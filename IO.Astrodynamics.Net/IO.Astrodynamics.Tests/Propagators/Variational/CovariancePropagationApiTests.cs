@@ -294,7 +294,7 @@ public class CovariancePropagationApiTests : IClassFixture<PartialsTestCases>
         // Assert
         foreach (var solution in new[] { rk78, vv })
         {
-            Assert.Null(solution.CovariancePropagation);
+            Assert.Equal(CovariancePropagationOptions.None, solution.CovariancePropagation); // None, not null (decision 56 of #668)
             Assert.Empty(solution.SensitivityParameters);
             Assert.Empty(solution.ExtendedCovarianceParameters);
             Assert.Throws<InvalidOperationException>(() => solution.GetStateTransitionMatrix(epoch));
@@ -402,7 +402,7 @@ public class CovariancePropagationApiTests : IClassFixture<PartialsTestCases>
         var reference = Run(CovariancePropagationOptions.None);
 
         // Assert
-        Assert.Null(solution.CovariancePropagation);
+        Assert.Equal(CovariancePropagationOptions.None, solution.CovariancePropagation); // None, not null (decision 56 of #668)
         Assert.Equal(reference.StateVectors.Select(s => s.Position), solution.StateVectors.Select(s => s.Position));
         Assert.All(solution.StateVectors, s => Assert.Null(s.Covariance));
     }
@@ -425,7 +425,7 @@ public class CovariancePropagationApiTests : IClassFixture<PartialsTestCases>
         Assert.Null(result.Results[0].Error);
         Assert.All(result.Results[0].Solution.StateVectors, s => Assert.NotNull(s.Covariance));
         Assert.Null(result.Results[1].Error);
-        Assert.Null(result.Results[1].Solution.CovariancePropagation);
+        Assert.Equal(CovariancePropagationOptions.None, result.Results[1].Solution.CovariancePropagation); // None, not null (decision 56 of #668)
         Assert.IsType<NotSupportedException>(result.Results[2].Error);
     }
 
@@ -666,7 +666,7 @@ public class CovariancePropagationApiTests : IClassFixture<PartialsTestCases>
         {
             ExecutionError = error
         };
-        spacecraft.SetStandbyManeuver(maneuver);
+        spacecraft.SetManeuvers(maneuver);
         var solution = spacecraft.Propagate(new TimeSystem.Window(Start, Start.AddHours(2.0)), new PropagationOptions { Integrator = new RK78IntegratorOptions { AbsoluteTolerance = 1e-11, RelativeTolerance = 1e-11 }, OutputStep = Step, ThirdBodies = new CelestialItem[] { _cases.Earth }, CovariancePropagation = new CovariancePropagationOptions { Mode = CovariancePropagationMode.Covariance } });
         Assert.NotNull(maneuver.ThrustWindow);
         return (solution, solution.Segments[1].BaseEpoch);

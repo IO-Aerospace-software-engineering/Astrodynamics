@@ -67,7 +67,7 @@ public class SpacecraftToOpmTests
         var engine = new Engine("eng", "model", "sn", Isp, 10.0, tank);
         spacecraft.AddEngine(engine);
         var burn = new ApogeeHeightManeuver(earth, S, TimeSpan.Zero, ra + 500000.0, engine);
-        spacecraft.SetStandbyManeuver(burn);
+        spacecraft.SetManeuvers(burn);
         IntegratorOptions instance = integrator == "RK" ? new RK78IntegratorOptions { AbsoluteTolerance = 1e-12, RelativeTolerance = 1e-12 } : new VVIntegratorOptions { Step = TimeSpan.FromSeconds(1.0) };
         var solution = spacecraft.Propagate(new Window(S, S.AddSeconds(6000.0)), new PropagationOptions { Integrator = instance, OutputStep = TimeSpan.FromSeconds(10.0), ThirdBodies = [earth], CovariancePropagation = CovariancePropagationOptions.None });
         return (spacecraft, burn, solution);

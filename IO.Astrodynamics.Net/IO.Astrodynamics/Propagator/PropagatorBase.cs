@@ -24,6 +24,11 @@ namespace IO.Astrodynamics.Propagator;
 public abstract class PropagatorBase : IPropagator
 {
     protected readonly CelestialItem OriginalObserver;
+
+    // The initial orbital parameters the propagator was built from, by reference (#783, decision 37 of #668): a run
+    // refuses a spacecraft that holds another
+    private readonly OrbitalParameters.OrbitalParameters _initialOrbit;
+
     public Window Window { get; }
     public Spacecraft Spacecraft { get; }
     public IIntegrator Integrator { get; }
@@ -46,6 +51,14 @@ public abstract class PropagatorBase : IPropagator
 
     // The impulses of the last propagation, in epoch order, their states on either side for the arcs of the stored states
     private readonly List<ImpulseBoundary> _impulses = new();
+
+    // The records of the maneuvers the current run executed, in execution order, a list of each run's own that its solution
+    // keeps (decision 57 of #668)
+    private List<ExecutedManeuver> _executed = new();
+
+    // The maneuver detectors the current run built, a list of each run's own, disarmed when the run ends, completed,
+    // stopped or thrown (decision 95 of #668, #802)
+    private List<ManeuverEventDetector> _runDetectors = new();
 
     /// <summary>
     /// The impulses of the propagation, in epoch order, each with the state of the integrator at its event before the
@@ -244,7 +257,7 @@ public abstract class PropagatorBase : IPropagator
         ValidateInertialFrame(spacecraft);
         ValidateOsculatingInitialOrbit(spacecraft);
         // A cycle in the maneuver chain would never end the walks of the chain: rejected before anything runs (#585)
-        var initialChain = Maneuver.Maneuver.Chain(spacecraft.InitialManeuver);
+        var initialChain = Maneuver.Maneuver.Chain(spacecraft.PlanHead);
         var standbyChain = Maneuver.Maneuver.Chain(spacecraft.StandbyManeuver);
         if (TargetOrbitFrameError(spacecraft, initialChain.Concat(standbyChain), PropagationFrame(spacecraft.InitialOrbitalParameters))
             is { } frameError)
@@ -256,6 +269,7 @@ public abstract class PropagatorBase : IPropagator
         // Spacecraft.Propagate, which leaves the previous propagation as it was
         spacecraft.CheckManeuverEngines();
 
+        _initialOrbit = spacecraft.InitialOrbitalParameters;
         OriginalObserver = spacecraft.InitialOrbitalParameters.Observer as CelestialItem;
         Window = new Window(window.StartDate.ToTDB(), window.EndDate.ToTDB());
         DeltaT = deltaT;
@@ -644,12 +658,13 @@ public abstract class PropagatorBase : IPropagator
 
     /// <summary>
     /// Propagates the spacecraft over the window, with its maneuver chain from its head
-    /// (<see cref="Spacecraft.InitialManeuver"/>, set by <see cref="Spacecraft.SetStandbyManeuver"/>).
+    /// (the first maneuver of <see cref="Spacecraft.Maneuvers"/>, set by <see cref="Spacecraft.SetManeuvers"/>).
     /// </summary>
     /// <remarks>
     /// Once its checks pass, the propagation re-arms the spacecraft, on every path (#583, decided by S. Guillet,
     /// 2026-11-17): the solution, the stored states and the attitude record of the previous propagation are dropped,
-    /// <see cref="Spacecraft.ExecutedManeuvers"/> is cleared, the tanks are refuelled and the chain is reset and put back
+    /// <see cref="Spacecraft.ExecutedManeuvers"/> is a new empty list, which each maneuver the run executes replaces by a
+    /// new list that adds it (decision 58 of #668), the tanks are refuelled and the chain is reset and put back
     /// in standby, so that a spacecraft propagated again, through a <see cref="CentralBodyPropagator"/> built directly or
     /// <c>Spacecraft.Propagate</c>, fires its chain as a spacecraft
     /// never propagated; a propagator built and never run, or rejected by its constructor, changes nothing. Before
@@ -671,9 +686,20 @@ public abstract class PropagatorBase : IPropagator
     /// instances whose forces evaluate each other's earlier solutions deadlock (the library evaluates no solution under
     /// the SPICE lock or the lock of an attitude record, so it cannot deadlock by itself). An evaluation of an earlier
     /// solution on another thread waits for the end of the run in progress, and a call waiting for the lock reads
-    /// <paramref name="cancellationToken"/> once it holds it. A reused instance keeps the initial state, the covariance and the options of its construction: a later
-    /// <see cref="Spacecraft.SetInitialOrbitalParameters"/> does not reach it (#783; build a new propagator to propagate
-    /// from another initial orbit).
+    /// <paramref name="cancellationToken"/> once it holds it. A reused instance keeps the initial state, the covariance and
+    /// the options of its construction, and refuses to run once the spacecraft holds other initial orbital parameters than
+    /// those it was built from, compared by reference, so an equal orbit given anew is another orbit
+    /// (<see cref="InvalidOperationException"/>; #783, decision 37 of #668, decided by S. Guillet, 2026-11-23: before
+    /// 11.0.0, a later <see cref="Spacecraft.SetInitialOrbitalParameters"/> did not reach it and the run started from the
+    /// former orbit); build a new propagator to propagate from another initial orbit. The guard covers the orbit only: the
+    /// maneuver chain, the tanks and the coefficients of the spacecraft are read at each run.
+    /// </para>
+    /// <para>
+    /// The re-arm drops the stored states and the attitude record of the spacecraft whatever
+    /// <see cref="Spacecraft.IsPropagated"/> says, those added by hand included (decision 38 of #668, decided by S.
+    /// Guillet, 2026-11-23: before 11.0.0 a first run kept the attitudes added by
+    /// <see cref="SpacecraftFrame.AddStateOrientationToICRF"/>, a quarter turn off a fresh run over half its window in
+    /// the gap analysis of L5), so every run, the first included, is a fresh run.
     /// </para>
     /// <para>
     /// Cancellation (R28 of #668): <paramref name="cancellationToken"/> is read once the checks pass, before the re-arm,
@@ -687,17 +713,41 @@ public abstract class PropagatorBase : IPropagator
     /// fuel, <see cref="Spacecraft.ExecutedManeuvers"/> and standby chain advanced up to the stop; the next propagation
     /// re-arms it (C2 of lot L4).
     /// </para>
+    /// <para>
+    /// A maneuver's detector serves the run that built it only (decision 95 of #668, #802, decided by S. Guillet,
+    /// 2026-11-24): the run disarms every detector it built when it ends, completed, stopped by the token or thrown, and a
+    /// detector an <see cref="IIntegrator"/> kept past the run then throws <see cref="InvalidOperationException"/> from
+    /// <see cref="IEventDetector.Evaluate"/> and <see cref="IEventDetector.HandleEvent"/>, changing nothing (before, it
+    /// executed its maneuver outside a run: fuel burned, <see cref="ImpulseManeuver.DeltaV"/> and the windows rewritten).
+    /// This holds for the calls that start after the end: a call already in progress when the run ends completes
+    /// (decision 98 of #668, decided by S. Guillet, 2026-11-24), which only an integrator that keeps a detector past its
+    /// <see cref="IIntegrator.IntegrateSegment"/> call, against its documented contract, meets; no lock is added.
+    /// A detector executes its impulse once at most for calls that do not overlap (decision 97 of #668, decided by S. Guillet, 2026-11-24): once its
+    /// <see cref="IEventDetector.HandleEvent"/> has executed the impulse, or started to and thrown, it throws within the
+    /// run too; the run never calls it again, replacing it with the detector of the next impulse, so a run whose
+    /// integrator calls <see cref="IEventDetector.HandleEvent"/> on the event it returns throws
+    /// <see cref="InvalidOperationException"/> from the propagation's own call rather than burning twice; an integrator
+    /// that executes an event and returns none breaks its contract, and the run returns incomplete, stopped at that
+    /// event.
+    /// </para>
+    /// <para>
+    /// The plan of the spacecraft is not changed during a run on it (decision 96 of #668, decided by S. Guillet,
+    /// 2026-11-24): the run reads the plan as it goes (<see cref="Spacecraft.SetManeuvers"/>); the run guard of #793,
+    /// after lot L5, will refuse it.
+    /// </para>
     /// </remarks>
     /// <param name="cancellationToken">The token that stops the run; none by default, bit for bit the run without it.</param>
     /// <returns>The solution.</returns>
     /// <exception cref="OperationCanceledException"><paramref name="cancellationToken"/> was cancelled; the exception
     /// carries it.</exception>
-    /// <exception cref="InvalidOperationException">The maneuver chain of the spacecraft is a cycle, which a subclass that
-    /// sets <see cref="Maneuver.Maneuver.NextManeuver"/> can build (#585); the constructor checks it too. Or an impulse
-    /// of the chain has its target orbit in another frame than the frame the propagator integrates in (GCRF and ICRF
-    /// counting as one, third review of #685), a maneuver attached after the propagator was built (#685; the constructor
-    /// throws <see cref="ArgumentException"/> for those it sees); or
-    /// a maneuver draws on a tank that is not the spacecraft's (#676). Nothing runs.</exception>
+    /// <exception cref="InvalidOperationException">The run re-checks what <see cref="Spacecraft.SetManeuvers"/> checks
+    /// (decision 46 of #668, decided by S. Guillet, 2026-11-23): the maneuver chain of the spacecraft is a cycle, a guard
+    /// of its walks (#585); the constructor checks it too. Or an impulse of the chain has its target orbit in another
+    /// frame than the frame the propagator integrates in (GCRF and ICRF counting as one, third review of #685), the
+    /// spacecraft having been given another initial orbit after its plan was set (#685; the constructor throws
+    /// <see cref="ArgumentException"/> for those it sees); or a maneuver draws on a tank that is not the spacecraft's
+    /// (#676), or is not in its plan; or the spacecraft holds other initial orbital parameters than those the propagator
+    /// was built from (#783). Nothing runs.</exception>
     public PropagationSolution Propagate(CancellationToken cancellationToken = default)
     {
         // The orientation cache is active on this thread only, so concurrent propagations sharing a central body do not
@@ -718,14 +768,20 @@ public abstract class PropagatorBase : IPropagator
             }
 
             bool reArmed = false;
+            // The lock is re-entrant, so a run may be nested in a run of this instance on its thread (a caller's integrator
+            // or force calling Propagate): the field is put back when the run ends, so that the detectors the outer run
+            // builds afterwards are disarmed with its own (decision 95 of #668)
+            var outerDetectors = _runDetectors;
+            var runDetectors = _runDetectors = new List<ManeuverEventDetector>();
             try
             {
                 return PropagateWithOrientationCache(cacheFrame, cache, cancellationToken, ref reArmed);
             }
             catch (OperationCanceledException) when (reArmed)
             {
-                // A run stopped after the re-arm leaves no stored state and no attitude record, those added by hand to a
-                // spacecraft never propagated included, which the re-arm keeps (C2 of lot L4 of #668)
+                // A run stopped after the re-arm leaves no stored state and no attitude record (C2 of lot L4 of #668). The
+                // re-arm drops them on every path since decision 38 of #668; this drop covers what code the run called
+                // may have added before the stop
                 Spacecraft.DropStoredStatesAndAttitudes();
                 throw;
             }
@@ -735,7 +791,34 @@ public abstract class PropagatorBase : IPropagator
                 {
                     hooked.Cancellation = default;
                 }
+
+                // A maneuver's detector serves the run that built it only: a caller's integrator receives the detectors
+                // within the run, and one kept past it would execute its maneuver outside a run (decision 95 of #668,
+                // decided by S. Guillet, 2026-11-24)
+                foreach (var detector in runDetectors)
+                {
+                    detector.Disarm();
+                }
+
+                _runDetectors = outerDetectors;
             }
+        }
+    }
+
+    /// <summary>
+    /// Throws <see cref="InvalidOperationException"/> when <paramref name="spacecraft"/> no longer holds
+    /// <paramref name="initialOrbit"/>, the initial orbital parameters a propagator was built from, compared by reference
+    /// (#783, decision 37 of #668, decided by S. Guillet, 2026-11-23): a propagator keeps the orbit of its construction,
+    /// so a run after <see cref="Spacecraft.SetInitialOrbitalParameters"/> would match no fresh propagator.
+    /// </summary>
+    internal static void RequireInitialOrbit(Spacecraft spacecraft, OrbitalParameters.OrbitalParameters initialOrbit)
+    {
+        if (!ReferenceEquals(spacecraft.InitialOrbitalParameters, initialOrbit))
+        {
+            throw new InvalidOperationException(
+                $"The initial orbit of {spacecraft.Name} changed since this propagator was built " +
+                "(SetInitialOrbitalParameters): a propagator keeps the initial orbit it was built from. Build a new " +
+                "propagator to propagate from the new one.");
         }
     }
 
@@ -759,7 +842,9 @@ public abstract class PropagatorBase : IPropagator
         // and whose target orbits are in the frame of the integration: a maneuver attached after the propagator was built
         // escaped the check of the constructor (#685)
         // The chain run is the one from the head, which the reset puts back in standby (#583)
-        var chain = Maneuver.Maneuver.Chain(Spacecraft.InitialManeuver);
+        // The initial orbit the propagator was built from (#783, decision 37 of #668)
+        RequireInitialOrbit(Spacecraft, _initialOrbit);
+        var chain = Maneuver.Maneuver.Chain(Spacecraft.PlanHead);
         if (TargetOrbitFrameError(Spacecraft, chain, InitialState.Frame) is { } frameError)
         {
             throw new InvalidOperationException(frameError);
@@ -781,6 +866,7 @@ public abstract class PropagatorBase : IPropagator
         reArmed = true;
         _timeline = new AttitudeTimeline();
         _impulses.Clear();
+        _executed = new List<ExecutedManeuver>();
         var eventDetectors = BuildEventDetectors();
 
         // 3. Create solution
@@ -888,8 +974,9 @@ public abstract class PropagatorBase : IPropagator
                 var stateBefore = new StateVector(evt.EventPosition, evt.EventVelocity, InitialState.Observer, eventEpoch,
                     InitialState.Frame, _covarianceModel != null ? CovarianceOf(eventY, eventQ) : null);
 
-                // Delegate to the event detector
+                // Delegate to the event detector, the mass before it for the record of an impulse
                 var detector = eventDetectors[evt.DetectorIndex];
+                double massBefore = Spacecraft.GetTotalMass();
                 var eventResult = detector.HandleEvent(eventState, Spacecraft);
 
                 // The next segment starts at the event: from the state after the maneuver on StopAndRestart, from the
@@ -905,7 +992,7 @@ public abstract class PropagatorBase : IPropagator
                 {
                     eventResult = eventResult with
                     {
-                        NextDetector = OnImpulse(executed.Maneuver, eventTau, eventResult.Orientation)
+                        NextDetector = OnImpulse(executed.Maneuver, eventEpoch, eventTau, eventResult.Orientation, massBefore)
                     };
                 }
 
@@ -980,9 +1067,11 @@ public abstract class PropagatorBase : IPropagator
         solution.ForceModel = PropagationForceModel.TryCreate(Integrator, solution, InitialState, cache, DynamicsSyncRoot);
         solution.Observer = InitialState.Observer;
         solution.Frame = InitialState.Frame;
-        solution.CovariancePropagation = _covariancePropagation;
+        // None when the run propagated neither Φ nor the covariance (decision 56 of #668)
+        solution.CovariancePropagation = _covariancePropagation ?? CovariancePropagationOptions.None;
         solution.Options = ResolvedOptions;
         solution.CovarianceAbsence = CovarianceAbsence;
+        solution.Maneuvers = _executed.AsReadOnly();
         var outputStates = GenerateOutput(solution, outputCount, endsAtWindowEnd);
 
         // 5b. The attitude record, from the timeline, on the solution (#539)
@@ -1090,10 +1179,18 @@ public abstract class PropagatorBase : IPropagator
         var impulse = ScheduleAttitudes(Spacecraft.StandbyManeuver, Window.StartDate, 0.0);
         if (impulse != null)
         {
-            detectors.Add(new ManeuverEventDetector(impulse));
+            detectors.Add(NewRunDetector(impulse));
         }
 
         return detectors;
+    }
+
+    // The detector of an impulse of the current run, which the run disarms when it ends (decision 95 of #668)
+    private ManeuverEventDetector NewRunDetector(ImpulseManeuver impulse)
+    {
+        var detector = new ManeuverEventDetector(impulse);
+        _runDetectors.Add(detector);
+        return detector;
     }
 
     /// <summary>
@@ -1135,6 +1232,12 @@ public abstract class PropagatorBase : IPropagator
             attitude.ManeuverWindow = new Window(start, end);
             _timeline.ActivateLaw(start, attitude);
 
+            // Its record: its activation, no delta-V, no fuel, the mass at its activation, which no impulse changes
+            // before it (the next impulse is gated by its end)
+            double mass = Spacecraft.GetTotalMass();
+            _executed.Add(new ExecutedManeuver(attitude, start, attitude.ThrustWindow.Value, attitude.ManeuverWindow.Value,
+                Vector3.Zero, 0.0, mass, mass));
+
             // The attitude is executed: the next maneuver of the chain may start at the end of its hold, in this
             // propagation only (#573)
             Spacecraft.ChainStandbyManeuver(attitude.NextManeuver, end);
@@ -1158,10 +1261,13 @@ public abstract class PropagatorBase : IPropagator
     /// attitude chained after it activates there; then the attitudes chained after it.
     /// </summary>
     /// <param name="impulse">The impulse its detector executed.</param>
+    /// <param name="eventEpoch">The TDB label of its event.</param>
     /// <param name="eventTau">The seconds of the time argument from the start of the window to its event.</param>
     /// <param name="orientation">Its attitude, the front along ΔV; null for none.</param>
+    /// <param name="massBefore">The total mass of the spacecraft before the burn.</param>
     /// <returns>The detector of the next impulse, null if none.</returns>
-    private IEventDetector OnImpulse(ImpulseManeuver impulse, double eventTau, StateOrientation orientation)
+    private IEventDetector OnImpulse(ImpulseManeuver impulse, in Time eventEpoch, double eventTau,
+        StateOrientation orientation, double massBefore)
     {
         // The windows ImpulseManeuver.TryExecute set from the event, in TDB seconds; about the Earth, counted in TT seconds
         // from the event's time argument (#547)
@@ -1189,6 +1295,10 @@ public abstract class PropagatorBase : IPropagator
 
         var maneuverEnd = impulse.ManeuverWindow!.Value.EndDate;
 
+        // Its record, the windows in their final form (in TT seconds about the Earth), before the attitudes chained after it
+        _executed.Add(new ExecutedManeuver(impulse, eventEpoch, impulse.ThrustWindow!.Value, impulse.ManeuverWindow.Value,
+            impulse.DeltaV, impulse.FuelBurned, massBefore, Spacecraft.GetTotalMass()));
+
         // The impulse's attitude from the opening of its thrust window, no earlier than the window or the last activation
         var start = thrust.StartDate;
         if (start < Window.StartDate) start = Window.StartDate;
@@ -1205,7 +1315,7 @@ public abstract class PropagatorBase : IPropagator
         }
 
         var nextImpulse = ScheduleAttitudes(impulse.NextManeuver, maneuverEnd, maneuverEndTau);
-        return nextImpulse != null ? new ManeuverEventDetector(nextImpulse) : null;
+        return nextImpulse != null ? NewRunDetector(nextImpulse) : null;
     }
 
     /// <summary>
@@ -1466,7 +1576,7 @@ public abstract class PropagatorBase : IPropagator
     /// </summary>
     /// <returns>The message of the first target in another frame than <paramref name="propagationFrame"/>, null when there
     /// is none.</returns>
-    private static string TargetOrbitFrameError(Spacecraft spacecraft, IEnumerable<Maneuver.Maneuver> maneuvers,
+    internal static string TargetOrbitFrameError(Spacecraft spacecraft, IEnumerable<Maneuver.Maneuver> maneuvers,
         Frame propagationFrame)
     {
         var initial = spacecraft.InitialOrbitalParameters;

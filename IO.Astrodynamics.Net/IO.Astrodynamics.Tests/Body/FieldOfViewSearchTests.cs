@@ -995,7 +995,7 @@ public class FieldOfViewSearchTests : IClassFixture<PropagatedFieldOfViewCase>
                 spacecraft.AddFuelTank(tank);
                 var engine = new Engine("eng515", "model", "sn515", 300.0, 10.0, tank);
                 spacecraft.AddEngine(engine);
-                spacecraft.SetStandbyManeuver(new NadirAttitude(earth, new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB), TimeSpan.Zero, engine));
+                spacecraft.SetManeuvers(new NadirAttitude(earth, new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB), TimeSpan.Zero, engine));
                 target = _case.Sun;
                 targetShape = ShapeType.Point;
                 number = 795;

@@ -1,27 +1,29 @@
 // Copyright 2023. Sylvain Guillet (sylvain.guillet@tutamail.com)
 
-using System;
 using System.Collections.Generic;
-using System.IO;
 using IO.Astrodynamics.Body.Spacecraft;
 using IO.Astrodynamics.TimeSystem;
 
 namespace IO.Astrodynamics.Mission;
 
+/// <summary>
+/// The summary of a scenario's run, returned by <see cref="Scenario.Simulate"/>.
+/// </summary>
 public class ScenarioSummary
 {
+    /// <summary>The window of the scenario.</summary>
     public Window Window { get; }
 
-    private readonly HashSet<SpacecraftSummary> _spacecraftSummaries = new HashSet<SpacecraftSummary>();
-    public IReadOnlyCollection<SpacecraftSummary> SpacecraftSummaries => _spacecraftSummaries;
+    /// <summary>
+    /// The summary of each spacecraft of the scenario, in scenario order (the order <see cref="Scenario.Spacecrafts"/>
+    /// lists them in), a read-only list (decision 59 of #668, decided by S. Guillet, 2026-11-23: a collection of no
+    /// order before 11.0.0).
+    /// </summary>
+    public IReadOnlyList<SpacecraftSummary> SpacecraftSummaries { get; }
 
-    internal ScenarioSummary(Window window)
+    internal ScenarioSummary(Window window, IReadOnlyList<SpacecraftSummary> spacecraftSummaries)
     {
         Window = window;
-    }
-
-    internal void AddSpacecraftSummary(SpacecraftSummary summary)
-    {
-        _spacecraftSummaries.Add(summary);
+        SpacecraftSummaries = spacecraftSummaries;
     }
 }

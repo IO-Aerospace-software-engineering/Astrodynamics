@@ -52,10 +52,48 @@ namespace IO.Astrodynamics.Body.Spacecraft
         public Vector3 BodyLeft => BodyRight.Inverse();
         public Vector3 BodyDown => BodyUp.Inverse();
 
-        private readonly HashSet<Maneuver.Maneuver> _executedManeuvers = new HashSet<Maneuver.Maneuver>();
-        public IReadOnlyCollection<Maneuver.Maneuver> ExecutedManeuvers => _executedManeuvers;
-        public Maneuver.Maneuver StandbyManeuver { get; private set; }
-        public Maneuver.Maneuver InitialManeuver { get; private set; }
+        private static readonly IReadOnlyList<Maneuver.Maneuver> NoManeuver = Array.AsReadOnly(Array.Empty<Maneuver.Maneuver>());
+
+        // The maneuvers the last run executed, in execution order: never changed once published, replaced as a whole
+        private IReadOnlyList<Maneuver.Maneuver> _executedManeuvers = NoManeuver;
+
+        /// <summary>
+        /// The maneuvers the last run executed, attitudes included, in execution order: a new read-only list at each run
+        /// (decision 58 of #668, decided by S. Guillet, 2026-11-23). The re-arm of a run swaps in an empty list, and each
+        /// maneuver the run executes swaps in a new list that adds it, so a list once read never changes: a list held from
+        /// an earlier run keeps its members, a reader on another thread during a run sees the maneuvers executed so far, and
+        /// a stopped run leaves those executed up to the stop (C2 of lot L4). It lists the definitions, whose values
+        /// (<c>DeltaV</c>, <c>FuelBurned</c>, the windows) are those of their last run, reset by the next one (decision 52):
+        /// the stable values of a run are its records, <see cref="PropagationSolution.Maneuvers"/>. Before 11.0.0 it was a
+        /// live set that the next run emptied. Until the fix of #794 (decision 44 of #668, decided by S. Guillet, 2026-11-23,
+        /// after lot L5), a stopped run also lists an attitude it scheduled before the stop (at its start, or at the event
+        /// of the impulse before it) whose activation it never reached, that attitude's <c>ThrustWindow</c> and
+        /// <c>ManeuverWindow</c> set and the chain advanced past it; a completed run reaches every attitude it schedules.
+        /// </summary>
+        public IReadOnlyList<Maneuver.Maneuver> ExecutedManeuvers => Volatile.Read(ref _executedManeuvers);
+        /// <summary>
+        /// The maneuver of the chain in standby during a run: the head of the plan before it, the next one to fire as it
+        /// runs. Internal since 11.0.0 (decision 45 of #668, decided by S. Guillet, 2026-11-23): it is run state; the plan
+        /// is <see cref="Maneuvers"/>, the maneuvers of the last run <see cref="ExecutedManeuvers"/>.
+        /// </summary>
+        internal Maneuver.Maneuver StandbyManeuver { get; private set; }
+
+        // The plan, in order (SetManeuvers); empty for none
+        private IReadOnlyList<Maneuver.Maneuver> _maneuvers = Array.Empty<Maneuver.Maneuver>();
+
+        /// <summary>
+        /// The maneuver plan of the spacecraft, in the order of <see cref="SetManeuvers"/>, each linked to the next
+        /// (<see cref="Maneuver.Maneuver.NextManeuver"/>): every propagation runs it from its first maneuver. Empty for no
+        /// plan. It is the plan as it was set, whatever a run executed (decision 45 of #668, decided by S. Guillet,
+        /// 2026-11-23).
+        /// </summary>
+        public IReadOnlyList<Maneuver.Maneuver> Maneuvers => _maneuvers;
+
+        /// <summary>The first maneuver of the plan, the head of the chain every run starts from; null for no plan.</summary>
+        internal Maneuver.Maneuver PlanHead => _maneuvers.Count > 0 ? _maneuvers[0] : null;
+
+        // The claims of the plans of every spacecraft, taken atomically (decision 46 of #668)
+        private static readonly object PlanSync = new();
         public Spacecraft Parent { get; private set; }
         public Spacecraft Child { get; private set; }
         public Clock Clock { get; }
@@ -119,7 +157,8 @@ namespace IO.Astrodynamics.Body.Spacecraft
 
         // Whether the stored states are those of a numerical propagation, by any path: a TLE spacecraft then reads them, SGP4
         // otherwise (#675).
-        // Set by SetPropagatedStates, cleared with the stored states; AddPropagatedStates (TLEPropagator) leaves it
+        // Set by SetPropagatedStates, cleared with the stored states; AddPropagatedStates (TLEPropagator's samples
+        // included) leaves it
         private bool _holdsPropagatedStates;
 
         /// <summary>
@@ -447,32 +486,68 @@ namespace IO.Astrodynamics.Body.Spacecraft
         // Whether the tank is one of the tank instances of the spacecraft, by reference: FuelTank compares by value (#676)
         private bool HoldsFuelTank(FuelTank fuelTank) => _fuelTanks.Any(x => ReferenceEquals(x, fuelTank));
 
+        // Whether the engine is one of the engine instances of the spacecraft, by reference: Engine compares by value
+        // (decision 92 of #668)
+        private bool HoldsEngine(Engine engine) => _engines.Any(x => ReferenceEquals(x, engine));
+
         /// <summary>
-        /// Checks, before a propagation, that each maneuver of the chain draws on a tank of this spacecraft (#676, #586):
-        /// its engine's fuel tank is one of the tank instances of the spacecraft and is held by this instance. The engine
-        /// itself need not be in <see cref="Engines"/>. Without it, an impulse on a tank of no spacecraft threw a
-        /// <see cref="NullReferenceException"/> during the run, one on another spacecraft's tank burnt that spacecraft's
-        /// fuel, and an attitude took the body axes of the other spacecraft, or the static ones.
+        /// Checks, before a propagation, that each maneuver of the chain draws on an engine of this spacecraft: an engine of
+        /// <see cref="Engines"/>, added with <see cref="AddEngine"/>, compared by reference (decision 92 of #668, decided by
+        /// S. Guillet, 2026-11-23: before, the tank alone was checked, so an engine built on the spacecraft's tank and never
+        /// added ran), whose fuel tank is one of the tank instances of the spacecraft and is held by this instance (#676,
+        /// #586). Without the tank check, an impulse on a tank of no spacecraft threw a <see cref="NullReferenceException"/>
+        /// during the run, one on another spacecraft's tank burnt that spacecraft's fuel, and an attitude took the body axes
+        /// of the other spacecraft, or the static ones. And that each is in the plan of this spacecraft
+        /// (<see cref="SetManeuvers"/>): the run's re-check of the claim (decision 46 of #668, decided by S. Guillet,
+        /// 2026-11-23).
         /// </summary>
-        /// <exception cref="InvalidOperationException">A maneuver draws on a tank that is not this spacecraft's; nothing
-        /// changes.</exception>
+        /// <exception cref="InvalidOperationException">A maneuver draws on an engine that is not one of this spacecraft's
+        /// engines or on a tank that is not this spacecraft's, or is not in its plan; nothing changes.</exception>
         internal void CheckManeuverEngines()
         {
-            foreach (var maneuver in Maneuver.Maneuver.Chain(InitialManeuver).Concat(Maneuver.Maneuver.Chain(StandbyManeuver)))
+            foreach (var maneuver in Maneuver.Maneuver.Chain(PlanHead).Concat(Maneuver.Maneuver.Chain(StandbyManeuver)))
             {
-                var tank = maneuver.Engine.FuelTank;
-                if (ReferenceEquals(tank.Spacecraft, this) && HoldsFuelTank(tank))
+                if (EngineError(maneuver) is { } engineError)
                 {
-                    continue;
+                    throw new InvalidOperationException(engineError);
                 }
 
-                string holder = tank.Spacecraft == null
-                    ? "is on no spacecraft"
-                    : $"belongs to the spacecraft {tank.Spacecraft.Name} ({tank.Spacecraft.NaifId})";
-                throw new InvalidOperationException(
-                    $"The {maneuver.GetType().Name} of {Name} ({NaifId}) draws on the engine {maneuver.Engine.Name} (serial number {maneuver.Engine.SerialNumber}), whose fuel tank {tank.Name} (serial number {tank.SerialNumber}) {holder}, not on the spacecraft propagated: " +
-                    $"add the tank to {Name} with AddFuelTank and the engine with AddEngine, or build the maneuver on an engine of {Name}.");
+                if (!ReferenceEquals(maneuver.PlanOwner, this))
+                {
+                    throw new InvalidOperationException(
+                        $"The {maneuver.GetType().Name} in the maneuver chain of {Name} ({NaifId}) is not in its plan: a plan is linked " +
+                        "by SetManeuvers only. Set the plan with SetManeuvers.");
+                }
             }
+        }
+
+        // Why a maneuver cannot run on this spacecraft: its engine's tank is not one of this spacecraft's (#676, #586), or
+        // the engine is not one of its engines, by reference (decision 92 of #668); null otherwise
+        private string EngineError(Maneuver.Maneuver maneuver)
+        {
+            var engine = maneuver.Engine;
+            var tank = engine.FuelTank;
+            if (ReferenceEquals(tank.Spacecraft, this) && HoldsFuelTank(tank))
+            {
+                if (HoldsEngine(engine))
+                {
+                    return null;
+                }
+
+                string notOneOf = $"The {maneuver.GetType().Name} of {Name} ({NaifId}) draws on the engine {engine.Name} (serial number {engine.SerialNumber}), which is not one of the engines of {Name}: " +
+                                  $"an engine of a plan is an engine instance added with AddEngine (an engine equal to one of them by name, model and serial number is another engine). ";
+                // A twin of an added engine cannot be added (AddEngine refuses it as already added): the advice is the
+                // instance of Engines (second review of lot L5a)
+                return _engines.Contains(engine)
+                    ? notOneOf + $"An engine equal to it is already one of the engines of {Name}: build the maneuver on that engine instance (Engines of {Name})."
+                    : notOneOf + $"Add the engine to {Name} with AddEngine before the plan, or build the maneuver on an engine of {Name}.";
+            }
+
+            string holder = tank.Spacecraft == null
+                ? "is on no spacecraft"
+                : $"belongs to the spacecraft {tank.Spacecraft.Name} ({tank.Spacecraft.NaifId})";
+            return $"The {maneuver.GetType().Name} of {Name} ({NaifId}) draws on the engine {maneuver.Engine.Name} (serial number {maneuver.Engine.SerialNumber}), whose fuel tank {tank.Name} (serial number {tank.SerialNumber}) {holder}, not on the spacecraft propagated: " +
+                   $"add the tank to {Name} with AddFuelTank and the engine with AddEngine, or build the maneuver on an engine of {Name}.";
         }
 
         /// <summary>
@@ -526,9 +601,11 @@ namespace IO.Astrodynamics.Body.Spacecraft
         }
 
         /// <summary>
-        /// Get total ISP of this spacecraft
+        /// The specific impulse of the engines of the spacecraft fired together, s: the sum of the thrusts of the engines
+        /// whose tank holds fuel at the start of a run (an initial quantity above 0) over g0 and over their fuel flows
+        /// (<see cref="GetTotalFuelFlow"/>). Every engine counts from lot L5b, once the tanks refuse a non-finite quantity
+        /// (decision 60 of #668 with L5-20 as amended, decided by S. Guillet, 2026-11-23; #801).
         /// </summary>
-        /// <returns></returns>
         public double GetTotalISP()
         {
             return (Engines.Where(x => x.FuelTank.InitialQuantity > 0.0).Sum(x => x.Thrust) / Constants.g0) /
@@ -536,57 +613,134 @@ namespace IO.Astrodynamics.Body.Spacecraft
         }
 
         /// <summary>
-        /// Get total fuel flow of this spacecraft
+        /// The sum of the fuel flows of the engines of the spacecraft whose tank holds fuel at the start of a run, kg/s; every
+        /// engine from lot L5b (decision 60 of #668, #801).
         /// </summary>
-        /// <returns></returns>
         public double GetTotalFuelFlow()
         {
             return Engines.Where(x => x.FuelTank.InitialQuantity > 0.0).Sum(x => x.FuelFlow);
         }
 
         /// <summary>
-        /// Get total fuel of this spacecraft
+        /// The fuel of the spacecraft's own tanks at the start of a run, kg: the sum of their initial quantities, the child
+        /// spacecraft's tanks aside (decision 60 of #668, decided by S. Guillet, 2026-11-23; <c>GetTotalFuel</c> before
+        /// 11.0.0, the same value).
         /// </summary>
-        /// <returns></returns>
-        public double GetTotalFuel()
+        public double GetInitialFuel()
         {
             return FuelTanks.Sum(x => x.InitialQuantity);
         }
 
         /// <summary>
-        /// Sets the head of the maneuver chain (<see cref="Maneuver.Maneuver.SetNextManeuver"/>): the maneuver every later
-        /// propagation starts the chain from. <see cref="InitialManeuver"/> and <see cref="StandbyManeuver"/> both become
-        /// <paramref name="maneuver"/>, whatever was set before or left by an earlier propagation, and nothing is added to
-        /// <see cref="ExecutedManeuvers"/>, which lists the maneuvers of the last propagation; null clears the chain, so the
-        /// next propagation fires nothing (#584, decided by S. Guillet, 2026-11-17: before 11.0.0 a second call before a
-        /// propagation, or a call after a propagation whose chain did not finish, left the first head in place, which fired,
-        /// and added it to <see cref="ExecutedManeuvers"/> before it ran).
+        /// The fuel left in the spacecraft's own tanks, kg: the sum of their quantities, what the last run left (the initial
+        /// fuel before any run and after the re-arm of the next), the child spacecraft's tanks aside (decision 60 of #668).
         /// </summary>
-        /// <param name="maneuver">The head of the chain; null for no maneuver.</param>
-        /// <param name="minimumEpoch">Null to keep the minimum epoch the maneuver was given. When later than that minimum
-        /// epoch, its new one, which every later propagation keeps, as the one of its constructor (#573): an
-        /// <see cref="Maneuver.ImpulseManeuver"/> never fires before it, and an <see cref="Maneuver.Attitude"/> never
-        /// activates before it (#539). An earlier value changes nothing.</param>
-        /// <exception cref="ArgumentException">The chain from <paramref name="maneuver"/> is a cycle, which a subclass that
-        /// sets <see cref="Maneuver.Maneuver.NextManeuver"/> can build (#585); nothing changes.</exception>
-        public void SetStandbyManeuver(Maneuver.Maneuver maneuver, Time? minimumEpoch = null)
+        public double GetRemainingFuel()
         {
-            try
-            {
-                Maneuver.Maneuver.Chain(maneuver);
-            }
-            catch (InvalidOperationException e)
-            {
-                throw new ArgumentException(e.Message, nameof(maneuver), e);
-            }
+            return FuelTanks.Sum(x => x.Quantity);
+        }
 
-            if (minimumEpoch.HasValue)
+        /// <summary>
+        /// Sets the maneuver plan of the spacecraft: <paramref name="maneuvers"/> in order, each linked to the next and the
+        /// last to none (<see cref="Maneuver.Maneuver.NextManeuver"/>), read back by <see cref="Maneuvers"/>; no maneuver
+        /// clears the plan, so the next propagation fires nothing. It is the one way to link a plan (decision 45 of #668,
+        /// decided by S. Guillet, 2026-11-23: before 11.0.0 <c>SetStandbyManeuver</c> set the head of a chain that
+        /// <c>Maneuver.SetNextManeuver</c> linked). Every later propagation runs the plan from its first maneuver, whatever
+        /// an earlier one executed; nothing is added to <see cref="ExecutedManeuvers"/>, which lists the maneuvers of the
+        /// last propagation (#584).
+        /// </summary>
+        /// <param name="maneuvers">The maneuvers of the plan, in order; none to clear it.</param>
+        /// <remarks>
+        /// <para>
+        /// The plan claims each of its maneuvers for this spacecraft (decision 46 of #668, decided by S. Guillet,
+        /// 2026-11-23): a maneuver is in one plan at a time, and the claim is released, its link cleared, when this
+        /// spacecraft sets another plan without it, after which another spacecraft may take it. A maneuver keeps the
+        /// minimum epoch of its constructor: a later one is a new maneuver in a new plan (decision 47; before 11.0.0
+        /// <c>SetStandbyManeuver(maneuver, minimumEpoch)</c> raised it).
+        /// </para>
+        /// <para>
+        /// The checks run here, where the call receives the maneuvers, and again for what changed since (another initial
+        /// orbit, whose frame the targets no longer share): a propagator built after the change throws
+        /// <see cref="ArgumentException"/> (<c>spacecraft</c>), the case of <see cref="Propagate(Window, PropagationOptions, CancellationToken)"/>, a scenario and a batch,
+        /// which build theirs (decision 94 of #668, decided by S. Guillet, 2026-11-23); a propagator built before it throws
+        /// <see cref="InvalidOperationException"/> at its <c>Propagate</c>, through the initial-orbit guard (#783) or the
+        /// re-check of the chain. So the tanks of the engines are added (<see cref="AddFuelTank"/>, and the engines with
+        /// <see cref="AddEngine"/>) and the initial orbit set before the plan.
+        /// </para>
+        /// <para>
+        /// The plan of a spacecraft is not changed during a run on it (decision 96 of #668, decided by S. Guillet,
+        /// 2026-11-24): a run reads the plan as it goes (its head at the re-arm, each next maneuver when the previous one
+        /// ends), so a call from another thread, or from code the run calls (a force, a custom integrator), mixes the two
+        /// plans; in the second review of L5a a call that set the plan [m1, m2] again during a run of [m1, m2] left
+        /// <see cref="ExecutedManeuvers"/> reading m1, m1. Set the plan before the run, or after it has returned. Nothing
+        /// checks the rule yet: the run guard of #793, after lot L5, will make this method throw
+        /// <see cref="InvalidOperationException"/> while a run holds the spacecraft.
+        /// </para>
+        /// </remarks>
+        /// <exception cref="ArgumentNullException"><paramref name="maneuvers"/> is null.</exception>
+        /// <exception cref="ArgumentException">Naming <c>maneuvers</c>: a maneuver is null; or appears twice, which would
+        /// make the chain a cycle (a repeated burn is a new maneuver, #585); or is in the plan of another spacecraft; or
+        /// draws on an engine that is not one of this spacecraft's <see cref="Engines"/>, added with <see cref="AddEngine"/>
+        /// and compared by reference (decision 92 of #668), or whose fuel tank is not one of this spacecraft's (#676); or, for
+        /// an impulse, has its target
+        /// orbit in another frame than the one the spacecraft is propagated in (GCRF and ICRF counting as one, #685). Nothing
+        /// changes.</exception>
+        public void SetManeuvers(params Maneuver.Maneuver[] maneuvers)
+        {
+            ArgumentNullException.ThrowIfNull(maneuvers);
+            var plan = (Maneuver.Maneuver[])maneuvers.Clone();
+            var listed = new HashSet<Maneuver.Maneuver>(ReferenceEqualityComparer.Instance);
+            lock (PlanSync)
             {
-                maneuver?.RaiseGivenMinimumEpoch(minimumEpoch.Value);
-            }
+                for (int i = 0; i < plan.Length; i++)
+                {
+                    var maneuver = plan[i] ?? throw new ArgumentException($"The maneuver at index {i} of the plan of {Name} is null.", nameof(maneuvers));
+                    if (!listed.Add(maneuver))
+                    {
+                        throw new ArgumentException(
+                            $"The {maneuver.GetType().Name} at index {i} of the plan of {Name} appears in it twice, which would make the maneuver chain a cycle: " +
+                            "a maneuver appears in a plan once; a repeated burn is a new maneuver.", nameof(maneuvers));
+                    }
 
-            InitialManeuver = maneuver;
-            StandbyManeuver = maneuver;
+                    if (maneuver.PlanOwner != null && !ReferenceEquals(maneuver.PlanOwner, this))
+                    {
+                        throw new ArgumentException(
+                            $"The {maneuver.GetType().Name} at index {i} of the plan of {Name} is in the plan of the spacecraft {maneuver.PlanOwner.Name} ({maneuver.PlanOwner.NaifId}): " +
+                            "a maneuver is in one plan at a time. Build a new maneuver for this plan, or set the other spacecraft's plan without it first.",
+                            nameof(maneuvers));
+                    }
+
+                    if (EngineError(maneuver) is { } engineError)
+                    {
+                        throw new ArgumentException(engineError, nameof(maneuvers));
+                    }
+                }
+
+                if (InitialOrbitalParameters != null &&
+                    PropagatorBase.TargetOrbitFrameError(this, plan, PropagatorBase.PropagationFrame(InitialOrbitalParameters)) is { } frameError)
+                {
+                    throw new ArgumentException(frameError, nameof(maneuvers));
+                }
+
+                // The claims of the former plan are released for the maneuvers this one does not hold
+                foreach (var former in _maneuvers)
+                {
+                    if (!listed.Contains(former))
+                    {
+                        former.PlanOwner = null;
+                        former.NextManeuver = null;
+                    }
+                }
+
+                for (int i = 0; i < plan.Length; i++)
+                {
+                    plan[i].PlanOwner = this;
+                    plan[i].NextManeuver = i + 1 < plan.Length ? plan[i + 1] : null;
+                }
+
+                _maneuvers = Array.AsReadOnly(plan);
+                StandbyManeuver = PlanHead;
+            }
         }
 
         /// <summary>
@@ -594,8 +748,8 @@ namespace IO.Astrodynamics.Body.Spacecraft
         /// the window of the maneuver that precedes it, for this propagation only: the gate is raised on
         /// <see cref="Maneuver.Maneuver.PropagationGate"/>, which the next <c>Propagate</c> clears, never on the minimum epoch
         /// the maneuver was given (#573). The maneuver in standby until then is added to <see cref="ExecutedManeuvers"/>.
-        /// The library's advances of a chain go through it, never through <see cref="SetStandbyManeuver"/>, which sets the
-        /// head of the chain (#584).
+        /// The library's advances of a chain go through it, never through <see cref="SetManeuvers"/>, which sets the plan
+        /// (#584).
         /// </summary>
         /// <param name="maneuver">The next maneuver of the chain; null at its end.</param>
         /// <param name="gate">The end of the window of the maneuver before it; null for none.</param>
@@ -608,7 +762,16 @@ namespace IO.Astrodynamics.Body.Spacecraft
 
             if (StandbyManeuver != null)
             {
-                _executedManeuvers.Add(StandbyManeuver);
+                // A new list that adds it, swapped in: a list once read never changes (decision 58 of #668)
+                var executed = Volatile.Read(ref _executedManeuvers);
+                var next = new Maneuver.Maneuver[executed.Count + 1];
+                for (int i = 0; i < executed.Count; i++)
+                {
+                    next[i] = executed[i];
+                }
+
+                next[^1] = StandbyManeuver;
+                Volatile.Write(ref _executedManeuvers, Array.AsReadOnly(next));
             }
 
             StandbyManeuver = maneuver;
@@ -644,15 +807,6 @@ namespace IO.Astrodynamics.Body.Spacecraft
         public StateOrientation GetOrientation(Frame referenceFrame, in Time epoch)
         {
             return referenceFrame.ToFrame(Frame, epoch);
-        }
-
-        /// <summary>
-        /// Get spacecraft summary
-        /// </summary>
-        /// <returns></returns>
-        internal SpacecraftSummary GetSummary()
-        {
-            return new SpacecraftSummary(this, _executedManeuvers);
         }
 
         /// <summary>
@@ -739,7 +893,8 @@ namespace IO.Astrodynamics.Body.Spacecraft
         /// epoch itself being read within them.
         /// </remarks>
         /// <exception cref="InvalidOperationException">The spacecraft holds propagated states and <paramref name="epoch"/>
-        /// lies outside them, as a read past the coverage of SPICE.</exception>
+        /// lies outside them, as a read past the coverage of SPICE, or in a gap between the windows given to
+        /// <see cref="AddPropagatedStates"/> (#792), or beside an arc of one state.</exception>
         public override StateVector GetGeometricStateRelativeTo(in Time epoch, CelestialItem referenceBody)
         {
             return GetGeometricStateRelativeTo(epoch, referenceBody, 0.0);
@@ -761,16 +916,17 @@ namespace IO.Astrodynamics.Body.Spacecraft
                     .ToFrame(Frames.Frame.ICRF)
                     .RelativeTo(referenceBody, Aberration.None).ToStateVector();
 
-            // Not enough cached states: the two-body orbit, in ICRF as every reader assumes (#535)
-            if (_propagatedStates.Count < 2)
+            // No stored state: the two-body orbit, in ICRF as every reader assumes (#535); a store of one state is read
+            // through the arcs, at its epoch only (decision 89 of #668, decided by S. Guillet, 2026-11-23)
+            if (_propagatedStates.Count == 0)
                 return InitialOrbitalParameters.ToStateVector(epoch)
                     .ToFrame(Frames.Frame.ICRF)
                     .RelativeTo(referenceBody, Aberration.None).ToStateVector();
 
-            // Interpolate the arc of the epoch (#540), within the propagated states (#527)
-            CheckInsidePropagatedStates(epoch, margin);
+            // Interpolate the arc of the epoch (#540), within the propagated states (#527), never in a gap between added
+            // windows (#792)
+            var interpolated = _propagatedStates.InterpolateWithin(epoch, margin) ?? throw OutsidePropagatedStates(epoch, margin);
             var cb = (CelestialItem)_propagatedStates.First.Observer;
-            var interpolated = _propagatedStates.Interpolate(epoch);
 
             if (cb.NaifId == referenceBody.NaifId)
                 return new StateVector(interpolated.Position, interpolated.Velocity,
@@ -801,17 +957,18 @@ namespace IO.Astrodynamics.Body.Spacecraft
             }
 
             // Determine reference body
-            CelestialItem cb = (_propagatedStates.Count >= 2)
+            CelestialItem cb = (_propagatedStates.Count > 0)
                 ? (CelestialItem)_propagatedStates.First.Observer
                 : InitialOrbitalParameters?.Observer as CelestialItem ?? Barycenters.SOLAR_SYSTEM_BARYCENTER;
 
             // Short-circuit: observer IS the CB, no aberration, have cached states, the epoch within them (#527: outside,
-            // the reference-body path throws for propagated states, and a TLE spacecraft sampled by TLEPropagator reads SGP4)
-            if (aberration == Aberration.None && _propagatedStates.Count >= 2
+            // or in a gap between added windows (#792), the reference-body path throws for propagated states, and a TLE
+            // spacecraft sampled by TLEPropagator reads SGP4)
+            if (aberration == Aberration.None && _propagatedStates.Count > 0
                                               && cb.NaifId == observer.NaifId && cb.NaifId != 0
-                                              && IsInside(_propagatedStates.Span, epoch, 0.0))
+                                              && _propagatedStates.InterpolateWithin(epoch, 0.0) is { } read)
             {
-                return _propagatedStates.Interpolate(epoch).ToFrame(frame);
+                return read.ToFrame(frame);
             }
 
             // Reference-body approach, a non-inertial frame at the epoch of its centre (#593)
@@ -834,13 +991,17 @@ namespace IO.Astrodynamics.Body.Spacecraft
         /// carried one (<see cref="CovariancePropagationMode.Covariance"/>), is not written. It is read from the
         /// <see cref="PropagationSolution"/> (<see cref="PropagationSolution.GetCovariance"/>) or from the output states.
         /// Before 11.0.0 the native writer wrote one segment of degree 15 across every impulse, of type 8 for equal steps.
-        /// An impulse at the end of the propagation opens a last arc of one state, the state after it (#575), which a segment
-        /// cannot hold: the SPK ends with the arc before it, and SPICE reads the state before the impulse at the last epoch,
-        /// where <c>GetEphemeris</c> reads the state after it.
+        /// An impulse at the end of a propagation opens an arc of one state, the state after it (#575), touching the arc before
+        /// it, which a segment cannot hold: the SPK leaves it out, whether it is the last arc or a window added after a gap by
+        /// <see cref="AddPropagatedStates"/> follows it (decision 90 of #668, decided by S. Guillet, 2026-11-23), so that its run
+        /// of arcs ends with the arc before it, and SPICE reads the state before the impulse at its epoch, where
+        /// <c>GetEphemeris</c> reads the state after it.
         /// </remarks>
         /// <exception cref="InvalidOperationException">The spacecraft is kernel-backed.</exception>
         /// <exception cref="ArgumentNullException"><paramref name="outputFile"/> is null.</exception>
-        /// <exception cref="ArgumentException">No state is stored, or an arc holds a single state.</exception>
+        /// <exception cref="ArgumentException">No state is stored, or an arc holds a single state: a state given alone to
+        /// <see cref="AddPropagatedStates"/> apart from every arc (decision 87 of #668), the arc of one state after an impulse
+        /// at the end of a propagation, which touches the arc before it, aside (decision 90).</exception>
         /// <exception cref="InvalidOperationException">SPICE failed to unload the file it replaces (the reopening of the other
         /// loaded SPKs, on a deleted one SPICE holds under a relative name): the message is SPICE's, and the file is left on
         /// disk as it was, nothing written (#706: before, the failure was ignored and the file replaced).</exception>
@@ -850,17 +1011,24 @@ namespace IO.Astrodynamics.Body.Spacecraft
             SpiceAPI.Instance.WriteEphemerisArcs(outputFile, NaifId, SpkArcs(_propagatedStates.Arcs));
         }
 
-        // The arcs an SPK holds: an impulse at the end of the propagation opens a last arc of one state at the epoch where
-        // the previous arc ends (#575), which no segment can hold (type 9 needs two epochs at least): it is not written, and
-        // SPICE reads the state before the impulse there
+        // The arcs an SPK holds: an impulse at the end of a propagation opens an arc of one state at the epoch where the arc
+        // before it ends (#575), which no segment can hold (type 9 needs two epochs at least): it is not written, whether it
+        // is the last arc or a window added after a gap follows it (decision 90 of #668), and SPICE reads the state before
+        // the impulse there; an arc of one state apart from the others is passed on, and refused (decision 87)
         private static IReadOnlyList<StateVector[]> SpkArcs(IReadOnlyList<StateVector[]> arcs)
         {
-            if (arcs.Count > 1 && arcs[^1].Length == 1 && arcs[^1][0].Epoch == arcs[^2][^1].Epoch)
+            var written = new List<StateVector[]>(arcs.Count);
+            for (int i = 0; i < arcs.Count; i++)
             {
-                return arcs.Take(arcs.Count - 1).ToArray();
+                if (i > 0 && arcs[i].Length == 1 && arcs[i][0].Epoch == arcs[i - 1][^1].Epoch)
+                {
+                    continue;
+                }
+
+                written.Add(arcs[i]);
             }
 
-            return arcs;
+            return written.Count == arcs.Count ? arcs : written;
         }
 
         /// <summary>
@@ -887,15 +1055,18 @@ namespace IO.Astrodynamics.Body.Spacecraft
 
         /// <summary>
         /// The window of the propagated states that <see cref="GetGeometricStateRelativeTo(in IO.Astrodynamics.TimeSystem.Time, IO.Astrodynamics.Body.CelestialItem)"/> interpolates, from the first
-        /// to the last; null when it reads no such states: a kernel-backed spacecraft, a TLE that no numerical propagation
-        /// stored states for (unpropagated, or sampled by <see cref="TLEPropagator"/>), or fewer than two states
-        /// (the initial orbital parameters are then propagated in two-body motion to the epoch).
+        /// to the last, the gaps between the windows given to <see cref="AddPropagatedStates"/> included (#792); null when it
+        /// reads no such states: a kernel-backed spacecraft, a TLE that no numerical propagation
+        /// stored states for (unpropagated, or sampled by <see cref="TLEPropagator"/>), or no stored state (the initial
+        /// orbital parameters are then propagated in two-body motion to the epoch). A store of one state is read through the
+        /// arcs, at its epoch only, its window of zero length (decision 89 of #668, decided by S. Guillet, 2026-11-23: before,
+        /// fewer than two states read the two-body orbit).
         /// </summary>
         internal Window? InterpolatedStatesWindow
         {
             get
             {
-                if (_isFromKernel || (InitialOrbitalParameters is TLE && !_holdsPropagatedStates) || _propagatedStates.Count < 2)
+                if (_isFromKernel || (InitialOrbitalParameters is TLE && !_holdsPropagatedStates) || _propagatedStates.Count == 0)
                 {
                     return null;
                 }
@@ -904,28 +1075,19 @@ namespace IO.Astrodynamics.Body.Spacecraft
             }
         }
 
-        // Whether an epoch lies within a span of stored states, widened by margin seconds on each side and by one tick, the
-        // resolution of a Time a corrected epoch is rounded to
-        private static bool IsInside(Window? span, in Time epoch, double margin)
+        // The exception of a read outside the propagated states the spacecraft interpolates, widened by margin seconds (#527),
+        // or in a gap between them (#792)
+        private InvalidOperationException OutsidePropagatedStates(in Time epoch, double margin)
         {
-            if (span is not { } window) return false;
-            long slack = (long)System.Math.Ceiling(margin * TimeSpan.TicksPerSecond) + (margin > 0.0 ? 1 : 0);
-            var t = epoch.ToTDB();
-            return (t - window.StartDate.ToTDB()).Ticks >= -slack && (window.EndDate.ToTDB() - t).Ticks >= -slack;
+            return new InvalidOperationException(
+                $"The epoch {epoch.ToTDB()} lies outside the propagated states of {Name}, {DescribeStoredWindows()}" +
+                (margin > 0.0 ? $" widened by the light time, {margin:R} s" : "") +
+                ": they would be extrapolated. Read the spacecraft within its propagation window, or propagate it over the epochs read.");
         }
 
-        // Throws for an epoch outside the propagated states the spacecraft interpolates, widened by margin seconds (#527)
-        private void CheckInsidePropagatedStates(in Time epoch, double margin)
-        {
-            var span = _propagatedStates.Span;
-            if (!IsInside(span, epoch, margin))
-            {
-                throw new InvalidOperationException(
-                    $"The epoch {epoch.ToTDB()} lies outside the propagated states of {Name}, [{span?.StartDate.ToTDB()}, {span?.EndDate.ToTDB()}]" +
-                    (margin > 0.0 ? $" widened by the light time, {margin:R} s" : "") +
-                    ": they would be extrapolated. Read the spacecraft within its propagation window, or propagate it over the epochs read.");
-            }
-        }
+        // The windows of the stored states, as [start, end] in TDB, separated by commas
+        private string DescribeStoredWindows() =>
+            string.Join(", ", _propagatedStates.Windows.Select(w => $"[{w.StartDate.ToTDB()}, {w.EndDate.ToTDB()}]"));
 
         // The initial state of a kernel-backed spacecraft relative to its centre of motion, the Earth by default (#620); the
         // identifier and the clock checked before the read (#676)
@@ -940,25 +1102,25 @@ namespace IO.Astrodynamics.Body.Spacecraft
 
         /// <summary>
         /// Throws when a window leaves the propagated states that <see cref="GetGeometricStateRelativeTo(in IO.Astrodynamics.TimeSystem.Time, IO.Astrodynamics.Body.CelestialItem)"/> interpolates,
-        /// which would be extrapolated (#527); nothing to check without such states (<see cref="InterpolatedStatesWindow"/>).
+        /// which would be extrapolated (#527), or meets a gap between the windows given to <see cref="AddPropagatedStates"/>
+        /// (decision 86 of #668, #792, decided by S. Guillet, 2026-11-23): the window must lie within one run of arcs that
+        /// touch; nothing to check without such states (<see cref="InterpolatedStatesWindow"/>).
         /// </summary>
         /// <param name="window">The window read.</param>
         /// <param name="description">What the window is, for the message.</param>
         /// <param name="paramName">The parameter of the window.</param>
-        /// <exception cref="ArgumentException">The window leaves the propagated states.</exception>
+        /// <exception cref="ArgumentException">The window leaves the propagated states or meets a gap between them.</exception>
         internal void CheckInterpolatedStatesCover(in Window window, string description, string paramName)
         {
-            if (InterpolatedStatesWindow is not { } states)
+            if (InterpolatedStatesWindow is null)
             {
                 return;
             }
 
-            var start = window.StartDate.ToTDB();
-            var end = window.EndDate.ToTDB();
-            if ((start - states.StartDate.ToTDB()).Ticks < 0 || (states.EndDate.ToTDB() - end).Ticks < 0)
+            if (!_propagatedStates.Covers(window))
             {
                 throw new ArgumentException(
-                    $"The {description} [{start}, {end}] leaves the propagated states of {Name}, [{states.StartDate.ToTDB()}, {states.EndDate.ToTDB()}]: they would be extrapolated.",
+                    $"The {description} [{window.StartDate.ToTDB()}, {window.EndDate.ToTDB()}] leaves the propagated states of {Name}, {DescribeStoredWindows()}: they would be extrapolated.",
                     paramName);
             }
         }
@@ -987,11 +1149,23 @@ namespace IO.Astrodynamics.Body.Spacecraft
         internal PropagationForceModel LastForceModel { get; set; }
 
         /// <summary>
-        /// Adds states to the stored states, each to the arc that holds its epoch (the later one at an impulse of the last
-        /// propagation), replacing a stored state of that arc at the same epoch; without stored states they make one arc.
-        /// They are kept in ICRF, the frame of the readers (#535). A propagation by <c>Propagate</c>
-        /// or <c>Scenario.Simulate</c> replaces every stored state, those added before it included (11.0.0, #540: they
-        /// were merged with the propagated ones before); <see cref="TLEPropagator"/> adds its states through this method.
+        /// Adds the states of one window to the stored states: one window per call (decisions 42, 83 to 87 and 89 to 91 of
+        /// #668, #792, decided by S. Guillet, 2026-11-23). When the hull of their epochs, closed, meets no stored arc (touching counts as
+        /// meeting), they make a new arc, inserted in time order; otherwise the arcs it meets are merged where a gap separates
+        /// them, so a call over the gap between two windows joins them (arcs that touch at an impulse stay apart), and each
+        /// state joins the arc of its epoch among them (the later one at an impulse), replacing a stored state of that arc at
+        /// the same epoch. A gap inside the states of one call is not detected: give each window its own call. A read in a
+        /// gap between two windows throws as a read outside the stored states (<see cref="GetGeometricStateRelativeTo(in IO.Astrodynamics.TimeSystem.Time, IO.Astrodynamics.Body.CelestialItem)"/>),
+        /// the light time of a corrected read allowed outside each arc, and a window argument that meets a gap is refused;
+        /// an arc of one state reads at its exact epoch only, and <see cref="WriteEphemeris"/> refuses it, a spacecraft that
+        /// stores one state only included (the two-body orbit of the initial orbital parameters reads only a spacecraft that
+        /// stores none). An epoch inside an arc is read by that arc; one in a gap within the light time of two arcs by the
+        /// nearer, the later one on a tie. Before 11.0.0
+        /// every state joined the arc of its epoch, so two windows made one arc read across the gap between them.
+        /// They are kept in ICRF, the frame of the readers (#535). Every propagation replaces every stored state, those
+        /// added before it included, on every path (11.0.0, #540: they were merged with the propagated ones before), and so
+        /// does a <see cref="TLEPropagator"/> run, which re-arms the spacecraft and stores its samples alone (decision 38 of
+        /// #668, decided by S. Guillet, 2026-11-23: before 11.0.0 it added them to the stored states).
         /// </summary>
         /// <param name="stateVectors">The states, relative to one central body.</param>
         /// <exception cref="InvalidOperationException">The spacecraft is kernel-backed.</exception>
@@ -1152,36 +1326,38 @@ namespace IO.Astrodynamics.Body.Spacecraft
 
         /// <summary>
         /// Re-arms the spacecraft for a propagation (#583): the solution, the force model, the stored states and the attitude
-        /// record of the previous propagation are dropped, <see cref="ExecutedManeuvers"/> cleared, the tanks refuelled, and
-        /// the chain from <see cref="InitialManeuver"/> reset (its windows and the gates of the last propagation) and put back
+        /// record are dropped, whatever filled them and whatever <see cref="IsPropagated"/> says (decision 38 of #668,
+        /// decided by S. Guillet, 2026-11-23: before 11.0.0 they were dropped only after a numerical propagation, so a first
+        /// run kept the attitudes added by hand), <see cref="ExecutedManeuvers"/> cleared, the tanks refuelled, and
+        /// the chain from the first maneuver of <see cref="Maneuvers"/> reset (its windows, the gates and every other value
+        /// of the last propagation, decision 52 of #668) and put back
         /// in standby. <see cref="PropagatorBase.Propagate"/> calls it once its checks pass, on every path: before 11.0.0
         /// only <c>Spacecraft.Propagate</c> did, so a second run through the builder of 10.x or a
         /// <see cref="CentralBodyPropagator"/> built directly fired no burn and started with the fuel left by the first.
+        /// <see cref="TLEPropagator"/> calls it too, once every sample is computed, before it stores them.
         /// </summary>
         internal void ResetPropagation()
         {
             LastPropagation = null;
             LastForceModel = null;
-            if (IsPropagated)
-            {
-                DropStoredStatesAndAttitudes();
-            }
+            DropStoredStatesAndAttitudes();
 
-            _executedManeuvers.Clear();
+            // A new list for the run, empty until it executes a maneuver (decision 58 of #668)
+            Volatile.Write(ref _executedManeuvers, NoManeuver);
             foreach (var fuelTank in FuelTanks)
             {
                 fuelTank.Refuel();
             }
 
-            Maneuver.Maneuver.ResetChain(InitialManeuver);
-            StandbyManeuver = InitialManeuver;
+            Maneuver.Maneuver.ResetChain(PlanHead);
+            StandbyManeuver = PlanHead;
         }
 
         /// <summary>
         /// Drops the stored states and the attitude record, whatever filled them (a propagation, <see cref="AddPropagatedStates"/>,
-        /// <see cref="SpacecraftFrame.AddStateOrientationToICRF"/>), and marks the spacecraft not propagated: the re-arm of a
-        /// propagated spacecraft, and a run stopped after the re-arm (C2 of lot L4 of #668), so that a TLE spacecraft reads
-        /// SGP4 again and any other its initial orbit.
+        /// <see cref="SpacecraftFrame.AddStateOrientationToICRF"/>), and marks the spacecraft not propagated: the re-arm of
+        /// every run (decision 38 of #668), and a run stopped after the re-arm (C2 of lot L4 of #668), so that a TLE
+        /// spacecraft reads SGP4 again and any other its initial orbit.
         /// </summary>
         internal void DropStoredStatesAndAttitudes()
         {

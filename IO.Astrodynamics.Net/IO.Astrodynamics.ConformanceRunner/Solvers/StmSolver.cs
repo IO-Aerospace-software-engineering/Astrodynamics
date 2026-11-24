@@ -54,7 +54,9 @@ public class StmSolver : ICategorySolver
             }
         }
 
-        var (finalPos, finalVel) = solution.InterpolateAt(end);
+        // The public reader of a solution (decision 54 of #668: InterpolateAt is internal; the same state, bit for bit)
+        var final = solution.GetStateVector(end);
+        var (finalPos, finalVel) = (final.Position, final.Velocity);
         return new Dictionary<string, object>
         {
             ["final_stm"] = values,

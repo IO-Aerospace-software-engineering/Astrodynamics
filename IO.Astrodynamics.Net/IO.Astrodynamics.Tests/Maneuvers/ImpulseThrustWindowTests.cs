@@ -158,8 +158,7 @@ public class ImpulseThrustWindowTests
         const double deltaV = 2039.0;
         var impulse = new FixedImpulse(body, Start, burn, new Vector3(0.0, deltaV, 0.0), engine);
         var nadir = new NadirAttitude(body, Start, TimeSpan.FromSeconds(30.0), engine);
-        impulse.SetNextManeuver(nadir);
-        spacecraft.SetStandbyManeuver(impulse);
+        spacecraft.SetManeuvers(impulse, nadir);
         double massBefore = spacecraft.GetTotalMass();
         var window = new Window(Start, Start.AddSeconds(1800.0));
 

@@ -6,10 +6,11 @@ Impulse maneuvers model instantaneous delta-V burns triggered by g-function zero
 
 | Member | Description |
 |--------|-------------|
-| `ComputeEventValue(StateVector)` | Scalar g-function evaluated at the current state |
+| `ComputeEventValue(StateVector)` | Scalar g-function evaluated at the current state; pure on every library maneuver (decision 50 of #668: before 11.0.0 a call locked the node of a `PlaneAlignmentManeuver` and wrote the intersection of an `ApsidalAlignmentManeuver`, #802), the node locked by the detector of a run |
+| `ComputeDeltaV(StateVector)` | The delta-V of the impulse at the state, in the frame of the state, without executing it: the state is taken about the centre of the maneuver, as the execution takes it (about its own observer for a maneuver without one), so at one state, whatever its observer (an SSB-mode solution's states are about the Sun), it is the delta-V of the execution; pure, it touches no tank, chain, window, gate or node lock, so it is the same before and after a run; at the state of its event in a run, the delta-V the run applies (decision 50 of #668, decided by S. Guillet, 2026-11-23; before, the preview was the execution, internal `TryExecute` since then, which burnt the fuel and moved the chain of a finished run, #802). A `PlaneAlignmentManeuver` takes the node of the rule of its g-function at the state; the fuel of a delta-V is `Tsiolkovski.DeltaM` |
 | `EventCrossingDirection` | `CrossingDirection` that triggers the burn |
 | `CheckPreconditions(StateVector)` | Optional additional constraints (returns `true` to allow firing). When it returns `false`, the occurrence is skipped and the maneuver waits for its next crossing; if none satisfies it within the window, the maneuver is not executed (`ThrustWindow` stays null) |
-| `DeltaV` | Burn delta-V vector, in the inertial frame of the propagated state |
+| `DeltaV` | Burn delta-V vector, in the inertial frame of the propagated state: the last run's value (below) |
 | `ThrustWindow` | Window of the equivalent finite burn (see below) |
 | `ManeuverWindow` | Thrust window extended by the maneuver hold duration (zero or more: a negative hold throws `ArgumentOutOfRangeException`, `maneuverHoldDuration`, since 11.0.0, R11 of #668) |
 | `ExecutionError` | Optional execution error by the model of Gates (`ManeuverExecutionError`), set with an object initializer; added to the velocity covariance at the burn when the propagation propagates the covariance, ignored otherwise. See [Covariance Propagation](covariance-propagation.md#execution-error-of-an-impulsive-maneuver) |
@@ -27,13 +28,17 @@ commanded ΔV (open loop).
 `PlaneAlignmentManeuver`, `ApsidalAlignmentManeuver` and the target-orbit `PhasingManeuver` compare their target with
 the integrated state, so the target is given in the frame the spacecraft is propagated in: the frame of its initial
 orbit, or ICRF for a spacecraft whose initial orbit is a TLE or an osculating TEME state, which is propagated in ICRF
-([Propagation Frame](propagators.md#propagation-frame)). The propagation checks every target of the chain, leading and
-chained, when it is built, on every spacecraft and every path (`Spacecraft.Propagate`, `Scenario.Simulate`,
-`BatchPropagator`, `MonteCarloPropagator`, the constructors and the avoidance propagations of the conjunction analysis): a target in another frame throws `ArgumentException` (parameter
+([Propagation Frame](propagators.md#propagation-frame)). `Spacecraft.SetManeuvers` checks every target of the plan
+against that frame, `ArgumentException` (parameter `maneuvers`) for one in another frame (decision 46 of #668). The
+propagation checks every target of the chain, leading and chained, when it is built, on every spacecraft and every path (`Spacecraft.Propagate`, `Scenario.Simulate`,
+`BatchPropagator`, the constructors and the avoidance propagations of the conjunction analysis; `MonteCarloPropagator`
+refuses a template with a plan, decision 41 of #668): a target in another frame throws `ArgumentException` (parameter
 `spacecraft`) naming the maneuver, the two frames and the fix, `targetOrbit.ToFrame(Frame.ICRF)` for ICRF, before it
-changes anything, and again when the propagator propagates (`PropagatorBase.Propagate`, which reads the chain of the
-spacecraft again), against the frame it integrates in: a maneuver attached after the propagator was built and whose
-target is in another frame throws `InvalidOperationException`, the state of the spacecraft (#685; before 11.0.0 only a
+changes anything (the case of a spacecraft whose initial orbit's frame changed after `SetManeuvers`: the constructor
+keeps its `ArgumentException`, the call receiving the faulty object, decision 94 of #668, decided by S. Guillet,
+2026-11-23), and again when the propagator propagates (`PropagatorBase.Propagate`, which reads the chain of the
+spacecraft again), against the frame it integrates in, the only check that throws `InvalidOperationException`, the
+state of the spacecraft (#685; before 11.0.0 only a
 TLE or TEME spacecraft was checked there, #675, and on another spacecraft the components of the target were read as if
 they were in the integration frame: a plane change of 2° from an ECLIPJ2000 target on an ICRF spacecraft burned
 2807 m/s for 263 m/s). The constructor checks the target too, when the
@@ -72,9 +77,9 @@ included: an attitude chained after an impulse activates there (#539).
 
 In a propagation about the Earth both windows, and the holds of the attitudes, count TT seconds from the time argument
 of the event (#547), as the integration does (#501); about any other body, SSB mode included, TDB seconds, bit for bit
-as before 11.0.0. `ImpulseManeuver.TryExecute` called outside a propagation sets them in TDB seconds from the epoch of
-its state. It returns the state after the impulse as a new state, its velocity plus ΔV, and leaves the state it is
-given unchanged (before 11.0.0 it added ΔV to that state's velocity, #588). The attitude of the impulse, its front along ΔV, is in force over `[t - f dt, end of ManeuverWindow]`,
+as before 11.0.0. The execution of an impulse, internal since 11.0.0 (decision 48 of #668), returns the state after the
+impulse as a new state, its velocity plus ΔV, and leaves the state it is given unchanged (before 11.0.0 it added ΔV to
+that state's velocity, #588). The attitude of the impulse, its front along ΔV, is in force over `[t - f dt, end of ManeuverWindow]`,
 its start no earlier than the start of the propagation or the previous activation of the chain
 ([Attitudes](attitudes.md#the-attitude-timeline)).
 
@@ -112,17 +117,17 @@ its g-function in its direction at or after the minimum epoch, searched from the
   an impulse, or an attitude (#539). The last leading attitude gates the first impulse by the end of its hold, and an
   attitude chained after an impulse delays the next impulse by its hold from the end of the impulse's window. About the
   Earth the end of an impulse's window is counted in TT seconds and replaces, as the gate of the next maneuver, the TDB
-  end `TryExecute` raised it to (#547).
+  end the execution raised it to (#547).
 - That gate belongs to the propagation that set it (#573). `MinimumEpoch` reports the later of the minimum epoch the
-  maneuver was given (its constructor, or `Spacecraft.SetStandbyManeuver(maneuver, minimumEpoch)`, which lasts) and that
-  gate, which holds after the propagation with the windows of the maneuver; the next `Spacecraft.Propagate` (and
+  maneuver was given (its constructor's, which lasts; before 11.0.0 `Spacecraft.SetStandbyManeuver(maneuver, minimumEpoch)`
+  could raise it: a later minimum epoch is now a new maneuver in a new plan, decision 47 of #668) and that gate, which holds after the propagation with the windows of the maneuver; the next `Spacecraft.Propagate` (and
   `Scenario.Simulate` and `BatchPropagator` through it) clears it before it runs. A spacecraft propagated again,
   from another state or over another window, so fires its maneuvers as a spacecraft never propagated would.
 - With Velocity-Verlet, the decision follows its own trajectory, whose crossings lag the Keplerian epoch: with 10 s
   steps, up to 0.096 s at a node, 0.18 s at an apsis of the orbit after a Velocity-Verlet burn and 1.5 s at the
   intersection of an apsidal alignment (worsts 0.0953 s, 0.176 s and 1.44 s on Linux x64, Windows and macOS arm64). A
   minimum epoch within that lag of a crossing is decided on that trajectory.
-- The public `ManeuverEventDetector.Evaluate` still returns +1 before the minimum epoch. A custom `Integrator` that compares
+- The maneuver detector's `Evaluate` (internal since decision 88 of #668; a custom `IIntegrator` given to the propagator reads it as an `IEventDetector`, within the run only: once the run ends it throws `InvalidOperationException` for the calls that start after the end, decision 95 of #668, a call in progress then completing, decision 98 of #668, and so it does once the detector has executed its impulse, decision 97 of #668; see [Event Detection](event-detection.md#the-maneuver-detector)) still returns +1 before the minimum epoch. A custom integrator that compares
   that value with the first g-value after the minimum epoch keeps the behaviour before 11.0.0: a false crossing at the
   minimum epoch for a positive-to-negative maneuver whose g is already negative there, and a missed negative-to-positive
   crossing in the step that holds it.
@@ -152,12 +157,15 @@ it is back at the perigee together with its target. The target is Δθ ahead of 
 difference of their true longitudes (Ω + ω + ν) at its epoch, beyond π a target behind. With t(Δθ) the time from the
 perigee to Δθ along the current orbit by Kepler's equation (negative for a target behind), the phasing orbit has the
 period T₂ = T₁ − t(Δθ) / N and the semi-major axis a₂ = (√μ T₂ / 2π)^(2/3), and ΔV = h₂ / r_p − h_target / r_p at the
-perigee. The hold is set to 0.9 N T₂ at the burn. Two constructors set the target:
+perigee. The hold is set to 0.9 N T₂ by the run that executes the burn, the last run's value: 0 before the burn and
+after the re-arm of the next run; the constructors take no hold (decision 51 of #668, decided by S. Guillet, 2026-11-23:
+before 11.0.0 they took one that the burn replaced, and the computed hold was left for good, #784). Two constructors set
+the target:
 
 | Constructor | Target | λ_target at the burn | h_target |
 |-------------|--------|----------------------|----------|
-| `PhasingManeuver(minimumEpoch, hold, targetOrbit, revolutionNumber, engine)` | the object on `targetOrbit`, about the maneuver center (its observer) in the frame of the spacecraft | `targetOrbit.TrueLongitude(burn epoch)` | the target orbit's |
-| `PhasingManeuver(maneuverCenter, minimumEpoch, hold, trueLongitude, revolutionNumber, engine)` | a virtual target on the spacecraft's current orbit (#588) | `trueLongitude`, in radians, about `maneuverCenter` in the frame of the spacecraft's state | the current orbit's |
+| `PhasingManeuver(minimumEpoch, targetOrbit, revolutionNumber, engine)` | the object on `targetOrbit`, about the maneuver center (its observer) in the frame of the spacecraft | `targetOrbit.TrueLongitude(burn epoch)` | the target orbit's |
+| `PhasingManeuver(maneuverCenter, minimumEpoch, trueLongitude, revolutionNumber, engine)` | a virtual target on the spacecraft's current orbit (#588) | `trueLongitude`, in radians, about `maneuverCenter` in the frame of the spacecraft's state | the current orbit's |
 
 With a true longitude, Δθ = λ − λ_sc(burn), and since the burn is at the perigee λ_sc(burn) is the longitude of the
 perigee Ω + ω: λ − (Ω + ω) is the phase of the target ahead of the spacecraft along its orbit, taken modulo 2π. For
@@ -175,19 +183,61 @@ orbit carries its own perigee radius, a(1 − e); before 11.0.0 it carried the c
 
 ### PlaneAlignmentManeuver
 
-Changes orbital plane to match a target. Uses an adaptive crossing direction on the g-function r . h_target to fire at the nearest orbital node (ascending or descending).
+Changes orbital plane to match a target. Uses an adaptive crossing direction on the g-function r . h_target to fire at the nearest orbital node (ascending or descending). The detector of a run locks the node at its first evaluation (`IsAscendingNode`, `EventCrossingDirection`); the re-arm of the next run clears both, the direction back to `Any` (#784: before 11.0.0 the direction of the last run's node was left). `RelativeInclination`, and the `IntersectsP`/`IntersectsQ` of `ApsidalAlignmentManeuver`, side results of the execution that nothing read, are internal since 11.0.0 (decision 51 of #668).
 
 ### ApsidalAlignmentManeuver
 
 Rotates the line of apsides. Fires at the nearest orbit intersection point using the g-function r . (h x p) with negative-to-positive crossing.
 
-## Maneuver Chain
+## Maneuver Plan
 
-Maneuvers are linked in a chain on the spacecraft:
+A spacecraft runs its plan, set by `Spacecraft.SetManeuvers(params Maneuver[])` in order and read back by
+`Spacecraft.Maneuvers` (decision 45 of #668, decided by S. Guillet, 2026-11-23): it links each maneuver to the next
+(`NextManeuver`, whose setter is internal) and the last to none, and is the one way to link a plan; no maneuver clears
+it. Every propagation runs the plan from its first maneuver, whatever an earlier one executed. Before 11.0.0
+`Spacecraft.SetStandbyManeuver` set the head of a chain that `Maneuver.SetNextManeuver` linked; both are removed, with
+`Spacecraft.InitialManeuver`, and `Spacecraft.StandbyManeuver`, the run's own state, is internal.
+
+`SetManeuvers` claims each maneuver for its spacecraft (decision 46): a maneuver is in one plan at a time, and it throws
+`ArgumentException` (`maneuvers`), changing nothing, for a maneuver in another spacecraft's plan, a maneuver listed
+twice (the chain would be a cycle), an engine that is not one of the spacecraft's `Engines` (added with `AddEngine`,
+compared by reference: an engine built on the spacecraft's tank and never added, or a twin of an added engine, is
+refused; decision 92, decided by S. Guillet, 2026-11-23), an engine whose fuel tank is not one of the spacecraft's, or
+a target orbit in another frame than the one the spacecraft is propagated in (below). The claim is released, and the link cleared, when the
+owner sets another plan without the maneuver. So the tanks and engines are added (`AddFuelTank`, `AddEngine`) and the
+initial orbit set before the plan. What changes after it is checked again: a propagator built after the initial
+orbit's frame changed throws `ArgumentException` (`spacecraft`), the case of `Spacecraft.Propagate`, a scenario and a
+batch, which build theirs (decision 94); a propagator built before the change throws `InvalidOperationException` at
+`Propagate`, through the initial-orbit guard (#783) or the re-check of the chain.
+
+The plan of a spacecraft is not changed during a run on it (decision 96 of #668, decided by S. Guillet, 2026-11-24): a
+run reads the plan as it goes, its head at the re-arm and each next maneuver when the previous one ends, so a
+`SetManeuvers` from another thread, or from code the run calls (a force, a custom integrator), mixes the two plans (in
+the second review of L5a, the plan [m1, m2] set again during a run of [m1, m2] left `ExecutedManeuvers` reading m1,
+m1). Set the plan before the run, or once it has returned. Nothing checks the rule yet: the run guard of
+[#793](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/793), after lot L5, will make
+`SetManeuvers` throw `InvalidOperationException` while a run holds the spacecraft
+([Thread Safety](../guides/thread-safety.md#one-run-at-a-time-per-spacecraft)).
+
+The `Maneuver` hierarchy is closed (decision 48): its constructor is `private protected`, so a user maneuver derives
+from `ImpulseManeuver` (its delta-V in the protected `Execute`, its g-function, crossing direction and preconditions) or
+from `Attitude` (`ComputeOrientation`); the concrete types stay unsealed. `TryExecute`, the execution a run calls, is
+internal, and so is `Engine.Ignite` (decision 49): called as previews they changed a finished run (#802). The previews are
+`ComputeDeltaV` and `Attitude.ComputeStateOrientation`.
+
+**The last run's values** (decision 52): a public member a run writes on a maneuver holds the value of the last run that
+executed it, and the re-arm of the next run clears it: `DeltaV`, `FuelBurned`, `ThrustWindow`, `ManeuverWindow`,
+`MinimumEpoch` (back to the minimum epoch the maneuver was given), the node of a `PlaneAlignmentManeuver`
+(`IsAscendingNode`, `EventCrossingDirection`) and the hold of a `PhasingManeuver`. `Attitude.StateOrientation` is
+removed: the attitude of a run is in the attitude record. A stopped run leaves the values it wrote up to the stop.
+
+### The chain of a run
+
+The maneuvers of the plan run as a chain:
 
 1. **Leading attitudes** are laid on the attitude timeline: each activates at the later of its `MinimumEpoch` and the end
    of the previous one's hold, from the start of the propagation; the last one's hold gates the first impulse.
-2. The first `ImpulseManeuver` is wrapped in a `ManeuverEventDetector`.
+2. The first `ImpulseManeuver` is wrapped in the internal maneuver detector (`ManeuverEventDetector`, decision 88 of #668).
 3. When the event fires, the detector executes the burn, and only the burn (`HandleEvent` returns no next detector).
    The propagation then lays the attitudes chained after it on the timeline, each from the end of the previous window,
    and builds the detector of the next impulse.
@@ -195,14 +245,17 @@ Maneuvers are linked in a chain on the spacecraft:
    of the propagation is not executed, and the chain stops there.
 
 Every executed maneuver, attitudes included, is in `Spacecraft.ExecutedManeuvers`, once, in the order of the chain
-(#570).
+(#570): a new read-only list at each run, replaced by a new list at each execution (decision 58 of #668), so a list held from an
+earlier run keeps its members; their values (`DeltaV`, `FuelBurned`, the windows) are those of the last run. The record
+of each, with the values of its run, is on the solution, `PropagationSolution.Maneuvers`, one sealed `ExecutedManeuver`
+per executed maneuver (decision 57, [Propagators](propagators.md#the-executed-maneuvers)), and a scenario's
+`SpacecraftSummary` is built from them (decision 59).
 
 A chain is a list: a maneuver appears in it once, and a repeated burn is a new maneuver object (#585). Each maneuver
 keeps one record (its windows, `DeltaV`, `FuelBurned`), so a maneuver met twice would lose the first. A cycle is
-rejected where it is made: `SetNextManeuver` throws `ArgumentException` when the chain from the next maneuver comes back
-to the maneuver itself or already holds a cycle, and leaves the chain as it was. A cycle built past it, by a subclass
-that sets the protected `NextManeuver`, is rejected by `Spacecraft.SetStandbyManeuver` (`ArgumentException`), by the
-construction of the propagator (`Spacecraft.Propagate` and so the scenario, the batch and the Monte Carlo propagators, a
+rejected where it is made: `SetManeuvers` throws `ArgumentException` for a maneuver listed twice and leaves the plan as
+it was (before 11.0.0 `SetNextManeuver` threw for a link that closed a cycle). The walks of the chain keep their guard:
+a chain that is a cycle is rejected by the construction of the propagator (`Spacecraft.Propagate` and so the scenario and the batch, a
 `CentralBodyPropagator` built directly: `InvalidOperationException`, before the states of an earlier
 propagation are cleared) and by `Propagate` (`InvalidOperationException`). Before 11.0.0 a cycle ended the process with
 a stack overflow at the first `Spacecraft.Propagate`, or never returned through the builder of 10.x.
@@ -226,7 +279,7 @@ var maneuver = new ApogeeHeightManeuver(
     42164000.0,
     engine);
 
-spacecraft.SetStandbyManeuver(maneuver);
+spacecraft.SetManeuvers(maneuver);
 var solution = spacecraft.Propagate(window, new PropagationOptions { ThirdBodies = perturbingBodies });
 ```
 

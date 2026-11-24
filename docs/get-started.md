@@ -160,7 +160,7 @@ state, which is the form every other API expects. See [TLE & OMM](tutorials/tle-
         SolarRadiationPressure = true
     });
 
-    var (position, velocity) = solution.InterpolateAt(window.EndDate);
+    var final = solution.GetStateVector(window.EndDate);
     ```
 
     The orbit is on `PlanetsAndMoons.EARTH_BODY`, which has no atmospheric model: its drag is NRLMSISE-00 at nominal
@@ -184,7 +184,7 @@ state, which is the form every other API expects. See [TLE & OMM](tutorials/tle-
         ThirdBodies = new CelestialItem[] { Stars.SUN_BODY, PlanetsAndMoons.MOON_BODY }
     });
 
-    var (position, velocity) = solution.InterpolateAt(window.EndDate);
+    var final = solution.GetStateVector(window.EndDate);
     ```
 
     Velocity-Verlet's error grows as the square of its step: a LEO day ends 974 km from Kepler at 60 s, 271 m at 1 s,

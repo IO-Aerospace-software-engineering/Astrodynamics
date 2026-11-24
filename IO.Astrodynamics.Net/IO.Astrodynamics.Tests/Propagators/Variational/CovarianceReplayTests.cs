@@ -59,7 +59,7 @@ public class CovarianceReplayTests : IClassFixture<ReferenceCases>
         Assert.NotNull(withCovariance.Segments[1].Variational.EntryManeuver?.ExecutionCovariance);
         AssertSameVariationalData(withCovariance, replayed);
         AssertSameEvaluations(withCovariance, replayed, _cases.Eclipsing.Window, TimeSpan.FromSeconds(997.3));
-        Assert.Null(withoutCovariance.CovariancePropagation);
+        Assert.Equal(CovariancePropagationOptions.None, withoutCovariance.CovariancePropagation); // None, not null (decision 56 of #668)
         Assert.Throws<InvalidOperationException>(() => withoutCovariance.GetCovariance(_cases.Eclipsing.Window.EndDate));
     }
 

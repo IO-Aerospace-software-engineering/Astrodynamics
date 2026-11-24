@@ -131,12 +131,33 @@ public class ManeuverEngineBindingTests
         }
     }
 
+    /// <summary>
+    /// Since decision 46 of #668 <see cref="Spacecraft.SetManeuvers"/> refuses a maneuver on an engine whose tank is not the
+    /// spacecraft's (<see cref="ArgumentException"/>, nothing changed): checked here, then the chain the run meets is built
+    /// past the claim, <paramref name="foreign"/> linked after <paramref name="own"/> through the internal setter of
+    /// <see cref="Maneuver.Maneuver.NextManeuver"/>, which a test reaches, so that the run's own re-check
+    /// (<see cref="InvalidOperationException"/>) is what the activation paths throw.
+    /// </summary>
+    private static void PlanPastTheClaim(Spacecraft spacecraft, Maneuver.Maneuver own, Maneuver.Maneuver foreign)
+    {
+        var before = spacecraft.Maneuvers.ToArray();
+        var refused = Assert.Throws<ArgumentException>(() => spacecraft.SetManeuvers(own, foreign));
+        Assert.Equal("maneuvers", refused.ParamName);
+        Assert.Contains(foreign.Engine.Name, refused.Message);
+        Assert.Equal(before, spacecraft.Maneuvers);
+        Assert.Null(foreign.PlanOwner);
+        Assert.Null(own.PlanOwner);
+
+        spacecraft.SetManeuvers(own);
+        own.NextManeuver = foreign;
+    }
+
     public static IEnumerable<object[]> Cases()
     {
         foreach (var (path, integrators) in Paths)
         foreach (var integrator in integrators)
         foreach (var chain in new[] { "Impulse", "Attitude", "ImpulseSecond" })
-        foreach (var engine in new[] { "UnattachedTank", "OtherSpacecraft" })
+        foreach (var engine in new[] { "UnattachedTank", "OtherSpacecraft", "NotAdded", "Twin" })
         {
             yield return [path, integrator, chain, engine];
         }
@@ -190,7 +211,7 @@ public class ManeuverEngineBindingTests
         }
 
         var spacecraft = NewSpacecraft(earth, out var ownEngine, orbit: orbit);
-        spacecraft.SetStandbyManeuver(new ApogeeHeightManeuver(earth, epoch, TimeSpan.Zero, 7300e3, ownEngine));
+        spacecraft.SetManeuvers(new ApogeeHeightManeuver(earth, epoch, TimeSpan.Zero, 7300e3, ownEngine));
         spacecraft.Propagate(window, new PropagationOptions { Integrator = integrator(), OutputStep = Output, ThirdBodies = [earth], CovariancePropagation = CovariancePropagationOptions.None });
         Assert.Single(spacecraft.ExecutedManeuvers);
 
@@ -198,7 +219,8 @@ public class ManeuverEngineBindingTests
         var foreignEngine = engineKind == "OtherSpacecraft"
             ? otherEngine
             : new Engine("LOOSE", "MODEL", "SN-LOOSE", Isp, 5.0, new FuelTank("LOOSE", "MODEL", "SN-LOOSE", Fuel, Fuel));
-        spacecraft.SetStandbyManeuver(new ApogeeHeightManeuver(earth, epoch, TimeSpan.Zero, 7300e3, foreignEngine));
+        PlanPastTheClaim(spacecraft, new ProgradeAttitude(earth, epoch, TimeSpan.Zero, ownEngine),
+            new ApogeeHeightManeuver(earth, epoch, TimeSpan.Zero, 7300e3, foreignEngine));
 
         var ownTank = spacecraft.FuelTanks.Single();
         var states = spacecraft.InterpolatedStatesWindow;
@@ -240,26 +262,18 @@ public class ManeuverEngineBindingTests
         var integrator = IntegratorOf(integratorName);
         var earth = new CelestialBody(PlanetsAndMoons.EARTH);
         var spacecraft = NewSpacecraft(earth, out var ownEngine);
-        spacecraft.SetStandbyManeuver(new ApogeeHeightManeuver(earth, Epoch, TimeSpan.Zero, 7300e3, ownEngine));
+        spacecraft.SetManeuvers(new ApogeeHeightManeuver(earth, Epoch, TimeSpan.Zero, 7300e3, ownEngine));
         spacecraft.Propagate(Window, new PropagationOptions { Integrator = integrator(), OutputStep = Output, ThirdBodies = [earth], CovariancePropagation = CovariancePropagationOptions.None });
         Assert.Single(spacecraft.ExecutedManeuvers);
 
         var other = NewSpacecraft(earth, out var otherEngine);
-        var foreignEngine = engineKind == "OtherSpacecraft"
-            ? otherEngine
-            : new Engine("LOOSE", "MODEL", "SN-LOOSE", Isp, 5.0, new FuelTank("LOOSE", "MODEL", "SN-LOOSE", Fuel, Fuel));
-        Maneuver.Maneuver head = chain switch
-        {
-            "Impulse" => new ApogeeHeightManeuver(earth, Epoch, TimeSpan.Zero, 7300e3, foreignEngine),
-            "Attitude" => new ProgradeAttitude(earth, Epoch, TimeSpan.FromMinutes(10.0), foreignEngine),
-            _ => new ProgradeAttitude(earth, Epoch, TimeSpan.FromMinutes(10.0), ownEngine)
-        };
-        if (chain == "ImpulseSecond")
-        {
-            head.SetNextManeuver(new ApogeeHeightManeuver(earth, Epoch, TimeSpan.Zero, 7300e3, foreignEngine));
-        }
-
-        spacecraft.SetStandbyManeuver(head);
+        var foreignEngine = ForeignEngine(engineKind, spacecraft, ownEngine, otherEngine);
+        // The foreign maneuver after an own attitude, held 0 s ("Impulse", "Attitude") or 10 min ("ImpulseSecond")
+        Maneuver.Maneuver foreign = chain == "Attitude"
+            ? new ProgradeAttitude(earth, Epoch, TimeSpan.FromMinutes(10.0), foreignEngine)
+            : new ApogeeHeightManeuver(earth, Epoch, TimeSpan.Zero, 7300e3, foreignEngine);
+        var own = new ProgradeAttitude(earth, Epoch, chain == "ImpulseSecond" ? TimeSpan.FromMinutes(10.0) : TimeSpan.Zero, ownEngine);
+        PlanPastTheClaim(spacecraft, own, foreign);
 
         var ownTank = spacecraft.FuelTanks.Single();
         var otherTank = other.FuelTanks.Single();
@@ -290,14 +304,87 @@ public class ManeuverEngineBindingTests
         Assert.Equal(foreignQuantity, foreignEngine.FuelTank.Quantity);
         Assert.Equal(Fuel, otherTank.Quantity);
         Assert.Empty(other.ExecutedManeuvers);
-        if (engineKind == "OtherSpacecraft")
+        switch (engineKind)
         {
-            Assert.Same(other, foreignEngine.FuelTank.Spacecraft);
+            case "OtherSpacecraft":
+                Assert.Same(other, foreignEngine.FuelTank.Spacecraft);
+                break;
+            case "UnattachedTank":
+                Assert.Null(foreignEngine.FuelTank.Spacecraft);
+                break;
+            default:
+                // On the spacecraft's own tank, not in its engines
+                Assert.Same(ownTank, foreignEngine.FuelTank);
+                Assert.DoesNotContain(spacecraft.Engines, x => ReferenceEquals(x, foreignEngine));
+                break;
         }
-        else
+    }
+
+    // The engine of the foreign maneuver: another spacecraft's, one on a tank of no spacecraft, one built on the
+    // spacecraft's own tank and never added with AddEngine, or a twin of its engine (equal by name, model and serial number,
+    // another instance), which AddEngine refuses as already added (decision 92 of #668, decided by S. Guillet, 2026-11-23)
+    private static Engine ForeignEngine(string engineKind, Spacecraft spacecraft, Engine ownEngine, Engine otherEngine) => engineKind switch
+    {
+        "OtherSpacecraft" => otherEngine,
+        "UnattachedTank" => new Engine("LOOSE", "MODEL", "SN-LOOSE", Isp, 5.0, new FuelTank("LOOSE", "MODEL", "SN-LOOSE", Fuel, Fuel)),
+        "NotAdded" => new Engine("NOTADDED", "MODEL", "SN-NOTADDED", Isp, 5.0, spacecraft.FuelTanks.Single()),
+        "Twin" => new Engine(ownEngine.Name, ownEngine.Model, ownEngine.SerialNumber, Isp, 5.0, spacecraft.FuelTanks.Single()),
+        _ => throw new ArgumentOutOfRangeException(nameof(engineKind))
+    };
+
+    /// <summary>
+    /// "An engine that is on this spacecraft" (decision 46) is an engine of <see cref="Spacecraft.Engines"/>, added with
+    /// <see cref="Spacecraft.AddEngine"/>, compared by reference (decision 92 of #668, decided by S. Guillet, 2026-11-23):
+    /// an engine built on the spacecraft's own tank and never added, or a twin of an added engine (equal by value, another
+    /// instance, which <c>AddEngine</c> refuses as already added), is refused by <c>SetManeuvers</c> with
+    /// <see cref="ArgumentException"/> (<c>maneuvers</c>), the plan unchanged; once added, the same engine is accepted and
+    /// fires (before, the tank alone was checked and both passed).
+    /// </summary>
+    [Theory]
+    [InlineData("NotAdded")]
+    [InlineData("Twin")]
+    public void AnEngineNotAddedWithAddEngine_IsRefusedBySetManeuvers(string engineKind)
+    {
+        var earth = new CelestialBody(PlanetsAndMoons.EARTH);
+        var spacecraft = NewSpacecraft(earth, out var ownEngine);
+        var engine = ForeignEngine(engineKind, spacecraft, ownEngine, null);
+        Assert.True(engineKind == "Twin" ? engine.Equals(ownEngine) : !spacecraft.Engines.Contains(engine));
+        var maneuver = new ApogeeHeightManeuver(earth, Epoch, TimeSpan.Zero, 7300e3, engine);
+        var attitude = new ProgradeAttitude(earth, Epoch, TimeSpan.Zero, engine);
+
+        foreach (var refusedManeuver in new Maneuver.Maneuver[] { maneuver, attitude })
         {
-            Assert.Null(foreignEngine.FuelTank.Spacecraft);
+            var refused = Assert.Throws<ArgumentException>(() => spacecraft.SetManeuvers(refusedManeuver));
+            Assert.Equal("maneuvers", refused.ParamName);
+            Assert.Contains(engine.Name, refused.Message);
+            // The advice the caller can follow: for a twin, which AddEngine refuses, the engine instance of Engines; for an
+            // engine not added, AddEngine (second review of lot L5a)
+            if (engineKind == "Twin")
+            {
+                Assert.Contains("Engines", refused.Message);
+                Assert.DoesNotContain("with AddEngine before the plan", refused.Message);
+            }
+            else
+            {
+                Assert.Contains("with AddEngine before the plan", refused.Message);
+            }
+
+            Assert.Empty(spacecraft.Maneuvers);
+            Assert.Null(refusedManeuver.PlanOwner);
         }
+
+        if (engineKind == "Twin")
+        {
+            Assert.Throws<ArgumentException>(() => spacecraft.AddEngine(engine));
+            return;
+        }
+
+        // Added, the same engine is accepted and fires
+        spacecraft.AddEngine(engine);
+        spacecraft.SetManeuvers(maneuver);
+        spacecraft.Propagate(Window, new PropagationOptions { Integrator = RK78IntegratorOptions.Default, OutputStep = Output, ThirdBodies = [earth], CovariancePropagation = CovariancePropagationOptions.None });
+        Assert.Same(maneuver, Assert.Single(spacecraft.ExecutedManeuvers));
+        Assert.True(maneuver.FuelBurned > 0.0);
     }
 
     [Fact]
@@ -341,7 +428,7 @@ public class ManeuverEngineBindingTests
         var earth = new CelestialBody(PlanetsAndMoons.EARTH);
         var spacecraft = NewSpacecraft(earth, out var engine);
         var maneuver = new ApogeeHeightManeuver(earth, Epoch, TimeSpan.Zero, 7300e3, engine);
-        spacecraft.SetStandbyManeuver(maneuver);
+        spacecraft.SetManeuvers(maneuver);
         double m0 = spacecraft.DryOperatingMass + Fuel;
 
         // Act
@@ -365,7 +452,7 @@ public class ManeuverEngineBindingTests
         // Arrange: BodyFront +X, which the static axes would leave 90° off
         var earth = new CelestialBody(PlanetsAndMoons.EARTH);
         var spacecraft = NewSpacecraft(earth, out var engine, Vector3.VectorX, Vector3.VectorY.Inverse());
-        spacecraft.SetStandbyManeuver(new ProgradeAttitude(earth, Epoch, TimeSpan.FromMinutes(30.0), engine));
+        spacecraft.SetManeuvers(new ProgradeAttitude(earth, Epoch, TimeSpan.FromMinutes(30.0), engine));
 
         // Act
         spacecraft.Propagate(Window, new PropagationOptions { Integrator = IntegratorOf(integratorName)(), OutputStep = Output, ThirdBodies = [earth], CovariancePropagation = CovariancePropagationOptions.None });

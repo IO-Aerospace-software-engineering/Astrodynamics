@@ -65,8 +65,9 @@ public class TriadSolver : ICategorySolver
             secondaryTarget,
             spacecraft.Engines.First());
 
-        // Execute the framework's TRIAD algorithm
-        var (_, stateOrientation) = triadAttitude.TryExecute(sv);
+        // The framework's TRIAD algorithm, by the public preview of the attitude (decision 50 of #668: the rotation of the
+        // execution at this state, the attitude's windows left unset)
+        var stateOrientation = triadAttitude.ComputeStateOrientation(sv);
         var attitudeQuat = stateOrientation.Rotation;
         var quatArray = UnitConversion.QuaternionToArray(attitudeQuat);
 

@@ -36,10 +36,10 @@ public class ZenithAttitudeTests
         spc.AddFuelTank(new FuelTank("ft", "ftA", "123456", 1000.0, 900.0));
         spc.AddEngine(new Engine("eng", "engmk1", "12345", 450, 50, spc.FuelTanks.First()));
         ZenithAttitude maneuver = new ZenithAttitude(TestHelpers.EarthAtJ2000,new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB), TimeSpan.Zero, spc.Engines.First());
-        maneuver.TryExecute(orbitalParams.ToStateVector());
+        var (_, maneuverOrientation) = maneuver.TryExecute(orbitalParams.ToStateVector());
 
         LabelAssert.Equal(new StateOrientation(new Quaternion(0.7071067811865476, 0.0, 0.0, -0.7071067811865476), Vector3.Zero, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF),
-            maneuver.StateOrientation);
+            maneuverOrientation);
         Assert.Equal(0.0, maneuver.FuelBurned);
         LabelAssert.Equal(new Window(TimeSystem.Time.J2000TDB, TimeSpan.Zero), maneuver.ManeuverWindow);
         LabelAssert.Equal(new Window(TimeSystem.Time.J2000TDB, TimeSpan.Zero), maneuver.ThrustWindow);

@@ -47,7 +47,13 @@ namespace IO.Astrodynamics.Body.Spacecraft
             Thrust = isp * fuelFlow * Constants.g0;
         }
 
-        public double Ignite(in Vector3 deltaV)
+        /// <summary>
+        /// Burns the fuel of <paramref name="deltaV"/> from the tank, at the total mass of its spacecraft (Tsiolkovsky), and
+        /// returns it. Internal since 11.0.0 (decision 49 of #668, decided by S. Guillet, 2026-11-23): public, it took the
+        /// fuel of a finished run outside any run, and threw <see cref="NullReferenceException"/> on a tank of no spacecraft
+        /// (#802). The fuel of a delta-V is <see cref="Tsiolkovski.DeltaM"/>.
+        /// </summary>
+        internal double Ignite(in Vector3 deltaV)
         {
             var fuelBurned = Tsiolkovski.DeltaM(ISP, FuelTank.Spacecraft.GetTotalMass(), deltaV.Magnitude());
             FuelTank.Burn(fuelBurned);

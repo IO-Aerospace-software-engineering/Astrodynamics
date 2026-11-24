@@ -34,7 +34,7 @@ namespace IO.Astrodynamics.Tests.Maneuvers
         {
             nameof(ApsidalAlignmentManeuver) => new ApsidalAlignmentManeuver(MinimumEpoch, TimeSpan.Zero, targetOrbit, engine),
             nameof(PlaneAlignmentManeuver) => new PlaneAlignmentManeuver(MinimumEpoch, TimeSpan.Zero, targetOrbit, engine),
-            nameof(PhasingManeuver) => new PhasingManeuver(MinimumEpoch, TimeSpan.Zero, targetOrbit, 2, engine),
+            nameof(PhasingManeuver) => new PhasingManeuver(MinimumEpoch, targetOrbit, 2, engine),
             nameof(ApogeeHeightManeuver) => new ApogeeHeightManeuver(MinimumEpoch, TimeSpan.Zero, targetOrbit, engine),
             nameof(PerigeeHeightManeuver) => new PerigeeHeightManeuver(MinimumEpoch, TimeSpan.Zero, targetOrbit, engine),
             _ => throw new ArgumentOutOfRangeException(nameof(maneuver))
@@ -223,10 +223,10 @@ namespace IO.Astrodynamics.Tests.Maneuvers
                 nameof(CombinedManeuver) => new CombinedManeuver(center, MinimumEpoch, TimeSpan.Zero, 6500000.0, 0.1, engine),
                 nameof(PlaneAlignmentManeuver) => new PlaneAlignmentManeuver(MinimumEpoch, TimeSpan.Zero, target, engine),
                 nameof(ApsidalAlignmentManeuver) => new ApsidalAlignmentManeuver(MinimumEpoch, TimeSpan.Zero, coplanar, engine),
-                nameof(PhasingManeuver) => new PhasingManeuver(MinimumEpoch, TimeSpan.Zero, elements.AtEpoch(elements.Epoch + TimeSpan.FromMinutes(10.0)), 2, engine),
-                _ => new PhasingManeuver(center, MinimumEpoch, TimeSpan.Zero, 1.0, 2, engine)
+                nameof(PhasingManeuver) => new PhasingManeuver(MinimumEpoch, elements.AtEpoch(elements.Epoch + TimeSpan.FromMinutes(10.0)), 2, engine),
+                _ => new PhasingManeuver(center, MinimumEpoch, 1.0, 2, engine)
             };
-            spc.SetStandbyManeuver(impulse);
+            spc.SetManeuvers(impulse);
 
             var given = orbit.ToStateVector();
             var position = given.Position;
@@ -272,7 +272,7 @@ namespace IO.Astrodynamics.Tests.Maneuvers
             var spc = engine.FuelTank.Spacecraft;
             var impulse = new IO.Astrodynamics.Tests.Propagators.Variational.FixedImpulse(TestHelpers.EarthAtJ2000, MinimumEpoch,
                 TimeSystem.Time.J2000TDB, Vector3.Zero, engine);
-            spc.SetStandbyManeuver(impulse);
+            spc.SetManeuvers(impulse);
 
             var given = spc.InitialOrbitalParameters.ToStateVector();
             var (after, orientation) = impulse.TryExecute(given);
@@ -325,7 +325,7 @@ namespace IO.Astrodynamics.Tests.Maneuvers
             {
                 nameof(ApsidalAlignmentManeuver) => new ApsidalAlignmentManeuver(PlaneChangeStart, TimeSpan.Zero, targetOrbit, engine),
                 nameof(PlaneAlignmentManeuver) => new PlaneAlignmentManeuver(PlaneChangeStart, TimeSpan.Zero, targetOrbit, engine),
-                nameof(PhasingManeuver) => new PhasingManeuver(PlaneChangeStart, TimeSpan.Zero, targetOrbit, 2, engine),
+                nameof(PhasingManeuver) => new PhasingManeuver(PlaneChangeStart, targetOrbit, 2, engine),
                 _ => throw new ArgumentOutOfRangeException(nameof(maneuver))
             };
 
@@ -377,10 +377,25 @@ namespace IO.Astrodynamics.Tests.Maneuvers
             if (chained)
             {
                 leading = new ApogeeHeightManeuver(earth, PlaneChangeStart, TimeSpan.Zero, 7100000.0, spacecraft.Engines.First());
-                leading.SetNextManeuver(rejected);
             }
 
-            spacecraft.SetStandbyManeuver(leading);
+            var plan = chained ? new Maneuver.Maneuver[] { leading, rejected } : new Maneuver.Maneuver[] { rejected };
+            if (!previous)
+            {
+                // The plan receives the maneuver: since decision 46 of #668 SetManeuvers refuses it, naming its parameter,
+                // the frames and the fix (the propagator constructor did before, naming spacecraft), and nothing changes
+                var refused = Assert.Throws<ArgumentException>(() => spacecraft.SetManeuvers(plan));
+                Assert.Equal("maneuvers", refused.ParamName);
+                Assert.Contains(maneuver, refused.Message);
+                Assert.Contains("ECLIPJ2000", refused.Message);
+                Assert.Contains("ToFrame(Frame.ICRF)", refused.Message);
+                Assert.Empty(spacecraft.Maneuvers);
+                Assert.Null(rejected.ThrustWindow);
+                Assert.Empty(spacecraft.PropagatedStates);
+                return;
+            }
+
+            spacecraft.SetManeuvers(plan);
             Window? leadingThrust = null, rejectedThrust = null;
             StateVector[] previousStates = null;
             if (previous)
@@ -439,7 +454,12 @@ namespace IO.Astrodynamics.Tests.Maneuvers
             var rejected = CreateAt(nameof(PlaneAlignmentManeuver), CircularOrbit(earth, 32.0).ToFrame(Frames.Frame.ECLIPTIC_J2000), engine);
             spacecraft.AddFuelTank(tank);
             spacecraft.AddEngine(engine);
-            spacecraft.SetStandbyManeuver(rejected);
+            // SetManeuvers refuses it (decision 46 of #668), so the run's re-check is reached by a maneuver linked past the
+            // plan, through the internal setter a test reaches
+            Assert.Equal("maneuvers", Assert.Throws<ArgumentException>(() => spacecraft.SetManeuvers(rejected)).ParamName);
+            var head = new NadirAttitude(earth, PlaneChangeStart, TimeSpan.Zero, engine);
+            spacecraft.SetManeuvers(head);
+            head.NextManeuver = rejected;
 
             // Act
             var exception = Assert.Throws<InvalidOperationException>(() => propagator.Propagate());
@@ -500,10 +520,9 @@ namespace IO.Astrodynamics.Tests.Maneuvers
             if (chained)
             {
                 leading = new ApogeeHeightManeuver(earth, PlaneChangeStart, TimeSpan.Zero, 7100000.0, spacecraft.Engines.First());
-                leading.SetNextManeuver(maneuver);
             }
 
-            spacecraft.SetStandbyManeuver(leading);
+            spacecraft.SetManeuvers(chained ? new Maneuver.Maneuver[] { leading, maneuver } : new Maneuver.Maneuver[] { maneuver });
             if (propagator != null)
             {
                 var solution = propagator.Propagate();
@@ -630,7 +649,7 @@ namespace IO.Astrodynamics.Tests.Maneuvers
                 var target = new KeplerianElements(6800000.0, 0.0, 52.6423 * IO.Astrodynamics.Constants.Deg2Rad, 353.0312 * IO.Astrodynamics.Constants.Deg2Rad,
                     0.0, 0.0, tle.Observer, start, frame);
                 var plane = new PlaneAlignmentManeuver(start, TimeSpan.Zero, target, spacecraft.Engines.First());
-                spacecraft.SetStandbyManeuver(plane);
+                spacecraft.SetManeuvers(plane);
                 var solution = spacecraft.Propagate(window, new PropagationOptions { Integrator = RK78IntegratorOptions.Default, OutputStep = TimeSpan.FromSeconds(60.0), ThirdBodies = Array.Empty<IO.Astrodynamics.Body.CelestialItem>(), CovariancePropagation = CovariancePropagationOptions.None });
                 return (plane, solution.StateVectors[^1]);
             }
@@ -665,7 +684,7 @@ namespace IO.Astrodynamics.Tests.Maneuvers
                 : PlaneChangeSpacecraftWithEngine(-6854, orbit.ToFrame(Frames.Frame.ECLIPTIC_J2000));
             var target = frame == "ICRF" ? targetEcl.ToFrame(Frames.Frame.ICRF) : targetEcl;
             var maneuver = new PlaneAlignmentManeuver(PlaneChangeStart, TimeSpan.Zero, target, engine);
-            spacecraft.SetStandbyManeuver(maneuver);
+            spacecraft.SetManeuvers(maneuver);
 
             // Act
             spacecraft.Propagate(PlaneChangeWindow, new PropagationOptions { Integrator = RK78IntegratorOptions.Default, OutputStep = PlaneChangeStep, ThirdBodies = [earth], CovariancePropagation = CovariancePropagationOptions.None });

@@ -89,18 +89,10 @@ public class ManeuverSolver : ICategorySolver
             // the start plus its earliest epoch, in TT seconds
             var minimumEpoch = start.ToTT().AddSeconds(k == 0 ? chain.Steps[0].EarliestAfterPreviousS : 0.0);
             var hold = TimeSpan.FromSeconds(k + 1 < chain.Steps.Count ? chain.Steps[k + 1].EarliestAfterPreviousS : 0.0);
-            var maneuver = CreateManeuver(chain.Steps[k], center, initialState, minimumEpoch, hold, engine);
-            if (k == 0)
-            {
-                spacecraft.SetStandbyManeuver(maneuver);
-            }
-            else
-            {
-                maneuvers[k - 1].SetNextManeuver(maneuver);
-            }
-
-            maneuvers.Add(maneuver);
+            maneuvers.Add(CreateManeuver(chain.Steps[k], center, initialState, minimumEpoch, hold, engine));
         }
+
+        spacecraft.SetManeuvers(maneuvers.ToArray());
 
         var solution = spacecraft.Propagate(propagationCase.Window,
             PropagatorSolver.Options(propagationCase, propagationCase.OutputStep));
@@ -129,14 +121,18 @@ public class ManeuverSolver : ICategorySolver
 
             mass -= maneuver.FuelBurned;
             var segment = BurnSegment(solution, maneuver.ThrustWindow.Value.StartDate);
-            var position = segment.InterpolateAt(0.0).position;
+            // The state after the burn, the start of the first step of its segment (the public steps of a segment;
+            // InterpolateAt is internal since decision 55 of #668, and at 0 it read that start)
+            var position = segment.Steps[0].StartPosition;
             Add(outputs, label, "elapsed_s", TerrestrialSeconds.Between(start, segment.BaseEpoch));
             Add(outputs, label, "position_km", Kilometres(position));
             Add(outputs, label, "delta_v_km_s", Kilometres(maneuver.DeltaV));
             Add(outputs, label, "mass_after_kg", mass);
         }
 
-        var (finalPos, finalVel) = solution.InterpolateAt(propagationCase.Window.EndDate);
+        // The public reader of a solution (decision 54 of #668: InterpolateAt is internal; the same state, bit for bit)
+        var final = solution.GetStateVector(propagationCase.Window.EndDate);
+        var (finalPos, finalVel) = (final.Position, final.Velocity);
         outputs["final_x_km"] = UnitConversion.MToKm(finalPos.X);
         outputs["final_y_km"] = UnitConversion.MToKm(finalPos.Y);
         outputs["final_z_km"] = UnitConversion.MToKm(finalPos.Z);
@@ -158,7 +154,8 @@ public class ManeuverSolver : ICategorySolver
     /// <param name="initialState">The state at the start: the plane of an <c>apsidal_alignment</c> target and the
     /// frame and epoch of the target orbits.</param>
     /// <param name="minimumEpoch">The earliest epoch given to the maneuver.</param>
-    /// <param name="hold">Its hold, the earliest epoch of the next step after its burn.</param>
+    /// <param name="hold">Its hold, the earliest epoch of the next step after its burn; a phasing maneuver takes none, its
+    /// burn setting 0.9 N T2 (decision 51 of #668).</param>
     /// <param name="engine">The engine of the spacecraft.</param>
     /// <exception cref="ArgumentException">An unknown type.</exception>
     internal static ImpulseManeuver CreateManeuver(ManeuverStep step, CelestialBody center, StateVector initialState, Time minimumEpoch,
@@ -187,7 +184,7 @@ public class ManeuverSolver : ICategorySolver
                 return new ApsidalAlignmentManeuver(minimumEpoch, hold, orbit, engine);
             case ManeuverStepType.Phasing:
                 var target = PropagationCase.BuildStateVector(step.Target, center, epoch, frame);
-                return new PhasingManeuver(minimumEpoch, hold, target, (uint)step.Revolutions!.Value, engine);
+                return new PhasingManeuver(minimumEpoch, target, (uint)step.Revolutions!.Value, engine);
             case ManeuverStepType.Combined:
                 return new CombinedManeuver(center, minimumEpoch, hold, UnitConversion.KmToM(step.TargetPeriapsisRadiusKm!.Value),
                     UnitConversion.DegToRad(step.TargetInclinationDeg!.Value), engine);

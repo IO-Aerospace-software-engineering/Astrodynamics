@@ -51,7 +51,7 @@ public partial class IntegratorEventTests
         var earth = new CelestialBody(PlanetsAndMoons.EARTH, Frame.ICRF, S);
         var (spacecraft, engine) = NewSpacecraft(-7931, MinimumEpochGateTests.Orbit(earth, System.Math.PI));
         var maneuver = new ApogeeHeightManeuver(earth, S, TimeSpan.Zero, 8378137.0, engine);
-        spacecraft.SetStandbyManeuver(maneuver);
+        spacecraft.SetManeuvers(maneuver);
         var window = new Window(S, MinimumEpochGateTests.GateAtTt(length));
         double massBefore = spacecraft.GetTotalMass();
         var solution = spacecraft.Propagate(window, new PropagationOptions { Integrator = NewIntegrator(integratorName), OutputStep = TimeSpan.FromSeconds(outputStep), ThirdBodies = [earth], CovariancePropagation = CovariancePropagationOptions.None });
@@ -73,7 +73,7 @@ public partial class IntegratorEventTests
         var (spacecraft, engine) = NewSpacecraft(-7932, MinimumEpochGateTests.Orbit(earth, System.Math.PI));
         var end = MinimumEpochGateTests.GateAtTt(3000.0);
         var impulse = new TimeLikeImpulse(earth, S, engine, end, 1.0);
-        spacecraft.SetStandbyManeuver(impulse);
+        spacecraft.SetManeuvers(impulse);
         var window = new Window(S, end);
         double massBefore = spacecraft.GetTotalMass();
         var solution = spacecraft.Propagate(window, new PropagationOptions { Integrator = NewIntegrator(integratorName), OutputStep = TimeSpan.FromSeconds(10.0), ThirdBodies = [earth], CovariancePropagation = CovariancePropagationOptions.None });
@@ -95,7 +95,7 @@ public partial class IntegratorEventTests
         var earth = new CelestialBody(PlanetsAndMoons.EARTH, Frame.ICRF, S);
         var (spacecraft, engine) = NewSpacecraft(-7933, MinimumEpochGateTests.Orbit(earth, System.Math.PI));
         var maneuver = new ApogeeHeightManeuver(earth, S, TimeSpan.Zero, 8378137.0, engine);
-        spacecraft.SetStandbyManeuver(maneuver);
+        spacecraft.SetManeuvers(maneuver);
         var window = new Window(S, MinimumEpochGateTests.GateAtTt(2964.0));
         double massBefore = spacecraft.GetTotalMass();
         var integrator = new NoStepAtZeroDuration(new VVIntegrator([new GravitationalAcceleration(earth)], TimeSpan.FromSeconds(1.0),
@@ -105,6 +105,66 @@ public partial class IntegratorEventTests
 
         Assert.Equal(1, integrator.ZeroDurationCalls);
         AssertEndsAfterTheBurn(spacecraft, maneuver, solution, window, massBefore, earth);
+    }
+
+    /// <summary>
+    /// A light-time read up to 20 ms past the end of a propagation that ends with an impulse (the margin of #527, the
+    /// internal reader of a corrected read) reads the arc of one state that the impulse opens (#575), touching the arc before
+    /// it at the burn: the state after the impulse, as at 8436db52 (decision 90 of #668, decided by S. Guillet,
+    /// 2026-11-23). The probe of the first review of lot L5a read the arc before the impulse extrapolated past it: 233.8 m/s
+    /// and 7.829 m off the state after at 1 ms, 78.29 m at 10 ms (Velocity-Verlet at 1 s). The reference is the state
+    /// after the burn, the state before plus the ΔV of the record (the closed form of an impulse); the read at the end itself
+    /// is that state too (#575). An <see cref="ApogeeHeightManeuver"/> at the perigee in the last step of Velocity-Verlet at
+    /// 1 s and 10 s, and RK7(8) over a window that ends at the burn it finds in a longer run.
+    /// </summary>
+    [Theory]
+    [InlineData("VV1", 2964.0)]
+    [InlineData("VV10", 2970.0)]
+    [InlineData("RK", 0.0)]
+    public void ALightTimeReadPastAnImpulseAtTheEnd_ReadsTheStateAfterIt(string integratorName, double length)
+    {
+        var earth = new CelestialBody(PlanetsAndMoons.EARTH, Frame.ICRF, S);
+        Window window;
+        if (length > 0.0)
+        {
+            window = new Window(S, MinimumEpochGateTests.GateAtTt(length));
+        }
+        else
+        {
+            // RK7(8) puts the burn at the root of its g-function: a first run finds it, the second ends there
+            var (probe, probeEngine) = NewSpacecraft(-7935, MinimumEpochGateTests.Orbit(earth, System.Math.PI));
+            probe.SetManeuvers(new ApogeeHeightManeuver(earth, S, TimeSpan.Zero, 8378137.0, probeEngine));
+            var probeSolution = probe.Propagate(new Window(S, MinimumEpochGateTests.GateAtTt(3000.0)), new PropagationOptions { Integrator = NewIntegrator(integratorName), OutputStep = TimeSpan.FromSeconds(10.0), ThirdBodies = [earth], CovariancePropagation = CovariancePropagationOptions.None });
+            window = new Window(S, probeSolution.Segments[1].BaseEpoch);
+        }
+
+        var (spacecraft, engine) = NewSpacecraft(-7934, MinimumEpochGateTests.Orbit(earth, System.Math.PI));
+        var maneuver = new ApogeeHeightManeuver(earth, S, TimeSpan.Zero, 8378137.0, engine);
+        spacecraft.SetManeuvers(maneuver);
+        var solution = spacecraft.Propagate(window, new PropagationOptions { Integrator = NewIntegrator(integratorName), OutputStep = TimeSpan.FromSeconds(4.0), ThirdBodies = [earth], CovariancePropagation = CovariancePropagationOptions.None });
+
+        // The burn at the end: the last arc is its state after alone, touching the arc before at the burn
+        var end = window.EndDate;
+        LabelAssert.Equal(end, solution.Segments[^1].BaseEpoch);
+        var arcs = spacecraft.PropagatedArcs;
+        var lastArc = Assert.Single(arcs[^1]);
+        LabelAssert.Equal(end, lastArc.Epoch);
+        LabelAssert.Equal(end, arcs[^2][^1].Epoch);
+        var before = solution.Segments[^2].Steps[^1];
+        var expectedVelocity = before.EndVelocity + maneuver.DeltaV;
+        var atEnd = spacecraft.GetGeometricStateRelativeTo(end, earth);
+        Assert.Equal(expectedVelocity, atEnd.Velocity);
+
+        foreach (double past in new[] { 1.0e-3, 1.0e-2, 2.0e-2 })
+        {
+            var read = spacecraft.GetGeometricStateRelativeTo(end.AddSeconds(past), earth, 0.02);
+            _output.WriteLine($"MEASURE decision 90 {integratorName} +{past * 1e3:F0} ms: |r - r_after| {(read.Position - atEnd.Position).Magnitude():E3} m, |v - v_after| {(read.Velocity - expectedVelocity).Magnitude():E3} m/s");
+            Assert.Equal(atEnd.Position, read.Position);
+            Assert.Equal(expectedVelocity, read.Velocity);
+        }
+
+        // Past the margin: outside the stored states
+        Assert.Throws<InvalidOperationException>(() => spacecraft.GetGeometricStateRelativeTo(end.AddSeconds(0.03), earth, 0.02));
     }
 
     /// <summary>The OPM ΔV in m/s less the jump of the final velocity at the burn, m/s: the rounding of the km/s of the OPM and

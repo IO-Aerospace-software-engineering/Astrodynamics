@@ -41,7 +41,8 @@ propagation is built (`ArgumentException`) and, for a maneuver attached after it
    the attitude timeline, from the end of its maneuver window, and build the detector of the next impulse. An impulse
    executed at the end of the window opens a last segment of zero length, so the solution ends with the state after it
    (#575).
-4. Compute output states on the requested output step with `PropagationSolution.InterpolateAt`, then the attitude
+4. Compute output states on the requested output step with the dense output of the solution (the internal
+   `InterpolateAt`, the state `GetStateVector` returns), then the attitude
    record from the timeline on the solution ([Attitudes](attitudes.md#the-attitude-timeline)). The outputs are the
    window start plus i·ΔT inside the window, then the window end, in place of the last grid point when that lies within
    ΔT/10 of the end: round(L/ΔT) + 1 of them over a window of length L, and the propagation runs to the window end, on
@@ -185,8 +186,8 @@ integrator with it at every run. A step of zero or less throws `ArgumentOutOfRan
 constructors that take an integrator, `OutputStep` (or the integrator's `Step`) where the options are built (#674).
 
 A constructor changes nothing on the spacecraft. `Propagate` re-arms it once its checks pass, on every path, as
-`Spacecraft.Propagate` does: the tanks refuelled, `ExecutedManeuvers`, the stored states and the attitude record of the
-previous propagation cleared, the maneuver chain started again from its head, and the spacecraft `IsPropagated` after
+`Spacecraft.Propagate` does: the tanks refuelled, an empty `ExecutedManeuvers` swapped in, each maneuver the run
+executes then swapping in a new list that adds it (decision 58 of #668), the stored states and the attitude record of the previous propagation dropped, the maneuver chain started again from its head, and the spacecraft `IsPropagated` after
 the run (#583, decided by S. Guillet, 2026-11-17; before 11.0.0 a second run through a propagator built directly fired no
 burn and started with the fuel the first left).
 
@@ -207,9 +208,21 @@ reused instances whose forces evaluate each other's earlier solutions deadlock (
 the SPICE lock or the lock of an attitude record, so it cannot deadlock by itself); an evaluation of an earlier solution
 on another thread waits for the end of the run in progress
 ([Thread Safety](../guides/thread-safety.md#the-lock-of-a-propagator-instance)). A reused instance keeps the initial state, the covariance and the options of
-its construction: a later `SetInitialOrbitalParameters` on the spacecraft does not reach it
-([#783](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/783)); build a new propagator to
-propagate from another initial orbit.
+its construction, and its `Propagate` throws `InvalidOperationException`, before anything changes, once the spacecraft
+holds other initial orbital parameters than those it was built from, compared by reference, so an equal orbit given
+anew by `SetInitialOrbitalParameters` is another orbit
+([#783](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/783), decision 37 of
+[#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668), decided by S. Guillet,
+2026-11-23; before 11.0.0 the run started from the former orbit, matching no fresh propagator); build a new propagator
+to propagate from another initial orbit. `Spacecraft.Propagate`, `Scenario.Simulate`, `BatchPropagator` and
+`MonteCarloPropagator` build a new propagator at each call and are not concerned. The guard covers the orbit only: the
+maneuver chain, the tanks and the coefficients of the spacecraft are read at each run.
+
+The re-arm of a run drops the stored states and the attitude record of the spacecraft whatever `IsPropagated` says,
+those added by hand (`AddPropagatedStates`, `AddStateOrientationToICRF`) included, on every path (decision 38 of #668,
+decided by S. Guillet, 2026-11-23): before 11.0.0 they were dropped only after a numerical propagation, so a first run
+kept the attitudes added by hand, a quarter turn off a fresh run over half of its window and outside it in the gap
+analysis of L5, while a second run dropped them (`RunIndependenceTests`).
 
 The covariance propagation needs an `RK78Integrator` (`NotSupportedException` otherwise). Without it, a covariance of the
 initial orbital parameters is not propagated: it stays on the initial state, the output states carry none, and no partial
@@ -219,18 +232,48 @@ derivative is evaluated.
 
 `PropagationSolution` is the multi-segment container returned by propagation. It holds `PropagationSegment` objects, each containing `AcceptedStep` records that support Hermite interpolation. An RK7(8) solution also keeps the dynamics of the propagation, to compute its states between the steps at the accuracy of the integrator.
 
+A solution is built by the propagators of the library only and cannot be changed once returned (decision 55 of #668,
+decided by S. Guillet, 2026-11-23,
+[#796](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/796)): its constructor, `AddSegment`
+and `SetOutputStates` are internal, `Segments`, `StateVectors`, `Maneuvers` and the `Steps` of each segment are
+read-only views (a cast cannot write them), and a `PropagationSegment` is built once from its steps. Before 11.0.0 a
+caller could add a step to a published solution, `Spacecraft.LastPropagation` included, and so widen its window, or
+replace one of its output states.
+
 | Member | Description |
 |--------|-------------|
 | `Segments` | Read-only list of `PropagationSegment` objects |
-| `StateVectors` | Output state vectors at the requested cadence |
-| `InterpolateAt(Time epoch)` | State at any epoch within the solution window; returns `(Vector3 position, Vector3 velocity)`. RK7(8): a shortened RK7(8) step from the start of the accepted step (13 force evaluations inside a step, none at a boundary); Velocity-Verlet: cubic Hermite interpolation. At a maneuver, the state after it |
-| `GetStateVector(Time epoch)` | The state of `InterpolateAt` as a `StateVector`, with its covariance when the propagation propagated it; throws outside the propagation |
+| `StateVectors` | Output state vectors at the requested cadence, a read-only list |
+| `GetStateVector(Time epoch)` | The state at any epoch of `Window` as a `StateVector` about `Observer` in `Frame`, with its covariance when the propagation propagated it; throws `ArgumentOutOfRangeException` outside `Window`, naming it. RK7(8): a shortened RK7(8) step from the start of the accepted step (13 force evaluations inside a step, none at a boundary); Velocity-Verlet: cubic Hermite interpolation. At a maneuver, the state after it. The one public reader: the former `InterpolateAt`, an unnamed tuple that clamped outside the window, is internal since 11.0.0 (decision 54 of #668), the same state bit for bit |
+| `Maneuvers` | The record of each maneuver the run executed, in execution order (`ExecutedManeuver`, below); empty for a `TLEPropagator` solution |
+| `Observer`, `Frame` | The observer and frame of its states, get-only: the central body and the inertial frame of the propagation, the TLE's Earth and `Frame.TEME` for a `TLEPropagator` solution; null for a solution built by hand (public since 11.0.0, decision 53 of #668) |
+| `Window` | The propagated window, to one tick: [first segment base, end of the propagation] in TDB labels; the reads accept an epoch of any scale within it, as the seconds of the time argument read it, one tick allowed at each end (decision 53 of #668) |
 | `Options` | The resolved settings of a run of `PropagationOptions` (above); null for the constructors that take an integrator |
-| `CovariancePropagation`, `SensitivityParameters`, `ExtendedCovarianceParameters` | The options of the covariance propagation (null when off), the columns of Ψ, the consider parameters of the extended covariance |
+| `CovariancePropagation`, `SensitivityParameters`, `ExtendedCovarianceParameters` | The options of the covariance propagation (`CovariancePropagationOptions.None` when off, a `TLEPropagator` solution included; null before 11.0.0, decision 56 of #668), the columns of Ψ, the consider parameters of the extended covariance |
 | `GetStateTransitionMatrix`, `GetParameterSensitivity`, `GetCovariance`, `GetExtendedCovariance` | Φ, Ψ, P and the extended covariance at any epoch; see [Covariance Propagation](covariance-propagation.md#results) |
 
 In covariance mode, the output states (`StateVectors`) carry their covariance. The SPK written from the propagated states
 (`Spacecraft.WriteEphemeris`) holds positions and velocities only: the covariance is read from the solution.
+
+#### The executed maneuvers
+
+`PropagationSolution.Maneuvers` holds one sealed `ExecutedManeuver` record per maneuver the run executed, attitudes
+included, in execution order (decision 57 of #668, decided by S. Guillet, 2026-11-23): the values of that run, which a
+later run of the same maneuver does not change, where the definitions hold those of their last run only and are reset
+by the next run's re-arm ([Impulse Maneuvers](impulse-maneuvers.md#maneuver-plan)).
+
+| Member | Description |
+|--------|-------------|
+| `ExecutedManeuver.Definition` | The maneuver of the plan that was executed |
+| `ExecutedManeuver.Epoch` | The TDB label of the event of an impulse, which carries its whole delta-V, or the activation of an attitude |
+| `ExecutedManeuver.ThrustWindow` | The thrust window, unclipped: the equivalent constant-thrust burn [t − f dt, t + (1 − f) dt] of an impulse (#335), which may open before the propagation window; the activation of an attitude, of zero length |
+| `ExecutedManeuver.ManeuverWindow` | The maneuver window, whose end gated the next maneuver |
+| `ExecutedManeuver.DeltaV` | The delta-V of an impulse in the frame of the solution, m/s; `Vector3.Zero` for an attitude |
+| `ExecutedManeuver.FuelBurned` | The fuel the impulse burned, kg (the rocket equation of `MassBefore`); 0 for an attitude |
+| `ExecutedManeuver.MassBefore`, `ExecutedManeuver.MassAfter` | The total mass of the spacecraft before and after the execution (`GetTotalMass`, the child included), kg; equal for an attitude |
+
+A record is built by the propagation only (no public constructor). A run stopped by its token returns no solution, so no
+record; `Spacecraft.ExecutedManeuvers` then lists what the run executed up to the stop.
 
 When conjunction assessment follows propagation, pass `PropagationSolution` directly to the SSA overloads to reuse the dense output.
 
@@ -250,6 +293,23 @@ var solution = propagator.Propagate();
 | `Spacecraft` | The spacecraft being propagated |
 | `DeltaT` | Output time step |
 
+The spacecraft has no maneuver plan, which SGP4 cannot execute: the constructor throws `ArgumentException`
+(`spacecraft`) for one with a plan, and `Propagate` `InvalidOperationException` for a plan set after it, before anything
+changes (decision 40 of #668, decided by S. Guillet, 2026-11-23; before 11.0.0 the plan was ignored). `Propagate`
+samples the TLE the propagator was built from, and throws `InvalidOperationException`, as the numerical path does, once
+the spacecraft holds other initial orbital parameters (#783, decision 37; before 11.0.0 the first sample came from the
+TLE of the construction and the others from the spacecraft's orbit).
+
+A run computes every sample and every acceleration first, then, in one block, re-arms the spacecraft as a numerical
+propagation does (its stored states, attitude record and last solution dropped, `ExecutedManeuvers` an empty list, its tanks
+refuelled) and stores its samples, which replace the stored states in one arc; a stop or an SGP4 failure changes
+nothing (decision 38 of #668, decided by S. Guillet, 2026-11-23). The spacecraft is then not `IsPropagated`, and reads
+SGP4 outside the samples. Before 11.0.0 a run added its samples to the stored states, in one arc with those of earlier
+runs (122 states after two runs of one hour at 60 s, read across the gap between them), and kept the attitude record and
+the solution of an earlier numerical run. Each run fills arrays of its own, so the solutions of two runs share no state
+([#785](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/785), decision 39; before 11.0.0 they
+held one array, its first state built once at construction).
+
 The samples follow the rule of the numerical propagation, the window start plus i·`DeltaT`, counted in ticks, then the window end: ceil(L/ΔT) + 1 samples for a
 window of length L, the last step shorter when ΔT does not divide L (#598); a grid point closer to the end than ΔT/10
 is dropped, the last step then up to 1.1 ΔT (a window given in UTC is a few ticks longer or shorter in TDB, its
@@ -262,9 +322,12 @@ that the step does not divide lost its end (90 s at 60 s: the last sample at +60
 The solution holds the SGP4 states at the samples, and between them the cubic Hermite of `PropagationSegment` on the
 positions, the velocities and the accelerations of SGP4 at the samples (the central difference of its velocity at
 ±1 s, #675; zero before 11.0.0, which put the interpolated velocity up to 49.9 m/s off SGP4). For the ISS at 60 s,
-`InterpolateAt` and `GetStateVector` are 4.3e-4 m/s and 0.38 m off SGP4 between the samples (the same on Linux x64,
-Windows and macOS arm64), and exact at them; `tle.ToStateVector(t)` is the exact SGP4 state at any instant. A TLE whose
-SGP4 fails within 1 s of an end of the window throws, before the spacecraft receives any sample.
+`GetStateVector` is 4.3e-4 m/s and 0.38 m off SGP4 between the samples (the same on Linux x64,
+Windows and macOS arm64), and exact at them; `tle.ToStateVector(t)` is the exact SGP4 state at any instant. The
+solution's `Observer` and `Frame` are those of its samples, the TLE's Earth and `Frame.TEME`, so `GetStateVector` reads
+it in TEME about the Earth (decision 53 of #668; before 11.0.0 they were not set and `GetStateVector` threw
+`InvalidOperationException`). A TLE whose SGP4 fails within 1 s of an end of the window throws, before the spacecraft
+receives any sample.
 
 ## BatchPropagator
 
@@ -331,7 +394,7 @@ records, or threw `NullReferenceException` at the burn).
 |----------|------|-------------|
 | `RunCount` | `int` | Number of runs (minimum 2) |
 | `Seed` | `int` | Random seed for reproducibility |
-| `TemplateSpacecraft` | `Spacecraft` | Nominal spacecraft with 6x6 covariance |
+| `TemplateSpacecraft` | `Spacecraft` | Nominal spacecraft with 6x6 covariance. Each run propagates a spacecraft built from its dry mass, maximum mass, area and drag and radiation coefficients, so a template with a maneuver plan throws `ArgumentException` (`config`) (decision 41 of #668); its fuel, payloads, body axes, hard-body radius and COSPAR id are not carried to the runs ([#795](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/795), fixed after lot L5) |
 | `Window` | `Window` | Propagation time window |
 | `Propagation` | `PropagationOptions` | The settings of every run ([Propagation Options](#propagation-options)); null for `PropagationOptions.Default`. The runs share their bodies, a geopotential included (11.0.0: `CelestialBodiesFactory`, `DeltaT`, `IncludeAtmosphericDrag`, `IncludeSolarRadiationPressure` and `IntegratorFactory` removed, R07 of #668) |
 | `BaseNaifId` | `int` | Base NAIF ID (default -100000) |
@@ -423,7 +486,7 @@ Where the token is read:
 |------|------|
 | `Spacecraft.Propagate`, `CentralBodyPropagator.Propagate` | Once the checks pass, before the spacecraft is re-armed; before each segment; by `VVIntegrator` and `RK78Integrator` at each accepted step, never between the rejections of a step (at most 101). Not after the last segment, so the outputs, the attitude record and the stored states are written as one block |
 | An `IIntegrator` implemented outside the library | Between its segments only (the interface does not change) |
-| `TLEPropagator.Propagate` | Before the first sample and at each sample; a stopped run adds nothing to the spacecraft |
+| `TLEPropagator.Propagate` | Before the first sample and at each sample; a stopped run changes nothing on the spacecraft |
 | `Scenario.Simulate` | Once the settings are checked, before anything changes; before each star and each spacecraft; inside each propagation |
 | `BatchPropagator.Propagate`, `MonteCarloPropagator.Propagate` | Before anything runs; before each task; inside each running propagation (before 11.0.0 the token of `BatchOptions` was read before each task only, and a running task ran to its end) |
 
@@ -441,16 +504,22 @@ What a stopped run leaves (C2 of lot L4):
   propagated, `AddPropagatedStates` and `AddStateOrientationToICRF`, included), is not `IsPropagated`, and keeps nothing
   for the conjunction analysis; a TLE spacecraft reads SGP4 again, any other its initial orbit;
 - its fuel, `ExecutedManeuvers` and standby chain are advanced up to the stop: an impulse executed before it has burnt
-  its fuel; the next propagation re-arms the spacecraft, on every path, and runs as for a spacecraft never propagated,
+  its fuel, and `ExecutedManeuvers` lists the maneuvers executed up to the stop (decision 58 of #668); until the fix of
+  [#794](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/794) (decision 44 of #668, after
+  lot L5), an attitude the run scheduled before the stop (at its start, or at the event of the impulse before it) whose
+  activation it never reached is in that list too, with its `ThrustWindow` and `ManeuverWindow` set and the chain
+  advanced past it (measured on the code before lot L5: a `NadirAttitude` at 3600 s listed after a stop near 300 s); a
+  stopped run returns no solution, so no `ExecutedManeuver` record lists it, and a completed run reaches every attitude
+  it schedules; the next propagation re-arms the spacecraft, on every path, and runs as for a spacecraft never propagated,
   a next run of the same propagator instance included (#782);
 - in `Scenario.Simulate` and a batch, the stars and spacecraft completed before the stop are complete, the later ones
   untouched; `IsSimulated` stays false, and no summary or result is returned.
 
-One exception: a stopped `TLEPropagator` run adds nothing and leaves the spacecraft as it was, its stored states,
-attitude record and `IsPropagated` those it had before the run (decision 19 of lot L4, decided by S. Guillet,
-2026-11-22). `TLEPropagator` adds its samples to the stored states instead of replacing them, so a run it never
-completed has nothing to replace; this is revisited with R08 in lot L5 (`CancellationTests`, a stop in the middle of a
-run).
+A stopped `TLEPropagator` run changes nothing and leaves the spacecraft as it was, its stored states, attitude record
+and `IsPropagated` those it had before the run: it computes every sample before it re-arms the spacecraft and stores
+them in one block (decision 19 of lot L4, decided by S. Guillet, 2026-11-22, the exception to C2 then, the rule since
+decision 38 of #668, decided by S. Guillet, 2026-11-23; `CancellationTests` and `RunIndependenceTests`, a stop in the
+middle of a run).
 
 The propagators hold no resource: `IPropagator`, `PropagatorBase` and `TLEPropagator` no longer implement
 `IDisposable` (their `Dispose` was empty, or cleared two fields), so `using var propagator = new CentralBodyPropagator(…)`

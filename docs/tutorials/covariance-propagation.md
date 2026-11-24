@@ -170,7 +170,7 @@ var raise = new ApogeeHeightManeuver(earth, epoch.AddHours(1.0), TimeSpan.Zero, 
         PointingSigma = 0.001      // rad, proportional to |ΔV|
     }
 };
-maneuvering.SetStandbyManeuver(raise);
+maneuvering.SetManeuvers(raise);
 
 var withBurn = maneuvering.Propagate(window, new PropagationOptions
 {

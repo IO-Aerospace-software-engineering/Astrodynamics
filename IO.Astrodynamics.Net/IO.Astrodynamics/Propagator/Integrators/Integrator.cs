@@ -167,9 +167,11 @@ public abstract class Integrator : IIntegrator
 
     /// <summary>
     /// Update any StateVector with new position, velocity, and epoch.
-    /// Used by subclasses that maintain their own StateVector pools (e.g., RK78 stage pool).
+    /// Used by the library's steppers that maintain their own StateVector pools (e.g., RK78 stage pool). Internal since
+    /// 11.0.0 (decision 55 of #668, decided by S. Guillet, 2026-11-23, #796): a subclass outside the library could
+    /// rewrite any state in place, a published solution's or a spacecraft's stored states included.
     /// </summary>
-    protected internal static void UpdateStateVector(StateVector sv, in Vector3 position, in Vector3 velocity, in Time epoch)
+    internal static void UpdateStateVector(StateVector sv, in Vector3 position, in Vector3 velocity, in Time epoch)
     {
         sv.UpdatePosition(position);
         sv.UpdateVelocity(velocity);

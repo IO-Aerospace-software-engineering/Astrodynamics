@@ -357,7 +357,7 @@ public class TimeArgumentTests
         var engine = new Engine("en5051", "model", "sn1", 300.0, 10.0, tank);
         spacecraft.AddFuelTank(tank);
         spacecraft.AddEngine(engine);
-        spacecraft.SetStandbyManeuver(new ApogeeHeightManeuver(_earth, window.StartDate, TimeSpan.Zero, 8378137.0,
+        spacecraft.SetManeuvers(new ApogeeHeightManeuver(_earth, window.StartDate, TimeSpan.Zero, 8378137.0,
             engine));
 
         // Act

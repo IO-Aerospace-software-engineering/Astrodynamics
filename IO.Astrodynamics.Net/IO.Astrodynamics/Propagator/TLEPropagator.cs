@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 using System.Threading;
 using IO.Astrodynamics.Body.Spacecraft;
 using IO.Astrodynamics.Frames;
@@ -12,22 +11,36 @@ namespace IO.Astrodynamics.Propagator;
 
 /// <summary>
 /// Samples the SGP4/SDP4 state of a spacecraft whose initial orbital parameters are a <see cref="TLE"/> over a window,
-/// adds the samples to the spacecraft's stored states and returns them as a synthetic <see cref="PropagationSolution"/>.
+/// stores the samples as the spacecraft's stored states and returns them as a synthetic <see cref="PropagationSolution"/>.
 /// </summary>
 /// <remarks>
+/// <para>
 /// The samples are those of the closed form of the grid, counted in ticks (#598): sample i at the window start plus
 /// i·<see cref="DeltaT"/>, i = 0 … ceil(L/ΔT) − 1, then the window end, so ceil(L/ΔT) + 1 samples, the last step shorter
 /// when ΔT does not divide the window length L; a grid point closer to the end than ΔT/10 is dropped, the last step then
 /// longer, up to 1.1 ΔT (a window given in UTC is a few ticks longer or shorter in TDB). Before 11.0.0 they were counted
 /// in whole seconds: a step below 1 s divided by zero, a fractional step ran past the window end, and a window that ΔT
 /// does not divide lost its end.
+/// </para>
+/// <para>
+/// A run computes every sample and every acceleration first, then, in one block, re-arms the spacecraft as a numerical
+/// propagation does (its stored states, attitude record, last solution and executed maneuvers dropped, its tanks
+/// refuelled) and stores its samples, which replace the stored states; a stop or a failure of SGP4 changes nothing
+/// (decision 38 of #668, decided by S. Guillet, 2026-11-23: before 11.0.0 a run added its samples to the stored states,
+/// in one arc with those of earlier runs, and kept the attitude record and the solution of an earlier numerical run). The
+/// spacecraft is then not <see cref="Spacecraft.IsPropagated"/>, and its geometric state reads SGP4 at every epoch, within
+/// the samples too; only <c>GetEphemeris</c> from its Earth without aberration interpolates the samples, within them
+/// (#675).
+/// Every run samples the TLE the propagator was built from, into arrays of its own, so the solutions of two runs share no
+/// state (#785, decision 39 of #668; before 11.0.0 they shared one array, its first sample built once at construction).
+/// </para>
 /// </remarks>
 public class TLEPropagator : IPropagator
 {
     private readonly Time[] _sampleEpochs;
-    private readonly StateVector[] _svCache;
-    // Keyed by label (#512), as the orientations of a frame
-    private readonly Dictionary<Time, StateOrientation> _stateOrientation = new Dictionary<Time, StateOrientation>(Time.ExactComparer);
+
+    // The TLE the propagator was built from, sampled by every run (#783, decision 37 of #668)
+    private readonly TLE _tle;
     public Window Window { get; }
     public Spacecraft Spacecraft { get; }
     public TimeSpan DeltaT { get; }
@@ -39,7 +52,8 @@ public class TLEPropagator : IPropagator
     /// <exception cref="ArgumentNullException"><paramref name="spacecraft"/> is null.</exception>
     /// <exception cref="ArgumentException"><paramref name="window"/> has zero length, one rule on every propagation path
     /// (decisions 7 and 15 of lot L4 of #668, decided by S. Guillet, 2026-11-22; before 11.0.0, one sample at the start),
-    /// or the initial orbital parameters of the spacecraft are not a TLE.</exception>
+    /// or the initial orbital parameters of the spacecraft are not a TLE, or the spacecraft has a maneuver plan, which
+    /// SGP4 cannot execute (decision 40 of #668, decided by S. Guillet, 2026-11-23; before 11.0.0 it was ignored).</exception>
     /// <exception cref="ArgumentOutOfRangeException"><paramref name="deltaT"/> is zero or less (#598; before 11.0.0, a
     /// step below 1 s threw <see cref="DivideByZeroException"/>), or gives more samples than an array holds.</exception>
     public TLEPropagator(Window window, Spacecraft spacecraft, TimeSpan deltaT)
@@ -47,10 +61,17 @@ public class TLEPropagator : IPropagator
         PropagatorBase.RequireWindowLength(window);
         Window = new Window(window.StartDate.ToTDB(), window.EndDate.ToTDB());
         Spacecraft = spacecraft ?? throw new ArgumentNullException(nameof(spacecraft));
-        if (Spacecraft.InitialOrbitalParameters is not TLE)
+        if (Spacecraft.InitialOrbitalParameters is not TLE tle)
         {
             throw new ArgumentException("Spacecraft orbital parameters must be a two lines elements");
         }
+
+        if (PlanError(Spacecraft) is { } planError)
+        {
+            throw new ArgumentException(planError, nameof(spacecraft));
+        }
+
+        _tle = tle;
 
         if (deltaT <= TimeSpan.Zero)
         {
@@ -84,38 +105,52 @@ public class TLEPropagator : IPropagator
         }
 
         _sampleEpochs[intervals] = Window.EndDate;
-
-        var initialState = Spacecraft.InitialOrbitalParameters.AtEpoch(Window.StartDate).ToStateVector();
-        _svCache = new StateVector[_sampleEpochs.Length];
-        _svCache[0] = initialState;
     }
 
+    // Why the spacecraft cannot be sampled: a maneuver plan, which SGP4 cannot execute (decision 40 of #668); null otherwise
+    private static string PlanError(Spacecraft spacecraft) => spacecraft.Maneuvers.Count > 0
+        ? $"{spacecraft.Name} has a maneuver plan, which SGP4 cannot execute: a TLEPropagator samples a spacecraft without " +
+          "maneuvers. Clear the plan (SetManeuvers()), or propagate the spacecraft numerically (Spacecraft.Propagate)."
+        : null;
+
     /// <summary>
-    /// Samples the SGP4 state at the epochs of the grid, adds the samples to the spacecraft's stored states and returns
-    /// them as a solution.
+    /// Samples the SGP4 state of the TLE the propagator was built from at the epochs of the grid, stores the samples as
+    /// the spacecraft's stored states and returns them as a solution.
     /// </summary>
-    /// <param name="cancellationToken">Read before the first sample and at each sample (R28 of #668): a run stopped adds
-    /// nothing to the spacecraft, which is left as it was, its stored states those it had before the run (decision 19 of
-    /// lot L4: the exception to C2, since this propagator adds its samples instead of replacing the stored states).</param>
-    /// <returns>The solution.</returns>
+    /// <param name="cancellationToken">Read before the first sample and at each sample (R28 of #668): a run stopped
+    /// changes nothing on the spacecraft, which re-arms and stores only once every sample is computed (decision 38 of
+    /// #668, decided by S. Guillet, 2026-11-23; decision 19 of lot L4, then the exception to C2, became the rule).</param>
+    /// <returns>The solution, in <see cref="Frame.TEME"/> about the TLE's Earth (<see cref="PropagationSolution.Observer"/>,
+    /// <see cref="PropagationSolution.Frame"/>; decision 53 of #668).</returns>
     /// <exception cref="OperationCanceledException"><paramref name="cancellationToken"/> was cancelled; the exception
     /// carries it.</exception>
+    /// <exception cref="InvalidOperationException">The spacecraft holds other initial orbital parameters than the TLE the
+    /// propagator was built from, compared by reference (#783, decision 37 of #668; before 11.0.0 the run took its first
+    /// sample from the TLE of the construction and the others from the spacecraft's orbit), or it has a maneuver plan,
+    /// set after the propagator was built (decision 40 of #668), or SGP4 fails at a sample. Nothing changes.</exception>
     public PropagationSolution Propagate(CancellationToken cancellationToken = default)
     {
-        cancellationToken.ThrowIfCancellationRequested();
-        _stateOrientation[Window.StartDate] = new StateOrientation(Quaternion.Identity, Vector3.Zero, Window.StartDate, Frame.ICRF);
-        int sampleCount = _sampleEpochs.Length;
-        for (int i = 1; i < sampleCount; i++)
+        // The checks of the run, before the token, as on the numerical path
+        PropagatorBase.RequireInitialOrbit(Spacecraft, _tle);
+        if (PlanError(Spacecraft) is { } planError)
         {
-            cancellationToken.ThrowIfCancellationRequested();
-            _svCache[i] = Spacecraft.InitialOrbitalParameters.ToStateVector(_sampleEpochs[i]);
+            throw new InvalidOperationException(planError);
         }
 
-        _stateOrientation[Window.EndDate] = new StateOrientation(Quaternion.Identity, Vector3.Zero, Window.EndDate, Frame.ICRF);
+        cancellationToken.ThrowIfCancellationRequested();
 
-        // Build synthetic PropagationSolution from TLE states, with the accelerations of SGP4 at the samples, which the cubic
-        // Hermite of a step interpolates the velocity with (#675: zero before, up to 49.9 m/s off SGP4 between samples).
-        // Read before the spacecraft receives the samples: an SGP4 that fails within 1 s of a window end leaves it as it was
+        // 1. Every sample and acceleration, in arrays of this run (#785), before anything changes: a stop or an SGP4 that
+        // fails (within 1 s of a window end for the accelerations) leaves the spacecraft as it was
+        int sampleCount = _sampleEpochs.Length;
+        var samples = new StateVector[sampleCount];
+        for (int i = 0; i < sampleCount; i++)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            samples[i] = _tle.ToStateVector(_sampleEpochs[i]);
+        }
+
+        // The accelerations of SGP4 at the samples, which the cubic Hermite of a step interpolates the velocity with
+        // (#675: zero before, up to 49.9 m/s off SGP4 between samples)
         var accelerations = new Vector3[sampleCount];
         for (int i = 0; i < sampleCount; i++)
         {
@@ -123,9 +158,7 @@ public class TLEPropagator : IPropagator
             accelerations[i] = Sgp4Acceleration(_sampleEpochs[i]);
         }
 
-        Spacecraft.AddPropagatedStates(_svCache);
-
-        var solution = new PropagationSolution { Owner = Spacecraft };
+        var solution = new PropagationSolution { Owner = Spacecraft, Observer = samples[0].Observer, Frame = samples[0].Frame };
         var segment = new PropagationSegment(Window.StartDate, sampleCount);
 
         // The steps join the samples, in TDB seconds from the start (the solution's time argument): ΔT each, the last
@@ -136,16 +169,21 @@ public class TLEPropagator : IPropagator
             double stepSize = (_sampleEpochs[i + 1] - Window.StartDate).TotalSeconds - cumulativeTime;
             segment.AddStep(new AcceptedStep(
                 cumulativeTime, stepSize,
-                _svCache[i].Position, _svCache[i].Velocity,
-                _svCache[i + 1].Position, _svCache[i + 1].Velocity,
+                samples[i].Position, samples[i].Velocity,
+                samples[i + 1].Position, samples[i + 1].Velocity,
                 accelerations[i], accelerations[i + 1]));
         }
 
         solution.AddSegment(segment);
-        solution.SetOutputStates(_svCache);
+        solution.SetOutputStates(samples);
+
+        // 2. In one block: the re-arm of every run (decision 38 of #668), then the samples, which replace the stored states
+        Spacecraft.ResetPropagation();
+        Spacecraft.AddPropagatedStates(samples);
 
         return solution;
     }
+
     // The half-width of the central difference of the SGP4 velocity, s
     private const double Sgp4DifferenceStep = 1.0;
 
@@ -157,8 +195,8 @@ public class TLEPropagator : IPropagator
     /// </summary>
     private Vector3 Sgp4Acceleration(in Time epoch)
     {
-        var after = Spacecraft.InitialOrbitalParameters.ToStateVector(epoch.AddSeconds(Sgp4DifferenceStep)).Velocity;
-        var before = Spacecraft.InitialOrbitalParameters.ToStateVector(epoch.AddSeconds(-Sgp4DifferenceStep)).Velocity;
+        var after = _tle.ToStateVector(epoch.AddSeconds(Sgp4DifferenceStep)).Velocity;
+        var before = _tle.ToStateVector(epoch.AddSeconds(-Sgp4DifferenceStep)).Velocity;
         return (after - before) / (2.0 * Sgp4DifferenceStep);
     }
 

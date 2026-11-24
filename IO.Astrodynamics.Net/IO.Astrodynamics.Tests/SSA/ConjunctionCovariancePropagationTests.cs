@@ -251,7 +251,7 @@ public class ConjunctionCovariancePropagationTests : IClassFixture<ConjunctionCo
         Assert.True(RelativeError(secondaryReference.GetCovariance(state.Epoch), encounter.SecondaryState.Covariance.Value) < 1e-12);
         Assert.Same(protectedSolution, encounter.ProtectedCovariance.Solution);
         Assert.NotSame(secondarySolution, encounter.SecondaryCovariance.Solution);
-        Assert.Null(secondarySolution.CovariancePropagation);
+        Assert.Equal(CovariancePropagationOptions.None, secondarySolution.CovariancePropagation); // None, not null (decision 56 of #668)
     }
 
     [Fact]

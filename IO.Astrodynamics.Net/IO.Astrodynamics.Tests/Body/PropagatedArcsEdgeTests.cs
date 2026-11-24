@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using IO.Astrodynamics.Body;
 using IO.Astrodynamics.Body.Spacecraft;
 using IO.Astrodynamics.Cosmographia;
+using IO.Astrodynamics.Exceptions;
 using IO.Astrodynamics.Maneuver;
 using IO.Astrodynamics.Math;
 using IO.Astrodynamics.Mission;
@@ -129,7 +130,7 @@ public class PropagatedArcsEdgeTests
         var engine = new Engine("eng", "model", "sn", 300.0, 10.0, tank);
         spacecraft.AddEngine(engine);
         var apogee = new ApogeeHeightManeuver(earth, Start, TimeSpan.Zero, 8378137.0, engine) { ExecutionError = error };
-        spacecraft.SetStandbyManeuver(apogee);
+        spacecraft.SetManeuvers(apogee);
         return (spacecraft, apogee);
     }
 
@@ -211,6 +212,78 @@ public class PropagatedArcsEdgeTests
     }
 
     /// <summary>
+    /// An impulse at the end of the propagation, then a later window given to <c>AddPropagatedStates</c> after a gap: the
+    /// arc of one state that the impulse opens (#575), touching the arc before it, is no longer the last arc, and the SPK
+    /// still leaves it out (decision 90 of #668, decided by S. Guillet, 2026-11-23: decision 87 applies to arcs separated by
+    /// a gap; before the second review of lot L5a <c>WriteEphemeris</c> threw "Arc 1 holds fewer than two states", where
+    /// 8436db52 wrote the file). SPICE reads the state before the impulse at the end, the added states over their window
+    /// (the stored states, two-body from the state after the impulse) and no state in the gap (SPKINSUFFDATA); the managed
+    /// reads the state after the impulse at the end.
+    /// </summary>
+    [Theory]
+    [InlineData(4.0, -5515)]
+    [InlineData(10.0, -5516)]
+    public void ImpulseAtTheEnd_ThenALaterWindow_TheSpkLeavesOutTheArcOfOneState(double step, int naifId)
+    {
+        var earth = new CelestialBody(PlanetsAndMoons.EARTH, Frame.ICRF, Start);
+        var (sc, apogee) = Apogee(naifId, Leo(earth), earth);
+        var window = new Window(Start, Start.AddSeconds(2964.0));
+        var outputStep = TimeSpan.FromSeconds(step);
+        var solution = sc.Propagate(window, new PropagationOptions { Integrator = new VVIntegratorOptions { Step = outputStep }, OutputStep = outputStep, ThirdBodies = [earth], CovariancePropagation = CovariancePropagationOptions.None });
+        Assert.True(apogee.ThrustWindow.HasValue);
+        Assert.Equal(0.0, solution.Segments[^1].Duration);
+        var end = window.EndDate;
+        var after = Assert.Single(sc.PropagatedArcs[^1]);
+        var before = solution.Segments[0].Steps[^1];
+
+        // A later window, 600 s to 1 200 s after the end, every 60 s: an arc of its own after a gap (decision 83)
+        var added = Enumerable.Range(0, 11).Select(i => after.AtEpoch(end.AddSeconds(600.0 + 60.0 * i)).ToStateVector()).ToArray();
+        sc.AddPropagatedStates(added);
+        var arcs = sc.PropagatedArcs;
+        Assert.Equal(3, arcs.Count);
+        Assert.Single(arcs[1]);
+        Assert.Equal(added.Length, arcs[2].Length);
+
+        var spk = NewSpk(sc.Name.ToLowerInvariant() + "added");
+        sc.WriteEphemeris(spk);
+        SpiceAPI.Instance.LoadKernels(spk);
+        try
+        {
+            var kernel = new Spacecraft(sc.NaifId, sc.Name, Start, 1000.0, 3000.0, new Clock(sc.Name + "K_CLK", 65536));
+            // At the end: the state before the impulse, where the managed read gives the state after it
+            var atEnd = kernel.GetGeometricStateRelativeTo(end, earth);
+            double endPosition = (atEnd.Position - before.EndPosition).Magnitude(), endVelocity = (atEnd.Velocity - before.EndVelocity).Magnitude();
+            var managedAtEnd = sc.GetGeometricStateRelativeTo(end, earth);
+            Assert.Equal(after.Velocity, managedAtEnd.Velocity);
+
+            // Over the added window: the managed reads, at the stored epochs and between them
+            double addedPosition = 0.0;
+            for (int i = 0; i < 2 * added.Length - 1; i++)
+            {
+                var epoch = added[0].Epoch.AddSeconds(30.0 * i);
+                addedPosition = System.Math.Max(addedPosition, (kernel.GetGeometricStateRelativeTo(epoch, earth).Position - sc.GetGeometricStateRelativeTo(epoch, earth).Position).Magnitude());
+            }
+
+            _output.WriteLine($"MEASURE decision 90 SPK after an added window, VV {step} s: arcs [{string.Join(",", arcs.Select(a => a.Length))}], at the end against the state before the impulse {endPosition:E2} m {endVelocity:E2} m/s, " +
+                              $"added window against the managed reads {addedPosition:E2} m");
+            Assert.True(endPosition <= SpkAtTheEnd, $"SPK at the end {endPosition:E3} m");
+            Assert.True(endVelocity <= SpkVelocityAtTheEnd, $"SPK at the end {endVelocity:E3} m/s");
+            Assert.True(addedPosition <= PropagatedArcsTests.SpkAgainstManaged, $"SPK over the added window {addedPosition:E3} m");
+
+            // The gap: no state in the SPK, none in the managed reads
+            var inGap = end.AddSeconds(300.0);
+            var spiceError = Assert.Throws<SpiceException>(() => kernel.GetGeometricStateRelativeTo(inGap, earth));
+            Assert.Equal("SPICE(SPKINSUFFDATA)", spiceError.ShortMessage);
+            Assert.Throws<InvalidOperationException>(() => sc.GetGeometricStateRelativeTo(inGap, earth));
+        }
+        finally
+        {
+            SpiceAPI.Instance.UnloadKernels(spk);
+            spk.Delete();
+        }
+    }
+
+    /// <summary>
     /// An impulse within 2 µs of the start or of the end of the window, located by RK7(8) (a timed impulse of 20 m/s, review
     /// of PR 1 of #554, ARC-2): the solution then has a second segment shorter than 2 µs. The first and the last output are
     /// kept in their own arc with the impulse's state, unfilled: the managed reads and the SPK cover the window, the solution
@@ -229,7 +302,7 @@ public class PropagatedArcsEdgeTests
         spacecraft.AddFuelTank(tank);
         var engine = new Engine("eng", "model", "sn", 300.0, 10.0, tank);
         spacecraft.AddEngine(engine);
-        spacecraft.SetStandbyManeuver(new TimedImpulse(earth, Start, engine, Start.AddSeconds(target), 20.0));
+        spacecraft.SetManeuvers(new TimedImpulse(earth, Start, engine, Start.AddSeconds(target), 20.0));
         var window = new Window(Start, Start.AddHours(2.0));
         var solution = spacecraft.Propagate(window, new PropagationOptions { Integrator = new RK78IntegratorOptions { AbsoluteTolerance = 1e-12, RelativeTolerance = 1e-12 }, OutputStep = TimeSpan.FromSeconds(10.0), ThirdBodies = [earth], CovariancePropagation = CovariancePropagationOptions.None });
         Assert.Equal(2, solution.Segments.Count);
@@ -297,9 +370,9 @@ public class PropagatedArcsEdgeTests
         var first = new ApogeeHeightManeuver(earth, Start, TimeSpan.Zero, 8378137.0, fast);
         var lvlh = TriadAttitude.CreateLVLH(earth, Start, TimeSpan.Zero, engine);
         var second = new ApogeeHeightManeuver(earth, Start, TimeSpan.Zero, 9378137.0, engine);
-        first.SetNextManeuver(lvlh);
-        lvlh.SetNextManeuver(second);
-        spacecraft.SetStandbyManeuver(first);
+        spacecraft.SetManeuvers(first,
+            lvlh,
+            second);
         var solution = spacecraft.Propagate(new Window(Start, Start.AddHours(2.0)), new PropagationOptions { Integrator = new RK78IntegratorOptions { AbsoluteTolerance = 1e-12, RelativeTolerance = 1e-12 }, OutputStep = TimeSpan.FromSeconds(10.0), ThirdBodies = [earth], CovariancePropagation = CovariancePropagationOptions.None });
         var events = solution.Segments.Skip(1).Select(x => x.BaseEpoch).ToArray();
         Assert.Equal(2, events.Length);
@@ -373,8 +446,7 @@ public class PropagatedArcsEdgeTests
         var target = Start.AddSeconds(2000.0);
         var trim = new TimedImpulse(earth, Start, engine, target, 1.0e-5);
         var burn = new TimedImpulse(earth, Start, engine, target.AddSeconds(d), 50.0);
-        trim.SetNextManeuver(burn);
-        spacecraft.SetStandbyManeuver(trim);
+        spacecraft.SetManeuvers(trim, burn);
         var solution = spacecraft.Propagate(new Window(Start, Start.AddHours(2.0)), new PropagationOptions { Integrator = new RK78IntegratorOptions { AbsoluteTolerance = 1e-12, RelativeTolerance = 1e-12 }, OutputStep = TimeSpan.FromSeconds(10.0), ThirdBodies = [earth], CovariancePropagation = CovariancePropagationOptions.None });
         var events = solution.Segments.Skip(1).Select(x => x.BaseEpoch).ToArray();
         Assert.Equal(2, events.Length);
@@ -476,7 +548,7 @@ public class PropagatedArcsEdgeTests
         ImpulseManeuver impulse = maneuver == "Apogee"
             ? new ApogeeHeightManeuver(earth, Start, TimeSpan.Zero, 8378137.0, engine) { ExecutionError = error }
             : new CombinedManeuver(earth, Start, TimeSpan.Zero, 7078137.0, 45.0 * IO.Astrodynamics.Constants.Deg2Rad, engine) { ExecutionError = error };
-        spacecraft.SetStandbyManeuver(impulse);
+        spacecraft.SetManeuvers(impulse);
         var window = new Window(Start, Start.AddHours(2.0));
         var options = new CovariancePropagationOptions { Mode = CovariancePropagationMode.Covariance };
         PropagationSolution solution;
@@ -615,7 +687,7 @@ public class PropagatedArcsEdgeTests
         spacecraft.AddFuelTank(tank);
         var engine = new Engine("eng", "model", "sn", 300.0, 10.0, tank);
         spacecraft.AddEngine(engine);
-        spacecraft.SetStandbyManeuver(new CombinedManeuver(earth, Start, TimeSpan.Zero, 7078137.0, 45.0 * IO.Astrodynamics.Constants.Deg2Rad, engine));
+        spacecraft.SetManeuvers(new CombinedManeuver(earth, Start, TimeSpan.Zero, 7078137.0, 45.0 * IO.Astrodynamics.Constants.Deg2Rad, engine));
         var step = TimeSpan.FromSeconds(60.0);
         var solution = spacecraft.Propagate(new Window(Start, Start.AddHours(2.0)), new PropagationOptions { Integrator = integrator == "RK78" ? new RK78IntegratorOptions { AbsoluteTolerance = 1e-12, RelativeTolerance = 1e-12 } : new VVIntegratorOptions { Step = step }, OutputStep = step, ThirdBodies = [earth], CovariancePropagation = CovariancePropagationOptions.None });
         var arc = spacecraft.PropagatedArcs[0];
@@ -903,7 +975,7 @@ public class PropagatedArcsEdgeTests
         ApogeeHeightManeuver Chain(Spacecraft sc, Engine engine, CelestialBody earth, Time start)
         {
             var apogee = new ApogeeHeightManeuver(earth, start.AddSeconds(100.0), TimeSpan.Zero, 7200000.0, engine);
-            sc.SetStandbyManeuver(apogee);
+            sc.SetManeuvers(apogee);
             return apogee;
         }
 

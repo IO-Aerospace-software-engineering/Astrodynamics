@@ -218,7 +218,7 @@ public class PropagationGoldenTests
         var engine = new Engine("golden3engine", "model", "sn1", 300.0, 10.0, tank);
         spacecraft.AddFuelTank(tank);
         spacecraft.AddEngine(engine);
-        spacecraft.SetStandbyManeuver(new ApogeeHeightManeuver(earth, Start, TimeSpan.Zero, 8378137.0, engine));
+        spacecraft.SetManeuvers(new ApogeeHeightManeuver(earth, Start, TimeSpan.Zero, 8378137.0, engine));
 
         return spacecraft.PropagateWithVariational(new Window(Start, Start.AddHours(4.0)),
             new PropagationOptions { Integrator = new RK78IntegratorOptions { AbsoluteTolerance = 1e-11, RelativeTolerance = 1e-11 }, OutputStep = TimeSpan.FromSeconds(60.0), ThirdBodies = new CelestialItem[] { earth, moon, sun } },

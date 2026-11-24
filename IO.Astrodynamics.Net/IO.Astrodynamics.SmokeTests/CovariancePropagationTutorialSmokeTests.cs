@@ -146,7 +146,7 @@ public class CovariancePropagationTutorialSmokeTests
                 PointingSigma = 0.001      // rad, proportional to |ΔV|
             }
         };
-        maneuvering.SetStandbyManeuver(raise);
+        maneuvering.SetManeuvers(raise);
 
         var withBurn = maneuvering.Propagate(window, new PropagationOptions
         {

@@ -36,7 +36,7 @@ using Time = IO.Astrodynamics.TimeSystem.Time;
 /// with <see cref="EventAction.Continue"/>, through the propagator's calls and through <c>Spacecraft.Propagate</c>
 /// (choice 3); two gated detectors through
 /// <see cref="IIntegrator.IntegrateSegment"/>; the search-start rule of <see cref="PlaneAlignmentManeuver"/> (choice 7); the
-/// public <see cref="ManeuverEventDetector.Evaluate"/> (choice 8); <c>EvaluateAvoidance</c> after an impulse whose gate
+/// <see cref="ManeuverEventDetector.Evaluate"/> (choice 8); <c>EvaluateAvoidance</c> after an impulse whose gate
 /// moved its burn; the two-<c>Propagate</c> construction of GMAT in SSB mode.
 /// </summary>
 /// <remarks>
@@ -273,7 +273,7 @@ public class MinimumEpochGateEdgeTests
             var engine = new Engine("eng", "model", "sn", 300.0, 10.0, tank);
             spacecraft.AddEngine(engine);
             var m = maneuver(engine);
-            spacecraft.SetStandbyManeuver(m);
+            spacecraft.SetManeuvers(m);
             return (spacecraft, m);
         }
 
@@ -394,7 +394,9 @@ public class MinimumEpochGateEdgeTests
         var atSearchStart = new PlaneAlignmentManeuver(S, TimeSpan.Zero, target, engine);
         double g = atSearchStart.ComputeEventValueAtSearchStart(state);
         var handed = new PlaneAlignmentManeuver(S, TimeSpan.Zero, target, engine);
-        double gHanded = handed.ComputeEventValue(state);
+        // The g-function of the run, through which the detector locks the node (the public ComputeEventValue is pure,
+        // decision 50 of #668)
+        double gHanded = handed.ComputeEventValueInRun(state);
 
         Assert.Equal(height, g, 1e-6);
         Assert.Equal(g, gHanded);
@@ -408,8 +410,8 @@ public class MinimumEpochGateEdgeTests
     }
 
     /// <summary>
-    /// The public <see cref="ManeuverEventDetector.Evaluate"/> keeps its +1 before the minimum epoch (choice 8), for a caller
-    /// outside the library; the gate the integrators read is the minimum epoch, and the g-function there is the maneuver's.
+    /// <see cref="ManeuverEventDetector.Evaluate"/> keeps its +1 before the minimum epoch (choice 8), for an integrator that
+    /// does not know the gate (the detector internal since decision 88 of #668); the gate the integrators read is the minimum epoch, and the g-function there is the maneuver's.
     /// </summary>
     [Fact]
     public void ManeuverEventDetector_EvaluateKeepsItsGuard_TheGateIsTheMinimumEpoch()
@@ -454,7 +456,7 @@ public class MinimumEpochGateEdgeTests
         protectedCraft.AddEngine(engine);
         var gate = MinimumEpochGateTests.GateAtTt(1000.0);
         var impulse = new PerigeeHeightManeuver(earth, gate, TimeSpan.Zero, 6878137.0, engine);
-        protectedCraft.SetStandbyManeuver(impulse);
+        protectedCraft.SetManeuvers(impulse);
         var window = new Window(S, S.AddHours(3.0));
         var solution = protectedCraft.Propagate(window, new PropagationOptions { Integrator = new RK78IntegratorOptions { AbsoluteTolerance = 1e-12, RelativeTolerance = 1e-12 }, OutputStep = TimeSpan.FromSeconds(60.0), ThirdBodies = [earth], CovariancePropagation = CovariancePropagationOptions.None });
 
@@ -520,7 +522,7 @@ public class MinimumEpochGateEdgeTests
             spacecraft.AddEngine(engine);
             if (withManeuver)
             {
-                spacecraft.SetStandbyManeuver(perigeeRaise
+                spacecraft.SetManeuvers(perigeeRaise
                     ? new PerigeeHeightManeuver(earth, gate, TimeSpan.Zero, 6878137.0, engine)
                     : new ApogeeHeightManeuver(earth, gate, TimeSpan.Zero, 8378137.0, engine));
             }

@@ -239,14 +239,14 @@ On `PropagationSolution`:
 
 | Member | Returns | Units |
 |--------|---------|-------|
-| `CovariancePropagation` | The options of the propagation; null when off | — |
+| `CovariancePropagation` | The options of the propagation; `CovariancePropagationOptions.None` when off (null before 11.0.0, decision 56 of #668: a test `== null` is now always false) | — |
 | `SensitivityParameters` | The columns of Ψ, in order | — |
 | `ExtendedCovarianceParameters` | The consider parameters, in the order of the rows and columns 7 and after of the extended covariance | — |
 | `GetStateTransitionMatrix(Time)` | Φ(t, t0), 6×6 | position-position and velocity-velocity blocks dimensionless; ∂r/∂v0 in s; ∂v/∂r0 in 1/s |
 | `GetParameterSensitivity(Time)` | Ψ(t), 6×p | m and m/s per unit of the coefficient |
 | `GetCovariance(Time)` | P(t), 6×6 | m², m²/s, m²/s² |
 | `GetExtendedCovariance(Time)` | (6 + c)×(6 + c) | P as above; state-parameter blocks in m and m/s; parameter block dimensionless |
-| `GetStateVector(Time)` | The state of `InterpolateAt`, with its covariance in covariance mode | m, m/s |
+| `GetStateVector(Time)` | The state at the epoch (the dense output of the solution), with its covariance in covariance mode | m, m/s |
 
 - Rows and columns are ordered x, y, z, vx, vy, vz, in the frame of the initial orbital parameters, which is the
   inertial frame of the propagation (ICRF or another), relative to its central body. Moving the origin from the observer of the initial state to the central body is a translation by a known
@@ -273,7 +273,7 @@ output state allocates its covariance matrix only.
 ### Cost
 
 Inside an integration step, a value costs one shortened RK7(8) step from the start of that step: 13 evaluations of the
-forces for a state (`InterpolateAt`), and 13 evaluations of the forces and 13 of their partial derivatives for Φ, Ψ or P
+forces for a state (`GetStateVector` without the covariance), and 13 evaluations of the forces and 13 of their partial derivatives for Φ, Ψ or P
 (the getters above). In covariance mode, every output state (`StateVectors`) carries its P, so it is computed the second
 way; with the state transition matrix only, the output states are computed the first way.
 
@@ -514,7 +514,7 @@ covariance at their burn, [Avoidance Studies](avoidance.md).
 
 ## Thread Safety
 
-The evaluations of a solution (`InterpolateAt` and the getters above) run under the lock of the forces of its
+The evaluations of a solution (the getters above) run under the lock of the forces of its
 propagator, one per instance, shared by the solutions of all its runs and held by each run (#782; a lock per solution
 before). They evaluate the forces of their propagation, its own geopotential field included. See [Thread Safety](../guides/thread-safety.md).
 

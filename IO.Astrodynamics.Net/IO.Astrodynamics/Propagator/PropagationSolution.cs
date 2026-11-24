@@ -2,6 +2,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using IO.Astrodynamics.Body;
 using IO.Astrodynamics.Frames;
 using IO.Astrodynamics.Math;
@@ -17,20 +18,43 @@ namespace IO.Astrodynamics.Propagator;
 /// Complete propagation trajectory spanning multiple segments.
 /// At maneuver boundaries, returns the post-maneuver state for epochs at or after the event.
 /// </summary>
+/// <remarks>
+/// Built by the propagators of the library only: its constructor and mutators are internal, and its collections
+/// (<see cref="Segments"/>, <see cref="StateVectors"/>, <see cref="Maneuvers"/>, and the steps of each segment) are
+/// read-only views, so a published solution cannot be changed (decision 55 of #668, decided by S. Guillet, 2026-11-23,
+/// #796: before 11.0.0 a caller could add a segment or a step, extending its window, or replace an output state). An
+/// <see cref="IPropagator"/> implemented outside the library subclasses <see cref="PropagatorBase"/>, or returns the
+/// solution of a library propagator it delegates to.
+/// </remarks>
 public sealed class PropagationSolution
 {
     private readonly List<PropagationSegment> _segments = new();
-    private StateVector[] _stateVectors = Array.Empty<StateVector>();
+    private readonly ReadOnlyCollection<PropagationSegment> _segmentsView;
+    private ReadOnlyCollection<StateVector> _stateVectors = Array.AsReadOnly(Array.Empty<StateVector>());
+
+    /// <summary>A solution of no segment, filled by the propagator that builds it.</summary>
+    internal PropagationSolution()
+    {
+        _segmentsView = _segments.AsReadOnly();
+    }
 
     /// <summary>
-    /// Ordered propagation segments.
+    /// Ordered propagation segments, a read-only view.
     /// </summary>
-    public IReadOnlyList<PropagationSegment> Segments => _segments;
+    public IReadOnlyList<PropagationSegment> Segments => _segmentsView;
 
     /// <summary>
-    /// Pre-computed state vectors sampled at DeltaT intervals.
+    /// The output states, every output step from the start and at the end of the window, a read-only view.
     /// </summary>
     public IReadOnlyList<StateVector> StateVectors => _stateVectors;
+
+    /// <summary>
+    /// The maneuvers the run executed, one record each in execution order, attitudes included (decision 57 of #668,
+    /// decided by S. Guillet, 2026-11-23): the values of this run, which a later run does not change, unlike those of the
+    /// definitions (decision 52). Empty for a run that executed none, a <see cref="TLEPropagator"/> solution and a
+    /// solution built otherwise.
+    /// </summary>
+    public IReadOnlyList<ExecutedManeuver> Maneuvers { get; internal set; } = Array.AsReadOnly(Array.Empty<ExecutedManeuver>());
 
     /// <summary>
     /// The dynamics of the propagation, kept in RK7(8) for the evaluations of the variational equations after it; null
@@ -77,6 +101,20 @@ public sealed class PropagationSolution
             return WindowEnd ?? TimeArgument.EpochAt(last.BaseEpoch, last.Duration);
         }
     }
+
+    /// <summary>
+    /// The propagated window, to one tick: from the base of the first segment, the TDB label of the start of the
+    /// propagation, to the end of the propagation (the end of its window, one tick off at most when the window was not
+    /// given in TDB), in TDB labels. The reads of the solution (<see cref="GetStateVector"/>,
+    /// <see cref="GetStateTransitionMatrix"/>, <see cref="GetParameterSensitivity"/>, <see cref="GetCovariance"/>,
+    /// <see cref="GetExtendedCovariance"/>) accept an epoch of any scale within it, as the seconds of the time argument
+    /// read it, one tick allowed at each end, and throw <see cref="ArgumentOutOfRangeException"/> naming it outside
+    /// (decision 53 of #668, decided by S. Guillet, 2026-11-23; choice 8 of the re-baseline of #668).
+    /// </summary>
+    /// <exception cref="InvalidOperationException">The solution holds no segment.</exception>
+    public Window Window => new(_segments.Count > 0
+        ? _segments[0].BaseEpoch
+        : throw new InvalidOperationException("Solution contains no segments."), End.ToTDB());
 
     private PropagationSegment LastSegment =>
         _segments.Count > 0 ? _segments[^1] : throw new InvalidOperationException("Solution contains no segments.");
@@ -146,17 +184,28 @@ public sealed class PropagationSolution
         return _segments[0];
     }
 
-    /// <summary>Observer of the propagated states, set by the propagator; null for a solution built by hand.</summary>
-    internal ILocalizable Observer { get; set; }
-
-    /// <summary>Frame of the propagated states, set by the propagator; null for a solution built by hand.</summary>
-    internal Frame Frame { get; set; }
+    /// <summary>
+    /// The observer of the states of the solution, its central body (the Sun when the initial orbital parameters are
+    /// relative to a star or a barycenter), set by the propagator: the TLE's Earth for a <see cref="TLEPropagator"/>
+    /// solution; null for a solution built by hand (decision 53 of #668, decided by S. Guillet, 2026-11-23; internal
+    /// before 11.0.0).
+    /// </summary>
+    public ILocalizable Observer { get; internal set; }
 
     /// <summary>
-    /// The options of the propagation of the state transition matrix and of the covariance; null when the propagation
-    /// did not integrate them (<see cref="CovariancePropagationOptions"/>).
+    /// The frame of the states of the solution, the inertial frame of the propagation, set by the propagator:
+    /// <see cref="Frames.Frame.TEME"/> for a <see cref="TLEPropagator"/> solution; null for a solution built by hand
+    /// (decision 53 of #668, decided by S. Guillet, 2026-11-23; internal before 11.0.0).
     /// </summary>
-    public CovariancePropagationOptions CovariancePropagation { get; internal set; }
+    public Frame Frame { get; internal set; }
+
+    /// <summary>
+    /// The options of the propagation of the state transition matrix and of the covariance;
+    /// <see cref="CovariancePropagationOptions.None"/> when the propagation did not integrate them, a
+    /// <see cref="TLEPropagator"/> solution and a solution built otherwise included (decision 56 of #668, decided by S.
+    /// Guillet, 2026-11-23: null before 11.0.0, so a test <c>== null</c> is now always false).
+    /// </summary>
+    public CovariancePropagationOptions CovariancePropagation { get; internal set; } = CovariancePropagationOptions.None;
 
     /// <summary>
     /// The resolved settings of a propagation built from <see cref="PropagationOptions"/> (R06 of #668, D1 rule 10), with
@@ -206,17 +255,18 @@ public sealed class PropagationSolution
             : ForceParameters.None);
 
     /// <summary>
-    /// Set the sampled output state vectors.
+    /// Set the sampled output state vectors, behind a read-only view; internal since 11.0.0 (decision 55 of #668). The
+    /// caller hands the array over and no longer writes it.
     /// </summary>
-    public void SetOutputStates(StateVector[] states)
+    internal void SetOutputStates(StateVector[] states)
     {
-        _stateVectors = states ?? throw new ArgumentNullException(nameof(states));
+        _stateVectors = Array.AsReadOnly(states ?? throw new ArgumentNullException(nameof(states)));
     }
 
     /// <summary>
-    /// Add a completed segment to the solution.
+    /// Add a completed segment to the solution; internal since 11.0.0 (decision 55 of #668).
     /// </summary>
-    public void AddSegment(PropagationSegment segment)
+    internal void AddSegment(PropagationSegment segment)
     {
         if (segment == null) throw new ArgumentNullException(nameof(segment));
         _segments.Add(segment);
@@ -244,8 +294,13 @@ public sealed class PropagationSolution
     /// The epoch may be in any time scale: an epoch and its conversion to another frame read the same instant, to the
     /// tick of their labels, and so do the other readers of the solution (#507).
     /// </para>
+    /// <para>
+    /// Internal since 11.0.0 (decision 54 of #668, decided by S. Guillet, 2026-11-23): the library's readers that rely on
+    /// its clamp (the outputs, the attitude samples, the conjunction analysis); the public reader is
+    /// <see cref="GetStateVector"/>, which names the frame and the observer and throws outside <see cref="Window"/>.
+    /// </para>
     /// </remarks>
-    public (Vector3 position, Vector3 velocity) InterpolateAt(Time epoch)
+    internal (Vector3 position, Vector3 velocity) InterpolateAt(Time epoch)
     {
         var segment = SegmentAt(epoch, out double t);
         return Dynamics != null ? Dynamics.StateAt(segment, t) : segment.InterpolateAt(t);
@@ -270,7 +325,7 @@ public sealed class PropagationSolution
     /// </remarks>
     /// <param name="epoch">The epoch, within the propagation; up to one tick of <see cref="Time"/> (100 ns) after its
     /// end, which reads the values at the end.</param>
-    /// <exception cref="ArgumentOutOfRangeException"><paramref name="epoch"/> is outside the propagation.</exception>
+    /// <exception cref="ArgumentOutOfRangeException"><paramref name="epoch"/> is outside the propagation (<see cref="Window"/>).</exception>
     /// <exception cref="InvalidOperationException">The propagation did not integrate the state transition matrix
     /// (<see cref="CovariancePropagationOptions"/>).</exception>
     public Matrix GetStateTransitionMatrix(Time epoch)
@@ -299,7 +354,7 @@ public sealed class PropagationSolution
     /// </remarks>
     /// <param name="epoch">The epoch, within the propagation; up to one tick of <see cref="Time"/> (100 ns) after its
     /// end, which reads the values at the end.</param>
-    /// <exception cref="ArgumentOutOfRangeException"><paramref name="epoch"/> is outside the propagation.</exception>
+    /// <exception cref="ArgumentOutOfRangeException"><paramref name="epoch"/> is outside the propagation (<see cref="Window"/>).</exception>
     /// <exception cref="InvalidOperationException">The propagation did not integrate the state transition matrix, or
     /// has no force with a parameter (no drag, no radiation force).</exception>
     public Matrix GetParameterSensitivity(Time epoch)
@@ -335,7 +390,7 @@ public sealed class PropagationSolution
     /// </remarks>
     /// <param name="epoch">The epoch, within the propagation; up to one tick of <see cref="Time"/> (100 ns) after its
     /// end, which reads the values at the end.</param>
-    /// <exception cref="ArgumentOutOfRangeException"><paramref name="epoch"/> is outside the propagation.</exception>
+    /// <exception cref="ArgumentOutOfRangeException"><paramref name="epoch"/> is outside the propagation (<see cref="Window"/>).</exception>
     /// <exception cref="InvalidOperationException">The propagation did not propagate the covariance
     /// (<see cref="CovariancePropagationMode.Covariance"/>).</exception>
     public Matrix GetCovariance(Time epoch)
@@ -358,7 +413,7 @@ public sealed class PropagationSolution
     /// </remarks>
     /// <param name="epoch">The epoch, within the propagation; up to one tick of <see cref="Time"/> (100 ns) after its
     /// end, which reads the values at the end.</param>
-    /// <exception cref="ArgumentOutOfRangeException"><paramref name="epoch"/> is outside the propagation.</exception>
+    /// <exception cref="ArgumentOutOfRangeException"><paramref name="epoch"/> is outside the propagation (<see cref="Window"/>).</exception>
     /// <exception cref="InvalidOperationException">The propagation did not propagate the covariance, or has no consider
     /// parameter.</exception>
     public Matrix GetExtendedCovariance(Time epoch)
@@ -390,9 +445,9 @@ public sealed class PropagationSolution
     /// </remarks>
     /// <param name="epoch">The epoch, within the propagation; up to one tick of <see cref="Time"/> (100 ns) after its
     /// end, which reads the values at the end.</param>
-    /// <exception cref="ArgumentOutOfRangeException"><paramref name="epoch"/> is outside the propagation.</exception>
+    /// <exception cref="ArgumentOutOfRangeException"><paramref name="epoch"/> is outside the propagation (<see cref="Window"/>).</exception>
     /// <exception cref="InvalidOperationException">The solution was not built by a propagator: it has no observer and
-    /// frame.</exception>
+    /// frame (a <see cref="TLEPropagator"/> solution has them since 11.0.0, decision 53 of #668).</exception>
     public StateVector GetStateVector(Time epoch)
     {
         CheckWithin(epoch);
@@ -561,8 +616,11 @@ public sealed class PropagationSolution
             throw new InvalidOperationException("Solution contains no segments.");
 
         if (!Covers(epoch, EpochTick))
+        {
+            var window = Window;
             throw new ArgumentOutOfRangeException(nameof(epoch), epoch,
-                "The epoch is outside the propagation.");
+                $"The epoch is outside the window of the solution, [{window.StartDate}, {window.EndDate}].");
+        }
     }
 
     // The segment containing the epoch, the later one at boundaries (post-maneuver state), and the time from its start

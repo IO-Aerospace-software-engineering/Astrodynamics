@@ -172,21 +172,26 @@ var solution = spacecraft.Propagate(new Window(epoch, epoch.AddHours(2)), new Pr
 
 ## Dense Output
 
-The propagation solution supports interpolation at arbitrary epochs within the propagated window:
+The propagation solution gives the state at any epoch of its window (`PropagationSolution.Window`), in the frame of the
+propagation and about its central body; an epoch outside the window throws `ArgumentOutOfRangeException`:
 
 ```csharp
 // Inputs: solution (PropagationSolution), epoch (Time)
-var (position, velocity) = solution.InterpolateAt(epoch.AddHours(12));
+var state = solution.GetStateVector(epoch.AddHours(12));
 
-Console.WriteLine($"Position: {position}");
-Console.WriteLine($"Velocity: {velocity}");
+Console.WriteLine($"Position: {state.Position}");
+Console.WriteLine($"Velocity: {state.Velocity}");
 ```
 
-Interpolation uses cubic Hermite polynomials constructed from the position, velocity, and acceleration stored at each accepted integration step. This provides smooth, continuous output without re-integrating.
+In RK7(8) the state is computed by a shortened RK7(8) step from the start of the accepted step that holds the epoch, at
+the accuracy of the integrator; in Velocity-Verlet it is the cubic Hermite interpolation of the accepted step, from the
+position, velocity and acceleration stored at its ends. Neither re-integrates the propagation. `GetStateVector` is the
+one public reader of a solution (decision 54 of #668: the former `InterpolateAt`, which returned an unnamed tuple and
+clamped outside the window, is internal since 11.0.0).
 
 ## Summary
 
 - `Spacecraft.Propagate` is the quickest way to run a propagation; `PropagationOptions` holds every setting, RK7(8) at 1e-9 every 60 s by default.
 - The RK7(8) integrator provides adaptive step control and 8th-order accuracy; Velocity-Verlet takes its own step.
 - Force models include two-body gravity, geopotential harmonics, third-body perturbations, drag, SRP, albedo, and thermal radiation.
-- Dense output via `InterpolateAt` provides states at arbitrary times without re-propagation.
+- Dense output via `GetStateVector` provides states at arbitrary times of the window without re-propagation.

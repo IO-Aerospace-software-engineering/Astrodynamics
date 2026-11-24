@@ -1369,10 +1369,12 @@ Represents a spacecraft with components.
 | `AddFuelTank(FuelTank fuelTank)` | Add fuel tank, held by no other spacecraft (#676, #586); a maneuver draws on a tank of the spacecraft it is propagated with, or the propagation throws before it runs |
 | `AddPayload(Payload payload)` | Add payload |
 | `GetTotalMass()` | Get total mass including fuel |
-| `GetTotalFuel()` | Get total fuel mass |
+| `GetInitialFuel()` | The fuel of the spacecraft's own tanks at the start of a run (`GetTotalFuel` before 11.0.0, decision 60 of #668) |
+| `GetRemainingFuel()` | The fuel left in the spacecraft's own tanks |
 | `GetTotalISP()` | Get combined specific impulse |
 | `GetTotalFuelFlow()` | Get combined fuel flow rate |
-| `SetStandbyManeuver(Maneuver maneuver, Time? minEpoch)` | Set the head of the maneuver chain, which the next propagation starts from (a second call replaces the first, null clears it, #584); a later minimum epoch given here is kept by every propagation (an impulse never fires before it, an attitude never activates before it) |
+| `SetManeuvers(params Maneuver[] maneuvers)` | Set the maneuver plan, in order, which every propagation runs from its first maneuver: the one way to link it (a second call replaces the first, no maneuver clears it, #584); it claims each maneuver for the spacecraft, `ArgumentException` for a maneuver of another spacecraft's plan, a repeated one, an engine whose tank is not the spacecraft's or a target orbit in another frame (decisions 45 and 46 of #668) |
+| `Maneuvers` | The plan, as `SetManeuvers` set it |
 | `Propagate(Window window, PropagationOptions options = null, CancellationToken cancellationToken = default)` | Propagate orbit with the settings of `options` (RK7(8) at 1e-9 about the central body alone, outputs every 60 s, when null), returns `PropagationSolution`; the token stops the run (`OperationCanceledException`, the spacecraft left re-armed and not propagated, R28 of #668) |
 | `GetEphemeris(Time epoch, ILocalizable observer, Frame frame, Aberration aberration)` | Get state relative to observer (uses reference-body pattern) |
 | `GetGeometricStateRelativeTo(Time epoch, CelestialItem referenceBody)` | Get geometric state relative to a reference body (interpolates from cache) |
@@ -1419,8 +1421,8 @@ var solution = spacecraft.Propagate(
     }
 );
 
-// Interpolate at any epoch within the propagation window: position (m) and velocity (m/s)
-var (positionAtHalfDay, velocityAtHalfDay) = solution.InterpolateAt(epoch.AddHours(12));
+// The state at any epoch within the propagation window, in its frame about its central body: position (m) and velocity (m/s)
+var halfDay = solution.GetStateVector(epoch.AddHours(12));
 
 // Read the stored states relative to an observer, in ICRF without correction: every minute over the first four
 var states = spacecraft.GetEphemeris(new Window(epoch, epoch.AddMinutes(4)), earth, TimeSpan.FromMinutes(1));
@@ -1448,9 +1450,8 @@ Propulsion engine.
 | `Thrust` | Thrust force (N): ISP × g0 × fuel flow |
 | `FuelTank` | The tank the engine draws on, given to the constructor |
 
-| Method | Description |
-|--------|-------------|
-| `Ignite(in Vector3 deltaV)` | Burn the fuel of a ΔV (Tsiolkovsky, on the total mass of the tank's spacecraft) from its tank; returns the fuel burned (kg) |
+The engine burns its fuel in a run only: `Ignite` is internal since 11.0.0 (decision 49 of #668); the fuel of a ΔV is
+`Tsiolkovski.DeltaM(isp, mass, deltaV)`.
 
 #### FuelTank
 
@@ -1498,12 +1499,12 @@ Launch window computation.
 
 #### Maneuver (Base class)
 
-Base class for orbital maneuvers.
+Base class of the two kinds of maneuver, `ImpulseManeuver` and `Attitude`, the bases of a user maneuver (its constructor is `private protected`, decision 48 of #668).
 
 | Method | Description |
 |--------|-------------|
-| `TryExecute(StateVector stateVector)` | Execute maneuver and return new state + orientation |
-| `SetNextManeuver(Maneuver maneuver)` | Chain maneuvers in sequence |
+| `NextManeuver` | The next maneuver of its plan, set by `Spacecraft.SetManeuvers` only |
+| `DeltaV`, `FuelBurned`, `ThrustWindow`, `ManeuverWindow` | The last run's values, cleared by the re-arm of the next run (decision 52 of #668) |
 
 #### ImpulseManeuver (Abstract)
 
@@ -1514,7 +1515,7 @@ Base class for impulse maneuvers. Uses industry-standard g-function event detect
 | `ComputeEventValue(StateVector localState)` | Continuous g-function; zero-crossing triggers the maneuver. State is maneuver-center-relative. |
 | `EventCrossingDirection` | Which zero-crossing direction triggers this maneuver (`NegativeToPositive`, `PositiveToNegative`, `Any`) |
 | `CheckPreconditions(StateVector state)` | Optional additional constraints (default: true). Override for maneuvers with extra conditions. |
-| `TryExecute(StateVector stateVector)` | Execute maneuver: compute DeltaV, burn fuel, update state |
+| `ComputeDeltaV(StateVector stateVector)` | The delta-V at the state, in its frame, without executing the maneuver: the state taken about the maneuver's centre, as the execution takes it; pure (decision 50 of #668) |
 | `DeltaV` | Computed delta-V vector (set after execution) |
 
 #### Attitude maneuvers
@@ -1527,6 +1528,8 @@ Base class for impulse maneuvers. Uses industry-standard g-function event detect
 - `AntiNormalAttitude`: Orient opposite to orbital normal (−h)
 - `InstrumentPointingAttitude`: Point instrument at target (single-vector, roll unconstrained)
 - `TriadAttitude`: Fully-constrained 3-DOF attitude using TRIAD algorithm (eliminates roll ambiguity)
+
+The preview of an attitude is `ComputeStateOrientation(StateVector)`, the rotation from the spacecraft frame to ICRF at the state, pure; `Attitude.StateOrientation` is removed: in a run, the attitude at an activation is in the attitude record (`spacecraft.Frame.GetStateOrientationToICRF(epoch)`) (decisions 50 and 52 of #668).
 
 The single-vector attitudes support configurable body axes via `GetBodyFront()`, which reads per-instance axes from `Spacecraft.BodyFront` with fallback to the static default `Spacecraft.Front` (+Y). The TRIAD factories read `BodyDown`/`BodyFront` and `BodyFront`/`BodyUp` of the same spacecraft, with the same fallback; both go through `GetBodyAxis(axis, fallback)` of `Maneuver` (`private protected`) (#677).
 
@@ -1663,12 +1666,12 @@ RK7(8) to the time of closest approach. See `docs/reference/covariance-propagati
 **Propagation Architecture:**
 1. **Build event detectors** from the spacecraft's maneuver chain: the leading attitudes on the attitude timeline, each at the later of its minimum epoch and the end of the previous hold, the last hold gating the first impulse (#539)
 2. **Segment loop**: Integrator advances with event detection; on event → the detector executes the impulse only, the propagation counts its windows in TT seconds about the Earth (#547), lays its attitude and the attitudes chained after it on the timeline and builds the next detector, reinitialize
-3. **Output**: Evaluate `PropagationSolution.InterpolateAt` every output step from the window start inside the window, then at the window end (in place of a grid point within ΔT/10 of it; #741, decided by S. Guillet, 2026-11-18), whether round(L/ΔT) rounds the window down or up (since 11.0.0: before, a grid that rounded up ran to round(L/ΔT)·ΔT, up to ΔT/2 past the window; R11 of #668, choice 6): a shortened RK7(8) step from the start of the accepted step for RK7(8), at the accuracy of the integrator; cubic Hermite interpolation for Velocity-Verlet
+3. **Output**: Evaluate the solution (the internal `PropagationSolution.InterpolateAt`, the state `GetStateVector` returns inside the window; decision 54 of #668) every output step from the window start inside the window, then at the window end (in place of a grid point within ΔT/10 of it; #741, decided by S. Guillet, 2026-11-18), whether round(L/ΔT) rounds the window down or up (since 11.0.0: before, a grid that rounded up ran to round(L/ΔT)·ΔT, up to ΔT/2 past the window; R11 of #668, choice 6): a shortened RK7(8) step from the start of the accepted step for RK7(8), at the accuracy of the integrator; cubic Hermite interpolation for Velocity-Verlet
 4. **Attitude record**: from the timeline, on the solution: each law at its activation, at each output epoch of its interval and 1 µs before the change that ends it; the impulse's attitude over its window (`docs/reference/attitudes.md#the-attitude-timeline`)
 
 **Key Supporting Types:**
-- `PropagationSolution`: Multi-segment container with `InterpolateAt(epoch)` for dense output (shortened RK7(8) step for RK7(8), cubic Hermite otherwise)
-- `PropagationSegment`: Ordered list of `AcceptedStep` records with binary-search Hermite interpolation
+- `PropagationSolution`: Multi-segment container with `GetStateVector(epoch)` for dense output (shortened RK7(8) step for RK7(8), cubic Hermite otherwise; `InterpolateAt` internal since 11.0.0, decision 54 of #668), immutable from outside (decision 55, #796), its `Maneuvers` the `ExecutedManeuver` records of the run (decision 57)
+- `PropagationSegment`: Ordered list of `AcceptedStep` records with binary-search Hermite interpolation, built once by `new PropagationSegment(baseEpoch, steps)` outside the library (`AddStep` internal, decision 55 of #668)
 - `AcceptedStep`: Stores position, velocity, and acceleration at step start/end for cubic Hermite interpolation
 - `IntegrationResult`: Integration segment + optional `EventInfo` (detector index, precise event time and state)
 
@@ -1682,8 +1685,8 @@ RK7(8) to the time of closest approach. See `docs/reference/covariance-propagati
 **Event Detection (`IEventDetector`):**
 - `Evaluate(state)` → continuous scalar g-function
 - `Direction` → `CrossingDirection` (`NegativeToPositive`, `PositiveToNegative`, `Any`)
-- `HandleEvent()` → `EventResult` (modified state, orientation, action, next detector); `ManeuverEventDetector.HandleEvent` executes the impulse only and returns no next detector (#539)
-- `ManeuverEventDetector` wraps `ImpulseManeuver`, delegates to `ComputeEventValue()`
+- `HandleEvent()` → `EventResult` (modified state, orientation, action, next detector); the internal `ManeuverEventDetector.HandleEvent` executes the impulse only and returns no next detector (#539)
+- `ManeuverEventDetector` (internal since 11.0.0, decision 88 of #668: the propagation takes no user detector) wraps `ImpulseManeuver`, delegates to `ComputeEventValue()`
 
 **Force Models:**
 - **Gravitational acceleration** from the central body and each body of `PropagationOptions.ThirdBodies`. If a body has a `GeopotentialModelParameters`, the full spherical harmonic model (EGM2008) is used; otherwise point-mass gravity is applied.
@@ -1725,8 +1728,8 @@ var propagator = new CentralBodyPropagator(
     });
 var solution = propagator.Propagate();
 
-// Use dense output for sub-step interpolation
-var (midPosition, midVelocity) = solution.InterpolateAt(epoch.AddHours(12));
+// Use dense output for sub-step reads
+var middle = solution.GetStateVector(epoch.AddHours(12));
 ```
 
 **Accuracy:** With degree-10 EGM2008, Moon, and Sun perturbations, 24h LEO propagation achieves sub-kilometer position accuracy compared to GMAT reference solutions.
@@ -2470,25 +2473,23 @@ var engine = new Engine("MainEngine", "Model1", "SN001", 450.0, 50.0, fuelTank);
 chaser.AddFuelTank(fuelTank);
 chaser.AddEngine(engine);
 
-// Chain maneuvers: plane alignment -> apsidal alignment -> phasing -> circularization
+// The plan: plane alignment -> apsidal alignment -> phasing -> circularization
 var maneuver1 = new PlaneAlignmentManeuver(
     new Time(DateTime.MinValue, TimeScale.TDB),
     TimeSpan.Zero, targetOrbit, engine
 );
 
-maneuver1
-    .SetNextManeuver(new ApsidalAlignmentManeuver(
+chaser.SetManeuvers(maneuver1,
+    new ApsidalAlignmentManeuver(
         new Time(DateTime.MinValue, TimeScale.TDB),
-        TimeSpan.Zero, targetOrbit, engine))
-    .SetNextManeuver(new PhasingManeuver(
+        TimeSpan.Zero, targetOrbit, engine),
+    new PhasingManeuver(
         new Time(DateTime.MinValue, TimeScale.TDB),
-        TimeSpan.Zero, targetOrbit, 1, engine))
-    .SetNextManeuver(new ApogeeHeightManeuver(
+        targetOrbit, 1, engine),
+    new ApogeeHeightManeuver(
         earth, new Time(DateTime.MinValue, TimeScale.TDB),
         TimeSpan.Zero, targetOrbit.SemiMajorAxis(), engine));
 
-// Set the maneuver sequence
-chaser.SetStandbyManeuver(maneuver1);
 scenario.AddSpacecraft(chaser);
 
 // Run the simulation
@@ -2499,7 +2500,7 @@ var summary = scenario.Simulate(new PropagationOptions
 });
 
 // Read maneuver results
-var executedManeuver = chaser.InitialManeuver;
+var executedManeuver = chaser.Maneuvers[0];  // the first maneuver of the plan, its values those of the last run
 Console.WriteLine($"Maneuver 1 start: {executedManeuver.ManeuverWindow?.StartDate}");
 Console.WriteLine($"Maneuver 1 delta-V: {((ImpulseManeuver)executedManeuver).DeltaV.Magnitude():F1} m/s");
 Console.WriteLine($"Fuel burned: {executedManeuver.FuelBurned:F1} kg");
@@ -2917,10 +2918,10 @@ var propagator = new CentralBodyPropagator(
 var solution = propagator.Propagate();
 
 // Get the final position and velocity from the dense output
-var (finalPosition, finalVelocity) = solution.InterpolateAt(epoch.AddDays(1));
+var final = solution.GetStateVector(epoch.AddDays(1));
 
-Console.WriteLine($"Position after 24h: ({finalPosition.X/1000:F3}, " +
-    $"{finalPosition.Y/1000:F3}, {finalPosition.Z/1000:F3}) km");
+Console.WriteLine($"Position after 24h: ({final.Position.X/1000:F3}, " +
+    $"{final.Position.Y/1000:F3}, {final.Position.Z/1000:F3}) km");
 ```
 
 ### Earth Observation with Attitude Maneuvers
@@ -2973,7 +2974,7 @@ var pointingManeuver = new InstrumentPointingToAttitude(
 );                                  // The direction is light-time corrected (Aberration.LT, the default, #549);
                                     // pass Aberration.None as a sixth argument for the geometric direction
 
-spacecraft.SetStandbyManeuver(pointingManeuver);
+spacecraft.SetManeuvers(pointingManeuver);
 
 // Simulate
 scenario.Simulate(new PropagationOptions
@@ -3035,7 +3036,7 @@ var triadManeuver = new TriadAttitude(
     engine
 );
 
-spacecraft.SetStandbyManeuver(triadManeuver);
+spacecraft.SetManeuvers(triadManeuver);
 
 // Simulate with high time resolution for attitude dynamics
 scenario.Simulate(new PropagationOptions

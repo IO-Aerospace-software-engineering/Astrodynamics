@@ -897,8 +897,8 @@ public readonly record struct Time : IComparable<Time>, IComparable, ISpanParsab
 
     /// <summary>
     /// The equality of labels (<see cref="EqualsExact"/>), for a hash collection that keeps the labels apart. The
-    /// library's caches whose values carry their key as a label use it too (the range rates of the conjunction search, the
-    /// orientations of <c>TLEPropagator</c>): a key in another scale, or a TDB tick next to one of the same TAI tick, is
+    /// library's caches whose values carry their key as a label use it too (the range rates of the conjunction search): a
+    /// key in another scale, or a TDB tick next to one of the same TAI tick, is
     /// read again rather than given the value of another label, bit for bit (#512).
     /// </summary>
     public static IEqualityComparer<Time> ExactComparer { get; } = new TimeExactComparer();

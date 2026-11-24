@@ -66,7 +66,11 @@ reads typed as the `StateVector` they build, with `ToFrame` and `RelativeTo` typ
 geopotential parameters as a value, a null covariance option of the conjunction analysis that throws, the task of a
 batch with a constructor of options, the outputs of a propagation that end at its window end whatever its step, a
 reversed window, a negative hold and a step of zero refused, the token of the methods that run, which stops a running
-batch too, and the propagators no longer `IDisposable`.
+batch too, the propagators no longer `IDisposable`, a reused propagator that refuses a spacecraft whose initial orbit
+changed, a `TLEPropagator` run that re-arms the spacecraft and replaces its stored states, `AddPropagatedStates` one
+window per call, the maneuver plan of `SetManeuvers` with a closed `Maneuver` hierarchy and pure previews, and the
+results of a run, read through `GetStateVector` and the records of `PropagationSolution.Maneuvers`, immutable from
+outside.
 **Removed** lists `Instrument.PositionInFOV`, `LowThrustManeuver`, `Quaternion.Zero`, `Star.PropagationOutput`,
 `ExceptionBase`, `Matrix.Set`, `Vector3 * Vector3`, six exports of the native library that .NET never called, the
 public interop structs of `IO.Astrodynamics.DTO`, the ten raw conversions of `SpiceAPI`, the public helpers of the
@@ -76,7 +80,8 @@ and `VVIntegrator.DeltaTs`, and the members that propagate without `PropagationO
 forces (the flag overloads of `Spacecraft.Propagate`, `Spacecraft.PropagateAsync`, the three `Scenario.SimulateAsync`,
 the flags constructors of `CentralBodyPropagator` and `PropagationTask`, `CentralBodyPropagatorBuilder`, and the
 factories and flags of `MonteCarloConfiguration`), the asynchronous members over synchronous work (`Star`, `BatchPropagator`
-and `MonteCarloPropagator` `PropagateAsync`) and the token and progress of `BatchOptions`. Several results change: see **Fixed** and **Changed**. The open defects a caller can meet at this
+and `MonteCarloPropagator` `PropagateAsync`), the token and progress of `BatchOptions`, `Spacecraft.SetStandbyManeuver`,
+`InitialManeuver` and `Maneuver.SetNextManeuver`, `Attitude.StateOrientation` and `Spacecraft.GetTotalFuel`. Several results change: see **Fixed** and **Changed**. The open defects a caller can meet at this
 release are listed under **Known limitations**.
 
 **Added**
@@ -313,7 +318,55 @@ release are listed under **Known limitations**.
   could not be asked for before. Local time is the calendar of the machine's zone, written in ISO only. A Julian date is
   written `n JD TAG` and seconds `s TAG`, the tag of the target scale, so the command reads its output back as the same
   instant (under **Changed**).
+- **`PropagationSolution.Window`, `Observer` and `Frame`** (lot L5a, R09 of [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668), decision 53, decided by
+  S. Guillet, 2026-11-23): `Window` is the propagated window, to one tick, [first segment base, end of the propagation]
+  in TDB labels, the span the reads accept (the check of before, unchanged: an epoch of any scale, read in the seconds
+  of the time argument, one tick allowed at each end), and a read outside it throws `ArgumentOutOfRangeException` naming
+  it (its message said "The epoch is outside the propagation." before); `Observer` and `Frame`, the observer and frame
+  of the states, internal before, are public and get-only, and a `TLEPropagator` solution sets them to those of its
+  samples, the TLE's Earth and `Frame.TEME`, so `GetStateVector` reads it, SGP4 at the samples bit for bit
+  (`SolutionWindowTests`; before, it threw `InvalidOperationException`, the observer and frame unknown, [#803](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/803)
+  (c)). No value moves.
 
+- **`Spacecraft.SetManeuvers(params Maneuver[])` and `Spacecraft.Maneuvers`** (lot L5a, R08 of [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668), decisions 45 to 47,
+  decided by S. Guillet, 2026-11-23): the maneuver plan, set in order and read back, each maneuver linked to the next
+  and the last to none, the one way to link a plan; no maneuver clears it, and nothing is added to `ExecutedManeuvers`
+  (#584). It claims each maneuver for its spacecraft and throws `ArgumentException` (`maneuvers`), changing nothing, for
+  a null maneuver, a maneuver listed twice, one in another spacecraft's plan, one whose engine is not one of the
+  spacecraft's `Engines` (added with `AddEngine`, by reference; decision 92, decided by S. Guillet, 2026-11-23) or whose
+  engine's tank is not one of the spacecraft's, or an impulse whose target orbit is in another frame than the one the
+  spacecraft is propagated in; the
+  claim is released, and the maneuver's link cleared, when the owner sets another plan without it. A propagator built
+  after the initial orbit's frame changed throws `ArgumentException` (`spacecraft`) for a target that no longer shares
+  it, as before (decision 94); the run checks again (`InvalidOperationException`) what changed since, a maneuver linked past the plan included (`ManeuverPlanTests`: the
+  links, the read-back, the four refusals, the release, concurrent claims, the re-check on every activation path, one
+  plan alike on `Spacecraft.Propagate`, a reused `CentralBodyPropagator`, a scenario and a batch, both integrators).
+  Replaces `SetStandbyManeuver` and `Maneuver.SetNextManeuver` (under **Removed**).
+- **`ImpulseManeuver.ComputeDeltaV(StateVector)` and `Attitude.ComputeStateOrientation(StateVector)`** (lot L5a, R08 of
+  [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668), decision 50, decided by S. Guillet, 2026-11-23; [#802](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/802)): the previews of an impulse and of an attitude law, pure:
+  they touch no tank, chain, window, gate or node lock, so they are the same before and after a run. Each takes the
+  state about the centre of the maneuver, as the execution takes it, whatever the observer of the state (an SSB-mode
+  solution's states are about the Sun), or about its own observer for a maneuver without a centre; `ComputeDeltaV`
+  returns the delta-V in the frame of the state, `ComputeStateOrientation` the rotation from the spacecraft frame to
+  ICRF, the state rotated to ICRF after its change of centre. At the same state they equal the execution a run makes,
+  bit for bit (`ManeuverPreviewTests`: the seven library impulses, ECLIPJ2000, states about the Sun and the Moon of an
+  orbit about the Earth, the delta-V of the orbit given about the Earth to 2.7e-12 m/s of 229.24 m/s and the attitude
+  to 0 rad; the attitude record at an activation, 0 rad, both integrators).
+- **`PropagationSolution.Maneuvers` and `ExecutedManeuver`** (lot L5a, R09 of [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668), decision 57, decided by S. Guillet,
+  2026-11-23): one sealed record per maneuver the run executed, attitudes included, in execution order: `Definition`,
+  `Epoch` (the TDB label of the event of an impulse, or the activation of an attitude), the unclipped `ThrustWindow`,
+  `ManeuverWindow`, `DeltaV` in the frame of the solution (zero for an attitude), `FuelBurned`, `MassBefore` and
+  `MassAfter` (`GetTotalMass`, the child included), built by the propagation only. They keep the values of their run,
+  where the definitions hold those of their last run only, reset by the next run's re-arm; empty for a `TLEPropagator`
+  solution (`ExecutedManeuverRecordTests`: the definitions as the run left them, the segment an impulse opens at its
+  epoch with its delta-V, the rocket equation of the mass before, on `Spacecraft.Propagate`, a reused
+  `CentralBodyPropagator`, a batch and a scenario, both integrators, ICRF, ECLIPJ2000 and SSB mode, values unchanged by
+  a later run). No value of a run moves.
+- **`Spacecraft.GetInitialFuel()` and `GetRemainingFuel()`** (lot L5a, R09 of #668, decision 60): the fuel of the
+  spacecraft's own tanks at the start of a run, the value of `GetTotalFuel` (under **Removed**), and the fuel the last
+  run left in them, the child's tanks aside.
+- **`PropagationSegment(Time, IEnumerable<AcceptedStep>)`** (lot L5a, decision 55 of #668): the segment of an integrator
+  implemented outside the library, built once from its steps, which it copies (under **Changed**).
 **Fixed**
 
 - **`Matrix * double[]` and `Matrix.Multiply(double[])` returned as many components as the vector**
@@ -4497,10 +4550,63 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   no step state and were already fresh; every first run is bit for bit unchanged (an extra `Initialize` with the initial
   state before a first run is a no-op, measured on 15 configurations), every golden unchanged, except a run whose caller
   re-initialized the integrator with another observer or frame (under **Changed**). A reused instance keeps the initial
-  state, covariance and options of its construction: a later `SetInitialOrbitalParameters` does not reach it, now stated
-  in the remarks of `Propagate` ([#783](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/783),
-  lot L5).
+  state, covariance and options of its construction, and since lot L5 throws once the spacecraft holds another initial
+  orbit (#783, under **Changed**).
+- **A first run after states and attitudes added by hand is a fresh run** ([#803](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/803) (b), lot L5a, R08 of [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668), decision 38,
+  decided by S. Guillet, 2026-11-23): the re-arm of a propagation (`Spacecraft.ResetPropagation`) dropped the stored
+  states and the attitude record only when `IsPropagated` was true, so the first run of a spacecraft kept the attitudes
+  added by `AddStateOrientationToICRF` (the stored states were replaced): measured in the gap analysis of L5, a record of
+  4 entries against 2 for a fresh spacecraft, a quarter turn off it from mid-window to the end and outside the window,
+  while a second run gave the fresh record. It now drops them whatever `IsPropagated` says, on every path
+  (`Spacecraft.Propagate`, a `CentralBodyPropagator`, a batch, a scenario, both integrators, a TLE spacecraft sampled by
+  `TLEPropagator` before; `RunIndependenceTests`). Runs on a spacecraft without such entries are unchanged, bit for bit.
+- **The solutions of the runs of one `TLEPropagator` share no state** ([#785](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/785), decision 39 of #668): each run samples
+  into arrays of its own, its first sample included; before, every solution of an instance held the propagator's one
+  array, whose first state was built once at construction, so a later run rewrote the states of an earlier solution
+  (`RunIndependenceTests.TheSolutionsOfTwoRunsOfOneTLEPropagator_ShareNoState`). The samples are those of before, bit
+  for bit.
 
+- **A re-armed `PlaneAlignmentManeuver` waited for the crossing of the last run's node** ([#784](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/784), lot L5a, decision 51 of
+  #668): the re-arm cleared `IsAscendingNode` but left `EventCrossingDirection`, so a run that did not reach the
+  maneuver ended with a node of none and the direction of the last run's node. `Reset` now clears both, the direction
+  back to `Any`, as a fresh maneuver's (`ManeuverPreviewTests.PlaneAlignment_TheReArm_ClearsTheCrossingDirection`, red
+  before the change, both integrators). No trajectory moves: the detector locks the node again at its first evaluation.
+- **Calls that look like previews changed a maneuver or a spacecraft outside a run** ([#802](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/802), lot L5a, decisions 49 and
+  50 of #668): the public `TryExecute` of a maneuver burnt the fuel, set the windows and moved the standby chain of a
+  finished run (592.27 kg taken and the `DeltaV` of the run overwritten in the gap analysis of L5), `Engine.Ignite` burnt
+  fuel (60.12 kg after a run) and threw `NullReferenceException` on a tank of no spacecraft, and the public
+  `ComputeEventValue` locked the node of a `PlaneAlignmentManeuver` and wrote the intersection of an
+  `ApsidalAlignmentManeuver`. The first two are internal, `ComputeEventValue` is pure on every library maneuver, and the
+  previews are `ComputeDeltaV` and `ComputeStateOrientation` (under **Added**, **Changed**). So is `ManeuverEventDetector`
+  (decision 88 of #668), whose public `HandleEvent` executed a maneuver outside a run: after an apogee raise propagated
+  3 h, a call at a state of the solution took the fuel from 850.075099 to 744.573379 kg, the `DeltaV` from 229.243040 to
+  172.742734 m/s and moved the thrust window by 2 h (the probe of the first review of L5a); the run's record was left.
+  A custom `IIntegrator` still received the detectors within the run and could keep them: a detector kept past the run
+  executed its maneuver outside it (472 kg of fuel burned and `DeltaV` rewritten in the probe of the second review of
+  L5a). A detector now serves the run that built it only (decision 95 of #668, decided by S. Guillet, 2026-11-24): the
+  run disarms it when it ends, completed, stopped or thrown, and its `Evaluate` and `HandleEvent` throw
+  `InvalidOperationException` afterwards, changing nothing; a call already in progress when the run ends completes
+  (decision 98 of #668, decided by S. Guillet, 2026-11-24: only an integrator that keeps a detector past its
+  `IntegrateSegment` call meets it, 12 of 300 runs of a probe calling `HandleEvent` in a loop from a thread burning fuel
+  after `Propagate` returned; no lock is added). Within the run, a custom `IIntegrator` that kept the
+  detector of an impulse executed it a second time (6.74 kg burned, `DeltaV` rewritten, nothing in
+  `ExecutedManeuvers`, in the probe of the third review of L5a): a detector now executes its impulse once at most for calls that do not overlap
+  (decision 97 of #668, decided by S. Guillet, 2026-11-24), disarming itself as its `HandleEvent` starts to execute it,
+  an execution that throws included (the fourth review of L5a: one that threw after the fuel burned left it armed, and
+  each later call burned again), a detector that skipped an occurrence (`Continue`) staying armed.
+- **A published propagation solution could be changed from outside the library** ([#796](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/796), lot L5a, decision 55 of
+  #668): `PropagationSegment.AddStep`, `PropagationSolution.AddSegment` and `SetOutputStates` were public, and
+  `Segments`, `StateVectors` and `Steps` returned the inner list or array, so a caller could add a step to a solution the
+  spacecraft keeps for the conjunction analysis (`LastPropagation`), widening its window (a read at its end + 5000 s
+  accepted where it threw), or replace an output state through a cast; `Integrator.UpdateStateVector` let a subclass
+  rewrite any state in place. They are internal and the collections read-only views, allocated once (under
+  **Changed**; `RunResultsSurfaceTests`).
+- **A list of executed maneuvers or a scenario summary held by a caller changed with the next run** (lot L5a,
+  decisions 58 and 59 of #668): `Spacecraft.ExecutedManeuvers` was a live set the next run emptied (measured 1 to 0 in
+  the gap analysis of L5), and `SpacecraftSummary.Maneuvers` held the definitions, whose `DeltaV`, `FuelBurned` and
+  windows the next run reset (258.818 m/s and 92.637 kg read 0 after a run that reached no burn). A run now swaps in
+  new lists, and the summary holds the records of its run (under **Changed**; `RunResultsSurfaceTests`,
+  `ExecutedManeuverRecordTests`).
 **Changed**
 
 - **Breaking: the scale of a `Time` is a required argument** (lot L2, R24 of
@@ -4726,8 +4832,9 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   not `IsPropagated`, nothing kept for the conjunction analysis (a TLE spacecraft reads SGP4 again, any other its initial
   orbit), its fuel, `ExecutedManeuvers` and standby chain advanced up to the stop; in `Scenario.Simulate` and a batch the
   earlier spacecraft are complete, `IsSimulated` stays false and no summary or result is returned. One exception: a
-  stopped `TLEPropagator` run adds nothing and leaves the spacecraft as it was, since it adds its samples instead of
-  replacing the stored states (decision 19 of lot L4, decided by S. Guillet, 2026-11-22; revisited in L5 with R08). A
+  stopped `TLEPropagator` run changes nothing and leaves the spacecraft as it was (decision 19 of lot L4, decided by
+  S. Guillet, 2026-11-22; since lot L5 the rule of its runs, which re-arm and store their samples in one block, under
+  **Changed**). A
   run with a live token is the run without one, bit for bit, every golden unchanged (`CancellationTests`: both integrators, an outer
   integrator, the covariance, an impulse, the SSB mode, a TLE spacecraft, a batch, a Monte Carlo campaign, a scenario, a
   task; a stop inside a step makes only the force evaluations left in it, 2 to 4 for RK7(8) about the Earth, 8 in SSB
@@ -5536,7 +5643,7 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
     every propagation about another body, and SSB mode, but for the attitudes, the windows and the gates the rules above
     move.
   - See [Attitudes](../reference/attitudes.md#the-attitude-timeline) and
-    [Impulse Maneuvers](../reference/impulse-maneuvers.md#maneuver-chain).
+    [Impulse Maneuvers](../reference/impulse-maneuvers.md#the-chain-of-a-run).
   - **Migration:** let `Spacecraft.Propagate`, `Scenario.SimulateAsync` or a propagator advance the chain; code that
     took the next detector from `HandleEvent` takes the next maneuver from `Maneuver.NextManeuver`. Give
     `SetStandbyManeuver(attitude, epoch)` a minimum epoch only when the attitude must wait for it, and shorten a hold
@@ -6934,7 +7041,215 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   product, the inverse, the copy, both Jacobian overloads and both covariance matrices: a write to a result reaches
   neither its source nor the next result).
   Migration: a caller that wrote the array to change the matrix calls `Set`, or builds the matrix again.
+- **Breaking: a propagator refuses a spacecraft whose initial orbit changed** ([#783](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/783), lot L5a, R08 of [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668),
+  decision 37, decided by S. Guillet, 2026-11-23): `PropagatorBase.Propagate` (`CentralBodyPropagator`, both
+  constructors, and a subclass) and `TLEPropagator.Propagate` throw `InvalidOperationException`, with the other checks of
+  the run and before the token, so before anything changes, once the spacecraft holds other `InitialOrbitalParameters`
+  than those the propagator was built from, compared by reference: an orbit replaced by an equal but distinct object
+  throws too, the same object set again does not. Before, a reused `CentralBodyPropagator` ran from the orbit of its
+  construction while the spacecraft reported another (6 930 000 m against a semi-major axis of 7 500 000 m in the
+  probes of R08), and a `TLEPropagator` took its first sample from the TLE of its construction and the others from the
+  spacecraft's orbit (a 668 860 m jump between samples 0 and 1). The guard covers the orbit only: the maneuver chain,
+  the tanks and the coefficients are read at each run. `Spacecraft.Propagate`, `Scenario.Simulate`, `BatchPropagator`
+  and `MonteCarloPropagator` build a propagator per call and are not concerned (`RunIndependenceTests`: both integrators,
+  both constructors, ICRF, ECLIPJ2000, SSB mode, a TLE). Migration: build a new propagator after
+  `SetInitialOrbitalParameters`.
+- **Breaking: a `TLEPropagator` run re-arms the spacecraft and replaces its stored states** ([#803](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/803) (a), lot L5a,
+  R08 of #668, decision 38, decided by S. Guillet, 2026-11-23): a run computes every sample and acceleration, then, in one block,
+  re-arms the spacecraft as a numerical propagation does (stored states, attitude record and last solution dropped,
+  `ExecutedManeuvers` cleared, tanks refuelled) and stores its samples alone, in one arc; a stop or an SGP4 failure
+  changes nothing, so decision 19 of lot L4 is the rule. Before, a run added its samples to the stored states (two runs
+  of one hour at 60 s gave one arc of 122 states, read across the gap between them) and kept the attitude record, the
+  solution and the executed maneuvers of an earlier numerical run beside SGP4 states. After a run the spacecraft is not
+  `IsPropagated` and reads SGP4 outside the samples, as a spacecraft only sampled did before. The unused orientations
+  the propagator kept (an internal dictionary keyed by label) are gone. Migration: none for a single run; to keep the
+  states of several windows, sample one window that holds them.
+- **Breaking: `TLEPropagator` refuses a spacecraft with a maneuver plan** (lot L5a, R08 of #668, decision 40, decided by
+  S. Guillet, 2026-11-23): its constructor throws `ArgumentException` (`spacecraft`), and `Propagate`
+  `InvalidOperationException` for a plan set after construction, before anything changes; before, the plan was ignored
+  silently (measured in the gap analysis: an apogee raise over 3 h executed nothing, the fuel unchanged), and a plan on
+  another spacecraft's tank was accepted. Migration: clear the plan (`SetManeuvers()`) or propagate the
+  spacecraft numerically.
+- **Breaking: `MonteCarloPropagator` refuses a template with a maneuver plan** (lot L5a, R08 of #668, decision 41,
+  decided by S. Guillet, 2026-11-23): both `Propagate` overloads throw `ArgumentException` (`config`) before anything is
+  sampled. Its runs propagate spacecraft built from the template's orbit, dry mass, area and coefficients, so a plan
+  was dropped silently (1.0786e7 m from the template's own run after 3 h in the gap analysis), while the docs listed the
+  campaign among the paths that run the chain (corrected). The fuel, payloads, axes, hard-body radius and COSPAR id the
+  runs also drop are an issue of their own, fixed after lot L5. Migration: clear the plan of the template (`SetManeuvers()`).
+- **Breaking: `Spacecraft.AddPropagatedStates` takes one window per call, and a read in the gap between two windows throws**
+  ([#792](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/792), lot L5a, R08 of [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668),
+  decisions 42 and 83 to 87, and 89 to 91, decided by S. Guillet, 2026-11-23): a call whose states span a hull, closed, that meets no
+  stored arc (touching counts as meeting) opens a new arc, inserted in time order; otherwise its states join the arcs
+  the hull meets, merged where a gap separates them (a call over the gap between two windows joins them; arcs that touch
+  at an impulse stay apart), each state the arc of its epoch among them, as before. A gap inside the states of one call
+  is not detected. `GetGeometricStateRelativeTo`, the short-circuit of `GetEphemeris` and every read through them throw
+  `InvalidOperationException` in a gap between two windows, as outside the stored states (#527), the light time of a
+  corrected read allowed outside each arc (an epoch inside an arc is read by that arc, as before, bit for bit; a
+  corrected epoch in a gap within the light time of two arcs is read by the nearer, the later one on a tie, decision
+  91), and the window arguments of the field-of-view search and of the `ILocalizable` overloads of the
+  conjunction analysis throw `ArgumentException` when they meet a gap, as when they leave the states; an arc of one
+  state (a call of one state apart from every arc) is read at its exact epoch only, and `WriteEphemeris` keeps refusing
+  it with `ArgumentException`. So is a spacecraft that stores one state only (decision 89): its read goes through the
+  arcs, at its exact epoch only, any other read throwing as in a gap (`ToOpm` at another epoch included), its window
+  of zero length refusing any wider window argument, where the two-body orbit of its initial orbital parameters
+  answered before at every epoch, its own one included (1.408e7 m off the stored state in the probe of the review); a
+  spacecraft that stores none keeps the two-body orbit. Before, every state joined the arc of its epoch, so the windows of several calls made one
+  arc, read across the gaps without an error: 9.28e9 m off the two-body orbit 1 h 56 min into a gap of 4 h between two
+  windows of one hour at 60 s (`AddedStatesGapTests`, with the reads of each window, to the bit those of a spacecraft
+  holding it alone, and within 3.4e-4 m of the two-body orbit, Linux x64, a provisional figure until the CI logs of the
+  three platforms set it), and a TLE spacecraft sampled by
+  `TLEPropagator` and given later states interpolated across the gap where it now reads SGP4. A call within or touching
+  the stored states, a propagation and a `TLEPropagator` run are unchanged, bit for bit, as is every read inside the
+  stored states, and a corrected read past the end of a propagation that ends with an impulse, within the light time
+  after the end, still reads the last arc of one state that impulse opens (#575), touching the arc before it at the
+  impulse: the state after the impulse, as before (decision 90; decisions 85 and 87 apply to arcs separated by a
+  gap), and `WriteEphemeris` leaves that arc out, a window added after it following a gap or not, its SPK ending that
+  run of arcs with the arc before the impulse (8436db52 wrote the file, the added window joined to that arc across the
+  gap; before the second review of lot L5a an added window made it throw "Arc 1 holds fewer than two states").
+  Migration: add each window in its own call, and the states between two windows
+  in one call that spans them to join them; one state per call opens an arc per state, read at its epoch only; a
+  spacecraft given one state to stand for an orbit is given no state, its initial orbital parameters then read in
+  two-body motion, or a window of states.
 
+- **Breaking: the maneuver plan is set by `Spacecraft.SetManeuvers`, which claims its maneuvers** (lot L5a, R08 of [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668),
+  decisions 45 to 47, decided by S. Guillet, 2026-11-23): `Maneuver.NextManeuver` keeps its public getter and its setter
+  is internal (protected before, so a subclass could relink a chain), `Spacecraft.StandbyManeuver`, the run's own state,
+  is internal, and a maneuver is in one plan at a time. The checks that ran when the propagator was built now run at
+  `SetManeuvers` too, where the call receives the maneuver, as `ArgumentException` (`maneuvers`): an engine that is not
+  one of the spacecraft's `Engines`, added with `AddEngine` and compared by reference (decision 92: an engine built on
+  the spacecraft's tank and never added ran before, the tank alone checked; a twin of an added engine, equal by value,
+  is another engine), an engine whose tank is not the spacecraft's (`InvalidOperationException` when the propagator
+  was built and at the run before, as still after the plan) and a target orbit in another frame than the one the
+  spacecraft is propagated in (a TEME target on a TLE spacecraft, which the constructor of the maneuver accepts,
+  included). The frame check of the propagator constructor stays as it was: a propagator built after the initial orbit's
+  frame changed, so that a target set by `SetManeuvers` no longer shares it, throws `ArgumentException` naming
+  `spacecraft`, the call receiving the faulty object; only `Propagate` re-checks the frames, with
+  `InvalidOperationException` (decision 94 of #668, decided by S. Guillet, 2026-11-23). The cycle check stays as a guard
+  of the walks of the chain. No result moves. Migration:
+  `spacecraft.SetManeuvers(m1, m2, m3)` for `spacecraft.SetStandbyManeuver(m1); m1.SetNextManeuver(m2).SetNextManeuver(m3)`,
+  `SetManeuvers()` for `SetStandbyManeuver(null)`, `spacecraft.Maneuvers[0]` for `InitialManeuver`; for
+  `StandbyManeuver` read after a run, the first maneuver of the plan the run did not execute, `spacecraft.Maneuvers[n]` with
+  n = `spacecraft.ExecutedManeuvers.Count` when n is below `spacecraft.Maneuvers.Count`, none otherwise (a run executes
+  the plan in its order); add the tanks and the engines (`AddEngine`, the engine instance the maneuver is built on) and
+  set the initial orbit before the plan; a maneuver for two spacecraft is two maneuvers.
+- **Breaking: the `Maneuver` hierarchy is closed** (lot L5a, R08 of #668, decisions 48 and 49, decided by S. Guillet,
+  2026-11-23): `Maneuver`'s constructor is `private protected`, so a user maneuver derives from `ImpulseManeuver` or
+  `Attitude`, the two kinds the propagation knows (a direct subclass of `Maneuver` compiled before, and could not be
+  run); `TryExecute` is internal, and the protected `Execute(StateVector)` is on `ImpulseManeuver`, documented pure, its
+  result the preview of `ComputeDeltaV` (it was on `Maneuver`, and `Attitude` returned a zero delta-V); `Engine.Ignite`
+  is internal; the concrete maneuvers stay unsealed. Decision 48 is split (decision 93 of #668, decided by S. Guillet,
+  2026-11-23): `Engine` moves to `ImpulseManeuver` and a protected `GetBodyAxis(BodyAxis)` replaces `GetBodyFront` in
+  lot L5b, with R13 and `BodyAxis` (decision 69); until then `Engine` stays on `Maneuver` and `GetBodyFront` protected.
+  Migration: a preview of
+  an impulse is `ComputeDeltaV(state)`, of an attitude `ComputeStateOrientation(state)`, the fuel of a delta-V
+  `Tsiolkovski.DeltaM(isp, mass, deltaV)`; a user maneuver keeps its `Execute` override on an `ImpulseManeuver`.
+- **Breaking: `ImpulseManeuver.ComputeEventValue` is pure** (lot L5a, decision 50 of #668, [#802](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/802)): it locks no node and
+  writes no intersection; the node of a `PlaneAlignmentManeuver` is locked by the detector of a run, at its first
+  evaluation, by the rule of before (the detector internal since decision 88). A run is bit for bit that of
+  before. Migration: a caller that read `IsAscendingNode` or `EventCrossingDirection` after a call of
+  `ComputeEventValue` reads them after the run that executed the maneuver, which writes the last run's values
+  (decision 52).
+- **Breaking: `ManeuverEventDetector` is internal** (lot L5a, R08 of #668, decision 88, decided by S. Guillet, 2026-11-23,
+  [#802](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/802)): the propagation builds its detectors from the maneuver plan and takes no user detector, and its
+  public `HandleEvent` executed a maneuver outside a run (fuel burned, `DeltaV` and the windows rewritten, the probe of
+  the first review of L5a: 105.5 kg of fuel taken after a run). `IEventDetector`, `EventResult`, `EventAction` and
+  `CrossingDirection` stay public, as they are. A custom `IIntegrator` given to the propagator still receives the
+  detectors as `IEventDetector` within the run, which decision 88 alone left open (the second review of L5a: a detector
+  kept past the run burned 472 kg of fuel and rewrote `DeltaV`), so a detector serves the run that built it only
+  (decision 95 of #668, decided by S. Guillet, 2026-11-24): the run disarms every detector it built when it ends,
+  completed, stopped by its token or thrown, a run nested in a run of the same propagator on its thread included (the
+  third review of L5a: the detectors the outer run built after the nested run stayed armed past it), and its `Evaluate` and `HandleEvent` then throw
+  `InvalidOperationException` naming the maneuver, changing nothing (no fuel, `DeltaV`, window or node of a
+  `PlaneAlignmentManeuver`; `IntegratorEventTests.ADetectorKeptPast*`, `ADetectorKeptFromAnEarlierRun_*`,
+  `ADetectorBuiltAfterANestedRun_*`, a bare `IIntegrator` and an `Integrator`
+  subclass over both integrators). This holds for the calls that start after the end: a call already in progress when
+  the run ends completes (decision 98 of #668, decided by S. Guillet, 2026-11-24), which only an integrator that keeps
+  a detector past its `IntegrateSegment` call, against the documented contract, meets; no lock is added. A detector also executes its impulse once at most for calls that do not overlap (decision 97 of #668, decided by
+  S. Guillet, 2026-11-24; the third review of L5a: a custom `IIntegrator` that kept the detector of an impulse executed
+  it a second time during the run, 6.74 kg burned, `DeltaV` rewritten, nothing in `ExecutedManeuvers`): when its
+  `HandleEvent` has executed the impulse it disarms itself, and a later `HandleEvent` or `Evaluate` within the run
+  throws `InvalidOperationException` saying that it has already executed its impulse (once the run has ended, the
+  message of a finished run is given first), changing nothing, while one that skipped the occurrence (`Continue`, the
+  preconditions not met) stays armed; it disarms itself as the execution starts, so a `HandleEvent` whose execution
+  throws disarms it too (the fourth review of L5a: an execution that threw after the fuel burned, a burn past the range
+  of a `TimeSpan`, left it armed, and each later call burned again, three burns in one run); the propagation never
+  calls a detector after its execution, so a run whose integrator calls `HandleEvent` on the event it returns throws
+  from the propagation's own call rather than burning twice, and one whose integrator executes an event and returns
+  none breaks the contract and returns incomplete, stopped at that event
+  (`IntegratorEventTests.ADetectorCalledAfterItsImpulse_*`, `AnIntegratorThatHandlesItsEvent_*`,
+  `ADetectorThatSkipped*`, `ADetectorWhoseExecutionThrows*`). No result moves. Migration: the propagation executes the plan
+  (`Spacecraft.SetManeuvers`, then a propagation); the previews of a maneuver are `ImpulseManeuver.ComputeDeltaV` and
+  `ComputeEventValue`, pure; a custom `IIntegrator` uses the detectors it receives within its call of
+  `IntegrateSegment` only.
+- **Breaking: `PhasingManeuver` takes no hold** (lot L5a, decision 51 of #668, decided by S. Guillet, 2026-11-23,
+  [#784](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/784)): its constructors are `PhasingManeuver(minimumEpoch, targetOrbit, revolutionNumber, engine)` and
+  `PhasingManeuver(maneuverCenter, minimumEpoch, trueLongitude, revolutionNumber, engine)`; the hold, 0.9 N T₂, is set
+  by the run that executes the burn and cleared to 0 by the re-arm of the next run (before, the hold given was replaced
+  at the burn, so it was dead input, and the computed hold was left for good). No result moves. Migration: drop the
+  hold argument.
+- **Breaking: `PlaneAlignmentManeuver.RelativeInclination`, `ApsidalAlignmentManeuver.IntersectsP` and `IntersectsQ`
+  are internal** (lot L5a, decision 51 of #668): side results of the execution that nothing read, which the re-arm
+  left. Migration: none in the library, as they were run state; the relative inclination is the angle between the two
+  orbits' normals (`SpecificAngularMomentum()` of the state and of the target orbit), and the intersection an apsidal
+  alignment burnt at (P or Q) is the position of its burn, the solution's state at the epoch of its record
+  (`PropagationSolution.GetStateVector(record.Epoch).Position`, `record` in `PropagationSolution.Maneuvers`), the
+  intersection of the two orbits nearest the spacecraft in true anomaly where its g-function crosses.
+- **The values a run writes on a maneuver are the last run's** (lot L5a, decision 52 of #668, decided by S. Guillet,
+  2026-11-23): `DeltaV`, `FuelBurned`, `ThrustWindow`, `ManeuverWindow`, `MinimumEpoch`, the node of a
+  `PlaneAlignmentManeuver` and the hold of a `PhasingManeuver` hold the values of the last run that executed the
+  maneuver, cleared by the re-arm of the next run, documented in [Impulse Maneuvers](../reference/impulse-maneuvers.md#maneuver-plan).
+- **Breaking: `PropagationSolution.InterpolateAt` is internal** (lot L5a, R09 of [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668), decision 54, decided by S.
+  Guillet, 2026-11-23; choice 8 of the re-baseline): the one public reader of a solution is `GetStateVector`, which
+  returns a `StateVector` about `Observer` in `Frame` and throws `ArgumentOutOfRangeException` outside `Window`, where
+  `InterpolateAt` returned an unnamed tuple and clamped to the first or last state. Inside the window the state is that
+  of `InterpolateAt`, bit for bit; in covariance mode `GetStateVector` also computes the covariance, about 4 times the
+  cost of the state alone. The library's readers that rely on the clamp (the outputs, the attitude samples, the
+  conjunction analysis) keep the internal method; the conformance runner reads `GetStateVector`, its report bit for
+  bit that of before (201 of 201 cases, every delta equal). Migration:
+  `var s = solution.GetStateVector(epoch); var (position, velocity) = (s.Position, s.Velocity);` for
+  `var (position, velocity) = solution.InterpolateAt(epoch);`, with an epoch inside `solution.Window`.
+- **Breaking: a `PropagationSegment` cannot be changed from outside the library** (lot L5a, decision 55 of #668, option
+  D, [#796](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/796)): its constructors are `PropagationSegment(Time baseEpoch)` and `PropagationSegment(Time baseEpoch,
+  IEnumerable<AcceptedStep> steps)`, which copies the steps; `AddStep`, the constructor with a step count,
+  `InterpolateAt(double)` and `HermiteInterpolate` are internal, and `Steps` is a read-only view (a cast to
+  `List<AcceptedStep>` fails, and its `IList` indexer and `Add` throw `NotSupportedException`). `IIntegrator` stays an
+  extension point. Migration: an integrator implemented outside the library collects its `AcceptedStep` values and
+  returns `new PropagationSegment(baseEpoch, steps)` in its `IntegrationResult`; the state of a solution between steps
+  is `GetStateVector`.
+- **Breaking: the constructor and mutators of `PropagationSolution` are internal** (lot L5a, R09 of #668, decision 55
+  and section A of the re-baseline, choice 5): `new PropagationSolution()`, `AddSegment` and `SetOutputStates`;
+  `Segments` and `StateVectors` are read-only views (`StateVectors` was the array itself), and so is the new
+  `Maneuvers`. `IPropagator` stays public, documented as implemented by the library and by `PropagatorBase` subclasses,
+  which build their own solution. Migration: an `IPropagator` implemented outside the library subclasses
+  `PropagatorBase`, or returns the solution of a library propagator it delegates to; a solution built by hand (a straight
+  line for the conjunction analysis) has no public equivalent in 11.0.0.
+- **Breaking: `Integrator.UpdateStateVector` is internal** (lot L5a, decision 55 of #668, [#796](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/796)): it was
+  `protected internal static` on a class a caller can derive from, the one way outside the library to rewrite a
+  `StateVector` in place, a published solution's or the stored states included. Migration: none in the library's
+  integrators; a subclass builds new states.
+- **Breaking: `PropagationSolution.CovariancePropagation` is `CovariancePropagationOptions.None` when the propagation
+  propagated neither Φ nor the covariance** (lot L5a, R09 of #668, decision 56, decided by S. Guillet, 2026-11-23), on
+  every path, a `TLEPropagator` solution included; it was null, while `Options.CovariancePropagation` was `None`. A
+  caller's `solution.CovariancePropagation == null` still compiles but is now always false, which the compiler does not
+  catch. Migration: test `solution.CovariancePropagation.Mode == CovariancePropagationMode.None`.
+- **Breaking: `Spacecraft.ExecutedManeuvers` is an `IReadOnlyList<Maneuver>`, a new list at each run** (lot L5a, R09 of
+  #668, decision 58, decided by S. Guillet, 2026-11-23): an `IReadOnlyCollection` before, a live set that the next run
+  emptied. The re-arm of a run swaps in an empty list, and each maneuver the run executes swaps in a new list that adds
+  it, in execution order, so a list once read never changes (a read-only view; a cast cannot write it): a list held
+  from an earlier run keeps its members, a reader on another thread during a run sees the maneuvers executed so far,
+  and a stopped run leaves those executed up to the stop (C2 of lot L4). It holds the definitions, whose values are those of their last run: the stable values of a run are its
+  records, `PropagationSolution.Maneuvers`. Until the fix of
+  [#794](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/794) (decision 44, after lot L5), a
+  stopped run's list also holds an attitude chained before the stop whose activation the run never reached. Migration:
+  a binary break only (recompile); index the list for the order of execution.
+- **Breaking: `SpacecraftSummary` is sealed, built from the records of the run** (lot L5a, R09 of #668, decision 59,
+  decided by S. Guillet, 2026-11-23): its constructor is internal (`Scenario.Simulate` builds it from the solution of each
+  spacecraft), `Maneuvers` is an `IReadOnlyList<ExecutedManeuver>` (the definitions, an `IEnumerable<Maneuver>`,
+  before), and `FuelConsumption` and `ManeuverWindow` are the sum and the hull of the records, bit for bit those of
+  before (the hull computed directly, with the tie-break of `Window.Merge`); its file is `SpacecraftSummary.cs`.
+  `ScenarioSummary.SpacecraftSummaries` is an `IReadOnlyList<SpacecraftSummary>` in scenario order (an
+  `IReadOnlyCollection` of a set before). Migration: `summary.Maneuvers[i].Definition` for the maneuver, and the record's
+  own `DeltaV`, `FuelBurned` and windows for the values of the run; index `SpacecraftSummaries`.
 **Removed**
 
 - **`Instrument.PositionInFOV`** (protected), on which `IsInFOV` was built before #515: its reference vector was not made
@@ -7116,6 +7431,21 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   three doubles ran in the order opposite to that of `Planetodetic`. Migration:
   `AtmosphericContext.FromPlanetodetic(new Planetodetic(longitude, latitude, altitude), epoch)`.
 
+- **`Spacecraft.SetStandbyManeuver(Maneuver, Time?)`, `Spacecraft.InitialManeuver` and `Maneuver.SetNextManeuver`**
+  (lot L5a, R08 of #668, decisions 45 and 47, decided by S. Guillet, 2026-11-23): replaced by
+  `Spacecraft.SetManeuvers(params Maneuver[])` and `Spacecraft.Maneuvers` (under **Added**). The minimum epoch the
+  two-argument call raised is the maneuver's own: pass the later of the old constructor value and the old
+  `SetStandbyManeuver` value as the constructor's `minimumEpoch`; raising the minimum epoch of a reused maneuver between
+  two runs has no equivalent: build a new maneuver and set a new plan. Migration: under **Changed**.
+- **`Attitude.StateOrientation`** (lot L5a, decision 52 of #668, decided by S. Guillet, 2026-11-23): the orientation the
+  last execution kept, which no re-arm cleared. Migration: a preview is `attitude.ComputeStateOrientation(state)`; the
+  attitude of a run at an activation is in the attitude record, `spacecraft.Frame.GetStateOrientationToICRF(epoch)`, the
+  same rotation (0 rad, `ManeuverPreviewTests`).
+- **`Attitude.Execute`** (protected, lot L5a, decision 48 of #668): an attitude changes no velocity, and `Execute` is on
+  `ImpulseManeuver`. Migration: none; an `Attitude` subclass overrides `ComputeOrientation`.
+- **`Spacecraft.GetTotalFuel()`** (lot L5a, R09 of #668, decision 60, decided by S. Guillet, 2026-11-23): it returned
+  the initial fuel whatever a run burnt. Migration: `GetInitialFuel()`, the same value, or `GetRemainingFuel()` for the
+  fuel left.
 **Known limitations**
 
 The open defects a caller can meet at this release, grouped by cause; each line gives the workaround when there is
@@ -7221,8 +7551,29 @@ not listed.
   `ArgumentException` (bodies of one identifier must have the same models, [#674](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/674)); give a TEME state on an Earth that
   carries the models
   ([Numerical propagation of a TLE](../reference/tle.md#numerical-propagation-of-a-tle)). CIRS and TIRS, quasi-inertial
-  as TEME, are still rejected as initial frames. A TLE cannot be built without the kernels that define the Earth. After
-  a numerical propagation, `TLEPropagator` adds its SGP4 states to the stored ones, and the spacecraft reads both.
+  as TEME, are still rejected as initial frames. A TLE cannot be built without the kernels that define the Earth.
+- **Runs on one spacecraft** ([#793](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/793), [#794](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/794)). A spacecraft takes one run at a
+  time (decision 43 of #668), and nothing checks it yet: two runs on one spacecraft at the same time, through two
+  propagators, `Spacecraft.Propagate`, a `TLEPropagator`, a scenario or a batch beside a direct run, interleave with no
+  exception, and can charge a burn twice (a tank left at 841.263915 kg against 917.541305 kg in 1 trial of 12 in the gap
+  analysis of lot L5); a guard that refuses the second run comes after lot L5 (#793;
+  [Thread Safety](../guides/thread-safety.md#one-run-at-a-time-per-spacecraft)). Nor is the plan of a spacecraft
+  changed during a run on it (decision 96 of #668, decided by S. Guillet, 2026-11-24): the run reads the plan as it
+  goes, so a `SetManeuvers` during it mixes the two plans (the plan [m1, m2] set again during a run of [m1, m2] left
+  `ExecutedManeuvers` reading m1, m1 in the second review of lot L5a); the same guard of #793 will make `SetManeuvers` throw
+  `InvalidOperationException` while a run holds the spacecraft. A run stopped by its token lists in
+  `ExecutedManeuvers` an attitude it scheduled before the stop whose activation it never reached, with its windows set
+  and the chain advanced past it (decision 44 of #668, fixed after lot L5 in #794); the records of a run are not
+  affected (a stopped run returns none), and the next run re-arms the spacecraft.
+- **Monte Carlo runs** ([#795](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/795)). Each run of `MonteCarloPropagator` propagates a spacecraft built from the
+  template's dry mass, maximum mass, area and drag and radiation coefficients only: its drag and SRP act on the dry
+  mass, without the fuel and payloads, and its tanks, engines, payloads, instruments, body axes, hard-body radius and
+  COSPAR id are dropped (a template with a maneuver plan throws since lot L5a, decision 41 of #668). Fixed after lot
+  L5 with the long validation; meanwhile give the template the mass to propagate as its dry mass.
+- **The mass of an avoidance trial** (second part of [#801](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/801)). The trial spacecraft of an avoidance
+  option takes the mass before the burn less the fuel the delta-V needs (Tsiolkovsky), not limited by the fuel on
+  board, so it can be lighter than the dry mass, and `AvoidanceOption` does not say that the burn cannot be made; fixed
+  after lot L5 (the mass limited by the fuel on board, the shortfall reported).
 - **CDM dates** ([#616](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/616)). A date in a
   leap second throws `CdmParseException`.
 - **Angles brought into [0, 2π)**

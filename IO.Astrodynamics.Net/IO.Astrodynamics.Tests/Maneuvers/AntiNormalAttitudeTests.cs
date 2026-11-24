@@ -39,9 +39,9 @@ public class AntiNormalAttitudeTests
         AntiNormalAttitude maneuver = new AntiNormalAttitude(TestHelpers.EarthAtJ2000, new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB), TimeSpan.Zero, spc.Engines.First());
 
         var sv = orbitalParams.ToStateVector();
-        maneuver.TryExecute(sv);
+        var maneuverOrientation = maneuver.ComputeStateOrientation(sv);
 
-        var rotatedFront = Spacecraft.Front.Rotate(maneuver.StateOrientation.Rotation).Normalize();
+        var rotatedFront = Spacecraft.Front.Rotate(maneuverOrientation.Rotation).Normalize();
         var antiNormal = sv.Position.Cross(sv.Velocity).Inverse().Normalize();
 
         double alignment = rotatedFront.Dot(antiNormal);
@@ -59,12 +59,12 @@ public class AntiNormalAttitudeTests
         var sv = orbitalParams.ToStateVector();
 
         var normalManeuver = new NormalAttitude(TestHelpers.EarthAtJ2000, new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB), TimeSpan.Zero, spc.Engines.First());
-        normalManeuver.TryExecute(sv);
-        var normalPointing = Spacecraft.Front.Rotate(normalManeuver.StateOrientation.Rotation).Normalize();
+        var normalManeuverOrientation2 = normalManeuver.ComputeStateOrientation(sv);
+        var normalPointing = Spacecraft.Front.Rotate(normalManeuverOrientation2.Rotation).Normalize();
 
         var antiNormalManeuver = new AntiNormalAttitude(TestHelpers.EarthAtJ2000, new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB), TimeSpan.Zero, spc.Engines.First());
-        antiNormalManeuver.TryExecute(sv);
-        var antiNormalPointing = Spacecraft.Front.Rotate(antiNormalManeuver.StateOrientation.Rotation).Normalize();
+        var antiNormalManeuverOrientation3 = antiNormalManeuver.ComputeStateOrientation(sv);
+        var antiNormalPointing = Spacecraft.Front.Rotate(antiNormalManeuverOrientation3.Rotation).Normalize();
 
         // Normal and anti-normal should be opposite (dot product close to -1)
         double dotProduct = normalPointing.Dot(antiNormalPointing);
@@ -100,7 +100,7 @@ public class AntiNormalAttitudeTests
         AntiNormalAttitude maneuver = new AntiNormalAttitude(TestHelpers.EarthAtJ2000, new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB), TimeSpan.Zero, spc.Engines.First());
 
         var sv = orbitalParams.ToStateVector();
-        maneuver.TryExecute(sv);
+        var maneuverOrientation4 = maneuver.ComputeStateOrientation(sv);
 
         // Anti-normal = -(r x v) / |r x v|
         var antiNormal = sv.Position.Cross(sv.Velocity).Inverse().Normalize();
@@ -110,7 +110,7 @@ public class AntiNormalAttitudeTests
             $"Polar orbit anti-normal Z should be ~0. Got: {antiNormal.Z}");
 
         // Rotated front should align with anti-normal
-        var rotatedFront = Spacecraft.Front.Rotate(maneuver.StateOrientation.Rotation).Normalize();
+        var rotatedFront = Spacecraft.Front.Rotate(maneuverOrientation4.Rotation).Normalize();
         double alignment = rotatedFront.Dot(antiNormal);
         Assert.True(alignment > 0.9999,
             $"Front should align with anti-normal. Alignment: {alignment}");
@@ -139,7 +139,7 @@ public class AntiNormalAttitudeTests
         AntiNormalAttitude maneuver = new AntiNormalAttitude(TestHelpers.EarthAtJ2000, new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB), TimeSpan.Zero, spc.Engines.First());
 
         // Act & Assert
-        Assert.Throws<InvalidOperationException>(() => maneuver.TryExecute(sv));
+        Assert.Throws<InvalidOperationException>(() => maneuver.ComputeStateOrientation(sv));
     }
 
     [Fact]
@@ -155,10 +155,10 @@ public class AntiNormalAttitudeTests
         AntiNormalAttitude maneuver = new AntiNormalAttitude(TestHelpers.EarthAtJ2000, new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB), TimeSpan.Zero, spc.Engines.First());
 
         var sv = orbitalParams.ToStateVector();
-        maneuver.TryExecute(sv);
+        var maneuverOrientation5 = maneuver.ComputeStateOrientation(sv);
 
         // The custom body front (+X) should align with the anti-normal direction
-        var rotatedFront = spc.BodyFront.Rotate(maneuver.StateOrientation.Rotation).Normalize();
+        var rotatedFront = spc.BodyFront.Rotate(maneuverOrientation5.Rotation).Normalize();
         var antiNormal = sv.Position.Cross(sv.Velocity).Inverse().Normalize();
 
         double alignment = rotatedFront.Dot(antiNormal);

@@ -20,7 +20,9 @@ namespace IO.Astrodynamics.Maneuver
     /// current orbit by Kepler's equation (negative for a target behind, Δθ beyond π), the phasing orbit has the period
     /// T₂ = T₁ − t(Δθ) / N and the semi-major axis a₂ = (√μ T₂ / 2π)^(2/3); the delta-V at the perigee is
     /// h₂ / r_p − h_target / r_p, h₂ the angular momentum of the phasing orbit and h_target that of the target's orbit.
-    /// The hold of the maneuver is set to 0.9 N T₂.
+    /// The hold of the maneuver is set to 0.9 N T₂ when a run executes it: the last run's value, 0 before and after the
+    /// re-arm of the next run (decision 51 of #668, decided by S. Guillet, 2026-11-23: before 11.0.0 a constructor took a
+    /// hold that the burn replaced, and the computed one was left for good, #784).
     /// </para>
     /// <para>
     /// The target is either a target orbit, whose true longitude at the epoch of the burn and angular momentum the
@@ -46,15 +48,14 @@ namespace IO.Astrodynamics.Maneuver
         /// true longitude at the epoch of the burn and angular momentum set the phasing orbit.
         /// </summary>
         /// <param name="minimumEpoch">The earliest epoch of the burn.</param>
-        /// <param name="maneuverHoldDuration">The hold of the maneuver; replaced at the burn by 0.9 N T₂.</param>
         /// <param name="targetOrbit">The orbit of the target, about the maneuver center and in the frame of the
         /// spacecraft.</param>
         /// <param name="revolutionNumber">The number N of revolutions of the phasing orbit.</param>
         /// <param name="engine">The engine of the burn.</param>
         /// <exception cref="ArgumentNullException"><paramref name="targetOrbit"/> or <paramref name="engine"/> is null.</exception>
         /// <exception cref="ArgumentException">The spacecraft of the engine and the target orbit are defined in different frames.</exception>
-        public PhasingManeuver(Time minimumEpoch, TimeSpan maneuverHoldDuration, OrbitalParameters.OrbitalParameters targetOrbit, uint revolutionNumber, Engine engine) : base(
-            minimumEpoch, maneuverHoldDuration, targetOrbit, engine)
+        public PhasingManeuver(Time minimumEpoch, OrbitalParameters.OrbitalParameters targetOrbit, uint revolutionNumber, Engine engine) : base(
+            minimumEpoch, TimeSpan.Zero, targetOrbit, engine)
         {
             RevolutionNumber = revolutionNumber;
         }
@@ -66,7 +67,6 @@ namespace IO.Astrodynamics.Maneuver
         /// </summary>
         /// <param name="maneuverCenter">The center of the maneuver, the body the true longitudes are measured about.</param>
         /// <param name="minimumEpoch">The earliest epoch of the burn.</param>
-        /// <param name="maneuverHoldDuration">The hold of the maneuver; replaced at the burn by 0.9 N T₂.</param>
         /// <param name="trueLongitude">The true longitude λ = Ω + ω + ν of the virtual target at the epoch of the burn, in
         /// radians, relative to <paramref name="maneuverCenter"/> in the frame of the spacecraft's state, the inertial
         /// frame of its initial orbital parameters. The burn is at the perigee, so λ_sc(burn) is the longitude of the
@@ -74,9 +74,8 @@ namespace IO.Astrodynamics.Maneuver
         /// modulo 2π: beyond π the target is behind.</param>
         /// <param name="revolutionNumber">The number N of revolutions of the phasing orbit.</param>
         /// <param name="engine">The engine of the burn.</param>
-        public PhasingManeuver(CelestialItem maneuverCenter, Time minimumEpoch, TimeSpan maneuverHoldDuration, double trueLongitude, uint revolutionNumber, Engine engine) : base(
-            maneuverCenter, minimumEpoch,
-            maneuverHoldDuration, engine)
+        public PhasingManeuver(CelestialItem maneuverCenter, Time minimumEpoch, double trueLongitude, uint revolutionNumber, Engine engine) : base(
+            maneuverCenter, minimumEpoch, TimeSpan.Zero, engine)
         {
             TargetTrueLongitude = trueLongitude;
             RevolutionNumber = revolutionNumber;
@@ -88,7 +87,31 @@ namespace IO.Astrodynamics.Maneuver
         public override double ComputeEventValue(StateVector localState) => localState.Position.Dot(localState.Velocity);
         public override CrossingDirection EventCrossingDirection => CrossingDirection.NegativeToPositive;
 
-        protected override Vector3 Execute(StateVector stateVector)
+        /// <inheritdoc />
+        /// <remarks>Pure (decision 50 of #668, decided by S. Guillet, 2026-11-23): the hold is set by the run only.</remarks>
+        protected override Vector3 Execute(StateVector stateVector) => DeltaVAt(stateVector).DeltaV;
+
+        /// <inheritdoc />
+        /// <remarks>The hold of the maneuver set to 0.9 N T₂.</remarks>
+        internal override Vector3 ExecuteInRun(StateVector localState)
+        {
+            var (deltaV, hold) = DeltaVAt(localState);
+            ManeuverHoldDuration = hold;
+            return deltaV;
+        }
+
+        /// <summary>
+        /// Clears the hold the last run set, back to 0 (decision 51 of #668, decided by S. Guillet, 2026-11-23), with what
+        /// every maneuver clears.
+        /// </summary>
+        internal override void Reset()
+        {
+            ManeuverHoldDuration = TimeSpan.Zero;
+            base.Reset();
+        }
+
+        // The delta-V and the hold 0.9 N T₂: the pure core of the execution (decision 50 of #668)
+        private (Vector3 DeltaV, TimeSpan Hold) DeltaVAt(StateVector stateVector)
         {
             // The target: the target orbit, or a virtual target on the current orbit at the given true longitude (#588)
             double targetTrueLongitude = TargetOrbit?.TrueLongitude(stateVector.Epoch) ?? TargetTrueLongitude;
@@ -117,8 +140,7 @@ namespace IO.Astrodynamics.Maneuver
 
             double dv = h2 / rp - (TargetOrbit ?? stateVector).SpecificAngularMomentum().Magnitude() / rp;
 
-            ManeuverHoldDuration = Time.SecondsToSpan(t2 * RevolutionNumber * 0.9);
-            return stateVector.Velocity.NormalizeOrZero() * dv;
+            return (stateVector.Velocity.NormalizeOrZero() * dv, Time.SecondsToSpan(t2 * RevolutionNumber * 0.9));
         }
     }
 }

@@ -70,7 +70,18 @@ public interface IIntegrator
     /// <param name="baseEpoch">Absolute start time of the segment.</param>
     /// <param name="duration">Duration to integrate, in seconds of the time argument of the propagation: TT seconds
     /// about the Earth, TDB seconds about any other central body (#501).</param>
-    /// <param name="eventDetectors">Optional event detectors to evaluate each step.</param>
+    /// <param name="eventDetectors">Optional event detectors to evaluate each step. The detectors of the maneuvers serve
+    /// the run that passed them only: once it ends, completed, stopped or thrown, their
+    /// <see cref="IEventDetector.Evaluate"/> and <see cref="IEventDetector.HandleEvent"/> throw
+    /// <see cref="System.InvalidOperationException"/> (decision 95 of #668, decided by S. Guillet, 2026-11-24), so an
+    /// implementation does not keep them past the call: the rule holds for the calls that start after the end of the
+    /// run, and a call already in progress when the run ends completes (decision 98 of #668, decided by S. Guillet,
+    /// 2026-11-24), so an implementation that keeps a detector past its call, against this contract, can still change the
+    /// spacecraft after the run. A detector executes its impulse once at most, for calls that do not overlap,: once its
+    /// <see cref="IEventDetector.HandleEvent"/> has executed it, or started to and thrown, the detector throws in the same
+    /// way within the run
+    /// (decision 97 of #668, decided by S. Guillet, 2026-11-24), so an implementation leaves
+    /// <see cref="IEventDetector.HandleEvent"/> to the propagation.</param>
     /// <returns>The propagation segment and optional event info.</returns>
     IntegrationResult IntegrateSegment(
         Vector3 startPosition, Vector3 startVelocity,

@@ -270,40 +270,76 @@ internal sealed class PropagatedEphemeris
     }
 
     /// <summary>
-    /// Adds states, each to the arc that holds its epoch (the later one at an impulse, the first one before every arc, the
-    /// last one after), replacing a state of that arc at the same epoch; with no arc, they make one.
+    /// Adds the states of one window (decisions 83 and 84 of #668, #792, decided by S. Guillet, 2026-11-23): when the hull
+    /// of their epochs, closed, meets no stored arc (touching counts as meeting), they make a new arc, inserted in time
+    /// order; otherwise the arcs the hull meets are merged where a gap separates them (arcs that touch, at an impulse, stay
+    /// apart), and each state joins the arc of its epoch among them (the later one at an impulse, the first one before
+    /// them, the last one after), replacing a state of that arc at the same epoch. A gap inside the states of one call is
+    /// not detected: they are one window. Before 11.0.0 every state joined the arc of its epoch, so the states of disjoint
+    /// windows made one arc, read across the gap between them.
     /// </summary>
     internal void Add(IEnumerable<StateVector> states)
     {
         ArgumentNullException.ThrowIfNull(states);
+        var added = states.ToArray();
+        if (added.Length == 0) return;
         lock (_writeLock)
         {
-            var snapshot = _snapshot;
-            var arcs = snapshot.Arcs.Select(a => a.ToList()).ToList();
-            foreach (var sv in states)
+            var arcs = _snapshot.Arcs.Select(a => a.ToList()).ToList();
+            var min = added[0].Epoch;
+            var max = min;
+            foreach (var sv in added)
             {
-                if (arcs.Count == 0)
+                if (sv.Epoch < min) min = sv.Epoch;
+                if (sv.Epoch > max) max = sv.Epoch;
+            }
+
+            // The arcs the hull [min, max] meets, consecutive since the arcs are disjoint and in time order
+            int first = -1, last = -1;
+            for (int k = 0; k < arcs.Count; k++)
+            {
+                if (arcs[k][0].Epoch <= max && arcs[k][^1].Epoch >= min)
                 {
-                    arcs.Add(new List<StateVector> { sv });
-                    continue;
+                    if (first < 0) first = k;
+                    last = k;
+                }
+            }
+
+            if (first < 0)
+            {
+                // A window apart from every arc: an arc of its own, in time order
+                var arc = new List<StateVector>(added.Length);
+                foreach (var sv in added) Insert(arc, sv);
+                int at = 0;
+                while (at < arcs.Count && arcs[at][0].Epoch < arc[0].Epoch) at++;
+                arcs.Insert(at, arc);
+            }
+            else
+            {
+                // The gaps the window covers close; the arcs that touch at an impulse stay apart
+                for (int k = last; k > first; k--)
+                {
+                    if (arcs[k - 1][^1].Epoch < arcs[k][0].Epoch)
+                    {
+                        arcs[k - 1].AddRange(arcs[k]);
+                        arcs.RemoveAt(k);
+                        last--;
+                    }
                 }
 
-                var arc = arcs[ArcIndex(arcs, sv.Epoch)];
-                int lo = 0, hi = arc.Count;
-                while (lo < hi)
+                foreach (var sv in added)
                 {
-                    int mid = (lo + hi) >> 1;
-                    if (arc[mid].Epoch < sv.Epoch) lo = mid + 1;
-                    else hi = mid;
-                }
+                    int target = first;
+                    for (int k = last; k > first; k--)
+                    {
+                        if (arcs[k][0].Epoch <= sv.Epoch)
+                        {
+                            target = k;
+                            break;
+                        }
+                    }
 
-                if (lo < arc.Count && arc[lo].Epoch == sv.Epoch)
-                {
-                    arc[lo] = sv;
-                }
-                else
-                {
-                    arc.Insert(lo, sv);
+                    Insert(arcs[target], sv);
                 }
             }
 
@@ -311,15 +347,140 @@ internal sealed class PropagatedEphemeris
         }
     }
 
-    // The arc of an epoch among arcs being built: the last one that starts at or before it, the first one before every arc
-    private static int ArcIndex(List<List<StateVector>> arcs, in Time epoch)
+    // Inserts a state in epoch order, replacing a state at the same epoch
+    private static void Insert(List<StateVector> arc, StateVector sv)
     {
-        for (int k = arcs.Count - 1; k > 0; k--)
+        int lo = 0, hi = arc.Count;
+        while (lo < hi)
         {
-            if (arcs[k][0].Epoch <= epoch) return k;
+            int mid = (lo + hi) >> 1;
+            if (arc[mid].Epoch < sv.Epoch) lo = mid + 1;
+            else hi = mid;
         }
 
-        return 0;
+        if (lo < arc.Count && arc[lo].Epoch == sv.Epoch)
+        {
+            arc[lo] = sv;
+        }
+        else
+        {
+            arc.Insert(lo, sv);
+        }
+    }
+
+    /// <summary>
+    /// The windows the stored states cover, in time order: each a run of arcs that touch (at an impulse), from its first
+    /// epoch to its last, two windows separated by a gap between added windows (#792); an arc of one state apart from the
+    /// others a window of zero length.
+    /// </summary>
+    internal IReadOnlyList<Window> Windows
+    {
+        get
+        {
+            var arcs = _snapshot.Arcs;
+            var windows = new List<Window>();
+            if (arcs.Length == 0) return windows;
+            var start = arcs[0][0].Epoch;
+            var end = arcs[0][^1].Epoch;
+            for (int k = 1; k < arcs.Length; k++)
+            {
+                if (arcs[k][0].Epoch == end)
+                {
+                    end = arcs[k][^1].Epoch;
+                    continue;
+                }
+
+                windows.Add(new Window(start, end));
+                start = arcs[k][0].Epoch;
+                end = arcs[k][^1].Epoch;
+            }
+
+            windows.Add(new Window(start, end));
+            return windows;
+        }
+    }
+
+    /// <summary>
+    /// Whether one window of the stored states (<see cref="Windows"/>) holds <paramref name="window"/>, to the tick of TDB
+    /// (decision 86 of #668): a window that meets a gap is not covered.
+    /// </summary>
+    internal bool Covers(in Window window)
+    {
+        var start = window.StartDate.ToTDB();
+        var end = window.EndDate.ToTDB();
+        foreach (var w in Windows)
+        {
+            if ((start - w.StartDate.ToTDB()).Ticks >= 0 && (w.EndDate.ToTDB() - end).Ticks >= 0) return true;
+        }
+
+        return false;
+    }
+
+    /// <summary>
+    /// The ticks a read may lie outside an arc for a margin in seconds, the light time of a corrected read (#527): the
+    /// margin rounded up, and one tick more, the resolution of a <see cref="Time"/> a corrected epoch is rounded to.
+    /// </summary>
+    internal static long Slack(double margin) =>
+        (long)System.Math.Ceiling(margin * TimeSpan.TicksPerSecond) + (margin > 0.0 ? 1 : 0);
+
+    /// <summary>
+    /// The Lagrange interpolation of the 8 states nearest to <paramref name="epoch"/> in the arc that reads it, null when
+    /// none does (decisions 85, 87, 90 and 91 of #668, decided by S. Guillet, 2026-11-23). An epoch inside an arc (from its
+    /// first epoch to its last) is read by that arc, the later one at an impulse, as before, bit for bit (91). Outside every
+    /// arc, an arc of two states or more reads an epoch within it widened by <paramref name="margin"/> seconds on each side
+    /// (<see cref="Slack"/>, 85), and the nearest arc that reads it does, the later one on a tie (91), so that a corrected
+    /// read in a gap within the margin of two arcs reads the nearer. An arc of one state apart from the others reads its own
+    /// epoch only (87); the arc of one state that an impulse at the end of a propagation opens (#575), which touches the arc
+    /// before it at the impulse, also reads within the margin past it: the state after the impulse, as before (90),
+    /// the tie with the arc before it, at the same distance, going to it. A read in a gap outside every widened arc, or
+    /// beside an arc of one state apart from the others, gives null.
+    /// </summary>
+    internal StateVector InterpolateWithin(in Time epoch, double margin)
+    {
+        var snapshot = _snapshot;
+        var arcs = snapshot.Arcs;
+        if (arcs.Length == 0) return null;
+        var t = epoch.ToTDB();
+        int k = snapshot.ArcIndex(epoch);
+        if (!Holds(arcs[k], t))
+        {
+            long slack = Slack(margin);
+            k = -1;
+            long nearest = long.MaxValue;
+            for (int j = 0; j < arcs.Length; j++)
+            {
+                if (Reads(arcs, j, t, slack, out long distance) && distance <= nearest)
+                {
+                    k = j;
+                    nearest = distance;
+                }
+            }
+
+            if (k < 0) return null;
+        }
+
+        return Lagrange.InterpolateSorted(arcs[k], epoch);
+    }
+
+    // Whether a TDB epoch lies within an arc, its ends included
+    private static bool Holds(StateVector[] arc, in Time tdb) =>
+        (arc[0].Epoch.ToTDB() - tdb).Ticks <= 0 && (tdb - arc[^1].Epoch.ToTDB()).Ticks <= 0;
+
+    // Whether arc j reads a TDB epoch within slack ticks, and the ticks from its hull: an arc of one state its own epoch, and
+    // past it within slack when it touches the arc before it (the arc an impulse at the end of a propagation opens, #575)
+    private static bool Reads(StateVector[][] arcs, int j, in Time tdb, long slack, out long distance)
+    {
+        var arc = arcs[j];
+        long before = (arc[0].Epoch.ToTDB() - tdb).Ticks;
+        long after = (tdb - arc[^1].Epoch.ToTDB()).Ticks;
+        distance = System.Math.Max(0L, System.Math.Max(before, after));
+        if (arc.Length == 1)
+        {
+            bool touches = j > 0 && arcs[j - 1][^1].Epoch == arc[0].Epoch;
+            return before == 0 && after == 0 || touches && before <= 0 && after <= slack;
+        }
+
+        return distance <= slack;
     }
 
     /// <summary>

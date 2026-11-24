@@ -153,7 +153,7 @@ internal static class GetStartedPage
             SolarRadiationPressure = true
         });
 
-        var (position, velocity) = solution.InterpolateAt(window.EndDate);
+        var final = solution.GetStateVector(window.EndDate);
         #endregion
     }
 
@@ -171,7 +171,7 @@ internal static class GetStartedPage
             ThirdBodies = new CelestialItem[] { Stars.SUN_BODY, PlanetsAndMoons.MOON_BODY }
         });
 
-        var (position, velocity) = solution.InterpolateAt(window.EndDate);
+        var final = solution.GetStateVector(window.EndDate);
         #endregion
     }
 }

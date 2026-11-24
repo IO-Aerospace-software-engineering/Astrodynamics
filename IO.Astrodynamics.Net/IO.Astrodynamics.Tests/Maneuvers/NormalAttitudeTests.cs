@@ -39,10 +39,10 @@ public class NormalAttitudeTests
         NormalAttitude maneuver = new NormalAttitude(TestHelpers.EarthAtJ2000, new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB), TimeSpan.Zero, spc.Engines.First());
 
         var sv = orbitalParams.ToStateVector();
-        maneuver.TryExecute(sv);
+        var maneuverOrientation = maneuver.ComputeStateOrientation(sv);
 
         // The body front (+Y) should be rotated to align with +Z (normal direction)
-        var rotatedFront = Spacecraft.Front.Rotate(maneuver.StateOrientation.Rotation).Normalize();
+        var rotatedFront = Spacecraft.Front.Rotate(maneuverOrientation.Rotation).Normalize();
         var normal = sv.Position.Cross(sv.Velocity).Normalize();
 
         // Verify the rotated front aligns with orbital normal
@@ -62,9 +62,9 @@ public class NormalAttitudeTests
         NormalAttitude maneuver = new NormalAttitude(TestHelpers.EarthAtJ2000, new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB), TimeSpan.Zero, spc.Engines.First());
 
         var sv = orbitalParams.ToStateVector();
-        maneuver.TryExecute(sv);
+        var maneuverOrientation2 = maneuver.ComputeStateOrientation(sv);
 
-        var rotatedFront = Spacecraft.Front.Rotate(maneuver.StateOrientation.Rotation).Normalize();
+        var rotatedFront = Spacecraft.Front.Rotate(maneuverOrientation2.Rotation).Normalize();
         var normal = sv.Position.Cross(sv.Velocity).Normalize();
 
         double alignment = rotatedFront.Dot(normal);
@@ -96,10 +96,10 @@ public class NormalAttitudeTests
         NormalAttitude maneuver = new NormalAttitude(TestHelpers.EarthAtJ2000, new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB), TimeSpan.Zero, spc.Engines.First());
 
         var sv = orbitalParams.ToStateVector();
-        maneuver.TryExecute(sv);
+        var maneuverOrientation3 = maneuver.ComputeStateOrientation(sv);
 
         // The custom body front (+X) should align with orbital normal
-        var rotatedFront = spc.BodyFront.Rotate(maneuver.StateOrientation.Rotation).Normalize();
+        var rotatedFront = spc.BodyFront.Rotate(maneuverOrientation3.Rotation).Normalize();
         var normal = sv.Position.Cross(sv.Velocity).Normalize();
 
         double alignment = rotatedFront.Dot(normal);
@@ -123,7 +123,7 @@ public class NormalAttitudeTests
         NormalAttitude maneuver = new NormalAttitude(TestHelpers.EarthAtJ2000, new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB), TimeSpan.Zero, spc.Engines.First());
 
         var sv = orbitalParams.ToStateVector();
-        maneuver.TryExecute(sv);
+        var maneuverOrientation4 = maneuver.ComputeStateOrientation(sv);
 
         // Compute expected normal: r x v, normalized
         var normal = sv.Position.Cross(sv.Velocity).Normalize();
@@ -133,7 +133,7 @@ public class NormalAttitudeTests
             $"Polar orbit normal Z should be ~0 (equatorial plane). Got: {normal.Z}");
 
         // The rotated front should align with the orbital normal
-        var rotatedFront = Spacecraft.Front.Rotate(maneuver.StateOrientation.Rotation).Normalize();
+        var rotatedFront = Spacecraft.Front.Rotate(maneuverOrientation4.Rotation).Normalize();
         double alignment = rotatedFront.Dot(normal);
         Assert.True(alignment > 0.9999,
             $"Front should align with polar orbit normal. Alignment: {alignment}");
@@ -157,7 +157,7 @@ public class NormalAttitudeTests
         NormalAttitude maneuver = new NormalAttitude(TestHelpers.EarthAtJ2000, new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB), TimeSpan.Zero, spc.Engines.First());
 
         var sv = orbitalParams.ToStateVector();
-        maneuver.TryExecute(sv);
+        var maneuverOrientation5 = maneuver.ComputeStateOrientation(sv);
 
         var normal = sv.Position.Cross(sv.Velocity).Normalize();
 
@@ -165,7 +165,7 @@ public class NormalAttitudeTests
         Assert.True(normal.Z < -0.9999,
             $"Retrograde equatorial orbit normal should be -Z. Got: ({normal.X:F6},{normal.Y:F6},{normal.Z:F6})");
 
-        var rotatedFront = Spacecraft.Front.Rotate(maneuver.StateOrientation.Rotation).Normalize();
+        var rotatedFront = Spacecraft.Front.Rotate(maneuverOrientation5.Rotation).Normalize();
         double alignment = rotatedFront.Dot(normal);
         Assert.True(alignment > 0.9999,
             $"Front should align with retrograde orbit normal (-Z). Alignment: {alignment}");
@@ -187,10 +187,10 @@ public class NormalAttitudeTests
         NormalAttitude maneuver = new NormalAttitude(TestHelpers.EarthAtJ2000, new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB), TimeSpan.Zero, spc.Engines.First());
 
         var sv = orbitalParams.ToStateVector();
-        maneuver.TryExecute(sv);
+        var maneuverOrientation6 = maneuver.ComputeStateOrientation(sv);
 
         // Primary check: rotated body front should align with orbital normal (+Z)
-        var rotatedFront = Spacecraft.Front.Rotate(maneuver.StateOrientation.Rotation).Normalize();
+        var rotatedFront = Spacecraft.Front.Rotate(maneuverOrientation6.Rotation).Normalize();
         Assert.True(System.Math.Abs(rotatedFront.X) < 1e-6,
             $"Rotated front X should be ~0. Got: {rotatedFront.X}");
         Assert.True(System.Math.Abs(rotatedFront.Y) < 1e-6,
@@ -202,7 +202,7 @@ public class NormalAttitudeTests
         // q = (cos(45°), sin(45°), 0, 0) = (√2/2, +√2/2, 0, 0)
         double expectedW = System.Math.Sqrt(0.5);  // cos(45°)
         double expectedX = System.Math.Sqrt(0.5);  // sin(45°) * axis.X = sin(45°) * 1
-        var q = maneuver.StateOrientation.Rotation;
+        var q = maneuverOrientation6.Rotation;
 
         // Account for quaternion double-cover: q and -q represent the same rotation.
         // Canonical form: pick the representative that matches the expected sign pattern.
@@ -236,7 +236,7 @@ public class NormalAttitudeTests
         NormalAttitude maneuver = new NormalAttitude(TestHelpers.EarthAtJ2000, new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB), TimeSpan.Zero, spc.Engines.First());
 
         // Act & Assert
-        Assert.Throws<InvalidOperationException>(() => maneuver.TryExecute(sv));
+        Assert.Throws<InvalidOperationException>(() => maneuver.ComputeStateOrientation(sv));
     }
 
     [Fact]
@@ -256,10 +256,10 @@ public class NormalAttitudeTests
         NormalAttitude maneuver = new NormalAttitude(TestHelpers.EarthAtJ2000, new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB), TimeSpan.Zero, spc.Engines.First());
 
         var sv = orbitalParams.ToStateVector();
-        maneuver.TryExecute(sv);
+        var maneuverOrientation7 = maneuver.ComputeStateOrientation(sv);
 
         var normal = sv.Position.Cross(sv.Velocity).Normalize();
-        var rotatedFront = Spacecraft.Front.Rotate(maneuver.StateOrientation.Rotation).Normalize();
+        var rotatedFront = Spacecraft.Front.Rotate(maneuverOrientation7.Rotation).Normalize();
 
         double alignment = rotatedFront.Dot(normal);
         Assert.True(alignment > 0.9999,
