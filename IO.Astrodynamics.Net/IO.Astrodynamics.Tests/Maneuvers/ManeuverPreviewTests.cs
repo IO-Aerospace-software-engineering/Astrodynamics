@@ -269,9 +269,8 @@ public class ManeuverPreviewTests
     }
 
     // Distance of the plane change from its closed form, m/s, of about 3.85 km/s: the rounding of the state conversion and
-    // of the elements the maneuver reads from the state. Measured 1.98e-8 m/s (worst of the two nodes, Linux x64,
-    // 2026-11-23); twice the worst. PROVISIONAL: a Linux-only figure, to be set from the MEASURE lines of the CI logs,
-    // twice the worst of Linux, Windows and macOS arm64.
+    // of the elements the maneuver reads from the state. Measured 1.982e-8 m/s (worst of the two nodes, Linux x64, Windows
+    // and macOS arm64 alike, CI of #808, 2026-11-24); twice the worst.
     private const double PlaneChangeTolerance = 4.0e-8;
 
     /// <summary>
@@ -297,9 +296,8 @@ public class ManeuverPreviewTests
         Assert.True(difference < ApogeeRaiseTolerance, $"{difference:E3} m/s");
     }
 
-    // Distance of the apogee raise from vis-viva, m/s, of about 229 m/s. Measured 0 (Linux x64, 2026-11-23), so the bound
-    // is that of the rounding, about 30 ulps of the delta-V. PROVISIONAL: a Linux-only figure, to be set from the MEASURE
-    // lines of the CI logs, twice the worst of Linux, Windows and macOS arm64 (this bound while the worst stays 0).
+    // Distance of the apogee raise from vis-viva, m/s, of about 229 m/s. Measured 0 on Linux x64, Windows and macOS arm64
+    // (CI of #808, 2026-11-24), so the bound is that of the rounding, about 30 ulps of the delta-V.
     private const double ApogeeRaiseTolerance = 1.0e-12;
 
     // ---------------------------------------------------------------------------------------------------------------------
