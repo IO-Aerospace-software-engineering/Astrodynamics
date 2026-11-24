@@ -7149,9 +7149,11 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   detectors as `IEventDetector` within the run, which decision 88 alone left open (the second review of L5a: a detector
   kept past the run burned 472 kg of fuel and rewrote `DeltaV`), so a detector serves the run that built it only
   (decision 95 of #668, decided by S. Guillet, 2026-11-24): the run disarms every detector it built when it ends,
-  completed, stopped by its token or thrown, and its `Evaluate` and `HandleEvent` then throw
+  completed, stopped by its token or thrown, a run nested in a run of the same propagator on its thread included (the
+  third review of L5a: the detectors the outer run built after the nested run stayed armed past it), and its `Evaluate` and `HandleEvent` then throw
   `InvalidOperationException` naming the maneuver, changing nothing (no fuel, `DeltaV`, window or node of a
-  `PlaneAlignmentManeuver`; `IntegratorEventTests.ADetectorKeptPast*`, a bare `IIntegrator` and an `Integrator`
+  `PlaneAlignmentManeuver`; `IntegratorEventTests.ADetectorKeptPast*`, `ADetectorKeptFromAnEarlierRun_*`,
+  `ADetectorBuiltAfterANestedRun_*`, a bare `IIntegrator` and an `Integrator`
   subclass over both integrators). No result moves. Migration: the propagation executes the plan
   (`Spacecraft.SetManeuvers`, then a propagation); the previews of a maneuver are `ImpulseManeuver.ComputeDeltaV` and
   `ComputeEventValue`, pure; a custom `IIntegrator` uses the detectors it receives within its call of
@@ -7535,7 +7537,7 @@ not listed.
   [Thread Safety](../guides/thread-safety.md#one-run-at-a-time-per-spacecraft)). Nor is the plan of a spacecraft
   changed during a run on it (decision 96 of #668, decided by S. Guillet, 2026-11-24): the run reads the plan as it
   goes, so a `SetManeuvers` during it mixes the two plans (the plan [m1, m2] set again during a run of [m1, m2] left
-  `ExecutedManeuvers` reading m1, m1 in the second review of lot L5a); the same guard of #793 makes `SetManeuvers` throw
+  `ExecutedManeuvers` reading m1, m1 in the second review of lot L5a); the same guard of #793 will make `SetManeuvers` throw
   `InvalidOperationException` while a run holds the spacecraft. A run stopped by its token lists in
   `ExecutedManeuvers` an attitude it scheduled before the stop whose activation it never reached, with its windows set
   and the chain advanced past it (decision 44 of #668, fixed after lot L5 in #794); the records of a run are not

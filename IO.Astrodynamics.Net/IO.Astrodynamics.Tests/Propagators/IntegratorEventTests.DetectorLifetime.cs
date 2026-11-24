@@ -43,6 +43,7 @@ public partial class IntegratorEventTests
         internal Action<int> Before { get; init; } = _ => { };
         internal Action<int> After { get; init; } = _ => { };
         internal List<IEventDetector> Captured { get; } = new();
+        internal int Calls => _calls;
         private int _calls;
 
         internal IntegrationResult Integrate(IIntegrator inner, Vector3 p, Vector3 v, Time b, double d, IReadOnlyList<IEventDetector> e)
@@ -216,5 +217,89 @@ public partial class IntegratorEventTests
         Assert.Throws<InvalidOperationException>(() => detector.HandleEvent(state, spacecraft));
         Assert.Null(maneuver.IsAscendingNode);
         Assert.Equal(before, Footprint(spacecraft, [maneuver]));
+    }
+
+    // The results of a run of TwoImpulses: every output state, then what the detectors changed
+    private static string Results(PropagationSolution solution, Spacecraft spacecraft, ImpulseManeuver[] plan) =>
+        string.Join("; ", solution.StateVectors.Select(sv => $"{sv.Epoch.TimeSpanFromJ2000().Ticks} {sv.Position.X:R} " +
+                                                              $"{sv.Position.Y:R} {sv.Position.Z:R} {sv.Velocity.X:R} {sv.Velocity.Y:R} {sv.Velocity.Z:R}")) +
+        $" | maneuvers {solution.Maneuvers.Count} | " + Footprint(spacecraft, plan);
+
+    /// <summary>
+    /// A propagator run twice with a caller's integrator that keeps the detectors it receives (decision 95 of #668, and the
+    /// reuse rule of decision 22 of #668, #782): the detectors of the first run throw during the second run and after it,
+    /// the second run is bit for bit a fresh run, and its own detectors throw once it ends.
+    /// </summary>
+    [Theory]
+    [MemberData(nameof(CapturingIntegrators))]
+    public void ADetectorKeptFromAnEarlierRun_ThrowsDuringAndAfterTheNextRun(string wrapper, string inner)
+    {
+        // The reference: a fresh run
+        var (freshSpacecraft, freshPlan, freshEarth) = TwoImpulses(-7966);
+        var freshSolution = new CentralBodyPropagator(new Window(S, MinimumEpochGateTests.GateAtTt(3000.0)), freshSpacecraft,
+            NewCapturing(wrapper, inner, freshEarth, new CaptureHooks()), TimeSpan.FromSeconds(10.0)).Propagate();
+        var fresh = Results(freshSolution, freshSpacecraft, freshPlan);
+
+        var (spacecraft, plan, earth) = TwoImpulses(-7965);
+        List<IEventDetector> fromRun1 = null;
+        int checkedDuringRun2 = 0;
+        var hooks = new CaptureHooks
+        {
+            Before = _ =>
+            {
+                if (fromRun1 == null) return;
+                AssertDisarmed(fromRun1, spacecraft, plan, earth, $"run 1 during run 2 {wrapper} {inner}");
+                checkedDuringRun2++;
+            }
+        };
+        var propagator = new CentralBodyPropagator(new Window(S, MinimumEpochGateTests.GateAtTt(3000.0)), spacecraft,
+            NewCapturing(wrapper, inner, earth, hooks), TimeSpan.FromSeconds(10.0));
+        var first = Results(propagator.Propagate(), spacecraft, plan);
+        fromRun1 = hooks.Captured.ToList();
+        Assert.Equal(2, fromRun1.Count);
+
+        var second = Results(propagator.Propagate(), spacecraft, plan);
+        var fromRun2 = hooks.Captured.Except(fromRun1).ToList();
+
+        Assert.Equal(fresh, first);
+        Assert.Equal(fresh, second);
+        Assert.True(checkedDuringRun2 > 0);
+        Assert.Equal(2, fromRun2.Count);
+        AssertDisarmed(fromRun1, spacecraft, plan, earth, $"run 1 after run 2 {wrapper} {inner}");
+        AssertDisarmed(fromRun2, spacecraft, plan, earth, $"run 2 {wrapper} {inner}");
+    }
+
+    /// <summary>
+    /// A run nested in a run of the same propagator, on its thread (the lock of the run is re-entrant): a caller's
+    /// integrator calls <see cref="PropagatorBase.Propagate"/> again in the first segment, with a token already cancelled.
+    /// The detectors the outer run builds after the nested run, that of the second impulse, are disarmed when the outer run
+    /// ends, as those it built before (decision 95 of #668, decided by S. Guillet, 2026-11-24).
+    /// </summary>
+    [Theory]
+    [MemberData(nameof(CapturingIntegrators))]
+    public void ADetectorBuiltAfterANestedRun_IsDisarmedWhenTheOuterRunEnds(string wrapper, string inner)
+    {
+        var (spacecraft, plan, earth) = TwoImpulses(-7967);
+        using var source = new CancellationTokenSource();
+        source.Cancel();
+        PropagatorBase propagator = null;
+        bool nested = false;
+        var hooks = new CaptureHooks
+        {
+            Before = call =>
+            {
+                if (call != 1) return;
+                Assert.ThrowsAny<OperationCanceledException>(() => propagator.Propagate(source.Token));
+                nested = true;
+            }
+        };
+        propagator = new CentralBodyPropagator(new Window(S, MinimumEpochGateTests.GateAtTt(3000.0)), spacecraft,
+            NewCapturing(wrapper, inner, earth, hooks), TimeSpan.FromSeconds(10.0));
+        var solution = propagator.Propagate();
+
+        Assert.True(nested);
+        Assert.Equal(2, solution.Maneuvers.Count);
+        Assert.Equal(2, hooks.Captured.Count);
+        AssertDisarmed(hooks.Captured, spacecraft, plan, earth, $"nested {wrapper} {inner}");
     }
 }

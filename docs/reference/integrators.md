@@ -40,6 +40,11 @@ The cancellation token of a propagation ([Propagators](propagators.md#cancellati
 not change (R28 of #668); a custom integrator, a bare `IIntegrator` or a subclass of `Integrator`, is stopped by the
 propagator between its segments, never inside one.
 
+The event detectors a custom integrator receives serve the run that called it only (decision 95 of #668, decided by
+S. Guillet, 2026-11-24): the run disarms every detector it built when it ends, completed, stopped or thrown, and a
+detector kept past it throws `InvalidOperationException` from `Evaluate` and `HandleEvent`, changing nothing
+([Event Detection](event-detection.md#the-maneuver-detector)).
+
 ## AcceptedStep
 
 Both integrators record `AcceptedStep` entries containing position, velocity, and acceleration at the start and end of each step. These records enable cubic Hermite interpolation between steps (internal since 11.0.0), which is exact at the step ends only.

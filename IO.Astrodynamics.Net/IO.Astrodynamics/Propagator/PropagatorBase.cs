@@ -758,6 +758,10 @@ public abstract class PropagatorBase : IPropagator
             }
 
             bool reArmed = false;
+            // The lock is re-entrant, so a run may be nested in a run of this instance on its thread (a caller's integrator
+            // or force calling Propagate): the field is put back when the run ends, so that the detectors the outer run
+            // builds afterwards are disarmed with its own (decision 95 of #668)
+            var outerDetectors = _runDetectors;
             var runDetectors = _runDetectors = new List<ManeuverEventDetector>();
             try
             {
@@ -785,6 +789,8 @@ public abstract class PropagatorBase : IPropagator
                 {
                     detector.Disarm();
                 }
+
+                _runDetectors = outerDetectors;
             }
         }
     }

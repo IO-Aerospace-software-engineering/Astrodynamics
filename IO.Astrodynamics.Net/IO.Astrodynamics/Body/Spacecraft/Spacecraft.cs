@@ -673,7 +673,7 @@ namespace IO.Astrodynamics.Body.Spacecraft
         /// ends), so a call from another thread, or from code the run calls (a force, a custom integrator), mixes the two
         /// plans; in the second review of L5a a call that set the plan [m1, m2] again during a run of [m1, m2] left
         /// <see cref="ExecutedManeuvers"/> reading m1, m1. Set the plan before the run, or after it has returned. Nothing
-        /// checks the rule yet: the run guard of #793, after lot L5, makes this method throw
+        /// checks the rule yet: the run guard of #793, after lot L5, will make this method throw
         /// <see cref="InvalidOperationException"/> while a run holds the spacecraft.
         /// </para>
         /// </remarks>
