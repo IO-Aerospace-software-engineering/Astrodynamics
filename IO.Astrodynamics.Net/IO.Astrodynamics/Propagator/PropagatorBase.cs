@@ -56,6 +56,10 @@ public abstract class PropagatorBase : IPropagator
     // keeps (decision 57 of #668)
     private List<ExecutedManeuver> _executed = new();
 
+    // The maneuver detectors the current run built, a list of each run's own, disarmed when the run ends, completed,
+    // stopped or thrown (decision 95 of #668, #802)
+    private List<ManeuverEventDetector> _runDetectors = new();
+
     /// <summary>
     /// The impulses of the propagation, in epoch order, each with the state of the integrator at its event before the
     /// maneuver executes and the state the maneuver gives, in the frame of the propagation, with their covariance in
@@ -709,6 +713,13 @@ public abstract class PropagatorBase : IPropagator
     /// fuel, <see cref="Spacecraft.ExecutedManeuvers"/> and standby chain advanced up to the stop; the next propagation
     /// re-arms it (C2 of lot L4).
     /// </para>
+    /// <para>
+    /// A maneuver's detector serves the run that built it only (decision 95 of #668, #802, decided by S. Guillet,
+    /// 2026-11-24): the run disarms every detector it built when it ends, completed, stopped by the token or thrown, and a
+    /// detector an <see cref="IIntegrator"/> kept past the run then throws <see cref="InvalidOperationException"/> from
+    /// <see cref="IEventDetector.Evaluate"/> and <see cref="IEventDetector.HandleEvent"/>, changing nothing (before, it
+    /// executed its maneuver outside a run: fuel burned, <see cref="ImpulseManeuver.DeltaV"/> and the windows rewritten).
+    /// </para>
     /// </remarks>
     /// <param name="cancellationToken">The token that stops the run; none by default, bit for bit the run without it.</param>
     /// <returns>The solution.</returns>
@@ -742,6 +753,7 @@ public abstract class PropagatorBase : IPropagator
             }
 
             bool reArmed = false;
+            var runDetectors = _runDetectors = new List<ManeuverEventDetector>();
             try
             {
                 return PropagateWithOrientationCache(cacheFrame, cache, cancellationToken, ref reArmed);
@@ -759,6 +771,14 @@ public abstract class PropagatorBase : IPropagator
                 if (hooked != null)
                 {
                     hooked.Cancellation = default;
+                }
+
+                // A maneuver's detector serves the run that built it only: a caller's integrator receives the detectors
+                // within the run, and one kept past it would execute its maneuver outside a run (decision 95 of #668,
+                // decided by S. Guillet, 2026-11-24)
+                foreach (var detector in runDetectors)
+                {
+                    detector.Disarm();
                 }
             }
         }
@@ -1138,10 +1158,18 @@ public abstract class PropagatorBase : IPropagator
         var impulse = ScheduleAttitudes(Spacecraft.StandbyManeuver, Window.StartDate, 0.0);
         if (impulse != null)
         {
-            detectors.Add(new ManeuverEventDetector(impulse));
+            detectors.Add(NewRunDetector(impulse));
         }
 
         return detectors;
+    }
+
+    // The detector of an impulse of the current run, which the run disarms when it ends (decision 95 of #668)
+    private ManeuverEventDetector NewRunDetector(ImpulseManeuver impulse)
+    {
+        var detector = new ManeuverEventDetector(impulse);
+        _runDetectors.Add(detector);
+        return detector;
     }
 
     /// <summary>
@@ -1266,7 +1294,7 @@ public abstract class PropagatorBase : IPropagator
         }
 
         var nextImpulse = ScheduleAttitudes(impulse.NextManeuver, maneuverEnd, maneuverEndTau);
-        return nextImpulse != null ? new ManeuverEventDetector(nextImpulse) : null;
+        return nextImpulse != null ? NewRunDetector(nextImpulse) : null;
     }
 
     /// <summary>

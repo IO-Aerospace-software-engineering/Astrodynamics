@@ -27,10 +27,21 @@ namespace IO.Astrodynamics.Propagator.Events;
 /// propagation executes the plan; the previews are <see cref="ImpulseManeuver.ComputeDeltaV"/> and
 /// <see cref="ImpulseManeuver.ComputeEventValue"/>.
 /// </para>
+/// <para>
+/// A detector serves the run that built it only (decision 95 of #668, #802, decided by S. Guillet, 2026-11-24): the run
+/// disarms every detector it built when it ends, completed, stopped by its token or thrown
+/// (<see cref="PropagatorBase.Propagate"/>), and <see cref="Evaluate"/> and <see cref="HandleEvent"/> then throw
+/// <see cref="System.InvalidOperationException"/> and change nothing. A custom <see cref="IIntegrator"/> receives the
+/// detectors as <see cref="IEventDetector"/> within the run, so decision 88 alone did not close the route: a detector
+/// kept past the run burned fuel and rewrote <see cref="ImpulseManeuver.DeltaV"/> and the windows.
+/// </para>
 /// </remarks>
 internal sealed class ManeuverEventDetector : IEventDetector, IGatedEventDetector
 {
     private readonly ImpulseManeuver _maneuver;
+
+    // Set once by the run that built the detector, when it ends, and read by any thread a caller's integrator calls from
+    private volatile bool _disarmed;
 
     public ManeuverEventDetector(ImpulseManeuver maneuver)
     {
@@ -39,6 +50,28 @@ internal sealed class ManeuverEventDetector : IEventDetector, IGatedEventDetecto
 
     /// <summary>The maneuver this detector triggers; its DeltaV is set once it has executed.</summary>
     internal ImpulseManeuver Maneuver => _maneuver;
+
+    /// <summary>
+    /// Ends the service of this detector: called by the run that built it when it ends, completed, stopped or thrown
+    /// (decision 95 of #668, decided by S. Guillet, 2026-11-24). <see cref="Evaluate"/>, <see cref="HandleEvent"/> and
+    /// the gated evaluation throw afterwards.
+    /// </summary>
+    internal void Disarm() => _disarmed = true;
+
+    // Throws once the run that built this detector has ended (decision 95 of #668), before anything is read or changed
+    private void RequireArmed()
+    {
+        if (_disarmed)
+        {
+            var owner = _maneuver.PlanOwner;
+            throw new System.InvalidOperationException(
+                $"The event detector of the {_maneuver.GetType().Name} (minimum epoch {_maneuver.MinimumEpoch}, engine " +
+                $"{_maneuver.Engine.Name}{(owner != null ? $", in the plan of {owner.Name}" : string.Empty)}) belongs to a " +
+                "finished run: a maneuver's detector serves the run that built it only, and the propagation executes the " +
+                "plan. Propagate again to execute the maneuver; ImpulseManeuver.ComputeDeltaV and ComputeEventValue are " +
+                "the previews.");
+        }
+    }
 
     public CrossingDirection Direction => _maneuver.EventCrossingDirection;
 
@@ -51,6 +84,8 @@ internal sealed class ManeuverEventDetector : IEventDetector, IGatedEventDetecto
     /// <see cref="ImpulseManeuver.ComputeEventValue"/> no longer does (decision 50 of #668, decided by S. Guillet,
     /// 2026-11-23).
     /// </summary>
+    /// <exception cref="System.InvalidOperationException">The run that built this detector has ended (decision 95 of
+    /// #668); nothing changes, the node of a <see cref="PlaneAlignmentManeuver"/> included.</exception>
     /// <remarks>
     /// The +1 before the minimum epoch is what an integrator that does not know the gate reads, such as a custom
     /// <see cref="IIntegrator"/> given to the propagator: compared with the first g-value after the minimum epoch, it gives
@@ -61,6 +96,8 @@ internal sealed class ManeuverEventDetector : IEventDetector, IGatedEventDetecto
     /// </remarks>
     public double Evaluate(StateVector state)
     {
+        RequireArmed();
+
         // Guard: before MinimumEpoch, return positive value (no crossing)
         if (state.Epoch < _maneuver.MinimumEpoch) return 1.0;
 
@@ -75,7 +112,11 @@ internal sealed class ManeuverEventDetector : IEventDetector, IGatedEventDetecto
     /// <inheritdoc />
     /// <remarks>The g-function of the maneuver from the start of a search
     /// (<see cref="ImpulseManeuver.ComputeEventValueAtSearchStart"/>), whatever the epoch.</remarks>
-    double IGatedEventDetector.EvaluateOpen(StateVector state) => _maneuver.ComputeEventValueAtSearchStart(Local(state));
+    double IGatedEventDetector.EvaluateOpen(StateVector state)
+    {
+        RequireArmed();
+        return _maneuver.ComputeEventValueAtSearchStart(Local(state));
+    }
 
     // The state relative to the center of the maneuver, the frame of its g-function
     private StateVector Local(StateVector state) => state.RelativeTo(_maneuver.ManeuverCenter, Aberration.None).ToStateVector();
@@ -94,6 +135,8 @@ internal sealed class ManeuverEventDetector : IEventDetector, IGatedEventDetecto
     /// <paramref name="stateAtEvent"/>, no attitude, the action <see cref="EventAction.Continue"/> and this detector,
     /// which waits for the next crossing.
     /// </returns>
+    /// <exception cref="System.InvalidOperationException">The run that built this detector has ended (decision 95 of
+    /// #668); nothing changes: no fuel burned, <see cref="ImpulseManeuver.DeltaV"/> and the windows untouched.</exception>
     /// <remarks>
     /// Before 11.0.0 it also executed the attitudes chained after the impulse at the epoch of its event, each raising the
     /// gate of the next maneuver, and returned the detector of the next impulse. The propagation now activates them at the
@@ -101,6 +144,8 @@ internal sealed class ManeuverEventDetector : IEventDetector, IGatedEventDetecto
     /// </remarks>
     public EventResult HandleEvent(StateVector stateAtEvent, Spacecraft spacecraft)
     {
+        RequireArmed();
+
         // Check optional preconditions (e.g., CombinedManeuver's apogee-node alignment)
         if (!_maneuver.CheckPreconditions(Local(stateAtEvent)))
         {

@@ -4581,6 +4581,11 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   (decision 88 of #668), whose public `HandleEvent` executed a maneuver outside a run: after an apogee raise propagated
   3 h, a call at a state of the solution took the fuel from 850.075099 to 744.573379 kg, the `DeltaV` from 229.243040 to
   172.742734 m/s and moved the thrust window by 2 h (the probe of the first review of L5a); the run's record was left.
+  A custom `IIntegrator` still received the detectors within the run and could keep them: a detector kept past the run
+  executed its maneuver outside it (472 kg of fuel burned and `DeltaV` rewritten in the probe of the second review of
+  L5a). A detector now serves the run that built it only (decision 95 of #668, decided by S. Guillet, 2026-11-24): the
+  run disarms it when it ends, completed, stopped or thrown, and its `Evaluate` and `HandleEvent` throw
+  `InvalidOperationException` afterwards, changing nothing.
 - **A published propagation solution could be changed from outside the library** ([#796](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/796), lot L5a, decision 55 of
   #668): `PropagationSegment.AddStep`, `PropagationSolution.AddSegment` and `SetOutputStates` were public, and
   `Segments`, `StateVectors` and `Steps` returned the inner list or array, so a caller could add a step to a solution the
@@ -7140,10 +7145,17 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   [#802](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/802)): the propagation builds its detectors from the maneuver plan and takes no user detector, and its
   public `HandleEvent` executed a maneuver outside a run (fuel burned, `DeltaV` and the windows rewritten, the probe of
   the first review of L5a: 105.5 kg of fuel taken after a run). `IEventDetector`, `EventResult`, `EventAction` and
-  `CrossingDirection` stay public, as they are; a custom `IIntegrator` given to the propagator still receives the
-  detector as an `IEventDetector` within the run. No result moves. Migration: the propagation executes the plan
+  `CrossingDirection` stay public, as they are. A custom `IIntegrator` given to the propagator still receives the
+  detectors as `IEventDetector` within the run, which decision 88 alone left open (the second review of L5a: a detector
+  kept past the run burned 472 kg of fuel and rewrote `DeltaV`), so a detector serves the run that built it only
+  (decision 95 of #668, decided by S. Guillet, 2026-11-24): the run disarms every detector it built when it ends,
+  completed, stopped by its token or thrown, and its `Evaluate` and `HandleEvent` then throw
+  `InvalidOperationException` naming the maneuver, changing nothing (no fuel, `DeltaV`, window or node of a
+  `PlaneAlignmentManeuver`; `IntegratorEventTests.ADetectorKeptPast*`, a bare `IIntegrator` and an `Integrator`
+  subclass over both integrators). No result moves. Migration: the propagation executes the plan
   (`Spacecraft.SetManeuvers`, then a propagation); the previews of a maneuver are `ImpulseManeuver.ComputeDeltaV` and
-  `ComputeEventValue`, pure.
+  `ComputeEventValue`, pure; a custom `IIntegrator` uses the detectors it receives within its call of
+  `IntegrateSegment` only.
 - **Breaking: `PhasingManeuver` takes no hold** (lot L5a, decision 51 of #668, decided by S. Guillet, 2026-11-23,
   [#784](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/784)): its constructors are `PhasingManeuver(minimumEpoch, targetOrbit, revolutionNumber, engine)` and
   `PhasingManeuver(maneuverCenter, minimumEpoch, trueLongitude, revolutionNumber, engine)`; the hold, 0.9 N T₂, is set
