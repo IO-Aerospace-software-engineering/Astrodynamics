@@ -34,9 +34,18 @@ public class CelestialAttitudeTarget : IAttitudeTarget
     /// </summary>
     /// <param name="target">The celestial body or site to track.</param>
     /// <param name="aberration">Aberration correction to apply (default: <see cref="Aberration.None"/>).</param>
+    /// <exception cref="ArgumentNullException"><paramref name="target"/> is null.</exception>
+    /// <exception cref="ArgumentOutOfRangeException"><paramref name="aberration"/> is not a member of
+    /// <see cref="Aberration"/> (#806, decision 67 of #668, decided by S. Guillet, 2026-11-23: the target was built, and
+    /// threw only at its first <see cref="GetDirection"/>, inside the propagation of its attitude).</exception>
     public CelestialAttitudeTarget(ILocalizable target, Aberration aberration = Aberration.None)
     {
         Target = target ?? throw new ArgumentNullException(nameof(target));
+        if (!Enum.IsDefined(aberration))
+        {
+            throw new ArgumentOutOfRangeException(nameof(aberration), aberration, "Unknown aberration correction.");
+        }
+
         Aberration = aberration;
     }
 

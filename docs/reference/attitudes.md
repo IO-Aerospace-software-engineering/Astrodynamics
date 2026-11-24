@@ -262,7 +262,10 @@ Wraps an `ILocalizable` (celestial body, site) for use as an attitude target.
 | `Target` | The `ILocalizable` to track |
 | `Aberration` | Aberration correction applied when computing direction |
 
-`CelestialAttitudeTarget` accepts an optional `Aberration` parameter (default: `Aberration.None`):
+`CelestialAttitudeTarget` accepts an optional `Aberration` parameter (default: `Aberration.None`); a value that is not a
+member of `Aberration` throws `ArgumentOutOfRangeException` (`aberration`) in the constructor
+([#806](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/806), decision 67 of #668; before
+11.0.0 at the first `GetDirection`, inside the propagation of the attitude):
 
 - **`Aberration.None`** (default) — geometric instantaneous direction, consistent with the attitude pipeline and industry practice.
 - **`Aberration.LT`** — light-time corrected apparent direction, for photon-based scenarios (e.g., optical sensors observing distant targets).

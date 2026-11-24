@@ -7287,6 +7287,14 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   filter gave 300 s with that tank empty, so the fuel cost of an avoidance option (`ConjunctionAssessment`, from the
   specific impulse) rises by about a third in that case. Without an engine `GetTotalISP` stays NaN (0 / 0) and
   `GetTotalFuelFlow` 0. #801 part 2, the avoidance clone lighter than its dry mass, stays open, fixed after lot L5.
+- **`CelestialAttitudeTarget` checks its aberration where it is given**
+  ([#806](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/806), lot L5b, decision 67 of
+  [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668), decided by S. Guillet,
+  2026-11-23): an `Aberration` that is not a member of the enumeration, `(Aberration)99`, built a target, which threw
+  `ArgumentOutOfRangeException` (`aberration`) only at its first `GetDirection`, inside the propagation of its attitude;
+  the constructor now throws it (`Enum.IsDefined`), as `InstrumentPointingToAttitude` does
+  (`CelestialAttitudeTargetTests.Constructor_UnknownAberration_ThrowsArgumentOutOfRangeException`, red before the
+  change). Every member of the enumeration is accepted as before. Migration: none for a defined value.
 **Removed**
 
 - **`Instrument.PositionInFOV`** (protected), on which `IsInFOV` was built before #515: its reference vector was not made

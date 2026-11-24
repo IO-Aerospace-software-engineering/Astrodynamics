@@ -132,6 +132,22 @@ public class CelestialAttitudeTargetTests
         Assert.True(worstPlane <= TriadPlaneTolerance, $"plane {worstPlane:E3} rad");
     }
 
+    /// <summary>
+    /// An aberration that is not a member of the enumeration is refused where it is given (#806, decision 67 of #668,
+    /// decided by S. Guillet, 2026-11-23): the target was built, and threw only at its first <c>GetDirection</c>, inside
+    /// the propagation of its attitude.
+    /// </summary>
+    [Theory]
+    [InlineData(99)]
+    [InlineData(-1)]
+    public void Constructor_UnknownAberration_ThrowsArgumentOutOfRangeException(int value)
+    {
+        var exception = Record.Exception(() => new CelestialAttitudeTarget(TestHelpers.MoonAtJ2000, (Aberration)value));
+
+        var rejected = Assert.IsType<ArgumentOutOfRangeException>(exception);
+        Assert.Equal("aberration", rejected.ParamName);
+    }
+
     [Fact]
     public void Constructor_NullTarget_ThrowsArgumentNullException()
     {
