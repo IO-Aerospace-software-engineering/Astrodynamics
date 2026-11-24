@@ -243,6 +243,10 @@ Rules learned during the state transition matrix and covariance work (10.2.0-pre
 - **Design first.** A significant change opens a draft PR whose description is the design, with its measurements and one recommendation per open choice, approved by S. Guillet before the implementation. A long feature keeps one tracking issue (as #364) holding the working rules, the dated decisions, the status, the thresholds and the lessons.
 - **Citations.** A reference that cannot be read from the environment is cited with "to be verified by S. Guillet"; once he confirms it, the marker becomes "confirmed by S. Guillet, <date>" ("Confirmed by S. Guillet (<date>)" on the provenance page). Every formula of the covariance work has its row on `docs/reference/covariance-propagation-provenance.md`. No marker is left at a release.
 - **Releases.** See "Releasing" in `docs/contributing/versioning.md`: the tag is the version, exactly.
+- **Review findings** (decided by S. Guillet, 2026-11-24). Only two kinds of finding go to S. Guillet as an open point:
+  - a blocking one: a decision broken, a result that moves, or a documented claim that is wrong;
+  - one that a normal use of the public API reaches.
+  A finding that needs a misuse of an extension point against its documented contract is not an open point: when a doc claims more than the code does, the claim is corrected; otherwise a defect is filed as an issue, and anything else is dropped. Every defect found is filed, and only the serious or breaking ones are fixed in the release under way. A change gets one adversarial review and its fixes; a second review checks those fixes only and opens no new rounds (#668, lot L5a went through four rounds).
 
 ## Public API
 
