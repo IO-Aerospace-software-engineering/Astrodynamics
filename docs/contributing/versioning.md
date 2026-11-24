@@ -7295,6 +7295,19 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   the constructor now throws it (`Enum.IsDefined`), as `InstrumentPointingToAttitude` does
   (`CelestialAttitudeTargetTests.Constructor_UnknownAberration_ThrowsArgumentOutOfRangeException`, red before the
   change). Every member of the enumeration is accepted as before. Migration: none for a defined value.
+- **Breaking: an attitude points the instruments of the spacecraft propagated**
+  ([#797](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/797), lot L5b, decision 66 of
+  [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668), decided by S. Guillet,
+  2026-11-23): an `InstrumentPointingToAttitude` or a `TriadAttitude` built on an instrument of another spacecraft ran,
+  on the spacecraft's own engine, and pointed that instrument's boresight, whose orientation is in the frame of its own
+  spacecraft (in the probe of the gap analysis of L5, 11 attitudes recorded and the spacecraft's own boresight 0.577 rad
+  from the Moon); the TRIAD instrument forms kept no reference to their instruments. They keep them now, and
+  `Spacecraft.SetManeuvers` throws `ArgumentException` (`maneuvers`) for an attitude that points an instrument whose
+  `Spacecraft` is not the spacecraft, compared by reference, nothing changed, the propagator constructor and `Propagate`
+  `InvalidOperationException` for a chain that holds one, beside the engine check (`ForeignInstrumentTests`, the
+  pointing, the TRIAD of one instrument and of two, red before the change). An attitude on the spacecraft's own
+  instruments runs as before, bit for bit (the body vectors of the TRIAD forms are those of before). Migration: build the
+  attitude on an instrument of the spacecraft it is propagated with.
 **Removed**
 
 - **`Instrument.PositionInFOV`** (protected), on which `IsInFOV` was built before #515: its reference vector was not made

@@ -67,6 +67,8 @@ public class InstrumentPointingToAttitude : Attitude
     /// direction is the target's as the point of <paramref name="stateVector"/> sees it, corrected by
     /// <see cref="Aberration"/> (#549).
     /// </summary>
+    internal override System.Collections.Generic.IEnumerable<Instrument> PointedInstruments => [Instrument];
+
     public override Quaternion ComputeOrientation(StateVector stateVector)
     {
         ArgumentNullException.ThrowIfNull(stateVector);

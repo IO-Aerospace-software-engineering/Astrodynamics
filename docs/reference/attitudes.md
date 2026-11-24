@@ -59,6 +59,13 @@ The direction is that of the target as the spacecraft sees it, corrected by the 
 | `Target` | The `ILocalizable` target to track |
 | `Aberration` | The correction of the target's direction, `Aberration.LT` by default |
 
+The instrument is one of the spacecraft propagated, compared by reference: `SetManeuvers` throws `ArgumentException`
+(`maneuvers`) for an attitude on an instrument of another spacecraft, and the propagator constructor and `Propagate`
+throw `InvalidOperationException` for a chain that holds one
+([#797](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/797), decision 66 of #668, decided by
+S. Guillet, 2026-11-23; before 11.0.0 the run pointed that instrument's boresight, whose orientation is in the frame of
+its own spacecraft: 0.577 rad off the Moon in the probe of the gap analysis of L5).
+
 ```csharp
 // Inputs: minimumEpoch (Time), holdDuration (TimeSpan), camera (Instrument), moon (CelestialBody), engine (Engine)
 var pointing = new InstrumentPointingToAttitude(
@@ -97,6 +104,9 @@ var attitude = new TriadAttitude(
     minimumEpoch, holdDuration,
     camera, primaryTarget, secondaryTarget, engine);
 ```
+
+The instrument forms keep their instruments: each is one of the spacecraft propagated, under the rule of
+[InstrumentPointingToAttitude](#instrumentpointingtoattitude) (#797).
 
 **Dual instruments** — different instruments for primary and secondary pointing:
 

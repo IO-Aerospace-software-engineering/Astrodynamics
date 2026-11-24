@@ -89,6 +89,22 @@ public class TriadAttitude : Attitude
     private readonly Vector3 _primaryBodyVector;
     private readonly Vector3 _secondaryBodyVector;
 
+    // The instruments of the Instrument forms, null for the other forms: the plan and the run check that they are
+    // instruments of the spacecraft propagated (#797, decision 66 of #668, decided by S. Guillet, 2026-11-23); before,
+    // the forms copied their vectors and kept no reference, so no check could see whose instrument it was. The body
+    // vectors stay those copied at construction, the instrument's vectors being fixed once it is built
+    private readonly Instrument _primaryInstrument;
+    private readonly Instrument _secondaryInstrument;
+
+    internal override System.Collections.Generic.IEnumerable<Instrument> PointedInstruments
+    {
+        get
+        {
+            if (_primaryInstrument != null) yield return _primaryInstrument;
+            if (_secondaryInstrument != null && !ReferenceEquals(_secondaryInstrument, _primaryInstrument)) yield return _secondaryInstrument;
+        }
+    }
+
     // The instance axes of the factories, read on the spacecraft of the engine's tank; null for the public constructors
     private readonly Func<Spacecraft, Vector3> _primaryAxis;
     private readonly Func<Spacecraft, Vector3> _secondaryAxis;
@@ -170,6 +186,7 @@ public class TriadAttitude : Attitude
         SecondaryTarget = secondaryTarget ?? throw new ArgumentNullException(nameof(secondaryTarget));
         MinimumVectorSeparation = minimumVectorSeparation;
 
+        _primaryInstrument = instrument;
         _primaryBodyVector = instrument.GetBoresightInSpacecraftFrame();
         _secondaryBodyVector = instrument.GetRefVectorInSpacecraftFrame();
 
@@ -209,6 +226,8 @@ public class TriadAttitude : Attitude
         SecondaryTarget = secondaryTarget ?? throw new ArgumentNullException(nameof(secondaryTarget));
         MinimumVectorSeparation = minimumVectorSeparation;
 
+        _primaryInstrument = primaryInstrument;
+        _secondaryInstrument = secondaryInstrument;
         _primaryBodyVector = primaryInstrument.GetBoresightInSpacecraftFrame();
         _secondaryBodyVector = secondaryInstrument.GetBoresightInSpacecraftFrame();
 

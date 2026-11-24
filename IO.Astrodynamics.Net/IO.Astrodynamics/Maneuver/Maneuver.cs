@@ -177,6 +177,13 @@ namespace IO.Astrodynamics.Maneuver
         /// </summary>
         internal Spacecraft PlanOwner { get; set; }
 
+        /// <summary>
+        /// The instruments the law of this maneuver points, none for a maneuver that points no instrument: the plan and the
+        /// run check that each is an instrument of the spacecraft propagated (#797, decision 66 of #668, decided by
+        /// S. Guillet, 2026-11-23).
+        /// </summary>
+        internal virtual IEnumerable<Instrument> PointedInstruments => Array.Empty<Instrument>();
+
 
         /// <summary>
         /// The fuel the last run that executed this maneuver burned for it, kg: the last run's value, cleared by the re-arm of

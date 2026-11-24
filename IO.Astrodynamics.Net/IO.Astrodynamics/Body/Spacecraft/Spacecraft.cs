@@ -543,7 +543,8 @@ namespace IO.Astrodynamics.Body.Spacecraft
         /// 2026-11-23).
         /// </summary>
         /// <exception cref="InvalidOperationException">A maneuver draws on an engine that is not one of this spacecraft's
-        /// engines or on a tank that is not this spacecraft's, or is not in its plan; nothing changes.</exception>
+        /// engines or on a tank that is not this spacecraft's, or points an instrument of another spacecraft (#797, decision 66
+        /// of #668, decided by S. Guillet, 2026-11-23), or is not in its plan; nothing changes.</exception>
         internal void CheckManeuverEngines()
         {
             foreach (var maneuver in Maneuver.Maneuver.Chain(PlanHead).Concat(Maneuver.Maneuver.Chain(StandbyManeuver)))
@@ -551,6 +552,11 @@ namespace IO.Astrodynamics.Body.Spacecraft
                 if (EngineError(maneuver) is { } engineError)
                 {
                     throw new InvalidOperationException(engineError);
+                }
+
+                if (InstrumentError(maneuver) is { } instrumentError)
+                {
+                    throw new InvalidOperationException(instrumentError);
                 }
 
                 if (!ReferenceEquals(maneuver.PlanOwner, this))
@@ -589,6 +595,24 @@ namespace IO.Astrodynamics.Body.Spacecraft
                 : $"belongs to the spacecraft {tank.Spacecraft.Name} ({tank.Spacecraft.NaifId})";
             return $"The {maneuver.GetType().Name} of {Name} ({NaifId}) draws on the engine {maneuver.Engine.Name} (serial number {maneuver.Engine.SerialNumber}), whose fuel tank {tank.Name} (serial number {tank.SerialNumber}) {holder}, not on the spacecraft propagated: " +
                    $"add the tank to {Name} with AddFuelTank and the engine with AddEngine, or build the maneuver on an engine of {Name}.";
+        }
+
+        // Why an attitude cannot run on this spacecraft: it points an instrument of another spacecraft (#797, decision 66 of
+        // #668, decided by S. Guillet, 2026-11-23), compared by reference (an instrument equal by NAIF id is another
+        // spacecraft's twin); null otherwise. Before, the run pointed that instrument's boresight, whose orientation is in
+        // the frame of its own spacecraft (0.577 rad off in the probe of L5-26)
+        private string InstrumentError(Maneuver.Maneuver maneuver)
+        {
+            foreach (var instrument in maneuver.PointedInstruments)
+            {
+                if (!ReferenceEquals(instrument.Spacecraft, this))
+                {
+                    return $"The {maneuver.GetType().Name} of {Name} ({NaifId}) points the instrument {instrument.Name} ({instrument.NaifId}) of the spacecraft {instrument.Spacecraft.Name} ({instrument.Spacecraft.NaifId}), not an instrument of the spacecraft propagated: " +
+                           $"an attitude points the instruments of its own spacecraft. Build the attitude on an instrument of {Name} (Instruments of {Name}).";
+                }
+            }
+
+            return null;
         }
 
         /// <summary>
@@ -724,7 +748,9 @@ namespace IO.Astrodynamics.Body.Spacecraft
         /// <exception cref="ArgumentException">Naming <c>maneuvers</c>: a maneuver is null; or appears twice, which would
         /// make the chain a cycle (a repeated burn is a new maneuver, #585); or is in the plan of another spacecraft; or
         /// draws on an engine that is not one of this spacecraft's <see cref="Engines"/>, added with <see cref="AddEngine"/>
-        /// and compared by reference (decision 92 of #668), or whose fuel tank is not one of this spacecraft's (#676); or, for
+        /// and compared by reference (decision 92 of #668), or whose fuel tank is not one of this spacecraft's (#676); or, for an
+        /// attitude, points an instrument of another spacecraft, compared by reference (#797, decision 66 of #668, decided by
+        /// S. Guillet, 2026-11-23: the run pointed that instrument's boresight); or, for
         /// an impulse, has its target
         /// orbit in another frame than the one the spacecraft is propagated in (GCRF and ICRF counting as one, #685). Nothing
         /// changes.</exception>
@@ -756,6 +782,11 @@ namespace IO.Astrodynamics.Body.Spacecraft
                     if (EngineError(maneuver) is { } engineError)
                     {
                         throw new ArgumentException(engineError, nameof(maneuvers));
+                    }
+
+                    if (InstrumentError(maneuver) is { } instrumentError)
+                    {
+                        throw new ArgumentException(instrumentError, nameof(maneuvers));
                     }
                 }
 
