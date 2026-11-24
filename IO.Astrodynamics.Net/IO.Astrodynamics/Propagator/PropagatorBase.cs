@@ -720,6 +720,11 @@ public abstract class PropagatorBase : IPropagator
     /// <see cref="IEventDetector.Evaluate"/> and <see cref="IEventDetector.HandleEvent"/>, changing nothing (before, it
     /// executed its maneuver outside a run: fuel burned, <see cref="ImpulseManeuver.DeltaV"/> and the windows rewritten).
     /// </para>
+    /// <para>
+    /// The plan of the spacecraft is not changed during a run on it (decision 96 of #668, decided by S. Guillet,
+    /// 2026-11-24): the run reads the plan as it goes (<see cref="Spacecraft.SetManeuvers"/>); the run guard of #793,
+    /// after lot L5, will refuse it.
+    /// </para>
     /// </remarks>
     /// <param name="cancellationToken">The token that stops the run; none by default, bit for bit the run without it.</param>
     /// <returns>The solution.</returns>

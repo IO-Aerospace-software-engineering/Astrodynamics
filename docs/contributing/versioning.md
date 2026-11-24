@@ -7532,7 +7532,11 @@ not listed.
   propagators, `Spacecraft.Propagate`, a `TLEPropagator`, a scenario or a batch beside a direct run, interleave with no
   exception, and can charge a burn twice (a tank left at 841.263915 kg against 917.541305 kg in 1 trial of 12 in the gap
   analysis of lot L5); a guard that refuses the second run comes after lot L5 (#793;
-  [Thread Safety](../guides/thread-safety.md#one-run-at-a-time-per-spacecraft)). A run stopped by its token lists in
+  [Thread Safety](../guides/thread-safety.md#one-run-at-a-time-per-spacecraft)). Nor is the plan of a spacecraft
+  changed during a run on it (decision 96 of #668, decided by S. Guillet, 2026-11-24): the run reads the plan as it
+  goes, so a `SetManeuvers` during it mixes the two plans (the plan [m1, m2] set again during a run of [m1, m2] left
+  `ExecutedManeuvers` reading m1, m1 in the second review of lot L5a); the same guard of #793 makes `SetManeuvers` throw
+  `InvalidOperationException` while a run holds the spacecraft. A run stopped by its token lists in
   `ExecutedManeuvers` an attitude it scheduled before the stop whose activation it never reached, with its windows set
   and the chain advanced past it (decision 44 of #668, fixed after lot L5 in #794); the records of a run are not
   affected (a stopped run returns none), and the next run re-arms the spacecraft.

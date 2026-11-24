@@ -667,6 +667,15 @@ namespace IO.Astrodynamics.Body.Spacecraft
         /// re-check of the chain. So the tanks of the engines are added (<see cref="AddFuelTank"/>, and the engines with
         /// <see cref="AddEngine"/>) and the initial orbit set before the plan.
         /// </para>
+        /// <para>
+        /// The plan of a spacecraft is not changed during a run on it (decision 96 of #668, decided by S. Guillet,
+        /// 2026-11-24): a run reads the plan as it goes (its head at the re-arm, each next maneuver when the previous one
+        /// ends), so a call from another thread, or from code the run calls (a force, a custom integrator), mixes the two
+        /// plans; in the second review of L5a a call that set the plan [m1, m2] again during a run of [m1, m2] left
+        /// <see cref="ExecutedManeuvers"/> reading m1, m1. Set the plan before the run, or after it has returned. Nothing
+        /// checks the rule yet: the run guard of #793, after lot L5, makes this method throw
+        /// <see cref="InvalidOperationException"/> while a run holds the spacecraft.
+        /// </para>
         /// </remarks>
         /// <exception cref="ArgumentNullException"><paramref name="maneuvers"/> is null.</exception>
         /// <exception cref="ArgumentException">Naming <c>maneuvers</c>: a maneuver is null; or appears twice, which would

@@ -210,6 +210,15 @@ orbit's frame changed throws `ArgumentException` (`spacecraft`), the case of `Sp
 batch, which build theirs (decision 94); a propagator built before the change throws `InvalidOperationException` at
 `Propagate`, through the initial-orbit guard (#783) or the re-check of the chain.
 
+The plan of a spacecraft is not changed during a run on it (decision 96 of #668, decided by S. Guillet, 2026-11-24): a
+run reads the plan as it goes, its head at the re-arm and each next maneuver when the previous one ends, so a
+`SetManeuvers` from another thread, or from code the run calls (a force, a custom integrator), mixes the two plans (in
+the second review of L5a, the plan [m1, m2] set again during a run of [m1, m2] left `ExecutedManeuvers` reading m1,
+m1). Set the plan before the run, or once it has returned. Nothing checks the rule yet: the run guard of
+[#793](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/793), after lot L5, will make
+`SetManeuvers` throw `InvalidOperationException` while a run holds the spacecraft
+([Thread Safety](../guides/thread-safety.md#one-run-at-a-time-per-spacecraft)).
+
 The `Maneuver` hierarchy is closed (decision 48): its constructor is `private protected`, so a user maneuver derives
 from `ImpulseManeuver` (its delta-V in the protected `Execute`, its g-function, crossing direction and preconditions) or
 from `Attitude` (`ComputeOrientation`); the concrete types stay unsealed. `TryExecute`, the execution a run calls, is
