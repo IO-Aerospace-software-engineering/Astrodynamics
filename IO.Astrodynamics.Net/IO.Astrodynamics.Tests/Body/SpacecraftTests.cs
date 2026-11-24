@@ -656,10 +656,10 @@ namespace IO.Astrodynamics.Tests.Body
         }
 
         [Fact]
-        public void GetBodyFront_FallsBackToStaticDefault_WhenNoSpacecraft()
+        public void GetBodyAxis_FallsBackToStaticDefault_BeforeAnyPlan()
         {
-            // Create FuelTank and Engine WITHOUT adding to a spacecraft.
-            // FuelTank.Spacecraft will be null, so GetBodyFront() returns Spacecraft.Front (+Y).
+            // Create FuelTank and Engine WITHOUT adding to a spacecraft, and the maneuver in no plan:
+            // GetBodyAxis(BodyAxis.Front) returns Spacecraft.Front (+Y) (decisions 46 and 69 of #668).
             // Verify NormalAttitude uses the static default by comparing with a spacecraft-attached version.
             var orbitalParams = new KeplerianElements(42164000.0, 0.0, 0.0, 0.0, 0.0, 0.0,
                 TestHelpers.EarthAtJ2000, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF);
@@ -668,7 +668,7 @@ namespace IO.Astrodynamics.Tests.Body
             FuelTank unattachedTank = new FuelTank("ft_detached", 1000.0, 900.0, "ftA", "sn-detached");
             Engine unattachedEngine = new Engine("eng_detached", 450, 50, unattachedTank, "engmk1", "sn-eng-detached");
 
-            // Maneuver using the detached engine — GetBodyFront() returns Spacecraft.Front (+Y)
+            // Maneuver using the detached engine, in no plan — GetBodyAxis(BodyAxis.Front) returns Spacecraft.Front (+Y)
             NormalAttitude detachedManeuver = new NormalAttitude(
                 TestHelpers.EarthAtJ2000,
                 new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB),

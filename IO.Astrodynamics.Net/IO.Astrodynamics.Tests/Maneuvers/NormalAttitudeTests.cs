@@ -95,6 +95,8 @@ public class NormalAttitudeTests
         spc.AddEngine(new Engine("eng", 450, 50, spc.FuelTanks.First(), "engmk1", "12345"));
         NormalAttitude maneuver = new NormalAttitude(TestHelpers.EarthAtJ2000, new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB), TimeSpan.Zero, spc.Engines.First());
 
+        // The axes of the plan's spacecraft (decisions 46 and 69 of #668): the static axes before any plan
+        spc.SetManeuvers(maneuver);
         var sv = orbitalParams.ToStateVector();
         var maneuverOrientation3 = maneuver.ComputeStateOrientation(sv);
 

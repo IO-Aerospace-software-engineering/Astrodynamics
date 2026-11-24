@@ -1318,6 +1318,8 @@ public class TriadAttitudeTests
     {
         var (spc, state) = CustomAxesSpacecraft(triad);
         var maneuver = TriadAttitude.CreateLVLH(TestHelpers.EarthAtJ2000, new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB), TimeSpan.Zero, spc.Engines.First());
+        // The axes of the plan's spacecraft (decisions 46 and 69 of #668)
+        spc.SetManeuvers(maneuver);
 
         var maneuverOrientation25 = maneuver.ComputeStateOrientation(state);
         var q = maneuverOrientation25.Rotation;
@@ -1349,6 +1351,8 @@ public class TriadAttitudeTests
         var (spc, state) = CustomAxesSpacecraft(triad);
         var maneuver = TriadAttitude.CreateProgradeWithSunTracking(TestHelpers.EarthAtJ2000, new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB), TimeSpan.Zero,
             TestHelpers.Sun, spc.Engines.First());
+        // The axes of the plan's spacecraft (decisions 46 and 69 of #668)
+        spc.SetManeuvers(maneuver);
 
         var maneuverOrientation26 = maneuver.ComputeStateOrientation(state);
         var q = maneuverOrientation26.Rotation;
@@ -1400,11 +1404,12 @@ public class TriadAttitudeTests
     }
 
     /// <summary>
-    /// The engine's tank on no spacecraft: the factories keep the static axes, the fallback of
-    /// <c>Maneuver.GetBodyFront</c> (#677); added to a spacecraft afterwards, they follow its axes.
+    /// Before any plan the factories keep the static axes, the fallback of <c>Maneuver.GetBodyAxis</c> (#677); in the plan
+    /// of a spacecraft, they follow its axes (decisions 46 and 69 of #668: the axes of the last plan's spacecraft, those
+    /// of the engine's tank's before lot L5b).
     /// </summary>
     [Fact]
-    public void Factories_UnattachedEngine_KeepStaticAxes()
+    public void Factories_BeforeAnyPlan_KeepStaticAxes()
     {
         var tank = new FuelTank("ft", 1000.0, 900.0, "ftA", "123456");
         var engine = new Engine("eng", 450, 50, tank, "engmk1", "12345");
@@ -1421,6 +1426,9 @@ public class TriadAttitudeTests
         var spc = new Spacecraft(-670, "TriadLateSpacecraft", 1000.0, CreateTestSpacecraft().orbitalParams, 3000.0, new Clock("LateClk", 65536), bodyFront: front,
             bodyRight: right, bodyUp: up);
         spc.AddFuelTank(tank);
+        spc.AddEngine(engine);
+        Assert.Equal(Spacecraft.Down, lvlh.PrimaryBodyVector);
+        spc.SetManeuvers(lvlh, sun);
 
         Assert.Equal(spc.BodyDown, lvlh.PrimaryBodyVector);
         Assert.Equal(spc.BodyFront, lvlh.SecondaryBodyVector);
@@ -1429,9 +1437,10 @@ public class TriadAttitudeTests
     }
 
     /// <summary>
-    /// The static axes of an engine whose tank is on no spacecraft, and the axes of another spacecraft, are never pointed
-    /// in a propagation: a factory attitude drawing on such an engine is rejected before it runs (#676, #586), so the
-    /// fallback of <c>Maneuver.GetBodyAxis</c> is read outside a propagation only (#677).
+    /// The static axes, and the axes of another spacecraft, are never pointed in a propagation: a factory attitude
+    /// drawing on an engine of no spacecraft or of another one is rejected before it runs (#676, #586), and a run
+    /// propagates the spacecraft of the plan, so the fallback of <c>Maneuver.GetBodyAxis</c> is read outside a
+    /// propagation only (#677).
     /// </summary>
     [Theory]
     [InlineData("LVLH", "NoSpacecraft")]

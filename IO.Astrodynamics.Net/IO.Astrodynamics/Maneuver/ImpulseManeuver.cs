@@ -235,7 +235,7 @@ namespace IO.Astrodynamics.Maneuver
             var deltaVInIcrf = stateVector.Frame == Frames.Frame.ICRF
                 ? DeltaV
                 : DeltaV.Rotate(stateVector.Frame.ToFrame(Frames.Frame.ICRF, stateVector.Epoch).Rotation);
-            return (after, new StateOrientation(GetBodyFront().ToOrIdentity(deltaVInIcrf), Vector3.Zero, stateVector.Epoch, Frames.Frame.ICRF));
+            return (after, new StateOrientation(GetBodyAxis(BodyAxis.Front).ToOrIdentity(deltaVInIcrf), Vector3.Zero, stateVector.Epoch, Frames.Frame.ICRF));
         }
 
         /// <summary>

@@ -824,7 +824,7 @@ internal static class DeveloperGuideExamples
             Spacecraft.Up, new CelestialAttitudeTarget(sun),         // Secondary: solar panel toward Sun
             engine);
 
-        // Factory methods for common operational attitudes, on the axes of the engine's spacecraft
+        // Factory methods for common operational attitudes, on the axes of the plan's spacecraft
         var lvlh = TriadAttitude.CreateLVLH(earth, epoch, duration, engine);
         var sunTrack = TriadAttitude.CreateProgradeWithSunTracking(earth, epoch, duration, sun, engine);
         #endregion

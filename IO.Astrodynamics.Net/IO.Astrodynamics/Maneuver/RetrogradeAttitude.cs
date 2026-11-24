@@ -17,6 +17,6 @@ public class RetrogradeAttitude : Attitude
 
     public override Quaternion ComputeOrientation(StateVector stateVector)
     {
-        return GetBodyFront().ToOrIdentity(stateVector.Velocity.Inverse());
+        return GetBodyAxis(BodyAxis.Front).ToOrIdentity(stateVector.Velocity.Inverse());
     }
 }

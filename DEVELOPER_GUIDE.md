@@ -1528,7 +1528,7 @@ Base class for impulse maneuvers. Uses industry-standard g-function event detect
 
 The preview of an attitude is `ComputeStateOrientation(StateVector)`, the rotation from the spacecraft frame to ICRF at the state, pure; `Attitude.StateOrientation` is removed: in a run, the attitude at an activation is in the attitude record (`spacecraft.Frame.GetStateOrientationToICRF(epoch)`) (decisions 50 and 52 of #668).
 
-The single-vector attitudes support configurable body axes via `GetBodyFront()`, which reads per-instance axes from `Spacecraft.BodyFront` with fallback to the static default `Spacecraft.Front` (+Y). The TRIAD factories read `BodyDown`/`BodyFront` and `BodyFront`/`BodyUp` of the same spacecraft, with the same fallback; both go through `GetBodyAxis(axis, fallback)` of `Maneuver` (`private protected`) (#677).
+The single-vector attitudes support configurable body axes via the protected `GetBodyAxis(BodyAxis)` of `Maneuver` (`enum BodyAxis` {Front, Back, Right, Left, Up, Down}), which reads the instance axes (`Spacecraft.BodyFront`, ...) of the spacecraft whose plan last held the maneuver (`SetManeuvers`), with the static axes (`Spacecraft.Front`, +Y, ...) before any plan (decisions 46, 48, 69 and 93 of #668; `GetBodyFront()` on the spacecraft of the engine's tank before 11.0.0). The TRIAD factories read `BodyDown`/`BodyFront` and `BodyFront`/`BodyUp` through the same rule (#677).
 
 **TRIAD Attitude Determination**
 
@@ -1558,7 +1558,7 @@ var targetAttitude = new TriadAttitude(
     Spacecraft.Up, new CelestialAttitudeTarget(sun),         // Secondary: solar panel toward Sun
     engine);
 
-// Factory methods for common operational attitudes, on the axes of the engine's spacecraft
+// Factory methods for common operational attitudes, on the axes of the plan's spacecraft
 var lvlh = TriadAttitude.CreateLVLH(earth, epoch, duration, engine);
 var sunTrack = TriadAttitude.CreateProgradeWithSunTracking(earth, epoch, duration, sun, engine);
 ```
@@ -1572,7 +1572,7 @@ Key features:
 - Minimum separation from collinear required between body vectors and reference vectors: `MinimumVectorSeparation`, 5 degrees by default, in [1e-14, π/2] rad (another throws `ArgumentOutOfRangeException`); collinear vectors (to the rounding of their components), zero and non-finite vectors throw at every separation allowed
 - Uses spacecraft body frame: Front (+Y), Right (+X), Up (+Z) — or per-instance `BodyFront`, `BodyRight`, `BodyUp` passed explicitly
 - Four constructor overloads: single instrument, dual instruments, explicit vectors, IAttitudeTarget; the body vectors given are literal
-- Factory methods: `CreateLVLH()` (`BodyDown` to nadir, `BodyFront` toward prograde), `CreateProgradeWithSunTracking()` (`BodyFront` to prograde, `BodyUp` toward the Sun), on the instance axes of the engine's spacecraft, read at execution; the static axes while the tank is on no spacecraft (#677), read outside a propagation only, since a propagation of an attitude whose tank is not the propagated spacecraft's throws (#676)
+- Factory methods: `CreateLVLH()` (`BodyDown` to nadir, `BodyFront` toward prograde), `CreateProgradeWithSunTracking()` (`BodyFront` to prograde, `BodyUp` toward the Sun), on the instance axes of the spacecraft whose plan last held the attitude, read at execution; the static axes before any plan (#677), read outside a propagation only, since a run propagates the plan's spacecraft
 
 #### Impulse maneuvers
 

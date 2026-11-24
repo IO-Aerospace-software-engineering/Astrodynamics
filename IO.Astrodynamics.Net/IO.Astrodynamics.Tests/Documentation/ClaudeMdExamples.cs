@@ -406,7 +406,7 @@ namespace ClaudeMdSamples
         internal static (TriadAttitude Lvlh, TriadAttitude SunTrack) Net21(CelestialBody earth, Time epoch, TimeSpan duration, CelestialBody sun, Engine engine)
         {
             #region net:21
-            // LVLH: BodyDown→Nadir, BodyFront→Prograde (the axes of the engine's spacecraft, #677)
+            // LVLH: BodyDown→Nadir, BodyFront→Prograde (the axes of the plan's spacecraft, #677)
             var lvlh = TriadAttitude.CreateLVLH(earth, epoch, duration, engine);
 
             // Prograde with sun tracking: BodyFront→Prograde, BodyUp→Sun

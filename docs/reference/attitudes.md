@@ -148,8 +148,9 @@ var attitude = new TriadAttitude(
 | `TriadAttitude.CreateLVLH(maneuverCenter, epoch, duration, engine)` | the spacecraft's `BodyDown` toward Nadir | its `BodyFront` toward Prograde | Local Vertical / Local Horizontal attitude |
 | `TriadAttitude.CreateProgradeWithSunTracking(maneuverCenter, epoch, duration, sun, engine)` | the spacecraft's `BodyFront` toward Prograde | its `BodyUp` toward Sun | Prograde with solar-panel Sun tracking |
 
-The axes are those of the spacecraft that carries the engine's tank, read at execution; while the tank is on no
-spacecraft, the static `Spacecraft.Down`, `Front` and `Up`. `PrimaryBodyVector` and `SecondaryBodyVector` of a factory
+The axes are those of the spacecraft whose plan last held the attitude (`SetManeuvers`), read at execution; before any
+plan, the static `Spacecraft.Down`, `Front` and `Up` (the spacecraft of the engine's tank before lot L5b, decisions 46
+and 69 of #668). `PrimaryBodyVector` and `SecondaryBodyVector` of a factory
 attitude return those axes. Before 11.0.0 the factories pointed the static axes whatever the spacecraft's, 90° off for
 a spacecraft whose front is +X or +Z (#677); for that attitude, pass the static axes to the constructor:
 `new TriadAttitude(center, epoch, duration, Spacecraft.Down, OrbitalDirectionTarget.Nadir, Spacecraft.Front,
@@ -176,7 +177,7 @@ Each spacecraft has configurable body axes that define the physical orientation 
 | `Spacecraft.Up` | Zenith-facing | +Z |
 | `Spacecraft.Down` | Nadir-facing | -Z |
 
-Instance-level overrides can be set via the `Spacecraft` constructor parameters (`bodyFront`, `bodyRight`, `bodyUp`). Custom axes must be finite, non-zero, orthogonal and right-handed; a zero axis, or one with a component that is not finite, throws `ArgumentException` naming it. The axes are read on the spacecraft that carries the engine's tank, at execution, with the static axes as fallback while the tank is on no spacecraft, which a read outside a propagation alone meets (a propagation of an attitude whose tank is not the propagated spacecraft's throws, see `Engine` above, #676): the single-vector attitudes (`NadirAttitude`, `ZenithAttitude`, `ProgradeAttitude`, `RetrogradeAttitude`, `NormalAttitude`, `AntiNormalAttitude`) and the attitude of an impulse point `BodyFront` (`GetBodyFront()`), `TriadAttitude.CreateLVLH` points `BodyDown` and `BodyFront`, and `TriadAttitude.CreateProgradeWithSunTracking` `BodyFront` and `BodyUp` (#677). The `TriadAttitude` constructors take literal body vectors: pass `sc.BodyFront`, `sc.BodyUp`, ... for a spacecraft's own axes. `InstrumentPointingToAttitude` points the instrument's boresight.
+Instance-level overrides can be set via the `Spacecraft` constructor parameters (`bodyFront`, `bodyRight`, `bodyUp`). Custom axes must be finite, non-zero, orthogonal and right-handed; a zero axis, or one with a component that is not finite, throws `ArgumentException` naming it. The axes are read at execution on the spacecraft whose plan last held the maneuver (`SetManeuvers`; a plan that releases it keeps them), with the static axes before any plan, which a read outside a propagation alone meets (a run propagates the plan's spacecraft): the single-vector attitudes (`NadirAttitude`, `ZenithAttitude`, `ProgradeAttitude`, `RetrogradeAttitude`, `NormalAttitude`, `AntiNormalAttitude`) and the attitude of an impulse point `BodyFront` (the protected `GetBodyAxis(BodyAxis.Front)` of `Maneuver`, `GetBodyFront()` before 11.0.0; a user law reads any axis of `BodyAxis` through it; decisions 46, 48, 69 and 93 of #668), `TriadAttitude.CreateLVLH` points `BodyDown` and `BodyFront`, and `TriadAttitude.CreateProgradeWithSunTracking` `BodyFront` and `BodyUp` (#677). The `TriadAttitude` constructors take literal body vectors: pass `sc.BodyFront`, `sc.BodyUp`, ... for a spacecraft's own axes. `InstrumentPointingToAttitude` points the instrument's boresight.
 
 ## The attitude timeline
 

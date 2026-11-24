@@ -28,7 +28,7 @@ namespace IO.Astrodynamics.Maneuver;
 /// The constructors take literal body vectors: the static axes above, an instrument's vectors, or a spacecraft's own axes
 /// (<see cref="Spacecraft.BodyFront"/>, <see cref="Spacecraft.BodyUp"/>, ...) passed explicitly. The factories
 /// <see cref="CreateLVLH"/> and <see cref="CreateProgradeWithSunTracking"/> instead use the instance axes of the spacecraft
-/// that carries the engine, read at each use, as the single-vector attitudes do (#677).
+/// whose plan last held the attitude, read at each use, as the single-vector attitudes do (#677).
 /// </para>
 /// <para>
 /// Example usage with spacecraft directions:
@@ -69,9 +69,10 @@ public class TriadAttitude : Attitude
     /// </summary>
     /// <remarks>
     /// The vector given to the constructor; for an attitude of <see cref="CreateLVLH"/> or
-    /// <see cref="CreateProgradeWithSunTracking"/>, the axis of the spacecraft that carries the engine's tank
+    /// <see cref="CreateProgradeWithSunTracking"/>, the axis of the spacecraft whose plan last held the attitude
     /// (<see cref="Spacecraft.BodyDown"/>, resp. <see cref="Spacecraft.BodyFront"/>), read at each call, or the static axis
-    /// (<see cref="Spacecraft.Down"/>, resp. <see cref="Spacecraft.Front"/>) while the tank is on no spacecraft (#677).
+    /// (<see cref="Spacecraft.Down"/>, resp. <see cref="Spacecraft.Front"/>) before any plan (#677; the spacecraft of the
+    /// engine's tank before lot L5b, decisions 46 and 69 of #668).
     /// </remarks>
     public Vector3 PrimaryBodyVector => ResolveAxis(_primaryAxis, _primaryBodyVector);
 
@@ -80,9 +81,10 @@ public class TriadAttitude : Attitude
     /// </summary>
     /// <remarks>
     /// The vector given to the constructor; for an attitude of <see cref="CreateLVLH"/> or
-    /// <see cref="CreateProgradeWithSunTracking"/>, the axis of the spacecraft that carries the engine's tank
+    /// <see cref="CreateProgradeWithSunTracking"/>, the axis of the spacecraft whose plan last held the attitude
     /// (<see cref="Spacecraft.BodyFront"/>, resp. <see cref="Spacecraft.BodyUp"/>), read at each call, or the static axis
-    /// (<see cref="Spacecraft.Front"/>, resp. <see cref="Spacecraft.Up"/>) while the tank is on no spacecraft (#677).
+    /// (<see cref="Spacecraft.Front"/>, resp. <see cref="Spacecraft.Up"/>) before any plan (#677; the spacecraft of the
+    /// engine's tank before lot L5b, decisions 46 and 69 of #668).
     /// </remarks>
     public Vector3 SecondaryBodyVector => ResolveAxis(_secondaryAxis, _secondaryBodyVector);
 
@@ -105,9 +107,10 @@ public class TriadAttitude : Attitude
         }
     }
 
-    // The instance axes of the factories, read on the spacecraft of the engine's tank; null for the public constructors
-    private readonly Func<Spacecraft, Vector3> _primaryAxis;
-    private readonly Func<Spacecraft, Vector3> _secondaryAxis;
+    // The instance axes of the factories, read on the spacecraft of the last plan (Maneuver.GetBodyAxis); null for the
+    // public constructors
+    private readonly BodyAxis? _primaryAxis;
+    private readonly BodyAxis? _secondaryAxis;
 
     /// <summary>
     /// Minimum allowed angle between vectors (body or reference) in radians, in [1e-14, π/2].
@@ -344,10 +347,10 @@ public class TriadAttitude : Attitude
         Time minimumEpoch,
         TimeSpan maneuverHoldDuration,
         Vector3 primaryStaticAxis,
-        Func<Spacecraft, Vector3> primaryAxis,
+        BodyAxis primaryAxis,
         IAttitudeTarget primaryTarget,
         Vector3 secondaryStaticAxis,
-        Func<Spacecraft, Vector3> secondaryAxis,
+        BodyAxis secondaryAxis,
         IAttitudeTarget secondaryTarget,
         Engine engine)
         : this(maneuverCenter, minimumEpoch, maneuverHoldDuration, primaryStaticAxis, primaryTarget, secondaryStaticAxis, secondaryTarget, engine)
@@ -361,11 +364,11 @@ public class TriadAttitude : Attitude
     /// Primary: the spacecraft's down axis toward nadir. Secondary: its front axis toward prograde.
     /// </summary>
     /// <remarks>
-    /// The axes are those of the spacecraft that carries the engine's tank, <see cref="Spacecraft.BodyDown"/> and
+    /// The axes are those of the spacecraft whose plan last held the attitude, <see cref="Spacecraft.BodyDown"/> and
     /// <see cref="Spacecraft.BodyFront"/>, read at execution as the single-vector attitudes read
-    /// <see cref="Spacecraft.BodyFront"/>; the static <see cref="Spacecraft.Down"/> and <see cref="Spacecraft.Front"/> while
-    /// the tank is on no spacecraft (#677), outside a propagation only: a propagation of the attitude on a tank that is not
-    /// the propagated spacecraft's throws (#676). For the static axes on any spacecraft, use the constructor with
+    /// <see cref="Spacecraft.BodyFront"/> (<see cref="Maneuver.GetBodyAxis"/>); the static <see cref="Spacecraft.Down"/> and
+    /// <see cref="Spacecraft.Front"/> before any plan (#677), outside a propagation only: a run propagates the spacecraft
+    /// of the plan. For the static axes on any spacecraft, use the constructor with
     /// <see cref="Spacecraft.Down"/> and <see cref="Spacecraft.Front"/>.
     /// </remarks>
     public static TriadAttitude CreateLVLH(
@@ -376,8 +379,8 @@ public class TriadAttitude : Attitude
     {
         return new TriadAttitude(
             maneuverCenter, minimumEpoch, maneuverHoldDuration,
-            Spacecraft.Down, s => s.BodyDown, OrbitalDirectionTarget.Nadir,
-            Spacecraft.Front, s => s.BodyFront, OrbitalDirectionTarget.Prograde,
+            Spacecraft.Down, BodyAxis.Down, OrbitalDirectionTarget.Nadir,
+            Spacecraft.Front, BodyAxis.Front, OrbitalDirectionTarget.Prograde,
             engine);
     }
 
@@ -386,11 +389,11 @@ public class TriadAttitude : Attitude
     /// Primary: the spacecraft's front axis toward prograde. Secondary: its up axis toward the Sun.
     /// </summary>
     /// <remarks>
-    /// The axes are those of the spacecraft that carries the engine's tank, <see cref="Spacecraft.BodyFront"/> and
+    /// The axes are those of the spacecraft whose plan last held the attitude, <see cref="Spacecraft.BodyFront"/> and
     /// <see cref="Spacecraft.BodyUp"/>, read at execution as the single-vector attitudes read
-    /// <see cref="Spacecraft.BodyFront"/>; the static <see cref="Spacecraft.Front"/> and <see cref="Spacecraft.Up"/> while
-    /// the tank is on no spacecraft (#677), outside a propagation only: a propagation of the attitude on a tank that is not
-    /// the propagated spacecraft's throws (#676). For the static axes on any spacecraft, use the constructor with
+    /// <see cref="Spacecraft.BodyFront"/> (<see cref="Maneuver.GetBodyAxis"/>); the static <see cref="Spacecraft.Front"/>
+    /// and <see cref="Spacecraft.Up"/> before any plan (#677), outside a propagation only: a run propagates the spacecraft
+    /// of the plan. For the static axes on any spacecraft, use the constructor with
     /// <see cref="Spacecraft.Front"/> and <see cref="Spacecraft.Up"/>.
     /// </remarks>
     public static TriadAttitude CreateProgradeWithSunTracking(
@@ -403,14 +406,14 @@ public class TriadAttitude : Attitude
         if (sun == null) throw new ArgumentNullException(nameof(sun));
         return new TriadAttitude(
             maneuverCenter, minimumEpoch, maneuverHoldDuration,
-            Spacecraft.Front, s => s.BodyFront, OrbitalDirectionTarget.Prograde,
-            Spacecraft.Up, s => s.BodyUp, new CelestialAttitudeTarget(sun),
+            Spacecraft.Front, BodyAxis.Front, OrbitalDirectionTarget.Prograde,
+            Spacecraft.Up, BodyAxis.Up, new CelestialAttitudeTarget(sun),
             engine);
     }
 
-    // The instance axis of a factory on the spacecraft of the engine's tank (Maneuver.GetBodyAxis, the rule of
-    // GetBodyFront), the given vector for the public constructors
-    private Vector3 ResolveAxis(Func<Spacecraft, Vector3> axis, Vector3 vector) => axis == null ? vector : GetBodyAxis(axis, vector);
+    // The instance axis of a factory on the spacecraft of the last plan (Maneuver.GetBodyAxis), the given vector for the
+    // public constructors
+    private Vector3 ResolveAxis(BodyAxis? axis, Vector3 vector) => axis.HasValue ? GetBodyAxis(axis.Value) : vector;
 
     private static CelestialItem GetManeuverCenter(ILocalizable target)
     {

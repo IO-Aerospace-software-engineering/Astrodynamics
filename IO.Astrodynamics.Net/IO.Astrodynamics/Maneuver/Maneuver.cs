@@ -130,37 +130,55 @@ namespace IO.Astrodynamics.Maneuver
         private TimeSpan _maneuverHoldDuration;
 
         /// <summary>
-        /// The engine of the maneuver, whose fuel tank's spacecraft gives the body axes of its attitude.
+        /// The engine of the maneuver.
         /// </summary>
         /// <remarks>
         /// Decision 48 of #668 is split (decision 93 of #668, decided by S. Guillet, 2026-11-23): the closed hierarchy, the
         /// internal <c>TryExecute</c>, the <c>private protected</c> constructor and <c>Execute</c> on
-        /// <see cref="ImpulseManeuver"/> land in lot L5a; <see cref="Engine"/> moves to <see cref="ImpulseManeuver"/> and a
-        /// protected <c>GetBodyAxis(BodyAxis)</c> replaces <see cref="GetBodyFront"/> in lot L5b, with R13 and
-        /// <c>BodyAxis</c> (decision 69).
+        /// <see cref="ImpulseManeuver"/> land in lot L5a; <see cref="Engine"/> moves to <see cref="ImpulseManeuver"/> in
+        /// lot L5b, with R13.
         /// </remarks>
         public Engine Engine { get; }
 
         /// <summary>
-        /// Gets the body front vector from the spacecraft instance (if available),
-        /// falling back to the static Spacecraft.Front default. Replaced by a protected <c>GetBodyAxis(BodyAxis)</c> in lot
-        /// L5b (decisions 48, 69 and 93 of #668).
+        /// The axis <paramref name="axis"/> of the spacecraft body frame, as the law of this maneuver points it: the
+        /// instance axis of the spacecraft whose plan last held the maneuver (<see cref="Spacecraft.SetManeuvers"/>), read
+        /// at the call (<see cref="Spacecraft.BodyFront"/>, <see cref="Spacecraft.BodyBack"/>,
+        /// <see cref="Spacecraft.BodyRight"/>, <see cref="Spacecraft.BodyLeft"/>, <see cref="Spacecraft.BodyUp"/>,
+        /// <see cref="Spacecraft.BodyDown"/>), or the static axis (<see cref="Spacecraft.Front"/>, ...) before any plan.
         /// </summary>
-        protected Vector3 GetBodyFront() => GetBodyAxis(static s => s.BodyFront, Spacecraft.Front);
+        /// <param name="axis">The axis.</param>
+        /// <returns>The unit vector of the axis in the spacecraft frame.</returns>
+        /// <exception cref="ArgumentOutOfRangeException"><paramref name="axis"/> is not a value of <see cref="BodyAxis"/>.</exception>
+        /// <remarks>
+        /// Since 11.0.0 (decisions 48, 69 and 93 of #668, decided by S. Guillet, 2026-11-23), in place of the protected
+        /// <c>GetBodyFront()</c>, which read the front axis of the spacecraft of the engine's tank. In a run the plan's
+        /// spacecraft is the propagated one, which the run checks (<see cref="Spacecraft.CheckManeuverEngines"/>), so
+        /// the run reads the axes it read before; a preview before any plan reads the static axes, where it read the axes
+        /// of the engine's spacecraft. The plan's claim is released when its spacecraft sets another plan without the
+        /// maneuver, and the axes stay those of the last plan's spacecraft (decision 46 of #668).
+        /// </remarks>
+        protected Vector3 GetBodyAxis(BodyAxis axis)
+        {
+            var spacecraft = LastPlanSpacecraft;
+            return axis switch
+            {
+                BodyAxis.Front => spacecraft?.BodyFront ?? Spacecraft.Front,
+                BodyAxis.Back => spacecraft?.BodyBack ?? Spacecraft.Back,
+                BodyAxis.Right => spacecraft?.BodyRight ?? Spacecraft.Right,
+                BodyAxis.Left => spacecraft?.BodyLeft ?? Spacecraft.Left,
+                BodyAxis.Up => spacecraft?.BodyUp ?? Spacecraft.Up,
+                BodyAxis.Down => spacecraft?.BodyDown ?? Spacecraft.Down,
+                _ => throw new ArgumentOutOfRangeException(nameof(axis), axis, "Unknown body axis.")
+            };
+        }
 
         /// <summary>
-        /// Gets a body axis of the spacecraft that carries the engine's tank, read at the call, or
-        /// <paramref name="fallback"/> while the tank is on no spacecraft (#677). A propagation checks first that the tank is
-        /// the propagated spacecraft's (<see cref="Spacecraft.CheckManeuverEngines"/>, #676), so only a read outside a
-        /// propagation meets the fallback.
+        /// The spacecraft whose plan last held this maneuver, whose instance axes <see cref="GetBodyAxis"/> reads: set when
+        /// <see cref="Spacecraft.SetManeuvers"/> claims the maneuver and never cleared, the release of the claim included
+        /// (decision 46 of #668: the axes stay those of the last plan's spacecraft); null before any plan.
         /// </summary>
-        /// <param name="axis">The axis of the spacecraft instance, such as <c>s =&gt; s.BodyFront</c>.</param>
-        /// <param name="fallback">The vector returned while the tank is on no spacecraft, such as <see cref="Spacecraft.Front"/>.</param>
-        private protected Vector3 GetBodyAxis(Func<Spacecraft, Vector3> axis, Vector3 fallback)
-        {
-            var spacecraft = Engine.FuelTank.Spacecraft;
-            return spacecraft != null ? axis(spacecraft) : fallback;
-        }
+        internal Spacecraft LastPlanSpacecraft { get; set; }
 
         /// <summary>
         /// The next maneuver of the plan this maneuver is in, null at its end or out of any plan. Set by

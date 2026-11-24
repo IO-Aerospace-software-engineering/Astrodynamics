@@ -18,6 +18,6 @@ public class ProgradeAttitude : Attitude
 
     public override Quaternion ComputeOrientation(StateVector stateVector)
     {
-        return GetBodyFront().ToOrIdentity(stateVector.Velocity);
+        return GetBodyAxis(BodyAxis.Front).ToOrIdentity(stateVector.Velocity);
     }
 }

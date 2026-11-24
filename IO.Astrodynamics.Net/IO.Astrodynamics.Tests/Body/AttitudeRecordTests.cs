@@ -1682,7 +1682,7 @@ public class AttitudeRecordTests
                     return (ContinuousLaw(t), true);
                 case "ImpulseLvlhAxes":
                 case "ImpulseProgradeSunAxes":
-                    // As "ImpulseTriad", the impulse's attitude on the spacecraft's own front (Maneuver.GetBodyFront)
+                    // As "ImpulseTriad", the impulse's attitude on the spacecraft's own front (Maneuver.GetBodyAxis)
                     if (AtRuleChange(t)) return (null, false);
                     if (t < Change) return (v => v, false);
                     return t < TriadStart ? (MinimalRotation(Spacecraft.BodyFront, ImpulseInIcrf()), false) : (ContinuousLaw(t), true);

@@ -217,9 +217,9 @@ namespace IO.Astrodynamics.Body.Spacecraft
             SolarRadiationCoeff = solarRadiationCoefficient;
             HardBodyRadius = hardBodyRadius;
 
-            BodyFront = BodyAxis(bodyFront, Vector3.VectorY, nameof(bodyFront));
-            BodyRight = BodyAxis(bodyRight, Vector3.VectorX, nameof(bodyRight));
-            BodyUp = BodyAxis(bodyUp, Vector3.VectorZ, nameof(bodyUp));
+            BodyFront = CheckedBodyAxis(bodyFront, Vector3.VectorY, nameof(bodyFront));
+            BodyRight = CheckedBodyAxis(bodyRight, Vector3.VectorX, nameof(bodyRight));
+            BodyUp = CheckedBodyAxis(bodyUp, Vector3.VectorZ, nameof(bodyUp));
 
             if (bodyFront.HasValue || bodyRight.HasValue || bodyUp.HasValue)
             {
@@ -372,7 +372,7 @@ namespace IO.Astrodynamics.Body.Spacecraft
         // accepted when the dot products of ValidateBodyAxes all vanished), nor has an axis with a component that is not
         // finite (fourth round of #668: it was normalized to NaN components, which every comparison of ValidateBodyAxes let
         // through)
-        private static Vector3 BodyAxis(Vector3? axis, Vector3 defaultAxis, string paramName)
+        private static Vector3 CheckedBodyAxis(Vector3? axis, Vector3 defaultAxis, string paramName)
         {
             if (!axis.HasValue)
             {
@@ -966,6 +966,7 @@ namespace IO.Astrodynamics.Body.Spacecraft
                 for (int i = 0; i < plan.Length; i++)
                 {
                     plan[i].PlanOwner = this;
+                    plan[i].LastPlanSpacecraft = this;
                     plan[i].NextManeuver = i + 1 < plan.Length ? plan[i + 1] : null;
                 }
 

@@ -370,6 +370,9 @@ release are listed under **Known limitations**.
   run left in them, the child's tanks aside.
 - **`PropagationSegment(Time, IEnumerable<AcceptedStep>)`** (lot L5a, decision 55 of #668): the segment of an integrator
   implemented outside the library, built once from its steps, which it copies (under **Changed**).
+- **`enum BodyAxis` {`Front`, `Back`, `Right`, `Left`, `Up`, `Down`}** (`IO.Astrodynamics.Maneuver`, lot L5b, decision 69 of
+  #668): an axis of the spacecraft body frame, resolved on the instance axes of the spacecraft whose plan last held the
+  maneuver, the static axes before any plan, by the protected `Maneuver.GetBodyAxis(BodyAxis)` (under **Changed**).
 **Fixed**
 
 - **`Matrix * double[]` and `Matrix.Multiply(double[])` returned as many components as the vector**
@@ -7391,6 +7394,19 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   pointing, the TRIAD of one instrument and of two, red before the change). An attitude on the spacecraft's own
   instruments runs as before, bit for bit (the body vectors of the TRIAD forms are those of before). Migration: build the
   attitude on an instrument of the spacecraft it is propagated with.
+- **Breaking: a maneuver law reads the body axes of the spacecraft whose plan last held it, through the protected
+  `GetBodyAxis(BodyAxis)`** (lot L5b, decisions 46, 48, 69 and 93 of
+  [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668), decided by S. Guillet,
+  2026-11-23): the protected `Maneuver.GetBodyFront()` is replaced by `protected Vector3 GetBodyAxis(BodyAxis axis)`, any
+  of the six axes of the new `enum BodyAxis` (under **Added**), an undefined value throwing `ArgumentOutOfRangeException`
+  (`axis`); it reads the instance axes of the spacecraft whose plan (`Spacecraft.SetManeuvers`) last held the maneuver,
+  which a plan that releases it keeps, and the static axes (`Spacecraft.Front`, ...) before any plan, where
+  `GetBodyFront()` and the TRIAD factories read the axes of the spacecraft of the engine's tank, the static ones while
+  the tank was on no spacecraft. A run reads the axes it read before, bit for bit: the plan's spacecraft is the
+  propagated one, whose engines the run checks (`BodyAxisTests`). A preview of an attitude in no plan (`ComputeStateOrientation`), or a factory's `PrimaryBodyVector` and `SecondaryBodyVector` read before
+  its plan, takes the static axes where it took those of the engine's spacecraft: for a spacecraft of custom axes, set
+  the plan first. Migration: `GetBodyAxis(BodyAxis.Front)` for `GetBodyFront()` in a user attitude; `spacecraft.SetManeuvers(attitude)`
+  before a preview on that spacecraft's axes.
 **Removed**
 
 - **The value equality of `FuelTank`, `Engine` and `Payload`: `Equals`, `GetHashCode`, `==`, `!=` and

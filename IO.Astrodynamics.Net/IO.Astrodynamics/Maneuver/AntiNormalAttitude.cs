@@ -29,6 +29,6 @@ public class AntiNormalAttitude : Attitude
                 "The orbit is degenerate (rectilinear trajectory).");
         }
 
-        return GetBodyFront().ToOrIdentity(normal.Inverse());
+        return GetBodyAxis(BodyAxis.Front).ToOrIdentity(normal.Inverse());
     }
 }

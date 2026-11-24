@@ -114,9 +114,9 @@ reads the frame of its own id.
 
 Default body-frame directions. The single-vector attitudes, the attitude of an impulse and the TRIAD factories
 (`TriadAttitude.CreateLVLH`, `CreateProgradeWithSunTracking`) read the instance axes (`BodyFront`, `BodyRight`,
-`BodyUp`) of the spacecraft that carries the engine's tank, and these static axes when no instance override is set or
-while the tank is on no spacecraft (#677), a read outside a propagation only: a propagation whose maneuver's tank is not the
-propagated spacecraft's throws (#676). The `TriadAttitude` constructors take literal body vectors: pass
+`BodyUp`) of the spacecraft whose plan last held the maneuver (`SetManeuvers`), and these static axes when no instance
+override is set or before any plan (#677), a read outside a propagation only: a run propagates the plan's spacecraft
+(decisions 46 and 69 of #668; the spacecraft of the engine's tank before lot L5b). The `TriadAttitude` constructors take literal body vectors: pass
 `spacecraft.BodyFront`, ... for the instance axes.
 
 | Field | Direction | Vector |

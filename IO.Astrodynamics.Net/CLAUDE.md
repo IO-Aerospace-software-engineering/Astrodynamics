@@ -665,7 +665,7 @@ Default body axes (static fields, backward-compatible):
 - `BodyBack`, `BodyLeft`, `BodyDown` — computed inverses
 - Passed via optional constructor parameters: `bodyFront`, `bodyRight`, `bodyUp`
 - Validation enforces orthogonality and right-handedness when custom axes are provided; a zero axis, or one with a component that is not finite, throws `ArgumentException` naming `bodyFront`, `bodyRight` or `bodyUp` (#680, fourth round of #668)
-- The axes are read on the spacecraft of the engine's tank at execution, with the static axes as fallback while the tank is on no spacecraft (a read outside a propagation only: a propagation whose maneuver's tank is not the propagated spacecraft's throws, `Spacecraft.CheckManeuverEngines`, #676): the single-vector attitudes and the impulse attitude point `BodyFront` through `GetBodyFront()` (replaced by a protected `GetBodyAxis(BodyAxis)` in lot L5b, `Engine` moving to `ImpulseManeuver` there: decision 93 of #668, which splits decision 48), `TriadAttitude.CreateLVLH` points `BodyDown`/`BodyFront` and `CreateProgradeWithSunTracking` `BodyFront`/`BodyUp`, all through the one rule of `Maneuver.GetBodyAxis` (`private protected`, no public surface) (#677); the `TriadAttitude` constructors take literal body vectors (pass `spacecraft.BodyFront`, ... for the instance axes)
+- The axes are read at execution on the spacecraft whose plan last held the maneuver (`SetManeuvers`; the claim's release keeps them), with the static axes before any plan (a read outside a propagation only: a run propagates the plan's spacecraft) (decisions 46, 48, 69 and 93 of #668; the spacecraft of the engine's tank before lot L5b): the single-vector attitudes and the impulse attitude point `BodyFront` through the protected `GetBodyAxis(BodyAxis)` (`enum BodyAxis` {Front, Back, Right, Left, Up, Down}; `GetBodyFront()` before 11.0.0), `TriadAttitude.CreateLVLH` points `BodyDown`/`BodyFront` and `CreateProgradeWithSunTracking` `BodyFront`/`BodyUp`, all through that one rule (#677); the `TriadAttitude` constructors take literal body vectors (pass `spacecraft.BodyFront`, ... for the instance axes)
 
 ```csharp
 // Spacecraft with +X as front (e.g., matching a SPICE FK convention)
@@ -742,7 +742,7 @@ The `IAttitudeTarget` interface enables orbital directions and celestial bodies 
 
 Convenience factories for common operational attitudes:
 ```csharp
-// LVLH: BodyDown→Nadir, BodyFront→Prograde (the axes of the engine's spacecraft, #677)
+// LVLH: BodyDown→Nadir, BodyFront→Prograde (the axes of the plan's spacecraft, #677)
 var lvlh = TriadAttitude.CreateLVLH(earth, epoch, duration, engine);
 
 // Prograde with sun tracking: BodyFront→Prograde, BodyUp→Sun
@@ -877,7 +877,7 @@ var deg2Rad = IO.Astrodynamics.Constants.Deg2Rad; // not Constants.Deg2Rad (that
    - Ensure body vectors and reference vectors are not collinear (`MinimumVectorSeparation`, 5 degrees by default, in [1e-14, π/2] rad)
    - Use `Spacecraft.Front`, `Spacecraft.Up`, etc. for standard body frame directions; use instance `BodyFront`, `BodyRight`, `BodyUp` for non-standard frames
    - Custom body axes must be finite, non-zero, orthogonal and right-handed (`BodyRight.Cross(BodyFront) == BodyUp`)
-   - The single-vector attitudes and the impulse attitude use `GetBodyFront()`, the TRIAD factories `BodyDown`/`BodyFront` and `BodyFront`/`BodyUp`, all on the engine's spacecraft with static fallback outside a propagation (in one, the tank is the propagated spacecraft's, #676); the `TriadAttitude` constructors take literal vectors
+   - The single-vector attitudes and the impulse attitude use `GetBodyAxis(BodyAxis.Front)`, the TRIAD factories `BodyDown`/`BodyFront` and `BodyFront`/`BodyUp`, all on the spacecraft of the plan that last held the maneuver, with the static axes before any plan (decisions 46 and 69 of #668); the `TriadAttitude` constructors take literal vectors
    - Use `IAttitudeTarget` with `TriadAttitude` to mix orbital directions (`OrbitalDirectionTarget.Prograde`, etc.) and celestial targets (`CelestialAttitudeTarget`)
    - Use factory methods `TriadAttitude.CreateLVLH()` and `CreateProgradeWithSunTracking()` for common operational attitudes (on the spacecraft's instance axes)
    - Use `Instrument.GetBoresightInSpacecraftFrame()` and `GetRefVectorInSpacecraftFrame()` for instrument-based pointing
