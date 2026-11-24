@@ -45,6 +45,9 @@ public partial class IntegratorEventTests
 
         // After the segment, with its result, its detectors and its base epoch, before the integrator returns
         internal Action<IntegrationResult, IReadOnlyList<IEventDetector>, Time> Returning { get; init; } = (_, _, _) => { };
+
+        // The result the integrator returns, from that of the segment
+        internal Func<IntegrationResult, IntegrationResult> Map { get; init; } = r => r;
         internal List<IEventDetector> Captured { get; } = new();
         internal int Calls => _calls;
         private int _calls;
@@ -61,7 +64,7 @@ public partial class IntegratorEventTests
             var result = inner.IntegrateSegment(p, v, b, d, e);
             After(call);
             Returning(result, e, b);
-            return result;
+            return Map(result);
         }
     }
 

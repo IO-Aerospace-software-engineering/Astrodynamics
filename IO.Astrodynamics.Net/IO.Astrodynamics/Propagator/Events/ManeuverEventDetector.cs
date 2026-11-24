@@ -46,6 +46,9 @@ namespace IO.Astrodynamics.Propagator.Events;
 /// itself, and a later <see cref="Evaluate"/> or <see cref="HandleEvent"/> throws
 /// <see cref="System.InvalidOperationException"/>, saying that it has already executed its impulse, and changes nothing;
 /// one that skipped the occurrence (<see cref="EventAction.Continue"/>, the preconditions not met) stays armed. The
+/// detector disarms itself as the execution starts, so an execution that throws disarms it too: before, one that threw
+/// after the fuel burned (a burn past the range of a <see cref="System.TimeSpan"/>) left it armed, and each later call
+/// burned again (three burns in a run of the fourth review of L5a). The
 /// propagation never calls a detector after its execution, replacing it with the detector of the next impulse, so the
 /// path of a run is unchanged; before, a custom <see cref="IIntegrator"/> that kept the detector of an impulse executed
 /// it a second time during the run (6.74 kg burned, <see cref="ImpulseManeuver.DeltaV"/> rewritten, nothing in the
@@ -75,7 +78,7 @@ internal sealed class ManeuverEventDetector : IEventDetector, IGatedEventDetecto
     /// </summary>
     internal void Disarm() => _disarmed = true;
 
-    // Set once by HandleEvent when it has executed the impulse (decision 97 of #668)
+    // Set once by HandleEvent as it starts to execute the impulse (decision 97 of #668)
     private volatile bool _executed;
 
     // Throws once the run that built this detector has ended (decision 95 of #668), or once the detector has executed
@@ -93,8 +96,8 @@ internal sealed class ManeuverEventDetector : IEventDetector, IGatedEventDetecto
         if (_executed)
         {
             throw new System.InvalidOperationException(
-                $"{Description()} has already executed its impulse: a maneuver's detector executes its impulse once at " +
-                "most, and the propagation builds the detector of the next impulse of the plan. Propagate again to " +
+                $"{Description()} has already executed its impulse (an execution that threw included): a maneuver's " +
+                "detector executes its impulse once at most, and the propagation builds the detector of the next impulse of the plan. Propagate again to " +
                 "execute the plan again; ImpulseManeuver.ComputeDeltaV and ComputeEventValue are the previews.");
         }
     }
@@ -172,7 +175,8 @@ internal sealed class ManeuverEventDetector : IEventDetector, IGatedEventDetecto
     /// </returns>
     /// <exception cref="System.InvalidOperationException">The run that built this detector has ended (decision 95 of
     /// #668), or the detector has already executed its impulse, a later call after a
-    /// <see cref="EventAction.StopAndRestart"/> (decision 97 of #668, decided by S. Guillet, 2026-11-24); nothing
+    /// <see cref="EventAction.StopAndRestart"/> or after a call whose execution threw (decision 97 of #668, decided by
+    /// S. Guillet, 2026-11-24); nothing
     /// changes: no fuel burned, <see cref="ImpulseManeuver.DeltaV"/> and the windows untouched.</exception>
     /// <remarks>
     /// Before 11.0.0 it also executed the attitudes chained after the impulse at the epoch of its event, each raising the
@@ -190,10 +194,10 @@ internal sealed class ManeuverEventDetector : IEventDetector, IGatedEventDetecto
             return new EventResult(stateAtEvent, null, EventAction.Continue, this);
         }
 
-        var (sv, so) = _maneuver.TryExecute(stateAtEvent);
-
-        // Executed: the detector disarms itself, so that its impulse executes once at most (decision 97 of #668)
+        // The detector disarms itself as the execution starts, so that its impulse executes once at most (decision 97 of
+        // #668), an execution that throws after the fuel burned included (the fourth review of L5a)
         _executed = true;
+        var (sv, so) = _maneuver.TryExecute(stateAtEvent);
         return new EventResult(sv, so, EventAction.StopAndRestart, null);
     }
 }

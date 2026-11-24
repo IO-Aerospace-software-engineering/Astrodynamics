@@ -723,10 +723,12 @@ public abstract class PropagatorBase : IPropagator
     /// (decision 98 of #668, decided by S. Guillet, 2026-11-24), which only an integrator that keeps a detector past its
     /// <see cref="IIntegrator.IntegrateSegment"/> call, against its documented contract, meets; no lock is added.
     /// A detector executes its impulse once at most (decision 97 of #668, decided by S. Guillet, 2026-11-24): once its
-    /// <see cref="IEventDetector.HandleEvent"/> has executed the impulse, it throws within the run too; the run never calls
-    /// it again, replacing it with the detector of the next impulse, so a run whose integrator calls
-    /// <see cref="IEventDetector.HandleEvent"/> itself throws <see cref="InvalidOperationException"/> rather than burning
-    /// twice.
+    /// <see cref="IEventDetector.HandleEvent"/> has executed the impulse, or started to and thrown, it throws within the
+    /// run too; the run never calls it again, replacing it with the detector of the next impulse, so a run whose
+    /// integrator calls <see cref="IEventDetector.HandleEvent"/> on the event it returns throws
+    /// <see cref="InvalidOperationException"/> from the propagation's own call rather than burning twice; an integrator
+    /// that executes an event and returns none breaks its contract, and the run returns incomplete, stopped at that
+    /// event.
     /// </para>
     /// <para>
     /// The plan of the spacecraft is not changed during a run on it (decision 96 of #668, decided by S. Guillet,

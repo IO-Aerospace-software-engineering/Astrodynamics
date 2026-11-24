@@ -47,9 +47,12 @@ detector kept past it throws `InvalidOperationException` from `Evaluate` and `Ha
 run: a call already in progress when the run ends completes (decision 98 of #668, decided by S. Guillet, 2026-11-24), so
 an integrator that keeps a detector past its `IntegrateSegment` call, against this contract, can still change the
 spacecraft after the run; no lock is added. A detector executes its impulse once at most (decision 97
-of #668, decided by S. Guillet, 2026-11-24): once its `HandleEvent` has executed the impulse, it throws in the same way
-within the run, so a custom integrator leaves `HandleEvent` to the propagation, which calls it once per event and never
-after the execution; an integrator that calls it itself makes the run throw rather than burn twice.
+of #668, decided by S. Guillet, 2026-11-24): once its `HandleEvent` has executed the impulse, or started to and thrown,
+it throws in the same way within the run, so a custom integrator leaves `HandleEvent` to the propagation, which calls it
+once per event and never after the execution; an integrator that calls `HandleEvent` on the event it returns makes the
+propagation's own call throw, so the run throws rather than burning twice. An integrator that executes an event and
+hides it (returns no event) breaks this contract: the propagation takes a result without an event for the end of its
+window, and the run returns incomplete, its solution stopped at that event.
 
 ## AcceptedStep
 
