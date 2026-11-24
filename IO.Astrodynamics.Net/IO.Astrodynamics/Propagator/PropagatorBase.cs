@@ -719,6 +719,9 @@ public abstract class PropagatorBase : IPropagator
     /// detector an <see cref="IIntegrator"/> kept past the run then throws <see cref="InvalidOperationException"/> from
     /// <see cref="IEventDetector.Evaluate"/> and <see cref="IEventDetector.HandleEvent"/>, changing nothing (before, it
     /// executed its maneuver outside a run: fuel burned, <see cref="ImpulseManeuver.DeltaV"/> and the windows rewritten).
+    /// This holds for the calls that start after the end: a call already in progress when the run ends completes
+    /// (decision 98 of #668, decided by S. Guillet, 2026-11-24), which only an integrator that keeps a detector past its
+    /// <see cref="IIntegrator.IntegrateSegment"/> call, against its documented contract, meets; no lock is added.
     /// A detector executes its impulse once at most (decision 97 of #668, decided by S. Guillet, 2026-11-24): once its
     /// <see cref="IEventDetector.HandleEvent"/> has executed the impulse, it throws within the run too; the run never calls
     /// it again, replacing it with the detector of the next impulse, so a run whose integrator calls

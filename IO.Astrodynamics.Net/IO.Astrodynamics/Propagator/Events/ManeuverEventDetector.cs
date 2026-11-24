@@ -33,7 +33,12 @@ namespace IO.Astrodynamics.Propagator.Events;
 /// (<see cref="PropagatorBase.Propagate"/>), and <see cref="Evaluate"/> and <see cref="HandleEvent"/> then throw
 /// <see cref="System.InvalidOperationException"/> and change nothing. A custom <see cref="IIntegrator"/> receives the
 /// detectors as <see cref="IEventDetector"/> within the run, so decision 88 alone did not close the route: a detector
-/// kept past the run burned fuel and rewrote <see cref="ImpulseManeuver.DeltaV"/> and the windows.
+/// kept past the run burned fuel and rewrote <see cref="ImpulseManeuver.DeltaV"/> and the windows. This holds for the
+/// calls that start after the end of the run: a call already in progress when the run ends completes (decision 98 of
+/// #668, decided by S. Guillet, 2026-11-24). Only an integrator that keeps a detector past its
+/// <see cref="IIntegrator.IntegrateSegment"/> call, against the documented contract, meets the case (12 of 300 runs of a
+/// probe whose thread called <see cref="HandleEvent"/> in a loop burned fuel after the run returned, in the third review
+/// of L5a); no lock is added to the detector.
 /// </para>
 /// <para>
 /// A detector executes its impulse once at most (decision 97 of #668, #802, decided by S. Guillet, 2026-11-24): when
