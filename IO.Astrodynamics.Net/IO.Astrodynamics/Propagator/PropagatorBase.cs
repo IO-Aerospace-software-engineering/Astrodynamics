@@ -722,7 +722,7 @@ public abstract class PropagatorBase : IPropagator
     /// This holds for the calls that start after the end: a call already in progress when the run ends completes
     /// (decision 98 of #668, decided by S. Guillet, 2026-11-24), which only an integrator that keeps a detector past its
     /// <see cref="IIntegrator.IntegrateSegment"/> call, against its documented contract, meets; no lock is added.
-    /// A detector executes its impulse once at most (decision 97 of #668, decided by S. Guillet, 2026-11-24): once its
+    /// A detector executes its impulse once at most for calls that do not overlap (decision 97 of #668, decided by S. Guillet, 2026-11-24): once its
     /// <see cref="IEventDetector.HandleEvent"/> has executed the impulse, or started to and thrown, it throws within the
     /// run too; the run never calls it again, replacing it with the detector of the next impulse, so a run whose
     /// integrator calls <see cref="IEventDetector.HandleEvent"/> on the event it returns throws

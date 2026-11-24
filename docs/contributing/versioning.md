@@ -4590,7 +4590,7 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   `IntegrateSegment` call meets it, 12 of 300 runs of a probe calling `HandleEvent` in a loop from a thread burning fuel
   after `Propagate` returned; no lock is added). Within the run, a custom `IIntegrator` that kept the
   detector of an impulse executed it a second time (6.74 kg burned, `DeltaV` rewritten, nothing in
-  `ExecutedManeuvers`, in the probe of the third review of L5a): a detector now executes its impulse once at most
+  `ExecutedManeuvers`, in the probe of the third review of L5a): a detector now executes its impulse once at most for calls that do not overlap
   (decision 97 of #668, decided by S. Guillet, 2026-11-24), disarming itself as its `HandleEvent` starts to execute it,
   an execution that throws included (the fourth review of L5a: one that threw after the fuel burned left it armed, and
   each later call burned again), a detector that skipped an occurrence (`Continue`) staying armed.
@@ -7164,7 +7164,7 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   `ADetectorBuiltAfterANestedRun_*`, a bare `IIntegrator` and an `Integrator`
   subclass over both integrators). This holds for the calls that start after the end: a call already in progress when
   the run ends completes (decision 98 of #668, decided by S. Guillet, 2026-11-24), which only an integrator that keeps
-  a detector past its `IntegrateSegment` call, against the documented contract, meets; no lock is added. A detector also executes its impulse once at most (decision 97 of #668, decided by
+  a detector past its `IntegrateSegment` call, against the documented contract, meets; no lock is added. A detector also executes its impulse once at most for calls that do not overlap (decision 97 of #668, decided by
   S. Guillet, 2026-11-24; the third review of L5a: a custom `IIntegrator` that kept the detector of an impulse executed
   it a second time during the run, 6.74 kg burned, `DeltaV` rewritten, nothing in `ExecutedManeuvers`): when its
   `HandleEvent` has executed the impulse it disarms itself, and a later `HandleEvent` or `Evaluate` within the run

@@ -46,7 +46,7 @@ detector kept past it throws `InvalidOperationException` from `Evaluate` and `Ha
 ([Event Detection](event-detection.md#the-maneuver-detector)). This holds for the calls that start after the end of the
 run: a call already in progress when the run ends completes (decision 98 of #668, decided by S. Guillet, 2026-11-24), so
 an integrator that keeps a detector past its `IntegrateSegment` call, against this contract, can still change the
-spacecraft after the run; no lock is added. A detector executes its impulse once at most (decision 97
+spacecraft after the run; no lock is added. A detector executes its impulse once at most for calls that do not overlap (decision 97
 of #668, decided by S. Guillet, 2026-11-24): once its `HandleEvent` has executed the impulse, or started to and thrown,
 it throws in the same way within the run, so a custom integrator leaves `HandleEvent` to the propagation, which calls it
 once per event and never after the execution; an integrator that calls `HandleEvent` on the event it returns makes the

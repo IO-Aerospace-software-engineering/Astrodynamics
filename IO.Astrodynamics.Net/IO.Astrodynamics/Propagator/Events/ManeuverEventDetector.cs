@@ -41,7 +41,7 @@ namespace IO.Astrodynamics.Propagator.Events;
 /// of L5a); no lock is added to the detector.
 /// </para>
 /// <para>
-/// A detector executes its impulse once at most (decision 97 of #668, #802, decided by S. Guillet, 2026-11-24): when
+/// A detector executes its impulse once at most for calls that do not overlap (decision 97 of #668, #802, decided by S. Guillet, 2026-11-24): when
 /// <see cref="HandleEvent"/> has executed the impulse (<see cref="EventAction.StopAndRestart"/>), the detector disarms
 /// itself, and a later <see cref="Evaluate"/> or <see cref="HandleEvent"/> throws
 /// <see cref="System.InvalidOperationException"/>, saying that it has already executed its impulse, and changes nothing;

@@ -77,7 +77,7 @@ public interface IIntegrator
     /// implementation does not keep them past the call: the rule holds for the calls that start after the end of the
     /// run, and a call already in progress when the run ends completes (decision 98 of #668, decided by S. Guillet,
     /// 2026-11-24), so an implementation that keeps a detector past its call, against this contract, can still change the
-    /// spacecraft after the run. A detector executes its impulse once at most: once its
+    /// spacecraft after the run. A detector executes its impulse once at most, for calls that do not overlap,: once its
     /// <see cref="IEventDetector.HandleEvent"/> has executed it, or started to and thrown, the detector throws in the same
     /// way within the run
     /// (decision 97 of #668, decided by S. Guillet, 2026-11-24), so an implementation leaves
