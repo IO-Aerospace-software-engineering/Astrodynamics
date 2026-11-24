@@ -572,7 +572,7 @@ public class VariationalPropagationTests : IClassFixture<PartialsTestCases>
         }
 
         var maneuver = new ApogeeHeightManeuver(_cases.Earth, Start, TimeSpan.Zero, 8378137.0, engine);
-        spacecraft.SetStandbyManeuver(maneuver);
+        spacecraft.SetManeuvers(maneuver);
         return (spacecraft, maneuver);
     }
 

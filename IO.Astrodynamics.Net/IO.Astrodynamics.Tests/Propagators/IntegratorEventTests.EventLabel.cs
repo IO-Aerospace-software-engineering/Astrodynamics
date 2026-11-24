@@ -73,7 +73,7 @@ public partial class IntegratorEventTests
         var window = new Window(S, S.AddHours(12.0));
         var (withEvents, engine) = NewSpacecraft(moon ? -7921 : -7922, Orbit());
         var never = new NeverPerigeeRaise(center, S, engine);
-        withEvents.SetStandbyManeuver(never);
+        withEvents.SetManeuvers(never);
         var (without, _) = NewSpacecraft(moon ? -7923 : -7924, Orbit());
         var integratorStep = TimeSpan.FromSeconds(step);
         var output = TimeSpan.FromSeconds(60.0);

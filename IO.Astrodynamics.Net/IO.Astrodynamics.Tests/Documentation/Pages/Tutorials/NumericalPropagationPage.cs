@@ -179,10 +179,10 @@ internal static class NumericalPropagationPage
     {
         #region docs/tutorials/numerical-propagation.md:8
         // Inputs: solution (PropagationSolution), epoch (Time)
-        var (position, velocity) = solution.InterpolateAt(epoch.AddHours(12));
+        var state = solution.GetStateVector(epoch.AddHours(12));
 
-        Console.WriteLine($"Position: {position}");
-        Console.WriteLine($"Velocity: {velocity}");
+        Console.WriteLine($"Position: {state.Position}");
+        Console.WriteLine($"Velocity: {state.Velocity}");
         #endregion
     }
 }

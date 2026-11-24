@@ -36,10 +36,10 @@ public class NadirAttitudeTests
         spc.AddFuelTank(new FuelTank("ft", "ftA", "123456", 1000.0, 900.0));
         spc.AddEngine(new Engine("eng", "engmk1", "12345", 450, 50, spc.FuelTanks.First()));
         NadirAttitude maneuver = new NadirAttitude(TestHelpers.EarthAtJ2000,new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB), TimeSpan.Zero, spc.Engines.First());
-        maneuver.TryExecute(orbitalParams.ToStateVector());
+        var (_, maneuverOrientation) = maneuver.TryExecute(orbitalParams.ToStateVector());
 
         LabelAssert.Equal(new StateOrientation(new Quaternion(0.7071067811865476, 0.0, 0.0, 0.7071067811865476), Vector3.Zero, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF),
-            maneuver.StateOrientation);
+            maneuverOrientation);
         Assert.Equal(0.0, maneuver.FuelBurned);
         LabelAssert.Equal(new Window(TimeSystem.Time.J2000TDB, TimeSpan.Zero), maneuver.ManeuverWindow);
         LabelAssert.Equal(new Window(TimeSystem.Time.J2000TDB, TimeSpan.Zero), maneuver.ThrustWindow);
@@ -56,10 +56,9 @@ public class NadirAttitudeTests
         var spc = new Spacecraft(-1107, "GenericSpacecraft1107", 1000.0, 3000.0, new Clock("GenericClk1107", 65536), orbitalParams);
         spc.AddFuelTank(new FuelTank("ft", "ftA", "123456", 1000.0, 900.0));
         spc.AddEngine(new Engine("eng", "engmk1", "12345", 450, 50, spc.FuelTanks.First()));
-        var nadir = new ExecuteProbe(spc.Engines.First());
+        var nadir = new NadirAttitude(TestHelpers.EarthAtJ2000, TimeSystem.Time.J2000TDB, TimeSpan.FromSeconds(10.0), spc.Engines.First());
         var prograde = new ProgradeAttitude(TestHelpers.EarthAtJ2000, TimeSystem.Time.J2000TDB, TimeSpan.Zero, spc.Engines.First());
-        nadir.SetNextManeuver(prograde);
-        spc.SetStandbyManeuver(nadir);
+        spc.SetManeuvers(nadir, prograde);
         var start = orbitalParams.ToStateVector();
 
         nadir.TryExecute(start);
@@ -70,11 +69,8 @@ public class NadirAttitudeTests
         Assert.Equal(prograde, spc.StandbyManeuver);
         Assert.Contains(nadir, spc.ExecutedManeuvers);
         LabelAssert.Equal(TimeSystem.Time.J2000TDB.AddSeconds(10.0), prograde.MinimumEpoch);
-        Assert.Equal(Vector3.Zero, nadir.DeltaVOf(start));
-    }
-
-    private sealed class ExecuteProbe(Engine engine) : NadirAttitude(TestHelpers.EarthAtJ2000, TimeSystem.Time.J2000TDB, TimeSpan.FromSeconds(10.0), engine)
-    {
-        public Vector3 DeltaVOf(StateVector state) => Execute(state);
+        // An attitude changes no velocity: its execution returns the state it was given (its Execute, which returned a zero
+        // delta-V, left Attitude with decision 48 of #668)
+        Assert.Same(afterTheHold, nadir.TryExecute(afterTheHold).sv);
     }
 }

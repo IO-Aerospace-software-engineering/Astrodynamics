@@ -170,7 +170,7 @@ internal static class AttitudesPage
         #region docs/reference/attitudes.md:9
         // Inputs: earth (CelestialBody), epoch (Time), engine (Engine), spacecraft (Spacecraft)
         var nadir = new NadirAttitude(earth, epoch, TimeSpan.FromMinutes(30), engine);
-        spacecraft.SetStandbyManeuver(nadir);
+        spacecraft.SetManeuvers(nadir);
         #endregion
     }
 
@@ -181,7 +181,7 @@ internal static class AttitudesPage
         // Inputs: epoch (Time), telescope (Instrument), targetStar (ILocalizable), engine (Engine), spacecraft (Spacecraft)
         var pointing = new InstrumentPointingToAttitude(
             epoch, TimeSpan.FromHours(2), telescope, targetStar, engine);
-        spacecraft.SetStandbyManeuver(pointing);
+        spacecraft.SetManeuvers(pointing);
         #endregion
     }
 
@@ -195,7 +195,7 @@ internal static class AttitudesPage
             Spacecraft.Front, OrbitalDirectionTarget.Prograde,
             Spacecraft.Up, new CelestialAttitudeTarget(sun),
             engine);
-        spacecraft.SetStandbyManeuver(attitude);
+        spacecraft.SetManeuvers(attitude);
         #endregion
     }
 
@@ -205,7 +205,7 @@ internal static class AttitudesPage
         #region docs/reference/attitudes.md:12
         // Inputs: earth (CelestialBody), epoch (Time), duration (TimeSpan), engine (Engine), spacecraft (Spacecraft)
         var lvlh = TriadAttitude.CreateLVLH(earth, epoch, duration, engine);
-        spacecraft.SetStandbyManeuver(lvlh);
+        spacecraft.SetManeuvers(lvlh);
         #endregion
     }
 }

@@ -63,7 +63,7 @@ var config = new MonteCarloConfiguration
 |----------|---------|
 | `RunCount` | Number of Monte Carlo samples |
 | `Seed` | RNG seed for reproducibility (same seed = same results) |
-| `TemplateSpacecraft` | Spacecraft whose initial state covariance is sampled |
+| `TemplateSpacecraft` | Spacecraft whose initial state covariance is sampled; without a maneuver plan, which the runs do not execute (`ArgumentException`, decision 41 of #668), and the runs take its dry mass alone ([#795](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/795)) |
 | `Window` | Propagation time window |
 | `Propagation` | The settings of every run, a `PropagationOptions` value ([Propagation Options](../reference/propagators.md#propagation-options)); null for its defaults, RK7(8) at 1e-9 every 60 s about the central body alone. `OutputStep` is the step of the statistics |
 

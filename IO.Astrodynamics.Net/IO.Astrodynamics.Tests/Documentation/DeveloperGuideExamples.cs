@@ -787,8 +787,8 @@ internal static class DeveloperGuideExamples
             }
         );
 
-        // Interpolate at any epoch within the propagation window: position (m) and velocity (m/s)
-        var (positionAtHalfDay, velocityAtHalfDay) = solution.InterpolateAt(epoch.AddHours(12));
+        // The state at any epoch within the propagation window, in its frame about its central body: position (m) and velocity (m/s)
+        var halfDay = solution.GetStateVector(epoch.AddHours(12));
 
         // Read the stored states relative to an observer, in ICRF without correction: every minute over the first four
         var states = spacecraft.GetEphemeris(new Window(epoch, epoch.AddMinutes(4)), earth, TimeSpan.FromMinutes(1));
@@ -888,8 +888,8 @@ internal static class DeveloperGuideExamples
             });
         var solution = propagator.Propagate();
 
-        // Use dense output for sub-step interpolation
-        var (midPosition, midVelocity) = solution.InterpolateAt(epoch.AddHours(12));
+        // Use dense output for sub-step reads
+        var middle = solution.GetStateVector(epoch.AddHours(12));
         #endregion
     }
 
@@ -1202,25 +1202,23 @@ internal static class DeveloperGuideExamples
         chaser.AddFuelTank(fuelTank);
         chaser.AddEngine(engine);
 
-        // Chain maneuvers: plane alignment -> apsidal alignment -> phasing -> circularization
+        // The plan: plane alignment -> apsidal alignment -> phasing -> circularization
         var maneuver1 = new PlaneAlignmentManeuver(
             new Time(DateTime.MinValue, TimeScale.TDB),
             TimeSpan.Zero, targetOrbit, engine
         );
 
-        maneuver1
-            .SetNextManeuver(new ApsidalAlignmentManeuver(
+        chaser.SetManeuvers(maneuver1,
+            new ApsidalAlignmentManeuver(
                 new Time(DateTime.MinValue, TimeScale.TDB),
-                TimeSpan.Zero, targetOrbit, engine))
-            .SetNextManeuver(new PhasingManeuver(
+                TimeSpan.Zero, targetOrbit, engine),
+            new PhasingManeuver(
                 new Time(DateTime.MinValue, TimeScale.TDB),
-                TimeSpan.Zero, targetOrbit, 1, engine))
-            .SetNextManeuver(new ApogeeHeightManeuver(
+                targetOrbit, 1, engine),
+            new ApogeeHeightManeuver(
                 earth, new Time(DateTime.MinValue, TimeScale.TDB),
                 TimeSpan.Zero, targetOrbit.SemiMajorAxis(), engine));
 
-        // Set the maneuver sequence
-        chaser.SetStandbyManeuver(maneuver1);
         scenario.AddSpacecraft(chaser);
 
         // Run the simulation
@@ -1231,7 +1229,7 @@ internal static class DeveloperGuideExamples
         });
 
         // Read maneuver results
-        var executedManeuver = chaser.InitialManeuver;
+        var executedManeuver = chaser.Maneuvers[0];  // the first maneuver of the plan, its values those of the last run
         Console.WriteLine($"Maneuver 1 start: {executedManeuver.ManeuverWindow?.StartDate}");
         Console.WriteLine($"Maneuver 1 delta-V: {((ImpulseManeuver)executedManeuver).DeltaV.Magnitude():F1} m/s");
         Console.WriteLine($"Fuel burned: {executedManeuver.FuelBurned:F1} kg");
@@ -1633,10 +1631,10 @@ internal static class DeveloperGuideExamples
         var solution = propagator.Propagate();
 
         // Get the final position and velocity from the dense output
-        var (finalPosition, finalVelocity) = solution.InterpolateAt(epoch.AddDays(1));
+        var final = solution.GetStateVector(epoch.AddDays(1));
 
-        Console.WriteLine($"Position after 24h: ({finalPosition.X/1000:F3}, " +
-            $"{finalPosition.Y/1000:F3}, {finalPosition.Z/1000:F3}) km");
+        Console.WriteLine($"Position after 24h: ({final.Position.X/1000:F3}, " +
+            $"{final.Position.Y/1000:F3}, {final.Position.Z/1000:F3}) km");
         #endregion
     }
 
@@ -1687,7 +1685,7 @@ internal static class DeveloperGuideExamples
         );                                  // The direction is light-time corrected (Aberration.LT, the default, #549);
                                             // pass Aberration.None as a sixth argument for the geometric direction
 
-        spacecraft.SetStandbyManeuver(pointingManeuver);
+        spacecraft.SetManeuvers(pointingManeuver);
 
         // Simulate
         scenario.Simulate(new PropagationOptions
@@ -1747,7 +1745,7 @@ internal static class DeveloperGuideExamples
             engine
         );
 
-        spacecraft.SetStandbyManeuver(triadManeuver);
+        spacecraft.SetManeuvers(triadManeuver);
 
         // Simulate with high time resolution for attitude dynamics
         scenario.Simulate(new PropagationOptions

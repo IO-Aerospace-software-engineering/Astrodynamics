@@ -327,7 +327,7 @@ public class Rk78OutputAccuracyTests
         spacecraft.AddFuelTank(tank);
         spacecraft.AddEngine(engine);
         var maneuver = new ApogeeHeightManeuver(_pointMassEarth, Start, TimeSpan.Zero, 8378137.0, engine);
-        spacecraft.SetStandbyManeuver(maneuver);
+        spacecraft.SetManeuvers(maneuver);
         return (spacecraft, maneuver);
     }
 

@@ -166,7 +166,7 @@ public class AttitudeTimelineEdgeTests
     // ---------------------------------------------------------------------------------------------------------------------
 
     /// <summary>
-    /// The public <c>ManeuverEventDetector.HandleEvent</c> on an impulse → attitude → impulse chain: it executes the impulse
+    /// <c>ManeuverEventDetector.HandleEvent</c> (internal since decision 88 of #668) on an impulse → attitude → impulse chain: it executes the impulse
     /// (its ΔV added to the state, its windows set, the fuel burned, the attitude the front along ΔV) and nothing else: the
     /// attitude chained after it is neither executed nor recorded, and no next detector is returned (#539, choice 10).
     /// </summary>
@@ -211,8 +211,7 @@ public class AttitudeTimelineEdgeTests
         var engine = new Engine("eng", "model", "sn", 300.0, 10.0, tank);
         spacecraft.AddEngine(engine);
         var impulse = new NeverReadyImpulse(earth, S, engine);
-        impulse.SetNextManeuver(new NadirAttitude(earth, S, TimeSpan.Zero, engine));
-        spacecraft.SetStandbyManeuver(impulse);
+        spacecraft.SetManeuvers(impulse, new NadirAttitude(earth, S, TimeSpan.Zero, engine));
         var detector = new ManeuverEventDetector(impulse);
         var state = spacecraft.InitialOrbitalParameters.ToStateVector();
 
@@ -348,7 +347,7 @@ public class AttitudeTimelineEdgeTests
         }
 
         // The summary: the merged windows and the fuel of the rules
-        var summary = run.Spacecraft.GetSummary();
+        var summary = run.Summary;
         var windows = m.Expected.Executed.Select(x => m.Expected.Windows[x].Maneuver).ToArray();
         var start = windows.Min(x => x.StartDate);
         var end = windows.Max(x => x.EndDate);
@@ -364,45 +363,9 @@ public class AttitudeTimelineEdgeTests
     }
 
     // ---------------------------------------------------------------------------------------------------------------------
-    // An impulse without an attitude; a gate at S where g is zero
+    // A gate at S where g is zero (an impulse without an attitude is unreachable since TryExecute is internal, decision
+    // 48 of #668: its test and NoAttitudeImpulse went)
     // ---------------------------------------------------------------------------------------------------------------------
-
-    /// <summary>
-    /// A user impulse whose execution returns no attitude, then an LVLH: the timeline records no attitude for it, the
-    /// identity holds to the end of its maneuver window, where the LVLH activates.
-    /// </summary>
-    [Theory]
-    [InlineData("RK")]
-    [InlineData("VV1")]
-    public void ImpulseWithoutAttitude_TheEarlierAttitudeHolds(string integrator)
-    {
-        var earth = new CelestialBody(PlanetsAndMoons.EARTH, Frame.ICRF, S);
-        int id = NextId();
-        var spacecraft = new Spacecraft(id, $"TL{-id}", 1000.0, 3000.0, new Clock($"TL{-id}_CLK", 65536), MinimumEpochGateTests.Orbit(earth, System.Math.PI));
-        var tank = new FuelTank("ft", "model", "sn", 1000.0, 1000.0);
-        spacecraft.AddFuelTank(tank);
-        var engine = new Engine("eng", "model", "sn", 300.0, 10.0, tank);
-        spacecraft.AddEngine(engine);
-        var impulse = new NoAttitudeImpulse(earth, engine);
-        var lvlh = TriadAttitude.CreateLVLH(earth, S, TimeSpan.Zero, engine);
-        impulse.SetNextManeuver(lvlh);
-        spacecraft.SetStandbyManeuver(impulse);
-        IntegratorOptions propagator = integrator == "RK" ? new RK78IntegratorOptions { AbsoluteTolerance = 1e-12, RelativeTolerance = 1e-12 } : new VVIntegratorOptions { Step = TimeSpan.FromSeconds(1.0) };
-        var solution = spacecraft.Propagate(new Window(S, S.AddHours(2.0)), new PropagationOptions { Integrator = propagator, OutputStep = TimeSpan.FromSeconds(10.0), ThirdBodies = [earth], CovariancePropagation = CovariancePropagationOptions.None });
-        var tc = solution.Segments[1].BaseEpoch;
-        double dt = TimelineRules.BurnDuration(2000.0, impulse.DeltaV.Magnitude(), 300.0, 10.0);
-        var end = TimelineRules.ManeuverEnd(tc, dt, TimelineRules.ThrustLead(impulse.DeltaV.Magnitude(), 300.0), 0.0, true);
-        double rule = System.Math.Abs((lvlh.ManeuverWindow!.Value.StartDate - end).TotalSeconds);
-        double identity = 0.0;
-        for (var t = S; t < end.AddSeconds(-1e-3); t = t.AddSeconds(1.0))
-            identity = System.Math.Max(identity, AttitudeRecordTests.RotationAngle(v => v, v => v.Rotate(spacecraft.Frame.GetStateOrientationToICRF(t).Rotation)));
-        var after = spacecraft.Frame.GetStateOrientationToICRF(end.AddSeconds(1e-3)).Rotation;
-        _output.WriteLine($"MEASURE #539 impulse without an attitude {integrator}: LVLH start - rule {rule:E2} s, identity before it {identity:E2} rad, " +
-                          $"at its start + 1 ms {AttitudeRecordTests.RotationAngle(v => v, v => v.Rotate(after)):E2} rad from the identity");
-        Assert.Equal(0.0, identity);
-        Assert.True(AttitudeRecordTests.RotationAngle(v => v, v => v.Rotate(after)) > 0.1);
-        if (TimelineRules.Checked) Assert.True(rule <= TimelineRules.RuleBound);
-    }
 
     /// <summary>
     /// R5: a leading nadir held 0 s puts the gate of the impulse after it at S (choice 4), where the orbit given by Keplerian
@@ -456,8 +419,7 @@ public class AttitudeTimelineEdgeTests
         spacecraft.AddEngine(engine);
         var prograde = new ProgradeAttitude(center, minimumEpoch, TimeSpan.FromSeconds(hold), engine);
         var nadir = new NadirAttitude(center, start, TimeSpan.Zero, engine);
-        prograde.SetNextManeuver(nadir);
-        spacecraft.SetStandbyManeuver(prograde);
+        spacecraft.SetManeuvers(prograde, nadir);
         return (spacecraft, prograde, nadir);
     }
 
@@ -520,7 +482,7 @@ public class AttitudeTimelineEdgeTests
         var orbit = new KeplerianElements((ra + rp) / 2.0, (ra - rp) / (ra + rp), 0.9, 0.3, 1.1, System.Math.PI, body, start, Frame.ICRF);
         var (spacecraft, prograde, nadir) = ProgradeThenNadir(body, start, minimum, 60.0, orbit);
         IntegratorOptions propagator = integrator == "RK" ? new RK78IntegratorOptions { AbsoluteTolerance = 1e-12, RelativeTolerance = 1e-12 } : new VVIntegratorOptions { Step = TimeSpan.FromSeconds(1.0) };
-        spacecraft.Propagate(new Window(start, start.AddSeconds(600.0)), new PropagationOptions { Integrator = propagator, OutputStep = TimeSpan.FromSeconds(10.0), ThirdBodies = [body], CovariancePropagation = CovariancePropagationOptions.None });
+        var solution = spacecraft.Propagate(new Window(start, start.AddSeconds(600.0)), new PropagationOptions { Integrator = propagator, OutputStep = TimeSpan.FromSeconds(10.0), ThirdBodies = [body], CovariancePropagation = CovariancePropagationOptions.None });
 
         var activation = prograde.ThrustWindow!.Value.StartDate;
         var end = prograde.ManeuverWindow!.Value.EndDate;
@@ -535,7 +497,7 @@ public class AttitudeTimelineEdgeTests
         LabelAssert.Equal(end, nadir.ThrustWindow.Value.StartDate);
         Assert.Equal(IO.Astrodynamics.TimeSystem.TimeScale.TDB, nadir.ThrustWindow.Value.StartDate.Scale);
         Assert.True(System.Math.Abs(hold - 60.0) <= TimelineRules.RuleBound, $"hold {hold:R} s");
-        var summary = spacecraft.GetSummary();
+        var summary = new SpacecraftSummary(spacecraft, solution.Maneuvers);
         LabelAssert.Equal(activation, summary.ManeuverWindow!.Value.StartDate);
     }
 
@@ -626,24 +588,4 @@ internal sealed class NeverReadyImpulse : ImpulseManeuver
     public override bool CheckPreconditions(StateVector state) => false;
 
     protected override Vector3 Execute(StateVector vector) => vector.Velocity.Normalize() * 10.0;
-}
-
-/// <summary>A user impulse at the perigee, 100 m/s along the velocity, whose execution returns no attitude.</summary>
-internal sealed class NoAttitudeImpulse : ImpulseManeuver
-{
-    internal NoAttitudeImpulse(CelestialItem center, Engine engine) : base(center, new Time(DateTime.MinValue, TimeScale.TDB), TimeSpan.Zero, engine)
-    {
-    }
-
-    public override double ComputeEventValue(StateVector localState) => localState.Position.Dot(localState.Velocity);
-
-    public override CrossingDirection EventCrossingDirection => CrossingDirection.NegativeToPositive;
-
-    protected override Vector3 Execute(StateVector vector) => vector.Velocity.Normalize() * 100.0;
-
-    public override (StateVector sv, StateOrientation so) TryExecute(StateVector stateVector)
-    {
-        var (sv, _) = base.TryExecute(stateVector);
-        return (sv, null);
-    }
 }

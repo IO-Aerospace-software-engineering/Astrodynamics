@@ -723,7 +723,7 @@ public class CovariancePropagationTests : IClassFixture<PartialsTestCases>, ICla
         {
             ExecutionError = execution
         };
-        spacecraft.SetStandbyManeuver(maneuver);
+        spacecraft.SetManeuvers(maneuver);
         return (spacecraft, maneuver);
     }
 

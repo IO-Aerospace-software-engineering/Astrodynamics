@@ -169,7 +169,8 @@ public sealed class StmCaseTests : IDisposable
                 new CovariancePropagationOptions { Mode = CovariancePropagationMode.StateTransitionOnly })).Propagate();
         var end = reference.Window.EndDate;
         var phi = solution.GetStateTransitionMatrix(end);
-        var (position, velocity) = solution.InterpolateAt(end);
+        var final = solution.GetStateVector(end);
+        var (position, velocity) = (final.Position, final.Velocity);
 
         // Assert: the same, bit for bit, since the accepted steps do not depend on the outputs
         Assert.True(reference.StepSize < reference.Window.Length);

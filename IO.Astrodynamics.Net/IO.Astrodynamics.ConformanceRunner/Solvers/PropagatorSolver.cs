@@ -73,8 +73,10 @@ public class PropagatorSolver : ICategorySolver
 
         var res = propagator.Propagate();
 
-        // Interpolate at exact window end to avoid DeltaT sampling gap
-        var (finalPos, finalVel) = res.InterpolateAt(propagationCase.Window.EndDate);
+        // Read at exact window end to avoid DeltaT sampling gap, through the public reader of a solution (decision 54 of
+        // #668: InterpolateAt is internal; the same state, bit for bit)
+        var final = res.GetStateVector(propagationCase.Window.EndDate);
+        var (finalPos, finalVel) = (final.Position, final.Velocity);
 
         // Return position (km) and velocity (km/s)
         return new Dictionary<string, object>

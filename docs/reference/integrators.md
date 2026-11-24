@@ -11,6 +11,14 @@ Integrators advance spacecraft state through time under configured force models.
 
 `IntegrationResult` contains the completed `PropagationSegment` and optional event information (`EventInfo`) if a detector triggered during the segment; both are read-only record structs (11.0.0: their properties had public setters before).
 
+A custom integrator collects the `AcceptedStep` values of its segment and builds the segment once, with
+`new PropagationSegment(baseEpoch, steps)`, which copies them, or `new PropagationSegment(baseEpoch)` for a segment of no
+step (decision 55 of #668, decided by S. Guillet, 2026-11-23,
+[#796](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/796)): a segment cannot be changed from
+outside the library, its `AddStep`, its constructor with a step count, its Hermite interpolation and the
+`UpdateStateVector` of `Integrator` being internal since 11.0.0, so a published solution cannot be changed. Before, an
+integrator filled the segment with the public `AddStep`, which also extended a published solution.
+
 The `duration` of `IntegrateSegment`, `PropagationSegment.Duration`, the `CumulativeTime` and `StepSize` of an
 `AcceptedStep` and the time of an event count the seconds of the time argument of the propagation: TT about the Earth,
 TDB about any other central body ([#501](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/501),
@@ -32,14 +40,28 @@ The cancellation token of a propagation ([Propagators](propagators.md#cancellati
 not change (R28 of #668); a custom integrator, a bare `IIntegrator` or a subclass of `Integrator`, is stopped by the
 propagator between its segments, never inside one.
 
+The event detectors a custom integrator receives serve the run that called it only (decision 95 of #668, decided by
+S. Guillet, 2026-11-24): the run disarms every detector it built when it ends, completed, stopped or thrown, and a
+detector kept past it throws `InvalidOperationException` from `Evaluate` and `HandleEvent`, changing nothing
+([Event Detection](event-detection.md#the-maneuver-detector)). This holds for the calls that start after the end of the
+run: a call already in progress when the run ends completes (decision 98 of #668, decided by S. Guillet, 2026-11-24), so
+an integrator that keeps a detector past its `IntegrateSegment` call, against this contract, can still change the
+spacecraft after the run; no lock is added. A detector executes its impulse once at most for calls that do not overlap (decision 97
+of #668, decided by S. Guillet, 2026-11-24): once its `HandleEvent` has executed the impulse, or started to and thrown,
+it throws in the same way within the run, so a custom integrator leaves `HandleEvent` to the propagation, which calls it
+once per event and never after the execution; an integrator that calls `HandleEvent` on the event it returns makes the
+propagation's own call throw, so the run throws rather than burning twice. An integrator that executes an event and
+hides it (returns no event) breaks this contract: the propagation takes a result without an event for the end of its
+window, and the run returns incomplete, its solution stopped at that event.
+
 ## AcceptedStep
 
-Both integrators record `AcceptedStep` entries containing position, velocity, and acceleration at the start and end of each step. These records enable cubic Hermite interpolation between steps (`PropagationSegment.InterpolateAt`), which is exact at the step ends only.
+Both integrators record `AcceptedStep` entries containing position, velocity, and acceleration at the start and end of each step. These records enable cubic Hermite interpolation between steps (internal since 11.0.0), which is exact at the step ends only.
 
 Between the steps, the states of a propagation depend on the integrator:
 
 - **Velocity-Verlet**: cubic Hermite interpolation of the accepted step.
-- **RK7(8)**: a shortened RK7(8) step from the start of the accepted step that contains the epoch, with the accuracy of the integrator. The cubic Hermite interpolation is off by up to about 100 m in LEO at the default tolerance, because its error grows as the fourth power of the step size (#363). The output states, `PropagationSolution.InterpolateAt`, the location of the events and the state the propagation restarts from after a maneuver all use the shortened step.
+- **RK7(8)**: a shortened RK7(8) step from the start of the accepted step that contains the epoch, with the accuracy of the integrator. The cubic Hermite interpolation is off by up to about 100 m in LEO at the default tolerance, because its error grows as the fourth power of the step size (#363). The output states, `PropagationSolution.GetStateVector`, the location of the events and the state the propagation restarts from after a maneuver all use the shortened step.
 
 ## VVIntegrator
 

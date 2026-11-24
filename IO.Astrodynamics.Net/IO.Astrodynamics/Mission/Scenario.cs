@@ -178,13 +178,17 @@ namespace IO.Astrodynamics.Mission
                 star.Propagate(Window, StarStep(options.OutputStep));
             }
 
+            // The summary of each spacecraft from the records of its solution, in scenario order (decision 59 of #668)
+            var summaries = new List<Body.Spacecraft.SpacecraftSummary>(_spacecrafts.Count);
             foreach (var spacecraft in _spacecrafts)
             {
                 cancellationToken.ThrowIfCancellationRequested();
-                spacecraft.Propagate(Window, options, _celestialBodies, cancellationToken);
+                var solution = spacecraft.Propagate(Window, options, _celestialBodies, cancellationToken);
+                summaries.Add(new Body.Spacecraft.SpacecraftSummary(spacecraft, solution.Maneuvers));
             }
 
-            return Summarize();
+            IsSimulated = true;
+            return new ScenarioSummary(Window, summaries.AsReadOnly());
         }
 
         // The list of the options and the bodies of the scenario name the same bodies with the same models, the central
@@ -224,17 +228,6 @@ namespace IO.Astrodynamics.Mission
             return starStepSize;
         }
 
-        private ScenarioSummary Summarize()
-        {
-            ScenarioSummary scenarioSummary = new ScenarioSummary(this.Window);
-            foreach (var spacecraft in _spacecrafts)
-            {
-                scenarioSummary.AddSpacecraftSummary(spacecraft.GetSummary());
-            }
-
-            IsSimulated = true;
-            return scenarioSummary;
-        }
         
         #region Operators
         public bool Equals(Scenario other)

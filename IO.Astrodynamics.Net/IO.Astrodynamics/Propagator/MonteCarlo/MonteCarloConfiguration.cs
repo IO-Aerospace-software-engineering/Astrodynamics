@@ -19,7 +19,9 @@ public sealed record MonteCarloConfiguration
 
     /// <summary>
     /// Spacecraft whose initial state, physical properties, and covariance are used as the
-    /// nominal reference. Each run creates a clone with a perturbed initial state.
+    /// nominal reference. Each run creates a clone with a perturbed initial state. A template with a maneuver plan is
+    /// refused by <see cref="MonteCarloPropagator.Propagate(MonteCarloConfiguration, System.Threading.CancellationToken)"/>
+    /// (<see cref="System.ArgumentException"/>, decision 41 of #668): the runs do not execute it.
     /// </summary>
     public required Spacecraft TemplateSpacecraft { get; init; }
 

@@ -199,7 +199,7 @@ public partial class IntegratorEventTests
         var (spacecraft, engine) = NewSpacecraft(sign > 0.0 ? -7901 : -7902, MinimumEpochGateTests.Orbit(earth, System.Math.PI));
         var root = MinimumEpochGateTests.GateAtTt(1100.0);
         var impulse = new TimeLikeImpulse(earth, S, engine, root, sign);
-        spacecraft.SetStandbyManeuver(impulse);
+        spacecraft.SetManeuvers(impulse);
         var solution = spacecraft.Propagate(new Window(S, MinimumEpochGateTests.GateAtTt(3000.0)), new PropagationOptions { Integrator = NewIntegrator(integratorName), OutputStep = TimeSpan.FromSeconds(10.0), ThirdBodies = [earth], CovariancePropagation = CovariancePropagationOptions.None });
 
         _output.WriteLine($"MEASURE #580 time-like impulse {integratorName} {sign:+0;-0}: {solution.Segments.Count} segments" +
@@ -233,7 +233,7 @@ public partial class IntegratorEventTests
         var (spacecraft, engine) = NewSpacecraft(-7903, orbit);
         var gate = S.Add(TimeSpan.FromSeconds(-gateBefore));
         var maneuver = new PerigeeHeightManeuver(earth, gate, TimeSpan.Zero, 6878137.0, engine);
-        spacecraft.SetStandbyManeuver(maneuver);
+        spacecraft.SetManeuvers(maneuver);
         var solution = spacecraft.Propagate(new Window(S, MinimumEpochGateTests.GateAtTt(3000.0)), new PropagationOptions { Integrator = NewIntegrator(integratorName), OutputStep = TimeSpan.FromSeconds(10.0), ThirdBodies = [earth], CovariancePropagation = CovariancePropagationOptions.None });
 
         Assert.True(solution.Segments.Count >= 2, $"{solution.Segments.Count} segments: no burn in the window");

@@ -157,24 +157,20 @@ orbit circularization.
 ```csharp
 // Inputs: targetOrbit (OrbitalParameters), engine (Engine), spacecraft (Spacecraft), mission (Mission), window
 //   (Window), earth (CelestialBody)
-// Build the maneuver chain
+// Build the maneuver plan, in order
 var maneuver1 = new PlaneAlignmentManeuver(
     new Time(DateTime.MinValue, TimeScale.TDB), TimeSpan.Zero,
     targetOrbit, engine);
 
-maneuver1
-    .SetNextManeuver(new ApsidalAlignmentManeuver(
+spacecraft.SetManeuvers(maneuver1,
+    new ApsidalAlignmentManeuver(
         new Time(DateTime.MinValue, TimeScale.TDB), TimeSpan.Zero,
-        targetOrbit, engine))
-    .SetNextManeuver(new PhasingManeuver(
-        new Time(DateTime.MinValue, TimeScale.TDB), TimeSpan.Zero,
-        targetOrbit, 3, engine))
-    .SetNextManeuver(new ApogeeHeightManeuver(
+        targetOrbit, engine),
+    new PhasingManeuver(
+        new Time(DateTime.MinValue, TimeScale.TDB), targetOrbit, 3, engine),
+    new ApogeeHeightManeuver(
         new Time(DateTime.MinValue, TimeScale.TDB), TimeSpan.Zero,
         targetOrbit, engine));
-
-// Arm the maneuver chain on the spacecraft
-spacecraft.SetStandbyManeuver(maneuver1);
 
 // Propagate --- maneuvers fire automatically via event detection
 var scenario = new Scenario("Rendezvous", mission, window);
@@ -192,13 +188,13 @@ reference table.
 Insert attitude maneuvers before impulse burns to orient the spacecraft:
 
 ```csharp
-// Inputs: earth (CelestialBody), engine (Engine), maneuver1 (Maneuver), spacecraft (Spacecraft)
+// Inputs: earth (CelestialBody), engine (Engine), chain (Maneuver[], the plan above), spacecraft (Spacecraft)
 var attitude = new ProgradeAttitude(
     earth, new Time(DateTime.MinValue, TimeScale.TDB),
     TimeSpan.FromMinutes(5), engine);
 
-attitude.SetNextManeuver(maneuver1);
-spacecraft.SetStandbyManeuver(attitude);
+// The attitude first, then the maneuvers of the plan
+spacecraft.SetManeuvers([attitude, .. chain]);
 ```
 
 The attitude activates at the start of the propagation and is held 5 minutes: the first

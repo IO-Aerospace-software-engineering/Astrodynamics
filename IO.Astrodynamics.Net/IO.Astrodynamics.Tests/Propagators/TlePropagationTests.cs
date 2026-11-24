@@ -329,7 +329,8 @@ public class TlePropagationTests
         var e = Assert.Throws<ArgumentException>(() => mean.Propagate(window, new PropagationOptions { Integrator = new VVIntegratorOptions { Step = OutputStep }, OutputStep = OutputStep, ThirdBodies = Array.Empty<CelestialItem>() }));
         Assert.Contains("must be defined in inertial frame", e.Message);
 
-        // A TEME target chained on a TLE spacecraft: rejected when the propagator is built, the previous run left as it was
+        // A TEME target chained on a TLE spacecraft: rejected by SetManeuvers, which receives it (decision 46 of #668; when
+        // the propagator was built before), the previous run left as it was
         var (spacecraft, engine) = WithEngine(-6982, tle);
         spacecraft.Propagate(window, new PropagationOptions { Integrator = RK78IntegratorOptions.Default, OutputStep = OutputStep, ThirdBodies = Array.Empty<CelestialItem>(), CovariancePropagation = CovariancePropagationOptions.None });
         var before = spacecraft.PropagatedStates;
@@ -337,11 +338,11 @@ public class TlePropagationTests
             tle.Observer, window.StartDate.ToTDB(), Frames.Frame.TEME);
         var icrfTarget = temeTarget.ToFrame(Frames.Frame.ICRF);
         var first = new PlaneAlignmentManeuver(window.StartDate, TimeSpan.Zero, icrfTarget, engine);
-        first.SetNextManeuver(new PlaneAlignmentManeuver(window.StartDate, TimeSpan.Zero, temeTarget, engine));
-        spacecraft.SetStandbyManeuver(first);
         var chained = Assert.Throws<ArgumentException>(() =>
-            spacecraft.Propagate(window, new PropagationOptions { Integrator = RK78IntegratorOptions.Default, OutputStep = OutputStep, ThirdBodies = Array.Empty<CelestialItem>(), CovariancePropagation = CovariancePropagationOptions.None }));
+            spacecraft.SetManeuvers(first, new PlaneAlignmentManeuver(window.StartDate, TimeSpan.Zero, temeTarget, engine)));
         Assert.Contains("ToFrame(Frame.ICRF)", chained.Message);
+        Assert.Equal("maneuvers", chained.ParamName);
+        Assert.Empty(spacecraft.Maneuvers);
         AssertSameStates(before, spacecraft.PropagatedStates);
     }
 
@@ -546,7 +547,7 @@ public class TlePropagationTests
         {
             var (spacecraft, engine) = WithEngine(id, orbit);
             var maneuver = new PlaneAlignmentManeuver(window.StartDate, TimeSpan.Zero, Target(Frames.Frame.ICRF), engine);
-            spacecraft.SetStandbyManeuver(maneuver);
+            spacecraft.SetManeuvers(maneuver);
             return (spacecraft, maneuver);
         }
 
@@ -565,23 +566,28 @@ public class TlePropagationTests
         Assert.Equal(twinSolution.StateVectors[^1].Velocity, solution.StateVectors[^1].Velocity);
         AssertSameStates(twin.PropagatedStates, fromTle.PropagatedStates);
 
-        // A TEME target: constructs, as before, and is rejected when the propagation is built, naming the fix
+        // A TEME target: constructs, as before, and is rejected by SetManeuvers (decision 46 of #668; when the propagation
+        // was built before), naming the fix
         var (temeSpacecraft, engine) = WithEngine(-7053, tle);
         var temeManeuver = new PlaneAlignmentManeuver(window.StartDate, TimeSpan.Zero, Target(Frames.Frame.TEME), engine);
-        temeSpacecraft.SetStandbyManeuver(temeManeuver);
-        var e = Assert.Throws<ArgumentException>(() =>
-            temeSpacecraft.Propagate(window, new PropagationOptions { Integrator = RK78IntegratorOptions.Default, OutputStep = OutputStep, ThirdBodies = Array.Empty<CelestialItem>(), CovariancePropagation = CovariancePropagationOptions.None }));
+        var e = Assert.Throws<ArgumentException>(() => temeSpacecraft.SetManeuvers(temeManeuver));
         Assert.Contains("ToFrame(Frame.ICRF)", e.Message);
+        Assert.Empty(temeSpacecraft.Maneuvers);
         Assert.False(temeSpacecraft.IsPropagated);
 
-        // Built before the engine is attached (no check at construction): rejected at the propagation as well
+        // Built before the engine is attached (no check at construction): rejected by SetManeuvers as well
         var tank = new FuelTank("ft675b", "model", "sn675b", 1000.0, 1000.0);
         var detached = new Engine("eng675b", "model", "sn675b", 300.0, 10.0, tank);
         var early = new PlaneAlignmentManeuver(window.StartDate, TimeSpan.Zero, Target(Frames.Frame.ECLIPTIC_J2000), detached);
         var late = NewSpacecraft(-7054, tle);
         late.AddFuelTank(tank);
         late.AddEngine(detached);
-        late.SetStandbyManeuver(early);
+        Assert.Throws<ArgumentException>(() => late.SetManeuvers(early));
+
+        // A plan set on an ECLIPJ2000 orbit, the spacecraft then given the TLE: rejected when the propagator is built
+        late.SetInitialOrbitalParameters(Target(Frames.Frame.ECLIPTIC_J2000));
+        late.SetManeuvers(early);
+        late.SetInitialOrbitalParameters(tle);
         Assert.Throws<ArgumentException>(() => new CentralBodyPropagator(window, late, new PropagationOptions { Integrator = RK78IntegratorOptions.Default, OutputStep = OutputStep, ThirdBodies = Array.Empty<CelestialItem>(), CovariancePropagation = CovariancePropagationOptions.None }));
     }
 }

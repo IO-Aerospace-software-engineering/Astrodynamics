@@ -171,7 +171,7 @@ public class MinimumStepNoiseTests
             new Vector3(1296.2335176264082, 2546.3347704417083, 2305.938709298581), body, Epoch.AddSeconds(2.49),
             Frames.Frame.ICRF);
         var maneuver = new PlaneAlignmentManeuver(Epoch, TimeSpan.Zero, target, engine);
-        spacecraft.SetStandbyManeuver(maneuver);
+        spacecraft.SetManeuvers(maneuver);
 
         // Act. The node is a grazing one: the trajectory, below the target plane at the start (the ascending node is locked),
         // rises above it from 2.381 s to 2.495 s only, 0.10 m at most (2026-11-18, Linux), where the steps of RK7(8) are

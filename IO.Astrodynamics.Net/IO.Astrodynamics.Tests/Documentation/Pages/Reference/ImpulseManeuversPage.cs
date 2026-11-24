@@ -74,7 +74,7 @@ internal static class ImpulseManeuversPage
             42164000.0,
             engine);
 
-        spacecraft.SetStandbyManeuver(maneuver);
+        spacecraft.SetManeuvers(maneuver);
         var solution = spacecraft.Propagate(window, new PropagationOptions { ThirdBodies = perturbingBodies });
         #endregion
     }

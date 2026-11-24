@@ -136,8 +136,7 @@ public class DefaultIntegratorFiguresTests
             var engine = new Engine("hohmann", "model", "sn", 450.0, 50.0, tank);
             spacecraft.AddEngine(engine);
             var raise = new ApogeeHeightManeuver(earth, Start, TimeSpan.Zero, r2, engine);
-            raise.SetNextManeuver(new PerigeeHeightManeuver(earth, Start, TimeSpan.Zero, r2, engine));
-            spacecraft.SetStandbyManeuver(raise);
+            spacecraft.SetManeuvers(raise, new PerigeeHeightManeuver(earth, Start, TimeSpan.Zero, r2, engine));
 
             // Act
             var solution = spacecraft.Propagate(window, Options(integrator));

@@ -261,7 +261,8 @@ namespace IO.Astrodynamics.Body.Spacecraft
         /// <exception cref="ArgumentException">The search window ends before it starts, the target is the instrument's
         /// spacecraft or is an ellipsoid without radii (a site, a spacecraft, a barycenter, a Lagrange point, a star), or, on the
         /// managed path, the search window leaves the propagated states of the instrument's spacecraft or of a spacecraft
-        /// target, which would be extrapolated.</exception>
+        /// target, which would be extrapolated, or meets a gap between the windows given to
+        /// <see cref="Spacecraft.AddPropagatedStates"/> (#792).</exception>
         /// <exception cref="InvalidOperationException">The field of view cannot be searched: an angular radius above
         /// π/2 − 1e-6, or a shape other than a
         /// circle on an instrument that is neither an <see cref="EllipticalInstrument"/> nor a <see cref="RectangularInstrument"/>;

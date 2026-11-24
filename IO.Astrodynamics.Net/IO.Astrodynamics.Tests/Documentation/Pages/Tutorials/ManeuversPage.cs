@@ -148,7 +148,7 @@ internal static class ManeuversPage
         #region docs/tutorials/maneuvers.md:7
         // Inputs: epoch (Time), targetOrbit (OrbitalParameters), revolutions (uint), engine (Engine)
         var phasing = new PhasingManeuver(
-            epoch, TimeSpan.Zero, targetOrbit, revolutions, engine);
+            epoch, targetOrbit, revolutions, engine);
         #endregion
     }
 
@@ -192,16 +192,15 @@ internal static class ManeuversPage
             new Time(DateTime.MinValue, TimeScale.TDB), TimeSpan.Zero,
             targetOrbit, engine);
 
-        // Each next maneuver takes its own arguments, as in the sections above
-        maneuver1
-            .SetNextManeuver(new ApsidalAlignmentManeuver(
-                new Time(DateTime.MinValue, TimeScale.TDB), TimeSpan.Zero, targetOrbit, engine))
-            .SetNextManeuver(new PhasingManeuver(
-                new Time(DateTime.MinValue, TimeScale.TDB), TimeSpan.Zero, targetOrbit, revolutions, engine))
-            .SetNextManeuver(new ApogeeHeightManeuver(
+        // The plan, in order; each maneuver takes its own arguments, as in the sections above
+        spacecraft.SetManeuvers(maneuver1,
+            new ApsidalAlignmentManeuver(
+                new Time(DateTime.MinValue, TimeScale.TDB), TimeSpan.Zero, targetOrbit, engine),
+            new PhasingManeuver(
+                new Time(DateTime.MinValue, TimeScale.TDB), targetOrbit, revolutions, engine),
+            new ApogeeHeightManeuver(
                 earth, new Time(DateTime.MinValue, TimeScale.TDB), TimeSpan.Zero, targetApogeeRadius, engine));
 
-        spacecraft.SetStandbyManeuver(maneuver1);
         #endregion
     }
 }

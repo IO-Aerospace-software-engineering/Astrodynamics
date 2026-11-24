@@ -12,7 +12,9 @@ namespace IO.Astrodynamics.Maneuver
     {
         public CelestialItem ManeuverCenter { get; }
         /// <summary>
-        /// Gets or sets the ThrustWindow instance.
+        /// The thrust window of the last run that executed this maneuver: the last run's value, cleared by the re-arm of the
+        /// next run (decision 52 of #668, decided by S. Guillet, 2026-11-23); null before any run, and after the re-arm until
+        /// the run executes it. The stable value of a run is its record, <see cref="Propagator.ExecutedManeuver.ThrustWindow"/>.
         /// For an <see cref="ImpulseManeuver"/>, this is the window of the equivalent constant-thrust burn: it lasts the burn
         /// duration dt given by the rocket equation, and the impulse epoch t is the centroid of its acceleration,
         /// <c>[t - f dt, t + (1 - f) dt]</c> with f = 1/x + 1/ln(1 - x) for the mass fraction burned x (1/2 for a small burn,
@@ -30,7 +32,10 @@ namespace IO.Astrodynamics.Maneuver
         public Window? ThrustWindow { get; internal set; }
 
         /// <summary>
-        /// Gets or sets the ManeuverWindow object that represents the window for controlling maneuvering tasks.
+        /// The maneuver window of the last run that executed this maneuver: the last run's value, cleared by the re-arm of
+        /// the next run (decision 52 of #668, decided by S. Guillet, 2026-11-23); null before any run, and after the re-arm
+        /// until the run executes it. The stable value of a run is its record,
+        /// <see cref="Propagator.ExecutedManeuver.ManeuverWindow"/>.
         /// For an <see cref="ImpulseManeuver"/>, from the start of <see cref="ThrustWindow"/> to the later of the end of its
         /// hold and the end of the thrust window; for an <see cref="Attitude"/>, from its activation to the end of its hold.
         /// Its end is the gate of the next maneuver of the chain. In a propagation about the Earth, its hold counts TT
@@ -60,8 +65,9 @@ namespace IO.Astrodynamics.Maneuver
         /// docs/reference/attitudes.md).
         /// </para>
         /// <para>
-        /// It is the later of the minimum epoch the maneuver was given (its constructor, raised by
-        /// <see cref="Spacecraft.SetStandbyManeuver"/> with a minimum epoch) and the gate of the current propagation, the end
+        /// It is the later of the minimum epoch the maneuver was given (its constructor's; before 11.0.0
+        /// <c>Spacecraft.SetStandbyManeuver(maneuver, minimumEpoch)</c> could raise it, decision 47 of #668) and the gate of
+        /// the current propagation, the end
         /// of the window of the previous maneuver of the chain, which the chain sets when that maneuver executes (an impulse
         /// or an attitude, leading or chained: the last leading attitude gates the first impulse). The gate
         /// belongs to one propagation (#573): it holds after the propagation, with the windows of the maneuver, and the next
@@ -76,11 +82,12 @@ namespace IO.Astrodynamics.Maneuver
         public Time MinimumEpoch => PropagationGate > GivenMinimumEpoch ? PropagationGate.Value : GivenMinimumEpoch;
 
         /// <summary>
-        /// The minimum epoch the maneuver was given: that of its constructor, raised by
-        /// <see cref="Spacecraft.SetStandbyManeuver"/> with a later minimum epoch. A propagation never changes it, and every
-        /// propagation keeps it (#573).
+        /// The minimum epoch the maneuver was given, that of its constructor. A propagation never changes it, and every
+        /// propagation keeps it (#573). Before 11.0.0 <c>Spacecraft.SetStandbyManeuver(maneuver, minimumEpoch)</c> could
+        /// raise it; a later minimum epoch is now a new maneuver in a new plan (decision 47 of #668, decided by S. Guillet,
+        /// 2026-11-23).
         /// </summary>
-        internal Time GivenMinimumEpoch { get; private set; }
+        internal Time GivenMinimumEpoch { get; }
 
         /// <summary>
         /// The gate of the current propagation: the end of the window of the previous maneuver of the chain, set through
@@ -101,6 +108,9 @@ namespace IO.Astrodynamics.Maneuver
         /// throwing <see cref="ArgumentOutOfRangeException"/> (R11 and decision 11 of lot L4 of #668, the setter
         /// <c>private protected</c> by decision 16, decided by S. Guillet, 2026-11-22: before 11.0.0 a protected setter
         /// accepted it, and the window it gave the maneuver mid-propagation ended before it started).
+        /// A <see cref="PhasingManeuver"/> takes no hold: a run that executes it sets its hold to 0.9 N T₂, the last run's
+        /// value, which the re-arm of the next run restores to 0 (decision 51 of #668, decided by S. Guillet, 2026-11-23,
+        /// #784).
         /// </remarks>
         public TimeSpan ManeuverHoldDuration
         {
@@ -119,11 +129,22 @@ namespace IO.Astrodynamics.Maneuver
 
         private TimeSpan _maneuverHoldDuration;
 
+        /// <summary>
+        /// The engine of the maneuver, whose fuel tank's spacecraft gives the body axes of its attitude.
+        /// </summary>
+        /// <remarks>
+        /// Decision 48 of #668 is split (decision 93 of #668, decided by S. Guillet, 2026-11-23): the closed hierarchy, the
+        /// internal <c>TryExecute</c>, the <c>private protected</c> constructor and <c>Execute</c> on
+        /// <see cref="ImpulseManeuver"/> land in lot L5a; <see cref="Engine"/> moves to <see cref="ImpulseManeuver"/> and a
+        /// protected <c>GetBodyAxis(BodyAxis)</c> replaces <see cref="GetBodyFront"/> in lot L5b, with R13 and
+        /// <c>BodyAxis</c> (decision 69).
+        /// </remarks>
         public Engine Engine { get; }
 
         /// <summary>
         /// Gets the body front vector from the spacecraft instance (if available),
-        /// falling back to the static Spacecraft.Front default.
+        /// falling back to the static Spacecraft.Front default. Replaced by a protected <c>GetBodyAxis(BodyAxis)</c> in lot
+        /// L5b (decisions 48, 69 and 93 of #668).
         /// </summary>
         protected Vector3 GetBodyFront() => GetBodyAxis(static s => s.BodyFront, Spacecraft.Front);
 
@@ -142,13 +163,26 @@ namespace IO.Astrodynamics.Maneuver
         }
 
         /// <summary>
-        /// Gets or sets the next maneuver.
+        /// The next maneuver of the plan this maneuver is in, null at its end or out of any plan. Set by
+        /// <see cref="Spacecraft.SetManeuvers"/> only, the one way to link a plan (decisions 45 and 46 of #668, decided by
+        /// S. Guillet, 2026-11-23): before 11.0.0 <c>SetNextManeuver</c> and the protected setter of a subclass linked it
+        /// too, outside any plan.
         /// </summary>
-        public Maneuver NextManeuver { get; protected set; }
+        public Maneuver NextManeuver { get; internal set; }
+
+        /// <summary>
+        /// The spacecraft whose plan holds this maneuver (<see cref="Spacecraft.SetManeuvers"/>), null out of any plan: a
+        /// maneuver is in one plan at a time, and the claim is released when its spacecraft sets another plan without it
+        /// (decision 46 of #668, decided by S. Guillet, 2026-11-23).
+        /// </summary>
+        internal Spacecraft PlanOwner { get; set; }
 
 
         /// <summary>
-        /// Gets or sets the amount of fuel burned.
+        /// The fuel the last run that executed this maneuver burned for it, kg: the last run's value, cleared by the re-arm of
+        /// the next run (decision 52 of #668, decided by S. Guillet, 2026-11-23); 0 before any run, and after the re-arm until
+        /// the run executes it, and 0 for an <see cref="Attitude"/>. The stable value of a run is its record,
+        /// <see cref="Propagator.ExecutedManeuver.FuelBurned"/>.
         /// </summary>
         public double FuelBurned { get; internal set; }
 
@@ -164,7 +198,12 @@ namespace IO.Astrodynamics.Maneuver
         /// before 11.0.0 it was accepted, and the window it gave the maneuver mid-propagation ended before it
         /// started).</exception>
         /// <exception cref="ArgumentNullException"><paramref name="engine"/> is null.</exception>
-        protected Maneuver(CelestialItem maneuverCenter, Time minimumEpoch, TimeSpan maneuverHoldDuration, Engine engine)
+        /// <remarks>
+        /// <c>private protected</c> (decision 48 of #668, decided by S. Guillet, 2026-11-23): the kinds of maneuver a
+        /// propagation knows are <see cref="ImpulseManeuver"/> and <see cref="Attitude"/>, the bases of a user maneuver;
+        /// before 11.0.0 a direct subclass of <see cref="Maneuver"/> compiled.
+        /// </remarks>
+        private protected Maneuver(CelestialItem maneuverCenter, Time minimumEpoch, TimeSpan maneuverHoldDuration, Engine engine)
         {
             ManeuverCenter = maneuverCenter;
             GivenMinimumEpoch = minimumEpoch;
@@ -173,33 +212,14 @@ namespace IO.Astrodynamics.Maneuver
         }
 
         /// <summary>
-        /// Chains <paramref name="maneuver"/> after this maneuver. A chain is a list: a maneuver appears in it once, and a
-        /// repeated burn is a new maneuver (#585).
+        /// The state a preview reads (<see cref="ImpulseManeuver.ComputeDeltaV"/>, <see cref="Attitude.ComputeStateOrientation"/>):
+        /// <paramref name="stateVector"/> about <see cref="ManeuverCenter"/>, as the execution takes it, in its own frame,
+        /// or about its own observer when the maneuver has no centre (decision 50 of #668, decided by S. Guillet,
+        /// 2026-11-23: the given centre, or the state's observer, never the last run's).
         /// </summary>
-        /// <param name="maneuver">The next maneuver; null to end the chain here.</param>
-        /// <returns><paramref name="maneuver"/>, to chain the next one.</returns>
-        /// <exception cref="ArgumentException">The chain from <paramref name="maneuver"/> holds this maneuver (the
-        /// maneuver itself, or one before it in the chain), or already holds a cycle: the chain would never end. The chain
-        /// is left as it was.</exception>
-        public Maneuver SetNextManeuver(Maneuver maneuver)
+        private protected StateVector PreviewState(StateVector stateVector)
         {
-            if (maneuver != null)
-            {
-                var visited = new HashSet<Maneuver>(ReferenceEqualityComparer.Instance) { this };
-                for (var next = maneuver; next != null; next = next.NextManeuver)
-                {
-                    if (!visited.Add(next))
-                    {
-                        throw new ArgumentException(
-                            $"Chaining this {maneuver.GetType().Name} after this {GetType().Name} would make the maneuver chain a cycle: " +
-                            $"the {next.GetType().Name} appears in it twice. A maneuver appears in a chain once; a repeated burn is a new maneuver.",
-                            nameof(maneuver));
-                    }
-                }
-            }
-
-            NextManeuver = maneuver;
-            return maneuver;
+            return ManeuverCenter is null ? stateVector : stateVector.RelativeTo(ManeuverCenter, Aberration.None).ToStateVector();
         }
 
         /// <summary>
@@ -208,7 +228,7 @@ namespace IO.Astrodynamics.Maneuver
         /// <param name="head">The first maneuver; null for none.</param>
         /// <returns>The maneuvers of the chain.</returns>
         /// <exception cref="InvalidOperationException">The chain is a cycle: a maneuver appears in it twice, which
-        /// <see cref="SetNextManeuver"/> rejects but a subclass that sets <see cref="NextManeuver"/> can build (#585).</exception>
+        /// <see cref="Spacecraft.SetManeuvers"/> rejects, kept as a guard of the walks of the chain (#585).</exception>
         internal static List<Maneuver> Chain(Maneuver head)
         {
             var chain = new List<Maneuver>();
@@ -241,22 +261,13 @@ namespace IO.Astrodynamics.Maneuver
             }
         }
 
-        protected abstract Vector3 Execute(StateVector vector);
-        public abstract (StateVector sv, StateOrientation so) TryExecute(StateVector stateVector);
-
         /// <summary>
-        /// Raises the minimum epoch the maneuver was given to <paramref name="minimumEpoch"/> when it is later, never lowers
-        /// it; <see cref="Reset"/> keeps it, so every later propagation does, as the one of the constructor (#573).
+        /// Executes the maneuver from <paramref name="stateVector"/> in a propagation: the state after it and its attitude.
+        /// Internal since 11.0.0 (decision 48 of #668, decided by S. Guillet, 2026-11-23): called as a preview, it changed
+        /// the maneuver and the spacecraft after a run (fuel, windows, the standby chain; #802); the previews are
+        /// <see cref="ImpulseManeuver.ComputeDeltaV"/> and <see cref="Attitude.ComputeStateOrientation"/>.
         /// </summary>
-        /// <param name="minimumEpoch">The minimum epoch given by the user, through
-        /// <see cref="Spacecraft.SetStandbyManeuver"/>.</param>
-        internal void RaiseGivenMinimumEpoch(Time minimumEpoch)
-        {
-            if (minimumEpoch > GivenMinimumEpoch)
-            {
-                GivenMinimumEpoch = minimumEpoch;
-            }
-        }
+        internal abstract (StateVector sv, StateOrientation so) TryExecute(StateVector stateVector);
 
         /// <summary>
         /// Raises the gate of the current propagation to <paramref name="gate"/> when there is none yet or it is later, never
