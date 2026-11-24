@@ -110,14 +110,22 @@ namespace IO.Astrodynamics.Maneuver
         internal Engine GivenEngine { get; }
 
         /// <summary>
-        /// An impulse about <paramref name="maneuverCenter"/>, at or after <paramref name="minimumEpoch"/>, held for
-        /// <paramref name="maneuverHoldDuration"/>, burning on <paramref name="engine"/>.
+        /// An impulse about <paramref name="maneuverCenter"/>, burning on <paramref name="engine"/>, at or after
+        /// <paramref name="minEpoch"/>, held for <paramref name="holdDuration"/>.
         /// </summary>
-        /// <param name="maneuverCenter">The centre of the maneuver; null for the centre the run infers.</param>
-        /// <param name="minimumEpoch">The earliest epoch of the maneuver.</param>
-        /// <param name="maneuverHoldDuration">The hold, zero or positive.</param>
         /// <param name="engine">The engine; null for the only engine of the spacecraft, which the run infers.</param>
-        protected ImpulseManeuver(CelestialItem maneuverCenter, Time minimumEpoch, TimeSpan maneuverHoldDuration, Engine engine) : base(maneuverCenter, minimumEpoch, maneuverHoldDuration)
+        /// <param name="minEpoch">The earliest epoch of the maneuver; default(Time) for none.</param>
+        /// <param name="holdDuration">The hold, zero or positive; zero by default.</param>
+        /// <param name="maneuverCenter">The centre of the maneuver; null for the centre the run infers (required in SSB
+        /// mode).</param>
+        /// <exception cref="ArgumentOutOfRangeException"><paramref name="holdDuration"/> is negative.</exception>
+        /// <remarks>
+        /// D1 rule 8 of #668 (lot L5b, decided by S. Guillet, 2026-11-23): the target of a library maneuver first, then
+        /// the optional <c>engine</c>, <c>minEpoch</c>, <c>holdDuration</c> and <c>maneuverCenter</c>; before 11.0.0
+        /// <c>(maneuverCenter, minimumEpoch, maneuverHoldDuration, engine)</c>, each required.
+        /// </remarks>
+        protected ImpulseManeuver(Engine engine = null, Time minEpoch = default, TimeSpan holdDuration = default,
+            CelestialItem maneuverCenter = null) : base(maneuverCenter, minEpoch, holdDuration)
         {
             GivenEngine = Engine = engine;
         }
@@ -163,33 +171,50 @@ namespace IO.Astrodynamics.Maneuver
         /// </summary>
         internal virtual Vector3 ExecuteInRun(StateVector localState) => Execute(localState);
 
+        /// <summary>
+        /// An impulse toward <paramref name="targetOrbit"/>, about its observer, burning on <paramref name="engine"/>, at
+        /// or after <paramref name="minEpoch"/>, held for <paramref name="holdDuration"/>.
+        /// </summary>
+        /// <param name="targetOrbit">The target orbit; its observer is the centre of the maneuver.</param>
+        /// <param name="engine">The engine; null for the only engine of the spacecraft, which the run infers.</param>
+        /// <param name="minEpoch">The earliest epoch of the maneuver; default(Time) for none.</param>
+        /// <param name="holdDuration">The hold, zero or positive; zero by default.</param>
         /// <exception cref="ArgumentNullException"><paramref name="targetOrbit"/> is null.</exception>
-        /// <exception cref="ArgumentException">The target orbit is defined neither in the frame of the initial orbit of the
-        /// spacecraft of the engine nor in the frame it is propagated in (ICRF for a TLE or a TEME state, #675), GCRF and
-        /// ICRF counting as one frame, whose axes the library shares (third review of #685).</exception>
+        /// <exception cref="ArgumentException">The observer of <paramref name="targetOrbit"/> is not a
+        /// <see cref="CelestialItem"/> (a site): the centre of a maneuver is a celestial item (IC-4 of lot L5b of
+        /// #668).</exception>
+        /// <exception cref="ArgumentOutOfRangeException"><paramref name="holdDuration"/> is negative.</exception>
         /// <remarks>
-        /// On a spacecraft whose initial orbit is a TLE or a TEME state, the propagation integrates in ICRF and takes the
-        /// target in ICRF: a target in TEME is accepted here, as before, and rejected when the propagation is built. This
-        /// check runs only when the tank of the engine is on a spacecraft, against the initial orbit it has then; the
-        /// propagation checks every target again when it is built, on every spacecraft (#685), so that a maneuver built
-        /// before its tank is attached, or whose spacecraft gets another initial orbit, is rejected there
-        /// (<see cref="ArgumentException"/>) when its target is not in the frame of the propagation. A target in GCRF is
-        /// taken on a spacecraft propagated in ICRF, and one in ICRF on a spacecraft propagated in GCRF: the library gives
-        /// the two frames the same axes (<see cref="Frames.GcrfFrame"/>, the identity rotation), so the components of the
-        /// target are those the integration reads (third review of #685; before, the comparison by name rejected them).
+        /// The frame of the target is checked by <see cref="Spacecraft.SetManeuvers"/> and by the propagation, against the
+        /// frame the spacecraft is propagated in (#685): since lot L5b the constructor checks it no more (decision 65 of
+        /// #668, decided by S. Guillet, 2026-11-23; before, it compared the target with the initial orbit of the spacecraft
+        /// of the engine's tank when there was one, a weaker rule than the propagation's, which accepted a target in TEME
+        /// on a TLE spacecraft that the propagation rejected).
         /// </remarks>
-        protected ImpulseManeuver(Time minimumEpoch, TimeSpan maneuverHoldDuration, OrbitalParameters.OrbitalParameters targetOrbit, Engine engine) : this(
-            RequireTargetOrbit(targetOrbit).Observer as CelestialItem, minimumEpoch, maneuverHoldDuration, engine)
+        protected ImpulseManeuver(OrbitalParameters.OrbitalParameters targetOrbit, Engine engine = null, Time minEpoch = default,
+            TimeSpan holdDuration = default) : this(engine, minEpoch, holdDuration, CenterOf(targetOrbit))
         {
-            var initial = engine?.FuelTank.Spacecraft?.InitialOrbitalParameters;
-            if (initial != null && !PropagatorBase.SameAxes(initial.Frame, targetOrbit.Frame) &&
-                !PropagatorBase.SameAxes(PropagatorBase.PropagationFrame(initial), targetOrbit.Frame))
-            {
-                throw new ArgumentException("Spacecraft and target orbit must be defined in the same frame");
-            }
-
             TargetOrbit = targetOrbit;
         }
+
+        /// <summary>
+        /// The centre of a target-orbit form: the observer of <paramref name="targetOrbit"/>, checked not null (#552,
+        /// #555) and a <see cref="CelestialItem"/> (IC-4 of lot L5b of #668: otherwise a null given centre would become
+        /// one the run infers).
+        /// </summary>
+        private protected static CelestialItem CenterOf(OrbitalParameters.OrbitalParameters targetOrbit)
+        {
+            return RequireTargetOrbit(targetOrbit).Observer as CelestialItem ?? throw new ArgumentException(
+                $"The observer of the target orbit, {(targetOrbit.Observer as INaifObject)?.Name ?? targetOrbit.Observer?.GetType().Name}, is not a celestial item: " +
+                "the centre of a maneuver is a celestial body or a barycentre. Give the target orbit about a celestial body.", nameof(targetOrbit));
+        }
+
+        /// <summary>
+        /// Why <paramref name="center"/> cannot be the centre of this impulse, null when it can: the rule of the apogee of
+        /// <see cref="ApogeeHeightManeuver"/> (decision 68 of #668); checked by the constructor for a given centre and by
+        /// the run for an inferred one.
+        /// </summary>
+        internal virtual string CenterError(CelestialItem center) => null;
 
         /// <summary>
         /// The target orbit, checked before the constructor chain dereferences it (#552); the target-orbit constructors of
@@ -256,7 +281,7 @@ namespace IO.Astrodynamics.Maneuver
             var thrustDuration = Tsiolkovski.DeltaT(Engine.ISP, Engine.FuelTank.Spacecraft.GetTotalMass() + FuelBurned, Engine.FuelFlow, DeltaV.Magnitude());
             ThrustLead = ThrustLeadFraction(DeltaV.Magnitude(), Engine.ISP);
             ThrustWindow = new Window(stateVector.Epoch - thrustDuration * ThrustLead, thrustDuration);
-            ManeuverWindow = new Window(ThrustWindow.Value.StartDate, ManeuverHoldDuration).Merge(ThrustWindow.Value);
+            ManeuverWindow = new Window(ThrustWindow.Value.StartDate, HoldDuration).Merge(ThrustWindow.Value);
 
             //Set next maneuver: the plan's spacecraft, the propagated one in a run (decisions 46 and 48 of #668); none for an
             //impulse in no plan

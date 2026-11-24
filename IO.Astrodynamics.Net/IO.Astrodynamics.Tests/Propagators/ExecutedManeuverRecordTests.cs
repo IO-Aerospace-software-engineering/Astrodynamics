@@ -86,9 +86,9 @@ public class ExecutedManeuverRecordTests
         Maneuver.Maneuver[] plan =
         [
             new NadirAttitude(earth, S, TimeSpan.FromSeconds(600.0)),
-            new ApogeeHeightManeuver(earth, S, TimeSpan.Zero, 8000e3, engine),
+            new ApogeeHeightManeuver(8000e3, engine, S, TimeSpan.Zero, earth),
             new ProgradeAttitude(earth, S, TimeSpan.Zero),
-            new PerigeeHeightManeuver(earth, S, TimeSpan.Zero, 7100e3, engine)
+            new PerigeeHeightManeuver(7100e3, engine, S, TimeSpan.Zero, earth)
         ];
         spacecraft.SetManeuvers(plan);
         return new Case(spacecraft, engine, plan, earth, frame);

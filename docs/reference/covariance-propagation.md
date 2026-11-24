@@ -399,7 +399,7 @@ the burn by the model of Gates, four independent zero-mean Gaussian errors:
 
 ```csharp
 // Inputs: earth (CelestialBody), epoch (Time), engine (Engine)
-var maneuver = new ApogeeHeightManeuver(earth, epoch, TimeSpan.Zero, 7000000.0, engine)
+var maneuver = new ApogeeHeightManeuver(7000000.0, engine, epoch, TimeSpan.Zero, earth)
 {
     ExecutionError = new ManeuverExecutionError
     {

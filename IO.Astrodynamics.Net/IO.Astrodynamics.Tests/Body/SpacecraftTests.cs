@@ -757,8 +757,11 @@ namespace IO.Astrodynamics.Tests.Body
             var spc = new Spacecraft(-1105, "Opm1105", 1000.0, sv, 3000.0, new Clock("Clk1105", 65536), cosparId: "2024-001A");
             spc.AddFuelTank(new FuelTank("ft", 1000.0, 900.0, "ftA", "123456"));
             spc.AddEngine(new Engine("eng", 450, 50, spc.FuelTanks.First(), "engmk1", "12345"));
-            var impulse = new ApogeeHeightManeuver(TestHelpers.EarthAtJ2000, new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB), TimeSpan.Zero, 42164000.0,
-                spc.Engines.First());
+            var impulse = new ApogeeHeightManeuver(42164000.0,
+                spc.Engines.First(),
+                new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB),
+                TimeSpan.Zero,
+                TestHelpers.EarthAtJ2000);
             spc.SetManeuvers(impulse);
             impulse.TryExecute(sv);
 
@@ -951,7 +954,7 @@ namespace IO.Astrodynamics.Tests.Body
 
             // Act
             spc.AddEngine(engine);
-            var maneuver = new ApogeeHeightManeuver(earth, epoch, TimeSpan.Zero, 7300e3, engine);
+            var maneuver = new ApogeeHeightManeuver(7300e3, engine, epoch, TimeSpan.Zero, earth);
             spc.SetManeuvers(maneuver);
             spc.Propagate(new Window(epoch, epoch.AddSeconds(7200.0)), new PropagationOptions { Integrator = RK78IntegratorOptions.Default, OutputStep = TimeSpan.FromSeconds(60.0), ThirdBodies = [earth], CovariancePropagation = CovariancePropagationOptions.None });
 

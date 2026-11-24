@@ -64,7 +64,7 @@ public class ManeuverChainCycleTests
 
     /// <summary>An apogee height maneuver whose next maneuver a test sets past <see cref="Spacecraft.SetManeuvers"/>, through the internal setter.</summary>
     private sealed class LinkedApogee(CelestialItem center, Time minimumEpoch, TimeSpan hold, double apogee, Engine engine)
-        : ApogeeHeightManeuver(center, minimumEpoch, hold, apogee, engine)
+        : ApogeeHeightManeuver(apogee, engine, minimumEpoch, hold, center)
     {
         public void ForceNext(Maneuver.Maneuver next) => NextManeuver = next;
     }
@@ -76,7 +76,7 @@ public class ManeuverChainCycleTests
         public Engine Engine { get; init; }
 
         public LinkedApogee Apogee() => new(Earth, S, TimeSpan.Zero, 8378137.0, Engine);
-        public PerigeeHeightManeuver Perigee() => new(Earth, S, TimeSpan.Zero, 7378137.0, Engine);
+        public PerigeeHeightManeuver Perigee() => new(7378137.0, Engine, S, TimeSpan.Zero, Earth);
         public LinkedNadir Nadir() => new(Earth, S, TimeSpan.FromSeconds(600.0));
     }
 

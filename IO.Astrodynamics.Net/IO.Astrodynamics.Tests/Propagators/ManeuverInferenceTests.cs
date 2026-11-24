@@ -146,7 +146,7 @@ public class ManeuverInferenceTests
         var earth = Earth();
         var inferred = NewSpacecraft(earth);
         var nadir = new NadirAttitude(null, S, TimeSpan.FromSeconds(600.0));
-        var raise = new ApogeeHeightManeuver(null, S, TimeSpan.Zero, 8000e3, null);
+        var raise = new ApogeeHeightManeuver(8000e3, null, S, TimeSpan.Zero, null);
         inferred.SetManeuvers(nadir, raise);
         Assert.Null(nadir.ManeuverCenter);
         Assert.Null(raise.ManeuverCenter);
@@ -162,7 +162,7 @@ public class ManeuverInferenceTests
         // The same plan given its engine and centre: the same run, bit for bit
         var explicitSc = NewSpacecraft(earth);
         explicitSc.SetManeuvers(new NadirAttitude(earth, S, TimeSpan.FromSeconds(600.0)),
-            new ApogeeHeightManeuver(earth, S, TimeSpan.Zero, 8000e3, explicitSc.Engines.Single()));
+            new ApogeeHeightManeuver(8000e3, explicitSc.Engines.Single(), S, TimeSpan.Zero, earth));
         var reference = explicitSc.Propagate(TwoHours, Options(earth, integrator));
         var end = TwoHours.EndDate;
         Assert.Equal(reference.GetStateVector(end).Position, solution.GetStateVector(end).Position);
@@ -179,8 +179,8 @@ public class ManeuverInferenceTests
         var earth = Earth();
         var spacecraft = NewSpacecraft(earth);
         var given = spacecraft.Engines.Single();
-        var explicitRaise = new ApogeeHeightManeuver(earth, S, TimeSpan.Zero, 8000e3, given);
-        var inferredRaise = new PerigeeHeightManeuver(null, S, TimeSpan.Zero, 7100e3, null);
+        var explicitRaise = new ApogeeHeightManeuver(8000e3, given, S, TimeSpan.Zero, earth);
+        var inferredRaise = new PerigeeHeightManeuver(7100e3, null, S, TimeSpan.Zero, null);
         spacecraft.SetManeuvers(explicitRaise, inferredRaise);
         spacecraft.Propagate(TwoHours, Options(earth, "RK"));
         Assert.Same(given, explicitRaise.Engine);
@@ -206,7 +206,7 @@ public class ManeuverInferenceTests
     {
         var earth = Earth();
         var spacecraft = NewSpacecraft(earth);
-        var raise = new ApogeeHeightManeuver(null, S, TimeSpan.Zero, 8000e3, null);
+        var raise = new ApogeeHeightManeuver(8000e3, null, S, TimeSpan.Zero, null);
         spacecraft.SetManeuvers(raise);
         var propagator = new CentralBodyPropagator(TwoHours, spacecraft, Options(earth, "RK"));
 
@@ -224,7 +224,7 @@ public class ManeuverInferenceTests
 
         // An Initialize that throws, before any run: they stay null
         var other = NewSpacecraft(earth);
-        var otherRaise = new ApogeeHeightManeuver(null, S, TimeSpan.Zero, 8000e3, null);
+        var otherRaise = new ApogeeHeightManeuver(8000e3, null, S, TimeSpan.Zero, null);
         other.SetManeuvers(otherRaise);
         var throwing = new ThrowingIntegrator();
         var throwingPropagator = new CentralBodyPropagator(TwoHours, other, throwing, Output);
@@ -252,7 +252,7 @@ public class ManeuverInferenceTests
     {
         var earth = Earth();
         var spacecraft = NewSpacecraft(earth);
-        var raise = new ApogeeHeightManeuver(null, S, TimeSpan.Zero, 8000e3, null);
+        var raise = new ApogeeHeightManeuver(8000e3, null, S, TimeSpan.Zero, null);
         spacecraft.SetManeuvers(raise);
         var propagator = new CentralBodyPropagator(TwoHours, spacecraft, Options(earth, "RK"));
         propagator.Propagate();
@@ -276,7 +276,7 @@ public class ManeuverInferenceTests
     {
         var earth = Earth();
         var spacecraft = NewSpacecraft(earth, engines: engines);
-        spacecraft.SetManeuvers(new ApogeeHeightManeuver(earth, S, TimeSpan.Zero, 8000e3, null));
+        spacecraft.SetManeuvers(new ApogeeHeightManeuver(8000e3, null, S, TimeSpan.Zero, earth));
 
         var constructor = Assert.Throws<InvalidOperationException>(() => new CentralBodyPropagator(TwoHours, spacecraft, Options(earth, "RK")));
         Assert.Contains("engine:", constructor.Message);
@@ -314,7 +314,7 @@ public class ManeuverInferenceTests
     {
         var earth = Earth();
         var first = NewSpacecraft(earth);
-        var raise = new ApogeeHeightManeuver(null, S, TimeSpan.Zero, 8000e3, null);
+        var raise = new ApogeeHeightManeuver(8000e3, null, S, TimeSpan.Zero, null);
         first.SetManeuvers(raise);
         first.Propagate(TwoHours, Options(earth, "RK"));
         Assert.Same(first.Engines.Single(), raise.Engine);
@@ -335,7 +335,7 @@ public class ManeuverInferenceTests
         var sun = new CelestialBody(Stars.Sun, Frame.ICRF, S);
         var spacecraft = NewSpacecraft(earth);
         var nadir = new NadirAttitude(null, S, TimeSpan.Zero);
-        var raise = new ApogeeHeightManeuver(null, S, TimeSpan.Zero, 8000e3, null);
+        var raise = new ApogeeHeightManeuver(8000e3, null, S, TimeSpan.Zero, null);
         spacecraft.SetManeuvers(nadir, raise);
         var heliocentric = spacecraft.InitialOrbitalParameters.ToStateVector().RelativeTo(sun, Aberration.None);
 

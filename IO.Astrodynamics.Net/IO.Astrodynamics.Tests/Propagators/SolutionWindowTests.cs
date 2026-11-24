@@ -144,8 +144,11 @@ public class SolutionWindowTests
                 spacecraft.AddFuelTank(tank);
                 var engine = new Engine($"eng{-spacecraft.NaifId}", 300.0, 10.0, tank, "model", "sn");
                 spacecraft.AddEngine(engine);
-                spacecraft.SetManeuvers(new ApogeeHeightManeuver(Earth, epoch.AddSeconds(600.0), TimeSpan.Zero,
-                    9000000.0, engine));
+                spacecraft.SetManeuvers(new ApogeeHeightManeuver(9000000.0,
+                    engine,
+                    epoch.AddSeconds(600.0),
+                    TimeSpan.Zero,
+                    Earth));
                 break;
         }
 

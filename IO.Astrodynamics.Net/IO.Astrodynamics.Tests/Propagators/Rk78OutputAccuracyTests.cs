@@ -326,7 +326,7 @@ public class Rk78OutputAccuracyTests
         var engine = new Engine("denseengine", 300.0, 10.0, tank, "model", "sn1");
         spacecraft.AddFuelTank(tank);
         spacecraft.AddEngine(engine);
-        var maneuver = new ApogeeHeightManeuver(_pointMassEarth, Start, TimeSpan.Zero, 8378137.0, engine);
+        var maneuver = new ApogeeHeightManeuver(8378137.0, engine, Start, TimeSpan.Zero, _pointMassEarth);
         spacecraft.SetManeuvers(maneuver);
         return (spacecraft, maneuver);
     }

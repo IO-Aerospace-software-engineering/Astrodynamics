@@ -108,9 +108,11 @@ namespace IO.Astrodynamics.Maneuver
         /// </para>
         /// </remarks>
         /// <value>
-        /// The minimum epoch value.
+        /// The minimum epoch value. <c>MinimumEpoch</c> before 11.0.0 (D2 choice 10 of #668, in lot L5b with R13,
+        /// decided by S. Guillet, 2026-11-23); the constructors take it as the optional <c>minEpoch</c>, default(Time)
+        /// for none (D3).
         /// </value>
-        public Time MinimumEpoch => PropagationGate > GivenMinimumEpoch ? PropagationGate.Value : GivenMinimumEpoch;
+        public Time MinEpoch => PropagationGate > GivenMinEpoch ? PropagationGate.Value : GivenMinEpoch;
 
         /// <summary>
         /// The minimum epoch the maneuver was given, that of its constructor. A propagation never changes it, and every
@@ -118,7 +120,7 @@ namespace IO.Astrodynamics.Maneuver
         /// raise it; a later minimum epoch is now a new maneuver in a new plan (decision 47 of #668, decided by S. Guillet,
         /// 2026-11-23).
         /// </summary>
-        internal Time GivenMinimumEpoch { get; }
+        internal Time GivenMinEpoch { get; }
 
         /// <summary>
         /// The gate of the current propagation: the end of the window of the previous maneuver of the chain, set through
@@ -141,24 +143,25 @@ namespace IO.Astrodynamics.Maneuver
         /// accepted it, and the window it gave the maneuver mid-propagation ended before it started).
         /// A <see cref="PhasingManeuver"/> takes no hold: a run that executes it sets its hold to 0.9 N T₂, the last run's
         /// value, which the re-arm of the next run restores to 0 (decision 51 of #668, decided by S. Guillet, 2026-11-23,
-        /// #784).
+        /// #784). <c>ManeuverHoldDuration</c> before 11.0.0 (R13 of #668, in lot L5b, decided by S. Guillet,
+        /// 2026-11-23); the constructors take it as the optional <c>holdDuration</c>, zero by default.
         /// </remarks>
-        public TimeSpan ManeuverHoldDuration
+        public TimeSpan HoldDuration
         {
-            get => _maneuverHoldDuration;
+            get => _holdDuration;
             private protected set
             {
                 if (value < TimeSpan.Zero)
                 {
-                    throw new ArgumentOutOfRangeException("maneuverHoldDuration", value,
+                    throw new ArgumentOutOfRangeException("holdDuration", value,
                         "The hold of a maneuver cannot be negative.");
                 }
 
-                _maneuverHoldDuration = value;
+                _holdDuration = value;
             }
         }
 
-        private TimeSpan _maneuverHoldDuration;
+        private TimeSpan _holdDuration;
 
         /// <summary>
         /// The axis <paramref name="axis"/> of the spacecraft body frame, as the law of this maneuver points it: the
@@ -232,29 +235,26 @@ namespace IO.Astrodynamics.Maneuver
         public double FuelBurned { get; internal set; }
 
         /// <summary>
-        /// A maneuver about <paramref name="maneuverCenter"/>, at or after <paramref name="minimumEpoch"/>, held for
-        /// <paramref name="maneuverHoldDuration"/>.
+        /// A maneuver about <paramref name="maneuverCenter"/>, at or after <paramref name="minEpoch"/>, held for
+        /// <paramref name="holdDuration"/>.
         /// </summary>
         /// <param name="maneuverCenter">The centre of the maneuver; null for the centre the run infers.</param>
-        /// <param name="minimumEpoch">The earliest epoch of the maneuver.</param>
-        /// <param name="maneuverHoldDuration">The hold, zero or positive.</param>
-        /// <exception cref="ArgumentOutOfRangeException"><paramref name="maneuverHoldDuration"/> is negative (R11 of #668:
+        /// <param name="minEpoch">The earliest epoch of the maneuver.</param>
+        /// <param name="holdDuration">The hold, zero or positive.</param>
+        /// <exception cref="ArgumentOutOfRangeException"><paramref name="holdDuration"/> is negative (R11 of #668:
         /// before 11.0.0 it was accepted, and the window it gave the maneuver mid-propagation ended before it
         /// started).</exception>
         /// <remarks>
         /// <c>private protected</c> (decision 48 of #668, decided by S. Guillet, 2026-11-23): the kinds of maneuver a
         /// propagation knows are <see cref="ImpulseManeuver"/> and <see cref="Attitude"/>, the bases of a user maneuver;
-        /// before 11.0.0 a direct subclass of <see cref="Maneuver"/> compiled.
-        /// </remarks>
-        /// <remarks>
-        /// The engine is on <see cref="ImpulseManeuver"/> since lot L5b (decisions 48 and 93 of #668): an attitude burns
+        /// before 11.0.0 a direct subclass of <see cref="Maneuver"/> compiled. The engine is on <see cref="ImpulseManeuver"/> since lot L5b (decisions 48 and 93 of #668): an attitude burns
         /// nothing, and the spacecraft it orients is the one whose plan holds it.
         /// </remarks>
-        private protected Maneuver(CelestialItem maneuverCenter, Time minimumEpoch, TimeSpan maneuverHoldDuration)
+        private protected Maneuver(CelestialItem maneuverCenter, Time minEpoch, TimeSpan holdDuration)
         {
             GivenCenter = ManeuverCenter = maneuverCenter;
-            GivenMinimumEpoch = minimumEpoch;
-            ManeuverHoldDuration = maneuverHoldDuration;
+            GivenMinEpoch = minEpoch;
+            HoldDuration = holdDuration;
         }
 
         /// <summary>
@@ -343,7 +343,7 @@ namespace IO.Astrodynamics.Maneuver
 
         /// <summary>
         /// Clears what a propagation set on this maneuver: the fuel burned, the windows and the gate of the propagation, so
-        /// that <see cref="MinimumEpoch"/> is again the minimum epoch the maneuver was given (#573), and the centre the run
+        /// that <see cref="MinEpoch"/> is again the minimum epoch the maneuver was given (#573), and the centre the run
         /// resolved, so that <see cref="ManeuverCenter"/> is again the one it was given (decision 63 of #668). The next maneuvers of
         /// the chain are reset by <see cref="ResetChain"/>, which <c>Spacecraft.ResetPropagation</c> calls at the start of
         /// every propagation, once the checks of <see cref="Propagator.PropagatorBase.Propagate"/> pass, on every path (#583)

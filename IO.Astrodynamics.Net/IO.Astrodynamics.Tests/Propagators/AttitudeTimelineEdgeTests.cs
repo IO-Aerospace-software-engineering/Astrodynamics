@@ -280,7 +280,7 @@ public class AttitudeTimelineEdgeTests
             case "LeadPast":
                 Assert.Empty(run.Burns);
                 Assert.Equal(new[] { run.Chain[1] }, notExecuted);
-                Assert.True(run.Chain[1].MinimumEpoch > run.Window.EndDate);
+                Assert.True(run.Chain[1].MinEpoch > run.Window.EndDate);
                 break;
             case "MinPast":
                 Assert.Empty(run.Burns);
@@ -386,7 +386,7 @@ public class AttitudeTimelineEdgeTests
         double burn = withLead.Seconds(withLead.Burns[0]);
         double later = alone.Seconds(alone.Burns[0]);
         var orbit = new KeplerClosedForm(withLead.Center.GM, sv.Position, sv.Velocity, 0.0);
-        LabelAssert.Equal(S, withLead.Chain[1].MinimumEpoch);
+        LabelAssert.Equal(S, withLead.Chain[1].MinEpoch);
         _output.WriteLine($"MEASURE #539 R5 {integrator}: the burn after a leading nadir held 0 s at S + {burn:R} s, without it at S + {later:R} s (period {orbit.T:F3} s)");
         if (integrator == "RK")
         {
@@ -451,7 +451,7 @@ public class AttitudeTimelineEdgeTests
             LabelAssert.Equal(minimum, prograde.ManeuverWindow.Value.EndDate);
             LabelAssert.Equal(minimum, nadir.ThrustWindow!.Value.StartDate);
             LabelAssert.Equal(minimum, nadir.ManeuverWindow!.Value.StartDate);
-            LabelAssert.Equal(minimum, nadir.MinimumEpoch);
+            LabelAssert.Equal(minimum, nadir.MinEpoch);
             Assert.Equal(new Maneuver.Maneuver[] { prograde, nadir }, spacecraft.ExecutedManeuvers.ToArray());
         }
 
@@ -577,7 +577,7 @@ public class AttitudeTimelineEdgeTests
 /// <summary>An impulse whose preconditions never hold.</summary>
 internal sealed class NeverReadyImpulse : ImpulseManeuver
 {
-    internal NeverReadyImpulse(CelestialItem center, Time minimumEpoch, Engine engine) : base(center, minimumEpoch, TimeSpan.Zero, engine)
+    internal NeverReadyImpulse(CelestialItem center, Time minimumEpoch, Engine engine) : base(engine, minimumEpoch, TimeSpan.Zero, center)
     {
     }
 

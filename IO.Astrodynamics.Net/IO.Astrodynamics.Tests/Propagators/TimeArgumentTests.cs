@@ -357,8 +357,11 @@ public class TimeArgumentTests
         var engine = new Engine("en5051", 300.0, 10.0, tank, "model", "sn1");
         spacecraft.AddFuelTank(tank);
         spacecraft.AddEngine(engine);
-        spacecraft.SetManeuvers(new ApogeeHeightManeuver(_earth, window.StartDate, TimeSpan.Zero, 8378137.0,
-            engine));
+        spacecraft.SetManeuvers(new ApogeeHeightManeuver(8378137.0,
+            engine,
+            window.StartDate,
+            TimeSpan.Zero,
+            _earth));
 
         // Act
         var solution = spacecraft.Propagate(window, new PropagationOptions { Integrator = rk78 ? new RK78IntegratorOptions { AbsoluteTolerance = 1e-11, RelativeTolerance = 1e-11 } : new VVIntegratorOptions { Step = TimeSpan.FromSeconds(10.0) }, OutputStep = TimeSpan.FromSeconds(60.0), ThirdBodies = new CelestialItem[] { _earth }, CovariancePropagation = CovariancePropagationOptions.None });

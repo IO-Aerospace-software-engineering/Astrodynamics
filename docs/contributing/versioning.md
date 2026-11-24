@@ -7443,6 +7443,59 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   plan given its engine and centre and the same plan inferring them give the same run. Migration: none for a maneuver
   given its engine and centre; in SSB mode give `maneuverCenter` to an impulse and to an attitude other than a law of
   celestial targets only; on a spacecraft of several engines give `engine`.
+- **Breaking: the impulses take their target first, then the optional `engine`, `minEpoch`, `holdDuration` and
+  `maneuverCenter`** (lot L5b, D1 rule 8 and R13 of
+  [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668), decided by S. Guillet,
+  2026-11-23): `ApogeeHeightManeuver(apogeeRadius, engine = null, minEpoch = default, holdDuration = default,
+  maneuverCenter = null)`, the same for `PerigeeHeightManeuver(perigeeRadius, …)` and
+  `CombinedManeuver(perigeeRadius, inclination, …)`, `PhasingManeuver(trueLongitude, revolutionNumber, engine = null,
+  minEpoch = default, maneuverCenter = null)`, and the target-orbit forms `(targetOrbit, engine = null, minEpoch =
+  default, holdDuration = default)` of `ApogeeHeightManeuver`, `PerigeeHeightManeuver`, `PlaneAlignmentManeuver`,
+  `ApsidalAlignmentManeuver` and `PhasingManeuver(targetOrbit, revolutionNumber, engine = null, minEpoch = default)`
+  (no hold for a phasing, decision 51; no centre for a target orbit, whose observer is the centre), where they took
+  `(maneuverCenter, minimumEpoch, maneuverHoldDuration, …, engine)` or `(minimumEpoch, maneuverHoldDuration,
+  targetOrbit, engine)`, each required; the protected constructors of `ImpulseManeuver` follow, `(engine = null, minEpoch
+  = default, holdDuration = default, maneuverCenter = null)` and `(targetOrbit, engine = null, minEpoch = default,
+  holdDuration = default)`. A null `engine` and `maneuverCenter` are inferred by the run (above), `minEpoch` defaults to
+  default(Time), no minimum (D3), and `holdDuration` to zero, the negative hold refused as before under the name
+  `holdDuration`. A target orbit whose observer is not a celestial item (a site) throws `ArgumentException`
+  (`targetOrbit`), where it gave a maneuver of no centre. An old positional call no longer compiles in most forms (a
+  `CelestialItem` or a `Time` first does not convert to a `double` or to `OrbitalParameters`); a call that binds the same
+  types, `(Time, TimeSpan, OrbitalParameters, Engine)`, does not compile either. The runs of a maneuver built with the same
+  values are bit for bit those of before (the conformance runner's maneuver cases, which give the centre and the engine,
+  unchanged). Migration: `new ApogeeHeightManeuver(center, minimumEpoch, hold, radius, engine)` becomes `new
+  ApogeeHeightManeuver(radius, engine, minimumEpoch, hold, center)`, or `new ApogeeHeightManeuver(radius)` on a spacecraft
+  of one engine about the centre of its orbit; `new PlaneAlignmentManeuver(minimumEpoch, hold, target, engine)` `new
+  PlaneAlignmentManeuver(target, engine, minimumEpoch, hold)`; a user `ImpulseManeuver` calls `base(engine, minEpoch,
+  holdDuration, maneuverCenter)`.
+- **Breaking: radii checked, an apogee above the surface of its centre and an inclination in [0, π]** (lot L5b, decision
+  68 of #668, decided by S. Guillet, 2026-11-23): a radius of `ApogeeHeightManeuver`, `PerigeeHeightManeuver` or
+  `CombinedManeuver` that is not finite or not above 0 throws `ArgumentOutOfRangeException` naming it (`apogeeRadius`,
+  `perigeeRadius`), "a radius from the centre …; for a height h pass R + h"; an apogee radius below the equatorial radius
+  of a celestial body centre throws `ArgumentException` in the constructor for a given centre (`apogeeRadius`, or
+  `targetOrbit` for the target-orbit form; the radius of a deferred body, `PlanetsAndMoons.EARTH_BODY`, is read there) and
+  `InvalidOperationException` from the propagator constructor and `Propagate` for an inferred one; the inclination of
+  `CombinedManeuver` not finite or outside [0, π] throws `ArgumentOutOfRangeException` (`inclination`). Before, all were
+  accepted: 1000e3 m, an altitude given for an apogee radius, put the apogee 5378 km under the surface and ended in
+  `InsufficientFuelException`; an inclination above π threw `ArgumentException` at the burn, and a negative one, which
+  `KeplerianElements` accepts in [−π, π], was executed (`CombinedManeuverTest.CheckPreconditions` passed 10.0 rad, of no
+  effect on its preconditions, now 0.5 rad). A perigee inside the body stays legal (a deorbit). No maneuver of the
+  repository's tests or of the conformance cases is refused (`ImpulseConstructionTests`). Migration: give a radius from
+  the centre, R + h for an altitude h; an inclination in [0, π].
+- **Breaking: `TargetApogee`, `TargetPerigeeHeight`, `MinimumEpoch` and `ManeuverHoldDuration` are renamed
+  `TargetApogeeRadius`, `TargetPerigeeRadius`, `MinEpoch` and `HoldDuration`** (lot L5b, R13 and D2 choice 10 of #668,
+  decisions 68 and 70, decided by S. Guillet, 2026-11-23): `ApogeeHeightManeuver.TargetApogee`,
+  `PerigeeHeightManeuver.TargetPerigeeHeight` and `CombinedManeuver.TargetPerigeeHeight`, radii in metres, and
+  `Maneuver.MinimumEpoch` and `Maneuver.ManeuverHoldDuration`, the same values; no forwarder. Migration: the new names.
+- **Breaking: the constructors of the impulses check the frame of their target no more** (lot L5b, decision 65 of #668,
+  decided by S. Guillet, 2026-11-23): `PlaneAlignmentManeuver`, `ApsidalAlignmentManeuver`, `PhasingManeuver(targetOrbit,
+  …)` and the protected `ImpulseManeuver(targetOrbit, …)` threw `ArgumentException` for a target in another frame than
+  the initial orbit of the spacecraft of the engine's tank (or ICRF on a TLE or TEME spacecraft), when that tank was on a
+  spacecraft (the target-orbit forms of `ApogeeHeightManeuver` and `PerigeeHeightManeuver` never checked it); a weaker
+  rule than the propagation's, which took a TEME target on a TLE spacecraft the propagation rejected. The rule is now
+  `Spacecraft.SetManeuvers` (`ArgumentException`, `maneuvers`) and the propagation (#685), against the frame the spacecraft
+  is propagated in. Migration: none for a target in the frame of the propagation; the error of another frame moves to
+  `SetManeuvers`.
 **Removed**
 
 - **The value equality of `FuelTank`, `Engine` and `Payload`: `Equals`, `GetHashCode`, `==`, `!=` and

@@ -99,7 +99,7 @@ public class ComponentConstructionTests
         var spacecraft = NewSpacecraft(earth);
         spacecraft.AddFuelTank(tank);
         var engine = spacecraft.AddEngine(new Engine("Main", 300.0, 10.0, tank));
-        spacecraft.SetManeuvers(new ApogeeHeightManeuver(earth, S, TimeSpan.Zero, 8000e3, engine));
+        spacecraft.SetManeuvers(new ApogeeHeightManeuver(8000e3, engine, S, TimeSpan.Zero, earth));
 
         var exception = Assert.Throws<InsufficientFuelException>(() => spacecraft.Propagate(new Window(S, TimeSpan.FromHours(2.0)), Options(earth, integrator)));
         Assert.Equal(0.0, exception.AvailableMass);
@@ -240,7 +240,7 @@ public class ComponentConstructionTests
             var tank = spacecraft.AddFuelTank(described ? new FuelTank("Tank", 1000.0, 1000.0, "M", "SN-T") : new FuelTank("Tank", 1000.0, 1000.0));
             var engine = spacecraft.AddEngine(described ? new Engine("Main", 300.0, 10.0, tank, "M", "SN-E") : new Engine("Main", 300.0, 10.0, tank));
             spacecraft.AddPayload(described ? new Payload("Battery", 10.0, "SN-P") : new Payload("Battery", 10.0));
-            var maneuver = new ApogeeHeightManeuver(earth, S, TimeSpan.Zero, 8000e3, engine);
+            var maneuver = new ApogeeHeightManeuver(8000e3, engine, S, TimeSpan.Zero, earth);
             spacecraft.SetManeuvers(maneuver);
             return (spacecraft, maneuver);
         }

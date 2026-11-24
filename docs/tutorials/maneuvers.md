@@ -110,7 +110,7 @@ plus h:
 // An apogee 1 000 km above the equator: R + 1 000 km from the Earth's centre
 double targetApogeeRadius = earth.EquatorialRadius + 1000e3;
 var raiseApogee = new ApogeeHeightManeuver(
-    earth, epoch, TimeSpan.Zero, targetApogeeRadius, engine);
+    targetApogeeRadius, engine, epoch, TimeSpan.Zero, earth);
 ```
 
 ### Moving the perigee
@@ -121,7 +121,7 @@ metres:
 ```csharp
 // Inputs: earth (CelestialBody), epoch (Time), targetPerigeeRadius (double), engine (Engine)
 var lowerPerigee = new PerigeeHeightManeuver(
-    earth, epoch, TimeSpan.Zero, targetPerigeeRadius, engine);
+    targetPerigeeRadius, engine, epoch, TimeSpan.Zero, earth);
 ```
 
 ### Phasing maneuver
@@ -132,7 +132,7 @@ particular relative position after a given number of revolutions:
 ```csharp
 // Inputs: epoch (Time), targetOrbit (OrbitalParameters), revolutions (uint), engine (Engine)
 var phasing = new PhasingManeuver(
-    epoch, targetOrbit, revolutions, engine);
+    targetOrbit, revolutions, engine, epoch);
 ```
 
 ### Plane alignment
@@ -144,7 +144,7 @@ adaptive crossing direction:
 ```csharp
 // Inputs: epoch (Time), targetOrbit (OrbitalParameters), engine (Engine)
 var planeChange = new PlaneAlignmentManeuver(
-    epoch, TimeSpan.Zero, targetOrbit, engine);
+    targetOrbit, engine, epoch, TimeSpan.Zero);
 ```
 
 ### Apsidal alignment
@@ -155,7 +155,7 @@ It fires at the nearest orbit intersection point using the g-function r . (h x p
 ```csharp
 // Inputs: epoch (Time), targetOrbit (OrbitalParameters), engine (Engine)
 var apsidalAlign = new ApsidalAlignmentManeuver(
-    epoch, TimeSpan.Zero, targetOrbit, engine);
+    targetOrbit, engine, epoch, TimeSpan.Zero);
 ```
 
 ### Combined maneuver
@@ -167,7 +167,7 @@ node before firing:
 ```csharp
 // Inputs: earth (CelestialBody), epoch (Time), targetPerigeeRadius and targetInclination (double), engine (Engine)
 var combined = new CombinedManeuver(
-    earth, epoch, TimeSpan.Zero, targetPerigeeRadius, targetInclination, engine);
+    targetPerigeeRadius, targetInclination, engine, epoch, TimeSpan.Zero, earth);
 ```
 
 ## Maneuver chaining
@@ -182,17 +182,19 @@ next impulse is gated by the end of their holds.
 // Inputs: targetOrbit (OrbitalParameters), engine (Engine), revolutions (uint), earth (CelestialBody),
 //   targetApogeeRadius (double), spacecraft (Spacecraft)
 var maneuver1 = new PlaneAlignmentManeuver(
-    new Time(DateTime.MinValue, TimeScale.TDB), TimeSpan.Zero,
-    targetOrbit, engine);
+    targetOrbit,
+    engine,
+    new Time(DateTime.MinValue, TimeScale.TDB),
+    TimeSpan.Zero);
 
 // The plan, in order; each maneuver takes its own arguments, as in the sections above
 spacecraft.SetManeuvers(maneuver1,
     new ApsidalAlignmentManeuver(
-        new Time(DateTime.MinValue, TimeScale.TDB), TimeSpan.Zero, targetOrbit, engine),
+        targetOrbit, engine, new Time(DateTime.MinValue, TimeScale.TDB), TimeSpan.Zero),
     new PhasingManeuver(
-        new Time(DateTime.MinValue, TimeScale.TDB), targetOrbit, revolutions, engine),
+        targetOrbit, revolutions, engine, new Time(DateTime.MinValue, TimeScale.TDB)),
     new ApogeeHeightManeuver(
-        earth, new Time(DateTime.MinValue, TimeScale.TDB), TimeSpan.Zero, targetApogeeRadius, engine));
+        targetApogeeRadius, engine, new Time(DateTime.MinValue, TimeScale.TDB), TimeSpan.Zero, earth));
 ```
 
 `SetManeuvers` links each maneuver to the next and is the one way to link a plan; every propagation runs the plan

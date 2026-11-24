@@ -76,7 +76,7 @@ public class RunIndependenceTests
         spacecraft.AddFuelTank(tank);
         var engine = new Engine($"eng{-id}", 300.0, 10.0, tank, "model", "sn");
         spacecraft.AddEngine(engine);
-        spacecraft.SetManeuvers(new ApogeeHeightManeuver(Earth, minimumEpoch, TimeSpan.Zero, 9000000.0, engine));
+        spacecraft.SetManeuvers(new ApogeeHeightManeuver(9000000.0, engine, minimumEpoch, TimeSpan.Zero, Earth));
     }
 
     private static PropagationOptions Options(string kind) => new()

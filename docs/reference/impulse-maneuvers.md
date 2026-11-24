@@ -12,7 +12,7 @@ Impulse maneuvers model instantaneous delta-V burns triggered by g-function zero
 | `CheckPreconditions(StateVector)` | Optional additional constraints (returns `true` to allow firing). When it returns `false`, the occurrence is skipped and the maneuver waits for its next crossing; if none satisfies it within the window, the maneuver is not executed (`ThrustWindow` stays null) |
 | `DeltaV` | Burn delta-V vector, in the inertial frame of the propagated state: the last run's value (below) |
 | `ThrustWindow` | Window of the equivalent finite burn (see below) |
-| `ManeuverWindow` | Thrust window extended by the maneuver hold duration (zero or more: a negative hold throws `ArgumentOutOfRangeException`, `maneuverHoldDuration`, since 11.0.0, R11 of #668) |
+| `ManeuverWindow` | Thrust window extended by the maneuver hold duration (zero or more: a negative hold throws `ArgumentOutOfRangeException`, `holdDuration`, since 11.0.0, R11 of #668) |
 | `Engine` | The engine of the impulse: the one it was given, null for one the run infers, until a run writes the engine it used right after its re-arm (the given one, else the only engine of the spacecraft); the next re-arm restores the given value ([The engine and the centre](#the-engine-and-the-centre); on `Maneuver` before lot L5b, decisions 48 and 93 of #668) |
 | `ManeuverCenter` | The centre of the impulse, by the same rule: the given one, else the observer of the initial orbit when it is a celestial body other than a star; required in SSB mode |
 | `ExecutionError` | Optional execution error by the model of Gates (`ManeuverExecutionError`), set with an object initializer; added to the velocity covariance at the burn when the propagation propagates the covariance, ignored otherwise. See [Covariance Propagation](covariance-propagation.md#execution-error-of-an-impulsive-maneuver) |
@@ -43,12 +43,10 @@ spacecraft again), against the frame it integrates in, the only check that throw
 state of the spacecraft (#685; before 11.0.0 only a
 TLE or TEME spacecraft was checked there, #675, and on another spacecraft the components of the target were read as if
 they were in the integration frame: a plane change of 2° from an ECLIPJ2000 target on an ICRF spacecraft burned
-2807 m/s for 263 m/s). The constructor checks the target too, when the
-tank of its engine is on a spacecraft: it takes the frame of the spacecraft's initial orbit or, on a TLE or TEME
-spacecraft, ICRF (#675); any other frame throws `ArgumentException`. On such a spacecraft a target in TEME still
-constructs and is rejected when the propagation is built. A maneuver built before its tank is on a spacecraft, or whose
-spacecraft gets another initial orbit afterwards (`SetInitialOrbitalParameters`), is checked only when the propagation
-is built. Frames are compared by name, as everywhere in the library, but for ICRF and GCRF, which the library gives the
+2807 m/s for 263 m/s). The constructor of a maneuver checks no frame since lot L5b (decision 65 of #668, decided by
+S. Guillet, 2026-11-23): the plan and the propagation are the one rule. Before, it compared the target, when the tank of
+its engine was on a spacecraft, with the frame of that spacecraft's initial orbit or ICRF, a weaker rule that took a
+TEME target on a TLE spacecraft the propagation then rejected. Frames are compared by name, as everywhere in the library, but for ICRF and GCRF, which the library gives the
 same axes (`GcrfFrame`, the identity rotation): a GCRF target is taken on a spacecraft propagated in ICRF (a TLE or TEME
 spacecraft included), and an ICRF target on one propagated in GCRF, by the constructor and the propagation alike, the
 components of the target being those the integration reads; the burn is bit for bit that of the relabelled target
@@ -92,7 +90,7 @@ The propagated state is unchanged, but where the gate binds a chained maneuver f
 
 ## Minimum Epoch
 
-`MinimumEpoch` is the earliest epoch at which the maneuver may fire (#569). The maneuver fires at the first crossing of
+`MinEpoch` is the earliest epoch at which the maneuver may fire (#569). The maneuver fires at the first crossing of
 its g-function in its direction at or after the minimum epoch, searched from the integrated state there, as GMAT's
 `Propagate` to the epoch followed by a `Propagate` to the apsis does:
 
@@ -120,7 +118,7 @@ its g-function in its direction at or after the minimum epoch, searched from the
   attitude chained after an impulse delays the next impulse by its hold from the end of the impulse's window. About the
   Earth the end of an impulse's window is counted in TT seconds and replaces, as the gate of the next maneuver, the TDB
   end the execution raised it to (#547).
-- That gate belongs to the propagation that set it (#573). `MinimumEpoch` reports the later of the minimum epoch the
+- That gate belongs to the propagation that set it (#573). `MinEpoch` reports the later of the minimum epoch the
   maneuver was given (its constructor's, which lasts; before 11.0.0 `Spacecraft.SetStandbyManeuver(maneuver, minimumEpoch)`
   could raise it: a later minimum epoch is now a new maneuver in a new plan, decision 47 of #668) and that gate, which holds after the propagation with the windows of the maneuver; the next `Spacecraft.Propagate` (and
   `Scenario.Simulate` and `BatchPropagator` through it) clears it before it runs. A spacecraft propagated again,
@@ -138,17 +136,72 @@ Before 11.0.0 the integrators compared that +1 with the first step end after the
 gated where r·v < 0 fired at the minimum epoch, and an `ApogeeHeightManeuver` gated in the step of its perigee, before
 it, fired one orbit later (#569).
 
+## Constructors
+
+Each impulse takes its target first, then the optional `engine`, `minEpoch`, `holdDuration` and `maneuverCenter`
+(D1 rule 8 of #668, lot L5b, decided by S. Guillet, 2026-11-23), for instance `new ApogeeHeightManeuver(rGeo)` or
+`new PerigeeHeightManeuver(rGeo, holdDuration: TimeSpan.FromMinutes(10))`. A null `engine` is the only engine of the
+spacecraft and a null `maneuverCenter` the observer of its initial orbit, both inferred by the run
+([The engine and the centre](#the-engine-and-the-centre)); `minEpoch` defaults to default(Time), no minimum, and
+`holdDuration` to zero (every parameter after the target is optional). The target-orbit forms take no `maneuverCenter`: their centre is the observer of the target,
+which must be a celestial item (`ArgumentException`, `targetOrbit`, for a site). `PhasingManeuver` takes no hold.
+
+```csharp-signature
+ApogeeHeightManeuver(double apogeeRadius, Engine engine, Time minEpoch, TimeSpan holdDuration, CelestialItem maneuverCenter)
+```
+
+```csharp-signature
+ApogeeHeightManeuver(OrbitalParameters targetOrbit, Engine engine, Time minEpoch, TimeSpan holdDuration)
+```
+
+```csharp-signature
+PerigeeHeightManeuver(double perigeeRadius, Engine engine, Time minEpoch, TimeSpan holdDuration, CelestialItem maneuverCenter)
+```
+
+```csharp-signature
+PerigeeHeightManeuver(OrbitalParameters targetOrbit, Engine engine, Time minEpoch, TimeSpan holdDuration)
+```
+
+```csharp-signature
+CombinedManeuver(double perigeeRadius, double inclination, Engine engine, Time minEpoch, TimeSpan holdDuration, CelestialItem maneuverCenter)
+```
+
+```csharp-signature
+PhasingManeuver(double trueLongitude, uint revolutionNumber, Engine engine, Time minEpoch, CelestialItem maneuverCenter)
+```
+
+```csharp-signature
+PhasingManeuver(OrbitalParameters targetOrbit, uint revolutionNumber, Engine engine, Time minEpoch)
+```
+
+```csharp-signature
+PlaneAlignmentManeuver(OrbitalParameters targetOrbit, Engine engine, Time minEpoch, TimeSpan holdDuration)
+```
+
+```csharp-signature
+ApsidalAlignmentManeuver(OrbitalParameters targetOrbit, Engine engine, Time minEpoch, TimeSpan holdDuration)
+```
+
+Radii are checked (decision 68 of #668, decided by S. Guillet, 2026-11-23): a radius of 0 or less, or not finite, throws
+`ArgumentOutOfRangeException` naming it (`apogeeRadius`, `perigeeRadius`), its message "a radius from the centre ...;
+for a height h pass R + h"; an apogee radius below the equatorial radius of a celestial body centre throws
+`ArgumentException` in the constructor for a given centre (the target-orbit form included, naming `targetOrbit`; the
+radius of a deferred body such as `PlanetsAndMoons.EARTH_BODY` is read there) and `InvalidOperationException` from the
+propagator constructor and `Propagate` for a centre the run infers. A perigee inside the body stays legal (a deorbit).
+`CombinedManeuver` checks its inclination in [0, π] (`ArgumentOutOfRangeException`, `inclination`). Before 11.0.0 the
+radii were accepted, and 1000e3 m, an altitude given for a radius, put the apogee 5378 km under the surface.
+
 ## Concrete Maneuvers
 
 ### ApogeeHeightManeuver
 
-Moves the apogee, up or down, to `TargetApogee`, a radius in metres from the centre of `ManeuverCenter` (not an
-altitude: R + h for an altitude h). Fires at perigee (r . v crosses zero from negative to positive).
+Moves the apogee, up or down, to `TargetApogeeRadius` (`TargetApogee` before 11.0.0), a radius in metres from the
+centre of `ManeuverCenter` (not an altitude: R + h for an altitude h), at or above its equatorial radius. Fires at perigee (r . v crosses zero from negative to positive).
 
 ### PerigeeHeightManeuver
 
-Moves the perigee, up or down, to `TargetPerigeeHeight`, a radius in metres from the centre of `ManeuverCenter` (not an
-altitude). Fires at apogee (r . v crosses zero from positive to negative).
+Moves the perigee, up or down, to `TargetPerigeeRadius` (`TargetPerigeeHeight` before 11.0.0), a radius in metres from
+the centre of `ManeuverCenter` (not an altitude). Fires at apogee (r . v crosses zero from positive to negative).
 
 ### PhasingManeuver
 
@@ -166,8 +219,8 @@ the target:
 
 | Constructor | Target | λ_target at the burn | h_target |
 |-------------|--------|----------------------|----------|
-| `PhasingManeuver(minimumEpoch, targetOrbit, revolutionNumber, engine)` | the object on `targetOrbit`, about the maneuver center (its observer) in the frame of the spacecraft | `targetOrbit.TrueLongitude(burn epoch)` | the target orbit's |
-| `PhasingManeuver(maneuverCenter, minimumEpoch, trueLongitude, revolutionNumber, engine)` | a virtual target on the spacecraft's current orbit (#588) | `trueLongitude`, in radians, about `maneuverCenter` in the frame of the spacecraft's state | the current orbit's |
+| `PhasingManeuver(targetOrbit, revolutionNumber, engine, minEpoch)` | the object on `targetOrbit`, about the maneuver center (its observer) in the frame of the spacecraft | `targetOrbit.TrueLongitude(burn epoch)` | the target orbit's |
+| `PhasingManeuver(trueLongitude, revolutionNumber, engine, minEpoch, maneuverCenter)` | a virtual target on the spacecraft's current orbit (#588) | `trueLongitude`, in radians, about the maneuver centre in the frame of the spacecraft's state | the current orbit's |
 
 With a true longitude, Δθ = λ − λ_sc(burn), and since the burn is at the perigee λ_sc(burn) is the longitude of the
 perigee Ω + ω: λ − (Ω + ω) is the phase of the target ahead of the spacecraft along its orbit, taken modulo 2π. For
@@ -177,8 +230,9 @@ true-longitude constructor threw `NullReferenceException` at its burn (#588).
 
 ### CombinedManeuver
 
-Combined plane and perigee change: the perigee moves, up or down, to `TargetPerigeeHeight`, a radius in metres from the
-centre of the maneuver centre (not an altitude), and the inclination to `TargetInclination`. Fires at apogee (r . v,
+Combined plane and perigee change: the perigee moves, up or down, to `TargetPerigeeRadius` (`TargetPerigeeHeight`
+before 11.0.0), a radius in metres from the centre of the maneuver centre (not an altitude), and the inclination to
+`TargetInclination`, in [0, π]. Fires at apogee (r . v,
 positive to negative) with an additional precondition that the apogee is aligned with the ascending node. Its target
 orbit carries its own perigee radius, a(1 − e); before 11.0.0 it carried the current orbit's, which no result read
 (#677).
@@ -229,7 +283,7 @@ internal, and so is `Engine.Ignite` (decision 49): called as previews they chang
 
 **The last run's values** (decision 52): a public member a run writes on a maneuver holds the value of the last run that
 executed it, and the re-arm of the next run clears it: `DeltaV`, `FuelBurned`, `ThrustWindow`, `ManeuverWindow`,
-`MinimumEpoch` (back to the minimum epoch the maneuver was given), the node of a `PlaneAlignmentManeuver`
+`MinEpoch` (back to the minimum epoch the maneuver was given), the node of a `PlaneAlignmentManeuver`
 (`IsAscendingNode`, `EventCrossingDirection`) and the hold of a `PhasingManeuver`. `Attitude.StateOrientation` is
 removed: the attitude of a run is in the attitude record. A stopped run leaves the values it wrote up to the stop.
 
@@ -237,7 +291,7 @@ removed: the attitude of a run is in the attitude record. A stopped run leaves t
 
 The maneuvers of the plan run as a chain:
 
-1. **Leading attitudes** are laid on the attitude timeline: each activates at the later of its `MinimumEpoch` and the end
+1. **Leading attitudes** are laid on the attitude timeline: each activates at the later of its `MinEpoch` and the end
    of the previous one's hold, from the start of the propagation; the last one's hold gates the first impulse.
 2. The first `ImpulseManeuver` is wrapped in the internal maneuver detector (`ManeuverEventDetector`, decision 88 of #668).
 3. When the event fires, the detector executes the burn, and only the burn (`HandleEvent` returns no next detector).
@@ -302,11 +356,11 @@ one on another spacecraft's tank burnt that spacecraft's fuel.
 //   (CelestialItem[])
 // Raise the apogee radius to 42,164 km (meters), at the first perigee after J2000 TDB.
 var maneuver = new ApogeeHeightManeuver(
-    earth,
+    42164000.0,
+    engine,
     Time.J2000TDB,
     TimeSpan.Zero,
-    42164000.0,
-    engine);
+    earth);
 
 spacecraft.SetManeuvers(maneuver);
 var solution = spacecraft.Propagate(window, new PropagationOptions { ThirdBodies = perturbingBodies });

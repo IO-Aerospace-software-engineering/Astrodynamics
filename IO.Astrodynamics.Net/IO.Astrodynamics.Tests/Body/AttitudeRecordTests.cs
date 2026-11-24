@@ -844,7 +844,7 @@ public class AttitudeRecordTests
             Configure = (sc, engine, earth, sun, start) =>
             {
                 var nadir = new NadirAttitude(earth, Min, TimeSpan.Zero);
-                impulse = new ApogeeHeightManeuver(earth, start.AddSeconds(100.0), TimeSpan.Zero, 7200000.0, engine);
+                impulse = new ApogeeHeightManeuver(7200000.0, engine, start.AddSeconds(100.0), TimeSpan.Zero, earth);
                 triad = new TriadAttitude(start.AddSeconds(100.0), TimeSpan.FromSeconds(hold), Spacecraft.Front, earth, Spacecraft.Up, sun);
                 prograde = new ProgradeAttitude(earth, start.AddSeconds(3400.0), TimeSpan.Zero);
                 sc.SetManeuvers(nadir,
@@ -1365,7 +1365,7 @@ public class AttitudeRecordTests
 
                 ImpulseManeuver Apogee()
                 {
-                    var apogee = new ApogeeHeightManeuver(earth, start.AddSeconds(100.0), TimeSpan.Zero, 7200000.0, engine);
+                    var apogee = new ApogeeHeightManeuver(7200000.0, engine, start.AddSeconds(100.0), TimeSpan.Zero, earth);
                     impulse ??= apogee;
                     return apogee;
                 }

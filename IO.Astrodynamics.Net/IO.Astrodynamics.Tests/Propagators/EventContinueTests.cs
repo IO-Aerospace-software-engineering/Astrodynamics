@@ -53,7 +53,7 @@ public class EventContinueTests
     {
         // Arrange
         var (spacecraft, engine) = CreateSpacecraft(-1355);
-        var maneuver = new CombinedManeuver(_earth, Start, TimeSpan.Zero, 9000000.0, 0.1, engine);
+        var maneuver = new CombinedManeuver(9000000.0, 0.1, engine, Start, TimeSpan.Zero, _earth);
         spacecraft.SetManeuvers(maneuver);
         var window = new TimeSystem.Window(Start, Start.AddHours(12.0));
 
@@ -89,8 +89,11 @@ public class EventContinueTests
         var skippingManeuver = new SkippingPerigeeHeightManeuver(_earth, Start, skippingEngine, 2);
         skipping.SetManeuvers(skippingManeuver);
         var (armed, armedEngine) = CreateSpacecraft(-1357);
-        var armedManeuver = new PerigeeHeightManeuver(_earth, Start.AddHours(6.0), TimeSpan.Zero, 9000000.0,
-            armedEngine);
+        var armedManeuver = new PerigeeHeightManeuver(9000000.0,
+            armedEngine,
+            Start.AddHours(6.0),
+            TimeSpan.Zero,
+            _earth);
         armed.SetManeuvers(armedManeuver);
 
         // Act
@@ -132,7 +135,7 @@ public class EventContinueTests
         // Arrange: Φ over 12 h across the four skipped apogees, against the same propagation without maneuver
         var window = new TimeSystem.Window(Start, Start.AddHours(12.0));
         var (skipping, engine) = CreateSpacecraft(-1358);
-        skipping.SetManeuvers(new CombinedManeuver(_earth, Start, TimeSpan.Zero, 9000000.0, 0.1, engine));
+        skipping.SetManeuvers(new CombinedManeuver(9000000.0, 0.1, engine, Start, TimeSpan.Zero, _earth));
         var (free, _) = CreateSpacecraft(-1359);
         var phi = new double[36];
         var expected = new double[36];
@@ -199,7 +202,7 @@ public class EventContinueTests
         var (position, velocity) = later.Dynamics.StateAt(segment,
             PropagationTimeArgument.Tt.SecondsBetween(segment.BaseEpoch, epoch));
         var (spacecraft, engine) = CreateSpacecraft(-1360);
-        var maneuver = new PerigeeHeightManeuver(_earth, Start, TimeSpan.Zero, 9000000.0, engine);
+        var maneuver = new PerigeeHeightManeuver(9000000.0, engine, Start, TimeSpan.Zero, _earth);
         spacecraft.SetManeuvers(maneuver);
         maneuver.TryExecute(new StateVector(position, velocity, _earth, epoch, Frames.Frame.ICRF));
         return maneuver.DeltaV;
@@ -226,7 +229,7 @@ public class EventContinueTests
         private readonly int _skips;
 
         public SkippingPerigeeHeightManeuver(CelestialItem center, TimeSystem.Time minimumEpoch, Engine engine,
-            int skips) : base(center, minimumEpoch, TimeSpan.Zero, 9000000.0, engine)
+            int skips) : base(9000000.0, engine, minimumEpoch, TimeSpan.Zero, center)
         {
             _skips = skips;
         }

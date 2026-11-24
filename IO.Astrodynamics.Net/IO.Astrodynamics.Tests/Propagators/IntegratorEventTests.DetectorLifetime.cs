@@ -100,7 +100,7 @@ public partial class IntegratorEventTests
     // What a detector could change: the spacecraft's fuel and executed maneuvers, each maneuver's ΔV, burn and windows
     private static string Footprint(Spacecraft spacecraft, IEnumerable<ImpulseManeuver> maneuvers) =>
         $"fuel {spacecraft.GetRemainingFuel():R}, mass {spacecraft.GetTotalMass():R}, executed {spacecraft.ExecutedManeuvers.Count}; " +
-        string.Join("; ", maneuvers.Select(m => $"dv {m.DeltaV}, burned {m.FuelBurned:R}, thrust {m.ThrustWindow}, maneuver {m.ManeuverWindow}, min {m.MinimumEpoch}"));
+        string.Join("; ", maneuvers.Select(m => $"dv {m.DeltaV}, burned {m.FuelBurned:R}, thrust {m.ThrustWindow}, maneuver {m.ManeuverWindow}, min {m.MinEpoch}"));
 
     // A plan of two time-like impulses, at TT 1 100 s and 2 000 s from the start, on a 3 000 s window
     private (Spacecraft Spacecraft, ImpulseManeuver[] Plan, CelestialBody Earth) TwoImpulses(int naifId)
@@ -205,7 +205,7 @@ public partial class IntegratorEventTests
         var earth = new CelestialBody(PlanetsAndMoons.EARTH, Frame.ICRF, S);
         var (spacecraft, engine) = NewSpacecraft(-7964, MinimumEpochGateTests.Orbit(earth, System.Math.PI));
         var target = new KeplerianElements(MinimumEpochGateTests.A0, MinimumEpochGateTests.E0, 0.95, 0.3, 1.1, 0.0, earth, S, Frame.ICRF);
-        var maneuver = new PlaneAlignmentManeuver(MinimumEpochGateTests.GateAtTt(5000.0), TimeSpan.Zero, target, engine);
+        var maneuver = new PlaneAlignmentManeuver(target, engine, MinimumEpochGateTests.GateAtTt(5000.0), TimeSpan.Zero);
         spacecraft.SetManeuvers(maneuver);
         var hooks = new CaptureHooks();
         var propagator = new CentralBodyPropagator(new Window(S, MinimumEpochGateTests.GateAtTt(3000.0)), spacecraft,

@@ -211,16 +211,25 @@ public class ExporterTests
         spacecraft2.AddPayload(new Payload("payload1", 50.0, "pay01"));
         spacecraft2.AddCircularInstrument("CAM602", 10.0 * IO.Astrodynamics.Constants.Deg2Rad, Vector3.VectorY, Vector3.VectorX, Vector3.Zero, naifId: -1791602, model: "mod1");
 
-        var planeAlignmentManeuver = new PlaneAlignmentManeuver(new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB), TimeSpan.Zero,
-            targetOrbit, spacecraft2.Engines.First());
+        var planeAlignmentManeuver = new PlaneAlignmentManeuver(targetOrbit,
+            spacecraft2.Engines.First(),
+            new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB),
+            TimeSpan.Zero);
 
         spacecraft2.SetManeuvers(planeAlignmentManeuver,
-            new ApsidalAlignmentManeuver(new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB),
-                TimeSpan.Zero, targetOrbit, spacecraft2.Engines.First()),
-            new PhasingManeuver(new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB), targetOrbit, 1,
-                spacecraft2.Engines.First()),
-            new ApogeeHeightManeuver(TestHelpers.EarthAtJ2000, new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB), TimeSpan.Zero, 15866666.666666666,
-                spacecraft2.Engines.First()));
+            new ApsidalAlignmentManeuver(targetOrbit,
+                spacecraft2.Engines.First(),
+                new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB),
+                TimeSpan.Zero),
+            new PhasingManeuver(targetOrbit,
+                1,
+                spacecraft2.Engines.First(),
+                new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB)),
+            new ApogeeHeightManeuver(15866666.666666666,
+                spacecraft2.Engines.First(),
+                new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB),
+                TimeSpan.Zero,
+                TestHelpers.EarthAtJ2000));
         scenario.AddSpacecraft(spacecraft2);
         var summary = scenario.Simulate(new PropagationOptions { Integrator = new VVIntegratorOptions { Step = TimeSpan.FromSeconds(1.0) }, OutputStep = TimeSpan.FromSeconds(1.0) });
         CosmographiaExporter cosmographiaExporter = new CosmographiaExporter();

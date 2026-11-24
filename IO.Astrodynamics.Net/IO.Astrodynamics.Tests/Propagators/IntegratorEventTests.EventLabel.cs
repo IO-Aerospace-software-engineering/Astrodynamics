@@ -36,7 +36,7 @@ public partial class IntegratorEventTests
     /// with no ΔV.</summary>
     private sealed class NeverPerigeeRaise : PerigeeHeightManeuver
     {
-        internal NeverPerigeeRaise(CelestialItem center, Time minimumEpoch, Engine engine) : base(center, minimumEpoch, TimeSpan.Zero, 6878137.0, engine)
+        internal NeverPerigeeRaise(CelestialItem center, Time minimumEpoch, Engine engine) : base(6878137.0, engine, minimumEpoch, TimeSpan.Zero, center)
         {
         }
 

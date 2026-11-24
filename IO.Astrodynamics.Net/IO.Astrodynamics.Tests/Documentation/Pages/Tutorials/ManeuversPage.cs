@@ -126,7 +126,7 @@ internal static class ManeuversPage
         // An apogee 1 000 km above the equator: R + 1 000 km from the Earth's centre
         double targetApogeeRadius = earth.EquatorialRadius + 1000e3;
         var raiseApogee = new ApogeeHeightManeuver(
-            earth, epoch, TimeSpan.Zero, targetApogeeRadius, engine);
+            targetApogeeRadius, engine, epoch, TimeSpan.Zero, earth);
         #endregion
     }
 
@@ -136,7 +136,7 @@ internal static class ManeuversPage
         #region docs/tutorials/maneuvers.md:6
         // Inputs: earth (CelestialBody), epoch (Time), targetPerigeeRadius (double), engine (Engine)
         var lowerPerigee = new PerigeeHeightManeuver(
-            earth, epoch, TimeSpan.Zero, targetPerigeeRadius, engine);
+            targetPerigeeRadius, engine, epoch, TimeSpan.Zero, earth);
         #endregion
     }
 
@@ -146,7 +146,7 @@ internal static class ManeuversPage
         #region docs/tutorials/maneuvers.md:7
         // Inputs: epoch (Time), targetOrbit (OrbitalParameters), revolutions (uint), engine (Engine)
         var phasing = new PhasingManeuver(
-            epoch, targetOrbit, revolutions, engine);
+            targetOrbit, revolutions, engine, epoch);
         #endregion
     }
 
@@ -156,7 +156,7 @@ internal static class ManeuversPage
         #region docs/tutorials/maneuvers.md:8
         // Inputs: epoch (Time), targetOrbit (OrbitalParameters), engine (Engine)
         var planeChange = new PlaneAlignmentManeuver(
-            epoch, TimeSpan.Zero, targetOrbit, engine);
+            targetOrbit, engine, epoch, TimeSpan.Zero);
         #endregion
     }
 
@@ -166,7 +166,7 @@ internal static class ManeuversPage
         #region docs/tutorials/maneuvers.md:9
         // Inputs: epoch (Time), targetOrbit (OrbitalParameters), engine (Engine)
         var apsidalAlign = new ApsidalAlignmentManeuver(
-            epoch, TimeSpan.Zero, targetOrbit, engine);
+            targetOrbit, engine, epoch, TimeSpan.Zero);
         #endregion
     }
 
@@ -176,7 +176,7 @@ internal static class ManeuversPage
         #region docs/tutorials/maneuvers.md:10
         // Inputs: earth (CelestialBody), epoch (Time), targetPerigeeRadius and targetInclination (double), engine (Engine)
         var combined = new CombinedManeuver(
-            earth, epoch, TimeSpan.Zero, targetPerigeeRadius, targetInclination, engine);
+            targetPerigeeRadius, targetInclination, engine, epoch, TimeSpan.Zero, earth);
         #endregion
     }
 
@@ -187,17 +187,19 @@ internal static class ManeuversPage
         // Inputs: targetOrbit (OrbitalParameters), engine (Engine), revolutions (uint), earth (CelestialBody),
         //   targetApogeeRadius (double), spacecraft (Spacecraft)
         var maneuver1 = new PlaneAlignmentManeuver(
-            new Time(DateTime.MinValue, TimeScale.TDB), TimeSpan.Zero,
-            targetOrbit, engine);
+            targetOrbit,
+            engine,
+            new Time(DateTime.MinValue, TimeScale.TDB),
+            TimeSpan.Zero);
 
         // The plan, in order; each maneuver takes its own arguments, as in the sections above
         spacecraft.SetManeuvers(maneuver1,
             new ApsidalAlignmentManeuver(
-                new Time(DateTime.MinValue, TimeScale.TDB), TimeSpan.Zero, targetOrbit, engine),
+                targetOrbit, engine, new Time(DateTime.MinValue, TimeScale.TDB), TimeSpan.Zero),
             new PhasingManeuver(
-                new Time(DateTime.MinValue, TimeScale.TDB), targetOrbit, revolutions, engine),
+                targetOrbit, revolutions, engine, new Time(DateTime.MinValue, TimeScale.TDB)),
             new ApogeeHeightManeuver(
-                earth, new Time(DateTime.MinValue, TimeScale.TDB), TimeSpan.Zero, targetApogeeRadius, engine));
+                targetApogeeRadius, engine, new Time(DateTime.MinValue, TimeScale.TDB), TimeSpan.Zero, earth));
 
         #endregion
     }

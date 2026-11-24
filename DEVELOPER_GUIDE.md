@@ -2473,20 +2473,29 @@ chaser.AddEngine(engine);
 
 // The plan: plane alignment -> apsidal alignment -> phasing -> circularization
 var maneuver1 = new PlaneAlignmentManeuver(
+    targetOrbit,
+    engine,
     new Time(DateTime.MinValue, TimeScale.TDB),
-    TimeSpan.Zero, targetOrbit, engine
+    TimeSpan.Zero
 );
 
 chaser.SetManeuvers(maneuver1,
     new ApsidalAlignmentManeuver(
+        targetOrbit,
+        engine,
         new Time(DateTime.MinValue, TimeScale.TDB),
-        TimeSpan.Zero, targetOrbit, engine),
+        TimeSpan.Zero),
     new PhasingManeuver(
-        new Time(DateTime.MinValue, TimeScale.TDB),
-        targetOrbit, 1, engine),
+        targetOrbit,
+        1,
+        engine,
+        new Time(DateTime.MinValue, TimeScale.TDB)),
     new ApogeeHeightManeuver(
-        earth, new Time(DateTime.MinValue, TimeScale.TDB),
-        TimeSpan.Zero, targetOrbit.SemiMajorAxis(), engine));
+        targetOrbit.SemiMajorAxis(),
+        engine,
+        new Time(DateTime.MinValue, TimeScale.TDB),
+        TimeSpan.Zero,
+        earth));
 
 scenario.AddSpacecraft(chaser);
 

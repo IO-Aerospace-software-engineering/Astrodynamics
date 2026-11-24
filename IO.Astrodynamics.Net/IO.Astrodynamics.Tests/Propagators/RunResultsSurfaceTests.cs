@@ -224,7 +224,7 @@ public class RunResultsSurfaceTests
     {
         var earth = Earth();
         var spacecraft = NewSpacecraft(earth, out var engine);
-        var apogee = new ApogeeHeightManeuver(earth, S.AddSeconds(600.0), TimeSpan.Zero, 8000e3, engine);
+        var apogee = new ApogeeHeightManeuver(8000e3, engine, S.AddSeconds(600.0), TimeSpan.Zero, earth);
         spacecraft.SetManeuvers(apogee);
         spacecraft.Propagate(new Window(S, S.AddHours(3.0)), Options(earth, integrator));
         var held = spacecraft.ExecutedManeuvers;

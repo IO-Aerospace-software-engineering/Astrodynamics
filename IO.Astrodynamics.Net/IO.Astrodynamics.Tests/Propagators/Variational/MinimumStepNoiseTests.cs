@@ -170,7 +170,7 @@ public class MinimumStepNoiseTests
         var target = new StateVector(new Vector3(5956434.445278982, -1653154.6911787654, -1653542.0820755141),
             new Vector3(1296.2335176264082, 2546.3347704417083, 2305.938709298581), body, Epoch.AddSeconds(2.49),
             Frames.Frame.ICRF);
-        var maneuver = new PlaneAlignmentManeuver(Epoch, TimeSpan.Zero, target, engine);
+        var maneuver = new PlaneAlignmentManeuver(target, engine, Epoch, TimeSpan.Zero);
         spacecraft.SetManeuvers(maneuver);
 
         // Act. The node is a grazing one: the trajectory, below the target plane at the start (the ascending node is locked),

@@ -22,8 +22,20 @@ namespace IO.Astrodynamics.Maneuver
         /// <see cref="IntersectsP"/>.</summary>
         internal bool IntersectsQ { get; private set; }
 
-        public ApsidalAlignmentManeuver(Time minimumEpoch, TimeSpan maneuverHoldDuration, OrbitalParameters.OrbitalParameters targetOrbit,
-            Engine engine) : base(minimumEpoch, maneuverHoldDuration, targetOrbit, engine)
+        /// <summary>
+        /// An impulse at the nearest intersection of the orbit with <paramref name="targetOrbit"/> that aligns the apsides.
+        /// </summary>
+        /// <param name="targetOrbit">The orbit whose apsides are the target, in the frame the spacecraft is propagated in;
+        /// its observer is the maneuver centre.</param>
+        /// <param name="engine">The engine; null for the only engine of the spacecraft, which the run infers.</param>
+        /// <param name="minEpoch">Earliest epoch when the maneuver can execute; default(Time) for none.</param>
+        /// <param name="holdDuration">Duration to hold after the maneuver; zero by default.</param>
+        /// <exception cref="ArgumentNullException"><paramref name="targetOrbit"/> is null.</exception>
+        /// <exception cref="ArgumentException">The observer of <paramref name="targetOrbit"/> is not a celestial
+        /// item.</exception>
+        /// <exception cref="ArgumentOutOfRangeException"><paramref name="holdDuration"/> is negative.</exception>
+        public ApsidalAlignmentManeuver(OrbitalParameters.OrbitalParameters targetOrbit, Engine engine = null, Time minEpoch = default,
+            TimeSpan holdDuration = default) : base(targetOrbit, engine, minEpoch, holdDuration)
         {
         }
 

@@ -808,28 +808,30 @@ public class PropagatedArcsTests
             switch (maneuver)
             {
                 case "Apogee":
-                    return [new ApogeeHeightManeuver(center, start, TimeSpan.Zero, center.NaifId == 301 ? 2200000.0 : 8378137.0, engine)];
+                    return [new ApogeeHeightManeuver(center.NaifId == 301 ? 2200000.0 : 8378137.0, engine, start, TimeSpan.Zero, center)];
                 case "Perigee":
-                    return [new ApogeeHeightManeuver(center, start, TimeSpan.Zero, 8378137.0, engine), new PerigeeHeightManeuver(center, start, TimeSpan.Zero, 7078137.0, engine)];
+                    return [new ApogeeHeightManeuver(8378137.0, engine, start, TimeSpan.Zero, center), new PerigeeHeightManeuver(7078137.0, engine, start, TimeSpan.Zero, center)];
                 case "Plane":
                     return
                     [
-                        new PlaneAlignmentManeuver(start, TimeSpan.Zero,
-                            new KeplerianElements(7078137.0, 0.0565, 42.0 * IO.Astrodynamics.Constants.Deg2Rad, 10.0 * IO.Astrodynamics.Constants.Deg2Rad, 0.0, 0.0, center, start,
-                                Frame.ICRF), engine)
+                        new PlaneAlignmentManeuver(new KeplerianElements(7078137.0, 0.0565, 42.0 * IO.Astrodynamics.Constants.Deg2Rad, 10.0 * IO.Astrodynamics.Constants.Deg2Rad, 0.0, 0.0, center, start,
+                                Frame.ICRF),
+                            engine,
+                            start,
+                            TimeSpan.Zero)
                     ];
                 case "Combined":
-                    return [new CombinedManeuver(center, start.AddSeconds(60.0), TimeSpan.Zero, 7078137.0, 45.0 * IO.Astrodynamics.Constants.Deg2Rad, engine)];
+                    return [new CombinedManeuver(7078137.0, 45.0 * IO.Astrodynamics.Constants.Deg2Rad, engine, start.AddSeconds(60.0), TimeSpan.Zero, center)];
                 case "CombinedLate":
-                    return [new CombinedManeuver(center, start, TimeSpan.Zero, 7078137.0, 45.0 * IO.Astrodynamics.Constants.Deg2Rad, engine)];
+                    return [new CombinedManeuver(7078137.0, 45.0 * IO.Astrodynamics.Constants.Deg2Rad, engine, start, TimeSpan.Zero, center)];
                 case "Chain4":
                 {
                     var target = new StateVector(new Vector3(4390853.7278876612, 5110607.0005866792, 917659.86391987884),
                         new Vector3(-4979.4693432656513, 3033.2639866911495, 6933.1803797017265), center, engine.FuelTank.Spacecraft.InitialOrbitalParameters.Epoch, Frame.ICRF);
                     return
                     [
-                        new PlaneAlignmentManeuver(Min, TimeSpan.Zero, target, engine), new ApsidalAlignmentManeuver(Min, TimeSpan.Zero, target, engine),
-                        new PhasingManeuver(Min, target, 1, engine), new ApogeeHeightManeuver(center, Min, TimeSpan.Zero, 15866666.666666666, engine)
+                        new PlaneAlignmentManeuver(target, engine, Min, TimeSpan.Zero), new ApsidalAlignmentManeuver(target, engine, Min, TimeSpan.Zero),
+                        new PhasingManeuver(target, 1, engine, Min), new ApogeeHeightManeuver(15866666.666666666, engine, Min, TimeSpan.Zero, center)
                     ];
                 }
                 case not null when maneuver.StartsWith("Timed"):
@@ -936,7 +938,7 @@ internal sealed class TimedImpulse : ImpulseManeuver
     private readonly Time _target;
     private readonly double _deltaV;
 
-    internal TimedImpulse(CelestialItem center, Time minimumEpoch, Engine engine, Time target, double deltaV) : base(center, minimumEpoch, TimeSpan.Zero, engine)
+    internal TimedImpulse(CelestialItem center, Time minimumEpoch, Engine engine, Time target, double deltaV) : base(engine, minimumEpoch, TimeSpan.Zero, center)
     {
         _target = target;
         _deltaV = deltaV;

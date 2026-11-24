@@ -719,7 +719,7 @@ public class CovariancePropagationTests : IClassFixture<PartialsTestCases>, ICla
         var engine = new Engine("covengine", 300.0, 10.0, tank, "model", "sn1");
         spacecraft.AddFuelTank(tank);
         spacecraft.AddEngine(engine);
-        var maneuver = new ApogeeHeightManeuver(_cases.Earth, Start, TimeSpan.Zero, 8378137.0, engine)
+        var maneuver = new ApogeeHeightManeuver(8378137.0, engine, Start, TimeSpan.Zero, _cases.Earth)
         {
             ExecutionError = execution
         };

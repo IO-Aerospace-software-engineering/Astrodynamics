@@ -280,7 +280,7 @@ public class ClaudeMdExamplesTests
     private static Spacecraft PropagatedWithImpulse(int naifId, out ImpulseManeuver impulse)
     {
         var spacecraft = SpacecraftWithEngine(naifId, out var engine, "2024-001A");
-        impulse = new ApogeeHeightManeuver(Earth, Epoch, TimeSpan.Zero, 7000000.0, engine);
+        impulse = new ApogeeHeightManeuver(7000000.0, engine, Epoch, TimeSpan.Zero, Earth);
         spacecraft.SetManeuvers(impulse);
         spacecraft.Propagate(new Window(Epoch, Epoch.AddHours(2.0)), new PropagationOptions { Integrator = new VVIntegratorOptions { Step = TimeSpan.FromSeconds(60.0) }, OutputStep = TimeSpan.FromSeconds(60.0), ThirdBodies = [Earth] });
         return spacecraft;

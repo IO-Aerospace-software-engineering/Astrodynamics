@@ -80,7 +80,7 @@ public class ManeuverPlanTests
         var earth = Earth();
         var spacecraft = NewSpacecraft(earth, out var engine);
         var nadir = new NadirAttitude(earth, S, TimeSpan.FromSeconds(600.0));
-        var apogee = new ApogeeHeightManeuver(earth, S, TimeSpan.Zero, 8000e3, engine);
+        var apogee = new ApogeeHeightManeuver(8000e3, engine, S, TimeSpan.Zero, earth);
         var prograde = new ProgradeAttitude(earth, S, TimeSpan.Zero);
         Assert.Empty(spacecraft.Maneuvers);
 
@@ -102,8 +102,8 @@ public class ManeuverPlanTests
     {
         var earth = Earth();
         var spacecraft = NewSpacecraft(earth, out var engine);
-        var a = new ApogeeHeightManeuver(earth, S, TimeSpan.Zero, 8000e3, engine);
-        var b = new PerigeeHeightManeuver(earth, S, TimeSpan.Zero, 7100e3, engine);
+        var a = new ApogeeHeightManeuver(8000e3, engine, S, TimeSpan.Zero, earth);
+        var b = new PerigeeHeightManeuver(7100e3, engine, S, TimeSpan.Zero, earth);
         var array = new Maneuver.Maneuver[] { a, b };
         spacecraft.SetManeuvers(array);
         array[0] = b;
@@ -115,7 +115,7 @@ public class ManeuverPlanTests
     {
         var earth = Earth();
         var spacecraft = NewSpacecraft(earth, out var engine);
-        var a = new ApogeeHeightManeuver(earth, S, TimeSpan.Zero, 8000e3, engine);
+        var a = new ApogeeHeightManeuver(8000e3, engine, S, TimeSpan.Zero, earth);
         var b = new NadirAttitude(earth, S, TimeSpan.Zero);
         spacecraft.SetManeuvers(a, b);
 
@@ -138,8 +138,8 @@ public class ManeuverPlanTests
     {
         var earth = Earth();
         var spacecraft = NewSpacecraft(earth, out var engine);
-        var a = new ApogeeHeightManeuver(earth, S, TimeSpan.Zero, 8000e3, engine);
-        var b = new PerigeeHeightManeuver(earth, S, TimeSpan.Zero, 7100e3, engine);
+        var a = new ApogeeHeightManeuver(8000e3, engine, S, TimeSpan.Zero, earth);
+        var b = new PerigeeHeightManeuver(7100e3, engine, S, TimeSpan.Zero, earth);
         var c = new NadirAttitude(earth, S, TimeSpan.Zero);
         spacecraft.SetManeuvers(a, b, c);
 
@@ -159,7 +159,7 @@ public class ManeuverPlanTests
     {
         var earth = Earth();
         var spacecraft = NewSpacecraft(earth, out var engine);
-        var a = new ApogeeHeightManeuver(earth, S, TimeSpan.Zero, 8000e3, engine);
+        var a = new ApogeeHeightManeuver(8000e3, engine, S, TimeSpan.Zero, earth);
         spacecraft.SetManeuvers(a);
 
         var e = Assert.Throws<ArgumentNullException>(() => spacecraft.SetManeuvers(null));
@@ -181,8 +181,8 @@ public class ManeuverPlanTests
     {
         var earth = Earth();
         var spacecraft = NewSpacecraft(earth, out var engine);
-        var a = new ApogeeHeightManeuver(earth, S, TimeSpan.Zero, 8000e3, engine);
-        var b = new PerigeeHeightManeuver(earth, S, TimeSpan.Zero, 7100e3, engine);
+        var a = new ApogeeHeightManeuver(8000e3, engine, S, TimeSpan.Zero, earth);
+        var b = new PerigeeHeightManeuver(7100e3, engine, S, TimeSpan.Zero, earth);
         var n = new NadirAttitude(earth, S, TimeSpan.Zero);
         var former = new ProgradeAttitude(earth, S, TimeSpan.Zero);
         spacecraft.SetManeuvers(former);
@@ -207,7 +207,7 @@ public class ManeuverPlanTests
         var earth = Earth();
         var owner = NewSpacecraft(earth, out var engine);
         var other = NewSpacecraft(earth, out _);
-        var a = new ApogeeHeightManeuver(earth, S, TimeSpan.Zero, 8000e3, engine);
+        var a = new ApogeeHeightManeuver(8000e3, engine, S, TimeSpan.Zero, earth);
         owner.SetManeuvers(a);
         var otherPlan = new NadirAttitude(earth, S, TimeSpan.Zero);
         other.SetManeuvers(otherPlan);
@@ -239,7 +239,7 @@ public class ManeuverPlanTests
             : new Engine("LOOSE", 300.0, 10.0, new FuelTank("LOOSE", 1000.0, 1000.0, "m", "SN-LOOSE"), "m", "SN-LOOSE");
         // An impulse only: an attitude has no engine since lot L5b (decisions 48 and 93 of #668)
         Assert.Equal("Impulse", kind);
-        Maneuver.Maneuver m = new ApogeeHeightManeuver(earth, S, TimeSpan.Zero, 8000e3, foreign);
+        Maneuver.Maneuver m = new ApogeeHeightManeuver(8000e3, foreign, S, TimeSpan.Zero, earth);
         var ownManeuver = new NadirAttitude(earth, S, TimeSpan.Zero);
         spacecraft.SetManeuvers(ownManeuver);
 
@@ -256,8 +256,8 @@ public class ManeuverPlanTests
 
     /// <summary>
     /// A target in another frame than the one the spacecraft is propagated in: a TEME target on a TLE spacecraft, which
-    /// propagates in ICRF (#675) and which the constructor of the maneuver accepts; and a maneuver built before its tank
-    /// was on the spacecraft, which the constructor cannot check (#685).
+    /// propagates in ICRF (#675); and a maneuver built before its tank was on the spacecraft (#685). The constructor of a
+    /// maneuver checks no frame since lot L5b (decision 65 of #668): the plan and the run do.
     /// </summary>
     [Theory]
     [InlineData("TemeTargetOnATle")]
@@ -274,7 +274,7 @@ public class ManeuverPlanTests
             spacecraft = NewSpacecraft(tleEarth, out var engine, tle);
             var target = tle.ToStateVector(tle.Epoch);
             Assert.Equal(Frames.Frame.TEME, target.Frame);
-            maneuver = new ApsidalAlignmentManeuver(tle.Epoch, TimeSpan.Zero, target, engine);
+            maneuver = new ApsidalAlignmentManeuver(target, engine, tle.Epoch, TimeSpan.Zero);
         }
         else
         {
@@ -285,7 +285,7 @@ public class ManeuverPlanTests
             var tank = new FuelTank("ft", 1000.0, 1000.0, "m", "sn");
             var engine = new Engine("eng", 300.0, 10.0, tank, "m", "sn");
             var target = new KeplerianElements(7100e3, 0.01, 0.5, 0.0, 0.0, 0.0, earth, S, Frames.Frame.ECLIPTIC_J2000);
-            maneuver = new ApsidalAlignmentManeuver(S, TimeSpan.Zero, target, engine);
+            maneuver = new ApsidalAlignmentManeuver(target, engine, S, TimeSpan.Zero);
             spacecraft.AddFuelTank(tank);
             spacecraft.AddEngine(engine);
         }
@@ -304,7 +304,7 @@ public class ManeuverPlanTests
         var earth = Earth();
         var spacecraft = NewSpacecraft(earth, out var engine);
         var target = new KeplerianElements(7100e3, 0.01, 0.5, 0.0, 0.0, 0.0, earth, S, Frames.Frame.GCRF);
-        var maneuver = new ApsidalAlignmentManeuver(S, TimeSpan.Zero, target, engine);
+        var maneuver = new ApsidalAlignmentManeuver(target, engine, S, TimeSpan.Zero);
         spacecraft.SetManeuvers(maneuver);
         Assert.Equal(new Maneuver.Maneuver[] { maneuver }, spacecraft.Maneuvers);
     }
@@ -350,7 +350,7 @@ public class ManeuverPlanTests
         spacecraft.SetManeuvers(head);
         var window = new Window(S, S.AddHours(1.0));
         CentralBodyPropagator reused = path == "Reused" ? new CentralBodyPropagator(window, spacecraft, Options(earth, integrator)) : null;
-        var stray = new ApogeeHeightManeuver(earth, S, TimeSpan.Zero, 8000e3, engine);
+        var stray = new ApogeeHeightManeuver(8000e3, engine, S, TimeSpan.Zero, earth);
         head.NextManeuver = stray;
 
         Exception exception = path switch
@@ -397,7 +397,7 @@ public class ManeuverPlanTests
             var spacecraft = NewSpacecraft(earth, out var engine);
             Maneuver.Maneuver[] plan =
             [
-                new NadirAttitude(earth, S, TimeSpan.FromSeconds(600.0)), new ApogeeHeightManeuver(earth, S, TimeSpan.Zero, 8000e3, engine),
+                new NadirAttitude(earth, S, TimeSpan.FromSeconds(600.0)), new ApogeeHeightManeuver(8000e3, engine, S, TimeSpan.Zero, earth),
                 new ProgradeAttitude(earth, S, TimeSpan.Zero)
             ];
             spacecraft.SetManeuvers(plan);

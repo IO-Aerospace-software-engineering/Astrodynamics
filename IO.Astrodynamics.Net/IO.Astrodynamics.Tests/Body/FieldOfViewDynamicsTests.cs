@@ -129,7 +129,7 @@ public class FieldOfViewDynamicsTests
                 // raises the apogee; the impulse's attitude over its thrust and maneuver windows, then the TRIAD law (#539)
                 var orbit = new StateVector(leo.Position, new Vector3(0.0, 7600.0, 0.0), earth, Start, Frames.Frame.ICRF);
                 var (spacecraft, engine) = Create(-5172, orbit);
-                var impulse = new ApogeeHeightManeuver(earth, Start.AddSeconds(100.0), TimeSpan.Zero, 7200000.0, engine);
+                var impulse = new ApogeeHeightManeuver(7200000.0, engine, Start.AddSeconds(100.0), TimeSpan.Zero, earth);
                 spacecraft.SetManeuvers(impulse, new TriadAttitude(Start.AddSeconds(100.0), TimeSpan.Zero, Spacecraft.Front, earth, Spacecraft.Up, sun));
                 spacecraft.Propagate(propagation, new PropagationOptions { Integrator = new VVIntegratorOptions { Step = oneSecond }, OutputStep = oneSecond, ThirdBodies = bodies });
                 Assert.NotNull(impulse.ThrustWindow);

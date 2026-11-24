@@ -207,8 +207,8 @@ public sealed class Lot3CaseTests : IDisposable
             Assert.IsType(type, maneuver);
             // The phasing maneuver takes no hold: its burn sets 0.9 N T2 (decision 51 of #668; before, the hold given was
             // replaced at the burn)
-            Assert.Equal(type == typeof(PhasingManeuver) ? TimeSpan.Zero : TimeSpan.FromSeconds(2000.0), maneuver.ManeuverHoldDuration);
-            Assert.Equal(epoch, maneuver.MinimumEpoch);
+            Assert.Equal(type == typeof(PhasingManeuver) ? TimeSpan.Zero : TimeSpan.FromSeconds(2000.0), maneuver.HoldDuration);
+            Assert.Equal(epoch, maneuver.MinEpoch);
             Assert.Same(earth, maneuver.ManeuverCenter);
         }
 

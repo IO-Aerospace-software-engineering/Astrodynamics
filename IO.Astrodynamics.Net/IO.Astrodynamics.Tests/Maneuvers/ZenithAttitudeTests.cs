@@ -20,8 +20,8 @@ public class ZenithAttitudeTests
     void Create()
     {
         ZenithAttitude zenithAttitude = new ZenithAttitude(TestHelpers.EarthAtJ2000,new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB), TimeSpan.FromHours(1.0));
-        LabelAssert.Equal(new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB), zenithAttitude.MinimumEpoch);
-        Assert.Equal(TimeSpan.FromHours(1.0), zenithAttitude.ManeuverHoldDuration);
+        LabelAssert.Equal(new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB), zenithAttitude.MinEpoch);
+        Assert.Equal(TimeSpan.FromHours(1.0), zenithAttitude.HoldDuration);
     }
 
     [Fact]

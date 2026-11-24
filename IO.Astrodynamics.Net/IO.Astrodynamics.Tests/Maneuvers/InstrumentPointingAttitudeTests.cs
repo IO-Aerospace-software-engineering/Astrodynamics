@@ -33,8 +33,8 @@ public class InstrumentPointingAttitudeTests
         spc.AddCircularInstrument("CAM602", 1.5, Vector3.VectorZ, Vector3.VectorY, new Vector3(0.0, -System.Math.PI * 0.5, 0.0), naifId: -172600, model: "mod1");
         InstrumentPointingToAttitude attitude =
             new InstrumentPointingToAttitude(new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB), TimeSpan.FromHours(1.0), spc.Instruments.First(), TestHelpers.EarthAtJ2000);
-        LabelAssert.Equal(new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB), attitude.MinimumEpoch);
-        Assert.Equal(TimeSpan.FromHours(1.0), attitude.ManeuverHoldDuration);
+        LabelAssert.Equal(new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB), attitude.MinEpoch);
+        Assert.Equal(TimeSpan.FromHours(1.0), attitude.HoldDuration);
         Assert.Equal(spc.Instruments.First(), attitude.Instrument);
         Assert.Equal(TestHelpers.EarthAtJ2000, attitude.Target);
     }

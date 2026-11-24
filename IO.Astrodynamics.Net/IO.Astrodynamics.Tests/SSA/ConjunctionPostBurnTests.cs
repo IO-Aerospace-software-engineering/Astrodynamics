@@ -70,7 +70,7 @@ public class ConjunctionPostBurnTests
         var orbit = new StateVector(new Vector3(-7378137.0, 0.0, 0.0), new Vector3(0.0, -5509.9, -4623.4), _earth, _start,
             Frames.Frame.ICRF);
         var spacecraft = NewSpacecraft(NextId(), orbit, out var engine);
-        var maneuver = new ApogeeHeightManeuver(_earth, _start, TimeSpan.Zero, 8378137.0, engine);
+        var maneuver = new ApogeeHeightManeuver(8378137.0, engine, _start, TimeSpan.Zero, _earth);
         spacecraft.SetManeuvers(maneuver);
         var solution = spacecraft.Propagate(new Window(_start, _start.AddHours(2.0)), new PropagationOptions { Integrator = rk78 ? new RK78IntegratorOptions { AbsoluteTolerance = 1e-12, RelativeTolerance = 1e-12 } : new VVIntegratorOptions { Step = TimeSpan.FromSeconds(1.0) }, OutputStep = TimeSpan.FromSeconds(60.0), ThirdBodies = new CelestialItem[] { _earth }, CovariancePropagation = CovariancePropagationOptions.None });
         Assert.Equal(2, solution.Segments.Count);
@@ -219,7 +219,7 @@ public class ConjunctionPostBurnTests
         var orbit = new KeplerianElements(11480000.0, 0.5, 28.5 * IO.Astrodynamics.Constants.Deg2Rad, 0.0,
             System.Math.PI * 0.5, System.Math.PI - 0.15, _earth, _start, Frames.Frame.ICRF);
         var spacecraft = NewSpacecraft(NextId(), orbit, out var engine);
-        spacecraft.SetManeuvers(new CombinedManeuver(_earth, _start, TimeSpan.Zero, 9000000.0, 0.1, engine));
+        spacecraft.SetManeuvers(new CombinedManeuver(9000000.0, 0.1, engine, _start, TimeSpan.Zero, _earth));
         var solution = spacecraft.Propagate(new Window(_start, _start.AddHours(1.0)), new PropagationOptions { Integrator = new RK78IntegratorOptions { AbsoluteTolerance = 1e-12, RelativeTolerance = 1e-12 }, OutputStep = TimeSpan.FromSeconds(60.0), ThirdBodies = new CelestialItem[] { _earth }, CovariancePropagation = CovariancePropagationOptions.None });
         Assert.Equal(2, solution.Segments.Count);
         var eventEpoch = solution.Segments[1].BaseEpoch;

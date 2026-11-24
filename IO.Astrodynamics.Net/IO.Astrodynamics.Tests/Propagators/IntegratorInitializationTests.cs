@@ -318,8 +318,11 @@ public class IntegratorInitializationTests
             spacecraft.AddFuelTank(tank);
             var engine = new Engine("eng", 300.0, 10.0, tank, "model", "sn");
             spacecraft.AddEngine(engine);
-            spacecraft.SetManeuvers(new ApogeeHeightManeuver(earth, Epoch.AddSeconds(600.0), TimeSpan.Zero, 9000000.0,
-                engine));
+            spacecraft.SetManeuvers(new ApogeeHeightManeuver(9000000.0,
+                engine,
+                Epoch.AddSeconds(600.0),
+                TimeSpan.Zero,
+                earth));
             return spacecraft;
         }
 

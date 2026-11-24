@@ -1210,7 +1210,7 @@ public abstract class PropagatorBase : IPropagator
 
     /// <summary>
     /// Activates the attitudes of the chain from <paramref name="maneuver"/> on, on the attitude timeline: each at its
-    /// <see cref="Maneuver.Maneuver.MinimumEpoch"/> or at the end of the previous maneuver's window
+    /// <see cref="Maneuver.Maneuver.MinEpoch"/> or at the end of the previous maneuver's window
     /// (<paramref name="previousEnd"/>, at <paramref name="previousEndTau"/> seconds of the time argument from the start of
     /// the window), whichever is later, its window its hold counted in seconds of the time argument (#547). Each executed
     /// attitude raises the gate of the next maneuver to the end of its hold, for this propagation only
@@ -1224,7 +1224,7 @@ public abstract class PropagatorBase : IPropagator
         {
             var start = previousEnd;
             double tau = previousEndTau;
-            var minimumEpoch = attitude.MinimumEpoch;
+            var minimumEpoch = attitude.MinEpoch;
             double minimumTau = TimeArgument.SecondsBetween(Window.StartDate, minimumEpoch);
             if (minimumTau > tau)
             {
@@ -1238,8 +1238,8 @@ public abstract class PropagatorBase : IPropagator
                 return null;
             }
 
-            double endTau = tau + attitude.ManeuverHoldDuration.TotalSeconds;
-            var end = After(start, endTau, attitude.ManeuverHoldDuration);
+            double endTau = tau + attitude.HoldDuration.TotalSeconds;
+            var end = After(start, endTau, attitude.HoldDuration);
             // About the Earth the end is the epoch of endTau, rounded to the tick: never before the activation, which
             // the minimum epoch gives exactly (a hold of 0)
             if (end < start) end = start;
@@ -1299,7 +1299,7 @@ public abstract class PropagatorBase : IPropagator
             double thrustStartTau = eventTau - dt * impulse.ThrustLead;
             var thrustStart = TimeArgument.EpochAt(Window.StartDate, thrustStartTau);
             thrust = new Window(thrustStart, TimeArgument.EpochAt(Window.StartDate, thrustStartTau + dt));
-            maneuverEndTau = thrustStartTau + System.Math.Max(impulse.ManeuverHoldDuration.TotalSeconds, dt);
+            maneuverEndTau = thrustStartTau + System.Math.Max(impulse.HoldDuration.TotalSeconds, dt);
             impulse.ThrustWindow = thrust;
             impulse.ManeuverWindow = new Window(thrustStart, TimeArgument.EpochAt(Window.StartDate, maneuverEndTau));
 
@@ -1584,10 +1584,12 @@ public abstract class PropagatorBase : IPropagator
     /// axes (<see cref="SameAxes"/>, third review of #685): a target in any other frame is rejected before anything
     /// runs, on every spacecraft (#685), when the propagator is built (<see cref="ArgumentException"/>) and again when it
     /// propagates, against the frame of its integration (<see cref="InvalidOperationException"/>: a maneuver attached to the
-    /// spacecraft after the propagator was built, the state of the spacecraft). The constructor of
-    /// <see cref="ImpulseManeuver"/> checks the frame of its target only when its tank is on a spacecraft, against the
-    /// initial orbit it has then; this check covers a maneuver built before its tank is attached, a spacecraft given another
-    /// initial orbit afterwards, and a TLE or TEME start, which is propagated in ICRF (#675).
+    /// spacecraft after the propagator was built, the state of the spacecraft), and by
+    /// <see cref="Spacecraft.SetManeuvers"/> (<see cref="ArgumentException"/>, <c>maneuvers</c>). The constructor of
+    /// <see cref="ImpulseManeuver"/> checks it no more since lot L5b (decision 65 of #668, decided by S. Guillet,
+    /// 2026-11-23): it compared the target, when the tank of the engine was on a spacecraft, with the initial orbit that
+    /// spacecraft had then, a weaker rule; this one covers every spacecraft, a spacecraft given another initial orbit
+    /// afterwards and a TLE or TEME start, which is propagated in ICRF (#675).
     /// </summary>
     /// <returns>The message of the first target in another frame than <paramref name="propagationFrame"/>, null when there
     /// is none.</returns>

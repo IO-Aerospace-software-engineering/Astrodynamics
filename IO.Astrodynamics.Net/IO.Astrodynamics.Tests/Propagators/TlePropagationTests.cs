@@ -337,9 +337,9 @@ public class TlePropagationTests
         var temeTarget = new KeplerianElements(6800000.0, 0.0, 55.0 * IO.Astrodynamics.Constants.Deg2Rad, 6.0, 0.0, 0.0,
             tle.Observer, window.StartDate.ToTDB(), Frames.Frame.TEME);
         var icrfTarget = temeTarget.ToFrame(Frames.Frame.ICRF);
-        var first = new PlaneAlignmentManeuver(window.StartDate, TimeSpan.Zero, icrfTarget, engine);
+        var first = new PlaneAlignmentManeuver(icrfTarget, engine, window.StartDate, TimeSpan.Zero);
         var chained = Assert.Throws<ArgumentException>(() =>
-            spacecraft.SetManeuvers(first, new PlaneAlignmentManeuver(window.StartDate, TimeSpan.Zero, temeTarget, engine)));
+            spacecraft.SetManeuvers(first, new PlaneAlignmentManeuver(temeTarget, engine, window.StartDate, TimeSpan.Zero)));
         Assert.Contains("ToFrame(Frame.ICRF)", chained.Message);
         Assert.Equal("maneuvers", chained.ParamName);
         Assert.Empty(spacecraft.Maneuvers);
@@ -546,12 +546,13 @@ public class TlePropagationTests
         (Spacecraft, PlaneAlignmentManeuver) Build(int id, IO.Astrodynamics.OrbitalParameters.OrbitalParameters orbit)
         {
             var (spacecraft, engine) = WithEngine(id, orbit);
-            var maneuver = new PlaneAlignmentManeuver(window.StartDate, TimeSpan.Zero, Target(Frames.Frame.ICRF), engine);
+            var maneuver = new PlaneAlignmentManeuver(Target(Frames.Frame.ICRF), engine, window.StartDate, TimeSpan.Zero);
             spacecraft.SetManeuvers(maneuver);
             return (spacecraft, maneuver);
         }
 
-        // Act: the ICRF target constructs on a TLE spacecraft (it threw "must be defined in the same frame")
+        // Act: the ICRF target is planned on a TLE spacecraft (before #675 its constructor threw "must be defined in the same
+        // frame"; since lot L5b the constructor checks no frame, the plan and the run do, decision 65 of #668)
         var (fromTle, maneuver) = Build(-7051, tle);
         var (twin, twinManeuver) = Build(-7052, Twin(tle, window));
         var solution = fromTle.Propagate(window, new PropagationOptions { Integrator = RK78IntegratorOptions.Default, OutputStep = OutputStep, ThirdBodies = Array.Empty<CelestialItem>(), CovariancePropagation = CovariancePropagationOptions.None });
@@ -569,7 +570,7 @@ public class TlePropagationTests
         // A TEME target: constructs, as before, and is rejected by SetManeuvers (decision 46 of #668; when the propagation
         // was built before), naming the fix
         var (temeSpacecraft, engine) = WithEngine(-7053, tle);
-        var temeManeuver = new PlaneAlignmentManeuver(window.StartDate, TimeSpan.Zero, Target(Frames.Frame.TEME), engine);
+        var temeManeuver = new PlaneAlignmentManeuver(Target(Frames.Frame.TEME), engine, window.StartDate, TimeSpan.Zero);
         var e = Assert.Throws<ArgumentException>(() => temeSpacecraft.SetManeuvers(temeManeuver));
         Assert.Contains("ToFrame(Frame.ICRF)", e.Message);
         Assert.Empty(temeSpacecraft.Maneuvers);
@@ -578,7 +579,7 @@ public class TlePropagationTests
         // Built before the engine is attached (no check at construction): rejected by SetManeuvers as well
         var tank = new FuelTank("ft675b", 1000.0, 1000.0, "model", "sn675b");
         var detached = new Engine("eng675b", 300.0, 10.0, tank, "model", "sn675b");
-        var early = new PlaneAlignmentManeuver(window.StartDate, TimeSpan.Zero, Target(Frames.Frame.ECLIPTIC_J2000), detached);
+        var early = new PlaneAlignmentManeuver(Target(Frames.Frame.ECLIPTIC_J2000), detached, window.StartDate, TimeSpan.Zero);
         var late = NewSpacecraft(-7054, tle);
         late.AddFuelTank(tank);
         late.AddEngine(detached);

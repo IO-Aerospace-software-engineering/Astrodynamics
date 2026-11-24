@@ -13,7 +13,7 @@ namespace IO.Astrodynamics.Propagator;
 /// once the integration is done; the attitude of an impulse (its front along ΔV) is discrete, held over its interval.
 /// </summary>
 /// <remarks>
-/// The epochs come from the maneuver chain: an attitude activates at its <see cref="Maneuver.Maneuver.MinimumEpoch"/> or
+/// The epochs come from the maneuver chain: an attitude activates at its <see cref="Maneuver.Maneuver.MinEpoch"/> or
 /// at the end of the previous maneuver's <see cref="Maneuver.Maneuver.ManeuverWindow"/>, whichever is later; the attitude
 /// of an impulse at the opening of its thrust window, no earlier than the start of the propagation or the last activation;
 /// after the <see cref="Maneuver.Maneuver.ManeuverWindow"/> of an impulse, the law in force before it resumes, unless an

@@ -19,8 +19,8 @@ public class RetrogradeAttitudeTests
     void Create()
     {
         RetrogradeAttitude attitude = new RetrogradeAttitude(TestHelpers.EarthAtJ2000,new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB), TimeSpan.FromHours(1.0));
-        LabelAssert.Equal(new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB),attitude.MinimumEpoch);
-        Assert.Equal(TimeSpan.FromHours(1.0),attitude.ManeuverHoldDuration);
+        LabelAssert.Equal(new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB),attitude.MinEpoch);
+        Assert.Equal(TimeSpan.FromHours(1.0),attitude.HoldDuration);
     }
     
     [Fact]

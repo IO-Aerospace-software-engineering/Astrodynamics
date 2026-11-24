@@ -350,7 +350,7 @@ public sealed class ReferenceCases
         spacecraft.AddFuelTank(tank);
         spacecraft.AddEngine(engine);
         spacecraft.SetManeuvers(maneuver?.Invoke(engine) ?? new ApogeeHeightManeuver(
-            (CelestialItem)Eclipsing.InitialState.Observer, Epoch, TimeSpan.Zero, EclipsingApogeeRadius, engine));
+            EclipsingApogeeRadius, engine, Epoch, TimeSpan.Zero, (CelestialItem)Eclipsing.InitialState.Observer));
         return spacecraft;
     }
 

@@ -20,8 +20,8 @@ public class AntiNormalAttitudeTests
     void Create()
     {
         AntiNormalAttitude attitude = new AntiNormalAttitude(TestHelpers.EarthAtJ2000, new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB), TimeSpan.FromHours(1.0));
-        LabelAssert.Equal(new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB), attitude.MinimumEpoch);
-        Assert.Equal(TimeSpan.FromHours(1.0), attitude.ManeuverHoldDuration);
+        LabelAssert.Equal(new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB), attitude.MinEpoch);
+        Assert.Equal(TimeSpan.FromHours(1.0), attitude.HoldDuration);
     }
 
     [Fact]

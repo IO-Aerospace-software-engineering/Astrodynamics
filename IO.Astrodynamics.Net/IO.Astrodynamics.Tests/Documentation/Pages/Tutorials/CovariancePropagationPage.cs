@@ -162,7 +162,7 @@ internal static class CovariancePropagationPage
             sectionalArea: 10.0, dragCoefficient: 2.2, solarRadiationCoefficient: 1.5);
         maneuvering.AddFuelTank(tank);
         maneuvering.AddEngine(engine);
-        var raise = new ApogeeHeightManeuver(earth, epoch.AddHours(1.0), TimeSpan.Zero, 6878137.0, engine)
+        var raise = new ApogeeHeightManeuver(6878137.0, engine, epoch.AddHours(1.0), TimeSpan.Zero, earth)
         {
             ExecutionError = new ManeuverExecutionError
             {

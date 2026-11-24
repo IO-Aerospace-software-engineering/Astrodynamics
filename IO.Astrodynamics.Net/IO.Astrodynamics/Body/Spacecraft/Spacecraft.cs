@@ -733,7 +733,8 @@ namespace IO.Astrodynamics.Body.Spacecraft
         /// </summary>
         /// <exception cref="InvalidOperationException">An impulse given no engine on a spacecraft of no engine or of
         /// several, or a law that reads its centre given none where it cannot be inferred (SSB mode: the observer is a
-        /// star or a barycentre).</exception>
+        /// star or a barycentre), or an impulse whose inferred centre breaks its rule (an apogee below the equatorial radius
+        /// of the centre, decision 68 of #668).</exception>
         internal (Engine Engine, CelestialItem Center) ResolveManeuver(Maneuver.Maneuver maneuver)
         {
             Engine engine = null;
@@ -765,6 +766,16 @@ namespace IO.Astrodynamics.Body.Spacecraft
                     $"of the initial orbit of {Name}, {observer}, is not a celestial body other than a star (SSB mode), and the law reads its centre " +
                     "(an impulse, an orbital direction, a user target or a user attitude; decisions 61, 64 and 99 of #668). Give maneuverCenter to the " +
                     "constructor of the maneuver.");
+            }
+
+            // The rule of the centre of an impulse (the apogee of an ApogeeHeightManeuver above the surface, decision 68 of
+            // #668): checked by the constructor for a given centre, here for an inferred one, with the exception of the
+            // chain checks (L5-27 as amended)
+            if (maneuver.GivenCenter == null && center != null && maneuver is Maneuver.ImpulseManeuver checkedImpulse &&
+                checkedImpulse.CenterError(center) is { } centerError)
+            {
+                throw new InvalidOperationException(
+                    $"The {maneuver.GetType().Name} of {Name} ({NaifId}) cannot take the centre the run infers, {(center as INaifObject)?.Name}: {centerError}");
             }
 
             return (engine, center);

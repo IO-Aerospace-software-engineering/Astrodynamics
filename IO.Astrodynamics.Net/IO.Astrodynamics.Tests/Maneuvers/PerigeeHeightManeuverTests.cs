@@ -24,12 +24,12 @@ namespace IO.Astrodynamics.Tests.Maneuvers
             FuelTank fuelTank10 = new FuelTank("My fuel tank10", 4000.0, 3000.0, "ft2021", "sn0");
             Engine eng = new Engine("My engine", 350.0, 50.0, fuelTank10, "model 1", "sn1");
 
-            PerigeeHeightManeuver perigeeHeightManeuver = new PerigeeHeightManeuver(TestHelpers.EarthAtJ2000,new TimeSystem.Time(new DateTime(2021, 01, 01),TimeScale.TDB), TimeSpan.FromDays(1.0), 151000000.0, eng);
+            PerigeeHeightManeuver perigeeHeightManeuver = new PerigeeHeightManeuver(151000000.0, eng, new TimeSystem.Time(new DateTime(2021, 01, 01),TimeScale.TDB), TimeSpan.FromDays(1.0), TestHelpers.EarthAtJ2000);
 
             Assert.NotNull(perigeeHeightManeuver.Engine);
-            Assert.Equal(TimeSpan.FromDays(1.0), perigeeHeightManeuver.ManeuverHoldDuration);
-            LabelAssert.Equal(new TimeSystem.Time(new DateTime(2021, 01, 01),TimeScale.TDB), perigeeHeightManeuver.MinimumEpoch);
-            Assert.Equal(151000000.0, perigeeHeightManeuver.TargetPerigeeHeight);
+            Assert.Equal(TimeSpan.FromDays(1.0), perigeeHeightManeuver.HoldDuration);
+            LabelAssert.Equal(new TimeSystem.Time(new DateTime(2021, 01, 01),TimeScale.TDB), perigeeHeightManeuver.MinEpoch);
+            Assert.Equal(151000000.0, perigeeHeightManeuver.TargetPerigeeRadius);
         }
 
         [Fact]
@@ -38,13 +38,15 @@ namespace IO.Astrodynamics.Tests.Maneuvers
             FuelTank fuelTank10 = new FuelTank("My fuel tank10", 4000.0, 3000.0, "ft2021", "sn0");
             Engine eng = new Engine("My engine", 350.0, 50.0, fuelTank10, "model 1", "sn1");
 
-            PerigeeHeightManeuver perigeeHeightManeuver = new PerigeeHeightManeuver(new TimeSystem.Time(new DateTime(2021, 01, 01),TimeScale.TDB), TimeSpan.FromDays(1.0),
-                new KeplerianElements(151000000, 0.0, 0.0, 0.0, 0.0, 0.0, TestHelpers.Earth, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF), eng);
+            PerigeeHeightManeuver perigeeHeightManeuver = new PerigeeHeightManeuver(new KeplerianElements(151000000, 0.0, 0.0, 0.0, 0.0, 0.0, TestHelpers.Earth, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF),
+                eng,
+                new TimeSystem.Time(new DateTime(2021, 01, 01),TimeScale.TDB),
+                TimeSpan.FromDays(1.0));
 
             Assert.NotNull(perigeeHeightManeuver.Engine);
-            Assert.Equal(TimeSpan.FromDays(1.0), perigeeHeightManeuver.ManeuverHoldDuration);
-            LabelAssert.Equal(new TimeSystem.Time(new DateTime(2021, 01, 01),TimeScale.TDB), perigeeHeightManeuver.MinimumEpoch);
-            Assert.Equal(151000000.0, perigeeHeightManeuver.TargetPerigeeHeight);
+            Assert.Equal(TimeSpan.FromDays(1.0), perigeeHeightManeuver.HoldDuration);
+            LabelAssert.Equal(new TimeSystem.Time(new DateTime(2021, 01, 01),TimeScale.TDB), perigeeHeightManeuver.MinEpoch);
+            Assert.Equal(151000000.0, perigeeHeightManeuver.TargetPerigeeRadius);
         }
 
         // The angle the velocity turns by over a tick, |a| 1e-7 s / |v|: the resolution of an epoch label at an apogee
@@ -60,7 +62,7 @@ namespace IO.Astrodynamics.Tests.Maneuvers
             spc.AddFuelTank(new FuelTank("ft", 1000.0, 900.0, "ftA", "123456"));
             spc.AddEngine(new Engine("eng", 450, 50, spc.FuelTanks.First(), "engmk1", "12345"));
 
-            var maneuver = new PerigeeHeightManeuver(TestHelpers.EarthAtJ2000,new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB), TimeSpan.Zero, 42164000.0, spc.Engines.First());
+            var maneuver = new PerigeeHeightManeuver(42164000.0, spc.Engines.First(), new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB), TimeSpan.Zero, TestHelpers.EarthAtJ2000);
 
             // The apogee, half a period after the perigee in TT seconds, the time of a two-body motion about the Earth
             // (#501, #508); Epoch + Period() * 0.5 adds TDB seconds, n·δ off the apogee
@@ -95,7 +97,7 @@ namespace IO.Astrodynamics.Tests.Maneuvers
             spc.AddFuelTank(new FuelTank("ft", 1000.0, 900.0, "ftA", "123456"));
             spc.AddEngine(new Engine("eng", 450, 50, spc.FuelTanks.First(), "engmk1", "12345"));
 
-            var maneuver = new PerigeeHeightManeuver(TestHelpers.EarthAtJ2000,new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB), TimeSpan.Zero, 6678000.0, spc.Engines.First());
+            var maneuver = new PerigeeHeightManeuver(6678000.0, spc.Engines.First(), new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB), TimeSpan.Zero, TestHelpers.EarthAtJ2000);
 
             // The apogee, half a period after the perigee in TT seconds, the time of a two-body motion about the Earth
             // (#501, #508); Epoch + Period() * 0.5 adds TDB seconds, n·δ off the apogee
@@ -141,14 +143,14 @@ namespace IO.Astrodynamics.Tests.Maneuvers
             var ke = Issue686Elements();
             FuelTank fuelTank = new FuelTank("My fuel tank10", 4000.0, 3000.0, "ft2021", "sn0");
             Engine eng = new Engine("My engine", 350.0, 50.0, fuelTank, "model 1", "sn1");
-            var maneuver = new PerigeeHeightManeuver(TimeSystem.Time.J2000TDB, TimeSpan.Zero, ke, eng);
+            var maneuver = new PerigeeHeightManeuver(ke, eng, TimeSystem.Time.J2000TDB, TimeSpan.Zero);
 
             double r = 7178e3;
             double v = System.Math.Sqrt(TestHelpers.EarthAtJ2000.GM / r);
             double worst = new[]
             {
                 System.Math.Abs(ke.PerigeeVector().Magnitude() / r - 1.0), System.Math.Abs(ke.ApogeeVector().Magnitude() / r - 1.0),
-                System.Math.Abs(maneuver.TargetPerigeeHeight / r - 1.0), System.Math.Abs(ke.PerigeeVelocity() / v - 1.0),
+                System.Math.Abs(maneuver.TargetPerigeeRadius / r - 1.0), System.Math.Abs(ke.PerigeeVelocity() / v - 1.0),
                 System.Math.Abs(ke.ApogeeVelocity() / v - 1.0)
             }.Max();
             System.Console.WriteLine($"MEASURE #686 issue elements e = {ke.E:E3}: worst apsis radius and velocity against 7178 km and sqrt(GM/r) {worst:E3}");

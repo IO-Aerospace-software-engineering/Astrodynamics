@@ -14,7 +14,7 @@ namespace IO.Astrodynamics.Maneuver;
 /// (<see cref="ComputeOrientation"/>).
 /// </summary>
 /// <remarks>
-/// In a propagation, the law is in force from its activation, at its <see cref="Maneuver.MinimumEpoch"/> or at the end of
+/// In a propagation, the law is in force from its activation, at its <see cref="Maneuver.MinEpoch"/> or at the end of
 /// the window of the previous maneuver of the chain, whichever is later, to the next activation of the chain: it is
 /// sampled on the solution over that whole interval, and its hold delays the next maneuver (#539,
 /// docs/reference/attitudes.md). An attitude that would activate after the end of the propagation is not executed.
@@ -81,7 +81,7 @@ public abstract class Attitude : Maneuver
         if (!ThrustWindow.HasValue || !ManeuverWindow.HasValue)
         {
             ThrustWindow = new Window(stateVector.Epoch, TimeSpan.Zero);
-            ManeuverWindow = new Window(stateVector.Epoch, ManeuverHoldDuration);
+            ManeuverWindow = new Window(stateVector.Epoch, HoldDuration);
         }
 
         // Computed in ICRF, whatever the frame of the state (#529, #535): the rotation from the spacecraft frame to ICRF

@@ -325,7 +325,7 @@ public partial class IntegratorEventTests
         private readonly Time[] _roots;
         private readonly int _skips;
 
-        internal TwoCrossingImpulse(CelestialItem center, Engine engine, int skips, params Time[] roots) : base(center, S, TimeSpan.Zero, engine)
+        internal TwoCrossingImpulse(CelestialItem center, Engine engine, int skips, params Time[] roots) : base(engine, S, TimeSpan.Zero, center)
         {
             _roots = roots;
             _skips = skips;

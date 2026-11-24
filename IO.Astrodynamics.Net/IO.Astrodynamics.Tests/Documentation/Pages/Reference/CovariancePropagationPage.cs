@@ -88,7 +88,7 @@ internal static class CovariancePropagationPage
     {
         #region docs/reference/covariance-propagation.md:2
         // Inputs: earth (CelestialBody), epoch (Time), engine (Engine)
-        var maneuver = new ApogeeHeightManeuver(earth, epoch, TimeSpan.Zero, 7000000.0, engine)
+        var maneuver = new ApogeeHeightManeuver(7000000.0, engine, epoch, TimeSpan.Zero, earth)
         {
             ExecutionError = new ManeuverExecutionError
             {

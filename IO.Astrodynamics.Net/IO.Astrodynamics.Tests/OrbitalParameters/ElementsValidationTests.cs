@@ -498,7 +498,7 @@ public class ElementsValidationTests
 
         // Act, assert: a bad argument (before: the apogee radius of the other branch, or +Infinity)
         var exception = Assert.Throws<ArgumentException>(() =>
-            new IO.Astrodynamics.Maneuver.ApogeeHeightManeuver(Epoch, TimeSpan.Zero, Keplerian(a: -1e7, e: 1.7), engine));
+            new IO.Astrodynamics.Maneuver.ApogeeHeightManeuver(Keplerian(a: -1e7, e: 1.7), engine, Epoch, TimeSpan.Zero));
         Assert.Equal("targetOrbit", exception.ParamName);
     }
 

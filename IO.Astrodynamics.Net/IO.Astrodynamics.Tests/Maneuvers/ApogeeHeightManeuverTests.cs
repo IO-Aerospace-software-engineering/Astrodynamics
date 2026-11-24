@@ -42,7 +42,7 @@ namespace IO.Astrodynamics.Tests.Maneuvers
             var spc = new Spacecraft(-1110, "GenericSpacecraft1110", 1000.0, state, 3000.0, new Clock("GenericClk1110", 65536));
             spc.AddFuelTank(new FuelTank("ft", 1000.0, 900.0, "ftA", "123456"));
             spc.AddEngine(new Engine("eng", 450, 50, spc.FuelTanks.First(), "engmk1", "12345"));
-            var maneuver = new ApogeeHeightManeuver(earth, new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB), TimeSpan.Zero, r2, spc.Engines.First());
+            var maneuver = new ApogeeHeightManeuver(r2, spc.Engines.First(), new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB), TimeSpan.Zero, earth);
 
             var after = maneuver.TryExecute(state).sv;
 
@@ -66,12 +66,12 @@ namespace IO.Astrodynamics.Tests.Maneuvers
             FuelTank fuelTank10 = new FuelTank("My fuel tank10", 4000.0, 3000.0, "ft2021", "sn0");
             Engine eng = new Engine("My engine", 350.0, 50.0, fuelTank10, "model 1", "sn1");
 
-            ApogeeHeightManeuver apogeeHeightManeuver = new ApogeeHeightManeuver(TestHelpers.EarthAtJ2000,new TimeSystem.Time(new DateTime(2021, 01, 01),TimeScale.TDB), TimeSpan.FromDays(1.0), 151000000.0, eng);
+            ApogeeHeightManeuver apogeeHeightManeuver = new ApogeeHeightManeuver(151000000.0, eng, new TimeSystem.Time(new DateTime(2021, 01, 01),TimeScale.TDB), TimeSpan.FromDays(1.0), TestHelpers.EarthAtJ2000);
 
             Assert.NotNull(apogeeHeightManeuver.Engine);
-            Assert.Equal(TimeSpan.FromDays(1.0), apogeeHeightManeuver.ManeuverHoldDuration);
-            LabelAssert.Equal(new TimeSystem.Time(new DateTime(2021, 01, 01),TimeScale.TDB), apogeeHeightManeuver.MinimumEpoch);
-            Assert.Equal(151000000.0, apogeeHeightManeuver.TargetApogee);
+            Assert.Equal(TimeSpan.FromDays(1.0), apogeeHeightManeuver.HoldDuration);
+            LabelAssert.Equal(new TimeSystem.Time(new DateTime(2021, 01, 01),TimeScale.TDB), apogeeHeightManeuver.MinEpoch);
+            Assert.Equal(151000000.0, apogeeHeightManeuver.TargetApogeeRadius);
         }
 
         [Fact]
@@ -80,13 +80,15 @@ namespace IO.Astrodynamics.Tests.Maneuvers
             FuelTank fuelTank10 = new FuelTank("My fuel tank10", 4000.0, 3000.0, "ft2021", "sn0");
             Engine eng = new Engine("My engine", 350.0, 50.0, fuelTank10, "model 1", "sn1");
 
-            ApogeeHeightManeuver apogeeHeightManeuver = new ApogeeHeightManeuver(new TimeSystem.Time(new DateTime(2021, 01, 01),TimeScale.TDB), TimeSpan.FromDays(1.0),
-                new KeplerianElements(151000000, 0.0, 0.0, 0.0, 0.0, 0.0, TestHelpers.Earth, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF), eng);
+            ApogeeHeightManeuver apogeeHeightManeuver = new ApogeeHeightManeuver(new KeplerianElements(151000000, 0.0, 0.0, 0.0, 0.0, 0.0, TestHelpers.Earth, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF),
+                eng,
+                new TimeSystem.Time(new DateTime(2021, 01, 01),TimeScale.TDB),
+                TimeSpan.FromDays(1.0));
 
             Assert.NotNull(apogeeHeightManeuver.Engine);
-            Assert.Equal(TimeSpan.FromDays(1.0), apogeeHeightManeuver.ManeuverHoldDuration);
-            LabelAssert.Equal(new TimeSystem.Time(new DateTime(2021, 01, 01),TimeScale.TDB), apogeeHeightManeuver.MinimumEpoch);
-            Assert.Equal(151000000.0, apogeeHeightManeuver.TargetApogee);
+            Assert.Equal(TimeSpan.FromDays(1.0), apogeeHeightManeuver.HoldDuration);
+            LabelAssert.Equal(new TimeSystem.Time(new DateTime(2021, 01, 01),TimeScale.TDB), apogeeHeightManeuver.MinEpoch);
+            Assert.Equal(151000000.0, apogeeHeightManeuver.TargetApogeeRadius);
         }
 
         [Fact]
@@ -98,7 +100,7 @@ namespace IO.Astrodynamics.Tests.Maneuvers
             spc.AddFuelTank(new FuelTank("ft", 1000.0, 900.0, "ftA", "123456"));
             spc.AddEngine(new Engine("eng", 450, 50, spc.FuelTanks.First(), "engmk1", "12345"));
 
-            ApogeeHeightManeuver maneuver = new ApogeeHeightManeuver(TestHelpers.EarthAtJ2000,new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB), TimeSpan.Zero, 42164000.0, spc.Engines.First());
+            ApogeeHeightManeuver maneuver = new ApogeeHeightManeuver(42164000.0, spc.Engines.First(), new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB), TimeSpan.Zero, TestHelpers.EarthAtJ2000);
 
             var res = maneuver.TryExecute(orbitalParams);
             // The state after the impulse, the given state unchanged (#588)
@@ -121,7 +123,7 @@ namespace IO.Astrodynamics.Tests.Maneuvers
             spc.AddFuelTank(new FuelTank("ft", 1000.0, 900.0, "ftA", "123456"));
             spc.AddEngine(new Engine("eng", 450, 50, spc.FuelTanks.First(), "engmk1", "12345"));
 
-            ApogeeHeightManeuver maneuver = new ApogeeHeightManeuver(TestHelpers.EarthAtJ2000,new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB), TimeSpan.Zero, 6678000.0, spc.Engines.First());
+            ApogeeHeightManeuver maneuver = new ApogeeHeightManeuver(6678000.0, spc.Engines.First(), new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB), TimeSpan.Zero, TestHelpers.EarthAtJ2000);
 
             var res = maneuver.TryExecute(orbitalParams);
             // The state after the impulse, the given state unchanged (#588)
@@ -146,8 +148,11 @@ namespace IO.Astrodynamics.Tests.Maneuvers
             var spc = new Spacecraft(-1108, "GenericSpacecraft1108", 1000.0, orbitalParams, 3000.0, new Clock("GenericClk1108", 65536));
             spc.AddFuelTank(new FuelTank("ft", 1000.0, 900.0, "ftA", "123456"));
             spc.AddEngine(new Engine("eng", 450, 50, spc.FuelTanks.First(), "engmk1", "12345"));
-            var maneuver = new ApogeeHeightManeuver(TestHelpers.EarthAtJ2000, new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB), TimeSpan.Zero, 42164000.0,
-                spc.Engines.First());
+            var maneuver = new ApogeeHeightManeuver(42164000.0,
+                spc.Engines.First(),
+                new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB),
+                TimeSpan.Zero,
+                TestHelpers.EarthAtJ2000);
 
             Assert.Throws<InvalidOperationException>(() => maneuver.ToOpmManeuverParameters());
 
@@ -164,9 +169,10 @@ namespace IO.Astrodynamics.Tests.Maneuvers
             Assert.Equal(new[] { "apogee" }, parameters.Comments);
         }
 
-        /// <summary>A target orbit in another frame than the spacecraft's initial state is rejected.</summary>
+        /// <summary>A target orbit in another frame than the spacecraft's initial state is rejected by the plan, no more by
+        /// the constructor (decision 65 of #668, decided by S. Guillet, 2026-11-23).</summary>
         [Fact]
-        public void ATargetOrbitInAnotherFrame_IsRejected()
+        public void ATargetOrbitInAnotherFrame_IsRejectedByThePlan()
         {
             var orbitalParams = new StateVector(new Vector3(6678000.0, 0.0, 0.0), new Vector3(0.0, 7727.0, 0.0), TestHelpers.EarthAtJ2000, TimeSystem.Time.J2000TDB,
                 Frames.Frame.ICRF);
@@ -175,7 +181,8 @@ namespace IO.Astrodynamics.Tests.Maneuvers
             spc.AddEngine(new Engine("eng", 450, 50, spc.FuelTanks.First(), "engmk1", "12345"));
             var target = new KeplerianElements(42164000.0, 0.0, 0.0, 0.0, 0.0, 0.0, TestHelpers.EarthAtJ2000, TimeSystem.Time.J2000TDB, Frames.Frame.ECLIPTIC_J2000);
 
-            Assert.Throws<ArgumentException>(() => new PlaneAlignmentManeuver(TimeSystem.Time.J2000TDB, TimeSpan.Zero, target, spc.Engines.First()));
+            var maneuver = new PlaneAlignmentManeuver(target, spc.Engines.First(), TimeSystem.Time.J2000TDB, TimeSpan.Zero);
+            Assert.Equal("maneuvers", Assert.Throws<ArgumentException>(() => spc.SetManeuvers(maneuver)).ParamName);
         }
 
         // #686: the apogee of the issue's near-circular elements is 7178 km (PerigeeHeightManeuverTests.Issue686Elements);
@@ -186,8 +193,8 @@ namespace IO.Astrodynamics.Tests.Maneuvers
             var ke = PerigeeHeightManeuverTests.Issue686Elements();
             FuelTank fuelTank = new FuelTank("My fuel tank10", 4000.0, 3000.0, "ft2021", "sn0");
             Engine eng = new Engine("My engine", 350.0, 50.0, fuelTank, "model 1", "sn1");
-            var maneuver = new ApogeeHeightManeuver(TimeSystem.Time.J2000TDB, TimeSpan.Zero, ke, eng);
-            double error = System.Math.Abs(maneuver.TargetApogee / 7178e3 - 1.0);
+            var maneuver = new ApogeeHeightManeuver(ke, eng, TimeSystem.Time.J2000TDB, TimeSpan.Zero);
+            double error = System.Math.Abs(maneuver.TargetApogeeRadius / 7178e3 - 1.0);
             _output.WriteLine($"MEASURE #686 issue elements: TargetApogee against 7178 km {error:E3}");
             Assert.True(error <= PerigeeHeightManeuverTests.Issue686Tolerance, $"{error:E3}");
         }

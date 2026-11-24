@@ -29,7 +29,7 @@ public class ManeuverHoldTests
     {
         var ex = Assert.Throws<ArgumentOutOfRangeException>(() =>
             new ProgradeAttitude(TestHelpers.EarthAtJ2000, Epoch, TimeSpan.FromTicks(-1)));
-        Assert.Equal("maneuverHoldDuration", ex.ParamName);
+        Assert.Equal("holdDuration", ex.ParamName);
     }
 
     [Fact]
@@ -43,15 +43,15 @@ public class ManeuverHoldTests
     public void Impulse_NegativeHold_Throws()
     {
         var ex = Assert.Throws<ArgumentOutOfRangeException>(() =>
-            new ApogeeHeightManeuver(TestHelpers.EarthAtJ2000, Epoch, TimeSpan.FromSeconds(-1), 8000000.0, NewEngine()));
-        Assert.Equal("maneuverHoldDuration", ex.ParamName);
+            new ApogeeHeightManeuver(8000000.0, NewEngine(), Epoch, TimeSpan.FromSeconds(-1), TestHelpers.EarthAtJ2000));
+        Assert.Equal("holdDuration", ex.ParamName);
     }
 
     [Fact]
     public void ZeroHold_IsAccepted()
     {
         var attitude = new ProgradeAttitude(TestHelpers.EarthAtJ2000, Epoch, TimeSpan.Zero);
-        Assert.Equal(TimeSpan.Zero, attitude.ManeuverHoldDuration);
+        Assert.Equal(TimeSpan.Zero, attitude.HoldDuration);
     }
 
     /// <summary>
@@ -62,7 +62,7 @@ public class ManeuverHoldTests
     [Fact]
     public void TheHoldSetter_IsNotPartOfThePublicOrProtectedSurface()
     {
-        var setter = typeof(IO.Astrodynamics.Maneuver.Maneuver).GetProperty(nameof(IO.Astrodynamics.Maneuver.Maneuver.ManeuverHoldDuration))!
+        var setter = typeof(IO.Astrodynamics.Maneuver.Maneuver).GetProperty(nameof(IO.Astrodynamics.Maneuver.Maneuver.HoldDuration))!
             .GetSetMethod(nonPublic: true);
         Assert.NotNull(setter);
         Assert.False(setter.IsPublic || setter.IsFamily || setter.IsFamilyOrAssembly, setter.Attributes.ToString());

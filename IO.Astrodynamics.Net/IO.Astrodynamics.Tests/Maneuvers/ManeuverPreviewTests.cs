@@ -74,13 +74,13 @@ public class ManeuverPreviewTests
         var target = new KeplerianElements(7200e3, 0.05, 0.6, 0.3, 0.4, 0.0, earth, S, Frames.Frame.ICRF);
         return kind switch
         {
-            "Apogee" => new ApogeeHeightManeuver(earth, S, TimeSpan.Zero, 8000e3, engine),
-            "Perigee" => new PerigeeHeightManeuver(earth, S, TimeSpan.Zero, 7100e3, engine),
-            "Combined" => new CombinedManeuver(earth, S, TimeSpan.Zero, 7100e3, 0.55, engine),
-            "Plane" => new PlaneAlignmentManeuver(S, TimeSpan.Zero, target, engine),
-            "Apsidal" => new ApsidalAlignmentManeuver(S, TimeSpan.Zero, new KeplerianElements(7010e3, 0.012, 0.5, 0.0, 0.2, 0.0, earth, S, Frames.Frame.ICRF), engine),
-            "PhasingOrbit" => new PhasingManeuver(S, target, 2, engine),
-            _ => new PhasingManeuver(earth, S, 1.0, 2, engine)
+            "Apogee" => new ApogeeHeightManeuver(8000e3, engine, S, TimeSpan.Zero, earth),
+            "Perigee" => new PerigeeHeightManeuver(7100e3, engine, S, TimeSpan.Zero, earth),
+            "Combined" => new CombinedManeuver(7100e3, 0.55, engine, S, TimeSpan.Zero, earth),
+            "Plane" => new PlaneAlignmentManeuver(target, engine, S, TimeSpan.Zero),
+            "Apsidal" => new ApsidalAlignmentManeuver(new KeplerianElements(7010e3, 0.012, 0.5, 0.0, 0.2, 0.0, earth, S, Frames.Frame.ICRF), engine, S, TimeSpan.Zero),
+            "PhasingOrbit" => new PhasingManeuver(target, 2, engine, S),
+            _ => new PhasingManeuver(1.0, 2, engine, S, earth)
         };
     }
 
@@ -123,7 +123,7 @@ public class ManeuverPreviewTests
         Assert.Null(previewed.ManeuverWindow);
         Assert.Same(standby, spacecraft.StandbyManeuver);
         Assert.Equal(crossing, previewed.EventCrossingDirection);
-        Assert.Equal(TimeSpan.Zero, previewed.ManeuverHoldDuration);
+        Assert.Equal(TimeSpan.Zero, previewed.HoldDuration);
         if (previewed is PlaneAlignmentManeuver plane) Assert.Null(plane.IsAscendingNode);
         if (previewed is ApsidalAlignmentManeuver apsidal) Assert.False(apsidal.IntersectsP || apsidal.IntersectsQ);
 
@@ -145,8 +145,8 @@ public class ManeuverPreviewTests
     {
         var earth = Earth();
         var spacecraft = NewSpacecraft(earth, out var engine);
-        var apogee = new ApogeeHeightManeuver(earth, S, TimeSpan.Zero, 8000e3, engine);
-        var perigee = new PerigeeHeightManeuver(earth, S, TimeSpan.Zero, 7100e3, engine);
+        var apogee = new ApogeeHeightManeuver(8000e3, engine, S, TimeSpan.Zero, earth);
+        var perigee = new PerigeeHeightManeuver(7100e3, engine, S, TimeSpan.Zero, earth);
         spacecraft.SetManeuvers(apogee, perigee);
         spacecraft.Propagate(new Window(S, S.AddHours(1.0)), Options(earth, integrator));
         Assert.NotNull(apogee.ThrustWindow);
@@ -182,7 +182,7 @@ public class ManeuverPreviewTests
     {
         var earth = Earth();
         var spacecraft = NewSpacecraft(earth, out var engine);
-        var apogee = new ApogeeHeightManeuver(earth, S, TimeSpan.Zero, 8000e3, engine);
+        var apogee = new ApogeeHeightManeuver(8000e3, engine, S, TimeSpan.Zero, earth);
         var targetFrame = frame == "ICRF" ? Frames.Frame.ICRF : Frames.Frame.ECLIPTIC_J2000;
         var aboutTheEarth = spacecraft.InitialOrbitalParameters.ToStateVector().ToFrame(targetFrame);
         CelestialItem other = observer switch
@@ -196,7 +196,7 @@ public class ManeuverPreviewTests
 
         var deltaV = apogee.ComputeDeltaV(state);
 
-        var twin = new ApogeeHeightManeuver(earth, S, TimeSpan.Zero, 8000e3, engine);
+        var twin = new ApogeeHeightManeuver(8000e3, engine, S, TimeSpan.Zero, earth);
         twin.TryExecute(state);
         Assert.Equal(twin.DeltaV, deltaV);
         var reference = apogee.ComputeDeltaV(aboutTheEarth);
@@ -210,7 +210,7 @@ public class ManeuverPreviewTests
     {
         var earth = Earth();
         NewSpacecraft(earth, out var engine);
-        var apogee = new ApogeeHeightManeuver(earth, S, TimeSpan.Zero, 8000e3, engine);
+        var apogee = new ApogeeHeightManeuver(8000e3, engine, S, TimeSpan.Zero, earth);
         Assert.Equal("stateVector", Assert.Throws<ArgumentNullException>(() => apogee.ComputeDeltaV(null)).ParamName);
     }
 
@@ -236,7 +236,7 @@ public class ManeuverPreviewTests
         var spc = new Spacecraft(Interlocked.Decrement(ref _nextId), "PLANEPREV", 1000.0, orbit, 3000.0, new Clock("PLANEPREV", 65536));
         spc.AddFuelTank(new FuelTank("ft", 2000.0, 1900.0, "ftA", "123456"));
         spc.AddEngine(new Engine("eng", 450, 50, spc.FuelTanks.First(), "engmk1", "12345"));
-        var plane = new PlaneAlignmentManeuver(new Time(DateTime.MinValue, TimeScale.TDB), TimeSpan.Zero, target, spc.Engines.First());
+        var plane = new PlaneAlignmentManeuver(target, spc.Engines.First(), new Time(DateTime.MinValue, TimeScale.TDB), TimeSpan.Zero);
 
         // The closed form: the normals, the node of the case's descending pass (u near 2.198 rad) and its opposite
         static Vector3 Normal(double i, double o) => new(System.Math.Sin(o) * System.Math.Sin(i), -System.Math.Cos(o) * System.Math.Sin(i), System.Math.Cos(i));
@@ -348,8 +348,8 @@ public class ManeuverPreviewTests
         var earth = Earth();
         var spacecraft = NewSpacecraft(earth, out var engine);
         var target = new KeplerianElements(7000e3, 0.0, 0.6, 0.3, 0.0, 0.0, earth, S, Frames.Frame.ICRF);
-        var plane = new PlaneAlignmentManeuver(S.AddSeconds(1800.0), TimeSpan.Zero, target, engine);
-        var fresh = new PlaneAlignmentManeuver(S.AddSeconds(1800.0), TimeSpan.Zero, target, engine);
+        var plane = new PlaneAlignmentManeuver(target, engine, S.AddSeconds(1800.0), TimeSpan.Zero);
+        var fresh = new PlaneAlignmentManeuver(target, engine, S.AddSeconds(1800.0), TimeSpan.Zero);
         spacecraft.SetManeuvers(plane);
         spacecraft.Propagate(new Window(S, S.AddHours(3.0)), Options(earth, integrator));
         Assert.NotNull(plane.ThrustWindow);
@@ -375,22 +375,22 @@ public class ManeuverPreviewTests
     {
         var earth = Earth();
         var spacecraft = NewSpacecraft(earth, out var engine);
-        var phasing = new PhasingManeuver(earth, S.AddSeconds(1800.0), 1.0, 2, engine);
-        Assert.Equal(TimeSpan.Zero, phasing.ManeuverHoldDuration);
+        var phasing = new PhasingManeuver(1.0, 2, engine, S.AddSeconds(1800.0), earth);
+        Assert.Equal(TimeSpan.Zero, phasing.HoldDuration);
         spacecraft.SetManeuvers(phasing);
 
         spacecraft.Propagate(new Window(S, S.AddHours(3.0)), Options(earth, integrator));
         Assert.NotNull(phasing.ThrustWindow);
-        var hold = phasing.ManeuverHoldDuration;
+        var hold = phasing.HoldDuration;
         Assert.True(hold > TimeSpan.Zero);
 
         spacecraft.Propagate(new Window(S, S.AddSeconds(600.0)), Options(earth, integrator));
         Assert.Null(phasing.ThrustWindow);
-        Assert.Equal(TimeSpan.Zero, phasing.ManeuverHoldDuration);
+        Assert.Equal(TimeSpan.Zero, phasing.HoldDuration);
 
         // The preview computes no hold
         phasing.ComputeDeltaV(spacecraft.InitialOrbitalParameters.ToStateVector());
-        Assert.Equal(TimeSpan.Zero, phasing.ManeuverHoldDuration);
+        Assert.Equal(TimeSpan.Zero, phasing.HoldDuration);
     }
 
     // ---------------------------------------------------------------------------------------------------------------------

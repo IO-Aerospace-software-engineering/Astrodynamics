@@ -152,13 +152,18 @@ namespace IO.Astrodynamics.Tests.Mission
             spacecraft.AddCircularInstrument("CAM601", 80.0 * IO.Astrodynamics.Constants.Deg2Rad, Vector3.VectorZ, Vector3.VectorX, Vector3.VectorX, naifId: -1783601, model: "mod1");
 
             var planeAlignmentManeuver =
-                new PlaneAlignmentManeuver(new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB), TimeSpan.Zero, targetOrbit, spacecraft.Engines.First());
+                new PlaneAlignmentManeuver(targetOrbit, spacecraft.Engines.First(), new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB), TimeSpan.Zero);
             spacecraft.SetManeuvers(planeAlignmentManeuver,
-                new ApsidalAlignmentManeuver(new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB), TimeSpan.Zero, targetOrbit,
-                    spacecraft.Engines.First()),
-                new PhasingManeuver(new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB), targetOrbit, 1, spacecraft.Engines.First()),
-                new ApogeeHeightManeuver(TestHelpers.EarthAtJ2000, new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB), TimeSpan.Zero, 15866666.666666666,
-                    spacecraft.Engines.First()),
+                new ApsidalAlignmentManeuver(targetOrbit,
+                    spacecraft.Engines.First(),
+                    new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB),
+                    TimeSpan.Zero),
+                new PhasingManeuver(targetOrbit, 1, spacecraft.Engines.First(), new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB)),
+                new ApogeeHeightManeuver(15866666.666666666,
+                    spacecraft.Engines.First(),
+                    new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB),
+                    TimeSpan.Zero,
+                    TestHelpers.EarthAtJ2000),
                 new ZenithAttitude(TestHelpers.EarthAtJ2000, new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB), TimeSpan.FromMinutes(1)),
                 new RetrogradeAttitude(TestHelpers.EarthAtJ2000, new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB), TimeSpan.FromMinutes(1)),
                 new ProgradeAttitude(TestHelpers.EarthAtJ2000, new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB), TimeSpan.FromMinutes(1)));
@@ -368,13 +373,18 @@ namespace IO.Astrodynamics.Tests.Mission
             spacecraft.AddCircularInstrument("CAM601", 80.0 * IO.Astrodynamics.Constants.Deg2Rad, Vector3.VectorZ, Vector3.VectorX, Vector3.VectorX, naifId: -1783601, model: "mod1");
 
             var planeAlignmentManeuver =
-                new PlaneAlignmentManeuver(new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB), TimeSpan.Zero, targetOrbit, spacecraft.Engines.First());
+                new PlaneAlignmentManeuver(targetOrbit, spacecraft.Engines.First(), new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB), TimeSpan.Zero);
             spacecraft.SetManeuvers(planeAlignmentManeuver,
-                new ApsidalAlignmentManeuver(new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB), TimeSpan.Zero, targetOrbit,
-                    spacecraft.Engines.First()),
-                new PhasingManeuver(new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB), targetOrbit, 1, spacecraft.Engines.First()),
-                new ApogeeHeightManeuver(TestHelpers.EarthAtJ2000, new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB), TimeSpan.Zero, 15866666.666666666,
-                    spacecraft.Engines.First()),
+                new ApsidalAlignmentManeuver(targetOrbit,
+                    spacecraft.Engines.First(),
+                    new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB),
+                    TimeSpan.Zero),
+                new PhasingManeuver(targetOrbit, 1, spacecraft.Engines.First(), new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB)),
+                new ApogeeHeightManeuver(15866666.666666666,
+                    spacecraft.Engines.First(),
+                    new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB),
+                    TimeSpan.Zero,
+                    TestHelpers.EarthAtJ2000),
                 new ZenithAttitude(TestHelpers.EarthAtJ2000, new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB), TimeSpan.FromMinutes(1)),
                 new RetrogradeAttitude(TestHelpers.EarthAtJ2000, new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB), TimeSpan.FromMinutes(1)),
                 new ProgradeAttitude(TestHelpers.EarthAtJ2000, new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB), TimeSpan.FromMinutes(1)));
@@ -763,7 +773,7 @@ namespace IO.Astrodynamics.Tests.Mission
                 Frames.Frame.ICRF).ToFrame(Frames.Frame.ECLIPTIC_J2000);
             var tank = new FuelTank("ft685", 1000.0, 900.0, "ftA", "sn685");
             var engine = new Engine("eng685", 450, 50, tank, "engmk1", "sn685");
-            var maneuver = new PlaneAlignmentManeuver(window.StartDate, TimeSpan.Zero, target, engine);
+            var maneuver = new PlaneAlignmentManeuver(target, engine, window.StartDate, TimeSpan.Zero);
             var spacecraft = new Spacecraft(-6855, "Scenario685", 1000.0, orbit, 3000.0, new Clock("clk685", 65536));
             spacecraft.AddFuelTank(tank);
             spacecraft.AddEngine(engine);

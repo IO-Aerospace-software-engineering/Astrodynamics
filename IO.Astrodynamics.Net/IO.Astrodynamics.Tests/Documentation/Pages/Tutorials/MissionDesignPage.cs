@@ -187,18 +187,24 @@ internal static class MissionDesignPage
         //   (Window), earth (CelestialBody)
         // Build the maneuver plan, in order
         var maneuver1 = new PlaneAlignmentManeuver(
-            new Time(DateTime.MinValue, TimeScale.TDB), TimeSpan.Zero,
-            targetOrbit, engine);
+            targetOrbit,
+            engine,
+            new Time(DateTime.MinValue, TimeScale.TDB),
+            TimeSpan.Zero);
 
         spacecraft.SetManeuvers(maneuver1,
             new ApsidalAlignmentManeuver(
-                new Time(DateTime.MinValue, TimeScale.TDB), TimeSpan.Zero,
-                targetOrbit, engine),
+                targetOrbit,
+                engine,
+                new Time(DateTime.MinValue, TimeScale.TDB),
+                TimeSpan.Zero),
             new PhasingManeuver(
-                new Time(DateTime.MinValue, TimeScale.TDB), targetOrbit, 3, engine),
+                targetOrbit, 3, engine, new Time(DateTime.MinValue, TimeScale.TDB)),
             new ApogeeHeightManeuver(
-                new Time(DateTime.MinValue, TimeScale.TDB), TimeSpan.Zero,
-                targetOrbit, engine));
+                targetOrbit,
+                engine,
+                new Time(DateTime.MinValue, TimeScale.TDB),
+                TimeSpan.Zero));
 
         // Propagate --- maneuvers fire automatically via event detection
         var scenario = new Scenario("Rendezvous", mission, window);

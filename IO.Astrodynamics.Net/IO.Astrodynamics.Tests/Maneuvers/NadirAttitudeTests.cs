@@ -20,8 +20,8 @@ public class NadirAttitudeTests
     void Create()
     {
         NadirAttitude zenithAttitude = new NadirAttitude(TestHelpers.EarthAtJ2000,new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB), TimeSpan.FromHours(1.0));
-        LabelAssert.Equal(new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB), zenithAttitude.MinimumEpoch);
-        Assert.Equal(TimeSpan.FromHours(1.0), zenithAttitude.ManeuverHoldDuration);
+        LabelAssert.Equal(new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB), zenithAttitude.MinEpoch);
+        Assert.Equal(TimeSpan.FromHours(1.0), zenithAttitude.HoldDuration);
     }
 
     [Fact]
@@ -62,6 +62,6 @@ public class NadirAttitudeTests
         Assert.Same(afterTheHold, nadir.TryExecute(afterTheHold).sv);
         Assert.Equal(nadir, spc.StandbyManeuver);
         Assert.Empty(spc.ExecutedManeuvers);
-        LabelAssert.Equal(TimeSystem.Time.J2000TDB, prograde.MinimumEpoch);
+        LabelAssert.Equal(TimeSystem.Time.J2000TDB, prograde.MinEpoch);
     }
 }
