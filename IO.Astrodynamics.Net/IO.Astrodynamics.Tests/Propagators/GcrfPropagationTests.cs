@@ -117,7 +117,7 @@ public class GcrfPropagationTests
                 initial = new StateVector(initial.Position, new Vector3(-50.0, 7790.0, 0.0), earth, Start, frame);
             }
 
-            var spacecraft = new Spacecraft(id, $"GCRF{-id}", 1000.0, 3000.0, new Clock($"gcrf{-id}", 65536), initial, 10.0, 2.2, null, 1.5);
+            var spacecraft = new Spacecraft(id, $"GCRF{-id}", 1000.0, initial, 3000.0, new Clock($"gcrf{-id}", 65536), 10.0, 2.2, null, 1.5);
             if (variant.Contains("Impulse"))
             {
                 var tank = new FuelTank("ft", "model", "sn", 1000.0, 1000.0);
@@ -191,7 +191,7 @@ public class GcrfPropagationTests
         PropagationSolution Run(Frames.Frame frame, int id)
         {
             var earth = Earth();
-            var spacecraft = new Spacecraft(id, $"GCRFC{-id}", 1000.0, 3000.0, new Clock($"gcrfc{-id}", 65536), State(earth, frame, p0), 10.0);
+            var spacecraft = new Spacecraft(id, $"GCRFC{-id}", 1000.0, State(earth, frame, p0), 3000.0, new Clock($"gcrfc{-id}", 65536), 10.0);
             return new CentralBodyPropagator(Window, spacecraft, new PropagationOptions { Integrator = RK78IntegratorOptions.Default, OutputStep = TimeSpan.FromSeconds(60.0), ThirdBodies = Bodies(earth), AtmosphericDrag = true, CovariancePropagation = options ?? CovariancePropagationOptions.None })
                 .Propagate();
         }

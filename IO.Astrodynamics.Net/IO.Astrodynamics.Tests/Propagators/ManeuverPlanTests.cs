@@ -55,8 +55,8 @@ public class ManeuverPlanTests
     private static Spacecraft NewSpacecraft(CelestialBody earth, out Engine engine, OrbitalParams orbit = null)
     {
         int id = NextId();
-        var spacecraft = new Spacecraft(id, "PLAN" + -id, 1000.0, 3000.0, new Clock("PLAN" + -id, 65536),
-            orbit ?? new KeplerianElements(7000e3, 0.01, 0.5, 0.0, 0.0, 0.0, earth, S, Frames.Frame.ICRF));
+        var spacecraft = new Spacecraft(id, "PLAN" + -id, 1000.0, orbit ?? new KeplerianElements(7000e3, 0.01, 0.5, 0.0, 0.0, 0.0, earth, S, Frames.Frame.ICRF), 3000.0,
+            new Clock("PLAN" + -id, 65536));
         var tank = new FuelTank("ft" + -id, "m", "sn" + -id, 1000.0, 1000.0);
         spacecraft.AddFuelTank(tank);
         engine = new Engine("eng" + -id, "m", "sn" + -id, 300.0, 10.0, tank);
@@ -282,8 +282,8 @@ public class ManeuverPlanTests
         {
             var earth = Earth();
             int id = NextId();
-            spacecraft = new Spacecraft(id, "PLAN" + -id, 1000.0, 3000.0, new Clock("PLAN" + -id, 65536),
-                new KeplerianElements(7000e3, 0.01, 0.5, 0.0, 0.0, 0.0, earth, S, Frames.Frame.ICRF));
+            spacecraft = new Spacecraft(id, "PLAN" + -id, 1000.0, new KeplerianElements(7000e3, 0.01, 0.5, 0.0, 0.0, 0.0, earth, S, Frames.Frame.ICRF), 3000.0,
+                new Clock("PLAN" + -id, 65536));
             var tank = new FuelTank("ft", "m", "sn", 1000.0, 1000.0);
             var engine = new Engine("eng", "m", "sn", 300.0, 10.0, tank);
             var target = new KeplerianElements(7100e3, 0.01, 0.5, 0.0, 0.0, 0.0, earth, S, Frames.Frame.ECLIPTIC_J2000);

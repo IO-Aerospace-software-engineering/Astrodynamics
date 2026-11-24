@@ -298,7 +298,7 @@ opm.SaveToFile("output.opm", validateBeforeSave: true, wrapInNdm: true, indent: 
 **OPM ↔ Spacecraft Bidirectional Conversion**
 ```csharp
 // Spacecraft to OPM (for archiving/sharing)
-var spacecraft = new Spacecraft(-1000, "ISS", 420000.0, 500000.0, clock, stateVector,
+var spacecraft = new Spacecraft(-1000, "ISS", 420000.0, stateVector, 500000.0, clock,
     1600.0, 2.2, "1998-067A", 1.5);
 var opm = spacecraft.ToOpm(
     originator: "My Organization",
@@ -311,7 +311,7 @@ opm.SaveToFile("iss.opm");
 var restoredOpm = Opm.LoadFromFile("iss.opm");
 var restored = restoredOpm.ToSpacecraft(
     naifId: -1000,
-    maximumOperatingMass: 500000.0,
+    maxOperatingMass: 500000.0,
     clock: new Clock("OnboardClock", 256),
     observer: earth);  // Optional, defaults to the CENTER_NAME centre (an unknown one throws)
 ```
@@ -491,7 +491,7 @@ var earth = new CelestialBody(PlanetsAndMoons.EARTH, Frame.ICRF, epoch,
 // A propagation takes the models of the orbit's centre, and a listed body of its id with other models throws
 // (#674): the orbit is built on this earth
 var orbit = new StateVector(new Vector3(6800000.0, 0, 0), new Vector3(0, 7500.0, 0), earth, epoch, Frame.ICRF);
-var spacecraft = new Spacecraft(-1000, "Sat", 100.0, 10000.0, clock, orbit);
+var spacecraft = new Spacecraft(-1000, "Sat", 100.0, orbit, 10000.0, clock);
 
 // The propagator uses the geopotential model of the orbit's centre; the settings in one PropagationOptions value
 var propagator = new CentralBodyPropagator(window, spacecraft, new PropagationOptions
@@ -533,7 +533,7 @@ rejects a step of zero or less.
 
 **Solar Radiation Pressure (`SolarRadiationPressure`)**
 - Cannonball model: `F = (L_sun / 4*pi*c) * Cr * (A/m) * r_hat / r^2`
-- Includes **reflectivity coefficient Cr** from `Spacecraft.SolarRadiationCoeff` (range 1.0–2.0, default 1.0)
+- Includes **reflectivity coefficient Cr** from `Spacecraft.SolarRadiationCoeff` (typically 1.0 to 2.0; finite and not negative; default 1.0)
 - **Continuous shadow model**: uses `ShadowFraction` (two-circle overlap area) instead of binary eclipse check
   - Handles none, partial, annular, and total eclipse geometries
   - SRP is scaled by `(1 - maxShadowFraction)` across all occluding bodies
@@ -542,8 +542,8 @@ rejects a step of zero or less.
 
 ```csharp
 // SRP with Cr = 1.5
-var spacecraft = new Spacecraft(-1001, "Sat", 100.0, 10000.0, clock, orbit,
-    sectionalArea: 10.0, solarRadiationCoeff: 1.5);
+var spacecraft = new Spacecraft(-1001, "Sat", 100.0, orbit, 10000.0, clock,
+    sectionalArea: 10.0, solarRadiationCoefficient: 1.5);
 var srp = new SolarRadiationPressure(spacecraft, [earth]);
 ```
 
@@ -669,7 +669,7 @@ Default body axes (static fields, backward-compatible):
 
 ```csharp
 // Spacecraft with +X as front (e.g., matching a SPICE FK convention)
-var spacecraft = new Spacecraft(-1001, "Sat", 1000, 5000, clock, orbit,
+var spacecraft = new Spacecraft(-1001, "Sat", 1000, orbit, 5000, clock,
     bodyFront: Vector3.VectorX, bodyRight: Vector3.VectorY.Inverse(), bodyUp: Vector3.VectorZ);
 
 // The single-vector attitudes, the impulse attitude and the TRIAD factories use the instance axes
@@ -858,7 +858,7 @@ var deg2Rad = IO.Astrodynamics.Constants.Deg2Rad; // not Constants.Deg2Rad (that
    - A document with several OPM messages (#679), or an OPM with several segments, headers, bodies, metadata or data sections, or blocks of a data section, throws `OpmParseException` without `validateSchema`; with it (the default) the NDM/XML 4.0.0 schema, checked in the form of the document (a root `ndm` or `opm` without a namespace, every element unqualified as Space-Track and the writer write it, or every element below the root in the namespace; third round of #668), rejects the repeated elements first, `OpmValidationException`, but not several OPMs of an NDM; split it into one message per segment. An `ndm` without an OPM (empty, or of other messages only), which the NDM master accepts, is a schema error too, `OpmValidationException` where the reader's `OpmParseException` came before
    - A keyword whose value the data model refuses (out of its range, or an empty required string) throws `OpmParseException` naming the keyword and its value, with the data model's `ArgumentException` as inner exception, with or without `validateSchema` for a value the schema accepts (the library's rules beyond the schema, #708, decided by S. Guillet, 2026-11-16; fourth round of #668; before, the `ArgumentException` crossed the reader); the data-model constructors keep their `ArgumentException`
    - Use `Spacecraft.ToOpm()` for archiving spacecraft state with maneuvers
-   - Use `Opm.ToSpacecraft()` to restore spacecraft (requires naifId, clock, maxMass)
+   - Use `Opm.ToSpacecraft()` to restore spacecraft (requires naifId; `maxOperatingMass` and `clock` optional, a MASS above the maximum throwing, decision 77 of #668)
    - Use `Opm.ToStateVector()` for simple state vector extraction
    - Unit conversions (km↔m, deg↔rad) are automatic
    - Maneuver conversion is one-way: Spacecraft→OPM (OPM maneuvers are archival only)
@@ -889,7 +889,7 @@ var deg2Rad = IO.Astrodynamics.Constants.Deg2Rad; // not Constants.Deg2Rad (that
    - Default drag coefficient (Cd) is **2.2** (free-molecular flow for satellites), not 0.3
    - Drag reads the central body's atmosphere: an Earth without a model takes NRLMSISE-00 at nominal space weather; another central body needs a model (#674)
    - Atmospheric drag uses **atmosphere-relative velocity** (body-centered velocity minus co-rotation)
-   - SRP includes **Cr coefficient** from `Spacecraft.SolarRadiationCoeff` (default 1.0, range 1.0–2.0)
+   - SRP includes **Cr coefficient** from `Spacecraft.SolarRadiationCoeff` (default 1.0; typically 1.0 to 2.0, finite and not negative)
    - SRP uses **continuous shadow fraction** (partial/annular eclipses reduce SRP proportionally)
    - Both forces use **dynamic mass** via `GetTotalMass()` (accounts for fuel consumption during propagation)
    - Use `CelestialItem.ShadowFraction()` for eclipse geometry calculations

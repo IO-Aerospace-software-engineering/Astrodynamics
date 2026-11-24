@@ -1060,7 +1060,7 @@ public class NearParabolicBandTests
     public void Issue477_APropagation_StartsFromTheElements(bool rk78)
     {
         // Arrange: a spacecraft whose initial orbit is case 1 without a perigee radius
-        var spacecraft = new Spacecraft(-1477, "BAND477", 100.0, 1000.0, new Clock("band477", 65536), Case1());
+        var spacecraft = new Spacecraft(-1477, "BAND477", 100.0, Case1(), 1000.0, new Clock("band477", 65536));
         var window = new Window(Epoch, Epoch.AddSeconds(60.0));
         var bodies = new CelestialItem[] { _earth };
 

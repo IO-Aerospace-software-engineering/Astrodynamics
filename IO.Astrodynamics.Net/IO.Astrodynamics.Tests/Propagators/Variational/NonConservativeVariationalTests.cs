@@ -188,8 +188,8 @@ public class NonConservativeVariationalTests : IClassFixture<ReferenceCases>
     private static PropagationSolution Propagate(ReferenceCase referenceCase, StateVector start, double dragCoefficient,
         double reflectivityCoefficient, double tolerance, VariationalOptions options)
     {
-        var spacecraft = new Spacecraft(-1965, "NONCONSERVATIVE", 100.0, 1000.0, new Clock("nonconservative", 65536),
-            start, 10.0, dragCoefficient, null, reflectivityCoefficient);
+        var spacecraft = new Spacecraft(-1965, "NONCONSERVATIVE", 100.0, start, 1000.0,
+            new Clock("nonconservative", 65536), 10.0, dragCoefficient, null, reflectivityCoefficient);
         return spacecraft.PropagateWithVariational(new TimeSystem.Window(start.Epoch, start.Epoch.Add(referenceCase.Duration)),
             new PropagationOptions { Integrator = new RK78IntegratorOptions { AbsoluteTolerance = tolerance, RelativeTolerance = tolerance }, OutputStep = TimeSpan.FromSeconds(3600.0), ThirdBodies = referenceCase.Bodies, AtmosphericDrag = referenceCase.AtmosphericDrag, SolarRadiationPressure = referenceCase.SolarRadiationPressure },
             options);

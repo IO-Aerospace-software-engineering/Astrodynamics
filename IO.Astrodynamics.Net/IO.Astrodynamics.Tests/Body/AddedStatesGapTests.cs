@@ -67,7 +67,7 @@ public class AddedStatesGapTests
             }).ToArray();
 
     private static Spacecraft NewSpacecraft(int naifId, StateVector orbit) =>
-        new(naifId, $"GA{-naifId}", 1000.0, 3000.0, new Clock($"GA{-naifId}_CLK", 65536), orbit);
+        new(naifId, $"GA{-naifId}", 1000.0, orbit, 3000.0, new Clock($"GA{-naifId}_CLK", 65536));
 
     private static double Seconds(in Time epoch) => (epoch - Start).TotalSeconds;
 
@@ -502,7 +502,7 @@ public class AddedStatesGapTests
         var earth = Earth();
         var moon = new CelestialBody(PlanetsAndMoons.MOON, Frame.ICRF, Start);
         var orbit = Orbit(earth);
-        var spacecraft = new Spacecraft(-7985, "GA7985", 1000.0, 3000.0, new Clock("GA7985_CLK", 65536), orbit, cosparId: "2026-001A");
+        var spacecraft = new Spacecraft(-7985, "GA7985", 1000.0, orbit, 3000.0, new Clock("GA7985_CLK", 65536), cosparId: "2026-001A");
         spacecraft.AddPropagatedStates(new StateVector(new Vector3(8000000.0, 0.0, 0.0), new Vector3(0.0, 7000.0, 0.0), earth,
             Start.AddSeconds(3600.0), Frame.ECLIPTIC_J2000));
         var lone = Assert.Single(Assert.Single(spacecraft.PropagatedArcs));
@@ -622,7 +622,7 @@ public class AddedStatesGapTests
         var tle = new TLE("ISS",
             "1 25544U 98067A   21020.53488036  .00016717  00000-0  10270-3 0  9054",
             "2 25544  51.6423 353.0312 0000493 320.8755  39.2360 15.49309423 25703");
-        var spacecraft = new Spacecraft(-7991, "GA7991", 100.0, 10000.0, new Clock("GA7991_CLK", 65536), tle);
+        var spacecraft = new Spacecraft(-7991, "GA7991", 100.0, tle, 10000.0, new Clock("GA7991_CLK", 65536));
         new TLEPropagator(new Window(tle.Epoch, tle.Epoch.AddHours(1.0)), spacecraft, TimeSpan.FromSeconds(60.0)).Propagate();
         var later = Enumerable.Range(0, 61)
             .Select(i => tle.ToStateVector(tle.Epoch.AddHours(3.0).AddSeconds(60.0 * i)).ToFrame(Frame.ICRF).ToStateVector()).ToArray();

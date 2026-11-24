@@ -7267,8 +7267,9 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   ([#800](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/800), lot L5b, decision 75 of #668,
   decided by S. Guillet, 2026-11-23, under **Fixed**): both `Spacecraft` constructors throw `ArgumentOutOfRangeException`
   naming the parameter for a `mass` not finite or negative (an `ArgumentException` naming no parameter from
-  `CelestialItem` before), a `maximumOperatingMass` not finite or below the mass, a `sectionalArea` not finite or not above
-  0, a `dragCoeff`, `solarRadiationCoeff` or `hardBodyRadius` not finite or negative; the kernel-backed constructor gains
+  `CelestialItem` before), a `maxOperatingMass` not finite or below the mass, a `sectionalArea` not finite or not above
+  0, a `dragCoefficient`, `solarRadiationCoefficient` or `hardBodyRadius` not finite or negative (the parameters named
+  as renamed by lot L5b, decision 71); the kernel-backed constructor gains
   these checks, which run before it reads the kernels, as do the NAIF id and the clock (before, a spacecraft without an SPK
   threw `SpiceException` whatever its values). `FuelTank` checks its `capacity` first, finite and above 0, then its
   `initialQuantity`, finite, above 0 and at most the capacity; `Engine` throws `ArgumentOutOfRangeException` naming `isp`
@@ -7276,6 +7277,36 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   before, for 0 or less). Migration: pass finite values in range; a `catch (ArgumentException)` still catches the new
   exception, which derives from it; `Assert.Throws<ArgumentException>` on an engine's or a payload's value or a
   spacecraft's negative mass becomes `Assert.Throws<ArgumentOutOfRangeException>`.
+- **Breaking: the propagated `Spacecraft` constructor takes the orbit fourth, the maximum operating mass and the clock
+  optional** (lot L5b, R10, decisions 70 and 71 of
+  [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668), decided by S. Guillet,
+  2026-11-23): `Spacecraft(int naifId, string name, double mass, OrbitalParameters initialOrbitalParameters, double
+  maxOperatingMass = double.MaxValue, Clock clock = null, double sectionalArea = 1.0, double dragCoefficient = 2.2,
+  string cosparId = null, double solarRadiationCoefficient = 1.0, Vector3? bodyFront = null, Vector3? bodyRight = null,
+  Vector3? bodyUp = null, double hardBodyRadius = 0.0)`, where it was `(naifId, name, mass, maximumOperatingMass, clock,
+  initialOrbitalParameters, sectionalArea, dragCoeff, cosparId, solarRadiationCoeff, ...)` with a required clock (a null
+  clock threw `ArgumentNullException`). The default clock is `new Clock(name + "_CLK", 65536)`, the resolution of the CK
+  the library writes; the defaults give the results of the explicit values they stand for, bit for bit, and the default
+  clock the SCLK of the explicit one byte for byte (`SpacecraftConstructionTests`). An old positional call no longer
+  compiles: a `double` does not convert to `OrbitalParameters`. Migration: `new Spacecraft(id, name, mass, max, clock,
+  orbit, ...)` becomes `new Spacecraft(id, name, mass, orbit, max, clock, ...)`, or `new Spacecraft(id, name, mass,
+  orbit)` when the maximum was `double.MaxValue` and the clock `name + "_CLK"` at 65536 ticks per second.
+- **Breaking: the parameters `maximumOperatingMass`, `dragCoeff` and `solarRadiationCoeff` of both `Spacecraft`
+  constructors are named `maxOperatingMass`, `dragCoefficient` and `solarRadiationCoefficient`** (lot L5b, decision 71 of
+  #668, decided by S. Guillet, 2026-11-23, as the member each sets; `SolarRadiationCoeff` keeps its name until lot L9).
+  The kernel-backed constructor keeps its positions and its default clock, `name + "_CLK"` at 256 ticks per second, so
+  only a named argument breaks. Migration: rename the named arguments; `ArgumentOutOfRangeException.ParamName` gives the
+  new names.
+- **Breaking: `Spacecraft.MaximumOperatingMass` is renamed `MaxOperatingMass`** (lot L5b, decision 70 of #668, decided by
+  S. Guillet, 2026-11-23), with no forwarder. The value stays informational: checked against the dry mass only, never
+  against the fuel and the payloads (L5-37 of #668). Migration: read `MaxOperatingMass`.
+- **Breaking: `Opm.ToSpacecraft(int naifId, double maxOperatingMass = double.MaxValue, Clock clock = null, ILocalizable
+  observer = null)` raises no maximum** (lot L5b, decision 77 of #668, decided by S. Guillet, 2026-11-23): the maximum
+  operating mass and the clock are optional with the defaults of the propagated constructor (the clock `OBJECT_NAME +
+  "_CLK"` at 65536 ticks per second), and a `MASS` above `maxOperatingMass` throws `ArgumentOutOfRangeException` naming
+  `maxOperatingMass` from the constructor, where the maximum was raised to the mass without a word; a null clock threw
+  `ArgumentNullException` before. The parameter `maximumOperatingMass` is named `maxOperatingMass`. Migration: pass a
+  maximum at least the OPM's mass, or none; `maximumOperatingMass:` becomes `maxOperatingMass:`.
 - **`Spacecraft.GetTotalISP()` and `GetTotalFuelFlow()` count every engine**
   ([#801](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/801) part 1, lot L5b, decision 60 of
   #668 with L5-20 as amended, decided by S. Guillet, 2026-11-23): they counted only the engines whose tank held fuel at

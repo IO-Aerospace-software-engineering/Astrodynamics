@@ -78,7 +78,7 @@ public class ExecutedManeuverRecordTests
     {
         earth ??= Earth();
         int id = NextId();
-        var spacecraft = new Spacecraft(id, "EM" + -id, 1000.0, 3000.0, new Clock("EM" + -id, 65536), Orbit(earth, frame));
+        var spacecraft = new Spacecraft(id, "EM" + -id, 1000.0, Orbit(earth, frame), 3000.0, new Clock("EM" + -id, 65536));
         var tank = new FuelTank("ft" + -id, "m", "sn" + -id, 1000.0, 1000.0);
         spacecraft.AddFuelTank(tank);
         var engine = new Engine("eng" + -id, "m", "sn" + -id, 300.0, 10.0, tank);
@@ -299,7 +299,7 @@ public class ExecutedManeuverRecordTests
     {
         var earth = Earth();
         int id = NextId();
-        var spacecraft = new Spacecraft(id, "EM" + -id, 1000.0, 3000.0, new Clock("EM" + -id, 65536), Orbit(earth, "ICRF"));
+        var spacecraft = new Spacecraft(id, "EM" + -id, 1000.0, Orbit(earth, "ICRF"), 3000.0, new Clock("EM" + -id, 65536));
         var scenario = new Scenario("EM", new IO.Astrodynamics.Mission.Mission("EM"), new Window(S, S.AddHours(1.0)));
         scenario.AddCelestialItem(earth);
         scenario.AddSpacecraft(spacecraft);
@@ -319,7 +319,7 @@ public class ExecutedManeuverRecordTests
             "1 25544U 98067A   21020.53488036  .00016717  00000-0  10270-3 0  9054",
             "2 25544  51.6423 353.0312 0000493 320.8755  39.2360 15.49309423 25703");
         int id = NextId();
-        var spacecraft = new Spacecraft(id, "EM" + -id, 100.0, 10000.0, new Clock("EM" + -id, 65536), tle);
+        var spacecraft = new Spacecraft(id, "EM" + -id, 100.0, tle, 10000.0, new Clock("EM" + -id, 65536));
 
         var solution = new TLEPropagator(new Window(tle.Epoch, tle.Epoch.AddHours(1.0)), spacecraft, Output).Propagate();
 

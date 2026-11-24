@@ -51,7 +51,7 @@ public class MinimumStepNoiseTests
     private static PropagationSolution Propagate(CelestialBody body, StateVector start, double tolerance,
         CovariancePropagationOptions options)
     {
-        return new Spacecraft(-4360, "MINSTEP4360", 1000.0, 1000.0, new Clock("minstep4360", 65536), start, 1.0, 2.2,
+        return new Spacecraft(-4360, "MINSTEP4360", 1000.0, start, 1000.0, new Clock("minstep4360", 65536), 1.0, 2.2,
             null, 1.0).Propagate(Window, new PropagationOptions { Integrator = new RK78IntegratorOptions { AbsoluteTolerance = tolerance, RelativeTolerance = tolerance }, OutputStep = Window.Length, ThirdBodies = new CelestialItem[] { body }, AtmosphericDrag = true, CovariancePropagation = options ?? CovariancePropagationOptions.None });
     }
 
@@ -140,8 +140,8 @@ public class MinimumStepNoiseTests
         var window = new TimeSystem.Window(Epoch, Epoch.AddSeconds(0.05));
 
         // Act
-        var solution = new Spacecraft(-4363, "MINSTEP4363", 1000.0, 1000.0, new Clock("minstep4363", 65536),
-            StandardAtmosphereBoundaryTests.StateThatStoppedAtTheMinimumStep(body), 1.0, 2.2, null, 1.0).Propagate(window, new PropagationOptions { Integrator = new RK78IntegratorOptions { AbsoluteTolerance = ReferenceTolerance, RelativeTolerance = ReferenceTolerance, InitialStep = TimeSpan.FromSeconds(9.5e-7) }, OutputStep = window.Length, ThirdBodies = new CelestialItem[] { body }, AtmosphericDrag = true, CovariancePropagation = new CovariancePropagationOptions { IncludeInStepControl = true } });
+        var solution = new Spacecraft(-4363, "MINSTEP4363", 1000.0, StandardAtmosphereBoundaryTests.StateThatStoppedAtTheMinimumStep(body), 1000.0,
+            new Clock("minstep4363", 65536), 1.0, 2.2, null, 1.0).Propagate(window, new PropagationOptions { Integrator = new RK78IntegratorOptions { AbsoluteTolerance = ReferenceTolerance, RelativeTolerance = ReferenceTolerance, InitialStep = TimeSpan.FromSeconds(9.5e-7) }, OutputStep = window.Length, ThirdBodies = new CelestialItem[] { body }, AtmosphericDrag = true, CovariancePropagation = new CovariancePropagationOptions { IncludeInStepControl = true } });
 
         // Assert: the first step is the minimum step size, and the propagation reaches the end of its window
         var steps = solution.Segments.SelectMany(s => s.Steps).ToArray();
@@ -161,7 +161,7 @@ public class MinimumStepNoiseTests
         // segment (100 rejections, error of Y 1.694 at 1e-6 s), as for 4 of 300 such targets from 0.01 to 3 s
         var body = StandardAtmosphereBoundaryTests.Body("Earth");
         var orbit = StandardAtmosphereBoundaryTests.NewSpacecraft(body, 8e3, 1.0, -4361).InitialOrbitalParameters;
-        var spacecraft = new Spacecraft(-4362, "MINSTEP4362", 990.0, 2000.0, new Clock("minstep4362", 65536), orbit,
+        var spacecraft = new Spacecraft(-4362, "MINSTEP4362", 990.0, orbit, 2000.0, new Clock("minstep4362", 65536),
             1.0, 2.2, null, 1.0);
         var tank = new FuelTank("minsteptank", "model", "sn1", 10.0, 10.0);
         var engine = new Engine("minstepengine", "model", "sn1", 300.0, 10.0, tank);

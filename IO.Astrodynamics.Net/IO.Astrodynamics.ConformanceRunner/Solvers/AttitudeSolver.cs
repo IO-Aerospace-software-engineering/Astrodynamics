@@ -75,9 +75,9 @@ public class AttitudeSolver : ICategorySolver
         var state = PropagationCase.BuildStateVector(inputs.Orbit, central, epoch, Frame.ICRF);
         var front = inputs.Pointing == null ? (Vector3?)null : Axis(inputs.Pointing.BodyVector);
         var spacecraft = front.HasValue
-            ? new Spacecraft(-999, "AttitudeTarget", 100.0, 1000.0, new Clock("ConfClk", 65536), state,
+            ? new Spacecraft(-999, "AttitudeTarget", 100.0, state, 1000.0, new Clock("ConfClk", 65536),
                 bodyFront: front.Value, bodyRight: RightOf(front.Value), bodyUp: RightOf(front.Value).Cross(front.Value))
-            : new Spacecraft(-999, "AttitudeTarget", 100.0, 1000.0, new Clock("ConfClk", 65536), state);
+            : new Spacecraft(-999, "AttitudeTarget", 100.0, state, 1000.0, new Clock("ConfClk", 65536));
         var tank = new FuelTank("ConformanceTank", "conformance", "0001", 100.0, 100.0);
         spacecraft.AddFuelTank(tank);
         var engine = new Engine("ConformanceEngine", "conformance", "0001", 300.0, 1.0, tank);

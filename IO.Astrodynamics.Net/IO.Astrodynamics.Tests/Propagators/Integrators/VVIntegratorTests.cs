@@ -85,7 +85,7 @@ public class VVIntegratorTests
         double n = System.Math.Sqrt(earth.GM / (a * a * a));
         var orbit = new KeplerianElements(a, e, System.Math.PI / 4.0, 0.0, 0.0, -300.0 * n, earth, epoch, Frames.Frame.ICRF);
         var initialState = orbit.ToStateVector();
-        var spacecraft = new Spacecraft(-7439, "VV439", 1000.0, 1000.0, new Clock("VV439_CLK", 65536), initialState, sectionalArea: area, dragCoeff: 2.2);
+        var spacecraft = new Spacecraft(-7439, "VV439", 1000.0, initialState, 1000.0, new Clock("VV439_CLK", 65536), sectionalArea: area, dragCoefficient: 2.2);
         const double duration = 600.0;
 
         Vector3 FinalPosition(Integrator integrator)

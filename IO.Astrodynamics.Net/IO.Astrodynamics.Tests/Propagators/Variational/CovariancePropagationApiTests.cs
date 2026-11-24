@@ -438,7 +438,7 @@ public class CovariancePropagationApiTests : IClassFixture<PartialsTestCases>
         var spacecraft = Spacecraft(-2111);
         scenario.AddSpacecraft(spacecraft);
         var failing = new Scenario("covariance2", new Astrodynamics.Mission.Mission("covariance2"), Window);
-        failing.AddSpacecraft(new Spacecraft(-2112, "NOP0", 100.0, 1000.0, new Clock("nop0", 65536), Leo));
+        failing.AddSpacecraft(new Spacecraft(-2112, "NOP0", 100.0, Leo, 1000.0, new Clock("nop0", 65536)));
         var options = new CovariancePropagationOptions { Mode = CovariancePropagationMode.Covariance };
 
         // Act
@@ -656,8 +656,8 @@ public class CovariancePropagationApiTests : IClassFixture<PartialsTestCases>
         ManeuverExecutionError error)
     {
         var state = CovariancePropagationTests.WithCovariance(Leo);
-        var spacecraft = new Spacecraft(naifId, "BURN" + naifId, 1000.0, 3000.0, new Clock("burn" + naifId, 65536),
-            state);
+        var spacecraft = new Spacecraft(naifId, "BURN" + naifId, 1000.0, state, 3000.0,
+            new Clock("burn" + naifId, 65536));
         var tank = new FuelTank("tank" + naifId, "model", "sn1", 1000.0, 1000.0);
         var engine = new Engine("engine" + naifId, "model", "sn1", 300.0, 10.0, tank);
         spacecraft.AddFuelTank(tank);
@@ -675,7 +675,7 @@ public class CovariancePropagationApiTests : IClassFixture<PartialsTestCases>
     private Spacecraft Spacecraft(int naifId = -1961)
     {
         var state = CovariancePropagationTests.WithCovariance(Leo);
-        return new Spacecraft(naifId, "API" + naifId, 100.0, 1000.0, new Clock("api" + naifId, 65536), state, 10.0, 2.2,
+        return new Spacecraft(naifId, "API" + naifId, 100.0, state, 1000.0, new Clock("api" + naifId, 65536), 10.0, 2.2,
             null, 1.5);
     }
 }

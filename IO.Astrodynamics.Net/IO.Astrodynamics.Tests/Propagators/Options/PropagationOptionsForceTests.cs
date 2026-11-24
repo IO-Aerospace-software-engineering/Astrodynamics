@@ -43,9 +43,9 @@ public class PropagationOptionsForceTests
     private static Spacecraft CreateSpacecraft(CelestialBody earth)
     {
         Clock clk = new Clock("My clock", 256);
-        return new Spacecraft(-1001, "MySpacecraft", 100.0, 10000.0, clk,
-            new StateVector(new Vector3(6800000.0, 0.0, 0.0), new Vector3(0.0, 7656.2204182967143, 0.0),
-                earth, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF));
+        return new Spacecraft(-1001, "MySpacecraft", 100.0, new StateVector(new Vector3(6800000.0, 0.0, 0.0), new Vector3(0.0, 7656.2204182967143, 0.0),
+                earth, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF), 10000.0,
+            clk);
     }
 
     // RK7(8) at 1e-10 or 1e-12, a first step of 60 s, the settings of these tests

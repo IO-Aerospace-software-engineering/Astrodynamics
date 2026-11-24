@@ -87,7 +87,7 @@ public class FieldOfViewDynamicsTests
 
     private static (Spacecraft spacecraft, Engine engine) Create(int naifId, StateVector orbit)
     {
-        var spacecraft = new Spacecraft(naifId, $"FOV{-naifId}", 1000.0, 3000.0, new Clock($"FOV{-naifId}_CLK", 65536), orbit);
+        var spacecraft = new Spacecraft(naifId, $"FOV{-naifId}", 1000.0, orbit, 3000.0, new Clock($"FOV{-naifId}_CLK", 65536));
         var tank = new FuelTank("ft515", "model", "sn515", 1000.0, 1000.0);
         spacecraft.AddFuelTank(tank);
         var engine = new Engine("eng515", "model", "sn515", 300.0, 10.0, tank);
@@ -176,7 +176,7 @@ public class FieldOfViewDynamicsTests
                 // Not propagated: the spacecraft reads SGP4 at each epoch, and its SPK holds the SGP4 states every 10 s
                 var tle = new TLE("ISS", "1 25544U 98067A   21020.53488036  .00016717  00000-0  10270-3 0  9054",
                     "2 25544  51.6423 353.0312 0000493 320.8755  39.2360 15.49309423 25703");
-                var spacecraft = new Spacecraft(-5177, "FOV5177", 1000.0, 3000.0, new Clock("FOV5177_CLK", 65536), tle);
+                var spacecraft = new Spacecraft(-5177, "FOV5177", 1000.0, tle, 3000.0, new Clock("FOV5177_CLK", 65536));
                 AddInstruments(spacecraft);
                 var tleStart = tle.Epoch.ToTDB();
                 // Its attitude, given by hand as the CK the test writes holds it: without one the search throws (#682)
@@ -189,7 +189,7 @@ public class FieldOfViewDynamicsTests
                 // reads its stored states, about 50 km from SGP4 at the end
                 var tle = new TLE("ISS", "1 25544U 98067A   21020.53488036  .00016717  00000-0  10270-3 0  9054",
                     "2 25544  51.6423 353.0312 0000493 320.8755  39.2360 15.49309423 25703");
-                var spacecraft = new Spacecraft(-5179, "FOV5179", 1000.0, 3000.0, new Clock("FOV5179_CLK", 65536), tle);
+                var spacecraft = new Spacecraft(-5179, "FOV5179", 1000.0, tle, 3000.0, new Clock("FOV5179_CLK", 65536));
                 AddInstruments(spacecraft);
                 var tleStart = tle.Epoch.ToTDB();
                 spacecraft.Propagate(new Window(tleStart, tleStart.AddSeconds(3000.0)), new PropagationOptions { Integrator = new RK78IntegratorOptions { AbsoluteTolerance = 1e-12, RelativeTolerance = 1e-12 }, OutputStep = oneSecond, ThirdBodies = new CelestialItem[] { moon, sun }, CovariancePropagation = CovariancePropagationOptions.None });

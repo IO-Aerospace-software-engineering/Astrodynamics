@@ -31,10 +31,10 @@ public class ThermalRadiationPressureTests
         double sectionalArea = 10.0, double solarRadiationCoeff = 1.0)
     {
         Clock clk = new Clock("My clock", 256);
-        return new Spacecraft(-1001, "MySpacecraft", mass, 10000.0, clk,
-            new StateVector(new Vector3(6778136.3, 0.0, 0.0), new Vector3(0.0, 7656.2204182967143, 0.0),
-                observer, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF),
-            sectionalArea: sectionalArea, solarRadiationCoeff: solarRadiationCoeff);
+        return new Spacecraft(-1001, "MySpacecraft", mass, new StateVector(new Vector3(6778136.3, 0.0, 0.0), new Vector3(0.0, 7656.2204182967143, 0.0),
+                observer, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF), 10000.0,
+            clk,
+            sectionalArea: sectionalArea, solarRadiationCoefficient: solarRadiationCoeff);
     }
 
     /// <summary>

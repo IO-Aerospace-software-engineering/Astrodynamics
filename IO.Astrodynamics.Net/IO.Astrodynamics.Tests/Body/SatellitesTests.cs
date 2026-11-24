@@ -42,8 +42,8 @@ public class SatellitesTests
         var references = new List<WeakReference>(count);
         for (int i = 0; i < count; i++)
         {
-            references.Add(new WeakReference(new Spacecraft(-30000 - i, "DROPPED" + i, 100.0, 1000.0,
-                new Clock("DROPPED" + i, 65536), Orbit(earth))));
+            references.Add(new WeakReference(new Spacecraft(-30000 - i, "DROPPED" + i, 100.0, Orbit(earth),
+                1000.0, new Clock("DROPPED" + i, 65536))));
         }
 
         return references;
@@ -79,7 +79,7 @@ public class SatellitesTests
 
             // Act
             var exception = Record.Exception(() => Parallel.For(0, built.Length, new ParallelOptions { MaxDegreeOfParallelism = 4 },
-                i => built[i] = new Spacecraft(-40000 - i, "P" + i, 100.0, 1000.0, new Clock("P" + i, 65536), Orbit(earth))));
+                i => built[i] = new Spacecraft(-40000 - i, "P" + i, 100.0, Orbit(earth), 1000.0, new Clock("P" + i, 65536))));
 
             // Assert: the set of the instances built, by reference
             Assert.Null(exception);
@@ -104,7 +104,7 @@ public class SatellitesTests
         int threads = System.Math.Max(16, 2 * Environment.ProcessorCount);
         var source = new CelestialBody(PlanetsAndMoons.EARTH);
         var items = Enumerable.Range(0, threads * 500)
-            .Select(i => new Spacecraft(-50000 - i, "R" + i, 100.0, 1000.0, new Clock("R" + i, 65536), Orbit(source))).ToArray();
+            .Select(i => new Spacecraft(-50000 - i, "R" + i, 100.0, Orbit(source), 1000.0, new Clock("R" + i, 65536))).ToArray();
         var expected = new HashSet<CelestialItem>(items, ReferenceEqualityComparer.Instance);
 
         for (int run = 0; run < 5; run++)
@@ -145,8 +145,8 @@ public class SatellitesTests
         // Arrange: two spacecraft of one NAIF id
         var earth = new CelestialBody(PlanetsAndMoons.EARTH);
         var moon = new CelestialBody(PlanetsAndMoons.MOON);
-        var a = new Spacecraft(-1001, "A", 100.0, 1000.0, new Clock("CA", 65536), Orbit(earth));
-        var b = new Spacecraft(-1001, "B", 100.0, 1000.0, new Clock("CB", 65536), Orbit(earth));
+        var a = new Spacecraft(-1001, "A", 100.0, Orbit(earth), 1000.0, new Clock("CA", 65536));
+        var b = new Spacecraft(-1001, "B", 100.0, Orbit(earth), 1000.0, new Clock("CB", 65536));
         Assert.True(Lists(earth, a));
         Assert.True(Lists(earth, b));
 
@@ -164,11 +164,11 @@ public class SatellitesTests
     public static IEnumerable<object[]> ThrowingConstructions()
     {
         // maximumOperatingMass < mass
-        yield return [new Func<CelestialBody, Clock, Spacecraft>((o, c) => new Spacecraft(-1003, "GHOST", 1000.0, 10.0, c, Orbit(o))), typeof(ArgumentOutOfRangeException)];
+        yield return [new Func<CelestialBody, Clock, Spacecraft>((o, c) => new Spacecraft(-1003, "GHOST", 1000.0, Orbit(o), 10.0, c)), typeof(ArgumentOutOfRangeException)];
         // a NAIF id whose frame id NaifId * 1000 is not an int
-        yield return [new Func<CelestialBody, Clock, Spacecraft>((o, c) => new Spacecraft(-2147484, "GHOST", 100.0, 1000.0, c, Orbit(o))), typeof(ArgumentOutOfRangeException)];
+        yield return [new Func<CelestialBody, Clock, Spacecraft>((o, c) => new Spacecraft(-2147484, "GHOST", 100.0, Orbit(o), 1000.0, c)), typeof(ArgumentOutOfRangeException)];
         // non-orthogonal body axes
-        yield return [new Func<CelestialBody, Clock, Spacecraft>((o, c) => new Spacecraft(-1003, "GHOST", 100.0, 1000.0, c, Orbit(o),
+        yield return [new Func<CelestialBody, Clock, Spacecraft>((o, c) => new Spacecraft(-1003, "GHOST", 100.0, Orbit(o), 1000.0, c,
             bodyFront: Vector3.VectorX, bodyRight: Vector3.VectorX, bodyUp: Vector3.VectorZ)), typeof(ArgumentException)];
     }
 
@@ -187,7 +187,7 @@ public class SatellitesTests
         Assert.IsType(exceptionType, exception);
         Assert.Empty(earth.Satellites);
         Assert.Null(clock.Spacecraft);
-        var valid = new Spacecraft(-1003, "VALID", 100.0, 1000.0, clock, Orbit(earth));
+        var valid = new Spacecraft(-1003, "VALID", 100.0, Orbit(earth), 1000.0, clock);
         Assert.Same(valid, clock.Spacecraft);
         Assert.Same(valid, earth.Satellites.Single());
     }
@@ -198,10 +198,10 @@ public class SatellitesTests
         // Arrange: a clock attached to a spacecraft of another NAIF id
         var earth = new CelestialBody(PlanetsAndMoons.EARTH);
         var clock = new Clock("SHARED_CLK", 65536);
-        var holder = new Spacecraft(-1004, "HOLDER", 100.0, 1000.0, clock, Orbit(earth));
+        var holder = new Spacecraft(-1004, "HOLDER", 100.0, Orbit(earth), 1000.0, clock);
 
         // Act
-        var exception = Record.Exception(() => new Spacecraft(-1005, "GHOST", 100.0, 1000.0, clock, Orbit(earth)));
+        var exception = Record.Exception(() => new Spacecraft(-1005, "GHOST", 100.0, Orbit(earth), 1000.0, clock));
 
         // Assert: only the holder is listed
         Assert.IsType<ArgumentException>(exception);
@@ -229,7 +229,7 @@ public class SatellitesTests
     {
         // Arrange
         var earth = new CelestialBody(PlanetsAndMoons.EARTH);
-        var a = new Spacecraft(-1007, "A", 100.0, 1000.0, new Clock("A", 65536), Orbit(earth));
+        var a = new Spacecraft(-1007, "A", 100.0, Orbit(earth), 1000.0, new Clock("A", 65536));
 
         // Act
         var listed = new List<object>();
@@ -249,7 +249,7 @@ public class SatellitesTests
         var barycenter = new Barycenter(3, Epoch);
 
         // Act
-        var spacecraft = new Spacecraft(-1006, "BARY", 100.0, 1000.0, new Clock("BARY", 65536), Orbit(barycenter));
+        var spacecraft = new Spacecraft(-1006, "BARY", 100.0, Orbit(barycenter), 1000.0, new Clock("BARY", 65536));
 
         // Assert
         Assert.False(Lists(barycenter, spacecraft));

@@ -40,7 +40,7 @@ public class ZeroLengthWindowTests
         int id = System.Threading.Interlocked.Decrement(ref _nextId);
         var orbit = new StateVector(new Vector3(6878137.0, 0.0, 0.0), new Vector3(0.0, 6200.0, 4500.0),
             PlanetsAndMoons.EARTH_BODY, Start, Frames.Frame.ICRF);
-        return new Spacecraft(id, "ZERO" + -id, 1000.0, 3000.0, new Clock("zero" + -id, 65536), orbit);
+        return new Spacecraft(id, "ZERO" + -id, 1000.0, orbit, 3000.0, new Clock("zero" + -id, 65536));
     }
 
     [Theory]
@@ -85,7 +85,7 @@ public class ZeroLengthWindowTests
             "1 25544U 98067A   21020.53488036  .00016717  00000-0  10270-3 0  9054",
             "2 25544  51.6423 353.0312 0000493 320.8755  39.2360 15.49309423 25703");
         int id = System.Threading.Interlocked.Decrement(ref _nextId);
-        var spacecraft = new Spacecraft(id, "ZERO" + -id, 100.0, 10000.0, new Clock("zero" + -id, 256), tle);
+        var spacecraft = new Spacecraft(id, "ZERO" + -id, 100.0, tle, 10000.0, new Clock("zero" + -id, 256));
         var epoch = scale == TimeScale.UTC ? tle.Epoch.ToUTC() : tle.Epoch.ToTDB();
         var empty = new Window(epoch, epoch);
 
@@ -162,7 +162,7 @@ public class ZeroLengthWindowTests
         var orbit = new StateVector(new Vector3(6878137.0, 0.0, 0.0), new Vector3(0.0, 6200.0, 4500.0),
             PlanetsAndMoons.EARTH_BODY, Start, Frames.Frame.ICRF,
             IO.Astrodynamics.Math.Matrix.Diagonal(100.0, 100.0, 100.0, 1e-4, 1e-4, 1e-4));
-        var template = new Spacecraft(id, "ZERO" + -id, 1000.0, 3000.0, new Clock("zero" + -id, 65536), orbit);
+        var template = new Spacecraft(id, "ZERO" + -id, 1000.0, orbit, 3000.0, new Clock("zero" + -id, 65536));
         var config = new MonteCarloConfiguration
         {
             RunCount = 3, Seed = 1, TemplateSpacecraft = template, Window = Empty, BaseNaifId = id - 100000

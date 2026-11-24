@@ -33,7 +33,7 @@ public class AntiNormalAttitudeTests
     {
         // For r=(+X, 0, 0) and v=(0, +Y, 0): h = r x v = +Z, so anti-normal = -Z
         var orbitalParams = new KeplerianElements(42164000.0, 0.0, 0.0, 0.0, 0.0, 0.0, TestHelpers.EarthAtJ2000, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF);
-        var spc = new Spacecraft(-672, "AntiNormalTestSC", 1000.0, 3000.0, new Clock("GenericClk", 65536), orbitalParams);
+        var spc = new Spacecraft(-672, "AntiNormalTestSC", 1000.0, orbitalParams, 3000.0, new Clock("GenericClk", 65536));
         spc.AddFuelTank(new FuelTank("ft", "ftA", "123456", 1000.0, 900.0));
         spc.AddEngine(new Engine("eng", "engmk1", "12345", 450, 50, spc.FuelTanks.First()));
         AntiNormalAttitude maneuver = new AntiNormalAttitude(TestHelpers.EarthAtJ2000, new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB), TimeSpan.Zero, spc.Engines.First());
@@ -52,7 +52,7 @@ public class AntiNormalAttitudeTests
     public void Execute_OppositeToNormal()
     {
         var orbitalParams = new KeplerianElements(42164000.0, 0.0, 0.0, 0.0, 0.0, 0.0, TestHelpers.EarthAtJ2000, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF);
-        var spc = new Spacecraft(-673, "TestSC", 1000.0, 3000.0, new Clock("GenericClk", 65536), orbitalParams);
+        var spc = new Spacecraft(-673, "TestSC", 1000.0, orbitalParams, 3000.0, new Clock("GenericClk", 65536));
         spc.AddFuelTank(new FuelTank("ft", "ftA", "123456", 1000.0, 900.0));
         spc.AddEngine(new Engine("eng", "engmk1", "12345", 450, 50, spc.FuelTanks.First()));
 
@@ -75,7 +75,7 @@ public class AntiNormalAttitudeTests
     public void Execute_FuelNotBurned()
     {
         var orbitalParams = new KeplerianElements(42164000.0, 0.0, 0.0, 0.0, 0.0, 0.0, TestHelpers.EarthAtJ2000, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF);
-        var spc = new Spacecraft(-674, "TestSC", 1000.0, 3000.0, new Clock("GenericClk", 65536), orbitalParams);
+        var spc = new Spacecraft(-674, "TestSC", 1000.0, orbitalParams, 3000.0, new Clock("GenericClk", 65536));
         spc.AddFuelTank(new FuelTank("ft", "ftA", "123456", 1000.0, 900.0));
         spc.AddEngine(new Engine("eng", "engmk1", "12345", 450, 50, spc.FuelTanks.First()));
         AntiNormalAttitude maneuver = new AntiNormalAttitude(TestHelpers.EarthAtJ2000, new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB), TimeSpan.Zero, spc.Engines.First());
@@ -94,7 +94,7 @@ public class AntiNormalAttitudeTests
             90.0 * Astrodynamics.Constants.Deg2Rad,
             0.0, 0.0, 0.0,
             TestHelpers.EarthAtJ2000, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF);
-        var spc = new Spacecraft(-681, "PolarAntiNormalSC", 1000.0, 3000.0, new Clock("GenericClk", 65536), orbitalParams);
+        var spc = new Spacecraft(-681, "PolarAntiNormalSC", 1000.0, orbitalParams, 3000.0, new Clock("GenericClk", 65536));
         spc.AddFuelTank(new FuelTank("ft", "ftA", "123456", 1000.0, 900.0));
         spc.AddEngine(new Engine("eng", "engmk1", "12345", 450, 50, spc.FuelTanks.First()));
         AntiNormalAttitude maneuver = new AntiNormalAttitude(TestHelpers.EarthAtJ2000, new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB), TimeSpan.Zero, spc.Engines.First());
@@ -133,7 +133,7 @@ public class AntiNormalAttitudeTests
             TimeSystem.Time.J2000TDB,
             Frames.Frame.ICRF);
 
-        var spc = new Spacecraft(-682, "DegAntiNormalSC", 1000.0, 3000.0, new Clock("GenericClk", 65536), sv);
+        var spc = new Spacecraft(-682, "DegAntiNormalSC", 1000.0, sv, 3000.0, new Clock("GenericClk", 65536));
         spc.AddFuelTank(new FuelTank("ft", "ftA", "123456", 1000.0, 900.0));
         spc.AddEngine(new Engine("eng", "engmk1", "12345", 450, 50, spc.FuelTanks.First()));
         AntiNormalAttitude maneuver = new AntiNormalAttitude(TestHelpers.EarthAtJ2000, new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB), TimeSpan.Zero, spc.Engines.First());
@@ -148,7 +148,7 @@ public class AntiNormalAttitudeTests
         // Mirror of NormalAttitudeTests.Execute_WithCustomBodyAxes but for anti-normal.
         // Spacecraft with +X as front; for equatorial orbit anti-normal = -Z.
         var orbitalParams = new KeplerianElements(42164000.0, 0.0, 0.0, 0.0, 0.0, 0.0, TestHelpers.EarthAtJ2000, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF);
-        var spc = new Spacecraft(-683, "AntiNormalCustomAxesSC", 1000.0, 3000.0, new Clock("GenericClk", 65536), orbitalParams,
+        var spc = new Spacecraft(-683, "AntiNormalCustomAxesSC", 1000.0, orbitalParams, 3000.0, new Clock("GenericClk", 65536),
             bodyFront: Vector3.VectorX, bodyRight: Vector3.VectorY.Inverse(), bodyUp: Vector3.VectorZ);
         spc.AddFuelTank(new FuelTank("ft", "ftA", "123456", 1000.0, 900.0));
         spc.AddEngine(new Engine("eng", "engmk1", "12345", 450, 50, spc.FuelTanks.First()));

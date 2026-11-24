@@ -36,7 +36,7 @@ namespace IO.Astrodynamics.Tests.Maneuvers
         {
             var orbitalParams = new KeplerianElements(24420999.959422689, 0.726546824, 28.5 * Astrodynamics.Constants.Deg2Rad, 0.0, 0.0, 0.0, TestHelpers.EarthAtJ2000,
                 TimeSystem.Time.J2000TDB, Frames.Frame.ICRF);
-            var spc = new Spacecraft(-666, "GenericSpacecraft", 1000.0, 10000.0, new Clock("GenericClk", 65536), orbitalParams);
+            var spc = new Spacecraft(-666, "GenericSpacecraft", 1000.0, orbitalParams, 10000.0, new Clock("GenericClk", 65536));
             spc.AddFuelTank(new FuelTank("ft", "ftA", "123456", 9000.0, 9000.0));
             spc.AddEngine(new Engine("eng", "engmk1", "12345", 450, 50, spc.FuelTanks.First()));
             var state = orbitalParams.ToStateVector(PropagationTimeArgument.Tt.EpochAt(orbitalParams.Epoch, orbitalParams.Period().TotalSeconds * 0.5));
@@ -150,7 +150,7 @@ namespace IO.Astrodynamics.Tests.Maneuvers
         {
             var orbitalParams = new KeplerianElements(24420999.959422689, 0.726546824, 28.5 * Astrodynamics.Constants.Deg2Rad, 0.0, 0.0, 0.0, TestHelpers.EarthAtJ2000,
                 TimeSystem.Time.J2000TDB, Frames.Frame.ICRF);
-            var spc = new Spacecraft(-666, "GenericSpacecraft", 1000.0, 10000.0, new Clock("GenericClk", 65536), orbitalParams);
+            var spc = new Spacecraft(-666, "GenericSpacecraft", 1000.0, orbitalParams, 10000.0, new Clock("GenericClk", 65536));
             spc.AddFuelTank(new FuelTank("ft", "ftA", "123456", 9000.0, 9000.0));
             spc.AddEngine(new Engine("eng", "engmk1", "12345", 450, 50, spc.FuelTanks.First()));
 
@@ -181,7 +181,7 @@ namespace IO.Astrodynamics.Tests.Maneuvers
         {
             var orbitalParams = new KeplerianElements(24420999.959422689, 0.726546824, 28.5 * Astrodynamics.Constants.Deg2Rad, 0.0, 0.0, 0.0, TestHelpers.EarthAtJ2000,
                 TimeSystem.Time.J2000TDB, Frames.Frame.ICRF);
-            var spc = new Spacecraft(-666, "GenericSpacecraft", 1000.0, 10000.0, new Clock("GenericClk", 65536), orbitalParams);
+            var spc = new Spacecraft(-666, "GenericSpacecraft", 1000.0, orbitalParams, 10000.0, new Clock("GenericClk", 65536));
             spc.AddFuelTank(new FuelTank("ft", "ftA", "123456", 9000.0, 9000.0));
             spc.AddEngine(new Engine("eng", "engmk1", "12345", 450, 50, spc.FuelTanks.First()));
 

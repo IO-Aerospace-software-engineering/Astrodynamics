@@ -155,12 +155,12 @@ public sealed class PropagatedFieldOfViewCase
         scenario.AddCelestialItem(Earth);
         scenario.AddCelestialItem(Sun);
         var orbit = new StateVector(new Vector3(6800000.0, 0.0, 0.0), new Vector3(0.0, 7656.2204182967143, 0.0), Earth, Start, Frames.Frame.ICRF);
-        Propagated = new Spacecraft(ObserverId, "FOV5151", 1000.0, 3000.0, new Clock("FOV5151_CLK", 65536), orbit);
+        Propagated = new Spacecraft(ObserverId, "FOV5151", 1000.0, orbit, 3000.0, new Clock("FOV5151_CLK", 65536));
         AddInstruments(Propagated);
         scenario.AddSpacecraft(Propagated);
         var targetOrbit = new StateVector(new Vector3(7000000.0 * System.Math.Cos(-0.6), 7000000.0 * System.Math.Sin(-0.6), 0.0),
             new Vector3(7546.0 * System.Math.Sin(0.6), 7546.0 * System.Math.Cos(-0.6), 0.0), Earth, Start, Frames.Frame.ICRF);
-        PropagatedTarget = new Spacecraft(TargetId, "FOV5152", 1000.0, 3000.0, new Clock("FOV5152_CLK", 65536), targetOrbit);
+        PropagatedTarget = new Spacecraft(TargetId, "FOV5152", 1000.0, targetOrbit, 3000.0, new Clock("FOV5152_CLK", 65536));
         scenario.AddSpacecraft(PropagatedTarget);
         scenario.Simulate(new PropagationOptions { Integrator = new VVIntegratorOptions { Step = TimeSpan.FromSeconds(1.0) }, OutputStep = TimeSpan.FromSeconds(1.0) });
 
@@ -739,8 +739,8 @@ public class FieldOfViewSearchTests : IClassFixture<PropagatedFieldOfViewCase>
 
         // A field CSPICE rejects, on an unpropagated spacecraft (the managed path) and on a kernel-backed one (the SPICE
         // path; the checks come first, so the instruments need no kernel)
-        var unpropagated = new Spacecraft(-5153, "FOV5153", 1000.0, 3000.0, new Clock("FOV5153_CLK", 65536),
-            new StateVector(new Vector3(6800000.0, 0.0, 0.0), new Vector3(0.0, 7656.2204182967143, 0.0), earth, _case.Start, Frames.Frame.ICRF));
+        var unpropagated = new Spacecraft(-5153, "FOV5153", 1000.0, new StateVector(new Vector3(6800000.0, 0.0, 0.0), new Vector3(0.0, 7656.2204182967143, 0.0), earth, _case.Start, Frames.Frame.ICRF), 3000.0,
+            new Clock("FOV5153_CLK", 65536));
         // The attitude it is searched with, given by hand: without one the search throws (#682)
         unpropagated.Frame.AddStateOrientationToICRF(new StateOrientation(Quaternion.Identity, Vector3.Zero, _case.Start, unpropagated.Frame));
         var kernel = new Spacecraft(PropagatedFieldOfViewCase.ObserverId, "FOV5151", _case.Start, 1000.0, 3000.0, new Clock("FOV5151_CLK", 65536));
@@ -803,8 +803,8 @@ public class FieldOfViewSearchTests : IClassFixture<PropagatedFieldOfViewCase>
             Frames.Frame.ICRF, ShapeType.Point, Aberration.LT, Step));
 
         // An observer inside the target's ellipsoid, on the managed path only (zzocced's rule)
-        var inside = new Spacecraft(-5155, "FOV5155", 1000.0, 3000.0, new Clock("FOV5155_CLK", 65536),
-            new StateVector(new Vector3(1000000.0, 0.0, 0.0), new Vector3(0.0, 100.0, 0.0), earth, _case.Start, Frames.Frame.ICRF));
+        var inside = new Spacecraft(-5155, "FOV5155", 1000.0, new StateVector(new Vector3(1000000.0, 0.0, 0.0), new Vector3(0.0, 100.0, 0.0), earth, _case.Start, Frames.Frame.ICRF), 3000.0,
+            new Clock("FOV5155_CLK", 65536));
         inside.Frame.AddStateOrientationToICRF(new StateOrientation(Quaternion.Identity, Vector3.Zero, _case.Start, inside.Frame));
         inside.AddCircularInstrument(-5155001, "INSIDE", "fov515", 0.3, Vector3.VectorZ, Vector3.VectorY, Vector3.Zero);
         inside.AddRectangularInstrument(-5155002, "INSIDER", "fov515", 0.3, 0.2, Vector3.VectorZ, Vector3.VectorY, Vector3.Zero);
@@ -820,7 +820,7 @@ public class FieldOfViewSearchTests : IClassFixture<PropagatedFieldOfViewCase>
     private Spacecraft Unpropagated(int id, TimeSystem.Time epoch)
     {
         var orbit = new KeplerianElements(6800000.0, 0.0001, 51.6 * IO.Astrodynamics.Constants.Deg2Rad, 0.0, 0.0, 0.0, _case.Earth, epoch, Frames.Frame.ICRF);
-        var spacecraft = new Spacecraft(id, $"FOV{-id}", 100.0, 10000.0, new Clock($"FOV{-id}_CLK", 65536), orbit);
+        var spacecraft = new Spacecraft(id, $"FOV{-id}", 100.0, orbit, 10000.0, new Clock($"FOV{-id}_CLK", 65536));
         spacecraft.AddCircularInstrument(id * 1000 - 1, "CAMERA", "fov682", 30.0 * IO.Astrodynamics.Constants.Deg2Rad, Vector3.VectorY, Vector3.VectorX, Vector3.Zero);
         return spacecraft;
     }
@@ -840,10 +840,10 @@ public class FieldOfViewSearchTests : IClassFixture<PropagatedFieldOfViewCase>
         var epoch = new TimeSystem.Time(2024, 3, 1, TimeScale.TDB);
         var tle = new TLE("ISS", "1 25544U 98067A   21020.53488036  .00016717  00000-0  10270-3 0  9054",
             "2 25544  51.6423 353.0312 0000493 320.8755  39.2360 15.49309423 25703");
-        var fromTle = new Spacecraft(-6822, "FOV6822", 1000.0, 3000.0, new Clock("FOV6822_CLK", 65536), tle);
+        var fromTle = new Spacecraft(-6822, "FOV6822", 1000.0, tle, 3000.0, new Clock("FOV6822_CLK", 65536));
         fromTle.AddCircularInstrument(-6822001, "CAMERA", "fov682", 30.0 * IO.Astrodynamics.Constants.Deg2Rad, Vector3.VectorY, Vector3.VectorX, Vector3.Zero);
         // Propagated by TLEPropagator, which records no attitude (#546)
-        var byTlePropagator = new Spacecraft(-6823, "FOV6823", 1000.0, 3000.0, new Clock("FOV6823_CLK", 65536), tle);
+        var byTlePropagator = new Spacecraft(-6823, "FOV6823", 1000.0, tle, 3000.0, new Clock("FOV6823_CLK", 65536));
         byTlePropagator.AddCircularInstrument(-6823001, "CAMERA", "fov682", 30.0 * IO.Astrodynamics.Constants.Deg2Rad, Vector3.VectorY, Vector3.VectorX, Vector3.Zero);
         var tleStart = tle.Epoch.ToTDB();
         var tleSolution = new IO.Astrodynamics.Propagator.TLEPropagator(new Window(tleStart, tleStart.AddSeconds(6.0 * 3600.0)), byTlePropagator,
@@ -984,7 +984,7 @@ public class FieldOfViewSearchTests : IClassFixture<PropagatedFieldOfViewCase>
             // Identifiers no other test class loads kernels for (FieldOfViewDynamicsTests: -5171 to -5177)
             int id = -5180 - 10 * generation - i;
             var orbit = new StateVector(new Vector3(6800000.0, 0.0, 0.0), new Vector3(0.0, 7656.2204182967143, 0.0), earth, _case.Start, Frames.Frame.ICRF);
-            var spacecraft = new Spacecraft(id, $"FOV{-id}", 1000.0, 3000.0, new Clock($"FOV{-id}_CLK", 65536), orbit);
+            var spacecraft = new Spacecraft(id, $"FOV{-id}", 1000.0, orbit, 3000.0, new Clock($"FOV{-id}_CLK", 65536));
             PropagatedFieldOfViewCase.AddInstruments(spacecraft);
             ILocalizable target = earth;
             var targetShape = shape;

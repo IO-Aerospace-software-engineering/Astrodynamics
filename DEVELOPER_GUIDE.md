@@ -913,7 +913,7 @@ Represents a complete CCSDS Orbit Parameter Message.
 | `SaveToStream(Stream stream, bool validateBeforeSave, bool wrapInNdm, bool indent)` | Save OPM to a stream |
 | `ToXmlString(bool wrapInNdm, bool indent)` | Convert to XML string without validation |
 | `ToStateVector(ILocalizable observer)` | Convert OPM to framework StateVector (km→m, km/s→m/s); without an observer, the centre `CENTER_NAME` names (a barycenter, the Sun, a planet or a moon; another name throws `ArgumentException`), and an observer that contradicts it throws (#679) |
-| `ToSpacecraft(int naifId, double maxMass, Clock clock, ILocalizable observer)` | Convert OPM to Spacecraft object; the observer as on `ToStateVector` |
+| `ToSpacecraft(int naifId, double maxOperatingMass = double.MaxValue, Clock clock = null, ILocalizable observer = null)` | Convert OPM to Spacecraft object; the observer as on `ToStateVector`; the defaults of the propagated constructor, a MASS above `maxOperatingMass` throwing `ArgumentOutOfRangeException` (decision 77 of #668) |
 | `Validate()` | Validate OPM content and return validation result |
 
 ```csharp
@@ -934,7 +934,7 @@ var stateVector = opm.ToStateVector(earth);  // Units: m, m/s
 // Convert to Spacecraft for mission operations
 var spacecraft = opm.ToSpacecraft(
     naifId: -1000,
-    maximumOperatingMass: 500000.0,
+    maxOperatingMass: 500000.0,
     clock: new Clock("OnboardClock", 256),
     observer: earth);
 ```
@@ -946,8 +946,8 @@ The `Spacecraft` class provides a `ToOpm()` method for exporting spacecraft stat
 ```csharp
 // clock: a Clock; stateVector: the initial state (an ISS-like orbit)
 // Create spacecraft and propagate with maneuvers
-var spacecraft = new Spacecraft(-1000, "ISS", 420000.0, 500000.0, clock,
-    stateVector, 1600.0, 2.2, "1998-067A", 1.5);
+var spacecraft = new Spacecraft(-1000, "ISS", 420000.0, stateVector, 500000.0,
+    clock, 1600.0, 2.2, "1998-067A", 1.5);
 
 // After propagation with executed maneuvers...
 var opm = spacecraft.ToOpm(
@@ -1340,18 +1340,18 @@ Represents a spacecraft with components.
 
 | Constructor | Description |
 |------------|-------------|
-| `Spacecraft(int naifId, string name, double dryMass, double maxMass, Clock clock, OrbitalParameters orbit, double sectionalArea = 1.0, double dragCoeff = 2.2, string cosparId = null, double solarRadiationCoeff = 1.0, Vector3? bodyFront = null, Vector3? bodyRight = null, Vector3? bodyUp = null)` | Create spacecraft |
+| `Spacecraft(int naifId, string name, double mass, OrbitalParameters initialOrbitalParameters, double maxOperatingMass = double.MaxValue, Clock clock = null, double sectionalArea = 1.0, double dragCoefficient = 2.2, string cosparId = null, double solarRadiationCoefficient = 1.0, Vector3? bodyFront = null, Vector3? bodyRight = null, Vector3? bodyUp = null, double hardBodyRadius = 0.0)` | Create spacecraft; the clock by default `name + "_CLK"` at 65536 ticks per second (decisions 70 and 71 of #668) |
 
 | Property | Description |
 |----------|-------------|
 | `NaifId` | NAIF ID, in [-2147483, -1] so that the frame id NaifId × 1000 is an `int` (#676) |
 | `Name` | Spacecraft name; its frame kernel variable `FRAME_<NAME>_FRAME` takes 20 ASCII characters at most, without blank, tab, quote, parenthesis, comma or '=' (#676) |
 | `DryOperatingMass` | Mass without fuel (kg) |
-| `MaximumOperatingMass` | Maximum operating mass (kg) |
+| `MaxOperatingMass` | Maximum operating mass (kg): informational, checked against the dry mass only |
 | `Clock` | Onboard clock, of this spacecraft's NAIF id alone: a clock attached to a spacecraft of another id is rejected (#676) |
 | `SectionalArea` | Mean cross-sectional area for drag and SRP (m²) |
 | `DragCoefficient` | Drag coefficient Cd (default 2.2) |
-| `SolarRadiationCoeff` | Solar radiation pressure coefficient Cr (default 1.0, range 1.0–2.0) |
+| `SolarRadiationCoeff` | Solar radiation pressure coefficient Cr (default 1.0; typically 1.0 to 2.0, finite and not negative) |
 | `InitialOrbitalParameters` | Initial orbit |
 | `BodyFront` | Instance body front axis (default: +Y, same as `Spacecraft.Front`) |
 | `BodyRight` | Instance body right axis (default: +X, same as `Spacecraft.Right`) |
@@ -1393,7 +1393,7 @@ var orbit = new KeplerianElements(
 
 // Create spacecraft
 var clock = new Clock("MainClock", 256);
-var spacecraft = new Spacecraft(-1001, "MySat", 500.0, 1000.0, clock, orbit);
+var spacecraft = new Spacecraft(-1001, "MySat", 500.0, orbit, 1000.0, clock);
 
 // Add components: the tank first, then the engine that draws on it (AddEngine requires its tank on the spacecraft)
 var tank = new FuelTank("MainTank", "Propellant", "Tank1", 200.0, 100.0);  // capacity, initial quantity (kg)
@@ -1714,7 +1714,7 @@ var orbit = new StateVector(
     new Vector3(0, 7500.0, 0),
     earth, epoch, Frame.ICRF);
 
-var spacecraft = new Spacecraft(-1001, "Sat", 100.0, 10000.0, clock, orbit);
+var spacecraft = new Spacecraft(-1001, "Sat", 100.0, orbit, 10000.0, clock);
 
 // Propagate with geopotential, Moon, and Sun perturbations
 var propagator = new CentralBodyPropagator(
@@ -2460,12 +2460,12 @@ var chaserOrbit = new StateVector(
 
 // Create target spacecraft
 var targetClock = new Clock("TargetClock", 65536);
-var target = new Spacecraft(-1001, "Target", 500.0, 1000.0, targetClock, targetOrbit);
+var target = new Spacecraft(-1001, "Target", 500.0, targetOrbit, 1000.0, targetClock);
 scenario.AddSpacecraft(target);
 
 // Create chaser spacecraft with propulsion
 var chaserClock = new Clock("ChaserClock", 65536);
-var chaser = new Spacecraft(-1002, "Chaser", 1000.0, 10000.0, chaserClock, chaserOrbit);
+var chaser = new Spacecraft(-1002, "Chaser", 1000.0, chaserOrbit, 10000.0, chaserClock);
 
 // Add fuel tank and engine
 var fuelTank = new FuelTank("MainTank", "Model1", "SN001", 9000.0, 9000.0);
@@ -2693,7 +2693,7 @@ var orbit = new StateVector(
 
 // Create spacecraft with camera
 var clock = new Clock("Clock1", 65536);
-var spacecraft = new Spacecraft(-179, "Observer", 1000.0, 3000.0, clock, orbit);
+var spacecraft = new Spacecraft(-179, "Observer", 1000.0, orbit, 3000.0, clock);
 
 // Add camera instrument (circular FOV, 43° half-angle, pointing nadir)
 spacecraft.AddCircularInstrument(
@@ -2788,7 +2788,7 @@ var issTLE = new TLE(
 
 // Create spacecraft from TLE
 var clock = new Clock("ISSClock", 65536);
-var iss = new Spacecraft(-25544, "ISS", 420000.0, 450000.0, clock, issTLE);
+var iss = new Spacecraft(-25544, "ISS", 420000.0, issTLE, 450000.0, clock);
 
 // Track from a ground station
 var goldstone = new Site(13, "DSS-13", earth);
@@ -2850,7 +2850,7 @@ var scenario = new Scenario("LunarOrbit", mission, new Window(start, end));
 var moonState = moon.GetEphemeris(start, earth, Frame.ICRF, Aberration.None);
 
 var clock = new Clock("Clock", 256);
-var spacecraft = new Spacecraft(-1001, "Probe", 100.0, 10000.0, clock, moonState);
+var spacecraft = new Spacecraft(-1001, "Probe", 100.0, moonState, 10000.0, clock);
 
 scenario.AddSpacecraft(spacecraft);
 
@@ -2903,7 +2903,7 @@ var orbit = new StateVector(
     earth, epoch, Frame.ICRF);
 
 var clock = new Clock("Clock", 256);
-var spacecraft = new Spacecraft(-1001, "LEOSat", 100.0, 10000.0, clock, orbit);
+var spacecraft = new Spacecraft(-1001, "LEOSat", 100.0, orbit, 10000.0, clock);
 
 var propagator = new CentralBodyPropagator(
     new Window(epoch, epoch.AddDays(1)),
@@ -2947,7 +2947,7 @@ var orbit = new KeplerianElements(
 
 // Create spacecraft
 var clock = new Clock("Clock", 256);
-var spacecraft = new Spacecraft(-334, "Observer", 1000.0, 2000.0, clock, orbit);
+var spacecraft = new Spacecraft(-334, "Observer", 1000.0, orbit, 2000.0, clock);
 
 // Add antenna instrument
 spacecraft.AddCircularInstrument(-334100, "Antenna", "HighGain",
@@ -3010,7 +3010,7 @@ var orbit = new KeplerianElements(
 );
 
 var clock = new Clock("Clock", 256);
-var spacecraft = new Spacecraft(-500, "Observer", 500.0, 1000.0, clock, orbit);
+var spacecraft = new Spacecraft(-500, "Observer", 500.0, orbit, 1000.0, clock);
 
 // Add Earth observation camera (points down via boresight)
 spacecraft.AddCircularInstrument(-500100, "EarthCam", "NadirCamera",

@@ -65,7 +65,7 @@ public class SrpPenumbraNoiseTests : IClassFixture<ReferenceCases>
         // Arrange: the first hour of R3, its first shadow crossing, an entry, at about 415 s
         var r3 = _cases.R3;
         var start = r3.InitialState;
-        var spacecraft = new Spacecraft(-1423, "PENUMBRA", 100.0, 1000.0, new Clock("penumbra", 65536), start, 10.0,
+        var spacecraft = new Spacecraft(-1423, "PENUMBRA", 100.0, start, 1000.0, new Clock("penumbra", 65536), 10.0,
             ReferenceCases.DragCoefficient, null, ReferenceCases.ReflectivityCoefficient);
         var solution = new CentralBodyPropagator(new TimeSystem.Window(start.Epoch, start.Epoch.AddSeconds(3600.0)), spacecraft, new PropagationOptions { Integrator = new RK78IntegratorOptions { AbsoluteTolerance = ReferenceCases.Tolerance, RelativeTolerance = ReferenceCases.Tolerance }, OutputStep = TimeSpan.FromSeconds(600.0), ThirdBodies = r3.Bodies, SolarRadiationPressure = true, CovariancePropagation = CovariancePropagationOptions.None }).Propagate();
         var srp = new SolarRadiationPressure(spacecraft, r3.Bodies.OfType<CelestialBody>());

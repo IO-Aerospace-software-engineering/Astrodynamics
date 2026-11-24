@@ -714,7 +714,7 @@ public class CovariancePropagationTests : IClassFixture<PartialsTestCases>, ICla
     {
         var orbit = WithCovariance(new StateVector(new Vector3(-7378137.0, 0.0, 0.0), new Vector3(0.0, -5509.9, -4623.4),
             _cases.Earth, Start, Frames.Frame.ICRF));
-        var spacecraft = new Spacecraft(naifId, "COV", 1000.0, 3000.0, new Clock("cov", 65536), orbit);
+        var spacecraft = new Spacecraft(naifId, "COV", 1000.0, orbit, 3000.0, new Clock("cov", 65536));
         var tank = new FuelTank("covtank", "model", "sn1", 1000.0, 1000.0);
         var engine = new Engine("covengine", "model", "sn1", 300.0, 10.0, tank);
         spacecraft.AddFuelTank(tank);

@@ -52,7 +52,7 @@ public class DefaultIntegratorFiguresTests
         double maximumMass = 3000.0)
     {
         int id = System.Threading.Interlocked.Decrement(ref _nextId);
-        return new Spacecraft(id, $"FIG{-id}", dryMass, maximumMass, new Clock($"fig{-id}", 65536), orbit);
+        return new Spacecraft(id, $"FIG{-id}", dryMass, orbit, maximumMass, new Clock($"fig{-id}", 65536));
     }
 
     // The state of the tutorial (docs/tutorials/numerical-propagation.md): 6 800 km, 7 700 m/s

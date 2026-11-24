@@ -470,7 +470,7 @@ public class RK78IntegratorTests
         var orbit = new StateVector(
             new Vector3(6800000.0, 0, 0), new Vector3(0, 7656.2204182967143, 0),
             earth, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF);
-        Spacecraft spc = new Spacecraft(-1001, "TestSat", 100.0, 10000.0, clk, orbit);
+        Spacecraft spc = new Spacecraft(-1001, "TestSat", 100.0, orbit, 10000.0, clk);
 
         var propWindow = new Window(TimeSystem.Time.J2000TDB, TimeSystem.Time.J2000TDB.AddHours(2));
 
@@ -504,7 +504,7 @@ public class RK78IntegratorTests
         var orbit = new StateVector(
             new Vector3(6800000.0, 0, 0), new Vector3(0, 7656.2204182967143, 0),
             earth, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF);
-        Spacecraft spc = new Spacecraft(-1001, "TestSat_CB", 100.0, 10000.0, clk, orbit);
+        Spacecraft spc = new Spacecraft(-1001, "TestSat_CB", 100.0, orbit, 10000.0, clk);
 
         var propWindow = new Window(TimeSystem.Time.J2000TDB, TimeSystem.Time.J2000TDB.AddHours(2));
 
@@ -539,8 +539,8 @@ public class RK78IntegratorTests
         var orbit = new StateVector(
             new Vector3(r0, 0, 0), new Vector3(0, v0, 0),
             earth, epoch, Frames.Frame.ICRF);
-        Spacecraft spc = new Spacecraft(-1001, "TestSat", 100.0, 10000.0, clk, orbit,
-            sectionalArea: 10.0, dragCoeff: 2.2, solarRadiationCoeff: 1.5);
+        Spacecraft spc = new Spacecraft(-1001, "TestSat", 100.0, orbit, 10000.0, clk,
+            sectionalArea: 10.0, dragCoefficient: 2.2, solarRadiationCoefficient: 1.5);
 
         var propWindow = new Window(epoch, epoch.AddHours(2));
 
@@ -596,7 +596,7 @@ public class RK78IntegratorTests
             new Vector3(2858.1975428173836, 3809.7859312745794, 6002.1266931226886),
             earth, utcEpoch, Frames.Frame.ICRF);
 
-        Spacecraft spc = new Spacecraft(-1001, "LEO_SAT_CB", 100.0, 10000.0, clk, orbit);
+        Spacecraft spc = new Spacecraft(-1001, "LEO_SAT_CB", 100.0, orbit, 10000.0, clk);
 
         var propWindow = new Window(utcEpoch, utcEpoch.AddDays(1));
 
@@ -645,8 +645,8 @@ public class RK78IntegratorTests
             new Vector3(-2727.809889171343, 1386.957738048448, 52.987319351738),
             earth, utcEpoch, Frames.Frame.ICRF);
 
-        Spacecraft spc = new Spacecraft(-1001, "INTELSAT901_CB", 3000.0, 5000.0, clk, orbit,
-            sectionalArea: 50.0, dragCoeff: 2.2, solarRadiationCoeff: 1.5);
+        Spacecraft spc = new Spacecraft(-1001, "INTELSAT901_CB", 3000.0, orbit, 5000.0, clk,
+            sectionalArea: 50.0, dragCoefficient: 2.2, solarRadiationCoefficient: 1.5);
 
         var propWindow = new Window(utcEpoch, utcEpoch.AddDays(1));
 
@@ -694,7 +694,7 @@ public class RK78IntegratorTests
             new Vector3(-1.9441954872554523, -7.255836338283476, 4.534910638063485e-16) * 1000.0,
             earth, utcEpoch, Frames.Frame.ICRF);
 
-        Spacecraft spc = new Spacecraft(-1001, "SSO_SAT_CB", 100.0, 1000.0, clk, orbit);
+        Spacecraft spc = new Spacecraft(-1001, "SSO_SAT_CB", 100.0, orbit, 1000.0, clk);
 
         var propWindow = new Window(utcEpoch, utcEpoch.AddDays(1));
 

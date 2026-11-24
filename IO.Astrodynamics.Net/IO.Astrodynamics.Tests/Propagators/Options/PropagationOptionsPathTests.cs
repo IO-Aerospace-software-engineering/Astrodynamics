@@ -48,7 +48,7 @@ public class PropagationOptionsPathTests
     internal static Spacecraft NewSpacecraft(IO.Astrodynamics.OrbitalParameters.OrbitalParameters orbit)
     {
         int id = NextId();
-        return new Spacecraft(id, $"OPT{-id}", 500.0, 3000.0, new Clock($"opt{-id}", 65536), orbit, 4.0, 2.2, null, 1.3);
+        return new Spacecraft(id, $"OPT{-id}", 500.0, orbit, 3000.0, new Clock($"opt{-id}", 65536), 4.0, 2.2, null, 1.3);
     }
 
     internal static Matrix Covariance() =>

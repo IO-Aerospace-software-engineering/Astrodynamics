@@ -54,7 +54,7 @@ public class InstrumentPointingAttitudeTests
         var epoch = new TimeSystem.Time(2021, 01, 01, 13, 0, 0, TimeScale.TDB);
         var orbitalParams = new StateVector(new Vector3(6678000.0, 0.0, 0.0), new Vector3(0.0, 7727.0, 0.0), TestHelpers.EarthAtJ2000, epoch,
             Frames.Frame.ICRF);
-        var spc = new Spacecraft(-666, "GenericSpacecraft", 1000.0, 3000.0, new Clock("GenericClk", 65536), orbitalParams);
+        var spc = new Spacecraft(-666, "GenericSpacecraft", 1000.0, orbitalParams, 3000.0, new Clock("GenericClk", 65536));
         spc.AddFuelTank(new FuelTank("ft", "ftA", "123456", 1000.0, 900.0));
         spc.AddEngine(new Engine("eng", "engmk1", "12345", 450, 50, spc.FuelTanks.First()));
 
@@ -117,7 +117,7 @@ public class InstrumentPointingAttitudeTests
 
     private static (Spacecraft Spacecraft, Instrument Instrument) PointingSpacecraft(int id, StateVector state)
     {
-        var spc = new Spacecraft(id, $"PT{-id}", 1000.0, 3000.0, new Clock($"PT{-id}_CLK", 65536), state);
+        var spc = new Spacecraft(id, $"PT{-id}", 1000.0, state, 3000.0, new Clock($"PT{-id}_CLK", 65536));
         spc.AddFuelTank(new FuelTank("ft", "ftA", "123456", 1000.0, 900.0));
         spc.AddEngine(new Engine("eng", "engmk1", "12345", 450, 50, spc.FuelTanks.First()));
         spc.AddCircularInstrument(id * 1000 - 1, "inst", "instmodel", 0.5, Vector3.VectorZ, Vector3.VectorY, new Vector3(0.3, 0.5, 0.2));

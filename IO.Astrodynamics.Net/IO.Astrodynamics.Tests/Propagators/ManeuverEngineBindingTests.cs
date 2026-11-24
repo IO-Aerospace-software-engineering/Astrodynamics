@@ -72,7 +72,7 @@ public class ManeuverEngineBindingTests
         IO.Astrodynamics.OrbitalParameters.OrbitalParameters orbit = null)
     {
         int id = NextId();
-        var spacecraft = new Spacecraft(id, "BIND" + -id, DryMass, 10000.0, new Clock("BIND" + -id, 65536), orbit ?? Orbit(earth),
+        var spacecraft = new Spacecraft(id, "BIND" + -id, DryMass, orbit ?? Orbit(earth), 10000.0, new Clock("BIND" + -id, 65536),
             bodyFront: front, bodyRight: right, bodyUp: front.HasValue ? Vector3.VectorZ : null);
         var tank = new FuelTank("TANK" + -id, "MODEL", "SN" + -id, Fuel, Fuel);
         spacecraft.AddFuelTank(tank);

@@ -161,7 +161,7 @@ public class GmatConformancePropagatorTests
         var earth = new CelestialBody(PlanetsAndMoons.EARTH, Frames.Frame.ICRF, gmatCase.Epoch,
             new GeopotentialModelParameters(GeopotentialModel, gmatCase.Degree) { CentralTerm = centralTerm });
         var orbit = new StateVector(gmatCase.Position, gmatCase.Velocity, earth, gmatCase.Epoch, Frames.Frame.ICRF);
-        var spacecraft = new Spacecraft(-1001, "GMAT_CONFORMANCE", 1000.0, 10000.0, new Clock("clock", 256), orbit);
+        var spacecraft = new Spacecraft(-1001, "GMAT_CONFORMANCE", 1000.0, orbit, 10000.0, new Clock("clock", 256));
         var window = new Window(gmatCase.Epoch, gmatCase.Epoch.AddDays(1));
         var propagator = verlet
             ? new CentralBodyPropagator(window, spacecraft, new PropagationOptions { Integrator = new VVIntegratorOptions { Step = TimeSpan.FromSeconds(1.0) }, OutputStep = TimeSpan.FromSeconds(1.0), ThirdBodies = gmatCase.ThirdBodies() })

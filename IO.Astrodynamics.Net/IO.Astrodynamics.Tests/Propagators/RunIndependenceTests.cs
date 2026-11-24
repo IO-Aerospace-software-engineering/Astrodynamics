@@ -63,7 +63,7 @@ public class RunIndependenceTests
     private static Spacecraft NewSpacecraft(IO.Astrodynamics.OrbitalParameters.OrbitalParameters orbit)
     {
         int id = NextId();
-        return new Spacecraft(id, $"RI{-id}", 100.0, 10000.0, new Clock($"riclk{-id}", 65536), orbit, 10.0, 2.2);
+        return new Spacecraft(id, $"RI{-id}", 100.0, orbit, 10000.0, new Clock($"riclk{-id}", 65536), 10.0, 2.2);
     }
 
     private static Spacecraft Leo(Frames.Frame frame = null) => NewSpacecraft(LeoState(frame));

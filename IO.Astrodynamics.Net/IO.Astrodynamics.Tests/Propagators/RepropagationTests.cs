@@ -210,7 +210,7 @@ public class RepropagationTests
     private static Sc Build(Env env, OrbitalParams orbit, string chain, Time? userGate = null)
     {
         int id = System.Threading.Interlocked.Decrement(ref _nextId);
-        var spacecraft = new Spacecraft(id, $"RP{-id}", 1000.0, 3000.0, new Clock($"RP{-id}_CLK", 65536), orbit, cosparId: "2024-001A");
+        var spacecraft = new Spacecraft(id, $"RP{-id}", 1000.0, orbit, 3000.0, new Clock($"RP{-id}_CLK", 65536), cosparId: "2024-001A");
         var tank = new FuelTank("ft", "model", "sn", 1000.0, 1000.0);
         spacecraft.AddFuelTank(tank);
         var engine = new Engine("eng", "model", "sn", 300.0, 10.0, tank);

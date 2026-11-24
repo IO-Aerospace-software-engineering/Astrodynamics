@@ -32,7 +32,7 @@ public class TriadAttitudeTests
             new TimeSystem.Time(2021, 01, 01, 13, 0, 0, TimeScale.TDB),
             Frames.Frame.ICRF);
 
-        var spc = new Spacecraft(-667, "TriadTestSpacecraft", 1000.0, 3000.0, new Clock("TestClk", 65536), orbitalParams);
+        var spc = new Spacecraft(-667, "TriadTestSpacecraft", 1000.0, orbitalParams, 3000.0, new Clock("TestClk", 65536));
         spc.AddFuelTank(new FuelTank("ft", "ftA", "123456", 1000.0, 900.0));
         spc.AddEngine(new Engine("eng", "engmk1", "12345", 450, 50, spc.FuelTanks.First()));
 
@@ -50,7 +50,7 @@ public class TriadAttitudeTests
             epoch,
             Frames.Frame.ICRF);
 
-        var target = new Spacecraft(-668, "TriadTargetSpacecraft", 800.0, 2000.0, new Clock("TargetClk", 65536), targetState);
+        var target = new Spacecraft(-668, "TriadTargetSpacecraft", 800.0, targetState, 2000.0, new Clock("TargetClk", 65536));
         var step = TimeSpan.FromSeconds(30.0);
         double dt = step.TotalSeconds;
 
@@ -1299,7 +1299,7 @@ public class TriadAttitudeTests
         var state = new KeplerianElements(7000000.0, 0.001, 0.9, 0.4, 1.1, 0.3, TestHelpers.EarthAtJ2000, new TimeSystem.Time(2021, 01, 01, 13, 0, 0, TimeScale.TDB),
             Frames.Frame.ICRF).ToStateVector();
         var (front, right, up) = BodyAxes(triad);
-        var spc = new Spacecraft(-669, "TriadAxesSpacecraft", 1000.0, 3000.0, new Clock("AxesClk", 65536), state, bodyFront: front, bodyRight: right, bodyUp: up);
+        var spc = new Spacecraft(-669, "TriadAxesSpacecraft", 1000.0, state, 3000.0, new Clock("AxesClk", 65536), bodyFront: front, bodyRight: right, bodyUp: up);
         spc.AddFuelTank(new FuelTank("ft", "ftA", "123456", 1000.0, 900.0));
         spc.AddEngine(new Engine("eng", "engmk1", "12345", 450, 50, spc.FuelTanks.First()));
         return (spc, state);
@@ -1418,7 +1418,7 @@ public class TriadAttitudeTests
         Assert.Equal(Spacecraft.Up, sun.SecondaryBodyVector);
 
         var (front, right, up) = BodyAxes("FrontZ");
-        var spc = new Spacecraft(-670, "TriadLateSpacecraft", 1000.0, 3000.0, new Clock("LateClk", 65536), CreateTestSpacecraft().orbitalParams, bodyFront: front,
+        var spc = new Spacecraft(-670, "TriadLateSpacecraft", 1000.0, CreateTestSpacecraft().orbitalParams, 3000.0, new Clock("LateClk", 65536), bodyFront: front,
             bodyRight: right, bodyUp: up);
         spc.AddFuelTank(tank);
 
@@ -1445,7 +1445,7 @@ public class TriadAttitudeTests
         if (engineKind == "OtherSpacecraft")
         {
             var (front, right, up) = BodyAxes("FrontX");
-            var other = new Spacecraft(-671, "TriadOtherSpacecraft", 1000.0, 3000.0, new Clock("OtherClk", 65536), state, bodyFront: front,
+            var other = new Spacecraft(-671, "TriadOtherSpacecraft", 1000.0, state, 3000.0, new Clock("OtherClk", 65536), bodyFront: front,
                 bodyRight: right, bodyUp: up);
             other.AddFuelTank(new FuelTank("ftO", "ftA", "654321", 1000.0, 900.0));
             other.AddEngine(new Engine("engO", "engmk1", "54321", 450, 50, other.FuelTanks.First()));

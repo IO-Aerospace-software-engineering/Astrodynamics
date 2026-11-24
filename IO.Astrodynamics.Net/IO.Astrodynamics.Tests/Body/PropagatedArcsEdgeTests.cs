@@ -124,7 +124,7 @@ public class PropagatedArcsEdgeTests
 
     private static (Spacecraft, ApogeeHeightManeuver) Apogee(int naifId, StateVector initial, CelestialBody earth, ManeuverExecutionError error = null)
     {
-        var spacecraft = new Spacecraft(naifId, $"PE{-naifId}", 1000.0, 3000.0, new Clock($"PE{-naifId}_CLK", 65536), initial);
+        var spacecraft = new Spacecraft(naifId, $"PE{-naifId}", 1000.0, initial, 3000.0, new Clock($"PE{-naifId}_CLK", 65536));
         var tank = new FuelTank("ft", "model", "sn", 1000.0, 1000.0);
         spacecraft.AddFuelTank(tank);
         var engine = new Engine("eng", "model", "sn", 300.0, 10.0, tank);
@@ -297,7 +297,7 @@ public class PropagatedArcsEdgeTests
     public void ImpulseWithin2MicrosecondsOfTheStartOrTheEnd_TheWindowStaysCovered(double target, int naifId)
     {
         var earth = new CelestialBody(PlanetsAndMoons.EARTH, Frame.ICRF, Start);
-        var spacecraft = new Spacecraft(naifId, $"PE{-naifId}", 1000.0, 3000.0, new Clock($"PE{-naifId}_CLK", 65536), Leo(earth));
+        var spacecraft = new Spacecraft(naifId, $"PE{-naifId}", 1000.0, Leo(earth), 3000.0, new Clock($"PE{-naifId}_CLK", 65536));
         var tank = new FuelTank("ft", "model", "sn", 1000.0, 1000.0);
         spacecraft.AddFuelTank(tank);
         var engine = new Engine("eng", "model", "sn", 300.0, 10.0, tank);
@@ -360,7 +360,7 @@ public class PropagatedArcsEdgeTests
     public void TwoImpulsesAtOneEvent_OneBoundary()
     {
         var earth = new CelestialBody(PlanetsAndMoons.EARTH, Frame.ICRF, Start);
-        var spacecraft = new Spacecraft(-5594, "PE5594", 1000.0, 3000.0, new Clock("PE5594_CLK", 65536), Leo(earth));
+        var spacecraft = new Spacecraft(-5594, "PE5594", 1000.0, Leo(earth), 3000.0, new Clock("PE5594_CLK", 65536));
         var tank = new FuelTank("ft", "model", "sn", 1000.0, 1000.0);
         spacecraft.AddFuelTank(tank);
         var engine = new Engine("eng", "model", "sn", 300.0, 10.0, tank);
@@ -438,7 +438,7 @@ public class PropagatedArcsEdgeTests
     public void TwoImpulsesWithin2Microseconds_ReadsAndSpkGiveTheStateAfterBoth(double d, int naifId)
     {
         var earth = new CelestialBody(PlanetsAndMoons.EARTH, Frame.ICRF, Start);
-        var spacecraft = new Spacecraft(naifId, $"PE{-naifId}", 1000.0, 3000.0, new Clock($"PE{-naifId}_CLK", 65536), Leo(earth));
+        var spacecraft = new Spacecraft(naifId, $"PE{-naifId}", 1000.0, Leo(earth), 3000.0, new Clock($"PE{-naifId}_CLK", 65536));
         var tank = new FuelTank("ft", "model", "sn", 1000.0, 1000.0);
         spacecraft.AddFuelTank(tank);
         var engine = new Engine("eng", "model", "sn", 300.0, 10.0, tank);
@@ -540,7 +540,7 @@ public class PropagatedArcsEdgeTests
         var inFrame = frame == Frame.ICRF ? leo : leo.ToFrame(frame).ToStateVector();
         var initial = new StateVector(inFrame.Position, inFrame.Velocity, earth, Start, frame, p0);
         var error = new ManeuverExecutionError { ResolutionSigma = 0.05, ShutoffSigma = 0.01, AutopilotSigma = 0.02, PointingSigma = 0.005 };
-        var spacecraft = new Spacecraft(naifId, $"PE{-naifId}", 1000.0, 3000.0, new Clock($"PE{-naifId}_CLK", 65536), initial);
+        var spacecraft = new Spacecraft(naifId, $"PE{-naifId}", 1000.0, initial, 3000.0, new Clock($"PE{-naifId}_CLK", 65536));
         var tank = new FuelTank("ft", "model", "sn", 1000.0, 1000.0);
         spacecraft.AddFuelTank(tank);
         var engine = new Engine("eng", "model", "sn", 300.0, 10.0, tank);
@@ -682,7 +682,7 @@ public class PropagatedArcsEdgeTests
     public void ShortArc_IsFilledFromTheSolution(string integrator, int naifId)
     {
         var earth = new CelestialBody(PlanetsAndMoons.EARTH, Frame.ICRF, Start);
-        var spacecraft = new Spacecraft(naifId, $"PE{-naifId}", 1000.0, 3000.0, new Clock($"PE{-naifId}_CLK", 65536), PropagatedArcsTests.LeoBeforeApogee(earth, Start));
+        var spacecraft = new Spacecraft(naifId, $"PE{-naifId}", 1000.0, PropagatedArcsTests.LeoBeforeApogee(earth, Start), 3000.0, new Clock($"PE{-naifId}_CLK", 65536));
         var tank = new FuelTank("ft", "model", "sn", 1000.0, 1000.0);
         spacecraft.AddFuelTank(tank);
         var engine = new Engine("eng", "model", "sn", 300.0, 10.0, tank);
@@ -773,7 +773,7 @@ public class PropagatedArcsEdgeTests
         var outputs = sourceSolution.StateVectors.Take(200).ToArray();
 
         // Without a propagation: one arc, the former read
-        var added = new Spacecraft(-5542, "PE5542", 1000.0, 3000.0, new Clock("PE5542_CLK", 65536), Leo(earth));
+        var added = new Spacecraft(-5542, "PE5542", 1000.0, Leo(earth), 3000.0, new Clock("PE5542_CLK", 65536));
         Assert.Throws<ArgumentNullException>(() => added.AddPropagatedStates(null));
         added.AddPropagatedStates(outputs.Reverse().ToArray());
         Assert.Single(added.PropagatedArcs);
@@ -904,7 +904,7 @@ public class PropagatedArcsEdgeTests
         long ticks = (long)System.Math.Round(back * TimeSpan.TicksPerSecond);
         var initial = SpiceAPI.Instance.Propagate2Bodies(atTca, earth.GM, TimeSpan.FromTicks(ticks));
         initial = new StateVector(initial.Position, initial.Velocity, earth, Start, Frame.ICRF);
-        var protectedCraft = new Spacecraft(-5562, "PE5562", 1000.0, 3000.0, new Clock("PE5562_CLK", 65536), initial);
+        var protectedCraft = new Spacecraft(-5562, "PE5562", 1000.0, initial, 3000.0, new Clock("PE5562_CLK", 65536));
         var protectedSolution = protectedCraft.Propagate(window, new PropagationOptions { Integrator = new RK78IntegratorOptions { AbsoluteTolerance = 1e-12, RelativeTolerance = 1e-12 }, OutputStep = step, ThirdBodies = [earth], CovariancePropagation = CovariancePropagationOptions.None });
 
         var search = new Window(tc.AddSeconds(-100.0), tc.AddSeconds(300.0));

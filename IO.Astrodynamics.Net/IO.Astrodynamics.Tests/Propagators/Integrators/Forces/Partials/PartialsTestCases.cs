@@ -89,7 +89,7 @@ public sealed class PartialsTestCases
     /// </summary>
     internal static Spacecraft Spacecraft(StateVector state)
     {
-        return new Spacecraft(-1961, "PARTIALS", 100.0, 1000.0, new Clock("partials", 65536), state, 10.0, 2.2, null,
+        return new Spacecraft(-1961, "PARTIALS", 100.0, state, 1000.0, new Clock("partials", 65536), 10.0, 2.2, null,
             1.5);
     }
 

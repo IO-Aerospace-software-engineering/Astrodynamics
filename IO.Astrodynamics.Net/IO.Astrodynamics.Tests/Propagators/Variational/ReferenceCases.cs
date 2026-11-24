@@ -81,7 +81,7 @@ internal sealed record ReferenceCase(string Name, StateVector InitialState, IRea
     internal static Spacecraft NewSpacecraft(int naifId, StateVector start, double dragCoefficient = ReferenceCases.DragCoefficient,
         double reflectivityCoefficient = ReferenceCases.ReflectivityCoefficient)
     {
-        return new Spacecraft(naifId, "REFERENCE" + -naifId, 100.0, 1000.0, new Clock("reference" + -naifId, 65536), start,
+        return new Spacecraft(naifId, "REFERENCE" + -naifId, 100.0, start, 1000.0, new Clock("reference" + -naifId, 65536),
             10.0, dragCoefficient, null, reflectivityCoefficient);
     }
 
@@ -343,8 +343,8 @@ public sealed class ReferenceCases
     internal Spacecraft EclipsingSpacecraft(int naifId, StateVector orbit, Func<Engine, ImpulseManeuver> maneuver = null,
         double dragCoefficient = DragCoefficient, double reflectivityCoefficient = ReflectivityCoefficient)
     {
-        var spacecraft = new Spacecraft(naifId, "ECLIPSING" + -naifId, 1000.0, 3000.0,
-            new Clock("eclipsing" + -naifId, 65536), orbit, 10.0, dragCoefficient, null, reflectivityCoefficient);
+        var spacecraft = new Spacecraft(naifId, "ECLIPSING" + -naifId, 1000.0, orbit,
+            3000.0, new Clock("eclipsing" + -naifId, 65536), 10.0, dragCoefficient, null, reflectivityCoefficient);
         var tank = new FuelTank("tank" + -naifId, "model", "sn1", 1000.0, 1000.0);
         var engine = new Engine("engine" + -naifId, "model", "sn1", 300.0, 10.0, tank);
         spacecraft.AddFuelTank(tank);

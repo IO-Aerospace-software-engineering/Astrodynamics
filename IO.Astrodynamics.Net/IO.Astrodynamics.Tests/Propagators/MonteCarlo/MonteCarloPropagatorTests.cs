@@ -45,7 +45,7 @@ public class MonteCarloPropagatorTests
             new Vector3(r0, 0, 0), new Vector3(0, v0, 0),
             earth, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF, cov);
 
-        return new Spacecraft(-1000, "Template", 100.0, 10000.0, new Clock("clk", 256), orbit);
+        return new Spacecraft(-1000, "Template", 100.0, orbit, 10000.0, new Clock("clk", 256));
     }
 
     private static MonteCarloConfiguration CreateDefaultConfig(int runCount = 5, int seed = 42)
@@ -215,7 +215,7 @@ public class MonteCarloPropagatorTests
             new Vector3(r0, 0, 0), new Vector3(0, v0, 0),
             earth, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF); // no covariance
 
-        var sc = new Spacecraft(-1000, "NoCov", 100.0, 10000.0, new Clock("clk", 256), orbit);
+        var sc = new Spacecraft(-1000, "NoCov", 100.0, orbit, 10000.0, new Clock("clk", 256));
 
         var config = new MonteCarloConfiguration
         {
@@ -282,7 +282,7 @@ public class MonteCarloPropagatorTests
         {
             RunCount = 3,
             Seed = 675,
-            TemplateSpacecraft = new Spacecraft(-1675, "TemeTemplate", 100.0, 10000.0, new Clock("clk675", 256), nominal),
+            TemplateSpacecraft = new Spacecraft(-1675, "TemeTemplate", 100.0, nominal, 10000.0, new Clock("clk675", 256)),
             Window = new Window(TimeSystem.Time.J2000TDB, TimeSystem.Time.J2000TDB.AddMinutes(10)),
             Propagation = new PropagationOptions { Integrator = new VVIntegratorOptions { Step = TimeSpan.FromSeconds(60) }, OutputStep = TimeSpan.FromSeconds(60), ThirdBodies = [new CelestialBody(PlanetsAndMoons.EARTH)] },
             BaseNaifId = -1680
@@ -330,7 +330,7 @@ public class MonteCarloPropagatorTests
             new Vector3(r0, 0, 0), new Vector3(0, v0, 0),
             earth, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF, cov);
 
-        return new Spacecraft(-1000, "Template", 100.0, 10000.0, new Clock("clk", 256), orbit);
+        return new Spacecraft(-1000, "Template", 100.0, orbit, 10000.0, new Clock("clk", 256));
     }
 
     // A progress that records each report on the reporting thread, so that the reports can be asserted

@@ -294,7 +294,7 @@ public class KernelWindowSearchTests : IClassFixture<KernelWindowSearchKernels>
     private static KeplerianElements LeoOrbit => new(6800000.0, 1.0e-4, 51.6 * IO.Astrodynamics.Constants.Deg2Rad, 0.0, 0.0, 0.0, Earth, LeoWindow.StartDate,
         Frames.Frame.ICRF);
 
-    private static Spacecraft ManagedLeo => new(-678, "LEO678", 100.0, 10000.0, new Clock("LEO678CLK", 65536), LeoOrbit);
+    private static Spacecraft ManagedLeo => new(-678, "LEO678", 100.0, LeoOrbit, 10000.0, new Clock("LEO678CLK", 65536));
 
     private void AssertShortPasses(Spacecraft leo, TimeSpan step, string path, double threshold)
     {

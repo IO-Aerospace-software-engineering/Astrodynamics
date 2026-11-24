@@ -43,8 +43,8 @@ public class TriadSolver : ICategorySolver
         var refVector = new Vector3(inputs.SecondaryBodyVector[0], inputs.SecondaryBodyVector[1], inputs.SecondaryBodyVector[2]);
 
         // Create spacecraft with instrument, engine and fuel tank
-        var spacecraft = new Spacecraft(-999, "ConformanceTestSC", 100.0, 1000.0,
-            new Clock("ConfClk", 65536), sv);
+        var spacecraft = new Spacecraft(-999, "ConformanceTestSC", 100.0, sv,
+            1000.0, new Clock("ConfClk", 65536));
         spacecraft.AddFuelTank(new FuelTank("ft", "ftA", "000000", 500.0, 400.0));
         spacecraft.AddEngine(new Engine("eng", "engA", "000000", 300, 50, spacecraft.FuelTanks.First()));
 

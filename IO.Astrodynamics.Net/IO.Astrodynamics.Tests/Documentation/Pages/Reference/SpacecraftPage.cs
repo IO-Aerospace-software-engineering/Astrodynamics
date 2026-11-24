@@ -65,13 +65,14 @@ internal static class SpacecraftPage
     {
         #region docs/reference/spacecraft.md:1
         // Inputs: orbit (StateVector)
-        var spacecraft = new Spacecraft(
-            naifId: -1001, name: "MySat",
-            mass: 500.0, maximumOperatingMass: 2000.0,
-            clock: new Clock("OnboardClk", 256),
-            initialOrbitalParameters: orbit,
-            sectionalArea: 10.0, dragCoeff: 2.2,
-            cosparId: "2024-001A", solarRadiationCoeff: 1.5);
+        // The NAIF id, the name, the dry mass (kg) and the initial orbit; everything else is optional
+        var spacecraft = new Spacecraft(-1001, "MySat", 500.0, orbit);
+
+        // The optional values, by name
+        var detailed = new Spacecraft(-1002, "MySat2", 500.0, orbit,
+            maxOperatingMass: 2000.0, clock: new Clock("OnboardClk", 256),
+            sectionalArea: 10.0, dragCoefficient: 2.2,
+            cosparId: "2024-001A", solarRadiationCoefficient: 1.5);
         #endregion
     }
 

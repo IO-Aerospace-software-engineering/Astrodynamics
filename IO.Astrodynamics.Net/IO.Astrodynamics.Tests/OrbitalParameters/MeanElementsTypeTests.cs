@@ -144,7 +144,7 @@ public class MeanElementsTypeTests
     }
 
     private Spacecraft MeanSpacecraft(int naifId, IO.Astrodynamics.OrbitalParameters.OrbitalParameters orbit) =>
-        new(naifId, $"MEAN{-naifId}", 100.0, 1000.0, new Clock($"mean{-naifId}", 65536), orbit);
+        new(naifId, $"MEAN{-naifId}", 100.0, orbit, 1000.0, new Clock($"mean{-naifId}", 65536));
 
     [Fact]
     public async Task APropagationFromAMeanInitialOrbit_IsRefused()

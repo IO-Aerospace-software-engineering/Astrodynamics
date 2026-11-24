@@ -114,7 +114,7 @@ public class CelestialAttitudeTargetTests
         double worstPrimary = 0.0, worstPlane = 0.0;
         foreach (var ((epoch, state, moonExpected), k) in Pointing("moon", earth).Select((p, k) => (p, k)))
         {
-            var spc = new Spacecraft(-7401, "S740", 1000.0, 3000.0, new Clock("S740_CLK", 65536), state);
+            var spc = new Spacecraft(-7401, "S740", 1000.0, state, 3000.0, new Clock("S740_CLK", 65536));
             spc.AddFuelTank(new FuelTank("ft", "ftA", "123456", 1000.0, 900.0));
             spc.AddEngine(new Engine("eng", "engmk1", "12345", 450, 50, spc.FuelTanks.First()));
             var attitude = new TriadAttitude(earth, epoch, TimeSpan.Zero, Spacecraft.Front, new CelestialAttitudeTarget(moon, Aberration.LT),

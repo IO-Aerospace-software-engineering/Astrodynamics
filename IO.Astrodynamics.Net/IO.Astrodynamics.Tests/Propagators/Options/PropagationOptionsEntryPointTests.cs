@@ -105,9 +105,9 @@ public class PropagationOptionsEntryPointTests
     private static Spacecraft Template(ILocalizable earth)
     {
         var covariance = IO.Astrodynamics.Math.Matrix.Diagonal(100.0, 100.0, 100.0, 0.01, 0.01, 0.01);
-        return new Spacecraft(-1700001, "MCOPT", 100.0, 10000.0, new Clock("mcopt", 256),
-            new StateVector(new Vector3(6800000.0, 0, 0), new Vector3(0, 7656.2, 0), earth, Start, Frames.Frame.ICRF,
-                covariance));
+        return new Spacecraft(-1700001, "MCOPT", 100.0, new StateVector(new Vector3(6800000.0, 0, 0), new Vector3(0, 7656.2, 0), earth, Start, Frames.Frame.ICRF,
+                covariance), 10000.0,
+            new Clock("mcopt", 256));
     }
 
 }

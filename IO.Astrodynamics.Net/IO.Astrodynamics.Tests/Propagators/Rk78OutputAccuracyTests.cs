@@ -321,7 +321,7 @@ public class Rk78OutputAccuracyTests
 
     private (Spacecraft Spacecraft, ApogeeHeightManeuver Maneuver) ManeuveringSpacecraft(StateVector orbit)
     {
-        var spacecraft = new Spacecraft(-1971, "DENSE", 1000.0, 3000.0, new Clock("dense", 65536), orbit);
+        var spacecraft = new Spacecraft(-1971, "DENSE", 1000.0, orbit, 3000.0, new Clock("dense", 65536));
         var tank = new FuelTank("densetank", "model", "sn1", 1000.0, 1000.0);
         var engine = new Engine("denseengine", "model", "sn1", 300.0, 10.0, tank);
         spacecraft.AddFuelTank(tank);

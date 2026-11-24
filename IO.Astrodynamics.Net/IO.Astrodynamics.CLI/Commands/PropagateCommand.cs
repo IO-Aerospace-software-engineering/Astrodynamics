@@ -67,7 +67,7 @@ public class PropagateCommand
         }
 
         Clock clock = new Clock($"clock{bodyName}", 65536);
-        Spacecraft spacecraft = new Spacecraft(-1000, bodyName, bodyMass, bodyMass, clock, initialOrbit, area, cd);
+        Spacecraft spacecraft = new Spacecraft(-1000, bodyName, bodyMass, initialOrbit, bodyMass, clock, area, cd);
         List<CelestialBody> bodies = new List<CelestialBody>([spacecraft.InitialOrbitalParameters.Observer as CelestialBody]);
         bodies.AddRange(celestialBodies?.Select(x => new CelestialBody(x)) ?? Array.Empty<CelestialBody>());
 

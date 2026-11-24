@@ -148,7 +148,7 @@ namespace ClaudeMdSamples
         {
             #region net:6
             // Spacecraft to OPM (for archiving/sharing)
-            var spacecraft = new Spacecraft(-1000, "ISS", 420000.0, 500000.0, clock, stateVector,
+            var spacecraft = new Spacecraft(-1000, "ISS", 420000.0, stateVector, 500000.0, clock,
                 1600.0, 2.2, "1998-067A", 1.5);
             var opm = spacecraft.ToOpm(
                 originator: "My Organization",
@@ -161,7 +161,7 @@ namespace ClaudeMdSamples
             var restoredOpm = Opm.LoadFromFile("iss.opm");
             var restored = restoredOpm.ToSpacecraft(
                 naifId: -1000,
-                maximumOperatingMass: 500000.0,
+                maxOperatingMass: 500000.0,
                 clock: new Clock("OnboardClock", 256),
                 observer: earth);  // Optional, defaults to the CENTER_NAME centre (an unknown one throws)
             #endregion
@@ -284,7 +284,7 @@ namespace ClaudeMdSamples
             // A propagation takes the models of the orbit's centre, and a listed body of its id with other models throws
             // (#674): the orbit is built on this earth
             var orbit = new StateVector(new Vector3(6800000.0, 0, 0), new Vector3(0, 7500.0, 0), earth, epoch, Frame.ICRF);
-            var spacecraft = new Spacecraft(-1000, "Sat", 100.0, 10000.0, clock, orbit);
+            var spacecraft = new Spacecraft(-1000, "Sat", 100.0, orbit, 10000.0, clock);
 
             // The propagator uses the geopotential model of the orbit's centre; the settings in one PropagationOptions value
             var propagator = new CentralBodyPropagator(window, spacecraft, new PropagationOptions
@@ -315,8 +315,8 @@ namespace ClaudeMdSamples
         {
             #region net:14
             // SRP with Cr = 1.5
-            var spacecraft = new Spacecraft(-1001, "Sat", 100.0, 10000.0, clock, orbit,
-                sectionalArea: 10.0, solarRadiationCoeff: 1.5);
+            var spacecraft = new Spacecraft(-1001, "Sat", 100.0, orbit, 10000.0, clock,
+                sectionalArea: 10.0, solarRadiationCoefficient: 1.5);
             var srp = new SolarRadiationPressure(spacecraft, [earth]);
             #endregion
             return srp;
@@ -329,7 +329,7 @@ namespace ClaudeMdSamples
         {
             #region net:16
             // Spacecraft with +X as front (e.g., matching a SPICE FK convention)
-            var spacecraft = new Spacecraft(-1001, "Sat", 1000, 5000, clock, orbit,
+            var spacecraft = new Spacecraft(-1001, "Sat", 1000, orbit, 5000, clock,
                 bodyFront: Vector3.VectorX, bodyRight: Vector3.VectorY.Inverse(), bodyUp: Vector3.VectorZ);
 
             // The single-vector attitudes, the impulse attitude and the TRIAD factories use the instance axes

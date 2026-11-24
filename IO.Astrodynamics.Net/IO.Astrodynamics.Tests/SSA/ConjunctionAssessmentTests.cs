@@ -2321,20 +2321,20 @@ public partial class ConjunctionAssessmentTests
     private static Spacecraft CreateSpacecraft(int naifId, string name, CelestialBody earth, Vector3 position, Vector3 velocity, Matrix covariance, double hardBodyRadius = 8.0)
     {
         var orbit = new StateVector(position, velocity, earth, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF, covariance);
-        return new Spacecraft(naifId, name, 120.0, 150.0, new Clock($"{name}_CLK", 256), orbit, sectionalArea: 2.0, dragCoeff: 2.2, cosparId: $"2026-001{name[0]}", solarRadiationCoeff: 1.2, hardBodyRadius: hardBodyRadius);
+        return new Spacecraft(naifId, name, 120.0, orbit, 150.0, new Clock($"{name}_CLK", 256), sectionalArea: 2.0, dragCoefficient: 2.2, cosparId: $"2026-001{name[0]}", solarRadiationCoefficient: 1.2, hardBodyRadius: hardBodyRadius);
     }
 
     private static Spacecraft CreateSpacecraftWithoutCovariance(int naifId, string name, CelestialBody earth, Vector3 position, Vector3 velocity, double hardBodyRadius = 8.0)
     {
         var orbit = new StateVector(position, velocity, earth, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF);
-        return new Spacecraft(naifId, name, 120.0, 150.0, new Clock($"{name}_CLK", 256), orbit, sectionalArea: 2.0, dragCoeff: 2.2, cosparId: $"2026-001{name[0]}", solarRadiationCoeff: 1.2, hardBodyRadius: hardBodyRadius);
+        return new Spacecraft(naifId, name, 120.0, orbit, 150.0, new Clock($"{name}_CLK", 256), sectionalArea: 2.0, dragCoefficient: 2.2, cosparId: $"2026-001{name[0]}", solarRadiationCoefficient: 1.2, hardBodyRadius: hardBodyRadius);
     }
 
     private static Spacecraft CreateSpacecraftFromBody(CelestialBody body, int naifId, string name, double hardBodyRadius = 0.0)
     {
         var earth = CreateEarth();
         var state = body.GetEphemeris(TimeSystem.Time.J2000TDB, earth, Frames.Frame.ICRF, Aberration.None);
-        return new Spacecraft(naifId, name, 1000.0, 2000.0, new Clock($"{name}_CLK", 256), state, sectionalArea: 10.0, dragCoeff: 2.2, cosparId: $"2026-001{name[0]}", solarRadiationCoeff: 1.2, hardBodyRadius: hardBodyRadius);
+        return new Spacecraft(naifId, name, 1000.0, state, 2000.0, new Clock($"{name}_CLK", 256), sectionalArea: 10.0, dragCoefficient: 2.2, cosparId: $"2026-001{name[0]}", solarRadiationCoefficient: 1.2, hardBodyRadius: hardBodyRadius);
     }
 
     private static Matrix BuildCovariance(double positionVariance, double velocityVariance)

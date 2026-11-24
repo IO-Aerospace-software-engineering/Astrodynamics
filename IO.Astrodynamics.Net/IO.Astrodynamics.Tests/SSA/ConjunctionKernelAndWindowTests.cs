@@ -47,8 +47,8 @@ public class CrossingEncounterCase : IDisposable
         var earth = new CelestialBody(PlanetsAndMoons.EARTH, Frames.Frame.ICRF, T0);
         var (s1, s2) = states(earth, T0);
 
-        Sat1 = new Spacecraft(id1, name + "1", 500.0, 5000.0, new Clock(name + "1_CLK", 256), s1);
-        Sat2 = new Spacecraft(id2, name + "2", 100.0, 1000.0, new Clock(name + "2_CLK", 256), s2);
+        Sat1 = new Spacecraft(id1, name + "1", 500.0, s1, 5000.0, new Clock(name + "1_CLK", 256));
+        Sat2 = new Spacecraft(id2, name + "2", 100.0, s2, 1000.0, new Clock(name + "2_CLK", 256));
         Window = new Window(T0, T0.AddSeconds(10800.0));
         Solution1 = Sat1.Propagate(Window, new PropagationOptions { Integrator = integrator1(), OutputStep = TimeSpan.FromSeconds(60.0), ThirdBodies = new CelestialItem[] { earth }, CovariancePropagation = CovariancePropagationOptions.None });
         Solution2 = Sat2.Propagate(Window, new PropagationOptions { Integrator = integrator2(), OutputStep = TimeSpan.FromSeconds(60.0), ThirdBodies = new CelestialItem[] { earth }, CovariancePropagation = CovariancePropagationOptions.None });
@@ -836,8 +836,8 @@ public class ConjunctionKernelAndWindowTests : ConjunctionDensePassTestBase, ICl
         Assert.Throws<ArgumentException>(() => ConjunctionAssessment.Screen(profile, new ILocalizable[] { _case.Sat2 }, beyond));
 
         // The secondary alone leaves its states: a protected spacecraft without stored states, read in two-body motion
-        var twoBody = new Spacecraft(-620003, "TWOBODY", 100.0, 1000.0, new Clock("TWOBODY_CLK", 256),
-            _case.Sat1.InitialOrbitalParameters);
+        var twoBody = new Spacecraft(-620003, "TWOBODY", 100.0, _case.Sat1.InitialOrbitalParameters, 1000.0,
+            new Clock("TWOBODY_CLK", 256));
         Assert.Throws<ArgumentException>(() =>
             ConjunctionAssessment.Analyze(new ProtectedSpacecraftProfile(twoBody), _case.Sat2, beyond, Options));
 
@@ -879,11 +879,11 @@ public class ConjunctionKernelAndWindowTests : ConjunctionDensePassTestBase, ICl
         StateVector Leo(CelestialBody body) => new(new Vector3(6878137.0, 0.0, 0.0), new Vector3(0.0, 7612.6, 0.0), body, epoch2040,
             Frames.Frame.ICRF);
         var pointMass = new CelestialBody(PlanetsAndMoons.EARTH, Frames.Frame.ICRF, epoch2040);
-        var free = new Spacecraft(-620004, "PCK2040", 100.0, 1000.0, new Clock("PCK2040_CLK", 256), Leo(pointMass));
+        var free = new Spacecraft(-620004, "PCK2040", 100.0, Leo(pointMass), 1000.0, new Clock("PCK2040_CLK", 256));
         free.Propagate(window2040, new PropagationOptions { Integrator = RK78IntegratorOptions.Default, OutputStep = TimeSpan.FromSeconds(60.0), ThirdBodies = new CelestialItem[] { pointMass }, CovariancePropagation = CovariancePropagationOptions.None });
         var withField = new CelestialBody(PlanetsAndMoons.EARTH, Frames.Frame.ICRF, epoch2040,
             new GeopotentialModelParameters("Data/SolarSystem/EGM2008_to70_TideFree", 10));
-        var bound = new Spacecraft(-620005, "PCK2040F", 100.0, 1000.0, new Clock("PCK2040F_CLK", 256), Leo(withField));
+        var bound = new Spacecraft(-620005, "PCK2040F", 100.0, Leo(withField), 1000.0, new Clock("PCK2040F_CLK", 256));
         Assert.Throws<InvalidOperationException>(() => bound.Propagate(window2040, new PropagationOptions { Integrator = RK78IntegratorOptions.Default, OutputStep = TimeSpan.FromSeconds(60.0), ThirdBodies = new CelestialItem[] { withField }, CovariancePropagation = CovariancePropagationOptions.None }));
 
         // de440s does not chain Mars to its barycenter: the body is built without initial orbital parameters (an

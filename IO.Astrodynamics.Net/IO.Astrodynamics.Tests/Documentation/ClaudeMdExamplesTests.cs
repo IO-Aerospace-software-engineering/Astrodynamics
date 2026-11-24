@@ -107,7 +107,7 @@ public class ClaudeMdExamplesTests
     // A spacecraft of the given id with a tank, an engine on it and a camera (boresight +Z, reference vector +Y)
     private static Spacecraft SpacecraftWithEngine(int naifId, out Engine engine, string cosparId = null)
     {
-        var spacecraft = new Spacecraft(naifId, $"CLAUDEMD{-naifId}", 500.0, 1000.0, new Clock($"CLAUDEMD{-naifId}_CLK", 256), Orbit(),
+        var spacecraft = new Spacecraft(naifId, $"CLAUDEMD{-naifId}", 500.0, Orbit(), 1000.0, new Clock($"CLAUDEMD{-naifId}_CLK", 256),
             cosparId: cosparId);
         var tank = new FuelTank("Tank", "Model", "SN1", 100.0, 100.0);
         spacecraft.AddFuelTank(tank);
@@ -325,7 +325,7 @@ public class ClaudeMdExamplesTests
     {
         var earth = new CelestialBody(PlanetsAndMoons.EARTH, Frames.Frame.ICRF, Epoch,
             new GeopotentialModelParameters("Data/SolarSystem/EGM2008_to70_TideFree", 10));
-        var spacecraft = new Spacecraft(-6730, "CLAUDEMD6730", 100.0, 10000.0, NewClock("CLAUDEMD6730_CLK"), Orbit());
+        var spacecraft = new Spacecraft(-6730, "CLAUDEMD6730", 100.0, Orbit(), 10000.0, NewClock("CLAUDEMD6730_CLK"));
         var exception = Assert.Throws<ArgumentException>(() => new CentralBodyPropagator(new Window(Epoch, Epoch.AddHours(1)), spacecraft, new PropagationOptions { Integrator = new VVIntegratorOptions { Step = TimeSpan.FromSeconds(1.0) }, OutputStep = TimeSpan.FromSeconds(1.0), ThirdBodies = [earth, PlanetsAndMoons.MOON_BODY, Stars.SUN_BODY] }));
         Assert.Equal("celestialBodies", exception.ParamName);
 

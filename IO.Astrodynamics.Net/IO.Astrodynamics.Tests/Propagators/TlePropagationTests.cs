@@ -84,7 +84,7 @@ public class TlePropagationTests
     }
 
     private static Spacecraft NewSpacecraft(int naifId, IO.Astrodynamics.OrbitalParameters.OrbitalParameters orbit) =>
-        new(naifId, $"TLEP{-naifId}", 1000.0, 3000.0, new Clock($"tlep{-naifId}", 65536), orbit, 10.0, 2.2, null, 1.5);
+        new(naifId, $"TLEP{-naifId}", 1000.0, orbit, 3000.0, new Clock($"tlep{-naifId}", 65536), 10.0, 2.2, null, 1.5);
 
     private static (Spacecraft Spacecraft, Engine Engine) WithEngine(int naifId, IO.Astrodynamics.OrbitalParameters.OrbitalParameters orbit)
     {

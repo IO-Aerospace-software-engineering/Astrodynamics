@@ -570,7 +570,7 @@ public class MinimumEpochGateTests
                 orbit = new StateVector(sv.Position, sv.Velocity, sv.Observer, sv.Epoch, sv.Frame, p0);
             }
 
-            var spacecraft = new Spacecraft(naifId, $"GT{-naifId}", 1000.0, 3000.0, new Clock($"GT{-naifId}_CLK", 65536), orbit);
+            var spacecraft = new Spacecraft(naifId, $"GT{-naifId}", 1000.0, orbit, 3000.0, new Clock($"GT{-naifId}_CLK", 65536));
             var tank = new FuelTank("ft", "model", "sn", 1000.0, 1000.0);
             spacecraft.AddFuelTank(tank);
             var engine = new Engine("eng", "model", "sn", 300.0, 10.0, tank);
@@ -984,7 +984,7 @@ public class MinimumEpochGateTests
     private static Time StepEdgeGate(CelestialBody center, string integrator, string edge)
     {
         var orbit = Orbit(center, System.Math.PI);
-        var spacecraft = new Spacecraft(-7999, "GTSTEPS", 1000.0, 3000.0, new Clock("GTSTEPS_CLK", 65536), orbit);
+        var spacecraft = new Spacecraft(-7999, "GTSTEPS", 1000.0, orbit, 3000.0, new Clock("GTSTEPS_CLK", 65536));
         IntegratorOptions propagator = integrator switch
         {
             "VV1" => new VVIntegratorOptions { Step = TimeSpan.FromSeconds(1.0) },

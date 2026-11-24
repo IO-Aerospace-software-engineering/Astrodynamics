@@ -99,7 +99,7 @@ namespace IO.Astrodynamics.Tests.Body
 
             //Configure spacecraft
             Clock clock = new Clock("clk1", 65536);
-            Spacecraft spacecraft = new Spacecraft(-179, "SC179", 1000.0, 3000.0, clock, parkingOrbit);
+            Spacecraft spacecraft = new Spacecraft(-179, "SC179", 1000.0, parkingOrbit, 3000.0, clock);
             spacecraft.AddCircularInstrument(-179789, "CAMERA789", "mod1", 0.75, Vector3.VectorZ, Vector3.VectorY, new Vector3(0.0, System.Math.PI * 0.5, 0.0));
             scenario.AddSpacecraft(spacecraft);
 
@@ -212,13 +212,13 @@ namespace IO.Astrodynamics.Tests.Body
 
             //Configure spacecraft
             Clock clock = new Clock("clk1", 65536);
-            Spacecraft spacecraft = new Spacecraft(-179, "SC179", 1000.0, 3000.0, clock, parkingOrbit);
+            Spacecraft spacecraft = new Spacecraft(-179, "SC179", 1000.0, parkingOrbit, 3000.0, clock);
             spacecraft.AddCircularInstrument(-179789, "CAMERA789", "mod1", 0.75, Vector3.VectorZ, Vector3.VectorY, new Vector3(0.0, System.Math.PI * 0.5, 0.0));
 
             StateVector targetOrbit = new StateVector(
                 new Vector3(6790000.0, 0.0, 0.0), new Vector3(0.0, 7656.2204182967143, 0.0), TestHelpers.EarthAtJ2000,
                 start, Frames.Frame.ICRF);
-            Spacecraft target = new Spacecraft(-181, "SC181", 1000.0, 3000.0, new Clock("clk181", 65536), targetOrbit);
+            Spacecraft target = new Spacecraft(-181, "SC181", 1000.0, targetOrbit, 3000.0, new Clock("clk181", 65536));
 
             // Never propagated, it has no attitude to test with (#682); with the identity given by hand, the target 10 km
             // below it is in the field
@@ -240,7 +240,7 @@ namespace IO.Astrodynamics.Tests.Body
 
             //Configure spacecraft
             Clock clock = new Clock("clk1", 65536);
-            Spacecraft spacecraft = new Spacecraft(-179, "SC179", 1000.0, 3000.0, clock, parkingOrbit);
+            Spacecraft spacecraft = new Spacecraft(-179, "SC179", 1000.0, parkingOrbit, 3000.0, clock);
             spacecraft.AddCircularInstrument(-179789, "CAMERA789", "mod1", 0.75, Vector3.VectorZ, Vector3.VectorY, new Vector3(0.0, System.Math.PI * 0.5, 0.0));
 
 
@@ -260,7 +260,7 @@ namespace IO.Astrodynamics.Tests.Body
 
             //Configure spacecraft
             Clock clock = new Clock("clk1", 65536);
-            Spacecraft spacecraft = new Spacecraft(-179, "SC179", 1000.0, 3000.0, clock, parkingOrbit);
+            Spacecraft spacecraft = new Spacecraft(-179, "SC179", 1000.0, parkingOrbit, 3000.0, clock);
             spacecraft.AddCircularInstrument(-179789, "CAMERA789", "mod1", 0.75, Vector3.VectorZ, Vector3.VectorY, new Vector3(0.0, System.Math.PI * 0.5, 0.0));
             spacecraft.Frame.AddStateOrientationToICRF(new StateOrientation(new Quaternion(Vector3.VectorZ, -Astrodynamics.Constants.HalfPi), Vector3.Zero, start, spacecraft.Frame));
 
@@ -276,7 +276,7 @@ namespace IO.Astrodynamics.Tests.Body
             StateVector parkingOrbit = new StateVector(
                 new Vector3(6800000.0, 0.0, 0.0), new Vector3(0.0, 7656.2204182967143, 0.0), TestHelpers.EarthAtJ2000,
                 start, Frames.Frame.ICRF);
-            Spacecraft spacecraft = new Spacecraft(-179, "SC179", 1000.0, 3000.0, new Clock("clk1", 65536), parkingOrbit);
+            Spacecraft spacecraft = new Spacecraft(-179, "SC179", 1000.0, parkingOrbit, 3000.0, new Clock("clk1", 65536));
             spacecraft.AddCircularInstrument(-179789, "CAMERA789", "mod1", 0.75, Vector3.VectorZ, Vector3.VectorY, new Vector3(0.0, System.Math.PI * 0.5, 0.0));
 
             // The rotation of pi/2 about +Y leaves the reference vector +Y, and the attitude is the identity
@@ -293,7 +293,7 @@ namespace IO.Astrodynamics.Tests.Body
             StateVector parkingOrbit = new StateVector(
                 new Vector3(6800000.0, 0.0, 0.0), new Vector3(0.0, 7656.2204182967143, 0.0), TestHelpers.EarthAtJ2000,
                 start, Frames.Frame.ICRF);
-            Spacecraft spacecraft = new Spacecraft(-179, "SC179", 1000.0, 3000.0, new Clock("clk1", 65536), parkingOrbit);
+            Spacecraft spacecraft = new Spacecraft(-179, "SC179", 1000.0, parkingOrbit, 3000.0, new Clock("clk1", 65536));
             spacecraft.AddCircularInstrument(-179789, "CAMERA789", "mod1", 0.75, Vector3.VectorZ, Vector3.VectorY, new Vector3(0.0, System.Math.PI * 0.5, 0.0));
             spacecraft.Frame.AddStateOrientationToICRF(new StateOrientation(new Quaternion(Vector3.VectorZ, -Astrodynamics.Constants.HalfPi), Vector3.Zero, start, spacecraft.Frame));
 
@@ -342,8 +342,8 @@ namespace IO.Astrodynamics.Tests.Body
         [Fact]
         public async Task WriteFrame()
         {
-            Spacecraft spc = new Spacecraft(-1001, "MySpacecraft", 1000.0, 10000.0, new Clock("clk1", 256), new StateVector(new Vector3(1.0, 2.0, 3.0), new Vector3(1.0, 2.0, 3.0),
-                TestHelpers.EarthAtJ2000, new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB), Frames.Frame.ICRF));
+            Spacecraft spc = new Spacecraft(-1001, "MySpacecraft", 1000.0, new StateVector(new Vector3(1.0, 2.0, 3.0), new Vector3(1.0, 2.0, 3.0),
+                TestHelpers.EarthAtJ2000, new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB), Frames.Frame.ICRF), 10000.0, new Clock("clk1", 256));
             spc.AddCircularInstrument(-1001600, "CAM600", "mod1", 1.5, Vector3.VectorZ, Vector3.VectorY, new Vector3(0.0, -System.Math.PI * 0.5, 0.0));
             await spc.Instruments.First().WriteFrameAsync(new FileInfo("instrumentFrame.tf"));
             TextReader tr = new StreamReader("instrumentFrame.tf");
@@ -356,8 +356,8 @@ namespace IO.Astrodynamics.Tests.Body
         [Fact]
         public async Task WriteKernel()
         {
-            Spacecraft spc = new Spacecraft(-1001, "MySpacecraft", 1000.0, 10000.0, new Clock("clk1", 256), new StateVector(new Vector3(1.0, 2.0, 3.0), new Vector3(1.0, 2.0, 3.0),
-                TestHelpers.EarthAtJ2000, new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB), Frames.Frame.ICRF));
+            Spacecraft spc = new Spacecraft(-1001, "MySpacecraft", 1000.0, new StateVector(new Vector3(1.0, 2.0, 3.0), new Vector3(1.0, 2.0, 3.0),
+                TestHelpers.EarthAtJ2000, new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB), Frames.Frame.ICRF), 10000.0, new Clock("clk1", 256));
             spc.AddCircularInstrument(-1001600, "CAM600", "mod1", 1.5, Vector3.VectorZ, Vector3.VectorY, new Vector3(0.0, -System.Math.PI * 0.5, 0.0));
             await spc.Instruments.First().WriteKernelAsync(new FileInfo("instrumentKernel.ti"));
             TextReader tr = new StreamReader("instrumentKernel.ti");
@@ -390,8 +390,8 @@ namespace IO.Astrodynamics.Tests.Body
                 new(0.3, -Astrodynamics.Constants.HalfPi, -0.2), new(0.3, 0.5, 0.2), new(-0.7, 1.1, 2.3)
             ];
             var start = new TimeSystem.Time(2024, 3, 1, 12, 0, 0, TimeScale.TDB);
-            var spacecraft = new Spacecraft(-8601, "EUL8601", 1000.0, 3000.0, new Clock("EUL8601_CLK", 65536),
-                new StateVector(new Vector3(6800000.0, 0.0, 0.0), new Vector3(0.0, 7656.2204182967143, 0.0), TestHelpers.EarthAtJ2000, start, Frames.Frame.ICRF));
+            var spacecraft = new Spacecraft(-8601, "EUL8601", 1000.0, new StateVector(new Vector3(6800000.0, 0.0, 0.0), new Vector3(0.0, 7656.2204182967143, 0.0), TestHelpers.EarthAtJ2000, start, Frames.Frame.ICRF), 3000.0,
+                new Clock("EUL8601_CLK", 65536));
             for (int i = 0; i < orientations.Length; i++)
             {
                 spacecraft.AddCircularInstrument(-8601001 - i, $"E{i}", "m", 0.5, Vector3.VectorZ, Vector3.VectorY, orientations[i]);
@@ -432,9 +432,9 @@ namespace IO.Astrodynamics.Tests.Body
             }
         }
 
-        private static Spacecraft Host(int naifId, string name) => new(naifId, name, 100.0, 1000.0, new Clock(name + "_CLK", 65536),
-            new StateVector(new Vector3(6800e3, 0.0, 0.0), new Vector3(0.0, 7656.0, 0.0), new CelestialBody(SolarSystemObjects.PlanetsAndMoons.EARTH),
-                new TimeSystem.Time(2024, 1, 1, TimeScale.TDB), Frames.Frame.ICRF));
+        private static Spacecraft Host(int naifId, string name) => new(naifId, name, 100.0, new StateVector(new Vector3(6800e3, 0.0, 0.0), new Vector3(0.0, 7656.0, 0.0), new CelestialBody(SolarSystemObjects.PlanetsAndMoons.EARTH),
+                new TimeSystem.Time(2024, 1, 1, TimeScale.TDB), Frames.Frame.ICRF), 1000.0,
+            new Clock(name + "_CLK", 65536));
 
         /// <summary>
         /// The id of the spacecraft frame, NaifId × 1000, is not an instrument id (#676): the instrument FK would define the

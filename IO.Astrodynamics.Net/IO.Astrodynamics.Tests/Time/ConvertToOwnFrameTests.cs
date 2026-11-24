@@ -92,8 +92,8 @@ public class ConvertToOwnFrameTests
         }
         var covariance = new Matrix(covarianceTerms);
 
-        var spacecraft = new Spacecraft(-5100, "CONVERT5100", 100.0, 1000.0, new Clock("convert5100", 65536),
-            new StateVector(state.Position, state.Velocity, earth, epoch, Frames.Frame.ICRF, covariance));
+        var spacecraft = new Spacecraft(-5100, "CONVERT5100", 100.0, new StateVector(state.Position, state.Velocity, earth, epoch, Frames.Frame.ICRF, covariance), 1000.0,
+            new Clock("convert5100", 65536));
 
         // Act: before #510 the propagator rejected the covariance, given at the epoch it had moved by a tick
         var propagator = new CentralBodyPropagator(new Window(epoch, epoch.AddHours(1.0)), spacecraft, new PropagationOptions { Integrator = new RK78IntegratorOptions { AbsoluteTolerance = 1e-12, RelativeTolerance = 1e-12 }, OutputStep = TimeSpan.FromSeconds(60.0), ThirdBodies = new CelestialItem[] { earth }, CovariancePropagation = new CovariancePropagationOptions { Mode = CovariancePropagationMode.Covariance } });

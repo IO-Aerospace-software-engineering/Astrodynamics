@@ -560,7 +560,7 @@ public class TimeArgumentTests
         var tle = new IO.Astrodynamics.OrbitalParameters.TLE.TLE("ISS",
             "1 25544U 98067A   21020.53488036  .00016717  00000-0  10270-3 0  9054",
             "2 25544  51.6423 353.0312 0000493 320.8755  39.2360 15.49309423 25703");
-        var spacecraft = new Spacecraft(-5101, "TIME5101", 100.0, 10000.0, new Clock("time5101", 256), tle);
+        var spacecraft = new Spacecraft(-5101, "TIME5101", 100.0, tle, 10000.0, new Clock("time5101", 256));
         var start = spacecraft.InitialOrbitalParameters.Epoch.ToTDB();
         var end = start.AddHours(2.0);
 
@@ -603,7 +603,7 @@ public class TimeArgumentTests
         CovariancePropagationTests.WithCovariance(state);
 
     private static Spacecraft Spacecraft(int naifId, StateVector state) =>
-        new(naifId, "TIME" + -naifId, 100.0, 1000.0, new Clock("time" + -naifId, 65536), state, 1.0);
+        new(naifId, "TIME" + -naifId, 100.0, state, 1000.0, new Clock("time" + -naifId, 65536), 1.0);
 
     // The integrator with its own forces, the point mass of the central body
     private static PropagationSolution WithItsForces(TimeSystem.Window window, Spacecraft spacecraft, CelestialBody body,

@@ -50,7 +50,7 @@ public class VVBenchmarks
             new Vector3(5442162.5926801835, -4068949.8468206248, -13456.851447751518),
             new Vector3(2858.1975428173836, 3809.7859312745794, 6002.1266931226886),
             _earthLeo, LeoEpoch, Frame.ICRF);
-        var spc = new Spacecraft(-1001, "LEO_Bench_VV", 100.0, 10000.0, clk, orbit);
+        var spc = new Spacecraft(-1001, "LEO_Bench_VV", 100.0, orbit, 10000.0, clk);
         var window = new Window(LeoEpoch, orbit.Period());
         _leoPropagator = new CentralBodyPropagator(window, spc, new PropagationOptions
         {

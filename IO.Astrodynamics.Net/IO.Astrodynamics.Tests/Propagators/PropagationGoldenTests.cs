@@ -179,7 +179,7 @@ public class PropagationGoldenTests
         var moon = new CelestialBody(PlanetsAndMoons.MOON, Frames.Frame.ICRF, Start);
         var orbit = new StateVector(new Vector3(6778137.0, 0.0, 0.0), new Vector3(0.0, 4751.0, 5993.0), earth, Start,
             Frames.Frame.ICRF);
-        var spacecraft = new Spacecraft(-1951, "GOLDEN1", 100.0, 1000.0, new Clock("golden1", 65536), orbit, 10.0, 2.2,
+        var spacecraft = new Spacecraft(-1951, "GOLDEN1", 100.0, orbit, 1000.0, new Clock("golden1", 65536), 10.0, 2.2,
             null, 1.5);
 
         return spacecraft.PropagateWithVariational(new Window(Start, Start.AddHours(3.0)),
@@ -196,7 +196,7 @@ public class PropagationGoldenTests
         var sun = new CelestialBody(Stars.Sun);
         var orbit = new StateVector(new Vector3(42164137.0, 0.0, 0.0), new Vector3(0.0, 3074.66, 10.0), earth, Start,
             Frames.Frame.ICRF);
-        var spacecraft = new Spacecraft(-1952, "GOLDEN2", 2000.0, 5000.0, new Clock("golden2", 65536), orbit);
+        var spacecraft = new Spacecraft(-1952, "GOLDEN2", 2000.0, orbit, 5000.0, new Clock("golden2", 65536));
 
         return spacecraft.PropagateWithVariational(new Window(Start, Start.AddDays(1.0)),
             new PropagationOptions { Integrator = new RK78IntegratorOptions { AbsoluteTolerance = 1e-11, RelativeTolerance = 1e-11 }, OutputStep = TimeSpan.FromSeconds(600.0), ThirdBodies = new CelestialItem[] { earth, moon, sun } },
@@ -213,7 +213,7 @@ public class PropagationGoldenTests
         var sun = new CelestialBody(Stars.Sun);
         var orbit = new StateVector(new Vector3(-7378137.0, 0.0, 0.0), new Vector3(0.0, -5509.9, -4623.4), earth, Start,
             Frames.Frame.ICRF);
-        var spacecraft = new Spacecraft(-1953, "GOLDEN3", 1000.0, 3000.0, new Clock("golden3", 65536), orbit);
+        var spacecraft = new Spacecraft(-1953, "GOLDEN3", 1000.0, orbit, 3000.0, new Clock("golden3", 65536));
         var tank = new FuelTank("golden3tank", "model", "sn1", 1000.0, 1000.0);
         var engine = new Engine("golden3engine", "model", "sn1", 300.0, 10.0, tank);
         spacecraft.AddFuelTank(tank);

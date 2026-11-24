@@ -196,7 +196,7 @@ public class RadiationPressureObserverTests
 
     private static Spacecraft CreateSpacecraft(StateVector state)
     {
-        return new Spacecraft(-1360, "OBSERVER360", 100.0, 1000.0, new Clock("observer360", 65536), state, 10.0, 2.2,
+        return new Spacecraft(-1360, "OBSERVER360", 100.0, state, 1000.0, new Clock("observer360", 65536), 10.0, 2.2,
             null, 1.5);
     }
 }

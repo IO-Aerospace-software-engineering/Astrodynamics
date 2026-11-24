@@ -46,7 +46,7 @@ public class MarsDragTests
             0.0, 0.0, body, Epoch, Frames.Frame.ICRF).ToStateVector();
 
     private static Spacecraft NewSpacecraft(IO.Astrodynamics.OrbitalParameters.OrbitalParameters orbit, int naifId) =>
-        new(naifId, "MARSDRAG" + -naifId, 100.0, 1000.0, new Clock("marsdrag" + -naifId, 65536), orbit, 10.0, 2.2, null,
+        new(naifId, "MARSDRAG" + -naifId, 100.0, orbit, 1000.0, new Clock("marsdrag" + -naifId, 65536), 10.0, 2.2, null,
             1.0);
 
     [Fact]
@@ -175,7 +175,7 @@ public class MarsDragTests
         double meanMotion = System.Math.Sqrt(body.GM / (a * a * a));
         var orbit = new KeplerianElements(a, (apoapsis - perigee) / (apoapsis + perigee),
             45.0 * IO.Astrodynamics.Constants.Deg2Rad, 0.0, 0.0, -300.0 * meanMotion, body, Epoch, Frames.Frame.ICRF);
-        var spacecraft = new Spacecraft(-4240, "MARSLAYER", 1000.0, 1000.0, new Clock("marslayer", 65536), orbit, 0.01,
+        var spacecraft = new Spacecraft(-4240, "MARSLAYER", 1000.0, orbit, 1000.0, new Clock("marslayer", 65536), 0.01,
             2.2, null, 1.0);
         var window = new TimeSystem.Window(Epoch, Epoch.AddSeconds(600.0));
         var options = new CovariancePropagationOptions { IncludeInStepControl = true };

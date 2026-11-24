@@ -37,8 +37,8 @@ public class ExporterTests
         scenario.AddCelestialItem(TestHelpers.EarthAtJ2000);
         scenario.AddCelestialItem(TestHelpers.Sun);
         scenario.AddCelestialItem(TestHelpers.MoonAtJ2000);
-        Spacecraft spacecraft = new Spacecraft(-333, "spc1", 1000.0, 2000.0, new Clock("clockspc1", 256),
-            new KeplerianElements(6800000.0, 0.0, 0.0, 0.0, 0.0, 0.0, TestHelpers.EarthAtJ2000, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF));
+        Spacecraft spacecraft = new Spacecraft(-333, "spc1", 1000.0, new KeplerianElements(6800000.0, 0.0, 0.0, 0.0, 0.0, 0.0, TestHelpers.EarthAtJ2000, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF), 2000.0,
+            new Clock("clockspc1", 256));
         scenario.AddSpacecraft(spacecraft);
         scenario.Simulate(new PropagationOptions { Integrator = new VVIntegratorOptions { Step = TimeSpan.FromSeconds(1.0) }, OutputStep = TimeSpan.FromSeconds(1.0) });
 
@@ -54,8 +54,8 @@ public class ExporterTests
         scenario.AddCelestialItem(TestHelpers.EarthAtJ2000);
         scenario.AddCelestialItem(TestHelpers.Sun);
         scenario.AddCelestialItem(TestHelpers.MoonAtJ2000);
-        Spacecraft spacecraft = new Spacecraft(-334, "spcWM", 1000.0, 2000.0, new Clock("clockspcWM", 256),
-            new KeplerianElements(6800000.0, 0.0, 0.0, 0.0, 0.0, 0.0, TestHelpers.EarthAtJ2000, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF));
+        Spacecraft spacecraft = new Spacecraft(-334, "spcWM", 1000.0, new KeplerianElements(6800000.0, 0.0, 0.0, 0.0, 0.0, 0.0, TestHelpers.EarthAtJ2000, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF), 2000.0,
+            new Clock("clockspcWM", 256));
         scenario.AddSpacecraft(spacecraft);
         scenario.AddCelestialItem(TestHelpers.MoonAtJ2000);
 
@@ -73,8 +73,8 @@ public class ExporterTests
         scenario.AddCelestialItem(TestHelpers.EarthAtJ2000);
         scenario.AddCelestialItem(TestHelpers.Sun);
         scenario.AddCelestialItem(TestHelpers.MoonAtJ2000);
-        Spacecraft spacecraft = new Spacecraft(-337, "spcLongMission", 1000.0, 2000.0, new Clock("clockSpcLongMission", 65536),
-            new KeplerianElements(6800000.0, 0.0, 0.0, 0.0, 0.0, 0.0, TestHelpers.EarthAtJ2000, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF));
+        Spacecraft spacecraft = new Spacecraft(-337, "spcLongMission", 1000.0, new KeplerianElements(6800000.0, 0.0, 0.0, 0.0, 0.0, 0.0, TestHelpers.EarthAtJ2000, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF), 2000.0,
+            new Clock("clockSpcLongMission", 65536));
         var a = spacecraft.InitialOrbitalParameters.ToStateVector();
         var b = a.RelativeTo(TestHelpers.Sun, Aberration.None);
         scenario.AddSpacecraft(spacecraft);
@@ -98,8 +98,8 @@ public class ExporterTests
         scenario.AddCelestialItem(TestHelpers.MoonAtJ2000);
 
         //Configure a spacecraft
-        Spacecraft spacecraft = new Spacecraft(-334, "EarthExplorer", 1000.0, 2000.0, new Clock("clockspc1", 256),
-            new KeplerianElements(6800000.0, 0.0, 1.0, 0.0, 0.0, 0.0, TestHelpers.EarthAtJ2000, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF));
+        Spacecraft spacecraft = new Spacecraft(-334, "EarthExplorer", 1000.0, new KeplerianElements(6800000.0, 0.0, 1.0, 0.0, 0.0, 0.0, TestHelpers.EarthAtJ2000, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF), 2000.0,
+            new Clock("clockspc1", 256));
 
         //Configure and attach an instrument to the spacecraft
         spacecraft.AddRectangularInstrument(-334100, "camera_hires", "camdeluxe", 0.03, 0.048, Vector3.VectorZ, Vector3.VectorY, Vector3.Zero);
@@ -147,8 +147,8 @@ public class ExporterTests
         scenario.AddCelestialItem(TestHelpers.Sun);
         scenario.AddCelestialItem(TestHelpers.MoonAtJ2000);
         scenario.AddCelestialItem(TestHelpers.EarthAtJ2000);
-        Spacecraft spacecraft = new Spacecraft(-334, "Spacecraft", 1000.0, 2000.0, new Clock("clockspc1", 256),
-            new KeplerianElements(11800000.0, 0.3, 1.0, 0.0, 0.0, 0.0, TestHelpers.EarthAtJ2000, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF));
+        Spacecraft spacecraft = new Spacecraft(-334, "Spacecraft", 1000.0, new KeplerianElements(11800000.0, 0.3, 1.0, 0.0, 0.0, 0.0, TestHelpers.EarthAtJ2000, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF), 2000.0,
+            new Clock("clockspc1", 256));
         spacecraft.AddCircularInstrument(-334100, "Antenna", "antdeluxe", 0.2, Vector3.VectorZ, Vector3.VectorY, Vector3.Zero);
         spacecraft.AddFuelTank(new FuelTank("fuelTank1", "fuelTankModel", "456", 2000.0, 2000.0));
         spacecraft.AddEngine(new Engine("engine1", "engineModel", "1234", 450, 50.0, spacecraft.FuelTanks.First()));
@@ -190,7 +190,7 @@ public class ExporterTests
         //Create and configure spacecraft1
         Clock clock1 = new Clock("clk1", 65536);
         Spacecraft spacecraft1 =
-            new Spacecraft(-1790, "Target", 1000.0, 10000.0, clock1, targetOrbit);
+            new Spacecraft(-1790, "Target", 1000.0, targetOrbit, 10000.0, clock1);
 
         FuelTank fuelTank1 = new FuelTank("ft1", "model1", "sn1", 9000.0, 9000.0);
         Engine engine1 = new Engine("engine1", "model1", "sn1", 450.0, 50.0, fuelTank1);
@@ -203,7 +203,7 @@ public class ExporterTests
         //Create and configure spacecraft2
         Clock clock2 = new Clock("clk2", 65536);
         Spacecraft spacecraft2 =
-            new Spacecraft(-1791, "Chaser", 1000.0, 10000.0, clock2, parkingOrbit);
+            new Spacecraft(-1791, "Chaser", 1000.0, parkingOrbit, 10000.0, clock2);
 
         FuelTank fuelTank2 = new FuelTank("ft1", "model1", "sn1", 9000.0, 9000.0);
         Engine engine2 = new Engine("engine1", "model1", "sn1", 450.0, 50.0, fuelTank2);
@@ -244,8 +244,8 @@ public class ExporterTests
         var start = TimeSystem.Time.J2000TDB.AddYears(21);
         var scenario = new Scenario("Export673", mission, new Window(start, start.AddMinutes(10.0)));
         scenario.AddCelestialItem(TestHelpers.EarthAtJ2000);
-        var spacecraft = new Spacecraft(-8674, PathLimitSpacecraft, 1000.0, 2000.0, new Clock("EXP8674_CLK", 65536),
-            new KeplerianElements(6800000.0, 0.0, 0.0, 0.0, 0.0, 0.0, TestHelpers.EarthAtJ2000, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF));
+        var spacecraft = new Spacecraft(-8674, PathLimitSpacecraft, 1000.0, new KeplerianElements(6800000.0, 0.0, 0.0, 0.0, 0.0, 0.0, TestHelpers.EarthAtJ2000, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF), 2000.0,
+            new Clock("EXP8674_CLK", 65536));
         scenario.AddSpacecraft(spacecraft);
         scenario.AddStar(new Astrodynamics.Body.Star(674, "star674", 1E+30, "spec", 2, 0.3792, Astrodynamics.Coordinates.Equatorial.FromRightAscensionDeclination(1, 1, start), 0.1, 0.1, 0, 0, 0, 0, start));
         scenario.Simulate(new PropagationOptions { Integrator = new VVIntegratorOptions { Step = TimeSpan.FromSeconds(1.0) }, OutputStep = TimeSpan.FromSeconds(1.0) });

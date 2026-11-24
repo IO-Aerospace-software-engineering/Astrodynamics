@@ -49,7 +49,7 @@ public class SsbModeThirdBodyTests
     }
 
     private static Spacecraft NewSpacecraft(StateVector orbit, int naifId) =>
-        new(naifId, "SSBTB" + -naifId, 1000.0, 3000.0, new Clock("ssbtb" + -naifId, 65536), orbit);
+        new(naifId, "SSBTB" + -naifId, 1000.0, orbit, 3000.0, new Clock("ssbtb" + -naifId, 65536));
 
     // The final position relative to the Sun in ICRF
     private static IO.Astrodynamics.Math.Vector3 FinalPosition(PropagationSolution solution, Frames.Frame frame)

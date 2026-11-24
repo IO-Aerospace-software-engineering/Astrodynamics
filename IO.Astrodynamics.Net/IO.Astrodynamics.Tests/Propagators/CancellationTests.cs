@@ -71,7 +71,7 @@ public class CancellationTests
         int id = NextId();
         var state = new StateVector(new Vector3(6700000.0, 0.0, 0.0), new Vector3(0.0, 8000.0, 0.0), earth, Epoch,
             Frames.Frame.ICRF, covariance);
-        var spacecraft = new Spacecraft(id, $"CX{-id}", 100.0, 10000.0, new Clock($"cxclk{-id}", 65536), state, 10.0, 2.2);
+        var spacecraft = new Spacecraft(id, $"CX{-id}", 100.0, state, 10000.0, new Clock($"cxclk{-id}", 65536), 10.0, 2.2);
         if (withManeuver)
         {
             var tank = new FuelTank($"ft{-id}", "model", "sn", 1000.0, 1000.0);
@@ -236,7 +236,7 @@ public class CancellationTests
             "1 25544U 98067A   21020.53488036  .00016717  00000-0  10270-3 0  9054",
             "2 25544  51.6423 353.0312 0000493 320.8755  39.2360 15.49309423 25703");
         int id = NextId();
-        var tleSpacecraft = new Spacecraft(id, $"CX{-id}", 100.0, 10000.0, new Clock($"cxclk{-id}", 65536), tle);
+        var tleSpacecraft = new Spacecraft(id, $"CX{-id}", 100.0, tle, 10000.0, new Clock($"cxclk{-id}", 65536));
         var start = tle.Epoch;
         var tlePropagator = new TLEPropagator(new Window(start, start.AddHours(1.0)), tleSpacecraft, Output);
         using var cts = new CancellationTokenSource();
@@ -266,7 +266,7 @@ public class CancellationTests
             "1 25544U 98067A   21020.53488036  .00016717  00000-0  10270-3 0  9054",
             "2 25544  51.6423 353.0312 0000493 320.8755  39.2360 15.49309423 25703");
         int id = NextId();
-        var spacecraft = new Spacecraft(id, $"CX{-id}", 100.0, 10000.0, new Clock($"cxclk{-id}", 65536), tle);
+        var spacecraft = new Spacecraft(id, $"CX{-id}", 100.0, tle, 10000.0, new Clock($"cxclk{-id}", 65536));
         var start = tle.Epoch;
         new TLEPropagator(new Window(start, start.AddHours(1.0)), spacecraft, Output).Propagate();
         var before = spacecraft.PropagatedStates.ToArray();
@@ -503,7 +503,7 @@ public class CancellationTests
         int id = NextId();
         var state = new StateVector(earthState.Position + new Vector3(4.0e8, 0.0, 0.0), earthState.Velocity, sun, Epoch,
             Frames.Frame.ICRF);
-        var spacecraft = new Spacecraft(id, $"CX{-id}", 100.0, 10000.0, new Clock($"cxclk{-id}", 65536), state, 10.0, 2.2);
+        var spacecraft = new Spacecraft(id, $"CX{-id}", 100.0, state, 10000.0, new Clock($"cxclk{-id}", 65536), 10.0, 2.2);
         var options = new PropagationOptions
         {
             OutputStep = Output, ThirdBodies = [earth], AtmosphericDrag = true,
@@ -562,7 +562,7 @@ public class CancellationTests
             "1 25544U 98067A   21020.53488036  .00016717  00000-0  10270-3 0  9054",
             "2 25544  51.6423 353.0312 0000493 320.8755  39.2360 15.49309423 25703");
         int id = NextId();
-        var spacecraft = new Spacecraft(id, $"CX{-id}", 100.0, 10000.0, new Clock($"cxclk{-id}", 65536), tle, 10.0, 2.2);
+        var spacecraft = new Spacecraft(id, $"CX{-id}", 100.0, tle, 10000.0, new Clock($"cxclk{-id}", 65536), 10.0, 2.2);
         var start = tle.Epoch;
         var window = new Window(start, start.AddHours(1.0));
         spacecraft.Propagate(window, Options("RK"));

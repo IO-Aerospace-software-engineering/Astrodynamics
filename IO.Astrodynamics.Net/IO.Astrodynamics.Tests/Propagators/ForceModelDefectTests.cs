@@ -66,9 +66,9 @@ public class ForceModelDefectTests
     private static Spacecraft NewSpacecraft(ILocalizable observer, Frames.Frame frame = null)
     {
         int id = NextId();
-        return new Spacecraft(id, $"FM{-id}", 100.0, 10000.0, new Clock($"fmclk{-id}", 65536),
-            new StateVector(new Vector3(6700000.0, 0.0, 0.0), new Vector3(0.0, 7713.0, 1000.0), observer, Epoch,
-                frame ?? Frames.Frame.ICRF), 10.0, 2.2);
+        return new Spacecraft(id, $"FM{-id}", 100.0, new StateVector(new Vector3(6700000.0, 0.0, 0.0), new Vector3(0.0, 7713.0, 1000.0), observer, Epoch,
+                frame ?? Frames.Frame.ICRF), 10000.0,
+            new Clock($"fmclk{-id}", 65536), 10.0, 2.2);
     }
 
     // The same orbit relative to the solar system barycenter: SSB mode, whose central body is the Sun
@@ -78,7 +78,7 @@ public class ForceModelDefectTests
             Epoch, Frames.Frame.ICRF);
         var ssbState = geocentric.RelativeTo(Barycenters.SOLAR_SYSTEM_BARYCENTER, Aberration.None).ToStateVector();
         int id = NextId();
-        return new Spacecraft(id, $"FM{-id}", 100.0, 10000.0, new Clock($"fmclk{-id}", 65536), ssbState, 10.0, 2.2);
+        return new Spacecraft(id, $"FM{-id}", 100.0, ssbState, 10000.0, new Clock($"fmclk{-id}", 65536), 10.0, 2.2);
     }
 
     private static Spacecraft NewMoonSpacecraft()
@@ -86,9 +86,9 @@ public class ForceModelDefectTests
         var moon = PlanetsAndMoons.MOON_BODY;
         double r = 1838000.0;
         int id = NextId();
-        return new Spacecraft(id, $"FM{-id}", 100.0, 10000.0, new Clock($"fmclk{-id}", 65536),
-            new StateVector(new Vector3(r, 0.0, 0.0), new Vector3(0.0, System.Math.Sqrt(moon.GM / r), 0.0), moon, Epoch,
-                Frames.Frame.ICRF), 10.0, 2.2);
+        return new Spacecraft(id, $"FM{-id}", 100.0, new StateVector(new Vector3(r, 0.0, 0.0), new Vector3(0.0, System.Math.Sqrt(moon.GM / r), 0.0), moon, Epoch,
+                Frames.Frame.ICRF), 10000.0,
+            new Clock($"fmclk{-id}", 65536), 10.0, 2.2);
     }
 
     private static CelestialBody EarthWith(IAtmosphericModel atmosphere = null,
@@ -371,8 +371,8 @@ public class ForceModelDefectTests
             var geocentric = new StateVector(new Vector3(6700000.0, 0.0, 0.0), new Vector3(0.0, 7713.0, 1000.0),
                 PlanetsAndMoons.EARTH_BODY, Epoch, Frames.Frame.ICRF);
             int id = NextId();
-            return new Spacecraft(id, $"FM{-id}", 100.0, 10000.0, new Clock($"fmclk{-id}", 65536),
-                geocentric.RelativeTo(moon, Aberration.None).ToStateVector(), 10.0, 2.2);
+            return new Spacecraft(id, $"FM{-id}", 100.0, geocentric.RelativeTo(moon, Aberration.None).ToStateVector(), 10000.0,
+                new Clock($"fmclk{-id}", 65536), 10.0, 2.2);
         }
 
         var window = new Window(Epoch, Epoch.AddMinutes(20.0));
@@ -760,8 +760,8 @@ public class ForceModelDefectTests
                     var template = NewSpacecraft(PlanetsAndMoons.EARTH_BODY);
                     var state = (StateVector)template.InitialOrbitalParameters;
                     int id = NextId();
-                    var withCovariance = new Spacecraft(id, $"FM{-id}", 100.0, 10000.0, new Clock($"fmclk{-id}", 256),
-                        new StateVector(state.Position, state.Velocity, state.Observer, state.Epoch, state.Frame, cov));
+                    var withCovariance = new Spacecraft(id, $"FM{-id}", 100.0, new StateVector(state.Position, state.Velocity, state.Observer, state.Epoch, state.Frame, cov), 10000.0,
+                        new Clock($"fmclk{-id}", 256));
                     MonteCarloPropagator.Propagate(new MonteCarloConfiguration
                     {
                         RunCount = 3, Seed = 1, TemplateSpacecraft = withCovariance, Window = window,

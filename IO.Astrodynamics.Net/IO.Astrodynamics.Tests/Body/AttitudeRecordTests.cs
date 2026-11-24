@@ -920,7 +920,7 @@ public class AttitudeRecordTests
         var f = FrameOf(frame);
         var inF = f == Frame.ICRF ? leo : leo.ToFrame(f).ToStateVector();
         int id = -(8431 + Array.IndexOf(Frames, frame));
-        var sc = new Spacecraft(id, $"TX{-id}", 1000.0, 3000.0, new Clock($"TX{-id}_CLK", 65536), inF);
+        var sc = new Spacecraft(id, $"TX{-id}", 1000.0, inF, 3000.0, new Clock($"TX{-id}_CLK", 65536));
         var tank = new FuelTank("ft", "model", "sn", 1000.0, 1000.0);
         sc.AddFuelTank(tank);
         var engine = new Engine("eng", "model", "sn", 300.0, 10.0, tank);
@@ -972,7 +972,7 @@ public class AttitudeRecordTests
         var tle = new TLE("ISS", "1 25544U 98067A   21020.53488036  .00016717  00000-0  10270-3 0  9054",
             "2 25544  51.6423 353.0312 0000493 320.8755  39.2360 15.49309423 25703");
         var start = new Time(2021, 1, 20, 12, 0, 0, TimeScale.TDB);
-        var sc = new Spacecraft(-8441, "TLE8441", 1000.0, 3000.0, new Clock("TLE8441_CLK", 65536), tle);
+        var sc = new Spacecraft(-8441, "TLE8441", 1000.0, tle, 3000.0, new Clock("TLE8441_CLK", 65536));
         new TLEPropagator(new Window(start, start.AddSeconds(600.0)), sc, TimeSpan.FromSeconds(10.0)).Propagate();
 
         string directory = "Data/User/AttitudeRecord537/TLE8441";
@@ -1025,8 +1025,8 @@ public class AttitudeRecordTests
         var p0 = new double[36];
         double[] sigma = [100.0, 200.0, 300.0, 0.1, 0.2, 0.3];
         for (int i = 0; i < 6; i++) p0[i * 7] = sigma[i] * sigma[i];
-        var sc = new Spacecraft(-8451, "COV8451", 1000.0, 3000.0, new Clock("COV8451_CLK", 65536),
-            new StateVector(inF.Position, inF.Velocity, earth, start, f, new Matrix(6, 6, p0)));
+        var sc = new Spacecraft(-8451, "COV8451", 1000.0, new StateVector(inF.Position, inF.Velocity, earth, start, f, new Matrix(6, 6, p0)), 3000.0,
+            new Clock("COV8451_CLK", 65536));
         var solution = sc.Propagate(new Window(start, start.AddSeconds(600.0)), new PropagationOptions { Integrator = new RK78IntegratorOptions { AbsoluteTolerance = 1e-12, RelativeTolerance = 1e-12 }, OutputStep = TimeSpan.FromSeconds(60.0), ThirdBodies = new CelestialItem[] { earth }, CovariancePropagation = new IO.Astrodynamics.Propagator.Variational.CovariancePropagationOptions { Mode = IO.Astrodynamics.Propagator.Variational.CovariancePropagationMode.Covariance } });
         var q = SpiceAPI.Instance.TransformFrame(start, f, Frame.ICRF).Rotation;
         // R, the matrix of pxform(ECLIPJ2000, J2000), by the images of the axes
@@ -1084,12 +1084,12 @@ public class AttitudeRecordTests
         var inF = leo.ToFrame(f).ToStateVector();
         var q = SpiceAPI.Instance.TransformFrame(start, f, Frame.ICRF).Rotation;
 
-        var twoBody = new Spacecraft(-8461, "TB8461", 1000.0, 3000.0, new Clock("TB8461_CLK", 65536), inF);
+        var twoBody = new Spacecraft(-8461, "TB8461", 1000.0, inF, 3000.0, new Clock("TB8461_CLK", 65536));
         var read = twoBody.GetGeometricStateRelativeTo(start, earth);
         Assert.Equal(Frame.ICRF, read.Frame);
         double twoBodyDelta = (read.Position - inF.Position.Rotate(q)).Magnitude();
 
-        var added = new Spacecraft(-8462, "AD8462", 1000.0, 3000.0, new Clock("AD8462_CLK", 65536), inF);
+        var added = new Spacecraft(-8462, "AD8462", 1000.0, inF, 3000.0, new Clock("AD8462_CLK", 65536));
         var later = new StateVector(inF.Position * 1.001, inF.Velocity, earth, start.AddSeconds(10.0), f);
         added.AddPropagatedStates(inF, later);
         double addedDelta = System.Math.Max((added.GetGeometricStateRelativeTo(start, earth).Position - inF.Position.Rotate(q)).Magnitude(),
@@ -1352,8 +1352,8 @@ public class AttitudeRecordTests
             {
                 // The laws of the TRIAD factories on custom body axes (#677): the front +Z, the right +X, the up −Y
                 var spacecraft = law.EndsWith("Axes")
-                    ? new Spacecraft(id, name, 1000.0, 3000.0, new Clock(name + "_CLK", 65536), initial, bodyFront: CustomFront, bodyRight: CustomRight, bodyUp: CustomUp)
-                    : new Spacecraft(id, name, 1000.0, 3000.0, new Clock(name + "_CLK", 65536), initial);
+                    ? new Spacecraft(id, name, 1000.0, initial, 3000.0, new Clock(name + "_CLK", 65536), bodyFront: CustomFront, bodyRight: CustomRight, bodyUp: CustomUp)
+                    : new Spacecraft(id, name, 1000.0, initial, 3000.0, new Clock(name + "_CLK", 65536));
                 var tank = new FuelTank("ft", "model", "sn", 1000.0, 1000.0);
                 spacecraft.AddFuelTank(tank);
                 var engine = new Engine("eng", "model", "sn", 300.0, 10.0, tank);

@@ -75,7 +75,7 @@ public class OutputGridTests
     private static Spacecraft NewSpacecraft(IO.Astrodynamics.OrbitalParameters.OrbitalParameters initial)
     {
         int id = NextId();
-        return new Spacecraft(id, "GRID" + -id, 1000.0, 3000.0, new Clock("grid" + -id, 65536), initial);
+        return new Spacecraft(id, "GRID" + -id, 1000.0, initial, 3000.0, new Clock("grid" + -id, 65536));
     }
 
     private static IntegratorOptions Integrator(string name) => name == "RK"

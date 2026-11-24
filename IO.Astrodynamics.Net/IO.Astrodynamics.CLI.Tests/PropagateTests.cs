@@ -421,7 +421,7 @@ public class PropagateTests
     private static Vector3 LibraryRunEnd(IO.Astrodynamics.OrbitalParameters.OrbitalParameters initial, CelestialBody earth, Time start,
         Time end)
     {
-        var spacecraft = new Spacecraft(-1000, "Reference", 100.0, 100.0, new Clock("clockReference", 65536), initial, 1.0, 0.3);
+        var spacecraft = new Spacecraft(-1000, "Reference", 100.0, initial, 100.0, new Clock("clockReference", 65536), 1.0, 0.3);
         var scenario = new Mission.Scenario("ScenarioReference", new Mission.Mission("MissionReference"), new Window(start, end));
         scenario.AddSpacecraft(spacecraft);
         scenario.AddCelestialItem(earth);
@@ -513,8 +513,8 @@ public class PropagateTests
     private static Body.Spacecraft.Spacecraft Simulate(OrbitalParameters.OrbitalParameters orbit, Body.CelestialBody center, int naifId,
         TimeSystem.Window window, bool drag)
     {
-        var spacecraft = new Body.Spacecraft.Spacecraft(naifId, $"P675R{-naifId}", 100.0, 100.0, new Body.Spacecraft.Clock($"clockP675R{-naifId}", 65536),
-            orbit, 1.0, 0.3);
+        var spacecraft = new Body.Spacecraft.Spacecraft(naifId, $"P675R{-naifId}", 100.0, orbit, 100.0,
+            new Body.Spacecraft.Clock($"clockP675R{-naifId}", 65536), 1.0, 0.3);
         var scenario = new Mission.Scenario($"ScenarioP675R{-naifId}", new Mission.Mission($"MissionP675R{-naifId}"), window);
         scenario.AddSpacecraft(spacecraft);
         scenario.AddCelestialItem(center);

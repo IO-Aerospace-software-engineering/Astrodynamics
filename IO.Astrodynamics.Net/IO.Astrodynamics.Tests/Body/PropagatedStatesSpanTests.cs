@@ -62,7 +62,7 @@ public class PropagatedStatesSpanTests
         earth = new CelestialBody(PlanetsAndMoons.EARTH, Frame.ICRF, S);
         var icrf = new StateVector(new Vector3(6800000.0, 0.0, 0.0), new Vector3(0.0, 5400.0, 5400.0), earth, S, Frame.ICRF);
         var initial = frame == "ICRF" ? icrf : icrf.ToFrame(Frame.ECLIPTIC_J2000).ToStateVector();
-        var spacecraft = new Spacecraft(naifId, $"SPAN{-naifId}", 1000.0, 3000.0, new Clock($"SPAN{-naifId}_CLK", 65536), initial);
+        var spacecraft = new Spacecraft(naifId, $"SPAN{-naifId}", 1000.0, initial, 3000.0, new Clock($"SPAN{-naifId}_CLK", 65536));
         IntegratorOptions integratorInstance = integrator == "RK" ? new RK78IntegratorOptions { AbsoluteTolerance = 1e-12, RelativeTolerance = 1e-12 } : new VVIntegratorOptions { Step = TimeSpan.FromSeconds(1.0) };
         spacecraft.Propagate(new Window(S, S.AddHours(2.0)), new PropagationOptions { Integrator = integratorInstance, OutputStep = Output, ThirdBodies = [earth], CovariancePropagation = CovariancePropagationOptions.None });
         return spacecraft;
@@ -267,9 +267,9 @@ public class PropagatedStatesSpanTests
         var earth = new CelestialBody(PlanetsAndMoons.EARTH, Frame.ICRF, S);
         var initial = new StateVector(new Vector3(6800000.0, 0.0, 0.0), new Vector3(0.0, 5400.0, 5400.0), earth, S, Frame.ICRF);
         var ahead = initial.AtEpoch(S.AddSeconds(200000.0 / initial.Velocity.Magnitude())).ToStateVector();
-        var observer = new Spacecraft(naifId, $"SPAN{-naifId}", 1000.0, 3000.0, new Clock($"SPAN{-naifId}_CLK", 65536), initial);
-        var target = new Spacecraft(naifId - 1, $"SPAN{1 - naifId}", 1000.0, 3000.0, new Clock($"SPAN{1 - naifId}_CLK", 65536),
-            new StateVector(ahead.Position, ahead.Velocity, earth, S, Frame.ICRF));
+        var observer = new Spacecraft(naifId, $"SPAN{-naifId}", 1000.0, initial, 3000.0, new Clock($"SPAN{-naifId}_CLK", 65536));
+        var target = new Spacecraft(naifId - 1, $"SPAN{1 - naifId}", 1000.0, new StateVector(ahead.Position, ahead.Velocity, earth, S, Frame.ICRF), 3000.0,
+            new Clock($"SPAN{1 - naifId}_CLK", 65536));
         observer.AddCircularInstrument(naifId * 1000 - 1, $"SPAN{-naifId}_CAM", "fov527", 1.0, new Vector3(0.0, 1.0, 1.0).Normalize(), Vector3.VectorX, Vector3.Zero);
         var window = new Window(S, S.AddHours(1.0));
         foreach (var spacecraft in new[] { observer, target })
@@ -290,7 +290,7 @@ public class PropagatedStatesSpanTests
     {
         var tle = new TLE("ISS", "1 25544U 98067A   21020.53488036  .00016717  00000-0  10270-3 0  9054",
             "2 25544  51.6423 353.0312 0000493 320.8755  39.2360 15.49309423 25703");
-        var spacecraft = new Spacecraft(-5277, "SPAN5277", 1000.0, 3000.0, new Clock("SPAN5277_CLK", 65536), tle);
+        var spacecraft = new Spacecraft(-5277, "SPAN5277", 1000.0, tle, 3000.0, new Clock("SPAN5277_CLK", 65536));
         var window = new Window(tle.Epoch, tle.Epoch.AddHours(1.0));
         new TLEPropagator(window, spacecraft, TimeSpan.FromSeconds(60.0)).Propagate();
         var earth = (CelestialItem)tle.Observer;
@@ -314,7 +314,7 @@ public class PropagatedStatesSpanTests
     {
         var earth = new CelestialBody(PlanetsAndMoons.EARTH, Frame.ICRF, S);
         var initial = new StateVector(new Vector3(6800000.0, 0.0, 0.0), new Vector3(0.0, 5400.0, 5400.0), earth, S, Frame.ICRF);
-        var spacecraft = new Spacecraft(-5278, "SPAN5278", 1000.0, 3000.0, new Clock("SPAN5278_CLK", 65536), initial);
+        var spacecraft = new Spacecraft(-5278, "SPAN5278", 1000.0, initial, 3000.0, new Clock("SPAN5278_CLK", 65536));
         var t = S.AddHours(-5.0);
         Assert.Equal(initial.AtEpoch(t).ToStateVector().Position, spacecraft.GetGeometricStateRelativeTo(t, earth).Position);
     }

@@ -720,7 +720,7 @@ public class PropagatedArcsTests
                 Engine engine;
                 if (chain4)
                 {
-                    spacecraft = new Spacecraft(id, name, 1000.0, 10000.0, new Clock(name + "_CLK", 65536), initial);
+                    spacecraft = new Spacecraft(id, name, 1000.0, initial, 10000.0, new Clock(name + "_CLK", 65536));
                     var tank = new FuelTank("ft1", "model1", "sn1", 9000.0, 9000.0);
                     engine = new Engine("engine1", "model1", "sn1", 450.0, 50.0, tank);
                     spacecraft.AddFuelTank(tank);
@@ -729,7 +729,7 @@ public class PropagatedArcsTests
                 }
                 else
                 {
-                    spacecraft = new Spacecraft(id, name, 1000.0, 3000.0, new Clock(name + "_CLK", 65536), initial);
+                    spacecraft = new Spacecraft(id, name, 1000.0, initial, 3000.0, new Clock(name + "_CLK", 65536));
                     var tank = new FuelTank("ft", "model", "sn", 1000.0, 1000.0);
                     spacecraft.AddFuelTank(tank);
                     engine = new Engine("eng", "model", "sn", 300.0, 10.0, tank);

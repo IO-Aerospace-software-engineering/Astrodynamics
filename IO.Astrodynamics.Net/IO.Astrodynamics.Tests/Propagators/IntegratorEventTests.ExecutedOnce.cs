@@ -228,8 +228,8 @@ public partial class IntegratorEventTests
     private static (Spacecraft Spacecraft, ImpulseManeuver Maneuver, CelestialBody Earth) SlowBurn(int naifId)
     {
         var earth = new CelestialBody(PlanetsAndMoons.EARTH, Frame.ICRF, S);
-        var spacecraft = new Spacecraft(naifId, $"IE{-naifId}", 1000.0, 3000.0, new Clock($"IE{-naifId}_CLK", 65536),
-            MinimumEpochGateTests.Orbit(earth, System.Math.PI), cosparId: "2026-001A");
+        var spacecraft = new Spacecraft(naifId, $"IE{-naifId}", 1000.0, MinimumEpochGateTests.Orbit(earth, System.Math.PI), 3000.0,
+            new Clock($"IE{-naifId}_CLK", 65536), cosparId: "2026-001A");
         var tank = new FuelTank("ft", "model", "sn", 1000.0, 1000.0);
         spacecraft.AddFuelTank(tank);
         var engine = new Engine("eng", "model", "sn", 300.0, 1e-12, tank);

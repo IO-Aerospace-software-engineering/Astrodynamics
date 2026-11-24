@@ -59,7 +59,7 @@ public partial class ConjunctionAssessmentTests
     }
 
     private static Spacecraft InputRuleSpacecraft(int naifId, StateVector state, double hardBodyRadius) =>
-        new(naifId, "IR" + -naifId, 120.0, 150.0, new Clock("ir" + -naifId, 256), state, sectionalArea: 2.0,
+        new(naifId, "IR" + -naifId, 120.0, state, 150.0, new Clock("ir" + -naifId, 256), sectionalArea: 2.0,
             hardBodyRadius: hardBodyRadius);
 
     private static PropagationSolution PropagateRk78(Spacecraft spacecraft, CelestialBody earth) =>
@@ -489,7 +489,7 @@ public partial class ConjunctionAssessmentTests
         // Arrange: each spacecraft propagated by the producer; a third spacecraft with the NAIF id of one of them
         var earth = CreateEarth();
         Spacecraft NewCraft(int naifId, StateVector state, double radius) => producer == "Tle"
-            ? new Spacecraft(naifId, "IRTLE" + -naifId, 100.0, 1000.0, new Clock("irtle" + -naifId, 256), InputRuleTle,
+            ? new Spacecraft(naifId, "IRTLE" + -naifId, 100.0, InputRuleTle, 1000.0, new Clock("irtle" + -naifId, 256),
                 hardBodyRadius: radius)
             : InputRuleSpacecraft(naifId, state, radius);
 

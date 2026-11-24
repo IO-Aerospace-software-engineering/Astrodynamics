@@ -114,10 +114,10 @@ public class GeopotentialModelParametersReuseTests
         const int count = 8;
         using var start = new Barrier(count);
 
-        Spacecraft NewSpacecraft(int id, CelestialBody earth) => new(id, $"GPR{-id}", 100.0, 10000.0,
-            new Clock($"gprclk{-id}", 65536),
-            new StateVector(new Vector3(6700000.0, 0.0, 0.0), new Vector3(0.0, 7713.0, 1000.0), earth, Epoch,
-                Frames.Frame.ICRF));
+        Spacecraft NewSpacecraft(int id, CelestialBody earth) => new(id, $"GPR{-id}", 100.0, new StateVector(new Vector3(6700000.0, 0.0, 0.0), new Vector3(0.0, 7713.0, 1000.0), earth, Epoch,
+                Frames.Frame.ICRF),
+            10000.0,
+            new Clock($"gprclk{-id}", 65536));
 
         // Act
         var tasks = Enumerable.Range(0, count).Select(i => Task.Factory.StartNew(() =>

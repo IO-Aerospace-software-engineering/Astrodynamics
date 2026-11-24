@@ -400,7 +400,7 @@ internal static class Program
         var before = SearchesBefore();
         var folder = Directory.CreateDirectory(Path.Combine(root.FullName, "Cks"));
         var clock = new Clock("IOA_G4_CLOCK", 65536);
-        var spacecraft = new Spacecraft(-1979, "IOA_G4_SPC", 3000.0, 10000.0, clock, EarthStates()[0]);
+        var spacecraft = new Spacecraft(-1979, "IOA_G4_SPC", 3000.0, EarthStates()[0], 10000.0, clock);
         var clockFile = new FileInfo(Path.Combine(folder.FullName, "clock.tsc"));
         clock.WriteAsync(clockFile).GetAwaiter().GetResult();
         SpiceAPI.Instance.LoadKernels(clockFile);
@@ -517,7 +517,7 @@ internal static class Program
         var folder = Directory.CreateDirectory(Path.Combine(root.FullName, "Spks"));
         var a = Copy(Path.Combine(kernels.FullName, "L2_de431.bsp"), folder, "a.bsp");
         var b = Copy(Path.Combine(kernels.FullName, "L2_de431.bsp"), folder, "b.bsp");
-        var spacecraft = new Spacecraft(-1976, "IOA_J1_SPC", 3000.0, 10000.0, new Clock("IOA_J1_CLOCK", 65536), EarthStates()[0]);
+        var spacecraft = new Spacecraft(-1976, "IOA_J1_SPC", 3000.0, EarthStates()[0], 10000.0, new Clock("IOA_J1_CLOCK", 65536));
         spacecraft.AddPropagatedStates(EarthStates());
         var c = new FileInfo(Path.Combine(folder.FullName, "c.bsp"));
         spacecraft.WriteEphemeris(c);
@@ -562,7 +562,7 @@ internal static class Program
     {
         var folder = Directory.CreateDirectory(Path.Combine(root.FullName, "RelativeCk"));
         var clock = new Clock("IOA_J1_CLOCK", 65536);
-        var spacecraft = new Spacecraft(-1977, "IOA_J1_SPC", 3000.0, 10000.0, clock, EarthStates()[0]);
+        var spacecraft = new Spacecraft(-1977, "IOA_J1_SPC", 3000.0, EarthStates()[0], 10000.0, clock);
         var clockFile = new FileInfo(Path.Combine(folder.FullName, "clock.tsc"));
         clock.WriteAsync(clockFile).GetAwaiter().GetResult();
         SpiceAPI.Instance.LoadKernels(clockFile);
@@ -614,7 +614,7 @@ internal static class Program
     {
         var folder = Directory.CreateDirectory(Path.Combine(root.FullName, "ReplaceRelativeCk"));
         var clock = new Clock("IOA_J1_CLOCK", 65536);
-        var spacecraft = new Spacecraft(-1978, "IOA_J1_SPC", 3000.0, 10000.0, clock, EarthStates()[0]);
+        var spacecraft = new Spacecraft(-1978, "IOA_J1_SPC", 3000.0, EarthStates()[0], 10000.0, clock);
         var clockFile = new FileInfo(Path.Combine(folder.FullName, "clock.tsc"));
         clock.WriteAsync(clockFile).GetAwaiter().GetResult();
         SpiceAPI.Instance.LoadKernels(clockFile);
@@ -668,7 +668,7 @@ internal static class Program
     // read failed and returned an uninitialised value (measured on c533a6e: an InvalidOperationException through that path)
     private static StateVector[] StatesAboutASpacecraft()
     {
-        var spacecraft = new Spacecraft(-1999902, "IOA_K1_SPC", 3000.0, 10000.0, new Clock("IOA_K1_CLOCK", 65536), EarthStates()[0]);
+        var spacecraft = new Spacecraft(-1999902, "IOA_K1_SPC", 3000.0, EarthStates()[0], 10000.0, new Clock("IOA_K1_CLOCK", 65536));
         return EarthStates().Select(x => new StateVector(x.Position, x.Velocity, spacecraft, x.Epoch, Frame.ICRF)).ToArray();
     }
 
@@ -767,7 +767,7 @@ internal static class Program
     {
         var folder = Directory.CreateDirectory(Path.Combine(root.FullName, "Ck"));
         var clock = new Clock("IOA_K1_CLOCK", 65536);
-        var spacecraft = new Spacecraft(-1999709, "IOA_K1_SPC", 3000.0, 10000.0, clock, EarthStates()[0]);
+        var spacecraft = new Spacecraft(-1999709, "IOA_K1_SPC", 3000.0, EarthStates()[0], 10000.0, clock);
         var clockFile = new FileInfo(Path.Combine(folder.FullName, "clock.tsc"));
         clock.WriteAsync(clockFile).GetAwaiter().GetResult();
         SpiceAPI.Instance.LoadKernels(clockFile);
@@ -809,7 +809,7 @@ internal static class Program
         var before = ReadMoon();
         var gm = WriteTextKernel(root, "gm.tpc", "BODY-1999820_GM = ( 1.0E-10 )");
         SpiceAPI.Instance.LoadKernels(gm);
-        var spacecraft = new Spacecraft(-1999820, "IOA_711_SPC", 3000.0, 10000.0, new Clock("IOA_711_CLOCK", 65536), EarthStates()[0]);
+        var spacecraft = new Spacecraft(-1999820, "IOA_711_SPC", 3000.0, EarthStates()[0], 10000.0, new Clock("IOA_711_CLOCK", 65536));
         var elements = new KeplerianElements(7.0e6, 0.01, 0.2, 0.3, 0.4, 0.5, spacecraft, Epoch, Frame.ICRF);
 
         var error = equinoctial
@@ -853,7 +853,7 @@ internal static class Program
     private static void ReadOrientationWithNoCk(DirectoryInfo root)
     {
         var clock = new Clock("IOA_712_CLOCK", 65536);
-        var spacecraft = new Spacecraft(-1999801, "IOA_712_SPC", 3000.0, 10000.0, clock, EarthStates()[0]);
+        var spacecraft = new Spacecraft(-1999801, "IOA_712_SPC", 3000.0, EarthStates()[0], 10000.0, clock);
         var clockFile = new FileInfo(Path.Combine(root.FullName, "clock.tsc"));
         clock.WriteAsync(clockFile).GetAwaiter().GetResult();
         SpiceAPI.Instance.LoadKernels(clockFile);
@@ -922,7 +922,7 @@ internal static class Program
     private static void ReplaceALoadedFileWithTheManagedWriter(DirectoryInfo root)
     {
         var folder = Directory.CreateDirectory(Path.Combine(root.FullName, "Managed"));
-        var spacecraft = new Spacecraft(-1999710, "IOA_K1_SPC", 3000.0, 10000.0, new Clock("IOA_K1_CLOCK", 65536), EarthStates()[0]);
+        var spacecraft = new Spacecraft(-1999710, "IOA_K1_SPC", 3000.0, EarthStates()[0], 10000.0, new Clock("IOA_K1_CLOCK", 65536));
         spacecraft.AddPropagatedStates(EarthStates());
         var c = new FileInfo(Path.Combine(folder.FullName, "c.bsp"));
         spacecraft.WriteEphemeris(c);
@@ -949,7 +949,7 @@ internal static class Program
     private static void ReplaceALoadedFileWithTheManagedWriterWhenAnSpkHeldRelativelyIsDeleted(DirectoryInfo root, DirectoryInfo kernels)
     {
         var folder = Directory.CreateDirectory(Path.Combine(root.FullName, "ManagedRelative"));
-        var spacecraft = new Spacecraft(-1999711, "IOA_K1_SPC", 3000.0, 10000.0, new Clock("IOA_K1_CLOCK", 65536), EarthStates()[0]);
+        var spacecraft = new Spacecraft(-1999711, "IOA_K1_SPC", 3000.0, EarthStates()[0], 10000.0, new Clock("IOA_K1_CLOCK", 65536));
         spacecraft.AddPropagatedStates(EarthStates());
         var c = new FileInfo(Path.Combine(folder.FullName, "c.bsp"));
         spacecraft.WriteEphemeris(c);
@@ -976,7 +976,7 @@ internal static class Program
     private static void ReplaceAFileAMetaKernelHoldsWithTheManagedWriterWhenAnSpkHeldRelativelyIsDeleted(DirectoryInfo root, DirectoryInfo kernels)
     {
         var folder = Directory.CreateDirectory(Path.Combine(root.FullName, "MetaRelative"));
-        var spacecraft = new Spacecraft(-1999712, "IOA_K1_SPC", 3000.0, 10000.0, new Clock("IOA_K1_CLOCK", 65536), EarthStates()[0]);
+        var spacecraft = new Spacecraft(-1999712, "IOA_K1_SPC", 3000.0, EarthStates()[0], 10000.0, new Clock("IOA_K1_CLOCK", 65536));
         spacecraft.AddPropagatedStates(EarthStates());
         var c = new FileInfo(Path.Combine(folder.FullName, "c.bsp"));
         spacecraft.WriteEphemeris(c);

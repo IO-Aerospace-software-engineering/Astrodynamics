@@ -287,7 +287,7 @@ public class AvoidanceFallbackTests : IClassFixture<AvoidanceFallbackCase>
         // Arrange: a spacecraft given by a TLE, not propagated (SGP4), without covariance
         var tle = new TLE("ISS", "1 25544U 98067A   21020.53488036  .00016717  00000-0  10270-3 0  9054",
             "2 25544  51.6423 353.0312 0000493 320.8755  39.2360 15.49309423 25703");
-        var protectedCraft = new Spacecraft(-6790, "TLE6790", 100.0, 1000.0, new Clock("tle6790", 65536), tle, 10.0, 2.2, null, 1.5);
+        var protectedCraft = new Spacecraft(-6790, "TLE6790", 100.0, tle, 1000.0, new Clock("tle6790", 65536), 10.0, 2.2, null, 1.5);
         var tca = tle.Epoch.AddHours(2.0);
         var secondary = ReferenceCase.NewSpacecraft(-6791,
             AvoidanceFallbackCase.SecondaryNear(protectedCraft.GetEphemeris(tca, tle.Observer, Frames.Frame.ICRF, Aberration.None)));

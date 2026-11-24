@@ -745,8 +745,8 @@ public class CelestialBodyTests
         var window = new Window(start, end);
         Assert.Equal(TimeSpan.FromSeconds(121.0), window.Length);
         var earth = new CelestialBody(PlanetsAndMoons.EARTH);
-        var spacecraft = new Astrodynamics.Body.Spacecraft.Spacecraft(-682, "SC682", 1000.0, 3000.0, new Astrodynamics.Body.Spacecraft.Clock("SC682_CLK", 65536),
-            new StateVector(new Vector3(6800000.0, 0.0, 0.0), new Vector3(0.0, 7656.2204182967143, 0.0), earth, start, Frames.Frame.ICRF));
+        var spacecraft = new Astrodynamics.Body.Spacecraft.Spacecraft(-682, "SC682", 1000.0, new StateVector(new Vector3(6800000.0, 0.0, 0.0), new Vector3(0.0, 7656.2204182967143, 0.0), earth, start, Frames.Frame.ICRF), 3000.0,
+            new Astrodynamics.Body.Spacecraft.Clock("SC682_CLK", 65536));
         foreach (var (item, observer) in new (Astrodynamics.Body.CelestialItem, ILocalizable)[] { (earth, TestHelpers.Sun), (spacecraft, earth) })
         {
             foreach (var (step, count) in new[] { (1.0, 121), (30.0, 5), (121.0, 1) })

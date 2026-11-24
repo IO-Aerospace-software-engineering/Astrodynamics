@@ -47,7 +47,7 @@ public class OrientationCacheConcurrencyTests
         const double deg = IO.Astrodynamics.Constants.Deg2Rad;
         var orbit = new KeplerianElements(6778137.0, 0.0005, 51.6 * deg, 20.0 * deg, 15.0 * deg, 0.0, earth, epoch,
             Frames.Frame.ICRF);
-        return new Spacecraft(naifId, $"CACHE{-naifId}", 100.0, 1000.0, new Clock($"cache{-naifId}", 65536), orbit,
+        return new Spacecraft(naifId, $"CACHE{-naifId}", 100.0, orbit, 1000.0, new Clock($"cache{-naifId}", 65536),
             10.0, 2.2, null, 1.5);
     }
 

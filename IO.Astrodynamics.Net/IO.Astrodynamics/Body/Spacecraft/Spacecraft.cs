@@ -110,7 +110,12 @@ namespace IO.Astrodynamics.Body.Spacecraft
         private readonly HashSet<Payload> _payloads = new();
         public IReadOnlyCollection<Payload> Payloads => _payloads;
         public double DryOperatingMass => Mass;
-        public double MaximumOperatingMass { get; }
+        /// <summary>
+        /// The maximum operating mass, kg: informational, checked against the dry mass only, never against the fuel and the
+        /// payloads (L5-37 of #668); double.MaxValue unless given. <c>MaximumOperatingMass</c> before 11.0.0 (decision 70
+        /// of #668, decided by S. Guillet, 2026-11-23).
+        /// </summary>
+        public double MaxOperatingMass { get; }
         public SpacecraftFrame Frame { get; }
         public double SectionalArea { get; }
         public double DragCoefficient { get; }
@@ -128,8 +133,7 @@ namespace IO.Astrodynamics.Body.Spacecraft
         /// Gets the solar radiation pressure coefficient (Cr).
         /// </summary>
         /// <remarks>
-        /// Typical values range from 1.0 (absorbing surface) to 2.0 (reflecting surface).
-        /// Default is 1.0.
+        /// Typically 1.0 (absorbing surface) to 2.0 (reflecting surface); finite and not negative (#800). Default is 1.0.
         /// </remarks>
         public double SolarRadiationCoeff { get; }
 
@@ -162,48 +166,55 @@ namespace IO.Astrodynamics.Body.Spacecraft
         private bool _holdsPropagatedStates;
 
         /// <summary>
-        /// Spacecraft constructor
+        /// A spacecraft propagated by the library from <paramref name="initialOrbitalParameters"/>. The NAIF id, the name, the
+        /// dry mass and the initial orbit are required; the other values are optional (decisions 70 and 71 of #668, decided by
+        /// S. Guillet, 2026-11-23; R10 of the ergonomics review).
         /// </summary>
-        /// <param name="naifId"></param>
-        /// <param name="name"></param>
-        /// <param name="mass"></param>
-        /// <param name="maximumOperatingMass"></param>
-        /// <param name="clock"></param>
-        /// <param name="initialOrbitalParameters"></param>
-        /// <param name="sectionalArea">Mean sectional area (used for both drag and solar radiation pressure)</param>
-        /// <param name="dragCoeff">Drag coefficient (Cd), default 2.2 for satellites in free-molecular flow</param>
+        /// <param name="naifId">The NAIF id, in [-2147483, -1] (#676): it names the kernels of the spacecraft.</param>
+        /// <param name="name">The name of the spacecraft.</param>
+        /// <param name="mass">The dry mass, kg: finite and not negative.</param>
+        /// <param name="initialOrbitalParameters">The initial orbit, which the propagations start from.</param>
+        /// <param name="maxOperatingMass">The maximum operating mass, kg, double.MaxValue by default: informational, finite
+        /// and at least <paramref name="mass"/>, checked against the dry mass only (L5-37 of #668), never against the fuel
+        /// and the payloads.</param>
+        /// <param name="clock">The onboard clock, by default a new clock named Name + "_CLK" at 65536 ticks per second (the
+        /// resolution of the CK, <see cref="SpacecraftFrame"/>); not attached to a spacecraft of another NAIF id (#676).
+        /// Before 11.0.0 it was required, a null clock throwing <see cref="ArgumentNullException"/>.</param>
+        /// <param name="sectionalArea">Mean sectional area (used for both drag and solar radiation pressure), m²</param>
+        /// <param name="dragCoefficient">Drag coefficient (Cd), default 2.2 for satellites in free-molecular flow</param>
         /// <param name="cosparId">COSPAR international designator (e.g., "1998-067A")</param>
-        /// <param name="solarRadiationCoeff">Solar radiation pressure coefficient (Cr), default 1.0</param>
+        /// <param name="solarRadiationCoefficient">Solar radiation pressure coefficient (Cr), default 1.0: typically 1.0 to
+        /// 2.0; finite and not negative</param>
         /// <param name="bodyFront">Instance body front axis (default: +Y). Finite and non-zero; must be orthogonal to bodyRight and bodyUp.</param>
         /// <param name="bodyRight">Instance body right axis (default: +X). Finite and non-zero; must be orthogonal to bodyFront and bodyUp.</param>
         /// <param name="bodyUp">Instance body up axis (default: +Z). Finite and non-zero; must be orthogonal to bodyFront and bodyRight.</param>
         /// <param name="hardBodyRadius">Hard-body radius in meters for conjunction assessment, finite and not negative (default 0.0, none): the radius of the spacecraft as a secondary object too (#683)</param>
         /// <exception cref="ArgumentOutOfRangeException"><paramref name="naifId"/> is not in [-2147483, -1]
         /// (#676), or, naming it, a value is not finite or out of its range (#800, decision 75 of #668, decided by
-        /// S. Guillet, 2026-11-23): <paramref name="mass"/> not negative, <paramref name="maximumOperatingMass"/> at least
-        /// <paramref name="mass"/>, <paramref name="sectionalArea"/> above 0, <paramref name="dragCoeff"/>,
-        /// <paramref name="solarRadiationCoeff"/> and <paramref name="hardBodyRadius"/> not negative.</exception>
-        /// <exception cref="ArgumentNullException"></exception>
+        /// S. Guillet, 2026-11-23): <paramref name="mass"/> not negative, <paramref name="maxOperatingMass"/> at least
+        /// <paramref name="mass"/>, <paramref name="sectionalArea"/> above 0, <paramref name="dragCoefficient"/>,
+        /// <paramref name="solarRadiationCoefficient"/> and <paramref name="hardBodyRadius"/> not negative.</exception>
         /// <exception cref="ArgumentException">Thrown when body axes are not orthogonal or not right-handed, when a body axis
         /// has a magnitude of 0 (the exception names it, #680) or a component that is not finite (the exception names it,
         /// the first of front, right and up; fourth round of #668), or when <paramref name="clock"/> is attached to a spacecraft
         /// of another NAIF id (#676: an SCLK identifies one spacecraft id).</exception>
-        public Spacecraft(int naifId, string name, double mass, double maximumOperatingMass, Clock clock, OrbitalParameters.OrbitalParameters initialOrbitalParameters,
-            double sectionalArea = 1.0, double dragCoeff = 2.2, string cosparId = null, double solarRadiationCoeff = 1.0,
-            Vector3? bodyFront = null, Vector3? bodyRight = null, Vector3? bodyUp = null, double hardBodyRadius = 0.0) : base(
-            naifId, name, CheckedPhysicalProperties(mass, maximumOperatingMass, sectionalArea, dragCoeff, solarRadiationCoeff, hardBodyRadius),
+        public Spacecraft(int naifId, string name, double mass, OrbitalParameters.OrbitalParameters initialOrbitalParameters,
+            double maxOperatingMass = double.MaxValue, Clock clock = null, double sectionalArea = 1.0, double dragCoefficient = 2.2,
+            string cosparId = null, double solarRadiationCoefficient = 1.0, Vector3? bodyFront = null, Vector3? bodyRight = null,
+            Vector3? bodyUp = null, double hardBodyRadius = 0.0) : base(
+            naifId, name, CheckedPhysicalProperties(mass, maxOperatingMass, sectionalArea, dragCoefficient, solarRadiationCoefficient, hardBodyRadius),
             initialOrbitalParameters)
         {
             if (naifId >= 0) throw new ArgumentOutOfRangeException(nameof(naifId));
             CheckFrameIdRange(naifId);
-            MaximumOperatingMass = maximumOperatingMass;
-            Clock = clock ?? throw new ArgumentNullException(nameof(clock));
+            MaxOperatingMass = maxOperatingMass;
+            Clock = clock ?? new Clock(name + "_CLK", DefaultClockResolution);
             Clock.CheckAttachableTo(naifId, name);
             Frame = new SpacecraftFrame(this);
             SectionalArea = sectionalArea;
-            DragCoefficient = dragCoeff;
+            DragCoefficient = dragCoefficient;
             CosparId = cosparId;
-            SolarRadiationCoeff = solarRadiationCoeff;
+            SolarRadiationCoeff = solarRadiationCoefficient;
             HardBodyRadius = hardBodyRadius;
 
             BodyFront = BodyAxis(bodyFront, Vector3.VectorY, nameof(bodyFront));
@@ -221,6 +232,12 @@ namespace IO.Astrodynamics.Body.Spacecraft
         }
 
         /// <summary>
+        /// The resolution of the default clock of a propagated spacecraft, ticks per second: that of the CK the library
+        /// writes (<see cref="SpacecraftFrame"/>), the resolution most explicit clocks took before 11.0.0.
+        /// </summary>
+        internal const uint DefaultClockResolution = 65536;
+
+        /// <summary>
         /// Creates a kernel-backed spacecraft whose ephemeris and orientation come from loaded SPK/CK kernels.
         /// Its initial orbital parameters are its state at <paramref name="epoch"/> relative to
         /// <paramref name="centerOfMotion"/>, the Earth by default (#620: the Solar System barycentre before 11.0.0); SPICE
@@ -231,13 +248,15 @@ namespace IO.Astrodynamics.Body.Spacecraft
         /// <param name="name">Spacecraft name</param>
         /// <param name="epoch">Epoch for initial state lookup (defaults to J2000 TDB)</param>
         /// <param name="mass">Dry mass in kg</param>
-        /// <param name="maximumOperatingMass">Maximum operating mass in kg</param>
-        /// <param name="clock">Onboard clock (defaults to a new clock named after the spacecraft); not attached to a spacecraft
-        /// of another NAIF id (#676)</param>
+        /// <param name="maxOperatingMass">Maximum operating mass in kg, informational: checked against the dry mass only
+        /// (<c>maximumOperatingMass</c> before 11.0.0, decision 71 of #668)</param>
+        /// <param name="clock">Onboard clock (defaults to a new clock named Name + "_CLK" at 256 ticks per second, as before
+        /// 11.0.0); not attached to a spacecraft of another NAIF id (#676)</param>
         /// <param name="sectionalArea">Mean sectional area in m²</param>
-        /// <param name="dragCoeff">Drag coefficient (Cd)</param>
+        /// <param name="dragCoefficient">Drag coefficient (Cd) (<c>dragCoeff</c> before 11.0.0)</param>
         /// <param name="cosparId">COSPAR international designator</param>
-        /// <param name="solarRadiationCoeff">Solar radiation pressure coefficient (Cr)</param>
+        /// <param name="solarRadiationCoefficient">Solar radiation pressure coefficient (Cr) (<c>solarRadiationCoeff</c>
+        /// before 11.0.0)</param>
         /// <param name="hardBodyRadius">Hard-body radius in meters for conjunction assessment, finite and not negative (default 0.0, none): the radius of the spacecraft as a secondary object too (#683)</param>
         /// <param name="centerOfMotion">The centre of the initial orbital parameters, the Earth when null; the Solar System
         /// barycentre, or any body the loaded kernels chain to, may be given.</param>
@@ -246,9 +265,9 @@ namespace IO.Astrodynamics.Body.Spacecraft
         /// <exception cref="ArgumentOutOfRangeException"><paramref name="naifId"/> is not in [-2147483, -1]
         /// (#676), or, naming it, a value is not finite or out of its range, checked before the kernels are read, as by the
         /// other constructor (#800, decision 75 of #668, decided by S. Guillet, 2026-11-23; before, only the hard-body
-        /// radius, #683): <paramref name="mass"/> not negative, <paramref name="maximumOperatingMass"/> at least
-        /// <paramref name="mass"/>, <paramref name="sectionalArea"/> above 0, <paramref name="dragCoeff"/>,
-        /// <paramref name="solarRadiationCoeff"/> and <paramref name="hardBodyRadius"/> not negative.</exception>
+        /// radius, #683): <paramref name="mass"/> not negative, <paramref name="maxOperatingMass"/> at least
+        /// <paramref name="mass"/>, <paramref name="sectionalArea"/> above 0, <paramref name="dragCoefficient"/>,
+        /// <paramref name="solarRadiationCoefficient"/> and <paramref name="hardBodyRadius"/> not negative.</exception>
         /// <exception cref="ArgumentException"><paramref name="clock"/> is attached to a spacecraft of another NAIF id
         /// (#676).</exception>
         /// <remarks>
@@ -257,21 +276,21 @@ namespace IO.Astrodynamics.Body.Spacecraft
         /// when no loaded kernel defines that id (#676).
         /// </remarks>
         public Spacecraft(int naifId, string name,
-            Time? epoch = null, double mass = 0.0, double maximumOperatingMass = double.MaxValue,
-            Clock clock = null, double sectionalArea = 1.0, double dragCoeff = 2.2,
-            string cosparId = null, double solarRadiationCoeff = 1.0, double hardBodyRadius = 0.0,
+            Time? epoch = null, double mass = 0.0, double maxOperatingMass = double.MaxValue,
+            Clock clock = null, double sectionalArea = 1.0, double dragCoefficient = 2.2,
+            string cosparId = null, double solarRadiationCoefficient = 1.0, double hardBodyRadius = 0.0,
             CelestialItem centerOfMotion = null)
-            : base(naifId, name, CheckedPhysicalProperties(mass, maximumOperatingMass, sectionalArea, dragCoeff, solarRadiationCoeff, hardBodyRadius),
+            : base(naifId, name, CheckedPhysicalProperties(mass, maxOperatingMass, sectionalArea, dragCoefficient, solarRadiationCoefficient, hardBodyRadius),
                 ReadKernelInitialState(naifId, name, epoch ?? TimeSystem.Time.J2000TDB, centerOfMotion, clock))
         {
             _isFromKernel = true;
-            MaximumOperatingMass = maximumOperatingMass;
+            MaxOperatingMass = maxOperatingMass;
             Clock = clock ?? new Clock(name + "_CLK", 256);
             Frame = new SpacecraftFrame(this);
             SectionalArea = sectionalArea;
-            DragCoefficient = dragCoeff;
+            DragCoefficient = dragCoefficient;
             CosparId = cosparId;
-            SolarRadiationCoeff = solarRadiationCoeff;
+            SolarRadiationCoeff = solarRadiationCoefficient;
             HardBodyRadius = hardBodyRadius;
             BodyFront = Vector3.VectorY;
             BodyRight = Vector3.VectorX;
@@ -304,17 +323,17 @@ namespace IO.Astrodynamics.Body.Spacecraft
         // only), an infinity passed them, and the kernel-backed constructor checked none. A base-call argument, so that it
         // runs before the base's own check of the mass and before the kernel-backed constructor reads the kernels. Returns
         // the mass
-        private static double CheckedPhysicalProperties(double mass, double maximumOperatingMass, double sectionalArea,
-            double dragCoeff, double solarRadiationCoeff, double hardBodyRadius)
+        private static double CheckedPhysicalProperties(double mass, double maxOperatingMass, double sectionalArea,
+            double dragCoefficient, double solarRadiationCoefficient, double hardBodyRadius)
         {
             if (!double.IsFinite(mass) || mass < 0.0)
             {
                 throw new ArgumentOutOfRangeException(nameof(mass), mass, "The dry mass must be finite and not negative.");
             }
 
-            if (!double.IsFinite(maximumOperatingMass) || maximumOperatingMass < mass)
+            if (!double.IsFinite(maxOperatingMass) || maxOperatingMass < mass)
             {
-                throw new ArgumentOutOfRangeException(nameof(maximumOperatingMass), maximumOperatingMass,
+                throw new ArgumentOutOfRangeException(nameof(maxOperatingMass), maxOperatingMass,
                     $"The maximum operating mass must be finite and at least the dry mass, {mass} kg.");
             }
 
@@ -323,14 +342,14 @@ namespace IO.Astrodynamics.Body.Spacecraft
                 throw new ArgumentOutOfRangeException(nameof(sectionalArea), sectionalArea, "The sectional area must be finite and above 0.");
             }
 
-            if (!double.IsFinite(dragCoeff) || dragCoeff < 0.0)
+            if (!double.IsFinite(dragCoefficient) || dragCoefficient < 0.0)
             {
-                throw new ArgumentOutOfRangeException(nameof(dragCoeff), dragCoeff, "The drag coefficient must be finite and not negative.");
+                throw new ArgumentOutOfRangeException(nameof(dragCoefficient), dragCoefficient, "The drag coefficient must be finite and not negative.");
             }
 
-            if (!double.IsFinite(solarRadiationCoeff) || solarRadiationCoeff < 0.0)
+            if (!double.IsFinite(solarRadiationCoefficient) || solarRadiationCoefficient < 0.0)
             {
-                throw new ArgumentOutOfRangeException(nameof(solarRadiationCoeff), solarRadiationCoeff,
+                throw new ArgumentOutOfRangeException(nameof(solarRadiationCoefficient), solarRadiationCoefficient,
                     "The solar radiation pressure coefficient must be finite and not negative.");
             }
 

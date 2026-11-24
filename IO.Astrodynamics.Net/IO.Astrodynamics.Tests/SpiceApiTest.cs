@@ -230,7 +230,7 @@ public partial class SpiceApiTest
         //Configure spacecraft
         Clock clock = new Clock("clk1", 65536);
         Spacecraft spacecraft =
-            new Spacecraft(-1794, "DRAGONFLY4", 1000.0, 10000.0, clock, parkingOrbit);
+            new Spacecraft(-1794, "DRAGONFLY4", 1000.0, parkingOrbit, 10000.0, clock);
 
         FuelTank fuelTank = new FuelTank("ft1", "model1", "sn1", 9000.0, 9000.0);
         Engine engine = new Engine("engine1", "model1", "sn1", 450.0, 50.0, fuelTank);
@@ -847,10 +847,10 @@ public partial class SpiceApiTest
         //Load solar system kernels
         const int size = 10;
         Clock clock = new Clock("clk1", 65536);
-        var spacecraft = new Spacecraft(-135, "Spc1", 3000.0, 10000.0, clock, new StateVector(new Vector3(6800, 0, 0),
+        var spacecraft = new Spacecraft(-135, "Spc1", 3000.0, new StateVector(new Vector3(6800, 0, 0),
             new Vector3(0, 8.0, 0),
             TestHelpers.EarthAtJ2000,
-            TimeSystem.Time.CreateTDB(0.0), Frames.Frame.ICRF));
+            TimeSystem.Time.CreateTDB(0.0), Frames.Frame.ICRF), 10000.0, clock);
 
         var sv = new StateVector[size];
         for (int i = 0; i < size; ++i)
@@ -900,10 +900,10 @@ public partial class SpiceApiTest
         //Load solar system kernels
         const int size = 10;
         Clock clock = new Clock("clk1", 65536);
-        var spacecraft = new Spacecraft(-175, "Spc1", 3000.0, 10000.0, clock, new StateVector(new Vector3(6800, 0, 0),
+        var spacecraft = new Spacecraft(-175, "Spc1", 3000.0, new StateVector(new Vector3(6800, 0, 0),
             new Vector3(0, 8.0, 0),
             TestHelpers.EarthAtJ2000,
-            TimeSystem.Time.CreateTDB(0.0), Frames.Frame.ICRF));
+            TimeSystem.Time.CreateTDB(0.0), Frames.Frame.ICRF), 10000.0, clock);
 
         var so = new StateOrientation[size];
         for (int i = 0; i < size; ++i)
@@ -1583,10 +1583,10 @@ public partial class SpiceApiTest
     {
         const int size = 10;
         Clock clock = new Clock("clk1", 65536);
-        var spacecraft = new Spacecraft(-176, "Spc2", 3000.0, 10000.0, clock, new StateVector(new Vector3(6800, 0, 0),
+        var spacecraft = new Spacecraft(-176, "Spc2", 3000.0, new StateVector(new Vector3(6800, 0, 0),
             new Vector3(0, 8.0, 0),
             TestHelpers.EarthAtJ2000,
-            TimeSystem.Time.CreateTDB(0.0), Frames.Frame.ICRF));
+            TimeSystem.Time.CreateTDB(0.0), Frames.Frame.ICRF), 10000.0, clock);
 
         var so = new StateOrientation[size];
         for (int i = 0; i < size; ++i)
@@ -2047,7 +2047,7 @@ public partial class SpiceApiTest
         var ckFile = new FileInfo(Path.Combine(dir.FullName, "pointing.bc"));
         var orbit = new StateVector(new Vector3(7.0e6, 0.0, 0.0), new Vector3(0.0, 7.5e3, 0.0), TestHelpers.EarthAtJ2000,
             TimeSystem.Time.J2000TDB, Frames.Frame.ICRF);
-        var spacecraft = new Spacecraft(id, $"IOA714CK{-id}", 1000.0, 10000.0, new Clock($"IOA714CLOCK{-id}", 65536), orbit);
+        var spacecraft = new Spacecraft(id, $"IOA714CK{-id}", 1000.0, orbit, 10000.0, new Clock($"IOA714CLOCK{-id}", 65536));
         await spacecraft.Clock.WriteAsync(clockFile);
         SpiceAPI.Instance.LoadKernels(clockFile);
         try

@@ -33,9 +33,9 @@ namespace IO.Astrodynamics.Tests.Body
         public async Task WriteClock()
         {
             Clock clock = new Clock("clk", 256);
-            Spacecraft spc = new Spacecraft(-1001, "MySpacecraft", 1000.0, 10000.0, clock,
-                new StateVector(new Vector3(1.0, 2.0, 3.0), new Vector3(1.0, 2.0, 3.0), TestHelpers.EarthAtJ2000,
-                    new TimeSystem.Time(DateTime.MinValue,TimeScale.TDB), Frames.Frame.ICRF));
+            Spacecraft spc = new Spacecraft(-1001, "MySpacecraft", 1000.0, new StateVector(new Vector3(1.0, 2.0, 3.0), new Vector3(1.0, 2.0, 3.0), TestHelpers.EarthAtJ2000,
+                    new TimeSystem.Time(DateTime.MinValue,TimeScale.TDB), Frames.Frame.ICRF), 10000.0,
+                clock);
             await clock.WriteAsync(new FileInfo("clock.tsc"));
             TextReader tr = new StreamReader("clock.tsc");
             var res = await tr.ReadToEndAsync();
@@ -80,12 +80,12 @@ namespace IO.Astrodynamics.Tests.Body
             var earth = new CelestialBody(SolarSystemObjects.PlanetsAndMoons.EARTH);
             var epoch = new TimeSystem.Time(2024, 1, 1, TimeScale.TDB);
             var clock = new Clock("SHARED", 65536);
-            var first = new Spacecraft(-1431, "FIRST", 100.0, 1000.0, clock, LeoAbout(earth, epoch));
+            var first = new Spacecraft(-1431, "FIRST", 100.0, LeoAbout(earth, epoch), 1000.0, clock);
 
             // Act
             var exception = Record.Exception(() => construction switch
             {
-                "Propagated" => new Spacecraft(-1432, "SECOND", 100.0, 1000.0, clock, LeoAbout(earth, epoch)),
+                "Propagated" => new Spacecraft(-1432, "SECOND", 100.0, LeoAbout(earth, epoch), 1000.0, clock),
                 "KernelBacked" => new Spacecraft(-1432, "SECOND", epoch, clock: clock),
                 _ => IO.Astrodynamics.CCSDS.OPM.Opm.CreateFromStateVector("SECOND", "2024-001A", LeoAbout(earth, epoch)).ToSpacecraft(-1432, 1000.0, clock, earth)
             });
@@ -112,12 +112,12 @@ namespace IO.Astrodynamics.Tests.Body
             var clock = new Clock("RETRY", 65536);
 
             // Act: non-orthogonal body axes
-            Assert.Throws<ArgumentException>(() => new Spacecraft(-1433, "FAILED", 100.0, 1000.0, clock, LeoAbout(earth, new TimeSystem.Time(2024, 1, 1, TimeScale.TDB)),
+            Assert.Throws<ArgumentException>(() => new Spacecraft(-1433, "FAILED", 100.0, LeoAbout(earth, new TimeSystem.Time(2024, 1, 1, TimeScale.TDB)), 1000.0, clock,
                 bodyFront: Vector3.VectorX, bodyRight: Vector3.VectorX, bodyUp: Vector3.VectorZ));
 
             // Assert
             Assert.Null(clock.Spacecraft);
-            var valid = new Spacecraft(-1433, "VALID", 100.0, 1000.0, clock, LeoAbout(earth, new TimeSystem.Time(2024, 1, 1, TimeScale.TDB)));
+            var valid = new Spacecraft(-1433, "VALID", 100.0, LeoAbout(earth, new TimeSystem.Time(2024, 1, 1, TimeScale.TDB)), 1000.0, clock);
             Assert.Same(valid, clock.Spacecraft);
         }
 
@@ -144,7 +144,7 @@ namespace IO.Astrodynamics.Tests.Body
                     barrier.SignalAndWait();
                     try
                     {
-                        built[k] = new Spacecraft(-1440 - k, "RACE" + k, 100.0, 1000.0, clock, LeoAbout(earth, new TimeSystem.Time(2024, 1, 1, TimeScale.TDB)));
+                        built[k] = new Spacecraft(-1440 - k, "RACE" + k, 100.0, LeoAbout(earth, new TimeSystem.Time(2024, 1, 1, TimeScale.TDB)), 1000.0, clock);
                     }
                     catch (Exception e)
                     {
@@ -174,8 +174,8 @@ namespace IO.Astrodynamics.Tests.Body
         {
             var earth = new CelestialBody(SolarSystemObjects.PlanetsAndMoons.EARTH);
             var clock = new Clock("SAME", 65536);
-            var first = new Spacecraft(-1434, "FIRST", 100.0, 1000.0, clock, LeoAbout(earth, new TimeSystem.Time(2024, 1, 1, TimeScale.TDB)));
-            var second = new Spacecraft(-1434, "SECOND", 100.0, 1000.0, clock, LeoAbout(earth, new TimeSystem.Time(2024, 1, 1, TimeScale.TDB)));
+            var first = new Spacecraft(-1434, "FIRST", 100.0, LeoAbout(earth, new TimeSystem.Time(2024, 1, 1, TimeScale.TDB)), 1000.0, clock);
+            var second = new Spacecraft(-1434, "SECOND", 100.0, LeoAbout(earth, new TimeSystem.Time(2024, 1, 1, TimeScale.TDB)), 1000.0, clock);
             Assert.Same(clock, second.Clock);
             Assert.Same(first, clock.Spacecraft);
         }
@@ -191,8 +191,8 @@ namespace IO.Astrodynamics.Tests.Body
             // Arrange
             var earth = new CelestialBody(SolarSystemObjects.PlanetsAndMoons.EARTH);
             var epoch = new TimeSystem.Time(2024, 1, 1, 0, 0, 0, TimeScale.TDB);
-            var spacecraft = new Spacecraft(-1435, "OWNCLK", 100.0, 1000.0, new Clock("OWNCLK", 256),
-                new KeplerianElements(7000e3, 0.001, 0.9, 0.0, 0.0, 0.0, earth, epoch, Frames.Frame.ICRF));
+            var spacecraft = new Spacecraft(-1435, "OWNCLK", 100.0, new KeplerianElements(7000e3, 0.001, 0.9, 0.0, 0.0, 0.0, earth, epoch, Frames.Frame.ICRF), 1000.0,
+                new Clock("OWNCLK", 256));
             var tank = new FuelTank("t", "m", "s", 100.0, 100.0);
             spacecraft.AddFuelTank(tank);
             var engine = new Engine("e", "m", "s", 300.0, 1.0, tank);

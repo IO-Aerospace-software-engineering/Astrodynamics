@@ -238,7 +238,7 @@ var tle = new TLE(
     "2 25544  51.6416 247.4627 0006703 130.5360 325.0288 15.49750667  1007");
 
 // Create spacecraft from TLE
-var iss = new Spacecraft(-25544, "ISS", 420000.0, 450000.0, new Clock("ISS_CLK", 65536), tle);
+var iss = new Spacecraft(-25544, "ISS", 420000.0, tle, 450000.0, new Clock("ISS_CLK", 65536));
 
 // Track from ground site
 var coords = mySite.GetHorizontalCoordinates(epoch, iss, Aberration.None);

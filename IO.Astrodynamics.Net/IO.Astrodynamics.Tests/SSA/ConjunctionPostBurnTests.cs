@@ -56,7 +56,7 @@ public class ConjunctionPostBurnTests
 
     private Spacecraft NewSpacecraft(int id, Astrodynamics.OrbitalParameters.OrbitalParameters orbit, out Engine engine)
     {
-        var spacecraft = new Spacecraft(id, "PB" + -id, 1000.0, 3000.0, new Clock("pb" + -id, 65536), orbit);
+        var spacecraft = new Spacecraft(id, "PB" + -id, 1000.0, orbit, 3000.0, new Clock("pb" + -id, 65536));
         var tank = new FuelTank("tank" + -id, "model", "sn1", 1000.0, 1000.0);
         engine = new Engine("engine" + -id, "model", "sn1", 300.0, 10.0, tank);
         spacecraft.AddFuelTank(tank);

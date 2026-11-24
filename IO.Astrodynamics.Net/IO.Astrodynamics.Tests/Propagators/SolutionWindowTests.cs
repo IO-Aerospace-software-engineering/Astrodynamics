@@ -46,7 +46,7 @@ public class SolutionWindowTests
     private static Spacecraft NewSpacecraft(IO.Astrodynamics.OrbitalParameters.OrbitalParameters orbit)
     {
         int id = NextId();
-        return new Spacecraft(id, $"SW{-id}", 100.0, 10000.0, new Clock($"swclk{-id}", 65536), orbit, 10.0, 2.2);
+        return new Spacecraft(id, $"SW{-id}", 100.0, orbit, 10000.0, new Clock($"swclk{-id}", 65536), 10.0, 2.2);
     }
 
     [Fact]

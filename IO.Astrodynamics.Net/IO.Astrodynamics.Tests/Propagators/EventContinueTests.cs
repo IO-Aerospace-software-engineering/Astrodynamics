@@ -179,8 +179,8 @@ public class EventContinueTests
     {
         var orbit = new KeplerianElements(SemiMajorAxis, 0.5, 28.5 * IO.Astrodynamics.Constants.Deg2Rad, 0.0,
             System.Math.PI * 0.5, MeanAnomaly, _earth, Start, Frames.Frame.ICRF);
-        var spacecraft = new Spacecraft(id, "CONTINUE" + -id, 1000.0, 3000.0, new Clock("continue" + -id, 65536),
-            orbit);
+        var spacecraft = new Spacecraft(id, "CONTINUE" + -id, 1000.0, orbit, 3000.0,
+            new Clock("continue" + -id, 65536));
         var tank = new FuelTank("tank" + -id, "model", "sn1", 1000.0, 1000.0);
         var engine = new Engine("engine" + -id, "model", "sn1", 300.0, 10.0, tank);
         spacecraft.AddFuelTank(tank);

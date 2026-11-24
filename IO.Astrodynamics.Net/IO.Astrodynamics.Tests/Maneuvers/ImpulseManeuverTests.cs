@@ -48,7 +48,7 @@ namespace IO.Astrodynamics.Tests.Maneuvers
             }
 
             var orbit = new KeplerianElements(7000000.0, 0.01, 0.1, 0.0, 0.0, 0.0, TestHelpers.EarthAtJ2000, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF);
-            var spc = new Spacecraft(-1552, "Impulse1552", 1000.0, 3000.0, new Clock("Clk1552", 65536), orbit);
+            var spc = new Spacecraft(-1552, "Impulse1552", 1000.0, orbit, 3000.0, new Clock("Clk1552", 65536));
             spc.AddFuelTank(new FuelTank("ft", "ftA", "123456", 1000.0, 900.0));
             spc.AddEngine(new Engine("eng", "engmk1", "12345", 450, 50, spc.FuelTanks.First()));
             return spc.Engines.First();
@@ -146,7 +146,7 @@ namespace IO.Astrodynamics.Tests.Maneuvers
             };
             for (int k = 0; k < orbits.Length; k++)
             {
-                var spc = new Spacecraft(-1553 - k, $"Impulse{1553 + k}", 1000.0, 3000.0, new Clock($"Clk{1553 + k}", 65536), orbits[k]);
+                var spc = new Spacecraft(-1553 - k, $"Impulse{1553 + k}", 1000.0, orbits[k], 3000.0, new Clock($"Clk{1553 + k}", 65536));
                 spc.AddFuelTank(new FuelTank("ft", "ftA", "123456", 1000.0, 900.0));
                 spc.AddEngine(new Engine("eng", "engmk1", "12345", 450, 50, spc.FuelTanks.First()));
                 var engine = spc.Engines.First();
@@ -209,7 +209,7 @@ namespace IO.Astrodynamics.Tests.Maneuvers
                 _ => new StateVector(elements.ToStateVector().Position, elements.ToStateVector().Velocity, center, elements.Epoch, elements.Frame, covariance)
             };
             // Fuel enough for any of the burns: the state is not at the event of the maneuver, which TryExecute does not check
-            var spc = new Spacecraft(-1588, "Impulse1588", 1000.0, 1.0e7, new Clock("Clk1588", 65536), orbit);
+            var spc = new Spacecraft(-1588, "Impulse1588", 1000.0, orbit, 1.0e7, new Clock("Clk1588", 65536));
             spc.AddFuelTank(new FuelTank("ft", "ftA", "123456", 1.0e6, 9.0e5));
             spc.AddEngine(new Engine("eng", "engmk1", "12345", 450, 50, spc.FuelTanks.First()));
             var engine = spc.Engines.First();
@@ -310,7 +310,7 @@ namespace IO.Astrodynamics.Tests.Maneuvers
             integrator == "VV" ? new VVIntegratorOptions { Step = PlaneChangeStep } : RK78IntegratorOptions.Default;
 
         private static Spacecraft PlaneChangeSpacecraft(int id, IO.Astrodynamics.OrbitalParameters.OrbitalParameters orbit) =>
-            new(id, $"PlaneChange{-id}", 1000.0, 3000.0, new Clock($"PlaneChangeClk{-id}", 65536), orbit);
+            new(id, $"PlaneChange{-id}", 1000.0, orbit, 3000.0, new Clock($"PlaneChangeClk{-id}", 65536));
 
         private static (Spacecraft, Engine) PlaneChangeSpacecraftWithEngine(int id, IO.Astrodynamics.OrbitalParameters.OrbitalParameters orbit)
         {
@@ -624,7 +624,7 @@ namespace IO.Astrodynamics.Tests.Maneuvers
             };
             for (int k = 0; k < orbits.Length; k++)
             {
-                var spc = new Spacecraft(-1563 - k, $"Impulse{1563 + k}", 1000.0, 3000.0, new Clock($"Clk{1563 + k}", 65536), orbits[k]);
+                var spc = new Spacecraft(-1563 - k, $"Impulse{1563 + k}", 1000.0, orbits[k], 3000.0, new Clock($"Clk{1563 + k}", 65536));
                 spc.AddFuelTank(new FuelTank("ft", "ftA", "123456", 1000.0, 900.0));
                 spc.AddEngine(new Engine("eng", "engmk1", "12345", 450, 50, spc.FuelTanks.First()));
                 var engine = spc.Engines.First();
@@ -643,7 +643,7 @@ namespace IO.Astrodynamics.Tests.Maneuvers
             var window = new Window(start, start.AddHours(2.0));
             (PlaneAlignmentManeuver, StateVector) Run(int id, Frames.Frame frame)
             {
-                var spacecraft = new Spacecraft(id, $"Impulse{-id}", 1000.0, 3000.0, new Clock($"Clk{-id}", 65536), tle);
+                var spacecraft = new Spacecraft(id, $"Impulse{-id}", 1000.0, tle, 3000.0, new Clock($"Clk{-id}", 65536));
                 spacecraft.AddFuelTank(new FuelTank("ft", "ftA", "123456", 1000.0, 900.0));
                 spacecraft.AddEngine(new Engine("eng", "engmk1", "12345", 450, 50, spacecraft.FuelTanks.First()));
                 var target = new KeplerianElements(6800000.0, 0.0, 52.6423 * IO.Astrodynamics.Constants.Deg2Rad, 353.0312 * IO.Astrodynamics.Constants.Deg2Rad,

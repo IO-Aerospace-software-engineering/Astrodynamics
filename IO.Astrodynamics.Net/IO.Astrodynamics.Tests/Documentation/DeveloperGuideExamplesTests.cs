@@ -241,7 +241,7 @@ public class DeveloperGuideExamplesTests
         var earth = PlanetsAndMoons.EARTH_BODY;
         var epoch = new TimeSystem.Time(2024, 1, 1, TimeScale.TDB);
         var orbit = new KeplerianElements(7000000, 0.001, 51.6 * IO.Astrodynamics.Constants.Deg2Rad, 0, 0, 0, earth, epoch, Frames.Frame.ICRF);
-        var spacecraft = new Spacecraft(-1001, "MySat", 500.0, 1000.0, new Clock("MainClock", 256), orbit);
+        var spacecraft = new Spacecraft(-1001, "MySat", 500.0, orbit, 1000.0, new Clock("MainClock", 256));
         var tank = new FuelTank("MainTank", "Propellant", "Tank1", 200.0, 100.0);
         var engine = new Engine("MainEngine", "RCS", "Engine1", 300.0, 0.05, tank);
         var exception = Assert.Throws<ArgumentException>(() => spacecraft.AddEngine(engine));
@@ -388,7 +388,7 @@ public class DeveloperGuideExamplesTests
         var earth = PlanetsAndMoons.EARTH_BODY;
         var epoch = new TimeSystem.Time(2024, 1, 1, TimeScale.TDB);
         var orbit = new KeplerianElements(6800000.0, 0.001, 51.6 * IO.Astrodynamics.Constants.Deg2Rad, 0.0, 0.0, 0.0, earth, epoch, Frames.Frame.ICRF);
-        var spacecraft = new Spacecraft(naifId, $"GUIDE{-naifId}", 500.0, 1000.0, new Clock($"GUIDE{-naifId}_CLK", 256), orbit);
+        var spacecraft = new Spacecraft(naifId, $"GUIDE{-naifId}", 500.0, orbit, 1000.0, new Clock($"GUIDE{-naifId}_CLK", 256));
         var tank = new FuelTank("Tank", "Model", "SN1", 100.0, 100.0);
         spacecraft.AddFuelTank(tank);
         engine = new Engine("Engine", "Model", "SN1", 300.0, 0.05, tank);

@@ -8,14 +8,34 @@ Creates a spacecraft for numerical propagation.
 
 ```csharp
 // Inputs: orbit (StateVector)
-var spacecraft = new Spacecraft(
-    naifId: -1001, name: "MySat",
-    mass: 500.0, maximumOperatingMass: 2000.0,
-    clock: new Clock("OnboardClk", 256),
-    initialOrbitalParameters: orbit,
-    sectionalArea: 10.0, dragCoeff: 2.2,
-    cosparId: "2024-001A", solarRadiationCoeff: 1.5);
+// The NAIF id, the name, the dry mass (kg) and the initial orbit; everything else is optional
+var spacecraft = new Spacecraft(-1001, "MySat", 500.0, orbit);
+
+// The optional values, by name
+var detailed = new Spacecraft(-1002, "MySat2", 500.0, orbit,
+    maxOperatingMass: 2000.0, clock: new Clock("OnboardClk", 256),
+    sectionalArea: 10.0, dragCoefficient: 2.2,
+    cosparId: "2024-001A", solarRadiationCoefficient: 1.5);
 ```
+
+| Parameter | Default | Description |
+|-----------|---------|-------------|
+| `maxOperatingMass` | `double.MaxValue` | Maximum operating mass (kg): informational, checked against the dry mass only, never against the fuel and the payloads |
+| `clock` | Auto-created | A new `Clock` named `"{name}_CLK"`, 65536 ticks per second (the resolution of the CK the library writes) |
+| `sectionalArea` | `1.0` | Mean sectional area (m2), drag and solar radiation pressure |
+| `dragCoefficient` | `2.2` | Drag coefficient Cd (free-molecular flow) |
+| `cosparId` | `null` | COSPAR international designator, written to the OPM |
+| `solarRadiationCoefficient` | `1.0` | Solar radiation pressure coefficient Cr, typically 1.0 to 2.0 |
+| `bodyFront`, `bodyRight`, `bodyUp` | +Y, +X, +Z | The body axes of the spacecraft |
+| `hardBodyRadius` | `0.0` | Hard-body radius (m) of the conjunction analysis |
+
+Since 11.0.0 (decisions 70 and 71 of #668, decided by S. Guillet, 2026-11-23) the initial orbit is the fourth
+parameter and the maximum operating mass and the clock are optional; before, `(naifId, name, mass,
+maximumOperatingMass, clock, initialOrbitalParameters, ...)` with a required clock. An old positional call no longer
+compiles (a `double` does not convert to `OrbitalParameters`): move the orbit after the mass, or name the arguments.
+The parameters `maximumOperatingMass`, `dragCoeff` and `solarRadiationCoeff` of both constructors are named
+`maxOperatingMass`, `dragCoefficient` and `solarRadiationCoefficient`, and the property `MaximumOperatingMass`
+`MaxOperatingMass`.
 
 The NAIF id is in [-2147483, -1], so that the id of the spacecraft frame, NaifId × 1000, is an `int`
 (`ArgumentOutOfRangeException` otherwise, #676; below -2147483 the frame id wrapped around before 11.0.0). A clock
@@ -28,8 +48,8 @@ spacecraft of different ids built at once on several threads with one clock, one
 
 The physical values are finite and in their ranges, or the constructor throws `ArgumentOutOfRangeException` naming the
 parameter ([#800](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/800), decision 75 of #668,
-decided by S. Guillet, 2026-11-23): `mass` not negative, `maximumOperatingMass` at least `mass`, `sectionalArea` above
-0, `dragCoeff`, `solarRadiationCoeff` and `hardBodyRadius` not negative. The kernel-backed constructor runs the same
+decided by S. Guillet, 2026-11-23): `mass` not negative, `maxOperatingMass` at least `mass`, `sectionalArea` above
+0, `dragCoefficient`, `solarRadiationCoefficient` and `hardBodyRadius` not negative. The kernel-backed constructor runs the same
 checks, before it reads the kernels. Before 11.0.0 a NaN passed the comparisons (a NaN of positive sign the area and
 the drag coefficient too), an infinity passed them, a negative mass threw `ArgumentException` naming no parameter, and
 the kernel-backed constructor checked the hard-body radius only.
@@ -47,11 +67,11 @@ var lro = new Spacecraft(naifId: -85, name: "LRO",
 |-----------|---------|-------------|
 | `epoch` | `Time.J2000TDB` | Epoch for initial state lookup |
 | `mass` | `0.0` | Dry mass (kg) |
-| `maximumOperatingMass` | `double.MaxValue` | Maximum operating mass (kg) |
-| `clock` | Auto-created | A new `Clock` named `"{name}_CLK"` |
+| `maxOperatingMass` | `double.MaxValue` | Maximum operating mass (kg) |
+| `clock` | Auto-created | A new `Clock` named `"{name}_CLK"`, 256 ticks per second (as before 11.0.0) |
 | `sectionalArea` | `1.0` | Mean sectional area (m2) |
-| `dragCoeff` | `2.2` | Drag coefficient |
-| `solarRadiationCoeff` | `1.0` | Solar radiation pressure coefficient |
+| `dragCoefficient` | `2.2` | Drag coefficient |
+| `solarRadiationCoefficient` | `1.0` | Solar radiation pressure coefficient |
 | `centerOfMotion` | the Earth | Centre of the initial orbital parameters (`InitialOrbitalParameters.Observer`), which the conjunction analysis takes as its observer when the spacecraft is protected |
 
 The initial orbital parameters are the state at `epoch` relative to `centerOfMotion`, the Earth by default (#620; the
@@ -76,10 +96,10 @@ reads the frame of its own id.
 |----------|-------------|
 | `NaifId` | NAIF ID, in [-2147483, -1] |
 | `DryOperatingMass` | Mass without fuel (kg): finite and not negative |
-| `MaximumOperatingMass` | Maximum operating mass (kg): finite and at least the dry mass |
+| `MaxOperatingMass` | Maximum operating mass (kg): informational, finite and at least the dry mass, checked against the dry mass only (`MaximumOperatingMass` before 11.0.0) |
 | `SectionalArea` | Cross-sectional area for drag and SRP (m2): finite and above 0 |
 | `DragCoefficient` | Cd (default 2.2): finite and not negative |
-| `SolarRadiationCoeff` | Cr (default 1.0): finite and not negative |
+| `SolarRadiationCoeff` | Cr (default 1.0): typically 1.0 to 2.0; finite and not negative |
 | `CosparId` | COSPAR international designator |
 | `HardBodyRadius` | Hard-body radius for conjunction assessment (m): finite and not negative, 0 (the default) for none, both constructors throwing `ArgumentOutOfRangeException` otherwise; the radius of the spacecraft as a secondary object too, an option of the analysis that gives another value throwing ([#683](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/683), [Conjunction Assessment](conjunction-assessment.md#conjunctionassessment-methods)) |
 | `BodyFront` / `BodyRight` / `BodyUp` | Instance body axes (override static defaults) |

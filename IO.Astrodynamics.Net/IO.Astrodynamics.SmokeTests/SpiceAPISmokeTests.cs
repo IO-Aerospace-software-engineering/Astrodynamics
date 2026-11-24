@@ -177,9 +177,9 @@ public class SpiceAPISmokeTests
     {
         const int size = 10;
         Clock clock = new Clock("smokeClk2", 65536);
-        var spacecraft = new Spacecraft(-902, "SmokeSpc2", 1000.0, 5000.0, clock,
-            new StateVector(new Vector3(6800000, 0, 0), new Vector3(0, 7656.0, 0),
-                EarthAtJ2000, Time.CreateTDB(0.0), Frame.ICRF));
+        var spacecraft = new Spacecraft(-902, "SmokeSpc2", 1000.0, new StateVector(new Vector3(6800000, 0, 0), new Vector3(0, 7656.0, 0),
+                EarthAtJ2000, Time.CreateTDB(0.0), Frame.ICRF), 5000.0,
+            clock);
 
         var so = new StateOrientation[size];
         for (int i = 0; i < size; ++i)
@@ -316,7 +316,7 @@ public class SpiceAPISmokeTests
             new Vector3(0.0, 7656.2204182967143, 0.0),
             EarthAtJ2000, Time.Create(676555130.0, TimeScale.TDB), Frame.ICRF);
 
-        var spacecraft = new Spacecraft(-904, "SmokeFovSpc", 1000.0, 5000.0, clock, parkingOrbit);
+        var spacecraft = new Spacecraft(-904, "SmokeFovSpc", 1000.0, parkingOrbit, 5000.0, clock);
         spacecraft.AddCircularInstrument(-904789, "SMOKECAM", "mod1", 0.75,
             Vector3.VectorZ, Vector3.VectorY,
             new Vector3(0.0, System.Math.PI * 0.5, 0.0));

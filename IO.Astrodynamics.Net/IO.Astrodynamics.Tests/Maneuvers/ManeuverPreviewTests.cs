@@ -53,8 +53,8 @@ public class ManeuverPreviewTests
     private static Spacecraft NewSpacecraft(CelestialBody earth, out Engine engine)
     {
         int id = Interlocked.Decrement(ref _nextId);
-        var spacecraft = new Spacecraft(id, "PREV" + -id, 1000.0, 3000.0, new Clock("PREV" + -id, 65536),
-            new KeplerianElements(7000e3, 0.01, 0.5, 0.0, 0.0, 0.0, earth, S, Frames.Frame.ICRF));
+        var spacecraft = new Spacecraft(id, "PREV" + -id, 1000.0, new KeplerianElements(7000e3, 0.01, 0.5, 0.0, 0.0, 0.0, earth, S, Frames.Frame.ICRF), 3000.0,
+            new Clock("PREV" + -id, 65536));
         var tank = new FuelTank("ft" + -id, "m", "sn" + -id, 1000.0, 1000.0);
         spacecraft.AddFuelTank(tank);
         engine = new Engine("eng" + -id, "m", "sn" + -id, 300.0, 10.0, tank);
@@ -233,7 +233,7 @@ public class ManeuverPreviewTests
         var earth = TestHelpers.EarthAtJ2000;
         var orbit = new KeplerianElements(a, 0.0, i1, o1, 0.0, 0.0, earth, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF);
         var target = new KeplerianElements(a, 0.0, i2, o2, 0.0, 0.0, earth, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF);
-        var spc = new Spacecraft(Interlocked.Decrement(ref _nextId), "PLANEPREV", 1000.0, 3000.0, new Clock("PLANEPREV", 65536), orbit);
+        var spc = new Spacecraft(Interlocked.Decrement(ref _nextId), "PLANEPREV", 1000.0, orbit, 3000.0, new Clock("PLANEPREV", 65536));
         spc.AddFuelTank(new FuelTank("ft", "ftA", "123456", 2000.0, 1900.0));
         spc.AddEngine(new Engine("eng", "engmk1", "12345", 450, 50, spc.FuelTanks.First()));
         var plane = new PlaneAlignmentManeuver(new Time(DateTime.MinValue, TimeScale.TDB), TimeSpan.Zero, target, spc.Engines.First());

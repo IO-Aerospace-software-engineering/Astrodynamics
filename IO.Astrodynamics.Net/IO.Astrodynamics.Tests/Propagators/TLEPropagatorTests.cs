@@ -50,7 +50,7 @@ public class TLEPropagatorTests
             "1 25544U 98067A   21020.53488036  .00016717  00000-0  10270-3 0  9054",
             "2 25544  51.6423 353.0312 0000493 320.8755  39.2360 15.49309423 25703");
         var window = new Window(tle.Epoch, tle.Epoch.AddHours(1.0));
-        var spacecraft = new Spacecraft(-1001, "MySpacecraft", 100.0, 10000.0, new Clock("My clock", 256), tle);
+        var spacecraft = new Spacecraft(-1001, "MySpacecraft", 100.0, tle, 10000.0, new Clock("My clock", 256));
         var solution = new TLEPropagator(window, spacecraft, TimeSpan.FromSeconds(60.0)).Propagate();
         var start = window.StartDate.ToTDB();
 
@@ -124,7 +124,7 @@ public class TLEPropagatorTests
         var end = good.AddSeconds(-0.5);
         Assert.False(Fails(end));
         Assert.True(Fails(end.AddSeconds(1.0)));
-        var spacecraft = new Spacecraft(-1003, "Decayed", 100.0, 10000.0, new Clock("Decayed clock", 256), tle);
+        var spacecraft = new Spacecraft(-1003, "Decayed", 100.0, tle, 10000.0, new Clock("Decayed clock", 256));
         var step = TimeSpan.FromSeconds(60.0);
         new TLEPropagator(new Window(end.AddSeconds(-3600.0), end.AddSeconds(-1800.0)), spacecraft, step).Propagate();
 
@@ -154,7 +154,7 @@ public class TLEPropagatorTests
             "1 25544U 98067A   21020.53488036  .00016717  00000-0  10270-3 0  9054",
             "2 25544  51.6423 353.0312 0000493 320.8755  39.2360 15.49309423 25703");
         
-        Spacecraft spc = new Spacecraft(-1001, "MySpacecraft", 100.0, 10000.0, clk, tle);
+        Spacecraft spc = new Spacecraft(-1001, "MySpacecraft", 100.0, tle, 10000.0, clk);
         var start = spc.InitialOrbitalParameters.Epoch.ToTDB();
         var end = start.AddDays(1.0);
         TLEPropagator propagator = new TLEPropagator(new Window(start, end), spc, TimeSpan.FromHours(1.0));
@@ -187,7 +187,7 @@ public class TLEPropagatorTests
     {
         var start = Iss.Epoch.ToTDB();
         var end = start.AddSeconds(windowSeconds);
-        var spacecraft = new Spacecraft(naifId, $"S{-naifId}", 100.0, 10000.0, new Clock($"c{-naifId}", 256), Iss);
+        var spacecraft = new Spacecraft(naifId, $"S{-naifId}", 100.0, Iss, 10000.0, new Clock($"c{-naifId}", 256));
         var step = TimeSpan.FromSeconds(stepSeconds);
         var solution = new TLEPropagator(new IO.Astrodynamics.TimeSystem.Window(start, end), spacecraft, step).Propagate();
 
@@ -264,7 +264,7 @@ public class TLEPropagatorTests
         var window = new IO.Astrodynamics.TimeSystem.Window(Iss.Epoch, Iss.Epoch.AddHours(1.0));
         var start = window.StartDate.ToTDB();
         var end = window.EndDate.ToTDB();
-        var spacecraft = new Spacecraft(-1009, "S1009", 100.0, 10000.0, new Clock("c1009", 256), Iss);
+        var spacecraft = new Spacecraft(-1009, "S1009", 100.0, Iss, 10000.0, new Clock("c1009", 256));
         var solution = new TLEPropagator(window, spacecraft, TimeSpan.FromSeconds(60.0)).Propagate();
         _output.WriteLine($"MEASURE TLEPropagatorTests.WindowGivenInUtc_EndsAtItsTdbEnd: TDB length − 3600 s = {(end - start).Ticks - 36000000000L} ticks");
         Assert.Equal(61, solution.StateVectors.Count);
@@ -284,7 +284,7 @@ public class TLEPropagatorTests
         // (measured on Linux x64, 2026-11-17: 4.282e-4 / 2.701e-5 m/s and 0.3762 / 3.726e-2 m; 2⁴ for an h⁴ error).
         // The reference is SGP4 at the exact instant (CSPICE evsgp4_c); before #598 the solution ended at +60 s
         var start = Iss.Epoch.ToTDB();
-        var spacecraft = new Spacecraft(-1006, "S1006", 100.0, 10000.0, new Clock("c1006", 256), Iss);
+        var spacecraft = new Spacecraft(-1006, "S1006", 100.0, Iss, 10000.0, new Clock("c1006", 256));
         var solution = new TLEPropagator(new IO.Astrodynamics.TimeSystem.Window(start, start.AddSeconds(90.0)), spacecraft,
             TimeSpan.FromSeconds(60.0)).Propagate();
         double worstVelocity = 0.0, worstPosition = 0.0;
@@ -310,7 +310,7 @@ public class TLEPropagatorTests
     {
         // #598: a zero step divided by zero; a step of zero or less is rejected as the integrators reject it (#674)
         var start = Iss.Epoch.ToTDB();
-        var spacecraft = new Spacecraft(-1007, "S1007", 100.0, 10000.0, new Clock("c1007", 256), Iss);
+        var spacecraft = new Spacecraft(-1007, "S1007", 100.0, Iss, 10000.0, new Clock("c1007", 256));
         var ex = Assert.Throws<ArgumentOutOfRangeException>(() =>
             new TLEPropagator(new IO.Astrodynamics.TimeSystem.Window(start, start.AddSeconds(60.0)), spacecraft, TimeSpan.FromTicks(ticks)));
         Assert.Equal("deltaT", ex.ParamName);

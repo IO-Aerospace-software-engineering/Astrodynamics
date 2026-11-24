@@ -489,8 +489,8 @@ public class ElementsValidationTests
     {
         // Arrange: a target orbit without an apoapsis, and an engine on a spacecraft
         var clock = new IO.Astrodynamics.Body.Spacecraft.Clock("clk737", 256);
-        var spacecraft = new IO.Astrodynamics.Body.Spacecraft.Spacecraft(-737, "S737", 1000.0, 10000.0, clock,
-            Keplerian(a: 7.0e6, e: 0.1));
+        var spacecraft = new IO.Astrodynamics.Body.Spacecraft.Spacecraft(-737, "S737", 1000.0, Keplerian(a: 7.0e6, e: 0.1), 10000.0,
+            clock);
         var tank = new IO.Astrodynamics.Body.Spacecraft.FuelTank("ft737", "model", "sn737", 1000.0, 900.0);
         spacecraft.AddFuelTank(tank);
         var engine = new IO.Astrodynamics.Body.Spacecraft.Engine("eng737", "model", "sn737", 450.0, 50.0, tank);

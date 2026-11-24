@@ -70,8 +70,8 @@ public class IntegratorInitializationTests
     private static Spacecraft NewSpacecraft(ILocalizable observer, Frames.Frame frame, Vector3 position, Vector3 velocity)
     {
         int id = NextId();
-        return new Spacecraft(id, $"II{-id}", 100.0, 10000.0, new Clock($"iiclk{-id}", 65536),
-            new StateVector(position, velocity, observer, Epoch, frame), 10.0, 2.2);
+        return new Spacecraft(id, $"II{-id}", 100.0, new StateVector(position, velocity, observer, Epoch, frame), 10000.0,
+            new Clock($"iiclk{-id}", 65536), 10.0, 2.2);
     }
 
     private static Spacecraft NewLeo(CelestialBody earth, Frames.Frame frame = null) =>
@@ -257,7 +257,7 @@ public class IntegratorInitializationTests
             Frames.Frame.ICRF);
         var ssbState = heliocentric.RelativeTo(Barycenters.SOLAR_SYSTEM_BARYCENTER, Aberration.None).ToStateVector();
         int id = NextId();
-        var spacecraft = new Spacecraft(id, $"II{-id}", 100.0, 10000.0, new Clock($"iiclk{-id}", 65536), ssbState, 10.0, 2.2);
+        var spacecraft = new Spacecraft(id, $"II{-id}", 100.0, ssbState, 10000.0, new Clock($"iiclk{-id}", 65536), 10.0, 2.2);
         var recorder = new RecordingIntegrator(new RK78Integrator(1e-12, 1e-12));
         recorder.Inner.AddForce(new GravitationalAcceleration(sun));
         var window = new Window(Epoch, Epoch.AddDays(1.0));
@@ -382,8 +382,8 @@ public class IntegratorInitializationTests
             var heliocentric = new StateVector(new Vector3(1.5e11, 0.0, 0.0), new Vector3(0.0, 29780.0, 1000.0), sun,
                 Epoch, Frames.Frame.ICRF);
             int id = NextId();
-            var ssb = new Spacecraft(id, $"II{-id}", 100.0, 10000.0, new Clock($"iiclk{-id}", 65536),
-                heliocentric.RelativeTo(Barycenters.SOLAR_SYSTEM_BARYCENTER, Aberration.None).ToStateVector(), 10.0, 2.2);
+            var ssb = new Spacecraft(id, $"II{-id}", 100.0, heliocentric.RelativeTo(Barycenters.SOLAR_SYSTEM_BARYCENTER, Aberration.None).ToStateVector(), 10000.0,
+                new Clock($"iiclk{-id}", 65536), 10.0, 2.2);
             // The gravity of the Sun and of the Earth as point masses about the observer of the state
             Integrator integrator = kind == "RK78"
                 ? new RK78Integrator(1e-12, 1e-12)

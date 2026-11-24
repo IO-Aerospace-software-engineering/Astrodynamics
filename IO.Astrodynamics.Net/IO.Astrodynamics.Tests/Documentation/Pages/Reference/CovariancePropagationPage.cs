@@ -107,7 +107,7 @@ internal static class CovariancePropagationPage
         if (remediation.Remediated)
             Console.WriteLine($"Smallest eigenvalue of the correlation matrix: {remediation.SmallestCorrelationEigenvalue:E3}");
 
-        var spacecraft = new Spacecraft(-1001, "SAT", 100.0, 1000.0, clock, remediation.State);
+        var spacecraft = new Spacecraft(-1001, "SAT", 100.0, remediation.State, 1000.0, clock);
         var solution = spacecraft.Propagate(window, new PropagationOptions
         {
             ThirdBodies = bodies,

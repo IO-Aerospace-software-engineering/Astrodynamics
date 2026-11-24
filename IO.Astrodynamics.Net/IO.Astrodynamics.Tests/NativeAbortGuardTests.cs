@@ -360,7 +360,7 @@ public class NativeAbortGuardTests
     [Fact]
     public void WriteEphemeris_CentreNotACelestialBody_Throws()
     {
-        var spacecraft = new Spacecraft(-1999721, "IOA_K1_GUARD", 3000.0, 10000.0, new Clock("IOA_K1_GUARD_CLOCK", 65536), EarthStates(1)[0]);
+        var spacecraft = new Spacecraft(-1999721, "IOA_K1_GUARD", 3000.0, EarthStates(1)[0], 10000.0, new Clock("IOA_K1_GUARD_CLOCK", 65536));
         AssertWriteEphemerisRejected(EarthStates(3, spacecraft), "not a celestial body");
         var site = new Site(339, "S339", TestHelpers.EarthAtJ2000, new Planetodetic(0.5, 0.2, 1000.0));
         AssertWriteEphemerisRejected(EarthStates(3, site), "not a celestial body");

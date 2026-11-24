@@ -42,9 +42,9 @@ public class PropagationPastTheWindowTests
         new GeopotentialModelParameters("Data/SolarSystem/EGM2008_to70_TideFree", 10));
 
     private static Spacecraft NewSpacecraft(CelestialBody earth, int naifId) =>
-        new(naifId, "PAST" + -naifId, 1000.0, 3000.0, new Clock("past" + -naifId, 65536),
-            new StateVector(new Vector3(6878137.0, 0.0, 0.0), new Vector3(0.0, 5382.9, 5382.9), earth, Start,
-                Frames.Frame.ICRF));
+        new(naifId, "PAST" + -naifId, 1000.0, new StateVector(new Vector3(6878137.0, 0.0, 0.0), new Vector3(0.0, 5382.9, 5382.9), earth, Start,
+                Frames.Frame.ICRF), 3000.0,
+            new Clock("past" + -naifId, 65536));
 
     private static double RotationAngle(Quaternion expected, Quaternion actual)
     {

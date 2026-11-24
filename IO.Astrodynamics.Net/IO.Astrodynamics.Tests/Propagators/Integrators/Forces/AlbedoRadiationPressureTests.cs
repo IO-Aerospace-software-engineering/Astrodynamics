@@ -30,10 +30,10 @@ public class AlbedoRadiationPressureTests
         double sectionalArea = 1.0, double solarRadiationCoeff = 1.0)
     {
         Clock clk = new Clock("My clock", 256);
-        return new Spacecraft(-1001, "MySpacecraft", mass, 10000.0, clk,
-            new StateVector(new Vector3(6800000.0, 0.0, 0.0), new Vector3(0.0, 7656.2204182967143, 0.0),
-                observer, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF),
-            sectionalArea: sectionalArea, solarRadiationCoeff: solarRadiationCoeff);
+        return new Spacecraft(-1001, "MySpacecraft", mass, new StateVector(new Vector3(6800000.0, 0.0, 0.0), new Vector3(0.0, 7656.2204182967143, 0.0),
+                observer, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF), 10000.0,
+            clk,
+            sectionalArea: sectionalArea, solarRadiationCoefficient: solarRadiationCoeff);
     }
 
     /// <summary>
@@ -337,9 +337,9 @@ public class AlbedoRadiationPressureTests
         var (state, dSunBody, _) = CreateSubSolarState(moon, rSc, epoch);
 
         Clock clk = new Clock("My clock", 256);
-        var spc = new Spacecraft(-1001, "MySpacecraft", 100.0, 10000.0, clk,
-            new StateVector(new Vector3(1837400.0, 0.0, 0.0), new Vector3(0.0, 1633.0, 0.0),
-                moon, epoch, Frames.Frame.ICRF));
+        var spc = new Spacecraft(-1001, "MySpacecraft", 100.0, new StateVector(new Vector3(1837400.0, 0.0, 0.0), new Vector3(0.0, 1633.0, 0.0),
+                moon, epoch, Frames.Frame.ICRF), 10000.0,
+            clk);
 
         var force = new AlbedoRadiationPressure(spc, moon);
         var acc = force.Apply(state);

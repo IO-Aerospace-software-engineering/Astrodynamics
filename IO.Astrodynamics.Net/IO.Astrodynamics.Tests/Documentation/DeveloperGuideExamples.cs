@@ -507,7 +507,7 @@ internal static class DeveloperGuideExamples
         // Convert to Spacecraft for mission operations
         var spacecraft = opm.ToSpacecraft(
             naifId: -1000,
-            maximumOperatingMass: 500000.0,
+            maxOperatingMass: 500000.0,
             clock: new Clock("OnboardClock", 256),
             observer: earth);
         #endregion
@@ -519,8 +519,8 @@ internal static class DeveloperGuideExamples
         #region guide:21
         // clock: a Clock; stateVector: the initial state (an ISS-like orbit)
         // Create spacecraft and propagate with maneuvers
-        var spacecraft = new Spacecraft(-1000, "ISS", 420000.0, 500000.0, clock,
-            stateVector, 1600.0, 2.2, "1998-067A", 1.5);
+        var spacecraft = new Spacecraft(-1000, "ISS", 420000.0, stateVector, 500000.0,
+            clock, 1600.0, 2.2, "1998-067A", 1.5);
 
         // After propagation with executed maneuvers...
         var opm = spacecraft.ToOpm(
@@ -759,7 +759,7 @@ internal static class DeveloperGuideExamples
 
         // Create spacecraft
         var clock = new Clock("MainClock", 256);
-        var spacecraft = new Spacecraft(-1001, "MySat", 500.0, 1000.0, clock, orbit);
+        var spacecraft = new Spacecraft(-1001, "MySat", 500.0, orbit, 1000.0, clock);
 
         // Add components: the tank first, then the engine that draws on it (AddEngine requires its tank on the spacecraft)
         var tank = new FuelTank("MainTank", "Propellant", "Tank1", 200.0, 100.0);  // capacity, initial quantity (kg)
@@ -874,7 +874,7 @@ internal static class DeveloperGuideExamples
             new Vector3(0, 7500.0, 0),
             earth, epoch, Frame.ICRF);
 
-        var spacecraft = new Spacecraft(-1001, "Sat", 100.0, 10000.0, clock, orbit);
+        var spacecraft = new Spacecraft(-1001, "Sat", 100.0, orbit, 10000.0, clock);
 
         // Propagate with geopotential, Moon, and Sun perturbations
         var propagator = new CentralBodyPropagator(
@@ -1189,12 +1189,12 @@ internal static class DeveloperGuideExamples
 
         // Create target spacecraft
         var targetClock = new Clock("TargetClock", 65536);
-        var target = new Spacecraft(-1001, "Target", 500.0, 1000.0, targetClock, targetOrbit);
+        var target = new Spacecraft(-1001, "Target", 500.0, targetOrbit, 1000.0, targetClock);
         scenario.AddSpacecraft(target);
 
         // Create chaser spacecraft with propulsion
         var chaserClock = new Clock("ChaserClock", 65536);
-        var chaser = new Spacecraft(-1002, "Chaser", 1000.0, 10000.0, chaserClock, chaserOrbit);
+        var chaser = new Spacecraft(-1002, "Chaser", 1000.0, chaserOrbit, 10000.0, chaserClock);
 
         // Add fuel tank and engine
         var fuelTank = new FuelTank("MainTank", "Model1", "SN001", 9000.0, 9000.0);
@@ -1414,7 +1414,7 @@ internal static class DeveloperGuideExamples
 
         // Create spacecraft with camera
         var clock = new Clock("Clock1", 65536);
-        var spacecraft = new Spacecraft(-179, "Observer", 1000.0, 3000.0, clock, orbit);
+        var spacecraft = new Spacecraft(-179, "Observer", 1000.0, orbit, 3000.0, clock);
 
         // Add camera instrument (circular FOV, 43° half-angle, pointing nadir)
         spacecraft.AddCircularInstrument(
@@ -1505,7 +1505,7 @@ internal static class DeveloperGuideExamples
 
         // Create spacecraft from TLE
         var clock = new Clock("ISSClock", 65536);
-        var iss = new Spacecraft(-25544, "ISS", 420000.0, 450000.0, clock, issTLE);
+        var iss = new Spacecraft(-25544, "ISS", 420000.0, issTLE, 450000.0, clock);
 
         // Track from a ground station
         var goldstone = new Site(13, "DSS-13", earth);
@@ -1567,7 +1567,7 @@ internal static class DeveloperGuideExamples
         var moonState = moon.GetEphemeris(start, earth, Frame.ICRF, Aberration.None);
 
         var clock = new Clock("Clock", 256);
-        var spacecraft = new Spacecraft(-1001, "Probe", 100.0, 10000.0, clock, moonState);
+        var spacecraft = new Spacecraft(-1001, "Probe", 100.0, moonState, 10000.0, clock);
 
         scenario.AddSpacecraft(spacecraft);
 
@@ -1616,7 +1616,7 @@ internal static class DeveloperGuideExamples
             earth, epoch, Frame.ICRF);
 
         var clock = new Clock("Clock", 256);
-        var spacecraft = new Spacecraft(-1001, "LEOSat", 100.0, 10000.0, clock, orbit);
+        var spacecraft = new Spacecraft(-1001, "LEOSat", 100.0, orbit, 10000.0, clock);
 
         var propagator = new CentralBodyPropagator(
             new Window(epoch, epoch.AddDays(1)),
@@ -1658,7 +1658,7 @@ internal static class DeveloperGuideExamples
 
         // Create spacecraft
         var clock = new Clock("Clock", 256);
-        var spacecraft = new Spacecraft(-334, "Observer", 1000.0, 2000.0, clock, orbit);
+        var spacecraft = new Spacecraft(-334, "Observer", 1000.0, orbit, 2000.0, clock);
 
         // Add antenna instrument
         spacecraft.AddCircularInstrument(-334100, "Antenna", "HighGain",
@@ -1719,7 +1719,7 @@ internal static class DeveloperGuideExamples
         );
 
         var clock = new Clock("Clock", 256);
-        var spacecraft = new Spacecraft(-500, "Observer", 500.0, 1000.0, clock, orbit);
+        var spacecraft = new Spacecraft(-500, "Observer", 500.0, orbit, 1000.0, clock);
 
         // Add Earth observation camera (points down via boresight)
         spacecraft.AddCircularInstrument(-500100, "EarthCam", "NadirCamera",

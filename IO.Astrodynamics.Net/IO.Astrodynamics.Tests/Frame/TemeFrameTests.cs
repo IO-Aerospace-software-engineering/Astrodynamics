@@ -347,8 +347,8 @@ public class TemeFrameTests
         var moon = new CelestialBody(PlanetsAndMoons.MOON);
         var earth = new CelestialBody(PlanetsAndMoons.EARTH);
         var orbit = new KeplerianElements(6800000.0, 0.0001, 51.6 * IO.Astrodynamics.Constants.Deg2Rad, 0.0, 0.0, 0.0, earth, epoch, Frames.Frame.ICRF);
-        var spacecraft = new IO.Astrodynamics.Body.Spacecraft.Spacecraft(-6825, "F07SC", 100.0, 10000.0,
-            new IO.Astrodynamics.Body.Spacecraft.Clock("F07SC_CLK", 65536), orbit);
+        var spacecraft = new IO.Astrodynamics.Body.Spacecraft.Spacecraft(-6825, "F07SC", 100.0, orbit,
+            10000.0, new IO.Astrodynamics.Body.Spacecraft.Clock("F07SC_CLK", 65536));
         var frame = spacecraft.Frame;
 
         // Its record empty, the frame is read by name, as before 11.0.0: no kernel defines F07SC_FRAME, so SPICE rejects it,
@@ -408,7 +408,7 @@ public class TemeFrameTests
         {
             var earth = new CelestialBody(PlanetsAndMoons.EARTH);
             var orbit = new StateVector(new Vector3(6800000.0, 0.0, 0.0), new Vector3(0.0, 7656.22, 0.0), earth, start, Frames.Frame.ICRF);
-            Writer = new IO.Astrodynamics.Body.Spacecraft.Spacecraft(id, name, 1000.0, 3000.0, new IO.Astrodynamics.Body.Spacecraft.Clock(name + "_CLK", 65536), orbit);
+            Writer = new IO.Astrodynamics.Body.Spacecraft.Spacecraft(id, name, 1000.0, orbit, 3000.0, new IO.Astrodynamics.Body.Spacecraft.Clock(name + "_CLK", 65536));
             for (int k = 0; k <= 120; k++)
             {
                 Writer.Frame.AddStateOrientationToICRF(new StateOrientation(CkAttitude(k), Vector3.Zero, start.AddSeconds(60.0 * k), Writer.Frame));
@@ -461,8 +461,8 @@ public class TemeFrameTests
         var moon = new CelestialBody(PlanetsAndMoons.MOON);
         var earth = new CelestialBody(PlanetsAndMoons.EARTH);
         using var kernels = new ManagedSpacecraftFrameKernels(-6826, "F07CK", start);
-        var fresh = new IO.Astrodynamics.Body.Spacecraft.Spacecraft(-6826, "F07CK", 1000.0, 3000.0, new IO.Astrodynamics.Body.Spacecraft.Clock("F07CK_CLK", 65536),
-            kernels.Writer.InitialOrbitalParameters);
+        var fresh = new IO.Astrodynamics.Body.Spacecraft.Spacecraft(-6826, "F07CK", 1000.0, kernels.Writer.InitialOrbitalParameters, 3000.0,
+            new IO.Astrodynamics.Body.Spacecraft.Clock("F07CK_CLK", 65536));
         Assert.Null(fresh.Frame.GetLatestStateOrientationToICRF());
 
         double worst = 0.0;

@@ -692,8 +692,8 @@ public class KeplerEquationTests
     // A 60 s propagation, by RK7(8) or by Velocity-Verlet, of a spacecraft whose initial orbit is the elements
     private static CentralBodyPropagator Propagator(KeplerianElements elements, bool rk78)
     {
-        var spacecraft = new Spacecraft(-1453, "KEPLER1453", 100.0, 1000.0, new Clock("kepler1453", 65536),
-            elements);
+        var spacecraft = new Spacecraft(-1453, "KEPLER1453", 100.0, elements, 1000.0,
+            new Clock("kepler1453", 65536));
         var window = new Window(Epoch, Epoch.AddSeconds(60.0));
         var bodies = new CelestialItem[] { (CelestialBody)elements.Observer };
         return rk78

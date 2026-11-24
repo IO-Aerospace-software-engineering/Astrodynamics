@@ -134,7 +134,7 @@ public class RK78Benchmarks
             new Vector3(5442162.5926801835, -4068949.8468206248, -13456.851447751518),
             new Vector3(2858.1975428173836, 3809.7859312745794, 6002.1266931226886),
             _earthLeo, LeoEpoch, Frame.ICRF);
-        var spc = new Spacecraft(-1001, "LEO_Bench", 100.0, 10000.0, clk, orbit);
+        var spc = new Spacecraft(-1001, "LEO_Bench", 100.0, orbit, 10000.0, clk);
         var window = new Window(LeoEpoch, orbit.Period());
         return new CentralBodyPropagator(window, spc, Options(
             new CelestialItem[] { PlanetsAndMoons.MOON_BODY, Stars.SUN_BODY },
@@ -168,7 +168,7 @@ public class RK78Benchmarks
             0.0,
             _earthSso, SsoEpoch, Frame.ICRF);
         var orbit = keplerianOrbit.ToStateVector();
-        var spc = new Spacecraft(-1002, "SSO_Bench", 100.0, 1000.0, clk, orbit);
+        var spc = new Spacecraft(-1002, "SSO_Bench", 100.0, orbit, 1000.0, clk);
         var window = new Window(SsoEpoch, keplerianOrbit.Period());
         return new CentralBodyPropagator(window, spc, Options(
             new CelestialItem[] { PlanetsAndMoons.MOON_BODY, Stars.SUN_BODY },
@@ -184,8 +184,8 @@ public class RK78Benchmarks
         var osculatingIcrf = tle.ToStateVector().ToFrame(Frame.ICRF).ToStateVector();
         var orbit = new StateVector(osculatingIcrf.Position, osculatingIcrf.Velocity,
             _earthGeo, osculatingIcrf.Epoch, Frame.ICRF);
-        var spc = new Spacecraft(-1003, "GEO_Bench", 3000.0, 5000.0, clk, orbit,
-            sectionalArea: 50.0, dragCoeff: 2.2, solarRadiationCoeff: 1.5);
+        var spc = new Spacecraft(-1003, "GEO_Bench", 3000.0, orbit, 5000.0, clk,
+            sectionalArea: 50.0, dragCoefficient: 2.2, solarRadiationCoefficient: 1.5);
         var window = new Window(_geoTleEpoch, orbit.Period());
         return new CentralBodyPropagator(window, spc, Options(
             new CelestialItem[]
@@ -212,8 +212,8 @@ public class RK78Benchmarks
         var orbit = new StateVector(
             new Vector3(r0, 0.0, 0.0), new Vector3(0.0, v0, 0.0),
             _earthLeoAtm, LeoEpoch, Frame.ICRF);
-        var spc = new Spacecraft(-1004, "LEO_Full_Bench", 100.0, 10000.0, clk, orbit,
-            sectionalArea: 10.0, dragCoeff: 2.2, solarRadiationCoeff: 1.5);
+        var spc = new Spacecraft(-1004, "LEO_Full_Bench", 100.0, orbit, 10000.0, clk,
+            sectionalArea: 10.0, dragCoefficient: 2.2, solarRadiationCoefficient: 1.5);
         var window = new Window(LeoEpoch, orbit.Period());
         return new CentralBodyPropagator(window, spc, Options(
             new CelestialItem[] { _earthLeoAtm, PlanetsAndMoons.MOON_BODY, Stars.SUN_BODY },

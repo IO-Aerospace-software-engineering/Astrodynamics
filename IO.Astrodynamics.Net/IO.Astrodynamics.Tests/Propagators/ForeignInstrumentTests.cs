@@ -51,8 +51,8 @@ public class ForeignInstrumentTests
     private static Spacecraft NewSpacecraft(CelestialBody earth, out Engine engine)
     {
         int id = NextId();
-        var spacecraft = new Spacecraft(id, "FI" + -id, 1000.0, 10000.0, new Clock("FI" + -id, 65536),
-            new KeplerianElements(7000e3, 0.01, 0.9, 0.0, 0.0, System.Math.PI, earth, Epoch, Frame.ICRF));
+        var spacecraft = new Spacecraft(id, "FI" + -id, 1000.0, new KeplerianElements(7000e3, 0.01, 0.9, 0.0, 0.0, System.Math.PI, earth, Epoch, Frame.ICRF), 10000.0,
+            new Clock("FI" + -id, 65536));
         var tank = new FuelTank("TANK" + -id, "MODEL", "SN" + -id, 3000.0, 3000.0);
         spacecraft.AddFuelTank(tank);
         engine = new Engine("ENGINE" + -id, "MODEL", "SN" + -id, 320.0, 5.0, tank);

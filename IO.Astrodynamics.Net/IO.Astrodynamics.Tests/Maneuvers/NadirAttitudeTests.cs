@@ -32,7 +32,7 @@ public class NadirAttitudeTests
     public void Execute()
     {
         var orbitalParams = new KeplerianElements(42164000.0, 0.0, 0.0, 0.0, 0.0, 0.0, TestHelpers.EarthAtJ2000, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF);
-        var spc = new Spacecraft(-666, "GenericSpacecraft", 1000.0, 3000.0, new Clock("GenericClk", 65536), orbitalParams);
+        var spc = new Spacecraft(-666, "GenericSpacecraft", 1000.0, orbitalParams, 3000.0, new Clock("GenericClk", 65536));
         spc.AddFuelTank(new FuelTank("ft", "ftA", "123456", 1000.0, 900.0));
         spc.AddEngine(new Engine("eng", "engmk1", "12345", 450, 50, spc.FuelTanks.First()));
         NadirAttitude maneuver = new NadirAttitude(TestHelpers.EarthAtJ2000,new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB), TimeSpan.Zero, spc.Engines.First());
@@ -53,7 +53,7 @@ public class NadirAttitudeTests
     public void AStateAfterTheHold_SetsTheNextManeuverStandby()
     {
         var orbitalParams = new KeplerianElements(42164000.0, 0.0, 0.0, 0.0, 0.0, 0.0, TestHelpers.EarthAtJ2000, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF);
-        var spc = new Spacecraft(-1107, "GenericSpacecraft1107", 1000.0, 3000.0, new Clock("GenericClk1107", 65536), orbitalParams);
+        var spc = new Spacecraft(-1107, "GenericSpacecraft1107", 1000.0, orbitalParams, 3000.0, new Clock("GenericClk1107", 65536));
         spc.AddFuelTank(new FuelTank("ft", "ftA", "123456", 1000.0, 900.0));
         spc.AddEngine(new Engine("eng", "engmk1", "12345", 450, 50, spc.FuelTanks.First()));
         var nadir = new NadirAttitude(TestHelpers.EarthAtJ2000, TimeSystem.Time.J2000TDB, TimeSpan.FromSeconds(10.0), spc.Engines.First());

@@ -205,7 +205,7 @@ public class AttitudeTimelineEdgeTests
     public void HandleEvent_PreconditionsFail_Continues()
     {
         var earth = new CelestialBody(PlanetsAndMoons.EARTH, Frame.ICRF, S);
-        var spacecraft = new Spacecraft(NextId(), "TLEDGEPRE", 1000.0, 3000.0, new Clock("TLEDGEPRE_CLK", 65536), MinimumEpochGateTests.Orbit(earth, 0.0));
+        var spacecraft = new Spacecraft(NextId(), "TLEDGEPRE", 1000.0, MinimumEpochGateTests.Orbit(earth, 0.0), 3000.0, new Clock("TLEDGEPRE_CLK", 65536));
         var tank = new FuelTank("ft", "model", "sn", 1000.0, 1000.0);
         spacecraft.AddFuelTank(tank);
         var engine = new Engine("eng", "model", "sn", 300.0, 10.0, tank);
@@ -412,7 +412,7 @@ public class AttitudeTimelineEdgeTests
         double hold, OrbitalParams orbit)
     {
         int id = NextId();
-        var spacecraft = new Spacecraft(id, $"TL{-id}", 1000.0, 3000.0, new Clock($"TL{-id}_CLK", 65536), orbit);
+        var spacecraft = new Spacecraft(id, $"TL{-id}", 1000.0, orbit, 3000.0, new Clock($"TL{-id}_CLK", 65536));
         var tank = new FuelTank("ft", "model", "sn", 1000.0, 1000.0);
         spacecraft.AddFuelTank(tank);
         var engine = new Engine("eng", "model", "sn", 300.0, 10.0, tank);

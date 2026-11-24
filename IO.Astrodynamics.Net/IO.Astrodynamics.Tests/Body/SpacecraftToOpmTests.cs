@@ -61,7 +61,7 @@ public class SpacecraftToOpmTests
         double ra = 6378137.0 + 1000000.0, rp = 6378137.0 + 400000.0, a = (ra + rp) / 2.0;
         var orbit = new KeplerianElements(a, (ra - rp) / (ra + rp), 0.9, 0.3, 1.1, System.Math.PI, earth, S, Frame.ICRF).ToStateVector();
         var initial = frame == "ICRF" ? orbit : orbit.ToFrame(Frame.ECLIPTIC_J2000).ToStateVector();
-        var spacecraft = new Spacecraft(naifId, $"OPM{-naifId}", Dry, 5000.0, new Clock($"OPM{-naifId}_CLK", 65536), initial, cosparId: "2024-001A");
+        var spacecraft = new Spacecraft(naifId, $"OPM{-naifId}", Dry, initial, 5000.0, new Clock($"OPM{-naifId}_CLK", 65536), cosparId: "2024-001A");
         var tank = new FuelTank("ft", "model", "sn", Fuel, Fuel);
         spacecraft.AddFuelTank(tank);
         var engine = new Engine("eng", "model", "sn", Isp, 10.0, tank);
@@ -170,7 +170,7 @@ public class SpacecraftToOpmTests
         var end = window.EndDate;
         var sgp4 = tle.ToStateVector(end);
 
-        var propagated = new Spacecraft(-6585, "OPM6585", 1000.0, 3000.0, new Clock("OPM6585_CLK", 65536), tle, cosparId: "1998-067A");
+        var propagated = new Spacecraft(-6585, "OPM6585", 1000.0, tle, 3000.0, new Clock("OPM6585_CLK", 65536), cosparId: "1998-067A");
         propagated.Propagate(window, new PropagationOptions { Integrator = new RK78IntegratorOptions { AbsoluteTolerance = 1e-12, RelativeTolerance = 1e-12 }, OutputStep = TimeSpan.FromSeconds(60.0), ThirdBodies = [earth], CovariancePropagation = CovariancePropagationOptions.None });
         var opm = propagated.ToOpm(epoch: end);
         var read = propagated.GetEphemeris(end, earth, Frame.TEME, Aberration.None);
@@ -182,7 +182,7 @@ public class SpacecraftToOpmTests
         Assert.Equal(read.Velocity.Z / 1000.0, opm.Data.StateVector.ZDot);
         Assert.True(fromSgp4 > 1000.0, $"{fromSgp4:E3} m");
 
-        var sampled = new Spacecraft(-6586, "OPM6586", 1000.0, 3000.0, new Clock("OPM6586_CLK", 65536), tle, cosparId: "1998-067A");
+        var sampled = new Spacecraft(-6586, "OPM6586", 1000.0, tle, 3000.0, new Clock("OPM6586_CLK", 65536), cosparId: "1998-067A");
         new TLEPropagator(window, sampled, TimeSpan.FromSeconds(60.0)).Propagate();
         var sampledOpm = sampled.ToOpm(epoch: end);
         Assert.Equal(sgp4.Position.X / 1000.0, sampledOpm.Data.StateVector.X);

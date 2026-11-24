@@ -561,7 +561,7 @@ public class VariationalPropagationTests : IClassFixture<PartialsTestCases>
     {
         orbit ??= new StateVector(new Vector3(-7378137.0, 0.0, 0.0), new Vector3(0.0, -5509.9, -4623.4), _cases.Earth,
             Start, Frames.Frame.ICRF);
-        var spacecraft = new Spacecraft(naifId, "STM", 1000.0, 3000.0, new Clock("stm", 65536), orbit);
+        var spacecraft = new Spacecraft(naifId, "STM", 1000.0, orbit, 3000.0, new Clock("stm", 65536));
         var tank = new FuelTank("stmtank", "model", "sn1", 1000.0, fuel);
         var engine = new Engine("stmengine", "model", "sn1", 300.0, 10.0, tank);
         spacecraft.AddFuelTank(tank);

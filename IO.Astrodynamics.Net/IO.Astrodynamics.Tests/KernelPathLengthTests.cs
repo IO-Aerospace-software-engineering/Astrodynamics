@@ -82,7 +82,7 @@ public class KernelPathLengthTests : IDisposable
     {
         var earth = new CelestialBody(PlanetsAndMoons.EARTH, Frames.Frame.ICRF, Start);
         var orbit = new StateVector(new Vector3(6800000.0, 0.0, 0.0), new Vector3(0.0, 7656.2204182967143, 0.0), earth, Start, Frames.Frame.ICRF);
-        return new Spacecraft(-8673, "KPL8673", 1000.0, 3000.0, new Clock("KPL8673_CLK", 65536), orbit);
+        return new Spacecraft(-8673, "KPL8673", 1000.0, orbit, 3000.0, new Clock("KPL8673_CLK", 65536));
     }
 
     /// <summary>Writes the kernel of <paramref name="writer"/> to <paramref name="file"/>; the clock kernel of the spacecraft,

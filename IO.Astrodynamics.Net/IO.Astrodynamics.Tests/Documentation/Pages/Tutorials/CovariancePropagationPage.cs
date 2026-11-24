@@ -92,8 +92,8 @@ internal static class CovariancePropagationPage
         var initialState = new StateVector(orbit.Position, orbit.Velocity, earth, epoch, Frame.ICRF,
             orbit.RotateCovarianceFromRtn(rtn));
 
-        var spacecraft = new Spacecraft(-1001, "SAT", 100.0, 1000.0, new Clock("SAT_CLK", 65536), initialState,
-            sectionalArea: 10.0, dragCoeff: 2.2, solarRadiationCoeff: 1.5);
+        var spacecraft = new Spacecraft(-1001, "SAT", 100.0, initialState, 1000.0, new Clock("SAT_CLK", 65536),
+            sectionalArea: 10.0, dragCoefficient: 2.2, solarRadiationCoefficient: 1.5);
         var window = new Window(epoch, epoch.AddHours(6.0));
         var t = epoch.AddHours(6.0);
         #endregion
@@ -158,8 +158,8 @@ internal static class CovariancePropagationPage
         // Inputs: initialState (StateVector), earth (CelestialBody), epoch (Time), window (Window), bodies (CelestialItem[])
         var tank = new FuelTank("TANK", "model", "sn1", 50.0, 50.0);
         var engine = new Engine("ENGINE", "model", "sn1", 300.0, 1.0, tank);
-        var maneuvering = new Spacecraft(-1002, "SAT2", 100.0, 1000.0, new Clock("SAT2_CLK", 65536), initialState,
-            sectionalArea: 10.0, dragCoeff: 2.2, solarRadiationCoeff: 1.5);
+        var maneuvering = new Spacecraft(-1002, "SAT2", 100.0, initialState, 1000.0, new Clock("SAT2_CLK", 65536),
+            sectionalArea: 10.0, dragCoefficient: 2.2, solarRadiationCoefficient: 1.5);
         maneuvering.AddFuelTank(tank);
         maneuvering.AddEngine(engine);
         var raise = new ApogeeHeightManeuver(earth, epoch.AddHours(1.0), TimeSpan.Zero, 6878137.0, engine)
@@ -204,8 +204,8 @@ internal static class CovariancePropagationPage
         if (remediation.Remediated)
             Console.WriteLine($"Smallest eigenvalue of the correlation matrix: {remediation.SmallestCorrelationEigenvalue:E3}");
 
-        var remediated = new Spacecraft(-1003, "SAT3", 100.0, 1000.0, new Clock("SAT3_CLK", 65536), remediation.State,
-            sectionalArea: 10.0, dragCoeff: 2.2, solarRadiationCoeff: 1.5);
+        var remediated = new Spacecraft(-1003, "SAT3", 100.0, remediation.State, 1000.0, new Clock("SAT3_CLK", 65536),
+            sectionalArea: 10.0, dragCoefficient: 2.2, solarRadiationCoefficient: 1.5);
         var fromRemediated = remediated.Propagate(window, new PropagationOptions
         {
             Integrator = new RK78IntegratorOptions { AbsoluteTolerance = 1e-11, RelativeTolerance = 1e-11 },
@@ -236,10 +236,10 @@ internal static class CovariancePropagationPage
                 orbit.RotateCovarianceFromRtn(rtn));
         }
 
-        var protectedCraft = new Spacecraft(-2001, "PROTECTED", 100.0, 1000.0, new Clock("P_CLK", 65536),
-            WithRtnCovariance(protectedOrbit, new[] { 50.0, 200.0, 30.0, 0.2, 0.05, 0.03 }), sectionalArea: 10.0);
-        var secondaryCraft = new Spacecraft(-2002, "SECONDARY", 100.0, 1000.0, new Clock("S_CLK", 65536),
-            WithRtnCovariance(secondaryOrbit, new[] { 80.0, 300.0, 60.0, 0.3, 0.08, 0.05 }), sectionalArea: 10.0);
+        var protectedCraft = new Spacecraft(-2001, "PROTECTED", 100.0, WithRtnCovariance(protectedOrbit, new[] { 50.0, 200.0, 30.0, 0.2, 0.05, 0.03 }), 1000.0,
+            new Clock("P_CLK", 65536), sectionalArea: 10.0);
+        var secondaryCraft = new Spacecraft(-2002, "SECONDARY", 100.0, WithRtnCovariance(secondaryOrbit, new[] { 80.0, 300.0, 60.0, 0.3, 0.08, 0.05 }), 1000.0,
+            new Clock("S_CLK", 65536), sectionalArea: 10.0);
 
         // Both propagated in RK7(8), without the variational equations (None: Auto would propagate the covariance given at the
         // start of the window)

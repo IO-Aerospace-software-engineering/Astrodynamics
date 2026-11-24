@@ -41,7 +41,7 @@ public class PropagatorTests
         Clock clk = new Clock("My clock", 256);
         var earth = new CelestialBody(PlanetsAndMoons.EARTH);
         var orbit = new KeplerianElements(42164000.0, 0, 0, 0, 0, 0, earth, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF);
-        Spacecraft spc = new Spacecraft(-1001, "MySpacecraft", 100.0, 10000.0, clk, orbit);
+        Spacecraft spc = new Spacecraft(-1001, "MySpacecraft", 100.0, orbit, 10000.0, clk);
         var propagator = new Propagator.CentralBodyPropagator(new Window(TimeSystem.Time.J2000TDB, TimeSystem.Time.J2000TDB.AddDays(1)), spc, new PropagationOptions { Integrator = new VVIntegratorOptions { Step = TimeSpan.FromSeconds(10.0) }, OutputStep = TimeSpan.FromSeconds(10.0), ThirdBodies = System.Array.Empty<CelestialItem>() });
         var solution = propagator.Propagate();
         var energy = solution.StateVectors
@@ -58,7 +58,7 @@ public class PropagatorTests
     {
         Clock clk = new Clock("My clock", 256);
         var orbit = new StateVector(new Vector3(6800000.0, 0, 0), new Vector3(0, 7500.0, 0), new CelestialBody(PlanetsAndMoons.EARTH), TimeSystem.Time.J2000TDB, Frames.Frame.ICRF);
-        Spacecraft spc = new Spacecraft(-1001, "MySpacecraft", 100.0, 10000.0, clk, orbit);
+        Spacecraft spc = new Spacecraft(-1001, "MySpacecraft", 100.0, orbit, 10000.0, clk);
         var propagator = new Propagator.CentralBodyPropagator(new Window(TimeSystem.Time.J2000TDB, TimeSystem.Time.J2000TDB.AddHours(2)), spc, new PropagationOptions { Integrator = new VVIntegratorOptions { Step = TimeSpan.FromSeconds(1.0) }, OutputStep = TimeSpan.FromSeconds(1.0), ThirdBodies = [PlanetsAndMoons.MOON_BODY, Stars.SUN_BODY] });
         var solution = propagator.Propagate();
         var orbitalParams = solution.StateVectors.First().RelativeTo(PlanetsAndMoons.EARTH_BODY, Aberration.None) as StateVector;
@@ -70,7 +70,7 @@ public class PropagatorTests
     {
         Clock clk = new Clock("My clock", 256);
         var orbit = new KeplerianElements(150000000000.0, 0, 0, 0, 0, 0, Barycenters.SOLAR_SYSTEM_BARYCENTER, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF);
-        Spacecraft spc = new Spacecraft(-1001, "MySpacecraft", 100.0, 10000.0, clk, orbit);
+        Spacecraft spc = new Spacecraft(-1001, "MySpacecraft", 100.0, orbit, 10000.0, clk);
         var propagator = new Propagator.CentralBodyPropagator(new Window(TimeSystem.Time.J2000TDB, TimeSystem.Time.J2000TDB.AddSeconds(5)), spc, new PropagationOptions { Integrator = new VVIntegratorOptions { Step = TimeSpan.FromSeconds(2.0) }, OutputStep = TimeSpan.FromSeconds(2.0), ThirdBodies = [Barycenters.SOLAR_SYSTEM_BARYCENTER] });
 
         var solution = propagator.Propagate();
@@ -91,7 +91,7 @@ public class PropagatorTests
     {
         Clock clk = new Clock("My clock", 256);
         var orbit = new KeplerianElements(150000000000.0, 0, 0, 0, 0, 0, Barycenters.SOLAR_SYSTEM_BARYCENTER, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF);
-        Spacecraft spc = new Spacecraft(-1001, "MySpacecraft", 100.0, 10000.0, clk, orbit);
+        Spacecraft spc = new Spacecraft(-1001, "MySpacecraft", 100.0, orbit, 10000.0, clk);
 
         var windowStart = TimeSystem.Time.J2000TDB;
         var windowEnd = windowStart.AddSeconds(windowSeconds);
@@ -140,7 +140,7 @@ public class PropagatorTests
             utcEpoch,
             Frames.Frame.ICRF);
 
-        Spacecraft spc = new Spacecraft(-1001, "MySpacecraft", 100.0, 10000.0, clk, orbit);
+        Spacecraft spc = new Spacecraft(-1001, "MySpacecraft", 100.0, orbit, 10000.0, clk);
 
         var endEpoch = utcEpoch.AddHours(2);
         var propWindow = new Window(utcEpoch, endEpoch);
@@ -167,8 +167,8 @@ public class PropagatorTests
         var earth = new CelestialBody(PlanetsAndMoons.EARTH);
         var orbit1 = new StateVector(new Vector3(6800000.0, 0, 0), new Vector3(0, 7500.0, 0), earth, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF);
         var orbit2 = new StateVector(new Vector3(6800000.0, 0, 0), new Vector3(0, 7500.0, 0), earth, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF);
-        Spacecraft spc1 = new Spacecraft(-1001, "MySpacecraft1", 100.0, 10000.0, clk1, orbit1);
-        Spacecraft spc2 = new Spacecraft(-1002, "MySpacecraft2", 100.0, 10000.0, clk2, orbit2);
+        Spacecraft spc1 = new Spacecraft(-1001, "MySpacecraft1", 100.0, orbit1, 10000.0, clk1);
+        Spacecraft spc2 = new Spacecraft(-1002, "MySpacecraft2", 100.0, orbit2, 10000.0, clk2);
 
         var window = new Window(TimeSystem.Time.J2000TDB, TimeSystem.Time.J2000TDB.AddHours(2));
         var deltaT = TimeSpan.FromSeconds(1.0);
@@ -213,7 +213,7 @@ public class PropagatorTests
         var earth = new CelestialBody(PlanetsAndMoons.EARTH);
         var orbit = new StateVector(new Vector3(6800000.0, 0, 0), new Vector3(0, 7500.0, 0),
             earth, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF);
-        Spacecraft spc = new Spacecraft(-1001, "MySpacecraft", 100.0, 10000.0, clk, orbit);
+        Spacecraft spc = new Spacecraft(-1001, "MySpacecraft", 100.0, orbit, 10000.0, clk);
 
         var propagator = new Propagator.CentralBodyPropagator(new Window(TimeSystem.Time.J2000TDB, TimeSystem.Time.J2000TDB.AddHours(2)), spc, new PropagationOptions { Integrator = new VVIntegratorOptions { Step = TimeSpan.FromSeconds(1.0) }, OutputStep = TimeSpan.FromSeconds(1.0), ThirdBodies = [PlanetsAndMoons.MOON_BODY, Stars.SUN_BODY] });
 
@@ -252,7 +252,7 @@ public class PropagatorTests
             new Vector3(2858.1975428173836, 3809.7859312745794, 6002.1266931226886),
             earth, utcEpoch, Frames.Frame.ICRF);
 
-        Spacecraft spc = new Spacecraft(-1001, "LEO_SAT_CB", 100.0, 10000.0, clk, orbit);
+        Spacecraft spc = new Spacecraft(-1001, "LEO_SAT_CB", 100.0, orbit, 10000.0, clk);
 
         var propWindow = new Window(utcEpoch, utcEpoch.AddDays(1));
 
@@ -298,8 +298,8 @@ public class PropagatorTests
             new Vector3(-2727.809889171343, 1386.957738048448, 52.987319351738),
             earth, utcEpoch, Frames.Frame.ICRF);
 
-        Spacecraft spc = new Spacecraft(-1001, "GEO_SAT_CB", 3000.0, 5000.0, clk, orbit,
-            sectionalArea: 50.0, dragCoeff: 2.2, solarRadiationCoeff: 1.5);
+        Spacecraft spc = new Spacecraft(-1001, "GEO_SAT_CB", 3000.0, orbit, 5000.0, clk,
+            sectionalArea: 50.0, dragCoefficient: 2.2, solarRadiationCoefficient: 1.5);
 
         var propWindow = new Window(utcEpoch, utcEpoch.AddDays(1));
 
@@ -348,7 +348,7 @@ public class PropagatorTests
             new Vector3(-1.9441954872554523, -7.255836338283476, 4.534910638063485e-16) * 1000.0,
             earth, utcEpoch, Frames.Frame.ICRF);
 
-        Spacecraft spc = new Spacecraft(-1001, "SSO_SAT_CB", 100.0, 1000.0, clk, orbit);
+        Spacecraft spc = new Spacecraft(-1001, "SSO_SAT_CB", 100.0, orbit, 1000.0, clk);
 
         var propWindow = new Window(utcEpoch, utcEpoch.AddDays(1));
 

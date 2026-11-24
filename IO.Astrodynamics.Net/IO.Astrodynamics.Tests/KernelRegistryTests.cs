@@ -718,7 +718,7 @@ public class KernelRegistryTests : IDisposable
         var folder = new DirectoryInfo(Path.Combine(_root.FullName, "Cks"));
         folder.Create();
         var clock = new Clock("IOA_K1_REG_CLOCK", 65536);
-        var spacecraft = new Spacecraft(-1999724, "IOA_K1_REG", 3000.0, 10000.0, clock, EarthStates(1, 6800000.0)[0]);
+        var spacecraft = new Spacecraft(-1999724, "IOA_K1_REG", 3000.0, EarthStates(1, 6800000.0)[0], 10000.0, clock);
         var clockFile = new FileInfo(Path.Combine(folder.FullName, "clock.tsc"));
         clock.WriteAsync(clockFile).GetAwaiter().GetResult();
         SpiceAPI.Instance.LoadKernels(clockFile);
@@ -756,8 +756,8 @@ public class KernelRegistryTests : IDisposable
     [Fact]
     public void SpacecraftWriteEphemeris_ReplacingALoadedFile_NoLongerListsIt()
     {
-        var spacecraft = new Spacecraft(-1999725, "IOA_K1_REG_SPC", 3000.0, 10000.0, new Clock("IOA_K1_REG_SPC_CLOCK", 65536),
-            EarthStates(1, 6800000.0)[0]);
+        var spacecraft = new Spacecraft(-1999725, "IOA_K1_REG_SPC", 3000.0, EarthStates(1, 6800000.0)[0], 10000.0,
+            new Clock("IOA_K1_REG_SPC_CLOCK", 65536));
         spacecraft.AddPropagatedStates(EarthStates(3, 6800000.0));
         var c = new FileInfo(Path.Combine(_root.FullName, "managed.bsp"));
         spacecraft.WriteEphemeris(c);
@@ -781,7 +781,7 @@ public class KernelRegistryTests : IDisposable
             return;
         }
 
-        var spacecraft = new Spacecraft(naifId, $"IOA_K1R_{-naifId}", 3000.0, 10000.0, new Clock($"IOA_K1R_CLOCK_{-naifId}", 65536), states[0]);
+        var spacecraft = new Spacecraft(naifId, $"IOA_K1R_{-naifId}", 3000.0, states[0], 10000.0, new Clock($"IOA_K1R_CLOCK_{-naifId}", 65536));
         spacecraft.AddPropagatedStates(states);
         spacecraft.WriteEphemeris(file);
     }

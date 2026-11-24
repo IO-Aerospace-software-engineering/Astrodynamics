@@ -131,7 +131,7 @@ public class CovariancePropagationBenchmarks
 
     /// <summary>The spacecraft of the reference cases: 100 kg, 10 m², Cd 2.2, Cr 1.5.</summary>
     internal static Spacecraft NewSpacecraft(int naifId, StateVector start) =>
-        new(naifId, "BENCH" + -naifId, 100.0, 1000.0, new Clock("bench" + -naifId, 65536), start, 10.0, 2.2, null, 1.5);
+        new(naifId, "BENCH" + -naifId, 100.0, start, 1000.0, new Clock("bench" + -naifId, 65536), 10.0, 2.2, null, 1.5);
 
     internal static StateVector State(double semiMajorAxis, double eccentricity, double inclination, double node,
         double argumentOfPerigee, double meanAnomaly, CelestialBody earth) =>

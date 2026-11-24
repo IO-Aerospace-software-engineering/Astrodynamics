@@ -547,7 +547,7 @@ public class StarVelocityTests
         var sun = Stars.SUN_BODY;
         var epoch = new TimeSystem.Time(2026, 11, 17, TimeScale.TDB);
         var aboutStar = new IO.Astrodynamics.OrbitalParameters.StateVector(AboutStarPosition, AboutStarVelocity, barnard, epoch, Frames.Frame.ICRF);
-        var spacecraft = new IO.Astrodynamics.Body.Spacecraft.Spacecraft(-731005, "AboutBarnard", 1000.0, 10000.0, new IO.Astrodynamics.Body.Spacecraft.Clock("clk731", 256), aboutStar);
+        var spacecraft = new IO.Astrodynamics.Body.Spacecraft.Spacecraft(-731005, "AboutBarnard", 1000.0, aboutStar, 10000.0, new IO.Astrodynamics.Body.Spacecraft.Clock("clk731", 256));
 
         // Act
         spacecraft.Propagate(new Window(epoch, epoch.AddHours(6.0)), new PropagationOptions { Integrator = new VVIntegratorOptions { Step = TimeSpan.FromSeconds(60.0) }, OutputStep = TimeSpan.FromSeconds(60.0), ThirdBodies = [sun] });

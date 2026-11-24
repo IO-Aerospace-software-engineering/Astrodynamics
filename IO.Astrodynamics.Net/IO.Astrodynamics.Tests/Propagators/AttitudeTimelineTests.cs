@@ -443,7 +443,7 @@ public class AttitudeTimelineTests
     internal static (Spacecraft, Maneuver.Maneuver[], Dictionary<Maneuver.Maneuver, string>, double Hours) Build(int naifId, string letter, OrbitalParams orbit,
         CelestialBody center)
     {
-        var spacecraft = new Spacecraft(naifId, $"TL{-naifId}", 1000.0, 3000.0, new Clock($"TL{-naifId}_CLK", 65536), orbit, cosparId: "2024-001A");
+        var spacecraft = new Spacecraft(naifId, $"TL{-naifId}", 1000.0, orbit, 3000.0, new Clock($"TL{-naifId}_CLK", 65536), cosparId: "2024-001A");
         var tank = new FuelTank("ft", "model", "sn", 1000.0, 1000.0);
         spacecraft.AddFuelTank(tank);
         var engine = new Engine("eng", "model", "sn", 300.0, 10.0, tank);

@@ -32,18 +32,18 @@ public class InputRangeTests
         foreach (var bad in new[] { double.NaN, PositiveNaN, double.PositiveInfinity, double.NegativeInfinity })
         {
             data.Add("mass", bad);
-            data.Add("maximumOperatingMass", bad);
+            data.Add("maxOperatingMass", bad);
             data.Add("sectionalArea", bad);
-            data.Add("dragCoeff", bad);
-            data.Add("solarRadiationCoeff", bad);
+            data.Add("dragCoefficient", bad);
+            data.Add("solarRadiationCoefficient", bad);
         }
 
         data.Add("mass", -1.0);
-        data.Add("maximumOperatingMass", 99.0);
+        data.Add("maxOperatingMass", 99.0);
         data.Add("sectionalArea", 0.0);
         data.Add("sectionalArea", -1.0);
-        data.Add("dragCoeff", -1.0);
-        data.Add("solarRadiationCoeff", -1.0);
+        data.Add("dragCoefficient", -1.0);
+        data.Add("solarRadiationCoefficient", -1.0);
         return data;
     }
 
@@ -54,10 +54,10 @@ public class InputRangeTests
     private static (double mass, double max, double area, double cd, double cr) Arguments(string parameter, double value) =>
     (
         parameter == "mass" ? value : 100.0,
-        parameter == "maximumOperatingMass" ? value : 1000.0,
+        parameter == "maxOperatingMass" ? value : 1000.0,
         parameter == "sectionalArea" ? value : 1.0,
-        parameter == "dragCoeff" ? value : 2.2,
-        parameter == "solarRadiationCoeff" ? value : 1.0
+        parameter == "dragCoefficient" ? value : 2.2,
+        parameter == "solarRadiationCoefficient" ? value : 1.0
     );
 
     [Theory]
@@ -66,8 +66,8 @@ public class InputRangeTests
     {
         var (mass, max, area, cd, cr) = Arguments(parameter, value);
 
-        var exception = Record.Exception(() => new Spacecraft(-1800, "SC1800", mass, max, new Clock("CLK1800", 65536), Leo(),
-            sectionalArea: area, dragCoeff: cd, solarRadiationCoeff: cr));
+        var exception = Record.Exception(() => new Spacecraft(-1800, "SC1800", mass, Leo(), max, new Clock("CLK1800", 65536),
+            sectionalArea: area, dragCoefficient: cd, solarRadiationCoefficient: cr));
 
         var rejected = Assert.IsType<ArgumentOutOfRangeException>(exception);
         Assert.Equal(parameter, rejected.ParamName);
@@ -84,7 +84,7 @@ public class InputRangeTests
         var (mass, max, area, cd, cr) = Arguments(parameter, value);
 
         var exception = Record.Exception(() => new Spacecraft(-1801, "SC1801", TimeSystem.Time.J2000TDB, mass, max,
-            sectionalArea: area, dragCoeff: cd, solarRadiationCoeff: cr));
+            sectionalArea: area, dragCoefficient: cd, solarRadiationCoefficient: cr));
 
         var rejected = Assert.IsType<ArgumentOutOfRangeException>(exception);
         Assert.Equal(parameter, rejected.ParamName);
@@ -102,11 +102,11 @@ public class InputRangeTests
     [Fact]
     public void Spacecraft_TakesTheBoundsOfTheRanges()
     {
-        var spacecraft = new Spacecraft(-1803, "SC1803", 0.0, 0.0, new Clock("CLK1803", 65536), Leo(), sectionalArea: double.Epsilon,
-            dragCoeff: 0.0, solarRadiationCoeff: 0.0);
+        var spacecraft = new Spacecraft(-1803, "SC1803", 0.0, Leo(), 0.0, new Clock("CLK1803", 65536), sectionalArea: double.Epsilon,
+            dragCoefficient: 0.0, solarRadiationCoefficient: 0.0);
 
         Assert.Equal(0.0, spacecraft.Mass);
-        Assert.Equal(0.0, spacecraft.MaximumOperatingMass);
+        Assert.Equal(0.0, spacecraft.MaxOperatingMass);
         Assert.Equal(double.Epsilon, spacecraft.SectionalArea);
         Assert.Equal(0.0, spacecraft.DragCoefficient);
         Assert.Equal(0.0, spacecraft.SolarRadiationCoeff);
@@ -180,7 +180,7 @@ public class InputRangeTests
     [Fact]
     public void InstrumentAtTheFrameId_OffersARangeWithoutOverflow()
     {
-        var spacecraft = new Spacecraft(-2147483, "SC2147483", 100.0, 1000.0, new Clock("CLK2147483", 65536), Leo());
+        var spacecraft = new Spacecraft(-2147483, "SC2147483", 100.0, Leo(), 1000.0, new Clock("CLK2147483", 65536));
 
         var exception = Record.Exception(() => spacecraft.AddCircularInstrument(-2147483000, "CAM", "M", 0.1, Vector3.VectorZ,
             Vector3.VectorX, Vector3.Zero));

@@ -93,7 +93,7 @@ public class DensityGradientNoiseTests
         var direction = new Vector3(0.0, 0.8, -0.6);
         var state = new StateVector(start, direction * System.Math.Sqrt(body.GM / radius), body, Epoch,
             Frames.Frame.ICRF);
-        var drag = new AtmosphericDrag(new Spacecraft(-1420, "NOISE", 100.0, 1000.0, new Clock("noise", 65536), state,
+        var drag = new AtmosphericDrag(new Spacecraft(-1420, "NOISE", 100.0, state, 1000.0, new Clock("noise", 65536),
             10.0, 2.2, null, 1.0), body);
         return (drag, start, direction, drag.BodyFixedRotation(state));
     }
