@@ -642,24 +642,26 @@ namespace IO.Astrodynamics.Body.Spacecraft
         }
 
         /// <summary>
-        /// The specific impulse of the engines of the spacecraft fired together, s: the sum of the thrusts of the engines
-        /// whose tank holds fuel at the start of a run (an initial quantity above 0) over g0 and over their fuel flows
-        /// (<see cref="GetTotalFuelFlow"/>). Every engine counts from lot L5b, once the tanks refuse a non-finite quantity
-        /// (decision 60 of #668 with L5-20 as amended, decided by S. Guillet, 2026-11-23; #801).
+        /// The specific impulse of the engines of the spacecraft fired together, s: the sum of the thrusts of every engine of
+        /// <see cref="Engines"/> over g0 and over their fuel flows (<see cref="GetTotalFuelFlow"/>), whatever their tanks
+        /// hold (decision 60 of #668 with L5-20 as amended, decided by S. Guillet, 2026-11-23; #801 part 1), so an engine on
+        /// an empty tank counts: engines of 300 s at 10 kg/s and 200 s at 30 kg/s give 225 s whatever the second tank holds.
+        /// Before lot L5b it counted only the engines whose tank held fuel at the start of a run (an initial quantity above
+        /// 0), which left out the engine of a tank of NaN quantity (300 s in that case), a quantity the tanks refuse since
+        /// #800. NaN (0 / 0) for a spacecraft without an engine.
         /// </summary>
         public double GetTotalISP()
         {
-            return (Engines.Where(x => x.FuelTank.InitialQuantity > 0.0).Sum(x => x.Thrust) / Constants.g0) /
-                   GetTotalFuelFlow();
+            return (Engines.Sum(x => x.Thrust) / Constants.g0) / GetTotalFuelFlow();
         }
 
         /// <summary>
-        /// The sum of the fuel flows of the engines of the spacecraft whose tank holds fuel at the start of a run, kg/s; every
-        /// engine from lot L5b (decision 60 of #668, #801).
+        /// The sum of the fuel flows of every engine of the spacecraft, kg/s, whatever their tanks hold (decision 60 of
+        /// #668, #801 part 1; before lot L5b, the engines whose tank held fuel at the start of a run); 0 without an engine.
         /// </summary>
         public double GetTotalFuelFlow()
         {
-            return Engines.Where(x => x.FuelTank.InitialQuantity > 0.0).Sum(x => x.FuelFlow);
+            return Engines.Sum(x => x.FuelFlow);
         }
 
         /// <summary>

@@ -321,9 +321,43 @@ public class RunResultsSurfaceTests
     }
 
     // ---------------------------------------------------------------------------------------------------------------------
-    // Decision 60: the fuel accessors (the drop of the filter of GetTotalISP and GetTotalFuelFlow lands with lot L5b,
-    // after the tanks refuse a non-finite quantity: L5-20 as amended, #801)
+    // Decision 60: the fuel accessors, and GetTotalISP and GetTotalFuelFlow over every engine (lot L5b, after the tanks
+    // refuse a non-finite quantity, #800: L5-20 as amended, #801 part 1)
     // ---------------------------------------------------------------------------------------------------------------------
+
+    /// <summary>
+    /// GetTotalISP and GetTotalFuelFlow count every engine, whatever its tank holds (decision 60 of #668, L5-20 as
+    /// amended, #801 part 1): they counted only the engines whose tank held fuel at the start of a run, which made them
+    /// 0 / 0 when none did. The empty tank is set by reflection, the constructor refusing an initial quantity of 0 in this
+    /// lot: the analog of L5-20, engines of 300 s at 10 kg/s and 200 s at 30 kg/s, 300 s with the filter, 225 s without.
+    /// </summary>
+    [Fact]
+    public void GetTotalISP_AndGetTotalFuelFlow_CountEveryEngine()
+    {
+        var spacecraft = NewSpacecraft(Earth(), out _);
+        var empty = new FuelTank("ftE", "m", "snE", 1000.0, 500.0);
+        spacecraft.AddFuelTank(empty);
+        spacecraft.AddEngine(new Engine("engE", "m", "snE", 200.0, 30.0, empty));
+        typeof(FuelTank).GetField("<InitialQuantity>k__BackingField", Everything)!.SetValue(empty, 0.0);
+
+        Assert.Equal(40.0, spacecraft.GetTotalFuelFlow());
+        Assert.Equal(225.0, spacecraft.GetTotalISP(), 1e-12);
+    }
+
+    /// <summary>
+    /// Without an engine, GetTotalISP is 0 / 0, NaN, as before (#801 part 1 changes the filter only; IC-12 of the gap
+    /// analysis of L5b), and GetTotalFuelFlow 0.
+    /// </summary>
+    [Fact]
+    public void GetTotalISP_WithoutAnEngine_IsNaN()
+    {
+        int id = NextId();
+        var spacecraft = new Spacecraft(id, "RR" + -id, 1000.0, 3000.0, new Clock("RR" + -id, 65536),
+            new KeplerianElements(7000e3, 0.01, 0.5, 0.0, 0.0, 0.0, Earth(), S, Frames.Frame.ICRF));
+
+        Assert.Equal(0.0, spacecraft.GetTotalFuelFlow());
+        Assert.True(double.IsNaN(spacecraft.GetTotalISP()));
+    }
 
     [Fact]
     public void TheFuelAccessors_ReplaceGetTotalFuel()

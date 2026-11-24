@@ -1371,8 +1371,8 @@ Represents a spacecraft with components.
 | `GetTotalMass()` | Get total mass including fuel |
 | `GetInitialFuel()` | The fuel of the spacecraft's own tanks at the start of a run (`GetTotalFuel` before 11.0.0, decision 60 of #668) |
 | `GetRemainingFuel()` | The fuel left in the spacecraft's own tanks |
-| `GetTotalISP()` | Get combined specific impulse |
-| `GetTotalFuelFlow()` | Get combined fuel flow rate |
+| `GetTotalISP()` | The specific impulse of every engine fired together (Σ thrust / g0 / Σ fuel flow), whatever their tanks hold; NaN without an engine (decision 60 of #668, #801) |
+| `GetTotalFuelFlow()` | The fuel flow of every engine, whatever their tanks hold; 0 without an engine |
 | `SetManeuvers(params Maneuver[] maneuvers)` | Set the maneuver plan, in order, which every propagation runs from its first maneuver: the one way to link it (a second call replaces the first, no maneuver clears it, #584); it claims each maneuver for the spacecraft, `ArgumentException` for a maneuver of another spacecraft's plan, a repeated one, an engine whose tank is not the spacecraft's or a target orbit in another frame (decisions 45 and 46 of #668) |
 | `Maneuvers` | The plan, as `SetManeuvers` set it |
 | `Propagate(Window window, PropagationOptions options = null, CancellationToken cancellationToken = default)` | Propagate orbit with the settings of `options` (RK7(8) at 1e-9 about the central body alone, outputs every 60 s, when null), returns `PropagationSolution`; the token stops the run (`OperationCanceledException`, the spacecraft left re-armed and not propagated, R28 of #668) |

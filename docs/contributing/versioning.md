@@ -7276,6 +7276,17 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   before, for 0 or less). Migration: pass finite values in range; a `catch (ArgumentException)` still catches the new
   exception, which derives from it; `Assert.Throws<ArgumentException>` on an engine's or a payload's value or a
   spacecraft's negative mass becomes `Assert.Throws<ArgumentOutOfRangeException>`.
+- **`Spacecraft.GetTotalISP()` and `GetTotalFuelFlow()` count every engine**
+  ([#801](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/801) part 1, lot L5b, decision 60 of
+  #668 with L5-20 as amended, decided by S. Guillet, 2026-11-23): they counted only the engines whose tank held fuel at
+  the start of a run (an initial quantity above 0), and now count every engine of `Engines`, whatever its tank holds. A
+  tank refuses a non-finite quantity since #800 (under **Fixed**), so every spacecraft that can be built gives the same
+  values, bit for bit (the set of engines enumerated in the order of their addition, as before); the filter left out
+  only the engine of a tank of NaN quantity. On a spacecraft that mixes empty and filled tanks the engines on the empty
+  tanks count: engines of 300 s at 10 kg/s and 200 s at 30 kg/s give 225 s whatever the second tank holds, where the
+  filter gave 300 s with that tank empty, so the fuel cost of an avoidance option (`ConjunctionAssessment`, from the
+  specific impulse) rises by about a third in that case. Without an engine `GetTotalISP` stays NaN (0 / 0) and
+  `GetTotalFuelFlow` 0. #801 part 2, the avoidance clone lighter than its dry mass, stays open, fixed after lot L5.
 **Removed**
 
 - **`Instrument.PositionInFOV`** (protected), on which `IsInFOV` was built before #515: its reference vector was not made
