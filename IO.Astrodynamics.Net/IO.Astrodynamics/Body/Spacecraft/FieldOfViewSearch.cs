@@ -2,6 +2,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using IO.Astrodynamics.Frames;
 using IO.Astrodynamics.Occultation;
 using IO.Astrodynamics.TimeSystem;
@@ -105,9 +106,7 @@ internal static class FieldOfViewSearch
     /// angle of 0 at search time.
     /// </remarks>
     /// <exception cref="InvalidOperationException">The angular radius of the field (the
-    /// larger half-angle of a circle or an ellipse, the angle of the corner of a rectangle) exceeds π/2 − 1e-6, or the
-    /// instrument is of a shape other than a circle without being an <see cref="EllipticalInstrument"/> or a
-    /// <see cref="RectangularInstrument"/>, so that its cross angle is unknown.</exception>
+    /// larger half-angle of a circle or an ellipse, the angle of the corner of a rectangle) exceeds π/2 − 1e-6.</exception>
     internal static double CheckField(Instrument instrument)
     {
         double crossAngle = instrument switch
@@ -115,8 +114,10 @@ internal static class FieldOfViewSearch
             EllipticalInstrument elliptical when instrument.Shape == InstrumentShape.Elliptical => elliptical.CrossAngle,
             RectangularInstrument rectangular when instrument.Shape == InstrumentShape.Rectangular => rectangular.CrossAngle,
             _ when instrument.Shape == InstrumentShape.Circular => instrument.FieldOfView,
-            _ => throw new InvalidOperationException(
-                $"The field of view of {instrument.Name} cannot be searched: its cross angle is unknown for the shape {instrument.Shape} of a {instrument.GetType().Name}.")
+            // The hierarchy is closed since 11.0.0 (decision 72 of #668): every instrument is one of the three library
+            // shapes, built by Spacecraft.Add*Instrument with its own shape, so no other instrument reaches this arm
+            _ => throw new UnreachableException(
+                $"The instrument {instrument.Name} is a {instrument.GetType().Name} of the shape {instrument.Shape}, which no Add*Instrument builds.")
         };
 
         // The boresight, the reference vector, the field of view and the cross angle are finite, and the half-angles positive,

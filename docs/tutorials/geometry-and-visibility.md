@@ -132,10 +132,11 @@ the windows of CSPICE's `gftfov`, to 1 µs.
 ### Setting up an instrument
 
 Instruments are added to a spacecraft by `AddCircularInstrument`,
-`AddEllipticalInstrument` or `AddRectangularInstrument`. Each has a NAIF
-identifier, a name, a model, its half-angles, and three vectors: the boresight
+`AddEllipticalInstrument` or `AddRectangularInstrument`, which return the
+instrument. Each has a name, its half-angles, and three vectors: the boresight
 and the reference vector in the instrument frame, and the orientation of the
-instrument frame in the spacecraft frame:
+instrument frame in the spacecraft frame (zero by default); its NAIF identifier
+is by default the first free NaifId × 1000 − n, and its model is optional:
 
 ```csharp
 // Inputs: spacecraft (Spacecraft)

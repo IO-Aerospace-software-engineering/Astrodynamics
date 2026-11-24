@@ -68,7 +68,7 @@ public class TriadAttitudeTests
     public void Constructor_WithInstrument_CreatesValidManeuver()
     {
         var (spc, orbitalParams) = CreateTestSpacecraft();
-        spc.AddCircularInstrument(-667600, "CAM", "mod1", 1.5, Vector3.VectorZ, Vector3.VectorY, Vector3.Zero);
+        spc.AddCircularInstrument("CAM", 1.5, Vector3.VectorZ, Vector3.VectorY, Vector3.Zero, naifId: -667600, model: "mod1");
 
         var maneuver = new TriadAttitude(
             new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB),
@@ -89,8 +89,8 @@ public class TriadAttitudeTests
     public void Constructor_WithDualInstruments_CreatesValidManeuver()
     {
         var (spc, orbitalParams) = CreateTestSpacecraft();
-        spc.AddCircularInstrument(-667600, "CAM1", "mod1", 1.5, Vector3.VectorZ, Vector3.VectorY, Vector3.Zero);
-        spc.AddCircularInstrument(-667601, "CAM2", "mod1", 1.5, Vector3.VectorX, Vector3.VectorY, Vector3.Zero);
+        spc.AddCircularInstrument("CAM1", 1.5, Vector3.VectorZ, Vector3.VectorY, Vector3.Zero, naifId: -667600, model: "mod1");
+        spc.AddCircularInstrument("CAM2", 1.5, Vector3.VectorX, Vector3.VectorY, Vector3.Zero, naifId: -667601, model: "mod1");
 
         var instruments = spc.Instruments.ToList();
         var maneuver = new TriadAttitude(
@@ -130,7 +130,7 @@ public class TriadAttitudeTests
     public void Constructor_NullPrimaryTarget_ThrowsArgumentNullException()
     {
         var (spc, _) = CreateTestSpacecraft();
-        spc.AddCircularInstrument(-667600, "CAM", "mod1", 1.5, Vector3.VectorZ, Vector3.VectorY, Vector3.Zero);
+        spc.AddCircularInstrument("CAM", 1.5, Vector3.VectorZ, Vector3.VectorY, Vector3.Zero, naifId: -667600, model: "mod1");
 
         Assert.Throws<ArgumentNullException>(() => new TriadAttitude(
             new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB),
@@ -145,7 +145,7 @@ public class TriadAttitudeTests
     public void Constructor_NullSecondaryTarget_ThrowsArgumentNullException()
     {
         var (spc, _) = CreateTestSpacecraft();
-        spc.AddCircularInstrument(-667600, "CAM", "mod1", 1.5, Vector3.VectorZ, Vector3.VectorY, Vector3.Zero);
+        spc.AddCircularInstrument("CAM", 1.5, Vector3.VectorZ, Vector3.VectorY, Vector3.Zero, naifId: -667600, model: "mod1");
 
         Assert.Throws<ArgumentNullException>(() => new TriadAttitude(
             new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB),
@@ -316,7 +316,7 @@ public class TriadAttitudeTests
     public void Execute_PrimaryVectorPointsAtPrimaryTarget()
     {
         var (spc, orbitalParams) = CreateTestSpacecraft();
-        spc.AddCircularInstrument(-667600, "CAM", "mod1", 1.5, Vector3.VectorZ, Vector3.VectorY, Vector3.Zero);
+        spc.AddCircularInstrument("CAM", 1.5, Vector3.VectorZ, Vector3.VectorY, Vector3.Zero, naifId: -667600, model: "mod1");
 
         var maneuver = new TriadAttitude(
             new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB),
@@ -344,7 +344,7 @@ public class TriadAttitudeTests
     public void Execute_SecondaryVectorLiesInConstraintPlane()
     {
         var (spc, orbitalParams) = CreateTestSpacecraft();
-        spc.AddCircularInstrument(-667600, "CAM", "mod1", 1.5, Vector3.VectorZ, Vector3.VectorY, Vector3.Zero);
+        spc.AddCircularInstrument("CAM", 1.5, Vector3.VectorZ, Vector3.VectorY, Vector3.Zero, naifId: -667600, model: "mod1");
 
         var maneuver = new TriadAttitude(
             new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB),
@@ -386,7 +386,7 @@ public class TriadAttitudeTests
     public void Execute_QuaternionIsNormalized()
     {
         var (spc, orbitalParams) = CreateTestSpacecraft();
-        spc.AddCircularInstrument(-667600, "CAM", "mod1", 1.5, Vector3.VectorZ, Vector3.VectorY, Vector3.Zero);
+        spc.AddCircularInstrument("CAM", 1.5, Vector3.VectorZ, Vector3.VectorY, Vector3.Zero, naifId: -667600, model: "mod1");
 
         var maneuver = new TriadAttitude(
             new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB),
@@ -409,7 +409,7 @@ public class TriadAttitudeTests
     public void Execute_RotationMatrixIsOrthogonal()
     {
         var (spc, orbitalParams) = CreateTestSpacecraft();
-        spc.AddCircularInstrument(-667600, "CAM", "mod1", 1.5, Vector3.VectorZ, Vector3.VectorY, Vector3.Zero);
+        spc.AddCircularInstrument("CAM", 1.5, Vector3.VectorZ, Vector3.VectorY, Vector3.Zero, naifId: -667600, model: "mod1");
 
         var maneuver = new TriadAttitude(
             new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB),
@@ -444,7 +444,7 @@ public class TriadAttitudeTests
     public void Execute_ProducesDifferentRollThanSingleVector()
     {
         var (spc, orbitalParams) = CreateTestSpacecraft();
-        spc.AddCircularInstrument(-667600, "CAM", "mod1", 1.5, Vector3.VectorZ, Vector3.VectorY, Vector3.Zero);
+        spc.AddCircularInstrument("CAM", 1.5, Vector3.VectorZ, Vector3.VectorY, Vector3.Zero, naifId: -667600, model: "mod1");
 
         // TRIAD pointing (fully constrained - uses both boresight and refVector)
         var triadManeuver = new TriadAttitude(
@@ -502,7 +502,7 @@ public class TriadAttitudeTests
 
         // Primary: nadir-pointing camera (Z-axis)
         // Secondary: solar panel normal (Y-axis toward Sun)
-        spc.AddCircularInstrument(-667600, "NadirCam", "mod1", 1.5, Vector3.VectorZ, Vector3.VectorY, Vector3.Zero);
+        spc.AddCircularInstrument("NadirCam", 1.5, Vector3.VectorZ, Vector3.VectorY, Vector3.Zero, naifId: -667600, model: "mod1");
 
         var maneuver = new TriadAttitude(
             new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB),
@@ -535,8 +535,8 @@ public class TriadAttitudeTests
         // Two instruments pointing at different celestial bodies
         var (spc, orbitalParams) = CreateTestSpacecraft();
 
-        spc.AddCircularInstrument(-667600, "LunarCam", "mod1", 1.5, Vector3.VectorZ, Vector3.VectorY, Vector3.Zero);
-        spc.AddCircularInstrument(-667601, "SunSensor", "mod1", 0.5, Vector3.VectorX, Vector3.VectorY, Vector3.Zero);
+        spc.AddCircularInstrument("LunarCam", 1.5, Vector3.VectorZ, Vector3.VectorY, Vector3.Zero, naifId: -667600, model: "mod1");
+        spc.AddCircularInstrument("SunSensor", 0.5, Vector3.VectorX, Vector3.VectorY, Vector3.Zero, naifId: -667601, model: "mod1");
 
         var instruments = spc.Instruments.ToList();
         var maneuver = new TriadAttitude(
@@ -569,7 +569,7 @@ public class TriadAttitudeTests
     public void Execute_AttitudeAtMultipleEpochs()
     {
         var (spc, _) = CreateTestSpacecraft();
-        spc.AddCircularInstrument(-667600, "CAM", "mod1", 1.5, Vector3.VectorZ, Vector3.VectorY, Vector3.Zero);
+        spc.AddCircularInstrument("CAM", 1.5, Vector3.VectorZ, Vector3.VectorY, Vector3.Zero, naifId: -667600, model: "mod1");
 
         var epochs = new[]
         {
@@ -640,7 +640,7 @@ public class TriadAttitudeTests
     public void Execute_NumericalStability_RepeatedCallsConsistent()
     {
         var (spc, orbitalParams) = CreateTestSpacecraft();
-        spc.AddCircularInstrument(-667600, "CAM", "mod1", 1.5, Vector3.VectorZ, Vector3.VectorY, Vector3.Zero);
+        spc.AddCircularInstrument("CAM", 1.5, Vector3.VectorZ, Vector3.VectorY, Vector3.Zero, naifId: -667600, model: "mod1");
 
         var maneuver = new TriadAttitude(
             new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB),
@@ -672,7 +672,7 @@ public class TriadAttitudeTests
     public void Execute_ManeuverWindowSet()
     {
         var (spc, orbitalParams) = CreateTestSpacecraft();
-        spc.AddCircularInstrument(-667600, "CAM", "mod1", 1.5, Vector3.VectorZ, Vector3.VectorY, Vector3.Zero);
+        spc.AddCircularInstrument("CAM", 1.5, Vector3.VectorZ, Vector3.VectorY, Vector3.Zero, naifId: -667600, model: "mod1");
 
         var maneuver = new TriadAttitude(
             new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB),
@@ -1504,8 +1504,8 @@ public class TriadAttitudeTests
     public void Separation_OutOfRange_Throws(double separation)
     {
         var (spc, _) = CreateTestSpacecraft();
-        spc.AddCircularInstrument(-667600, "CAM1", "mod1", 1.5, Vector3.VectorZ, Vector3.VectorY, Vector3.Zero);
-        spc.AddCircularInstrument(-667601, "CAM2", "mod1", 1.5, Vector3.VectorX, Vector3.VectorY, Vector3.Zero);
+        spc.AddCircularInstrument("CAM1", 1.5, Vector3.VectorZ, Vector3.VectorY, Vector3.Zero, naifId: -667600, model: "mod1");
+        spc.AddCircularInstrument("CAM2", 1.5, Vector3.VectorX, Vector3.VectorY, Vector3.Zero, naifId: -667601, model: "mod1");
         var instruments = spc.Instruments.ToList();
         var epoch = new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB);
         var hold = TimeSpan.FromHours(1.0);

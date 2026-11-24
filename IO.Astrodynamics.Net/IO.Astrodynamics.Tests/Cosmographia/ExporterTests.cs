@@ -102,7 +102,7 @@ public class ExporterTests
             new Clock("clockspc1", 256));
 
         //Configure and attach an instrument to the spacecraft
-        spacecraft.AddRectangularInstrument(-334100, "camera_hires", "camdeluxe", 0.03, 0.048, Vector3.VectorZ, Vector3.VectorY, Vector3.Zero);
+        spacecraft.AddRectangularInstrument("camera_hires", 0.03, 0.048, Vector3.VectorZ, Vector3.VectorY, Vector3.Zero, naifId: -334100, model: "camdeluxe");
 
         //Add a fuel tank
         spacecraft.AddFuelTank(new FuelTank("fuelTank1", "fuelTankModel", "456", 2000.0, 2000.0));
@@ -149,7 +149,7 @@ public class ExporterTests
         scenario.AddCelestialItem(TestHelpers.EarthAtJ2000);
         Spacecraft spacecraft = new Spacecraft(-334, "Spacecraft", 1000.0, new KeplerianElements(11800000.0, 0.3, 1.0, 0.0, 0.0, 0.0, TestHelpers.EarthAtJ2000, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF), 2000.0,
             new Clock("clockspc1", 256));
-        spacecraft.AddCircularInstrument(-334100, "Antenna", "antdeluxe", 0.2, Vector3.VectorZ, Vector3.VectorY, Vector3.Zero);
+        spacecraft.AddCircularInstrument("Antenna", 0.2, Vector3.VectorZ, Vector3.VectorY, Vector3.Zero, naifId: -334100, model: "antdeluxe");
         spacecraft.AddFuelTank(new FuelTank("fuelTank1", "fuelTankModel", "456", 2000.0, 2000.0));
         spacecraft.AddEngine(new Engine("engine1", "engineModel", "1234", 450, 50.0, spacecraft.FuelTanks.First()));
         scenario.AddSpacecraft(spacecraft);
@@ -197,7 +197,7 @@ public class ExporterTests
         spacecraft1.AddFuelTank(fuelTank1);
         spacecraft1.AddEngine(engine1);
         spacecraft1.AddPayload(new Payload("payload1", 50.0, "pay01"));
-        spacecraft1.AddCircularInstrument(-1790601, "CAM601", "mod1", 10.0 * IO.Astrodynamics.Constants.Deg2Rad, Vector3.VectorZ, Vector3.VectorX, Vector3.VectorX);
+        spacecraft1.AddCircularInstrument("CAM601", 10.0 * IO.Astrodynamics.Constants.Deg2Rad, Vector3.VectorZ, Vector3.VectorX, Vector3.VectorX, naifId: -1790601, model: "mod1");
         scenario.AddSpacecraft(spacecraft1);
 
         //Create and configure spacecraft2
@@ -210,7 +210,7 @@ public class ExporterTests
         spacecraft2.AddFuelTank(fuelTank2);
         spacecraft2.AddEngine(engine2);
         spacecraft2.AddPayload(new Payload("payload1", 50.0, "pay01"));
-        spacecraft2.AddCircularInstrument(-1791602, "CAM602", "mod1", 10.0 * IO.Astrodynamics.Constants.Deg2Rad, Vector3.VectorY, Vector3.VectorX, Vector3.Zero);
+        spacecraft2.AddCircularInstrument("CAM602", 10.0 * IO.Astrodynamics.Constants.Deg2Rad, Vector3.VectorY, Vector3.VectorX, Vector3.Zero, naifId: -1791602, model: "mod1");
 
         var planeAlignmentManeuver = new PlaneAlignmentManeuver(new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB), TimeSpan.Zero,
             targetOrbit, spacecraft2.Engines.First());

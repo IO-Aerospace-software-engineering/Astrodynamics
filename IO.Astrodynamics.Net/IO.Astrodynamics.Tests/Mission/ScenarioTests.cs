@@ -149,7 +149,7 @@ namespace IO.Astrodynamics.Tests.Mission
             spacecraft.AddFuelTank(fuelTank);
             spacecraft.AddEngine(engine);
             spacecraft.AddPayload(new Payload("payload1", 50.0, "pay01"));
-            spacecraft.AddCircularInstrument(-1783601, "CAM601", "mod1", 80.0 * IO.Astrodynamics.Constants.Deg2Rad, Vector3.VectorZ, Vector3.VectorX, Vector3.VectorX);
+            spacecraft.AddCircularInstrument("CAM601", 80.0 * IO.Astrodynamics.Constants.Deg2Rad, Vector3.VectorZ, Vector3.VectorX, Vector3.VectorX, naifId: -1783601, model: "mod1");
 
             var planeAlignmentManeuver =
                 new PlaneAlignmentManeuver(new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB), TimeSpan.Zero, targetOrbit, spacecraft.Engines.First());
@@ -365,7 +365,7 @@ namespace IO.Astrodynamics.Tests.Mission
             spacecraft.AddFuelTank(fuelTank);
             spacecraft.AddEngine(engine);
             spacecraft.AddPayload(new Payload("payload1", 50.0, "pay01"));
-            spacecraft.AddCircularInstrument(-1783601, "CAM601", "mod1", 80.0 * IO.Astrodynamics.Constants.Deg2Rad, Vector3.VectorZ, Vector3.VectorX, Vector3.VectorX);
+            spacecraft.AddCircularInstrument("CAM601", 80.0 * IO.Astrodynamics.Constants.Deg2Rad, Vector3.VectorZ, Vector3.VectorX, Vector3.VectorX, naifId: -1783601, model: "mod1");
 
             var planeAlignmentManeuver =
                 new PlaneAlignmentManeuver(new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB), TimeSpan.Zero, targetOrbit, spacecraft.Engines.First());
@@ -523,7 +523,7 @@ namespace IO.Astrodynamics.Tests.Mission
             spacecraft.AddFuelTank(fuelTank);
             spacecraft.AddEngine(engine);
             spacecraft.AddPayload(new Payload("payload1", 50.0, "pay01"));
-            spacecraft.AddCircularInstrument(-1785601, "CAM601", "mod1", 80.0 * IO.Astrodynamics.Constants.Deg2Rad, Vector3.VectorZ, Vector3.VectorX, Vector3.VectorX);
+            spacecraft.AddCircularInstrument("CAM601", 80.0 * IO.Astrodynamics.Constants.Deg2Rad, Vector3.VectorZ, Vector3.VectorX, Vector3.VectorX, naifId: -1785601, model: "mod1");
 
             scenario.AddSpacecraft(spacecraft);
             var summary = scenario.Simulate(new PropagationOptions { Integrator = new VVIntegratorOptions { Step = TimeSpan.FromSeconds(1.0) }, OutputStep = TimeSpan.FromSeconds(1.0) });

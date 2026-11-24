@@ -32,7 +32,7 @@ public class InstrumentPointingAttitudeTests
         FuelTank fuelTank10 = new FuelTank("My fuel tank10", "ft2021", "sn0", 4000.0, 3000.0);
         Engine eng = new Engine("My engine", "model 1", "sn1", 350.0, 50.0, fuelTank10);
         var spc = TestHelpers.Spacecraft;
-        spc.AddCircularInstrument(-172600, "CAM602", "mod1", 1.5, Vector3.VectorZ, Vector3.VectorY, new Vector3(0.0, -System.Math.PI * 0.5, 0.0));
+        spc.AddCircularInstrument("CAM602", 1.5, Vector3.VectorZ, Vector3.VectorY, new Vector3(0.0, -System.Math.PI * 0.5, 0.0), naifId: -172600, model: "mod1");
         InstrumentPointingToAttitude attitude =
             new InstrumentPointingToAttitude(new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB), TimeSpan.FromHours(1.0), spc.Instruments.First(), TestHelpers.EarthAtJ2000, eng);
         LabelAssert.Equal(new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB), attitude.MinimumEpoch);
@@ -58,7 +58,7 @@ public class InstrumentPointingAttitudeTests
         spc.AddFuelTank(new FuelTank("ft", "ftA", "123456", 1000.0, 900.0));
         spc.AddEngine(new Engine("eng", "engmk1", "12345", 450, 50, spc.FuelTanks.First()));
 
-        spc.AddCircularInstrument(-666600, "inst", "instmodel", 1.57, Vector3.VectorZ, Vector3.VectorY, new Vector3(x, y, z));
+        spc.AddCircularInstrument("inst", 1.57, Vector3.VectorZ, Vector3.VectorY, new Vector3(x, y, z), naifId: -666600, model: "instmodel");
         InstrumentPointingToAttitude maneuver =
             new InstrumentPointingToAttitude(new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB), TimeSpan.FromSeconds(10.0), spc.Instruments.First(), TestHelpers.MoonAtJ2000, spc.Engines.First());
         Assert.Equal(Aberration.LT, maneuver.Aberration);
@@ -120,7 +120,7 @@ public class InstrumentPointingAttitudeTests
         var spc = new Spacecraft(id, $"PT{-id}", 1000.0, state, 3000.0, new Clock($"PT{-id}_CLK", 65536));
         spc.AddFuelTank(new FuelTank("ft", "ftA", "123456", 1000.0, 900.0));
         spc.AddEngine(new Engine("eng", "engmk1", "12345", 450, 50, spc.FuelTanks.First()));
-        spc.AddCircularInstrument(id * 1000 - 1, "inst", "instmodel", 0.5, Vector3.VectorZ, Vector3.VectorY, new Vector3(0.3, 0.5, 0.2));
+        spc.AddCircularInstrument("inst", 0.5, Vector3.VectorZ, Vector3.VectorY, new Vector3(0.3, 0.5, 0.2), naifId: id * 1000 - 1, model: "instmodel");
         return (spc, spc.Instruments.First());
     }
 
@@ -233,7 +233,7 @@ public class InstrumentPointingAttitudeTests
     public void RejectsAnUnknownAberration()
     {
         var spc = TestHelpers.Spacecraft;
-        spc.AddCircularInstrument(-172601, "CAM603", "mod1", 1.5, Vector3.VectorZ, Vector3.VectorY, Vector3.Zero);
+        spc.AddCircularInstrument("CAM603", 1.5, Vector3.VectorZ, Vector3.VectorY, Vector3.Zero, naifId: -172601, model: "mod1");
         var tank = new FuelTank("ft", "ftA", "123456", 1000.0, 900.0);
         var engine = new Engine("eng", "engmk1", "12345", 450, 50, tank);
         var exception = Assert.Throws<ArgumentOutOfRangeException>(() => new InstrumentPointingToAttitude(new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB),

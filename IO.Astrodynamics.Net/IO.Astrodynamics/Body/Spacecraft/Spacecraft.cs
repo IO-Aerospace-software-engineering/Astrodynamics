@@ -402,94 +402,184 @@ namespace IO.Astrodynamics.Body.Spacecraft
         }
 
         /// <summary>
-        /// Add circular instrument to spacecraft
+        /// Adds a circular instrument to the spacecraft and returns it (decision 72 of #668, decided by S. Guillet,
+        /// 2026-11-23; before 11.0.0 the method returned nothing and took the id and the model first).
         /// </summary>
-        /// <param name="naifId"></param>
-        /// <param name="name"></param>
-        /// <param name="model"></param>
-        /// <param name="fieldOfView"></param>
-        /// <param name="boresight"></param>
-        /// <param name="refVector"></param>
-        /// <param name="orientation">The Euler angles (x, y, z) in radians about the axes 1, 2, 3 of the frame kernel, finite: <see cref="Instrument.Orientation"/></param>
-        /// <exception cref="ArgumentException">The name or the model is empty, the instrument was already added, or, naming the
-        /// parameter, the field of view is not a finite positive number, the boresight or the reference vector has a component
-        /// that is not finite or a magnitude of 0, or the reference vector is parallel to the boresight: the fields CSPICE's
-        /// <c>getfov</c> rejects (#707; before 11.0.0 the instrument was added and the search threw); or an Euler angle of
-        /// <paramref name="orientation"/> is not finite, which has no rotation and which SPICE cannot read in the frame kernel
-        /// (#715; before 11.0.0 the instrument was added with a NaN rotation).</exception>
+        /// <param name="name">The name of the instrument, unique on the spacecraft on its invariant upper-cased form</param>
+        /// <param name="fieldOfView">The half-angle of the circle, rad: finite and positive</param>
+        /// <param name="boresight">The boresight, in the instrument frame: finite components, a non-zero magnitude</param>
+        /// <param name="refVector">The reference vector, in the instrument frame: finite components, a non-zero magnitude,
+        /// not parallel to the boresight</param>
+        /// <param name="orientation">The Euler angles (x, y, z) in radians about the axes 1, 2, 3 of the frame kernel, finite:
+        /// <see cref="Instrument.Orientation"/>; zero by default, the instrument frame the spacecraft frame</param>
+        /// <param name="naifId">The NAIF id of the instrument; by default the smallest free NaifId × 1000 − n, n in
+        /// [1, 999] (NAIF IDs Required Reading, "Instruments"). Required on a kernel-backed spacecraft</param>
+        /// <param name="model">The model of the instrument, informational; null by default</param>
+        /// <returns>The instrument added.</returns>
+        /// <exception cref="ArgumentNullException"><paramref name="naifId"/> is null on a kernel-backed spacecraft
+        /// (decision 73 of #668): <c>gftfov</c> reads the instrument kernel loaded under the id, and a default id could
+        /// read another instrument of the mission's kernel.</exception>
+        /// <exception cref="InvalidOperationException"><paramref name="naifId"/> is null and no id NaifId × 1000 − n,
+        /// n in [1, 999], is free (or an int): pass <paramref name="naifId"/>.</exception>
+        /// <exception cref="ArgumentException">Naming the parameter: <paramref name="naifId"/> is the id of another
+        /// instrument of the spacecraft; <paramref name="name"/> has the invariant upper-cased form of the name of another
+        /// of its instruments (decision 74 of #668: both kernels would assign FRAME_&lt;SPACECRAFT&gt;_&lt;INSTRUMENT&gt;,
+        /// and write the same file on a case-insensitive file system), or is empty; the field of view is not a finite
+        /// positive number, the boresight or the reference vector has a component that is not finite or a magnitude of 0,
+        /// or the reference vector is parallel to the boresight: the fields CSPICE's <c>getfov</c> rejects (#707); or an
+        /// Euler angle of <paramref name="orientation"/> is not finite (#715).</exception>
         /// <exception cref="ArgumentOutOfRangeException"><paramref name="naifId"/> is not negative, or is the id of the
-        /// spacecraft frame, NaifId × 1000, which the instrument frame kernel would define relative to itself (#676); an
-        /// instrument id of NAIF's convention is NaifId × 1000 − n, n in [1, 999] (NAIF IDs Required Reading, "Instruments").</exception>
-        public void AddCircularInstrument(int naifId, string name, string model, double fieldOfView, in Vector3 boresight, in Vector3 refVector, in Vector3 orientation)
+        /// spacecraft frame, NaifId × 1000, which the instrument frame kernel would define relative to itself
+        /// (#676).</exception>
+        public CircularInstrument AddCircularInstrument(string name, double fieldOfView, in Vector3 boresight, in Vector3 refVector,
+            in Vector3 orientation = default, int? naifId = null, string model = null)
         {
-            if (!_instruments.Add(new CircularInstrument(this, naifId, name, model, fieldOfView, boresight, refVector, orientation)))
-            {
-                throw new ArgumentException("Instrument already added to spacecraft");
-            }
+            int id = InstrumentIdToAdd(naifId, name);
+            return AddInstrument(new CircularInstrument(this, id, name, model, fieldOfView, boresight, refVector, orientation));
         }
 
         /// <summary>
-        /// Add rectangular instrument
+        /// Adds a rectangular instrument to the spacecraft and returns it (decision 72 of #668, decided by S. Guillet,
+        /// 2026-11-23; before 11.0.0 the method returned nothing and took the id and the model first).
         /// </summary>
-        /// <param name="naifId"></param>
-        /// <param name="name"></param>
-        /// <param name="model"></param>
-        /// <param name="fieldOfView">The half-angle in the plane of the boresight and the reference vector (<c>FOV_REF_ANGLE</c>), rad</param>
+        /// <param name="name">The name of the instrument, unique on the spacecraft on its invariant upper-cased form</param>
+        /// <param name="fieldOfView">The half-angle in the plane of the boresight and the reference vector
+        /// (<c>FOV_REF_ANGLE</c>), rad: finite and positive</param>
         /// <param name="crossAngle">The half-angle across that plane (<c>FOV_CROSS_ANGLE</c>), rad: finite and positive</param>
-        /// <param name="boresight"></param>
-        /// <param name="refVector"></param>
-        /// <param name="orientation">The Euler angles (x, y, z) in radians about the axes 1, 2, 3 of the frame kernel, finite: <see cref="Instrument.Orientation"/></param>
-        /// <exception cref="ArgumentException">The name or the model is empty, the instrument was already added, or, naming the
-        /// parameter, the field of view is not a finite positive number, the boresight or the reference vector has a component
-        /// that is not finite or a magnitude of 0, or the reference vector is parallel to the boresight: the fields CSPICE's
-        /// <c>getfov</c> rejects (#707; before 11.0.0 the instrument was added and the search threw); or an Euler angle of
-        /// <paramref name="orientation"/> is not finite, which has no rotation and which SPICE cannot read in the frame kernel
-        /// (#715; before 11.0.0 the instrument was added with a NaN rotation).</exception>
+        /// <param name="boresight">The boresight, in the instrument frame: finite components, a non-zero magnitude</param>
+        /// <param name="refVector">The reference vector, in the instrument frame: finite components, a non-zero magnitude,
+        /// not parallel to the boresight</param>
+        /// <param name="orientation">The Euler angles (x, y, z) in radians about the axes 1, 2, 3 of the frame kernel, finite:
+        /// <see cref="Instrument.Orientation"/>; zero by default, the instrument frame the spacecraft frame</param>
+        /// <param name="naifId">The NAIF id of the instrument; by default the smallest free NaifId × 1000 − n, n in
+        /// [1, 999] (NAIF IDs Required Reading, "Instruments"). Required on a kernel-backed spacecraft</param>
+        /// <param name="model">The model of the instrument, informational; null by default</param>
+        /// <returns>The instrument added.</returns>
+        /// <exception cref="ArgumentNullException"><paramref name="naifId"/> is null on a kernel-backed spacecraft
+        /// (decision 73 of #668): <c>gftfov</c> reads the instrument kernel loaded under the id, and a default id could
+        /// read another instrument of the mission's kernel.</exception>
+        /// <exception cref="InvalidOperationException"><paramref name="naifId"/> is null and no id NaifId × 1000 − n,
+        /// n in [1, 999], is free (or an int): pass <paramref name="naifId"/>.</exception>
+        /// <exception cref="ArgumentException">Naming the parameter: <paramref name="naifId"/> is the id of another
+        /// instrument of the spacecraft; <paramref name="name"/> has the invariant upper-cased form of the name of another
+        /// of its instruments (decision 74 of #668: both kernels would assign FRAME_&lt;SPACECRAFT&gt;_&lt;INSTRUMENT&gt;,
+        /// and write the same file on a case-insensitive file system), or is empty; the field of view is not a finite
+        /// positive number, the boresight or the reference vector has a component that is not finite or a magnitude of 0,
+        /// or the reference vector is parallel to the boresight: the fields CSPICE's <c>getfov</c> rejects (#707); or an
+        /// Euler angle of <paramref name="orientation"/> is not finite (#715).</exception>
         /// <exception cref="ArgumentOutOfRangeException"><paramref name="naifId"/> is not negative, or is the id of the
-        /// spacecraft frame, NaifId × 1000, which the instrument frame kernel would define relative to itself (#676); an
-        /// instrument id of NAIF's convention is NaifId × 1000 − n, n in [1, 999] (NAIF IDs Required Reading, "Instruments");
-        /// or <paramref name="crossAngle"/> is not a finite positive number: SPICE cannot read a NaN or an infinity in the
-        /// kernel (#707), and a cross angle of 0 or −0 is a field of no width, which <c>gftfov</c> rejects or searches as a
-        /// segment depending on the rounding of the boresight (#715; before 11.0.0 +0 was accepted and the search threw).</exception>
-        public void AddRectangularInstrument(int naifId, string name, string model, double fieldOfView, double crossAngle, in Vector3 boresight, in Vector3 refVector,
-            in Vector3 orientation)
+        /// spacecraft frame, NaifId × 1000, which the instrument frame kernel would define relative to itself (#676); or
+        /// <paramref name="crossAngle"/> is not a finite positive number: SPICE cannot read a NaN or an infinity in the
+        /// kernel (#707), and a cross angle of 0 or −0 is a field of no width (#715).</exception>
+        public RectangularInstrument AddRectangularInstrument(string name, double fieldOfView, double crossAngle, in Vector3 boresight,
+            in Vector3 refVector, in Vector3 orientation = default, int? naifId = null, string model = null)
         {
-            if (!_instruments.Add(new RectangularInstrument(this, naifId, name, model, fieldOfView, crossAngle, boresight, refVector, orientation)))
-            {
-                throw new ArgumentException("Instrument already added to spacecraft");
-            }
+            int id = InstrumentIdToAdd(naifId, name);
+            return AddInstrument(new RectangularInstrument(this, id, name, model, fieldOfView, crossAngle, boresight, refVector, orientation));
         }
 
         /// <summary>
-        /// Add elliptical instrument
+        /// Adds a elliptical instrument to the spacecraft and returns it (decision 72 of #668, decided by S. Guillet,
+        /// 2026-11-23; before 11.0.0 the method returned nothing and took the id and the model first).
         /// </summary>
-        /// <param name="naifId"></param>
-        /// <param name="name"></param>
-        /// <param name="model"></param>
-        /// <param name="fieldOfView">The half-angle in the plane of the boresight and the reference vector (<c>FOV_REF_ANGLE</c>), rad</param>
+        /// <param name="name">The name of the instrument, unique on the spacecraft on its invariant upper-cased form</param>
+        /// <param name="fieldOfView">The half-angle in the plane of the boresight and the reference vector
+        /// (<c>FOV_REF_ANGLE</c>), rad: finite and positive</param>
         /// <param name="crossAngle">The half-angle across that plane (<c>FOV_CROSS_ANGLE</c>), rad: finite and positive</param>
-        /// <param name="boresight"></param>
-        /// <param name="refVector"></param>
-        /// <param name="orientation">The Euler angles (x, y, z) in radians about the axes 1, 2, 3 of the frame kernel, finite: <see cref="Instrument.Orientation"/></param>
-        /// <exception cref="ArgumentException">The name or the model is empty, the instrument was already added, or, naming the
-        /// parameter, the field of view is not a finite positive number, the boresight or the reference vector has a component
-        /// that is not finite or a magnitude of 0, or the reference vector is parallel to the boresight: the fields CSPICE's
-        /// <c>getfov</c> rejects (#707; before 11.0.0 the instrument was added and the search threw); or an Euler angle of
-        /// <paramref name="orientation"/> is not finite, which has no rotation and which SPICE cannot read in the frame kernel
-        /// (#715; before 11.0.0 the instrument was added with a NaN rotation).</exception>
+        /// <param name="boresight">The boresight, in the instrument frame: finite components, a non-zero magnitude</param>
+        /// <param name="refVector">The reference vector, in the instrument frame: finite components, a non-zero magnitude,
+        /// not parallel to the boresight</param>
+        /// <param name="orientation">The Euler angles (x, y, z) in radians about the axes 1, 2, 3 of the frame kernel, finite:
+        /// <see cref="Instrument.Orientation"/>; zero by default, the instrument frame the spacecraft frame</param>
+        /// <param name="naifId">The NAIF id of the instrument; by default the smallest free NaifId × 1000 − n, n in
+        /// [1, 999] (NAIF IDs Required Reading, "Instruments"). Required on a kernel-backed spacecraft</param>
+        /// <param name="model">The model of the instrument, informational; null by default</param>
+        /// <returns>The instrument added.</returns>
+        /// <exception cref="ArgumentNullException"><paramref name="naifId"/> is null on a kernel-backed spacecraft
+        /// (decision 73 of #668): <c>gftfov</c> reads the instrument kernel loaded under the id, and a default id could
+        /// read another instrument of the mission's kernel.</exception>
+        /// <exception cref="InvalidOperationException"><paramref name="naifId"/> is null and no id NaifId × 1000 − n,
+        /// n in [1, 999], is free (or an int): pass <paramref name="naifId"/>.</exception>
+        /// <exception cref="ArgumentException">Naming the parameter: <paramref name="naifId"/> is the id of another
+        /// instrument of the spacecraft; <paramref name="name"/> has the invariant upper-cased form of the name of another
+        /// of its instruments (decision 74 of #668: both kernels would assign FRAME_&lt;SPACECRAFT&gt;_&lt;INSTRUMENT&gt;,
+        /// and write the same file on a case-insensitive file system), or is empty; the field of view is not a finite
+        /// positive number, the boresight or the reference vector has a component that is not finite or a magnitude of 0,
+        /// or the reference vector is parallel to the boresight: the fields CSPICE's <c>getfov</c> rejects (#707); or an
+        /// Euler angle of <paramref name="orientation"/> is not finite (#715).</exception>
         /// <exception cref="ArgumentOutOfRangeException"><paramref name="naifId"/> is not negative, or is the id of the
-        /// spacecraft frame, NaifId × 1000, which the instrument frame kernel would define relative to itself (#676); an
-        /// instrument id of NAIF's convention is NaifId × 1000 − n, n in [1, 999] (NAIF IDs Required Reading, "Instruments");
-        /// or <paramref name="crossAngle"/> is not a finite positive number: SPICE cannot read a NaN or an infinity in the
-        /// kernel (#707), and a cross angle of 0 or −0 is a field of no width, which <c>gftfov</c> rejects or searches as a
-        /// segment depending on the rounding of the boresight (#715; before 11.0.0 +0 was accepted and the search threw).</exception>
-        public void AddEllipticalInstrument(int naifId, string name, string model, double fieldOfView, double crossAngle, in Vector3 boresight, in Vector3 refVector,
-            in Vector3 orientation)
+        /// spacecraft frame, NaifId × 1000, which the instrument frame kernel would define relative to itself (#676); or
+        /// <paramref name="crossAngle"/> is not a finite positive number: SPICE cannot read a NaN or an infinity in the
+        /// kernel (#707), and a cross angle of 0 or −0 is a field of no width (#715).</exception>
+        public EllipticalInstrument AddEllipticalInstrument(string name, double fieldOfView, double crossAngle, in Vector3 boresight,
+            in Vector3 refVector, in Vector3 orientation = default, int? naifId = null, string model = null)
         {
-            if (!_instruments.Add(new EllipticalInstrument(this, naifId, name, model, fieldOfView, crossAngle, boresight, refVector, orientation)))
+            int id = InstrumentIdToAdd(naifId, name);
+            return AddInstrument(new EllipticalInstrument(this, id, name, model, fieldOfView, crossAngle, boresight, refVector, orientation));
+        }
+
+        // The checks of Add*Instrument, before the instrument is built, in the order of lot L5b (decisions 72 to 74 of
+        // #668, decided by S. Guillet, 2026-11-23): a kernel-backed spacecraft requires the id, then the id (given, or the
+        // smallest free NaifId × 1000 − n), then a duplicate id, then a name of the invariant upper-cased form of another's.
+        // The value checks stay in the constructor of Instrument. Returns the id of the instrument to build
+        private int InstrumentIdToAdd(int? naifId, string name)
+        {
+            if (naifId == null && IsSpiceBacked)
             {
-                throw new ArgumentException("Instrument already added to spacecraft");
+                throw new ArgumentNullException(nameof(naifId),
+                    $"An instrument of the kernel-backed spacecraft {Name} ({NaifId}) takes its NAIF id: the field-of-view search (gftfov) reads the instrument kernel loaded under it, and a default id could read another instrument of the mission's kernel.");
             }
+
+            int id = naifId ?? DefaultInstrumentId();
+            if (_instruments.Any(x => x.NaifId == id))
+            {
+                throw new ArgumentException(
+                    $"The NAIF id {id} is the id of the instrument {_instruments.First(x => x.NaifId == id).Name} of {Name} ({NaifId}): an instrument id names one instrument.",
+                    nameof(naifId));
+            }
+
+            // Two names of one upper-cased form write the same kernel variable FRAME_<SPACECRAFT>_<INSTRUMENT> and the same
+            // file on a case-insensitive file system (decision 74 of #668); the writers move to ToUpperInvariant in lot L5c
+            string upper = string.IsNullOrEmpty(name) ? null : name.ToUpperInvariant();
+            var sameName = upper == null ? null : _instruments.FirstOrDefault(x => x.Name.ToUpperInvariant() == upper);
+            if (sameName != null)
+            {
+                throw new ArgumentException(
+                    $"The instrument name {name} has the upper-cased form of the name of the instrument {sameName.Name} ({sameName.NaifId}) of {Name}: both frame kernels would assign FRAME_{Name.ToUpperInvariant()}_{upper}, and both kernels would be the same file on a case-insensitive file system. Give the instrument another name.",
+                    nameof(name));
+            }
+
+            return id;
+        }
+
+        // The smallest free NaifId × 1000 − n, n in [1, 999], that is an int (NAIF IDs Required Reading, "Instruments";
+        // n ≤ 648 at -2147483), computed in long (decision 72 of #668)
+        private int DefaultInstrumentId()
+        {
+            long frameId = (long)NaifId * 1000L;
+            for (int n = 1; n <= 999; n++)
+            {
+                long candidate = frameId - n;
+                if (candidate < int.MinValue)
+                {
+                    break;
+                }
+
+                if (_instruments.All(x => x.NaifId != candidate))
+                {
+                    return (int)candidate;
+                }
+            }
+
+            throw new InvalidOperationException(
+                $"No NAIF id NaifId × 1000 − n, n in [1, 999], is free on {Name} ({NaifId}): pass the instrument's naifId.");
+        }
+
+        private T AddInstrument<T>(T instrument) where T : Instrument
+        {
+            // The id was checked free before the instrument was built
+            _instruments.Add(instrument);
+            return instrument;
         }
 
         /// <summary>

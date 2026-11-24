@@ -788,7 +788,13 @@ Both methods transform the instrument-frame vectors to the spacecraft body frame
 An instrument is built with a finite, non-zero boresight and reference vector that are not parallel, a finite positive
 field of view, the fields CSPICE's `getfov` accepts, and finite Euler angles (#715); otherwise `AddCircularInstrument`, `AddEllipticalInstrument` and
 `AddRectangularInstrument` throw `ArgumentException` naming the parameter, and the last two
-`ArgumentOutOfRangeException` for a cross angle that is not a finite positive number (#707, #715).
+`ArgumentOutOfRangeException` for a cross angle that is not a finite positive number (#707, #715). The three methods
+return the instrument they add and take `(name, fieldOfView, [crossAngle,] boresight, refVector, orientation = default,
+naifId = null, model = null)`: the id by default the smallest free NaifId × 1000 − n, n in [1, 999]
+(`InvalidOperationException` when none is left), required on a kernel-backed spacecraft (`ArgumentNullException`), not
+another instrument's (`ArgumentException`), the name unique on its invariant upper-cased form (`ArgumentException`), all
+checked before the instrument is built; the constructor of `Instrument` is `private protected`, so they are the only
+way to build one (decisions 72 to 74 of #668).
 
 **Matrix Utility**
 

@@ -79,10 +79,10 @@ public class FieldOfViewDynamicsTests
     {
         int id = spacecraft.NaifId * 1000;
         var y = new Vector3(0.0, IO.Astrodynamics.Constants.HalfPi, 0.0);
-        spacecraft.AddCircularInstrument(id - 789, "CAMERA789", "fov515", 0.75, Vector3.VectorZ, Vector3.VectorY, y);
-        spacecraft.AddEllipticalInstrument(id - 790, "ELL790", "fov515", 0.75, 0.3, Vector3.VectorZ, Vector3.VectorY, y);
-        spacecraft.AddRectangularInstrument(id - 791, "REC791", "fov515", 0.75, 0.3, Vector3.VectorZ, Vector3.VectorY, y);
-        spacecraft.AddCircularInstrument(id - 792, "WIDE792", "fov515", 1.3, Spacecraft.Front, Vector3.VectorZ, Vector3.Zero);
+        spacecraft.AddCircularInstrument("CAMERA789", 0.75, Vector3.VectorZ, Vector3.VectorY, y, naifId: id - 789, model: "fov515");
+        spacecraft.AddEllipticalInstrument("ELL790", 0.75, 0.3, Vector3.VectorZ, Vector3.VectorY, y, naifId: id - 790, model: "fov515");
+        spacecraft.AddRectangularInstrument("REC791", 0.75, 0.3, Vector3.VectorZ, Vector3.VectorY, y, naifId: id - 791, model: "fov515");
+        spacecraft.AddCircularInstrument("WIDE792", 1.3, Spacecraft.Front, Vector3.VectorZ, Vector3.Zero, naifId: id - 792, model: "fov515");
     }
 
     private static (Spacecraft spacecraft, Engine engine) Create(int naifId, StateVector orbit)

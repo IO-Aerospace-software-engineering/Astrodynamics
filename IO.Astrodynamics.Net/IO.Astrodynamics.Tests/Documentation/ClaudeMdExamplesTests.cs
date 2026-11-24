@@ -113,7 +113,7 @@ public class ClaudeMdExamplesTests
         spacecraft.AddFuelTank(tank);
         engine = new Engine("Engine", "Model", "SN1", 300.0, 0.05, tank);
         spacecraft.AddEngine(engine);
-        spacecraft.AddCircularInstrument(naifId * 1000 - 1, "Camera", "Imager", 0.2, Vector3.VectorZ, Vector3.VectorY, Vector3.Zero);
+        spacecraft.AddCircularInstrument("Camera", 0.2, Vector3.VectorZ, Vector3.VectorY, Vector3.Zero, naifId: naifId * 1000 - 1, model: "Imager");
         return spacecraft;
     }
 

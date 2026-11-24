@@ -767,13 +767,11 @@ internal static class DeveloperGuideExamples
         var engine = new Engine("MainEngine", "RCS", "Engine1", 300.0, 0.05, tank);  // ISP (s), fuel flow (kg/s)
         spacecraft.AddEngine(engine);
 
-        // Add instrument
-        spacecraft.AddCircularInstrument(-1001001, "Camera", "Imager",
+        // Add instrument: its NAIF id by default the first free NaifId × 1000 − n, -1001001, and no model
+        spacecraft.AddCircularInstrument("Camera",
             10 * Constants.Deg2Rad,              // FOV
             new Vector3(1, 0, 0),                // Boresight
-            new Vector3(0, 1, 0),                // Reference vector
-            new Vector3(0, 0, 0)                 // Orientation
-        );
+            new Vector3(0, 1, 0));               // Reference vector; the orientation zero by default
 
         // Propagate (returns PropagationSolution for dense output). Velocity-Verlet is of the second order: its error grows as
         // the square of the step (about 120 m after 12 h in this LEO at 1 s, 450 km at 60 s); without an integrator the
@@ -1661,8 +1659,8 @@ internal static class DeveloperGuideExamples
         var spacecraft = new Spacecraft(-334, "Observer", 1000.0, orbit, 2000.0, clock);
 
         // Add antenna instrument
-        spacecraft.AddCircularInstrument(-334100, "Antenna", "HighGain",
-            0.2, Vector3.VectorZ, Vector3.VectorY, Vector3.Zero);
+        spacecraft.AddCircularInstrument("Antenna",
+            0.2, Vector3.VectorZ, Vector3.VectorY, Vector3.Zero, naifId: -334100, model: "HighGain");
 
         // Add propulsion
         var tank = new FuelTank("Tank1", "Model", "SN1", 2000.0, 2000.0);
@@ -1722,8 +1720,8 @@ internal static class DeveloperGuideExamples
         var spacecraft = new Spacecraft(-500, "Observer", 500.0, orbit, 1000.0, clock);
 
         // Add Earth observation camera (points down via boresight)
-        spacecraft.AddCircularInstrument(-500100, "EarthCam", "NadirCamera",
-            0.5, Vector3.VectorZ.Inverse(), Vector3.VectorY, Vector3.Zero);  // Boresight: -Z (nadir), refVector: +Y
+        spacecraft.AddCircularInstrument("EarthCam",
+            0.5, Vector3.VectorZ.Inverse(), Vector3.VectorY, Vector3.Zero, naifId: -500100, model: "NadirCamera");  // Boresight: -Z (nadir), refVector: +Y
 
         // Add propulsion
         var tank = new FuelTank("Tank1", "Model", "SN1", 100.0, 100.0);

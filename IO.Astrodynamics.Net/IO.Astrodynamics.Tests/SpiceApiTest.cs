@@ -237,7 +237,7 @@ public partial class SpiceApiTest
         spacecraft.AddFuelTank(fuelTank);
         spacecraft.AddEngine(engine);
         spacecraft.AddPayload(new Payload("payload1", 50.0, "pay01"));
-        spacecraft.AddCircularInstrument(-1794600, "CAM600", "mod1", 1.5, Vector3.VectorZ, Vector3.VectorX, Vector3.VectorX);
+        spacecraft.AddCircularInstrument("CAM600", 1.5, Vector3.VectorZ, Vector3.VectorX, Vector3.VectorX, naifId: -1794600, model: "mod1");
 
         spacecraft.SetManeuvers(new NadirAttitude(TestHelpers.EarthAtJ2000, new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB), TimeSpan.Zero,
             spacecraft.Engines.First()));

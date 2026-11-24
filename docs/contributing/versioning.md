@@ -7307,6 +7307,31 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   `maxOperatingMass` from the constructor, where the maximum was raised to the mass without a word; a null clock threw
   `ArgumentNullException` before. The parameter `maximumOperatingMass` is named `maxOperatingMass`. Migration: pass a
   maximum at least the OPM's mass, or none; `maximumOperatingMass:` becomes `maxOperatingMass:`.
+- **Breaking: one `Add*Instrument` per shape, which returns the instrument, the NAIF id and the model optional** (lot
+  L5b, R10, decisions 72 to 74 of #668, decided by S. Guillet, 2026-11-23): `CircularInstrument
+  AddCircularInstrument(string name, double fieldOfView, in Vector3 boresight, in Vector3 refVector, in Vector3
+  orientation = default, int? naifId = null, string model = null)`, and `AddRectangularInstrument` and
+  `AddEllipticalInstrument` with `crossAngle` after `fieldOfView`, where the three returned nothing and took `(int naifId,
+  string name, string model, double fieldOfView, ...)`, the id, the model and the orientation required (an empty model
+  threw `ArgumentException`). The default id is the smallest free NaifId × 1000 − n, n in [1, 999], that is an `int`
+  (NAIF IDs Required Reading, "Instruments"), and writes the kernels of the same id given explicitly byte for byte
+  (`InstrumentAdditionTests`); when none is left the call throws `InvalidOperationException`. The checks run before the
+  instrument is built, in this order: a kernel-backed spacecraft requires `naifId` (`ArgumentNullException`, decision
+  73: `gftfov` reads the instrument kernel loaded under it), a duplicate id throws `ArgumentException` naming `naifId`
+  ("Instrument already added to spacecraft", naming no parameter, before), and a name of the invariant upper-cased form
+  of another instrument's throws `ArgumentException` naming `name` (decision 74: "Cam" and "CAM" both assigned
+  `FRAME_<SPACECRAFT>_CAM`, the later kernel winning, and wrote one file on a case-insensitive file system); the value
+  checks stay in the constructor. An old positional call no longer compiles (an `int` does not convert to `string`); a
+  call that names every argument keeps its meaning. Migration: `sc.AddCircularInstrument(id, name, model, fov, b, r, o)`
+  becomes `sc.AddCircularInstrument(name, fov, b, r, o, naifId: id, model: model)`, or `sc.AddCircularInstrument(name,
+  fov, b, r)` for the default id and orientation; read the instrument from the return value rather than
+  `Instruments`; give two instruments of one spacecraft names that differ by more than their case.
+- **Breaking: the constructor of `Instrument` is `private protected`** (lot L5b, decision 72 of #668 with the critic's gap 1
+  of L5-32, decided by S. Guillet, 2026-11-23): the hierarchy is closed, and `Add*Instrument` builds every instrument under
+  its checks. A subclass outside the library built an instrument that no id or name rule covered, that `Instruments` did
+  not list and so the kernel writers never wrote, and that `Equals` (by NAIF id) took for a library instrument of its id;
+  the field-of-view search threw `InvalidOperationException` for such an instrument of a shape other than a circle, a
+  case that no longer exists. Migration: build the instrument with the `Add*Instrument` of its shape.
 - **`Spacecraft.GetTotalISP()` and `GetTotalFuelFlow()` count every engine**
   ([#801](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/801) part 1, lot L5b, decision 60 of
   #668 with L5-20 as amended, decided by S. Guillet, 2026-11-23): they counted only the engines whose tank held fuel at

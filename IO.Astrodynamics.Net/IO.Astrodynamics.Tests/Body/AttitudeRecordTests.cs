@@ -925,7 +925,7 @@ public class AttitudeRecordTests
         sc.AddFuelTank(tank);
         var engine = new Engine("eng", "model", "sn", 300.0, 10.0, tank);
         sc.AddEngine(engine);
-        sc.AddCircularInstrument(id * 1000 - 1, "I1", "m", 0.5, Vector3.VectorZ, Vector3.VectorY, InstrumentOrientations[0]);
+        sc.AddCircularInstrument("I1", 0.5, Vector3.VectorZ, Vector3.VectorY, InstrumentOrientations[0], naifId: id * 1000 - 1, model: "m");
         var instrument = sc.Instruments.First();
         Vector3 FromEarth(CelestialItem body) => SpiceAPI.Instance.ReadEphemeris(start, 399, body.NaifId, Frame.ICRF, Aberration.None).Position;
         var boresight = EulerToSpacecraft(instrument.Orientation, instrument.Boresight);
@@ -1360,7 +1360,7 @@ public class AttitudeRecordTests
                 spacecraft.AddEngine(engine);
                 for (int i = 0; i < InstrumentOrientations.Length; i++)
                 {
-                    spacecraft.AddCircularInstrument(id * 1000 - 1 - i, $"I{i + 1}", "m", 0.5, Vector3.VectorZ, Vector3.VectorY, InstrumentOrientations[i]);
+                    spacecraft.AddCircularInstrument($"I{i + 1}", 0.5, Vector3.VectorZ, Vector3.VectorY, InstrumentOrientations[i], naifId: id * 1000 - 1 - i, model: "m");
                 }
 
                 ImpulseManeuver Apogee()

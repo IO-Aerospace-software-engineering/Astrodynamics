@@ -1362,7 +1362,7 @@ Represents a spacecraft with components.
 
 | Method | Description |
 |--------|-------------|
-| `AddCircularInstrument(...)` | Add circular FOV instrument (an id other than the spacecraft frame's, NaifId × 1000, #676; a finite non-zero boresight, a finite non-zero reference vector not parallel to it and a finite positive field of view, as `getfov` reads them, and finite Euler angles, or `ArgumentException` naming the parameter, #707, #715) |
+| `AddCircularInstrument(...)` | Add a circular FOV instrument and return it: `(name, fieldOfView, boresight, refVector, orientation = default, naifId = null, model = null)`, the id by default the smallest free NaifId × 1000 − n, n in [1, 999] (`InvalidOperationException` when none is left), required on a kernel-backed spacecraft (`ArgumentNullException`), not another instrument's (`ArgumentException`), the name unique on its invariant upper-cased form (`ArgumentException`; decisions 72 to 74 of #668) (an id other than the spacecraft frame's, NaifId × 1000, #676; a finite non-zero boresight, a finite non-zero reference vector not parallel to it and a finite positive field of view, as `getfov` reads them, and finite Euler angles, or `ArgumentException` naming the parameter, #707, #715) |
 | `AddRectangularInstrument(...)` | Add rectangular FOV instrument (same rules, and a finite positive cross angle, or `ArgumentOutOfRangeException`, #707, #715) |
 | `AddEllipticalInstrument(...)` | Add elliptical FOV instrument (same rules, and a finite positive cross angle, or `ArgumentOutOfRangeException`, #707, #715) |
 | `AddEngine(Engine engine)` | Add propulsion engine, on a tank instance added to the spacecraft (`ArgumentException` otherwise, #676, #586) |
@@ -1401,13 +1401,11 @@ spacecraft.AddFuelTank(tank);
 var engine = new Engine("MainEngine", "RCS", "Engine1", 300.0, 0.05, tank);  // ISP (s), fuel flow (kg/s)
 spacecraft.AddEngine(engine);
 
-// Add instrument
-spacecraft.AddCircularInstrument(-1001001, "Camera", "Imager",
+// Add instrument: its NAIF id by default the first free NaifId × 1000 − n, -1001001, and no model
+spacecraft.AddCircularInstrument("Camera",
     10 * Constants.Deg2Rad,              // FOV
     new Vector3(1, 0, 0),                // Boresight
-    new Vector3(0, 1, 0),                // Reference vector
-    new Vector3(0, 0, 0)                 // Orientation
-);
+    new Vector3(0, 1, 0));               // Reference vector; the orientation zero by default
 
 // Propagate (returns PropagationSolution for dense output). Velocity-Verlet is of the second order: its error grows as
 // the square of the step (about 120 m after 12 h in this LEO at 1 s, 450 km at 60 s); without an integrator the
@@ -2950,8 +2948,8 @@ var clock = new Clock("Clock", 256);
 var spacecraft = new Spacecraft(-334, "Observer", 1000.0, orbit, 2000.0, clock);
 
 // Add antenna instrument
-spacecraft.AddCircularInstrument(-334100, "Antenna", "HighGain",
-    0.2, Vector3.VectorZ, Vector3.VectorY, Vector3.Zero);
+spacecraft.AddCircularInstrument("Antenna",
+    0.2, Vector3.VectorZ, Vector3.VectorY, Vector3.Zero, naifId: -334100, model: "HighGain");
 
 // Add propulsion
 var tank = new FuelTank("Tank1", "Model", "SN1", 2000.0, 2000.0);
@@ -3013,8 +3011,8 @@ var clock = new Clock("Clock", 256);
 var spacecraft = new Spacecraft(-500, "Observer", 500.0, orbit, 1000.0, clock);
 
 // Add Earth observation camera (points down via boresight)
-spacecraft.AddCircularInstrument(-500100, "EarthCam", "NadirCamera",
-    0.5, Vector3.VectorZ.Inverse(), Vector3.VectorY, Vector3.Zero);  // Boresight: -Z (nadir), refVector: +Y
+spacecraft.AddCircularInstrument("EarthCam",
+    0.5, Vector3.VectorZ.Inverse(), Vector3.VectorY, Vector3.Zero, naifId: -500100, model: "NadirCamera");  // Boresight: -Z (nadir), refVector: +Y
 
 // Add propulsion
 var tank = new FuelTank("Tank1", "Model", "SN1", 100.0, 100.0);

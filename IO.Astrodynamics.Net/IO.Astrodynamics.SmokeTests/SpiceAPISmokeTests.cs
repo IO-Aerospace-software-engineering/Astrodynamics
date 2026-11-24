@@ -317,9 +317,9 @@ public class SpiceAPISmokeTests
             EarthAtJ2000, Time.Create(676555130.0, TimeScale.TDB), Frame.ICRF);
 
         var spacecraft = new Spacecraft(-904, "SmokeFovSpc", 1000.0, parkingOrbit, 5000.0, clock);
-        spacecraft.AddCircularInstrument(-904789, "SMOKECAM", "mod1", 0.75,
+        spacecraft.AddCircularInstrument("SMOKECAM", 0.75,
             Vector3.VectorZ, Vector3.VectorY,
-            new Vector3(0.0, System.Math.PI * 0.5, 0.0));
+            new Vector3(0.0, System.Math.PI * 0.5, 0.0), naifId: -904789, model: "mod1");
 
         var searchWindow = new Window(
             Time.Create(676555200.0, TimeScale.TDB),

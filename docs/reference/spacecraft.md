@@ -134,9 +134,9 @@ Instance-level overrides can be set via constructor parameters (`bodyFront`, `bo
 
 | Method | Description |
 |--------|-------------|
-| `AddCircularInstrument(...)` | Add circular FOV instrument; its id is negative and not the spacecraft frame's, NaifId × 1000 (#676) |
-| `AddEllipticalInstrument(...)` | Add elliptical FOV instrument, under the same id rule |
-| `AddRectangularInstrument(...)` | Add rectangular FOV instrument, under the same id rule |
+| `AddCircularInstrument(name, fieldOfView, boresight, refVector, orientation = default, naifId = null, model = null)` | Add a circular FOV instrument and return it ([Adding an instrument](#adding-an-instrument)) |
+| `AddEllipticalInstrument(name, fieldOfView, crossAngle, boresight, refVector, orientation = default, naifId = null, model = null)` | Add an elliptical FOV instrument and return it, under the same rules |
+| `AddRectangularInstrument(name, fieldOfView, crossAngle, boresight, refVector, orientation = default, naifId = null, model = null)` | Add a rectangular FOV instrument and return it, under the same rules |
 | `AddEngine(Engine)` | Add propulsion engine, whose fuel tank is a tank instance added to the spacecraft (`ArgumentException` otherwise, a tank equal to it by value included, #676, #586; `InvalidOperationException` for an unknown tank before 11.0.0) |
 | `AddFuelTank(FuelTank)` | Add fuel tank (a burn that needs more fuel than its tank holds throws `InsufficientFuelException`, an `InvalidOperationException` since 11.0.0, with `RequiredMass` and `AvailableMass` in kg); a tank held by another spacecraft is rejected (`ArgumentException`, #676, #586); the tank is attached atomically, so that of spacecraft adding one tank at once on several threads one takes it |
 | `AddPayload(Payload)` | Add payload |
@@ -479,9 +479,9 @@ var tank = new FuelTank("MainTank", "FT-100", "SN001",
 
 | Property | Description |
 |----------|-------------|
-| `NaifId` | NAIF instrument ID: negative, and not the spacecraft frame's id NaifId × 1000, which the instrument FK would define relative to itself (SPICE(BADFRAMESPEC2), #676); NAIF's convention is NaifId × 1000 − n, n from 1 to 999 (NAIF IDs Required Reading, "Instruments") |
-| `Name` | Instrument name |
-| `Model` | Instrument model identifier |
+| `NaifId` | NAIF instrument ID: negative, and not the spacecraft frame's id NaifId × 1000, which the instrument FK would define relative to itself (SPICE(BADFRAMESPEC2), #676); NAIF's convention is NaifId × 1000 − n, n from 1 to 999 (NAIF IDs Required Reading, "Instruments"), the default of the `Add*Instrument` methods |
+| `Name` | Instrument name, unique on its spacecraft on its invariant upper-cased form |
+| `Model` | Instrument model identifier, informational (no kernel reads it); null when none was given |
 | `FieldOfView` | Half-angle in the plane of the boresight and the reference vector, the IK's `FOV_REF_ANGLE` (rad): finite and positive |
 | `CrossAngle` | Half-angle across that plane, the IK's `FOV_CROSS_ANGLE` (rad): finite and positive ([#715](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/715)); `EllipticalInstrument` and `RectangularInstrument` |
 | `Shape` | `InstrumentShape` (Circular, Rectangular, Elliptical) |
@@ -496,6 +496,35 @@ var tank = new FuelTank("MainTank", "FT-100", "SN001",
 | `FindWindowsInFieldOfViewConstraint(Window, Spacecraft, ILocalizable, Frame, ShapeType, Aberration, TimeSpan)` | The windows, in TDB, where the target is in the field: those of CSPICE's `gftfov` ([Field-of-view search](#field-of-view-search)) |
 | `GetBoresightInSpacecraftFrame()` | Transform boresight to spacecraft body frame |
 | `GetRefVectorInSpacecraftFrame()` | Transform reference vector to spacecraft body frame |
+
+#### Adding an instrument
+
+`AddCircularInstrument`, `AddEllipticalInstrument` and `AddRectangularInstrument` build the instrument, list it in
+`Instruments` and return it, typed as its shape: `var camera = spacecraft.AddCircularInstrument("Camera", 0.1,
+Vector3.VectorZ, Vector3.VectorX);` (decision 72 of #668, decided by S. Guillet, 2026-11-23). They are the only way to
+build an instrument: the constructor of `Instrument` is `private protected` since 11.0.0, so every instrument is one of
+the three library shapes, under the rules below, and the kernel writers write it.
+
+- **The orientation** is zero by default: the instrument frame is the spacecraft frame.
+- **The NAIF id** is optional. By default it is the smallest free NaifId × 1000 − n, n from 1 to 999 (NAIF IDs Required
+  Reading, "Instruments"), that is an `int` (n up to 648 at NaifId -2147483): -1001001 for the first instrument of
+  -1001, then -1001002, the gaps the given ids leave filled first. When none is left, the call throws
+  `InvalidOperationException`: pass `naifId`. A given id outside the convention is accepted (mission kernels use them),
+  but not the spacecraft frame's id, NaifId × 1000 (`ArgumentOutOfRangeException`, #676), nor the id of another
+  instrument of the spacecraft (`ArgumentException` naming `naifId`). A default id writes the kernels of the same id
+  given explicitly, byte for byte.
+- **A kernel-backed spacecraft requires the id** (decision 73 of #668): `gftfov` reads the instrument kernel loaded under
+  it, and a default id could read another instrument of the mission's kernel. Without one the call throws
+  `ArgumentNullException` naming `naifId`.
+- **The name** is unique on the spacecraft on its invariant upper-cased form (decision 74 of #668): "Cam" and "CAM" both
+  write the kernel variable `FRAME_<SPACECRAFT>_CAM`, and the same file on a case-insensitive file system, so the second
+  throws `ArgumentException` naming `name`. The writers still upper-case with the current culture until lot L5c.
+- **The model** is optional and informational: it reaches no kernel.
+
+The checks of the id and the name run in that order before the instrument is built, so a rejected call adds nothing.
+Before 11.0.0 the three methods returned nothing and took `(naifId, name, model, fieldOfView, ...)`, the id and the
+model required, a second name differing in case only accepted, and a subclass of `Instrument` outside the library could
+build an instrument none of these rules covered.
 
 The constructor, so `AddCircularInstrument`, `AddEllipticalInstrument` and `AddRectangularInstrument`, throws
 `ArgumentException` naming the parameter for the fields CSPICE's `getfov` rejects on the kernel the library writes, or
@@ -626,8 +655,9 @@ search for a `+S` correction.
 - `ArgumentException`: a search window that ends before it starts, a target that is the instrument's spacecraft, an
   ellipsoid target without radii (a site, a spacecraft, a barycenter, a Lagrange point, a star);
 - `InvalidOperationException`: a field whose angular radius (the larger half-angle of a circle or an ellipse, the angle
-  of the corner of a rectangle) exceeds π/2 − 1e-6, as `gftfov` rejects it, or a shape other than a circle on an
-  instrument that is neither an `EllipticalInstrument` nor a `RectangularInstrument`. The boresight, the reference
+  of the corner of a rectangle) exceeds π/2 − 1e-6, as `gftfov` rejects it (before 11.0.0 also a shape other than a
+  circle on an instrument of a subclass outside the library, which the closed hierarchy no longer allows, decision 72
+  of #668). The boresight, the reference
   vector, the field of view and the cross angle, whose half-angles are positive, are checked when the instrument is
   built ([#707](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/707), [#715](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/715), [Instrument](#instrument)).
 

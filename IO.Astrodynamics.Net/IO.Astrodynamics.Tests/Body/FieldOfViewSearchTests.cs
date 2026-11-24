@@ -214,40 +214,40 @@ public sealed class PropagatedFieldOfViewCase
         var turned = new Vector3(0.0, System.Math.Cos(System.Math.PI / 6.0), System.Math.Sin(System.Math.PI / 6.0));
         int Id(int n) => spacecraft.NaifId * 1000 - n;
         // The Earth, the boresight along -X of ICRF, as InstrumentTests.FindWindowInFieldOfView
-        spacecraft.AddCircularInstrument(Id(789), "CAMERA789", "fov515", 0.75, Vector3.VectorZ, Vector3.VectorY, y);
-        spacecraft.AddEllipticalInstrument(Id(790), "ELL790", "fov515", 0.75, 0.3, Vector3.VectorZ, Vector3.VectorY, y);
-        spacecraft.AddRectangularInstrument(Id(791), "REC791", "fov515", 0.75, 0.3, Vector3.VectorZ, Vector3.VectorY, y);
-        spacecraft.AddEllipticalInstrument(Id(793), "ELL793", "fov515", 0.3, 0.75, Vector3.VectorZ, Vector3.VectorY, y);
-        spacecraft.AddRectangularInstrument(Id(794), "REC794", "fov515", 0.3, 0.75, Vector3.VectorZ, Vector3.VectorY, y);
-        spacecraft.AddCircularInstrument(Id(795), "CIR795", "fov515", 0.75, N(-System.Math.Cos(0.4), 0.0, System.Math.Sin(0.4)), Vector3.VectorZ, zero);
-        spacecraft.AddRectangularInstrument(Id(796), "REC796", "fov515", 0.75, 0.3, mX, turned, zero);
-        spacecraft.AddEllipticalInstrument(Id(797), "ELL797", "fov515", 0.75, 0.3, mX, new Vector3(0.5, 1.0, 0.2), zero);
-        spacecraft.AddCircularInstrument(Id(798), "CIR798", "fov515", 0.05, mX, Vector3.VectorY, zero);
-        spacecraft.AddEllipticalInstrument(Id(799), "ELL799", "fov515", 0.05, 0.02, mX, Vector3.VectorY, zero);
-        spacecraft.AddRectangularInstrument(Id(800), "REC800", "fov515", 0.05, 0.02, mX, turned, zero);
-        spacecraft.AddCircularInstrument(Id(801), "CIR801", "fov515", 0.18038, g, gRef, zero);
-        spacecraft.AddRectangularInstrument(Id(802), "REC802", "fov515", 0.18038, 0.1, g, gRef, zero);
+        spacecraft.AddCircularInstrument("CAMERA789", 0.75, Vector3.VectorZ, Vector3.VectorY, y, naifId: Id(789), model: "fov515");
+        spacecraft.AddEllipticalInstrument("ELL790", 0.75, 0.3, Vector3.VectorZ, Vector3.VectorY, y, naifId: Id(790), model: "fov515");
+        spacecraft.AddRectangularInstrument("REC791", 0.75, 0.3, Vector3.VectorZ, Vector3.VectorY, y, naifId: Id(791), model: "fov515");
+        spacecraft.AddEllipticalInstrument("ELL793", 0.3, 0.75, Vector3.VectorZ, Vector3.VectorY, y, naifId: Id(793), model: "fov515");
+        spacecraft.AddRectangularInstrument("REC794", 0.3, 0.75, Vector3.VectorZ, Vector3.VectorY, y, naifId: Id(794), model: "fov515");
+        spacecraft.AddCircularInstrument("CIR795", 0.75, N(-System.Math.Cos(0.4), 0.0, System.Math.Sin(0.4)), Vector3.VectorZ, zero, naifId: Id(795), model: "fov515");
+        spacecraft.AddRectangularInstrument("REC796", 0.75, 0.3, mX, turned, zero, naifId: Id(796), model: "fov515");
+        spacecraft.AddEllipticalInstrument("ELL797", 0.75, 0.3, mX, new Vector3(0.5, 1.0, 0.2), zero, naifId: Id(797), model: "fov515");
+        spacecraft.AddCircularInstrument("CIR798", 0.05, mX, Vector3.VectorY, zero, naifId: Id(798), model: "fov515");
+        spacecraft.AddEllipticalInstrument("ELL799", 0.05, 0.02, mX, Vector3.VectorY, zero, naifId: Id(799), model: "fov515");
+        spacecraft.AddRectangularInstrument("REC800", 0.05, 0.02, mX, turned, zero, naifId: Id(800), model: "fov515");
+        spacecraft.AddCircularInstrument("CIR801", 0.18038, g, gRef, zero, naifId: Id(801), model: "fov515");
+        spacecraft.AddRectangularInstrument("REC802", 0.18038, 0.1, g, gRef, zero, naifId: Id(802), model: "fov515");
         // The Moon, the boresight on its apparent direction at S + 3000 s
-        spacecraft.AddCircularInstrument(Id(810), "CIR810", "fov515", 0.008, m3, Vector3.VectorZ, zero);
-        spacecraft.AddEllipticalInstrument(Id(811), "ELL811", "fov515", 0.012, 0.004, m3, Vector3.VectorZ, zero);
-        spacecraft.AddRectangularInstrument(Id(812), "REC812", "fov515", 0.012, 0.004, m3, new Vector3(0.3, 0.0, 1.0), zero);
-        spacecraft.AddCircularInstrument(Id(813), "CIR813", "fov515", 0.002, m3, Vector3.VectorZ, zero);
-        spacecraft.AddCircularInstrument(Id(814), "CIR814", "fov515", 0.05, m3, Vector3.VectorZ, zero);
+        spacecraft.AddCircularInstrument("CIR810", 0.008, m3, Vector3.VectorZ, zero, naifId: Id(810), model: "fov515");
+        spacecraft.AddEllipticalInstrument("ELL811", 0.012, 0.004, m3, Vector3.VectorZ, zero, naifId: Id(811), model: "fov515");
+        spacecraft.AddRectangularInstrument("REC812", 0.012, 0.004, m3, new Vector3(0.3, 0.0, 1.0), zero, naifId: Id(812), model: "fov515");
+        spacecraft.AddCircularInstrument("CIR813", 0.002, m3, Vector3.VectorZ, zero, naifId: Id(813), model: "fov515");
+        spacecraft.AddCircularInstrument("CIR814", 0.05, m3, Vector3.VectorZ, zero, naifId: Id(814), model: "fov515");
         // The Sun
-        spacecraft.AddCircularInstrument(Id(820), "CIR820", "fov515", 0.0002, s3, Vector3.VectorZ, zero);
-        spacecraft.AddCircularInstrument(Id(821), "CIR821", "fov515", 0.0002, sEdge, Vector3.VectorZ, zero);
-        spacecraft.AddEllipticalInstrument(Id(822), "ELL822", "fov515", 0.0003, 0.0001, sEdge, e, zero);
-        spacecraft.AddRectangularInstrument(Id(823), "REC823", "fov515", 0.0003, 0.0001, sEdge, e + Vector3.VectorZ * 0.5, zero);
+        spacecraft.AddCircularInstrument("CIR820", 0.0002, s3, Vector3.VectorZ, zero, naifId: Id(820), model: "fov515");
+        spacecraft.AddCircularInstrument("CIR821", 0.0002, sEdge, Vector3.VectorZ, zero, naifId: Id(821), model: "fov515");
+        spacecraft.AddEllipticalInstrument("ELL822", 0.0003, 0.0001, sEdge, e, zero, naifId: Id(822), model: "fov515");
+        spacecraft.AddRectangularInstrument("REC823", 0.0003, 0.0001, sEdge, e + Vector3.VectorZ * 0.5, zero, naifId: Id(823), model: "fov515");
         // L1, the boresight on its apparent direction at S + 3000 s (LT, spkpos): the parallax of the orbit moves it by up
         // to 8.4e-3 rad, in and out of the fields
         var l1 = N(0.19333405, 0.900347, 0.38986822);
-        spacecraft.AddCircularInstrument(Id(824), "CIR824", "fov515", 0.004, l1, Vector3.VectorZ, zero);
-        spacecraft.AddRectangularInstrument(Id(825), "REC825", "fov515", 0.004, 0.002, l1, Vector3.VectorZ, zero);
+        spacecraft.AddCircularInstrument("CIR824", 0.004, l1, Vector3.VectorZ, zero, naifId: Id(824), model: "fov515");
+        spacecraft.AddRectangularInstrument("REC825", 0.004, 0.002, l1, Vector3.VectorZ, zero, naifId: Id(825), model: "fov515");
         // The star: the stellar aberration of the orbital velocity moves its apparent direction by about 2.5e-5 rad about
         // its mean (stelab, spiceypy, over the window); a circle 2.5e-5 rad from the mean "S" direction, and a rectangle
         // 2e-5 rad from the mean "XS" direction (stlabx), each crossed twice; the geometric direction stays outside both
-        spacecraft.AddCircularInstrument(Id(830), "CIR830", "fov515", 2.5e-5, N(0.3462671531, 0.1070470016, 0.9320085827), Vector3.VectorZ, zero);
-        spacecraft.AddRectangularInstrument(Id(831), "REC831", "fov515", 2.5e-5, 1.5e-5, N(0.3460816294, 0.107124567, 0.9320685774), Vector3.VectorZ, zero);
+        spacecraft.AddCircularInstrument("CIR830", 2.5e-5, N(0.3462671531, 0.1070470016, 0.9320085827), Vector3.VectorZ, zero, naifId: Id(830), model: "fov515");
+        spacecraft.AddRectangularInstrument("REC831", 2.5e-5, 1.5e-5, N(0.3460816294, 0.107124567, 0.9320685774), Vector3.VectorZ, zero, naifId: Id(831), model: "fov515");
     }
 
     internal Instrument PropagatedInstrument(int number) => Propagated.Instruments.First(x => x.NaifId == ObserverId * 1000 - number);
@@ -690,17 +690,6 @@ public class FieldOfViewSearchTests : IClassFixture<PropagatedFieldOfViewCase>
         Assert.True(FieldOfViewKernels.WorstEdge(actual, expected) < PropagatedLimit);
     }
 
-    /// <summary>An instrument of a user's subclass, which the library cannot read a cross angle from.</summary>
-    private sealed class UserInstrument : Instrument
-    {
-        public UserInstrument(Spacecraft spacecraft, InstrumentShape shape) : base(spacecraft, spacecraft.NaifId * 1000 - 999, "USER999", "fov515", 0.3, shape,
-            Vector3.VectorZ, Vector3.VectorY, Vector3.Zero)
-        {
-        }
-
-        public override Task WriteKernelAsync(FileInfo outputFile) => Task.CompletedTask;
-    }
-
     /// <summary>The argument errors of choices 7 and 14, the same exception on both paths for the same call.</summary>
     [Fact]
     public void Errors_SameExceptionOnBothPaths()
@@ -749,44 +738,23 @@ public class FieldOfViewSearchTests : IClassFixture<PropagatedFieldOfViewCase>
             int id = spacecraft.NaifId * 1000;
             // A zero boresight and a reference vector parallel to it are rejected when the instrument is added (#707)
             Assert.Equal("boresight", Assert.Throws<ArgumentException>(() =>
-                spacecraft.AddCircularInstrument(id - 901, "ZERO", "fov515", 0.3, Vector3.Zero, Vector3.VectorY, Vector3.Zero)).ParamName);
+                spacecraft.AddCircularInstrument("ZERO", 0.3, Vector3.Zero, Vector3.VectorY, Vector3.Zero, naifId: id - 901, model: "fov515")).ParamName);
             Assert.Equal("refVector", Assert.Throws<ArgumentException>(() =>
-                spacecraft.AddCircularInstrument(id - 902, "PARALLEL", "fov515", 0.3, Vector3.VectorZ, Vector3.VectorZ * 2.0, Vector3.Zero)).ParamName);
+                spacecraft.AddCircularInstrument("PARALLEL", 0.3, Vector3.VectorZ, Vector3.VectorZ * 2.0, Vector3.Zero, naifId: id - 902, model: "fov515")).ParamName);
             // and so is a cross angle of 0 (#715; before, the search threw)
             Assert.Equal("crossAngle", Assert.Throws<ArgumentOutOfRangeException>(() =>
-                spacecraft.AddEllipticalInstrument(id - 903, "NOCROSSE", "fov515", 0.3, 0.0, Vector3.VectorZ, Vector3.VectorY, Vector3.Zero)).ParamName);
+                spacecraft.AddEllipticalInstrument("NOCROSSE", 0.3, 0.0, Vector3.VectorZ, Vector3.VectorY, Vector3.Zero, naifId: id - 903, model: "fov515")).ParamName);
             Assert.Equal("crossAngle", Assert.Throws<ArgumentOutOfRangeException>(() =>
-                spacecraft.AddRectangularInstrument(id - 904, "NOCROSSR", "fov515", 0.3, 0.0, Vector3.VectorZ, Vector3.VectorY, Vector3.Zero)).ParamName);
-            spacecraft.AddCircularInstrument(id - 905, "WIDEC", "fov515", IO.Astrodynamics.Constants.HalfPi - 1e-7, Vector3.VectorZ, Vector3.VectorY, Vector3.Zero);
-            spacecraft.AddRectangularInstrument(id - 906, "WIDER", "fov515", IO.Astrodynamics.Constants.HalfPi - 1e-7, 0.1, Vector3.VectorZ, Vector3.VectorY, Vector3.Zero);
-            spacecraft.AddRectangularInstrument(id - 907, "HALFPI", "fov515", 0.1, IO.Astrodynamics.Constants.HalfPi, Vector3.VectorZ, Vector3.VectorY, Vector3.Zero);
-            spacecraft.AddEllipticalInstrument(id - 908, "WIDEE", "fov515", 0.1, IO.Astrodynamics.Constants.HalfPi - 1e-7, Vector3.VectorZ, Vector3.VectorY, Vector3.Zero);
+                spacecraft.AddRectangularInstrument("NOCROSSR", 0.3, 0.0, Vector3.VectorZ, Vector3.VectorY, Vector3.Zero, naifId: id - 904, model: "fov515")).ParamName);
+            spacecraft.AddCircularInstrument("WIDEC", IO.Astrodynamics.Constants.HalfPi - 1e-7, Vector3.VectorZ, Vector3.VectorY, Vector3.Zero, naifId: id - 905, model: "fov515");
+            spacecraft.AddRectangularInstrument("WIDER", IO.Astrodynamics.Constants.HalfPi - 1e-7, 0.1, Vector3.VectorZ, Vector3.VectorY, Vector3.Zero, naifId: id - 906, model: "fov515");
+            spacecraft.AddRectangularInstrument("HALFPI", 0.1, IO.Astrodynamics.Constants.HalfPi, Vector3.VectorZ, Vector3.VectorY, Vector3.Zero, naifId: id - 907, model: "fov515");
+            spacecraft.AddEllipticalInstrument("WIDEE", 0.1, IO.Astrodynamics.Constants.HalfPi - 1e-7, Vector3.VectorZ, Vector3.VectorY, Vector3.Zero, naifId: id - 908, model: "fov515");
             foreach (var instrument in spacecraft.Instruments.Where(x => -x.NaifId % 1000 > 900))
             {
                 Assert.Throws<InvalidOperationException>(() =>
                     instrument.FindWindowsInFieldOfViewConstraint(window, spacecraft, earth, Frames.Frame.ICRF, ShapeType.Point, Aberration.LT, Step));
                 Assert.Throws<InvalidOperationException>(() => instrument.IsInFOV(window.StartDate, earth, Aberration.LT));
-            }
-
-            // An instrument of a user's subclass with a shape other than a circle: its cross angle is unknown
-            var user = new UserInstrument(spacecraft, InstrumentShape.Elliptical);
-            Assert.Throws<InvalidOperationException>(() =>
-                user.FindWindowsInFieldOfViewConstraint(window, spacecraft, earth, Frames.Frame.ICRF, ShapeType.Point, Aberration.LT, Step));
-            Assert.Throws<InvalidOperationException>(() => user.IsInFOV(window.StartDate, earth, Aberration.LT));
-            // and a circle of a user's subclass is searched, its cross angle its field of view, on the managed path; on the
-            // SPICE path gftfov reads its instrument kernel, which this subclass does not write: SPICE's error, where the
-            // search returned no window before (#668)
-            var circle = new UserInstrument(spacecraft, InstrumentShape.Circular);
-            var shortWindow = new Window(window.StartDate, window.StartDate.AddSeconds(60.0));
-            if (spacecraft == unpropagated)
-            {
-                Assert.NotNull(circle.FindWindowsInFieldOfViewConstraint(shortWindow, spacecraft, earth, Frames.Frame.ICRF, ShapeType.Point, Aberration.None, Step));
-            }
-            else
-            {
-                var exception = Assert.Throws<SpiceException>(() =>
-                    circle.FindWindowsInFieldOfViewConstraint(shortWindow, spacecraft, earth, Frames.Frame.ICRF, ShapeType.Point, Aberration.None, Step));
-                Assert.Contains($"INS{circle.NaifId}_FOV_FRAME", exception.Message);
             }
         }
 
@@ -806,8 +774,8 @@ public class FieldOfViewSearchTests : IClassFixture<PropagatedFieldOfViewCase>
         var inside = new Spacecraft(-5155, "FOV5155", 1000.0, new StateVector(new Vector3(1000000.0, 0.0, 0.0), new Vector3(0.0, 100.0, 0.0), earth, _case.Start, Frames.Frame.ICRF), 3000.0,
             new Clock("FOV5155_CLK", 65536));
         inside.Frame.AddStateOrientationToICRF(new StateOrientation(Quaternion.Identity, Vector3.Zero, _case.Start, inside.Frame));
-        inside.AddCircularInstrument(-5155001, "INSIDE", "fov515", 0.3, Vector3.VectorZ, Vector3.VectorY, Vector3.Zero);
-        inside.AddRectangularInstrument(-5155002, "INSIDER", "fov515", 0.3, 0.2, Vector3.VectorZ, Vector3.VectorY, Vector3.Zero);
+        inside.AddCircularInstrument("INSIDE", 0.3, Vector3.VectorZ, Vector3.VectorY, Vector3.Zero, naifId: -5155001, model: "fov515");
+        inside.AddRectangularInstrument("INSIDER", 0.3, 0.2, Vector3.VectorZ, Vector3.VectorY, Vector3.Zero, naifId: -5155002, model: "fov515");
         foreach (var instrument in inside.Instruments)
         {
             var exception = Assert.Throws<InvalidOperationException>(() => instrument.FindWindowsInFieldOfViewConstraint(new Window(_case.Start, _case.Start.AddSeconds(60.0)), inside, earth,
@@ -821,7 +789,7 @@ public class FieldOfViewSearchTests : IClassFixture<PropagatedFieldOfViewCase>
     {
         var orbit = new KeplerianElements(6800000.0, 0.0001, 51.6 * IO.Astrodynamics.Constants.Deg2Rad, 0.0, 0.0, 0.0, _case.Earth, epoch, Frames.Frame.ICRF);
         var spacecraft = new Spacecraft(id, $"FOV{-id}", 100.0, orbit, 10000.0, new Clock($"FOV{-id}_CLK", 65536));
-        spacecraft.AddCircularInstrument(id * 1000 - 1, "CAMERA", "fov682", 30.0 * IO.Astrodynamics.Constants.Deg2Rad, Vector3.VectorY, Vector3.VectorX, Vector3.Zero);
+        spacecraft.AddCircularInstrument("CAMERA", 30.0 * IO.Astrodynamics.Constants.Deg2Rad, Vector3.VectorY, Vector3.VectorX, Vector3.Zero, naifId: id * 1000 - 1, model: "fov682");
         return spacecraft;
     }
 
@@ -841,10 +809,10 @@ public class FieldOfViewSearchTests : IClassFixture<PropagatedFieldOfViewCase>
         var tle = new TLE("ISS", "1 25544U 98067A   21020.53488036  .00016717  00000-0  10270-3 0  9054",
             "2 25544  51.6423 353.0312 0000493 320.8755  39.2360 15.49309423 25703");
         var fromTle = new Spacecraft(-6822, "FOV6822", 1000.0, tle, 3000.0, new Clock("FOV6822_CLK", 65536));
-        fromTle.AddCircularInstrument(-6822001, "CAMERA", "fov682", 30.0 * IO.Astrodynamics.Constants.Deg2Rad, Vector3.VectorY, Vector3.VectorX, Vector3.Zero);
+        fromTle.AddCircularInstrument("CAMERA", 30.0 * IO.Astrodynamics.Constants.Deg2Rad, Vector3.VectorY, Vector3.VectorX, Vector3.Zero, naifId: -6822001, model: "fov682");
         // Propagated by TLEPropagator, which records no attitude (#546)
         var byTlePropagator = new Spacecraft(-6823, "FOV6823", 1000.0, tle, 3000.0, new Clock("FOV6823_CLK", 65536));
-        byTlePropagator.AddCircularInstrument(-6823001, "CAMERA", "fov682", 30.0 * IO.Astrodynamics.Constants.Deg2Rad, Vector3.VectorY, Vector3.VectorX, Vector3.Zero);
+        byTlePropagator.AddCircularInstrument("CAMERA", 30.0 * IO.Astrodynamics.Constants.Deg2Rad, Vector3.VectorY, Vector3.VectorX, Vector3.Zero, naifId: -6823001, model: "fov682");
         var tleStart = tle.Epoch.ToTDB();
         var tleSolution = new IO.Astrodynamics.Propagator.TLEPropagator(new Window(tleStart, tleStart.AddSeconds(6.0 * 3600.0)), byTlePropagator,
             TimeSpan.FromMinutes(10.0)).Propagate();
@@ -873,8 +841,8 @@ public class FieldOfViewSearchTests : IClassFixture<PropagatedFieldOfViewCase>
 
             // A field error first: a field wider than gftfov's bound (a zero boresight and a cross angle of 0 are rejected when
             // the instrument is added, #707, #715)
-            spacecraft.AddEllipticalInstrument(spacecraft.NaifId * 1000 - 2, "WIDE", "fov682", 0.3, IO.Astrodynamics.Constants.HalfPi - 1e-7, Vector3.VectorY,
-                Vector3.VectorX, Vector3.Zero);
+            spacecraft.AddEllipticalInstrument("WIDE", 0.3, IO.Astrodynamics.Constants.HalfPi - 1e-7, Vector3.VectorY,
+                Vector3.VectorX, Vector3.Zero, naifId: spacecraft.NaifId * 1000 - 2, model: "fov682");
             var wide = spacecraft.Instruments.First(x => x.Name == "WIDE");
             var fieldError = Assert.Throws<InvalidOperationException>(() =>
                 wide.FindWindowsInFieldOfViewConstraint(window, spacecraft, earth, earth.Frame, ShapeType.Point, Aberration.LT, TimeSpan.FromMinutes(1.0)));

@@ -57,8 +57,8 @@ public class ForeignInstrumentTests
         spacecraft.AddFuelTank(tank);
         engine = new Engine("ENGINE" + -id, "MODEL", "SN" + -id, 320.0, 5.0, tank);
         spacecraft.AddEngine(engine);
-        spacecraft.AddCircularInstrument(id * 1000 - 1, "CAMZ" + -id, "MODEL", 0.1, Vector3.VectorZ, Vector3.VectorY, Vector3.Zero);
-        spacecraft.AddCircularInstrument(id * 1000 - 2, "CAMX" + -id, "MODEL", 0.1, Vector3.VectorX, Vector3.VectorY, Vector3.Zero);
+        spacecraft.AddCircularInstrument("CAMZ" + -id, 0.1, Vector3.VectorZ, Vector3.VectorY, Vector3.Zero, naifId: id * 1000 - 1, model: "MODEL");
+        spacecraft.AddCircularInstrument("CAMX" + -id, 0.1, Vector3.VectorX, Vector3.VectorY, Vector3.Zero, naifId: id * 1000 - 2, model: "MODEL");
         return spacecraft;
     }
 

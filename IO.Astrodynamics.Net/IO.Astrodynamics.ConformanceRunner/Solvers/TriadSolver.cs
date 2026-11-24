@@ -50,8 +50,8 @@ public class TriadSolver : ICategorySolver
 
         // Create a circular instrument with the boresight and clock directions
         var fovRad = UnitConversion.DegToRad(inputs.FieldOfView.HalfAngleDeg);
-        spacecraft.AddCircularInstrument(-99900, "ConfInst", "ConfModel",
-            fovRad, boresight, refVector, Vector3.Zero);
+        spacecraft.AddCircularInstrument("ConfInst",
+            fovRad, boresight, refVector, Vector3.Zero, naifId: -99900, model: "ConfModel");
         var instrument = spacecraft.Instruments.First();
 
         // The TRIAD of the IAttitudeTarget constructor: the instrument's boresight towards the primary target, its

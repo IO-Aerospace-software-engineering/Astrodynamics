@@ -23,7 +23,8 @@ namespace IO.Astrodynamics.Body.Spacecraft
         public string Name { get; }
 
         /// <summary>
-        /// Model name
+        /// The model of the instrument, informational (it reaches no kernel); null when none was given (optional since
+        /// 11.0.0, decision 72 of #668)
         /// </summary>
         public string Model { get; }
 
@@ -77,7 +78,10 @@ namespace IO.Astrodynamics.Body.Spacecraft
         public Spacecraft Spacecraft { get; }
 
         /// <summary>
-        /// Instrument constructor
+        /// Instrument constructor, <c>private protected</c> since 11.0.0 (decision 72 of #668, decided by S. Guillet,
+        /// 2026-11-23): the hierarchy is closed, <c>Spacecraft.Add*Instrument</c> builds every instrument, under its checks
+        /// (the id, the name), and lists it in <see cref="Body.Spacecraft.Spacecraft.Instruments"/>. Before, a subclass
+        /// outside the library built an instrument none of those rules covered, which the kernel writers never wrote.
         /// </summary>
         /// <remarks>
         /// The field of view is checked as CSPICE's <c>getfov</c> reads it from the instrument kernel the library writes
@@ -102,21 +106,16 @@ namespace IO.Astrodynamics.Body.Spacecraft
         /// boresight</param>
         /// <param name="orientation">The Euler angles (x, y, z) of <see cref="Orientation"/>, rad: finite</param>
         /// <param name="spacecraft"></param>
-        /// <exception cref="ArgumentException">The name or the model is empty; or, naming the parameter, the field of view is
+        /// <exception cref="ArgumentException">The name is empty; or, naming the parameter, the field of view is
         /// not a finite positive number, the boresight or the reference vector has a component that is not finite or a
         /// magnitude of 0 (the boresight checked first), or the reference vector is parallel to the boresight (#707), or an
         /// Euler angle of the orientation is not finite (#715).</exception>
-        protected Instrument(Spacecraft spacecraft, int naifId, string name, string model, double fieldOfView, InstrumentShape shape, Vector3 boresight, Vector3 refVector,
-            Vector3 orientation)
+        private protected Instrument(Spacecraft spacecraft, int naifId, string name, string model, double fieldOfView, InstrumentShape shape, Vector3 boresight,
+            Vector3 refVector, Vector3 orientation)
         {
             if (string.IsNullOrEmpty(name))
             {
-                throw new ArgumentException("Instrument requires a name");
-            }
-
-            if (string.IsNullOrEmpty(model))
-            {
-                throw new ArgumentException("Instrument requires a model");
+                throw new ArgumentException("Instrument requires a name", nameof(name));
             }
 
             // A NaN passed the former test fieldOfView <= 0, and an infinity was not checked (#707)

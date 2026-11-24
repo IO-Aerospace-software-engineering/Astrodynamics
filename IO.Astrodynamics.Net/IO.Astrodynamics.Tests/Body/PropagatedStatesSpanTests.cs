@@ -270,7 +270,7 @@ public class PropagatedStatesSpanTests
         var observer = new Spacecraft(naifId, $"SPAN{-naifId}", 1000.0, initial, 3000.0, new Clock($"SPAN{-naifId}_CLK", 65536));
         var target = new Spacecraft(naifId - 1, $"SPAN{1 - naifId}", 1000.0, new StateVector(ahead.Position, ahead.Velocity, earth, S, Frame.ICRF), 3000.0,
             new Clock($"SPAN{1 - naifId}_CLK", 65536));
-        observer.AddCircularInstrument(naifId * 1000 - 1, $"SPAN{-naifId}_CAM", "fov527", 1.0, new Vector3(0.0, 1.0, 1.0).Normalize(), Vector3.VectorX, Vector3.Zero);
+        observer.AddCircularInstrument($"SPAN{-naifId}_CAM", 1.0, new Vector3(0.0, 1.0, 1.0).Normalize(), Vector3.VectorX, Vector3.Zero, naifId: naifId * 1000 - 1, model: "fov527");
         var window = new Window(S, S.AddHours(1.0));
         foreach (var spacecraft in new[] { observer, target })
         {

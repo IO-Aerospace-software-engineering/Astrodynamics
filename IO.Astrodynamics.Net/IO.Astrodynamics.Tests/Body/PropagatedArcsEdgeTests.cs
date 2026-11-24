@@ -996,8 +996,8 @@ public class PropagatedArcsEdgeTests
         {
             Configure = (sc, engine, earth, _, start) =>
             {
-                sc.AddCircularInstrument(-5582901, "BEFORE", "fov540", 0.02, before, Perpendicular(before), Vector3.Zero);
-                sc.AddCircularInstrument(-5582902, "AFTER", "fov540", 0.02, after, Perpendicular(after), Vector3.Zero);
+                sc.AddCircularInstrument("BEFORE", 0.02, before, Perpendicular(before), Vector3.Zero, naifId: -5582901, model: "fov540");
+                sc.AddCircularInstrument("AFTER", 0.02, after, Perpendicular(after), Vector3.Zero, naifId: -5582902, model: "fov540");
                 Chain(sc, engine, earth, start);
             }
         });

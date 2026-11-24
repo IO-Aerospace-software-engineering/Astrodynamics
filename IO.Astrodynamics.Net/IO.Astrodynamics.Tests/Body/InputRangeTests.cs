@@ -182,8 +182,8 @@ public class InputRangeTests
     {
         var spacecraft = new Spacecraft(-2147483, "SC2147483", 100.0, Leo(), 1000.0, new Clock("CLK2147483", 65536));
 
-        var exception = Record.Exception(() => spacecraft.AddCircularInstrument(-2147483000, "CAM", "M", 0.1, Vector3.VectorZ,
-            Vector3.VectorX, Vector3.Zero));
+        var exception = Record.Exception(() => spacecraft.AddCircularInstrument("CAM", 0.1, Vector3.VectorZ,
+            Vector3.VectorX, Vector3.Zero, naifId: -2147483000, model: "M"));
 
         var rejected = Assert.IsType<ArgumentOutOfRangeException>(exception);
         Assert.Equal("naifId", rejected.ParamName);

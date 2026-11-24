@@ -124,7 +124,7 @@ namespace IO.Astrodynamics.Tests.Body
             spacecraft.AddFuelTank(fuelTank);
             spacecraft.AddEngine(engine);
             spacecraft.AddPayload(new Payload("payload1", 50.0, "pay01"));
-            spacecraft.AddCircularInstrument(-178600, "CAM600", "mod1", 1.5, Vector3.VectorZ, Vector3.VectorX, Vector3.VectorX);
+            spacecraft.AddCircularInstrument("CAM600", 1.5, Vector3.VectorZ, Vector3.VectorX, Vector3.VectorX, naifId: -178600, model: "mod1");
             scenario.AddSpacecraft(spacecraft);
 
             var root = Constants.OutputPath.CreateSubdirectory(scenario.Mission.Name).CreateSubdirectory(scenario.Name);
@@ -210,9 +210,9 @@ namespace IO.Astrodynamics.Tests.Body
             Clock clk = new Clock("My clock", 256);
             Spacecraft spc = new Spacecraft(-1001, "MySpacecraft", 1000.0, ke, 10000.0, clk);
 
-            spc.AddCircularInstrument(-1001600, "My instrument", "Model", 1.57, Vector3.VectorZ, Vector3.VectorX, Vector3.VectorX);
+            spc.AddCircularInstrument("My instrument", 1.57, Vector3.VectorZ, Vector3.VectorX, Vector3.VectorX, naifId: -1001600, model: "Model");
             Assert.Single(spc.Instruments);
-            Assert.Throws<ArgumentException>(() => spc.AddCircularInstrument(-1001600, "My instrument", "Model", 1.57, Vector3.VectorZ, Vector3.VectorX, Vector3.VectorX));
+            Assert.Throws<ArgumentException>(() => spc.AddCircularInstrument("My instrument", 1.57, Vector3.VectorZ, Vector3.VectorX, Vector3.VectorX, naifId: -1001600, model: "Model"));
         }
 
         [Fact]
@@ -731,10 +731,10 @@ namespace IO.Astrodynamics.Tests.Body
             var sv = new StateVector(new Vector3(6800000.0, 0.0, 0.0), new Vector3(0.0, 7656.0, 0.0), TestHelpers.EarthAtJ2000, TimeSystem.Time.J2000TDB,
                 Frames.Frame.ICRF);
             var spc = new Spacecraft(-1103, "Instruments1103", 1000.0, sv, 3000.0, new Clock("Clk1103", 256));
-            spc.AddRectangularInstrument(-1103001, "REC", "model", 0.2, 0.1, Vector3.VectorZ, Vector3.VectorX, Vector3.Zero);
-            spc.AddEllipticalInstrument(-1103002, "ELL", "model", 0.2, 0.1, Vector3.VectorZ, Vector3.VectorX, Vector3.Zero);
-            Assert.Throws<ArgumentException>(() => spc.AddRectangularInstrument(-1103001, "REC", "model", 0.2, 0.1, Vector3.VectorZ, Vector3.VectorX, Vector3.Zero));
-            Assert.Throws<ArgumentException>(() => spc.AddEllipticalInstrument(-1103002, "ELL", "model", 0.2, 0.1, Vector3.VectorZ, Vector3.VectorX, Vector3.Zero));
+            spc.AddRectangularInstrument("REC", 0.2, 0.1, Vector3.VectorZ, Vector3.VectorX, Vector3.Zero, naifId: -1103001, model: "model");
+            spc.AddEllipticalInstrument("ELL", 0.2, 0.1, Vector3.VectorZ, Vector3.VectorX, Vector3.Zero, naifId: -1103002, model: "model");
+            Assert.Throws<ArgumentException>(() => spc.AddRectangularInstrument("REC", 0.2, 0.1, Vector3.VectorZ, Vector3.VectorX, Vector3.Zero, naifId: -1103001, model: "model"));
+            Assert.Throws<ArgumentException>(() => spc.AddEllipticalInstrument("ELL", 0.2, 0.1, Vector3.VectorZ, Vector3.VectorX, Vector3.Zero, naifId: -1103002, model: "model"));
             Assert.Equal(2, spc.Instruments.Count);
         }
 
