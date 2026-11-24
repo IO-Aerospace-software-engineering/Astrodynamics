@@ -371,8 +371,28 @@ release are listed under **Known limitations**.
   choice 12 of [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668), decided by
   S. Guillet, 2026-11-19), SPICE's `bodn2c_c` through the new native `GetNaifIdProxy`: SPICE's built-in names and those
   of the loaded kernels, in any case, false for a name SPICE does not know (`docs/reference/spice-api.md`, "Body names").
+- **The command-line tool: names, kernels from the environment, csv and json, the scale of its epochs** (lot L8 of the
+  ergonomics review, R29 of #668, choice 12, decided by S. Guillet, 2026-11-19; `docs/reference/cli.md`, its help
+  generated from the tool and compared by `CliPageTests`). An object is a NAIF identifier or a name SPICE knows (`MOON`,
+  `DSS-13`, a name the loaded kernels give), read through `SpiceAPI.TryGetNaifId`; `-K` is repeatable and follows the
+  paths of the environment variable `ASTRO_KERNELS`; `--format csv` writes the rows of `ephemeris`, `orientation` and the
+  window searches, `--format json` the record of `celestial-body-info`, `sub-point`, `angular-separation`,
+  `frame-converter` and `orbital-parameters-converter`, field names with their unit and every real in its shortest
+  round-trip form; `--time-scale tdb|tt|tai|utc|gps` writes the epochs in another scale than the input's; a value takes
+  a unit (`400000km`, `7.5km/s`, `51.6deg`); `propagate --integrator rk78|vv` and `--atmosphere nrlmsise00|standard`
+  choose the integrator and the atmosphere of the Earth; `--verbose` writes the trace of an error.
 **Fixed**
 
+- **The command line read its numbers in the culture of the machine** ([#814](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/814)):
+  `orbital-parameters-converter`, `propagate` and the illumination search parsed their values with `double.Parse`, so
+  that `6800000,0` was 68 000 000 m in an English culture (an orbit 10 times larger, silently) and a comma decimal was
+  read in a French one. They are read in invariant culture, a dot as decimal separator and no thousands separator, any
+  other text an input error (exit code 2), the values written with a dot read as before.
+- **`astro orientation` never ended for a step of zero or less** ([#815](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/815)):
+  its loop added the step to the epoch while it stayed in the window. A step of zero or less is an input error, exit code 2.
+- **`astro orbital-parameters-converter` accepted three type flags** ([#816](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/816)):
+  its check was an exclusive or of the flags, which an odd number passes, so `-s -k -q` ran as `-s`. The types are
+  `--from` and `--as`, one value each (lot L8).
 - **`Matrix * double[]` and `Matrix.Multiply(double[])` returned as many components as the vector**
   ([#774](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/774), fixed in lot L2 of the ergonomics review, decided by S. Guillet, 2026-11-21). M v has one component per
   row of M, but the result was allocated with the length of v, the number of columns: a 2 × 3 matrix returned three
@@ -7254,6 +7274,46 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   `ScenarioSummary.SpacecraftSummaries` is an `IReadOnlyList<SpacecraftSummary>` in scenario order (an
   `IReadOnlyCollection` of a set before). Migration: `summary.Maneuvers[i].Definition` for the maneuver, and the record's
   own `DeltaV`, `FuelBurned` and windows for the values of the run; index `SpacecraftSummaries`.
+- **Breaking: the command-line tool takes its objects as positional arguments and everything else as options** (lot L8,
+  R29 of [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668), decided by S. Guillet, 2026-11-19 and 2026-11-24: no compatibility with the positional forms of 10.x
+  beyond the aliases of `time-converter`). The kernels move from the first positional argument to `-K`, repeatable,
+  after the paths of `ASTRO_KERNELS`; the window and the step to `--begin`, `--end` and `--step`, an epoch to `--epoch`,
+  the frame and the aberration to `--frame` and `--aberration`, the values of the searches to `--relation`, `--value`,
+  `--adjust`, `--system`, `--coordinate`, `--target-shape`, `--front-shape`, `--occultation`, `--target-frame`,
+  `--fixed-frame`, `--site` and `--angle`; the type flags (`-s -k -q -t`, `-d -c`, `--to-state-vector`, `--to-keplerian`,
+  `--to-equinoctial`) become `--from state|keplerian|equinoctial|tle` and `--as`, an orbit `--orbit` (a TLE
+  `--orbit "<line 1>" --orbit "<line 2>"`, without centre, epoch or frame, which it carries), the target epoch and frame
+  of the converter `--target-epoch` and `--target-frame`, and the settings of `propagate` (`-r -a -n`, mass, area, Cd and
+  bodies) `--srp`, `--drag`, `--degree`, `--mass`, `--area`, `--cd` and `--body`, its directory `--output`. An object is
+  an identifier or a name, a negative identifier given bare (`-1000`, which the parser read as options before). Migration:
+  the old-to-new form of each command in `docs/reference/cli.md`, "Migrating from 10.x", for example
+  `ephemeris k 301 399 B E 00:01:00 ICRF LT -k` → `ephemeris 301 399 -K k --begin B --end E --step 1min --aberration LT --as keplerian`.
+- **Breaking: `astro propagate` runs with the library's defaults** (lot L8, choice 12 of #668, decided by S. Guillet,
+  2026-11-19): RK7(8) at 1e-9 with outputs every 60 s, a drag coefficient of 2.2 and, with `--drag`, NRLMSISE-00 at nominal
+  space weather for the Earth, where it ran Velocity-Verlet at 1 s with outputs every second, Cd 0.3 and the U.S. Standard
+  Atmosphere 1976. Its SPK is the library run of those settings on the Earth of the CLI (EGM2008 at degree 10), within
+  the rounding of the SPK (3.07e-9 m, Linux x64; `PropagateTests.Defaults_AreTheLibrarysRun`): 4.864 m from the run of
+  10.x after 30 min of a 6800 km orbit with drag and SRP, whose drag the coefficient alone multiplies by 7.3. Mars keeps its
+  standard atmosphere, `--atmosphere` for another centre than the Earth and `--drag` about another centre than the Earth
+  and Mars are input errors. Migration: `--integrator vv --step 1s --cd 0.3 --atmosphere standard` writes the SPK of 10.x
+  byte for byte (measured from a state and from a TLE with drag and SRP at `--degree 20`, against main 76e02ed7).
+- **Breaking: a step of the command line needs a colon or a unit** (lot L8, R29 of #668): `[d.]hh:mm:ss[.f]` or a number
+  and `s`, `min`, `h` or `d`; a bare `60` was 60 days (`TimeSpan.Parse`) and is an input error. Migration: `60s`, `1min` or
+  `00:01:00`.
+- **Breaking: the command line reads its numbers in invariant culture** (lot L8, #814): a dot as decimal separator, no
+  thousands separator, a finite value; a value in another form is an input error. Migration: write the decimals with a dot.
+- **Breaking: exit codes and messages of the command line** (lot L8, R29 of #668): 0 for a success and for the help and
+  the version, 2 for an argument the command cannot read (an unknown command, option, object, frame, value or unit, a
+  missing argument), 3 for the kernels (none, a missing path, a file SPICE refuses), 1 for an error of the library or of
+  SPICE; each error is one line on the standard error, its trace with `--verbose`, where Cocona exited 129 for an unknown
+  option and for the help, and every exception ended the process with its stack trace and exit code 1; the standard output
+  holds the data only, without the banner `IO.Astrodynamics.CLI v11.0.0 experimental` that preceded it, and `--version`
+  writes `astro 11.0.0`. Migration: test 2 and 3 where a script tested 129 or 1, and read the data from the first line.
+- **Breaking: the command line writes its epochs in the scale of the input** (lot L8, R29 of #668, decided by S. Guillet,
+  2026-11-19): `orientation`, the window searches, `frame-converter` and `orbital-parameters-converter` write UTC labels for
+  a `Z` input where they wrote TDB (`ephemeris` already wrote the scale of its window), a converted label the nearest tick of
+  the instant, which can sit one tick off it. Migration: `--time-scale tdb`.
+
 **Removed**
 
 - **`Instrument.PositionInFOV`** (protected), on which `IsInFOV` was built before #515: its reference vector was not made

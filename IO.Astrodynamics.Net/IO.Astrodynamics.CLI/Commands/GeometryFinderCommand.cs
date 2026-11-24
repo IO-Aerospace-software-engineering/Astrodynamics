@@ -20,7 +20,7 @@ public class GeometryFinderCommand
         "Relation: <, >, =, <=, >=, !, ABSMIN, ABSMAX, LOCMIN or LOCMAX, in any case (<= and >= are searched as < and >, whose windows are closed; ! is the window less the instants of =)";
 
     private const string AdjustDescription =
-        "Adjustment of ABSMIN and ABSMAX (default 0): the windows where the value is within it of the absolute extremum, in the unit of --value";
+        "Adjustment of ABSMIN and ABSMAX: the windows where the value is within it of the absolute extremum, in the unit of --value";
 
     [Command("find-windows-from-coordinate-constraint", Description = "The windows where a coordinate of a target seen from an observer meets a relation (CSPICE gfposc)")]
     public int CoordinateConstraint(
@@ -43,7 +43,7 @@ public class GeometryFinderCommand
         OutputOptions output,
         [Option("adjust", ValueName = "value", Description = AdjustDescription)]
         string adjust = "0",
-        [Option("frame", ValueName = "frame", Description = "Frame of the coordinates: ICRF (default, written J2000) or a frame of the kernels")]
+        [Option("frame", ValueName = "frame", Description = "Frame of the coordinates: ICRF (written J2000) or a frame of the kernels")]
         string frame = "ICRF")
     {
         return CliContext.Execute(output.Verbose, () =>

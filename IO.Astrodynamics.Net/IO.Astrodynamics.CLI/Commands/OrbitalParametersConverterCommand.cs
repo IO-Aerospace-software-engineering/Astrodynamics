@@ -17,7 +17,7 @@ public class OrbitalParametersConverterCommand
         OutputOptions output,
         [Option("target-epoch", ValueName = "epoch", Description = "Epoch of the orbit written, by the two-body motion (SGP4 for a TLE): the epoch of the orbit given by default")]
         string targetEpoch = null,
-        [Option("target-frame", ValueName = "frame", Description = "Frame of the orbit written: ICRF (default, written J2000) or a frame of the library or of the loaded kernels")]
+        [Option("target-frame", ValueName = "frame", Description = "Frame of the orbit written: ICRF (written J2000) or a frame of the library or of the loaded kernels")]
         string targetFrame = "ICRF")
     {
         return CliContext.Execute(output.Verbose, () =>

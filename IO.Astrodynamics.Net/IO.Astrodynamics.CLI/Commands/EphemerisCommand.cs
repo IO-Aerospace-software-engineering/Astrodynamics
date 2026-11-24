@@ -22,9 +22,9 @@ public class EphemerisCommand
         AberrationOptions aberration,
         TimeScaleOptions timeScale,
         OutputOptions output,
-        [Option("frame", ValueName = "frame", Description = "Frame of the states: ICRF (default, written J2000) or a frame of the library or of the loaded kernels")]
+        [Option("frame", ValueName = "frame", Description = "Frame of the states: ICRF (written J2000) or a frame of the library or of the loaded kernels")]
         string frame = "ICRF",
-        [Option("as", ValueName = "state|keplerian|equinoctial", Description = "Kind of the states written: state (default), keplerian or equinoctial")]
+        [Option("as", ValueName = "state|keplerian|equinoctial", Description = "Kind of the states written: state, keplerian or equinoctial")]
         string @as = "state")
     {
         return CliContext.Execute(output.Verbose, () =>
@@ -80,7 +80,7 @@ public class EphemerisCommand
         EpochOptions epoch,
         AberrationOptions aberration,
         OutputOptions output,
-        [Option("as", ValueName = "planetocentric|planetodetic|cartesian", Description = "Coordinates written: planetocentric (default), planetodetic, or the planetocentric cartesian position on the surface")]
+        [Option("as", ValueName = "planetocentric|planetodetic|cartesian", Description = "Coordinates written: planetocentric, planetodetic, or the planetocentric cartesian position on the surface")]
         string @as = "planetocentric")
     {
         return CliContext.Execute(output.Verbose, () =>

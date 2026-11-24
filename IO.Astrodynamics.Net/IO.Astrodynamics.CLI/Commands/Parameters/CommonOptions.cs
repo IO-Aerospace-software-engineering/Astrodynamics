@@ -8,7 +8,7 @@ public sealed class KernelOptions : ICommandParameterSet
     [Option("kernels", ['K'], ValueName = "path",
         Description = "A kernel, a meta-kernel or a directory of kernels; repeatable, loaded in order after the paths of the environment variable ASTRO_KERNELS (separated by the path separator of the platform)")]
     [HasDefaultValue]
-    public string[] Kernels { get; set; } = [];
+    public string[] Kernels { get; set; }
 }
 
 /// <summary>The output of a command: its format and the trace of its errors.</summary>
@@ -55,7 +55,7 @@ public sealed class PropagationWindowOptions : ICommandParameterSet
     [Option("end", ValueName = "epoch", Description = "End of the propagation, in the same forms")]
     public string End { get; set; }
 
-    [Option("step", ValueName = "step", Description = "Output step: [d.]hh:mm:ss[.f], or a number and s, min, h or d; 60s by default")]
+    [Option("step", ValueName = "step", Description = "Output step: [d.]hh:mm:ss[.f], or a number and s, min, h or d")]
     [HasDefaultValue]
     public string Step { get; set; } = "60s";
 }
@@ -74,7 +74,7 @@ public sealed class EpochOptions : ICommandParameterSet
 public sealed class AberrationOptions : ICommandParameterSet
 {
     [Option("aberration", ValueName = "correction",
-        Description = "Aberration correction: NONE (default), LT, LT+S, CN, CN+S, XLT, XLT+S, XCN or XCN+S, in any case")]
+        Description = "Aberration correction: NONE, LT, LT+S, CN, CN+S, XLT, XLT+S, XCN or XCN+S, in any case")]
     [HasDefaultValue]
     public string Aberration { get; set; } = "NONE";
 }

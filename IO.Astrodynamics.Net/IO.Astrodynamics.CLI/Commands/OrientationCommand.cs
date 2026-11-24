@@ -17,7 +17,7 @@ public class OrientationCommand
         WindowOptions window,
         TimeScaleOptions timeScale,
         OutputOptions output,
-        [Option("frame", ValueName = "frame", Description = "Reference frame: ICRF (default, written J2000) or a frame of the library or of the loaded kernels")]
+        [Option("frame", ValueName = "frame", Description = "Reference frame: ICRF (written J2000) or a frame of the library or of the loaded kernels")]
         string frame = "ICRF")
     {
         return CliContext.Execute(output.Verbose, () =>

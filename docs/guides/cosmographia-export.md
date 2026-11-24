@@ -26,7 +26,7 @@ The exported SPK uses the spacecraft's NAIF ID and covers the propagated time wi
 `CosmographiaExporter.ExportAsync(scenario, outputDirectory)` writes a simulated scenario to
 `<outputDirectory>/<Mission>_<Scenario>`, which it replaces: the kernels of each spacecraft (clock, frame, CK, SPK and
 instruments), site and star, and the Cosmographia catalog files, among them `spice.json`, which lists the kernels.
-`astro propagate` exports the same way.
+`astro propagate` exports the same way ([command-line tool](../reference/cli.md)).
 
 The layout adds to the output directory `/<Mission>_<Scenario>/Spacecrafts/<name>/Orientation/<name>.ck` for the CK of
 a spacecraft, usually the longest kernel: 31 characters plus the mission and scenario names and twice the spacecraft

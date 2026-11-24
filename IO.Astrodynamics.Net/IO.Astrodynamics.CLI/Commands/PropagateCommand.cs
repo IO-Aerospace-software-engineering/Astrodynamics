@@ -42,9 +42,9 @@ public class PropagateCommand
         string atmosphere = null,
         [Option("degree", ValueName = "degree", Description = "Degree of the geopotential of the Earth (EGM2008), 10 by default, 100 at most")]
         string degree = null,
-        [Option("mass", ValueName = "mass", Description = "Mass of the spacecraft, kg (100 by default)")]
+        [Option("mass", ValueName = "mass", Description = "Mass of the spacecraft, kg")]
         string mass = "100",
-        [Option("area", ValueName = "area", Description = "Cross-sectional area of the spacecraft, m2 (1 by default)")]
+        [Option("area", ValueName = "area", Description = "Cross-sectional area of the spacecraft, m2")]
         string area = "1",
         [Option("cd", ValueName = "coefficient", Description = "Drag coefficient (2.2 by default)")]
         string cd = null,
