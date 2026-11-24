@@ -491,6 +491,100 @@ public class PropagateTests
         return spacecraft;
     }
 
+    /// <summary>
+    /// Without options, propagate runs with the library's defaults (choice 12 of #668): RK7(8) at 1e-9 with outputs every
+    /// 60 s, Cd 2.2, and with --drag NRLMSISE-00 at nominal space weather for the Earth (the atmosphere of an Earth without
+    /// a model, #674). Its SPK is the library run of those settings on the Earth of the CLI (EGM2008 at degree 10, no
+    /// atmospheric model), read at the outputs, within the rounding of the SPK; and it moves from the run of 10.x, which
+    /// --integrator vv --step 1s --cd 0.3 --atmosphere standard gives.
+    /// </summary>
+    [Fact]
+    public async Task Defaults_AreTheLibrarysRun()
+    {
+        const string output = "PDEF";
+        var window = new Window(Time.J2000TDB, Time.J2000TDB.AddSeconds(1800.0));
+        var outputs = Enumerable.Range(0, 31).Select(i => window.StartDate.AddSeconds(60.0 * i)).ToArray();
+        using (await Configuration.LockAsync())
+        {
+            if (Directory.Exists(output))
+            {
+                Directory.Delete(output, true);
+            }
+
+            Assert.Equal(Written(output), CliRun.Ok(Propagate("PDEF", output, "state", StateValues, "ICRF", "0.0", "1800.0", "--drag", "--srp")));
+            var spk = new FileInfo(Directory.GetFiles(output, "PDEF.spk", SearchOption.AllDirectories).Single());
+
+            var stream = typeof(PropagateCommand).Assembly.GetManifestResourceStream(EmbeddedModel)!;
+            var earth = new CelestialBody(399, new GeopotentialModelParameters(stream, 10));
+            var initial = new IO.Astrodynamics.OrbitalParameters.StateVector(new Vector3(6800000.0, 0.0, 0.0), new Vector3(0.0, 8000.0, 0.0), earth,
+                window.StartDate, Frames.Frame.ICRF);
+            var spacecraft = new Spacecraft(-1000, "Reference", 100.0, 100.0, new Clock("clockReference", 65536), initial, 1.0, 2.2);
+            var scenario = new Mission.Scenario("ScenarioDefaults", new Mission.Mission("MissionDefaults"), window);
+            scenario.AddSpacecraft(spacecraft);
+            scenario.AddCelestialItem(earth);
+            scenario.Simulate(new PropagationOptions { AtmosphericDrag = true, SolarRadiationPressure = true });
+
+            double worst = 0.0;
+            Vector3 end;
+            try
+            {
+                SpiceAPI.Instance.LoadKernels(spk);
+                foreach (var epoch in outputs)
+                {
+                    var fromSpk = SpiceAPI.Instance.ReadEphemeris(epoch, 399, -1000, Frames.Frame.ICRF, Aberration.None).Position;
+                    worst = System.Math.Max(worst, (fromSpk - spacecraft.GetEphemeris(epoch, earth, Frames.Frame.ICRF, Aberration.None).Position).Magnitude());
+                }
+
+                end = SpiceAPI.Instance.ReadEphemeris(outputs[^1], 399, -1000, Frames.Frame.ICRF, Aberration.None).Position;
+            }
+            finally
+            {
+                SpiceAPI.Instance.UnloadKernels(spk);
+            }
+
+            var legacy = await RunAndReadEnd("s", StateValues, "ICRF", "PLEG", outputs[^1], 10);
+            _output.WriteLine($"MEASURE R29 propagate defaults: CLI SPK to the library run {worst:E2} m at the outputs; " +
+                              $"{(end - legacy).Magnitude():F3} m from the run of 10.x (no drag in the latter) after 30 min");
+            Assert.True(worst < DefaultsSpkThreshold, $"CLI SPK {worst:E2} m from the library run");
+            Assert.True((end - legacy).Magnitude() > 1.0);
+        }
+    }
+
+    /// <summary>
+    /// The SPK of the default run against the library run, read at its 31 outputs: the reading of the type-9 SPK, 3.07e-9 m
+    /// worst on Linux x64 (2026-11-24), about three units in the last place of a 6.8e6 m position. Provisional, twice the
+    /// Linux worst rounded up at the second digit: to be set from the CI logs of Linux, Windows and macOS arm64.
+    /// </summary>
+    private const double DefaultsSpkThreshold = 6.2e-9;
+
+    /// <summary>
+    /// --integrator vv --step 1s --cd 0.3 --atmosphere standard, the migration line of the Breaking entry, writes the SPK of
+    /// propagate before 11.0.0 byte for byte, with drag and SRP, from a state and from a TLE at -n 20: the files of main at
+    /// 76e02ed7, measured on Linux x64 with cmp (2026-11-24), are the library runs of those settings, which this test
+    /// checks against the SPK (<see cref="PropagateFromTle_RunsOnTheCliEarth"/>, <see cref="EarthGeopotentialDegree_IsTheDegreeOfTheRun"/>)
+    /// and here between two runs: the same bytes.
+    /// </summary>
+    [Fact]
+    public async Task Legacy_WritesTheSameSpkTwice()
+    {
+        using (await Configuration.LockAsync())
+        {
+            byte[] Run(string output)
+            {
+                if (Directory.Exists(output))
+                {
+                    Directory.Delete(output, true);
+                }
+
+                Assert.Equal(Written(output), CliRun.Ok(Propagate("Sat", output, "state", "6800000.0 0.0 0.0 0.0 7600.0 0.0", "ICRF", "0.0", "600.0",
+                    ["--srp", "--drag", .. Legacy])));
+                return File.ReadAllBytes(Directory.GetFiles(output, "Sat.spk", SearchOption.AllDirectories).Single());
+            }
+
+            Assert.Equal(Run("PLA"), Run("PLB"));
+        }
+    }
+
     [Fact]
     public async Task PropagateFromTle_RefusesACentre()
     {

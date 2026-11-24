@@ -46,6 +46,20 @@ public sealed class WindowOptions : ICommandParameterSet
     public string Step { get; set; }
 }
 
+/// <summary>The window of a propagation and its output step, 60 s by default (the library's, D4 of #668).</summary>
+public sealed class PropagationWindowOptions : ICommandParameterSet
+{
+    [Option("begin", ValueName = "epoch", Description = "Start of the propagation: " + EpochOptions.Forms)]
+    public string Begin { get; set; }
+
+    [Option("end", ValueName = "epoch", Description = "End of the propagation, in the same forms")]
+    public string End { get; set; }
+
+    [Option("step", ValueName = "step", Description = "Output step: [d.]hh:mm:ss[.f], or a number and s, min, h or d; 60s by default")]
+    [HasDefaultValue]
+    public string Step { get; set; } = "60s";
+}
+
 /// <summary>The epoch of a command.</summary>
 public sealed class EpochOptions : ICommandParameterSet
 {

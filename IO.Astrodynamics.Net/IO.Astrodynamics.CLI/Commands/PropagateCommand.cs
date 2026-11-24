@@ -30,7 +30,7 @@ public class PropagateCommand
         string output,
         OrbitOptions orbit,
         KernelOptions kernels,
-        WindowOptions window,
+        PropagationWindowOptions window,
         OutputOptions outputOptions,
         [Option("integrator", ValueName = "rk78|vv", Description = "Integrator: rk78, RK7(8) at 1e-9 (default), or vv, Velocity-Verlet at 1 s")]
         string integrator = null,
@@ -118,16 +118,25 @@ public class PropagateCommand
         double Area,
         double DragCoefficient)
     {
-        /// <summary>The integrator without --integrator.</summary>
-        internal const string DefaultIntegrator = "vv";
+        /// <summary>
+        /// The integrator without --integrator: RK7(8) at 1e-9, the library's default (choice 12 of #668: Velocity-Verlet at
+        /// 1 s before 11.0.0).
+        /// </summary>
+        internal const string DefaultIntegrator = "rk78";
 
-        /// <summary>The atmosphere of the Earth without --atmosphere.</summary>
-        internal const string DefaultAtmosphere = "standard";
+        /// <summary>
+        /// The atmosphere of the Earth without --atmosphere: NRLMSISE-00 at nominal space weather, the library's for an Earth
+        /// without a model (#674; the U.S. Standard Atmosphere 1976 before 11.0.0).
+        /// </summary>
+        internal const string DefaultAtmosphere = "nrlmsise00";
 
-        /// <summary>The drag coefficient without --cd.</summary>
-        internal const double DefaultDragCoefficient = 0.3;
+        /// <summary>The drag coefficient without --cd: 2.2, the library's (0.3 before 11.0.0).</summary>
+        internal const double DefaultDragCoefficient = 2.2;
 
-        /// <summary>The atmosphere of the Earth the settings name.</summary>
+        /// <summary>
+        /// The atmosphere of the Earth the settings name: none for NRLMSISE-00, so that the Earth takes the library's,
+        /// NRLMSISE-00 at nominal space weather (#674), or the U.S. Standard Atmosphere 1976.
+        /// </summary>
         internal IAtmosphericModel Atmosphere => AtmosphereName == "standard" ? new EarthStandardAtmosphere() : null;
 
         internal static PropagationSettings Read(string integrator, bool drag, string atmosphere, string degree, string mass, string area, string cd)
