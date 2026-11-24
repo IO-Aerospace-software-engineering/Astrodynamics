@@ -4585,7 +4585,11 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   executed its maneuver outside it (472 kg of fuel burned and `DeltaV` rewritten in the probe of the second review of
   L5a). A detector now serves the run that built it only (decision 95 of #668, decided by S. Guillet, 2026-11-24): the
   run disarms it when it ends, completed, stopped or thrown, and its `Evaluate` and `HandleEvent` throw
-  `InvalidOperationException` afterwards, changing nothing.
+  `InvalidOperationException` afterwards, changing nothing. Within the run, a custom `IIntegrator` that kept the
+  detector of an impulse executed it a second time (6.74 kg burned, `DeltaV` rewritten, nothing in
+  `ExecutedManeuvers`, in the probe of the third review of L5a): a detector now executes its impulse once at most
+  (decision 97 of #668, decided by S. Guillet, 2026-11-24), disarming itself when its `HandleEvent` has executed it, a
+  detector that skipped an occurrence (`Continue`) staying armed.
 - **A published propagation solution could be changed from outside the library** ([#796](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/796), lot L5a, decision 55 of
   #668): `PropagationSegment.AddStep`, `PropagationSolution.AddSegment` and `SetOutputStates` were public, and
   `Segments`, `StateVectors` and `Steps` returned the inner list or array, so a caller could add a step to a solution the
@@ -7154,7 +7158,15 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   `InvalidOperationException` naming the maneuver, changing nothing (no fuel, `DeltaV`, window or node of a
   `PlaneAlignmentManeuver`; `IntegratorEventTests.ADetectorKeptPast*`, `ADetectorKeptFromAnEarlierRun_*`,
   `ADetectorBuiltAfterANestedRun_*`, a bare `IIntegrator` and an `Integrator`
-  subclass over both integrators). No result moves. Migration: the propagation executes the plan
+  subclass over both integrators). A detector also executes its impulse once at most (decision 97 of #668, decided by
+  S. Guillet, 2026-11-24; the third review of L5a: a custom `IIntegrator` that kept the detector of an impulse executed
+  it a second time during the run, 6.74 kg burned, `DeltaV` rewritten, nothing in `ExecutedManeuvers`): when its
+  `HandleEvent` has executed the impulse it disarms itself, and a later `HandleEvent` or `Evaluate` throws
+  `InvalidOperationException` saying that it has already executed its impulse, changing nothing, while one that
+  skipped the occurrence (`Continue`, the preconditions not met) stays armed; the propagation never calls a detector
+  after its execution, so a run whose integrator calls `HandleEvent` itself throws rather than burning twice
+  (`IntegratorEventTests.ADetectorCalledAfterItsImpulse_*`, `AnIntegratorThatHandlesItsEvent_*`,
+  `ADetectorThatSkipped*`). No result moves. Migration: the propagation executes the plan
   (`Spacecraft.SetManeuvers`, then a propagation); the previews of a maneuver are `ImpulseManeuver.ComputeDeltaV` and
   `ComputeEventValue`, pure; a custom `IIntegrator` uses the detectors it receives within its call of
   `IntegrateSegment` only.

@@ -127,7 +127,7 @@ its g-function in its direction at or after the minimum epoch, searched from the
   steps, up to 0.096 s at a node, 0.18 s at an apsis of the orbit after a Velocity-Verlet burn and 1.5 s at the
   intersection of an apsidal alignment (worsts 0.0953 s, 0.176 s and 1.44 s on Linux x64, Windows and macOS arm64). A
   minimum epoch within that lag of a crossing is decided on that trajectory.
-- The maneuver detector's `Evaluate` (internal since decision 88 of #668; a custom `IIntegrator` given to the propagator reads it as an `IEventDetector`, within the run only: once the run ends it throws `InvalidOperationException`, decision 95 of #668) still returns +1 before the minimum epoch. A custom integrator that compares
+- The maneuver detector's `Evaluate` (internal since decision 88 of #668; a custom `IIntegrator` given to the propagator reads it as an `IEventDetector`, within the run only: once the run ends it throws `InvalidOperationException`, decision 95 of #668, and so it does once the detector has executed its impulse, decision 97 of #668) still returns +1 before the minimum epoch. A custom integrator that compares
   that value with the first g-value after the minimum epoch keeps the behaviour before 11.0.0: a false crossing at the
   minimum epoch for a positive-to-negative maneuver whose g is already negative there, and a missed negative-to-positive
   crossing in the step that holds it.

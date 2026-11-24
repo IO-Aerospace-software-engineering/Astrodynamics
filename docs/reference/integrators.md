@@ -43,7 +43,10 @@ propagator between its segments, never inside one.
 The event detectors a custom integrator receives serve the run that called it only (decision 95 of #668, decided by
 S. Guillet, 2026-11-24): the run disarms every detector it built when it ends, completed, stopped or thrown, and a
 detector kept past it throws `InvalidOperationException` from `Evaluate` and `HandleEvent`, changing nothing
-([Event Detection](event-detection.md#the-maneuver-detector)).
+([Event Detection](event-detection.md#the-maneuver-detector)). A detector executes its impulse once at most (decision 97
+of #668, decided by S. Guillet, 2026-11-24): once its `HandleEvent` has executed the impulse, it throws in the same way
+within the run, so a custom integrator leaves `HandleEvent` to the propagation, which calls it once per event and never
+after the execution; an integrator that calls it itself makes the run throw rather than burn twice.
 
 ## AcceptedStep
 

@@ -719,6 +719,11 @@ public abstract class PropagatorBase : IPropagator
     /// detector an <see cref="IIntegrator"/> kept past the run then throws <see cref="InvalidOperationException"/> from
     /// <see cref="IEventDetector.Evaluate"/> and <see cref="IEventDetector.HandleEvent"/>, changing nothing (before, it
     /// executed its maneuver outside a run: fuel burned, <see cref="ImpulseManeuver.DeltaV"/> and the windows rewritten).
+    /// A detector executes its impulse once at most (decision 97 of #668, decided by S. Guillet, 2026-11-24): once its
+    /// <see cref="IEventDetector.HandleEvent"/> has executed the impulse, it throws within the run too; the run never calls
+    /// it again, replacing it with the detector of the next impulse, so a run whose integrator calls
+    /// <see cref="IEventDetector.HandleEvent"/> itself throws <see cref="InvalidOperationException"/> rather than burning
+    /// twice.
     /// </para>
     /// <para>
     /// The plan of the spacecraft is not changed during a run on it (decision 96 of #668, decided by S. Guillet,

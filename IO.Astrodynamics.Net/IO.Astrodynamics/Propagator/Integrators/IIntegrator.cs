@@ -74,7 +74,10 @@ public interface IIntegrator
     /// the run that passed them only: once it ends, completed, stopped or thrown, their
     /// <see cref="IEventDetector.Evaluate"/> and <see cref="IEventDetector.HandleEvent"/> throw
     /// <see cref="System.InvalidOperationException"/> (decision 95 of #668, decided by S. Guillet, 2026-11-24), so an
-    /// implementation does not keep them past the call.</param>
+    /// implementation does not keep them past the call. A detector executes its impulse once at most: once its
+    /// <see cref="IEventDetector.HandleEvent"/> has executed it, the detector throws in the same way within the run
+    /// (decision 97 of #668, decided by S. Guillet, 2026-11-24), so an implementation leaves
+    /// <see cref="IEventDetector.HandleEvent"/> to the propagation.</param>
     /// <returns>The propagation segment and optional event info.</returns>
     IntegrationResult IntegrateSegment(
         Vector3 startPosition, Vector3 startVelocity,

@@ -35,6 +35,18 @@ namespace IO.Astrodynamics.Propagator.Events;
 /// detectors as <see cref="IEventDetector"/> within the run, so decision 88 alone did not close the route: a detector
 /// kept past the run burned fuel and rewrote <see cref="ImpulseManeuver.DeltaV"/> and the windows.
 /// </para>
+/// <para>
+/// A detector executes its impulse once at most (decision 97 of #668, #802, decided by S. Guillet, 2026-11-24): when
+/// <see cref="HandleEvent"/> has executed the impulse (<see cref="EventAction.StopAndRestart"/>), the detector disarms
+/// itself, and a later <see cref="Evaluate"/> or <see cref="HandleEvent"/> throws
+/// <see cref="System.InvalidOperationException"/>, saying that it has already executed its impulse, and changes nothing;
+/// one that skipped the occurrence (<see cref="EventAction.Continue"/>, the preconditions not met) stays armed. The
+/// propagation never calls a detector after its execution, replacing it with the detector of the next impulse, so the
+/// path of a run is unchanged; before, a custom <see cref="IIntegrator"/> that kept the detector of an impulse executed
+/// it a second time during the run (6.74 kg burned, <see cref="ImpulseManeuver.DeltaV"/> rewritten, nothing in the
+/// executed maneuvers, in the probe of the third review of L5a). The end of the run is named first: a detector that
+/// executed its impulse throws the message of a finished run once its run has ended.
+/// </para>
 /// </remarks>
 internal sealed class ManeuverEventDetector : IEventDetector, IGatedEventDetector
 {
@@ -58,19 +70,36 @@ internal sealed class ManeuverEventDetector : IEventDetector, IGatedEventDetecto
     /// </summary>
     internal void Disarm() => _disarmed = true;
 
-    // Throws once the run that built this detector has ended (decision 95 of #668), before anything is read or changed
+    // Set once by HandleEvent when it has executed the impulse (decision 97 of #668)
+    private volatile bool _executed;
+
+    // Throws once the run that built this detector has ended (decision 95 of #668), or once the detector has executed
+    // its impulse (decision 97 of #668), before anything is read or changed; the end of the run is named first
     private void RequireArmed()
     {
         if (_disarmed)
         {
-            var owner = _maneuver.PlanOwner;
             throw new System.InvalidOperationException(
-                $"The event detector of the {_maneuver.GetType().Name} (minimum epoch {_maneuver.MinimumEpoch}, engine " +
-                $"{_maneuver.Engine.Name}{(owner != null ? $", in the plan of {owner.Name}" : string.Empty)}) belongs to a " +
-                "finished run: a maneuver's detector serves the run that built it only, and the propagation executes the " +
-                "plan. Propagate again to execute the maneuver; ImpulseManeuver.ComputeDeltaV and ComputeEventValue are " +
-                "the previews.");
+                $"{Description()} belongs to a finished run: a maneuver's detector serves the run that built it only, " +
+                "and the propagation executes the plan. Propagate again to execute the maneuver; " +
+                "ImpulseManeuver.ComputeDeltaV and ComputeEventValue are the previews.");
         }
+
+        if (_executed)
+        {
+            throw new System.InvalidOperationException(
+                $"{Description()} has already executed its impulse: a maneuver's detector executes its impulse once at " +
+                "most, and the propagation builds the detector of the next impulse of the plan. Propagate again to " +
+                "execute the plan again; ImpulseManeuver.ComputeDeltaV and ComputeEventValue are the previews.");
+        }
+    }
+
+    // The detector and its maneuver, as the exceptions of RequireArmed name them
+    private string Description()
+    {
+        var owner = _maneuver.PlanOwner;
+        return $"The event detector of the {_maneuver.GetType().Name} (minimum epoch {_maneuver.MinimumEpoch}, engine " +
+               $"{_maneuver.Engine.Name}{(owner != null ? $", in the plan of {owner.Name}" : string.Empty)})";
     }
 
     public CrossingDirection Direction => _maneuver.EventCrossingDirection;
@@ -85,7 +114,8 @@ internal sealed class ManeuverEventDetector : IEventDetector, IGatedEventDetecto
     /// 2026-11-23).
     /// </summary>
     /// <exception cref="System.InvalidOperationException">The run that built this detector has ended (decision 95 of
-    /// #668); nothing changes, the node of a <see cref="PlaneAlignmentManeuver"/> included.</exception>
+    /// #668), or the detector has executed its impulse (decision 97 of #668); nothing changes, the node of a
+    /// <see cref="PlaneAlignmentManeuver"/> included.</exception>
     /// <remarks>
     /// The +1 before the minimum epoch is what an integrator that does not know the gate reads, such as a custom
     /// <see cref="IIntegrator"/> given to the propagator: compared with the first g-value after the minimum epoch, it gives
@@ -136,7 +166,9 @@ internal sealed class ManeuverEventDetector : IEventDetector, IGatedEventDetecto
     /// which waits for the next crossing.
     /// </returns>
     /// <exception cref="System.InvalidOperationException">The run that built this detector has ended (decision 95 of
-    /// #668); nothing changes: no fuel burned, <see cref="ImpulseManeuver.DeltaV"/> and the windows untouched.</exception>
+    /// #668), or the detector has already executed its impulse, a later call after a
+    /// <see cref="EventAction.StopAndRestart"/> (decision 97 of #668, decided by S. Guillet, 2026-11-24); nothing
+    /// changes: no fuel burned, <see cref="ImpulseManeuver.DeltaV"/> and the windows untouched.</exception>
     /// <remarks>
     /// Before 11.0.0 it also executed the attitudes chained after the impulse at the epoch of its event, each raising the
     /// gate of the next maneuver, and returned the detector of the next impulse. The propagation now activates them at the
@@ -154,6 +186,9 @@ internal sealed class ManeuverEventDetector : IEventDetector, IGatedEventDetecto
         }
 
         var (sv, so) = _maneuver.TryExecute(stateAtEvent);
+
+        // Executed: the detector disarms itself, so that its impulse executes once at most (decision 97 of #668)
+        _executed = true;
         return new EventResult(sv, so, EventAction.StopAndRestart, null);
     }
 }
