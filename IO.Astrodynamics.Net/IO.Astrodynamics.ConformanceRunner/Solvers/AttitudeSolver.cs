@@ -25,7 +25,8 @@ namespace IO.Astrodynamics.ConformanceRunner.Solvers;
 /// <see cref="OrbitalDirectionTarget.Prograde"/>, <c>orbit_normal</c> → <see cref="OrbitalDirectionTarget.Normal"/>; a
 /// single axis the spacecraft's front (<see cref="Spacecraft.BodyFront"/>, the case's body vector) toward its direction,
 /// <see cref="NadirAttitude"/>, <see cref="ProgradeAttitude"/> or <see cref="NormalAttitude"/>. The law is set at the
-/// start with no hold, on a spacecraft with a tank and an engine, which an attitude requires and which burns nothing.
+/// start with no hold, about the explicit centre of the case; an attitude takes no engine since lot L5b (decisions 48 and
+/// 93 of #668), so the spacecraft holds no tank and no engine.
 /// </para>
 /// <para>
 /// The propagation stores its states and attitudes every <c>sample_step_s</c> of its time argument, TT seconds about
@@ -78,11 +79,7 @@ public class AttitudeSolver : ICategorySolver
             ? new Spacecraft(-999, "AttitudeTarget", 100.0, state, 1000.0, new Clock("ConfClk", 65536),
                 bodyFront: front.Value, bodyRight: RightOf(front.Value), bodyUp: RightOf(front.Value).Cross(front.Value))
             : new Spacecraft(-999, "AttitudeTarget", 100.0, state, 1000.0, new Clock("ConfClk", 65536));
-        var tank = new FuelTank("ConformanceTank", 100.0, 100.0, "conformance", "0001");
-        spacecraft.AddFuelTank(tank);
-        var engine = new Engine("ConformanceEngine", 300.0, 1.0, tank, "conformance", "0001");
-        spacecraft.AddEngine(engine);
-        spacecraft.SetManeuvers(Law(inputs, central, window.StartDate, engine));
+        spacecraft.SetManeuvers(Law(inputs, central, window.StartDate));
 
         TwoBodyTrajectory.Propagate(spacecraft, window, Tolerance, TimeSpan.FromSeconds(inputs.SampleStepS));
 
@@ -119,21 +116,21 @@ public class AttitudeSolver : ICategorySolver
     }
 
     /// <summary>The library's law of the case (see the remarks of <see cref="AttitudeSolver"/>).</summary>
-    internal static Attitude Law(AttitudeInputs inputs, CelestialBody center, Time start, Engine engine)
+    internal static Attitude Law(AttitudeInputs inputs, CelestialBody center, Time start)
     {
         if (inputs.Pointing != null)
         {
             return inputs.Pointing.Direction switch
             {
-                AttitudeAxis.Nadir => new NadirAttitude(center, start, TimeSpan.Zero, engine),
-                AttitudeAxis.Velocity => new ProgradeAttitude(center, start, TimeSpan.Zero, engine),
-                AttitudeAxis.OrbitNormal => new NormalAttitude(center, start, TimeSpan.Zero, engine),
+                AttitudeAxis.Nadir => new NadirAttitude(center, start, TimeSpan.Zero),
+                AttitudeAxis.Velocity => new ProgradeAttitude(center, start, TimeSpan.Zero),
+                AttitudeAxis.OrbitNormal => new NormalAttitude(center, start, TimeSpan.Zero),
                 _ => throw UnknownDirection(inputs.Pointing.Direction)
             };
         }
 
         return new TriadAttitude(center, start, TimeSpan.Zero, Axis(inputs.Primary.BodyVector), Target(inputs.Primary.Direction),
-            Axis(inputs.Secondary.BodyVector), Target(inputs.Secondary.Direction), engine);
+            Axis(inputs.Secondary.BodyVector), Target(inputs.Secondary.Direction));
     }
 
     /// <summary>The library's orbital direction of a direction of the suite.</summary>

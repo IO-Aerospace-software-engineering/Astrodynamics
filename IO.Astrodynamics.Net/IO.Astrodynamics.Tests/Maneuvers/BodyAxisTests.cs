@@ -26,7 +26,7 @@ public class BodyAxisTests
     // A user law that exposes the protected axis reader
     private sealed class AxisProbe : Attitude
     {
-        public AxisProbe(Engine engine) : base(TestHelpers.EarthAtJ2000, new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB), TimeSpan.Zero, engine)
+        public AxisProbe() : base(TestHelpers.EarthAtJ2000, new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB), TimeSpan.Zero)
         {
         }
 
@@ -71,7 +71,7 @@ public class BodyAxisTests
         // An engine on a spacecraft of custom axes: before any plan, the static axes all the same (before lot L5b, the
         // axes of the engine's spacecraft)
         var spc = CustomAxesSpacecraft(-6900, "AxisNoPlanSc", Vector3.VectorX, Vector3.VectorY.Inverse(), Vector3.VectorZ);
-        var probe = new AxisProbe(spc.Engines.First());
+        var probe = new AxisProbe();
         Assert.Equal(Spacecraft.Front, probe.Axis(BodyAxis.Front));
         Assert.Equal(Spacecraft.Back, probe.Axis(BodyAxis.Back));
         Assert.Equal(Spacecraft.Right, probe.Axis(BodyAxis.Right));
@@ -84,7 +84,7 @@ public class BodyAxisTests
     public void InAPlan_TheInstanceAxesOfItsSpacecraft()
     {
         var spc = CustomAxesSpacecraft(-6901, "AxisPlanSc", Vector3.VectorX, Vector3.VectorY.Inverse(), Vector3.VectorZ);
-        var probe = new AxisProbe(spc.Engines.First());
+        var probe = new AxisProbe();
         spc.SetManeuvers(probe);
 
         Assert.Equal(spc.BodyFront, probe.Axis(BodyAxis.Front));
@@ -100,7 +100,7 @@ public class BodyAxisTests
     public void ReleasedFromItsPlan_KeepsTheAxesOfTheLastPlansSpacecraft()
     {
         var first = CustomAxesSpacecraft(-6902, "AxisFirstSc", Vector3.VectorX, Vector3.VectorY.Inverse(), Vector3.VectorZ);
-        var probe = new AxisProbe(first.Engines.First());
+        var probe = new AxisProbe();
         first.SetManeuvers(probe);
         first.SetManeuvers();
 
@@ -111,7 +111,7 @@ public class BodyAxisTests
     [Fact]
     public void AnUndefinedAxis_Throws()
     {
-        var probe = new AxisProbe(FreeEngine());
+        var probe = new AxisProbe();
         var ex = Assert.Throws<ArgumentOutOfRangeException>(() => probe.Axis((BodyAxis)6));
         Assert.Equal("axis", ex.ParamName);
     }
@@ -120,8 +120,7 @@ public class BodyAxisTests
     public void ASingleVectorAttitude_PreviewsOnTheStaticAxesBeforeAnyPlan_AndOnTheInstanceAxesInOne()
     {
         var spc = CustomAxesSpacecraft(-6904, "AxisPreviewSc", Vector3.VectorX, Vector3.VectorY.Inverse(), Vector3.VectorZ);
-        var prograde = new ProgradeAttitude(TestHelpers.EarthAtJ2000, new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB), TimeSpan.Zero,
-            spc.Engines.First());
+        var prograde = new ProgradeAttitude(TestHelpers.EarthAtJ2000, new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB), TimeSpan.Zero);
         var state = spc.InitialOrbitalParameters.ToStateVector();
         var velocity = state.Velocity.Normalize();
 

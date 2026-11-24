@@ -84,8 +84,8 @@ namespace IO.Astrodynamics.Tests.Maneuvers
         }
 
         /// <summary>
-        /// A null target orbit is reported before a null engine; a null engine with a target orbit is the error of the
-        /// engine.
+        /// A null target orbit is an argument error; a null engine is the engine the run infers, the spacecraft's only one
+        /// (decision 61 of #668; before lot L5b, <see cref="ArgumentNullException"/>).
         /// </summary>
         [Theory]
         [InlineData(nameof(ApsidalAlignmentManeuver))]
@@ -93,10 +93,10 @@ namespace IO.Astrodynamics.Tests.Maneuvers
         [InlineData(nameof(PhasingManeuver))]
         [InlineData(nameof(ApogeeHeightManeuver))]
         [InlineData(nameof(PerigeeHeightManeuver))]
-        public void ANullEngine_IsAnArgumentError(string maneuver)
+        public void ANullTargetOrbit_IsAnArgumentError_ANullEngine_TheOneTheRunInfers(string maneuver)
         {
             Assert.Equal("targetOrbit", Assert.Throws<ArgumentNullException>(() => Create(maneuver, null, null)).ParamName);
-            Assert.Equal("engine", Assert.Throws<ArgumentNullException>(() => Create(maneuver, Target(Frames.Frame.ICRF), null)).ParamName);
+            Assert.Null(Create(maneuver, Target(Frames.Frame.ICRF), null).Engine);
         }
 
         /// <summary>
@@ -457,7 +457,7 @@ namespace IO.Astrodynamics.Tests.Maneuvers
             // SetManeuvers refuses it (decision 46 of #668), so the run's re-check is reached by a maneuver linked past the
             // plan, through the internal setter a test reaches
             Assert.Equal("maneuvers", Assert.Throws<ArgumentException>(() => spacecraft.SetManeuvers(rejected)).ParamName);
-            var head = new NadirAttitude(earth, PlaneChangeStart, TimeSpan.Zero, engine);
+            var head = new NadirAttitude(earth, PlaneChangeStart, TimeSpan.Zero);
             spacecraft.SetManeuvers(head);
             head.NextManeuver = rejected;
 

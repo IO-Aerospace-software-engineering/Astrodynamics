@@ -1373,7 +1373,7 @@ Represents a spacecraft with components.
 | `GetRemainingFuel()` | The fuel left in the spacecraft's own tanks |
 | `GetTotalISP()` | The specific impulse of every engine fired together (Σ thrust / g0 / Σ fuel flow), whatever their tanks hold; NaN without an engine (decision 60 of #668, #801) |
 | `GetTotalFuelFlow()` | The fuel flow of every engine, whatever their tanks hold; 0 without an engine |
-| `SetManeuvers(params Maneuver[] maneuvers)` | Set the maneuver plan, in order, which every propagation runs from its first maneuver: the one way to link it (a second call replaces the first, no maneuver clears it, #584); it claims each maneuver for the spacecraft, `ArgumentException` for a maneuver of another spacecraft's plan, a repeated one, an engine whose tank is not the spacecraft's or a target orbit in another frame (decisions 45 and 46 of #668) |
+| `SetManeuvers(params Maneuver[] maneuvers)` | Set the maneuver plan, in order, which every propagation runs from its first maneuver: the one way to link it (a second call replaces the first, no maneuver clears it, #584); it claims each maneuver for the spacecraft, `ArgumentException` for a maneuver of another spacecraft's plan, a repeated one, an impulse given an engine whose tank is not the spacecraft's or a target orbit in another frame (decisions 45 and 46 of #668); an impulse given no engine takes the spacecraft's only one, and a maneuver given no centre the observer of the initial orbit, at the run (decisions 61 and 64) |
 | `Maneuvers` | The plan, as `SetManeuvers` set it |
 | `Propagate(Window window, PropagationOptions options = null, CancellationToken cancellationToken = default)` | Propagate orbit with the settings of `options` (RK7(8) at 1e-9 about the central body alone, outputs every 60 s, when null), returns `PropagationSolution`; the token stops the run (`OperationCanceledException`, the spacecraft left re-armed and not propagated, R28 of #668) |
 | `GetEphemeris(Time epoch, ILocalizable observer, Frame frame, Aberration aberration)` | Get state relative to observer (uses reference-body pattern) |
@@ -1514,6 +1514,8 @@ Base class for impulse maneuvers. Uses industry-standard g-function event detect
 | `CheckPreconditions(StateVector state)` | Optional additional constraints (default: true). Override for maneuvers with extra conditions. |
 | `ComputeDeltaV(StateVector stateVector)` | The delta-V at the state, in its frame, without executing the maneuver: the state taken about the maneuver's centre, as the execution takes it; pure (decision 50 of #668) |
 | `DeltaV` | Computed delta-V vector (set after execution) |
+| `Engine` | The engine of the impulse: the given one, null for one the run infers, until a run writes the one it used, the spacecraft's only engine when it was given none (on `ImpulseManeuver` since lot L5b, decisions 48, 61, 63 and 93 of #668) |
+| `ManeuverCenter` | The centre: the given one, else the observer of the initial orbit when it is a celestial body other than a star, written by the run; required in SSB mode (decisions 61, 64 and 99 of #668) |
 
 #### Attitude maneuvers
 
@@ -1525,6 +1527,8 @@ Base class for impulse maneuvers. Uses industry-standard g-function event detect
 - `AntiNormalAttitude`: Orient opposite to orbital normal (−h)
 - `InstrumentPointingAttitude`: Point instrument at target (single-vector, roll unconstrained)
 - `TriadAttitude`: Fully-constrained 3-DOF attitude using TRIAD algorithm (eliminates roll ambiguity)
+
+An attitude takes no engine (decisions 48 and 93 of #668): it orients the spacecraft whose plan holds it, so a spacecraft without a tank or an engine runs a plan of attitudes. A null centre is inferred by the run as for an impulse; in SSB mode, where it cannot be, a law whose targets are all library `CelestialAttitudeTarget`s takes the central body of the run, and any other law (an orbital direction, a user `IAttitudeTarget`, a user `Attitude` subclass) requires `maneuverCenter`, the propagator constructor and `Propagate` throwing `InvalidOperationException` (decision 99 of #668, decided by S. Guillet, 2026-11-24).
 
 The preview of an attitude is `ComputeStateOrientation(StateVector)`, the rotation from the spacecraft frame to ICRF at the state, pure; `Attitude.StateOrientation` is removed: in a run, the attitude at an activation is in the attitude record (`spacecraft.Frame.GetStateOrientationToICRF(epoch)`) (decisions 50 and 52 of #668).
 
@@ -1541,26 +1545,23 @@ The `TriadAttitude` class uses two non-collinear observation vectors to fully co
 var attitude = new TriadAttitude(
     minimumEpoch, TimeSpan.FromMinutes(30),
     Spacecraft.Front, moon,    // Primary: Front points at Moon
-    Spacecraft.Up, sun,        // Secondary: Up toward Sun (roll constraint)
-    engine);
+    Spacecraft.Up, sun);
 
 // Using instruments
 var cameraAttitude = new TriadAttitude(
     minimumEpoch, holdDuration,
     camera,                    // Uses camera boresight (primary) and refVector (secondary)
-    earth, sun,                // Primary target, secondary target
-    engine);
+    earth, sun);
 
 // Using IAttitudeTarget (orbital directions and/or celestial bodies)
 var targetAttitude = new TriadAttitude(
     earth, epoch, duration,
     Spacecraft.Front, OrbitalDirectionTarget.Prograde,       // Primary: prograde pointing
-    Spacecraft.Up, new CelestialAttitudeTarget(sun),         // Secondary: solar panel toward Sun
-    engine);
+    Spacecraft.Up, new CelestialAttitudeTarget(sun));
 
 // Factory methods for common operational attitudes, on the axes of the plan's spacecraft
-var lvlh = TriadAttitude.CreateLVLH(earth, epoch, duration, engine);
-var sunTrack = TriadAttitude.CreateProgradeWithSunTracking(earth, epoch, duration, sun, engine);
+var lvlh = TriadAttitude.CreateLVLH(earth, epoch, duration);
+var sunTrack = TriadAttitude.CreateProgradeWithSunTracking(earth, epoch, duration, sun);
 ```
 
 **IAttitudeTarget system**: The `IAttitudeTarget` interface enables orbital directions and celestial bodies to be used interchangeably as TRIAD targets:
@@ -2966,8 +2967,7 @@ var pointingManeuver = new InstrumentPointingToAttitude(
     start.AddHours(7.25),           // Start time
     TimeSpan.FromHours(0.5),        // Duration
     spacecraft.Instruments.First(), // Instrument to point
-    groundStation,                  // Target
-    engine                          // Engine for attitude control
+    groundStation
 );                                  // The direction is light-time corrected (Aberration.LT, the default, #549);
                                     // pass Aberration.None as a sixth argument for the geometric direction
 
@@ -3029,8 +3029,7 @@ var triadManeuver = new TriadAttitude(
     start,                          // Start time
     TimeSpan.FromHours(1.5),        // Hold duration
     Spacecraft.Down, earth,         // Primary constraint: nadir pointing
-    Spacecraft.Right, sun,          // Secondary constraint: +X toward the Sun
-    engine
+    Spacecraft.Right, sun
 );
 
 spacecraft.SetManeuvers(triadManeuver);
@@ -3055,17 +3054,16 @@ Console.WriteLine("Spacecraft maintains nadir pointing with roll constrained tow
 ```csharp
 // earth: the CelestialBody of the orbit; sun: the Sun; engine: an Engine of the spacecraft; epoch: Time; duration: TimeSpan
 // LVLH attitude using factory method (the spacecraft's BodyDown to nadir, its BodyFront toward prograde)
-var lvlh = TriadAttitude.CreateLVLH(earth, epoch, duration, engine);
+var lvlh = TriadAttitude.CreateLVLH(earth, epoch, duration);
 
 // Prograde with sun tracking using factory method
-var sunTrack = TriadAttitude.CreateProgradeWithSunTracking(earth, epoch, duration, sun, engine);
+var sunTrack = TriadAttitude.CreateProgradeWithSunTracking(earth, epoch, duration, sun);
 
 // Custom: nadir pointing with normal constraint (using OrbitalDirectionTarget)
 var customLvlh = new TriadAttitude(
     earth, epoch, duration,
     Spacecraft.Down, OrbitalDirectionTarget.Nadir,
-    Spacecraft.Front, OrbitalDirectionTarget.Prograde,
-    engine);
+    Spacecraft.Front, OrbitalDirectionTarget.Prograde);
 ```
 
 ---

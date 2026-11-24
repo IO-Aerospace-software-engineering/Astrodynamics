@@ -73,7 +73,7 @@ public class SpacecraftKernelsTests
         spacecraft.AddFuelTank(tank);
         var engine = new Engine("eng", 300.0, 10.0, tank, "model", "sn");
         spacecraft.AddEngine(engine);
-        spacecraft.SetManeuvers(new NadirAttitude(earth, new Time(DateTime.MinValue, TimeScale.TDB), TimeSpan.Zero, engine));
+        spacecraft.SetManeuvers(new NadirAttitude(earth, new Time(DateTime.MinValue, TimeScale.TDB), TimeSpan.Zero));
         spacecraft.Propagate(new Window(Start, End), new PropagationOptions
         {
             Integrator = new VVIntegratorOptions { Step = TimeSpan.FromSeconds(10.0) },

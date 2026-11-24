@@ -6171,7 +6171,7 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   spacecraft of the engine's tank. A spacecraft with the default axes is bit for bit, and so are the `PrimaryBodyVector`
   and `SecondaryBodyVector` of an engine whose tank is on no spacecraft, which no propagation points ([#676](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/676)); the forces read no attitude, so the trajectory does not move. Migration, for the former attitude: the
   constructor with the static axes, `new TriadAttitude(center, epoch, hold, Spacecraft.Down, OrbitalDirectionTarget.Nadir,
-  Spacecraft.Front, OrbitalDirectionTarget.Prograde, engine)`, or `Spacecraft.Front`, `OrbitalDirectionTarget.Prograde`,
+  Spacecraft.Front, OrbitalDirectionTarget.Prograde)`, or `Spacecraft.Front`, `OrbitalDirectionTarget.Prograde`,
   `Spacecraft.Up`, `new CelestialAttitudeTarget(sun)` for prograde with Sun tracking.
 - **Breaking: drag about an Earth without an atmospheric model is NRLMSISE-00 at nominal space weather** ([#674](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/674),
   Fixed above). A propagation about `PlanetsAndMoons.EARTH_BODY`, or any Earth built without a model, with
@@ -7158,7 +7158,7 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   result the preview of `ComputeDeltaV` (it was on `Maneuver`, and `Attitude` returned a zero delta-V); `Engine.Ignite`
   is internal; the concrete maneuvers stay unsealed. Decision 48 is split (decision 93 of #668, decided by S. Guillet,
   2026-11-23): `Engine` moves to `ImpulseManeuver` and a protected `GetBodyAxis(BodyAxis)` replaces `GetBodyFront` in
-  lot L5b, with R13 and `BodyAxis` (decision 69); until then `Engine` stays on `Maneuver` and `GetBodyFront` protected.
+  lot L5b, with R13 and `BodyAxis` (decision 69), both below.
   Migration: a preview of
   an impulse is `ComputeDeltaV(state)`, of an attitude `ComputeStateOrientation(state)`, the fuel of a delta-V
   `Tsiolkovski.DeltaM(isp, mass, deltaV)`; a user maneuver keeps its `Execute` override on an `ImpulseManeuver`.
@@ -7407,6 +7407,42 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   its plan, takes the static axes where it took those of the engine's spacecraft: for a spacecraft of custom axes, set
   the plan first. Migration: `GetBodyAxis(BodyAxis.Front)` for `GetBodyFront()` in a user attitude; `spacecraft.SetManeuvers(attitude)`
   before a preview on that spacecraft's axes.
+- **Breaking: `Engine` is on `ImpulseManeuver`, and an attitude takes no engine** (lot L5b, decisions 48 and 93 of
+  [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668), decided by S. Guillet,
+  2026-11-23): `Maneuver.Engine` moves to `ImpulseManeuver.Engine`, and the constructors of `Attitude`, `NadirAttitude`,
+  `ZenithAttitude`, `ProgradeAttitude`, `RetrogradeAttitude`, `NormalAttitude`, `AntiNormalAttitude`,
+  `InstrumentPointingToAttitude`, `TriadAttitude` and its factories `CreateLVLH` and `CreateProgradeWithSunTracking`
+  lose their `Engine engine` parameter (an engine was required, null throwing `ArgumentNullException`). An attitude
+  burns nothing: it orients the spacecraft whose plan holds it, whose axes it reads (`GetBodyAxis`, above), so a
+  spacecraft without a tank or an engine runs a plan of attitudes, where a thrusterless satellite needed a tank and an
+  engine for it. `SetManeuvers` and the run check the engine of an impulse only; the execution of an attitude no longer
+  sets the next maneuver in standby from its engine's spacecraft (a branch the run never reached: the run advances the
+  chain on its attitude timeline), and an impulse executed outside a plan moves no chain. A run with an attitude on the
+  spacecraft's own engine is bit for bit that of before. Migration: drop the engine argument of an attitude
+  (`new NadirAttitude(earth, epoch, hold)`); `((ImpulseManeuver)maneuver).Engine` for `maneuver.Engine`; a user
+  `Attitude` calls `base(maneuverCenter, minimumEpoch, holdDuration)`.
+- **Breaking: a maneuver given no engine or no centre takes those the run infers** (lot L5b, decisions 61, 63 and 64 of
+  #668, decided by S. Guillet, 2026-11-23, and decision 99, decided by S. Guillet, 2026-11-24): an impulse whose engine
+  is null takes the only engine of the spacecraft (`Engines`, decision 92), and a maneuver whose centre is null the
+  observer of the spacecraft's initial orbit when it is a celestial body other than a star, resolved from the values the
+  maneuver was given when the propagator is built and at `Propagate`, writing nothing; where the centre cannot be
+  inferred (SSB mode: a star or a barycentre), a law whose targets are all library `CelestialAttitudeTarget`s takes the
+  central body of the run, and every other law (the impulses, the orbital-direction attitudes, a user `IAttitudeTarget`
+  or subclass of `CelestialAttitudeTarget`, a user `Attitude` subclass) requires `maneuverCenter`: the propagator
+  constructor and `Propagate` throw `InvalidOperationException`, as for an impulse given no engine on a spacecraft of
+  none or several ("pass engine:"). Before, a null engine threw `ArgumentNullException` in the constructor, a null centre
+  was accepted by most constructors and threw `NullReferenceException` in the run, the `TriadAttitude` of
+  `IAttitudeTarget` targets threw `ArgumentNullException` for it, and a user law about a centre it read received a
+  heliocentric state silently in SSB mode. `ImpulseManeuver.Engine` and `ManeuverCenter` return the values given before
+  a run and the values the last run used after it, written right after its re-arm, which restores the given ones
+  (decision 63; a stopped run keeps the resolved ones, a cancelled token or an `Initialize` that throws changes neither);
+  every check before the write and every preview (`ComputeDeltaV`, `ComputeStateOrientation`) read the given values,
+  so a maneuver released after a run goes to another spacecraft, an engine added between two runs makes the second
+  throw, and a preview of an inferred centre takes the state about its own observer before and after a run alike
+  (`ManeuverInferenceTests`, both integrators). The explicit engine and centre give the run of before, bit for bit; a
+  plan given its engine and centre and the same plan inferring them give the same run. Migration: none for a maneuver
+  given its engine and centre; in SSB mode give `maneuverCenter` to an impulse and to an attitude other than a law of
+  celestial targets only; on a spacecraft of several engines give `engine`.
 **Removed**
 
 - **The value equality of `FuelTank`, `Engine` and `Payload`: `Equals`, `GetHashCode`, `==`, `!=` and

@@ -159,9 +159,9 @@ namespace IO.Astrodynamics.Tests.Mission
                 new PhasingManeuver(new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB), targetOrbit, 1, spacecraft.Engines.First()),
                 new ApogeeHeightManeuver(TestHelpers.EarthAtJ2000, new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB), TimeSpan.Zero, 15866666.666666666,
                     spacecraft.Engines.First()),
-                new ZenithAttitude(TestHelpers.EarthAtJ2000, new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB), TimeSpan.FromMinutes(1), engine),
-                new RetrogradeAttitude(TestHelpers.EarthAtJ2000, new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB), TimeSpan.FromMinutes(1), engine),
-                new ProgradeAttitude(TestHelpers.EarthAtJ2000, new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB), TimeSpan.FromMinutes(1), engine));
+                new ZenithAttitude(TestHelpers.EarthAtJ2000, new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB), TimeSpan.FromMinutes(1)),
+                new RetrogradeAttitude(TestHelpers.EarthAtJ2000, new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB), TimeSpan.FromMinutes(1)),
+                new ProgradeAttitude(TestHelpers.EarthAtJ2000, new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB), TimeSpan.FromMinutes(1)));
 
             scenario.AddSpacecraft(spacecraft);
 
@@ -253,7 +253,7 @@ namespace IO.Astrodynamics.Tests.Mission
             spacecraft.AddFuelTank(fuelTank);
             spacecraft.AddEngine(engine);
 
-            var progradeAttitude = new ProgradeAttitude(TestHelpers.EarthAtJ2000, new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB), TimeSpan.Zero, engine);
+            var progradeAttitude = new ProgradeAttitude(TestHelpers.EarthAtJ2000, new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB), TimeSpan.Zero);
             spacecraft.SetManeuvers(progradeAttitude);
 
             scenario.AddSpacecraft(spacecraft);
@@ -375,9 +375,9 @@ namespace IO.Astrodynamics.Tests.Mission
                 new PhasingManeuver(new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB), targetOrbit, 1, spacecraft.Engines.First()),
                 new ApogeeHeightManeuver(TestHelpers.EarthAtJ2000, new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB), TimeSpan.Zero, 15866666.666666666,
                     spacecraft.Engines.First()),
-                new ZenithAttitude(TestHelpers.EarthAtJ2000, new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB), TimeSpan.FromMinutes(1), engine),
-                new RetrogradeAttitude(TestHelpers.EarthAtJ2000, new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB), TimeSpan.FromMinutes(1), engine),
-                new ProgradeAttitude(TestHelpers.EarthAtJ2000, new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB), TimeSpan.FromMinutes(1), engine));
+                new ZenithAttitude(TestHelpers.EarthAtJ2000, new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB), TimeSpan.FromMinutes(1)),
+                new RetrogradeAttitude(TestHelpers.EarthAtJ2000, new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB), TimeSpan.FromMinutes(1)),
+                new ProgradeAttitude(TestHelpers.EarthAtJ2000, new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB), TimeSpan.FromMinutes(1)));
 
             scenario.AddSpacecraft(spacecraft);
 

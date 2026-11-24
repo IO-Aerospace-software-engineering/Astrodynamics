@@ -384,7 +384,7 @@ public class ClaudeMdExamplesTests
     {
         SpacecraftWithEngine(-6732, out var engine);
         var exception = Assert.Throws<ArgumentException>(() => new TriadAttitude(Epoch, TimeSpan.FromMinutes(30),
-            Spacecraft.Down, Earth, Spacecraft.Up, Sun, engine));
+            Spacecraft.Down, Earth, Spacecraft.Up, Sun));
         Assert.Contains("collinear", exception.Message);
     }
 

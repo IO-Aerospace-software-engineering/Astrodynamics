@@ -11,8 +11,8 @@ namespace IO.Astrodynamics.Maneuver;
 
 public class ProgradeAttitude : Attitude
 {
-    public ProgradeAttitude(CelestialItem maneuverCenter, Time minimumEpoch, TimeSpan maneuverHoldDuration, Engine engine) : base(maneuverCenter, minimumEpoch,
-        maneuverHoldDuration, engine)
+    public ProgradeAttitude(CelestialItem maneuverCenter, Time minimumEpoch, TimeSpan maneuverHoldDuration) : base(maneuverCenter, minimumEpoch,
+        maneuverHoldDuration)
     {
     }
 

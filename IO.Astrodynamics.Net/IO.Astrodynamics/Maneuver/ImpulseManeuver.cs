@@ -87,8 +87,39 @@ namespace IO.Astrodynamics.Maneuver
         /// </remarks>
         public virtual bool CheckPreconditions(StateVector state) => true;
 
-        protected ImpulseManeuver(CelestialItem maneuverCenter, Time minimumEpoch, TimeSpan maneuverHoldDuration, Engine engine) : base(maneuverCenter, minimumEpoch, maneuverHoldDuration, engine)
+        /// <summary>
+        /// The engine of the impulse: the one it was given (<see cref="GivenEngine"/>), null when it was given none, until
+        /// a run resolves it; the engine the last run used, written right after its re-arm (decisions 61 and 63 of #668,
+        /// decided by S. Guillet, 2026-11-23): the given one, else the only engine of the spacecraft
+        /// (<see cref="Spacecraft.Engines"/>, decision 92). The re-arm of the next run restores the given value, and a
+        /// stopped run keeps the resolved one.
+        /// </summary>
+        /// <remarks>
+        /// On <see cref="ImpulseManeuver"/> since lot L5b (decisions 48 and 93 of #668, decided by S. Guillet, 2026-11-23):
+        /// it was on <see cref="Maneuver"/>, and an attitude needed an engine to reach its spacecraft. A run whose impulse
+        /// was given no engine throws <see cref="InvalidOperationException"/> from the propagator constructor and from
+        /// <c>Propagate</c> when the spacecraft holds no engine or several (decision 64).
+        /// </remarks>
+        public Engine Engine { get; internal set; }
+
+        /// <summary>
+        /// The engine the impulse was given, null for one the run infers: what every check before a run reads
+        /// (<see cref="Spacecraft.SetManeuvers"/>, the engine check of the run), never <see cref="Engine"/>, which a run
+        /// writes.
+        /// </summary>
+        internal Engine GivenEngine { get; }
+
+        /// <summary>
+        /// An impulse about <paramref name="maneuverCenter"/>, at or after <paramref name="minimumEpoch"/>, held for
+        /// <paramref name="maneuverHoldDuration"/>, burning on <paramref name="engine"/>.
+        /// </summary>
+        /// <param name="maneuverCenter">The centre of the maneuver; null for the centre the run infers.</param>
+        /// <param name="minimumEpoch">The earliest epoch of the maneuver.</param>
+        /// <param name="maneuverHoldDuration">The hold, zero or positive.</param>
+        /// <param name="engine">The engine; null for the only engine of the spacecraft, which the run infers.</param>
+        protected ImpulseManeuver(CelestialItem maneuverCenter, Time minimumEpoch, TimeSpan maneuverHoldDuration, Engine engine) : base(maneuverCenter, minimumEpoch, maneuverHoldDuration)
         {
+            GivenEngine = Engine = engine;
         }
 
         /// <summary>
@@ -96,14 +127,16 @@ namespace IO.Astrodynamics.Maneuver
         /// executing it (decision 50 of #668, decided by S. Guillet, 2026-11-23).
         /// </summary>
         /// <param name="stateVector">The state at the impulse, in any frame and about any observer: it is taken about the
-        /// centre of the maneuver (<see cref="Maneuver.ManeuverCenter"/>), as the execution takes it, or about its own
-        /// observer when the maneuver has no centre, never about the centre of a run.</param>
+        /// centre the maneuver was given, as the execution takes it, or about its own observer when it was given none,
+        /// never about the centre a run resolved (<see cref="Maneuver.ManeuverCenter"/> after a run).</param>
         /// <returns>The delta-V, in the frame of <paramref name="stateVector"/>.</returns>
         /// <remarks>
         /// Pure: it touches no tank, chain, window, gate or node lock, so it is the same before and after a run. Before
         /// 11.0.0 the preview was the public <c>TryExecute</c>, which burnt the fuel, set the windows and moved the
         /// standby chain of a finished run (#802). At the state of its event in a run, it is the delta-V the run applies
-        /// (<see cref="DeltaV"/>), whatever the observer of the state (an SSB-mode solution's states are about the Sun): a
+        /// (<see cref="DeltaV"/>): for a maneuver given its centre, whatever the observer of the state (an SSB-mode
+        /// solution's states are about the Sun); for an inferred centre, at a state about the centre the run resolves, as
+        /// the states of its solution are (IC-6 of lot L5b of #668): a
         /// <see cref="PlaneAlignmentManeuver"/> takes the node of the rule of <see cref="ComputeEventValue"/> at the state,
         /// which is the node the run locked at its crossing.
         /// </remarks>
@@ -130,7 +163,7 @@ namespace IO.Astrodynamics.Maneuver
         /// </summary>
         internal virtual Vector3 ExecuteInRun(StateVector localState) => Execute(localState);
 
-        /// <exception cref="ArgumentNullException"><paramref name="targetOrbit"/> or <paramref name="engine"/> is null.</exception>
+        /// <exception cref="ArgumentNullException"><paramref name="targetOrbit"/> is null.</exception>
         /// <exception cref="ArgumentException">The target orbit is defined neither in the frame of the initial orbit of the
         /// spacecraft of the engine nor in the frame it is propagated in (ICRF for a TLE or a TEME state, #675), GCRF and
         /// ICRF counting as one frame, whose axes the library shares (third review of #685).</exception>
@@ -148,7 +181,7 @@ namespace IO.Astrodynamics.Maneuver
         protected ImpulseManeuver(Time minimumEpoch, TimeSpan maneuverHoldDuration, OrbitalParameters.OrbitalParameters targetOrbit, Engine engine) : this(
             RequireTargetOrbit(targetOrbit).Observer as CelestialItem, minimumEpoch, maneuverHoldDuration, engine)
         {
-            var initial = engine.FuelTank.Spacecraft?.InitialOrbitalParameters;
+            var initial = engine?.FuelTank.Spacecraft?.InitialOrbitalParameters;
             if (initial != null && !PropagatorBase.SameAxes(initial.Frame, targetOrbit.Frame) &&
                 !PropagatorBase.SameAxes(PropagatorBase.PropagationFrame(initial), targetOrbit.Frame))
             {
@@ -225,8 +258,9 @@ namespace IO.Astrodynamics.Maneuver
             ThrustWindow = new Window(stateVector.Epoch - thrustDuration * ThrustLead, thrustDuration);
             ManeuverWindow = new Window(ThrustWindow.Value.StartDate, ManeuverHoldDuration).Merge(ThrustWindow.Value);
 
-            //Set next maneuver
-            Engine.FuelTank.Spacecraft.ChainStandbyManeuver(this.NextManeuver, ManeuverWindow.Value.EndDate);
+            //Set next maneuver: the plan's spacecraft, the propagated one in a run (decisions 46 and 48 of #668); none for an
+            //impulse in no plan
+            PlanOwner?.ChainStandbyManeuver(this.NextManeuver, ManeuverWindow.Value.EndDate);
 
             //return computed state vector and state orientation
             //The front along the delta-V, in ICRF whatever the frame of the state (#529, #535); a zero delta-V (a target
@@ -275,6 +309,7 @@ namespace IO.Astrodynamics.Maneuver
         {
             DeltaV = Vector3.Zero;
             ThrustLead = 0.5;
+            Engine = GivenEngine;
             base.Reset();
         }
 

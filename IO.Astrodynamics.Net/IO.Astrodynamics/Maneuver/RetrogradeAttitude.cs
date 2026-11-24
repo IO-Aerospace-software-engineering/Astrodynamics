@@ -11,7 +11,7 @@ namespace IO.Astrodynamics.Maneuver;
 
 public class RetrogradeAttitude : Attitude
 {
-    public RetrogradeAttitude(CelestialItem maneuverCenter, Time minimumEpoch, TimeSpan maneuverHoldDuration, Engine engine) : base(maneuverCenter, minimumEpoch, maneuverHoldDuration, engine)
+    public RetrogradeAttitude(CelestialItem maneuverCenter, Time minimumEpoch, TimeSpan maneuverHoldDuration) : base(maneuverCenter, minimumEpoch, maneuverHoldDuration)
     {
     }
 

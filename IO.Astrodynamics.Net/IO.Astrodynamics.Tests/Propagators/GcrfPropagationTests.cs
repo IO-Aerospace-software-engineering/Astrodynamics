@@ -125,7 +125,7 @@ public class GcrfPropagationTests
                 var engine = new Engine("eng", 300.0, 10.0, tank, "model", "sn");
                 spacecraft.AddEngine(engine);
                 var apogee = new ApogeeHeightManeuver(earth, Start.AddSeconds(100.0), TimeSpan.Zero, 7600000.0, engine);
-                spacecraft.SetManeuvers(apogee, new NadirAttitude(earth, Start.AddSeconds(100.0), TimeSpan.Zero, engine));
+                spacecraft.SetManeuvers(apogee, new NadirAttitude(earth, Start.AddSeconds(100.0), TimeSpan.Zero));
             }
 
             IntegratorOptions integrator = variant == "RK78" ? RK78IntegratorOptions.Default : new VVIntegratorOptions { Step = TimeSpan.FromSeconds(1.0) };

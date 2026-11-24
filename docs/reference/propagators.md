@@ -35,7 +35,11 @@ propagation is built (`ArgumentException`) and, for a maneuver attached after it
 
 ### Propagation Loop
 
-1. Build event detectors from the spacecraft maneuver chain.
+1. Write on each maneuver of the plan the engine and the centre the run resolved when it checked the chain, right after
+   the re-arm (an impulse given no engine takes the spacecraft's only engine, a maneuver given no centre the observer of
+   the initial orbit when it is a celestial body other than a star; decisions 61, 63, 64 and 99 of #668,
+   [The engine and the centre](impulse-maneuvers.md#the-engine-and-the-centre)), then build event detectors from the
+   spacecraft maneuver chain.
 2. Integrate a segment until the next event or end of window.
 3. Execute the maneuver via `IEventDetector.HandleEvent()`, update state; lay the attitudes chained after an impulse on
    the attitude timeline, from the end of its maneuver window, and build the detector of the next impulse. An impulse

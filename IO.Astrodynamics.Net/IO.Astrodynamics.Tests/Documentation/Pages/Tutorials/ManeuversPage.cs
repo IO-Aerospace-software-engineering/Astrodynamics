@@ -66,10 +66,10 @@ internal static class ManeuversPage
         #region docs/tutorials/maneuvers.md:1
         // Inputs: earth (CelestialBody), epoch (Time), engine (Engine)
         // Point the thrust axis along the velocity vector; the next maneuver of the chain starts 30 minutes later at the earliest
-        var prograde = new ProgradeAttitude(earth, epoch, TimeSpan.FromMinutes(30), engine);
+        var prograde = new ProgradeAttitude(earth, epoch, TimeSpan.FromMinutes(30));
 
         // Point the instrument axis toward the sub-satellite point, also held 30 minutes
-        var nadir = new NadirAttitude(earth, epoch, TimeSpan.FromMinutes(30), engine);
+        var nadir = new NadirAttitude(earth, epoch, TimeSpan.FromMinutes(30));
         #endregion
     }
 
@@ -83,8 +83,7 @@ internal static class ManeuversPage
         // undetermined: the body vectors must be at least 5 degrees apart)
         var triad = new TriadAttitude(epoch, TimeSpan.FromHours(1.5),
             Spacecraft.Down, earth,    // Primary: nadir pointing
-            Spacecraft.Right, sun,     // Secondary: +X toward the Sun
-            engine);
+            Spacecraft.Right, sun);
         #endregion
     }
 
@@ -101,8 +100,7 @@ internal static class ManeuversPage
 
         var triad = new TriadAttitude(earth, epoch, duration,
             Spacecraft.Front, OrbitalDirectionTarget.Prograde,
-            Spacecraft.Up, moonTarget,
-            engine);
+            Spacecraft.Up, moonTarget);
         #endregion
     }
 
@@ -112,11 +110,11 @@ internal static class ManeuversPage
         #region docs/tutorials/maneuvers.md:4
         // Inputs: earth and sun (CelestialBody), epoch (Time), duration (TimeSpan), engine (Engine)
         // LVLH frame (the spacecraft's down axis to nadir, its front axis toward the velocity)
-        var lvlh = TriadAttitude.CreateLVLH(earth, epoch, duration, engine);
+        var lvlh = TriadAttitude.CreateLVLH(earth, epoch, duration);
 
         // Prograde thrust with solar panels tracking the Sun
         var sunTrack = TriadAttitude.CreateProgradeWithSunTracking(
-            earth, epoch, duration, sun, engine);
+            earth, epoch, duration, sun);
         #endregion
     }
 

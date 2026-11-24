@@ -10,17 +10,23 @@ All attitude maneuvers inherit from the abstract `Attitude` class.
 |--------|------|-------------|
 | `ComputeOrientation(StateVector)` | Method | Compute the orientation quaternion at the given state (abstract, public): the rotation from the spacecraft frame to the frame of the state |
 | `ComputeStateOrientation(StateVector)` | Method | The preview of the attitude at the state: the rotation from the spacecraft frame to ICRF (`ComputeOrientation` on the state taken about the centre of the maneuver, as the execution takes it (about its own observer for a maneuver without one), then rotated to ICRF), at the epoch of the state, labelled ICRF; pure: it sets no window and moves no chain, so it is the same before and after a run (decision 50 of #668, decided by S. Guillet, 2026-11-23). It replaces the StateOrientation property, removed (decision 52): the orientation the internal execution kept, which no re-arm cleared; in a run, the attitude at an activation is in the attitude record, `spacecraft.Frame.GetStateOrientationToICRF(epoch)`, the same rotation |
-| `ManeuverCenter` | Property | The central body for the maneuver frame |
+| `ManeuverCenter` | Property | The central body the law reads: the one it was given, null for one the run infers, until a run writes the centre it used right after its re-arm (the given one, else the observer of the initial orbit when it is a celestial body other than a star, else, for a law whose targets are all library `CelestialAttitudeTarget`s, the central body of the run); the next re-arm restores the given value (decisions 61, 63 and 99 of #668, [The engine and the centre](impulse-maneuvers.md#the-engine-and-the-centre)) |
 | `MinimumEpoch` | Property | Earliest epoch at which the attitude can activate: it activates at the later of this epoch and the end of the window of the previous maneuver of the chain |
 | `ManeuverHoldDuration` | Property | How long the attitude is held before the next maneuver of the chain may start; the law stays in force until the next activation. TT seconds about the Earth (#547); zero or more, a negative hold throwing `ArgumentOutOfRangeException` (`maneuverHoldDuration`) on every maneuver constructor (since 11.0.0, R11 of #668); its setter, which applies the same check, is `private protected` (decision 11 of lot L4, its access validated by decision 16, decided by S. Guillet, 2026-11-22: `PhasingManeuver` computes its hold at execution and sets it through the check; `protected` in 10.x) |
-| `Engine` | Property | The engine associated with this maneuver, whose fuel tank is the propagated spacecraft's: the attitude takes that spacecraft's body axes, and a propagation whose attitude's tank is another spacecraft's, or no spacecraft's, throws `InvalidOperationException` before it runs (#676, #586; before, it ran with the static or the other spacecraft's axes) |
 
 **Constructor** (used by all concrete attitude types):
 
 ```csharp-signature
 Attitude(CelestialItem maneuverCenter, Time minimumEpoch,
-         TimeSpan maneuverHoldDuration, Engine engine)
+         TimeSpan maneuverHoldDuration)
 ```
+
+An attitude takes no engine since lot L5b (decisions 48 and 93 of #668, decided by S. Guillet, 2026-11-23): it burns
+nothing and orients the spacecraft whose plan holds it, whose axes `GetBodyAxis(BodyAxis)` reads, so a satellite without
+a thruster runs a plan of attitudes without a tank or an engine (before 11.0.0 the engine was required, and its tank's
+spacecraft gave the axes). A null `maneuverCenter` is the centre the run infers; in SSB mode, where it cannot be
+inferred, a user subclass of `Attitude` requires it, since the library cannot know what its law reads (decision 99 of
+#668, decided by S. Guillet, 2026-11-24).
 
 ## Single-Vector Attitudes
 
@@ -39,12 +45,12 @@ All six types share the same constructor signature:
 
 ```csharp
 // Inputs: maneuverCenter (CelestialItem), minimumEpoch (Time), holdDuration (TimeSpan), engine (Engine)
-new ProgradeAttitude(maneuverCenter, minimumEpoch, holdDuration, engine);
-new RetrogradeAttitude(maneuverCenter, minimumEpoch, holdDuration, engine);
-new NadirAttitude(maneuverCenter, minimumEpoch, holdDuration, engine);
-new ZenithAttitude(maneuverCenter, minimumEpoch, holdDuration, engine);
-new NormalAttitude(maneuverCenter, minimumEpoch, holdDuration, engine);
-new AntiNormalAttitude(maneuverCenter, minimumEpoch, holdDuration, engine);
+new ProgradeAttitude(maneuverCenter, minimumEpoch, holdDuration);
+new RetrogradeAttitude(maneuverCenter, minimumEpoch, holdDuration);
+new NadirAttitude(maneuverCenter, minimumEpoch, holdDuration);
+new ZenithAttitude(maneuverCenter, minimumEpoch, holdDuration);
+new NormalAttitude(maneuverCenter, minimumEpoch, holdDuration);
+new AntiNormalAttitude(maneuverCenter, minimumEpoch, holdDuration);
 ```
 
 ## InstrumentPointingToAttitude
@@ -69,11 +75,11 @@ its own spacecraft: 0.577 rad off the Moon in the probe of the gap analysis of L
 ```csharp
 // Inputs: minimumEpoch (Time), holdDuration (TimeSpan), camera (Instrument), moon (CelestialBody), engine (Engine)
 var pointing = new InstrumentPointingToAttitude(
-    minimumEpoch, holdDuration, camera, moon, engine);
+    minimumEpoch, holdDuration, camera, moon);
 
 // The geometric direction
 var geometric = new InstrumentPointingToAttitude(
-    minimumEpoch, holdDuration, camera, moon, engine, Aberration.None);
+    minimumEpoch, holdDuration, camera, moon, Aberration.None);
 ```
 
 ## TriadAttitude
@@ -102,7 +108,7 @@ var geometric = new InstrumentPointingToAttitude(
 //   (ILocalizable), engine (Engine)
 var attitude = new TriadAttitude(
     minimumEpoch, holdDuration,
-    camera, primaryTarget, secondaryTarget, engine);
+    camera, primaryTarget, secondaryTarget);
 ```
 
 The instrument forms keep their instruments: each is one of the spacecraft propagated, under the rule of
@@ -116,7 +122,7 @@ The instrument forms keep their instruments: each is one of the spacecraft propa
 var attitude = new TriadAttitude(
     minimumEpoch, holdDuration,
     primaryInstrument, primaryTarget,
-    secondaryInstrument, secondaryTarget, engine);
+    secondaryInstrument, secondaryTarget);
 ```
 
 **Explicit body vectors + ILocalizable targets** — direct spacecraft-frame vectors with celestial body targets:
@@ -126,8 +132,7 @@ var attitude = new TriadAttitude(
 var attitude = new TriadAttitude(
     minimumEpoch, holdDuration,
     Spacecraft.Front, moon,       // Primary: Front points at Moon
-    Spacecraft.Up, sun,           // Secondary: Up toward Sun
-    engine);
+    Spacecraft.Up, sun);
 ```
 
 **Explicit body vectors + IAttitudeTarget targets** — supports orbital directions and celestial bodies:
@@ -137,16 +142,15 @@ var attitude = new TriadAttitude(
 var attitude = new TriadAttitude(
     earth, minimumEpoch, holdDuration,
     Spacecraft.Front, OrbitalDirectionTarget.Prograde,
-    Spacecraft.Up, new CelestialAttitudeTarget(sun),
-    engine);
+    Spacecraft.Up, new CelestialAttitudeTarget(sun));
 ```
 
 ### Factory Methods
 
 | Method | Primary | Secondary | Description |
 |--------|---------|-----------|-------------|
-| `TriadAttitude.CreateLVLH(maneuverCenter, epoch, duration, engine)` | the spacecraft's `BodyDown` toward Nadir | its `BodyFront` toward Prograde | Local Vertical / Local Horizontal attitude |
-| `TriadAttitude.CreateProgradeWithSunTracking(maneuverCenter, epoch, duration, sun, engine)` | the spacecraft's `BodyFront` toward Prograde | its `BodyUp` toward Sun | Prograde with solar-panel Sun tracking |
+| `TriadAttitude.CreateLVLH(maneuverCenter, epoch, duration)` | the spacecraft's `BodyDown` toward Nadir | its `BodyFront` toward Prograde | Local Vertical / Local Horizontal attitude |
+| `TriadAttitude.CreateProgradeWithSunTracking(maneuverCenter, epoch, duration, sun)` | the spacecraft's `BodyFront` toward Prograde | its `BodyUp` toward Sun | Prograde with solar-panel Sun tracking |
 
 The axes are those of the spacecraft whose plan last held the attitude (`SetManeuvers`), read at execution; before any
 plan, the static `Spacecraft.Down`, `Front` and `Up` (the spacecraft of the engine's tank before lot L5b, decisions 46
@@ -154,14 +158,14 @@ and 69 of #668). `PrimaryBodyVector` and `SecondaryBodyVector` of a factory
 attitude return those axes. Before 11.0.0 the factories pointed the static axes whatever the spacecraft's, 90° off for
 a spacecraft whose front is +X or +Z (#677); for that attitude, pass the static axes to the constructor:
 `new TriadAttitude(center, epoch, duration, Spacecraft.Down, OrbitalDirectionTarget.Nadir, Spacecraft.Front,
-OrbitalDirectionTarget.Prograde, engine)`.
+OrbitalDirectionTarget.Prograde)`.
 
 ```csharp
 // Inputs: earth and sun (CelestialBody), epoch (Time), duration (TimeSpan), engine (Engine)
-var lvlh = TriadAttitude.CreateLVLH(earth, epoch, duration, engine);
+var lvlh = TriadAttitude.CreateLVLH(earth, epoch, duration);
 
 var sunTrack = TriadAttitude.CreateProgradeWithSunTracking(
-    earth, epoch, duration, sun, engine);
+    earth, epoch, duration, sun);
 ```
 
 ## Body Axes
@@ -305,7 +309,7 @@ var moonTarget = new CelestialAttitudeTarget(moon, Aberration.LT);
 
 ```csharp
 // Inputs: earth (CelestialBody), epoch (Time), engine (Engine), spacecraft (Spacecraft)
-var nadir = new NadirAttitude(earth, epoch, TimeSpan.FromMinutes(30), engine);
+var nadir = new NadirAttitude(earth, epoch, TimeSpan.FromMinutes(30));
 spacecraft.SetManeuvers(nadir);
 ```
 
@@ -314,7 +318,7 @@ spacecraft.SetManeuvers(nadir);
 ```csharp
 // Inputs: epoch (Time), telescope (Instrument), targetStar (ILocalizable), engine (Engine), spacecraft (Spacecraft)
 var pointing = new InstrumentPointingToAttitude(
-    epoch, TimeSpan.FromHours(2), telescope, targetStar, engine);
+    epoch, TimeSpan.FromHours(2), telescope, targetStar);
 spacecraft.SetManeuvers(pointing);
 ```
 
@@ -325,8 +329,7 @@ spacecraft.SetManeuvers(pointing);
 var attitude = new TriadAttitude(
     earth, epoch, TimeSpan.FromHours(1.5),
     Spacecraft.Front, OrbitalDirectionTarget.Prograde,
-    Spacecraft.Up, new CelestialAttitudeTarget(sun),
-    engine);
+    Spacecraft.Up, new CelestialAttitudeTarget(sun));
 spacecraft.SetManeuvers(attitude);
 ```
 
@@ -334,7 +337,7 @@ spacecraft.SetManeuvers(attitude);
 
 ```csharp
 // Inputs: earth (CelestialBody), epoch (Time), duration (TimeSpan), engine (Engine), spacecraft (Spacecraft)
-var lvlh = TriadAttitude.CreateLVLH(earth, epoch, duration, engine);
+var lvlh = TriadAttitude.CreateLVLH(earth, epoch, duration);
 spacecraft.SetManeuvers(lvlh);
 ```
 

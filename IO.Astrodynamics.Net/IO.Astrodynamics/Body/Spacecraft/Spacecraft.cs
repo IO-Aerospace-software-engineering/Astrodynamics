@@ -673,7 +673,7 @@ namespace IO.Astrodynamics.Body.Spacecraft
         private bool HoldsEngine(Engine engine) => _engines.Contains(engine);
 
         /// <summary>
-        /// Checks, before a propagation, that each maneuver of the chain draws on an engine of this spacecraft: an engine of
+        /// Checks, before a propagation, that each impulse of the chain given an engine draws on an engine of this spacecraft: an engine of
         /// <see cref="Engines"/>, added with <see cref="AddEngine"/>, compared by reference (decision 92 of #668, decided by
         /// S. Guillet, 2026-11-23: before, the tank alone was checked, so an engine built on the spacecraft's tank and never
         /// added ran), whose fuel tank is one of the tank instances of the spacecraft and is held by this instance (#676,
@@ -681,12 +681,16 @@ namespace IO.Astrodynamics.Body.Spacecraft
         /// during the run, one on another spacecraft's tank burnt that spacecraft's fuel, and an attitude took the body axes
         /// of the other spacecraft, or the static ones. And that each is in the plan of this spacecraft
         /// (<see cref="SetManeuvers"/>): the run's re-check of the claim (decision 46 of #668, decided by S. Guillet,
-        /// 2026-11-23).
+        /// 2026-11-23). Then it resolves, writing nothing, the engine and the centre the run gives each maneuver of the plan
+        /// (decisions 61, 63 and 64 of #668, decided by S. Guillet, 2026-11-23): see <see cref="ResolveManeuver"/>.
         /// </summary>
+        /// <returns>The maneuvers of the plan, from its head, each with the engine (null for an attitude) and the centre
+        /// (null for the central body of the run) the run writes on it right after its re-arm.</returns>
         /// <exception cref="InvalidOperationException">A maneuver draws on an engine that is not one of this spacecraft's
         /// engines or on a tank that is not this spacecraft's, or points an instrument of another spacecraft (#797, decision 66
-        /// of #668, decided by S. Guillet, 2026-11-23), or is not in its plan; nothing changes.</exception>
-        internal void CheckManeuverEngines()
+        /// of #668, decided by S. Guillet, 2026-11-23), or is not in its plan, or its engine or its centre cannot be inferred
+        /// (decision 64); nothing changes.</exception>
+        internal IReadOnlyList<(Maneuver.Maneuver Maneuver, Engine Engine, CelestialItem Center)> CheckManeuverEngines()
         {
             foreach (var maneuver in Maneuver.Maneuver.Chain(PlanHead).Concat(Maneuver.Maneuver.Chain(StandbyManeuver)))
             {
@@ -707,13 +711,82 @@ namespace IO.Astrodynamics.Body.Spacecraft
                         "by SetManeuvers only. Set the plan with SetManeuvers.");
                 }
             }
+
+            var resolved = new List<(Maneuver.Maneuver, Engine, CelestialItem)>();
+            foreach (var maneuver in Maneuver.Maneuver.Chain(PlanHead))
+            {
+                var (engine, center) = ResolveManeuver(maneuver);
+                resolved.Add((maneuver, engine, center));
+            }
+
+            return resolved;
         }
 
+        /// <summary>
+        /// The engine and the centre a run gives <paramref name="maneuver"/>, resolved from the values it was given,
+        /// never from those a run wrote (IC-1 of lot L5b of #668), writing nothing (decisions 61, 63 and 64 of #668, decided
+        /// by S. Guillet, 2026-11-23): for an impulse, the engine it was given, else the only engine of
+        /// <see cref="Engines"/> (decision 92); for every maneuver, the centre it was given, else the observer of the
+        /// initial orbit of this spacecraft when it is a celestial body other than a star, else, for a law that does not
+        /// read its centre (all its targets library <see cref="Maneuver.CelestialAttitudeTarget"/>s), null, the central body of the
+        /// run (decision 99 of #668, decided by S. Guillet, 2026-11-24).
+        /// </summary>
+        /// <exception cref="InvalidOperationException">An impulse given no engine on a spacecraft of no engine or of
+        /// several, or a law that reads its centre given none where it cannot be inferred (SSB mode: the observer is a
+        /// star or a barycentre).</exception>
+        internal (Engine Engine, CelestialItem Center) ResolveManeuver(Maneuver.Maneuver maneuver)
+        {
+            Engine engine = null;
+            if (maneuver is Maneuver.ImpulseManeuver impulse)
+            {
+                engine = impulse.GivenEngine;
+                if (engine == null)
+                {
+                    if (_engines.Count != 1)
+                    {
+                        string held = _engines.Count == 0
+                            ? "holds no engine"
+                            : $"holds {_engines.Count} engines ({string.Join(", ", _engines.Select(x => x.Name))})";
+                        throw new InvalidOperationException(
+                            $"The {maneuver.GetType().Name} of {Name} ({NaifId}) was given no engine, and {Name} {held}: the engine is inferred only " +
+                            $"when the spacecraft holds one (decisions 61 and 64 of #668). Pass engine: to the constructor of the maneuver, an engine of {Name}.");
+                    }
+
+                    engine = _engines.First();
+                }
+            }
+
+            var center = maneuver.GivenCenter ?? InferredCenter;
+            if (center == null && maneuver.ReadsCenter)
+            {
+                string observer = InitialOrbitalParameters?.Observer is INaifObject named ? named.Name : "none";
+                throw new InvalidOperationException(
+                    $"The {maneuver.GetType().Name} of {Name} ({NaifId}) was given no maneuverCenter, and the centre cannot be inferred: the observer " +
+                    $"of the initial orbit of {Name}, {observer}, is not a celestial body other than a star (SSB mode), and the law reads its centre " +
+                    "(an impulse, an orbital direction, a user target or a user attitude; decisions 61, 64 and 99 of #668). Give maneuverCenter to the " +
+                    "constructor of the maneuver.");
+            }
+
+            return (engine, center);
+        }
+
+        // The centre a maneuver given none takes: the observer of the initial orbit as given when it is a celestial body
+        // other than a star (decision 61 of #668, L5-05 as amended: a star or a barycentre is the SSB mode, whose run is
+        // about the Sun, and a state read from an SSB-mode solution is about the Sun, so it infers the Sun); null otherwise
+        private CelestialItem InferredCenter =>
+            InitialOrbitalParameters?.Observer is CelestialBody body and not Star ? body : null;
+
         // Why a maneuver cannot run on this spacecraft: its engine's tank is not one of this spacecraft's (#676, #586), or
-        // the engine is not one of its engines, by reference (decision 92 of #668); null otherwise
+        // the engine is not one of its engines, by reference (decision 92 of #668); null otherwise. An impulse only (an
+        // attitude has no engine since lot L5b, decision 48 of #668), on the engine it was given (IC-1 of lot L5b): an
+        // inferred engine is one of Engines, whose tanks AddEngine checks
         private string EngineError(Maneuver.Maneuver maneuver)
         {
-            var engine = maneuver.Engine;
+            if (maneuver is not Maneuver.ImpulseManeuver { GivenEngine: { } engine })
+            {
+                return null;
+            }
+
             var tank = engine.FuelTank;
             if (ReferenceEquals(tank.Spacecraft, this) && HoldsFuelTank(tank))
             {
@@ -734,7 +807,7 @@ namespace IO.Astrodynamics.Body.Spacecraft
             string holder = tank.Spacecraft == null
                 ? "is on no spacecraft"
                 : $"belongs to the spacecraft {tank.Spacecraft.Name} ({tank.Spacecraft.NaifId})";
-            return $"The {maneuver.GetType().Name} of {Name} ({NaifId}) draws on the engine {maneuver.Engine.Name}{SerialOf(maneuver.Engine.SerialNumber)}, whose fuel tank {tank.Name}{SerialOf(tank.SerialNumber)} {holder}, not on the spacecraft propagated: " +
+            return $"The {maneuver.GetType().Name} of {Name} ({NaifId}) draws on the engine {engine.Name}{SerialOf(engine.SerialNumber)}, whose fuel tank {tank.Name}{SerialOf(tank.SerialNumber)} {holder}, not on the spacecraft propagated: " +
                    $"add the tank to {Name} with AddFuelTank and the engine with AddEngine, or build the maneuver on an engine of {Name}.";
         }
 

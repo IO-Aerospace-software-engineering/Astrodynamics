@@ -451,9 +451,9 @@ public class AttitudeTimelineTests
         bool moon = center.NaifId == PlanetsAndMoons.MOON.NaifId;
         var kinds = new Dictionary<Maneuver.Maneuver, string>();
 
-        Maneuver.Maneuver Nadir(double hold, double? minimum = null) => Kind(new NadirAttitude(center, minimum.HasValue ? S.AddSeconds(minimum.Value) : Min, TimeSpan.FromSeconds(hold), engine), "nadir");
-        Maneuver.Maneuver Prograde(double hold, double? minimum = null) => Kind(new ProgradeAttitude(center, minimum.HasValue ? S.AddSeconds(minimum.Value) : Min, TimeSpan.FromSeconds(hold), engine), "prograde");
-        Maneuver.Maneuver Lvlh(double hold) => Kind(TriadAttitude.CreateLVLH(center, Min, TimeSpan.FromSeconds(hold), engine), "lvlh");
+        Maneuver.Maneuver Nadir(double hold, double? minimum = null) => Kind(new NadirAttitude(center, minimum.HasValue ? S.AddSeconds(minimum.Value) : Min, TimeSpan.FromSeconds(hold)), "nadir");
+        Maneuver.Maneuver Prograde(double hold, double? minimum = null) => Kind(new ProgradeAttitude(center, minimum.HasValue ? S.AddSeconds(minimum.Value) : Min, TimeSpan.FromSeconds(hold)), "prograde");
+        Maneuver.Maneuver Lvlh(double hold) => Kind(TriadAttitude.CreateLVLH(center, Min, TimeSpan.FromSeconds(hold)), "lvlh");
         Maneuver.Maneuver Apo(double hold = 0.0, double target = 8378137.0) =>
             new ApogeeHeightManeuver(center, Min, TimeSpan.FromSeconds(hold), moon ? MoonRadius + (target == 8378137.0 ? 500000.0 : 700000.0) : target, engine);
         Maneuver.Maneuver Peri() => new PerigeeHeightManeuver(center, Min, TimeSpan.Zero, 6978137.0, engine);

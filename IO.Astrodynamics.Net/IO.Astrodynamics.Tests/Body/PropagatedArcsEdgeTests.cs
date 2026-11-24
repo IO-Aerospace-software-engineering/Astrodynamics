@@ -368,7 +368,7 @@ public class PropagatedArcsEdgeTests
         var fast = new Engine("fast", 300.0, 1e12, tank, "model", "sn2");
         spacecraft.AddEngine(fast);
         var first = new ApogeeHeightManeuver(earth, Start, TimeSpan.Zero, 8378137.0, fast);
-        var lvlh = TriadAttitude.CreateLVLH(earth, Start, TimeSpan.Zero, engine);
+        var lvlh = TriadAttitude.CreateLVLH(earth, Start, TimeSpan.Zero);
         var second = new ApogeeHeightManeuver(earth, Start, TimeSpan.Zero, 9378137.0, engine);
         spacecraft.SetManeuvers(first,
             lvlh,

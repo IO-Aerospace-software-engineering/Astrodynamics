@@ -10,7 +10,38 @@ namespace IO.Astrodynamics.Maneuver
 {
     public abstract class Maneuver
     {
-        public CelestialItem ManeuverCenter { get; }
+        /// <summary>
+        /// The centre of the maneuver: the one it was given (<see cref="GivenCenter"/>), null when it was given none, until
+        /// a run resolves it; the centre the last run used, written right after its re-arm (decisions 61 and 63 of #668,
+        /// decided by S. Guillet, 2026-11-23): the given one, else the observer of the spacecraft's initial orbit when it
+        /// is a celestial body other than a star, else, for a law whose targets are all library
+        /// <see cref="CelestialAttitudeTarget"/>s, the central body of the run (decision 99 of #668, decided by
+        /// S. Guillet, 2026-11-24). The re-arm of the next run restores the given value, and a stopped run keeps the
+        /// resolved one.
+        /// </summary>
+        /// <remarks>
+        /// When the centre cannot be inferred (SSB mode: the observer is a star or a barycentre), a law that reads it (an
+        /// impulse, an orbital-direction attitude, a law with an orbital-direction or user target, a user
+        /// <see cref="Attitude"/> subclass) requires it: the propagator constructor and <c>Propagate</c> throw
+        /// <see cref="InvalidOperationException"/> (decisions 64 and 99 of #668). Before 11.0.0 the centre was required
+        /// by every constructor but the TRIAD forms of a target, which took it from the target.
+        /// </remarks>
+        public CelestialItem ManeuverCenter { get; internal set; }
+
+        /// <summary>
+        /// The centre the maneuver was given, null for one the run infers: what every check before a run and every preview
+        /// read (<see cref="PreviewState"/>), never <see cref="ManeuverCenter"/>, which a run writes (decision 50 of #668).
+        /// </summary>
+        internal CelestialItem GivenCenter { get; }
+
+        /// <summary>
+        /// Whether the law of this maneuver reads its centre, so that it requires one when the centre cannot be inferred
+        /// (decision 99 of #668, decided by S. Guillet, 2026-11-24): true by default, every impulse, orbital-direction
+        /// attitude and user <see cref="Attitude"/> subclass, whose use of the centre the library cannot know; false for a
+        /// law whose targets are all library <see cref="CelestialAttitudeTarget"/>s, which takes the central body of the
+        /// run (<see cref="TriadAttitude"/>, <see cref="InstrumentPointingToAttitude"/>).
+        /// </summary>
+        internal virtual bool ReadsCenter => true;
         /// <summary>
         /// The thrust window of the last run that executed this maneuver: the last run's value, cleared by the re-arm of the
         /// next run (decision 52 of #668, decided by S. Guillet, 2026-11-23); null before any run, and after the re-arm until
@@ -130,17 +161,6 @@ namespace IO.Astrodynamics.Maneuver
         private TimeSpan _maneuverHoldDuration;
 
         /// <summary>
-        /// The engine of the maneuver.
-        /// </summary>
-        /// <remarks>
-        /// Decision 48 of #668 is split (decision 93 of #668, decided by S. Guillet, 2026-11-23): the closed hierarchy, the
-        /// internal <c>TryExecute</c>, the <c>private protected</c> constructor and <c>Execute</c> on
-        /// <see cref="ImpulseManeuver"/> land in lot L5a; <see cref="Engine"/> moves to <see cref="ImpulseManeuver"/> in
-        /// lot L5b, with R13.
-        /// </remarks>
-        public Engine Engine { get; }
-
-        /// <summary>
         /// The axis <paramref name="axis"/> of the spacecraft body frame, as the law of this maneuver points it: the
         /// instance axis of the spacecraft whose plan last held the maneuver (<see cref="Spacecraft.SetManeuvers"/>), read
         /// at the call (<see cref="Spacecraft.BodyFront"/>, <see cref="Spacecraft.BodyBack"/>,
@@ -213,38 +233,39 @@ namespace IO.Astrodynamics.Maneuver
 
         /// <summary>
         /// A maneuver about <paramref name="maneuverCenter"/>, at or after <paramref name="minimumEpoch"/>, held for
-        /// <paramref name="maneuverHoldDuration"/>, burning on <paramref name="engine"/>.
+        /// <paramref name="maneuverHoldDuration"/>.
         /// </summary>
-        /// <param name="maneuverCenter">The centre of the maneuver.</param>
+        /// <param name="maneuverCenter">The centre of the maneuver; null for the centre the run infers.</param>
         /// <param name="minimumEpoch">The earliest epoch of the maneuver.</param>
         /// <param name="maneuverHoldDuration">The hold, zero or positive.</param>
-        /// <param name="engine">The engine.</param>
         /// <exception cref="ArgumentOutOfRangeException"><paramref name="maneuverHoldDuration"/> is negative (R11 of #668:
         /// before 11.0.0 it was accepted, and the window it gave the maneuver mid-propagation ended before it
         /// started).</exception>
-        /// <exception cref="ArgumentNullException"><paramref name="engine"/> is null.</exception>
         /// <remarks>
         /// <c>private protected</c> (decision 48 of #668, decided by S. Guillet, 2026-11-23): the kinds of maneuver a
         /// propagation knows are <see cref="ImpulseManeuver"/> and <see cref="Attitude"/>, the bases of a user maneuver;
         /// before 11.0.0 a direct subclass of <see cref="Maneuver"/> compiled.
         /// </remarks>
-        private protected Maneuver(CelestialItem maneuverCenter, Time minimumEpoch, TimeSpan maneuverHoldDuration, Engine engine)
+        /// <remarks>
+        /// The engine is on <see cref="ImpulseManeuver"/> since lot L5b (decisions 48 and 93 of #668): an attitude burns
+        /// nothing, and the spacecraft it orients is the one whose plan holds it.
+        /// </remarks>
+        private protected Maneuver(CelestialItem maneuverCenter, Time minimumEpoch, TimeSpan maneuverHoldDuration)
         {
-            ManeuverCenter = maneuverCenter;
+            GivenCenter = ManeuverCenter = maneuverCenter;
             GivenMinimumEpoch = minimumEpoch;
             ManeuverHoldDuration = maneuverHoldDuration;
-            Engine = engine ?? throw new ArgumentNullException(nameof(engine));
         }
 
         /// <summary>
         /// The state a preview reads (<see cref="ImpulseManeuver.ComputeDeltaV"/>, <see cref="Attitude.ComputeStateOrientation"/>):
-        /// <paramref name="stateVector"/> about <see cref="ManeuverCenter"/>, as the execution takes it, in its own frame,
-        /// or about its own observer when the maneuver has no centre (decision 50 of #668, decided by S. Guillet,
-        /// 2026-11-23: the given centre, or the state's observer, never the last run's).
+        /// <paramref name="stateVector"/> about the centre the maneuver was given (<see cref="GivenCenter"/>), as the
+        /// execution takes it, in its own frame, or about its own observer when the maneuver was given none (decision 50 of
+        /// #668, decided by S. Guillet, 2026-11-23: the given centre, or the state's observer, never the last run's).
         /// </summary>
         private protected StateVector PreviewState(StateVector stateVector)
         {
-            return ManeuverCenter is null ? stateVector : stateVector.RelativeTo(ManeuverCenter, Aberration.None).ToStateVector();
+            return GivenCenter is null ? stateVector : stateVector.RelativeTo(GivenCenter, Aberration.None).ToStateVector();
         }
 
         /// <summary>
@@ -322,7 +343,8 @@ namespace IO.Astrodynamics.Maneuver
 
         /// <summary>
         /// Clears what a propagation set on this maneuver: the fuel burned, the windows and the gate of the propagation, so
-        /// that <see cref="MinimumEpoch"/> is again the minimum epoch the maneuver was given (#573). The next maneuvers of
+        /// that <see cref="MinimumEpoch"/> is again the minimum epoch the maneuver was given (#573), and the centre the run
+        /// resolved, so that <see cref="ManeuverCenter"/> is again the one it was given (decision 63 of #668). The next maneuvers of
         /// the chain are reset by <see cref="ResetChain"/>, which <c>Spacecraft.ResetPropagation</c> calls at the start of
         /// every propagation, once the checks of <see cref="Propagator.PropagatorBase.Propagate"/> pass, on every path (#583)
         /// (a loop since #585, no longer a recursion).
@@ -332,6 +354,7 @@ namespace IO.Astrodynamics.Maneuver
             FuelBurned = 0.0;
             ManeuverWindow = ThrustWindow = null;
             PropagationGate = null;
+            ManeuverCenter = GivenCenter;
         }
     }
 }

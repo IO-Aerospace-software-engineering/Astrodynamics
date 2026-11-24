@@ -14,8 +14,8 @@ namespace IO.Astrodynamics.Maneuver;
 /// </summary>
 public class NormalAttitude : Attitude
 {
-    public NormalAttitude(CelestialItem maneuverCenter, Time minimumEpoch, TimeSpan maneuverHoldDuration, Engine engine)
-        : base(maneuverCenter, minimumEpoch, maneuverHoldDuration, engine)
+    public NormalAttitude(CelestialItem maneuverCenter, Time minimumEpoch, TimeSpan maneuverHoldDuration)
+        : base(maneuverCenter, minimumEpoch, maneuverHoldDuration)
     {
     }
 

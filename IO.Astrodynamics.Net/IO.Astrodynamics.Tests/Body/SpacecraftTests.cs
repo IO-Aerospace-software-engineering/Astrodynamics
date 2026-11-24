@@ -672,8 +672,7 @@ namespace IO.Astrodynamics.Tests.Body
             NormalAttitude detachedManeuver = new NormalAttitude(
                 TestHelpers.EarthAtJ2000,
                 new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB),
-                TimeSpan.Zero,
-                unattachedEngine);
+                TimeSpan.Zero);
 
             var sv = orbitalParams.ToStateVector();
             var detachedManeuverOrientation = detachedManeuver.ComputeStateOrientation(sv);
@@ -685,8 +684,7 @@ namespace IO.Astrodynamics.Tests.Body
             NormalAttitude referenceManeuver = new NormalAttitude(
                 TestHelpers.EarthAtJ2000,
                 new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB),
-                TimeSpan.Zero,
-                spcDefault.Engines.First());
+                TimeSpan.Zero);
 
             var referenceManeuverOrientation2 = referenceManeuver.ComputeStateOrientation(sv);
 

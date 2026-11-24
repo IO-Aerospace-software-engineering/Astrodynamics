@@ -65,12 +65,12 @@ internal static class AttitudesPage
     {
         #region docs/reference/attitudes.md:1
         // Inputs: maneuverCenter (CelestialItem), minimumEpoch (Time), holdDuration (TimeSpan), engine (Engine)
-        new ProgradeAttitude(maneuverCenter, minimumEpoch, holdDuration, engine);
-        new RetrogradeAttitude(maneuverCenter, minimumEpoch, holdDuration, engine);
-        new NadirAttitude(maneuverCenter, minimumEpoch, holdDuration, engine);
-        new ZenithAttitude(maneuverCenter, minimumEpoch, holdDuration, engine);
-        new NormalAttitude(maneuverCenter, minimumEpoch, holdDuration, engine);
-        new AntiNormalAttitude(maneuverCenter, minimumEpoch, holdDuration, engine);
+        new ProgradeAttitude(maneuverCenter, minimumEpoch, holdDuration);
+        new RetrogradeAttitude(maneuverCenter, minimumEpoch, holdDuration);
+        new NadirAttitude(maneuverCenter, minimumEpoch, holdDuration);
+        new ZenithAttitude(maneuverCenter, minimumEpoch, holdDuration);
+        new NormalAttitude(maneuverCenter, minimumEpoch, holdDuration);
+        new AntiNormalAttitude(maneuverCenter, minimumEpoch, holdDuration);
         #endregion
     }
 
@@ -80,11 +80,11 @@ internal static class AttitudesPage
         #region docs/reference/attitudes.md:2
         // Inputs: minimumEpoch (Time), holdDuration (TimeSpan), camera (Instrument), moon (CelestialBody), engine (Engine)
         var pointing = new InstrumentPointingToAttitude(
-            minimumEpoch, holdDuration, camera, moon, engine);
+            minimumEpoch, holdDuration, camera, moon);
 
         // The geometric direction
         var geometric = new InstrumentPointingToAttitude(
-            minimumEpoch, holdDuration, camera, moon, engine, Aberration.None);
+            minimumEpoch, holdDuration, camera, moon, Aberration.None);
         #endregion
     }
 
@@ -96,7 +96,7 @@ internal static class AttitudesPage
         //   (ILocalizable), engine (Engine)
         var attitude = new TriadAttitude(
             minimumEpoch, holdDuration,
-            camera, primaryTarget, secondaryTarget, engine);
+            camera, primaryTarget, secondaryTarget);
         #endregion
     }
 
@@ -109,7 +109,7 @@ internal static class AttitudesPage
         var attitude = new TriadAttitude(
             minimumEpoch, holdDuration,
             primaryInstrument, primaryTarget,
-            secondaryInstrument, secondaryTarget, engine);
+            secondaryInstrument, secondaryTarget);
         #endregion
     }
 
@@ -121,8 +121,7 @@ internal static class AttitudesPage
         var attitude = new TriadAttitude(
             minimumEpoch, holdDuration,
             Spacecraft.Front, moon,       // Primary: Front points at Moon
-            Spacecraft.Up, sun,           // Secondary: Up toward Sun
-            engine);
+            Spacecraft.Up, sun);
         #endregion
     }
 
@@ -134,8 +133,7 @@ internal static class AttitudesPage
         var attitude = new TriadAttitude(
             earth, minimumEpoch, holdDuration,
             Spacecraft.Front, OrbitalDirectionTarget.Prograde,
-            Spacecraft.Up, new CelestialAttitudeTarget(sun),
-            engine);
+            Spacecraft.Up, new CelestialAttitudeTarget(sun));
         #endregion
     }
 
@@ -144,10 +142,10 @@ internal static class AttitudesPage
     {
         #region docs/reference/attitudes.md:7
         // Inputs: earth and sun (CelestialBody), epoch (Time), duration (TimeSpan), engine (Engine)
-        var lvlh = TriadAttitude.CreateLVLH(earth, epoch, duration, engine);
+        var lvlh = TriadAttitude.CreateLVLH(earth, epoch, duration);
 
         var sunTrack = TriadAttitude.CreateProgradeWithSunTracking(
-            earth, epoch, duration, sun, engine);
+            earth, epoch, duration, sun);
         #endregion
     }
 
@@ -169,7 +167,7 @@ internal static class AttitudesPage
     {
         #region docs/reference/attitudes.md:9
         // Inputs: earth (CelestialBody), epoch (Time), engine (Engine), spacecraft (Spacecraft)
-        var nadir = new NadirAttitude(earth, epoch, TimeSpan.FromMinutes(30), engine);
+        var nadir = new NadirAttitude(earth, epoch, TimeSpan.FromMinutes(30));
         spacecraft.SetManeuvers(nadir);
         #endregion
     }
@@ -180,7 +178,7 @@ internal static class AttitudesPage
         #region docs/reference/attitudes.md:10
         // Inputs: epoch (Time), telescope (Instrument), targetStar (ILocalizable), engine (Engine), spacecraft (Spacecraft)
         var pointing = new InstrumentPointingToAttitude(
-            epoch, TimeSpan.FromHours(2), telescope, targetStar, engine);
+            epoch, TimeSpan.FromHours(2), telescope, targetStar);
         spacecraft.SetManeuvers(pointing);
         #endregion
     }
@@ -193,8 +191,7 @@ internal static class AttitudesPage
         var attitude = new TriadAttitude(
             earth, epoch, TimeSpan.FromHours(1.5),
             Spacecraft.Front, OrbitalDirectionTarget.Prograde,
-            Spacecraft.Up, new CelestialAttitudeTarget(sun),
-            engine);
+            Spacecraft.Up, new CelestialAttitudeTarget(sun));
         spacecraft.SetManeuvers(attitude);
         #endregion
     }
@@ -204,7 +201,7 @@ internal static class AttitudesPage
     {
         #region docs/reference/attitudes.md:12
         // Inputs: earth (CelestialBody), epoch (Time), duration (TimeSpan), engine (Engine), spacecraft (Spacecraft)
-        var lvlh = TriadAttitude.CreateLVLH(earth, epoch, duration, engine);
+        var lvlh = TriadAttitude.CreateLVLH(earth, epoch, duration);
         spacecraft.SetManeuvers(lvlh);
         #endregion
     }

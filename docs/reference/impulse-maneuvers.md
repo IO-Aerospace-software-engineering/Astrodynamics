@@ -13,6 +13,8 @@ Impulse maneuvers model instantaneous delta-V burns triggered by g-function zero
 | `DeltaV` | Burn delta-V vector, in the inertial frame of the propagated state: the last run's value (below) |
 | `ThrustWindow` | Window of the equivalent finite burn (see below) |
 | `ManeuverWindow` | Thrust window extended by the maneuver hold duration (zero or more: a negative hold throws `ArgumentOutOfRangeException`, `maneuverHoldDuration`, since 11.0.0, R11 of #668) |
+| `Engine` | The engine of the impulse: the one it was given, null for one the run infers, until a run writes the engine it used right after its re-arm (the given one, else the only engine of the spacecraft); the next re-arm restores the given value ([The engine and the centre](#the-engine-and-the-centre); on `Maneuver` before lot L5b, decisions 48 and 93 of #668) |
+| `ManeuverCenter` | The centre of the impulse, by the same rule: the given one, else the observer of the initial orbit when it is a celestial body other than a star; required in SSB mode |
 | `ExecutionError` | Optional execution error by the model of Gates (`ManeuverExecutionError`), set with an object initializer; added to the velocity covariance at the burn when the propagation propagates the covariance, ignored otherwise. See [Covariance Propagation](covariance-propagation.md#execution-error-of-an-impulsive-maneuver) |
 
 `ManeuverExecutionError` takes its four standard deviations by name, so that two of different units cannot be swapped:
@@ -260,7 +262,34 @@ a chain that is a cycle is rejected by the construction of the propagator (`Spac
 propagation are cleared) and by `Propagate` (`InvalidOperationException`). Before 11.0.0 a cycle ended the process with
 a stack overflow at the first `Spacecraft.Propagate`, or never returned through the builder of 10.x.
 
-Each maneuver of the chain draws on a tank of the propagated spacecraft: its `Engine.FuelTank` is one of the
+### The engine and the centre
+
+A maneuver may be given no engine and no centre (decisions 61, 63 and 64 of #668, decided by S. Guillet, 2026-11-23):
+the run infers them, from the values the maneuver was given, when the propagator is built and again at `Propagate`,
+writing nothing, and writes the values it uses on the maneuver right after its re-arm.
+
+- **The engine** of an impulse (`ImpulseManeuver.Engine`; an attitude has none): the one it was given, else the only
+  engine of the spacecraft (`Spacecraft.Engines`, decision 92). An impulse given no engine on a spacecraft of no engine
+  or of several throws `InvalidOperationException` naming them, "pass engine:".
+- **The centre** of every maneuver (`ManeuverCenter`): the one it was given, else the observer of the spacecraft's
+  initial orbit, as given, when it is a celestial body other than a star. Where it cannot be inferred (SSB mode: the
+  observer is a star or a barycentre), a law whose targets are all library `CelestialAttitudeTarget`s (a TRIAD of
+  celestial targets, `InstrumentPointingToAttitude`) takes the central body of the run, the Sun, and every other law
+  requires `maneuverCenter`: the impulses, the orbital-direction attitudes in any form, a user `IAttitudeTarget` (or a
+  subclass of `CelestialAttitudeTarget`) and a user `Attitude` subclass, whose use of the centre the library cannot
+  know. Without it the propagator constructor and `Propagate` throw `InvalidOperationException` (decision 99 of #668,
+  decided by S. Guillet, 2026-11-24; before, such a law received a heliocentric state silently). A state read from an
+  SSB-mode solution is about the Sun, so an initial orbit built from it infers the Sun.
+
+Before a run, `Engine` and `ManeuverCenter` return the values the maneuver was given (null for an inferred one); after
+it, the values the run used, the last run's values (decision 52); the re-arm of the next run restores the given ones,
+and a stopped run keeps the resolved ones. A token already cancelled or an `IIntegrator.Initialize` that throws changes
+neither (decisions 6 and 22 of lot L4). Every check before the write and every preview read the given values (IC-1 of
+lot L5b): a maneuver a run inferred the engine of can go to another spacecraft's plan once released, an engine added
+between two runs makes the second throw, and `ComputeDeltaV` and `ComputeStateOrientation` take the state about the
+given centre, or about its own observer, never about the centre of the last run.
+
+Each impulse given an engine draws on a tank of the propagated spacecraft: its `Engine.FuelTank` is one of the
 spacecraft's tank instances, held by it. The same constructions and `Propagate` check it and throw
 `InvalidOperationException` naming the maneuver, the engine, its tank and the spacecraft, before anything changes
 (#676, #586). Before 11.0.0 an impulse on a tank added to no spacecraft threw `NullReferenceException` at its burn, and

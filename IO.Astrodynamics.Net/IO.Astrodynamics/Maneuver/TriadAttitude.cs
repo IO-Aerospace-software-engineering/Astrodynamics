@@ -34,7 +34,7 @@ namespace IO.Astrodynamics.Maneuver;
 /// Example usage with spacecraft directions:
 /// <code>
 /// // Point spacecraft Front at Moon, keep Up toward Sun
-/// new TriadAttitude(epoch, duration, Spacecraft.Front, moon, Spacecraft.Up, sun, engine);
+/// new TriadAttitude(epoch, duration, Spacecraft.Front, moon, Spacecraft.Up, sun);
 /// </code>
 /// </para>
 /// </remarks>
@@ -167,7 +167,6 @@ public class TriadAttitude : Attitude
     /// constrains the roll toward the secondary target.</param>
     /// <param name="primaryTarget">The target of the boresight, also the maneuver's centre (a site's body for a site).</param>
     /// <param name="secondaryTarget">The target of the reference vector, for the roll.</param>
-    /// <param name="engine">Engine used for the maneuver.</param>
     /// <param name="minimumVectorSeparation">Minimum angle between vectors in radians, in [1e-14, π/2] (default: 5 degrees).</param>
     /// <exception cref="ArgumentOutOfRangeException"><paramref name="minimumVectorSeparation"/> is not in [1e-14, π/2] (fourth
     /// round of #668).</exception>
@@ -179,9 +178,8 @@ public class TriadAttitude : Attitude
         Instrument instrument,
         ILocalizable primaryTarget,
         ILocalizable secondaryTarget,
-        Engine engine,
         double minimumVectorSeparation = DefaultMinimumSeparation)
-        : base(GetManeuverCenter(primaryTarget), minimumEpoch, maneuverHoldDuration, engine)
+        : base(GetManeuverCenter(primaryTarget), minimumEpoch, maneuverHoldDuration)
     {
         CheckMinimumVectorSeparation(minimumVectorSeparation);
         if (instrument == null) throw new ArgumentNullException(nameof(instrument));
@@ -205,7 +203,6 @@ public class TriadAttitude : Attitude
     /// <param name="primaryTarget">The target of the primary boresight, also the maneuver's centre (a site's body for a site).</param>
     /// <param name="secondaryInstrument">The instrument whose boresight constrains the roll toward the secondary target.</param>
     /// <param name="secondaryTarget">The target of the secondary boresight, for the roll.</param>
-    /// <param name="engine">Engine used for the maneuver.</param>
     /// <param name="minimumVectorSeparation">Minimum angle between vectors in radians, in [1e-14, π/2] (default: 5 degrees).</param>
     /// <exception cref="ArgumentOutOfRangeException"><paramref name="minimumVectorSeparation"/> is not in [1e-14, π/2] (fourth
     /// round of #668).</exception>
@@ -218,9 +215,8 @@ public class TriadAttitude : Attitude
         ILocalizable primaryTarget,
         Instrument secondaryInstrument,
         ILocalizable secondaryTarget,
-        Engine engine,
         double minimumVectorSeparation = DefaultMinimumSeparation)
-        : base(GetManeuverCenter(primaryTarget), minimumEpoch, maneuverHoldDuration, engine)
+        : base(GetManeuverCenter(primaryTarget), minimumEpoch, maneuverHoldDuration)
     {
         CheckMinimumVectorSeparation(minimumVectorSeparation);
         if (primaryInstrument == null) throw new ArgumentNullException(nameof(primaryInstrument));
@@ -246,7 +242,6 @@ public class TriadAttitude : Attitude
     /// <param name="primaryTarget">The target of the primary direction, also the maneuver's centre (a site's body for a site).</param>
     /// <param name="secondaryBodyVector">Secondary direction in body frame for roll constraint.</param>
     /// <param name="secondaryTarget">The target of the secondary direction, for the roll.</param>
-    /// <param name="engine">Engine used for the maneuver.</param>
     /// <param name="minimumVectorSeparation">Minimum angle between vectors in radians, in [1e-14, π/2] (default: 5 degrees).</param>
     /// <exception cref="ArgumentOutOfRangeException"><paramref name="minimumVectorSeparation"/> is not in [1e-14, π/2] (fourth
     /// round of #668).</exception>
@@ -259,9 +254,8 @@ public class TriadAttitude : Attitude
         ILocalizable primaryTarget,
         Vector3 secondaryBodyVector,
         ILocalizable secondaryTarget,
-        Engine engine,
         double minimumVectorSeparation = DefaultMinimumSeparation)
-        : base(GetManeuverCenter(primaryTarget), minimumEpoch, maneuverHoldDuration, engine)
+        : base(GetManeuverCenter(primaryTarget), minimumEpoch, maneuverHoldDuration)
     {
         CheckMinimumVectorSeparation(minimumVectorSeparation);
         PrimaryTarget = primaryTarget ?? throw new ArgumentNullException(nameof(primaryTarget));
@@ -283,14 +277,16 @@ public class TriadAttitude : Attitude
     /// Creates a TRIAD attitude maneuver using explicit body frame vectors and IAttitudeTarget targets.
     /// This constructor supports orbital directions (prograde, nadir, normal, etc.) as well as celestial bodies.
     /// </summary>
-    /// <param name="maneuverCenter">The central body for this maneuver (required for orbital direction computation).</param>
+    /// <param name="maneuverCenter">The central body for this maneuver; null for the centre the run infers, the observer
+    /// of the initial orbit when it is a celestial body other than a star, and otherwise the central body of the run when
+    /// both targets are library <see cref="CelestialAttitudeTarget"/>s (decisions 61 and 99 of #668); required in SSB
+    /// mode for an orbital-direction or user target.</param>
     /// <param name="minimumEpoch">Earliest epoch when the maneuver can execute.</param>
     /// <param name="maneuverHoldDuration">Duration to hold the attitude after achieving it.</param>
     /// <param name="primaryBodyVector">Primary direction in spacecraft body frame.</param>
     /// <param name="primaryTarget">Primary attitude target (orbital direction or celestial body).</param>
     /// <param name="secondaryBodyVector">Secondary direction in body frame for roll constraint.</param>
     /// <param name="secondaryTarget">Secondary attitude target (orbital direction or celestial body).</param>
-    /// <param name="engine">Engine used for the maneuver.</param>
     /// <param name="minimumVectorSeparation">Minimum angle between vectors in radians, in [1e-14, π/2] (default: 5 degrees).</param>
     /// <exception cref="ArgumentOutOfRangeException"><paramref name="minimumVectorSeparation"/> is not in [1e-14, π/2] (fourth
     /// round of #668).</exception>
@@ -302,8 +298,7 @@ public class TriadAttitude : Attitude
     /// var attitude = new TriadAttitude(
     ///     earth, epoch, TimeSpan.FromMinutes(30),
     ///     Spacecraft.Front, OrbitalDirectionTarget.Prograde,
-    ///     Spacecraft.Up, new CelestialAttitudeTarget(sun),
-    ///     engine);
+    ///     Spacecraft.Up, new CelestialAttitudeTarget(sun));
     /// </code>
     /// </example>
     public TriadAttitude(
@@ -314,9 +309,8 @@ public class TriadAttitude : Attitude
         IAttitudeTarget primaryTarget,
         Vector3 secondaryBodyVector,
         IAttitudeTarget secondaryTarget,
-        Engine engine,
         double minimumVectorSeparation = DefaultMinimumSeparation)
-        : base(maneuverCenter ?? throw new ArgumentNullException(nameof(maneuverCenter)), minimumEpoch, maneuverHoldDuration, engine)
+        : base(maneuverCenter, minimumEpoch, maneuverHoldDuration)
     {
         CheckMinimumVectorSeparation(minimumVectorSeparation);
         PrimaryAttitudeTarget = primaryTarget ?? throw new ArgumentNullException(nameof(primaryTarget));
@@ -351,9 +345,8 @@ public class TriadAttitude : Attitude
         IAttitudeTarget primaryTarget,
         Vector3 secondaryStaticAxis,
         BodyAxis secondaryAxis,
-        IAttitudeTarget secondaryTarget,
-        Engine engine)
-        : this(maneuverCenter, minimumEpoch, maneuverHoldDuration, primaryStaticAxis, primaryTarget, secondaryStaticAxis, secondaryTarget, engine)
+        IAttitudeTarget secondaryTarget)
+        : this(maneuverCenter, minimumEpoch, maneuverHoldDuration, primaryStaticAxis, primaryTarget, secondaryStaticAxis, secondaryTarget)
     {
         _primaryAxis = primaryAxis;
         _secondaryAxis = secondaryAxis;
@@ -374,14 +367,12 @@ public class TriadAttitude : Attitude
     public static TriadAttitude CreateLVLH(
         CelestialItem maneuverCenter,
         Time minimumEpoch,
-        TimeSpan maneuverHoldDuration,
-        Engine engine)
+        TimeSpan maneuverHoldDuration)
     {
         return new TriadAttitude(
             maneuverCenter, minimumEpoch, maneuverHoldDuration,
             Spacecraft.Down, BodyAxis.Down, OrbitalDirectionTarget.Nadir,
-            Spacecraft.Front, BodyAxis.Front, OrbitalDirectionTarget.Prograde,
-            engine);
+            Spacecraft.Front, BodyAxis.Front, OrbitalDirectionTarget.Prograde);
     }
 
     /// <summary>
@@ -400,20 +391,26 @@ public class TriadAttitude : Attitude
         CelestialItem maneuverCenter,
         Time minimumEpoch,
         TimeSpan maneuverHoldDuration,
-        ILocalizable sun,
-        Engine engine)
+        ILocalizable sun)
     {
         if (sun == null) throw new ArgumentNullException(nameof(sun));
         return new TriadAttitude(
             maneuverCenter, minimumEpoch, maneuverHoldDuration,
             Spacecraft.Front, BodyAxis.Front, OrbitalDirectionTarget.Prograde,
-            Spacecraft.Up, BodyAxis.Up, new CelestialAttitudeTarget(sun),
-            engine);
+            Spacecraft.Up, BodyAxis.Up, new CelestialAttitudeTarget(sun));
     }
 
     // The instance axis of a factory on the spacecraft of the last plan (Maneuver.GetBodyAxis), the given vector for the
     // public constructors
     private Vector3 ResolveAxis(BodyAxis? axis, Vector3 vector) => axis.HasValue ? GetBodyAxis(axis.Value) : vector;
+
+    // Whether the law reads its centre (decision 99 of #668, decided by S. Guillet, 2026-11-24): not when both targets are
+    // celestial, a library CelestialAttitudeTarget or the ILocalizable of a target form, which then takes the central body
+    // of the run when the centre cannot be inferred; an orbital-direction or user target reads it
+    internal override bool ReadsCenter => !(IsCelestial(PrimaryAttitudeTarget) && IsCelestial(SecondaryAttitudeTarget));
+
+    // A library CelestialAttitudeTarget, not a subclass; null for the ILocalizable target of a target form
+    private static bool IsCelestial(IAttitudeTarget target) => target == null || target.GetType() == typeof(CelestialAttitudeTarget);
 
     private static CelestialItem GetManeuverCenter(ILocalizable target)
     {

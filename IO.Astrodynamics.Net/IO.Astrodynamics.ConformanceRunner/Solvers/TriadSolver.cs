@@ -42,11 +42,9 @@ public class TriadSolver : ICategorySolver
         var boresight = new Vector3(inputs.PrimaryBodyVector[0], inputs.PrimaryBodyVector[1], inputs.PrimaryBodyVector[2]);
         var refVector = new Vector3(inputs.SecondaryBodyVector[0], inputs.SecondaryBodyVector[1], inputs.SecondaryBodyVector[2]);
 
-        // Create spacecraft with instrument, engine and fuel tank
+        // Create spacecraft with instrument (an attitude takes no engine since lot L5b, decisions 48 and 93 of #668)
         var spacecraft = new Spacecraft(-999, "ConformanceTestSC", 100.0, sv,
             1000.0, new Clock("ConfClk", 65536));
-        spacecraft.AddFuelTank(new FuelTank("ft", 500.0, 400.0, "ftA", "000000"));
-        spacecraft.AddEngine(new Engine("eng", 300, 50, spacecraft.FuelTanks.First(), "engA", "000000"));
 
         // Create a circular instrument with the boresight and clock directions
         var fovRad = UnitConversion.DegToRad(inputs.FieldOfView.HalfAngleDeg);
@@ -62,8 +60,7 @@ public class TriadSolver : ICategorySolver
             instrument.GetBoresightInSpacecraftFrame(),
             primaryTarget,
             instrument.GetRefVectorInSpacecraftFrame(),
-            secondaryTarget,
-            spacecraft.Engines.First());
+            secondaryTarget);
 
         // The framework's TRIAD algorithm, by the public preview of the attitude (decision 50 of #668: the rotation of the
         // execution at this state, the attitude's windows left unset)

@@ -72,10 +72,10 @@ public class ForeignInstrumentTests
         var sun = new CelestialBody(Stars.Sun);
         return form switch
         {
-            "Pointing" => new InstrumentPointingToAttitude(Epoch, Hold, Camera(other, "Z"), moon, engine, Aberration.None),
-            "Triad" => new TriadAttitude(Epoch, Hold, Camera(other, "Z"), moon, sun, engine),
-            "TriadPrimary" => new TriadAttitude(Epoch, Hold, Camera(other, "Z"), moon, Camera(own, "X"), sun, engine),
-            "TriadSecondary" => new TriadAttitude(Epoch, Hold, Camera(own, "Z"), moon, Camera(other, "X"), sun, engine),
+            "Pointing" => new InstrumentPointingToAttitude(Epoch, Hold, Camera(other, "Z"), moon, Aberration.None),
+            "Triad" => new TriadAttitude(Epoch, Hold, Camera(other, "Z"), moon, sun),
+            "TriadPrimary" => new TriadAttitude(Epoch, Hold, Camera(other, "Z"), moon, Camera(own, "X"), sun),
+            "TriadSecondary" => new TriadAttitude(Epoch, Hold, Camera(own, "Z"), moon, Camera(other, "X"), sun),
             _ => throw new ArgumentOutOfRangeException(nameof(form))
         };
     }
@@ -96,7 +96,7 @@ public class ForeignInstrumentTests
         var earth = new CelestialBody(PlanetsAndMoons.EARTH);
         var spacecraft = NewSpacecraft(earth, out var engine);
         var other = NewSpacecraft(earth, out _);
-        var own = new ProgradeAttitude(earth, Epoch, TimeSpan.Zero, engine);
+        var own = new ProgradeAttitude(earth, Epoch, TimeSpan.Zero);
         spacecraft.SetManeuvers(own);
         var foreign = AttitudeOf(form, spacecraft, other, engine);
 
@@ -116,7 +116,7 @@ public class ForeignInstrumentTests
     // NextManeuver, which a test reaches, so that the run's own re-check is what throws
     private static void PlanPastTheClaim(string form, Spacecraft spacecraft, Spacecraft other, Engine engine, CelestialBody earth)
     {
-        var own = new ProgradeAttitude(earth, Epoch, TimeSpan.Zero, engine);
+        var own = new ProgradeAttitude(earth, Epoch, TimeSpan.Zero);
         var foreign = AttitudeOf(form, spacecraft, other, engine);
         Assert.Throws<ArgumentException>(() => spacecraft.SetManeuvers(own, foreign));
         spacecraft.SetManeuvers(own);
@@ -168,7 +168,7 @@ public class ForeignInstrumentTests
         var earth = new CelestialBody(PlanetsAndMoons.EARTH);
         var spacecraft = NewSpacecraft(earth, out var engine);
         var other = NewSpacecraft(earth, out _);
-        var own = new ProgradeAttitude(earth, Epoch, TimeSpan.Zero, engine);
+        var own = new ProgradeAttitude(earth, Epoch, TimeSpan.Zero);
         spacecraft.SetManeuvers(own);
         var propagator = new CentralBodyPropagator(Window, spacecraft, Options(earth, integrator));
         var foreign = AttitudeOf(form, spacecraft, other, engine);

@@ -333,7 +333,7 @@ namespace ClaudeMdSamples
                 bodyFront: Vector3.VectorX, bodyRight: Vector3.VectorY.Inverse(), bodyUp: Vector3.VectorZ);
 
             // The single-vector attitudes, the impulse attitude and the TRIAD factories use the instance axes
-            var prograde = new ProgradeAttitude(earth, epoch, duration, engine);
+            var prograde = new ProgradeAttitude(earth, epoch, duration);
             // → orients spacecraft.BodyFront (+X) along velocity vector
             #endregion
             return spacecraft;
@@ -346,8 +346,7 @@ namespace ClaudeMdSamples
             // Point camera boresight at Earth, constrain roll using camera refVector toward Sun
             var attitude = new TriadAttitude(
                 minimumEpoch, holdDuration,
-                camera, earth, sun,  // instrument, primaryTarget, secondaryTarget
-                engine);
+                camera, earth, sun);
             #endregion
             return attitude;
         }
@@ -361,8 +360,7 @@ namespace ClaudeMdSamples
             var attitude = new TriadAttitude(
                 minimumEpoch, holdDuration,
                 nadirCamera, earth,
-                starTracker, referenceStar,
-                engine);
+                starTracker, referenceStar);
             #endregion
             return attitude;
         }
@@ -375,8 +373,7 @@ namespace ClaudeMdSamples
             var attitude = new TriadAttitude(
                 minimumEpoch, holdDuration,
                 Spacecraft.Front, moon,
-                Spacecraft.Up, sun,
-                engine);
+                Spacecraft.Up, sun);
             #endregion
             return attitude;
         }
@@ -389,15 +386,13 @@ namespace ClaudeMdSamples
             var attitude = new TriadAttitude(
                 earth, epoch, duration,
                 Spacecraft.Front, OrbitalDirectionTarget.Prograde,
-                Spacecraft.Up, new CelestialAttitudeTarget(sun),
-                engine);
+                Spacecraft.Up, new CelestialAttitudeTarget(sun));
 
             // Full LVLH attitude (nadir pointing with prograde constraint)
             var lvlh = new TriadAttitude(
                 earth, epoch, duration,
                 Spacecraft.Down, OrbitalDirectionTarget.Nadir,
-                Spacecraft.Front, OrbitalDirectionTarget.Prograde,
-                engine);
+                Spacecraft.Front, OrbitalDirectionTarget.Prograde);
             #endregion
             return (attitude, lvlh);
         }
@@ -407,10 +402,10 @@ namespace ClaudeMdSamples
         {
             #region net:21
             // LVLH: BodyDown→Nadir, BodyFront→Prograde (the axes of the plan's spacecraft, #677)
-            var lvlh = TriadAttitude.CreateLVLH(earth, epoch, duration, engine);
+            var lvlh = TriadAttitude.CreateLVLH(earth, epoch, duration);
 
             // Prograde with sun tracking: BodyFront→Prograde, BodyUp→Sun
-            var sunTrack = TriadAttitude.CreateProgradeWithSunTracking(earth, epoch, duration, sun, engine);
+            var sunTrack = TriadAttitude.CreateProgradeWithSunTracking(earth, epoch, duration, sun);
             #endregion
             return (lvlh, sunTrack);
         }
@@ -424,8 +419,7 @@ namespace ClaudeMdSamples
             var earthObservation = new TriadAttitude(
                 epoch, TimeSpan.FromMinutes(30),
                 Spacecraft.Down, earth,    // Primary: nadir pointing
-                Spacecraft.Right, sun,     // Secondary: +X toward the Sun, as near as nadir pointing allows
-                engine);
+                Spacecraft.Right, sun);
             #endregion
             return earthObservation;
         }
@@ -439,8 +433,7 @@ namespace ClaudeMdSamples
             var observation = new TriadAttitude(
                 epoch, TimeSpan.FromHours(2),
                 telescope, targetStar,
-                rollSensor, referenceStar,
-                engine);
+                rollSensor, referenceStar);
             #endregion
             return observation;
         }
@@ -450,7 +443,7 @@ namespace ClaudeMdSamples
         {
             #region net:24
             // Orient for plane-change burn: front along orbital normal
-            var normalAttitude = new NormalAttitude(earth, epoch, duration, engine);
+            var normalAttitude = new NormalAttitude(earth, epoch, duration);
             #endregion
             return normalAttitude;
         }

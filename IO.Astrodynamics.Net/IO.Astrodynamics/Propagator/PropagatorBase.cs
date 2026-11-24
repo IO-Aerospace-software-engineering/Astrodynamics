@@ -266,7 +266,8 @@ public abstract class PropagatorBase : IPropagator
         }
 
         // Each maneuver draws on a tank of the spacecraft (#676, #586), checked before anything runs: before the reset of
-        // Spacecraft.Propagate, which leaves the previous propagation as it was
+        // Spacecraft.Propagate, which leaves the previous propagation as it was; and the engine and centre of each are
+        // resolved, written by the run only (decisions 61, 63 and 64 of #668)
         spacecraft.CheckManeuverEngines();
 
         _initialOrbit = spacecraft.InitialOrbitalParameters;
@@ -850,7 +851,9 @@ public abstract class PropagatorBase : IPropagator
             throw new InvalidOperationException(frameError);
         }
 
-        Spacecraft.CheckManeuverEngines();
+        // The engine and centre each maneuver of the plan runs with, resolved from the values it was given, writing nothing
+        // (decisions 61, 63 and 64 of #668)
+        var resolved = Spacecraft.CheckManeuverEngines();
 
         // Before the re-arm, so that a token already cancelled changes nothing (decision 6 of lot L4 of #668)
         cancellationToken.ThrowIfCancellationRequested();
@@ -864,6 +867,18 @@ public abstract class PropagatorBase : IPropagator
         // Every check passed: the spacecraft is re-armed, on every path (#583)
         Spacecraft.ResetPropagation();
         reArmed = true;
+
+        // The resolved engine and centre, written right after the re-arm, which restored the given ones (decision 63 of
+        // #668, decided by S. Guillet, 2026-11-23): a stopped run keeps them, and the next run's re-arm restores them; a
+        // law that reads no centre, given none where none can be inferred, takes the central body of the run (decision 99)
+        foreach (var (maneuver, engine, center) in resolved)
+        {
+            maneuver.ManeuverCenter = center ?? InitialState.Observer as CelestialItem;
+            if (maneuver is ImpulseManeuver impulse)
+            {
+                impulse.Engine = engine;
+            }
+        }
         _timeline = new AttitudeTimeline();
         _impulses.Clear();
         _executed = new List<ExecutedManeuver>();

@@ -44,12 +44,11 @@ public class InstrumentPointingToAttitude : Attitude
     /// <param name="maneuverHoldDuration">The hold of the attitude.</param>
     /// <param name="instrument">The instrument whose boresight points at the target.</param>
     /// <param name="target">The target: a celestial item, a site or a spacecraft.</param>
-    /// <param name="engine">The engine of the maneuver chain.</param>
     /// <param name="aberration">The correction of the target's direction, light time (<see cref="Aberration.LT"/>) by
     /// default (#549).</param>
-    public InstrumentPointingToAttitude(Time minimumEpoch, TimeSpan maneuverHoldDuration, Instrument instrument, ILocalizable target, Engine engine,
+    public InstrumentPointingToAttitude(Time minimumEpoch, TimeSpan maneuverHoldDuration, Instrument instrument, ILocalizable target,
         Aberration aberration = Aberration.LT) : base(
-        target is CelestialItem t ? t : (target as Site)?.CelestialBody, minimumEpoch, maneuverHoldDuration, engine)
+        target is CelestialItem t ? t : (target as Site)?.CelestialBody, minimumEpoch, maneuverHoldDuration)
     {
         Instrument = instrument ?? throw new ArgumentNullException(nameof(instrument));
         Target = target ?? throw new ArgumentNullException(nameof(target));
@@ -68,6 +67,10 @@ public class InstrumentPointingToAttitude : Attitude
     /// <see cref="Aberration"/> (#549).
     /// </summary>
     internal override System.Collections.Generic.IEnumerable<Instrument> PointedInstruments => [Instrument];
+
+    // Its target is celestial: the law takes the central body of the run when the centre cannot be inferred (decision 99
+    // of #668, decided by S. Guillet, 2026-11-24)
+    internal override bool ReadsCenter => false;
 
     public override Quaternion ComputeOrientation(StateVector stateVector)
     {

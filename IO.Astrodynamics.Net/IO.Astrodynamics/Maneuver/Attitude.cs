@@ -21,7 +21,23 @@ namespace IO.Astrodynamics.Maneuver;
 /// </remarks>
 public abstract class Attitude : Maneuver
 {
-    public Attitude(CelestialItem maneuverCenter, Time minimumEpoch, TimeSpan maneuverHoldDuration, Engine engine) : base(maneuverCenter, minimumEpoch, maneuverHoldDuration, engine)
+    /// <summary>
+    /// An attitude law about <paramref name="maneuverCenter"/>, activated at or after <paramref name="minimumEpoch"/>, held
+    /// for <paramref name="maneuverHoldDuration"/>.
+    /// </summary>
+    /// <param name="maneuverCenter">The centre the law reads; null for the centre the run infers (decision 61 of #668),
+    /// required in SSB mode, where it cannot be inferred: a user law reads it, as far as the library knows (decision 99 of
+    /// #668, decided by S. Guillet, 2026-11-24).</param>
+    /// <param name="minimumEpoch">The earliest epoch of its activation.</param>
+    /// <param name="maneuverHoldDuration">Its hold, zero or positive.</param>
+    /// <exception cref="ArgumentOutOfRangeException"><paramref name="maneuverHoldDuration"/> is negative.</exception>
+    /// <remarks>
+    /// An attitude takes no engine since lot L5b (decisions 48 and 93 of #668, decided by S. Guillet, 2026-11-23): it
+    /// burns nothing, and orients the spacecraft whose plan holds it (<see cref="Spacecraft.SetManeuvers"/>), whose axes
+    /// <see cref="Maneuver.GetBodyAxis"/> reads; before, a satellite without a thruster needed a tank and an engine for
+    /// it.
+    /// </remarks>
+    public Attitude(CelestialItem maneuverCenter, Time minimumEpoch, TimeSpan maneuverHoldDuration) : base(maneuverCenter, minimumEpoch, maneuverHoldDuration)
     {
     }
 
@@ -31,14 +47,16 @@ public abstract class Attitude : Maneuver
     /// The attitude of the law at <paramref name="stateVector"/>: the rotation from the spacecraft frame to ICRF, without
     /// executing the attitude (decision 50 of #668, decided by S. Guillet, 2026-11-23).
     /// </summary>
-    /// <param name="stateVector">The state, in any frame and about any observer: it is taken about the centre of the
-    /// maneuver (<see cref="Maneuver.ManeuverCenter"/>), as the execution takes it, or about its own observer when the
-    /// maneuver has no centre, never about the centre of a run, then rotated to ICRF when it is in another frame.</param>
+    /// <param name="stateVector">The state, in any frame and about any observer: it is taken about the centre the maneuver
+    /// was given, as the execution takes it, or about its own observer when it was given none, never about the centre a
+    /// run resolved (<see cref="Maneuver.ManeuverCenter"/> after a run), then rotated to ICRF when it is in another
+    /// frame.</param>
     /// <returns>The rotation from the spacecraft frame to ICRF (<see cref="ComputeOrientation"/> on that state in ICRF), at
     /// the epoch of the state, with a zero angular velocity, labelled ICRF.</returns>
     /// <remarks>
-    /// Pure: it sets no window and moves no chain, so it is the same before and after a run, and at the same state it is
-    /// the orientation of the execution, whatever the observer of the state. Before 11.0.0 the preview was the public
+    /// Pure: it sets no window and moves no chain, so it is the same before and after a run. At the same state it is the
+    /// orientation of the execution: for a maneuver given its centre, whatever the observer of the state; for an inferred
+    /// centre, at a state about the centre the run resolves, as the states of its solution are (IC-6 of lot L5b of #668). Before 11.0.0 the preview was the public
     /// <c>TryExecute</c>, which set the windows of the attitude, could move the standby chain of a finished run, and kept
     /// its result in <c>StateOrientation</c>, which no re-arm cleared (#802); in a run, the attitude at its activation is
     /// in the attitude record (<see cref="SpacecraftFrame.GetStateOrientationToICRF"/>).
@@ -58,17 +76,12 @@ public abstract class Attitude : Maneuver
 
     internal override (StateVector sv, StateOrientation so) TryExecute(StateVector stateVector)
     {
-        //Compute maneuver window
+        //Compute maneuver window: a run sets it at the activation, before this call (the chain advances on the attitude
+        //timeline, PropagatorBase.ScheduleAttitudes)
         if (!ThrustWindow.HasValue || !ManeuverWindow.HasValue)
         {
             ThrustWindow = new Window(stateVector.Epoch, TimeSpan.Zero);
             ManeuverWindow = new Window(stateVector.Epoch, ManeuverHoldDuration);
-        }
-
-        //If state vector is outside maneuver windows the next maneuver can be set
-        if (stateVector.Epoch > ManeuverWindow.Value.EndDate)
-        {
-            Engine.FuelTank.Spacecraft.ChainStandbyManeuver(this.NextManeuver, ManeuverWindow.Value.EndDate);
         }
 
         // Computed in ICRF, whatever the frame of the state (#529, #535): the rotation from the spacecraft frame to ICRF

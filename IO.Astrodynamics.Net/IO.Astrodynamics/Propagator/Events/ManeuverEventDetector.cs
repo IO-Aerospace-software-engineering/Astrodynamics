@@ -107,7 +107,7 @@ internal sealed class ManeuverEventDetector : IEventDetector, IGatedEventDetecto
     {
         var owner = _maneuver.PlanOwner;
         return $"The event detector of the {_maneuver.GetType().Name} (minimum epoch {_maneuver.MinimumEpoch}, engine " +
-               $"{_maneuver.Engine.Name}{(owner != null ? $", in the plan of {owner.Name}" : string.Empty)})";
+               $"{_maneuver.Engine?.Name ?? "inferred at the run"}{(owner != null ? $", in the plan of {owner.Name}" : string.Empty)})";
     }
 
     public CrossingDirection Direction => _maneuver.EventCrossingDirection;
