@@ -367,6 +367,10 @@ release are listed under **Known limitations**.
   run left in them, the child's tanks aside.
 - **`PropagationSegment(Time, IEnumerable<AcceptedStep>)`** (lot L5a, decision 55 of #668): the segment of an integrator
   implemented outside the library, built once from its steps, which it copies (under **Changed**).
+- **`SpiceAPI.TryGetNaifId(string, out int)`: the NAIF identifier of a body name** (lot L8 of the ergonomics review,
+  choice 12 of [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668), decided by
+  S. Guillet, 2026-11-19), SPICE's `bodn2c_c` through the new native `GetNaifIdProxy`: SPICE's built-in names and those
+  of the loaded kernels, in any case, false for a name SPICE does not know (`docs/reference/spice-api.md`, "Body names").
 **Fixed**
 
 - **`Matrix * double[]` and `Matrix.Multiply(double[])` returned as many components as the vector**

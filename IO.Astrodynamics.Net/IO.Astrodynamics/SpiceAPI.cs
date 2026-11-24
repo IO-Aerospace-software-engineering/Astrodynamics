@@ -85,6 +85,11 @@ public class SpiceAPI
     [return: MarshalAs(UnmanagedType.I1)]
     private static extern bool GetFrameNameProxy(int frameId, [Out] byte[] name);
 
+    // bodn2c_c: the NAIF identifier SPICE gives to a body name, false when it knows none (choice 12 of #668)
+    [DllImport(@"IO.Astrodynamics", CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi)]
+    [return: MarshalAs(UnmanagedType.I1)]
+    private static extern bool GetNaifIdProxy(string name, out int naifId);
+
     // namfrm_c and frinfo_c: the id, the centre and the class SPICE gives to a frame name, false when it knows none (#593)
     [DllImport(@"IO.Astrodynamics", CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi)]
     [return: MarshalAs(UnmanagedType.I1)]
@@ -606,6 +611,47 @@ public class SpiceAPI
 
     /// <summary>The error of a failed native call: the message of the native layer and SPICE's short and long ones.</summary>
     private readonly record struct NativeError(string Message, string ShortMessage, string LongMessage);
+
+    /// <summary>
+    /// The NAIF identifier SPICE gives to a body name (<c>bodn2c_c</c>): its built-in names (the planets, their moons and
+    /// barycentres, the Sun, the solar system barycentre, the stations of the DSN, many spacecraft) and those the loaded
+    /// kernels assign (<c>NAIF_BODY_NAME</c>, <c>NAIF_BODY_CODE</c>), in any case, leading and trailing blanks ignored and
+    /// inner ones compressed (choice 12 of #668, decided by S. Guillet, 2026-11-19).
+    /// </summary>
+    /// <param name="name">The name of the body, as SPICE names it (<c>MOON</c>, <c>Earth Barycenter</c>, <c>DSS-13</c>).</param>
+    /// <param name="naifId">The identifier when the name is known, 0 otherwise.</param>
+    /// <returns>Whether SPICE knows a body of that name. The text of an identifier (<c>"399"</c>) is not a name, and a
+    /// blank name is not known.</returns>
+    /// <remarks>Read under the lock at each call, so a kernel loaded or unloaded since is taken into account. The managed
+    /// table of the CCSDS readers stays separate and kernel-free.</remarks>
+    /// <exception cref="ArgumentNullException"><paramref name="name"/> is null.</exception>
+    /// <exception cref="SpiceException">SPICE failed to read the name.</exception>
+    public bool TryGetNaifId(string name, out int naifId)
+    {
+        if (name == null) throw new ArgumentNullException(nameof(name));
+        naifId = 0;
+        if (string.IsNullOrWhiteSpace(name))
+        {
+            return false;
+        }
+
+        lock (lockObject)
+        {
+            if (GetNaifIdProxy(name, out naifId))
+            {
+                return true;
+            }
+
+            var error = LastNativeError();
+            naifId = 0;
+            if (string.IsNullOrEmpty(error.ShortMessage))
+            {
+                return false;
+            }
+
+            throw NativeException($"The name {name} can't be read", error);
+        }
+    }
 
     /// <summary>
     ///     Get spice toolkit version number
