@@ -19,7 +19,7 @@ namespace IO.Astrodynamics.Tests.Body
         public void CreateInvalid()
         {
             Assert.Throws<ArgumentException>(() => new Payload("", 1000.0, "sn"));
-            Assert.Throws<ArgumentException>(() => new Payload("pl", 0.0, "sn"));
+            Assert.Throws<ArgumentOutOfRangeException>(() => new Payload("pl", 0.0, "sn"));
             Assert.Throws<ArgumentException>(() => new Payload("pl", 1000.0, ""));
         }
 

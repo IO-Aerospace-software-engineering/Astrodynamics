@@ -21,13 +21,34 @@ namespace IO.Astrodynamics.Body.Spacecraft
         public double Quantity { get; private set; }
         public string SerialNumber { get; }
 
+        /// <summary>
+        /// A fuel tank.
+        /// </summary>
+        /// <param name="name">The name of the tank</param>
+        /// <param name="model">The model of the tank</param>
+        /// <param name="serialNumber">The serial number of the tank</param>
+        /// <param name="capacity">The capacity, kg: finite and above 0</param>
+        /// <param name="initialQuantity">The fuel at the start of a run, kg: finite, above 0 and at most
+        /// <paramref name="capacity"/></param>
+        /// <exception cref="ArgumentException">The name, the model or the serial number is empty.</exception>
+        /// <exception cref="ArgumentOutOfRangeException">Naming it, <paramref name="capacity"/> (checked first) or
+        /// <paramref name="initialQuantity"/> is not finite or out of its range (#800, decision 75 of #668, decided by
+        /// S. Guillet, 2026-11-23: a NaN passed the comparisons, and so did an infinite capacity).</exception>
         public FuelTank(string name, string model, string serialNumber, double capacity, double initialQuantity)
         {
             if (string.IsNullOrEmpty(name)) throw new ArgumentException("Value cannot be null or empty.", nameof(name));
             if (string.IsNullOrEmpty(model)) throw new ArgumentException("Value cannot be null or empty.", nameof(model));
             if (string.IsNullOrEmpty(serialNumber)) throw new ArgumentException("Value cannot be null or empty.", nameof(serialNumber));
-            if (initialQuantity <= 0 || initialQuantity > capacity) throw new ArgumentOutOfRangeException(nameof(initialQuantity));
-            if (capacity <= 0) throw new ArgumentOutOfRangeException(nameof(capacity));
+            if (!double.IsFinite(capacity) || capacity <= 0.0)
+            {
+                throw new ArgumentOutOfRangeException(nameof(capacity), capacity, "The capacity of a tank must be finite and above 0.");
+            }
+
+            if (!double.IsFinite(initialQuantity) || initialQuantity <= 0.0 || initialQuantity > capacity)
+            {
+                throw new ArgumentOutOfRangeException(nameof(initialQuantity), initialQuantity,
+                    $"The initial quantity of a tank must be finite, above 0 and at most its capacity, {capacity} kg.");
+            }
 
             Name = name;
             Model = model;

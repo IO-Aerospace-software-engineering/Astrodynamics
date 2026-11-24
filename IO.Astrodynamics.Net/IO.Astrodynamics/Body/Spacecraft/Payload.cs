@@ -9,9 +9,22 @@ namespace IO.Astrodynamics.Body.Spacecraft
         public string SerialNumber { get; }
         public double Mass { get; }
 
+        /// <summary>
+        /// A payload.
+        /// </summary>
+        /// <param name="name">The name of the payload</param>
+        /// <param name="mass">The mass, kg: finite and above 0</param>
+        /// <param name="serialNumber">The serial number of the payload</param>
+        /// <exception cref="ArgumentOutOfRangeException"><paramref name="mass"/> is not finite or not above 0 (#800,
+        /// decision 75 of #668, decided by S. Guillet, 2026-11-23: a NaN and an infinity passed, and 0 or less threw
+        /// <see cref="ArgumentException"/> naming no parameter).</exception>
+        /// <exception cref="ArgumentException">The name or the serial number is empty.</exception>
         public Payload(string name, double mass, string serialNumber)
         {
-            if (mass <= 0) throw new ArgumentException("Payload must have a mass");
+            if (!double.IsFinite(mass) || mass <= 0.0)
+            {
+                throw new ArgumentOutOfRangeException(nameof(mass), mass, "The mass of a payload must be finite and above 0.");
+            }
 
 
             if (string.IsNullOrEmpty(name)) throw new ArgumentException("Value cannot be null or empty.", nameof(name));

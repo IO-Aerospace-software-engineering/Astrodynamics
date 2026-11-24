@@ -4607,6 +4607,19 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   windows the next run reset (258.818 m/s and 92.637 kg read 0 after a run that reached no burn). A run now swaps in
   new lists, and the summary holds the records of its run (under **Changed**; `RunResultsSurfaceTests`,
   `ExecutedManeuverRecordTests`).
+- **The constructors of `Spacecraft`, `FuelTank`, `Engine` and `Payload` accepted values no spacecraft can have**
+  ([#800](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/800), lot L5b, decision 75 of
+  [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668), decided by S. Guillet,
+  2026-11-23): their checks compared with `<`, `<=` or `>`, which a NaN passes, and none tested for an infinity, so an
+  engine of NaN or infinite `isp` or `fuelFlow`, a tank of NaN or infinite capacity or of NaN initial quantity, a payload
+  of NaN or infinite mass and a propagated spacecraft of NaN mass, NaN or infinite maximum operating mass, infinite area,
+  drag or radiation coefficient (a NaN of positive sign for the area and the drag coefficient, which `ThrowIfNegative`
+  rejected only through the sign bit of `double.NaN`) were built; the kernel-backed constructor checked none of the
+  ranges of the propagated one (a maximum operating mass below the mass, an area of 0 or less, negative coefficients
+  were accepted for LRO). Every such value now throws `ArgumentOutOfRangeException` naming the parameter (under
+  **Changed**; `InputRangeTests`, red before the change). The message of an instrument whose id is the frame id of a
+  spacecraft of NAIF id -2147483 offered the ids "[2147483297, -2147483001]", its lower bound computed in `int`; it is
+  computed in `long`, no lower than `int.MinValue`: "[-2147483648, -2147483001]".
 **Changed**
 
 - **Breaking: the scale of a `Time` is a required argument** (lot L2, R24 of
@@ -7250,6 +7263,19 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   `ScenarioSummary.SpacecraftSummaries` is an `IReadOnlyList<SpacecraftSummary>` in scenario order (an
   `IReadOnlyCollection` of a set before). Migration: `summary.Maneuvers[i].Definition` for the maneuver, and the record's
   own `DeltaV`, `FuelBurned` and windows for the values of the run; index `SpacecraftSummaries`.
+- **Breaking: finite and in-range values for `Spacecraft`, `FuelTank`, `Engine` and `Payload`**
+  ([#800](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/800), lot L5b, decision 75 of #668,
+  decided by S. Guillet, 2026-11-23, under **Fixed**): both `Spacecraft` constructors throw `ArgumentOutOfRangeException`
+  naming the parameter for a `mass` not finite or negative (an `ArgumentException` naming no parameter from
+  `CelestialItem` before), a `maximumOperatingMass` not finite or below the mass, a `sectionalArea` not finite or not above
+  0, a `dragCoeff`, `solarRadiationCoeff` or `hardBodyRadius` not finite or negative; the kernel-backed constructor gains
+  these checks, which run before it reads the kernels, as do the NAIF id and the clock (before, a spacecraft without an SPK
+  threw `SpiceException` whatever its values). `FuelTank` checks its `capacity` first, finite and above 0, then its
+  `initialQuantity`, finite, above 0 and at most the capacity; `Engine` throws `ArgumentOutOfRangeException` naming `isp`
+  or `fuelFlow`, not finite or not above 0, and `Payload` naming `mass` (both `ArgumentException` naming no parameter
+  before, for 0 or less). Migration: pass finite values in range; a `catch (ArgumentException)` still catches the new
+  exception, which derives from it; `Assert.Throws<ArgumentException>` on an engine's or a payload's value or a
+  spacecraft's negative mass becomes `Assert.Throws<ArgumentOutOfRangeException>`.
 **Removed**
 
 - **`Instrument.PositionInFOV`** (protected), on which `IsInFOV` was built before #515: its reference vector was not made

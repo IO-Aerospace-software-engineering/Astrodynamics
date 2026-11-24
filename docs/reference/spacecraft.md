@@ -26,6 +26,14 @@ clock is attached, and the spacecraft listed by its observer's `Satellites`, at 
 check: a constructor that throws leaves the clock free and lists nothing (#676). The clock is attached atomically: of
 spacecraft of different ids built at once on several threads with one clock, one takes it and the others throw.
 
+The physical values are finite and in their ranges, or the constructor throws `ArgumentOutOfRangeException` naming the
+parameter ([#800](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/800), decision 75 of #668,
+decided by S. Guillet, 2026-11-23): `mass` not negative, `maximumOperatingMass` at least `mass`, `sectionalArea` above
+0, `dragCoeff`, `solarRadiationCoeff` and `hardBodyRadius` not negative. The kernel-backed constructor runs the same
+checks, before it reads the kernels. Before 11.0.0 a NaN passed the comparisons (a NaN of positive sign the area and
+the drag coefficient too), an infinity passed them, a negative mass threw `ArgumentException` naming no parameter, and
+the kernel-backed constructor checked the hard-body radius only.
+
 ## Kernel-Backed Constructor
 
 Creates a spacecraft whose ephemeris comes from loaded SPK/CK kernels. Use for archived missions (LRO, Cassini, JWST) or when using a spacecraft as an observer without propagation.
@@ -53,7 +61,8 @@ kernels must cover `epoch` and chain the spacecraft to that centre, or the const
 
 Kernel-backed spacecraft: `IsSpiceBacked` returns `true`. Calling `Propagate()` throws `InvalidOperationException`.
 
-The NAIF id and the clock follow the rules of the standard constructor, checked before the SPK is read. The frame of
+The NAIF id, the clock and the physical values follow the rules of the standard constructor, checked before the SPK is
+read (the physical values since 11.0.0, #800). The frame of
 a kernel-backed spacecraft is the frame the loaded kernels define for the id NaifId × 1000, whatever its name: SPICE is
 asked for that name (`frmnam_c`) at each read, so a twin named otherwise than the propagated spacecraft, or a mission FK
 that names the frame `KSAT_BUS`, is read, and so is an FK loaded after the twin is built. `Frame.Name` stays
@@ -66,11 +75,11 @@ reads the frame of its own id.
 | Property | Description |
 |----------|-------------|
 | `NaifId` | NAIF ID, in [-2147483, -1] |
-| `DryOperatingMass` | Mass without fuel (kg) |
-| `MaximumOperatingMass` | Maximum operating mass (kg) |
-| `SectionalArea` | Cross-sectional area for drag and SRP (m2) |
-| `DragCoefficient` | Cd (default 2.2) |
-| `SolarRadiationCoeff` | Cr (default 1.0) |
+| `DryOperatingMass` | Mass without fuel (kg): finite and not negative |
+| `MaximumOperatingMass` | Maximum operating mass (kg): finite and at least the dry mass |
+| `SectionalArea` | Cross-sectional area for drag and SRP (m2): finite and above 0 |
+| `DragCoefficient` | Cd (default 2.2): finite and not negative |
+| `SolarRadiationCoeff` | Cr (default 1.0): finite and not negative |
 | `CosparId` | COSPAR international designator |
 | `HardBodyRadius` | Hard-body radius for conjunction assessment (m): finite and not negative, 0 (the default) for none, both constructors throwing `ArgumentOutOfRangeException` otherwise; the radius of the spacecraft as a secondary object too, an option of the analysis that gives another value throwing ([#683](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/683), [Conjunction Assessment](conjunction-assessment.md#conjunctionassessment-methods)) |
 | `BodyFront` / `BodyRight` / `BodyUp` | Instance body axes (override static defaults) |
@@ -419,8 +428,8 @@ J2000), its CK is not (`InvalidOperationException`).
 | `Name` | Engine name |
 | `Model` | Engine model identifier |
 | `SerialNumber` | Serial number |
-| `ISP` | Specific impulse (s) |
-| `FuelFlow` | Fuel mass flow rate (kg/s) |
+| `ISP` | Specific impulse (s): finite and above 0 |
+| `FuelFlow` | Fuel mass flow rate (kg/s): finite and above 0 |
 | `Thrust` | Computed thrust (N) |
 | `FuelTank` | Associated fuel tank; a maneuver on the engine is propagated with the spacecraft that holds this tank, and with no other (#676, #586) |
 
@@ -437,8 +446,8 @@ var engine = new Engine("MainEngine", "RS-25", "SN001",
 | `Name` | Tank name |
 | `Model` | Tank model identifier |
 | `SerialNumber` | Serial number |
-| `Capacity` | Maximum capacity (kg) |
-| `InitialQuantity` | Initial fuel quantity (kg) |
+| `Capacity` | Maximum capacity (kg): finite and above 0, checked first |
+| `InitialQuantity` | Initial fuel quantity (kg): finite, above 0 and at most the capacity |
 | `Quantity` | Current fuel quantity (kg) |
 
 ```csharp
@@ -673,6 +682,11 @@ found no window for a rectangle where `gftfov` finds two.
 ```csharp
 var payload = new Payload("Camera", 25.0, "SN-42");
 ```
+
+The constructors of `Engine`, `FuelTank` and `Payload` throw `ArgumentOutOfRangeException` naming the parameter for a
+value that is not finite or out of its range: an engine's `isp` and `fuelFlow` above 0, a tank's `capacity` above 0 and
+its `initialQuantity` above 0 and at most the capacity, a payload's `mass` above 0 (#800; before 11.0.0 a NaN and an
+infinity passed, and an engine or a payload with a value of 0 or less threw `ArgumentException` naming no parameter).
 
 ## See Also
 

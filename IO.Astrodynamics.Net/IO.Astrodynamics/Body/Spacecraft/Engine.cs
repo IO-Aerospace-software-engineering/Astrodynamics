@@ -14,6 +14,20 @@ namespace IO.Astrodynamics.Body.Spacecraft
         public FuelTank FuelTank { get; }
         public string SerialNumber { get; }
 
+        /// <summary>
+        /// An engine fed by <paramref name="fuelTank"/>.
+        /// </summary>
+        /// <param name="name">The name of the engine</param>
+        /// <param name="model">The model of the engine</param>
+        /// <param name="serialNumber">The serial number of the engine</param>
+        /// <param name="isp">The specific impulse, s: finite and above 0</param>
+        /// <param name="fuelFlow">The fuel flow, kg/s: finite and above 0</param>
+        /// <param name="fuelTank">The tank that feeds the engine</param>
+        /// <exception cref="ArgumentException">The name, the model or the serial number is empty.</exception>
+        /// <exception cref="ArgumentOutOfRangeException">Naming it, <paramref name="isp"/> or <paramref name="fuelFlow"/>
+        /// is not finite or not above 0 (#800, decision 75 of #668, decided by S. Guillet, 2026-11-23: a NaN and an infinity
+        /// passed, and 0 or less threw <see cref="ArgumentException"/> naming no parameter).</exception>
+        /// <exception cref="ArgumentNullException"><paramref name="fuelTank"/> is null.</exception>
         public Engine(string name, string model, string serialNumber, double isp, double fuelFlow, FuelTank fuelTank)
         {
             if (string.IsNullOrEmpty(name))
@@ -26,14 +40,14 @@ namespace IO.Astrodynamics.Body.Spacecraft
                 throw new ArgumentException("Engine requires a model");
             }
 
-            if (isp <= 0)
+            if (!double.IsFinite(isp) || isp <= 0.0)
             {
-                throw new ArgumentException("ISP must be a positive number");
+                throw new ArgumentOutOfRangeException(nameof(isp), isp, "The specific impulse must be finite and above 0.");
             }
 
-            if (fuelFlow <= 0)
+            if (!double.IsFinite(fuelFlow) || fuelFlow <= 0.0)
             {
-                throw new ArgumentException("Fuel flow must be a positive number");
+                throw new ArgumentOutOfRangeException(nameof(fuelFlow), fuelFlow, "The fuel flow must be finite and above 0.");
             }
 
             if (string.IsNullOrEmpty(serialNumber)) throw new ArgumentException("Value cannot be null or empty.", nameof(serialNumber));

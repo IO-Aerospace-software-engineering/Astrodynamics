@@ -160,8 +160,11 @@ namespace IO.Astrodynamics.Body.Spacecraft
             // same id would define the spacecraft frame relative to itself, SPICE(BADFRAMESPEC2) (#676)
             if (naifId == spacecraft.Frame.Id)
             {
+                // The bounds in long, the lower one no less than int.MinValue: at NaifId -2147483 the frame id is -2147483000,
+                // and its - 999 in int wrapped to 2147483297 (#800, decision 75 of #668)
+                long lowest = System.Math.Max((long)spacecraft.Frame.Id - 999L, int.MinValue);
                 throw new ArgumentOutOfRangeException(nameof(naifId), naifId,
-                    $"The instrument id {naifId} is the id of the frame of {spacecraft.Name}, {spacecraft.Frame.Id} (NaifId × 1000): the instrument frame would be defined relative to itself. Take an id in [{spacecraft.Frame.Id - 999}, {spacecraft.Frame.Id - 1}].");
+                    $"The instrument id {naifId} is the id of the frame of {spacecraft.Name}, {spacecraft.Frame.Id} (NaifId × 1000): the instrument frame would be defined relative to itself. Take an id in [{lowest}, {(long)spacecraft.Frame.Id - 1L}].");
             }
 
             NaifId = naifId;

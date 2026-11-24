@@ -26,8 +26,8 @@ namespace IO.Astrodynamics.Tests.Body
             FuelTank ft = new FuelTank("ft", "ftmodel", "sn0", 1000.0, 100.0);
             Assert.Throws<ArgumentException>(() => new Engine("", "model", "sn1", 350.0, 50.0, ft));
             Assert.Throws<ArgumentException>(() => new Engine("eng", "", "sn1", 350.0, 50.0, ft));
-            Assert.Throws<ArgumentException>(() => new Engine("eng", "model", "sn1", 0.0, 50.0, ft));
-            Assert.Throws<ArgumentException>(() => new Engine("eng", "model", "sn1", 350.0, 0.0, ft));
+            Assert.Throws<ArgumentOutOfRangeException>(() => new Engine("eng", "model", "sn1", 0.0, 50.0, ft));
+            Assert.Throws<ArgumentOutOfRangeException>(() => new Engine("eng", "model", "sn1", 350.0, 0.0, ft));
             Assert.Throws<ArgumentException>(() => new Engine("eng", "model", "", 350.0, 50.0, ft));
             Assert.Throws<ArgumentNullException>(() => new Engine("eng", "model", "sn1", 350.0, 50.0, null));
         }

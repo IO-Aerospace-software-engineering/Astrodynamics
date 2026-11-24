@@ -178,9 +178,11 @@ namespace IO.Astrodynamics.Body.Spacecraft
         /// <param name="bodyRight">Instance body right axis (default: +X). Finite and non-zero; must be orthogonal to bodyFront and bodyUp.</param>
         /// <param name="bodyUp">Instance body up axis (default: +Z). Finite and non-zero; must be orthogonal to bodyFront and bodyRight.</param>
         /// <param name="hardBodyRadius">Hard-body radius in meters for conjunction assessment, finite and not negative (default 0.0, none): the radius of the spacecraft as a secondary object too (#683)</param>
-        /// <exception cref="ArgumentOutOfRangeException"></exception>
         /// <exception cref="ArgumentOutOfRangeException"><paramref name="naifId"/> is not in [-2147483, -1]
-        /// (#676), or a mass, coefficient, area or radius is out of its range.</exception>
+        /// (#676), or, naming it, a value is not finite or out of its range (#800, decision 75 of #668, decided by
+        /// S. Guillet, 2026-11-23): <paramref name="mass"/> not negative, <paramref name="maximumOperatingMass"/> at least
+        /// <paramref name="mass"/>, <paramref name="sectionalArea"/> above 0, <paramref name="dragCoeff"/>,
+        /// <paramref name="solarRadiationCoeff"/> and <paramref name="hardBodyRadius"/> not negative.</exception>
         /// <exception cref="ArgumentNullException"></exception>
         /// <exception cref="ArgumentException">Thrown when body axes are not orthogonal or not right-handed, when a body axis
         /// has a magnitude of 0 (the exception names it, #680) or a component that is not finite (the exception names it,
@@ -189,15 +191,11 @@ namespace IO.Astrodynamics.Body.Spacecraft
         public Spacecraft(int naifId, string name, double mass, double maximumOperatingMass, Clock clock, OrbitalParameters.OrbitalParameters initialOrbitalParameters,
             double sectionalArea = 1.0, double dragCoeff = 2.2, string cosparId = null, double solarRadiationCoeff = 1.0,
             Vector3? bodyFront = null, Vector3? bodyRight = null, Vector3? bodyUp = null, double hardBodyRadius = 0.0) : base(
-            naifId, name, mass, initialOrbitalParameters)
+            naifId, name, CheckedPhysicalProperties(mass, maximumOperatingMass, sectionalArea, dragCoeff, solarRadiationCoeff, hardBodyRadius),
+            initialOrbitalParameters)
         {
-            if (maximumOperatingMass < mass) throw new ArgumentOutOfRangeException(nameof(maximumOperatingMass));
             if (naifId >= 0) throw new ArgumentOutOfRangeException(nameof(naifId));
             CheckFrameIdRange(naifId);
-            ArgumentOutOfRangeException.ThrowIfNegative(dragCoeff);
-            ArgumentOutOfRangeException.ThrowIfNegativeOrZero(sectionalArea);
-            ArgumentOutOfRangeException.ThrowIfNegative(solarRadiationCoeff);
-            ThrowIfInvalidHardBodyRadius(hardBodyRadius, nameof(hardBodyRadius));
             MaximumOperatingMass = maximumOperatingMass;
             Clock = clock ?? throw new ArgumentNullException(nameof(clock));
             Clock.CheckAttachableTo(naifId, name);
@@ -246,7 +244,11 @@ namespace IO.Astrodynamics.Body.Spacecraft
         /// <exception cref="InvalidOperationException">The loaded kernels give no state of the spacecraft relative to
         /// <paramref name="centerOfMotion"/> at <paramref name="epoch"/> (#454).</exception>
         /// <exception cref="ArgumentOutOfRangeException"><paramref name="naifId"/> is not in [-2147483, -1]
-        /// (#676), or <paramref name="hardBodyRadius"/> is negative or not finite (#683).</exception>
+        /// (#676), or, naming it, a value is not finite or out of its range, checked before the kernels are read, as by the
+        /// other constructor (#800, decision 75 of #668, decided by S. Guillet, 2026-11-23; before, only the hard-body
+        /// radius, #683): <paramref name="mass"/> not negative, <paramref name="maximumOperatingMass"/> at least
+        /// <paramref name="mass"/>, <paramref name="sectionalArea"/> above 0, <paramref name="dragCoeff"/>,
+        /// <paramref name="solarRadiationCoeff"/> and <paramref name="hardBodyRadius"/> not negative.</exception>
         /// <exception cref="ArgumentException"><paramref name="clock"/> is attached to a spacecraft of another NAIF id
         /// (#676).</exception>
         /// <remarks>
@@ -259,10 +261,10 @@ namespace IO.Astrodynamics.Body.Spacecraft
             Clock clock = null, double sectionalArea = 1.0, double dragCoeff = 2.2,
             string cosparId = null, double solarRadiationCoeff = 1.0, double hardBodyRadius = 0.0,
             CelestialItem centerOfMotion = null)
-            : base(naifId, name, mass, ReadKernelInitialState(naifId, name, epoch ?? TimeSystem.Time.J2000TDB, centerOfMotion, clock))
+            : base(naifId, name, CheckedPhysicalProperties(mass, maximumOperatingMass, sectionalArea, dragCoeff, solarRadiationCoeff, hardBodyRadius),
+                ReadKernelInitialState(naifId, name, epoch ?? TimeSystem.Time.J2000TDB, centerOfMotion, clock))
         {
             _isFromKernel = true;
-            ThrowIfInvalidHardBodyRadius(hardBodyRadius, nameof(hardBodyRadius));
             MaximumOperatingMass = maximumOperatingMass;
             Clock = clock ?? new Clock(name + "_CLK", 256);
             Frame = new SpacecraftFrame(this);
@@ -295,6 +297,45 @@ namespace IO.Astrodynamics.Body.Spacecraft
                 throw new ArgumentOutOfRangeException(nameof(naifId), naifId,
                     $"A spacecraft NAIF id is in [{MinimumNaifId}, -1]: its frame id, NaifId × 1000, must be an int.");
             }
+        }
+
+        // The physical properties of both constructors, finite and in their ranges (#800, decision 75 of #668, decided by
+        // S. Guillet, 2026-11-23): a NaN passed the comparisons (ThrowIfNegative rejected double.NaN through its sign bit
+        // only), an infinity passed them, and the kernel-backed constructor checked none. A base-call argument, so that it
+        // runs before the base's own check of the mass and before the kernel-backed constructor reads the kernels. Returns
+        // the mass
+        private static double CheckedPhysicalProperties(double mass, double maximumOperatingMass, double sectionalArea,
+            double dragCoeff, double solarRadiationCoeff, double hardBodyRadius)
+        {
+            if (!double.IsFinite(mass) || mass < 0.0)
+            {
+                throw new ArgumentOutOfRangeException(nameof(mass), mass, "The dry mass must be finite and not negative.");
+            }
+
+            if (!double.IsFinite(maximumOperatingMass) || maximumOperatingMass < mass)
+            {
+                throw new ArgumentOutOfRangeException(nameof(maximumOperatingMass), maximumOperatingMass,
+                    $"The maximum operating mass must be finite and at least the dry mass, {mass} kg.");
+            }
+
+            if (!double.IsFinite(sectionalArea) || sectionalArea <= 0.0)
+            {
+                throw new ArgumentOutOfRangeException(nameof(sectionalArea), sectionalArea, "The sectional area must be finite and above 0.");
+            }
+
+            if (!double.IsFinite(dragCoeff) || dragCoeff < 0.0)
+            {
+                throw new ArgumentOutOfRangeException(nameof(dragCoeff), dragCoeff, "The drag coefficient must be finite and not negative.");
+            }
+
+            if (!double.IsFinite(solarRadiationCoeff) || solarRadiationCoeff < 0.0)
+            {
+                throw new ArgumentOutOfRangeException(nameof(solarRadiationCoeff), solarRadiationCoeff,
+                    "The solar radiation pressure coefficient must be finite and not negative.");
+            }
+
+            ThrowIfInvalidHardBodyRadius(hardBodyRadius, nameof(hardBodyRadius));
+            return mass;
         }
 
         // A hard-body radius is finite and not negative, 0 for none (#683: the conjunction analysis reads the radius of a
