@@ -555,11 +555,11 @@ public class PropagateTests
     }
 
     /// <summary>
-    /// The SPK of the default run against the library run, read at its 31 outputs: the reading of the type-9 SPK, 3.07e-9 m
-    /// worst on Linux x64 (2026-11-24), about three units in the last place of a 6.8e6 m position. Provisional, twice the
-    /// Linux worst rounded up at the second digit: to be set from the CI logs of Linux, Windows and macOS arm64.
+    /// The SPK of the default run against the library run, read at its 31 outputs: the reading of the type-9 SPK, about a few
+    /// units in the last place of a 6.8e6 m position. Measured by the CI of #819 (2026-11-24): 3.07e-9 m on Linux x64,
+    /// 2.98e-9 m on Windows, 4.71e-9 m on macOS arm64; twice the worst, rounded up at the second digit.
     /// </summary>
-    private const double DefaultsSpkThreshold = 6.2e-9;
+    private const double DefaultsSpkThreshold = 9.5e-9;
 
     /// <summary>
     /// --integrator vv --step 1s --cd 0.3 --atmosphere standard, the migration line of the Breaking entry, writes the SPK of

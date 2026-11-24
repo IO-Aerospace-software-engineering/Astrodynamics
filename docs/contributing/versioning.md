@@ -7293,8 +7293,8 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   2026-11-19): RK7(8) at 1e-9 with outputs every 60 s, a drag coefficient of 2.2 and, with `--drag`, NRLMSISE-00 at nominal
   space weather for the Earth, where it ran Velocity-Verlet at 1 s with outputs every second, Cd 0.3 and the U.S. Standard
   Atmosphere 1976. Its SPK is the library run of those settings on the Earth of the CLI (EGM2008 at degree 10), within
-  the rounding of the SPK (3.07e-9 m, Linux x64; `PropagateTests.Defaults_AreTheLibrarysRun`): 4.864 m from the run of
-  10.x after 30 min of a 6800 km orbit with drag and SRP, whose drag the coefficient alone multiplies by 7.3. Mars keeps its
+  the rounding of the SPK (4.71e-9 m at most over Linux x64, Windows and macOS arm64; `PropagateTests.Defaults_AreTheLibrarysRun`). After 30 min of a 6800 km orbit with drag and SRP, it ends 4.864 m from
+  the 10.x run of the same orbit without drag or SRP. On a run with drag, the coefficient alone multiplies the drag by 7.3. Mars keeps its
   standard atmosphere; `--atmosphere` without `--drag` or for another centre than the Earth, `--drag` about another centre
   than the Earth and Mars, a `--body` that is the centre, a mass or an area of 0 or less and a negative drag coefficient
   are input errors. Migration: `--integrator vv --step 1s --cd 0.3`, with `--atmosphere standard` for a run with `--drag`
