@@ -44,7 +44,7 @@ internal static class Program
             // The errors of the run, Cocona's included, written to the caller's error once the run ends: whether Cocona
             // reported an error tells a help from an error that holds --help
             var errors = new StringWriter();
-            CliContext.Begin(output, errors);
+            CliContext.Begin(output, errors, error);
             try
             {
                 string[] normalized;

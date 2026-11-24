@@ -186,6 +186,29 @@ public class CliGrammarTests
         }
     }
 
+    /// <summary>
+    /// The progress line of propagate --verbose reaches the standard error before the run ends, not after its output
+    /// (second review of L8: the buffered errors delivered it last).
+    /// </summary>
+    [Fact]
+    public void VerboseProgress_PrecedesTheOutput()
+    {
+        using (Configuration.Lock())
+        {
+            var writer = new OrderWriter();
+            var code = Program.Run(["propagate", "PV", "-K", "Data", "--output", "PV", "--from", "state", "--orbit", "6800km 0 0 0 7.6km/s 0",
+                "--center", "EARTH", "--epoch", "0", "--frame", "ICRF", "--begin", "0", "--end", "60", "--verbose"], writer, writer);
+            Assert.Equal(0, code);
+            Assert.StartsWith("Propagation in progress.", writer.ToString());
+            Assert.Contains("NAIF id : -1000", writer.ToString());
+        }
+    }
+
+    // One writer for the output and the error, which keeps the order of their lines
+    private sealed class OrderWriter : StringWriter
+    {
+    }
+
     /// <summary>The aliases of time-converter bundled behind one minus sign read as each of them.</summary>
     [Fact]
     public void BundledAliases_AreFlags()

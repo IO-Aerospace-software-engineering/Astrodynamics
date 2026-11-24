@@ -26,13 +26,20 @@ internal static class CliContext
 
     internal static TextWriter Error { get; private set; } = Console.Error;
 
+    /// <summary>
+    /// The caller's standard error, written at once: the progress of a long command under <c>--verbose</c>, which the
+    /// errors, buffered until the run ends (<see cref="Program.Run"/>), would deliver after its output.
+    /// </summary>
+    internal static TextWriter Progress { get; private set; } = Console.Error;
+
     /// <summary>The exit code the command set, null while no command ran (the parser's own errors, the help).</summary>
     internal static int? ExitCode { get; private set; }
 
-    internal static void Begin(TextWriter output, TextWriter error)
+    internal static void Begin(TextWriter output, TextWriter error, TextWriter progress)
     {
         Out = output;
         Error = error;
+        Progress = progress;
         ExitCode = null;
     }
 

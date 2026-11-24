@@ -101,7 +101,7 @@ public class PropagateCommand
 
             if (outputOptions.Verbose)
             {
-                CliContext.Error.WriteLine("Propagation in progress.");
+                CliContext.Progress.WriteLine("Propagation in progress.");
             }
 
             scenario.Simulate(new PropagationOptions
