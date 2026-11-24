@@ -18,10 +18,13 @@ public class OrientationCommand
         TimeScaleOptions timeScale,
         OutputOptions output,
         [Option("frame", ValueName = "frame", Description = "Reference frame: ICRF (written J2000) or a frame of the library or of the loaded kernels")]
-        string frame = "ICRF")
+        string frame = "ICRF",
+        [Argument("unexpected", Description = "Nothing: a value with spaces is quoted, everything but the objects is an option")]
+        string[] unexpected = null)
     {
         return CliContext.Execute(output.Verbose, () =>
         {
+            CliValues.NoMore(unexpected);
             var format = CliOutput.Format(output.Format, tabular: true);
             var searchWindow = CliValues.Window(window.Begin, window.End);
             var step = CliValues.Step(window.Step, "--step");

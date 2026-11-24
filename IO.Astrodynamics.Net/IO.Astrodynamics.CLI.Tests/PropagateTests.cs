@@ -25,9 +25,13 @@ public class PropagateTests
 
     /// <summary>
     /// The settings of propagate before 11.0.0, the migration line of its Breaking entry: Velocity-Verlet at 1 s with outputs
-    /// every 1 s, Cd 0.3, the U.S. Standard Atmosphere 1976 for the Earth (R29 of #668).
+    /// every 1 s, Cd 0.3, and with --drag about the Earth the U.S. Standard Atmosphere 1976 (<see cref="LegacyDrag"/>; R29 of
+    /// #668, decision 100).
     /// </summary>
-    internal static readonly string[] Legacy = ["--integrator", "vv", "--step", "1s", "--cd", "0.3", "--atmosphere", "standard"];
+    internal static readonly string[] Legacy = ["--integrator", "vv", "--step", "1s", "--cd", "0.3"];
+
+    /// <summary>The settings of propagate before 11.0.0 with the drag about the Earth.</summary>
+    internal static readonly string[] LegacyDrag = ["--drag", .. Legacy, "--atmosphere", "standard"];
 
     /// <summary>The arguments of a propagation from the orbit <paramref name="from"/> <paramref name="values"/> at J2000 TDB.</summary>
     internal static string[] Propagate(string name, string output, string from, string values, string frame, string begin, string end, params string[] options) =>
@@ -46,7 +50,7 @@ public class PropagateTests
         using (await Configuration.LockAsync())
         {
             var res = CliRun.Ok(Propagate("MyBody", "PropagatorExport", "state", "6800000.0 0.0 0.0 0.0 8000.0 0.0", "ICRF", "0.0", "3600.0",
-                ["--srp", "--drag", "--degree", "20", "--body", "10", "--body", "MOON", .. Legacy]));
+                ["--srp", "--degree", "20", "--body", "10", "--body", "MOON", .. LegacyDrag]));
             Assert.Equal(Written("PropagatorExport"), res);
         }
     }
@@ -361,7 +365,7 @@ public class PropagateTests
     /// The reference: the scenario the command builds, with the library's own <see cref="GeopotentialModelParameters"/>
     /// of <paramref name="degree"/> on a fresh stream of the embedded model (a parameter set reads its stream once). For a
     /// TLE (<c>t</c>, its two lines separated by a comma), the SGP4 state at the TDB start of the window in TEME on that
-    /// Earth, as <see cref="Helpers.TleStartState"/> builds it from <c>tle.ToStateVector</c> (#675).
+    /// Earth, as the library starts a TLE spacecraft from <c>tle.ToStateVector</c> at the window start (#675), its Earth filled by the geopotential of the options.
     /// </summary>
     private static Vector3 LibraryRunEnd(string activation, string values, string frame, ushort degree, Time end,
         Time? startEpoch = null)
@@ -428,7 +432,7 @@ public class PropagateTests
         {
             // Act
             res = CliRun.Ok(["propagate", "P675", "-K", "Data", "--output", outputDirectory, "--from", "tle", "--orbit", IssLine1, "--orbit", IssLine2,
-                "--begin", "2021-01-20T13:00:00Z", "--end", "2021-01-20T13:30:00Z", "--srp", "--drag", .. Legacy]);
+                "--begin", "2021-01-20T13:00:00Z", "--end", "2021-01-20T13:30:00Z", "--srp", .. LegacyDrag]);
 
             var tle = new OrbitalParameters.TLE.TLE("ISS", IssLine1, IssLine2);
             var t0 = window.StartDate.ToTDB();
@@ -577,7 +581,7 @@ public class PropagateTests
                 }
 
                 Assert.Equal(Written(output), CliRun.Ok(Propagate("Sat", output, "state", "6800000.0 0.0 0.0 0.0 7600.0 0.0", "ICRF", "0.0", "600.0",
-                    ["--srp", "--drag", .. Legacy])));
+                    ["--srp", .. LegacyDrag])));
                 return File.ReadAllBytes(Directory.GetFiles(output, "Sat.spk", SearchOption.AllDirectories).Single());
             }
 
@@ -608,26 +612,52 @@ public class PropagateTests
 
     /// <summary>
     /// The options a centre refuses (R29 of #668, choice 3): the drag about a centre other than the Earth and Mars, and an
-    /// atmosphere chosen for a centre other than the Earth (Mars keeps its standard atmosphere), input errors.
+    /// atmosphere chosen for a centre other than the Earth (Mars keeps its standard atmosphere); an atmosphere without the
+    /// drag that reads it (choice 17 of decision 100); input errors, before anything is written.
     /// </summary>
     [Fact]
     public async Task DragAndAtmosphere_AboutAnotherCentre_AreInputErrors()
     {
         using (await Configuration.LockAsync())
         {
-            string[] AboutTheMoon(params string[] options) =>
+            string[] About(string center, params string[] options) =>
             [
-                "propagate", "PMOON", "-K", "Data", "--output", "PMOON", "--from", "state", "--orbit", "2000km 0 0 0 1.6km/s 0", "--center", "MOON",
+                "propagate", "PMOON", "-K", "Data", "--output", "PMOON", "--from", "state", "--orbit", "4000km 0 0 0 3km/s 0", "--center", center,
                 "--epoch", "0.0", "--frame", "ICRF", "--begin", "0.0", "--end", "10.0", "--step", "1s", .. options
             ];
             Assert.Equal($"Error: --drag: the command has an atmosphere for the Earth and Mars only, the centre is 301.{Environment.NewLine}",
-                CliRun.Fails(2, AboutTheMoon("--drag")));
-            Assert.Equal($"Error: --atmosphere: the atmosphere chosen is the Earth's, the centre is 301.{Environment.NewLine}",
-                CliRun.Fails(2, AboutTheMoon("--atmosphere", "standard")));
-            Assert.StartsWith("Error: --atmosphere: 'msis' is not one of nrlmsise00, standard.", CliRun.Fails(2, AboutTheMoon("--atmosphere", "msis")));
-            Assert.StartsWith("Error: --integrator: 'rk4' is not one of rk78, vv.", CliRun.Fails(2, AboutTheMoon("--integrator", "rk4")));
-            Assert.StartsWith("Error: --format: propagate writes text only.", CliRun.Fails(2, AboutTheMoon("--format", "json")));
+                CliRun.Fails(2, About("MOON", "--drag")));
+            Assert.Equal($"Error: --atmosphere: the atmosphere chosen is the Earth's, the centre is 499.{Environment.NewLine}",
+                CliRun.Fails(2, About("MARS", "--drag", "--atmosphere", "standard")));
+            Assert.Equal($"Error: --atmosphere: an atmosphere is read by the drag only; give --drag.{Environment.NewLine}",
+                CliRun.Fails(2, About("EARTH", "--atmosphere", "standard")));
+            Assert.StartsWith("Error: --atmosphere: 'msis' is not one of nrlmsise00, standard.", CliRun.Fails(2, About("MOON", "--drag", "--atmosphere", "msis")));
+            Assert.StartsWith("Error: --integrator: 'rk4' is not one of rk78, vv.", CliRun.Fails(2, About("MOON", "--integrator", "rk4")));
+            // propagate writes text only: it has no --format
+            CliRun.Fails(2, About("MOON", "--format", "json"));
             Assert.False(Directory.Exists("PMOON"));
+        }
+    }
+
+    /// <summary>
+    /// The values of the spacecraft a propagation refuses before it runs (review of L8): a mass or an area of 0 or less, a
+    /// negative drag coefficient, a third body that is the centre, a name that cannot name a kernel variable.
+    /// </summary>
+    [Theory]
+    [InlineData("--mass", "-5", "Error: --mass: the mass is above 0 kg, '-5' was given.")]
+    [InlineData("--mass", "0", "Error: --mass: the mass is above 0 kg, '0' was given.")]
+    [InlineData("--area", "0", "Error: --area: the area is above 0 m2, '0' was given.")]
+    [InlineData("--cd", "-1", "Error: --cd: the drag coefficient is 0 or above, '-1' was given.")]
+    [InlineData("--body", "EARTH", "Error: --body: 399 is the centre of the orbit, which acts already; give the other bodies only.")]
+    public async Task SpacecraftValues_TheCommandRefuses(string option, string value, string expected)
+    {
+        using (await Configuration.LockAsync())
+        {
+            Assert.Equal(expected + Environment.NewLine,
+                CliRun.Fails(2, Propagate("PBAD", "PBAD", "state", StateValues, "ICRF", "0.0", "10.0", option, value)));
+            Assert.StartsWith("Error: name: The frame kernel of the spacecraft 'my sat' cannot be written",
+                CliRun.Fails(2, Propagate("my sat", "PBAD", "state", StateValues, "ICRF", "0.0", "10.0")));
+            Assert.False(Directory.Exists("PBAD"));
         }
     }
 }

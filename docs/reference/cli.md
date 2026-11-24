@@ -14,7 +14,7 @@ Its grammar is one for every command (R29 of [#668](https://github.com/IO-Aerosp
 ```bash
 astro ephemeris MOON EARTH -K kernels --begin 2024-01-01T00:00:00Z --end 2024-01-02T00:00:00Z --step 12h --aberration LT+S
 astro ephemeris -1000 EARTH -K kernels -K out --begin 0 --end 3600 --step 60s --format csv
-astro propagate Sat -K kernels --output out --from keplerian --orbit "6800km 0.001 51.6deg 0 0 0" --center EARTH --epoch 0 --frame ICRF --begin 0 --end 1d --drag
+astro propagate Sat -K kernels --output out --from keplerian --orbit "6800km 0.001 51.6deg 0 0 0" --center EARTH --epoch 0 --frame ICRF --begin 0 --end 86400 --drag
 ```
 
 ## Kernels
@@ -73,8 +73,12 @@ The standard output holds the data only. Each error is one line on the standard 
 (`--step`), a drag coefficient of 2.2, and with `--drag` NRLMSISE-00 at nominal space weather for the Earth; Mars takes its
 standard atmosphere, and the drag about another centre is refused. The Earth carries EGM2008 to `--degree` (10 by
 default, 100 at most). It writes the kernels of the spacecraft, NAIF identifier -1000, and a Cosmographia scenario in
-`--output`, and prints the identifier and the directory. `--integrator vv --step 1s --cd 0.3 --atmosphere standard` gives
-the settings of the command before 11.0.0, whose SPK it writes byte for byte.
+`--output`, and prints the identifier and the directory. `--integrator vv --step 1s --cd 0.3` gives the settings of the
+command before 11.0.0, with `--atmosphere standard` for a run with `--drag` about the Earth, whose SPK it writes byte for
+byte. An atmosphere is read by the drag only: `--atmosphere` without `--drag`, or about another centre than the Earth, is
+an input error, and so are `--drag` about another centre than the Earth and Mars, a `--body` that is the centre, a mass
+or an area of 0 or less, a negative drag coefficient, and a name that cannot name a kernel variable (a blank, a quote, more
+than 32 bytes with its frame).
 
 ## Known limitations
 
@@ -114,6 +118,9 @@ orbital-parameters-converter -K k --from tle --orbit "<line 1>" --orbit "<line 2
 propagate k Sat 399 "x y z vx vy vz" T0 ICRF B E out -r -a -n 20 100 1 0.3 10 301
 propagate Sat -K k --output out --from state --orbit "x y z vx vy vz" --center 399 --epoch T0 --frame ICRF --begin B --end E --srp --drag --degree 20 --mass 100 --area 1 --body 10 --body 301 --integrator vv --step 1s --cd 0.3 --atmosphere standard
 
+propagate k Sat 301 "x y z vx vy vz" T0 ICRF B E out
+propagate Sat -K k --output out --from state --orbit "x y z vx vy vz" --center 301 --epoch T0 --frame ICRF --begin B --end E --integrator vv --step 1s --cd 0.3
+
 find-windows-from-distance-constraint k 399 301 "<" 400000000 B E 1.00:00:00 LT
 find-windows-from-distance-constraint 399 301 -K k --relation "<" --value 400000km --begin B --end E --step 1d --aberration LT
 
@@ -133,7 +140,8 @@ find-windows-from-illumination-constraint 10 399 10 -K k --fixed-frame ITRF93 --
 Beyond the grammar, a step needs a colon or a unit (`60` was 60 days), the numbers are read in invariant culture,
 the epochs are written in the scale of the input (`--time-scale tdb` for the TDB labels of 10.x), the exit codes are 0,
 1, 2 and 3 (129 for an unknown option and for the help before), no banner precedes the data, and `propagate` runs
-with the library's defaults (`--integrator vv --step 1s --cd 0.3 --atmosphere standard` for the run of 10.x).
+with the library's defaults (`--integrator vv --step 1s --cd 0.3` for the run of 10.x, with `--atmosphere standard` for
+a run with `--drag` about the Earth). A positional argument a command does not take is an input error.
 
 ## Commands
 
@@ -171,13 +179,14 @@ Options:
 
 <!-- generated: astro ephemeris --help -->
 ```text
-Usage: astro ephemeris [--kernels <path>...] [--begin <epoch>] [--end <epoch>] [--step <step>] [--aberration <correction>] [--time-scale <tdb|tt|tai|utc|gps>] [--format <text|csv|json>] [--verbose] [--frame <frame>] [--as <state|keplerian|equinoctial>] [--help] target observer
+Usage: astro ephemeris [--kernels <path>...] [--begin <epoch>] [--end <epoch>] [--step <step>] [--aberration <correction>] [--time-scale <tdb|tt|tai|utc|gps>] [--format <text|csv|json>] [--verbose] [--frame <frame>] [--as <state|keplerian|equinoctial>] [--help] target observer unexpected0 ... unexpectedN
 
 The states of a target relative to an observer over a window, as state vectors, Keplerian or equinoctial elements
 
 Arguments:
-  0: target      Target: a NAIF identifier (399, -1000) or a name SPICE knows, built in or given by the loaded kernels (EARTH, DSS-13) (Required)
-  1: observer    Observer: a NAIF identifier (399, -1000) or a name SPICE knows, built in or given by the loaded kernels (EARTH, DSS-13) (Required)
+  0: target        Target: a NAIF identifier (399, -1000) or a name SPICE knows, built in or given by the loaded kernels (EARTH, DSS-13) (Required)
+  1: observer      Observer: a NAIF identifier (399, -1000) or a name SPICE knows, built in or given by the loaded kernels (EARTH, DSS-13) (Required)
+  2: unexpected    Nothing: a value with spaces is quoted, everything but the objects is an option
 
 Options:
   -K, --kernels <path>...               A kernel, a meta-kernel or a directory of kernels; repeatable, loaded in order after the paths of the environment variable ASTRO_KERNELS (separated by the path separator of the platform)
@@ -197,13 +206,14 @@ Options:
 
 <!-- generated: astro sub-point --help -->
 ```text
-Usage: astro sub-point [--kernels <path>...] [--epoch <epoch>] [--aberration <correction>] [--format <text|csv|json>] [--verbose] [--as <planetocentric|planetodetic|cartesian>] [--help] object body
+Usage: astro sub-point [--kernels <path>...] [--epoch <epoch>] [--aberration <correction>] [--format <text|csv|json>] [--verbose] [--as <planetocentric|planetodetic|cartesian>] [--help] object body unexpected0 ... unexpectedN
 
 The sub-observer point of an object on a celestial body, in planetocentric, planetodetic or planetocentric cartesian coordinates
 
 Arguments:
-  0: object    Object projected, a celestial body or a spacecraft: a NAIF identifier (399, -1000) or a name SPICE knows, built in or given by the loaded kernels (EARTH, DSS-13) (Required)
-  1: body      Celestial body onto which the object is projected: a NAIF identifier (399, -1000) or a name SPICE knows, built in or given by the loaded kernels (EARTH, DSS-13) (Required)
+  0: object        Object projected, a celestial body or a spacecraft: a NAIF identifier (399, -1000) or a name SPICE knows, built in or given by the loaded kernels (EARTH, DSS-13) (Required)
+  1: body          Celestial body onto which the object is projected: a NAIF identifier (399, -1000) or a name SPICE knows, built in or given by the loaded kernels (EARTH, DSS-13) (Required)
+  2: unexpected    Nothing: a value with spaces is quoted, everything but the objects is an option
 
 Options:
   -K, --kernels <path>...                         A kernel, a meta-kernel or a directory of kernels; repeatable, loaded in order after the paths of the environment variable ASTRO_KERNELS (separated by the path separator of the platform)
@@ -219,14 +229,15 @@ Options:
 
 <!-- generated: astro angular-separation --help -->
 ```text
-Usage: astro angular-separation [--kernels <path>...] [--epoch <epoch>] [--aberration <correction>] [--format <text|csv|json>] [--verbose] [--help] observer first second
+Usage: astro angular-separation [--kernels <path>...] [--epoch <epoch>] [--aberration <correction>] [--format <text|csv|json>] [--verbose] [--help] observer first second unexpected0 ... unexpectedN
 
 The angle between two objects seen from an observer, in rad
 
 Arguments:
-  0: observer    Observer: a NAIF identifier (399, -1000) or a name SPICE knows, built in or given by the loaded kernels (EARTH, DSS-13) (Required)
-  1: first       First object: a NAIF identifier (399, -1000) or a name SPICE knows, built in or given by the loaded kernels (EARTH, DSS-13) (Required)
-  2: second      Second object: a NAIF identifier (399, -1000) or a name SPICE knows, built in or given by the loaded kernels (EARTH, DSS-13) (Required)
+  0: observer      Observer: a NAIF identifier (399, -1000) or a name SPICE knows, built in or given by the loaded kernels (EARTH, DSS-13) (Required)
+  1: first         First object: a NAIF identifier (399, -1000) or a name SPICE knows, built in or given by the loaded kernels (EARTH, DSS-13) (Required)
+  2: second        Second object: a NAIF identifier (399, -1000) or a name SPICE knows, built in or given by the loaded kernels (EARTH, DSS-13) (Required)
+  3: unexpected    Nothing: a value with spaces is quoted, everything but the objects is an option
 
 Options:
   -K, --kernels <path>...      A kernel, a meta-kernel or a directory of kernels; repeatable, loaded in order after the paths of the environment variable ASTRO_KERNELS (separated by the path separator of the platform)
@@ -241,12 +252,13 @@ Options:
 
 <!-- generated: astro orientation --help -->
 ```text
-Usage: astro orientation [--kernels <path>...] [--begin <epoch>] [--end <epoch>] [--step <step>] [--time-scale <tdb|tt|tai|utc|gps>] [--format <text|csv|json>] [--verbose] [--frame <frame>] [--help] object
+Usage: astro orientation [--kernels <path>...] [--begin <epoch>] [--end <epoch>] [--step <step>] [--time-scale <tdb|tt|tai|utc|gps>] [--format <text|csv|json>] [--verbose] [--frame <frame>] [--help] object unexpected0 ... unexpectedN
 
 The orientations of a celestial body or a spacecraft relative to a frame over a window: the rotation from the frame and the angular velocity
 
 Arguments:
-  0: object    Celestial body, or spacecraft read from its CK: a NAIF identifier (399, -1000) or a name SPICE knows, built in or given by the loaded kernels (EARTH, DSS-13) (Required)
+  0: object        Celestial body, or spacecraft read from its CK: a NAIF identifier (399, -1000) or a name SPICE knows, built in or given by the loaded kernels (EARTH, DSS-13) (Required)
+  1: unexpected    Nothing: a value with spaces is quoted, everything but the objects is an option
 
 Options:
   -K, --kernels <path>...              A kernel, a meta-kernel or a directory of kernels; repeatable, loaded in order after the paths of the environment variable ASTRO_KERNELS (separated by the path separator of the platform)
@@ -264,13 +276,14 @@ Options:
 
 <!-- generated: astro find-windows-from-coordinate-constraint --help -->
 ```text
-Usage: astro find-windows-from-coordinate-constraint [--system <system>] [--coordinate <coordinate>] [--relation <relation>] [--value <value>] [--kernels <path>...] [--begin <epoch>] [--end <epoch>] [--step <step>] [--aberration <correction>] [--time-scale <tdb|tt|tai|utc|gps>] [--format <text|csv|json>] [--verbose] [--adjust <value>] [--frame <frame>] [--help] observer target
+Usage: astro find-windows-from-coordinate-constraint [--system <system>] [--coordinate <coordinate>] [--relation <relation>] [--value <value>] [--kernels <path>...] [--begin <epoch>] [--end <epoch>] [--step <step>] [--aberration <correction>] [--time-scale <tdb|tt|tai|utc|gps>] [--format <text|csv|json>] [--verbose] [--adjust <value>] [--frame <frame>] [--help] observer target unexpected0 ... unexpectedN
 
 The windows where a coordinate of a target seen from an observer meets a relation (CSPICE gfposc)
 
 Arguments:
-  0: observer    Observer: a NAIF identifier (399, -1000) or a name SPICE knows, built in or given by the loaded kernels (EARTH, DSS-13) (Required)
-  1: target      Target: a NAIF identifier (399, -1000) or a name SPICE knows, built in or given by the loaded kernels (EARTH, DSS-13) (Required)
+  0: observer      Observer: a NAIF identifier (399, -1000) or a name SPICE knows, built in or given by the loaded kernels (EARTH, DSS-13) (Required)
+  1: target        Target: a NAIF identifier (399, -1000) or a name SPICE knows, built in or given by the loaded kernels (EARTH, DSS-13) (Required)
+  2: unexpected    Nothing: a value with spaces is quoted, everything but the objects is an option
 
 Options:
   --system <system>                    Coordinate system: RECTANGULAR, RA/DEC, GEODETIC or PLANETOGRAPHIC, in any case (the member name RaDec read too) (Required)
@@ -294,13 +307,14 @@ Options:
 
 <!-- generated: astro find-windows-from-distance-constraint --help -->
 ```text
-Usage: astro find-windows-from-distance-constraint [--relation <relation>] [--value <distance>] [--kernels <path>...] [--begin <epoch>] [--end <epoch>] [--step <step>] [--aberration <correction>] [--time-scale <tdb|tt|tai|utc|gps>] [--format <text|csv|json>] [--verbose] [--help] observer target
+Usage: astro find-windows-from-distance-constraint [--relation <relation>] [--value <distance>] [--kernels <path>...] [--begin <epoch>] [--end <epoch>] [--step <step>] [--aberration <correction>] [--time-scale <tdb|tt|tai|utc|gps>] [--format <text|csv|json>] [--verbose] [--help] observer target unexpected0 ... unexpectedN
 
 The windows where the distance of a target from an observer meets a relation (CSPICE gfdist)
 
 Arguments:
-  0: observer    Observer: a NAIF identifier (399, -1000) or a name SPICE knows, built in or given by the loaded kernels (EARTH, DSS-13) (Required)
-  1: target      Target: a NAIF identifier (399, -1000) or a name SPICE knows, built in or given by the loaded kernels (EARTH, DSS-13) (Required)
+  0: observer      Observer: a NAIF identifier (399, -1000) or a name SPICE knows, built in or given by the loaded kernels (EARTH, DSS-13) (Required)
+  1: target        Target: a NAIF identifier (399, -1000) or a name SPICE knows, built in or given by the loaded kernels (EARTH, DSS-13) (Required)
+  2: unexpected    Nothing: a value with spaces is quoted, everything but the objects is an option
 
 Options:
   --relation <relation>                Relation: <, >, =, <=, >=, !, ABSMIN, ABSMAX, LOCMIN or LOCMAX, in any case (<= and >= are searched as < and >, whose windows are closed; ! is the window less the instants of =) (Required)
@@ -320,14 +334,15 @@ Options:
 
 <!-- generated: astro find-windows-from-occultation-constraint --help -->
 ```text
-Usage: astro find-windows-from-occultation-constraint [--target-shape <point|ellipsoid>] [--front-shape <point|ellipsoid>] [--occultation <full|annular|partial|any>] [--kernels <path>...] [--begin <epoch>] [--end <epoch>] [--step <step>] [--aberration <correction>] [--time-scale <tdb|tt|tai|utc|gps>] [--format <text|csv|json>] [--verbose] [--help] observer target front
+Usage: astro find-windows-from-occultation-constraint [--target-shape <point|ellipsoid>] [--front-shape <point|ellipsoid>] [--occultation <full|annular|partial|any>] [--kernels <path>...] [--begin <epoch>] [--end <epoch>] [--step <step>] [--aberration <correction>] [--time-scale <tdb|tt|tai|utc|gps>] [--format <text|csv|json>] [--verbose] [--help] observer target front unexpected0 ... unexpectedN
 
 The windows where a front body occults a target seen from an observer (CSPICE gfoclt)
 
 Arguments:
-  0: observer    Observer: a NAIF identifier (399, -1000) or a name SPICE knows, built in or given by the loaded kernels (EARTH, DSS-13) (Required)
-  1: target      Target occulted: a NAIF identifier (399, -1000) or a name SPICE knows, built in or given by the loaded kernels (EARTH, DSS-13) (Required)
-  2: front       Front body, which occults the target: a NAIF identifier (399, -1000) or a name SPICE knows, built in or given by the loaded kernels (EARTH, DSS-13) (Required)
+  0: observer      Observer: a NAIF identifier (399, -1000) or a name SPICE knows, built in or given by the loaded kernels (EARTH, DSS-13) (Required)
+  1: target        Target occulted: a NAIF identifier (399, -1000) or a name SPICE knows, built in or given by the loaded kernels (EARTH, DSS-13) (Required)
+  2: front         Front body, which occults the target: a NAIF identifier (399, -1000) or a name SPICE knows, built in or given by the loaded kernels (EARTH, DSS-13) (Required)
+  3: unexpected    Nothing: a value with spaces is quoted, everything but the objects is an option
 
 Options:
   --target-shape <point|ellipsoid>            Shape of the target: point or ellipsoid (Required)
@@ -348,7 +363,7 @@ Options:
 
 <!-- generated: astro find-windows-from-fov-constraint --help -->
 ```text
-Usage: astro find-windows-from-fov-constraint [--target-frame <frame>] [--target-shape <point|ellipsoid>] [--kernels <path>...] [--begin <epoch>] [--end <epoch>] [--step <step>] [--aberration <correction>] [--time-scale <tdb|tt|tai|utc|gps>] [--format <text|csv|json>] [--verbose] [--help] observer instrument target
+Usage: astro find-windows-from-fov-constraint [--target-frame <frame>] [--target-shape <point|ellipsoid>] [--kernels <path>...] [--begin <epoch>] [--end <epoch>] [--step <step>] [--aberration <correction>] [--time-scale <tdb|tt|tai|utc|gps>] [--format <text|csv|json>] [--verbose] [--help] observer instrument target unexpected0 ... unexpectedN
 
 The windows where a target is in the field of view of an instrument of a spacecraft (CSPICE gftfov)
 
@@ -356,6 +371,7 @@ Arguments:
   0: observer      Spacecraft that carries the instrument: a NAIF identifier (399, -1000) or a name SPICE knows, built in or given by the loaded kernels (EARTH, DSS-13) (Required)
   1: instrument    Instrument: a NAIF identifier (399, -1000) or a name SPICE knows, built in or given by the loaded kernels (EARTH, DSS-13) (Required)
   2: target        Target: a NAIF identifier (399, -1000) or a name SPICE knows, built in or given by the loaded kernels (EARTH, DSS-13) (Required)
+  3: unexpected    Nothing: a value with spaces is quoted, everything but the objects is an option
 
 Options:
   --target-frame <frame>               Body-fixed frame of the target (ITRF93, IAU_MOON, ...), which orients its ellipsoid (Required)
@@ -375,14 +391,15 @@ Options:
 
 <!-- generated: astro find-windows-from-illumination-constraint --help -->
 ```text
-Usage: astro find-windows-from-illumination-constraint [--fixed-frame <frame>] [--site <"longitude latitude altitude">] [--angle <phase|incidence|emission>] [--relation <relation>] [--value <angle>] [--kernels <path>...] [--begin <epoch>] [--end <epoch>] [--step <step>] [--aberration <correction>] [--time-scale <tdb|tt|tai|utc|gps>] [--format <text|csv|json>] [--verbose] [--adjust <angle>] [--help] observer target source
+Usage: astro find-windows-from-illumination-constraint [--fixed-frame <frame>] [--site <"longitude latitude altitude">] [--angle <phase|incidence|emission>] [--relation <relation>] [--value <angle>] [--kernels <path>...] [--begin <epoch>] [--end <epoch>] [--step <step>] [--aberration <correction>] [--time-scale <tdb|tt|tai|utc|gps>] [--format <text|csv|json>] [--verbose] [--adjust <angle>] [--help] observer target source unexpected0 ... unexpectedN
 
 The windows where an illumination angle at a site of a target body, seen from an observer, meets a relation (CSPICE gfilum)
 
 Arguments:
-  0: observer    Observer: a NAIF identifier (399, -1000) or a name SPICE knows, built in or given by the loaded kernels (EARTH, DSS-13) (Required)
-  1: target      Target body of the site: a NAIF identifier (399, -1000) or a name SPICE knows, built in or given by the loaded kernels (EARTH, DSS-13) (Required)
-  2: source      Illumination source: a NAIF identifier (399, -1000) or a name SPICE knows, built in or given by the loaded kernels (EARTH, DSS-13) (Required)
+  0: observer      Observer: a NAIF identifier (399, -1000) or a name SPICE knows, built in or given by the loaded kernels (EARTH, DSS-13) (Required)
+  1: target        Target body of the site: a NAIF identifier (399, -1000) or a name SPICE knows, built in or given by the loaded kernels (EARTH, DSS-13) (Required)
+  2: source        Illumination source: a NAIF identifier (399, -1000) or a name SPICE knows, built in or given by the loaded kernels (EARTH, DSS-13) (Required)
+  3: unexpected    Nothing: a value with spaces is quoted, everything but the objects is an option
 
 Options:
   --fixed-frame <frame>                     Body-fixed frame of the target (ITRF93, IAU_MOON, ...) (Required)
@@ -406,9 +423,12 @@ Options:
 
 <!-- generated: astro orbital-parameters-converter --help -->
 ```text
-Usage: astro orbital-parameters-converter [--as <state|keplerian|equinoctial>] [--from <state|keplerian|equinoctial|tle>] [--orbit <values>...] [--center <body>] [--epoch <epoch>] [--frame <frame>] [--kernels <path>...] [--time-scale <tdb|tt|tai|utc|gps>] [--format <text|csv|json>] [--verbose] [--target-epoch <epoch>] [--target-frame <frame>] [--help]
+Usage: astro orbital-parameters-converter [--as <state|keplerian|equinoctial>] [--from <state|keplerian|equinoctial|tle>] [--orbit <values>...] [--center <body>] [--epoch <epoch>] [--frame <frame>] [--kernels <path>...] [--time-scale <tdb|tt|tai|utc|gps>] [--format <text|csv|json>] [--verbose] [--target-epoch <epoch>] [--target-frame <frame>] [--help] unexpected0 ... unexpectedN
 
 Converts an orbit to a state vector, Keplerian or equinoctial elements, at an epoch and in a frame
+
+Arguments:
+  0: unexpected    Nothing: a value with spaces is quoted, everything but the objects is an option
 
 Options:
   --as <state|keplerian|equinoctial>          Kind of the orbit written: state, keplerian or equinoctial (Required)
@@ -430,13 +450,14 @@ Options:
 
 <!-- generated: astro frame-converter --help -->
 ```text
-Usage: astro frame-converter [--kernels <path>...] [--epoch <epoch>] [--time-scale <tdb|tt|tai|utc|gps>] [--format <text|csv|json>] [--verbose] [--help] from to
+Usage: astro frame-converter [--kernels <path>...] [--epoch <epoch>] [--time-scale <tdb|tt|tai|utc|gps>] [--format <text|csv|json>] [--verbose] [--help] from to unexpected0 ... unexpectedN
 
 The orientation of a frame relative to another at an epoch: the rotation from the first and the angular velocity
 
 Arguments:
-  0: from    Frame converted from: ICRF (written J2000) or a frame of the library or of the loaded kernels (Required)
-  1: to      Frame converted to, as the first (Required)
+  0: from          Frame converted from: ICRF (written J2000) or a frame of the library or of the loaded kernels (Required)
+  1: to            Frame converted to, as the first (Required)
+  2: unexpected    Nothing: a value with spaces is quoted, everything but the objects is an option
 
 Options:
   -K, --kernels <path>...              A kernel, a meta-kernel or a directory of kernels; repeatable, loaded in order after the paths of the environment variable ASTRO_KERNELS (separated by the path separator of the platform)
@@ -476,12 +497,13 @@ Options:
 
 <!-- generated: astro celestial-body-info --help -->
 ```text
-Usage: astro celestial-body-info [--kernels <path>...] [--format <text|csv|json>] [--verbose] [--help] body
+Usage: astro celestial-body-info [--kernels <path>...] [--format <text|csv|json>] [--verbose] [--help] body unexpected0 ... unexpectedN
 
 The information of a celestial body: identifier, name, mass, GM, fixed frame, radii, flattening, J2 to J4
 
 Arguments:
-  0: body    Celestial body: a NAIF identifier (399, -1000) or a name SPICE knows, built in or given by the loaded kernels (EARTH, DSS-13) (Required)
+  0: body          Celestial body: a NAIF identifier (399, -1000) or a name SPICE knows, built in or given by the loaded kernels (EARTH, DSS-13) (Required)
+  1: unexpected    Nothing: a value with spaces is quoted, everything but the objects is an option
 
 Options:
   -K, --kernels <path>...     A kernel, a meta-kernel or a directory of kernels; repeatable, loaded in order after the paths of the environment variable ASTRO_KERNELS (separated by the path separator of the platform)
@@ -494,12 +516,13 @@ Options:
 
 <!-- generated: astro propagate --help -->
 ```text
-Usage: astro propagate [--output <directory>] [--from <state|keplerian|equinoctial|tle>] [--orbit <values>...] [--center <body>] [--epoch <epoch>] [--frame <frame>] [--kernels <path>...] [--begin <epoch>] [--end <epoch>] [--step <step>] [--format <text|csv|json>] [--verbose] [--integrator <rk78|vv>] [--drag] [--srp] [--atmosphere <nrlmsise00|standard>] [--degree <degree>] [--mass <mass>] [--area <area>] [--cd <coefficient>] [--body <body>...] [--help] name
+Usage: astro propagate [--output <directory>] [--from <state|keplerian|equinoctial|tle>] [--orbit <values>...] [--center <body>] [--epoch <epoch>] [--frame <frame>] [--kernels <path>...] [--begin <epoch>] [--end <epoch>] [--step <step>] [--verbose] [--integrator <rk78|vv>] [--drag] [--srp] [--atmosphere <nrlmsise00|standard>] [--degree <degree>] [--mass <mass>] [--area <area>] [--cd <coefficient>] [--body <body>...] [--help] name unexpected0 ... unexpectedN
 
 Propagates a spacecraft about its centre and writes its kernels and a Cosmographia scenario
 
 Arguments:
-  0: name    Name of the spacecraft (Required)
+  0: name          Name of the spacecraft (Required)
+  1: unexpected    Nothing: a value with spaces is quoted, everything but the objects is an option
 
 Options:
   --output <directory>                        Directory of the kernels and the Cosmographia scenario written (Required)
@@ -512,7 +535,6 @@ Options:
   --begin <epoch>                             Start of the propagation: an ISO 8601 date or a day of year with an optional time, then Z, an offset or a scale tag (2024-01-01T21:00:00Z, 2024-001T21:00:00 UTC), seconds from J2000 with an optional tag (144521.0 UTC), or a Julian date (2460310.5 JD UTC); the tags are UTC, TT, TDT, TDB, TAI and GPS, TDB when none is given (Required)
   --end <epoch>                               End of the propagation, in the same forms (Required)
   --step <step>                               Output step: [d.]hh:mm:ss[.f], or a number and s, min, h or d (Default: 60s)
-  --format <text|csv|json>                    Output format: text (default), csv for the commands that write rows, json for those that write one record
   --verbose                                   Write the trace of an error after its message
   --integrator <rk78|vv>                      Integrator: rk78, RK7(8) at 1e-9 (default), or vv, Velocity-Verlet at 1 s
   --drag                                      Atmospheric drag, about the Earth or Mars

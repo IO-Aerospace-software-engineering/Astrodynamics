@@ -210,45 +210,7 @@ public class Helpers
             : new Frame(name);
     }
 
-    /// <summary>
-    /// The centre of motion of a propagation of the CLI: the Earth with the embedded EGM2008 at
-    /// <paramref name="geopotentialDegrees"/> and <paramref name="earthAtmosphere"/>, Mars with its standard atmosphere, any
-    /// other body as the kernels define it.
-    /// </summary>
-    internal static CelestialBody CreateCenterOfMotion(int centerOfMotion, ushort geopotentialDegrees, IAtmosphericModel earthAtmosphere)
-    {
-        GeopotentialModelParameters geopotentialModelParameters = null;
-        IAtmosphericModel atmosphericModel = null;
-        if (centerOfMotion == PlanetsAndMoons.EARTH.NaifId)
-        {
-            Stream sr = typeof(PropagateCommand).Assembly.GetManifestResourceStream("IO.Astrodynamics.CLI.Data.EGM2008_to100_TideFree.txt");
-            geopotentialModelParameters = new GeopotentialModelParameters(sr, geopotentialDegrees);
-            atmosphericModel = earthAtmosphere;
-        }
-        else if (centerOfMotion == PlanetsAndMoons.MARS.NaifId)
-        {
-            atmosphericModel = new MarsStandardAtmosphere();
-        }
-
-        return new CelestialBody(centerOfMotion, geopotentialModelParameters, atmosphericModel);
-    }
-
-    /// <summary>
-    /// The initial orbit of a propagation from a TLE (#675): its SGP4 state at the TDB start of the window, in TEME, on
-    /// the Earth of the CLI, which carries its geopotential, the embedded EGM2008 to <paramref name="geopotentialDegrees"/>
-    /// (the degree of <c>propagate -n</c>, #681), and atmosphere (the propagation rotates it once to ICRF).
-    /// </summary>
-    /// <exception cref="ArgumentException">The centre of motion is not the Earth: a TLE describes an Earth orbit.</exception>
-    internal static StateVector TleStartState(TLE tle, int centerOfMotion, in Window window, ushort geopotentialDegrees, IAtmosphericModel earthAtmosphere)
-    {
-        if (centerOfMotion != PlanetsAndMoons.EARTH.NaifId)
-        {
-            throw new ArgumentException(
-                $"A TLE describes an Earth orbit: its centre of motion is the Earth (399), not {centerOfMotion}.", nameof(centerOfMotion));
-        }
-
-        var start = window.StartDate.ToTDB();
-        var sgp4 = tle.ToStateVector(start);
-        return new StateVector(sgp4.Position, sgp4.Velocity, CreateCenterOfMotion(centerOfMotion, geopotentialDegrees, earthAtmosphere), start, Frame.TEME);
-    }
+    /// <summary>The embedded EGM2008 model of the Earth to <paramref name="degree"/>, read from a fresh stream.</summary>
+    internal static GeopotentialModelParameters EarthGeopotential(ushort degree) =>
+        new(typeof(PropagateCommand).Assembly.GetManifestResourceStream("IO.Astrodynamics.CLI.Data.EGM2008_to100_TideFree.txt"), degree);
 }

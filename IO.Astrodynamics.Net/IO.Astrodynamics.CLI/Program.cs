@@ -39,18 +39,32 @@ internal static class Program
     {
         lock (RunLock)
         {
-            CliContext.Begin(output, error);
             var exitCode = Environment.ExitCode;
             Environment.ExitCode = 0;
+            // The errors of the run, Cocona's included, written to the caller's error once the run ends: whether Cocona
+            // reported an error tells a help from an error that holds --help
+            var errors = new StringWriter();
+            CliContext.Begin(output, errors);
             try
             {
-                var builder = CoconaApp.CreateBuilder(Normalize(args), options =>
+                string[] normalized;
+                try
+                {
+                    normalized = Normalize(args);
+                }
+                catch (CliInputException e)
+                {
+                    errors.WriteLine($"Error: {e.Message}");
+                    return CliContext.InputError;
+                }
+
+                var builder = CoconaApp.CreateBuilder(normalized, options =>
                 {
                     options.EnableShellCompletionSupport = false;
                     options.TreatPublicMethodsAsCommands = false;
                 });
                 builder.Logging.ClearProviders();
-                builder.Services.AddSingleton<ICoconaConsoleProvider>(new WriterConsoleProvider(output, error));
+                builder.Services.AddSingleton<ICoconaConsoleProvider>(new WriterConsoleProvider(output, errors));
                 builder.Services.AddSingleton<ICoconaApplicationMetadataProvider>(new AstroMetadataProvider());
 
                 var app = builder.Build();
@@ -72,22 +86,25 @@ internal static class Program
                     return code;
                 }
 
-                return Environment.ExitCode == 0 || args.Any(x => x is "--help" or "-h") ? CliContext.Success : CliContext.InputError;
+                var help = normalized.TakeWhile(x => x != "--").Any(x => x is "--help" or "-h");
+                return Environment.ExitCode == 0 || (help && errors.GetStringBuilder().Length == 0) ? CliContext.Success : CliContext.InputError;
             }
             catch (Exception e)
             {
-                error.WriteLine($"Error: {CliContext.OneLine(e.Message)}");
+                errors.WriteLine($"Error: {CliContext.OneLine(e.Message)}");
                 return CliContext.Failure;
             }
             finally
             {
                 Environment.ExitCode = exitCode;
+                error.Write(errors.ToString());
             }
         }
     }
 
     /// <summary>
-    /// The arguments as Cocona reads them: each option joined to its value (<c>--value=-5deg</c>, <c>--kernels=path</c>),
+    /// The arguments as Cocona reads them (<see cref="CliInputException"/> for an option given last without its value):
+    /// each option joined to its value (<c>--value=-5deg</c>, <c>--kernels=path</c>),
     /// then <c>--</c> and the positional arguments, so that an argument that starts with a minus sign and a digit or a dot
     /// (<c>-1000</c>, <c>-0.5</c>) is read as a value, never as an option (R29 of #668: Cocona read <c>-1000</c> as the
     /// options <c>-1</c>, <c>-0</c>, ...). The first positional argument, the command, stays first.
@@ -111,10 +128,16 @@ internal static class Program
                 continue;
             }
 
-            if ((arg.StartsWith("--", StringComparison.Ordinal) && arg.Contains('=')) || Flags.Contains(arg) || i + 1 == args.Count)
+            if ((arg.StartsWith("--", StringComparison.Ordinal) && arg.Contains('=')) || Flags.Contains(arg) || IsBundledAliases(arg))
             {
                 options.Add(arg);
                 continue;
+            }
+
+            if (i + 1 == args.Count)
+            {
+                // An option given last without its value: it would take the "--" that precedes the positional arguments
+                throw new CliInputException($"{(arg == "-K" ? "-K" : arg)} requires a value.");
             }
 
             var value = args[++i];
@@ -141,6 +164,10 @@ internal static class Program
 
         return [positionals[0], .. options, "--", .. positionals.Skip(1)];
     }
+
+    // The aliases of time-converter bundled behind one minus sign (-tj, -ue): flags, as each of them
+    private static bool IsBundledAliases(string arg) =>
+        arg.Length > 2 && arg[0] == '-' && arg[1] != '-' && arg.Skip(1).All(c => "tuljed".Contains(c));
 
     // An option starts with a minus sign, not followed by a digit or a dot (a negative number)
     private static bool IsOption(string arg) =>

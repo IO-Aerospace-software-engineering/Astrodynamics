@@ -15,10 +15,13 @@ public class FrameConverterCommand
         KernelOptions kernels,
         EpochOptions epoch,
         TimeScaleOptions timeScale,
-        OutputOptions output)
+        OutputOptions output,
+        [Argument("unexpected", Description = "Nothing: a value with spaces is quoted, everything but the objects is an option")]
+        string[] unexpected = null)
     {
         return CliContext.Execute(output.Verbose, () =>
         {
+            CliValues.NoMore(unexpected);
             var format = CliOutput.Format(output.Format, tabular: false);
             var at = CliValues.Epoch(epoch.Epoch, "--epoch");
             var scale = CliValues.TimeScale(timeScale.TimeScale, at.Scale);

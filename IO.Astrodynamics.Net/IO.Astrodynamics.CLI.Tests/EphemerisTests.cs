@@ -98,6 +98,32 @@ public class EphemerisTests
         }
     }
 
+    /// <summary>
+    /// A positional argument the command does not take (a frame and an aberration in the positions of 10.x, an unquoted
+    /// value) is an input error: Cocona would drop it (review of L8).
+    /// </summary>
+    [Fact]
+    public void AnUnexpectedPositionalArgument_IsAnInputError()
+    {
+        using (Configuration.Lock())
+        {
+            var error = CliRun.Fails(2, ["ephemeris", "301", "399", "IAU_EARTH", "LT", "-K", "Data", "--begin", "0", "--end", "60", "--step", "60s"]);
+            Assert.Equal($"Error: Unexpected argument(s) 'IAU_EARTH LT': quote a value that holds spaces, and give everything but the objects of the command as options.{Environment.NewLine}", error);
+            Assert.StartsWith("Error: Unexpected argument(s) '301'", CliRun.Fails(2, "celestial-body-info", "399", "-K", "Data", "--", "301"));
+        }
+    }
+
+    /// <summary>An identifier the library does not know as a body is the object of the input: exit code 2 (review of L8).</summary>
+    [Fact]
+    public void AnUnknownIdentifier_IsAnInputError()
+    {
+        using (Configuration.Lock())
+        {
+            Assert.Contains("12345", CliRun.Fails(2, "celestial-body-info", "12345", "-K", "Data"));
+            Assert.Contains("12345", CliRun.Fails(2, Ephemeris("12345", "399")));
+        }
+    }
+
     [Fact]
     public void AnUnknownFrame_IsAnInputError()
     {
@@ -223,11 +249,11 @@ public class EphemerisTests
         using (Configuration.Lock())
         {
             var begin = new Time(new DateTime(2023, 01, 01, 1, 0, 0), TimeScale.TDB);
-            var fromCli = CliRun.Fails(1, "ephemeris", "301", observerId.ToString(CultureInfo.InvariantCulture), "-K", "Data",
-                "--begin", begin.ToString(), "--end", begin.AddSeconds(60.0).ToString(), "--step", "1min");
-
             SpiceAPI.Instance.LoadKernels(new DirectoryInfo("Data"));
             var fromLibrary = Record.Exception(() => SpiceAPI.Instance.ReadEphemeris(begin, observerId, 301, Frames.Frame.ICRF, Aberration.None));
+            Assert.NotNull(fromLibrary);
+            var fromCli = CliRun.Fails(CliRun.ExitCodeOf(fromLibrary), "ephemeris", "301", observerId.ToString(CultureInfo.InvariantCulture), "-K", "Data",
+                "--begin", begin.ToString(), "--end", begin.AddSeconds(60.0).ToString(), "--step", "1min");
 
             Assert.Equal(observerId == 301001, SpiceAPI.IsSiteId(observerId));
             Assert.NotNull(fromLibrary);
@@ -282,9 +308,9 @@ public class EphemerisTests
             try
             {
                 // Without the kernel that names it
-                var fromCli = CliRun.Fails(1, Args("399777"));
                 var fromLibrary = Record.Exception(() => SpiceAPI.Instance.ReadEphemeris(begin, 399777, 301, Frames.Frame.ICRF, Aberration.None));
                 Assert.NotNull(fromLibrary);
+                var fromCli = CliRun.Fails(CliRun.ExitCodeOf(fromLibrary), Args("399777"));
                 Assert.Equal(CliRun.ErrorLine(fromLibrary), fromCli);
                 Assert.Contains("399777 has no name in SPICE", fromCli);
                 Assert.Contains("'CLISITE' is neither a NAIF identifier nor a name SPICE knows", CliRun.Fails(2, Args("CLISITE")));
@@ -390,12 +416,11 @@ public class EphemerisTests
     {
         using (Configuration.Lock())
         {
-            var fromCli = CliRun.Fails(1, "sub-point", objectId.ToString(CultureInfo.InvariantCulture), "399", "-K", "Data", "--epoch", "0.0");
-
             SpiceAPI.Instance.LoadKernels(new DirectoryInfo("Data"));
             var fromLibrary = Record.Exception(() => Body.CelestialItem.Create(objectId));
-
             Assert.NotNull(fromLibrary);
+            var fromCli = CliRun.Fails(CliRun.ExitCodeOf(fromLibrary), "sub-point", objectId.ToString(CultureInfo.InvariantCulture), "399", "-K", "Data", "--epoch", "0.0");
+
             Assert.DoesNotContain("is a site", fromCli);
             Assert.Equal(CliRun.ErrorLine(fromLibrary), fromCli);
         }

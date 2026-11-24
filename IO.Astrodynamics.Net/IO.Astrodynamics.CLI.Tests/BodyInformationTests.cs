@@ -69,7 +69,7 @@ public class BodyInformationsTests
 
     /// <summary>
     /// CASSINI's identifier, a name built into SPICE, ended the process in the native layer (#560, exit code 134); it is
-    /// the library's argument error, raised before the native call, exit code 1.
+    /// the library's argument error, raised before the native call, an input error of the tool (exit code 2).
     /// </summary>
     [Fact]
     public void SpacecraftIdentifier_IsTheLibrarysArgumentError()
@@ -77,8 +77,8 @@ public class BodyInformationsTests
         using (Configuration.Lock())
         {
             var fromLibrary = Assert.Throws<ArgumentException>(() => new Body.CelestialBody(-82));
-            Assert.Equal(CliRun.ErrorLine(fromLibrary), CliRun.Fails(1, "celestial-body-info", "-82", "-K", "Data"));
-            Assert.Equal(CliRun.ErrorLine(fromLibrary), CliRun.Fails(1, "celestial-body-info", "CASSINI", "-K", "Data"));
+            Assert.Equal(CliRun.ErrorLine(fromLibrary), CliRun.Fails(CliRun.ExitCodeOf(fromLibrary), "celestial-body-info", "-82", "-K", "Data"));
+            Assert.Equal(CliRun.ErrorLine(fromLibrary), CliRun.Fails(CliRun.ExitCodeOf(fromLibrary), "celestial-body-info", "CASSINI", "-K", "Data"));
         }
     }
 
@@ -96,7 +96,7 @@ public class BodyInformationsTests
         {
             // A named body first, so that the native stack holds its record
             CliRun.Ok("celestial-body-info", "399", "-K", "Data");
-            var e = CliRun.Fails(1, "celestial-body-info", id.ToString(), "-K", "Data");
+            var e = CliRun.Fails(2, "celestial-body-info", id.ToString(), "-K", "Data");
             Assert.Contains(id.ToString(), e);
         }
     }

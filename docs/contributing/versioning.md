@@ -7285,7 +7285,8 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   `--orbit "<line 1>" --orbit "<line 2>"`, without centre, epoch or frame, which it carries), the target epoch and frame
   of the converter `--target-epoch` and `--target-frame`, and the settings of `propagate` (`-r -a -n`, mass, area, Cd and
   bodies) `--srp`, `--drag`, `--degree`, `--mass`, `--area`, `--cd` and `--body`, its directory `--output`. An object is
-  an identifier or a name, a negative identifier given bare (`-1000`, which the parser read as options before). Migration:
+  an identifier or a name, a negative identifier given bare (`-1000`, which the parser read as options before), and a
+  positional argument a command does not take is an input error (10.x read the frame and the aberration there). Migration:
   the old-to-new form of each command in `docs/reference/cli.md`, "Migrating from 10.x", for example
   `ephemeris k 301 399 B E 00:01:00 ICRF LT -k` → `ephemeris 301 399 -K k --begin B --end E --step 1min --aberration LT --as keplerian`.
 - **Breaking: `astro propagate` runs with the library's defaults** (lot L8, choice 12 of #668, decided by S. Guillet,
@@ -7294,9 +7295,11 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   Atmosphere 1976. Its SPK is the library run of those settings on the Earth of the CLI (EGM2008 at degree 10), within
   the rounding of the SPK (3.07e-9 m, Linux x64; `PropagateTests.Defaults_AreTheLibrarysRun`): 4.864 m from the run of
   10.x after 30 min of a 6800 km orbit with drag and SRP, whose drag the coefficient alone multiplies by 7.3. Mars keeps its
-  standard atmosphere, `--atmosphere` for another centre than the Earth and `--drag` about another centre than the Earth
-  and Mars are input errors. Migration: `--integrator vv --step 1s --cd 0.3 --atmosphere standard` writes the SPK of 10.x
-  byte for byte (measured from a state and from a TLE with drag and SRP at `--degree 20`, against main 76e02ed7).
+  standard atmosphere; `--atmosphere` without `--drag` or for another centre than the Earth, `--drag` about another centre
+  than the Earth and Mars, a `--body` that is the centre, a mass or an area of 0 or less and a negative drag coefficient
+  are input errors. Migration: `--integrator vv --step 1s --cd 0.3`, with `--atmosphere standard` for a run with `--drag`
+  about the Earth, writes the SPK of 10.x byte for byte (measured from a state and from a TLE with drag and SRP at
+  `--degree 20`, against main 76e02ed7).
 - **Breaking: a step of the command line needs a colon or a unit** (lot L8, R29 of #668): `[d.]hh:mm:ss[.f]` or a number
   and `s`, `min`, `h` or `d`; a bare `60` was 60 days (`TimeSpan.Parse`) and is an input error. Migration: `60s`, `1min` or
   `00:01:00`.

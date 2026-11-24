@@ -261,6 +261,19 @@ internal static class CliValues
         return frame;
     }
 
+    /// <summary>
+    /// Refuses the positional arguments a command does not take (an unquoted value split by the shell, a frame or an
+    /// aberration in the positions of 10.x), which the parser would otherwise drop.
+    /// </summary>
+    internal static void NoMore(string[] unexpected)
+    {
+        if (unexpected is { Length: > 0 })
+        {
+            throw new CliInputException(
+                $"Unexpected argument(s) '{string.Join(" ", unexpected)}': quote a value that holds spaces, and give everything but the objects of the command as options.");
+        }
+    }
+
     /// <summary>The scale of a <c>--time-scale</c>, or <paramref name="input"/> when none is given.</summary>
     internal static TimeScale TimeScale(string text, TimeScale input)
     {

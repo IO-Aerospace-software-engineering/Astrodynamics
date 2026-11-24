@@ -12,10 +12,13 @@ public class BodyInformationCommand
         [Argument("body", Description = "Celestial body: " + EphemerisCommand.ObjectDescription)]
         string body,
         KernelOptions kernels,
-        OutputOptions output)
+        OutputOptions output,
+        [Argument("unexpected", Description = "Nothing: a value with spaces is quoted, everything but the objects is an option")]
+        string[] unexpected = null)
     {
         return CliContext.Execute(output.Verbose, () =>
         {
+            CliValues.NoMore(unexpected);
             var format = CliOutput.Format(output.Format, tabular: false);
             CliKernels.Load(kernels.Kernels);
             var celestialBody = new CelestialBody(CliValues.Object(body, "body"));

@@ -44,10 +44,13 @@ public class GeometryFinderCommand
         [Option("adjust", ValueName = "value", Description = AdjustDescription)]
         string adjust = "0",
         [Option("frame", ValueName = "frame", Description = "Frame of the coordinates: ICRF (written J2000) or a frame of the kernels")]
-        string frame = "ICRF")
+        string frame = "ICRF",
+        [Argument("unexpected", Description = "Nothing: a value with spaces is quoted, everything but the objects is an option")]
+        string[] unexpected = null)
     {
         return CliContext.Execute(output.Verbose, () =>
         {
+            CliValues.NoMore(unexpected);
             var search = Search.Read(window, aberration, timeScale, output);
             var coordinateSystem = CliValues.Enumeration<CoordinateSystem>(Required(system, "--system"), "--system");
             var coordinateValue = CliValues.Enumeration<Coordinate>(Required(coordinate, "--coordinate"), "--coordinate");
@@ -82,10 +85,13 @@ public class GeometryFinderCommand
         WindowOptions window,
         AberrationOptions aberration,
         TimeScaleOptions timeScale,
-        OutputOptions output)
+        OutputOptions output,
+        [Argument("unexpected", Description = "Nothing: a value with spaces is quoted, everything but the objects is an option")]
+        string[] unexpected = null)
     {
         return CliContext.Execute(output.Verbose, () =>
         {
+            CliValues.NoMore(unexpected);
             var search = Search.Read(window, aberration, timeScale, output);
             var operation = CliValues.Enumeration<RelationnalOperator>(Required(relation, "--relation"), "--relation");
             var distance = CliValues.Quantity(Required(value, "--value"), Dimension.Length, "--value");
@@ -117,10 +123,13 @@ public class GeometryFinderCommand
         WindowOptions window,
         AberrationOptions aberration,
         TimeScaleOptions timeScale,
-        OutputOptions output)
+        OutputOptions output,
+        [Argument("unexpected", Description = "Nothing: a value with spaces is quoted, everything but the objects is an option")]
+        string[] unexpected = null)
     {
         return CliContext.Execute(output.Verbose, () =>
         {
+            CliValues.NoMore(unexpected);
             var search = Search.Read(window, aberration, timeScale, output);
             var targetShapeType = CliValues.Enumeration<ShapeType>(Required(targetShape, "--target-shape"), "--target-shape");
             var frontShapeType = CliValues.Enumeration<ShapeType>(Required(frontShape, "--front-shape"), "--front-shape");
@@ -153,10 +162,13 @@ public class GeometryFinderCommand
         WindowOptions window,
         AberrationOptions aberration,
         TimeScaleOptions timeScale,
-        OutputOptions output)
+        OutputOptions output,
+        [Argument("unexpected", Description = "Nothing: a value with spaces is quoted, everything but the objects is an option")]
+        string[] unexpected = null)
     {
         return CliContext.Execute(output.Verbose, () =>
         {
+            CliValues.NoMore(unexpected);
             var search = Search.Read(window, aberration, timeScale, output);
             var shape = CliValues.Enumeration<ShapeType>(Required(targetShape, "--target-shape"), "--target-shape");
 
@@ -195,10 +207,13 @@ public class GeometryFinderCommand
         TimeScaleOptions timeScale,
         OutputOptions output,
         [Option("adjust", ValueName = "angle", Description = AdjustDescription)]
-        string adjust = "0")
+        string adjust = "0",
+        [Argument("unexpected", Description = "Nothing: a value with spaces is quoted, everything but the objects is an option")]
+        string[] unexpected = null)
     {
         return CliContext.Execute(output.Verbose, () =>
         {
+            CliValues.NoMore(unexpected);
             var search = Search.Read(window, aberration, timeScale, output);
             var coordinates = CliValues.Quantities([Required(site, "--site")], [Dimension.Angle, Dimension.Angle, Dimension.Length], "--site");
             var illuminationAngle = CliValues.Enumeration<IlluminationAngle>(Required(angle, "--angle"), "--angle");

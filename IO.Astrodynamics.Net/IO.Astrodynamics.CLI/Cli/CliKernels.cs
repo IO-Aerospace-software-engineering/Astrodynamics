@@ -29,17 +29,21 @@ internal static class CliKernels
     /// </summary>
     internal static void Load(IEnumerable<string> options)
     {
-        var paths = Paths(options);
+        var fromOptions = (options ?? []).Where(x => !string.IsNullOrWhiteSpace(x)).ToArray();
+        var paths = Paths(fromOptions);
         if (paths.Count == 0)
         {
             throw new CliKernelException($"No kernels: give -K <path> (a kernel, a meta-kernel or a directory), or set {EnvironmentVariable}.");
         }
 
-        foreach (var path in paths)
+        for (int i = 0; i < paths.Count; i++)
         {
+            // The paths of the variable come first: name the source of the one at fault
+            var source = i < paths.Count - fromOptions.Length ? EnvironmentVariable : "-K";
+            var path = paths[i];
             if (!File.Exists(path) && !Directory.Exists(path))
             {
-                throw new CliKernelException($"-K: the kernel path {path} does not exist.");
+                throw new CliKernelException($"{source}: the kernel path {path} does not exist.");
             }
 
             try
@@ -48,7 +52,7 @@ internal static class CliKernels
             }
             catch (Exception e) when (e is InvalidOperationException or ArgumentException)
             {
-                throw new CliKernelException($"-K: {e.Message}", e);
+                throw new CliKernelException($"{source}: {e.Message}", e);
             }
         }
     }

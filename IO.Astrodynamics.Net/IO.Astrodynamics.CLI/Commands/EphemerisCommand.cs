@@ -25,10 +25,13 @@ public class EphemerisCommand
         [Option("frame", ValueName = "frame", Description = "Frame of the states: ICRF (written J2000) or a frame of the library or of the loaded kernels")]
         string frame = "ICRF",
         [Option("as", ValueName = "state|keplerian|equinoctial", Description = "Kind of the states written: state, keplerian or equinoctial")]
-        string @as = "state")
+        string @as = "state",
+        [Argument("unexpected", Description = "Nothing: a value with spaces is quoted, everything but the objects is an option")]
+        string[] unexpected = null)
     {
         return CliContext.Execute(output.Verbose, () =>
         {
+            CliValues.NoMore(unexpected);
             var format = CliOutput.Format(output.Format, tabular: true);
             var kind = CliValues.Choice(@as, "--as", "state", "keplerian", "equinoctial");
             var searchWindow = CliValues.Window(window.Begin, window.End);
@@ -81,10 +84,13 @@ public class EphemerisCommand
         AberrationOptions aberration,
         OutputOptions output,
         [Option("as", ValueName = "planetocentric|planetodetic|cartesian", Description = "Coordinates written: planetocentric, planetodetic, or the planetocentric cartesian position on the surface")]
-        string @as = "planetocentric")
+        string @as = "planetocentric",
+        [Argument("unexpected", Description = "Nothing: a value with spaces is quoted, everything but the objects is an option")]
+        string[] unexpected = null)
     {
         return CliContext.Execute(output.Verbose, () =>
         {
+            CliValues.NoMore(unexpected);
             var format = CliOutput.Format(output.Format, tabular: false);
             var kind = CliValues.Choice(@as, "--as", "planetocentric", "planetodetic", "cartesian");
             var at = CliValues.Epoch(epoch.Epoch, "--epoch");
@@ -133,10 +139,13 @@ public class EphemerisCommand
         KernelOptions kernels,
         EpochOptions epoch,
         AberrationOptions aberration,
-        OutputOptions output)
+        OutputOptions output,
+        [Argument("unexpected", Description = "Nothing: a value with spaces is quoted, everything but the objects is an option")]
+        string[] unexpected = null)
     {
         return CliContext.Execute(output.Verbose, () =>
         {
+            CliValues.NoMore(unexpected);
             var format = CliOutput.Format(output.Format, tabular: false);
             var at = CliValues.Epoch(epoch.Epoch, "--epoch");
             var correction = CliValues.Enumeration<Aberration>(aberration.Aberration, "--aberration");

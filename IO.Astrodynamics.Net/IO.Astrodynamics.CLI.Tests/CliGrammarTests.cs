@@ -166,6 +166,37 @@ public class CliGrammarTests
         }
     }
 
+    /// <summary>
+    /// --help among the arguments of an error is no help (review of L8): an unknown command, or --help taken as the value
+    /// of an option, exits 2; an option given last without its value is an input error, not the value "--".
+    /// </summary>
+    [Theory]
+    [InlineData("body-information", "--help")]
+    [InlineData("ephemeris", "399", "301", "--frame", "--help")]
+    [InlineData("celestial-body-info", "399", "-K")]
+    [InlineData("celestial-body-info", "399", "-K", "Data", "--format")]
+    [InlineData("time-converter", "0", "--to")]
+    public void HelpInAnError_AndAnOptionWithoutItsValue_AreInputErrors(params string[] args)
+    {
+        using (Configuration.Lock())
+        {
+            var result = CliRun.Run(args);
+            Assert.Equal(2, result.ExitCode);
+            Assert.StartsWith("Error: ", result.Error);
+        }
+    }
+
+    /// <summary>The aliases of time-converter bundled behind one minus sign read as each of them.</summary>
+    [Fact]
+    public void BundledAliases_AreFlags()
+    {
+        using (Configuration.Lock())
+        {
+            Assert.Equal(CliRun.Ok("time-converter", "0", "-t", "-j"), CliRun.Ok("time-converter", "-tj", "0"));
+            Assert.Equal(new[] { "time-converter", "-ue", "--", "0" }, Program.Normalize(["time-converter", "-ue", "0"]));
+        }
+    }
+
     /// <summary>An error is one line on the standard error; --verbose adds its trace.</summary>
     [Fact]
     public void AnError_IsOneLine_AndVerboseAddsItsTrace()

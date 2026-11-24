@@ -52,6 +52,8 @@ internal static class CliContext
             ExitCode = e switch
             {
                 CliInputException => InputError,
+                // An identifier the library refuses (no name in SPICE, not a celestial body): the object of the input
+                ArgumentException { ParamName: "naifId" } => InputError,
                 CliKernelException => KernelError,
                 _ => Failure
             };

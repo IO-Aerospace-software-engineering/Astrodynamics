@@ -129,7 +129,7 @@ public class KernelsPathTests : IDisposable
                 Assert.Equal(new[] { "Data", file.FullName }, CliKernels.Paths([]));
 
                 Environment.SetEnvironmentVariable(CliKernels.EnvironmentVariable, Path.Combine(_folder.FullName, "missing"));
-                Assert.StartsWith("Error: -K: the kernel path", CliRun.Fails(3, "celestial-body-info", "399", "-K", "Data"));
+                Assert.StartsWith("Error: ASTRO_KERNELS: the kernel path", CliRun.Fails(3, "celestial-body-info", "399", "-K", "Data"));
             }
             finally
             {

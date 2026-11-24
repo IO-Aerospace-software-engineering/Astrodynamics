@@ -31,7 +31,7 @@ public class PropagateCommand
         OrbitOptions orbit,
         KernelOptions kernels,
         PropagationWindowOptions window,
-        OutputOptions outputOptions,
+        VerboseOptions outputOptions,
         [Option("integrator", ValueName = "rk78|vv", Description = "Integrator: rk78, RK7(8) at 1e-9 (default), or vv, Velocity-Verlet at 1 s")]
         string integrator = null,
         [Option("drag", Description = "Atmospheric drag, about the Earth or Mars")]
@@ -49,16 +49,24 @@ public class PropagateCommand
         [Option("cd", ValueName = "coefficient", Description = "Drag coefficient (2.2 by default)")]
         string cd = null,
         [Option("body", ValueName = "body", Description = "A celestial body whose gravity acts as a third body, in addition to the centre: a NAIF identifier or a name SPICE knows; repeatable")]
-        string[] body = null)
+        string[] body = null,
+        [Argument("unexpected", Description = "Nothing: a value with spaces is quoted, everything but the objects is an option")]
+        string[] unexpected = null)
     {
         return CliContext.Execute(outputOptions.Verbose, () =>
         {
-            if (CliValues.Choice(outputOptions.Format, "--format", "text", "csv", "json") is "csv" or "json")
+            CliValues.NoMore(unexpected);
+            var settings = PropagationSettings.Read(integrator, drag, atmosphere, degree, mass, area, cd);
+            try
             {
-                throw new CliInputException("--format: propagate writes text only.");
+                // The name of the spacecraft names its kernels: checked before anything runs, as its frame kernel checks it
+                Kernels.TextKernelNames.Check("FRAME_" + (name ?? string.Empty).ToUpper() + "_FRAME", $"the spacecraft '{name}'");
+            }
+            catch (InvalidOperationException e)
+            {
+                throw new CliInputException($"name: {e.Message}", e);
             }
 
-            var settings = PropagationSettings.Read(integrator, drag, atmosphere, degree, mass, area, cd);
             CliOrbit.Kind(orbit);
             var propagationWindow = CliValues.Window(window.Begin, window.End);
             var step = CliValues.Step(window.Step, "--step");
@@ -68,16 +76,20 @@ public class PropagateCommand
             }
 
             CliKernels.Load(kernels.Kernels);
-            var initialOrbit = CliOrbit.Read(orbit, id => Helpers.CreateCenterOfMotion(id, settings.Degree, settings.Atmosphere));
+            // The centre without models: its geopotential and atmosphere are the fallbacks of the options (implementer
+            // choice 16 of decision 100), and a TLE starts from its SGP4 state at the window start on its own Earth (#675),
+            // which the options fill
+            var initialOrbit = CliOrbit.Read(orbit, id => new CelestialBody(id));
             var centerId = initialOrbit is TLE ? PlanetsAndMoons.EARTH.NaifId : initialOrbit.Observer.NaifId;
             settings.CheckCenter(centerId);
-            if (initialOrbit is TLE tle)
+
+            var bodyIds = (body ?? []).Select(x => CliValues.Object(x, "--body")).ToArray();
+            if (bodyIds.Contains(centerId))
             {
-                // The SGP4 state at the start of the window, on the Earth of the CLI (#675), its geopotential of --degree (#681)
-                initialOrbit = Helpers.TleStartState(tle, centerId, propagationWindow, settings.Degree, settings.Atmosphere);
+                throw new CliInputException($"--body: {centerId} is the centre of the orbit, which acts already; give the other bodies only.");
             }
 
-            var bodies = (body ?? []).Select(x => new CelestialBody(CliValues.Object(x, "--body"))).ToList();
+            var bodies = bodyIds.Select(x => new CelestialBody(x)).ToList();
 
             var clock = new Clock($"clock{name}", 65536);
             var spacecraft = new Spacecraft(SpacecraftId, name, settings.Mass, settings.Mass, clock, initialOrbit, settings.Area, settings.DragCoefficient);
@@ -95,6 +107,13 @@ public class PropagateCommand
             scenario.Simulate(new PropagationOptions
             {
                 Integrator = settings.Integrator,
+                Geopotential = centerId == PlanetsAndMoons.EARTH.NaifId ? Helpers.EarthGeopotential(settings.Degree) : null,
+                Atmosphere = centerId switch
+                {
+                    _ when centerId == PlanetsAndMoons.EARTH.NaifId => settings.Atmosphere,
+                    _ when centerId == PlanetsAndMoons.MARS.NaifId => new MarsStandardAtmosphere(),
+                    _ => null
+                },
                 OutputStep = step,
                 AtmosphericDrag = drag,
                 SolarRadiationPressure = srp
@@ -143,6 +162,11 @@ public class PropagateCommand
         {
             var integratorName = CliValues.Choice(integrator, "--integrator", "rk78", "vv") ?? DefaultIntegrator;
             var atmosphereName = CliValues.Choice(atmosphere, "--atmosphere", "nrlmsise00", "standard");
+            if (atmosphereName != null && !drag)
+            {
+                // Implementer choice 17 of decision 100: the atmosphere is read by the drag only
+                throw new CliInputException("--atmosphere: an atmosphere is read by the drag only; give --drag.");
+            }
 
             var degreeValue = Helpers.EarthGeopotentialDefaultDegree;
             if (degree != null)
@@ -158,6 +182,20 @@ public class PropagateCommand
             var massValue = CliValues.Quantity(mass, Dimension.Mass, "--mass");
             var areaValue = CliValues.Quantity(area, Dimension.Area, "--area");
             var cdValue = cd == null ? DefaultDragCoefficient : CliValues.Quantity(cd, Dimension.None, "--cd");
+            if (massValue <= 0.0)
+            {
+                throw new CliInputException($"--mass: the mass is above 0 kg, '{mass}' was given.");
+            }
+
+            if (areaValue <= 0.0)
+            {
+                throw new CliInputException($"--area: the area is above 0 m2, '{area}' was given.");
+            }
+
+            if (cdValue < 0.0)
+            {
+                throw new CliInputException($"--cd: the drag coefficient is 0 or above, '{cd}' was given.");
+            }
             return new PropagationSettings(
                 integratorName == "rk78" ? RK78IntegratorOptions.Default : new VVIntegratorOptions { Step = TimeSpan.FromSeconds(1.0) },
                 degreeValue, drag, atmosphereName ?? DefaultAtmosphere, massValue, areaValue, cdValue)

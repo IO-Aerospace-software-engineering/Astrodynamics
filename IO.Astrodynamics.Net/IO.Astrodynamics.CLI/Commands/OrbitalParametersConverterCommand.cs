@@ -18,10 +18,13 @@ public class OrbitalParametersConverterCommand
         [Option("target-epoch", ValueName = "epoch", Description = "Epoch of the orbit written, by the two-body motion (SGP4 for a TLE): the epoch of the orbit given by default")]
         string targetEpoch = null,
         [Option("target-frame", ValueName = "frame", Description = "Frame of the orbit written: ICRF (written J2000) or a frame of the library or of the loaded kernels")]
-        string targetFrame = "ICRF")
+        string targetFrame = "ICRF",
+        [Argument("unexpected", Description = "Nothing: a value with spaces is quoted, everything but the objects is an option")]
+        string[] unexpected = null)
     {
         return CliContext.Execute(output.Verbose, () =>
         {
+            CliValues.NoMore(unexpected);
             var format = CliOutput.Format(output.Format, tabular: false);
             var kind = CliValues.Choice(@as, "--as", "state", "keplerian", "equinoctial");
             CliOrbit.Kind(orbit);

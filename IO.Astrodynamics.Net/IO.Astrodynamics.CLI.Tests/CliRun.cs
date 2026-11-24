@@ -36,6 +36,12 @@ internal static class CliRun
         return result.Error;
     }
 
+    /// <summary>
+    /// The exit code of an exception of the library: 2 for an identifier the library refuses (<c>naifId</c>), the object
+    /// of the input, 1 otherwise.
+    /// </summary>
+    internal static int ExitCodeOf(Exception e) => e is ArgumentException { ParamName: "naifId" } ? 2 : 1;
+
     /// <summary>The line the tool writes for an exception of the library.</summary>
     internal static string ErrorLine(Exception e) => $"Error: {CliContext.OneLine(e.Message)}{Environment.NewLine}";
 }

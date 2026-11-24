@@ -24,6 +24,14 @@ public sealed class OutputOptions : ICommandParameterSet
     public bool Verbose { get; set; }
 }
 
+/// <summary>The trace of the errors of a command that writes text only.</summary>
+public sealed class VerboseOptions : ICommandParameterSet
+{
+    [Option("verbose", Description = "Write the trace of an error after its message")]
+    [HasDefaultValue]
+    public bool Verbose { get; set; }
+}
+
 /// <summary>The scale of the epochs a command writes.</summary>
 public sealed class TimeScaleOptions : ICommandParameterSet
 {
