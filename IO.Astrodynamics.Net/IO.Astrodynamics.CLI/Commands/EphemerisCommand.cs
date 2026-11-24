@@ -1,146 +1,166 @@
-using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
-using System.Threading.Tasks;
 using Cocona;
 using IO.Astrodynamics.Body;
+using IO.Astrodynamics.CLI.Cli;
 using IO.Astrodynamics.CLI.Commands.Parameters;
-using IO.Astrodynamics.Frames;
 
 namespace IO.Astrodynamics.CLI.Commands;
 
 public class EphemerisCommand
 {
-    public EphemerisCommand()
+    internal const string ObjectDescription = "a NAIF identifier (399, -1000) or a name SPICE knows, built in or given by the loaded kernels (EARTH, DSS-13)";
+
+    [Command("ephemeris", Description = "The states of a target relative to an observer over a window, as state vectors, Keplerian or equinoctial elements")]
+    public int Ephemeris(
+        [Argument("target", Description = "Target: " + ObjectDescription)]
+        string target,
+        [Argument("observer", Description = "Observer: " + ObjectDescription)]
+        string observer,
+        KernelOptions kernels,
+        WindowOptions window,
+        AberrationOptions aberration,
+        TimeScaleOptions timeScale,
+        OutputOptions output,
+        [Option("frame", ValueName = "frame", Description = "Frame of the states: ICRF (default, written J2000) or a frame of the library or of the loaded kernels")]
+        string frame = "ICRF",
+        [Option("as", ValueName = "state|keplerian|equinoctial", Description = "Kind of the states written: state (default), keplerian or equinoctial")]
+        string @as = "state")
     {
+        return CliContext.Execute(output.Verbose, () =>
+        {
+            var format = CliOutput.Format(output.Format, tabular: true);
+            var kind = CliValues.Choice(@as, "--as", "state", "keplerian", "equinoctial");
+            var searchWindow = CliValues.Window(window.Begin, window.End);
+            var step = CliValues.Step(window.Step, "--step");
+            var correction = CliValues.Enumeration<Aberration>(aberration.Aberration, "--aberration");
+            var scale = CliValues.TimeScale(timeScale.TimeScale, searchWindow.StartDate.Scale);
+
+            CliKernels.Load(kernels.Kernels);
+            var targetObject = Helpers.CreateLocalizable(CliValues.Object(target, "target"), searchWindow.StartDate);
+            var observerObject = Helpers.CreateLocalizable(CliValues.Object(observer, "observer"), searchWindow.StartDate);
+            var outputFrame = CliValues.Frame(frame, "--frame");
+
+            IEnumerable<OrbitalParameters.OrbitalParameters> ephemeris = targetObject
+                .GetEphemeris(searchWindow, observerObject, outputFrame, correction, step)
+                .Select(x => CliTime.Relabel(x, scale))
+                .Select(x => kind switch
+                {
+                    "keplerian" => x.ToKeplerianElements(),
+                    "equinoctial" => x.ToEquinoctial(),
+                    _ => x
+                });
+
+            var orbits = ephemeris.ToArray();
+            if (format == OutputFormat.Csv)
+            {
+                CliOutput.WriteCsv(CliContext.Out, kind switch
+                {
+                    "keplerian" => CliOutput.KeplerianHeader,
+                    "equinoctial" => CliOutput.EquinoctialHeader,
+                    _ => CliOutput.StateHeader
+                }, orbits.Select(CliOutput.Orbit));
+                return;
+            }
+
+            foreach (var orbit in orbits)
+            {
+                CliContext.Out.WriteLine(orbit.ToString());
+            }
+        });
     }
 
-    [Command("ephemeris", Description = "Compute ephemeris of given object")]
-    public Task Ephemeris(
-        [Argument(Description = "Kernels path: a directory, a kernel file or a meta-kernel")]
-        string kernelsPath,
-        [Argument(Description = "Object identifier (Naif Identifier)")]
-        int objectId,
-        [Argument(Description = "Observer identifier (Naif Identifier)")]
-        int observerId,
-        WindowParameters windowParameters,
-        [Argument(Description = "Step size <d.hh:mm:ss.fff>")]
-        TimeSpan step,
-        [Argument(Description = "Frame")] string frame = "ICRF",
-        [Argument(Description = "Aberration")] string aberration = "None",
-        [Option('s', Description = "Display result as state vector")]
-        bool toStateVector = true,
-        [Option('k', Description = "Display result as Keplerian elements")]
-        bool toKeplerian = false,
-        [Option('q', Description = "Display result as equinoctial elements")]
-        bool toEquinoctial = false)
+    [Command("sub-point", Description = "The sub-observer point of an object on a celestial body, in planetocentric, planetodetic or planetocentric cartesian coordinates")]
+    public int SubPoint(
+        [Argument("object", Description = "Object projected, a celestial body or a spacecraft: " + ObjectDescription)]
+        string @object,
+        [Argument("body", Description = "Celestial body onto which the object is projected: " + ObjectDescription)]
+        string body,
+        KernelOptions kernels,
+        EpochOptions epoch,
+        AberrationOptions aberration,
+        OutputOptions output,
+        [Option("as", ValueName = "planetocentric|planetodetic|cartesian", Description = "Coordinates written: planetocentric (default), planetodetic, or the planetocentric cartesian position on the surface")]
+        string @as = "planetocentric")
     {
-        SpiceAPI.Instance.LoadKernels(Helpers.KernelsPath(kernelsPath));
-
-        var window = Helpers.ConvertWindowInput(windowParameters.Begin, windowParameters.End);
-        var localizableObject = Helpers.CreateLocalizable(objectId, window.StartDate);
-
-        var observerItem = Helpers.CreateLocalizable(observerId, window.StartDate);
-
-        IEnumerable<OrbitalParameters.OrbitalParameters> ephemeris = localizableObject.GetEphemeris(window, observerItem, Helpers.ResolveFrame(frame),
-            Enum.Parse<Aberration>(aberration, true), step);
-
-
-        if (toKeplerian)
+        return CliContext.Execute(output.Verbose, () =>
         {
-            ephemeris = ephemeris.Select(x => x.ToKeplerianElements());
-        }
-        else if (toEquinoctial)
-        {
-            ephemeris = ephemeris.Select(x => x.ToEquinoctial());
-        }
+            var format = CliOutput.Format(output.Format, tabular: false);
+            var kind = CliValues.Choice(@as, "--as", "planetocentric", "planetodetic", "cartesian");
+            var at = CliValues.Epoch(epoch.Epoch, "--epoch");
+            var correction = CliValues.Enumeration<Aberration>(aberration.Aberration, "--aberration");
 
-        foreach (var eph in ephemeris)
-        {
-            Console.WriteLine(eph.ToString());
-        }
+            CliKernels.Load(kernels.Kernels);
+            var objectId = CliValues.Object(@object, "object");
 
-        return Task.CompletedTask;
+            // A site has no sub-observer point (#681). A site by the library's rule (SpiceAPI.IsSiteOfNamedBody); NOTO and
+            // NEW NORCIA, of no body SPICE names, are objects of the kernels and projected (#750)
+            if (SpiceAPI.IsSiteOfNamedBody(objectId))
+            {
+                throw new CliInputException(
+                    $"object: sub-point projects a celestial body or a spacecraft; {@object} is a site.");
+            }
+
+            var celestialItem = Helpers.CreateCelestialItem(objectId, at);
+            var celestialBody = new CelestialBody(CliValues.Object(body, "body"));
+            var planetocentric = celestialItem.SubObserverPoint(celestialBody, at, correction);
+
+            switch (kind)
+            {
+                case "cartesian":
+                    var position = planetocentric.ToCartesianCoordinates().Normalize() * planetocentric.RadiusFromPlanetocentricLatitude(celestialBody);
+                    Write(format, position.ToString(), CliOutput.Cartesian(position));
+                    break;
+                case "planetodetic":
+                    var planetodetic = planetocentric.ToPlanetodetic(celestialBody);
+                    Write(format, planetodetic.ToString(), CliOutput.Planetodetic(planetodetic));
+                    break;
+                default:
+                    Write(format, planetocentric.ToString(), CliOutput.Planetocentric(planetocentric));
+                    break;
+            }
+        });
     }
 
-    [Command("sub-point", Description = "Compute sub observer point of given object in planetodetic, planetocentric or planetocentric cartesian coordinates")]
-    public Task SubPoint(
-        [Argument(Description = "Kernels path: a directory, a kernel file or a meta-kernel")]
-        string kernelsPath,
-        [Argument(Description = "Object identifier (Naif Identifier)")]
-        int objectId,
-        [Argument(Description = "Identifier of the celestial body onto which the object is projected (Naif Identifier)")]
-        int celestialBodyId,
-        EpochParameters epochParameters,
-        [Argument(Description = "Aberration")] string aberration = "None",
-        [Option(shortName: 'd', Description = "Display result as planetodetic coordinates")]
-        bool planetodetic = false,
-        [Option(shortName: 'c', Description = "Display result as planetocentric cartesian coordinates")]
-        bool cartesian = false)
+    [Command("angular-separation", Description = "The angle between two objects seen from an observer, in rad")]
+    public int AngularSeparation(
+        [Argument("observer", Description = "Observer: " + ObjectDescription)]
+        string observer,
+        [Argument("first", Description = "First object: " + ObjectDescription)]
+        string first,
+        [Argument("second", Description = "Second object: " + ObjectDescription)]
+        string second,
+        KernelOptions kernels,
+        EpochOptions epoch,
+        AberrationOptions aberration,
+        OutputOptions output)
     {
-        SpiceAPI.Instance.LoadKernels(Helpers.KernelsPath(kernelsPath));
-
-        // A site has no sub-observer point: before #681 it was cast to a celestial item, null, then dereferenced. A site by
-        // the library's rule (SpiceAPI.IsSiteOfNamedBody, decided once the kernels are loaded), which the CLI follows since
-        // 11.0.0; NOTO and NEW NORCIA, of no body SPICE names, are objects of the kernels and projected (#750)
-        if (SpiceAPI.IsSiteOfNamedBody(objectId))
+        return CliContext.Execute(output.Verbose, () =>
         {
-            throw new ArgumentException(
-                $"sub-point projects a celestial body or a spacecraft given by its NAIF identifier; {objectId} is a site", nameof(objectId));
-        }
+            var format = CliOutput.Format(output.Format, tabular: false);
+            var at = CliValues.Epoch(epoch.Epoch, "--epoch");
+            var correction = CliValues.Enumeration<Aberration>(aberration.Aberration, "--aberration");
 
-        var epoch = Helpers.ConvertDateTimeInput(epochParameters.Epoch);
-        var celestialItem = Helpers.CreateCelestialItem(objectId, epoch);
+            CliKernels.Load(kernels.Kernels);
+            var observerObject = Helpers.CreateLocalizable(CliValues.Object(observer, "observer"), at);
+            var firstObject = Helpers.CreateLocalizable(CliValues.Object(first, "first"), at);
+            var secondObject = Helpers.CreateLocalizable(CliValues.Object(second, "second"), at);
 
-        var celestialBody = new CelestialBody(celestialBodyId);
-        var abe = Enum.Parse<Aberration>(aberration, true);
-
-        var planetocentric = celestialItem.SubObserverPoint(celestialBody, epoch, abe);
-
-        if (cartesian)
-        {
-            Console.WriteLine(planetocentric.ToCartesianCoordinates().Normalize() *
-                              planetocentric.RadiusFromPlanetocentricLatitude(celestialBody));
-            return Task.CompletedTask;
-        }
-
-        if (planetodetic)
-        {
-            Console.WriteLine(planetocentric.ToPlanetodetic(celestialBody));
-            return Task.CompletedTask;
-        }
-
-        Console.WriteLine(planetocentric);
-        return Task.CompletedTask;
+            var angle = observerObject.AngularSeparation(at, firstObject, secondObject, correction);
+            Write(format, CliOutput.Real(angle), [new CliOutput.Field("angle_rad", angle)]);
+        });
     }
 
-    [Command("angular-separation", Description = "Compute angular separation between given objects")]
-    public Task AngularSeparation(
-        [Argument(Description = "Kernels path: a directory, a kernel file or a meta-kernel")]
-        string kernelsPath,
-        [Argument(Description = "Observer identifier (Naif Identifier)")]
-        int observerId,
-        [Argument(Description = "First object identifier (Naif Identifier)")]
-        int firstObjectId,
-        [Argument(Description = "Second object identifier (Naif Identifier)")]
-        int secondObjectId,
-        EpochParameters epochParameters,
-        [Argument(Description = "Aberration")] string aberration = "None"
-    )
+    /// <summary>Writes a record: its text, or its fields in json.</summary>
+    internal static void Write(OutputFormat format, string text, IReadOnlyList<CliOutput.Field> fields)
     {
-        SpiceAPI.Instance.LoadKernels(Helpers.KernelsPath(kernelsPath));
-
-        var epoch = Helpers.ConvertDateTimeInput(epochParameters.Epoch);
-        var observer = Helpers.CreateLocalizable(observerId, epoch);
-        var firstObject = Helpers.CreateLocalizable(firstObjectId, epoch);
-        var secondObject = Helpers.CreateLocalizable(secondObjectId, epoch);
-        var abe = Enum.Parse<Aberration>(aberration, true);
-
-        var angle = observer.AngularSeparation(epoch, firstObject, secondObject, abe);
-
-        Console.WriteLine(angle);
-
-        return Task.CompletedTask;
+        if (format == OutputFormat.Json)
+        {
+            CliOutput.WriteJson(CliContext.Out, fields);
+        }
+        else
+        {
+            CliContext.Out.WriteLine(text);
+        }
     }
 }

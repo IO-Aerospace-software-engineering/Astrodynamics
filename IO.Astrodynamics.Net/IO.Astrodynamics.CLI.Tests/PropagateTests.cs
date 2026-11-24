@@ -1,12 +1,10 @@
 // Copyright 2024. Sylvain Guillet (sylvain.guillet@tutamail.com)
 
 using System.Globalization;
-using System.Text;
 using IO.Astrodynamics.Atmosphere;
 using IO.Astrodynamics.Body;
 using IO.Astrodynamics.Body.Spacecraft;
 using IO.Astrodynamics.CLI.Commands;
-using IO.Astrodynamics.CLI.Commands.Parameters;
 using IO.Astrodynamics.Math;
 using IO.Astrodynamics.Tests.OrbitalParameters;
 using IO.Astrodynamics.TimeSystem;
@@ -25,30 +23,32 @@ public class PropagateTests
         _output = output;
     }
 
+    /// <summary>
+    /// The settings of propagate before 11.0.0, the migration line of its Breaking entry: Velocity-Verlet at 1 s with outputs
+    /// every 1 s, Cd 0.3, the U.S. Standard Atmosphere 1976 for the Earth (R29 of #668).
+    /// </summary>
+    internal static readonly string[] Legacy = ["--integrator", "vv", "--step", "1s", "--cd", "0.3", "--atmosphere", "standard"];
+
+    /// <summary>The arguments of a propagation from the orbit <paramref name="from"/> <paramref name="values"/> at J2000 TDB.</summary>
+    internal static string[] Propagate(string name, string output, string from, string values, string frame, string begin, string end, params string[] options) =>
+    [
+        "propagate", name, "-K", "Data", "--output", output, "--from", from, "--orbit", values, "--center", "399", "--epoch", "0.0", "--frame", frame,
+        "--begin", begin, "--end", end, .. options
+    ];
+
+    /// <summary>The lines the command writes on success: the NAIF identifier of the spacecraft and the output directory.</summary>
+    internal static string Written(string output) =>
+        $"NAIF id : -1000{Environment.NewLine}Output : {new DirectoryInfo(output).FullName}{Environment.NewLine}";
+
     [Fact]
     public async Task PropagateWithPerturbations()
     {
-        var command = new PropagateCommand();
-        StringBuilder sb = new StringBuilder();
-        StringWriter sw = new StringWriter(sb);
-        string res;
-
         using (await Configuration.LockAsync())
         {
-            Console.SetOut(sw);
-
-            await command.Propagate("Data", "MyBody",
-                new Commands.Parameters.OrbitalParameters
-                {
-                    CenterOfMotionId = 399, OrbitalParametersEpoch = "0.0", Frame = "ICRF", OrbitalParametersValues = "6800000.0 0.0 0.0 0.0 8000.0 0.0",
-                    FromStateVector = true
-                }, new WindowParameters { Begin = "0.0", End = "3600.0" }, "PropagatorExport", true,
-                true, 20, celestialBodies: [10, 301]);
-
-            res = sb.ToString();
+            var res = CliRun.Ok(Propagate("MyBody", "PropagatorExport", "state", "6800000.0 0.0 0.0 0.0 8000.0 0.0", "ICRF", "0.0", "3600.0",
+                ["--srp", "--drag", "--degree", "20", "--body", "10", "--body", "MOON", .. Legacy]));
+            Assert.Equal(Written("PropagatorExport"), res);
         }
-
-        Assert.Contains("Propagation completed", res);
     }
 
     [Fact]
@@ -61,25 +61,16 @@ public class PropagateTests
         string Longest(string output) => Path.Combine(output, "MissionK673_ScenarioK673", "Spacecrafts", "K673", "Orientation", "K673.ck");
         var output = Path.Combine(root.FullName, new string('o', 256 - Longest(root.FullName).Length - 1));
         Assert.Equal(256, Longest(output).Length);
-        var command = new PropagateCommand();
-        StringWriter sw = new StringWriter(new StringBuilder());
-
         try
         {
             using (await Configuration.LockAsync())
             {
-                Console.SetOut(sw);
-
                 // Act
-                var exception = await Assert.ThrowsAsync<ArgumentException>(() => command.Propagate("Data", "K673",
-                    new Commands.Parameters.OrbitalParameters
-                    {
-                        CenterOfMotionId = 399, OrbitalParametersEpoch = "0.0", Frame = "ICRF", OrbitalParametersValues = "6800000.0 0.0 0.0 0.0 8000.0 0.0",
-                        FromStateVector = true
-                    }, new WindowParameters { Begin = "0.0", End = "60.0" }, output, false, false));
+                var error = CliRun.Fails(1, Propagate("K673", output, "state", "6800000.0 0.0 0.0 0.0 8000.0 0.0", "ICRF", "0.0", "60.0", Legacy));
 
-                // Assert: nothing written
-                Assert.Equal("outputDirectory", exception.ParamName);
+                // Assert: the library's error (its parameter outputDirectory), nothing written
+                Assert.Contains("(Parameter 'outputDirectory')", error);
+                Assert.Single(error.Split(Environment.NewLine, StringSplitOptions.RemoveEmptyEntries));
                 Assert.False(Directory.Exists(output));
             }
         }
@@ -99,23 +90,14 @@ public class PropagateTests
         // The output directory is short: CSPICE loads a kernel path of at most 255 characters
         var reference = EquinoctialReference.Load();
         var c = reference.Cli.Single(x => x.Name == name);
-        var command = new PropagateCommand();
-        StringBuilder sb = new StringBuilder();
-        StringWriter sw = new StringWriter(sb);
         OrbitalParameters.StateVector start;
         double gm;
+        string res;
 
         using (await Configuration.LockAsync())
         {
-            Console.SetOut(sw);
-
             // Act: propagate, then read the exported ephemeris of the spacecraft (-1000) at the start of the window
-            await command.Propagate("Data", "P452",
-                new Commands.Parameters.OrbitalParameters
-                {
-                    CenterOfMotionId = 399, OrbitalParametersEpoch = "0.0", Frame = "ICRF",
-                    OrbitalParametersValues = c.CliValues, FromEquinoctial = true
-                }, new WindowParameters { Begin = "0.0", End = "60.0" }, outputDirectory, false, false);
+            res = CliRun.Ok(Propagate("P452", outputDirectory, "equinoctial", c.CliValues, "ICRF", "0.0", "60.0", Legacy));
             var ephemeris = new FileInfo(Directory.GetFiles(outputDirectory, "P452.spk", SearchOption.AllDirectories)
                 .Single());
             try
@@ -134,7 +116,7 @@ public class PropagateTests
         // Assert against the 60-digit state, with the GM of the kernels of these tests (gm_de431). The start goes
         // through AtEpoch (K): measured again on the Kepler solver of #453; twice the worst over Linux, Windows and
         // macOS arm64 (CI run 40413920226, 2026-10-26): 2.55e-16 (suite 156, macOS arm64) and 2.80e-16 (suite 155)
-        Assert.Contains("Propagation completed", sb.ToString());
+        Assert.Equal(Written(outputDirectory), res);
         Assert.Equal(reference.Gm["gm_de431"], gm);
         var (position, velocity) = c.At(0.0).RelativeError(start);
         _output.WriteLine($"MEASURE #452 PropagateFromEquinoctial_StartsAtTheReference, {name}: position " +
@@ -217,7 +199,7 @@ public class PropagateTests
     /// (the Moon here); the degree of the model itself runs, as the library run of that degree.
     /// </summary>
     [Fact]
-    public async Task EarthGeopotentialDegreeAbove100_IsAnArgumentError()
+    public async Task EarthGeopotentialDegreeAbove100_IsAnInputError()
     {
         var maximum = EmbeddedModelDegree();
         Assert.Equal(100, maximum);
@@ -230,21 +212,21 @@ public class PropagateTests
                 Directory.Delete(output, true);
             }
 
-            var exception = await Assert.ThrowsAsync<ArgumentException>(() => Run("s", StateValues, "ICRF", output, output,
-                Time.J2000TDB.AddSeconds(10.0), (ushort)(maximum + 1)));
-            Assert.Contains(maximum.ToString(CultureInfo.InvariantCulture), exception.Message);
+            var refused = CliRun.Fails(2, Propagate(output, output, "state", StateValues, "ICRF", "0.0", "10.0",
+                ["--degree", (maximum + 1).ToString(CultureInfo.InvariantCulture), .. Legacy]));
+            Assert.Contains(maximum.ToString(CultureInfo.InvariantCulture), refused);
             Assert.False(Directory.Exists(output));
 
-            exception = await Assert.ThrowsAsync<ArgumentException>(() => Run("s", "2000000.0 0.0 0.0 0.0 1600.0 0.0", "ICRF", output, output,
-                Time.J2000TDB.AddSeconds(10.0), (ushort)(maximum + 1), 301));
-            Assert.Contains(maximum.ToString(CultureInfo.InvariantCulture), exception.Message);
+            refused = CliRun.Fails(2, ["propagate", output, "-K", "Data", "--output", output, "--from", "state", "--orbit", "2000000.0 0.0 0.0 0.0 1600.0 0.0",
+                "--center", "301", "--epoch", "0.0", "--frame", "ICRF", "--begin", "0.0", "--end", "10.0", "--step", "1s", "--degree", (maximum + 1).ToString(CultureInfo.InvariantCulture)]);
+            Assert.Contains(maximum.ToString(CultureInfo.InvariantCulture), refused);
             Assert.False(Directory.Exists(output));
 
             var end = Time.J2000TDB.AddSeconds(10.0);
             var cli = await RunAndReadEnd("s", StateValues, "ICRF", "NM", end, (ushort)maximum);
             var library = LibraryRunEnd("s", StateValues, "ICRF", (ushort)maximum, end);
             var error = (cli - library).Magnitude();
-            _output.WriteLine($"MEASURE #681 EarthGeopotentialDegreeAbove100_IsAnArgumentError, n = {maximum}: CLI SPK to the library run {error:E2} m");
+            _output.WriteLine($"MEASURE #681 EarthGeopotentialDegreeAbove100_IsAnInputError, n = {maximum}: CLI SPK to the library run {error:E2} m");
             Assert.True(error < SpkInterpolationThreshold, $"CLI SPK {error:E2} m from the library run of degree {maximum}");
         }
     }
@@ -331,38 +313,28 @@ public class PropagateTests
         return int.Parse(fields[0], CultureInfo.InvariantCulture);
     }
 
-    private static async Task<FileInfo> Run(string activation, string values, string frame, string bodyName, string output, Time end,
+    private static Task<FileInfo> Run(string activation, string values, string frame, string bodyName, string output, Time end,
         ushort? degree, int center = 399, Time? start = null)
     {
-        var command = new PropagateCommand();
-        var sb = new StringBuilder();
-        Console.SetOut(new StringWriter(sb));
         if (Directory.Exists(output))
         {
             Directory.Delete(output, true);
         }
 
-        var parameters = new Commands.Parameters.OrbitalParameters
-        {
-            CenterOfMotionId = center, OrbitalParametersEpoch = "0.0", Frame = frame, OrbitalParametersValues = values,
-            FromStateVector = activation == "s", FromKeplerian = activation == "k", FromEquinoctial = activation == "q", FromTLE = activation == "t"
-        };
-        var window = new WindowParameters
-        {
-            Begin = (start ?? Time.J2000TDB).TimeSpanFromJ2000().TotalSeconds.ToString("R", CultureInfo.InvariantCulture),
-            End = end.TimeSpanFromJ2000().TotalSeconds.ToString("R", CultureInfo.InvariantCulture)
-        };
+        var begin = (start ?? Time.J2000TDB).TimeSpanFromJ2000().TotalSeconds.ToString("R", CultureInfo.InvariantCulture);
+        var stop = end.TimeSpanFromJ2000().TotalSeconds.ToString("R", CultureInfo.InvariantCulture);
+        string[] orbit = activation == "t"
+            ? ["--from", "tle", "--orbit", values.Split(',')[0], "--orbit", values.Split(',')[1]]
+            : ["--from", activation switch { "s" => "state", "k" => "keplerian", _ => "equinoctial" }, "--orbit", values,
+                "--center", center.ToString(CultureInfo.InvariantCulture), "--epoch", "0.0", "--frame", frame];
+        string[] args = ["propagate", bodyName, "-K", "Data", "--output", output, .. orbit, "--begin", begin, "--end", stop, .. Legacy];
         if (degree.HasValue)
         {
-            await command.Propagate("Data", bodyName, parameters, window, output, false, false, degree.Value);
-        }
-        else
-        {
-            await command.Propagate("Data", bodyName, parameters, window, output, false, false);
+            args = [.. args, "--degree", degree.Value.ToString(CultureInfo.InvariantCulture)];
         }
 
-        Assert.Contains("Propagation completed", sb.ToString());
-        return new FileInfo(Directory.GetFiles(output, $"{bodyName}.spk", SearchOption.AllDirectories).Single());
+        Assert.Equal(Written(output), CliRun.Ok(args));
+        return Task.FromResult(new FileInfo(Directory.GetFiles(output, $"{bodyName}.spk", SearchOption.AllDirectories).Single()));
     }
 
     private static async Task<Vector3> RunAndReadEnd(string activation, string values, string frame, string name, Time end, ushort degree,
@@ -447,23 +419,16 @@ public class PropagateTests
         // EarthStandardAtmosphere), with the settings of the command (Scenario.SimulateAsync, Velocity-Verlet 1 s, mass 100,
         // area 1, Cd 0.3). The output directory is short: CSPICE loads a kernel path of at most 255 characters
         const string outputDirectory = "P675T";
-        var command = new PropagateCommand();
-        var sb = new StringBuilder();
-        var sw = new StringWriter(sb);
+        string res;
         var window = new TimeSystem.Window(TimeSystem.Time.Parse("2021-01-20T13:00:00Z"), TimeSystem.Time.Parse("2021-01-20T13:30:00Z"));
         var epochs = Enumerable.Range(0, 31).Select(i => window.StartDate.ToTDB().AddSeconds(60.0 * i)).ToArray();
         double worst = 0.0, fromPointMass = double.MaxValue;
 
         using (await Configuration.LockAsync())
         {
-            Console.SetOut(sw);
-
             // Act
-            await command.Propagate("Data", "P675", new Commands.Parameters.OrbitalParameters
-            {
-                CenterOfMotionId = 399, OrbitalParametersEpoch = "2021-01-20T13:00:00Z", Frame = "ICRF",
-                OrbitalParametersValues = $"{IssLine1},{IssLine2}", FromTLE = true
-            }, new WindowParameters { Begin = "2021-01-20T13:00:00Z", End = "2021-01-20T13:30:00Z" }, outputDirectory, true, true);
+            res = CliRun.Ok(["propagate", "P675", "-K", "Data", "--output", outputDirectory, "--from", "tle", "--orbit", IssLine1, "--orbit", IssLine2,
+                "--begin", "2021-01-20T13:00:00Z", "--end", "2021-01-20T13:30:00Z", "--srp", "--drag", .. Legacy]);
 
             var tle = new OrbitalParameters.TLE.TLE("ISS", IssLine1, IssLine2);
             var t0 = window.StartDate.ToTDB();
@@ -501,7 +466,7 @@ public class PropagateTests
         // more than 1 km from the run on the point-mass Earth of the TLE, without geopotential nor atmosphere
         _output.WriteLine($"MEASURE #675 PropagateFromTle_RunsOnTheCliEarth: SPK against the library run {worst:E3} m, " +
                           $"{fromPointMass:F1} m from the point-mass run at the end");
-        Assert.Contains("Propagation completed", sb.ToString());
+        Assert.Equal(Written(outputDirectory), res);
         Assert.InRange(worst, 0.0, SpkAgainstManaged);
         Assert.True(fromPointMass > 1000.0, $"{fromPointMass:F1} m");
     }
@@ -527,35 +492,48 @@ public class PropagateTests
     }
 
     [Fact]
-    public async Task PropagateFromTle_RejectsAnotherCentre()
+    public async Task PropagateFromTle_RefusesACentre()
     {
-        // Arrange: -t about the Moon; a TLE is an Earth orbit by definition (SGP4, WGS-72)
+        // A TLE is an Earth orbit by definition (SGP4, WGS-72), with its epoch and its frame (R29 of #668): given a centre,
+        // an epoch or a frame, an input error before anything is written
         const string outputDirectory = "P675M";
         if (Directory.Exists(outputDirectory))
         {
             Directory.Delete(outputDirectory, true);
         }
 
-        var command = new PropagateCommand();
-        var sb = new StringBuilder();
-        var sw = new StringWriter(sb);
-        ArgumentException exception;
-
         using (await Configuration.LockAsync())
         {
-            Console.SetOut(sw);
-
-            // Act
-            exception = await Assert.ThrowsAsync<ArgumentException>(() => command.Propagate("Data", "P675M", new Commands.Parameters.OrbitalParameters
-            {
-                CenterOfMotionId = 301, OrbitalParametersEpoch = "2021-01-20T13:00:00Z", Frame = "ICRF",
-                OrbitalParametersValues = $"{IssLine1},{IssLine2}", FromTLE = true
-            }, new WindowParameters { Begin = "2021-01-20T13:00:00Z", End = "2021-01-20T13:30:00Z" }, outputDirectory, false, false));
+            var error = CliRun.Fails(2, ["propagate", "P675M", "-K", "Data", "--output", outputDirectory, "--from", "tle", "--orbit", IssLine1, "--orbit", IssLine2,
+                "--center", "301", "--begin", "2021-01-20T13:00:00Z", "--end", "2021-01-20T13:30:00Z", "--step", "60s"]);
+            Assert.Equal($"Error: --from tle: a TLE carries its centre (the Earth), its epoch and its frame (TEME); leave out --center, --epoch and --frame.{Environment.NewLine}", error);
         }
 
-        // Assert: the rule named, no SPK written
-        Assert.Contains("399", exception.Message);
-        Assert.DoesNotContain("inertial frame", exception.Message);
-        Assert.False(Directory.Exists(outputDirectory) && Directory.GetFiles(outputDirectory, "*.spk", SearchOption.AllDirectories).Any());
+        Assert.False(Directory.Exists(outputDirectory));
+    }
+
+    /// <summary>
+    /// The options a centre refuses (R29 of #668, choice 3): the drag about a centre other than the Earth and Mars, and an
+    /// atmosphere chosen for a centre other than the Earth (Mars keeps its standard atmosphere), input errors.
+    /// </summary>
+    [Fact]
+    public async Task DragAndAtmosphere_AboutAnotherCentre_AreInputErrors()
+    {
+        using (await Configuration.LockAsync())
+        {
+            string[] AboutTheMoon(params string[] options) =>
+            [
+                "propagate", "PMOON", "-K", "Data", "--output", "PMOON", "--from", "state", "--orbit", "2000km 0 0 0 1.6km/s 0", "--center", "MOON",
+                "--epoch", "0.0", "--frame", "ICRF", "--begin", "0.0", "--end", "10.0", "--step", "1s", .. options
+            ];
+            Assert.Equal($"Error: --drag: the command has an atmosphere for the Earth and Mars only, the centre is 301.{Environment.NewLine}",
+                CliRun.Fails(2, AboutTheMoon("--drag")));
+            Assert.Equal($"Error: --atmosphere: the atmosphere chosen is the Earth's, the centre is 301.{Environment.NewLine}",
+                CliRun.Fails(2, AboutTheMoon("--atmosphere", "standard")));
+            Assert.StartsWith("Error: --atmosphere: 'msis' is not one of nrlmsise00, standard.", CliRun.Fails(2, AboutTheMoon("--atmosphere", "msis")));
+            Assert.StartsWith("Error: --integrator: 'rk4' is not one of rk78, vv.", CliRun.Fails(2, AboutTheMoon("--integrator", "rk4")));
+            Assert.StartsWith("Error: --format: propagate writes text only.", CliRun.Fails(2, AboutTheMoon("--format", "json")));
+            Assert.False(Directory.Exists("PMOON"));
+        }
     }
 }

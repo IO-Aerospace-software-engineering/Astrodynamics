@@ -1,8 +1,5 @@
 using System.Globalization;
-using System.Text;
 using System.Text.RegularExpressions;
-using IO.Astrodynamics.CLI.Commands;
-using IO.Astrodynamics.CLI.Commands.Parameters;
 using IO.Astrodynamics.Tests.OrbitalParameters;
 using Xunit.Abstractions;
 
@@ -17,6 +14,15 @@ public class OrbitalParametersTests
         _output = output;
     }
 
+    private const string SunState = "-26499033677.42509 132757417338.33946 57556718470.53819 -29794.26007 -5018.05231 -2175.39380";
+
+    // The converter of an orbit given by its kind, values, centre and frame at J2000 TDB, to the kind --as
+    private static string[] Convert(string from, string values, string center, string @as, params string[] options) =>
+    [
+        "orbital-parameters-converter", "-K", "Data", "--from", from, "--orbit", values, "--center", center, "--epoch", "0.0", "--frame", "ICRF",
+        "--as", @as, .. options
+    ];
+
     // The input of the state vector conversions, relative to the Sun, at J2000 TDB, in ICRF
     private static OrbitalParameters.StateVector InputState()
     {
@@ -30,18 +36,7 @@ public class OrbitalParametersTests
     {
         using (Configuration.Lock())
         {
-            var command = new OrbitalParametersConverterCommand();
-            StringBuilder sb = new StringBuilder();
-            StringWriter sw = new StringWriter(sb);
-            Console.SetOut(sw);
-            command.Converter("Data",
-                new Commands.Parameters.OrbitalParameters
-                {
-                    OrbitalParametersValues = "-26499033677.42509 132757417338.33946 57556718470.53819 -29794.26007 -5018.05231 -2175.39380", CenterOfMotionId = 10,
-                    OrbitalParametersEpoch = "0.0",
-                    Frame = "ICRF", FromStateVector = true, FromEquinoctial = false, FromKeplerian = false, FromTLE = false
-                }, true, false, false, new EpochParameters { Epoch = "0.0" }, "ICRF");
-            var res = sb.ToString();
+            var res = CliRun.Ok(Convert("state", SunState, "10", "state", "--target-epoch", "0.0", "--target-frame", "ICRF"));
 
             // The same epoch and frame: the input itself, to rounding (the Keplerian round trip moved it by 0.72 m, #368)
             OutputAssert.EqualApprox(
@@ -55,18 +50,7 @@ public class OrbitalParametersTests
     {
         using (Configuration.Lock())
         {
-            var command = new OrbitalParametersConverterCommand();
-            StringBuilder sb = new StringBuilder();
-            StringWriter sw = new StringWriter(sb);
-            Console.SetOut(sw);
-            command.Converter("Data",
-                new Commands.Parameters.OrbitalParameters
-                {
-                    OrbitalParametersValues = "-26499033677.42509 132757417338.33946 57556718470.53819 -29794.26007 -5018.05231 -2175.39380", CenterOfMotionId = 10,
-                    OrbitalParametersEpoch = "0.0",
-                    Frame = "ICRF", FromStateVector = true, FromEquinoctial = false, FromKeplerian = false, FromTLE = false
-                }, true, false, false, new EpochParameters { Epoch = "0.0" }, "ECLIPJ2000");
-            var res = sb.ToString();
+            var res = CliRun.Ok(Convert("state", SunState, "10", "state", "--target-epoch", "0.0", "--target-frame", "ECLIPJ2000"));
 
             // The input rotated to the ecliptic, without the Keplerian round trip. Per number, relative: the rounding of
             // the round trip, 1e-15 of the 1.4e11 m vector, is 6e-12 of its small ecliptic z (6e5 m); SvToSv checks the
@@ -82,19 +66,7 @@ public class OrbitalParametersTests
     {
         using (Configuration.Lock())
         {
-            var command = new OrbitalParametersConverterCommand();
-            StringBuilder sb = new StringBuilder();
-            StringWriter sw = new StringWriter(sb);
-            Console.SetOut(sw);
-            command.Converter("Data",
-                new Commands.Parameters.OrbitalParameters
-                {
-                    OrbitalParametersValues = "-26499033677.42509 132757417338.33946 57556718470.53819 -29794.26007 -5018.05231 -2175.39380", CenterOfMotionId = 10,
-                    OrbitalParametersEpoch = "0.0",
-                    Frame = "ICRF", FromStateVector = true, FromEquinoctial = false, FromKeplerian = false, FromTLE = false
-                },
-                false, true, false, new EpochParameters());
-            var res = sb.ToString();
+            var res = CliRun.Ok(Convert("state", SunState, "SUN", "keplerian"));
 
             // Against SPICE OSCELT
             OutputAssert.EqualApprox(
@@ -108,17 +80,7 @@ public class OrbitalParametersTests
     {
         using (Configuration.Lock())
         {
-            var command = new OrbitalParametersConverterCommand();
-            StringBuilder sb = new StringBuilder();
-            StringWriter sw = new StringWriter(sb);
-            Console.SetOut(sw);
-            command.Converter("Data", new Commands.Parameters.OrbitalParameters
-            {
-                OrbitalParametersValues = "13560000.0 0.5 0.17453292519943295 0.26179938779914941 0.52359877559829882 0.78539816339744828", CenterOfMotionId = 399,
-                OrbitalParametersEpoch = "0.0",
-                Frame = "ICRF", FromStateVector = false, FromKeplerian = true, FromEquinoctial = false, FromTLE = false
-            }, false, false, true, new EpochParameters());
-            var res = sb.ToString();
+            var res = CliRun.Ok(Convert("keplerian", "13560000.0 0.5 0.17453292519943295 0.26179938779914941 0.52359877559829882 0.78539816339744828", "399", "equinoctial"));
             // Numbers compared within tolerance so the same expected value holds across
             // architectures (last-digit round-trip formatting differs on x64 vs arm64).
             OutputAssert.EqualApprox(
@@ -132,17 +94,7 @@ public class OrbitalParametersTests
     {
         using (Configuration.Lock())
         {
-            var command = new OrbitalParametersConverterCommand();
-            StringBuilder sb = new StringBuilder();
-            StringWriter sw = new StringWriter(sb);
-            Console.SetOut(sw);
-            command.Converter("Data", new Commands.Parameters.OrbitalParameters
-            {
-                OrbitalParametersValues = "6800803.5449581668 0.001353139738203394 0.90267066832323262 0.56855938608714662 1.8545420365902201 0.7925932793200029",
-                CenterOfMotionId = 399, OrbitalParametersEpoch = "0.0",
-                Frame = "ICRF", FromStateVector = false, FromKeplerian = true, FromEquinoctial = false, FromTLE = false
-            }, true, false, false, new EpochParameters());
-            var res = sb.ToString();
+            var res = CliRun.Ok(Convert("keplerian", "6800803.5449581668 0.001353139738203394 0.90267066832323262 0.56855938608714662 1.8545420365902201 0.7925932793200029", "399", "state"));
 
             // Numbers compared within tolerance so the same expected value holds across
             // architectures (last-digit round-trip formatting differs on x64 vs arm64).
@@ -157,17 +109,7 @@ public class OrbitalParametersTests
     {
         using (Configuration.Lock())
         {
-            var command = new OrbitalParametersConverterCommand();
-            StringBuilder sb = new StringBuilder();
-            StringWriter sw = new StringWriter(sb);
-            Console.SetOut(sw);
-            command.Converter("Data", new Commands.Parameters.OrbitalParameters
-            {
-                OrbitalParametersValues = "6800803.5449581668 0.001353139738203394 0.90267066832323262 0.56855938608714662 1.8545420365902201 0.7925932793200029",
-                CenterOfMotionId = 399, OrbitalParametersEpoch = "0.0", Frame = "ICRF", FromStateVector = false, FromKeplerian = true, FromEquinoctial = false,
-                FromTLE = false
-            }, false, true, false, new EpochParameters{Epoch = "3600.0"});
-            var res = sb.ToString();
+            var res = CliRun.Ok(Convert("keplerian", "6800803.5449581668 0.001353139738203394 0.90267066832323262 0.56855938608714662 1.8545420365902201 0.7925932793200029", "EARTH", "keplerian", "--target-epoch", "3600.0"));
 
             // M + n Δt, Δt the TT seconds of the hour of TDB labels, the time of a two-body motion about the Earth (#501,
             // #508): 1.21e-6 s short of 3600 s from J2000, 1.36e-9 rad of M (4.845168091449668 over 3600 s)
@@ -200,19 +142,9 @@ public class OrbitalParametersTests
             // and 151, at J2000 TDB. Before #452, the state of 155 was 4.79e6 m off, that of 156 1.32e7 m
             var reference = EquinoctialReference.Load();
             var c = reference.Cli.Single(x => x.Name == name);
-            var command = new OrbitalParametersConverterCommand();
-            StringBuilder sb = new StringBuilder();
-            StringWriter sw = new StringWriter(sb);
-            Console.SetOut(sw);
-
             // Act: to a state vector at the epoch of the elements and 600 s later, through AtEpoch (K)
-            command.Converter("Data", new Commands.Parameters.OrbitalParameters
-            {
-                OrbitalParametersValues = c.CliValues, CenterOfMotionId = 399, OrbitalParametersEpoch = "0.0",
-                Frame = "ICRF", FromStateVector = false, FromKeplerian = false, FromEquinoctial = true, FromTLE = false
-            }, true, false, false, new EpochParameters { Epoch = dt.ToString("R", CultureInfo.InvariantCulture) },
-                "ICRF");
-            var res = sb.ToString();
+            var res = CliRun.Ok(Convert("equinoctial", c.CliValues, "399", "state", "--target-epoch", dt.ToString("R", CultureInfo.InvariantCulture),
+                "--target-frame", "ICRF"));
 
             // Assert against the 60-digit state, with the GM of the kernels of these tests (gm_de431)
             var earth = new Body.CelestialBody(399);
@@ -264,19 +196,8 @@ public class OrbitalParametersTests
         {
             // Arrange: r = (7000 km, 0, 0), v = (0, 10671.729487052813, 0) m/s about the Earth, e − 1 about −5e-7, in the
             // band |e − 1| < 1e-6 (#462: the converter printed P : Infinity)
-            var command = new OrbitalParametersConverterCommand();
-            StringBuilder sb = new StringBuilder();
-            StringWriter sw = new StringWriter(sb);
-            Console.SetOut(sw);
-
             // Act
-            command.Converter("Data", new Commands.Parameters.OrbitalParameters
-            {
-                OrbitalParametersValues = "7000000.0 0.0 0.0 0.0 10671.729487052813 0.0", CenterOfMotionId = 399,
-                OrbitalParametersEpoch = "0.0", Frame = "ICRF", FromStateVector = true, FromKeplerian = false,
-                FromEquinoctial = false, FromTLE = false
-            }, false, false, true, new EpochParameters());
-            var res = sb.ToString();
+            var res = CliRun.Ok(Convert("state", "7000000.0 0.0 0.0 0.0 10671.729487052813 0.0", "399", "equinoctial"));
 
             // Assert: P = h²/μ of the state, with the GM of the kernels of these tests (gm_de431)
             var match = SemiLatusRectumRx.Match(res);
@@ -299,18 +220,8 @@ public class OrbitalParametersTests
         {
             // Arrange: --from-equinoctial passes no perigee radius: case 1 of #477, P = 14 000 km, F = 1, G = 0, H = 0.1,
             // K = 0.05, L0 = 0.5 rad, a parabola with q = P / 2 (before: ArgumentException from AtEpoch)
-            var command = new OrbitalParametersConverterCommand();
-            StringBuilder sb = new StringBuilder();
-            StringWriter sw = new StringWriter(sb);
-            Console.SetOut(sw);
-
             // Act
-            command.Converter("Data", new Commands.Parameters.OrbitalParameters
-            {
-                OrbitalParametersValues = "14000000.0 1.0 0.0 0.1 0.05 0.5", CenterOfMotionId = 399, OrbitalParametersEpoch = "0.0",
-                Frame = "ICRF", FromStateVector = false, FromKeplerian = false, FromEquinoctial = true, FromTLE = false
-            }, true, false, false, new EpochParameters { Epoch = "0.0" }, "ICRF");
-            var res = sb.ToString();
+            var res = CliRun.Ok(Convert("equinoctial", "14000000.0 1.0 0.0 0.1 0.05 0.5", "399", "state", "--target-epoch", "0.0", "--target-frame", "ICRF"));
 
             // Assert: the position of the elements at their epoch, the 60-digit closed form (its geometry does not read
             // the GM; tools/near_parabolic/near_parabolic_reference.py)
@@ -324,54 +235,91 @@ public class OrbitalParametersTests
     }
 
     [Fact]
-    public async Task EquinoctialWithANegativeSemiLatusRectum_IsRefused()
+    public void EquinoctialWithANegativeSemiLatusRectum_IsRefused()
     {
-        // --from-equinoctial with P = −7000 km: no conic has p ≤ 0 (#481: before, a mirrored position with a NaN velocity
-        // through ToStateVector, NaN states through AtEpoch)
-        var command = new OrbitalParametersConverterCommand();
-        var exception = await Assert.ThrowsAsync<ArgumentOutOfRangeException>(() =>
-            command.Converter("Data", new Commands.Parameters.OrbitalParameters
-            {
-                OrbitalParametersValues = "-7000000.0 0.1 0.05 0.2 0.1 1.0", CenterOfMotionId = 399, OrbitalParametersEpoch = "0.0",
-                Frame = "ICRF", FromStateVector = false, FromKeplerian = false, FromEquinoctial = true, FromTLE = false
-            }, true, false, false, new EpochParameters { Epoch = "0.0" }, "ICRF"));
-        Assert.Equal("p", exception.ParamName);
-        Assert.Contains("semi-latus rectum P must be finite and above 0", exception.Message);
+        // --from equinoctial with P = −7000 km: no conic has p ≤ 0 (#481: before, a mirrored position with a NaN velocity
+        // through ToStateVector, NaN states through AtEpoch); a value no orbit has is an input error
+        using (Configuration.Lock())
+        {
+            var error = CliRun.Fails(2, Convert("equinoctial", "-7000000.0 0.1 0.05 0.2 0.1 1.0", "399", "state"));
+            Assert.StartsWith("Error: --orbit: ", error);
+            Assert.Contains("semi-latus rectum P must be finite and above 0", error);
+        }
+    }
+
+    /// <summary>
+    /// The kinds and the values of an orbit (R29 of #668): an unknown kind, a missing --from, --as or --orbit, the wrong
+    /// number of values, a unit of another dimension, a TLE given a centre, and a number in another culture (#814: "6800000,0"
+    /// was 68000000 m) are input errors, before any conversion.
+    /// </summary>
+    [Theory]
+    [InlineData("--from", "orbit", "Error: --from: 'orbit' is not one of state, keplerian, equinoctial, tle.")]
+    [InlineData("--as", "tle", "Error: --as: 'tle' is not one of state, keplerian, equinoctial.")]
+    [InlineData("--orbit", "6800000.0 0.0 0.0 0.0 7000.0", "Error: --orbit: 6 values are expected, 5 were given.")]
+    [InlineData("--orbit", "6800000,0 0.0 0.0 0.0 7000.0 0.0", "Error: --orbit: '6800000,0' is not a number, in m or km (m without unit); a number is written in invariant culture, a dot as decimal separator and no thousands separator.")]
+    [InlineData("--orbit", "6800000.0 0.0 0.0 0.0 7000.0 0.0,5", "Error: --orbit: '0.0,5' is not a number, in m/s or km/s (m/s without unit); a number is written in invariant culture, a dot as decimal separator and no thousands separator.")]
+    [InlineData("--orbit", "6800000.0 0.0 0.0 0.0 7deg 0.0", "Error: --orbit: 'deg' is not a unit of this value, in m/s or km/s (m/s without unit).")]
+    [InlineData("--frame", "NOT_A_FRAME", "Error: --frame: 'NOT_A_FRAME' is not a frame of the library or of the loaded kernels.")]
+    [InlineData("--center", "NOT A BODY", "Error: --center: 'NOT A BODY' is neither a NAIF identifier nor a name SPICE knows, built in or given by the loaded kernels.")]
+    public void AnOrbitTheCommandCannotRead_IsAnInputError(string option, string value, string expected)
+    {
+        using (Configuration.Lock())
+        {
+            var args = Convert("state", "6800000.0 0.0 0.0 0.0 7000.0 0.0", "399", "keplerian");
+            args[Array.IndexOf(args, option) + 1] = value;
+            Assert.Equal(expected + Environment.NewLine, CliRun.Fails(2, args));
+        }
+    }
+
+    /// <summary>The values of an orbit in km, km/s and degrees, the same orbit as in m, m/s and rad.</summary>
+    [Fact]
+    public void Units_AreConvertedToSi()
+    {
+        using (Configuration.Lock())
+        {
+            Assert.Equal(CliRun.Ok(Convert("state", "6800000 0 0 0 7500 0", "399", "keplerian")),
+                CliRun.Ok(Convert("state", "6800km 0 0 0 7.5km/s 0", "399", "keplerian")));
+            Assert.Equal(CliRun.Ok(Convert("keplerian", "7000000 0.001 0.5235987755982988 0 0 0", "399", "state")),
+                CliRun.Ok(Convert("keplerian", "7000km 0.001 30deg 0 0 0", "399", "state")));
+        }
+    }
+
+    /// <summary>
+    /// A TLE carries its centre, its epoch and its frame (R29 of #668): given with --center, --epoch or --frame, an input
+    /// error; without, its state at its epoch, or at --target-epoch, SGP4's, labelled in the scale of that epoch.
+    /// </summary>
+    [Fact]
+    public void Tle_HasNoCenterEpochOrFrame()
+    {
+        using (Configuration.Lock())
+        {
+            const string line1 = "1 25544U 98067A   21020.53488036  .00016717  00000-0  10270-3 0  9054";
+            const string line2 = "2 25544  51.6423 353.0312 0000493 320.8755  39.2360 15.49309423 25703";
+            var error = CliRun.Fails(2, "orbital-parameters-converter", "-K", "Data", "--from", "tle", "--orbit", line1, "--orbit", line2, "--center", "399",
+                "--as", "state");
+            Assert.Equal($"Error: --from tle: a TLE carries its centre (the Earth), its epoch and its frame (TEME); leave out --center, --epoch and --frame.{Environment.NewLine}", error);
+            Assert.StartsWith("Error: --orbit: a TLE is two lines", CliRun.Fails(2, "orbital-parameters-converter", "-K", "Data", "--from", "tle", "--orbit", line1, "--as", "state"));
+
+            var res = CliRun.Ok("orbital-parameters-converter", "-K", "Data", "--from", "tle", "--orbit", line1, "--orbit", line2, "--as", "state",
+                "--target-epoch", "2021-01-20T13:00:00Z");
+            SpiceAPI.Instance.LoadKernels(new DirectoryInfo("Data"));
+            var tle = new OrbitalParameters.TLE.TLE("body", line1, line2);
+            var expected = tle.AtEpoch(TimeSystem.Time.Parse("2021-01-20T13:00:00Z")).ToFrame(Frames.Frame.ICRF).ToStateVector();
+            Assert.Equal($"{expected}{Environment.NewLine}", res);
+            Assert.StartsWith("Epoch : 2021-01-20T13:00:00.0000000Z ", res);
+        }
     }
 
     [Fact]
-    public async Task Exceptions()
+    public void Json_ReadsBackBitForBit()
     {
-        var command = new OrbitalParametersConverterCommand();
-        await Assert.ThrowsAsync<ArgumentException>(() =>
-            command.Converter("Data", new Commands.Parameters.OrbitalParameters
-            {
-                OrbitalParametersValues = "6800000.0 0.0 0.0 0.0 7000.0 0.0", CenterOfMotionId = 10, OrbitalParametersEpoch = "0.0", Frame = "ICRF",
-                FromStateVector = true,
-                FromKeplerian = true, FromEquinoctial = false, FromTLE = false
-            }, true, false, false, new EpochParameters()));
-        await Assert.ThrowsAsync<ArgumentException>(() =>
-            command.Converter("Data", new Commands.Parameters.OrbitalParameters
-            {
-                OrbitalParametersValues = "6800000.0 0.0 0.0 0.0 7000.0 0.0", CenterOfMotionId = 10, OrbitalParametersEpoch = "0.0", Frame = "ICRF",
-                FromStateVector = false,
-                FromKeplerian = false, FromEquinoctial = false, FromTLE = false
-            }, true, false, false, new EpochParameters()));
-        await Assert.ThrowsAsync<ArgumentException>(() =>
-            command.Converter("Data", new Commands.Parameters.OrbitalParameters
-            {
-                OrbitalParametersValues = "6800000.0 0.0 0.0 0.0 7000.0 0.0", CenterOfMotionId = 10, OrbitalParametersEpoch = "0.0",
-                Frame = "ICRF",
-                FromStateVector = true,
-                FromKeplerian = false, FromEquinoctial = false, FromTLE = false
-            }, false, false, false, new EpochParameters()));
-        await Assert.ThrowsAsync<ArgumentException>(() =>
-            command.Converter("Data", new Commands.Parameters.OrbitalParameters
-            {
-                OrbitalParametersValues = "6800000.0 0.0 0.0 0.0 7000.0 0.0", CenterOfMotionId = 10, OrbitalParametersEpoch = "0.0",
-                Frame = "ICRF",
-                FromStateVector = true,
-                FromKeplerian = false, FromEquinoctial = false, FromTLE = false
-            }, true, true, false, new EpochParameters()));
+        using (Configuration.Lock())
+        {
+            var text = CliRun.Ok(Convert("state", SunState, "10", "keplerian"));
+            var json = System.Text.Json.JsonDocument.Parse(CliRun.Ok(Convert("state", SunState, "10", "keplerian", "--format", "json"))).RootElement;
+            Assert.Equal("2000-01-01T12:00:00.0000000 TDB", json.GetProperty("epoch").GetString());
+            Assert.Contains($"A : {json.GetProperty("a_m").GetDouble().ToString("R", CultureInfo.InvariantCulture)},", text);
+            Assert.Contains($"Ecc. : {json.GetProperty("e").GetDouble().ToString("R", CultureInfo.InvariantCulture)},", text);
+        }
     }
 }

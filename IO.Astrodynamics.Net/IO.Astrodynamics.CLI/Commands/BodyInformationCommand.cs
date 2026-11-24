@@ -1,27 +1,25 @@
-using System;
-using System.IO;
-using System.Threading.Tasks;
 using Cocona;
 using IO.Astrodynamics.Body;
+using IO.Astrodynamics.CLI.Cli;
+using IO.Astrodynamics.CLI.Commands.Parameters;
 
 namespace IO.Astrodynamics.CLI.Commands;
 
 public class BodyInformationCommand
 {
-    public BodyInformationCommand()
+    [Command("celestial-body-info", Description = "The information of a celestial body: identifier, name, mass, GM, fixed frame, radii, flattening, J2 to J4")]
+    public int GetInformations(
+        [Argument("body", Description = "Celestial body: " + EphemerisCommand.ObjectDescription)]
+        string body,
+        KernelOptions kernels,
+        OutputOptions output)
     {
-    }
-
-    [Command("celestial-body-info", Description = "Get celestial body informations")]
-    public Task GetInformations(
-        [Argument(Description = "Kernels path: a directory, a kernel file or a meta-kernel")]
-        string kernelsPath,
-        [Argument(Description = "Celestial body identifier (Naif Identifier)")]
-        int id)
-    {
-        SpiceAPI.Instance.LoadKernels(Helpers.KernelsPath(kernelsPath));
-        CelestialBody body = new CelestialBody(id);
-        Console.WriteLine(body.ToString());
-        return Task.CompletedTask;
+        return CliContext.Execute(output.Verbose, () =>
+        {
+            var format = CliOutput.Format(output.Format, tabular: false);
+            CliKernels.Load(kernels.Kernels);
+            var celestialBody = new CelestialBody(CliValues.Object(body, "body"));
+            EphemerisCommand.Write(format, celestialBody.ToString(), CliOutput.Body(celestialBody));
+        });
     }
 }

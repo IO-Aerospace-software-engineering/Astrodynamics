@@ -81,4 +81,23 @@ public class SpiceApiNaifIdTests
             file.Delete();
         }
     }
+
+    /// <summary>
+    /// <see cref="SpiceAPI.KnowsFrame"/>, the check of the frame arguments of the command-line tool (R29 of #668): the
+    /// frames the library holds and those SPICE knows by the name it is handed, not a name neither knows.
+    /// </summary>
+    [Fact]
+    public void KnowsFrame()
+    {
+        Assert.True(SpiceAPI.KnowsFrame(Frames.Frame.ICRF));
+        Assert.True(SpiceAPI.KnowsFrame(new Frames.Frame("GCRF")));
+        Assert.True(SpiceAPI.KnowsFrame(new Frames.Frame("teme")));
+        Assert.True(SpiceAPI.KnowsFrame(new Frames.Frame("CIRS")));
+        Assert.True(SpiceAPI.KnowsFrame(Frames.Frame.ITRF93));
+        Assert.True(SpiceAPI.KnowsFrame(new Frames.Frame("iau_earth")));
+        Assert.True(SpiceAPI.KnowsFrame(new Frames.Frame("ECLIPJ2000")));
+        Assert.False(SpiceAPI.KnowsFrame(new Frames.Frame("NOT_A_FRAME_L8")));
+        Assert.False(SpiceAPI.KnowsFrame(new Frames.Frame("ICRF")));
+        Assert.False(SpiceAPI.KnowsFrame(null));
+    }
 }

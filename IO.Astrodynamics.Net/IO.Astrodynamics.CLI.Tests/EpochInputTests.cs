@@ -1,6 +1,4 @@
 using System.Text;
-using IO.Astrodynamics.CLI.Commands;
-using IO.Astrodynamics.CLI.Commands.Parameters;
 
 namespace IO.Astrodynamics.CLI.Tests;
 
@@ -35,11 +33,7 @@ public class EpochInputTests
     {
         using (Configuration.Lock())
         {
-            var sb = new StringBuilder();
-            Console.SetOut(new StringWriter(sb));
-            new TimeConverterCommand().TimeConverter(new EpochParameters { Epoch = epoch }, false, true, false, false,
-                false, true);
-            Assert.Equal($"{expected}{Environment.NewLine}", sb.ToString());
+            Assert.Equal($"{expected}{Environment.NewLine}", CliRun.Ok("time-converter", epoch, "-u", "-d"));
         }
     }
 
@@ -84,7 +78,10 @@ public class EpochInputTests
     [InlineData("nan jd tdb")]
     public void NaNJulianDate_IsRejected(string epoch)
     {
-        Assert.Throws<FormatException>(() => SecondsFromJ2000InTdb(epoch));
+        using (Configuration.Lock())
+        {
+            Assert.StartsWith($"Error: epoch: '{epoch}' is not an epoch", CliRun.Fails(2, "time-converter", epoch, "-t", "-e"));
+        }
     }
 
     // D3 of #668: seconds take any scale tag (757339200 TT threw a FormatException before 11.0.0), and the calendar forms
@@ -119,20 +116,21 @@ public class EpochInputTests
     [InlineData("12:00")]
     [InlineData("757339200 TCG")]
     [InlineData("tomorrow")]
-    public void AnEpochOfNoForm_ThrowsAFormatExceptionListingTheForms(string epoch)
+    public void AnEpochOfNoForm_IsAnInputErrorListingTheForms(string epoch)
     {
-        var exception = Assert.Throws<FormatException>(() => Convert(epoch, "tdb", "iso"));
-        Assert.Contains("Julian date", exception.Message);
+        using (Configuration.Lock())
+        {
+            var error = CliRun.Fails(2, "time-converter", epoch, "--to", "tdb", "--format", "iso");
+            Assert.StartsWith($"Error: epoch: '{epoch}' is not an epoch", error);
+            Assert.Contains("Julian date", error);
+        }
     }
 
     private static string Convert(string epoch, string to, string format)
     {
         using (Configuration.Lock())
         {
-            var sb = new StringBuilder();
-            Console.SetOut(new StringWriter(sb));
-            new TimeConverterCommand().TimeConverter(new EpochParameters { Epoch = epoch }, to: to, format: format);
-            return sb.ToString();
+            return CliRun.Ok("time-converter", epoch, "--to", to, "--format", format);
         }
     }
 
@@ -140,11 +138,7 @@ public class EpochInputTests
     {
         using (Configuration.Lock())
         {
-            var sb = new StringBuilder();
-            Console.SetOut(new StringWriter(sb));
-            new TimeConverterCommand().TimeConverter(new EpochParameters { Epoch = epoch }, true, false, false, false,
-                true, false);
-            return sb.ToString();
+            return CliRun.Ok("time-converter", epoch, "-t", "-e");
         }
     }
 }

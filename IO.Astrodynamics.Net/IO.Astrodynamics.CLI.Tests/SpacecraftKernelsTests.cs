@@ -1,12 +1,9 @@
 // Copyright 2026. Sylvain Guillet (sylvain.guillet@tutamail.com)
 
 using System.Globalization;
-using System.Text;
 using System.Text.RegularExpressions;
 using IO.Astrodynamics.Body;
 using IO.Astrodynamics.Body.Spacecraft;
-using IO.Astrodynamics.CLI.Commands;
-using IO.Astrodynamics.CLI.Commands.Parameters;
 using IO.Astrodynamics.Maneuver;
 using IO.Astrodynamics.Math;
 using IO.Astrodynamics.OrbitalParameters;
@@ -102,13 +99,6 @@ public class SpacecraftKernelsTests
         return _kernels;
     }
 
-    private static string Run(Action command)
-    {
-        var sb = new StringBuilder();
-        Console.SetOut(new StringWriter(sb));
-        command();
-        return sb.ToString();
-    }
 
     private static double[] Numbers(string text) =>
         NumberRx.Matches(text).Select(m => double.Parse(m.Value, CultureInfo.InvariantCulture)).ToArray();
@@ -148,13 +138,9 @@ public class SpacecraftKernelsTests
             // 91 epochs between the CK's records (every 10 s), the UTC window the same instants
             var begin = Start.AddSeconds(3.25);
             var end = Start.AddSeconds(590.0);
-            var window = new WindowParameters
-            {
-                Begin = utcWindow ? begin.ToUTC().ToString() : begin.ToString(),
-                End = utcWindow ? end.ToUTC().ToString() : end.ToString()
-            };
-
-            var output = Run(() => new OrientationCommand().Orientation(kernels, SpacecraftId, window, TimeSpan.FromSeconds(6.5), frameArgument));
+            var output = CliRun.Ok("orientation", SpacecraftId.ToString(CultureInfo.InvariantCulture), "-K", kernels,
+                "--begin", utcWindow ? begin.ToUTC().ToString() : begin.ToString(), "--end", utcWindow ? end.ToUTC().ToString() : end.ToString(),
+                "--step", "6.5s", "--frame", frameArgument);
 
             var lines = output.Split(Environment.NewLine, StringSplitOptions.RemoveEmptyEntries);
             Assert.Equal(91, lines.Length);
@@ -189,16 +175,14 @@ public class SpacecraftKernelsTests
     }
 
     [Fact]
-    public void Orientation_OfASpacecraft_OutsideItsCk_Throws()
+    public void Orientation_OfASpacecraft_OutsideItsCk_Fails()
     {
         using (Configuration.Lock())
         {
             var kernels = Kernels();
-            var window = new WindowParameters { Begin = Start.AddSeconds(-120.0).ToString(), End = Start.AddSeconds(-60.0).ToString() };
-
-            var exception = Assert.Throws<InvalidOperationException>(() =>
-                Run(() => new OrientationCommand().Orientation(kernels, SpacecraftId, window, TimeSpan.FromSeconds(60.0))));
-            Assert.Contains("No orientation found", exception.Message);
+            var error = CliRun.Fails(1, "orientation", SpacecraftId.ToString(CultureInfo.InvariantCulture), "-K", kernels,
+                "--begin", Start.AddSeconds(-120.0).ToString(), "--end", Start.AddSeconds(-60.0).ToString(), "--step", "60s");
+            Assert.Contains("No orientation found", error);
         }
     }
 
@@ -220,9 +204,9 @@ public class SpacecraftKernelsTests
         using (Configuration.Lock())
         {
             var kernels = Kernels();
-            var window = new WindowParameters { Begin = Start.AddSeconds(5.0).ToString(), End = Start.AddSeconds(595.0).ToString() };
-
-            var output = Run(() => new EphemerisCommand().Ephemeris(kernels, SpacecraftId, 399, window, TimeSpan.FromSeconds(30.0), frameArgument, aberration));
+            var output = CliRun.Ok("ephemeris", SpacecraftId.ToString(CultureInfo.InvariantCulture), "399", "-K", kernels,
+                "--begin", Start.AddSeconds(5.0).ToString(), "--end", Start.AddSeconds(595.0).ToString(), "--step", "30s", "--frame", frameArgument,
+                "--aberration", aberration);
 
             var lines = output.Split(Environment.NewLine, StringSplitOptions.RemoveEmptyEntries);
             Assert.Equal(20, lines.Length);
@@ -249,9 +233,8 @@ public class SpacecraftKernelsTests
         using (Configuration.Lock())
         {
             var kernels = Kernels();
-            var window = new WindowParameters { Begin = Start.AddSeconds(5.0).ToString(), End = Start.AddSeconds(95.0).ToString() };
-
-            var output = Run(() => new EphemerisCommand().Ephemeris(kernels, 399, SpacecraftId, window, TimeSpan.FromSeconds(30.0)));
+            var output = CliRun.Ok("ephemeris", "399", SpacecraftId.ToString(CultureInfo.InvariantCulture), "-K", kernels,
+                "--begin", Start.AddSeconds(5.0).ToString(), "--end", Start.AddSeconds(95.0).ToString(), "--step", "30s");
 
             var lines = output.Split(Environment.NewLine, StringSplitOptions.RemoveEmptyEntries);
             Assert.Equal(4, lines.Length);
@@ -274,7 +257,7 @@ public class SpacecraftKernelsTests
             var kernels = Kernels();
             var epoch = Start.AddSeconds(301.5);
 
-            var output = Run(() => new EphemerisCommand().SubPoint(kernels, SpacecraftId, 399, new EpochParameters { Epoch = epoch.ToString() }));
+            var output = CliRun.Ok("sub-point", SpacecraftId.ToString(CultureInfo.InvariantCulture), "399", "-K", kernels, "--epoch", epoch.ToString());
 
             // The closed form on spkezr in ITRF93, the Earth's frame
             var position = Spkezr(epoch, "ITRF93", Aberration.None).Position;
@@ -297,10 +280,10 @@ public class SpacecraftKernelsTests
             var spacecraftFromEarth = Spkezr(epoch, "J2000", Aberration.None).Position;
 
             // From the spacecraft, between the Earth and the Moon; from the Earth, between the spacecraft and the Moon
-            var fromSpacecraft = double.Parse(Run(() => new EphemerisCommand().AngularSeparation(kernels, SpacecraftId, 399, 301,
-                new EpochParameters { Epoch = epoch.ToString() })), CultureInfo.InvariantCulture);
-            var fromEarth = double.Parse(Run(() => new EphemerisCommand().AngularSeparation(kernels, 399, SpacecraftId, 301,
-                new EpochParameters { Epoch = epoch.ToString() })), CultureInfo.InvariantCulture);
+            var fromSpacecraft = double.Parse(CliRun.Ok("angular-separation", SpacecraftId.ToString(CultureInfo.InvariantCulture), "399", "301",
+                "-K", kernels, "--epoch", epoch.ToString()), CultureInfo.InvariantCulture);
+            var fromEarth = double.Parse(CliRun.Ok("angular-separation", "EARTH", SpacecraftId.ToString(CultureInfo.InvariantCulture), "MOON",
+                "-K", kernels, "--epoch", epoch.ToString()), CultureInfo.InvariantCulture);
 
             // The angle of the two directions, by the atan2 of their cross and dot products
             static double Angle(Vector3 a, Vector3 b) => System.Math.Atan2(a.Cross(b).Magnitude(), a.Dot(b));

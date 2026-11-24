@@ -34,13 +34,6 @@ public class Helpers
     internal const ushort EarthGeopotentialDefaultDegree = 10;
 
     /// <summary>
-    /// The kernels path of a command, as <see cref="SpiceAPI.LoadKernels"/> takes it: a file (a kernel or a meta-kernel) when
-    /// one exists at the path, a directory otherwise (#673: every command passed a directory, from which a file loaded
-    /// nothing). A path that does not exist loads nothing, as before.
-    /// </summary>
-    internal static FileSystemInfo KernelsPath(string path) => File.Exists(path) ? new FileInfo(path) : new DirectoryInfo(path);
-
-    /// <summary>
     /// The object of a NAIF identifier: a site by the library's rule (<see cref="SpiceAPI.IsSiteOfNamedBody"/>, its body's
     /// identifier times 1000 plus its own, the body a planet or a moon without the Lagrange points that SPICE names), built
     /// from the kernels under its SPICE name as <see cref="SpiceAPI.ReadEphemeris(Time, int, int, Frame, Aberration)"/>
@@ -217,44 +210,12 @@ public class Helpers
             : new Frame(name);
     }
 
-    internal static OrbitalParameters.OrbitalParameters ConvertToOrbitalParameters(string orbitalParametersInput, int centerofMotion, string epoch, string originalFrame,
-        bool fromStateVector, bool fromKeplerian, bool fromEquinoctial, bool fromTLE, ushort geopotentialDegrees = EarthGeopotentialDefaultDegree)
-    {
-        var inputFrame = ResolveFrame(originalFrame);
-        var inputEpoch = Helpers.ConvertDateTimeInput(epoch);
-
-        var inputCenterOfMotion = CreateCenterOfMotion(centerofMotion, geopotentialDegrees);
-        //Generate original orbital parameters
-        OrbitalParameters.OrbitalParameters orbitalParameters = null;
-        if (fromStateVector)
-        {
-            var arr = orbitalParametersInput.Split(' ').Select(double.Parse).ToArray();
-            orbitalParameters = new StateVector(new Vector3(arr[0], arr[1], arr[2]), new Vector3(arr[3], arr[4], arr[5]), inputCenterOfMotion, inputEpoch, inputFrame);
-        }
-        else if (fromKeplerian)
-        {
-            var arr = orbitalParametersInput.Split(' ').Select(double.Parse).ToArray();
-            orbitalParameters = new KeplerianElements(arr[0], arr[1], arr[2], arr[3], arr[4], arr[5], inputCenterOfMotion, inputEpoch, inputFrame);
-        }
-        else if (fromEquinoctial)
-        {
-            var arr = orbitalParametersInput.Split(' ').Select(double.Parse).ToArray();
-            orbitalParameters = new EquinoctialElements(arr[0], arr[1], arr[2], arr[3], arr[4], arr[5], inputCenterOfMotion, inputEpoch, inputFrame);
-        }
-        else if (fromTLE)
-        {
-            var arr = orbitalParametersInput.Split(',').ToArray();
-            orbitalParameters = new TLE("body", arr[0], arr[1]);
-        }
-
-        return orbitalParameters;
-    }
-
     /// <summary>
-    /// The centre of motion of the CLI: the Earth with the embedded EGM2008 at <paramref name="geopotentialDegrees"/> and
-    /// the U.S. Standard Atmosphere 1976, Mars with its standard atmosphere, any other body as the kernels define it.
+    /// The centre of motion of a propagation of the CLI: the Earth with the embedded EGM2008 at
+    /// <paramref name="geopotentialDegrees"/> and <paramref name="earthAtmosphere"/>, Mars with its standard atmosphere, any
+    /// other body as the kernels define it.
     /// </summary>
-    internal static CelestialBody CreateCenterOfMotion(int centerOfMotion, ushort geopotentialDegrees = EarthGeopotentialDefaultDegree)
+    internal static CelestialBody CreateCenterOfMotion(int centerOfMotion, ushort geopotentialDegrees, IAtmosphericModel earthAtmosphere)
     {
         GeopotentialModelParameters geopotentialModelParameters = null;
         IAtmosphericModel atmosphericModel = null;
@@ -262,7 +223,7 @@ public class Helpers
         {
             Stream sr = typeof(PropagateCommand).Assembly.GetManifestResourceStream("IO.Astrodynamics.CLI.Data.EGM2008_to100_TideFree.txt");
             geopotentialModelParameters = new GeopotentialModelParameters(sr, geopotentialDegrees);
-            atmosphericModel = new EarthStandardAtmosphere();
+            atmosphericModel = earthAtmosphere;
         }
         else if (centerOfMotion == PlanetsAndMoons.MARS.NaifId)
         {
@@ -278,7 +239,7 @@ public class Helpers
     /// (the degree of <c>propagate -n</c>, #681), and atmosphere (the propagation rotates it once to ICRF).
     /// </summary>
     /// <exception cref="ArgumentException">The centre of motion is not the Earth: a TLE describes an Earth orbit.</exception>
-    internal static StateVector TleStartState(TLE tle, int centerOfMotion, in Window window, ushort geopotentialDegrees)
+    internal static StateVector TleStartState(TLE tle, int centerOfMotion, in Window window, ushort geopotentialDegrees, IAtmosphericModel earthAtmosphere)
     {
         if (centerOfMotion != PlanetsAndMoons.EARTH.NaifId)
         {
@@ -288,39 +249,6 @@ public class Helpers
 
         var start = window.StartDate.ToTDB();
         var sgp4 = tle.ToStateVector(start);
-        return new StateVector(sgp4.Position, sgp4.Velocity, CreateCenterOfMotion(centerOfMotion, geopotentialDegrees), start, Frame.TEME);
-    }
-
-    /// <summary>
-    /// The orbital parameters of the command's arguments, about a centre whose geopotential, for the Earth, is the embedded
-    /// EGM2008 model to <paramref name="geopotentialDegrees"/> (#681: the degree of <c>propagate -n</c>, which no code read).
-    /// </summary>
-    internal static OrbitalParameters.OrbitalParameters ConvertToOrbitalParameters(Commands.Parameters.OrbitalParameters orbitalParameters,
-        ushort geopotentialDegrees)
-    {
-        return ConvertToOrbitalParameters(orbitalParameters.OrbitalParametersValues, orbitalParameters.CenterOfMotionId, orbitalParameters.OrbitalParametersEpoch,
-            orbitalParameters.Frame, orbitalParameters.FromStateVector, orbitalParameters.FromKeplerian, orbitalParameters.FromEquinoctial, orbitalParameters.FromTLE,
-            geopotentialDegrees);
-    }
-
-    internal static Planetodetic ConvertToPlanetodetic(string value)
-    {
-        double[] coordinates = value.Split(' ').Select(double.Parse).ToArray();
-        return new Planetodetic(coordinates[0], coordinates[1], coordinates[2]);
-    }
-
-    internal static Window ConvertWindowInput(string begin, string end)
-    {
-        return new Window(ConvertDateTimeInput(begin), ConvertDateTimeInput(end));
-    }
-
-    internal static Window ConvertWindowInput(EpochParameters begin, EpochParameters end)
-    {
-        return ConvertWindowInput(begin.Epoch, end.Epoch);
-    }
-
-    internal static Window ConvertWindowInput(WindowParameters windowParameters)
-    {
-        return ConvertWindowInput(windowParameters.Begin, windowParameters.End);
+        return new StateVector(sgp4.Position, sgp4.Velocity, CreateCenterOfMotion(centerOfMotion, geopotentialDegrees, earthAtmosphere), start, Frame.TEME);
     }
 }

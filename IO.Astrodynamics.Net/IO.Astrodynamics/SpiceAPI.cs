@@ -465,6 +465,25 @@ public class SpiceAPI
         }
     }
 
+    /// <summary>
+    /// Whether a read in <paramref name="frame"/> can find the frame: one the library holds (<see cref="ManagedReadFrame"/>:
+    /// TEME, CIRS, TIRS, a site or spacecraft frame of the library), or one SPICE knows by the name it is handed
+    /// (<see cref="SpiceFrameName"/>, <c>namfrm_c</c>), decided under the lock at each call; the command-line tool checks
+    /// its frame arguments with it (R29 of #668).
+    /// </summary>
+    internal static bool KnowsFrame(Frame frame)
+    {
+        if (frame == null)
+        {
+            return false;
+        }
+
+        lock (lockObject)
+        {
+            return ManagedReadFrame(frame) != null || GetFrameInfoProxy(SpiceFrameName(frame), out _, out _, out _);
+        }
+    }
+
     /// <summary>The one computation method of the illumination searches, CSPICE's <c>gfilum_c</c> (#682).</summary>
     internal const string EllipsoidMethod = "ELLIPSOID";
 
