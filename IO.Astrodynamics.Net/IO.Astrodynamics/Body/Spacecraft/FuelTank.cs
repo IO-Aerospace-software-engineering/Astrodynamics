@@ -4,7 +4,12 @@ using IO.Astrodynamics.Exceptions;
 
 namespace IO.Astrodynamics.Body.Spacecraft
 {
-    public class FuelTank : IEquatable<FuelTank>
+    /// <summary>
+    /// A fuel tank, compared by reference: a tank is an entity whose quantity a run changes, and a spacecraft holds one
+    /// tank of a name (decision 76 of #668, decided by S. Guillet, 2026-11-23; value equality on the name, the model and
+    /// the serial number before 11.0.0).
+    /// </summary>
+    public class FuelTank
     {
         private Spacecraft _spacecraft;
 
@@ -24,30 +29,33 @@ namespace IO.Astrodynamics.Body.Spacecraft
         /// <summary>
         /// A fuel tank.
         /// </summary>
-        /// <param name="name">The name of the tank</param>
-        /// <param name="model">The model of the tank</param>
-        /// <param name="serialNumber">The serial number of the tank</param>
+        /// <param name="name">The name of the tank, unique among the tanks of its spacecraft</param>
         /// <param name="capacity">The capacity, kg: finite and above 0</param>
-        /// <param name="initialQuantity">The fuel at the start of a run, kg: finite, above 0 and at most
-        /// <paramref name="capacity"/></param>
-        /// <exception cref="ArgumentException">The name, the model or the serial number is empty.</exception>
+        /// <param name="initialQuantity">The fuel at the start of a run, kg: finite, from 0 (an empty tank, whose first burn
+        /// throws <see cref="InsufficientFuelException"/>) to <paramref name="capacity"/></param>
+        /// <param name="model">The model of the tank, informational; null by default</param>
+        /// <param name="serialNumber">The serial number of the tank, informational; null by default</param>
+        /// <exception cref="ArgumentException">The name is empty.</exception>
         /// <exception cref="ArgumentOutOfRangeException">Naming it, <paramref name="capacity"/> (checked first) or
         /// <paramref name="initialQuantity"/> is not finite or out of its range (#800, decision 75 of #668, decided by
         /// S. Guillet, 2026-11-23: a NaN passed the comparisons, and so did an infinite capacity).</exception>
-        public FuelTank(string name, string model, string serialNumber, double capacity, double initialQuantity)
+        /// <remarks>
+        /// Since 11.0.0 (R10 and decision 76 of #668, decided by S. Guillet, 2026-11-23) the model and the serial number come
+        /// last and are optional, and a tank may start empty; before, <c>(name, model, serialNumber, capacity,
+        /// initialQuantity)</c>, each string required, the initial quantity above 0.
+        /// </remarks>
+        public FuelTank(string name, double capacity, double initialQuantity, string model = null, string serialNumber = null)
         {
             if (string.IsNullOrEmpty(name)) throw new ArgumentException("Value cannot be null or empty.", nameof(name));
-            if (string.IsNullOrEmpty(model)) throw new ArgumentException("Value cannot be null or empty.", nameof(model));
-            if (string.IsNullOrEmpty(serialNumber)) throw new ArgumentException("Value cannot be null or empty.", nameof(serialNumber));
             if (!double.IsFinite(capacity) || capacity <= 0.0)
             {
                 throw new ArgumentOutOfRangeException(nameof(capacity), capacity, "The capacity of a tank must be finite and above 0.");
             }
 
-            if (!double.IsFinite(initialQuantity) || initialQuantity <= 0.0 || initialQuantity > capacity)
+            if (!double.IsFinite(initialQuantity) || initialQuantity < 0.0 || initialQuantity > capacity)
             {
                 throw new ArgumentOutOfRangeException(nameof(initialQuantity), initialQuantity,
-                    $"The initial quantity of a tank must be finite, above 0 and at most its capacity, {capacity} kg.");
+                    $"The initial quantity of a tank must be finite, not negative and at most its capacity, {capacity} kg.");
             }
 
             Name = name;
@@ -75,36 +83,6 @@ namespace IO.Astrodynamics.Body.Spacecraft
         internal Spacecraft AttachSpacecraft(Spacecraft spacecraft)
         {
             return Interlocked.CompareExchange(ref _spacecraft, spacecraft, null) ?? spacecraft;
-        }
-
-        public bool Equals(FuelTank other)
-        {
-            if (ReferenceEquals(null, other)) return false;
-            if (ReferenceEquals(this, other)) return true;
-            return Name == other.Name && Model == other.Model && SerialNumber == other.SerialNumber;
-        }
-
-        public override bool Equals(object obj)
-        {
-            if (ReferenceEquals(null, obj)) return false;
-            if (ReferenceEquals(this, obj)) return true;
-            if (obj.GetType() != this.GetType()) return false;
-            return Equals((FuelTank)obj);
-        }
-
-        public override int GetHashCode()
-        {
-            return HashCode.Combine(Name, Model, SerialNumber);
-        }
-
-        public static bool operator ==(FuelTank left, FuelTank right)
-        {
-            return Equals(left, right);
-        }
-
-        public static bool operator !=(FuelTank left, FuelTank right)
-        {
-            return !Equals(left, right);
         }
 
         internal void Refuel()

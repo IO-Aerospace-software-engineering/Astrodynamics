@@ -180,9 +180,9 @@ public sealed class Lot3CaseTests : IDisposable
         var state = new StateVector(new Vector3(6428778.39, 2100929.85, -1661580.75), new Vector3(-1460.44, 6743.21, 3149.61), earth, epoch,
             Frames.Frame.ICRF);
         var spacecraft = new Spacecraft(-998, "Lot3Steps", 1000.0, state, 10000.0, new Clock("Lot3Clk", 256));
-        var tank = new FuelTank("t", "m", "s", 500.0, 500.0);
+        var tank = new FuelTank("t", 500.0, 500.0, "m", "s");
         spacecraft.AddFuelTank(tank);
-        var engine = new Engine("e", "m", "s", 300.0, ManeuverSolver.FuelFlow, tank);
+        var engine = new Engine("e", 300.0, ManeuverSolver.FuelFlow, tank, "m", "s");
         spacecraft.AddEngine(engine);
         var target = new StateVectorOrbit { Type = "state_vector", PositionKm = new[] { 6073.7, 3205.9, -1101.0 }, VelocityKmS = new[] { -2.95, 6.18, 3.51 } };
         var steps = new (ManeuverStep Step, Type Maneuver)[]

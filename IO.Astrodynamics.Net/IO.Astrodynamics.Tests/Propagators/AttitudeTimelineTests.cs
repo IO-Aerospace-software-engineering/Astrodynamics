@@ -444,9 +444,9 @@ public class AttitudeTimelineTests
         CelestialBody center)
     {
         var spacecraft = new Spacecraft(naifId, $"TL{-naifId}", 1000.0, orbit, 3000.0, new Clock($"TL{-naifId}_CLK", 65536), cosparId: "2024-001A");
-        var tank = new FuelTank("ft", "model", "sn", 1000.0, 1000.0);
+        var tank = new FuelTank("ft", 1000.0, 1000.0, "model", "sn");
         spacecraft.AddFuelTank(tank);
-        var engine = new Engine("eng", "model", "sn", 300.0, 10.0, tank);
+        var engine = new Engine("eng", 300.0, 10.0, tank, "model", "sn");
         spacecraft.AddEngine(engine);
         bool moon = center.NaifId == PlanetsAndMoons.MOON.NaifId;
         var kinds = new Dictionary<Maneuver.Maneuver, string>();

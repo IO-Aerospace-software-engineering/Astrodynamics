@@ -1232,9 +1232,9 @@ public class CdmTests
             hardBodyRadius: 3.0);
         if (secondaryEngine)
         {
-            var tank = new FuelTank("tank" + -naifId, "model", "sn1", 20.0, 20.0);
+            var tank = new FuelTank("tank" + -naifId, 20.0, 20.0, "model", "sn1");
             secondarySpacecraft.AddFuelTank(tank);
-            secondarySpacecraft.AddEngine(new Engine("engine" + -naifId, "model", "sn1", 300.0, 10.0, tank));
+            secondarySpacecraft.AddEngine(new Engine("engine" + -naifId, 300.0, 10.0, tank, "model", "sn1"));
         }
 
         return ConjunctionAssessment.Analyze(new ProtectedSpacecraftProfile(protectedSpacecraft), secondarySpacecraft,
@@ -1537,9 +1537,9 @@ public class CdmTests
         {
             foreach (var spacecraft in new[] { protectedSpacecraft, secondarySpacecraft })
             {
-                var tank = new FuelTank("tank" + -spacecraft.NaifId, "model", "sn1", 20.0, 20.0);
+                var tank = new FuelTank("tank" + -spacecraft.NaifId, 20.0, 20.0, "model", "sn1");
                 spacecraft.AddFuelTank(tank);
-                spacecraft.AddEngine(new Engine("engine" + -spacecraft.NaifId, "model", "sn1", 300.0, 10.0, tank));
+                spacecraft.AddEngine(new Engine("engine" + -spacecraft.NaifId, 300.0, 10.0, tank, "model", "sn1"));
             }
         }
 

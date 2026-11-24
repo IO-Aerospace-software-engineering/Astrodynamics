@@ -45,8 +45,8 @@ public class TriadSolver : ICategorySolver
         // Create spacecraft with instrument, engine and fuel tank
         var spacecraft = new Spacecraft(-999, "ConformanceTestSC", 100.0, sv,
             1000.0, new Clock("ConfClk", 65536));
-        spacecraft.AddFuelTank(new FuelTank("ft", "ftA", "000000", 500.0, 400.0));
-        spacecraft.AddEngine(new Engine("eng", "engA", "000000", 300, 50, spacecraft.FuelTanks.First()));
+        spacecraft.AddFuelTank(new FuelTank("ft", 500.0, 400.0, "ftA", "000000"));
+        spacecraft.AddEngine(new Engine("eng", 300, 50, spacecraft.FuelTanks.First(), "engA", "000000"));
 
         // Create a circular instrument with the boresight and clock directions
         var fovRad = UnitConversion.DegToRad(inputs.FieldOfView.HalfAngleDeg);

@@ -211,9 +211,9 @@ public class RepropagationTests
     {
         int id = System.Threading.Interlocked.Decrement(ref _nextId);
         var spacecraft = new Spacecraft(id, $"RP{-id}", 1000.0, orbit, 3000.0, new Clock($"RP{-id}_CLK", 65536), cosparId: "2024-001A");
-        var tank = new FuelTank("ft", "model", "sn", 1000.0, 1000.0);
+        var tank = new FuelTank("ft", 1000.0, 1000.0, "model", "sn");
         spacecraft.AddFuelTank(tank);
-        var engine = new Engine("eng", "model", "sn", 300.0, 10.0, tank);
+        var engine = new Engine("eng", 300.0, 10.0, tank, "model", "sn");
         spacecraft.AddEngine(engine);
         var maneuvers = NewChain(env, engine, chain, userGate);
         spacecraft.SetManeuvers(maneuvers);

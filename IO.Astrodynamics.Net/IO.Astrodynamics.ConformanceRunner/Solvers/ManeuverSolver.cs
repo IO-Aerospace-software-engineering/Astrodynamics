@@ -74,9 +74,9 @@ public class ManeuverSolver : ICategorySolver
 
         var spacecraft = propagationCase.Spacecraft;
         var center = (CelestialBody)propagationCase.Bodies[0];
-        var tank = new FuelTank("ConformanceTank", "conformance", "0001", chain.FuelMassKg, chain.FuelMassKg);
+        var tank = new FuelTank("ConformanceTank", chain.FuelMassKg, chain.FuelMassKg, "conformance", "0001");
         spacecraft.AddFuelTank(tank);
-        var engine = new Engine("ConformanceEngine", "conformance", "0001", chain.IspS, FuelFlow, tank);
+        var engine = new Engine("ConformanceEngine", chain.IspS, FuelFlow, tank, "conformance", "0001");
         spacecraft.AddEngine(engine);
         double initialMass = spacecraft.GetTotalMass();
 

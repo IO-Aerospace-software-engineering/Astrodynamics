@@ -761,11 +761,10 @@ internal static class DeveloperGuideExamples
         var clock = new Clock("MainClock", 256);
         var spacecraft = new Spacecraft(-1001, "MySat", 500.0, orbit, 1000.0, clock);
 
-        // Add components: the tank first, then the engine that draws on it (AddEngine requires its tank on the spacecraft)
-        var tank = new FuelTank("MainTank", "Propellant", "Tank1", 200.0, 100.0);  // capacity, initial quantity (kg)
-        spacecraft.AddFuelTank(tank);
-        var engine = new Engine("MainEngine", "RCS", "Engine1", 300.0, 0.05, tank);  // ISP (s), fuel flow (kg/s)
-        spacecraft.AddEngine(engine);
+        // Add components: the tank first, then the engine that draws on it (AddEngine requires its tank on the spacecraft);
+        // each Add returns its argument, the model and the serial number optional
+        var tank = spacecraft.AddFuelTank(new FuelTank("MainTank", 200.0, 100.0));  // capacity, initial quantity (kg)
+        var engine = spacecraft.AddEngine(new Engine("MainEngine", 300.0, 0.05, tank));  // ISP (s), fuel flow (kg/s)
 
         // Add instrument: its NAIF id by default the first free NaifId × 1000 − n, -1001001, and no model
         spacecraft.AddCircularInstrument("Camera",
@@ -1195,8 +1194,8 @@ internal static class DeveloperGuideExamples
         var chaser = new Spacecraft(-1002, "Chaser", 1000.0, chaserOrbit, 10000.0, chaserClock);
 
         // Add fuel tank and engine
-        var fuelTank = new FuelTank("MainTank", "Model1", "SN001", 9000.0, 9000.0);
-        var engine = new Engine("MainEngine", "Model1", "SN001", 450.0, 50.0, fuelTank);
+        var fuelTank = new FuelTank("MainTank", 9000.0, 9000.0, "Model1", "SN001");
+        var engine = new Engine("MainEngine", 450.0, 50.0, fuelTank, "Model1", "SN001");
         chaser.AddFuelTank(fuelTank);
         chaser.AddEngine(engine);
 
@@ -1663,8 +1662,8 @@ internal static class DeveloperGuideExamples
             0.2, Vector3.VectorZ, Vector3.VectorY, Vector3.Zero, naifId: -334100, model: "HighGain");
 
         // Add propulsion
-        var tank = new FuelTank("Tank1", "Model", "SN1", 2000.0, 2000.0);
-        var engine = new Engine("Engine1", "Model", "SN1", 450, 50.0, tank);
+        var tank = new FuelTank("Tank1", 2000.0, 2000.0, "Model", "SN1");
+        var engine = new Engine("Engine1", 450, 50.0, tank, "Model", "SN1");
         spacecraft.AddFuelTank(tank);
         spacecraft.AddEngine(engine);
 
@@ -1724,8 +1723,8 @@ internal static class DeveloperGuideExamples
             0.5, Vector3.VectorZ.Inverse(), Vector3.VectorY, Vector3.Zero, naifId: -500100, model: "NadirCamera");  // Boresight: -Z (nadir), refVector: +Y
 
         // Add propulsion
-        var tank = new FuelTank("Tank1", "Model", "SN1", 100.0, 100.0);
-        var engine = new Engine("Engine1", "Model", "SN1", 220, 10.0, tank);
+        var tank = new FuelTank("Tank1", 100.0, 100.0, "Model", "SN1");
+        var engine = new Engine("Engine1", 220, 10.0, tank, "Model", "SN1");
         spacecraft.AddFuelTank(tank);
         spacecraft.AddEngine(engine);
 

@@ -214,8 +214,8 @@ public class PropagationGoldenTests
         var orbit = new StateVector(new Vector3(-7378137.0, 0.0, 0.0), new Vector3(0.0, -5509.9, -4623.4), earth, Start,
             Frames.Frame.ICRF);
         var spacecraft = new Spacecraft(-1953, "GOLDEN3", 1000.0, orbit, 3000.0, new Clock("golden3", 65536));
-        var tank = new FuelTank("golden3tank", "model", "sn1", 1000.0, 1000.0);
-        var engine = new Engine("golden3engine", "model", "sn1", 300.0, 10.0, tank);
+        var tank = new FuelTank("golden3tank", 1000.0, 1000.0, "model", "sn1");
+        var engine = new Engine("golden3engine", 300.0, 10.0, tank, "model", "sn1");
         spacecraft.AddFuelTank(tank);
         spacecraft.AddEngine(engine);
         spacecraft.SetManeuvers(new ApogeeHeightManeuver(earth, Start, TimeSpan.Zero, 8378137.0, engine));

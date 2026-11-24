@@ -19,8 +19,8 @@ public class ZenithAttitudeTests
     [Fact]
     void Create()
     {
-        FuelTank fuelTank10 = new FuelTank("My fuel tank10", "ft2021", "sn0", 4000.0, 3000.0);
-        Engine eng = new Engine("My engine", "model 1", "sn1", 350.0, 50.0, fuelTank10);
+        FuelTank fuelTank10 = new FuelTank("My fuel tank10", 4000.0, 3000.0, "ft2021", "sn0");
+        Engine eng = new Engine("My engine", 350.0, 50.0, fuelTank10, "model 1", "sn1");
         ZenithAttitude zenithAttitude = new ZenithAttitude(TestHelpers.EarthAtJ2000,new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB), TimeSpan.FromHours(1.0), eng);
         LabelAssert.Equal(new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB), zenithAttitude.MinimumEpoch);
         Assert.Equal(TimeSpan.FromHours(1.0), zenithAttitude.ManeuverHoldDuration);
@@ -33,8 +33,8 @@ public class ZenithAttitudeTests
     {
         var orbitalParams = new KeplerianElements(42164000.0, 0.0, 0.0, 0.0, 0.0, 0.0, TestHelpers.EarthAtJ2000, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF);
         var spc = new Spacecraft(-666, "GenericSpacecraft", 1000.0, orbitalParams, 3000.0, new Clock("GenericClk", 65536));
-        spc.AddFuelTank(new FuelTank("ft", "ftA", "123456", 1000.0, 900.0));
-        spc.AddEngine(new Engine("eng", "engmk1", "12345", 450, 50, spc.FuelTanks.First()));
+        spc.AddFuelTank(new FuelTank("ft", 1000.0, 900.0, "ftA", "123456"));
+        spc.AddEngine(new Engine("eng", 450, 50, spc.FuelTanks.First(), "engmk1", "12345"));
         ZenithAttitude maneuver = new ZenithAttitude(TestHelpers.EarthAtJ2000,new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB), TimeSpan.Zero, spc.Engines.First());
         var (_, maneuverOrientation) = maneuver.TryExecute(orbitalParams.ToStateVector());
 

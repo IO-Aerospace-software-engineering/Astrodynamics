@@ -57,9 +57,9 @@ public class ManeuverPlanTests
         int id = NextId();
         var spacecraft = new Spacecraft(id, "PLAN" + -id, 1000.0, orbit ?? new KeplerianElements(7000e3, 0.01, 0.5, 0.0, 0.0, 0.0, earth, S, Frames.Frame.ICRF), 3000.0,
             new Clock("PLAN" + -id, 65536));
-        var tank = new FuelTank("ft" + -id, "m", "sn" + -id, 1000.0, 1000.0);
+        var tank = new FuelTank("ft" + -id, 1000.0, 1000.0, "m", "sn" + -id);
         spacecraft.AddFuelTank(tank);
-        engine = new Engine("eng" + -id, "m", "sn" + -id, 300.0, 10.0, tank);
+        engine = new Engine("eng" + -id, 300.0, 10.0, tank, "m", "sn" + -id);
         spacecraft.AddEngine(engine);
         return spacecraft;
     }
@@ -238,7 +238,7 @@ public class ManeuverPlanTests
         var other = NewSpacecraft(earth, out var otherEngine);
         var foreign = engineKind == "OtherSpacecraft"
             ? otherEngine
-            : new Engine("LOOSE", "m", "SN-LOOSE", 300.0, 10.0, new FuelTank("LOOSE", "m", "SN-LOOSE", 1000.0, 1000.0));
+            : new Engine("LOOSE", 300.0, 10.0, new FuelTank("LOOSE", 1000.0, 1000.0, "m", "SN-LOOSE"), "m", "SN-LOOSE");
         Maneuver.Maneuver m = kind == "Impulse"
             ? new ApogeeHeightManeuver(earth, S, TimeSpan.Zero, 8000e3, foreign)
             : new ProgradeAttitude(earth, S, TimeSpan.Zero, foreign);
@@ -284,8 +284,8 @@ public class ManeuverPlanTests
             int id = NextId();
             spacecraft = new Spacecraft(id, "PLAN" + -id, 1000.0, new KeplerianElements(7000e3, 0.01, 0.5, 0.0, 0.0, 0.0, earth, S, Frames.Frame.ICRF), 3000.0,
                 new Clock("PLAN" + -id, 65536));
-            var tank = new FuelTank("ft", "m", "sn", 1000.0, 1000.0);
-            var engine = new Engine("eng", "m", "sn", 300.0, 10.0, tank);
+            var tank = new FuelTank("ft", 1000.0, 1000.0, "m", "sn");
+            var engine = new Engine("eng", 300.0, 10.0, tank, "m", "sn");
             var target = new KeplerianElements(7100e3, 0.01, 0.5, 0.0, 0.0, 0.0, earth, S, Frames.Frame.ECLIPTIC_J2000);
             maneuver = new ApsidalAlignmentManeuver(S, TimeSpan.Zero, target, engine);
             spacecraft.AddFuelTank(tank);

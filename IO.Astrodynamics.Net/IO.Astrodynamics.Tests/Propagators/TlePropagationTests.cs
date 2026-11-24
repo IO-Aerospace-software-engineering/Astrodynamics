@@ -89,9 +89,9 @@ public class TlePropagationTests
     private static (Spacecraft Spacecraft, Engine Engine) WithEngine(int naifId, IO.Astrodynamics.OrbitalParameters.OrbitalParameters orbit)
     {
         var spacecraft = NewSpacecraft(naifId, orbit);
-        var tank = new FuelTank("ft675", "model", "sn675", 1000.0, 1000.0);
+        var tank = new FuelTank("ft675", 1000.0, 1000.0, "model", "sn675");
         spacecraft.AddFuelTank(tank);
-        var engine = new Engine("eng675", "model", "sn675", 300.0, 10.0, tank);
+        var engine = new Engine("eng675", 300.0, 10.0, tank, "model", "sn675");
         spacecraft.AddEngine(engine);
         return (spacecraft, engine);
     }
@@ -576,8 +576,8 @@ public class TlePropagationTests
         Assert.False(temeSpacecraft.IsPropagated);
 
         // Built before the engine is attached (no check at construction): rejected by SetManeuvers as well
-        var tank = new FuelTank("ft675b", "model", "sn675b", 1000.0, 1000.0);
-        var detached = new Engine("eng675b", "model", "sn675b", 300.0, 10.0, tank);
+        var tank = new FuelTank("ft675b", 1000.0, 1000.0, "model", "sn675b");
+        var detached = new Engine("eng675b", 300.0, 10.0, tank, "model", "sn675b");
         var early = new PlaneAlignmentManeuver(window.StartDate, TimeSpan.Zero, Target(Frames.Frame.ECLIPTIC_J2000), detached);
         var late = NewSpacecraft(-7054, tle);
         late.AddFuelTank(tank);

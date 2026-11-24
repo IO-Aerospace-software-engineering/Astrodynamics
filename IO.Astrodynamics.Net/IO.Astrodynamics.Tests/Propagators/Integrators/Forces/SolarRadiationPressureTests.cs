@@ -72,7 +72,7 @@ public class SolarRadiationPressureTests
         Clock clk = new Clock("My clock", 256);
         Spacecraft spc = new Spacecraft(-1001, "MySpacecraft", 100.0, new StateVector(new Vector3(6800000.0, 0.0, 0.0), new Vector3(0.0, 7656.2204182967143, 0.0), earth, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF), 10000.0,
             clk);
-        var fuelTank = new FuelTank("tank1", "model1", "sn001", 100.0, 50.0);
+        var fuelTank = new FuelTank("tank1", 100.0, 50.0, "model1", "sn001");
         spc.AddFuelTank(fuelTank);
 
         SolarRadiationPressure solarRadiationPressure = new SolarRadiationPressure(spc, [earth]);

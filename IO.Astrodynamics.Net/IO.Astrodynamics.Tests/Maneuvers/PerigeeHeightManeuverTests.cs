@@ -21,8 +21,8 @@ namespace IO.Astrodynamics.Tests.Maneuvers
         [Fact]
         public void Create()
         {
-            FuelTank fuelTank10 = new FuelTank("My fuel tank10", "ft2021", "sn0", 4000.0, 3000.0);
-            Engine eng = new Engine("My engine", "model 1", "sn1", 350.0, 50.0, fuelTank10);
+            FuelTank fuelTank10 = new FuelTank("My fuel tank10", 4000.0, 3000.0, "ft2021", "sn0");
+            Engine eng = new Engine("My engine", 350.0, 50.0, fuelTank10, "model 1", "sn1");
 
             PerigeeHeightManeuver perigeeHeightManeuver = new PerigeeHeightManeuver(TestHelpers.EarthAtJ2000,new TimeSystem.Time(new DateTime(2021, 01, 01),TimeScale.TDB), TimeSpan.FromDays(1.0), 151000000.0, eng);
 
@@ -35,8 +35,8 @@ namespace IO.Astrodynamics.Tests.Maneuvers
         [Fact]
         public void Create2()
         {
-            FuelTank fuelTank10 = new FuelTank("My fuel tank10", "ft2021", "sn0", 4000.0, 3000.0);
-            Engine eng = new Engine("My engine", "model 1", "sn1", 350.0, 50.0, fuelTank10);
+            FuelTank fuelTank10 = new FuelTank("My fuel tank10", 4000.0, 3000.0, "ft2021", "sn0");
+            Engine eng = new Engine("My engine", 350.0, 50.0, fuelTank10, "model 1", "sn1");
 
             PerigeeHeightManeuver perigeeHeightManeuver = new PerigeeHeightManeuver(new TimeSystem.Time(new DateTime(2021, 01, 01),TimeScale.TDB), TimeSpan.FromDays(1.0),
                 new KeplerianElements(151000000, 0.0, 0.0, 0.0, 0.0, 0.0, TestHelpers.Earth, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF), eng);
@@ -57,8 +57,8 @@ namespace IO.Astrodynamics.Tests.Maneuvers
             var orbitalParams = new StateVector(new Vector3(6678000.0, 0.0, 0.0), new Vector3(0.0, 7727.0, 0.0), TestHelpers.EarthAtJ2000, TimeSystem.Time.J2000TDB,
                 Frames.Frame.ICRF);
             var spc = new Spacecraft(-666, "GenericSpacecraft", 1000.0, orbitalParams, 3000.0, new Clock("GenericClk", 65536));
-            spc.AddFuelTank(new FuelTank("ft", "ftA", "123456", 1000.0, 900.0));
-            spc.AddEngine(new Engine("eng", "engmk1", "12345", 450, 50, spc.FuelTanks.First()));
+            spc.AddFuelTank(new FuelTank("ft", 1000.0, 900.0, "ftA", "123456"));
+            spc.AddEngine(new Engine("eng", 450, 50, spc.FuelTanks.First(), "engmk1", "12345"));
 
             var maneuver = new PerigeeHeightManeuver(TestHelpers.EarthAtJ2000,new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB), TimeSpan.Zero, 42164000.0, spc.Engines.First());
 
@@ -92,8 +92,8 @@ namespace IO.Astrodynamics.Tests.Maneuvers
             var orbitalParams = new StateVector(new Vector3(42164000.0, 0.0, 0.0), new Vector3(0.0, 3075.0, 0.0), TestHelpers.EarthAtJ2000, TimeSystem.Time.J2000TDB,
                 Frames.Frame.ICRF);
             var spc = new Spacecraft(-666, "GenericSpacecraft", 1000.0, orbitalParams, 3000.0, new Clock("GenericClk", 65536));
-            spc.AddFuelTank(new FuelTank("ft", "ftA", "123456", 1000.0, 900.0));
-            spc.AddEngine(new Engine("eng", "engmk1", "12345", 450, 50, spc.FuelTanks.First()));
+            spc.AddFuelTank(new FuelTank("ft", 1000.0, 900.0, "ftA", "123456"));
+            spc.AddEngine(new Engine("eng", 450, 50, spc.FuelTanks.First(), "engmk1", "12345"));
 
             var maneuver = new PerigeeHeightManeuver(TestHelpers.EarthAtJ2000,new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB), TimeSpan.Zero, 6678000.0, spc.Engines.First());
 
@@ -139,8 +139,8 @@ namespace IO.Astrodynamics.Tests.Maneuvers
         public void Create_FromNearCircularElements_TargetsTheirPerigeeRadius()
         {
             var ke = Issue686Elements();
-            FuelTank fuelTank = new FuelTank("My fuel tank10", "ft2021", "sn0", 4000.0, 3000.0);
-            Engine eng = new Engine("My engine", "model 1", "sn1", 350.0, 50.0, fuelTank);
+            FuelTank fuelTank = new FuelTank("My fuel tank10", 4000.0, 3000.0, "ft2021", "sn0");
+            Engine eng = new Engine("My engine", 350.0, 50.0, fuelTank, "model 1", "sn1");
             var maneuver = new PerigeeHeightManeuver(TimeSystem.Time.J2000TDB, TimeSpan.Zero, ke, eng);
 
             double r = 7178e3;

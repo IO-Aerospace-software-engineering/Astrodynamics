@@ -314,9 +314,9 @@ public class IntegratorInitializationTests
         {
             var spacecraft = NewSpacecraft(earth, Frames.Frame.ICRF, new Vector3(6700000.0, 0.0, 0.0),
                 new Vector3(0.0, 8000.0, 0.0));
-            var tank = new FuelTank("ft", "model", "sn", 1000.0, 1000.0);
+            var tank = new FuelTank("ft", 1000.0, 1000.0, "model", "sn");
             spacecraft.AddFuelTank(tank);
-            var engine = new Engine("eng", "model", "sn", 300.0, 10.0, tank);
+            var engine = new Engine("eng", 300.0, 10.0, tank, "model", "sn");
             spacecraft.AddEngine(engine);
             spacecraft.SetManeuvers(new ApogeeHeightManeuver(earth, Epoch.AddSeconds(600.0), TimeSpan.Zero, 9000000.0,
                 engine));

@@ -120,9 +120,9 @@ public class GcrfPropagationTests
             var spacecraft = new Spacecraft(id, $"GCRF{-id}", 1000.0, initial, 3000.0, new Clock($"gcrf{-id}", 65536), 10.0, 2.2, null, 1.5);
             if (variant.Contains("Impulse"))
             {
-                var tank = new FuelTank("ft", "model", "sn", 1000.0, 1000.0);
+                var tank = new FuelTank("ft", 1000.0, 1000.0, "model", "sn");
                 spacecraft.AddFuelTank(tank);
-                var engine = new Engine("eng", "model", "sn", 300.0, 10.0, tank);
+                var engine = new Engine("eng", 300.0, 10.0, tank, "model", "sn");
                 spacecraft.AddEngine(engine);
                 var apogee = new ApogeeHeightManeuver(earth, Start.AddSeconds(100.0), TimeSpan.Zero, 7600000.0, engine);
                 spacecraft.SetManeuvers(apogee, new NadirAttitude(earth, Start.AddSeconds(100.0), TimeSpan.Zero, engine));

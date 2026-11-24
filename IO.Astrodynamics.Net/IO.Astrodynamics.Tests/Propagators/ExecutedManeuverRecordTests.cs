@@ -79,9 +79,9 @@ public class ExecutedManeuverRecordTests
         earth ??= Earth();
         int id = NextId();
         var spacecraft = new Spacecraft(id, "EM" + -id, 1000.0, Orbit(earth, frame), 3000.0, new Clock("EM" + -id, 65536));
-        var tank = new FuelTank("ft" + -id, "m", "sn" + -id, 1000.0, 1000.0);
+        var tank = new FuelTank("ft" + -id, 1000.0, 1000.0, "m", "sn" + -id);
         spacecraft.AddFuelTank(tank);
-        var engine = new Engine("eng" + -id, "m", "sn" + -id, 300.0, 10.0, tank);
+        var engine = new Engine("eng" + -id, 300.0, 10.0, tank, "m", "sn" + -id);
         spacecraft.AddEngine(engine);
         Maneuver.Maneuver[] plan =
         [

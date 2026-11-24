@@ -2130,9 +2130,9 @@ public partial class ConjunctionAssessmentTests
         var earth = CreateEarth();
         var protectedSpacecraft = CreateSpacecraft(-1301, "PROTECTED", earth,
             new Vector3(6_800_000.0, 0.0, 0.0), new Vector3(0.0, 7_656.2204182967143, 0.0));
-        var fuelTank = new FuelTank("MAIN", "MONO", "FT-001", 25.0, 25.0);
+        var fuelTank = new FuelTank("MAIN", 25.0, 25.0, "MONO", "FT-001");
         protectedSpacecraft.AddFuelTank(fuelTank);
-        protectedSpacecraft.AddEngine(new Engine("ENG", "RCS", "ENG-001", 220.0, 0.05, fuelTank));
+        protectedSpacecraft.AddEngine(new Engine("ENG", 220.0, 0.05, fuelTank, "RCS", "ENG-001"));
 
         var secondarySpacecraft = CreateSpacecraft(-1302, "SECONDARY", earth,
             new Vector3(6_800_000.0, 120.0, 0.0), new Vector3(0.0, 7_656.2204182967143, 0.0));

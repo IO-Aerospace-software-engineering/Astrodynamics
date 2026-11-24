@@ -74,9 +74,9 @@ public class CancellationTests
         var spacecraft = new Spacecraft(id, $"CX{-id}", 100.0, state, 10000.0, new Clock($"cxclk{-id}", 65536), 10.0, 2.2);
         if (withManeuver)
         {
-            var tank = new FuelTank($"ft{-id}", "model", "sn", 1000.0, 1000.0);
+            var tank = new FuelTank($"ft{-id}", 1000.0, 1000.0, "model", "sn");
             spacecraft.AddFuelTank(tank);
-            var engine = new Engine($"eng{-id}", "model", "sn", 300.0, 10.0, tank);
+            var engine = new Engine($"eng{-id}", 300.0, 10.0, tank, "model", "sn");
             spacecraft.AddEngine(engine);
             spacecraft.SetManeuvers(new ApogeeHeightManeuver(earth, Epoch.AddSeconds(600.0), TimeSpan.Zero,
                 9000000.0, engine));

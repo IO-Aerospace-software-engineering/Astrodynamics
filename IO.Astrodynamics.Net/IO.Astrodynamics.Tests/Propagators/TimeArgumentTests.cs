@@ -353,8 +353,8 @@ public class TimeArgumentTests
         var orbit = new StateVector(new Vector3(-7378137.0, 0.0, 0.0), new Vector3(0.0, -5509.9, -4623.4), _earth,
             window.StartDate.ToTDB(), Frames.Frame.ICRF);
         var spacecraft = Spacecraft(-5051, orbit);
-        var tank = new FuelTank("ta5051", "model", "sn1", 1000.0, 1000.0);
-        var engine = new Engine("en5051", "model", "sn1", 300.0, 10.0, tank);
+        var tank = new FuelTank("ta5051", 1000.0, 1000.0, "model", "sn1");
+        var engine = new Engine("en5051", 300.0, 10.0, tank, "model", "sn1");
         spacecraft.AddFuelTank(tank);
         spacecraft.AddEngine(engine);
         spacecraft.SetManeuvers(new ApogeeHeightManeuver(_earth, window.StartDate, TimeSpan.Zero, 8378137.0,

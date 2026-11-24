@@ -45,7 +45,7 @@ public class InsuffisantFuelExceptionTests
     [Fact]
     public void ABurnOfMoreFuelThanTheTankHolds_ThrowsWithTheMasses()
     {
-        var tank = new FuelTank("ft", "model", "sn", 1000.0, 100.0);
+        var tank = new FuelTank("ft", 1000.0, 100.0, "model", "sn");
         var error = Assert.Throws<InsufficientFuelException>(() => tank.Burn(150.0));
         Assert.Equal(150.0, error.RequiredMass);
         Assert.Equal(100.0, error.AvailableMass);

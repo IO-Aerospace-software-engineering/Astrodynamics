@@ -92,7 +92,7 @@ public class SpacecraftConstructionTests
     {
         int id = NextId();
         var spacecraft = new Spacecraft(id, "Sat" + -id, 1000.0, Orbit(Earth()), maxOperatingMass: 1000.0);
-        var tank = new FuelTank("T", "m", "sn", 500.0, 500.0);
+        var tank = new FuelTank("T", 500.0, 500.0, "m", "sn");
         spacecraft.AddFuelTank(tank);
 
         Assert.Equal(1500.0, spacecraft.GetTotalMass());

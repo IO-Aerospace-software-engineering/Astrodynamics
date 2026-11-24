@@ -30,8 +30,8 @@ namespace IO.Astrodynamics.Tests.Maneuvers
         [Fact]
         public void Create()
         {
-            FuelTank fuelTank10 = new FuelTank("My fuel tank10", "ft2021", "sn0", 4000.0, 3000.0);
-            Engine eng = new Engine("My engine", "model 1", "sn1", 350.0, 50.0, fuelTank10);
+            FuelTank fuelTank10 = new FuelTank("My fuel tank10", 4000.0, 3000.0, "ft2021", "sn0");
+            Engine eng = new Engine("My engine", 350.0, 50.0, fuelTank10, "model 1", "sn1");
 
             PhasingManeuver maneuver = new PhasingManeuver(TestHelpers.EarthAtJ2000,new TimeSystem.Time(new DateTime(2021, 01, 01),TimeScale.TDB), 3.0, 2, eng);
 
@@ -50,8 +50,8 @@ namespace IO.Astrodynamics.Tests.Maneuvers
             var targtOrbitalParams = new KeplerianElements(42164000.0, 0.0, 0.0, 0.0, 0.0, 345.0 * Astrodynamics.Constants.Deg2Rad, TestHelpers.EarthAtJ2000,
                 TimeSystem.Time.J2000TDB, Frames.Frame.ICRF);
             var spc = new Spacecraft(-666, "GenericSpacecraft", 1000.0, orbitalParams, 3000.0, new Clock("GenericClk", 65536));
-            spc.AddFuelTank(new FuelTank("ft", "ftA", "123456", 1000.0, 900.0));
-            spc.AddEngine(new Engine("eng", "engmk1", "12345", 450, 50, spc.FuelTanks.First()));
+            spc.AddFuelTank(new FuelTank("ft", 1000.0, 900.0, "ftA", "123456"));
+            spc.AddEngine(new Engine("eng", 450, 50, spc.FuelTanks.First(), "engmk1", "12345"));
             PhasingManeuver maneuver = new PhasingManeuver(new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB), targtOrbitalParams, 3, spc.Engines.First());
             var atStart = orbitalParams.ToStateVector();
             maneuver.TryExecute(atStart);
@@ -82,8 +82,8 @@ namespace IO.Astrodynamics.Tests.Maneuvers
         private static Spacecraft NewSpacecraft(int naifId, IO.Astrodynamics.OrbitalParameters.OrbitalParameters orbit)
         {
             var spc = new Spacecraft(naifId, $"Phasing{-naifId}", 1000.0, orbit, 3000.0, new Clock($"Phasing{-naifId}Clk", 65536));
-            spc.AddFuelTank(new FuelTank("ft", "ftA", "123456", 1000.0, 900.0));
-            spc.AddEngine(new Engine("eng", "engmk1", "12345", 450, 50, spc.FuelTanks.First()));
+            spc.AddFuelTank(new FuelTank("ft", 1000.0, 900.0, "ftA", "123456"));
+            spc.AddEngine(new Engine("eng", 450, 50, spc.FuelTanks.First(), "engmk1", "12345"));
             return spc;
         }
 

@@ -163,8 +163,8 @@ public class MinimumStepNoiseTests
         var orbit = StandardAtmosphereBoundaryTests.NewSpacecraft(body, 8e3, 1.0, -4361).InitialOrbitalParameters;
         var spacecraft = new Spacecraft(-4362, "MINSTEP4362", 990.0, orbit, 2000.0, new Clock("minstep4362", 65536),
             1.0, 2.2, null, 1.0);
-        var tank = new FuelTank("minsteptank", "model", "sn1", 10.0, 10.0);
-        var engine = new Engine("minstepengine", "model", "sn1", 300.0, 10.0, tank);
+        var tank = new FuelTank("minsteptank", 10.0, 10.0, "model", "sn1");
+        var engine = new Engine("minstepengine", 300.0, 10.0, tank, "model", "sn1");
         spacecraft.AddFuelTank(tank);
         spacecraft.AddEngine(engine);
         var target = new StateVector(new Vector3(5956434.445278982, -1653154.6911787654, -1653542.0820755141),

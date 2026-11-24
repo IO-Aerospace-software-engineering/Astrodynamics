@@ -921,9 +921,9 @@ public class AttitudeRecordTests
         var inF = f == Frame.ICRF ? leo : leo.ToFrame(f).ToStateVector();
         int id = -(8431 + Array.IndexOf(Frames, frame));
         var sc = new Spacecraft(id, $"TX{-id}", 1000.0, inF, 3000.0, new Clock($"TX{-id}_CLK", 65536));
-        var tank = new FuelTank("ft", "model", "sn", 1000.0, 1000.0);
+        var tank = new FuelTank("ft", 1000.0, 1000.0, "model", "sn");
         sc.AddFuelTank(tank);
-        var engine = new Engine("eng", "model", "sn", 300.0, 10.0, tank);
+        var engine = new Engine("eng", 300.0, 10.0, tank, "model", "sn");
         sc.AddEngine(engine);
         sc.AddCircularInstrument("I1", 0.5, Vector3.VectorZ, Vector3.VectorY, InstrumentOrientations[0], naifId: id * 1000 - 1, model: "m");
         var instrument = sc.Instruments.First();
@@ -1354,9 +1354,9 @@ public class AttitudeRecordTests
                 var spacecraft = law.EndsWith("Axes")
                     ? new Spacecraft(id, name, 1000.0, initial, 3000.0, new Clock(name + "_CLK", 65536), bodyFront: CustomFront, bodyRight: CustomRight, bodyUp: CustomUp)
                     : new Spacecraft(id, name, 1000.0, initial, 3000.0, new Clock(name + "_CLK", 65536));
-                var tank = new FuelTank("ft", "model", "sn", 1000.0, 1000.0);
+                var tank = new FuelTank("ft", 1000.0, 1000.0, "model", "sn");
                 spacecraft.AddFuelTank(tank);
-                var engine = new Engine("eng", "model", "sn", 300.0, 10.0, tank);
+                var engine = new Engine("eng", 300.0, 10.0, tank, "model", "sn");
                 spacecraft.AddEngine(engine);
                 for (int i = 0; i < InstrumentOrientations.Length; i++)
                 {

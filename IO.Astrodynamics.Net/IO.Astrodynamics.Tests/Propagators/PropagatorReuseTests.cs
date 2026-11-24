@@ -95,9 +95,9 @@ public class PropagatorReuseTests
     // A prograde attitude at +300 s held 5 min, then an apogee raise to 9 000 km at the first perigee after +600 s
     private static Spacecraft WithChain(Spacecraft spacecraft)
     {
-        var tank = new FuelTank("ft", "model", "sn", 1000.0, 1000.0);
+        var tank = new FuelTank("ft", 1000.0, 1000.0, "model", "sn");
         spacecraft.AddFuelTank(tank);
-        var engine = new Engine("eng", "model", "sn", 300.0, 10.0, tank);
+        var engine = new Engine("eng", 300.0, 10.0, tank, "model", "sn");
         spacecraft.AddEngine(engine);
         var prograde = new ProgradeAttitude(Earth, Epoch.AddSeconds(300.0), TimeSpan.FromMinutes(5.0), engine);
         spacecraft.SetManeuvers(prograde, new ApogeeHeightManeuver(Earth, Epoch.AddSeconds(600.0), TimeSpan.Zero, 9000000.0, engine));

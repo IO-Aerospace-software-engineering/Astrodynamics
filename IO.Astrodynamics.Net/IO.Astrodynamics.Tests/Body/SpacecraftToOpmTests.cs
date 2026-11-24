@@ -62,9 +62,9 @@ public class SpacecraftToOpmTests
         var orbit = new KeplerianElements(a, (ra - rp) / (ra + rp), 0.9, 0.3, 1.1, System.Math.PI, earth, S, Frame.ICRF).ToStateVector();
         var initial = frame == "ICRF" ? orbit : orbit.ToFrame(Frame.ECLIPTIC_J2000).ToStateVector();
         var spacecraft = new Spacecraft(naifId, $"OPM{-naifId}", Dry, initial, 5000.0, new Clock($"OPM{-naifId}_CLK", 65536), cosparId: "2024-001A");
-        var tank = new FuelTank("ft", "model", "sn", Fuel, Fuel);
+        var tank = new FuelTank("ft", Fuel, Fuel, "model", "sn");
         spacecraft.AddFuelTank(tank);
-        var engine = new Engine("eng", "model", "sn", Isp, 10.0, tank);
+        var engine = new Engine("eng", Isp, 10.0, tank, "model", "sn");
         spacecraft.AddEngine(engine);
         var burn = new ApogeeHeightManeuver(earth, S, TimeSpan.Zero, ra + 500000.0, engine);
         spacecraft.SetManeuvers(burn);

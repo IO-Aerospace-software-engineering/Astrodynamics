@@ -105,10 +105,10 @@ public class ExporterTests
         spacecraft.AddRectangularInstrument("camera_hires", 0.03, 0.048, Vector3.VectorZ, Vector3.VectorY, Vector3.Zero, naifId: -334100, model: "camdeluxe");
 
         //Add a fuel tank
-        spacecraft.AddFuelTank(new FuelTank("fuelTank1", "fuelTankModel", "456", 2000.0, 2000.0));
+        spacecraft.AddFuelTank(new FuelTank("fuelTank1", 2000.0, 2000.0, "fuelTankModel", "456"));
 
         //Add an engine
-        spacecraft.AddEngine(new Engine("engine1", "engineModel", "1234", 450, 50.0, spacecraft.FuelTanks.First()));
+        spacecraft.AddEngine(new Engine("engine1", 450, 50.0, spacecraft.FuelTanks.First(), "engineModel", "1234"));
 
         //Attach the spacecraft to the scenario
         scenario.AddSpacecraft(spacecraft);
@@ -150,8 +150,8 @@ public class ExporterTests
         Spacecraft spacecraft = new Spacecraft(-334, "Spacecraft", 1000.0, new KeplerianElements(11800000.0, 0.3, 1.0, 0.0, 0.0, 0.0, TestHelpers.EarthAtJ2000, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF), 2000.0,
             new Clock("clockspc1", 256));
         spacecraft.AddCircularInstrument("Antenna", 0.2, Vector3.VectorZ, Vector3.VectorY, Vector3.Zero, naifId: -334100, model: "antdeluxe");
-        spacecraft.AddFuelTank(new FuelTank("fuelTank1", "fuelTankModel", "456", 2000.0, 2000.0));
-        spacecraft.AddEngine(new Engine("engine1", "engineModel", "1234", 450, 50.0, spacecraft.FuelTanks.First()));
+        spacecraft.AddFuelTank(new FuelTank("fuelTank1", 2000.0, 2000.0, "fuelTankModel", "456"));
+        spacecraft.AddEngine(new Engine("engine1", 450, 50.0, spacecraft.FuelTanks.First(), "engineModel", "1234"));
         scenario.AddSpacecraft(spacecraft);
         var initialManeuver = new InstrumentPointingToAttitude(scenario.Window.StartDate.AddHours(7.25), TimeSpan.FromHours(0.5), spacecraft.Instruments.First(), site,
             spacecraft.Engines.First());
@@ -192,8 +192,8 @@ public class ExporterTests
         Spacecraft spacecraft1 =
             new Spacecraft(-1790, "Target", 1000.0, targetOrbit, 10000.0, clock1);
 
-        FuelTank fuelTank1 = new FuelTank("ft1", "model1", "sn1", 9000.0, 9000.0);
-        Engine engine1 = new Engine("engine1", "model1", "sn1", 450.0, 50.0, fuelTank1);
+        FuelTank fuelTank1 = new FuelTank("ft1", 9000.0, 9000.0, "model1", "sn1");
+        Engine engine1 = new Engine("engine1", 450.0, 50.0, fuelTank1, "model1", "sn1");
         spacecraft1.AddFuelTank(fuelTank1);
         spacecraft1.AddEngine(engine1);
         spacecraft1.AddPayload(new Payload("payload1", 50.0, "pay01"));
@@ -205,8 +205,8 @@ public class ExporterTests
         Spacecraft spacecraft2 =
             new Spacecraft(-1791, "Chaser", 1000.0, parkingOrbit, 10000.0, clock2);
 
-        FuelTank fuelTank2 = new FuelTank("ft1", "model1", "sn1", 9000.0, 9000.0);
-        Engine engine2 = new Engine("engine1", "model1", "sn1", 450.0, 50.0, fuelTank2);
+        FuelTank fuelTank2 = new FuelTank("ft1", 9000.0, 9000.0, "model1", "sn1");
+        Engine engine2 = new Engine("engine1", 450.0, 50.0, fuelTank2, "model1", "sn1");
         spacecraft2.AddFuelTank(fuelTank2);
         spacecraft2.AddEngine(engine2);
         spacecraft2.AddPayload(new Payload("payload1", 50.0, "pay01"));

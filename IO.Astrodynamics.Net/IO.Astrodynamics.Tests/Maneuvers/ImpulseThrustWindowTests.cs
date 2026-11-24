@@ -59,9 +59,9 @@ public class ImpulseThrustWindowTests
     private static Spacecraft NewSpacecraft(int naifId, StateVector initial, double dry, double fuel, out Engine engine)
     {
         var spacecraft = new Spacecraft(naifId, "TW" + -naifId, dry, initial, dry + fuel + 1.0, new Clock("tw" + -naifId, 65536));
-        var tank = new FuelTank("tank" + -naifId, "model", "sn", fuel, fuel);
+        var tank = new FuelTank("tank" + -naifId, fuel, fuel, "model", "sn");
         spacecraft.AddFuelTank(tank);
-        engine = new Engine("engine" + -naifId, "model", "sn", Isp, FuelFlow, tank);
+        engine = new Engine("engine" + -naifId, Isp, FuelFlow, tank, "model", "sn");
         spacecraft.AddEngine(engine);
         return spacecraft;
     }

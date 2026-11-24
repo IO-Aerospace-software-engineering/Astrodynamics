@@ -55,9 +55,9 @@ public class ManeuverPreviewTests
         int id = Interlocked.Decrement(ref _nextId);
         var spacecraft = new Spacecraft(id, "PREV" + -id, 1000.0, new KeplerianElements(7000e3, 0.01, 0.5, 0.0, 0.0, 0.0, earth, S, Frames.Frame.ICRF), 3000.0,
             new Clock("PREV" + -id, 65536));
-        var tank = new FuelTank("ft" + -id, "m", "sn" + -id, 1000.0, 1000.0);
+        var tank = new FuelTank("ft" + -id, 1000.0, 1000.0, "m", "sn" + -id);
         spacecraft.AddFuelTank(tank);
-        engine = new Engine("eng" + -id, "m", "sn" + -id, 300.0, 10.0, tank);
+        engine = new Engine("eng" + -id, 300.0, 10.0, tank, "m", "sn" + -id);
         spacecraft.AddEngine(engine);
         return spacecraft;
     }
@@ -234,8 +234,8 @@ public class ManeuverPreviewTests
         var orbit = new KeplerianElements(a, 0.0, i1, o1, 0.0, 0.0, earth, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF);
         var target = new KeplerianElements(a, 0.0, i2, o2, 0.0, 0.0, earth, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF);
         var spc = new Spacecraft(Interlocked.Decrement(ref _nextId), "PLANEPREV", 1000.0, orbit, 3000.0, new Clock("PLANEPREV", 65536));
-        spc.AddFuelTank(new FuelTank("ft", "ftA", "123456", 2000.0, 1900.0));
-        spc.AddEngine(new Engine("eng", "engmk1", "12345", 450, 50, spc.FuelTanks.First()));
+        spc.AddFuelTank(new FuelTank("ft", 2000.0, 1900.0, "ftA", "123456"));
+        spc.AddEngine(new Engine("eng", 450, 50, spc.FuelTanks.First(), "engmk1", "12345"));
         var plane = new PlaneAlignmentManeuver(new Time(DateTime.MinValue, TimeScale.TDB), TimeSpan.Zero, target, spc.Engines.First());
 
         // The closed form: the normals, the node of the case's descending pass (u near 2.198 rad) and its opposite

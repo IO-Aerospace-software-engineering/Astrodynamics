@@ -205,9 +205,9 @@ public class CdmPropagatedCovarianceTests : IClassFixture<CdmPropagatedCovarianc
         var protectedCraft = ReferenceSpacecraft(-6311, _case.ProtectedStart);
         var secondaryCraft = ReferenceSpacecraft(-6312, _case.SecondaryStart);
         // An engine on the secondary: a capability, not a thrust model of its propagation (#684)
-        var tank = new FuelTank("tank6312", "model", "sn1", 20.0, 20.0);
+        var tank = new FuelTank("tank6312", 20.0, 20.0, "model", "sn1");
         secondaryCraft.AddFuelTank(tank);
-        secondaryCraft.AddEngine(new Engine("engine6312", "model", "sn1", 300.0, 10.0, tank));
+        secondaryCraft.AddEngine(new Engine("engine6312", 300.0, 10.0, tank, "model", "sn1"));
         _case.Propagate(protectedCraft);
         _case.Propagate(secondaryCraft);
         var encounter = ConjunctionAssessment.Analyze(new ProtectedSpacecraftProfile(protectedCraft), secondaryCraft,

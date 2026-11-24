@@ -156,8 +156,8 @@ internal static class CovariancePropagationPage
     {
         #region docs/tutorials/covariance-propagation.md:5
         // Inputs: initialState (StateVector), earth (CelestialBody), epoch (Time), window (Window), bodies (CelestialItem[])
-        var tank = new FuelTank("TANK", "model", "sn1", 50.0, 50.0);
-        var engine = new Engine("ENGINE", "model", "sn1", 300.0, 1.0, tank);
+        var tank = new FuelTank("TANK", 50.0, 50.0, "model", "sn1");
+        var engine = new Engine("ENGINE", 300.0, 1.0, tank, "model", "sn1");
         var maneuvering = new Spacecraft(-1002, "SAT2", 100.0, initialState, 1000.0, new Clock("SAT2_CLK", 65536),
             sectionalArea: 10.0, dragCoefficient: 2.2, solarRadiationCoefficient: 1.5);
         maneuvering.AddFuelTank(tank);

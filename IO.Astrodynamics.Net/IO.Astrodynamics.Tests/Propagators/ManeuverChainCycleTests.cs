@@ -86,9 +86,9 @@ public class ManeuverChainCycleTests
         var orbit = new KeplerianElements(7128137.0, 500.0 / 7128.137, 0.5, 0.0, 0.0, 0.0, earth, S, Frame.ICRF);
         int id = System.Threading.Interlocked.Decrement(ref _nextId);
         var spacecraft = new Spacecraft(id, $"CYC{-id}", 500.0, orbit, 3000.0, new Clock($"CYC{-id}_CLK", 65536));
-        var tank = new FuelTank("ft", "model", "sn", 800.0, 800.0);
+        var tank = new FuelTank("ft", 800.0, 800.0, "model", "sn");
         spacecraft.AddFuelTank(tank);
-        var engine = new Engine("eng", "model", "sn", 320.0, 5.0, tank);
+        var engine = new Engine("eng", 320.0, 5.0, tank, "model", "sn");
         spacecraft.AddEngine(engine);
         return new Setup { Earth = earth, Spacecraft = spacecraft, Engine = engine };
     }

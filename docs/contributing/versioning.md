@@ -70,7 +70,9 @@ batch too, the propagators no longer `IDisposable`, a reused propagator that ref
 changed, a `TLEPropagator` run that re-arms the spacecraft and replaces its stored states, `AddPropagatedStates` one
 window per call, the maneuver plan of `SetManeuvers` with a closed `Maneuver` hierarchy and pure previews, and the
 results of a run, read through `GetStateVector` and the records of `PropagationSolution.Maneuvers`, immutable from
-outside.
+outside, and a first spacecraft in a few arguments: the orbit fourth with the maximum operating mass and the clock
+optional, one `Add*Instrument` per shape with a default id, components whose model and serial number are optional, each
+`Add` returning its argument and one name per component.
 **Removed** lists `Instrument.PositionInFOV`, `LowThrustManeuver`, `Quaternion.Zero`, `Star.PropagationOutput`,
 `ExceptionBase`, `Matrix.Set`, `Vector3 * Vector3`, six exports of the native library that .NET never called, the
 public interop structs of `IO.Astrodynamics.DTO`, the ten raw conversions of `SpiceAPI`, the public helpers of the
@@ -81,7 +83,8 @@ forces (the flag overloads of `Spacecraft.Propagate`, `Spacecraft.PropagateAsync
 the flags constructors of `CentralBodyPropagator` and `PropagationTask`, `CentralBodyPropagatorBuilder`, and the
 factories and flags of `MonteCarloConfiguration`), the asynchronous members over synchronous work (`Star`, `BatchPropagator`
 and `MonteCarloPropagator` `PropagateAsync`), the token and progress of `BatchOptions`, `Spacecraft.SetStandbyManeuver`,
-`InitialManeuver` and `Maneuver.SetNextManeuver`, `Attitude.StateOrientation` and `Spacecraft.GetTotalFuel`. Several results change: see **Fixed** and **Changed**. The open defects a caller can meet at this
+`InitialManeuver` and `Maneuver.SetNextManeuver`, `Attitude.StateOrientation`, `Spacecraft.GetTotalFuel` and the value
+equality of `FuelTank`, `Engine` and `Payload`. Several results change: see **Fixed** and **Changed**. The open defects a caller can meet at this
 release are listed under **Known limitations**.
 
 **Added**
@@ -7332,6 +7335,30 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   not list and so the kernel writers never wrote, and that `Equals` (by NAIF id) took for a library instrument of its id;
   the field-of-view search threw `InvalidOperationException` for such an instrument of a shape other than a circle, a
   case that no longer exists. Migration: build the instrument with the `Add*Instrument` of its shape.
+- **Breaking: `FuelTank`, `Engine` and `Payload` take their model and serial number last and optional, a tank may
+  start empty** (lot L5b, R10 and decision 76 of #668, decided by S. Guillet, 2026-11-23): `FuelTank(string name, double
+  capacity, double initialQuantity, string model = null, string serialNumber = null)`, `Engine(string name, double isp,
+  double fuelFlow, FuelTank fuelTank, string model = null, string serialNumber = null)` and `Payload(string name, double
+  mass, string serialNumber = null)`, where they were `FuelTank(name, model, serialNumber, capacity, initialQuantity)`
+  and `Engine(name, model, serialNumber, isp, fuelFlow, fuelTank)`, each string required (an empty one threw
+  `ArgumentException`), and a payload's serial number required. A tank's `initialQuantity` may be 0, an empty tank whose
+  first burn throws `InsufficientFuelException` (above 0 before); the model and the serial number reach no kernel. An
+  old positional call no longer compiles (a `string` does not convert to `double`). The components built without a model
+  or a serial number propagate as those built with them, bit for bit (`ComponentConstructionTests`). Migration: `new
+  FuelTank(name, model, serial, capacity, quantity)` becomes `new FuelTank(name, capacity, quantity, model, serial)` or
+  `new FuelTank(name, capacity, quantity)`, and `new Engine(name, model, serial, isp, flow, tank)` `new Engine(name, isp,
+  flow, tank, model, serial)` or `new Engine(name, isp, flow, tank)`.
+- **Breaking: `AddFuelTank`, `AddEngine` and `AddPayload` return their argument and refuse a second component of a name**
+  (lot L5b, R10 and decision 76 of #668, decided by S. Guillet, 2026-11-23): `FuelTank AddFuelTank(FuelTank)`, `Engine
+  AddEngine(Engine)` and `Payload AddPayload(Payload)`, which returned nothing (source compatible, a binary break), and
+  a second tank, engine or payload of a name on a spacecraft, compared ordinally, throws `ArgumentException` naming the
+  parameter; a tank or an engine of a name was accepted before when its model or serial number differed, and a payload
+  of a name when its serial number or mass did. `AddFuelTank` checks the name before it attaches the tank, so a refused
+  tank stays free for another spacecraft. The payload's rule has no file behind it (a payload name reaches no kernel):
+  it is the rule of every component. The messages of `AddEngine`, `AddFuelTank` and of the run's engine check print a
+  serial number only when one is given, and the run names an engine of the name of an added one where it named an
+  engine equal by value. Migration: give each tank, engine and payload of a spacecraft its own name; `var tank =
+  spacecraft.AddFuelTank(new FuelTank(...))`.
 - **`Spacecraft.GetTotalISP()` and `GetTotalFuelFlow()` count every engine**
   ([#801](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/801) part 1, lot L5b, decision 60 of
   #668 with L5-20 as amended, decided by S. Guillet, 2026-11-23): they counted only the engines whose tank held fuel at
@@ -7366,6 +7393,12 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   attitude on an instrument of the spacecraft it is propagated with.
 **Removed**
 
+- **The value equality of `FuelTank`, `Engine` and `Payload`: `Equals`, `GetHashCode`, `==`, `!=` and
+  `IEquatable<T>`** (lot L5b, decision 76 of #668, decided by S. Guillet, 2026-11-23): they compared the name, the model
+  and the serial number (the mass too for a payload), so two tanks of no model compared equal once both were optional,
+  and a twin passed for the instance it copied (the library compared its own components by reference since #676). The
+  three compare by reference. Migration: compare `Name` (and the other values) where a value comparison was meant;
+  `Spacecraft.FuelTanks.Contains(tank)` tells whether a spacecraft holds that instance.
 - **`Instrument.PositionInFOV`** (protected), on which `IsInFOV` was built before #515: its reference vector was not made
   perpendicular to the boresight and its corrections were those of `CelestialItem.GetEphemeris`. A subclass of
   `Instrument` that called it no longer compiles. Use `IsInFOV`, the `POINT` condition of CSPICE's `fovtrg` with the

@@ -268,9 +268,9 @@ public class MinimumEpochGateEdgeTests
         (Spacecraft, ImpulseManeuver) Build(int id, Func<Engine, ImpulseManeuver> maneuver)
         {
             var spacecraft = new Spacecraft(id, $"GE{-id}", 1000.0, MinimumEpochGateTests.Orbit(earth, m0), 3000.0, new Clock($"GE{-id}_CLK", 65536));
-            var tank = new FuelTank("ft", "model", "sn", 1000.0, 1000.0);
+            var tank = new FuelTank("ft", 1000.0, 1000.0, "model", "sn");
             spacecraft.AddFuelTank(tank);
-            var engine = new Engine("eng", "model", "sn", 300.0, 10.0, tank);
+            var engine = new Engine("eng", 300.0, 10.0, tank, "model", "sn");
             spacecraft.AddEngine(engine);
             var m = maneuver(engine);
             spacecraft.SetManeuvers(m);
@@ -345,9 +345,9 @@ public class MinimumEpochGateEdgeTests
         foreach (bool apogeeFirst in new[] { true, false })
         {
             var spacecraft = new Spacecraft(-7811, "GE7811", 1000.0, orbit, 3000.0, new Clock("GE7811_CLK", 65536));
-            var tank = new FuelTank("ft", "model", "sn", 1000.0, 1000.0);
+            var tank = new FuelTank("ft", 1000.0, 1000.0, "model", "sn");
             spacecraft.AddFuelTank(tank);
-            var engine = new Engine("eng", "model", "sn", 300.0, 10.0, tank);
+            var engine = new Engine("eng", 300.0, 10.0, tank, "model", "sn");
             spacecraft.AddEngine(engine);
             var apogee = new ManeuverEventDetector(new ApogeeHeightManeuver(earth, MinimumEpochGateTests.GateAtTt(perigee - 3.0), TimeSpan.Zero, 8378137.0, engine));
             var lowered = new ManeuverEventDetector(new PerigeeHeightManeuver(earth, MinimumEpochGateTests.GateAtTt(perigee - 2.0), TimeSpan.Zero, 6878137.0, engine));
@@ -384,9 +384,9 @@ public class MinimumEpochGateEdgeTests
         var target = new KeplerianElements(7000000.0, 0.0, 0.5, 0.0, 0.0, 0.0, earth, S, Frame.ICRF);
         var normal = target.SpecificAngularMomentum().Normalize();
         var spacecraft = new Spacecraft(-7821, "GE7821", 1000.0, target, 3000.0, new Clock("GE7821_CLK", 65536));
-        var tank = new FuelTank("ft", "model", "sn", 1000.0, 1000.0);
+        var tank = new FuelTank("ft", 1000.0, 1000.0, "model", "sn");
         spacecraft.AddFuelTank(tank);
-        var engine = new Engine("eng", "model", "sn", 300.0, 10.0, tank);
+        var engine = new Engine("eng", 300.0, 10.0, tank, "model", "sn");
         spacecraft.AddEngine(engine);
         var inPlane = normal.Cross(Vector3.VectorZ).Normalize();
         var state = new StateVector(inPlane * 7000000.0 + normal * height, normal.Cross(inPlane) * 7500.0 + normal * (rate * 100.0), earth, S, Frame.ICRF);
@@ -419,9 +419,9 @@ public class MinimumEpochGateEdgeTests
         var earth = new CelestialBody(PlanetsAndMoons.EARTH, Frame.ICRF, S);
         var orbit = MinimumEpochGateTests.Orbit(earth, 1.0);
         var spacecraft = new Spacecraft(-7831, "GE7831", 1000.0, orbit, 3000.0, new Clock("GE7831_CLK", 65536));
-        var tank = new FuelTank("ft", "model", "sn", 1000.0, 1000.0);
+        var tank = new FuelTank("ft", 1000.0, 1000.0, "model", "sn");
         spacecraft.AddFuelTank(tank);
-        var engine = new Engine("eng", "model", "sn", 300.0, 10.0, tank);
+        var engine = new Engine("eng", 300.0, 10.0, tank, "model", "sn");
         spacecraft.AddEngine(engine);
         var gate = S.AddSeconds(1000.0);
         var detector = new ManeuverEventDetector(new ApogeeHeightManeuver(earth, gate, TimeSpan.Zero, 8378137.0, engine));
@@ -450,9 +450,9 @@ public class MinimumEpochGateEdgeTests
         var sv = orbit.ToStateVector();
         var k = new KeplerClosedForm(earth.GM, sv.Position, sv.Velocity, 0.0);
         var protectedCraft = new Spacecraft(-7841, "GE7841", 1000.0, sv, 3000.0, new Clock("GE7841_CLK", 65536));
-        var tank = new FuelTank("ft", "model", "sn", 1000.0, 1000.0);
+        var tank = new FuelTank("ft", 1000.0, 1000.0, "model", "sn");
         protectedCraft.AddFuelTank(tank);
-        var engine = new Engine("eng", "model", "sn", 300.0, 10.0, tank);
+        var engine = new Engine("eng", 300.0, 10.0, tank, "model", "sn");
         protectedCraft.AddEngine(engine);
         var gate = MinimumEpochGateTests.GateAtTt(1000.0);
         var impulse = new PerigeeHeightManeuver(earth, gate, TimeSpan.Zero, 6878137.0, engine);
@@ -516,9 +516,9 @@ public class MinimumEpochGateEdgeTests
         Spacecraft Build(int id, StateVector initial, bool withManeuver)
         {
             var spacecraft = new Spacecraft(id, $"GE{-id}", 1000.0, initial, 3000.0, new Clock($"GE{-id}_CLK", 65536));
-            var tank = new FuelTank("ft", "model", "sn", 1000.0, 1000.0);
+            var tank = new FuelTank("ft", 1000.0, 1000.0, "model", "sn");
             spacecraft.AddFuelTank(tank);
-            var engine = new Engine("eng", "model", "sn", 300.0, 10.0, tank);
+            var engine = new Engine("eng", 300.0, 10.0, tank, "model", "sn");
             spacecraft.AddEngine(engine);
             if (withManeuver)
             {

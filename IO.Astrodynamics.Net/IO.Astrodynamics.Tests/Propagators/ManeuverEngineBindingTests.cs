@@ -74,9 +74,9 @@ public class ManeuverEngineBindingTests
         int id = NextId();
         var spacecraft = new Spacecraft(id, "BIND" + -id, DryMass, orbit ?? Orbit(earth), 10000.0, new Clock("BIND" + -id, 65536),
             bodyFront: front, bodyRight: right, bodyUp: front.HasValue ? Vector3.VectorZ : null);
-        var tank = new FuelTank("TANK" + -id, "MODEL", "SN" + -id, Fuel, Fuel);
+        var tank = new FuelTank("TANK" + -id, Fuel, Fuel, "MODEL", "SN" + -id);
         spacecraft.AddFuelTank(tank);
-        engine = new Engine("ENGINE" + -id, "MODEL", "SN" + -id, Isp, 5.0, tank);
+        engine = new Engine("ENGINE" + -id, Isp, 5.0, tank, "MODEL", "SN" + -id);
         spacecraft.AddEngine(engine);
         return spacecraft;
     }
@@ -218,7 +218,7 @@ public class ManeuverEngineBindingTests
         var other = NewSpacecraft(earth, out var otherEngine);
         var foreignEngine = engineKind == "OtherSpacecraft"
             ? otherEngine
-            : new Engine("LOOSE", "MODEL", "SN-LOOSE", Isp, 5.0, new FuelTank("LOOSE", "MODEL", "SN-LOOSE", Fuel, Fuel));
+            : new Engine("LOOSE", Isp, 5.0, new FuelTank("LOOSE", Fuel, Fuel, "MODEL", "SN-LOOSE"), "MODEL", "SN-LOOSE");
         PlanPastTheClaim(spacecraft, new ProgradeAttitude(earth, epoch, TimeSpan.Zero, ownEngine),
             new ApogeeHeightManeuver(earth, epoch, TimeSpan.Zero, 7300e3, foreignEngine));
 
@@ -321,22 +321,23 @@ public class ManeuverEngineBindingTests
     }
 
     // The engine of the foreign maneuver: another spacecraft's, one on a tank of no spacecraft, one built on the
-    // spacecraft's own tank and never added with AddEngine, or a twin of its engine (equal by name, model and serial number,
-    // another instance), which AddEngine refuses as already added (decision 92 of #668, decided by S. Guillet, 2026-11-23)
+    // spacecraft's own tank and never added with AddEngine, or a twin of its engine (another instance of its name, model and
+    // serial number), which AddEngine refuses as a second engine of the name (decision 92 of #668, decided by S. Guillet,
+    // 2026-11-23; decision 76 for the name: equal by value, it was refused as already added before)
     private static Engine ForeignEngine(string engineKind, Spacecraft spacecraft, Engine ownEngine, Engine otherEngine) => engineKind switch
     {
         "OtherSpacecraft" => otherEngine,
-        "UnattachedTank" => new Engine("LOOSE", "MODEL", "SN-LOOSE", Isp, 5.0, new FuelTank("LOOSE", "MODEL", "SN-LOOSE", Fuel, Fuel)),
-        "NotAdded" => new Engine("NOTADDED", "MODEL", "SN-NOTADDED", Isp, 5.0, spacecraft.FuelTanks.Single()),
-        "Twin" => new Engine(ownEngine.Name, ownEngine.Model, ownEngine.SerialNumber, Isp, 5.0, spacecraft.FuelTanks.Single()),
+        "UnattachedTank" => new Engine("LOOSE", Isp, 5.0, new FuelTank("LOOSE", Fuel, Fuel, "MODEL", "SN-LOOSE"), "MODEL", "SN-LOOSE"),
+        "NotAdded" => new Engine("NOTADDED", Isp, 5.0, spacecraft.FuelTanks.Single(), "MODEL", "SN-NOTADDED"),
+        "Twin" => new Engine(ownEngine.Name, Isp, 5.0, spacecraft.FuelTanks.Single(), ownEngine.Model, ownEngine.SerialNumber),
         _ => throw new ArgumentOutOfRangeException(nameof(engineKind))
     };
 
     /// <summary>
     /// "An engine that is on this spacecraft" (decision 46) is an engine of <see cref="Spacecraft.Engines"/>, added with
     /// <see cref="Spacecraft.AddEngine"/>, compared by reference (decision 92 of #668, decided by S. Guillet, 2026-11-23):
-    /// an engine built on the spacecraft's own tank and never added, or a twin of an added engine (equal by value, another
-    /// instance, which <c>AddEngine</c> refuses as already added), is refused by <c>SetManeuvers</c> with
+    /// an engine built on the spacecraft's own tank and never added, or a twin of an added engine (another instance of its
+    /// name, which <c>AddEngine</c> refuses as a second engine of the name, decision 76), is refused by <c>SetManeuvers</c> with
     /// <see cref="ArgumentException"/> (<c>maneuvers</c>), the plan unchanged; once added, the same engine is accepted and
     /// fires (before, the tank alone was checked and both passed).
     /// </summary>
@@ -348,7 +349,8 @@ public class ManeuverEngineBindingTests
         var earth = new CelestialBody(PlanetsAndMoons.EARTH);
         var spacecraft = NewSpacecraft(earth, out var ownEngine);
         var engine = ForeignEngine(engineKind, spacecraft, ownEngine, null);
-        Assert.True(engineKind == "Twin" ? engine.Equals(ownEngine) : !spacecraft.Engines.Contains(engine));
+        Assert.True(engineKind == "Twin" ? engine.Name == ownEngine.Name && !ReferenceEquals(engine, ownEngine) : !spacecraft.Engines.Contains(engine));
+        Assert.DoesNotContain(engine, spacecraft.Engines);
         var maneuver = new ApogeeHeightManeuver(earth, Epoch, TimeSpan.Zero, 7300e3, engine);
         var attitude = new ProgradeAttitude(earth, Epoch, TimeSpan.Zero, engine);
 
@@ -357,7 +359,8 @@ public class ManeuverEngineBindingTests
             var refused = Assert.Throws<ArgumentException>(() => spacecraft.SetManeuvers(refusedManeuver));
             Assert.Equal("maneuvers", refused.ParamName);
             Assert.Contains(engine.Name, refused.Message);
-            // The advice the caller can follow: for a twin, which AddEngine refuses, the engine instance of Engines; for an
+            // The advice the caller can follow: for an engine of the name of an added one, which AddEngine refuses, the
+            // engine instance of Engines; for an
             // engine not added, AddEngine (second review of lot L5a)
             if (engineKind == "Twin")
             {

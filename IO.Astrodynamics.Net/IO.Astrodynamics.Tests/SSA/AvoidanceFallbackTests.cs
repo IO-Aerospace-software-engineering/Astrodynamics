@@ -99,8 +99,8 @@ public sealed class AvoidanceFallbackCase
     internal static Spacecraft WithEngine(int naifId, StateVector start, out Engine engine)
     {
         var spacecraft = ReferenceCase.NewSpacecraft(naifId, start);
-        var tank = new FuelTank("tank" + -naifId, "model", "sn1", 100.0, 100.0);
-        engine = new Engine("engine" + -naifId, "model", "sn1", 300.0, 10.0, tank);
+        var tank = new FuelTank("tank" + -naifId, 100.0, 100.0, "model", "sn1");
+        engine = new Engine("engine" + -naifId, 300.0, 10.0, tank, "model", "sn1");
         spacecraft.AddFuelTank(tank);
         spacecraft.AddEngine(engine);
         return spacecraft;
@@ -658,9 +658,9 @@ public class AvoidanceFallbackTests : IClassFixture<AvoidanceFallbackCase>
                 afterBurn.RotateCovarianceFromRtn(start.RotateCovarianceToRtn(start.Covariance.Value)));
         }
         var after = ReferenceCase.NewSpacecraft(naifId - 50, afterBurn);
-        var tank = new FuelTank("tank" + -naifId, "model", "sn1", 100.0, 100.0 - option.FuelCostEstimateKilograms);
+        var tank = new FuelTank("tank" + -naifId, 100.0, 100.0 - option.FuelCostEstimateKilograms, "model", "sn1");
         after.AddFuelTank(tank);
-        after.AddEngine(new Engine("engine" + -naifId, "model", "sn1", 300.0, 10.0, tank));
+        after.AddEngine(new Engine("engine" + -naifId, 300.0, 10.0, tank, "model", "sn1"));
         var solution = after.Propagate(new Window(option.BurnEpoch, AvoidanceFallbackCase.PropagationWindow.EndDate), new PropagationOptions { Integrator = new VVIntegratorOptions { Step = AvoidanceFallbackCase.VelocityVerletStep }, OutputStep = AvoidanceFallbackCase.VelocityVerletStep, ThirdBodies = _case.Bodies, AtmosphericDrag = true, SolarRadiationPressure = true });
         return (after, solution);
     }

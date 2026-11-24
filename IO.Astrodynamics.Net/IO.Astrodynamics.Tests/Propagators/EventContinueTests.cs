@@ -181,8 +181,8 @@ public class EventContinueTests
             System.Math.PI * 0.5, MeanAnomaly, _earth, Start, Frames.Frame.ICRF);
         var spacecraft = new Spacecraft(id, "CONTINUE" + -id, 1000.0, orbit, 3000.0,
             new Clock("continue" + -id, 65536));
-        var tank = new FuelTank("tank" + -id, "model", "sn1", 1000.0, 1000.0);
-        var engine = new Engine("engine" + -id, "model", "sn1", 300.0, 10.0, tank);
+        var tank = new FuelTank("tank" + -id, 1000.0, 1000.0, "model", "sn1");
+        var engine = new Engine("engine" + -id, 300.0, 10.0, tank, "model", "sn1");
         spacecraft.AddFuelTank(tank);
         spacecraft.AddEngine(engine);
         return (spacecraft, engine);

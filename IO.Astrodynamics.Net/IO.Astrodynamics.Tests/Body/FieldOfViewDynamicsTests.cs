@@ -88,9 +88,9 @@ public class FieldOfViewDynamicsTests
     private static (Spacecraft spacecraft, Engine engine) Create(int naifId, StateVector orbit)
     {
         var spacecraft = new Spacecraft(naifId, $"FOV{-naifId}", 1000.0, orbit, 3000.0, new Clock($"FOV{-naifId}_CLK", 65536));
-        var tank = new FuelTank("ft515", "model", "sn515", 1000.0, 1000.0);
+        var tank = new FuelTank("ft515", 1000.0, 1000.0, "model", "sn515");
         spacecraft.AddFuelTank(tank);
-        var engine = new Engine("eng515", "model", "sn515", 300.0, 10.0, tank);
+        var engine = new Engine("eng515", 300.0, 10.0, tank, "model", "sn515");
         spacecraft.AddEngine(engine);
         AddInstruments(spacecraft);
         return (spacecraft, engine);

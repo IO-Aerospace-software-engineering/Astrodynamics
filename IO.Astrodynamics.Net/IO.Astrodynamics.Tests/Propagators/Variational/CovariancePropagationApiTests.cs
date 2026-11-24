@@ -658,8 +658,8 @@ public class CovariancePropagationApiTests : IClassFixture<PartialsTestCases>
         var state = CovariancePropagationTests.WithCovariance(Leo);
         var spacecraft = new Spacecraft(naifId, "BURN" + naifId, 1000.0, state, 3000.0,
             new Clock("burn" + naifId, 65536));
-        var tank = new FuelTank("tank" + naifId, "model", "sn1", 1000.0, 1000.0);
-        var engine = new Engine("engine" + naifId, "model", "sn1", 300.0, 10.0, tank);
+        var tank = new FuelTank("tank" + naifId, 1000.0, 1000.0, "model", "sn1");
+        var engine = new Engine("engine" + naifId, 300.0, 10.0, tank, "model", "sn1");
         spacecraft.AddFuelTank(tank);
         spacecraft.AddEngine(engine);
         var maneuver = new ApogeeHeightManeuver(_cases.Earth, Start, TimeSpan.Zero, 7000000.0, engine)

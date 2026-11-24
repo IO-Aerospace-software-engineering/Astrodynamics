@@ -124,11 +124,11 @@ public class InputRangeTests
     [InlineData(100.0, 0x7FF8000000000000L, "initialQuantity")]
     [InlineData(100.0, double.PositiveInfinity, "initialQuantity")]
     [InlineData(100.0, double.NegativeInfinity, "initialQuantity")]
-    [InlineData(100.0, 0.0, "initialQuantity")]
+    [InlineData(100.0, -1e-300, "initialQuantity")]
     [InlineData(100.0, 100.5, "initialQuantity")]
     public void FuelTank_RejectsAValueNotFiniteOrOutOfRange(object capacity, object initialQuantity, string parameter)
     {
-        var exception = Record.Exception(() => new FuelTank("T", "M", "S", AsDouble(capacity), AsDouble(initialQuantity)));
+        var exception = Record.Exception(() => new FuelTank("T", AsDouble(capacity), AsDouble(initialQuantity), "M", "S"));
 
         var rejected = Assert.IsType<ArgumentOutOfRangeException>(exception);
         Assert.Equal(parameter, rejected.ParamName);
@@ -149,9 +149,9 @@ public class InputRangeTests
     [InlineData(300.0, -1.0, "fuelFlow")]
     public void Engine_RejectsAValueNotFiniteOrOutOfRange(object isp, object fuelFlow, string parameter)
     {
-        var tank = new FuelTank("T", "M", "S", 100.0, 10.0);
+        var tank = new FuelTank("T", 100.0, 10.0, "M", "S");
 
-        var exception = Record.Exception(() => new Engine("E", "M", "S", AsDouble(isp), AsDouble(fuelFlow), tank));
+        var exception = Record.Exception(() => new Engine("E", AsDouble(isp), AsDouble(fuelFlow), tank, "M", "S"));
 
         var rejected = Assert.IsType<ArgumentOutOfRangeException>(exception);
         Assert.Equal(parameter, rejected.ParamName);

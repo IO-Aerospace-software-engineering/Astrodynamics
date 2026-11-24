@@ -56,9 +56,9 @@ public class RunResultsSurfaceTests
         int id = NextId();
         var spacecraft = new Spacecraft(id, "RR" + -id, 1000.0, new KeplerianElements(7000e3, 0.01, 0.5, 0.0, 0.0, 0.0, earth, S, Frames.Frame.ICRF), 3000.0,
             new Clock("RR" + -id, 65536));
-        var tank = new FuelTank("ft" + -id, "m", "sn" + -id, 1000.0, 1000.0);
+        var tank = new FuelTank("ft" + -id, 1000.0, 1000.0, "m", "sn" + -id);
         spacecraft.AddFuelTank(tank);
-        engine = new Engine("eng" + -id, "m", "sn" + -id, 300.0, 10.0, tank);
+        engine = new Engine("eng" + -id, 300.0, 10.0, tank, "m", "sn" + -id);
         spacecraft.AddEngine(engine);
         return spacecraft;
     }
@@ -335,9 +335,9 @@ public class RunResultsSurfaceTests
     public void GetTotalISP_AndGetTotalFuelFlow_CountEveryEngine()
     {
         var spacecraft = NewSpacecraft(Earth(), out _);
-        var empty = new FuelTank("ftE", "m", "snE", 1000.0, 500.0);
+        var empty = new FuelTank("ftE", 1000.0, 500.0, "m", "snE");
         spacecraft.AddFuelTank(empty);
-        spacecraft.AddEngine(new Engine("engE", "m", "snE", 200.0, 30.0, empty));
+        spacecraft.AddEngine(new Engine("engE", 200.0, 30.0, empty, "m", "snE"));
         typeof(FuelTank).GetField("<InitialQuantity>k__BackingField", Everything)!.SetValue(empty, 0.0);
 
         Assert.Equal(40.0, spacecraft.GetTotalFuelFlow());

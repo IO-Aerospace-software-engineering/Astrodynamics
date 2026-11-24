@@ -137,9 +137,9 @@ Instance-level overrides can be set via constructor parameters (`bodyFront`, `bo
 | `AddCircularInstrument(name, fieldOfView, boresight, refVector, orientation = default, naifId = null, model = null)` | Add a circular FOV instrument and return it ([Adding an instrument](#adding-an-instrument)) |
 | `AddEllipticalInstrument(name, fieldOfView, crossAngle, boresight, refVector, orientation = default, naifId = null, model = null)` | Add an elliptical FOV instrument and return it, under the same rules |
 | `AddRectangularInstrument(name, fieldOfView, crossAngle, boresight, refVector, orientation = default, naifId = null, model = null)` | Add a rectangular FOV instrument and return it, under the same rules |
-| `AddEngine(Engine)` | Add propulsion engine, whose fuel tank is a tank instance added to the spacecraft (`ArgumentException` otherwise, a tank equal to it by value included, #676, #586; `InvalidOperationException` for an unknown tank before 11.0.0) |
-| `AddFuelTank(FuelTank)` | Add fuel tank (a burn that needs more fuel than its tank holds throws `InsufficientFuelException`, an `InvalidOperationException` since 11.0.0, with `RequiredMass` and `AvailableMass` in kg); a tank held by another spacecraft is rejected (`ArgumentException`, #676, #586); the tank is attached atomically, so that of spacecraft adding one tank at once on several threads one takes it |
-| `AddPayload(Payload)` | Add payload |
+| `AddEngine(Engine)` | Add a propulsion engine and return it, whose fuel tank is a tank added to the spacecraft (`ArgumentException` otherwise, #676, #586; `InvalidOperationException` for an unknown tank before 11.0.0); a second engine of a name (ordinal) is refused (`ArgumentException` naming `engine`, decision 76 of #668) |
+| `AddFuelTank(FuelTank)` | Add a fuel tank and return it (a burn that needs more fuel than its tank holds throws `InsufficientFuelException`, an `InvalidOperationException` since 11.0.0, with `RequiredMass` and `AvailableMass` in kg); a second tank of a name (ordinal) is refused (`ArgumentException` naming `fuelTank`, decision 76 of #668), checked before the tank is attached, so a refused tank can go to another spacecraft; a tank held by another spacecraft is rejected (`ArgumentException`, #676, #586); the tank is attached atomically, so that of spacecraft adding one tank at once on several threads one takes it |
+| `AddPayload(Payload)` | Add a payload and return it; a second payload of a name (ordinal) is refused (`ArgumentException` naming `payload`): the rule of every component, for uniformity, since a payload name reaches no file (decision 76 of #668) |
 | `GetTotalMass()` | Total mass including fuel |
 | `GetInitialFuel()` | The fuel of the spacecraft's own tanks at the start of a run, the sum of their initial quantities, the child's tanks aside (decision 60 of #668, decided by S. Guillet, 2026-11-23; `GetTotalFuel` before 11.0.0, the same value) |
 | `GetRemainingFuel()` | The fuel left in the spacecraft's own tanks, the sum of their quantities: what the last run left |
@@ -445,9 +445,9 @@ J2000), its CK is not (`InvalidOperationException`).
 
 | Property | Description |
 |----------|-------------|
-| `Name` | Engine name |
-| `Model` | Engine model identifier |
-| `SerialNumber` | Serial number |
+| `Name` | Engine name, unique among the engines of its spacecraft |
+| `Model` | Engine model identifier, informational; null when none was given |
+| `SerialNumber` | Serial number, informational; null when none was given |
 | `ISP` | Specific impulse (s): finite and above 0 |
 | `FuelFlow` | Fuel mass flow rate (kg/s): finite and above 0 |
 | `Thrust` | Computed thrust (N) |
@@ -455,24 +455,24 @@ J2000), its CK is not (`InvalidOperationException`).
 
 ```csharp
 // Inputs: tank (FuelTank)
-var engine = new Engine("MainEngine", "RS-25", "SN001",
-    isp: 366.0, fuelFlow: 0.5, fuelTank: tank);
+var engine = new Engine("MainEngine", isp: 366.0, fuelFlow: 0.5, fuelTank: tank,
+    model: "RS-25", serialNumber: "SN001");
 ```
 
 ### FuelTank
 
 | Property | Description |
 |----------|-------------|
-| `Name` | Tank name |
-| `Model` | Tank model identifier |
-| `SerialNumber` | Serial number |
+| `Name` | Tank name, unique among the tanks of its spacecraft |
+| `Model` | Tank model identifier, informational; null when none was given |
+| `SerialNumber` | Serial number, informational; null when none was given |
 | `Capacity` | Maximum capacity (kg): finite and above 0, checked first |
-| `InitialQuantity` | Initial fuel quantity (kg): finite, above 0 and at most the capacity |
+| `InitialQuantity` | Initial fuel quantity (kg): finite, from 0 (an empty tank, whose first burn throws `InsufficientFuelException`) to the capacity |
 | `Quantity` | Current fuel quantity (kg) |
 
 ```csharp
-var tank = new FuelTank("MainTank", "FT-100", "SN001",
-    capacity: 1000.0, initialQuantity: 800.0);
+var tank = new FuelTank("MainTank", capacity: 1000.0, initialQuantity: 800.0,
+    model: "FT-100", serialNumber: "SN001");
 ```
 
 ### Instrument
@@ -735,8 +735,20 @@ var payload = new Payload("Camera", 25.0, "SN-42");
 
 The constructors of `Engine`, `FuelTank` and `Payload` throw `ArgumentOutOfRangeException` naming the parameter for a
 value that is not finite or out of its range: an engine's `isp` and `fuelFlow` above 0, a tank's `capacity` above 0 and
-its `initialQuantity` above 0 and at most the capacity, a payload's `mass` above 0 (#800; before 11.0.0 a NaN and an
+its `initialQuantity` not negative and at most the capacity, a payload's `mass` above 0 (#800; before 11.0.0 a NaN and an
 infinity passed, and an engine or a payload with a value of 0 or less threw `ArgumentException` naming no parameter).
+
+`FuelTank(name, capacity, initialQuantity, model = null, serialNumber = null)`, `Engine(name, isp, fuelFlow, fuelTank,
+model = null, serialNumber = null)` and `Payload(name, mass, serialNumber = null)` take their model and serial number
+last and optional, informational values no kernel reads (R10 and decision 76 of #668, decided by S. Guillet,
+2026-11-23; before 11.0.0 `(name, model, serialNumber, ...)`, each string required, and a payload's serial number
+required). A tank may start empty, `initialQuantity` 0; its first burn throws `InsufficientFuelException`. The three
+compare by reference: they are entities, a tank's quantity changes in a run, and two components of the same values
+are two components (value equality on the name, the model and the serial number before, the mass too for a payload,
+so a twin passed for the instance). `AddFuelTank`, `AddEngine` and `AddPayload` return their argument and refuse a
+second component of a name on a spacecraft, compared ordinally, with `ArgumentException` naming the parameter: a tank
+or an engine of a name, accepted before when its model or serial number differed, now throws. The payload's rule has no
+file behind it, unlike the instruments' (a payload name reaches no kernel): it is the rule of every component.
 
 ## See Also
 

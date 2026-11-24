@@ -193,9 +193,9 @@ namespace IO.Astrodynamics.Tests.Body
             var epoch = new TimeSystem.Time(2024, 1, 1, 0, 0, 0, TimeScale.TDB);
             var spacecraft = new Spacecraft(-1435, "OWNCLK", 100.0, new KeplerianElements(7000e3, 0.001, 0.9, 0.0, 0.0, 0.0, earth, epoch, Frames.Frame.ICRF), 1000.0,
                 new Clock("OWNCLK", 256));
-            var tank = new FuelTank("t", "m", "s", 100.0, 100.0);
+            var tank = new FuelTank("t", 100.0, 100.0, "m", "s");
             spacecraft.AddFuelTank(tank);
-            var engine = new Engine("e", "m", "s", 300.0, 1.0, tank);
+            var engine = new Engine("e", 300.0, 1.0, tank, "m", "s");
             spacecraft.AddEngine(engine);
             spacecraft.SetManeuvers(Maneuver.TriadAttitude.CreateLVLH(earth, epoch, TimeSpan.Zero, engine));
             spacecraft.Propagate(new Window(epoch, epoch.AddSeconds(3600.0)), new PropagationOptions { Integrator = new RK78IntegratorOptions { AbsoluteTolerance = 1e-10, RelativeTolerance = 1e-10 }, OutputStep = TimeSpan.FromSeconds(60.0), ThirdBodies = [earth], CovariancePropagation = CovariancePropagationOptions.None });

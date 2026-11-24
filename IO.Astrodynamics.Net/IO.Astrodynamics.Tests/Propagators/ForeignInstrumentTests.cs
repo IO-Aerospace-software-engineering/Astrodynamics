@@ -53,9 +53,9 @@ public class ForeignInstrumentTests
         int id = NextId();
         var spacecraft = new Spacecraft(id, "FI" + -id, 1000.0, new KeplerianElements(7000e3, 0.01, 0.9, 0.0, 0.0, System.Math.PI, earth, Epoch, Frame.ICRF), 10000.0,
             new Clock("FI" + -id, 65536));
-        var tank = new FuelTank("TANK" + -id, "MODEL", "SN" + -id, 3000.0, 3000.0);
+        var tank = new FuelTank("TANK" + -id, 3000.0, 3000.0, "MODEL", "SN" + -id);
         spacecraft.AddFuelTank(tank);
-        engine = new Engine("ENGINE" + -id, "MODEL", "SN" + -id, 320.0, 5.0, tank);
+        engine = new Engine("ENGINE" + -id, 320.0, 5.0, tank, "MODEL", "SN" + -id);
         spacecraft.AddEngine(engine);
         spacecraft.AddCircularInstrument("CAMZ" + -id, 0.1, Vector3.VectorZ, Vector3.VectorY, Vector3.Zero, naifId: id * 1000 - 1, model: "MODEL");
         spacecraft.AddCircularInstrument("CAMX" + -id, 0.1, Vector3.VectorX, Vector3.VectorY, Vector3.Zero, naifId: id * 1000 - 2, model: "MODEL");

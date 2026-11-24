@@ -20,7 +20,7 @@ public class ManeuverHoldTests
     }
 
     private static Engine NewEngine() =>
-        new("eng", "model", "sn", 350.0, 50.0, new FuelTank("tank", "model", "sn", 4000.0, 3000.0));
+        new("eng", 350.0, 50.0, new FuelTank("tank", 4000.0, 3000.0, "model", "sn"), "model", "sn");
 
     private static readonly TimeSystem.Time Epoch = new(2024, 3, 1, 12, 0, 0, TimeScale.TDB);
 

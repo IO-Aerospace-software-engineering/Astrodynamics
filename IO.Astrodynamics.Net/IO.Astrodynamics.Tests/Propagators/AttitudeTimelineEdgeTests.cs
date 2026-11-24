@@ -206,9 +206,9 @@ public class AttitudeTimelineEdgeTests
     {
         var earth = new CelestialBody(PlanetsAndMoons.EARTH, Frame.ICRF, S);
         var spacecraft = new Spacecraft(NextId(), "TLEDGEPRE", 1000.0, MinimumEpochGateTests.Orbit(earth, 0.0), 3000.0, new Clock("TLEDGEPRE_CLK", 65536));
-        var tank = new FuelTank("ft", "model", "sn", 1000.0, 1000.0);
+        var tank = new FuelTank("ft", 1000.0, 1000.0, "model", "sn");
         spacecraft.AddFuelTank(tank);
-        var engine = new Engine("eng", "model", "sn", 300.0, 10.0, tank);
+        var engine = new Engine("eng", 300.0, 10.0, tank, "model", "sn");
         spacecraft.AddEngine(engine);
         var impulse = new NeverReadyImpulse(earth, S, engine);
         spacecraft.SetManeuvers(impulse, new NadirAttitude(earth, S, TimeSpan.Zero, engine));
@@ -413,9 +413,9 @@ public class AttitudeTimelineEdgeTests
     {
         int id = NextId();
         var spacecraft = new Spacecraft(id, $"TL{-id}", 1000.0, orbit, 3000.0, new Clock($"TL{-id}_CLK", 65536));
-        var tank = new FuelTank("ft", "model", "sn", 1000.0, 1000.0);
+        var tank = new FuelTank("ft", 1000.0, 1000.0, "model", "sn");
         spacecraft.AddFuelTank(tank);
-        var engine = new Engine("eng", "model", "sn", 300.0, 10.0, tank);
+        var engine = new Engine("eng", 300.0, 10.0, tank, "model", "sn");
         spacecraft.AddEngine(engine);
         var prograde = new ProgradeAttitude(center, minimumEpoch, TimeSpan.FromSeconds(hold), engine);
         var nadir = new NadirAttitude(center, start, TimeSpan.Zero, engine);

@@ -37,8 +37,8 @@ namespace IO.Astrodynamics.Tests.Maneuvers
             var orbitalParams = new KeplerianElements(24420999.959422689, 0.726546824, 28.5 * Astrodynamics.Constants.Deg2Rad, 0.0, 0.0, 0.0, TestHelpers.EarthAtJ2000,
                 TimeSystem.Time.J2000TDB, Frames.Frame.ICRF);
             var spc = new Spacecraft(-666, "GenericSpacecraft", 1000.0, orbitalParams, 10000.0, new Clock("GenericClk", 65536));
-            spc.AddFuelTank(new FuelTank("ft", "ftA", "123456", 9000.0, 9000.0));
-            spc.AddEngine(new Engine("eng", "engmk1", "12345", 450, 50, spc.FuelTanks.First()));
+            spc.AddFuelTank(new FuelTank("ft", 9000.0, 9000.0, "ftA", "123456"));
+            spc.AddEngine(new Engine("eng", 450, 50, spc.FuelTanks.First(), "engmk1", "12345"));
             var state = orbitalParams.ToStateVector(PropagationTimeArgument.Tt.EpochAt(orbitalParams.Epoch, orbitalParams.Period().TotalSeconds * 0.5));
             // A target equal to the apogee: the apogee radius the maneuver reads from the state
             double target = equalToApogee ? state.ApogeeVector().Magnitude() : targetRadius;
@@ -98,8 +98,8 @@ namespace IO.Astrodynamics.Tests.Maneuvers
         [Fact]
         public void Create()
         {
-            FuelTank fuelTank10 = new FuelTank("My fuel tank10", "ft2021", "sn0", 4000.0, 3000.0);
-            Engine eng = new Engine("My engine", "model 1", "sn1", 350.0, 50.0, fuelTank10);
+            FuelTank fuelTank10 = new FuelTank("My fuel tank10", 4000.0, 3000.0, "ft2021", "sn0");
+            Engine eng = new Engine("My engine", 350.0, 50.0, fuelTank10, "model 1", "sn1");
 
             CombinedManeuver maneuver = new CombinedManeuver(TestHelpers.EarthAtJ2000,new TimeSystem.Time(new DateTime(2021, 01, 01),TimeScale.TDB), TimeSpan.FromDays(1.0), 151000000.0, 1.0, eng);
 
@@ -125,8 +125,8 @@ namespace IO.Astrodynamics.Tests.Maneuvers
             var maneuver = new CombinedManeuver(TestHelpers.EarthAtJ2000,
                 new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB), TimeSpan.Zero,
                 alignedOrbit.ApogeeVector().Magnitude() + 100000.0, 10.0,
-                new Engine("eng", "engmk1", "12345", 450, 50,
-                    new FuelTank("ft", "ftA", "123456", 1000, 1000)));
+                new Engine("eng", 450, 50,
+                    new FuelTank("ft", 1000, 1000, "ftA", "123456"), "engmk1", "12345"));
 
             Assert.True(maneuver.CheckPreconditions(alignedOrbit.ToStateVector()));
 
@@ -151,8 +151,8 @@ namespace IO.Astrodynamics.Tests.Maneuvers
             var orbitalParams = new KeplerianElements(24420999.959422689, 0.726546824, 28.5 * Astrodynamics.Constants.Deg2Rad, 0.0, 0.0, 0.0, TestHelpers.EarthAtJ2000,
                 TimeSystem.Time.J2000TDB, Frames.Frame.ICRF);
             var spc = new Spacecraft(-666, "GenericSpacecraft", 1000.0, orbitalParams, 10000.0, new Clock("GenericClk", 65536));
-            spc.AddFuelTank(new FuelTank("ft", "ftA", "123456", 9000.0, 9000.0));
-            spc.AddEngine(new Engine("eng", "engmk1", "12345", 450, 50, spc.FuelTanks.First()));
+            spc.AddFuelTank(new FuelTank("ft", 9000.0, 9000.0, "ftA", "123456"));
+            spc.AddEngine(new Engine("eng", 450, 50, spc.FuelTanks.First(), "engmk1", "12345"));
 
             var maneuver = new CombinedManeuver(TestHelpers.EarthAtJ2000,new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB), TimeSpan.Zero, 42164000.0, 0.0, spc.Engines.First());
 
@@ -182,8 +182,8 @@ namespace IO.Astrodynamics.Tests.Maneuvers
             var orbitalParams = new KeplerianElements(24420999.959422689, 0.726546824, 28.5 * Astrodynamics.Constants.Deg2Rad, 0.0, 0.0, 0.0, TestHelpers.EarthAtJ2000,
                 TimeSystem.Time.J2000TDB, Frames.Frame.ICRF);
             var spc = new Spacecraft(-666, "GenericSpacecraft", 1000.0, orbitalParams, 10000.0, new Clock("GenericClk", 65536));
-            spc.AddFuelTank(new FuelTank("ft", "ftA", "123456", 9000.0, 9000.0));
-            spc.AddEngine(new Engine("eng", "engmk1", "12345", 450, 50, spc.FuelTanks.First()));
+            spc.AddFuelTank(new FuelTank("ft", 9000.0, 9000.0, "ftA", "123456"));
+            spc.AddEngine(new Engine("eng", 450, 50, spc.FuelTanks.First(), "engmk1", "12345"));
 
             var maneuver = new CombinedManeuver(TestHelpers.EarthAtJ2000,new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB), TimeSpan.Zero, 6600000.0, 0.0, spc.Engines.First());
 

@@ -33,8 +33,8 @@ public class TriadAttitudeTests
             Frames.Frame.ICRF);
 
         var spc = new Spacecraft(-667, "TriadTestSpacecraft", 1000.0, orbitalParams, 3000.0, new Clock("TestClk", 65536));
-        spc.AddFuelTank(new FuelTank("ft", "ftA", "123456", 1000.0, 900.0));
-        spc.AddEngine(new Engine("eng", "engmk1", "12345", 450, 50, spc.FuelTanks.First()));
+        spc.AddFuelTank(new FuelTank("ft", 1000.0, 900.0, "ftA", "123456"));
+        spc.AddEngine(new Engine("eng", 450, 50, spc.FuelTanks.First(), "engmk1", "12345"));
 
         return (spc, orbitalParams);
     }
@@ -1300,8 +1300,8 @@ public class TriadAttitudeTests
             Frames.Frame.ICRF).ToStateVector();
         var (front, right, up) = BodyAxes(triad);
         var spc = new Spacecraft(-669, "TriadAxesSpacecraft", 1000.0, state, 3000.0, new Clock("AxesClk", 65536), bodyFront: front, bodyRight: right, bodyUp: up);
-        spc.AddFuelTank(new FuelTank("ft", "ftA", "123456", 1000.0, 900.0));
-        spc.AddEngine(new Engine("eng", "engmk1", "12345", 450, 50, spc.FuelTanks.First()));
+        spc.AddFuelTank(new FuelTank("ft", 1000.0, 900.0, "ftA", "123456"));
+        spc.AddEngine(new Engine("eng", 450, 50, spc.FuelTanks.First(), "engmk1", "12345"));
         return (spc, state);
     }
 
@@ -1406,8 +1406,8 @@ public class TriadAttitudeTests
     [Fact]
     public void Factories_UnattachedEngine_KeepStaticAxes()
     {
-        var tank = new FuelTank("ft", "ftA", "123456", 1000.0, 900.0);
-        var engine = new Engine("eng", "engmk1", "12345", 450, 50, tank);
+        var tank = new FuelTank("ft", 1000.0, 900.0, "ftA", "123456");
+        var engine = new Engine("eng", 450, 50, tank, "engmk1", "12345");
         var min = new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB);
         var lvlh = TriadAttitude.CreateLVLH(TestHelpers.EarthAtJ2000, min, TimeSpan.Zero, engine);
         var sun = TriadAttitude.CreateProgradeWithSunTracking(TestHelpers.EarthAtJ2000, min, TimeSpan.Zero, TestHelpers.Sun, engine);
@@ -1447,13 +1447,13 @@ public class TriadAttitudeTests
             var (front, right, up) = BodyAxes("FrontX");
             var other = new Spacecraft(-671, "TriadOtherSpacecraft", 1000.0, state, 3000.0, new Clock("OtherClk", 65536), bodyFront: front,
                 bodyRight: right, bodyUp: up);
-            other.AddFuelTank(new FuelTank("ftO", "ftA", "654321", 1000.0, 900.0));
-            other.AddEngine(new Engine("engO", "engmk1", "54321", 450, 50, other.FuelTanks.First()));
+            other.AddFuelTank(new FuelTank("ftO", 1000.0, 900.0, "ftA", "654321"));
+            other.AddEngine(new Engine("engO", 450, 50, other.FuelTanks.First(), "engmk1", "54321"));
             engine = other.Engines.First();
         }
         else
         {
-            engine = new Engine("engL", "engmk1", "54322", 450, 50, new FuelTank("ftL", "ftA", "654322", 1000.0, 900.0));
+            engine = new Engine("engL", 450, 50, new FuelTank("ftL", 1000.0, 900.0, "ftA", "654322"), "engmk1", "54322");
         }
 
         var epoch = state.Epoch;

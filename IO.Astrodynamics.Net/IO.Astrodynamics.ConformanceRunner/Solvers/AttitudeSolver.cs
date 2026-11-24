@@ -78,9 +78,9 @@ public class AttitudeSolver : ICategorySolver
             ? new Spacecraft(-999, "AttitudeTarget", 100.0, state, 1000.0, new Clock("ConfClk", 65536),
                 bodyFront: front.Value, bodyRight: RightOf(front.Value), bodyUp: RightOf(front.Value).Cross(front.Value))
             : new Spacecraft(-999, "AttitudeTarget", 100.0, state, 1000.0, new Clock("ConfClk", 65536));
-        var tank = new FuelTank("ConformanceTank", "conformance", "0001", 100.0, 100.0);
+        var tank = new FuelTank("ConformanceTank", 100.0, 100.0, "conformance", "0001");
         spacecraft.AddFuelTank(tank);
-        var engine = new Engine("ConformanceEngine", "conformance", "0001", 300.0, 1.0, tank);
+        var engine = new Engine("ConformanceEngine", 300.0, 1.0, tank, "conformance", "0001");
         spacecraft.AddEngine(engine);
         spacecraft.SetManeuvers(Law(inputs, central, window.StartDate, engine));
 

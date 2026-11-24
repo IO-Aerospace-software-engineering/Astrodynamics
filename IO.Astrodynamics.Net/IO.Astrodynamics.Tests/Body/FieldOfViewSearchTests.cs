@@ -959,9 +959,9 @@ public class FieldOfViewSearchTests : IClassFixture<PropagatedFieldOfViewCase>
             if (i >= 3)
             {
                 // Nadir: the Earth stays in place in the frame, the Sun turns about the orbit's normal
-                var tank = new FuelTank("ft515", "model", "sn515", 1000.0, 1000.0);
+                var tank = new FuelTank("ft515", 1000.0, 1000.0, "model", "sn515");
                 spacecraft.AddFuelTank(tank);
-                var engine = new Engine("eng515", "model", "sn515", 300.0, 10.0, tank);
+                var engine = new Engine("eng515", 300.0, 10.0, tank, "model", "sn515");
                 spacecraft.AddEngine(engine);
                 spacecraft.SetManeuvers(new NadirAttitude(earth, new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB), TimeSpan.Zero, engine));
                 target = _case.Sun;

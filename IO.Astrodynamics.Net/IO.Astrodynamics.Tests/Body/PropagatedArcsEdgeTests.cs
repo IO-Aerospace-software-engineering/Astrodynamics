@@ -125,9 +125,9 @@ public class PropagatedArcsEdgeTests
     private static (Spacecraft, ApogeeHeightManeuver) Apogee(int naifId, StateVector initial, CelestialBody earth, ManeuverExecutionError error = null)
     {
         var spacecraft = new Spacecraft(naifId, $"PE{-naifId}", 1000.0, initial, 3000.0, new Clock($"PE{-naifId}_CLK", 65536));
-        var tank = new FuelTank("ft", "model", "sn", 1000.0, 1000.0);
+        var tank = new FuelTank("ft", 1000.0, 1000.0, "model", "sn");
         spacecraft.AddFuelTank(tank);
-        var engine = new Engine("eng", "model", "sn", 300.0, 10.0, tank);
+        var engine = new Engine("eng", 300.0, 10.0, tank, "model", "sn");
         spacecraft.AddEngine(engine);
         var apogee = new ApogeeHeightManeuver(earth, Start, TimeSpan.Zero, 8378137.0, engine) { ExecutionError = error };
         spacecraft.SetManeuvers(apogee);
@@ -298,9 +298,9 @@ public class PropagatedArcsEdgeTests
     {
         var earth = new CelestialBody(PlanetsAndMoons.EARTH, Frame.ICRF, Start);
         var spacecraft = new Spacecraft(naifId, $"PE{-naifId}", 1000.0, Leo(earth), 3000.0, new Clock($"PE{-naifId}_CLK", 65536));
-        var tank = new FuelTank("ft", "model", "sn", 1000.0, 1000.0);
+        var tank = new FuelTank("ft", 1000.0, 1000.0, "model", "sn");
         spacecraft.AddFuelTank(tank);
-        var engine = new Engine("eng", "model", "sn", 300.0, 10.0, tank);
+        var engine = new Engine("eng", 300.0, 10.0, tank, "model", "sn");
         spacecraft.AddEngine(engine);
         spacecraft.SetManeuvers(new TimedImpulse(earth, Start, engine, Start.AddSeconds(target), 20.0));
         var window = new Window(Start, Start.AddHours(2.0));
@@ -361,11 +361,11 @@ public class PropagatedArcsEdgeTests
     {
         var earth = new CelestialBody(PlanetsAndMoons.EARTH, Frame.ICRF, Start);
         var spacecraft = new Spacecraft(-5594, "PE5594", 1000.0, Leo(earth), 3000.0, new Clock("PE5594_CLK", 65536));
-        var tank = new FuelTank("ft", "model", "sn", 1000.0, 1000.0);
+        var tank = new FuelTank("ft", 1000.0, 1000.0, "model", "sn");
         spacecraft.AddFuelTank(tank);
-        var engine = new Engine("eng", "model", "sn", 300.0, 10.0, tank);
+        var engine = new Engine("eng", 300.0, 10.0, tank, "model", "sn");
         spacecraft.AddEngine(engine);
-        var fast = new Engine("fast", "model", "sn2", 300.0, 1e12, tank);
+        var fast = new Engine("fast", 300.0, 1e12, tank, "model", "sn2");
         spacecraft.AddEngine(fast);
         var first = new ApogeeHeightManeuver(earth, Start, TimeSpan.Zero, 8378137.0, fast);
         var lvlh = TriadAttitude.CreateLVLH(earth, Start, TimeSpan.Zero, engine);
@@ -439,9 +439,9 @@ public class PropagatedArcsEdgeTests
     {
         var earth = new CelestialBody(PlanetsAndMoons.EARTH, Frame.ICRF, Start);
         var spacecraft = new Spacecraft(naifId, $"PE{-naifId}", 1000.0, Leo(earth), 3000.0, new Clock($"PE{-naifId}_CLK", 65536));
-        var tank = new FuelTank("ft", "model", "sn", 1000.0, 1000.0);
+        var tank = new FuelTank("ft", 1000.0, 1000.0, "model", "sn");
         spacecraft.AddFuelTank(tank);
-        var engine = new Engine("eng", "model", "sn", 300.0, 10.0, tank);
+        var engine = new Engine("eng", 300.0, 10.0, tank, "model", "sn");
         spacecraft.AddEngine(engine);
         var target = Start.AddSeconds(2000.0);
         var trim = new TimedImpulse(earth, Start, engine, target, 1.0e-5);
@@ -541,9 +541,9 @@ public class PropagatedArcsEdgeTests
         var initial = new StateVector(inFrame.Position, inFrame.Velocity, earth, Start, frame, p0);
         var error = new ManeuverExecutionError { ResolutionSigma = 0.05, ShutoffSigma = 0.01, AutopilotSigma = 0.02, PointingSigma = 0.005 };
         var spacecraft = new Spacecraft(naifId, $"PE{-naifId}", 1000.0, initial, 3000.0, new Clock($"PE{-naifId}_CLK", 65536));
-        var tank = new FuelTank("ft", "model", "sn", 1000.0, 1000.0);
+        var tank = new FuelTank("ft", 1000.0, 1000.0, "model", "sn");
         spacecraft.AddFuelTank(tank);
-        var engine = new Engine("eng", "model", "sn", 300.0, 10.0, tank);
+        var engine = new Engine("eng", 300.0, 10.0, tank, "model", "sn");
         spacecraft.AddEngine(engine);
         ImpulseManeuver impulse = maneuver == "Apogee"
             ? new ApogeeHeightManeuver(earth, Start, TimeSpan.Zero, 8378137.0, engine) { ExecutionError = error }
@@ -683,9 +683,9 @@ public class PropagatedArcsEdgeTests
     {
         var earth = new CelestialBody(PlanetsAndMoons.EARTH, Frame.ICRF, Start);
         var spacecraft = new Spacecraft(naifId, $"PE{-naifId}", 1000.0, PropagatedArcsTests.LeoBeforeApogee(earth, Start), 3000.0, new Clock($"PE{-naifId}_CLK", 65536));
-        var tank = new FuelTank("ft", "model", "sn", 1000.0, 1000.0);
+        var tank = new FuelTank("ft", 1000.0, 1000.0, "model", "sn");
         spacecraft.AddFuelTank(tank);
-        var engine = new Engine("eng", "model", "sn", 300.0, 10.0, tank);
+        var engine = new Engine("eng", 300.0, 10.0, tank, "model", "sn");
         spacecraft.AddEngine(engine);
         spacecraft.SetManeuvers(new CombinedManeuver(earth, Start, TimeSpan.Zero, 7078137.0, 45.0 * IO.Astrodynamics.Constants.Deg2Rad, engine));
         var step = TimeSpan.FromSeconds(60.0);

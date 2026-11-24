@@ -232,8 +232,8 @@ public partial class SpiceApiTest
         Spacecraft spacecraft =
             new Spacecraft(-1794, "DRAGONFLY4", 1000.0, parkingOrbit, 10000.0, clock);
 
-        FuelTank fuelTank = new FuelTank("ft1", "model1", "sn1", 9000.0, 9000.0);
-        Engine engine = new Engine("engine1", "model1", "sn1", 450.0, 50.0, fuelTank);
+        FuelTank fuelTank = new FuelTank("ft1", 9000.0, 9000.0, "model1", "sn1");
+        Engine engine = new Engine("engine1", 450.0, 50.0, fuelTank, "model1", "sn1");
         spacecraft.AddFuelTank(fuelTank);
         spacecraft.AddEngine(engine);
         spacecraft.AddPayload(new Payload("payload1", 50.0, "pay01"));

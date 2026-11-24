@@ -72,9 +72,9 @@ public class RunIndependenceTests
     private static void AddPlan(Spacecraft spacecraft, in TimeSystem.Time minimumEpoch)
     {
         int id = spacecraft.NaifId;
-        var tank = new FuelTank($"ft{-id}", "model", "sn", 1000.0, 1000.0);
+        var tank = new FuelTank($"ft{-id}", 1000.0, 1000.0, "model", "sn");
         spacecraft.AddFuelTank(tank);
-        var engine = new Engine($"eng{-id}", "model", "sn", 300.0, 10.0, tank);
+        var engine = new Engine($"eng{-id}", 300.0, 10.0, tank, "model", "sn");
         spacecraft.AddEngine(engine);
         spacecraft.SetManeuvers(new ApogeeHeightManeuver(Earth, minimumEpoch, TimeSpan.Zero, 9000000.0, engine));
     }

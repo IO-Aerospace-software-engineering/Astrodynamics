@@ -1365,9 +1365,9 @@ Represents a spacecraft with components.
 | `AddCircularInstrument(...)` | Add a circular FOV instrument and return it: `(name, fieldOfView, boresight, refVector, orientation = default, naifId = null, model = null)`, the id by default the smallest free NaifId × 1000 − n, n in [1, 999] (`InvalidOperationException` when none is left), required on a kernel-backed spacecraft (`ArgumentNullException`), not another instrument's (`ArgumentException`), the name unique on its invariant upper-cased form (`ArgumentException`; decisions 72 to 74 of #668) (an id other than the spacecraft frame's, NaifId × 1000, #676; a finite non-zero boresight, a finite non-zero reference vector not parallel to it and a finite positive field of view, as `getfov` reads them, and finite Euler angles, or `ArgumentException` naming the parameter, #707, #715) |
 | `AddRectangularInstrument(...)` | Add rectangular FOV instrument (same rules, and a finite positive cross angle, or `ArgumentOutOfRangeException`, #707, #715) |
 | `AddEllipticalInstrument(...)` | Add elliptical FOV instrument (same rules, and a finite positive cross angle, or `ArgumentOutOfRangeException`, #707, #715) |
-| `AddEngine(Engine engine)` | Add propulsion engine, on a tank instance added to the spacecraft (`ArgumentException` otherwise, #676, #586) |
-| `AddFuelTank(FuelTank fuelTank)` | Add fuel tank, held by no other spacecraft (#676, #586); a maneuver draws on a tank of the spacecraft it is propagated with, or the propagation throws before it runs |
-| `AddPayload(Payload payload)` | Add payload |
+| `AddEngine(Engine engine)` | Add a propulsion engine and return it, on a tank added to the spacecraft (`ArgumentException` otherwise, #676, #586); a second engine of a name throws `ArgumentException` (decision 76 of #668) |
+| `AddFuelTank(FuelTank fuelTank)` | Add a fuel tank and return it, held by no other spacecraft (#676, #586); a second tank of a name throws `ArgumentException` (decision 76 of #668); a maneuver draws on a tank of the spacecraft it is propagated with, or the propagation throws before it runs |
+| `AddPayload(Payload payload)` | Add a payload and return it; a second payload of a name throws `ArgumentException` (decision 76 of #668) |
 | `GetTotalMass()` | Get total mass including fuel |
 | `GetInitialFuel()` | The fuel of the spacecraft's own tanks at the start of a run (`GetTotalFuel` before 11.0.0, decision 60 of #668) |
 | `GetRemainingFuel()` | The fuel left in the spacecraft's own tanks |
@@ -1395,11 +1395,10 @@ var orbit = new KeplerianElements(
 var clock = new Clock("MainClock", 256);
 var spacecraft = new Spacecraft(-1001, "MySat", 500.0, orbit, 1000.0, clock);
 
-// Add components: the tank first, then the engine that draws on it (AddEngine requires its tank on the spacecraft)
-var tank = new FuelTank("MainTank", "Propellant", "Tank1", 200.0, 100.0);  // capacity, initial quantity (kg)
-spacecraft.AddFuelTank(tank);
-var engine = new Engine("MainEngine", "RCS", "Engine1", 300.0, 0.05, tank);  // ISP (s), fuel flow (kg/s)
-spacecraft.AddEngine(engine);
+// Add components: the tank first, then the engine that draws on it (AddEngine requires its tank on the spacecraft);
+// each Add returns its argument, the model and the serial number optional
+var tank = spacecraft.AddFuelTank(new FuelTank("MainTank", 200.0, 100.0));  // capacity, initial quantity (kg)
+var engine = spacecraft.AddEngine(new Engine("MainEngine", 300.0, 0.05, tank));  // ISP (s), fuel flow (kg/s)
 
 // Add instrument: its NAIF id by default the first free NaifId × 1000 − n, -1001001, and no model
 spacecraft.AddCircularInstrument("Camera",
@@ -1436,7 +1435,7 @@ Propulsion engine.
 
 | Constructor | Description |
 |------------|-------------|
-| `Engine(string name, string model, string serialNumber, double isp, double fuelFlow, FuelTank fuelTank)` | Create an engine drawing on a tank, which is added to the spacecraft before the engine (`AddFuelTank`, then `AddEngine`) |
+| `Engine(string name, double isp, double fuelFlow, FuelTank fuelTank, string model = null, string serialNumber = null)` | Create an engine drawing on a tank, which is added to the spacecraft before the engine (`AddFuelTank`, then `AddEngine`); compared by reference (decision 76 of #668) |
 
 | Property | Description |
 |----------|-------------|
@@ -1457,7 +1456,7 @@ Fuel storage tank.
 
 | Constructor | Description |
 |------------|-------------|
-| `FuelTank(string name, string model, string serialNumber, double capacity, double initialFuel)` | Create tank |
+| `FuelTank(string name, double capacity, double initialQuantity, string model = null, string serialNumber = null)` | Create a tank, empty when `initialQuantity` is 0 (its first burn throws `InsufficientFuelException`); compared by reference (decision 76 of #668) |
 
 | Property | Description |
 |----------|-------------|
@@ -2466,8 +2465,8 @@ var chaserClock = new Clock("ChaserClock", 65536);
 var chaser = new Spacecraft(-1002, "Chaser", 1000.0, chaserOrbit, 10000.0, chaserClock);
 
 // Add fuel tank and engine
-var fuelTank = new FuelTank("MainTank", "Model1", "SN001", 9000.0, 9000.0);
-var engine = new Engine("MainEngine", "Model1", "SN001", 450.0, 50.0, fuelTank);
+var fuelTank = new FuelTank("MainTank", 9000.0, 9000.0, "Model1", "SN001");
+var engine = new Engine("MainEngine", 450.0, 50.0, fuelTank, "Model1", "SN001");
 chaser.AddFuelTank(fuelTank);
 chaser.AddEngine(engine);
 
@@ -2952,8 +2951,8 @@ spacecraft.AddCircularInstrument("Antenna",
     0.2, Vector3.VectorZ, Vector3.VectorY, Vector3.Zero, naifId: -334100, model: "HighGain");
 
 // Add propulsion
-var tank = new FuelTank("Tank1", "Model", "SN1", 2000.0, 2000.0);
-var engine = new Engine("Engine1", "Model", "SN1", 450, 50.0, tank);
+var tank = new FuelTank("Tank1", 2000.0, 2000.0, "Model", "SN1");
+var engine = new Engine("Engine1", 450, 50.0, tank, "Model", "SN1");
 spacecraft.AddFuelTank(tank);
 spacecraft.AddEngine(engine);
 
@@ -3015,8 +3014,8 @@ spacecraft.AddCircularInstrument("EarthCam",
     0.5, Vector3.VectorZ.Inverse(), Vector3.VectorY, Vector3.Zero, naifId: -500100, model: "NadirCamera");  // Boresight: -Z (nadir), refVector: +Y
 
 // Add propulsion
-var tank = new FuelTank("Tank1", "Model", "SN1", 100.0, 100.0);
-var engine = new Engine("Engine1", "Model", "SN1", 220, 10.0, tank);
+var tank = new FuelTank("Tank1", 100.0, 100.0, "Model", "SN1");
+var engine = new Engine("Engine1", 220, 10.0, tank, "Model", "SN1");
 spacecraft.AddFuelTank(tank);
 spacecraft.AddEngine(engine);
 

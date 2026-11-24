@@ -109,9 +109,9 @@ public class ClaudeMdExamplesTests
     {
         var spacecraft = new Spacecraft(naifId, $"CLAUDEMD{-naifId}", 500.0, Orbit(), 1000.0, new Clock($"CLAUDEMD{-naifId}_CLK", 256),
             cosparId: cosparId);
-        var tank = new FuelTank("Tank", "Model", "SN1", 100.0, 100.0);
+        var tank = new FuelTank("Tank", 100.0, 100.0, "Model", "SN1");
         spacecraft.AddFuelTank(tank);
-        engine = new Engine("Engine", "Model", "SN1", 300.0, 0.05, tank);
+        engine = new Engine("Engine", 300.0, 0.05, tank, "Model", "SN1");
         spacecraft.AddEngine(engine);
         spacecraft.AddCircularInstrument("Camera", 0.2, Vector3.VectorZ, Vector3.VectorY, Vector3.Zero, naifId: naifId * 1000 - 1, model: "Imager");
         return spacecraft;

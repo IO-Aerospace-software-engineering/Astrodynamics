@@ -90,8 +90,8 @@ internal static class SpacecraftPage
     {
         #region docs/reference/spacecraft.md:3
         // Inputs: tank (FuelTank)
-        var engine = new Engine("MainEngine", "RS-25", "SN001",
-            isp: 366.0, fuelFlow: 0.5, fuelTank: tank);
+        var engine = new Engine("MainEngine", isp: 366.0, fuelFlow: 0.5, fuelTank: tank,
+            model: "RS-25", serialNumber: "SN001");
         #endregion
     }
 
@@ -99,8 +99,8 @@ internal static class SpacecraftPage
     internal static void Block04()
     {
         #region docs/reference/spacecraft.md:4
-        var tank = new FuelTank("MainTank", "FT-100", "SN001",
-            capacity: 1000.0, initialQuantity: 800.0);
+        var tank = new FuelTank("MainTank", capacity: 1000.0, initialQuantity: 800.0,
+            model: "FT-100", serialNumber: "SN001");
         #endregion
     }
 

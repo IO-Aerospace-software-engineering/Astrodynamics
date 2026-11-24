@@ -144,8 +144,8 @@ namespace IO.Astrodynamics.Tests.Mission
             Clock clock = new Clock("clk1", 65536);
             Spacecraft spacecraft = new Spacecraft(-1783, "DRAGONFLY3", 1000.0, parkingOrbit, 10000.0, clock);
 
-            FuelTank fuelTank = new FuelTank("ft1", "model1", "sn1", 9000.0, 9000.0);
-            Engine engine = new Engine("engine1", "model1", "sn1", 450.0, 50.0, fuelTank);
+            FuelTank fuelTank = new FuelTank("ft1", 9000.0, 9000.0, "model1", "sn1");
+            Engine engine = new Engine("engine1", 450.0, 50.0, fuelTank, "model1", "sn1");
             spacecraft.AddFuelTank(fuelTank);
             spacecraft.AddEngine(engine);
             spacecraft.AddPayload(new Payload("payload1", 50.0, "pay01"));
@@ -248,8 +248,8 @@ namespace IO.Astrodynamics.Tests.Mission
             Clock clock = new Clock("clk1", 65536);
             Spacecraft spacecraft = new Spacecraft(-1783, "DRAGONFLY3", 1000.0, parkingOrbit, 10000.0, clock);
 
-            FuelTank fuelTank = new FuelTank("ft1", "model1", "sn1", 9000.0, 9000.0);
-            Engine engine = new Engine("engine1", "model1", "sn1", 450.0, 50.0, fuelTank);
+            FuelTank fuelTank = new FuelTank("ft1", 9000.0, 9000.0, "model1", "sn1");
+            Engine engine = new Engine("engine1", 450.0, 50.0, fuelTank, "model1", "sn1");
             spacecraft.AddFuelTank(fuelTank);
             spacecraft.AddEngine(engine);
 
@@ -360,8 +360,8 @@ namespace IO.Astrodynamics.Tests.Mission
             Clock clock = new Clock("clk1", 65536);
             Spacecraft spacecraft = new Spacecraft(-1783, "DRAGONFLY31", 1000.0, parkingOrbit, 10000.0, clock);
 
-            FuelTank fuelTank = new FuelTank("ft1", "model1", "sn1", 9000.0, 9000.0);
-            Engine engine = new Engine("engine1", "model1", "sn1", 450.0, 50.0, fuelTank);
+            FuelTank fuelTank = new FuelTank("ft1", 9000.0, 9000.0, "model1", "sn1");
+            Engine engine = new Engine("engine1", 450.0, 50.0, fuelTank, "model1", "sn1");
             spacecraft.AddFuelTank(fuelTank);
             spacecraft.AddEngine(engine);
             spacecraft.AddPayload(new Payload("payload1", 50.0, "pay01"));
@@ -518,8 +518,8 @@ namespace IO.Astrodynamics.Tests.Mission
             Clock clock = new Clock("clk1", 65536);
             Spacecraft spacecraft = new Spacecraft(-1785, "DRAGONFLY32", 1000.0, parkingOrbit, 10000.0, clock);
 
-            FuelTank fuelTank = new FuelTank("ft1", "model1", "sn1", 9000.0, 9000.0);
-            Engine engine = new Engine("engine1", "model1", "sn1", 450.0, 50.0, fuelTank);
+            FuelTank fuelTank = new FuelTank("ft1", 9000.0, 9000.0, "model1", "sn1");
+            Engine engine = new Engine("engine1", 450.0, 50.0, fuelTank, "model1", "sn1");
             spacecraft.AddFuelTank(fuelTank);
             spacecraft.AddEngine(engine);
             spacecraft.AddPayload(new Payload("payload1", 50.0, "pay01"));
@@ -761,8 +761,8 @@ namespace IO.Astrodynamics.Tests.Mission
                 Frames.Frame.ICRF);
             var target = new KeplerianElements(7000000.0, 0.0, 32.0 * Astrodynamics.Constants.Deg2Rad, 0.0, 0.0, 1.0, earth, window.StartDate,
                 Frames.Frame.ICRF).ToFrame(Frames.Frame.ECLIPTIC_J2000);
-            var tank = new FuelTank("ft685", "ftA", "sn685", 1000.0, 900.0);
-            var engine = new Engine("eng685", "engmk1", "sn685", 450, 50, tank);
+            var tank = new FuelTank("ft685", 1000.0, 900.0, "ftA", "sn685");
+            var engine = new Engine("eng685", 450, 50, tank, "engmk1", "sn685");
             var maneuver = new PlaneAlignmentManeuver(window.StartDate, TimeSpan.Zero, target, engine);
             var spacecraft = new Spacecraft(-6855, "Scenario685", 1000.0, orbit, 3000.0, new Clock("clk685", 65536));
             spacecraft.AddFuelTank(tank);
