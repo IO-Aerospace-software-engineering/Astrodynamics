@@ -39,7 +39,8 @@ internal static class OccultationSearch
         var front = frontBody as ILocalizable ?? CelestialItem.Create(frontBody.NaifId);
         var evaluator = new OccultationEvaluator(observer, target, targetShape, options.TargetFrame, front, frontShape, options.FrontFrame, aberration,
             searchWindow.StartDate.ToTDB());
-        return OccultationFinder.FindWindows(evaluator, searchWindow, occultationType, stepSize, options.ConvergenceTolerance);
+        return OccultationFinder.FindWindows(evaluator, searchWindow, occultationType, stepSize,
+            options.ConvergenceTolerance ?? OccultationSearchOptions.DefaultConvergenceTolerance);
     }
 
     /// <summary>

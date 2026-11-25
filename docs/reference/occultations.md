@@ -50,7 +50,7 @@ A body modeled as `ShapeType.Ellipsoid` is the triaxial ellipsoid of its radii (
 The managed search follows the method of CSPICE's `zzocced`: a linear map turns one ellipsoid into the unit sphere,
 keeping every incidence of the apparent discs, and three continuous margins measure the overlap of the discs and the
 containment of each in the other. Brent's method locates each zero of a margin to
-`OccultationSearchOptions.ConvergenceTolerance` (1 µs by default, `gfoclt`'s). A window that holds at the start or the
+`OccultationSearchOptions.ConvergenceTolerance` (1 µs when null, `gfoclt`'s). A window that holds at the start or the
 end of the search window, or whose transition lies within the tolerance of them, starts or ends there; no state outside
 the search window is read.
 

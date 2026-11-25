@@ -439,6 +439,19 @@ release are listed under **Known limitations**.
   `includeEnd` the end appended when the last point precedes it, however close; a step of zero or less
   `ArgumentOutOfRangeException` (`step`) at the call; across a UTC leap second the UTC calendar's points
   (`WindowTests`). The grid of the library's window reads. See [Time Systems](../reference/time-and-windows.md#window).
+- **`WindowSearchOptions` and `FieldOfViewSearchOptions`; `OccultationSearchOptions` extended** (lot L6, R15 of
+  [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668), D1, decided by S. Guillet,
+  2026-11-19): one sealed record per kind of window search, of init properties, `Default` equal to `new()`, the settings
+  of the searches on the observer. `WindowSearchOptions` (distance, coordinate, horizontal, illumination and the static
+  `GeometryFinder.FindWindows`): `Step`, `Aberration`, `ConvergenceTolerance`, `AdjustValue`; `FieldOfViewSearchOptions`:
+  `Step`, `Aberration`, `ConvergenceTolerance`, `TargetShape`, `TargetFrame`; `OccultationSearchOptions` gains `Step`,
+  `Aberration`, `TargetShape`, `FrontShape` and `OccultationType` (`Any` by default) beside `FrontFrame`, `TargetFrame`
+  and `ConvergenceTolerance`. The three repeat `Step`, `Aberration` and `ConvergenceTolerance` with one type and default
+  (`TimeSpan?`, `Aberration?` and `TimeSpan?`, null): a null step is required or inferred by the search, a null
+  aberration `None`, a null tolerance 1 µs, a null shape an ellipsoid for a body with radii and a point otherwise, a null
+  frame the body's own. A step or a tolerance that is not positive throws `ArgumentOutOfRangeException` naming the
+  property, and an `AdjustValue` negative or not finite naming `AdjustValue`, in `init`, so again through `with`
+  (`WindowSearchOptionsTests`).
 - **The command-line tool: names, kernels from the environment, csv and json, the scale of its epochs** (lot L8 of the
   ergonomics review, R29 of #668, choice 12, decided by S. Guillet, 2026-11-19; `docs/reference/cli.md`, its help
   generated from the tool and compared by `CliPageTests`). An object is a NAIF identifier or a name SPICE knows (`MOON`,
@@ -5131,6 +5144,13 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   message. The `ILocalizable` overloads of the conjunction analysis keep `ArgumentException` until lot L7; a target that
   is the instrument's spacecraft or an ellipsoid without radii keeps `ArgumentException` (`FieldOfViewSearchTests`,
   `AddedStatesGapTests`). Migration: catch `InvalidOperationException` there.
+- **Breaking: `OccultationSearchOptions.ConvergenceTolerance` is a `TimeSpan?`, null for 1 µs** (lot L6, R15 of
+  [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668), D1 rule 2 and choice 6,
+  decided by S. Guillet, 2026-11-19): the three window search records repeat it with one type and default; a tolerance
+  that is not positive throws `ArgumentOutOfRangeException` naming `ConvergenceTolerance` (it named `value`), and the
+  public field `OccultationSearchOptions.DefaultConvergenceTolerance` is internal. The searches are unchanged, bit for
+  bit. Migration: `options.ConvergenceTolerance ?? TimeSpan.FromTicks(10)` where a `TimeSpan` is read; `TimeSpan.FromTicks(10)`
+  for `DefaultConvergenceTolerance`.
 - **Breaking: `EquinoctialElements` takes a perigee radius with a non-finite P only** (R23 of #668, choice 3 of the
   first annex): a finite P fixes q = P / (1 + e), so a perigee radius beside it throws `ArgumentException`
   (`perigeeRadius`); before, it was stored, and `PerigeeRadius()` returned 1 m for P = 7000 km given 1 m. The library's
