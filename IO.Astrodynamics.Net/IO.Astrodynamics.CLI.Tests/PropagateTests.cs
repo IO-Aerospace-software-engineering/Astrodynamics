@@ -397,7 +397,7 @@ public class PropagateTests
     private static Vector3 LibraryRunEnd(IO.Astrodynamics.OrbitalParameters.OrbitalParameters initial, CelestialBody earth, Time start,
         Time end)
     {
-        var spacecraft = new Spacecraft(-1000, "Reference", 100.0, 100.0, new Clock("clockReference", 65536), initial, 1.0, 0.3);
+        var spacecraft = new Spacecraft(-1000, "Reference", 100.0, initial, 100.0, new Clock("clockReference", 65536), 1.0, 0.3);
         var scenario = new Mission.Scenario("ScenarioReference", new Mission.Mission("MissionReference"), new Window(start, end));
         scenario.AddSpacecraft(spacecraft);
         scenario.AddCelestialItem(earth);
@@ -482,8 +482,8 @@ public class PropagateTests
     private static Body.Spacecraft.Spacecraft Simulate(OrbitalParameters.OrbitalParameters orbit, Body.CelestialBody center, int naifId,
         TimeSystem.Window window, bool drag)
     {
-        var spacecraft = new Body.Spacecraft.Spacecraft(naifId, $"P675R{-naifId}", 100.0, 100.0, new Body.Spacecraft.Clock($"clockP675R{-naifId}", 65536),
-            orbit, 1.0, 0.3);
+        var spacecraft = new Body.Spacecraft.Spacecraft(naifId, $"P675R{-naifId}", 100.0, orbit, 100.0,
+            new Body.Spacecraft.Clock($"clockP675R{-naifId}", 65536), 1.0, 0.3);
         var scenario = new Mission.Scenario($"ScenarioP675R{-naifId}", new Mission.Mission($"MissionP675R{-naifId}"), window);
         scenario.AddSpacecraft(spacecraft);
         scenario.AddCelestialItem(center);
@@ -522,7 +522,7 @@ public class PropagateTests
             var earth = new CelestialBody(399, new GeopotentialModelParameters(stream, 10));
             var initial = new IO.Astrodynamics.OrbitalParameters.StateVector(new Vector3(6800000.0, 0.0, 0.0), new Vector3(0.0, 8000.0, 0.0), earth,
                 window.StartDate, Frames.Frame.ICRF);
-            var spacecraft = new Spacecraft(-1000, "Reference", 100.0, 100.0, new Clock("clockReference", 65536), initial, 1.0, 2.2);
+            var spacecraft = new Spacecraft(-1000, "Reference", 100.0, initial, 100.0, new Clock("clockReference", 65536), 1.0, 2.2);
             var scenario = new Mission.Scenario("ScenarioDefaults", new Mission.Mission("MissionDefaults"), window);
             scenario.AddSpacecraft(spacecraft);
             scenario.AddCelestialItem(earth);

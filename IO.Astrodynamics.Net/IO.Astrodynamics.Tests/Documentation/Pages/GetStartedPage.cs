@@ -135,13 +135,9 @@ internal static class GetStartedPage
     {
         #region docs/get-started.md:6
         // Inputs: orbit (StateVector), epoch (Time)
-        var spacecraft = new Spacecraft(
-            -1001,                         // NAIF id
-            "MySat",
-            500.0,                         // mass, kg
-            1000.0,                        // maximum operating mass, kg
-            new Clock("MySatClock", 256),  // on-board clock, 256 ticks per second
-            orbit);
+        // The NAIF id, the name, the dry mass (kg) and the orbit; the maximum operating mass and the on-board clock are
+        // optional (MySat_CLK, 65536 ticks per second)
+        var spacecraft = new Spacecraft(-1001, "MySat", 500.0, orbit);
 
         var window = new Window(epoch, epoch.AddHours(2));
 

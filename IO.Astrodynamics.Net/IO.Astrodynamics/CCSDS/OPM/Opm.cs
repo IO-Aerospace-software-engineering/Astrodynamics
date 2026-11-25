@@ -297,53 +297,50 @@ public class Opm
     /// <summary>
     /// Converts this OPM to a framework Spacecraft.
     /// </summary>
-    /// <param name="naifId">The NAIF identifier for the spacecraft (must be negative).</param>
-    /// <param name="maximumOperatingMass">The maximum operating mass in kilograms.</param>
-    /// <param name="clock">The spacecraft clock.</param>
+    /// <param name="naifId">The NAIF identifier for the spacecraft, in [-2147483, -1].</param>
+    /// <param name="maxOperatingMass">The maximum operating mass in kilograms, double.MaxValue by default: at least the
+    /// MASS of the OPM, or the constructor throws (decision 77 of #668, decided by S. Guillet, 2026-11-23; before 11.0.0 a
+    /// maximum below the mass was raised to it without a word, and the parameter was named
+    /// <c>maximumOperatingMass</c>).</param>
+    /// <param name="clock">The spacecraft clock, by default a new clock named OBJECT_NAME + "_CLK" at 65536 ticks per
+    /// second, as the propagated constructor of <see cref="Spacecraft"/> (required before 11.0.0).</param>
     /// <param name="observer">The centre of the state. If null, the centre <c>CENTER_NAME</c> names, as on <see cref="ToStateVector"/>.</param>
     /// <returns>A new Spacecraft instance with the OPM data.</returns>
     /// <remarks>
     /// OPM provides: OBJECT_NAME (name), OBJECT_ID (cosparId), stateVector, and optionally spacecraftParameters.
-    /// The caller must provide naifId, maximumOperatingMass, and clock as these are not part of the CCSDS OPM standard.
+    /// The NAIF id is not part of the CCSDS OPM standard; the maximum operating mass and the clock are optional.
     /// If spacecraftParameters is not present in the OPM, default values are used for mass (1.0 kg),
-    /// sectionalArea (1.0 m²), dragCoeff (2.2), and solarRadiationCoeff (1.0).
+    /// sectionalArea (1.0 m²), dragCoefficient (2.2), and solarRadiationCoefficient (1.0).
     /// The reference frame and the epoch's time system are mapped as described on <see cref="ToStateVector"/>.
     /// </remarks>
-    /// <exception cref="ArgumentNullException">Thrown when clock is null.</exception>
-    /// <exception cref="ArgumentOutOfRangeException">Thrown when naifId is non-negative or maximumOperatingMass is invalid.</exception>
+    /// <exception cref="ArgumentOutOfRangeException">Thrown when naifId is not in [-2147483, -1], or, naming it, when
+    /// <paramref name="maxOperatingMass"/> is not finite or below the MASS of the OPM.</exception>
     /// <exception cref="ArgumentException">
     /// No observer is given and <c>CENTER_NAME</c> is not a centre the library identifies, or the observer contradicts it
-    /// (see <see cref="ToStateVector"/>).
+    /// (see <see cref="ToStateVector"/>), or <paramref name="clock"/> is attached to a spacecraft of another NAIF id.
     /// </exception>
-    public Spacecraft ToSpacecraft(int naifId, double maximumOperatingMass, Clock clock, ILocalizable observer = null)
+    public Spacecraft ToSpacecraft(int naifId, double maxOperatingMass = double.MaxValue, Clock clock = null, ILocalizable observer = null)
     {
-        if (clock == null)
-            throw new ArgumentNullException(nameof(clock));
-
         // Get state vector
         var stateVector = ToStateVector(observer);
 
         // Extract spacecraft parameters from OPM (with defaults if not present)
         double mass = Data.Mass ?? 1.0;
         double sectionalArea = Data.DragArea ?? 1.0;
-        double dragCoeff = Data.DragCoefficient ?? 2.2;
-        double solarRadCoeff = Data.SolarRadiationCoefficient ?? 1.0;
-
-        // Ensure maximumOperatingMass is at least equal to mass
-        if (maximumOperatingMass < mass)
-            maximumOperatingMass = mass;
+        double dragCoefficient = Data.DragCoefficient ?? 2.2;
+        double solarRadiationCoefficient = Data.SolarRadiationCoefficient ?? 1.0;
 
         return new Spacecraft(
             naifId,
             ObjectName,
             mass,
-            maximumOperatingMass,
-            clock,
             stateVector,
+            maxOperatingMass,
+            clock,
             sectionalArea,
-            dragCoeff,
+            dragCoefficient,
             ObjectId,  // COSPAR ID from OPM OBJECT_ID
-            solarRadCoeff);
+            solarRadiationCoefficient);
     }
 
     /// <summary>

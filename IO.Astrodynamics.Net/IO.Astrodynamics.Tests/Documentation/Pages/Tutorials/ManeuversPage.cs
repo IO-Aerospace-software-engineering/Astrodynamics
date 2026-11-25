@@ -66,10 +66,10 @@ internal static class ManeuversPage
         #region docs/tutorials/maneuvers.md:1
         // Inputs: earth (CelestialBody), epoch (Time), engine (Engine)
         // Point the thrust axis along the velocity vector; the next maneuver of the chain starts 30 minutes later at the earliest
-        var prograde = new ProgradeAttitude(earth, epoch, TimeSpan.FromMinutes(30), engine);
+        var prograde = new ProgradeAttitude(epoch, TimeSpan.FromMinutes(30), earth);
 
         // Point the instrument axis toward the sub-satellite point, also held 30 minutes
-        var nadir = new NadirAttitude(earth, epoch, TimeSpan.FromMinutes(30), engine);
+        var nadir = new NadirAttitude(epoch, TimeSpan.FromMinutes(30), earth);
         #endregion
     }
 
@@ -77,14 +77,14 @@ internal static class ManeuversPage
     internal static void Block02(Time epoch, CelestialBody earth, CelestialBody sun, Engine engine)
     {
         #region docs/tutorials/maneuvers.md:2
-        // Inputs: epoch (Time), earth and sun (CelestialBody), engine (Engine)
+        // Inputs: epoch (Time), earth and sun (CelestialBody)
         // Primary: spacecraft -Z toward Earth (nadir pointing)
         // Secondary: spacecraft +X toward Sun, which sets the roll about nadir (+Z, opposite to -Z, would leave the roll
         // undetermined: the body vectors must be at least 5 degrees apart)
-        var triad = new TriadAttitude(epoch, TimeSpan.FromHours(1.5),
-            Spacecraft.Down, earth,    // Primary: nadir pointing
-            Spacecraft.Right, sun,     // Secondary: +X toward the Sun
-            engine);
+        var triad = new TriadAttitude(
+            Spacecraft.Down, new CelestialAttitudeTarget(earth),  // Primary: nadir pointing
+            Spacecraft.Right, new CelestialAttitudeTarget(sun),
+            epoch, TimeSpan.FromHours(1.5));
         #endregion
     }
 
@@ -92,17 +92,20 @@ internal static class ManeuversPage
     internal static void Block03(Engine engine, CelestialBody sun, CelestialBody moon, CelestialBody earth, Time epoch, TimeSpan duration)
     {
         #region docs/tutorials/maneuvers.md:3
-        // Inputs: engine (Engine), sun, moon and earth (CelestialBody), epoch (Time), duration (TimeSpan)
+        // Inputs: sun, moon and earth (CelestialBody), epoch (Time), duration (TimeSpan)
         // Default geometric direction
         var sunTarget = new CelestialAttitudeTarget(sun);
 
         // Light-time corrected direction for sensor pointing
         var moonTarget = new CelestialAttitudeTarget(moon, Aberration.LT);
 
-        var triad = new TriadAttitude(earth, epoch, duration,
-            Spacecraft.Front, OrbitalDirectionTarget.Prograde,
-            Spacecraft.Up, moonTarget,
-            engine);
+        var triad = new TriadAttitude(Spacecraft.Front,
+            OrbitalDirectionTarget.Prograde,
+            Spacecraft.Up,
+            moonTarget,
+            epoch,
+            duration,
+            earth);
         #endregion
     }
 
@@ -110,13 +113,13 @@ internal static class ManeuversPage
     internal static void Block04(CelestialBody earth, Time epoch, TimeSpan duration, Engine engine, CelestialBody sun)
     {
         #region docs/tutorials/maneuvers.md:4
-        // Inputs: earth and sun (CelestialBody), epoch (Time), duration (TimeSpan), engine (Engine)
+        // Inputs: earth and sun (CelestialBody), epoch (Time), duration (TimeSpan)
         // LVLH frame (the spacecraft's down axis to nadir, its front axis toward the velocity)
-        var lvlh = TriadAttitude.CreateLVLH(earth, epoch, duration, engine);
+        var lvlh = TriadAttitude.CreateLvlh(epoch, duration, earth);
 
         // Prograde thrust with solar panels tracking the Sun
         var sunTrack = TriadAttitude.CreateProgradeWithSunTracking(
-            earth, epoch, duration, sun, engine);
+            sun, epoch, duration, earth);
         #endregion
     }
 
@@ -128,7 +131,7 @@ internal static class ManeuversPage
         // An apogee 1 000 km above the equator: R + 1 000 km from the Earth's centre
         double targetApogeeRadius = earth.EquatorialRadius + 1000e3;
         var raiseApogee = new ApogeeHeightManeuver(
-            earth, epoch, TimeSpan.Zero, targetApogeeRadius, engine);
+            targetApogeeRadius, engine, epoch, TimeSpan.Zero, earth);
         #endregion
     }
 
@@ -138,7 +141,7 @@ internal static class ManeuversPage
         #region docs/tutorials/maneuvers.md:6
         // Inputs: earth (CelestialBody), epoch (Time), targetPerigeeRadius (double), engine (Engine)
         var lowerPerigee = new PerigeeHeightManeuver(
-            earth, epoch, TimeSpan.Zero, targetPerigeeRadius, engine);
+            targetPerigeeRadius, engine, epoch, TimeSpan.Zero, earth);
         #endregion
     }
 
@@ -148,7 +151,7 @@ internal static class ManeuversPage
         #region docs/tutorials/maneuvers.md:7
         // Inputs: epoch (Time), targetOrbit (OrbitalParameters), revolutions (uint), engine (Engine)
         var phasing = new PhasingManeuver(
-            epoch, targetOrbit, revolutions, engine);
+            targetOrbit, revolutions, engine, epoch);
         #endregion
     }
 
@@ -158,7 +161,7 @@ internal static class ManeuversPage
         #region docs/tutorials/maneuvers.md:8
         // Inputs: epoch (Time), targetOrbit (OrbitalParameters), engine (Engine)
         var planeChange = new PlaneAlignmentManeuver(
-            epoch, TimeSpan.Zero, targetOrbit, engine);
+            targetOrbit, engine, epoch, TimeSpan.Zero);
         #endregion
     }
 
@@ -168,7 +171,7 @@ internal static class ManeuversPage
         #region docs/tutorials/maneuvers.md:9
         // Inputs: epoch (Time), targetOrbit (OrbitalParameters), engine (Engine)
         var apsidalAlign = new ApsidalAlignmentManeuver(
-            epoch, TimeSpan.Zero, targetOrbit, engine);
+            targetOrbit, engine, epoch, TimeSpan.Zero);
         #endregion
     }
 
@@ -178,7 +181,7 @@ internal static class ManeuversPage
         #region docs/tutorials/maneuvers.md:10
         // Inputs: earth (CelestialBody), epoch (Time), targetPerigeeRadius and targetInclination (double), engine (Engine)
         var combined = new CombinedManeuver(
-            earth, epoch, TimeSpan.Zero, targetPerigeeRadius, targetInclination, engine);
+            targetPerigeeRadius, targetInclination, engine, epoch, TimeSpan.Zero, earth);
         #endregion
     }
 
@@ -189,17 +192,19 @@ internal static class ManeuversPage
         // Inputs: targetOrbit (OrbitalParameters), engine (Engine), revolutions (uint), earth (CelestialBody),
         //   targetApogeeRadius (double), spacecraft (Spacecraft)
         var maneuver1 = new PlaneAlignmentManeuver(
-            new Time(DateTime.MinValue, TimeScale.TDB), TimeSpan.Zero,
-            targetOrbit, engine);
+            targetOrbit,
+            engine,
+            new Time(DateTime.MinValue, TimeScale.TDB),
+            TimeSpan.Zero);
 
         // The plan, in order; each maneuver takes its own arguments, as in the sections above
         spacecraft.SetManeuvers(maneuver1,
             new ApsidalAlignmentManeuver(
-                new Time(DateTime.MinValue, TimeScale.TDB), TimeSpan.Zero, targetOrbit, engine),
+                targetOrbit, engine, new Time(DateTime.MinValue, TimeScale.TDB), TimeSpan.Zero),
             new PhasingManeuver(
-                new Time(DateTime.MinValue, TimeScale.TDB), targetOrbit, revolutions, engine),
+                targetOrbit, revolutions, engine, new Time(DateTime.MinValue, TimeScale.TDB)),
             new ApogeeHeightManeuver(
-                earth, new Time(DateTime.MinValue, TimeScale.TDB), TimeSpan.Zero, targetApogeeRadius, engine));
+                targetApogeeRadius, engine, new Time(DateTime.MinValue, TimeScale.TDB), TimeSpan.Zero, earth));
 
         #endregion
     }

@@ -34,8 +34,8 @@ var protectedState = new StateVector(
     earth, epoch, Frame.ICRF, protectedCov);
 
 var protectedSpacecraft = new Spacecraft(
-    -1001, "Protected", 120.0, 150.0,
-    new Clock("Protected_CLK", 256), protectedState,
+    -1001, "Protected", 120.0, protectedState,
+    150.0, new Clock("Protected_CLK", 256),
     hardBodyRadius: 8.0);
 ```
 
@@ -54,8 +54,8 @@ var secondaryState = new StateVector(
     earth, epoch, Frame.ICRF, secondaryCov);
 
 var secondarySpacecraft = new Spacecraft(
-    -2001, "Secondary", 80.0, 100.0,
-    new Clock("Secondary_CLK", 256), secondaryState,
+    -2001, "Secondary", 80.0, secondaryState,
+    100.0, new Clock("Secondary_CLK", 256),
     hardBodyRadius: 3.0);
 ```
 

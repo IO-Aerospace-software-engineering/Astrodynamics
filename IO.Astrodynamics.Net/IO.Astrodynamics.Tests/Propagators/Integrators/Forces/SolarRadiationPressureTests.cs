@@ -32,8 +32,8 @@ public class SolarRadiationPressureTests
     {
         var earth = new CelestialBody(399, new GeopotentialModelParameters(Path.Combine(Constants.SolarSystemKernelPath.ToString(), "EGM2008_to70_TideFree")));
         Clock clk = new Clock("My clock", 256);
-        Spacecraft spc = new Spacecraft(-1001, "MySpacecraft", 100.0, 10000.0, clk,
-            new StateVector(new Vector3(6800000.0, 0.0, 0.0), new Vector3(0.0, 7656.2204182967143, 0.0), earth, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF));
+        Spacecraft spc = new Spacecraft(-1001, "MySpacecraft", 100.0, new StateVector(new Vector3(6800000.0, 0.0, 0.0), new Vector3(0.0, 7656.2204182967143, 0.0), earth, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF), 10000.0,
+            clk);
         SolarRadiationPressure solarRadiationPressure = new SolarRadiationPressure(spc, [earth]);
 
         StateVector parkingOrbit = new StateVector(new Vector3(6800000.0, 0.0, 0.0), new Vector3(0.0, 7656.2204182967143, 0.0), earth, TimeSystem.Time.J2000TDB,
@@ -48,9 +48,9 @@ public class SolarRadiationPressureTests
         // Cr = 1.8 should scale the SRP by 1.8x compared to Cr = 1.0
         var earth = new CelestialBody(399, new GeopotentialModelParameters(Path.Combine(Constants.SolarSystemKernelPath.ToString(), "EGM2008_to70_TideFree")));
         Clock clk = new Clock("My clock", 256);
-        Spacecraft spc = new Spacecraft(-1001, "MySpacecraft", 100.0, 10000.0, clk,
-            new StateVector(new Vector3(6800000.0, 0.0, 0.0), new Vector3(0.0, 7656.2204182967143, 0.0), earth, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF),
-            solarRadiationCoeff: 1.8);
+        Spacecraft spc = new Spacecraft(-1001, "MySpacecraft", 100.0, new StateVector(new Vector3(6800000.0, 0.0, 0.0), new Vector3(0.0, 7656.2204182967143, 0.0), earth, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF), 10000.0,
+            clk,
+            solarRadiationCoefficient: 1.8);
         SolarRadiationPressure solarRadiationPressure = new SolarRadiationPressure(spc, [earth]);
 
         StateVector parkingOrbit = new StateVector(new Vector3(6800000.0, 0.0, 0.0), new Vector3(0.0, 7656.2204182967143, 0.0), earth, TimeSystem.Time.J2000TDB,
@@ -70,9 +70,9 @@ public class SolarRadiationPressureTests
         // So result should be 100/150 = 2/3 of the base result
         var earth = new CelestialBody(399, new GeopotentialModelParameters(Path.Combine(Constants.SolarSystemKernelPath.ToString(), "EGM2008_to70_TideFree")));
         Clock clk = new Clock("My clock", 256);
-        Spacecraft spc = new Spacecraft(-1001, "MySpacecraft", 100.0, 10000.0, clk,
-            new StateVector(new Vector3(6800000.0, 0.0, 0.0), new Vector3(0.0, 7656.2204182967143, 0.0), earth, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF));
-        var fuelTank = new FuelTank("tank1", "model1", "sn001", 100.0, 50.0);
+        Spacecraft spc = new Spacecraft(-1001, "MySpacecraft", 100.0, new StateVector(new Vector3(6800000.0, 0.0, 0.0), new Vector3(0.0, 7656.2204182967143, 0.0), earth, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF), 10000.0,
+            clk);
+        var fuelTank = new FuelTank("tank1", 100.0, 50.0, "model1", "sn001");
         spc.AddFuelTank(fuelTank);
 
         SolarRadiationPressure solarRadiationPressure = new SolarRadiationPressure(spc, [earth]);
@@ -99,8 +99,8 @@ public class SolarRadiationPressureTests
     {
         var earth = new CelestialBody(399);
         Clock clk = new Clock("My clock", 256);
-        Spacecraft spc = new Spacecraft(-1001, "MySpacecraft", 100.0, 10000.0, clk,
-            new StateVector(new Vector3(6800000.0, 0.0, 0.0), new Vector3(0.0, 7656.2204182967143, 0.0), earth, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF));
+        Spacecraft spc = new Spacecraft(-1001, "MySpacecraft", 100.0, new StateVector(new Vector3(6800000.0, 0.0, 0.0), new Vector3(0.0, 7656.2204182967143, 0.0), earth, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF), 10000.0,
+            clk);
         Assert.Throws<ArgumentNullException>(() => new SolarRadiationPressure(spc, null));
     }
 
@@ -112,7 +112,7 @@ public class SolarRadiationPressureTests
         var earth = new CelestialBody(PlanetsAndMoons.EARTH, Frames.Frame.ICRF, SunlitEpoch);
         var state = new StateVector(new Vector3(6800000.0, 0.0, 0.0), new Vector3(0.0, 7656.2204182967143, 0.0), earth,
             SunlitEpoch, Frames.Frame.ICRF);
-        var spacecraft = new Spacecraft(-1001, "MySpacecraft", 100.0, 10000.0, new Clock("My clock", 256), state, 10.0,
+        var spacecraft = new Spacecraft(-1001, "MySpacecraft", 100.0, state, 10000.0, new Clock("My clock", 256), 10.0,
             2.2, null, 1.5);
         return (earth, spacecraft, state);
     }

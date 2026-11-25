@@ -413,12 +413,14 @@ public class NearestTickSpanTests
             for (uint revolutions = 1; revolutions <= 3; revolutions++)
             {
                 var orbit = new KeplerianElements(7000000.0 + 1111.0 * k, 0.01, 0.1, 0.0, 0.0, 0.0, earth, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF);
-                var spacecraft = new Spacecraft(-1637, "Phasing1637", 1000.0, 3000.0, new Clock("Clk1637", 65536), orbit);
-                spacecraft.AddFuelTank(new FuelTank("ft", "ftA", "123456", 1000.0, 900.0));
-                spacecraft.AddEngine(new Engine("eng", "engmk1", "12345", 450, 50, spacecraft.FuelTanks.First()));
+                var spacecraft = new Spacecraft(-1637, "Phasing1637", 1000.0, orbit, 3000.0, new Clock("Clk1637", 65536));
+                spacecraft.AddFuelTank(new FuelTank("ft", 1000.0, 900.0, "ftA", "123456"));
+                spacecraft.AddEngine(new Engine("eng", 450, 50, spacecraft.FuelTanks.First(), "engmk1", "12345"));
                 var target = new KeplerianElements(7000000.0 + 1111.0 * k, 0.01, 0.1, 0.0, 0.0, 0.3 + 0.05 * k, earth, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF);
-                var maneuver = new PhasingManeuver(new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB), target, revolutions,
-                    spacecraft.Engines.First());
+                var maneuver = new PhasingManeuver(target,
+                    revolutions,
+                    spacecraft.Engines.First(),
+                    new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB));
                 var state = orbit.ToStateVector();
                 maneuver.TryExecute(state);
 
@@ -439,8 +441,8 @@ public class NearestTickSpanTests
                 double hold = t2 * revolutions * 0.9;
 
                 long expected = ExactTicks.Nearest(hold);
-                Assert.True(expected == maneuver.ManeuverHoldDuration.Ticks,
-                    $"a = {orbit.SemiMajorAxis():R} m, {revolutions} revolutions: {maneuver.ManeuverHoldDuration.Ticks} ticks, the nearest {expected}");
+                Assert.True(expected == maneuver.HoldDuration.Ticks,
+                    $"a = {orbit.SemiMajorAxis():R} m, {revolutions} revolutions: {maneuver.HoldDuration.Ticks} ticks, the nearest {expected}");
                 count++;
                 if (Truncated(hold) != expected)
                 {

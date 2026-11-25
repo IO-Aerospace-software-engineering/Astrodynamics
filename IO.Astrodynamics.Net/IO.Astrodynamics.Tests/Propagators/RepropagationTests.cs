@@ -210,15 +210,15 @@ public class RepropagationTests
     private static Sc Build(Env env, OrbitalParams orbit, string chain, Time? userGate = null)
     {
         int id = System.Threading.Interlocked.Decrement(ref _nextId);
-        var spacecraft = new Spacecraft(id, $"RP{-id}", 1000.0, 3000.0, new Clock($"RP{-id}_CLK", 65536), orbit, cosparId: "2024-001A");
-        var tank = new FuelTank("ft", "model", "sn", 1000.0, 1000.0);
+        var spacecraft = new Spacecraft(id, $"RP{-id}", 1000.0, orbit, 3000.0, new Clock($"RP{-id}_CLK", 65536), cosparId: "2024-001A");
+        var tank = new FuelTank("ft", 1000.0, 1000.0, "model", "sn");
         spacecraft.AddFuelTank(tank);
-        var engine = new Engine("eng", "model", "sn", 300.0, 10.0, tank);
+        var engine = new Engine("eng", 300.0, 10.0, tank, "model", "sn");
         spacecraft.AddEngine(engine);
         var maneuvers = NewChain(env, engine, chain, userGate);
         spacecraft.SetManeuvers(maneuvers);
         // Read before any propagation: the minimum epoch each maneuver was given
-        return new Sc { Env = env, Spacecraft = spacecraft, Chain = maneuvers, Given = maneuvers.Select(m => m.MinimumEpoch).ToArray() };
+        return new Sc { Env = env, Spacecraft = spacecraft, Chain = maneuvers, Given = maneuvers.Select(m => m.MinEpoch).ToArray() };
     }
 
     /// <summary>
@@ -239,15 +239,15 @@ public class RepropagationTests
         }
         else if (chain == "apo1" || chain == "apo2")
         {
-            maneuvers = [new ApogeeHeightManeuver(c, h, TimeSpan.Zero, chain == "apo1" ? 8378137.0 : 9378137.0, engine)];
+            maneuvers = [new ApogeeHeightManeuver(chain == "apo1" ? 8378137.0 : 9378137.0, engine, h, TimeSpan.Zero, c)];
         }
         else if (chain == "apo-apo")
         {
             // About the Moon (orbit 100 × 300 km, period 7 654 s), a hold of 7 000 s puts the second burn of a run from
             // the perigee at S + 500 at the perigee 8 252 s later, before the gate of a run from the apogee at S (10 827 s)
             maneuvers = env.Moon
-                ? [new ApogeeHeightManeuver(c, h, TimeSpan.FromSeconds(7000.0), MoonRadius + 500000.0, engine), new ApogeeHeightManeuver(c, S, TimeSpan.Zero, MoonRadius + 700000.0, engine)]
-                : [new ApogeeHeightManeuver(c, h, TimeSpan.FromSeconds(5000.0), 8378137.0, engine), new ApogeeHeightManeuver(c, S, TimeSpan.Zero, 8878137.0, engine)];
+                ? [new ApogeeHeightManeuver(MoonRadius + 500000.0, engine, h, TimeSpan.FromSeconds(7000.0), c), new ApogeeHeightManeuver(MoonRadius + 700000.0, engine, S, TimeSpan.Zero, c)]
+                : [new ApogeeHeightManeuver(8378137.0, engine, h, TimeSpan.FromSeconds(5000.0), c), new ApogeeHeightManeuver(8878137.0, engine, S, TimeSpan.Zero, c)];
         }
         else if (chain.StartsWith("lead2"))
         {
@@ -255,23 +255,23 @@ public class RepropagationTests
             // gate of an attitude by the attitude before it, and of the impulse by the last (#539, #582 choice 4)
             maneuvers =
             [
-                new NadirAttitude(c, h, TimeSpan.FromSeconds(500.0), engine), new ProgradeAttitude(c, S, TimeSpan.FromSeconds(500.0), engine),
-                new ApogeeHeightManeuver(c, S, TimeSpan.Zero, 8378137.0, engine)
+                new NadirAttitude(h, TimeSpan.FromSeconds(500.0), c), new ProgradeAttitude(S, TimeSpan.FromSeconds(500.0), c),
+                new ApogeeHeightManeuver(8378137.0, engine, S, TimeSpan.Zero, c)
             ];
         }
         else if (chain.StartsWith("lead"))
         {
             // A leading NadirAttitude held H s, then an ApogeeHeightManeuver: the hold gates the impulse (#539)
             double hold = double.Parse(chain[4..], Invariant);
-            maneuvers = [new NadirAttitude(c, h, TimeSpan.FromSeconds(hold), engine), new ApogeeHeightManeuver(c, S, TimeSpan.Zero, 8378137.0, engine)];
+            maneuvers = [new NadirAttitude(h, TimeSpan.FromSeconds(hold), c), new ApogeeHeightManeuver(8378137.0, engine, S, TimeSpan.Zero, c)];
         }
         else
         {
             double hold = double.Parse(chain[3..], Invariant);
             maneuvers =
             [
-                new ApogeeHeightManeuver(c, h, TimeSpan.Zero, 8378137.0, engine), new NadirAttitude(c, S, TimeSpan.FromSeconds(hold), engine),
-                new PerigeeHeightManeuver(c, S, TimeSpan.Zero, 6878137.0, engine)
+                new ApogeeHeightManeuver(8378137.0, engine, h, TimeSpan.Zero, c), new NadirAttitude(S, TimeSpan.FromSeconds(hold), c),
+                new PerigeeHeightManeuver(6878137.0, engine, S, TimeSpan.Zero, c)
             ];
         }
 
@@ -404,7 +404,7 @@ public class RepropagationTests
             DeltaV = sc.Chain.OfType<ImpulseManeuver>().Where(m => m.ThrustWindow.HasValue).Select(m => m.DeltaV).ToArray(),
             R = r,
             V = v,
-            Gates = sc.Chain.Select(m => m.MinimumEpoch).ToArray(),
+            Gates = sc.Chain.Select(m => m.MinEpoch).ToArray(),
             Executed = spacecraft.ExecutedManeuvers.Select(m => (Array.IndexOf(sc.Chain, m), m.ManeuverWindow, m.ThrustWindow)).ToArray(),
             Opm = (opm.Data.Maneuvers ?? []).Select(m => (m.ManEpochIgnition, m.ManDuration, m.ManDeltaMass, m.ManDv1, m.ManDv2, m.ManDv3)).ToArray(),
             Summary = (summary.ManeuverWindow, summary.FuelConsumption, summary.Maneuvers.Count()),
@@ -491,9 +491,9 @@ public class RepropagationTests
         var expected = sc.Chain.Select((m, i) => i == 0 || !sc.Chain[i - 1].ManeuverWindow.HasValue
             ? sc.Given[i]
             : Later(sc.Given[i], sc.Chain[i - 1].ManeuverWindow.Value.EndDate)).ToArray();
-        _output.WriteLine($"MEASURE #573 {tag} MinimumEpoch: {Fs(sc.Chain.Select(m => Tt(m.MinimumEpoch)))}, the given ones and the windows before them " +
+        _output.WriteLine($"MEASURE #573 {tag} MinimumEpoch: {Fs(sc.Chain.Select(m => Tt(m.MinEpoch)))}, the given ones and the windows before them " +
                           $"{Fs(expected.Select(Tt))}");
-        LabelAssert.Equal(expected, sc.Chain.Select(m => m.MinimumEpoch).ToArray());
+        LabelAssert.Equal(expected, sc.Chain.Select(m => m.MinEpoch).ToArray());
     }
 
     /// <summary>
@@ -607,7 +607,7 @@ public class RepropagationTests
         reused.Spacecraft.SetInitialOrbitalParameters(env.PerigeeAt(s2));
         // Between two runs, MinimumEpoch shows the gates of the last run, with its windows: SetInitialOrbitalParameters
         // clears nothing
-        LabelAssert.Equal(r1.Gates, reused.Chain.Select(m => m.MinimumEpoch).ToArray());
+        LabelAssert.Equal(r1.Gates, reused.Chain.Select(m => m.MinEpoch).ToArray());
 
         // Act
         var r2 = Propagate(reused, Win(s2), integrator, path);
@@ -841,7 +841,7 @@ public class RepropagationTests
         for (int i = 0; i < fresh.Chain.Length && fresh.Chain[i] is Attitude attitude; i++)
         {
             var start = TimelineRules.Activation(fresh.Given[i], previousEnd);
-            var end = TimelineRules.After(start, attitude.ManeuverHoldDuration.TotalSeconds, tt);
+            var end = TimelineRules.After(start, attitude.HoldDuration.TotalSeconds, tt);
             Assert.True(attitude.ManeuverWindow.HasValue, $"{tag}: attitude {i} not executed");
             worst = System.Math.Max(worst, System.Math.Abs((attitude.ManeuverWindow.Value.StartDate - start).TotalSeconds));
             worst = System.Math.Max(worst, System.Math.Abs((attitude.ManeuverWindow.Value.EndDate - end).TotalSeconds));
@@ -1026,14 +1026,14 @@ public class RepropagationTests
         var s2 = S.AddSeconds(500.0);
         var reused = Build(env, env.Apogee(), "apo-apo", userGate);
         var fresh1 = Build(env, env.Apogee(), "apo-apo", userGate);
-        var before = reused.Chain.Select(m => m.MinimumEpoch).ToArray();
-        LabelAssert.Equal(fresh1.Chain.Select(m => m.MinimumEpoch), before);
+        var before = reused.Chain.Select(m => m.MinEpoch).ToArray();
+        LabelAssert.Equal(fresh1.Chain.Select(m => m.MinEpoch), before);
         LabelAssert.Equal(userGate, before[0]);
 
         // Act
         var r1 = Propagate(reused, Win(S), integrator, "Propagate");
         reused.Spacecraft.SetInitialOrbitalParameters(env.PerigeeAt(s2));
-        var between = reused.Chain.Select(m => m.MinimumEpoch).ToArray();
+        var between = reused.Chain.Select(m => m.MinEpoch).ToArray();
         var r2 = Propagate(reused, Win(s2), integrator, "Propagate");
 
         // Assert
@@ -1075,13 +1075,13 @@ public class RepropagationTests
         // Act
         var plan = NewChain(env, reused.Spacecraft.Engines.Single(), "apo-apo", S.AddSeconds(6000.0));
         reused.Spacecraft.SetManeuvers(plan);
-        var renewed = new Sc { Env = env, Spacecraft = reused.Spacecraft, Chain = plan, Given = plan.Select(m => m.MinimumEpoch).ToArray() };
+        var renewed = new Sc { Env = env, Spacecraft = reused.Spacecraft, Chain = plan, Given = plan.Select(m => m.MinEpoch).ToArray() };
         var r2 = Propagate(renewed, Win(s2), integrator, "Propagate");
 
         // Assert
-        LabelAssert.Equal(S.AddSeconds(4000.0), former[0].MinimumEpoch);
+        LabelAssert.Equal(S.AddSeconds(4000.0), former[0].MinEpoch);
         Assert.All(former, m => Assert.Null(m.PlanOwner));
-        LabelAssert.Equal(S.AddSeconds(6000.0), plan[0].MinimumEpoch);
+        LabelAssert.Equal(S.AddSeconds(6000.0), plan[0].MinEpoch);
         var (fresh, f) = Fresh(tag, renewed, env.PerigeeAt(s2), "apo-apo", Win(s2), integrator, "Propagate", true, userGate: S.AddSeconds(6000.0));
         LabelAssert.Equal(S.AddSeconds(6000.0), r2.Gates[0]);
         AssertSame(tag, r2, f, renewed, fresh);
@@ -1314,7 +1314,7 @@ public class RepropagationTests
         Assert.Equal(maneuvers, spacecraft.Maneuvers);
         Assert.Same(maneuvers.FirstOrDefault(), spacecraft.StandbyManeuver);
         Assert.Equal(executedBefore, spacecraft.ExecutedManeuvers.ToArray());
-        var reused = new Sc { Env = env, Spacecraft = spacecraft, Chain = maneuvers, Given = maneuvers.Select(m => m.MinimumEpoch).ToArray() };
+        var reused = new Sc { Env = env, Spacecraft = spacecraft, Chain = maneuvers, Given = maneuvers.Select(m => m.MinEpoch).ToArray() };
         var r = Propagate(reused, Win(S), integrator, path);
         var (fresh, f) = Fresh(tag, reused, env.Apogee(), chain, Win(S), integrator, path, false);
         AssertSame(tag, r, f, reused, fresh);

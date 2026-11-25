@@ -32,9 +32,9 @@ public class TriadAttitudeTests
             new TimeSystem.Time(2021, 01, 01, 13, 0, 0, TimeScale.TDB),
             Frames.Frame.ICRF);
 
-        var spc = new Spacecraft(-667, "TriadTestSpacecraft", 1000.0, 3000.0, new Clock("TestClk", 65536), orbitalParams);
-        spc.AddFuelTank(new FuelTank("ft", "ftA", "123456", 1000.0, 900.0));
-        spc.AddEngine(new Engine("eng", "engmk1", "12345", 450, 50, spc.FuelTanks.First()));
+        var spc = new Spacecraft(-667, "TriadTestSpacecraft", 1000.0, orbitalParams, 3000.0, new Clock("TestClk", 65536));
+        spc.AddFuelTank(new FuelTank("ft", 1000.0, 900.0, "ftA", "123456"));
+        spc.AddEngine(new Engine("eng", 450, 50, spc.FuelTanks.First(), "engmk1", "12345"));
 
         return (spc, orbitalParams);
     }
@@ -50,7 +50,7 @@ public class TriadAttitudeTests
             epoch,
             Frames.Frame.ICRF);
 
-        var target = new Spacecraft(-668, "TriadTargetSpacecraft", 800.0, 2000.0, new Clock("TargetClk", 65536), targetState);
+        var target = new Spacecraft(-668, "TriadTargetSpacecraft", 800.0, targetState, 2000.0, new Clock("TargetClk", 65536));
         var step = TimeSpan.FromSeconds(30.0);
         double dt = step.TotalSeconds;
 
@@ -68,19 +68,18 @@ public class TriadAttitudeTests
     public void Constructor_WithInstrument_CreatesValidManeuver()
     {
         var (spc, orbitalParams) = CreateTestSpacecraft();
-        spc.AddCircularInstrument(-667600, "CAM", "mod1", 1.5, Vector3.VectorZ, Vector3.VectorY, Vector3.Zero);
+        spc.AddCircularInstrument("CAM", 1.5, Vector3.VectorZ, Vector3.VectorY, Vector3.Zero, naifId: -667600, model: "mod1");
 
         var maneuver = new TriadAttitude(
-            new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB),
-            TimeSpan.FromHours(1.0),
             spc.Instruments.First(),
-            TestHelpers.MoonAtJ2000,
-            TestHelpers.Sun,
-            spc.Engines.First());
+            new CelestialAttitudeTarget(TestHelpers.MoonAtJ2000),
+            new CelestialAttitudeTarget(TestHelpers.Sun),
+            new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB),
+            TimeSpan.FromHours(1.0));
 
         Assert.NotNull(maneuver);
-        Assert.Equal(TestHelpers.MoonAtJ2000, maneuver.PrimaryTarget);
-        Assert.Equal(TestHelpers.Sun, maneuver.SecondaryTarget);
+        Assert.Equal(TestHelpers.MoonAtJ2000, ((CelestialAttitudeTarget)maneuver.PrimaryTarget).Target);
+        Assert.Equal(TestHelpers.Sun, ((CelestialAttitudeTarget)maneuver.SecondaryTarget).Target);
         Assert.Equal(Vector3.VectorZ, maneuver.PrimaryBodyVector);
         Assert.Equal(Vector3.VectorY, maneuver.SecondaryBodyVector);
     }
@@ -89,18 +88,17 @@ public class TriadAttitudeTests
     public void Constructor_WithDualInstruments_CreatesValidManeuver()
     {
         var (spc, orbitalParams) = CreateTestSpacecraft();
-        spc.AddCircularInstrument(-667600, "CAM1", "mod1", 1.5, Vector3.VectorZ, Vector3.VectorY, Vector3.Zero);
-        spc.AddCircularInstrument(-667601, "CAM2", "mod1", 1.5, Vector3.VectorX, Vector3.VectorY, Vector3.Zero);
+        spc.AddCircularInstrument("CAM1", 1.5, Vector3.VectorZ, Vector3.VectorY, Vector3.Zero, naifId: -667600, model: "mod1");
+        spc.AddCircularInstrument("CAM2", 1.5, Vector3.VectorX, Vector3.VectorY, Vector3.Zero, naifId: -667601, model: "mod1");
 
         var instruments = spc.Instruments.ToList();
         var maneuver = new TriadAttitude(
-            new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB),
-            TimeSpan.FromHours(1.0),
             instruments[0],
-            TestHelpers.MoonAtJ2000,
+            new CelestialAttitudeTarget(TestHelpers.MoonAtJ2000),
             instruments[1],
-            TestHelpers.Sun,
-            spc.Engines.First());
+            new CelestialAttitudeTarget(TestHelpers.Sun),
+            new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB),
+            TimeSpan.FromHours(1.0));
 
         Assert.NotNull(maneuver);
         Assert.Equal(Vector3.VectorZ, maneuver.PrimaryBodyVector);
@@ -113,13 +111,12 @@ public class TriadAttitudeTests
         var (spc, orbitalParams) = CreateTestSpacecraft();
 
         var maneuver = new TriadAttitude(
-            new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB),
-            TimeSpan.FromHours(1.0),
             Vector3.VectorZ,
-            TestHelpers.MoonAtJ2000,
+            new CelestialAttitudeTarget(TestHelpers.MoonAtJ2000),
             Vector3.VectorX,
-            TestHelpers.Sun,
-            spc.Engines.First());
+            new CelestialAttitudeTarget(TestHelpers.Sun),
+            new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB),
+            TimeSpan.FromHours(1.0));
 
         Assert.NotNull(maneuver);
         Assert.Equal(Vector3.VectorZ, maneuver.PrimaryBodyVector);
@@ -130,30 +127,28 @@ public class TriadAttitudeTests
     public void Constructor_NullPrimaryTarget_ThrowsArgumentNullException()
     {
         var (spc, _) = CreateTestSpacecraft();
-        spc.AddCircularInstrument(-667600, "CAM", "mod1", 1.5, Vector3.VectorZ, Vector3.VectorY, Vector3.Zero);
+        spc.AddCircularInstrument("CAM", 1.5, Vector3.VectorZ, Vector3.VectorY, Vector3.Zero, naifId: -667600, model: "mod1");
 
         Assert.Throws<ArgumentNullException>(() => new TriadAttitude(
-            new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB),
-            TimeSpan.FromHours(1.0),
             spc.Instruments.First(),
             null,
-            TestHelpers.Sun,
-            spc.Engines.First()));
+            new CelestialAttitudeTarget(TestHelpers.Sun),
+            new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB),
+            TimeSpan.FromHours(1.0)));
     }
 
     [Fact]
     public void Constructor_NullSecondaryTarget_ThrowsArgumentNullException()
     {
         var (spc, _) = CreateTestSpacecraft();
-        spc.AddCircularInstrument(-667600, "CAM", "mod1", 1.5, Vector3.VectorZ, Vector3.VectorY, Vector3.Zero);
+        spc.AddCircularInstrument("CAM", 1.5, Vector3.VectorZ, Vector3.VectorY, Vector3.Zero, naifId: -667600, model: "mod1");
 
         Assert.Throws<ArgumentNullException>(() => new TriadAttitude(
-            new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB),
-            TimeSpan.FromHours(1.0),
             spc.Instruments.First(),
-            TestHelpers.MoonAtJ2000,
+            new CelestialAttitudeTarget(TestHelpers.MoonAtJ2000),
             null,
-            spc.Engines.First()));
+            new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB),
+            TimeSpan.FromHours(1.0)));
     }
 
     [Fact]
@@ -162,12 +157,11 @@ public class TriadAttitudeTests
         var (spc, _) = CreateTestSpacecraft();
 
         Assert.Throws<ArgumentNullException>(() => new TriadAttitude(
-            new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB),
-            TimeSpan.FromHours(1.0),
             (Instrument)null,
-            TestHelpers.MoonAtJ2000,
-            TestHelpers.Sun,
-            spc.Engines.First()));
+            new CelestialAttitudeTarget(TestHelpers.MoonAtJ2000),
+            new CelestialAttitudeTarget(TestHelpers.Sun),
+            new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB),
+            TimeSpan.FromHours(1.0)));
     }
 
     [Fact]
@@ -176,13 +170,12 @@ public class TriadAttitudeTests
         var (spc, _) = CreateTestSpacecraft();
 
         Assert.Throws<ArgumentException>(() => new TriadAttitude(
-            new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB),
-            TimeSpan.FromHours(1.0),
             Vector3.Zero,
-            TestHelpers.MoonAtJ2000,
+            new CelestialAttitudeTarget(TestHelpers.MoonAtJ2000),
             Vector3.VectorX,
-            TestHelpers.Sun,
-            spc.Engines.First()));
+            new CelestialAttitudeTarget(TestHelpers.Sun),
+            new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB),
+            TimeSpan.FromHours(1.0)));
     }
 
     [Fact]
@@ -191,13 +184,12 @@ public class TriadAttitudeTests
         var (spc, _) = CreateTestSpacecraft();
 
         Assert.Throws<ArgumentException>(() => new TriadAttitude(
-            new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB),
-            TimeSpan.FromHours(1.0),
             Vector3.VectorZ,
-            TestHelpers.MoonAtJ2000,
+            new CelestialAttitudeTarget(TestHelpers.MoonAtJ2000),
             Vector3.Zero,
-            TestHelpers.Sun,
-            spc.Engines.First()));
+            new CelestialAttitudeTarget(TestHelpers.Sun),
+            new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB),
+            TimeSpan.FromHours(1.0)));
     }
 
     #endregion
@@ -210,13 +202,12 @@ public class TriadAttitudeTests
         var (spc, _) = CreateTestSpacecraft();
 
         var ex = Assert.Throws<ArgumentException>(() => new TriadAttitude(
-            new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB),
-            TimeSpan.FromHours(1.0),
             Vector3.VectorZ,
-            TestHelpers.MoonAtJ2000,
+            new CelestialAttitudeTarget(TestHelpers.MoonAtJ2000),
             Vector3.VectorZ * 2.0,
-            TestHelpers.Sun,
-            spc.Engines.First()));
+            new CelestialAttitudeTarget(TestHelpers.Sun),
+            new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB),
+            TimeSpan.FromHours(1.0)));
 
         Assert.Contains("collinear", ex.Message, StringComparison.OrdinalIgnoreCase);
     }
@@ -227,13 +218,12 @@ public class TriadAttitudeTests
         var (spc, _) = CreateTestSpacecraft();
 
         var ex = Assert.Throws<ArgumentException>(() => new TriadAttitude(
-            new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB),
-            TimeSpan.FromHours(1.0),
             Vector3.VectorZ,
-            TestHelpers.MoonAtJ2000,
+            new CelestialAttitudeTarget(TestHelpers.MoonAtJ2000),
             Vector3.VectorZ * -1.0,
-            TestHelpers.Sun,
-            spc.Engines.First()));
+            new CelestialAttitudeTarget(TestHelpers.Sun),
+            new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB),
+            TimeSpan.FromHours(1.0)));
 
         Assert.Contains("collinear", ex.Message, StringComparison.OrdinalIgnoreCase);
     }
@@ -250,13 +240,12 @@ public class TriadAttitudeTests
             System.Math.Cos(angle));
 
         var maneuver = new TriadAttitude(
-            new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB),
-            TimeSpan.FromHours(1.0),
             Vector3.VectorZ,
-            TestHelpers.MoonAtJ2000,
+            new CelestialAttitudeTarget(TestHelpers.MoonAtJ2000),
             secondaryVector,
-            TestHelpers.Sun,
-            spc.Engines.First());
+            new CelestialAttitudeTarget(TestHelpers.Sun),
+            new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB),
+            TimeSpan.FromHours(1.0));
 
         Assert.NotNull(maneuver);
     }
@@ -273,13 +262,12 @@ public class TriadAttitudeTests
             System.Math.Cos(angle));
 
         Assert.Throws<ArgumentException>(() => new TriadAttitude(
-            new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB),
-            TimeSpan.FromHours(1.0),
             Vector3.VectorZ,
-            TestHelpers.MoonAtJ2000,
+            new CelestialAttitudeTarget(TestHelpers.MoonAtJ2000),
             secondaryVector,
-            TestHelpers.Sun,
-            spc.Engines.First()));
+            new CelestialAttitudeTarget(TestHelpers.Sun),
+            new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB),
+            TimeSpan.FromHours(1.0)));
     }
 
     [Fact]
@@ -295,17 +283,16 @@ public class TriadAttitudeTests
 
         // Use custom minimum of 1 degree
         var maneuver = new TriadAttitude(
+            Vector3.VectorZ,
+            new CelestialAttitudeTarget(TestHelpers.MoonAtJ2000),
+            secondaryVector,
+            new CelestialAttitudeTarget(TestHelpers.Sun),
             new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB),
             TimeSpan.FromHours(1.0),
-            Vector3.VectorZ,
-            TestHelpers.MoonAtJ2000,
-            secondaryVector,
-            TestHelpers.Sun,
-            spc.Engines.First(),
-            minimumVectorSeparation: 1.0 * Astrodynamics.Constants.Deg2Rad);
+            minVectorSeparation: 1.0 * Astrodynamics.Constants.Deg2Rad);
 
         Assert.NotNull(maneuver);
-        Assert.Equal(1.0 * Astrodynamics.Constants.Deg2Rad, maneuver.MinimumVectorSeparation);
+        Assert.Equal(1.0 * Astrodynamics.Constants.Deg2Rad, maneuver.MinVectorSeparation);
     }
 
     #endregion
@@ -316,15 +303,14 @@ public class TriadAttitudeTests
     public void Execute_PrimaryVectorPointsAtPrimaryTarget()
     {
         var (spc, orbitalParams) = CreateTestSpacecraft();
-        spc.AddCircularInstrument(-667600, "CAM", "mod1", 1.5, Vector3.VectorZ, Vector3.VectorY, Vector3.Zero);
+        spc.AddCircularInstrument("CAM", 1.5, Vector3.VectorZ, Vector3.VectorY, Vector3.Zero, naifId: -667600, model: "mod1");
 
         var maneuver = new TriadAttitude(
-            new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB),
-            TimeSpan.FromSeconds(10.0),
             spc.Instruments.First(),
-            TestHelpers.MoonAtJ2000,
-            TestHelpers.Sun,
-            spc.Engines.First());
+            new CelestialAttitudeTarget(TestHelpers.MoonAtJ2000),
+            new CelestialAttitudeTarget(TestHelpers.Sun),
+            new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB),
+            TimeSpan.FromSeconds(10.0));
 
         var maneuverOrientation = maneuver.ComputeStateOrientation(orbitalParams);
 
@@ -344,15 +330,14 @@ public class TriadAttitudeTests
     public void Execute_SecondaryVectorLiesInConstraintPlane()
     {
         var (spc, orbitalParams) = CreateTestSpacecraft();
-        spc.AddCircularInstrument(-667600, "CAM", "mod1", 1.5, Vector3.VectorZ, Vector3.VectorY, Vector3.Zero);
+        spc.AddCircularInstrument("CAM", 1.5, Vector3.VectorZ, Vector3.VectorY, Vector3.Zero, naifId: -667600, model: "mod1");
 
         var maneuver = new TriadAttitude(
-            new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB),
-            TimeSpan.FromSeconds(10.0),
             spc.Instruments.First(),
-            TestHelpers.MoonAtJ2000,
-            TestHelpers.Sun,
-            spc.Engines.First());
+            new CelestialAttitudeTarget(TestHelpers.MoonAtJ2000),
+            new CelestialAttitudeTarget(TestHelpers.Sun),
+            new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB),
+            TimeSpan.FromSeconds(10.0));
 
         var maneuverOrientation2 = maneuver.ComputeStateOrientation(orbitalParams);
 
@@ -386,15 +371,14 @@ public class TriadAttitudeTests
     public void Execute_QuaternionIsNormalized()
     {
         var (spc, orbitalParams) = CreateTestSpacecraft();
-        spc.AddCircularInstrument(-667600, "CAM", "mod1", 1.5, Vector3.VectorZ, Vector3.VectorY, Vector3.Zero);
+        spc.AddCircularInstrument("CAM", 1.5, Vector3.VectorZ, Vector3.VectorY, Vector3.Zero, naifId: -667600, model: "mod1");
 
         var maneuver = new TriadAttitude(
-            new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB),
-            TimeSpan.FromSeconds(10.0),
             spc.Instruments.First(),
-            TestHelpers.MoonAtJ2000,
-            TestHelpers.Sun,
-            spc.Engines.First());
+            new CelestialAttitudeTarget(TestHelpers.MoonAtJ2000),
+            new CelestialAttitudeTarget(TestHelpers.Sun),
+            new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB),
+            TimeSpan.FromSeconds(10.0));
 
         var maneuverOrientation3 = maneuver.ComputeStateOrientation(orbitalParams);
 
@@ -409,15 +393,14 @@ public class TriadAttitudeTests
     public void Execute_RotationMatrixIsOrthogonal()
     {
         var (spc, orbitalParams) = CreateTestSpacecraft();
-        spc.AddCircularInstrument(-667600, "CAM", "mod1", 1.5, Vector3.VectorZ, Vector3.VectorY, Vector3.Zero);
+        spc.AddCircularInstrument("CAM", 1.5, Vector3.VectorZ, Vector3.VectorY, Vector3.Zero, naifId: -667600, model: "mod1");
 
         var maneuver = new TriadAttitude(
-            new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB),
-            TimeSpan.FromSeconds(10.0),
             spc.Instruments.First(),
-            TestHelpers.MoonAtJ2000,
-            TestHelpers.Sun,
-            spc.Engines.First());
+            new CelestialAttitudeTarget(TestHelpers.MoonAtJ2000),
+            new CelestialAttitudeTarget(TestHelpers.Sun),
+            new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB),
+            TimeSpan.FromSeconds(10.0));
 
         var maneuverOrientation4 = maneuver.ComputeStateOrientation(orbitalParams);
 
@@ -444,16 +427,15 @@ public class TriadAttitudeTests
     public void Execute_ProducesDifferentRollThanSingleVector()
     {
         var (spc, orbitalParams) = CreateTestSpacecraft();
-        spc.AddCircularInstrument(-667600, "CAM", "mod1", 1.5, Vector3.VectorZ, Vector3.VectorY, Vector3.Zero);
+        spc.AddCircularInstrument("CAM", 1.5, Vector3.VectorZ, Vector3.VectorY, Vector3.Zero, naifId: -667600, model: "mod1");
 
         // TRIAD pointing (fully constrained - uses both boresight and refVector)
         var triadManeuver = new TriadAttitude(
-            new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB),
-            TimeSpan.FromSeconds(10.0),
             spc.Instruments.First(),
-            TestHelpers.MoonAtJ2000,
-            TestHelpers.Sun,
-            spc.Engines.First());
+            new CelestialAttitudeTarget(TestHelpers.MoonAtJ2000),
+            new CelestialAttitudeTarget(TestHelpers.Sun),
+            new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB),
+            TimeSpan.FromSeconds(10.0));
 
         var triadManeuverOrientation5 = triadManeuver.ComputeStateOrientation(orbitalParams);
         var triadQ = triadManeuverOrientation5.Rotation;
@@ -502,15 +484,14 @@ public class TriadAttitudeTests
 
         // Primary: nadir-pointing camera (Z-axis)
         // Secondary: solar panel normal (Y-axis toward Sun)
-        spc.AddCircularInstrument(-667600, "NadirCam", "mod1", 1.5, Vector3.VectorZ, Vector3.VectorY, Vector3.Zero);
+        spc.AddCircularInstrument("NadirCam", 1.5, Vector3.VectorZ, Vector3.VectorY, Vector3.Zero, naifId: -667600, model: "mod1");
 
         var maneuver = new TriadAttitude(
-            new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB),
-            TimeSpan.FromSeconds(10.0),
             spc.Instruments.First(),
-            TestHelpers.EarthAtJ2000, // Point at Earth (nadir)
-            TestHelpers.Sun, // Secondary constraint toward Sun
-            spc.Engines.First());
+            new CelestialAttitudeTarget(TestHelpers.EarthAtJ2000), // Point at Earth (nadir)
+            new CelestialAttitudeTarget(TestHelpers.Sun),
+            new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB),
+            TimeSpan.FromSeconds(10.0));
 
         var maneuverOrientation6 = maneuver.ComputeStateOrientation(orbitalParams);
 
@@ -535,18 +516,17 @@ public class TriadAttitudeTests
         // Two instruments pointing at different celestial bodies
         var (spc, orbitalParams) = CreateTestSpacecraft();
 
-        spc.AddCircularInstrument(-667600, "LunarCam", "mod1", 1.5, Vector3.VectorZ, Vector3.VectorY, Vector3.Zero);
-        spc.AddCircularInstrument(-667601, "SunSensor", "mod1", 0.5, Vector3.VectorX, Vector3.VectorY, Vector3.Zero);
+        spc.AddCircularInstrument("LunarCam", 1.5, Vector3.VectorZ, Vector3.VectorY, Vector3.Zero, naifId: -667600, model: "mod1");
+        spc.AddCircularInstrument("SunSensor", 0.5, Vector3.VectorX, Vector3.VectorY, Vector3.Zero, naifId: -667601, model: "mod1");
 
         var instruments = spc.Instruments.ToList();
         var maneuver = new TriadAttitude(
+            instruments[0],
+            new CelestialAttitudeTarget(TestHelpers.MoonAtJ2000), // LunarCam points at Moon
+            instruments[1],
+            new CelestialAttitudeTarget(TestHelpers.Sun), // SunSensor constrains roll toward Sun
             new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB),
-            TimeSpan.FromSeconds(10.0),
-            instruments[0], // LunarCam points at Moon
-            TestHelpers.MoonAtJ2000,
-            instruments[1], // SunSensor constrains roll toward Sun
-            TestHelpers.Sun,
-            spc.Engines.First());
+            TimeSpan.FromSeconds(10.0));
 
         var maneuverOrientation7 = maneuver.ComputeStateOrientation(orbitalParams);
 
@@ -569,7 +549,7 @@ public class TriadAttitudeTests
     public void Execute_AttitudeAtMultipleEpochs()
     {
         var (spc, _) = CreateTestSpacecraft();
-        spc.AddCircularInstrument(-667600, "CAM", "mod1", 1.5, Vector3.VectorZ, Vector3.VectorY, Vector3.Zero);
+        spc.AddCircularInstrument("CAM", 1.5, Vector3.VectorZ, Vector3.VectorY, Vector3.Zero, naifId: -667600, model: "mod1");
 
         var epochs = new[]
         {
@@ -588,12 +568,11 @@ public class TriadAttitudeTests
                 Frames.Frame.ICRF);
 
             var maneuver = new TriadAttitude(
-                new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB),
-                TimeSpan.FromSeconds(10.0),
                 spc.Instruments.First(),
-                TestHelpers.MoonAtJ2000,
-                TestHelpers.Sun,
-                spc.Engines.First());
+                new CelestialAttitudeTarget(TestHelpers.MoonAtJ2000),
+                new CelestialAttitudeTarget(TestHelpers.Sun),
+                new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB),
+                TimeSpan.FromSeconds(10.0));
 
             var maneuverOrientation8 = maneuver.ComputeStateOrientation(orbitalParams);
 
@@ -618,13 +597,12 @@ public class TriadAttitudeTests
 
         // Orthogonal vectors are optimal for TRIAD (maximum numerical stability)
         var maneuver = new TriadAttitude(
-            new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB),
-            TimeSpan.FromSeconds(10.0),
             Vector3.VectorZ,
-            TestHelpers.MoonAtJ2000,
+            new CelestialAttitudeTarget(TestHelpers.MoonAtJ2000),
             Vector3.VectorX,
-            TestHelpers.Sun,
-            spc.Engines.First());
+            new CelestialAttitudeTarget(TestHelpers.Sun),
+            new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB),
+            TimeSpan.FromSeconds(10.0));
 
         var maneuverOrientation9 = maneuver.ComputeStateOrientation(orbitalParams);
 
@@ -640,15 +618,14 @@ public class TriadAttitudeTests
     public void Execute_NumericalStability_RepeatedCallsConsistent()
     {
         var (spc, orbitalParams) = CreateTestSpacecraft();
-        spc.AddCircularInstrument(-667600, "CAM", "mod1", 1.5, Vector3.VectorZ, Vector3.VectorY, Vector3.Zero);
+        spc.AddCircularInstrument("CAM", 1.5, Vector3.VectorZ, Vector3.VectorY, Vector3.Zero, naifId: -667600, model: "mod1");
 
         var maneuver = new TriadAttitude(
-            new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB),
-            TimeSpan.FromSeconds(10.0),
             spc.Instruments.First(),
-            TestHelpers.MoonAtJ2000,
-            TestHelpers.Sun,
-            spc.Engines.First());
+            new CelestialAttitudeTarget(TestHelpers.MoonAtJ2000),
+            new CelestialAttitudeTarget(TestHelpers.Sun),
+            new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB),
+            TimeSpan.FromSeconds(10.0));
 
         // Execute multiple times
         var results = new Quaternion[5];
@@ -672,16 +649,18 @@ public class TriadAttitudeTests
     public void Execute_ManeuverWindowSet()
     {
         var (spc, orbitalParams) = CreateTestSpacecraft();
-        spc.AddCircularInstrument(-667600, "CAM", "mod1", 1.5, Vector3.VectorZ, Vector3.VectorY, Vector3.Zero);
+        spc.AddCircularInstrument("CAM", 1.5, Vector3.VectorZ, Vector3.VectorY, Vector3.Zero, naifId: -667600, model: "mod1");
 
         var maneuver = new TriadAttitude(
+            spc.Instruments.First(),
+            new CelestialAttitudeTarget(TestHelpers.MoonAtJ2000),
+            new CelestialAttitudeTarget(TestHelpers.Sun),
             new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB),
             TimeSpan.FromSeconds(10.0),
-            spc.Instruments.First(),
-            TestHelpers.MoonAtJ2000,
-            TestHelpers.Sun,
-            spc.Engines.First());
+            TestHelpers.MoonAtJ2000);
 
+        // The execution of a run reads the centre the run wrote: outside a run, the one given (the primary target was the
+        // centre before lot L5b, decision 62 of #668)
         maneuver.TryExecute(orbitalParams);
 
         Assert.Equal(0.0, maneuver.FuelBurned);
@@ -702,13 +681,12 @@ public class TriadAttitudeTests
             System.Math.Cos(angle));
 
         var maneuver = new TriadAttitude(
-            new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB),
-            TimeSpan.FromSeconds(10.0),
             Vector3.VectorZ,
-            TestHelpers.MoonAtJ2000,
+            new CelestialAttitudeTarget(TestHelpers.MoonAtJ2000),
             secondaryVector,
-            TestHelpers.Sun,
-            spc.Engines.First());
+            new CelestialAttitudeTarget(TestHelpers.Sun),
+            new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB),
+            TimeSpan.FromSeconds(10.0));
 
         var maneuverOrientation11 = maneuver.ComputeStateOrientation(orbitalParams);
 
@@ -762,36 +740,34 @@ public class TriadAttitudeTests
         var (spc, orbitalParams) = CreateTestSpacecraft();
 
         var maneuver = new TriadAttitude(
-            TestHelpers.EarthAtJ2000,
-            new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB),
-            TimeSpan.FromHours(1.0),
             Spacecraft.Front,
             OrbitalDirectionTarget.Prograde,
             Spacecraft.Up,
             new CelestialAttitudeTarget(TestHelpers.Sun),
-            spc.Engines.First());
+            new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB),
+            TimeSpan.FromHours(1.0),
+            TestHelpers.EarthAtJ2000);
 
         Assert.NotNull(maneuver);
         Assert.Equal(Spacecraft.Front, maneuver.PrimaryBodyVector);
         Assert.Equal(Spacecraft.Up, maneuver.SecondaryBodyVector);
-        Assert.NotNull(maneuver.PrimaryAttitudeTarget);
-        Assert.NotNull(maneuver.SecondaryAttitudeTarget);
+        Assert.NotNull(maneuver.PrimaryTarget);
+        Assert.NotNull(maneuver.SecondaryTarget);
     }
 
     [Fact]
-    public void Constructor_WithAttitudeTargets_NullManeuverCenter_ThrowsArgumentNullException()
+    public void Constructor_WithAttitudeTargets_NullManeuverCenter_IsTheCentreTheRunInfers()
     {
-        var (spc, _) = CreateTestSpacecraft();
-
-        Assert.Throws<ArgumentNullException>(() => new TriadAttitude(
-            null,
-            new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB),
-            TimeSpan.FromHours(1.0),
+        // Decisions 61 and 99 of #668: a null centre is the one the run infers (it threw ArgumentNullException before)
+        var maneuver = new TriadAttitude(
             Spacecraft.Front,
             OrbitalDirectionTarget.Prograde,
             Spacecraft.Up,
             new CelestialAttitudeTarget(TestHelpers.Sun),
-            spc.Engines.First()));
+            new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB),
+            TimeSpan.FromHours(1.0));
+
+        Assert.Null(maneuver.ManeuverCenter);
     }
 
     [Fact]
@@ -800,14 +776,13 @@ public class TriadAttitudeTests
         var (spc, _) = CreateTestSpacecraft();
 
         Assert.Throws<ArgumentNullException>(() => new TriadAttitude(
-            TestHelpers.EarthAtJ2000,
-            new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB),
-            TimeSpan.FromHours(1.0),
             Spacecraft.Front,
             null,
             Spacecraft.Up,
             new CelestialAttitudeTarget(TestHelpers.Sun),
-            spc.Engines.First()));
+            new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB),
+            TimeSpan.FromHours(1.0),
+            TestHelpers.EarthAtJ2000));
     }
 
     [Fact]
@@ -816,14 +791,13 @@ public class TriadAttitudeTests
         var (spc, _) = CreateTestSpacecraft();
 
         Assert.Throws<ArgumentNullException>(() => new TriadAttitude(
-            TestHelpers.EarthAtJ2000,
-            new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB),
-            TimeSpan.FromHours(1.0),
             Spacecraft.Front,
             OrbitalDirectionTarget.Prograde,
             Spacecraft.Up,
             null,
-            spc.Engines.First()));
+            new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB),
+            TimeSpan.FromHours(1.0),
+            TestHelpers.EarthAtJ2000));
     }
 
     [Fact]
@@ -832,14 +806,13 @@ public class TriadAttitudeTests
         var (spc, orbitalParams) = CreateTestSpacecraft();
 
         var maneuver = new TriadAttitude(
-            TestHelpers.EarthAtJ2000,
-            new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB),
-            TimeSpan.FromSeconds(10.0),
             Spacecraft.Front,
             OrbitalDirectionTarget.Prograde,
             Spacecraft.Up,
             new CelestialAttitudeTarget(TestHelpers.Sun),
-            spc.Engines.First());
+            new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB),
+            TimeSpan.FromSeconds(10.0),
+            TestHelpers.EarthAtJ2000);
 
         var maneuverOrientation12 = maneuver.ComputeStateOrientation(orbitalParams);
 
@@ -864,14 +837,13 @@ public class TriadAttitudeTests
         var (spc, orbitalParams) = CreateTestSpacecraft();
 
         var maneuver = new TriadAttitude(
-            TestHelpers.EarthAtJ2000,
-            new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB),
-            TimeSpan.FromSeconds(10.0),
             Spacecraft.Down,
             OrbitalDirectionTarget.Nadir,
             Spacecraft.Front,
             OrbitalDirectionTarget.Prograde,
-            spc.Engines.First());
+            new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB),
+            TimeSpan.FromSeconds(10.0),
+            TestHelpers.EarthAtJ2000);
 
         var maneuverOrientation13 = maneuver.ComputeStateOrientation(orbitalParams);
 
@@ -895,14 +867,13 @@ public class TriadAttitudeTests
         var (spc, orbitalParams) = CreateTestSpacecraft();
 
         var maneuver = new TriadAttitude(
-            TestHelpers.EarthAtJ2000,
-            new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB),
-            TimeSpan.FromSeconds(10.0),
             Vector3.VectorZ,
             new CelestialAttitudeTarget(TestHelpers.MoonAtJ2000),
             Vector3.VectorX,
             OrbitalDirectionTarget.Normal,
-            spc.Engines.First());
+            new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB),
+            TimeSpan.FromSeconds(10.0),
+            TestHelpers.EarthAtJ2000);
 
         var maneuverOrientation14 = maneuver.ComputeStateOrientation(orbitalParams);
 
@@ -927,14 +898,13 @@ public class TriadAttitudeTests
         var (spc, orbitalParams) = CreateTestSpacecraft();
 
         var maneuver = new TriadAttitude(
-            TestHelpers.EarthAtJ2000,
-            new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB),
-            TimeSpan.FromSeconds(10.0),
             Spacecraft.Front,
             OrbitalDirectionTarget.Nadir,
             Spacecraft.Up,
-            OrbitalDirectionTarget.Zenith,  // Opposite of nadir — collinear!
-            spc.Engines.First());
+            OrbitalDirectionTarget.Zenith,
+            new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB),
+            TimeSpan.FromSeconds(10.0),
+            TestHelpers.EarthAtJ2000);
 
         Assert.Throws<InvalidOperationException>(() => maneuver.ComputeStateOrientation(orbitalParams));
     }
@@ -945,18 +915,17 @@ public class TriadAttitudeTests
         var (spc, _) = CreateTestSpacecraft();
 
         var maneuver = new TriadAttitude(
-            TestHelpers.EarthAtJ2000,
-            new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB),
-            TimeSpan.FromHours(1.0),
             Vector3.VectorZ,
             new CelestialAttitudeTarget(TestHelpers.MoonAtJ2000),
             Vector3.VectorX,
             new CelestialAttitudeTarget(TestHelpers.Sun),
-            spc.Engines.First());
+            new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB),
+            TimeSpan.FromHours(1.0),
+            TestHelpers.EarthAtJ2000);
 
         // CelestialAttitudeTarget should map back to PrimaryTarget/SecondaryTarget
-        Assert.Equal(TestHelpers.MoonAtJ2000, maneuver.PrimaryTarget);
-        Assert.Equal(TestHelpers.Sun, maneuver.SecondaryTarget);
+        Assert.Equal(TestHelpers.MoonAtJ2000, ((CelestialAttitudeTarget)maneuver.PrimaryTarget).Target);
+        Assert.Equal(TestHelpers.Sun, ((CelestialAttitudeTarget)maneuver.SecondaryTarget).Target);
     }
 
     [Fact]
@@ -971,25 +940,23 @@ public class TriadAttitudeTests
 
         // ILocalizable constructor — maneuverCenter is set internally to MoonAtJ2000
         var localizableManeuver = new TriadAttitude(
-            new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB),
-            TimeSpan.FromSeconds(10.0),
-            Spacecraft.Front,
-            TestHelpers.MoonAtJ2000,
-            Spacecraft.Up,
-            TestHelpers.Sun,
-            spc.Engines.First());
-
-        // IAttitudeTarget constructor with CelestialAttitudeTarget wrappers.
-        // Use MoonAtJ2000 as maneuverCenter to match the ILocalizable path.
-        var attitudeTargetManeuver = new TriadAttitude(
-            TestHelpers.MoonAtJ2000,
-            new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB),
-            TimeSpan.FromSeconds(10.0),
             Spacecraft.Front,
             new CelestialAttitudeTarget(TestHelpers.MoonAtJ2000),
             Spacecraft.Up,
             new CelestialAttitudeTarget(TestHelpers.Sun),
-            spc.Engines.First());
+            new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB),
+            TimeSpan.FromSeconds(10.0));
+
+        // IAttitudeTarget constructor with CelestialAttitudeTarget wrappers.
+        // Use MoonAtJ2000 as maneuverCenter to match the ILocalizable path.
+        var attitudeTargetManeuver = new TriadAttitude(
+            Spacecraft.Front,
+            new CelestialAttitudeTarget(TestHelpers.MoonAtJ2000),
+            Spacecraft.Up,
+            new CelestialAttitudeTarget(TestHelpers.Sun),
+            new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB),
+            TimeSpan.FromSeconds(10.0),
+            TestHelpers.MoonAtJ2000);
 
         var localizableManeuverOrientation15 = localizableManeuver.ComputeStateOrientation(orbitalParams);
         var attitudeTargetManeuverOrientation16 = attitudeTargetManeuver.ComputeStateOrientation(orbitalParams);
@@ -1018,15 +985,14 @@ public class TriadAttitudeTests
     #region Factory Method Tests
 
     [Fact]
-    public void CreateLVLH_CreatesValidManeuver()
+    public void CreateLvlh_CreatesValidManeuver()
     {
         var (spc, orbitalParams) = CreateTestSpacecraft();
 
-        var maneuver = TriadAttitude.CreateLVLH(
-            TestHelpers.EarthAtJ2000,
+        var maneuver = TriadAttitude.CreateLvlh(
             new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB),
             TimeSpan.FromSeconds(10.0),
-            spc.Engines.First());
+            TestHelpers.EarthAtJ2000);
 
         Assert.NotNull(maneuver);
         Assert.Equal(Spacecraft.Down, maneuver.PrimaryBodyVector);
@@ -1049,11 +1015,10 @@ public class TriadAttitudeTests
         var (spc, orbitalParams) = CreateTestSpacecraft();
 
         var maneuver = TriadAttitude.CreateProgradeWithSunTracking(
-            TestHelpers.EarthAtJ2000,
+            TestHelpers.Sun,
             new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB),
             TimeSpan.FromSeconds(10.0),
-            TestHelpers.Sun,
-            spc.Engines.First());
+            TestHelpers.EarthAtJ2000);
 
         Assert.NotNull(maneuver);
         Assert.Equal(Spacecraft.Front, maneuver.PrimaryBodyVector);
@@ -1076,35 +1041,32 @@ public class TriadAttitudeTests
         var (spc, _) = CreateTestSpacecraft();
 
         Assert.Throws<ArgumentNullException>(() => TriadAttitude.CreateProgradeWithSunTracking(
-            TestHelpers.EarthAtJ2000,
+            null,
             new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB),
             TimeSpan.FromSeconds(10.0),
-            null,
-            spc.Engines.First()));
+            TestHelpers.EarthAtJ2000));
     }
 
     [Fact]
-    public void CreateLVLH_MatchesManualConstruction()
+    public void CreateLvlh_MatchesManualConstruction()
     {
-        // The CreateLVLH factory should produce the same result as manually constructing
+        // The CreateLvlh factory should produce the same result as manually constructing
         // a TriadAttitude with Down→Nadir, Front→Prograde.
         var (spc, orbitalParams) = CreateTestSpacecraft();
 
-        var factoryManeuver = TriadAttitude.CreateLVLH(
-            TestHelpers.EarthAtJ2000,
+        var factoryManeuver = TriadAttitude.CreateLvlh(
             new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB),
             TimeSpan.FromSeconds(10.0),
-            spc.Engines.First());
+            TestHelpers.EarthAtJ2000);
 
         var manualManeuver = new TriadAttitude(
-            TestHelpers.EarthAtJ2000,
-            new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB),
-            TimeSpan.FromSeconds(10.0),
             Spacecraft.Down,
             OrbitalDirectionTarget.Nadir,
             Spacecraft.Front,
             OrbitalDirectionTarget.Prograde,
-            spc.Engines.First());
+            new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB),
+            TimeSpan.FromSeconds(10.0),
+            TestHelpers.EarthAtJ2000);
 
         // Both should have the same body vectors
         Assert.Equal(Spacecraft.Down, factoryManeuver.PrimaryBodyVector);
@@ -1147,14 +1109,13 @@ public class TriadAttitudeTests
         var (spc, orbitalParams) = CreateTestSpacecraft();
 
         var maneuver = new TriadAttitude(
-            TestHelpers.EarthAtJ2000,
-            new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB),
-            TimeSpan.FromSeconds(10.0),
             Vector3.VectorZ,
             new CelestialAttitudeTarget(TestHelpers.MoonAtJ2000),
             Vector3.VectorX,
             OrbitalDirectionTarget.Normal,
-            spc.Engines.First());
+            new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB),
+            TimeSpan.FromSeconds(10.0),
+            TestHelpers.EarthAtJ2000);
 
         var maneuverOrientation21 = maneuver.ComputeStateOrientation(orbitalParams);
 
@@ -1190,14 +1151,13 @@ public class TriadAttitudeTests
         var targetSpacecraft = CreatePropagatedTargetSpacecraft(orbitalParams.Epoch);
 
         var maneuver = new TriadAttitude(
-            TestHelpers.EarthAtJ2000,
-            new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB),
-            TimeSpan.FromSeconds(10.0),
             Vector3.VectorZ,
             new CelestialAttitudeTarget(targetSpacecraft),
             Vector3.VectorX,
             OrbitalDirectionTarget.Normal,
-            spc.Engines.First());
+            new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB),
+            TimeSpan.FromSeconds(10.0),
+            TestHelpers.EarthAtJ2000);
 
         var maneuverOrientation22 = maneuver.ComputeStateOrientation(orbitalParams);
 
@@ -1227,24 +1187,22 @@ public class TriadAttitudeTests
         var (spc, orbitalParams) = CreateTestSpacecraft();
 
         var maneuverLT = new TriadAttitude(
-            TestHelpers.EarthAtJ2000,
-            new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB),
-            TimeSpan.FromSeconds(10.0),
             Vector3.VectorZ,
             new CelestialAttitudeTarget(TestHelpers.MoonAtJ2000, Aberration.LT),
             Vector3.VectorX,
             OrbitalDirectionTarget.Normal,
-            spc.Engines.First());
-
-        var maneuverNone = new TriadAttitude(
-            TestHelpers.EarthAtJ2000,
             new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB),
             TimeSpan.FromSeconds(10.0),
+            TestHelpers.EarthAtJ2000);
+
+        var maneuverNone = new TriadAttitude(
             Vector3.VectorZ,
             new CelestialAttitudeTarget(TestHelpers.MoonAtJ2000, Aberration.None),
             Vector3.VectorX,
             OrbitalDirectionTarget.Normal,
-            spc.Engines.First());
+            new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB),
+            TimeSpan.FromSeconds(10.0),
+            TestHelpers.EarthAtJ2000);
 
         var maneuverLTOrientation23 = maneuverLT.ComputeStateOrientation(orbitalParams);
         var maneuverNoneOrientation24 = maneuverNone.ComputeStateOrientation(orbitalParams);
@@ -1299,9 +1257,9 @@ public class TriadAttitudeTests
         var state = new KeplerianElements(7000000.0, 0.001, 0.9, 0.4, 1.1, 0.3, TestHelpers.EarthAtJ2000, new TimeSystem.Time(2021, 01, 01, 13, 0, 0, TimeScale.TDB),
             Frames.Frame.ICRF).ToStateVector();
         var (front, right, up) = BodyAxes(triad);
-        var spc = new Spacecraft(-669, "TriadAxesSpacecraft", 1000.0, 3000.0, new Clock("AxesClk", 65536), state, bodyFront: front, bodyRight: right, bodyUp: up);
-        spc.AddFuelTank(new FuelTank("ft", "ftA", "123456", 1000.0, 900.0));
-        spc.AddEngine(new Engine("eng", "engmk1", "12345", 450, 50, spc.FuelTanks.First()));
+        var spc = new Spacecraft(-669, "TriadAxesSpacecraft", 1000.0, state, 3000.0, new Clock("AxesClk", 65536), bodyFront: front, bodyRight: right, bodyUp: up);
+        spc.AddFuelTank(new FuelTank("ft", 1000.0, 900.0, "ftA", "123456"));
+        spc.AddEngine(new Engine("eng", 450, 50, spc.FuelTanks.First(), "engmk1", "12345"));
         return (spc, state);
     }
 
@@ -1314,10 +1272,12 @@ public class TriadAttitudeTests
     [InlineData("FrontX")]
     [InlineData("FrontZ")]
     [InlineData("Rotated")]
-    public void CreateLVLH_CustomAxes_PointsTheSpacecraftAxes(string triad)
+    public void CreateLvlh_CustomAxes_PointsTheSpacecraftAxes(string triad)
     {
         var (spc, state) = CustomAxesSpacecraft(triad);
-        var maneuver = TriadAttitude.CreateLVLH(TestHelpers.EarthAtJ2000, new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB), TimeSpan.Zero, spc.Engines.First());
+        var maneuver = TriadAttitude.CreateLvlh(new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB), TimeSpan.Zero, TestHelpers.EarthAtJ2000);
+        // The axes of the plan's spacecraft (decisions 46 and 69 of #668)
+        spc.SetManeuvers(maneuver);
 
         var maneuverOrientation25 = maneuver.ComputeStateOrientation(state);
         var q = maneuverOrientation25.Rotation;
@@ -1347,8 +1307,12 @@ public class TriadAttitudeTests
     public void CreateProgradeWithSunTracking_CustomAxes_PointsTheSpacecraftAxes(string triad)
     {
         var (spc, state) = CustomAxesSpacecraft(triad);
-        var maneuver = TriadAttitude.CreateProgradeWithSunTracking(TestHelpers.EarthAtJ2000, new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB), TimeSpan.Zero,
-            TestHelpers.Sun, spc.Engines.First());
+        var maneuver = TriadAttitude.CreateProgradeWithSunTracking(TestHelpers.Sun,
+            new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB),
+            TimeSpan.Zero,
+            TestHelpers.EarthAtJ2000);
+        // The axes of the plan's spacecraft (decisions 46 and 69 of #668)
+        spc.SetManeuvers(maneuver);
 
         var maneuverOrientation26 = maneuver.ComputeStateOrientation(state);
         var q = maneuverOrientation26.Rotation;
@@ -1377,12 +1341,22 @@ public class TriadAttitudeTests
         var min = new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB);
         var engine = spc.Engines.First();
 
-        var lvlh = TriadAttitude.CreateLVLH(TestHelpers.EarthAtJ2000, min, TimeSpan.Zero, engine);
-        var lvlhStatic = new TriadAttitude(TestHelpers.EarthAtJ2000, min, TimeSpan.Zero, Spacecraft.Down, OrbitalDirectionTarget.Nadir, Spacecraft.Front,
-            OrbitalDirectionTarget.Prograde, engine);
-        var sun = TriadAttitude.CreateProgradeWithSunTracking(TestHelpers.EarthAtJ2000, min, TimeSpan.Zero, TestHelpers.Sun, engine);
-        var sunStatic = new TriadAttitude(TestHelpers.EarthAtJ2000, min, TimeSpan.Zero, Spacecraft.Front, OrbitalDirectionTarget.Prograde, Spacecraft.Up,
-            new CelestialAttitudeTarget(TestHelpers.Sun), engine);
+        var lvlh = TriadAttitude.CreateLvlh(min, TimeSpan.Zero, TestHelpers.EarthAtJ2000);
+        var lvlhStatic = new TriadAttitude(Spacecraft.Down,
+            OrbitalDirectionTarget.Nadir,
+            Spacecraft.Front,
+            OrbitalDirectionTarget.Prograde,
+            min,
+            TimeSpan.Zero,
+            TestHelpers.EarthAtJ2000);
+        var sun = TriadAttitude.CreateProgradeWithSunTracking(TestHelpers.Sun, min, TimeSpan.Zero, TestHelpers.EarthAtJ2000);
+        var sunStatic = new TriadAttitude(Spacecraft.Front,
+            OrbitalDirectionTarget.Prograde,
+            Spacecraft.Up,
+            new CelestialAttitudeTarget(TestHelpers.Sun),
+            min,
+            TimeSpan.Zero,
+            TestHelpers.EarthAtJ2000);
 
         foreach (var (factory, explicitForm) in new[] { (lvlh, lvlhStatic), (sun, sunStatic) })
         {
@@ -1400,17 +1374,18 @@ public class TriadAttitudeTests
     }
 
     /// <summary>
-    /// The engine's tank on no spacecraft: the factories keep the static axes, the fallback of
-    /// <c>Maneuver.GetBodyFront</c> (#677); added to a spacecraft afterwards, they follow its axes.
+    /// Before any plan the factories keep the static axes, the fallback of <c>Maneuver.GetBodyAxis</c> (#677); in the plan
+    /// of a spacecraft, they follow its axes (decisions 46 and 69 of #668: the axes of the last plan's spacecraft, those
+    /// of the engine's tank's before lot L5b).
     /// </summary>
     [Fact]
-    public void Factories_UnattachedEngine_KeepStaticAxes()
+    public void Factories_BeforeAnyPlan_KeepStaticAxes()
     {
-        var tank = new FuelTank("ft", "ftA", "123456", 1000.0, 900.0);
-        var engine = new Engine("eng", "engmk1", "12345", 450, 50, tank);
+        var tank = new FuelTank("ft", 1000.0, 900.0, "ftA", "123456");
+        var engine = new Engine("eng", 450, 50, tank, "engmk1", "12345");
         var min = new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB);
-        var lvlh = TriadAttitude.CreateLVLH(TestHelpers.EarthAtJ2000, min, TimeSpan.Zero, engine);
-        var sun = TriadAttitude.CreateProgradeWithSunTracking(TestHelpers.EarthAtJ2000, min, TimeSpan.Zero, TestHelpers.Sun, engine);
+        var lvlh = TriadAttitude.CreateLvlh(min, TimeSpan.Zero, TestHelpers.EarthAtJ2000);
+        var sun = TriadAttitude.CreateProgradeWithSunTracking(TestHelpers.Sun, min, TimeSpan.Zero, TestHelpers.EarthAtJ2000);
 
         Assert.Equal(Spacecraft.Down, lvlh.PrimaryBodyVector);
         Assert.Equal(Spacecraft.Front, lvlh.SecondaryBodyVector);
@@ -1418,66 +1393,17 @@ public class TriadAttitudeTests
         Assert.Equal(Spacecraft.Up, sun.SecondaryBodyVector);
 
         var (front, right, up) = BodyAxes("FrontZ");
-        var spc = new Spacecraft(-670, "TriadLateSpacecraft", 1000.0, 3000.0, new Clock("LateClk", 65536), CreateTestSpacecraft().orbitalParams, bodyFront: front,
+        var spc = new Spacecraft(-670, "TriadLateSpacecraft", 1000.0, CreateTestSpacecraft().orbitalParams, 3000.0, new Clock("LateClk", 65536), bodyFront: front,
             bodyRight: right, bodyUp: up);
         spc.AddFuelTank(tank);
+        spc.AddEngine(engine);
+        Assert.Equal(Spacecraft.Down, lvlh.PrimaryBodyVector);
+        spc.SetManeuvers(lvlh, sun);
 
         Assert.Equal(spc.BodyDown, lvlh.PrimaryBodyVector);
         Assert.Equal(spc.BodyFront, lvlh.SecondaryBodyVector);
         Assert.Equal(spc.BodyFront, sun.PrimaryBodyVector);
         Assert.Equal(spc.BodyUp, sun.SecondaryBodyVector);
-    }
-
-    /// <summary>
-    /// The static axes of an engine whose tank is on no spacecraft, and the axes of another spacecraft, are never pointed
-    /// in a propagation: a factory attitude drawing on such an engine is rejected before it runs (#676, #586), so the
-    /// fallback of <c>Maneuver.GetBodyAxis</c> is read outside a propagation only (#677).
-    /// </summary>
-    [Theory]
-    [InlineData("LVLH", "NoSpacecraft")]
-    [InlineData("LVLH", "OtherSpacecraft")]
-    [InlineData("ProgradeSun", "NoSpacecraft")]
-    [InlineData("ProgradeSun", "OtherSpacecraft")]
-    public void Factories_EngineNotOnSpacecraft_PropagationThrows(string factory, string engineKind)
-    {
-        var (spc, state) = CustomAxesSpacecraft("FrontZ");
-        Engine engine;
-        if (engineKind == "OtherSpacecraft")
-        {
-            var (front, right, up) = BodyAxes("FrontX");
-            var other = new Spacecraft(-671, "TriadOtherSpacecraft", 1000.0, 3000.0, new Clock("OtherClk", 65536), state, bodyFront: front,
-                bodyRight: right, bodyUp: up);
-            other.AddFuelTank(new FuelTank("ftO", "ftA", "654321", 1000.0, 900.0));
-            other.AddEngine(new Engine("engO", "engmk1", "54321", 450, 50, other.FuelTanks.First()));
-            engine = other.Engines.First();
-        }
-        else
-        {
-            engine = new Engine("engL", "engmk1", "54322", 450, 50, new FuelTank("ftL", "ftA", "654322", 1000.0, 900.0));
-        }
-
-        var epoch = state.Epoch;
-        TriadAttitude attitude = factory == "LVLH"
-            ? TriadAttitude.CreateLVLH(TestHelpers.EarthAtJ2000, epoch, TimeSpan.FromMinutes(10.0), engine)
-            : TriadAttitude.CreateProgradeWithSunTracking(TestHelpers.EarthAtJ2000, epoch, TimeSpan.FromMinutes(10.0), TestHelpers.Sun, engine);
-        // SetManeuvers refuses it (ArgumentException, decision 46 of #668); the run's own re-check is reached by the attitude
-        // linked past the plan, through the internal setter a test reaches
-        var refused = Assert.Throws<ArgumentException>(() => spc.SetManeuvers(attitude));
-        Assert.Equal("maneuvers", refused.ParamName);
-        Assert.Contains(engine.Name, refused.Message);
-        var head = new NadirAttitude(TestHelpers.EarthAtJ2000, epoch, TimeSpan.Zero, spc.Engines.First());
-        spc.SetManeuvers(head);
-        head.NextManeuver = attitude;
-
-        var earth = new IO.Astrodynamics.Body.CelestialBody(IO.Astrodynamics.SolarSystemObjects.PlanetsAndMoons.EARTH);
-        var exception = Record.Exception(() => spc.Propagate(new Window(epoch, epoch.AddSeconds(1200.0)), new PropagationOptions { Integrator = new VVIntegratorOptions { Step = TimeSpan.FromSeconds(60.0) }, OutputStep = TimeSpan.FromSeconds(60.0), ThirdBodies = [earth] }));
-
-        var rejected = Assert.IsType<InvalidOperationException>(exception);
-        Assert.Contains(engine.Name, rejected.Message);
-        Assert.Contains(spc.Name, rejected.Message);
-        Assert.False(spc.IsPropagated);
-        Assert.Empty(spc.Frame.GetStateOrientationsToICRF());
-        Assert.Empty(spc.ExecutedManeuvers);
     }
 
     #endregion
@@ -1504,8 +1430,8 @@ public class TriadAttitudeTests
     public void Separation_OutOfRange_Throws(double separation)
     {
         var (spc, _) = CreateTestSpacecraft();
-        spc.AddCircularInstrument(-667600, "CAM1", "mod1", 1.5, Vector3.VectorZ, Vector3.VectorY, Vector3.Zero);
-        spc.AddCircularInstrument(-667601, "CAM2", "mod1", 1.5, Vector3.VectorX, Vector3.VectorY, Vector3.Zero);
+        spc.AddCircularInstrument("CAM1", 1.5, Vector3.VectorZ, Vector3.VectorY, Vector3.Zero, naifId: -667600, model: "mod1");
+        spc.AddCircularInstrument("CAM2", 1.5, Vector3.VectorX, Vector3.VectorY, Vector3.Zero, naifId: -667601, model: "mod1");
         var instruments = spc.Instruments.ToList();
         var epoch = new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB);
         var hold = TimeSpan.FromHours(1.0);
@@ -1513,17 +1439,23 @@ public class TriadAttitudeTests
 
         var constructors = new Func<TriadAttitude>[]
         {
-            () => new TriadAttitude(epoch, hold, instruments[0], TestHelpers.MoonAtJ2000, TestHelpers.Sun, engine, separation),
-            () => new TriadAttitude(epoch, hold, instruments[0], TestHelpers.MoonAtJ2000, instruments[1], TestHelpers.Sun, engine, separation),
-            () => new TriadAttitude(epoch, hold, Vector3.VectorZ, TestHelpers.MoonAtJ2000, Vector3.VectorY, TestHelpers.Sun, engine, separation),
-            () => new TriadAttitude(TestHelpers.EarthAtJ2000, epoch, hold, Vector3.VectorZ, OrbitalDirectionTarget.Nadir, Vector3.VectorY,
-                OrbitalDirectionTarget.Prograde, engine, separation)
+            () => new TriadAttitude(instruments[0], new CelestialAttitudeTarget(TestHelpers.MoonAtJ2000), new CelestialAttitudeTarget(TestHelpers.Sun), epoch, hold, minVectorSeparation: separation),
+            () => new TriadAttitude(instruments[0], new CelestialAttitudeTarget(TestHelpers.MoonAtJ2000), instruments[1], new CelestialAttitudeTarget(TestHelpers.Sun), epoch, hold, minVectorSeparation: separation),
+            () => new TriadAttitude(Vector3.VectorZ, new CelestialAttitudeTarget(TestHelpers.MoonAtJ2000), Vector3.VectorY, new CelestialAttitudeTarget(TestHelpers.Sun), epoch, hold, minVectorSeparation: separation),
+            () => new TriadAttitude(Vector3.VectorZ,
+                OrbitalDirectionTarget.Nadir,
+                Vector3.VectorY,
+                OrbitalDirectionTarget.Prograde,
+                epoch,
+                hold,
+                TestHelpers.EarthAtJ2000,
+                separation)
         };
 
         foreach (var constructor in constructors)
         {
             var exception = Assert.Throws<ArgumentOutOfRangeException>(constructor);
-            Assert.Equal("minimumVectorSeparation", exception.ParamName);
+            Assert.Equal("minVectorSeparation", exception.ParamName);
         }
     }
 
@@ -1542,9 +1474,14 @@ public class TriadAttitudeTests
     public void Separation_HalfPi_PerpendicularVectors_IsAccepted()
     {
         var (spc, orbitalParams) = CreateTestSpacecraft();
-        var maneuver = new TriadAttitude(TestHelpers.EarthAtJ2000, new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB),
-            TimeSpan.FromSeconds(10.0), Vector3.VectorZ, OrbitalDirectionTarget.Nadir, Vector3.VectorY, OrbitalDirectionTarget.Prograde,
-            spc.Engines.First(), System.Math.PI / 2.0);
+        var maneuver = new TriadAttitude(Vector3.VectorZ,
+            OrbitalDirectionTarget.Nadir,
+            Vector3.VectorY,
+            OrbitalDirectionTarget.Prograde,
+            new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB),
+            TimeSpan.FromSeconds(10.0),
+            TestHelpers.EarthAtJ2000,
+            System.Math.PI / 2.0);
 
         var orientation = maneuver.ComputeOrientation(orbitalParams);
 
@@ -1553,7 +1490,7 @@ public class TriadAttitudeTests
         double primaryAngle = ResolvedAngle(Vector3.VectorZ.Rotate(orientation), nadir);
         double secondaryAngle = ResolvedAngle(Vector3.VectorY.Rotate(orientation), prograde);
         _output.WriteLine($"MEASURE half-pi primary angle {primaryAngle:E3} rad, secondary angle {secondaryAngle:E3} rad");
-        Assert.Equal(System.Math.PI / 2.0, maneuver.MinimumVectorSeparation);
+        Assert.Equal(System.Math.PI / 2.0, maneuver.MinVectorSeparation);
         Assert.True(primaryAngle <= HalfPiAttitudeAngle, $"primary angle {primaryAngle:E3} rad");
         Assert.True(secondaryAngle <= HalfPiAttitudeAngle, $"secondary angle {secondaryAngle:E3} rad");
     }
@@ -1565,16 +1502,32 @@ public class TriadAttitudeTests
     {
         var (spc, orbitalParams) = CreateTestSpacecraft();
         var epoch = new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB);
-        var perpendicular = new TriadAttitude(TestHelpers.EarthAtJ2000, epoch, TimeSpan.FromSeconds(10.0), Vector3.VectorZ,
-            OrbitalDirectionTarget.Nadir, Vector3.VectorY, OrbitalDirectionTarget.Prograde, spc.Engines.First(), LowestSeparation);
-        var close = new TriadAttitude(epoch, TimeSpan.FromHours(1.0), Vector3.VectorZ, TestHelpers.MoonAtJ2000,
-            new Vector3(1e-12, 0.0, 1.0), TestHelpers.Sun, spc.Engines.First(), LowestSeparation);
+        var perpendicular = new TriadAttitude(Vector3.VectorZ,
+            OrbitalDirectionTarget.Nadir,
+            Vector3.VectorY,
+            OrbitalDirectionTarget.Prograde,
+            epoch,
+            TimeSpan.FromSeconds(10.0),
+            TestHelpers.EarthAtJ2000,
+            LowestSeparation);
+        var close = new TriadAttitude(Vector3.VectorZ,
+            new CelestialAttitudeTarget(TestHelpers.MoonAtJ2000),
+            new Vector3(1e-12, 0.0, 1.0),
+            new CelestialAttitudeTarget(TestHelpers.Sun),
+            epoch,
+            TimeSpan.FromHours(1.0),
+            minVectorSeparation: LowestSeparation);
 
-        Assert.Equal(LowestSeparation, perpendicular.MinimumVectorSeparation);
-        Assert.Equal(LowestSeparation, close.MinimumVectorSeparation);
+        Assert.Equal(LowestSeparation, perpendicular.MinVectorSeparation);
+        Assert.Equal(LowestSeparation, close.MinVectorSeparation);
         // The separation only decides which pairs pass: the attitude is that of the default separation, bit for bit
-        var atDefault = new TriadAttitude(TestHelpers.EarthAtJ2000, epoch, TimeSpan.FromSeconds(10.0), Vector3.VectorZ,
-            OrbitalDirectionTarget.Nadir, Vector3.VectorY, OrbitalDirectionTarget.Prograde, spc.Engines.First()).ComputeOrientation(orbitalParams);
+        var atDefault = new TriadAttitude(Vector3.VectorZ,
+            OrbitalDirectionTarget.Nadir,
+            Vector3.VectorY,
+            OrbitalDirectionTarget.Prograde,
+            epoch,
+            TimeSpan.FromSeconds(10.0),
+            TestHelpers.EarthAtJ2000).ComputeOrientation(orbitalParams);
         var atLowest = perpendicular.ComputeOrientation(orbitalParams);
         Assert.Equal(atDefault.W, atLowest.W);
         Assert.Equal(atDefault.VectorPart, atLowest.VectorPart);
@@ -1586,9 +1539,13 @@ public class TriadAttitudeTests
     public void AntiparallelBodyVectors_TinySeparation_Throws()
     {
         var (spc, _) = CreateTestSpacecraft();
-        Assert.Throws<ArgumentException>(() => new TriadAttitude(new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB),
-            TimeSpan.FromHours(1.0), Vector3.VectorZ, TestHelpers.MoonAtJ2000, Vector3.VectorZ.Inverse(), TestHelpers.Sun,
-            spc.Engines.First(), LowestSeparation));
+        Assert.Throws<ArgumentException>(() => new TriadAttitude(Vector3.VectorZ,
+            new CelestialAttitudeTarget(TestHelpers.MoonAtJ2000),
+            Vector3.VectorZ.Inverse(),
+            new CelestialAttitudeTarget(TestHelpers.Sun),
+            new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB),
+            TimeSpan.FromHours(1.0),
+            minVectorSeparation: LowestSeparation));
     }
 
     // Collinear body vectors that round apart, at the smallest separation: v and fl(k v) for random v and k, collinear by
@@ -1612,7 +1569,7 @@ public class TriadAttitudeTests
             worstSine = System.Math.Max(worstSine, v.NormalizeOrZero().Cross(w.NormalizeOrZero()).Magnitude());
             try
             {
-                _ = new TriadAttitude(epoch, TimeSpan.FromHours(1.0), v, TestHelpers.MoonAtJ2000, w, TestHelpers.Sun, engine, LowestSeparation);
+                _ = new TriadAttitude(v, new CelestialAttitudeTarget(TestHelpers.MoonAtJ2000), w, new CelestialAttitudeTarget(TestHelpers.Sun), epoch, TimeSpan.FromHours(1.0), minVectorSeparation: LowestSeparation);
             }
             catch (ArgumentException e) when (e is not ArgumentOutOfRangeException)
             {
@@ -1635,9 +1592,14 @@ public class TriadAttitudeTests
         IAttitudeTarget secondary = geometry == "antiparallel"
             ? OrbitalDirectionTarget.Zenith
             : new CelestialAttitudeTarget(TestHelpers.EarthAtJ2000);
-        var maneuver = new TriadAttitude(TestHelpers.EarthAtJ2000, new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB),
-            TimeSpan.FromSeconds(10.0), Vector3.VectorZ, OrbitalDirectionTarget.Nadir, Vector3.VectorY, secondary,
-            spc.Engines.First(), LowestSeparation);
+        var maneuver = new TriadAttitude(Vector3.VectorZ,
+            OrbitalDirectionTarget.Nadir,
+            Vector3.VectorY,
+            secondary,
+            new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB),
+            TimeSpan.FromSeconds(10.0),
+            TestHelpers.EarthAtJ2000,
+            LowestSeparation);
 
         Assert.Throws<InvalidOperationException>(() => maneuver.ComputeOrientation(orbitalParams));
     }
@@ -1660,8 +1622,13 @@ public class TriadAttitudeTests
         _output.WriteLine($"MEASURE acos angle of v and {k} v from collinear {fromCollinear:E3} rad");
         Assert.True(fromCollinear > 1e-12, $"the pair is not one that acos resolves apart: {fromCollinear:E3} rad");
 
-        Assert.Throws<ArgumentException>(() => new TriadAttitude(new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB),
-            TimeSpan.FromHours(1.0), v, TestHelpers.MoonAtJ2000, w, TestHelpers.Sun, spc.Engines.First(), 1e-12));
+        Assert.Throws<ArgumentException>(() => new TriadAttitude(v,
+            new CelestialAttitudeTarget(TestHelpers.MoonAtJ2000),
+            w,
+            new CelestialAttitudeTarget(TestHelpers.Sun),
+            new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB),
+            TimeSpan.FromHours(1.0),
+            minVectorSeparation: 1e-12));
     }
 
     // A body vector with a component that is not finite has no direction: the NaN angle passed every comparison and the
@@ -1679,10 +1646,19 @@ public class TriadAttitudeTests
         var secondaryVector = primary ? Vector3.VectorY : nonFinite;
         var epoch = new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB);
 
-        Assert.Throws<ArgumentException>(() => new TriadAttitude(epoch, TimeSpan.FromHours(1.0), primaryVector, TestHelpers.MoonAtJ2000,
-            secondaryVector, TestHelpers.Sun, spc.Engines.First()));
-        Assert.Throws<ArgumentException>(() => new TriadAttitude(TestHelpers.EarthAtJ2000, epoch, TimeSpan.FromHours(1.0), primaryVector,
-            OrbitalDirectionTarget.Nadir, secondaryVector, OrbitalDirectionTarget.Prograde, spc.Engines.First()));
+        Assert.Throws<ArgumentException>(() => new TriadAttitude(primaryVector,
+            new CelestialAttitudeTarget(TestHelpers.MoonAtJ2000),
+            secondaryVector,
+            new CelestialAttitudeTarget(TestHelpers.Sun),
+            epoch,
+            TimeSpan.FromHours(1.0)));
+        Assert.Throws<ArgumentException>(() => new TriadAttitude(primaryVector,
+            OrbitalDirectionTarget.Nadir,
+            secondaryVector,
+            OrbitalDirectionTarget.Prograde,
+            epoch,
+            TimeSpan.FromHours(1.0),
+            TestHelpers.EarthAtJ2000));
     }
 
     #endregion

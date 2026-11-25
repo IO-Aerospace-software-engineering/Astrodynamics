@@ -843,10 +843,10 @@ public class AttitudeRecordTests
         {
             Configure = (sc, engine, earth, sun, start) =>
             {
-                var nadir = new NadirAttitude(earth, Min, TimeSpan.Zero, engine);
-                impulse = new ApogeeHeightManeuver(earth, start.AddSeconds(100.0), TimeSpan.Zero, 7200000.0, engine);
-                triad = new TriadAttitude(start.AddSeconds(100.0), TimeSpan.FromSeconds(hold), Spacecraft.Front, earth, Spacecraft.Up, sun, engine);
-                prograde = new ProgradeAttitude(earth, start.AddSeconds(3400.0), TimeSpan.Zero, engine);
+                var nadir = new NadirAttitude(Min, TimeSpan.Zero, earth);
+                impulse = new ApogeeHeightManeuver(7200000.0, engine, start.AddSeconds(100.0), TimeSpan.Zero, earth);
+                triad = new TriadAttitude(Spacecraft.Front, new CelestialAttitudeTarget(earth), Spacecraft.Up, new CelestialAttitudeTarget(sun), start.AddSeconds(100.0), TimeSpan.FromSeconds(hold));
+                prograde = new ProgradeAttitude(start.AddSeconds(3400.0), TimeSpan.Zero, earth);
                 sc.SetManeuvers(nadir,
                     impulse,
                     triad,
@@ -920,25 +920,27 @@ public class AttitudeRecordTests
         var f = FrameOf(frame);
         var inF = f == Frame.ICRF ? leo : leo.ToFrame(f).ToStateVector();
         int id = -(8431 + Array.IndexOf(Frames, frame));
-        var sc = new Spacecraft(id, $"TX{-id}", 1000.0, 3000.0, new Clock($"TX{-id}_CLK", 65536), inF);
-        var tank = new FuelTank("ft", "model", "sn", 1000.0, 1000.0);
+        var sc = new Spacecraft(id, $"TX{-id}", 1000.0, inF, 3000.0, new Clock($"TX{-id}_CLK", 65536));
+        var tank = new FuelTank("ft", 1000.0, 1000.0, "model", "sn");
         sc.AddFuelTank(tank);
-        var engine = new Engine("eng", "model", "sn", 300.0, 10.0, tank);
+        var engine = new Engine("eng", 300.0, 10.0, tank, "model", "sn");
         sc.AddEngine(engine);
-        sc.AddCircularInstrument(id * 1000 - 1, "I1", "m", 0.5, Vector3.VectorZ, Vector3.VectorY, InstrumentOrientations[0]);
+        sc.AddCircularInstrument("I1", 0.5, Vector3.VectorZ, Vector3.VectorY, InstrumentOrientations[0], naifId: id * 1000 - 1, model: "m");
         var instrument = sc.Instruments.First();
         Vector3 FromEarth(CelestialItem body) => SpiceAPI.Instance.ReadEphemeris(start, 399, body.NaifId, Frame.ICRF, Aberration.None).Position;
         var boresight = EulerToSpacecraft(instrument.Orientation, instrument.Boresight);
         var reference = EulerToSpacecraft(instrument.Orientation, instrument.RefVector);
+        // A direct execution takes the centre it is given (a run writes the one it resolves): the centres of before 11.0.0,
+        // the Earth, and for the pointing its target, the Moon, so the laws are those of before bit for bit (decision 62 of #668)
         var cases = new (string, Attitude, Func<Vector3, Vector3>)[]
         {
-            ("Nadir", new NadirAttitude(earth, Min, TimeSpan.Zero, engine), MinimalRotation(Spacecraft.Front, leo.Position.Inverse())),
-            ("Prograde", new ProgradeAttitude(earth, Min, TimeSpan.Zero, engine), MinimalRotation(Spacecraft.Front, leo.Velocity)),
-            ("Triad", new TriadAttitude(Min, TimeSpan.Zero, Spacecraft.Front, earth, Spacecraft.Up, sun, engine),
+            ("Nadir", new NadirAttitude(Min, TimeSpan.Zero, earth), MinimalRotation(Spacecraft.Front, leo.Position.Inverse())),
+            ("Prograde", new ProgradeAttitude(Min, TimeSpan.Zero, earth), MinimalRotation(Spacecraft.Front, leo.Velocity)),
+            ("Triad", new TriadAttitude(Spacecraft.Front, new CelestialAttitudeTarget(earth), Spacecraft.Up, new CelestialAttitudeTarget(sun), Min, TimeSpan.Zero, earth),
                 Triad(Spacecraft.Front, Spacecraft.Up, leo.Position.Inverse(), FromEarth(sun) - leo.Position)),
-            ("InstrumentTriad", new TriadAttitude(Min, TimeSpan.Zero, instrument, earth, sun, engine),
+            ("InstrumentTriad", new TriadAttitude(instrument, new CelestialAttitudeTarget(earth), new CelestialAttitudeTarget(sun), Min, TimeSpan.Zero, earth),
                 Triad(boresight, reference, leo.Position.Inverse(), FromEarth(sun) - leo.Position)),
-            ("InstrumentPointing", new InstrumentPointingToAttitude(Min, TimeSpan.Zero, instrument, moon, engine, Aberration.None), MinimalRotation(boresight, FromEarth(moon) - leo.Position))
+            ("InstrumentPointing", new InstrumentPointingToAttitude(instrument, new CelestialAttitudeTarget(moon), Min, TimeSpan.Zero, moon), MinimalRotation(boresight, FromEarth(moon) - leo.Position))
         };
         foreach (var (name, attitude, law) in cases)
         {
@@ -972,7 +974,7 @@ public class AttitudeRecordTests
         var tle = new TLE("ISS", "1 25544U 98067A   21020.53488036  .00016717  00000-0  10270-3 0  9054",
             "2 25544  51.6423 353.0312 0000493 320.8755  39.2360 15.49309423 25703");
         var start = new Time(2021, 1, 20, 12, 0, 0, TimeScale.TDB);
-        var sc = new Spacecraft(-8441, "TLE8441", 1000.0, 3000.0, new Clock("TLE8441_CLK", 65536), tle);
+        var sc = new Spacecraft(-8441, "TLE8441", 1000.0, tle, 3000.0, new Clock("TLE8441_CLK", 65536));
         new TLEPropagator(new Window(start, start.AddSeconds(600.0)), sc, TimeSpan.FromSeconds(10.0)).Propagate();
 
         string directory = "Data/User/AttitudeRecord537/TLE8441";
@@ -1025,8 +1027,8 @@ public class AttitudeRecordTests
         var p0 = new double[36];
         double[] sigma = [100.0, 200.0, 300.0, 0.1, 0.2, 0.3];
         for (int i = 0; i < 6; i++) p0[i * 7] = sigma[i] * sigma[i];
-        var sc = new Spacecraft(-8451, "COV8451", 1000.0, 3000.0, new Clock("COV8451_CLK", 65536),
-            new StateVector(inF.Position, inF.Velocity, earth, start, f, new Matrix(6, 6, p0)));
+        var sc = new Spacecraft(-8451, "COV8451", 1000.0, new StateVector(inF.Position, inF.Velocity, earth, start, f, new Matrix(6, 6, p0)), 3000.0,
+            new Clock("COV8451_CLK", 65536));
         var solution = sc.Propagate(new Window(start, start.AddSeconds(600.0)), new PropagationOptions { Integrator = new RK78IntegratorOptions { AbsoluteTolerance = 1e-12, RelativeTolerance = 1e-12 }, OutputStep = TimeSpan.FromSeconds(60.0), ThirdBodies = new CelestialItem[] { earth }, CovariancePropagation = new IO.Astrodynamics.Propagator.Variational.CovariancePropagationOptions { Mode = IO.Astrodynamics.Propagator.Variational.CovariancePropagationMode.Covariance } });
         var q = SpiceAPI.Instance.TransformFrame(start, f, Frame.ICRF).Rotation;
         // R, the matrix of pxform(ECLIPJ2000, J2000), by the images of the axes
@@ -1084,12 +1086,12 @@ public class AttitudeRecordTests
         var inF = leo.ToFrame(f).ToStateVector();
         var q = SpiceAPI.Instance.TransformFrame(start, f, Frame.ICRF).Rotation;
 
-        var twoBody = new Spacecraft(-8461, "TB8461", 1000.0, 3000.0, new Clock("TB8461_CLK", 65536), inF);
+        var twoBody = new Spacecraft(-8461, "TB8461", 1000.0, inF, 3000.0, new Clock("TB8461_CLK", 65536));
         var read = twoBody.GetGeometricStateRelativeTo(start, earth);
         Assert.Equal(Frame.ICRF, read.Frame);
         double twoBodyDelta = (read.Position - inF.Position.Rotate(q)).Magnitude();
 
-        var added = new Spacecraft(-8462, "AD8462", 1000.0, 3000.0, new Clock("AD8462_CLK", 65536), inF);
+        var added = new Spacecraft(-8462, "AD8462", 1000.0, inF, 3000.0, new Clock("AD8462_CLK", 65536));
         var later = new StateVector(inF.Position * 1.001, inF.Velocity, earth, start.AddSeconds(10.0), f);
         added.AddPropagatedStates(inF, later);
         double addedDelta = System.Math.Max((added.GetGeometricStateRelativeTo(start, earth).Position - inF.Position.Rotate(q)).Magnitude(),
@@ -1352,41 +1354,41 @@ public class AttitudeRecordTests
             {
                 // The laws of the TRIAD factories on custom body axes (#677): the front +Z, the right +X, the up −Y
                 var spacecraft = law.EndsWith("Axes")
-                    ? new Spacecraft(id, name, 1000.0, 3000.0, new Clock(name + "_CLK", 65536), initial, bodyFront: CustomFront, bodyRight: CustomRight, bodyUp: CustomUp)
-                    : new Spacecraft(id, name, 1000.0, 3000.0, new Clock(name + "_CLK", 65536), initial);
-                var tank = new FuelTank("ft", "model", "sn", 1000.0, 1000.0);
+                    ? new Spacecraft(id, name, 1000.0, initial, 3000.0, new Clock(name + "_CLK", 65536), bodyFront: CustomFront, bodyRight: CustomRight, bodyUp: CustomUp)
+                    : new Spacecraft(id, name, 1000.0, initial, 3000.0, new Clock(name + "_CLK", 65536));
+                var tank = new FuelTank("ft", 1000.0, 1000.0, "model", "sn");
                 spacecraft.AddFuelTank(tank);
-                var engine = new Engine("eng", "model", "sn", 300.0, 10.0, tank);
+                var engine = new Engine("eng", 300.0, 10.0, tank, "model", "sn");
                 spacecraft.AddEngine(engine);
                 for (int i = 0; i < InstrumentOrientations.Length; i++)
                 {
-                    spacecraft.AddCircularInstrument(id * 1000 - 1 - i, $"I{i + 1}", "m", 0.5, Vector3.VectorZ, Vector3.VectorY, InstrumentOrientations[i]);
+                    spacecraft.AddCircularInstrument($"I{i + 1}", 0.5, Vector3.VectorZ, Vector3.VectorY, InstrumentOrientations[i], naifId: id * 1000 - 1 - i, model: "m");
                 }
 
                 ImpulseManeuver Apogee()
                 {
-                    var apogee = new ApogeeHeightManeuver(earth, start.AddSeconds(100.0), TimeSpan.Zero, 7200000.0, engine);
+                    var apogee = new ApogeeHeightManeuver(7200000.0, engine, start.AddSeconds(100.0), TimeSpan.Zero, earth);
                     impulse ??= apogee;
                     return apogee;
                 }
 
-                TriadAttitude TriadAfter() => new(start.AddSeconds(100.0), TimeSpan.Zero, Spacecraft.Front, earth, Spacecraft.Up, sun, engine);
+                TriadAttitude TriadAfter() => new(Spacecraft.Front, new CelestialAttitudeTarget(earth), Spacecraft.Up, new CelestialAttitudeTarget(sun), start.AddSeconds(100.0), TimeSpan.Zero);
                 switch (law)
                 {
                     case "None":
                         break;
                     case "Nadir":
-                        spacecraft.SetManeuvers(new NadirAttitude(earth, Min, TimeSpan.Zero, engine));
+                        spacecraft.SetManeuvers(new NadirAttitude(Min, TimeSpan.Zero, earth));
                         break;
                     case "Prograde":
-                        spacecraft.SetManeuvers(new ProgradeAttitude(earth, Min, TimeSpan.Zero, engine));
+                        spacecraft.SetManeuvers(new ProgradeAttitude(Min, TimeSpan.Zero, earth));
                         break;
                     case "InstrumentTriad":
                         // The boresight of the instrument at (0.3, 0.5, 0.2) to the Earth, its reference vector toward the Sun
-                        spacecraft.SetManeuvers(new TriadAttitude(Min, TimeSpan.Zero, spacecraft.Instruments.First(), earth, sun, engine));
+                        spacecraft.SetManeuvers(new TriadAttitude(spacecraft.Instruments.First(), new CelestialAttitudeTarget(earth), new CelestialAttitudeTarget(sun), Min, TimeSpan.Zero));
                         break;
                     case "InstrumentPointing":
-                        spacecraft.SetManeuvers(new InstrumentPointingToAttitude(Min, TimeSpan.Zero, spacecraft.Instruments.First(), moon, engine, Aberration.None));
+                        spacecraft.SetManeuvers(new InstrumentPointingToAttitude(spacecraft.Instruments.First(), new CelestialAttitudeTarget(moon), Min, TimeSpan.Zero));
                         break;
                     case "ImpulseAlone":
                         spacecraft.SetManeuvers(Apogee());
@@ -1399,7 +1401,7 @@ public class AttitudeRecordTests
                     }
                     case "NadirImpulseTriad":
                     {
-                        var nadir = new NadirAttitude(earth, Min, TimeSpan.Zero, engine);
+                        var nadir = new NadirAttitude(Min, TimeSpan.Zero, earth);
                         var apogee = Apogee();
                         spacecraft.SetManeuvers(nadir,
                             apogee,
@@ -1407,10 +1409,10 @@ public class AttitudeRecordTests
                         break;
                     }
                     case "LvlhAxes":
-                        spacecraft.SetManeuvers(TriadAttitude.CreateLVLH(earth, Min, TimeSpan.Zero, engine));
+                        spacecraft.SetManeuvers(TriadAttitude.CreateLvlh(Min, TimeSpan.Zero, earth));
                         break;
                     case "ProgradeSunAxes":
-                        spacecraft.SetManeuvers(TriadAttitude.CreateProgradeWithSunTracking(earth, Min, TimeSpan.Zero, sun, engine));
+                        spacecraft.SetManeuvers(TriadAttitude.CreateProgradeWithSunTracking(sun, Min, TimeSpan.Zero, earth));
                         break;
                     case "ImpulseLvlhAxes":
                     case "ImpulseProgradeSunAxes":
@@ -1419,15 +1421,15 @@ public class AttitudeRecordTests
                         var apogee = Apogee();
                         spacecraft.SetManeuvers(apogee,
                             law == "ImpulseLvlhAxes"
-                            ? TriadAttitude.CreateLVLH(earth, start.AddSeconds(100.0), TimeSpan.Zero, engine)
-                            : TriadAttitude.CreateProgradeWithSunTracking(earth, start.AddSeconds(100.0), TimeSpan.Zero, sun, engine));
+                            ? TriadAttitude.CreateLvlh(start.AddSeconds(100.0), TimeSpan.Zero, earth)
+                            : TriadAttitude.CreateProgradeWithSunTracking(sun, start.AddSeconds(100.0), TimeSpan.Zero, earth));
                         break;
                     }
                     case "LvlhImpulseAxes":
                     {
                         // The leading LVLH interrupted by the impulse and resumed by the timeline after its maneuver window,
                         // as the nadir of "NadirImpulseTriad" with no attitude chained after the impulse
-                        var lvlh = TriadAttitude.CreateLVLH(earth, Min, TimeSpan.Zero, engine);
+                        var lvlh = TriadAttitude.CreateLvlh(Min, TimeSpan.Zero, earth);
                         spacecraft.SetManeuvers(lvlh, Apogee());
                         break;
                     }
@@ -1682,7 +1684,7 @@ public class AttitudeRecordTests
                     return (ContinuousLaw(t), true);
                 case "ImpulseLvlhAxes":
                 case "ImpulseProgradeSunAxes":
-                    // As "ImpulseTriad", the impulse's attitude on the spacecraft's own front (Maneuver.GetBodyFront)
+                    // As "ImpulseTriad", the impulse's attitude on the spacecraft's own front (Maneuver.GetBodyAxis)
                     if (AtRuleChange(t)) return (null, false);
                     if (t < Change) return (v => v, false);
                     return t < TriadStart ? (MinimalRotation(Spacecraft.BodyFront, ImpulseInIcrf()), false) : (ContinuousLaw(t), true);

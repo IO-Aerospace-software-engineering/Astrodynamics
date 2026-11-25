@@ -54,7 +54,7 @@ public class CustomItemCenterOfMotionTests
         var observer = Observer(observerId);
 
         // Act
-        var spacecraft = new Spacecraft(-747, "S747", 100.0, 1000.0, new Clock("S747", 65536), OrbitAbout(observer, 1.0e9));
+        var spacecraft = new Spacecraft(-747, "S747", 100.0, OrbitAbout(observer, 1.0e9), 1000.0, new Clock("S747", 65536));
 
         // Assert
         Assert.Equal(observerId, spacecraft.CenterOfMotionId);
@@ -80,7 +80,7 @@ public class CustomItemCenterOfMotionTests
     public void Spacecraft_OfTheStaticEarth_IsAboutTheEarth()
     {
         // Act: the deferred static object of PlanetsAndMoons as observer
-        var spacecraft = new Spacecraft(-747, "S747", 100.0, 1000.0, new Clock("S747", 65536), OrbitAbout(PlanetsAndMoons.EARTH_BODY));
+        var spacecraft = new Spacecraft(-747, "S747", 100.0, OrbitAbout(PlanetsAndMoons.EARTH_BODY), 1000.0, new Clock("S747", 65536));
 
         // Assert
         Assert.Equal(399, spacecraft.CenterOfMotionId);
@@ -91,10 +91,10 @@ public class CustomItemCenterOfMotionTests
     public void Spacecraft_AboutASpacecraft_TakesItsBarycentre()
     {
         // Arrange: a spacecraft about the Moon, and a second about the first
-        var mother = new Spacecraft(-748, "M747", 100.0, 1000.0, new Clock("M747", 65536), OrbitAbout(new CelestialBody(301)));
+        var mother = new Spacecraft(-748, "M747", 100.0, OrbitAbout(new CelestialBody(301)), 1000.0, new Clock("M747", 65536));
 
         // Act
-        var daughter = new Spacecraft(-749, "D747", 100.0, 1000.0, new Clock("D747", 65536), OrbitAbout(mother, 100.0));
+        var daughter = new Spacecraft(-749, "D747", 100.0, OrbitAbout(mother, 100.0), 1000.0, new Clock("D747", 65536));
 
         // Assert: the centre is the observer, the barycentre that of the observer
         Assert.Equal(-748, daughter.CenterOfMotionId);
@@ -128,7 +128,7 @@ public class CustomItemCenterOfMotionTests
     public void Spacecraft_GivenANewOrbit_IsAboutItsObserver(int firstObserverId, int newObserverId)
     {
         // Arrange: a spacecraft about the first observer
-        var spacecraft = new Spacecraft(-747, "S747", 100.0, 1000.0, new Clock("S747", 65536), OrbitAbout(Observer(firstObserverId), 1.0e9));
+        var spacecraft = new Spacecraft(-747, "S747", 100.0, OrbitAbout(Observer(firstObserverId), 1.0e9), 1000.0, new Clock("S747", 65536));
 
         // Act: its initial orbit moved to another centre
         spacecraft.SetInitialOrbitalParameters(OrbitAbout(Observer(newObserverId), 1.0e9));
@@ -142,7 +142,7 @@ public class CustomItemCenterOfMotionTests
     public void Spacecraft_WithoutOrbit_GivenOne_IsAboutItsObserver()
     {
         // Arrange: a spacecraft built without an orbit, about nothing
-        var spacecraft = new Spacecraft(-747, "S747", 100.0, 1000.0, new Clock("S747", 65536), null);
+        var spacecraft = new Spacecraft(-747, "S747", 100.0, null, 1000.0, new Clock("S747", 65536));
         Assert.Equal(0, spacecraft.CenterOfMotionId);
         Assert.Equal(0, spacecraft.BarycenterOfMotionId);
 

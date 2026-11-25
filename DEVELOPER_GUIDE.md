@@ -913,7 +913,7 @@ Represents a complete CCSDS Orbit Parameter Message.
 | `SaveToStream(Stream stream, bool validateBeforeSave, bool wrapInNdm, bool indent)` | Save OPM to a stream |
 | `ToXmlString(bool wrapInNdm, bool indent)` | Convert to XML string without validation |
 | `ToStateVector(ILocalizable observer)` | Convert OPM to framework StateVector (km→m, km/s→m/s); without an observer, the centre `CENTER_NAME` names (a barycenter, the Sun, a planet or a moon; another name throws `ArgumentException`), and an observer that contradicts it throws (#679) |
-| `ToSpacecraft(int naifId, double maxMass, Clock clock, ILocalizable observer)` | Convert OPM to Spacecraft object; the observer as on `ToStateVector` |
+| `ToSpacecraft(int naifId, double maxOperatingMass = double.MaxValue, Clock clock = null, ILocalizable observer = null)` | Convert OPM to Spacecraft object; the observer as on `ToStateVector`; the defaults of the propagated constructor, a MASS above `maxOperatingMass` throwing `ArgumentOutOfRangeException` (decision 77 of #668) |
 | `Validate()` | Validate OPM content and return validation result |
 
 ```csharp
@@ -934,7 +934,7 @@ var stateVector = opm.ToStateVector(earth);  // Units: m, m/s
 // Convert to Spacecraft for mission operations
 var spacecraft = opm.ToSpacecraft(
     naifId: -1000,
-    maximumOperatingMass: 500000.0,
+    maxOperatingMass: 500000.0,
     clock: new Clock("OnboardClock", 256),
     observer: earth);
 ```
@@ -946,8 +946,8 @@ The `Spacecraft` class provides a `ToOpm()` method for exporting spacecraft stat
 ```csharp
 // clock: a Clock; stateVector: the initial state (an ISS-like orbit)
 // Create spacecraft and propagate with maneuvers
-var spacecraft = new Spacecraft(-1000, "ISS", 420000.0, 500000.0, clock,
-    stateVector, 1600.0, 2.2, "1998-067A", 1.5);
+var spacecraft = new Spacecraft(-1000, "ISS", 420000.0, stateVector, 500000.0,
+    clock, 1600.0, 2.2, "1998-067A", 1.5);
 
 // After propagation with executed maneuvers...
 var opm = spacecraft.ToOpm(
@@ -1340,40 +1340,40 @@ Represents a spacecraft with components.
 
 | Constructor | Description |
 |------------|-------------|
-| `Spacecraft(int naifId, string name, double dryMass, double maxMass, Clock clock, OrbitalParameters orbit, double sectionalArea = 1.0, double dragCoeff = 2.2, string cosparId = null, double solarRadiationCoeff = 1.0, Vector3? bodyFront = null, Vector3? bodyRight = null, Vector3? bodyUp = null)` | Create spacecraft |
+| `Spacecraft(int naifId, string name, double mass, OrbitalParameters initialOrbitalParameters, double maxOperatingMass = double.MaxValue, Clock clock = null, double sectionalArea = 1.0, double dragCoefficient = 2.2, string cosparId = null, double solarRadiationCoefficient = 1.0, Vector3? bodyFront = null, Vector3? bodyRight = null, Vector3? bodyUp = null, double hardBodyRadius = 0.0)` | Create spacecraft; the clock by default `name + "_CLK"` at 65536 ticks per second (decisions 70 and 71 of #668) |
 
 | Property | Description |
 |----------|-------------|
 | `NaifId` | NAIF ID, in [-2147483, -1] so that the frame id NaifId × 1000 is an `int` (#676) |
 | `Name` | Spacecraft name; its frame kernel variable `FRAME_<NAME>_FRAME` takes 20 ASCII characters at most, without blank, tab, quote, parenthesis, comma or '=' (#676) |
 | `DryOperatingMass` | Mass without fuel (kg) |
-| `MaximumOperatingMass` | Maximum operating mass (kg) |
+| `MaxOperatingMass` | Maximum operating mass (kg): informational, checked against the dry mass only |
 | `Clock` | Onboard clock, of this spacecraft's NAIF id alone: a clock attached to a spacecraft of another id is rejected (#676) |
 | `SectionalArea` | Mean cross-sectional area for drag and SRP (m²) |
 | `DragCoefficient` | Drag coefficient Cd (default 2.2) |
-| `SolarRadiationCoeff` | Solar radiation pressure coefficient Cr (default 1.0, range 1.0–2.0) |
+| `SolarRadiationCoeff` | Solar radiation pressure coefficient Cr (default 1.0; typically 1.0 to 2.0, finite and not negative) |
 | `InitialOrbitalParameters` | Initial orbit |
 | `BodyFront` | Instance body front axis (default: +Y, same as `Spacecraft.Front`) |
 | `BodyRight` | Instance body right axis (default: +X, same as `Spacecraft.Right`) |
 | `BodyUp` | Instance body up axis (default: +Z, same as `Spacecraft.Up`) |
 | `BodyBack` / `BodyLeft` / `BodyDown` | Computed inverses of body axes |
 
-**Configurable body axes**: Pass `bodyFront`, `bodyRight`, `bodyUp` to the constructor to override the default body frame. Custom axes must be finite, non-zero, orthogonal and right-handed (`bodyRight.Cross(bodyFront) == bodyUp`); a zero axis, or one with a component that is not finite, throws `ArgumentException` naming it. The attitudes read the axes of the spacecraft that carries the engine's tank at execution, with the static axes as fallback: the single-vector attitudes and the attitude of an impulse use `BodyFront` via `GetBodyFront()`, `TriadAttitude.CreateLVLH` uses `BodyDown`/`BodyFront` and `CreateProgradeWithSunTracking` `BodyFront`/`BodyUp` (#677); the `TriadAttitude` constructors take literal body vectors.
+**Configurable body axes**: Pass `bodyFront`, `bodyRight`, `bodyUp` to the constructor to override the default body frame. Custom axes must be finite, non-zero, orthogonal and right-handed (`bodyRight.Cross(bodyFront) == bodyUp`); a zero axis, or one with a component that is not finite, throws `ArgumentException` naming it. The attitudes read the axes of the spacecraft whose plan last held them (`SetManeuvers`) at execution, with the static axes before any plan: the single-vector attitudes their `bodyAxis` (`BodyAxis.Front` by default) and the attitude of an impulse `BodyFront` via the protected `GetBodyAxis(BodyAxis)`, the `BodyAxis` constructor of `TriadAttitude` its two axes, `TriadAttitude.CreateLvlh` `BodyDown`/`BodyFront` and `CreateProgradeWithSunTracking` `BodyFront`/`BodyUp` (#677, decisions 46 and 69 of #668); the `Vector3` constructor of `TriadAttitude` takes literal body vectors.
 
 | Method | Description |
 |--------|-------------|
-| `AddCircularInstrument(...)` | Add circular FOV instrument (an id other than the spacecraft frame's, NaifId × 1000, #676; a finite non-zero boresight, a finite non-zero reference vector not parallel to it and a finite positive field of view, as `getfov` reads them, and finite Euler angles, or `ArgumentException` naming the parameter, #707, #715) |
+| `AddCircularInstrument(...)` | Add a circular FOV instrument and return it: `(name, fieldOfView, boresight, refVector, orientation = default, naifId = null, model = null)`, the id by default the smallest free NaifId × 1000 − n, n in [1, 999] (`InvalidOperationException` when none is left), required on a kernel-backed spacecraft (`ArgumentNullException`), not another instrument's (`ArgumentException`), the name unique on its invariant upper-cased form (`ArgumentException`; decisions 72 to 74 of #668) (an id other than the spacecraft frame's, NaifId × 1000, #676; a finite non-zero boresight, a finite non-zero reference vector not parallel to it and a finite positive field of view, as `getfov` reads them, and finite Euler angles, or `ArgumentException` naming the parameter, #707, #715) |
 | `AddRectangularInstrument(...)` | Add rectangular FOV instrument (same rules, and a finite positive cross angle, or `ArgumentOutOfRangeException`, #707, #715) |
 | `AddEllipticalInstrument(...)` | Add elliptical FOV instrument (same rules, and a finite positive cross angle, or `ArgumentOutOfRangeException`, #707, #715) |
-| `AddEngine(Engine engine)` | Add propulsion engine, on a tank instance added to the spacecraft (`ArgumentException` otherwise, #676, #586) |
-| `AddFuelTank(FuelTank fuelTank)` | Add fuel tank, held by no other spacecraft (#676, #586); a maneuver draws on a tank of the spacecraft it is propagated with, or the propagation throws before it runs |
-| `AddPayload(Payload payload)` | Add payload |
+| `AddEngine(Engine engine)` | Add a propulsion engine and return it, on a tank added to the spacecraft (`ArgumentException` otherwise, #676, #586); a second engine of a name throws `ArgumentException` (decision 76 of #668) |
+| `AddFuelTank(FuelTank fuelTank)` | Add a fuel tank and return it, held by no other spacecraft (#676, #586); a second tank of a name throws `ArgumentException` (decision 76 of #668); a maneuver draws on a tank of the spacecraft it is propagated with, or the propagation throws before it runs |
+| `AddPayload(Payload payload)` | Add a payload and return it; a second payload of a name throws `ArgumentException` (decision 76 of #668) |
 | `GetTotalMass()` | Get total mass including fuel |
 | `GetInitialFuel()` | The fuel of the spacecraft's own tanks at the start of a run (`GetTotalFuel` before 11.0.0, decision 60 of #668) |
 | `GetRemainingFuel()` | The fuel left in the spacecraft's own tanks |
-| `GetTotalISP()` | Get combined specific impulse |
-| `GetTotalFuelFlow()` | Get combined fuel flow rate |
-| `SetManeuvers(params Maneuver[] maneuvers)` | Set the maneuver plan, in order, which every propagation runs from its first maneuver: the one way to link it (a second call replaces the first, no maneuver clears it, #584); it claims each maneuver for the spacecraft, `ArgumentException` for a maneuver of another spacecraft's plan, a repeated one, an engine whose tank is not the spacecraft's or a target orbit in another frame (decisions 45 and 46 of #668) |
+| `GetTotalISP()` | The specific impulse of every engine fired together (Σ thrust / g0 / Σ fuel flow), whatever their tanks hold; NaN without an engine (decision 60 of #668, #801) |
+| `GetTotalFuelFlow()` | The fuel flow of every engine, whatever their tanks hold; 0 without an engine |
+| `SetManeuvers(params Maneuver[] maneuvers)` | Set the maneuver plan, in order, which every propagation runs from its first maneuver: the one way to link it (a second call replaces the first, no maneuver clears it, #584); it claims each maneuver for the spacecraft, `ArgumentException` for a maneuver of another spacecraft's plan, a repeated one, an impulse given an engine whose tank is not the spacecraft's or a target orbit in another frame (decisions 45 and 46 of #668); an impulse given no engine takes the spacecraft's only one, and a maneuver given no centre the observer of the initial orbit, at the run (decisions 61 and 64) |
 | `Maneuvers` | The plan, as `SetManeuvers` set it |
 | `Propagate(Window window, PropagationOptions options = null, CancellationToken cancellationToken = default)` | Propagate orbit with the settings of `options` (RK7(8) at 1e-9 about the central body alone, outputs every 60 s, when null), returns `PropagationSolution`; the token stops the run (`OperationCanceledException`, the spacecraft left re-armed and not propagated, R28 of #668) |
 | `GetEphemeris(Time epoch, ILocalizable observer, Frame frame, Aberration aberration)` | Get state relative to observer (uses reference-body pattern) |
@@ -1393,21 +1393,18 @@ var orbit = new KeplerianElements(
 
 // Create spacecraft
 var clock = new Clock("MainClock", 256);
-var spacecraft = new Spacecraft(-1001, "MySat", 500.0, 1000.0, clock, orbit);
+var spacecraft = new Spacecraft(-1001, "MySat", 500.0, orbit, 1000.0, clock);
 
-// Add components: the tank first, then the engine that draws on it (AddEngine requires its tank on the spacecraft)
-var tank = new FuelTank("MainTank", "Propellant", "Tank1", 200.0, 100.0);  // capacity, initial quantity (kg)
-spacecraft.AddFuelTank(tank);
-var engine = new Engine("MainEngine", "RCS", "Engine1", 300.0, 0.05, tank);  // ISP (s), fuel flow (kg/s)
-spacecraft.AddEngine(engine);
+// Add components: the tank first, then the engine that draws on it (AddEngine requires its tank on the spacecraft);
+// each Add returns its argument, the model and the serial number optional
+var tank = spacecraft.AddFuelTank(new FuelTank("MainTank", 200.0, 100.0));  // capacity, initial quantity (kg)
+var engine = spacecraft.AddEngine(new Engine("MainEngine", 300.0, 0.05, tank));  // ISP (s), fuel flow (kg/s)
 
-// Add instrument
-spacecraft.AddCircularInstrument(-1001001, "Camera", "Imager",
+// Add instrument: its NAIF id by default the first free NaifId × 1000 − n, -1001001, and no model
+spacecraft.AddCircularInstrument("Camera",
     10 * Constants.Deg2Rad,              // FOV
     new Vector3(1, 0, 0),                // Boresight
-    new Vector3(0, 1, 0),                // Reference vector
-    new Vector3(0, 0, 0)                 // Orientation
-);
+    new Vector3(0, 1, 0));               // Reference vector; the orientation zero by default
 
 // Propagate (returns PropagationSolution for dense output). Velocity-Verlet is of the second order: its error grows as
 // the square of the step (about 120 m after 12 h in this LEO at 1 s, 450 km at 60 s); without an integrator the
@@ -1438,7 +1435,7 @@ Propulsion engine.
 
 | Constructor | Description |
 |------------|-------------|
-| `Engine(string name, string model, string serialNumber, double isp, double fuelFlow, FuelTank fuelTank)` | Create an engine drawing on a tank, which is added to the spacecraft before the engine (`AddFuelTank`, then `AddEngine`) |
+| `Engine(string name, double isp, double fuelFlow, FuelTank fuelTank, string model = null, string serialNumber = null)` | Create an engine drawing on a tank, which is added to the spacecraft before the engine (`AddFuelTank`, then `AddEngine`); compared by reference (decision 76 of #668) |
 
 | Property | Description |
 |----------|-------------|
@@ -1459,7 +1456,7 @@ Fuel storage tank.
 
 | Constructor | Description |
 |------------|-------------|
-| `FuelTank(string name, string model, string serialNumber, double capacity, double initialFuel)` | Create tank |
+| `FuelTank(string name, double capacity, double initialQuantity, string model = null, string serialNumber = null)` | Create a tank, empty when `initialQuantity` is 0 (its first burn throws `InsufficientFuelException`); compared by reference (decision 76 of #668) |
 
 | Property | Description |
 |----------|-------------|
@@ -1517,6 +1514,8 @@ Base class for impulse maneuvers. Uses industry-standard g-function event detect
 | `CheckPreconditions(StateVector state)` | Optional additional constraints (default: true). Override for maneuvers with extra conditions. |
 | `ComputeDeltaV(StateVector stateVector)` | The delta-V at the state, in its frame, without executing the maneuver: the state taken about the maneuver's centre, as the execution takes it; pure (decision 50 of #668) |
 | `DeltaV` | Computed delta-V vector (set after execution) |
+| `Engine` | The engine of the impulse: the given one, null for one the run infers, until a run writes the one it used, the spacecraft's only engine when it was given none (on `ImpulseManeuver` since lot L5b, decisions 48, 61, 63 and 93 of #668) |
+| `ManeuverCenter` | The centre: the given one, else the observer of the initial orbit when it is a celestial body other than a star, written by the run; required in SSB mode (decisions 61, 64 and 99 of #668) |
 
 #### Attitude maneuvers
 
@@ -1529,9 +1528,11 @@ Base class for impulse maneuvers. Uses industry-standard g-function event detect
 - `InstrumentPointingAttitude`: Point instrument at target (single-vector, roll unconstrained)
 - `TriadAttitude`: Fully-constrained 3-DOF attitude using TRIAD algorithm (eliminates roll ambiguity)
 
+An attitude takes no engine (decisions 48 and 93 of #668): it orients the spacecraft whose plan holds it, so a spacecraft without a tank or an engine runs a plan of attitudes. A null centre is inferred by the run as for an impulse; in SSB mode, where it cannot be, the library's `TriadAttitude` or `InstrumentPointingToAttitude` whose targets are all library `CelestialAttitudeTarget`s takes the central body of the run, and any other law (an orbital direction, a user `IAttitudeTarget`, a user `Attitude` subclass, one of `TriadAttitude` or `InstrumentPointingToAttitude` included) requires `maneuverCenter`, the propagator constructor and `Propagate` throwing `InvalidOperationException` (decision 99 of #668, decided by S. Guillet, 2026-11-24).
+
 The preview of an attitude is `ComputeStateOrientation(StateVector)`, the rotation from the spacecraft frame to ICRF at the state, pure; `Attitude.StateOrientation` is removed: in a run, the attitude at an activation is in the attitude record (`spacecraft.Frame.GetStateOrientationToICRF(epoch)`) (decisions 50 and 52 of #668).
 
-The single-vector attitudes support configurable body axes via `GetBodyFront()`, which reads per-instance axes from `Spacecraft.BodyFront` with fallback to the static default `Spacecraft.Front` (+Y). The TRIAD factories read `BodyDown`/`BodyFront` and `BodyFront`/`BodyUp` of the same spacecraft, with the same fallback; both go through `GetBodyAxis(axis, fallback)` of `Maneuver` (`private protected`) (#677).
+The single-vector attitudes support configurable body axes via the protected `GetBodyAxis(BodyAxis)` of `Maneuver` (`enum BodyAxis` {Front, Back, Right, Left, Up, Down}), which reads the instance axes (`Spacecraft.BodyFront`, ...) of the spacecraft whose plan last held the maneuver (`SetManeuvers`), with the static axes (`Spacecraft.Front`, +Y, ...) before any plan (decisions 46, 48, 69 and 93 of #668; `GetBodyFront()` on the spacecraft of the engine's tank before 11.0.0). The TRIAD factories read `BodyDown`/`BodyFront` and `BodyFront`/`BodyUp` through the same rule (#677).
 
 **TRIAD Attitude Determination**
 
@@ -1542,28 +1543,25 @@ The `TriadAttitude` class uses two non-collinear observation vectors to fully co
 // minimumEpoch, epoch: Time; holdDuration, duration: TimeSpan
 // Point spacecraft Front at Moon, keep Up toward Sun
 var attitude = new TriadAttitude(
-    minimumEpoch, TimeSpan.FromMinutes(30),
-    Spacecraft.Front, moon,    // Primary: Front points at Moon
-    Spacecraft.Up, sun,        // Secondary: Up toward Sun (roll constraint)
-    engine);
+    Spacecraft.Front, new CelestialAttitudeTarget(moon),    // Primary: Front points at Moon
+    Spacecraft.Up, new CelestialAttitudeTarget(sun),
+    minimumEpoch, TimeSpan.FromMinutes(30));
 
 // Using instruments
 var cameraAttitude = new TriadAttitude(
-    minimumEpoch, holdDuration,
     camera,                    // Uses camera boresight (primary) and refVector (secondary)
-    earth, sun,                // Primary target, secondary target
-    engine);
+    new CelestialAttitudeTarget(earth), new CelestialAttitudeTarget(sun),
+    minimumEpoch, holdDuration);
 
 // Using IAttitudeTarget (orbital directions and/or celestial bodies)
 var targetAttitude = new TriadAttitude(
-    earth, epoch, duration,
     Spacecraft.Front, OrbitalDirectionTarget.Prograde,       // Primary: prograde pointing
-    Spacecraft.Up, new CelestialAttitudeTarget(sun),         // Secondary: solar panel toward Sun
-    engine);
+    Spacecraft.Up, new CelestialAttitudeTarget(sun),
+    epoch, duration, earth);
 
-// Factory methods for common operational attitudes, on the axes of the engine's spacecraft
-var lvlh = TriadAttitude.CreateLVLH(earth, epoch, duration, engine);
-var sunTrack = TriadAttitude.CreateProgradeWithSunTracking(earth, epoch, duration, sun, engine);
+// Factory methods for common operational attitudes, on the axes of the plan's spacecraft
+var lvlh = TriadAttitude.CreateLvlh(epoch, duration, earth);
+var sunTrack = TriadAttitude.CreateProgradeWithSunTracking(sun, epoch, duration, earth);
 ```
 
 **IAttitudeTarget system**: The `IAttitudeTarget` interface enables orbital directions and celestial bodies to be used interchangeably as TRIAD targets:
@@ -1572,10 +1570,10 @@ var sunTrack = TriadAttitude.CreateProgradeWithSunTracking(earth, epoch, duratio
 - `OrbitalDirection` enum: `Prograde`, `Retrograde`, `Nadir`, `Zenith`, `Normal`, `AntiNormal`
 
 Key features:
-- Minimum separation from collinear required between body vectors and reference vectors: `MinimumVectorSeparation`, 5 degrees by default, in [1e-14, π/2] rad (another throws `ArgumentOutOfRangeException`); collinear vectors (to the rounding of their components), zero and non-finite vectors throw at every separation allowed
+- Minimum separation from collinear required between body vectors and reference vectors: `MinVectorSeparation`, 5 degrees by default, in [1e-14, π/2] rad (another throws `ArgumentOutOfRangeException`); collinear vectors (to the rounding of their components), zero and non-finite vectors throw at every separation allowed
 - Uses spacecraft body frame: Front (+Y), Right (+X), Up (+Z) — or per-instance `BodyFront`, `BodyRight`, `BodyUp` passed explicitly
-- Four constructor overloads: single instrument, dual instruments, explicit vectors, IAttitudeTarget; the body vectors given are literal
-- Factory methods: `CreateLVLH()` (`BodyDown` to nadir, `BodyFront` toward prograde), `CreateProgradeWithSunTracking()` (`BodyFront` to prograde, `BodyUp` toward the Sun), on the instance axes of the engine's spacecraft, read at execution; the static axes while the tank is on no spacecraft (#677), read outside a propagation only, since a propagation of an attitude whose tank is not the propagated spacecraft's throws (#676)
+- Four constructors, all of `IAttitudeTarget` targets (decision 69 of #668): two `BodyAxis` axes (resolved on the plan's spacecraft at each read), two literal body vectors (`Vector3`), an instrument's boresight and reference vector, two instruments' boresights
+- Factory methods: `CreateLvlh()` (`BodyDown` to nadir, `BodyFront` toward prograde), `CreateProgradeWithSunTracking()` (`BodyFront` to prograde, `BodyUp` toward the Sun), on the instance axes of the spacecraft whose plan last held the attitude, read at execution; the static axes before any plan (#677), read outside a propagation only, since a run propagates the plan's spacecraft
 
 #### Impulse maneuvers
 
@@ -1714,7 +1712,7 @@ var orbit = new StateVector(
     new Vector3(0, 7500.0, 0),
     earth, epoch, Frame.ICRF);
 
-var spacecraft = new Spacecraft(-1001, "Sat", 100.0, 10000.0, clock, orbit);
+var spacecraft = new Spacecraft(-1001, "Sat", 100.0, orbit, 10000.0, clock);
 
 // Propagate with geopotential, Moon, and Sun perturbations
 var propagator = new CentralBodyPropagator(
@@ -2460,35 +2458,44 @@ var chaserOrbit = new StateVector(
 
 // Create target spacecraft
 var targetClock = new Clock("TargetClock", 65536);
-var target = new Spacecraft(-1001, "Target", 500.0, 1000.0, targetClock, targetOrbit);
+var target = new Spacecraft(-1001, "Target", 500.0, targetOrbit, 1000.0, targetClock);
 scenario.AddSpacecraft(target);
 
 // Create chaser spacecraft with propulsion
 var chaserClock = new Clock("ChaserClock", 65536);
-var chaser = new Spacecraft(-1002, "Chaser", 1000.0, 10000.0, chaserClock, chaserOrbit);
+var chaser = new Spacecraft(-1002, "Chaser", 1000.0, chaserOrbit, 10000.0, chaserClock);
 
 // Add fuel tank and engine
-var fuelTank = new FuelTank("MainTank", "Model1", "SN001", 9000.0, 9000.0);
-var engine = new Engine("MainEngine", "Model1", "SN001", 450.0, 50.0, fuelTank);
+var fuelTank = new FuelTank("MainTank", 9000.0, 9000.0, "Model1", "SN001");
+var engine = new Engine("MainEngine", 450.0, 50.0, fuelTank, "Model1", "SN001");
 chaser.AddFuelTank(fuelTank);
 chaser.AddEngine(engine);
 
 // The plan: plane alignment -> apsidal alignment -> phasing -> circularization
 var maneuver1 = new PlaneAlignmentManeuver(
+    targetOrbit,
+    engine,
     new Time(DateTime.MinValue, TimeScale.TDB),
-    TimeSpan.Zero, targetOrbit, engine
+    TimeSpan.Zero
 );
 
 chaser.SetManeuvers(maneuver1,
     new ApsidalAlignmentManeuver(
+        targetOrbit,
+        engine,
         new Time(DateTime.MinValue, TimeScale.TDB),
-        TimeSpan.Zero, targetOrbit, engine),
+        TimeSpan.Zero),
     new PhasingManeuver(
-        new Time(DateTime.MinValue, TimeScale.TDB),
-        targetOrbit, 1, engine),
+        targetOrbit,
+        1,
+        engine,
+        new Time(DateTime.MinValue, TimeScale.TDB)),
     new ApogeeHeightManeuver(
-        earth, new Time(DateTime.MinValue, TimeScale.TDB),
-        TimeSpan.Zero, targetOrbit.SemiMajorAxis(), engine));
+        targetOrbit.SemiMajorAxis(),
+        engine,
+        new Time(DateTime.MinValue, TimeScale.TDB),
+        TimeSpan.Zero,
+        earth));
 
 scenario.AddSpacecraft(chaser);
 
@@ -2693,7 +2700,7 @@ var orbit = new StateVector(
 
 // Create spacecraft with camera
 var clock = new Clock("Clock1", 65536);
-var spacecraft = new Spacecraft(-179, "Observer", 1000.0, 3000.0, clock, orbit);
+var spacecraft = new Spacecraft(-179, "Observer", 1000.0, orbit, 3000.0, clock);
 
 // Add camera instrument (circular FOV, 43° half-angle, pointing nadir)
 spacecraft.AddCircularInstrument(
@@ -2788,7 +2795,7 @@ var issTLE = new TLE(
 
 // Create spacecraft from TLE
 var clock = new Clock("ISSClock", 65536);
-var iss = new Spacecraft(-25544, "ISS", 420000.0, 450000.0, clock, issTLE);
+var iss = new Spacecraft(-25544, "ISS", 420000.0, issTLE, 450000.0, clock);
 
 // Track from a ground station
 var goldstone = new Site(13, "DSS-13", earth);
@@ -2850,7 +2857,7 @@ var scenario = new Scenario("LunarOrbit", mission, new Window(start, end));
 var moonState = moon.GetEphemeris(start, earth, Frame.ICRF, Aberration.None);
 
 var clock = new Clock("Clock", 256);
-var spacecraft = new Spacecraft(-1001, "Probe", 100.0, 10000.0, clock, moonState);
+var spacecraft = new Spacecraft(-1001, "Probe", 100.0, moonState, 10000.0, clock);
 
 scenario.AddSpacecraft(spacecraft);
 
@@ -2903,7 +2910,7 @@ var orbit = new StateVector(
     earth, epoch, Frame.ICRF);
 
 var clock = new Clock("Clock", 256);
-var spacecraft = new Spacecraft(-1001, "LEOSat", 100.0, 10000.0, clock, orbit);
+var spacecraft = new Spacecraft(-1001, "LEOSat", 100.0, orbit, 10000.0, clock);
 
 var propagator = new CentralBodyPropagator(
     new Window(epoch, epoch.AddDays(1)),
@@ -2947,15 +2954,15 @@ var orbit = new KeplerianElements(
 
 // Create spacecraft
 var clock = new Clock("Clock", 256);
-var spacecraft = new Spacecraft(-334, "Observer", 1000.0, 2000.0, clock, orbit);
+var spacecraft = new Spacecraft(-334, "Observer", 1000.0, orbit, 2000.0, clock);
 
 // Add antenna instrument
-spacecraft.AddCircularInstrument(-334100, "Antenna", "HighGain",
-    0.2, Vector3.VectorZ, Vector3.VectorY, Vector3.Zero);
+spacecraft.AddCircularInstrument("Antenna",
+    0.2, Vector3.VectorZ, Vector3.VectorY, Vector3.Zero, naifId: -334100, model: "HighGain");
 
 // Add propulsion
-var tank = new FuelTank("Tank1", "Model", "SN1", 2000.0, 2000.0);
-var engine = new Engine("Engine1", "Model", "SN1", 450, 50.0, tank);
+var tank = new FuelTank("Tank1", 2000.0, 2000.0, "Model", "SN1");
+var engine = new Engine("Engine1", 450, 50.0, tank, "Model", "SN1");
 spacecraft.AddFuelTank(tank);
 spacecraft.AddEngine(engine);
 
@@ -2966,13 +2973,12 @@ scenario.AddSpacecraft(spacecraft);
 
 // Configure attitude maneuver to point antenna at ground station
 var pointingManeuver = new InstrumentPointingToAttitude(
-    start.AddHours(7.25),           // Start time
-    TimeSpan.FromHours(0.5),        // Duration
     spacecraft.Instruments.First(), // Instrument to point
-    groundStation,                  // Target
-    engine                          // Engine for attitude control
-);                                  // The direction is light-time corrected (Aberration.LT, the default, #549);
-                                    // pass Aberration.None as a sixth argument for the geometric direction
+    new CelestialAttitudeTarget(groundStation, Aberration.LT),
+    start.AddHours(7.25),           // Start time
+    TimeSpan.FromHours(0.5)         // Duration
+);                                  // The direction is light-time corrected (#549); the target carries its correction,
+                                    // new CelestialAttitudeTarget(groundStation) for the geometric direction
 
 spacecraft.SetManeuvers(pointingManeuver);
 
@@ -3010,15 +3016,15 @@ var orbit = new KeplerianElements(
 );
 
 var clock = new Clock("Clock", 256);
-var spacecraft = new Spacecraft(-500, "Observer", 500.0, 1000.0, clock, orbit);
+var spacecraft = new Spacecraft(-500, "Observer", 500.0, orbit, 1000.0, clock);
 
 // Add Earth observation camera (points down via boresight)
-spacecraft.AddCircularInstrument(-500100, "EarthCam", "NadirCamera",
-    0.5, Vector3.VectorZ.Inverse(), Vector3.VectorY, Vector3.Zero);  // Boresight: -Z (nadir), refVector: +Y
+spacecraft.AddCircularInstrument("EarthCam",
+    0.5, Vector3.VectorZ.Inverse(), Vector3.VectorY, Vector3.Zero, naifId: -500100, model: "NadirCamera");  // Boresight: -Z (nadir), refVector: +Y
 
 // Add propulsion
-var tank = new FuelTank("Tank1", "Model", "SN1", 100.0, 100.0);
-var engine = new Engine("Engine1", "Model", "SN1", 220, 10.0, tank);
+var tank = new FuelTank("Tank1", 100.0, 100.0, "Model", "SN1");
+var engine = new Engine("Engine1", 220, 10.0, tank, "Model", "SN1");
 spacecraft.AddFuelTank(tank);
 spacecraft.AddEngine(engine);
 
@@ -3029,11 +3035,10 @@ scenario.AddSpacecraft(spacecraft);
 // - Secondary: Spacecraft Right (+X) oriented toward Sun, which sets the roll about nadir (a vector at 5 degrees at
 //   least from the primary: Up, opposite to Down, would be rejected)
 var triadManeuver = new TriadAttitude(
+    Spacecraft.Down, new CelestialAttitudeTarget(earth),  // Primary constraint: nadir pointing
+    Spacecraft.Right, new CelestialAttitudeTarget(sun),
     start,                          // Start time
-    TimeSpan.FromHours(1.5),        // Hold duration
-    Spacecraft.Down, earth,         // Primary constraint: nadir pointing
-    Spacecraft.Right, sun,          // Secondary constraint: +X toward the Sun
-    engine
+    TimeSpan.FromHours(1.5)         // Hold duration
 );
 
 spacecraft.SetManeuvers(triadManeuver);
@@ -3058,17 +3063,20 @@ Console.WriteLine("Spacecraft maintains nadir pointing with roll constrained tow
 ```csharp
 // earth: the CelestialBody of the orbit; sun: the Sun; engine: an Engine of the spacecraft; epoch: Time; duration: TimeSpan
 // LVLH attitude using factory method (the spacecraft's BodyDown to nadir, its BodyFront toward prograde)
-var lvlh = TriadAttitude.CreateLVLH(earth, epoch, duration, engine);
+var lvlh = TriadAttitude.CreateLvlh(epoch, duration, earth);
 
 // Prograde with sun tracking using factory method
-var sunTrack = TriadAttitude.CreateProgradeWithSunTracking(earth, epoch, duration, sun, engine);
+var sunTrack = TriadAttitude.CreateProgradeWithSunTracking(sun, epoch, duration, earth);
 
 // Custom: nadir pointing with normal constraint (using OrbitalDirectionTarget)
 var customLvlh = new TriadAttitude(
-    earth, epoch, duration,
-    Spacecraft.Down, OrbitalDirectionTarget.Nadir,
-    Spacecraft.Front, OrbitalDirectionTarget.Prograde,
-    engine);
+    Spacecraft.Down,
+    OrbitalDirectionTarget.Nadir,
+    Spacecraft.Front,
+    OrbitalDirectionTarget.Prograde,
+    epoch,
+    duration,
+    earth);
 ```
 
 ---

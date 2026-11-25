@@ -181,6 +181,23 @@ Used with [`OrbitalDirectionTarget`](attitudes.md#orbitaldirectiontarget) for TR
 | `Normal` | Orbital angular momentum (h = r x v) |
 | `AntiNormal` | Anti-orbital angular momentum |
 
+## BodyAxis
+
+An axis of the spacecraft body frame (`IO.Astrodynamics.Maneuver`, decision 69 of #668): the axis a single-vector
+attitude points (`bodyAxis`, `Front` by default) and the axes of the `BodyAxis` constructor of
+[`TriadAttitude`](attitudes.md#constructors), resolved on the instance axes of the spacecraft whose plan last held the
+maneuver, the static axes before any plan ([Body Axes](attitudes.md#body-axes)). A value outside the enumeration throws
+`ArgumentOutOfRangeException`.
+
+| Value | Description |
+|-------|-------------|
+| `Front` | `Spacecraft.BodyFront` (+Y by default) |
+| `Back` | `Spacecraft.BodyBack` (−Y by default) |
+| `Right` | `Spacecraft.BodyRight` (+X by default) |
+| `Left` | `Spacecraft.BodyLeft` (−X by default) |
+| `Up` | `Spacecraft.BodyUp` (+Z by default) |
+| `Down` | `Spacecraft.BodyDown` (−Z by default) |
+
 ## InstrumentShape
 
 | Value | Description |

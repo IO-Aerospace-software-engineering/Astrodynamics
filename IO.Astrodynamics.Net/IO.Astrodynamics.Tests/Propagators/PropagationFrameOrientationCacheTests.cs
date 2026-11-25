@@ -392,7 +392,7 @@ public class PropagationFrameOrientationCacheTests
             new GeopotentialModelParameters("Data/SolarSystem/EGM2008_to70_TideFree", 10));
         var leo = new StateVector(new Vector3(6878137.0, 0.0, 0.0), new Vector3(0.0, 7612.6, 0.0), earth, start, Frames.Frame.ICRF);
         int id = -622100 - (int)(endFromCoverageEnd + 31.0) * 10 - (int)(length - 3600.0);
-        var spacecraft = new Spacecraft(id, $"KR1{-id}", 100.0, 1000.0, new Clock($"KR1{-id}CLK", 256), leo);
+        var spacecraft = new Spacecraft(id, $"KR1{-id}", 100.0, leo, 1000.0, new Clock($"KR1{-id}CLK", 256));
 
         void Propagate() => spacecraft.Propagate(new Window(start, end), new PropagationOptions { Integrator = RK78IntegratorOptions.Default, OutputStep = TimeSpan.FromSeconds(60.0), ThirdBodies = new CelestialItem[] { earth }, CovariancePropagation = CovariancePropagationOptions.None });
 

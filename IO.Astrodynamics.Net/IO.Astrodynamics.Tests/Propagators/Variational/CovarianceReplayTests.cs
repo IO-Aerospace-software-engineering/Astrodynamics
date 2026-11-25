@@ -164,8 +164,11 @@ public class CovarianceReplayTests : IClassFixture<ReferenceCases>
     private Spacecraft EclipsingSpacecraft(int naifId, StateVector orbit, ManeuverExecutionError execution)
     {
         return _cases.EclipsingSpacecraft(naifId, orbit, engine => new ApogeeHeightManeuver(
-            (IO.Astrodynamics.Body.CelestialItem)_cases.Eclipsing.InitialState.Observer, ReferenceCases.Epoch, TimeSpan.Zero,
-            ReferenceCases.EclipsingApogeeRadius, engine) { ExecutionError = execution });
+            ReferenceCases.EclipsingApogeeRadius,
+            engine,
+            ReferenceCases.Epoch,
+            TimeSpan.Zero,
+            (IO.Astrodynamics.Body.CelestialItem)_cases.Eclipsing.InitialState.Observer) { ExecutionError = execution });
     }
 
     private PropagationSolution Propagate(Spacecraft spacecraft, CovariancePropagationOptions options)

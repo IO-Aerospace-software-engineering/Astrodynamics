@@ -379,9 +379,9 @@ public class FrameTests
     {
         // The subclasses that are not static frames: a SpacecraftFrame and a SiteFrame are equal to a frame built by their
         // name, in any case, for every relation (they were different for == and Equals(object))
-        var spacecraft = new IO.Astrodynamics.Body.Spacecraft.Spacecraft(-1562, "EQ562", 1000.0, 3000.0, new IO.Astrodynamics.Body.Spacecraft.Clock("eq562", 65536),
-            new StateVector(new Vector3(6778137.0, 0.0, 0.0), new Vector3(0.0, 7668.6, 0.0), TestHelpers.EarthAtJ2000,
-                TimeSystem.Time.J2000TDB, Frames.Frame.ICRF));
+        var spacecraft = new IO.Astrodynamics.Body.Spacecraft.Spacecraft(-1562, "EQ562", 1000.0, new StateVector(new Vector3(6778137.0, 0.0, 0.0), new Vector3(0.0, 7668.6, 0.0), TestHelpers.EarthAtJ2000,
+                TimeSystem.Time.J2000TDB, Frames.Frame.ICRF), 3000.0,
+            new IO.Astrodynamics.Body.Spacecraft.Clock("eq562", 65536));
         var site = new Site(339, "EQ562SITE", TestHelpers.EarthAtJ2000, new Planetodetic(-2.0384478466737517, 0.61517960506340708, 1073.2434632601216));
         foreach (var frame in new Frames.Frame[] { spacecraft.Frame, site.Frame })
         {

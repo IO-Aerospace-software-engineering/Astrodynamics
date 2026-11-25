@@ -16,28 +16,39 @@ namespace IO.Astrodynamics.Maneuver
     {
         /// <summary>
         /// The perigee radius after the burn, in m from the centre of the maneuver centre (not an altitude).
+        /// <c>TargetPerigeeHeight</c> before 11.0.0 (decision 68 of #668, in lot L5b, decided by S. Guillet, 2026-11-23).
         /// </summary>
-        public double TargetPerigeeHeight { get; } = double.NaN;
+        public double TargetPerigeeRadius { get; }
 
         /// <summary>
-        /// The inclination after the burn, in radians.
+        /// The inclination after the burn, in radians, in [0, π].
         /// </summary>
-        public double TargetInclination { get; } = double.NaN;
+        public double TargetInclination { get; }
 
         /// <summary>
         /// Creates the maneuver.
         /// </summary>
-        /// <param name="maneuverCenter">The body the orbit is about.</param>
-        /// <param name="minimumEpoch">Earliest epoch when the maneuver can execute.</param>
-        /// <param name="maneuverHoldDuration">Duration to hold after the maneuver.</param>
-        /// <param name="perigeeRadius">The perigee radius after the burn, in m from the centre of
-        /// <paramref name="maneuverCenter"/>, not an altitude: for an altitude h, its equatorial radius + h.</param>
-        /// <param name="inclination">The inclination after the burn, in radians.</param>
-        /// <param name="engine">Engine used for the maneuver.</param>
-        public CombinedManeuver(CelestialItem maneuverCenter, Time minimumEpoch, TimeSpan maneuverHoldDuration, double perigeeRadius, double inclination, Engine engine) : base(
-            maneuverCenter, minimumEpoch, maneuverHoldDuration, engine)
+        /// <param name="perigeeRadius">The perigee radius after the burn, in m from the centre of the maneuver centre, not
+        /// an altitude: for an altitude h, its equatorial radius + h.</param>
+        /// <param name="inclination">The inclination after the burn, in radians, in [0, π].</param>
+        /// <param name="engine">The engine; null for the only engine of the spacecraft, which the run infers.</param>
+        /// <param name="minEpoch">Earliest epoch when the maneuver can execute; default(Time) for none.</param>
+        /// <param name="holdDuration">Duration to hold after the maneuver; zero by default.</param>
+        /// <param name="maneuverCenter">The body the orbit is about; null for the centre the run infers, the observer of
+        /// the initial orbit (required in SSB mode).</param>
+        /// <exception cref="ArgumentOutOfRangeException"><paramref name="perigeeRadius"/> is not finite or not above 0, or
+        /// <paramref name="inclination"/> is not finite or outside [0, π] (decision 68 of #668, decided by S. Guillet,
+        /// 2026-11-23: before 11.0.0 an inclination above π threw <see cref="ArgumentException"/> at the burn and a negative
+        /// one was executed); or <paramref name="holdDuration"/> is negative.</exception>
+        public CombinedManeuver(double perigeeRadius, double inclination, Engine engine = null, Time minEpoch = default,
+            TimeSpan holdDuration = default, CelestialItem maneuverCenter = null) : base(engine, minEpoch, holdDuration, maneuverCenter)
         {
-            TargetPerigeeHeight = perigeeRadius;
+            TargetPerigeeRadius = ApogeeHeightManeuver.CheckRadius(perigeeRadius, nameof(perigeeRadius), "perigee");
+            if (!(inclination >= 0.0 && inclination <= System.Math.PI))
+            {
+                throw new ArgumentOutOfRangeException(nameof(inclination), inclination, "The target inclination must be finite and in [0, π] rad.");
+            }
+
             TargetInclination = inclination;
         }
 
@@ -59,7 +70,7 @@ namespace IO.Astrodynamics.Maneuver
         }
 
         /// <summary>
-        /// The orbit after the burn: its apsides the current apogee and <see cref="TargetPerigeeHeight"/>, inclined at
+        /// The orbit after the burn: its apsides the current apogee and <see cref="TargetPerigeeRadius"/>, inclined at
         /// <see cref="TargetInclination"/>, through the given state. It carries no cached perigee radius, so its
         /// <see cref="OrbitalParameters.OrbitalParameters.PerigeeRadius"/> is its own, a(1 − e) (#677); it carried the current
         /// orbit's.
@@ -72,9 +83,9 @@ namespace IO.Astrodynamics.Maneuver
             double apogee = stateVector.ApogeeVector().Magnitude();
 
             //If target perigee is higher than current apogee
-            if (TargetPerigeeHeight > apogee)
+            if (TargetPerigeeRadius > apogee)
             {
-                e = 1.0 - (2.0 / ((TargetPerigeeHeight / apogee) + 1.0));
+                e = 1.0 - (2.0 / ((TargetPerigeeRadius / apogee) + 1.0));
 
                 //Periapse argument will turn by 180°
                 meanAnomaly = (meanAnomaly + Constants.PI) % Constants.TwoPi;
@@ -82,10 +93,10 @@ namespace IO.Astrodynamics.Maneuver
             }
             else
             {
-                e = 1.0 - (2.0 / ((apogee / TargetPerigeeHeight) + 1.0));
+                e = 1.0 - (2.0 / ((apogee / TargetPerigeeRadius) + 1.0));
             }
 
-            return new KeplerianElements((TargetPerigeeHeight + apogee) * 0.5, e, TargetInclination, stateVector.AscendingNode(), periapsisArgument, meanAnomaly,
+            return new KeplerianElements((TargetPerigeeRadius + apogee) * 0.5, e, TargetInclination, stateVector.AscendingNode(), periapsisArgument, meanAnomaly,
                 stateVector.Observer, stateVector.Epoch, stateVector.Frame);
         }
     }

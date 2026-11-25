@@ -15,37 +15,44 @@ namespace IO.Astrodynamics.Maneuver
     {
         /// <summary>
         /// The perigee radius after the burn, in m from the centre of the maneuver centre (not an altitude).
+        /// <c>TargetPerigeeHeight</c> before 11.0.0 (R13 of #668, in lot L5b, decided by S. Guillet, 2026-11-23).
         /// </summary>
-        public double TargetPerigeeHeight { get; } = double.NaN;
+        public double TargetPerigeeRadius { get; }
 
         /// <summary>
         /// Creates the maneuver that moves the perigee to that of <paramref name="targetOrbit"/>, about its observer.
         /// </summary>
-        /// <param name="minimumEpoch">Earliest epoch when the maneuver can execute.</param>
-        /// <param name="maneuverHoldDuration">Duration to hold after the maneuver.</param>
         /// <param name="targetOrbit">The orbit whose perigee radius is the target; its observer is the maneuver centre.</param>
-        /// <param name="engine">Engine used for the maneuver.</param>
-        /// <exception cref="ArgumentNullException"><paramref name="targetOrbit"/> is null, checked before the engine; or
-        /// <paramref name="engine"/> is null (before 11.0.0 a null target orbit threw <see cref="NullReferenceException"/>,
-        /// #555).</exception>
-        public PerigeeHeightManeuver(Time minimumEpoch, TimeSpan maneuverHoldDuration, OrbitalParameters.OrbitalParameters targetOrbit, Engine engine) : this(
-            RequireTargetOrbit(targetOrbit).Observer as CelestialItem, minimumEpoch, maneuverHoldDuration, targetOrbit.PerigeeVector().Magnitude(), engine)
+        /// <param name="engine">The engine; null for the only engine of the spacecraft, which the run infers.</param>
+        /// <param name="minEpoch">Earliest epoch when the maneuver can execute; default(Time) for none.</param>
+        /// <param name="holdDuration">Duration to hold after the maneuver; zero by default.</param>
+        /// <exception cref="ArgumentNullException"><paramref name="targetOrbit"/> is null (before 11.0.0 a null target
+        /// orbit threw <see cref="NullReferenceException"/>, #555).</exception>
+        /// <exception cref="ArgumentException">The observer of <paramref name="targetOrbit"/> is not a celestial
+        /// item.</exception>
+        /// <exception cref="ArgumentOutOfRangeException"><paramref name="holdDuration"/> is negative.</exception>
+        public PerigeeHeightManeuver(OrbitalParameters.OrbitalParameters targetOrbit, Engine engine = null, Time minEpoch = default,
+            TimeSpan holdDuration = default) : this(RequireTargetOrbit(targetOrbit).PerigeeVector().Magnitude(), engine, minEpoch,
+            holdDuration, CenterOf(targetOrbit))
         {
         }
 
         /// <summary>
         /// Creates the maneuver that moves the perigee to <paramref name="perigeeRadius"/>.
         /// </summary>
-        /// <param name="maneuverCenter">The body the orbit is about.</param>
-        /// <param name="minimumEpoch">Earliest epoch when the maneuver can execute.</param>
-        /// <param name="maneuverHoldDuration">Duration to hold after the maneuver.</param>
-        /// <param name="perigeeRadius">The perigee radius after the burn, in m from the centre of
-        /// <paramref name="maneuverCenter"/>, not an altitude: for an altitude h, its equatorial radius + h.</param>
-        /// <param name="engine">Engine used for the maneuver.</param>
-        public PerigeeHeightManeuver(CelestialItem maneuverCenter, Time minimumEpoch, TimeSpan maneuverHoldDuration, double perigeeRadius, Engine engine) : base(maneuverCenter, minimumEpoch, maneuverHoldDuration,
-            engine)
+        /// <param name="perigeeRadius">The perigee radius after the burn, in m from the centre of the maneuver centre, not
+        /// an altitude: for an altitude h, its equatorial radius + h. A perigee inside the body is legal (a deorbit).</param>
+        /// <param name="engine">The engine; null for the only engine of the spacecraft, which the run infers.</param>
+        /// <param name="minEpoch">Earliest epoch when the maneuver can execute; default(Time) for none.</param>
+        /// <param name="holdDuration">Duration to hold after the maneuver; zero by default.</param>
+        /// <param name="maneuverCenter">The body the orbit is about; null for the centre the run infers, the observer of
+        /// the initial orbit (required in SSB mode).</param>
+        /// <exception cref="ArgumentOutOfRangeException"><paramref name="perigeeRadius"/> is not finite or not above 0
+        /// (decision 68 of #668, decided by S. Guillet, 2026-11-23); or <paramref name="holdDuration"/> is negative.</exception>
+        public PerigeeHeightManeuver(double perigeeRadius, Engine engine = null, Time minEpoch = default, TimeSpan holdDuration = default,
+            CelestialItem maneuverCenter = null) : base(engine, minEpoch, holdDuration, maneuverCenter)
         {
-            TargetPerigeeHeight = perigeeRadius;
+            TargetPerigeeRadius = ApogeeHeightManeuver.CheckRadius(perigeeRadius, nameof(perigeeRadius), "perigee");
         }
 
         /// <summary>
@@ -58,7 +65,7 @@ namespace IO.Astrodynamics.Maneuver
         {
             var apogee = stateVector.ApogeeVector().Magnitude();
             double vInit = stateVector.Velocity.Magnitude();
-            double vFinal = System.Math.Sqrt(stateVector.Observer.GM * ((2.0 / apogee) - (1.0 / ((apogee + TargetPerigeeHeight) / 2.0))));
+            double vFinal = System.Math.Sqrt(stateVector.Observer.GM * ((2.0 / apogee) - (1.0 / ((apogee + TargetPerigeeRadius) / 2.0))));
             return stateVector.Velocity.NormalizeOrZero() * (vFinal - vInit);
         }
     }

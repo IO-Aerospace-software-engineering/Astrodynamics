@@ -86,7 +86,7 @@ public class DeveloperGuideExamplesSmokeTests
 
         // Create spacecraft from TLE
         var clock = new Clock("ISSClock", 65536);
-        var iss = new Spacecraft(-25544, "ISS", 420000.0, 450000.0, clock, issTLE);
+        var iss = new Spacecraft(-25544, "ISS", 420000.0, issTLE, 450000.0, clock);
 
         // Track from a ground station
         var goldstone = new Site(13, "DSS-13", earth);

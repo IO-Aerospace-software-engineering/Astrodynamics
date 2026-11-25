@@ -54,11 +54,11 @@ public class RunResultsSurfaceTests
     private static Spacecraft NewSpacecraft(CelestialBody earth, out Engine engine)
     {
         int id = NextId();
-        var spacecraft = new Spacecraft(id, "RR" + -id, 1000.0, 3000.0, new Clock("RR" + -id, 65536),
-            new KeplerianElements(7000e3, 0.01, 0.5, 0.0, 0.0, 0.0, earth, S, Frames.Frame.ICRF));
-        var tank = new FuelTank("ft" + -id, "m", "sn" + -id, 1000.0, 1000.0);
+        var spacecraft = new Spacecraft(id, "RR" + -id, 1000.0, new KeplerianElements(7000e3, 0.01, 0.5, 0.0, 0.0, 0.0, earth, S, Frames.Frame.ICRF), 3000.0,
+            new Clock("RR" + -id, 65536));
+        var tank = new FuelTank("ft" + -id, 1000.0, 1000.0, "m", "sn" + -id);
         spacecraft.AddFuelTank(tank);
-        engine = new Engine("eng" + -id, "m", "sn" + -id, 300.0, 10.0, tank);
+        engine = new Engine("eng" + -id, 300.0, 10.0, tank, "m", "sn" + -id);
         spacecraft.AddEngine(engine);
         return spacecraft;
     }
@@ -162,7 +162,7 @@ public class RunResultsSurfaceTests
             "1 25544U 98067A   21020.53488036  .00016717  00000-0  10270-3 0  9054",
             "2 25544  51.6423 353.0312 0000493 320.8755  39.2360 15.49309423 25703");
         int id = NextId();
-        var spacecraft = new Spacecraft(id, "RR" + -id, 100.0, 10000.0, new Clock("RR" + -id, 65536), tle);
+        var spacecraft = new Spacecraft(id, "RR" + -id, 100.0, tle, 10000.0, new Clock("RR" + -id, 65536));
         var solution = new TLEPropagator(new Window(tle.Epoch, tle.Epoch.AddHours(1.0)), spacecraft, Output).Propagate();
 
         AssertReadOnly(solution.Segments);
@@ -205,7 +205,7 @@ public class RunResultsSurfaceTests
             "1 25544U 98067A   21020.53488036  .00016717  00000-0  10270-3 0  9054",
             "2 25544  51.6423 353.0312 0000493 320.8755  39.2360 15.49309423 25703");
         int id = NextId();
-        var spacecraft = new Spacecraft(id, "RR" + -id, 100.0, 10000.0, new Clock("RR" + -id, 65536), tle);
+        var spacecraft = new Spacecraft(id, "RR" + -id, 100.0, tle, 10000.0, new Clock("RR" + -id, 65536));
         var solution = new TLEPropagator(new Window(tle.Epoch, tle.Epoch.AddHours(1.0)), spacecraft, Output).Propagate();
 
         Assert.Equal(CovariancePropagationOptions.None, solution.CovariancePropagation);
@@ -224,7 +224,7 @@ public class RunResultsSurfaceTests
     {
         var earth = Earth();
         var spacecraft = NewSpacecraft(earth, out var engine);
-        var apogee = new ApogeeHeightManeuver(earth, S.AddSeconds(600.0), TimeSpan.Zero, 8000e3, engine);
+        var apogee = new ApogeeHeightManeuver(8000e3, engine, S.AddSeconds(600.0), TimeSpan.Zero, earth);
         spacecraft.SetManeuvers(apogee);
         spacecraft.Propagate(new Window(S, S.AddHours(3.0)), Options(earth, integrator));
         var held = spacecraft.ExecutedManeuvers;
@@ -321,9 +321,43 @@ public class RunResultsSurfaceTests
     }
 
     // ---------------------------------------------------------------------------------------------------------------------
-    // Decision 60: the fuel accessors (the drop of the filter of GetTotalISP and GetTotalFuelFlow lands with lot L5b,
-    // after the tanks refuse a non-finite quantity: L5-20 as amended, #801)
+    // Decision 60: the fuel accessors, and GetTotalISP and GetTotalFuelFlow over every engine (lot L5b, after the tanks
+    // refuse a non-finite quantity, #800: L5-20 as amended, #801 part 1)
     // ---------------------------------------------------------------------------------------------------------------------
+
+    /// <summary>
+    /// GetTotalISP and GetTotalFuelFlow count every engine, whatever its tank holds (decision 60 of #668, L5-20 as
+    /// amended, #801 part 1): they counted only the engines whose tank held fuel at the start of a run, which made them
+    /// 0 / 0 when none did. The empty tank is set by reflection, the constructor refusing an initial quantity of 0 in this
+    /// lot: the analog of L5-20, engines of 300 s at 10 kg/s and 200 s at 30 kg/s, 300 s with the filter, 225 s without.
+    /// </summary>
+    [Fact]
+    public void GetTotalISP_AndGetTotalFuelFlow_CountEveryEngine()
+    {
+        var spacecraft = NewSpacecraft(Earth(), out _);
+        var empty = new FuelTank("ftE", 1000.0, 500.0, "m", "snE");
+        spacecraft.AddFuelTank(empty);
+        spacecraft.AddEngine(new Engine("engE", 200.0, 30.0, empty, "m", "snE"));
+        typeof(FuelTank).GetField("<InitialQuantity>k__BackingField", Everything)!.SetValue(empty, 0.0);
+
+        Assert.Equal(40.0, spacecraft.GetTotalFuelFlow());
+        Assert.Equal(225.0, spacecraft.GetTotalISP(), 1e-12);
+    }
+
+    /// <summary>
+    /// Without an engine, GetTotalISP is 0 / 0, NaN, as before (#801 part 1 changes the filter only; IC-12 of the gap
+    /// analysis of L5b), and GetTotalFuelFlow 0.
+    /// </summary>
+    [Fact]
+    public void GetTotalISP_WithoutAnEngine_IsNaN()
+    {
+        int id = NextId();
+        var spacecraft = new Spacecraft(id, "RR" + -id, 1000.0, new KeplerianElements(7000e3, 0.01, 0.5, 0.0, 0.0, 0.0, Earth(), S, Frames.Frame.ICRF), 3000.0,
+            new Clock("RR" + -id, 65536));
+
+        Assert.Equal(0.0, spacecraft.GetTotalFuelFlow());
+        Assert.True(double.IsNaN(spacecraft.GetTotalISP()));
+    }
 
     [Fact]
     public void TheFuelAccessors_ReplaceGetTotalFuel()

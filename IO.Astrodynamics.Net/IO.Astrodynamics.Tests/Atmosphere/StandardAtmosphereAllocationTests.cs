@@ -136,7 +136,7 @@ public class StandardAtmosphereAllocationTests
         // Arrange: the orientation cache of the body-fixed frame active on this thread, as in a propagation
         var body = Body(name);
         var state = State(name, body);
-        var spacecraft = new Spacecraft(-1961, "DRAG", 100.0, 1000.0, new Clock("drag", 65536), state, 10.0, 2.2,
+        var spacecraft = new Spacecraft(-1961, "DRAG", 100.0, state, 1000.0, new Clock("drag", 65536), 10.0, 2.2,
             null, 1.5);
         var context = ForceEvaluationContext.FromSpacecraft(spacecraft);
         var force = new AtmosphericDrag(spacecraft, body);

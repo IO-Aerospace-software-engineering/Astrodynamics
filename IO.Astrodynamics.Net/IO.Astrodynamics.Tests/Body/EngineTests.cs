@@ -9,8 +9,8 @@ namespace IO.Astrodynamics.Tests.Body
         [Fact]
         public void Create()
         {
-            FuelTank ft = new FuelTank( "ft", "ftmodel", "sn0", 1000.0, 100.0);
-            Engine engine = new Engine("eng", "model", "sn1", 350.0, 50.0, ft);
+            FuelTank ft = new FuelTank( "ft", 1000.0, 100.0, "ftmodel", "sn0");
+            Engine engine = new Engine("eng", 350.0, 50.0, ft, "model", "sn1");
             Assert.Equal("eng", engine.Name);
             Assert.Equal("model", engine.Model);
             Assert.Equal(350.0, engine.ISP);
@@ -23,23 +23,23 @@ namespace IO.Astrodynamics.Tests.Body
         [Fact]
         public void CreateInvalid()
         {
-            FuelTank ft = new FuelTank("ft", "ftmodel", "sn0", 1000.0, 100.0);
-            Assert.Throws<ArgumentException>(() => new Engine("", "model", "sn1", 350.0, 50.0, ft));
-            Assert.Throws<ArgumentException>(() => new Engine("eng", "", "sn1", 350.0, 50.0, ft));
-            Assert.Throws<ArgumentException>(() => new Engine("eng", "model", "sn1", 0.0, 50.0, ft));
-            Assert.Throws<ArgumentException>(() => new Engine("eng", "model", "sn1", 350.0, 0.0, ft));
-            Assert.Throws<ArgumentException>(() => new Engine("eng", "model", "", 350.0, 50.0, ft));
-            Assert.Throws<ArgumentNullException>(() => new Engine("eng", "model", "sn1", 350.0, 50.0, null));
+            FuelTank ft = new FuelTank("ft", 1000.0, 100.0, "ftmodel", "sn0");
+            Assert.Throws<ArgumentException>(() => new Engine("", 350.0, 50.0, ft, "model", "sn1"));
+            Assert.Throws<ArgumentOutOfRangeException>(() => new Engine("eng", 0.0, 50.0, ft, "model", "sn1"));
+            Assert.Throws<ArgumentOutOfRangeException>(() => new Engine("eng", 350.0, 0.0, ft, "model", "sn1"));
+            // The model and the serial number are informational since 11.0.0 (decision 76 of #668): any value, null included
+            Assert.Null(new Engine("eng", 350.0, 50.0, ft).Model);
+            Assert.Throws<ArgumentNullException>(() => new Engine("eng", 350.0, 50.0, null, "model", "sn1"));
         }
 
         [Fact]
         public void Equality()
         {
-            FuelTank ft = new FuelTank("ft", "ftmodel", "sn0", 1000.0, 100.0);
-            Engine engine = new Engine("eng", "model", "sn1", 350.0, 50.0, ft);
+            FuelTank ft = new FuelTank("ft", 1000.0, 100.0, "ftmodel", "sn0");
+            Engine engine = new Engine("eng", 350.0, 50.0, ft, "model", "sn1");
             
-            FuelTank ft2 = new FuelTank("ft2", "ftmodel2", "sn20", 1000.0, 100.0);
-            Engine engine2 = new Engine("eng2", "model2", "sn21", 350.0, 50.0, ft2);
+            // Reference equality since 11.0.0 (decision 76 of #668): a twin of the same values is another engine
+            Engine engine2 = new Engine("eng", 350.0, 50.0, ft, "model", "sn1");
             
             Assert.True(engine!=engine2);
             Assert.True(engine.Equals(engine));

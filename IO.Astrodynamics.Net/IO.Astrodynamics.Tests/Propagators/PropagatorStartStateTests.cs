@@ -103,8 +103,8 @@ public class PropagatorStartStateTests
         var reference = EquinoctialReference.Load();
         Assert.Equal(reference.Gm["gm_de440"], _earth.GM);
         var c = reference.Case(elements);
-        var spacecraft = new Spacecraft(-1452, "START1452", 100.0, 1000.0, new Clock("start1452", 65536),
-            c.Elements(_earth, Epoch, Frames.Frame.ICRF), 10.0);
+        var spacecraft = new Spacecraft(-1452, "START1452", 100.0, c.Elements(_earth, Epoch, Frames.Frame.ICRF), 1000.0,
+            new Clock("start1452", 65536), 10.0);
         var startDate = tdbWindow ? Epoch.ToTDB() : Epoch;
         var window = new Window(startDate, startDate.AddSeconds(600.0));
         var bodies = new CelestialItem[] { _earth };

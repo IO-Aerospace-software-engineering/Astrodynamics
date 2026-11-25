@@ -47,15 +47,21 @@ namespace IO.Astrodynamics.Maneuver
         /// A phasing maneuver toward a target orbit: the target is the object of <paramref name="targetOrbit"/>, whose
         /// true longitude at the epoch of the burn and angular momentum set the phasing orbit.
         /// </summary>
-        /// <param name="minimumEpoch">The earliest epoch of the burn.</param>
-        /// <param name="targetOrbit">The orbit of the target, about the maneuver center and in the frame of the
-        /// spacecraft.</param>
+        /// <param name="targetOrbit">The orbit of the target, about the maneuver centre and in the frame the spacecraft
+        /// is propagated in; its observer is the maneuver centre.</param>
         /// <param name="revolutionNumber">The number N of revolutions of the phasing orbit.</param>
-        /// <param name="engine">The engine of the burn.</param>
-        /// <exception cref="ArgumentNullException"><paramref name="targetOrbit"/> or <paramref name="engine"/> is null.</exception>
-        /// <exception cref="ArgumentException">The spacecraft of the engine and the target orbit are defined in different frames.</exception>
-        public PhasingManeuver(Time minimumEpoch, OrbitalParameters.OrbitalParameters targetOrbit, uint revolutionNumber, Engine engine) : base(
-            minimumEpoch, TimeSpan.Zero, targetOrbit, engine)
+        /// <param name="engine">The engine; null for the only engine of the spacecraft, which the run infers.</param>
+        /// <param name="minEpoch">The earliest epoch of the burn; default(Time) for none.</param>
+        /// <exception cref="ArgumentNullException"><paramref name="targetOrbit"/> is null.</exception>
+        /// <exception cref="ArgumentException">The observer of <paramref name="targetOrbit"/> is not a celestial
+        /// item.</exception>
+        /// <remarks>
+        /// Takes no hold (decision 51 of #668): the run sets it. The frame of the target is checked by
+        /// <see cref="Spacecraft.SetManeuvers"/> and by the propagation (decision 65 of #668; the constructor checked it
+        /// against the spacecraft of the engine before lot L5b).
+        /// </remarks>
+        public PhasingManeuver(OrbitalParameters.OrbitalParameters targetOrbit, uint revolutionNumber, Engine engine = null, Time minEpoch = default) :
+            base(targetOrbit, engine, minEpoch, TimeSpan.Zero)
         {
             RevolutionNumber = revolutionNumber;
         }
@@ -65,17 +71,18 @@ namespace IO.Astrodynamics.Maneuver
         /// the orbit of the spacecraft at the burn, at the true longitude <paramref name="trueLongitude"/> at the epoch of
         /// the burn, so that Δθ = λ − λ_sc(burn), and its angular momentum is the spacecraft's.
         /// </summary>
-        /// <param name="maneuverCenter">The center of the maneuver, the body the true longitudes are measured about.</param>
-        /// <param name="minimumEpoch">The earliest epoch of the burn.</param>
         /// <param name="trueLongitude">The true longitude λ = Ω + ω + ν of the virtual target at the epoch of the burn, in
-        /// radians, relative to <paramref name="maneuverCenter"/> in the frame of the spacecraft's state, the inertial
-        /// frame of its initial orbital parameters. The burn is at the perigee, so λ_sc(burn) is the longitude of the
-        /// perigee Ω + ω, and λ − (Ω + ω) is the phase of the target ahead of the spacecraft along its orbit, taken
-        /// modulo 2π: beyond π the target is behind.</param>
+        /// radians, relative to the maneuver centre in the frame of the spacecraft's state, the inertial frame of its
+        /// initial orbital parameters. The burn is at the perigee, so λ_sc(burn) is the longitude of the perigee Ω + ω,
+        /// and λ − (Ω + ω) is the phase of the target ahead of the spacecraft along its orbit, taken modulo 2π: beyond π
+        /// the target is behind.</param>
         /// <param name="revolutionNumber">The number N of revolutions of the phasing orbit.</param>
-        /// <param name="engine">The engine of the burn.</param>
-        public PhasingManeuver(CelestialItem maneuverCenter, Time minimumEpoch, double trueLongitude, uint revolutionNumber, Engine engine) : base(
-            maneuverCenter, minimumEpoch, TimeSpan.Zero, engine)
+        /// <param name="engine">The engine; null for the only engine of the spacecraft, which the run infers.</param>
+        /// <param name="minEpoch">The earliest epoch of the burn; default(Time) for none.</param>
+        /// <param name="maneuverCenter">The centre of the maneuver, the body the true longitudes are measured about; null
+        /// for the centre the run infers, the observer of the initial orbit (required in SSB mode).</param>
+        public PhasingManeuver(double trueLongitude, uint revolutionNumber, Engine engine = null, Time minEpoch = default,
+            CelestialItem maneuverCenter = null) : base(engine, minEpoch, TimeSpan.Zero, maneuverCenter)
         {
             TargetTrueLongitude = trueLongitude;
             RevolutionNumber = revolutionNumber;
@@ -96,7 +103,7 @@ namespace IO.Astrodynamics.Maneuver
         internal override Vector3 ExecuteInRun(StateVector localState)
         {
             var (deltaV, hold) = DeltaVAt(localState);
-            ManeuverHoldDuration = hold;
+            HoldDuration = hold;
             return deltaV;
         }
 
@@ -106,7 +113,7 @@ namespace IO.Astrodynamics.Maneuver
         /// </summary>
         internal override void Reset()
         {
-            ManeuverHoldDuration = TimeSpan.Zero;
+            HoldDuration = TimeSpan.Zero;
             base.Reset();
         }
 

@@ -79,18 +79,18 @@ public class FieldOfViewDynamicsTests
     {
         int id = spacecraft.NaifId * 1000;
         var y = new Vector3(0.0, IO.Astrodynamics.Constants.HalfPi, 0.0);
-        spacecraft.AddCircularInstrument(id - 789, "CAMERA789", "fov515", 0.75, Vector3.VectorZ, Vector3.VectorY, y);
-        spacecraft.AddEllipticalInstrument(id - 790, "ELL790", "fov515", 0.75, 0.3, Vector3.VectorZ, Vector3.VectorY, y);
-        spacecraft.AddRectangularInstrument(id - 791, "REC791", "fov515", 0.75, 0.3, Vector3.VectorZ, Vector3.VectorY, y);
-        spacecraft.AddCircularInstrument(id - 792, "WIDE792", "fov515", 1.3, Spacecraft.Front, Vector3.VectorZ, Vector3.Zero);
+        spacecraft.AddCircularInstrument("CAMERA789", 0.75, Vector3.VectorZ, Vector3.VectorY, y, naifId: id - 789, model: "fov515");
+        spacecraft.AddEllipticalInstrument("ELL790", 0.75, 0.3, Vector3.VectorZ, Vector3.VectorY, y, naifId: id - 790, model: "fov515");
+        spacecraft.AddRectangularInstrument("REC791", 0.75, 0.3, Vector3.VectorZ, Vector3.VectorY, y, naifId: id - 791, model: "fov515");
+        spacecraft.AddCircularInstrument("WIDE792", 1.3, Spacecraft.Front, Vector3.VectorZ, Vector3.Zero, naifId: id - 792, model: "fov515");
     }
 
     private static (Spacecraft spacecraft, Engine engine) Create(int naifId, StateVector orbit)
     {
-        var spacecraft = new Spacecraft(naifId, $"FOV{-naifId}", 1000.0, 3000.0, new Clock($"FOV{-naifId}_CLK", 65536), orbit);
-        var tank = new FuelTank("ft515", "model", "sn515", 1000.0, 1000.0);
+        var spacecraft = new Spacecraft(naifId, $"FOV{-naifId}", 1000.0, orbit, 3000.0, new Clock($"FOV{-naifId}_CLK", 65536));
+        var tank = new FuelTank("ft515", 1000.0, 1000.0, "model", "sn515");
         spacecraft.AddFuelTank(tank);
-        var engine = new Engine("eng515", "model", "sn515", 300.0, 10.0, tank);
+        var engine = new Engine("eng515", 300.0, 10.0, tank, "model", "sn515");
         spacecraft.AddEngine(engine);
         AddInstruments(spacecraft);
         return (spacecraft, engine);
@@ -129,8 +129,8 @@ public class FieldOfViewDynamicsTests
                 // raises the apogee; the impulse's attitude over its thrust and maneuver windows, then the TRIAD law (#539)
                 var orbit = new StateVector(leo.Position, new Vector3(0.0, 7600.0, 0.0), earth, Start, Frames.Frame.ICRF);
                 var (spacecraft, engine) = Create(-5172, orbit);
-                var impulse = new ApogeeHeightManeuver(earth, Start.AddSeconds(100.0), TimeSpan.Zero, 7200000.0, engine);
-                spacecraft.SetManeuvers(impulse, new TriadAttitude(Start.AddSeconds(100.0), TimeSpan.Zero, Spacecraft.Front, earth, Spacecraft.Up, sun, engine));
+                var impulse = new ApogeeHeightManeuver(7200000.0, engine, Start.AddSeconds(100.0), TimeSpan.Zero, earth);
+                spacecraft.SetManeuvers(impulse, new TriadAttitude(Spacecraft.Front, new CelestialAttitudeTarget(earth), Spacecraft.Up, new CelestialAttitudeTarget(sun), Start.AddSeconds(100.0), TimeSpan.Zero));
                 spacecraft.Propagate(propagation, new PropagationOptions { Integrator = new VVIntegratorOptions { Step = oneSecond }, OutputStep = oneSecond, ThirdBodies = bodies });
                 Assert.NotNull(impulse.ThrustWindow);
                 Assert.InRange((impulse.ThrustWindow.Value.StartDate - Start).TotalSeconds, 100.0, 2900.0);
@@ -139,7 +139,7 @@ public class FieldOfViewDynamicsTests
             case "Nadir":
             {
                 var (spacecraft, engine) = Create(-5173, leo);
-                spacecraft.SetManeuvers(new NadirAttitude(earth, new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB), TimeSpan.Zero, engine));
+                spacecraft.SetManeuvers(new NadirAttitude(new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB), TimeSpan.Zero, earth));
                 spacecraft.Propagate(propagation, new PropagationOptions { Integrator = new VVIntegratorOptions { Step = oneSecond }, OutputStep = oneSecond, ThirdBodies = bodies });
                 return (spacecraft, window);
             }
@@ -162,7 +162,7 @@ public class FieldOfViewDynamicsTests
             {
                 // The nadir attitude through Scenario.Simulate
                 var (spacecraft, engine) = Create(-5178, leo);
-                spacecraft.SetManeuvers(new NadirAttitude(earth, new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB), TimeSpan.Zero, engine));
+                spacecraft.SetManeuvers(new NadirAttitude(new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB), TimeSpan.Zero, earth));
                 var scenario = new IO.Astrodynamics.Mission.Scenario($"FovDyn{spacecraft.NaifId}", new IO.Astrodynamics.Mission.Mission($"fovdyn{spacecraft.NaifId}"), propagation);
                 scenario.AddCelestialItem(moon);
                 scenario.AddCelestialItem(earth);
@@ -176,7 +176,7 @@ public class FieldOfViewDynamicsTests
                 // Not propagated: the spacecraft reads SGP4 at each epoch, and its SPK holds the SGP4 states every 10 s
                 var tle = new TLE("ISS", "1 25544U 98067A   21020.53488036  .00016717  00000-0  10270-3 0  9054",
                     "2 25544  51.6423 353.0312 0000493 320.8755  39.2360 15.49309423 25703");
-                var spacecraft = new Spacecraft(-5177, "FOV5177", 1000.0, 3000.0, new Clock("FOV5177_CLK", 65536), tle);
+                var spacecraft = new Spacecraft(-5177, "FOV5177", 1000.0, tle, 3000.0, new Clock("FOV5177_CLK", 65536));
                 AddInstruments(spacecraft);
                 var tleStart = tle.Epoch.ToTDB();
                 // Its attitude, given by hand as the CK the test writes holds it: without one the search throws (#682)
@@ -189,7 +189,7 @@ public class FieldOfViewDynamicsTests
                 // reads its stored states, about 50 km from SGP4 at the end
                 var tle = new TLE("ISS", "1 25544U 98067A   21020.53488036  .00016717  00000-0  10270-3 0  9054",
                     "2 25544  51.6423 353.0312 0000493 320.8755  39.2360 15.49309423 25703");
-                var spacecraft = new Spacecraft(-5179, "FOV5179", 1000.0, 3000.0, new Clock("FOV5179_CLK", 65536), tle);
+                var spacecraft = new Spacecraft(-5179, "FOV5179", 1000.0, tle, 3000.0, new Clock("FOV5179_CLK", 65536));
                 AddInstruments(spacecraft);
                 var tleStart = tle.Epoch.ToTDB();
                 spacecraft.Propagate(new Window(tleStart, tleStart.AddSeconds(3000.0)), new PropagationOptions { Integrator = new RK78IntegratorOptions { AbsoluteTolerance = 1e-12, RelativeTolerance = 1e-12 }, OutputStep = oneSecond, ThirdBodies = new CelestialItem[] { moon, sun }, CovariancePropagation = CovariancePropagationOptions.None });

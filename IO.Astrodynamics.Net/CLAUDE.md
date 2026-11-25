@@ -298,7 +298,7 @@ opm.SaveToFile("output.opm", validateBeforeSave: true, wrapInNdm: true, indent: 
 **OPM ↔ Spacecraft Bidirectional Conversion**
 ```csharp
 // Spacecraft to OPM (for archiving/sharing)
-var spacecraft = new Spacecraft(-1000, "ISS", 420000.0, 500000.0, clock, stateVector,
+var spacecraft = new Spacecraft(-1000, "ISS", 420000.0, stateVector, 500000.0, clock,
     1600.0, 2.2, "1998-067A", 1.5);
 var opm = spacecraft.ToOpm(
     originator: "My Organization",
@@ -311,7 +311,7 @@ opm.SaveToFile("iss.opm");
 var restoredOpm = Opm.LoadFromFile("iss.opm");
 var restored = restoredOpm.ToSpacecraft(
     naifId: -1000,
-    maximumOperatingMass: 500000.0,
+    maxOperatingMass: 500000.0,
     clock: new Clock("OnboardClock", 256),
     observer: earth);  // Optional, defaults to the CENTER_NAME centre (an unknown one throws)
 ```
@@ -491,7 +491,7 @@ var earth = new CelestialBody(PlanetsAndMoons.EARTH, Frame.ICRF, epoch,
 // A propagation takes the models of the orbit's centre, and a listed body of its id with other models throws
 // (#674): the orbit is built on this earth
 var orbit = new StateVector(new Vector3(6800000.0, 0, 0), new Vector3(0, 7500.0, 0), earth, epoch, Frame.ICRF);
-var spacecraft = new Spacecraft(-1000, "Sat", 100.0, 10000.0, clock, orbit);
+var spacecraft = new Spacecraft(-1000, "Sat", 100.0, orbit, 10000.0, clock);
 
 // The propagator uses the geopotential model of the orbit's centre; the settings in one PropagationOptions value
 var propagator = new CentralBodyPropagator(window, spacecraft, new PropagationOptions
@@ -533,7 +533,7 @@ rejects a step of zero or less.
 
 **Solar Radiation Pressure (`SolarRadiationPressure`)**
 - Cannonball model: `F = (L_sun / 4*pi*c) * Cr * (A/m) * r_hat / r^2`
-- Includes **reflectivity coefficient Cr** from `Spacecraft.SolarRadiationCoeff` (range 1.0–2.0, default 1.0)
+- Includes **reflectivity coefficient Cr** from `Spacecraft.SolarRadiationCoeff` (typically 1.0 to 2.0; finite and not negative; default 1.0)
 - **Continuous shadow model**: uses `ShadowFraction` (two-circle overlap area) instead of binary eclipse check
   - Handles none, partial, annular, and total eclipse geometries
   - SRP is scaled by `(1 - maxShadowFraction)` across all occluding bodies
@@ -542,8 +542,8 @@ rejects a step of zero or less.
 
 ```csharp
 // SRP with Cr = 1.5
-var spacecraft = new Spacecraft(-1001, "Sat", 100.0, 10000.0, clock, orbit,
-    sectionalArea: 10.0, solarRadiationCoeff: 1.5);
+var spacecraft = new Spacecraft(-1001, "Sat", 100.0, orbit, 10000.0, clock,
+    sectionalArea: 10.0, solarRadiationCoefficient: 1.5);
 var srp = new SolarRadiationPressure(spacecraft, [earth]);
 ```
 
@@ -604,7 +604,7 @@ Industry-standard g-function zero-crossing approach for maneuver triggering and 
 
 **Key Types**
 - `IEventDetector`: `Evaluate(state)` → scalar, `Direction` → `CrossingDirection`, `HandleEvent()` → `EventResult`
-- `ManeuverEventDetector` (internal, decision 88 of #668: the propagation takes no user detector, and its public `HandleEvent` executed a maneuver outside a run): Wraps `ImpulseManeuver`, delegates to `ComputeEventValue()` through the internal `ComputeEventValueInRun`, where a `PlaneAlignmentManeuver` locks its node (the public `ComputeEventValue` is pure, decision 50 of #668); `HandleEvent` executes the impulse only and returns no next detector, the propagation advancing the chain (#539); its `MinimumEpoch` is the gate of the detector (#569, internal `IGatedEventDetector`): `VVIntegrator` and `RK78Integrator` evaluate the g-function at the gate in the step that holds it and fire at the first crossing at or after it (a zero at the gate counts there when the sign after it is the target sign); `Evaluate` keeps its +1 before the gate for a custom `IIntegrator`; internally, `EvaluateOpen` calls `ImpulseManeuver.ComputeEventValueAtSearchStart` (internal virtual, `ComputeEventValue` by default), which only `PlaneAlignmentManeuver` overrides: from the state at a minimum epoch inside a step it takes the node it moves toward, never one just passed, and so at a segment base whose gate is open there (#581; the detector of an event just handled starts from its g-value past that root); a g exactly zero at a step end after a non-zero one is a crossing there, a gated g exactly zero at the base with its gate at or before the base a crossing there when the first step end has the target sign (#580), and `IIntegrator.IntegrateSegment` reports the earliest crossing of a step, ties in list order (#578); the gate of a chained maneuver belongs to one propagation (#573): `Spacecraft.ChainStandbyManeuver` raises `Maneuver.PropagationGate`, cleared by `Maneuver.Reset` at each propagation, on every path (`PropagatorBase.Propagate` re-arms the spacecraft once its checks pass, #583); `Spacecraft.SetManeuvers(params Maneuver[])` sets the plan, the one way to link it, claiming each maneuver for its spacecraft, nothing added to `ExecutedManeuvers` (#584; decisions 45 to 47 of #668, `SetStandbyManeuver` and `SetNextManeuver` removed); `MinimumEpoch` is the later of the gate and the minimum epoch of the maneuver's constructor
+- `ManeuverEventDetector` (internal, decision 88 of #668: the propagation takes no user detector, and its public `HandleEvent` executed a maneuver outside a run): Wraps `ImpulseManeuver`, delegates to `ComputeEventValue()` through the internal `ComputeEventValueInRun`, where a `PlaneAlignmentManeuver` locks its node (the public `ComputeEventValue` is pure, decision 50 of #668); `HandleEvent` executes the impulse only and returns no next detector, the propagation advancing the chain (#539); its `MinEpoch` is the gate of the detector (#569, internal `IGatedEventDetector`): `VVIntegrator` and `RK78Integrator` evaluate the g-function at the gate in the step that holds it and fire at the first crossing at or after it (a zero at the gate counts there when the sign after it is the target sign); `Evaluate` keeps its +1 before the gate for a custom `IIntegrator`; internally, `EvaluateOpen` calls `ImpulseManeuver.ComputeEventValueAtSearchStart` (internal virtual, `ComputeEventValue` by default), which only `PlaneAlignmentManeuver` overrides: from the state at a minimum epoch inside a step it takes the node it moves toward, never one just passed, and so at a segment base whose gate is open there (#581; the detector of an event just handled starts from its g-value past that root); a g exactly zero at a step end after a non-zero one is a crossing there, a gated g exactly zero at the base with its gate at or before the base a crossing there when the first step end has the target sign (#580), and `IIntegrator.IntegrateSegment` reports the earliest crossing of a step, ties in list order (#578); the gate of a chained maneuver belongs to one propagation (#573): `Spacecraft.ChainStandbyManeuver` raises `Maneuver.PropagationGate`, cleared by `Maneuver.Reset` at each propagation, on every path (`PropagatorBase.Propagate` re-arms the spacecraft once its checks pass, #583); `Spacecraft.SetManeuvers(params Maneuver[])` sets the plan, the one way to link it, claiming each maneuver for its spacecraft, nothing added to `ExecutedManeuvers` (#584; decisions 45 to 47 of #668, `SetStandbyManeuver` and `SetNextManeuver` removed); `MinEpoch` is the later of the gate and the minimum epoch of the maneuver's constructor
 - `CrossingDirection` enum: `NegativeToPositive`, `PositiveToNegative`, `Any`
 - `EventResult`: Modified state, orientation, action (`StopAndRestart` or `Continue`), next detector
 
@@ -624,7 +624,8 @@ Each `ImpulseManeuver` implements:
 | ApsidalAlignmentManeuver | r·(ĥ×p̂) | neg→pos | Nearest intersection |
 
 **Maneuver Chain Processing**
-- Leading `Attitude` maneuvers are laid on the attitude timeline (not via event detection): each activates at the later of its `MinimumEpoch` and the end of the previous hold; the last hold gates the first impulse
+- The engine and the centre (decisions 48, 61, 63, 64 and 93 of #668, decided by S. Guillet, 2026-11-23; decision 99, 2026-11-24): `Engine` is on `ImpulseManeuver` (an attitude takes none, so a spacecraft without a tank runs a plan of attitudes); an impulse given no engine takes the only engine of the spacecraft, a maneuver given no centre the observer of the initial orbit when it is a celestial body other than a star; where the centre cannot be inferred (SSB mode) the library's `TriadAttitude` or `InstrumentPointingToAttitude` whose targets are all library `CelestialAttitudeTarget`s takes the central body of the run and any other law (impulses, orbital directions, a user `IAttitudeTarget`, a user `Attitude` subclass, one of `TriadAttitude` or `InstrumentPointingToAttitude` included) throws `InvalidOperationException` from the propagator constructor and `Propagate`, as an impulse given no engine on a spacecraft of none or several; the resolved values are written right after the re-arm (`Engine`, `ManeuverCenter`: the given ones before a run, the last run's after it), and every check before the write and every preview read the given ones (internal `GivenEngine`, `GivenCenter`)
+- Leading `Attitude` maneuvers are laid on the attitude timeline (not via event detection): each activates at the later of its `MinEpoch` and the end of the previous hold; the last hold gates the first impulse
 - First `ImpulseManeuver` is wrapped in `ManeuverEventDetector`
 - After impulse fires: `ManeuverEventDetector.HandleEvent` executes the impulse only; the propagation counts its windows in TT seconds about the Earth (#547), lays the attitudes chained after it on the timeline from the end of its maneuver window, and builds the detector of the next impulse, gated by the end of their holds
 - `Attitude.ComputeOrientation()` is `public` for continuous orientation recomputation at output epochs
@@ -640,7 +641,7 @@ The framework provides a family of attitude maneuvers for spacecraft orientation
 - `RetrogradeAttitude`: Anti-velocity pointing
 - `NormalAttitude`: Orbital normal pointing (h = r × v)
 - `AntiNormalAttitude`: Anti-normal pointing (−h)
-- `InstrumentPointingToAttitude`: Single-vector instrument pointing at a target, its direction corrected by `Aberration` (`Aberration.LT` by default, the target as the spacecraft sees it, as `spkcvo_c`; a `Star` without light time, as `Star.GetEphemeris`; `Aberration.None` geometric; #549)
+- `InstrumentPointingToAttitude`: Single-vector instrument pointing at an `IAttitudeTarget`, which carries its correction (decision 67 of #668: a `CelestialAttitudeTarget` geometric by default, `Aberration.LT` the target as the spacecraft sees it, as `spkcvo_c`; a `Star` without light time, as `Star.GetEphemeris`; #549), or an orbital direction; the attitude's own `Aberration`, `Aberration.LT` by default, removed in lot L5b
 - `TriadAttitude`: Two-vector fully-constrained attitude (eliminates roll ambiguity)
 
 **TRIAD Attitude Determination**
@@ -665,64 +666,78 @@ Default body axes (static fields, backward-compatible):
 - `BodyBack`, `BodyLeft`, `BodyDown` — computed inverses
 - Passed via optional constructor parameters: `bodyFront`, `bodyRight`, `bodyUp`
 - Validation enforces orthogonality and right-handedness when custom axes are provided; a zero axis, or one with a component that is not finite, throws `ArgumentException` naming `bodyFront`, `bodyRight` or `bodyUp` (#680, fourth round of #668)
-- The axes are read on the spacecraft of the engine's tank at execution, with the static axes as fallback while the tank is on no spacecraft (a read outside a propagation only: a propagation whose maneuver's tank is not the propagated spacecraft's throws, `Spacecraft.CheckManeuverEngines`, #676): the single-vector attitudes and the impulse attitude point `BodyFront` through `GetBodyFront()` (replaced by a protected `GetBodyAxis(BodyAxis)` in lot L5b, `Engine` moving to `ImpulseManeuver` there: decision 93 of #668, which splits decision 48), `TriadAttitude.CreateLVLH` points `BodyDown`/`BodyFront` and `CreateProgradeWithSunTracking` `BodyFront`/`BodyUp`, all through the one rule of `Maneuver.GetBodyAxis` (`private protected`, no public surface) (#677); the `TriadAttitude` constructors take literal body vectors (pass `spacecraft.BodyFront`, ... for the instance axes)
+- The axes are read at execution on the spacecraft whose plan last held the maneuver (`SetManeuvers`; the claim's release keeps them), with the static axes before any plan (a read outside a propagation only: a run propagates the plan's spacecraft) (decisions 46, 48, 69 and 93 of #668; the spacecraft of the engine's tank before lot L5b): the single-vector attitudes their `bodyAxis` (`BodyAxis.Front` by default) and the impulse attitude `BodyFront` through the protected `GetBodyAxis(BodyAxis)` (`enum BodyAxis` {Front, Back, Right, Left, Up, Down}; `GetBodyFront()` before 11.0.0), the `BodyAxis` constructor of `TriadAttitude` its two axes, `TriadAttitude.CreateLvlh` `BodyDown`/`BodyFront` and `CreateProgradeWithSunTracking` `BodyFront`/`BodyUp`, all through that one rule (#677, decision 69 of #668); the `Vector3` constructor of `TriadAttitude` takes literal body vectors
 
 ```csharp
 // Spacecraft with +X as front (e.g., matching a SPICE FK convention)
-var spacecraft = new Spacecraft(-1001, "Sat", 1000, 5000, clock, orbit,
+var spacecraft = new Spacecraft(-1001, "Sat", 1000, orbit, 5000, clock,
     bodyFront: Vector3.VectorX, bodyRight: Vector3.VectorY.Inverse(), bodyUp: Vector3.VectorZ);
 
 // The single-vector attitudes, the impulse attitude and the TRIAD factories use the instance axes
-var prograde = new ProgradeAttitude(earth, epoch, duration, engine);
+var prograde = new ProgradeAttitude(epoch, duration, earth);
 // → orients spacecraft.BodyFront (+X) along velocity vector
 ```
 
 **Constructor Options**
 
+Four constructors, all of `IAttitudeTarget` targets (orbital directions and celestial bodies alike, decision 69 of #668):
+
 1. **Single Instrument**: Uses instrument's boresight (primary) and refVector (secondary)
 ```csharp
 // Point camera boresight at Earth, constrain roll using camera refVector toward Sun
 var attitude = new TriadAttitude(
-    minimumEpoch, holdDuration,
-    camera, earth, sun,  // instrument, primaryTarget, secondaryTarget
-    engine);
+    camera,
+    new CelestialAttitudeTarget(earth),
+    new CelestialAttitudeTarget(sun),
+    minimumEpoch,
+    holdDuration);
 ```
 
 2. **Dual Instruments**: Different instruments for primary and secondary pointing
 ```csharp
 // Point nadir camera at Earth, star tracker at reference star
 var attitude = new TriadAttitude(
-    minimumEpoch, holdDuration,
-    nadirCamera, earth,
-    starTracker, referenceStar,
-    engine);
+    nadirCamera,
+    new CelestialAttitudeTarget(earth),
+    starTracker,
+    new CelestialAttitudeTarget(referenceStar),
+    minimumEpoch,
+    holdDuration);
 ```
 
-3. **Explicit Body Vectors**: Direct spacecraft frame vectors
+3. **Explicit Body Vectors**: Literal spacecraft frame vectors (`Spacecraft.Front`, ... are the static axes on any spacecraft)
 ```csharp
-// Point spacecraft Front at Moon, keep Up toward Sun
+// Point the static Front at Moon, keep the static Up toward Sun
 var attitude = new TriadAttitude(
-    minimumEpoch, holdDuration,
-    Spacecraft.Front, moon,
-    Spacecraft.Up, sun,
-    engine);
+    Spacecraft.Front,
+    new CelestialAttitudeTarget(moon),
+    Spacecraft.Up,
+    new CelestialAttitudeTarget(sun),
+    minimumEpoch,
+    holdDuration);
 ```
 
-4. **IAttitudeTarget (orbital directions and/or celestial bodies)**: Uses `IAttitudeTarget` interface for polymorphic targets
+4. **Body Axes**: `BodyAxis` values, resolved on the instance axes of the spacecraft whose plan holds the attitude at each read (the static axes before any plan)
 ```csharp
 // Point prograde with solar panels toward Sun
 var attitude = new TriadAttitude(
-    earth, epoch, duration,
-    Spacecraft.Front, OrbitalDirectionTarget.Prograde,
-    Spacecraft.Up, new CelestialAttitudeTarget(sun),
-    engine);
+    BodyAxis.Front,
+    OrbitalDirectionTarget.Prograde,
+    BodyAxis.Up,
+    new CelestialAttitudeTarget(sun),
+    epoch,
+    duration,
+    earth);
 
 // Full LVLH attitude (nadir pointing with prograde constraint)
 var lvlh = new TriadAttitude(
-    earth, epoch, duration,
-    Spacecraft.Down, OrbitalDirectionTarget.Nadir,
-    Spacecraft.Front, OrbitalDirectionTarget.Prograde,
-    engine);
+    BodyAxis.Down,
+    OrbitalDirectionTarget.Nadir,
+    BodyAxis.Front,
+    OrbitalDirectionTarget.Prograde,
+    epoch,
+    duration,
+    earth);
 ```
 
 **IAttitudeTarget System**
@@ -742,11 +757,11 @@ The `IAttitudeTarget` interface enables orbital directions and celestial bodies 
 
 Convenience factories for common operational attitudes:
 ```csharp
-// LVLH: BodyDown→Nadir, BodyFront→Prograde (the axes of the engine's spacecraft, #677)
-var lvlh = TriadAttitude.CreateLVLH(earth, epoch, duration, engine);
+// LVLH: BodyDown→Nadir, BodyFront→Prograde (the axes of the plan's spacecraft, #677)
+var lvlh = TriadAttitude.CreateLvlh(epoch, duration, earth);
 
 // Prograde with sun tracking: BodyFront→Prograde, BodyUp→Sun
-var sunTrack = TriadAttitude.CreateProgradeWithSunTracking(earth, epoch, duration, sun, engine);
+var sunTrack = TriadAttitude.CreateProgradeWithSunTracking(sun, epoch, duration, earth);
 ```
 
 **Use Case Examples**
@@ -756,26 +771,27 @@ var sunTrack = TriadAttitude.CreateProgradeWithSunTracking(earth, epoch, duratio
 // Keep nadir sensor pointed at Earth, the roll about nadir set by the Sun (Up, opposite to Down, would be
 // rejected: the body vectors must be at least 5 degrees apart)
 var earthObservation = new TriadAttitude(
-    epoch, TimeSpan.FromMinutes(30),
-    Spacecraft.Down, earth,    // Primary: nadir pointing
-    Spacecraft.Right, sun,     // Secondary: +X toward the Sun, as near as nadir pointing allows
-    engine);
+    Spacecraft.Down, new CelestialAttitudeTarget(earth),  // Primary: nadir pointing
+    Spacecraft.Right, new CelestialAttitudeTarget(sun),
+    epoch, TimeSpan.FromMinutes(30));
 ```
 
 *Instrument Pointing with Roll Constraint*
 ```csharp
 // Point telescope at target star, constrain roll using reference star
 var observation = new TriadAttitude(
-    epoch, TimeSpan.FromHours(2),
-    telescope, targetStar,
-    rollSensor, referenceStar,
-    engine);
+    telescope,
+    new CelestialAttitudeTarget(targetStar),
+    rollSensor,
+    new CelestialAttitudeTarget(referenceStar),
+    epoch,
+    TimeSpan.FromHours(2));
 ```
 
 *Plane-Change Attitude (Normal Pointing)*
 ```csharp
 // Orient for plane-change burn: front along orbital normal
-var normalAttitude = new NormalAttitude(earth, epoch, duration, engine);
+var normalAttitude = new NormalAttitude(epoch, duration, earth);
 ```
 
 **Instrument Enhancements**
@@ -788,7 +804,13 @@ Both methods transform the instrument-frame vectors to the spacecraft body frame
 An instrument is built with a finite, non-zero boresight and reference vector that are not parallel, a finite positive
 field of view, the fields CSPICE's `getfov` accepts, and finite Euler angles (#715); otherwise `AddCircularInstrument`, `AddEllipticalInstrument` and
 `AddRectangularInstrument` throw `ArgumentException` naming the parameter, and the last two
-`ArgumentOutOfRangeException` for a cross angle that is not a finite positive number (#707, #715).
+`ArgumentOutOfRangeException` for a cross angle that is not a finite positive number (#707, #715). The three methods
+return the instrument they add and take `(name, fieldOfView, [crossAngle,] boresight, refVector, orientation = default,
+naifId = null, model = null)`: the id by default the smallest free NaifId × 1000 − n, n in [1, 999]
+(`InvalidOperationException` when none is left), required on a kernel-backed spacecraft (`ArgumentNullException`), not
+another instrument's (`ArgumentException`), the name unique on its invariant upper-cased form (`ArgumentException`), all
+checked before the instrument is built; the constructor of `Instrument` is `private protected`, so they are the only
+way to build one (decisions 72 to 74 of #668).
 
 **Matrix Utility**
 
@@ -858,7 +880,7 @@ var deg2Rad = IO.Astrodynamics.Constants.Deg2Rad; // not Constants.Deg2Rad (that
    - A document with several OPM messages (#679), or an OPM with several segments, headers, bodies, metadata or data sections, or blocks of a data section, throws `OpmParseException` without `validateSchema`; with it (the default) the NDM/XML 4.0.0 schema, checked in the form of the document (a root `ndm` or `opm` without a namespace, every element unqualified as Space-Track and the writer write it, or every element below the root in the namespace; third round of #668), rejects the repeated elements first, `OpmValidationException`, but not several OPMs of an NDM; split it into one message per segment. An `ndm` without an OPM (empty, or of other messages only), which the NDM master accepts, is a schema error too, `OpmValidationException` where the reader's `OpmParseException` came before
    - A keyword whose value the data model refuses (out of its range, or an empty required string) throws `OpmParseException` naming the keyword and its value, with the data model's `ArgumentException` as inner exception, with or without `validateSchema` for a value the schema accepts (the library's rules beyond the schema, #708, decided by S. Guillet, 2026-11-16; fourth round of #668; before, the `ArgumentException` crossed the reader); the data-model constructors keep their `ArgumentException`
    - Use `Spacecraft.ToOpm()` for archiving spacecraft state with maneuvers
-   - Use `Opm.ToSpacecraft()` to restore spacecraft (requires naifId, clock, maxMass)
+   - Use `Opm.ToSpacecraft()` to restore spacecraft (requires naifId; `maxOperatingMass` and `clock` optional, a MASS above the maximum throwing, decision 77 of #668)
    - Use `Opm.ToStateVector()` for simple state vector extraction
    - Unit conversions (km↔m, deg↔rad) are automatic
    - Maneuver conversion is one-way: Spacecraft→OPM (OPM maneuvers are archival only)
@@ -868,12 +890,12 @@ var deg2Rad = IO.Astrodynamics.Constants.Deg2Rad; // not Constants.Deg2Rad (that
    - Use `TriadAttitude` for fully-constrained orientation (eliminates roll ambiguity)
    - Use single-vector attitudes (`NadirAttitude`, `ProgradeAttitude`, `NormalAttitude`, etc.) only when roll is unconstrained
    - Use `NormalAttitude` / `AntiNormalAttitude` for plane-change burns (h = r × v)
-   - Ensure body vectors and reference vectors are not collinear (`MinimumVectorSeparation`, 5 degrees by default, in [1e-14, π/2] rad)
+   - Ensure body vectors and reference vectors are not collinear (`MinVectorSeparation`, 5 degrees by default, in [1e-14, π/2] rad)
    - Use `Spacecraft.Front`, `Spacecraft.Up`, etc. for standard body frame directions; use instance `BodyFront`, `BodyRight`, `BodyUp` for non-standard frames
    - Custom body axes must be finite, non-zero, orthogonal and right-handed (`BodyRight.Cross(BodyFront) == BodyUp`)
-   - The single-vector attitudes and the impulse attitude use `GetBodyFront()`, the TRIAD factories `BodyDown`/`BodyFront` and `BodyFront`/`BodyUp`, all on the engine's spacecraft with static fallback outside a propagation (in one, the tank is the propagated spacecraft's, #676); the `TriadAttitude` constructors take literal vectors
+   - The single-vector attitudes use `GetBodyAxis(bodyAxis)` (`BodyAxis.Front` by default), the impulse attitude `GetBodyAxis(BodyAxis.Front)`, the TRIAD factories `BodyDown`/`BodyFront` and `BodyFront`/`BodyUp`, and the `BodyAxis` constructor of `TriadAttitude` its two axes, all on the spacecraft of the plan that last held the maneuver, with the static axes before any plan (decisions 46 and 69 of #668); the `Vector3` constructor of `TriadAttitude` takes literal vectors
    - Use `IAttitudeTarget` with `TriadAttitude` to mix orbital directions (`OrbitalDirectionTarget.Prograde`, etc.) and celestial targets (`CelestialAttitudeTarget`)
-   - Use factory methods `TriadAttitude.CreateLVLH()` and `CreateProgradeWithSunTracking()` for common operational attitudes (on the spacecraft's instance axes)
+   - Use factory methods `TriadAttitude.CreateLvlh()` and `CreateProgradeWithSunTracking()` for common operational attitudes (on the spacecraft's instance axes)
    - Use `Instrument.GetBoresightInSpacecraftFrame()` and `GetRefVectorInSpacecraftFrame()` for instrument-based pointing
 11. **Geopotential Gravity**: When working with spherical harmonic gravity models:
    - Pass `GeopotentialModelParameters` to `CelestialBody` constructor to enable geopotential
@@ -889,7 +911,7 @@ var deg2Rad = IO.Astrodynamics.Constants.Deg2Rad; // not Constants.Deg2Rad (that
    - Default drag coefficient (Cd) is **2.2** (free-molecular flow for satellites), not 0.3
    - Drag reads the central body's atmosphere: an Earth without a model takes NRLMSISE-00 at nominal space weather; another central body needs a model (#674)
    - Atmospheric drag uses **atmosphere-relative velocity** (body-centered velocity minus co-rotation)
-   - SRP includes **Cr coefficient** from `Spacecraft.SolarRadiationCoeff` (default 1.0, range 1.0–2.0)
+   - SRP includes **Cr coefficient** from `Spacecraft.SolarRadiationCoeff` (default 1.0; typically 1.0 to 2.0, finite and not negative)
    - SRP uses **continuous shadow fraction** (partial/annular eclipses reduce SRP proportionally)
    - Both forces use **dynamic mass** via `GetTotalMass()` (accounts for fuel consumption during propagation)
    - Use `CelestialItem.ShadowFraction()` for eclipse geometry calculations

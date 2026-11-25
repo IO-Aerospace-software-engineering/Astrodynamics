@@ -45,8 +45,8 @@ public class VelocityScenario
         _geopotential = new CelestialBody(PlanetsAndMoons.EARTH, Frame.ICRF, TimeSystem.Time.J2000TDB,
             new GeopotentialModelParameters("Data/SolarSystem/EGM2008_to70_TideFree", 70));
         Clock clk = new Clock("My clock", 256);
-        Spacecraft spc = new Spacecraft(-1001, "MySpacecraft", 100.0, 10000.0, clk,
-            new StateVector(new Vector3(6800000.0, 0.0, 0.0), new Vector3(0.0, 7656.2204182967143, 0.0), _earth, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF));
+        Spacecraft spc = new Spacecraft(-1001, "MySpacecraft", 100.0, new StateVector(new Vector3(6800000.0, 0.0, 0.0), new Vector3(0.0, 7656.2204182967143, 0.0), _earth, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF), 10000.0,
+            clk);
         // _srp = new SolarRadiationPressure(spc, [_earth]);
         // _atm = new AtmosphericDrag(spc, _earth);
         // List<ForceBase> forces = new List<ForceBase>();

@@ -15,8 +15,8 @@ var earth = new CelestialBody(PlanetsAndMoons.EARTH,
     albedo: 0.306, thermalEffectiveTemperature: 254.0, thermalEmissivity: 0.95);
 
 // The orbit about this Earth: the central body carries the models and the coefficients
-var spacecraft = new Spacecraft(-1001, "HiFiSat", 100.0, 10000.0, new Clock("HiFiClock", 65536),
-    new StateVector(orbit.Position, orbit.Velocity, earth, orbit.Epoch, orbit.Frame));
+var spacecraft = new Spacecraft(-1001, "HiFiSat", 100.0, new StateVector(orbit.Position, orbit.Velocity, earth, orbit.Epoch, orbit.Frame), 10000.0,
+    new Clock("HiFiClock", 65536));
 
 // The adaptive integrator and every perturbation
 var options = new PropagationOptions

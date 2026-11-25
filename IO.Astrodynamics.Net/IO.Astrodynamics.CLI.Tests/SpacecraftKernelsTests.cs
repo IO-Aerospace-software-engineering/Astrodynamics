@@ -65,12 +65,12 @@ public class SpacecraftKernelsTests
         var sun = new CelestialBody(10);
         var moon = new CelestialBody(301);
         var orbit = new KeplerianElements(6778137.0, 0.001, 51.6 * Constants.Deg2Rad, 0.3, 0.5, 0.0, earth, Start, Frame.ICRF);
-        var spacecraft = new Spacecraft(SpacecraftId, SpacecraftName, 1000.0, 3000.0, new Clock(SpacecraftName + "_CLK", 65536), orbit);
-        var tank = new FuelTank("ft", "model", "sn", 1000.0, 1000.0);
+        var spacecraft = new Spacecraft(SpacecraftId, SpacecraftName, 1000.0, orbit, 3000.0, new Clock(SpacecraftName + "_CLK", 65536));
+        var tank = new FuelTank("ft", 1000.0, 1000.0, "model", "sn");
         spacecraft.AddFuelTank(tank);
-        var engine = new Engine("eng", "model", "sn", 300.0, 10.0, tank);
+        var engine = new Engine("eng", 300.0, 10.0, tank, "model", "sn");
         spacecraft.AddEngine(engine);
-        spacecraft.SetManeuvers(new NadirAttitude(earth, new Time(DateTime.MinValue, TimeScale.TDB), TimeSpan.Zero, engine));
+        spacecraft.SetManeuvers(new NadirAttitude(new Time(DateTime.MinValue, TimeScale.TDB), TimeSpan.Zero, earth));
         spacecraft.Propagate(new Window(Start, End), new PropagationOptions
         {
             Integrator = new VVIntegratorOptions { Step = TimeSpan.FromSeconds(10.0) },

@@ -426,8 +426,8 @@ public class AvoidanceCovarianceTests : IClassFixture<ConjunctionCovarianceCase>
     private static Spacecraft WithEngine(int naifId, StateVector start, out Engine engine)
     {
         var spacecraft = ReferenceCase.NewSpacecraft(naifId, start);
-        var tank = new FuelTank("tank" + -naifId, "model", "sn1", 100.0, 100.0);
-        engine = new Engine("engine" + -naifId, "model", "sn1", 300.0, 10.0, tank);
+        var tank = new FuelTank("tank" + -naifId, 100.0, 100.0, "model", "sn1");
+        engine = new Engine("engine" + -naifId, 300.0, 10.0, tank, "model", "sn1");
         spacecraft.AddFuelTank(tank);
         spacecraft.AddEngine(engine);
         return spacecraft;

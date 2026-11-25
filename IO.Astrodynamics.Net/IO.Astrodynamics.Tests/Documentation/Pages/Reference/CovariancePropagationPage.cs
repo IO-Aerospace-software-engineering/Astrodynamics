@@ -88,7 +88,7 @@ internal static class CovariancePropagationPage
     {
         #region docs/reference/covariance-propagation.md:2
         // Inputs: earth (CelestialBody), epoch (Time), engine (Engine)
-        var maneuver = new ApogeeHeightManeuver(earth, epoch, TimeSpan.Zero, 7000000.0, engine)
+        var maneuver = new ApogeeHeightManeuver(7000000.0, engine, epoch, TimeSpan.Zero, earth)
         {
             ExecutionError = new ManeuverExecutionError
             {
@@ -107,7 +107,7 @@ internal static class CovariancePropagationPage
         if (remediation.Remediated)
             Console.WriteLine($"Smallest eigenvalue of the correlation matrix: {remediation.SmallestCorrelationEigenvalue:E3}");
 
-        var spacecraft = new Spacecraft(-1001, "SAT", 100.0, 1000.0, clock, remediation.State);
+        var spacecraft = new Spacecraft(-1001, "SAT", 100.0, remediation.State, 1000.0, clock);
         var solution = spacecraft.Propagate(window, new PropagationOptions
         {
             ThirdBodies = bodies,

@@ -65,13 +65,14 @@ internal static class SpacecraftPage
     {
         #region docs/reference/spacecraft.md:1
         // Inputs: orbit (StateVector)
-        var spacecraft = new Spacecraft(
-            naifId: -1001, name: "MySat",
-            mass: 500.0, maximumOperatingMass: 2000.0,
-            clock: new Clock("OnboardClk", 256),
-            initialOrbitalParameters: orbit,
-            sectionalArea: 10.0, dragCoeff: 2.2,
-            cosparId: "2024-001A", solarRadiationCoeff: 1.5);
+        // The NAIF id, the name, the dry mass (kg) and the initial orbit; everything else is optional
+        var spacecraft = new Spacecraft(-1001, "MySat", 500.0, orbit);
+
+        // The optional values, by name
+        var detailed = new Spacecraft(-1002, "MySat2", 500.0, orbit,
+            maxOperatingMass: 2000.0, clock: new Clock("OnboardClk", 256),
+            sectionalArea: 10.0, dragCoefficient: 2.2,
+            cosparId: "2024-001A", solarRadiationCoefficient: 1.5);
         #endregion
     }
 
@@ -89,8 +90,8 @@ internal static class SpacecraftPage
     {
         #region docs/reference/spacecraft.md:3
         // Inputs: tank (FuelTank)
-        var engine = new Engine("MainEngine", "RS-25", "SN001",
-            isp: 366.0, fuelFlow: 0.5, fuelTank: tank);
+        var engine = new Engine("MainEngine", isp: 366.0, fuelFlow: 0.5, fuelTank: tank,
+            model: "RS-25", serialNumber: "SN001");
         #endregion
     }
 
@@ -98,8 +99,8 @@ internal static class SpacecraftPage
     internal static void Block04()
     {
         #region docs/reference/spacecraft.md:4
-        var tank = new FuelTank("MainTank", "FT-100", "SN001",
-            capacity: 1000.0, initialQuantity: 800.0);
+        var tank = new FuelTank("MainTank", capacity: 1000.0, initialQuantity: 800.0,
+            model: "FT-100", serialNumber: "SN001");
         #endregion
     }
 

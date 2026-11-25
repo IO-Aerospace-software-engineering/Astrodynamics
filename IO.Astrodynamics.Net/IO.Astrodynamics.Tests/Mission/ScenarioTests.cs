@@ -142,26 +142,31 @@ namespace IO.Astrodynamics.Tests.Mission
 
             //Create and configure spacecraft
             Clock clock = new Clock("clk1", 65536);
-            Spacecraft spacecraft = new Spacecraft(-1783, "DRAGONFLY3", 1000.0, 10000.0, clock, parkingOrbit);
+            Spacecraft spacecraft = new Spacecraft(-1783, "DRAGONFLY3", 1000.0, parkingOrbit, 10000.0, clock);
 
-            FuelTank fuelTank = new FuelTank("ft1", "model1", "sn1", 9000.0, 9000.0);
-            Engine engine = new Engine("engine1", "model1", "sn1", 450.0, 50.0, fuelTank);
+            FuelTank fuelTank = new FuelTank("ft1", 9000.0, 9000.0, "model1", "sn1");
+            Engine engine = new Engine("engine1", 450.0, 50.0, fuelTank, "model1", "sn1");
             spacecraft.AddFuelTank(fuelTank);
             spacecraft.AddEngine(engine);
             spacecraft.AddPayload(new Payload("payload1", 50.0, "pay01"));
-            spacecraft.AddCircularInstrument(-1783601, "CAM601", "mod1", 80.0 * IO.Astrodynamics.Constants.Deg2Rad, Vector3.VectorZ, Vector3.VectorX, Vector3.VectorX);
+            spacecraft.AddCircularInstrument("CAM601", 80.0 * IO.Astrodynamics.Constants.Deg2Rad, Vector3.VectorZ, Vector3.VectorX, Vector3.VectorX, naifId: -1783601, model: "mod1");
 
             var planeAlignmentManeuver =
-                new PlaneAlignmentManeuver(new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB), TimeSpan.Zero, targetOrbit, spacecraft.Engines.First());
+                new PlaneAlignmentManeuver(targetOrbit, spacecraft.Engines.First(), new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB), TimeSpan.Zero);
             spacecraft.SetManeuvers(planeAlignmentManeuver,
-                new ApsidalAlignmentManeuver(new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB), TimeSpan.Zero, targetOrbit,
-                    spacecraft.Engines.First()),
-                new PhasingManeuver(new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB), targetOrbit, 1, spacecraft.Engines.First()),
-                new ApogeeHeightManeuver(TestHelpers.EarthAtJ2000, new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB), TimeSpan.Zero, 15866666.666666666,
-                    spacecraft.Engines.First()),
-                new ZenithAttitude(TestHelpers.EarthAtJ2000, new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB), TimeSpan.FromMinutes(1), engine),
-                new RetrogradeAttitude(TestHelpers.EarthAtJ2000, new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB), TimeSpan.FromMinutes(1), engine),
-                new ProgradeAttitude(TestHelpers.EarthAtJ2000, new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB), TimeSpan.FromMinutes(1), engine));
+                new ApsidalAlignmentManeuver(targetOrbit,
+                    spacecraft.Engines.First(),
+                    new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB),
+                    TimeSpan.Zero),
+                new PhasingManeuver(targetOrbit, 1, spacecraft.Engines.First(), new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB)),
+                new ApogeeHeightManeuver(15866666.666666666,
+                    spacecraft.Engines.First(),
+                    new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB),
+                    TimeSpan.Zero,
+                    TestHelpers.EarthAtJ2000),
+                new ZenithAttitude(new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB), TimeSpan.FromMinutes(1), TestHelpers.EarthAtJ2000),
+                new RetrogradeAttitude(new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB), TimeSpan.FromMinutes(1), TestHelpers.EarthAtJ2000),
+                new ProgradeAttitude(new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB), TimeSpan.FromMinutes(1), TestHelpers.EarthAtJ2000));
 
             scenario.AddSpacecraft(spacecraft);
 
@@ -246,14 +251,14 @@ namespace IO.Astrodynamics.Tests.Mission
 
             //Create and configure spacecraft
             Clock clock = new Clock("clk1", 65536);
-            Spacecraft spacecraft = new Spacecraft(-1783, "DRAGONFLY3", 1000.0, 10000.0, clock, parkingOrbit);
+            Spacecraft spacecraft = new Spacecraft(-1783, "DRAGONFLY3", 1000.0, parkingOrbit, 10000.0, clock);
 
-            FuelTank fuelTank = new FuelTank("ft1", "model1", "sn1", 9000.0, 9000.0);
-            Engine engine = new Engine("engine1", "model1", "sn1", 450.0, 50.0, fuelTank);
+            FuelTank fuelTank = new FuelTank("ft1", 9000.0, 9000.0, "model1", "sn1");
+            Engine engine = new Engine("engine1", 450.0, 50.0, fuelTank, "model1", "sn1");
             spacecraft.AddFuelTank(fuelTank);
             spacecraft.AddEngine(engine);
 
-            var progradeAttitude = new ProgradeAttitude(TestHelpers.EarthAtJ2000, new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB), TimeSpan.Zero, engine);
+            var progradeAttitude = new ProgradeAttitude(new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB), TimeSpan.Zero, TestHelpers.EarthAtJ2000);
             spacecraft.SetManeuvers(progradeAttitude);
 
             scenario.AddSpacecraft(spacecraft);
@@ -298,7 +303,7 @@ namespace IO.Astrodynamics.Tests.Mission
 
             //Create and configure spacecraft
             Clock clock = new Clock("clk1", 65536);
-            Spacecraft spacecraft = new Spacecraft(-1787, "DRAGONFLY7", 1000.0, 10000.0, clock, parkingOrbit);
+            Spacecraft spacecraft = new Spacecraft(-1787, "DRAGONFLY7", 1000.0, parkingOrbit, 10000.0, clock);
 
             scenario.AddSpacecraft(spacecraft);
 
@@ -358,26 +363,31 @@ namespace IO.Astrodynamics.Tests.Mission
 
             //Create and configure spacecraft
             Clock clock = new Clock("clk1", 65536);
-            Spacecraft spacecraft = new Spacecraft(-1783, "DRAGONFLY31", 1000.0, 10000.0, clock, parkingOrbit);
+            Spacecraft spacecraft = new Spacecraft(-1783, "DRAGONFLY31", 1000.0, parkingOrbit, 10000.0, clock);
 
-            FuelTank fuelTank = new FuelTank("ft1", "model1", "sn1", 9000.0, 9000.0);
-            Engine engine = new Engine("engine1", "model1", "sn1", 450.0, 50.0, fuelTank);
+            FuelTank fuelTank = new FuelTank("ft1", 9000.0, 9000.0, "model1", "sn1");
+            Engine engine = new Engine("engine1", 450.0, 50.0, fuelTank, "model1", "sn1");
             spacecraft.AddFuelTank(fuelTank);
             spacecraft.AddEngine(engine);
             spacecraft.AddPayload(new Payload("payload1", 50.0, "pay01"));
-            spacecraft.AddCircularInstrument(-1783601, "CAM601", "mod1", 80.0 * IO.Astrodynamics.Constants.Deg2Rad, Vector3.VectorZ, Vector3.VectorX, Vector3.VectorX);
+            spacecraft.AddCircularInstrument("CAM601", 80.0 * IO.Astrodynamics.Constants.Deg2Rad, Vector3.VectorZ, Vector3.VectorX, Vector3.VectorX, naifId: -1783601, model: "mod1");
 
             var planeAlignmentManeuver =
-                new PlaneAlignmentManeuver(new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB), TimeSpan.Zero, targetOrbit, spacecraft.Engines.First());
+                new PlaneAlignmentManeuver(targetOrbit, spacecraft.Engines.First(), new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB), TimeSpan.Zero);
             spacecraft.SetManeuvers(planeAlignmentManeuver,
-                new ApsidalAlignmentManeuver(new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB), TimeSpan.Zero, targetOrbit,
-                    spacecraft.Engines.First()),
-                new PhasingManeuver(new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB), targetOrbit, 1, spacecraft.Engines.First()),
-                new ApogeeHeightManeuver(TestHelpers.EarthAtJ2000, new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB), TimeSpan.Zero, 15866666.666666666,
-                    spacecraft.Engines.First()),
-                new ZenithAttitude(TestHelpers.EarthAtJ2000, new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB), TimeSpan.FromMinutes(1), engine),
-                new RetrogradeAttitude(TestHelpers.EarthAtJ2000, new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB), TimeSpan.FromMinutes(1), engine),
-                new ProgradeAttitude(TestHelpers.EarthAtJ2000, new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB), TimeSpan.FromMinutes(1), engine));
+                new ApsidalAlignmentManeuver(targetOrbit,
+                    spacecraft.Engines.First(),
+                    new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB),
+                    TimeSpan.Zero),
+                new PhasingManeuver(targetOrbit, 1, spacecraft.Engines.First(), new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB)),
+                new ApogeeHeightManeuver(15866666.666666666,
+                    spacecraft.Engines.First(),
+                    new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB),
+                    TimeSpan.Zero,
+                    TestHelpers.EarthAtJ2000),
+                new ZenithAttitude(new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB), TimeSpan.FromMinutes(1), TestHelpers.EarthAtJ2000),
+                new RetrogradeAttitude(new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB), TimeSpan.FromMinutes(1), TestHelpers.EarthAtJ2000),
+                new ProgradeAttitude(new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB), TimeSpan.FromMinutes(1), TestHelpers.EarthAtJ2000));
 
             scenario.AddSpacecraft(spacecraft);
 
@@ -516,14 +526,14 @@ namespace IO.Astrodynamics.Tests.Mission
 
             //Create and configure spacecraft
             Clock clock = new Clock("clk1", 65536);
-            Spacecraft spacecraft = new Spacecraft(-1785, "DRAGONFLY32", 1000.0, 10000.0, clock, parkingOrbit);
+            Spacecraft spacecraft = new Spacecraft(-1785, "DRAGONFLY32", 1000.0, parkingOrbit, 10000.0, clock);
 
-            FuelTank fuelTank = new FuelTank("ft1", "model1", "sn1", 9000.0, 9000.0);
-            Engine engine = new Engine("engine1", "model1", "sn1", 450.0, 50.0, fuelTank);
+            FuelTank fuelTank = new FuelTank("ft1", 9000.0, 9000.0, "model1", "sn1");
+            Engine engine = new Engine("engine1", 450.0, 50.0, fuelTank, "model1", "sn1");
             spacecraft.AddFuelTank(fuelTank);
             spacecraft.AddEngine(engine);
             spacecraft.AddPayload(new Payload("payload1", 50.0, "pay01"));
-            spacecraft.AddCircularInstrument(-1785601, "CAM601", "mod1", 80.0 * IO.Astrodynamics.Constants.Deg2Rad, Vector3.VectorZ, Vector3.VectorX, Vector3.VectorX);
+            spacecraft.AddCircularInstrument("CAM601", 80.0 * IO.Astrodynamics.Constants.Deg2Rad, Vector3.VectorZ, Vector3.VectorX, Vector3.VectorX, naifId: -1785601, model: "mod1");
 
             scenario.AddSpacecraft(spacecraft);
             var summary = scenario.Simulate(new PropagationOptions { Integrator = new VVIntegratorOptions { Step = TimeSpan.FromSeconds(1.0) }, OutputStep = TimeSpan.FromSeconds(1.0) });
@@ -731,7 +741,7 @@ namespace IO.Astrodynamics.Tests.Mission
         {
             var orbit = new StateVector(new Vector3(6800000.0, 0.0, 0.0), new Vector3(0.0, 5420.0, 5420.0),
                 TestHelpers.EarthAtJ2000, epoch, Frames.Frame.ICRF);
-            return new Spacecraft(naifId, name, 1000.0, 10000.0, new Clock("clk" + name, 65536), orbit);
+            return new Spacecraft(naifId, name, 1000.0, orbit, 10000.0, new Clock("clk" + name, 65536));
         }
 
         private static void AssertSameEphemeris(Spacecraft expected, Spacecraft actual, Window window)
@@ -761,10 +771,10 @@ namespace IO.Astrodynamics.Tests.Mission
                 Frames.Frame.ICRF);
             var target = new KeplerianElements(7000000.0, 0.0, 32.0 * Astrodynamics.Constants.Deg2Rad, 0.0, 0.0, 1.0, earth, window.StartDate,
                 Frames.Frame.ICRF).ToFrame(Frames.Frame.ECLIPTIC_J2000);
-            var tank = new FuelTank("ft685", "ftA", "sn685", 1000.0, 900.0);
-            var engine = new Engine("eng685", "engmk1", "sn685", 450, 50, tank);
-            var maneuver = new PlaneAlignmentManeuver(window.StartDate, TimeSpan.Zero, target, engine);
-            var spacecraft = new Spacecraft(-6855, "Scenario685", 1000.0, 3000.0, new Clock("clk685", 65536), orbit);
+            var tank = new FuelTank("ft685", 1000.0, 900.0, "ftA", "sn685");
+            var engine = new Engine("eng685", 450, 50, tank, "engmk1", "sn685");
+            var maneuver = new PlaneAlignmentManeuver(target, engine, window.StartDate, TimeSpan.Zero);
+            var spacecraft = new Spacecraft(-6855, "Scenario685", 1000.0, orbit, 3000.0, new Clock("clk685", 65536));
             spacecraft.AddFuelTank(tank);
             spacecraft.AddEngine(engine);
             // SetManeuvers refuses it, where the call receives the maneuver (decision 46 of #668)
@@ -816,7 +826,7 @@ namespace IO.Astrodynamics.Tests.Mission
             var ssb = Barycenters.SOLAR_SYSTEM_BARYCENTER;
             StateVector testOrbit = moon.GetEphemeris(start, new CelestialBody(399), frame, Aberration.None).RelativeTo(ssb, Aberration.None).ToStateVector();
             Clock clk = new Clock("My clock", 256);
-            Spacecraft spc = new Spacecraft(-1001, "MySpacecraft", 100.0, 10000.0, clk, testOrbit, 0.5);
+            Spacecraft spc = new Spacecraft(-1001, "MySpacecraft", 100.0, testOrbit, 10000.0, clk, 0.5);
             scenario.AddSpacecraft(spc);
             scenario.AddCelestialItem(new CelestialBody(10));
             scenario.AddCelestialItem(new CelestialBody(399));
@@ -867,7 +877,7 @@ namespace IO.Astrodynamics.Tests.Mission
                 var ssb = Barycenters.SOLAR_SYSTEM_BARYCENTER;
                 StateVector testOrbit = moon.GetEphemeris(start, new CelestialBody(399), frame, Aberration.None).RelativeTo(ssb, Aberration.None).ToStateVector();
                 Clock clk = new Clock("My clock", 256);
-                Spacecraft spc = new Spacecraft(-1001, "MySpacecraft", 100.0, 10000.0, clk, testOrbit, 0.5);
+                Spacecraft spc = new Spacecraft(-1001, "MySpacecraft", 100.0, testOrbit, 10000.0, clk, 0.5);
                 scenario.AddSpacecraft(spc);
                 scenario.AddCelestialItem(new CelestialBody(10));
                 scenario.AddCelestialItem(new CelestialBody(399));
@@ -948,7 +958,7 @@ namespace IO.Astrodynamics.Tests.Mission
                 var ssb = Barycenters.SOLAR_SYSTEM_BARYCENTER;
                 StateVector testOrbit = moon.GetEphemeris(start, new CelestialBody(399), frame, Aberration.None).RelativeTo(ssb, Aberration.None).ToStateVector();
                 Clock clk = new Clock("My clock", 256);
-                Spacecraft spc = new Spacecraft(-1001, "MySpacecraft", 100.0, 10000.0, clk, testOrbit, 0.5);
+                Spacecraft spc = new Spacecraft(-1001, "MySpacecraft", 100.0, testOrbit, 10000.0, clk, 0.5);
                 scenario.AddSpacecraft(spc);
                 scenario.AddCelestialItem(new CelestialBody(10));
                 scenario.AddCelestialItem(new CelestialBody(399));
@@ -1025,7 +1035,7 @@ namespace IO.Astrodynamics.Tests.Mission
 
                 //-----------Scenario 10 s-----------------------------------
                 Scenario scenario10s = new Scenario($"scn{stepSize}", mission, new Window(start, end));
-                Spacecraft spc10s = new Spacecraft(-1002 - stepSize, $"Spc{stepSize}", 100.0, 10000.0, clk, testOrbit, 0.5);
+                Spacecraft spc10s = new Spacecraft(-1002 - stepSize, $"Spc{stepSize}", 100.0, testOrbit, 10000.0, clk, 0.5);
                 scenario10s.AddSpacecraft(spc10s);
                 scenario10s.AddCelestialItem(earth);
                 scenario10s.AddCelestialItem(new CelestialBody(10));

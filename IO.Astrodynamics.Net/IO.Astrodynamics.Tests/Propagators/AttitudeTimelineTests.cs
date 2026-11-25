@@ -312,7 +312,7 @@ public class AttitudeTimelineTests
 
             var (spacecraft, chain, kinds, hours) = Build(naifId, letter, orbit, center);
             before?.Invoke(spacecraft, chain);
-            var given = chain.Select(x => x.MinimumEpoch).ToArray();
+            var given = chain.Select(x => x.MinEpoch).ToArray();
             var window = new Window(S, S.AddSeconds(hours * 3600.0));
             var step = TimeSpan.FromSeconds(output);
             IntegratorOptions NewIntegrator() => integrator switch
@@ -443,20 +443,20 @@ public class AttitudeTimelineTests
     internal static (Spacecraft, Maneuver.Maneuver[], Dictionary<Maneuver.Maneuver, string>, double Hours) Build(int naifId, string letter, OrbitalParams orbit,
         CelestialBody center)
     {
-        var spacecraft = new Spacecraft(naifId, $"TL{-naifId}", 1000.0, 3000.0, new Clock($"TL{-naifId}_CLK", 65536), orbit, cosparId: "2024-001A");
-        var tank = new FuelTank("ft", "model", "sn", 1000.0, 1000.0);
+        var spacecraft = new Spacecraft(naifId, $"TL{-naifId}", 1000.0, orbit, 3000.0, new Clock($"TL{-naifId}_CLK", 65536), cosparId: "2024-001A");
+        var tank = new FuelTank("ft", 1000.0, 1000.0, "model", "sn");
         spacecraft.AddFuelTank(tank);
-        var engine = new Engine("eng", "model", "sn", 300.0, 10.0, tank);
+        var engine = new Engine("eng", 300.0, 10.0, tank, "model", "sn");
         spacecraft.AddEngine(engine);
         bool moon = center.NaifId == PlanetsAndMoons.MOON.NaifId;
         var kinds = new Dictionary<Maneuver.Maneuver, string>();
 
-        Maneuver.Maneuver Nadir(double hold, double? minimum = null) => Kind(new NadirAttitude(center, minimum.HasValue ? S.AddSeconds(minimum.Value) : Min, TimeSpan.FromSeconds(hold), engine), "nadir");
-        Maneuver.Maneuver Prograde(double hold, double? minimum = null) => Kind(new ProgradeAttitude(center, minimum.HasValue ? S.AddSeconds(minimum.Value) : Min, TimeSpan.FromSeconds(hold), engine), "prograde");
-        Maneuver.Maneuver Lvlh(double hold) => Kind(TriadAttitude.CreateLVLH(center, Min, TimeSpan.FromSeconds(hold), engine), "lvlh");
+        Maneuver.Maneuver Nadir(double hold, double? minimum = null) => Kind(new NadirAttitude(minimum.HasValue ? S.AddSeconds(minimum.Value) : Min, TimeSpan.FromSeconds(hold), center), "nadir");
+        Maneuver.Maneuver Prograde(double hold, double? minimum = null) => Kind(new ProgradeAttitude(minimum.HasValue ? S.AddSeconds(minimum.Value) : Min, TimeSpan.FromSeconds(hold), center), "prograde");
+        Maneuver.Maneuver Lvlh(double hold) => Kind(TriadAttitude.CreateLvlh(Min, TimeSpan.FromSeconds(hold), center), "lvlh");
         Maneuver.Maneuver Apo(double hold = 0.0, double target = 8378137.0) =>
-            new ApogeeHeightManeuver(center, Min, TimeSpan.FromSeconds(hold), moon ? MoonRadius + (target == 8378137.0 ? 500000.0 : 700000.0) : target, engine);
-        Maneuver.Maneuver Peri() => new PerigeeHeightManeuver(center, Min, TimeSpan.Zero, 6978137.0, engine);
+            new ApogeeHeightManeuver(moon ? MoonRadius + (target == 8378137.0 ? 500000.0 : 700000.0) : target, engine, Min, TimeSpan.FromSeconds(hold), center);
+        Maneuver.Maneuver Peri() => new PerigeeHeightManeuver(6978137.0, engine, Min, TimeSpan.Zero, center);
 
         Maneuver.Maneuver Kind(Maneuver.Maneuver m, string kind)
         {
@@ -470,7 +470,7 @@ public class AttitudeTimelineTests
         // f dt (about 8 s, f the lead of the centroid of the burn, #335) before, before the end of the window of the first
         double a2 = (MinimumEpochGateTests.Apogee0 + 6878137.0) / 2.0;
         double halfT2 = System.Math.PI * System.Math.Sqrt(a2 * a2 * a2 / center.GM);
-        Maneuver.Maneuver PeriThenHold() => new PerigeeHeightManeuver(center, MinimumEpochGateTests.GateAtTt(3500.0), TimeSpan.FromSeconds(halfT2 - 5.0), 6878137.0, engine);
+        Maneuver.Maneuver PeriThenHold() => new PerigeeHeightManeuver(6878137.0, engine, MinimumEpochGateTests.GateAtTt(3500.0), TimeSpan.FromSeconds(halfT2 - 5.0), center);
         Maneuver.Maneuver[] chain = letter switch
         {
             "ClipS" => [Apo()],
@@ -552,7 +552,7 @@ public class AttitudeTimelineTests
             {
                 var start = TimelineRules.Activation(run.Given[i], previousEnd);
                 if (start > end) break;
-                var stop = TimelineRules.After(start, attitude.ManeuverHoldDuration.TotalSeconds, run.Tt);
+                var stop = TimelineRules.After(start, attitude.HoldDuration.TotalSeconds, run.Tt);
                 expected.Activations.Add(new Activation(start, "law", attitude, attitude, Vector3.Zero));
                 expected.Windows[attitude] = (new Window(start, start), new Window(start, stop));
                 executed.Add(attitude);
@@ -577,7 +577,7 @@ public class AttitudeTimelineTests
             double lead = TimelineRules.ThrustLead(dv, 300.0);
             var thrustStart = TimelineRules.ThrustStart(tc, dt, lead, run.Tt);
             var thrustEnd = TimelineRules.After(thrustStart, dt, run.Tt);
-            var maneuverEnd = TimelineRules.ManeuverEnd(tc, dt, lead, impulse.ManeuverHoldDuration.TotalSeconds, run.Tt);
+            var maneuverEnd = TimelineRules.ManeuverEnd(tc, dt, lead, impulse.HoldDuration.TotalSeconds, run.Tt);
             expected.Windows[impulse] = (new Window(thrustStart, thrustEnd), new Window(thrustStart, maneuverEnd));
             var attitudeStart = TimelineRules.Activation(thrustStart, run.Window.StartDate);
             if (expected.Activations.Count > 0) attitudeStart = TimelineRules.Activation(attitudeStart, expected.Activations[^1].Epoch);
@@ -649,7 +649,7 @@ public class AttitudeTimelineTests
         }
 
         foreach (var (maneuver, gate) in expected.Gates)
-            m.Gates = System.Math.Max(m.Gates, System.Math.Abs((maneuver.MinimumEpoch - gate).TotalSeconds));
+            m.Gates = System.Math.Max(m.Gates, System.Math.Abs((maneuver.MinEpoch - gate).TotalSeconds));
 
         // The burns against the closed form: the first apsis of the maneuver at or after its gate, on the orbit before it;
         // for the first impulse without a burn, that apsis past the end of the window (the library would otherwise have

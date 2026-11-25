@@ -107,13 +107,13 @@ public class ClaudeMdExamplesTests
     // A spacecraft of the given id with a tank, an engine on it and a camera (boresight +Z, reference vector +Y)
     private static Spacecraft SpacecraftWithEngine(int naifId, out Engine engine, string cosparId = null)
     {
-        var spacecraft = new Spacecraft(naifId, $"CLAUDEMD{-naifId}", 500.0, 1000.0, new Clock($"CLAUDEMD{-naifId}_CLK", 256), Orbit(),
+        var spacecraft = new Spacecraft(naifId, $"CLAUDEMD{-naifId}", 500.0, Orbit(), 1000.0, new Clock($"CLAUDEMD{-naifId}_CLK", 256),
             cosparId: cosparId);
-        var tank = new FuelTank("Tank", "Model", "SN1", 100.0, 100.0);
+        var tank = new FuelTank("Tank", 100.0, 100.0, "Model", "SN1");
         spacecraft.AddFuelTank(tank);
-        engine = new Engine("Engine", "Model", "SN1", 300.0, 0.05, tank);
+        engine = new Engine("Engine", 300.0, 0.05, tank, "Model", "SN1");
         spacecraft.AddEngine(engine);
-        spacecraft.AddCircularInstrument(naifId * 1000 - 1, "Camera", "Imager", 0.2, Vector3.VectorZ, Vector3.VectorY, Vector3.Zero);
+        spacecraft.AddCircularInstrument("Camera", 0.2, Vector3.VectorZ, Vector3.VectorY, Vector3.Zero, naifId: naifId * 1000 - 1, model: "Imager");
         return spacecraft;
     }
 
@@ -280,7 +280,7 @@ public class ClaudeMdExamplesTests
     private static Spacecraft PropagatedWithImpulse(int naifId, out ImpulseManeuver impulse)
     {
         var spacecraft = SpacecraftWithEngine(naifId, out var engine, "2024-001A");
-        impulse = new ApogeeHeightManeuver(Earth, Epoch, TimeSpan.Zero, 7000000.0, engine);
+        impulse = new ApogeeHeightManeuver(7000000.0, engine, Epoch, TimeSpan.Zero, Earth);
         spacecraft.SetManeuvers(impulse);
         spacecraft.Propagate(new Window(Epoch, Epoch.AddHours(2.0)), new PropagationOptions { Integrator = new VVIntegratorOptions { Step = TimeSpan.FromSeconds(60.0) }, OutputStep = TimeSpan.FromSeconds(60.0), ThirdBodies = [Earth] });
         return spacecraft;
@@ -325,7 +325,7 @@ public class ClaudeMdExamplesTests
     {
         var earth = new CelestialBody(PlanetsAndMoons.EARTH, Frames.Frame.ICRF, Epoch,
             new GeopotentialModelParameters("Data/SolarSystem/EGM2008_to70_TideFree", 10));
-        var spacecraft = new Spacecraft(-6730, "CLAUDEMD6730", 100.0, 10000.0, NewClock("CLAUDEMD6730_CLK"), Orbit());
+        var spacecraft = new Spacecraft(-6730, "CLAUDEMD6730", 100.0, Orbit(), 10000.0, NewClock("CLAUDEMD6730_CLK"));
         var exception = Assert.Throws<ArgumentException>(() => new CentralBodyPropagator(new Window(Epoch, Epoch.AddHours(1)), spacecraft, new PropagationOptions { Integrator = new VVIntegratorOptions { Step = TimeSpan.FromSeconds(1.0) }, OutputStep = TimeSpan.FromSeconds(1.0), ThirdBodies = [earth, PlanetsAndMoons.MOON_BODY, Stars.SUN_BODY] }));
         Assert.Equal("celestialBodies", exception.ParamName);
 
@@ -383,8 +383,12 @@ public class ClaudeMdExamplesTests
     public void EarthObservationBlock_OldBodyVectors_Throw()
     {
         SpacecraftWithEngine(-6732, out var engine);
-        var exception = Assert.Throws<ArgumentException>(() => new TriadAttitude(Epoch, TimeSpan.FromMinutes(30),
-            Spacecraft.Down, Earth, Spacecraft.Up, Sun, engine));
+        var exception = Assert.Throws<ArgumentException>(() => new TriadAttitude(Spacecraft.Down,
+            new CelestialAttitudeTarget(Earth),
+            Spacecraft.Up,
+            new CelestialAttitudeTarget(Sun),
+            Epoch,
+            TimeSpan.FromMinutes(30)));
         Assert.Contains("collinear", exception.Message);
     }
 

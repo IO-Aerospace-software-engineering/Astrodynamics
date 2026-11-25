@@ -92,7 +92,7 @@ public class PropagateCommand
             var bodies = bodyIds.Select(x => new CelestialBody(x)).ToList();
 
             var clock = new Clock($"clock{name}", 65536);
-            var spacecraft = new Spacecraft(SpacecraftId, name, settings.Mass, settings.Mass, clock, initialOrbit, settings.Area, settings.DragCoefficient);
+            var spacecraft = new Spacecraft(SpacecraftId, name, settings.Mass, initialOrbit, settings.Mass, clock, settings.Area, settings.DragCoefficient);
 
             var scenario = new Scenario($"Scenario{name}", new Mission.Mission($"Mission{name}"), propagationWindow);
             scenario.AddSpacecraft(spacecraft);

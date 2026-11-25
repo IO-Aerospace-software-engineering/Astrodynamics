@@ -64,8 +64,8 @@ public class StandardAtmosphereBoundaryTests
         double meanMotion = System.Math.Sqrt(body.GM / (a * a * a));
         var orbit = new KeplerianElements(a, (apoapsis - perigee) / (apoapsis + perigee),
             45.0 * IO.Astrodynamics.Constants.Deg2Rad, 0.0, 0.0, -300.0 * meanMotion, body, Epoch, Frames.Frame.ICRF);
-        return new Spacecraft(naifId, "BOUNDARY" + -naifId, 1000.0, 1000.0, new Clock("boundary" + -naifId, 65536),
-            orbit, area, 2.2, null, 1.0);
+        return new Spacecraft(naifId, "BOUNDARY" + -naifId, 1000.0, orbit, 1000.0,
+            new Clock("boundary" + -naifId, 65536), area, 2.2, null, 1.0);
     }
 
     // The lowest geodetic altitude of the trajectory, every second
@@ -296,8 +296,8 @@ public class StandardAtmosphereBoundaryTests
         var bodies = new CelestialItem[] { body };
         bool ecliptic = path.EndsWith("ECLIPJ2000");
         var start = ecliptic ? StateInTheEclipticThatStoppedAtTheMinimumStep(body) : StateThatStoppedAtTheMinimumStep(body);
-        Spacecraft NewFromTheState(StateVector state) => new(-4350, "BOUNDARY4350", 1000.0, 1000.0,
-            new Clock("boundary4350", 65536), state, 1.0, 2.2, null, 1.0);
+        Spacecraft NewFromTheState(StateVector state) => new(-4350, "BOUNDARY4350", 1000.0, state,
+            1000.0, new Clock("boundary4350", 65536), 1.0, 2.2, null, 1.0);
         var spacecraft = NewFromTheState(start);
         var options = new CovariancePropagationOptions { IncludeInStepControl = true };
         IntegratorOptions Integrator() => new RK78IntegratorOptions { AbsoluteTolerance = 1e-13, RelativeTolerance = 1e-13 };
@@ -384,7 +384,7 @@ public class StandardAtmosphereBoundaryTests
         var body = Body("Earth");
         var start = StateThatStoppedAtTheMinimumStep(body);
         PropagationSolution Propagate(CovariancePropagationOptions options) =>
-            new Spacecraft(-4351, "BOUNDARY4351", 1000.0, 1000.0, new Clock("boundary4351", 65536), start, 1.0, 2.2,
+            new Spacecraft(-4351, "BOUNDARY4351", 1000.0, start, 1000.0, new Clock("boundary4351", 65536), 1.0, 2.2,
                 null, 1.0).Propagate(Window, new PropagationOptions { Integrator = new RK78IntegratorOptions { AbsoluteTolerance = 1e-13, RelativeTolerance = 1e-13 }, OutputStep = Window.Length, ThirdBodies = new CelestialItem[] { body }, AtmosphericDrag = true, CovariancePropagation = options ?? CovariancePropagationOptions.None });
 
         // Act

@@ -221,8 +221,8 @@ public class TleTextTests
     public void ManeuverIgnition_IsWrittenInUtc()
     {
         // #479: MAN_EPOCH_IGNITION took the calendar of the thrust window, TDB in a propagation
-        var engine = new Engine("engine", "model", "sn", 350.0, 50.0, new FuelTank("tank", "model", "sn", 4000.0, 3000.0));
-        var maneuver = new ApogeeHeightManeuver(TestHelpers.EarthAtJ2000, TimeSystem.Time.J2000TDB, TimeSpan.Zero, 7000000.0, engine);
+        var engine = new Engine("engine", 350.0, 50.0, new FuelTank("tank", 4000.0, 3000.0, "model", "sn"), "model", "sn");
+        var maneuver = new ApogeeHeightManeuver(7000000.0, engine, TimeSystem.Time.J2000TDB, TimeSpan.Zero, TestHelpers.EarthAtJ2000);
         maneuver.ThrustWindow = new Window(new TimeSystem.Time(new DateTime(2021, 3, 20, 12, 0, 0), TimeScale.TDB), TimeSpan.FromSeconds(10.0));
         var parameters = maneuver.ToOpmManeuverParameters();
         Assert.InRange(System.Math.Abs((parameters.ManEpochIgnition - new DateTime(2021, 3, 20, 11, 58, 50).AddTicks(8143932)).TotalSeconds), 0.0, 1.1e-6);

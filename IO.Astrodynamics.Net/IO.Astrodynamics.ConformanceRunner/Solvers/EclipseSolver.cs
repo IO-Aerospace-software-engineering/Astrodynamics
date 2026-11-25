@@ -175,8 +175,8 @@ public class EclipseSolver : ICategorySolver
 
         double gm = TwoBodyTrajectory.Gm(inputs.GmKm3S2, body);
         var centralBody = _trajectory.CentralBody(body, gm, epoch);
-        var spacecraft = new Spacecraft(-999, "ConformanceTestSC", 100.0, 1000.0, new Clock("ConfClk", 65536),
-            TwoBodyTrajectory.KeplerianState(kep, body, centralBody, gm, epoch));
+        var spacecraft = new Spacecraft(-999, "ConformanceTestSC", 100.0, TwoBodyTrajectory.KeplerianState(kep, body, centralBody, gm, epoch), 1000.0,
+            new Clock("ConfClk", 65536));
         TwoBodyTrajectory.Propagate(spacecraft, searchWindow, Tolerance, OutputStep);
         return spacecraft;
     }

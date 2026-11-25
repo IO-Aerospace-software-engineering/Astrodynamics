@@ -63,7 +63,7 @@ public class RunIndependenceTests
     private static Spacecraft NewSpacecraft(IO.Astrodynamics.OrbitalParameters.OrbitalParameters orbit)
     {
         int id = NextId();
-        return new Spacecraft(id, $"RI{-id}", 100.0, 10000.0, new Clock($"riclk{-id}", 65536), orbit, 10.0, 2.2);
+        return new Spacecraft(id, $"RI{-id}", 100.0, orbit, 10000.0, new Clock($"riclk{-id}", 65536), 10.0, 2.2);
     }
 
     private static Spacecraft Leo(Frames.Frame frame = null) => NewSpacecraft(LeoState(frame));
@@ -72,11 +72,11 @@ public class RunIndependenceTests
     private static void AddPlan(Spacecraft spacecraft, in TimeSystem.Time minimumEpoch)
     {
         int id = spacecraft.NaifId;
-        var tank = new FuelTank($"ft{-id}", "model", "sn", 1000.0, 1000.0);
+        var tank = new FuelTank($"ft{-id}", 1000.0, 1000.0, "model", "sn");
         spacecraft.AddFuelTank(tank);
-        var engine = new Engine($"eng{-id}", "model", "sn", 300.0, 10.0, tank);
+        var engine = new Engine($"eng{-id}", 300.0, 10.0, tank, "model", "sn");
         spacecraft.AddEngine(engine);
-        spacecraft.SetManeuvers(new ApogeeHeightManeuver(Earth, minimumEpoch, TimeSpan.Zero, 9000000.0, engine));
+        spacecraft.SetManeuvers(new ApogeeHeightManeuver(9000000.0, engine, minimumEpoch, TimeSpan.Zero, Earth));
     }
 
     private static PropagationOptions Options(string kind) => new()

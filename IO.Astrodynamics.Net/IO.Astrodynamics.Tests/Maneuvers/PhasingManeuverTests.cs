@@ -30,15 +30,15 @@ namespace IO.Astrodynamics.Tests.Maneuvers
         [Fact]
         public void Create()
         {
-            FuelTank fuelTank10 = new FuelTank("My fuel tank10", "ft2021", "sn0", 4000.0, 3000.0);
-            Engine eng = new Engine("My engine", "model 1", "sn1", 350.0, 50.0, fuelTank10);
+            FuelTank fuelTank10 = new FuelTank("My fuel tank10", 4000.0, 3000.0, "ft2021", "sn0");
+            Engine eng = new Engine("My engine", 350.0, 50.0, fuelTank10, "model 1", "sn1");
 
-            PhasingManeuver maneuver = new PhasingManeuver(TestHelpers.EarthAtJ2000,new TimeSystem.Time(new DateTime(2021, 01, 01),TimeScale.TDB), 3.0, 2, eng);
+            PhasingManeuver maneuver = new PhasingManeuver(3.0, 2, eng, new TimeSystem.Time(new DateTime(2021, 01, 01),TimeScale.TDB), TestHelpers.EarthAtJ2000);
 
             Assert.NotNull(maneuver.Engine);
             // No hold before the burn: the phasing maneuver takes none, the burn sets 0.9 N T2 (decision 51 of #668)
-            Assert.Equal(TimeSpan.Zero, maneuver.ManeuverHoldDuration);
-            LabelAssert.Equal(new TimeSystem.Time(new DateTime(2021, 01, 01),TimeScale.TDB), maneuver.MinimumEpoch);
+            Assert.Equal(TimeSpan.Zero, maneuver.HoldDuration);
+            LabelAssert.Equal(new TimeSystem.Time(new DateTime(2021, 01, 01),TimeScale.TDB), maneuver.MinEpoch);
             Assert.Equal(3.0, maneuver.TargetTrueLongitude);
             Assert.Equal((uint)2, maneuver.RevolutionNumber);
         }
@@ -49,10 +49,10 @@ namespace IO.Astrodynamics.Tests.Maneuvers
             var orbitalParams = new KeplerianElements(42164000.0, 0.0, 0.0, 0.0, 0.0, 0.0, TestHelpers.EarthAtJ2000, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF);
             var targtOrbitalParams = new KeplerianElements(42164000.0, 0.0, 0.0, 0.0, 0.0, 345.0 * Astrodynamics.Constants.Deg2Rad, TestHelpers.EarthAtJ2000,
                 TimeSystem.Time.J2000TDB, Frames.Frame.ICRF);
-            var spc = new Spacecraft(-666, "GenericSpacecraft", 1000.0, 3000.0, new Clock("GenericClk", 65536), orbitalParams);
-            spc.AddFuelTank(new FuelTank("ft", "ftA", "123456", 1000.0, 900.0));
-            spc.AddEngine(new Engine("eng", "engmk1", "12345", 450, 50, spc.FuelTanks.First()));
-            PhasingManeuver maneuver = new PhasingManeuver(new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB), targtOrbitalParams, 3, spc.Engines.First());
+            var spc = new Spacecraft(-666, "GenericSpacecraft", 1000.0, orbitalParams, 3000.0, new Clock("GenericClk", 65536));
+            spc.AddFuelTank(new FuelTank("ft", 1000.0, 900.0, "ftA", "123456"));
+            spc.AddEngine(new Engine("eng", 450, 50, spc.FuelTanks.First(), "engmk1", "12345"));
+            PhasingManeuver maneuver = new PhasingManeuver(targtOrbitalParams, 3, spc.Engines.First(), new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB));
             var atStart = orbitalParams.ToStateVector();
             maneuver.TryExecute(atStart);
 
@@ -81,9 +81,9 @@ namespace IO.Astrodynamics.Tests.Maneuvers
 
         private static Spacecraft NewSpacecraft(int naifId, IO.Astrodynamics.OrbitalParameters.OrbitalParameters orbit)
         {
-            var spc = new Spacecraft(naifId, $"Phasing{-naifId}", 1000.0, 3000.0, new Clock($"Phasing{-naifId}Clk", 65536), orbit);
-            spc.AddFuelTank(new FuelTank("ft", "ftA", "123456", 1000.0, 900.0));
-            spc.AddEngine(new Engine("eng", "engmk1", "12345", 450, 50, spc.FuelTanks.First()));
+            var spc = new Spacecraft(naifId, $"Phasing{-naifId}", 1000.0, orbit, 3000.0, new Clock($"Phasing{-naifId}Clk", 65536));
+            spc.AddFuelTank(new FuelTank("ft", 1000.0, 900.0, "ftA", "123456"));
+            spc.AddEngine(new Engine("eng", 450, 50, spc.FuelTanks.First(), "engmk1", "12345"));
             return spc;
         }
 
@@ -119,7 +119,7 @@ namespace IO.Astrodynamics.Tests.Maneuvers
         {
             var orbitalParams = Orbit("circular", 0.0, TestHelpers.EarthAtJ2000, TimeSystem.Time.J2000TDB);
             var spc = NewSpacecraft(-666, orbitalParams);
-            PhasingManeuver maneuver = new PhasingManeuver(TestHelpers.EarthAtJ2000, new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB), 345.0 * Deg, 3, spc.Engines.First());
+            PhasingManeuver maneuver = new PhasingManeuver(345.0 * Deg, 3, spc.Engines.First(), new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB), TestHelpers.EarthAtJ2000);
             Assert.Null(maneuver.TargetOrbit);
 
             var (_, _, dv) = ClosedFormPhasing(ClosedForm(orbitalParams.ToStateVector(), 0.0), 345.0 * Deg, 3);
@@ -159,18 +159,18 @@ namespace IO.Astrodynamics.Tests.Maneuvers
             var (t2, _, dv) = ClosedFormPhasing(k, deltaTheta, revolutions);
 
             var spc = NewSpacecraft(-5881, initial);
-            var maneuver = new PhasingManeuver(center, TimeSystem.Time.J2000TDB, PerigeeLongitude(orbit) + deltaTheta, revolutions, spc.Engines.First());
+            var maneuver = new PhasingManeuver(PerigeeLongitude(orbit) + deltaTheta, revolutions, spc.Engines.First(), TimeSystem.Time.J2000TDB, center);
             var sv = initial.ToStateVector();
             var velocity = sv.Velocity;
             maneuver.TryExecute(sv);
 
             double dvError = System.Math.Abs(maneuver.DeltaV.Dot(velocity.Normalize()) - dv);
             double alongError = (maneuver.DeltaV - velocity.Normalize() * maneuver.DeltaV.Dot(velocity.Normalize())).Magnitude();
-            double holdError = System.Math.Abs(maneuver.ManeuverHoldDuration.TotalSeconds - 0.9 * revolutions * t2);
+            double holdError = System.Math.Abs(maneuver.HoldDuration.TotalSeconds - 0.9 * revolutions * t2);
 
             // The target-orbit constructor with the target on the same orbit at Δθ: its mean anomaly from the closed form
             var target = Orbit(orbit, k.MeanOfTrue(deltaTheta), center, epoch);
-            var reference = new PhasingManeuver(epoch, target, revolutions, NewSpacecraft(-5882, initial).Engines.First());
+            var reference = new PhasingManeuver(target, revolutions, NewSpacecraft(-5882, initial).Engines.First(), epoch);
             reference.TryExecute(initial.ToStateVector());
             double pathsError = (maneuver.DeltaV - reference.DeltaV).Magnitude();
 
@@ -216,7 +216,7 @@ namespace IO.Astrodynamics.Tests.Maneuvers
             var (targetAtArrival, _) = new KeplerClosedForm(k.Mu, rt, vt, tBurn).StateAt(tArrival);
 
             var spc = NewSpacecraft(integrator == "RK" ? -5883 : -5884, initial);
-            var maneuver = new PhasingManeuver(center, start, PerigeeLongitude("eccentric") + deltaTheta, revolutions, spc.Engines.First());
+            var maneuver = new PhasingManeuver(PerigeeLongitude("eccentric") + deltaTheta, revolutions, spc.Engines.First(), start, center);
             spc.SetManeuvers(maneuver);
             var window = new Window(start, PropagationTimeArgument.Tt.EpochAt(start, tArrival + 600.0));
             IntegratorOptions NewIntegrator() => integrator == "RK" ? new RK78IntegratorOptions { AbsoluteTolerance = 1e-12, RelativeTolerance = 1e-12 } : new VVIntegratorOptions { Step = TimeSpan.FromSeconds(1.0) };

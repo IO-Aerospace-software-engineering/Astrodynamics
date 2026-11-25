@@ -150,7 +150,7 @@ internal sealed class NonlinearityIndex
         StateVector state, in Window window, CovariancePropagationOptions options)
     {
         var spacecraft = new Spacecraft(NextId(), "NONLINEARITY_INDEX", System.Math.Max(context.TotalMass, 1e-9),
-            System.Math.Max(context.TotalMass, 1e-9), new Clock("NONLINEARITY_INDEX", 65536), state, 1.0,
+            state, System.Math.Max(context.TotalMass, 1e-9), new Clock("NONLINEARITY_INDEX", 65536), 1.0,
             context.DragCoefficient, null, context.ReflectivityCoefficient);
         // The state integrated with the mass and coefficients of the propagation, as its variational equations, not the
         // spacecraft the forces were built for as it is now (#418)

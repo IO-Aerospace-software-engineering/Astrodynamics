@@ -62,8 +62,8 @@ public class DenseAirStepControlTests
         double speed = System.Math.Sqrt(body.GM / radius);
         var start = new StateVector(new Vector3(radius, 0.0, 0.0), new Vector3(0.0, 0.6 * speed, 0.8 * speed), body,
             Epoch, Frames.Frame.ICRF);
-        return new Spacecraft(naifId, "DENSEAIR" + -naifId, 100.0, 1000.0, new Clock("denseair" + -naifId, 65536),
-            start, 10.0, 2.2, null, 1.0);
+        return new Spacecraft(naifId, "DENSEAIR" + -naifId, 100.0, start, 1000.0,
+            new Clock("denseair" + -naifId, 65536), 10.0, 2.2, null, 1.0);
     }
 
     private static int Steps(PropagationSolution solution) => solution.Segments.Sum(s => s.Steps.Count);
@@ -135,8 +135,8 @@ public class DenseAirStepControlTests
         Spacecraft WithP0(int naifId)
         {
             var spacecraft = NewSpacecraft(body, 200e3, naifId);
-            return new Spacecraft(naifId, spacecraft.Name, 100.0, 1000.0, new Clock("p0" + -naifId, 65536),
-                CovariancePropagationTests.WithCovariance((StateVector)spacecraft.InitialOrbitalParameters), 10.0, 2.2,
+            return new Spacecraft(naifId, spacecraft.Name, 100.0, CovariancePropagationTests.WithCovariance((StateVector)spacecraft.InitialOrbitalParameters), 1000.0,
+                new Clock("p0" + -naifId, 65536), 10.0, 2.2,
                 null, 1.0);
         }
 
@@ -216,7 +216,7 @@ public class DenseAirStepControlTests
         var geocentric = NewSpacecraft(body, 400e3, -1451);
         var ssbState = ((StateVector)geocentric.InitialOrbitalParameters)
             .RelativeTo(SolarSystemObjects.Barycenters.SOLAR_SYSTEM_BARYCENTER, Aberration.None).ToStateVector();
-        var ssb = new Spacecraft(-1452, "DENSEAIRSSB", 100.0, 1000.0, new Clock("denseairssb", 65536), ssbState, 10.0,
+        var ssb = new Spacecraft(-1452, "DENSEAIRSSB", 100.0, ssbState, 1000.0, new Clock("denseairssb", 65536), 10.0,
             2.2, null, 1.0);
         var bodies = new CelestialItem[] { body, SolarSystemObjects.Stars.SUN_BODY };
 

@@ -114,11 +114,16 @@ public class CelestialAttitudeTargetTests
         double worstPrimary = 0.0, worstPlane = 0.0;
         foreach (var ((epoch, state, moonExpected), k) in Pointing("moon", earth).Select((p, k) => (p, k)))
         {
-            var spc = new Spacecraft(-7401, "S740", 1000.0, 3000.0, new Clock("S740_CLK", 65536), state);
-            spc.AddFuelTank(new FuelTank("ft", "ftA", "123456", 1000.0, 900.0));
-            spc.AddEngine(new Engine("eng", "engmk1", "12345", 450, 50, spc.FuelTanks.First()));
-            var attitude = new TriadAttitude(earth, epoch, TimeSpan.Zero, Spacecraft.Front, new CelestialAttitudeTarget(moon, Aberration.LT),
-                Spacecraft.Up, new CelestialAttitudeTarget(sun, Aberration.LTS), spc.Engines.First());
+            var spc = new Spacecraft(-7401, "S740", 1000.0, state, 3000.0, new Clock("S740_CLK", 65536));
+            spc.AddFuelTank(new FuelTank("ft", 1000.0, 900.0, "ftA", "123456"));
+            spc.AddEngine(new Engine("eng", 450, 50, spc.FuelTanks.First(), "engmk1", "12345"));
+            var attitude = new TriadAttitude(Spacecraft.Front,
+                new CelestialAttitudeTarget(moon, Aberration.LT),
+                Spacecraft.Up,
+                new CelestialAttitudeTarget(sun, Aberration.LTS),
+                epoch,
+                TimeSpan.Zero,
+                earth);
             var q = attitude.ComputeOrientation(state);
             var m = moonExpected[Aberration.LT].Normalize();
             var s = suns[k].Expected[Aberration.LTS].Normalize();
@@ -130,6 +135,22 @@ public class CelestialAttitudeTargetTests
         _output.WriteLine($"MEASURE #740 TRIAD primary on the Moon (LT) {worstPrimary:E3} rad, plane of the Sun (LT+S) {worstPlane:E3} rad");
         Assert.True(worstPrimary <= TriadPrimaryTolerance, $"primary {worstPrimary:E3} rad");
         Assert.True(worstPlane <= TriadPlaneTolerance, $"plane {worstPlane:E3} rad");
+    }
+
+    /// <summary>
+    /// An aberration that is not a member of the enumeration is refused where it is given (#806, decision 67 of #668,
+    /// decided by S. Guillet, 2026-11-23): the target was built, and threw only at its first <c>GetDirection</c>, inside
+    /// the propagation of its attitude.
+    /// </summary>
+    [Theory]
+    [InlineData(99)]
+    [InlineData(-1)]
+    public void Constructor_UnknownAberration_ThrowsArgumentOutOfRangeException(int value)
+    {
+        var exception = Record.Exception(() => new CelestialAttitudeTarget(TestHelpers.MoonAtJ2000, (Aberration)value));
+
+        var rejected = Assert.IsType<ArgumentOutOfRangeException>(exception);
+        Assert.Equal("aberration", rejected.ParamName);
     }
 
     [Fact]

@@ -785,7 +785,7 @@ namespace IO.Astrodynamics.Tests.CCSDS.OPM
             Assert.Equal("ISS", spacecraft.Name);
             Assert.Equal("1998-067A", spacecraft.CosparId);
             Assert.Equal(1.0, spacecraft.Mass); // Default mass when not specified
-            Assert.Equal(500000.0, spacecraft.MaximumOperatingMass);
+            Assert.Equal(500000.0, spacecraft.MaxOperatingMass);
             Assert.Equal(1.0, spacecraft.SectionalArea); // Default
             Assert.Equal(2.2, spacecraft.DragCoefficient); // Default
             Assert.Equal(1.0, spacecraft.SolarRadiationCoeff); // Default
@@ -816,8 +816,13 @@ namespace IO.Astrodynamics.Tests.CCSDS.OPM
             Assert.Equal(1.5, spacecraft.SolarRadiationCoeff);
         }
 
+        /// <summary>
+        /// A MASS above the maximum operating mass given throws, naming the parameter: the value the caller gave conflicts
+        /// with the file (decision 77 of #668, decided by S. Guillet, 2026-11-23); before 11.0.0 the maximum was raised to
+        /// the mass without a word.
+        /// </summary>
         [Fact]
-        public void ToSpacecraft_MaxMassLessThanMass_AdjustsMaxMass()
+        public void ToSpacecraft_MaxMassLessThanMass_Throws()
         {
             var header = CcsdsHeader.CreateDefault();
             var metadata = new OpmMetadata("ISS", "1998-067A", "EARTH", "ICRF", "UTC");
@@ -828,20 +833,33 @@ namespace IO.Astrodynamics.Tests.CCSDS.OPM
             var clock = new Clock("OnboardClock", 256);
             var earth = new CelestialBody(PlanetsAndMoons.EARTH);
 
-            // maxMass (100000) < mass (420000), should be adjusted
-            var spacecraft = opm.ToSpacecraft(-1000, 100000.0, clock, earth);
+            var exception = Assert.Throws<ArgumentOutOfRangeException>(() => opm.ToSpacecraft(-1000, 100000.0, clock, earth));
 
-            Assert.Equal(420000.0, spacecraft.Mass);
-            Assert.Equal(420000.0, spacecraft.MaximumOperatingMass);
+            Assert.Equal("maxOperatingMass", exception.ParamName);
+            Assert.Null(clock.Spacecraft);
         }
 
+        /// <summary>
+        /// The maximum operating mass and the clock are optional (decision 77 of #668): double.MaxValue and the clock
+        /// Name + "_CLK" at 65536 ticks per second, those of the propagated constructor; a null clock threw
+        /// <see cref="ArgumentNullException"/> before 11.0.0.
+        /// </summary>
         [Fact]
-        public void ToSpacecraft_NullClock_ThrowsArgumentNullException()
+        public void ToSpacecraft_TakesTheDefaultsOfThePropagatedConstructor()
         {
             var opm = CreateMinimalOpm("ISS", "1998-067A");
             var earth = new CelestialBody(PlanetsAndMoons.EARTH);
 
-            Assert.Throws<ArgumentNullException>(() => opm.ToSpacecraft(-1000, 500000.0, null, earth));
+            var spacecraft = opm.ToSpacecraft(-1000, observer: earth);
+
+            Assert.Equal(double.MaxValue, spacecraft.MaxOperatingMass);
+            Assert.Equal("ISS_CLK", spacecraft.Clock.Name);
+            Assert.Equal(65536u, spacecraft.Clock.Resolution);
+            Assert.Same(spacecraft, spacecraft.Clock.Spacecraft);
+
+            var nullClock = opm.ToSpacecraft(-1001, 500000.0, null, earth);
+            Assert.Equal("ISS_CLK", nullClock.Clock.Name);
+            Assert.Equal(500000.0, nullClock.MaxOperatingMass);
         }
 
         [Fact]
@@ -882,7 +900,7 @@ namespace IO.Astrodynamics.Tests.CCSDS.OPM
             var earth = new CelestialBody(PlanetsAndMoons.EARTH, Frames.Frame.ICRF, epoch);
             var sv = new StateVector(new Vector3(x, y, 0.0), new Vector3(vx, vy, 0.0), earth, epoch, Frames.Frame.ICRF);
             Assert.Equal(System.Math.PI, sv.Inclination(), 12);
-            var spacecraft = new Spacecraft(-1000, "RETRO", 1000.0, 5000.0, new Clock("OnboardClock", 256), sv, 1.0, 2.2, "2024-001A", 1.0);
+            var spacecraft = new Spacecraft(-1000, "RETRO", 1000.0, sv, 5000.0, new Clock("OnboardClock", 256), 1.0, 2.2, "2024-001A", 1.0);
 
             var opm = spacecraft.ToOpm(includeSpacecraftParameters: false, includeManeuvers: false);
             var kep = opm.Data.KeplerianElements;
@@ -914,7 +932,7 @@ namespace IO.Astrodynamics.Tests.CCSDS.OPM
             var sv = new StateVector(position, velocity, earth, epoch, Frames.Frame.ICRF);
 
             var originalSpacecraft = new Spacecraft(
-                -1000, "ISS", 420000.0, 500000.0, clock, sv,
+                -1000, "ISS", 420000.0, sv, 500000.0, clock,
                 1600.0, 2.2, "1998-067A", 1.5);
 
             // Convert to OPM

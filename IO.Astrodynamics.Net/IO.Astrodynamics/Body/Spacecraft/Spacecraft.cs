@@ -110,7 +110,12 @@ namespace IO.Astrodynamics.Body.Spacecraft
         private readonly HashSet<Payload> _payloads = new();
         public IReadOnlyCollection<Payload> Payloads => _payloads;
         public double DryOperatingMass => Mass;
-        public double MaximumOperatingMass { get; }
+        /// <summary>
+        /// The maximum operating mass, kg: informational, checked against the dry mass only, never against the fuel and the
+        /// payloads (L5-37 of #668); double.MaxValue unless given. <c>MaximumOperatingMass</c> before 11.0.0 (decision 70
+        /// of #668, decided by S. Guillet, 2026-11-23).
+        /// </summary>
+        public double MaxOperatingMass { get; }
         public SpacecraftFrame Frame { get; }
         public double SectionalArea { get; }
         public double DragCoefficient { get; }
@@ -128,8 +133,7 @@ namespace IO.Astrodynamics.Body.Spacecraft
         /// Gets the solar radiation pressure coefficient (Cr).
         /// </summary>
         /// <remarks>
-        /// Typical values range from 1.0 (absorbing surface) to 2.0 (reflecting surface).
-        /// Default is 1.0.
+        /// Typically 1.0 (absorbing surface) to 2.0 (reflecting surface); finite and not negative (#800). Default is 1.0.
         /// </remarks>
         public double SolarRadiationCoeff { get; }
 
@@ -162,55 +166,60 @@ namespace IO.Astrodynamics.Body.Spacecraft
         private bool _holdsPropagatedStates;
 
         /// <summary>
-        /// Spacecraft constructor
+        /// A spacecraft propagated by the library from <paramref name="initialOrbitalParameters"/>. The NAIF id, the name, the
+        /// dry mass and the initial orbit are required; the other values are optional (decisions 70 and 71 of #668, decided by
+        /// S. Guillet, 2026-11-23; R10 of the ergonomics review).
         /// </summary>
-        /// <param name="naifId"></param>
-        /// <param name="name"></param>
-        /// <param name="mass"></param>
-        /// <param name="maximumOperatingMass"></param>
-        /// <param name="clock"></param>
-        /// <param name="initialOrbitalParameters"></param>
-        /// <param name="sectionalArea">Mean sectional area (used for both drag and solar radiation pressure)</param>
-        /// <param name="dragCoeff">Drag coefficient (Cd), default 2.2 for satellites in free-molecular flow</param>
+        /// <param name="naifId">The NAIF id, in [-2147483, -1] (#676): it names the kernels of the spacecraft.</param>
+        /// <param name="name">The name of the spacecraft.</param>
+        /// <param name="mass">The dry mass, kg: finite and not negative.</param>
+        /// <param name="initialOrbitalParameters">The initial orbit, which the propagations start from.</param>
+        /// <param name="maxOperatingMass">The maximum operating mass, kg, double.MaxValue by default: informational, finite
+        /// and at least <paramref name="mass"/>, checked against the dry mass only (L5-37 of #668), never against the fuel
+        /// and the payloads.</param>
+        /// <param name="clock">The onboard clock, by default a new clock named Name + "_CLK" at 65536 ticks per second (the
+        /// resolution of the CK, <see cref="SpacecraftFrame"/>); not attached to a spacecraft of another NAIF id (#676).
+        /// Before 11.0.0 it was required, a null clock throwing <see cref="ArgumentNullException"/>.</param>
+        /// <param name="sectionalArea">Mean sectional area (used for both drag and solar radiation pressure), m²</param>
+        /// <param name="dragCoefficient">Drag coefficient (Cd), default 2.2 for satellites in free-molecular flow</param>
         /// <param name="cosparId">COSPAR international designator (e.g., "1998-067A")</param>
-        /// <param name="solarRadiationCoeff">Solar radiation pressure coefficient (Cr), default 1.0</param>
+        /// <param name="solarRadiationCoefficient">Solar radiation pressure coefficient (Cr), default 1.0: typically 1.0 to
+        /// 2.0; finite and not negative</param>
         /// <param name="bodyFront">Instance body front axis (default: +Y). Finite and non-zero; must be orthogonal to bodyRight and bodyUp.</param>
         /// <param name="bodyRight">Instance body right axis (default: +X). Finite and non-zero; must be orthogonal to bodyFront and bodyUp.</param>
         /// <param name="bodyUp">Instance body up axis (default: +Z). Finite and non-zero; must be orthogonal to bodyFront and bodyRight.</param>
         /// <param name="hardBodyRadius">Hard-body radius in meters for conjunction assessment, finite and not negative (default 0.0, none): the radius of the spacecraft as a secondary object too (#683)</param>
-        /// <exception cref="ArgumentOutOfRangeException"></exception>
         /// <exception cref="ArgumentOutOfRangeException"><paramref name="naifId"/> is not in [-2147483, -1]
-        /// (#676), or a mass, coefficient, area or radius is out of its range.</exception>
-        /// <exception cref="ArgumentNullException"></exception>
+        /// (#676), or, naming it, a value is not finite or out of its range (#800, decision 75 of #668, decided by
+        /// S. Guillet, 2026-11-23): <paramref name="mass"/> not negative, <paramref name="maxOperatingMass"/> at least
+        /// <paramref name="mass"/>, <paramref name="sectionalArea"/> above 0, <paramref name="dragCoefficient"/>,
+        /// <paramref name="solarRadiationCoefficient"/> and <paramref name="hardBodyRadius"/> not negative.</exception>
         /// <exception cref="ArgumentException">Thrown when body axes are not orthogonal or not right-handed, when a body axis
         /// has a magnitude of 0 (the exception names it, #680) or a component that is not finite (the exception names it,
         /// the first of front, right and up; fourth round of #668), or when <paramref name="clock"/> is attached to a spacecraft
         /// of another NAIF id (#676: an SCLK identifies one spacecraft id).</exception>
-        public Spacecraft(int naifId, string name, double mass, double maximumOperatingMass, Clock clock, OrbitalParameters.OrbitalParameters initialOrbitalParameters,
-            double sectionalArea = 1.0, double dragCoeff = 2.2, string cosparId = null, double solarRadiationCoeff = 1.0,
-            Vector3? bodyFront = null, Vector3? bodyRight = null, Vector3? bodyUp = null, double hardBodyRadius = 0.0) : base(
-            naifId, name, mass, initialOrbitalParameters)
+        public Spacecraft(int naifId, string name, double mass, OrbitalParameters.OrbitalParameters initialOrbitalParameters,
+            double maxOperatingMass = double.MaxValue, Clock clock = null, double sectionalArea = 1.0, double dragCoefficient = 2.2,
+            string cosparId = null, double solarRadiationCoefficient = 1.0, Vector3? bodyFront = null, Vector3? bodyRight = null,
+            Vector3? bodyUp = null, double hardBodyRadius = 0.0) : base(
+            naifId, name, CheckedPhysicalProperties(mass, maxOperatingMass, sectionalArea, dragCoefficient, solarRadiationCoefficient, hardBodyRadius),
+            initialOrbitalParameters)
         {
-            if (maximumOperatingMass < mass) throw new ArgumentOutOfRangeException(nameof(maximumOperatingMass));
             if (naifId >= 0) throw new ArgumentOutOfRangeException(nameof(naifId));
             CheckFrameIdRange(naifId);
-            ArgumentOutOfRangeException.ThrowIfNegative(dragCoeff);
-            ArgumentOutOfRangeException.ThrowIfNegativeOrZero(sectionalArea);
-            ArgumentOutOfRangeException.ThrowIfNegative(solarRadiationCoeff);
-            ThrowIfInvalidHardBodyRadius(hardBodyRadius, nameof(hardBodyRadius));
-            MaximumOperatingMass = maximumOperatingMass;
-            Clock = clock ?? throw new ArgumentNullException(nameof(clock));
+            MaxOperatingMass = maxOperatingMass;
+            Clock = clock ?? new Clock(name + "_CLK", DefaultClockResolution);
             Clock.CheckAttachableTo(naifId, name);
             Frame = new SpacecraftFrame(this);
             SectionalArea = sectionalArea;
-            DragCoefficient = dragCoeff;
+            DragCoefficient = dragCoefficient;
             CosparId = cosparId;
-            SolarRadiationCoeff = solarRadiationCoeff;
+            SolarRadiationCoeff = solarRadiationCoefficient;
             HardBodyRadius = hardBodyRadius;
 
-            BodyFront = BodyAxis(bodyFront, Vector3.VectorY, nameof(bodyFront));
-            BodyRight = BodyAxis(bodyRight, Vector3.VectorX, nameof(bodyRight));
-            BodyUp = BodyAxis(bodyUp, Vector3.VectorZ, nameof(bodyUp));
+            BodyFront = CheckedBodyAxis(bodyFront, Vector3.VectorY, nameof(bodyFront));
+            BodyRight = CheckedBodyAxis(bodyRight, Vector3.VectorX, nameof(bodyRight));
+            BodyUp = CheckedBodyAxis(bodyUp, Vector3.VectorZ, nameof(bodyUp));
 
             if (bodyFront.HasValue || bodyRight.HasValue || bodyUp.HasValue)
             {
@@ -223,6 +232,12 @@ namespace IO.Astrodynamics.Body.Spacecraft
         }
 
         /// <summary>
+        /// The resolution of the default clock of a propagated spacecraft, ticks per second: that of the CK the library
+        /// writes (<see cref="SpacecraftFrame"/>), the resolution most explicit clocks took before 11.0.0.
+        /// </summary>
+        internal const uint DefaultClockResolution = 65536;
+
+        /// <summary>
         /// Creates a kernel-backed spacecraft whose ephemeris and orientation come from loaded SPK/CK kernels.
         /// Its initial orbital parameters are its state at <paramref name="epoch"/> relative to
         /// <paramref name="centerOfMotion"/>, the Earth by default (#620: the Solar System barycentre before 11.0.0); SPICE
@@ -233,20 +248,26 @@ namespace IO.Astrodynamics.Body.Spacecraft
         /// <param name="name">Spacecraft name</param>
         /// <param name="epoch">Epoch for initial state lookup (defaults to J2000 TDB)</param>
         /// <param name="mass">Dry mass in kg</param>
-        /// <param name="maximumOperatingMass">Maximum operating mass in kg</param>
-        /// <param name="clock">Onboard clock (defaults to a new clock named after the spacecraft); not attached to a spacecraft
-        /// of another NAIF id (#676)</param>
+        /// <param name="maxOperatingMass">Maximum operating mass in kg, informational: checked against the dry mass only
+        /// (<c>maximumOperatingMass</c> before 11.0.0, decision 71 of #668)</param>
+        /// <param name="clock">Onboard clock (defaults to a new clock named Name + "_CLK" at 256 ticks per second, as before
+        /// 11.0.0); not attached to a spacecraft of another NAIF id (#676)</param>
         /// <param name="sectionalArea">Mean sectional area in m²</param>
-        /// <param name="dragCoeff">Drag coefficient (Cd)</param>
+        /// <param name="dragCoefficient">Drag coefficient (Cd) (<c>dragCoeff</c> before 11.0.0)</param>
         /// <param name="cosparId">COSPAR international designator</param>
-        /// <param name="solarRadiationCoeff">Solar radiation pressure coefficient (Cr)</param>
+        /// <param name="solarRadiationCoefficient">Solar radiation pressure coefficient (Cr) (<c>solarRadiationCoeff</c>
+        /// before 11.0.0)</param>
         /// <param name="hardBodyRadius">Hard-body radius in meters for conjunction assessment, finite and not negative (default 0.0, none): the radius of the spacecraft as a secondary object too (#683)</param>
         /// <param name="centerOfMotion">The centre of the initial orbital parameters, the Earth when null; the Solar System
         /// barycentre, or any body the loaded kernels chain to, may be given.</param>
         /// <exception cref="InvalidOperationException">The loaded kernels give no state of the spacecraft relative to
         /// <paramref name="centerOfMotion"/> at <paramref name="epoch"/> (#454).</exception>
         /// <exception cref="ArgumentOutOfRangeException"><paramref name="naifId"/> is not in [-2147483, -1]
-        /// (#676), or <paramref name="hardBodyRadius"/> is negative or not finite (#683).</exception>
+        /// (#676), or, naming it, a value is not finite or out of its range, checked before the kernels are read, as by the
+        /// other constructor (#800, decision 75 of #668, decided by S. Guillet, 2026-11-23; before, only the hard-body
+        /// radius, #683): <paramref name="mass"/> not negative, <paramref name="maxOperatingMass"/> at least
+        /// <paramref name="mass"/>, <paramref name="sectionalArea"/> above 0, <paramref name="dragCoefficient"/>,
+        /// <paramref name="solarRadiationCoefficient"/> and <paramref name="hardBodyRadius"/> not negative.</exception>
         /// <exception cref="ArgumentException"><paramref name="clock"/> is attached to a spacecraft of another NAIF id
         /// (#676).</exception>
         /// <remarks>
@@ -255,21 +276,21 @@ namespace IO.Astrodynamics.Body.Spacecraft
         /// when no loaded kernel defines that id (#676).
         /// </remarks>
         public Spacecraft(int naifId, string name,
-            Time? epoch = null, double mass = 0.0, double maximumOperatingMass = double.MaxValue,
-            Clock clock = null, double sectionalArea = 1.0, double dragCoeff = 2.2,
-            string cosparId = null, double solarRadiationCoeff = 1.0, double hardBodyRadius = 0.0,
+            Time? epoch = null, double mass = 0.0, double maxOperatingMass = double.MaxValue,
+            Clock clock = null, double sectionalArea = 1.0, double dragCoefficient = 2.2,
+            string cosparId = null, double solarRadiationCoefficient = 1.0, double hardBodyRadius = 0.0,
             CelestialItem centerOfMotion = null)
-            : base(naifId, name, mass, ReadKernelInitialState(naifId, name, epoch ?? TimeSystem.Time.J2000TDB, centerOfMotion, clock))
+            : base(naifId, name, CheckedPhysicalProperties(mass, maxOperatingMass, sectionalArea, dragCoefficient, solarRadiationCoefficient, hardBodyRadius),
+                ReadKernelInitialState(naifId, name, epoch ?? TimeSystem.Time.J2000TDB, centerOfMotion, clock))
         {
             _isFromKernel = true;
-            ThrowIfInvalidHardBodyRadius(hardBodyRadius, nameof(hardBodyRadius));
-            MaximumOperatingMass = maximumOperatingMass;
+            MaxOperatingMass = maxOperatingMass;
             Clock = clock ?? new Clock(name + "_CLK", 256);
             Frame = new SpacecraftFrame(this);
             SectionalArea = sectionalArea;
-            DragCoefficient = dragCoeff;
+            DragCoefficient = dragCoefficient;
             CosparId = cosparId;
-            SolarRadiationCoeff = solarRadiationCoeff;
+            SolarRadiationCoeff = solarRadiationCoefficient;
             HardBodyRadius = hardBodyRadius;
             BodyFront = Vector3.VectorY;
             BodyRight = Vector3.VectorX;
@@ -297,6 +318,45 @@ namespace IO.Astrodynamics.Body.Spacecraft
             }
         }
 
+        // The physical properties of both constructors, finite and in their ranges (#800, decision 75 of #668, decided by
+        // S. Guillet, 2026-11-23): a NaN passed the comparisons (ThrowIfNegative rejected double.NaN through its sign bit
+        // only), an infinity passed them, and the kernel-backed constructor checked none. A base-call argument, so that it
+        // runs before the base's own check of the mass and before the kernel-backed constructor reads the kernels. Returns
+        // the mass
+        private static double CheckedPhysicalProperties(double mass, double maxOperatingMass, double sectionalArea,
+            double dragCoefficient, double solarRadiationCoefficient, double hardBodyRadius)
+        {
+            if (!double.IsFinite(mass) || mass < 0.0)
+            {
+                throw new ArgumentOutOfRangeException(nameof(mass), mass, "The dry mass must be finite and not negative.");
+            }
+
+            if (!double.IsFinite(maxOperatingMass) || maxOperatingMass < mass)
+            {
+                throw new ArgumentOutOfRangeException(nameof(maxOperatingMass), maxOperatingMass,
+                    $"The maximum operating mass must be finite and at least the dry mass, {mass} kg.");
+            }
+
+            if (!double.IsFinite(sectionalArea) || sectionalArea <= 0.0)
+            {
+                throw new ArgumentOutOfRangeException(nameof(sectionalArea), sectionalArea, "The sectional area must be finite and above 0.");
+            }
+
+            if (!double.IsFinite(dragCoefficient) || dragCoefficient < 0.0)
+            {
+                throw new ArgumentOutOfRangeException(nameof(dragCoefficient), dragCoefficient, "The drag coefficient must be finite and not negative.");
+            }
+
+            if (!double.IsFinite(solarRadiationCoefficient) || solarRadiationCoefficient < 0.0)
+            {
+                throw new ArgumentOutOfRangeException(nameof(solarRadiationCoefficient), solarRadiationCoefficient,
+                    "The solar radiation pressure coefficient must be finite and not negative.");
+            }
+
+            ThrowIfInvalidHardBodyRadius(hardBodyRadius, nameof(hardBodyRadius));
+            return mass;
+        }
+
         // A hard-body radius is finite and not negative, 0 for none (#683: the conjunction analysis reads the radius of a
         // secondary): the rule of the constructors and of the radius options of the conjunction analysis
         internal static void ThrowIfInvalidHardBodyRadius(double hardBodyRadius, string paramName)
@@ -312,7 +372,7 @@ namespace IO.Astrodynamics.Body.Spacecraft
         // accepted when the dot products of ValidateBodyAxes all vanished), nor has an axis with a component that is not
         // finite (fourth round of #668: it was normalized to NaN components, which every comparison of ValidateBodyAxes let
         // through)
-        private static Vector3 BodyAxis(Vector3? axis, Vector3 defaultAxis, string paramName)
+        private static Vector3 CheckedBodyAxis(Vector3? axis, Vector3 defaultAxis, string paramName)
         {
             if (!axis.HasValue)
             {
@@ -342,133 +402,249 @@ namespace IO.Astrodynamics.Body.Spacecraft
         }
 
         /// <summary>
-        /// Add circular instrument to spacecraft
+        /// Adds a circular instrument to the spacecraft and returns it (decision 72 of #668, decided by S. Guillet,
+        /// 2026-11-23; before 11.0.0 the method returned nothing and took the id and the model first).
         /// </summary>
-        /// <param name="naifId"></param>
-        /// <param name="name"></param>
-        /// <param name="model"></param>
-        /// <param name="fieldOfView"></param>
-        /// <param name="boresight"></param>
-        /// <param name="refVector"></param>
-        /// <param name="orientation">The Euler angles (x, y, z) in radians about the axes 1, 2, 3 of the frame kernel, finite: <see cref="Instrument.Orientation"/></param>
-        /// <exception cref="ArgumentException">The name or the model is empty, the instrument was already added, or, naming the
-        /// parameter, the field of view is not a finite positive number, the boresight or the reference vector has a component
-        /// that is not finite or a magnitude of 0, or the reference vector is parallel to the boresight: the fields CSPICE's
-        /// <c>getfov</c> rejects (#707; before 11.0.0 the instrument was added and the search threw); or an Euler angle of
-        /// <paramref name="orientation"/> is not finite, which has no rotation and which SPICE cannot read in the frame kernel
-        /// (#715; before 11.0.0 the instrument was added with a NaN rotation).</exception>
+        /// <param name="name">The name of the instrument, unique on the spacecraft on its invariant upper-cased form</param>
+        /// <param name="fieldOfView">The half-angle of the circle, rad: finite and positive</param>
+        /// <param name="boresight">The boresight, in the instrument frame: finite components, a non-zero magnitude</param>
+        /// <param name="refVector">The reference vector, in the instrument frame: finite components, a non-zero magnitude,
+        /// not parallel to the boresight</param>
+        /// <param name="orientation">The Euler angles (x, y, z) in radians about the axes 1, 2, 3 of the frame kernel, finite:
+        /// <see cref="Instrument.Orientation"/>; zero by default, the instrument frame the spacecraft frame</param>
+        /// <param name="naifId">The NAIF id of the instrument; by default the smallest free NaifId × 1000 − n, n in
+        /// [1, 999] (NAIF IDs Required Reading, "Instruments"). Required on a kernel-backed spacecraft</param>
+        /// <param name="model">The model of the instrument, informational; null by default</param>
+        /// <returns>The instrument added.</returns>
+        /// <exception cref="ArgumentNullException"><paramref name="naifId"/> is null on a kernel-backed spacecraft
+        /// (decision 73 of #668): <c>gftfov</c> reads the instrument kernel loaded under the id, and a default id could
+        /// read another instrument of the mission's kernel.</exception>
+        /// <exception cref="InvalidOperationException"><paramref name="naifId"/> is null and no id NaifId × 1000 − n,
+        /// n in [1, 999], is free (or an int): pass <paramref name="naifId"/>.</exception>
+        /// <exception cref="ArgumentException">Naming the parameter: <paramref name="naifId"/> is the id of another
+        /// instrument of the spacecraft; <paramref name="name"/> has the invariant upper-cased form of the name of another
+        /// of its instruments (decision 74 of #668: both kernels would assign FRAME_&lt;SPACECRAFT&gt;_&lt;INSTRUMENT&gt;,
+        /// and write the same file on a case-insensitive file system), or is empty; the field of view is not a finite
+        /// positive number, the boresight or the reference vector has a component that is not finite or a magnitude of 0,
+        /// or the reference vector is parallel to the boresight: the fields CSPICE's <c>getfov</c> rejects (#707); or an
+        /// Euler angle of <paramref name="orientation"/> is not finite (#715).</exception>
         /// <exception cref="ArgumentOutOfRangeException"><paramref name="naifId"/> is not negative, or is the id of the
-        /// spacecraft frame, NaifId × 1000, which the instrument frame kernel would define relative to itself (#676); an
-        /// instrument id of NAIF's convention is NaifId × 1000 − n, n in [1, 999] (NAIF IDs Required Reading, "Instruments").</exception>
-        public void AddCircularInstrument(int naifId, string name, string model, double fieldOfView, in Vector3 boresight, in Vector3 refVector, in Vector3 orientation)
+        /// spacecraft frame, NaifId × 1000, which the instrument frame kernel would define relative to itself
+        /// (#676).</exception>
+        public CircularInstrument AddCircularInstrument(string name, double fieldOfView, in Vector3 boresight, in Vector3 refVector,
+            in Vector3 orientation = default, int? naifId = null, string model = null)
         {
-            if (!_instruments.Add(new CircularInstrument(this, naifId, name, model, fieldOfView, boresight, refVector, orientation)))
-            {
-                throw new ArgumentException("Instrument already added to spacecraft");
-            }
+            int id = InstrumentIdToAdd(naifId, name);
+            return AddInstrument(new CircularInstrument(this, id, name, model, fieldOfView, boresight, refVector, orientation));
         }
 
         /// <summary>
-        /// Add rectangular instrument
+        /// Adds a rectangular instrument to the spacecraft and returns it (decision 72 of #668, decided by S. Guillet,
+        /// 2026-11-23; before 11.0.0 the method returned nothing and took the id and the model first).
         /// </summary>
-        /// <param name="naifId"></param>
-        /// <param name="name"></param>
-        /// <param name="model"></param>
-        /// <param name="fieldOfView">The half-angle in the plane of the boresight and the reference vector (<c>FOV_REF_ANGLE</c>), rad</param>
+        /// <param name="name">The name of the instrument, unique on the spacecraft on its invariant upper-cased form</param>
+        /// <param name="fieldOfView">The half-angle in the plane of the boresight and the reference vector
+        /// (<c>FOV_REF_ANGLE</c>), rad: finite and positive</param>
         /// <param name="crossAngle">The half-angle across that plane (<c>FOV_CROSS_ANGLE</c>), rad: finite and positive</param>
-        /// <param name="boresight"></param>
-        /// <param name="refVector"></param>
-        /// <param name="orientation">The Euler angles (x, y, z) in radians about the axes 1, 2, 3 of the frame kernel, finite: <see cref="Instrument.Orientation"/></param>
-        /// <exception cref="ArgumentException">The name or the model is empty, the instrument was already added, or, naming the
-        /// parameter, the field of view is not a finite positive number, the boresight or the reference vector has a component
-        /// that is not finite or a magnitude of 0, or the reference vector is parallel to the boresight: the fields CSPICE's
-        /// <c>getfov</c> rejects (#707; before 11.0.0 the instrument was added and the search threw); or an Euler angle of
-        /// <paramref name="orientation"/> is not finite, which has no rotation and which SPICE cannot read in the frame kernel
-        /// (#715; before 11.0.0 the instrument was added with a NaN rotation).</exception>
+        /// <param name="boresight">The boresight, in the instrument frame: finite components, a non-zero magnitude</param>
+        /// <param name="refVector">The reference vector, in the instrument frame: finite components, a non-zero magnitude,
+        /// not parallel to the boresight</param>
+        /// <param name="orientation">The Euler angles (x, y, z) in radians about the axes 1, 2, 3 of the frame kernel, finite:
+        /// <see cref="Instrument.Orientation"/>; zero by default, the instrument frame the spacecraft frame</param>
+        /// <param name="naifId">The NAIF id of the instrument; by default the smallest free NaifId × 1000 − n, n in
+        /// [1, 999] (NAIF IDs Required Reading, "Instruments"). Required on a kernel-backed spacecraft</param>
+        /// <param name="model">The model of the instrument, informational; null by default</param>
+        /// <returns>The instrument added.</returns>
+        /// <exception cref="ArgumentNullException"><paramref name="naifId"/> is null on a kernel-backed spacecraft
+        /// (decision 73 of #668): <c>gftfov</c> reads the instrument kernel loaded under the id, and a default id could
+        /// read another instrument of the mission's kernel.</exception>
+        /// <exception cref="InvalidOperationException"><paramref name="naifId"/> is null and no id NaifId × 1000 − n,
+        /// n in [1, 999], is free (or an int): pass <paramref name="naifId"/>.</exception>
+        /// <exception cref="ArgumentException">Naming the parameter: <paramref name="naifId"/> is the id of another
+        /// instrument of the spacecraft; <paramref name="name"/> has the invariant upper-cased form of the name of another
+        /// of its instruments (decision 74 of #668: both kernels would assign FRAME_&lt;SPACECRAFT&gt;_&lt;INSTRUMENT&gt;,
+        /// and write the same file on a case-insensitive file system), or is empty; the field of view is not a finite
+        /// positive number, the boresight or the reference vector has a component that is not finite or a magnitude of 0,
+        /// or the reference vector is parallel to the boresight: the fields CSPICE's <c>getfov</c> rejects (#707); or an
+        /// Euler angle of <paramref name="orientation"/> is not finite (#715).</exception>
         /// <exception cref="ArgumentOutOfRangeException"><paramref name="naifId"/> is not negative, or is the id of the
-        /// spacecraft frame, NaifId × 1000, which the instrument frame kernel would define relative to itself (#676); an
-        /// instrument id of NAIF's convention is NaifId × 1000 − n, n in [1, 999] (NAIF IDs Required Reading, "Instruments");
-        /// or <paramref name="crossAngle"/> is not a finite positive number: SPICE cannot read a NaN or an infinity in the
-        /// kernel (#707), and a cross angle of 0 or −0 is a field of no width, which <c>gftfov</c> rejects or searches as a
-        /// segment depending on the rounding of the boresight (#715; before 11.0.0 +0 was accepted and the search threw).</exception>
-        public void AddRectangularInstrument(int naifId, string name, string model, double fieldOfView, double crossAngle, in Vector3 boresight, in Vector3 refVector,
-            in Vector3 orientation)
+        /// spacecraft frame, NaifId × 1000, which the instrument frame kernel would define relative to itself (#676); or
+        /// <paramref name="crossAngle"/> is not a finite positive number: SPICE cannot read a NaN or an infinity in the
+        /// kernel (#707), and a cross angle of 0 or −0 is a field of no width (#715).</exception>
+        public RectangularInstrument AddRectangularInstrument(string name, double fieldOfView, double crossAngle, in Vector3 boresight,
+            in Vector3 refVector, in Vector3 orientation = default, int? naifId = null, string model = null)
         {
-            if (!_instruments.Add(new RectangularInstrument(this, naifId, name, model, fieldOfView, crossAngle, boresight, refVector, orientation)))
-            {
-                throw new ArgumentException("Instrument already added to spacecraft");
-            }
+            int id = InstrumentIdToAdd(naifId, name);
+            return AddInstrument(new RectangularInstrument(this, id, name, model, fieldOfView, crossAngle, boresight, refVector, orientation));
         }
 
         /// <summary>
-        /// Add elliptical instrument
+        /// Adds a elliptical instrument to the spacecraft and returns it (decision 72 of #668, decided by S. Guillet,
+        /// 2026-11-23; before 11.0.0 the method returned nothing and took the id and the model first).
         /// </summary>
-        /// <param name="naifId"></param>
-        /// <param name="name"></param>
-        /// <param name="model"></param>
-        /// <param name="fieldOfView">The half-angle in the plane of the boresight and the reference vector (<c>FOV_REF_ANGLE</c>), rad</param>
+        /// <param name="name">The name of the instrument, unique on the spacecraft on its invariant upper-cased form</param>
+        /// <param name="fieldOfView">The half-angle in the plane of the boresight and the reference vector
+        /// (<c>FOV_REF_ANGLE</c>), rad: finite and positive</param>
         /// <param name="crossAngle">The half-angle across that plane (<c>FOV_CROSS_ANGLE</c>), rad: finite and positive</param>
-        /// <param name="boresight"></param>
-        /// <param name="refVector"></param>
-        /// <param name="orientation">The Euler angles (x, y, z) in radians about the axes 1, 2, 3 of the frame kernel, finite: <see cref="Instrument.Orientation"/></param>
-        /// <exception cref="ArgumentException">The name or the model is empty, the instrument was already added, or, naming the
-        /// parameter, the field of view is not a finite positive number, the boresight or the reference vector has a component
-        /// that is not finite or a magnitude of 0, or the reference vector is parallel to the boresight: the fields CSPICE's
-        /// <c>getfov</c> rejects (#707; before 11.0.0 the instrument was added and the search threw); or an Euler angle of
-        /// <paramref name="orientation"/> is not finite, which has no rotation and which SPICE cannot read in the frame kernel
-        /// (#715; before 11.0.0 the instrument was added with a NaN rotation).</exception>
+        /// <param name="boresight">The boresight, in the instrument frame: finite components, a non-zero magnitude</param>
+        /// <param name="refVector">The reference vector, in the instrument frame: finite components, a non-zero magnitude,
+        /// not parallel to the boresight</param>
+        /// <param name="orientation">The Euler angles (x, y, z) in radians about the axes 1, 2, 3 of the frame kernel, finite:
+        /// <see cref="Instrument.Orientation"/>; zero by default, the instrument frame the spacecraft frame</param>
+        /// <param name="naifId">The NAIF id of the instrument; by default the smallest free NaifId × 1000 − n, n in
+        /// [1, 999] (NAIF IDs Required Reading, "Instruments"). Required on a kernel-backed spacecraft</param>
+        /// <param name="model">The model of the instrument, informational; null by default</param>
+        /// <returns>The instrument added.</returns>
+        /// <exception cref="ArgumentNullException"><paramref name="naifId"/> is null on a kernel-backed spacecraft
+        /// (decision 73 of #668): <c>gftfov</c> reads the instrument kernel loaded under the id, and a default id could
+        /// read another instrument of the mission's kernel.</exception>
+        /// <exception cref="InvalidOperationException"><paramref name="naifId"/> is null and no id NaifId × 1000 − n,
+        /// n in [1, 999], is free (or an int): pass <paramref name="naifId"/>.</exception>
+        /// <exception cref="ArgumentException">Naming the parameter: <paramref name="naifId"/> is the id of another
+        /// instrument of the spacecraft; <paramref name="name"/> has the invariant upper-cased form of the name of another
+        /// of its instruments (decision 74 of #668: both kernels would assign FRAME_&lt;SPACECRAFT&gt;_&lt;INSTRUMENT&gt;,
+        /// and write the same file on a case-insensitive file system), or is empty; the field of view is not a finite
+        /// positive number, the boresight or the reference vector has a component that is not finite or a magnitude of 0,
+        /// or the reference vector is parallel to the boresight: the fields CSPICE's <c>getfov</c> rejects (#707); or an
+        /// Euler angle of <paramref name="orientation"/> is not finite (#715).</exception>
         /// <exception cref="ArgumentOutOfRangeException"><paramref name="naifId"/> is not negative, or is the id of the
-        /// spacecraft frame, NaifId × 1000, which the instrument frame kernel would define relative to itself (#676); an
-        /// instrument id of NAIF's convention is NaifId × 1000 − n, n in [1, 999] (NAIF IDs Required Reading, "Instruments");
-        /// or <paramref name="crossAngle"/> is not a finite positive number: SPICE cannot read a NaN or an infinity in the
-        /// kernel (#707), and a cross angle of 0 or −0 is a field of no width, which <c>gftfov</c> rejects or searches as a
-        /// segment depending on the rounding of the boresight (#715; before 11.0.0 +0 was accepted and the search threw).</exception>
-        public void AddEllipticalInstrument(int naifId, string name, string model, double fieldOfView, double crossAngle, in Vector3 boresight, in Vector3 refVector,
-            in Vector3 orientation)
+        /// spacecraft frame, NaifId × 1000, which the instrument frame kernel would define relative to itself (#676); or
+        /// <paramref name="crossAngle"/> is not a finite positive number: SPICE cannot read a NaN or an infinity in the
+        /// kernel (#707), and a cross angle of 0 or −0 is a field of no width (#715).</exception>
+        public EllipticalInstrument AddEllipticalInstrument(string name, double fieldOfView, double crossAngle, in Vector3 boresight,
+            in Vector3 refVector, in Vector3 orientation = default, int? naifId = null, string model = null)
         {
-            if (!_instruments.Add(new EllipticalInstrument(this, naifId, name, model, fieldOfView, crossAngle, boresight, refVector, orientation)))
+            int id = InstrumentIdToAdd(naifId, name);
+            return AddInstrument(new EllipticalInstrument(this, id, name, model, fieldOfView, crossAngle, boresight, refVector, orientation));
+        }
+
+        // The checks of Add*Instrument, before the instrument is built, in the order of lot L5b (decisions 72 to 74 of
+        // #668, decided by S. Guillet, 2026-11-23): a kernel-backed spacecraft requires the id, then the id (given, or the
+        // smallest free NaifId × 1000 − n), then a duplicate id, then a name of the invariant upper-cased form of another's.
+        // The value checks stay in the constructor of Instrument. Returns the id of the instrument to build
+        private int InstrumentIdToAdd(int? naifId, string name)
+        {
+            if (naifId == null && IsSpiceBacked)
             {
-                throw new ArgumentException("Instrument already added to spacecraft");
+                throw new ArgumentNullException(nameof(naifId),
+                    $"An instrument of the kernel-backed spacecraft {Name} ({NaifId}) takes its NAIF id: the field-of-view search (gftfov) reads the instrument kernel loaded under it, and a default id could read another instrument of the mission's kernel.");
             }
+
+            int id = naifId ?? DefaultInstrumentId();
+            if (_instruments.Any(x => x.NaifId == id))
+            {
+                throw new ArgumentException(
+                    $"The NAIF id {id} is the id of the instrument {_instruments.First(x => x.NaifId == id).Name} of {Name} ({NaifId}): an instrument id names one instrument.",
+                    nameof(naifId));
+            }
+
+            // Two names of one upper-cased form write the same kernel variable FRAME_<SPACECRAFT>_<INSTRUMENT> and the same
+            // file on a case-insensitive file system (decision 74 of #668); the writers move to ToUpperInvariant in lot L5c
+            string upper = string.IsNullOrEmpty(name) ? null : name.ToUpperInvariant();
+            var sameName = upper == null ? null : _instruments.FirstOrDefault(x => x.Name.ToUpperInvariant() == upper);
+            if (sameName != null)
+            {
+                throw new ArgumentException(
+                    $"The instrument name {name} has the upper-cased form of the name of the instrument {sameName.Name} ({sameName.NaifId}) of {Name}: both frame kernels would assign FRAME_{Name.ToUpperInvariant()}_{upper}, and both kernels would be the same file on a case-insensitive file system. Give the instrument another name.",
+                    nameof(name));
+            }
+
+            return id;
+        }
+
+        // The smallest free NaifId × 1000 − n, n in [1, 999], that is an int (NAIF IDs Required Reading, "Instruments";
+        // n ≤ 648 at -2147483), computed in long (decision 72 of #668)
+        private int DefaultInstrumentId()
+        {
+            long frameId = (long)NaifId * 1000L;
+            for (int n = 1; n <= 999; n++)
+            {
+                long candidate = frameId - n;
+                if (candidate < int.MinValue)
+                {
+                    break;
+                }
+
+                if (_instruments.All(x => x.NaifId != candidate))
+                {
+                    return (int)candidate;
+                }
+            }
+
+            throw new InvalidOperationException(
+                $"No NAIF id NaifId × 1000 − n, n in [1, 999], is free on {Name} ({NaifId}): pass the instrument's naifId.");
+        }
+
+        private T AddInstrument<T>(T instrument) where T : Instrument
+        {
+            // The id was checked free before the instrument was built
+            _instruments.Add(instrument);
+            return instrument;
         }
 
         /// <summary>
-        /// Add engine to spacecraft
+        /// Adds an engine to the spacecraft and returns it (decision 76 of #668, decided by S. Guillet, 2026-11-23: it
+        /// returned nothing before 11.0.0).
         /// </summary>
-        /// <param name="engine"></param>
+        /// <param name="engine">The engine, on a tank added to the spacecraft</param>
+        /// <returns><paramref name="engine"/>.</returns>
         /// <exception cref="ArgumentNullException"><paramref name="engine"/> is null.</exception>
-        /// <exception cref="ArgumentException">The engine is already added, or its fuel tank is not one of the tank
-        /// instances added to the spacecraft: a tank equal to one of them by name, model and serial number is another tank
-        /// (#676, #586; an unknown tank threw <see cref="InvalidOperationException"/> before 11.0.0).</exception>
-        public void AddEngine(Engine engine)
+        /// <exception cref="ArgumentException">Naming <paramref name="engine"/>: its fuel tank is not one of the tanks added
+        /// to the spacecraft (#676, #586; an unknown tank threw <see cref="InvalidOperationException"/> before 11.0.0), the
+        /// engine is already added, or another engine of the spacecraft has its name, compared ordinally (decision 76 of
+        /// #668).</exception>
+        public Engine AddEngine(Engine engine)
         {
             if (engine == null) throw new ArgumentNullException(nameof(engine));
             if (!HoldsFuelTank(engine.FuelTank))
             {
                 // ArgumentException, the call receiving the faulty engine (#676, decided by S. Guillet, 2026-11-14)
                 throw new ArgumentException(
-                    $"Unknown fuel tank, you must add fuel tank to spacecraft before add engine: the fuel tank {engine.FuelTank.Name} (serial number {engine.FuelTank.SerialNumber}) of the engine {engine.Name} is not a tank instance of {Name}; a tank equal to one of its tanks by name, model and serial number is another tank.",
+                    $"Unknown fuel tank, you must add fuel tank to spacecraft before add engine: the fuel tank {engine.FuelTank.Name}{SerialOf(engine.FuelTank.SerialNumber)} of the engine {engine.Name} is not a tank of {Name}.",
                     nameof(engine));
             }
 
-            if (!_engines.Add(engine))
+            if (HoldsEngine(engine))
             {
-                throw new ArgumentException("Engine already added to spacecraft");
+                throw new ArgumentException($"The engine {engine.Name} is already added to {Name}.", nameof(engine));
             }
+
+            if (_engines.Any(x => x.Name == engine.Name))
+            {
+                throw new ArgumentException(
+                    $"{Name} already holds an engine named {engine.Name}: the engines of a spacecraft have one name each (decision 76 of #668).",
+                    nameof(engine));
+            }
+
+            _engines.Add(engine);
+            return engine;
         }
 
         /// <summary>
-        /// Add fuel tank to spacecraft
+        /// Adds a fuel tank to the spacecraft and returns it (decision 76 of #668, decided by S. Guillet, 2026-11-23: it
+        /// returned nothing before 11.0.0).
         /// </summary>
-        /// <param name="fuelTank"></param>
-        /// <exception cref="ArgumentException">The tank is already added, or is held by another spacecraft: a tank belongs to
-        /// one spacecraft (#676, #586; before, it moved to this one without an error).</exception>
-        public void AddFuelTank(FuelTank fuelTank)
+        /// <param name="fuelTank">The tank, held by no other spacecraft</param>
+        /// <returns><paramref name="fuelTank"/>.</returns>
+        /// <exception cref="ArgumentNullException"><paramref name="fuelTank"/> is null.</exception>
+        /// <exception cref="ArgumentException">Naming <paramref name="fuelTank"/>: the tank is already added, another tank of
+        /// the spacecraft has its name, compared ordinally (decision 76 of #668; checked before the tank is attached, so a
+        /// refused tank stays free for another spacecraft), or the tank is held by another spacecraft: a tank belongs to one
+        /// spacecraft (#676, #586; before, it moved to this one without an error).</exception>
+        public FuelTank AddFuelTank(FuelTank fuelTank)
         {
             if (fuelTank == null) throw new ArgumentNullException(nameof(fuelTank));
-            if (_fuelTanks.Contains(fuelTank))
+            if (HoldsFuelTank(fuelTank))
             {
-                throw new ArgumentException("Fuel tank already added to spacecraft");
+                throw new ArgumentException($"The fuel tank {fuelTank.Name} is already added to {Name}.", nameof(fuelTank));
+            }
+
+            // Before the attach, which is never released: a tank refused after it would be held by no list (IC-16 of lot L5b)
+            if (_fuelTanks.Any(x => x.Name == fuelTank.Name))
+            {
+                throw new ArgumentException(
+                    $"{Name} already holds a fuel tank named {fuelTank.Name}: the tanks of a spacecraft have one name each (decision 76 of #668).",
+                    nameof(fuelTank));
             }
 
             // Attached atomically, so that one spacecraft takes a tank added to several at once (#676)
@@ -476,22 +652,28 @@ namespace IO.Astrodynamics.Body.Spacecraft
             if (!ReferenceEquals(holder, this))
             {
                 throw new ArgumentException(
-                    $"The fuel tank {fuelTank.Name} (serial number {fuelTank.SerialNumber}) belongs to the spacecraft {holder.Name} ({holder.NaifId}): a tank belongs to one spacecraft.",
+                    $"The fuel tank {fuelTank.Name}{SerialOf(fuelTank.SerialNumber)} belongs to the spacecraft {holder.Name} ({holder.NaifId}): a tank belongs to one spacecraft.",
                     nameof(fuelTank));
             }
 
             _fuelTanks.Add(fuelTank);
+            return fuelTank;
         }
 
-        // Whether the tank is one of the tank instances of the spacecraft, by reference: FuelTank compares by value (#676)
-        private bool HoldsFuelTank(FuelTank fuelTank) => _fuelTanks.Any(x => ReferenceEquals(x, fuelTank));
+        // " (serial number s)" for a component given a serial number, nothing otherwise (decision 76 of #668: optional)
+        private static string SerialOf(string serialNumber) =>
+            string.IsNullOrEmpty(serialNumber) ? string.Empty : $" (serial number {serialNumber})";
 
-        // Whether the engine is one of the engine instances of the spacecraft, by reference: Engine compares by value
-        // (decision 92 of #668)
-        private bool HoldsEngine(Engine engine) => _engines.Any(x => ReferenceEquals(x, engine));
+        // Whether the tank is one of the tanks of the spacecraft: FuelTank compares by reference since 11.0.0 (decision 76 of
+        // #668; by value before, so the check compared references, #676)
+        private bool HoldsFuelTank(FuelTank fuelTank) => _fuelTanks.Contains(fuelTank);
+
+        // Whether the engine is one of the engines of the spacecraft: Engine compares by reference since 11.0.0 (decisions 76
+        // and 92 of #668)
+        private bool HoldsEngine(Engine engine) => _engines.Contains(engine);
 
         /// <summary>
-        /// Checks, before a propagation, that each maneuver of the chain draws on an engine of this spacecraft: an engine of
+        /// Checks, before a propagation, that each impulse of the chain given an engine draws on an engine of this spacecraft: an engine of
         /// <see cref="Engines"/>, added with <see cref="AddEngine"/>, compared by reference (decision 92 of #668, decided by
         /// S. Guillet, 2026-11-23: before, the tank alone was checked, so an engine built on the spacecraft's tank and never
         /// added ran), whose fuel tank is one of the tank instances of the spacecraft and is held by this instance (#676,
@@ -499,17 +681,27 @@ namespace IO.Astrodynamics.Body.Spacecraft
         /// during the run, one on another spacecraft's tank burnt that spacecraft's fuel, and an attitude took the body axes
         /// of the other spacecraft, or the static ones. And that each is in the plan of this spacecraft
         /// (<see cref="SetManeuvers"/>): the run's re-check of the claim (decision 46 of #668, decided by S. Guillet,
-        /// 2026-11-23).
+        /// 2026-11-23). Then it resolves, writing nothing, the engine and the centre the run gives each maneuver of the plan
+        /// (decisions 61, 63 and 64 of #668, decided by S. Guillet, 2026-11-23): see <see cref="ResolveManeuver"/>.
         /// </summary>
+        /// <returns>The maneuvers of the plan, from its head, each with the engine (null for an attitude) and the centre
+        /// (null for the central body of the run) the run writes on it right after its re-arm.</returns>
         /// <exception cref="InvalidOperationException">A maneuver draws on an engine that is not one of this spacecraft's
-        /// engines or on a tank that is not this spacecraft's, or is not in its plan; nothing changes.</exception>
-        internal void CheckManeuverEngines()
+        /// engines or on a tank that is not this spacecraft's, or points an instrument of another spacecraft (#797, decision 66
+        /// of #668, decided by S. Guillet, 2026-11-23), or is not in its plan, or its engine or its centre cannot be inferred
+        /// (decision 64); nothing changes.</exception>
+        internal IReadOnlyList<(Maneuver.Maneuver Maneuver, Engine Engine, CelestialItem Center)> CheckManeuverEngines()
         {
             foreach (var maneuver in Maneuver.Maneuver.Chain(PlanHead).Concat(Maneuver.Maneuver.Chain(StandbyManeuver)))
             {
                 if (EngineError(maneuver) is { } engineError)
                 {
                     throw new InvalidOperationException(engineError);
+                }
+
+                if (InstrumentError(maneuver) is { } instrumentError)
+                {
+                    throw new InvalidOperationException(instrumentError);
                 }
 
                 if (!ReferenceEquals(maneuver.PlanOwner, this))
@@ -519,13 +711,93 @@ namespace IO.Astrodynamics.Body.Spacecraft
                         "by SetManeuvers only. Set the plan with SetManeuvers.");
                 }
             }
+
+            var resolved = new List<(Maneuver.Maneuver, Engine, CelestialItem)>();
+            foreach (var maneuver in Maneuver.Maneuver.Chain(PlanHead))
+            {
+                var (engine, center) = ResolveManeuver(maneuver);
+                resolved.Add((maneuver, engine, center));
+            }
+
+            return resolved;
         }
 
+        /// <summary>
+        /// The engine and the centre a run gives <paramref name="maneuver"/>, resolved from the values it was given,
+        /// never from those a run wrote (IC-1 of lot L5b of #668), writing nothing (decisions 61, 63 and 64 of #668, decided
+        /// by S. Guillet, 2026-11-23): for an impulse, the engine it was given, else the only engine of
+        /// <see cref="Engines"/> (decision 92); for every maneuver, the centre it was given, else the observer of the
+        /// initial orbit of this spacecraft when it is a celestial body other than a star, else, for a law that does not
+        /// read its centre (all its targets library <see cref="Maneuver.CelestialAttitudeTarget"/>s), null, the central body of the
+        /// run (decision 99 of #668, decided by S. Guillet, 2026-11-24).
+        /// </summary>
+        /// <exception cref="InvalidOperationException">An impulse given no engine on a spacecraft of no engine or of
+        /// several, or a law that reads its centre given none where it cannot be inferred (SSB mode: the observer is a
+        /// star or a barycentre), or an impulse whose inferred centre breaks its rule (an apogee below the equatorial radius
+        /// of the centre, decision 68 of #668).</exception>
+        internal (Engine Engine, CelestialItem Center) ResolveManeuver(Maneuver.Maneuver maneuver)
+        {
+            Engine engine = null;
+            if (maneuver is Maneuver.ImpulseManeuver impulse)
+            {
+                engine = impulse.GivenEngine;
+                if (engine == null)
+                {
+                    if (_engines.Count != 1)
+                    {
+                        string held = _engines.Count == 0
+                            ? "holds no engine"
+                            : $"holds {_engines.Count} engines ({string.Join(", ", _engines.Select(x => x.Name))})";
+                        throw new InvalidOperationException(
+                            $"The {maneuver.GetType().Name} of {Name} ({NaifId}) was given no engine, and {Name} {held}: the engine is inferred only " +
+                            $"when the spacecraft holds one (decisions 61 and 64 of #668). Pass engine: to the constructor of the maneuver, an engine of {Name}.");
+                    }
+
+                    engine = _engines.First();
+                }
+            }
+
+            var center = maneuver.GivenCenter ?? InferredCenter;
+            if (center == null && maneuver.ReadsCenter)
+            {
+                string observer = InitialOrbitalParameters?.Observer is INaifObject named ? named.Name : "none";
+                throw new InvalidOperationException(
+                    $"The {maneuver.GetType().Name} of {Name} ({NaifId}) was given no maneuverCenter, and the centre cannot be inferred: the observer " +
+                    $"of the initial orbit of {Name}, {observer}, is not a celestial body other than a star (SSB mode), and the law reads its centre " +
+                    "(an impulse, an orbital direction, a user target or a user attitude; decisions 61, 64 and 99 of #668). Give maneuverCenter to the " +
+                    "constructor of the maneuver.");
+            }
+
+            // The rule of the centre of an impulse (the apogee of an ApogeeHeightManeuver above the surface, decision 68 of
+            // #668): checked by the constructor for a given centre, here for an inferred one, with the exception of the
+            // chain checks (L5-27 as amended)
+            if (maneuver.GivenCenter == null && center != null && maneuver is Maneuver.ImpulseManeuver checkedImpulse &&
+                checkedImpulse.CenterError(center) is { } centerError)
+            {
+                throw new InvalidOperationException(
+                    $"The {maneuver.GetType().Name} of {Name} ({NaifId}) cannot take the centre the run infers, {(center as INaifObject)?.Name}: {centerError}");
+            }
+
+            return (engine, center);
+        }
+
+        // The centre a maneuver given none takes: the observer of the initial orbit as given when it is a celestial body
+        // other than a star (decision 61 of #668, L5-05 as amended: a star or a barycentre is the SSB mode, whose run is
+        // about the Sun, and a state read from an SSB-mode solution is about the Sun, so it infers the Sun); null otherwise
+        private CelestialItem InferredCenter =>
+            InitialOrbitalParameters?.Observer is CelestialBody body and not Star ? body : null;
+
         // Why a maneuver cannot run on this spacecraft: its engine's tank is not one of this spacecraft's (#676, #586), or
-        // the engine is not one of its engines, by reference (decision 92 of #668); null otherwise
+        // the engine is not one of its engines, by reference (decision 92 of #668); null otherwise. An impulse only (an
+        // attitude has no engine since lot L5b, decision 48 of #668), on the engine it was given (IC-1 of lot L5b): an
+        // inferred engine is one of Engines, whose tanks AddEngine checks
         private string EngineError(Maneuver.Maneuver maneuver)
         {
-            var engine = maneuver.Engine;
+            if (maneuver is not Maneuver.ImpulseManeuver { GivenEngine: { } engine })
+            {
+                return null;
+            }
+
             var tank = engine.FuelTank;
             if (ReferenceEquals(tank.Spacecraft, this) && HoldsFuelTank(tank))
             {
@@ -534,33 +806,67 @@ namespace IO.Astrodynamics.Body.Spacecraft
                     return null;
                 }
 
-                string notOneOf = $"The {maneuver.GetType().Name} of {Name} ({NaifId}) draws on the engine {engine.Name} (serial number {engine.SerialNumber}), which is not one of the engines of {Name}: " +
-                                  $"an engine of a plan is an engine instance added with AddEngine (an engine equal to one of them by name, model and serial number is another engine). ";
-                // A twin of an added engine cannot be added (AddEngine refuses it as already added): the advice is the
-                // instance of Engines (second review of lot L5a)
-                return _engines.Contains(engine)
-                    ? notOneOf + $"An engine equal to it is already one of the engines of {Name}: build the maneuver on that engine instance (Engines of {Name})."
+                string notOneOf = $"The {maneuver.GetType().Name} of {Name} ({NaifId}) draws on the engine {engine.Name}{SerialOf(engine.SerialNumber)}, which is not one of the engines of {Name}: " +
+                                  $"an engine of a plan is an engine instance added with AddEngine. ";
+                // An engine of the name of an added one cannot be added (AddEngine refuses a second engine of a name): the
+                // advice is the instance of Engines (second review of lot L5a; a twin by value before decision 76 of #668)
+                return _engines.Any(x => x.Name == engine.Name)
+                    ? notOneOf + $"An engine of the same name is one of the engines of {Name}: build the maneuver on that engine instance (Engines of {Name})."
                     : notOneOf + $"Add the engine to {Name} with AddEngine before the plan, or build the maneuver on an engine of {Name}.";
             }
 
             string holder = tank.Spacecraft == null
                 ? "is on no spacecraft"
                 : $"belongs to the spacecraft {tank.Spacecraft.Name} ({tank.Spacecraft.NaifId})";
-            return $"The {maneuver.GetType().Name} of {Name} ({NaifId}) draws on the engine {maneuver.Engine.Name} (serial number {maneuver.Engine.SerialNumber}), whose fuel tank {tank.Name} (serial number {tank.SerialNumber}) {holder}, not on the spacecraft propagated: " +
+            return $"The {maneuver.GetType().Name} of {Name} ({NaifId}) draws on the engine {engine.Name}{SerialOf(engine.SerialNumber)}, whose fuel tank {tank.Name}{SerialOf(tank.SerialNumber)} {holder}, not on the spacecraft propagated: " +
                    $"add the tank to {Name} with AddFuelTank and the engine with AddEngine, or build the maneuver on an engine of {Name}.";
         }
 
+        // Why an attitude cannot run on this spacecraft: it points an instrument of another spacecraft (#797, decision 66 of
+        // #668, decided by S. Guillet, 2026-11-23), compared by reference (an instrument equal by NAIF id is another
+        // spacecraft's twin); null otherwise. Before, the run pointed that instrument's boresight, whose orientation is in
+        // the frame of its own spacecraft (0.577 rad off in the probe of L5-26)
+        private string InstrumentError(Maneuver.Maneuver maneuver)
+        {
+            foreach (var instrument in maneuver.PointedInstruments)
+            {
+                if (!ReferenceEquals(instrument.Spacecraft, this))
+                {
+                    return $"The {maneuver.GetType().Name} of {Name} ({NaifId}) points the instrument {instrument.Name} ({instrument.NaifId}) of the spacecraft {instrument.Spacecraft.Name} ({instrument.Spacecraft.NaifId}), not an instrument of the spacecraft propagated: " +
+                           $"an attitude points the instruments of its own spacecraft. Build the attitude on an instrument of {Name} (Instruments of {Name}).";
+                }
+            }
+
+            return null;
+        }
+
         /// <summary>
-        /// Add payload to spacecraft
+        /// Adds a payload to the spacecraft and returns it (decision 76 of #668, decided by S. Guillet, 2026-11-23: it
+        /// returned nothing before 11.0.0).
         /// </summary>
-        /// <param name="payload"></param>
-        public void AddPayload(Payload payload)
+        /// <param name="payload">The payload</param>
+        /// <returns><paramref name="payload"/>.</returns>
+        /// <exception cref="ArgumentNullException"><paramref name="payload"/> is null.</exception>
+        /// <exception cref="ArgumentException">Naming <paramref name="payload"/>: the payload is already added, or another
+        /// payload of the spacecraft has its name, compared ordinally. The rule of every component, for uniformity: a payload
+        /// name reaches no file (decision 76 of #668).</exception>
+        public Payload AddPayload(Payload payload)
         {
             if (payload == null) throw new ArgumentNullException(nameof(payload));
-            if (!_payloads.Add(payload))
+            if (_payloads.Contains(payload))
             {
-                throw new ArgumentException("Payload already added to spacecraft");
+                throw new ArgumentException($"The payload {payload.Name} is already added to {Name}.", nameof(payload));
             }
+
+            if (_payloads.Any(x => x.Name == payload.Name))
+            {
+                throw new ArgumentException(
+                    $"{Name} already holds a payload named {payload.Name}: the payloads of a spacecraft have one name each (decision 76 of #668).",
+                    nameof(payload));
+            }
+
+            _payloads.Add(payload);
+            return payload;
         }
 
         /// <summary>
@@ -601,24 +907,26 @@ namespace IO.Astrodynamics.Body.Spacecraft
         }
 
         /// <summary>
-        /// The specific impulse of the engines of the spacecraft fired together, s: the sum of the thrusts of the engines
-        /// whose tank holds fuel at the start of a run (an initial quantity above 0) over g0 and over their fuel flows
-        /// (<see cref="GetTotalFuelFlow"/>). Every engine counts from lot L5b, once the tanks refuse a non-finite quantity
-        /// (decision 60 of #668 with L5-20 as amended, decided by S. Guillet, 2026-11-23; #801).
+        /// The specific impulse of the engines of the spacecraft fired together, s: the sum of the thrusts of every engine of
+        /// <see cref="Engines"/> over g0 and over their fuel flows (<see cref="GetTotalFuelFlow"/>), whatever their tanks
+        /// hold (decision 60 of #668 with L5-20 as amended, decided by S. Guillet, 2026-11-23; #801 part 1), so an engine on
+        /// an empty tank counts: engines of 300 s at 10 kg/s and 200 s at 30 kg/s give 225 s whatever the second tank holds.
+        /// Before lot L5b it counted only the engines whose tank held fuel at the start of a run (an initial quantity above
+        /// 0), which left out the engine of a tank of NaN quantity (300 s in that case), a quantity the tanks refuse since
+        /// #800. NaN (0 / 0) for a spacecraft without an engine.
         /// </summary>
         public double GetTotalISP()
         {
-            return (Engines.Where(x => x.FuelTank.InitialQuantity > 0.0).Sum(x => x.Thrust) / Constants.g0) /
-                   GetTotalFuelFlow();
+            return (Engines.Sum(x => x.Thrust) / Constants.g0) / GetTotalFuelFlow();
         }
 
         /// <summary>
-        /// The sum of the fuel flows of the engines of the spacecraft whose tank holds fuel at the start of a run, kg/s; every
-        /// engine from lot L5b (decision 60 of #668, #801).
+        /// The sum of the fuel flows of every engine of the spacecraft, kg/s, whatever their tanks hold (decision 60 of
+        /// #668, #801 part 1; before lot L5b, the engines whose tank held fuel at the start of a run); 0 without an engine.
         /// </summary>
         public double GetTotalFuelFlow()
         {
-            return Engines.Where(x => x.FuelTank.InitialQuantity > 0.0).Sum(x => x.FuelFlow);
+            return Engines.Sum(x => x.FuelFlow);
         }
 
         /// <summary>
@@ -681,7 +989,9 @@ namespace IO.Astrodynamics.Body.Spacecraft
         /// <exception cref="ArgumentException">Naming <c>maneuvers</c>: a maneuver is null; or appears twice, which would
         /// make the chain a cycle (a repeated burn is a new maneuver, #585); or is in the plan of another spacecraft; or
         /// draws on an engine that is not one of this spacecraft's <see cref="Engines"/>, added with <see cref="AddEngine"/>
-        /// and compared by reference (decision 92 of #668), or whose fuel tank is not one of this spacecraft's (#676); or, for
+        /// and compared by reference (decision 92 of #668), or whose fuel tank is not one of this spacecraft's (#676); or, for an
+        /// attitude, points an instrument of another spacecraft, compared by reference (#797, decision 66 of #668, decided by
+        /// S. Guillet, 2026-11-23: the run pointed that instrument's boresight); or, for
         /// an impulse, has its target
         /// orbit in another frame than the one the spacecraft is propagated in (GCRF and ICRF counting as one, #685). Nothing
         /// changes.</exception>
@@ -714,6 +1024,11 @@ namespace IO.Astrodynamics.Body.Spacecraft
                     {
                         throw new ArgumentException(engineError, nameof(maneuvers));
                     }
+
+                    if (InstrumentError(maneuver) is { } instrumentError)
+                    {
+                        throw new ArgumentException(instrumentError, nameof(maneuvers));
+                    }
                 }
 
                 if (InitialOrbitalParameters != null &&
@@ -735,6 +1050,7 @@ namespace IO.Astrodynamics.Body.Spacecraft
                 for (int i = 0; i < plan.Length; i++)
                 {
                     plan[i].PlanOwner = this;
+                    plan[i].LastPlanSpacecraft = this;
                     plan[i].NextManeuver = i + 1 < plan.Length ? plan[i + 1] : null;
                 }
 

@@ -137,7 +137,7 @@ public class PropagationCaseTests
 
         // The spacecraft and the forces
         Assert.Equal(500.0, propagationCase.Spacecraft.DryOperatingMass);
-        Assert.Equal(800.0, propagationCase.Spacecraft.MaximumOperatingMass);
+        Assert.Equal(800.0, propagationCase.Spacecraft.MaxOperatingMass);
         Assert.Equal(4.0, propagationCase.Spacecraft.SectionalArea);
         Assert.Equal(2.1, propagationCase.Spacecraft.DragCoefficient);
         Assert.Equal(1.3, propagationCase.Spacecraft.SolarRadiationCoeff);
@@ -548,7 +548,7 @@ public class PropagationCaseTests
         var pointMass = state.Position * (-earth.GM / System.Math.Pow(state.Position.Magnitude(), 3.0));
         Assert.InRange((earth.EvaluateGravitationalAcceleration(state) - pointMass).Magnitude() / pointMass.Magnitude(), 0.0, 1e-15);
         Assert.Equal(100.0, propagationCase.Spacecraft.DryOperatingMass);
-        Assert.Equal(1000.0, propagationCase.Spacecraft.MaximumOperatingMass);
+        Assert.Equal(1000.0, propagationCase.Spacecraft.MaxOperatingMass);
         Assert.Equal(1.0, propagationCase.Spacecraft.SectionalArea);
         Assert.Equal(2.2, propagationCase.Spacecraft.DragCoefficient);
         Assert.Equal(1.0, propagationCase.Spacecraft.SolarRadiationCoeff);

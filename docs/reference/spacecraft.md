@@ -8,14 +8,34 @@ Creates a spacecraft for numerical propagation.
 
 ```csharp
 // Inputs: orbit (StateVector)
-var spacecraft = new Spacecraft(
-    naifId: -1001, name: "MySat",
-    mass: 500.0, maximumOperatingMass: 2000.0,
-    clock: new Clock("OnboardClk", 256),
-    initialOrbitalParameters: orbit,
-    sectionalArea: 10.0, dragCoeff: 2.2,
-    cosparId: "2024-001A", solarRadiationCoeff: 1.5);
+// The NAIF id, the name, the dry mass (kg) and the initial orbit; everything else is optional
+var spacecraft = new Spacecraft(-1001, "MySat", 500.0, orbit);
+
+// The optional values, by name
+var detailed = new Spacecraft(-1002, "MySat2", 500.0, orbit,
+    maxOperatingMass: 2000.0, clock: new Clock("OnboardClk", 256),
+    sectionalArea: 10.0, dragCoefficient: 2.2,
+    cosparId: "2024-001A", solarRadiationCoefficient: 1.5);
 ```
+
+| Parameter | Default | Description |
+|-----------|---------|-------------|
+| `maxOperatingMass` | `double.MaxValue` | Maximum operating mass (kg): informational, checked against the dry mass only, never against the fuel and the payloads |
+| `clock` | Auto-created | A new `Clock` named `"{name}_CLK"`, 65536 ticks per second (the resolution of the CK the library writes) |
+| `sectionalArea` | `1.0` | Mean sectional area (m2), drag and solar radiation pressure |
+| `dragCoefficient` | `2.2` | Drag coefficient Cd (free-molecular flow) |
+| `cosparId` | `null` | COSPAR international designator, written to the OPM |
+| `solarRadiationCoefficient` | `1.0` | Solar radiation pressure coefficient Cr, typically 1.0 to 2.0 |
+| `bodyFront`, `bodyRight`, `bodyUp` | +Y, +X, +Z | The body axes of the spacecraft |
+| `hardBodyRadius` | `0.0` | Hard-body radius (m) of the conjunction analysis |
+
+Since 11.0.0 (decisions 70 and 71 of #668, decided by S. Guillet, 2026-11-23) the initial orbit is the fourth
+parameter and the maximum operating mass and the clock are optional; before, `(naifId, name, mass,
+maximumOperatingMass, clock, initialOrbitalParameters, ...)` with a required clock. An old positional call no longer
+compiles (a `double` does not convert to `OrbitalParameters`): move the orbit after the mass, or name the arguments.
+The parameters `maximumOperatingMass`, `dragCoeff` and `solarRadiationCoeff` of both constructors are named
+`maxOperatingMass`, `dragCoefficient` and `solarRadiationCoefficient`, and the property `MaximumOperatingMass`
+`MaxOperatingMass`.
 
 The NAIF id is in [-2147483, -1], so that the id of the spacecraft frame, NaifId × 1000, is an `int`
 (`ArgumentOutOfRangeException` otherwise, #676; below -2147483 the frame id wrapped around before 11.0.0). A clock
@@ -25,6 +45,14 @@ kernel-backed twin) is accepted and stays with its first spacecraft. Give each s
 clock is attached, and the spacecraft listed by its observer's `Satellites`, at the end of the constructor, after every
 check: a constructor that throws leaves the clock free and lists nothing (#676). The clock is attached atomically: of
 spacecraft of different ids built at once on several threads with one clock, one takes it and the others throw.
+
+The physical values are finite and in their ranges, or the constructor throws `ArgumentOutOfRangeException` naming the
+parameter ([#800](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/800), decision 75 of #668,
+decided by S. Guillet, 2026-11-23): `mass` not negative, `maxOperatingMass` at least `mass`, `sectionalArea` above
+0, `dragCoefficient`, `solarRadiationCoefficient` and `hardBodyRadius` not negative. The kernel-backed constructor runs the same
+checks, before it reads the kernels. Before 11.0.0 a NaN passed the comparisons (a NaN of positive sign the area and
+the drag coefficient too), an infinity passed them, a negative mass threw `ArgumentException` naming no parameter, and
+the kernel-backed constructor checked the hard-body radius only.
 
 ## Kernel-Backed Constructor
 
@@ -39,11 +67,11 @@ var lro = new Spacecraft(naifId: -85, name: "LRO",
 |-----------|---------|-------------|
 | `epoch` | `Time.J2000TDB` | Epoch for initial state lookup |
 | `mass` | `0.0` | Dry mass (kg) |
-| `maximumOperatingMass` | `double.MaxValue` | Maximum operating mass (kg) |
-| `clock` | Auto-created | A new `Clock` named `"{name}_CLK"` |
+| `maxOperatingMass` | `double.MaxValue` | Maximum operating mass (kg) |
+| `clock` | Auto-created | A new `Clock` named `"{name}_CLK"`, 256 ticks per second (as before 11.0.0) |
 | `sectionalArea` | `1.0` | Mean sectional area (m2) |
-| `dragCoeff` | `2.2` | Drag coefficient |
-| `solarRadiationCoeff` | `1.0` | Solar radiation pressure coefficient |
+| `dragCoefficient` | `2.2` | Drag coefficient |
+| `solarRadiationCoefficient` | `1.0` | Solar radiation pressure coefficient |
 | `centerOfMotion` | the Earth | Centre of the initial orbital parameters (`InitialOrbitalParameters.Observer`), which the conjunction analysis takes as its observer when the spacecraft is protected |
 
 The initial orbital parameters are the state at `epoch` relative to `centerOfMotion`, the Earth by default (#620; the
@@ -53,7 +81,8 @@ kernels must cover `epoch` and chain the spacecraft to that centre, or the const
 
 Kernel-backed spacecraft: `IsSpiceBacked` returns `true`. Calling `Propagate()` throws `InvalidOperationException`.
 
-The NAIF id and the clock follow the rules of the standard constructor, checked before the SPK is read. The frame of
+The NAIF id, the clock and the physical values follow the rules of the standard constructor, checked before the SPK is
+read (the physical values since 11.0.0, #800). The frame of
 a kernel-backed spacecraft is the frame the loaded kernels define for the id NaifId × 1000, whatever its name: SPICE is
 asked for that name (`frmnam_c`) at each read, so a twin named otherwise than the propagated spacecraft, or a mission FK
 that names the frame `KSAT_BUS`, is read, and so is an FK loaded after the twin is built. `Frame.Name` stays
@@ -66,11 +95,11 @@ reads the frame of its own id.
 | Property | Description |
 |----------|-------------|
 | `NaifId` | NAIF ID, in [-2147483, -1] |
-| `DryOperatingMass` | Mass without fuel (kg) |
-| `MaximumOperatingMass` | Maximum operating mass (kg) |
-| `SectionalArea` | Cross-sectional area for drag and SRP (m2) |
-| `DragCoefficient` | Cd (default 2.2) |
-| `SolarRadiationCoeff` | Cr (default 1.0) |
+| `DryOperatingMass` | Mass without fuel (kg): finite and not negative |
+| `MaxOperatingMass` | Maximum operating mass (kg): informational, finite and at least the dry mass, checked against the dry mass only (`MaximumOperatingMass` before 11.0.0) |
+| `SectionalArea` | Cross-sectional area for drag and SRP (m2): finite and above 0 |
+| `DragCoefficient` | Cd (default 2.2): finite and not negative |
+| `SolarRadiationCoeff` | Cr (default 1.0): typically 1.0 to 2.0; finite and not negative |
 | `CosparId` | COSPAR international designator |
 | `HardBodyRadius` | Hard-body radius for conjunction assessment (m): finite and not negative, 0 (the default) for none, both constructors throwing `ArgumentOutOfRangeException` otherwise; the radius of the spacecraft as a secondary object too, an option of the analysis that gives another value throwing ([#683](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/683), [Conjunction Assessment](conjunction-assessment.md#conjunctionassessment-methods)) |
 | `BodyFront` / `BodyRight` / `BodyUp` | Instance body axes (override static defaults) |
@@ -83,12 +112,12 @@ reads the frame of its own id.
 
 ## Static Body Axes
 
-Default body-frame directions. The single-vector attitudes, the attitude of an impulse and the TRIAD factories
-(`TriadAttitude.CreateLVLH`, `CreateProgradeWithSunTracking`) read the instance axes (`BodyFront`, `BodyRight`,
-`BodyUp`) of the spacecraft that carries the engine's tank, and these static axes when no instance override is set or
-while the tank is on no spacecraft (#677), a read outside a propagation only: a propagation whose maneuver's tank is not the
-propagated spacecraft's throws (#676). The `TriadAttitude` constructors take literal body vectors: pass
-`spacecraft.BodyFront`, ... for the instance axes.
+Default body-frame directions. The single-vector attitudes, the attitude of an impulse, the `BodyAxis` constructor of
+`TriadAttitude` and the TRIAD factories (`TriadAttitude.CreateLvlh`, `CreateProgradeWithSunTracking`) read the instance axes (`BodyFront`, `BodyRight`,
+`BodyUp`) of the spacecraft whose plan last held the maneuver (`SetManeuvers`), and these static axes when no instance
+override is set or before any plan (#677), a read outside a propagation only: a run propagates the plan's spacecraft
+(decisions 46 and 69 of #668; the spacecraft of the engine's tank before lot L5b). The `Vector3` constructor of
+`TriadAttitude` takes literal body vectors: these static axes, or `spacecraft.BodyFront`, ... copied at the call.
 
 | Field | Direction | Vector |
 |-------|-----------|--------|
@@ -105,18 +134,18 @@ Instance-level overrides can be set via constructor parameters (`bodyFront`, `bo
 
 | Method | Description |
 |--------|-------------|
-| `AddCircularInstrument(...)` | Add circular FOV instrument; its id is negative and not the spacecraft frame's, NaifId × 1000 (#676) |
-| `AddEllipticalInstrument(...)` | Add elliptical FOV instrument, under the same id rule |
-| `AddRectangularInstrument(...)` | Add rectangular FOV instrument, under the same id rule |
-| `AddEngine(Engine)` | Add propulsion engine, whose fuel tank is a tank instance added to the spacecraft (`ArgumentException` otherwise, a tank equal to it by value included, #676, #586; `InvalidOperationException` for an unknown tank before 11.0.0) |
-| `AddFuelTank(FuelTank)` | Add fuel tank (a burn that needs more fuel than its tank holds throws `InsufficientFuelException`, an `InvalidOperationException` since 11.0.0, with `RequiredMass` and `AvailableMass` in kg); a tank held by another spacecraft is rejected (`ArgumentException`, #676, #586); the tank is attached atomically, so that of spacecraft adding one tank at once on several threads one takes it |
-| `AddPayload(Payload)` | Add payload |
+| `AddCircularInstrument(name, fieldOfView, boresight, refVector, orientation = default, naifId = null, model = null)` | Add a circular FOV instrument and return it ([Adding an instrument](#adding-an-instrument)) |
+| `AddEllipticalInstrument(name, fieldOfView, crossAngle, boresight, refVector, orientation = default, naifId = null, model = null)` | Add an elliptical FOV instrument and return it, under the same rules |
+| `AddRectangularInstrument(name, fieldOfView, crossAngle, boresight, refVector, orientation = default, naifId = null, model = null)` | Add a rectangular FOV instrument and return it, under the same rules |
+| `AddEngine(Engine)` | Add a propulsion engine and return it, whose fuel tank is a tank added to the spacecraft (`ArgumentException` otherwise, #676, #586; `InvalidOperationException` for an unknown tank before 11.0.0); a second engine of a name (ordinal) is refused (`ArgumentException` naming `engine`, decision 76 of #668) |
+| `AddFuelTank(FuelTank)` | Add a fuel tank and return it (a burn that needs more fuel than its tank holds throws `InsufficientFuelException`, an `InvalidOperationException` since 11.0.0, with `RequiredMass` and `AvailableMass` in kg); a second tank of a name (ordinal) is refused (`ArgumentException` naming `fuelTank`, decision 76 of #668), checked before the tank is attached, so a refused tank can go to another spacecraft; a tank held by another spacecraft is rejected (`ArgumentException`, #676, #586); the tank is attached atomically, so that of spacecraft adding one tank at once on several threads one takes it |
+| `AddPayload(Payload)` | Add a payload and return it; a second payload of a name (ordinal) is refused (`ArgumentException` naming `payload`): the rule of every component, for uniformity, since a payload name reaches no file (decision 76 of #668) |
 | `GetTotalMass()` | Total mass including fuel |
 | `GetInitialFuel()` | The fuel of the spacecraft's own tanks at the start of a run, the sum of their initial quantities, the child's tanks aside (decision 60 of #668, decided by S. Guillet, 2026-11-23; `GetTotalFuel` before 11.0.0, the same value) |
 | `GetRemainingFuel()` | The fuel left in the spacecraft's own tanks, the sum of their quantities: what the last run left |
-| `GetTotalISP()`, `GetTotalFuelFlow()` | The specific impulse of the engines fired together (Σ thrust / g0 / Σ fuel flow) and their total fuel flow, over the engines whose tank holds fuel at the start of a run (an initial quantity above 0); every engine from lot L5b, once the tanks refuse a non-finite quantity ([#801](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/801), decision 60) |
+| `GetTotalISP()`, `GetTotalFuelFlow()` | The specific impulse of the engines fired together (Σ thrust / g0 / Σ fuel flow) and their total fuel flow, over every engine, whatever its tank holds: an engine on an empty tank counts, so engines of 300 s at 10 kg/s and 200 s at 30 kg/s give 225 s whatever the second tank holds ([#801](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/801) part 1, decision 60 of #668; before lot L5b, the engines whose tank held fuel at the start of a run, which left out the engine of a tank of NaN quantity, refused since [#800](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/800)); `GetTotalISP` is NaN (0 / 0) and `GetTotalFuelFlow` 0 without an engine |
 | `ExecutedManeuvers` | The maneuvers the last run executed, attitudes included, in execution order: a new read-only list at each run, empty at the re-arm and replaced by a new list at each maneuver the run executes, so a list once read never changes (decision 58 of #668); the definitions, whose values are those of their last run: the stable values of a run are its records, `PropagationSolution.Maneuvers` |
-| `SetManeuvers(params Maneuver[])` | Set the maneuver plan, in order, each maneuver linked to the next, the one way to link a plan: a second call replaces the first, no maneuver clears it, and nothing is added to `ExecutedManeuvers` (#584); it claims each maneuver for the spacecraft and throws `ArgumentException` (`maneuvers`) for a maneuver of another spacecraft's plan, a maneuver listed twice, an engine that is not one of its `Engines` (added with `AddEngine`, by reference, decision 92), an engine whose tank is not the spacecraft's or a target orbit in another frame, so the tanks, engines and initial orbit come first; a frame changed after it throws `ArgumentException` (`spacecraft`) from a propagator built after the change (`Propagate`, a scenario, a batch; decision 94) and `InvalidOperationException` at the `Propagate` of one built before it ([Maneuver Plan](impulse-maneuvers.md#maneuver-plan); decisions 45 to 47 of #668, decided by S. Guillet, 2026-11-23: SetStandbyManeuver, its minimum epoch now the maneuver's own, and Maneuver.SetNextManeuver removed); the plan is not changed during a run on the spacecraft (decision 96 of #668, decided by S. Guillet, 2026-11-24: a call during a run mixes the two plans, `ExecutedManeuvers` reading m1, m1 for the plan [m1, m2] set again mid-run; the run guard of [#793](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/793), after lot L5, will make it throw `InvalidOperationException` while a run holds the spacecraft) |
+| `SetManeuvers(params Maneuver[])` | Set the maneuver plan, in order, each maneuver linked to the next, the one way to link a plan: a second call replaces the first, no maneuver clears it, and nothing is added to `ExecutedManeuvers` (#584); it claims each maneuver for the spacecraft and throws `ArgumentException` (`maneuvers`) for a maneuver of another spacecraft's plan, a maneuver listed twice, an impulse given an engine that is not one of its `Engines` (added with `AddEngine`, by reference, decision 92) or whose tank is not the spacecraft's (an impulse given none takes the spacecraft's only engine at the run, decision 61), an attitude that points an instrument of another spacecraft (by reference, [#797](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/797), decision 66 of #668; the run re-checks it with `InvalidOperationException`) or a target orbit in another frame, so the tanks, engines, instruments and initial orbit come first; a frame changed after it throws `ArgumentException` (`spacecraft`) from a propagator built after the change (`Propagate`, a scenario, a batch; decision 94) and `InvalidOperationException` at the `Propagate` of one built before it ([Maneuver Plan](impulse-maneuvers.md#maneuver-plan); decisions 45 to 47 of #668, decided by S. Guillet, 2026-11-23: SetStandbyManeuver, its minimum epoch now the maneuver's own, and Maneuver.SetNextManeuver removed); the plan is not changed during a run on the spacecraft (decision 96 of #668, decided by S. Guillet, 2026-11-24: a call during a run mixes the two plans, `ExecutedManeuvers` reading m1, m1 for the plan [m1, m2] set again mid-run; the run guard of [#793](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/793), after lot L5, will make it throw `InvalidOperationException` while a run holds the spacecraft) |
 | `Maneuvers` | The plan, as `SetManeuvers` set it, whatever a run executed; empty for none |
 | `Propagate(Window, PropagationOptions)` | Propagate the orbit with the settings of the options, RK7(8) at 1e-9 about the central body alone every 60 s by default ([Propagation Options](propagators.md#propagation-options); 11.0.0, R06 of #668) |
 | `Propagate(Window, IEnumerable, bool, bool, TimeSpan)` | Propagate orbit |
@@ -141,14 +170,18 @@ SGP4 samples, for a spacecraft with one (decision 40). The reset belongs to `Pro
 propagator built directly fired no burn and started with the fuel left by the first). The inputs of a propagation are
 checked when its propagator is built, and its chain again when it runs, before anything is reset: a propagation
 rejected there, or a propagator built and never run, leaves the previous one as it was. A spacecraft propagated again fires
-its chain as a spacecraft never propagated. Among those inputs, each maneuver of the chain draws on an engine of the
+its chain as a spacecraft never propagated. Among those inputs, each impulse of the chain given an engine draws on an engine of the
 spacecraft: an engine of `Engines`, added with `AddEngine`, compared by reference, a twin equal by name, model and
 serial number being another engine (decision 92 of #668, decided by S. Guillet, 2026-11-23: before, the tank alone was
 checked, so an engine built on the spacecraft's tank and never added ran), whose fuel tank is one of the spacecraft's
 tank instances, held by it; otherwise `SetManeuvers` throws `ArgumentException` (`maneuvers`) and the propagation
 `InvalidOperationException`, naming the maneuver, the engine and the spacecraft (#676, #586; before, an impulse on a
 foreign tank threw `NullReferenceException` at its burn or burnt another spacecraft's fuel, and an attitude took the
-static or another spacecraft's body axes).
+static or another spacecraft's body axes). An impulse given no engine takes the only engine of the spacecraft, and a
+maneuver given no centre the observer of the initial orbit when it is a celestial body other than a star; where either
+cannot be inferred, the propagator constructor and `Propagate` throw `InvalidOperationException` (decisions 61, 64 and
+99 of #668, [The engine and the centre](impulse-maneuvers.md#the-engine-and-the-centre)). An attitude has no engine
+since lot L5b, so a spacecraft without a tank or an engine runs a plan of attitudes.
 
 The exception types of these rules follow one rule (decided by S. Guillet, 2026-11-14, after the .NET Framework Design
 Guidelines: `ArgumentException` for a bad argument, `InvalidOperationException` for the state of an object):
@@ -416,43 +449,43 @@ J2000), its CK is not (`InvalidOperationException`).
 
 | Property | Description |
 |----------|-------------|
-| `Name` | Engine name |
-| `Model` | Engine model identifier |
-| `SerialNumber` | Serial number |
-| `ISP` | Specific impulse (s) |
-| `FuelFlow` | Fuel mass flow rate (kg/s) |
+| `Name` | Engine name, unique among the engines of its spacecraft |
+| `Model` | Engine model identifier, informational; null when none was given |
+| `SerialNumber` | Serial number, informational; null when none was given |
+| `ISP` | Specific impulse (s): finite and above 0 |
+| `FuelFlow` | Fuel mass flow rate (kg/s): finite and above 0 |
 | `Thrust` | Computed thrust (N) |
 | `FuelTank` | Associated fuel tank; a maneuver on the engine is propagated with the spacecraft that holds this tank, and with no other (#676, #586) |
 
 ```csharp
 // Inputs: tank (FuelTank)
-var engine = new Engine("MainEngine", "RS-25", "SN001",
-    isp: 366.0, fuelFlow: 0.5, fuelTank: tank);
+var engine = new Engine("MainEngine", isp: 366.0, fuelFlow: 0.5, fuelTank: tank,
+    model: "RS-25", serialNumber: "SN001");
 ```
 
 ### FuelTank
 
 | Property | Description |
 |----------|-------------|
-| `Name` | Tank name |
-| `Model` | Tank model identifier |
-| `SerialNumber` | Serial number |
-| `Capacity` | Maximum capacity (kg) |
-| `InitialQuantity` | Initial fuel quantity (kg) |
+| `Name` | Tank name, unique among the tanks of its spacecraft |
+| `Model` | Tank model identifier, informational; null when none was given |
+| `SerialNumber` | Serial number, informational; null when none was given |
+| `Capacity` | Maximum capacity (kg): finite and above 0, checked first |
+| `InitialQuantity` | Initial fuel quantity (kg): finite, from 0 (an empty tank, whose first burn throws `InsufficientFuelException`) to the capacity |
 | `Quantity` | Current fuel quantity (kg) |
 
 ```csharp
-var tank = new FuelTank("MainTank", "FT-100", "SN001",
-    capacity: 1000.0, initialQuantity: 800.0);
+var tank = new FuelTank("MainTank", capacity: 1000.0, initialQuantity: 800.0,
+    model: "FT-100", serialNumber: "SN001");
 ```
 
 ### Instrument
 
 | Property | Description |
 |----------|-------------|
-| `NaifId` | NAIF instrument ID: negative, and not the spacecraft frame's id NaifId × 1000, which the instrument FK would define relative to itself (SPICE(BADFRAMESPEC2), #676); NAIF's convention is NaifId × 1000 − n, n from 1 to 999 (NAIF IDs Required Reading, "Instruments") |
-| `Name` | Instrument name |
-| `Model` | Instrument model identifier |
+| `NaifId` | NAIF instrument ID: negative, and not the spacecraft frame's id NaifId × 1000, which the instrument FK would define relative to itself (SPICE(BADFRAMESPEC2), #676); NAIF's convention is NaifId × 1000 − n, n from 1 to 999 (NAIF IDs Required Reading, "Instruments"), the default of the `Add*Instrument` methods |
+| `Name` | Instrument name, unique on its spacecraft on its invariant upper-cased form |
+| `Model` | Instrument model identifier, informational (no kernel reads it); null when none was given |
 | `FieldOfView` | Half-angle in the plane of the boresight and the reference vector, the IK's `FOV_REF_ANGLE` (rad): finite and positive |
 | `CrossAngle` | Half-angle across that plane, the IK's `FOV_CROSS_ANGLE` (rad): finite and positive ([#715](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/715)); `EllipticalInstrument` and `RectangularInstrument` |
 | `Shape` | `InstrumentShape` (Circular, Rectangular, Elliptical) |
@@ -467,6 +500,35 @@ var tank = new FuelTank("MainTank", "FT-100", "SN001",
 | `FindWindowsInFieldOfViewConstraint(Window, Spacecraft, ILocalizable, Frame, ShapeType, Aberration, TimeSpan)` | The windows, in TDB, where the target is in the field: those of CSPICE's `gftfov` ([Field-of-view search](#field-of-view-search)) |
 | `GetBoresightInSpacecraftFrame()` | Transform boresight to spacecraft body frame |
 | `GetRefVectorInSpacecraftFrame()` | Transform reference vector to spacecraft body frame |
+
+#### Adding an instrument
+
+`AddCircularInstrument`, `AddEllipticalInstrument` and `AddRectangularInstrument` build the instrument, list it in
+`Instruments` and return it, typed as its shape: `var camera = spacecraft.AddCircularInstrument("Camera", 0.1,
+Vector3.VectorZ, Vector3.VectorX);` (decision 72 of #668, decided by S. Guillet, 2026-11-23). They are the only way to
+build an instrument: the constructor of `Instrument` is `private protected` since 11.0.0, so every instrument is one of
+the three library shapes, under the rules below, and the kernel writers write it.
+
+- **The orientation** is zero by default: the instrument frame is the spacecraft frame.
+- **The NAIF id** is optional. By default it is the smallest free NaifId × 1000 − n, n from 1 to 999 (NAIF IDs Required
+  Reading, "Instruments"), that is an `int` (n up to 648 at NaifId -2147483): -1001001 for the first instrument of
+  -1001, then -1001002, the gaps the given ids leave filled first. When none is left, the call throws
+  `InvalidOperationException`: pass `naifId`. A given id outside the convention is accepted (mission kernels use them),
+  but not the spacecraft frame's id, NaifId × 1000 (`ArgumentOutOfRangeException`, #676), nor the id of another
+  instrument of the spacecraft (`ArgumentException` naming `naifId`). A default id writes the kernels of the same id
+  given explicitly, byte for byte.
+- **A kernel-backed spacecraft requires the id** (decision 73 of #668): `gftfov` reads the instrument kernel loaded under
+  it, and a default id could read another instrument of the mission's kernel. Without one the call throws
+  `ArgumentNullException` naming `naifId`.
+- **The name** is unique on the spacecraft on its invariant upper-cased form (decision 74 of #668): "Cam" and "CAM" both
+  write the kernel variable `FRAME_<SPACECRAFT>_CAM`, and the same file on a case-insensitive file system, so the second
+  throws `ArgumentException` naming `name`. The writers still upper-case with the current culture until lot L5c.
+- **The model** is optional and informational: it reaches no kernel.
+
+The checks of the id and the name run in that order before the instrument is built, so a rejected call adds nothing.
+Before 11.0.0 the three methods returned nothing and took `(naifId, name, model, fieldOfView, ...)`, the id and the
+model required, a second name differing in case only accepted, and a subclass of `Instrument` outside the library could
+build an instrument none of these rules covered.
 
 The constructor, so `AddCircularInstrument`, `AddEllipticalInstrument` and `AddRectangularInstrument`, throws
 `ArgumentException` naming the parameter for the fields CSPICE's `getfov` rejects on the kernel the library writes, or
@@ -597,8 +659,9 @@ search for a `+S` correction.
 - `ArgumentException`: a search window that ends before it starts, a target that is the instrument's spacecraft, an
   ellipsoid target without radii (a site, a spacecraft, a barycenter, a Lagrange point, a star);
 - `InvalidOperationException`: a field whose angular radius (the larger half-angle of a circle or an ellipse, the angle
-  of the corner of a rectangle) exceeds π/2 − 1e-6, as `gftfov` rejects it, or a shape other than a circle on an
-  instrument that is neither an `EllipticalInstrument` nor a `RectangularInstrument`. The boresight, the reference
+  of the corner of a rectangle) exceeds π/2 − 1e-6, as `gftfov` rejects it (before 11.0.0 also a shape other than a
+  circle on an instrument of a subclass outside the library, which the closed hierarchy no longer allows, decision 72
+  of #668). The boresight, the reference
   vector, the field of view and the cross angle, whose half-angles are positive, are checked when the instrument is
   built ([#707](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/707), [#715](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/715), [Instrument](#instrument)).
 
@@ -673,6 +736,23 @@ found no window for a rectangle where `gftfov` finds two.
 ```csharp
 var payload = new Payload("Camera", 25.0, "SN-42");
 ```
+
+The constructors of `Engine`, `FuelTank` and `Payload` throw `ArgumentOutOfRangeException` naming the parameter for a
+value that is not finite or out of its range: an engine's `isp` and `fuelFlow` above 0, a tank's `capacity` above 0 and
+its `initialQuantity` not negative and at most the capacity, a payload's `mass` above 0 (#800; before 11.0.0 a NaN and an
+infinity passed, and an engine or a payload with a value of 0 or less threw `ArgumentException` naming no parameter).
+
+`FuelTank(name, capacity, initialQuantity, model = null, serialNumber = null)`, `Engine(name, isp, fuelFlow, fuelTank,
+model = null, serialNumber = null)` and `Payload(name, mass, serialNumber = null)` take their model and serial number
+last and optional, informational values no kernel reads (R10 and decision 76 of #668, decided by S. Guillet,
+2026-11-23; before 11.0.0 `(name, model, serialNumber, ...)`, each string required, and a payload's serial number
+required). A tank may start empty, `initialQuantity` 0; its first burn throws `InsufficientFuelException`. The three
+compare by reference: they are entities, a tank's quantity changes in a run, and two components of the same values
+are two components (value equality on the name, the model and the serial number before, the mass too for a payload,
+so a twin passed for the instance). `AddFuelTank`, `AddEngine` and `AddPayload` return their argument and refuse a
+second component of a name on a spacecraft, compared ordinally, with `ArgumentException` naming the parameter: a tank
+or an engine of a name, accepted before when its model or serial number differed, now throws. The payload's rule has no
+file behind it, unlike the instruments' (a payload name reaches no kernel): it is the rule of every component.
 
 ## See Also
 

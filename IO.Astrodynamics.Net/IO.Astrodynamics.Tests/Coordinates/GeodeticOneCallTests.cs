@@ -201,8 +201,8 @@ public class GeodeticOneCallTests
     public void ObserverThatIsNoBody_Throws()
     {
         var earth = new CelestialBody(PlanetsAndMoons.EARTH);
-        var spacecraft = new Spacecraft(-2002, "R20Observer", 100.0, 1000.0, new Clock("R20ObserverClk", 65536),
-            new StateVector(new Vector3(6800e3, 0.0, 0.0), new Vector3(0.0, 7600.0, 0.0), earth, Epoch, Frames.Frame.ICRF));
+        var spacecraft = new Spacecraft(-2002, "R20Observer", 100.0, new StateVector(new Vector3(6800e3, 0.0, 0.0), new Vector3(0.0, 7600.0, 0.0), earth, Epoch, Frames.Frame.ICRF), 1000.0,
+            new Clock("R20ObserverClk", 65536));
         var aboutSpacecraft = new StateVector(new Vector3(100.0, 0.0, 0.0), Vector3.Zero, spacecraft, Epoch, Frames.Frame.ICRF);
         var aboutBarycenter = new StateVector(new Vector3(1e11, 0.0, 0.0), Vector3.Zero, new Barycenter(0), Epoch, Frames.Frame.ICRF);
         Assert.Throws<InvalidOperationException>(() => aboutSpacecraft.ToPlanetodetic());
@@ -216,8 +216,8 @@ public class GeodeticOneCallTests
         // The managed coordinate search reads ToPlanetodetic(): an observer without an ellipsoid throws its
         // InvalidOperationException (before 11.0.0 an InvalidCastException, the observer cast to CelestialBody)
         var earth = new CelestialBody(PlanetsAndMoons.EARTH);
-        var spacecraft = new Spacecraft(-2003, "R20Search", 100.0, 1000.0, new Clock("R20SearchClk", 65536),
-            new StateVector(new Vector3(6800e3, 0.0, 0.0), new Vector3(0.0, 7600.0, 0.0), earth, Epoch, Frames.Frame.ICRF));
+        var spacecraft = new Spacecraft(-2003, "R20Search", 100.0, new StateVector(new Vector3(6800e3, 0.0, 0.0), new Vector3(0.0, 7600.0, 0.0), earth, Epoch, Frames.Frame.ICRF), 1000.0,
+            new Clock("R20SearchClk", 65536));
         var moon = new CelestialBody(PlanetsAndMoons.MOON);
         Assert.Throws<InvalidOperationException>(() => moon.FindWindowsOnCoordinateConstraint(new Window(Epoch, Epoch.AddSeconds(600.0)),
             spacecraft, Frames.Frame.ICRF, CoordinateSystem.Geodetic, Coordinate.Latitude, RelationnalOperator.Greater, 0.0, 0.0,

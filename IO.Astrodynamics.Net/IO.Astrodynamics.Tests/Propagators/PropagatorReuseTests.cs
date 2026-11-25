@@ -89,18 +89,18 @@ public class PropagatorReuseTests
             state = CovariancePropagationTests.WithCovariance(state);
         }
 
-        return new Spacecraft(id, $"RU{-id}", 100.0, 10000.0, new Clock($"ruclk{-id}", 65536), state, 10.0, 2.2);
+        return new Spacecraft(id, $"RU{-id}", 100.0, state, 10000.0, new Clock($"ruclk{-id}", 65536), 10.0, 2.2);
     }
 
     // A prograde attitude at +300 s held 5 min, then an apogee raise to 9 000 km at the first perigee after +600 s
     private static Spacecraft WithChain(Spacecraft spacecraft)
     {
-        var tank = new FuelTank("ft", "model", "sn", 1000.0, 1000.0);
+        var tank = new FuelTank("ft", 1000.0, 1000.0, "model", "sn");
         spacecraft.AddFuelTank(tank);
-        var engine = new Engine("eng", "model", "sn", 300.0, 10.0, tank);
+        var engine = new Engine("eng", 300.0, 10.0, tank, "model", "sn");
         spacecraft.AddEngine(engine);
-        var prograde = new ProgradeAttitude(Earth, Epoch.AddSeconds(300.0), TimeSpan.FromMinutes(5.0), engine);
-        spacecraft.SetManeuvers(prograde, new ApogeeHeightManeuver(Earth, Epoch.AddSeconds(600.0), TimeSpan.Zero, 9000000.0, engine));
+        var prograde = new ProgradeAttitude(Epoch.AddSeconds(300.0), TimeSpan.FromMinutes(5.0), Earth);
+        spacecraft.SetManeuvers(prograde, new ApogeeHeightManeuver(9000000.0, engine, Epoch.AddSeconds(600.0), TimeSpan.Zero, Earth));
         return spacecraft;
     }
 
@@ -111,7 +111,7 @@ public class PropagatorReuseTests
             Frames.Frame.ICRF);
         var ssbState = heliocentric.RelativeTo(Barycenters.SOLAR_SYSTEM_BARYCENTER, Aberration.None).ToStateVector();
         int id = NextId();
-        return new Spacecraft(id, $"RU{-id}", 100.0, 10000.0, new Clock($"ruclk{-id}", 65536), ssbState, 10.0, 2.2);
+        return new Spacecraft(id, $"RU{-id}", 100.0, ssbState, 10000.0, new Clock($"ruclk{-id}", 65536), 10.0, 2.2);
     }
 
     private static RK78Integrator CallerRk78(params ForceBase[] extra)
@@ -644,7 +644,7 @@ public class PropagatorReuseTests
         int id = NextId();
         var state = new StateVector(new Vector3(2000000.0, 0.0, 0.0), new Vector3(0.0, 1600.0, 0.0),
             PlanetsAndMoons.MOON_BODY, Epoch, Frames.Frame.ICRF);
-        return new Spacecraft(id, $"RU{-id}", 100.0, 10000.0, new Clock($"ruclk{-id}", 65536), state, 10.0, 2.2);
+        return new Spacecraft(id, $"RU{-id}", 100.0, state, 10000.0, new Clock($"ruclk{-id}", 65536), 10.0, 2.2);
     }
 
     /// <summary>
@@ -698,7 +698,7 @@ public class PropagatorReuseTests
         int id = NextId();
         var state = new StateVector(new Vector3(100000.0, 0.0, 0.0), new Vector3(0.0, 10.0, 0.0), elara, Epoch,
             Frames.Frame.ICRF);
-        return new Spacecraft(id, $"RU{-id}", 100.0, 10000.0, new Clock($"ruclk{-id}", 65536), state, 10.0, 2.2);
+        return new Spacecraft(id, $"RU{-id}", 100.0, state, 10000.0, new Clock($"ruclk{-id}", 65536), 10.0, 2.2);
     }
 
     /// <summary>

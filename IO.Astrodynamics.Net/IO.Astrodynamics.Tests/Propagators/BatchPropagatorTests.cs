@@ -39,7 +39,7 @@ public class BatchPropagatorTests
         var orbit = new StateVector(
             new Vector3(r0, 0, 0), new Vector3(0, v0, 0),
             earth, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF);
-        return new Spacecraft(naifId, name, 100.0, 10000.0, new Clock("clk", 256), orbit);
+        return new Spacecraft(naifId, name, 100.0, orbit, 10000.0, new Clock("clk", 256));
     }
 
     private static Window DefaultWindow =>
@@ -158,9 +158,9 @@ public class BatchPropagatorTests
         var goodSc = CreateSpacecraft(-5001, "Good");
         // Drag about the Moon, which has no atmosphere: the task fails with InvalidOperationException (#674)
         var moon = new CelestialBody(PlanetsAndMoons.MOON);
-        var badSc = new Spacecraft(-5002, "Bad", 100.0, 10000.0, new Clock("clk", 256),
-            new StateVector(new Vector3(2.0e6, 0, 0), new Vector3(0, System.Math.Sqrt(moon.GM / 2.0e6), 0), moon,
-                TimeSystem.Time.J2000TDB, Frames.Frame.ICRF));
+        var badSc = new Spacecraft(-5002, "Bad", 100.0, new StateVector(new Vector3(2.0e6, 0, 0), new Vector3(0, System.Math.Sqrt(moon.GM / 2.0e6), 0), moon,
+                TimeSystem.Time.J2000TDB, Frames.Frame.ICRF), 10000.0,
+            new Clock("clk", 256));
 
         var tasks = new List<PropagationTask>
         {
@@ -330,8 +330,8 @@ public class BatchPropagatorTests
                 new Vector3(r0, 0, 0), new Vector3(0, v0, 0),
                 earth, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF);
 
-            var sc = new Spacecraft(-(11001 + i), $"GeoSat{i}", 100.0, 10000.0,
-                new Clock($"clk{i}", 256), orbit);
+            var sc = new Spacecraft(-(11001 + i), $"GeoSat{i}", 100.0, orbit,
+                10000.0, new Clock($"clk{i}", 256));
 
             tasks.Add(new PropagationTask(sc, DefaultWindow, new PropagationOptions { Integrator = new RK78IntegratorOptions { AbsoluteTolerance = 1e-10, RelativeTolerance = 1e-10, InitialStep = TimeSpan.FromSeconds(30.0) }, OutputStep = TimeSpan.FromSeconds(60), ThirdBodies = new CelestialItem[] { earth, Stars.SUN_BODY, PlanetsAndMoons.MOON_BODY }, CovariancePropagation = CovariancePropagationOptions.None }));
         }

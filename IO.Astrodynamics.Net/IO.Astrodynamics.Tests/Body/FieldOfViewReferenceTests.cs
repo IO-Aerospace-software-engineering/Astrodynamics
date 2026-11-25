@@ -160,13 +160,13 @@ public class FieldOfViewReferenceTests : IClassFixture<FieldOfViewReferenceKerne
             switch (instrument.GetProperty("shape").GetString())
             {
                 case "CIRCLE":
-                    spacecraft.AddCircularInstrument(id, instrumentName, "fov_reference", refAngle, boresight, refVector, orientation);
+                    spacecraft.AddCircularInstrument(instrumentName, refAngle, boresight, refVector, orientation, naifId: id, model: "fov_reference");
                     break;
                 case "ELLIPSE":
-                    spacecraft.AddEllipticalInstrument(id, instrumentName, "fov_reference", refAngle, crossAngle, boresight, refVector, orientation);
+                    spacecraft.AddEllipticalInstrument(instrumentName, refAngle, crossAngle, boresight, refVector, orientation, naifId: id, model: "fov_reference");
                     break;
                 default:
-                    spacecraft.AddRectangularInstrument(id, instrumentName, "fov_reference", refAngle, crossAngle, boresight, refVector, orientation);
+                    spacecraft.AddRectangularInstrument(instrumentName, refAngle, crossAngle, boresight, refVector, orientation, naifId: id, model: "fov_reference");
                     break;
             }
         }

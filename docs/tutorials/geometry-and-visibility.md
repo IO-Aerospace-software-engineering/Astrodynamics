@@ -132,10 +132,11 @@ the windows of CSPICE's `gftfov`, to 1 µs.
 ### Setting up an instrument
 
 Instruments are added to a spacecraft by `AddCircularInstrument`,
-`AddEllipticalInstrument` or `AddRectangularInstrument`. Each has a NAIF
-identifier, a name, a model, its half-angles, and three vectors: the boresight
+`AddEllipticalInstrument` or `AddRectangularInstrument`, which return the
+instrument. Each has a name, its half-angles, and three vectors: the boresight
 and the reference vector in the instrument frame, and the orientation of the
-instrument frame in the spacecraft frame:
+instrument frame in the spacecraft frame (zero by default); its NAIF identifier
+is by default the first free NaifId × 1000 − n, and its model is optional:
 
 ```csharp
 // Inputs: spacecraft (Spacecraft)
@@ -238,7 +239,7 @@ var tle = new TLE(
     "2 25544  51.6416 247.4627 0006703 130.5360 325.0288 15.49750667  1007");
 
 // Create spacecraft from TLE
-var iss = new Spacecraft(-25544, "ISS", 420000.0, 450000.0, new Clock("ISS_CLK", 65536), tle);
+var iss = new Spacecraft(-25544, "ISS", 420000.0, tle, 450000.0, new Clock("ISS_CLK", 65536));
 
 // Track from ground site
 var coords = mySite.GetHorizontalCoordinates(epoch, iss, Aberration.None);

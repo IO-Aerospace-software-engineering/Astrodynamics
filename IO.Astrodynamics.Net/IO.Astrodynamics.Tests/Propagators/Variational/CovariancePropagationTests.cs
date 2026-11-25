@@ -714,12 +714,12 @@ public class CovariancePropagationTests : IClassFixture<PartialsTestCases>, ICla
     {
         var orbit = WithCovariance(new StateVector(new Vector3(-7378137.0, 0.0, 0.0), new Vector3(0.0, -5509.9, -4623.4),
             _cases.Earth, Start, Frames.Frame.ICRF));
-        var spacecraft = new Spacecraft(naifId, "COV", 1000.0, 3000.0, new Clock("cov", 65536), orbit);
-        var tank = new FuelTank("covtank", "model", "sn1", 1000.0, 1000.0);
-        var engine = new Engine("covengine", "model", "sn1", 300.0, 10.0, tank);
+        var spacecraft = new Spacecraft(naifId, "COV", 1000.0, orbit, 3000.0, new Clock("cov", 65536));
+        var tank = new FuelTank("covtank", 1000.0, 1000.0, "model", "sn1");
+        var engine = new Engine("covengine", 300.0, 10.0, tank, "model", "sn1");
         spacecraft.AddFuelTank(tank);
         spacecraft.AddEngine(engine);
-        var maneuver = new ApogeeHeightManeuver(_cases.Earth, Start, TimeSpan.Zero, 8378137.0, engine)
+        var maneuver = new ApogeeHeightManeuver(8378137.0, engine, Start, TimeSpan.Zero, _cases.Earth)
         {
             ExecutionError = execution
         };

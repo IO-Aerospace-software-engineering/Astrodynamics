@@ -70,8 +70,8 @@ public class LightTimeCorrectionTests
             site.GetProperty("latitude_deg").GetDouble() * global::IO.Astrodynamics.Constants.Deg2Rad, site.GetProperty("altitude_m").GetDouble()));
         _dss13 = new Site(13, "DSS-13", _earth);
         var s0 = _reference.GetProperty("spacecraft_state_e0").EnumerateArray().Select(e => e.GetDouble()).ToArray();
-        _spacecraft = new Spacecraft(-1001, "S491", 100.0, 1000.0, new Clock("S491", 65536),
-            new StateVector(new Vector3(s0[0], s0[1], s0[2]), new Vector3(s0[3], s0[4], s0[5]), _earth, _epochs[0], Frames.Frame.ICRF));
+        _spacecraft = new Spacecraft(-1001, "S491", 100.0, new StateVector(new Vector3(s0[0], s0[1], s0[2]), new Vector3(s0[3], s0[4], s0[5]), _earth, _epochs[0], Frames.Frame.ICRF), 1000.0,
+            new Clock("S491", 65536));
     }
 
     private IEnumerable<(Aberration Flag, int Epoch, double[] Expected)> Rows(string label)
@@ -318,7 +318,7 @@ public class LightTimeCorrectionTests
         Assert.Equal(_site.NaifId, SpiceAPI.NonInertialFrameCenter(_site.Frame));
         Assert.Equal(399, SpiceAPI.NonInertialFrameCenter(Frames.Frame.TEME));
         Assert.Equal(399, SpiceAPI.NonInertialFrameCenter(Frames.Frame.TIRS));
-        var oriented = new Spacecraft(-1593, "S593", 100.0, 1000.0, new Clock("S593", 65536), _spacecraft.InitialOrbitalParameters);
+        var oriented = new Spacecraft(-1593, "S593", 100.0, _spacecraft.InitialOrbitalParameters, 1000.0, new Clock("S593", 65536));
         Assert.Null(SpiceAPI.NonInertialFrameCenter(oriented.Frame));
         oriented.Frame.AddStateOrientationToICRF(new StateOrientation(Quaternion.Identity, Vector3.Zero, _epochs[0], oriented.Frame));
         Assert.Equal(-1593, SpiceAPI.NonInertialFrameCenter(oriented.Frame));

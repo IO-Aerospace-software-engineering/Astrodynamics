@@ -1232,9 +1232,9 @@ public class CdmTests
             hardBodyRadius: 3.0);
         if (secondaryEngine)
         {
-            var tank = new FuelTank("tank" + -naifId, "model", "sn1", 20.0, 20.0);
+            var tank = new FuelTank("tank" + -naifId, 20.0, 20.0, "model", "sn1");
             secondarySpacecraft.AddFuelTank(tank);
-            secondarySpacecraft.AddEngine(new Engine("engine" + -naifId, "model", "sn1", 300.0, 10.0, tank));
+            secondarySpacecraft.AddEngine(new Engine("engine" + -naifId, 300.0, 10.0, tank, "model", "sn1"));
         }
 
         return ConjunctionAssessment.Analyze(new ProtectedSpacecraftProfile(protectedSpacecraft), secondarySpacecraft,
@@ -1513,33 +1513,33 @@ public class CdmTests
             -41001,
             "ProtectedAlpha",
             120.0,
+            protectedState,
             150.0,
             new Clock("ProtectedAlpha_CLK", 256),
-            protectedState,
             sectionalArea: 2.0,
-            dragCoeff: 2.2,
+            dragCoefficient: 2.2,
             cosparId: "2026-001A",
-            solarRadiationCoeff: 1.2,
+            solarRadiationCoefficient: 1.2,
             hardBodyRadius: 8.0);
         var secondarySpacecraft = new Spacecraft(
             -41002,
             "SecondaryBravo",
             95.0,
+            secondaryState,
             120.0,
             new Clock("SecondaryBravo_CLK", 256),
-            secondaryState,
             sectionalArea: 1.5,
-            dragCoeff: 2.1,
+            dragCoefficient: 2.1,
             cosparId: "2026-001B",
-            solarRadiationCoeff: 1.1,
+            solarRadiationCoefficient: 1.1,
             hardBodyRadius: 3.0);
         if (withEngines)
         {
             foreach (var spacecraft in new[] { protectedSpacecraft, secondarySpacecraft })
             {
-                var tank = new FuelTank("tank" + -spacecraft.NaifId, "model", "sn1", 20.0, 20.0);
+                var tank = new FuelTank("tank" + -spacecraft.NaifId, 20.0, 20.0, "model", "sn1");
                 spacecraft.AddFuelTank(tank);
-                spacecraft.AddEngine(new Engine("engine" + -spacecraft.NaifId, "model", "sn1", 300.0, 10.0, tank));
+                spacecraft.AddEngine(new Engine("engine" + -spacecraft.NaifId, 300.0, 10.0, tank, "model", "sn1"));
             }
         }
 
@@ -1597,13 +1597,13 @@ public class CdmTests
             naifId,
             name,
             120.0,
+            orbit,
             150.0,
             new Clock($"{name}_CLK", 256),
-            orbit,
             sectionalArea: 2.0,
-            dragCoeff: 2.2,
+            dragCoefficient: 2.2,
             cosparId: $"2026-001{name[0]}",
-            solarRadiationCoeff: 1.2,
+            solarRadiationCoefficient: 1.2,
             hardBodyRadius: hardBodyRadius);
     }
 
@@ -1620,13 +1620,13 @@ public class CdmTests
             naifId,
             name,
             120.0,
+            orbit,
             150.0,
             new Clock($"{name}_CLK", 256),
-            orbit,
             sectionalArea: 2.0,
-            dragCoeff: 2.2,
+            dragCoefficient: 2.2,
             cosparId: $"2026-001{name[0]}",
-            solarRadiationCoeff: 1.2,
+            solarRadiationCoefficient: 1.2,
             hardBodyRadius: hardBodyRadius);
     }
 

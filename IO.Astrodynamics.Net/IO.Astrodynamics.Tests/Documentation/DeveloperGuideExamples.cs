@@ -507,7 +507,7 @@ internal static class DeveloperGuideExamples
         // Convert to Spacecraft for mission operations
         var spacecraft = opm.ToSpacecraft(
             naifId: -1000,
-            maximumOperatingMass: 500000.0,
+            maxOperatingMass: 500000.0,
             clock: new Clock("OnboardClock", 256),
             observer: earth);
         #endregion
@@ -519,8 +519,8 @@ internal static class DeveloperGuideExamples
         #region guide:21
         // clock: a Clock; stateVector: the initial state (an ISS-like orbit)
         // Create spacecraft and propagate with maneuvers
-        var spacecraft = new Spacecraft(-1000, "ISS", 420000.0, 500000.0, clock,
-            stateVector, 1600.0, 2.2, "1998-067A", 1.5);
+        var spacecraft = new Spacecraft(-1000, "ISS", 420000.0, stateVector, 500000.0,
+            clock, 1600.0, 2.2, "1998-067A", 1.5);
 
         // After propagation with executed maneuvers...
         var opm = spacecraft.ToOpm(
@@ -759,21 +759,18 @@ internal static class DeveloperGuideExamples
 
         // Create spacecraft
         var clock = new Clock("MainClock", 256);
-        var spacecraft = new Spacecraft(-1001, "MySat", 500.0, 1000.0, clock, orbit);
+        var spacecraft = new Spacecraft(-1001, "MySat", 500.0, orbit, 1000.0, clock);
 
-        // Add components: the tank first, then the engine that draws on it (AddEngine requires its tank on the spacecraft)
-        var tank = new FuelTank("MainTank", "Propellant", "Tank1", 200.0, 100.0);  // capacity, initial quantity (kg)
-        spacecraft.AddFuelTank(tank);
-        var engine = new Engine("MainEngine", "RCS", "Engine1", 300.0, 0.05, tank);  // ISP (s), fuel flow (kg/s)
-        spacecraft.AddEngine(engine);
+        // Add components: the tank first, then the engine that draws on it (AddEngine requires its tank on the spacecraft);
+        // each Add returns its argument, the model and the serial number optional
+        var tank = spacecraft.AddFuelTank(new FuelTank("MainTank", 200.0, 100.0));  // capacity, initial quantity (kg)
+        var engine = spacecraft.AddEngine(new Engine("MainEngine", 300.0, 0.05, tank));  // ISP (s), fuel flow (kg/s)
 
-        // Add instrument
-        spacecraft.AddCircularInstrument(-1001001, "Camera", "Imager",
+        // Add instrument: its NAIF id by default the first free NaifId × 1000 − n, -1001001, and no model
+        spacecraft.AddCircularInstrument("Camera",
             10 * Constants.Deg2Rad,              // FOV
             new Vector3(1, 0, 0),                // Boresight
-            new Vector3(0, 1, 0),                // Reference vector
-            new Vector3(0, 0, 0)                 // Orientation
-        );
+            new Vector3(0, 1, 0));               // Reference vector; the orientation zero by default
 
         // Propagate (returns PropagationSolution for dense output). Velocity-Verlet is of the second order: its error grows as
         // the square of the step (about 120 m after 12 h in this LEO at 1 s, 450 km at 60 s); without an integrator the
@@ -808,28 +805,25 @@ internal static class DeveloperGuideExamples
         // minimumEpoch, epoch: Time; holdDuration, duration: TimeSpan
         // Point spacecraft Front at Moon, keep Up toward Sun
         var attitude = new TriadAttitude(
-            minimumEpoch, TimeSpan.FromMinutes(30),
-            Spacecraft.Front, moon,    // Primary: Front points at Moon
-            Spacecraft.Up, sun,        // Secondary: Up toward Sun (roll constraint)
-            engine);
+            Spacecraft.Front, new CelestialAttitudeTarget(moon),    // Primary: Front points at Moon
+            Spacecraft.Up, new CelestialAttitudeTarget(sun),
+            minimumEpoch, TimeSpan.FromMinutes(30));
 
         // Using instruments
         var cameraAttitude = new TriadAttitude(
-            minimumEpoch, holdDuration,
             camera,                    // Uses camera boresight (primary) and refVector (secondary)
-            earth, sun,                // Primary target, secondary target
-            engine);
+            new CelestialAttitudeTarget(earth), new CelestialAttitudeTarget(sun),
+            minimumEpoch, holdDuration);
 
         // Using IAttitudeTarget (orbital directions and/or celestial bodies)
         var targetAttitude = new TriadAttitude(
-            earth, epoch, duration,
             Spacecraft.Front, OrbitalDirectionTarget.Prograde,       // Primary: prograde pointing
-            Spacecraft.Up, new CelestialAttitudeTarget(sun),         // Secondary: solar panel toward Sun
-            engine);
+            Spacecraft.Up, new CelestialAttitudeTarget(sun),
+            epoch, duration, earth);
 
-        // Factory methods for common operational attitudes, on the axes of the engine's spacecraft
-        var lvlh = TriadAttitude.CreateLVLH(earth, epoch, duration, engine);
-        var sunTrack = TriadAttitude.CreateProgradeWithSunTracking(earth, epoch, duration, sun, engine);
+        // Factory methods for common operational attitudes, on the axes of the plan's spacecraft
+        var lvlh = TriadAttitude.CreateLvlh(epoch, duration, earth);
+        var sunTrack = TriadAttitude.CreateProgradeWithSunTracking(sun, epoch, duration, earth);
         #endregion
     }
 
@@ -874,7 +868,7 @@ internal static class DeveloperGuideExamples
             new Vector3(0, 7500.0, 0),
             earth, epoch, Frame.ICRF);
 
-        var spacecraft = new Spacecraft(-1001, "Sat", 100.0, 10000.0, clock, orbit);
+        var spacecraft = new Spacecraft(-1001, "Sat", 100.0, orbit, 10000.0, clock);
 
         // Propagate with geopotential, Moon, and Sun perturbations
         var propagator = new CentralBodyPropagator(
@@ -1189,35 +1183,44 @@ internal static class DeveloperGuideExamples
 
         // Create target spacecraft
         var targetClock = new Clock("TargetClock", 65536);
-        var target = new Spacecraft(-1001, "Target", 500.0, 1000.0, targetClock, targetOrbit);
+        var target = new Spacecraft(-1001, "Target", 500.0, targetOrbit, 1000.0, targetClock);
         scenario.AddSpacecraft(target);
 
         // Create chaser spacecraft with propulsion
         var chaserClock = new Clock("ChaserClock", 65536);
-        var chaser = new Spacecraft(-1002, "Chaser", 1000.0, 10000.0, chaserClock, chaserOrbit);
+        var chaser = new Spacecraft(-1002, "Chaser", 1000.0, chaserOrbit, 10000.0, chaserClock);
 
         // Add fuel tank and engine
-        var fuelTank = new FuelTank("MainTank", "Model1", "SN001", 9000.0, 9000.0);
-        var engine = new Engine("MainEngine", "Model1", "SN001", 450.0, 50.0, fuelTank);
+        var fuelTank = new FuelTank("MainTank", 9000.0, 9000.0, "Model1", "SN001");
+        var engine = new Engine("MainEngine", 450.0, 50.0, fuelTank, "Model1", "SN001");
         chaser.AddFuelTank(fuelTank);
         chaser.AddEngine(engine);
 
         // The plan: plane alignment -> apsidal alignment -> phasing -> circularization
         var maneuver1 = new PlaneAlignmentManeuver(
+            targetOrbit,
+            engine,
             new Time(DateTime.MinValue, TimeScale.TDB),
-            TimeSpan.Zero, targetOrbit, engine
+            TimeSpan.Zero
         );
 
         chaser.SetManeuvers(maneuver1,
             new ApsidalAlignmentManeuver(
+                targetOrbit,
+                engine,
                 new Time(DateTime.MinValue, TimeScale.TDB),
-                TimeSpan.Zero, targetOrbit, engine),
+                TimeSpan.Zero),
             new PhasingManeuver(
-                new Time(DateTime.MinValue, TimeScale.TDB),
-                targetOrbit, 1, engine),
+                targetOrbit,
+                1,
+                engine,
+                new Time(DateTime.MinValue, TimeScale.TDB)),
             new ApogeeHeightManeuver(
-                earth, new Time(DateTime.MinValue, TimeScale.TDB),
-                TimeSpan.Zero, targetOrbit.SemiMajorAxis(), engine));
+                targetOrbit.SemiMajorAxis(),
+                engine,
+                new Time(DateTime.MinValue, TimeScale.TDB),
+                TimeSpan.Zero,
+                earth));
 
         scenario.AddSpacecraft(chaser);
 
@@ -1414,7 +1417,7 @@ internal static class DeveloperGuideExamples
 
         // Create spacecraft with camera
         var clock = new Clock("Clock1", 65536);
-        var spacecraft = new Spacecraft(-179, "Observer", 1000.0, 3000.0, clock, orbit);
+        var spacecraft = new Spacecraft(-179, "Observer", 1000.0, orbit, 3000.0, clock);
 
         // Add camera instrument (circular FOV, 43° half-angle, pointing nadir)
         spacecraft.AddCircularInstrument(
@@ -1505,7 +1508,7 @@ internal static class DeveloperGuideExamples
 
         // Create spacecraft from TLE
         var clock = new Clock("ISSClock", 65536);
-        var iss = new Spacecraft(-25544, "ISS", 420000.0, 450000.0, clock, issTLE);
+        var iss = new Spacecraft(-25544, "ISS", 420000.0, issTLE, 450000.0, clock);
 
         // Track from a ground station
         var goldstone = new Site(13, "DSS-13", earth);
@@ -1567,7 +1570,7 @@ internal static class DeveloperGuideExamples
         var moonState = moon.GetEphemeris(start, earth, Frame.ICRF, Aberration.None);
 
         var clock = new Clock("Clock", 256);
-        var spacecraft = new Spacecraft(-1001, "Probe", 100.0, 10000.0, clock, moonState);
+        var spacecraft = new Spacecraft(-1001, "Probe", 100.0, moonState, 10000.0, clock);
 
         scenario.AddSpacecraft(spacecraft);
 
@@ -1616,7 +1619,7 @@ internal static class DeveloperGuideExamples
             earth, epoch, Frame.ICRF);
 
         var clock = new Clock("Clock", 256);
-        var spacecraft = new Spacecraft(-1001, "LEOSat", 100.0, 10000.0, clock, orbit);
+        var spacecraft = new Spacecraft(-1001, "LEOSat", 100.0, orbit, 10000.0, clock);
 
         var propagator = new CentralBodyPropagator(
             new Window(epoch, epoch.AddDays(1)),
@@ -1658,15 +1661,15 @@ internal static class DeveloperGuideExamples
 
         // Create spacecraft
         var clock = new Clock("Clock", 256);
-        var spacecraft = new Spacecraft(-334, "Observer", 1000.0, 2000.0, clock, orbit);
+        var spacecraft = new Spacecraft(-334, "Observer", 1000.0, orbit, 2000.0, clock);
 
         // Add antenna instrument
-        spacecraft.AddCircularInstrument(-334100, "Antenna", "HighGain",
-            0.2, Vector3.VectorZ, Vector3.VectorY, Vector3.Zero);
+        spacecraft.AddCircularInstrument("Antenna",
+            0.2, Vector3.VectorZ, Vector3.VectorY, Vector3.Zero, naifId: -334100, model: "HighGain");
 
         // Add propulsion
-        var tank = new FuelTank("Tank1", "Model", "SN1", 2000.0, 2000.0);
-        var engine = new Engine("Engine1", "Model", "SN1", 450, 50.0, tank);
+        var tank = new FuelTank("Tank1", 2000.0, 2000.0, "Model", "SN1");
+        var engine = new Engine("Engine1", 450, 50.0, tank, "Model", "SN1");
         spacecraft.AddFuelTank(tank);
         spacecraft.AddEngine(engine);
 
@@ -1677,13 +1680,12 @@ internal static class DeveloperGuideExamples
 
         // Configure attitude maneuver to point antenna at ground station
         var pointingManeuver = new InstrumentPointingToAttitude(
-            start.AddHours(7.25),           // Start time
-            TimeSpan.FromHours(0.5),        // Duration
             spacecraft.Instruments.First(), // Instrument to point
-            groundStation,                  // Target
-            engine                          // Engine for attitude control
-        );                                  // The direction is light-time corrected (Aberration.LT, the default, #549);
-                                            // pass Aberration.None as a sixth argument for the geometric direction
+            new CelestialAttitudeTarget(groundStation, Aberration.LT),
+            start.AddHours(7.25),           // Start time
+            TimeSpan.FromHours(0.5)         // Duration
+        );                                  // The direction is light-time corrected (#549); the target carries its correction,
+                                            // new CelestialAttitudeTarget(groundStation) for the geometric direction
 
         spacecraft.SetManeuvers(pointingManeuver);
 
@@ -1719,15 +1721,15 @@ internal static class DeveloperGuideExamples
         );
 
         var clock = new Clock("Clock", 256);
-        var spacecraft = new Spacecraft(-500, "Observer", 500.0, 1000.0, clock, orbit);
+        var spacecraft = new Spacecraft(-500, "Observer", 500.0, orbit, 1000.0, clock);
 
         // Add Earth observation camera (points down via boresight)
-        spacecraft.AddCircularInstrument(-500100, "EarthCam", "NadirCamera",
-            0.5, Vector3.VectorZ.Inverse(), Vector3.VectorY, Vector3.Zero);  // Boresight: -Z (nadir), refVector: +Y
+        spacecraft.AddCircularInstrument("EarthCam",
+            0.5, Vector3.VectorZ.Inverse(), Vector3.VectorY, Vector3.Zero, naifId: -500100, model: "NadirCamera");  // Boresight: -Z (nadir), refVector: +Y
 
         // Add propulsion
-        var tank = new FuelTank("Tank1", "Model", "SN1", 100.0, 100.0);
-        var engine = new Engine("Engine1", "Model", "SN1", 220, 10.0, tank);
+        var tank = new FuelTank("Tank1", 100.0, 100.0, "Model", "SN1");
+        var engine = new Engine("Engine1", 220, 10.0, tank, "Model", "SN1");
         spacecraft.AddFuelTank(tank);
         spacecraft.AddEngine(engine);
 
@@ -1738,11 +1740,10 @@ internal static class DeveloperGuideExamples
         // - Secondary: Spacecraft Right (+X) oriented toward Sun, which sets the roll about nadir (a vector at 5 degrees at
         //   least from the primary: Up, opposite to Down, would be rejected)
         var triadManeuver = new TriadAttitude(
+            Spacecraft.Down, new CelestialAttitudeTarget(earth),  // Primary constraint: nadir pointing
+            Spacecraft.Right, new CelestialAttitudeTarget(sun),
             start,                          // Start time
-            TimeSpan.FromHours(1.5),        // Hold duration
-            Spacecraft.Down, earth,         // Primary constraint: nadir pointing
-            Spacecraft.Right, sun,          // Secondary constraint: +X toward the Sun
-            engine
+            TimeSpan.FromHours(1.5)         // Hold duration
         );
 
         spacecraft.SetManeuvers(triadManeuver);
@@ -1765,17 +1766,20 @@ internal static class DeveloperGuideExamples
         #region guide:58
         // earth: the CelestialBody of the orbit; sun: the Sun; engine: an Engine of the spacecraft; epoch: Time; duration: TimeSpan
         // LVLH attitude using factory method (the spacecraft's BodyDown to nadir, its BodyFront toward prograde)
-        var lvlh = TriadAttitude.CreateLVLH(earth, epoch, duration, engine);
+        var lvlh = TriadAttitude.CreateLvlh(epoch, duration, earth);
 
         // Prograde with sun tracking using factory method
-        var sunTrack = TriadAttitude.CreateProgradeWithSunTracking(earth, epoch, duration, sun, engine);
+        var sunTrack = TriadAttitude.CreateProgradeWithSunTracking(sun, epoch, duration, earth);
 
         // Custom: nadir pointing with normal constraint (using OrbitalDirectionTarget)
         var customLvlh = new TriadAttitude(
-            earth, epoch, duration,
-            Spacecraft.Down, OrbitalDirectionTarget.Nadir,
-            Spacecraft.Front, OrbitalDirectionTarget.Prograde,
-            engine);
+            Spacecraft.Down,
+            OrbitalDirectionTarget.Nadir,
+            Spacecraft.Front,
+            OrbitalDirectionTarget.Prograde,
+            epoch,
+            duration,
+            earth);
         #endregion
     }
 

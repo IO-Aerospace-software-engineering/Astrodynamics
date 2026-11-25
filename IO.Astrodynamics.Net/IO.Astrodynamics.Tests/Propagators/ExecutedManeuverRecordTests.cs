@@ -78,17 +78,17 @@ public class ExecutedManeuverRecordTests
     {
         earth ??= Earth();
         int id = NextId();
-        var spacecraft = new Spacecraft(id, "EM" + -id, 1000.0, 3000.0, new Clock("EM" + -id, 65536), Orbit(earth, frame));
-        var tank = new FuelTank("ft" + -id, "m", "sn" + -id, 1000.0, 1000.0);
+        var spacecraft = new Spacecraft(id, "EM" + -id, 1000.0, Orbit(earth, frame), 3000.0, new Clock("EM" + -id, 65536));
+        var tank = new FuelTank("ft" + -id, 1000.0, 1000.0, "m", "sn" + -id);
         spacecraft.AddFuelTank(tank);
-        var engine = new Engine("eng" + -id, "m", "sn" + -id, 300.0, 10.0, tank);
+        var engine = new Engine("eng" + -id, 300.0, 10.0, tank, "m", "sn" + -id);
         spacecraft.AddEngine(engine);
         Maneuver.Maneuver[] plan =
         [
-            new NadirAttitude(earth, S, TimeSpan.FromSeconds(600.0), engine),
-            new ApogeeHeightManeuver(earth, S, TimeSpan.Zero, 8000e3, engine),
-            new ProgradeAttitude(earth, S, TimeSpan.Zero, engine),
-            new PerigeeHeightManeuver(earth, S, TimeSpan.Zero, 7100e3, engine)
+            new NadirAttitude(S, TimeSpan.FromSeconds(600.0), earth),
+            new ApogeeHeightManeuver(8000e3, engine, S, TimeSpan.Zero, earth),
+            new ProgradeAttitude(S, TimeSpan.Zero, earth),
+            new PerigeeHeightManeuver(7100e3, engine, S, TimeSpan.Zero, earth)
         ];
         spacecraft.SetManeuvers(plan);
         return new Case(spacecraft, engine, plan, earth, frame);
@@ -299,7 +299,7 @@ public class ExecutedManeuverRecordTests
     {
         var earth = Earth();
         int id = NextId();
-        var spacecraft = new Spacecraft(id, "EM" + -id, 1000.0, 3000.0, new Clock("EM" + -id, 65536), Orbit(earth, "ICRF"));
+        var spacecraft = new Spacecraft(id, "EM" + -id, 1000.0, Orbit(earth, "ICRF"), 3000.0, new Clock("EM" + -id, 65536));
         var scenario = new Scenario("EM", new IO.Astrodynamics.Mission.Mission("EM"), new Window(S, S.AddHours(1.0)));
         scenario.AddCelestialItem(earth);
         scenario.AddSpacecraft(spacecraft);
@@ -319,7 +319,7 @@ public class ExecutedManeuverRecordTests
             "1 25544U 98067A   21020.53488036  .00016717  00000-0  10270-3 0  9054",
             "2 25544  51.6423 353.0312 0000493 320.8755  39.2360 15.49309423 25703");
         int id = NextId();
-        var spacecraft = new Spacecraft(id, "EM" + -id, 100.0, 10000.0, new Clock("EM" + -id, 65536), tle);
+        var spacecraft = new Spacecraft(id, "EM" + -id, 100.0, tle, 10000.0, new Clock("EM" + -id, 65536));
 
         var solution = new TLEPropagator(new Window(tle.Epoch, tle.Epoch.AddHours(1.0)), spacecraft, Output).Propagate();
 

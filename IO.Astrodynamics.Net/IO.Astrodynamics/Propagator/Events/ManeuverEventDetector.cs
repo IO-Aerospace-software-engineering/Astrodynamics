@@ -13,7 +13,7 @@ namespace IO.Astrodynamics.Propagator.Events;
 /// </summary>
 /// <remarks>
 /// The maneuver fires at the first crossing of its g-function in its direction at or after its
-/// <see cref="Maneuver.Maneuver.MinimumEpoch"/>, searched from the integrated state there (#569). The minimum epoch is the
+/// <see cref="Maneuver.Maneuver.MinEpoch"/>, searched from the integrated state there (#569). The minimum epoch is the
 /// gate of the detector: <see cref="VVIntegrator"/> and <see cref="RK78Integrator"/> evaluate the g-function at it, in the
 /// step that holds it, instead of reading the value <see cref="Evaluate"/> returns before it.
 /// <para>
@@ -106,8 +106,8 @@ internal sealed class ManeuverEventDetector : IEventDetector, IGatedEventDetecto
     private string Description()
     {
         var owner = _maneuver.PlanOwner;
-        return $"The event detector of the {_maneuver.GetType().Name} (minimum epoch {_maneuver.MinimumEpoch}, engine " +
-               $"{_maneuver.Engine.Name}{(owner != null ? $", in the plan of {owner.Name}" : string.Empty)})";
+        return $"The event detector of the {_maneuver.GetType().Name} (minimum epoch {_maneuver.MinEpoch}, engine " +
+               $"{_maneuver.Engine?.Name ?? "inferred at the run"}{(owner != null ? $", in the plan of {owner.Name}" : string.Empty)})";
     }
 
     public CrossingDirection Direction => _maneuver.EventCrossingDirection;
@@ -116,7 +116,7 @@ internal sealed class ManeuverEventDetector : IEventDetector, IGatedEventDetecto
 
     /// <summary>
     /// The g-function of the maneuver at <paramref name="state"/>, relative to its <see cref="Maneuver.Maneuver.ManeuverCenter"/>;
-    /// +1 before its <see cref="Maneuver.Maneuver.MinimumEpoch"/>. The first evaluation after the minimum epoch locks the
+    /// +1 before its <see cref="Maneuver.Maneuver.MinEpoch"/>. The first evaluation after the minimum epoch locks the
     /// node a <see cref="PlaneAlignmentManeuver"/> waits for, which its public
     /// <see cref="ImpulseManeuver.ComputeEventValue"/> no longer does (decision 50 of #668, decided by S. Guillet,
     /// 2026-11-23).
@@ -136,8 +136,8 @@ internal sealed class ManeuverEventDetector : IEventDetector, IGatedEventDetecto
     {
         RequireArmed();
 
-        // Guard: before MinimumEpoch, return positive value (no crossing)
-        if (state.Epoch < _maneuver.MinimumEpoch) return 1.0;
+        // Guard: before MinEpoch, return positive value (no crossing)
+        if (state.Epoch < _maneuver.MinEpoch) return 1.0;
 
         // The g-function of the run: a maneuver whose first evaluation decides which crossing it waits for locks it here
         // (decision 50 of #668: the public ComputeEventValue is pure)
@@ -145,7 +145,7 @@ internal sealed class ManeuverEventDetector : IEventDetector, IGatedEventDetecto
     }
 
     /// <inheritdoc />
-    Time IGatedEventDetector.Gate => _maneuver.MinimumEpoch;
+    Time IGatedEventDetector.Gate => _maneuver.MinEpoch;
 
     /// <inheritdoc />
     /// <remarks>The g-function of the maneuver from the start of a search

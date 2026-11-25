@@ -390,14 +390,14 @@ public class KernelBackedSpacecraftTests
         public KSatKernels(string frameName = null)
         {
             var earth = new CelestialBody(PlanetsAndMoons.EARTH);
-            Spacecraft = new Spacecraft(-1401, "KSat", 100.0, 1000.0, new Clock("KSatClk", 256),
-                new KeplerianElements(7000e3, 0.001, 0.9, 0.0, 0.0, 0.0, earth, KSatEpoch, Frames.Frame.ICRF));
-            Spacecraft.AddCircularInstrument(-1401001, "Camera", "Imager", 0.1, Vector3.VectorZ, Vector3.VectorX, new Vector3(0.1, 0.2, 0.3));
-            var tank = new FuelTank("t", "m", "s", 100.0, 100.0);
+            Spacecraft = new Spacecraft(-1401, "KSat", 100.0, new KeplerianElements(7000e3, 0.001, 0.9, 0.0, 0.0, 0.0, earth, KSatEpoch, Frames.Frame.ICRF), 1000.0,
+                new Clock("KSatClk", 256));
+            Spacecraft.AddCircularInstrument("Camera", 0.1, Vector3.VectorZ, Vector3.VectorX, new Vector3(0.1, 0.2, 0.3), naifId: -1401001, model: "Imager");
+            var tank = new FuelTank("t", 100.0, 100.0, "m", "s");
             Spacecraft.AddFuelTank(tank);
-            var engine = new Engine("e", "m", "s", 300.0, 1.0, tank);
+            var engine = new Engine("e", 300.0, 1.0, tank, "m", "s");
             Spacecraft.AddEngine(engine);
-            Spacecraft.SetManeuvers(Maneuver.TriadAttitude.CreateLVLH(earth, KSatEpoch, TimeSpan.Zero, engine));
+            Spacecraft.SetManeuvers(Maneuver.TriadAttitude.CreateLvlh(KSatEpoch, TimeSpan.Zero, earth));
             Spacecraft.Propagate(new Window(KSatEpoch, KSatEpoch.AddSeconds(7200.0)), new PropagationOptions { Integrator = new RK78IntegratorOptions { AbsoluteTolerance = 1e-10, RelativeTolerance = 1e-10 }, OutputStep = TimeSpan.FromSeconds(60.0), ThirdBodies = [earth], CovariancePropagation = CovariancePropagationOptions.None });
 
             var directory = Constants.OutputPath.CreateSubdirectory("KernelBackedFrame676").CreateSubdirectory(Guid.NewGuid().ToString("N")[..8]);

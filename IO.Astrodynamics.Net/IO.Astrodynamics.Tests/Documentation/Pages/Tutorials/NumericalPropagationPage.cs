@@ -75,7 +75,7 @@ internal static class NumericalPropagationPage
             earth, epoch, Frame.ICRF);
 
         var clock = new Clock("DemoClock", 65536);  // 65536 ticks per second
-        var spacecraft = new Spacecraft(-1001, "DemoSat", 100.0, 10000.0, clock, orbit);
+        var spacecraft = new Spacecraft(-1001, "DemoSat", 100.0, orbit, 10000.0, clock);
 
         var solution = spacecraft.Propagate(
             new Window(epoch, epoch.AddDays(1)),
@@ -161,7 +161,7 @@ internal static class NumericalPropagationPage
             thermalEffectiveTemperature: 254.0,
             thermalEmissivity: 0.95);
         var orbit = new StateVector(new Vector3(6800000.0, 0.0, 0.0), new Vector3(0.0, 7700.0, 0.0), earth, epoch, Frame.ICRF);
-        var spacecraft = new Spacecraft(-1002, "RadiationSat", 100.0, 10000.0, new Clock("RadiationClock", 65536), orbit);
+        var spacecraft = new Spacecraft(-1002, "RadiationSat", 100.0, orbit, 10000.0, new Clock("RadiationClock", 65536));
 
         var solution = spacecraft.Propagate(new Window(epoch, epoch.AddHours(2)), new PropagationOptions
         {

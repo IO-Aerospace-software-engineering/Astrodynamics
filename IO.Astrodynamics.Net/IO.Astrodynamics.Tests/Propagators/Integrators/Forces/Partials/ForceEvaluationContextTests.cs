@@ -34,7 +34,7 @@ public class ForceEvaluationContextTests : IClassFixture<PartialsTestCases>
         // Arrange
         var state = PartialsTestCases.State(PartialsTestCases.Leo400, _cases.Earth);
         var spacecraft = PartialsTestCases.Spacecraft(state);
-        spacecraft.AddFuelTank(new FuelTank("ctxtank", "model", "sn1", 500.0, 300.0));
+        spacecraft.AddFuelTank(new FuelTank("ctxtank", 500.0, 300.0, "model", "sn1"));
 
         // Act
         var context = ForceEvaluationContext.FromSpacecraft(spacecraft);
@@ -126,7 +126,7 @@ public class ForceEvaluationContextTests : IClassFixture<PartialsTestCases>
     {
         // Arrange: a mass-dependent force on a spacecraft whose tank is burnt, as at an impulsive maneuver
         var (force, state, spacecraft) = Create(forceName, PartialsTestCases.Leo400);
-        var tank = new FuelTank("burntank", "model", "sn1", 500.0, 300.0);
+        var tank = new FuelTank("burntank", 500.0, 300.0, "model", "sn1");
         spacecraft.AddFuelTank(tank);
         var beforeBurn = force.Apply(state);
         double massBeforeBurn = spacecraft.GetTotalMass();

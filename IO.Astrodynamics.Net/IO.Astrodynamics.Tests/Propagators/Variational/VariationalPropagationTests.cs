@@ -561,9 +561,9 @@ public class VariationalPropagationTests : IClassFixture<PartialsTestCases>
     {
         orbit ??= new StateVector(new Vector3(-7378137.0, 0.0, 0.0), new Vector3(0.0, -5509.9, -4623.4), _cases.Earth,
             Start, Frames.Frame.ICRF);
-        var spacecraft = new Spacecraft(naifId, "STM", 1000.0, 3000.0, new Clock("stm", 65536), orbit);
-        var tank = new FuelTank("stmtank", "model", "sn1", 1000.0, fuel);
-        var engine = new Engine("stmengine", "model", "sn1", 300.0, 10.0, tank);
+        var spacecraft = new Spacecraft(naifId, "STM", 1000.0, orbit, 3000.0, new Clock("stm", 65536));
+        var tank = new FuelTank("stmtank", 1000.0, fuel, "model", "sn1");
+        var engine = new Engine("stmengine", 300.0, 10.0, tank, "model", "sn1");
         spacecraft.AddFuelTank(tank);
         spacecraft.AddEngine(engine);
         if (!withManeuver)
@@ -571,7 +571,7 @@ public class VariationalPropagationTests : IClassFixture<PartialsTestCases>
             return (spacecraft, null);
         }
 
-        var maneuver = new ApogeeHeightManeuver(_cases.Earth, Start, TimeSpan.Zero, 8378137.0, engine);
+        var maneuver = new ApogeeHeightManeuver(8378137.0, engine, Start, TimeSpan.Zero, _cases.Earth);
         spacecraft.SetManeuvers(maneuver);
         return (spacecraft, maneuver);
     }

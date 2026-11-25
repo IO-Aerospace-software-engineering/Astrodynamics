@@ -42,28 +42,25 @@ public class TriadSolver : ICategorySolver
         var boresight = new Vector3(inputs.PrimaryBodyVector[0], inputs.PrimaryBodyVector[1], inputs.PrimaryBodyVector[2]);
         var refVector = new Vector3(inputs.SecondaryBodyVector[0], inputs.SecondaryBodyVector[1], inputs.SecondaryBodyVector[2]);
 
-        // Create spacecraft with instrument, engine and fuel tank
-        var spacecraft = new Spacecraft(-999, "ConformanceTestSC", 100.0, 1000.0,
-            new Clock("ConfClk", 65536), sv);
-        spacecraft.AddFuelTank(new FuelTank("ft", "ftA", "000000", 500.0, 400.0));
-        spacecraft.AddEngine(new Engine("eng", "engA", "000000", 300, 50, spacecraft.FuelTanks.First()));
+        // Create spacecraft with instrument (an attitude takes no engine since lot L5b, decisions 48 and 93 of #668)
+        var spacecraft = new Spacecraft(-999, "ConformanceTestSC", 100.0, sv,
+            1000.0, new Clock("ConfClk", 65536));
 
         // Create a circular instrument with the boresight and clock directions
         var fovRad = UnitConversion.DegToRad(inputs.FieldOfView.HalfAngleDeg);
-        spacecraft.AddCircularInstrument(-99900, "ConfInst", "ConfModel",
-            fovRad, boresight, refVector, Vector3.Zero);
+        spacecraft.AddCircularInstrument("ConfInst",
+            fovRad, boresight, refVector, Vector3.Zero, naifId: -99900, model: "ConfModel");
         var instrument = spacecraft.Instruments.First();
 
         // The TRIAD of the IAttitudeTarget constructor: the instrument's boresight towards the primary target, its
         // reference vector towards the secondary one
-        var triadAttitude = new TriadAttitude(earth,
-            new Time(DateTime.MinValue, TimeScale.TDB),
-            TimeSpan.FromSeconds(10.0),
-            instrument.GetBoresightInSpacecraftFrame(),
+        var triadAttitude = new TriadAttitude(instrument.GetBoresightInSpacecraftFrame(),
             primaryTarget,
             instrument.GetRefVectorInSpacecraftFrame(),
             secondaryTarget,
-            spacecraft.Engines.First());
+            new Time(DateTime.MinValue, TimeScale.TDB),
+            TimeSpan.FromSeconds(10.0),
+            earth);
 
         // The framework's TRIAD algorithm, by the public preview of the attitude (decision 50 of #668: the rotation of the
         // execution at this state, the attitude's windows left unset)

@@ -505,7 +505,7 @@ public class MinimumEpochGateTests
         public double Seconds(Time t) => Case.Moon ? (t.ToTDB() - S).TotalSeconds : Tt(t);
 
         /// <summary>The minimum epoch of the k-th executed impulse, as the library set it.</summary>
-        public Time Gate(int k) => Executed[k].MinimumEpoch;
+        public Time Gate(int k) => Executed[k].MinEpoch;
 
         /// <summary>The index of the segment that ends at burn k.</summary>
         public int SegmentOfBurn(int k)
@@ -570,10 +570,10 @@ public class MinimumEpochGateTests
                 orbit = new StateVector(sv.Position, sv.Velocity, sv.Observer, sv.Epoch, sv.Frame, p0);
             }
 
-            var spacecraft = new Spacecraft(naifId, $"GT{-naifId}", 1000.0, 3000.0, new Clock($"GT{-naifId}_CLK", 65536), orbit);
-            var tank = new FuelTank("ft", "model", "sn", 1000.0, 1000.0);
+            var spacecraft = new Spacecraft(naifId, $"GT{-naifId}", 1000.0, orbit, 3000.0, new Clock($"GT{-naifId}_CLK", 65536));
+            var tank = new FuelTank("ft", 1000.0, 1000.0, "model", "sn");
             spacecraft.AddFuelTank(tank);
-            var engine = new Engine("eng", "model", "sn", 300.0, 10.0, tank);
+            var engine = new Engine("eng", 300.0, 10.0, tank, "model", "sn");
             spacecraft.AddEngine(engine);
             var chain = @case.Chain(engine, center, integrator);
             // The plan: the maneuvers of the case in order, with the attitudes a case puts between two of them (f5), which it
@@ -680,7 +680,7 @@ public class MinimumEpochGateTests
                 return new GateCase
                 {
                     Orbit = c => Orbit(c, System.Math.PI),
-                    Chain = (e, c, _) => [new PerigeeHeightManeuver(c, GateAtTt(m), TimeSpan.Zero, 6878137.0, e)],
+                    Chain = (e, c, _) => [new PerigeeHeightManeuver(6878137.0, e, GateAtTt(m), TimeSpan.Zero, c)],
                     Expected = r =>
                     {
                         var k = r.Initial();
@@ -695,7 +695,7 @@ public class MinimumEpochGateTests
                 return new GateCase
                 {
                     Orbit = c => Orbit(c, System.Math.PI, 0.5, 0.3, System.Math.PI),
-                    Chain = (e, c, _) => [new CombinedManeuver(c, GateAtTt(m), TimeSpan.Zero, 6878137.0, 0.45, e)],
+                    Chain = (e, c, _) => [new CombinedManeuver(6878137.0, 0.45, e, GateAtTt(m), TimeSpan.Zero, c)],
                     Expected = r =>
                     {
                         var k = r.Initial();
@@ -712,7 +712,7 @@ public class MinimumEpochGateTests
                 return new GateCase
                 {
                     Orbit = c => Orbit(c, System.Math.PI),
-                    Chain = (e, c, _) => [new ApogeeHeightManeuver(c, GateAtTt(m), TimeSpan.Zero, 8378137.0, e)],
+                    Chain = (e, c, _) => [new ApogeeHeightManeuver(8378137.0, e, GateAtTt(m), TimeSpan.Zero, c)],
                     Expected = r =>
                     {
                         var k = r.Initial();
@@ -726,7 +726,7 @@ public class MinimumEpochGateTests
                 return new GateCase
                 {
                     Orbit = c => Orbit(c, System.Math.PI),
-                    Chain = (e, c, _) => [new PhasingManeuver(GateAtTt(m), PhasingTarget(c), 1, e)],
+                    Chain = (e, c, _) => [new PhasingManeuver(PhasingTarget(c), 1, e, GateAtTt(m))],
                     Hours = 3.0,
                     Expected = r =>
                     {
@@ -746,14 +746,14 @@ public class MinimumEpochGateTests
                         var k = ClosedFormOf(c, Orbit(c, System.Math.PI));
                         var (first, second, _) = k.IntersectionsWith(ClosedFormOf(c, ApsidalTarget(c)));
                         double tFirst = System.Math.Min(k.TimeOfTrue(first, 0.0), k.TimeOfTrue(second, 0.0));
-                        return [new ApsidalAlignmentManeuver(GateAtTt(tFirst - Value(item[4..])), TimeSpan.Zero, ApsidalTarget(c), e)];
+                        return [new ApsidalAlignmentManeuver(ApsidalTarget(c), e, GateAtTt(tFirst - Value(item[4..])), TimeSpan.Zero)];
                     },
                     Expected = r =>
                     {
                         var k = r.Initial();
                         var target = ClosedFormOf(r.Center, ApsidalTarget(r.Center));
                         var (first, second, dw) = k.IntersectionsWith(target);
-                        double gate = Tt(r.Chain[0].MinimumEpoch);
+                        double gate = Tt(r.Chain[0].MinEpoch);
                         double t1 = k.TimeOfTrue(first, gate), t2 = k.TimeOfTrue(second, gate);
                         double nu = t1 <= t2 ? first : second;
                         var (_, v1) = k.StateAtTrue(nu);
@@ -769,13 +769,13 @@ public class MinimumEpochGateTests
                 return new GateCase
                 {
                     Orbit = c => Orbit(c, System.Math.PI, 0.5, 0.3, System.Math.PI),
-                    Chain = (e, c, _) => [new PlaneAlignmentManeuver(GateAtTt(m), TimeSpan.Zero, PlaneTarget(c, e), e)],
+                    Chain = (e, c, _) => [new PlaneAlignmentManeuver(PlaneTarget(c, e), e, GateAtTt(m), TimeSpan.Zero)],
                     Expected = r =>
                     {
                         var k = r.Initial();
                         var ht = PlaneNormal(r.Center);
                         var d = k.Hh.Cross(ht).Normalize();
-                        double gate = Tt(r.Chain[0].MinimumEpoch);
+                        double gate = Tt(r.Chain[0].MinEpoch);
                         double nu = k.TrueAnomalyOf(d);
                         double t = System.Math.Min(k.TimeOfTrue(nu, gate), k.TimeOfTrue(nu + System.Math.PI, gate));
                         var (rr, v) = k.StateAt(t);
@@ -787,7 +787,7 @@ public class MinimumEpochGateTests
                     {
                         if (!r.IsVelocityVerlet || r.Ssb) return;
                         // Velocity-Verlet: the node chosen by the search-start rule on its own state at the gate
-                        var gate = r.Chain[0].MinimumEpoch;
+                        var gate = r.Chain[0].MinEpoch;
                         var (p, v) = r.Solution.InterpolateAt(gate);
                         var local = r.Local(gate, p, v);
                         var targetH = ((PlaneAlignmentManeuver)r.Chain[0]).TargetOrbit.SpecificAngularMomentum().Normalize();
@@ -804,13 +804,13 @@ public class MinimumEpochGateTests
                 {
                     Orbit = c => Orbit(c, System.Math.PI),
                     Hours = 6.0,
-                    Chain = (e, c, _) => [new ApogeeHeightManeuver(c, S, TimeSpan.FromSeconds(hold), 8378137.0, e), new PerigeeHeightManeuver(c, S, TimeSpan.Zero, 6878137.0, e)],
+                    Chain = (e, c, _) => [new ApogeeHeightManeuver(8378137.0, e, S, TimeSpan.FromSeconds(hold), c), new PerigeeHeightManeuver(6878137.0, e, S, TimeSpan.Zero, c)],
                     Expected = r =>
                     {
                         var k = r.Initial();
                         var list = One(k.NextApsis(0.0, false), k.ApogeeChange(8378137.0), k.T);
                         var k2 = r.After(0);
-                        list.Add(new ExpectedBurn(k2.NextApsis(Tt(r.Chain[1].MinimumEpoch), true), k2.PerigeeChange(6878137.0), "apsis", k2.T));
+                        list.Add(new ExpectedBurn(k2.NextApsis(Tt(r.Chain[1].MinEpoch), true), k2.PerigeeChange(6878137.0), "apsis", k2.T));
                         return list;
                     }
                 };
@@ -829,14 +829,14 @@ public class MinimumEpochGateTests
                     {
                         double a2 = (Apogee0 + 6878137.0) / 2.0;
                         double t2 = 2.0 * System.Math.PI * System.Math.Sqrt(a2 * a2 * a2 / c.GM);
-                        return [new PerigeeHeightManeuver(c, GateAtTt(3500.0), TimeSpan.FromSeconds(t2 / 2.0 - x), 6878137.0, e), new ApogeeHeightManeuver(c, S, TimeSpan.Zero, 8378137.0, e)];
+                        return [new PerigeeHeightManeuver(6878137.0, e, GateAtTt(3500.0), TimeSpan.FromSeconds(t2 / 2.0 - x), c), new ApogeeHeightManeuver(8378137.0, e, S, TimeSpan.Zero, c)];
                     },
                     Expected = r =>
                     {
                         var k = r.Initial();
                         var list = One(k.NextApsis(Tt(GateAtTt(3500.0)), true), k.PerigeeChange(6878137.0), k.T);
                         var k2 = r.After(0);
-                        list.Add(new ExpectedBurn(k2.NextApsis(Tt(r.Chain[1].MinimumEpoch), false), k2.ApogeeChange(8378137.0), "apsis", k2.T));
+                        list.Add(new ExpectedBurn(k2.NextApsis(Tt(r.Chain[1].MinEpoch), false), k2.ApogeeChange(8378137.0), "apsis", k2.T));
                         return list;
                     }
                 };
@@ -849,9 +849,9 @@ public class MinimumEpochGateTests
                     Orbit = c => Orbit(c, System.Math.PI),
                     Chain = (e, c, _) =>
                     {
-                        var first = new PerigeeHeightManeuver(c, GateAtTt(3500.0), TimeSpan.Zero, 6878137.0, e);
-                        var attitude = new NadirAttitude(c, S, TimeSpan.FromSeconds(hold), e);
-                        var second = new PerigeeHeightManeuver(c, S, TimeSpan.Zero, 6978137.0, e);
+                        var first = new PerigeeHeightManeuver(6878137.0, e, GateAtTt(3500.0), TimeSpan.Zero, c);
+                        var attitude = new NadirAttitude(S, TimeSpan.FromSeconds(hold), c);
+                        var second = new PerigeeHeightManeuver(6978137.0, e, S, TimeSpan.Zero, c);
                         first.NextManeuver = attitude;
                         attitude.NextManeuver = second;
                         return [first, second];
@@ -861,7 +861,7 @@ public class MinimumEpochGateTests
                         var k = r.Initial();
                         var list = One(k.NextApsis(Tt(GateAtTt(3500.0)), true), k.PerigeeChange(6878137.0), k.T);
                         var k2 = r.After(0);
-                        list.Add(new ExpectedBurn(k2.NextApsis(Tt(r.Chain[1].MinimumEpoch), true), k2.PerigeeChange(6978137.0), "apsis", k2.T));
+                        list.Add(new ExpectedBurn(k2.NextApsis(Tt(r.Chain[1].MinEpoch), true), k2.PerigeeChange(6978137.0), "apsis", k2.T));
                         return list;
                     }
                 };
@@ -876,7 +876,7 @@ public class MinimumEpochGateTests
                 return new GateCase
                 {
                     Orbit = c => Orbit(c, System.Math.PI),
-                    Chain = (e, c, _) => [new ApogeeHeightManeuver(c, GateAtTt(m), TimeSpan.Zero, 8378137.0, e)],
+                    Chain = (e, c, _) => [new ApogeeHeightManeuver(8378137.0, e, GateAtTt(m), TimeSpan.Zero, c)],
                     Expected = r =>
                     {
                         var k = r.Initial();
@@ -889,11 +889,11 @@ public class MinimumEpochGateTests
                 return new GateCase
                 {
                     Orbit = c => Orbit(c, System.Math.PI),
-                    Chain = (e, c, integrator) => [new ApogeeHeightManeuver(c, StepEdgeGate(c, integrator, item), TimeSpan.Zero, 8378137.0, e)],
+                    Chain = (e, c, integrator) => [new ApogeeHeightManeuver(8378137.0, e, StepEdgeGate(c, integrator, item), TimeSpan.Zero, c)],
                     Expected = r =>
                     {
                         var k = r.Initial();
-                        return One(k.NextApsis(Tt(r.Chain[0].MinimumEpoch), false), k.ApogeeChange(8378137.0), k.T);
+                        return One(k.NextApsis(Tt(r.Chain[0].MinEpoch), false), k.ApogeeChange(8378137.0), k.T);
                     }
                 };
             }
@@ -903,11 +903,11 @@ public class MinimumEpochGateTests
                 return new GateCase
                 {
                     Orbit = c => Orbit(c, System.Math.PI),
-                    Chain = (e, c, _) => [new PerigeeHeightManeuver(c, item == "at-base" ? S : S.Add(TimeSpan.FromTicks(1)), TimeSpan.Zero, 6878137.0, e)],
+                    Chain = (e, c, _) => [new PerigeeHeightManeuver(6878137.0, e, item == "at-base" ? S : S.Add(TimeSpan.FromTicks(1)), TimeSpan.Zero, c)],
                     Expected = r =>
                     {
                         var k = r.Initial();
-                        double tc = item == "at-base" ? 0.0 : k.NextApsis(Tt(r.Chain[0].MinimumEpoch), true);
+                        double tc = item == "at-base" ? 0.0 : k.NextApsis(Tt(r.Chain[0].MinEpoch), true);
                         return One(tc, k.PerigeeChange(6878137.0), k.T);
                     },
                     Check = r =>
@@ -961,13 +961,13 @@ public class MinimumEpochGateTests
                         var k = ClosedFormOf(c, MoonOrbit(c));
                         double m = item.StartsWith("apo-") ? k.T - Value(item[4..]) : item.StartsWith("peri-") ? k.T / 2.0 - Value(item[5..]) : Value(item[1..]);
                         return perigee
-                            ? [new PerigeeHeightManeuver(c, S.AddSeconds(m), TimeSpan.Zero, MoonRadius + 150000.0, e)]
-                            : [new ApogeeHeightManeuver(c, S.AddSeconds(m), TimeSpan.Zero, MoonRadius + 500000.0, e)];
+                            ? [new PerigeeHeightManeuver(MoonRadius + 150000.0, e, S.AddSeconds(m), TimeSpan.Zero, c)]
+                            : [new ApogeeHeightManeuver(MoonRadius + 500000.0, e, S.AddSeconds(m), TimeSpan.Zero, c)];
                     },
                     Expected = r =>
                     {
                         var k = r.Initial();
-                        double gate = r.Seconds(r.Chain[0].MinimumEpoch);
+                        double gate = r.Seconds(r.Chain[0].MinEpoch);
                         return perigee
                             ? One(k.NextApsis(gate, true), k.PerigeeChange(MoonRadius + 150000.0), k.T, "moon")
                             : One(k.NextApsis(gate, false), k.ApogeeChange(MoonRadius + 500000.0), k.T, "moon");
@@ -984,7 +984,7 @@ public class MinimumEpochGateTests
     private static Time StepEdgeGate(CelestialBody center, string integrator, string edge)
     {
         var orbit = Orbit(center, System.Math.PI);
-        var spacecraft = new Spacecraft(-7999, "GTSTEPS", 1000.0, 3000.0, new Clock("GTSTEPS_CLK", 65536), orbit);
+        var spacecraft = new Spacecraft(-7999, "GTSTEPS", 1000.0, orbit, 3000.0, new Clock("GTSTEPS_CLK", 65536));
         IntegratorOptions propagator = integrator switch
         {
             "VV1" => new VVIntegratorOptions { Step = TimeSpan.FromSeconds(1.0) },
@@ -1063,7 +1063,7 @@ public class MinimumEpochGateTests
 /// velocity.</summary>
 internal sealed class AnyApsisImpulse : ImpulseManeuver
 {
-    internal AnyApsisImpulse(CelestialItem center, Time minimumEpoch, Engine engine) : base(center, minimumEpoch, TimeSpan.Zero, engine)
+    internal AnyApsisImpulse(CelestialItem center, Time minimumEpoch, Engine engine) : base(engine, minimumEpoch, TimeSpan.Zero, center)
     {
     }
 

@@ -50,7 +50,7 @@ public partial class IntegratorEventTests
     {
         var earth = new CelestialBody(PlanetsAndMoons.EARTH, Frame.ICRF, S);
         var (spacecraft, engine) = NewSpacecraft(-7931, MinimumEpochGateTests.Orbit(earth, System.Math.PI));
-        var maneuver = new ApogeeHeightManeuver(earth, S, TimeSpan.Zero, 8378137.0, engine);
+        var maneuver = new ApogeeHeightManeuver(8378137.0, engine, S, TimeSpan.Zero, earth);
         spacecraft.SetManeuvers(maneuver);
         var window = new Window(S, MinimumEpochGateTests.GateAtTt(length));
         double massBefore = spacecraft.GetTotalMass();
@@ -94,7 +94,7 @@ public partial class IntegratorEventTests
     {
         var earth = new CelestialBody(PlanetsAndMoons.EARTH, Frame.ICRF, S);
         var (spacecraft, engine) = NewSpacecraft(-7933, MinimumEpochGateTests.Orbit(earth, System.Math.PI));
-        var maneuver = new ApogeeHeightManeuver(earth, S, TimeSpan.Zero, 8378137.0, engine);
+        var maneuver = new ApogeeHeightManeuver(8378137.0, engine, S, TimeSpan.Zero, earth);
         spacecraft.SetManeuvers(maneuver);
         var window = new Window(S, MinimumEpochGateTests.GateAtTt(2964.0));
         double massBefore = spacecraft.GetTotalMass();
@@ -133,13 +133,13 @@ public partial class IntegratorEventTests
         {
             // RK7(8) puts the burn at the root of its g-function: a first run finds it, the second ends there
             var (probe, probeEngine) = NewSpacecraft(-7935, MinimumEpochGateTests.Orbit(earth, System.Math.PI));
-            probe.SetManeuvers(new ApogeeHeightManeuver(earth, S, TimeSpan.Zero, 8378137.0, probeEngine));
+            probe.SetManeuvers(new ApogeeHeightManeuver(8378137.0, probeEngine, S, TimeSpan.Zero, earth));
             var probeSolution = probe.Propagate(new Window(S, MinimumEpochGateTests.GateAtTt(3000.0)), new PropagationOptions { Integrator = NewIntegrator(integratorName), OutputStep = TimeSpan.FromSeconds(10.0), ThirdBodies = [earth], CovariancePropagation = CovariancePropagationOptions.None });
             window = new Window(S, probeSolution.Segments[1].BaseEpoch);
         }
 
         var (spacecraft, engine) = NewSpacecraft(-7934, MinimumEpochGateTests.Orbit(earth, System.Math.PI));
-        var maneuver = new ApogeeHeightManeuver(earth, S, TimeSpan.Zero, 8378137.0, engine);
+        var maneuver = new ApogeeHeightManeuver(8378137.0, engine, S, TimeSpan.Zero, earth);
         spacecraft.SetManeuvers(maneuver);
         var solution = spacecraft.Propagate(window, new PropagationOptions { Integrator = NewIntegrator(integratorName), OutputStep = TimeSpan.FromSeconds(4.0), ThirdBodies = [earth], CovariancePropagation = CovariancePropagationOptions.None });
 

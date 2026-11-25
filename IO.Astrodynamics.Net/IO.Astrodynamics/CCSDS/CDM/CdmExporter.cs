@@ -355,7 +355,8 @@ internal static class CdmExporter
 
         // Object 2: YES for a spacecraft with an engine; otherwise N/A, "not available" or "not applicable" (CCSDS 508.0-B-1
         // Cor. 2, 1.4.3.1, which the MANEUVERABLE row of Table 3-3 refers to): the library knows the model of the object,
-        // not its maneuver capacity (#683: YES for any spacecraft)
+        // not its maneuver capacity (#683: YES for any spacecraft). An engine counts whatever its tank holds, an empty tank
+        // (lot L5b, R10) included: the letter of #683's rule; SecondaryParticipantMetadata overrides it
         var maneuverable = role == CdmObjectRole.Object1
             ? encounterCase.ProtectedAsset.ManeuverConstraints.MaxDeltaVMetersPerSecond > 0.0
                 ? CdmManeuverable.Yes

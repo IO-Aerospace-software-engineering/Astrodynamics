@@ -54,7 +54,7 @@ public class IntegratorDefaultsTests
     private static Spacecraft NewSpacecraft(IO.Astrodynamics.OrbitalParameters.OrbitalParameters orbit)
     {
         int id = NextId();
-        return new Spacecraft(id, $"DEF{-id}", 500.0, 3000.0, new Clock($"def{-id}", 65536), orbit);
+        return new Spacecraft(id, $"DEF{-id}", 500.0, orbit, 3000.0, new Clock($"def{-id}", 65536));
     }
 
     // The explicit settings: the integrator instance with its forces, the central body's point-mass gravity

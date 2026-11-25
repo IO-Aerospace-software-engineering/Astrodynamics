@@ -68,11 +68,11 @@ internal static class ImpulseManeuversPage
         //   (CelestialItem[])
         // Raise the apogee radius to 42,164 km (meters), at the first perigee after J2000 TDB.
         var maneuver = new ApogeeHeightManeuver(
-            earth,
+            42164000.0,
+            engine,
             Time.J2000TDB,
             TimeSpan.Zero,
-            42164000.0,
-            engine);
+            earth);
 
         spacecraft.SetManeuvers(maneuver);
         var solution = spacecraft.Propagate(window, new PropagationOptions { ThirdBodies = perturbingBodies });

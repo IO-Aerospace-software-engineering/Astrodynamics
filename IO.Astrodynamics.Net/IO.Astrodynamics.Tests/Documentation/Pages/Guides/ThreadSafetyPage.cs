@@ -81,8 +81,8 @@ internal static class ThreadSafetyPage
         for (int i = 0; i < taskCount; i++)
         {
             // The same state about the shared Earth
-            var spacecraft = new Spacecraft(-(1000 + i), $"Sat-{i}", 100.0, 10000.0,
-                new Clock($"clk-{i}", 256), new StateVector(orbit.Position, orbit.Velocity, earth, orbit.Epoch, orbit.Frame));
+            var spacecraft = new Spacecraft(-(1000 + i), $"Sat-{i}", 100.0, new StateVector(orbit.Position, orbit.Velocity, earth, orbit.Epoch, orbit.Frame),
+                10000.0, new Clock($"clk-{i}", 256));
             tasks.Add(new PropagationTask(spacecraft, window, options));
         }
 

@@ -87,8 +87,8 @@ public class EphemerisDefaultsTests
     public void PropagatedSpacecraft_DefaultsAreIcrfGeometric()
     {
         var earth = new CelestialBody(PlanetsAndMoons.EARTH);
-        var spacecraft = new Spacecraft(-2001, "R20Defaults", 100.0, 1000.0, new Clock("R20DefaultsClk", 65536),
-            new StateVector(new Vector3(6800000.0, 0.0, 0.0), new Vector3(0.0, 7656.0, 1000.0), earth, Epoch, Frames.Frame.ICRF));
+        var spacecraft = new Spacecraft(-2001, "R20Defaults", 100.0, new StateVector(new Vector3(6800000.0, 0.0, 0.0), new Vector3(0.0, 7656.0, 1000.0), earth, Epoch, Frames.Frame.ICRF), 1000.0,
+            new Clock("R20DefaultsClk", 65536));
         spacecraft.Propagate(new Window(Epoch, Epoch.AddSeconds(600.0)), new PropagationOptions { Integrator = new VVIntegratorOptions { Step = TimeSpan.FromSeconds(10.0) }, OutputStep = TimeSpan.FromSeconds(10.0), ThirdBodies = [earth] });
 
         // From its central body (the short cut on the stored states) and from the Moon (the reference-body path)

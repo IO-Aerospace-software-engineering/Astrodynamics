@@ -335,7 +335,7 @@ public class ConjunctionTcaAccuracyTests
 
     private static Spacecraft Spacecraft(int naifId, string name, StateVector state)
     {
-        return new Spacecraft(naifId, name, 100.0, 1000.0, new Clock(name, 65536), state, 1.0);
+        return new Spacecraft(naifId, name, 100.0, state, 1000.0, new Clock(name, 65536), 1.0);
     }
 
     private static Vector3 Position(double[] state) => new(state[0], state[1], state[2]);

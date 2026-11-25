@@ -32,11 +32,11 @@ namespace IO.Astrodynamics.Tests.Maneuvers
 
         private static ImpulseManeuver Create(string maneuver, IO.Astrodynamics.OrbitalParameters.OrbitalParameters targetOrbit, Engine engine) => maneuver switch
         {
-            nameof(ApsidalAlignmentManeuver) => new ApsidalAlignmentManeuver(MinimumEpoch, TimeSpan.Zero, targetOrbit, engine),
-            nameof(PlaneAlignmentManeuver) => new PlaneAlignmentManeuver(MinimumEpoch, TimeSpan.Zero, targetOrbit, engine),
-            nameof(PhasingManeuver) => new PhasingManeuver(MinimumEpoch, targetOrbit, 2, engine),
-            nameof(ApogeeHeightManeuver) => new ApogeeHeightManeuver(MinimumEpoch, TimeSpan.Zero, targetOrbit, engine),
-            nameof(PerigeeHeightManeuver) => new PerigeeHeightManeuver(MinimumEpoch, TimeSpan.Zero, targetOrbit, engine),
+            nameof(ApsidalAlignmentManeuver) => new ApsidalAlignmentManeuver(targetOrbit, engine, MinimumEpoch, TimeSpan.Zero),
+            nameof(PlaneAlignmentManeuver) => new PlaneAlignmentManeuver(targetOrbit, engine, MinimumEpoch, TimeSpan.Zero),
+            nameof(PhasingManeuver) => new PhasingManeuver(targetOrbit, 2, engine, MinimumEpoch),
+            nameof(ApogeeHeightManeuver) => new ApogeeHeightManeuver(targetOrbit, engine, MinimumEpoch, TimeSpan.Zero),
+            nameof(PerigeeHeightManeuver) => new PerigeeHeightManeuver(targetOrbit, engine, MinimumEpoch, TimeSpan.Zero),
             _ => throw new ArgumentOutOfRangeException(nameof(maneuver))
         };
 
@@ -44,13 +44,13 @@ namespace IO.Astrodynamics.Tests.Maneuvers
         {
             if (!attached)
             {
-                return new Engine("eng", "engmk1", "12345", 450, 50, new FuelTank("ft", "ftA", "123456", 1000.0, 900.0));
+                return new Engine("eng", 450, 50, new FuelTank("ft", 1000.0, 900.0, "ftA", "123456"), "engmk1", "12345");
             }
 
             var orbit = new KeplerianElements(7000000.0, 0.01, 0.1, 0.0, 0.0, 0.0, TestHelpers.EarthAtJ2000, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF);
-            var spc = new Spacecraft(-1552, "Impulse1552", 1000.0, 3000.0, new Clock("Clk1552", 65536), orbit);
-            spc.AddFuelTank(new FuelTank("ft", "ftA", "123456", 1000.0, 900.0));
-            spc.AddEngine(new Engine("eng", "engmk1", "12345", 450, 50, spc.FuelTanks.First()));
+            var spc = new Spacecraft(-1552, "Impulse1552", 1000.0, orbit, 3000.0, new Clock("Clk1552", 65536));
+            spc.AddFuelTank(new FuelTank("ft", 1000.0, 900.0, "ftA", "123456"));
+            spc.AddEngine(new Engine("eng", 450, 50, spc.FuelTanks.First(), "engmk1", "12345"));
             return spc.Engines.First();
         }
 
@@ -84,8 +84,8 @@ namespace IO.Astrodynamics.Tests.Maneuvers
         }
 
         /// <summary>
-        /// A null target orbit is reported before a null engine; a null engine with a target orbit is the error of the
-        /// engine.
+        /// A null target orbit is an argument error; a null engine is the engine the run infers, the spacecraft's only one
+        /// (decision 61 of #668; before lot L5b, <see cref="ArgumentNullException"/>).
         /// </summary>
         [Theory]
         [InlineData(nameof(ApsidalAlignmentManeuver))]
@@ -93,24 +93,36 @@ namespace IO.Astrodynamics.Tests.Maneuvers
         [InlineData(nameof(PhasingManeuver))]
         [InlineData(nameof(ApogeeHeightManeuver))]
         [InlineData(nameof(PerigeeHeightManeuver))]
-        public void ANullEngine_IsAnArgumentError(string maneuver)
+        public void ANullTargetOrbit_IsAnArgumentError_ANullEngine_TheOneTheRunInfers(string maneuver)
         {
             Assert.Equal("targetOrbit", Assert.Throws<ArgumentNullException>(() => Create(maneuver, null, null)).ParamName);
-            Assert.Equal("engine", Assert.Throws<ArgumentNullException>(() => Create(maneuver, Target(Frames.Frame.ICRF), null)).ParamName);
+            Assert.Null(Create(maneuver, Target(Frames.Frame.ICRF), null).Engine);
+        }
+
+        // Whether the plan of the spacecraft of the engine takes the maneuver: since lot L5b the frame of a target orbit is
+        // checked by the plan and the run, not by the constructor (decision 65 of #668, decided by S. Guillet, 2026-11-23)
+        private static Exception Plan(ImpulseManeuver maneuver)
+        {
+            var spacecraft = maneuver.Engine.FuelTank.Spacecraft;
+            var exception = Record.Exception(() => spacecraft.SetManeuvers(maneuver));
+            spacecraft.SetManeuvers();
+            return exception;
         }
 
         /// <summary>
-        /// A target orbit in a frame other than that of the spacecraft of the engine is rejected; without a spacecraft,
-        /// or in its frame, the maneuver takes the target orbit and its observer as center.
+        /// A target orbit in a frame other than the one the spacecraft is propagated in is rejected by the plan
+        /// (<see cref="ArgumentException"/>, <c>maneuvers</c>), no more by the constructor (decision 65 of #668); in that
+        /// frame, the maneuver takes the target orbit and its observer as center.
         /// </summary>
         [Theory]
         [InlineData(nameof(ApsidalAlignmentManeuver))]
         [InlineData(nameof(PlaneAlignmentManeuver))]
         [InlineData(nameof(PhasingManeuver))]
-        public void TheFrameOfTheTargetOrbit_IsChecked(string maneuver)
+        public void TheFrameOfTheTargetOrbit_IsCheckedByThePlan(string maneuver)
         {
-            var exception = Assert.Throws<ArgumentException>(() => Create(maneuver, Target(Frames.Frame.ECLIPTIC_J2000), Engine(true)));
-            Assert.IsNotType<ArgumentNullException>(exception);
+            var ecliptic = Create(maneuver, Target(Frames.Frame.ECLIPTIC_J2000), Engine(true));
+            var exception = Assert.IsType<ArgumentException>(Plan(ecliptic));
+            Assert.Equal("maneuvers", exception.ParamName);
 
             var target = Target(Frames.Frame.ICRF);
             foreach (var engine in new[] { Engine(true), Engine(false) })
@@ -146,23 +158,19 @@ namespace IO.Astrodynamics.Tests.Maneuvers
             };
             for (int k = 0; k < orbits.Length; k++)
             {
-                var spc = new Spacecraft(-1553 - k, $"Impulse{1553 + k}", 1000.0, 3000.0, new Clock($"Clk{1553 + k}", 65536), orbits[k]);
-                spc.AddFuelTank(new FuelTank("ft", "ftA", "123456", 1000.0, 900.0));
-                spc.AddEngine(new Engine("eng", "engmk1", "12345", 450, 50, spc.FuelTanks.First()));
+                var spc = new Spacecraft(-1553 - k, $"Impulse{1553 + k}", 1000.0, orbits[k], 3000.0, new Clock($"Clk{1553 + k}", 65536));
+                spc.AddFuelTank(new FuelTank("ft", 1000.0, 900.0, "ftA", "123456"));
+                spc.AddEngine(new Engine("eng", 450, 50, spc.FuelTanks.First(), "engmk1", "12345"));
                 var engine = spc.Engines.First();
                 bool mean = orbits[k] is KeplerianElements { ElementsType: OrbitalElementsType.Mean };
 
+                // The constructor takes any frame (decision 65 of #668); the plan takes the frame of the propagation, ICRF
+                // for a TLE or a TEME state, TEME for mean elements, which no numerical propagation takes
                 Assert.Equal(Frames.Frame.TEME, Create(maneuver, Target(Frames.Frame.TEME), engine).TargetOrbit.Frame);
-                if (mean)
-                {
-                    Assert.Throws<ArgumentException>(() => Create(maneuver, Target(Frames.Frame.ICRF), engine));
-                }
-                else
-                {
-                    Assert.Equal(Frames.Frame.ICRF, Create(maneuver, Target(Frames.Frame.ICRF), engine).TargetOrbit.Frame);
-                }
-
-                Assert.Throws<ArgumentException>(() => Create(maneuver, Target(Frames.Frame.ECLIPTIC_J2000), engine));
+                Assert.Equal(Frames.Frame.ICRF, Create(maneuver, Target(Frames.Frame.ICRF), engine).TargetOrbit.Frame);
+                Assert.Equal(mean, Plan(Create(maneuver, Target(Frames.Frame.TEME), engine)) == null);
+                Assert.Equal(mean, Plan(Create(maneuver, Target(Frames.Frame.ICRF), engine)) != null);
+                Assert.IsType<ArgumentException>(Plan(Create(maneuver, Target(Frames.Frame.ECLIPTIC_J2000), engine)));
             }
         }
 
@@ -209,22 +217,22 @@ namespace IO.Astrodynamics.Tests.Maneuvers
                 _ => new StateVector(elements.ToStateVector().Position, elements.ToStateVector().Velocity, center, elements.Epoch, elements.Frame, covariance)
             };
             // Fuel enough for any of the burns: the state is not at the event of the maneuver, which TryExecute does not check
-            var spc = new Spacecraft(-1588, "Impulse1588", 1000.0, 1.0e7, new Clock("Clk1588", 65536), orbit);
-            spc.AddFuelTank(new FuelTank("ft", "ftA", "123456", 1.0e6, 9.0e5));
-            spc.AddEngine(new Engine("eng", "engmk1", "12345", 450, 50, spc.FuelTanks.First()));
+            var spc = new Spacecraft(-1588, "Impulse1588", 1000.0, orbit, 1.0e7, new Clock("Clk1588", 65536));
+            spc.AddFuelTank(new FuelTank("ft", 1.0e6, 9.0e5, "ftA", "123456"));
+            spc.AddEngine(new Engine("eng", 450, 50, spc.FuelTanks.First(), "engmk1", "12345"));
             var engine = spc.Engines.First();
             var target = new KeplerianElements(8000000.0, 0.15, 0.5, 0.3, 0.6, 0.0, center, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF);
             // The apsidal alignment intersects two orbits of the same plane: the orbit rotated by 0.05 rad in its plane
             var coplanar = new KeplerianElements(7000000.0, 0.1, 0.3, 0.2, 0.45, 1.0, center, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF);
             ImpulseManeuver impulse = maneuver switch
             {
-                nameof(ApogeeHeightManeuver) => new ApogeeHeightManeuver(center, MinimumEpoch, TimeSpan.Zero, 9000000.0, engine),
-                nameof(PerigeeHeightManeuver) => new PerigeeHeightManeuver(center, MinimumEpoch, TimeSpan.Zero, 6800000.0, engine),
-                nameof(CombinedManeuver) => new CombinedManeuver(center, MinimumEpoch, TimeSpan.Zero, 6500000.0, 0.1, engine),
-                nameof(PlaneAlignmentManeuver) => new PlaneAlignmentManeuver(MinimumEpoch, TimeSpan.Zero, target, engine),
-                nameof(ApsidalAlignmentManeuver) => new ApsidalAlignmentManeuver(MinimumEpoch, TimeSpan.Zero, coplanar, engine),
-                nameof(PhasingManeuver) => new PhasingManeuver(MinimumEpoch, elements.AtEpoch(elements.Epoch + TimeSpan.FromMinutes(10.0)), 2, engine),
-                _ => new PhasingManeuver(center, MinimumEpoch, 1.0, 2, engine)
+                nameof(ApogeeHeightManeuver) => new ApogeeHeightManeuver(9000000.0, engine, MinimumEpoch, TimeSpan.Zero, center),
+                nameof(PerigeeHeightManeuver) => new PerigeeHeightManeuver(6800000.0, engine, MinimumEpoch, TimeSpan.Zero, center),
+                nameof(CombinedManeuver) => new CombinedManeuver(6500000.0, 0.1, engine, MinimumEpoch, TimeSpan.Zero, center),
+                nameof(PlaneAlignmentManeuver) => new PlaneAlignmentManeuver(target, engine, MinimumEpoch, TimeSpan.Zero),
+                nameof(ApsidalAlignmentManeuver) => new ApsidalAlignmentManeuver(coplanar, engine, MinimumEpoch, TimeSpan.Zero),
+                nameof(PhasingManeuver) => new PhasingManeuver(elements.AtEpoch(elements.Epoch + TimeSpan.FromMinutes(10.0)), 2, engine, MinimumEpoch),
+                _ => new PhasingManeuver(1.0, 2, engine, MinimumEpoch, center)
             };
             spc.SetManeuvers(impulse);
 
@@ -310,22 +318,22 @@ namespace IO.Astrodynamics.Tests.Maneuvers
             integrator == "VV" ? new VVIntegratorOptions { Step = PlaneChangeStep } : RK78IntegratorOptions.Default;
 
         private static Spacecraft PlaneChangeSpacecraft(int id, IO.Astrodynamics.OrbitalParameters.OrbitalParameters orbit) =>
-            new(id, $"PlaneChange{-id}", 1000.0, 3000.0, new Clock($"PlaneChangeClk{-id}", 65536), orbit);
+            new(id, $"PlaneChange{-id}", 1000.0, orbit, 3000.0, new Clock($"PlaneChangeClk{-id}", 65536));
 
         private static (Spacecraft, Engine) PlaneChangeSpacecraftWithEngine(int id, IO.Astrodynamics.OrbitalParameters.OrbitalParameters orbit)
         {
             var spacecraft = PlaneChangeSpacecraft(id, orbit);
-            spacecraft.AddFuelTank(new FuelTank("ft685", "ftA", $"sn{-id}", 1000.0, 900.0));
-            spacecraft.AddEngine(new Engine("eng685", "engmk1", $"sn{-id}", 450, 50, spacecraft.FuelTanks.First()));
+            spacecraft.AddFuelTank(new FuelTank("ft685", 1000.0, 900.0, "ftA", $"sn{-id}"));
+            spacecraft.AddEngine(new Engine("eng685", 450, 50, spacecraft.FuelTanks.First(), "engmk1", $"sn{-id}"));
             return (spacecraft, spacecraft.Engines.First());
         }
 
         private static ImpulseManeuver CreateAt(string maneuver, IO.Astrodynamics.OrbitalParameters.OrbitalParameters targetOrbit, Engine engine) =>
             maneuver switch
             {
-                nameof(ApsidalAlignmentManeuver) => new ApsidalAlignmentManeuver(PlaneChangeStart, TimeSpan.Zero, targetOrbit, engine),
-                nameof(PlaneAlignmentManeuver) => new PlaneAlignmentManeuver(PlaneChangeStart, TimeSpan.Zero, targetOrbit, engine),
-                nameof(PhasingManeuver) => new PhasingManeuver(PlaneChangeStart, targetOrbit, 2, engine),
+                nameof(ApsidalAlignmentManeuver) => new ApsidalAlignmentManeuver(targetOrbit, engine, PlaneChangeStart, TimeSpan.Zero),
+                nameof(PlaneAlignmentManeuver) => new PlaneAlignmentManeuver(targetOrbit, engine, PlaneChangeStart, TimeSpan.Zero),
+                nameof(PhasingManeuver) => new PhasingManeuver(targetOrbit, 2, engine, PlaneChangeStart),
                 _ => throw new ArgumentOutOfRangeException(nameof(maneuver))
             };
 
@@ -365,8 +373,8 @@ namespace IO.Astrodynamics.Tests.Maneuvers
             else
             {
                 // Built before its tank is on the spacecraft: no check at construction
-                var tank = new FuelTank("ft685", "ftA", "sn6852", 1000.0, 900.0);
-                var engine = new Engine("eng685", "engmk1", "sn6852", 450, 50, tank);
+                var tank = new FuelTank("ft685", 1000.0, 900.0, "ftA", "sn6852");
+                var engine = new Engine("eng685", 450, 50, tank, "engmk1", "sn6852");
                 rejected = CreateAt(maneuver, targetEcl, engine);
                 spacecraft = PlaneChangeSpacecraft(-6852, orbit);
                 spacecraft.AddFuelTank(tank);
@@ -376,7 +384,7 @@ namespace IO.Astrodynamics.Tests.Maneuvers
             ImpulseManeuver leading = rejected;
             if (chained)
             {
-                leading = new ApogeeHeightManeuver(earth, PlaneChangeStart, TimeSpan.Zero, 7100000.0, spacecraft.Engines.First());
+                leading = new ApogeeHeightManeuver(7100000.0, spacecraft.Engines.First(), PlaneChangeStart, TimeSpan.Zero, earth);
             }
 
             var plan = chained ? new Maneuver.Maneuver[] { leading, rejected } : new Maneuver.Maneuver[] { rejected };
@@ -449,15 +457,15 @@ namespace IO.Astrodynamics.Tests.Maneuvers
             var earth = TestHelpers.EarthAtJ2000;
             var spacecraft = PlaneChangeSpacecraft(integrator == "VV" ? -6855 : -6856, CircularOrbit(earth, 30.0));
             var propagator = new Propagator.CentralBodyPropagator(PlaneChangeWindow, spacecraft, new PropagationOptions { Integrator = PlaneChangeIntegrator(integrator), OutputStep = PlaneChangeStep, ThirdBodies = [earth], CovariancePropagation = CovariancePropagationOptions.None });
-            var tank = new FuelTank("ft685", "ftA", "sn6855", 1000.0, 900.0);
-            var engine = new Engine("eng685", "engmk1", "sn6855", 450, 50, tank);
+            var tank = new FuelTank("ft685", 1000.0, 900.0, "ftA", "sn6855");
+            var engine = new Engine("eng685", 450, 50, tank, "engmk1", "sn6855");
             var rejected = CreateAt(nameof(PlaneAlignmentManeuver), CircularOrbit(earth, 32.0).ToFrame(Frames.Frame.ECLIPTIC_J2000), engine);
             spacecraft.AddFuelTank(tank);
             spacecraft.AddEngine(engine);
             // SetManeuvers refuses it (decision 46 of #668), so the run's re-check is reached by a maneuver linked past the
             // plan, through the internal setter a test reaches
             Assert.Equal("maneuvers", Assert.Throws<ArgumentException>(() => spacecraft.SetManeuvers(rejected)).ParamName);
-            var head = new NadirAttitude(earth, PlaneChangeStart, TimeSpan.Zero, engine);
+            var head = new NadirAttitude(PlaneChangeStart, TimeSpan.Zero, earth);
             spacecraft.SetManeuvers(head);
             head.NextManeuver = rejected;
 
@@ -499,13 +507,13 @@ namespace IO.Astrodynamics.Tests.Maneuvers
             {
                 Engine engine;
                 (spacecraft, engine) = PlaneChangeSpacecraftWithEngine(id, orbit);
-                maneuver = new PlaneAlignmentManeuver(PlaneChangeStart, TimeSpan.Zero, target, engine);
+                maneuver = new PlaneAlignmentManeuver(target, engine, PlaneChangeStart, TimeSpan.Zero);
             }
             else
             {
-                var tank = new FuelTank("ft685", "ftA", $"sn{-id}", 1000.0, 900.0);
-                var engine = new Engine("eng685", "engmk1", $"sn{-id}", 450, 50, tank);
-                maneuver = new PlaneAlignmentManeuver(PlaneChangeStart, TimeSpan.Zero, target, engine);
+                var tank = new FuelTank("ft685", 1000.0, 900.0, "ftA", $"sn{-id}");
+                var engine = new Engine("eng685", 450, 50, tank, "engmk1", $"sn{-id}");
+                maneuver = new PlaneAlignmentManeuver(target, engine, PlaneChangeStart, TimeSpan.Zero);
                 spacecraft = PlaneChangeSpacecraft(id, orbit);
                 if (order != "tank after")
                 {
@@ -519,7 +527,7 @@ namespace IO.Astrodynamics.Tests.Maneuvers
             ImpulseManeuver leading = maneuver;
             if (chained)
             {
-                leading = new ApogeeHeightManeuver(earth, PlaneChangeStart, TimeSpan.Zero, 7100000.0, spacecraft.Engines.First());
+                leading = new ApogeeHeightManeuver(7100000.0, spacecraft.Engines.First(), PlaneChangeStart, TimeSpan.Zero, earth);
             }
 
             spacecraft.SetManeuvers(chained ? new Maneuver.Maneuver[] { leading, maneuver } : new Maneuver.Maneuver[] { maneuver });
@@ -624,17 +632,19 @@ namespace IO.Astrodynamics.Tests.Maneuvers
             };
             for (int k = 0; k < orbits.Length; k++)
             {
-                var spc = new Spacecraft(-1563 - k, $"Impulse{1563 + k}", 1000.0, 3000.0, new Clock($"Clk{1563 + k}", 65536), orbits[k]);
-                spc.AddFuelTank(new FuelTank("ft", "ftA", "123456", 1000.0, 900.0));
-                spc.AddEngine(new Engine("eng", "engmk1", "12345", 450, 50, spc.FuelTanks.First()));
+                var spc = new Spacecraft(-1563 - k, $"Impulse{1563 + k}", 1000.0, orbits[k], 3000.0, new Clock($"Clk{1563 + k}", 65536));
+                spc.AddFuelTank(new FuelTank("ft", 1000.0, 900.0, "ftA", "123456"));
+                spc.AddEngine(new Engine("eng", 450, 50, spc.FuelTanks.First(), "engmk1", "12345"));
                 var engine = spc.Engines.First();
+                var gcrf = Create(maneuver, Target(Frames.Frame.GCRF), engine);
+                Assert.Equal(Frames.Frame.GCRF, gcrf.TargetOrbit.Frame);
                 if (orbits[k] is KeplerianElements { ElementsType: OrbitalElementsType.Mean })
                 {
-                    Assert.Throws<ArgumentException>(() => Create(maneuver, Target(Frames.Frame.GCRF), engine));
+                    Assert.IsType<ArgumentException>(Plan(gcrf));
                 }
                 else
                 {
-                    Assert.Equal(Frames.Frame.GCRF, Create(maneuver, Target(Frames.Frame.GCRF), engine).TargetOrbit.Frame);
+                    Assert.Null(Plan(gcrf));
                 }
             }
 
@@ -643,12 +653,12 @@ namespace IO.Astrodynamics.Tests.Maneuvers
             var window = new Window(start, start.AddHours(2.0));
             (PlaneAlignmentManeuver, StateVector) Run(int id, Frames.Frame frame)
             {
-                var spacecraft = new Spacecraft(id, $"Impulse{-id}", 1000.0, 3000.0, new Clock($"Clk{-id}", 65536), tle);
-                spacecraft.AddFuelTank(new FuelTank("ft", "ftA", "123456", 1000.0, 900.0));
-                spacecraft.AddEngine(new Engine("eng", "engmk1", "12345", 450, 50, spacecraft.FuelTanks.First()));
+                var spacecraft = new Spacecraft(id, $"Impulse{-id}", 1000.0, tle, 3000.0, new Clock($"Clk{-id}", 65536));
+                spacecraft.AddFuelTank(new FuelTank("ft", 1000.0, 900.0, "ftA", "123456"));
+                spacecraft.AddEngine(new Engine("eng", 450, 50, spacecraft.FuelTanks.First(), "engmk1", "12345"));
                 var target = new KeplerianElements(6800000.0, 0.0, 52.6423 * IO.Astrodynamics.Constants.Deg2Rad, 353.0312 * IO.Astrodynamics.Constants.Deg2Rad,
                     0.0, 0.0, tle.Observer, start, frame);
-                var plane = new PlaneAlignmentManeuver(start, TimeSpan.Zero, target, spacecraft.Engines.First());
+                var plane = new PlaneAlignmentManeuver(target, spacecraft.Engines.First(), start, TimeSpan.Zero);
                 spacecraft.SetManeuvers(plane);
                 var solution = spacecraft.Propagate(window, new PropagationOptions { Integrator = RK78IntegratorOptions.Default, OutputStep = TimeSpan.FromSeconds(60.0), ThirdBodies = Array.Empty<IO.Astrodynamics.Body.CelestialItem>(), CovariancePropagation = CovariancePropagationOptions.None });
                 return (plane, solution.StateVectors[^1]);
@@ -683,7 +693,7 @@ namespace IO.Astrodynamics.Tests.Maneuvers
                 ? PlaneChangeSpacecraftWithEngine(-6853, orbit)
                 : PlaneChangeSpacecraftWithEngine(-6854, orbit.ToFrame(Frames.Frame.ECLIPTIC_J2000));
             var target = frame == "ICRF" ? targetEcl.ToFrame(Frames.Frame.ICRF) : targetEcl;
-            var maneuver = new PlaneAlignmentManeuver(PlaneChangeStart, TimeSpan.Zero, target, engine);
+            var maneuver = new PlaneAlignmentManeuver(target, engine, PlaneChangeStart, TimeSpan.Zero);
             spacecraft.SetManeuvers(maneuver);
 
             // Act

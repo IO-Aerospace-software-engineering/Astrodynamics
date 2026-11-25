@@ -348,7 +348,7 @@ public class PropagatedEphemerisTests
         Assert.Throws<ArgumentException>(() => SpiceAPI.Instance.WriteEphemerisArcs(file, -5404, new[] { new[] { State(0.0) } }));
         Assert.Throws<ArgumentException>(() => SpiceAPI.Instance.WriteEphemerisArcs(file, -5404, new[] { new[] { State(10.0), State(0.0) } }));
         // A spacecraft with one stored state
-        var spacecraft = new IO.Astrodynamics.Body.Spacecraft.Spacecraft(-5404, "PE5404", 1000.0, 3000.0, new Clock("PE5404_CLK", 65536), State(0.0));
+        var spacecraft = new IO.Astrodynamics.Body.Spacecraft.Spacecraft(-5404, "PE5404", 1000.0, State(0.0), 3000.0, new Clock("PE5404_CLK", 65536));
         spacecraft.AddPropagatedStates(State(0.0));
         Assert.Throws<ArgumentException>(() => spacecraft.WriteEphemeris(file));
         file.Refresh();
@@ -484,7 +484,7 @@ public class PropagatedEphemerisTests
         Assert.False(file.Exists);
 
         // A spacecraft without stored states has nothing to write
-        var spacecraft = new IO.Astrodynamics.Body.Spacecraft.Spacecraft(-5401, "PE5401", 1000.0, 3000.0, new Clock("PE5401_CLK", 65536), State(0.0));
+        var spacecraft = new IO.Astrodynamics.Body.Spacecraft.Spacecraft(-5401, "PE5401", 1000.0, State(0.0), 3000.0, new Clock("PE5401_CLK", 65536));
         Assert.Throws<ArgumentException>(() => spacecraft.WriteEphemeris(file));
         Assert.Throws<ArgumentNullException>(() => spacecraft.WriteEphemeris(null));
     }

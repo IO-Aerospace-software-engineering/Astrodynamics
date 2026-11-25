@@ -61,7 +61,7 @@ internal static class StraightLineEncounter
             }
 
             int id = naifId - k;
-            spacecraft[k] = new Spacecraft(id, $"Encounter{-id}", 100.0, 1000.0, new Clock($"EncounterClk{-id}", 256), state,
+            spacecraft[k] = new Spacecraft(id, $"Encounter{-id}", 100.0, state, 1000.0, new Clock($"EncounterClk{-id}", 256),
                 hardBodyRadius: k == 0 ? hardBodyRadiusMeters : 0.0);
             trajectories[k] = StraightLine(earth, window.StartDate, position - velocity * HalfSpanSeconds, velocity);
         }

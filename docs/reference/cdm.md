@@ -150,7 +150,8 @@ Inferred metadata, which `ProtectedParticipantMetadata` and `SecondaryParticipan
   "not available" or "not applicable" (CCSDS 508.0-B-1 Cor. 2, 1.4.3.1, to which the `MANEUVERABLE` row of Table 3-3
   refers), and the library knows the model of the object, not its maneuver capacity
   ([#683](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/683): `YES` for any spacecraft
-  before, an engineless one or a debris wrapped in a spacecraft included);
+  before, an engineless one or a debris wrapped in a spacecraft included). An engine counts whatever its tank holds,
+  an empty tank (allowed since 11.0.0, decision 76 of #668) included; `SecondaryParticipantMetadata` overrides it;
 - `AREA_PC` is π r² for each object, r the protected spacecraft's `HardBodyRadius` for object 1 and, for object 2,
   the combined radius minus it: the radius of the secondary the analysis resolved, its own `HardBodyRadius` when it
   gives one ([#683](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/683): π·5² for any

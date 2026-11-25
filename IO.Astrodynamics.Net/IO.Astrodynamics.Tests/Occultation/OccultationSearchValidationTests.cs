@@ -283,7 +283,7 @@ public class OccultationSearchValidationTests
         var earth = new CelestialBody(PlanetsAndMoons.EARTH, Frames.Frame.ICRF, Eclipse001Window.StartDate);
         var orbit = new KeplerianElements(7000000.0, 0.001, 28.5 * IO.Astrodynamics.Constants.Deg2Rad, 45.0 * IO.Astrodynamics.Constants.Deg2Rad, 0.0, 0.0, earth,
             Eclipse001Window.StartDate, Frames.Frame.ICRF);
-        var spacecraft = new Spacecraft(naifId, "Eclipse001", 100.0, 1000.0, new Clock("Eclipse001Clk", 65536), orbit);
+        var spacecraft = new Spacecraft(naifId, "Eclipse001", 100.0, orbit, 1000.0, new Clock("Eclipse001Clk", 65536));
         spacecraft.Propagate(Eclipse001Window, new PropagationOptions { Integrator = new RK78IntegratorOptions { AbsoluteTolerance = 1e-12, RelativeTolerance = 1e-12, InitialStep = TimeSpan.FromSeconds(60.0) }, OutputStep = outputStep, ThirdBodies = [earth], CovariancePropagation = CovariancePropagationOptions.None });
         return spacecraft;
     }

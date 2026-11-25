@@ -148,7 +148,7 @@ namespace ClaudeMdSamples
         {
             #region net:6
             // Spacecraft to OPM (for archiving/sharing)
-            var spacecraft = new Spacecraft(-1000, "ISS", 420000.0, 500000.0, clock, stateVector,
+            var spacecraft = new Spacecraft(-1000, "ISS", 420000.0, stateVector, 500000.0, clock,
                 1600.0, 2.2, "1998-067A", 1.5);
             var opm = spacecraft.ToOpm(
                 originator: "My Organization",
@@ -161,7 +161,7 @@ namespace ClaudeMdSamples
             var restoredOpm = Opm.LoadFromFile("iss.opm");
             var restored = restoredOpm.ToSpacecraft(
                 naifId: -1000,
-                maximumOperatingMass: 500000.0,
+                maxOperatingMass: 500000.0,
                 clock: new Clock("OnboardClock", 256),
                 observer: earth);  // Optional, defaults to the CENTER_NAME centre (an unknown one throws)
             #endregion
@@ -284,7 +284,7 @@ namespace ClaudeMdSamples
             // A propagation takes the models of the orbit's centre, and a listed body of its id with other models throws
             // (#674): the orbit is built on this earth
             var orbit = new StateVector(new Vector3(6800000.0, 0, 0), new Vector3(0, 7500.0, 0), earth, epoch, Frame.ICRF);
-            var spacecraft = new Spacecraft(-1000, "Sat", 100.0, 10000.0, clock, orbit);
+            var spacecraft = new Spacecraft(-1000, "Sat", 100.0, orbit, 10000.0, clock);
 
             // The propagator uses the geopotential model of the orbit's centre; the settings in one PropagationOptions value
             var propagator = new CentralBodyPropagator(window, spacecraft, new PropagationOptions
@@ -315,8 +315,8 @@ namespace ClaudeMdSamples
         {
             #region net:14
             // SRP with Cr = 1.5
-            var spacecraft = new Spacecraft(-1001, "Sat", 100.0, 10000.0, clock, orbit,
-                sectionalArea: 10.0, solarRadiationCoeff: 1.5);
+            var spacecraft = new Spacecraft(-1001, "Sat", 100.0, orbit, 10000.0, clock,
+                sectionalArea: 10.0, solarRadiationCoefficient: 1.5);
             var srp = new SolarRadiationPressure(spacecraft, [earth]);
             #endregion
             return srp;
@@ -329,11 +329,11 @@ namespace ClaudeMdSamples
         {
             #region net:16
             // Spacecraft with +X as front (e.g., matching a SPICE FK convention)
-            var spacecraft = new Spacecraft(-1001, "Sat", 1000, 5000, clock, orbit,
+            var spacecraft = new Spacecraft(-1001, "Sat", 1000, orbit, 5000, clock,
                 bodyFront: Vector3.VectorX, bodyRight: Vector3.VectorY.Inverse(), bodyUp: Vector3.VectorZ);
 
             // The single-vector attitudes, the impulse attitude and the TRIAD factories use the instance axes
-            var prograde = new ProgradeAttitude(earth, epoch, duration, engine);
+            var prograde = new ProgradeAttitude(epoch, duration, earth);
             // → orients spacecraft.BodyFront (+X) along velocity vector
             #endregion
             return spacecraft;
@@ -345,9 +345,11 @@ namespace ClaudeMdSamples
             #region net:17
             // Point camera boresight at Earth, constrain roll using camera refVector toward Sun
             var attitude = new TriadAttitude(
-                minimumEpoch, holdDuration,
-                camera, earth, sun,  // instrument, primaryTarget, secondaryTarget
-                engine);
+                camera,
+                new CelestialAttitudeTarget(earth),
+                new CelestialAttitudeTarget(sun),
+                minimumEpoch,
+                holdDuration);
             #endregion
             return attitude;
         }
@@ -359,10 +361,12 @@ namespace ClaudeMdSamples
             #region net:18
             // Point nadir camera at Earth, star tracker at reference star
             var attitude = new TriadAttitude(
-                minimumEpoch, holdDuration,
-                nadirCamera, earth,
-                starTracker, referenceStar,
-                engine);
+                nadirCamera,
+                new CelestialAttitudeTarget(earth),
+                starTracker,
+                new CelestialAttitudeTarget(referenceStar),
+                minimumEpoch,
+                holdDuration);
             #endregion
             return attitude;
         }
@@ -371,33 +375,41 @@ namespace ClaudeMdSamples
         internal static TriadAttitude Net19(Time minimumEpoch, TimeSpan holdDuration, CelestialBody moon, CelestialBody sun, Engine engine)
         {
             #region net:19
-            // Point spacecraft Front at Moon, keep Up toward Sun
+            // Point the static Front at Moon, keep the static Up toward Sun
             var attitude = new TriadAttitude(
-                minimumEpoch, holdDuration,
-                Spacecraft.Front, moon,
-                Spacecraft.Up, sun,
-                engine);
+                Spacecraft.Front,
+                new CelestialAttitudeTarget(moon),
+                Spacecraft.Up,
+                new CelestialAttitudeTarget(sun),
+                minimumEpoch,
+                holdDuration);
             #endregion
             return attitude;
         }
 
-        // IO.Astrodynamics.Net/CLAUDE.md, "Constructor Options", 4
+        // IO.Astrodynamics.Net/CLAUDE.md, "Constructor Options", 4 (the BodyAxis constructor)
         internal static (TriadAttitude Attitude, TriadAttitude Lvlh) Net20(CelestialBody earth, Time epoch, TimeSpan duration, CelestialBody sun, Engine engine)
         {
             #region net:20
             // Point prograde with solar panels toward Sun
             var attitude = new TriadAttitude(
-                earth, epoch, duration,
-                Spacecraft.Front, OrbitalDirectionTarget.Prograde,
-                Spacecraft.Up, new CelestialAttitudeTarget(sun),
-                engine);
+                BodyAxis.Front,
+                OrbitalDirectionTarget.Prograde,
+                BodyAxis.Up,
+                new CelestialAttitudeTarget(sun),
+                epoch,
+                duration,
+                earth);
 
             // Full LVLH attitude (nadir pointing with prograde constraint)
             var lvlh = new TriadAttitude(
-                earth, epoch, duration,
-                Spacecraft.Down, OrbitalDirectionTarget.Nadir,
-                Spacecraft.Front, OrbitalDirectionTarget.Prograde,
-                engine);
+                BodyAxis.Down,
+                OrbitalDirectionTarget.Nadir,
+                BodyAxis.Front,
+                OrbitalDirectionTarget.Prograde,
+                epoch,
+                duration,
+                earth);
             #endregion
             return (attitude, lvlh);
         }
@@ -406,11 +418,11 @@ namespace ClaudeMdSamples
         internal static (TriadAttitude Lvlh, TriadAttitude SunTrack) Net21(CelestialBody earth, Time epoch, TimeSpan duration, CelestialBody sun, Engine engine)
         {
             #region net:21
-            // LVLH: BodyDown→Nadir, BodyFront→Prograde (the axes of the engine's spacecraft, #677)
-            var lvlh = TriadAttitude.CreateLVLH(earth, epoch, duration, engine);
+            // LVLH: BodyDown→Nadir, BodyFront→Prograde (the axes of the plan's spacecraft, #677)
+            var lvlh = TriadAttitude.CreateLvlh(epoch, duration, earth);
 
             // Prograde with sun tracking: BodyFront→Prograde, BodyUp→Sun
-            var sunTrack = TriadAttitude.CreateProgradeWithSunTracking(earth, epoch, duration, sun, engine);
+            var sunTrack = TriadAttitude.CreateProgradeWithSunTracking(sun, epoch, duration, earth);
             #endregion
             return (lvlh, sunTrack);
         }
@@ -422,10 +434,9 @@ namespace ClaudeMdSamples
             // Keep nadir sensor pointed at Earth, the roll about nadir set by the Sun (Up, opposite to Down, would be
             // rejected: the body vectors must be at least 5 degrees apart)
             var earthObservation = new TriadAttitude(
-                epoch, TimeSpan.FromMinutes(30),
-                Spacecraft.Down, earth,    // Primary: nadir pointing
-                Spacecraft.Right, sun,     // Secondary: +X toward the Sun, as near as nadir pointing allows
-                engine);
+                Spacecraft.Down, new CelestialAttitudeTarget(earth),  // Primary: nadir pointing
+                Spacecraft.Right, new CelestialAttitudeTarget(sun),
+                epoch, TimeSpan.FromMinutes(30));
             #endregion
             return earthObservation;
         }
@@ -437,10 +448,12 @@ namespace ClaudeMdSamples
             #region net:23
             // Point telescope at target star, constrain roll using reference star
             var observation = new TriadAttitude(
-                epoch, TimeSpan.FromHours(2),
-                telescope, targetStar,
-                rollSensor, referenceStar,
-                engine);
+                telescope,
+                new CelestialAttitudeTarget(targetStar),
+                rollSensor,
+                new CelestialAttitudeTarget(referenceStar),
+                epoch,
+                TimeSpan.FromHours(2));
             #endregion
             return observation;
         }
@@ -450,7 +463,7 @@ namespace ClaudeMdSamples
         {
             #region net:24
             // Orient for plane-change burn: front along orbital normal
-            var normalAttitude = new NormalAttitude(earth, epoch, duration, engine);
+            var normalAttitude = new NormalAttitude(epoch, duration, earth);
             #endregion
             return normalAttitude;
         }

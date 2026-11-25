@@ -73,7 +73,7 @@ public class PropagationToTheWindowEndTests
     }
 
     private static Spacecraft NewSpacecraft(int naifId, StateVector initial) =>
-        new(naifId, "WE" + -naifId, 1000.0, 3000.0, new Clock("we" + -naifId, 65536), initial);
+        new(naifId, "WE" + -naifId, 1000.0, initial, 3000.0, new Clock("we" + -naifId, 65536));
 
     private static PropagationSolution Propagate(Spacecraft spacecraft, Window window, string integrator, double step)
     {

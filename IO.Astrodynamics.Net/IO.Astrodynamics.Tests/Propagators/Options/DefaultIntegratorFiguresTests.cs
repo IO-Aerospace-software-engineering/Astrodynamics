@@ -52,7 +52,7 @@ public class DefaultIntegratorFiguresTests
         double maximumMass = 3000.0)
     {
         int id = System.Threading.Interlocked.Decrement(ref _nextId);
-        return new Spacecraft(id, $"FIG{-id}", dryMass, maximumMass, new Clock($"fig{-id}", 65536), orbit);
+        return new Spacecraft(id, $"FIG{-id}", dryMass, orbit, maximumMass, new Clock($"fig{-id}", 65536));
     }
 
     // The state of the tutorial (docs/tutorials/numerical-propagation.md): 6 800 km, 7 700 m/s
@@ -131,12 +131,12 @@ public class DefaultIntegratorFiguresTests
             var orbit = new StateVector(new Vector3(r1, 0.0, 0.0), new Vector3(0.0, System.Math.Sqrt(mu / r1), 0.0), earth,
                 Start, Frames.Frame.ICRF);
             var spacecraft = NewSpacecraft(orbit, 1000.0, 10000.0);
-            var tank = new FuelTank("hohmann", "model", "sn", 9000.0, 5000.0);
+            var tank = new FuelTank("hohmann", 9000.0, 5000.0, "model", "sn");
             spacecraft.AddFuelTank(tank);
-            var engine = new Engine("hohmann", "model", "sn", 450.0, 50.0, tank);
+            var engine = new Engine("hohmann", 450.0, 50.0, tank, "model", "sn");
             spacecraft.AddEngine(engine);
-            var raise = new ApogeeHeightManeuver(earth, Start, TimeSpan.Zero, r2, engine);
-            spacecraft.SetManeuvers(raise, new PerigeeHeightManeuver(earth, Start, TimeSpan.Zero, r2, engine));
+            var raise = new ApogeeHeightManeuver(r2, engine, Start, TimeSpan.Zero, earth);
+            spacecraft.SetManeuvers(raise, new PerigeeHeightManeuver(r2, engine, Start, TimeSpan.Zero, earth));
 
             // Act
             var solution = spacecraft.Propagate(window, Options(integrator));

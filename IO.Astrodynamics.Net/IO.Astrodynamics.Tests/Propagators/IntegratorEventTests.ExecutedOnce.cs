@@ -228,11 +228,11 @@ public partial class IntegratorEventTests
     private static (Spacecraft Spacecraft, ImpulseManeuver Maneuver, CelestialBody Earth) SlowBurn(int naifId)
     {
         var earth = new CelestialBody(PlanetsAndMoons.EARTH, Frame.ICRF, S);
-        var spacecraft = new Spacecraft(naifId, $"IE{-naifId}", 1000.0, 3000.0, new Clock($"IE{-naifId}_CLK", 65536),
-            MinimumEpochGateTests.Orbit(earth, System.Math.PI), cosparId: "2026-001A");
-        var tank = new FuelTank("ft", "model", "sn", 1000.0, 1000.0);
+        var spacecraft = new Spacecraft(naifId, $"IE{-naifId}", 1000.0, MinimumEpochGateTests.Orbit(earth, System.Math.PI), 3000.0,
+            new Clock($"IE{-naifId}_CLK", 65536), cosparId: "2026-001A");
+        var tank = new FuelTank("ft", 1000.0, 1000.0, "model", "sn");
         spacecraft.AddFuelTank(tank);
-        var engine = new Engine("eng", "model", "sn", 300.0, 1e-12, tank);
+        var engine = new Engine("eng", 300.0, 1e-12, tank, "model", "sn");
         spacecraft.AddEngine(engine);
         var maneuver = new TimeLikeImpulse(earth, S, engine, MinimumEpochGateTests.GateAtTt(1100.0), 1.0);
         spacecraft.SetManeuvers(maneuver);
@@ -325,7 +325,7 @@ public partial class IntegratorEventTests
         private readonly Time[] _roots;
         private readonly int _skips;
 
-        internal TwoCrossingImpulse(CelestialItem center, Engine engine, int skips, params Time[] roots) : base(center, S, TimeSpan.Zero, engine)
+        internal TwoCrossingImpulse(CelestialItem center, Engine engine, int skips, params Time[] roots) : base(engine, S, TimeSpan.Zero, center)
         {
             _roots = roots;
             _skips = skips;

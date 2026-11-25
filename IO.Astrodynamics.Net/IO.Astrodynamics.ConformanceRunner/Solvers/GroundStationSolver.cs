@@ -211,7 +211,7 @@ public class GroundStationSolver : ICategorySolver
         var epoch = EpochParser.Parse(inputs.Epoch);
         var central = _trajectory.CentralBody(earth, TwoBodyTrajectory.Gm(inputs.GmKm3S2, earth), epoch);
         var state = PropagationCase.BuildStateVector(svo, central, epoch, Frame.ICRF);
-        var spacecraft = new Spacecraft(-999, "StationTarget", 100.0, 1000.0, new Clock("ConfClk", 65536), state);
+        var spacecraft = new Spacecraft(-999, "StationTarget", 100.0, state, 1000.0, new Clock("ConfClk", 65536));
         TwoBodyTrajectory.Propagate(spacecraft, window, Tolerance, OutputStep);
         return spacecraft;
     }

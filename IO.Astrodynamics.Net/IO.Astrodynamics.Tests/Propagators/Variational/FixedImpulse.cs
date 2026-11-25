@@ -20,7 +20,7 @@ internal sealed class FixedImpulse : ImpulseManeuver
     private readonly Vector3 _deltaV;
 
     internal FixedImpulse(CelestialItem center, TimeSystem.Time minimumEpoch, TimeSystem.Time burnEpoch, Vector3 deltaV,
-        Engine engine) : base(center, minimumEpoch, TimeSpan.Zero, engine)
+        Engine engine) : base(engine, minimumEpoch, TimeSpan.Zero, center)
     {
         _burnEpoch = burnEpoch;
         _deltaV = deltaV;

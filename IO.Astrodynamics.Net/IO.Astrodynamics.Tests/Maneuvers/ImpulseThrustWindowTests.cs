@@ -58,10 +58,10 @@ public class ImpulseThrustWindowTests
 
     private static Spacecraft NewSpacecraft(int naifId, StateVector initial, double dry, double fuel, out Engine engine)
     {
-        var spacecraft = new Spacecraft(naifId, "TW" + -naifId, dry, dry + fuel + 1.0, new Clock("tw" + -naifId, 65536), initial);
-        var tank = new FuelTank("tank" + -naifId, "model", "sn", fuel, fuel);
+        var spacecraft = new Spacecraft(naifId, "TW" + -naifId, dry, initial, dry + fuel + 1.0, new Clock("tw" + -naifId, 65536));
+        var tank = new FuelTank("tank" + -naifId, fuel, fuel, "model", "sn");
         spacecraft.AddFuelTank(tank);
-        engine = new Engine("engine" + -naifId, "model", "sn", Isp, FuelFlow, tank);
+        engine = new Engine("engine" + -naifId, Isp, FuelFlow, tank, "model", "sn");
         spacecraft.AddEngine(engine);
         return spacecraft;
     }
@@ -157,7 +157,7 @@ public class ImpulseThrustWindowTests
         var burn = Start.AddSeconds(600.0);
         const double deltaV = 2039.0;
         var impulse = new FixedImpulse(body, Start, burn, new Vector3(0.0, deltaV, 0.0), engine);
-        var nadir = new NadirAttitude(body, Start, TimeSpan.FromSeconds(30.0), engine);
+        var nadir = new NadirAttitude(Start, TimeSpan.FromSeconds(30.0), body);
         spacecraft.SetManeuvers(impulse, nadir);
         double massBefore = spacecraft.GetTotalMass();
         var window = new Window(Start, Start.AddSeconds(1800.0));

@@ -74,9 +74,9 @@ public class ManeuverSolver : ICategorySolver
 
         var spacecraft = propagationCase.Spacecraft;
         var center = (CelestialBody)propagationCase.Bodies[0];
-        var tank = new FuelTank("ConformanceTank", "conformance", "0001", chain.FuelMassKg, chain.FuelMassKg);
+        var tank = new FuelTank("ConformanceTank", chain.FuelMassKg, chain.FuelMassKg, "conformance", "0001");
         spacecraft.AddFuelTank(tank);
-        var engine = new Engine("ConformanceEngine", "conformance", "0001", chain.IspS, FuelFlow, tank);
+        var engine = new Engine("ConformanceEngine", chain.IspS, FuelFlow, tank, "conformance", "0001");
         spacecraft.AddEngine(engine);
         double initialMass = spacecraft.GetTotalMass();
 
@@ -166,28 +166,32 @@ public class ManeuverSolver : ICategorySolver
         switch (step.Type)
         {
             case ManeuverStepType.ApoapsisRadius:
-                return new ApogeeHeightManeuver(center, minimumEpoch, hold, UnitConversion.KmToM(step.TargetApoapsisRadiusKm!.Value), engine);
+                return new ApogeeHeightManeuver(UnitConversion.KmToM(step.TargetApoapsisRadiusKm!.Value), engine, minimumEpoch, hold, center);
             case ManeuverStepType.PeriapsisRadius:
-                return new PerigeeHeightManeuver(center, minimumEpoch, hold, UnitConversion.KmToM(step.TargetPeriapsisRadiusKm!.Value), engine);
+                return new PerigeeHeightManeuver(UnitConversion.KmToM(step.TargetPeriapsisRadiusKm!.Value), engine, minimumEpoch, hold, center);
             case ManeuverStepType.PlaneChange:
                 // A circular orbit of the target plane: the maneuver reads its normal only, fixed in ICRF
                 var plane = new KeplerianElements(initialState.Position.Magnitude(), 0.0,
                     UnitConversion.DegToRad(step.TargetPlane.InclinationDeg), UnitConversion.DegToRad(step.TargetPlane.RaanDeg), 0.0, 0.0,
                     center, epoch, frame);
-                return new PlaneAlignmentManeuver(minimumEpoch, hold, plane, engine);
+                return new PlaneAlignmentManeuver(plane, engine, minimumEpoch, hold);
             case ManeuverStepType.ApsidalAlignment:
                 // In the current plane, the plane of the initial state (CheckPlanes): its argument of periapsis from the
                 // ascending node of that plane
                 var orbit = new KeplerianElements(UnitConversion.KmToM(step.TargetOrbit.AKm), step.TargetOrbit.E,
                     initialState.Inclination(), initialState.AscendingNode(), UnitConversion.DegToRad(step.TargetOrbit.ArgpDeg), 0.0,
                     center, epoch, frame);
-                return new ApsidalAlignmentManeuver(minimumEpoch, hold, orbit, engine);
+                return new ApsidalAlignmentManeuver(orbit, engine, minimumEpoch, hold);
             case ManeuverStepType.Phasing:
                 var target = PropagationCase.BuildStateVector(step.Target, center, epoch, frame);
-                return new PhasingManeuver(minimumEpoch, target, (uint)step.Revolutions!.Value, engine);
+                return new PhasingManeuver(target, (uint)step.Revolutions!.Value, engine, minimumEpoch);
             case ManeuverStepType.Combined:
-                return new CombinedManeuver(center, minimumEpoch, hold, UnitConversion.KmToM(step.TargetPeriapsisRadiusKm!.Value),
-                    UnitConversion.DegToRad(step.TargetInclinationDeg!.Value), engine);
+                return new CombinedManeuver(UnitConversion.KmToM(step.TargetPeriapsisRadiusKm!.Value),
+                    UnitConversion.DegToRad(step.TargetInclinationDeg!.Value),
+                    engine,
+                    minimumEpoch,
+                    hold,
+                    center);
             default:
                 throw new ArgumentException($"The type '{step.Type}' of the step '{step.Label}' is not a maneuver type of spec.md section 13.1.");
         }

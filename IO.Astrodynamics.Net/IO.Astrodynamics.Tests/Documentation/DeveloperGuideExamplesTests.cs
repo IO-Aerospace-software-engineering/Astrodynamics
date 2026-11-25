@@ -241,9 +241,9 @@ public class DeveloperGuideExamplesTests
         var earth = PlanetsAndMoons.EARTH_BODY;
         var epoch = new TimeSystem.Time(2024, 1, 1, TimeScale.TDB);
         var orbit = new KeplerianElements(7000000, 0.001, 51.6 * IO.Astrodynamics.Constants.Deg2Rad, 0, 0, 0, earth, epoch, Frames.Frame.ICRF);
-        var spacecraft = new Spacecraft(-1001, "MySat", 500.0, 1000.0, new Clock("MainClock", 256), orbit);
-        var tank = new FuelTank("MainTank", "Propellant", "Tank1", 200.0, 100.0);
-        var engine = new Engine("MainEngine", "RCS", "Engine1", 300.0, 0.05, tank);
+        var spacecraft = new Spacecraft(-1001, "MySat", 500.0, orbit, 1000.0, new Clock("MainClock", 256));
+        var tank = new FuelTank("MainTank", 200.0, 100.0, "Propellant", "Tank1");
+        var engine = new Engine("MainEngine", 300.0, 0.05, tank, "RCS", "Engine1");
         var exception = Assert.Throws<ArgumentException>(() => spacecraft.AddEngine(engine));
         Assert.Equal("engine", exception.ParamName);
         Assert.Empty(spacecraft.Engines);
@@ -388,12 +388,12 @@ public class DeveloperGuideExamplesTests
         var earth = PlanetsAndMoons.EARTH_BODY;
         var epoch = new TimeSystem.Time(2024, 1, 1, TimeScale.TDB);
         var orbit = new KeplerianElements(6800000.0, 0.001, 51.6 * IO.Astrodynamics.Constants.Deg2Rad, 0.0, 0.0, 0.0, earth, epoch, Frames.Frame.ICRF);
-        var spacecraft = new Spacecraft(naifId, $"GUIDE{-naifId}", 500.0, 1000.0, new Clock($"GUIDE{-naifId}_CLK", 256), orbit);
-        var tank = new FuelTank("Tank", "Model", "SN1", 100.0, 100.0);
+        var spacecraft = new Spacecraft(naifId, $"GUIDE{-naifId}", 500.0, orbit, 1000.0, new Clock($"GUIDE{-naifId}_CLK", 256));
+        var tank = new FuelTank("Tank", 100.0, 100.0, "Model", "SN1");
         spacecraft.AddFuelTank(tank);
-        engine = new Engine("Engine", "Model", "SN1", 300.0, 0.05, tank);
+        engine = new Engine("Engine", 300.0, 0.05, tank, "Model", "SN1");
         spacecraft.AddEngine(engine);
-        spacecraft.AddCircularInstrument(naifId * 1000 - 1, "Camera", "Imager", 0.2, Vector3.VectorZ, Vector3.VectorY, Vector3.Zero);
+        spacecraft.AddCircularInstrument("Camera", 0.2, Vector3.VectorZ, Vector3.VectorY, Vector3.Zero, naifId: naifId * 1000 - 1, model: "Imager");
         return spacecraft;
     }
 

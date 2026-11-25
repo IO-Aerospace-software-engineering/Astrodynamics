@@ -19,24 +19,23 @@ namespace IO.Astrodynamics.Tests.Body
         public void CreateInvalid()
         {
             Assert.Throws<ArgumentException>(() => new Payload("", 1000.0, "sn"));
-            Assert.Throws<ArgumentException>(() => new Payload("pl", 0.0, "sn"));
-            Assert.Throws<ArgumentException>(() => new Payload("pl", 1000.0, ""));
+            Assert.Throws<ArgumentOutOfRangeException>(() => new Payload("pl", 0.0, "sn"));
+            // The serial number is informational and optional since 11.0.0 (decision 76 of #668)
+            Assert.Null(new Payload("pl", 1000.0).SerialNumber);
         }
 
+        // Reference equality since 11.0.0 (decision 76 of #668): two payloads of the same values were equal before
         [Fact]
         public void PayloadEquality()
         {
             Payload payload = new Payload("pl", 1000.0, "sn");
             Payload payload2 = new Payload("pl", 1000.0, "sn");
-            Payload payload3 = new Payload("pl1", 1000.0, "sn");
-            Assert.Equal(payload, payload2);
+            Assert.NotEqual(payload, payload2);
             Assert.False(payload == null);
-            Assert.False(payload == payload3);
-            Assert.True(payload != payload3);
-            Assert.True(payload.Equals(payload2));
+            Assert.True(payload != payload2);
+            Assert.False(payload.Equals(payload2));
             Assert.False(payload.Equals(null));
-            Assert.False(payload.Equals((object)null));
-            Assert.True(payload.Equals((object)payload2));
+            Assert.True(payload.Equals((object)payload));
         }
     }
 }

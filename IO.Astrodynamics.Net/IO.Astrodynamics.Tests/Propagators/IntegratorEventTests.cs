@@ -154,7 +154,7 @@ public partial class IntegratorEventTests
         private readonly Time _root;
         private readonly double _sign;
 
-        internal TimeLikeImpulse(CelestialItem center, Time minimumEpoch, Engine engine, Time root, double sign) : base(center, minimumEpoch, TimeSpan.Zero, engine)
+        internal TimeLikeImpulse(CelestialItem center, Time minimumEpoch, Engine engine, Time root, double sign) : base(engine, minimumEpoch, TimeSpan.Zero, center)
         {
             _root = root;
             _sign = sign;
@@ -169,11 +169,11 @@ public partial class IntegratorEventTests
 
     private static (Spacecraft Spacecraft, Engine Engine) NewSpacecraft(int naifId, OrbitalParams orbit)
     {
-        var spacecraft = new Spacecraft(naifId, $"IE{-naifId}", 1000.0, 3000.0, new Clock($"IE{-naifId}_CLK", 65536), orbit,
+        var spacecraft = new Spacecraft(naifId, $"IE{-naifId}", 1000.0, orbit, 3000.0, new Clock($"IE{-naifId}_CLK", 65536),
             cosparId: "2026-001A");
-        var tank = new FuelTank("ft", "model", "sn", 1000.0, 1000.0);
+        var tank = new FuelTank("ft", 1000.0, 1000.0, "model", "sn");
         spacecraft.AddFuelTank(tank);
-        var engine = new Engine("eng", "model", "sn", 300.0, 10.0, tank);
+        var engine = new Engine("eng", 300.0, 10.0, tank, "model", "sn");
         spacecraft.AddEngine(engine);
         return (spacecraft, engine);
     }
@@ -232,7 +232,7 @@ public partial class IntegratorEventTests
         Assert.Equal(0.0, sv.Position.Dot(sv.Velocity));
         var (spacecraft, engine) = NewSpacecraft(-7903, orbit);
         var gate = S.Add(TimeSpan.FromSeconds(-gateBefore));
-        var maneuver = new PerigeeHeightManeuver(earth, gate, TimeSpan.Zero, 6878137.0, engine);
+        var maneuver = new PerigeeHeightManeuver(6878137.0, engine, gate, TimeSpan.Zero, earth);
         spacecraft.SetManeuvers(maneuver);
         var solution = spacecraft.Propagate(new Window(S, MinimumEpochGateTests.GateAtTt(3000.0)), new PropagationOptions { Integrator = NewIntegrator(integratorName), OutputStep = TimeSpan.FromSeconds(10.0), ThirdBodies = [earth], CovariancePropagation = CovariancePropagationOptions.None });
 

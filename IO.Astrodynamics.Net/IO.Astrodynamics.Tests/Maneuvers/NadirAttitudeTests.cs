@@ -19,23 +19,19 @@ public class NadirAttitudeTests
     [Fact]
     void Create()
     {
-        FuelTank fuelTank10 = new FuelTank("My fuel tank10", "ft2021", "sn0", 4000.0, 3000.0);
-        Engine eng = new Engine("My engine", "model 1", "sn1", 350.0, 50.0, fuelTank10);
-        NadirAttitude zenithAttitude = new NadirAttitude(TestHelpers.EarthAtJ2000,new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB), TimeSpan.FromHours(1.0), eng);
-        LabelAssert.Equal(new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB), zenithAttitude.MinimumEpoch);
-        Assert.Equal(TimeSpan.FromHours(1.0), zenithAttitude.ManeuverHoldDuration);
-        Assert.NotNull(zenithAttitude.Engine);
-        Assert.Equal(eng, zenithAttitude.Engine);
+        NadirAttitude zenithAttitude = new NadirAttitude(new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB), TimeSpan.FromHours(1.0), TestHelpers.EarthAtJ2000);
+        LabelAssert.Equal(new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB), zenithAttitude.MinEpoch);
+        Assert.Equal(TimeSpan.FromHours(1.0), zenithAttitude.HoldDuration);
     }
 
     [Fact]
     public void Execute()
     {
         var orbitalParams = new KeplerianElements(42164000.0, 0.0, 0.0, 0.0, 0.0, 0.0, TestHelpers.EarthAtJ2000, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF);
-        var spc = new Spacecraft(-666, "GenericSpacecraft", 1000.0, 3000.0, new Clock("GenericClk", 65536), orbitalParams);
-        spc.AddFuelTank(new FuelTank("ft", "ftA", "123456", 1000.0, 900.0));
-        spc.AddEngine(new Engine("eng", "engmk1", "12345", 450, 50, spc.FuelTanks.First()));
-        NadirAttitude maneuver = new NadirAttitude(TestHelpers.EarthAtJ2000,new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB), TimeSpan.Zero, spc.Engines.First());
+        var spc = new Spacecraft(-666, "GenericSpacecraft", 1000.0, orbitalParams, 3000.0, new Clock("GenericClk", 65536));
+        spc.AddFuelTank(new FuelTank("ft", 1000.0, 900.0, "ftA", "123456"));
+        spc.AddEngine(new Engine("eng", 450, 50, spc.FuelTanks.First(), "engmk1", "12345"));
+        NadirAttitude maneuver = new NadirAttitude(new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB), TimeSpan.Zero, TestHelpers.EarthAtJ2000);
         var (_, maneuverOrientation) = maneuver.TryExecute(orbitalParams.ToStateVector());
 
         LabelAssert.Equal(new StateOrientation(new Quaternion(0.7071067811865476, 0.0, 0.0, 0.7071067811865476), Vector3.Zero, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF),
@@ -46,31 +42,26 @@ public class NadirAttitudeTests
     }
 
     /// <summary>
-    /// A state after the hold of an attitude, the window set by its first execution, makes the maneuver chained after it
-    /// the spacecraft's standby maneuver, not before the end of the hold; an attitude changes no velocity.
+    /// An attitude changes no velocity: its execution returns the state it was given, and moves no chain (the run advances
+    /// the chain on its attitude timeline; the branch of the execution that set the next maneuver in standby, after the
+    /// hold, was dead in a run and is removed in lot L5b with the engine of the attitude, decisions 48 and 93 of #668).
     /// </summary>
     [Fact]
-    public void AStateAfterTheHold_SetsTheNextManeuverStandby()
+    public void TheExecution_ReturnsTheStateItWasGiven_AndMovesNoChain()
     {
         var orbitalParams = new KeplerianElements(42164000.0, 0.0, 0.0, 0.0, 0.0, 0.0, TestHelpers.EarthAtJ2000, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF);
-        var spc = new Spacecraft(-1107, "GenericSpacecraft1107", 1000.0, 3000.0, new Clock("GenericClk1107", 65536), orbitalParams);
-        spc.AddFuelTank(new FuelTank("ft", "ftA", "123456", 1000.0, 900.0));
-        spc.AddEngine(new Engine("eng", "engmk1", "12345", 450, 50, spc.FuelTanks.First()));
-        var nadir = new NadirAttitude(TestHelpers.EarthAtJ2000, TimeSystem.Time.J2000TDB, TimeSpan.FromSeconds(10.0), spc.Engines.First());
-        var prograde = new ProgradeAttitude(TestHelpers.EarthAtJ2000, TimeSystem.Time.J2000TDB, TimeSpan.Zero, spc.Engines.First());
+        var spc = new Spacecraft(-1107, "GenericSpacecraft1107", 1000.0, orbitalParams, 3000.0, new Clock("GenericClk1107", 65536));
+        var nadir = new NadirAttitude(TimeSystem.Time.J2000TDB, TimeSpan.FromSeconds(10.0), TestHelpers.EarthAtJ2000);
+        var prograde = new ProgradeAttitude(TimeSystem.Time.J2000TDB, TimeSpan.Zero, TestHelpers.EarthAtJ2000);
         spc.SetManeuvers(nadir, prograde);
         var start = orbitalParams.ToStateVector();
 
         nadir.TryExecute(start);
-        Assert.Equal(nadir, spc.StandbyManeuver);
-
         var afterTheHold = start.ToStateVector(TimeSystem.Time.J2000TDB.AddSeconds(20.0));
-        nadir.TryExecute(afterTheHold);
-        Assert.Equal(prograde, spc.StandbyManeuver);
-        Assert.Contains(nadir, spc.ExecutedManeuvers);
-        LabelAssert.Equal(TimeSystem.Time.J2000TDB.AddSeconds(10.0), prograde.MinimumEpoch);
-        // An attitude changes no velocity: its execution returns the state it was given (its Execute, which returned a zero
-        // delta-V, left Attitude with decision 48 of #668)
+
         Assert.Same(afterTheHold, nadir.TryExecute(afterTheHold).sv);
+        Assert.Equal(nadir, spc.StandbyManeuver);
+        Assert.Empty(spc.ExecutedManeuvers);
+        LabelAssert.Equal(TimeSystem.Time.J2000TDB, prograde.MinEpoch);
     }
 }

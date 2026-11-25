@@ -61,93 +61,100 @@ namespace DocumentationPageSamples.Reference;
 internal static class AttitudesPage
 {
     // docs/reference/attitudes.md, "Single-Vector Attitudes"
-    internal static void Block01(CelestialItem maneuverCenter, Time minimumEpoch, TimeSpan holdDuration, Engine engine)
+    internal static void Block01(CelestialItem maneuverCenter, Time minEpoch, TimeSpan holdDuration)
     {
         #region docs/reference/attitudes.md:1
-        // Inputs: maneuverCenter (CelestialItem), minimumEpoch (Time), holdDuration (TimeSpan), engine (Engine)
-        new ProgradeAttitude(maneuverCenter, minimumEpoch, holdDuration, engine);
-        new RetrogradeAttitude(maneuverCenter, minimumEpoch, holdDuration, engine);
-        new NadirAttitude(maneuverCenter, minimumEpoch, holdDuration, engine);
-        new ZenithAttitude(maneuverCenter, minimumEpoch, holdDuration, engine);
-        new NormalAttitude(maneuverCenter, minimumEpoch, holdDuration, engine);
-        new AntiNormalAttitude(maneuverCenter, minimumEpoch, holdDuration, engine);
+        // Inputs: maneuverCenter (CelestialItem), minEpoch (Time), holdDuration (TimeSpan)
+        new ProgradeAttitude(minEpoch, holdDuration, maneuverCenter);
+        new RetrogradeAttitude(minEpoch, holdDuration, maneuverCenter);
+        new NadirAttitude(minEpoch, holdDuration, maneuverCenter);
+        new ZenithAttitude(minEpoch, holdDuration, maneuverCenter);
+        new NormalAttitude(minEpoch, holdDuration, maneuverCenter);
+        new AntiNormalAttitude(minEpoch, holdDuration, maneuverCenter);
+
+        // The centre the run infers, at once, and another axis
+        var down = new NadirAttitude(bodyAxis: BodyAxis.Down);
         #endregion
     }
 
     // docs/reference/attitudes.md, "InstrumentPointingToAttitude"
-    internal static void Block02(Time minimumEpoch, TimeSpan holdDuration, Instrument camera, CelestialBody moon, Engine engine)
+    internal static void Block02(Time minEpoch, TimeSpan holdDuration, Instrument camera, CelestialBody moon)
     {
         #region docs/reference/attitudes.md:2
-        // Inputs: minimumEpoch (Time), holdDuration (TimeSpan), camera (Instrument), moon (CelestialBody), engine (Engine)
+        // Inputs: minEpoch (Time), holdDuration (TimeSpan), camera (Instrument), moon (CelestialBody)
         var pointing = new InstrumentPointingToAttitude(
-            minimumEpoch, holdDuration, camera, moon, engine);
+            camera, new CelestialAttitudeTarget(moon, Aberration.LT), minEpoch, holdDuration);
 
         // The geometric direction
         var geometric = new InstrumentPointingToAttitude(
-            minimumEpoch, holdDuration, camera, moon, engine, Aberration.None);
+            camera, new CelestialAttitudeTarget(moon), minEpoch, holdDuration);
         #endregion
     }
 
     // docs/reference/attitudes.md, "Constructors"
-    internal static void Block03(Time minimumEpoch, TimeSpan holdDuration, Instrument camera, ILocalizable primaryTarget, ILocalizable secondaryTarget, Engine engine)
+    internal static void Block03(CelestialBody moon, CelestialBody sun, Time minEpoch, TimeSpan holdDuration)
     {
         #region docs/reference/attitudes.md:3
-        // Inputs: minimumEpoch (Time), holdDuration (TimeSpan), camera (Instrument), primaryTarget and secondaryTarget
-        //   (ILocalizable), engine (Engine)
+        // Inputs: moon and sun (CelestialBody), minEpoch (Time), holdDuration (TimeSpan)
         var attitude = new TriadAttitude(
-            minimumEpoch, holdDuration,
-            camera, primaryTarget, secondaryTarget, engine);
+            BodyAxis.Front, new CelestialAttitudeTarget(moon),   // Primary: Front points at Moon
+            BodyAxis.Up, new CelestialAttitudeTarget(sun),       // Secondary: Up toward Sun
+            minEpoch, holdDuration);
         #endregion
     }
 
     // docs/reference/attitudes.md, "Constructors"
-    internal static void Block04(Instrument primaryInstrument, ILocalizable primaryTarget, Instrument secondaryInstrument, ILocalizable secondaryTarget, Engine engine, Time minimumEpoch, TimeSpan holdDuration)
+    internal static void Block04(Time minEpoch, TimeSpan holdDuration, Instrument camera, ILocalizable primaryTarget, ILocalizable secondaryTarget)
     {
         #region docs/reference/attitudes.md:4
-        // Inputs: primaryInstrument and secondaryInstrument (Instrument), primaryTarget and secondaryTarget (ILocalizable),
-        //   engine (Engine), minimumEpoch (Time), holdDuration (TimeSpan)
+        // Inputs: minEpoch (Time), holdDuration (TimeSpan), camera (Instrument), primaryTarget and secondaryTarget
+        //   (ILocalizable)
         var attitude = new TriadAttitude(
-            minimumEpoch, holdDuration,
-            primaryInstrument, primaryTarget,
-            secondaryInstrument, secondaryTarget, engine);
+            camera,
+            new CelestialAttitudeTarget(primaryTarget),
+            new CelestialAttitudeTarget(secondaryTarget),
+            minEpoch,
+            holdDuration);
         #endregion
     }
 
     // docs/reference/attitudes.md, "Constructors"
-    internal static void Block05(Time minimumEpoch, TimeSpan holdDuration, CelestialBody moon, CelestialBody sun, Engine engine)
+    internal static void Block05(Instrument primaryInstrument, ILocalizable primaryTarget, Instrument secondaryInstrument, ILocalizable secondaryTarget, Time minEpoch, TimeSpan holdDuration)
     {
         #region docs/reference/attitudes.md:5
-        // Inputs: minimumEpoch (Time), holdDuration (TimeSpan), moon and sun (CelestialBody), engine (Engine)
+        // Inputs: primaryInstrument and secondaryInstrument (Instrument), primaryTarget and secondaryTarget (ILocalizable),
+        //   minEpoch (Time), holdDuration (TimeSpan)
         var attitude = new TriadAttitude(
-            minimumEpoch, holdDuration,
-            Spacecraft.Front, moon,       // Primary: Front points at Moon
-            Spacecraft.Up, sun,           // Secondary: Up toward Sun
-            engine);
+            primaryInstrument,
+            new CelestialAttitudeTarget(primaryTarget),
+            secondaryInstrument,
+            new CelestialAttitudeTarget(secondaryTarget),
+            minEpoch,
+            holdDuration);
         #endregion
     }
 
     // docs/reference/attitudes.md, "Constructors"
-    internal static void Block06(CelestialBody earth, Time minimumEpoch, TimeSpan holdDuration, CelestialBody sun, Engine engine)
+    internal static void Block06(CelestialBody earth, CelestialBody sun, Time minEpoch, TimeSpan holdDuration)
     {
         #region docs/reference/attitudes.md:6
-        // Inputs: earth and sun (CelestialBody), minimumEpoch (Time), holdDuration (TimeSpan), engine (Engine)
+        // Inputs: earth and sun (CelestialBody), minEpoch (Time), holdDuration (TimeSpan)
+        var antenna = new Vector3(0.0, 0.6, 0.8);
         var attitude = new TriadAttitude(
-            earth, minimumEpoch, holdDuration,
-            Spacecraft.Front, OrbitalDirectionTarget.Prograde,
-            Spacecraft.Up, new CelestialAttitudeTarget(sun),
-            engine);
+            antenna, OrbitalDirectionTarget.Nadir,
+            Spacecraft.Front, new CelestialAttitudeTarget(sun),
+            minEpoch, holdDuration, earth);
         #endregion
     }
 
     // docs/reference/attitudes.md, "Factory Methods"
-    internal static void Block07(CelestialBody earth, Time epoch, TimeSpan duration, Engine engine, CelestialBody sun)
+    internal static void Block07(CelestialBody earth, CelestialBody sun, Time minEpoch, TimeSpan holdDuration)
     {
         #region docs/reference/attitudes.md:7
-        // Inputs: earth and sun (CelestialBody), epoch (Time), duration (TimeSpan), engine (Engine)
-        var lvlh = TriadAttitude.CreateLVLH(earth, epoch, duration, engine);
+        // Inputs: earth and sun (CelestialBody), minEpoch (Time), holdDuration (TimeSpan)
+        var lvlh = TriadAttitude.CreateLvlh(minEpoch, holdDuration, earth);
 
-        var sunTrack = TriadAttitude.CreateProgradeWithSunTracking(
-            earth, epoch, duration, sun, engine);
+        var sunTrack = TriadAttitude.CreateProgradeWithSunTracking(sun, minEpoch, holdDuration, earth);
         #endregion
     }
 
@@ -165,46 +172,47 @@ internal static class AttitudesPage
     }
 
     // docs/reference/attitudes.md, "Single-vector attitude"
-    internal static void Block09(CelestialBody earth, Time epoch, Engine engine, Spacecraft spacecraft)
+    internal static void Block09(CelestialBody earth, Time epoch, Spacecraft spacecraft)
     {
         #region docs/reference/attitudes.md:9
-        // Inputs: earth (CelestialBody), epoch (Time), engine (Engine), spacecraft (Spacecraft)
-        var nadir = new NadirAttitude(earth, epoch, TimeSpan.FromMinutes(30), engine);
+        // Inputs: earth (CelestialBody), epoch (Time), spacecraft (Spacecraft)
+        var nadir = new NadirAttitude(epoch, TimeSpan.FromMinutes(30), earth);
+        // Or the centre the run infers, the observer of the spacecraft's initial orbit
+        var inferred = new NadirAttitude(epoch, TimeSpan.FromMinutes(30));
         spacecraft.SetManeuvers(nadir);
         #endregion
     }
 
     // docs/reference/attitudes.md, "Instrument pointing"
-    internal static void Block10(Time epoch, Instrument telescope, ILocalizable targetStar, Engine engine, Spacecraft spacecraft)
+    internal static void Block10(Time epoch, Instrument telescope, ILocalizable targetStar, Spacecraft spacecraft)
     {
         #region docs/reference/attitudes.md:10
-        // Inputs: epoch (Time), telescope (Instrument), targetStar (ILocalizable), engine (Engine), spacecraft (Spacecraft)
+        // Inputs: epoch (Time), telescope (Instrument), targetStar (ILocalizable), spacecraft (Spacecraft)
         var pointing = new InstrumentPointingToAttitude(
-            epoch, TimeSpan.FromHours(2), telescope, targetStar, engine);
+            telescope, new CelestialAttitudeTarget(targetStar, Aberration.LT), epoch, TimeSpan.FromHours(2));
         spacecraft.SetManeuvers(pointing);
         #endregion
     }
 
     // docs/reference/attitudes.md, "TRIAD with orbital directions and celestial target"
-    internal static void Block11(CelestialBody earth, Time epoch, CelestialBody sun, Engine engine, Spacecraft spacecraft)
+    internal static void Block11(CelestialBody earth, Time epoch, CelestialBody sun, Spacecraft spacecraft)
     {
         #region docs/reference/attitudes.md:11
-        // Inputs: earth and sun (CelestialBody), epoch (Time), engine (Engine), spacecraft (Spacecraft)
+        // Inputs: earth and sun (CelestialBody), epoch (Time), spacecraft (Spacecraft)
         var attitude = new TriadAttitude(
-            earth, epoch, TimeSpan.FromHours(1.5),
-            Spacecraft.Front, OrbitalDirectionTarget.Prograde,
-            Spacecraft.Up, new CelestialAttitudeTarget(sun),
-            engine);
+            BodyAxis.Front, OrbitalDirectionTarget.Prograde,
+            BodyAxis.Up, new CelestialAttitudeTarget(sun),
+            epoch, TimeSpan.FromHours(1.5), earth);
         spacecraft.SetManeuvers(attitude);
         #endregion
     }
 
     // docs/reference/attitudes.md, "LVLH factory"
-    internal static void Block12(CelestialBody earth, Time epoch, TimeSpan duration, Engine engine, Spacecraft spacecraft)
+    internal static void Block12(CelestialBody earth, Time epoch, TimeSpan duration, Spacecraft spacecraft)
     {
         #region docs/reference/attitudes.md:12
-        // Inputs: earth (CelestialBody), epoch (Time), duration (TimeSpan), engine (Engine), spacecraft (Spacecraft)
-        var lvlh = TriadAttitude.CreateLVLH(earth, epoch, duration, engine);
+        // Inputs: earth (CelestialBody), epoch (Time), duration (TimeSpan), spacecraft (Spacecraft)
+        var lvlh = TriadAttitude.CreateLvlh(epoch, duration, earth);
         spacecraft.SetManeuvers(lvlh);
         #endregion
     }

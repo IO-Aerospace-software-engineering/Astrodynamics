@@ -36,14 +36,18 @@ namespace IO.Astrodynamics.Tests.Maneuvers
         {
             var orbitalParams = new KeplerianElements(24420999.959422689, 0.726546824, 28.5 * Astrodynamics.Constants.Deg2Rad, 0.0, 0.0, 0.0, TestHelpers.EarthAtJ2000,
                 TimeSystem.Time.J2000TDB, Frames.Frame.ICRF);
-            var spc = new Spacecraft(-666, "GenericSpacecraft", 1000.0, 10000.0, new Clock("GenericClk", 65536), orbitalParams);
-            spc.AddFuelTank(new FuelTank("ft", "ftA", "123456", 9000.0, 9000.0));
-            spc.AddEngine(new Engine("eng", "engmk1", "12345", 450, 50, spc.FuelTanks.First()));
+            var spc = new Spacecraft(-666, "GenericSpacecraft", 1000.0, orbitalParams, 10000.0, new Clock("GenericClk", 65536));
+            spc.AddFuelTank(new FuelTank("ft", 9000.0, 9000.0, "ftA", "123456"));
+            spc.AddEngine(new Engine("eng", 450, 50, spc.FuelTanks.First(), "engmk1", "12345"));
             var state = orbitalParams.ToStateVector(PropagationTimeArgument.Tt.EpochAt(orbitalParams.Epoch, orbitalParams.Period().TotalSeconds * 0.5));
             // A target equal to the apogee: the apogee radius the maneuver reads from the state
             double target = equalToApogee ? state.ApogeeVector().Magnitude() : targetRadius;
-            var maneuver = new CombinedManeuver(TestHelpers.EarthAtJ2000, new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB), TimeSpan.Zero, target, 0.0,
-                spc.Engines.First());
+            var maneuver = new CombinedManeuver(target,
+                0.0,
+                spc.Engines.First(),
+                new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB),
+                TimeSpan.Zero,
+                TestHelpers.EarthAtJ2000);
             return (state, maneuver);
         }
 
@@ -61,11 +65,11 @@ namespace IO.Astrodynamics.Tests.Maneuvers
             var (state, maneuver) = AtApogee(targetRadius, equalToApogee);
             var target = maneuver.ComputeTargetOrbit(state);
             double apogee = state.ApogeeVector().Magnitude();
-            double expected = System.Math.Min(maneuver.TargetPerigeeHeight, apogee);
+            double expected = System.Math.Min(maneuver.TargetPerigeeRadius, apogee);
 
             Assert.Equal(target.SemiMajorAxis() * (1.0 - target.Eccentricity()), target.PerigeeRadius());
             double relative = System.Math.Abs(target.PerigeeRadius() - expected) / expected;
-            _output.WriteLine($"MEASURE #677 combined target perigee {maneuver.TargetPerigeeHeight}: {target.PerigeeRadius():R} m against {expected:R} m, relative {relative:E2}");
+            _output.WriteLine($"MEASURE #677 combined target perigee {maneuver.TargetPerigeeRadius}: {target.PerigeeRadius():R} m against {expected:R} m, relative {relative:E2}");
             Assert.True(relative <= TargetPerigeeRelative, $"target perigee {target.PerigeeRadius():R} m, min(target, apogee) {expected:R} m, relative {relative:E3}");
         }
 
@@ -98,15 +102,15 @@ namespace IO.Astrodynamics.Tests.Maneuvers
         [Fact]
         public void Create()
         {
-            FuelTank fuelTank10 = new FuelTank("My fuel tank10", "ft2021", "sn0", 4000.0, 3000.0);
-            Engine eng = new Engine("My engine", "model 1", "sn1", 350.0, 50.0, fuelTank10);
+            FuelTank fuelTank10 = new FuelTank("My fuel tank10", 4000.0, 3000.0, "ft2021", "sn0");
+            Engine eng = new Engine("My engine", 350.0, 50.0, fuelTank10, "model 1", "sn1");
 
-            CombinedManeuver maneuver = new CombinedManeuver(TestHelpers.EarthAtJ2000,new TimeSystem.Time(new DateTime(2021, 01, 01),TimeScale.TDB), TimeSpan.FromDays(1.0), 151000000.0, 1.0, eng);
+            CombinedManeuver maneuver = new CombinedManeuver(151000000.0, 1.0, eng, new TimeSystem.Time(new DateTime(2021, 01, 01),TimeScale.TDB), TimeSpan.FromDays(1.0), TestHelpers.EarthAtJ2000);
 
             Assert.NotNull(maneuver.Engine);
-            Assert.Equal(TimeSpan.FromDays(1.0), maneuver.ManeuverHoldDuration);
-            LabelAssert.Equal(new TimeSystem.Time(new DateTime(2021, 01, 01),TimeScale.TDB), maneuver.MinimumEpoch);
-            Assert.Equal(151000000.0, maneuver.TargetPerigeeHeight);
+            Assert.Equal(TimeSpan.FromDays(1.0), maneuver.HoldDuration);
+            LabelAssert.Equal(new TimeSystem.Time(new DateTime(2021, 01, 01),TimeScale.TDB), maneuver.MinEpoch);
+            Assert.Equal(151000000.0, maneuver.TargetPerigeeRadius);
             Assert.Equal(1.0, maneuver.TargetInclination);
         }
 
@@ -122,11 +126,15 @@ namespace IO.Astrodynamics.Tests.Maneuvers
             var alignedOrbit = new KeplerianElements(11480000.0, 0.5, 28.5 * Astrodynamics.Constants.Deg2Rad,
                 0.0, 0.0, 0.0, TestHelpers.EarthAtJ2000, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF);
 
-            var maneuver = new CombinedManeuver(TestHelpers.EarthAtJ2000,
-                new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB), TimeSpan.Zero,
-                alignedOrbit.ApogeeVector().Magnitude() + 100000.0, 10.0,
-                new Engine("eng", "engmk1", "12345", 450, 50,
-                    new FuelTank("ft", "ftA", "123456", 1000, 1000)));
+            // The inclination plays no part in the preconditions: 0.5 rad (10.0 rad before lot L5b, outside [0, π], which the
+            // constructor refuses since decision 68 of #668)
+            var maneuver = new CombinedManeuver(alignedOrbit.ApogeeVector().Magnitude() + 100000.0,
+                0.5,
+                new Engine("eng", 450, 50,
+                    new FuelTank("ft", 1000, 1000, "ftA", "123456"), "engmk1", "12345"),
+                new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB),
+                TimeSpan.Zero,
+                TestHelpers.EarthAtJ2000);
 
             Assert.True(maneuver.CheckPreconditions(alignedOrbit.ToStateVector()));
 
@@ -150,11 +158,11 @@ namespace IO.Astrodynamics.Tests.Maneuvers
         {
             var orbitalParams = new KeplerianElements(24420999.959422689, 0.726546824, 28.5 * Astrodynamics.Constants.Deg2Rad, 0.0, 0.0, 0.0, TestHelpers.EarthAtJ2000,
                 TimeSystem.Time.J2000TDB, Frames.Frame.ICRF);
-            var spc = new Spacecraft(-666, "GenericSpacecraft", 1000.0, 10000.0, new Clock("GenericClk", 65536), orbitalParams);
-            spc.AddFuelTank(new FuelTank("ft", "ftA", "123456", 9000.0, 9000.0));
-            spc.AddEngine(new Engine("eng", "engmk1", "12345", 450, 50, spc.FuelTanks.First()));
+            var spc = new Spacecraft(-666, "GenericSpacecraft", 1000.0, orbitalParams, 10000.0, new Clock("GenericClk", 65536));
+            spc.AddFuelTank(new FuelTank("ft", 9000.0, 9000.0, "ftA", "123456"));
+            spc.AddEngine(new Engine("eng", 450, 50, spc.FuelTanks.First(), "engmk1", "12345"));
 
-            var maneuver = new CombinedManeuver(TestHelpers.EarthAtJ2000,new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB), TimeSpan.Zero, 42164000.0, 0.0, spc.Engines.First());
+            var maneuver = new CombinedManeuver(42164000.0, 0.0, spc.Engines.First(), new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB), TimeSpan.Zero, TestHelpers.EarthAtJ2000);
 
             // The apogee, half a period after the perigee in TT seconds, the time of a two-body motion about the Earth
             // (#501, #508); Epoch + Period() * 0.5 adds TDB seconds, n·δ off the apogee
@@ -181,11 +189,11 @@ namespace IO.Astrodynamics.Tests.Maneuvers
         {
             var orbitalParams = new KeplerianElements(24420999.959422689, 0.726546824, 28.5 * Astrodynamics.Constants.Deg2Rad, 0.0, 0.0, 0.0, TestHelpers.EarthAtJ2000,
                 TimeSystem.Time.J2000TDB, Frames.Frame.ICRF);
-            var spc = new Spacecraft(-666, "GenericSpacecraft", 1000.0, 10000.0, new Clock("GenericClk", 65536), orbitalParams);
-            spc.AddFuelTank(new FuelTank("ft", "ftA", "123456", 9000.0, 9000.0));
-            spc.AddEngine(new Engine("eng", "engmk1", "12345", 450, 50, spc.FuelTanks.First()));
+            var spc = new Spacecraft(-666, "GenericSpacecraft", 1000.0, orbitalParams, 10000.0, new Clock("GenericClk", 65536));
+            spc.AddFuelTank(new FuelTank("ft", 9000.0, 9000.0, "ftA", "123456"));
+            spc.AddEngine(new Engine("eng", 450, 50, spc.FuelTanks.First(), "engmk1", "12345"));
 
-            var maneuver = new CombinedManeuver(TestHelpers.EarthAtJ2000,new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB), TimeSpan.Zero, 6600000.0, 0.0, spc.Engines.First());
+            var maneuver = new CombinedManeuver(6600000.0, 0.0, spc.Engines.First(), new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB), TimeSpan.Zero, TestHelpers.EarthAtJ2000);
 
             // The apogee, half a period after the perigee in TT seconds, the time of a two-body motion about the Earth
             // (#501, #508); Epoch + Period() * 0.5 adds TDB seconds, n·δ off the apogee

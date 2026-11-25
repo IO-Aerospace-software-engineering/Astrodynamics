@@ -144,12 +144,12 @@ public static class MonteCarloPropagator
                 naifId,
                 $"MC_{i:D6}",
                 template.DryOperatingMass,
-                template.MaximumOperatingMass,
-                clock,
                 runState,
+                template.MaxOperatingMass,
+                clock,
                 template.SectionalArea,
                 coefficients?[k].DragCoefficient ?? template.DragCoefficient,
-                solarRadiationCoeff: coefficients?[k].ReflectivityCoefficient ?? template.SolarRadiationCoeff);
+                solarRadiationCoefficient: coefficients?[k].ReflectivityCoefficient ?? template.SolarRadiationCoeff);
 
             tasks[k] = new PropagationTask(sc, config.Window, config.Propagation);
         }

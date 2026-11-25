@@ -56,15 +56,15 @@ public class ManeuverChainCycleTests
     }
 
     /// <summary>A nadir attitude whose next maneuver a test sets past <see cref="Spacecraft.SetManeuvers"/>, through the internal setter.</summary>
-    private sealed class LinkedNadir(CelestialItem center, Time minimumEpoch, TimeSpan hold, Engine engine)
-        : NadirAttitude(center, minimumEpoch, hold, engine)
+    private sealed class LinkedNadir(CelestialItem center, Time minimumEpoch, TimeSpan hold)
+        : NadirAttitude(minimumEpoch, hold, center)
     {
         public void ForceNext(Maneuver.Maneuver next) => NextManeuver = next;
     }
 
     /// <summary>An apogee height maneuver whose next maneuver a test sets past <see cref="Spacecraft.SetManeuvers"/>, through the internal setter.</summary>
     private sealed class LinkedApogee(CelestialItem center, Time minimumEpoch, TimeSpan hold, double apogee, Engine engine)
-        : ApogeeHeightManeuver(center, minimumEpoch, hold, apogee, engine)
+        : ApogeeHeightManeuver(apogee, engine, minimumEpoch, hold, center)
     {
         public void ForceNext(Maneuver.Maneuver next) => NextManeuver = next;
     }
@@ -76,8 +76,8 @@ public class ManeuverChainCycleTests
         public Engine Engine { get; init; }
 
         public LinkedApogee Apogee() => new(Earth, S, TimeSpan.Zero, 8378137.0, Engine);
-        public PerigeeHeightManeuver Perigee() => new(Earth, S, TimeSpan.Zero, 7378137.0, Engine);
-        public LinkedNadir Nadir() => new(Earth, S, TimeSpan.FromSeconds(600.0), Engine);
+        public PerigeeHeightManeuver Perigee() => new(7378137.0, Engine, S, TimeSpan.Zero, Earth);
+        public LinkedNadir Nadir() => new(Earth, S, TimeSpan.FromSeconds(600.0));
     }
 
     private static Setup Create()
@@ -85,10 +85,10 @@ public class ManeuverChainCycleTests
         var earth = new CelestialBody(PlanetsAndMoons.EARTH, Frame.ICRF, S);
         var orbit = new KeplerianElements(7128137.0, 500.0 / 7128.137, 0.5, 0.0, 0.0, 0.0, earth, S, Frame.ICRF);
         int id = System.Threading.Interlocked.Decrement(ref _nextId);
-        var spacecraft = new Spacecraft(id, $"CYC{-id}", 500.0, 3000.0, new Clock($"CYC{-id}_CLK", 65536), orbit);
-        var tank = new FuelTank("ft", "model", "sn", 800.0, 800.0);
+        var spacecraft = new Spacecraft(id, $"CYC{-id}", 500.0, orbit, 3000.0, new Clock($"CYC{-id}_CLK", 65536));
+        var tank = new FuelTank("ft", 800.0, 800.0, "model", "sn");
         spacecraft.AddFuelTank(tank);
-        var engine = new Engine("eng", "model", "sn", 320.0, 5.0, tank);
+        var engine = new Engine("eng", 320.0, 5.0, tank, "model", "sn");
         spacecraft.AddEngine(engine);
         return new Setup { Earth = earth, Spacecraft = spacecraft, Engine = engine };
     }
@@ -344,7 +344,7 @@ public class ManeuverChainCycleTests
         var current = (Maneuver.Maneuver)head;
         for (int i = 0; i < 200_000; i++)
         {
-            var next = new NadirAttitude(setup.Earth, S, TimeSpan.Zero, setup.Engine);
+            var next = new NadirAttitude(S, TimeSpan.Zero, setup.Earth);
             current.NextManeuver = next;
             current = next;
             current.FuelBurned = 1.0;

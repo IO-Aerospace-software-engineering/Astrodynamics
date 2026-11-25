@@ -618,8 +618,8 @@ public class DocumentationPagesExamplesTests
     public void BatchTutorial_Blocks_Run()
     {
         var window = new Window(Epoch, Epoch.AddHours(1.0));
-        var spacecraft1 = new Spacecraft(-7051, "BATCH1", 100.0, 1000.0, new Clock("BATCH1_CLK", 256), Leo(6800000.0, 0.9, Epoch));
-        var spacecraft2 = new Spacecraft(-7052, "BATCH2", 100.0, 1000.0, new Clock("BATCH2_CLK", 256), Leo(7000000.0, 0.3, Epoch));
+        var spacecraft1 = new Spacecraft(-7051, "BATCH1", 100.0, Leo(6800000.0, 0.9, Epoch), 1000.0, new Clock("BATCH1_CLK", 256));
+        var spacecraft2 = new Spacecraft(-7052, "BATCH2", 100.0, Leo(7000000.0, 0.3, Epoch), 1000.0, new Clock("BATCH2_CLK", 256));
 
         var tasks = (List<PropagationTask>)Block("docs/tutorials/batch-propagation.md", 1).Invoke(null, new object[] { spacecraft1, window, spacecraft2 })!;
         var result = (BatchResult)Block("docs/tutorials/batch-propagation.md", 2).Invoke(null, new object[] { tasks })!;
@@ -657,7 +657,7 @@ public class DocumentationPagesExamplesTests
         for (int i = 0; i < 2; i++)
         {
             var earth = new CelestialBody(PlanetsAndMoons.EARTH, new GeopotentialModelParameters("Data/SolarSystem/EGM2008_to70_TideFree", 10));
-            var spacecraft = new Spacecraft(-(7061 + i), $"SHARED{i}", 100.0, 10000.0, new Clock($"SHARED{i}_CLK", 256), orbit);
+            var spacecraft = new Spacecraft(-(7061 + i), $"SHARED{i}", 100.0, orbit, 10000.0, new Clock($"SHARED{i}_CLK", 256));
             tasks.Add(new PropagationTask(spacecraft, window, new PropagationOptions { Integrator = new RK78IntegratorOptions { AbsoluteTolerance = 1e-10, RelativeTolerance = 1e-10, InitialStep = TimeSpan.FromSeconds(30.0) }, OutputStep = TimeSpan.FromSeconds(60), ThirdBodies = new CelestialItem[] { earth, Stars.SUN_BODY, PlanetsAndMoons.MOON_BODY }, CovariancePropagation = CovariancePropagationOptions.None }));
         }
 

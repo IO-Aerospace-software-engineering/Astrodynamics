@@ -40,7 +40,7 @@ namespace IO.Astrodynamics.Tests.Body
         public void Create()
         {
             var spc = TestHelpers.Spacecraft;
-            spc.AddCircularInstrument(-1600, "inst", "model", 1.57, Vector3.VectorZ, Vector3.VectorX, new Vector3(0.0, Astrodynamics.Constants.HalfPi, 0.0));
+            spc.AddCircularInstrument("inst", 1.57, Vector3.VectorZ, Vector3.VectorX, new Vector3(0.0, Astrodynamics.Constants.HalfPi, 0.0), naifId: -1600, model: "model");
             Assert.Equal("inst", spc.Instruments.First().Name);
             Assert.Equal("model", spc.Instruments.First().Model);
             Assert.Equal(1.57, spc.Instruments.First().FieldOfView);
@@ -54,19 +54,17 @@ namespace IO.Astrodynamics.Tests.Body
         {
             var spc = TestHelpers.Spacecraft;
             Assert.Throws<ArgumentException>(() =>
-                spc.AddCircularInstrument(-1600, "", "model", 1.57, Vector3.VectorZ, Vector3.VectorX, new Vector3(0.0, Astrodynamics.Constants.HalfPi, 0.0)));
+                spc.AddCircularInstrument("", 1.57, Vector3.VectorZ, Vector3.VectorX, new Vector3(0.0, Astrodynamics.Constants.HalfPi, 0.0), naifId: -1600, model: "model"));
             Assert.Throws<ArgumentException>(() =>
-                spc.AddCircularInstrument(-1600, "inst", "", 1.57, Vector3.VectorZ, Vector3.VectorX, new Vector3(0.0, Astrodynamics.Constants.HalfPi, 0.0)));
-            Assert.Throws<ArgumentException>(() =>
-                spc.AddCircularInstrument(-1600, "inst", "model", 0.0, Vector3.VectorZ, Vector3.VectorX, new Vector3(0.0, Astrodynamics.Constants.HalfPi, 0.0)));
+                spc.AddCircularInstrument("inst", 0.0, Vector3.VectorZ, Vector3.VectorX, new Vector3(0.0, Astrodynamics.Constants.HalfPi, 0.0), naifId: -1600, model: "model"));
         }
 
         [Fact]
         public void Equality()
         {
             var spc = TestHelpers.Spacecraft;
-            spc.AddCircularInstrument(-1600, "inst", "model", 1.57, Vector3.VectorZ, Vector3.VectorX, new Vector3(0.0, Astrodynamics.Constants.HalfPi, 0.0));
-            spc.AddCircularInstrument(-1700, "inst", "model", 1.57, Vector3.VectorZ, Vector3.VectorX, new Vector3(0.0, Astrodynamics.Constants.HalfPi, 0.0));
+            spc.AddCircularInstrument("inst", 1.57, Vector3.VectorZ, Vector3.VectorX, new Vector3(0.0, Astrodynamics.Constants.HalfPi, 0.0), naifId: -1600, model: "model");
+            spc.AddCircularInstrument("inst2", 1.57, Vector3.VectorZ, Vector3.VectorX, new Vector3(0.0, Astrodynamics.Constants.HalfPi, 0.0), naifId: -1700, model: "model");
             var instrument = spc.Instruments.First();
             var instrument2 = spc.Instruments.ElementAt(1);
             Assert.False(instrument == instrument2);
@@ -99,8 +97,8 @@ namespace IO.Astrodynamics.Tests.Body
 
             //Configure spacecraft
             Clock clock = new Clock("clk1", 65536);
-            Spacecraft spacecraft = new Spacecraft(-179, "SC179", 1000.0, 3000.0, clock, parkingOrbit);
-            spacecraft.AddCircularInstrument(-179789, "CAMERA789", "mod1", 0.75, Vector3.VectorZ, Vector3.VectorY, new Vector3(0.0, System.Math.PI * 0.5, 0.0));
+            Spacecraft spacecraft = new Spacecraft(-179, "SC179", 1000.0, parkingOrbit, 3000.0, clock);
+            spacecraft.AddCircularInstrument("CAMERA789", 0.75, Vector3.VectorZ, Vector3.VectorY, new Vector3(0.0, System.Math.PI * 0.5, 0.0), naifId: -179789, model: "mod1");
             scenario.AddSpacecraft(spacecraft);
 
             //Execute scenario
@@ -212,13 +210,13 @@ namespace IO.Astrodynamics.Tests.Body
 
             //Configure spacecraft
             Clock clock = new Clock("clk1", 65536);
-            Spacecraft spacecraft = new Spacecraft(-179, "SC179", 1000.0, 3000.0, clock, parkingOrbit);
-            spacecraft.AddCircularInstrument(-179789, "CAMERA789", "mod1", 0.75, Vector3.VectorZ, Vector3.VectorY, new Vector3(0.0, System.Math.PI * 0.5, 0.0));
+            Spacecraft spacecraft = new Spacecraft(-179, "SC179", 1000.0, parkingOrbit, 3000.0, clock);
+            spacecraft.AddCircularInstrument("CAMERA789", 0.75, Vector3.VectorZ, Vector3.VectorY, new Vector3(0.0, System.Math.PI * 0.5, 0.0), naifId: -179789, model: "mod1");
 
             StateVector targetOrbit = new StateVector(
                 new Vector3(6790000.0, 0.0, 0.0), new Vector3(0.0, 7656.2204182967143, 0.0), TestHelpers.EarthAtJ2000,
                 start, Frames.Frame.ICRF);
-            Spacecraft target = new Spacecraft(-181, "SC181", 1000.0, 3000.0, new Clock("clk181", 65536), targetOrbit);
+            Spacecraft target = new Spacecraft(-181, "SC181", 1000.0, targetOrbit, 3000.0, new Clock("clk181", 65536));
 
             // Never propagated, it has no attitude to test with (#682); with the identity given by hand, the target 10 km
             // below it is in the field
@@ -240,8 +238,8 @@ namespace IO.Astrodynamics.Tests.Body
 
             //Configure spacecraft
             Clock clock = new Clock("clk1", 65536);
-            Spacecraft spacecraft = new Spacecraft(-179, "SC179", 1000.0, 3000.0, clock, parkingOrbit);
-            spacecraft.AddCircularInstrument(-179789, "CAMERA789", "mod1", 0.75, Vector3.VectorZ, Vector3.VectorY, new Vector3(0.0, System.Math.PI * 0.5, 0.0));
+            Spacecraft spacecraft = new Spacecraft(-179, "SC179", 1000.0, parkingOrbit, 3000.0, clock);
+            spacecraft.AddCircularInstrument("CAMERA789", 0.75, Vector3.VectorZ, Vector3.VectorY, new Vector3(0.0, System.Math.PI * 0.5, 0.0), naifId: -179789, model: "mod1");
 
 
             var boresightICRF = spacecraft.Instruments.First().GetBoresightInICRFFrame(start);
@@ -260,8 +258,8 @@ namespace IO.Astrodynamics.Tests.Body
 
             //Configure spacecraft
             Clock clock = new Clock("clk1", 65536);
-            Spacecraft spacecraft = new Spacecraft(-179, "SC179", 1000.0, 3000.0, clock, parkingOrbit);
-            spacecraft.AddCircularInstrument(-179789, "CAMERA789", "mod1", 0.75, Vector3.VectorZ, Vector3.VectorY, new Vector3(0.0, System.Math.PI * 0.5, 0.0));
+            Spacecraft spacecraft = new Spacecraft(-179, "SC179", 1000.0, parkingOrbit, 3000.0, clock);
+            spacecraft.AddCircularInstrument("CAMERA789", 0.75, Vector3.VectorZ, Vector3.VectorY, new Vector3(0.0, System.Math.PI * 0.5, 0.0), naifId: -179789, model: "mod1");
             spacecraft.Frame.AddStateOrientationToICRF(new StateOrientation(new Quaternion(Vector3.VectorZ, -Astrodynamics.Constants.HalfPi), Vector3.Zero, start, spacecraft.Frame));
 
 
@@ -276,8 +274,8 @@ namespace IO.Astrodynamics.Tests.Body
             StateVector parkingOrbit = new StateVector(
                 new Vector3(6800000.0, 0.0, 0.0), new Vector3(0.0, 7656.2204182967143, 0.0), TestHelpers.EarthAtJ2000,
                 start, Frames.Frame.ICRF);
-            Spacecraft spacecraft = new Spacecraft(-179, "SC179", 1000.0, 3000.0, new Clock("clk1", 65536), parkingOrbit);
-            spacecraft.AddCircularInstrument(-179789, "CAMERA789", "mod1", 0.75, Vector3.VectorZ, Vector3.VectorY, new Vector3(0.0, System.Math.PI * 0.5, 0.0));
+            Spacecraft spacecraft = new Spacecraft(-179, "SC179", 1000.0, parkingOrbit, 3000.0, new Clock("clk1", 65536));
+            spacecraft.AddCircularInstrument("CAMERA789", 0.75, Vector3.VectorZ, Vector3.VectorY, new Vector3(0.0, System.Math.PI * 0.5, 0.0), naifId: -179789, model: "mod1");
 
             // The rotation of pi/2 about +Y leaves the reference vector +Y, and the attitude is the identity
             var instrument = spacecraft.Instruments.First();
@@ -293,8 +291,8 @@ namespace IO.Astrodynamics.Tests.Body
             StateVector parkingOrbit = new StateVector(
                 new Vector3(6800000.0, 0.0, 0.0), new Vector3(0.0, 7656.2204182967143, 0.0), TestHelpers.EarthAtJ2000,
                 start, Frames.Frame.ICRF);
-            Spacecraft spacecraft = new Spacecraft(-179, "SC179", 1000.0, 3000.0, new Clock("clk1", 65536), parkingOrbit);
-            spacecraft.AddCircularInstrument(-179789, "CAMERA789", "mod1", 0.75, Vector3.VectorZ, Vector3.VectorY, new Vector3(0.0, System.Math.PI * 0.5, 0.0));
+            Spacecraft spacecraft = new Spacecraft(-179, "SC179", 1000.0, parkingOrbit, 3000.0, new Clock("clk1", 65536));
+            spacecraft.AddCircularInstrument("CAMERA789", 0.75, Vector3.VectorZ, Vector3.VectorY, new Vector3(0.0, System.Math.PI * 0.5, 0.0), naifId: -179789, model: "mod1");
             spacecraft.Frame.AddStateOrientationToICRF(new StateOrientation(new Quaternion(Vector3.VectorZ, -Astrodynamics.Constants.HalfPi), Vector3.Zero, start, spacecraft.Frame));
 
             // The attitude takes the boresight -X to +Y (GetBoresightInICRF2): a rotation of -pi/2 about +Z, which takes +Y to +X
@@ -313,14 +311,14 @@ namespace IO.Astrodynamics.Tests.Body
             var spc = TestHelpers.Spacecraft;
 
             // Instrument with no orientation - refVector should remain unchanged
-            spc.AddCircularInstrument(-1600, "inst1", "model", 1.57, Vector3.VectorZ, Vector3.VectorY, Vector3.Zero);
+            spc.AddCircularInstrument("inst1", 1.57, Vector3.VectorZ, Vector3.VectorY, Vector3.Zero, naifId: -1600, model: "model");
             var refVector1 = spc.Instruments.First().GetRefVectorInSpacecraftFrame();
             Assert.Equal(Vector3.VectorY, refVector1, TestHelpers.VectorComparer);
 
             // Euler angles (0, 0, pi/2) of the frame kernel (#524): pxform(instrument, spacecraft) = eul2m(0, 0, pi/2, 1, 2, 3),
             // the frame rotation [pi/2]_3, takes the reference vector X to -Y
-            spc.AddCircularInstrument(-1700, "inst2", "model", 1.57, Vector3.VectorZ, Vector3.VectorX,
-                new Vector3(0.0, 0.0, Astrodynamics.Constants.HalfPi));
+            spc.AddCircularInstrument("inst2", 1.57, Vector3.VectorZ, Vector3.VectorX,
+                new Vector3(0.0, 0.0, Astrodynamics.Constants.HalfPi), naifId: -1700, model: "model");
             var refVector2 = spc.Instruments.ElementAt(1).GetRefVectorInSpacecraftFrame();
             Assert.Equal(new Vector3(0.0, -1.0, 0.0), refVector2, TestHelpers.VectorComparer);
         }
@@ -332,8 +330,8 @@ namespace IO.Astrodynamics.Tests.Body
 
             // Euler angles (0, pi/2, 0) of the frame kernel (#524): eul2m(0, pi/2, 0, 1, 2, 3), the frame rotation [pi/2]_2,
             // takes the reference vector X to +Z (and the boresight Z to -X, the managed path's value before #524)
-            spc.AddCircularInstrument(-1600, "inst", "model", 1.57, Vector3.VectorZ, Vector3.VectorX,
-                new Vector3(0.0, Astrodynamics.Constants.HalfPi, 0.0));
+            spc.AddCircularInstrument("inst", 1.57, Vector3.VectorZ, Vector3.VectorX,
+                new Vector3(0.0, Astrodynamics.Constants.HalfPi, 0.0), naifId: -1600, model: "model");
             var refVector = spc.Instruments.First().GetRefVectorInSpacecraftFrame();
             Assert.Equal(new Vector3(0.0, 0.0, 1.0), refVector, TestHelpers.VectorComparer);
             Assert.Equal(new Vector3(-1.0, 0.0, 0.0), spc.Instruments.First().GetBoresightInSpacecraftFrame(), TestHelpers.VectorComparer);
@@ -342,9 +340,9 @@ namespace IO.Astrodynamics.Tests.Body
         [Fact]
         public async Task WriteFrame()
         {
-            Spacecraft spc = new Spacecraft(-1001, "MySpacecraft", 1000.0, 10000.0, new Clock("clk1", 256), new StateVector(new Vector3(1.0, 2.0, 3.0), new Vector3(1.0, 2.0, 3.0),
-                TestHelpers.EarthAtJ2000, new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB), Frames.Frame.ICRF));
-            spc.AddCircularInstrument(-1001600, "CAM600", "mod1", 1.5, Vector3.VectorZ, Vector3.VectorY, new Vector3(0.0, -System.Math.PI * 0.5, 0.0));
+            Spacecraft spc = new Spacecraft(-1001, "MySpacecraft", 1000.0, new StateVector(new Vector3(1.0, 2.0, 3.0), new Vector3(1.0, 2.0, 3.0),
+                TestHelpers.EarthAtJ2000, new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB), Frames.Frame.ICRF), 10000.0, new Clock("clk1", 256));
+            spc.AddCircularInstrument("CAM600", 1.5, Vector3.VectorZ, Vector3.VectorY, new Vector3(0.0, -System.Math.PI * 0.5, 0.0), naifId: -1001600, model: "mod1");
             await spc.Instruments.First().WriteFrameAsync(new FileInfo("instrumentFrame.tf"));
             TextReader tr = new StreamReader("instrumentFrame.tf");
             var res = await tr.ReadToEndAsync();
@@ -356,9 +354,9 @@ namespace IO.Astrodynamics.Tests.Body
         [Fact]
         public async Task WriteKernel()
         {
-            Spacecraft spc = new Spacecraft(-1001, "MySpacecraft", 1000.0, 10000.0, new Clock("clk1", 256), new StateVector(new Vector3(1.0, 2.0, 3.0), new Vector3(1.0, 2.0, 3.0),
-                TestHelpers.EarthAtJ2000, new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB), Frames.Frame.ICRF));
-            spc.AddCircularInstrument(-1001600, "CAM600", "mod1", 1.5, Vector3.VectorZ, Vector3.VectorY, new Vector3(0.0, -System.Math.PI * 0.5, 0.0));
+            Spacecraft spc = new Spacecraft(-1001, "MySpacecraft", 1000.0, new StateVector(new Vector3(1.0, 2.0, 3.0), new Vector3(1.0, 2.0, 3.0),
+                TestHelpers.EarthAtJ2000, new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB), Frames.Frame.ICRF), 10000.0, new Clock("clk1", 256));
+            spc.AddCircularInstrument("CAM600", 1.5, Vector3.VectorZ, Vector3.VectorY, new Vector3(0.0, -System.Math.PI * 0.5, 0.0), naifId: -1001600, model: "mod1");
             await spc.Instruments.First().WriteKernelAsync(new FileInfo("instrumentKernel.ti"));
             TextReader tr = new StreamReader("instrumentKernel.ti");
             var res = await tr.ReadToEndAsync();
@@ -390,11 +388,11 @@ namespace IO.Astrodynamics.Tests.Body
                 new(0.3, -Astrodynamics.Constants.HalfPi, -0.2), new(0.3, 0.5, 0.2), new(-0.7, 1.1, 2.3)
             ];
             var start = new TimeSystem.Time(2024, 3, 1, 12, 0, 0, TimeScale.TDB);
-            var spacecraft = new Spacecraft(-8601, "EUL8601", 1000.0, 3000.0, new Clock("EUL8601_CLK", 65536),
-                new StateVector(new Vector3(6800000.0, 0.0, 0.0), new Vector3(0.0, 7656.2204182967143, 0.0), TestHelpers.EarthAtJ2000, start, Frames.Frame.ICRF));
+            var spacecraft = new Spacecraft(-8601, "EUL8601", 1000.0, new StateVector(new Vector3(6800000.0, 0.0, 0.0), new Vector3(0.0, 7656.2204182967143, 0.0), TestHelpers.EarthAtJ2000, start, Frames.Frame.ICRF), 3000.0,
+                new Clock("EUL8601_CLK", 65536));
             for (int i = 0; i < orientations.Length; i++)
             {
-                spacecraft.AddCircularInstrument(-8601001 - i, $"E{i}", "m", 0.5, Vector3.VectorZ, Vector3.VectorY, orientations[i]);
+                spacecraft.AddCircularInstrument($"E{i}", 0.5, Vector3.VectorZ, Vector3.VectorY, orientations[i], naifId: -8601001 - i, model: "m");
             }
 
             string directory = "Data/User/AttitudeRecord537/EUL8601";
@@ -432,9 +430,9 @@ namespace IO.Astrodynamics.Tests.Body
             }
         }
 
-        private static Spacecraft Host(int naifId, string name) => new(naifId, name, 100.0, 1000.0, new Clock(name + "_CLK", 65536),
-            new StateVector(new Vector3(6800e3, 0.0, 0.0), new Vector3(0.0, 7656.0, 0.0), new CelestialBody(SolarSystemObjects.PlanetsAndMoons.EARTH),
-                new TimeSystem.Time(2024, 1, 1, TimeScale.TDB), Frames.Frame.ICRF));
+        private static Spacecraft Host(int naifId, string name) => new(naifId, name, 100.0, new StateVector(new Vector3(6800e3, 0.0, 0.0), new Vector3(0.0, 7656.0, 0.0), new CelestialBody(SolarSystemObjects.PlanetsAndMoons.EARTH),
+                new TimeSystem.Time(2024, 1, 1, TimeScale.TDB), Frames.Frame.ICRF), 1000.0,
+            new Clock(name + "_CLK", 65536));
 
         /// <summary>
         /// The id of the spacecraft frame, NaifId × 1000, is not an instrument id (#676): the instrument FK would define the
@@ -456,13 +454,13 @@ namespace IO.Astrodynamics.Tests.Body
                 switch (shape)
                 {
                     case "Circular":
-                        spc.AddCircularInstrument(-1401000, "CAM", "M", 0.1, Vector3.VectorZ, Vector3.VectorX, Vector3.Zero);
+                        spc.AddCircularInstrument("CAM", 0.1, Vector3.VectorZ, Vector3.VectorX, Vector3.Zero, naifId: -1401000, model: "M");
                         break;
                     case "Rectangular":
-                        spc.AddRectangularInstrument(-1401000, "CAM", "M", 0.1, 0.05, Vector3.VectorZ, Vector3.VectorX, Vector3.Zero);
+                        spc.AddRectangularInstrument("CAM", 0.1, 0.05, Vector3.VectorZ, Vector3.VectorX, Vector3.Zero, naifId: -1401000, model: "M");
                         break;
                     default:
-                        spc.AddEllipticalInstrument(-1401000, "CAM", "M", 0.1, 0.05, Vector3.VectorZ, Vector3.VectorX, Vector3.Zero);
+                        spc.AddEllipticalInstrument("CAM", 0.1, 0.05, Vector3.VectorZ, Vector3.VectorX, Vector3.Zero, naifId: -1401000, model: "M");
                         break;
                 }
             });
@@ -486,7 +484,7 @@ namespace IO.Astrodynamics.Tests.Body
         {
             // Arrange
             var spc = Host(-1321, spacecraftName);
-            spc.AddCircularInstrument(-1321001, instrumentName, "M", 0.1, Vector3.VectorZ, Vector3.VectorX, Vector3.Zero);
+            spc.AddCircularInstrument(instrumentName, 0.1, Vector3.VectorZ, Vector3.VectorX, Vector3.Zero, naifId: -1321001, model: "M");
             var fk = FrameKernelFiles.NewFile("instrument_refused");
 
             // Act
@@ -558,13 +556,13 @@ namespace IO.Astrodynamics.Tests.Body
             switch (shape)
             {
                 case "Circular":
-                    spc.AddCircularInstrument(naifId, name, "M", 0.1, Vector3.VectorZ, Vector3.VectorX, Vector3.Zero);
+                    spc.AddCircularInstrument(name, 0.1, Vector3.VectorZ, Vector3.VectorX, Vector3.Zero, naifId: naifId, model: "M");
                     break;
                 case "Rectangular":
-                    spc.AddRectangularInstrument(naifId, name, "M", 0.1, 0.05, Vector3.VectorZ, Vector3.VectorX, Vector3.Zero);
+                    spc.AddRectangularInstrument(name, 0.1, 0.05, Vector3.VectorZ, Vector3.VectorX, Vector3.Zero, naifId: naifId, model: "M");
                     break;
                 default:
-                    spc.AddEllipticalInstrument(naifId, name, "M", 0.1, 0.05, Vector3.VectorZ, Vector3.VectorX, Vector3.Zero);
+                    spc.AddEllipticalInstrument(name, 0.1, 0.05, Vector3.VectorZ, Vector3.VectorX, Vector3.Zero, naifId: naifId, model: "M");
                     break;
             }
         }
@@ -578,7 +576,7 @@ namespace IO.Astrodynamics.Tests.Body
         {
             // Arrange
             var spc = Host(-1322, "ABCDEFGHIJKL");
-            spc.AddCircularInstrument(-1322001, "NOPQRSTUVWXYZ", "M", 0.1, Vector3.VectorZ, Vector3.VectorX, Vector3.Zero);
+            spc.AddCircularInstrument("NOPQRSTUVWXYZ", 0.1, Vector3.VectorZ, Vector3.VectorX, Vector3.Zero, naifId: -1322001, model: "M");
             var spacecraftFk = FrameKernelFiles.NewFile("instrument_host");
             var fk = FrameKernelFiles.NewFile("instrument_boundary");
             Assert.Equal(32, System.Text.Encoding.UTF8.GetByteCount("FRAME_ABCDEFGHIJKL_NOPQRSTUVWXYZ"));
@@ -596,16 +594,19 @@ namespace IO.Astrodynamics.Tests.Body
 
         private static void AddInstrument(Spacecraft spc, string shape, int naifId, double fieldOfView, Vector3 boresight, Vector3 refVector)
         {
+            // CAM for the first id of the spacecraft, CAM<n> for NaifId × 1000 − n otherwise: an instrument name is unique on
+            // its spacecraft since 11.0.0 (decision 74 of #668)
+            string name = naifId % 1000 == -1 ? "CAM" : $"CAM{-naifId % 1000}";
             switch (shape)
             {
                 case "Circular":
-                    spc.AddCircularInstrument(naifId, "CAM", "M", fieldOfView, boresight, refVector, Vector3.Zero);
+                    spc.AddCircularInstrument(name, fieldOfView, boresight, refVector, Vector3.Zero, naifId: naifId, model: "M");
                     break;
                 case "Rectangular":
-                    spc.AddRectangularInstrument(naifId, "CAM", "M", fieldOfView, 0.05, boresight, refVector, Vector3.Zero);
+                    spc.AddRectangularInstrument(name, fieldOfView, 0.05, boresight, refVector, Vector3.Zero, naifId: naifId, model: "M");
                     break;
                 default:
-                    spc.AddEllipticalInstrument(naifId, "CAM", "M", fieldOfView, 0.05, boresight, refVector, Vector3.Zero);
+                    spc.AddEllipticalInstrument(name, fieldOfView, 0.05, boresight, refVector, Vector3.Zero, naifId: naifId, model: "M");
                     break;
             }
         }
@@ -806,9 +807,9 @@ namespace IO.Astrodynamics.Tests.Body
             var exception = Record.Exception(() =>
             {
                 if (shape == "Rectangular")
-                    spc.AddRectangularInstrument(-7078001, "CAM", "M", 0.1, crossAngle, Vector3.VectorZ, Vector3.VectorX, Vector3.Zero);
+                    spc.AddRectangularInstrument("CAM", 0.1, crossAngle, Vector3.VectorZ, Vector3.VectorX, Vector3.Zero, naifId: -7078001, model: "M");
                 else
-                    spc.AddEllipticalInstrument(-7078001, "CAM", "M", 0.1, crossAngle, Vector3.VectorZ, Vector3.VectorX, Vector3.Zero);
+                    spc.AddEllipticalInstrument("CAM", 0.1, crossAngle, Vector3.VectorZ, Vector3.VectorX, Vector3.Zero, naifId: -7078001, model: "M");
             });
 
             // Assert
@@ -847,9 +848,9 @@ namespace IO.Astrodynamics.Tests.Body
             var exception = Record.Exception(() =>
             {
                 if (shape == "Rectangular")
-                    spc.AddRectangularInstrument(-7151001, "CAM", "M", 0.1, crossAngle, Vector3.VectorZ, Vector3.VectorX, Vector3.Zero);
+                    spc.AddRectangularInstrument("CAM", 0.1, crossAngle, Vector3.VectorZ, Vector3.VectorX, Vector3.Zero, naifId: -7151001, model: "M");
                 else
-                    spc.AddEllipticalInstrument(-7151001, "CAM", "M", 0.1, crossAngle, Vector3.VectorZ, Vector3.VectorX, Vector3.Zero);
+                    spc.AddEllipticalInstrument("CAM", 0.1, crossAngle, Vector3.VectorZ, Vector3.VectorX, Vector3.Zero, naifId: -7151001, model: "M");
             });
 
             // Assert
@@ -875,9 +876,9 @@ namespace IO.Astrodynamics.Tests.Body
 
             // Act
             if (shape == "Rectangular")
-                spc.AddRectangularInstrument(-7152001, "CAM", "M", 0.1, crossAngle, Vector3.VectorZ, Vector3.VectorX, Vector3.Zero);
+                spc.AddRectangularInstrument("CAM", 0.1, crossAngle, Vector3.VectorZ, Vector3.VectorX, Vector3.Zero, naifId: -7152001, model: "M");
             else
-                spc.AddEllipticalInstrument(-7152001, "CAM", "M", 0.1, crossAngle, Vector3.VectorZ, Vector3.VectorX, Vector3.Zero);
+                spc.AddEllipticalInstrument("CAM", 0.1, crossAngle, Vector3.VectorZ, Vector3.VectorX, Vector3.Zero, naifId: -7152001, model: "M");
 
             // Assert
             var instrument = Assert.Single(spc.Instruments);
@@ -924,13 +925,13 @@ namespace IO.Astrodynamics.Tests.Body
                 switch (shape)
                 {
                     case "Circular":
-                        spc.AddCircularInstrument(-7153001, "CAM", "M", 0.1, Vector3.VectorZ, Vector3.VectorX, angles);
+                        spc.AddCircularInstrument("CAM", 0.1, Vector3.VectorZ, Vector3.VectorX, angles, naifId: -7153001, model: "M");
                         break;
                     case "Rectangular":
-                        spc.AddRectangularInstrument(-7153001, "CAM", "M", 0.1, 0.05, Vector3.VectorZ, Vector3.VectorX, angles);
+                        spc.AddRectangularInstrument("CAM", 0.1, 0.05, Vector3.VectorZ, Vector3.VectorX, angles, naifId: -7153001, model: "M");
                         break;
                     default:
-                        spc.AddEllipticalInstrument(-7153001, "CAM", "M", 0.1, 0.05, Vector3.VectorZ, Vector3.VectorX, angles);
+                        spc.AddEllipticalInstrument("CAM", 0.1, 0.05, Vector3.VectorZ, Vector3.VectorX, angles, naifId: -7153001, model: "M");
                         break;
                 }
             });
@@ -963,13 +964,13 @@ namespace IO.Astrodynamics.Tests.Body
                 switch (shape)
                 {
                     case "Circular":
-                        spc.AddCircularInstrument(-7154001 - n, "C" + n, "M", 0.1, Vector3.VectorZ, Vector3.VectorX, new Vector3(x, y, z));
+                        spc.AddCircularInstrument("C" + n, 0.1, Vector3.VectorZ, Vector3.VectorX, new Vector3(x, y, z), naifId: -7154001 - n, model: "M");
                         break;
                     case "Rectangular":
-                        spc.AddRectangularInstrument(-7154001 - n, "C" + n, "M", 0.1, 0.05, Vector3.VectorZ, Vector3.VectorX, new Vector3(x, y, z));
+                        spc.AddRectangularInstrument("C" + n, 0.1, 0.05, Vector3.VectorZ, Vector3.VectorX, new Vector3(x, y, z), naifId: -7154001 - n, model: "M");
                         break;
                     default:
-                        spc.AddEllipticalInstrument(-7154001 - n, "C" + n, "M", 0.1, 0.05, Vector3.VectorZ, Vector3.VectorX, new Vector3(x, y, z));
+                        spc.AddEllipticalInstrument("C" + n, 0.1, 0.05, Vector3.VectorZ, Vector3.VectorX, new Vector3(x, y, z), naifId: -7154001 - n, model: "M");
                         break;
                 }
             }
@@ -1130,9 +1131,9 @@ namespace IO.Astrodynamics.Tests.Body
             var boresight = moon.GetEphemeris(epoch, spc, Frames.Frame.ICRF, Aberration.None).Position.Normalize();
             var refVector = boresight.Cross(Vector3.VectorZ).Normalize();
             if (shape == "Circular")
-                spc.AddCircularInstrument(-7156001, "CAM", "M", refAngle, boresight, refVector, Vector3.Zero);
+                spc.AddCircularInstrument("CAM", refAngle, boresight, refVector, Vector3.Zero, naifId: -7156001, model: "M");
             else
-                spc.AddEllipticalInstrument(-7156001, "CAM", "M", refAngle, crossAngle, boresight, refVector, Vector3.Zero);
+                spc.AddEllipticalInstrument("CAM", refAngle, crossAngle, boresight, refVector, Vector3.Zero, naifId: -7156001, model: "M");
             var instrument = spc.Instruments.Single();
             var window = new Window(epoch, epoch.AddSeconds(120.0));
 
@@ -1223,11 +1224,11 @@ namespace IO.Astrodynamics.Tests.Body
             var twin = Host(-7158, "T715B");
             spc.Frame.AddStateOrientationToICRF(new StateOrientation(Quaternion.Identity, Vector3.Zero, epoch, spc.Frame));
             if (shape == "Circular")
-                spc.AddCircularInstrument(-7157001, "CAM", "M", 0.1, Vector3.VectorZ, Vector3.VectorX, Vector3.Zero);
+                spc.AddCircularInstrument("CAM", 0.1, Vector3.VectorZ, Vector3.VectorX, Vector3.Zero, naifId: -7157001, model: "M");
             else if (shape == "Elliptical")
-                spc.AddEllipticalInstrument(-7157001, "CAM", "M", 0.1, 0.2, Vector3.VectorZ, Vector3.VectorX, Vector3.Zero);
+                spc.AddEllipticalInstrument("CAM", 0.1, 0.2, Vector3.VectorZ, Vector3.VectorX, Vector3.Zero, naifId: -7157001, model: "M");
             else
-                spc.AddRectangularInstrument(-7157001, "CAM", "M", 0.1, 0.2, Vector3.VectorZ, Vector3.VectorX, Vector3.Zero);
+                spc.AddRectangularInstrument("CAM", 0.1, 0.2, Vector3.VectorZ, Vector3.VectorX, Vector3.Zero, naifId: -7157001, model: "M");
             Assert.Equal(0.0, twin.GetEphemeris(epoch, spc, Frames.Frame.ICRF, Aberration.None).Position.Magnitude());
             return (spc.Instruments.Single(), twin);
         }

@@ -192,8 +192,8 @@ public sealed record PropagationCase(Window Window, Spacecraft Spacecraft, IRead
         double area = inputs.Spacecraft?.SectionalAreaM2 ?? 1.0;
         double cd = inputs.Spacecraft?.DragCoefficient ?? 2.2;
         double cr = inputs.Spacecraft?.RadiationPressureCoefficient ?? 1.0;
-        return new Spacecraft(naifId, naifId == DefaultNaifId ? "ConformanceTestSC" : $"ConformanceTestSC{-naifId}", mass, maxMass, clock, sv,
-            sectionalArea: area, dragCoeff: cd, solarRadiationCoeff: cr, hardBodyRadius: hardBodyRadius);
+        return new Spacecraft(naifId, naifId == DefaultNaifId ? "ConformanceTestSC" : $"ConformanceTestSC{-naifId}", mass, sv, maxMass, clock,
+            sectionalArea: area, dragCoefficient: cd, solarRadiationCoefficient: cr, hardBodyRadius: hardBodyRadius);
     }
 
     /// <summary>The state of an orbit of the inputs (<see cref="InputParser.ParseOrbit"/>) at its epoch, about <paramref name="observer"/>.</summary>

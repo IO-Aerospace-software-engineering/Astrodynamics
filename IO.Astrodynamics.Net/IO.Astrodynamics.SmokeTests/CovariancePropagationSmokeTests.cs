@@ -50,7 +50,7 @@ public class CovariancePropagationSmokeTests
         var orbit = new KeplerianElements(6778137.0, 0.0005, 51.6 * Constants.Deg2Rad, 0.0, 0.0, 0.0, earth, epoch,
             Frame.ICRF).ToStateVector();
         var initialState = new StateVector(orbit.Position, orbit.Velocity, earth, epoch, Frame.ICRF, p0);
-        var spacecraft = new Spacecraft(-1990, "SMOKE", 100.0, 1000.0, new Clock("smoke", 65536), initialState,
+        var spacecraft = new Spacecraft(-1990, "SMOKE", 100.0, initialState, 1000.0, new Clock("smoke", 65536),
             10.0, 2.2);
         var window = new Window(epoch, epoch.AddHours(2.0));
         var tca = epoch.AddSeconds(5000.5);

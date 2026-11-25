@@ -651,8 +651,8 @@ public class EquinoctialElementsSingularityTests
         var later = new List<(string Name, (double Position, double Velocity) Error)>();
         foreach (var c in cases)
         {
-            var spacecraft = new Spacecraft(-1452, "OPM452", 100.0, 1000.0, new Clock("opm452", 256),
-                c.Elements(_earth, Epoch, Frames.Frame.ICRF), 1.0, 2.2, "2021-001A");
+            var spacecraft = new Spacecraft(-1452, "OPM452", 100.0, c.Elements(_earth, Epoch, Frames.Frame.ICRF), 1000.0,
+                new Clock("opm452", 256), 1.0, 2.2, "2021-001A");
             var ephemeris = spacecraft.GetEphemeris(Epoch, _earth, Frames.Frame.ICRF, Aberration.None);
             var opm = spacecraft.ToOpm().Data.StateVector;
             var fromOpm = new StateVector(new Vector3(opm.X * 1000.0, opm.Y * 1000.0, opm.Z * 1000.0),

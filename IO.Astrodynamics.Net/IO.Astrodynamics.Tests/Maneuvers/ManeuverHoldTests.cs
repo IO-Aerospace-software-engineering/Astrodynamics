@@ -20,7 +20,7 @@ public class ManeuverHoldTests
     }
 
     private static Engine NewEngine() =>
-        new("eng", "model", "sn", 350.0, 50.0, new FuelTank("tank", "model", "sn", 4000.0, 3000.0));
+        new("eng", 350.0, 50.0, new FuelTank("tank", 4000.0, 3000.0, "model", "sn"), "model", "sn");
 
     private static readonly TimeSystem.Time Epoch = new(2024, 3, 1, 12, 0, 0, TimeScale.TDB);
 
@@ -28,30 +28,30 @@ public class ManeuverHoldTests
     public void Attitude_NegativeHold_Throws()
     {
         var ex = Assert.Throws<ArgumentOutOfRangeException>(() =>
-            new ProgradeAttitude(TestHelpers.EarthAtJ2000, Epoch, TimeSpan.FromTicks(-1), NewEngine()));
-        Assert.Equal("maneuverHoldDuration", ex.ParamName);
+            new ProgradeAttitude(Epoch, TimeSpan.FromTicks(-1), TestHelpers.EarthAtJ2000));
+        Assert.Equal("holdDuration", ex.ParamName);
     }
 
     [Fact]
     public void Triad_NegativeHold_Throws()
     {
         Assert.Throws<ArgumentOutOfRangeException>(() =>
-            TriadAttitude.CreateLVLH(TestHelpers.EarthAtJ2000, Epoch, TimeSpan.FromSeconds(-1), NewEngine()));
+            TriadAttitude.CreateLvlh(Epoch, TimeSpan.FromSeconds(-1), TestHelpers.EarthAtJ2000));
     }
 
     [Fact]
     public void Impulse_NegativeHold_Throws()
     {
         var ex = Assert.Throws<ArgumentOutOfRangeException>(() =>
-            new ApogeeHeightManeuver(TestHelpers.EarthAtJ2000, Epoch, TimeSpan.FromSeconds(-1), 8000000.0, NewEngine()));
-        Assert.Equal("maneuverHoldDuration", ex.ParamName);
+            new ApogeeHeightManeuver(8000000.0, NewEngine(), Epoch, TimeSpan.FromSeconds(-1), TestHelpers.EarthAtJ2000));
+        Assert.Equal("holdDuration", ex.ParamName);
     }
 
     [Fact]
     public void ZeroHold_IsAccepted()
     {
-        var attitude = new ProgradeAttitude(TestHelpers.EarthAtJ2000, Epoch, TimeSpan.Zero, NewEngine());
-        Assert.Equal(TimeSpan.Zero, attitude.ManeuverHoldDuration);
+        var attitude = new ProgradeAttitude(Epoch, TimeSpan.Zero, TestHelpers.EarthAtJ2000);
+        Assert.Equal(TimeSpan.Zero, attitude.HoldDuration);
     }
 
     /// <summary>
@@ -62,7 +62,7 @@ public class ManeuverHoldTests
     [Fact]
     public void TheHoldSetter_IsNotPartOfThePublicOrProtectedSurface()
     {
-        var setter = typeof(IO.Astrodynamics.Maneuver.Maneuver).GetProperty(nameof(IO.Astrodynamics.Maneuver.Maneuver.ManeuverHoldDuration))!
+        var setter = typeof(IO.Astrodynamics.Maneuver.Maneuver).GetProperty(nameof(IO.Astrodynamics.Maneuver.Maneuver.HoldDuration))!
             .GetSetMethod(nonPublic: true);
         Assert.NotNull(setter);
         Assert.False(setter.IsPublic || setter.IsFamily || setter.IsFamilyOrAssembly, setter.Attributes.ToString());

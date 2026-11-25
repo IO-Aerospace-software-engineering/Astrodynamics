@@ -102,7 +102,7 @@ public class CovarianceRemediationTests : IClassFixture<PartialsTestCases>
     }
 
     private Spacecraft NewSpacecraft(int naifId, StateVector state) =>
-        new(naifId, $"REMEDIATION{-naifId}", 100.0, 1000.0, new Clock("remediation", 65536), state, 10.0, 2.2, null, 1.5);
+        new(naifId, $"REMEDIATION{-naifId}", 100.0, state, 1000.0, new Clock("remediation", 65536), 10.0, 2.2, null, 1.5);
 
     [Fact]
     public async Task ExplicitPropagation_InitialCovarianceIndefiniteFromRounding_IsRejected()
