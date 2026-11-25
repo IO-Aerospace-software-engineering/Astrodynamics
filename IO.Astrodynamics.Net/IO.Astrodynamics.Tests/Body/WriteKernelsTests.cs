@@ -108,6 +108,16 @@ public sealed class WriteKernelsTests : IDisposable
         return directory.GetFiles().ToDictionary(x => x.Name, x => System.IO.File.ReadAllBytes(x.FullName));
     }
 
+    // The bytes of a file SPICE may hold: CSPICE opens a binary kernel it loads read-write on Windows, so a read must share
+    // writing (FileShare.ReadWrite, as SpiceAPI.IsKernelFile and KernelShadowing), or it fails with a sharing violation
+    private static byte[] ReadShared(string path)
+    {
+        using var stream = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
+        using var memory = new MemoryStream();
+        stream.CopyTo(memory);
+        return memory.ToArray();
+    }
+
     private static string[] Loaded() => SpiceAPI.Instance.GetLoadedKernels().Select(x => x.FullName).ToArray();
 
     [Theory]
@@ -134,7 +144,7 @@ public sealed class WriteKernelsTests : IDisposable
             Assert.Equal(Path.Combine(target.FullName, spacecraft.Name + "_CAM.tf"), kernels.Instruments[0].Frame.FullName);
             Assert.Equal(Path.Combine(target.FullName, spacecraft.Name + "_SPEC.ti"), kernels.Instruments[1].Kernel.FullName);
             Assert.Empty(target.GetDirectories());
-            var written = target.GetFiles().ToDictionary(x => x.Name, x => File.ReadAllBytes(x.FullName));
+            var written = target.GetFiles().ToDictionary(x => x.Name, x => ReadShared(x.FullName));
             Assert.Equal(manual.Keys.OrderBy(x => x, StringComparer.Ordinal), written.Keys.OrderBy(x => x, StringComparer.Ordinal));
             foreach (var (name, bytes) in manual)
             {
@@ -411,7 +421,7 @@ public sealed class WriteKernelsTests : IDisposable
             ThirdBodies = [earth, new CelestialBody(Stars.Sun)]
         });
         using var kernels = spacecraft.WriteKernels(target);
-        Assert.False(before.AsSpan().SequenceEqual(File.ReadAllBytes(kernels.Ephemeris.FullName)));
+        Assert.False(before.AsSpan().SequenceEqual(ReadShared(kernels.Ephemeris.FullName)));
         var twin = new Spacecraft(spacecraft.NaifId, spacecraft.Name, Start, 1000.0, 3000.0, new Clock(spacecraft.Name + "_CLK", 65536));
         var epoch = Start.AddSeconds(155.0);
         var managed = spacecraft.GetEphemeris(epoch, earth, Frames.Frame.ICRF, Aberration.None).ToStateVector();
