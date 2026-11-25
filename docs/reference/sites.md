@@ -47,7 +47,14 @@ the search window starts or ends there. `LocalMin` and `LocalMax` give the extre
 extreme; `Equal` gives the crossings of the value, as windows of zero length.
 
 Every search returns its windows as an `IReadOnlyList<Window>` (R16 of #668), sorted, their count and indexing visible;
-the lists combine with the algebra of [Window Lists](time-and-windows.md#window-lists).
+the lists combine with the algebra of [Window Lists](time-and-windows.md#window-lists). The site is the observer of
+its searches, their settings one `WindowSearchOptions` (lot L6 of
+[#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668)): `Step` required
+(`ArgumentException`, `options`), a null `Aberration` `None`, a null `ConvergenceTolerance` 1 µs (on CSPICE's path it
+throws), `AdjustValue` for `AbsoluteMin` and `AbsoluteMax` only, and not on CSPICE's distance search (`gfdist_c` takes
+none). The windows are labelled in the scale of the search
+window's start ([The Windows of a Search](time-and-windows.md#the-windows-of-a-search)), and the occultation search of a
+site is the library's whatever the site ([Occultations](occultations.md)).
 
 Between the samples the library looks for the extremes of the quantity that the samples hide, as the occultation search
 does ([Occultations](occultations.md)): where three consecutive samples show an extreme of the quantity that does not
@@ -61,7 +68,7 @@ above 30° from DSS-13 at a 20 min step, as CSPICE finds them. CSPICE asks for a
 where the quantity is monotone ([`gfdist_c`](https://naif.jpl.nasa.gov/pub/naif/toolkit_docs/C/cspice/gfdist_c.html),
 Particulars, "The Search Process" and "Step Size"; the same in `gfposc_c` and `gfilum_c`, where a longitude or a right
 ascension needs its sine or cosine monotone); neither rule depends on the length of the windows. A `bool` quantity given
-to `GeometryFinder.FindWindowsWithCondition` has nothing to search between its samples: its step must be shorter than
+to `GeometryFinder.FindWindows` has nothing to search between its samples: its step must be shorter than
 every window and every gap. Before 11.0.0 the library decided each transition from the samples alone, and lost the
 windows, gaps and crossings between two samples
 ([#678](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/678)).
@@ -73,11 +80,11 @@ the message), never a partial list: split such a search window. The managed sear
 has no such bound. Before 11.0.0 a CSPICE search returned its first 1000 windows and dropped the rest without an error
 (`NotEqual` then ending with one window across every dropped crossing), and an illumination search of more than 1000
 windows threw ([#653](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/653)): the Moon's X in
-`IAU_EARTH` crosses 0 2126 times in 1100 days, which `FindWindowsOnCoordinateConstraint` with `Equal` now returns, as
+`IAU_EARTH` crosses 0 2126 times in 1100 days, which `FindCoordinateWindows` with `Equal` now returns, as
 `gfposc_c` does.
 
 Both searches take a distance in m. CSPICE searches the distance of a site from the kernels to a spacecraft from the
-kernels, and its illumination (`FindWindowsOnIlluminationConstraint`, `FindDayWindows`) whatever the source: its surface
+kernels, and its illumination (`FindIlluminationWindows`, `FindDayWindows`) whatever the source: its surface
 point is its `Planetodetic`, the coordinates of its position at J2000 TDB (DSS-13 has moved 0.467 m since, 1.4 ms of a
 sunrise at most). CSPICE's `gfilum_c` takes the normal of a point above the ellipsoid from `surfnm_c`, tilted from the
 geodetic normal that the library's search takes (0.11″ at DSS-13, 1071 m up at 35.2° of latitude): there the sunrise
@@ -134,7 +141,7 @@ from Mercury, which moves 7e-8 rad/s). Before 11.0.0 the managed `Planetographic
 
 #### Illumination
 
-`FindWindowsOnIlluminationConstraint` searches the incidence angle of a source at the site. The emission and phase angles
+`FindIlluminationWindows` searches the incidence angle of a source at the site. The emission and phase angles
 are measured at the point towards an observer (`gfilum_c` Particulars), which the search does not take: they throw
 `ArgumentException` ([#682](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/682); before 11.0.0 the managed path measured them from the site itself, 0, and
 `gfilum_c` was given the site as its observer). With an observer, search them with
@@ -147,9 +154,10 @@ var windows = GeometryFinder.FindWindows(window,
 ```
 
 which is within 4.4 ms of `gfilum_c` from the Moon at DSS-13 (the normal above the ellipsoid, as for the incidence).
-The method is ELLIPSOID, the only one `gfilum_c` supports (Detailed_Input `method`), whatever its case and its leading
-or trailing whitespace; any other, DSK forms included, throws `ArgumentException` on both paths (before 11.0.0, no
-window on the CSPICE path and the ellipsoid on the managed one).
+The method is ELLIPSOID, the only one `gfilum_c` supports (Detailed_Input `method`): `FindIlluminationWindows` takes
+no method (lot L6 of #668). `SpiceAPI.FindWindowsOnIlluminationConstraint` keeps its `method`, ELLIPSOID whatever its
+case and its leading or trailing whitespace, any other, DSK forms included, throwing `ArgumentException` (before
+11.0.0, no window on the CSPICE path and the ellipsoid on the managed one).
 
 #### Reads in the site's frame
 
@@ -188,7 +196,7 @@ kernel of its id is loaded; `SpiceAPI.FindWindowsOnCoordinateConstraint` with it
 `SpiceAPI.TransformFrame` with it composes that frame through ICRF, as for a site built from coordinates (fourth round
 of #668; before, it threw). `Planetodetic` and the illumination
 angles do not move: `IlluminationIncidence` and `IlluminationEmission` take the normal of the ellipsoid at
-`Planetodetic`, the normal `gfilum_c` takes for the site in `FindWindowsOnIlluminationConstraint` (#488), not the
+`Planetodetic`, the normal `gfilum_c` takes for the site in `FindIlluminationWindows` (#488), not the
 zenith of the kernel frame. `WriteFrame` of such a site writes that kernel frame: its name and id in the
 kernels, and its rotation to the frame of the body read from SPICE, as `TKFRAME_<id>_MATRIX` (column order, one column
 per line, CSPICE reading 132 characters of a line), so that the file defines the frame the kernels define to the

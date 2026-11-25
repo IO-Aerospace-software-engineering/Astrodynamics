@@ -202,11 +202,11 @@ label what SPICE returns with the frame given (#543).
 
 The window searches take the units of the library, except the coordinate search:
 
-- `FindWindowsOnDistanceConstraint`: the distance in m, as `CelestialItem` and `Site` take it (the native layer hands
+- `FindWindowsOnDistanceConstraint`: the distance in m, as `FindDistanceWindows` takes it (the native layer hands
   km to `gfdist_c`). Before 11.0.0 the kernel-spacecraft branch of `CelestialItem` and `Site` divided it by 1000 once
   more ([#466](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/466)).
 - `FindWindowsOnCoordinateConstraint`: the value as `gfposc_c` takes it, km for a distance coordinate (X, Y, Z, range,
-  radius, altitude) and rad for an angle; `CelestialItem` and `Site` convert their metres.
+  radius, altitude) and rad for an angle; `FindCoordinateWindows` converts its metres.
 - `FindWindowsOnIlluminationConstraint`: the surface point as `Planetodetic`, longitude and latitude in rad and the
   altitude in m above the ellipsoid of the body (equatorial radius and flattening of the kernels); before 11.0.0 the
   altitude was read in km ([#488](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/488)). So
@@ -220,7 +220,7 @@ The window searches take the units of the library, except the coordinate search:
 A search CSPICE cannot run throws `InvalidOperationException` with SPICE's message: a frame name SPICE does not know, a
 body or an epoch without ephemeris data, an epoch outside the coverage of the frame data or of the C-kernel, an
 instrument whose kernel is not loaded (`INS<id>_FOV_FRAME` not found), a step SPICE rejects, a result cell that
-overflows. So do the CSPICE paths of the searches of `CelestialItem`, `Site` and `Instrument`, `Site.FindDayWindows`
+overflows. So do the CSPICE paths of the searches on an observer (`WindowSearches`, `Site`, `Instrument`), `Site.FindDayWindows`
 and the launch windows of a kernel site, and the CLI commands `find-windows-from-*-constraint` end with it (exit code 1). Before the fourth round of
 [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668) the native proxies printed the
 error on standard output, dropped it and returned no window, which a caller could not tell from a condition that never

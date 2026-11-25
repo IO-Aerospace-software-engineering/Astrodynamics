@@ -290,6 +290,7 @@ Represents a time interval.
 | `TryMerge(Window other, out Window merged)` | The hull of two windows that share an instant |
 | `GetIntersection(Window other)` | Get overlapping portion (throws when there is none) |
 | `TryGetIntersection(Window other, out Window intersection)` | Get overlapping portion, false when there is none |
+| `Sample(TimeSpan step, bool includeEnd = false)` | The instants start + i·step at or before the end, lazily, the grid of the window reads (with `includeEnd` the end appended off the grid) |
 | `==`, `Equals` | The same two ends as instants, whatever their frames, `Length` excluded (#512) |
 
 ```csharp
@@ -305,6 +306,10 @@ var t = new Time(2024, 1, 15, TimeScale.TDB);
 if (window.Contains(t))
     Console.WriteLine("Time is within window");
 ```
+
+Lists of windows, as the window searches return them (`IReadOnlyList<Window>`), combine with the extensions of
+`WindowList`, the algebra of CSPICE's `wn*` routines on closed windows: `IntersectWindows`, `UnionWindows`,
+`ExceptWindows`, `ComplementWithin(Window)` and `TotalDuration()` (see `docs/reference/time-and-windows.md#window-lists`).
 
 ---
 

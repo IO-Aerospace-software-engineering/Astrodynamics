@@ -1,6 +1,6 @@
 # Event Detection
 
-The event detection system uses industry-standard g-function zero-crossing to locate the maneuver trigger points during propagation. The propagation builds its detectors from the maneuver chain only (an internal maneuver detector, `ManeuverEventDetector`, public before 11.0.0) and takes no user detector: the epochs of other events of a propagated spacecraft (apsides, nodes, altitude crossings, passes over a site) are found after the propagation by the window searches, `FindWindowsOnDistanceConstraint` (`LocalMin` and `LocalMax` for the apsides) and `FindWindowsOnCoordinateConstraint` (the edges of its windows), located to 1 µs ([Sites](sites.md#window-searches)).
+The event detection system uses industry-standard g-function zero-crossing to locate the maneuver trigger points during propagation. The propagation builds its detectors from the maneuver chain only (an internal maneuver detector, `ManeuverEventDetector`, public before 11.0.0) and takes no user detector: the epochs of other events of a propagated spacecraft (apsides, nodes, altitude crossings, passes over a site) are found after the propagation by the window searches on an observer, `FindDistanceWindows` (`LocalMin` and `LocalMax` for the apsides) and `FindCoordinateWindows` (the edges of its windows), located to 1 µs ([Sites](sites.md#window-searches)).
 
 ## IEventDetector Interface
 

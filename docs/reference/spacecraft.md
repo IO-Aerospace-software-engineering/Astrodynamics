@@ -660,7 +660,8 @@ boresight, as `getfov` does, and the axes are read at each epoch through the spa
 | Rectangle | the ray within the rectangle of half-sides tan `FieldOfView` and tan `CrossAngle` | a ray of the pyramid meets the ellipsoid in front of the observer |
 
 An ellipsoid target is the triaxial ellipsoid of the radii of a `CelestialBody` (`BODYnnn_RADII`), oriented by
-`targetFrame` at the light-time corrected epoch. The frame is used as given, without a check of its center; `gftfov`
+`FieldOfViewSearchOptions.TargetFrame` (the target's own frame when null) at the light-time corrected epoch; a null
+`TargetShape` is an ellipsoid for a body with radii and a point otherwise. The frame is used as given, without a check of its center; `gftfov`
 requires a body-fixed frame centered on the target. It is ignored for a point, as `gftfov` ignores it.
 
 **Two paths.**
@@ -677,7 +678,11 @@ requires a body-fixed frame centered on the target. It is ignored for a point, a
   rectangle against an ellipsoid, the largest discriminant over the rectangle of the ray through the ellipsoid, in
   closed form.
 
-Both paths return TDB windows, whatever the time frame of the search window, and count the step in TDB seconds. A
+Both paths count the step in TDB seconds, and label the windows in the scale of the search window's start (lot L6 of
+[#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668)): an end at a bound of the search
+window is that bound, every other end the same instant in that scale, an end inside a UTC leap second kept in TDB;
+before 11.0.0 both returned TDB windows. The step is required (`ArgumentException`, `options`, naming `Step`); a
+`ConvergenceTolerance` applies to the managed path (1 µs when null) and throws `ArgumentException` on CSPICE's. A
 window that holds at the start or the end of the search window, or whose transition lies within 1 µs of them, starts or
 ends there. The managed path reads no state outside the search window, except the target at its light-time corrected
 epoch: up to its light time before the start (reception, `LT` and `CN`) or after the end (transmission, `XLT` and
@@ -723,9 +728,11 @@ search for a `+S` correction.
 
 **Errors.** Both paths check the same rules before the search, and throw:
 
-- `ArgumentOutOfRangeException`: a step that is not positive;
-- `ArgumentException`: a search window that ends before it starts, a target that is the instrument's spacecraft, an
-  ellipsoid target without radii (a site, a spacecraft, a barycenter, a Lagrange point, a star);
+- `ArgumentOutOfRangeException`: a step or a convergence tolerance that is not positive, when the options are built
+  (`init`, so through `with` too);
+- `ArgumentException`: no step (`options`), a target that is the instrument's spacecraft, an ellipsoid target without
+  radii (a site, a spacecraft, a barycenter, a Lagrange point, a star), a `TargetFrame` SPICE does not know
+  (`options`, SPICE's error as inner exception); a `Window` cannot end before it starts (its constructor throws);
 - `InvalidOperationException`: a field whose angular radius (the larger half-angle of a circle or an ellipse, the angle
   of the corner of a rectangle) exceeds π/2 − 1e-6, as `gftfov` rejects it (before 11.0.0 also a shape other than a
   circle on an instrument of a subclass outside the library, which the closed hierarchy no longer allows, decision 72

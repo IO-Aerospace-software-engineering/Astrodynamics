@@ -81,7 +81,9 @@ reads (`GetEphemeris`, `SpiceAPI.ReadEphemeris`, at an epoch or over a window, n
 (`referenceFrame`) and the window searches of CSPICE: `FindWindowsOnCoordinateConstraint` (`frame`),
 `FindWindowsOnIlluminationConstraint` (`fixedFrame`), `FindWindowsOnOccultationConstraint` (`frontFrame`, `targetFrame`,
 for an ellipsoid) and `FindWindowsInFieldOfViewConstraint` (`targetFrame`, for an ellipsoid; a point target reads no
-frame). The library asks SPICE (`namfrm_c`) after the failed call; the message names the frame, and the
+frame), and so the searches on an observer that reach them: `FindCoordinateWindows` (`frame`), and
+`FindOccultationWindows` and `Instrument.FindFieldOfViewWindows` (`options`, for the frames of their options; lot
+L6 of #668). The library asks SPICE (`namfrm_c`) after the failed call; the message names the frame, and the
 `InvalidOperationException` of the call, with SPICE's message (`SPICE(UNKNOWNFRAME)`'s "was not recognized as a known
 reference frame" for a transform), is its inner exception (R25 of
 [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668), decided by S. Guillet,
@@ -211,7 +213,7 @@ before, a read in it threw SPICE(UNKNOWNFRAME)), decided at each read. The frame
 is empty (never propagated, no orientation added, built from a TLE or propagated by `TLEPropagator`) holds no attitude in
 the library: a read in it still reaches SPICE by name, which reads the frame kernel and the CK of that id when they are
 loaded (those the library wrote for an earlier object of the id) and throws SPICE(UNKNOWNFRAME) otherwise. A coordinate
-search of `CelestialItem` or `Site` in a frame whose reads are the library's is the library's, also when a kernel
+search on an observer (`FindCoordinateWindows`, `Site.FindHorizontalWindows`) in a frame whose reads are the library's is the library's, also when a kernel
 spacecraft takes part, so that it agrees with the reads; `SpiceAPI.FindWindowsOnCoordinateConstraint`, which hands the
 frame to CSPICE by name, throws `ArgumentException` for TEME, CIRS, TIRS and the frame of a site or a spacecraft that no
 loaded kernel defines under its name (third review of #690; before, no window), and for any other name SPICE does not

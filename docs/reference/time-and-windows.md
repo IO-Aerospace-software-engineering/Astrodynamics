@@ -252,6 +252,21 @@ var window = new Window(new Time(2024, 1, 1, TimeScale.TDB), new Time(2024, 1, 3
 Console.WriteLine($"Duration: {window.Length.TotalDays} days");
 ```
 
+### The Windows of a Search
+
+The window searches on an observer (`FindDistanceWindows`, `FindCoordinateWindows`, `FindOccultationWindows`, the
+searches of a `Site` and of an `Instrument`, `GeometryFinder.FindWindows`) and `Site.FindDayWindows` label their
+windows in the scale of the search window's start (lot L6 of #668): an end at a bound of the search window is that
+bound, every other end the same instant in that scale. A `Time` holds no leap second, so an end inside a UTC leap
+second, which no UTC label holds, keeps its TDB label. On a UTC or TT search window, `Length` of a result counts TT
+seconds ([The Length of a Window](#the-length-of-a-window)); before 11.0.0 the CSPICE, occultation and field-of-view
+searches labelled TDB, and their lengths counted TDB seconds, up to 3.3e-10 of the length apart. The six raw searches
+of `SpiceAPI` keep their TDB labels. The library's distance, coordinate and illumination search (`GeometryFinder`)
+samples and solves in the calendar of the start's scale: on a UTC window, a crossing during a leap second is labelled
+up to 1 s from its instant
+([#830](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/830), under **Known limitations** of
+11.0.0); search such a window in TDB.
+
 ### Window Lists
 
 The static class `WindowList` (R16 of #668) extends `IEnumerable<Window>` with the algebra of CSPICE's `wn*` routines:

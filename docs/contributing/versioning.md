@@ -79,7 +79,10 @@ optional and inferred by the run, the radii of the impulses checked, the axes of
 `TriadAttitude` and an `InstrumentPointingToAttitude` of `IAttitudeTarget` targets, and an attitude that points only
 the instruments of its own spacecraft, and the text kernel writers synchronous, with the frame of a spacecraft built by
 the spacecraft alone, a write with nothing to write that throws `InvalidOperationException`, and a Cosmographia export
-(and `astro propagate`) that refuses a name that is not a portable file name and a previous export SPICE holds.
+(and `astro propagate`) that refuses a name that is not a portable file name and a previous export SPICE holds, and
+the window searches on the observer with one options record per kind, their windows an `IReadOnlyList<Window>`
+labelled in the scale of the search window, the occultation of a site observer searched by the library, an angular
+threshold checked against its range, and the window reads on the grid of `Window.Sample`.
 **Removed** lists `Instrument.PositionInFOV`, `LowThrustManeuver`, `Quaternion.Zero`, `Star.PropagationOutput`,
 `Window.Merge` and `Window.Intersects(Time)` (now `Hull` and `Contains`), the window searches on the target
 (`FindWindowsOn…Constraint` of `CelestialItem`, `ILocalizable` and `Site`, `Instrument.FindWindowsInFieldOfViewConstraint`
@@ -4831,6 +4834,20 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   in it before it wrote. The mission and scenario names are checked as the name of the export directory they form, by the
   portable file-name rule of #799(a) (under **Changed**), before anything is deleted. Migration: none
   (`ExportCheckTests`, red before the change: the output directory and the file beside the export were deleted).
+- **`SpiceAPI.TransformFrame` over a window dropped the end of the window even on the grid**
+  ([#781](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/781), lot L6, decision 9 of
+  [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668), decided by S. Guillet,
+  2026-11-22): its loop stopped strictly before the end, while the other window reads read it, so one hour at 20 min
+  gave 3 orientations for 4. Its epochs are the points of `Window.Sample(stepSize)`, the grid of every window read,
+  the end read when it lies on the grid (Breaking, under **Changed**; `EphemerisWindowStepTests`, `SpiceApiTest`, red
+  before the change).
+- **`SpiceAPI.ReadEphemeris` and `ReadOrientation` over a UTC window across a leap second read one epoch past its end**
+  ([#829](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/829), lot L6, decision 107 of
+  [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668), decided by S. Guillet,
+  2026-11-25): the number of epochs counted the leap second while the epochs followed the UTC calendar, so the two UTC
+  minutes around the leap second of 2012-06-30 at 1 s gave 122 states for 121, the last at 2012-07-01T00:01:01Z, and a
+  read whose data ended at the window end threw `SpiceException`. The epochs are the points of `Window.Sample(stepSize)`
+  (Breaking, under **Changed**; `SpiceApiWindowReadTests`, red before the change).
 **Changed**
 
 - **Breaking: the scale of a `Time` is a required argument** (lot L2, R24 of
@@ -5155,7 +5172,7 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   epochs followed the calendar, so the read went one step past the end: the two UTC minutes around the leap second of
   2012-06-30 at 1 s gave 122 states (and 122 CK records) for 121, the last at 2012-07-01T00:01:01Z, and a read whose data
   end at the window end threw `SpiceException` there. Every other window is read as before, bit for bit
-  (`SpiceApiTest`). Migration: none; a caller that counted on the extra state reads it by its epoch.
+  (`SpiceApiWindowReadTests`). Migration: none; a caller that counted on the extra state reads it by its epoch.
 - **Breaking: an angular threshold outside the range of its angle throws `ArgumentOutOfRangeException`** (lot L6, R11 of
   [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668), section A of the re-baseline,
   decided by S. Guillet, 2026-11-19: range guards on the comparison operators only): the threshold (`value`) of
@@ -8241,7 +8258,7 @@ not listed.
   the polar axis with a negative-zero x (and y), the longitude is ±π (atan2 of signed zeros), where both give 0 (with
   +0, latitude ±π/2 exactly, longitude 0).
 - **A boolean quantity in the managed window search**
-  ([#678](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/678)). `GeometryFinder.FindWindowsWithCondition` of a `Func<Time, bool>`
+  ([#678](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/678)). `GeometryFinder.FindWindows` of a `Func<Time, bool>`
   has no margin to search between its samples: a window or a gap shorter than the step can be lost. Use a step shorter
   than every window and gap, or a `double` quantity whose sign is the condition. A `double` quantity's search finds a
   window or a gap between two samples down to the resolution of `localmin`, about 2 √ε h + 2τ/3 for a step h and
@@ -8249,6 +8266,22 @@ not listed.
   exactly at the value). The occultation and field-of-view searches have the same limit, the bound scaling with
   `OccultationSearchOptions.ConvergenceTolerance` (#668: their documentation said "however short", and the `stepSize`
   of the distance, coordinate and illumination searches of `CelestialItem` and `Site` "every window and gap").
+- **The light time of the occultation search with a spacecraft of the kernels**
+  ([#828](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/828)). With `LT`, `CN`, `XLT` or
+  `XCN` and a spacecraft of the kernels taking part, the library's occultation search and `gfoclt` find the same
+  windows with edges up to 6.2e-4 s apart (LRO behind the Moon from DSS-13: 3.7e-4 s with `LT`, 1.2e-4 s with `CN`,
+  6.2e-4 s with `XLT`; 5.0e-7 s geometric), though the states agree: the two light-time models differ, and which one is
+  right is not established. Since lot L6 the occultation search of a site observer is the library's whatever the site
+  (under **Changed**), so its edges move by those amounts from the former `gfoclt` path. Workaround: for `gfoclt`'s
+  windows from a site of the kernels, `SpiceAPI.FindWindowsOnOccultationConstraint` with the site's NAIF id
+  ([Occultations](../reference/occultations.md#accuracy)).
+- **A crossing during a UTC leap second in the library's threshold search**
+  ([#830](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/830)). `GeometryFinder`, the
+  library's distance, coordinate, horizontal and illumination search, samples and solves in the calendar of the search
+  window's start: on a UTC search window that spans a leap second, a crossing during the leap second is labelled at
+  00:00:00, up to 1 s from its instant (found by reading the code, not measured). The CSPICE, occultation and
+  field-of-view searches keep such an end in TDB. Workaround: search over the window in TDB,
+  `new Window(start.ToTDB(), end.ToTDB())` ([Time Systems](../reference/time-and-windows.md#the-windows-of-a-search)).
 - **Kernels the library writes** ([#545](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/545),
   [#546](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/546),
   [#655](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/655),
