@@ -281,7 +281,7 @@ namespace IO.Astrodynamics.Maneuver
             var thrustDuration = Tsiolkovski.DeltaT(Engine.ISP, Engine.FuelTank.Spacecraft.GetTotalMass() + FuelBurned, Engine.FuelFlow, DeltaV.Magnitude());
             ThrustLead = ThrustLeadFraction(DeltaV.Magnitude(), Engine.ISP);
             ThrustWindow = new Window(stateVector.Epoch - thrustDuration * ThrustLead, thrustDuration);
-            ManeuverWindow = new Window(ThrustWindow.Value.StartDate, HoldDuration).Merge(ThrustWindow.Value);
+            ManeuverWindow = new Window(ThrustWindow.Value.StartDate, HoldDuration).Hull(ThrustWindow.Value);
 
             //Set next maneuver: the plan's spacecraft, the propagated one in a run (decisions 46 and 48 of #668); none for an
             //impulse in no plan

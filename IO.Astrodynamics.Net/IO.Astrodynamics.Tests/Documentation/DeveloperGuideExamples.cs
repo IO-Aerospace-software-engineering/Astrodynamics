@@ -175,7 +175,7 @@ internal static class DeveloperGuideExamples
 
         // Check intersection
         var t = new Time(2024, 1, 15, TimeScale.TDB);
-        if (window.Intersects(t))
+        if (window.Contains(t))
             Console.WriteLine("Time is within window");
         #endregion
     }

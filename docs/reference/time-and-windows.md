@@ -237,9 +237,11 @@ var fromJD = Time.CreateFromJD(2451545.0, TimeScale.TDB);
 | `StartDate` / `EndDate` | Interval boundaries |
 | `==`, `!=`, `Equals` | The same two ends, instants compared whatever their scales (#512): a window and the window of the same instants in TDB are equal; `Length` does not take part |
 | `Length` | Window duration, `EndDate - StartDate`: 121 s for the two UTC minutes around the leap second of 2016-12-31; the length given to `Window(Time, TimeSpan)`, whose `EndDate` is `start + length` in calendar arithmetic, so a UTC window built from a length across a leap second keeps that length while `EndDate - StartDate`, and a propagation over it, count the leap second |
-| `Merge(Window)` | Merge two overlapping windows |
-| `Intersects(Window)` / `Intersects(Time)` | Check overlap |
-| `GetIntersection(Window)` | Get overlapping portion |
+| `Contains(Time)` | Whether the window holds the instant, its ends included, whatever the scales (`Intersects(Time)` before 11.0.0) |
+| `Intersects(Window)` | Whether the two windows share an instant: the ends are closed, so touching windows intersect |
+| `Hull(Window)` | The earlier start and the later end; on a tie of instants the argument's end, in its scale (`Merge` before 11.0.0, bit for bit) |
+| `TryMerge(Window, out Window)` | The hull of two windows that share an instant, touching ones included (as CSPICE's `wninsd`); false otherwise |
+| `GetIntersection(Window)` / `TryGetIntersection(Window, out Window)` | The instants both windows hold, one instant for touching windows (as CSPICE's `wnintd`); `GetIntersection` throws `ArgumentException` and `TryGetIntersection` returns false when they share none |
 
 ### Example
 

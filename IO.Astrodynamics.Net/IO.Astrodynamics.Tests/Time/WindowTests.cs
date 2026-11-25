@@ -76,13 +76,88 @@ public class WindowTests
     }
 
     [Fact]
-    void MergeWindows()
+    void HullOfWindows()
     {
         Window w1 = new Window(new TimeSystem.Time(2021, 01, 02, TimeScale.TDB), new TimeSystem.Time(2021, 01, 10, TimeScale.TDB));
         Window w2 = new Window(new TimeSystem.Time(2021, 01, 04, TimeScale.TDB), new TimeSystem.Time(2021, 01, 12, TimeScale.TDB));
-        Window res = w1.Merge(w2);
+        Window res = w1.Hull(w2);
 
         LabelAssert.Equal(res, new Window(new TimeSystem.Time(2021, 01, 02, TimeScale.TDB), new TimeSystem.Time(2021, 01, 12, TimeScale.TDB)));
+    }
+
+    // R16 of #668 (decided by S. Guillet, 2026-11-19): Hull is the removed Merge, bit for bit: the earlier start and the
+    // later end, compared strictly, so on a tie of instants the argument's end is taken, in its scale (here the TDB label
+    // of an instant of the UTC window, at both ends, and the hull of two disjoint windows of two scales)
+    [Fact]
+    void HullIsTheRemovedMergeBitForBit()
+    {
+        var a = new TimeSystem.Time(2016, 12, 31, 23, 59, 0, TimeScale.UTC);
+        var b = new TimeSystem.Time(2017, 01, 01, 0, 1, 0, TimeScale.UTC);
+        var utc = new Window(a, b);
+        var tdbTie = new Window(a.ToTDB(), b.ToTDB());
+        var tdbInside = new Window(a.ToTDB().Add(TimeSpan.FromSeconds(10)), b.ToTDB());
+        var tdbLater = new Window(b.ToTDB().Add(TimeSpan.FromHours(1)), b.ToTDB().Add(TimeSpan.FromHours(2)));
+        Assert.Equal(a, a.ToTDB());
+        foreach (var (w1, w2) in new[] { (utc, tdbTie), (tdbTie, utc), (utc, tdbInside), (tdbInside, utc), (utc, tdbLater), (tdbLater, utc) })
+        {
+            // The body of the removed Window.Merge (10.2.0-preview-1 to lot L5c of 11.0.0)
+            var min = w1.StartDate < w2.StartDate ? w1.StartDate : w2.StartDate;
+            var max = w1.EndDate > w2.EndDate ? w1.EndDate : w2.EndDate;
+            LabelAssert.Equal(new Window(min, max), w1.Hull(w2));
+        }
+
+        Assert.Equal(TimeScale.TDB, utc.Hull(tdbTie).StartDate.Scale);
+        Assert.Equal(TimeScale.TDB, utc.Hull(tdbTie).EndDate.Scale);
+        Assert.Equal(TimeScale.UTC, tdbTie.Hull(utc).StartDate.Scale);
+    }
+
+    // TryMerge gives the hull of two windows that share an instant, touching ones included (as CSPICE's wninsd merges
+    // [0, 1] and [1, 2] into [0, 2]), and false with the default window for disjoint ones
+    [Fact]
+    void TryMergeOfWindows()
+    {
+        var t0 = new TimeSystem.Time(2021, 01, 02, TimeScale.TDB);
+        var w1 = new Window(t0, TimeSpan.FromHours(2));
+        var overlapping = new Window(t0.AddHours(1), TimeSpan.FromHours(2));
+        var touching = new Window(t0.AddHours(2), TimeSpan.FromHours(1));
+        var disjoint = new Window(t0.AddHours(2).Add(TimeSpan.FromTicks(1)), TimeSpan.FromHours(1));
+
+        Assert.True(w1.TryMerge(overlapping, out var merged));
+        LabelAssert.Equal(w1.Hull(overlapping), merged);
+        Assert.True(w1.TryMerge(touching, out merged));
+        LabelAssert.Equal(new Window(t0, t0.AddHours(3)), merged);
+        Assert.False(w1.TryMerge(disjoint, out merged));
+        Assert.Equal(default, merged);
+    }
+
+    // TryGetIntersection gives GetIntersection's window when the windows share an instant, one instant for touching
+    // windows (CSPICE's wnintd of [0, 1] and [1, 2] is [1, 1]), and false where GetIntersection throws
+    [Fact]
+    void TryGetIntersectionOfWindows()
+    {
+        var t0 = new TimeSystem.Time(2021, 01, 02, TimeScale.TDB);
+        var w1 = new Window(t0, TimeSpan.FromHours(2));
+        var overlapping = new Window(t0.AddHours(1), TimeSpan.FromHours(2));
+        var touching = new Window(t0.AddHours(2), TimeSpan.FromHours(1));
+        var disjoint = new Window(t0.AddHours(2).Add(TimeSpan.FromTicks(1)), TimeSpan.FromHours(1));
+
+        Assert.True(w1.TryGetIntersection(overlapping, out var intersection));
+        LabelAssert.Equal(w1.GetIntersection(overlapping), intersection);
+        LabelAssert.Equal(new Window(t0.AddHours(1), t0.AddHours(2)), intersection);
+        Assert.True(w1.TryGetIntersection(touching, out intersection));
+        LabelAssert.Equal(new Window(t0.AddHours(2), t0.AddHours(2)), intersection);
+        Assert.False(w1.TryGetIntersection(disjoint, out intersection));
+        Assert.Equal(default, intersection);
+    }
+
+    // R16 of #668: Merge and Intersects(Time) are removed outright (no forwarder, the amendment of 2026-11-19), replaced by
+    // Hull and Contains
+    [Fact]
+    void MergeAndIntersectsOfATimeAreRemoved()
+    {
+        Assert.Null(typeof(Window).GetMethod("Merge"));
+        Assert.Null(typeof(Window).GetMethod("Intersects", new[] { typeof(TimeSystem.Time) }));
+        Assert.NotNull(typeof(Window).GetMethod("Intersects", new[] { typeof(Window) }));
     }
 
     [Fact]
@@ -104,21 +179,32 @@ public class WindowTests
     }
 
     [Fact]
-    void DateTimeIntersect()
+    void ContainsATime()
     {
         Window w1 = new Window(new TimeSystem.Time(2021, 01, 02, TimeScale.TDB), new TimeSystem.Time(2021, 01, 10, TimeScale.TDB));
-        TimeSystem.Time dt = new TimeSystem.Time(2021, 01, 10, TimeScale.TDB);
-        bool res = w1.Intersects(dt);
-        Assert.True(res);
+        Assert.True(w1.Contains(new TimeSystem.Time(2021, 01, 10, TimeScale.TDB)));
+        Assert.True(w1.Contains(new TimeSystem.Time(2021, 01, 02, TimeScale.TDB)));
+        Assert.True(w1.Contains(new TimeSystem.Time(2021, 01, 05, TimeScale.TDB)));
     }
 
     [Fact]
-    void DateTimeDoesntIntersect()
+    void DoesNotContainATime()
     {
         Window w1 = new Window(new TimeSystem.Time(2021, 01, 02, TimeScale.TDB), new TimeSystem.Time(2021, 01, 10, TimeScale.TDB));
-        TimeSystem.Time dt = new TimeSystem.Time(2021, 01, 11, TimeScale.TDB);
-        bool res = w1.Intersects(dt);
-        Assert.False(res);
+        Assert.False(w1.Contains(new TimeSystem.Time(2021, 01, 11, TimeScale.TDB)));
+        Assert.False(w1.Contains(new TimeSystem.Time(2021, 01, 10, TimeScale.TDB).Add(TimeSpan.FromTicks(1))));
+        Assert.False(w1.Contains(new TimeSystem.Time(2021, 01, 02, TimeScale.TDB).Add(TimeSpan.FromTicks(-1))));
+    }
+
+    // The ends are instants: a window of UTC ends contains the TDB labels of its ends, and a zero-length window its instant
+    [Fact]
+    void ContainsTheInstantsOfItsEndsInAnotherScale()
+    {
+        var start = new TimeSystem.Time(2024, 03, 01, TimeScale.UTC);
+        var w = new Window(start, TimeSpan.FromHours(1));
+        Assert.True(w.Contains(start.ToTDB()));
+        Assert.True(w.Contains(w.EndDate.ToTDB()));
+        Assert.True(new Window(start, start).Contains(start.ToTDB()));
     }
 
     [Fact]

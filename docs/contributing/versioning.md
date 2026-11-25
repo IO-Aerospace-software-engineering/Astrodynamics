@@ -81,6 +81,7 @@ the instruments of its own spacecraft, and the text kernel writers synchronous, 
 the spacecraft alone, a write with nothing to write that throws `InvalidOperationException`, and a Cosmographia export
 (and `astro propagate`) that refuses a name that is not a portable file name and a previous export SPICE holds.
 **Removed** lists `Instrument.PositionInFOV`, `LowThrustManeuver`, `Quaternion.Zero`, `Star.PropagationOutput`,
+`Window.Merge` and `Window.Intersects(Time)` (now `Hull` and `Contains`),
 `ExceptionBase`, `Matrix.Set`, `Vector3 * Vector3`, six exports of the native library that .NET never called, the
 public interop structs of `IO.Astrodynamics.DTO`, the ten raw conversions of `SpiceAPI`, the public helpers of the
 implementation, the `Equatorial` constructors of two angles and the coordinate conversions taking a flattening and a
@@ -413,6 +414,13 @@ release are listed under **Known limitations**.
   first, the clock kernel loaded only while the CK is written, then moved into place and loaded (decision 79); the
   centre of the SPK is not checked (decision 79, #655: the managed writer writes any centre). Two spacecraft are written
   into one directory with the first handle alive. See [Spacecraft](../reference/spacecraft.md#the-kernels).
+- **`Window.Contains`, `Hull`, `TryMerge` and `TryGetIntersection`** (lot L6, R16 of
+  [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668), decided by S. Guillet,
+  2026-11-19): `Contains(Time)` whether the window holds an instant, its ends included; `Hull(Window)` the earlier start
+  and the later end, on a tie of instants the argument's end, the removed `Merge` bit for bit; `TryMerge(Window, out
+  Window)` the hull of two windows that share an instant, touching ones included, as CSPICE's `wninsd`; and
+  `TryGetIntersection(Window, out Window)` the window of `GetIntersection`, false where `GetIntersection` throws
+  (`WindowTests`). See [Time Systems](../reference/time-and-windows.md#window).
 - **The command-line tool: names, kernels from the environment, csv and json, the scale of its epochs** (lot L8 of the
   ergonomics review, R29 of #668, choice 12, decided by S. Guillet, 2026-11-19; `docs/reference/cli.md`, its help
   generated from the tool and compared by `CliPageTests`). An object is a NAIF identifier or a name SPICE knows (`MOON`,
@@ -7798,6 +7806,12 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
 
 **Removed**
 
+- **`Window.Merge` and `Window.Intersects(Time)`** (lot L6, R16 of
+  [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668), decided by S. Guillet,
+  2026-11-19, no forwarder): renamed outright, so that the names say what they compute (a hull, which spans the gap
+  between two disjoint windows, and the membership of an instant). Migration: `w1.Merge(w2)` → `w1.Hull(w2)`, the same
+  window bit for bit (or `w1.TryMerge(w2, out var merged)` to merge only windows that share an instant);
+  `window.Intersects(time)` → `window.Contains(time)`. `Intersects(Window)` is unchanged.
 - **The `ILocalizable` constructors of `TriadAttitude`, `PrimaryAttitudeTarget` and `SecondaryAttitudeTarget`, and
   `InstrumentPointingToAttitude.Aberration`** (lot L5b, decisions 67 and 69 of #668, decided by S. Guillet, 2026-11-23):
   the three TRIAD forms of `ILocalizable` targets (literal vectors, one instrument, two instruments), whose targets were

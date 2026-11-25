@@ -36,7 +36,7 @@ using OrbitalParams = IO.Astrodynamics.OrbitalParameters.OrbitalParameters;
 /// The references are the decided rules and independent ones: the definitions of the last run (the values the run writes on
 /// them, decision 52), the segments of the solution (an impulse opens the next one, at its epoch, with its delta-V), the
 /// rocket equation (<see cref="Tsiolkovski.DeltaM"/> of the mass before the burn), and the hull of the maneuver windows
-/// by <see cref="Window.Merge"/>, the rule of the summary before 11.0.0. The case: a 7 000 km orbit, e = 0.01, i = 0.5
+/// by <see cref="Window.Hull"/>, the rule of the summary before 11.0.0. The case: a 7 000 km orbit, e = 0.01, i = 0.5
 /// rad, about a point-mass Earth from 2024-03-01 12:00 TDB; 1 000 kg dry, 1 000 kg of fuel, Isp 300 s, 10 kg/s; a nadir
 /// attitude held 600 s, an apogee raise to 8 000 km, a prograde attitude, a perigee raise to 7 100 km, over 3 h.
 /// </remarks>
@@ -246,7 +246,7 @@ public class ExecutedManeuverRecordTests
     /// <summary>
     /// Decision 59: the summary of a scenario is built from the records of the run: its maneuvers are the records, its
     /// fuel consumption their sum and its maneuver window their hull, as the definitions gave them before 11.0.0 (the
-    /// hull of <see cref="Window.Merge"/>), and a later run leaves them as they were.
+    /// hull of <see cref="Window.Hull"/>), and a later run leaves them as they were.
     /// </summary>
     [Theory]
     [InlineData("RK")]
@@ -273,7 +273,7 @@ public class ExecutedManeuverRecordTests
         var hull = c.Plan[0].ManeuverWindow!.Value;
         foreach (var maneuver in c.Plan.Skip(1))
         {
-            hull = hull.Merge(maneuver.ManeuverWindow!.Value);
+            hull = hull.Hull(maneuver.ManeuverWindow!.Value);
         }
 
         LabelAssert.Equal(hull, summary.ManeuverWindow!.Value);

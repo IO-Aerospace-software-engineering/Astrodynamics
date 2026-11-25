@@ -48,7 +48,7 @@ public partial class ConjunctionAssessmentTests
 
         foreach (var tca in tcas)
         {
-            Assert.True(window.Intersects(tca), "TCA must be within the screening window");
+            Assert.True(window.Contains(tca), "TCA must be within the screening window");
 
             // At TCA, range-rate (r_rel · v_rel) should be ≈ 0
             var moonState = moon.GetEphemeris(tca, earth, Frames.Frame.ICRF, Aberration.None);
@@ -315,7 +315,7 @@ public partial class ConjunctionAssessmentTests
         // Each encounter must have a distinct epoch and positive miss distance
         for (int i = 0; i < encounters.Count; i++)
         {
-            Assert.True(window.Intersects(encounters[i].EncounterState.Epoch));
+            Assert.True(window.Contains(encounters[i].EncounterState.Epoch));
             Assert.True(encounters[i].EncounterState.MissDistanceMeters > 0.0);
             // Epochs must be distinct (separated by at least 1 day for Moon-Sun geometry)
             for (int j = i + 1; j < encounters.Count; j++)
@@ -2298,7 +2298,7 @@ public partial class ConjunctionAssessmentTests
         Assert.Equal(6, avoidance.Count);
         Assert.All(avoidance, option =>
         {
-            Assert.True(window.Intersects(option.BurnEpoch), "Burn epoch must stay inside the screening window");
+            Assert.True(window.Contains(option.BurnEpoch), "Burn epoch must stay inside the screening window");
             Assert.True(System.Math.Abs(option.DeltaVInertial.Magnitude() - 0.1) < 1e-12,
                 $"Only the valid 0.1 m/s delta-V should remain, got {option.DeltaVInertial.Magnitude():E6}");
             Assert.True(System.Math.Abs((encounter.EncounterState.Epoch - option.BurnEpoch).TotalSeconds - 120.0) < 1e-9,

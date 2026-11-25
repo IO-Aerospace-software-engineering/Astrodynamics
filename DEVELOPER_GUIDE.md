@@ -284,10 +284,12 @@ Represents a time interval.
 | `StartDate` | Get start time |
 | `EndDate` | Get end time |
 | `Length` | Get window duration |
-| `Merge(Window other)` | Merge two overlapping windows |
-| `Intersects(Window other)` | Check if windows overlap |
-| `Intersects(Time time)` | Check if time is within window |
-| `GetIntersection(Window other)` | Get overlapping portion |
+| `Contains(Time time)` | Check if time is within window, ends included |
+| `Intersects(Window other)` | Check if windows share an instant (touching windows do) |
+| `Hull(Window other)` | The earlier start and the later end (`Merge` before 11.0.0) |
+| `TryMerge(Window other, out Window merged)` | The hull of two windows that share an instant |
+| `GetIntersection(Window other)` | Get overlapping portion (throws when there is none) |
+| `TryGetIntersection(Window other, out Window intersection)` | Get overlapping portion, false when there is none |
 | `==`, `Equals` | The same two ends as instants, whatever their frames, `Length` excluded (#512) |
 
 ```csharp
@@ -300,7 +302,7 @@ Console.WriteLine($"Duration: {window.Length.TotalDays} days");
 
 // Check intersection
 var t = new Time(2024, 1, 15, TimeScale.TDB);
-if (window.Intersects(t))
+if (window.Contains(t))
     Console.WriteLine("Time is within window");
 ```
 

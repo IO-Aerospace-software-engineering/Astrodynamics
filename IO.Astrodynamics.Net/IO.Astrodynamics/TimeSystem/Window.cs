@@ -63,11 +63,17 @@ public readonly record struct Window
     }
 
     /// <summary>
-    /// Merge two windows
+    /// The smallest window that holds both windows: the earlier start and the later end, compared as instants.
     /// </summary>
-    /// <param name="window"></param>
-    /// <returns></returns>
-    public Window Merge(Window window)
+    /// <remarks>
+    /// The comparisons are strict, so on a tie of instants the end of <paramref name="window"/> is taken, in its scale.
+    /// It replaces <c>Merge</c> since 11.0.0, bit for bit (R16 of #668, decided by S. Guillet, 2026-11-19). Two disjoint
+    /// windows give the window that spans the gap between them; <see cref="TryMerge"/> merges only windows that share an
+    /// instant.
+    /// </remarks>
+    /// <param name="window">The other window.</param>
+    /// <returns>The hull of the two windows.</returns>
+    public Window Hull(Window window)
     {
         Time min = StartDate < window.StartDate ? StartDate : window.StartDate;
         Time max = EndDate > window.EndDate ? EndDate : window.EndDate;
@@ -76,41 +82,78 @@ public readonly record struct Window
     }
 
     /// <summary>
-    /// Know if two windows intersects
+    /// The hull of two windows that share at least one instant (<see cref="Intersects(Window)"/>), touching windows
+    /// included, as CSPICE's <c>wninsd</c> merges [0, 1] and [1, 2] into [0, 2] (R16 of #668, decided by S. Guillet,
+    /// 2026-11-19).
     /// </summary>
-    /// <param name="window"></param>
-    /// <returns></returns>
+    /// <param name="window">The other window.</param>
+    /// <param name="merged">The hull (<see cref="Hull"/>) when the windows intersect, the default window otherwise.</param>
+    /// <returns>Whether the windows intersect.</returns>
+    public bool TryMerge(Window window, out Window merged)
+    {
+        bool intersects = Intersects(window);
+        merged = intersects ? Hull(window) : default;
+        return intersects;
+    }
+
+    /// <summary>
+    /// Whether two windows share at least one instant: the ends are closed, so touching windows intersect.
+    /// </summary>
+    /// <param name="window">The other window.</param>
+    /// <returns>Whether the windows intersect.</returns>
     public bool Intersects(Window window)
     {
         return !(window.StartDate > EndDate || window.EndDate < StartDate);
     }
 
-
     /// <summary>
-    /// Know if datetime intersects with window
+    /// Whether the window holds the instant <paramref name="date"/>, its ends included, whatever the scales
+    /// (R16 of #668, decided by S. Guillet, 2026-11-19: <c>Intersects(Time)</c> before 11.0.0).
     /// </summary>
-    /// <param name="date"></param>
-    /// <returns></returns>
-    public bool Intersects(Time date)
+    /// <param name="date">The instant.</param>
+    /// <returns>Whether <paramref name="date"/> is at or after the start and at or before the end.</returns>
+    public bool Contains(Time date)
     {
         return date >= StartDate && date <= EndDate;
     }
 
     /// <summary>
-    /// Get intersection between two windows
+    /// The instants two windows share: the later start and the earlier end, compared strictly, so on a tie of instants
+    /// the end of <paramref name="window"/> is taken, in its scale. Touching windows share one instant, a window of zero
+    /// length, as CSPICE's <c>wnintd</c> gives [1, 1] for [0, 1] and [1, 2].
     /// </summary>
-    /// <param name="window"></param>
-    /// <returns></returns>
+    /// <param name="window">The other window.</param>
+    /// <returns>The intersection.</returns>
+    /// <exception cref="ArgumentException">The windows share no instant (<see cref="TryGetIntersection"/> returns false).</exception>
     public Window GetIntersection(Window window)
     {
-        if (!Intersects(window))
+        if (!TryGetIntersection(window, out var intersection))
         {
             throw new ArgumentException("Windows don't intersect");
         }
 
+        return intersection;
+    }
+
+    /// <summary>
+    /// The intersection of two windows (<see cref="GetIntersection"/>) when they share an instant (R16 of #668, decided
+    /// by S. Guillet, 2026-11-19).
+    /// </summary>
+    /// <param name="window">The other window.</param>
+    /// <param name="intersection">The intersection when the windows intersect, the default window otherwise.</param>
+    /// <returns>Whether the windows intersect.</returns>
+    public bool TryGetIntersection(Window window, out Window intersection)
+    {
+        if (!Intersects(window))
+        {
+            intersection = default;
+            return false;
+        }
+
         Time min = StartDate > window.StartDate ? StartDate : window.StartDate;
         Time max = EndDate < window.EndDate ? EndDate : window.EndDate;
-        return new Window(min, max);
+        intersection = new Window(min, max);
+        return true;
     }
 
     /// <summary>

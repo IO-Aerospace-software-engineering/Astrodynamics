@@ -289,7 +289,7 @@ public class RunResultsSurfaceTests
     }
 
     /// <summary>
-    /// The maneuver window of a summary is the hull that <see cref="Window.Merge"/> folded over the windows of the records,
+    /// The maneuver window of a summary is the hull that <see cref="Window.Hull"/> folded over the windows of the records,
     /// in execution order, gave before 11.0.0, to the label (decision 59): a later window that starts earlier moves the
     /// start, and on ends that are one instant tagged in different scales the later window's label is kept. Records out of
     /// order, the ends of the second and third one instant each in TAI and TT (TT = TAI + 32.184 s exactly), and the fuel
@@ -311,7 +311,7 @@ public class RunResultsSurfaceTests
 
         var summary = new SpacecraftSummary(null!, records);
 
-        var expected = windows.Skip(1).Aggregate(windows[0], (hull, w) => hull.Merge(w));
+        var expected = windows.Skip(1).Aggregate(windows[0], (hull, w) => hull.Hull(w));
         Assert.True(expected.StartDate.EqualsExact(tiedEnds.StartDate) && expected.EndDate.EqualsExact(tiedEnds.EndDate));
         Assert.NotNull(summary.ManeuverWindow);
         Assert.True(summary.ManeuverWindow.Value.StartDate.EqualsExact(expected.StartDate), $"{summary.ManeuverWindow.Value.StartDate}");
