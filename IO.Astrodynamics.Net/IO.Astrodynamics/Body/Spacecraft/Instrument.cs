@@ -279,7 +279,7 @@ namespace IO.Astrodynamics.Body.Spacecraft
         /// of the frame data or of the C-kernel, more windows than the 10000 of its result cell, #653), with SPICE's message
         /// (fourth round of #668; before 11.0.0 the search returned no window, and a search of more than 1000 windows its
         /// first 1000, #653).</exception>
-        public IEnumerable<Window> FindWindowsInFieldOfViewConstraint(Window searchWindow, Spacecraft observer, ILocalizable target,
+        public IReadOnlyList<Window> FindWindowsInFieldOfViewConstraint(Window searchWindow, Spacecraft observer, ILocalizable target,
             Frame targetFrame, ShapeType targetShape, Aberration aberration, TimeSpan stepSize)
         {
             if (observer == null) throw new ArgumentNullException(nameof(observer));

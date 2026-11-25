@@ -1694,7 +1694,7 @@ public class SpiceAPI
     /// within the search window: the rounding is monotone, and where an ulp is coarser than a tick the double after the seconds of a
     /// tick is more than half a tick past that tick (the double before, more than half a tick before it).
     /// </summary>
-    private static IEnumerable<TimeSystem.Window> WithinSearchWindow(Window[] windows, int count, TimeSystem.Window searchWindow)
+    private static IReadOnlyList<TimeSystem.Window> WithinSearchWindow(Window[] windows, int count, TimeSystem.Window searchWindow)
     {
         var start = searchWindow.StartDate.ToTDB();
         var end = searchWindow.EndDate.ToTDB();
@@ -1729,7 +1729,7 @@ public class SpiceAPI
     /// returned its first 1000 (#653).
     /// </summary>
     /// <exception cref="InvalidOperationException">The native search failed: SPICE's message.</exception>
-    private static IEnumerable<TimeSystem.Window> RunWindowSearch(TimeSystem.Window searchWindow, NativeWindowSearch search,
+    private static IReadOnlyList<TimeSystem.Window> RunWindowSearch(TimeSystem.Window searchWindow, NativeWindowSearch search,
         params (string Name, Frame Frame, string ParamName)[] frames)
     {
         var windows = System.Buffers.ArrayPool<Window>.Shared.Rent(WindowSearchCapacity);
@@ -1785,8 +1785,8 @@ public class SpiceAPI
     /// <see cref="RelationnalOperator.NotEqual"/>, which CSPICE has not, the rest of the search window once the instants
     /// of <c>=</c> are taken out, a window from each crossing to the next, as the managed search defines it (#482).
     /// </summary>
-    private static IEnumerable<TimeSystem.Window> SearchWindows(TimeSystem.Window searchWindow, RelationnalOperator relationalOperator,
-        Func<string, IEnumerable<TimeSystem.Window>> search)
+    private static IReadOnlyList<TimeSystem.Window> SearchWindows(TimeSystem.Window searchWindow, RelationnalOperator relationalOperator,
+        Func<string, IReadOnlyList<TimeSystem.Window>> search)
     {
         if (relationalOperator != RelationnalOperator.NotEqual)
         {
@@ -1839,7 +1839,7 @@ public class SpiceAPI
     /// an epoch outside the coverage of the frame data, a step SPICE rejects, more windows than its result cell holds (10000, #653), with
     /// SPICE's message (fourth round of #668; before 11.0.0 the native layer dropped the error and the search returned no
     /// window).</exception>
-    public IEnumerable<TimeSystem.Window> FindWindowsOnDistanceConstraint(TimeSystem.Window searchWindow, int observerId,
+    public IReadOnlyList<TimeSystem.Window> FindWindowsOnDistanceConstraint(TimeSystem.Window searchWindow, int observerId,
         int targetId, RelationnalOperator relationalOperator, double value, Aberration aberration,
         TimeSpan stepSize)
     {
@@ -1847,7 +1847,7 @@ public class SpiceAPI
             value, aberration, stepSize));
     }
 
-    private IEnumerable<TimeSystem.Window> DistanceWindows(TimeSystem.Window searchWindow, int observerId, int targetId, string relation,
+    private IReadOnlyList<TimeSystem.Window> DistanceWindows(TimeSystem.Window searchWindow, int observerId, int targetId, string relation,
         double value, Aberration aberration, TimeSpan stepSize)
     {
         lock (lockObject)
@@ -1876,7 +1876,7 @@ public class SpiceAPI
     /// radii it does not know, the frame the kernels associate with an ellipsoid when SPICE does not know it, with SPICE's
     /// message (fourth round of #668; before 11.0.0 the native layer dropped the error and the search returned no
     /// window).</exception>
-    public IEnumerable<TimeSystem.Window> FindWindowsOnOccultationConstraint(TimeSystem.Window searchWindow, int observerId,
+    public IReadOnlyList<TimeSystem.Window> FindWindowsOnOccultationConstraint(TimeSystem.Window searchWindow, int observerId,
         int targetId, ShapeType targetShape, int frontBodyId, ShapeType frontShape,
         OccultationType occultationType, Aberration aberration, TimeSpan stepSize)
     {
@@ -1914,7 +1914,7 @@ public class SpiceAPI
     /// radii it does not know, the frame the kernels associate with an ellipsoid when SPICE does not know it, with SPICE's
     /// message (fourth round of #668; before 11.0.0 the native layer dropped the error and the search returned no
     /// window).</exception>
-    public IEnumerable<TimeSystem.Window> FindWindowsOnOccultationConstraint(TimeSystem.Window searchWindow, int observerId,
+    public IReadOnlyList<TimeSystem.Window> FindWindowsOnOccultationConstraint(TimeSystem.Window searchWindow, int observerId,
         int targetId, ShapeType targetShape, int frontBodyId, ShapeType frontShape,
         OccultationType occultationType, Aberration aberration, TimeSpan stepSize, Frame frontFrame, Frame targetFrame)
     {
@@ -1981,7 +1981,7 @@ public class SpiceAPI
     /// an epoch outside the coverage of the frame data, a step SPICE rejects, more windows than its result cell holds (10000, #653),
     /// with SPICE's message (fourth round of #668; before 11.0.0 the native layer dropped the error and the search returned
     /// no window).</exception>
-    public IEnumerable<TimeSystem.Window> FindWindowsOnCoordinateConstraint(TimeSystem.Window searchWindow, int observerId,
+    public IReadOnlyList<TimeSystem.Window> FindWindowsOnCoordinateConstraint(TimeSystem.Window searchWindow, int observerId,
         int targetId, Frame frame, CoordinateSystem coordinateSystem, Coordinate coordinate,
         RelationnalOperator relationalOperator, double value, double adjustValue, Aberration aberration,
         TimeSpan stepSize)
@@ -2044,7 +2044,7 @@ public class SpiceAPI
     /// an epoch outside the coverage of the frame data, a step SPICE rejects, more windows than its result cell holds (10000, #653),
     /// with SPICE's message (fourth round of #668; before 11.0.0 the native layer dropped the error and the search returned
     /// no window).</exception>
-    public IEnumerable<TimeSystem.Window> FindWindowsOnIlluminationConstraint(TimeSystem.Window searchWindow, int observerId,
+    public IReadOnlyList<TimeSystem.Window> FindWindowsOnIlluminationConstraint(TimeSystem.Window searchWindow, int observerId,
         int targetBodyId, Frame fixedFrame, Coordinates.Planetodetic planetodetic, IlluminationAngle illuminationType, RelationnalOperator relationalOperator,
         double value, double adjustValue, Aberration aberration, TimeSpan stepSize, int illuminationSourceId,
         string method = "Ellipsoid")
@@ -2088,7 +2088,7 @@ public class SpiceAPI
     /// an epoch outside the coverage of the frame data, a step SPICE rejects, more windows than its result cell holds (10000, #653), an
     /// instrument whose field of view no loaded instrument kernel defines, with SPICE's message (fourth round of #668;
     /// before 11.0.0 the native layer dropped the error and the search returned no window).</exception>
-    public IEnumerable<TimeSystem.Window> FindWindowsInFieldOfViewConstraint(TimeSystem.Window searchWindow, int observerId,
+    public IReadOnlyList<TimeSystem.Window> FindWindowsInFieldOfViewConstraint(TimeSystem.Window searchWindow, int observerId,
         int instrumentId, int targetId, Frame targetFrame, ShapeType targetShape, Aberration aberration, TimeSpan stepSize)
     {
         if (targetFrame == null) throw new ArgumentNullException(nameof(targetFrame));

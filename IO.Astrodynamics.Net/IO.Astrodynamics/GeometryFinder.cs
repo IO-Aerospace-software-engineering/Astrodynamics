@@ -143,7 +143,7 @@ public class GeometryFinder
     /// <exception cref="ArgumentOutOfRangeException">The step is not positive.</exception>
     /// <exception cref="ArgumentException">The type is neither a double nor a boolean, or the relation is not one of a
     /// boolean.</exception>
-    public IEnumerable<Window> FindWindowsWithCondition<T>(Window searchWindow,
+    public IReadOnlyList<Window> FindWindowsWithCondition<T>(Window searchWindow,
         Func<Time, T> calculateValue,
         RelationnalOperator relationalOperator, T targetValue,
         TimeSpan stepSize)
@@ -165,7 +165,7 @@ public class GeometryFinder
     /// <param name="stepSize">The step of the samples, positive (the step rule of the remarks of the class).</param>
     /// <exception cref="ArgumentOutOfRangeException">The step is not positive, or the adjustment value of an absolute
     /// extreme is negative.</exception>
-    internal IEnumerable<Window> FindWindowsWithCondition<T>(Window searchWindow, Func<Time, T> calculateValue,
+    internal IReadOnlyList<Window> FindWindowsWithCondition<T>(Window searchWindow, Func<Time, T> calculateValue,
         RelationnalOperator relationalOperator, T targetValue, double adjustValue, TimeSpan stepSize)
     {
         ArgumentNullException.ThrowIfNull(calculateValue);
@@ -694,7 +694,7 @@ public class GeometryFinder
         }
 
         /// <summary>The windows of intervals of offsets; a bound of the search window exactly.</summary>
-        internal IEnumerable<Window> ToWindows(IEnumerable<(double Start, double End)> intervals)
+        internal IReadOnlyList<Window> ToWindows(IEnumerable<(double Start, double End)> intervals)
         {
             return intervals.Select(w => new Window(At(w.Start), At(w.End))).ToArray();
         }

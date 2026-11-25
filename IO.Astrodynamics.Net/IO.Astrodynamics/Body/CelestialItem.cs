@@ -1613,7 +1613,7 @@ public abstract class CelestialItem : ILocalizable, IEquatable<CelestialItem>
     /// body or an epoch without ephemeris data, a frame it does not know, an epoch outside the coverage of the frame data,
     /// more windows than the 10000 of its result cell, #653), with SPICE's message (fourth round of #668; before 11.0.0 the
     /// search returned no window, and a search of more than 1000 windows its first 1000, #653).</exception>
-    public IEnumerable<Window> FindWindowsOnDistanceConstraint(in Window searchWindow, ILocalizable observer,
+    public IReadOnlyList<Window> FindWindowsOnDistanceConstraint(in Window searchWindow, ILocalizable observer,
         RelationnalOperator relationalOperator, double value, Aberration aberration, in TimeSpan stepSize)
     {
         // SpiceAPI takes metres, as this method: the native layer converts them to km for gfdist_c (#466)
@@ -1645,7 +1645,7 @@ public abstract class CelestialItem : ILocalizable, IEquatable<CelestialItem>
     /// body or an epoch without ephemeris data, a frame it does not know, an epoch outside the coverage of the frame data,
     /// more windows than the 10000 of its result cell, #653), with SPICE's message (fourth round of #668; before 11.0.0 the
     /// search returned no window, and a search of more than 1000 windows its first 1000, #653).</exception>
-    public IEnumerable<Window> FindWindowsOnOccultationConstraint(in Window searchWindow, ILocalizable observer,
+    public IReadOnlyList<Window> FindWindowsOnOccultationConstraint(in Window searchWindow, ILocalizable observer,
         ShapeType targetShape, INaifObject frontBody, ShapeType frontShape, OccultationType occultationType, Aberration aberration, in TimeSpan stepSize)
     {
         return FindWindowsOnOccultationConstraint(searchWindow, observer, targetShape, frontBody, frontShape, occultationType, aberration, stepSize,
@@ -1697,7 +1697,7 @@ public abstract class CelestialItem : ILocalizable, IEquatable<CelestialItem>
     /// body or an epoch without ephemeris data, a frame it does not know, an epoch outside the coverage of the frame data,
     /// more windows than the 10000 of its result cell, #653), with SPICE's message (fourth round of #668; before 11.0.0 the
     /// search returned no window, and a search of more than 1000 windows its first 1000, #653).</exception>
-    public IEnumerable<Window> FindWindowsOnOccultationConstraint(in Window searchWindow, ILocalizable observer,
+    public IReadOnlyList<Window> FindWindowsOnOccultationConstraint(in Window searchWindow, ILocalizable observer,
         ShapeType targetShape, INaifObject frontBody, ShapeType frontShape, OccultationType occultationType, Aberration aberration, in TimeSpan stepSize,
         OccultationSearchOptions options)
     {
@@ -1742,7 +1742,7 @@ public abstract class CelestialItem : ILocalizable, IEquatable<CelestialItem>
     /// body or an epoch without ephemeris data, a frame it does not know, an epoch outside the coverage of the frame data,
     /// more windows than the 10000 of its result cell, #653), with SPICE's message (fourth round of #668; before 11.0.0 the
     /// search returned no window, and a search of more than 1000 windows its first 1000, #653).</exception>
-    public IEnumerable<Window> FindWindowsOnCoordinateConstraint(in Window searchWindow, ILocalizable observer, Frame frame,
+    public IReadOnlyList<Window> FindWindowsOnCoordinateConstraint(in Window searchWindow, ILocalizable observer, Frame frame,
         CoordinateSystem coordinateSystem, Coordinate coordinate, RelationnalOperator relationalOperator, double value, double adjustValue, Aberration aberration,
         in TimeSpan stepSize)
     {

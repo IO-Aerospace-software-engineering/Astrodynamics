@@ -2683,7 +2683,7 @@ public partial class ConjunctionAssessmentTests
             yield return _observer;
         }
 
-        public IEnumerable<Window> FindWindowsOnDistanceConstraint(
+        public IReadOnlyList<Window> FindWindowsOnDistanceConstraint(
             in Window searchWindow,
             ILocalizable observer,
             RelationnalOperator relationalOperator,
@@ -2694,7 +2694,7 @@ public partial class ConjunctionAssessmentTests
             return Array.Empty<Window>();
         }
 
-        public IEnumerable<Window> FindWindowsOnOccultationConstraint(
+        public IReadOnlyList<Window> FindWindowsOnOccultationConstraint(
             in Window searchWindow,
             ILocalizable observer,
             ShapeType targetShape,
@@ -2707,7 +2707,7 @@ public partial class ConjunctionAssessmentTests
             return Array.Empty<Window>();
         }
 
-        public IEnumerable<Window> FindWindowsOnCoordinateConstraint(
+        public IReadOnlyList<Window> FindWindowsOnCoordinateConstraint(
             in Window searchWindow,
             ILocalizable observer,
             Frames.Frame frame,
@@ -2806,7 +2806,7 @@ public partial class ConjunctionAssessmentTests
             yield return _observer;
         }
 
-        public IEnumerable<Window> FindWindowsOnDistanceConstraint(
+        public IReadOnlyList<Window> FindWindowsOnDistanceConstraint(
             in Window searchWindow,
             ILocalizable observer,
             RelationnalOperator relationalOperator,
@@ -2817,7 +2817,7 @@ public partial class ConjunctionAssessmentTests
             return Array.Empty<Window>();
         }
 
-        public IEnumerable<Window> FindWindowsOnOccultationConstraint(
+        public IReadOnlyList<Window> FindWindowsOnOccultationConstraint(
             in Window searchWindow,
             ILocalizable observer,
             ShapeType targetShape,
@@ -2830,7 +2830,7 @@ public partial class ConjunctionAssessmentTests
             return Array.Empty<Window>();
         }
 
-        public IEnumerable<Window> FindWindowsOnCoordinateConstraint(
+        public IReadOnlyList<Window> FindWindowsOnCoordinateConstraint(
             in Window searchWindow,
             ILocalizable observer,
             Frames.Frame frame,

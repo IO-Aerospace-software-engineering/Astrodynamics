@@ -45,6 +45,9 @@ the search window starts or ends there. `LocalMin` and `LocalMax` give the extre
 `AbsoluteMin` and `AbsoluteMax` the extreme over it, its bounds included, with `adjustValue` the windows within it of the
 extreme; `Equal` gives the crossings of the value, as windows of zero length.
 
+Every search returns its windows as an `IReadOnlyList<Window>` (R16 of #668), sorted, their count and indexing visible;
+the lists combine with the algebra of [Window Lists](time-and-windows.md#window-lists).
+
 Between the samples the library looks for the extremes of the quantity that the samples hide, as the occultation search
 does ([Occultations](occultations.md)): where three consecutive samples show an extreme of the quantity that does not
 reach the value, Brent's `localmin` locates it between their two neighbors (the first and last intervals likewise), and

@@ -4962,6 +4962,17 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   and the Moon in TDB seconds, every path). The force caches cover the window (#626), and a propagation no
   longer reads data past it. Migration: none for a step that divides the window; a caller that read the state at
   round(L/ΔT)·ΔT reads it from a window that long.
+- **Breaking: the window searches return `IReadOnlyList<Window>`** (lot L6, R16 of
+  [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668), choice 2, decided by
+  S. Guillet, 2026-11-19): the 21 public searches (`FindWindowsOnDistanceConstraint`,
+  `FindWindowsOnOccultationConstraint`, `FindWindowsOnCoordinateConstraint` of `CelestialItem`, `ILocalizable` and
+  `Site`, `Site.FindWindowsOnIlluminationConstraint` and `FindDayWindows`, `Instrument.FindWindowsInFieldOfViewConstraint`,
+  `GeometryFinder.FindWindowsWithCondition` and the six searches of `SpiceAPI`) returned the arrays and lists they build
+  as an `IEnumerable<Window>`; they return them as an `IReadOnlyList<Window>`, the same windows bit for bit, with `Count`
+  and the indexer. A dependent compiled against 10.x must be rebuilt, an implementer of `ILocalizable` changes the return
+  type of its three searches, and a `var` result later assigned a LINQ query no longer compiles (CS0266). Migration:
+  rebuild; in an `ILocalizable` implementation, return `IReadOnlyList<Window>` (an array or a list); declare as
+  `IEnumerable<Window>` a variable that a query is later assigned to, or end the query with `.ToArray()`.
 - **Breaking: a reversed window throws** (R11 of #668, section A of the re-baseline, decided by S. Guillet, 2026-11-19): `new Window(start, end)` throws `ArgumentException`
   (`endDate`) for an end before its start, and `new Window(start, length)` `ArgumentOutOfRangeException` (`length`) for a
   negative length, where they built a window of negative length; a window of zero length is accepted, and each end keeps

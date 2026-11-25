@@ -90,7 +90,7 @@ namespace IO.Astrodynamics.Body
         /// most half the time between two extremes of the quantity; on CSPICE's, shorter than the shortest interval where it
         /// is monotone.</param>
         /// <returns>An enumerable of time windows that satisfy the distance constraint.</returns>
-        IEnumerable<Window> FindWindowsOnDistanceConstraint(in Window searchWindow, ILocalizable observer, RelationnalOperator relationalOperator, double value,
+        IReadOnlyList<Window> FindWindowsOnDistanceConstraint(in Window searchWindow, ILocalizable observer, RelationnalOperator relationalOperator, double value,
             Aberration aberration, in TimeSpan stepSize);
 
         /// <summary>
@@ -105,7 +105,7 @@ namespace IO.Astrodynamics.Body
         /// <param name="stepSize">The step size for the search.</param>
         /// <param name="observer">The observer of the celestial object.</param>
         /// <returns>An enumerable of time windows that satisfy the occultation constraint.</returns>
-        IEnumerable<Window> FindWindowsOnOccultationConstraint(in Window searchWindow, ILocalizable observer, ShapeType targetShape, INaifObject frontBody,
+        IReadOnlyList<Window> FindWindowsOnOccultationConstraint(in Window searchWindow, ILocalizable observer, ShapeType targetShape, INaifObject frontBody,
             ShapeType frontShape, OccultationType occultationType, Aberration aberration, in TimeSpan stepSize);
 
         /// <summary>
@@ -124,7 +124,7 @@ namespace IO.Astrodynamics.Body
         /// is monotone.</param>
         /// <param name="observer">The observer of the celestial object.</param>
         /// <returns>An enumerable of time windows that satisfy the coordinate constraint.</returns>
-        public IEnumerable<Window> FindWindowsOnCoordinateConstraint(in Window searchWindow, ILocalizable observer, Frame frame, CoordinateSystem coordinateSystem,
+        public IReadOnlyList<Window> FindWindowsOnCoordinateConstraint(in Window searchWindow, ILocalizable observer, Frame frame, CoordinateSystem coordinateSystem,
             Coordinate coordinate, RelationnalOperator relationalOperator, double value, double adjustValue, Aberration aberration, in TimeSpan stepSize);
     }
 }
