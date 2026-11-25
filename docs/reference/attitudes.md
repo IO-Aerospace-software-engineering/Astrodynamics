@@ -10,7 +10,7 @@ All attitude maneuvers inherit from the abstract `Attitude` class.
 |--------|------|-------------|
 | `ComputeOrientation(StateVector)` | Method | Compute the orientation quaternion at the given state (abstract, public): the rotation from the spacecraft frame to the frame of the state |
 | `ComputeStateOrientation(StateVector)` | Method | The preview of the attitude at the state: the rotation from the spacecraft frame to ICRF (`ComputeOrientation` on the state taken about the centre of the maneuver, as the execution takes it (about its own observer for a maneuver without one), then rotated to ICRF), at the epoch of the state, labelled ICRF; pure: it sets no window and moves no chain, so it is the same before and after a run (decision 50 of #668, decided by S. Guillet, 2026-11-23). It replaces the StateOrientation property, removed (decision 52): the orientation the internal execution kept, which no re-arm cleared; in a run, the attitude at an activation is in the attitude record, `spacecraft.Frame.GetStateOrientationToICRF(epoch)`, the same rotation |
-| `ManeuverCenter` | Property | The central body the law reads: the one it was given, null for one the run infers, until a run writes the centre it used right after its re-arm (the given one, else the observer of the initial orbit when it is a celestial body other than a star, else, for a law whose targets are all library `CelestialAttitudeTarget`s, the central body of the run); the next re-arm restores the given value (decisions 61, 63 and 99 of #668, [The engine and the centre](impulse-maneuvers.md#the-engine-and-the-centre)) |
+| `ManeuverCenter` | Property | The central body the law reads: the one it was given, null for one the run infers, until a run writes the centre it used right after its re-arm (the given one, else the observer of the initial orbit when it is a celestial body other than a star, else, for the library's `TriadAttitude` or `InstrumentPointingToAttitude` whose targets are all library `CelestialAttitudeTarget`s, the central body of the run); the next re-arm restores the given value (decisions 61, 63 and 99 of #668, [The engine and the centre](impulse-maneuvers.md#the-engine-and-the-centre)) |
 | `MinEpoch` | Property | Earliest epoch at which the attitude can activate: it activates at the later of this epoch and the end of the window of the previous maneuver of the chain |
 | `HoldDuration` | Property | How long the attitude is held before the next maneuver of the chain may start; the law stays in force until the next activation. TT seconds about the Earth (#547); zero or more, a negative hold throwing `ArgumentOutOfRangeException` (`holdDuration`) on every maneuver constructor (since 11.0.0, R11 of #668); its setter, which applies the same check, is `private protected` (decision 11 of lot L4, its access validated by decision 16, decided by S. Guillet, 2026-11-22: `PhasingManeuver` computes its hold at execution and sets it through the check; `protected` in 10.x) |
 
@@ -26,9 +26,9 @@ attitude takes no engine since lot L5b (decisions 48 and 93 of #668, decided by 
 nothing and orients the spacecraft whose plan holds it, whose axes the protected `GetBodyAxis(BodyAxis)` reads, so a
 satellite without a thruster runs a plan of attitudes without a tank or an engine (before 11.0.0 the engine was
 required, and its tank's spacecraft gave the axes). In SSB mode, where the centre cannot be inferred, a user subclass of
-`Attitude` requires `maneuverCenter`, since the library cannot know what its law reads (decision 99 of #668, decided by
-S. Guillet, 2026-11-24). Before 11.0.0 the constructors took `(maneuverCenter, minimumEpoch, maneuverHoldDuration,
-engine)`, each required.
+`Attitude`, of `TriadAttitude` or of `InstrumentPointingToAttitude` requires `maneuverCenter`, whatever its targets,
+since the library cannot know what its law reads (decision 99 of #668, decided by S. Guillet, 2026-11-24). Before
+11.0.0 the constructors took `(maneuverCenter, minimumEpoch, maneuverHoldDuration, engine)`, each required.
 
 ## Single-Vector Attitudes
 
@@ -133,8 +133,8 @@ Four constructors, each with `IAttitudeTarget` targets, then the optional `minEp
 `maneuverCenter` and `minVectorSeparation` (decision 69 of #668, decided by S. Guillet, 2026-11-23). A celestial target
 is a `CelestialAttitudeTarget`, geometric by default; an orbital direction an `OrbitalDirectionTarget`. A null
 `maneuverCenter` is the centre the run infers; in SSB mode, where it cannot be inferred, a TRIAD whose two targets are
-library `CelestialAttitudeTarget`s takes the central body of the run, and one with an orbital direction or a user target
-requires it (decision 99 of #668). Before lot L5b the constructors of `ILocalizable` targets took the primary target (or
+library `CelestialAttitudeTarget`s takes the central body of the run, and one with an orbital direction or a user target,
+or a user subclass of `TriadAttitude` whatever its targets, requires it (decision 99 of #668). Before lot L5b the constructors of `ILocalizable` targets took the primary target (or
 a site's body) as the centre, and the targets were read back by `PrimaryAttitudeTarget` and `SecondaryAttitudeTarget`,
 both removed.
 

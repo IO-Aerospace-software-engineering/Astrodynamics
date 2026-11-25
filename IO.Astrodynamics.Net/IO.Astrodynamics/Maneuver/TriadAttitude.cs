@@ -342,10 +342,12 @@ public class TriadAttitude : Attitude
         _ => Spacecraft.Down
     };
 
-    // Whether the law reads its centre (decision 99 of #668, decided by S. Guillet, 2026-11-24): not when both targets are
-    // library CelestialAttitudeTargets, which then take the central body of the run when the centre cannot be inferred;
-    // an orbital-direction or user target reads it
-    internal override bool ReadsCenter => !(IsCelestial(PrimaryTarget) && IsCelestial(SecondaryTarget));
+    // Whether the law reads its centre (decision 99 of #668, decided by S. Guillet, 2026-11-24): not for the library's own
+    // law when both targets are library CelestialAttitudeTargets, which then take the central body of the run when the
+    // centre cannot be inferred; an orbital-direction or user target reads it, and so does a user subclass, which may
+    // replace the law (as a user Attitude subclass)
+    internal override bool ReadsCenter =>
+        GetType() != typeof(TriadAttitude) || !(IsCelestial(PrimaryTarget) && IsCelestial(SecondaryTarget));
 
     // A library CelestialAttitudeTarget, not a subclass
     private static bool IsCelestial(IAttitudeTarget target) => target.GetType() == typeof(CelestialAttitudeTarget);

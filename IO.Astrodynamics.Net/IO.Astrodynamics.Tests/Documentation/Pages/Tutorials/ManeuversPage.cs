@@ -77,7 +77,7 @@ internal static class ManeuversPage
     internal static void Block02(Time epoch, CelestialBody earth, CelestialBody sun, Engine engine)
     {
         #region docs/tutorials/maneuvers.md:2
-        // Inputs: epoch (Time), earth and sun (CelestialBody), engine (Engine)
+        // Inputs: epoch (Time), earth and sun (CelestialBody)
         // Primary: spacecraft -Z toward Earth (nadir pointing)
         // Secondary: spacecraft +X toward Sun, which sets the roll about nadir (+Z, opposite to -Z, would leave the roll
         // undetermined: the body vectors must be at least 5 degrees apart)
@@ -92,7 +92,7 @@ internal static class ManeuversPage
     internal static void Block03(Engine engine, CelestialBody sun, CelestialBody moon, CelestialBody earth, Time epoch, TimeSpan duration)
     {
         #region docs/tutorials/maneuvers.md:3
-        // Inputs: engine (Engine), sun, moon and earth (CelestialBody), epoch (Time), duration (TimeSpan)
+        // Inputs: sun, moon and earth (CelestialBody), epoch (Time), duration (TimeSpan)
         // Default geometric direction
         var sunTarget = new CelestialAttitudeTarget(sun);
 
@@ -113,7 +113,7 @@ internal static class ManeuversPage
     internal static void Block04(CelestialBody earth, Time epoch, TimeSpan duration, Engine engine, CelestialBody sun)
     {
         #region docs/tutorials/maneuvers.md:4
-        // Inputs: earth and sun (CelestialBody), epoch (Time), duration (TimeSpan), engine (Engine)
+        // Inputs: earth and sun (CelestialBody), epoch (Time), duration (TimeSpan)
         // LVLH frame (the spacecraft's down axis to nadir, its front axis toward the velocity)
         var lvlh = TriadAttitude.CreateLvlh(epoch, duration, earth);
 

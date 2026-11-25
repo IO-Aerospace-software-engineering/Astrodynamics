@@ -624,7 +624,7 @@ Each `ImpulseManeuver` implements:
 | ApsidalAlignmentManeuver | r·(ĥ×p̂) | neg→pos | Nearest intersection |
 
 **Maneuver Chain Processing**
-- The engine and the centre (decisions 48, 61, 63, 64 and 93 of #668, decided by S. Guillet, 2026-11-23; decision 99, 2026-11-24): `Engine` is on `ImpulseManeuver` (an attitude takes none, so a spacecraft without a tank runs a plan of attitudes); an impulse given no engine takes the only engine of the spacecraft, a maneuver given no centre the observer of the initial orbit when it is a celestial body other than a star; where the centre cannot be inferred (SSB mode) a law whose targets are all library `CelestialAttitudeTarget`s takes the central body of the run and any other law (impulses, orbital directions, a user `IAttitudeTarget`, a user `Attitude` subclass) throws `InvalidOperationException` from the propagator constructor and `Propagate`, as an impulse given no engine on a spacecraft of none or several; the resolved values are written right after the re-arm (`Engine`, `ManeuverCenter`: the given ones before a run, the last run's after it), and every check before the write and every preview read the given ones (internal `GivenEngine`, `GivenCenter`)
+- The engine and the centre (decisions 48, 61, 63, 64 and 93 of #668, decided by S. Guillet, 2026-11-23; decision 99, 2026-11-24): `Engine` is on `ImpulseManeuver` (an attitude takes none, so a spacecraft without a tank runs a plan of attitudes); an impulse given no engine takes the only engine of the spacecraft, a maneuver given no centre the observer of the initial orbit when it is a celestial body other than a star; where the centre cannot be inferred (SSB mode) the library's `TriadAttitude` or `InstrumentPointingToAttitude` whose targets are all library `CelestialAttitudeTarget`s takes the central body of the run and any other law (impulses, orbital directions, a user `IAttitudeTarget`, a user `Attitude` subclass, one of `TriadAttitude` or `InstrumentPointingToAttitude` included) throws `InvalidOperationException` from the propagator constructor and `Propagate`, as an impulse given no engine on a spacecraft of none or several; the resolved values are written right after the re-arm (`Engine`, `ManeuverCenter`: the given ones before a run, the last run's after it), and every check before the write and every preview read the given ones (internal `GivenEngine`, `GivenCenter`)
 - Leading `Attitude` maneuvers are laid on the attitude timeline (not via event detection): each activates at the later of its `MinEpoch` and the end of the previous hold; the last hold gates the first impulse
 - First `ImpulseManeuver` is wrapped in `ManeuverEventDetector`
 - After impulse fires: `ManeuverEventDetector.HandleEvent` executes the impulse only; the propagation counts its windows in TT seconds about the Earth (#547), lays the attitudes chained after it on the timeline from the end of its maneuver window, and builds the detector of the next impulse, gated by the end of their holds
@@ -680,6 +680,8 @@ var prograde = new ProgradeAttitude(epoch, duration, earth);
 
 **Constructor Options**
 
+Four constructors, all of `IAttitudeTarget` targets (orbital directions and celestial bodies alike, decision 69 of #668):
+
 1. **Single Instrument**: Uses instrument's boresight (primary) and refVector (secondary)
 ```csharp
 // Point camera boresight at Earth, constrain roll using camera refVector toward Sun
@@ -703,9 +705,9 @@ var attitude = new TriadAttitude(
     holdDuration);
 ```
 
-3. **Explicit Body Vectors**: Direct spacecraft frame vectors
+3. **Explicit Body Vectors**: Literal spacecraft frame vectors (`Spacecraft.Front`, ... are the static axes on any spacecraft)
 ```csharp
-// Point spacecraft Front at Moon, keep Up toward Sun
+// Point the static Front at Moon, keep the static Up toward Sun
 var attitude = new TriadAttitude(
     Spacecraft.Front,
     new CelestialAttitudeTarget(moon),
@@ -715,13 +717,13 @@ var attitude = new TriadAttitude(
     holdDuration);
 ```
 
-4. **IAttitudeTarget (orbital directions and/or celestial bodies)**: Uses `IAttitudeTarget` interface for polymorphic targets
+4. **Body Axes**: `BodyAxis` values, resolved on the instance axes of the spacecraft whose plan holds the attitude at each read (the static axes before any plan)
 ```csharp
 // Point prograde with solar panels toward Sun
 var attitude = new TriadAttitude(
-    Spacecraft.Front,
+    BodyAxis.Front,
     OrbitalDirectionTarget.Prograde,
-    Spacecraft.Up,
+    BodyAxis.Up,
     new CelestialAttitudeTarget(sun),
     epoch,
     duration,
@@ -729,9 +731,9 @@ var attitude = new TriadAttitude(
 
 // Full LVLH attitude (nadir pointing with prograde constraint)
 var lvlh = new TriadAttitude(
-    Spacecraft.Down,
+    BodyAxis.Down,
     OrbitalDirectionTarget.Nadir,
-    Spacecraft.Front,
+    BodyAxis.Front,
     OrbitalDirectionTarget.Prograde,
     epoch,
     duration,
@@ -891,7 +893,7 @@ var deg2Rad = IO.Astrodynamics.Constants.Deg2Rad; // not Constants.Deg2Rad (that
    - Ensure body vectors and reference vectors are not collinear (`MinVectorSeparation`, 5 degrees by default, in [1e-14, π/2] rad)
    - Use `Spacecraft.Front`, `Spacecraft.Up`, etc. for standard body frame directions; use instance `BodyFront`, `BodyRight`, `BodyUp` for non-standard frames
    - Custom body axes must be finite, non-zero, orthogonal and right-handed (`BodyRight.Cross(BodyFront) == BodyUp`)
-   - The single-vector attitudes and the impulse attitude use `GetBodyAxis(BodyAxis.Front)`, the TRIAD factories `BodyDown`/`BodyFront` and `BodyFront`/`BodyUp`, all on the spacecraft of the plan that last held the maneuver, with the static axes before any plan (decisions 46 and 69 of #668); the `TriadAttitude` constructors take literal vectors
+   - The single-vector attitudes use `GetBodyAxis(bodyAxis)` (`BodyAxis.Front` by default), the impulse attitude `GetBodyAxis(BodyAxis.Front)`, the TRIAD factories `BodyDown`/`BodyFront` and `BodyFront`/`BodyUp`, and the `BodyAxis` constructor of `TriadAttitude` its two axes, all on the spacecraft of the plan that last held the maneuver, with the static axes before any plan (decisions 46 and 69 of #668); the `Vector3` constructor of `TriadAttitude` takes literal vectors
    - Use `IAttitudeTarget` with `TriadAttitude` to mix orbital directions (`OrbitalDirectionTarget.Prograde`, etc.) and celestial targets (`CelestialAttitudeTarget`)
    - Use factory methods `TriadAttitude.CreateLvlh()` and `CreateProgradeWithSunTracking()` for common operational attitudes (on the spacecraft's instance axes)
    - Use `Instrument.GetBoresightInSpacecraftFrame()` and `GetRefVectorInSpacecraftFrame()` for instrument-based pointing

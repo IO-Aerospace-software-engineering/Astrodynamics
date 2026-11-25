@@ -72,9 +72,11 @@ public class InstrumentPointingToAttitude : Attitude
 
     internal override System.Collections.Generic.IEnumerable<Instrument> PointedInstruments => [Instrument];
 
-    // Whether the law reads its centre (decision 99 of #668, decided by S. Guillet, 2026-11-24): not for a library
-    // CelestialAttitudeTarget, which takes the central body of the run when the centre cannot be inferred
-    internal override bool ReadsCenter => Target.GetType() != typeof(CelestialAttitudeTarget);
+    // Whether the law reads its centre (decision 99 of #668, decided by S. Guillet, 2026-11-24): not for the library's own
+    // law pointing at a library CelestialAttitudeTarget, which takes the central body of the run when the centre cannot be
+    // inferred; a user subclass, which may replace the law, reads it (as a user Attitude subclass)
+    internal override bool ReadsCenter =>
+        GetType() != typeof(InstrumentPointingToAttitude) || Target.GetType() != typeof(CelestialAttitudeTarget);
 
     /// <summary>
     /// The rotation from the spacecraft frame to the frame of <paramref name="stateVector"/> that takes the boresight to

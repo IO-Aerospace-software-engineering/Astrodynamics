@@ -27,8 +27,9 @@ using Time = IO.Astrodynamics.TimeSystem.Time;
 /// The engine and the centre a run gives each maneuver, lot L5b of #668 (decisions 48, 61, 63, 64 and 93, decided by
 /// S. Guillet, 2026-11-23, and decision 99, decided by S. Guillet, 2026-11-24): <see cref="ImpulseManeuver.Engine"/> is on
 /// the impulse; a maneuver given no engine takes the only engine of the spacecraft and one given no centre the observer of
-/// its initial orbit when it is a celestial body other than a star; where the centre cannot be inferred (SSB mode), a law
-/// whose targets are all library <see cref="CelestialAttitudeTarget"/>s takes the central body of the run and any other law
+/// its initial orbit when it is a celestial body other than a star; where the centre cannot be inferred (SSB mode), the
+/// library's <see cref="TriadAttitude"/> or <see cref="InstrumentPointingToAttitude"/> whose targets are all library
+/// <see cref="CelestialAttitudeTarget"/>s takes the central body of the run and any other law (a user subclass of either)
 /// throws <see cref="InvalidOperationException"/> from the propagator constructor and from <c>Propagate</c>. The resolved
 /// values are written right after the re-arm, restored by the next re-arm, and every check before the write and every
 /// preview reads the given values (IC-1 of the gap analysis of L5b).
@@ -109,6 +110,36 @@ public class ManeuverInferenceTests
 
         public override Quaternion ComputeOrientation(StateVector stateVector) =>
             GetBodyAxis(BodyAxis.Front).To(stateVector.Position);
+    }
+
+    // A user subclass of the library's TRIAD law, which replaces the law: the library cannot know whether it reads its
+    // centre, whatever its targets
+    private sealed class UserTriad : TriadAttitude
+    {
+        public UserTriad(CelestialItem maneuverCenter) : base(BodyAxis.Front,
+            new CelestialAttitudeTarget(new CelestialBody(PlanetsAndMoons.MOON)),
+            BodyAxis.Up,
+            new CelestialAttitudeTarget(new CelestialBody(Stars.Sun, Frame.ICRF, S)),
+            S,
+            TimeSpan.Zero,
+            maneuverCenter)
+        {
+        }
+
+        public override Quaternion ComputeOrientation(StateVector stateVector) =>
+            GetBodyAxis(BodyAxis.Front).To(stateVector.Position);
+    }
+
+    // A user subclass of the library's pointing law, the same
+    private sealed class UserPointing : InstrumentPointingToAttitude
+    {
+        public UserPointing(Instrument instrument, CelestialItem maneuverCenter) : base(instrument,
+            new CelestialAttitudeTarget(new CelestialBody(PlanetsAndMoons.MOON)), S, TimeSpan.Zero, maneuverCenter)
+        {
+        }
+
+        public override Quaternion ComputeOrientation(StateVector stateVector) =>
+            Instrument.GetBoresightInSpacecraftFrame().To(stateVector.Position);
     }
 
     // The largest angle between the axes two rotations give (the sign of a quaternion is free)
@@ -378,6 +409,8 @@ public class ManeuverInferenceTests
             TimeSpan.Zero,
             center),
         "UserAttitude" => new UserAttitude(center),
+        "UserTriadSubclass" => new UserTriad(center),
+        "UserPointingSubclass" => new UserPointing(Camera(spacecraft), center),
         "OrbitalDirection" => new TriadAttitude(Spacecraft.Down,
             OrbitalDirectionTarget.Nadir,
             Spacecraft.Front,
@@ -395,6 +428,10 @@ public class ManeuverInferenceTests
     [InlineData("DerivedCelestialTarget", "RK")]
     [InlineData("UserAttitude", "RK")]
     [InlineData("UserAttitude", "VV")]
+    [InlineData("UserTriadSubclass", "RK")]
+    [InlineData("UserTriadSubclass", "VV")]
+    [InlineData("UserPointingSubclass", "RK")]
+    [InlineData("UserPointingSubclass", "VV")]
     [InlineData("OrbitalDirection", "RK")]
     [InlineData("Nadir", "VV")]
     [InlineData("PointingAtAnOrbitalDirection", "RK")]

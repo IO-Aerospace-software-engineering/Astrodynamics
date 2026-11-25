@@ -14,17 +14,20 @@ namespace IO.Astrodynamics.Maneuver
         /// The centre of the maneuver: the one it was given (<see cref="GivenCenter"/>), null when it was given none, until
         /// a run resolves it; the centre the last run used, written right after its re-arm (decisions 61 and 63 of #668,
         /// decided by S. Guillet, 2026-11-23): the given one, else the observer of the spacecraft's initial orbit when it
-        /// is a celestial body other than a star, else, for a law whose targets are all library
-        /// <see cref="CelestialAttitudeTarget"/>s, the central body of the run (decision 99 of #668, decided by
+        /// is a celestial body other than a star, else, for the library's <see cref="TriadAttitude"/> or
+        /// <see cref="InstrumentPointingToAttitude"/> whose targets are all library <see cref="CelestialAttitudeTarget"/>s,
+        /// the central body of the run (decision 99 of #668, decided by
         /// S. Guillet, 2026-11-24). The re-arm of the next run restores the given value, and a stopped run keeps the
         /// resolved one.
         /// </summary>
         /// <remarks>
         /// When the centre cannot be inferred (SSB mode: the observer is a star or a barycentre), a law that reads it (an
         /// impulse, an orbital-direction attitude, a law with an orbital-direction or user target, a user
-        /// <see cref="Attitude"/> subclass) requires it: the propagator constructor and <c>Propagate</c> throw
-        /// <see cref="InvalidOperationException"/> (decisions 64 and 99 of #668). Before 11.0.0 the centre was required
-        /// by every constructor but the TRIAD forms of a target, which took it from the target.
+        /// <see cref="Attitude"/> subclass, a user subclass of <see cref="TriadAttitude"/> or
+        /// <see cref="InstrumentPointingToAttitude"/> included) requires it: the propagator constructor and
+        /// <c>Propagate</c> throw <see cref="InvalidOperationException"/> (decisions 64 and 99 of #668). Before 11.0.0 the
+        /// centre was required by every constructor but the TRIAD forms of a target and
+        /// <see cref="InstrumentPointingToAttitude"/>, which took it from the target (or a site's body).
         /// </remarks>
         public CelestialItem ManeuverCenter { get; internal set; }
 
@@ -37,9 +40,10 @@ namespace IO.Astrodynamics.Maneuver
         /// <summary>
         /// Whether the law of this maneuver reads its centre, so that it requires one when the centre cannot be inferred
         /// (decision 99 of #668, decided by S. Guillet, 2026-11-24): true by default, every impulse, orbital-direction
-        /// attitude and user <see cref="Attitude"/> subclass, whose use of the centre the library cannot know; false for a
-        /// law whose targets are all library <see cref="CelestialAttitudeTarget"/>s, which takes the central body of the
-        /// run (<see cref="TriadAttitude"/>, <see cref="InstrumentPointingToAttitude"/>).
+        /// attitude and user <see cref="Attitude"/> subclass (a user subclass of <see cref="TriadAttitude"/> or
+        /// <see cref="InstrumentPointingToAttitude"/> included), whose use of the centre the library cannot know; false for
+        /// the library's <see cref="TriadAttitude"/> and <see cref="InstrumentPointingToAttitude"/> whose targets are all
+        /// library <see cref="CelestialAttitudeTarget"/>s, which take the central body of the run.
         /// </summary>
         internal virtual bool ReadsCenter => true;
         /// <summary>

@@ -53,7 +53,7 @@ exactly; the secondary is satisfied in the plane perpendicular to the primary.
 This eliminates roll ambiguity.
 
 ```csharp
-// Inputs: epoch (Time), earth and sun (CelestialBody), engine (Engine)
+// Inputs: epoch (Time), earth and sun (CelestialBody)
 // Primary: spacecraft -Z toward Earth (nadir pointing)
 // Secondary: spacecraft +X toward Sun, which sets the roll about nadir (+Z, opposite to -Z, would leave the roll
 // undetermined: the body vectors must be at least 5 degrees apart)
@@ -69,7 +69,7 @@ Use `Aberration.LT` for photon-based pointing scenarios (e.g., optical sensors);
 target as the spacecraft sees it, as CSPICE's `spkcvo_c` corrects it from the spacecraft's state (#740):
 
 ```csharp
-// Inputs: engine (Engine), sun, moon and earth (CelestialBody), epoch (Time), duration (TimeSpan)
+// Inputs: sun, moon and earth (CelestialBody), epoch (Time), duration (TimeSpan)
 // Default geometric direction
 var sunTarget = new CelestialAttitudeTarget(sun);
 
@@ -85,12 +85,13 @@ var triad = new TriadAttitude(Spacecraft.Front,
     earth);
 ```
 
-Factory methods create common attitude profiles in one call. They point the axes of the spacecraft that carries the
-engine (`BodyDown` and `BodyFront` for LVLH, `BodyFront` and `BodyUp` for Sun tracking), so a spacecraft built with
-its own `bodyFront`, `bodyRight` and `bodyUp` gets its own axes pointed:
+Factory methods create common attitude profiles in one call. They point the axes of the spacecraft whose plan holds the
+attitude (`SetManeuvers`; the static axes before any plan): `BodyDown` and `BodyFront` for LVLH, `BodyFront` and
+`BodyUp` for Sun tracking, so a spacecraft built with its own `bodyFront`, `bodyRight` and `bodyUp` gets its own axes
+pointed:
 
 ```csharp
-// Inputs: earth and sun (CelestialBody), epoch (Time), duration (TimeSpan), engine (Engine)
+// Inputs: earth and sun (CelestialBody), epoch (Time), duration (TimeSpan)
 // LVLH frame (the spacecraft's down axis to nadir, its front axis toward the velocity)
 var lvlh = TriadAttitude.CreateLvlh(epoch, duration, earth);
 

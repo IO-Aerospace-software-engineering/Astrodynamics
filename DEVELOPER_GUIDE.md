@@ -1528,7 +1528,7 @@ Base class for impulse maneuvers. Uses industry-standard g-function event detect
 - `InstrumentPointingAttitude`: Point instrument at target (single-vector, roll unconstrained)
 - `TriadAttitude`: Fully-constrained 3-DOF attitude using TRIAD algorithm (eliminates roll ambiguity)
 
-An attitude takes no engine (decisions 48 and 93 of #668): it orients the spacecraft whose plan holds it, so a spacecraft without a tank or an engine runs a plan of attitudes. A null centre is inferred by the run as for an impulse; in SSB mode, where it cannot be, a law whose targets are all library `CelestialAttitudeTarget`s takes the central body of the run, and any other law (an orbital direction, a user `IAttitudeTarget`, a user `Attitude` subclass) requires `maneuverCenter`, the propagator constructor and `Propagate` throwing `InvalidOperationException` (decision 99 of #668, decided by S. Guillet, 2026-11-24).
+An attitude takes no engine (decisions 48 and 93 of #668): it orients the spacecraft whose plan holds it, so a spacecraft without a tank or an engine runs a plan of attitudes. A null centre is inferred by the run as for an impulse; in SSB mode, where it cannot be, the library's `TriadAttitude` or `InstrumentPointingToAttitude` whose targets are all library `CelestialAttitudeTarget`s takes the central body of the run, and any other law (an orbital direction, a user `IAttitudeTarget`, a user `Attitude` subclass, one of `TriadAttitude` or `InstrumentPointingToAttitude` included) requires `maneuverCenter`, the propagator constructor and `Propagate` throwing `InvalidOperationException` (decision 99 of #668, decided by S. Guillet, 2026-11-24).
 
 The preview of an attitude is `ComputeStateOrientation(StateVector)`, the rotation from the spacecraft frame to ICRF at the state, pure; `Attitude.StateOrientation` is removed: in a run, the attitude at an activation is in the attitude record (`spacecraft.Frame.GetStateOrientationToICRF(epoch)`) (decisions 50 and 52 of #668).
 
@@ -1572,7 +1572,7 @@ var sunTrack = TriadAttitude.CreateProgradeWithSunTracking(sun, epoch, duration,
 Key features:
 - Minimum separation from collinear required between body vectors and reference vectors: `MinVectorSeparation`, 5 degrees by default, in [1e-14, π/2] rad (another throws `ArgumentOutOfRangeException`); collinear vectors (to the rounding of their components), zero and non-finite vectors throw at every separation allowed
 - Uses spacecraft body frame: Front (+Y), Right (+X), Up (+Z) — or per-instance `BodyFront`, `BodyRight`, `BodyUp` passed explicitly
-- Four constructor overloads: single instrument, dual instruments, explicit vectors, IAttitudeTarget; the body vectors given are literal
+- Four constructors, all of `IAttitudeTarget` targets (decision 69 of #668): two `BodyAxis` axes (resolved on the plan's spacecraft at each read), two literal body vectors (`Vector3`), an instrument's boresight and reference vector, two instruments' boresights
 - Factory methods: `CreateLvlh()` (`BodyDown` to nadir, `BodyFront` toward prograde), `CreateProgradeWithSunTracking()` (`BodyFront` to prograde, `BodyUp` toward the Sun), on the instance axes of the spacecraft whose plan last held the attitude, read at execution; the static axes before any plan (#677), read outside a propagation only, since a run propagates the plan's spacecraft
 
 #### Impulse maneuvers

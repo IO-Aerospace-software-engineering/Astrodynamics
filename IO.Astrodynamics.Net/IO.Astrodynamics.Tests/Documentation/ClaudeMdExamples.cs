@@ -375,7 +375,7 @@ namespace ClaudeMdSamples
         internal static TriadAttitude Net19(Time minimumEpoch, TimeSpan holdDuration, CelestialBody moon, CelestialBody sun, Engine engine)
         {
             #region net:19
-            // Point spacecraft Front at Moon, keep Up toward Sun
+            // Point the static Front at Moon, keep the static Up toward Sun
             var attitude = new TriadAttitude(
                 Spacecraft.Front,
                 new CelestialAttitudeTarget(moon),
@@ -387,15 +387,15 @@ namespace ClaudeMdSamples
             return attitude;
         }
 
-        // IO.Astrodynamics.Net/CLAUDE.md, "Constructor Options", 4
+        // IO.Astrodynamics.Net/CLAUDE.md, "Constructor Options", 4 (the BodyAxis constructor)
         internal static (TriadAttitude Attitude, TriadAttitude Lvlh) Net20(CelestialBody earth, Time epoch, TimeSpan duration, CelestialBody sun, Engine engine)
         {
             #region net:20
             // Point prograde with solar panels toward Sun
             var attitude = new TriadAttitude(
-                Spacecraft.Front,
+                BodyAxis.Front,
                 OrbitalDirectionTarget.Prograde,
-                Spacecraft.Up,
+                BodyAxis.Up,
                 new CelestialAttitudeTarget(sun),
                 epoch,
                 duration,
@@ -403,9 +403,9 @@ namespace ClaudeMdSamples
 
             // Full LVLH attitude (nadir pointing with prograde constraint)
             var lvlh = new TriadAttitude(
-                Spacecraft.Down,
+                BodyAxis.Down,
                 OrbitalDirectionTarget.Nadir,
-                Spacecraft.Front,
+                BodyAxis.Front,
                 OrbitalDirectionTarget.Prograde,
                 epoch,
                 duration,

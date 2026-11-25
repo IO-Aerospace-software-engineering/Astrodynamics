@@ -327,11 +327,12 @@ writing nothing, and writes the values it uses on the maneuver right after its r
   or of several throws `InvalidOperationException` naming them, "pass engine:".
 - **The centre** of every maneuver (`ManeuverCenter`): the one it was given, else the observer of the spacecraft's
   initial orbit, as given, when it is a celestial body other than a star. Where it cannot be inferred (SSB mode: the
-  observer is a star or a barycentre), a law whose targets are all library `CelestialAttitudeTarget`s (a TRIAD of
-  celestial targets, `InstrumentPointingToAttitude`) takes the central body of the run, the Sun, and every other law
-  requires `maneuverCenter`: the impulses, the orbital-direction attitudes in any form, a user `IAttitudeTarget` (or a
-  subclass of `CelestialAttitudeTarget`) and a user `Attitude` subclass, whose use of the centre the library cannot
-  know. Without it the propagator constructor and `Propagate` throw `InvalidOperationException` (decision 99 of #668,
+  observer is a star or a barycentre), the library's own law whose targets are all library `CelestialAttitudeTarget`s
+  (a `TriadAttitude` of celestial targets, an `InstrumentPointingToAttitude`) takes the central body of the run, the
+  Sun, and every other law requires `maneuverCenter`: the impulses, the orbital-direction attitudes in any form, a user
+  `IAttitudeTarget` (or a subclass of `CelestialAttitudeTarget`) and a user `Attitude` subclass (a subclass of
+  `TriadAttitude` or `InstrumentPointingToAttitude` included, whatever its targets), whose use of the centre the
+  library cannot know. Without it the propagator constructor and `Propagate` throw `InvalidOperationException` (decision 99 of #668,
   decided by S. Guillet, 2026-11-24; before, such a law received a heliocentric state silently). A state read from an
   SSB-mode solution is about the Sun, so an initial orbit built from it infers the Sun.
 

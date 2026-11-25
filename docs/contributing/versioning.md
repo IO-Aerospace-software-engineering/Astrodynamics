@@ -7447,10 +7447,11 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   is null takes the only engine of the spacecraft (`Engines`, decision 92), and a maneuver whose centre is null the
   observer of the spacecraft's initial orbit when it is a celestial body other than a star, resolved from the values the
   maneuver was given when the propagator is built and at `Propagate`, writing nothing; where the centre cannot be
-  inferred (SSB mode: a star or a barycentre), a law whose targets are all library `CelestialAttitudeTarget`s takes the
-  central body of the run, and every other law (the impulses, the orbital-direction attitudes, a user `IAttitudeTarget`
-  or subclass of `CelestialAttitudeTarget`, a user `Attitude` subclass) requires `maneuverCenter`: the propagator
-  constructor and `Propagate` throw `InvalidOperationException`, as for an impulse given no engine on a spacecraft of
+  inferred (SSB mode: a star or a barycentre), the library's `TriadAttitude` or `InstrumentPointingToAttitude` whose
+  targets are all library `CelestialAttitudeTarget`s takes the central body of the run, and every other law (the
+  impulses, the orbital-direction attitudes, a user `IAttitudeTarget` or subclass of `CelestialAttitudeTarget`, a user
+  `Attitude` subclass, one of `TriadAttitude` or `InstrumentPointingToAttitude` included) requires `maneuverCenter`:
+  the propagator constructor and `Propagate` throw `InvalidOperationException`, as for an impulse given no engine on a spacecraft of
   none or several ("pass engine:"). Before, a null engine threw `ArgumentNullException` in the constructor, a null centre
   was accepted by most constructors and threw `NullReferenceException` in the run, the `TriadAttitude` of
   `IAttitudeTarget` targets threw `ArgumentNullException` for it, and a user law about a centre it read received a
@@ -7475,9 +7476,10 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   `ApsidalAlignmentManeuver` and `PhasingManeuver(targetOrbit, revolutionNumber, engine = null, minEpoch = default)`
   (no hold for a phasing, decision 51; no centre for a target orbit, whose observer is the centre), where they took
   `(maneuverCenter, minimumEpoch, maneuverHoldDuration, …, engine)` or `(minimumEpoch, maneuverHoldDuration,
-  targetOrbit, engine)`, each required; the protected constructors of `ImpulseManeuver` follow, `(engine = null, minEpoch
-  = default, holdDuration = default, maneuverCenter = null)` and `(targetOrbit, engine = null, minEpoch = default,
-  holdDuration = default)`. A null `engine` and `maneuverCenter` are inferred by the run (above), `minEpoch` defaults to
+  targetOrbit, engine)`, and `PhasingManeuver` `(minimumEpoch, targetOrbit, revolutionNumber, engine)` or
+  `(maneuverCenter, minimumEpoch, trueLongitude, revolutionNumber, engine)`, each required; the protected constructors
+  of `ImpulseManeuver` follow, `(engine = null, minEpoch = default, holdDuration = default, maneuverCenter = null)` and
+  `(targetOrbit, engine = null, minEpoch = default, holdDuration = default)`. A null `engine` and `maneuverCenter` are inferred by the run (above), `minEpoch` defaults to
   default(Time), no minimum (D3), and `holdDuration` to zero, the negative hold refused as before under the name
   `holdDuration`. A target orbit whose observer is not a celestial item (a site) throws `ArgumentException`
   (`targetOrbit`), where it gave a maneuver of no centre. An old positional call no longer compiles in most forms (a
@@ -7487,8 +7489,10 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   unchanged). Migration: `new ApogeeHeightManeuver(center, minimumEpoch, hold, radius, engine)` becomes `new
   ApogeeHeightManeuver(radius, engine, minimumEpoch, hold, center)`, or `new ApogeeHeightManeuver(radius)` on a spacecraft
   of one engine about the centre of its orbit; `new PlaneAlignmentManeuver(minimumEpoch, hold, target, engine)` `new
-  PlaneAlignmentManeuver(target, engine, minimumEpoch, hold)`; a user `ImpulseManeuver` calls `base(engine, minEpoch,
-  holdDuration, maneuverCenter)`.
+  PlaneAlignmentManeuver(target, engine, minimumEpoch, hold)`; `new PhasingManeuver(minimumEpoch, target, n, engine)`
+  `new PhasingManeuver(target, n, engine, minimumEpoch)`, and `new PhasingManeuver(center, minimumEpoch, lambda, n,
+  engine)` `new PhasingManeuver(lambda, n, engine, minimumEpoch, center)`; a user `ImpulseManeuver` calls
+  `base(engine, minEpoch, holdDuration, maneuverCenter)`.
 - **Breaking: radii checked, an apogee above the surface of its centre and an inclination in [0, π]** (lot L5b, decision
   68 of #668, decided by S. Guillet, 2026-11-23): a radius of `ApogeeHeightManeuver`, `PerigeeHeightManeuver` or
   `CombinedManeuver` that is not finite or not above 0 throws `ArgumentOutOfRangeException` naming it (`apogeeRadius`,
