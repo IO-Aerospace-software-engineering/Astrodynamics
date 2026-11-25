@@ -1977,6 +1977,7 @@ public class SpiceAPI
     /// knows no frame of the name handed (read through <c>namfrm_c</c> after the failed search): the message names the
     /// frame, the <see cref="SpiceException"/> of the search, with SPICE's message, its inner exception (R25 of #668,
     /// decided by S. Guillet, 2026-11-19; before 11.0.0 that exception). Both name <c>frame</c>.</exception>
+    /// <exception cref="ArgumentOutOfRangeException">With a comparison operator, <paramref name="value"/> is an angle outside its range, or NaN: a right ascension or a planetographic longitude outside [0, 2π], a geodetic longitude outside [−π, π], a declination or a latitude outside [−π/2, π/2], in radians (R11 of #668, lot L6; before 11.0.0 it was searched as given).</exception>
     /// <exception cref="SpiceException">SPICE cannot run the search: a body or an epoch without ephemeris data,
     /// an epoch outside the coverage of the frame data, a step SPICE rejects, more windows than its result cell holds (10000, #653),
     /// with SPICE's message (fourth round of #668; before 11.0.0 the native layer dropped the error and the search returned
@@ -1987,6 +1988,7 @@ public class SpiceAPI
         TimeSpan stepSize)
     {
         if (frame == null) throw new ArgumentNullException(nameof(frame));
+        GeometryFinder.CheckCoordinateThreshold(coordinateSystem, coordinate, relationalOperator, value);
         if (!SpiceKnowsFrame(frame))
         {
             throw new ArgumentException(
@@ -2027,6 +2029,7 @@ public class SpiceAPI
     /// and its leading or trailing whitespace (#682).</param>
     /// <returns>The windows where the constraint holds.</returns>
     /// <exception cref="ArgumentNullException"><paramref name="fixedFrame"/> or <paramref name="method"/> is null.</exception>
+    /// <exception cref="ArgumentOutOfRangeException">With a comparison operator, <paramref name="value"/> is outside [0, π], or NaN: the angles are in radians (R11 of #668, lot L6; before 11.0.0 it was searched as given).</exception>
     /// <exception cref="ArgumentException"><paramref name="method"/> is not ELLIPSOID; before 11.0.0 such a method gave no
     /// window, <c>gfilum_c</c>'s error dropped by the native proxy (#682). Or SPICE knows no frame of the name of
     /// <paramref name="fixedFrame"/> (<c>fixedFrame</c>, read through <c>namfrm_c</c> after the failed search): the message
@@ -2050,6 +2053,7 @@ public class SpiceAPI
         string method = "Ellipsoid")
     {
         if (fixedFrame == null) throw new ArgumentNullException(nameof(fixedFrame));
+        GeometryFinder.CheckIlluminationThreshold(relationalOperator, value);
         method = CheckIlluminationMethod(method);
         return SearchWindows(searchWindow, relationalOperator, relation =>
         {

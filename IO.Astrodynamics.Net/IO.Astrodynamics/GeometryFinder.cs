@@ -80,6 +80,55 @@ public class GeometryFinder
     }
 
     /// <summary>
+    /// The range guard of an angular threshold of a comparison operator (R11 of #668, lot L6, decided by S. Guillet,
+    /// 2026-11-19): the right ascension and the planetographic longitude in [0, 2π], the geodetic longitude in [−π, π],
+    /// the declination and the latitudes in [−π/2, π/2], closed; an extreme, whose value is no threshold, and a length are
+    /// not checked.
+    /// </summary>
+    /// <exception cref="ArgumentOutOfRangeException">The threshold is outside its range, or NaN (<c>value</c>).</exception>
+    internal static void CheckCoordinateThreshold(CoordinateSystem coordinateSystem, Coordinate coordinate, RelationnalOperator relationalOperator, double value)
+    {
+        if (IsExtremeOperator(relationalOperator)) return;
+        switch (coordinateSystem, coordinate)
+        {
+            case (CoordinateSystem.RaDec, Coordinate.RightAscension) or (CoordinateSystem.Planetographic, Coordinate.Longitude):
+                CheckAngle(value, 0.0, Constants.TwoPi, "[0, 2π]", $"{coordinate} threshold", nameof(value));
+                break;
+            case (CoordinateSystem.Geodetic, Coordinate.Longitude):
+                CheckAngle(value, -System.Math.PI, System.Math.PI, "[−π, π]", $"{coordinate} threshold", nameof(value));
+                break;
+            case (_, Coordinate.Declination or Coordinate.Latitude):
+                CheckAngle(value, -Constants.HalfPi, Constants.HalfPi, "[−π/2, π/2]", $"{coordinate} threshold", nameof(value));
+                break;
+        }
+    }
+
+    /// <summary>
+    /// The range guard of an illumination angle threshold of a comparison operator, [0, π] (R11 of #668, lot L6).
+    /// </summary>
+    /// <exception cref="ArgumentOutOfRangeException">The threshold is outside [0, π], or NaN (<c>value</c>).</exception>
+    internal static void CheckIlluminationThreshold(RelationnalOperator relationalOperator, double value)
+    {
+        if (!IsExtremeOperator(relationalOperator))
+            CheckAngle(value, 0.0, System.Math.PI, "[0, π]", "illumination angle threshold", nameof(value));
+    }
+
+    /// <summary>
+    /// An angle in its closed range, in radians, or <see cref="ArgumentOutOfRangeException"/> naming
+    /// <paramref name="parameterName"/> (R11 of #668, lot L6); NaN is outside every range.
+    /// </summary>
+    internal static void CheckAngle(double value, double minimum, double maximum, string range, string quantity, string parameterName)
+    {
+        if (value >= minimum && value <= maximum) return;
+        throw new ArgumentOutOfRangeException(parameterName, value,
+            $"The {quantity} {value} is outside {range} rad: the angles are in radians, not degrees.");
+    }
+
+    private static bool IsExtremeOperator(RelationnalOperator relationalOperator) =>
+        relationalOperator is RelationnalOperator.AbsoluteMin or RelationnalOperator.AbsoluteMax or RelationnalOperator.LocalMin
+            or RelationnalOperator.LocalMax;
+
+    /// <summary>
     /// Whether a value satisfies a relation with a target value.
     /// </summary>
     /// <param name="actualValue">The value.</param>

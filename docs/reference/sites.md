@@ -96,6 +96,16 @@ operators ended the process on the CSPICE path (the native parser of the relatio
 applies to `SpiceAPI.FindWindowsOnDistanceConstraint`, `FindWindowsOnCoordinateConstraint` and
 `FindWindowsOnIlluminationConstraint`, and to the command line (`<=`, `>=` and `!`).
 
+An angular threshold is checked against the range of its angle before any search, on both paths, by the six comparison
+operators (R11 of [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668), lot L6): the
+right ascension and the planetographic longitude in [0, 2π], the geodetic longitude in [−π, π], the declination and the
+latitudes in [−π/2, π/2], an illumination angle in [0, π] (`SpiceAPI.FindWindowsOnIlluminationConstraint`'s emission
+and phase included), each range closed, its bounds accepted. A value outside it, a value in degrees for instance, or NaN
+throws `ArgumentOutOfRangeException` (`value`), and so does the twilight of `FindDayWindows` and of `Launch` outside
+[−π/2, π/2] (`twilight`); the command line reports it as an error of `--value`, exit code 2. The four extremes, whose
+value is no threshold, and the lengths (X, Y, Z, range, radius, altitude) are not checked. Before 11.0.0 such a threshold
+was searched as given: a declination above 100 found no window, and an incidence below 100 the whole search window.
+
 #### Planetographic coordinates
 
 `CoordinateSystem.Planetographic` is CSPICE's PLANETOGRAPHIC on both paths ([#682](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/682)): the longitude, the latitude

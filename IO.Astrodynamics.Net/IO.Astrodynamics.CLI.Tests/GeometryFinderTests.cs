@@ -143,6 +143,24 @@ public class GeometryFinderTests
         "--aberration", "CNS", .. options
     ];
 
+    /// <summary>
+    /// An angular threshold outside the range of its angle (R11 of #668, lot L6) is an error of the input, exit code 2,
+    /// naming <c>--value</c>: a declination of 100 rad, an incidence of 200 deg.
+    /// </summary>
+    [Fact]
+    public void AngleThresholdOutOfRange_InputError()
+    {
+        using (Configuration.Lock())
+        {
+            var e = CliRun.Fails(2, Coordinate("RA/DEC", "DECLINATION", ">", "100"));
+            Assert.StartsWith("Error: --value:", e);
+            Assert.Contains("[−π/2, π/2]", e);
+            e = CliRun.Fails(2, Illumination("0.0349 0.8378 0.0", "200deg"));
+            Assert.StartsWith("Error: --value:", e);
+            Assert.Contains("[0, π]", e);
+        }
+    }
+
     [Fact]
     public void IlluminationConstraint()
     {

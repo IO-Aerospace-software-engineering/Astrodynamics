@@ -438,6 +438,7 @@ namespace IO.Astrodynamics.Surface
         /// managed spacecraft with an attitude record) the library searches, on the reads in that frame (third review of
         /// #690; before, <c>gfposc_c</c> got a name SPICE does not know and returned no window).
         /// </remarks>
+        /// <exception cref="ArgumentOutOfRangeException">With a comparison operator, <paramref name="value"/> is an angle outside its range, or NaN: a right ascension or a planetographic longitude outside [0, 2π], a geodetic longitude outside [−π, π], a declination or a latitude outside [−π/2, π/2], in radians (R11 of #668, lot L6; before 11.0.0 it was searched as given).</exception>
         /// <exception cref="InvalidOperationException">On the path of CSPICE's <c>gfposc_c</c>, SPICE cannot run the search (a
         /// body or an epoch without ephemeris data, a frame it does not know, an epoch outside the coverage of the frame data,
         /// more windows than the 10000 of its result cell, #653), with SPICE's message (fourth round of #668; before 11.0.0 the
@@ -445,6 +446,7 @@ namespace IO.Astrodynamics.Surface
         public IReadOnlyList<Window> FindWindowsOnCoordinateConstraint(in Window searchWindow, ILocalizable observer, Frame frame, CoordinateSystem coordinateSystem,
             Coordinate coordinate, RelationnalOperator relationalOperator, double value, double adjustValue, Aberration aberration, in TimeSpan stepSize)
         {
+            GeometryFinder.CheckCoordinateThreshold(coordinateSystem, coordinate, relationalOperator, value);
             // CSPICE searches only in a frame SPICE reads as the library does (third review of #690)
             if (IsSpiceBacked && observer is CelestialItem ci3 && ci3.IsSpiceBacked && ci3.IsSpacecraft && !SpiceAPI.IsManagedFrame(frame))
             {
@@ -547,6 +549,7 @@ namespace IO.Astrodynamics.Surface
         /// <see cref="IlluminationAngle.Phase"/>, which need an observer; or <paramref name="method"/> is not ELLIPSOID, which
         /// before 11.0.0 gave no window on the path of <c>gfilum_c</c> and was ignored on the managed one (#682).</exception>
         /// <exception cref="ArgumentNullException"><paramref name="method"/> is null.</exception>
+        /// <exception cref="ArgumentOutOfRangeException">With a comparison operator, <paramref name="value"/> is outside [0, π], or NaN: the angles are in radians (R11 of #668, lot L6; before 11.0.0 it was searched as given).</exception>
         /// <exception cref="InvalidOperationException">On the path of CSPICE's <c>gfilum_c</c>, SPICE cannot run the search (a
         /// body or an epoch without ephemeris data, a frame it does not know, an epoch outside the coverage of the frame data,
         /// more windows than the 10000 of its result cell, #653), with SPICE's message (fourth round of #668; before 11.0.0 the
@@ -562,6 +565,7 @@ namespace IO.Astrodynamics.Surface
                     nameof(illuminationType));
             }
 
+            GeometryFinder.CheckIlluminationThreshold(relationalOperator, value);
             method = SpiceAPI.CheckIlluminationMethod(method);
             if (_isFromKernel && illuminationSource is INaifObject src)
                 return SpiceAPI.Instance.FindWindowsOnIlluminationConstraint(
@@ -696,12 +700,14 @@ namespace IO.Astrodynamics.Surface
         /// <remarks>For a site from the kernels CSPICE's <c>gfilum_c</c> searches; for a site built from its coordinates
         /// the library does (<see cref="GeometryFinder"/>), and a day or a night shorter than the minute (the Sun grazing
         /// the twilight angle) is found as an extreme of the incidence between two samples (#678).</remarks>
+        /// <exception cref="ArgumentOutOfRangeException"><paramref name="twilight"/> is outside [−π/2, π/2], or NaN: the angles are in radians (R11 of #668, lot L6).</exception>
         /// <exception cref="InvalidOperationException">On the path of CSPICE's <c>gfilum_c</c>, SPICE cannot run the search (a
         /// body or an epoch without ephemeris data, a frame it does not know, an epoch outside the coverage of the frame data,
         /// more windows than the 10000 of its result cell, #653), with SPICE's message (fourth round of #668; before 11.0.0 the
         /// search returned no window, and its result cell held 1000 windows, #653).</exception>
         public IReadOnlyList<Window> FindDayWindows(in Window searchWindow, double twilight)
         {
+            GeometryFinder.CheckAngle(twilight, -Constants.HalfPi, Constants.HalfPi, "[−π/2, π/2]", "twilight", nameof(twilight));
             var sun = Stars.SUN_BODY;
             return FindWindowsOnIlluminationConstraint(searchWindow, IlluminationAngle.Incidence, RelationnalOperator.Lower, Constants.HalfPi + twilight, 0.0,
                 Aberration.LTS, TimeSpan.FromMinutes(1.0), sun);

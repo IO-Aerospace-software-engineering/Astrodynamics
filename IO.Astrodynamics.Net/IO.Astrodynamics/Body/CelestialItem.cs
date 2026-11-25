@@ -1729,7 +1729,7 @@ public abstract class CelestialItem : ILocalizable, IEquatable<CelestialItem>
     /// managed spacecraft with an attitude record) the library searches, on the reads in that frame (third review of #690;
     /// before, <c>gfposc_c</c> got a name SPICE does not know and returned no window).
     /// </remarks>
-    /// <exception cref="ArgumentOutOfRangeException"></exception>
+    /// <exception cref="ArgumentOutOfRangeException">With a comparison operator, <paramref name="value"/> is an angle outside its range, or NaN: a right ascension or a planetographic longitude outside [0, 2π], a geodetic longitude outside [−π, π], a declination or a latitude outside [−π/2, π/2], in radians (R11 of #668, lot L6; before 11.0.0 it was searched as given).</exception>
     /// <exception cref="InvalidOperationException">On the path of CSPICE's <c>gfposc_c</c>, SPICE cannot run the search (a
     /// body or an epoch without ephemeris data, a frame it does not know, an epoch outside the coverage of the frame data,
     /// more windows than the 10000 of its result cell, #653), with SPICE's message (fourth round of #668; before 11.0.0 the
@@ -1738,6 +1738,7 @@ public abstract class CelestialItem : ILocalizable, IEquatable<CelestialItem>
         CoordinateSystem coordinateSystem, Coordinate coordinate, RelationnalOperator relationalOperator, double value, double adjustValue, Aberration aberration,
         in TimeSpan stepSize)
     {
+        GeometryFinder.CheckCoordinateThreshold(coordinateSystem, coordinate, relationalOperator, value);
         // CSPICE searches only in a frame SPICE reads as the library does (third review of #690)
         if (IsSpiceBacked && observer is CelestialItem ci3 && ci3.IsSpiceBacked
             && (IsSpacecraft || ci3.IsSpacecraft) && !SpiceAPI.IsManagedFrame(frame))

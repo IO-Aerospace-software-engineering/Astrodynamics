@@ -5109,6 +5109,19 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   2012-06-30 at 1 s gave 122 states (and 122 CK records) for 121, the last at 2012-07-01T00:01:01Z, and a read whose data
   end at the window end threw `SpiceException` there. Every other window is read as before, bit for bit
   (`SpiceApiTest`). Migration: none; a caller that counted on the extra state reads it by its epoch.
+- **Breaking: an angular threshold outside the range of its angle throws `ArgumentOutOfRangeException`** (lot L6, R11 of
+  [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668), section A of the re-baseline,
+  decided by S. Guillet, 2026-11-19: range guards on the comparison operators only): the threshold (`value`) of
+  `FindWindowsOnCoordinateConstraint` (`CelestialItem`, `Site`, `SpiceAPI`) for a right ascension or a planetographic
+  longitude outside [0, 2π], a geodetic longitude outside [−π, π], a declination or a latitude outside [−π/2, π/2], and
+  of `Site.FindWindowsOnIlluminationConstraint` and `SpiceAPI.FindWindowsOnIlluminationConstraint` outside [0, π], or
+  NaN, with `Greater`, `Lower`, `Equal`, `NotEqual`, `GreaterOrEqual` or `LowerOrEqual`, before any search, on the managed
+  and the CSPICE paths; the twilight (`twilight`) of `Site.FindDayWindows` and of the `Launch` constructor outside
+  [−π/2, π/2]. Each range is closed; the four extremes and the lengths are not checked. The message says the angles are
+  in radians; the command line maps it to an error of `--value`, exit code 2. Before, the search ran on the value given:
+  a threshold in degrees gave no window or the whole search window, without an error (`WindowSearchAngleGuardTests`).
+  Every threshold in its range searches as before, bit for bit. Migration: give the angle in radians
+  (`Constants.Deg2Rad`).
 - **Breaking: `EquinoctialElements` takes a perigee radius with a non-finite P only** (R23 of #668, choice 3 of the
   first annex): a finite P fixes q = P / (1 + e), so a perigee radius beside it throws `ArgumentException`
   (`perigeeRadius`); before, it was stored, and `PerigeeRadius()` returned 1 m for P = 7000 km given 1 m. The library's

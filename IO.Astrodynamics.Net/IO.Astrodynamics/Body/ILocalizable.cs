@@ -124,6 +124,7 @@ namespace IO.Astrodynamics.Body
         /// is monotone.</param>
         /// <param name="observer">The observer of the celestial object.</param>
         /// <returns>An enumerable of time windows that satisfy the coordinate constraint.</returns>
+        /// <exception cref="ArgumentOutOfRangeException">With a comparison operator, <paramref name="value"/> is an angle outside its range, or NaN: a right ascension or a planetographic longitude outside [0, 2π], a geodetic longitude outside [−π, π], a declination or a latitude outside [−π/2, π/2], in radians (R11 of #668, lot L6; before 11.0.0 it was searched as given).</exception>
         public IReadOnlyList<Window> FindWindowsOnCoordinateConstraint(in Window searchWindow, ILocalizable observer, Frame frame, CoordinateSystem coordinateSystem,
             Coordinate coordinate, RelationnalOperator relationalOperator, double value, double adjustValue, Aberration aberration, in TimeSpan stepSize);
     }
