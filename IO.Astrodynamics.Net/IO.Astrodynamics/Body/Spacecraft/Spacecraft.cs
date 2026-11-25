@@ -539,7 +539,7 @@ namespace IO.Astrodynamics.Body.Spacecraft
             }
 
             // Two names of one upper-cased form write the same kernel variable FRAME_<SPACECRAFT>_<INSTRUMENT> and the same
-            // file on a case-insensitive file system (decision 74 of #668); the writers move to ToUpperInvariant in lot L5c
+            // file on a case-insensitive file system (decision 74 of #668); the writers upper-case invariantly too (#798)
             string upper = string.IsNullOrEmpty(name) ? null : name.ToUpperInvariant();
             var sameName = upper == null ? null : _instruments.FirstOrDefault(x => x.Name.ToUpperInvariant() == upper);
             if (sameName != null)

@@ -38,6 +38,11 @@ namespace IO.Astrodynamics.Surface
 
         public OrbitalParameters.OrbitalParameters InitialOrbitalParameters { get; }
 
+        /// <summary>
+        /// The topocentric frame of the site, named <c>&lt;NAME&gt;_TOPO</c>, the name upper-cased in the invariant culture
+        /// whatever the culture of the thread (#798, decision 101 of #668, decided by S. Guillet, 2026-11-25: before, tr-TR or
+        /// az named the frame of a site "dss_i" <c>DSS_İ_TOPO</c>).
+        /// </summary>
         public SiteFrame Frame { get; }
         public double GM { get; } = 0.0;
         public double Mass { get; } = 0.0;
@@ -126,7 +131,7 @@ namespace IO.Astrodynamics.Surface
                 InitialOrbitalParameters = GetEphemeris(Time.J2000TDB, CelestialBody, CelestialBody.Frame, Aberration.None);
             }
 
-            Frame = new SiteFrame(name.ToUpper() + "_TOPO", this);
+            Frame = new SiteFrame(name.ToUpperInvariant() + "_TOPO", this);
         }
 
         /// <summary>

@@ -356,9 +356,10 @@ namespace IO.Astrodynamics.Body.Spacecraft
 
         /// <summary>
         /// Writes the frame kernel of the instrument, a TK frame relative to the spacecraft frame, whose kernel variable
-        /// <c>FRAME_&lt;SPACECRAFT&gt;_&lt;INSTRUMENT&gt;</c> holds the upper-cased names. The ids are written in the invariant
-        /// culture, whatever the culture of the thread (#821, decision 104 of #668, decided by S. Guillet, 2026-11-25: before,
-        /// a culture whose minus sign is not '-', such as sv-SE, fi-FI or he-IL, wrote a kernel SPICE could not load).
+        /// <c>FRAME_&lt;SPACECRAFT&gt;_&lt;INSTRUMENT&gt;</c> holds the upper-cased names. The names are upper-cased and the ids
+        /// written in the invariant culture, whatever the culture of the thread (#798, #821, decisions 101 and 104 of #668,
+        /// decided by S. Guillet, 2026-11-25: before, a culture whose minus sign is not '-', such as sv-SE, fi-FI or he-IL,
+        /// wrote a kernel SPICE could not load, and tr-TR or az wrote "İ" for an "i").
         /// </summary>
         /// <param name="outputFile">The frame kernel to write.</param>
         /// <exception cref="InvalidOperationException">The names make a kernel variable name SPICE cannot read: a blank, a
@@ -372,12 +373,12 @@ namespace IO.Astrodynamics.Body.Spacecraft
             using StreamReader sr = new StreamReader(stream ?? throw new InvalidOperationException());
             var templateData = await sr.ReadToEndAsync();
             var data = templateData
-                .Replace("{spacecraftname}", Spacecraft.Name.ToUpper())
-                .Replace("{instrumentname}", Name.ToUpper())
+                .Replace("{spacecraftname}", Spacecraft.Name.ToUpperInvariant())
+                .Replace("{instrumentname}", Name.ToUpperInvariant())
                 .Replace("{instrumentid}", NaifId.ToString(CultureInfo.InvariantCulture))
-                .Replace("{framename}", Spacecraft.Name.ToUpper() + "_" + Name.ToUpper())
+                .Replace("{framename}", Spacecraft.Name.ToUpperInvariant() + "_" + Name.ToUpperInvariant())
                 .Replace("{spacecraftid}", Spacecraft.NaifId.ToString(CultureInfo.InvariantCulture))
-                .Replace("{spacecraftframe}", Spacecraft.Frame.Name.ToUpper())
+                .Replace("{spacecraftframe}", Spacecraft.Frame.Name.ToUpperInvariant())
                 .Replace("{x}", Orientation.X.ToString(CultureInfo.InvariantCulture))
                 .Replace("{y}", Orientation.Y.ToString(CultureInfo.InvariantCulture))
                 .Replace("{z}", Orientation.Z.ToString(CultureInfo.InvariantCulture));
@@ -407,9 +408,10 @@ namespace IO.Astrodynamics.Body.Spacecraft
 
         /// <summary>
         /// Writes the instrument kernel, whose <c>INS&lt;id&gt;_FOV_FRAME</c> names the frame of the instrument frame kernel,
-        /// <c>&lt;SPACECRAFT&gt;_&lt;INSTRUMENT&gt;</c> upper-cased. The ids are written in the invariant culture, whatever the
-        /// culture of the thread (#821, decision 104 of #668, decided by S. Guillet, 2026-11-25: before, a culture whose minus
-        /// sign is not '-', such as sv-SE, fi-FI or he-IL, wrote <c>INS−…</c>, which SPICE does not read as the instrument's).
+        /// <c>&lt;SPACECRAFT&gt;_&lt;INSTRUMENT&gt;</c> upper-cased. The names are upper-cased and the ids written in the
+        /// invariant culture, whatever the culture of the thread (#798, #821, decisions 101 and 104 of #668, decided by
+        /// S. Guillet, 2026-11-25: before, a culture whose minus sign is not '-', such as sv-SE, fi-FI or he-IL, wrote
+        /// <c>INS−…</c>, which SPICE does not read as the instrument's, and tr-TR or az wrote "İ" for an "i").
         /// </summary>
         /// <param name="outputFile">The instrument kernel to write.</param>
         /// <exception cref="InvalidOperationException">The names make a frame the instrument frame kernel cannot define, by
@@ -425,7 +427,7 @@ namespace IO.Astrodynamics.Body.Spacecraft
         /// <exception cref="InvalidOperationException">SPICE cannot read the variable.</exception>
         private protected void CheckFrameKernelName(string kernel)
         {
-            Kernels.TextKernelNames.Check("FRAME_" + Spacecraft.Name.ToUpper() + "_" + Name.ToUpper(),
+            Kernels.TextKernelNames.Check("FRAME_" + Spacecraft.Name.ToUpperInvariant() + "_" + Name.ToUpperInvariant(),
                 $"the instrument '{Name}' of the spacecraft '{Spacecraft.Name}'", kernel);
         }
 

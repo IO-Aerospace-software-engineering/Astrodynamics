@@ -446,9 +446,10 @@ public class SpacecraftFrame : Frame
 
     /// <summary>
     /// Writes the frame kernel of the spacecraft frame, whose kernel variable <c>FRAME_&lt;NAME&gt;_FRAME</c> holds the
-    /// upper-cased name of the spacecraft. The ids are written in the invariant culture, whatever the culture of the thread
-    /// (#821, decision 104 of #668, decided by S. Guillet, 2026-11-25: before, a culture whose minus sign is not '-', such as
-    /// sv-SE, fi-FI or he-IL, wrote a kernel SPICE could not load).
+    /// upper-cased name of the spacecraft. The names are upper-cased and the ids written in the invariant culture, whatever
+    /// the culture of the thread (#798, #821, decisions 101 and 104 of #668, decided by S. Guillet, 2026-11-25: before, a
+    /// culture whose minus sign is not '-', such as sv-SE, fi-FI or he-IL, wrote a kernel SPICE could not load, and tr-TR or
+    /// az wrote "İ" for an "i").
     /// </summary>
     /// <param name="outputFile">The frame kernel to write.</param>
     /// <exception cref="InvalidOperationException">The name of the spacecraft makes a kernel variable name SPICE cannot read:
@@ -457,12 +458,12 @@ public class SpacecraftFrame : Frame
     /// nothing is written.</exception>
     public async Task WriteAsync(FileInfo outputFile)
     {
-        Kernels.TextKernelNames.Check("FRAME_" + Name.ToUpper(), $"the spacecraft '{Spacecraft.Name}'");
+        Kernels.TextKernelNames.Check("FRAME_" + Name.ToUpperInvariant(), $"the spacecraft '{Spacecraft.Name}'");
         await using var stream = this.GetType().Assembly.GetManifestResourceStream("IO.Astrodynamics.Templates.FrameTemplate.tf");
         using StreamReader sr = new StreamReader(stream ?? throw new InvalidOperationException());
         var templateData = await sr.ReadToEndAsync();
-        var data = templateData.Replace("{framename}", Name.ToUpper()).Replace("{frameid}", Id!.Value.ToString(CultureInfo.InvariantCulture)).Replace("{spacecraftid}", Spacecraft.NaifId.ToString(CultureInfo.InvariantCulture))
-            .Replace("{spacecraftname}", Spacecraft.Name.ToUpper());
+        var data = templateData.Replace("{framename}", Name.ToUpperInvariant()).Replace("{frameid}", Id!.Value.ToString(CultureInfo.InvariantCulture)).Replace("{spacecraftid}", Spacecraft.NaifId.ToString(CultureInfo.InvariantCulture))
+            .Replace("{spacecraftname}", Spacecraft.Name.ToUpperInvariant());
         await using var sw = new StreamWriter(outputFile.FullName);
         await sw.WriteAsync(data);
     }

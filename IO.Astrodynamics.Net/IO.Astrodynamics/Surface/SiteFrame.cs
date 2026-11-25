@@ -34,7 +34,8 @@ public class SiteFrame : Frame
     /// <summary>
     /// Writes the frame kernel of the topocentric frame of the site, whose kernel variable <c>FRAME_&lt;SITE&gt;_TOPO</c>
     /// holds the upper-cased name of the site: a TK frame of the frame of its body, the frame
-    /// <see cref="GetStateOrientationToICRF"/> gives.
+    /// <see cref="GetStateOrientationToICRF"/> gives. The names are upper-cased and the ids written in the invariant culture,
+    /// whatever the culture of the thread (#798, #821, decisions 101 and 104 of #668, decided by S. Guillet, 2026-11-25).
     /// </summary>
     /// <remarks>
     /// For a site built from coordinates, or from the kernels when no loaded kernel defines its frame id, the frame of
@@ -57,18 +58,18 @@ public class SiteFrame : Frame
     {
         var kernelFrameName = Site.IsSpiceBacked ? SpiceAPI.KernelFrameNameOf(Id!.Value) : null;
         var frameName = kernelFrameName ?? Name;
-        Kernels.TextKernelNames.Check("FRAME_" + frameName.ToUpper(), $"the site '{Site.Name}'");
+        Kernels.TextKernelNames.Check("FRAME_" + frameName.ToUpperInvariant(), $"the site '{Site.Name}'");
         string matrix = kernelFrameName != null ? KernelFrameMatrix(kernelFrameName) : null;
         var template = matrix != null ? "IO.Astrodynamics.Templates.SiteKernelFrameTemplate.tf" : "IO.Astrodynamics.Templates.SiteFrameTemplate.tf";
         await using var stream = this.GetType().Assembly.GetManifestResourceStream(template);
         using StreamReader sr = new StreamReader(stream ?? throw new InvalidOperationException());
         var templateData = await sr.ReadToEndAsync();
         var data = templateData
-            .Replace("{sitename}", Site.Name.ToUpper())
+            .Replace("{sitename}", Site.Name.ToUpperInvariant())
             .Replace("{siteid}", Site.NaifId.ToString(CultureInfo.InvariantCulture))
-            .Replace("{sitenametopo}", frameName.ToUpper())
+            .Replace("{sitenametopo}", frameName.ToUpperInvariant())
             .Replace("{frameid}", Id!.Value.ToString(CultureInfo.InvariantCulture))
-            .Replace("{fixedframe}", Site.CelestialBody.Frame.Name.ToUpper())
+            .Replace("{fixedframe}", Site.CelestialBody.Frame.Name.ToUpperInvariant())
             .Replace("{matrix}", matrix)
             .Replace("{long}", (-Site.Planetodetic.Longitude).ToString(CultureInfo.InvariantCulture))
             .Replace("{colat}", (-(Constants.HalfPi - Site.Planetodetic.Latitude)).ToString(CultureInfo.InvariantCulture));

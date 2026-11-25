@@ -102,7 +102,7 @@ public class CosmographiaExporter
         {
             SiteRootObject siteJson = new SiteRootObject();
             siteJson.name = $"{scenario.Mission.Name}_{scenario.Name}";
-            var bodyName = char.ToUpper(siteByBody.Key.Name[0]) + siteByBody.Key.Name.Substring(1).ToLower();
+            var bodyName = CatalogBodyName(siteByBody.Key.Name);
             siteJson.version = "1.0";
             siteJson.items = new SiteItem[1];
             siteJson.items[0] = new SiteItem();
@@ -124,7 +124,7 @@ public class CosmographiaExporter
                 idx++;
             }
 
-            await using var fileStream = File.Create(Path.Combine(outputDirectory.FullName, $"{bodyName.ToLower()}-features.json"));
+            await using var fileStream = File.Create(Path.Combine(outputDirectory.FullName, $"{bodyName.ToLowerInvariant()}-features.json"));
             await JsonSerializer.SerializeAsync(fileStream, siteJson, CosmographiaJsonContext.Default.SiteRootObject);
         }
     }
@@ -165,24 +165,21 @@ public class CosmographiaExporter
             {
                 observationJson.items[idx] = new ObservationItems();
                 observationJson.items[idx].obsClass = "observation";
-                observationJson.items[idx].name = $"{spacecraft.Name.ToUpper()}_{maneuverByInstrument.Key.Name.ToUpper()}_OBSERVATIONS";
+                observationJson.items[idx].name = $"{spacecraft.Name.ToUpperInvariant()}_{maneuverByInstrument.Key.Name.ToUpperInvariant()}_OBSERVATIONS";
                 observationJson.items[idx].startTime = scenario.Window.StartDate.ToString();
                 observationJson.items[idx].endTime = scenario.Window.EndDate.ToString();
-                observationJson.items[idx].center = char.ToUpper(spacecraft.InitialOrbitalParameters.Observer.Name[0]) +
-                                                    spacecraft.InitialOrbitalParameters.Observer.Name.Substring(1).ToLower();
+                observationJson.items[idx].center = CatalogBodyName(spacecraft.InitialOrbitalParameters.Observer.Name);
                 observationJson.items[idx].trajectoryFrame = new ObservationTrajectoryFrame();
                 observationJson.items[idx].trajectoryFrame.type = "BodyFixed";
-                observationJson.items[idx].trajectoryFrame.body = char.ToUpper(spacecraft.InitialOrbitalParameters.Observer.Name[0]) +
-                                                                  spacecraft.InitialOrbitalParameters.Observer.Name.Substring(1).ToLower();
+                observationJson.items[idx].trajectoryFrame.body = CatalogBodyName(spacecraft.InitialOrbitalParameters.Observer.Name);
 
                 observationJson.items[idx].bodyFrame = new ObservationBodyFrame();
                 observationJson.items[idx].bodyFrame.type = "BodyFixed";
-                observationJson.items[idx].bodyFrame.body = char.ToUpper(spacecraft.InitialOrbitalParameters.Observer.Name[0]) +
-                                                            spacecraft.InitialOrbitalParameters.Observer.Name.Substring(1).ToLower();
+                observationJson.items[idx].bodyFrame.body = CatalogBodyName(spacecraft.InitialOrbitalParameters.Observer.Name);
 
                 observationJson.items[idx].geometry = new ObservationGeometry();
                 observationJson.items[idx].geometry.type = "Observations";
-                observationJson.items[idx].geometry.sensor = $"{spacecraft.Name.ToUpper()}_{maneuverByInstrument.Key.Name.ToUpper()}";
+                observationJson.items[idx].geometry.sensor = $"{spacecraft.Name.ToUpperInvariant()}_{maneuverByInstrument.Key.Name.ToUpperInvariant()}";
                 observationJson.items[idx].geometry.footprintColor = _instrumentColors[maneuverByInstrument.Key];
                 observationJson.items[idx].geometry.footprintOpacity = 0.4;
                 observationJson.items[idx].geometry.showResWithColor = false;
@@ -228,18 +225,17 @@ public class CosmographiaExporter
             foreach (var instrument in spacecraft.Instruments)
             {
                 sensorJson.items[idx] = new SensorItem();
-                sensorJson.items[idx].center = spacecraft.Name.ToUpper();
-                sensorJson.items[idx].name = $"{spacecraft.Name.ToUpper()}_{instrument.Name.ToUpper()}";
+                sensorJson.items[idx].center = spacecraft.Name.ToUpperInvariant();
+                sensorJson.items[idx].name = $"{spacecraft.Name.ToUpperInvariant()}_{instrument.Name.ToUpperInvariant()}";
                 sensorJson.items[idx].startTime = scenario.Window.StartDate.ToString();
                 sensorJson.items[idx].endTime = scenario.Window.EndDate.ToString();
-                sensorJson.items[idx].parent = spacecraft.Name.ToUpper();
+                sensorJson.items[idx].parent = spacecraft.Name.ToUpperInvariant();
                 sensorJson.items[idx].sensorClass = "sensor";
 
                 sensorJson.items[idx].geometry = new SensorGeometry();
                 sensorJson.items[idx].geometry.type = "Spice";
-                sensorJson.items[idx].geometry.instrName = $"{spacecraft.Name.ToUpper()}_{instrument.Name.ToUpper()}";
-                sensorJson.items[idx].geometry.target = char.ToUpper(spacecraft.InitialOrbitalParameters.Observer.Name[0]) +
-                                                        spacecraft.InitialOrbitalParameters.Observer.Name.Substring(1).ToLower();
+                sensorJson.items[idx].geometry.instrName = $"{spacecraft.Name.ToUpperInvariant()}_{instrument.Name.ToUpperInvariant()}";
+                sensorJson.items[idx].geometry.target = CatalogBodyName(spacecraft.InitialOrbitalParameters.Observer.Name);
                 sensorJson.items[idx].geometry.range = 100000;
                 sensorJson.items[idx].geometry.rangeTracking = true;
 
@@ -272,20 +268,19 @@ public class CosmographiaExporter
         foreach (var spacecraft in scenario.Spacecrafts)
         {
             spacecraftJson.items[idx] = new SpacecraftItem();
-            spacecraftJson.items[idx].name = spacecraft.Name.ToUpper();
-            spacecraftJson.items[idx].center = char.ToUpper(spacecraft.InitialOrbitalParameters.Observer.Name[0]) +
-                                               spacecraft.InitialOrbitalParameters.Observer.Name.Substring(1).ToLower();
+            spacecraftJson.items[idx].name = spacecraft.Name.ToUpperInvariant();
+            spacecraftJson.items[idx].center = CatalogBodyName(spacecraft.InitialOrbitalParameters.Observer.Name);
             spacecraftJson.items[idx].spacecraftClass = "spacecraft";
             spacecraftJson.items[idx].startTime = scenario.Window.StartDate.ToString();
             spacecraftJson.items[idx].endTime = scenario.Window.EndDate.ToString();
 
             spacecraftJson.items[idx].trajectory = new SpacecraftTrajectory();
             spacecraftJson.items[idx].trajectory.center = spacecraftJson.items[idx].center;
-            spacecraftJson.items[idx].trajectory.target = spacecraft.Name.ToUpper();
+            spacecraftJson.items[idx].trajectory.target = spacecraft.Name.ToUpperInvariant();
             spacecraftJson.items[idx].trajectory.type = "Spice";
 
             spacecraftJson.items[idx].bodyFrame = new SpacecraftBodyFrame();
-            spacecraftJson.items[idx].bodyFrame.name = spacecraft.Frame.Name.ToUpper();
+            spacecraftJson.items[idx].bodyFrame.name = spacecraft.Frame.Name.ToUpperInvariant();
             spacecraftJson.items[idx].bodyFrame.type = "Spice";
 
             spacecraftJson.items[idx].geometry = new SpacecraftGeometry();
@@ -311,6 +306,14 @@ public class CosmographiaExporter
         await using var fileStream = File.Create(Path.Combine(outputDirectory.FullName, "spacecrafts.json"));
         await JsonSerializer.SerializeAsync(fileStream, spacecraftJson, CosmographiaJsonContext.Default.SpacecraftRootObject);
     }
+
+    /// <summary>
+    /// The name of a body in the catalog, from its SPICE name: its first letter upper-cased and the others lower-cased, in
+    /// the invariant culture (<c>JUPITER</c> gives <c>Jupiter</c>, whatever the culture of the thread: under tr-TR the
+    /// current culture gave <c>Jupıter</c>, #798, decision 101 of #668, decided by S. Guillet, 2026-11-25).
+    /// </summary>
+    internal static string CatalogBodyName(string spiceName) =>
+        char.ToUpperInvariant(spiceName[0]) + spiceName.Substring(1).ToLowerInvariant();
 
     private double[] GetSpacecraftColor(Spacecraft spacecraft)
     {

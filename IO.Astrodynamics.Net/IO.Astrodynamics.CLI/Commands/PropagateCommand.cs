@@ -60,7 +60,7 @@ public class PropagateCommand
             try
             {
                 // The name of the spacecraft names its kernels: checked before anything runs, as its frame kernel checks it
-                Kernels.TextKernelNames.Check("FRAME_" + (name ?? string.Empty).ToUpper() + "_FRAME", $"the spacecraft '{name}'");
+                Kernels.TextKernelNames.Check("FRAME_" + (name ?? string.Empty).ToUpperInvariant() + "_FRAME", $"the spacecraft '{name}'");
             }
             catch (InvalidOperationException e)
             {

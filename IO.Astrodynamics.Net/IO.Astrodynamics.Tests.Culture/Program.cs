@@ -29,7 +29,8 @@ namespace IO.Astrodynamics.Tests.Culture;
 /// &lt;file&gt; OK</c> or the type of the exception its load threw; <c>FRAME &lt;id&gt; &lt;name&gt;</c>, the frame the
 /// loaded kernels define for the frame id of the spacecraft, of each instrument and of the site (<c>-</c> for none);
 /// <c>FOV &lt;id&gt; &lt;shape&gt;</c>, the shape <c>getfov_c</c> reads for each instrument from the loaded instrument
-/// kernels, or its error, <c>SKIPPED</c> on Windows, whose native library does not export CSPICE's routines.
+/// kernels, or its error, <c>SKIPPED</c> on Windows, whose native library does not export CSPICE's routines;
+/// <c>SITE-FRAME-NAME</c>, the name of the frame of the site.
 /// </para>
 /// <para>
 /// The mode <c>export</c> takes the same arguments: it simulates the spacecraft and the site and exports the scenario to
@@ -116,6 +117,7 @@ internal static class Program
                 Console.WriteLine($"FRAME {id.ToString(CultureInfo.InvariantCulture)} {SpiceAPI.KernelFrameNameOf(id) ?? "-"}");
             }
 
+            Console.WriteLine($"SITE-FRAME-NAME {site.Frame.Name}");
             foreach (var instrument in spacecraft.Instruments)
             {
                 string fov = OperatingSystem.IsWindows() ? "SKIPPED" : Fov(instrument.NaifId);

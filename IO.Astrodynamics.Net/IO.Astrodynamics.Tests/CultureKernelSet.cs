@@ -57,8 +57,10 @@ internal static class CultureKernelSet
     internal const string ExportName = "Culture_Export";
 
     /// <summary>
-    /// Simulates the spacecraft and the site of <see cref="Build"/> for an hour from 2021-01-01 TDB (Velocity-Verlet at
-    /// 10 s, outputs every 10 s) and exports the scenario to Cosmographia into <paramref name="directory"/>.
+    /// Simulates the spacecraft and the site of <see cref="Build"/>, with a second site of the same id named
+    /// <c>&lt;site&gt;_J</c> on Jupiter, for an hour from 2021-01-01 TDB (Velocity-Verlet at 10 s, outputs every 10 s) and
+    /// exports the scenario to Cosmographia into <paramref name="directory"/>. The Jupiter site gives the catalog a body
+    /// whose name holds an I (<c>jupiter-features.json</c>, #798).
     /// </summary>
     internal static async Task ExportAsync(Spacecraft spacecraft, Site site, DirectoryInfo directory)
     {
@@ -67,6 +69,8 @@ internal static class CultureKernelSet
         scenario.AddCelestialItem((CelestialBody)spacecraft.InitialOrbitalParameters.Observer);
         scenario.AddSpacecraft(spacecraft);
         scenario.AddSite(site);
+        var jupiter = new CelestialBody(PlanetsAndMoons.JUPITER, Frames.Frame.ICRF, TimeSystem.Time.J2000TDB);
+        scenario.AddSite(new Site(site.Id, site.Name + "_J", jupiter, new Planetodetic(1.0, 0.2, 0.0)));
         scenario.Simulate(new PropagationOptions
         {
             Integrator = new VVIntegratorOptions { Step = System.TimeSpan.FromSeconds(10.0) }, OutputStep = System.TimeSpan.FromSeconds(10.0)
