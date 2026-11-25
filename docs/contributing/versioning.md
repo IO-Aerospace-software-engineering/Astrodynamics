@@ -4680,6 +4680,37 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   and pointed that instrument's boresight, whose orientation is in the frame of its own spacecraft (the spacecraft's own
   boresight 0.577 rad from the Moon in the probe of the gap analysis of L5). `SetManeuvers`, the propagator constructor
   and `Propagate` refuse it (under **Changed**; `ForeignInstrumentTests`, red before the change).
+- **The text kernel writers wrote the negative NAIF ids in the culture of the thread**
+  ([#821](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/821), lot L5c, decision 104 of
+  [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668), decided by S. Guillet,
+  2026-11-25): `SpacecraftFrame.WriteAsync`, `Instrument.WriteFrameAsync` and the three `WriteKernelAsync` substituted
+  `NaifId.ToString()` and the frame id in the current culture, which writes −1 as U+2212 then "1" under sv-SE and fi-FI
+  and as U+200E then "-1" under he-IL, while their angles and vectors were already invariant: the frame kernels failed
+  to load (`SpiceException`: "Encountered '−1821000' while attempting to parse a number"), so did
+  `CosmographiaExporter.ExportAsync`, which loads the frame kernel it writes, and the instrument kernels defined
+  `INS−1821001_…`, which `getfov_c` does not read as the instrument's (`SPICE(FRAMEMISSING)`). Every id the text writers
+  substitute (the clock's and the site frame kernel's, unaffected, included) and the duration and lead of the
+  trajectory plot of the export, which wrote "0,064… d" under sv-SE, are written in the invariant culture. No byte moves
+  under invariant globalization, which the repository's hosts and tools set, nor in a culture whose minus sign is '-'
+  and decimal separator '.'. Migration: none (`KernelWriterCultureTests`, in the child process
+  `IO.Astrodynamics.Tests.Culture`, which runs outside invariant globalization, under sv-SE, fi-FI and he-IL; red
+  before the change).
+- **The kernel writers and the Cosmographia export upper-cased the names in the culture of the thread**
+  ([#798](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/798), lot L5c, decisions 74 and
+  101 of [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668), decided by S. Guillet,
+  2026-11-23 and 2026-11-25): under tr-TR or az, where "i" upper-cases to "İ" (U+0130), the spacecraft frame kernel,
+  the instrument frame and instrument kernels, the site frame kernel and the catalog of an export named `İSS_İMAGER`
+  the object every other culture names `ISS_IMAGER`, the frame of a site, named at construction, was `<NAME>_TOPO` in
+  that culture, and the catalog named the body of a site on Jupiter "Jupıter" (U+0131, in `jupıter-features.json`),
+  which Cosmographia does not know. Every name that reaches a kernel, a path or the catalog is upper-cased, and the
+  catalog's body names lower-cased after their first letter, in the invariant culture: the writers, `Site.Frame`
+  (`<NAME>_TOPO`), `SiteFrame.WriteAsync`, the exporter's object, sensor, centre and body names, and the name check of
+  `astro propagate`. The bytes are unchanged outside the Turkish and Azeri cultures, and always under invariant
+  globalization (the text kernels, the CK, the spacecraft SPK and the catalog of a set and an export with lower-case
+  ASCII names compared byte for byte with 21d0e648); under tr or az a name with "i" now writes "I", and a name that
+  holds "ı" (U+0131) keeps it. `Site.Frame.Name` changes under tr and az only. Migration: none, but a kernel or a
+  catalog written before 11.0.0 under tr or az names its objects with "İ" (`KernelWriterCultureTests`, under tr-TR, red
+  before the change).
 **Changed**
 
 - **Breaking: the scale of a `Time` is a required argument** (lot L2, R24 of
