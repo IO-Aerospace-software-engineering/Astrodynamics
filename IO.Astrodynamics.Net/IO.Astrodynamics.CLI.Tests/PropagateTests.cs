@@ -660,4 +660,24 @@ public class PropagateTests
             Assert.False(Directory.Exists("PBAD"));
         }
     }
+
+    /// <summary>
+    /// A spacecraft name that is not a portable file name is refused before the propagation (#799(a), decision 74 of
+    /// #668): the name names the directories and files of the export, which refuses it too, and the mission and scenario
+    /// the command builds from it. Before, a name holding a '/' propagated and wrote nested directories, and a reserved
+    /// device name or a trailing dot wrote files Windows cannot open.
+    /// </summary>
+    [Theory]
+    [InlineData("a/b", "it holds '/' (U+002F)")]
+    [InlineData("CON", "it is the device name CON")]
+    [InlineData("sat.", "it ends with a dot")]
+    public async Task NameThatIsNotAPortableFileName_TheCommandRefuses(string name, string reason)
+    {
+        using (await Configuration.LockAsync())
+        {
+            Assert.StartsWith($"Error: name: The files of the spacecraft '{name}' cannot be written: its name is not a portable file name, {reason}",
+                CliRun.Fails(2, Propagate(name, "PNAME", "state", StateValues, "ICRF", "0.0", "10.0")));
+            Assert.False(Directory.Exists("PNAME"));
+        }
+    }
 }

@@ -4720,6 +4720,24 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   attitude record now says that a `TLEPropagator` run records none and names `SpacecraftFrame.AddStateOrientationToICRF`,
   which gives the spacecraft attitudes to write (after the run, whose re-arm drops those added before it). Migration:
   none (`KernelWriteContentTests`, red before the change).
+- **`CosmographiaExporter.ExportAsync` deleted the previous export before it wrote the new one**
+  ([#799](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/799)(b), lot L5c, decision 74 of
+  [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668), decided by S. Guillet,
+  2026-11-23): the export deleted `<Mission>_<Scenario>`, then wrote its kernels and its catalog, so a writer that threw
+  (a kernel variable SPICE cannot read, a spacecraft without attitude record) or the catalog that threw (the period of an
+  open orbit, [#824](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/824)) left no export at
+  all. The export checks its names, writes its kernels and its catalog into its scratch directory, and only then replaces
+  the previous export, which a failure before that leaves as it was; the kernels are the same bytes (compared with
+  21d0e648 on an export of a spacecraft, an instrument, a site and a star; the native SPKs of the site and the star hold
+  the path of the scratch directory they were written in, random in both). Migration: none (`ExportCheckTests`, red
+  before the change).
+- **A scenario named `/..` made `CosmographiaExporter.ExportAsync` delete the whole output directory**
+  ([#822](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/822), lot L5c, decision 105 of
+  [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668), decided by S. Guillet,
+  2026-11-25): `<Mission>_<Scenario>` resolved to the output directory itself, which the export deleted with everything
+  in it before it wrote. The mission and scenario names are checked as the name of the export directory they form, by the
+  portable file-name rule of #799(a) (under **Changed**), before anything is deleted. Migration: none
+  (`ExportCheckTests`, red before the change: the output directory and the file beside the export were deleted).
 **Changed**
 
 - **Breaking: the scale of a `Time` is a required argument** (lot L2, R24 of
@@ -7721,6 +7739,22 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   `SpiceAPI.WriteEphemeris`, whose native writer writes three states or more; nothing is written. `SpiceAPI.WriteEphemeris`
   and `Site.WriteEphemeris`, whose arguments are at fault, keep theirs. Migration: catch `InvalidOperationException`, or
   propagate the star over three steps or more.
+- **Breaking: `CosmographiaExporter.ExportAsync` refuses a name that is not a portable file name**
+  ([#799](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/799)(a), lot L5c, decisions 74 and
+  105 of #668, decided by S. Guillet, 2026-11-23 and 2026-11-25): a spacecraft, instrument, site or star name, or the
+  export directory `<Mission>_<Scenario>` the mission and scenario names form, that is empty, holds one of
+  `/ \ : * ? " < > |` or a control character, is `.` or `..`, ends with a dot or a space, or is a device name Windows
+  reserves (CON, PRN, AUX, NUL, COM1 to COM9, LPT1 to LPT9, in any case, alone or before a dot) throws
+  `InvalidOperationException` naming the object and the reason, before anything is deleted or written (internal
+  `Kernels/PortableFileNames`, beside `TextKernelNames`). Before, a name holding a `/` or a `\` was written into nested
+  directories on Linux and macOS, a scenario named `/..` deleted the output directory (#822, under **Fixed**), and a
+  reserved name or a trailing dot wrote files Windows cannot open. The constructors do not check it. Migration: rename the
+  object (no name of the repository's tests and examples changes).
+- **Breaking: `astro propagate` refuses a spacecraft name that is not a portable file name**
+  ([#799](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/799)(a), lot L5c, decision 74 of
+  #668, decided by S. Guillet, 2026-11-23): the rule of the export, checked before the propagation, exit code 2
+  (`Error: name: …`), where the name propagated and was written into nested directories or failed after the propagation.
+  Migration: another name.
 
 **Removed**
 

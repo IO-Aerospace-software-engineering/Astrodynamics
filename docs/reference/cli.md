@@ -77,8 +77,10 @@ default, 100 at most). It writes the kernels of the spacecraft, NAIF identifier 
 command before 11.0.0, with `--atmosphere standard` for a run with `--drag` about the Earth, whose SPK it writes byte for
 byte. An atmosphere is read by the drag only: `--atmosphere` without `--drag`, or about another centre than the Earth, is
 an input error, and so are `--drag` about another centre than the Earth and Mars, a `--body` that is the centre, a mass
-or an area of 0 or less, a negative drag coefficient, and a name that cannot name a kernel variable (a blank, a quote, more
-than 32 bytes with its frame).
+or an area of 0 or less, a negative drag coefficient, a name that is not a portable file name (a `/`, `\`, `:` or another character
+Windows refuses, a trailing dot or space, a device name such as CON or NUL; the rule of the
+[Cosmographia export](../guides/cosmographia-export.md#scenario-export), #799) and a name that cannot name a kernel
+variable (a blank, a quote, more than 32 bytes with its frame), all refused before the propagation.
 
 ## Known limitations
 

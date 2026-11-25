@@ -59,7 +59,10 @@ public class PropagateCommand
             var settings = PropagationSettings.Read(integrator, drag, atmosphere, degree, mass, area, cd);
             try
             {
-                // The name of the spacecraft names its kernels: checked before anything runs, as its frame kernel checks it
+                // The name of the spacecraft names its kernels and their files: checked before anything runs, as the export
+                // checks it (a portable file name, #799(a), decision 74 of #668; the mission Mission<name> and the scenario
+                // Scenario<name> pass when it passes) and as its frame kernel checks it
+                Kernels.PortableFileNames.Check(name, $"the spacecraft '{name}'");
                 Kernels.TextKernelNames.Check("FRAME_" + (name ?? string.Empty).ToUpperInvariant() + "_FRAME", $"the spacecraft '{name}'");
             }
             catch (InvalidOperationException e)
