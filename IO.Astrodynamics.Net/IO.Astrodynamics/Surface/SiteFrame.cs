@@ -65,9 +65,9 @@ public class SiteFrame : Frame
         var templateData = await sr.ReadToEndAsync();
         var data = templateData
             .Replace("{sitename}", Site.Name.ToUpper())
-            .Replace("{siteid}", Site.NaifId.ToString())
+            .Replace("{siteid}", Site.NaifId.ToString(CultureInfo.InvariantCulture))
             .Replace("{sitenametopo}", frameName.ToUpper())
-            .Replace("{frameid}", Id.ToString())
+            .Replace("{frameid}", Id!.Value.ToString(CultureInfo.InvariantCulture))
             .Replace("{fixedframe}", Site.CelestialBody.Frame.Name.ToUpper())
             .Replace("{matrix}", matrix)
             .Replace("{long}", (-Site.Planetodetic.Longitude).ToString(CultureInfo.InvariantCulture))

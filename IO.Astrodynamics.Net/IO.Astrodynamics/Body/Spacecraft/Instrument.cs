@@ -356,7 +356,9 @@ namespace IO.Astrodynamics.Body.Spacecraft
 
         /// <summary>
         /// Writes the frame kernel of the instrument, a TK frame relative to the spacecraft frame, whose kernel variable
-        /// <c>FRAME_&lt;SPACECRAFT&gt;_&lt;INSTRUMENT&gt;</c> holds the upper-cased names.
+        /// <c>FRAME_&lt;SPACECRAFT&gt;_&lt;INSTRUMENT&gt;</c> holds the upper-cased names. The ids are written in the invariant
+        /// culture, whatever the culture of the thread (#821, decision 104 of #668, decided by S. Guillet, 2026-11-25: before,
+        /// a culture whose minus sign is not '-', such as sv-SE, fi-FI or he-IL, wrote a kernel SPICE could not load).
         /// </summary>
         /// <param name="outputFile">The frame kernel to write.</param>
         /// <exception cref="InvalidOperationException">The names make a kernel variable name SPICE cannot read: a blank, a
@@ -372,9 +374,9 @@ namespace IO.Astrodynamics.Body.Spacecraft
             var data = templateData
                 .Replace("{spacecraftname}", Spacecraft.Name.ToUpper())
                 .Replace("{instrumentname}", Name.ToUpper())
-                .Replace("{instrumentid}", NaifId.ToString())
+                .Replace("{instrumentid}", NaifId.ToString(CultureInfo.InvariantCulture))
                 .Replace("{framename}", Spacecraft.Name.ToUpper() + "_" + Name.ToUpper())
-                .Replace("{spacecraftid}", Spacecraft.NaifId.ToString())
+                .Replace("{spacecraftid}", Spacecraft.NaifId.ToString(CultureInfo.InvariantCulture))
                 .Replace("{spacecraftframe}", Spacecraft.Frame.Name.ToUpper())
                 .Replace("{x}", Orientation.X.ToString(CultureInfo.InvariantCulture))
                 .Replace("{y}", Orientation.Y.ToString(CultureInfo.InvariantCulture))
@@ -405,7 +407,9 @@ namespace IO.Astrodynamics.Body.Spacecraft
 
         /// <summary>
         /// Writes the instrument kernel, whose <c>INS&lt;id&gt;_FOV_FRAME</c> names the frame of the instrument frame kernel,
-        /// <c>&lt;SPACECRAFT&gt;_&lt;INSTRUMENT&gt;</c> upper-cased.
+        /// <c>&lt;SPACECRAFT&gt;_&lt;INSTRUMENT&gt;</c> upper-cased. The ids are written in the invariant culture, whatever the
+        /// culture of the thread (#821, decision 104 of #668, decided by S. Guillet, 2026-11-25: before, a culture whose minus
+        /// sign is not '-', such as sv-SE, fi-FI or he-IL, wrote <c>INS−…</c>, which SPICE does not read as the instrument's).
         /// </summary>
         /// <param name="outputFile">The instrument kernel to write.</param>
         /// <exception cref="InvalidOperationException">The names make a frame the instrument frame kernel cannot define, by

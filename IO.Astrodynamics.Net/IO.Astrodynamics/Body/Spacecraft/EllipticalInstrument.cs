@@ -29,9 +29,9 @@ public class EllipticalInstrument : Instrument
         using StreamReader sr = new StreamReader(stream ?? throw new InvalidOperationException());
         var templateData = await sr.ReadToEndAsync();
         var data = templateData
-            .Replace("{instrumentid}", NaifId.ToString())
+            .Replace("{instrumentid}", NaifId.ToString(CultureInfo.InvariantCulture))
             .Replace("{framename}", Spacecraft.Name.ToUpper() + "_" + Name.ToUpper())
-            .Replace("{spacecraftid}", Spacecraft.NaifId.ToString())
+            .Replace("{spacecraftid}", Spacecraft.NaifId.ToString(CultureInfo.InvariantCulture))
             .Replace("{bx}", Boresight.X.ToString(CultureInfo.InvariantCulture))
             .Replace("{by}", Boresight.Y.ToString(CultureInfo.InvariantCulture))
             .Replace("{bz}", Boresight.Z.ToString(CultureInfo.InvariantCulture))

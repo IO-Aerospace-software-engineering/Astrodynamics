@@ -1,4 +1,5 @@
 using System;
+using System.Globalization;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
@@ -69,7 +70,7 @@ namespace IO.Astrodynamics.Body.Spacecraft
             await using var stream = this.GetType().Assembly.GetManifestResourceStream("IO.Astrodynamics.Templates.ClockTemplate.tsc");
             using StreamReader sr = new StreamReader(stream ?? throw new InvalidOperationException());
             var templateData = await sr.ReadToEndAsync();
-            var data = templateData.Replace("{id}", System.Math.Abs(Spacecraft.NaifId).ToString()).Replace("{resolution}",  Resolution.ToString());
+            var data = templateData.Replace("{id}", System.Math.Abs(Spacecraft.NaifId).ToString(CultureInfo.InvariantCulture)).Replace("{resolution}",  Resolution.ToString(CultureInfo.InvariantCulture));
             await using var sw = new StreamWriter(outputFile.FullName);
             await sw.WriteAsync(data);
         }

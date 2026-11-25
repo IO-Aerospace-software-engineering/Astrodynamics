@@ -1,6 +1,7 @@
 // Copyright 2023. Sylvain Guillet (sylvain.guillet@tutamail.com)
 
 using System;
+using System.Globalization;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -298,9 +299,9 @@ public class CosmographiaExporter
             spacecraftJson.items[idx].label.color = GetSpacecraftColor(spacecraft);
             spacecraftJson.items[idx].trajectoryPlot = new SpacecraftTrajectoryPlot();
             spacecraftJson.items[idx].trajectoryPlot.color = spacecraftJson.items[idx].label.color;
-            spacecraftJson.items[idx].trajectoryPlot.duration = $"{spacecraft.InitialOrbitalParameters.Period().TotalDays} d";
+            spacecraftJson.items[idx].trajectoryPlot.duration = string.Create(CultureInfo.InvariantCulture, $"{spacecraft.InitialOrbitalParameters.Period().TotalDays} d");
             spacecraftJson.items[idx].trajectoryPlot.fade = 1;
-            spacecraftJson.items[idx].trajectoryPlot.lead = $"{spacecraft.InitialOrbitalParameters.Period().TotalDays * 0.1} d";
+            spacecraftJson.items[idx].trajectoryPlot.lead = string.Create(CultureInfo.InvariantCulture, $"{spacecraft.InitialOrbitalParameters.Period().TotalDays * 0.1} d");
             spacecraftJson.items[idx].trajectoryPlot.visible = true;
             spacecraftJson.items[idx].trajectoryPlot.lineWidth = 3;
 

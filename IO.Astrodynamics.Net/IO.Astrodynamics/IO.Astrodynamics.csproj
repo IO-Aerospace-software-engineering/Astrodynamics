@@ -43,6 +43,7 @@
         <InternalsVisibleTo Include="IO.Astrodynamics.Tests" />
         <InternalsVisibleTo Include="IO.Astrodynamics.Tests.KernelUnload" />
         <InternalsVisibleTo Include="IO.Astrodynamics.Tests.ColdStart" />
+        <InternalsVisibleTo Include="IO.Astrodynamics.Tests.Culture" />
         <InternalsVisibleTo Include="IO.Astrodynamics.CLI" />
         <InternalsVisibleTo Include="IO.Astrodynamics.CLI.Tests" />
         <InternalsVisibleTo Include="IO.Astrodynamics.ConformanceRunner" />

@@ -1,6 +1,7 @@
 // Copyright 2024. Sylvain Guillet (sylvain.guillet@tutamail.com)
 
 using System;
+using System.Globalization;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -445,7 +446,9 @@ public class SpacecraftFrame : Frame
 
     /// <summary>
     /// Writes the frame kernel of the spacecraft frame, whose kernel variable <c>FRAME_&lt;NAME&gt;_FRAME</c> holds the
-    /// upper-cased name of the spacecraft.
+    /// upper-cased name of the spacecraft. The ids are written in the invariant culture, whatever the culture of the thread
+    /// (#821, decision 104 of #668, decided by S. Guillet, 2026-11-25: before, a culture whose minus sign is not '-', such as
+    /// sv-SE, fi-FI or he-IL, wrote a kernel SPICE could not load).
     /// </summary>
     /// <param name="outputFile">The frame kernel to write.</param>
     /// <exception cref="InvalidOperationException">The name of the spacecraft makes a kernel variable name SPICE cannot read:
@@ -458,7 +461,7 @@ public class SpacecraftFrame : Frame
         await using var stream = this.GetType().Assembly.GetManifestResourceStream("IO.Astrodynamics.Templates.FrameTemplate.tf");
         using StreamReader sr = new StreamReader(stream ?? throw new InvalidOperationException());
         var templateData = await sr.ReadToEndAsync();
-        var data = templateData.Replace("{framename}", Name.ToUpper()).Replace("{frameid}", Id.ToString()).Replace("{spacecraftid}", Spacecraft.NaifId.ToString())
+        var data = templateData.Replace("{framename}", Name.ToUpper()).Replace("{frameid}", Id!.Value.ToString(CultureInfo.InvariantCulture)).Replace("{spacecraftid}", Spacecraft.NaifId.ToString(CultureInfo.InvariantCulture))
             .Replace("{spacecraftname}", Spacecraft.Name.ToUpper());
         await using var sw = new StreamWriter(outputFile.FullName);
         await sw.WriteAsync(data);
