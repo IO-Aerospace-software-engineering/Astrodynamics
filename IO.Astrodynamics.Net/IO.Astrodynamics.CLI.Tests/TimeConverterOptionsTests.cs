@@ -1,7 +1,3 @@
-using System.Text;
-using IO.Astrodynamics.CLI.Commands;
-using IO.Astrodynamics.CLI.Commands.Parameters;
-
 namespace IO.Astrodynamics.CLI.Tests;
 
 /// <summary>
@@ -82,31 +78,65 @@ public class TimeConverterOptionsTests
     [InlineData(null, "csv")]
     [InlineData("local", "jd")]
     [InlineData("local", "seconds")]
-    public void AnUnknownScaleOrFormat_OrLocalOutsideIso_Throws(string? to, string? format)
+    public void AnUnknownScaleOrFormat_OrLocalOutsideIso_IsAnInputError(string? to, string? format)
     {
-        Assert.Throws<ArgumentException>(() => Run("2017-01-01T00:00:00Z", to: to, format: format));
+        using (Configuration.Lock())
+        {
+            Assert.StartsWith("Error: ", CliRun.Fails(2, Args("2017-01-01T00:00:00Z", to, format, false, false, false)));
+        }
     }
 
     [Fact]
-    public void AnOptionAndAnAliasThatDisagree_Throw()
+    public void AnOptionAndAnAliasThatDisagree_AreAnInputError()
     {
-        Assert.Throws<ArgumentException>(() => Run("2017-01-01T00:00:00Z", to: "utc", toTdb: true));
-        Assert.Throws<ArgumentException>(() => Run("2017-01-01T00:00:00Z", format: "jd", toSeconds: true));
+        using (Configuration.Lock())
+        {
+            Assert.Equal($"Error: Two scales are asked for: utc and tdb. Give one.{Environment.NewLine}",
+                CliRun.Fails(2, Args("2017-01-01T00:00:00Z", "utc", null, true, false, false)));
+            Assert.Equal($"Error: Two formats are asked for: jd and seconds. Give one.{Environment.NewLine}",
+                CliRun.Fails(2, Args("2017-01-01T00:00:00Z", null, "jd", false, false, true)));
+        }
+
         // An alias that agrees with its option is accepted
         Assert.Equal(Run("2017-01-01T00:00:00Z", to: "utc"), Run("2017-01-01T00:00:00Z", to: "utc", toUtc: true));
     }
 
     [Fact]
-    public async Task AnArgumentAfterTheEpoch_Throws()
+    public void AnArgumentAfterTheEpoch_IsAnInputError()
     {
         // An unquoted tag (time-converter 2020-01-01T12:00:00 TAI) reached the command as a second argument, which was
         // dropped, and the epoch read untagged, as TDB (D3.7 of #668)
         using (Configuration.Lock())
         {
-            var exception = await Assert.ThrowsAsync<ArgumentException>(() => new TimeConverterCommand().TimeConverter(
-                new EpochParameters { Epoch = "2020-01-01T12:00:00" }, unexpected: ["TAI"]));
-            Assert.Contains("\"2020-01-01T12:00:00 TAI\"", exception.Message);
+            var error = CliRun.Fails(2, "time-converter", "2020-01-01T12:00:00", "TAI");
+            Assert.Contains("\"2020-01-01T12:00:00 TAI\"", error);
         }
+    }
+
+    /// <summary>
+    /// A negative number of seconds, bare (R29 of #668: Cocona read "-1000" as the options -1, -0, ...), and an epoch the
+    /// grammar refuses, an input error.
+    /// </summary>
+    [Fact]
+    public void NegativeSeconds_AndAnEpochOfNoForm()
+    {
+        using (Configuration.Lock())
+        {
+            Assert.Equal($"2000-01-01T11:43:20.0000000 TDB{Environment.NewLine}", CliRun.Ok("time-converter", "-1000"));
+            Assert.Equal($"-1000 UTC{Environment.NewLine}", CliRun.Ok("time-converter", "-1000 UTC", "--to", "utc", "--format", "seconds"));
+            Assert.StartsWith("Error: epoch: 'tomorrow' is not an epoch", CliRun.Fails(2, "time-converter", "tomorrow"));
+        }
+    }
+
+    private static string[] Args(string epoch, string? to, string? format, bool toTdb, bool toUtc, bool toSeconds)
+    {
+        var args = new List<string> { "time-converter", epoch };
+        if (to != null) args.AddRange(["--to", to]);
+        if (format != null) args.AddRange(["--format", format]);
+        if (toTdb) args.Add("-t");
+        if (toUtc) args.Add("-u");
+        if (toSeconds) args.Add("-e");
+        return args.ToArray();
     }
 
     private static string Run(string epoch, string? to = null, string? format = null, bool toTdb = false, bool toUtc = false,
@@ -114,11 +144,7 @@ public class TimeConverterOptionsTests
     {
         using (Configuration.Lock())
         {
-            var sb = new StringBuilder();
-            Console.SetOut(new StringWriter(sb));
-            new TimeConverterCommand().TimeConverter(new EpochParameters { Epoch = epoch }, toTdb, toUtc, false, false, toSeconds,
-                false, to, format);
-            return sb.ToString();
+            return CliRun.Ok(Args(epoch, to, format, toTdb, toUtc, toSeconds));
         }
     }
 }

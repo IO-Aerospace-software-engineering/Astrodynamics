@@ -295,6 +295,17 @@ into a managed frame (TEME, CIRS, TIRS, the frame of a site from coordinates), s
 SPICE error with no long message is reported by its short one (`SPICE(ZEROVELOCITY)`), where the proxies that report through
 the shared routine reported such an error as a success.
 
+### Body names
+
+`SpiceAPI.Instance.TryGetNaifId(name, out naifId)` gives the NAIF identifier SPICE gives to a body name (`bodn2c_c`):
+its built-in names (the planets, their moons and barycentres, the Sun, the solar system barycentre, the stations of the
+DSN, many spacecraft) and those the loaded kernels assign (`NAIF_BODY_NAME`, `NAIF_BODY_CODE`), in any case, the
+blanks compressed (choice 12 of [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668),
+decided by S. Guillet, 2026-11-19). It returns false for a name SPICE does not know, a blank name and the text of an
+identifier (`"399"`, which is not a name), throws `ArgumentNullException` for null, and reads the kernels loaded at
+the time of the call, under the lock. The command-line tool names its objects through it. The CCSDS readers keep their
+own kernel-free table of centre names.
+
 ### Example
 
 ```csharp

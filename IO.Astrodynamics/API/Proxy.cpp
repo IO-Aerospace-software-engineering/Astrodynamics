@@ -526,6 +526,31 @@ bool GetFrameNameProxy(int frameId, char name[33])
     return true;
 }
 
+bool GetNaifIdProxy(const char *name, int *naifId)
+{
+    ActivateErrorManagement();
+    ClearLastError();
+    *naifId = 0;
+    SpiceInt code = 0;
+    SpiceBoolean found = SPICEFALSE;
+    bodn2c_c(name, &code, &found);
+    if (failed_c())
+    {
+        std::strncpy(lastError, TakeSpiceMessages(), sizeof(lastError) - 1);
+        lastError[sizeof(lastError) - 1] = '\0';
+        return false;
+    }
+
+    if (!found)
+    {
+        std::snprintf(lastError, sizeof(lastError), "SPICE knows no body named '%s'", name);
+        return false;
+    }
+
+    *naifId = static_cast<int>(code);
+    return true;
+}
+
 bool GetFrameInfoProxy(const char *frameName, int *frameId, int *centerId, int *frameClass)
 {
     ActivateErrorManagement();

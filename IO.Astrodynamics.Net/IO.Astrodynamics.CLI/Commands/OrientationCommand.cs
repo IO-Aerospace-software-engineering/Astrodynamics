@@ -1,48 +1,64 @@
-using System;
 using System.Collections.Generic;
-using System.IO;
-using System.Threading.Tasks;
+using System.Linq;
 using Cocona;
+using IO.Astrodynamics.CLI.Cli;
 using IO.Astrodynamics.CLI.Commands.Parameters;
-using IO.Astrodynamics.Frames;
 using IO.Astrodynamics.OrbitalParameters;
-using IO.Astrodynamics.TimeSystem;
 
 namespace IO.Astrodynamics.CLI.Commands;
 
 public class OrientationCommand
 {
-    public OrientationCommand()
+    [Command("orientation", Description = "The orientations of a celestial body or a spacecraft relative to a frame over a window: the rotation from the frame and the angular velocity")]
+    public int Orientation(
+        [Argument("object", Description = "Celestial body, or spacecraft read from its CK: " + EphemerisCommand.ObjectDescription)]
+        string @object,
+        KernelOptions kernels,
+        WindowOptions window,
+        TimeScaleOptions timeScale,
+        OutputOptions output,
+        [Option("frame", ValueName = "frame", Description = "Reference frame: ICRF (written J2000) or a frame of the library or of the loaded kernels")]
+        string frame = "ICRF",
+        [Argument("unexpected", Description = "Nothing: a value with spaces is quoted, everything but the objects is an option")]
+        string[] unexpected = null)
     {
-    }
-
-    [Command("orientation", Description = "Compute orientations of given object")]
-    public Task Orientation(
-        [Argument(Description = "Kernels path: a directory, a kernel file or a meta-kernel")] string kernelsPath,
-        [Argument(Description = "Object identifier (Naif Identifier)")] int objectId,
-        WindowParameters windowParameters,
-        [Argument(Description = "Step size <d.hh:mm:ss.fff>")] TimeSpan step,
-        [Argument(Description = "Frame")] string frame="ICRF")
-    {
-        SpiceAPI.Instance.LoadKernels(Helpers.KernelsPath(kernelsPath));
-        
-        Frame targetFrame = Helpers.ResolveFrame(frame);
-        var orientationAt = Helpers.CreateOrientationReader(objectId, targetFrame);
-
-        List<StateOrientation> orientations = new List<StateOrientation>();
-        Window windowInput = Helpers.ConvertWindowInput(windowParameters.Begin, windowParameters.End);
-        for (Time epoch = windowInput.StartDate; epoch <= windowInput.EndDate; epoch+=step)
+        return CliContext.Execute(output.Verbose, () =>
         {
-            orientations.Add(orientationAt(epoch));
-        }
+            CliValues.NoMore(unexpected);
+            var format = CliOutput.Format(output.Format, tabular: true);
+            var searchWindow = CliValues.Window(window.Begin, window.End);
+            var step = CliValues.Step(window.Step, "--step");
+            var scale = CliValues.TimeScale(timeScale.TimeScale, searchWindow.StartDate.Scale);
 
-        foreach (var orientation in orientations)
-        {
-            Console.WriteLine(orientation.ToString());
-        }
+            CliKernels.Load(kernels.Kernels);
+            var objectId = CliValues.Object(@object, "object");
+            var referenceFrame = CliValues.Frame(frame, "--frame");
+            var orientationAt = Helpers.CreateOrientationReader(objectId, referenceFrame);
 
-        return Task.CompletedTask;
+            // The epochs of the ephemeris reads: start + i·step within the window, in the scale of its start (#563; unified
+            // with Window.Sample in L6, decision 9 of #668)
+            var orientations = new List<StateOrientation>();
+            for (long i = 0;; i++)
+            {
+                var epoch = searchWindow.StartDate + step * i;
+                if (epoch > searchWindow.EndDate)
+                {
+                    break;
+                }
+
+                orientations.Add(CliTime.Relabel(orientationAt(epoch), scale));
+            }
+
+            if (format == OutputFormat.Csv)
+            {
+                CliOutput.WriteCsv(CliContext.Out, CliOutput.OrientationHeader, orientations.Select(CliOutput.Orientation));
+                return;
+            }
+
+            foreach (var orientation in orientations)
+            {
+                CliContext.Out.WriteLine(CliOutput.OrientationText(orientation));
+            }
+        });
     }
-
-   
 }
