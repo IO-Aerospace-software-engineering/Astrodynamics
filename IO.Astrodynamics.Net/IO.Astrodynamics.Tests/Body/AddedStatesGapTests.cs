@@ -438,7 +438,7 @@ public class AddedStatesGapTests
         // #668, lot L6; ArgumentException before 11.0.0)
         var camera = spacecraft.AddCircularInstrument("GAPCAM", 0.1, Vector3.VectorZ, Vector3.VectorY, Vector3.Zero);
         var notCovered = Assert.Throws<InvalidOperationException>(() =>
-            camera.FindWindowsInFieldOfViewConstraint(across, spacecraft, earth, Frame.ICRF, ShapeType.Point, Aberration.None, TimeSpan.FromMinutes(1.0)));
+            camera.FindFieldOfViewWindows(across, earth, new FieldOfViewSearchOptions { Step = TimeSpan.FromMinutes(1.0), TargetShape = ShapeType.Point, TargetFrame = Frame.ICRF }));
         Assert.Contains("leaves the propagated states", notCovered.Message);
     }
 
@@ -544,8 +544,7 @@ public class AddedStatesGapTests
         var secondary = NewSpacecraft(-7986, new StateVector(new Vector3(-7378137.0, 0.0, 1000.0), new Vector3(0.0, -5509.9, -4623.4), earth, Start, Frame.ICRF));
         var profile = new ProtectedSpacecraftProfile(spacecraft);
         Assert.Equal("screeningWindow", Assert.Throws<ArgumentException>(() => ConjunctionAssessment.Analyze(profile, secondary, wider)).ParamName);
-        Assert.Throws<InvalidOperationException>(() => spacecraft.FindWindowsOnDistanceConstraint(wider, moon, RelationnalOperator.Greater, 1.0,
-            Aberration.None, TimeSpan.FromSeconds(60.0)).ToArray());
+        Assert.Throws<InvalidOperationException>(() => moon.FindDistanceWindows(wider, spacecraft, RelationnalOperator.Greater, 1.0, new WindowSearchOptions { Step = TimeSpan.FromSeconds(60.0) }).ToArray());
 
         // The SPK refuses it
         var directory = Directory.CreateDirectory(Path.Combine("Data/User/AddedStatesGap", "store-of-one"));

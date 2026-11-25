@@ -211,7 +211,7 @@ maneuver, the static axes before any plan ([Body Axes](attitudes.md#body-axes)).
 | Value | Description |
 |-------|-------------|
 | `Incidence` | Angle between surface normal and illumination direction |
-| `Emission` | Angle between surface normal and observer direction; needs an observer: `Site.FindWindowsOnIlluminationConstraint`, which takes none, throws for it (#682) |
+| `Emission` | Angle between surface normal and observer direction; needs an observer: `Site.FindIlluminationWindows`, which takes none, throws for it (#682) |
 | `Phase` | Angle between illumination and observer directions; needs an observer, as `Emission` |
 
 ## Classification (TLE)

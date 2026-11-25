@@ -81,7 +81,9 @@ the instruments of its own spacecraft, and the text kernel writers synchronous, 
 the spacecraft alone, a write with nothing to write that throws `InvalidOperationException`, and a Cosmographia export
 (and `astro propagate`) that refuses a name that is not a portable file name and a previous export SPICE holds.
 **Removed** lists `Instrument.PositionInFOV`, `LowThrustManeuver`, `Quaternion.Zero`, `Star.PropagationOutput`,
-`Window.Merge` and `Window.Intersects(Time)` (now `Hull` and `Contains`),
+`Window.Merge` and `Window.Intersects(Time)` (now `Hull` and `Contains`), the window searches on the target
+(`FindWindowsOn…Constraint` of `CelestialItem`, `ILocalizable` and `Site`, `Instrument.FindWindowsInFieldOfViewConstraint`
+and the instance `GeometryFinder`, now the searches on the observer),
 `ExceptionBase`, `Matrix.Set`, `Vector3 * Vector3`, six exports of the native library that .NET never called, the
 public interop structs of `IO.Astrodynamics.DTO`, the ten raw conversions of `SpiceAPI`, the public helpers of the
 implementation, the `Equatorial` constructors of two angles and the coordinate conversions taking a flattening and a
@@ -5022,7 +5024,9 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   and the indexer. A dependent compiled against 10.x must be rebuilt, an implementer of `ILocalizable` changes the return
   type of its three searches, and a `var` result later assigned a LINQ query no longer compiles (CS0266). Migration:
   rebuild; in an `ILocalizable` implementation, return `IReadOnlyList<Window>` (an array or a list); declare as
-  `IEnumerable<Window>` a variable that a query is later assigned to, or end the query with `.ToArray()`.
+  `IEnumerable<Window>` a variable that a query is later assigned to, or end the query with `.ToArray()`. The searches of
+  `CelestialItem`, `ILocalizable`, `Site` (but `FindDayWindows`), `Instrument` and `GeometryFinder` are removed since,
+  in lot L6 (see **Removed**), and the searches on the observer that replace them return an `IReadOnlyList<Window>` too.
 - **Breaking: a reversed window throws** (R11 of #668, section A of the re-baseline, decided by S. Guillet, 2026-11-19): `new Window(start, end)` throws `ArgumentException`
   (`endDate`) for an end before its start, and `new Window(start, length)` `ArgumentOutOfRangeException` (`length`) for a
   negative length, where they built a window of negative length; a window of zero length is accepted, and each end keeps
@@ -5163,8 +5167,10 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   [−π/2, π/2]. Each range is closed; the four extremes and the lengths are not checked. The message says the angles are
   in radians; the command line maps it to an error of `--value`, exit code 2. Before, the search ran on the value given:
   a threshold in degrees gave no window or the whole search window, without an error (`WindowSearchAngleGuardTests`).
-  Every threshold in its range searches as before, bit for bit. Migration: give the angle in radians
-  (`Constants.Deg2Rad`).
+  Every threshold in its range searches as before, bit for bit. The searches of `CelestialItem` and `Site` are removed
+  since, in lot L6 (see **Removed**): the guard is that of `FindCoordinateWindows`, `Site.FindHorizontalWindows` (an
+  elevation in [−π/2, π/2], an azimuth in [0, 2π]) and `Site.FindIlluminationWindows` that replace them. Migration: give
+  the angle in radians (`Constants.Deg2Rad`).
 - **Breaking: the field-of-view search throws `InvalidOperationException` for a search window that leaves the stored
   states** (lot L6, decisions 81 and 86 of [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668),
   decided by S. Guillet, 2026-11-23): the managed `Instrument.FindWindowsInFieldOfViewConstraint` refuses a search window
@@ -5173,7 +5179,8 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   `GetEphemeris` over a window and the managed distance search; it threw `ArgumentException` (`searchWindow`), the same
   message. The `ILocalizable` overloads of the conjunction analysis keep `ArgumentException` until lot L7; a target that
   is the instrument's spacecraft or an ellipsoid without radii keeps `ArgumentException` (`FieldOfViewSearchTests`,
-  `AddedStatesGapTests`). Migration: catch `InvalidOperationException` there.
+  `AddedStatesGapTests`); the search is `Instrument.FindFieldOfViewWindows` since lot L6 (see **Removed**). Migration:
+  catch `InvalidOperationException` there.
 - **Breaking: `Site.FindDayWindows` labels its windows in the scale of the search window's start** (lot L6, R15 of
   [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668), IC-12, decided by S. Guillet,
   2026-11-19): it is `FindIlluminationWindows` with a step of 1 min and `LTS`, the same instants, bit for bit on a TDB
@@ -5189,6 +5196,27 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   public field `OccultationSearchOptions.DefaultConvergenceTolerance` is internal. The searches are unchanged, bit for
   bit. Migration: `options.ConvergenceTolerance ?? TimeSpan.FromTicks(10)` where a `TimeSpan` is read; `TimeSpan.FromTicks(10)`
   for `DefaultConvergenceTolerance`.
+- **Breaking: the occultation search of a site observer is the library's** (lot L6, R15 of
+  [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668), choice 4 and IC-10, decided by
+  S. Guillet, 2026-11-19): `site.FindOccultationWindows(window, target, front, options)` runs the managed occultation
+  search whatever the site, as the search of the target from the site did (`target.FindWindowsOnOccultationConstraint(window,
+  site, …)`), equal to it bit for bit (`ObserverWindowSearchTests`). The removed `Site.FindWindowsOnOccultationConstraint`
+  ran CSPICE's `gfoclt_c` for a site, a spacecraft target and a front body all from the kernels: there the windows move,
+  the same windows with each edge within 5.0e-7 s geometric, 3.7e-4 s with LT, 1.2e-4 s with CN and 6.2e-4 s with XLT
+  (LRO behind the Moon from DSS-13, 7 windows over 12 h at a 60 s step, `Occultation_SiteObserver_MovesFromGfocltWithinItsMeasure`;
+  which of the two light-time models is right is [#828](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/828)),
+  and the windows are labelled in the scale of the search window's start. A site built from coordinates, the case of the
+  conformance runner, searched with the library before as now. Migration: none; for `gfoclt_c`'s windows from a site of the
+  kernels, call `SpiceAPI.FindWindowsOnOccultationConstraint` with the site's NAIF id as observer.
+- **Breaking: the searches on the observer label their windows in the scale of the search window's start** (lot L6, R15
+  of [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668), IC-7 and IC-8, decided by
+  S. Guillet, 2026-11-19), where the removed searches on the target labelled TDB on the paths of CSPICE and of the
+  occultation and field-of-view searches: the same instants, an end at a bound of the search window that bound, an end
+  inside a UTC leap second kept in TDB. On a UTC or TT search window, `Window.Length` and `EndDate − StartDate` of a result
+  count TT seconds, not TDB seconds (#508): up to 3.3e-10 of the length plus 100 ns for each converted end (3.2e-10 on the
+  passes of LRO, 3.8e-10 on a window of 261 s, `ObserverWindowLabelTests`). The conformance runner gives its occultation
+  searches the search window in TDB, its report unchanged, bit for bit. Migration: compare the windows as instants
+  (`Window` equality); for TDB labels and lengths, search over `new Window(start.ToTDB(), end.ToTDB())`.
 - **Breaking: `EquinoctialElements` takes a perigee radius with a non-finite P only** (R23 of #668, choice 3 of the
   first annex): a finite P fixes q = P / (1 + e), so a perigee radius beside it throws `ArgumentException`
   (`perigeeRadius`); before, it was stored, and `PerigeeRadius()` returned 1 m for P = 7000 km given 1 m. The library's
@@ -7940,6 +7968,41 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
 
 **Removed**
 
+- **The window searches on the target: `FindWindowsOnDistanceConstraint`, `FindWindowsOnOccultationConstraint` and
+  `FindWindowsOnCoordinateConstraint` of `CelestialItem`, `ILocalizable` and `Site`, `Site.FindWindowsOnIlluminationConstraint`,
+  `Instrument.FindWindowsInFieldOfViewConstraint`, and the public constructor, `FindWindowsWithCondition` and
+  `EvaluateCondition` of `GeometryFinder`, now a static class** (lot L6, R15 of
+  [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668), choice 1 and §7 of the
+  re-baseline, decided by S. Guillet, 2026-11-19, no forwarder): the searches are on the observer, their settings one
+  options record per kind (`WindowSearchOptions`, `OccultationSearchOptions`, `FieldOfViewSearchOptions`), each on the
+  path of the former search of the target with the observer as argument, the same windows but for the two Breaking
+  entries above (a site observer's occultation, the labels). The raw searches of `SpiceAPI`, by NAIF identifiers, stay;
+  an implementer of `ILocalizable` drops its three searches, which the extensions replace for any `ILocalizable` (the
+  library's search, through `GetEphemeris`). Migration:
+  - `target.FindWindowsOnDistanceConstraint(window, observer, relation, value, aberration, step)` →
+    `observer.FindDistanceWindows(window, target, relation, value, new WindowSearchOptions { Step = step, Aberration = aberration })`;
+  - `target.FindWindowsOnCoordinateConstraint(window, observer, frame, system, coordinate, relation, value, adjust, aberration, step)`
+    → `observer.FindCoordinateWindows(window, target, frame, system, coordinate, relation, value, new WindowSearchOptions
+    { Step = step, Aberration = aberration, AdjustValue = adjust })`, `AdjustValue` left null but for `AbsoluteMin` and
+    `AbsoluteMax` (with another relation, or on `gfdist_c`, it throws `ArgumentException`; the former searches ignored
+    it); the visibility of a spacecraft from a site, its declination in `site.Frame`, is
+    `site.FindHorizontalWindows(window, spacecraft, HorizontalCoordinate.Elevation, relation, mask, options)`, bit for bit;
+  - `target.FindWindowsOnOccultationConstraint(window, observer, targetShape, front, frontShape, type, aberration, step[, options])`
+    and `site.FindWindowsOnOccultationConstraint(window, target, …)` → `observer.FindOccultationWindows(window, target,
+    front, new OccultationSearchOptions { Step = step, Aberration = aberration, TargetShape = targetShape, FrontShape =
+    frontShape, OccultationType = type, FrontFrame = …, TargetFrame = … })` (a null shape an ellipsoid for a body with
+    radii, a point otherwise; the step inferred for a propagated or TLE spacecraft about the front body, decision 106);
+  - `site.FindWindowsOnIlluminationConstraint(window, angle, relation, value, adjust, aberration, step, source[, method])`
+    → `site.FindIlluminationWindows(window, angle, relation, value, source, new WindowSearchOptions { Step = step,
+    Aberration = aberration })`, the method ELLIPSOID, the only one (`SpiceAPI.FindWindowsOnIlluminationConstraint` keeps
+    its `method`, and the emission and phase angles with an observer);
+  - `instrument.FindWindowsInFieldOfViewConstraint(window, spacecraft, target, targetFrame, targetShape, aberration, step)`
+    → `instrument.FindFieldOfViewWindows(window, target, new FieldOfViewSearchOptions { Step = step, Aberration =
+    aberration, TargetShape = targetShape, TargetFrame = targetFrame })`, the observer the instrument's spacecraft;
+  - `new GeometryFinder().FindWindowsWithCondition(window, quantity, relation, value, step)` →
+    `GeometryFinder.FindWindows(window, quantity, relation, value, new WindowSearchOptions { Step = step })`, a
+    `Func<Time, double>` or a `Func<Time, bool>`; `EvaluateCondition`, which no search used, has no replacement (compare
+    the values).
 - **`Window.Merge` and `Window.Intersects(Time)`** (lot L6, R16 of
   [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668), decided by S. Guillet,
   2026-11-19, no forwarder): renamed outright, so that the names say what they compute (a hull, which spans the gap

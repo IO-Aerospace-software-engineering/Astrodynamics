@@ -65,8 +65,8 @@ internal static class SitesPage
     {
         #region docs/reference/sites.md:1
         // Inputs: window (Window), step (TimeSpan), site (Site), moon (CelestialBody)
-        var windows = new GeometryFinder().FindWindowsWithCondition(window,
-            t => site.IlluminationEmission(t, moon, Aberration.None), RelationnalOperator.Lower, Constants.HalfPi, step);
+        var windows = GeometryFinder.FindWindows(window,
+            t => site.IlluminationEmission(t, moon, Aberration.None), RelationnalOperator.Lower, Constants.HalfPi, new WindowSearchOptions { Step = step });
         #endregion
     }
 

@@ -137,8 +137,7 @@ public class StarOccultationTests
         var dss13 = new Site(13, "DSS-13", earth);
         var star = NewStar(distancePc, properMotion);
 
-        var windows = star.FindWindowsOnOccultationConstraint(SearchWindow, dss13, ShapeType.Point, moon, ShapeType.Ellipsoid,
-            OccultationType.Any, aberration, TimeSpan.FromSeconds(60.0)).ToArray();
+        var windows = dss13.FindOccultationWindows(SearchWindow, star, moon, new OccultationSearchOptions { Step = TimeSpan.FromSeconds(60.0), Aberration = aberration, TargetShape = ShapeType.Point, FrontShape = ShapeType.Ellipsoid }).ToArray();
 
         var (entry, exit) = Reference(distancePc, properMotion, aberration);
         Assert.Single(windows);

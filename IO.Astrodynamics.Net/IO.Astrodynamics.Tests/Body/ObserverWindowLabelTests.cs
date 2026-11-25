@@ -73,31 +73,26 @@ public class ObserverWindowLabelTests
         var options = WindowSearchOptions.Default with { Step = Step };
 
         // gfdist_c and gfposc_c, which labelled TDB
-        AssertInTheWindowScale(lro.FindWindowsOnDistanceConstraint(UtcDistanceWindow, moon, RelationnalOperator.Greater, 1815148.0, Aberration.None, Step),
+        AssertInTheWindowScale(moon.FindDistanceWindows(UtcDistanceWindow, lro, RelationnalOperator.Greater, 1815148.0, new WindowSearchOptions { Step = Step }),
             moon.FindDistanceWindows(UtcDistanceWindow, lro, RelationnalOperator.Greater, 1815148.0, options), UtcDistanceWindow, "gfdist_c");
-        AssertInTheWindowScale(lro.FindWindowsOnCoordinateConstraint(UtcDistanceWindow, moon, Frames.Frame.ICRF, CoordinateSystem.Rectangular, Coordinate.Z,
-                RelationnalOperator.Greater, 500000.0, 0.0, Aberration.None, Step),
+        AssertInTheWindowScale(moon.FindCoordinateWindows(UtcDistanceWindow, lro, Frames.Frame.ICRF, CoordinateSystem.Rectangular, Coordinate.Z, RelationnalOperator.Greater, 500000.0, new WindowSearchOptions { Step = Step }),
             moon.FindCoordinateWindows(UtcDistanceWindow, lro, Frames.Frame.ICRF, CoordinateSystem.Rectangular, Coordinate.Z, RelationnalOperator.Greater,
                 500000.0, options), UtcDistanceWindow, "gfposc_c");
 
         // gfilum_c and the day windows, which forward to it
-        AssertInTheWindowScale(dss13.FindWindowsOnIlluminationConstraint(UtcDistanceWindow, IlluminationAngle.Incidence, RelationnalOperator.Lower, 1.5, 0.0,
-                Aberration.None, Step, sun),
+        AssertInTheWindowScale(dss13.FindIlluminationWindows(UtcDistanceWindow, IlluminationAngle.Incidence, RelationnalOperator.Lower, 1.5, sun, new WindowSearchOptions { Step = Step }),
             dss13.FindIlluminationWindows(UtcDistanceWindow, IlluminationAngle.Incidence, RelationnalOperator.Lower, 1.5, sun, options), UtcDistanceWindow,
             "gfilum_c");
-        AssertInTheWindowScale(dss13.FindWindowsOnIlluminationConstraint(UtcDistanceWindow, IlluminationAngle.Incidence, RelationnalOperator.Lower,
-                IO.Astrodynamics.Constants.HalfPi + 0.1, 0.0, Aberration.LTS, TimeSpan.FromMinutes(1.0), sun),
+        AssertInTheWindowScale(dss13.FindIlluminationWindows(UtcDistanceWindow, IlluminationAngle.Incidence, RelationnalOperator.Lower, IO.Astrodynamics.Constants.HalfPi + 0.1, sun, new WindowSearchOptions { Step = TimeSpan.FromMinutes(1.0), Aberration = Aberration.LTS }),
             dss13.FindDayWindows(UtcDistanceWindow, 0.1), UtcDistanceWindow, "FindDayWindows");
 
         // gfoclt_c and the library's occultation search, which labelled TDB
         var kernelSpacecraft = new Spacecraft(-470001, "eclipse_001", epoch: UtcEclipse001.StartDate);
-        AssertInTheWindowScale(sun.FindWindowsOnOccultationConstraint(UtcEclipse001, kernelSpacecraft, ShapeType.Ellipsoid, earth, ShapeType.Ellipsoid,
-                OccultationType.None, Aberration.None, Step),
+        AssertInTheWindowScale(kernelSpacecraft.FindOccultationWindows(UtcEclipse001, sun, earth, new OccultationSearchOptions { Step = Step, TargetShape = ShapeType.Ellipsoid, FrontShape = ShapeType.Ellipsoid, OccultationType = OccultationType.None }),
             kernelSpacecraft.FindOccultationWindows(UtcEclipse001, sun, earth, new OccultationSearchOptions { Step = Step, OccultationType = OccultationType.None }),
             UtcEclipse001, "gfoclt_c, None");
         var dss65 = new Site(65, "DSS-65", earth);
-        AssertInTheWindowScale(dss65.FindWindowsOnOccultationConstraint(UtcEclipse2005, sun, ShapeType.Ellipsoid, moon, ShapeType.Ellipsoid, OccultationType.Any,
-                Aberration.None, TimeSpan.FromSeconds(360.0)),
+        AssertInTheWindowScale(dss65.FindOccultationWindows(UtcEclipse2005, sun, moon, new OccultationSearchOptions { Step = TimeSpan.FromSeconds(360.0), TargetShape = ShapeType.Ellipsoid, FrontShape = ShapeType.Ellipsoid }),
             dss65.FindOccultationWindows(UtcEclipse2005, sun, moon, new OccultationSearchOptions { Step = TimeSpan.FromSeconds(360.0) }), UtcEclipse2005,
             "managed occultation");
     }

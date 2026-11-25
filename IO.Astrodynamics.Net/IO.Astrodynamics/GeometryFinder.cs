@@ -67,17 +67,13 @@ namespace IO.Astrodynamics;
 /// </para>
 /// <para>The search keeps no state between calls: two searches may run concurrently.</para>
 /// </remarks>
-public class GeometryFinder
+public static class GeometryFinder
 {
     // The default convergence tolerance of the transitions, s: CSPICE's SPICE_GF_CNVTOL
     private const double DefaultTolerance = 1e-6;
 
     // The spacing of the five values of the rate, as a fraction of the step (and half of it, for Richardson's extrapolation)
     private const double RateSpacingPerStep = 1.0 / 16.0;
-
-    public GeometryFinder()
-    {
-    }
 
     /// <summary>
     /// The range guard of an angular threshold of a comparison operator (R11 of #668, lot L6, decided by S. Guillet,
@@ -127,98 +123,6 @@ public class GeometryFinder
     internal static bool IsExtremeOperator(RelationnalOperator relationalOperator) =>
         relationalOperator is RelationnalOperator.AbsoluteMin or RelationnalOperator.AbsoluteMax or RelationnalOperator.LocalMin
             or RelationnalOperator.LocalMax;
-
-    /// <summary>
-    /// Whether a value satisfies a relation with a target value.
-    /// </summary>
-    /// <param name="actualValue">The value.</param>
-    /// <param name="targetValue">The target value.</param>
-    /// <param name="operatorType">The relation; the extremes are no relation of two values.</param>
-    /// <returns>Whether the relation holds; the equality of two doubles holds within 1e-9.</returns>
-    /// <exception cref="ArgumentException">The relation is an extreme, or an order of two booleans, or the type is
-    /// neither a double nor a boolean.</exception>
-    public bool EvaluateCondition<T>(T actualValue, T targetValue, RelationnalOperator operatorType)
-    {
-        if (actualValue is double actualDouble && targetValue is double targetDouble)
-        {
-            switch (operatorType)
-            {
-                case RelationnalOperator.Greater:
-                    return actualDouble > targetDouble;
-                case RelationnalOperator.GreaterOrEqual:
-                    return actualDouble >= targetDouble;
-                case RelationnalOperator.Lower:
-                    return actualDouble < targetDouble;
-                case RelationnalOperator.LowerOrEqual:
-                    return actualDouble <= targetDouble;
-                case RelationnalOperator.Equal:
-                    return System.Math.Abs(actualDouble - targetDouble) < 1e-9;
-                case RelationnalOperator.NotEqual:
-                    return System.Math.Abs(actualDouble - targetDouble) >= 1e-9;
-                default:
-                    throw new ArgumentException("Invalid operator");
-            }
-        }
-        else if (actualValue is bool actualBool && targetValue is bool targetBool)
-        {
-            switch (operatorType)
-            {
-                case RelationnalOperator.Equal:
-                    return actualBool == targetBool;
-                case RelationnalOperator.NotEqual:
-                    return actualBool != targetBool;
-                default:
-                    throw new ArgumentException("Invalid operator");
-            }
-        }
-        else
-        {
-            throw new ArgumentException("Invalid type");
-        }
-    }
-
-    /// <summary>
-    /// The windows of the search window where the quantity satisfies the relation; see the remarks of the class.
-    /// </summary>
-    /// <param name="searchWindow">The search window; the windows are in the time scale of its start.</param>
-    /// <param name="calculateValue">The quantity at an epoch: a <see cref="double"/>, or a <see cref="bool"/> for
-    /// <see cref="RelationnalOperator.Equal"/> and <see cref="RelationnalOperator.NotEqual"/>.</param>
-    /// <param name="relationalOperator">The relation.</param>
-    /// <param name="targetValue">The value; ignored by the extremes.</param>
-    /// <param name="stepSize">The step of the samples, positive: at most half the time between two extremes of a
-    /// <see cref="double"/> quantity, shorter than every window and gap of a <see cref="bool"/> one (the step rule of the
-    /// remarks of the class).</param>
-    /// <returns>The windows, in time order.</returns>
-    /// <exception cref="ArgumentOutOfRangeException">The step is not positive.</exception>
-    /// <exception cref="ArgumentException">The type is neither a double nor a boolean, or the relation is not one of a
-    /// boolean.</exception>
-    public IReadOnlyList<Window> FindWindowsWithCondition<T>(Window searchWindow,
-        Func<Time, T> calculateValue,
-        RelationnalOperator relationalOperator, T targetValue,
-        TimeSpan stepSize)
-    {
-        return FindWindowsWithCondition(searchWindow, calculateValue, relationalOperator, targetValue, 0.0, stepSize);
-    }
-
-    /// <summary>
-    /// The windows of the search window where the quantity satisfies the relation, with the adjustment value of the
-    /// absolute extremes (CSPICE's <c>adjust</c>); see the remarks of the class.
-    /// </summary>
-    /// <param name="searchWindow">The search window; the windows are in the time scale of its start.</param>
-    /// <param name="calculateValue">The quantity at an epoch.</param>
-    /// <param name="relationalOperator">The relation.</param>
-    /// <param name="targetValue">The value; ignored by the extremes.</param>
-    /// <param name="adjustValue">For <see cref="RelationnalOperator.AbsoluteMin"/> and
-    /// <see cref="RelationnalOperator.AbsoluteMax"/>, zero for the extreme itself, or positive for the windows where the
-    /// quantity is within it of the extreme; ignored by the other relations.</param>
-    /// <param name="stepSize">The step of the samples, positive (the step rule of the remarks of the class).</param>
-    /// <exception cref="ArgumentOutOfRangeException">The step is not positive, or the adjustment value of an absolute
-    /// extreme is negative.</exception>
-    internal IReadOnlyList<Window> FindWindowsWithCondition<T>(Window searchWindow, Func<Time, T> calculateValue,
-        RelationnalOperator relationalOperator, T targetValue, double adjustValue, TimeSpan stepSize)
-    {
-        return Find(searchWindow, calculateValue, relationalOperator, targetValue, adjustValue, stepSize, DefaultTolerance);
-    }
 
     /// <summary>
     /// The windows of the search window where a <see cref="double"/> quantity satisfies the relation; see the remarks of

@@ -236,8 +236,7 @@ namespace IO.Astrodynamics.Tests.Surface
             CelestialBody moon = new CelestialBody(PlanetsAndMoons.MOON);
             Site site = new Site(13, "DSS-13", TestHelpers.EarthAtJ2000);
 
-            var res = site.FindWindowsOnDistanceConstraint(new Window(TimeSystem.Time.CreateTDB(220881665.18391809), TimeSystem.Time.CreateTDB(228657665.18565452)),
-                TestHelpers.MoonAtJ2000, RelationnalOperator.Greater, 400000000, Aberration.None, TimeSpan.FromSeconds(3600.0));
+            var res = TestHelpers.MoonAtJ2000.FindDistanceWindows(new Window(TimeSystem.Time.CreateTDB(220881665.18391809), TimeSystem.Time.CreateTDB(228657665.18565452)), site, RelationnalOperator.Greater, 400000000, new WindowSearchOptions { Step = TimeSpan.FromSeconds(3600.0) });
             // CSPICE gfdist (tools/geometry_reference, converged to 1e-9 s): 24 windows
             GeometryReference.AssertWindows(null, "dss13_moon_distance > 400000 km", res, GeometryReference.ThresholdCrossing);
         }
@@ -248,8 +247,7 @@ namespace IO.Astrodynamics.Tests.Surface
             CelestialBody moon = new CelestialBody(PlanetsAndMoons.MOON);
             Site site = new Site(13, "DSS-13", TestHelpers.EarthAtJ2000);
 
-            var res = site.FindWindowsOnOccultationConstraint(new Window(TimeSystem.Time.Parse("2005-10-03 00:00:00", TimeScale.TDB), TimeSystem.Time.Parse("2005-10-04 00:00:00", TimeScale.TDB)),
-                TestHelpers.Sun, ShapeType.Ellipsoid, TestHelpers.MoonAtJ2000, ShapeType.Ellipsoid, OccultationType.Partial, Aberration.None, TimeSpan.FromSeconds(360.0));
+            var res = site.FindOccultationWindows(new Window(TimeSystem.Time.Parse("2005-10-03 00:00:00", TimeScale.TDB), TimeSystem.Time.Parse("2005-10-04 00:00:00", TimeScale.TDB)), TestHelpers.Sun, TestHelpers.MoonAtJ2000, new OccultationSearchOptions { Step = TimeSpan.FromSeconds(360.0), TargetShape = ShapeType.Ellipsoid, FrontShape = ShapeType.Ellipsoid, OccultationType = OccultationType.Partial });
             var windows = res as Window[] ?? res.ToArray();
             Assert.Single(windows);
             // CSPICE gfoclt (tools/occultation_reference, converged to 1e-9 s), TDB seconds past J2000
@@ -262,10 +260,7 @@ namespace IO.Astrodynamics.Tests.Surface
         {
             Site site = new Site(13, "DSS-13", TestHelpers.EarthAtJ2000);
 
-            var res = site.FindWindowsOnCoordinateConstraint(new Window(TimeSystem.Time.Parse("2000-01-01 12:00:00", TimeScale.TDB).ToTDB(), TimeSystem.Time.Parse("2000-02-01 12:00:00", TimeScale.TDB).ToTDB()),
-                TestHelpers.MoonAtJ2000,
-                TestHelpers.MoonAtJ2000.Frame, CoordinateSystem.RaDec, Coordinate.Declination, RelationnalOperator.Greater, 0.0, 0.0, Aberration.None,
-                TimeSpan.FromSeconds(60.0));
+            var res = TestHelpers.MoonAtJ2000.FindCoordinateWindows(new Window(TimeSystem.Time.Parse("2000-01-01 12:00:00", TimeScale.TDB).ToTDB(), TimeSystem.Time.Parse("2000-02-01 12:00:00", TimeScale.TDB).ToTDB()), site, TestHelpers.MoonAtJ2000.Frame, CoordinateSystem.RaDec, Coordinate.Declination, RelationnalOperator.Greater, 0.0, new WindowSearchOptions { Step = TimeSpan.FromSeconds(60.0) });
 
             // CSPICE gfposc (tools/geometry_reference, converged to 1e-9 s): DSS-13 above the Moon's equator
             GeometryReference.AssertWindows(null, "moon_dss13_declination > 0", res, GeometryReference.ThresholdCrossing);
@@ -276,11 +271,7 @@ namespace IO.Astrodynamics.Tests.Surface
         {
             Site site = new Site(13, "DSS-13", TestHelpers.EarthAtJ2000);
 
-            var res = TestHelpers.MoonAtJ2000.FindWindowsOnCoordinateConstraint(
-                new Window(TimeSystem.Time.Parse("2000-01-01 12:00:00", TimeScale.TDB).ToTDB(), TimeSystem.Time.Parse("2000-01-02 12:00:00", TimeScale.TDB).ToTDB()),
-                site,
-                site.Frame, CoordinateSystem.Rectangular, Coordinate.Z, RelationnalOperator.Greater, 0.0, 0.0, Aberration.None,
-                TimeSpan.FromSeconds(60.0));
+            var res = site.FindCoordinateWindows(new Window(TimeSystem.Time.Parse("2000-01-01 12:00:00", TimeScale.TDB).ToTDB(), TimeSystem.Time.Parse("2000-01-02 12:00:00", TimeScale.TDB).ToTDB()), TestHelpers.MoonAtJ2000, site.Frame, CoordinateSystem.Rectangular, Coordinate.Z, RelationnalOperator.Greater, 0.0, new WindowSearchOptions { Step = TimeSpan.FromSeconds(60.0) });
 
             // CSPICE gfposc (tools/geometry_reference, converged to 1e-9 s) in DSS-13_TOPO, the frame of the kernels of the
             // station (#690): the Moon is up at the start and at the end of the search window, whose bounds close the windows
@@ -299,9 +290,7 @@ namespace IO.Astrodynamics.Tests.Surface
             Site site = new Site(13, "DSS-13", TestHelpers.EarthAtJ2000,
                 new Planetodetic(-116.79445837 * Astrodynamics.Constants.Deg2Rad, 35.24716450 * Astrodynamics.Constants.Deg2Rad, 1070.85059));
 
-            var res = site.FindWindowsOnIlluminationConstraint(new Window(TimeSystem.Time.CreateTDB(674524800), TimeSystem.Time.CreateTDB(674611200)),
-                IlluminationAngle.Incidence, RelationnalOperator.Lower, System.Math.PI * 0.5 - (-0.8 * IO.Astrodynamics.Constants.Deg2Rad), 0.0, aberration,
-                TimeSpan.FromSeconds(3600), TestHelpers.Sun);
+            var res = site.FindIlluminationWindows(new Window(TimeSystem.Time.CreateTDB(674524800), TimeSystem.Time.CreateTDB(674611200)), IlluminationAngle.Incidence, RelationnalOperator.Lower, System.Math.PI * 0.5 - (-0.8 * IO.Astrodynamics.Constants.Deg2Rad), TestHelpers.Sun, new WindowSearchOptions { Step = TimeSpan.FromSeconds(3600), Aberration = aberration });
 
             // CSPICE gfposc (tools/geometry_reference, converged to 1e-9 s): the Sun above -0.8° of elevation in the site's
             // frame, the incidence below 90.8°, with the same correction (LT+S: the 1.13 s of #491 before its fix)
@@ -1023,22 +1012,18 @@ namespace IO.Astrodynamics.Tests.Surface
         /// Detailed_Input <c>method</c>, CSPICE N0067); measured on N0067, each of these strings is rejected
         /// (SPICE(INVALIDMETHOD) "The only supported computation method is ELLIPSOID", SPICE(EMPTYSTRING) for the empty one,
         /// Exceptions 18), which the native proxy dropped: no window on the CSPICE path, the ellipsoid's windows on the
-        /// managed path, which never read the method. Each now throws on both paths and in <see cref="SpiceAPI"/>.
+        /// managed path, which never read the method. Each now throws in <see cref="SpiceAPI"/>; the site's search takes no
+        /// method since lot L6 (<see cref="Site.FindIlluminationWindows"/>, ELLIPSOID).
         /// </summary>
         [Fact]
-        public void IlluminationSearch_MethodOtherThanEllipsoid_ThrowsOnBothPaths()
+        public void IlluminationSearch_MethodOtherThanEllipsoid_Throws()
         {
             var earth = new CelestialBody(PlanetsAndMoons.EARTH);
             var dss13 = new Site(13, "DSS-13", earth);
-            var fromCoordinates = new Site(682, "F07DSS13GEO", earth, dss13.Planetodetic);
             var window = new Window(new TimeSystem.Time(2024, 3, 1, TimeScale.TDB), new TimeSystem.Time(2024, 3, 3, TimeScale.TDB));
             var step = TimeSpan.FromMinutes(10.0);
             var searches = new (string Path, Func<string, Window[]> Search)[]
             {
-                ("kernel site, CSPICE", m => dss13.FindWindowsOnIlluminationConstraint(window, IlluminationAngle.Incidence, RelationnalOperator.Lower,
-                    IO.Astrodynamics.Constants.HalfPi, 0.0, Aberration.LTS, step, TestHelpers.Sun, m).ToArray()),
-                ("site from coordinates, managed", m => fromCoordinates.FindWindowsOnIlluminationConstraint(window, IlluminationAngle.Incidence,
-                    RelationnalOperator.Lower, IO.Astrodynamics.Constants.HalfPi, 0.0, Aberration.LTS, step, TestHelpers.Sun, m).ToArray()),
                 ("SpiceAPI", m => SpiceAPI.Instance.FindWindowsOnIlluminationConstraint(window, 399013, 399, earth.Frame, dss13.Planetodetic,
                     IlluminationAngle.Incidence, RelationnalOperator.Lower, IO.Astrodynamics.Constants.HalfPi, 0.0, Aberration.LTS, step, 10, m).ToArray())
             };
@@ -1075,9 +1060,8 @@ namespace IO.Astrodynamics.Tests.Surface
                 {
                     foreach (var relation in new[] { RelationnalOperator.Lower, RelationnalOperator.Greater, RelationnalOperator.LocalMin })
                     {
-                        var exception = Assert.Throws<ArgumentException>(() => site.FindWindowsOnIlluminationConstraint(window, angle, relation,
-                            IO.Astrodynamics.Constants.HalfPi, 0.0, Aberration.None, TimeSpan.FromMinutes(10.0), TestHelpers.Sun).ToArray());
-                        Assert.Equal("illuminationType", exception.ParamName);
+                        var exception = Assert.Throws<ArgumentException>(() => site.FindIlluminationWindows(window, angle, relation, IO.Astrodynamics.Constants.HalfPi, TestHelpers.Sun, new WindowSearchOptions { Step = TimeSpan.FromMinutes(10.0) }).ToArray());
+                        Assert.Equal("angle", exception.ParamName);
                         Assert.Contains("observer", exception.Message);
                     }
                 }
@@ -1085,14 +1069,9 @@ namespace IO.Astrodynamics.Tests.Surface
                 // An angle that is none of the enumeration's
                 if (site == fromCoordinates)
                 {
-                    Assert.Throws<ArgumentOutOfRangeException>(() => site.FindWindowsOnIlluminationConstraint(window, (IlluminationAngle)99,
-                        RelationnalOperator.Lower, IO.Astrodynamics.Constants.HalfPi, 0.0, Aberration.None, TimeSpan.FromMinutes(10.0), TestHelpers.Sun).ToArray());
+                    Assert.Throws<ArgumentOutOfRangeException>(() => site.FindIlluminationWindows(window, (IlluminationAngle)99, RelationnalOperator.Lower, IO.Astrodynamics.Constants.HalfPi, TestHelpers.Sun, new WindowSearchOptions { Step = TimeSpan.FromMinutes(10.0) }).ToArray());
                 }
 
-                // The angle is checked before the method
-                Assert.Equal("illuminationType", Assert.Throws<ArgumentException>(() => site.FindWindowsOnIlluminationConstraint(window,
-                    IlluminationAngle.Emission, RelationnalOperator.Lower, IO.Astrodynamics.Constants.HalfPi, 0.0, Aberration.None, TimeSpan.FromMinutes(10.0),
-                    TestHelpers.Sun, "DSK").ToArray()).ParamName);
             }
         }
 
@@ -1115,8 +1094,8 @@ namespace IO.Astrodynamics.Tests.Surface
             var fromCoordinates = new Site(682, "F07DSS13GEO", earth, dss13.Planetodetic);
             var window = new Window(new TimeSystem.Time(2024, 3, 1, TimeScale.TDB), new TimeSystem.Time(2024, 3, 2, TimeScale.TDB));
             var step = TimeSpan.FromMinutes(10.0);
-            var managed = new GeometryFinder().FindWindowsWithCondition(window, t => fromCoordinates.IlluminationEmission(t, moon, Aberration.None),
-                RelationnalOperator.Lower, IO.Astrodynamics.Constants.HalfPi, step).ToArray();
+            var managed = GeometryFinder.FindWindows(window, t => fromCoordinates.IlluminationEmission(t, moon, Aberration.None),
+                RelationnalOperator.Lower, IO.Astrodynamics.Constants.HalfPi, new WindowSearchOptions { Step = step }).ToArray();
             var gfilum = SpiceAPI.Instance.FindWindowsOnIlluminationConstraint(window, 301, 399, earth.Frame, dss13.Planetodetic, IlluminationAngle.Emission,
                 RelationnalOperator.Lower, IO.Astrodynamics.Constants.HalfPi, 0.0, Aberration.None, step, 10).ToArray();
             Assert.Single(gfilum);
@@ -1223,8 +1202,7 @@ namespace IO.Astrodynamics.Tests.Surface
             // A coordinate search in the site's frame, the declination of the site from the Moon above 0: the condition holds
             // inside each window on the ICRF read rotated to the frame
             var window = new Window(start, start.AddSeconds(86400.0));
-            var windows = site.FindWindowsOnCoordinateConstraint(window, moon, site.Frame, CoordinateSystem.RaDec, Coordinate.Declination, RelationnalOperator.Greater,
-                0.0, 0.0, Aberration.None, TimeSpan.FromMinutes(10.0)).ToArray();
+            var windows = moon.FindCoordinateWindows(window, site, site.Frame, CoordinateSystem.RaDec, Coordinate.Declination, RelationnalOperator.Greater, 0.0, new WindowSearchOptions { Step = TimeSpan.FromMinutes(10.0) }).ToArray();
             Assert.NotEmpty(windows);
             foreach (var w in windows)
             {

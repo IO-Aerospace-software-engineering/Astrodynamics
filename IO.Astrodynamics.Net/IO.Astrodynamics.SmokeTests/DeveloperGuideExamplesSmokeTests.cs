@@ -56,9 +56,10 @@ public class DeveloperGuideExamplesSmokeTests
         var horizontal = mySite.GetHorizontalCoordinates(epoch, moon, Aberration.LT);
 
         // Find visibility windows
-        var windows = mySite.FindWindowsOnDistanceConstraint(
+        var windows = moon.FindDistanceWindows(
             new Window(new Time(2024, 1, 1, TimeScale.TDB), new Time(2024, 1, 2, TimeScale.TDB)),
-            moon, RelationnalOperator.Lower, 400000000, Aberration.LT, TimeSpan.FromMinutes(10));
+            mySite, RelationnalOperator.Lower, 400000000,
+            new WindowSearchOptions { Step = TimeSpan.FromMinutes(10), Aberration = Aberration.LT });
 
         _output.WriteLine($"Range {horizontal.Range:R} m, {horizontal.Range - 399039486.050:E3} m from spkcpo; {string.Join(", ", windows)}");
         Assert.Equal(399039486.050, horizontal.Range, RangeBound);
@@ -94,13 +95,12 @@ public class DeveloperGuideExamplesSmokeTests
         var trackStart = new Time(2024, 6, 3, TimeScale.TDB);
         var trackEnd = trackStart.AddDays(1);
 
-        var visibilityWindows = goldstone.FindWindowsOnDistanceConstraint(
+        var visibilityWindows = iss.FindDistanceWindows(
             new Window(trackStart, trackEnd),
-            iss,
+            goldstone,
             RelationnalOperator.Lower,
             2000000,  // Within 2000 km
-            Aberration.LT,
-            TimeSpan.FromMinutes(1)
+            new WindowSearchOptions { Step = TimeSpan.FromMinutes(1), Aberration = Aberration.LT }
         );
 
         _output.WriteLine($"{string.Join(", ", visibilityWindows)}");

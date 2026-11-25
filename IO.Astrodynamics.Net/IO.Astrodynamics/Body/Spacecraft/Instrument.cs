@@ -193,14 +193,15 @@ namespace IO.Astrodynamics.Body.Spacecraft
         }
 
         /// <summary>
-        /// The windows, in TDB, where the target is in the field of view of the instrument, its spacecraft the observer:
-        /// the windows of CSPICE's <c>gftfov</c>.
+        /// The windows where <paramref name="target"/> is in the field of view of the instrument, its spacecraft the observer:
+        /// the windows of CSPICE's <c>gftfov</c>, its search when the spacecraft and the target come from the kernels, the
+        /// library's otherwise (R15 of #668, lot L6, decided by S. Guillet, 2026-11-19).
         /// </summary>
         /// <remarks>
         /// <para>
         /// <b>The condition.</b> A <see cref="ShapeType.Point"/> target is in view when the direction of its center is within
         /// the field; an <see cref="ShapeType.Ellipsoid"/> target when its apparent disc, the ellipsoid of the radii of a
-        /// <see cref="CelestialBody"/> oriented by <paramref name="targetFrame"/> at the light-time corrected epoch, overlaps
+        /// <see cref="CelestialBody"/> oriented by the target frame of the options at the light-time corrected epoch, overlaps
         /// the field, partly or whole. The field is that of the instrument kernel: <see cref="FieldOfView"/> is the half-angle
         /// in the plane of the boresight and the reference vector (<c>FOV_REF_ANGLE</c>), the cross angle of an ellipse or a
         /// rectangle the half-angle across it (<c>FOV_CROSS_ANGLE</c>), the reference vector is made perpendicular to the
@@ -250,18 +251,16 @@ namespace IO.Astrodynamics.Body.Spacecraft
         /// semi-axes of the cone of the field underflow (below about 6e-171 rad at the Moon's distance).
         /// </para>
         /// </remarks>
-        /// <param name="searchWindow">The search window.</param>
-        /// <param name="observer">Not used: the observer is the instrument's spacecraft.</param>
+        /// <param name="window">The search window.</param>
         /// <param name="target">The target.</param>
-        /// <param name="targetFrame">The body-fixed frame of the target's ellipsoid; ignored for a point.</param>
-        /// <param name="targetShape">The target's shape.</param>
-        /// <param name="aberration">The aberration correction.</param>
-        /// <param name="stepSize">The step of the search, positive.</param>
-        /// <returns>The windows, in TDB.</returns>
-        /// <exception cref="ArgumentNullException">An argument is null.</exception>
-        /// <exception cref="ArgumentOutOfRangeException">The step is not positive.</exception>
-        /// <exception cref="ArgumentException">The target is the instrument's spacecraft or is an ellipsoid without radii (a
-        /// site, a spacecraft, a barycenter, a Lagrange point, a star).</exception>
+        /// <param name="options">The step (required), the aberration (<see cref="Aberration.None"/> when null), the convergence
+        /// tolerance (1 µs when null, the library's search only), the target's shape (an ellipsoid when it has radii, a point
+        /// otherwise) and the frame of its ellipsoid (its own when null).</param>
+        /// <returns>The windows, in time order, labelled in the scale of the search window's start (<see cref="WindowSearches"/>).</returns>
+        /// <exception cref="ArgumentNullException"><paramref name="target"/> is null.</exception>
+        /// <exception cref="ArgumentException">The step is not given, a convergence tolerance is given on CSPICE's search, or
+        /// SPICE does not know the target frame (<c>options</c>, SPICE's error as inner exception); the target is the
+        /// instrument's spacecraft, or an ellipsoid without radii.</exception>
         /// <exception cref="InvalidOperationException">On the managed path, the search window leaves the propagated states of
         /// the instrument's spacecraft or of a spacecraft target, which would be extrapolated, or meets a gap between the
         /// windows given to <see cref="Spacecraft.AddPropagatedStates"/> (#792): the state of the spacecraft (decisions 81 and
@@ -280,40 +279,6 @@ namespace IO.Astrodynamics.Body.Spacecraft
         /// of the frame data or of the C-kernel, more windows than the 10000 of its result cell, #653), with SPICE's message
         /// (fourth round of #668; before 11.0.0 the search returned no window, and a search of more than 1000 windows its
         /// first 1000, #653).</exception>
-        public IReadOnlyList<Window> FindWindowsInFieldOfViewConstraint(Window searchWindow, Spacecraft observer, ILocalizable target,
-            Frame targetFrame, ShapeType targetShape, Aberration aberration, TimeSpan stepSize)
-        {
-            if (observer == null) throw new ArgumentNullException(nameof(observer));
-            if (target == null) throw new ArgumentNullException(nameof(target));
-            if (targetFrame == null) throw new ArgumentNullException(nameof(targetFrame));
-
-            if (!(Spacecraft.IsSpiceBacked && target.IsSpiceBacked))
-            {
-                return FieldOfViewSearch.Managed(this, searchWindow, target, targetShape, targetFrame, aberration, stepSize);
-            }
-
-            FieldOfViewSearch.Check(this, searchWindow, target, targetShape, stepSize);
-            return SpiceAPI.Instance.FindWindowsInFieldOfViewConstraint(
-                searchWindow, Spacecraft.NaifId, NaifId, target.NaifId,
-                targetFrame, targetShape, aberration, stepSize);
-        }
-
-        /// <summary>
-        /// The windows where <paramref name="target"/> is in the field of view of the instrument, its spacecraft the observer:
-        /// the search of <see cref="FindWindowsInFieldOfViewConstraint"/>, CSPICE's <c>gftfov</c> when the spacecraft and the
-        /// target come from the kernels, the library's otherwise (R15 of #668, lot L6, decided by S. Guillet, 2026-11-19).
-        /// </summary>
-        /// <param name="window">The search window.</param>
-        /// <param name="target">The target.</param>
-        /// <param name="options">The step (required), the aberration (<see cref="Aberration.None"/> when null), the convergence
-        /// tolerance (1 µs when null, the library's search only), the target's shape (an ellipsoid when it has radii, a point
-        /// otherwise) and the frame of its ellipsoid (its own when null).</param>
-        /// <returns>The windows, in time order, labelled in the scale of the search window's start (<see cref="WindowSearches"/>).</returns>
-        /// <exception cref="ArgumentNullException"><paramref name="target"/> is null.</exception>
-        /// <exception cref="ArgumentException">The step is not given, a convergence tolerance is given on CSPICE's search, or
-        /// SPICE does not know the target frame (<c>options</c>, SPICE's error as inner exception); the target is the
-        /// instrument's spacecraft, or an ellipsoid without radii.</exception>
-        /// <exception cref="InvalidOperationException">The exceptions of <see cref="FindWindowsInFieldOfViewConstraint"/>.</exception>
         public IReadOnlyList<Window> FindFieldOfViewWindows(in Window window, ILocalizable target, FieldOfViewSearchOptions options = null)
         {
             ArgumentNullException.ThrowIfNull(target);
@@ -434,7 +399,7 @@ namespace IO.Astrodynamics.Body.Spacecraft
 
         /// <summary>
         /// Whether the center of the target is in the field of view at an epoch: the condition of CSPICE's <c>fovtrg</c> with
-        /// the shape <c>POINT</c>, and the point condition of <see cref="FindWindowsInFieldOfViewConstraint"/>, with the
+        /// the shape <c>POINT</c>, and the point condition of <see cref="FindFieldOfViewWindows"/>, with the
         /// same field, the same corrections ("+S" included) and a <see cref="Star"/> read as a direction. The search does not
         /// call this method.
         /// </summary>
@@ -443,7 +408,7 @@ namespace IO.Astrodynamics.Body.Spacecraft
         /// <param name="aberration">The aberration correction.</param>
         /// <exception cref="ArgumentException">The target is the instrument's spacecraft.</exception>
         /// <exception cref="InvalidOperationException">The field of view cannot be searched (see
-        /// <see cref="FindWindowsInFieldOfViewConstraint"/>), the target is at the observer, whatever the shape of the field
+        /// <see cref="FindFieldOfViewWindows"/>), the target is at the observer, whatever the shape of the field
         /// (distance 0: it has no direction; #715 and #721, before 11.0.0 an unrelated <see cref="ArgumentException"/> for a
         /// circle or an ellipse and <c>true</c> for a rectangle), or the spacecraft is managed and has no attitude (#682;
         /// before 11.0.0 the identity of ICRF was used).</exception>

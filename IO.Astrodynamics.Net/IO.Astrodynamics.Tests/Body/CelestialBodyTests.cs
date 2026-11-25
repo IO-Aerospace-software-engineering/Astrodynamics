@@ -81,9 +81,7 @@ public class CelestialBodyTests
         var moon = TestHelpers.MoonAt20011214;
         var earth = TestHelpers.EarthAtJ2000;
         var sun = TestHelpers.Sun;
-        var res = sun.FindWindowsOnOccultationConstraint(
-            new Window(TimeSystem.Time.CreateTDB(61473664.183390938), TimeSystem.Time.CreateTDB(61646464.183445148)), earth,
-            ShapeType.Ellipsoid, moon, ShapeType.Ellipsoid, OccultationType.Any, Aberration.None, TimeSpan.FromMinutes(60.0)).ToArray();
+        var res = earth.FindOccultationWindows(new Window(TimeSystem.Time.CreateTDB(61473664.183390938), TimeSystem.Time.CreateTDB(61646464.183445148)), sun, moon, new OccultationSearchOptions { Step = TimeSpan.FromMinutes(60.0), TargetShape = ShapeType.Ellipsoid, FrontShape = ShapeType.Ellipsoid }).ToArray();
         Assert.Single(res);
 
         // CSPICE gfoclt (tools/occultation_reference, converged to 1e-9 s), TDB seconds past J2000
@@ -94,9 +92,7 @@ public class CelestialBodyTests
     [Fact]
     public void FindWindowsOnDistanceConstraint()
     {
-        var res = TestHelpers.EarthAtJ2000.FindWindowsOnDistanceConstraint(
-            new Window(TimeSystem.Time.Parse("2000-01-01 12:00:00.0000 TDB"), TimeSystem.Time.Parse("2000-04-01 12:00:00.0000 TDB")),
-            TestHelpers.MoonAtJ2000, RelationnalOperator.Greater, 400000000, Aberration.None, TimeSpan.FromSeconds(86400.0));
+        var res = TestHelpers.MoonAtJ2000.FindDistanceWindows(new Window(TimeSystem.Time.Parse("2000-01-01 12:00:00.0000 TDB"), TimeSystem.Time.Parse("2000-04-01 12:00:00.0000 TDB")), TestHelpers.EarthAtJ2000, RelationnalOperator.Greater, 400000000, new WindowSearchOptions { Step = TimeSpan.FromSeconds(86400.0) });
         // CSPICE gfdist (tools/geometry_reference, converged to 1e-9 s); the first window holds at the start of the search
         // window (#461: it started 18.5 h before it)
         var windows = res as Window[] ?? res.ToArray();

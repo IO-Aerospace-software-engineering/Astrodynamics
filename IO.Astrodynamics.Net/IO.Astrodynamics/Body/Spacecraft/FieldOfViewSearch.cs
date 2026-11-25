@@ -10,7 +10,7 @@ using IO.Astrodynamics.TimeSystem;
 namespace IO.Astrodynamics.Body.Spacecraft;
 
 /// <summary>
-/// The field-of-view search behind <see cref="Instrument.FindWindowsInFieldOfViewConstraint"/>: the managed search of the
+/// The field-of-view search behind <see cref="Instrument.FindFieldOfViewWindows"/>: the managed search of the
 /// library (<see cref="FieldOfViewEvaluator"/> and the root finder of the occultations), and the rules both paths apply
 /// before the search, CSPICE's <c>gftfov</c> on the other one.
 /// </summary>

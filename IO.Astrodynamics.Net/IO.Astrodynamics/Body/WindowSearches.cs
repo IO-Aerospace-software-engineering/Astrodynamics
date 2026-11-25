@@ -23,8 +23,9 @@ namespace IO.Astrodynamics.Body;
 /// holds (TEME, CIRS, TIRS, a site or spacecraft frame the kernels do not define) and an occultation of a front body
 /// not from the kernels are the library's. Every other search is the library's (<see cref="GeometryFinder"/>, the
 /// managed occultation search): a site observer, a propagated spacecraft, two natural bodies, any other
-/// <see cref="ILocalizable"/>. A search equals the former search of the target with the observer as argument, bit for
-/// bit, but for the occultation of a site observer, which CSPICE ran and the library runs (choice 4).
+/// <see cref="ILocalizable"/>. A search equals the former search of the target with the observer as argument (removed in
+/// 11.0.0, §7 of the re-baseline), bit for bit, but for the occultation of a site observer, which CSPICE ran and the
+/// library runs (choice 4).
 /// </para>
 /// <para>
 /// <b>Settings.</b> The step is required (<see cref="ArgumentException"/> naming it), but for an occultation where the

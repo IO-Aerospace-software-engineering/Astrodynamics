@@ -1,19 +1,17 @@
 # Occultations and eclipses
 
-`FindWindowsOnOccultationConstraint` finds the windows when a front body occults a target (the back body) as an
-observer sees them. It is a method of the target (`CelestialItem`, the observer as argument) and of a `Site` (the site
-as observer). An eclipse is the occultation of the Sun.
+`FindOccultationWindows` finds the windows when a front body occults a target (the back body) as an observer sees
+them. It is a method of the observer (`WindowSearches`, an extension of every `ILocalizable`), its settings one
+`OccultationSearchOptions`. An eclipse is the occultation of the Sun.
 
 ```csharp
 // Inputs: window (Window), spacecraft (Spacecraft)
 var earth = new CelestialBody(PlanetsAndMoons.EARTH);
 var sun = new CelestialBody(Stars.Sun);
 // spacecraft: propagated, from a TLE, or from the kernels
-var options = new OccultationSearchOptions { FrontFrame = new Frame("IAU_EARTH") };
-var penumbra = sun.FindWindowsOnOccultationConstraint(window, spacecraft, ShapeType.Ellipsoid, earth, ShapeType.Ellipsoid,
-    OccultationType.Any, Aberration.None, TimeSpan.FromSeconds(60.0), options);
-var umbra = sun.FindWindowsOnOccultationConstraint(window, spacecraft, ShapeType.Ellipsoid, earth, ShapeType.Ellipsoid,
-    OccultationType.Full, Aberration.None, TimeSpan.FromSeconds(60.0), options);
+var options = new OccultationSearchOptions { Step = TimeSpan.FromSeconds(60.0), FrontFrame = new Frame("IAU_EARTH") };
+var penumbra = spacecraft.FindOccultationWindows(window, sun, earth, options);
+var umbra = spacecraft.FindOccultationWindows(window, sun, earth, options with { OccultationType = OccultationType.Full });
 ```
 
 ## Types

@@ -219,9 +219,7 @@ public class GeodeticOneCallTests
         var spacecraft = new Spacecraft(-2003, "R20Search", 100.0, new StateVector(new Vector3(6800e3, 0.0, 0.0), new Vector3(0.0, 7600.0, 0.0), earth, Epoch, Frames.Frame.ICRF), 1000.0,
             new Clock("R20SearchClk", 65536));
         var moon = new CelestialBody(PlanetsAndMoons.MOON);
-        Assert.Throws<InvalidOperationException>(() => moon.FindWindowsOnCoordinateConstraint(new Window(Epoch, Epoch.AddSeconds(600.0)),
-            spacecraft, Frames.Frame.ICRF, CoordinateSystem.Geodetic, Coordinate.Latitude, RelationnalOperator.Greater, 0.0, 0.0,
-            Aberration.None, TimeSpan.FromSeconds(60.0)).ToArray());
+        Assert.Throws<InvalidOperationException>(() => spacecraft.FindCoordinateWindows(new Window(Epoch, Epoch.AddSeconds(600.0)), moon, Frames.Frame.ICRF, CoordinateSystem.Geodetic, Coordinate.Latitude, RelationnalOperator.Greater, 0.0, new WindowSearchOptions { Step = TimeSpan.FromSeconds(60.0) }).ToArray());
     }
 
     [Fact]

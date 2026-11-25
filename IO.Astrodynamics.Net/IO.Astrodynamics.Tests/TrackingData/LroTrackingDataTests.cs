@@ -59,17 +59,10 @@ public class LroTrackingDataTests
     private List<Window> ComputeTrackingArcs()
     {
         // Find windows when LRO is above the horizon (Z > 0 in site topocentric frame)
-        var aboveHorizonWindows = _lro.FindWindowsOnCoordinateConstraint(
-            _searchWindow, _site, _site.Frame,
-            CoordinateSystem.Rectangular, Coordinate.Z,
-            RelationnalOperator.Greater, 0.0, 0.0,
-            Aberration.None, _step).ToList();
+        var aboveHorizonWindows = _site.FindCoordinateWindows(_searchWindow, _lro, _site.Frame, CoordinateSystem.Rectangular, Coordinate.Z, RelationnalOperator.Greater, 0.0, new WindowSearchOptions { Step = _step }).ToList();
 
         // Find windows when LRO is occulted by Moon from site
-        var occultations = _lro.FindWindowsOnOccultationConstraint(
-            _searchWindow, _site,
-            ShapeType.Point, _moon, ShapeType.Ellipsoid,
-            OccultationType.Full, Aberration.None, _step).ToList();
+        var occultations = _site.FindOccultationWindows(_searchWindow, _lro, _moon, new OccultationSearchOptions { Step = _step, TargetShape = ShapeType.Point, FrontShape = ShapeType.Ellipsoid, OccultationType = OccultationType.Full }).ToList();
 
         // Subtract occultation windows from above-horizon windows
         var trackingArcs = new List<Window>();

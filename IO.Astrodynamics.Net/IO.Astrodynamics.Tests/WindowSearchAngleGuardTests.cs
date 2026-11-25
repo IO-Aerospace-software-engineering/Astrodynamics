@@ -93,10 +93,8 @@ public class WindowSearchAngleGuardTests
         foreach (var relation in Comparisons)
         {
             // The managed search of a celestial item and of a site
-            AssertGuard(() => Moon.FindWindowsOnCoordinateConstraint(SearchWindow, earth, earth.Frame, system, coordinate, relation, value, 0.0,
-                Aberration.None, Step), "value");
-            AssertGuard(() => site.FindWindowsOnCoordinateConstraint(SearchWindow, Moon, Frames.Frame.ICRF, system, coordinate, relation, value, 0.0,
-                Aberration.None, Step), "value");
+            AssertGuard(() => earth.FindCoordinateWindows(SearchWindow, Moon, earth.Frame, system, coordinate, relation, value, new WindowSearchOptions { Step = Step }), "value");
+            AssertGuard(() => Moon.FindCoordinateWindows(SearchWindow, site, Frames.Frame.ICRF, system, coordinate, relation, value, new WindowSearchOptions { Step = Step }), "value");
             // The raw search of CSPICE
             AssertGuard(() => SpiceAPI.Instance.FindWindowsOnCoordinateConstraint(SearchWindow, 399, 301, earth.Frame, system, coordinate, relation,
                 value, 0.0, Aberration.None, Step), "value");
@@ -110,8 +108,7 @@ public class WindowSearchAngleGuardTests
         TestKernels.EnsureLro();
         var lro = new Spacecraft(-85, "LRO", epoch: SearchWindow.StartDate);
         var moon = Moon;
-        AssertGuard(() => lro.FindWindowsOnCoordinateConstraint(SearchWindow, moon, moon.Frame, system, coordinate, RelationnalOperator.Greater, value, 0.0,
-            Aberration.None, Step), "value");
+        AssertGuard(() => moon.FindCoordinateWindows(SearchWindow, lro, moon.Frame, system, coordinate, RelationnalOperator.Greater, value, new WindowSearchOptions { Step = Step }), "value");
     }
 
     [Theory]
@@ -120,8 +117,7 @@ public class WindowSearchAngleGuardTests
     {
         var earth = Earth;
         // A closed range: the bound is a threshold, as gfposc_c takes it
-        Assert.NotNull(Moon.FindWindowsOnCoordinateConstraint(SearchWindow, earth, earth.Frame, system, coordinate, RelationnalOperator.Greater, value, 0.0,
-            Aberration.None, Step));
+        Assert.NotNull(earth.FindCoordinateWindows(SearchWindow, Moon, earth.Frame, system, coordinate, RelationnalOperator.Greater, value, new WindowSearchOptions { Step = Step }));
     }
 
     [Fact]
@@ -131,14 +127,11 @@ public class WindowSearchAngleGuardTests
         // The value of an extreme is no threshold; a length has no range
         foreach (var relation in Extremes)
         {
-            Assert.NotNull(Moon.FindWindowsOnCoordinateConstraint(SearchWindow, earth, earth.Frame, CoordinateSystem.RaDec, Coordinate.Declination, relation,
-                10.0, 0.0, Aberration.None, Step));
+            Assert.NotNull(earth.FindCoordinateWindows(SearchWindow, Moon, earth.Frame, CoordinateSystem.RaDec, Coordinate.Declination, relation, 10.0, new WindowSearchOptions { Step = Step }));
         }
 
-        Assert.Empty(Moon.FindWindowsOnCoordinateConstraint(SearchWindow, earth, earth.Frame, CoordinateSystem.RaDec, Coordinate.Range,
-            RelationnalOperator.Greater, 1.0e12, 0.0, Aberration.None, Step));
-        Assert.Empty(Moon.FindWindowsOnCoordinateConstraint(SearchWindow, earth, earth.Frame, CoordinateSystem.Rectangular, Coordinate.Z,
-            RelationnalOperator.Greater, 1.0e12, 0.0, Aberration.None, Step));
+        Assert.Empty(earth.FindCoordinateWindows(SearchWindow, Moon, earth.Frame, CoordinateSystem.RaDec, Coordinate.Range, RelationnalOperator.Greater, 1.0e12, new WindowSearchOptions { Step = Step }));
+        Assert.Empty(earth.FindCoordinateWindows(SearchWindow, Moon, earth.Frame, CoordinateSystem.Rectangular, Coordinate.Z, RelationnalOperator.Greater, 1.0e12, new WindowSearchOptions { Step = Step }));
     }
 
     [Theory]
@@ -152,8 +145,7 @@ public class WindowSearchAngleGuardTests
         var earth = Earth;
         foreach (var relation in Comparisons)
         {
-            AssertGuard(() => site.FindWindowsOnIlluminationConstraint(SearchWindow, IlluminationAngle.Incidence, relation, value, 0.0, Aberration.None, Step,
-                TestHelpers.Sun), "value");
+            AssertGuard(() => site.FindIlluminationWindows(SearchWindow, IlluminationAngle.Incidence, relation, value, TestHelpers.Sun, new WindowSearchOptions { Step = Step }), "value");
             foreach (var angle in new[] { IlluminationAngle.Incidence, IlluminationAngle.Emission, IlluminationAngle.Phase })
             {
                 AssertGuard(() => SpiceAPI.Instance.FindWindowsOnIlluminationConstraint(SearchWindow, 301, 399, earth.Frame, site.Planetodetic, angle, relation,
@@ -166,12 +158,9 @@ public class WindowSearchAngleGuardTests
     public void Illumination_AtTheBounds_AndExtremes_Search()
     {
         var site = SiteFromCoordinates;
-        Assert.NotNull(site.FindWindowsOnIlluminationConstraint(SearchWindow, IlluminationAngle.Incidence, RelationnalOperator.Lower, 0.0, 0.0, Aberration.None,
-            Step, TestHelpers.Sun));
-        Assert.NotNull(site.FindWindowsOnIlluminationConstraint(SearchWindow, IlluminationAngle.Incidence, RelationnalOperator.Lower, System.Math.PI, 0.0,
-            Aberration.None, Step, TestHelpers.Sun));
-        Assert.NotEmpty(site.FindWindowsOnIlluminationConstraint(SearchWindow, IlluminationAngle.Incidence, RelationnalOperator.AbsoluteMin, 100.0, 0.0,
-            Aberration.None, Step, TestHelpers.Sun));
+        Assert.NotNull(site.FindIlluminationWindows(SearchWindow, IlluminationAngle.Incidence, RelationnalOperator.Lower, 0.0, TestHelpers.Sun, new WindowSearchOptions { Step = Step }));
+        Assert.NotNull(site.FindIlluminationWindows(SearchWindow, IlluminationAngle.Incidence, RelationnalOperator.Lower, System.Math.PI, TestHelpers.Sun, new WindowSearchOptions { Step = Step }));
+        Assert.NotEmpty(site.FindIlluminationWindows(SearchWindow, IlluminationAngle.Incidence, RelationnalOperator.AbsoluteMin, 100.0, TestHelpers.Sun, new WindowSearchOptions { Step = Step }));
     }
 
     [Theory]

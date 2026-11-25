@@ -1968,8 +1968,7 @@ public class SpiceAPI
     /// spacecraft whose frame id no loaded kernel defines under the name handed, third review of #690; before, the proxy
     /// dropped the error of <c>gfposc_c</c> and the search returned no window). The frame of a site built from coordinates
     /// or of a managed spacecraft whose name a loaded kernel gives its id is still searched in that kernel frame, by name.
-    /// <see cref="Body.CelestialItem.FindWindowsOnCoordinateConstraint"/> and
-    /// <see cref="Surface.Site.FindWindowsOnCoordinateConstraint"/> search in every frame whose reads are the library's
+    /// <see cref="Body.WindowSearches.FindCoordinateWindows"/> searches in every frame whose reads are the library's
     /// (<see cref="ManagedReadFrame"/>) as the library reads it.
     /// </remarks>
     /// <exception cref="ArgumentNullException"></exception>
@@ -1992,7 +1991,7 @@ public class SpiceAPI
         if (!SpiceKnowsFrame(frame))
         {
             throw new ArgumentException(
-                $"CSPICE cannot search in the frame {frame.Name}: SPICE does not know it (a frame of the library, or a site or spacecraft frame that no loaded kernel defines). CelestialItem.FindWindowsOnCoordinateConstraint and Site.FindWindowsOnCoordinateConstraint search in it.",
+                $"CSPICE cannot search in the frame {frame.Name}: SPICE does not know it (a frame of the library, or a site or spacecraft frame that no loaded kernel defines). FindCoordinateWindows searches in it.",
                 nameof(frame));
         }
 

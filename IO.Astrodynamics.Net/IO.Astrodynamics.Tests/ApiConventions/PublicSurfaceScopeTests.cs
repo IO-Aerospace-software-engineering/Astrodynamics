@@ -176,11 +176,10 @@ public class PublicSurfaceScopeTests
 
     /// <summary>
     /// The window searches return an <see cref="IReadOnlyList{T}"/> of windows, their count and indexing visible, never an
-    /// <see cref="IEnumerable{T}"/> of windows (R16 of #668, choice 2, decided by S. Guillet, 2026-11-19): the 21 public
-    /// searches of <c>CelestialItem</c>, <c>ILocalizable</c>, <c>Site</c>, <c>Instrument</c>, <c>GeometryFinder</c> and
-    /// <c>SpiceAPI</c>, which returned the arrays and lists they build as an <c>IEnumerable&lt;Window&gt;</c> before 11.0.0,
-    /// and the 8 searches on the observer of R15 (<c>WindowSearches</c>, <c>Site</c>, <c>Instrument</c>, the static
-    /// <c>GeometryFinder.FindWindows</c>).
+    /// <see cref="IEnumerable{T}"/> of windows (R16 of #668, choice 2, decided by S. Guillet, 2026-11-19): the six raw
+    /// searches of <c>SpiceAPI</c> and <c>Site.FindDayWindows</c>, which returned the arrays and lists they build as an
+    /// <c>IEnumerable&lt;Window&gt;</c> before 11.0.0, and the 8 searches on the observer of R15 (<c>WindowSearches</c>,
+    /// <c>Site</c>, <c>Instrument</c>, the static <c>GeometryFinder.FindWindows</c>), which replace the others.
     /// </summary>
     [Fact]
     public void WindowSearches_ReturnAReadOnlyList()
@@ -189,9 +188,31 @@ public class PublicSurfaceScopeTests
             .SelectMany(t => t.GetMethods(BindingFlags.Public | BindingFlags.Instance | BindingFlags.Static | BindingFlags.DeclaredOnly))
             .Where(m => m.Name.StartsWith("Find") && m.Name.Contains("Windows") && m.ReturnType != typeof(IEnumerable<LaunchWindow>))
             .ToList();
-        Assert.Equal(29, searches.Count);
+        Assert.Equal(15, searches.Count);
         Assert.All(searches, m => Assert.True(m.ReturnType == typeof(IReadOnlyList<Window>), $"{m.DeclaringType}.{m}"));
         Assert.DoesNotContain(PublicSurface.Types.SelectMany(t => t.GetMethods(PublicSurface.Declared)).Where(m => m.IsPublic || m.IsFamily),
             m => m.ReturnType == typeof(IEnumerable<Window>));
+    }
+
+    /// <summary>
+    /// The former searches, on the target with the observer as argument, are removed outright (R15 of #668, §7 of the
+    /// re-baseline, decided by S. Guillet, 2026-11-19, no forwarder): <c>FindWindowsOnDistanceConstraint</c>,
+    /// <c>FindWindowsOnOccultationConstraint</c>, <c>FindWindowsOnCoordinateConstraint</c> and
+    /// <c>FindWindowsOnIlluminationConstraint</c> of every type but <c>SpiceAPI</c>, whose raw searches stay,
+    /// <c>Instrument.FindWindowsInFieldOfViewConstraint</c>, and the instance <c>GeometryFinder</c>, a static class.
+    /// </summary>
+    [Fact]
+    public void FormerWindowSearches_AreRemoved()
+    {
+        string[] former =
+        [
+            "FindWindowsOnDistanceConstraint", "FindWindowsOnOccultationConstraint", "FindWindowsOnCoordinateConstraint",
+            "FindWindowsOnIlluminationConstraint", "FindWindowsInFieldOfViewConstraint", "FindWindowsWithCondition", "EvaluateCondition"
+        ];
+        var remaining = PublicSurface.Types.Where(t => t != typeof(SpiceAPI))
+            .SelectMany(t => t.GetMethods(BindingFlags.Public | BindingFlags.Instance | BindingFlags.Static | BindingFlags.DeclaredOnly))
+            .Where(m => former.Contains(m.Name)).Select(m => $"{m.DeclaringType}.{m.Name}").ToList();
+        Assert.True(remaining.Count == 0, "former searches: " + string.Join(", ", remaining));
+        Assert.True(typeof(GeometryFinder).IsAbstract && typeof(GeometryFinder).IsSealed, "GeometryFinder is not static");
     }
 }

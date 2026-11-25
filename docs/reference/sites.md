@@ -29,10 +29,11 @@ Ground-based observation or tracking site.
 | `GetEphemeris(Time, ILocalizable)` | Get site state relative to observer in ICRF without correction, bit for bit the read with `Frame.ICRF` and `Aberration.None`; `GetEphemeris(Window, ILocalizable, TimeSpan)` over a window (11.0.0, R20 of #668), its step above zero or `ArgumentOutOfRangeException` (`stepSize`; R11 of #668) |
 | `GetEphemeris(Time, ILocalizable, Frame, Aberration)` | Get site state relative to observer, a `StateVector` (11.0.0): a site of the kernels seen from a body, a barycenter or a kernel spacecraft by `spkezr_c`; a site given by its coordinates corrected as `spkcpt_c` corrects it, the site itself at t ∓ lt ([Light time of a site](#light-time-of-a-site)) |
 | `AngularSeparation(Time, ILocalizable, ILocalizable, Aberration)` | Angular separation |
-| `FindWindowsOnDistanceConstraint(...)` | Find distance constraint windows |
-| `FindWindowsOnCoordinateConstraint(...)` | Find coordinate constraint windows of this site seen from an observer; for the visibility of a spacecraft, search the spacecraft from the site: `spacecraft.FindWindowsOnCoordinateConstraint(window, site, site.Frame, CoordinateSystem.RaDec, Coordinate.Declination, RelationnalOperator.Greater, mask, 0.0, aberration, step)` (the declination in the site's frame is the elevation) |
-| `FindWindowsOnOccultationConstraint(...)` | Find occultation windows ([Occultations](occultations.md)) |
-| `FindWindowsOnIlluminationConstraint(...)` | Find the windows of the incidence angle of a source ([Illumination](#illumination)) |
+| `FindDistanceWindows(...)` | Find the windows of the distance of a target seen from the site (`WindowSearches`) |
+| `FindCoordinateWindows(...)` | Find the windows of a coordinate of a target seen from the site (`WindowSearches`) |
+| `FindHorizontalWindows(Window, ILocalizable, HorizontalCoordinate, RelationnalOperator, double, WindowSearchOptions)` | Find the windows of the azimuth, elevation or range of a target seen from the site, as `GetHorizontalCoordinates` gives them; the visibility of a spacecraft is its elevation above the mask |
+| `FindOccultationWindows(...)` | Find occultation windows seen from the site (`WindowSearches`, [Occultations](occultations.md)) |
+| `FindIlluminationWindows(Window, IlluminationAngle, RelationnalOperator, double, ILocalizable, WindowSearchOptions)` | Find the windows of the incidence angle of a source ([Illumination](#illumination)) |
 | `FindDayWindows(Window, double)` | Find daylight windows |
 | `WriteFrame(FileInfo)` | Write the frame kernel of the topocentric frame `<NAME>_TOPO`; its kernel variable `FRAME_<NAME>_TOPO` follows SPICE's rules (Kernel Required Reading, "Variable Name Rules"): no blank, tab or other whitespace or control character, quote, parenthesis, comma or '=', 32 bytes at most in UTF-8, so 21 ASCII characters for the name; another name throws `InvalidOperationException` and nothing is written (#676). For a site from the kernels whose frame id the loaded kernels define, that kernel frame under its kernel name, as a TK matrix of the body frame; one not fixed in the body frame throws `InvalidOperationException` (#690). A file it replaces is unloaded first, under every name SPICE holds it by, and the new one is left unloaded (decision 103 of #668) |
 
@@ -141,8 +142,8 @@ are measured at the point towards an observer (`gfilum_c` Particulars), which th
 
 ```csharp
 // Inputs: window (Window), step (TimeSpan), site (Site), moon (CelestialBody)
-var windows = new GeometryFinder().FindWindowsWithCondition(window,
-    t => site.IlluminationEmission(t, moon, Aberration.None), RelationnalOperator.Lower, Constants.HalfPi, step);
+var windows = GeometryFinder.FindWindows(window,
+    t => site.IlluminationEmission(t, moon, Aberration.None), RelationnalOperator.Lower, Constants.HalfPi, new WindowSearchOptions { Step = step });
 ```
 
 which is within 4.4 ms of `gfilum_c` from the Moon at DSS-13 (the normal above the ellipsoid, as for the incidence).

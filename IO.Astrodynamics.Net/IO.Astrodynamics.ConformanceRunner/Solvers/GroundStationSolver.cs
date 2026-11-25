@@ -92,8 +92,8 @@ public class GroundStationSolver : ICategorySolver
         for (int k = 0; k < passes.Count; k++)
         {
             var pass = passes[k];
-            var culmination = target.FindWindowsOnCoordinateConstraint(pass, site, site.Frame, CoordinateSystem.RaDec, Coordinate.Declination,
-                RelationnalOperator.AbsoluteMax, 0.0, 0.0, aberration, step).First().StartDate;
+            var culmination = site.FindHorizontalWindows(pass, target, HorizontalCoordinate.Elevation, RelationnalOperator.AbsoluteMax, 0.0,
+                new WindowSearchOptions { Step = step, Aberration = aberration }).First().StartDate;
             outputs[OutputComparer.IndexedOutput(Passes, k, "rise")] = pass.StartDate;
             outputs[OutputComparer.IndexedOutput(Passes, k, "set")] = pass.EndDate;
             outputs[OutputComparer.IndexedOutput(Passes, k, "duration_s")] = pass.Length.TotalSeconds;
@@ -126,12 +126,16 @@ public class GroundStationSolver : ICategorySolver
     internal static List<Window> FindPasses(Spacecraft target, Site site, IReadOnlyList<CelestialBody> occulters, Window window,
         double mask, Aberration aberration, TimeSpan step)
     {
-        var passes = target.FindWindowsOnCoordinateConstraint(window, site, site.Frame, CoordinateSystem.RaDec, Coordinate.Declination,
-            RelationnalOperator.Greater, mask, 0.0, aberration, step).ToList();
+        var passes = site.FindHorizontalWindows(window, target, HorizontalCoordinate.Elevation, RelationnalOperator.Greater, mask,
+            new WindowSearchOptions { Step = step, Aberration = aberration }).ToList();
         foreach (var occulter in occulters)
         {
-            var hidden = target.FindWindowsOnOccultationConstraint(window, site, ShapeType.Point, occulter, ShapeType.Ellipsoid,
-                OccultationType.Full, aberration, step).ToList();
+            // In TDB, as the occultation windows were labelled before lot L6, so that the pass ends they give keep their labels
+            // and the culminations searched from them their grid (IC-9 of lot L6 of #668)
+            var hidden = site.FindOccultationWindows(new Window(window.StartDate.ToTDB(), window.EndDate.ToTDB()), target, occulter, new OccultationSearchOptions
+            {
+                Step = step, Aberration = aberration, TargetShape = ShapeType.Point, FrontShape = ShapeType.Ellipsoid, OccultationType = OccultationType.Full
+            }).ToList();
             passes = Subtract(passes, hidden);
         }
 

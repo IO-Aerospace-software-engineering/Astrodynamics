@@ -453,13 +453,13 @@ public class FieldOfViewSearchTests : IClassFixture<PropagatedFieldOfViewCase>
 
         // The public path of the propagated spacecraft: the managed search
         var instrument = _case.PropagatedInstrument(number);
-        var managed = instrument.FindWindowsInFieldOfViewConstraint(_case.SearchWindow, _case.Propagated, _case.Target(target, false), frame, shape, aberration, Step).ToArray();
+        var managed = instrument.FindFieldOfViewWindows(_case.SearchWindow, _case.Target(target, false), new FieldOfViewSearchOptions { Step = Step, Aberration = aberration, TargetShape = shape, TargetFrame = frame }).ToArray();
 
         // The same trajectory read from its kernels: the managed search, and the public path (SPICE for a kernel target)
         var kernelInstrument = _case.KernelInstrument(number);
         var kernelTarget = _case.Target(target, true);
         var kernel = FieldOfViewSearch.Managed(kernelInstrument, _case.SearchWindow, kernelTarget, shape, frame, aberration, Step);
-        var kernelPublic = kernelInstrument.FindWindowsInFieldOfViewConstraint(_case.SearchWindow, _case.Kernel, kernelTarget, frame, shape, aberration, spiceStep).ToArray();
+        var kernelPublic = kernelInstrument.FindFieldOfViewWindows(_case.SearchWindow, kernelTarget, new FieldOfViewSearchOptions { Step = spiceStep, Aberration = aberration, TargetShape = shape, TargetFrame = frame }).ToArray();
 
         double worstManaged = FieldOfViewKernels.WorstEdge(managed, expected);
         double worstKernel = FieldOfViewKernels.WorstEdge(kernel, expected);
@@ -540,7 +540,7 @@ public class FieldOfViewSearchTests : IClassFixture<PropagatedFieldOfViewCase>
     {
         var earth = _case.Earth;
         var itrf = PropagatedFieldOfViewCase.TargetFrame("399");
-        var grazing = _case.PropagatedInstrument(801).FindWindowsInFieldOfViewConstraint(_case.SearchWindow, _case.Propagated, earth, itrf, ShapeType.Ellipsoid, Aberration.LT, Step)
+        var grazing = _case.PropagatedInstrument(801).FindFieldOfViewWindows(_case.SearchWindow, earth, new FieldOfViewSearchOptions { Step = Step, Aberration = Aberration.LT, TargetShape = ShapeType.Ellipsoid, TargetFrame = itrf })
             .ToArray();
         Assert.Empty(_case.Gftfov(801, "399", ShapeType.Ellipsoid, Aberration.LT, Step));
         var fine = _case.Gftfov(801, "399", ShapeType.Ellipsoid, Aberration.LT, ShortStep);
@@ -548,7 +548,7 @@ public class FieldOfViewSearchTests : IClassFixture<PropagatedFieldOfViewCase>
         Assert.InRange((fine[0].EndDate - fine[0].StartDate).TotalSeconds, 10.0, 11.0);
         Assert.True(FieldOfViewKernels.WorstEdge(grazing, fine) < 4.4e-4);
 
-        var gap = _case.PropagatedInstrument(802).FindWindowsInFieldOfViewConstraint(_case.SearchWindow, _case.Propagated, earth, itrf, ShapeType.Ellipsoid, Aberration.None, Step)
+        var gap = _case.PropagatedInstrument(802).FindFieldOfViewWindows(_case.SearchWindow, earth, new FieldOfViewSearchOptions { Step = Step, TargetShape = ShapeType.Ellipsoid, TargetFrame = itrf })
             .ToArray();
         Assert.Single(_case.Gftfov(802, "399", ShapeType.Ellipsoid, Aberration.None, Step));
         var fineGap = _case.Gftfov(802, "399", ShapeType.Ellipsoid, Aberration.None, ShortStep);
@@ -569,8 +569,7 @@ public class FieldOfViewSearchTests : IClassFixture<PropagatedFieldOfViewCase>
     {
         foreach (var aberration in new[] { Aberration.None, Aberration.LT, Aberration.LTS })
         {
-            var actual = _case.KernelInstrument(number).FindWindowsInFieldOfViewConstraint(_case.SearchWindow, _case.Kernel, _case.PropagatedTarget, Frames.Frame.ICRF,
-                ShapeType.Point, aberration, Step).ToArray();
+            var actual = _case.KernelInstrument(number).FindFieldOfViewWindows(_case.SearchWindow, _case.PropagatedTarget, new FieldOfViewSearchOptions { Step = Step, Aberration = aberration, TargetShape = ShapeType.Point, TargetFrame = Frames.Frame.ICRF }).ToArray();
             var expected = _case.Gftfov(number, "-5152", ShapeType.Point, aberration, Step);
             double worst = FieldOfViewKernels.WorstEdge(actual, expected);
             _output.WriteLine($"MEASURE #515 kernel observer, propagated target {number} {aberration}, {expected.Length} windows: |managed - gftfov (1e-6 s)| {worst:E2} s");
@@ -590,16 +589,16 @@ public class FieldOfViewSearchTests : IClassFixture<PropagatedFieldOfViewCase>
         var instrument = _case.PropagatedInstrument(789);
         var earth = _case.Earth;
         var itrf = PropagatedFieldOfViewCase.TargetFrame("399");
-        var point = instrument.FindWindowsInFieldOfViewConstraint(_case.SearchWindow, _case.Propagated, earth, itrf, ShapeType.Point, Aberration.LT, Step).ToArray();
+        var point = instrument.FindFieldOfViewWindows(_case.SearchWindow, earth, new FieldOfViewSearchOptions { Step = Step, Aberration = Aberration.LT, TargetShape = ShapeType.Point, TargetFrame = itrf }).ToArray();
         LabelAssert.Equal(_case.SearchWindow.StartDate, point[0].StartDate);
-        var ellipsoid = instrument.FindWindowsInFieldOfViewConstraint(_case.SearchWindow, _case.Propagated, earth, itrf, ShapeType.Ellipsoid, Aberration.LT, Step).ToArray();
+        var ellipsoid = instrument.FindFieldOfViewWindows(_case.SearchWindow, earth, new FieldOfViewSearchOptions { Step = Step, Aberration = Aberration.LT, TargetShape = ShapeType.Ellipsoid, TargetFrame = itrf }).ToArray();
         Assert.Equal(2, ellipsoid.Length);
         LabelAssert.Equal(_case.SearchWindow.StartDate, ellipsoid[0].StartDate);
         LabelAssert.Equal(_case.SearchWindow.EndDate, ellipsoid[1].EndDate);
 
         var inside = new Window(_case.Start.AddSeconds(100.0), _case.Start.AddSeconds(200.0));
-        var managed = instrument.FindWindowsInFieldOfViewConstraint(inside, _case.Propagated, earth, itrf, ShapeType.Ellipsoid, Aberration.LT, Step).ToArray();
-        var spice = _case.KernelInstrument(789).FindWindowsInFieldOfViewConstraint(inside, _case.Kernel, earth, itrf, ShapeType.Ellipsoid, Aberration.LT, Step).ToArray();
+        var managed = instrument.FindFieldOfViewWindows(inside, earth, new FieldOfViewSearchOptions { Step = Step, Aberration = Aberration.LT, TargetShape = ShapeType.Ellipsoid, TargetFrame = itrf }).ToArray();
+        var spice = _case.KernelInstrument(789).FindFieldOfViewWindows(inside, earth, new FieldOfViewSearchOptions { Step = Step, Aberration = Aberration.LT, TargetShape = ShapeType.Ellipsoid, TargetFrame = itrf }).ToArray();
         Assert.Single(managed);
         LabelAssert.Equal(inside.StartDate, managed[0].StartDate);
         LabelAssert.Equal(inside.EndDate, managed[0].EndDate);
@@ -620,12 +619,11 @@ public class FieldOfViewSearchTests : IClassFixture<PropagatedFieldOfViewCase>
         var options = FieldOfViewSearchOptions.Default with { Step = Step, Aberration = Aberration.LT, TargetFrame = itrf };
         foreach (var (instrument, spacecraft) in new[] { (_case.PropagatedInstrument(789), _case.Propagated), (_case.KernelInstrument(789), _case.Kernel) })
         {
-            var expected = instrument.FindWindowsInFieldOfViewConstraint(_case.SearchWindow, spacecraft, earth, itrf, ShapeType.Ellipsoid, Aberration.LT, Step);
+            var expected = instrument.FindFieldOfViewWindows(_case.SearchWindow, earth, new FieldOfViewSearchOptions { Step = Step, Aberration = Aberration.LT, TargetShape = ShapeType.Ellipsoid, TargetFrame = itrf });
             Assert.NotEmpty(expected);
             LabelAssert.Equal(expected, instrument.FindFieldOfViewWindows(_case.SearchWindow, earth, options));
-            LabelAssert.Equal(instrument.FindWindowsInFieldOfViewConstraint(_case.SearchWindow, spacecraft, earth, earth.Frame, ShapeType.Ellipsoid, Aberration.None,
-                Step), instrument.FindFieldOfViewWindows(_case.SearchWindow, earth, new FieldOfViewSearchOptions { Step = Step }));
-            LabelAssert.Equal(instrument.FindWindowsInFieldOfViewConstraint(_case.SearchWindow, spacecraft, earth, itrf, ShapeType.Point, Aberration.LT, Step),
+            LabelAssert.Equal(instrument.FindFieldOfViewWindows(_case.SearchWindow, earth, new FieldOfViewSearchOptions { Step = Step, TargetShape = ShapeType.Ellipsoid, TargetFrame = earth.Frame }), instrument.FindFieldOfViewWindows(_case.SearchWindow, earth, new FieldOfViewSearchOptions { Step = Step }));
+            LabelAssert.Equal(instrument.FindFieldOfViewWindows(_case.SearchWindow, earth, new FieldOfViewSearchOptions { Step = Step, Aberration = Aberration.LT, TargetShape = ShapeType.Point, TargetFrame = itrf }),
                 instrument.FindFieldOfViewWindows(_case.SearchWindow, earth, options with { TargetShape = ShapeType.Point }));
         }
 
@@ -646,20 +644,24 @@ public class FieldOfViewSearchTests : IClassFixture<PropagatedFieldOfViewCase>
         Assert.IsType<IO.Astrodynamics.Exceptions.SpiceException>(unknown.InnerException);
     }
 
-    /// <summary>A search window tagged UTC: TDB windows on both paths, equal to those of the TDB search window.</summary>
+    /// <summary>
+    /// A search window tagged UTC: on both paths the windows of the TDB search window, the same instants, labelled UTC, the
+    /// scale of the search window's start (R15 of #668, lot L6; TDB before).
+    /// </summary>
     [Fact]
-    public void UtcSearchWindow_ReturnsTdbWindowsOnBothPaths()
+    public void UtcSearchWindow_ReturnsTheSameInstantsLabelledUtc_OnBothPaths()
     {
         var utc = new Window(_case.SearchWindow.StartDate.ToUTC(), _case.SearchWindow.EndDate.ToUTC());
         var earth = _case.Earth;
         var itrf = PropagatedFieldOfViewCase.TargetFrame("399");
-        var managedUtc = _case.PropagatedInstrument(790).FindWindowsInFieldOfViewConstraint(utc, _case.Propagated, earth, itrf, ShapeType.Ellipsoid, Aberration.LT, Step)
+        var managedUtc = _case.PropagatedInstrument(790).FindFieldOfViewWindows(utc, earth, new FieldOfViewSearchOptions { Step = Step, Aberration = Aberration.LT, TargetShape = ShapeType.Ellipsoid, TargetFrame = itrf })
             .ToArray();
-        var managedTdb = _case.PropagatedInstrument(790).FindWindowsInFieldOfViewConstraint(_case.SearchWindow, _case.Propagated, earth, itrf, ShapeType.Ellipsoid,
-            Aberration.LT, Step).ToArray();
-        var spiceUtc = _case.KernelInstrument(790).FindWindowsInFieldOfViewConstraint(utc, _case.Kernel, earth, itrf, ShapeType.Ellipsoid, Aberration.LT, Step).ToArray();
-        Assert.Equal(0.0, FieldOfViewKernels.WorstEdge(managedUtc, managedTdb));
-        Assert.True(FieldOfViewKernels.WorstEdge(managedUtc, spiceUtc) < PublicPathsLimit);
+        var managedTdb = _case.PropagatedInstrument(790).FindFieldOfViewWindows(_case.SearchWindow, earth, new FieldOfViewSearchOptions { Step = Step, Aberration = Aberration.LT, TargetShape = ShapeType.Ellipsoid, TargetFrame = itrf }).ToArray();
+        var spiceUtc = _case.KernelInstrument(790).FindFieldOfViewWindows(utc, earth, new FieldOfViewSearchOptions { Step = Step, Aberration = Aberration.LT, TargetShape = ShapeType.Ellipsoid, TargetFrame = itrf }).ToArray();
+        Assert.All(managedUtc.Concat(spiceUtc), w => Assert.True(w.StartDate.Scale == TimeScale.UTC && w.EndDate.Scale == TimeScale.UTC));
+        Window[] InTdb(Window[] windows) => windows.Select(w => new Window(w.StartDate.ToTDB(), w.EndDate.ToTDB())).ToArray();
+        Assert.Equal(0.0, FieldOfViewKernels.WorstEdge(InTdb(managedUtc), managedTdb));
+        Assert.True(FieldOfViewKernels.WorstEdge(InTdb(managedUtc), InTdb(spiceUtc)) < PublicPathsLimit);
     }
 
     /// <summary>
@@ -670,10 +672,8 @@ public class FieldOfViewSearchTests : IClassFixture<PropagatedFieldOfViewCase>
     public void Ellipse_RefAngleInTheReferencePlane_518()
     {
         var earth = _case.Earth;
-        var e790 = _case.PropagatedInstrument(790).FindWindowsInFieldOfViewConstraint(_case.SearchWindow, _case.Propagated, earth, Frames.Frame.ICRF, ShapeType.Point,
-            Aberration.LT, Step).ToArray();
-        var e793 = _case.PropagatedInstrument(793).FindWindowsInFieldOfViewConstraint(_case.SearchWindow, _case.Propagated, earth, Frames.Frame.ICRF, ShapeType.Point,
-            Aberration.LT, Step).ToArray();
+        var e790 = _case.PropagatedInstrument(790).FindFieldOfViewWindows(_case.SearchWindow, earth, new FieldOfViewSearchOptions { Step = Step, Aberration = Aberration.LT, TargetShape = ShapeType.Point, TargetFrame = Frames.Frame.ICRF }).ToArray();
+        var e793 = _case.PropagatedInstrument(793).FindFieldOfViewWindows(_case.SearchWindow, earth, new FieldOfViewSearchOptions { Step = Step, Aberration = Aberration.LT, TargetShape = ShapeType.Point, TargetFrame = Frames.Frame.ICRF }).ToArray();
         Assert.True(FieldOfViewKernels.WorstEdge(e790, _case.Gftfov(790, "399", ShapeType.Point, Aberration.LT, Step)) < PropagatedLimit);
         Assert.True(FieldOfViewKernels.WorstEdge(e793, _case.Gftfov(793, "399", ShapeType.Point, Aberration.LT, Step)) < PropagatedLimit);
         Assert.Equal(e790.Length, e793.Length);
@@ -689,8 +689,7 @@ public class FieldOfViewSearchTests : IClassFixture<PropagatedFieldOfViewCase>
     {
         foreach (int n in new[] { 791, 796 })
         {
-            var actual = _case.PropagatedInstrument(n).FindWindowsInFieldOfViewConstraint(_case.SearchWindow, _case.Propagated, _case.Earth, Frames.Frame.ICRF,
-                ShapeType.Point, Aberration.LT, Step).ToArray();
+            var actual = _case.PropagatedInstrument(n).FindFieldOfViewWindows(_case.SearchWindow, _case.Earth, new FieldOfViewSearchOptions { Step = Step, Aberration = Aberration.LT, TargetShape = ShapeType.Point, TargetFrame = Frames.Frame.ICRF }).ToArray();
             var expected = _case.Gftfov(n, "399", ShapeType.Point, Aberration.LT, Step);
             Assert.Equal(2, expected.Length);
             Assert.True(FieldOfViewKernels.WorstEdge(actual, expected) < PropagatedLimit);
@@ -707,8 +706,7 @@ public class FieldOfViewSearchTests : IClassFixture<PropagatedFieldOfViewCase>
     {
         foreach (var target in new[] { "399", "-5152" })
         {
-            var actual = _case.PropagatedInstrument(797).FindWindowsInFieldOfViewConstraint(_case.SearchWindow, _case.Propagated, _case.Target(target, false),
-                Frames.Frame.ICRF, ShapeType.Point, Aberration.LT, Step).ToArray();
+            var actual = _case.PropagatedInstrument(797).FindFieldOfViewWindows(_case.SearchWindow, _case.Target(target, false), new FieldOfViewSearchOptions { Step = Step, Aberration = Aberration.LT, TargetShape = ShapeType.Point, TargetFrame = Frames.Frame.ICRF }).ToArray();
             var expected = _case.Gftfov(797, target, ShapeType.Point, Aberration.LT, Step);
             Assert.NotEmpty(expected);
             Assert.True(FieldOfViewKernels.WorstEdge(actual, expected) < PropagatedLimit);
@@ -722,8 +720,7 @@ public class FieldOfViewSearchTests : IClassFixture<PropagatedFieldOfViewCase>
     [Fact]
     public void Edges_ToTheMicrosecond_521()
     {
-        var actual = _case.PropagatedInstrument(789).FindWindowsInFieldOfViewConstraint(_case.SearchWindow, _case.Propagated, _case.Earth, Frames.Frame.ICRF,
-            ShapeType.Point, Aberration.LT, TimeSpan.FromSeconds(360.0)).ToArray();
+        var actual = _case.PropagatedInstrument(789).FindFieldOfViewWindows(_case.SearchWindow, _case.Earth, new FieldOfViewSearchOptions { Step = TimeSpan.FromSeconds(360.0), Aberration = Aberration.LT, TargetShape = ShapeType.Point, TargetFrame = Frames.Frame.ICRF }).ToArray();
         var expected = _case.Gftfov(789, "399", ShapeType.Point, Aberration.LT, TimeSpan.FromSeconds(360.0));
         Assert.Equal(2, expected.Length);
         LabelAssert.Equal(expected[0].StartDate, actual[0].StartDate);
@@ -744,26 +741,22 @@ public class FieldOfViewSearchTests : IClassFixture<PropagatedFieldOfViewCase>
         {
             var instrument = spacecraft.Instruments.First();
             Assert.Throws<ArgumentOutOfRangeException>(() =>
-                instrument.FindWindowsInFieldOfViewConstraint(window, spacecraft, earth, Frames.Frame.ICRF, ShapeType.Point, Aberration.LT, TimeSpan.Zero));
+                instrument.FindFieldOfViewWindows(window, earth, new FieldOfViewSearchOptions { Step = TimeSpan.Zero, Aberration = Aberration.LT, TargetShape = ShapeType.Point, TargetFrame = Frames.Frame.ICRF }));
             Assert.Throws<ArgumentOutOfRangeException>(() =>
-                instrument.FindWindowsInFieldOfViewConstraint(window, spacecraft, earth, Frames.Frame.ICRF, ShapeType.Point, Aberration.LT, TimeSpan.FromSeconds(-60.0)));
+                instrument.FindFieldOfViewWindows(window, earth, new FieldOfViewSearchOptions { Step = TimeSpan.FromSeconds(-60.0), Aberration = Aberration.LT, TargetShape = ShapeType.Point, TargetFrame = Frames.Frame.ICRF }));
             Assert.Throws<ArgumentException>(() =>
-                instrument.FindWindowsInFieldOfViewConstraint(window, spacecraft, spacecraft, Frames.Frame.ICRF, ShapeType.Point, Aberration.LT, Step));
+                instrument.FindFieldOfViewWindows(window, spacecraft, new FieldOfViewSearchOptions { Step = Step, Aberration = Aberration.LT, TargetShape = ShapeType.Point, TargetFrame = Frames.Frame.ICRF }));
             // A search window that ends before it starts, which the constructor from a length allowed before 11.0.0: it
             // throws there now (R11 of #668), before any search
             Assert.Throws<ArgumentOutOfRangeException>(() => new Window(window.EndDate, TimeSpan.FromSeconds(-60.0)));
             foreach (ILocalizable target in new ILocalizable[] { _case.Dss13, _case.CoordinateSite, other, new Barycenter(3), new LagrangePoint(LagrangePoints.L1), star })
             {
                 Assert.Throws<ArgumentException>(() =>
-                    instrument.FindWindowsInFieldOfViewConstraint(window, spacecraft, target, Frames.Frame.ICRF, ShapeType.Ellipsoid, Aberration.LT, Step));
+                    instrument.FindFieldOfViewWindows(window, target, new FieldOfViewSearchOptions { Step = Step, Aberration = Aberration.LT, TargetShape = ShapeType.Ellipsoid, TargetFrame = Frames.Frame.ICRF }));
             }
 
             Assert.Throws<ArgumentNullException>(() =>
-                instrument.FindWindowsInFieldOfViewConstraint(window, null, earth, Frames.Frame.ICRF, ShapeType.Point, Aberration.LT, Step));
-            Assert.Throws<ArgumentNullException>(() =>
-                instrument.FindWindowsInFieldOfViewConstraint(window, spacecraft, null, Frames.Frame.ICRF, ShapeType.Point, Aberration.LT, Step));
-            Assert.Throws<ArgumentNullException>(() =>
-                instrument.FindWindowsInFieldOfViewConstraint(window, spacecraft, earth, null, ShapeType.Point, Aberration.LT, Step));
+                instrument.FindFieldOfViewWindows(window, null, new FieldOfViewSearchOptions { Step = Step, Aberration = Aberration.LT, TargetShape = ShapeType.Point, TargetFrame = Frames.Frame.ICRF }));
         }
 
         // A field CSPICE rejects, on an unpropagated spacecraft (the managed path) and on a kernel-backed one (the SPICE
@@ -793,7 +786,7 @@ public class FieldOfViewSearchTests : IClassFixture<PropagatedFieldOfViewCase>
             foreach (var instrument in spacecraft.Instruments.Where(x => -x.NaifId % 1000 > 900))
             {
                 Assert.Throws<InvalidOperationException>(() =>
-                    instrument.FindWindowsInFieldOfViewConstraint(window, spacecraft, earth, Frames.Frame.ICRF, ShapeType.Point, Aberration.LT, Step));
+                    instrument.FindFieldOfViewWindows(window, earth, new FieldOfViewSearchOptions { Step = Step, Aberration = Aberration.LT, TargetShape = ShapeType.Point, TargetFrame = Frames.Frame.ICRF }));
                 Assert.Throws<InvalidOperationException>(() => instrument.IsInFOV(window.StartDate, earth, Aberration.LT));
             }
         }
@@ -804,13 +797,13 @@ public class FieldOfViewSearchTests : IClassFixture<PropagatedFieldOfViewCase>
         var before = new Window(_case.Start.AddSeconds(-10.0), _case.End);
         var after = new Window(_case.Start.AddSeconds(1.0), _case.End.AddSeconds(10.0));
         Assert.Contains("leaves the propagated states", Assert.Throws<InvalidOperationException>(() => _case.PropagatedInstrument(789)
-            .FindWindowsInFieldOfViewConstraint(before, _case.Propagated, earth, Frames.Frame.ICRF, ShapeType.Point, Aberration.LT, Step)).Message);
+            .FindFieldOfViewWindows(before, earth, new FieldOfViewSearchOptions { Step = Step, Aberration = Aberration.LT, TargetShape = ShapeType.Point, TargetFrame = Frames.Frame.ICRF })).Message);
         Assert.Contains("leaves the propagated states", Assert.Throws<InvalidOperationException>(() => _case.PropagatedInstrument(789)
-            .FindWindowsInFieldOfViewConstraint(after, _case.Propagated, earth, Frames.Frame.ICRF, ShapeType.Point, Aberration.LT, Step)).Message);
+            .FindFieldOfViewWindows(after, earth, new FieldOfViewSearchOptions { Step = Step, Aberration = Aberration.LT, TargetShape = ShapeType.Point, TargetFrame = Frames.Frame.ICRF })).Message);
         Assert.Contains("leaves the propagated states", Assert.Throws<InvalidOperationException>(() => _case.KernelInstrument(789)
-            .FindWindowsInFieldOfViewConstraint(after, _case.Kernel, _case.PropagatedTarget, Frames.Frame.ICRF, ShapeType.Point, Aberration.LT, Step)).Message);
+            .FindFieldOfViewWindows(after, _case.PropagatedTarget, new FieldOfViewSearchOptions { Step = Step, Aberration = Aberration.LT, TargetShape = ShapeType.Point, TargetFrame = Frames.Frame.ICRF })).Message);
         Assert.Contains("leaves the propagated states", Assert.Throws<InvalidOperationException>(() => _case.KernelInstrument(789)
-            .FindWindowsInFieldOfViewConstraint(before, _case.Kernel, _case.PropagatedTarget, Frames.Frame.ICRF, ShapeType.Point, Aberration.LT, Step)).Message);
+            .FindFieldOfViewWindows(before, _case.PropagatedTarget, new FieldOfViewSearchOptions { Step = Step, Aberration = Aberration.LT, TargetShape = ShapeType.Point, TargetFrame = Frames.Frame.ICRF })).Message);
 
         // An observer inside the target's ellipsoid, on the managed path only (zzocced's rule)
         var inside = new Spacecraft(-5155, "FOV5155", 1000.0, new StateVector(new Vector3(1000000.0, 0.0, 0.0), new Vector3(0.0, 100.0, 0.0), earth, _case.Start, Frames.Frame.ICRF), 3000.0,
@@ -820,8 +813,7 @@ public class FieldOfViewSearchTests : IClassFixture<PropagatedFieldOfViewCase>
         inside.AddRectangularInstrument("INSIDER", 0.3, 0.2, Vector3.VectorZ, Vector3.VectorY, Vector3.Zero, naifId: -5155002, model: "fov515");
         foreach (var instrument in inside.Instruments)
         {
-            var exception = Assert.Throws<InvalidOperationException>(() => instrument.FindWindowsInFieldOfViewConstraint(new Window(_case.Start, _case.Start.AddSeconds(60.0)), inside, earth,
-                PropagatedFieldOfViewCase.TargetFrame("399"), ShapeType.Ellipsoid, Aberration.None, Step));
+            var exception = Assert.Throws<InvalidOperationException>(() => instrument.FindFieldOfViewWindows(new Window(_case.Start, _case.Start.AddSeconds(60.0)), earth, new FieldOfViewSearchOptions { Step = Step, TargetShape = ShapeType.Ellipsoid, TargetFrame = PropagatedFieldOfViewCase.TargetFrame("399") }));
             Assert.DoesNotContain("no attitude", exception.Message);
         }
     }
@@ -871,12 +863,9 @@ public class FieldOfViewSearchTests : IClassFixture<PropagatedFieldOfViewCase>
                 Assert.Contains("no attitude", exception.Message);
             }
 
-            AssertNoAttitude(() => camera.FindWindowsInFieldOfViewConstraint(window, spacecraft, earth, earth.Frame, ShapeType.Ellipsoid, Aberration.LT,
-                TimeSpan.FromMinutes(1.0)));
-            AssertNoAttitude(() => camera.FindWindowsInFieldOfViewConstraint(window, spacecraft, earth, earth.Frame, ShapeType.Point, Aberration.LT,
-                TimeSpan.FromMinutes(1.0)));
-            AssertNoAttitude(() => camera.FindWindowsInFieldOfViewConstraint(window, spacecraft, moon, moon.Frame, ShapeType.Point, Aberration.LT,
-                TimeSpan.FromMinutes(1.0)));
+            AssertNoAttitude(() => camera.FindFieldOfViewWindows(window, earth, new FieldOfViewSearchOptions { Step = TimeSpan.FromMinutes(1.0), Aberration = Aberration.LT, TargetShape = ShapeType.Ellipsoid, TargetFrame = earth.Frame }));
+            AssertNoAttitude(() => camera.FindFieldOfViewWindows(window, earth, new FieldOfViewSearchOptions { Step = TimeSpan.FromMinutes(1.0), Aberration = Aberration.LT, TargetShape = ShapeType.Point, TargetFrame = earth.Frame }));
+            AssertNoAttitude(() => camera.FindFieldOfViewWindows(window, moon, new FieldOfViewSearchOptions { Step = TimeSpan.FromMinutes(1.0), Aberration = Aberration.LT, TargetShape = ShapeType.Point, TargetFrame = moon.Frame }));
             AssertNoAttitude(() => camera.IsInFOV(start.AddSeconds(3000.0), earth, Aberration.LT));
             // The getters keep the documented identity before any attitude
             Assert.Equal(Vector3.VectorY, camera.GetBoresightInICRFFrame(start));
@@ -887,17 +876,16 @@ public class FieldOfViewSearchTests : IClassFixture<PropagatedFieldOfViewCase>
                 Vector3.VectorX, Vector3.Zero, naifId: spacecraft.NaifId * 1000 - 2, model: "fov682");
             var wide = spacecraft.Instruments.First(x => x.Name == "WIDE");
             var fieldError = Assert.Throws<InvalidOperationException>(() =>
-                wide.FindWindowsInFieldOfViewConstraint(window, spacecraft, earth, earth.Frame, ShapeType.Point, Aberration.LT, TimeSpan.FromMinutes(1.0)));
+                wide.FindFieldOfViewWindows(window, earth, new FieldOfViewSearchOptions { Step = TimeSpan.FromMinutes(1.0), Aberration = Aberration.LT, TargetShape = ShapeType.Point, TargetFrame = earth.Frame }));
             Assert.Contains("angular radius", fieldError.Message);
             Assert.Contains("angular radius", Assert.Throws<InvalidOperationException>(() => wide.IsInFOV(start, earth, Aberration.LT)).Message);
             // and an argument error before it: the instrument's spacecraft as the target
             Assert.Throws<ArgumentException>(() =>
-                camera.FindWindowsInFieldOfViewConstraint(window, spacecraft, spacecraft, earth.Frame, ShapeType.Point, Aberration.LT, TimeSpan.FromMinutes(1.0)));
+                camera.FindFieldOfViewWindows(window, spacecraft, new FieldOfViewSearchOptions { Step = TimeSpan.FromMinutes(1.0), Aberration = Aberration.LT, TargetShape = ShapeType.Point, TargetFrame = earth.Frame }));
 
             // An attitude added to its frame lifts the refusal: the identity searched as before 11.0.0
             spacecraft.Frame.AddStateOrientationToICRF(new StateOrientation(Quaternion.Identity, Vector3.Zero, start, spacecraft.Frame));
-            Assert.NotEmpty(camera.FindWindowsInFieldOfViewConstraint(window, spacecraft, earth, earth.Frame, ShapeType.Ellipsoid, Aberration.LT,
-                TimeSpan.FromMinutes(1.0)));
+            Assert.NotEmpty(camera.FindFieldOfViewWindows(window, earth, new FieldOfViewSearchOptions { Step = TimeSpan.FromMinutes(1.0), Aberration = Aberration.LT, TargetShape = ShapeType.Ellipsoid, TargetFrame = earth.Frame }));
             camera.IsInFOV(start.AddSeconds(3000.0), earth, Aberration.LT);
         }
     }
@@ -935,8 +923,7 @@ public class FieldOfViewSearchTests : IClassFixture<PropagatedFieldOfViewCase>
                 Assert.Equal(expected, camera.IsInFOV(t, earth, Aberration.None));
             }
 
-            var windows = camera.FindWindowsInFieldOfViewConstraint(window, spacecraft, earth, Frames.Frame.ICRF, ShapeType.Point, Aberration.None,
-                TimeSpan.FromMinutes(1.0)).ToArray();
+            var windows = camera.FindFieldOfViewWindows(window, earth, new FieldOfViewSearchOptions { Step = TimeSpan.FromMinutes(1.0), TargetShape = ShapeType.Point, TargetFrame = Frames.Frame.ICRF }).ToArray();
             if (q == Quaternion.Identity)
             {
                 Assert.Equal(0, inView);
@@ -1013,7 +1000,7 @@ public class FieldOfViewSearchTests : IClassFixture<PropagatedFieldOfViewCase>
 
             spacecraft.Propagate(propagation, new PropagationOptions { Integrator = new VVIntegratorOptions { Step = TimeSpan.FromSeconds(1.0) }, OutputStep = TimeSpan.FromSeconds(1.0), ThirdBodies = bodies });
             var inst = spacecraft.Instruments.First(x => x.NaifId == id * 1000 - number);
-            return (spacecraft, () => inst.FindWindowsInFieldOfViewConstraint(window, spacecraft, target, itrf, targetShape, Aberration.LTS, Step).ToArray());
+            return (spacecraft, () => inst.FindFieldOfViewWindows(window, target, new FieldOfViewSearchOptions { Step = Step, Aberration = Aberration.LTS, TargetShape = targetShape, TargetFrame = itrf }).ToArray());
         }
 
         var first = Enumerable.Range(0, 12).Select(i => Fresh(i, 0)).ToArray();

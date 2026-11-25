@@ -200,7 +200,7 @@ of [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/iss
 | A body read at an epoch where it has no data | `InvalidOperationException` | `GetEphemeris` and `GetGeometricStateRelativeTo` of a propagated spacecraft before its first stored state or after its last, its light-time margin aside ([#527](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/527)), or in a gap between the windows given to `AddPropagatedStates`; a body read outside the coverage of the kernels (`SpiceException`, an `InvalidOperationException`) |
 | A solution read outside its window | `ArgumentOutOfRangeException` | `PropagationSolution.GetStateVector` and the getters of the covariance propagation outside `PropagationSolution.Window` ([Propagators](propagators.md)) |
 | A write with nothing to write | `InvalidOperationException` | `WriteEphemeris` of a spacecraft that stores no state, `WriteOrientation` of an empty attitude record (a `TLEPropagator` run records none, [#546](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/546)), `WriteKernels` of either, `Star.WriteEphemeris` of a star that stores fewer than three states; nothing is written. An arc of one state keeps its `ArgumentException` in `WriteEphemeris` (decisions 87 and 89 of #668), which `WriteKernels` refuses with `InvalidOperationException`; `SpiceAPI.WriteEphemeris` and `Site.WriteEphemeris`, whose arguments are at fault, keep theirs |
-| A window argument that leaves a body's stored states | `InvalidOperationException` | `GetEphemeris` over a window and the managed distance search of `CelestialItem` past a propagated spacecraft's states; the managed field-of-view search (`Instrument.FindWindowsInFieldOfViewConstraint`) for a search window that leaves the stored states of the instrument's spacecraft or of a spacecraft target, or meets a gap between them (decision 86; `ArgumentException` before lot L6). Until lot L7 of #668 the `ILocalizable` overloads of `ConjunctionAssessment.Analyze` and `AnalyzeAll` still throw `ArgumentException` for such a window, and so does a conjunction trajectory that does not cover the window |
+| A window argument that leaves a body's stored states | `InvalidOperationException` | `GetEphemeris` over a window and the managed distance search (`FindDistanceWindows`) past a propagated spacecraft's states; the managed field-of-view search (`Instrument.FindFieldOfViewWindows`) for a search window that leaves the stored states of the instrument's spacecraft or of a spacecraft target, or meets a gap between them (decision 86; `ArgumentException` before lot L6). Until lot L7 of #668 the `ILocalizable` overloads of `ConjunctionAssessment.Analyze` and `AnalyzeAll` still throw `ArgumentException` for such a window, and so does a conjunction trajectory that does not cover the window |
 
 Before 11.0.0 a write with nothing to write threw the `ArgumentException` of the SPK writer (`arcs`) or of
 `SpiceAPI.WriteEphemeris` (`stateVectors`), which blamed the file for what the spacecraft or the star lacked
@@ -563,7 +563,7 @@ var tank = new FuelTank("MainTank", capacity: 1000.0, initialQuantity: 800.0,
 | Method | Description |
 |--------|-------------|
 | `IsInFOV(Time, ILocalizable, Aberration)` | Whether the center of the target is in the field at an epoch: the `POINT` condition of CSPICE's `fovtrg`, with the corrections of the search |
-| `FindWindowsInFieldOfViewConstraint(Window, Spacecraft, ILocalizable, Frame, ShapeType, Aberration, TimeSpan)` | The windows, in TDB, where the target is in the field: those of CSPICE's `gftfov` ([Field-of-view search](#field-of-view-search)) |
+| `FindFieldOfViewWindows(Window, ILocalizable, FieldOfViewSearchOptions)` | The windows where the target is in the field, labelled in the scale of the search window's start: those of CSPICE's `gftfov` ([Field-of-view search](#field-of-view-search)) |
 | `GetBoresightInSpacecraftFrame()` | Transform boresight to spacecraft body frame |
 | `GetRefVectorInSpacecraftFrame()` | Transform reference vector to spacecraft body frame |
 
@@ -635,14 +635,16 @@ decade, #715; every finite angle accepted, decided by S. Guillet, 2026-11-17). G
 
 #### Field-of-view search
 
-`FindWindowsInFieldOfViewConstraint` finds the windows when a target is in the field of view of an instrument, its
-spacecraft the observer (the `observer` argument is not used). It computes what CSPICE's `gftfov` computes.
+`FindFieldOfViewWindows` finds the windows when a target is in the field of view of an instrument, its spacecraft the
+observer. It computes what CSPICE's `gftfov` computes.
 
 ```csharp
 // Inputs: spacecraft (Spacecraft), window (Window), earth (CelestialBody)
 var camera = spacecraft.Instruments.First();
-var windows = camera.FindWindowsInFieldOfViewConstraint(window, spacecraft, earth, new Frame("ITRF93"),
-    ShapeType.Ellipsoid, Aberration.LT, TimeSpan.FromSeconds(60.0));
+var windows = camera.FindFieldOfViewWindows(window, earth, new FieldOfViewSearchOptions
+{
+    Step = TimeSpan.FromSeconds(60.0), Aberration = Aberration.LT, TargetShape = ShapeType.Ellipsoid, TargetFrame = new Frame("ITRF93")
+});
 ```
 
 **The field.** The field of the instrument kernel: `FieldOfView` is the half-angle in the plane of the boresight and the

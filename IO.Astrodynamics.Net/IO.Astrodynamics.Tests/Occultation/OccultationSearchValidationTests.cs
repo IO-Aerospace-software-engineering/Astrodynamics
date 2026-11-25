@@ -146,8 +146,8 @@ public class OccultationSearchValidationTests
             }
 
             return (observer is Site site
-                ? site.FindWindowsOnOccultationConstraint(window, target, ShapeType.Ellipsoid, front, ShapeType.Ellipsoid, type, aberration, step, options)
-                : target.FindWindowsOnOccultationConstraint(window, observer, ShapeType.Ellipsoid, front, ShapeType.Ellipsoid, type, aberration, step, options)).ToArray();
+                ? site.FindOccultationWindows(window, target, front, options with { Step = step, Aberration = aberration, TargetShape = ShapeType.Ellipsoid, FrontShape = ShapeType.Ellipsoid, OccultationType = type })
+                : observer.FindOccultationWindows(window, target, front, options with { Step = step, Aberration = aberration, TargetShape = ShapeType.Ellipsoid, FrontShape = ShapeType.Ellipsoid, OccultationType = type })).ToArray();
         }
 
         double worstReference = WorstEdge(Search(FineTolerance), reference);
@@ -300,11 +300,9 @@ public class OccultationSearchValidationTests
         var sun = new CelestialBody(Stars.Sun);
         var options = new OccultationSearchOptions { FrontFrame = IauEarth };
         var started = DateTime.UtcNow;
-        var any = sun.FindWindowsOnOccultationConstraint(Eclipse001Window, spacecraft, ShapeType.Ellipsoid, earth, ShapeType.Ellipsoid, OccultationType.Any,
-            Aberration.None, TimeSpan.FromSeconds(60.0), options).ToArray();
+        var any = spacecraft.FindOccultationWindows(Eclipse001Window, sun, earth, options with { Step = TimeSpan.FromSeconds(60.0), TargetShape = ShapeType.Ellipsoid, FrontShape = ShapeType.Ellipsoid }).ToArray();
         var elapsed = DateTime.UtcNow - started;
-        var full = sun.FindWindowsOnOccultationConstraint(Eclipse001Window, spacecraft, ShapeType.Ellipsoid, earth, ShapeType.Ellipsoid, OccultationType.Full,
-            Aberration.None, TimeSpan.FromSeconds(60.0), options).ToArray();
+        var full = spacecraft.FindOccultationWindows(Eclipse001Window, sun, earth, options with { Step = TimeSpan.FromSeconds(60.0), TargetShape = ShapeType.Ellipsoid, FrontShape = ShapeType.Ellipsoid, OccultationType = OccultationType.Full }).ToArray();
         var gfocltAny = SpiceAPI.Instance.FindWindowsOnOccultationConstraint(Eclipse001Window, kernelSpacecraft.NaifId, sun.NaifId, ShapeType.Ellipsoid, earth.NaifId,
             ShapeType.Ellipsoid, OccultationType.Any, Aberration.None, TimeSpan.FromSeconds(1.0), IauEarth, null).ToArray();
         var gfocltFull = SpiceAPI.Instance.FindWindowsOnOccultationConstraint(Eclipse001Window, kernelSpacecraft.NaifId, sun.NaifId, ShapeType.Ellipsoid, earth.NaifId,

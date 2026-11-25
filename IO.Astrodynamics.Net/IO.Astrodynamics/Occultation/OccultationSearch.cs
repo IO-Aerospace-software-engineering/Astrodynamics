@@ -10,7 +10,7 @@ using IO.Astrodynamics.TimeSystem;
 namespace IO.Astrodynamics.Occultation;
 
 /// <summary>
-/// The two paths of an occultation search behind <c>FindWindowsOnOccultationConstraint</c>: the managed search of the
+/// The two paths of an occultation search behind <see cref="Body.WindowSearches.FindOccultationWindows"/>: the managed search of the
 /// library, and CSPICE's <c>gfoclt</c> when every participant is in the kernels. Both apply the same rules to the
 /// shapes and to <see cref="OccultationType.None"/>.
 /// </summary>

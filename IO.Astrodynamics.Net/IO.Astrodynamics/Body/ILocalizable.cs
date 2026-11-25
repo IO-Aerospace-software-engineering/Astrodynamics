@@ -77,55 +77,5 @@ namespace IO.Astrodynamics.Body
         /// Gets the mass of the celestial object.
         /// </summary>
         double Mass { get; }
-
-        /// <summary>
-        /// Finds time windows based on a distance constraint.
-        /// </summary>
-        /// <param name="searchWindow">The time window to search within.</param>
-        /// <param name="observer">The observer of the celestial object.</param>
-        /// <param name="relationalOperator">The relational operator for the distance constraint.</param>
-        /// <param name="value">The distance value for the constraint, m.</param>
-        /// <param name="aberration">The aberration correction to apply.</param>
-        /// <param name="stepSize">The step size for the search: on the library's search (<see cref="GeometryFinder"/>), at
-        /// most half the time between two extremes of the quantity; on CSPICE's, shorter than the shortest interval where it
-        /// is monotone.</param>
-        /// <returns>An enumerable of time windows that satisfy the distance constraint.</returns>
-        IReadOnlyList<Window> FindWindowsOnDistanceConstraint(in Window searchWindow, ILocalizable observer, RelationnalOperator relationalOperator, double value,
-            Aberration aberration, in TimeSpan stepSize);
-
-        /// <summary>
-        /// Finds time windows based on an occultation constraint.
-        /// </summary>
-        /// <param name="searchWindow">The time window to search within.</param>
-        /// <param name="targetShape">The shape of the target celestial object.</param>
-        /// <param name="frontBody">The front body causing the occultation.</param>
-        /// <param name="frontShape">The shape of the front body.</param>
-        /// <param name="occultationType">The type of occultation.</param>
-        /// <param name="aberration">The aberration correction to apply.</param>
-        /// <param name="stepSize">The step size for the search.</param>
-        /// <param name="observer">The observer of the celestial object.</param>
-        /// <returns>An enumerable of time windows that satisfy the occultation constraint.</returns>
-        IReadOnlyList<Window> FindWindowsOnOccultationConstraint(in Window searchWindow, ILocalizable observer, ShapeType targetShape, INaifObject frontBody,
-            ShapeType frontShape, OccultationType occultationType, Aberration aberration, in TimeSpan stepSize);
-
-        /// <summary>
-        /// Finds time windows based on a coordinate constraint.
-        /// </summary>
-        /// <param name="searchWindow">The time window to search within.</param>
-        /// <param name="frame">The reference frame for the coordinate constraint.</param>
-        /// <param name="coordinateSystem">The coordinate system for the constraint.</param>
-        /// <param name="coordinate">The coordinate for the constraint.</param>
-        /// <param name="relationalOperator">The relational operator for the coordinate constraint.</param>
-        /// <param name="value">The coordinate value for the constraint.</param>
-        /// <param name="adjustValue">The adjustment value for the constraint.</param>
-        /// <param name="aberration">The aberration correction to apply.</param>
-        /// <param name="stepSize">The step size for the search: on the library's search (<see cref="GeometryFinder"/>), at
-        /// most half the time between two extremes of the quantity; on CSPICE's, shorter than the shortest interval where it
-        /// is monotone.</param>
-        /// <param name="observer">The observer of the celestial object.</param>
-        /// <returns>An enumerable of time windows that satisfy the coordinate constraint.</returns>
-        /// <exception cref="ArgumentOutOfRangeException">With a comparison operator, <paramref name="value"/> is an angle outside its range, or NaN: a right ascension or a planetographic longitude outside [0, 2π], a geodetic longitude outside [−π, π], a declination or a latitude outside [−π/2, π/2], in radians (R11 of #668, lot L6; before 11.0.0 it was searched as given).</exception>
-        public IReadOnlyList<Window> FindWindowsOnCoordinateConstraint(in Window searchWindow, ILocalizable observer, Frame frame, CoordinateSystem coordinateSystem,
-            Coordinate coordinate, RelationnalOperator relationalOperator, double value, double adjustValue, Aberration aberration, in TimeSpan stepSize);
     }
 }

@@ -91,14 +91,15 @@ public class EclipseSolver : ICategorySolver
         var lightSource = BodyResolver.Resolve(inputs.LightSource);
         var spacecraft = PropagatedSpacecraft(inputs, occultingBody, epoch, searchWindow);
 
-        var options = new OccultationSearchOptions { FrontFrame = IauFrame(occultingBody) };
-        var penumbra = lightSource.FindWindowsOnOccultationConstraint(searchWindow, spacecraft, ShapeType.Ellipsoid, occultingBody,
-                ShapeType.Ellipsoid, OccultationType.Any, Aberration.None, SearchStep, options)
-            .FirstOrDefault();
+        var options = new OccultationSearchOptions
+        {
+            Step = SearchStep, Aberration = Aberration.None, TargetShape = ShapeType.Ellipsoid, FrontShape = ShapeType.Ellipsoid,
+            FrontFrame = IauFrame(occultingBody)
+        };
+        var penumbra = spacecraft.FindOccultationWindows(InTdb(searchWindow), lightSource, occultingBody, options).FirstOrDefault();
         var umbra = penumbra == default
             ? default
-            : lightSource.FindWindowsOnOccultationConstraint(penumbra, spacecraft, ShapeType.Ellipsoid, occultingBody,
-                    ShapeType.Ellipsoid, OccultationType.Full, Aberration.None, SearchStep, options)
+            : spacecraft.FindOccultationWindows(penumbra, lightSource, occultingBody, options with { OccultationType = OccultationType.Full })
                 .FirstOrDefault();
 
         return new Dictionary<string, object>
@@ -111,6 +112,11 @@ public class EclipseSolver : ICategorySolver
             ["umbra_duration_s"] = Output(umbra, () => umbra.Length.TotalSeconds)
         };
     }
+
+    // The search window in TDB: the occultation searches label their windows in the scale of the window's start, so a UTC
+    // window would give UTC labels and lengths in TT seconds; the TDB window keeps the TDB labels and lengths of the cases
+    // (IC-9 of lot L6 of #668)
+    private static Window InTdb(Window window) => new(window.StartDate.ToTDB(), window.EndDate.ToTDB());
 
     // The second branch (002 to 006): every event of every occulting body, about the Earth, in time order
     private Dictionary<string, object> EveryEvent(EclipseInputs inputs)
@@ -130,11 +136,13 @@ public class EclipseSolver : ICategorySolver
         var events = new List<(CelestialBody Body, OccultationType Type, Window Window)>();
         foreach (var body in occultingBodies)
         {
-            var options = new OccultationSearchOptions { FrontFrame = IauFrame(body) };
+            var options = new OccultationSearchOptions
+            {
+                Step = SearchStep, Aberration = aberration, TargetShape = ShapeType.Ellipsoid, FrontShape = ShapeType.Ellipsoid, FrontFrame = IauFrame(body)
+            };
             foreach (var type in EventTypes)
             {
-                events.AddRange(lightSource.FindWindowsOnOccultationConstraint(searchWindow, spacecraft, ShapeType.Ellipsoid, body,
-                        ShapeType.Ellipsoid, type, aberration, SearchStep, options)
+                events.AddRange(spacecraft.FindOccultationWindows(InTdb(searchWindow), lightSource, body, options with { OccultationType = type })
                     .Select(window => (body, type, window)));
             }
         }

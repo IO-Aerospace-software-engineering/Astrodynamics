@@ -98,9 +98,9 @@ public class KernelWindowSearchTests : IClassFixture<KernelWindowSearchKernels>
     {
         // #466: 1 window, 0 and 0 before, gfdist at 1.815148 km
         string key = $"lro_moon_distance {label} 1815.148 km";
-        AssertWindows(key, Lro.FindWindowsOnDistanceConstraint(DistanceWindow, Moon, relation, LroMoonDistance, Aberration.None, Step), NativeThreshold,
+        AssertWindows(key, Moon.FindDistanceWindows(DistanceWindow, Lro, relation, LroMoonDistance, new WindowSearchOptions { Step = Step }), NativeThreshold,
             "spacecraft, body observer");
-        AssertWindows(key, Moon.FindWindowsOnDistanceConstraint(DistanceWindow, Lro, relation, LroMoonDistance, Aberration.None, Step), NativeThreshold,
+        AssertWindows(key, Lro.FindDistanceWindows(DistanceWindow, Moon, relation, LroMoonDistance, new WindowSearchOptions { Step = Step }), NativeThreshold,
             "body, spacecraft observer");
     }
 
@@ -108,19 +108,15 @@ public class KernelWindowSearchTests : IClassFixture<KernelWindowSearchKernels>
     public void Distance_SpacecraftAndBarycenter()
     {
         var emb = new Barycenter(3);
-        AssertWindows("lro_emb_distance > 364500 km", Lro.FindWindowsOnDistanceConstraint(DistanceWindow, emb, RelationnalOperator.Greater, 364500000.0,
-            Aberration.None, Step), NativeThreshold, "spacecraft, barycenter observer");
-        AssertWindows("lro_emb_distance > 364500 km", emb.FindWindowsOnDistanceConstraint(DistanceWindow, Lro, RelationnalOperator.Greater, 364500000.0,
-            Aberration.None, Step), NativeThreshold, "barycenter, spacecraft observer");
+        AssertWindows("lro_emb_distance > 364500 km", emb.FindDistanceWindows(DistanceWindow, Lro, RelationnalOperator.Greater, 364500000.0, new WindowSearchOptions { Step = Step }), NativeThreshold, "spacecraft, barycenter observer");
+        AssertWindows("lro_emb_distance > 364500 km", Lro.FindDistanceWindows(DistanceWindow, emb, RelationnalOperator.Greater, 364500000.0, new WindowSearchOptions { Step = Step }), NativeThreshold, "barycenter, spacecraft observer");
     }
 
     [Fact]
     public void Distance_TwoSpacecraft()
     {
-        AssertWindows("lro_orbiter_distance < 3000 km", Lro.FindWindowsOnDistanceConstraint(DistanceWindow, Orbiter, RelationnalOperator.Lower, 3000000.0,
-            Aberration.None, Step), NativeThreshold, "LRO, orbiter observer");
-        AssertWindows("lro_orbiter_distance < 3000 km", Orbiter.FindWindowsOnDistanceConstraint(DistanceWindow, Lro, RelationnalOperator.Lower, 3000000.0,
-            Aberration.None, Step), NativeThreshold, "orbiter, LRO observer");
+        AssertWindows("lro_orbiter_distance < 3000 km", Orbiter.FindDistanceWindows(DistanceWindow, Lro, RelationnalOperator.Lower, 3000000.0, new WindowSearchOptions { Step = Step }), NativeThreshold, "LRO, orbiter observer");
+        AssertWindows("lro_orbiter_distance < 3000 km", Lro.FindDistanceWindows(DistanceWindow, Orbiter, RelationnalOperator.Lower, 3000000.0, new WindowSearchOptions { Step = Step }), NativeThreshold, "orbiter, LRO observer");
     }
 
     [Fact]
@@ -128,10 +124,8 @@ public class KernelWindowSearchTests : IClassFixture<KernelWindowSearchKernels>
     {
         // The site's search goes to gfdist (#466: 1 window before, gfdist at 372 km); the spacecraft's, with a site
         // observer, is the managed search
-        AssertWindows("lro_dss13_distance > 372000 km", Dss13.FindWindowsOnDistanceConstraint(DistanceWindow, Lro, RelationnalOperator.Greater, 3.72e8,
-            Aberration.None, Step), NativeThreshold, "kernel site, spacecraft observer");
-        AssertWindows("lro_dss13_distance > 372000 km", Lro.FindWindowsOnDistanceConstraint(DistanceWindow, Dss13, RelationnalOperator.Greater, 3.72e8,
-            Aberration.None, Step), ManagedThreshold, "spacecraft, site observer, managed");
+        AssertWindows("lro_dss13_distance > 372000 km", Lro.FindDistanceWindows(DistanceWindow, Dss13, RelationnalOperator.Greater, 3.72e8, new WindowSearchOptions { Step = Step }), NativeThreshold, "kernel site, spacecraft observer");
+        AssertWindows("lro_dss13_distance > 372000 km", Dss13.FindDistanceWindows(DistanceWindow, Lro, RelationnalOperator.Greater, 3.72e8, new WindowSearchOptions { Step = Step }), ManagedThreshold, "spacecraft, site observer, managed");
     }
 
     [Fact]
@@ -146,12 +140,9 @@ public class KernelWindowSearchTests : IClassFixture<KernelWindowSearchKernels>
     {
         // The coordinate branch converts its distances to km for gfposc, which takes them as they are: the same windows
         // as the distance search at the same threshold
-        AssertWindows("lro_moon_z > 500 km", Lro.FindWindowsOnCoordinateConstraint(DistanceWindow, Moon, Frames.Frame.ICRF, CoordinateSystem.Rectangular,
-            Coordinate.Z, RelationnalOperator.Greater, 500000.0, 0.0, Aberration.None, Step), NativeThreshold, "spacecraft Z");
-        AssertWindows("lro_moon_range > 1815.148 km", Lro.FindWindowsOnCoordinateConstraint(DistanceWindow, Moon, Frames.Frame.ICRF, CoordinateSystem.RaDec,
-            Coordinate.Range, RelationnalOperator.Greater, LroMoonDistance, 0.0, Aberration.None, Step), NativeThreshold, "spacecraft range");
-        AssertWindows("lro_dss13_range > 372000 km", Dss13.FindWindowsOnCoordinateConstraint(DistanceWindow, Lro, Frames.Frame.ICRF, CoordinateSystem.RaDec,
-            Coordinate.Range, RelationnalOperator.Greater, 3.72e8, 0.0, Aberration.None, Step), NativeThreshold, "kernel site range");
+        AssertWindows("lro_moon_z > 500 km", Moon.FindCoordinateWindows(DistanceWindow, Lro, Frames.Frame.ICRF, CoordinateSystem.Rectangular, Coordinate.Z, RelationnalOperator.Greater, 500000.0, new WindowSearchOptions { Step = Step }), NativeThreshold, "spacecraft Z");
+        AssertWindows("lro_moon_range > 1815.148 km", Moon.FindCoordinateWindows(DistanceWindow, Lro, Frames.Frame.ICRF, CoordinateSystem.RaDec, Coordinate.Range, RelationnalOperator.Greater, LroMoonDistance, new WindowSearchOptions { Step = Step }), NativeThreshold, "spacecraft range");
+        AssertWindows("lro_dss13_range > 372000 km", Lro.FindCoordinateWindows(DistanceWindow, Dss13, Frames.Frame.ICRF, CoordinateSystem.RaDec, Coordinate.Range, RelationnalOperator.Greater, 3.72e8, new WindowSearchOptions { Step = Step }), NativeThreshold, "kernel site range");
         Assert.Equal(Reference.Value["lro_moon_range > 1815.148 km"], Reference.Value["lro_moon_distance > 1815.148 km"]);
     }
 
@@ -169,8 +160,7 @@ public class KernelWindowSearchTests : IClassFixture<KernelWindowSearchKernels>
     public void Illumination_KernelSite(string label, RelationnalOperator relation, double angle, Aberration aberration)
     {
         // #488: the point 1070.85 km above DSS-13, 3.1 to 29.6 s off
-        AssertWindows(label, Dss13.FindWindowsOnIlluminationConstraint(IlluminationWindow, IlluminationAngle.Incidence, relation, angle, 0.0, aberration, Step,
-            TestHelpers.Sun), NativeThreshold, "kernel site");
+        AssertWindows(label, Dss13.FindIlluminationWindows(IlluminationWindow, IlluminationAngle.Incidence, relation, angle, TestHelpers.Sun, new WindowSearchOptions { Step = Step, Aberration = aberration }), NativeThreshold, "kernel site");
     }
 
     [Theory]
@@ -193,8 +183,7 @@ public class KernelWindowSearchTests : IClassFixture<KernelWindowSearchKernels>
         // 10.7″/s at sunrise (measured, Linux x64, 2026-11-11); twice that
         var dss13 = Dss13;
         var fromCoordinates = new Site(99, "DSS13GEO", Earth, dss13.Planetodetic);
-        AssertWindows("dss13_sun_incidence > 90 deg NONE", fromCoordinates.FindWindowsOnIlluminationConstraint(IlluminationWindow, IlluminationAngle.Incidence,
-            RelationnalOperator.Greater, IO.Astrodynamics.Constants.HalfPi, 0.0, Aberration.None, Step, TestHelpers.Sun), 1.0e-2, "site from coordinates");
+        AssertWindows("dss13_sun_incidence > 90 deg NONE", fromCoordinates.FindIlluminationWindows(IlluminationWindow, IlluminationAngle.Incidence, RelationnalOperator.Greater, IO.Astrodynamics.Constants.HalfPi, TestHelpers.Sun, new WindowSearchOptions { Step = Step }), 1.0e-2, "site from coordinates");
     }
 
     [Fact]
@@ -204,31 +193,31 @@ public class KernelWindowSearchTests : IClassFixture<KernelWindowSearchKernels>
         // the native proxies dropped it and the searches returned no window. The reference is SPICE's error signal: a frame
         // name it does not know, a window past LRO's SPK (2023-349 to 2024-075), a window past de440s and the Earth's PCK.
         // The unknown name is a bad argument since R25 of #668 (review of L1), SPICE's error its inner exception
-        var unknownFrame = Assert.Throws<ArgumentException>(() => Lro.FindWindowsOnCoordinateConstraint(DistanceWindow, Moon,
-            new Frames.Frame("NOT_A_FRAME_668"), CoordinateSystem.Rectangular, Coordinate.Z, RelationnalOperator.Greater, 500000.0, 0.0, Aberration.None,
-            Step).ToArray());
+        var unknownFrame = Assert.Throws<ArgumentException>(() => Moon.FindCoordinateWindows(DistanceWindow, Lro, new Frames.Frame("NOT_A_FRAME_668"), CoordinateSystem.Rectangular, Coordinate.Z, RelationnalOperator.Greater, 500000.0, new WindowSearchOptions { Step = Step }).ToArray());
         Assert.Equal("frame", unknownFrame.ParamName);
         Assert.Contains("NOT_A_FRAME_668", Assert.IsType<SpiceException>(unknownFrame.InnerException).Message);
 
         var pastTheSpk = new Window(new TimeSystem.Time(2024, 6, 1, TimeScale.TDB), new TimeSystem.Time(2024, 6, 2, TimeScale.TDB));
-        var noState = Assert.Throws<SpiceException>(() => Lro.FindWindowsOnDistanceConstraint(pastTheSpk, Moon, RelationnalOperator.Greater,
-            LroMoonDistance, Aberration.None, Step).ToArray());
+        var noState = Assert.Throws<SpiceException>(() => Moon.FindDistanceWindows(pastTheSpk, Lro, RelationnalOperator.Greater, LroMoonDistance, new WindowSearchOptions { Step = Step }).ToArray());
         Assert.Contains("Insufficient ephemeris data", noState.Message);
         Assert.Contains("-85", noState.Message);
 
-        // The occultation search of a kernel site, a kernel spacecraft target and a kernel front body goes to gfoclt_c
-        // (Site.FindWindowsOnOccultationConstraint), and so does its complement (OccultationType.None)
+        // The occultation search of a kernel spacecraft observer, a kernel target and a kernel front body goes to gfoclt_c,
+        // and so does its complement (OccultationType.None); that of a kernel site observing a kernel spacecraft is the
+        // library's since lot L6 (choice 4 and IC-10 of #668; gfoclt_c before), whose read of the spacecraft throws SPICE's
+        // error too
         foreach (var occultation in new[] { OccultationType.Any, OccultationType.None })
         {
-            var noTarget = Assert.Throws<SpiceException>(() => Dss13.FindWindowsOnOccultationConstraint(pastTheSpk, Lro, ShapeType.Point, Moon,
-                ShapeType.Ellipsoid, occultation, Aberration.None, Step).ToArray());
+            var noObserver = Assert.Throws<SpiceException>(() => Lro.FindOccultationWindows(pastTheSpk, TestHelpers.Sun, Moon, new OccultationSearchOptions { Step = Step, TargetShape = ShapeType.Ellipsoid, FrontShape = ShapeType.Ellipsoid, OccultationType = occultation }).ToArray());
+            Assert.Contains("Insufficient ephemeris data", noObserver.Message);
+            Assert.Contains("-85", noObserver.Message);
+            var noTarget = Assert.Throws<SpiceException>(() => Dss13.FindOccultationWindows(pastTheSpk, Lro, Moon, new OccultationSearchOptions { Step = Step, TargetShape = ShapeType.Point, FrontShape = ShapeType.Ellipsoid, OccultationType = occultation }).ToArray());
             Assert.Contains("Insufficient ephemeris data", noTarget.Message);
             Assert.Contains("-85", noTarget.Message);
         }
 
         var past = new Window(new TimeSystem.Time(2160, 3, 1, TimeScale.TDB), new TimeSystem.Time(2160, 3, 2, TimeScale.TDB));
-        var noPck = Assert.Throws<SpiceException>(() => Dss13.FindWindowsOnIlluminationConstraint(past, IlluminationAngle.Incidence,
-            RelationnalOperator.Greater, IO.Astrodynamics.Constants.HalfPi, 0.0, Aberration.None, Step, TestHelpers.Sun).ToArray());
+        var noPck = Assert.Throws<SpiceException>(() => Dss13.FindIlluminationWindows(past, IlluminationAngle.Incidence, RelationnalOperator.Greater, IO.Astrodynamics.Constants.HalfPi, TestHelpers.Sun, new WindowSearchOptions { Step = Step }).ToArray());
         Assert.Contains("2160", noPck.Message);
         Assert.Throws<SpiceException>(() => Dss13.FindDayWindows(past, 0.8 * IO.Astrodynamics.Constants.Deg2Rad).ToArray());
     }
@@ -299,9 +288,8 @@ public class KernelWindowSearchTests : IClassFixture<KernelWindowSearchKernels>
     private void AssertShortPasses(Spacecraft leo, TimeSpan step, string path, double threshold)
     {
         var dss13 = Dss13;
-        AssertWindows(LeoElevation, leo.FindWindowsOnCoordinateConstraint(LeoWindow, dss13, dss13.Frame, CoordinateSystem.RaDec, Coordinate.Declination,
-            RelationnalOperator.Greater, ThirtyDegrees, 0.0, Aberration.None, step), threshold, path);
-        AssertWindows(LeoRange, leo.FindWindowsOnDistanceConstraint(LeoWindow, dss13, RelationnalOperator.Lower, 1.0e6, Aberration.None, step), threshold, path);
+        AssertWindows(LeoElevation, dss13.FindCoordinateWindows(LeoWindow, leo, dss13.Frame, CoordinateSystem.RaDec, Coordinate.Declination, RelationnalOperator.Greater, ThirtyDegrees, new WindowSearchOptions { Step = step }), threshold, path);
+        AssertWindows(LeoRange, dss13.FindDistanceWindows(LeoWindow, leo, RelationnalOperator.Lower, 1.0e6, new WindowSearchOptions { Step = step }), threshold, path);
     }
 
     [Theory]
@@ -326,10 +314,8 @@ public class KernelWindowSearchTests : IClassFixture<KernelWindowSearchKernels>
         var site = new Site(98, "DSS13COORDINATES", Earth, Dss13.Planetodetic);
         var step = TimeSpan.FromMinutes(stepMinutes);
         string path = $"site from coordinates, managed, step {stepMinutes} min";
-        AssertWindows("dss13_coordinates_from_leo_declination < -30 deg", site.FindWindowsOnCoordinateConstraint(LeoWindow, ManagedLeo, site.Frame,
-            CoordinateSystem.RaDec, Coordinate.Declination, RelationnalOperator.Lower, -ThirtyDegrees, 0.0, Aberration.None, step), ShortWindowThreshold, path);
-        AssertWindows("dss13_coordinates_leo_distance < 1000 km", site.FindWindowsOnDistanceConstraint(LeoWindow, ManagedLeo, RelationnalOperator.Lower, 1.0e6,
-            Aberration.None, step), ShortWindowThreshold, path);
+        AssertWindows("dss13_coordinates_from_leo_declination < -30 deg", ManagedLeo.FindCoordinateWindows(LeoWindow, site, site.Frame, CoordinateSystem.RaDec, Coordinate.Declination, RelationnalOperator.Lower, -ThirtyDegrees, new WindowSearchOptions { Step = step }), ShortWindowThreshold, path);
+        AssertWindows("dss13_coordinates_leo_distance < 1000 km", ManagedLeo.FindDistanceWindows(LeoWindow, site, RelationnalOperator.Lower, 1.0e6, new WindowSearchOptions { Step = step }), ShortWindowThreshold, path);
     }
 
     [Theory]
@@ -346,9 +332,8 @@ public class KernelWindowSearchTests : IClassFixture<KernelWindowSearchKernels>
             var leo = new Spacecraft(-67801, "LEO678SPK", epoch: LeoWindow.StartDate);
             var dss13 = Dss13;
             var step = TimeSpan.FromMinutes(stepMinutes);
-            AssertWindows(LeoElevation, dss13.FindWindowsOnCoordinateConstraint(LeoWindow, leo, dss13.Frame, CoordinateSystem.RaDec, Coordinate.Declination,
-                RelationnalOperator.Lower, -ThirtyDegrees, 0.0, Aberration.None, step), NativeThreshold, $"kernel site, gfposc, step {stepMinutes} min");
-            AssertWindows(LeoRange, dss13.FindWindowsOnDistanceConstraint(LeoWindow, leo, RelationnalOperator.Lower, 1.0e6, Aberration.None, step),
+            AssertWindows(LeoElevation, leo.FindCoordinateWindows(LeoWindow, dss13, dss13.Frame, CoordinateSystem.RaDec, Coordinate.Declination, RelationnalOperator.Lower, -ThirtyDegrees, new WindowSearchOptions { Step = step }), NativeThreshold, $"kernel site, gfposc, step {stepMinutes} min");
+            AssertWindows(LeoRange, leo.FindDistanceWindows(LeoWindow, dss13, RelationnalOperator.Lower, 1.0e6, new WindowSearchOptions { Step = step }),
                 NativeThreshold, $"kernel site, gfdist, step {stepMinutes} min");
         }
         finally
@@ -375,9 +360,8 @@ public class KernelWindowSearchTests : IClassFixture<KernelWindowSearchKernels>
         }
 
         var dss13 = Dss13;
-        var passes = leo.FindWindowsOnCoordinateConstraint(LeoWindow, dss13, dss13.Frame, CoordinateSystem.RaDec, Coordinate.Declination,
-            RelationnalOperator.Greater, ThirtyDegrees, 0.0, Aberration.None, step).ToArray();
-        var ranges = leo.FindWindowsOnDistanceConstraint(LeoWindow, dss13, RelationnalOperator.Lower, 1.0e6, Aberration.None, step).ToArray();
+        var passes = dss13.FindCoordinateWindows(LeoWindow, leo, dss13.Frame, CoordinateSystem.RaDec, Coordinate.Declination, RelationnalOperator.Greater, ThirtyDegrees, new WindowSearchOptions { Step = step }).ToArray();
+        var ranges = dss13.FindDistanceWindows(LeoWindow, leo, RelationnalOperator.Lower, 1.0e6, new WindowSearchOptions { Step = step }).ToArray();
         _output.WriteLine($"MEASURE Velocity-Verlet: {passes.Length} passes, {ranges.Length} range windows");
         Assert.Equal(Reference.Value[LeoElevation].Length, passes.Length);
         Assert.Equal(Reference.Value[LeoRange].Length, ranges.Length);
@@ -392,8 +376,7 @@ public class KernelWindowSearchTests : IClassFixture<KernelWindowSearchKernels>
         // normal is gfilum's (#654); the Sun's incidence below 58.83 deg, its minimum over the 3 days plus 0.3 deg
         var site = new Site(97, "DSS13GROUND", Earth, new Planetodetic(Dss13.Planetodetic.Longitude, Dss13.Planetodetic.Latitude, 0.0));
         var window = new Window(IlluminationWindow.StartDate, IlluminationWindow.StartDate.AddSeconds(3.0 * 86400.0));
-        AssertWindows("point_sun_incidence dss13 0 m < 58.83 deg NONE 3 days", site.FindWindowsOnIlluminationConstraint(window, IlluminationAngle.Incidence,
-            RelationnalOperator.Lower, 58.83 * IO.Astrodynamics.Constants.Deg2Rad, 0.0, Aberration.None, TimeSpan.FromHours(stepHours), TestHelpers.Sun),
+        AssertWindows("point_sun_incidence dss13 0 m < 58.83 deg NONE 3 days", site.FindIlluminationWindows(window, IlluminationAngle.Incidence, RelationnalOperator.Lower, 58.83 * IO.Astrodynamics.Constants.Deg2Rad, TestHelpers.Sun, new WindowSearchOptions { Step = TimeSpan.FromHours(stepHours) }),
             ShortWindowThreshold, $"site from coordinates, managed, step {stepHours} h");
     }
 
@@ -421,18 +404,15 @@ public class KernelWindowSearchTests : IClassFixture<KernelWindowSearchKernels>
         var fromCoordinates = new Site(99, "DSS13GEO", Earth, dss13.Planetodetic);
         foreach (var site in new[] { dss13, fromCoordinates })
         {
-            var expected = site.FindWindowsOnIlluminationConstraint(IlluminationWindow, IlluminationAngle.Incidence, RelationnalOperator.Lower, angle, 0.0,
-                Aberration.LTS, Step, TestHelpers.Sun).ToArray();
+            var expected = site.FindIlluminationWindows(IlluminationWindow, IlluminationAngle.Incidence, RelationnalOperator.Lower, angle, TestHelpers.Sun, new WindowSearchOptions { Step = Step, Aberration = Aberration.LTS }).ToArray();
             foreach (var method in new[] { "ELLIPSOID", "ellipsoid", " Ellipsoid ", "eLLipsoid  " })
             {
-                var actual = site.FindWindowsOnIlluminationConstraint(IlluminationWindow, IlluminationAngle.Incidence, RelationnalOperator.Lower, angle, 0.0,
-                    Aberration.LTS, Step, TestHelpers.Sun, method).ToArray();
+                var actual = site.FindIlluminationWindows(IlluminationWindow, IlluminationAngle.Incidence, RelationnalOperator.Lower, angle, TestHelpers.Sun, new WindowSearchOptions { Step = Step, Aberration = Aberration.LTS }).ToArray();
                 LabelAssert.Equal(expected, actual);
             }
         }
 
-        AssertWindows(label, dss13.FindWindowsOnIlluminationConstraint(IlluminationWindow, IlluminationAngle.Incidence, RelationnalOperator.Lower, angle, 0.0,
-            Aberration.LTS, Step, TestHelpers.Sun, " ellipsoid"), NativeThreshold, "kernel site, method ' ellipsoid'");
+        AssertWindows(label, dss13.FindIlluminationWindows(IlluminationWindow, IlluminationAngle.Incidence, RelationnalOperator.Lower, angle, TestHelpers.Sun, new WindowSearchOptions { Step = Step, Aberration = Aberration.LTS }), NativeThreshold, "kernel site, method ' ellipsoid'");
     }
 
     // The planetographic longitude east of the prime meridian of the body-fixed frame of the observer's body, in (−π, π]:
@@ -505,8 +485,7 @@ public class KernelWindowSearchTests : IClassFixture<KernelWindowSearchKernels>
         var earth = Earth;
         var moon = Moon;
         var step = TimeSpan.FromHours(1.0);
-        var managed = moon.FindWindowsOnCoordinateConstraint(MoonPlanetographicWindow, earth, earth.Frame, CoordinateSystem.Planetographic, Coordinate.Longitude,
-            RelationnalOperator.Greater, longitude, 0.0, Aberration.None, step).ToArray();
+        var managed = earth.FindCoordinateWindows(MoonPlanetographicWindow, moon, earth.Frame, CoordinateSystem.Planetographic, Coordinate.Longitude, RelationnalOperator.Greater, longitude, new WindowSearchOptions { Step = step }).ToArray();
         var gfposc = SpiceAPI.Instance.FindWindowsOnCoordinateConstraint(MoonPlanetographicWindow, 399, 301, earth.Frame, CoordinateSystem.Planetographic,
             Coordinate.Longitude, RelationnalOperator.Greater, longitude, 0.0, Aberration.None, step).ToArray();
         AssertPlanetographic($"Moon from the Earth, longitude > {longitude} rad", managed, gfposc, MoonPlanetographicWindow, moon, earth, CutAngle);
@@ -534,8 +513,7 @@ public class KernelWindowSearchTests : IClassFixture<KernelWindowSearchKernels>
         CelestialItem target = targetId == 10 ? TestHelpers.Sun : new CelestialBody(targetId);
         var start = new TimeSystem.Time(year, 1, 1, TimeScale.TDB);
         var window = new Window(start, months == 1 ? new TimeSystem.Time(year, 7, 1, TimeScale.TDB) : new TimeSystem.Time(year + 1, 1, 1, TimeScale.TDB));
-        var managed = target.FindWindowsOnCoordinateConstraint(window, observer, observer.Frame, CoordinateSystem.Planetographic, Coordinate.Longitude,
-            RelationnalOperator.Greater, longitude, 0.0, Aberration.None, step).ToArray();
+        var managed = observer.FindCoordinateWindows(window, target, observer.Frame, CoordinateSystem.Planetographic, Coordinate.Longitude, RelationnalOperator.Greater, longitude, new WindowSearchOptions { Step = step }).ToArray();
         var gfposc = SpiceAPI.Instance.FindWindowsOnCoordinateConstraint(window, observerId, targetId, observer.Frame, CoordinateSystem.Planetographic,
             Coordinate.Longitude, RelationnalOperator.Greater, longitude, 0.0, Aberration.None, step).ToArray();
         AssertPlanetographic($"{target.Name} from {observer.Name} in {observer.Frame.Name}, longitude > {longitude} rad, step {step}", managed, gfposc, window,
@@ -544,8 +522,7 @@ public class KernelWindowSearchTests : IClassFixture<KernelWindowSearchKernels>
         if (observerId == 199 && targetId == 399 && step == TimeSpan.FromDays(1.0))
         {
             var dss13 = Dss13;
-            var site = dss13.FindWindowsOnCoordinateConstraint(window, observer, observer.Frame, CoordinateSystem.Planetographic, Coordinate.Longitude,
-                RelationnalOperator.Greater, longitude, 0.0, Aberration.None, step).ToArray();
+            var site = observer.FindCoordinateWindows(window, dss13, observer.Frame, CoordinateSystem.Planetographic, Coordinate.Longitude, RelationnalOperator.Greater, longitude, new WindowSearchOptions { Step = step }).ToArray();
             var siteGfposc = SpiceAPI.Instance.FindWindowsOnCoordinateConstraint(window, observerId, dss13.NaifId, observer.Frame, CoordinateSystem.Planetographic,
                 Coordinate.Longitude, RelationnalOperator.Greater, longitude, 0.0, Aberration.None, step).ToArray();
             AssertPlanetographic($"DSS-13 from {observer.Name}, longitude > {longitude} rad", site, siteGfposc, window, dss13, observer, CutAngle);
@@ -569,8 +546,7 @@ public class KernelWindowSearchTests : IClassFixture<KernelWindowSearchKernels>
         foreach (var (coordinate, value) in new[] { (Coordinate.Latitude, -0.4), (Coordinate.Altitude, 3.9e8) })
         {
             double spiceValue = coordinate == Coordinate.Altitude ? value / 1000.0 : value;
-            var managed = moon.FindWindowsOnCoordinateConstraint(window, earth, earth.Frame, CoordinateSystem.Planetographic, coordinate,
-                RelationnalOperator.Greater, value, 0.0, Aberration.None, step).ToArray();
+            var managed = earth.FindCoordinateWindows(window, moon, earth.Frame, CoordinateSystem.Planetographic, coordinate, RelationnalOperator.Greater, value, new WindowSearchOptions { Step = step }).ToArray();
             var gfposc = SpiceAPI.Instance.FindWindowsOnCoordinateConstraint(window, 399, 301, earth.Frame, CoordinateSystem.Planetographic, coordinate,
                 RelationnalOperator.Greater, spiceValue, 0.0, Aberration.None, step).ToArray();
             AssertPlanetographic($"Moon from the Earth, {coordinate} > {value}", managed, gfposc, window, moon, earth, null);
@@ -581,8 +557,7 @@ public class KernelWindowSearchTests : IClassFixture<KernelWindowSearchKernels>
         foreach (var (coordinate, value) in new[] { (Coordinate.Latitude, 0.0), (Coordinate.Altitude, 3.9e8) })
         {
             double spiceValue = coordinate == Coordinate.Altitude ? value / 1000.0 : value;
-            var managed = dss13.FindWindowsOnCoordinateConstraint(siteWindow, moon, moon.Frame, CoordinateSystem.Planetographic, coordinate,
-                RelationnalOperator.Greater, value, 0.0, Aberration.None, step).ToArray();
+            var managed = moon.FindCoordinateWindows(siteWindow, dss13, moon.Frame, CoordinateSystem.Planetographic, coordinate, RelationnalOperator.Greater, value, new WindowSearchOptions { Step = step }).ToArray();
             var gfposc = SpiceAPI.Instance.FindWindowsOnCoordinateConstraint(siteWindow, 301, dss13.NaifId, moon.Frame, CoordinateSystem.Planetographic, coordinate,
                 RelationnalOperator.Greater, spiceValue, 0.0, Aberration.None, step).ToArray();
             AssertPlanetographic($"DSS-13 from the Moon in {moon.Frame.Name}, {coordinate} > {value}", managed, gfposc, siteWindow, dss13, moon, null);
@@ -697,8 +672,7 @@ public class KernelWindowSearchTests : IClassFixture<KernelWindowSearchKernels>
                 {
                     var expected = SpiceAPI.Instance.FindWindowsOnCoordinateConstraint(LeoWindow, leo.NaifId, site.NaifId, referenceFrame, CoordinateSystem.RaDec,
                         Coordinate.Declination, relation, value, 0.0, Aberration.None, step).ToArray();
-                    var actual = site.FindWindowsOnCoordinateConstraint(LeoWindow, leo, site.Frame, CoordinateSystem.RaDec, Coordinate.Declination, relation, value,
-                        0.0, Aberration.None, step).ToArray();
+                    var actual = leo.FindCoordinateWindows(LeoWindow, site, site.Frame, CoordinateSystem.RaDec, Coordinate.Declination, relation, value, new WindowSearchOptions { Step = step }).ToArray();
                     AssertSameWindows($"kernel site without frame kernel seen from the LEO, {label}", expected, actual, ManagedFrameSearchThreshold);
                 }
 
@@ -707,8 +681,7 @@ public class KernelWindowSearchTests : IClassFixture<KernelWindowSearchKernels>
                     Coordinate.Declination, RelationnalOperator.Greater, sixtyDegrees, 0.0, Aberration.None, step).ToArray();
                 foreach (var (frame, label) in new[] { (site.Frame, "kernel site without frame kernel"), (coordinatesSite.Frame, "site from coordinates") })
                 {
-                    var actual = leo.FindWindowsOnCoordinateConstraint(LeoWindow, earth, frame, CoordinateSystem.RaDec, Coordinate.Declination,
-                        RelationnalOperator.Greater, sixtyDegrees, 0.0, Aberration.None, step).ToArray();
+                    var actual = earth.FindCoordinateWindows(LeoWindow, leo, frame, CoordinateSystem.RaDec, Coordinate.Declination, RelationnalOperator.Greater, sixtyDegrees, new WindowSearchOptions { Step = step }).ToArray();
                     AssertSameWindows($"the LEO from the Earth in the frame of the {label}, declination > 60 deg", fromEarth, actual, ManagedFrameSearchThreshold);
                 }
 
@@ -763,8 +736,7 @@ public class KernelWindowSearchTests : IClassFixture<KernelWindowSearchKernels>
                 var step = TimeSpan.FromMinutes(5.0);
                 var expected = SpiceAPI.Instance.FindWindowsOnCoordinateConstraint(LeoWindow, leo.NaifId, site.NaifId, new Frames.Frame("RV792K_TOPO"),
                     CoordinateSystem.RaDec, Coordinate.Declination, RelationnalOperator.Lower, -ThirtyDegrees, 0.0, Aberration.None, step).ToArray();
-                var actual = site.FindWindowsOnCoordinateConstraint(LeoWindow, leo, site.Frame, CoordinateSystem.RaDec, Coordinate.Declination,
-                    RelationnalOperator.Lower, -ThirtyDegrees, 0.0, Aberration.None, step).ToArray();
+                var actual = leo.FindCoordinateWindows(LeoWindow, site, site.Frame, CoordinateSystem.RaDec, Coordinate.Declination, RelationnalOperator.Lower, -ThirtyDegrees, new WindowSearchOptions { Step = step }).ToArray();
                 Assert.NotEmpty(expected);
                 LabelAssert.Equal(expected, actual);
             }

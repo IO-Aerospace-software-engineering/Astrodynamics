@@ -112,8 +112,7 @@ public class PropagatedStatesSpanTests
         }
 
         // The managed distance search over a window past the states reads them outside: it throws
-        Assert.Throws<InvalidOperationException>(() => spacecraft.FindWindowsOnDistanceConstraint(new Window(last.Epoch.AddSeconds(-600.0), last.Epoch.AddSeconds(600.0)),
-            moon, RelationnalOperator.Greater, 1.0, Aberration.None, TimeSpan.FromSeconds(60.0)).ToArray());
+        Assert.Throws<InvalidOperationException>(() => moon.FindDistanceWindows(new Window(last.Epoch.AddSeconds(-600.0), last.Epoch.AddSeconds(600.0)), spacecraft, RelationnalOperator.Greater, 1.0, new WindowSearchOptions { Step = TimeSpan.FromSeconds(60.0) }).ToArray());
     }
 
     /// <summary>
@@ -235,15 +234,15 @@ public class PropagatedStatesSpanTests
         var window = new Window(S, S.AddHours(1.0));
         var instrument = observer.Instruments.Single();
         var step = TimeSpan.FromSeconds(60.0);
-        var geometric = instrument.FindWindowsInFieldOfViewConstraint(window, observer, target, Frame.ICRF, ShapeType.Point, Aberration.None, step).ToArray();
-        var hidden = target.FindWindowsOnOccultationConstraint(window, observer, ShapeType.Point, earth, ShapeType.Ellipsoid, OccultationType.Any, Aberration.None, step).ToArray();
+        var geometric = instrument.FindFieldOfViewWindows(window, target, new FieldOfViewSearchOptions { Step = step, TargetShape = ShapeType.Point, TargetFrame = Frame.ICRF }).ToArray();
+        var hidden = observer.FindOccultationWindows(window, target, earth, new OccultationSearchOptions { Step = step, TargetShape = ShapeType.Point, FrontShape = ShapeType.Ellipsoid }).ToArray();
         Assert.NotEmpty(geometric);
 
         foreach (var aberration in new[] { Aberration.LT, Aberration.LTS, Aberration.CN, Aberration.CNS, Aberration.XLT, Aberration.XLTS, Aberration.XCN, Aberration.XCNS })
         {
             // Act
-            var corrected = instrument.FindWindowsInFieldOfViewConstraint(window, observer, target, Frame.ICRF, ShapeType.Point, aberration, step).ToArray();
-            var occulted = target.FindWindowsOnOccultationConstraint(window, observer, ShapeType.Point, earth, ShapeType.Ellipsoid, OccultationType.Any, aberration, step).ToArray();
+            var corrected = instrument.FindFieldOfViewWindows(window, target, new FieldOfViewSearchOptions { Step = step, Aberration = aberration, TargetShape = ShapeType.Point, TargetFrame = Frame.ICRF }).ToArray();
+            var occulted = observer.FindOccultationWindows(window, target, earth, new OccultationSearchOptions { Step = step, Aberration = aberration, TargetShape = ShapeType.Point, FrontShape = ShapeType.Ellipsoid }).ToArray();
 
             // Assert: the windows of the geometric search, their ends moved by the aberration (the target's motion from
             // the solar system barycentre over the light time, 20 m across 200 km, and the stellar aberration, each about

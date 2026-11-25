@@ -2683,45 +2683,6 @@ public partial class ConjunctionAssessmentTests
             yield return _observer;
         }
 
-        public IReadOnlyList<Window> FindWindowsOnDistanceConstraint(
-            in Window searchWindow,
-            ILocalizable observer,
-            RelationnalOperator relationalOperator,
-            double value,
-            Aberration aberration,
-            in TimeSpan stepSize)
-        {
-            return Array.Empty<Window>();
-        }
-
-        public IReadOnlyList<Window> FindWindowsOnOccultationConstraint(
-            in Window searchWindow,
-            ILocalizable observer,
-            ShapeType targetShape,
-            INaifObject frontBody,
-            ShapeType frontShape,
-            OccultationType occultationType,
-            Aberration aberration,
-            in TimeSpan stepSize)
-        {
-            return Array.Empty<Window>();
-        }
-
-        public IReadOnlyList<Window> FindWindowsOnCoordinateConstraint(
-            in Window searchWindow,
-            ILocalizable observer,
-            Frames.Frame frame,
-            CoordinateSystem coordinateSystem,
-            Coordinate coordinate,
-            RelationnalOperator relationalOperator,
-            double value,
-            double adjustValue,
-            Aberration aberration,
-            in TimeSpan stepSize)
-        {
-            return Array.Empty<Window>();
-        }
-
         private StateVector BuildState(TimeSystem.Time epoch)
         {
             double dtSeconds = (epoch - _epoch0).TotalSeconds;
@@ -2804,45 +2765,6 @@ public partial class ConjunctionAssessmentTests
         public IEnumerable<ILocalizable> GetCentersOfMotion()
         {
             yield return _observer;
-        }
-
-        public IReadOnlyList<Window> FindWindowsOnDistanceConstraint(
-            in Window searchWindow,
-            ILocalizable observer,
-            RelationnalOperator relationalOperator,
-            double value,
-            Aberration aberration,
-            in TimeSpan stepSize)
-        {
-            return Array.Empty<Window>();
-        }
-
-        public IReadOnlyList<Window> FindWindowsOnOccultationConstraint(
-            in Window searchWindow,
-            ILocalizable observer,
-            ShapeType targetShape,
-            INaifObject frontBody,
-            ShapeType frontShape,
-            OccultationType occultationType,
-            Aberration aberration,
-            in TimeSpan stepSize)
-        {
-            return Array.Empty<Window>();
-        }
-
-        public IReadOnlyList<Window> FindWindowsOnCoordinateConstraint(
-            in Window searchWindow,
-            ILocalizable observer,
-            Frames.Frame frame,
-            CoordinateSystem coordinateSystem,
-            Coordinate coordinate,
-            RelationnalOperator relationalOperator,
-            double value,
-            double adjustValue,
-            Aberration aberration,
-            in TimeSpan stepSize)
-        {
-            return Array.Empty<Window>();
         }
 
         private StateVector BuildState(TimeSystem.Time epoch)

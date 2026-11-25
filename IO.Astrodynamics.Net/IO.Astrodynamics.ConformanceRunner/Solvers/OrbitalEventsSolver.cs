@@ -63,21 +63,22 @@ public class OrbitalEventsSolver : ICategorySolver
             {
                 case OrbitalEventRequest.Periapsis:
                 case OrbitalEventRequest.Apoapsis:
-                    var extremes = spacecraft.FindWindowsOnDistanceConstraint(window, center,
+                    var extremes = center.FindDistanceWindows(window, spacecraft,
                         request.Type == OrbitalEventRequest.Periapsis ? RelationnalOperator.LocalMin : RelationnalOperator.LocalMax,
-                        0.0, Aberration.None, step).Select(w => w.StartDate).ToList();
+                        0.0, new WindowSearchOptions { Step = step, Aberration = Aberration.None }).Select(w => w.StartDate).ToList();
                     Add(outputs, request.Type, extremes, window.StartDate,
                         t => UnitConversion.MToKm(spacecraft.GetEphemeris(t, center, Frame.ICRF, Aberration.None).Position.Magnitude()));
                     break;
                 case OrbitalEventRequest.AscendingNode:
                 case OrbitalEventRequest.DescendingNode:
-                    var north = spacecraft.FindWindowsOnCoordinateConstraint(window, center, Frame.ICRF, CoordinateSystem.Rectangular, Coordinate.Z,
-                        RelationnalOperator.Greater, 0.0, 0.0, Aberration.None, step);
+                    var north = center.FindCoordinateWindows(window, spacecraft, Frame.ICRF, CoordinateSystem.Rectangular, Coordinate.Z,
+                        RelationnalOperator.Greater, 0.0, new WindowSearchOptions { Step = step, Aberration = Aberration.None });
                     Add(outputs, request.Type, Crossings(north, window, request.Type == OrbitalEventRequest.AscendingNode), window.StartDate);
                     break;
                 case OrbitalEventRequest.Altitude:
-                    var above = spacecraft.FindWindowsOnCoordinateConstraint(window, center, center.Frame, CoordinateSystem.Geodetic, Coordinate.Altitude,
-                        RelationnalOperator.Greater, UnitConversion.KmToM(request.ValueKm!.Value), 0.0, Aberration.None, step).ToList();
+                    var above = center.FindCoordinateWindows(window, spacecraft, center.Frame, CoordinateSystem.Geodetic, Coordinate.Altitude,
+                        RelationnalOperator.Greater, UnitConversion.KmToM(request.ValueKm!.Value),
+                        new WindowSearchOptions { Step = step, Aberration = Aberration.None }).ToList();
                     if (request.Direction != OrbitalEventRequest.Down)
                     {
                         Add(outputs, "altitude_up", Crossings(above, window, true), window.StartDate);

@@ -126,17 +126,19 @@ public class TrackingDataSolver : ICategorySolver
         Window searchWindow, TimeSpan step)
     {
         // Find windows when target is above the horizon (Z > 0 in site topocentric frame)
-        var aboveHorizonWindows = spacecraft.FindWindowsOnCoordinateConstraint(
-            searchWindow, site, site.Frame,
+        var aboveHorizonWindows = site.FindCoordinateWindows(
+            searchWindow, spacecraft, site.Frame,
             CoordinateSystem.Rectangular, Coordinate.Z,
-            RelationnalOperator.Greater, 0.0, 0.0,
-            Aberration.None, step).ToList();
+            RelationnalOperator.Greater, 0.0,
+            new WindowSearchOptions { Step = step, Aberration = Aberration.None }).ToList();
 
         // Find windows when target is occulted by the occulting body from site
-        var occultations = spacecraft.FindWindowsOnOccultationConstraint(
-            searchWindow, site,
-            ShapeType.Point, occultingBody, ShapeType.Ellipsoid,
-            OccultationType.Full, Aberration.None, step).ToList();
+        var occultations = site.FindOccultationWindows(
+            searchWindow, spacecraft, occultingBody, new OccultationSearchOptions
+            {
+                Step = step, Aberration = Aberration.None, TargetShape = ShapeType.Point, FrontShape = ShapeType.Ellipsoid,
+                OccultationType = OccultationType.Full
+            }).ToList();
 
         // Subtract occultation windows from above-horizon windows
         var trackingArcs = GroundStationSolver.Subtract(aboveHorizonWindows, occultations);

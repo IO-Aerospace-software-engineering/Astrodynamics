@@ -70,8 +70,9 @@ identifiers they are objects of the kernels read by their identifier
 | `GeosynchronousOrbit(double, double, Time)` | Compute geosynchronous orbit, of the sidereal rotation period of the body frame at the epoch |
 | `GeosynchronousOrbit(double, double, Time, TimeSpan)` | Compute geosynchronous orbit of a declared period |
 | `HelioSynchronousOrbit(double, double, Time)` | Compute helio-synchronous orbit |
-| `FindWindowsOnDistanceConstraint(...)` | Find distance constraint windows |
-| `FindWindowsOnOccultationConstraint(...)` | Find occultation/eclipse windows ([Occultations](occultations.md)) |
+| `FindDistanceWindows(...)` | Find the windows of the distance of a target seen from this item, the observer (`WindowSearches`) |
+| `FindCoordinateWindows(...)` | Find the windows of a coordinate of a target seen from this item, the observer (`WindowSearches`) |
+| `FindOccultationWindows(...)` | Find occultation/eclipse windows seen from this item, the observer (`WindowSearches`, [Occultations](occultations.md)) |
 | `AngularSeparation(Time, ILocalizable, ILocalizable, Aberration)` | Compute angular separation |
 | `SubObserverPoint(CelestialBody, Time, Aberration)` | Get sub-observer point |
 | `GetAtmosphere(double)` / `GetAtmosphere(AtmosphericContext)` | Get atmospheric data: from the configured atmospheric model of the body; for an Earth without one, NRLMSISE-00 at nominal space weather (the atmosphere of its drag) when the context holds the geodetic position and the epoch, and otherwise the U.S. Standard Atmosphere 1976 (`EarthStandardAtmosphere`), its base atmosphere, which needs the altitude only: `GetAtmosphere(double)` and every altitude-only or partial context (decided by S. Guillet, 2026-11-14); a null context, which holds no altitude, and another body without a model give a NaN temperature and a zero pressure and density. `GetAirDensity`, `GetAirPressure` and `GetAirTemperature` give the same values (#674) |
