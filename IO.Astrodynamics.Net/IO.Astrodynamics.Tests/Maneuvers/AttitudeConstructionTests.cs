@@ -36,6 +36,13 @@ public class AttitudeConstructionTests
 
     private static readonly Time S = new(2024, 3, 1, 12, 0, 0, TimeScale.TDB);
 
+    /// <summary>
+    /// The angle between an axis and its target, atan2(|a × b|, a · b). Measured by the CI of #820 at 5d97c750 (2026-11-25), identical on Linux x64, Windows x64 and macOS arm64: the boresight
+    /// to the Moon 2.420e-16 rad at worst (geometric), twice the worst rounded up at the second digit; the axes to nadir and
+    /// the boresight to prograde measure 0 and take the same bound, the rounding of one direction.
+    /// </summary>
+    private const double PointingThreshold = 4.9e-16;
+
     private static Spacecraft CustomAxes(int id)
     {
         var orbit = new KeplerianElements(7000e3, 0.01, 0.5, 0.0, 0.0, 0.0, TestHelpers.EarthAtJ2000, S, Frames.Frame.ICRF);
@@ -80,7 +87,7 @@ public class AttitudeConstructionTests
         var nadirDirection = state.Position.Inverse();
         var angle = System.Math.Atan2(pointed.Cross(nadirDirection).Magnitude(), pointed.Dot(nadirDirection));
         _output.WriteLine($"MEASURE AttitudeConstruction nadir {axis}: axis to nadir {angle:E3} rad");
-        Assert.True(angle < 1e-15, $"{angle:E3} rad");
+        Assert.True(angle < PointingThreshold, $"{angle:E3} rad");
         Assert.Equal(axis, nadir.BodyAxis);
     }
 
@@ -189,7 +196,7 @@ public class AttitudeConstructionTests
             var direction = target.GetDirection(state);
             var angle = System.Math.Atan2(boresight.Cross(direction).Magnitude(), boresight.Dot(direction));
             _output.WriteLine($"MEASURE AttitudeConstruction pointing {(target is CelestialAttitudeTarget c ? "Moon " + c.Aberration : "prograde")}: boresight to target {angle:E3} rad");
-            Assert.True(angle < 1e-15, $"{angle:E3} rad");
+            Assert.True(angle < PointingThreshold, $"{angle:E3} rad");
         }
     }
 }

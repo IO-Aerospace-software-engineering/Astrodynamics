@@ -123,6 +123,8 @@ public class BodyAxisTests
     [Fact]
     public void ASingleVectorAttitude_PreviewsOnTheStaticAxesBeforeAnyPlan_AndOnTheInstanceAxesInOne()
     {
+        // Vector3.Angle is an acos, which gives no angle between 0 and 1.49e-8 rad: the 1e-12 rad bound asserts a cosine of
+        // exactly 1. Measured by the CI of #820 at 5d97c750 (2026-11-25), identical on Linux x64, Windows x64 and macOS arm64: 0 rad, before any plan and in one.
         var spc = CustomAxesSpacecraft(-6904, "AxisPreviewSc", Vector3.VectorX, Vector3.VectorY.Inverse(), Vector3.VectorZ);
         var prograde = new ProgradeAttitude(new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB), TimeSpan.Zero, TestHelpers.EarthAtJ2000);
         var state = spc.InitialOrbitalParameters.ToStateVector();

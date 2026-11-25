@@ -228,9 +228,10 @@ public class InstrumentPointingAttitudeTests
     // CSPICE's at a range of a few thousand km; geometric 2.3e-16 rad for the Moon, 2.9e-16 rad for the site on Linux x64
     // and 5.4e-16 rad on Windows x64 and macOS arm64. Since lot L5b the preview takes the state about its own observer, the
     // Earth, where the centre was the Moon (decision 62 of #668: the centre the run infers, rounding only) and the
-    // direction is CelestialAttitudeTarget's: re-measured on Linux x64 the Moon 1.122e-13 rad (CN+S; 1.120e-13 CN), the site
-    // 1.140e-12 rad (XCN, its centre the Earth before and after), geometric 1.99e-16 rad for the Moon, within the tolerances;
-    // the Windows x64 and macOS arm64 figures are read from the CI of the lot's PR
+    // direction is CelestialAttitudeTarget's: re-measured the Moon 1.122e-13 rad (CN+S; 1.120e-13 CN), the site 1.140e-12 rad
+    // (XCN, its centre the Earth before and after), geometric 1.99e-16 rad for the Moon, the
+    // same on Linux x64, Windows x64 and macOS arm64, and 2.24e-16 rad for the site on Linux x64, 5.06e-16 rad on Windows x64
+    // and macOS arm64 (CI of #820 at 5d97c750), within the tolerances
     private const double MoonPointingTolerance = 2.1e-13;
     private const double SitePointingTolerance = 2.3e-12;
 
@@ -238,7 +239,7 @@ public class InstrumentPointingAttitudeTests
     // lines of PointsAtAStarWithoutLightTime, CI run 44225490669), rounded up at two digits: 1.573e-16 rad on the three
     // (XLT+S and XCN+S at 20 pc), where the light time moved the boresight by 4.5e-5 rad (9.2″) at 20 pc. Since lot L5b
     // (decision 62 of #668, the preview about the Earth, the state's observer, where the centre was the star): re-measured
-    // on Linux x64 1.138e-16 rad (the geometric corrections at 20 pc), within the tolerance; the Windows x64 and macOS
-    // arm64 figures are read from the CI of the lot's PR
+    // 1.138e-16 rad (the geometric corrections at 20 pc), the same on Linux x64, Windows x64 and macOS arm64 (CI of #820 at
+    // 5d97c750), within the tolerance
     private const double StarPointingTolerance = 3.2e-16;
 }

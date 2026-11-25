@@ -7600,7 +7600,7 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   preview (`ComputeStateOrientation`) of the reference tests takes the state about its own observer, the Earth, and
   moves within their tolerances, against `spkcvo_c` the Moon from 1.012e-13 to 1.122e-13 rad at worst (CN+S; 2.1e-13
   allowed), a star against its closed form from 1.573e-16 to 1.138e-16 rad (3.2e-16 allowed), the site unchanged
-  (1.140e-12 rad, its centre the Earth before and after), on Linux x64 (`InstrumentPointingAttitudeTests`); a spacecraft
+  (1.140e-12 rad, its centre the Earth before and after), the same on Linux x64, Windows x64 and macOS arm64 (`InstrumentPointingAttitudeTests`, CI of #820); a spacecraft
   target with LT moves by 1.02e-8 rad about the Earth and 1.20e-7 rad about the Sun at 100 m, 4.5e-10 and 1.0e-9 rad at
   10 km, 1.9e-12 and 2.0e-11 rad at 1000 km, geometric by 0 rad about the Earth and 4e-14 to 5e-14 rad about the Sun, the
   light time itself 1.08e-4 rad (the probe of the gap analysis of L5b, which corrects the "3.8e-16 rad geometric, 7.9e-12

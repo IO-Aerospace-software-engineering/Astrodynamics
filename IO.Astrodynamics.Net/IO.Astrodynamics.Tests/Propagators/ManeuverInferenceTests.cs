@@ -147,6 +147,19 @@ public class ManeuverInferenceTests
     }
 
     // The largest angle between the axes two rotations give (the sign of a quaternion is free)
+    // Measured by the CI of #820 at 5d97c750 (2026-11-25), identical on Linux x64, Windows x64 and macOS arm64, each threshold twice the worst rounded up at the second digit:
+    // - the front along the velocity of a plan of attitudes only, read on the attitude record at an output epoch,
+    //   3.004e-11 rad (RK7(8)) and 3.005e-11 rad (Velocity-Verlet);
+    // - the SSB pointing, the boresight to the Moon, 2.058e-16 rad on both integrators;
+    // - the SSB user attitude, the front to the position from the Earth, 1.684e-16 rad (RK7(8)), 6.603e-17 rad
+    //   (Velocity-Verlet);
+    // - the SSB TRIAD, the recorded attitude to the law, 0 rad on both, held at the pointing's bound, the rounding of one
+    //   direction.
+    private const double AttitudesOnlyThreshold = 6.1e-11;
+    private const double SsbPointingThreshold = 4.2e-16;
+    private const double SsbUserAttitudeThreshold = 3.4e-16;
+    private const double SsbTriadThreshold = SsbPointingThreshold;
+
     private static double RotationAngle(Quaternion a, Quaternion b) =>
         new[] { Vector3.VectorX, Vector3.VectorY, Vector3.VectorZ }.Max(v => Separation(v.Rotate(a), v.Rotate(b)));
 
@@ -338,7 +351,7 @@ public class ManeuverInferenceTests
         var front = spacecraft.BodyFront.Rotate(spacecraft.Frame.GetStateOrientationToICRF(S.AddHours(1.0)).Rotation);
         double angle = Separation(front, state.Velocity);
         _output.WriteLine($"MEASURE ManeuverInference attitudes only {integrator}: front to velocity {angle:E3} rad");
-        Assert.True(angle < 1e-9, $"{angle:E3} rad");
+        Assert.True(angle < AttitudesOnlyThreshold, $"{angle:E3} rad");
     }
 
     // ---------------------------------------------------------------------------------------------------------------------
@@ -485,7 +498,7 @@ public class ManeuverInferenceTests
             var front = spacecraft.BodyFront.Rotate(spacecraft.Frame.GetStateOrientationToICRF(epoch).Rotation);
             var angle = Separation(front, fromEarth);
             _output.WriteLine($"MEASURE ManeuverInference SSB user attitude {integrator}: front to position from the Earth {angle:E3} rad");
-            Assert.True(angle < 1e-9, $"{angle:E3} rad");
+            Assert.True(angle < SsbUserAttitudeThreshold, $"{angle:E3} rad");
         }
     }
 
@@ -516,7 +529,7 @@ public class ManeuverInferenceTests
         var recorded = spacecraft.Frame.GetStateOrientationToICRF(epoch).Rotation;
         var angle = RotationAngle(expected, recorded);
         _output.WriteLine($"MEASURE ManeuverInference SSB TRIAD {integrator}: recorded to law {angle:E3} rad");
-        Assert.True(angle < 1e-9, $"{angle:E3} rad");
+        Assert.True(angle < SsbTriadThreshold, $"{angle:E3} rad");
     }
 
     [Theory]
@@ -539,6 +552,6 @@ public class ManeuverInferenceTests
         var toMoon = moon.GetEphemeris(epoch, spacecraft, Frame.ICRF, Aberration.None).Position;
         var angle = Separation(boresight, toMoon);
         _output.WriteLine($"MEASURE ManeuverInference SSB pointing {integrator}: boresight to the Moon {angle:E3} rad");
-        Assert.True(angle < 1e-9, $"{angle:E3} rad");
+        Assert.True(angle < SsbPointingThreshold, $"{angle:E3} rad");
     }
 }
