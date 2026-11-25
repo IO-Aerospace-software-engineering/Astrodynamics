@@ -485,7 +485,8 @@ public class SpacecraftFrame : Frame
             if (Spacecraft.IsSpiceBacked)
                 throw new InvalidOperationException("Cannot write the orientation of a kernel-backed spacecraft.");
             if (_record.Count == 0)
-                throw new InvalidOperationException($"Spacecraft {Spacecraft.Name} has no attitude to write: it has not been propagated.");
+                throw new InvalidOperationException(
+                    $"Spacecraft {Spacecraft.Name} has no attitude record to write: it has not been propagated numerically, and a TLEPropagator run records no attitude; propagate it, or give it attitudes with SpacecraftFrame.AddStateOrientationToICRF.");
 
             var records = new List<StateOrientation>(_record.Count + 8);
             for (int i = 0; i < _record.Count; i++)

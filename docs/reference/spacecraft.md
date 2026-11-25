@@ -152,7 +152,7 @@ Instance-level overrides can be set via constructor parameters (`bodyFront`, `bo
 | `Propagate(Window, IEnumerable, Integrator, bool, bool, TimeSpan, CovariancePropagationOptions)` | Propagate the orbit with the integrator, and the state transition matrix and the covariance of the initial orbital parameters ([Covariance Propagation](covariance-propagation.md)); null options for none |
 | `GetEphemeris(Time, ILocalizable, Frame, Aberration)` | Get state relative to observer |
 | `GetOrientation(Frame, Time)` | The rotation from the frame to the spacecraft frame (the C-matrix of a CK), with the angular velocity of the spacecraft relative to the frame, in the frame ([Attitude and kernels](#attitude-and-kernels)) |
-| `WriteEphemeris(FileInfo)` | Write the stored states to an SPK file, in J2000, one type-9 segment per arc, between impulses and between the windows given to `AddPropagatedStates` ([The stored states across an impulse](#the-stored-states-across-an-impulse)), an arc of one state refused (`ArgumentException`); positions and velocities only, never the covariance |
+| `WriteEphemeris(FileInfo)` | Write the stored states to an SPK file, in J2000, one type-9 segment per arc, between impulses and between the windows given to `AddPropagatedStates` ([The stored states across an impulse](#the-stored-states-across-an-impulse)), an arc of one state refused (`ArgumentException`), a spacecraft that stores no state `InvalidOperationException` (decision 81 of #668; `ArgumentException` before 11.0.0); positions and velocities only, never the covariance |
 | `AddPropagatedStates(params StateVector[])` | Add the states of one window to the stored states, in ICRF: one window per call, a new arc when it meets no stored arc, a read in the gap between two windows throwing ([The stored states across an impulse](#the-stored-states-across-an-impulse)); a propagation replaces them |
 | `WriteOrientation(FileInfo)` | Write the attitude of the last propagation as a type-3 CK, in J2000 ([Attitude and kernels](#attitude-and-kernels)) |
 | `ToOpm(...)` | Export to CCSDS OPM |
@@ -378,7 +378,9 @@ A kernel-backed spacecraft reads its frame kernel and its CK through SPICE at ev
   law's sample there, when the propagation took one). The CK then gives the library's attitude everywhere but over that
   microsecond, where it turns to the new attitude (up to 0.79 rad in the tests); a field-of-view edge moves by at most
   that microsecond and the rounding of its encoded SCLK. The spacecraft clock kernel must be loaded.
-  `InvalidOperationException` for a kernel-backed spacecraft or one never propagated.
+  `InvalidOperationException` for a kernel-backed spacecraft or one whose attitude record is empty: never propagated
+  numerically, or sampled by a `TLEPropagator`, which records no attitude; its message names
+  `SpacecraftFrame.AddStateOrientationToICRF`, which gives it one (#546).
 - **The frame kernels** (`SpacecraftFrame.Write`, `Instrument.WriteFrame`) put the upper-cased names in kernel
   variable names, `FRAME_<SPACECRAFT>_FRAME` and `FRAME_<SPACECRAFT>_<INSTRUMENT>`, which SPICE reads with the rules of
   the Kernel Required Reading ("Variable Name Rules"): no blank, comma, parenthesis, '=' or TAB, and 32 characters at

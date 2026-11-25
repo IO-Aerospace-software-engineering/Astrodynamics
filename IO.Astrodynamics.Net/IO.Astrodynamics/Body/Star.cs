@@ -413,12 +413,20 @@ public class Star : CelestialBody
     /// velocity (before 11.0.0 a zero velocity, #731), through the native writer (<see cref="SpiceAPI.WriteEphemeris"/>): a file it replaces that <see cref="SpiceAPI.LoadKernels(FileSystemInfo)"/> loaded is unloaded
     /// first, and the new one is left unloaded (#706).
     /// </summary>
-    /// <exception cref="ArgumentException">The last propagation stored fewer than three states: the native writer writes three
-    /// or more (#706: before, a C++ exception crossed P/Invoke and ended the process). See
-    /// <see cref="SpiceAPI.WriteEphemeris"/> for the others.</exception>
+    /// <exception cref="ArgumentNullException"><paramref name="outputFile"/> is null.</exception>
+    /// <exception cref="InvalidOperationException">The star stores fewer than three states (never propagated, or a
+    /// propagation of fewer than three steps): the native writer writes three or more, and nothing is written (decision 81
+    /// of #668, decided by S. Guillet, 2026-11-23; #799(e): before 11.0.0, <see cref="ArgumentException"/>, and before #706
+    /// a C++ exception that crossed P/Invoke and ended the process). See <see cref="SpiceAPI.WriteEphemeris"/> for the
+    /// others.</exception>
     public override void WriteEphemeris(FileInfo outputFile)
     {
-        SpiceAPI.Instance.WriteEphemeris(outputFile, NaifId, Volatile.Read(ref _propagatedStates));
+        ArgumentNullException.ThrowIfNull(outputFile);
+        var states = Volatile.Read(ref _propagatedStates);
+        if (states.Length < 3)
+            throw new InvalidOperationException(
+                $"Star {Name} stores {states.Length} states: an SPK of the native writer needs three or more; propagate it over three steps or more.");
+        SpiceAPI.Instance.WriteEphemeris(outputFile, NaifId, states);
     }
 
     /// <summary>

@@ -1131,7 +1131,10 @@ namespace IO.Astrodynamics.Body.Spacecraft
         /// spacecraft's clock kernel must be loaded.
         /// </summary>
         /// <param name="outputFile">The CK to write.</param>
-        /// <exception cref="InvalidOperationException">The spacecraft is kernel-backed, or it has not been propagated.</exception>
+        /// <exception cref="InvalidOperationException">The spacecraft is kernel-backed, or its attitude record is empty: never
+        /// propagated numerically, or sampled by a <see cref="Propagator.TLEPropagator"/>, which records no attitude; the
+        /// message names <see cref="SpacecraftFrame.AddStateOrientationToICRF"/>, which gives it one (#546, decision 81 of
+        /// #668, decided by S. Guillet, 2026-11-23).</exception>
         public void WriteOrientation(FileInfo outputFile)
         {
             Frame.WriteOrientation(outputFile, this);
@@ -1303,9 +1306,11 @@ namespace IO.Astrodynamics.Body.Spacecraft
         /// of arcs ends with the arc before it, and SPICE reads the state before the impulse at its epoch, where
         /// <c>GetEphemeris</c> reads the state after it.
         /// </remarks>
-        /// <exception cref="InvalidOperationException">The spacecraft is kernel-backed.</exception>
+        /// <exception cref="InvalidOperationException">The spacecraft is kernel-backed, or it stores no state: nothing is
+        /// written (decision 81 of #668, decided by S. Guillet, 2026-11-23; #799(e): before 11.0.0,
+        /// <see cref="ArgumentException"/>).</exception>
         /// <exception cref="ArgumentNullException"><paramref name="outputFile"/> is null.</exception>
-        /// <exception cref="ArgumentException">No state is stored, or an arc holds a single state: a state given alone to
+        /// <exception cref="ArgumentException">An arc holds a single state: a state given alone to
         /// <see cref="AddPropagatedStates"/> apart from every arc (decision 87 of #668), the arc of one state after an impulse
         /// at the end of a propagation, which touches the arc before it, aside (decision 90).</exception>
         /// <exception cref="InvalidOperationException">SPICE failed to unload the file it replaces (the reopening of the other
@@ -1314,7 +1319,12 @@ namespace IO.Astrodynamics.Body.Spacecraft
         public override void WriteEphemeris(FileInfo outputFile)
         {
             if (_isFromKernel) throw new InvalidOperationException("Cannot write ephemeris for a kernel-backed spacecraft.");
-            SpiceAPI.Instance.WriteEphemerisArcs(outputFile, NaifId, SpkArcs(_propagatedStates.Arcs));
+            ArgumentNullException.ThrowIfNull(outputFile);
+            var arcs = _propagatedStates.Arcs;
+            if (arcs.Count == 0)
+                throw new InvalidOperationException(
+                    $"Spacecraft {Name} has no stored state to write: propagate it, or give it states with {nameof(AddPropagatedStates)}.");
+            SpiceAPI.Instance.WriteEphemerisArcs(outputFile, NaifId, SpkArcs(arcs));
         }
 
         // The arcs an SPK holds: an impulse at the end of a propagation opens an arc of one state at the epoch where the arc

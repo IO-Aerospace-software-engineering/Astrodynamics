@@ -4712,6 +4712,14 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   holds "ı" (U+0131) keeps it. `Site.Frame.Name` changes under tr and az only. Migration: none, but a kernel or a
   catalog written before 11.0.0 under tr or az names its objects with "İ" (`KernelWriterCultureTests`, under tr-TR, red
   before the change).
+- **`Spacecraft.WriteOrientation` said "it has not been propagated" of a spacecraft a `TLEPropagator` had run**
+  ([#546](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/546), lot L5c, decision 81 of
+  [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668), decided by S. Guillet,
+  2026-11-23): a `TLEPropagator` run stores SGP4's states and records no attitude, so the CK writer refused the
+  spacecraft it had just propagated, with a message that pointed nowhere. The `InvalidOperationException` of an empty
+  attitude record now says that a `TLEPropagator` run records none and names `SpacecraftFrame.AddStateOrientationToICRF`,
+  which gives the spacecraft attitudes to write (after the run, whose re-arm drops those added before it). Migration:
+  none (`KernelWriteContentTests`, red before the change).
 **Changed**
 
 - **Breaking: the scale of a `Time` is a required argument** (lot L2, R24 of
@@ -7701,6 +7709,18 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   #668, decided by S. Guillet, 2026-11-23): it wrote the attitude record of the frame's spacecraft under the id of the
   spacecraft it was given (measured: the record of one spacecraft written under the id of another, never propagated).
   Migration: `spacecraft.WriteOrientation(file)`.
+- **Breaking: `Spacecraft.WriteEphemeris` of a spacecraft that stores no state throws `InvalidOperationException`**
+  ([#799](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/799)(e), lot L5c, decision 81 of
+  #668, decided by S. Guillet, 2026-11-23): it threw the `ArgumentException` (`arcs`) of the SPK writer, which blamed the
+  file for what the spacecraft lacked; nothing is written. An arc of one state keeps its `ArgumentException` (decisions
+  87 and 89). Migration: catch `InvalidOperationException`, or test the stored states first (propagate the spacecraft,
+  or give it states with `AddPropagatedStates`).
+- **Breaking: `Star.WriteEphemeris` of a star that stores fewer than three states throws `InvalidOperationException`**
+  ([#799](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/799)(e), lot L5c, decision 81 of
+  #668, decided by S. Guillet, 2026-11-23): it threw the `ArgumentException` (`stateVectors`) of
+  `SpiceAPI.WriteEphemeris`, whose native writer writes three states or more; nothing is written. `SpiceAPI.WriteEphemeris`
+  and `Site.WriteEphemeris`, whose arguments are at fault, keep theirs. Migration: catch `InvalidOperationException`, or
+  propagate the star over three steps or more.
 
 **Removed**
 
