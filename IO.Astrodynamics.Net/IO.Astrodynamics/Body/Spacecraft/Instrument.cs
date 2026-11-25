@@ -421,6 +421,13 @@ namespace IO.Astrodynamics.Body.Spacecraft
         public abstract void WriteKernel(FileInfo outputFile);
 
         /// <summary>
+        /// Checks the kernel variable of the frame and instrument kernels before a writer of a set of kernels opens any file
+        /// (<see cref="Spacecraft.WriteKernels"/>): the check of <see cref="WriteFrame"/> and <see cref="WriteKernel"/>.
+        /// </summary>
+        /// <exception cref="InvalidOperationException">SPICE cannot read the variable.</exception>
+        internal void CheckKernelNames() => CheckFrameKernelName("frame kernel");
+
+        /// <summary>
         /// Checks the kernel variable <c>FRAME_&lt;SPACECRAFT&gt;_&lt;INSTRUMENT&gt;</c> of the instrument frame kernel, whose
         /// frame name the instrument kernel names too, before a writer opens its file (#676).
         /// </summary>

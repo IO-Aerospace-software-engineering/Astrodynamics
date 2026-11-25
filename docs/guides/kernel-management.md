@@ -113,6 +113,13 @@ SPICE kernels supply the ephemeris, orientation, leap-second, and body-constant 
   listed. A failed unload of the file throws `InvalidOperationException` with SPICE's message, and the file is kept as it
   was; so does a path the file system rejects (a loop of symbolic links), given to a writer or to `LoadKernels`, which
   ended the process before 11.0.0.
+- `Spacecraft.WriteKernels(directory)` writes the kernels of a spacecraft and loads each file by its own path, one entry of
+  `GetLoadedKernels` each; the `SpacecraftKernels` it returns unloads exactly those files at `Dispose` (R14 and decisions
+  79 and 80 of #668). It refuses, before it writes anything, a directory that is or lies inside a loaded directory, and a
+  file it would write that SPICE holds, from `LoadKernels`, another handle or a loaded meta-kernel (whose files the
+  registry does not list: a native query reads SPICE's own list, decision 102). A load of the directory made while the
+  handle lives furnishes nothing for its files and does not take them over: `Dispose` unloads them and replaces that
+  entry by its other files; load them again after it to keep them ([Spacecraft](../reference/spacecraft.md#the-kernels)).
 - SPICE takes a kernel path of at most 255 characters (NAIF, SPICE Kernel Required Reading, "Recommendations on Kernel
   File Naming"), and `LoadKernels` hands it the full path: a kernel at a longer path fails with
   `SPICE(FILENAMETOOLONG)`. Load it through a meta-kernel that names it by a shorter relative path, or move it.

@@ -42,9 +42,10 @@ public class CosmographiaExporter
     /// then replaces the previous export, so a check, a writer or the catalog that throws leaves the previous export and
     /// the output directory as they were (#799(b), decision 74 of #668, decided by S. Guillet, 2026-11-23; before, the
     /// previous export was deleted first). A failure while the previous export is deleted or the new one copied leaves part
-    /// of either. The scratch directory, under the system temporary directory, is deleted in every case; the clock and frame
-    /// kernels of each spacecraft are loaded from it while its CK is written and unloaded after, so the export leaves the
-    /// kernels SPICE holds as they were.
+    /// of either. The scratch directory, under the system temporary directory, is deleted in every case; the clock kernel
+    /// of each spacecraft is loaded from it while its CK is written and unloaded after (the sequence of
+    /// <see cref="Spacecraft.WriteKernels"/>, R14 of #668; its frame kernel too before 11.0.0, which changed no byte of
+    /// the CK), so the export leaves the kernels SPICE holds as they were.
     /// </remarks>
     /// <param name="scenario">The simulated scenario.</param>
     /// <param name="outputDirectory">The directory of the export.</param>
@@ -59,7 +60,7 @@ public class CosmographiaExporter
     /// <exception cref="ArgumentException">A kernel of the export would have a full path longer than the 255 characters
     /// (UTF-8 bytes) of a kernel name SPICE takes, which <see cref="SpiceAPI.LoadKernels(FileSystemInfo)"/> could not load: under the output
     /// directory (parameter <c>outputDirectory</c>), or under the new directory of the system temporary directory
-    /// (<see cref="Path.GetTempPath"/>) where the export writes its kernels and loads the clock and frame kernels of each
+    /// (<see cref="Path.GetTempPath"/>) where the export writes its kernels and loads the clock kernel of each
     /// spacecraft before it copies them (no parameter). The longest is usually the CK of a spacecraft,
     /// <c>/&lt;Mission&gt;_&lt;Scenario&gt;/Spacecrafts/&lt;name&gt;/Orientation/&lt;name&gt;.ck</c> after the output
     /// directory, 31 characters plus the mission and scenario names and twice the spacecraft name. Nothing is deleted or
@@ -438,8 +439,8 @@ public class CosmographiaExporter
         }
     }
 
-    // Writes the kernels under kernelsTemp, whose kernel paths ExportAsync checked; the clock and frame kernels of each
-    // spacecraft are loaded while its CK is written, and those loaded are unloaded after, whether the writing succeeded
+    // Writes the kernels under kernelsTemp, whose kernel paths ExportAsync checked; the clock kernel of each spacecraft is
+    // loaded while its CK is written, and unloaded after, whether the writing succeeded
     private static void ExportRawData(Scenario scenario, DirectoryInfo kernelsTemp)
     {
         FileInfo Kernel(string relativePath) => new(Path.Combine(kernelsTemp.FullName, relativePath));
@@ -455,34 +456,14 @@ public class CosmographiaExporter
             spacecraftOutputDirectory.CreateSubdirectory("Instruments");
             spacecraftOutputDirectory.CreateSubdirectory("Orientation");
 
-            var clockFile = Kernel(ClockPath(spacecraft));
-            var frameFile = Kernel(FramePath(spacecraft));
-            var loaded = new List<FileInfo>(2);
-            try
-            {
-                spacecraft.Clock.Write(clockFile);
-                SpiceAPI.Instance.LoadKernels(clockFile);
-                loaded.Add(clockFile);
-
-                spacecraft.Frame.Write(frameFile);
-                SpiceAPI.Instance.LoadKernels(frameFile);
-                loaded.Add(frameFile);
-                spacecraft.WriteOrientation(Kernel(OrientationPath(spacecraft)));
-                spacecraft.WriteEphemeris(Kernel(EphemerisPath(spacecraft)));
-            }
-            finally
-            {
-                foreach (var file in loaded)
-                {
-                    SpiceAPI.Instance.UnloadKernels(file);
-                }
-            }
-
-            foreach (var instrument in spacecraft.Instruments)
-            {
-                instrument.WriteFrame(Kernel(InstrumentFramePath(spacecraft, instrument)));
-                instrument.WriteKernel(Kernel(InstrumentKernelPath(spacecraft, instrument)));
-            }
+            // The sequence of Spacecraft.WriteKernels in the layout of the export (R14 of #668): the content first, as the
+            // writers would refuse it, then the files, the clock kernel loaded while the CK is written and unloaded after
+            var orientation = spacecraft.Frame.CkRecords();
+            var ephemeris = spacecraft.EphemerisKernelBytes(asState: false);
+            spacecraft.WriteKernelSet(new SpacecraftKernels(Kernel(ClockPath(spacecraft)), Kernel(FramePath(spacecraft)),
+                Kernel(EphemerisPath(spacecraft)), Kernel(OrientationPath(spacecraft)),
+                spacecraft.Instruments.Select(x => new InstrumentKernelFiles(x, Kernel(InstrumentFramePath(spacecraft, x)),
+                    Kernel(InstrumentKernelPath(spacecraft, x)))).ToArray(), []), ephemeris, orientation);
         }
 
         foreach (var site in scenario.Sites)

@@ -219,4 +219,58 @@ public class ExportCheckTests
             root.Delete(true);
         }
     }
+
+    /// <summary>
+    /// The kernels of a spacecraft in the export are byte for byte those of the manual sequence of its writers, the sequence
+    /// <see cref="Spacecraft.WriteKernels"/> shares with the export (R14 of #668: the export loads the clock kernel alone
+    /// while it writes the CK, the frame kernel too before, which changed no byte).
+    /// </summary>
+    [Fact]
+    public async Task Export_WritesTheSpacecraftKernelsOfTheManualSequence()
+    {
+        var scenario = Simulated();
+        var spacecraft = scenario.Spacecrafts.Single();
+        var instrument = spacecraft.Instruments.Single();
+        var root = Directory.CreateTempSubdirectory("export-bytes-");
+        try
+        {
+            var output = Directory.CreateDirectory(Path.Combine(root.FullName, "output"));
+            await new CosmographiaExporter().ExportAsync(scenario, output);
+            var exported = Path.Combine(output.FullName, $"{Mission}_{ScenarioName}", "Spacecrafts", spacecraft.Name);
+
+            var manual = Directory.CreateDirectory(Path.Combine(root.FullName, "manual"));
+            FileInfo File(string name) => new(Path.Combine(manual.FullName, name));
+            spacecraft.Clock.Write(File("sc.tsc"));
+            spacecraft.Frame.Write(File("sc.tf"));
+            instrument.WriteFrame(File("cam.tf"));
+            instrument.WriteKernel(File("cam.ti"));
+            spacecraft.WriteEphemeris(File("sc.spk"));
+            SpiceAPI.Instance.LoadKernels(File("sc.tsc"));
+            try
+            {
+                spacecraft.WriteOrientation(File("sc.ck"));
+            }
+            finally
+            {
+                SpiceAPI.Instance.UnloadKernels(File("sc.tsc"));
+            }
+
+            foreach (var (mine, theirs) in new[]
+                     {
+                         ("sc.tsc", Path.Combine("Clocks", spacecraft.Name + ".tsc")), ("sc.tf", Path.Combine("Frames", spacecraft.Name + ".tf")),
+                         ("cam.tf", Path.Combine("Instruments", instrument.Name + ".tf")), ("cam.ti", Path.Combine("Instruments", instrument.Name + ".ti")),
+                         ("sc.spk", Path.Combine("Ephemeris", spacecraft.Name + ".spk")), ("sc.ck", Path.Combine("Orientation", spacecraft.Name + ".ck"))
+                     })
+            {
+                Assert.True(System.IO.File.ReadAllBytes(File(mine).FullName).AsSpan().SequenceEqual(System.IO.File.ReadAllBytes(Path.Combine(exported, theirs))),
+                    $"{theirs} differs from the manual sequence");
+            }
+
+            AssertNothingLoadedUnder(root);
+        }
+        finally
+        {
+            root.Delete(true);
+        }
+    }
 }

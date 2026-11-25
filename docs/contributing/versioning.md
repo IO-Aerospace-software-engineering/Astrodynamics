@@ -391,6 +391,26 @@ release are listed under **Known limitations**.
   choice 12 of [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668), decided by
   S. Guillet, 2026-11-19), SPICE's `bodn2c_c` through the new native `GetNaifIdProxy`: SPICE's built-in names and those
   of the loaded kernels, in any case, false for a name SPICE does not know (`docs/reference/spice-api.md`, "Body names").
+- **`Spacecraft.WriteKernels(DirectoryInfo)`: the kernels of a spacecraft in one call** (lot L5c, R14 and decisions 78 to
+  81 of [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668), decided by S. Guillet,
+  2026-11-23, and decision 102, 2026-11-25). It writes the clock kernel `<name>.tsc`, the frame kernel `<name>.tf`, the
+  frame and instrument kernels `<name>_<instrument>.tf` and `.ti` of each instrument, the SPK `<name>.bsp` and the CK
+  `<name>.bc` into one directory, each byte for byte what its writer writes (compared under both integrators, with an
+  impulse, attitudes and two instruments, `WriteKernelsTests`), and loads them, each by its own path; it returns the
+  sealed `SpacecraftKernels` (`Clock`, `Frame`, `Ephemeris`, `Orientation`, `Instruments` of
+  `InstrumentKernelFiles(Instrument, Frame, Kernel)`, `IsLoaded`), whose `Dispose`, idempotent and without a
+  finalizer, unloads exactly what the call loaded and leaves the files on disk. Every check runs before anything is
+  written, created or loaded, with `InvalidOperationException`: a kernel-backed spacecraft; by content (decision 81),
+  no stored state, no arc an SPK can write (an arc of one state, which `WriteEphemeris` refuses with
+  `ArgumentException`, decision 87), states without attitude record (a `TLEPropagator` run records none: given
+  attitudes by `AddStateOrientationToICRF` after the run, such a spacecraft is written, #546); the names (the kernel
+  variables of #676 and the portable file-name rule of #799(a)); the load scope (decision 80): a directory that is, or
+  lies inside, a loaded directory, and a file it would write that SPICE holds, from a load of the library, a live handle
+  or a meta-kernel (decision 102, the native query `KernelHeldProxy`), through a symbolic link too; a path longer than
+  SPICE takes, `ArgumentException` (`directory`, #673). The files are written into a subdirectory of the directory
+  first, the clock kernel loaded only while the CK is written, then moved into place and loaded (decision 79); the
+  centre of the SPK is not checked (decision 79, #655: the managed writer writes any centre). Two spacecraft are written
+  into one directory with the first handle alive. See [Spacecraft](../reference/spacecraft.md#the-kernels).
 - **The command-line tool: names, kernels from the environment, csv and json, the scale of its epochs** (lot L8 of the
   ergonomics review, R29 of #668, choice 12, decided by S. Guillet, 2026-11-19; `docs/reference/cli.md`, its help
   generated from the tool and compared by `CliPageTests`). An object is a NAIF identifier or a name SPICE knows (`MOON`,
@@ -7717,7 +7737,7 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   `await clock.WriteAsync(f)` → `clock.Write(f)`; `await frame.WriteAsync(f)` → `frame.Write(f)`;
   `await instrument.WriteFrameAsync(f)` → `instrument.WriteFrame(f)`; `await instrument.WriteKernelAsync(f)` →
   `instrument.WriteKernel(f)`; `await site.WriteFrameAsync(f)` → `site.WriteFrame(f)`; `await siteFrame.WriteAsync(f)` →
-  `siteFrame.Write(f)`.
+  `siteFrame.Write(f)`; or, for the kernels of a spacecraft, `spacecraft.WriteKernels(directory)`.
 - **Breaking: the constructor `SpacecraftFrame(Spacecraft)` is internal**
   ([#799](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/799)(d), lot L5c, decision 78 of
   #668, decided by S. Guillet, 2026-11-23): a frame built apart from its spacecraft held an empty attitude record, which
@@ -7726,7 +7746,7 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   ([#799](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/799)(d), lot L5c, decision 78 of
   #668, decided by S. Guillet, 2026-11-23): it wrote the attitude record of the frame's spacecraft under the id of the
   spacecraft it was given (measured: the record of one spacecraft written under the id of another, never propagated).
-  Migration: `spacecraft.WriteOrientation(file)`.
+  Migration: `spacecraft.WriteOrientation(file)` or `spacecraft.WriteKernels(directory)`.
 - **Breaking: `Spacecraft.WriteEphemeris` of a spacecraft that stores no state throws `InvalidOperationException`**
   ([#799](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/799)(e), lot L5c, decision 81 of
   #668, decided by S. Guillet, 2026-11-23): it threw the `ArgumentException` (`arcs`) of the SPK writer, which blamed the
@@ -8007,12 +8027,19 @@ not listed.
   leave the kernel they write unloaded: load it after writing. A file they replace is unloaded first under its path and
   the absolute names whose symbolic links resolve through it (#706), but not under a relative name other than its path
   (a meta-kernel's) nor through a hard link, through which SPICE goes on reading the replaced data: unload such a load
-  before rewriting the file. A spacecraft propagated by `TLEPropagator` has no attitude record, so its CK cannot be written and its
-  field-of-view searches throw ([#682](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/682)); give it its attitude with `AddStateOrientationToICRF`.
+  before rewriting the file. `Spacecraft.WriteKernels` loads what it writes, each file by its own path, and refuses a
+  directory inside a loaded one and a file SPICE holds, a meta-kernel's included; a load of the directory made while
+  its handle lives furnishes nothing for the handle's files and does not take them over, `Dispose` unloading them all
+  (load them again after it to keep them), and `IsLoaded` does not follow a user's `UnloadKernels` of them. A
+  spacecraft propagated by `TLEPropagator` has no attitude record, so its CK cannot be written (`WriteKernels` refuses
+  it too) and its field-of-view searches throw
+  ([#682](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/682)); give it its attitude with
+  `AddStateOrientationToICRF`, after the run.
   An instrument named `Frame` (any case) on a spacecraft `Sat` writes `FRAME_SAT_FRAME`, the variable of the spacecraft's
   own frame, in its frame kernel, so the kernel loaded last defines `SAT_FRAME`
   ([#812](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/812); `Add*Instrument` checks the names of the instruments among themselves only, decision 74 of #668):
-  give no instrument that name.
+  give no instrument that name; `WriteKernels` loads the instrument frame kernels after the spacecraft's, so the
+  instrument's wins there.
 - **Kernel paths of more than 255 characters** ([#673](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/673)). `LoadKernels` and the command line hand SPICE the full path of
   each kernel, so a kernel whose full path is longer than 255 characters cannot be loaded through them
   (`SPICE(FILENAMETOOLONG)`, SPICE's message in the `InvalidOperationException` since #706, nothing on the standard

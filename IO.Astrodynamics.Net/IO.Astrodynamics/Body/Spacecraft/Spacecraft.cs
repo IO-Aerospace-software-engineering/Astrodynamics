@@ -1141,6 +1141,195 @@ namespace IO.Astrodynamics.Body.Spacecraft
         }
 
         /// <summary>
+        /// Writes the kernels of the spacecraft into one directory and loads them, each file by its own path (R14 of #668;
+        /// decisions 79, 80 and 81 of #668, decided by S. Guillet, 2026-11-23): its clock kernel <c>&lt;name&gt;.tsc</c>
+        /// (<see cref="Spacecraft.Clock"/>), its frame kernel <c>&lt;name&gt;.tf</c> (<see cref="SpacecraftFrame.Write"/>), the
+        /// frame and instrument kernels of each instrument <c>&lt;name&gt;_&lt;instrument&gt;.tf</c> and <c>.ti</c>
+        /// (<see cref="Instrument.WriteFrame"/>, <see cref="Instrument.WriteKernel"/>, not to be confused with this method),
+        /// the SPK <c>&lt;name&gt;.bsp</c> (<see cref="WriteEphemeris"/>) and the CK <c>&lt;name&gt;.bc</c>
+        /// (<see cref="WriteOrientation"/>), each byte for byte what its writer writes, the names as the spacecraft and the
+        /// instruments hold them. <see cref="SpacecraftKernels.Dispose"/> unloads exactly what the call loaded.
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// Every check runs before anything is written, created or loaded: the content (stored states, an arc an SPK can
+        /// write, an attitude record), the names (the kernel variables SPICE reads, #676, and the portable file-name rule,
+        /// #799(a)), the length of each path SPICE takes (#673), then, under the lock of SPICE, the load scope: the directory
+        /// must not be, or lie inside, a loaded directory of <see cref="SpiceAPI.GetLoadedKernels"/>, which would take the
+        /// files written in it, and SPICE must hold none of the files it writes, from a load of the library, a meta-kernel's
+        /// or a live <see cref="SpacecraftKernels"/> (decisions 80 and 102 of #668): unload them first, or Dispose the
+        /// handle. Two spacecraft are written into one directory with the first handle alive; one spacecraft per directory
+        /// is the advice, since the files of a spacecraft and of an instrument of another can share a name.
+        /// </para>
+        /// <para>
+        /// The files are written into a new subdirectory of the directory, the clock kernel loaded only while the CK is
+        /// written (its epochs are clock ticks), then moved into the directory, replacing files of the same names, and loaded
+        /// in the order the CK needs, the clock and the frames first. A failure before the move leaves the directory as it
+        /// was (one the call created is removed); a failure during the move can leave a mix of the old and the new files; a
+        /// failed load unloads what the call loaded and throws, the files staying on disk. The subdirectory is deleted in
+        /// every case, but a process killed meanwhile leaves it, and a later load of the directory loads its files.
+        /// </para>
+        /// <para>
+        /// A spacecraft sampled by a <see cref="Propagator.TLEPropagator"/> records no attitude: it is written once given
+        /// attitudes by <see cref="SpacecraftFrame.AddStateOrientationToICRF"/>, after the run, whose re-arm drops those
+        /// added before it (decision 81 of #668: refused by content, not by provenance). The centre of the SPK is not
+        /// checked (decision 79: the managed SPK writer writes any centre, #655). The call is not made during a run on the
+        /// spacecraft (decisions 43 and 96 of #668: one run at a time per spacecraft).
+        /// </para>
+        /// </remarks>
+        /// <param name="directory">The directory of the kernels, created when it does not exist.</param>
+        /// <returns>The written files, loaded until the handle is disposed.</returns>
+        /// <exception cref="ArgumentNullException"><paramref name="directory"/> is null.</exception>
+        /// <exception cref="InvalidOperationException">The spacecraft is kernel-backed; it stores no state, or no arc an SPK
+        /// can write (an arc of one state, which <see cref="WriteEphemeris"/> refuses with <see cref="ArgumentException"/>,
+        /// decision 87 of #668); its attitude record is empty (#546); a name makes a kernel variable SPICE cannot read or is
+        /// not a portable file name; the directory is, or lies inside, a loaded directory; or SPICE holds a file the call
+        /// would write. Nothing is written, created or loaded.</exception>
+        /// <exception cref="ArgumentException">A file, or a file of the subdirectory the call writes in first, would have
+        /// a full path longer than the 255 characters (UTF-8 bytes) of a kernel name SPICE takes (parameter
+        /// <c>directory</c>, #673); nothing is written, created or loaded.</exception>
+        /// <exception cref="Exceptions.SpiceException">SPICE failed to write the CK or to load a file.</exception>
+        public SpacecraftKernels WriteKernels(DirectoryInfo directory)
+        {
+            ArgumentNullException.ThrowIfNull(directory);
+            if (_isFromKernel)
+                throw new InvalidOperationException(
+                    $"Cannot write the kernels of the kernel-backed spacecraft {Name}: its kernels are those SPICE reads.");
+
+            // The content, as its writers would refuse it, but as the state of the spacecraft (decision 81)
+            var ephemeris = EphemerisKernelBytes(asState: true);
+            var orientation = Frame.CkRecords();
+
+            // The names: the portable rule first, since a name that leaves its directory makes every path meaningless
+            Kernels.PortableFileNames.Check(Name, $"the spacecraft '{Name}'");
+            foreach (var instrument in Instruments)
+            {
+                Kernels.PortableFileNames.Check(instrument.Name, $"the instrument '{instrument.Name}' of the spacecraft '{Name}'");
+            }
+
+            Frame.CheckKernelName();
+            foreach (var instrument in Instruments)
+            {
+                instrument.CheckKernelNames();
+            }
+
+            // The paths SPICE takes, in the directory and in the subdirectory the files are written in first
+            var target = new DirectoryInfo(directory.FullName);
+            string scratchName = Path.GetRandomFileName();
+            var files = KernelSetFiles(target);
+            var scratchFiles = KernelSetFiles(new DirectoryInfo(Path.Combine(target.FullName, scratchName)));
+            foreach (var file in files.Files.Concat(scratchFiles.Files))
+            {
+                Kernels.KernelPath.EnsureLoadable(file.FullName, nameof(directory));
+            }
+
+            lock (SpiceAPI.SyncRoot)
+            {
+                SpiceAPI.Instance.ThrowIfKernelSetTargetHeld(target, files.Files, $"the spacecraft '{Name}'");
+                bool created = !Directory.Exists(target.FullName);
+                Directory.CreateDirectory(target.FullName);
+                while (Directory.Exists(Path.Combine(target.FullName, scratchName)) || File.Exists(Path.Combine(target.FullName, scratchName)))
+                {
+                    // A name of the same length, so the paths checked above stay within SPICE's
+                    scratchName = Path.GetRandomFileName();
+                    scratchFiles = KernelSetFiles(new DirectoryInfo(Path.Combine(target.FullName, scratchName)));
+                }
+
+                var scratch = Directory.CreateDirectory(Path.Combine(target.FullName, scratchName));
+                bool moving = false;
+                try
+                {
+                    WriteKernelSet(scratchFiles, ephemeris, orientation);
+                    moving = true;
+                    foreach (var (from, to) in scratchFiles.Files.Zip(files.Files))
+                    {
+                        File.Move(from.FullName, to.FullName, overwrite: true);
+                    }
+                }
+                finally
+                {
+                    scratch.Refresh();
+                    if (scratch.Exists)
+                    {
+                        scratch.Delete(true);
+                    }
+
+                    if (!moving && created && !Directory.EnumerateFileSystemEntries(target.FullName).Any())
+                    {
+                        Directory.Delete(target.FullName);
+                    }
+                }
+
+                var loaded = SpiceAPI.Instance.LoadKernelFilesScoped(files.Files);
+                return new SpacecraftKernels(files.Clock, files.Frame, files.Ephemeris, files.Orientation, files.Instruments, loaded);
+            }
+        }
+
+        // The files of WriteKernels in a directory; a handle never loaded, the paths only
+        private SpacecraftKernels KernelSetFiles(DirectoryInfo directory)
+        {
+            FileInfo File(string name) => new(Path.Combine(directory.FullName, name));
+            return new SpacecraftKernels(File(Name + ".tsc"), File(Name + ".tf"), File(Name + ".bsp"), File(Name + ".bc"),
+                Instruments.Select(x => new InstrumentKernelFiles(x, File($"{Name}_{x.Name}.tf"), File($"{Name}_{x.Name}.ti"))).ToArray(), []);
+        }
+
+        /// <summary>
+        /// Writes the kernels of the spacecraft into the files given, from its SPK bytes and CK records computed and checked
+        /// before (<see cref="EphemerisKernelBytes"/>, <see cref="SpacecraftFrame.CkRecords"/>): the clock, the frame, each
+        /// instrument's frame and instrument kernels, the CK with the clock kernel loaded meanwhile (its epochs are clock
+        /// ticks; the frame kernel changes none of its bytes), then the SPK. The sequence of <see cref="WriteKernels"/> and
+        /// of the Cosmographia export, each file byte for byte what its writer writes.
+        /// </summary>
+        internal void WriteKernelSet(SpacecraftKernels files, byte[] ephemeris, IReadOnlyList<StateOrientation> orientation)
+        {
+            Clock.Write(files.Clock);
+            Frame.Write(files.Frame);
+            foreach (var instrument in files.Instruments)
+            {
+                instrument.Instrument.WriteFrame(instrument.Frame);
+                instrument.Instrument.WriteKernel(instrument.Kernel);
+            }
+
+            SpiceAPI.Instance.LoadKernels(files.Clock);
+            try
+            {
+                SpiceAPI.Instance.WriteOrientation(files.Orientation, NaifId, orientation);
+            }
+            finally
+            {
+                SpiceAPI.Instance.UnloadKernels(files.Clock);
+            }
+
+            SpiceAPI.Instance.WriteEphemerisBytes(files.Ephemeris, ephemeris);
+        }
+
+        /// <summary>
+        /// The bytes of the SPK of the stored states (<see cref="WriteEphemeris"/>), built and checked before any file is
+        /// written: <see cref="InvalidOperationException"/> for a kernel-backed spacecraft or one that stores no state;
+        /// for an arc an SPK cannot hold (an arc of one state), <see cref="ArgumentException"/> as the writer's argument
+        /// (<see cref="WriteEphemeris"/>, the export, decision 87 of #668) or, with <paramref name="asState"/>,
+        /// <see cref="InvalidOperationException"/>, the state of the spacecraft (<see cref="WriteKernels"/>, decision 81).
+        /// </summary>
+        internal byte[] EphemerisKernelBytes(bool asState)
+        {
+            if (_isFromKernel) throw new InvalidOperationException("Cannot write ephemeris for a kernel-backed spacecraft.");
+            var arcs = _propagatedStates.Arcs;
+            if (arcs.Count == 0)
+                throw new InvalidOperationException(
+                    $"Spacecraft {Name} has no stored state to write: propagate it, or give it states with {nameof(AddPropagatedStates)}.");
+            try
+            {
+                return Kernels.SpkWriter.BuildType9(NaifId, 1, SpkArcs(arcs));
+            }
+            catch (ArgumentException e) when (asState)
+            {
+                throw new InvalidOperationException(
+                    $"Spacecraft {Name} has no arc an SPK can write: {e.Message} An arc of one state, a state given alone to {nameof(AddPropagatedStates)}, cannot be a segment (decision 87 of #668).",
+                    e);
+            }
+        }
+
+        /// <summary>
         /// Propagate the spacecraft over <paramref name="window"/> with the settings of <paramref name="options"/> (R06 of
         /// #668): by default RK7(8) at 1e-9, an output state every 60 s, the central body of the initial orbit alone with
         /// its models, and the covariance of the initial orbital parameters propagated when it can be (Auto).
@@ -1320,11 +1509,7 @@ namespace IO.Astrodynamics.Body.Spacecraft
         {
             if (_isFromKernel) throw new InvalidOperationException("Cannot write ephemeris for a kernel-backed spacecraft.");
             ArgumentNullException.ThrowIfNull(outputFile);
-            var arcs = _propagatedStates.Arcs;
-            if (arcs.Count == 0)
-                throw new InvalidOperationException(
-                    $"Spacecraft {Name} has no stored state to write: propagate it, or give it states with {nameof(AddPropagatedStates)}.");
-            SpiceAPI.Instance.WriteEphemerisArcs(outputFile, NaifId, SpkArcs(arcs));
+            SpiceAPI.Instance.WriteEphemerisBytes(outputFile, EphemerisKernelBytes(asState: false));
         }
 
         // The arcs an SPK holds: an impulse at the end of a propagation opens an arc of one state at the epoch where the arc

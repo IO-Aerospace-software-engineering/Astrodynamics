@@ -44,9 +44,10 @@ public class SpiceAPI
 
     /// <summary>
     /// A file a load handed SPICE, the kernels SPICE reads again when it unloads it, and those whose reading may make that
-    /// unload fail (<see cref="UnloadRereads"/>).
+    /// unload fail (<see cref="UnloadRereads"/>). A scoped load (<see cref="LoadKernelFilesScoped"/>) keeps its records
+    /// and unloads them by reference (<see cref="UnloadKernelFilesScoped"/>), never by value.
     /// </summary>
-    private sealed record KernelFile(string Name, KernelRereads Reads, KernelRereads MayFailOn);
+    internal sealed record KernelFile(string Name, KernelRereads Reads, KernelRereads MayFailOn);
 
     /// <summary>
     ///     Instantiate API
@@ -869,8 +870,8 @@ public class SpiceAPI
     }
 
     // LoadKernels under the lock: the kernel files of the path that no entry holds are handed to SPICE, in their order;
-    // those furnished before a failure are registered too
-    private void LoadKernelsLocked(FileSystemInfo path)
+    // those furnished before a failure are registered too. Returns the records it registered
+    private List<KernelFile> LoadKernelsLocked(FileSystemInfo path)
     {
         // Before any native call, so that a failed call changes nothing; not the cached Exists of the instance, which a
         // stored entry would trust after a deletion
@@ -911,6 +912,8 @@ public class SpiceAPI
                 Register(path, holder, furnished);
             }
         }
+
+        return furnished;
     }
 
     // Records the files a load furnished: in the entry that holds the path, or in a new entry of the path, listed last, that
@@ -1033,6 +1036,138 @@ public class SpiceAPI
             }
 
             return held;
+        }
+    }
+
+    /// <summary>
+    /// Refuses a set of kernels to write into <paramref name="directory"/> (decision 80 of #668, decided by S. Guillet,
+    /// 2026-11-23): the directory is a loaded entry of <see cref="GetLoadedKernels"/> or lies inside one, whose later load
+    /// or unload would take the files written in it, or SPICE holds one of <paramref name="files"/>, from a load of this
+    /// class, a meta-kernel's (<see cref="HoldsKernelFile"/>, decision 102) or a scoped load still alive, so that the write
+    /// would replace data SPICE reads. Read under the lock, which the caller holds from this check to its last load.
+    /// </summary>
+    /// <exception cref="InvalidOperationException">The directory is or lies inside a loaded entry, or SPICE holds a file;
+    /// the message names it.</exception>
+    internal void ThrowIfKernelSetTargetHeld(DirectoryInfo directory, IEnumerable<FileInfo> files, string owner)
+    {
+        lock (lockObject)
+        {
+            var entry = _kernels.FirstOrDefault(x => IsSameOrInside(directory.FullName, x.Path.FullName));
+            if (entry != null)
+            {
+                throw new InvalidOperationException(
+                    $"The kernels of {owner} cannot be written into {directory.FullName}: it is {(IsSameOrInside(entry.Path.FullName, directory.FullName) ? "" : "inside ")}the loaded kernel path {entry.Path.FullName}, which would take the files written in it. Write them into another directory, or unload {entry.Path.FullName} first.");
+            }
+
+            foreach (var file in files)
+            {
+                if (_kernels.SelectMany(x => x.Files).Any(x => IsSameOrInside(x.Name, file.FullName)) || HoldsKernelFile(file))
+                {
+                    throw new InvalidOperationException(
+                        $"The kernels of {owner} cannot be written into {directory.FullName}: SPICE holds {file.FullName}, which the write would replace under the data SPICE reads. Unload it first (UnloadKernels of its path or of the meta-kernel that names it, or Dispose the SpacecraftKernels that loaded it).");
+                }
+            }
+        }
+    }
+
+    /// <summary>
+    /// Loads each file by its own path, in the order given, one entry of <see cref="GetLoadedKernels"/> each, and returns
+    /// the records it registered, which <see cref="UnloadKernelFilesScoped"/> unloads (decision 80 of #668). The caller
+    /// checked that no entry holds the files nor their directory (<see cref="ThrowIfKernelSetTargetHeld"/>), so each file is
+    /// handed to SPICE. A failed load unloads the records of the call loaded before it and throws.
+    /// </summary>
+    /// <exception cref="SpiceException">SPICE failed to load a file, as <see cref="LoadKernels(FileSystemInfo)"/>.</exception>
+    internal IReadOnlyList<KernelFile> LoadKernelFilesScoped(IEnumerable<FileInfo> files)
+    {
+        lock (lockObject)
+        {
+            var loaded = new List<KernelFile>();
+            long nativeCalls = _nativeKernelCalls;
+            try
+            {
+                foreach (var file in files)
+                {
+                    loaded.AddRange(LoadKernelsLocked(file));
+                }
+            }
+            catch
+            {
+                try
+                {
+                    UnloadKernelFilesLocked(loaded);
+                }
+                catch (InvalidOperationException)
+                {
+                    // The load's own failure is the one reported
+                }
+
+                throw;
+            }
+            finally
+            {
+                AfterKernelCall(nativeCalls);
+            }
+
+            return loaded;
+        }
+    }
+
+    /// <summary>
+    /// Unloads the records of a scoped load (<see cref="LoadKernelFilesScoped"/>) that the registry still holds, by
+    /// reference, in one pass (#673: a later unload repairs the failure of an earlier one on a deleted text kernel), and
+    /// nothing else: a record a user's load of a directory took into its entry is unloaded and that entry replaced by its
+    /// other files, as <see cref="UnloadKernels(FileSystemInfo)"/> of a file inside it does; a file loaded again under the
+    /// same name after the records left the registry (a writer replaced it, a user unloaded it) is not one of them and
+    /// stays (decision 80 of #668, decided by S. Guillet, 2026-11-23).
+    /// </summary>
+    /// <exception cref="SpiceException">SPICE failed to unload a file and no later unload of the call repaired it; every
+    /// record is unloaded before the exception.</exception>
+    internal void UnloadKernelFilesScoped(IReadOnlyCollection<KernelFile> files)
+    {
+        lock (lockObject)
+        {
+            long nativeCalls = _nativeKernelCalls;
+            try
+            {
+                UnloadKernelFilesLocked(files);
+            }
+            finally
+            {
+                if (_nativeKernelCalls != nativeCalls)
+                {
+                    ForgetDroppedKernels();
+                    Interlocked.Increment(ref _kernelPoolGeneration);
+                }
+            }
+        }
+    }
+
+    // UnloadKernelFilesScoped under the lock
+    private void UnloadKernelFilesLocked(IReadOnlyCollection<KernelFile> files)
+    {
+        var unloaded = new List<KernelFile>();
+        for (int i = 0; i < _kernels.Count; i++)
+        {
+            var entry = _kernels[i];
+            var removed = entry.Files.Where(f => files.Any(x => ReferenceEquals(x, f))).ToArray();
+            if (removed.Length == 0)
+            {
+                continue;
+            }
+
+            var remaining = entry.Files.Where(f => !removed.Any(x => ReferenceEquals(x, f)))
+                .Select(x => new KernelEntry(new FileInfo(x.Name), [x])).ToArray();
+            _kernels.RemoveAt(i);
+            _kernels.InsertRange(i, remaining);
+            i += remaining.Length - 1;
+            unloaded.AddRange(removed);
+        }
+
+        var unrepaired = new List<(KernelFile File, NativeError Error)>();
+        UnloadFiles(unloaded.ToArray(), unrepaired);
+        if (unrepaired.Count > 0)
+        {
+            throw NativeException($"Kernel {unrepaired[0].File.Name} can't be unloaded", unrepaired[0].Error);
         }
     }
 
@@ -2361,10 +2496,19 @@ public class SpiceAPI
     {
         if (filePath == null) throw new ArgumentNullException(nameof(filePath));
         if (arcs == null) throw new ArgumentNullException(nameof(arcs));
+        // The file is built and checked first: an argument it cannot write leaves an existing file as it was
+        WriteEphemerisBytes(filePath, Kernels.SpkWriter.BuildType9(naifId, 1, arcs));
+    }
+
+    /// <summary>
+    /// Writes the bytes of an SPK the managed writer built (<see cref="Kernels.SpkWriter.BuildType9"/>), as
+    /// <see cref="WriteEphemerisArcs"/> writes them: the file it replaces unloaded first, the new one left unloaded.
+    /// </summary>
+    /// <exception cref="SpiceException">SPICE failed to unload the file it replaces, as <see cref="WriteEphemerisArcs"/>.</exception>
+    internal void WriteEphemerisBytes(FileInfo filePath, byte[] bytes)
+    {
         lock (lockObject)
         {
-            // The file is built and checked first: an argument it cannot write leaves an existing file as it was
-            var bytes = Kernels.SpkWriter.BuildType9(naifId, 1, arcs);
             UnloadReplacedKernel(filePath);
 
             // File.Exists, not FileInfo.Exists: the caller's FileInfo must not cache the state of the file before the write
@@ -2390,7 +2534,8 @@ public class SpiceAPI
     }
 
     /// <summary>
-    /// The lock of every CSPICE call, for the tests that call CSPICE directly in the process.
+    /// The lock of every CSPICE call, for the tests that call CSPICE directly in the process, and for
+    /// <c>Spacecraft.WriteKernels</c>, which holds it from its load-scope checks to its last load (decision 80 of #668).
     /// </summary>
     internal static object SyncRoot => lockObject;
 

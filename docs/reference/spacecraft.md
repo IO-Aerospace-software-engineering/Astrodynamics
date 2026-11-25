@@ -155,6 +155,7 @@ Instance-level overrides can be set via constructor parameters (`bodyFront`, `bo
 | `WriteEphemeris(FileInfo)` | Write the stored states to an SPK file, in J2000, one type-9 segment per arc, between impulses and between the windows given to `AddPropagatedStates` ([The stored states across an impulse](#the-stored-states-across-an-impulse)), an arc of one state refused (`ArgumentException`), a spacecraft that stores no state `InvalidOperationException` (decision 81 of #668; `ArgumentException` before 11.0.0); positions and velocities only, never the covariance |
 | `AddPropagatedStates(params StateVector[])` | Add the states of one window to the stored states, in ICRF: one window per call, a new arc when it meets no stored arc, a read in the gap between two windows throwing ([The stored states across an impulse](#the-stored-states-across-an-impulse)); a propagation replaces them |
 | `WriteOrientation(FileInfo)` | Write the attitude of the last propagation as a type-3 CK, in J2000 ([Attitude and kernels](#attitude-and-kernels)) |
+| `WriteKernels(DirectoryInfo)` | Write the clock, frame, instrument, SPK and CK kernels into one directory and load them, each byte for byte what its writer writes; `Dispose` the returned `SpacecraftKernels` to unload exactly what the call loaded ([The kernels](#the-kernels); R14 and decisions 79 to 81 of #668) |
 | `ToOpm(...)` | Export to CCSDS OPM |
 
 Each propagation, by every path (`Propagate`, `Scenario.Simulate`, `BatchPropagator` and a `CentralBodyPropagator`
@@ -360,6 +361,37 @@ A kernel-backed spacecraft reads its frame kernel and its CK through SPICE at ev
 
 ### The kernels
 
+- **`WriteKernels(directory)`** writes the kernels of the spacecraft in one call and loads them (R14 and decisions 79 to
+  81 of #668, decided by S. Guillet, 2026-11-23): `<name>.tsc` (the clock), `<name>.tf` (the frame),
+  `<name>_<instrument>.tf` and `<name>_<instrument>.ti` for each instrument, `<name>.bsp` (`WriteEphemeris`) and
+  `<name>.bc` (`WriteOrientation`), each byte for byte what its writer writes, the names as the spacecraft and the
+  instruments hold them. It returns a `SpacecraftKernels` handle, whose `Clock`, `Frame`, `Ephemeris`, `Orientation` and
+  `Instruments` (`InstrumentKernelFiles`) give the files and whose `Dispose` unloads exactly what the call loaded, once,
+  leaving the files on disk; `IsLoaded` is true until then (a user's `UnloadKernels` of the files is not tracked). It
+  checks everything before it writes, creates or loads anything, with `InvalidOperationException`: a kernel-backed
+  spacecraft; no stored state, no arc an SPK can write (an arc of one state), or no attitude record (a `TLEPropagator`
+  run records none: give the spacecraft attitudes with `SpacecraftFrame.AddStateOrientationToICRF` after the run, and it
+  is written); a name SPICE cannot read in a kernel variable or that is not a portable file name; a directory that is,
+  or lies inside, a loaded directory (whose later load or unload would take the files), or a file it would write that
+  SPICE holds, from `LoadKernels`, a live handle or a loaded meta-kernel, through a symbolic link too (decisions 80 and
+  102): unload it, or dispose the handle, first. A path longer than SPICE takes throws `ArgumentException` naming
+  `directory`. The files are written into a new subdirectory first, the clock kernel loaded only while the CK is
+  written, then moved into the directory, replacing files of the same names, and loaded, the clock and the frames
+  first; a failure before the move leaves the directory as it was, one during the move can leave a mix of old and new
+  files, and a failed load unloads what the call loaded. A load of the directory, or of a directory above it, made while
+  the handle lives furnishes nothing for the handle's files and does not take them over: `Dispose` unloads them all,
+  and that entry of `GetLoadedKernels` is replaced by its other files; load them again after `Dispose` to keep them.
+  Two spacecraft can be written into one directory, the first handle alive; one spacecraft per directory is the
+  advice, since a spacecraft `A_B` and the instrument `B` of a spacecraft `A` write the same file. The call is not made
+  during a run on the spacecraft (one run at a time per spacecraft, decision 43).
+
+  ```csharp-signature
+  public SpacecraftKernels WriteKernels(DirectoryInfo directory)
+  ```
+
+  For a spacecraft `Sat` with an instrument `Cam`, `using var kernels = sat.WriteKernels(new DirectoryInfo("out"))`
+  writes `out/Sat.tsc`, `Sat.tf`, `Sat_Cam.tf`, `Sat_Cam.ti`, `Sat.bsp` and `Sat.bc`, loaded until the end of the
+  `using` scope.
 - **`WriteEphemeris`** writes the stored states, in J2000: one segment of type 9 (Lagrange, unequal steps) per arc, in
   time order, of degree min(7, N − 1) for an arc of N states, the managed reader's window of 8 states; at an impulse the
   later segment, the state after it, is the one SPICE reads, and 1 µs before it the earlier one, the state before. The
@@ -443,7 +475,8 @@ converts) away from the impulses; across an impulse they interpolate through the
 near a 635 m/s burn (#540): regenerate them. A CK of the identity attitude from ICRF is unaffected.
 
 **Not covered.** `TLEPropagator`, which `Spacecraft.Propagate` does not use, records no attitude: its SPK is written (in
-J2000), its CK is not (`InvalidOperationException`).
+J2000), its CK is not (`InvalidOperationException`), nor its set of kernels by `WriteKernels`, until the spacecraft is
+given attitudes by `SpacecraftFrame.AddStateOrientationToICRF` after the run.
 
 ## Components
 

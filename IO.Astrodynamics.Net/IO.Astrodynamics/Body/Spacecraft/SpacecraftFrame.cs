@@ -462,7 +462,7 @@ public class SpacecraftFrame : Frame
     /// nothing is written.</exception>
     public void Write(FileInfo outputFile)
     {
-        Kernels.TextKernelNames.Check("FRAME_" + Name.ToUpperInvariant(), $"the spacecraft '{Spacecraft.Name}'");
+        CheckKernelName();
         using var stream = this.GetType().Assembly.GetManifestResourceStream("IO.Astrodynamics.Templates.FrameTemplate.tf");
         using StreamReader sr = new StreamReader(stream ?? throw new InvalidOperationException());
         var templateData = sr.ReadToEnd();
@@ -471,6 +471,14 @@ public class SpacecraftFrame : Frame
         using var sw = new StreamWriter(outputFile.FullName);
         sw.Write(data);
     }
+
+    /// <summary>
+    /// Checks the kernel variable <c>FRAME_&lt;NAME&gt;_FRAME</c> of the frame kernel (#676), as <see cref="Write"/> writes it:
+    /// the writer and the up-front checks of <see cref="Spacecraft.WriteKernels"/> share it.
+    /// </summary>
+    /// <exception cref="InvalidOperationException">SPICE cannot read the variable.</exception>
+    internal void CheckKernelName() =>
+        Kernels.TextKernelNames.Check("FRAME_" + Name.ToUpperInvariant(), $"the spacecraft '{Spacecraft.Name}'");
 
     /// <summary>
     /// The records of the CK of the attitude record (<see cref="SpacecraftFrame"/>'s remarks): the C-matrix (ICRF to the
