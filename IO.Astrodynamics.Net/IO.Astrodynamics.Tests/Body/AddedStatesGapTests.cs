@@ -433,6 +433,13 @@ public class AddedStatesGapTests
         var across = new Window(Start.AddSeconds(3000.0), Start.AddSeconds(19000.0));
         Assert.Equal("screeningWindow", Assert.Throws<ArgumentException>(() => ConjunctionAssessment.Analyze(profile, secondary, across)).ParamName);
         Assert.Equal("screeningWindow", Assert.Throws<ArgumentException>(() => ConjunctionAssessment.AnalyzeAll(profile, secondary, across)).ParamName);
+
+        // The field-of-view search too, with InvalidOperationException, the state of the spacecraft (decisions 81 and 86 of
+        // #668, lot L6; ArgumentException before 11.0.0)
+        var camera = spacecraft.AddCircularInstrument("GAPCAM", 0.1, Vector3.VectorZ, Vector3.VectorY, Vector3.Zero);
+        var notCovered = Assert.Throws<InvalidOperationException>(() =>
+            camera.FindWindowsInFieldOfViewConstraint(across, spacecraft, earth, Frame.ICRF, ShapeType.Point, Aberration.None, TimeSpan.FromMinutes(1.0)));
+        Assert.Contains("leaves the propagated states", notCovered.Message);
     }
 
     #endregion

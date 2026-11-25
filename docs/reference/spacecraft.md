@@ -200,7 +200,7 @@ of [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/iss
 | A body read at an epoch where it has no data | `InvalidOperationException` | `GetEphemeris` and `GetGeometricStateRelativeTo` of a propagated spacecraft before its first stored state or after its last, its light-time margin aside ([#527](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/527)), or in a gap between the windows given to `AddPropagatedStates`; a body read outside the coverage of the kernels (`SpiceException`, an `InvalidOperationException`) |
 | A solution read outside its window | `ArgumentOutOfRangeException` | `PropagationSolution.GetStateVector` and the getters of the covariance propagation outside `PropagationSolution.Window` ([Propagators](propagators.md)) |
 | A write with nothing to write | `InvalidOperationException` | `WriteEphemeris` of a spacecraft that stores no state, `WriteOrientation` of an empty attitude record (a `TLEPropagator` run records none, [#546](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/546)), `WriteKernels` of either, `Star.WriteEphemeris` of a star that stores fewer than three states; nothing is written. An arc of one state keeps its `ArgumentException` in `WriteEphemeris` (decisions 87 and 89 of #668), which `WriteKernels` refuses with `InvalidOperationException`; `SpiceAPI.WriteEphemeris` and `Site.WriteEphemeris`, whose arguments are at fault, keep theirs |
-| A window argument that leaves a body's stored states | `InvalidOperationException` | `GetEphemeris` over a window and the managed distance search of `CelestialItem` past a propagated spacecraft's states. Until lots L6 and L7 of #668 the field-of-view search (`Instrument.FindWindowsInFieldOfViewConstraint`) and the `ILocalizable` overloads of `ConjunctionAssessment.Analyze` and `AnalyzeAll` still throw `ArgumentException` for a window that leaves the stored states or meets a gap between them (decision 86), and so does a conjunction trajectory that does not cover the window |
+| A window argument that leaves a body's stored states | `InvalidOperationException` | `GetEphemeris` over a window and the managed distance search of `CelestialItem` past a propagated spacecraft's states; the managed field-of-view search (`Instrument.FindWindowsInFieldOfViewConstraint`) for a search window that leaves the stored states of the instrument's spacecraft or of a spacecraft target, or meets a gap between them (decision 86; `ArgumentException` before lot L6). Until lot L7 of #668 the `ILocalizable` overloads of `ConjunctionAssessment.Analyze` and `AnalyzeAll` still throw `ArgumentException` for such a window, and so does a conjunction trajectory that does not cover the window |
 
 Before 11.0.0 a write with nothing to write threw the `ArgumentException` of the SPK writer (`arcs`) or of
 `SpiceAPI.WriteEphemeris` (`stateVectors`), which blamed the file for what the spacecraft or the star lacked
@@ -281,8 +281,9 @@ across the jump:
   two windows throws `InvalidOperationException`, as a read outside them, the light time of a corrected read allowed
   outside each arc (an epoch inside an arc is read by that arc, as before, bit for bit; a corrected epoch in a gap
   within the light time of two arcs is read by the nearer, the later one on a tie, decision 91), and a window
-  argument that meets a gap (a field-of-view search, the `ILocalizable` overloads of the conjunction analysis) is refused
-  up front with `ArgumentException`. An arc of one state (a call of one state apart from every arc) is read at its exact
+  argument that meets a gap is refused up front, by a field-of-view search with `InvalidOperationException` (decision 81
+  of #668, lot L6) and by the `ILocalizable` overloads of the conjunction analysis with `ArgumentException` until lot
+  L7. An arc of one state (a call of one state apart from every arc) is read at its exact
   epoch only, any other read throwing as in a gap, and `WriteEphemeris` refuses it with `ArgumentException` (a segment
   needs two epochs); so is a spacecraft that stores one state only, whose window is that epoch (decision 89: before
   11.0.0 it read the two-body orbit of its initial orbital parameters, at every epoch, its own one included). Only a
@@ -730,7 +731,9 @@ search for a `+S` correction.
   vector, the field of view and the cross angle, whose half-angles are positive, are checked when the instrument is
   built ([#707](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/707), [#715](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/715), [Instrument](#instrument)).
 
-The managed path also throws `ArgumentException` when the search window leaves the propagated states of the
+The managed path also throws `InvalidOperationException` (decisions 81 and 86 of
+[#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668), lot L6; `ArgumentException`
+before 11.0.0) when the search window leaves the propagated states of the
 instrument's spacecraft or of a spacecraft target, which would be extrapolated, or meets a gap between the windows given
 to `AddPropagatedStates` ([#792](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/792)) (a spacecraft target is read up to its
 light time before the start for the reception corrections, or after the end for the transmission ones, `XLT` and `XCN`,

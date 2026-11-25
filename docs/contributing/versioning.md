@@ -5122,6 +5122,15 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   a threshold in degrees gave no window or the whole search window, without an error (`WindowSearchAngleGuardTests`).
   Every threshold in its range searches as before, bit for bit. Migration: give the angle in radians
   (`Constants.Deg2Rad`).
+- **Breaking: the field-of-view search throws `InvalidOperationException` for a search window that leaves the stored
+  states** (lot L6, decisions 81 and 86 of [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668),
+  decided by S. Guillet, 2026-11-23): the managed `Instrument.FindWindowsInFieldOfViewConstraint` refuses a search window
+  that leaves the stored states of the instrument's spacecraft or of a spacecraft target, or meets a gap between the
+  windows given to `AddPropagatedStates`, with `InvalidOperationException`, the state of the spacecraft, as
+  `GetEphemeris` over a window and the managed distance search; it threw `ArgumentException` (`searchWindow`), the same
+  message. The `ILocalizable` overloads of the conjunction analysis keep `ArgumentException` until lot L7; a target that
+  is the instrument's spacecraft or an ellipsoid without radii keeps `ArgumentException` (`FieldOfViewSearchTests`,
+  `AddedStatesGapTests`). Migration: catch `InvalidOperationException` there.
 - **Breaking: `EquinoctialElements` takes a perigee radius with a non-finite P only** (R23 of #668, choice 3 of the
   first annex): a finite P fixes q = P / (1 + e), so a perigee radius beside it throws `ArgumentException`
   (`perigeeRadius`); before, it was stored, and `PerigeeRadius()` returned 1 m for P = 7000 km given 1 m. The library's
@@ -8155,14 +8164,14 @@ not listed.
   name; and it throws `InvalidOperationException` at the trajectory plot of a spacecraft whose initial orbit is open,
   which has no period ([#824](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/824)), the
   previous export left as it was since #799.
-- **A window that leaves a spacecraft's stored states** (lots L6 and L7 of
+- **A window that leaves a spacecraft's stored states** (lot L7 of
   [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668)). Decision 81 of #668 gives a
-  window argument that leaves a body's stored states `InvalidOperationException`, as `GetEphemeris` over a window and the
-  managed distance search throw ([Spacecraft](../reference/spacecraft.md#the-exceptions-of-the-reads-and-the-writes)),
-  but the field-of-view search (`Instrument.FindWindowsInFieldOfViewConstraint`) and the `ILocalizable` overloads of
-  `ConjunctionAssessment.Analyze` and `AnalyzeAll` still throw `ArgumentException` for such a window, for one that meets
-  a gap between the windows given to `AddPropagatedStates` (decision 86) and, for the conjunction, for a trajectory that
-  does not cover the window: lots L6 and L7 change them. Catch `ArgumentException` there until then.
+  window argument that leaves a body's stored states `InvalidOperationException`, as `GetEphemeris` over a window, the
+  managed distance search and, since lot L6, the field-of-view search throw
+  ([Spacecraft](../reference/spacecraft.md#the-exceptions-of-the-reads-and-the-writes)), but the `ILocalizable`
+  overloads of `ConjunctionAssessment.Analyze` and `AnalyzeAll` still throw `ArgumentException` for such a window, for
+  one that meets a gap between the windows given to `AddPropagatedStates` (decision 86) and for a trajectory that does
+  not cover the window: lot L7 changes them. Catch `ArgumentException` there until then.
 - **Kernel paths of more than 255 characters** ([#673](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/673)). `LoadKernels` and the command line hand SPICE the full path of
   each kernel, so a kernel whose full path is longer than 255 characters cannot be loaded through them
   (`SPICE(FILENAMETOOLONG)`, SPICE's message in the `InvalidOperationException` since #706, nothing on the standard

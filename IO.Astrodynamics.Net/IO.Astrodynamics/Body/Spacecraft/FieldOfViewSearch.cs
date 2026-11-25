@@ -26,9 +26,9 @@ internal static class FieldOfViewSearch
     /// The managed search: the windows, in TDB, where the target is in the field of view of the instrument, its
     /// spacecraft the observer.
     /// </summary>
-    /// <exception cref="ArgumentException">An argument of <see cref="Check"/>, or the search window leaves the propagated
-    /// states of the observer or of a spacecraft target (<see cref="CheckCoverage"/>).</exception>
-    /// <exception cref="InvalidOperationException">The field of view cannot be searched (<see cref="CheckField"/>), or the
+    /// <exception cref="ArgumentException">An argument of <see cref="Check"/>.</exception>
+    /// <exception cref="InvalidOperationException">The search window leaves the propagated states of the observer or of a
+    /// spacecraft target (<see cref="CheckCoverage"/>), the field of view cannot be searched (<see cref="CheckField"/>), or the
     /// spacecraft has no attitude (<see cref="CheckAttitude"/>).</exception>
     internal static IReadOnlyList<Window> Managed(Instrument instrument, in Window searchWindow, ILocalizable target, ShapeType targetShape, Frame targetFrame,
         Aberration aberration, in TimeSpan stepSize)
@@ -142,10 +142,11 @@ internal static class FieldOfViewSearch
     /// after its end (transmission, XLT and XCN), which its propagated states allow (#527, decided by S. Guillet,
     /// 2026-11-17).
     /// </summary>
-    /// <exception cref="ArgumentException">The search window leaves the propagated states, or meets a gap between the
-    /// windows given to <see cref="Spacecraft.AddPropagatedStates"/> (#792).</exception>
+    /// <exception cref="InvalidOperationException">The search window leaves the propagated states, or meets a gap between the
+    /// windows given to <see cref="Spacecraft.AddPropagatedStates"/> (#792): the state of the spacecraft (decisions 81 and 86
+    /// of #668, decided by S. Guillet, 2026-11-23, lot L6; <see cref="ArgumentException"/> before 11.0.0).</exception>
     internal static void CheckCoverage(Spacecraft spacecraft, in Window searchWindow)
     {
-        spacecraft.CheckInterpolatedStatesCover(searchWindow, "search window", nameof(searchWindow));
+        spacecraft.CheckInterpolatedStatesCover(searchWindow, "search window");
     }
 }

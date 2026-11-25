@@ -758,17 +758,19 @@ public class FieldOfViewSearchTests : IClassFixture<PropagatedFieldOfViewCase>
             }
         }
 
-        // The coverage of the propagated states (choice 14): the observer's, and a spacecraft target's for a kernel-backed observer
+        // The coverage of the propagated states (choice 14): the observer's, and a spacecraft target's for a kernel-backed observer;
+        // a window argument that leaves a body's stored states is the state of the body, InvalidOperationException (decisions 81
+        // and 86 of #668, lot L6; ArgumentException before 11.0.0)
         var before = new Window(_case.Start.AddSeconds(-10.0), _case.End);
         var after = new Window(_case.Start.AddSeconds(1.0), _case.End.AddSeconds(10.0));
-        Assert.Throws<ArgumentException>(() => _case.PropagatedInstrument(789).FindWindowsInFieldOfViewConstraint(before, _case.Propagated, earth, Frames.Frame.ICRF,
-            ShapeType.Point, Aberration.LT, Step));
-        Assert.Throws<ArgumentException>(() => _case.PropagatedInstrument(789).FindWindowsInFieldOfViewConstraint(after, _case.Propagated, earth, Frames.Frame.ICRF,
-            ShapeType.Point, Aberration.LT, Step));
-        Assert.Throws<ArgumentException>(() => _case.KernelInstrument(789).FindWindowsInFieldOfViewConstraint(after, _case.Kernel, _case.PropagatedTarget,
-            Frames.Frame.ICRF, ShapeType.Point, Aberration.LT, Step));
-        Assert.Throws<ArgumentException>(() => _case.KernelInstrument(789).FindWindowsInFieldOfViewConstraint(before, _case.Kernel, _case.PropagatedTarget,
-            Frames.Frame.ICRF, ShapeType.Point, Aberration.LT, Step));
+        Assert.Contains("leaves the propagated states", Assert.Throws<InvalidOperationException>(() => _case.PropagatedInstrument(789)
+            .FindWindowsInFieldOfViewConstraint(before, _case.Propagated, earth, Frames.Frame.ICRF, ShapeType.Point, Aberration.LT, Step)).Message);
+        Assert.Contains("leaves the propagated states", Assert.Throws<InvalidOperationException>(() => _case.PropagatedInstrument(789)
+            .FindWindowsInFieldOfViewConstraint(after, _case.Propagated, earth, Frames.Frame.ICRF, ShapeType.Point, Aberration.LT, Step)).Message);
+        Assert.Contains("leaves the propagated states", Assert.Throws<InvalidOperationException>(() => _case.KernelInstrument(789)
+            .FindWindowsInFieldOfViewConstraint(after, _case.Kernel, _case.PropagatedTarget, Frames.Frame.ICRF, ShapeType.Point, Aberration.LT, Step)).Message);
+        Assert.Contains("leaves the propagated states", Assert.Throws<InvalidOperationException>(() => _case.KernelInstrument(789)
+            .FindWindowsInFieldOfViewConstraint(before, _case.Kernel, _case.PropagatedTarget, Frames.Frame.ICRF, ShapeType.Point, Aberration.LT, Step)).Message);
 
         // An observer inside the target's ellipsoid, on the managed path only (zzocced's rule)
         var inside = new Spacecraft(-5155, "FOV5155", 1000.0, new StateVector(new Vector3(1000000.0, 0.0, 0.0), new Vector3(0.0, 100.0, 0.0), earth, _case.Start, Frames.Frame.ICRF), 3000.0,

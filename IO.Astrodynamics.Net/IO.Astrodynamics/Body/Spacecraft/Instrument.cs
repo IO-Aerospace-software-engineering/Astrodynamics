@@ -259,12 +259,12 @@ namespace IO.Astrodynamics.Body.Spacecraft
         /// <returns>The windows, in TDB.</returns>
         /// <exception cref="ArgumentNullException">An argument is null.</exception>
         /// <exception cref="ArgumentOutOfRangeException">The step is not positive.</exception>
-        /// <exception cref="ArgumentException">The search window ends before it starts, the target is the instrument's
-        /// spacecraft or is an ellipsoid without radii (a site, a spacecraft, a barycenter, a Lagrange point, a star), or, on the
-        /// managed path, the search window leaves the propagated states of the instrument's spacecraft or of a spacecraft
-        /// target, which would be extrapolated, or meets a gap between the windows given to
-        /// <see cref="Spacecraft.AddPropagatedStates"/> (#792).</exception>
-        /// <exception cref="InvalidOperationException">The field of view cannot be searched: an angular radius above
+        /// <exception cref="ArgumentException">The target is the instrument's spacecraft or is an ellipsoid without radii (a
+        /// site, a spacecraft, a barycenter, a Lagrange point, a star).</exception>
+        /// <exception cref="InvalidOperationException">On the managed path, the search window leaves the propagated states of
+        /// the instrument's spacecraft or of a spacecraft target, which would be extrapolated, or meets a gap between the
+        /// windows given to <see cref="Spacecraft.AddPropagatedStates"/> (#792): the state of the spacecraft (decisions 81 and
+        /// 86 of #668, decided by S. Guillet, 2026-11-23, lot L6; <see cref="ArgumentException"/> before 11.0.0). The field of view cannot be searched: an angular radius above
         /// π/2 − 1e-6, or a shape other than a
         /// circle on an instrument that is neither an <see cref="EllipticalInstrument"/> nor a <see cref="RectangularInstrument"/>;
         /// or, on the managed path, a circle or an ellipse whose half-angles are so small that the squares of the semi-axes of
