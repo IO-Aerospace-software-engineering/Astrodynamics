@@ -631,9 +631,8 @@ public class KernelWindowSearchTests : IClassFixture<KernelWindowSearchKernels>
     /// review of #690): the frame of a site from the kernels whose frame id no loaded kernel defines, and the frame of a
     /// site built from coordinates (#558, #682). CSPICE's <c>gfposc_c</c> got the site's own name, which SPICE does not
     /// know, and its proxy dropped the error, so the search returned no window, while a read in the frame is the
-    /// library's. The search is the managed one in those frames, on the site's own search (the site seen from the LEO,
-    /// <see cref="Site.FindWindowsOnCoordinateConstraint"/>) and on the spacecraft's (the LEO from the Earth,
-    /// <see cref="CelestialItem.FindWindowsOnCoordinateConstraint"/>), and <see cref="SpiceAPI.FindWindowsOnCoordinateConstraint"/>,
+    /// library's. The search is the managed one in those frames, on the search of the LEO observing the site
+    /// (<see cref="WindowSearches.FindCoordinateWindows"/>) and on that of the Earth observing the LEO, and <see cref="SpiceAPI.FindWindowsOnCoordinateConstraint"/>,
     /// which can only hand the frame to CSPICE, throws. The reference is <c>gfposc_c</c> in a frame kernel written by the
     /// test in NAIF's topocentric convention on the site's <see cref="Site.Planetodetic"/>, under another id and name
     /// (1399890, RV890_TOPO).

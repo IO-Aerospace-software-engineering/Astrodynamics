@@ -530,7 +530,7 @@ public class GeometryFinderTests
 
     /// <summary>
     /// The windows and gaps of a double quantity between samples (#678's search) on the closed form of
-    /// <c>ShortWindowMargin</c>, through the public <see cref="GeometryFinder.FindWindowsWithCondition{T}(Window, Func{TimeSystem.Time, T}, RelationnalOperator, T, TimeSpan)"/>:
+    /// <c>ShortWindowMargin</c>, through the public <see cref="GeometryFinder.FindWindows(Window, Func{TimeSystem.Time, double}, RelationnalOperator, double, WindowSearchOptions)"/>:
     /// with the step at most half the time between the extremes, every window and gap at least 2 √ε h + 2τ/3 wide is
     /// found (τ = 1 µs; 2.5 µs at 1 min, 19 µs at 10 min, 41 µs at 22.5 min), its edges within 1 µs and half a tick of the
     /// closed form; a tangency gives no window. #678 stated "down to about 1 µs", which longer steps do not reach (#668).

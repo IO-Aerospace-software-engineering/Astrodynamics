@@ -52,8 +52,8 @@ public class LroTrackingDataTests
 
     /// <summary>
     /// Compute tracking visibility arcs using high-level framework APIs:
-    /// 1. FindWindowsOnCoordinateConstraint: LRO Z > 0 in site topocentric frame (above horizon)
-    /// 2. FindWindowsOnOccultationConstraint: LRO occulted by Moon from site
+    /// 1. FindCoordinateWindows on the site: LRO Z > 0 in site topocentric frame (above horizon)
+    /// 2. FindOccultationWindows on the site: LRO occulted by Moon from site
     /// 3. Subtract occultation windows from above-horizon windows
     /// </summary>
     private List<Window> ComputeTrackingArcs()

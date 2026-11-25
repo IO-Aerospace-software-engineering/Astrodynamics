@@ -1,7 +1,7 @@
 """CSPICE references for the window searches that the library hands to CSPICE (#466, #488): gfdist, gfposc and gfilum on
 objects of the kernels, converged to 1e-9 s (gfstol), finer than the 1e-6 s of the native layer's searches.
 
-#466, the distance searches of a kernel spacecraft (CelestialItem and Site.FindWindowsOnDistanceConstraint, gfdist):
+#466, the distance searches of a kernel spacecraft (FindDistanceWindows of a body or a site observing it, gfdist):
   - LRO (-85, the SPK of the tests) from the Moon beyond, within and at 1815.148 km, from the Earth-Moon barycenter beyond
     364 500 km, from DSS-13 (399013, earthstns_itrf93_201023.bsp) beyond 372 000 km, and from a second kernel spacecraft
     within 3000 km: a two-body lunar orbiter (-85901; a = 2500 km, e = 0.2, i = 60 deg, Omega = 30 deg, omega = 45 deg,
@@ -36,7 +36,7 @@ ELLIPSOID, the Sun as source, the incidence angle):
     georec(lon, lat, alt), written as a temporary type 8 SPK (-67802, centre 399, ITRF93, removed after the search), seen
     from the LEO in the topocentric frame of a site from coordinates (north, west, zenith of those coordinates, relative
     to ITRF93), defined here as DSS-13_J2000_TOPO (1678013): declination < -30 deg (gfposc) and range < 1000 km
-    (gfdist), the searches of Site.FindWindowsOnCoordinateConstraint and FindWindowsOnDistanceConstraint on that site;
+    (gfdist), the searches FindCoordinateWindows and FindDistanceWindows of the LEO observing that site;
   - the point of DSS-13's longitude and latitude at 0 m on the ellipsoid (georec, as above), incidence of the Sun
     < 58.83 deg (the minimum over the window, 58.5315 deg, plus 0.3 deg, rounded), without correction, observer 399013,
     over 2023-12-15 00:05 to 2023-12-18 00:05 TDB, step 60 s.

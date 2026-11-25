@@ -39,7 +39,7 @@ The `OccultationType` option controls what you are looking for:
 | `OccultationType.Annular` | Front body inside the target's disc |
 | `OccultationType.Any` | Any of the above |
 
-The `stepSize` sets the initial search grid. Use a step smaller than the
+`Step` sets the search grid. Use a step smaller than the
 shortest event you expect to find.
 
 ### Spacecraft eclipse windows
@@ -108,7 +108,8 @@ var visibilityWindows = spacecraft.Instruments.First()
         });
 ```
 
-The method returns a collection of `Window` objects, in TDB, representing
+The method returns a collection of `Window` objects, labelled in the scale of
+the search window's start (see [the windows of a search](../reference/time-and-windows.md#the-windows-of-a-search)), representing
 contiguous intervals when the target is inside the instrument's field of view:
 the windows of CSPICE's `gftfov`, to 1 µs.
 

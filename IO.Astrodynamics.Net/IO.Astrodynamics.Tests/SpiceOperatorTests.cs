@@ -30,10 +30,9 @@ namespace IO.Astrodynamics.Tests;
 /// <see cref="SpiceApiTest"/> compares the windows of the same searches.
 /// </para>
 /// <para>
-/// The paths: the three <see cref="SpiceAPI"/> searches; <see cref="CelestialItem.FindWindowsOnCoordinateConstraint"/> of
-/// a kernel spacecraft (LRO from the Moon) and <see cref="Site.FindWindowsOnCoordinateConstraint"/> of a kernel site
-/// (DSS-13 from LRO), on the LRO SPK of the tests. <see cref="CelestialItem.FindWindowsOnDistanceConstraint"/> and
-/// <see cref="Site.FindWindowsOnIlluminationConstraint"/> on their CSPICE path are checked against their own
+/// The paths: the three <see cref="SpiceAPI"/> searches; <see cref="WindowSearches.FindCoordinateWindows"/> of the Moon
+/// observing a kernel spacecraft (LRO) and of LRO observing a kernel site (DSS-13), on the LRO SPK of the tests.
+/// <see cref="WindowSearches.FindDistanceWindows"/> and <see cref="Site.FindIlluminationWindows"/> on their CSPICE path are checked against their own
 /// <see cref="RelationnalOperator.Greater"/>, <see cref="RelationnalOperator.Lower"/> and <see cref="RelationnalOperator.Equal"/>
 /// searches, CSPICE's: the threshold of the first is in m, as the library reads it since #466, and the surface point
 /// of the second in m, its altitude converted to km since #488.

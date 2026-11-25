@@ -1435,7 +1435,7 @@ internal static class DeveloperGuideExamples
         });
 
         // Find windows when Earth is in the camera's field of view: any part of its ellipsoid, oriented by its frame, with the light time.
-        // The spacecraft is propagated, so the library searches; the windows are those of CSPICE's gftfov, in TDB, to 1 µs
+        // The spacecraft is propagated, so the library searches; the windows are those of CSPICE's gftfov, to 1 µs
         var visibilityWindows = spacecraft.Instruments.First()
             .FindFieldOfViewWindows(
                 new Window(start, end),

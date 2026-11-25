@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Linq;
 using IO.Astrodynamics.Body;
 using IO.Astrodynamics.Body.Spacecraft;
+using IO.Astrodynamics.Occultation;
 using IO.Astrodynamics.SolarSystemObjects;
 using IO.Astrodynamics.Surface;
 using IO.Astrodynamics.TimeSystem;
@@ -72,27 +73,36 @@ public class ObserverWindowLabelTests
         var dss13 = new Site(13, "DSS-13", earth);
         var options = WindowSearchOptions.Default with { Step = Step };
 
+        // The former instants from the paths that keep their TDB labels: the raw searches of SpiceAPI (gfposc_c in km) and
+        // the internal occultation searches
         // gfdist_c and gfposc_c, which labelled TDB
-        AssertInTheWindowScale(moon.FindDistanceWindows(UtcDistanceWindow, lro, RelationnalOperator.Greater, 1815148.0, new WindowSearchOptions { Step = Step }),
+        AssertInTheWindowScale(SpiceAPI.Instance.FindWindowsOnDistanceConstraint(UtcDistanceWindow, moon.NaifId, lro.NaifId, RelationnalOperator.Greater, 1815148.0,
+                Aberration.None, Step),
             moon.FindDistanceWindows(UtcDistanceWindow, lro, RelationnalOperator.Greater, 1815148.0, options), UtcDistanceWindow, "gfdist_c");
-        AssertInTheWindowScale(moon.FindCoordinateWindows(UtcDistanceWindow, lro, Frames.Frame.ICRF, CoordinateSystem.Rectangular, Coordinate.Z, RelationnalOperator.Greater, 500000.0, new WindowSearchOptions { Step = Step }),
+        AssertInTheWindowScale(SpiceAPI.Instance.FindWindowsOnCoordinateConstraint(UtcDistanceWindow, moon.NaifId, lro.NaifId, Frames.Frame.ICRF,
+                CoordinateSystem.Rectangular, Coordinate.Z, RelationnalOperator.Greater, 500.0, 0.0, Aberration.None, Step),
             moon.FindCoordinateWindows(UtcDistanceWindow, lro, Frames.Frame.ICRF, CoordinateSystem.Rectangular, Coordinate.Z, RelationnalOperator.Greater,
                 500000.0, options), UtcDistanceWindow, "gfposc_c");
 
         // gfilum_c and the day windows, which forward to it
-        AssertInTheWindowScale(dss13.FindIlluminationWindows(UtcDistanceWindow, IlluminationAngle.Incidence, RelationnalOperator.Lower, 1.5, sun, new WindowSearchOptions { Step = Step }),
+        AssertInTheWindowScale(SpiceAPI.Instance.FindWindowsOnIlluminationConstraint(UtcDistanceWindow, dss13.NaifId, earth.NaifId, earth.Frame, dss13.Planetodetic,
+                IlluminationAngle.Incidence, RelationnalOperator.Lower, 1.5, 0.0, Aberration.None, Step, sun.NaifId, "ELLIPSOID"),
             dss13.FindIlluminationWindows(UtcDistanceWindow, IlluminationAngle.Incidence, RelationnalOperator.Lower, 1.5, sun, options), UtcDistanceWindow,
             "gfilum_c");
-        AssertInTheWindowScale(dss13.FindIlluminationWindows(UtcDistanceWindow, IlluminationAngle.Incidence, RelationnalOperator.Lower, IO.Astrodynamics.Constants.HalfPi + 0.1, sun, new WindowSearchOptions { Step = TimeSpan.FromMinutes(1.0), Aberration = Aberration.LTS }),
+        AssertInTheWindowScale(SpiceAPI.Instance.FindWindowsOnIlluminationConstraint(UtcDistanceWindow, dss13.NaifId, earth.NaifId, earth.Frame, dss13.Planetodetic,
+                IlluminationAngle.Incidence, RelationnalOperator.Lower, IO.Astrodynamics.Constants.HalfPi + 0.1, 0.0, Aberration.LTS, TimeSpan.FromMinutes(1.0),
+                sun.NaifId, "ELLIPSOID"),
             dss13.FindDayWindows(UtcDistanceWindow, 0.1), UtcDistanceWindow, "FindDayWindows");
 
         // gfoclt_c and the library's occultation search, which labelled TDB
         var kernelSpacecraft = new Spacecraft(-470001, "eclipse_001", epoch: UtcEclipse001.StartDate);
-        AssertInTheWindowScale(kernelSpacecraft.FindOccultationWindows(UtcEclipse001, sun, earth, new OccultationSearchOptions { Step = Step, TargetShape = ShapeType.Ellipsoid, FrontShape = ShapeType.Ellipsoid, OccultationType = OccultationType.None }),
+        AssertInTheWindowScale(OccultationSearch.Spice(UtcEclipse001, kernelSpacecraft.NaifId, sun.NaifId, ShapeType.Ellipsoid, earth.NaifId, ShapeType.Ellipsoid,
+                OccultationType.None, Aberration.None, Step, OccultationSearchOptions.Default),
             kernelSpacecraft.FindOccultationWindows(UtcEclipse001, sun, earth, new OccultationSearchOptions { Step = Step, OccultationType = OccultationType.None }),
             UtcEclipse001, "gfoclt_c, None");
         var dss65 = new Site(65, "DSS-65", earth);
-        AssertInTheWindowScale(dss65.FindOccultationWindows(UtcEclipse2005, sun, moon, new OccultationSearchOptions { Step = TimeSpan.FromSeconds(360.0), TargetShape = ShapeType.Ellipsoid, FrontShape = ShapeType.Ellipsoid }),
+        AssertInTheWindowScale(OccultationSearch.Managed(UtcEclipse2005, dss65, sun, ShapeType.Ellipsoid, moon, ShapeType.Ellipsoid, OccultationType.Any,
+                Aberration.None, TimeSpan.FromSeconds(360.0), OccultationSearchOptions.Default),
             dss65.FindOccultationWindows(UtcEclipse2005, sun, moon, new OccultationSearchOptions { Step = TimeSpan.FromSeconds(360.0) }), UtcEclipse2005,
             "managed occultation");
     }

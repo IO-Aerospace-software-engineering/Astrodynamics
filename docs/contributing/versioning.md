@@ -8008,10 +8008,13 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
     and `site.FindWindowsOnOccultationConstraint(window, target, …)` → `observer.FindOccultationWindows(window, target,
     front, new OccultationSearchOptions { Step = step, Aberration = aberration, TargetShape = targetShape, FrontShape =
     frontShape, OccultationType = type, FrontFrame = …, TargetFrame = … })` (a null shape an ellipsoid for a body with
-    radii, a point otherwise; the step inferred for a propagated or TLE spacecraft about the front body, decision 106);
+    radii, a point otherwise; the step inferred for a propagated or TLE spacecraft about the front body, decision 106),
+    `ConvergenceTolerance` left null on CSPICE's `gfoclt_c` path, where it throws `ArgumentException` (`options`) while
+    the former search ignored it;
   - `site.FindWindowsOnIlluminationConstraint(window, angle, relation, value, adjust, aberration, step, source[, method])`
     → `site.FindIlluminationWindows(window, angle, relation, value, source, new WindowSearchOptions { Step = step,
-    Aberration = aberration })`, the method ELLIPSOID, the only one (`SpiceAPI.FindWindowsOnIlluminationConstraint` keeps
+    Aberration = aberration, AdjustValue = adjust })`, `AdjustValue` left null but for `AbsoluteMin` and `AbsoluteMax`, as
+    for the coordinates, the method ELLIPSOID, the only one (`SpiceAPI.FindWindowsOnIlluminationConstraint` keeps
     its `method`, and the emission and phase angles with an observer);
   - `instrument.FindWindowsInFieldOfViewConstraint(window, spacecraft, target, targetFrame, targetShape, aberration, step)`
     → `instrument.FindFieldOfViewWindows(window, target, new FieldOfViewSearchOptions { Step = step, Aberration =

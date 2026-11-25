@@ -607,7 +607,7 @@ public class FieldOfViewSearchTests : IClassFixture<PropagatedFieldOfViewCase>
 
     /// <summary>
     /// <see cref="Instrument.FindFieldOfViewWindows"/> (R15 of #668, lot L6) equals the former search on both paths, bit for
-    /// bit: the target's shape an ellipsoid when it has radii, its own frame when none is given; a convergence tolerance
+    /// bit (the library's internal search and the raw <c>gftfov_c</c> of <see cref="SpiceAPI"/>, which keep its TDB labels): the target's shape an ellipsoid when it has radii, its own frame when none is given; a convergence tolerance
     /// applies to the library's search and throws on <c>gftfov</c>'s, and so does a frame SPICE does not know, with the
     /// options as parameter.
     /// </summary>
@@ -617,13 +617,21 @@ public class FieldOfViewSearchTests : IClassFixture<PropagatedFieldOfViewCase>
         var earth = _case.Earth;
         var itrf = PropagatedFieldOfViewCase.TargetFrame("399");
         var options = FieldOfViewSearchOptions.Default with { Step = Step, Aberration = Aberration.LT, TargetFrame = itrf };
-        foreach (var (instrument, spacecraft) in new[] { (_case.PropagatedInstrument(789), _case.Propagated), (_case.KernelInstrument(789), _case.Kernel) })
+        // The former windows from the paths that keep them: the library's search (internal) and the raw gftfov_c of SpiceAPI
+        var propagated = _case.PropagatedInstrument(789);
+        var kernel = _case.KernelInstrument(789);
+        foreach (var (instrument, spice) in new[] { (propagated, false), (kernel, true) })
         {
-            var expected = instrument.FindFieldOfViewWindows(_case.SearchWindow, earth, new FieldOfViewSearchOptions { Step = Step, Aberration = Aberration.LT, TargetShape = ShapeType.Ellipsoid, TargetFrame = itrf });
+            IReadOnlyList<Window> Former(Frames.Frame frame, ShapeType shape, Aberration aberration) => spice
+                ? SpiceAPI.Instance.FindWindowsInFieldOfViewConstraint(_case.SearchWindow, _case.Kernel.NaifId, kernel.NaifId, earth.NaifId, frame, shape, aberration,
+                    Step)
+                : FieldOfViewSearch.Managed(propagated, _case.SearchWindow, earth, shape, frame, aberration, Step);
+            var expected = Former(itrf, ShapeType.Ellipsoid, Aberration.LT);
             Assert.NotEmpty(expected);
             LabelAssert.Equal(expected, instrument.FindFieldOfViewWindows(_case.SearchWindow, earth, options));
-            LabelAssert.Equal(instrument.FindFieldOfViewWindows(_case.SearchWindow, earth, new FieldOfViewSearchOptions { Step = Step, TargetShape = ShapeType.Ellipsoid, TargetFrame = earth.Frame }), instrument.FindFieldOfViewWindows(_case.SearchWindow, earth, new FieldOfViewSearchOptions { Step = Step }));
-            LabelAssert.Equal(instrument.FindFieldOfViewWindows(_case.SearchWindow, earth, new FieldOfViewSearchOptions { Step = Step, Aberration = Aberration.LT, TargetShape = ShapeType.Point, TargetFrame = itrf }),
+            LabelAssert.Equal(Former(earth.Frame, ShapeType.Ellipsoid, Aberration.None),
+                instrument.FindFieldOfViewWindows(_case.SearchWindow, earth, new FieldOfViewSearchOptions { Step = Step }));
+            LabelAssert.Equal(Former(itrf, ShapeType.Point, Aberration.LT),
                 instrument.FindFieldOfViewWindows(_case.SearchWindow, earth, options with { TargetShape = ShapeType.Point }));
         }
 
