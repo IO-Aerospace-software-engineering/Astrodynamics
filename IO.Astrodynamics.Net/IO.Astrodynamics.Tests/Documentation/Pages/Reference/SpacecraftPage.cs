@@ -85,10 +85,30 @@ internal static class SpacecraftPage
         #endregion
     }
 
-    // docs/reference/spacecraft.md, "Engine"
-    internal static void Block03(FuelTank tank)
+    // docs/reference/spacecraft.md, "The kernels" (files written and kernels loaded: compiled only)
+    internal static void Block03(Spacecraft sat)
     {
         #region docs/reference/spacecraft.md:3
+        // Inputs: sat (Spacecraft, propagated, with an instrument Cam)
+        // Writes out/Sat.tsc, Sat.tf, Sat_Cam.tf, Sat_Cam.ti, Sat.bsp and Sat.bc, and loads them
+        using (var kernels = sat.WriteKernels(new DirectoryInfo("out")))
+        {
+            Console.WriteLine(kernels.Ephemeris.FullName);
+            foreach (var instrument in kernels.Instruments)
+            {
+                Console.WriteLine($"{instrument.Instrument.Name}: {instrument.Frame.Name}, {instrument.Kernel.Name}");
+            }
+
+            // SPICE reads the spacecraft here: a kernel-backed twin, a CSPICE search, another tool through the files
+        }
+        // Disposed: the files the call loaded are unloaded, and stay on disk
+        #endregion
+    }
+
+    // docs/reference/spacecraft.md, "Engine"
+    internal static void Block04(FuelTank tank)
+    {
+        #region docs/reference/spacecraft.md:4
         // Inputs: tank (FuelTank)
         var engine = new Engine("MainEngine", isp: 366.0, fuelFlow: 0.5, fuelTank: tank,
             model: "RS-25", serialNumber: "SN001");
@@ -96,18 +116,18 @@ internal static class SpacecraftPage
     }
 
     // docs/reference/spacecraft.md, "FuelTank"
-    internal static void Block04()
+    internal static void Block05()
     {
-        #region docs/reference/spacecraft.md:4
+        #region docs/reference/spacecraft.md:5
         var tank = new FuelTank("MainTank", capacity: 1000.0, initialQuantity: 800.0,
             model: "FT-100", serialNumber: "SN001");
         #endregion
     }
 
     // docs/reference/spacecraft.md, "Field-of-view search"
-    internal static void Block05(Spacecraft spacecraft, Window window, CelestialBody earth)
+    internal static void Block06(Spacecraft spacecraft, Window window, CelestialBody earth)
     {
-        #region docs/reference/spacecraft.md:5
+        #region docs/reference/spacecraft.md:6
         // Inputs: spacecraft (Spacecraft), window (Window), earth (CelestialBody)
         var camera = spacecraft.Instruments.First();
         var windows = camera.FindWindowsInFieldOfViewConstraint(window, spacecraft, earth, new Frame("ITRF93"),
@@ -116,9 +136,9 @@ internal static class SpacecraftPage
     }
 
     // docs/reference/spacecraft.md, "Payload"
-    internal static void Block06()
+    internal static void Block07()
     {
-        #region docs/reference/spacecraft.md:6
+        #region docs/reference/spacecraft.md:7
         var payload = new Payload("Camera", 25.0, "SN-42");
         #endregion
     }

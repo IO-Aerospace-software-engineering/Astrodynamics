@@ -160,6 +160,17 @@ of the file (the reopening of the other SPKs or CKs, on a deleted one SPICE hold
 `InvalidOperationException` with SPICE's message and keeps the file on disk as it was, no longer loaded, nothing written:
 `Spacecraft.WriteEphemeris` ignored that failure and replaced the file before #706.
 
+The text kernel writers (`Clock.Write`, `SpacecraftFrame.Write`, `Instrument.WriteFrame`, `Instrument.WriteKernel`,
+`Site.WriteFrame`, `SiteFrame.Write`) follow the same rule since decision 103 of
+[#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668) (decided by S. Guillet,
+2026-11-25): they rewrote a loaded file under SPICE's load, which a later `LoadKernels` skipped as a file already
+loaded, so SPICE read the replaced content (a frame kernel rewritten for another spacecraft still named the first).
+`Spacecraft.WriteKernels` and `CosmographiaExporter.ExportAsync` replace nothing SPICE holds: they refuse, with
+`InvalidOperationException` before anything is written or deleted, a file or a directory SPICE holds, from
+`LoadKernels`, a live `SpacecraftKernels` handle or a loaded meta-kernel, whose files the registry of `SpiceAPI` does not
+list: a native query reads SPICE's own list by the rule above, unloading nothing (decisions 80, 102 and 103 of #668), so
+a meta-kernel's relative name other than the path is not found there either.
+
 `TransformFrame` composes a TEME end through ICRF (#451), and so the frame of a site built from coordinates or of a site
 from the kernels whose frame id no loaded kernel defines, the frame only the library holds, whose orientation is
 `SiteFrame.GetStateOrientationToICRF`, bit for bit `ToFrame`'s (fourth round of

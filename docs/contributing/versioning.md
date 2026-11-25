@@ -47,7 +47,8 @@ Current version information and release notes since 8.0. Breaking changes are ca
 Changes since 10.2.0-preview-1: the conformance runner of the six lots of
 [#457](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/457) and the defects its references
 found, the integration over TT seconds about the Earth, the managed occultation, field-of-view and window searches to
-1 µs, the managed TEME, the attitude timeline of a propagation and the kernels it writes, the 2D Pc and the CDM.
+1 µs, the managed TEME, the attitude timeline of a propagation and the kernels it writes, with the kernels of a spacecraft
+written and loaded in one call (`Spacecraft.WriteKernels`), the 2D Pc and the CDM.
 
 A major version, because it breaks the API. The entries marked **Breaking** under **Changed** list each change a
 caller can meet, with its migration: among them the maneuver chain on the attitude timeline, the kernels and the
@@ -77,7 +78,8 @@ targets: the impulses and the attitudes take their target first, the engine (on 
 optional and inferred by the run, the radii of the impulses checked, the axes of the spacecraft by `BodyAxis`, a
 `TriadAttitude` and an `InstrumentPointingToAttitude` of `IAttitudeTarget` targets, and an attitude that points only
 the instruments of its own spacecraft, and the text kernel writers synchronous, with the frame of a spacecraft built by
-the spacecraft alone.
+the spacecraft alone, a write with nothing to write that throws `InvalidOperationException`, and a Cosmographia export
+(and `astro propagate`) that refuses a name that is not a portable file name and a previous export SPICE holds.
 **Removed** lists `Instrument.PositionInFOV`, `LowThrustManeuver`, `Quaternion.Zero`, `Star.PropagationOutput`,
 `ExceptionBase`, `Matrix.Set`, `Vector3 * Vector3`, six exports of the native library that .NET never called, the
 public interop structs of `IO.Astrodynamics.DTO`, the ten raw conversions of `SpiceAPI`, the public helpers of the
@@ -8057,6 +8059,28 @@ not listed.
   ([#812](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/812); `Add*Instrument` checks the names of the instruments among themselves only, decision 74 of #668):
   give no instrument that name; `WriteKernels` loads the instrument frame kernels after the spacecraft's, so the
   instrument's wins there.
+  `Spacecraft.WriteEphemeris` refuses an arc of one state with `ArgumentException` (decisions 87 and 89 of #668), which
+  `WriteKernels` refuses with `InvalidOperationException` before it writes anything. `WriteKernels` finds a file SPICE
+  holds through a meta-kernel under its full path or an absolute name whose symbolic links resolve through it, not under
+  a relative name other than its path, as the writers find it; it writes into a new subdirectory of its directory first,
+  which a process killed meanwhile leaves, and a later load of the directory loads its files: delete it. Names composed
+  across spacecraft ([#825](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/825)): a spacecraft
+  `A` with an instrument `B` and a spacecraft `A_B` write the same file `A_B.tf`, and both define the body `A_B`, so
+  `WriteKernels` refuses the second while the first handle lives and overwrites the first's instrument frame kernel after
+  it; write one spacecraft per directory. `CosmographiaExporter.ExportAsync` writes two spacecraft, sites or stars of one
+  name onto the same files, the last one winning
+  ([#823](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/823)): give each object its own
+  name; and it throws `InvalidOperationException` at the trajectory plot of a spacecraft whose initial orbit is open,
+  which has no period ([#824](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/824)), the
+  previous export left as it was since #799.
+- **A window that leaves a spacecraft's stored states** (lots L6 and L7 of
+  [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668)). Decision 81 of #668 gives a
+  window argument that leaves a body's stored states `InvalidOperationException`, as `GetEphemeris` over a window and the
+  managed distance search throw ([Spacecraft](../reference/spacecraft.md#the-exceptions-of-the-reads-and-the-writes)),
+  but the field-of-view search (`Instrument.FindWindowsInFieldOfViewConstraint`) and the `ILocalizable` overloads of
+  `ConjunctionAssessment.Analyze` and `AnalyzeAll` still throw `ArgumentException` for such a window, for one that meets
+  a gap between the windows given to `AddPropagatedStates` (decision 86) and, for the conjunction, for a trajectory that
+  does not cover the window: lots L6 and L7 change them. Catch `ArgumentException` there until then.
 - **Kernel paths of more than 255 characters** ([#673](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/673)). `LoadKernels` and the command line hand SPICE the full path of
   each kernel, so a kernel whose full path is longer than 255 characters cannot be loaded through them
   (`SPICE(FILENAMETOOLONG)`, SPICE's message in the `InvalidOperationException` since #706, nothing on the standard

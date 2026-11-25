@@ -5,7 +5,9 @@ Propagated trajectories can be exported as SPICE SPK kernels for visualization i
 ## Workflow
 
 1. **Propagate** the spacecraft trajectory using `CentralBodyPropagator` or any other propagator.
-2. **Write the ephemeris** to an SPK file using `Spacecraft.WriteEphemeris()`.
+2. **Write the ephemeris** to an SPK file using `Spacecraft.WriteEphemeris()`, or every kernel of the spacecraft (clock,
+   frames, instruments, SPK and CK) into one directory with `Spacecraft.WriteKernels()`, which also loads them until its
+   handle is disposed ([Spacecraft](../reference/spacecraft.md#the-kernels)).
 3. **Load the SPK** in Cosmographia (or another SPICE viewer) alongside the standard planetary kernels.
 
 ## Example
@@ -52,6 +54,13 @@ that SPICE holds, a meta-kernel's included (#799, decision 103 of
 [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668); before 11.0.0 it deleted the
 export under SPICE's load, whose text kernels stayed in the kernel pool with the old content, and a later unload that
 read them again failed). Unload it before the export, and load the new one after it.
+
+Two limits remain. Two spacecraft, sites or stars of one name are written onto the same files, the last one winning
+with no exception ([#823](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/823)): give each
+object of a scenario its own name. The trajectory plot of a spacecraft reads the period of its initial orbit, which
+throws `InvalidOperationException` for an open orbit
+([#824](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/824)); since 11.0.0 the previous
+export is left as it was.
 
 The layout adds to the output directory `/<Mission>_<Scenario>/Spacecrafts/<name>/Orientation/<name>.ck` for the CK of
 a spacecraft, usually the longest kernel: 31 characters plus the mission and scenario names and twice the spacecraft

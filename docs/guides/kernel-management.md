@@ -120,9 +120,14 @@ SPICE kernels supply the ephemeris, orientation, leap-second, and body-constant 
   `GetLoadedKernels` each; the `SpacecraftKernels` it returns unloads exactly those files at `Dispose` (R14 and decisions
   79 and 80 of #668). It refuses, before it writes anything, a directory that is or lies inside a loaded directory, and a
   file it would write that SPICE holds, from `LoadKernels`, another handle or a loaded meta-kernel (whose files the
-  registry does not list: a native query reads SPICE's own list, decision 102). A load of the directory made while the
-  handle lives furnishes nothing for its files and does not take them over: `Dispose` unloads them and replaces that
-  entry by its other files; load them again after it to keep them ([Spacecraft](../reference/spacecraft.md#the-kernels)).
+  registry does not list: a native query reads SPICE's own list, decision 102), under its full path or an absolute name
+  whose symbolic links resolve through it, as the writers find it (a relative name of a meta-kernel is not found). A load
+  of the directory made while the handle lives furnishes nothing for its files and does not take them over: `Dispose`
+  unloads them and replaces that entry by its other files; load them again after it to keep them
+  ([Spacecraft](../reference/spacecraft.md#the-kernels)). It writes into a new subdirectory of the directory first,
+  deleted in every case, but a process killed meanwhile leaves it, and a later load of the directory loads its files:
+  delete it before. `IsLoaded` means "not disposed": a user's `UnloadKernels` or `ClearKernels` of the files is not
+  tracked.
 - SPICE takes a kernel path of at most 255 characters (NAIF, SPICE Kernel Required Reading, "Recommendations on Kernel
   File Naming"), and `LoadKernels` hands it the full path: a kernel at a longer path fails with
   `SPICE(FILENAMETOOLONG)`. Load it through a meta-kernel that names it by a shorter relative path, or move it.

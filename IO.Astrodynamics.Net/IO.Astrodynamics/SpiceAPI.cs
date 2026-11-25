@@ -716,7 +716,16 @@ public class SpiceAPI
     /// A file a writer replaces (<see cref="WriteEphemeris"/>, <see cref="WriteOrientation"/>, <c>Spacecraft.WriteEphemeris</c>
     /// and the writers that call them) leaves the listing before the write, unloaded as <see cref="UnloadKernels(FileSystemInfo)"/> unloads
     /// it, a directory being replaced by its remaining files; the new file is not loaded (#706: before, the native writers
-    /// left it listed and SPICE read the replaced data, the managed one left it listed while SPICE no longer held it).
+    /// left it listed and SPICE read the replaced data, the managed one left it listed while SPICE no longer held it). The
+    /// text kernel writers (<c>Clock.Write</c>, <c>SpacecraftFrame.Write</c>, <c>Instrument.WriteFrame</c>,
+    /// <c>Instrument.WriteKernel</c>, <c>Site.WriteFrame</c>, <c>SiteFrame.Write</c>) do the same (decision 103 of #668,
+    /// decided by S. Guillet, 2026-11-25).
+    /// </para>
+    /// <para>
+    /// <c>Spacecraft.WriteKernels</c> loads each file it writes by its own path, one entry each, which the
+    /// <c>SpacecraftKernels</c> it returns removes at <c>Dispose</c>; a directory a user loads while the handle lives,
+    /// which lists those files, is replaced by its other files then (decisions 79 and 80 of #668, decided by S. Guillet,
+    /// 2026-11-23). A meta-kernel is one entry: the files it names are not listed, though SPICE holds them.
     /// </para>
     /// </remarks>
     public IEnumerable<FileSystemInfo> GetLoadedKernels()

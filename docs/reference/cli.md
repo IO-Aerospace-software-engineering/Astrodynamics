@@ -81,6 +81,9 @@ or an area of 0 or less, a negative drag coefficient, a name that is not a porta
 Windows refuses, a trailing dot or space, a device name such as CON or NUL; the rule of the
 [Cosmographia export](../guides/cosmographia-export.md#scenario-export), #799) and a name that cannot name a kernel
 variable (a blank, a quote, more than 32 bytes with its frame), all refused before the propagation.
+The export refuses, after the propagation, an `--output` whose previous export SPICE holds: the kernels given with `-K`
+above or inside it, or a meta-kernel that names its files (decision 103 of #668,
+[Cosmographia export](../guides/cosmographia-export.md#scenario-export)); give another directory.
 
 ## Known limitations
 

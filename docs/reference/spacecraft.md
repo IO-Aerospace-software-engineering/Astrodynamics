@@ -189,6 +189,23 @@ Guidelines: `ArgumentException` for a bad argument, `InvalidOperationException` 
 `ArgumentException` where the call receives the faulty object (`AddFuelTank`, `AddEngine`, the clock of a
 constructor), `InvalidOperationException` for the chain checked at a propagation, a state of the spacecraft.
 
+### The exceptions of the reads and the writes
+
+The reads and the writes of a body follow the same rule, the type naming the object whose state is at fault (decision 81
+of [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668), decided by S. Guillet,
+2026-11-23, with choice 8 of its re-baseline for the first two rows):
+
+| Case | Exception | Where |
+|------|-----------|-------|
+| A body read at an epoch where it has no data | `InvalidOperationException` | `GetEphemeris` and `GetGeometricStateRelativeTo` of a propagated spacecraft before its first stored state or after its last, its light-time margin aside ([#527](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/527)), or in a gap between the windows given to `AddPropagatedStates`; a body read outside the coverage of the kernels (`SpiceException`, an `InvalidOperationException`) |
+| A solution read outside its window | `ArgumentOutOfRangeException` | `PropagationSolution.GetStateVector` and the getters of the covariance propagation outside `PropagationSolution.Window` ([Propagators](propagators.md)) |
+| A write with nothing to write | `InvalidOperationException` | `WriteEphemeris` of a spacecraft that stores no state, `WriteOrientation` of an empty attitude record (a `TLEPropagator` run records none, [#546](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/546)), `WriteKernels` of either, `Star.WriteEphemeris` of a star that stores fewer than three states; nothing is written. An arc of one state keeps its `ArgumentException` in `WriteEphemeris` (decisions 87 and 89 of #668), which `WriteKernels` refuses with `InvalidOperationException`; `SpiceAPI.WriteEphemeris` and `Site.WriteEphemeris`, whose arguments are at fault, keep theirs |
+| A window argument that leaves a body's stored states | `InvalidOperationException` | `GetEphemeris` over a window and the managed distance search of `CelestialItem` past a propagated spacecraft's states. Until lots L6 and L7 of #668 the field-of-view search (`Instrument.FindWindowsInFieldOfViewConstraint`) and the `ILocalizable` overloads of `ConjunctionAssessment.Analyze` and `AnalyzeAll` still throw `ArgumentException` for a window that leaves the stored states or meets a gap between them (decision 86), and so does a conjunction trajectory that does not cover the window |
+
+Before 11.0.0 a write with nothing to write threw the `ArgumentException` of the SPK writer (`arcs`) or of
+`SpiceAPI.WriteEphemeris` (`stateVectors`), which blamed the file for what the spacecraft or the star lacked
+([#799](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/799)).
+
 ## Attitude and kernels
 
 A propagated spacecraft keeps the states and the attitude that the library reads (`GetEphemeris`, the instruments, the
@@ -385,13 +402,23 @@ A kernel-backed spacecraft reads its frame kernel and its CK through SPICE at ev
   advice, since a spacecraft `A_B` and the instrument `B` of a spacecraft `A` write the same file. The call is not made
   during a run on the spacecraft (one run at a time per spacecraft, decision 43).
 
-  ```csharp-signature
-  public SpacecraftKernels WriteKernels(DirectoryInfo directory)
-  ```
+  For a spacecraft `Sat` with an instrument `Cam`, propagated:
 
-  For a spacecraft `Sat` with an instrument `Cam`, `using var kernels = sat.WriteKernels(new DirectoryInfo("out"))`
-  writes `out/Sat.tsc`, `Sat.tf`, `Sat_Cam.tf`, `Sat_Cam.ti`, `Sat.bsp` and `Sat.bc`, loaded until the end of the
-  `using` scope.
+  ```csharp
+  // Inputs: sat (Spacecraft, propagated, with an instrument Cam)
+  // Writes out/Sat.tsc, Sat.tf, Sat_Cam.tf, Sat_Cam.ti, Sat.bsp and Sat.bc, and loads them
+  using (var kernels = sat.WriteKernels(new DirectoryInfo("out")))
+  {
+      Console.WriteLine(kernels.Ephemeris.FullName);
+      foreach (var instrument in kernels.Instruments)
+      {
+          Console.WriteLine($"{instrument.Instrument.Name}: {instrument.Frame.Name}, {instrument.Kernel.Name}");
+      }
+
+      // SPICE reads the spacecraft here: a kernel-backed twin, a CSPICE search, another tool through the files
+  }
+  // Disposed: the files the call loaded are unloaded, and stay on disk
+  ```
 - **`WriteEphemeris`** writes the stored states, in J2000: one segment of type 9 (Lagrange, unequal steps) per arc, in
   time order, of degree min(7, N − 1) for an arc of N states, the managed reader's window of 8 states; at an impulse the
   later segment, the state after it, is the one SPICE reads, and 1 µs before it the earlier one, the state before. The
