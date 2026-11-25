@@ -461,6 +461,8 @@ public class SpacecraftFrame : Frame
     /// a blank, a tab or another whitespace or control character, a quote, a parenthesis, a comma or '=', or more than 32
     /// bytes in UTF-8, so 20 ASCII characters at most for the name (Kernel Required Reading, "Variable Name Rules", #676);
     /// nothing is written.</exception>
+    /// <exception cref="Exceptions.SpiceException">The file it replaces is loaded and its unload fails (SPICE's error): the
+    /// file is kept as it was and nothing is written (#799(c), decision 103 of #668).</exception>
     public void Write(FileInfo outputFile)
     {
         CheckKernelName();

@@ -367,6 +367,8 @@ namespace IO.Astrodynamics.Body.Spacecraft
         /// tab or another whitespace or control character, a quote, a parenthesis, a comma or '=', or more than 32 bytes in
         /// UTF-8, so 25 ASCII characters at most for the two names (Kernel Required Reading, "Variable Name Rules", #676);
         /// nothing is written.</exception>
+        /// <exception cref="Exceptions.SpiceException">The file it replaces is loaded and its unload fails (SPICE's error): the
+        /// file is kept as it was and nothing is written (#799(c), decision 103 of #668).</exception>
         public void WriteFrame(FileInfo outputFile)
         {
             CheckFrameKernelName("frame kernel");
@@ -419,6 +421,8 @@ namespace IO.Astrodynamics.Body.Spacecraft
         /// <exception cref="InvalidOperationException">The names make a frame the instrument frame kernel cannot define, by
         /// the rule of <see cref="WriteFrame"/> (#676): a quote would end the string value, which SPICE then rejects
         /// (SPICE(TYPEMISMATCH) at <c>furnsh_c</c>); nothing is written.</exception>
+        /// <exception cref="Exceptions.SpiceException">The file it replaces is loaded and its unload fails (SPICE's error): the
+        /// file is kept as it was and nothing is written (#799(c), decision 103 of #668).</exception>
         public abstract void WriteKernel(FileInfo outputFile);
 
         /// <summary>

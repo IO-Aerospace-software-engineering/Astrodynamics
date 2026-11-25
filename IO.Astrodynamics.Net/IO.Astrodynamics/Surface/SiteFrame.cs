@@ -55,6 +55,8 @@ public class SiteFrame : Frame
     /// '=', or more than 32 bytes in UTF-8, so 21 ASCII characters at most for the name (Kernel Required Reading, "Variable
     /// Name Rules", #676); or the kernel frame of a site from the kernels is not fixed in the frame of its body, which a TK
     /// frame of that body cannot hold. Nothing is written.</exception>
+    /// <exception cref="Exceptions.SpiceException">The file it replaces is loaded and its unload fails (SPICE's error): the
+    /// file is kept as it was and nothing is written (#799(c), decision 103 of #668).</exception>
     public void Write(FileInfo outputFile)
     {
         var kernelFrameName = Site.IsSpiceBacked ? SpiceAPI.KernelFrameNameOf(Id!.Value) : null;

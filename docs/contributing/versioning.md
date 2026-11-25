@@ -4727,7 +4727,7 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   that culture, and the catalog named the body of a site on Jupiter "Jupıter" (U+0131, in `jupıter-features.json`),
   which Cosmographia does not know. Every name that reaches a kernel, a path or the catalog is upper-cased, and the
   catalog's body names lower-cased after their first letter, in the invariant culture: the writers, `Site.Frame`
-  (`<NAME>_TOPO`), `SiteFrame.WriteAsync`, the exporter's object, sensor, centre and body names, and the name check of
+  (`<NAME>_TOPO`), `SiteFrame.Write`, the exporter's object, sensor, centre and body names, and the name check of
   `astro propagate`. The bytes are unchanged outside the Turkish and Azeri cultures, and always under invariant
   globalization (the text kernels, the CK, the spacecraft SPK and the catalog of a set and an export with lower-case
   ASCII names compared byte for byte with 21d0e648); under tr or az a name with "i" now writes "I", and a name that
@@ -7769,7 +7769,7 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   SPICE's load: its text kernels stayed in the kernel pool with the old content, and a later unload that read them again
   failed. The export never changes the kernels SPICE holds. Migration: `UnloadKernels` the previous export (or the
   meta-kernel that names its files) before the export, and load the new one after it.
-- **The text kernel writers unload the file they replace** ([#799](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/799)(c),
+- **Breaking: the text kernel writers unload the file they replace** ([#799](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/799)(c),
   lot L5c, decision 103 of #668, decided by S. Guillet, 2026-11-25): `Clock.Write`, `SpacecraftFrame.Write`,
   `Instrument.WriteFrame`, `Instrument.WriteKernel`, `Site.WriteFrame` and `SiteFrame.Write`, as the SPK and CK writers
   since [#706](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/706), first unload a file

@@ -71,6 +71,8 @@ namespace IO.Astrodynamics.Body.Spacecraft
         /// A file it replaces is unloaded first, under every name SPICE holds it by (a meta-kernel's included), and the new file is left unloaded, as the SPK and CK writers do (#799(c), decision 103 of #668, decided by S. Guillet, 2026-11-25).
         /// </summary>
         /// <param name="outputFile">The clock kernel to write.</param>
+        /// <exception cref="Exceptions.SpiceException">The file it replaces is loaded and its unload fails (SPICE's error): the
+        /// file is kept as it was and nothing is written (#799(c), decision 103 of #668).</exception>
         public void Write(FileInfo outputFile)
         {
             using var stream = this.GetType().Assembly.GetManifestResourceStream("IO.Astrodynamics.Templates.ClockTemplate.tsc");
