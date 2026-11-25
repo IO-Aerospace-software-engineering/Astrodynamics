@@ -133,7 +133,13 @@ Or run it from a clone of this repository:
 dotnet run --project IO.Astrodynamics.Net/IO.Astrodynamics.CLI -- --help
 ```
 
-Available commands: `ephemeris`, `propagate`, `orientation`, `sub-point`, `angular-separation`, `celestial-body-info`, `orbital-parameters-converter`, `frame-converter`, `time-converter`, and the window finders `find-windows-from-distance-constraint`, `find-windows-from-occultation-constraint`, `find-windows-from-coordinate-constraint`, `find-windows-from-illumination-constraint`, `find-windows-from-fov-constraint`.
+Available commands: `ephemeris`, `propagate`, `orientation`, `sub-point`, `angular-separation`, `celestial-body-info`, `orbital-parameters-converter`, `frame-converter`, `time-converter`, and the window finders `find-windows-from-distance-constraint`, `find-windows-from-occultation-constraint`, `find-windows-from-coordinate-constraint`, `find-windows-from-illumination-constraint`, `find-windows-from-fov-constraint`. The objects of a command are its positional arguments, NAIF identifiers or names, and everything else an option:
+
+```bash
+astro ephemeris MOON EARTH -K kernels --begin 2024-01-01T00:00:00Z --end 2024-01-02T00:00:00Z --step 12h --aberration LT+S --format csv
+```
+
+See the [command-line tool reference](https://docs.io-aerospace.org/reference/cli/) for the grammar, the formats, the exit codes and the help of each command.
 
 ## Native C++ interop
 

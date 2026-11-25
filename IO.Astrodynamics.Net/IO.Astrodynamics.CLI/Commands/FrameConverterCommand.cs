@@ -1,34 +1,37 @@
-using System;
-using System.IO;
-using System.Threading.Tasks;
 using Cocona;
+using IO.Astrodynamics.CLI.Cli;
 using IO.Astrodynamics.CLI.Commands.Parameters;
-using IO.Astrodynamics.Frames;
 
 namespace IO.Astrodynamics.CLI.Commands;
 
 public class FrameConverterCommand
 {
-    public FrameConverterCommand()
-    {
-    }
-
-    [Command("frame-converter", Description = "Convert a frame to another at given epoch")]
-    public Task Convert(
-        [Argument(Description = "Kernels path: a directory, a kernel file or a meta-kernel")]
-        string kernelsPath,
-        [Argument(Description = "Origin frame")]
+    [Command("frame-converter", Description = "The orientation of a frame relative to another at an epoch: the rotation from the first and the angular velocity")]
+    public int Convert(
+        [Argument("from", Description = "Frame converted from: ICRF (written J2000) or a frame of the library or of the loaded kernels")]
         string from,
-        [Argument(Description = "Target frame")]
+        [Argument("to", Description = "Frame converted to, as the first")]
         string to,
-        EpochParameters epoch)
+        KernelOptions kernels,
+        EpochOptions epoch,
+        TimeScaleOptions timeScale,
+        OutputOptions output,
+        [Argument("unexpected", Description = "Nothing: a value with spaces is quoted, everything but the objects is an option")]
+        string[] unexpected = null)
     {
-        SpiceAPI.Instance.LoadKernels(Helpers.KernelsPath(kernelsPath));
+        return CliContext.Execute(output.Verbose, () =>
+        {
+            CliValues.NoMore(unexpected);
+            var format = CliOutput.Format(output.Format, tabular: false);
+            var at = CliValues.Epoch(epoch.Epoch, "--epoch");
+            var scale = CliValues.TimeScale(timeScale.TimeScale, at.Scale);
 
-        var inputEpoch = Helpers.ConvertDateTimeInput(epoch.Epoch);
+            CliKernels.Load(kernels.Kernels);
+            var fromFrame = CliValues.Frame(from, "from");
+            var toFrame = CliValues.Frame(to, "to");
 
-        var q = Helpers.ResolveFrame(from).ToFrame(Helpers.ResolveFrame(to), inputEpoch);
-        Console.WriteLine(q);
-        return Task.CompletedTask;
+            var orientation = CliTime.Relabel(fromFrame.ToFrame(toFrame, at), scale);
+            EphemerisCommand.Write(format, CliOutput.OrientationText(orientation), CliOutput.Orientation(orientation));
+        });
     }
 }

@@ -1039,6 +1039,56 @@ TEST(API, GetFrameNameProxy)
     ASSERT_STREQ("SPICE knows no frame of id -999999000", GetLastErrorProxy());
 }
 
+TEST(API, GetNaifIdProxy)
+{
+    // SPICE's built-in body names (NAIF IDs Required Reading, "NAIF Object ID numbers"): MOON is 301, EARTH 399, the solar
+    // system barycenter 0, DSS-13 399013; bodn2c_c ignores case and compresses blanks ("Earth  Barycenter" is 3)
+    int id = 0;
+    ASSERT_TRUE(GetNaifIdProxy("MOON", &id)) << GetLastErrorProxy();
+    ASSERT_EQ(301, id);
+    ASSERT_TRUE(GetNaifIdProxy("earth", &id)) << GetLastErrorProxy();
+    ASSERT_EQ(399, id);
+    ASSERT_TRUE(GetNaifIdProxy("Solar System Barycenter", &id)) << GetLastErrorProxy();
+    ASSERT_EQ(0, id);
+    ASSERT_TRUE(GetNaifIdProxy("Earth  Barycenter", &id)) << GetLastErrorProxy();
+    ASSERT_EQ(3, id);
+    ASSERT_TRUE(GetNaifIdProxy("DSS-13", &id)) << GetLastErrorProxy();
+    ASSERT_EQ(399013, id);
+
+    // A name a text kernel defines (NAIF_BODY_NAME, NAIF_BODY_CODE), then none once it is unloaded
+    auto file = std::filesystem::temp_directory_path() / "IOA_L8_CPP_NAME.tk";
+    {
+        std::ofstream out(file);
+        out << "\\begindata\n   NAIF_BODY_NAME += 'IOA L8 PROBE'\n   NAIF_BODY_CODE += -999123\n\\begintext\n";
+    }
+    ASSERT_TRUE(LoadKernelsProxy(file.string().c_str())) << GetLastErrorProxy();
+    ASSERT_TRUE(GetNaifIdProxy("ioa l8 probe", &id)) << GetLastErrorProxy();
+    ASSERT_EQ(-999123, id);
+    ASSERT_TRUE(UnloadKernelsProxy(file.string().c_str())) << GetLastErrorProxy();
+    std::filesystem::remove(file);
+
+    // A name SPICE does not know, the text of an identifier (bodn2c_c reads names only), a blank name and an empty one (SPICE's EMPTYSTRING): false, the
+    // identifier 0 and the message, SPICE left without a pending error
+    id = 42;
+    ASSERT_FALSE(GetNaifIdProxy("IOA L8 PROBE", &id));
+    ASSERT_EQ(0, id);
+    ASSERT_STREQ("SPICE knows no body named 'IOA L8 PROBE'", GetLastErrorProxy());
+    ASSERT_FALSE(GetNaifIdProxy("399", &id));
+    ASSERT_STREQ("SPICE knows no body named '399'", GetLastErrorProxy());
+    ASSERT_FALSE(GetNaifIdProxy("   ", &id));
+    ASSERT_EQ(0, id);
+    ASSERT_FALSE(GetNaifIdProxy("", &id));
+    ASSERT_EQ(0, id);
+    ASSERT_STREQ("SPICE(EMPTYSTRING)", GetLastErrorShortProxy());
+    ASSERT_STREQ("String \"name\" has length zero.", GetLastErrorProxy());
+#if !defined(_WIN32)
+    // CSPICE's own symbols are not exported by the Windows DLL; the next call's success shows no pending error there too
+    ASSERT_FALSE(failed_c());
+#endif
+    ASSERT_TRUE(GetNaifIdProxy("MOON", &id)) << GetLastErrorProxy();
+    ASSERT_EQ(301, id);
+}
+
 TEST(API, GetFrameInfoProxy)
 {
     // SPICE's built-in frame table (Frames Required Reading, "Built-in Inertial Reference Frames" and "Built-in PCK-Based

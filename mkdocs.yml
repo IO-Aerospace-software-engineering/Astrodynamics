@@ -92,6 +92,7 @@ nav:
       - Math: reference/math.md
       - Enumerations: reference/enumerations.md
       - Predefined Objects: reference/predefined-objects.md
+    - Command-Line Tool: reference/cli.md
 
   - Guides:
     - guides/index.md

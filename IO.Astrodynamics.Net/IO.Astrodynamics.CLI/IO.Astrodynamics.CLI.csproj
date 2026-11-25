@@ -10,7 +10,7 @@
         <Version>11.0.0</Version>
         <Title>Astrodynamics command line interface</Title>
         <Authors>Sylvain Guillet</Authors>
-        <Description>This CLI allows end user to exploit IO.Astrodynamics framework </Description>
+        <Description>The command-line tool of IO.Astrodynamics: ephemerides, orientations, window searches, conversions and propagations from SPICE kernels</Description>
         <Copyright>Sylvain Guillet</Copyright>
         <PackageProjectUrl>https://github.com/IO-Aerospace-software-engineering/Astrodynamics</PackageProjectUrl>
         <PackageIcon>io-only-dark-trans.png</PackageIcon>
@@ -20,6 +20,10 @@
 
     <ItemGroup>
       <PackageReference Include="Cocona" Version="2.2.0" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <InternalsVisibleTo Include="IO.Astrodynamics.CLI.Tests" />
     </ItemGroup>
 
     <ItemGroup>

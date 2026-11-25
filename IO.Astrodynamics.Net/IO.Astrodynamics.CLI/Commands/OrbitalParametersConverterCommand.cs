@@ -1,82 +1,51 @@
-using System;
-using System.IO;
-using System.Threading.Tasks;
 using Cocona;
+using IO.Astrodynamics.Body;
+using IO.Astrodynamics.CLI.Cli;
 using IO.Astrodynamics.CLI.Commands.Parameters;
-using IO.Astrodynamics.Frames;
 
 namespace IO.Astrodynamics.CLI.Commands;
 
 public class OrbitalParametersConverterCommand
 {
-    public OrbitalParametersConverterCommand()
+    [Command("orbital-parameters-converter", Description = "Converts an orbit to a state vector, Keplerian or equinoctial elements, at an epoch and in a frame")]
+    public int Converter(
+        [Option("as", ValueName = "state|keplerian|equinoctial", Description = "Kind of the orbit written: state, keplerian or equinoctial")]
+        string @as,
+        OrbitOptions orbit,
+        KernelOptions kernels,
+        TimeScaleOptions timeScale,
+        OutputOptions output,
+        [Option("target-epoch", ValueName = "epoch", Description = "Epoch of the orbit written, by the two-body motion (SGP4 for a TLE): the epoch of the orbit given by default")]
+        string targetEpoch = null,
+        [Option("target-frame", ValueName = "frame", Description = "Frame of the orbit written: ICRF (written J2000) or a frame of the library or of the loaded kernels")]
+        string targetFrame = "ICRF",
+        [Argument("unexpected", Description = "Nothing: a value with spaces is quoted, everything but the objects is an option")]
+        string[] unexpected = null)
     {
-    }
-
-    [Command("orbital-parameters-converter", Description = "Convert an orbital parameters to another type at given epoch in given frame")]
-    public Task Converter(
-        [Argument(Description = "Kernels path: a directory, a kernel file or a meta-kernel")]
-        string kernelsPath,
-        Parameters.OrbitalParameters orbitalParameters,
-        [Option( Description = "Convert to state vector")]
-        bool toStateVector,
-        [Option(Description = "Convert to keplerian elements")]
-        bool toKeplerian,
-        [Option(Description = "Convert to Equinoctial")]
-        bool toEquinoctial,
-        EpochParameters targetEpoch,
-        [Argument(Description = "Target frame")]
-        string targetFrame = "ICRF")
-    {
-        //Load kernels
-        SpiceAPI.Instance.LoadKernels(Helpers.KernelsPath(kernelsPath));
-
-        //Check inputs
-        if (!(orbitalParameters.FromEquinoctial ^ orbitalParameters.FromKeplerian ^ orbitalParameters.FromStateVector ^ orbitalParameters.FromTLE))
+        return CliContext.Execute(output.Verbose, () =>
         {
-            throw new ArgumentException("You must set the original orbital parameters type. use --help for more information");
-        }
+            CliValues.NoMore(unexpected);
+            var format = CliOutput.Format(output.Format, tabular: false);
+            var kind = CliValues.Choice(@as, "--as", "state", "keplerian", "equinoctial");
+            CliOrbit.Kind(orbit);
+            var outputEpoch = targetEpoch == null ? (TimeSystem.Time?)null : CliValues.Epoch(targetEpoch, "--target-epoch");
 
-        if (!(toStateVector ^ toKeplerian ^ toEquinoctial))
-        {
-            throw new ArgumentException("You must set the target orbital parameters type. use --help for more information");
-        }
+            CliKernels.Load(kernels.Kernels);
+            var outputFrame = CliValues.Frame(targetFrame, "--target-frame");
+            var input = CliOrbit.Read(orbit, id => new CelestialBody(id));
 
-        if (string.IsNullOrEmpty(targetEpoch?.Epoch))
-        {
-            targetEpoch.Epoch = orbitalParameters.OrbitalParametersEpoch;
-        }
+            // At the epoch and in the frame asked, then of the kind asked, labelled in the scale of the epoch written
+            var epoch = outputEpoch ?? input.Epoch;
+            var converted = input.AtEpoch(epoch).ToFrame(outputFrame);
+            converted = CliTime.Relabel(converted, CliValues.TimeScale(timeScale.TimeScale, epoch.Scale));
+            OrbitalParameters.OrbitalParameters result = kind switch
+            {
+                "keplerian" => converted.ToKeplerianElements(),
+                "equinoctial" => converted.ToEquinoctial(),
+                _ => converted.ToStateVector()
+            };
 
-        //Initialize data
-
-        var outputFrame = Helpers.ResolveFrame(targetFrame);
-
-        var outputEpoch = Helpers.ConvertDateTimeInput(targetEpoch.Epoch);
-
-
-        var inputOrbitalParameters = Helpers.ConvertToOrbitalParameters(orbitalParameters.OrbitalParametersValues, orbitalParameters.CenterOfMotionId,
-            orbitalParameters.OrbitalParametersEpoch,
-            orbitalParameters.Frame, orbitalParameters.FromStateVector, orbitalParameters.FromKeplerian, orbitalParameters.FromEquinoctial, orbitalParameters.FromTLE);
-
-        //At given epoch and in given frame
-        inputOrbitalParameters = inputOrbitalParameters!.AtEpoch(outputEpoch).ToFrame(outputFrame);
-
-        //Generate required output
-        if (toStateVector)
-        {
-            inputOrbitalParameters = inputOrbitalParameters.ToStateVector();
-        }
-        else if (toKeplerian)
-        {
-            inputOrbitalParameters = inputOrbitalParameters.ToKeplerianElements();
-        }
-        else if (toEquinoctial)
-        {
-            inputOrbitalParameters = inputOrbitalParameters.ToEquinoctial();
-        }
-
-        Console.WriteLine(inputOrbitalParameters.ToString());
-
-        return Task.CompletedTask;
+            EphemerisCommand.Write(format, result.ToString(), CliOutput.Orbit(result));
+        });
     }
 }

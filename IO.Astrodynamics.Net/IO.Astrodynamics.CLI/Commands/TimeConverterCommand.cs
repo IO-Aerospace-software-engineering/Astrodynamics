@@ -2,6 +2,7 @@ using System;
 using System.Globalization;
 using System.Threading.Tasks;
 using Cocona;
+using IO.Astrodynamics.CLI.Cli;
 using IO.Astrodynamics.CLI.Commands.Parameters;
 using IO.Astrodynamics.TimeSystem;
 
@@ -25,11 +26,12 @@ public class TimeConverterCommand
     /// Before 11.0.0 one of <c>-t</c>, <c>-u</c>, <c>-l</c> and one of <c>-j</c>, <c>-e</c>, <c>-d</c> were required, an
     /// exclusive or that three flags also passed, and TT, TAI and GPS could not be asked for.
     /// </remarks>
-    /// <exception cref="ArgumentException">A scale or a format is unknown, two of them are asked for, local time with
-    /// another format than ISO, or an argument follows the epoch (an unquoted tag, which the epoch would otherwise lose).</exception>
-    [Command("time-converter", Description = "Convert an epoch to a time scale (tdb, tt, tai, utc, gps or local) and a format (iso, jd or seconds from J2000)")]
-    public Task TimeConverter(
-        EpochParameters epochParameters,
+    /// <remarks>An unknown scale or format, two of them, local time with another format than ISO, or an argument after the
+    /// epoch (an unquoted tag, which the epoch would otherwise lose) is an input error, exit code 2 (R29 of #668).</remarks>
+    [Command("time-converter", Description = "Converts an epoch to a time scale (tdb, tt, tai, utc, gps or local) and a format (iso, jd or seconds from J2000)")]
+    public int TimeConverter(
+        [Argument("epoch", Description = "Epoch: " + EpochOptions.Forms + "; an epoch with a space is quoted")]
+        string epoch,
         [Option('t', Description = "Convert to TDB (alias of --to tdb)")]
         bool toTDB = false,
         [Option('u', Description = "Convert to UTC (alias of --to utc)")]
@@ -46,31 +48,38 @@ public class TimeConverterCommand
         string to = null,
         [Option("format", Description = "Output format: iso, jd or seconds (iso by default)")]
         string format = null,
-        [Argument(Description = "Nothing: an epoch with a space is quoted (\"2024-01-01T00:00:00 TAI\")")]
+        [Option("verbose", Description = "Write the trace of an error after its message")]
+        bool verbose = false,
+        [Argument("unexpected", Description = "Nothing: an epoch with a space is quoted (\"2024-01-01T00:00:00 TAI\")")]
         string[] unexpected = null)
+    {
+        return CliContext.Execute(verbose, () => Convert(epoch, toTDB, toUTC, toLocal, toJulian, toSecondsFromJ2000, toDateTime, to, format, unexpected));
+    }
+
+    private static void Convert(string epoch, bool toTDB, bool toUTC, bool toLocal, bool toJulian, bool toSecondsFromJ2000, bool toDateTime,
+        string to, string format, string[] unexpected)
     {
         if (unexpected is { Length: > 0 })
         {
             // An unquoted tag would be read as a second argument and the epoch taken untagged, as TDB (D3.7 of #668)
-            throw new ArgumentException(
-                $"Unexpected argument(s) '{string.Join(" ", unexpected)}': quote an epoch that holds a space, as \"{epochParameters.Epoch} {string.Join(" ", unexpected)}\".",
-                nameof(unexpected));
+            throw new CliInputException(
+                $"Unexpected argument(s) '{string.Join(" ", unexpected)}': quote an epoch that holds a space, as \"{epoch} {string.Join(" ", unexpected)}\".");
         }
 
         string scale = Choose("scale", to, ("tdb", toTDB), ("utc", toUTC), ("local", toLocal)) ?? "tdb";
         string output = Choose("format", format, ("jd", toJulian), ("seconds", toSecondsFromJ2000), ("iso", toDateTime)) ?? "iso";
         if (output is not ("iso" or "jd" or "seconds"))
         {
-            throw new ArgumentException($"Unknown format '{format}': iso, jd or seconds.", nameof(format));
+            throw new CliInputException($"Unknown format '{format}': iso, jd or seconds.");
         }
 
-        var input = Helpers.ConvertDateTimeInput(epochParameters.Epoch);
+        var input = CliValues.Epoch(epoch, "epoch");
         string res;
         if (scale == "local")
         {
             if (output != "iso")
             {
-                throw new ArgumentException("Local time is written in ISO only: give --format iso.", nameof(format));
+                throw new CliInputException("Local time is written in ISO only: give --format iso.");
             }
 
             // A local time is not a scale: the UTC instant in the zone of the machine
@@ -80,7 +89,7 @@ public class TimeConverterCommand
         {
             var converted = input.ConvertTo(Helpers.ScaleOfTag(scale is "tdb" or "tt" or "tai" or "utc" or "gps"
                 ? scale
-                : throw new ArgumentException($"Unknown scale '{to}': tdb, tt, tai, utc, gps or local.", nameof(to))));
+                : throw new CliInputException($"Unknown scale '{to}': tdb, tt, tai, utc, gps or local.")));
             // Every output names its scale, in a form the command reads back (D3.4 of #668: no implicit scale): n JD TAG and
             // seconds TAG (the names of TimeScale are the tags), the numbers in invariant culture
             string tag = converted.Scale.ToString();
@@ -92,8 +101,7 @@ public class TimeConverterCommand
             };
         }
 
-        Console.WriteLine(res);
-        return Task.CompletedTask;
+        CliContext.Out.WriteLine(res);
     }
 
     // The value of an option and of its aliases, in lower case: null when none is given, the one given otherwise
@@ -109,7 +117,7 @@ public class TimeConverterCommand
 
             if (chosen != null && chosen != alias.Value)
             {
-                throw new ArgumentException($"Two {what}s are asked for: {chosen} and {alias.Value}. Give one.");
+                throw new CliInputException($"Two {what}s are asked for: {chosen} and {alias.Value}. Give one.");
             }
 
             chosen = alias.Value;

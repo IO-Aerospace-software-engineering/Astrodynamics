@@ -171,6 +171,15 @@ MODULE_API bool KernelNameResolvesThroughProxy(const char *name, const char *pat
 MODULE_API bool GetFrameNameProxy(int frameId, char name[33]);
 
 /**
+ * Get the NAIF identifier SPICE gives to a body name (bodn2c_c), from its built-in names and the NAIF_BODY_NAME and
+ * NAIF_BODY_CODE assignments of the loaded kernels, in any case, its blanks compressed (choice 12 of #668)
+ * @param name Body name
+ * @param naifId Receives the identifier, 0 when SPICE knows no body of that name
+ * @return true when SPICE knows a body of that name, false otherwise (call GetLastErrorProxy for details)
+ */
+MODULE_API bool GetNaifIdProxy(const char *name, int *naifId);
+
+/**
  * Get the identifier, the centre and the class SPICE gives to a frame name (namfrm_c, frinfo_c), from its built-in frames
  * and the loaded frame kernels: the centre of a non-inertial output frame sets the epoch of its orientation under a light
  * time correction, as spkezr_c evaluates it (#593)

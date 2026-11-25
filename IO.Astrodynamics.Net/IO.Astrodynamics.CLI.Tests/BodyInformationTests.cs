@@ -1,5 +1,4 @@
 using System.Text;
-using IO.Astrodynamics.CLI.Commands;
 using IO.Astrodynamics.Tests;
 
 namespace IO.Astrodynamics.CLI.Tests;
@@ -11,12 +10,8 @@ public class BodyInformationsTests
     {
         using (Configuration.Lock())
         {
-            var command = new BodyInformationCommand();
-            StringBuilder sb = new StringBuilder();
-            StringWriter sw = new StringWriter(sb);
-            Console.SetOut(sw);
-            command.GetInformations("Data", 399);
-            var res = sb.ToString();
+            var res = CliRun.Ok("celestial-body-info", "399", "-K", "Data");
+            Assert.Equal(res, CliRun.Ok("celestial-body-info", "Earth", "-K", "Data"));
             var earth = new Body.CelestialBody(399);
 
             // Every value parses back to its property (#681: Mass, GM and the radii were printed to 7 digits, GM under
@@ -46,17 +41,44 @@ public class BodyInformationsTests
     }
 
     /// <summary>
-    /// CASSINI's identifier, a name built into SPICE, ended the process in the native layer (#560, exit code 134); it is
-    /// now an argument error, raised before the native call (an identifier without a name, which returned an empty record
-    /// and then an <see cref="System.InvalidOperationException"/>, raises the same argument error).
+    /// json: the fields of the record with their unit, read back bit for bit; a value the body has not (J2 of the Moon in
+    /// these kernels) is null.
     /// </summary>
     [Fact]
-    public void SpacecraftIdentifier_IsAnArgumentError()
+    public void Json_ReadsBackBitForBit()
     {
         using (Configuration.Lock())
         {
-            var command = new BodyInformationCommand();
-            Assert.Throws<ArgumentException>(() => { _ = command.GetInformations("Data", -82); });
+            var earth = new Body.CelestialBody(399);
+            var json = System.Text.Json.JsonDocument.Parse(CliRun.Ok("celestial-body-info", "399", "-K", "Data", "--format", "json")).RootElement;
+            Assert.Equal(399, json.GetProperty("naif_id").GetInt32());
+            Assert.Equal("EARTH", json.GetProperty("name").GetString());
+            Assert.Equal(earth.Mass, json.GetProperty("mass_kg").GetDouble());
+            Assert.Equal(earth.GM, json.GetProperty("gm_m3_s2").GetDouble());
+            Assert.Equal("ITRF93", json.GetProperty("fixed_frame").GetString());
+            Assert.Equal(earth.EquatorialRadius, json.GetProperty("equatorial_radius_m").GetDouble());
+            Assert.Equal(earth.PolarRadius, json.GetProperty("polar_radius_m").GetDouble());
+            Assert.Equal(earth.Flattening, json.GetProperty("flattening").GetDouble());
+            Assert.Equal(earth.J2, json.GetProperty("j2").GetDouble());
+            Assert.Equal(earth.J4, json.GetProperty("j4").GetDouble());
+
+            var moon = System.Text.Json.JsonDocument.Parse(CliRun.Ok("celestial-body-info", "MOON", "-K", "Data", "--format", "json")).RootElement;
+            Assert.Equal(System.Text.Json.JsonValueKind.Null, moon.GetProperty("j2").ValueKind);
+        }
+    }
+
+    /// <summary>
+    /// CASSINI's identifier, a name built into SPICE, ended the process in the native layer (#560, exit code 134); it is
+    /// the library's argument error, raised before the native call, an input error of the tool (exit code 2).
+    /// </summary>
+    [Fact]
+    public void SpacecraftIdentifier_IsTheLibrarysArgumentError()
+    {
+        using (Configuration.Lock())
+        {
+            var fromLibrary = Assert.Throws<ArgumentException>(() => new Body.CelestialBody(-82));
+            Assert.Equal(CliRun.ErrorLine(fromLibrary), CliRun.Fails(CliRun.ExitCodeOf(fromLibrary), "celestial-body-info", "-82", "-K", "Data"));
+            Assert.Equal(CliRun.ErrorLine(fromLibrary), CliRun.Fails(CliRun.ExitCodeOf(fromLibrary), "celestial-body-info", "CASSINI", "-K", "Data"));
         }
     }
 
@@ -72,12 +94,10 @@ public class BodyInformationsTests
     {
         using (Configuration.Lock())
         {
-            var command = new BodyInformationCommand();
             // A named body first, so that the native stack holds its record
-            Console.SetOut(new StringWriter());
-            command.GetInformations("Data", 399);
-            var e = Assert.Throws<ArgumentException>(() => { _ = command.GetInformations("Data", id); });
-            Assert.Contains(id.ToString(), e.Message);
+            CliRun.Ok("celestial-body-info", "399", "-K", "Data");
+            var e = CliRun.Fails(2, "celestial-body-info", id.ToString(), "-K", "Data");
+            Assert.Contains(id.ToString(), e);
         }
     }
 }
