@@ -379,14 +379,14 @@ A kernel-backed spacecraft reads its frame kernel and its CK through SPICE at ev
   microsecond, where it turns to the new attitude (up to 0.79 rad in the tests); a field-of-view edge moves by at most
   that microsecond and the rounding of its encoded SCLK. The spacecraft clock kernel must be loaded.
   `InvalidOperationException` for a kernel-backed spacecraft or one never propagated.
-- **The frame kernels** (`SpacecraftFrame.WriteAsync`, `Instrument.WriteFrameAsync`) put the upper-cased names in kernel
+- **The frame kernels** (`SpacecraftFrame.Write`, `Instrument.WriteFrame`) put the upper-cased names in kernel
   variable names, `FRAME_<SPACECRAFT>_FRAME` and `FRAME_<SPACECRAFT>_<INSTRUMENT>`, which SPICE reads with the rules of
   the Kernel Required Reading ("Variable Name Rules"): no blank, comma, parenthesis, '=' or TAB, and 32 characters at
   most, counted in the bytes of the file (UTF-8); a quote, which ends the string values the names are also written in,
   is refused too. A name outside the rule throws `InvalidOperationException` and nothing is written (#676; before, the
   FK was written and `LoadKernels` rejected it): 20 ASCII characters at most for a spacecraft, 25 for a spacecraft and an
   instrument together; `-`, `.`, `/` and non-ASCII letters are accepted within the 32 bytes. The instrument kernels
-  (`Instrument.WriteKernelAsync`) name the instrument frame, `<SPACECRAFT>_<INSTRUMENT>`, in the string
+  (`Instrument.WriteKernel`) name the instrument frame, `<SPACECRAFT>_<INSTRUMENT>`, in the string
   `INS<id>_FOV_FRAME`, and check the instrument FK's variable by the same rule: a quote ended that string, which SPICE
   rejected at `furnsh_c` (SPICE(TYPEMISMATCH)), and a blank or a longer name named a frame no FK can define.
 - **The encoded SCLK.** The CK's epochs are the spacecraft clock of the library, 65 536 ticks per second from 1957: a
@@ -549,7 +549,7 @@ was built with a NaN `RotationToSpacecraft` and NaN spacecraft-frame getters.
 #### Instrument orientation
 
 `Orientation` holds the Euler angles (x, y, z), in radians, of the frame kernel the library writes for the instrument
-(`WriteFrameAsync`): `TKFRAME_<id>_ANGLES = (x, y, z)`, `TKFRAME_<id>_AXES = (1, 2, 3)`, `UNITS = 'RADIANS'`, relative to
+(`WriteFrame`): `TKFRAME_<id>_ANGLES = (x, y, z)`, `TKFRAME_<id>_AXES = (1, 2, 3)`, `UNITS = 'RADIANS'`, relative to
 the spacecraft frame. NAIF's Frames Required Reading defines them in "Defining a TK Frame Using Euler Angles"
 (https://naif.jpl.nasa.gov/pub/naif/toolkit_docs/C/req/frames.html): "If M is the matrix that converts vectors relative
 to the TK frame to the RELATIVE frame by left multiplication, then the angles and axes must satisfy the following

@@ -65,7 +65,7 @@ internal static class Program
             switch (args[1])
             {
                 case "text-kernels" when args.Length == 11:
-                    await TextKernels(output, int.Parse(args[4], CultureInfo.InvariantCulture), args[5], [args[6], args[7], args[8]],
+                    TextKernels(output, int.Parse(args[4], CultureInfo.InvariantCulture), args[5], [args[6], args[7], args[8]],
                         int.Parse(args[9], CultureInfo.InvariantCulture), args[10]);
                     return 0;
                 case "export" when args.Length == 11:
@@ -87,11 +87,11 @@ internal static class Program
     }
 
     // Writes the set, loads each kernel and reports what SPICE knows of it
-    private static async Task TextKernels(DirectoryInfo output, int spacecraftId, string spacecraftName, string[] instrumentNames,
+    private static void TextKernels(DirectoryInfo output, int spacecraftId, string spacecraftName, string[] instrumentNames,
         int siteId, string siteName)
     {
         var (spacecraft, site) = CultureKernelSet.Build(spacecraftId, spacecraftName, instrumentNames, siteId, siteName);
-        await CultureKernelSet.WriteAsync(spacecraft, site, output);
+        CultureKernelSet.Write(spacecraft, site, output);
         var loaded = new System.Collections.Generic.List<FileInfo>();
         try
         {

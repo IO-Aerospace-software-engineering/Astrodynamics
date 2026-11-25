@@ -76,7 +76,8 @@ optional, one `Add*Instrument` per shape with a default id, components whose mod
 targets: the impulses and the attitudes take their target first, the engine (on `ImpulseManeuver` only) and the centre
 optional and inferred by the run, the radii of the impulses checked, the axes of the spacecraft by `BodyAxis`, a
 `TriadAttitude` and an `InstrumentPointingToAttitude` of `IAttitudeTarget` targets, and an attitude that points only
-the instruments of its own spacecraft.
+the instruments of its own spacecraft, and the text kernel writers synchronous, with the frame of a spacecraft built by
+the spacecraft alone.
 **Removed** lists `Instrument.PositionInFOV`, `LowThrustManeuver`, `Quaternion.Zero`, `Star.PropagationOutput`,
 `ExceptionBase`, `Matrix.Set`, `Vector3 * Vector3`, six exports of the native library that .NET never called, the
 public interop structs of `IO.Astrodynamics.DTO`, the ten raw conversions of `SpiceAPI`, the public helpers of the
@@ -7682,6 +7683,24 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   2026-11-19): `orientation`, the window searches, `frame-converter` and `orbital-parameters-converter` write UTC labels for
   a `Z` input where they wrote TDB (`ephemeris` already wrote the scale of its window), a converted label the nearest tick of
   the instant, which can sit one tick off it. Migration: `--time-scale tdb`.
+- **Breaking: the kernel writers of `Clock`, `SpacecraftFrame`, `Instrument`, `Site` and `SiteFrame` are synchronous**
+  (lot L5c, R14 and decision 78 of #668, decided by S. Guillet, 2026-11-23): `void Clock.Write(FileInfo)`,
+  `SpacecraftFrame.Write(FileInfo)`, `Instrument.WriteFrame(FileInfo)`, `Instrument.WriteKernel(FileInfo)` (abstract,
+  overridden by the three shapes), `Site.WriteFrame(FileInfo)` and `SiteFrame.Write(FileInfo)` replace the six `Write*Async`
+  methods, which returned a `Task` over a few kilobytes of text; the files are the same bytes. Migration:
+  `await clock.WriteAsync(f)` → `clock.Write(f)`; `await frame.WriteAsync(f)` → `frame.Write(f)`;
+  `await instrument.WriteFrameAsync(f)` → `instrument.WriteFrame(f)`; `await instrument.WriteKernelAsync(f)` →
+  `instrument.WriteKernel(f)`; `await site.WriteFrameAsync(f)` → `site.WriteFrame(f)`; `await siteFrame.WriteAsync(f)` →
+  `siteFrame.Write(f)`.
+- **Breaking: the constructor `SpacecraftFrame(Spacecraft)` is internal**
+  ([#799](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/799)(d), lot L5c, decision 78 of
+  #668, decided by S. Guillet, 2026-11-23): a frame built apart from its spacecraft held an empty attitude record, which
+  no propagation fills, and its CK writer threw. Migration: `spacecraft.Frame`, the frame the spacecraft builds.
+- **Breaking: `SpacecraftFrame.WriteOrientation(FileInfo, Spacecraft)` is internal**
+  ([#799](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/799)(d), lot L5c, decision 78 of
+  #668, decided by S. Guillet, 2026-11-23): it wrote the attitude record of the frame's spacecraft under the id of the
+  spacecraft it was given (measured: the record of one spacecraft written under the id of another, never propagated).
+  Migration: `spacecraft.WriteOrientation(file)`.
 
 **Removed**
 

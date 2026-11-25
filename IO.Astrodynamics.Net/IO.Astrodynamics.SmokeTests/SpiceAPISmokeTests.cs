@@ -173,7 +173,7 @@ public class SpiceAPISmokeTests
     // ===== WriteOrientation & ReadOrientation =====
 
     [Fact]
-    public async Task WriteAndReadOrientation()
+    public void WriteAndReadOrientation()
     {
         const int size = 10;
         Clock clock = new Clock("smokeClk2", 65536);
@@ -193,7 +193,7 @@ public class SpiceAPISmokeTests
         var ckFile = new FileInfo("SmokeTest_Orientation.ck");
         try
         {
-            await clock.WriteAsync(clockFile);
+            clock.Write(clockFile);
             SpiceAPI.Instance.LoadKernels(clockFile);
 
             SpiceAPI.Instance.WriteOrientation(ckFile, spacecraft.NaifId, so);

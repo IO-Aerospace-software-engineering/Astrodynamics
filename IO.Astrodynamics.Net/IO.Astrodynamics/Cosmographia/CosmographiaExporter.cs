@@ -80,7 +80,7 @@ public class CosmographiaExporter
             throw;
         }
 
-        await ExportRawDataAsync(scenario, kernelsTemp, missionOutputDirectory);
+        ExportRawData(scenario, kernelsTemp, missionOutputDirectory);
 
         await ExportSpiceKernelsAsync(scenario, missionOutputDirectory);
 
@@ -343,7 +343,7 @@ public class CosmographiaExporter
         await JsonSerializer.SerializeAsync(fileStream, spiceJson, CosmographiaJsonContext.Default.SpiceRootObject);
     }
 
-    // The kernels of the export, relative to <Mission>_<Scenario>: the layout ExportRawDataAsync writes
+    // The kernels of the export, relative to <Mission>_<Scenario>: the layout ExportRawData writes
     private static string ClockPath(Spacecraft spacecraft) => Path.Combine("Spacecrafts", spacecraft.Name, "Clocks", $"{spacecraft.Name}.tsc");
     private static string FramePath(Spacecraft spacecraft) => Path.Combine("Spacecrafts", spacecraft.Name, "Frames", $"{spacecraft.Name}.tf");
     private static string OrientationPath(Spacecraft spacecraft) => Path.Combine("Spacecrafts", spacecraft.Name, "Orientation", $"{spacecraft.Name}.ck");
@@ -384,7 +384,7 @@ public class CosmographiaExporter
 
     // Writes the kernels under kernelsTemp, whose kernel paths ExportAsync checked, copies them to outputDirectory, and
     // deletes kernelsTemp
-    private async Task ExportRawDataAsync(Scenario scenario, DirectoryInfo kernelsTemp, DirectoryInfo outputDirectory)
+    private static void ExportRawData(Scenario scenario, DirectoryInfo kernelsTemp, DirectoryInfo outputDirectory)
     {
         FileInfo Kernel(string relativePath) => new(Path.Combine(kernelsTemp.FullName, relativePath));
         var spacecraftFolder = kernelsTemp.CreateSubdirectory("Spacecrafts");
@@ -406,10 +406,10 @@ public class CosmographiaExporter
 
                 try
                 {
-                    await spacecraft.Clock.WriteAsync(clockFile);
+                    spacecraft.Clock.Write(clockFile);
                     SpiceAPI.Instance.LoadKernels(clockFile);
 
-                    await spacecraft.Frame.WriteAsync(frameFile);
+                    spacecraft.Frame.Write(frameFile);
                     SpiceAPI.Instance.LoadKernels(frameFile);
                     spacecraft.WriteOrientation(Kernel(OrientationPath(spacecraft)));
                     spacecraft.WriteEphemeris(Kernel(EphemerisPath(spacecraft)));
@@ -422,15 +422,15 @@ public class CosmographiaExporter
 
                 foreach (var instrument in spacecraft.Instruments)
                 {
-                    await instrument.WriteFrameAsync(Kernel(InstrumentFramePath(spacecraft, instrument)));
-                    await instrument.WriteKernelAsync(Kernel(InstrumentKernelPath(spacecraft, instrument)));
+                    instrument.WriteFrame(Kernel(InstrumentFramePath(spacecraft, instrument)));
+                    instrument.WriteKernel(Kernel(InstrumentKernelPath(spacecraft, instrument)));
                 }
             }
 
             foreach (var site in scenario.Sites)
             {
                 sitesFolder.CreateSubdirectory(site.Name);
-                await site.WriteFrameAsync(Kernel(SiteFramePath(site)));
+                site.WriteFrame(Kernel(SiteFramePath(site)));
                 site.WriteEphemeris(scenario.Window, Kernel(SiteEphemerisPath(site)));
             }
 

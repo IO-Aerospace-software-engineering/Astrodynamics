@@ -2,7 +2,6 @@ using System;
 using System.Globalization;
 using System.IO;
 using System.Threading;
-using System.Threading.Tasks;
 
 namespace IO.Astrodynamics.Body.Spacecraft
 {
@@ -65,14 +64,20 @@ namespace IO.Astrodynamics.Body.Spacecraft
             }
         }
 
-        public async Task WriteAsync(FileInfo outputFile)
+        /// <summary>
+        /// Writes the clock kernel (SCLK) of the spacecraft: the clock of id |NaifId| at <see cref="Resolution"/> ticks per
+        /// second, the id and the resolution written in the invariant culture. Synchronous since 11.0.0, <c>WriteAsync</c>
+        /// before (decision 78 of #668, decided by S. Guillet, 2026-11-23).
+        /// </summary>
+        /// <param name="outputFile">The clock kernel to write.</param>
+        public void Write(FileInfo outputFile)
         {
-            await using var stream = this.GetType().Assembly.GetManifestResourceStream("IO.Astrodynamics.Templates.ClockTemplate.tsc");
+            using var stream = this.GetType().Assembly.GetManifestResourceStream("IO.Astrodynamics.Templates.ClockTemplate.tsc");
             using StreamReader sr = new StreamReader(stream ?? throw new InvalidOperationException());
-            var templateData = await sr.ReadToEndAsync();
+            var templateData = sr.ReadToEnd();
             var data = templateData.Replace("{id}", System.Math.Abs(Spacecraft.NaifId).ToString(CultureInfo.InvariantCulture)).Replace("{resolution}",  Resolution.ToString(CultureInfo.InvariantCulture));
-            await using var sw = new StreamWriter(outputFile.FullName);
-            await sw.WriteAsync(data);
+            using var sw = new StreamWriter(outputFile.FullName);
+            sw.Write(data);
         }
 
         public bool Equals(Clock other)

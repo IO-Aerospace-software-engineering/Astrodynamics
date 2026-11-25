@@ -87,10 +87,10 @@ public class SpacecraftKernelsTests
 
         Directory.CreateDirectory(directory);
         string stem = Path.Combine(directory, SpacecraftName.ToLowerInvariant());
-        spacecraft.Clock.WriteAsync(new FileInfo(stem + ".tsc")).GetAwaiter().GetResult();
+        spacecraft.Clock.Write(new FileInfo(stem + ".tsc"));
         // The CK writer encodes its epochs with the clock kernel
         SpiceAPI.Instance.LoadKernels(new FileInfo(stem + ".tsc"));
-        ((SpacecraftFrame)spacecraft.Frame).WriteAsync(new FileInfo(stem + ".tf")).GetAwaiter().GetResult();
+        spacecraft.Frame.Write(new FileInfo(stem + ".tf"));
         spacecraft.WriteEphemeris(new FileInfo(stem + ".bsp"));
         spacecraft.WriteOrientation(new FileInfo(stem + ".bc"));
         // Loaded for the references read before a command (the commands load the directory again)

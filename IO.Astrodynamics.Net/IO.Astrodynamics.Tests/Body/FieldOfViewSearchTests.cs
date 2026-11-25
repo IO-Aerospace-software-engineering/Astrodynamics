@@ -47,16 +47,16 @@ internal static class FieldOfViewKernels
 
         string stem = spacecraft.Name.ToLowerInvariant();
         var clock = File(stem + ".tsc");
-        spacecraft.Clock.WriteAsync(clock).GetAwaiter().GetResult();
+        spacecraft.Clock.Write(clock);
         var frame = File(stem + ".tf");
-        ((SpacecraftFrame)spacecraft.Frame).WriteAsync(frame).GetAwaiter().GetResult();
+        spacecraft.Frame.Write(frame);
         var texts = new List<FileInfo> { clock, frame };
         foreach (var instrument in spacecraft.Instruments)
         {
             var instrumentFrame = File($"{stem}_{instrument.Name.ToLowerInvariant()}.tf");
-            instrument.WriteFrameAsync(instrumentFrame).GetAwaiter().GetResult();
+            instrument.WriteFrame(instrumentFrame);
             var kernel = File($"{stem}_{instrument.Name.ToLowerInvariant()}.ti");
-            instrument.WriteKernelAsync(kernel).GetAwaiter().GetResult();
+            instrument.WriteKernel(kernel);
             texts.Add(instrumentFrame);
             texts.Add(kernel);
         }
@@ -929,7 +929,7 @@ public class FieldOfViewSearchTests : IClassFixture<PropagatedFieldOfViewCase>
     /// docs/guides/thread-safety.md states, corrected by #668: it said a spacecraft's frame stored every orientation read).
     /// </summary>
     [Fact]
-    public async Task ConcurrentSearches_EqualSequentialSearches()
+    public void ConcurrentSearches_EqualSequentialSearches()
     {
         var window = new Window(_case.Start.AddSeconds(1.0), _case.Start.AddSeconds(2000.0));
         var propagation = new Window(_case.Start, _case.Start.AddSeconds(2001.0));
@@ -1025,7 +1025,7 @@ public class FieldOfViewSearchTests : IClassFixture<PropagatedFieldOfViewCase>
         // The CK is written in the ticks of the spacecraft's clock, whose kernel is loaded first
         var clock = new FileInfo("Data/User/FieldOfViewSearch515/concurrent.tsc");
         File.Delete(clock.FullName);
-        await fresh[0].spacecraft.Clock.WriteAsync(new FileInfo(clock.FullName));
+        fresh[0].spacecraft.Clock.Write(new FileInfo(clock.FullName));
         SpiceAPI.Instance.LoadKernels(new FileInfo(clock.FullName));
         try
         {

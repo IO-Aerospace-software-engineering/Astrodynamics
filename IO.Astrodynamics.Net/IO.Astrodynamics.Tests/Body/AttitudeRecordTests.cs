@@ -1531,17 +1531,17 @@ public class AttitudeRecordTests
             Directory.CreateDirectory(directory);
             string stem = sc.Name.ToLowerInvariant();
             var clock = NewFile(directory, stem + ".tsc");
-            sc.Clock.WriteAsync(clock).GetAwaiter().GetResult();
+            sc.Clock.Write(clock);
             var frame = NewFile(directory, stem + ".tf");
-            ((SpacecraftFrame)sc.Frame).WriteAsync(frame).GetAwaiter().GetResult();
+            sc.Frame.Write(frame);
             SpiceAPI.Instance.LoadKernels(clock);
             SpiceAPI.Instance.LoadKernels(frame);
             foreach (var instrument in sc.Instruments)
             {
                 var instrumentFrame = NewFile(directory, $"{stem}_{instrument.Name.ToLowerInvariant()}.tf");
-                instrument.WriteFrameAsync(instrumentFrame).GetAwaiter().GetResult();
+                instrument.WriteFrame(instrumentFrame);
                 var kernel = NewFile(directory, $"{stem}_{instrument.Name.ToLowerInvariant()}.ti");
-                instrument.WriteKernelAsync(kernel).GetAwaiter().GetResult();
+                instrument.WriteKernel(kernel);
                 SpiceAPI.Instance.LoadKernels(instrumentFrame);
                 SpiceAPI.Instance.LoadKernels(kernel);
             }
@@ -1558,7 +1558,7 @@ public class AttitudeRecordTests
         /// <summary>The epochs of the discrete changes: the second record of each pair of CK records 1 µs apart.</summary>
         internal Time[] DiscreteChanges()
         {
-            var records = ((SpacecraftFrame)Spacecraft.Frame).CkRecords();
+            var records = Spacecraft.Frame.CkRecords();
             var changes = new List<Time>();
             for (int i = 1; i < records.Length; i++)
             {

@@ -53,7 +53,7 @@ public class KernelWriterCultureTests
     [InlineData("sv-SE")]
     [InlineData("fi-FI")]
     [InlineData("he-IL")]
-    public async Task TextKernels_InACultureOfAnotherMinusSign_AreTheInvariantBytes_AndDefineTheirIds(string culture)
+    public void TextKernels_InACultureOfAnotherMinusSign_AreTheInvariantBytes_AndDefineTheirIds(string culture)
     {
         const int spacecraftId = -1821;
         const int siteId = 821;
@@ -63,7 +63,7 @@ public class KernelWriterCultureTests
             // The reference: the set written in this process, in the invariant culture
             var reference = root.CreateSubdirectory("invariant");
             var (spacecraft, site) = CultureKernelSet.Build(spacecraftId, "SAT821", ["CAM821", "RECT821", "ELL821"], siteId, "SITE821");
-            await CultureKernelSet.WriteAsync(spacecraft, site, reference);
+            CultureKernelSet.Write(spacecraft, site, reference);
 
             var written = Path.Combine(root.FullName, culture);
             var lines = RunChild(culture, "text-kernels", written, "-1821", "SAT821", "CAM821", "RECT821", "ELL821", "821", "SITE821");
@@ -105,7 +105,7 @@ public class KernelWriterCultureTests
     [Theory]
     [InlineData("sv-SE")]
     [InlineData("he-IL")]
-    public async Task CosmographiaExport_InACultureOfAnotherMinusSignAndDecimalSeparator_WritesTheInvariantKernelsAndNumbers(string culture)
+    public void CosmographiaExport_InACultureOfAnotherMinusSignAndDecimalSeparator_WritesTheInvariantKernelsAndNumbers(string culture)
     {
         // Before #821 the export failed under sv-SE and he-IL: it loads the spacecraft frame kernel it writes in its scratch
         // directory, which held the id in the culture (SpiceException); its trajectory plot wrote "1,5 d" under sv-SE
@@ -114,7 +114,7 @@ public class KernelWriterCultureTests
         {
             var reference = root.CreateSubdirectory("invariant");
             var (spacecraft, site) = CultureKernelSet.Build(-1822, "SAT822", ["CAM822", "RECT822", "ELL822"], 822, "SITE822");
-            await CultureKernelSet.WriteAsync(spacecraft, site, reference);
+            CultureKernelSet.Write(spacecraft, site, reference);
 
             var written = Path.Combine(root.FullName, culture);
             var lines = RunChild(culture, "export", written, "-1822", "SAT822", "CAM822", "RECT822", "ELL822", "822", "SITE822");
@@ -154,7 +154,7 @@ public class KernelWriterCultureTests
     }
 
     [Fact]
-    public async Task TextKernels_InTurkish_AreTheInvariantBytes_AndDefineTheInvariantNames()
+    public void TextKernels_InTurkish_AreTheInvariantBytes_AndDefineTheInvariantNames()
     {
         // Before #798 the writers upper-cased with the current culture: under tr-TR "iss798" became "İSS798" (U+0130), a
         // name no other culture writes for the same object; the site's frame, named at construction, too
@@ -163,7 +163,7 @@ public class KernelWriterCultureTests
         {
             var reference = root.CreateSubdirectory("invariant");
             var (spacecraft, site) = CultureKernelSet.Build(-1798, "iss798", ["imager", "irspec", "lidar"], 798, "site798");
-            await CultureKernelSet.WriteAsync(spacecraft, site, reference);
+            CultureKernelSet.Write(spacecraft, site, reference);
             Assert.Equal("SITE798_TOPO", site.Frame.Name);
 
             var written = Path.Combine(root.FullName, "tr-TR");
@@ -199,7 +199,7 @@ public class KernelWriterCultureTests
     }
 
     [Fact]
-    public async Task CosmographiaExport_InTurkish_NamesTheObjectsOfItsKernels_AndTheBodiesAsCosmographia()
+    public void CosmographiaExport_InTurkish_NamesTheObjectsOfItsKernels_AndTheBodiesAsCosmographia()
     {
         // Before #798, under tr-TR, the kernels and the catalog both wrote "İSS799_İMAGER", and the catalog named the
         // centre of a site on Jupiter "Jupıter" (U+0131), in "jupıter-features.json"
@@ -208,7 +208,7 @@ public class KernelWriterCultureTests
         {
             var reference = root.CreateSubdirectory("invariant");
             var (spacecraft, site) = CultureKernelSet.Build(-1799, "iss799", ["imager", "irspec", "lidar"], 799, "site799");
-            await CultureKernelSet.WriteAsync(spacecraft, site, reference);
+            CultureKernelSet.Write(spacecraft, site, reference);
 
             var written = Path.Combine(root.FullName, "tr-TR");
             var lines = RunChild("tr-TR", "export", written, "-1799", "iss799", "imager", "irspec", "lidar", "799", "site799");

@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.IO;
 using System.Linq;
-using System.Threading.Tasks;
 using IO.Astrodynamics.Body;
 using IO.Astrodynamics.Coordinates;
 using IO.Astrodynamics.DataProvider;
@@ -657,15 +656,16 @@ namespace IO.Astrodynamics.Surface
         }
 
         /// <summary>
-        /// Writes the frame kernel of the topocentric frame of the site (<see cref="SiteFrame.WriteAsync"/>): the frame of
+        /// Writes the frame kernel of the topocentric frame of the site (<see cref="SiteFrame.Write"/>): the frame of
         /// <see cref="Planetodetic"/>, or for a site from the kernels whose frame id the loaded kernels define, that kernel
-        /// frame under its kernel name (#690).
+        /// frame under its kernel name (#690). Synchronous since 11.0.0, <c>WriteFrameAsync</c> before (decision 78 of #668,
+        /// decided by S. Guillet, 2026-11-23).
         /// </summary>
         /// <param name="outputFile">The frame kernel to write.</param>
-        /// <exception cref="InvalidOperationException">See <see cref="SiteFrame.WriteAsync"/>; nothing is written.</exception>
-        public async Task WriteFrameAsync(FileInfo outputFile)
+        /// <exception cref="InvalidOperationException">See <see cref="SiteFrame.Write"/>; nothing is written.</exception>
+        public void WriteFrame(FileInfo outputFile)
         {
-            await Frame.WriteAsync(outputFile);
+            Frame.Write(outputFile);
         }
 
         /// <summary>

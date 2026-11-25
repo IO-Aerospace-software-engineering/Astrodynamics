@@ -211,7 +211,7 @@ public partial class SpiceApiTest
     }
 
     [Fact]
-    public async Task ReadOrientation()
+    public void ReadOrientation()
     {
         TimeSystem.Time start = TimeSystem.Time.CreateTDB(662778000.0);
         TimeSystem.Time end = start.AddSeconds(60.0);
@@ -248,7 +248,7 @@ public partial class SpiceApiTest
         scenario.Simulate(new PropagationOptions { Integrator = new VVIntegratorOptions { Step = TimeSpan.FromSeconds(1.0) }, OutputStep = TimeSpan.FromSeconds(1.0) });
         var ckFile = new FileInfo(root + "/OrientationTestFile.ck");
         var clckFile = new FileInfo(root + "/ClckTestFile.tsc");
-        await spacecraft.Clock.WriteAsync(clckFile);
+        spacecraft.Clock.Write(clckFile);
         SpiceAPI.Instance.LoadKernels(clckFile);
 
         spacecraft.WriteOrientation(ckFile);
@@ -485,14 +485,14 @@ public partial class SpiceApiTest
     /// J2000 TDB, the site's constructor reads past it: SPICE's error at 2000 JAN 01 12:00:00.
     /// </summary>
     [Fact]
-    public async Task ReadEphemeris_FromAnUnnamedWrittenSite_ThrowsAndTheTargetReadWorks()
+    public void ReadEphemeris_FromAnUnnamedWrittenSite_ThrowsAndTheTargetReadWorks()
     {
         var epoch = new TimeSystem.Time(2024, 3, 1, 12, 0, 0, TimeScale.TDB);
         var site = new Site(786, "RE786", PlanetsAndMoons.EARTH_BODY, new Planetodetic(0.5, 0.2, 1000.0));
         var spk = IO.Astrodynamics.Tests.Body.FrameKernelFiles.NewFile("site786", ".bsp");
         var fk = IO.Astrodynamics.Tests.Body.FrameKernelFiles.NewFile("site786_names");
         site.WriteEphemeris(new Window(epoch.AddDays(-1.0), epoch.AddDays(1.0)), spk);
-        await site.WriteFrameAsync(fk);
+        site.WriteFrame(fk);
         Assert.Empty(KernelShadowing.Find([spk, fk], KernelShadowing.SolarSystem));
         SpiceAPI.Instance.LoadKernels(spk);
         try
@@ -894,7 +894,7 @@ public partial class SpiceApiTest
     }
 
     [Fact]
-    public async Task WriteOrientation()
+    public void WriteOrientation()
     {
         //Load solar system kernels
         const int size = 10;
@@ -911,7 +911,7 @@ public partial class SpiceApiTest
         }
 
         var clockFile = new FileInfo("OrientationClockTest.tsc");
-        await clock.WriteAsync(clockFile);
+        clock.Write(clockFile);
         //Write ephemeris file
         FileInfo file = new FileInfo("OrientationTestFile.ck");
         var frameFile = new FileInfo("OrientationTestFrame.tf");
@@ -950,7 +950,7 @@ public partial class SpiceApiTest
 
             // pxform(J2000, SC) on the written CK, with the frame kernel of the spacecraft: the C-matrix written, J2000 to the
             // spacecraft frame (choice 7 of the design of #537), at its records
-            await ((SpacecraftFrame)spacecraft.Frame).WriteAsync(frameFile);
+            spacecraft.Frame.Write(frameFile);
             SpiceAPI.Instance.LoadKernels(frameFile);
             foreach (var written in so)
             {
@@ -1594,7 +1594,7 @@ public partial class SpiceApiTest
         }
 
         var clockFile = new FileInfo("OrientationClockTestFromId.tsc");
-        await clock.WriteAsync(clockFile);
+        clock.Write(clockFile);
         SpiceAPI.Instance.LoadKernels(clockFile);
         FileInfo file = new FileInfo("OrientationTestFileFromId.ck");
         try
@@ -2025,7 +2025,7 @@ public partial class SpiceApiTest
     // #714: ReadOrientation threw "No orientation found" for a CK segment without angular velocity: ckgpav_c skips it with no
     // error (ckgpav_c.c, Restrictions 1), and the native layer fell back to ckgp_c only on an error. A type-3 CK written by
     // ckw03_c with and without rates (11 records 100 s apart, a rotation about z at 1e-3 rad/s, the SPICE quaternion
-    // (cos(wt/2), 0, 0, sin(wt/2))), the clock written by Clock.WriteAsync: each record is ckgp_c's C-matrix and the closed form
+    // (cos(wt/2), 0, 0, sin(wt/2))), the clock written by Clock.Write: each record is ckgp_c's C-matrix and the closed form
     // R_z(1e-3 t), with a zero angular velocity without rates and (0, 0, 1e-3) rad/s with them. ckw03_c is not exported by the
     // Windows DLL
     // Twice the worst on Linux x64 of the angle of a record to ckgp_c and to the closed form (the MEASURE lines, 1.570e-16
@@ -2047,7 +2047,7 @@ public partial class SpiceApiTest
         var orbit = new StateVector(new Vector3(7.0e6, 0.0, 0.0), new Vector3(0.0, 7.5e3, 0.0), TestHelpers.EarthAtJ2000,
             TimeSystem.Time.J2000TDB, Frames.Frame.ICRF);
         var spacecraft = new Spacecraft(id, $"IOA714CK{-id}", 1000.0, orbit, 10000.0, new Clock($"IOA714CLOCK{-id}", 65536));
-        await spacecraft.Clock.WriteAsync(clockFile);
+        spacecraft.Clock.Write(clockFile);
         SpiceAPI.Instance.LoadKernels(clockFile);
         try
         {

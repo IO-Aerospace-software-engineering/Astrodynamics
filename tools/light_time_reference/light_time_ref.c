@@ -29,7 +29,7 @@
  *
  * Rows of the review of #593: states in a non-inertial frame centred on a third object, neither the observer nor the
  * target: the topocentric frames of G and of H, a second site given by its coordinates (longitude 10 deg, latitude 45
- * deg, altitude 200 m), each the TK frame the library writes for a site (Site.WriteFrameAsync: angles -longitude,
+ * deg, altitude 200 m), each the TK frame the library writes for a site (Site.WriteFrame: angles -longitude,
  * -(pi/2 - latitude), pi about the axes 3, 2, 3 of ITRF93) centred on the site, written with an SPK of type 8 of the site
  * fixed in ITRF93 (399491 and 399492) so that SPICE reads the centre; and S_TK, a frame of S oriented as ITRF93 (a TK
  * frame, the identity relative to ITRF93, centred on S), which the library gives S as an attitude record. Rows: the Moon

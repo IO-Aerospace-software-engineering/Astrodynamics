@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading;
-using System.Threading.Tasks;
 using IO.Astrodynamics.CCSDS.Common;
 using IO.Astrodynamics.CCSDS.OPM;
 using IO.Astrodynamics.Frames;
@@ -1123,15 +1122,6 @@ namespace IO.Astrodynamics.Body.Spacecraft
         public StateOrientation GetOrientation(Frame referenceFrame, in Time epoch)
         {
             return referenceFrame.ToFrame(Frame, epoch);
-        }
-
-        /// <summary>
-        /// Write frame
-        /// </summary>
-        /// <param name="outputFile"></param>
-        private async Task WriteFrameAsync(FileInfo outputFile)
-        {
-            await (Frame as SpacecraftFrame)!.WriteAsync(outputFile);
         }
 
         /// <summary>

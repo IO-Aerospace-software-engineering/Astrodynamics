@@ -98,7 +98,7 @@ namespace IO.Astrodynamics.Tests.Body
         }
 
         [Fact]
-        public async Task GetOrientation()
+        public void GetOrientation()
         {
             TimeSystem.Time start =  TimeSystem.Time.Create(676555130.80,TimeScale.UTC).ToTDB();
             TimeSystem.Time end = start.Add(TimeSpan.FromSeconds(6448.0));
@@ -403,7 +403,7 @@ namespace IO.Astrodynamics.Tests.Body
                 Frames.Frame.ECLIPTIC_J2000);
             Clock clk1 = new Clock("My clock", 256);
             Spacecraft spc1 = new Spacecraft(-1001, "MySpacecraft", 1000.0, ke, 10000.0, clk1);
-            var frame = new SpacecraftFrame(spc1);
+            var frame = spc1.Frame;
             Assert.Equal("MySpacecraft_FRAME", frame.Name);
             Assert.Equal(-1001, frame.Spacecraft.NaifId);
             Assert.Equal(-1001000, frame.Id);
@@ -416,8 +416,8 @@ namespace IO.Astrodynamics.Tests.Body
                 Frames.Frame.ECLIPTIC_J2000);
             Clock clk1 = new Clock("My clock", 256);
             Spacecraft spc1 = new Spacecraft(-350, "MySpacecraft", 1000.0, ke, 10000.0, clk1);
-            var frame = new SpacecraftFrame(spc1);
-            await frame.WriteAsync(new FileInfo("test.tf"));
+            var frame = spc1.Frame;
+            frame.Write(new FileInfo("test.tf"));
             TextReader tr = new StreamReader("test.tf");
             var res = await tr.ReadToEndAsync();
             Assert.Equal(
@@ -977,7 +977,7 @@ namespace IO.Astrodynamics.Tests.Body
             var fk = FrameKernelFiles.NewFile("bound");
             try
             {
-                await spc.Frame.WriteAsync(fk);
+                spc.Frame.Write(fk);
 
                 // Assert: (long)-2147483 × 1000, in 64 bits
                 Assert.Equal(-2147483L * 1000L, (long)spc.Frame.Id);
@@ -1030,14 +1030,14 @@ namespace IO.Astrodynamics.Tests.Body
         [InlineData("Sat\t1")]
         [InlineData("ABCDEFGHIJKLMNOPQRSTU")]
         [InlineData("ÉÉÉÉÉÉÉÉÉÉÉÉÉ")]
-        public async Task WriteFrame_NameSpiceCannotRead_Throws(string name)
+        public void WriteFrame_NameSpiceCannotRead_Throws(string name)
         {
             // Arrange
             var spc = new Spacecraft(-1221, name, 100.0, LeoAbout(new CelestialBody(PlanetsAndMoons.EARTH)), 1000.0, new Clock("NAMES", 65536));
             var fk = FrameKernelFiles.NewFile("refused");
 
             // Act
-            var exception = await Record.ExceptionAsync(() => spc.Frame.WriteAsync(fk));
+            var exception = Record.Exception(() => spc.Frame.Write(fk));
 
             // Assert
             var rejected = Assert.IsType<InvalidOperationException>(exception);
@@ -1056,7 +1056,7 @@ namespace IO.Astrodynamics.Tests.Body
         [InlineData("S/T")]
         [InlineData("ABCDEFGHIJKLMNOPQRST")]
         [InlineData("ABCDEFGHIJKLMNOPQRÉ")]
-        public async Task WriteFrame_BoundaryNames_LoadInSpice(string name)
+        public void WriteFrame_BoundaryNames_LoadInSpice(string name)
         {
             // Arrange
             var spc = new Spacecraft(-1222, name, 100.0, LeoAbout(new CelestialBody(PlanetsAndMoons.EARTH)), 1000.0, new Clock("NAMES", 65536));
@@ -1064,7 +1064,7 @@ namespace IO.Astrodynamics.Tests.Body
             Assert.True(System.Text.Encoding.UTF8.GetByteCount("FRAME_" + name.ToUpper() + "_FRAME") <= 32);
 
             // Act
-            await spc.Frame.WriteAsync(fk);
+            spc.Frame.Write(fk);
 
             // Assert: loaded without error
             FrameKernelFiles.Load(fk);

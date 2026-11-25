@@ -76,7 +76,7 @@ public class AttitudeTimelineEdgeTests
     // The epochs of the library's discrete changes: the second record of each pair of CK records 1 µs apart
     private static Time[] DiscreteChanges(Spacecraft spacecraft)
     {
-        var records = ((SpacecraftFrame)spacecraft.Frame).CkRecords();
+        var records = spacecraft.Frame.CkRecords();
         return records.Skip(1).Where((x, i) => (x.Epoch - records[i].Epoch).TotalSeconds <= 1.5e-6).Select(x => x.Epoch).ToArray();
     }
 
@@ -527,8 +527,8 @@ public class AttitudeTimelineEdgeTests
         var ck = NewFile(stem + ".bc");
         // The SPK too: the kernel-backed spacecraft reads its initial state, which throws without one since #454
         var spk = NewFile(stem + ".bsp");
-        sc.Clock.WriteAsync(clock).GetAwaiter().GetResult();
-        ((SpacecraftFrame)sc.Frame).WriteAsync(frame).GetAwaiter().GetResult();
+        sc.Clock.Write(clock);
+        sc.Frame.Write(frame);
         sc.WriteEphemeris(spk);
         SpiceAPI.Instance.LoadKernels(clock);
         SpiceAPI.Instance.LoadKernels(frame);

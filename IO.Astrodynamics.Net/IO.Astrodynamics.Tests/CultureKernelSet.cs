@@ -26,7 +26,7 @@ namespace IO.Astrodynamics.Tests;
 /// </summary>
 internal static class CultureKernelSet
 {
-    /// <summary>The kernels of the set, by file name, in the order <see cref="WriteAsync"/> writes them.</summary>
+    /// <summary>The kernels of the set, by file name, in the order <see cref="Write"/> writes them.</summary>
     internal static readonly string[] Files =
     [
         "clock.tsc", "spacecraft.tf", "circular.tf", "circular.ti", "rectangular.tf", "rectangular.ti", "elliptical.tf",
@@ -79,19 +79,19 @@ internal static class CultureKernelSet
     }
 
     /// <summary>Writes the kernels of <see cref="Files"/> into <paramref name="directory"/>.</summary>
-    internal static async Task WriteAsync(Spacecraft spacecraft, Site site, DirectoryInfo directory)
+    internal static void Write(Spacecraft spacecraft, Site site, DirectoryInfo directory)
     {
         FileInfo File(string name) => new(Path.Combine(directory.FullName, name));
-        await spacecraft.Clock.WriteAsync(File("clock.tsc"));
-        await spacecraft.Frame.WriteAsync(File("spacecraft.tf"));
+        spacecraft.Clock.Write(File("clock.tsc"));
+        spacecraft.Frame.Write(File("spacecraft.tf"));
         var shapes = new[] { "circular", "rectangular", "elliptical" };
         var instruments = new List<Instrument>(spacecraft.Instruments);
         for (int i = 0; i < shapes.Length; i++)
         {
-            await instruments[i].WriteFrameAsync(File(shapes[i] + ".tf"));
-            await instruments[i].WriteKernelAsync(File(shapes[i] + ".ti"));
+            instruments[i].WriteFrame(File(shapes[i] + ".tf"));
+            instruments[i].WriteKernel(File(shapes[i] + ".ti"));
         }
 
-        await site.WriteFrameAsync(File("site.tf"));
+        site.WriteFrame(File("site.tf"));
     }
 }

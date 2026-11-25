@@ -418,8 +418,8 @@ public class TemeFrameTests
             var clock = new FileInfo(Path.Combine(_directory.FullName, "f07ck.tsc"));
             var fk = new FileInfo(Path.Combine(_directory.FullName, "f07ck.tf"));
             var ck = new FileInfo(Path.Combine(_directory.FullName, "f07ck.bc"));
-            Writer.Clock.WriteAsync(clock).GetAwaiter().GetResult();
-            ((IO.Astrodynamics.Body.Spacecraft.SpacecraftFrame)Writer.Frame).WriteAsync(fk).GetAwaiter().GetResult();
+            Writer.Clock.Write(clock);
+            Writer.Frame.Write(fk);
             clock.Refresh();
             fk.Refresh();
             Assert.Empty(KernelShadowing.Find([clock, fk], KernelShadowing.SolarSystem));

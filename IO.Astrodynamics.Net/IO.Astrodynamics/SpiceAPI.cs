@@ -1942,7 +1942,7 @@ public class SpiceAPI
     /// <exception cref="ArgumentException">The observer is a site identifier (<see cref="IsSiteOfNamedBody"/>: body × 1000
     /// + site, of a body SPICE names) that no loaded kernel names (<c>naifId</c>, "has no name in SPICE"): its observer is a
     /// <see cref="Surface.Site"/> built from its SPICE name (#672); load a kernel that names it (NAIF_BODY_NAME and
-    /// NAIF_BODY_CODE, as the frame kernel of <see cref="Surface.Site.WriteFrameAsync"/>) with its SPK. Or the observer is
+    /// NAIF_BODY_CODE, as the frame kernel of <see cref="Surface.Site.WriteFrame"/>) with its SPK. Or the observer is
     /// another identifier that is not a celestial body, or that SPICE does not name (#672). An identifier of the form of a
     /// site whose body SPICE does not name, SPICE's NOTO (398989) and NEW NORCIA (398990), is an object of the kernels read
     /// by its identifier (<see cref="Body.KernelObject"/>, #750: before, "The NAIF identifier 398 has no name in SPICE"):
@@ -2064,7 +2064,7 @@ public class SpiceAPI
     /// <exception cref="ArgumentException">The observer is a site identifier (<see cref="IsSiteOfNamedBody"/>: body × 1000
     /// + site, of a body SPICE names) that no loaded kernel names (<c>naifId</c>, "has no name in SPICE"): its observer is a
     /// <see cref="Surface.Site"/> built from its SPICE name (#672); load a kernel that names it (NAIF_BODY_NAME and
-    /// NAIF_BODY_CODE, as the frame kernel of <see cref="Surface.Site.WriteFrameAsync"/>) with its SPK. Or the observer is
+    /// NAIF_BODY_CODE, as the frame kernel of <see cref="Surface.Site.WriteFrame"/>) with its SPK. Or the observer is
     /// another identifier that is not a celestial body, or that SPICE does not name (#672). An identifier of the form of a
     /// site whose body SPICE does not name, SPICE's NOTO (398989) and NEW NORCIA (398990), is an object of the kernels read
     /// by its identifier (<see cref="Body.KernelObject"/>, #750: before, "The NAIF identifier 398 has no name in SPICE"):

@@ -290,7 +290,7 @@ public class EphemerisTests
     /// the kernel that names it loaded, its frame kernel, the CLI reads it under that name, by its identifier or its name.
     /// </summary>
     [Fact]
-    public async Task Ephemeris_FromASiteTheKernelsDoNotName_FailsAsTheLibrary_AndReadsOnceNamed()
+    public void Ephemeris_FromASiteTheKernelsDoNotName_FailsAsTheLibrary_AndReadsOnceNamed()
     {
         using (Configuration.Lock())
         {
@@ -301,7 +301,7 @@ public class EphemerisTests
             var frameKernel = new FileInfo(Path.Combine(directory.FullName, "site777.tf"));
             var site = new Surface.Site(777, "CLISITE", new Body.CelestialBody(399), new Coordinates.Planetodetic(0.1, 0.6, 100.0));
             site.WriteEphemeris(new Window(begin.AddDays(-1.0), begin.AddDays(1.0)), spk);
-            await site.WriteFrameAsync(frameKernel);
+            site.WriteFrame(frameKernel);
             string[] Args(string observer) =>
                 ["ephemeris", "301", observer, "-K", "Data", "--begin", begin.ToString(), "--end", begin.AddSeconds(60.0).ToString(), "--step", "1min"];
             SpiceAPI.Instance.LoadKernels(spk);

@@ -402,7 +402,7 @@ internal static class Program
         var clock = new Clock("IOA_G4_CLOCK", 65536);
         var spacecraft = new Spacecraft(-1979, "IOA_G4_SPC", 3000.0, EarthStates()[0], 10000.0, clock);
         var clockFile = new FileInfo(Path.Combine(folder.FullName, "clock.tsc"));
-        clock.WriteAsync(clockFile).GetAwaiter().GetResult();
+        clock.Write(clockFile);
         SpiceAPI.Instance.LoadKernels(clockFile);
         var records = Enumerable.Range(0, 3)
             .Select(i => new StateOrientation(Quaternion.Identity, Vector3.Zero, Epoch.AddSeconds(i), Frame.ICRF)).ToArray();
@@ -564,7 +564,7 @@ internal static class Program
         var clock = new Clock("IOA_J1_CLOCK", 65536);
         var spacecraft = new Spacecraft(-1977, "IOA_J1_SPC", 3000.0, EarthStates()[0], 10000.0, clock);
         var clockFile = new FileInfo(Path.Combine(folder.FullName, "clock.tsc"));
-        clock.WriteAsync(clockFile).GetAwaiter().GetResult();
+        clock.Write(clockFile);
         SpiceAPI.Instance.LoadKernels(clockFile);
         var records = Enumerable.Range(0, 3)
             .Select(i => new StateOrientation(Quaternion.Identity, Vector3.Zero, Epoch.AddSeconds(i), Frame.ICRF)).ToArray();
@@ -616,7 +616,7 @@ internal static class Program
         var clock = new Clock("IOA_J1_CLOCK", 65536);
         var spacecraft = new Spacecraft(-1978, "IOA_J1_SPC", 3000.0, EarthStates()[0], 10000.0, clock);
         var clockFile = new FileInfo(Path.Combine(folder.FullName, "clock.tsc"));
-        clock.WriteAsync(clockFile).GetAwaiter().GetResult();
+        clock.Write(clockFile);
         SpiceAPI.Instance.LoadKernels(clockFile);
         var records = Enumerable.Range(0, 3)
             .Select(i => new StateOrientation(Quaternion.Identity, Vector3.Zero, Epoch.AddSeconds(i), Frame.ICRF)).ToArray();
@@ -769,7 +769,7 @@ internal static class Program
         var clock = new Clock("IOA_K1_CLOCK", 65536);
         var spacecraft = new Spacecraft(-1999709, "IOA_K1_SPC", 3000.0, EarthStates()[0], 10000.0, clock);
         var clockFile = new FileInfo(Path.Combine(folder.FullName, "clock.tsc"));
-        clock.WriteAsync(clockFile).GetAwaiter().GetResult();
+        clock.Write(clockFile);
         SpiceAPI.Instance.LoadKernels(clockFile);
         var identity = Enumerable.Range(0, 3)
             .Select(i => new StateOrientation(Quaternion.Identity, Vector3.Zero, Epoch.AddSeconds(i), Frame.ICRF)).ToArray();
@@ -855,7 +855,7 @@ internal static class Program
         var clock = new Clock("IOA_712_CLOCK", 65536);
         var spacecraft = new Spacecraft(-1999801, "IOA_712_SPC", 3000.0, EarthStates()[0], 10000.0, clock);
         var clockFile = new FileInfo(Path.Combine(root.FullName, "clock.tsc"));
-        clock.WriteAsync(clockFile).GetAwaiter().GetResult();
+        clock.Write(clockFile);
         SpiceAPI.Instance.LoadKernels(clockFile);
         Check(SpiceAPI.Instance.GetLoadedKernels().All(k => !k.Extension.Equals(".bc", StringComparison.OrdinalIgnoreCase)), "no CK is loaded");
 
