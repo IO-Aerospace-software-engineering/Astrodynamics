@@ -48,7 +48,7 @@ S. Guillet, 2026-11-23): the plan and the propagation are the one rule. Before, 
 its engine was on a spacecraft, with the frame of that spacecraft's initial orbit or ICRF, a weaker rule that took a
 TEME target on a TLE spacecraft the propagation then rejected. Frames are compared by name, as everywhere in the library, but for ICRF and GCRF, which the library gives the
 same axes (`GcrfFrame`, the identity rotation): a GCRF target is taken on a spacecraft propagated in ICRF (a TLE or TEME
-spacecraft included), and an ICRF target on one propagated in GCRF, by the constructor and the propagation alike, the
+spacecraft included), and an ICRF target on one propagated in GCRF, by `SetManeuvers` and the propagation alike, the
 components of the target being those the integration reads; the burn is bit for bit that of the relabelled target
 (third review of #685; before, both were rejected, and the fix the message named, `targetOrbit.ToFrame(Frame.ICRF)`,
 changed no number). Any other pair of frames is rejected, whatever their rotation.

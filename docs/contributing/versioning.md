@@ -72,7 +72,11 @@ window per call, the maneuver plan of `SetManeuvers` with a closed `Maneuver` hi
 results of a run, read through `GetStateVector` and the records of `PropagationSolution.Maneuvers`, immutable from
 outside, and a first spacecraft in a few arguments: the orbit fourth with the maximum operating mass and the clock
 optional, one `Add*Instrument` per shape with a default id, components whose model and serial number are optional, each
-`Add` returning its argument and one name per component.
+`Add` returning its argument and one name per component, finite values in range, and maneuvers built from their
+targets: the impulses and the attitudes take their target first, the engine (on `ImpulseManeuver` only) and the centre
+optional and inferred by the run, the radii of the impulses checked, the axes of the spacecraft by `BodyAxis`, a
+`TriadAttitude` and an `InstrumentPointingToAttitude` of `IAttitudeTarget` targets, and an attitude that points only
+the instruments of its own spacecraft.
 **Removed** lists `Instrument.PositionInFOV`, `LowThrustManeuver`, `Quaternion.Zero`, `Star.PropagationOutput`,
 `ExceptionBase`, `Matrix.Set`, `Vector3 * Vector3`, six exports of the native library that .NET never called, the
 public interop structs of `IO.Astrodynamics.DTO`, the ten raw conversions of `SpiceAPI`, the public helpers of the
@@ -83,8 +87,9 @@ forces (the flag overloads of `Spacecraft.Propagate`, `Spacecraft.PropagateAsync
 the flags constructors of `CentralBodyPropagator` and `PropagationTask`, `CentralBodyPropagatorBuilder`, and the
 factories and flags of `MonteCarloConfiguration`), the asynchronous members over synchronous work (`Star`, `BatchPropagator`
 and `MonteCarloPropagator` `PropagateAsync`), the token and progress of `BatchOptions`, `Spacecraft.SetStandbyManeuver`,
-`InitialManeuver` and `Maneuver.SetNextManeuver`, `Attitude.StateOrientation`, `Spacecraft.GetTotalFuel` and the value
-equality of `FuelTank`, `Engine` and `Payload`. Several results change: see **Fixed** and **Changed**. The open defects a caller can meet at this
+`InitialManeuver` and `Maneuver.SetNextManeuver`, `Attitude.StateOrientation`, `Spacecraft.GetTotalFuel`, the value
+equality of `FuelTank`, `Engine` and `Payload`, the `ILocalizable` constructors of `TriadAttitude` and
+`InstrumentPointingToAttitude.Aberration`. Several results change: see **Fixed** and **Changed**. The open defects a caller can meet at this
 release are listed under **Known limitations**.
 
 **Added**
@@ -372,7 +377,15 @@ release are listed under **Known limitations**.
   implemented outside the library, built once from its steps, which it copies (under **Changed**).
 - **`enum BodyAxis` {`Front`, `Back`, `Right`, `Left`, `Up`, `Down`}** (`IO.Astrodynamics.Maneuver`, lot L5b, decision 69 of
   #668): an axis of the spacecraft body frame, resolved on the instance axes of the spacecraft whose plan last held the
-  maneuver, the static axes before any plan, by the protected `Maneuver.GetBodyAxis(BodyAxis)` (under **Changed**).
+  maneuver, the static axes before any plan, by the protected `Maneuver.GetBodyAxis(BodyAxis)` (under **Changed**); the
+  axis a single-vector attitude points (`bodyAxis`, `Front` by default, read back from its `BodyAxis` property) and the
+  `TriadAttitude(BodyAxis, IAttitudeTarget, BodyAxis, IAttitudeTarget, …)` constructor, two axes of the spacecraft of
+  the plan (decision 69, under **Changed**).
+- **The engine and the centre a run infers** (lot L5b, decisions 61, 63 and 64 of #668, decided by S. Guillet,
+  2026-11-23, and decision 99, decided by S. Guillet, 2026-11-24): an impulse given no engine takes the only engine of
+  the spacecraft, a maneuver given no centre the observer of its initial orbit when it is a celestial body other than a
+  star, and a spacecraft without a tank or an engine runs a plan of attitudes (under **Changed**;
+  [The engine and the centre](../reference/impulse-maneuvers.md#the-engine-and-the-centre)).
 **Fixed**
 
 - **`Matrix * double[]` and `Matrix.Multiply(double[])` returned as many components as the vector**
@@ -4626,6 +4639,22 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   **Changed**; `InputRangeTests`, red before the change). The message of an instrument whose id is the frame id of a
   spacecraft of NAIF id -2147483 offered the ids "[2147483297, -2147483001]", its lower bound computed in `int`; it is
   computed in `long`, no lower than `int.MinValue`: "[-2147483648, -2147483001]".
+- **`CelestialAttitudeTarget` accepted an aberration that is not a member of `Aberration`**
+  ([#806](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/806), lot L5b, decision 67 of
+  [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668), decided by S. Guillet,
+  2026-11-23): an `Aberration` that is not a member of the enumeration, `(Aberration)99`, built a target, which threw
+  `ArgumentOutOfRangeException` (`aberration`) only at its first `GetDirection`, inside the propagation of its attitude;
+  the constructor now throws it (`Enum.IsDefined`), as `InstrumentPointingToAttitude` did for its own aberration until
+  it took the target's (decision 67, under **Changed**)
+  (`CelestialAttitudeTargetTests.Constructor_UnknownAberration_ThrowsArgumentOutOfRangeException`, red before the
+  change). Every member of the enumeration is accepted as before. Migration: none for a defined value.
+- **An attitude pointed the instrument of another spacecraft**
+  ([#797](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/797), lot L5b, decision 66 of
+  [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668), decided by S. Guillet,
+  2026-11-23): an `InstrumentPointingToAttitude` or a `TriadAttitude` built on an instrument of another spacecraft ran
+  and pointed that instrument's boresight, whose orientation is in the frame of its own spacecraft (the spacecraft's own
+  boresight 0.577 rad from the Moon in the probe of the gap analysis of L5). `SetManeuvers`, the propagator constructor
+  and `Propagate` refuse it (under **Changed**; `ForeignInstrumentTests`, red before the change).
 **Changed**
 
 - **Breaking: the scale of a `Time` is a required argument** (lot L2, R24 of
@@ -7115,8 +7144,8 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   spacecraft that stores none keeps the two-body orbit. Before, every state joined the arc of its epoch, so the windows of several calls made one
   arc, read across the gaps without an error: 9.28e9 m off the two-body orbit 1 h 56 min into a gap of 4 h between two
   windows of one hour at 60 s (`AddedStatesGapTests`, with the reads of each window, to the bit those of a spacecraft
-  holding it alone, and within 3.4e-4 m of the two-body orbit, Linux x64, a provisional figure until the CI logs of the
-  three platforms set it), and a TLE spacecraft sampled by
+  holding it alone, and within 3.412e-4 m of the two-body orbit on Linux x64, Windows and macOS arm64 alike, the CI of
+  #808), and a TLE spacecraft sampled by
   `TLEPropagator` and given later states interpolated across the gap where it now reads SGP4. A call within or touching
   the stored states, a propagation and a `TLEPropagator` run are unchanged, bit for bit, as is every read inside the
   stored states, and a corrected read past the end of a propagation that ends with an impulse, within the light time
@@ -7373,18 +7402,10 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   filter gave 300 s with that tank empty, so the fuel cost of an avoidance option (`ConjunctionAssessment`, from the
   specific impulse) rises by about a third in that case. Without an engine `GetTotalISP` stays NaN (0 / 0) and
   `GetTotalFuelFlow` 0. #801 part 2, the avoidance clone lighter than its dry mass, stays open, fixed after lot L5.
-- **`CelestialAttitudeTarget` checks its aberration where it is given**
-  ([#806](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/806), lot L5b, decision 67 of
-  [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668), decided by S. Guillet,
-  2026-11-23): an `Aberration` that is not a member of the enumeration, `(Aberration)99`, built a target, which threw
-  `ArgumentOutOfRangeException` (`aberration`) only at its first `GetDirection`, inside the propagation of its attitude;
-  the constructor now throws it (`Enum.IsDefined`), as `InstrumentPointingToAttitude` does
-  (`CelestialAttitudeTargetTests.Constructor_UnknownAberration_ThrowsArgumentOutOfRangeException`, red before the
-  change). Every member of the enumeration is accepted as before. Migration: none for a defined value.
 - **Breaking: an attitude points the instruments of the spacecraft propagated**
   ([#797](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/797), lot L5b, decision 66 of
   [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668), decided by S. Guillet,
-  2026-11-23): an `InstrumentPointingToAttitude` or a `TriadAttitude` built on an instrument of another spacecraft ran,
+  2026-11-23, under **Fixed**): an `InstrumentPointingToAttitude` or a `TriadAttitude` built on an instrument of another spacecraft ran,
   on the spacecraft's own engine, and pointed that instrument's boresight, whose orientation is in the frame of its own
   spacecraft (in the probe of the gap analysis of L5, 11 attitudes recorded and the spacecraft's own boresight 0.577 rad
   from the Moon); the TRIAD instrument forms kept no reference to their instruments. They keep them now, and
@@ -7569,7 +7590,6 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   CelestialAttitudeTarget(target)` (geometric, as the removed forms computed it) or `new CelestialAttitudeTarget(target,
   aberration)`, and read it back from `PrimaryTarget`, `SecondaryTarget` or `Target` (`CelestialAttitudeTarget.Target`,
   `.Aberration`).
-
 - **The value equality of `FuelTank`, `Engine` and `Payload`: `Equals`, `GetHashCode`, `==`, `!=` and
   `IEquatable<T>`** (lot L5b, decision 76 of #668, decided by S. Guillet, 2026-11-23): they compared the name, the model
   and the serial number (the mass too for a payload), so two tanks of no model compared equal once both were optional,
@@ -7813,6 +7833,10 @@ not listed.
   (a meta-kernel's) nor through a hard link, through which SPICE goes on reading the replaced data: unload such a load
   before rewriting the file. A spacecraft propagated by `TLEPropagator` has no attitude record, so its CK cannot be written and its
   field-of-view searches throw ([#682](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/682)); give it its attitude with `AddStateOrientationToICRF`.
+  An instrument named `Frame` (any case) on a spacecraft `Sat` writes `FRAME_SAT_FRAME`, the variable of the spacecraft's
+  own frame, in its frame kernel, so the kernel loaded last defines `SAT_FRAME`
+  ([#812](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/812); `Add*Instrument` checks the names of the instruments among themselves only, decision 74 of #668):
+  give no instrument that name.
 - **Kernel paths of more than 255 characters** ([#673](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/673)). `LoadKernels` and the command line hand SPICE the full path of
   each kernel, so a kernel whose full path is longer than 255 characters cannot be loaded through them
   (`SPICE(FILENAMETOOLONG)`, SPICE's message in the `InvalidOperationException` since #706, nothing on the standard
@@ -7889,6 +7913,16 @@ not listed.
   `ExecutedManeuvers` an attitude it scheduled before the stop whose activation it never reached, with its windows set
   and the chain advanced past it (decision 44 of #668, fixed after lot L5 in #794); the records of a run are not
   affected (a stopped run returns none), and the next run re-arms the spacecraft.
+- **Inputs that fail in the run** ([#807](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/807), [#810](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/810), [#811](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/811),
+  [#813](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/813)). A few inputs pass their constructor and throw only inside the propagation, with an exception that does
+  not name them: a `PhasingManeuver` of `revolutionNumber` 0 or of a true longitude that is not finite
+  (`ArgumentException`, `seconds`, at the burn, no fuel burned; #810), an `OrbitalDirectionTarget` of a value outside
+  `OrbitalDirection`, `(OrbitalDirection)99` (`ArgumentOutOfRangeException` at the first orientation; #811), a spacecraft
+  of total mass 0 propagated with drag or solar radiation pressure (`ArgumentOutOfRangeException`, `seconds`; #813),
+  and an engine whose burn lasts longer than a `TimeSpan` holds, a fuel flow of 1e-12 kg/s for 10 m/s
+  (`OverflowException` after the fuel is burnt, the windows unset and nothing in `ExecutedManeuvers`; #807). Give a
+  revolution number of 1 or more and a finite longitude, a defined direction, a mass above 0 with mass-dependent forces
+  and an engine whose burns fit in a `TimeSpan` (about 9.2e11 s); no fix is scheduled yet.
 - **Monte Carlo runs** ([#795](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/795)). Each run of `MonteCarloPropagator` propagates a spacecraft built from the
   template's dry mass, maximum mass, area and drag and radiation coefficients only: its drag and SRP act on the dry
   mass, without the fuel and payloads, and its tanks, engines, payloads, instruments, body axes, hard-body radius and
