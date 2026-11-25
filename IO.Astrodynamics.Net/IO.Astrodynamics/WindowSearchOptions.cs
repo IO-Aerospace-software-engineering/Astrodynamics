@@ -1,6 +1,9 @@
 // Copyright 2026. Sylvain Guillet (sylvain.guillet@tutamail.com)
 
 using System;
+using System.Collections.Generic;
+using System.Linq;
+using IO.Astrodynamics.TimeSystem;
 
 namespace IO.Astrodynamics;
 
@@ -179,6 +182,28 @@ internal static class WindowSearchSettings
             throw new ArgumentException(
                 $"{record}.ConvergenceTolerance cannot apply: CSPICE's {routine} runs this search, at its fixed tolerance of 1 µs. Leave it null.",
                 "options");
+        }
+    }
+
+    /// <summary>
+    /// The windows of a search on the observer labelled in the scale of the search window's start (R15 of #668, lot L6,
+    /// decided by S. Guillet, 2026-11-19; IC-7 and IC-8): an end at a bound of the search window is that bound, as given;
+    /// every other end the same instant in the scale of the start, but where no label of that scale holds the instant (an
+    /// end inside a UTC leap second), which keeps its label.
+    /// </summary>
+    internal static IReadOnlyList<Window> InScaleOf(IReadOnlyList<Window> windows, in Window searchWindow)
+    {
+        var start = searchWindow.StartDate;
+        var end = searchWindow.EndDate;
+        return windows.Select(w => new Window(Label(w.StartDate), Label(w.EndDate))).ToArray();
+
+        Time Label(Time t)
+        {
+            // A bound, as the CSPICE and occultation searches label it (its TDB conversion) or as given
+            if (t == start || t.EqualsExact(start.ToTDB())) return start;
+            if (t == end || t.EqualsExact(end.ToTDB())) return end;
+            var label = t.ConvertTo(start.Scale);
+            return label == t ? label : t;
         }
     }
 }

@@ -476,7 +476,12 @@ release are listed under **Known limitations**.
   occultation and field-of-view searches) and throws on CSPICE's (choice 6); an `AdjustValue` applies to `AbsoluteMin`
   and `AbsoluteMax` only and throws on `gfdist_c`, which the native layer gives none; a frame SPICE does not know in the
   occultation or field-of-view options throws `ArgumentException` (`options`) with SPICE's error inside; the static
-  search throws for an aberration. The windows are labelled as the former searches labelled them.
+  search throws for an aberration. The windows are labelled in the scale of the search window's start (IC-7 and IC-8 of
+  lot L6): an end at a bound of the search window is that bound, every other end the same instant in that scale (the
+  former CSPICE and occultation searches labelled TDB), an end inside a UTC leap second, which no UTC label holds, TDB;
+  on a UTC or TT window `Window.Length` counts TT seconds (#508), up to 3.3e-10 of the length plus 100 ns for each
+  converted end from the TDB lengths of the former searches (3.2e-10 on the passes of LRO, 3.8e-10 on a window of 261 s,
+  `ObserverWindowLabelTests`).
 - **The command-line tool: names, kernels from the environment, csv and json, the scale of its epochs** (lot L8 of the
   ergonomics review, R29 of #668, choice 12, decided by S. Guillet, 2026-11-19; `docs/reference/cli.md`, its help
   generated from the tool and compared by `CliPageTests`). An object is a NAIF identifier or a name SPICE knows (`MOON`,
@@ -5169,6 +5174,14 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   message. The `ILocalizable` overloads of the conjunction analysis keep `ArgumentException` until lot L7; a target that
   is the instrument's spacecraft or an ellipsoid without radii keeps `ArgumentException` (`FieldOfViewSearchTests`,
   `AddedStatesGapTests`). Migration: catch `InvalidOperationException` there.
+- **Breaking: `Site.FindDayWindows` labels its windows in the scale of the search window's start** (lot L6, R15 of
+  [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668), IC-12, decided by S. Guillet,
+  2026-11-19): it is `FindIlluminationWindows` with a step of 1 min and `LTS`, the same instants, bit for bit on a TDB
+  window. On a UTC or TT window the path of `gfilum_c` (a site from the kernels) labelled TDB; the labels are now in the
+  scale of the start, an end inside a UTC leap second kept TDB, so `Window.Length` and `EndDate − StartDate` count TT
+  seconds, not TDB seconds (#508): up to 3.3e-10 of the length plus 100 ns for each converted end, 3.1e-10 on a day
+  window of DSS-13 (`ObserverWindowLabelTests`). `Launch`, which compares the day windows as instants, is unchanged.
+  Migration: compare the windows as instants (`Window` equality), or read `ToTDB()` of their ends for TDB labels.
 - **Breaking: `OccultationSearchOptions.ConvergenceTolerance` is a `TimeSpan?`, null for 1 µs** (lot L6, R15 of
   [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668), D1 rule 2 and choice 6,
   decided by S. Guillet, 2026-11-19): the three window search records repeat it with one type and default; a tolerance

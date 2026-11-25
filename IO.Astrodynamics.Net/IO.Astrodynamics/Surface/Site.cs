@@ -567,7 +567,7 @@ namespace IO.Astrodynamics.Surface
         /// <param name="value">The angle, rad; ignored by the extremes.</param>
         /// <param name="source">The source of the illumination, the Sun for the day.</param>
         /// <param name="options">The step (required), the aberration, the convergence tolerance and the adjustment value.</param>
-        /// <returns>The windows, in time order.</returns>
+        /// <returns>The windows, in time order, labelled in the scale of the search window's start (<see cref="Body.WindowSearches"/>).</returns>
         /// <exception cref="ArgumentNullException"><paramref name="source"/> is null.</exception>
         /// <exception cref="ArgumentException"><paramref name="angle"/> is <see cref="IlluminationAngle.Emission"/> or
         /// <see cref="IlluminationAngle.Phase"/>; the step is not given, an adjustment value is given with a relation other
@@ -591,8 +591,8 @@ namespace IO.Astrodynamics.Surface
             options ??= WindowSearchOptions.Default;
             WindowSearchSettings.CheckAdjustValue(options, relationalOperator);
             var step = WindowSearchSettings.RequireStep(options.Step, nameof(WindowSearchOptions));
-            return IlluminationWindows(window, angle, relationalOperator, value, options.AdjustValue ?? 0.0, options.Aberration ?? Aberration.None, step, source,
-                "ELLIPSOID", options.ConvergenceTolerance);
+            return WindowSearchSettings.InScaleOf(IlluminationWindows(window, angle, relationalOperator, value, options.AdjustValue ?? 0.0,
+                options.Aberration ?? Aberration.None, step, source, "ELLIPSOID", options.ConvergenceTolerance), window);
         }
 
         /// <summary>
@@ -610,7 +610,7 @@ namespace IO.Astrodynamics.Surface
         /// <param name="relationalOperator">The relation.</param>
         /// <param name="value">The value, rad or m; ignored by the extremes.</param>
         /// <param name="options">The step (required), the aberration, the convergence tolerance and the adjustment value.</param>
-        /// <returns>The windows, in time order.</returns>
+        /// <returns>The windows, in time order, labelled in the scale of the search window's start (<see cref="Body.WindowSearches"/>).</returns>
         /// <exception cref="ArgumentNullException"><paramref name="target"/> is null.</exception>
         /// <exception cref="ArgumentOutOfRangeException">With a comparison operator, an azimuth outside [0, 2π] or an
         /// elevation outside [−π/2, π/2], or NaN: the angles are in radians (R11 of #668).</exception>
@@ -765,7 +765,8 @@ namespace IO.Astrodynamics.Surface
 
         /// <summary>
         /// The windows where the Sun's incidence at the site is below 90° plus the twilight angle, with light time and
-        /// stellar aberration, sampled every minute.
+        /// stellar aberration, sampled every minute: <see cref="FindIlluminationWindows"/>, its windows labelled in the scale
+        /// of the search window's start (R15 of #668, lot L6; TDB on the path of <c>gfilum_c</c> before).
         /// </summary>
         /// <remarks>For a site from the kernels CSPICE's <c>gfilum_c</c> searches; for a site built from its coordinates
         /// the library does (<see cref="GeometryFinder"/>), and a day or a night shorter than the minute (the Sun grazing
@@ -778,9 +779,8 @@ namespace IO.Astrodynamics.Surface
         public IReadOnlyList<Window> FindDayWindows(in Window searchWindow, double twilight)
         {
             GeometryFinder.CheckAngle(twilight, -Constants.HalfPi, Constants.HalfPi, "[−π/2, π/2]", "twilight", nameof(twilight));
-            var sun = Stars.SUN_BODY;
-            return FindWindowsOnIlluminationConstraint(searchWindow, IlluminationAngle.Incidence, RelationnalOperator.Lower, Constants.HalfPi + twilight, 0.0,
-                Aberration.LTS, TimeSpan.FromMinutes(1.0), sun);
+            return FindIlluminationWindows(searchWindow, IlluminationAngle.Incidence, RelationnalOperator.Lower, Constants.HalfPi + twilight, Stars.SUN_BODY,
+                new WindowSearchOptions { Step = TimeSpan.FromMinutes(1.0), Aberration = Aberration.LTS });
         }
 
         #region operators

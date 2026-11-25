@@ -32,6 +32,12 @@ namespace IO.Astrodynamics.Body;
 /// search and throws on CSPICE's, whose tolerance is 1 µs; an <see cref="WindowSearchOptions.AdjustValue"/> applies to an
 /// absolute extreme and throws with another relation and on <c>gfdist_c</c>, which takes none.
 /// </para>
+/// <para>
+/// <b>Labels.</b> The windows are labelled in the scale of the search window's start: an end at a bound of the search
+/// window is that bound, every other end the same instant in that scale (the former CSPICE and occultation searches
+/// labelled TDB), but an end inside a UTC leap second, which no UTC label holds, keeps its TDB label. On a UTC or TT
+/// window, <see cref="Window.Length"/> then counts TT seconds (#508).
+/// </para>
 /// </remarks>
 public static class WindowSearches
 {
@@ -44,7 +50,7 @@ public static class WindowSearches
     /// <param name="relationalOperator">The relation.</param>
     /// <param name="value">The distance, m; ignored by the extremes.</param>
     /// <param name="options">The step (required), the aberration, the convergence tolerance and the adjustment value.</param>
-    /// <returns>The windows, in time order.</returns>
+    /// <returns>The windows, in time order, labelled in the scale of the search window's start.</returns>
     /// <exception cref="ArgumentNullException">The observer or the target is null.</exception>
     /// <exception cref="ArgumentException">The step is not given, an adjustment value is given with a relation other than an
     /// absolute extreme or on CSPICE's <c>gfdist_c</c>, or a convergence tolerance on CSPICE's search (<c>options</c>).</exception>
@@ -70,7 +76,8 @@ public static class WindowSearches
             }
 
             // SpiceAPI takes metres: the native layer converts them to km for gfdist_c (#466)
-            return SpiceAPI.Instance.FindWindowsOnDistanceConstraint(window, observer.NaifId, target.NaifId, relationalOperator, value, aberration, step);
+            return WindowSearchSettings.InScaleOf(
+                SpiceAPI.Instance.FindWindowsOnDistanceConstraint(window, observer.NaifId, target.NaifId, relationalOperator, value, aberration, step), window);
         }
 
         return GeometryFinder.Find(window, date => target.GetEphemeris(date, observer, Frame.ICRF, aberration).Position.Magnitude(), relationalOperator,
@@ -91,7 +98,7 @@ public static class WindowSearches
     /// <param name="relationalOperator">The relation.</param>
     /// <param name="value">The value, m or rad; ignored by the extremes.</param>
     /// <param name="options">The step (required), the aberration, the convergence tolerance and the adjustment value.</param>
-    /// <returns>The windows, in time order.</returns>
+    /// <returns>The windows, in time order, labelled in the scale of the search window's start.</returns>
     /// <exception cref="ArgumentNullException">The observer or the target is null.</exception>
     /// <exception cref="ArgumentOutOfRangeException">With a comparison operator, <paramref name="value"/> is an angle outside
     /// its range, or NaN (R11 of #668): a right ascension or a planetographic longitude outside [0, 2π], a geodetic
@@ -119,8 +126,8 @@ public static class WindowSearches
             // SPICE uses km for the distance coordinates, the library m; angles are radians in both
             bool isDistance = coordinate is Coordinate.X or Coordinate.Y or Coordinate.Z or Coordinate.Range or Coordinate.Radius or Coordinate.Altitude;
             double scale = isDistance ? 1000.0 : 1.0;
-            return SpiceAPI.Instance.FindWindowsOnCoordinateConstraint(window, observer.NaifId, target.NaifId, frame, coordinateSystem, coordinate,
-                relationalOperator, value / scale, adjust / scale, aberration, step);
+            return WindowSearchSettings.InScaleOf(SpiceAPI.Instance.FindWindowsOnCoordinateConstraint(window, observer.NaifId, target.NaifId, frame,
+                coordinateSystem, coordinate, relationalOperator, value / scale, adjust / scale, aberration, step), window);
         }
 
         return GeometryFinder.Find(window, CelestialItem.CoordinateQuantity(target, observer, frame, coordinateSystem, coordinate, aberration, window.StartDate),
@@ -137,7 +144,7 @@ public static class WindowSearches
     /// <param name="front">The occulting body.</param>
     /// <param name="options">The step, the aberration, the shapes and frames of the bodies, the type of occultation and the
     /// convergence tolerance.</param>
-    /// <returns>The windows, in time order.</returns>
+    /// <returns>The windows, in time order, labelled in the scale of the search window's start.</returns>
     /// <exception cref="ArgumentNullException">An argument is null.</exception>
     /// <exception cref="ArgumentException">The step is not given where the search does not infer it, a convergence tolerance
     /// is given on CSPICE's search, SPICE does not know a frame of the options (<c>options</c>, SPICE's error as inner
@@ -160,12 +167,12 @@ public static class WindowSearches
             if (target is CelestialItem item && item.SearchesOnSpice(observer) && front is ILocalizable frontItem && frontItem.IsSpiceBacked)
             {
                 WindowSearchSettings.RejectToleranceOnCspice(options.ConvergenceTolerance, nameof(OccultationSearchOptions), "gfoclt_c");
-                return OccultationSearch.Spice(window, observer.NaifId, target.NaifId, targetShape, front.NaifId, frontShape, options.OccultationType,
-                    aberration, WindowSearchSettings.RequireStep(options.Step, nameof(OccultationSearchOptions)), options);
+                return WindowSearchSettings.InScaleOf(OccultationSearch.Spice(window, observer.NaifId, target.NaifId, targetShape, front.NaifId, frontShape,
+                    options.OccultationType, aberration, WindowSearchSettings.RequireStep(options.Step, nameof(OccultationSearchOptions)), options), window);
             }
 
-            return OccultationSearch.Managed(window, observer, target, targetShape, front, frontShape, options.OccultationType, aberration,
-                OccultationStep(window, observer, target, front, options.Step), options);
+            return WindowSearchSettings.InScaleOf(OccultationSearch.Managed(window, observer, target, targetShape, front, frontShape, options.OccultationType,
+                aberration, OccultationStep(window, observer, target, front, options.Step), options), window);
         }
         catch (ArgumentException e) when (e.ParamName is "frontFrame" or "targetFrame")
         {

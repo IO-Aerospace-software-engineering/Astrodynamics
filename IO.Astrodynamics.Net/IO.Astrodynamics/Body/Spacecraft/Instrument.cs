@@ -308,7 +308,7 @@ namespace IO.Astrodynamics.Body.Spacecraft
         /// <param name="options">The step (required), the aberration (<see cref="Aberration.None"/> when null), the convergence
         /// tolerance (1 µs when null, the library's search only), the target's shape (an ellipsoid when it has radii, a point
         /// otherwise) and the frame of its ellipsoid (its own when null).</param>
-        /// <returns>The windows, in time order.</returns>
+        /// <returns>The windows, in time order, labelled in the scale of the search window's start (<see cref="WindowSearches"/>).</returns>
         /// <exception cref="ArgumentNullException"><paramref name="target"/> is null.</exception>
         /// <exception cref="ArgumentException">The step is not given, a convergence tolerance is given on CSPICE's search, or
         /// SPICE does not know the target frame (<c>options</c>, SPICE's error as inner exception); the target is the
@@ -326,12 +326,14 @@ namespace IO.Astrodynamics.Body.Spacecraft
             {
                 if (!(Spacecraft.IsSpiceBacked && target.IsSpiceBacked))
                 {
-                    return FieldOfViewSearch.Managed(this, window, target, shape, frame, aberration, step, options.ConvergenceTolerance);
+                    return WindowSearchSettings.InScaleOf(FieldOfViewSearch.Managed(this, window, target, shape, frame, aberration, step,
+                        options.ConvergenceTolerance), window);
                 }
 
                 WindowSearchSettings.RejectToleranceOnCspice(options.ConvergenceTolerance, nameof(FieldOfViewSearchOptions), "gftfov_c");
                 FieldOfViewSearch.Check(this, window, target, shape, step);
-                return SpiceAPI.Instance.FindWindowsInFieldOfViewConstraint(window, Spacecraft.NaifId, NaifId, target.NaifId, frame, shape, aberration, step);
+                return WindowSearchSettings.InScaleOf(
+                    SpiceAPI.Instance.FindWindowsInFieldOfViewConstraint(window, Spacecraft.NaifId, NaifId, target.NaifId, frame, shape, aberration, step), window);
             }
             catch (ArgumentException e) when (e.ParamName == "targetFrame")
             {
