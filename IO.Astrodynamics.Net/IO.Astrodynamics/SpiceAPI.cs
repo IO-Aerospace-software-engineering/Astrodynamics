@@ -80,6 +80,12 @@ public class SpiceAPI
     [return: MarshalAs(UnmanagedType.I1)]
     private static extern bool KernelNameResolvesThroughProxy(string name, string path);
 
+    // Whether SPICE holds a file: a name KEEPER holds, of any kind, a meta-kernel's files included, that resolves through it
+    // (KernelNameResolvesThroughProxy's rule), read only (decision 102 of #668)
+    [DllImport(@"IO.Astrodynamics", CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi)]
+    [return: MarshalAs(UnmanagedType.I1)]
+    private static extern bool KernelHeldProxy(string path, [MarshalAs(UnmanagedType.I1)] out bool held);
+
     // frmnam_c: the name SPICE gives to a frame id, false when it knows none (#676)
     [DllImport(@"IO.Astrodynamics", CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi)]
     [return: MarshalAs(UnmanagedType.I1)]
@@ -999,6 +1005,35 @@ public class SpiceAPI
     {
         _nativeKernelCalls++;
         return UnloadEveryLoadProxy(path);
+    }
+
+    /// <summary>
+    /// Whether SPICE holds <paramref name="file"/>: a name SPICE's list of loaded kernels (KEEPER) holds that resolves through
+    /// it, the same path or an absolute name whose symbolic links reach its entry in its directory, the rule of the writers'
+    /// unload (<c>KernelsLoader::ResolvesThrough</c>, #706). Every load counts, a file a loaded meta-kernel names included,
+    /// which the registry of <see cref="GetLoadedKernels"/> does not list (it lists the meta-kernel); a relative name other
+    /// than the path (a meta-kernel's, resolved against the working directory of its load), a hard link and the file a
+    /// symbolic link given here names do not. Read under the lock, unloading nothing, the binary kernels whose file was
+    /// deleted included (decision 102 of #668, decided by S. Guillet, 2026-11-25: a native query, the .NET side cannot read
+    /// KEEPER; the writers of a set of kernels refuse a file SPICE holds, decision 80).
+    /// </summary>
+    /// <param name="file">The file, by its full path.</param>
+    /// <returns>True when SPICE holds the file under a name that resolves through it.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="file"/> is null.</exception>
+    /// <exception cref="InvalidOperationException">SPICE cannot read its list (<see cref="SpiceException"/>, SPICE's
+    /// message).</exception>
+    internal bool HoldsKernelFile(FileSystemInfo file)
+    {
+        ArgumentNullException.ThrowIfNull(file);
+        lock (lockObject)
+        {
+            if (!KernelHeldProxy(file.FullName, out bool held))
+            {
+                throw NativeException($"Whether SPICE holds {file.FullName} can't be read");
+            }
+
+            return held;
+        }
     }
 
     /// <summary>

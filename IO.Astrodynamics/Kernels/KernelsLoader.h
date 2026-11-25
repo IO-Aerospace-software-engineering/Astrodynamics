@@ -50,6 +50,16 @@ namespace IO::Astrodynamics::Kernels
          * the file system cannot resolve do not (review of #706)
          */
         static bool ResolvesThrough(const std::string& name, const std::string& path);
+
+        /**
+         * @brief Whether SPICE holds a file: a name KEEPER holds (kdata_c, every kind, a meta-kernel and the files it names
+         * included) that resolves through it (ResolvesThrough), the rule of UnloadEveryLoad, read only: nothing is unloaded,
+         * the deleted binary kernels included. A relative name other than the path, a hard link and the file a symbolic link
+         * given as the path names are not found, as for the unload. A failure of kdata_c is left signalled. The .NET layer
+         * refuses to write over a held file (decision 102 of #668, decided by S. Guillet, 2026-11-25: its registry lists a
+         * meta-kernel, not the files it names)
+         */
+        static bool Holds(const std::string& path);
 	};
 }
 

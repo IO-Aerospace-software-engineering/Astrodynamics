@@ -2214,6 +2214,107 @@ TEST(API, KernelNameResolvesThroughProxy)
 #endif
 }
 
+// Decision 102 of #668: whether SPICE holds a file, read from KEEPER's list (kdata_c) by the rule of the writers' unload
+// (ResolvesThrough), unloading nothing. A file a loaded meta-kernel names by its absolute path is held, and so is the
+// meta-kernel; a file loaded directly is held; a file SPICE does not hold, in the same folder or missing, is not; once the
+// meta-kernel is unloaded its files are not. The .NET registry lists the meta-kernel only, so this read is the only one
+// that sees its files. The references are the proxies' own load and unload and a variable of the text kernel, read by
+// the next test where the CSPICE routines are exported
+TEST(API, KernelHeldProxyFollowsKeeper)
+{
+    auto folder = FreshFolder("ioa_102_cpp_held");
+    const auto held = folder / "held.tk";
+    const auto direct = folder / "direct.tk";
+    const auto other = folder / "other.tk";
+    const auto metaKernel = folder / "user.tm";
+    std::ofstream(held.string()) << "KPL/PCK\n\\begindata\nIOA_102_HELD = 1\n\\begintext\n";
+    std::ofstream(direct.string()) << "KPL/PCK\n\\begindata\nIOA_102_DIRECT = 1\n\\begintext\n";
+    std::ofstream(other.string()) << "KPL/PCK\n\\begindata\nIOA_102_OTHER = 1\n\\begintext\n";
+    // The path in strings of 60 characters at most, each but the last ended by the continuation marker '+' (a string value
+    // of a text kernel holds 80 characters at most; the temporary directory of macOS is long)
+    std::string value;
+    const auto path = held.string();
+    for (size_t i = 0; i < path.size(); i += 60)
+    {
+        value += "'" + path.substr(i, 60) + (i + 60 < path.size() ? "+'\n" : "'");
+    }
+    std::ofstream(metaKernel.string()) << "KPL/MK\n\\begindata\nKERNELS_TO_LOAD = ( " << value << " )\n\\begintext\n";
+    ASSERT_TRUE(LoadKernelsProxy(metaKernel.string().c_str()));
+    ASSERT_TRUE(LoadKernelsProxy(direct.string().c_str()));
+
+    bool answer{};
+    ASSERT_TRUE(KernelHeldProxy(held.string().c_str(), &answer));
+    EXPECT_TRUE(answer);
+    ASSERT_TRUE(KernelHeldProxy(metaKernel.string().c_str(), &answer));
+    EXPECT_TRUE(answer);
+    ASSERT_TRUE(KernelHeldProxy(direct.string().c_str(), &answer));
+    EXPECT_TRUE(answer);
+    ASSERT_TRUE(KernelHeldProxy(other.string().c_str(), &answer));
+    EXPECT_FALSE(answer);
+    ASSERT_TRUE(KernelHeldProxy((folder / "missing.bsp").string().c_str(), &answer));
+    EXPECT_FALSE(answer);
+    // A query unloads nothing: asked again, the answers are the same
+    ASSERT_TRUE(KernelHeldProxy(held.string().c_str(), &answer));
+    EXPECT_TRUE(answer);
+
+    ASSERT_TRUE(UnloadKernelsProxy(metaKernel.string().c_str()));
+    ASSERT_TRUE(KernelHeldProxy(held.string().c_str(), &answer));
+    EXPECT_FALSE(answer);
+    ASSERT_TRUE(KernelHeldProxy(direct.string().c_str(), &answer));
+    EXPECT_TRUE(answer);
+    ASSERT_TRUE(UnloadKernelsProxy(direct.string().c_str()));
+    ASSERT_TRUE(KernelHeldProxy(direct.string().c_str(), &answer));
+    EXPECT_FALSE(answer);
+    std::filesystem::remove_all(folder);
+}
+
+// Decision 102 of #668, where the CSPICE routines are exported: the query unloads nothing, neither the file it is asked
+// about (its variable still in the pool) nor an SPK whose file was deleted, which a load or an unload would drop
+// (KernelsLoader::UnloadDeletedBinaryKernels); a name whose symbolic link reaches the file asked about holds it, as for the
+// writers' unload (ResolvesThrough), and a hard link does not
+TEST(API, KernelHeldProxyUnloadsNothingAndFollowsSymbolicLinks)
+{
+#if defined(_WIN32)
+    GTEST_SKIP() << "KEEPER's list and the kernel pool are read through the CSPICE routines the shared library exports on Linux and macOS only";
+#else
+    auto folder = FreshFolder("ioa_102_cpp_held_links");
+    const auto text = folder / "held.tk";
+    const auto link = folder / "link.tk";
+    const auto hard = folder / "hard.tk";
+    const auto spk = folder / "deleted.bsp";
+    std::ofstream(text.string()) << "KPL/PCK\n\\begindata\nBODY1999102_RADII = ( 1.0 2.0 3.0 )\n\\begintext\n";
+    std::filesystem::create_symlink(text, link);
+    std::filesystem::create_hard_link(text, hard);
+    auto sv = EarthStates(3);
+    ASSERT_TRUE(WriteEphemerisProxy(spk.string().c_str(), -1999102, sv.data(), 3));
+    ASSERT_TRUE(LoadKernelsProxy(link.string().c_str()));
+    ASSERT_TRUE(LoadKernelsProxy(spk.string().c_str()));
+    const SpiceInt handle = KeeperHandle(spk);
+    ASSERT_GT(handle, 0);
+    std::filesystem::remove(spk);
+
+    bool answer{};
+    ASSERT_TRUE(KernelHeldProxy(text.string().c_str(), &answer));
+    EXPECT_TRUE(answer);
+    ASSERT_TRUE(KernelHeldProxy(link.string().c_str(), &answer));
+    EXPECT_TRUE(answer);
+    ASSERT_TRUE(KernelHeldProxy(hard.string().c_str(), &answer));
+    EXPECT_FALSE(answer);
+    ASSERT_TRUE(KernelHeldProxy(spk.string().c_str(), &answer));
+    EXPECT_TRUE(answer);
+
+    EXPECT_TRUE(bodfnd_c(1999102, "RADII"));
+    EXPECT_EQ(handle, KeeperHandle(spk));
+    EXPECT_TRUE(DafHandleOpen(handle));
+    EXPECT_FALSE(failed_c());
+
+    ASSERT_TRUE(UnloadKernelsProxy(link.string().c_str()));
+    EXPECT_EQ(-1, KeeperHandle(spk));
+    reset_c();
+    std::filesystem::remove_all(folder);
+#endif
+}
+
 // #711 and #712: no C++ exception crosses P/Invoke from the element conversions, the TLE proxies and the body information,
 // and no proxy that fails leaves SPICE failed for the next call. A centre of motion the native layer reads as a celestial
 // body (CelestialBody(int)) threw SDKException out of the proxy when SPICE names no body of its id (exit code 134 of the .NET
@@ -2598,6 +2699,7 @@ TEST(API, EveryReportingProxyThatSucceedsClearsTheLastError)
     ExpectClearedBy("LoadKernelsProxy", [&kernel] { return LoadKernelsProxy(kernel.string().c_str()); });
     ExpectClearedBy("UnloadKernelsProxy", [&kernel] { return UnloadKernelsProxy(kernel.string().c_str()); });
     ExpectClearedBy("UnloadEveryLoadProxy", [&kernel] { return UnloadEveryLoadProxy(kernel.string().c_str()); });
+    ExpectClearedBy("KernelHeldProxy", [&kernel] { bool held{}; return KernelHeldProxy(kernel.string().c_str(), &held); });
     std::filesystem::remove(kernel);
     auto folder = FreshFolder("ioa_714_cpp_clear_spk");
     const auto spk = folder / "e.bsp";
