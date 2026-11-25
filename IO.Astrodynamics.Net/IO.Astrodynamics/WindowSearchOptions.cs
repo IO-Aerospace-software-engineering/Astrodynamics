@@ -142,4 +142,43 @@ internal static class WindowSearchSettings
 
         return value;
     }
+
+    /// <summary>
+    /// The step of a search that infers none: required (choice 2 of R15 of #668, decided by S. Guillet, 2026-11-19).
+    /// </summary>
+    /// <exception cref="ArgumentException">The step is null (<c>options</c>).</exception>
+    internal static TimeSpan RequireStep(TimeSpan? step, string record)
+    {
+        return step ?? throw new ArgumentException(
+            $"{record}.Step is required: give the step of the samples, shorter than the shortest window or gap to find.", "options");
+    }
+
+    /// <summary>
+    /// <see cref="WindowSearchOptions.AdjustValue"/> applies to the absolute extremes only (R15 of #668, decided by
+    /// S. Guillet, 2026-11-19).
+    /// </summary>
+    /// <exception cref="ArgumentException">An adjustment value is given with another relation (<c>options</c>).</exception>
+    internal static void CheckAdjustValue(WindowSearchOptions options, RelationnalOperator relationalOperator)
+    {
+        if (options.AdjustValue.HasValue && relationalOperator is not (RelationnalOperator.AbsoluteMin or RelationnalOperator.AbsoluteMax))
+        {
+            throw new ArgumentException(
+                $"WindowSearchOptions.AdjustValue applies to AbsoluteMin and AbsoluteMax only, not to {relationalOperator}: leave it null.", "options");
+        }
+    }
+
+    /// <summary>
+    /// A convergence tolerance given to a search that CSPICE runs, whose tolerance is fixed at 1 µs (choice 6 of R15 of
+    /// #668, decided by S. Guillet, 2026-11-19; no C++ change).
+    /// </summary>
+    /// <exception cref="ArgumentException">The tolerance is given (<c>options</c>).</exception>
+    internal static void RejectToleranceOnCspice(TimeSpan? tolerance, string record, string routine)
+    {
+        if (tolerance.HasValue)
+        {
+            throw new ArgumentException(
+                $"{record}.ConvergenceTolerance cannot apply: CSPICE's {routine} runs this search, at its fixed tolerance of 1 µs. Leave it null.",
+                "options");
+        }
+    }
 }

@@ -606,6 +606,46 @@ public class FieldOfViewSearchTests : IClassFixture<PropagatedFieldOfViewCase>
         Assert.True(FieldOfViewKernels.WorstEdge(managed, spice) < PublicPathsLimit);
     }
 
+    /// <summary>
+    /// <see cref="Instrument.FindFieldOfViewWindows"/> (R15 of #668, lot L6) equals the former search on both paths, bit for
+    /// bit: the target's shape an ellipsoid when it has radii, its own frame when none is given; a convergence tolerance
+    /// applies to the library's search and throws on <c>gftfov</c>'s, and so does a frame SPICE does not know, with the
+    /// options as parameter.
+    /// </summary>
+    [Fact]
+    public void FindFieldOfViewWindows_EqualsTheFormerSearch()
+    {
+        var earth = _case.Earth;
+        var itrf = PropagatedFieldOfViewCase.TargetFrame("399");
+        var options = FieldOfViewSearchOptions.Default with { Step = Step, Aberration = Aberration.LT, TargetFrame = itrf };
+        foreach (var (instrument, spacecraft) in new[] { (_case.PropagatedInstrument(789), _case.Propagated), (_case.KernelInstrument(789), _case.Kernel) })
+        {
+            var expected = instrument.FindWindowsInFieldOfViewConstraint(_case.SearchWindow, spacecraft, earth, itrf, ShapeType.Ellipsoid, Aberration.LT, Step);
+            Assert.NotEmpty(expected);
+            LabelAssert.Equal(expected, instrument.FindFieldOfViewWindows(_case.SearchWindow, earth, options));
+            LabelAssert.Equal(instrument.FindWindowsInFieldOfViewConstraint(_case.SearchWindow, spacecraft, earth, earth.Frame, ShapeType.Ellipsoid, Aberration.None,
+                Step), instrument.FindFieldOfViewWindows(_case.SearchWindow, earth, new FieldOfViewSearchOptions { Step = Step }));
+            LabelAssert.Equal(instrument.FindWindowsInFieldOfViewConstraint(_case.SearchWindow, spacecraft, earth, itrf, ShapeType.Point, Aberration.LT, Step),
+                instrument.FindFieldOfViewWindows(_case.SearchWindow, earth, options with { TargetShape = ShapeType.Point }));
+        }
+
+        var step = Assert.Throws<ArgumentException>(() => _case.PropagatedInstrument(789).FindFieldOfViewWindows(_case.SearchWindow, earth));
+        Assert.Equal("options", step.ParamName);
+        Assert.Contains("FieldOfViewSearchOptions.Step", step.Message);
+        var tolerance = Assert.Throws<ArgumentException>(() => _case.KernelInstrument(789).FindFieldOfViewWindows(_case.SearchWindow, earth,
+            options with { ConvergenceTolerance = TimeSpan.FromTicks(5) }));
+        Assert.Equal("options", tolerance.ParamName);
+        Assert.Contains("ConvergenceTolerance", tolerance.Message);
+        var coarse = _case.PropagatedInstrument(789).FindFieldOfViewWindows(_case.SearchWindow, earth, options with { ConvergenceTolerance = TimeSpan.FromSeconds(0.1) });
+        var fine = _case.PropagatedInstrument(789).FindFieldOfViewWindows(_case.SearchWindow, earth, options);
+        Assert.True(FieldOfViewKernels.WorstEdge(coarse.ToArray(), fine.ToArray()) <= 0.1);
+        var unknown = Assert.Throws<ArgumentException>(() => _case.KernelInstrument(789).FindFieldOfViewWindows(_case.SearchWindow, earth,
+            options with { TargetFrame = new Frames.Frame("NOT_A_FRAME_668") }));
+        Assert.Equal("options", unknown.ParamName);
+        Assert.Contains("TargetFrame", unknown.Message);
+        Assert.IsType<IO.Astrodynamics.Exceptions.SpiceException>(unknown.InnerException);
+    }
+
     /// <summary>A search window tagged UTC: TDB windows on both paths, equal to those of the TDB search window.</summary>
     [Fact]
     public void UtcSearchWindow_ReturnsTdbWindowsOnBothPaths()

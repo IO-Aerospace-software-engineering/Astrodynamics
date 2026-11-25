@@ -69,8 +69,8 @@ namespace IO.Astrodynamics;
 /// </remarks>
 public class GeometryFinder
 {
-    // The convergence tolerance of the transitions, s: CSPICE's SPICE_GF_CNVTOL
-    private const double Tolerance = 1e-6;
+    // The default convergence tolerance of the transitions, s: CSPICE's SPICE_GF_CNVTOL
+    private const double DefaultTolerance = 1e-6;
 
     // The spacing of the five values of the rate, as a fraction of the step (and half of it, for Richardson's extrapolation)
     private const double RateSpacingPerStep = 1.0 / 16.0;
@@ -124,7 +124,7 @@ public class GeometryFinder
             $"The {quantity} {value} is outside {range} rad: the angles are in radians, not degrees.");
     }
 
-    private static bool IsExtremeOperator(RelationnalOperator relationalOperator) =>
+    internal static bool IsExtremeOperator(RelationnalOperator relationalOperator) =>
         relationalOperator is RelationnalOperator.AbsoluteMin or RelationnalOperator.AbsoluteMax or RelationnalOperator.LocalMin
             or RelationnalOperator.LocalMax;
 
@@ -217,6 +217,76 @@ public class GeometryFinder
     internal IReadOnlyList<Window> FindWindowsWithCondition<T>(Window searchWindow, Func<Time, T> calculateValue,
         RelationnalOperator relationalOperator, T targetValue, double adjustValue, TimeSpan stepSize)
     {
+        return Find(searchWindow, calculateValue, relationalOperator, targetValue, adjustValue, stepSize, DefaultTolerance);
+    }
+
+    /// <summary>
+    /// The windows of the search window where a <see cref="double"/> quantity satisfies the relation; see the remarks of
+    /// the class (R15 of #668, lot L6, decided by S. Guillet, 2026-11-19).
+    /// </summary>
+    /// <param name="window">The search window; the windows are in the time scale of its start.</param>
+    /// <param name="quantity">The quantity at an epoch.</param>
+    /// <param name="relationalOperator">The relation.</param>
+    /// <param name="value">The value; ignored by the extremes.</param>
+    /// <param name="options">The step (required), the convergence tolerance (1 µs when null) and, for
+    /// <see cref="RelationnalOperator.AbsoluteMin"/> and <see cref="RelationnalOperator.AbsoluteMax"/>, the adjustment
+    /// value; the aberration, which a quantity carries itself, unset.</param>
+    /// <returns>The windows, in time order.</returns>
+    /// <exception cref="ArgumentException">The step is not given, an aberration or an adjustment value of another
+    /// relation than an absolute extreme is given (<c>options</c>).</exception>
+    public static IReadOnlyList<Window> FindWindows(Window window, Func<Time, double> quantity, RelationnalOperator relationalOperator, double value,
+        WindowSearchOptions options = null)
+    {
+        options ??= WindowSearchOptions.Default;
+        var step = Check(options, relationalOperator);
+        return Find(window, quantity, relationalOperator, value, options.AdjustValue ?? 0.0, step, ToleranceOf(options.ConvergenceTolerance));
+    }
+
+    /// <summary>
+    /// The windows of the search window where a <see cref="bool"/> quantity is equal (or not equal) to the value; see the
+    /// remarks of the class (R15 of #668, lot L6, decided by S. Guillet, 2026-11-19).
+    /// </summary>
+    /// <param name="window">The search window; the windows are in the time scale of its start.</param>
+    /// <param name="predicate">The quantity at an epoch.</param>
+    /// <param name="relationalOperator"><see cref="RelationnalOperator.Equal"/> or <see cref="RelationnalOperator.NotEqual"/>.</param>
+    /// <param name="value">The value.</param>
+    /// <param name="options">The step (required), shorter than every window and gap to find, and the convergence
+    /// tolerance (1 µs when null); the aberration and the adjustment value unset.</param>
+    /// <returns>The windows, in time order.</returns>
+    /// <exception cref="ArgumentException">The step is not given, an aberration or an adjustment value is given
+    /// (<c>options</c>), or the relation is not one of a boolean.</exception>
+    public static IReadOnlyList<Window> FindWindows(Window window, Func<Time, bool> predicate, RelationnalOperator relationalOperator, bool value,
+        WindowSearchOptions options = null)
+    {
+        options ??= WindowSearchOptions.Default;
+        var step = Check(options, relationalOperator);
+        return Find(window, predicate, relationalOperator, value, 0.0, step, ToleranceOf(options.ConvergenceTolerance));
+    }
+
+    // The settings of a static search: its step, and no aberration
+    private static TimeSpan Check(WindowSearchOptions options, RelationnalOperator relationalOperator)
+    {
+        if (options.Aberration.HasValue)
+        {
+            throw new ArgumentException(
+                "WindowSearchOptions.Aberration does not apply to GeometryFinder.FindWindows: the quantity carries its own correction. Leave it null.",
+                nameof(options));
+        }
+
+        WindowSearchSettings.CheckAdjustValue(options, relationalOperator);
+        return WindowSearchSettings.RequireStep(options.Step, nameof(WindowSearchOptions));
+    }
+
+    /// <summary>The convergence tolerance in seconds, 1 µs when null.</summary>
+    internal static double ToleranceOf(TimeSpan? tolerance) =>
+        tolerance.HasValue ? tolerance.Value.Ticks / (double)TimeSpan.TicksPerSecond : DefaultTolerance;
+
+    /// <summary>The search of a quantity, the step positive, to the convergence tolerance in seconds.</summary>
+    /// <exception cref="ArgumentOutOfRangeException">The step is not positive, or the adjustment value of an absolute
+    /// extreme is negative.</exception>
+    internal static IReadOnlyList<Window> Find<T>(Window searchWindow, Func<Time, T> calculateValue,
+        RelationnalOperator relationalOperator, T targetValue, double adjustValue, TimeSpan stepSize, double tolerance)
+    {
         ArgumentNullException.ThrowIfNull(calculateValue);
         if (stepSize <= TimeSpan.Zero)
         {
@@ -230,7 +300,7 @@ public class GeometryFinder
                 throw new ArgumentOutOfRangeException(nameof(adjustValue), "The adjustment value must be positive or zero.");
             }
 
-            var search = new Search(searchWindow, stepSize, quantity);
+            var search = new Search(searchWindow, stepSize, quantity, tolerance);
             return search.ToWindows(Find(search, relationalOperator, value, adjustValue));
         }
 
@@ -242,7 +312,7 @@ public class GeometryFinder
             }
 
             bool equal = relationalOperator == RelationnalOperator.Equal;
-            var search = new Search(searchWindow, stepSize, null);
+            var search = new Search(searchWindow, stepSize, null, tolerance);
             Func<double, bool> holds = x => predicate(search.At(x)) == target == equal;
             var offsets = search.Offsets;
             return search.ToWindows(Merge(Threshold(search, offsets, offsets.Select(holds).ToArray(), null, holds, null)));
@@ -296,7 +366,7 @@ public class GeometryFinder
     {
         var x = extra == null ? search.Offsets.ToList() : search.Offsets.Concat(extra).Distinct().OrderBy(o => o).ToList();
         var m = x.Select(margin).ToArray();
-        var hidden = HiddenExtremes.Find(x, m, margin, Tolerance, zeroHolds);
+        var hidden = HiddenExtremes.Find(x, m, margin, search.Tolerance, zeroHolds);
         if (hidden.Count == 0)
         {
             return (x, m);
@@ -352,15 +422,15 @@ public class GeometryFinder
 
             double a = x[i - 1];
             double root = margin == null || double.IsNaN(m[i - 1]) || double.IsNaN(m[i])
-                ? Bisect(margin == null ? holds : o => margin(o) > 0.0, a, x[i], h[i])
-                : a + Brent.FindRoot(o => margin(a + o), 0.0, x[i] - a, m[i - 1], m[i], Tolerance);
+                ? Bisect(margin == null ? holds : o => margin(o) > 0.0, a, x[i], h[i], search.Tolerance)
+                : a + Brent.FindRoot(o => margin(a + o), 0.0, x[i] - a, m[i - 1], m[i], search.Tolerance);
             if (h[i])
             {
-                open = root <= Tolerance ? 0.0 : root;
+                open = root <= search.Tolerance ? 0.0 : root;
             }
             else
             {
-                windows.Add((open!.Value, last - root <= Tolerance ? last : root));
+                windows.Add((open!.Value, last - root <= search.Tolerance ? last : root));
                 open = null;
             }
         }
@@ -378,9 +448,10 @@ public class GeometryFinder
     /// <param name="a">The offset where the relation is the opposite of <paramref name="holdsAtB"/>.</param>
     /// <param name="b">The other offset.</param>
     /// <param name="holdsAtB">The relation at <paramref name="b"/>.</param>
-    private static double Bisect(Func<double, bool> holds, double a, double b, bool holdsAtB)
+    /// <param name="tolerance">The convergence tolerance, s.</param>
+    private static double Bisect(Func<double, bool> holds, double a, double b, bool holdsAtB, double tolerance)
     {
-        while (b - a > Tolerance)
+        while (b - a > tolerance)
         {
             double middle = 0.5 * (a + b);
             if (middle <= a || middle >= b)
@@ -449,10 +520,10 @@ public class GeometryFinder
             {
                 double a = x[i];
                 double b = x[i + 1];
-                double root = a + Brent.FindRoot(o => search.F(a + o) - value, 0.0, b - a, g[i], g[i + 1], Tolerance);
+                double root = a + Brent.FindRoot(o => search.F(a + o) - value, 0.0, b - a, g[i], g[i + 1], search.Tolerance);
                 if (!IsJump(search, root, a, b, System.Math.Abs(g[i + 1] - g[i])))
                 {
-                    root = root <= Tolerance ? 0.0 : search.Length - root <= Tolerance ? search.Length : root;
+                    root = root <= search.Tolerance ? 0.0 : search.Length - root <= search.Tolerance ? search.Length : root;
                     found.Add((root, root));
                 }
             }
@@ -468,7 +539,7 @@ public class GeometryFinder
     /// </summary>
     private static bool IsJump(Search search, double root, double a, double b, double change)
     {
-        const double halfWidth = 10.0 * Tolerance;
+        double halfWidth = 10.0 * search.Tolerance;
         if (b - a < 8.0 * halfWidth)
         {
             return false;
@@ -512,7 +583,7 @@ public class GeometryFinder
     private static List<double> Extremes(Search search, bool minimum)
     {
         var extremes = new List<double>();
-        if (search.RateSpacing < 2.0 * Tolerance)
+        if (search.RateSpacing < 2.0 * search.Tolerance)
         {
             return extremes;
         }
@@ -552,8 +623,8 @@ public class GeometryFinder
             if (minimum ? ra < 0.0 && rb >= 0.0 : ra > 0.0 && rb <= 0.0)
             {
                 double a = x[i];
-                double root = a + Brent.FindRoot(o => search.Rate(a + o), 0.0, x[i + 1] - a, ra, rb, Tolerance);
-                if (root > Tolerance && search.Length - root > Tolerance && IsExtreme(search, root))
+                double root = a + Brent.FindRoot(o => search.Rate(a + o), 0.0, x[i + 1] - a, ra, rb, search.Tolerance);
+                if (root > search.Tolerance && search.Length - root > search.Tolerance && IsExtreme(search, root))
                 {
                     extremes.Add(root);
                 }
@@ -622,8 +693,9 @@ public class GeometryFinder
         private readonly Time _start;
         private readonly Func<Time, double> _quantity;
 
-        internal Search(in Window searchWindow, in TimeSpan step, Func<Time, double> quantity)
+        internal Search(in Window searchWindow, in TimeSpan step, Func<Time, double> quantity, double tolerance)
         {
+            Tolerance = tolerance;
             _window = searchWindow;
             _start = searchWindow.StartDate;
             _quantity = quantity;
@@ -639,7 +711,7 @@ public class GeometryFinder
             Length = totalTicks / (double)TimeSpan.TicksPerSecond;
             offsets.Add(Length);
             Offsets = offsets;
-            RateSpacing = System.Math.Min(System.Math.Max(step.TotalSeconds * RateSpacingPerStep, 20.0 * Tolerance), 0.25 * Length);
+            RateSpacing = System.Math.Min(System.Math.Max(step.TotalSeconds * RateSpacingPerStep, 20.0 * tolerance), 0.25 * Length);
         }
 
         /// <summary>The offsets of the samples, s, increasing; the first is 0, the last the end of the search window.</summary>
@@ -647,6 +719,9 @@ public class GeometryFinder
 
         /// <summary>The offset of the end of the search window, s.</summary>
         internal double Length { get; }
+
+        /// <summary>The convergence tolerance of the transitions and the extremes, s.</summary>
+        internal double Tolerance { get; }
 
         /// <summary>The larger spacing of the five values of the rate, s.</summary>
         internal double RateSpacing { get; }

@@ -4,6 +4,7 @@ using System.Globalization;
 using System.IO;
 using IO.Astrodynamics.Frames;
 using IO.Astrodynamics.Math;
+using IO.Astrodynamics.Occultation;
 using IO.Astrodynamics.SolarSystemObjects;
 using IO.Astrodynamics.TimeSystem;
 
@@ -295,6 +296,47 @@ namespace IO.Astrodynamics.Body.Spacecraft
             return SpiceAPI.Instance.FindWindowsInFieldOfViewConstraint(
                 searchWindow, Spacecraft.NaifId, NaifId, target.NaifId,
                 targetFrame, targetShape, aberration, stepSize);
+        }
+
+        /// <summary>
+        /// The windows where <paramref name="target"/> is in the field of view of the instrument, its spacecraft the observer:
+        /// the search of <see cref="FindWindowsInFieldOfViewConstraint"/>, CSPICE's <c>gftfov</c> when the spacecraft and the
+        /// target come from the kernels, the library's otherwise (R15 of #668, lot L6, decided by S. Guillet, 2026-11-19).
+        /// </summary>
+        /// <param name="window">The search window.</param>
+        /// <param name="target">The target.</param>
+        /// <param name="options">The step (required), the aberration (<see cref="Aberration.None"/> when null), the convergence
+        /// tolerance (1 µs when null, the library's search only), the target's shape (an ellipsoid when it has radii, a point
+        /// otherwise) and the frame of its ellipsoid (its own when null).</param>
+        /// <returns>The windows, in time order.</returns>
+        /// <exception cref="ArgumentNullException"><paramref name="target"/> is null.</exception>
+        /// <exception cref="ArgumentException">The step is not given, a convergence tolerance is given on CSPICE's search, or
+        /// SPICE does not know the target frame (<c>options</c>, SPICE's error as inner exception); the target is the
+        /// instrument's spacecraft, or an ellipsoid without radii.</exception>
+        /// <exception cref="InvalidOperationException">The exceptions of <see cref="FindWindowsInFieldOfViewConstraint"/>.</exception>
+        public IReadOnlyList<Window> FindFieldOfViewWindows(in Window window, ILocalizable target, FieldOfViewSearchOptions options = null)
+        {
+            ArgumentNullException.ThrowIfNull(target);
+            options ??= FieldOfViewSearchOptions.Default;
+            var step = WindowSearchSettings.RequireStep(options.Step, nameof(FieldOfViewSearchOptions));
+            var shape = options.TargetShape ?? OccultationBodyModel.DefaultShape(target);
+            var frame = options.TargetFrame ?? (target as CelestialBody)?.Frame ?? Frame.ICRF;
+            var aberration = options.Aberration ?? Aberration.None;
+            try
+            {
+                if (!(Spacecraft.IsSpiceBacked && target.IsSpiceBacked))
+                {
+                    return FieldOfViewSearch.Managed(this, window, target, shape, frame, aberration, step, options.ConvergenceTolerance);
+                }
+
+                WindowSearchSettings.RejectToleranceOnCspice(options.ConvergenceTolerance, nameof(FieldOfViewSearchOptions), "gftfov_c");
+                FieldOfViewSearch.Check(this, window, target, shape, step);
+                return SpiceAPI.Instance.FindWindowsInFieldOfViewConstraint(window, Spacecraft.NaifId, NaifId, target.NaifId, frame, shape, aberration, step);
+            }
+            catch (ArgumentException e) when (e.ParamName == "targetFrame")
+            {
+                throw WindowSearches.FrameError(e, nameof(FieldOfViewSearchOptions), "TargetFrame");
+            }
         }
 
         /// <summary>

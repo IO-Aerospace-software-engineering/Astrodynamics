@@ -452,6 +452,25 @@ release are listed under **Known limitations**.
   frame the body's own. A step or a tolerance that is not positive throws `ArgumentOutOfRangeException` naming the
   property, and an `AdjustValue` negative or not finite naming `AdjustValue`, in `init`, so again through `with`
   (`WindowSearchOptionsTests`).
+- **The window searches on the observer** (lot L6, R15 of
+  [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668), choices 1 to 7, decided by
+  S. Guillet, 2026-11-19): the receiver is the observer and the settings one options record. `WindowSearches`, extensions
+  of `ILocalizable`: `observer.FindDistanceWindows(window, target, relation, value, options)`,
+  `FindCoordinateWindows(window, target, frame, system, coordinate, relation, value, options)` and
+  `FindOccultationWindows(window, target, front, options)`; `Site.FindHorizontalWindows(window, target,
+  HorizontalCoordinate, relation, value, options)` (`Azimuth`, `Elevation`, `Range`, as `GetHorizontalCoordinates`
+  gives them: the declination, 2π minus the right ascension with the relation mirrored, and the range in the site's
+  frame) and `Site.FindIlluminationWindows(window, angle, relation, value, source, options)`;
+  `Instrument.FindFieldOfViewWindows(window, target, options)`; and the static `GeometryFinder.FindWindows(window,
+  quantity, relation, value, options)` of a `double` or `bool` quantity. Each search runs where the former search of the
+  target with the observer as argument ran, CSPICE's or the library's, and returns its windows bit for bit, but for the
+  occultation of a site observer, which the library searches (choice 4), as the search of the target from the site did
+  (`ObserverWindowSearchTests`, `FieldOfViewSearchTests`). The step is required (`ArgumentException`, `options`, naming
+  `Step`); a null aberration is `None`; a convergence tolerance applies to the library's search (`GeometryFinder`, the
+  occultation and field-of-view searches) and throws on CSPICE's (choice 6); an `AdjustValue` applies to `AbsoluteMin`
+  and `AbsoluteMax` only and throws on `gfdist_c`, which the native layer gives none; a frame SPICE does not know in the
+  occultation or field-of-view options throws `ArgumentException` (`options`) with SPICE's error inside; the static
+  search throws for an aberration. The windows are labelled as the former searches labelled them.
 - **The command-line tool: names, kernels from the environment, csv and json, the scale of its epochs** (lot L8 of the
   ergonomics review, R29 of #668, choice 12, decided by S. Guillet, 2026-11-19; `docs/reference/cli.md`, its help
   generated from the tool and compared by `CliPageTests`). An object is a NAIF identifier or a name SPICE knows (`MOON`,

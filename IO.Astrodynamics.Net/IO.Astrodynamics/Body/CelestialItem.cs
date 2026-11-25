@@ -1586,6 +1586,13 @@ public abstract class CelestialItem : ILocalizable, IEquatable<CelestialItem>
     #region FindWindows
 
     /// <summary>
+    /// Whether CSPICE runs a search of this item, the target, seen from <paramref name="observer"/>: both from the kernels,
+    /// one of them a spacecraft (the routing of the searches on the observer, R15 of #668, lot L6).
+    /// </summary>
+    internal bool SearchesOnSpice(ILocalizable observer) =>
+        IsSpiceBacked && observer is CelestialItem item && item.IsSpiceBacked && (IsSpacecraft || item.IsSpacecraft);
+
+    /// <summary>
     /// Find windows on distance constraint
     /// </summary>
     /// <param name="searchWindow"></param>
@@ -1753,13 +1760,27 @@ public abstract class CelestialItem : ILocalizable, IEquatable<CelestialItem>
                 coordinateSystem, coordinate, relationalOperator, spiceValue, spiceAdjust, aberration, stepSize);
         }
 
+        var evaluateCoordinates = CoordinateQuantity(this, observer, frame, coordinateSystem, coordinate, aberration, searchWindow.StartDate);
+        return _geometryFinder.FindWindowsWithCondition(searchWindow, evaluateCoordinates, relationalOperator, value, adjustValue, stepSize);
+    }
+
+    #endregion
+
+    /// <summary>
+    /// The coordinate of <paramref name="target"/> seen from <paramref name="observer"/> in <paramref name="frame"/> at an
+    /// epoch, the quantity of the managed coordinate searches (the planetographic sense of the longitude read once, at
+    /// <paramref name="start"/>); null for a coordinate system it does not know.
+    /// </summary>
+    internal static Func<Time, double> CoordinateQuantity(ILocalizable target, ILocalizable observer, Frame frame, CoordinateSystem coordinateSystem,
+        Coordinate coordinate, Aberration aberration, Time start)
+    {
         Func<Time, double> evaluateCoordinates = null;
         switch (coordinateSystem)
         {
             case CoordinateSystem.Rectangular:
                 evaluateCoordinates = date =>
                 {
-                    var stateVector = GetEphemeris(date, observer, frame, aberration);
+                    var stateVector = target.GetEphemeris(date, observer, frame, aberration);
                     return coordinate switch
                     {
                         Coordinate.X => stateVector.Position.X,
@@ -1772,7 +1793,7 @@ public abstract class CelestialItem : ILocalizable, IEquatable<CelestialItem>
             case CoordinateSystem.RaDec:
                 evaluateCoordinates = date =>
                 {
-                    var stateVector = GetEphemeris(date, observer, frame, aberration);
+                    var stateVector = target.GetEphemeris(date, observer, frame, aberration);
                     // The angles in the search frame, as gfposc, not rotated to ICRF as ToEquatorial (#680)
                     var equatorial = Equatorial.FromPositionInFrame(stateVector.Position, stateVector.Epoch);
                     return coordinate switch
@@ -1787,7 +1808,7 @@ public abstract class CelestialItem : ILocalizable, IEquatable<CelestialItem>
             case CoordinateSystem.Geodetic:
                 evaluateCoordinates = date =>
                 {
-                    var stateVector = GetEphemeris(date, observer, frame, aberration);
+                    var stateVector = target.GetEphemeris(date, observer, frame, aberration);
                     var geodetic = stateVector.ToPlanetodetic();
                     return coordinate switch
                     {
@@ -1801,16 +1822,14 @@ public abstract class CelestialItem : ILocalizable, IEquatable<CelestialItem>
             case CoordinateSystem.Planetographic:
                 // CSPICE's PLANETOGRAPHIC (#682): the sense of the longitude of the observer's body read once, at the start
                 bool positiveWest = observer is CelestialBody observerBody &&
-                                    GeodeticCoordinates.IsPlanetographicLongitudePositiveWest(observerBody, searchWindow.StartDate);
+                                    GeodeticCoordinates.IsPlanetographicLongitudePositiveWest(observerBody, start);
                 evaluateCoordinates = date =>
-                    GeodeticCoordinates.PlanetographicCoordinate(GetEphemeris(date, observer, frame, aberration), coordinate, positiveWest);
+                    GeodeticCoordinates.PlanetographicCoordinate(target.GetEphemeris(date, observer, frame, aberration), coordinate, positiveWest);
                 break;
         }
 
-        return _geometryFinder.FindWindowsWithCondition(searchWindow, evaluateCoordinates, relationalOperator, value, adjustValue, stepSize);
+        return evaluateCoordinates;
     }
-
-    #endregion
 
     #region Operators
 

@@ -323,6 +323,14 @@ namespace IO.Astrodynamics.Surface
 
 
         /// <summary>
+        /// Whether CSPICE runs a search of this site, the target, seen from <paramref name="observer"/>: the site and the
+        /// observer from the kernels, the observer a spacecraft (the routing of the searches on the observer, R15 of #668,
+        /// lot L6).
+        /// </summary>
+        internal bool SearchesOnSpice(ILocalizable observer) =>
+            IsSpiceBacked && observer is CelestialItem item && item.IsSpiceBacked && item.IsSpacecraft;
+
+        /// <summary>
         /// Find when distance constraint occurs
         /// </summary>
         /// <param name="searchWindow"></param>
@@ -459,60 +467,7 @@ namespace IO.Astrodynamics.Surface
                     coordinateSystem, coordinate, relationalOperator, spiceValue, spiceAdjust, aberration, stepSize);
             }
 
-            Func<Time, double> evaluateCoordinates = null;
-            switch (coordinateSystem)
-            {
-                case CoordinateSystem.Rectangular:
-                    evaluateCoordinates = date =>
-                    {
-                        var stateVector = GetEphemeris(date, observer, frame, aberration);
-                        return coordinate switch
-                        {
-                            Coordinate.X => stateVector.Position.X,
-                            Coordinate.Y => stateVector.Position.Y,
-                            Coordinate.Z => stateVector.Position.Z,
-                            _ => throw new ArgumentOutOfRangeException()
-                        };
-                    };
-                    break;
-                case CoordinateSystem.RaDec:
-                    evaluateCoordinates = date =>
-                    {
-                        var stateVector = GetEphemeris(date, observer, frame, aberration);
-                        // The angles in the search frame, as gfposc, not rotated to ICRF as ToEquatorial (#680)
-                        var equatorial = Equatorial.FromPositionInFrame(stateVector.Position, stateVector.Epoch);
-                        return coordinate switch
-                        {
-                            Coordinate.Declination => equatorial.Declination,
-                            Coordinate.RightAscension => equatorial.RightAscension,
-                            Coordinate.Range => equatorial.Distance,
-                            _ => throw new ArgumentOutOfRangeException()
-                        };
-                    };
-                    break;
-                case CoordinateSystem.Geodetic:
-                    evaluateCoordinates = date =>
-                    {
-                        var stateVector = GetEphemeris(date, observer, frame, aberration);
-                        var geodetic = stateVector.ToPlanetodetic();
-                        return coordinate switch
-                        {
-                            Coordinate.Latitude => geodetic.Latitude,
-                            Coordinate.Longitude => geodetic.Longitude,
-                            Coordinate.Altitude => geodetic.Altitude,
-                            _ => throw new ArgumentOutOfRangeException()
-                        };
-                    };
-                    break;
-                case CoordinateSystem.Planetographic:
-                    // CSPICE's PLANETOGRAPHIC (#682): the sense of the longitude of the observer's body read once, at the start
-                    bool positiveWest = observer is CelestialBody observerBody &&
-                                        GeodeticCoordinates.IsPlanetographicLongitudePositiveWest(observerBody, searchWindow.StartDate);
-                    evaluateCoordinates = date =>
-                        GeodeticCoordinates.PlanetographicCoordinate(GetEphemeris(date, observer, frame, aberration), coordinate, positiveWest);
-                    break;
-            }
-
+            var evaluateCoordinates = CelestialItem.CoordinateQuantity(this, observer, frame, coordinateSystem, coordinate, aberration, searchWindow.StartDate);
             return _geometryFinder.FindWindowsWithCondition(searchWindow, evaluateCoordinates, relationalOperator, value, adjustValue, stepSize);
         }
 
@@ -567,20 +522,135 @@ namespace IO.Astrodynamics.Surface
 
             GeometryFinder.CheckIlluminationThreshold(relationalOperator, value);
             method = SpiceAPI.CheckIlluminationMethod(method);
+            return IlluminationWindows(searchWindow, illuminationType, relationalOperator, value, adjustValue, aberration, stepSize, illuminationSource, method,
+                null);
+        }
+
+        // The illumination search, its arguments checked: gfilum_c for a site of the kernels, the library's search otherwise,
+        // to the convergence tolerance given (1 µs when null), which gfilum_c cannot take
+        private IReadOnlyList<Window> IlluminationWindows(in Window searchWindow, IlluminationAngle illuminationType, RelationnalOperator relationalOperator,
+            double value, double adjustValue, Aberration aberration, in TimeSpan stepSize, ILocalizable illuminationSource, string method, TimeSpan? tolerance)
+        {
             if (_isFromKernel && illuminationSource is INaifObject src)
+            {
+                WindowSearchSettings.RejectToleranceOnCspice(tolerance, nameof(WindowSearchOptions), "gfilum_c");
                 return SpiceAPI.Instance.FindWindowsOnIlluminationConstraint(
                     searchWindow, NaifId, CelestialBody.NaifId, CelestialBody.Frame,
                     Planetodetic, illuminationType, relationalOperator, value, adjustValue,
                     aberration, stepSize, src.NaifId, method);
+            }
 
             if (illuminationType != IlluminationAngle.Incidence)
             {
                 throw new ArgumentOutOfRangeException(nameof(illuminationType), illuminationType, null);
             }
 
-            return _geometryFinder.FindWindowsWithCondition(searchWindow, date => IlluminationIncidence(date, illuminationSource, aberration), relationalOperator,
-                value, adjustValue, stepSize);
+            return GeometryFinder.Find(searchWindow, date => IlluminationIncidence(date, illuminationSource, aberration), relationalOperator, value, adjustValue,
+                stepSize, GeometryFinder.ToleranceOf(tolerance));
         }
+
+        /// <summary>
+        /// The windows where the illumination angle of <paramref name="source"/> at the site satisfies the relation: the
+        /// incidence, the angle between the direction of the source and the normal to the ellipsoid of the body at
+        /// <see cref="Planetodetic"/> (R15 of #668, lot L6, decided by S. Guillet, 2026-11-19). CSPICE's <c>gfilum_c</c>
+        /// searches for a site of the kernels, the library otherwise (<see cref="GeometryFinder"/>).
+        /// </summary>
+        /// <remarks>
+        /// The emission and phase angles are angles at the point towards an observer, which this search does not take: they
+        /// throw (#682). With an observer, search them with <see cref="SpiceAPI.FindWindowsOnIlluminationConstraint"/>
+        /// (objects of the kernels) or with <see cref="GeometryFinder.FindWindows(Window, Func{Time, double}, RelationnalOperator, double, WindowSearchOptions)"/>
+        /// on <see cref="IlluminationEmission"/> or <see cref="IlluminationPhase"/>.
+        /// </remarks>
+        /// <param name="window">The search window.</param>
+        /// <param name="angle">The angle: <see cref="IlluminationAngle.Incidence"/>.</param>
+        /// <param name="relationalOperator">The relation.</param>
+        /// <param name="value">The angle, rad; ignored by the extremes.</param>
+        /// <param name="source">The source of the illumination, the Sun for the day.</param>
+        /// <param name="options">The step (required), the aberration, the convergence tolerance and the adjustment value.</param>
+        /// <returns>The windows, in time order.</returns>
+        /// <exception cref="ArgumentNullException"><paramref name="source"/> is null.</exception>
+        /// <exception cref="ArgumentException"><paramref name="angle"/> is <see cref="IlluminationAngle.Emission"/> or
+        /// <see cref="IlluminationAngle.Phase"/>; the step is not given, an adjustment value is given with a relation other
+        /// than an absolute extreme, or a convergence tolerance on CSPICE's search (<c>options</c>).</exception>
+        /// <exception cref="ArgumentOutOfRangeException">With a comparison operator, <paramref name="value"/> is outside
+        /// [0, π], or NaN: the angles are in radians (R11 of #668).</exception>
+        /// <exception cref="InvalidOperationException">On the path of CSPICE, SPICE cannot run the search, with its
+        /// message.</exception>
+        public IReadOnlyList<Window> FindIlluminationWindows(in Window window, IlluminationAngle angle, RelationnalOperator relationalOperator, double value,
+            ILocalizable source, WindowSearchOptions options = null)
+        {
+            ArgumentNullException.ThrowIfNull(source);
+            if (angle is IlluminationAngle.Emission or IlluminationAngle.Phase)
+            {
+                throw new ArgumentException(
+                    $"The {angle} angle of {Name} is measured towards an observer, which this search does not take (it would be the site itself, where the angle is undefined). Search it with SpiceAPI.FindWindowsOnIlluminationConstraint and the observer's NAIF id, or with GeometryFinder.FindWindows on IlluminationEmission or IlluminationPhase with an observer.",
+                    nameof(angle));
+            }
+
+            GeometryFinder.CheckIlluminationThreshold(relationalOperator, value);
+            options ??= WindowSearchOptions.Default;
+            WindowSearchSettings.CheckAdjustValue(options, relationalOperator);
+            var step = WindowSearchSettings.RequireStep(options.Step, nameof(WindowSearchOptions));
+            return IlluminationWindows(window, angle, relationalOperator, value, options.AdjustValue ?? 0.0, options.Aberration ?? Aberration.None, step, source,
+                "ELLIPSOID", options.ConvergenceTolerance);
+        }
+
+        /// <summary>
+        /// The windows where a horizontal coordinate of <paramref name="target"/> seen from the site, in its topocentric
+        /// frame, satisfies the relation, as <see cref="GetHorizontalCoordinates"/> gives it (R15 of #668, lot L6, choice
+        /// 3, decided by S. Guillet, 2026-11-19): the elevation is the declination in <see cref="Frame"/>, the range its
+        /// range, and the azimuth, −atan2(y, x) in [0, 2π), 2π minus the right ascension, its relation mirrored (a
+        /// threshold of 0, the north, the right ascension 0 with the same relation). The library searches
+        /// (<see cref="GeometryFinder"/>), whatever the target: the coordinate search of
+        /// <see cref="WindowSearches.FindCoordinateWindows"/> with the site as observer.
+        /// </summary>
+        /// <param name="window">The search window.</param>
+        /// <param name="target">The target.</param>
+        /// <param name="coordinate">The horizontal coordinate.</param>
+        /// <param name="relationalOperator">The relation.</param>
+        /// <param name="value">The value, rad or m; ignored by the extremes.</param>
+        /// <param name="options">The step (required), the aberration, the convergence tolerance and the adjustment value.</param>
+        /// <returns>The windows, in time order.</returns>
+        /// <exception cref="ArgumentNullException"><paramref name="target"/> is null.</exception>
+        /// <exception cref="ArgumentOutOfRangeException">With a comparison operator, an azimuth outside [0, 2π] or an
+        /// elevation outside [−π/2, π/2], or NaN: the angles are in radians (R11 of #668).</exception>
+        /// <exception cref="ArgumentException">The step is not given, or an adjustment value is given with a relation other
+        /// than an absolute extreme (<c>options</c>).</exception>
+        public IReadOnlyList<Window> FindHorizontalWindows(in Window window, ILocalizable target, HorizontalCoordinate coordinate,
+            RelationnalOperator relationalOperator, double value, WindowSearchOptions options = null)
+        {
+            bool extreme = GeometryFinder.IsExtremeOperator(relationalOperator);
+            switch (coordinate)
+            {
+                case HorizontalCoordinate.Elevation:
+                    if (!extreme) GeometryFinder.CheckAngle(value, -Constants.HalfPi, Constants.HalfPi, "[−π/2, π/2]", "elevation threshold", nameof(value));
+                    return this.FindCoordinateWindows(window, target, Frame, CoordinateSystem.RaDec, Coordinate.Declination, relationalOperator, value, options);
+                case HorizontalCoordinate.Range:
+                    return this.FindCoordinateWindows(window, target, Frame, CoordinateSystem.RaDec, Coordinate.Range, relationalOperator, value, options);
+                case HorizontalCoordinate.Azimuth:
+                    if (!extreme) GeometryFinder.CheckAngle(value, 0.0, Constants.TwoPi, "[0, 2π]", "azimuth threshold", nameof(value));
+                    // az = 2π − ra for ra > 0, az = 0 for ra = 0: a relation to 0 is the same relation of ra to 0
+                    bool north = !extreme && value == 0.0;
+                    return this.FindCoordinateWindows(window, target, Frame, CoordinateSystem.RaDec, Coordinate.RightAscension,
+                        north ? relationalOperator : Mirrored(relationalOperator), north ? 0.0 : Constants.TwoPi - value, options);
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(coordinate), coordinate, null);
+            }
+        }
+
+        // The relation of the right ascension to 2π minus a value, of the azimuth to the value
+        private static RelationnalOperator Mirrored(RelationnalOperator relationalOperator) => relationalOperator switch
+        {
+            RelationnalOperator.Greater => RelationnalOperator.Lower,
+            RelationnalOperator.Lower => RelationnalOperator.Greater,
+            RelationnalOperator.GreaterOrEqual => RelationnalOperator.LowerOrEqual,
+            RelationnalOperator.LowerOrEqual => RelationnalOperator.GreaterOrEqual,
+            RelationnalOperator.AbsoluteMin => RelationnalOperator.AbsoluteMax,
+            RelationnalOperator.AbsoluteMax => RelationnalOperator.AbsoluteMin,
+            RelationnalOperator.LocalMin => RelationnalOperator.LocalMax,
+            RelationnalOperator.LocalMax => RelationnalOperator.LocalMin,
+            _ => relationalOperator
+        };
 
         /// <summary>
         /// The emission angle at the site: the angle between the direction of <paramref name="observer"/> and the normal to

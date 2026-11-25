@@ -31,7 +31,7 @@ internal static class FieldOfViewSearch
     /// spacecraft target (<see cref="CheckCoverage"/>), the field of view cannot be searched (<see cref="CheckField"/>), or the
     /// spacecraft has no attitude (<see cref="CheckAttitude"/>).</exception>
     internal static IReadOnlyList<Window> Managed(Instrument instrument, in Window searchWindow, ILocalizable target, ShapeType targetShape, Frame targetFrame,
-        Aberration aberration, in TimeSpan stepSize)
+        Aberration aberration, in TimeSpan stepSize, TimeSpan? tolerance = null)
     {
         Check(instrument, searchWindow, target, targetShape, stepSize);
         CheckCoverage(instrument.Spacecraft, searchWindow);
@@ -41,7 +41,7 @@ internal static class FieldOfViewSearch
         }
 
         var evaluator = new FieldOfViewEvaluator(instrument, target, targetShape, targetFrame, aberration);
-        return OccultationFinder.FindWindows(t => evaluator.Margin(t), searchWindow, stepSize, ConvergenceTolerance);
+        return OccultationFinder.FindWindows(t => evaluator.Margin(t), searchWindow, stepSize, tolerance ?? ConvergenceTolerance);
     }
 
     /// <summary>
