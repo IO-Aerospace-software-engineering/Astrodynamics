@@ -36,8 +36,13 @@ public sealed record OccultationSearchOptions
     public static OccultationSearchOptions Default { get; } = new();
 
     /// <summary>
-    /// The step of the samples, positive; null for the step the search infers where it can, required otherwise
-    /// (<see cref="ArgumentException"/> naming it).
+    /// The step of the samples, positive. Null infers it on the library's search for a propagated or TLE spacecraft
+    /// (observer or target) whose centre of propagation is the front body: the smallest period of its orbit about that body
+    /// over the search window (the osculating period at the window start and after each impulse inside it; for a TLE, that
+    /// of its mean motion) over 16, capped at half the window; there a step above half that period throws
+    /// <see cref="ArgumentOutOfRangeException"/>, since a step of at most half the period finds every eclipse (decision 106
+    /// of #668, decided by S. Guillet, 2026-11-25). Everywhere else (CSPICE's <c>gfoclt</c>, a site or natural bodies, a
+    /// front body that is not the centre) the step is required (<see cref="ArgumentException"/> naming it).
     /// </summary>
     /// <exception cref="ArgumentOutOfRangeException">The value is not positive.</exception>
     public TimeSpan? Step

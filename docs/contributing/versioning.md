@@ -466,7 +466,13 @@ release are listed under **Known limitations**.
   target with the observer as argument ran, CSPICE's or the library's, and returns its windows bit for bit, but for the
   occultation of a site observer, which the library searches (choice 4), as the search of the target from the site did
   (`ObserverWindowSearchTests`, `FieldOfViewSearchTests`). The step is required (`ArgumentException`, `options`, naming
-  `Step`); a null aberration is `None`; a convergence tolerance applies to the library's search (`GeometryFinder`, the
+  `Step`), but for the library's occultation search of a propagated or TLE spacecraft whose centre of propagation is the
+  front body (decision 106 of #668, decided by S. Guillet, 2026-11-25): there a null step is the smallest period of its
+  orbit about that body over the window (the osculating period at the window start and after each impulse inside it;
+  the mean motion of a TLE) over 16, capped at half the window, and a step above half that period throws
+  `ArgumentOutOfRangeException` (`options`); the 16 eclipses of an equatorial LEO day at the equinox are found at
+  period/16 and at period/2 within 2.0e-7 s of a 1 min step, and period/2 + 2 min throws
+  (`OccultationStepInferenceTests`); a null aberration is `None`; a convergence tolerance applies to the library's search (`GeometryFinder`, the
   occultation and field-of-view searches) and throws on CSPICE's (choice 6); an `AdjustValue` applies to `AbsoluteMin`
   and `AbsoluteMax` only and throws on `gfdist_c`, which the native layer gives none; a frame SPICE does not know in the
   occultation or field-of-view options throws `ArgumentException` (`options`) with SPICE's error inside; the static

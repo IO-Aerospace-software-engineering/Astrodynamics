@@ -2,6 +2,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using IO.Astrodynamics.Frames;
 using IO.Astrodynamics.Occultation;
 using IO.Astrodynamics.Surface;
@@ -151,7 +152,6 @@ public static class WindowSearches
         ArgumentNullException.ThrowIfNull(target);
         ArgumentNullException.ThrowIfNull(front);
         options ??= OccultationSearchOptions.Default;
-        var step = WindowSearchSettings.RequireStep(options.Step, nameof(OccultationSearchOptions));
         var aberration = options.Aberration ?? Aberration.None;
         var targetShape = options.TargetShape ?? OccultationBodyModel.DefaultShape(target);
         var frontShape = options.FrontShape ?? OccultationBodyModel.DefaultShape(front as ILocalizable ?? CelestialItem.Create(front.NaifId));
@@ -161,15 +161,57 @@ public static class WindowSearches
             {
                 WindowSearchSettings.RejectToleranceOnCspice(options.ConvergenceTolerance, nameof(OccultationSearchOptions), "gfoclt_c");
                 return OccultationSearch.Spice(window, observer.NaifId, target.NaifId, targetShape, front.NaifId, frontShape, options.OccultationType,
-                    aberration, step, options);
+                    aberration, WindowSearchSettings.RequireStep(options.Step, nameof(OccultationSearchOptions)), options);
             }
 
-            return OccultationSearch.Managed(window, observer, target, targetShape, front, frontShape, options.OccultationType, aberration, step, options);
+            return OccultationSearch.Managed(window, observer, target, targetShape, front, frontShape, options.OccultationType, aberration,
+                OccultationStep(window, observer, target, front, options.Step), options);
         }
         catch (ArgumentException e) when (e.ParamName is "frontFrame" or "targetFrame")
         {
             throw FrameError(e, nameof(OccultationSearchOptions), e.ParamName == "frontFrame" ? "FrontFrame" : "TargetFrame");
         }
+    }
+
+    /// <summary>
+    /// The step of the library's occultation search (decision 106 of #668, decided by S. Guillet, 2026-11-25): for a
+    /// propagated or TLE spacecraft observer or target whose centre of propagation is the front body, inferred when not
+    /// given, the smallest period about it over the window over 16, capped at half the window (one tick at least), and a
+    /// step given above half that period refused; required otherwise.
+    /// </summary>
+    /// <exception cref="ArgumentException">The step is not given and no spacecraft infers it (<c>options</c>).</exception>
+    /// <exception cref="ArgumentOutOfRangeException">The step given exceeds half the period (<c>options</c>).</exception>
+    private static TimeSpan OccultationStep(in Window window, ILocalizable observer, ILocalizable target, INaifObject front, TimeSpan? step)
+    {
+        TimeSpan? period = null;
+        foreach (var participant in new[] { observer, target }.OfType<Spacecraft.Spacecraft>())
+        {
+            var p = participant.SmallestPeriodAbout(front, window);
+            if (p.HasValue && (period is null || p < period)) period = p;
+        }
+
+        if (period is null)
+        {
+            return step ?? throw new ArgumentException(
+                "OccultationSearchOptions.Step is required: give the step of the samples, shorter than the shortest window or gap to find. The search " +
+                "infers it only for a propagated or TLE spacecraft whose centre of propagation is the front body, on the library's search.", "options");
+        }
+
+        if (step is { } given)
+        {
+            if (given > period.Value / 2)
+            {
+                throw new ArgumentOutOfRangeException("options", given,
+                    $"OccultationSearchOptions.Step {given} exceeds half the period of the orbit about {front.Name}, {period.Value}: a step of at most half the period finds every eclipse.");
+            }
+
+            return given;
+        }
+
+        var halfWindow = (window.EndDate.ToTDB() - window.StartDate.ToTDB()) / 2;
+        var cap = halfWindow > TimeSpan.Zero ? halfWindow : TimeSpan.FromTicks(1);
+        var inferred = period.Value / 16;
+        return inferred < cap ? inferred : cap;
     }
 
     /// <summary>
