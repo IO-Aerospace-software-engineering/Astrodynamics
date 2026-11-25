@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 
 namespace IO.Astrodynamics.TimeSystem;
 public readonly record struct Window
@@ -154,6 +155,58 @@ public readonly record struct Window
         Time max = EndDate < window.EndDate ? EndDate : window.EndDate;
         intersection = new Window(min, max);
         return true;
+    }
+
+    /// <summary>
+    /// The instants <c>StartDate + i · step</c>, i from 0, at or before <see cref="EndDate"/>: each point is the start plus
+    /// i steps in the calendar of the start's scale (<see cref="Time.Add"/>, exact to the tick), compared with the end as
+    /// an instant, so the end is a point when it lies on the grid; with <paramref name="includeEnd"/> the end, in its own
+    /// scale, is also appended when the last point precedes it, however close (R11 of #668, decision 9, decided by
+    /// S. Guillet, 2026-11-22).
+    /// </summary>
+    /// <remarks>
+    /// The grid of the library's window reads (<c>GetEphemeris</c> of a <see cref="Body.CelestialItem"/> or a
+    /// <see cref="Surface.Site"/>, <c>Star.Propagate</c>, <c>SpiceAPI.TransformFrame</c>, <c>SpiceAPI.ReadEphemeris</c>,
+    /// <c>SpiceAPI.ReadOrientation</c>), each without the end off the grid. Across a UTC leap second the points follow the
+    /// UTC calendar, so a window from 2016-12-31T23:59:00Z to 2017-01-01T00:01:00Z (121 s, <see cref="Length"/>) gives 121
+    /// points at 1 s, the last its end. The points are computed as they are enumerated; a point past the last tick of the
+    /// calendar ends them.
+    /// </remarks>
+    /// <param name="step">The step between two points, positive.</param>
+    /// <param name="includeEnd">Whether the end is appended when it lies off the grid.</param>
+    /// <returns>The points, in time order.</returns>
+    /// <exception cref="ArgumentOutOfRangeException"><paramref name="step"/> is zero or negative, at the call.</exception>
+    public IEnumerable<Time> Sample(TimeSpan step, bool includeEnd = false)
+    {
+        if (step <= TimeSpan.Zero)
+        {
+            throw new ArgumentOutOfRangeException(nameof(step), step, "The step of a sampling must be positive.");
+        }
+
+        return Points(StartDate, EndDate, step.Ticks, includeEnd);
+
+        static IEnumerable<Time> Points(Time start, Time end, long stepTicks, bool includeEnd)
+        {
+            // The number of steps from the start to the calendar's last tick, past which no point exists
+            long maximumIndex = (DateTime.MaxValue.Ticks - start.DateTime.Ticks) / stepTicks;
+            Time last = start;
+            for (long i = 0; i <= maximumIndex; i++)
+            {
+                var point = start.Add(TimeSpan.FromTicks(stepTicks * i));
+                if (point > end)
+                {
+                    break;
+                }
+
+                last = point;
+                yield return point;
+            }
+
+            if (includeEnd && last < end)
+            {
+                yield return end;
+            }
+        }
     }
 
     /// <summary>

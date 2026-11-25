@@ -35,19 +35,9 @@ public class OrientationCommand
             var referenceFrame = CliValues.Frame(frame, "--frame");
             var orientationAt = Helpers.CreateOrientationReader(objectId, referenceFrame);
 
-            // The epochs of the ephemeris reads: start + i·step within the window, in the scale of its start (#563; unified
-            // with Window.Sample in L6, decision 9 of #668)
-            var orientations = new List<StateOrientation>();
-            for (long i = 0;; i++)
-            {
-                var epoch = searchWindow.StartDate + step * i;
-                if (epoch > searchWindow.EndDate)
-                {
-                    break;
-                }
-
-                orientations.Add(CliTime.Relabel(orientationAt(epoch), scale));
-            }
+            // The epochs of the reads: start + i·step within the window, in the scale of its start (#563), the points of
+            // Window.Sample (decision 9 of #668)
+            var orientations = searchWindow.Sample(step).Select(epoch => CliTime.Relabel(orientationAt(epoch), scale)).ToList();
 
             if (format == OutputFormat.Csv)
             {

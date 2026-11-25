@@ -436,7 +436,8 @@ public class Star : CelestialBody
     /// <param name="stepSize">The step size for propagation, positive.</param>
     /// <remarks>
     /// The states of the propagation replace those the star held, as <c>Spacecraft.Propagate</c> replaces the states of a
-    /// spacecraft: a state at the start of the window and every <paramref name="stepSize"/> up to its end, published at once
+    /// spacecraft: a state at the start of the window and every <paramref name="stepSize"/> up to its end (the points of
+    /// <see cref="Window.Sample"/>), published at once
     /// when they are all computed, each the position of <see cref="GetEquatorialCoordinates"/> and the space velocity of
     /// <see cref="GetGeometricStateRelativeTo"/> (before 11.0.0 a zero velocity, #731). Before 11.0.0 each propagation added its states to those of the previous ones (the
     /// first state of an epoch kept), so that <see cref="WriteEphemeris"/> wrote every window ever propagated, the gaps
@@ -450,7 +451,7 @@ public class Star : CelestialBody
     {
         PropagatorBase.RequirePositiveStep(stepSize, nameof(stepSize));
         var states = new List<StateVector>();
-        for (Time epoch = timeWindow.StartDate; epoch <= timeWindow.EndDate; epoch += stepSize)
+        foreach (var epoch in timeWindow.Sample(stepSize))
         {
             var position = GetEquatorialCoordinates(epoch).ToCartesian();
             states.Add(new StateVector(position, _spaceVelocity, Barycenters.SOLAR_SYSTEM_BARYCENTER, epoch, Frame.ICRF));

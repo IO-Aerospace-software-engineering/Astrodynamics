@@ -637,7 +637,7 @@ public abstract class CelestialItem : ILocalizable, IEquatable<CelestialItem>
     /// </summary>
     /// <remarks>
     /// The states every <paramref name="stepSize"/> from the start of the window, placed in its calendar
-    /// (<c>StartDate + i · stepSize</c>), up to its end. Across a leap second the window's <see cref="Window.Length"/> counts
+    /// (<c>StartDate + i · stepSize</c>), up to its end: the points of <see cref="Window.Sample"/>. Across a leap second the window's <see cref="Window.Length"/> counts
     /// one second more than its calendar: the end bounds the samples, so that none lies past it (#682; before 11.0.0 the
     /// last state of such a window could lie one second past its end).
     /// </remarks>
@@ -652,17 +652,9 @@ public abstract class CelestialItem : ILocalizable, IEquatable<CelestialItem>
     public IEnumerable<StateVector> GetEphemeris(in Window searchWindow, ILocalizable observer, Frame frame, Aberration aberration, in TimeSpan stepSize)
     {
         RequirePositiveEphemerisStep(stepSize);
-        // An upper bound of the count: the Length counts the leap seconds the calendar placement does not
-        var occurences = (int)((searchWindow.Length / stepSize) + 1);
-        var ephemeris = new List<StateVector>(occurences);
-        for (int i = 0; i < occurences; i++)
+        var ephemeris = new List<StateVector>();
+        foreach (var epoch in searchWindow.Sample(stepSize))
         {
-            var epoch = searchWindow.StartDate + stepSize * i;
-            if (epoch > searchWindow.EndDate)
-            {
-                break;
-            }
-
             ephemeris.Add(GetEphemeris(epoch, observer, frame, aberration));
         }
 

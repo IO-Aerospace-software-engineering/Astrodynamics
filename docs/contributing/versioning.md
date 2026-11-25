@@ -432,6 +432,13 @@ release are listed under **Known limitations**.
   the next one starts after it, 1 of the 50 reference cases). Checked against spiceypy 8.4.0 (CSPICE N0067) on the 50
   lists of `tools/window_list_reference`, A in UTC and B in TDB (`WindowListTests`). LINQ's `Intersect`, `Union` and
   `Except` compare windows as values. See [Time Systems](../reference/time-and-windows.md#window-lists).
+- **`Window.Sample(step, includeEnd = false)`** (lot L6, R11 of
+  [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668), decision 9, decided by
+  S. Guillet, 2026-11-22): the instants start + i·step at or before the end, computed lazily, each the start plus i steps
+  in the calendar of its scale, compared with the end as an instant (the end a point when it lies on the grid); with
+  `includeEnd` the end appended when the last point precedes it, however close; a step of zero or less
+  `ArgumentOutOfRangeException` (`step`) at the call; across a UTC leap second the UTC calendar's points
+  (`WindowTests`). The grid of the library's window reads. See [Time Systems](../reference/time-and-windows.md#window).
 - **The command-line tool: names, kernels from the environment, csv and json, the scale of its epochs** (lot L8 of the
   ergonomics review, R29 of #668, choice 12, decided by S. Guillet, 2026-11-19; `docs/reference/cli.md`, its help
   generated from the tool and compared by `CliPageTests`). An object is a NAIF identifier or a name SPICE knows (`MOON`,
@@ -5076,7 +5083,17 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   site and asked a list of `int.MaxValue` states on a body, and a negative one threw the list's `capacity` exception or
   returned the start alone, and so does `SpiceAPI.TransformFrame(window, fromFrame, toFrame, stepSize)` at the call, not
   at the enumeration, where a zero step enumerated without end (decision 10 of lot L4, decided by S. Guillet, 2026-11-22;
-  its end, dropped even on the grid, is #781, lot L6) (`EphemerisWindowStepTests`). Migration: a positive step.
+  its end, dropped even on the grid, is read since lot L6, #781, the entry below) (`EphemerisWindowStepTests`).
+  Migration: a positive step.
+- **Breaking: `SpiceAPI.TransformFrame(window, fromFrame, toFrame, stepSize)` reads the end of the window when it lies on
+  the grid** ([#781](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/781), lot L6, decision 9
+  of #668, decided by S. Guillet, 2026-11-22): its epochs are the points of `Window.Sample(stepSize)`, start + i·step up
+  to the end, as the other window reads. Before, the loop stopped strictly before the end, so a step that divides the
+  window dropped its last orientation: one hour at 20 min gave 3 orientations for 4, one day at 1 day 1 for 2. Every
+  other orientation is unchanged, bit for bit, and so is a grid whose end lies off it (`EphemerisWindowStepTests`,
+  `SpiceApiTest`). The grids of `GetEphemeris` over a window (`CelestialItem`, `Site`), `Star.Propagate` and the command
+  `orientation` take `Window.Sample` too, bit for bit. Migration: none for the end; to keep the former orientations,
+  drop the last one when the end lies on the grid.
 - **Breaking: `EquinoctialElements` takes a perigee radius with a non-finite P only** (R23 of #668, choice 3 of the
   first annex): a finite P fixes q = P / (1 + e), so a perigee radius beside it throws `ArgumentException`
   (`perigeeRadius`); before, it was stored, and `PerigeeRadius()` returned 1 m for P = 7000 km given 1 m. The library's
