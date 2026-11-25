@@ -112,12 +112,12 @@ reads the frame of its own id.
 
 ## Static Body Axes
 
-Default body-frame directions. The single-vector attitudes, the attitude of an impulse and the TRIAD factories
-(`TriadAttitude.CreateLVLH`, `CreateProgradeWithSunTracking`) read the instance axes (`BodyFront`, `BodyRight`,
+Default body-frame directions. The single-vector attitudes, the attitude of an impulse, the `BodyAxis` constructor of
+`TriadAttitude` and the TRIAD factories (`TriadAttitude.CreateLvlh`, `CreateProgradeWithSunTracking`) read the instance axes (`BodyFront`, `BodyRight`,
 `BodyUp`) of the spacecraft whose plan last held the maneuver (`SetManeuvers`), and these static axes when no instance
 override is set or before any plan (#677), a read outside a propagation only: a run propagates the plan's spacecraft
-(decisions 46 and 69 of #668; the spacecraft of the engine's tank before lot L5b). The `TriadAttitude` constructors take literal body vectors: pass
-`spacecraft.BodyFront`, ... for the instance axes.
+(decisions 46 and 69 of #668; the spacecraft of the engine's tank before lot L5b). The `Vector3` constructor of
+`TriadAttitude` takes literal body vectors: these static axes, or `spacecraft.BodyFront`, ... copied at the call.
 
 | Field | Direction | Vector |
 |-------|-----------|--------|

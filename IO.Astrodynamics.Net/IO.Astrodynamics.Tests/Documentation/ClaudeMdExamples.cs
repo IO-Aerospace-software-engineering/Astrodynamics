@@ -333,7 +333,7 @@ namespace ClaudeMdSamples
                 bodyFront: Vector3.VectorX, bodyRight: Vector3.VectorY.Inverse(), bodyUp: Vector3.VectorZ);
 
             // The single-vector attitudes, the impulse attitude and the TRIAD factories use the instance axes
-            var prograde = new ProgradeAttitude(earth, epoch, duration);
+            var prograde = new ProgradeAttitude(epoch, duration, earth);
             // → orients spacecraft.BodyFront (+X) along velocity vector
             #endregion
             return spacecraft;
@@ -345,8 +345,11 @@ namespace ClaudeMdSamples
             #region net:17
             // Point camera boresight at Earth, constrain roll using camera refVector toward Sun
             var attitude = new TriadAttitude(
-                minimumEpoch, holdDuration,
-                camera, earth, sun);
+                camera,
+                new CelestialAttitudeTarget(earth),
+                new CelestialAttitudeTarget(sun),
+                minimumEpoch,
+                holdDuration);
             #endregion
             return attitude;
         }
@@ -358,9 +361,12 @@ namespace ClaudeMdSamples
             #region net:18
             // Point nadir camera at Earth, star tracker at reference star
             var attitude = new TriadAttitude(
-                minimumEpoch, holdDuration,
-                nadirCamera, earth,
-                starTracker, referenceStar);
+                nadirCamera,
+                new CelestialAttitudeTarget(earth),
+                starTracker,
+                new CelestialAttitudeTarget(referenceStar),
+                minimumEpoch,
+                holdDuration);
             #endregion
             return attitude;
         }
@@ -371,9 +377,12 @@ namespace ClaudeMdSamples
             #region net:19
             // Point spacecraft Front at Moon, keep Up toward Sun
             var attitude = new TriadAttitude(
-                minimumEpoch, holdDuration,
-                Spacecraft.Front, moon,
-                Spacecraft.Up, sun);
+                Spacecraft.Front,
+                new CelestialAttitudeTarget(moon),
+                Spacecraft.Up,
+                new CelestialAttitudeTarget(sun),
+                minimumEpoch,
+                holdDuration);
             #endregion
             return attitude;
         }
@@ -384,15 +393,23 @@ namespace ClaudeMdSamples
             #region net:20
             // Point prograde with solar panels toward Sun
             var attitude = new TriadAttitude(
-                earth, epoch, duration,
-                Spacecraft.Front, OrbitalDirectionTarget.Prograde,
-                Spacecraft.Up, new CelestialAttitudeTarget(sun));
+                Spacecraft.Front,
+                OrbitalDirectionTarget.Prograde,
+                Spacecraft.Up,
+                new CelestialAttitudeTarget(sun),
+                epoch,
+                duration,
+                earth);
 
             // Full LVLH attitude (nadir pointing with prograde constraint)
             var lvlh = new TriadAttitude(
-                earth, epoch, duration,
-                Spacecraft.Down, OrbitalDirectionTarget.Nadir,
-                Spacecraft.Front, OrbitalDirectionTarget.Prograde);
+                Spacecraft.Down,
+                OrbitalDirectionTarget.Nadir,
+                Spacecraft.Front,
+                OrbitalDirectionTarget.Prograde,
+                epoch,
+                duration,
+                earth);
             #endregion
             return (attitude, lvlh);
         }
@@ -402,10 +419,10 @@ namespace ClaudeMdSamples
         {
             #region net:21
             // LVLH: BodyDown→Nadir, BodyFront→Prograde (the axes of the plan's spacecraft, #677)
-            var lvlh = TriadAttitude.CreateLVLH(earth, epoch, duration);
+            var lvlh = TriadAttitude.CreateLvlh(epoch, duration, earth);
 
             // Prograde with sun tracking: BodyFront→Prograde, BodyUp→Sun
-            var sunTrack = TriadAttitude.CreateProgradeWithSunTracking(earth, epoch, duration, sun);
+            var sunTrack = TriadAttitude.CreateProgradeWithSunTracking(sun, epoch, duration, earth);
             #endregion
             return (lvlh, sunTrack);
         }
@@ -417,9 +434,9 @@ namespace ClaudeMdSamples
             // Keep nadir sensor pointed at Earth, the roll about nadir set by the Sun (Up, opposite to Down, would be
             // rejected: the body vectors must be at least 5 degrees apart)
             var earthObservation = new TriadAttitude(
-                epoch, TimeSpan.FromMinutes(30),
-                Spacecraft.Down, earth,    // Primary: nadir pointing
-                Spacecraft.Right, sun);
+                Spacecraft.Down, new CelestialAttitudeTarget(earth),  // Primary: nadir pointing
+                Spacecraft.Right, new CelestialAttitudeTarget(sun),
+                epoch, TimeSpan.FromMinutes(30));
             #endregion
             return earthObservation;
         }
@@ -431,9 +448,12 @@ namespace ClaudeMdSamples
             #region net:23
             // Point telescope at target star, constrain roll using reference star
             var observation = new TriadAttitude(
-                epoch, TimeSpan.FromHours(2),
-                telescope, targetStar,
-                rollSensor, referenceStar);
+                telescope,
+                new CelestialAttitudeTarget(targetStar),
+                rollSensor,
+                new CelestialAttitudeTarget(referenceStar),
+                epoch,
+                TimeSpan.FromHours(2));
             #endregion
             return observation;
         }
@@ -443,7 +463,7 @@ namespace ClaudeMdSamples
         {
             #region net:24
             // Orient for plane-change burn: front along orbital normal
-            var normalAttitude = new NormalAttitude(earth, epoch, duration);
+            var normalAttitude = new NormalAttitude(epoch, duration, earth);
             #endregion
             return normalAttitude;
         }

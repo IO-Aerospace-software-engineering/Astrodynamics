@@ -850,7 +850,7 @@ public class MinimumEpochGateTests
                     Chain = (e, c, _) =>
                     {
                         var first = new PerigeeHeightManeuver(6878137.0, e, GateAtTt(3500.0), TimeSpan.Zero, c);
-                        var attitude = new NadirAttitude(c, S, TimeSpan.FromSeconds(hold));
+                        var attitude = new NadirAttitude(S, TimeSpan.FromSeconds(hold), c);
                         var second = new PerigeeHeightManeuver(6978137.0, e, S, TimeSpan.Zero, c);
                         first.NextManeuver = attitude;
                         attitude.NextManeuver = second;

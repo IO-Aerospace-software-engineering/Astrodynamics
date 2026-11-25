@@ -383,8 +383,12 @@ public class ClaudeMdExamplesTests
     public void EarthObservationBlock_OldBodyVectors_Throw()
     {
         SpacecraftWithEngine(-6732, out var engine);
-        var exception = Assert.Throws<ArgumentException>(() => new TriadAttitude(Epoch, TimeSpan.FromMinutes(30),
-            Spacecraft.Down, Earth, Spacecraft.Up, Sun));
+        var exception = Assert.Throws<ArgumentException>(() => new TriadAttitude(Spacecraft.Down,
+            new CelestialAttitudeTarget(Earth),
+            Spacecraft.Up,
+            new CelestialAttitudeTarget(Sun),
+            Epoch,
+            TimeSpan.FromMinutes(30)));
         Assert.Contains("collinear", exception.Message);
     }
 

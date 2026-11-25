@@ -5,7 +5,6 @@ using IO.Astrodynamics.Body;
 using IO.Astrodynamics.Body.Spacecraft;
 using IO.Astrodynamics.Math;
 using IO.Astrodynamics.OrbitalParameters;
-using IO.Astrodynamics.Surface;
 using IO.Astrodynamics.TimeSystem;
 
 namespace IO.Astrodynamics.Maneuver;
@@ -25,71 +24,62 @@ namespace IO.Astrodynamics.Maneuver;
 /// </list>
 /// </para>
 /// <para>
-/// The constructors take literal body vectors: the static axes above, an instrument's vectors, or a spacecraft's own axes
-/// (<see cref="Spacecraft.BodyFront"/>, <see cref="Spacecraft.BodyUp"/>, ...) passed explicitly. The factories
-/// <see cref="CreateLVLH"/> and <see cref="CreateProgradeWithSunTracking"/> instead use the instance axes of the spacecraft
-/// whose plan last held the attitude, read at each use, as the single-vector attitudes do (#677).
+/// Four constructors, all with <see cref="IAttitudeTarget"/> targets (decision 69 of #668, decided by S. Guillet,
+/// 2026-11-23): two <see cref="BodyAxis"/> axes of the spacecraft, resolved on the spacecraft of the plan at each use as
+/// the single-vector attitudes resolve theirs (<see cref="Maneuver.GetBodyAxis"/>, #677); two literal body vectors (an
+/// off-axis antenna, a solar-array normal); an instrument's boresight and reference vector; or the boresights of two
+/// instruments. The factories <see cref="CreateLvlh"/> and <see cref="CreateProgradeWithSunTracking"/> are the
+/// <see cref="BodyAxis"/> shape. A celestial target is a <see cref="CelestialAttitudeTarget"/>, which carries its
+/// correction; the constructors of <c>ILocalizable</c> targets, and <c>PrimaryAttitudeTarget</c> and
+/// <c>SecondaryAttitudeTarget</c>, are removed in lot L5b.
 /// </para>
 /// <para>
 /// Example usage with spacecraft directions:
 /// <code>
 /// // Point spacecraft Front at Moon, keep Up toward Sun
-/// new TriadAttitude(epoch, duration, Spacecraft.Front, moon, Spacecraft.Up, sun);
+/// new TriadAttitude(BodyAxis.Front, new CelestialAttitudeTarget(moon), BodyAxis.Up, new CelestialAttitudeTarget(sun));
 /// </code>
 /// </para>
 /// </remarks>
 public class TriadAttitude : Attitude
 {
     /// <summary>
-    /// Primary target that the primary body vector should point at (celestial body).
-    /// Null when using IAttitudeTarget-based targeting.
+    /// The target of the primary body vector: an orbital direction or a celestial target, never null. An
+    /// <c>ILocalizable</c> before lot L5b, beside <c>PrimaryAttitudeTarget</c> (decision 69 of #668).
     /// </summary>
-    public ILocalizable PrimaryTarget { get; }
+    public IAttitudeTarget PrimaryTarget { get; }
 
     /// <summary>
-    /// Secondary target used to eliminate roll ambiguity around the primary pointing axis (celestial body).
-    /// Null when using IAttitudeTarget-based targeting.
+    /// The target of the secondary body vector, which constrains the roll about the primary one; never null.
     /// </summary>
-    public ILocalizable SecondaryTarget { get; }
+    public IAttitudeTarget SecondaryTarget { get; }
 
     /// <summary>
-    /// Primary attitude target (orbital direction or celestial body).
-    /// Null when using ILocalizable-based targeting.
-    /// </summary>
-    public IAttitudeTarget PrimaryAttitudeTarget { get; }
-
-    /// <summary>
-    /// Secondary attitude target (orbital direction or celestial body).
-    /// Null when using ILocalizable-based targeting.
-    /// </summary>
-    public IAttitudeTarget SecondaryAttitudeTarget { get; }
-
-    /// <summary>
-    /// Primary direction in spacecraft body frame that should point toward PrimaryTarget.
+    /// Primary direction in spacecraft body frame that should point toward <see cref="PrimaryTarget"/>.
     /// </summary>
     /// <remarks>
-    /// The vector given to the constructor; for an attitude of <see cref="CreateLVLH"/> or
-    /// <see cref="CreateProgradeWithSunTracking"/>, the axis of the spacecraft whose plan last held the attitude
-    /// (<see cref="Spacecraft.BodyDown"/>, resp. <see cref="Spacecraft.BodyFront"/>), read at each call, or the static axis
-    /// (<see cref="Spacecraft.Down"/>, resp. <see cref="Spacecraft.Front"/>) before any plan (#677; the spacecraft of the
-    /// engine's tank before lot L5b, decisions 46 and 69 of #668).
+    /// The vector given to the constructor, or the instrument's; for the <see cref="BodyAxis"/> shape (the factories
+    /// included), the axis of the spacecraft whose plan last held the attitude, read at each call, or the static axis
+    /// before any plan (#677; decisions 46 and 69 of #668).
     /// </remarks>
-    public Vector3 PrimaryBodyVector => ResolveAxis(_primaryAxis, _primaryBodyVector);
+    public Vector3 PrimaryBodyVector => _primaryAxis.HasValue ? GetBodyAxis(_primaryAxis.Value) : _primaryBodyVector;
 
     /// <summary>
-    /// Secondary direction in spacecraft body frame used to constrain roll.
+    /// Secondary direction in spacecraft body frame used to constrain roll, toward <see cref="SecondaryTarget"/>.
     /// </summary>
     /// <remarks>
-    /// The vector given to the constructor; for an attitude of <see cref="CreateLVLH"/> or
-    /// <see cref="CreateProgradeWithSunTracking"/>, the axis of the spacecraft whose plan last held the attitude
-    /// (<see cref="Spacecraft.BodyFront"/>, resp. <see cref="Spacecraft.BodyUp"/>), read at each call, or the static axis
-    /// (<see cref="Spacecraft.Front"/>, resp. <see cref="Spacecraft.Up"/>) before any plan (#677; the spacecraft of the
-    /// engine's tank before lot L5b, decisions 46 and 69 of #668).
+    /// The vector given to the constructor, or the instrument's; for the <see cref="BodyAxis"/> shape, the axis of the
+    /// spacecraft whose plan last held the attitude, read at each call, or the static axis before any plan.
     /// </remarks>
-    public Vector3 SecondaryBodyVector => ResolveAxis(_secondaryAxis, _secondaryBodyVector);
+    public Vector3 SecondaryBodyVector => _secondaryAxis.HasValue ? GetBodyAxis(_secondaryAxis.Value) : _secondaryBodyVector;
 
     private readonly Vector3 _primaryBodyVector;
     private readonly Vector3 _secondaryBodyVector;
+
+    // The axes of the BodyAxis shape, read on the spacecraft of the last plan (Maneuver.GetBodyAxis); null for the other
+    // shapes
+    private readonly BodyAxis? _primaryAxis;
+    private readonly BodyAxis? _secondaryAxis;
 
     // The instruments of the Instrument forms, null for the other forms: the plan and the run check that they are
     // instruments of the spacecraft propagated (#797, decision 66 of #668, decided by S. Guillet, 2026-11-23); before,
@@ -107,11 +97,6 @@ public class TriadAttitude : Attitude
         }
     }
 
-    // The instance axes of the factories, read on the spacecraft of the last plan (Maneuver.GetBodyAxis); null for the
-    // public constructors
-    private readonly BodyAxis? _primaryAxis;
-    private readonly BodyAxis? _secondaryAxis;
-
     /// <summary>
     /// Minimum allowed angle between vectors (body or reference) in radians, in [1e-14, π/2].
     /// Default is 5 degrees. Vectors closer than this to collinear (parallel or antiparallel) are rejected,
@@ -126,8 +111,10 @@ public class TriadAttitude : Attitude
     /// most about (3 + √2)·2^-53 = 4.9e-16 (measured up to 2.4e-16), so collinear vectors that round apart are rejected
     /// at every separation allowed; below it such a pair passed with a roll set by rounding. A subnormal component (below
     /// about 2.2e-308) rounds by an absolute 4.9e-324, more than that bound: give body vectors of a normal magnitude.
+    /// <c>MinimumVectorSeparation</c> before 11.0.0 (D2 choice 10 and decision 70 of #668, in lot L5b, decided by
+    /// S. Guillet, 2026-11-23).
     /// </remarks>
-    public double MinimumVectorSeparation { get; }
+    public double MinVectorSeparation { get; }
 
     private const double DefaultMinimumSeparation = 5.0 * Constants.Deg2Rad;
 
@@ -138,11 +125,11 @@ public class TriadAttitude : Attitude
     // A separation is in [1e-14, π/2] rad (fourth round of #668): 0, a negative one or NaN switched off both collinearity
     // checks, one below the rounding of the sine let collinear vectors that round apart through, and one above π/2
     // rejected every pair, perpendicular ones included
-    private static void CheckMinimumVectorSeparation(double minimumVectorSeparation)
+    private static void CheckMinVectorSeparation(double minVectorSeparation)
     {
-        if (!(minimumVectorSeparation >= LowestMinimumSeparation && minimumVectorSeparation <= System.Math.PI / 2.0))
+        if (!(minVectorSeparation >= LowestMinimumSeparation && minVectorSeparation <= System.Math.PI / 2.0))
         {
-            throw new ArgumentOutOfRangeException(nameof(minimumVectorSeparation), minimumVectorSeparation,
+            throw new ArgumentOutOfRangeException(nameof(minVectorSeparation), minVectorSeparation,
                 "The minimum vector separation must be in [1e-14, π/2] rad.");
         }
     }
@@ -154,277 +141,223 @@ public class TriadAttitude : Attitude
     private bool AreSeparated(in Vector3 a, in Vector3 b)
     {
         double sine = a.NormalizeOrZero().Cross(b.NormalizeOrZero()).Magnitude();
-        return sine >= System.Math.Sin(MinimumVectorSeparation);
+        return sine >= System.Math.Sin(MinVectorSeparation);
+    }
+
+    // The common part of the constructors: the targets and the separation, checked first
+    private TriadAttitude(IAttitudeTarget primaryTarget, IAttitudeTarget secondaryTarget, Time minEpoch, TimeSpan holdDuration,
+        CelestialItem maneuverCenter, double minVectorSeparation) : base(minEpoch, holdDuration, maneuverCenter)
+    {
+        CheckMinVectorSeparation(minVectorSeparation);
+        PrimaryTarget = primaryTarget ?? throw new ArgumentNullException(nameof(primaryTarget));
+        SecondaryTarget = secondaryTarget ?? throw new ArgumentNullException(nameof(secondaryTarget));
+        MinVectorSeparation = minVectorSeparation;
     }
 
     /// <summary>
-    /// Creates a TRIAD attitude maneuver using an instrument's boresight and reference vector.
-    /// The boresight points at the primary target, while the reference vector constrains roll toward the secondary target.
+    /// A TRIAD attitude that points the axis <paramref name="primaryBodyAxis"/> of the spacecraft at
+    /// <paramref name="primaryTarget"/> and turns <paramref name="secondaryBodyAxis"/> toward
+    /// <paramref name="secondaryTarget"/>.
     /// </summary>
-    /// <param name="minimumEpoch">Earliest epoch when the maneuver can execute.</param>
-    /// <param name="maneuverHoldDuration">Duration to hold the attitude after achieving it.</param>
-    /// <param name="instrument">The instrument whose boresight points at the primary target and whose reference vector
-    /// constrains the roll toward the secondary target.</param>
-    /// <param name="primaryTarget">The target of the boresight, also the maneuver's centre (a site's body for a site).</param>
-    /// <param name="secondaryTarget">The target of the reference vector, for the roll.</param>
-    /// <param name="minimumVectorSeparation">Minimum angle between vectors in radians, in [1e-14, π/2] (default: 5 degrees).</param>
-    /// <exception cref="ArgumentOutOfRangeException"><paramref name="minimumVectorSeparation"/> is not in [1e-14, π/2] (fourth
-    /// round of #668).</exception>
+    /// <param name="primaryBodyAxis">The axis of the spacecraft toward the primary target, resolved on the spacecraft of
+    /// the plan at each use (<see cref="Maneuver.GetBodyAxis"/>).</param>
+    /// <param name="primaryTarget">The primary target, an orbital direction or a celestial target.</param>
+    /// <param name="secondaryBodyAxis">The axis that constrains the roll.</param>
+    /// <param name="secondaryTarget">The secondary target.</param>
+    /// <param name="minEpoch">Earliest epoch when the maneuver can execute; default(Time) for none.</param>
+    /// <param name="holdDuration">Duration to hold the attitude; zero by default.</param>
+    /// <param name="maneuverCenter">The central body; null for the centre the run infers (decisions 61, 62 and 99 of
+    /// #668: required in SSB mode unless both targets are library <see cref="CelestialAttitudeTarget"/>s, which take the
+    /// central body of the run).</param>
+    /// <param name="minVectorSeparation">Minimum angle between vectors in radians, in [1e-14, π/2] (default: 5 degrees).</param>
+    /// <exception cref="ArgumentNullException">A target is null.</exception>
+    /// <exception cref="ArgumentOutOfRangeException"><paramref name="minVectorSeparation"/> is not in [1e-14, π/2], an
+    /// axis is not a value of <see cref="BodyAxis"/>, or <paramref name="holdDuration"/> is negative.</exception>
+    /// <exception cref="ArgumentException">The two axes are the same or opposite, checked on the static axes, which every
+    /// spacecraft's instance axes repeat (orthonormal, right-handed).</exception>
+    public TriadAttitude(BodyAxis primaryBodyAxis, IAttitudeTarget primaryTarget, BodyAxis secondaryBodyAxis, IAttitudeTarget secondaryTarget,
+        Time minEpoch = default, TimeSpan holdDuration = default, CelestialItem maneuverCenter = null,
+        double minVectorSeparation = DefaultMinimumSeparation)
+        : this(primaryTarget, secondaryTarget, minEpoch, holdDuration, maneuverCenter, minVectorSeparation)
+    {
+        _primaryAxis = CheckBodyAxis(primaryBodyAxis, nameof(primaryBodyAxis));
+        _secondaryAxis = CheckBodyAxis(secondaryBodyAxis, nameof(secondaryBodyAxis));
+        // The static axes, before any plan: the check of the axes
+        _primaryBodyVector = StaticAxis(primaryBodyAxis);
+        _secondaryBodyVector = StaticAxis(secondaryBodyAxis);
+        ValidateBodyVectors(_primaryBodyVector, _secondaryBodyVector);
+    }
+
+    /// <summary>
+    /// A TRIAD attitude that points the literal body vector <paramref name="primaryBodyVector"/> at
+    /// <paramref name="primaryTarget"/> and turns <paramref name="secondaryBodyVector"/> toward
+    /// <paramref name="secondaryTarget"/>: a body direction that is neither an axis of the spacecraft nor an instrument's.
+    /// </summary>
+    /// <param name="primaryBodyVector">Primary direction in spacecraft body frame.</param>
+    /// <param name="primaryTarget">The primary target, an orbital direction or a celestial target.</param>
+    /// <param name="secondaryBodyVector">Secondary direction in body frame for roll constraint.</param>
+    /// <param name="secondaryTarget">The secondary target.</param>
+    /// <param name="minEpoch">Earliest epoch when the maneuver can execute; default(Time) for none.</param>
+    /// <param name="holdDuration">Duration to hold the attitude; zero by default.</param>
+    /// <param name="maneuverCenter">The central body; null for the centre the run infers (decisions 61, 62 and 99 of
+    /// #668).</param>
+    /// <param name="minVectorSeparation">Minimum angle between vectors in radians, in [1e-14, π/2] (default: 5 degrees).</param>
+    /// <exception cref="ArgumentNullException">A target is null.</exception>
+    /// <exception cref="ArgumentOutOfRangeException"><paramref name="minVectorSeparation"/> is not in [1e-14, π/2] (fourth
+    /// round of #668), or <paramref name="holdDuration"/> is negative.</exception>
     /// <exception cref="ArgumentException">The body vectors are closer than the separation to collinear, or one of them is
     /// zero or has a component that is not finite.</exception>
-    public TriadAttitude(
-        Time minimumEpoch,
-        TimeSpan maneuverHoldDuration,
-        Instrument instrument,
-        ILocalizable primaryTarget,
-        ILocalizable secondaryTarget,
-        double minimumVectorSeparation = DefaultMinimumSeparation)
-        : base(GetManeuverCenter(primaryTarget), minimumEpoch, maneuverHoldDuration)
+    public TriadAttitude(Vector3 primaryBodyVector, IAttitudeTarget primaryTarget, Vector3 secondaryBodyVector, IAttitudeTarget secondaryTarget,
+        Time minEpoch = default, TimeSpan holdDuration = default, CelestialItem maneuverCenter = null,
+        double minVectorSeparation = DefaultMinimumSeparation)
+        : this(primaryTarget, secondaryTarget, minEpoch, holdDuration, maneuverCenter, minVectorSeparation)
     {
-        CheckMinimumVectorSeparation(minimumVectorSeparation);
-        if (instrument == null) throw new ArgumentNullException(nameof(instrument));
-        PrimaryTarget = primaryTarget ?? throw new ArgumentNullException(nameof(primaryTarget));
-        SecondaryTarget = secondaryTarget ?? throw new ArgumentNullException(nameof(secondaryTarget));
-        MinimumVectorSeparation = minimumVectorSeparation;
+        if (primaryBodyVector.Magnitude() < double.Epsilon)
+            throw new ArgumentException("Primary body vector cannot be zero.", nameof(primaryBodyVector));
+        if (secondaryBodyVector.Magnitude() < double.Epsilon)
+            throw new ArgumentException("Secondary body vector cannot be zero.", nameof(secondaryBodyVector));
 
-        _primaryInstrument = instrument;
+        _primaryBodyVector = primaryBodyVector;
+        _secondaryBodyVector = secondaryBodyVector;
+        ValidateBodyVectors(_primaryBodyVector, _secondaryBodyVector);
+    }
+
+    /// <summary>
+    /// A TRIAD attitude that points the boresight of <paramref name="instrument"/> at <paramref name="primaryTarget"/> and
+    /// turns its reference vector toward <paramref name="secondaryTarget"/>.
+    /// </summary>
+    /// <param name="instrument">The instrument, of the spacecraft propagated (#797).</param>
+    /// <param name="primaryTarget">The target of the boresight.</param>
+    /// <param name="secondaryTarget">The target of the reference vector, for the roll.</param>
+    /// <param name="minEpoch">Earliest epoch when the maneuver can execute; default(Time) for none.</param>
+    /// <param name="holdDuration">Duration to hold the attitude; zero by default.</param>
+    /// <param name="maneuverCenter">The central body; null for the centre the run infers (decisions 61, 62 and 99 of
+    /// #668; before lot L5b, the primary target, or a site's body).</param>
+    /// <param name="minVectorSeparation">Minimum angle between vectors in radians, in [1e-14, π/2] (default: 5 degrees).</param>
+    /// <exception cref="ArgumentNullException">The instrument or a target is null.</exception>
+    /// <exception cref="ArgumentOutOfRangeException"><paramref name="minVectorSeparation"/> is not in [1e-14, π/2] (fourth
+    /// round of #668), or <paramref name="holdDuration"/> is negative.</exception>
+    /// <exception cref="ArgumentException">The body vectors are closer than the separation to collinear, or one of them is
+    /// zero or has a component that is not finite.</exception>
+    public TriadAttitude(Instrument instrument, IAttitudeTarget primaryTarget, IAttitudeTarget secondaryTarget,
+        Time minEpoch = default, TimeSpan holdDuration = default, CelestialItem maneuverCenter = null,
+        double minVectorSeparation = DefaultMinimumSeparation)
+        : this(primaryTarget, secondaryTarget, minEpoch, holdDuration, maneuverCenter, minVectorSeparation)
+    {
+        _primaryInstrument = instrument ?? throw new ArgumentNullException(nameof(instrument));
         _primaryBodyVector = instrument.GetBoresightInSpacecraftFrame();
         _secondaryBodyVector = instrument.GetRefVectorInSpacecraftFrame();
-
-        ValidateBodyVectors();
+        ValidateBodyVectors(_primaryBodyVector, _secondaryBodyVector);
     }
 
     /// <summary>
-    /// Creates a TRIAD attitude maneuver using two different instruments pointing at two targets.
+    /// A TRIAD attitude that points the boresight of <paramref name="primaryInstrument"/> at
+    /// <paramref name="primaryTarget"/> and turns the boresight of <paramref name="secondaryInstrument"/> toward
+    /// <paramref name="secondaryTarget"/>.
     /// </summary>
-    /// <param name="minimumEpoch">Earliest epoch when the maneuver can execute.</param>
-    /// <param name="maneuverHoldDuration">Duration to hold the attitude after achieving it.</param>
     /// <param name="primaryInstrument">The instrument whose boresight points at the primary target.</param>
-    /// <param name="primaryTarget">The target of the primary boresight, also the maneuver's centre (a site's body for a site).</param>
-    /// <param name="secondaryInstrument">The instrument whose boresight constrains the roll toward the secondary target.</param>
-    /// <param name="secondaryTarget">The target of the secondary boresight, for the roll.</param>
-    /// <param name="minimumVectorSeparation">Minimum angle between vectors in radians, in [1e-14, π/2] (default: 5 degrees).</param>
-    /// <exception cref="ArgumentOutOfRangeException"><paramref name="minimumVectorSeparation"/> is not in [1e-14, π/2] (fourth
-    /// round of #668).</exception>
+    /// <param name="primaryTarget">The target of the primary boresight.</param>
+    /// <param name="secondaryInstrument">The instrument whose boresight constrains the roll.</param>
+    /// <param name="secondaryTarget">The target of the secondary boresight.</param>
+    /// <param name="minEpoch">Earliest epoch when the maneuver can execute; default(Time) for none.</param>
+    /// <param name="holdDuration">Duration to hold the attitude; zero by default.</param>
+    /// <param name="maneuverCenter">The central body; null for the centre the run infers (decisions 61, 62 and 99 of
+    /// #668; before lot L5b, the primary target, or a site's body).</param>
+    /// <param name="minVectorSeparation">Minimum angle between vectors in radians, in [1e-14, π/2] (default: 5 degrees).</param>
+    /// <exception cref="ArgumentNullException">An instrument or a target is null.</exception>
+    /// <exception cref="ArgumentOutOfRangeException"><paramref name="minVectorSeparation"/> is not in [1e-14, π/2] (fourth
+    /// round of #668), or <paramref name="holdDuration"/> is negative.</exception>
     /// <exception cref="ArgumentException">The body vectors are closer than the separation to collinear, or one of them is
     /// zero or has a component that is not finite.</exception>
-    public TriadAttitude(
-        Time minimumEpoch,
-        TimeSpan maneuverHoldDuration,
-        Instrument primaryInstrument,
-        ILocalizable primaryTarget,
-        Instrument secondaryInstrument,
-        ILocalizable secondaryTarget,
-        double minimumVectorSeparation = DefaultMinimumSeparation)
-        : base(GetManeuverCenter(primaryTarget), minimumEpoch, maneuverHoldDuration)
+    public TriadAttitude(Instrument primaryInstrument, IAttitudeTarget primaryTarget, Instrument secondaryInstrument, IAttitudeTarget secondaryTarget,
+        Time minEpoch = default, TimeSpan holdDuration = default, CelestialItem maneuverCenter = null,
+        double minVectorSeparation = DefaultMinimumSeparation)
+        : this(primaryTarget, secondaryTarget, minEpoch, holdDuration, maneuverCenter, minVectorSeparation)
     {
-        CheckMinimumVectorSeparation(minimumVectorSeparation);
-        if (primaryInstrument == null) throw new ArgumentNullException(nameof(primaryInstrument));
-        if (secondaryInstrument == null) throw new ArgumentNullException(nameof(secondaryInstrument));
-        PrimaryTarget = primaryTarget ?? throw new ArgumentNullException(nameof(primaryTarget));
-        SecondaryTarget = secondaryTarget ?? throw new ArgumentNullException(nameof(secondaryTarget));
-        MinimumVectorSeparation = minimumVectorSeparation;
-
-        _primaryInstrument = primaryInstrument;
-        _secondaryInstrument = secondaryInstrument;
+        _primaryInstrument = primaryInstrument ?? throw new ArgumentNullException(nameof(primaryInstrument));
+        _secondaryInstrument = secondaryInstrument ?? throw new ArgumentNullException(nameof(secondaryInstrument));
         _primaryBodyVector = primaryInstrument.GetBoresightInSpacecraftFrame();
         _secondaryBodyVector = secondaryInstrument.GetBoresightInSpacecraftFrame();
-
-        ValidateBodyVectors();
+        ValidateBodyVectors(_primaryBodyVector, _secondaryBodyVector);
     }
 
     /// <summary>
-    /// Creates a TRIAD attitude maneuver using explicit body frame vectors and ILocalizable targets.
+    /// Creates an LVLH (Local Vertical Local Horizontal) attitude: the spacecraft's down axis toward nadir, its front axis
+    /// toward prograde; the <see cref="BodyAxis"/> shape of <see cref="BodyAxis.Down"/> and <see cref="BodyAxis.Front"/>.
     /// </summary>
-    /// <param name="minimumEpoch">Earliest epoch when the maneuver can execute.</param>
-    /// <param name="maneuverHoldDuration">Duration to hold the attitude after achieving it.</param>
-    /// <param name="primaryBodyVector">Primary direction in spacecraft body frame.</param>
-    /// <param name="primaryTarget">The target of the primary direction, also the maneuver's centre (a site's body for a site).</param>
-    /// <param name="secondaryBodyVector">Secondary direction in body frame for roll constraint.</param>
-    /// <param name="secondaryTarget">The target of the secondary direction, for the roll.</param>
-    /// <param name="minimumVectorSeparation">Minimum angle between vectors in radians, in [1e-14, π/2] (default: 5 degrees).</param>
-    /// <exception cref="ArgumentOutOfRangeException"><paramref name="minimumVectorSeparation"/> is not in [1e-14, π/2] (fourth
-    /// round of #668).</exception>
-    /// <exception cref="ArgumentException">The body vectors are closer than the separation to collinear, or one of them is
-    /// zero or has a component that is not finite.</exception>
-    public TriadAttitude(
-        Time minimumEpoch,
-        TimeSpan maneuverHoldDuration,
-        Vector3 primaryBodyVector,
-        ILocalizable primaryTarget,
-        Vector3 secondaryBodyVector,
-        ILocalizable secondaryTarget,
-        double minimumVectorSeparation = DefaultMinimumSeparation)
-        : base(GetManeuverCenter(primaryTarget), minimumEpoch, maneuverHoldDuration)
-    {
-        CheckMinimumVectorSeparation(minimumVectorSeparation);
-        PrimaryTarget = primaryTarget ?? throw new ArgumentNullException(nameof(primaryTarget));
-        SecondaryTarget = secondaryTarget ?? throw new ArgumentNullException(nameof(secondaryTarget));
-        MinimumVectorSeparation = minimumVectorSeparation;
-
-        if (primaryBodyVector.Magnitude() < double.Epsilon)
-            throw new ArgumentException("Primary body vector cannot be zero.", nameof(primaryBodyVector));
-        if (secondaryBodyVector.Magnitude() < double.Epsilon)
-            throw new ArgumentException("Secondary body vector cannot be zero.", nameof(secondaryBodyVector));
-
-        _primaryBodyVector = primaryBodyVector;
-        _secondaryBodyVector = secondaryBodyVector;
-
-        ValidateBodyVectors();
-    }
-
-    /// <summary>
-    /// Creates a TRIAD attitude maneuver using explicit body frame vectors and IAttitudeTarget targets.
-    /// This constructor supports orbital directions (prograde, nadir, normal, etc.) as well as celestial bodies.
-    /// </summary>
-    /// <param name="maneuverCenter">The central body for this maneuver; null for the centre the run infers, the observer
-    /// of the initial orbit when it is a celestial body other than a star, and otherwise the central body of the run when
-    /// both targets are library <see cref="CelestialAttitudeTarget"/>s (decisions 61 and 99 of #668); required in SSB
-    /// mode for an orbital-direction or user target.</param>
-    /// <param name="minimumEpoch">Earliest epoch when the maneuver can execute.</param>
-    /// <param name="maneuverHoldDuration">Duration to hold the attitude after achieving it.</param>
-    /// <param name="primaryBodyVector">Primary direction in spacecraft body frame.</param>
-    /// <param name="primaryTarget">Primary attitude target (orbital direction or celestial body).</param>
-    /// <param name="secondaryBodyVector">Secondary direction in body frame for roll constraint.</param>
-    /// <param name="secondaryTarget">Secondary attitude target (orbital direction or celestial body).</param>
-    /// <param name="minimumVectorSeparation">Minimum angle between vectors in radians, in [1e-14, π/2] (default: 5 degrees).</param>
-    /// <exception cref="ArgumentOutOfRangeException"><paramref name="minimumVectorSeparation"/> is not in [1e-14, π/2] (fourth
-    /// round of #668).</exception>
-    /// <exception cref="ArgumentException">The body vectors are closer than the separation to collinear, or one of them is
-    /// zero or has a component that is not finite.</exception>
-    /// <example>
-    /// <code>
-    /// // Prograde with sun tracking
-    /// var attitude = new TriadAttitude(
-    ///     earth, epoch, TimeSpan.FromMinutes(30),
-    ///     Spacecraft.Front, OrbitalDirectionTarget.Prograde,
-    ///     Spacecraft.Up, new CelestialAttitudeTarget(sun));
-    /// </code>
-    /// </example>
-    public TriadAttitude(
-        CelestialItem maneuverCenter,
-        Time minimumEpoch,
-        TimeSpan maneuverHoldDuration,
-        Vector3 primaryBodyVector,
-        IAttitudeTarget primaryTarget,
-        Vector3 secondaryBodyVector,
-        IAttitudeTarget secondaryTarget,
-        double minimumVectorSeparation = DefaultMinimumSeparation)
-        : base(maneuverCenter, minimumEpoch, maneuverHoldDuration)
-    {
-        CheckMinimumVectorSeparation(minimumVectorSeparation);
-        PrimaryAttitudeTarget = primaryTarget ?? throw new ArgumentNullException(nameof(primaryTarget));
-        SecondaryAttitudeTarget = secondaryTarget ?? throw new ArgumentNullException(nameof(secondaryTarget));
-        MinimumVectorSeparation = minimumVectorSeparation;
-
-        if (primaryBodyVector.Magnitude() < double.Epsilon)
-            throw new ArgumentException("Primary body vector cannot be zero.", nameof(primaryBodyVector));
-        if (secondaryBodyVector.Magnitude() < double.Epsilon)
-            throw new ArgumentException("Secondary body vector cannot be zero.", nameof(secondaryBodyVector));
-
-        _primaryBodyVector = primaryBodyVector;
-        _secondaryBodyVector = secondaryBodyVector;
-
-        // Map CelestialAttitudeTarget back to ILocalizable properties for compatibility
-        if (primaryTarget is CelestialAttitudeTarget celestialPrimary)
-            PrimaryTarget = celestialPrimary.Target;
-        if (secondaryTarget is CelestialAttitudeTarget celestialSecondary)
-            SecondaryTarget = celestialSecondary.Target;
-
-        ValidateBodyVectors();
-    }
-
-    // The attitude of a factory: the public constructor on the static axes (its checks run on them), then the instance axes
-    // that replace them at each use
-    private TriadAttitude(
-        CelestialItem maneuverCenter,
-        Time minimumEpoch,
-        TimeSpan maneuverHoldDuration,
-        Vector3 primaryStaticAxis,
-        BodyAxis primaryAxis,
-        IAttitudeTarget primaryTarget,
-        Vector3 secondaryStaticAxis,
-        BodyAxis secondaryAxis,
-        IAttitudeTarget secondaryTarget)
-        : this(maneuverCenter, minimumEpoch, maneuverHoldDuration, primaryStaticAxis, primaryTarget, secondaryStaticAxis, secondaryTarget)
-    {
-        _primaryAxis = primaryAxis;
-        _secondaryAxis = secondaryAxis;
-    }
-
-    /// <summary>
-    /// Creates an LVLH (Local Vertical Local Horizontal) attitude.
-    /// Primary: the spacecraft's down axis toward nadir. Secondary: its front axis toward prograde.
-    /// </summary>
+    /// <param name="minEpoch">Earliest epoch when the maneuver can execute; default(Time) for none.</param>
+    /// <param name="holdDuration">Duration to hold the attitude; zero by default.</param>
+    /// <param name="maneuverCenter">The central body; null for the centre the run infers (required in SSB mode: the
+    /// orbital directions read it).</param>
+    /// <exception cref="ArgumentOutOfRangeException"><paramref name="holdDuration"/> is negative.</exception>
     /// <remarks>
     /// The axes are those of the spacecraft whose plan last held the attitude, <see cref="Spacecraft.BodyDown"/> and
-    /// <see cref="Spacecraft.BodyFront"/>, read at execution as the single-vector attitudes read
-    /// <see cref="Spacecraft.BodyFront"/> (<see cref="Maneuver.GetBodyAxis"/>); the static <see cref="Spacecraft.Down"/> and
-    /// <see cref="Spacecraft.Front"/> before any plan (#677), outside a propagation only: a run propagates the spacecraft
-    /// of the plan. For the static axes on any spacecraft, use the constructor with
-    /// <see cref="Spacecraft.Down"/> and <see cref="Spacecraft.Front"/>.
+    /// <see cref="Spacecraft.BodyFront"/>, read at execution as the single-vector attitudes read theirs
+    /// (<see cref="Maneuver.GetBodyAxis"/>); the static <see cref="Spacecraft.Down"/> and <see cref="Spacecraft.Front"/>
+    /// before any plan (#677), outside a propagation only: a run propagates the spacecraft of the plan. For the static
+    /// axes on any spacecraft, use the <see cref="Vector3"/> shape with <see cref="Spacecraft.Down"/> and
+    /// <see cref="Spacecraft.Front"/>. <c>CreateLVLH(maneuverCenter, minimumEpoch, maneuverHoldDuration, engine)</c> before
+    /// 11.0.0 (D2's casing of acronyms and D1 rule 8 of #668, in lot L5b, decided by S. Guillet, 2026-11-23).
     /// </remarks>
-    public static TriadAttitude CreateLVLH(
-        CelestialItem maneuverCenter,
-        Time minimumEpoch,
-        TimeSpan maneuverHoldDuration)
+    public static TriadAttitude CreateLvlh(Time minEpoch = default, TimeSpan holdDuration = default, CelestialItem maneuverCenter = null)
     {
-        return new TriadAttitude(
-            maneuverCenter, minimumEpoch, maneuverHoldDuration,
-            Spacecraft.Down, BodyAxis.Down, OrbitalDirectionTarget.Nadir,
-            Spacecraft.Front, BodyAxis.Front, OrbitalDirectionTarget.Prograde);
+        return new TriadAttitude(BodyAxis.Down, OrbitalDirectionTarget.Nadir, BodyAxis.Front, OrbitalDirectionTarget.Prograde, minEpoch,
+            holdDuration, maneuverCenter);
     }
 
     /// <summary>
-    /// Creates a prograde attitude with sun tracking for solar panel orientation.
-    /// Primary: the spacecraft's front axis toward prograde. Secondary: its up axis toward the Sun.
+    /// Creates a prograde attitude with sun tracking for solar panel orientation: the spacecraft's front axis toward
+    /// prograde, its up axis toward the Sun, geometric (<c>new CelestialAttitudeTarget(sun)</c>).
     /// </summary>
+    /// <param name="sun">The Sun the up axis turns toward.</param>
+    /// <param name="minEpoch">Earliest epoch when the maneuver can execute; default(Time) for none.</param>
+    /// <param name="holdDuration">Duration to hold the attitude; zero by default.</param>
+    /// <param name="maneuverCenter">The central body; null for the centre the run infers (required in SSB mode: the
+    /// prograde direction reads it).</param>
+    /// <exception cref="ArgumentNullException"><paramref name="sun"/> is null.</exception>
+    /// <exception cref="ArgumentOutOfRangeException"><paramref name="holdDuration"/> is negative.</exception>
     /// <remarks>
     /// The axes are those of the spacecraft whose plan last held the attitude, <see cref="Spacecraft.BodyFront"/> and
-    /// <see cref="Spacecraft.BodyUp"/>, read at execution as the single-vector attitudes read
-    /// <see cref="Spacecraft.BodyFront"/> (<see cref="Maneuver.GetBodyAxis"/>); the static <see cref="Spacecraft.Front"/>
-    /// and <see cref="Spacecraft.Up"/> before any plan (#677), outside a propagation only: a run propagates the spacecraft
-    /// of the plan. For the static axes on any spacecraft, use the constructor with
-    /// <see cref="Spacecraft.Front"/> and <see cref="Spacecraft.Up"/>.
+    /// <see cref="Spacecraft.BodyUp"/>, read at execution (<see cref="Maneuver.GetBodyAxis"/>); the static
+    /// <see cref="Spacecraft.Front"/> and <see cref="Spacecraft.Up"/> before any plan (#677). The Sun stays a required
+    /// argument (decision 70 of #668): a Sun built in the factory would read the data provider at the call and ignore the
+    /// caller's. Before 11.0.0 <c>(maneuverCenter, minimumEpoch, maneuverHoldDuration, sun, engine)</c>.
     /// </remarks>
-    public static TriadAttitude CreateProgradeWithSunTracking(
-        CelestialItem maneuverCenter,
-        Time minimumEpoch,
-        TimeSpan maneuverHoldDuration,
-        ILocalizable sun)
+    public static TriadAttitude CreateProgradeWithSunTracking(ILocalizable sun, Time minEpoch = default, TimeSpan holdDuration = default,
+        CelestialItem maneuverCenter = null)
     {
         if (sun == null) throw new ArgumentNullException(nameof(sun));
-        return new TriadAttitude(
-            maneuverCenter, minimumEpoch, maneuverHoldDuration,
-            Spacecraft.Front, BodyAxis.Front, OrbitalDirectionTarget.Prograde,
-            Spacecraft.Up, BodyAxis.Up, new CelestialAttitudeTarget(sun));
+        return new TriadAttitude(BodyAxis.Front, OrbitalDirectionTarget.Prograde, BodyAxis.Up, new CelestialAttitudeTarget(sun), minEpoch,
+            holdDuration, maneuverCenter);
     }
 
-    // The instance axis of a factory on the spacecraft of the last plan (Maneuver.GetBodyAxis), the given vector for the
-    // public constructors
-    private Vector3 ResolveAxis(BodyAxis? axis, Vector3 vector) => axis.HasValue ? GetBodyAxis(axis.Value) : vector;
+    // The static axis of a BodyAxis, the axis before any plan (Spacecraft.Front, ...)
+    private static Vector3 StaticAxis(BodyAxis axis) => axis switch
+    {
+        BodyAxis.Front => Spacecraft.Front,
+        BodyAxis.Back => Spacecraft.Back,
+        BodyAxis.Right => Spacecraft.Right,
+        BodyAxis.Left => Spacecraft.Left,
+        BodyAxis.Up => Spacecraft.Up,
+        _ => Spacecraft.Down
+    };
 
     // Whether the law reads its centre (decision 99 of #668, decided by S. Guillet, 2026-11-24): not when both targets are
-    // celestial, a library CelestialAttitudeTarget or the ILocalizable of a target form, which then takes the central body
-    // of the run when the centre cannot be inferred; an orbital-direction or user target reads it
-    internal override bool ReadsCenter => !(IsCelestial(PrimaryAttitudeTarget) && IsCelestial(SecondaryAttitudeTarget));
+    // library CelestialAttitudeTargets, which then take the central body of the run when the centre cannot be inferred;
+    // an orbital-direction or user target reads it
+    internal override bool ReadsCenter => !(IsCelestial(PrimaryTarget) && IsCelestial(SecondaryTarget));
 
-    // A library CelestialAttitudeTarget, not a subclass; null for the ILocalizable target of a target form
-    private static bool IsCelestial(IAttitudeTarget target) => target == null || target.GetType() == typeof(CelestialAttitudeTarget);
+    // A library CelestialAttitudeTarget, not a subclass
+    private static bool IsCelestial(IAttitudeTarget target) => target.GetType() == typeof(CelestialAttitudeTarget);
 
-    private static CelestialItem GetManeuverCenter(ILocalizable target)
+    private void ValidateBodyVectors(in Vector3 primary, in Vector3 secondary)
     {
-        return target is CelestialItem t ? t : (target as Site)?.CelestialBody;
-    }
-
-    private void ValidateBodyVectors()
-    {
-        if (!AreSeparated(PrimaryBodyVector, SecondaryBodyVector))
+        if (!AreSeparated(primary, secondary))
         {
-            double angle = PrimaryBodyVector.Angle(SecondaryBodyVector);
+            double angle = primary.Angle(secondary);
             throw new ArgumentException(
                 $"Body vectors are too close to collinear. Angle: {angle * Constants.Rad2Deg:F2} degrees. " +
-                $"Minimum separation required: {MinimumVectorSeparation * Constants.Rad2Deg:F2} degrees.");
+                $"Minimum separation required: {MinVectorSeparation * Constants.Rad2Deg:F2} degrees.");
         }
     }
 
@@ -434,27 +367,13 @@ public class TriadAttitude : Attitude
     /// <param name="stateVector">Current spacecraft state vector.</param>
     /// <returns>Quaternion representing the spacecraft orientation.</returns>
     /// <exception cref="InvalidOperationException">The reference vectors are closer than
-    /// <see cref="MinimumVectorSeparation"/> to collinear, or one of them is zero or not finite.</exception>
+    /// <see cref="MinVectorSeparation"/> to collinear, or one of them is zero or not finite.</exception>
     public override Quaternion ComputeOrientation(StateVector stateVector)
     {
-        Vector3 primaryRefVector;
-        Vector3 secondaryRefVector;
-
-        if (PrimaryAttitudeTarget != null && SecondaryAttitudeTarget != null)
-        {
-            // IAttitudeTarget path — supports orbital directions and celestial bodies
-            primaryRefVector = PrimaryAttitudeTarget.GetDirection(stateVector);
-            secondaryRefVector = SecondaryAttitudeTarget.GetDirection(stateVector);
-        }
-        else
-        {
-            // ILocalizable ephemeris path — geometric, consistent with Attitude.TryExecute and IAttitudeTarget path
-            var primaryEphemeris = PrimaryTarget.GetEphemeris(stateVector.Epoch, stateVector.Observer, stateVector.Frame, Aberration.None);
-            var secondaryEphemeris = SecondaryTarget.GetEphemeris(stateVector.Epoch, stateVector.Observer, stateVector.Frame, Aberration.None);
-
-            primaryRefVector = (primaryEphemeris.ToStateVector().Position - stateVector.Position).NormalizeOrZero();
-            secondaryRefVector = (secondaryEphemeris.ToStateVector().Position - stateVector.Position).NormalizeOrZero();
-        }
+        // The directions of the targets, orbital or celestial (IAttitudeTarget; the ILocalizable path, the same expression
+        // as CelestialAttitudeTarget's geometric one, left with its constructors in lot L5b, decision 69 of #668)
+        var primaryRefVector = PrimaryTarget.GetDirection(stateVector);
+        var secondaryRefVector = SecondaryTarget.GetDirection(stateVector);
 
         // Validate reference vectors are not collinear
         if (!AreSeparated(primaryRefVector, secondaryRefVector))
@@ -463,7 +382,7 @@ public class TriadAttitude : Attitude
             throw new InvalidOperationException(
                 $"Reference vectors are too close to collinear at epoch {stateVector.Epoch}. " +
                 $"Angle: {refAngle * Constants.Rad2Deg:F2} degrees. " +
-                $"Minimum separation required: {MinimumVectorSeparation * Constants.Rad2Deg:F2} degrees.");
+                $"Minimum separation required: {MinVectorSeparation * Constants.Rad2Deg:F2} degrees.");
         }
 
         // Construct orthonormal triads using the NAIF pattern

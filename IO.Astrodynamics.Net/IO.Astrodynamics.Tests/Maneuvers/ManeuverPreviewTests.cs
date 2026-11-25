@@ -406,8 +406,8 @@ public class ManeuverPreviewTests
     {
         var earth = Earth();
         var spacecraft = NewSpacecraft(earth, out var engine);
-        var nadir = new NadirAttitude(earth, S, TimeSpan.FromSeconds(10.0));
-        var prograde = new ProgradeAttitude(earth, S, TimeSpan.Zero);
+        var nadir = new NadirAttitude(S, TimeSpan.FromSeconds(10.0), earth);
+        var prograde = new ProgradeAttitude(S, TimeSpan.Zero, earth);
         spacecraft.SetManeuvers(nadir, prograde);
         var state = spacecraft.InitialOrbitalParameters.ToStateVector();
 
@@ -420,7 +420,7 @@ public class ManeuverPreviewTests
         Assert.Empty(spacecraft.ExecutedManeuvers);
         Assert.NotNull(later);
 
-        var twin = new NadirAttitude(earth, S, TimeSpan.FromSeconds(10.0));
+        var twin = new NadirAttitude(S, TimeSpan.FromSeconds(10.0), earth);
         var (_, executed) = twin.TryExecute(state);
         Assert.Equal(executed.Rotation, orientation.Rotation);
         LabelAssert.Equal(state.Epoch, orientation.Epoch);
@@ -447,7 +447,7 @@ public class ManeuverPreviewTests
     {
         var earth = Earth();
         var spacecraft = NewSpacecraft(earth, out var engine);
-        var nadir = new NadirAttitude(earth, S, TimeSpan.Zero);
+        var nadir = new NadirAttitude(S, TimeSpan.Zero, earth);
         spacecraft.SetManeuvers(nadir);
         var targetFrame = frame == "ICRF" ? Frames.Frame.ICRF : Frames.Frame.ECLIPTIC_J2000;
         var aboutTheEarth = spacecraft.InitialOrbitalParameters.ToStateVector().ToFrame(targetFrame);
@@ -456,7 +456,7 @@ public class ManeuverPreviewTests
 
         var orientation = nadir.ComputeStateOrientation(state);
 
-        var twin = new NadirAttitude(earth, S, TimeSpan.Zero);
+        var twin = new NadirAttitude(S, TimeSpan.Zero, earth);
         var (_, executed) = twin.TryExecute(state);
         Assert.Equal(executed.Rotation, orientation.Rotation);
         Assert.Equal(Frames.Frame.ICRF, orientation.ReferenceFrame);
@@ -476,7 +476,7 @@ public class ManeuverPreviewTests
     {
         var earth = Earth();
         var spacecraft = NewSpacecraft(earth, out var engine);
-        var nadir = new NadirAttitude(earth, S.AddSeconds(300.0), TimeSpan.Zero);
+        var nadir = new NadirAttitude(S.AddSeconds(300.0), TimeSpan.Zero, earth);
         spacecraft.SetManeuvers(nadir);
         var solution = spacecraft.Propagate(new Window(S, S.AddHours(1.0)), Options(earth, integrator));
         var activation = nadir.ThrustWindow!.Value.StartDate;

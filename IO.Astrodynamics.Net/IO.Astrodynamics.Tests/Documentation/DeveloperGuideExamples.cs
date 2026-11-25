@@ -805,25 +805,25 @@ internal static class DeveloperGuideExamples
         // minimumEpoch, epoch: Time; holdDuration, duration: TimeSpan
         // Point spacecraft Front at Moon, keep Up toward Sun
         var attitude = new TriadAttitude(
-            minimumEpoch, TimeSpan.FromMinutes(30),
-            Spacecraft.Front, moon,    // Primary: Front points at Moon
-            Spacecraft.Up, sun);
+            Spacecraft.Front, new CelestialAttitudeTarget(moon),    // Primary: Front points at Moon
+            Spacecraft.Up, new CelestialAttitudeTarget(sun),
+            minimumEpoch, TimeSpan.FromMinutes(30));
 
         // Using instruments
         var cameraAttitude = new TriadAttitude(
-            minimumEpoch, holdDuration,
             camera,                    // Uses camera boresight (primary) and refVector (secondary)
-            earth, sun);
+            new CelestialAttitudeTarget(earth), new CelestialAttitudeTarget(sun),
+            minimumEpoch, holdDuration);
 
         // Using IAttitudeTarget (orbital directions and/or celestial bodies)
         var targetAttitude = new TriadAttitude(
-            earth, epoch, duration,
             Spacecraft.Front, OrbitalDirectionTarget.Prograde,       // Primary: prograde pointing
-            Spacecraft.Up, new CelestialAttitudeTarget(sun));
+            Spacecraft.Up, new CelestialAttitudeTarget(sun),
+            epoch, duration, earth);
 
         // Factory methods for common operational attitudes, on the axes of the plan's spacecraft
-        var lvlh = TriadAttitude.CreateLVLH(earth, epoch, duration);
-        var sunTrack = TriadAttitude.CreateProgradeWithSunTracking(earth, epoch, duration, sun);
+        var lvlh = TriadAttitude.CreateLvlh(epoch, duration, earth);
+        var sunTrack = TriadAttitude.CreateProgradeWithSunTracking(sun, epoch, duration, earth);
         #endregion
     }
 
@@ -1680,12 +1680,12 @@ internal static class DeveloperGuideExamples
 
         // Configure attitude maneuver to point antenna at ground station
         var pointingManeuver = new InstrumentPointingToAttitude(
-            start.AddHours(7.25),           // Start time
-            TimeSpan.FromHours(0.5),        // Duration
             spacecraft.Instruments.First(), // Instrument to point
-            groundStation
-        );                                  // The direction is light-time corrected (Aberration.LT, the default, #549);
-                                            // pass Aberration.None as a sixth argument for the geometric direction
+            new CelestialAttitudeTarget(groundStation, Aberration.LT),
+            start.AddHours(7.25),           // Start time
+            TimeSpan.FromHours(0.5)         // Duration
+        );                                  // The direction is light-time corrected (#549); the target carries its correction,
+                                            // new CelestialAttitudeTarget(groundStation) for the geometric direction
 
         spacecraft.SetManeuvers(pointingManeuver);
 
@@ -1740,10 +1740,10 @@ internal static class DeveloperGuideExamples
         // - Secondary: Spacecraft Right (+X) oriented toward Sun, which sets the roll about nadir (a vector at 5 degrees at
         //   least from the primary: Up, opposite to Down, would be rejected)
         var triadManeuver = new TriadAttitude(
+            Spacecraft.Down, new CelestialAttitudeTarget(earth),  // Primary constraint: nadir pointing
+            Spacecraft.Right, new CelestialAttitudeTarget(sun),
             start,                          // Start time
-            TimeSpan.FromHours(1.5),        // Hold duration
-            Spacecraft.Down, earth,         // Primary constraint: nadir pointing
-            Spacecraft.Right, sun
+            TimeSpan.FromHours(1.5)         // Hold duration
         );
 
         spacecraft.SetManeuvers(triadManeuver);
@@ -1766,16 +1766,20 @@ internal static class DeveloperGuideExamples
         #region guide:58
         // earth: the CelestialBody of the orbit; sun: the Sun; engine: an Engine of the spacecraft; epoch: Time; duration: TimeSpan
         // LVLH attitude using factory method (the spacecraft's BodyDown to nadir, its BodyFront toward prograde)
-        var lvlh = TriadAttitude.CreateLVLH(earth, epoch, duration);
+        var lvlh = TriadAttitude.CreateLvlh(epoch, duration, earth);
 
         // Prograde with sun tracking using factory method
-        var sunTrack = TriadAttitude.CreateProgradeWithSunTracking(earth, epoch, duration, sun);
+        var sunTrack = TriadAttitude.CreateProgradeWithSunTracking(sun, epoch, duration, earth);
 
         // Custom: nadir pointing with normal constraint (using OrbitalDirectionTarget)
         var customLvlh = new TriadAttitude(
-            earth, epoch, duration,
-            Spacecraft.Down, OrbitalDirectionTarget.Nadir,
-            Spacecraft.Front, OrbitalDirectionTarget.Prograde);
+            Spacecraft.Down,
+            OrbitalDirectionTarget.Nadir,
+            Spacecraft.Front,
+            OrbitalDirectionTarget.Prograde,
+            epoch,
+            duration,
+            earth);
         #endregion
     }
 

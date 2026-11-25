@@ -103,7 +103,7 @@ public class ManeuverInferenceTests
     // A user attitude law: its front along the position from its centre
     private sealed class UserAttitude : Attitude
     {
-        public UserAttitude(CelestialItem maneuverCenter) : base(maneuverCenter, S, TimeSpan.Zero)
+        public UserAttitude(CelestialItem maneuverCenter) : base(S, TimeSpan.Zero, maneuverCenter)
         {
         }
 
@@ -145,7 +145,7 @@ public class ManeuverInferenceTests
     {
         var earth = Earth();
         var inferred = NewSpacecraft(earth);
-        var nadir = new NadirAttitude(null, S, TimeSpan.FromSeconds(600.0));
+        var nadir = new NadirAttitude(S, TimeSpan.FromSeconds(600.0));
         var raise = new ApogeeHeightManeuver(8000e3, null, S, TimeSpan.Zero, null);
         inferred.SetManeuvers(nadir, raise);
         Assert.Null(nadir.ManeuverCenter);
@@ -161,7 +161,7 @@ public class ManeuverInferenceTests
 
         // The same plan given its engine and centre: the same run, bit for bit
         var explicitSc = NewSpacecraft(earth);
-        explicitSc.SetManeuvers(new NadirAttitude(earth, S, TimeSpan.FromSeconds(600.0)),
+        explicitSc.SetManeuvers(new NadirAttitude(S, TimeSpan.FromSeconds(600.0), earth),
             new ApogeeHeightManeuver(8000e3, explicitSc.Engines.Single(), S, TimeSpan.Zero, earth));
         var reference = explicitSc.Propagate(TwoHours, Options(earth, integrator));
         var end = TwoHours.EndDate;
@@ -292,8 +292,8 @@ public class ManeuverInferenceTests
         var earth = Earth();
         var spacecraft = NewSpacecraft(earth, engines: 0);
         Assert.Empty(spacecraft.FuelTanks);
-        var nadir = new NadirAttitude(null, S, TimeSpan.FromMinutes(30.0));
-        var prograde = new ProgradeAttitude(null, S, TimeSpan.Zero);
+        var nadir = new NadirAttitude(S, TimeSpan.FromMinutes(30.0));
+        var prograde = new ProgradeAttitude(S, TimeSpan.Zero);
         spacecraft.SetManeuvers(nadir, prograde);
 
         spacecraft.Propagate(TwoHours, Options(earth, integrator));
@@ -334,7 +334,7 @@ public class ManeuverInferenceTests
         var earth = Earth();
         var sun = new CelestialBody(Stars.Sun, Frame.ICRF, S);
         var spacecraft = NewSpacecraft(earth);
-        var nadir = new NadirAttitude(null, S, TimeSpan.Zero);
+        var nadir = new NadirAttitude(S, TimeSpan.Zero);
         var raise = new ApogeeHeightManeuver(8000e3, null, S, TimeSpan.Zero, null);
         spacecraft.SetManeuvers(nadir, raise);
         var heliocentric = spacecraft.InitialOrbitalParameters.ToStateVector().RelativeTo(sun, Aberration.None);
@@ -347,7 +347,7 @@ public class ManeuverInferenceTests
         Assert.Equal(orientationBefore, nadir.ComputeStateOrientation(heliocentric).Rotation);
         Assert.Equal(deltaVBefore, raise.ComputeDeltaV(heliocentric));
         // The run's centre would have given another preview
-        var aboutEarth = new NadirAttitude(earth, S, TimeSpan.Zero).ComputeStateOrientation(heliocentric).Rotation;
+        var aboutEarth = new NadirAttitude(S, TimeSpan.Zero, earth).ComputeStateOrientation(heliocentric).Rotation;
         Assert.True(RotationAngle(orientationBefore, aboutEarth) > 1e-3);
     }
 
@@ -355,17 +355,37 @@ public class ManeuverInferenceTests
     // Decision 99: where the centre cannot be inferred (SSB mode)
     // ---------------------------------------------------------------------------------------------------------------------
 
-    private static Attitude LawReadingTheCentre(string law, CelestialItem center) => law switch
+    // The pointing of an instrument of the spacecraft of the plan
+    private static Instrument Camera(Spacecraft spacecraft) =>
+        spacecraft.Instruments.FirstOrDefault() ?? spacecraft.AddCircularInstrument("CAM", 0.1, Vector3.VectorZ, Vector3.VectorY);
+
+    private static Attitude LawReadingTheCentre(string law, CelestialItem center, Spacecraft spacecraft) => law switch
     {
-        "UserTarget" => new TriadAttitude(center, S, TimeSpan.Zero, Spacecraft.Front, new UserTarget(), Spacecraft.Up,
-            new CelestialAttitudeTarget(new CelestialBody(Stars.Sun, Frame.ICRF, S))),
-        "DerivedCelestialTarget" => new TriadAttitude(center, S, TimeSpan.Zero, Spacecraft.Front,
-            new DerivedCelestialTarget(new CelestialBody(PlanetsAndMoons.MOON)), Spacecraft.Up,
-            new CelestialAttitudeTarget(new CelestialBody(Stars.Sun, Frame.ICRF, S))),
+        "PointingAtAnOrbitalDirection" => new InstrumentPointingToAttitude(Camera(spacecraft), OrbitalDirectionTarget.Prograde, S,
+            maneuverCenter: center),
+        "UserTarget" => new TriadAttitude(Spacecraft.Front,
+            new UserTarget(),
+            Spacecraft.Up,
+            new CelestialAttitudeTarget(new CelestialBody(Stars.Sun, Frame.ICRF, S)),
+            S,
+            TimeSpan.Zero,
+            center),
+        "DerivedCelestialTarget" => new TriadAttitude(Spacecraft.Front,
+            new DerivedCelestialTarget(new CelestialBody(PlanetsAndMoons.MOON)),
+            Spacecraft.Up,
+            new CelestialAttitudeTarget(new CelestialBody(Stars.Sun, Frame.ICRF, S)),
+            S,
+            TimeSpan.Zero,
+            center),
         "UserAttitude" => new UserAttitude(center),
-        "OrbitalDirection" => new TriadAttitude(center, S, TimeSpan.Zero, Spacecraft.Down, OrbitalDirectionTarget.Nadir, Spacecraft.Front,
-            OrbitalDirectionTarget.Prograde),
-        "Nadir" => new NadirAttitude(center, S, TimeSpan.Zero),
+        "OrbitalDirection" => new TriadAttitude(Spacecraft.Down,
+            OrbitalDirectionTarget.Nadir,
+            Spacecraft.Front,
+            OrbitalDirectionTarget.Prograde,
+            S,
+            TimeSpan.Zero,
+            center),
+        "Nadir" => new NadirAttitude(S, TimeSpan.Zero, center),
         _ => throw new ArgumentOutOfRangeException(nameof(law))
     };
 
@@ -377,11 +397,12 @@ public class ManeuverInferenceTests
     [InlineData("UserAttitude", "VV")]
     [InlineData("OrbitalDirection", "RK")]
     [InlineData("Nadir", "VV")]
+    [InlineData("PointingAtAnOrbitalDirection", "RK")]
     public void SsbMode_ALawThatReadsItsCentre_GivenNone_ThrowsInTheConstructorAndInPropagate(string law, string integrator)
     {
         var earth = Earth();
         var spacecraft = NewSpacecraft(earth, ssb: true);
-        spacecraft.SetManeuvers(LawReadingTheCentre(law, null));
+        spacecraft.SetManeuvers(LawReadingTheCentre(law, null, spacecraft));
 
         var constructor = Assert.Throws<InvalidOperationException>(() => new CentralBodyPropagator(TwoHours, spacecraft, Options(earth, integrator, true)));
         Assert.Contains("maneuverCenter", constructor.Message);
@@ -390,7 +411,7 @@ public class ManeuverInferenceTests
         // A propagator built before the plan: its Propagate throws, nothing changed
         var other = NewSpacecraft(earth, ssb: true);
         var propagator = new CentralBodyPropagator(TwoHours, other, Options(earth, integrator, true));
-        other.SetManeuvers(LawReadingTheCentre(law, null));
+        other.SetManeuvers(LawReadingTheCentre(law, null, other));
         var run = Assert.Throws<InvalidOperationException>(() => propagator.Propagate());
         Assert.Contains("maneuverCenter", run.Message);
         Assert.False(other.IsPropagated);
@@ -402,11 +423,12 @@ public class ManeuverInferenceTests
     [InlineData("UserTarget", "VV")]
     [InlineData("UserAttitude", "RK")]
     [InlineData("UserAttitude", "VV")]
+    [InlineData("PointingAtAnOrbitalDirection", "VV")]
     public void SsbMode_ALawThatReadsItsCentre_GivenIt_Runs(string law, string integrator)
     {
         var earth = Earth();
         var spacecraft = NewSpacecraft(earth, ssb: true);
-        var attitude = LawReadingTheCentre(law, earth);
+        var attitude = LawReadingTheCentre(law, earth, spacecraft);
         spacecraft.SetManeuvers(attitude);
 
         spacecraft.Propagate(TwoHours, Options(earth, integrator, true));
@@ -432,8 +454,12 @@ public class ManeuverInferenceTests
         var moon = new CelestialBody(PlanetsAndMoons.MOON);
         var sun = new CelestialBody(Stars.Sun, Frame.ICRF, S);
         var spacecraft = NewSpacecraft(earth, ssb: true);
-        var triad = new TriadAttitude(null, S, TimeSpan.Zero, Spacecraft.Front, new CelestialAttitudeTarget(moon), Spacecraft.Up,
-            new CelestialAttitudeTarget(sun));
+        var triad = new TriadAttitude(Spacecraft.Front,
+            new CelestialAttitudeTarget(moon),
+            Spacecraft.Up,
+            new CelestialAttitudeTarget(sun),
+            S,
+            TimeSpan.Zero);
         spacecraft.SetManeuvers(triad);
 
         spacecraft.Propagate(TwoHours, Options(earth, integrator, true));
@@ -445,5 +471,26 @@ public class ManeuverInferenceTests
         var expected = triad.ComputeOrientation(state);
         var recorded = spacecraft.Frame.GetStateOrientationToICRF(epoch).Rotation;
         Assert.True(RotationAngle(expected, recorded) < 1e-9);
+    }
+
+    [Theory]
+    [InlineData("RK")]
+    [InlineData("VV")]
+    public void SsbMode_APointingAtACelestialTarget_GivenNoCentre_TakesTheCentralBodyOfTheRun(string integrator)
+    {
+        var earth = Earth();
+        var moon = new CelestialBody(PlanetsAndMoons.MOON);
+        var spacecraft = NewSpacecraft(earth, ssb: true);
+        var pointing = new InstrumentPointingToAttitude(Camera(spacecraft), new CelestialAttitudeTarget(moon), S);
+        spacecraft.SetManeuvers(pointing);
+
+        spacecraft.Propagate(TwoHours, Options(earth, integrator, true));
+
+        Assert.Equal([pointing], spacecraft.ExecutedManeuvers);
+        Assert.Equal(Stars.Sun.NaifId, ((CelestialItem)pointing.ManeuverCenter).NaifId);
+        var epoch = S.AddHours(1.0);
+        var boresight = Camera(spacecraft).GetBoresightInSpacecraftFrame().Rotate(spacecraft.Frame.GetStateOrientationToICRF(epoch).Rotation);
+        var toMoon = moon.GetEphemeris(epoch, spacecraft, Frame.ICRF, Aberration.None).Position;
+        Assert.True(Separation(boresight, toMoon) < 1e-9);
     }
 }

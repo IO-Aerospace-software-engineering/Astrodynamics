@@ -16,66 +16,75 @@ namespace IO.Astrodynamics.Maneuver;
 /// #524), to the direction of the target. The roll about the boresight is not constrained.
 /// </summary>
 /// <remarks>
-/// The direction is that of the target as the spacecraft sees it, corrected by <see cref="Aberration"/>, <see cref="Aberration.LT"/>
-/// by default: the target at t − lt from the spacecraft's position at t, lt the light time of CSPICE's <c>spkltc</c>, and
-/// for "+S" the stellar aberration of <c>stelab</c> from the spacecraft's velocity, as <c>spkcvo_c</c> corrects it
-/// (#549, decided by S. Guillet, 2026-11-17); a <see cref="Star"/> takes no light time, its "+S" corrections the stellar
-/// aberration alone, as <see cref="Star.GetEphemeris"/> reads it. Before 11.0.0 the law asked for LT, but a celestial
-/// target, the centre of the maneuver, was read relative to itself, so its direction was geometric (the Moon 4.2e-5 to
-/// 4.5e-5 rad, about 40 km, from its LT direction from a LEO); a <see cref="Site"/> of the kernels took the light time
-/// from its body's centre, and a site given by its coordinates, read from the Earth with LT, met the correction #489
-/// dropped, so its direction was geometric too.
+/// <para>
+/// The direction is that of the target, an <see cref="IAttitudeTarget"/> (<see cref="IAttitudeTarget.GetDirection"/>):
+/// for a <see cref="CelestialAttitudeTarget"/>, the target as the spacecraft sees it, corrected by the aberration of the
+/// target, <see cref="Aberration.None"/> by default, <see cref="Aberration.LT"/> the target at t − lt from the
+/// spacecraft's position at t, lt the light time of CSPICE's <c>spkltc</c>, and for "+S" the stellar aberration of
+/// <c>stelab</c> from the spacecraft's velocity, as <c>spkcvo_c</c> corrects it (#549, decided by S. Guillet,
+/// 2026-11-17); a <see cref="Star"/> takes no light time.
+/// </para>
+/// <para>
+/// Since lot L5b (decision 67 of #668, decided by S. Guillet, 2026-11-23) the target is an <see cref="IAttitudeTarget"/>,
+/// which carries its correction: the attitude's own <c>Aberration</c>, <see cref="Aberration.LT"/> by default, is
+/// removed, so a target given as <c>new CelestialAttitudeTarget(moon)</c> is geometric where the former default corrected
+/// the light time (9.165e-5 rad for the Moon from a LEO in the gap analysis of L5); pass
+/// <c>new CelestialAttitudeTarget(moon, Aberration.LT)</c> for the former direction. The centre follows the rule of every
+/// maneuver (decision 62 of #668): the one given, else the one the run infers, where the target, or a site's body, was
+/// the centre before; the direction depends on the centre through rounding only.
+/// </para>
 /// </remarks>
 public class InstrumentPointingToAttitude : Attitude
 {
+    /// <summary>
+    /// The instrument whose boresight points at the target, an instrument of the spacecraft propagated (#797).
+    /// </summary>
     public Instrument Instrument { get; }
-    public ILocalizable Target { get; }
 
     /// <summary>
-    /// The correction of the target's direction, <see cref="Aberration.LT"/> by default; <see cref="Aberration.None"/>
-    /// points at its geometric direction.
+    /// The target of the boresight, with its correction (decision 67 of #668: an <c>ILocalizable</c> before lot L5b).
     /// </summary>
-    public Aberration Aberration { get; }
+    public IAttitudeTarget Target { get; }
 
     /// <summary>
     /// An attitude that points the boresight of <paramref name="instrument"/> at <paramref name="target"/>.
     /// </summary>
-    /// <param name="minimumEpoch">The earliest epoch of the attitude.</param>
-    /// <param name="maneuverHoldDuration">The hold of the attitude.</param>
     /// <param name="instrument">The instrument whose boresight points at the target.</param>
-    /// <param name="target">The target: a celestial item, a site or a spacecraft.</param>
-    /// <param name="aberration">The correction of the target's direction, light time (<see cref="Aberration.LT"/>) by
-    /// default (#549).</param>
-    public InstrumentPointingToAttitude(Time minimumEpoch, TimeSpan maneuverHoldDuration, Instrument instrument, ILocalizable target,
-        Aberration aberration = Aberration.LT) : base(
-        target is CelestialItem t ? t : (target as Site)?.CelestialBody, minimumEpoch, maneuverHoldDuration)
+    /// <param name="target">The target, with its correction: a <see cref="CelestialAttitudeTarget"/> of a celestial item,
+    /// a site or a spacecraft, or an orbital direction (<see cref="OrbitalDirectionTarget"/>).</param>
+    /// <param name="minEpoch">The earliest epoch of the attitude; default(Time) for none.</param>
+    /// <param name="holdDuration">The hold of the attitude, zero or positive; zero by default.</param>
+    /// <param name="maneuverCenter">The central body; null for the centre the run infers (decisions 61 and 62 of #668);
+    /// in SSB mode, where it cannot be inferred, a library <see cref="CelestialAttitudeTarget"/> takes the central body of
+    /// the run, and any other target requires it (decision 99 of #668, decided by S. Guillet, 2026-11-24).</param>
+    /// <exception cref="ArgumentNullException"><paramref name="instrument"/> or <paramref name="target"/> is null.</exception>
+    /// <exception cref="ArgumentOutOfRangeException"><paramref name="holdDuration"/> is negative.</exception>
+    /// <remarks>
+    /// D1 rule 8 of #668 (lot L5b, decided by S. Guillet, 2026-11-23); before 11.0.0 <c>(minimumEpoch,
+    /// maneuverHoldDuration, instrument, target, engine, aberration = Aberration.LT)</c>.
+    /// </remarks>
+    public InstrumentPointingToAttitude(Instrument instrument, IAttitudeTarget target, Time minEpoch = default, TimeSpan holdDuration = default,
+        CelestialItem maneuverCenter = null) : base(minEpoch, holdDuration, maneuverCenter)
     {
         Instrument = instrument ?? throw new ArgumentNullException(nameof(instrument));
         Target = target ?? throw new ArgumentNullException(nameof(target));
-        if (!Enum.IsDefined(aberration))
-        {
-            throw new ArgumentOutOfRangeException(nameof(aberration), aberration, "Unknown aberration correction.");
-        }
-
-        Aberration = aberration;
     }
+
+    internal override System.Collections.Generic.IEnumerable<Instrument> PointedInstruments => [Instrument];
+
+    // Whether the law reads its centre (decision 99 of #668, decided by S. Guillet, 2026-11-24): not for a library
+    // CelestialAttitudeTarget, which takes the central body of the run when the centre cannot be inferred
+    internal override bool ReadsCenter => Target.GetType() != typeof(CelestialAttitudeTarget);
 
     /// <summary>
     /// The rotation from the spacecraft frame to the frame of <paramref name="stateVector"/> that takes the boresight to
-    /// the target, <c>direction = boresight.Rotate(q)</c>, as the other attitudes take their body vector to theirs. The
-    /// direction is the target's as the point of <paramref name="stateVector"/> sees it, corrected by
-    /// <see cref="Aberration"/> (#549).
+    /// the direction of the target, <c>direction = boresight.Rotate(q)</c>, as the other attitudes take their body vector
+    /// to theirs (<see cref="IAttitudeTarget.GetDirection"/>).
     /// </summary>
-    internal override System.Collections.Generic.IEnumerable<Instrument> PointedInstruments => [Instrument];
-
-    // Its target is celestial: the law takes the central body of the run when the centre cannot be inferred (decision 99
-    // of #668, decided by S. Guillet, 2026-11-24)
-    internal override bool ReadsCenter => false;
-
+    /// <exception cref="ArgumentNullException"><paramref name="stateVector"/> is null.</exception>
     public override Quaternion ComputeOrientation(StateVector stateVector)
     {
         ArgumentNullException.ThrowIfNull(stateVector);
-        var targetVector = CelestialItem.ApparentPositionFromState(Target, stateVector, Aberration);
-        return Instrument.GetBoresightInSpacecraftFrame().ToOrIdentity(targetVector);
+        return Instrument.GetBoresightInSpacecraftFrame().ToOrIdentity(Target.GetDirection(stateVector));
     }
 }

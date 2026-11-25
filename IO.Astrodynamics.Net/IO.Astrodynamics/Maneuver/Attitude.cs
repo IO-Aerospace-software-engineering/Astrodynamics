@@ -22,22 +22,24 @@ namespace IO.Astrodynamics.Maneuver;
 public abstract class Attitude : Maneuver
 {
     /// <summary>
-    /// An attitude law about <paramref name="maneuverCenter"/>, activated at or after <paramref name="minimumEpoch"/>, held
-    /// for <paramref name="maneuverHoldDuration"/>.
+    /// An attitude law activated at or after <paramref name="minEpoch"/>, held for <paramref name="holdDuration"/>, about
+    /// <paramref name="maneuverCenter"/>.
     /// </summary>
+    /// <param name="minEpoch">The earliest epoch of its activation; default(Time) for none.</param>
+    /// <param name="holdDuration">Its hold, zero or positive; zero by default.</param>
     /// <param name="maneuverCenter">The centre the law reads; null for the centre the run infers (decision 61 of #668),
     /// required in SSB mode, where it cannot be inferred: a user law reads it, as far as the library knows (decision 99 of
     /// #668, decided by S. Guillet, 2026-11-24).</param>
-    /// <param name="minimumEpoch">The earliest epoch of its activation.</param>
-    /// <param name="maneuverHoldDuration">Its hold, zero or positive.</param>
-    /// <exception cref="ArgumentOutOfRangeException"><paramref name="maneuverHoldDuration"/> is negative.</exception>
+    /// <exception cref="ArgumentOutOfRangeException"><paramref name="holdDuration"/> is negative.</exception>
     /// <remarks>
     /// An attitude takes no engine since lot L5b (decisions 48 and 93 of #668, decided by S. Guillet, 2026-11-23): it
     /// burns nothing, and orients the spacecraft whose plan holds it (<see cref="Spacecraft.SetManeuvers"/>), whose axes
     /// <see cref="Maneuver.GetBodyAxis"/> reads; before, a satellite without a thruster needed a tank and an engine for
-    /// it.
+    /// it. Its parameters follow D1 rule 8 (the targets of a law, then the optional <c>minEpoch</c>,
+    /// <c>holdDuration</c> and <c>maneuverCenter</c>); before 11.0.0 <c>(maneuverCenter, minimumEpoch,
+    /// maneuverHoldDuration, engine)</c>.
     /// </remarks>
-    public Attitude(CelestialItem maneuverCenter, Time minimumEpoch, TimeSpan maneuverHoldDuration) : base(maneuverCenter, minimumEpoch, maneuverHoldDuration)
+    public Attitude(Time minEpoch = default, TimeSpan holdDuration = default, CelestialItem maneuverCenter = null) : base(maneuverCenter, minEpoch, holdDuration)
     {
     }
 

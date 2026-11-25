@@ -19,7 +19,7 @@ public class ProgradeAttitudeTests
     [Fact]
     void Create()
     {
-        ProgradeAttitude attitude = new ProgradeAttitude(TestHelpers.EarthAtJ2000,new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB), TimeSpan.FromHours(1.0));
+        ProgradeAttitude attitude = new ProgradeAttitude(new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB), TimeSpan.FromHours(1.0), TestHelpers.EarthAtJ2000);
         LabelAssert.Equal(new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB), attitude.MinEpoch);
         Assert.Equal(TimeSpan.FromHours(1.0), attitude.HoldDuration);
     }
@@ -31,7 +31,7 @@ public class ProgradeAttitudeTests
         var spc = new Spacecraft(-666, "GenericSpacecraft", 1000.0, orbitalParams, 3000.0, new Clock("GenericClk", 65536));
         spc.AddFuelTank(new FuelTank("ft", 1000.0, 900.0, "ftA", "123456"));
         spc.AddEngine(new Engine("eng", 450, 50, spc.FuelTanks.First(), "engmk1", "12345"));
-        ProgradeAttitude maneuver = new ProgradeAttitude(TestHelpers.EarthAtJ2000,new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB), TimeSpan.Zero);
+        ProgradeAttitude maneuver = new ProgradeAttitude(new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB), TimeSpan.Zero, TestHelpers.EarthAtJ2000);
         var (_, maneuverOrientation) = maneuver.TryExecute(orbitalParams.ToStateVector());
 
         LabelAssert.Equal(new StateOrientation(new Quaternion(1.0, 0.0, 0.0, 0.0), Vector3.Zero, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF), maneuverOrientation);

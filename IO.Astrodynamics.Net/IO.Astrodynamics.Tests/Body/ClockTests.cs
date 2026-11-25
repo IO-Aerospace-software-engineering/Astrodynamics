@@ -197,7 +197,7 @@ namespace IO.Astrodynamics.Tests.Body
             spacecraft.AddFuelTank(tank);
             var engine = new Engine("e", 300.0, 1.0, tank, "m", "s");
             spacecraft.AddEngine(engine);
-            spacecraft.SetManeuvers(Maneuver.TriadAttitude.CreateLVLH(earth, epoch, TimeSpan.Zero));
+            spacecraft.SetManeuvers(Maneuver.TriadAttitude.CreateLvlh(epoch, TimeSpan.Zero, earth));
             spacecraft.Propagate(new Window(epoch, epoch.AddSeconds(3600.0)), new PropagationOptions { Integrator = new RK78IntegratorOptions { AbsoluteTolerance = 1e-10, RelativeTolerance = 1e-10 }, OutputStep = TimeSpan.FromSeconds(60.0), ThirdBodies = [earth], CovariancePropagation = CovariancePropagationOptions.None });
             var directory = Constants.OutputPath.CreateSubdirectory("Clock676").CreateSubdirectory(Guid.NewGuid().ToString("N")[..8]);
             var sclk = new FileInfo(Path.Combine(directory.FullName, "ownclk.tsc"));

@@ -211,7 +211,7 @@ public class AttitudeTimelineEdgeTests
         var engine = new Engine("eng", 300.0, 10.0, tank, "model", "sn");
         spacecraft.AddEngine(engine);
         var impulse = new NeverReadyImpulse(earth, S, engine);
-        spacecraft.SetManeuvers(impulse, new NadirAttitude(earth, S, TimeSpan.Zero));
+        spacecraft.SetManeuvers(impulse, new NadirAttitude(S, TimeSpan.Zero, earth));
         var detector = new ManeuverEventDetector(impulse);
         var state = spacecraft.InitialOrbitalParameters.ToStateVector();
 
@@ -417,8 +417,8 @@ public class AttitudeTimelineEdgeTests
         spacecraft.AddFuelTank(tank);
         var engine = new Engine("eng", 300.0, 10.0, tank, "model", "sn");
         spacecraft.AddEngine(engine);
-        var prograde = new ProgradeAttitude(center, minimumEpoch, TimeSpan.FromSeconds(hold));
-        var nadir = new NadirAttitude(center, start, TimeSpan.Zero);
+        var prograde = new ProgradeAttitude(minimumEpoch, TimeSpan.FromSeconds(hold), center);
+        var nadir = new NadirAttitude(start, TimeSpan.Zero, center);
         spacecraft.SetManeuvers(prograde, nadir);
         return (spacecraft, prograde, nadir);
     }

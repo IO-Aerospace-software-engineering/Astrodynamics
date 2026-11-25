@@ -670,9 +670,9 @@ namespace IO.Astrodynamics.Tests.Body
 
             // Maneuver using the detached engine, in no plan — GetBodyAxis(BodyAxis.Front) returns Spacecraft.Front (+Y)
             NormalAttitude detachedManeuver = new NormalAttitude(
-                TestHelpers.EarthAtJ2000,
                 new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB),
-                TimeSpan.Zero);
+                TimeSpan.Zero,
+                TestHelpers.EarthAtJ2000);
 
             var sv = orbitalParams.ToStateVector();
             var detachedManeuverOrientation = detachedManeuver.ComputeStateOrientation(sv);
@@ -682,9 +682,9 @@ namespace IO.Astrodynamics.Tests.Body
             spcDefault.AddFuelTank(new FuelTank("ft_ref", 1000.0, 900.0, "ftA", "sn-ref"));
             spcDefault.AddEngine(new Engine("eng_ref", 450, 50, spcDefault.FuelTanks.First(), "engmk1", "sn-eng-ref"));
             NormalAttitude referenceManeuver = new NormalAttitude(
-                TestHelpers.EarthAtJ2000,
                 new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB),
-                TimeSpan.Zero);
+                TimeSpan.Zero,
+                TestHelpers.EarthAtJ2000);
 
             var referenceManeuverOrientation2 = referenceManeuver.ComputeStateOrientation(sv);
 

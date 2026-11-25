@@ -164,9 +164,9 @@ namespace IO.Astrodynamics.Tests.Mission
                     new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB),
                     TimeSpan.Zero,
                     TestHelpers.EarthAtJ2000),
-                new ZenithAttitude(TestHelpers.EarthAtJ2000, new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB), TimeSpan.FromMinutes(1)),
-                new RetrogradeAttitude(TestHelpers.EarthAtJ2000, new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB), TimeSpan.FromMinutes(1)),
-                new ProgradeAttitude(TestHelpers.EarthAtJ2000, new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB), TimeSpan.FromMinutes(1)));
+                new ZenithAttitude(new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB), TimeSpan.FromMinutes(1), TestHelpers.EarthAtJ2000),
+                new RetrogradeAttitude(new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB), TimeSpan.FromMinutes(1), TestHelpers.EarthAtJ2000),
+                new ProgradeAttitude(new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB), TimeSpan.FromMinutes(1), TestHelpers.EarthAtJ2000));
 
             scenario.AddSpacecraft(spacecraft);
 
@@ -258,7 +258,7 @@ namespace IO.Astrodynamics.Tests.Mission
             spacecraft.AddFuelTank(fuelTank);
             spacecraft.AddEngine(engine);
 
-            var progradeAttitude = new ProgradeAttitude(TestHelpers.EarthAtJ2000, new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB), TimeSpan.Zero);
+            var progradeAttitude = new ProgradeAttitude(new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB), TimeSpan.Zero, TestHelpers.EarthAtJ2000);
             spacecraft.SetManeuvers(progradeAttitude);
 
             scenario.AddSpacecraft(spacecraft);
@@ -385,9 +385,9 @@ namespace IO.Astrodynamics.Tests.Mission
                     new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB),
                     TimeSpan.Zero,
                     TestHelpers.EarthAtJ2000),
-                new ZenithAttitude(TestHelpers.EarthAtJ2000, new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB), TimeSpan.FromMinutes(1)),
-                new RetrogradeAttitude(TestHelpers.EarthAtJ2000, new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB), TimeSpan.FromMinutes(1)),
-                new ProgradeAttitude(TestHelpers.EarthAtJ2000, new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB), TimeSpan.FromMinutes(1)));
+                new ZenithAttitude(new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB), TimeSpan.FromMinutes(1), TestHelpers.EarthAtJ2000),
+                new RetrogradeAttitude(new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB), TimeSpan.FromMinutes(1), TestHelpers.EarthAtJ2000),
+                new ProgradeAttitude(new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB), TimeSpan.FromMinutes(1), TestHelpers.EarthAtJ2000));
 
             scenario.AddSpacecraft(spacecraft);
 

@@ -130,7 +130,7 @@ public class FieldOfViewDynamicsTests
                 var orbit = new StateVector(leo.Position, new Vector3(0.0, 7600.0, 0.0), earth, Start, Frames.Frame.ICRF);
                 var (spacecraft, engine) = Create(-5172, orbit);
                 var impulse = new ApogeeHeightManeuver(7200000.0, engine, Start.AddSeconds(100.0), TimeSpan.Zero, earth);
-                spacecraft.SetManeuvers(impulse, new TriadAttitude(Start.AddSeconds(100.0), TimeSpan.Zero, Spacecraft.Front, earth, Spacecraft.Up, sun));
+                spacecraft.SetManeuvers(impulse, new TriadAttitude(Spacecraft.Front, new CelestialAttitudeTarget(earth), Spacecraft.Up, new CelestialAttitudeTarget(sun), Start.AddSeconds(100.0), TimeSpan.Zero));
                 spacecraft.Propagate(propagation, new PropagationOptions { Integrator = new VVIntegratorOptions { Step = oneSecond }, OutputStep = oneSecond, ThirdBodies = bodies });
                 Assert.NotNull(impulse.ThrustWindow);
                 Assert.InRange((impulse.ThrustWindow.Value.StartDate - Start).TotalSeconds, 100.0, 2900.0);
@@ -139,7 +139,7 @@ public class FieldOfViewDynamicsTests
             case "Nadir":
             {
                 var (spacecraft, engine) = Create(-5173, leo);
-                spacecraft.SetManeuvers(new NadirAttitude(earth, new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB), TimeSpan.Zero));
+                spacecraft.SetManeuvers(new NadirAttitude(new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB), TimeSpan.Zero, earth));
                 spacecraft.Propagate(propagation, new PropagationOptions { Integrator = new VVIntegratorOptions { Step = oneSecond }, OutputStep = oneSecond, ThirdBodies = bodies });
                 return (spacecraft, window);
             }
@@ -162,7 +162,7 @@ public class FieldOfViewDynamicsTests
             {
                 // The nadir attitude through Scenario.Simulate
                 var (spacecraft, engine) = Create(-5178, leo);
-                spacecraft.SetManeuvers(new NadirAttitude(earth, new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB), TimeSpan.Zero));
+                spacecraft.SetManeuvers(new NadirAttitude(new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB), TimeSpan.Zero, earth));
                 var scenario = new IO.Astrodynamics.Mission.Scenario($"FovDyn{spacecraft.NaifId}", new IO.Astrodynamics.Mission.Mission($"fovdyn{spacecraft.NaifId}"), propagation);
                 scenario.AddCelestialItem(moon);
                 scenario.AddCelestialItem(earth);

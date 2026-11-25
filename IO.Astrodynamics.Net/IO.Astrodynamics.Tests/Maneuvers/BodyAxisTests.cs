@@ -26,7 +26,7 @@ public class BodyAxisTests
     // A user law that exposes the protected axis reader
     private sealed class AxisProbe : Attitude
     {
-        public AxisProbe() : base(TestHelpers.EarthAtJ2000, new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB), TimeSpan.Zero)
+        public AxisProbe() : base(new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB), TimeSpan.Zero, TestHelpers.EarthAtJ2000)
         {
         }
 
@@ -120,7 +120,7 @@ public class BodyAxisTests
     public void ASingleVectorAttitude_PreviewsOnTheStaticAxesBeforeAnyPlan_AndOnTheInstanceAxesInOne()
     {
         var spc = CustomAxesSpacecraft(-6904, "AxisPreviewSc", Vector3.VectorX, Vector3.VectorY.Inverse(), Vector3.VectorZ);
-        var prograde = new ProgradeAttitude(TestHelpers.EarthAtJ2000, new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB), TimeSpan.Zero);
+        var prograde = new ProgradeAttitude(new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB), TimeSpan.Zero, TestHelpers.EarthAtJ2000);
         var state = spc.InitialOrbitalParameters.ToStateVector();
         var velocity = state.Velocity.Normalize();
 

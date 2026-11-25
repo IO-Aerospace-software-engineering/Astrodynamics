@@ -843,10 +843,10 @@ public class AttitudeRecordTests
         {
             Configure = (sc, engine, earth, sun, start) =>
             {
-                var nadir = new NadirAttitude(earth, Min, TimeSpan.Zero);
+                var nadir = new NadirAttitude(Min, TimeSpan.Zero, earth);
                 impulse = new ApogeeHeightManeuver(7200000.0, engine, start.AddSeconds(100.0), TimeSpan.Zero, earth);
-                triad = new TriadAttitude(start.AddSeconds(100.0), TimeSpan.FromSeconds(hold), Spacecraft.Front, earth, Spacecraft.Up, sun);
-                prograde = new ProgradeAttitude(earth, start.AddSeconds(3400.0), TimeSpan.Zero);
+                triad = new TriadAttitude(Spacecraft.Front, new CelestialAttitudeTarget(earth), Spacecraft.Up, new CelestialAttitudeTarget(sun), start.AddSeconds(100.0), TimeSpan.FromSeconds(hold));
+                prograde = new ProgradeAttitude(start.AddSeconds(3400.0), TimeSpan.Zero, earth);
                 sc.SetManeuvers(nadir,
                     impulse,
                     triad,
@@ -930,15 +930,17 @@ public class AttitudeRecordTests
         Vector3 FromEarth(CelestialItem body) => SpiceAPI.Instance.ReadEphemeris(start, 399, body.NaifId, Frame.ICRF, Aberration.None).Position;
         var boresight = EulerToSpacecraft(instrument.Orientation, instrument.Boresight);
         var reference = EulerToSpacecraft(instrument.Orientation, instrument.RefVector);
+        // A direct execution takes the centre it is given (a run writes the one it resolves): the centres of before 11.0.0,
+        // the Earth, and for the pointing its target, the Moon, so the laws are those of before bit for bit (decision 62 of #668)
         var cases = new (string, Attitude, Func<Vector3, Vector3>)[]
         {
-            ("Nadir", new NadirAttitude(earth, Min, TimeSpan.Zero), MinimalRotation(Spacecraft.Front, leo.Position.Inverse())),
-            ("Prograde", new ProgradeAttitude(earth, Min, TimeSpan.Zero), MinimalRotation(Spacecraft.Front, leo.Velocity)),
-            ("Triad", new TriadAttitude(Min, TimeSpan.Zero, Spacecraft.Front, earth, Spacecraft.Up, sun),
+            ("Nadir", new NadirAttitude(Min, TimeSpan.Zero, earth), MinimalRotation(Spacecraft.Front, leo.Position.Inverse())),
+            ("Prograde", new ProgradeAttitude(Min, TimeSpan.Zero, earth), MinimalRotation(Spacecraft.Front, leo.Velocity)),
+            ("Triad", new TriadAttitude(Spacecraft.Front, new CelestialAttitudeTarget(earth), Spacecraft.Up, new CelestialAttitudeTarget(sun), Min, TimeSpan.Zero, earth),
                 Triad(Spacecraft.Front, Spacecraft.Up, leo.Position.Inverse(), FromEarth(sun) - leo.Position)),
-            ("InstrumentTriad", new TriadAttitude(Min, TimeSpan.Zero, instrument, earth, sun),
+            ("InstrumentTriad", new TriadAttitude(instrument, new CelestialAttitudeTarget(earth), new CelestialAttitudeTarget(sun), Min, TimeSpan.Zero, earth),
                 Triad(boresight, reference, leo.Position.Inverse(), FromEarth(sun) - leo.Position)),
-            ("InstrumentPointing", new InstrumentPointingToAttitude(Min, TimeSpan.Zero, instrument, moon, Aberration.None), MinimalRotation(boresight, FromEarth(moon) - leo.Position))
+            ("InstrumentPointing", new InstrumentPointingToAttitude(instrument, new CelestialAttitudeTarget(moon), Min, TimeSpan.Zero, moon), MinimalRotation(boresight, FromEarth(moon) - leo.Position))
         };
         foreach (var (name, attitude, law) in cases)
         {
@@ -1370,23 +1372,23 @@ public class AttitudeRecordTests
                     return apogee;
                 }
 
-                TriadAttitude TriadAfter() => new(start.AddSeconds(100.0), TimeSpan.Zero, Spacecraft.Front, earth, Spacecraft.Up, sun);
+                TriadAttitude TriadAfter() => new(Spacecraft.Front, new CelestialAttitudeTarget(earth), Spacecraft.Up, new CelestialAttitudeTarget(sun), start.AddSeconds(100.0), TimeSpan.Zero);
                 switch (law)
                 {
                     case "None":
                         break;
                     case "Nadir":
-                        spacecraft.SetManeuvers(new NadirAttitude(earth, Min, TimeSpan.Zero));
+                        spacecraft.SetManeuvers(new NadirAttitude(Min, TimeSpan.Zero, earth));
                         break;
                     case "Prograde":
-                        spacecraft.SetManeuvers(new ProgradeAttitude(earth, Min, TimeSpan.Zero));
+                        spacecraft.SetManeuvers(new ProgradeAttitude(Min, TimeSpan.Zero, earth));
                         break;
                     case "InstrumentTriad":
                         // The boresight of the instrument at (0.3, 0.5, 0.2) to the Earth, its reference vector toward the Sun
-                        spacecraft.SetManeuvers(new TriadAttitude(Min, TimeSpan.Zero, spacecraft.Instruments.First(), earth, sun));
+                        spacecraft.SetManeuvers(new TriadAttitude(spacecraft.Instruments.First(), new CelestialAttitudeTarget(earth), new CelestialAttitudeTarget(sun), Min, TimeSpan.Zero));
                         break;
                     case "InstrumentPointing":
-                        spacecraft.SetManeuvers(new InstrumentPointingToAttitude(Min, TimeSpan.Zero, spacecraft.Instruments.First(), moon, Aberration.None));
+                        spacecraft.SetManeuvers(new InstrumentPointingToAttitude(spacecraft.Instruments.First(), new CelestialAttitudeTarget(moon), Min, TimeSpan.Zero));
                         break;
                     case "ImpulseAlone":
                         spacecraft.SetManeuvers(Apogee());
@@ -1399,7 +1401,7 @@ public class AttitudeRecordTests
                     }
                     case "NadirImpulseTriad":
                     {
-                        var nadir = new NadirAttitude(earth, Min, TimeSpan.Zero);
+                        var nadir = new NadirAttitude(Min, TimeSpan.Zero, earth);
                         var apogee = Apogee();
                         spacecraft.SetManeuvers(nadir,
                             apogee,
@@ -1407,10 +1409,10 @@ public class AttitudeRecordTests
                         break;
                     }
                     case "LvlhAxes":
-                        spacecraft.SetManeuvers(TriadAttitude.CreateLVLH(earth, Min, TimeSpan.Zero));
+                        spacecraft.SetManeuvers(TriadAttitude.CreateLvlh(Min, TimeSpan.Zero, earth));
                         break;
                     case "ProgradeSunAxes":
-                        spacecraft.SetManeuvers(TriadAttitude.CreateProgradeWithSunTracking(earth, Min, TimeSpan.Zero, sun));
+                        spacecraft.SetManeuvers(TriadAttitude.CreateProgradeWithSunTracking(sun, Min, TimeSpan.Zero, earth));
                         break;
                     case "ImpulseLvlhAxes":
                     case "ImpulseProgradeSunAxes":
@@ -1419,15 +1421,15 @@ public class AttitudeRecordTests
                         var apogee = Apogee();
                         spacecraft.SetManeuvers(apogee,
                             law == "ImpulseLvlhAxes"
-                            ? TriadAttitude.CreateLVLH(earth, start.AddSeconds(100.0), TimeSpan.Zero)
-                            : TriadAttitude.CreateProgradeWithSunTracking(earth, start.AddSeconds(100.0), TimeSpan.Zero, sun));
+                            ? TriadAttitude.CreateLvlh(start.AddSeconds(100.0), TimeSpan.Zero, earth)
+                            : TriadAttitude.CreateProgradeWithSunTracking(sun, start.AddSeconds(100.0), TimeSpan.Zero, earth));
                         break;
                     }
                     case "LvlhImpulseAxes":
                     {
                         // The leading LVLH interrupted by the impulse and resumed by the timeline after its maneuver window,
                         // as the nadir of "NadirImpulseTriad" with no attitude chained after the impulse
-                        var lvlh = TriadAttitude.CreateLVLH(earth, Min, TimeSpan.Zero);
+                        var lvlh = TriadAttitude.CreateLvlh(Min, TimeSpan.Zero, earth);
                         spacecraft.SetManeuvers(lvlh, Apogee());
                         break;
                     }

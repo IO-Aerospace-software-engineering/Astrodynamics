@@ -19,7 +19,7 @@ public class NadirAttitudeTests
     [Fact]
     void Create()
     {
-        NadirAttitude zenithAttitude = new NadirAttitude(TestHelpers.EarthAtJ2000,new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB), TimeSpan.FromHours(1.0));
+        NadirAttitude zenithAttitude = new NadirAttitude(new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB), TimeSpan.FromHours(1.0), TestHelpers.EarthAtJ2000);
         LabelAssert.Equal(new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB), zenithAttitude.MinEpoch);
         Assert.Equal(TimeSpan.FromHours(1.0), zenithAttitude.HoldDuration);
     }
@@ -31,7 +31,7 @@ public class NadirAttitudeTests
         var spc = new Spacecraft(-666, "GenericSpacecraft", 1000.0, orbitalParams, 3000.0, new Clock("GenericClk", 65536));
         spc.AddFuelTank(new FuelTank("ft", 1000.0, 900.0, "ftA", "123456"));
         spc.AddEngine(new Engine("eng", 450, 50, spc.FuelTanks.First(), "engmk1", "12345"));
-        NadirAttitude maneuver = new NadirAttitude(TestHelpers.EarthAtJ2000,new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB), TimeSpan.Zero);
+        NadirAttitude maneuver = new NadirAttitude(new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB), TimeSpan.Zero, TestHelpers.EarthAtJ2000);
         var (_, maneuverOrientation) = maneuver.TryExecute(orbitalParams.ToStateVector());
 
         LabelAssert.Equal(new StateOrientation(new Quaternion(0.7071067811865476, 0.0, 0.0, 0.7071067811865476), Vector3.Zero, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF),
@@ -51,8 +51,8 @@ public class NadirAttitudeTests
     {
         var orbitalParams = new KeplerianElements(42164000.0, 0.0, 0.0, 0.0, 0.0, 0.0, TestHelpers.EarthAtJ2000, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF);
         var spc = new Spacecraft(-1107, "GenericSpacecraft1107", 1000.0, orbitalParams, 3000.0, new Clock("GenericClk1107", 65536));
-        var nadir = new NadirAttitude(TestHelpers.EarthAtJ2000, TimeSystem.Time.J2000TDB, TimeSpan.FromSeconds(10.0));
-        var prograde = new ProgradeAttitude(TestHelpers.EarthAtJ2000, TimeSystem.Time.J2000TDB, TimeSpan.Zero);
+        var nadir = new NadirAttitude(TimeSystem.Time.J2000TDB, TimeSpan.FromSeconds(10.0), TestHelpers.EarthAtJ2000);
+        var prograde = new ProgradeAttitude(TimeSystem.Time.J2000TDB, TimeSpan.Zero, TestHelpers.EarthAtJ2000);
         spc.SetManeuvers(nadir, prograde);
         var start = orbitalParams.ToStateVector();
 

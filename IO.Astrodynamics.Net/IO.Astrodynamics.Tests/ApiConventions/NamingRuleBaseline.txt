@@ -30,7 +30,6 @@ N1.acronym	IO.Astrodynamics.Frames.Frame.GetStateOrientationToICRF(Time)
 N1.acronym	IO.Astrodynamics.Frames.GcrfFrame.GetStateOrientationToICRF(Time)
 N1.acronym	IO.Astrodynamics.Frames.TemeFrame.GetStateOrientationToICRF(Time)
 N1.acronym	IO.Astrodynamics.Frames.TirsFrame.GetStateOrientationToICRF(Time)
-N1.acronym	IO.Astrodynamics.Maneuver.TriadAttitude.CreateLVLH(CelestialItem, Time, TimeSpan)
 N1.acronym	IO.Astrodynamics.Math.Quaternion.SLERP(Quaternion, double)
 N1.acronym	IO.Astrodynamics.OrbitalParameters.KeplerianElements.AOP
 N1.acronym	IO.Astrodynamics.OrbitalParameters.KeplerianElements.FromOMM(double, double, double, double, double, double, ILocalizable, Time, Frame)

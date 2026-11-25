@@ -1358,7 +1358,7 @@ Represents a spacecraft with components.
 | `BodyUp` | Instance body up axis (default: +Z, same as `Spacecraft.Up`) |
 | `BodyBack` / `BodyLeft` / `BodyDown` | Computed inverses of body axes |
 
-**Configurable body axes**: Pass `bodyFront`, `bodyRight`, `bodyUp` to the constructor to override the default body frame. Custom axes must be finite, non-zero, orthogonal and right-handed (`bodyRight.Cross(bodyFront) == bodyUp`); a zero axis, or one with a component that is not finite, throws `ArgumentException` naming it. The attitudes read the axes of the spacecraft that carries the engine's tank at execution, with the static axes as fallback: the single-vector attitudes and the attitude of an impulse use `BodyFront` via `GetBodyFront()`, `TriadAttitude.CreateLVLH` uses `BodyDown`/`BodyFront` and `CreateProgradeWithSunTracking` `BodyFront`/`BodyUp` (#677); the `TriadAttitude` constructors take literal body vectors.
+**Configurable body axes**: Pass `bodyFront`, `bodyRight`, `bodyUp` to the constructor to override the default body frame. Custom axes must be finite, non-zero, orthogonal and right-handed (`bodyRight.Cross(bodyFront) == bodyUp`); a zero axis, or one with a component that is not finite, throws `ArgumentException` naming it. The attitudes read the axes of the spacecraft whose plan last held them (`SetManeuvers`) at execution, with the static axes before any plan: the single-vector attitudes their `bodyAxis` (`BodyAxis.Front` by default) and the attitude of an impulse `BodyFront` via the protected `GetBodyAxis(BodyAxis)`, the `BodyAxis` constructor of `TriadAttitude` its two axes, `TriadAttitude.CreateLvlh` `BodyDown`/`BodyFront` and `CreateProgradeWithSunTracking` `BodyFront`/`BodyUp` (#677, decisions 46 and 69 of #668); the `Vector3` constructor of `TriadAttitude` takes literal body vectors.
 
 | Method | Description |
 |--------|-------------|
@@ -1543,25 +1543,25 @@ The `TriadAttitude` class uses two non-collinear observation vectors to fully co
 // minimumEpoch, epoch: Time; holdDuration, duration: TimeSpan
 // Point spacecraft Front at Moon, keep Up toward Sun
 var attitude = new TriadAttitude(
-    minimumEpoch, TimeSpan.FromMinutes(30),
-    Spacecraft.Front, moon,    // Primary: Front points at Moon
-    Spacecraft.Up, sun);
+    Spacecraft.Front, new CelestialAttitudeTarget(moon),    // Primary: Front points at Moon
+    Spacecraft.Up, new CelestialAttitudeTarget(sun),
+    minimumEpoch, TimeSpan.FromMinutes(30));
 
 // Using instruments
 var cameraAttitude = new TriadAttitude(
-    minimumEpoch, holdDuration,
     camera,                    // Uses camera boresight (primary) and refVector (secondary)
-    earth, sun);
+    new CelestialAttitudeTarget(earth), new CelestialAttitudeTarget(sun),
+    minimumEpoch, holdDuration);
 
 // Using IAttitudeTarget (orbital directions and/or celestial bodies)
 var targetAttitude = new TriadAttitude(
-    earth, epoch, duration,
     Spacecraft.Front, OrbitalDirectionTarget.Prograde,       // Primary: prograde pointing
-    Spacecraft.Up, new CelestialAttitudeTarget(sun));
+    Spacecraft.Up, new CelestialAttitudeTarget(sun),
+    epoch, duration, earth);
 
 // Factory methods for common operational attitudes, on the axes of the plan's spacecraft
-var lvlh = TriadAttitude.CreateLVLH(earth, epoch, duration);
-var sunTrack = TriadAttitude.CreateProgradeWithSunTracking(earth, epoch, duration, sun);
+var lvlh = TriadAttitude.CreateLvlh(epoch, duration, earth);
+var sunTrack = TriadAttitude.CreateProgradeWithSunTracking(sun, epoch, duration, earth);
 ```
 
 **IAttitudeTarget system**: The `IAttitudeTarget` interface enables orbital directions and celestial bodies to be used interchangeably as TRIAD targets:
@@ -1570,10 +1570,10 @@ var sunTrack = TriadAttitude.CreateProgradeWithSunTracking(earth, epoch, duratio
 - `OrbitalDirection` enum: `Prograde`, `Retrograde`, `Nadir`, `Zenith`, `Normal`, `AntiNormal`
 
 Key features:
-- Minimum separation from collinear required between body vectors and reference vectors: `MinimumVectorSeparation`, 5 degrees by default, in [1e-14, π/2] rad (another throws `ArgumentOutOfRangeException`); collinear vectors (to the rounding of their components), zero and non-finite vectors throw at every separation allowed
+- Minimum separation from collinear required between body vectors and reference vectors: `MinVectorSeparation`, 5 degrees by default, in [1e-14, π/2] rad (another throws `ArgumentOutOfRangeException`); collinear vectors (to the rounding of their components), zero and non-finite vectors throw at every separation allowed
 - Uses spacecraft body frame: Front (+Y), Right (+X), Up (+Z) — or per-instance `BodyFront`, `BodyRight`, `BodyUp` passed explicitly
 - Four constructor overloads: single instrument, dual instruments, explicit vectors, IAttitudeTarget; the body vectors given are literal
-- Factory methods: `CreateLVLH()` (`BodyDown` to nadir, `BodyFront` toward prograde), `CreateProgradeWithSunTracking()` (`BodyFront` to prograde, `BodyUp` toward the Sun), on the instance axes of the spacecraft whose plan last held the attitude, read at execution; the static axes before any plan (#677), read outside a propagation only, since a run propagates the plan's spacecraft
+- Factory methods: `CreateLvlh()` (`BodyDown` to nadir, `BodyFront` toward prograde), `CreateProgradeWithSunTracking()` (`BodyFront` to prograde, `BodyUp` toward the Sun), on the instance axes of the spacecraft whose plan last held the attitude, read at execution; the static axes before any plan (#677), read outside a propagation only, since a run propagates the plan's spacecraft
 
 #### Impulse maneuvers
 
@@ -2973,12 +2973,12 @@ scenario.AddSpacecraft(spacecraft);
 
 // Configure attitude maneuver to point antenna at ground station
 var pointingManeuver = new InstrumentPointingToAttitude(
-    start.AddHours(7.25),           // Start time
-    TimeSpan.FromHours(0.5),        // Duration
     spacecraft.Instruments.First(), // Instrument to point
-    groundStation
-);                                  // The direction is light-time corrected (Aberration.LT, the default, #549);
-                                    // pass Aberration.None as a sixth argument for the geometric direction
+    new CelestialAttitudeTarget(groundStation, Aberration.LT),
+    start.AddHours(7.25),           // Start time
+    TimeSpan.FromHours(0.5)         // Duration
+);                                  // The direction is light-time corrected (#549); the target carries its correction,
+                                    // new CelestialAttitudeTarget(groundStation) for the geometric direction
 
 spacecraft.SetManeuvers(pointingManeuver);
 
@@ -3035,10 +3035,10 @@ scenario.AddSpacecraft(spacecraft);
 // - Secondary: Spacecraft Right (+X) oriented toward Sun, which sets the roll about nadir (a vector at 5 degrees at
 //   least from the primary: Up, opposite to Down, would be rejected)
 var triadManeuver = new TriadAttitude(
+    Spacecraft.Down, new CelestialAttitudeTarget(earth),  // Primary constraint: nadir pointing
+    Spacecraft.Right, new CelestialAttitudeTarget(sun),
     start,                          // Start time
-    TimeSpan.FromHours(1.5),        // Hold duration
-    Spacecraft.Down, earth,         // Primary constraint: nadir pointing
-    Spacecraft.Right, sun
+    TimeSpan.FromHours(1.5)         // Hold duration
 );
 
 spacecraft.SetManeuvers(triadManeuver);
@@ -3063,16 +3063,20 @@ Console.WriteLine("Spacecraft maintains nadir pointing with roll constrained tow
 ```csharp
 // earth: the CelestialBody of the orbit; sun: the Sun; engine: an Engine of the spacecraft; epoch: Time; duration: TimeSpan
 // LVLH attitude using factory method (the spacecraft's BodyDown to nadir, its BodyFront toward prograde)
-var lvlh = TriadAttitude.CreateLVLH(earth, epoch, duration);
+var lvlh = TriadAttitude.CreateLvlh(epoch, duration, earth);
 
 // Prograde with sun tracking using factory method
-var sunTrack = TriadAttitude.CreateProgradeWithSunTracking(earth, epoch, duration, sun);
+var sunTrack = TriadAttitude.CreateProgradeWithSunTracking(sun, epoch, duration, earth);
 
 // Custom: nadir pointing with normal constraint (using OrbitalDirectionTarget)
 var customLvlh = new TriadAttitude(
-    earth, epoch, duration,
-    Spacecraft.Down, OrbitalDirectionTarget.Nadir,
-    Spacecraft.Front, OrbitalDirectionTarget.Prograde);
+    Spacecraft.Down,
+    OrbitalDirectionTarget.Nadir,
+    Spacecraft.Front,
+    OrbitalDirectionTarget.Prograde,
+    epoch,
+    duration,
+    earth);
 ```
 
 ---

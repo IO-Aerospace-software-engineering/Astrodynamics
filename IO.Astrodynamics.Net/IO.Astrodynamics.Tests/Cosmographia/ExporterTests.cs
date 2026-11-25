@@ -114,13 +114,17 @@ public class ExporterTests
         scenario.AddSpacecraft(spacecraft);
 
         //Configure the first maneuver
-        var initialManeuver = new InstrumentPointingToAttitude(scenario.Window.StartDate.AddMinutes(10.0), TimeSpan.FromHours(1.0), spacecraft.Instruments.First(),
-            spacecraft.InitialOrbitalParameters.Observer);
+        var initialManeuver = new InstrumentPointingToAttitude(spacecraft.Instruments.First(),
+            new CelestialAttitudeTarget(spacecraft.InitialOrbitalParameters.Observer, Aberration.LT),
+            scenario.Window.StartDate.AddMinutes(10.0),
+            TimeSpan.FromHours(1.0));
 
         //Configure the second maneuver and set the plan, the first maneuver then the second
         spacecraft.SetManeuvers(initialManeuver,
-            new InstrumentPointingToAttitude(scenario.Window.StartDate.AddHours(2.0), TimeSpan.FromHours(1.0), spacecraft.Instruments.First(),
-            spacecraft.InitialOrbitalParameters.Observer));
+            new InstrumentPointingToAttitude(spacecraft.Instruments.First(),
+            new CelestialAttitudeTarget(spacecraft.InitialOrbitalParameters.Observer, Aberration.LT),
+            scenario.Window.StartDate.AddHours(2.0),
+            TimeSpan.FromHours(1.0)));
 
         //Todo fix why state orientation during maneuver returns Nan
         //Run the simulation
@@ -153,7 +157,7 @@ public class ExporterTests
         spacecraft.AddFuelTank(new FuelTank("fuelTank1", 2000.0, 2000.0, "fuelTankModel", "456"));
         spacecraft.AddEngine(new Engine("engine1", 450, 50.0, spacecraft.FuelTanks.First(), "engineModel", "1234"));
         scenario.AddSpacecraft(spacecraft);
-        var initialManeuver = new InstrumentPointingToAttitude(scenario.Window.StartDate.AddHours(7.25), TimeSpan.FromHours(0.5), spacecraft.Instruments.First(), site);
+        var initialManeuver = new InstrumentPointingToAttitude(spacecraft.Instruments.First(), new CelestialAttitudeTarget(site, Aberration.LT), scenario.Window.StartDate.AddHours(7.25), TimeSpan.FromHours(0.5));
         spacecraft.SetManeuvers(initialManeuver);
         scenario.Simulate(new PropagationOptions { Integrator = new VVIntegratorOptions { Step = TimeSpan.FromSeconds(1.0) }, OutputStep = TimeSpan.FromSeconds(1.0) });
 

@@ -99,7 +99,7 @@ public class PropagatorReuseTests
         spacecraft.AddFuelTank(tank);
         var engine = new Engine("eng", 300.0, 10.0, tank, "model", "sn");
         spacecraft.AddEngine(engine);
-        var prograde = new ProgradeAttitude(Earth, Epoch.AddSeconds(300.0), TimeSpan.FromMinutes(5.0));
+        var prograde = new ProgradeAttitude(Epoch.AddSeconds(300.0), TimeSpan.FromMinutes(5.0), Earth);
         spacecraft.SetManeuvers(prograde, new ApogeeHeightManeuver(9000000.0, engine, Epoch.AddSeconds(600.0), TimeSpan.Zero, Earth));
         return spacecraft;
     }

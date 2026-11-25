@@ -32,11 +32,11 @@ public class InstrumentPointingAttitudeTests
         var spc = TestHelpers.Spacecraft;
         spc.AddCircularInstrument("CAM602", 1.5, Vector3.VectorZ, Vector3.VectorY, new Vector3(0.0, -System.Math.PI * 0.5, 0.0), naifId: -172600, model: "mod1");
         InstrumentPointingToAttitude attitude =
-            new InstrumentPointingToAttitude(new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB), TimeSpan.FromHours(1.0), spc.Instruments.First(), TestHelpers.EarthAtJ2000);
+            new InstrumentPointingToAttitude(spc.Instruments.First(), new CelestialAttitudeTarget(TestHelpers.EarthAtJ2000, Aberration.LT), new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB), TimeSpan.FromHours(1.0));
         LabelAssert.Equal(new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB), attitude.MinEpoch);
         Assert.Equal(TimeSpan.FromHours(1.0), attitude.HoldDuration);
         Assert.Equal(spc.Instruments.First(), attitude.Instrument);
-        Assert.Equal(TestHelpers.EarthAtJ2000, attitude.Target);
+        Assert.Equal(TestHelpers.EarthAtJ2000, ((CelestialAttitudeTarget)attitude.Target).Target);
     }
 
     [Theory]
@@ -56,8 +56,9 @@ public class InstrumentPointingAttitudeTests
 
         spc.AddCircularInstrument("inst", 1.57, Vector3.VectorZ, Vector3.VectorY, new Vector3(x, y, z), naifId: -666600, model: "instmodel");
         InstrumentPointingToAttitude maneuver =
-            new InstrumentPointingToAttitude(new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB), TimeSpan.FromSeconds(10.0), spc.Instruments.First(), TestHelpers.MoonAtJ2000);
-        Assert.Equal(Aberration.LT, maneuver.Aberration);
+            new InstrumentPointingToAttitude(spc.Instruments.First(), new CelestialAttitudeTarget(TestHelpers.MoonAtJ2000, Aberration.LT), new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB), TimeSpan.FromSeconds(10.0),
+                TestHelpers.MoonAtJ2000);
+        Assert.Equal(Aberration.LT, ((CelestialAttitudeTarget)maneuver.Target).Aberration);
         var (_, maneuverOrientation) = maneuver.TryExecute(orbitalParams.ToStateVector());
 
         // The closed form: the minimal rotation taking the boresight, in the spacecraft frame by the Euler angles of the frame
@@ -137,7 +138,7 @@ public class InstrumentPointingAttitudeTests
             {
                 var state = new StateVector(new Vector3(s[0], s[1], s[2]), new Vector3(s[3], s[4], s[5]), earth, epoch, Frames.Frame.ICRF);
                 var (spc, instrument) = PointingSpacecraft(-5491, state);
-                var attitude = new InstrumentPointingToAttitude(new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB), TimeSpan.Zero, instrument, moon, flag);
+                var attitude = new InstrumentPointingToAttitude(instrument, new CelestialAttitudeTarget(moon, flag), new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB), TimeSpan.Zero);
                 var orientation = attitude.ComputeStateOrientation(state);
                 var boresight = instrument.GetBoresightInSpacecraftFrame().Rotate(orientation.Rotation);
                 worst = System.Math.Max(worst, Body.AttitudeRecordTests.Angle(boresight, expected[flag]));
@@ -174,7 +175,7 @@ public class InstrumentPointingAttitudeTests
                 var state = new StateVector(new Vector3(s[0], s[1], s[2]), new Vector3(s[3], s[4], s[5]), earth, epochs[e], Frames.Frame.ICRF);
                 var expected = ToVector(states.GetProperty("site_from_spacecraft").GetProperty(flag.GetDescription()).EnumerateArray().ElementAt(e));
                 var (spc, instrument) = PointingSpacecraft(-5492, state);
-                var attitude = new InstrumentPointingToAttitude(new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB), TimeSpan.Zero, instrument, site, flag);
+                var attitude = new InstrumentPointingToAttitude(instrument, new CelestialAttitudeTarget(site, flag), new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB), TimeSpan.Zero);
                 var orientation = attitude.ComputeStateOrientation(state);
                 var boresight = instrument.GetBoresightInSpacecraftFrame().Rotate(orientation.Rotation);
                 worst = System.Math.Max(worst, Body.AttitudeRecordTests.Angle(boresight, expected));
@@ -209,7 +210,7 @@ public class InstrumentPointingAttitudeTests
         foreach (var flag in Flags)
         {
             var (spc, instrument) = PointingSpacecraft(-5493, state);
-            var attitude = new InstrumentPointingToAttitude(new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB), TimeSpan.Zero, instrument, star, flag);
+            var attitude = new InstrumentPointingToAttitude(instrument, new CelestialAttitudeTarget(star, flag), new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB), TimeSpan.Zero);
             var orientation = attitude.ComputeStateOrientation(state);
             var boresight = instrument.GetBoresightInSpacecraftFrame().Rotate(orientation.Rotation);
             var geometric = star.GetEquatorialCoordinates(epoch).ToCartesian() - (state.Position + earth.GetGeometricStateFromICRF(epoch).ToStateVector().Position);
@@ -222,27 +223,22 @@ public class InstrumentPointingAttitudeTests
         }
     }
 
-    [Fact]
-    public void RejectsAnUnknownAberration()
-    {
-        var spc = TestHelpers.Spacecraft;
-        spc.AddCircularInstrument("CAM603", 1.5, Vector3.VectorZ, Vector3.VectorY, Vector3.Zero, naifId: -172601, model: "mod1");
-        var tank = new FuelTank("ft", 1000.0, 900.0, "ftA", "123456");
-        var engine = new Engine("eng", 450, 50, tank, "engmk1", "12345");
-        var exception = Assert.Throws<ArgumentOutOfRangeException>(() => new InstrumentPointingToAttitude(new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB),
-            TimeSpan.Zero, spc.Instruments.First(), TestHelpers.MoonAtJ2000, (Aberration)99));
-        Assert.Equal("aberration", exception.ParamName);
-    }
-
     // Twice the worst over the corrections on Linux x64, Windows x64 and macOS arm64 (CI run 44225490669), rounded up at two
     // digits: the Moon 1.012e-13 rad (CN), the site 1.140e-12 rad (XCN) on the three, the light time of the library against
     // CSPICE's at a range of a few thousand km; geometric 2.3e-16 rad for the Moon, 2.9e-16 rad for the site on Linux x64
-    // and 5.4e-16 rad on Windows x64 and macOS arm64
+    // and 5.4e-16 rad on Windows x64 and macOS arm64. Since lot L5b the preview takes the state about its own observer, the
+    // Earth, where the centre was the Moon (decision 62 of #668: the centre the run infers, rounding only) and the
+    // direction is CelestialAttitudeTarget's: re-measured on Linux x64 the Moon 1.122e-13 rad (CN+S; 1.120e-13 CN), the site
+    // 1.140e-12 rad (XCN, its centre the Earth before and after), geometric 1.99e-16 rad for the Moon, within the tolerances;
+    // the Windows x64 and macOS arm64 figures are read from the CI of the lot's PR
     private const double MoonPointingTolerance = 2.1e-13;
     private const double SitePointingTolerance = 2.3e-12;
 
     // Twice the worst over the corrections and the two distances on Linux x64, Windows x64 and macOS arm64 (the MEASURE
     // lines of PointsAtAStarWithoutLightTime, CI run 44225490669), rounded up at two digits: 1.573e-16 rad on the three
-    // (XLT+S and XCN+S at 20 pc), where the light time moved the boresight by 4.5e-5 rad (9.2″) at 20 pc
+    // (XLT+S and XCN+S at 20 pc), where the light time moved the boresight by 4.5e-5 rad (9.2″) at 20 pc. Since lot L5b
+    // (decision 62 of #668, the preview about the Earth, the state's observer, where the centre was the star): re-measured
+    // on Linux x64 1.138e-16 rad (the geometric corrections at 20 pc), within the tolerance; the Windows x64 and macOS
+    // arm64 figures are read from the CI of the lot's PR
     private const double StarPointingTolerance = 3.2e-16;
 }

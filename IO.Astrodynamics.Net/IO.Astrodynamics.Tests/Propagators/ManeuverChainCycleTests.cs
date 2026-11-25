@@ -57,7 +57,7 @@ public class ManeuverChainCycleTests
 
     /// <summary>A nadir attitude whose next maneuver a test sets past <see cref="Spacecraft.SetManeuvers"/>, through the internal setter.</summary>
     private sealed class LinkedNadir(CelestialItem center, Time minimumEpoch, TimeSpan hold)
-        : NadirAttitude(center, minimumEpoch, hold)
+        : NadirAttitude(minimumEpoch, hold, center)
     {
         public void ForceNext(Maneuver.Maneuver next) => NextManeuver = next;
     }
@@ -344,7 +344,7 @@ public class ManeuverChainCycleTests
         var current = (Maneuver.Maneuver)head;
         for (int i = 0; i < 200_000; i++)
         {
-            var next = new NadirAttitude(setup.Earth, S, TimeSpan.Zero);
+            var next = new NadirAttitude(S, TimeSpan.Zero, setup.Earth);
             current.NextManeuver = next;
             current = next;
             current.FuelBurned = 1.0;

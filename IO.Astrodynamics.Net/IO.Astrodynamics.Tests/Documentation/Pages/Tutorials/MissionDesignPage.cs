@@ -220,8 +220,9 @@ internal static class MissionDesignPage
         #region docs/tutorials/mission-design.md:8
         // Inputs: earth (CelestialBody), engine (Engine), chain (Maneuver[], the plan above), spacecraft (Spacecraft)
         var attitude = new ProgradeAttitude(
-            earth, new Time(DateTime.MinValue, TimeScale.TDB),
-            TimeSpan.FromMinutes(5));
+            new Time(DateTime.MinValue, TimeScale.TDB),
+            TimeSpan.FromMinutes(5),
+            earth);
 
         // The attitude first, then the maneuvers of the plan
         spacecraft.SetManeuvers([attitude, .. chain]);

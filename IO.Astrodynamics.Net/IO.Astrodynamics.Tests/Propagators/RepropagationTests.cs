@@ -255,7 +255,7 @@ public class RepropagationTests
             // gate of an attitude by the attitude before it, and of the impulse by the last (#539, #582 choice 4)
             maneuvers =
             [
-                new NadirAttitude(c, h, TimeSpan.FromSeconds(500.0)), new ProgradeAttitude(c, S, TimeSpan.FromSeconds(500.0)),
+                new NadirAttitude(h, TimeSpan.FromSeconds(500.0), c), new ProgradeAttitude(S, TimeSpan.FromSeconds(500.0), c),
                 new ApogeeHeightManeuver(8378137.0, engine, S, TimeSpan.Zero, c)
             ];
         }
@@ -263,14 +263,14 @@ public class RepropagationTests
         {
             // A leading NadirAttitude held H s, then an ApogeeHeightManeuver: the hold gates the impulse (#539)
             double hold = double.Parse(chain[4..], Invariant);
-            maneuvers = [new NadirAttitude(c, h, TimeSpan.FromSeconds(hold)), new ApogeeHeightManeuver(8378137.0, engine, S, TimeSpan.Zero, c)];
+            maneuvers = [new NadirAttitude(h, TimeSpan.FromSeconds(hold), c), new ApogeeHeightManeuver(8378137.0, engine, S, TimeSpan.Zero, c)];
         }
         else
         {
             double hold = double.Parse(chain[3..], Invariant);
             maneuvers =
             [
-                new ApogeeHeightManeuver(8378137.0, engine, h, TimeSpan.Zero, c), new NadirAttitude(c, S, TimeSpan.FromSeconds(hold)),
+                new ApogeeHeightManeuver(8378137.0, engine, h, TimeSpan.Zero, c), new NadirAttitude(S, TimeSpan.FromSeconds(hold), c),
                 new PerigeeHeightManeuver(6878137.0, engine, S, TimeSpan.Zero, c)
             ];
         }

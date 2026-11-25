@@ -6170,8 +6170,8 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   managed field-of-view searches; `PrimaryBodyVector` and `SecondaryBodyVector` of a factory attitude follow the
   spacecraft of the engine's tank. A spacecraft with the default axes is bit for bit, and so are the `PrimaryBodyVector`
   and `SecondaryBodyVector` of an engine whose tank is on no spacecraft, which no propagation points ([#676](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/676)); the forces read no attitude, so the trajectory does not move. Migration, for the former attitude: the
-  constructor with the static axes, `new TriadAttitude(center, epoch, hold, Spacecraft.Down, OrbitalDirectionTarget.Nadir,
-  Spacecraft.Front, OrbitalDirectionTarget.Prograde)`, or `Spacecraft.Front`, `OrbitalDirectionTarget.Prograde`,
+  constructor with the static axes, `new TriadAttitude(Spacecraft.Down, OrbitalDirectionTarget.Nadir, Spacecraft.Front,
+  OrbitalDirectionTarget.Prograde, epoch, hold, center)` (in the order of lot L5b, below), or `Spacecraft.Front`, `OrbitalDirectionTarget.Prograde`,
   `Spacecraft.Up`, `new CelestialAttitudeTarget(sun)` for prograde with Sun tracking.
 - **Breaking: drag about an Earth without an atmospheric model is NRLMSISE-00 at nominal space weather** ([#674](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/674),
   Fixed above). A propagation about `PlanetsAndMoons.EARTH_BODY`, or any Earth built without a model, with
@@ -7419,8 +7419,8 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   sets the next maneuver in standby from its engine's spacecraft (a branch the run never reached: the run advances the
   chain on its attitude timeline), and an impulse executed outside a plan moves no chain. A run with an attitude on the
   spacecraft's own engine is bit for bit that of before. Migration: drop the engine argument of an attitude
-  (`new NadirAttitude(earth, epoch, hold)`); `((ImpulseManeuver)maneuver).Engine` for `maneuver.Engine`; a user
-  `Attitude` calls `base(maneuverCenter, minimumEpoch, holdDuration)`.
+  (in the order of its parameters below, `new NadirAttitude(epoch, hold, earth)`); `((ImpulseManeuver)maneuver).Engine`
+  for `maneuver.Engine`; a user `Attitude` calls `base(minEpoch, holdDuration, maneuverCenter)`.
 - **Breaking: a maneuver given no engine or no centre takes those the run infers** (lot L5b, decisions 61, 63 and 64 of
   #668, decided by S. Guillet, 2026-11-23, and decision 99, decided by S. Guillet, 2026-11-24): an impulse whose engine
   is null takes the only engine of the spacecraft (`Engines`, decision 92), and a maneuver whose centre is null the
@@ -7496,7 +7496,79 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   `Spacecraft.SetManeuvers` (`ArgumentException`, `maneuvers`) and the propagation (#685), against the frame the spacecraft
   is propagated in. Migration: none for a target in the frame of the propagation; the error of another frame moves to
   `SetManeuvers`.
+- **Breaking: the attitudes take their targets first, then the optional `minEpoch`, `holdDuration` and
+  `maneuverCenter`, and the single-vector attitudes an optional `bodyAxis`** (lot L5b, D1 rule 8 and R13 of
+  [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668), decision 69, decided by S.
+  Guillet, 2026-11-23): `NadirAttitude`, `ZenithAttitude`, `ProgradeAttitude`, `RetrogradeAttitude`, `NormalAttitude` and
+  `AntiNormalAttitude` take `(minEpoch = default, holdDuration = default, maneuverCenter = null, bodyAxis =
+  BodyAxis.Front)` and expose `BodyAxis`, the axis they point, read on the spacecraft of the plan (`GetBodyAxis`, above);
+  the base `Attitude(minEpoch = default, holdDuration = default, maneuverCenter = null)`;
+  `InstrumentPointingToAttitude(instrument, target, minEpoch = default, holdDuration = default, maneuverCenter = null)`;
+  where they took `(maneuverCenter, minimumEpoch, maneuverHoldDuration)` (`InstrumentPointingToAttitude`:
+  `(minimumEpoch, maneuverHoldDuration, instrument, target, aberration)`), each required but the aberration (the engine
+  of every attitude went with decisions 48 and 93, above). An undefined `BodyAxis` throws `ArgumentOutOfRangeException`
+  naming its parameter. The default axis, the front, is the attitude of before, bit for bit. An old positional call no
+  longer compiles (a `CelestialItem` first does not convert to a `Time`). Migration: `new NadirAttitude(center, epoch,
+  hold)` becomes `new NadirAttitude(epoch, hold, center)`, or `new NadirAttitude()` from the start of the run about the
+  centre of the orbit; `new NadirAttitude(bodyAxis: BodyAxis.Down)` points another axis; a user `Attitude` calls
+  `base(minEpoch, holdDuration, maneuverCenter)`.
+- **Breaking: `TriadAttitude` has four constructors of `IAttitudeTarget` targets, and its factories follow D1 rule 8**
+  (lot L5b, decisions 69 and 70 of #668, decided by S. Guillet, 2026-11-23): `(BodyAxis, IAttitudeTarget, BodyAxis,
+  IAttitudeTarget, …)`, two axes of the spacecraft resolved on the spacecraft of the plan at each use as the
+  single-vector attitudes resolve theirs (new; the same or opposite axes throw `ArgumentException`, an undefined one
+  `ArgumentOutOfRangeException`); `(Vector3, IAttitudeTarget, Vector3, IAttitudeTarget, …)`, literal body vectors;
+  `(Instrument, IAttitudeTarget, IAttitudeTarget, …)`, the boresight and the reference vector of an instrument; and
+  `(Instrument, IAttitudeTarget, Instrument, IAttitudeTarget, …)`, the boresights of two instruments; each followed by the
+  optional `minEpoch`, `holdDuration`, `maneuverCenter` and `minVectorSeparation`. The constructors of `ILocalizable`
+  targets are removed (below): a celestial target is a `CelestialAttitudeTarget`, which carries its correction, geometric
+  by default as the removed path computed it, so a TRIAD of the same targets points the same way. Their centre, the
+  primary target or a site's body, becomes the rule of every maneuver: the one given, else the one the run infers
+  (decisions 61, 62 and 99; the direction depends on the centre through rounding only), and a null centre no longer
+  throws `ArgumentNullException` in the `IAttitudeTarget` constructor. `PrimaryTarget` and `SecondaryTarget` are typed
+  `IAttitudeTarget`, never null (an `ILocalizable`, null for an orbital direction, before);
+  `MinimumVectorSeparation` is renamed `MinVectorSeparation`, its parameter `minVectorSeparation`; `CreateLVLH` is
+  renamed `CreateLvlh(minEpoch = default, holdDuration = default, maneuverCenter = null)` (D2's casing of acronyms) and
+  `CreateProgradeWithSunTracking(sun, minEpoch = default, holdDuration = default, maneuverCenter = null)` keeps its
+  required Sun, first, wrapped in a geometric `CelestialAttitudeTarget` as before (decision 70: a Sun built in the factory
+  would read the data provider at the call). Both factories are the `BodyAxis` shape, bit for bit. No forwarder.
+  Migration: `new TriadAttitude(minimumEpoch, hold, Spacecraft.Front, moon, Spacecraft.Up, sun)` becomes `new
+  TriadAttitude(Spacecraft.Front, new CelestialAttitudeTarget(moon), Spacecraft.Up, new CelestialAttitudeTarget(sun),
+  minimumEpoch, hold)`, or `BodyAxis.Front` and `BodyAxis.Up` for the axes of the spacecraft of the plan; `new
+  TriadAttitude(center, epoch, hold, Spacecraft.Down, OrbitalDirectionTarget.Nadir, Spacecraft.Front,
+  OrbitalDirectionTarget.Prograde)` becomes `new TriadAttitude(Spacecraft.Down, OrbitalDirectionTarget.Nadir,
+  Spacecraft.Front, OrbitalDirectionTarget.Prograde, epoch, hold, center)`; `TriadAttitude.CreateLvlh(epoch, hold, center)`
+  for `CreateLVLH(center, epoch, hold)`, `CreateProgradeWithSunTracking(sun, epoch, hold, center)` for
+  `CreateProgradeWithSunTracking(center, epoch, hold, sun)`; `MinVectorSeparation` for `MinimumVectorSeparation`.
+- **Breaking: `InstrumentPointingToAttitude` points at an `IAttitudeTarget`, which carries its correction, and its
+  centre is that of every maneuver** (lot L5b, decisions 62 and 67 of #668, decided by S. Guillet, 2026-11-23):
+  `Target` is an `IAttitudeTarget` (an `ILocalizable` before), so the boresight may point at an orbital direction too, and
+  the attitude's own `Aberration`, `Aberration.LT` by default, is removed with its parameter (below): the direction is
+  `Target.GetDirection(state)`, a `CelestialAttitudeTarget` corrected as #549 corrected the attitude's (#740), its
+  unknown aberration refused by `CelestialAttitudeTarget` (#806). A target given as `new CelestialAttitudeTarget(moon)`
+  is geometric, 9.165e-5 rad from the former default for the Moon from a LEO. The centre, the target (or a site's body)
+  before, is the one given, else the one the run infers (decision 62), which moves the direction by rounding only: the
+  preview (`ComputeStateOrientation`) of the reference tests takes the state about its own observer, the Earth, and
+  moves within their tolerances, against `spkcvo_c` the Moon from 1.012e-13 to 1.122e-13 rad at worst (CN+S; 2.1e-13
+  allowed), a star against its closed form from 1.573e-16 to 1.138e-16 rad (3.2e-16 allowed), the site unchanged
+  (1.140e-12 rad, its centre the Earth before and after), on Linux x64 (`InstrumentPointingAttitudeTests`); a spacecraft
+  target with LT moves by 1.02e-8 rad about the Earth and 1.20e-7 rad about the Sun at 100 m, 4.5e-10 and 1.0e-9 rad at
+  10 km, 1.9e-12 and 2.0e-11 rad at 1000 km, geometric by 0 rad about the Earth and 4e-14 to 5e-14 rad about the Sun, the
+  light time itself 1.08e-4 rad (the probe of the gap analysis of L5b, which corrects the "3.8e-16 rad geometric, 7.9e-12
+  rad with LT" of decision 62, measured on a far target, the Moon). In SSB mode a library `CelestialAttitudeTarget` takes
+  the central body of the run when the centre cannot be inferred, any other target requires `maneuverCenter` (decision
+  99). Migration: `new InstrumentPointingToAttitude(camera, new CelestialAttitudeTarget(moon, Aberration.LT), epoch, hold)`
+  for `new InstrumentPointingToAttitude(epoch, hold, camera, moon)`, `new CelestialAttitudeTarget(moon, aberration)` for
+  the `aberration` argument, `new CelestialAttitudeTarget(moon)` for `Aberration.None`.
 **Removed**
+
+- **The `ILocalizable` constructors of `TriadAttitude`, `PrimaryAttitudeTarget` and `SecondaryAttitudeTarget`, and
+  `InstrumentPointingToAttitude.Aberration`** (lot L5b, decisions 67 and 69 of #668, decided by S. Guillet, 2026-11-23):
+  the three TRIAD forms of `ILocalizable` targets (literal vectors, one instrument, two instruments), whose targets were
+  read back by `PrimaryAttitudeTarget` and `SecondaryAttitudeTarget` beside `PrimaryTarget` and `SecondaryTarget`, and
+  the correction of the pointing attitude, which its target now carries. Migration: wrap each target in `new
+  CelestialAttitudeTarget(target)` (geometric, as the removed forms computed it) or `new CelestialAttitudeTarget(target,
+  aberration)`, and read it back from `PrimaryTarget`, `SecondaryTarget` or `Target` (`CelestialAttitudeTarget.Target`,
+  `.Aberration`).
 
 - **The value equality of `FuelTank`, `Engine` and `Payload`: `Equals`, `GetHashCode`, `==`, `!=` and
   `IEquatable<T>`** (lot L5b, decision 76 of #668, decided by S. Guillet, 2026-11-23): they compared the name, the model

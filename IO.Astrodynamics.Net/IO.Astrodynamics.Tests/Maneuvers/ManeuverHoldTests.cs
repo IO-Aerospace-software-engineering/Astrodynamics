@@ -28,7 +28,7 @@ public class ManeuverHoldTests
     public void Attitude_NegativeHold_Throws()
     {
         var ex = Assert.Throws<ArgumentOutOfRangeException>(() =>
-            new ProgradeAttitude(TestHelpers.EarthAtJ2000, Epoch, TimeSpan.FromTicks(-1)));
+            new ProgradeAttitude(Epoch, TimeSpan.FromTicks(-1), TestHelpers.EarthAtJ2000));
         Assert.Equal("holdDuration", ex.ParamName);
     }
 
@@ -36,7 +36,7 @@ public class ManeuverHoldTests
     public void Triad_NegativeHold_Throws()
     {
         Assert.Throws<ArgumentOutOfRangeException>(() =>
-            TriadAttitude.CreateLVLH(TestHelpers.EarthAtJ2000, Epoch, TimeSpan.FromSeconds(-1)));
+            TriadAttitude.CreateLvlh(Epoch, TimeSpan.FromSeconds(-1), TestHelpers.EarthAtJ2000));
     }
 
     [Fact]
@@ -50,7 +50,7 @@ public class ManeuverHoldTests
     [Fact]
     public void ZeroHold_IsAccepted()
     {
-        var attitude = new ProgradeAttitude(TestHelpers.EarthAtJ2000, Epoch, TimeSpan.Zero);
+        var attitude = new ProgradeAttitude(Epoch, TimeSpan.Zero, TestHelpers.EarthAtJ2000);
         Assert.Equal(TimeSpan.Zero, attitude.HoldDuration);
     }
 

@@ -220,7 +220,7 @@ public class ManeuverEngineBindingTests
         var foreignEngine = engineKind == "OtherSpacecraft"
             ? otherEngine
             : new Engine("LOOSE", Isp, 5.0, new FuelTank("LOOSE", Fuel, Fuel, "MODEL", "SN-LOOSE"), "MODEL", "SN-LOOSE");
-        PlanPastTheClaim(spacecraft, new ProgradeAttitude(earth, epoch, TimeSpan.Zero),
+        PlanPastTheClaim(spacecraft, new ProgradeAttitude(epoch, TimeSpan.Zero, earth),
             new ApogeeHeightManeuver(7300e3, foreignEngine, epoch, TimeSpan.Zero, earth));
 
         var ownTank = spacecraft.FuelTanks.Single();
@@ -271,7 +271,7 @@ public class ManeuverEngineBindingTests
         var foreignEngine = ForeignEngine(engineKind, spacecraft, ownEngine, otherEngine);
         // The foreign impulse after an own attitude, held 0 s ("Impulse") or 10 min ("ImpulseSecond")
         Maneuver.Maneuver foreign = new ApogeeHeightManeuver(7300e3, foreignEngine, Epoch, TimeSpan.Zero, earth);
-        var own = new ProgradeAttitude(earth, Epoch, chain == "ImpulseSecond" ? TimeSpan.FromMinutes(10.0) : TimeSpan.Zero);
+        var own = new ProgradeAttitude(Epoch, chain == "ImpulseSecond" ? TimeSpan.FromMinutes(10.0) : TimeSpan.Zero, earth);
         PlanPastTheClaim(spacecraft, own, foreign);
 
         var ownTank = spacecraft.FuelTanks.Single();
@@ -453,7 +453,7 @@ public class ManeuverEngineBindingTests
         // Arrange: BodyFront +X, which the static axes would leave 90° off
         var earth = new CelestialBody(PlanetsAndMoons.EARTH);
         var spacecraft = NewSpacecraft(earth, out var engine, Vector3.VectorX, Vector3.VectorY.Inverse());
-        spacecraft.SetManeuvers(new ProgradeAttitude(earth, Epoch, TimeSpan.FromMinutes(30.0)));
+        spacecraft.SetManeuvers(new ProgradeAttitude(Epoch, TimeSpan.FromMinutes(30.0), earth));
 
         // Act
         spacecraft.Propagate(Window, new PropagationOptions { Integrator = IntegratorOf(integratorName)(), OutputStep = Output, ThirdBodies = [earth], CovariancePropagation = CovariancePropagationOptions.None });

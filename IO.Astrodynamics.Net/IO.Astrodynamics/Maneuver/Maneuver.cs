@@ -197,6 +197,20 @@ namespace IO.Astrodynamics.Maneuver
         }
 
         /// <summary>
+        /// <paramref name="axis"/> when it is a value of <see cref="BodyAxis"/>, or <see cref="ArgumentOutOfRangeException"/>
+        /// naming <paramref name="paramName"/> (decision 69 of #668).
+        /// </summary>
+        private protected static BodyAxis CheckBodyAxis(BodyAxis axis, string paramName)
+        {
+            if (!Enum.IsDefined(axis))
+            {
+                throw new ArgumentOutOfRangeException(paramName, axis, "Unknown body axis.");
+            }
+
+            return axis;
+        }
+
+        /// <summary>
         /// The spacecraft whose plan last held this maneuver, whose instance axes <see cref="GetBodyAxis"/> reads: set when
         /// <see cref="Spacecraft.SetManeuvers"/> claims the maneuver and never cleared, the release of the claim included
         /// (decision 46 of #668: the axes stay those of the last plan's spacecraft); null before any plan.

@@ -641,7 +641,7 @@ The framework provides a family of attitude maneuvers for spacecraft orientation
 - `RetrogradeAttitude`: Anti-velocity pointing
 - `NormalAttitude`: Orbital normal pointing (h = r × v)
 - `AntiNormalAttitude`: Anti-normal pointing (−h)
-- `InstrumentPointingToAttitude`: Single-vector instrument pointing at a target, its direction corrected by `Aberration` (`Aberration.LT` by default, the target as the spacecraft sees it, as `spkcvo_c`; a `Star` without light time, as `Star.GetEphemeris`; `Aberration.None` geometric; #549)
+- `InstrumentPointingToAttitude`: Single-vector instrument pointing at an `IAttitudeTarget`, which carries its correction (decision 67 of #668: a `CelestialAttitudeTarget` geometric by default, `Aberration.LT` the target as the spacecraft sees it, as `spkcvo_c`; a `Star` without light time, as `Star.GetEphemeris`; #549), or an orbital direction; the attitude's own `Aberration`, `Aberration.LT` by default, removed in lot L5b
 - `TriadAttitude`: Two-vector fully-constrained attitude (eliminates roll ambiguity)
 
 **TRIAD Attitude Determination**
@@ -666,7 +666,7 @@ Default body axes (static fields, backward-compatible):
 - `BodyBack`, `BodyLeft`, `BodyDown` — computed inverses
 - Passed via optional constructor parameters: `bodyFront`, `bodyRight`, `bodyUp`
 - Validation enforces orthogonality and right-handedness when custom axes are provided; a zero axis, or one with a component that is not finite, throws `ArgumentException` naming `bodyFront`, `bodyRight` or `bodyUp` (#680, fourth round of #668)
-- The axes are read at execution on the spacecraft whose plan last held the maneuver (`SetManeuvers`; the claim's release keeps them), with the static axes before any plan (a read outside a propagation only: a run propagates the plan's spacecraft) (decisions 46, 48, 69 and 93 of #668; the spacecraft of the engine's tank before lot L5b): the single-vector attitudes and the impulse attitude point `BodyFront` through the protected `GetBodyAxis(BodyAxis)` (`enum BodyAxis` {Front, Back, Right, Left, Up, Down}; `GetBodyFront()` before 11.0.0), `TriadAttitude.CreateLVLH` points `BodyDown`/`BodyFront` and `CreateProgradeWithSunTracking` `BodyFront`/`BodyUp`, all through that one rule (#677); the `TriadAttitude` constructors take literal body vectors (pass `spacecraft.BodyFront`, ... for the instance axes)
+- The axes are read at execution on the spacecraft whose plan last held the maneuver (`SetManeuvers`; the claim's release keeps them), with the static axes before any plan (a read outside a propagation only: a run propagates the plan's spacecraft) (decisions 46, 48, 69 and 93 of #668; the spacecraft of the engine's tank before lot L5b): the single-vector attitudes their `bodyAxis` (`BodyAxis.Front` by default) and the impulse attitude `BodyFront` through the protected `GetBodyAxis(BodyAxis)` (`enum BodyAxis` {Front, Back, Right, Left, Up, Down}; `GetBodyFront()` before 11.0.0), the `BodyAxis` constructor of `TriadAttitude` its two axes, `TriadAttitude.CreateLvlh` `BodyDown`/`BodyFront` and `CreateProgradeWithSunTracking` `BodyFront`/`BodyUp`, all through that one rule (#677, decision 69 of #668); the `Vector3` constructor of `TriadAttitude` takes literal body vectors
 
 ```csharp
 // Spacecraft with +X as front (e.g., matching a SPICE FK convention)
@@ -674,7 +674,7 @@ var spacecraft = new Spacecraft(-1001, "Sat", 1000, orbit, 5000, clock,
     bodyFront: Vector3.VectorX, bodyRight: Vector3.VectorY.Inverse(), bodyUp: Vector3.VectorZ);
 
 // The single-vector attitudes, the impulse attitude and the TRIAD factories use the instance axes
-var prograde = new ProgradeAttitude(earth, epoch, duration);
+var prograde = new ProgradeAttitude(epoch, duration, earth);
 // → orients spacecraft.BodyFront (+X) along velocity vector
 ```
 
@@ -684,41 +684,58 @@ var prograde = new ProgradeAttitude(earth, epoch, duration);
 ```csharp
 // Point camera boresight at Earth, constrain roll using camera refVector toward Sun
 var attitude = new TriadAttitude(
-    minimumEpoch, holdDuration,
-    camera, earth, sun);
+    camera,
+    new CelestialAttitudeTarget(earth),
+    new CelestialAttitudeTarget(sun),
+    minimumEpoch,
+    holdDuration);
 ```
 
 2. **Dual Instruments**: Different instruments for primary and secondary pointing
 ```csharp
 // Point nadir camera at Earth, star tracker at reference star
 var attitude = new TriadAttitude(
-    minimumEpoch, holdDuration,
-    nadirCamera, earth,
-    starTracker, referenceStar);
+    nadirCamera,
+    new CelestialAttitudeTarget(earth),
+    starTracker,
+    new CelestialAttitudeTarget(referenceStar),
+    minimumEpoch,
+    holdDuration);
 ```
 
 3. **Explicit Body Vectors**: Direct spacecraft frame vectors
 ```csharp
 // Point spacecraft Front at Moon, keep Up toward Sun
 var attitude = new TriadAttitude(
-    minimumEpoch, holdDuration,
-    Spacecraft.Front, moon,
-    Spacecraft.Up, sun);
+    Spacecraft.Front,
+    new CelestialAttitudeTarget(moon),
+    Spacecraft.Up,
+    new CelestialAttitudeTarget(sun),
+    minimumEpoch,
+    holdDuration);
 ```
 
 4. **IAttitudeTarget (orbital directions and/or celestial bodies)**: Uses `IAttitudeTarget` interface for polymorphic targets
 ```csharp
 // Point prograde with solar panels toward Sun
 var attitude = new TriadAttitude(
-    earth, epoch, duration,
-    Spacecraft.Front, OrbitalDirectionTarget.Prograde,
-    Spacecraft.Up, new CelestialAttitudeTarget(sun));
+    Spacecraft.Front,
+    OrbitalDirectionTarget.Prograde,
+    Spacecraft.Up,
+    new CelestialAttitudeTarget(sun),
+    epoch,
+    duration,
+    earth);
 
 // Full LVLH attitude (nadir pointing with prograde constraint)
 var lvlh = new TriadAttitude(
-    earth, epoch, duration,
-    Spacecraft.Down, OrbitalDirectionTarget.Nadir,
-    Spacecraft.Front, OrbitalDirectionTarget.Prograde);
+    Spacecraft.Down,
+    OrbitalDirectionTarget.Nadir,
+    Spacecraft.Front,
+    OrbitalDirectionTarget.Prograde,
+    epoch,
+    duration,
+    earth);
 ```
 
 **IAttitudeTarget System**
@@ -739,10 +756,10 @@ The `IAttitudeTarget` interface enables orbital directions and celestial bodies 
 Convenience factories for common operational attitudes:
 ```csharp
 // LVLH: BodyDown→Nadir, BodyFront→Prograde (the axes of the plan's spacecraft, #677)
-var lvlh = TriadAttitude.CreateLVLH(earth, epoch, duration);
+var lvlh = TriadAttitude.CreateLvlh(epoch, duration, earth);
 
 // Prograde with sun tracking: BodyFront→Prograde, BodyUp→Sun
-var sunTrack = TriadAttitude.CreateProgradeWithSunTracking(earth, epoch, duration, sun);
+var sunTrack = TriadAttitude.CreateProgradeWithSunTracking(sun, epoch, duration, earth);
 ```
 
 **Use Case Examples**
@@ -752,24 +769,27 @@ var sunTrack = TriadAttitude.CreateProgradeWithSunTracking(earth, epoch, duratio
 // Keep nadir sensor pointed at Earth, the roll about nadir set by the Sun (Up, opposite to Down, would be
 // rejected: the body vectors must be at least 5 degrees apart)
 var earthObservation = new TriadAttitude(
-    epoch, TimeSpan.FromMinutes(30),
-    Spacecraft.Down, earth,    // Primary: nadir pointing
-    Spacecraft.Right, sun);
+    Spacecraft.Down, new CelestialAttitudeTarget(earth),  // Primary: nadir pointing
+    Spacecraft.Right, new CelestialAttitudeTarget(sun),
+    epoch, TimeSpan.FromMinutes(30));
 ```
 
 *Instrument Pointing with Roll Constraint*
 ```csharp
 // Point telescope at target star, constrain roll using reference star
 var observation = new TriadAttitude(
-    epoch, TimeSpan.FromHours(2),
-    telescope, targetStar,
-    rollSensor, referenceStar);
+    telescope,
+    new CelestialAttitudeTarget(targetStar),
+    rollSensor,
+    new CelestialAttitudeTarget(referenceStar),
+    epoch,
+    TimeSpan.FromHours(2));
 ```
 
 *Plane-Change Attitude (Normal Pointing)*
 ```csharp
 // Orient for plane-change burn: front along orbital normal
-var normalAttitude = new NormalAttitude(earth, epoch, duration);
+var normalAttitude = new NormalAttitude(epoch, duration, earth);
 ```
 
 **Instrument Enhancements**
@@ -868,12 +888,12 @@ var deg2Rad = IO.Astrodynamics.Constants.Deg2Rad; // not Constants.Deg2Rad (that
    - Use `TriadAttitude` for fully-constrained orientation (eliminates roll ambiguity)
    - Use single-vector attitudes (`NadirAttitude`, `ProgradeAttitude`, `NormalAttitude`, etc.) only when roll is unconstrained
    - Use `NormalAttitude` / `AntiNormalAttitude` for plane-change burns (h = r × v)
-   - Ensure body vectors and reference vectors are not collinear (`MinimumVectorSeparation`, 5 degrees by default, in [1e-14, π/2] rad)
+   - Ensure body vectors and reference vectors are not collinear (`MinVectorSeparation`, 5 degrees by default, in [1e-14, π/2] rad)
    - Use `Spacecraft.Front`, `Spacecraft.Up`, etc. for standard body frame directions; use instance `BodyFront`, `BodyRight`, `BodyUp` for non-standard frames
    - Custom body axes must be finite, non-zero, orthogonal and right-handed (`BodyRight.Cross(BodyFront) == BodyUp`)
    - The single-vector attitudes and the impulse attitude use `GetBodyAxis(BodyAxis.Front)`, the TRIAD factories `BodyDown`/`BodyFront` and `BodyFront`/`BodyUp`, all on the spacecraft of the plan that last held the maneuver, with the static axes before any plan (decisions 46 and 69 of #668); the `TriadAttitude` constructors take literal vectors
    - Use `IAttitudeTarget` with `TriadAttitude` to mix orbital directions (`OrbitalDirectionTarget.Prograde`, etc.) and celestial targets (`CelestialAttitudeTarget`)
-   - Use factory methods `TriadAttitude.CreateLVLH()` and `CreateProgradeWithSunTracking()` for common operational attitudes (on the spacecraft's instance axes)
+   - Use factory methods `TriadAttitude.CreateLvlh()` and `CreateProgradeWithSunTracking()` for common operational attitudes (on the spacecraft's instance axes)
    - Use `Instrument.GetBoresightInSpacecraftFrame()` and `GetRefVectorInSpacecraftFrame()` for instrument-based pointing
 11. **Geopotential Gravity**: When working with spherical harmonic gravity models:
    - Pass `GeopotentialModelParameters` to `CelestialBody` constructor to enable geopotential

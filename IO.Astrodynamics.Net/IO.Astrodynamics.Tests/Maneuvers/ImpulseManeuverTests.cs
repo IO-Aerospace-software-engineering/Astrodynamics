@@ -465,7 +465,7 @@ namespace IO.Astrodynamics.Tests.Maneuvers
             // SetManeuvers refuses it (decision 46 of #668), so the run's re-check is reached by a maneuver linked past the
             // plan, through the internal setter a test reaches
             Assert.Equal("maneuvers", Assert.Throws<ArgumentException>(() => spacecraft.SetManeuvers(rejected)).ParamName);
-            var head = new NadirAttitude(earth, PlaneChangeStart, TimeSpan.Zero);
+            var head = new NadirAttitude(PlaneChangeStart, TimeSpan.Zero, earth);
             spacecraft.SetManeuvers(head);
             head.NextManeuver = rejected;
 

@@ -122,15 +122,20 @@ public class AttitudeSolver : ICategorySolver
         {
             return inputs.Pointing.Direction switch
             {
-                AttitudeAxis.Nadir => new NadirAttitude(center, start, TimeSpan.Zero),
-                AttitudeAxis.Velocity => new ProgradeAttitude(center, start, TimeSpan.Zero),
-                AttitudeAxis.OrbitNormal => new NormalAttitude(center, start, TimeSpan.Zero),
+                AttitudeAxis.Nadir => new NadirAttitude(start, TimeSpan.Zero, center),
+                AttitudeAxis.Velocity => new ProgradeAttitude(start, TimeSpan.Zero, center),
+                AttitudeAxis.OrbitNormal => new NormalAttitude(start, TimeSpan.Zero, center),
                 _ => throw UnknownDirection(inputs.Pointing.Direction)
             };
         }
 
-        return new TriadAttitude(center, start, TimeSpan.Zero, Axis(inputs.Primary.BodyVector), Target(inputs.Primary.Direction),
-            Axis(inputs.Secondary.BodyVector), Target(inputs.Secondary.Direction));
+        return new TriadAttitude(Axis(inputs.Primary.BodyVector),
+            Target(inputs.Primary.Direction),
+            Axis(inputs.Secondary.BodyVector),
+            Target(inputs.Secondary.Direction),
+            start,
+            TimeSpan.Zero,
+            center);
     }
 
     /// <summary>The library's orbital direction of a direction of the suite.</summary>

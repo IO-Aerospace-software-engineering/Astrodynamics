@@ -117,8 +117,13 @@ public class CelestialAttitudeTargetTests
             var spc = new Spacecraft(-7401, "S740", 1000.0, state, 3000.0, new Clock("S740_CLK", 65536));
             spc.AddFuelTank(new FuelTank("ft", 1000.0, 900.0, "ftA", "123456"));
             spc.AddEngine(new Engine("eng", 450, 50, spc.FuelTanks.First(), "engmk1", "12345"));
-            var attitude = new TriadAttitude(earth, epoch, TimeSpan.Zero, Spacecraft.Front, new CelestialAttitudeTarget(moon, Aberration.LT),
-                Spacecraft.Up, new CelestialAttitudeTarget(sun, Aberration.LTS));
+            var attitude = new TriadAttitude(Spacecraft.Front,
+                new CelestialAttitudeTarget(moon, Aberration.LT),
+                Spacecraft.Up,
+                new CelestialAttitudeTarget(sun, Aberration.LTS),
+                epoch,
+                TimeSpan.Zero,
+                earth);
             var q = attitude.ComputeOrientation(state);
             var m = moonExpected[Aberration.LT].Normalize();
             var s = suns[k].Expected[Aberration.LTS].Normalize();
