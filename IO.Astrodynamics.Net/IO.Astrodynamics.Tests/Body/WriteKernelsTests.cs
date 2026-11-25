@@ -203,16 +203,18 @@ public sealed class WriteKernelsTests : IDisposable
         Assert.Contains(kernels.Orientation.FullName, Loaded());
     }
 
-    // The state of the target and of the registry before a refusal, to compare after it
-    private static (bool Exists, string[] Files, string[] Loaded) Snapshot(DirectoryInfo target)
+    // The state of the target and of the registry under the class's root before a refusal, to compare after it (other
+    // classes load and unload their kernels meanwhile, so the whole registry is not compared; every file a call could load
+    // lies under the root)
+    private (bool Exists, string[] Files, string[] Loaded) Snapshot(DirectoryInfo target)
     {
         target.Refresh();
         return (target.Exists,
             target.Exists ? target.GetFileSystemInfos("*", SearchOption.AllDirectories).Select(x => x.FullName).Order(StringComparer.Ordinal).ToArray() : [],
-            Loaded());
+            Loaded().Where(x => x.StartsWith(_root.FullName, StringComparison.Ordinal)).ToArray());
     }
 
-    private static void AssertRefusedUnchanged(Spacecraft spacecraft, DirectoryInfo target, string expected)
+    private void AssertRefusedUnchanged(Spacecraft spacecraft, DirectoryInfo target, string expected)
     {
         var before = Snapshot(target);
         var exception = Assert.Throws<InvalidOperationException>(() => spacecraft.WriteKernels(target));
