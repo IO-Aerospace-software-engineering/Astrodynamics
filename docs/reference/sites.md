@@ -86,7 +86,9 @@ Both paths take every value of `RelationnalOperator` (#482). CSPICE has no `>=`,
 `GreaterOrEqual` and `LowerOrEqual` are searched as `Greater` and `Lower`, whose windows are closed, so for a quantity
 that crosses the value they are the windows of the managed search, which bisects the relation itself; the two differ only
 where the quantity stays equal to the value over an interval, which CSPICE's `>` leaves out. `NotEqual` is, on both
-paths, the search window less the crossings of `Equal`, a window from each crossing to the next. Before 11.0.0 the three
+paths, the search window less the crossings of `Equal`, a window from each crossing to the next: touching windows,
+which the window-list algebra (`WindowList`, [Time Systems](time-and-windows.md#window-lists)) merges back into the
+search window, as CSPICE's `wninsd` does. Before 11.0.0 the three
 operators ended the process on the CSPICE path (the native parser of the relation threw across P/Invoke); the same
 applies to `SpiceAPI.FindWindowsOnDistanceConstraint`, `FindWindowsOnCoordinateConstraint` and
 `FindWindowsOnIlluminationConstraint`, and to the command line (`<=`, `>=` and `!`).

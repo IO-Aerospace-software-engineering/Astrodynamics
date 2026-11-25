@@ -221,7 +221,8 @@ var fromJD = Time.CreateFromJD(2451545.0, TimeScale.TDB);
 
 ## Window
 
-`Window` models a time interval with intersection and merge operations.
+`Window` models a closed time interval, with the operations of one window below and those of lists of windows in
+[Window Lists](#window-lists).
 
 ### Constructors
 
@@ -248,6 +249,36 @@ var fromJD = Time.CreateFromJD(2451545.0, TimeScale.TDB);
 ```csharp
 var window = new Window(new Time(2024, 1, 1, TimeScale.TDB), new Time(2024, 1, 31, TimeScale.TDB));
 Console.WriteLine($"Duration: {window.Length.TotalDays} days");
+```
+
+### Window Lists
+
+The static class `WindowList` (R16 of #668) extends `IEnumerable<Window>` with the algebra of CSPICE's `wn*` routines:
+each list is the set of instants its closed windows hold, and each result is an `IReadOnlyList<Window>`, sorted,
+disjoint and closed, a window of zero length kept. Their names are not LINQ's: `Intersect`, `Union` and `Except` of
+LINQ compare the windows as values, so that [0, 2 h] and [1 h, 3 h] have no window in common.
+
+| Member | Description |
+|--------|-------------|
+| `IntersectWindows(IEnumerable<Window>)` | The instants both lists hold, as `wnintd`: touching windows share one instant |
+| `UnionWindows(IEnumerable<Window>)` | The instants either list holds, as `wnunid`: overlapping and touching windows merged |
+| `ExceptWindows(IEnumerable<Window>)` | The instants of the list the other does not hold, closed, as `wndifd`: taking one instant out of a window leaves it whole |
+| `ComplementWithin(Window)` | The instants of the window the list does not hold, closed: `wndifd` of the window and the list, which is `wncomd` as its header defines it (`wncomd` itself returns a window past its right end where a window of the list ends before the window and the next one starts after it) |
+| `TotalDuration()` | The sum of `EndDate - StartDate` over the union of the list, the leap seconds between UTC ends counted (#508) |
+
+Each list is first normalised as `wninsd` inserts windows: sorted by start and merged where windows overlap or touch, so
+the touching windows of a `NotEqual` search are one window. The instants are compared whatever their scales
+(`Time.CompareTo`); each end of a result is an end of an input with its label, on a tie of instants that of the first
+window that holds it, the receiver's before the argument's. A null list throws `ArgumentNullException`. The algebra is
+checked against `wnintd`, `wnunid`, `wndifd` and `wncomd` on the lists of `tools/window_list_reference`.
+
+```csharp
+var day = new Window(new Time(2024, 1, 1, TimeScale.TDB), TimeSpan.FromDays(1.0));
+var inView = new[] { new Window(day.StartDate.AddHours(1.0), TimeSpan.FromHours(3.0)) };
+var lit = new[] { new Window(day.StartDate, TimeSpan.FromHours(2.0)), new Window(day.StartDate.AddHours(3.0), TimeSpan.FromHours(6.0)) };
+IReadOnlyList<Window> both = inView.IntersectWindows(lit); // 01:00 to 02:00 and 03:00 to 04:00
+IReadOnlyList<Window> gaps = both.ComplementWithin(day);    // 00:00 to 01:00, 02:00 to 03:00, 04:00 to 24:00
+TimeSpan total = both.TotalDuration();                      // 2 h
 ```
 
 ## The Time Argument of a Propagation

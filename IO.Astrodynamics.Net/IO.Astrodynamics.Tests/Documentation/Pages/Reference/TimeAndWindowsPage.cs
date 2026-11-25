@@ -87,4 +87,17 @@ internal static class TimeAndWindowsPage
         Console.WriteLine($"Duration: {window.Length.TotalDays} days");
         #endregion
     }
+
+    // docs/reference/time-and-windows.md, "Window Lists"
+    internal static void Block03()
+    {
+        #region docs/reference/time-and-windows.md:3
+        var day = new Window(new Time(2024, 1, 1, TimeScale.TDB), TimeSpan.FromDays(1.0));
+        var inView = new[] { new Window(day.StartDate.AddHours(1.0), TimeSpan.FromHours(3.0)) };
+        var lit = new[] { new Window(day.StartDate, TimeSpan.FromHours(2.0)), new Window(day.StartDate.AddHours(3.0), TimeSpan.FromHours(6.0)) };
+        IReadOnlyList<Window> both = inView.IntersectWindows(lit); // 01:00 to 02:00 and 03:00 to 04:00
+        IReadOnlyList<Window> gaps = both.ComplementWithin(day);    // 00:00 to 01:00, 02:00 to 03:00, 04:00 to 24:00
+        TimeSpan total = both.TotalDuration();                      // 2 h
+        #endregion
+    }
 }

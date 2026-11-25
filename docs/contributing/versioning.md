@@ -421,6 +421,17 @@ release are listed under **Known limitations**.
   Window)` the hull of two windows that share an instant, touching ones included, as CSPICE's `wninsd`; and
   `TryGetIntersection(Window, out Window)` the window of `GetIntersection`, false where `GetIntersection` throws
   (`WindowTests`). See [Time Systems](../reference/time-and-windows.md#window).
+- **`WindowList`: the algebra of window lists** (lot L6, R16 of
+  [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668), decided by S. Guillet,
+  2026-11-19): extensions of `IEnumerable<Window>`, `IntersectWindows`, `UnionWindows`, `ExceptWindows`,
+  `ComplementWithin(Window)` and `TotalDuration`, each list the set of instants its closed windows hold and each result
+  an `IReadOnlyList<Window>` sorted, disjoint and closed, as CSPICE's `wnintd`, `wnunid`, `wndifd` and `wncomd` give it
+  (zero-length windows kept, touching windows merged, so the touching windows of a `NotEqual` search are one), each end
+  an end of an input with its label; `ComplementWithin` is `wndifd` of the window and the list, which is `wncomd` as its
+  header defines it (`wncomd` returns a window past its right end where a window of the list ends before the window and
+  the next one starts after it, 1 of the 50 reference cases). Checked against spiceypy 8.4.0 (CSPICE N0067) on the 50
+  lists of `tools/window_list_reference`, A in UTC and B in TDB (`WindowListTests`). LINQ's `Intersect`, `Union` and
+  `Except` compare windows as values. See [Time Systems](../reference/time-and-windows.md#window-lists).
 - **The command-line tool: names, kernels from the environment, csv and json, the scale of its epochs** (lot L8 of the
   ergonomics review, R29 of #668, choice 12, decided by S. Guillet, 2026-11-19; `docs/reference/cli.md`, its help
   generated from the tool and compared by `CliPageTests`). An object is a NAIF identifier or a name SPICE knows (`MOON`,
