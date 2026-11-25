@@ -2139,7 +2139,7 @@ public class SpiceAPI
         Aberration aberration, TimeSpan stepSize)
     {
         ArgumentNullException.ThrowIfNull(frame);
-        var grid = new WindowGrid(searchWindow, stepSize);
+        var grid = WindowGrid(searchWindow, stepSize);
         // Built before the lock (#623): the observer of a Lagrange point reads Barycenters, whose type initializer takes it
         var observer = CreateObserver(observerId);
         lock (lockObject)
@@ -2148,9 +2148,9 @@ public class SpiceAPI
             // A managed frame is read in J2000, then rotated (#558)
             var managed = ManagedReadFrame(frame);
             string frameName = managed == null ? SpiceFrameName(frame) : Frame.ICRF.Name;
-            for (long first = 0; first < grid.Count; first += WindowReadChunk)
+            foreach (var chunk in grid.Chunk(WindowReadChunk))
             {
-                double[] epochs = grid.Seconds(first, WindowReadChunk);
+                double[] epochs = TdbSeconds(chunk);
                 var stateVectors = new StateVector[epochs.Length];
                 if (!ReadEphemerisProxy(epochs, epochs.Length, observerId, targetId, frameName, aberration.GetDescription(), stateVectors))
                     ThrowLastProxyError(frameName, frame, nameof(frame));
@@ -2165,7 +2165,7 @@ public class SpiceAPI
                 for (int i = 0; i < stateVectors.Length; i++)
                 {
                     // Labelled with the epoch read, start + i·step in the frame of the window start (#563, #625)
-                    var epoch = grid.Epoch(first + i);
+                    var epoch = chunk[i];
                     var x = stateVectors[i];
                     orbitalParameters.Add(managed == null
                         ? new OrbitalParameters.StateVector(x.Position.Convert(), x.Velocity.Convert(), observer, epoch, frame)
@@ -2181,52 +2181,29 @@ public class SpiceAPI
     private const int WindowReadChunk = 10000;
 
     /// <summary>
-    /// The epochs of a window read (#563): start + i·step in the time scale of the window start, i from 0 while within the
-    /// window, in exact tick arithmetic, the end of the window included when it falls on the grid; each epoch read at its TDB
-    /// seconds, as the read of that epoch alone takes them. Before 11.0.0 the native proxies stepped their epoch by
-    /// epoch += step in double TDB seconds, so that sample i drifted from start + i·step (1.43e-4 s after 6000 steps of
-    /// 0.1 s, 4.29e-4 s after 9000 of 1.2 s) and the last epoch of the window could be dropped; a grid taken in TDB for a
-    /// window of another frame still dropped it where TDB − TT made the window shorter in TDB (a UTC window of 600 s at
-    /// 0.1 s from the first of May to that of October 2026: 6000 states for 6001, review of #563), and its labels were off
-    /// start + i·step by up to 2 ticks.
+    /// The epochs of a window read (#563): the points of <see cref="TimeSystem.Window.Sample"/>, start + i·step in the time
+    /// scale of the window start, i from 0 while within the window, in exact tick arithmetic, the end of the window included
+    /// when it falls on the grid. Before 11.0.0 the native proxies stepped their epoch by epoch += step in double TDB
+    /// seconds, so that sample i drifted from start + i·step (1.43e-4 s after 6000 steps of 0.1 s, 4.29e-4 s after 9000 of
+    /// 1.2 s) and the last epoch of the window could be dropped; a grid taken in TDB for a window of another frame still
+    /// dropped it where TDB − TT made the window shorter in TDB (review of #563); and a grid counted from the length of a
+    /// UTC window that spans a leap second read one epoch past its end (#829, decision 107 of #668, decided by
+    /// S. Guillet, 2026-11-25).
     /// </summary>
-    private readonly struct WindowGrid
+    /// <exception cref="ArgumentOutOfRangeException"><paramref name="stepSize"/> is not positive.</exception>
+    private static Time[] WindowGrid(TimeSystem.Window searchWindow, TimeSpan stepSize)
     {
-        private readonly Time _start;
-        private readonly long _stepTicks;
-
-        /// <summary>The number of epochs.</summary>
-        internal long Count { get; }
-
-        /// <exception cref="ArgumentOutOfRangeException"><paramref name="stepSize"/> is not positive.</exception>
-        internal WindowGrid(TimeSystem.Window searchWindow, TimeSpan stepSize)
+        if (stepSize <= TimeSpan.Zero)
         {
-            if (stepSize <= TimeSpan.Zero)
-            {
-                throw new ArgumentOutOfRangeException(nameof(stepSize), stepSize, "The step of a window read must be positive.");
-            }
-
-            _start = searchWindow.StartDate;
-            _stepTicks = stepSize.Ticks;
-            Count = (searchWindow.EndDate.ConvertTo(_start.Scale) - _start).Ticks / _stepTicks + 1;
+            throw new ArgumentOutOfRangeException(nameof(stepSize), stepSize, "The step of a window read must be positive.");
         }
 
-        /// <summary>Epoch <paramref name="index"/>, in the time scale of the window start.</summary>
-        internal Time Epoch(long index) => _start + TimeSpan.FromTicks(_stepTicks * index);
-
-        /// <summary>The TDB seconds past J2000 of at most <paramref name="length"/> epochs from <paramref name="first"/>, as the
-        /// read of one epoch takes them.</summary>
-        internal double[] Seconds(long first, int length)
-        {
-            var seconds = new double[(int)System.Math.Min(length, Count - first)];
-            for (int i = 0; i < seconds.Length; i++)
-            {
-                seconds[i] = Epoch(first + i).ToTDB().TimeSpanFromJ2000().TotalSeconds;
-            }
-
-            return seconds;
-        }
+        return searchWindow.Sample(stepSize).ToArray();
     }
+
+    // The TDB seconds past J2000 of the epochs, as the read of one epoch takes them
+    private static double[] TdbSeconds(Time[] epochs) =>
+        epochs.Select(epoch => epoch.ToTDB().TimeSpanFromJ2000().TotalSeconds).ToArray();
 
     /// <summary>
     /// Return state vector at given epoch using NAIF IDs directly.
@@ -2461,14 +2438,14 @@ public class SpiceAPI
         Frame referenceFrame, TimeSpan stepSize)
     {
         if (referenceFrame == null) throw new ArgumentNullException(nameof(referenceFrame));
-        var grid = new WindowGrid(searchWindow, stepSize);
+        var grid = WindowGrid(searchWindow, stepSize);
         lock (lockObject)
         {
             string frameName = SpiceFrameName(referenceFrame);
             List<OrbitalParameters.StateOrientation> records = [];
-            for (long first = 0; first < grid.Count; first += WindowReadChunk)
+            foreach (var chunk in grid.Chunk(WindowReadChunk))
             {
-                double[] epochs = grid.Seconds(first, WindowReadChunk);
+                double[] epochs = TdbSeconds(chunk);
                 // A buffer of the epochs read (#563: before, 10000 records whatever the window, 1.4 ms for one epoch)
                 var stateOrientations = new StateOrientation[epochs.Length];
                 if (!ReadOrientationProxy(epochs, epochs.Length, naifId, tolerance.TotalSeconds, frameName, stateOrientations))

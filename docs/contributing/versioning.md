@@ -5094,6 +5094,15 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   `SpiceApiTest`). The grids of `GetEphemeris` over a window (`CelestialItem`, `Site`), `Star.Propagate` and the command
   `orientation` take `Window.Sample` too, bit for bit. Migration: none for the end; to keep the former orientations,
   drop the last one when the end lies on the grid.
+- **Breaking: `SpiceAPI.ReadEphemeris(window, …, stepSize)` and `ReadOrientation(window, …, stepSize)` stop at the end of
+  a UTC window that spans a leap second** ([#829](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/829),
+  lot L6, decision 107 of #668, decided by S. Guillet, 2026-11-25): their epochs are the points of
+  `Window.Sample(stepSize)`, start + i·step in the UTC calendar up to the end, as their documentation said ("while within
+  the window"). Before, the number of epochs came from the window's length, which counts the leap second, while the
+  epochs followed the calendar, so the read went one step past the end: the two UTC minutes around the leap second of
+  2012-06-30 at 1 s gave 122 states (and 122 CK records) for 121, the last at 2012-07-01T00:01:01Z, and a read whose data
+  end at the window end threw `SpiceException` there. Every other window is read as before, bit for bit
+  (`SpiceApiTest`). Migration: none; a caller that counted on the extra state reads it by its epoch.
 - **Breaking: `EquinoctialElements` takes a perigee radius with a non-finite P only** (R23 of #668, choice 3 of the
   first annex): a finite P fixes q = P / (1 + e), so a perigee radius beside it throws `ArgumentException`
   (`perigeeRadius`); before, it was stored, and `PerigeeRadius()` returned 1 m for P = 7000 km given 1 m. The library's
