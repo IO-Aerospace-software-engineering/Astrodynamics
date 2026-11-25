@@ -67,8 +67,8 @@ propagation is built (`ArgumentException`) and, for a maneuver attached after it
    is sampled and in the `TLEPropagator` constructor, one rule on every propagation path (decisions 7, 15 and 18 of lot
    L4, decided by S. Guillet, 2026-11-22; before, a numerical propagation re-armed the spacecraft and threw
    `InvalidOperationException` "Solution contains no segments", `TLEPropagator` returned one sample at the start, and a
-   scenario of stars alone propagated them and reported itself simulated). `Star.Propagate` itself is unchanged in
-   11.0.0: its grid is unified with the propagation outputs in a later lot.
+   scenario of stars alone propagated them and reported itself simulated), and in `Star.Propagate` before its step,
+   the states the star held kept (before, the one state of the start replaced them).
 
 ### Supported Perturbations
 

@@ -4996,8 +4996,8 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   decided by S. Guillet, 2026-11-22) at the start of the call, before anything changes: `Spacecraft.Propagate`, both
   `CentralBodyPropagator` constructors and `Scenario.Simulate` (before its stars, whatever the scenario holds: a scenario
   of stars alone throws too, its stars not propagated and `IsSimulated` unchanged, decision 18 of lot L4, decided by
-  S. Guillet, 2026-11-22, where it propagated its stars and reported itself simulated; `Star.Propagate` itself unchanged,
-  its grid left to L6); a batch task reports it as its error. Before, the propagation re-armed the spacecraft and threw `InvalidOperationException` "Solution
+  S. Guillet, 2026-11-22, where it propagated its stars and reported itself simulated; `Star.Propagate` itself since
+  lot L6, the entry below); a batch task reports it as its error. Before, the propagation re-armed the spacecraft and threw `InvalidOperationException` "Solution
   contains no segments". The `TLEPropagator` constructor throws it too, for a window in TDB or in UTC, one rule on every
   propagation path (decision 15 of lot L4, decided by S. Guillet, 2026-11-22), where it returned one sample at the start,
   and so does `MonteCarloPropagator.Propagate` for a `MonteCarloConfiguration.Window` of zero length, before anything is
@@ -5094,6 +5094,12 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   `SpiceApiTest`). The grids of `GetEphemeris` over a window (`CelestialItem`, `Site`), `Star.Propagate` and the command
   `orientation` take `Window.Sample` too, bit for bit. Migration: none for the end; to keep the former orientations,
   drop the last one when the end lies on the grid.
+- **Breaking: `Star.Propagate(window, stepSize)` over a window of zero length throws `ArgumentException` (`window`)**
+  (lot L6, decisions 7, 15 and 18 of #668, decided by S. Guillet, 2026-11-22), checked before the step, the states the
+  star held kept: the rule of every propagation path. Before, it stored the one state of the start in place of the
+  star's states, which `WriteEphemeris` then refused (fewer than three). The parameter `timeWindow` is renamed `window`,
+  the name of every propagation's window (`StarTests`). Migration: a window with a length; a named argument
+  `timeWindow:` becomes `window:`.
 - **Breaking: `SpiceAPI.ReadEphemeris(window, …, stepSize)` and `ReadOrientation(window, …, stepSize)` stop at the end of
   a UTC window that spans a leap second** ([#829](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/829),
   lot L6, decision 107 of #668, decided by S. Guillet, 2026-11-25): their epochs are the points of

@@ -432,7 +432,7 @@ public class Star : CelestialBody
     /// <summary>
     /// Propagates the star.
     /// </summary>
-    /// <param name="timeWindow">The time window for propagation.</param>
+    /// <param name="window">The time window for propagation, of a length above zero.</param>
     /// <param name="stepSize">The step size for propagation, positive.</param>
     /// <remarks>
     /// The states of the propagation replace those the star held, as <c>Spacecraft.Propagate</c> replaces the states of a
@@ -447,11 +447,15 @@ public class Star : CelestialBody
     /// <exception cref="ArgumentOutOfRangeException"><paramref name="stepSize"/> is zero or negative, the rule of every
     /// step of the library (#674); nothing is stored. Before 11.0.0 the call never returned (a negative step also stored
     /// states without bound).</exception>
-    public void Propagate(Window timeWindow, TimeSpan stepSize)
+    /// <exception cref="ArgumentException"><paramref name="window"/> has zero length, checked first, the rule of every
+    /// propagation path (decisions 7, 15 and 18 of #668, decided by S. Guillet, 2026-11-22); the states the star held are
+    /// kept. Before 11.0.0 the one state of the start replaced them.</exception>
+    public void Propagate(Window window, TimeSpan stepSize)
     {
+        PropagatorBase.RequireWindowLength(window);
         PropagatorBase.RequirePositiveStep(stepSize, nameof(stepSize));
         var states = new List<StateVector>();
-        foreach (var epoch in timeWindow.Sample(stepSize))
+        foreach (var epoch in window.Sample(stepSize))
         {
             var position = GetEquatorialCoordinates(epoch).ToCartesian();
             states.Add(new StateVector(position, _spaceVelocity, Barycenters.SOLAR_SYSTEM_BARYCENTER, epoch, Frame.ICRF));
