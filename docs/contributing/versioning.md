@@ -7767,7 +7767,8 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   or inside it, or a file of it that SPICE holds, a meta-kernel's included (decision 102), throws
   `InvalidOperationException` naming it, before anything is deleted or written. Before, the export deleted it under
   SPICE's load: its text kernels stayed in the kernel pool with the old content, and a later unload that read them again
-  failed. The export never changes the kernels SPICE holds. Migration: `UnloadKernels` the previous export (or the
+  failed. The export never changes the kernels SPICE holds; a first export, with no `<Mission>_<Scenario>` to replace, is
+  written under a loaded directory as before. Migration: `UnloadKernels` the previous export (or the
   meta-kernel that names its files) before the export, and load the new one after it.
 - **Breaking: the text kernel writers unload the file they replace** ([#799](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/799)(c),
   lot L5c, decision 103 of #668, decided by S. Guillet, 2026-11-25): `Clock.Write`, `SpacecraftFrame.Write`,

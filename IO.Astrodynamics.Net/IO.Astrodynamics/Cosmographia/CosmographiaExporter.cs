@@ -55,7 +55,7 @@ public class CosmographiaExporter
     /// or the export directory <c>&lt;Mission&gt;_&lt;Scenario&gt;</c> the mission and scenario names form (#799(a), #822,
     /// decisions 74 and 105 of #668, decided by S. Guillet, 2026-11-23 and 2026-11-25: before, a name holding a '/' was
     /// written into nested directories, and a scenario named <c>/..</c> made the export delete the whole output directory).
-    /// Or the export directory <c>&lt;Mission&gt;_&lt;Scenario&gt;</c> is a loaded kernel path, lies inside one or holds
+    /// Or the export directory <c>&lt;Mission&gt;_&lt;Scenario&gt;</c> exists and is a loaded kernel path, lies inside one or holds
     /// one, or SPICE holds a file of it, from <see cref="SpiceAPI.LoadKernels(FileSystemInfo)"/> or a meta-kernel (#799(c),
     /// decisions 102 and 103 of #668, decided by S. Guillet, 2026-11-25: before, the export deleted it under SPICE's load,
     /// whose text kernels stayed in the pool with the old content); unload it first.

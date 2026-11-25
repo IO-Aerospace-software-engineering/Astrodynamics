@@ -2545,25 +2545,27 @@ public class SpiceAPI
 
     /// <summary>
     /// Refuses to replace a directory SPICE holds (#799(c), decision 103 of #668, decided by S. Guillet, 2026-11-25, for the
-    /// Cosmographia export): the directory is a loaded entry of <see cref="GetLoadedKernels"/>, lies inside one or holds
-    /// one, or SPICE holds a file of it, from a load of this class or a meta-kernel's (<see cref="HoldsKernelFile"/>,
-    /// decision 102). Read under the lock, unloading nothing.
+    /// Cosmographia export): the directory exists and is a loaded entry of <see cref="GetLoadedKernels"/>, lies inside one
+    /// or holds one, or SPICE holds a file of it, from a load of this class or a meta-kernel's (<see cref="HoldsKernelFile"/>,
+    /// decision 102); a directory that does not exist replaces nothing and is accepted. Read under the lock, unloading nothing.
     /// </summary>
     /// <exception cref="InvalidOperationException">SPICE holds the directory or a file of it; the message names it.</exception>
     internal void ThrowIfDirectoryHeld(DirectoryInfo directory, string owner)
     {
         lock (lockObject)
         {
+            // A directory that does not exist replaces nothing: a first export under a loaded directory leaves the pool unchanged
+            // (decision 103 of #668 refuses to replace an export SPICE holds)
+            if (!Directory.Exists(directory.FullName))
+            {
+                return;
+            }
+
             var entry = _kernels.FirstOrDefault(x => IsSameOrInside(directory.FullName, x.Path.FullName) || IsSameOrInside(x.Path.FullName, directory.FullName));
             if (entry != null)
             {
                 throw new InvalidOperationException(
                     $"{owner} cannot replace {directory.FullName}: the loaded kernel path {entry.Path.FullName} holds it or lies inside it, and SPICE would go on reading the files it deletes. Unload {entry.Path.FullName} first.");
-            }
-
-            if (!Directory.Exists(directory.FullName))
-            {
-                return;
             }
 
             var held = Directory.EnumerateFiles(directory.FullName, "*", SearchOption.AllDirectories).FirstOrDefault(x => HoldsKernelFile(new FileInfo(x)));

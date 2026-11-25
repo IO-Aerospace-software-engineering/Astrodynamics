@@ -325,6 +325,48 @@ public class ExportCheckTests
         }
     }
 
+    /// <summary>
+    /// A first export, with no previous export to replace, under a directory loaded with LoadKernels is written and loads
+    /// nothing (decision 103 of #668 refuses to replace an export SPICE holds, not to write a new one: the pool is unchanged);
+    /// the next export, which would replace the first under the loaded entry, is refused and deletes nothing.
+    /// </summary>
+    [Fact]
+    public async Task FirstExport_UnderALoadedDirectory_IsWritten_AndTheNextOneIsRefused()
+    {
+        var scenario = Simulated();
+        var root = Directory.CreateTempSubdirectory("export-first-");
+        try
+        {
+            var kernel = new FileInfo(Path.Combine(root.FullName, "user.tk"));
+            File.WriteAllText(kernel.FullName, "KPL/PCK\n\\begindata\nCHECK799_FIRST_EXPORT = 1\n\\begintext\n");
+            var output = new DirectoryInfo(Path.Combine(root.FullName, "output"));
+            SpiceAPI.Instance.LoadKernels(root);
+            try
+            {
+                await new CosmographiaExporter().ExportAsync(scenario, output);
+
+                Assert.True(File.Exists(Path.Combine(output.FullName, $"{Mission}_{ScenarioName}", "spice.json")));
+                Assert.Equal([root.FullName],
+                    SpiceAPI.Instance.GetLoadedKernels().Select(x => x.FullName).Where(x => x.StartsWith(root.FullName, StringComparison.Ordinal)));
+
+                var before = Entries(output);
+                var exception = await Assert.ThrowsAsync<InvalidOperationException>(() => new CosmographiaExporter().ExportAsync(scenario, output));
+                Assert.Contains(root.FullName, exception.Message);
+                Assert.Equal(before, Entries(output));
+            }
+            finally
+            {
+                SpiceAPI.Instance.UnloadKernels(root);
+            }
+
+            AssertNothingLoadedUnder(root);
+        }
+        finally
+        {
+            root.Delete(true);
+        }
+    }
+
     // A meta-kernel naming one file by its absolute path, in pieces of 60 characters at most
     private static FileInfo MetaKernel(FileInfo metaKernel, FileInfo member)
     {
