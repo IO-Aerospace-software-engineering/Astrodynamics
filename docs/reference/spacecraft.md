@@ -422,7 +422,10 @@ A kernel-backed spacecraft reads its frame kernel and its CK through SPICE at ev
   instrument together; `-`, `.`, `/` and non-ASCII letters are accepted within the 32 bytes. The instrument kernels
   (`Instrument.WriteKernel`) name the instrument frame, `<SPACECRAFT>_<INSTRUMENT>`, in the string
   `INS<id>_FOV_FRAME`, and check the instrument FK's variable by the same rule: a quote ended that string, which SPICE
-  rejected at `furnsh_c` (SPICE(TYPEMISMATCH)), and a blank or a longer name named a frame no FK can define.
+  rejected at `furnsh_c` (SPICE(TYPEMISMATCH)), and a blank or a longer name named a frame no FK can define. The text
+  kernel writers (`Clock.Write`, `SpacecraftFrame.Write`, `Instrument.WriteFrame`, `Instrument.WriteKernel`) unload a
+  file they replace, as `WriteEphemeris` and `WriteOrientation` do, and leave the new one unloaded, so that a later
+  `LoadKernels` reads it (decision 103 of #668; before 11.0.0 SPICE went on reading the replaced content).
 - **The encoded SCLK.** The CK's epochs are the spacecraft clock of the library, 65 536 ticks per second from 1957: a
   double whose spacing is 2.4e-7 s up to 2025-01-19 03:13 TDB and 4.8e-7 s from then to 2093. It is the floor of the
   attitude read from the CK.

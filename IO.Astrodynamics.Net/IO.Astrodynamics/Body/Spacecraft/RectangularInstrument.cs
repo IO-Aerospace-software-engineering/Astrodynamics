@@ -40,7 +40,6 @@ public class RectangularInstrument : Instrument
             .Replace("{rz}", RefVector.Z.ToString(CultureInfo.InvariantCulture))
             .Replace("{angle}", FieldOfView.ToString(CultureInfo.InvariantCulture))
             .Replace("{cangle}", CrossAngle.ToString(CultureInfo.InvariantCulture));
-        using var sw = new StreamWriter(outputFile.FullName);
-        sw.Write(data);
+        SpiceAPI.Instance.WriteTextKernel(outputFile, data);
     }
 }

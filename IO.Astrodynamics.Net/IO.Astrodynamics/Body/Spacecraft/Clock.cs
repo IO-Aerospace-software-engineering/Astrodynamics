@@ -68,6 +68,7 @@ namespace IO.Astrodynamics.Body.Spacecraft
         /// Writes the clock kernel (SCLK) of the spacecraft: the clock of id |NaifId| at <see cref="Resolution"/> ticks per
         /// second, the id and the resolution written in the invariant culture. Synchronous since 11.0.0, <c>WriteAsync</c>
         /// before (decision 78 of #668, decided by S. Guillet, 2026-11-23).
+        /// A file it replaces is unloaded first, under every name SPICE holds it by (a meta-kernel's included), and the new file is left unloaded, as the SPK and CK writers do (#799(c), decision 103 of #668, decided by S. Guillet, 2026-11-25).
         /// </summary>
         /// <param name="outputFile">The clock kernel to write.</param>
         public void Write(FileInfo outputFile)
@@ -76,8 +77,7 @@ namespace IO.Astrodynamics.Body.Spacecraft
             using StreamReader sr = new StreamReader(stream ?? throw new InvalidOperationException());
             var templateData = sr.ReadToEnd();
             var data = templateData.Replace("{id}", System.Math.Abs(Spacecraft.NaifId).ToString(CultureInfo.InvariantCulture)).Replace("{resolution}",  Resolution.ToString(CultureInfo.InvariantCulture));
-            using var sw = new StreamWriter(outputFile.FullName);
-            sw.Write(data);
+            SpiceAPI.Instance.WriteTextKernel(outputFile, data);
         }
 
         public bool Equals(Clock other)

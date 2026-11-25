@@ -360,6 +360,7 @@ namespace IO.Astrodynamics.Body.Spacecraft
         /// decided by S. Guillet, 2026-11-25: before, a culture whose minus sign is not '-', such as sv-SE, fi-FI or he-IL,
         /// wrote a kernel SPICE could not load, and tr-TR or az wrote "İ" for an "i"). Synchronous since 11.0.0,
         /// <c>WriteFrameAsync</c> before (decision 78 of #668, decided by S. Guillet, 2026-11-23).
+        /// A file it replaces is unloaded first, under every name SPICE holds it by (a meta-kernel's included), and the new file is left unloaded, as the SPK and CK writers do (#799(c), decision 103 of #668, decided by S. Guillet, 2026-11-25).
         /// </summary>
         /// <param name="outputFile">The frame kernel to write.</param>
         /// <exception cref="InvalidOperationException">The names make a kernel variable name SPICE cannot read: a blank, a
@@ -382,8 +383,7 @@ namespace IO.Astrodynamics.Body.Spacecraft
                 .Replace("{x}", Orientation.X.ToString(CultureInfo.InvariantCulture))
                 .Replace("{y}", Orientation.Y.ToString(CultureInfo.InvariantCulture))
                 .Replace("{z}", Orientation.Z.ToString(CultureInfo.InvariantCulture));
-            using var sw = new StreamWriter(outputFile.FullName);
-            sw.Write(data);
+            SpiceAPI.Instance.WriteTextKernel(outputFile, data);
         }
 
         /// <summary>
@@ -413,6 +413,7 @@ namespace IO.Astrodynamics.Body.Spacecraft
         /// S. Guillet, 2026-11-25: before, a culture whose minus sign is not '-', such as sv-SE, fi-FI or he-IL, wrote
         /// <c>INS−…</c>, which SPICE does not read as the instrument's, and tr-TR or az wrote "İ" for an "i").
         /// Synchronous since 11.0.0, <c>WriteKernelAsync</c> before (decision 78 of #668, decided by S. Guillet, 2026-11-23).
+        /// A file it replaces is unloaded first, under every name SPICE holds it by (a meta-kernel's included), and the new file is left unloaded, as the SPK and CK writers do (#799(c), decision 103 of #668, decided by S. Guillet, 2026-11-25).
         /// </summary>
         /// <param name="outputFile">The instrument kernel to write.</param>
         /// <exception cref="InvalidOperationException">The names make a frame the instrument frame kernel cannot define, by

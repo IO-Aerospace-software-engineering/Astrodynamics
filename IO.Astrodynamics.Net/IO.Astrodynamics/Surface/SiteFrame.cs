@@ -36,6 +36,7 @@ public class SiteFrame : Frame
     /// <see cref="GetStateOrientationToICRF"/> gives. The names are upper-cased and the ids written in the invariant culture,
     /// whatever the culture of the thread (#798, #821, decisions 101 and 104 of #668, decided by S. Guillet, 2026-11-25).
     /// Synchronous since 11.0.0, <c>WriteAsync</c> before (decision 78 of #668, decided by S. Guillet, 2026-11-23).
+    /// A file it replaces is unloaded first, under every name SPICE holds it by (a meta-kernel's included), and the new file is left unloaded, as the SPK and CK writers do (#799(c), decision 103 of #668, decided by S. Guillet, 2026-11-25).
     /// </summary>
     /// <remarks>
     /// For a site built from coordinates, or from the kernels when no loaded kernel defines its frame id, the frame of
@@ -73,8 +74,7 @@ public class SiteFrame : Frame
             .Replace("{matrix}", matrix)
             .Replace("{long}", (-Site.Planetodetic.Longitude).ToString(CultureInfo.InvariantCulture))
             .Replace("{colat}", (-(Constants.HalfPi - Site.Planetodetic.Latitude)).ToString(CultureInfo.InvariantCulture));
-        using var sw = new StreamWriter(outputFile.FullName);
-        sw.Write(data);
+        SpiceAPI.Instance.WriteTextKernel(outputFile, data);
     }
 
     // The rotation from the kernel frame of the site to the frame of its body, as SPICE reads it, in column order: column i

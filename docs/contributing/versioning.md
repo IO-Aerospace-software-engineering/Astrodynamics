@@ -7759,6 +7759,23 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   `SpiceAPI.WriteEphemeris`, whose native writer writes three states or more; nothing is written. `SpiceAPI.WriteEphemeris`
   and `Site.WriteEphemeris`, whose arguments are at fault, keep theirs. Migration: catch `InvalidOperationException`, or
   propagate the star over three steps or more.
+- **Breaking: `CosmographiaExporter.ExportAsync` refuses to replace a previous export SPICE holds**
+  ([#799](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/799)(c), lot L5c, decision 103 of
+  #668, decided by S. Guillet, 2026-11-25): `<Mission>_<Scenario>` loaded with `LoadKernels`, a loaded directory above it
+  or inside it, or a file of it that SPICE holds, a meta-kernel's included (decision 102), throws
+  `InvalidOperationException` naming it, before anything is deleted or written. Before, the export deleted it under
+  SPICE's load: its text kernels stayed in the kernel pool with the old content, and a later unload that read them again
+  failed. The export never changes the kernels SPICE holds. Migration: `UnloadKernels` the previous export (or the
+  meta-kernel that names its files) before the export, and load the new one after it.
+- **The text kernel writers unload the file they replace** ([#799](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/799)(c),
+  lot L5c, decision 103 of #668, decided by S. Guillet, 2026-11-25): `Clock.Write`, `SpacecraftFrame.Write`,
+  `Instrument.WriteFrame`, `Instrument.WriteKernel`, `Site.WriteFrame` and `SiteFrame.Write`, as the SPK and CK writers
+  since [#706](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/706), first unload a file
+  `LoadKernels` loaded as `UnloadKernels` does, then every other load SPICE holds of it (a meta-kernel's, a name whose
+  symbolic links resolve through it), write it and leave it unloaded. Before, the file was rewritten under SPICE's load,
+  which a later `LoadKernels` skipped as a file already loaded: SPICE read the old content (measured: a frame kernel
+  rewritten for another spacecraft still named the first, `TextKernelReplaceTests`). The files are the same bytes; a
+  failed unload throws `SpiceException` and leaves the file as it was. Migration: load the file again after the write.
 - **Breaking: `CosmographiaExporter.ExportAsync` refuses a name that is not a portable file name**
   ([#799](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/799)(a), lot L5c, decisions 74 and
   105 of #668, decided by S. Guillet, 2026-11-23 and 2026-11-25): a spacecraft, instrument, site or star name, or the
@@ -8023,8 +8040,8 @@ not listed.
   [#655](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/655),
   [#661](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/661),
   [#706](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/706)). `Spacecraft.WriteOrientation`,
-  `SpiceAPI.WriteOrientation` and `SpiceAPI.WriteEphemeris` (under `Star.WriteEphemeris` and `Site.WriteEphemeris`)
-  leave the kernel they write unloaded: load it after writing. A file they replace is unloaded first under its path and
+  `SpiceAPI.WriteOrientation` and `SpiceAPI.WriteEphemeris` (under `Star.WriteEphemeris` and `Site.WriteEphemeris`),
+  and the text kernel writers since decision 103 of #668, leave the kernel they write unloaded: load it after writing. A file they replace is unloaded first under its path and
   the absolute names whose symbolic links resolve through it (#706), but not under a relative name other than its path
   (a meta-kernel's) nor through a hard link, through which SPICE goes on reading the replaced data: unload such a load
   before rewriting the file. `Spacecraft.WriteKernels` loads what it writes, each file by its own path, and refuses a

@@ -2501,6 +2501,72 @@ public class SpiceAPI
     }
 
     /// <summary>
+    /// Writes a text kernel the library built (the clock, frame and instrument kernels; #799(c), decision 103 of #668,
+    /// decided by S. Guillet, 2026-11-25): as the SPK and CK writers since #706, a file <see cref="LoadKernels(FileSystemInfo)"/>
+    /// loaded is first unloaded as <see cref="UnloadKernels(FileSystemInfo)"/> does, then every other load of it SPICE
+    /// holds (a meta-kernel's, a name whose symbolic links resolve through it), and the new file is left unloaded, so that a
+    /// later load reads it; before, the file was rewritten under SPICE's load, which a later load skipped, and SPICE read
+    /// the replaced content. The text is written in UTF-8 without a byte order mark, as before.
+    /// </summary>
+    /// <exception cref="SpiceException">SPICE failed to unload the file it replaces (the text kernels it reads again after
+    /// the unload, one of them deleted since its load); the file is left on disk as it was, nothing written.</exception>
+    internal void WriteTextKernel(FileInfo file, string text)
+    {
+        ArgumentNullException.ThrowIfNull(file);
+        lock (lockObject)
+        {
+            long nativeCalls = _nativeKernelCalls;
+            try
+            {
+                UnloadReplacedKernel(file);
+                if (File.Exists(file.FullName) && HoldsKernelFile(file) && !UnloadEveryLoadNative(file.FullName))
+                {
+                    throw NativeException($"The text kernel {file.FullName} cannot be written: the file it replaces could not be unloaded");
+                }
+            }
+            finally
+            {
+                AfterKernelCall(nativeCalls);
+            }
+
+            using var writer = new StreamWriter(file.FullName);
+            writer.Write(text);
+        }
+    }
+
+    /// <summary>
+    /// Refuses to replace a directory SPICE holds (#799(c), decision 103 of #668, decided by S. Guillet, 2026-11-25, for the
+    /// Cosmographia export): the directory is a loaded entry of <see cref="GetLoadedKernels"/>, lies inside one or holds
+    /// one, or SPICE holds a file of it, from a load of this class or a meta-kernel's (<see cref="HoldsKernelFile"/>,
+    /// decision 102). Read under the lock, unloading nothing.
+    /// </summary>
+    /// <exception cref="InvalidOperationException">SPICE holds the directory or a file of it; the message names it.</exception>
+    internal void ThrowIfDirectoryHeld(DirectoryInfo directory, string owner)
+    {
+        lock (lockObject)
+        {
+            var entry = _kernels.FirstOrDefault(x => IsSameOrInside(directory.FullName, x.Path.FullName) || IsSameOrInside(x.Path.FullName, directory.FullName));
+            if (entry != null)
+            {
+                throw new InvalidOperationException(
+                    $"{owner} cannot replace {directory.FullName}: the loaded kernel path {entry.Path.FullName} holds it or lies inside it, and SPICE would go on reading the files it deletes. Unload {entry.Path.FullName} first.");
+            }
+
+            if (!Directory.Exists(directory.FullName))
+            {
+                return;
+            }
+
+            var held = Directory.EnumerateFiles(directory.FullName, "*", SearchOption.AllDirectories).FirstOrDefault(x => HoldsKernelFile(new FileInfo(x)));
+            if (held != null)
+            {
+                throw new InvalidOperationException(
+                    $"{owner} cannot replace {directory.FullName}: SPICE holds {held}, which it would delete under the data SPICE reads. Unload it first (UnloadKernels of its path or of the meta-kernel that names it).");
+            }
+        }
+    }
+
+    /// <summary>
     /// Writes the bytes of an SPK the managed writer built (<see cref="Kernels.SpkWriter.BuildType9"/>), as
     /// <see cref="WriteEphemerisArcs"/> writes them: the file it replaces unloaded first, the new one left unloaded.
     /// </summary>

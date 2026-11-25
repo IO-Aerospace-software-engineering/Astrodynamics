@@ -273,4 +273,69 @@ public class ExportCheckTests
             root.Delete(true);
         }
     }
+
+    /// <summary>
+    /// The export refuses to replace a previous export SPICE holds, before anything is deleted (#799(c), decision 103 of
+    /// #668, decided by S. Guillet, 2026-11-25): the export directory loaded, a loaded directory above it, or a file of it a
+    /// meta-kernel loaded. Before, it deleted the export under SPICE's loads: the text kernels stayed in the pool with the
+    /// old content, and a later unload that read them again failed.
+    /// </summary>
+    [Theory]
+    [InlineData("export")]
+    [InlineData("output")]
+    [InlineData("meta-kernel")]
+    public async Task Export_OverAPreviousExportSpiceHolds_IsRefused_AndDeletesNothing(string held)
+    {
+        var scenario = Simulated();
+        var root = Directory.CreateTempSubdirectory("export-held-");
+        try
+        {
+            var output = Directory.CreateDirectory(Path.Combine(root.FullName, "output"));
+            await new CosmographiaExporter().ExportAsync(scenario, output);
+            var export = new DirectoryInfo(Path.Combine(output.FullName, $"{Mission}_{ScenarioName}"));
+            var clock = new FileInfo(Path.Combine(export.FullName, "Spacecrafts", "SC799", "Clocks", "SC799.tsc"));
+            FileSystemInfo loaded = held switch
+            {
+                "export" => export,
+                "output" => output,
+                _ => MetaKernel(new FileInfo(Path.Combine(root.FullName, "mission.tm")), clock)
+            };
+            var before = Entries(output);
+            SpiceAPI.Instance.LoadKernels(loaded);
+            try
+            {
+                var exception = await Assert.ThrowsAsync<InvalidOperationException>(() => new CosmographiaExporter().ExportAsync(scenario, output));
+
+                Assert.Contains(held == "meta-kernel" ? clock.FullName : loaded.FullName, exception.Message);
+                Assert.Equal(before, Entries(output));
+                Assert.True(SpiceAPI.Instance.HoldsKernelFile(clock));
+            }
+            finally
+            {
+                SpiceAPI.Instance.UnloadKernels(loaded);
+            }
+
+            // Once unloaded, the export replaces it
+            await new CosmographiaExporter().ExportAsync(scenario, output);
+            AssertNothingLoadedUnder(root);
+        }
+        finally
+        {
+            root.Delete(true);
+        }
+    }
+
+    // A meta-kernel naming one file by its absolute path, in pieces of 60 characters at most
+    private static FileInfo MetaKernel(FileInfo metaKernel, FileInfo member)
+    {
+        var path = member.FullName;
+        var value = new System.Text.StringBuilder();
+        for (int i = 0; i < path.Length; i += 60)
+        {
+            value.Append('\'').Append(path.Substring(i, System.Math.Min(60, path.Length - i))).Append(i + 60 < path.Length ? "+'\n" : "'");
+        }
+
+        File.WriteAllText(metaKernel.FullName, $"KPL/MK\n\\begindata\nKERNELS_TO_LOAD = ( {value} )\n\\begintext\n");
+        return metaKernel;
+    }
 }

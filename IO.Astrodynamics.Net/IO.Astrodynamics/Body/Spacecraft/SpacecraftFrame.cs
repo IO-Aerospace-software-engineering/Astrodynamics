@@ -454,6 +454,7 @@ public class SpacecraftFrame : Frame
     /// the culture of the thread (#798, #821, decisions 101 and 104 of #668, decided by S. Guillet, 2026-11-25: before, a
     /// culture whose minus sign is not '-', such as sv-SE, fi-FI or he-IL, wrote a kernel SPICE could not load, and tr-TR or
     /// az wrote "İ" for an "i"). Synchronous since 11.0.0, <c>WriteAsync</c> before (decision 78 of #668, decided by S. Guillet, 2026-11-23).
+    /// A file it replaces is unloaded first, under every name SPICE holds it by (a meta-kernel's included), and the new file is left unloaded, as the SPK and CK writers do (#799(c), decision 103 of #668, decided by S. Guillet, 2026-11-25).
     /// </summary>
     /// <param name="outputFile">The frame kernel to write.</param>
     /// <exception cref="InvalidOperationException">The name of the spacecraft makes a kernel variable name SPICE cannot read:
@@ -468,8 +469,7 @@ public class SpacecraftFrame : Frame
         var templateData = sr.ReadToEnd();
         var data = templateData.Replace("{framename}", Name.ToUpperInvariant()).Replace("{frameid}", Id!.Value.ToString(CultureInfo.InvariantCulture)).Replace("{spacecraftid}", Spacecraft.NaifId.ToString(CultureInfo.InvariantCulture))
             .Replace("{spacecraftname}", Spacecraft.Name.ToUpperInvariant());
-        using var sw = new StreamWriter(outputFile.FullName);
-        sw.Write(data);
+        SpiceAPI.Instance.WriteTextKernel(outputFile, data);
     }
 
     /// <summary>
