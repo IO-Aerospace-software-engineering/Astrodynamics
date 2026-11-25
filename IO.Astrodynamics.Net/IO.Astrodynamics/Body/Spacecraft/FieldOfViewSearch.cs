@@ -80,7 +80,7 @@ internal static class FieldOfViewSearch
     /// <summary>
     /// The attitude of the instrument's spacecraft: a managed spacecraft whose attitude record is empty, never propagated
     /// and with no orientation added, built from a TLE or propagated by the TLE propagator, has none to search with; its
-    /// CK, which <c>gftfov</c> would read, cannot be written either (<see cref="SpacecraftFrame.WriteOrientation"/>). Before
+    /// CK, which <c>gftfov</c> would read, cannot be written either (<see cref="Spacecraft.WriteOrientation"/>). Before
     /// 11.0.0 the identity of ICRF was searched (#682). A kernel-backed spacecraft reads its CK through SPICE.
     /// </summary>
     /// <exception cref="InvalidOperationException">The spacecraft is managed and its attitude record is empty.</exception>

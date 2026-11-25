@@ -47,7 +47,8 @@ Current version information and release notes since 8.0. Breaking changes are ca
 Changes since 10.2.0-preview-1: the conformance runner of the six lots of
 [#457](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/457) and the defects its references
 found, the integration over TT seconds about the Earth, the managed occultation, field-of-view and window searches to
-1 µs, the managed TEME, the attitude timeline of a propagation and the kernels it writes, the 2D Pc and the CDM.
+1 µs, the managed TEME, the attitude timeline of a propagation and the kernels it writes, with the kernels of a spacecraft
+written and loaded in one call (`Spacecraft.WriteKernels`), the 2D Pc and the CDM.
 
 A major version, because it breaks the API. The entries marked **Breaking** under **Changed** list each change a
 caller can meet, with its migration: among them the maneuver chain on the attitude timeline, the kernels and the
@@ -76,7 +77,9 @@ optional, one `Add*Instrument` per shape with a default id, components whose mod
 targets: the impulses and the attitudes take their target first, the engine (on `ImpulseManeuver` only) and the centre
 optional and inferred by the run, the radii of the impulses checked, the axes of the spacecraft by `BodyAxis`, a
 `TriadAttitude` and an `InstrumentPointingToAttitude` of `IAttitudeTarget` targets, and an attitude that points only
-the instruments of its own spacecraft.
+the instruments of its own spacecraft, and the text kernel writers synchronous, with the frame of a spacecraft built by
+the spacecraft alone, a write with nothing to write that throws `InvalidOperationException`, and a Cosmographia export
+(and `astro propagate`) that refuses a name that is not a portable file name and a previous export SPICE holds.
 **Removed** lists `Instrument.PositionInFOV`, `LowThrustManeuver`, `Quaternion.Zero`, `Star.PropagationOutput`,
 `ExceptionBase`, `Matrix.Set`, `Vector3 * Vector3`, six exports of the native library that .NET never called, the
 public interop structs of `IO.Astrodynamics.DTO`, the ten raw conversions of `SpiceAPI`, the public helpers of the
@@ -390,6 +393,26 @@ release are listed under **Known limitations**.
   choice 12 of [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668), decided by
   S. Guillet, 2026-11-19), SPICE's `bodn2c_c` through the new native `GetNaifIdProxy`: SPICE's built-in names and those
   of the loaded kernels, in any case, false for a name SPICE does not know (`docs/reference/spice-api.md`, "Body names").
+- **`Spacecraft.WriteKernels(DirectoryInfo)`: the kernels of a spacecraft in one call** (lot L5c, R14 and decisions 78 to
+  81 of [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668), decided by S. Guillet,
+  2026-11-23, and decision 102, 2026-11-25). It writes the clock kernel `<name>.tsc`, the frame kernel `<name>.tf`, the
+  frame and instrument kernels `<name>_<instrument>.tf` and `.ti` of each instrument, the SPK `<name>.bsp` and the CK
+  `<name>.bc` into one directory, each byte for byte what its writer writes (compared under both integrators, with an
+  impulse, attitudes and two instruments, `WriteKernelsTests`), and loads them, each by its own path; it returns the
+  sealed `SpacecraftKernels` (`Clock`, `Frame`, `Ephemeris`, `Orientation`, `Instruments` of
+  `InstrumentKernelFiles(Instrument, Frame, Kernel)`, `IsLoaded`), whose `Dispose`, idempotent and without a
+  finalizer, unloads exactly what the call loaded and leaves the files on disk. Every check runs before anything is
+  written, created or loaded, with `InvalidOperationException`: a kernel-backed spacecraft; by content (decision 81),
+  no stored state, no arc an SPK can write (an arc of one state, which `WriteEphemeris` refuses with
+  `ArgumentException`, decision 87), states without attitude record (a `TLEPropagator` run records none: given
+  attitudes by `AddStateOrientationToICRF` after the run, such a spacecraft is written, #546); the names (the kernel
+  variables of #676 and the portable file-name rule of #799(a)); the load scope (decision 80): a directory that is, or
+  lies inside, a loaded directory, and a file it would write that SPICE holds, from a load of the library, a live handle
+  or a meta-kernel (decision 102, the native query `KernelHeldProxy`), through a symbolic link too; a path longer than
+  SPICE takes, `ArgumentException` (`directory`, #673). The files are written into a subdirectory of the directory
+  first, the clock kernel loaded only while the CK is written, then moved into place and loaded (decision 79); the
+  centre of the SPK is not checked (decision 79, #655: the managed writer writes any centre). Two spacecraft are written
+  into one directory with the first handle alive. See [Spacecraft](../reference/spacecraft.md#the-kernels).
 - **The command-line tool: names, kernels from the environment, csv and json, the scale of its epochs** (lot L8 of the
   ergonomics review, R29 of #668, choice 12, decided by S. Guillet, 2026-11-19; `docs/reference/cli.md`, its help
   generated from the tool and compared by `CliPageTests`). An object is a NAIF identifier or a name SPICE knows (`MOON`,
@@ -4680,6 +4703,63 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   and pointed that instrument's boresight, whose orientation is in the frame of its own spacecraft (the spacecraft's own
   boresight 0.577 rad from the Moon in the probe of the gap analysis of L5). `SetManeuvers`, the propagator constructor
   and `Propagate` refuse it (under **Changed**; `ForeignInstrumentTests`, red before the change).
+- **The text kernel writers wrote the negative NAIF ids in the culture of the thread**
+  ([#821](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/821), lot L5c, decision 104 of
+  [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668), decided by S. Guillet,
+  2026-11-25): `SpacecraftFrame.WriteAsync`, `Instrument.WriteFrameAsync` and the three `WriteKernelAsync` substituted
+  `NaifId.ToString()` and the frame id in the current culture, which writes −1 as U+2212 then "1" under sv-SE and fi-FI
+  and as U+200E then "-1" under he-IL, while their angles and vectors were already invariant: the frame kernels failed
+  to load (`SpiceException`: "Encountered '−1821000' while attempting to parse a number"), so did
+  `CosmographiaExporter.ExportAsync`, which loads the frame kernel it writes, and the instrument kernels defined
+  `INS−1821001_…`, which `getfov_c` does not read as the instrument's (`SPICE(FRAMEMISSING)`). Every id the text writers
+  substitute (the clock's and the site frame kernel's, unaffected, included) and the duration and lead of the
+  trajectory plot of the export, which wrote "0,064… d" under sv-SE, are written in the invariant culture. No byte moves
+  under invariant globalization, which the repository's hosts and tools set, nor in a culture whose minus sign is '-'
+  and decimal separator '.'. Migration: none (`KernelWriterCultureTests`, in the child process
+  `IO.Astrodynamics.Tests.Culture`, which runs outside invariant globalization, under sv-SE, fi-FI and he-IL; red
+  before the change).
+- **The kernel writers and the Cosmographia export upper-cased the names in the culture of the thread**
+  ([#798](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/798), lot L5c, decisions 74 and
+  101 of [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668), decided by S. Guillet,
+  2026-11-23 and 2026-11-25): under tr-TR or az, where "i" upper-cases to "İ" (U+0130), the spacecraft frame kernel,
+  the instrument frame and instrument kernels, the site frame kernel and the catalog of an export named `İSS_İMAGER`
+  the object every other culture names `ISS_IMAGER`, the frame of a site, named at construction, was `<NAME>_TOPO` in
+  that culture, and the catalog named the body of a site on Jupiter "Jupıter" (U+0131, in `jupıter-features.json`),
+  which Cosmographia does not know. Every name that reaches a kernel, a path or the catalog is upper-cased, and the
+  catalog's body names lower-cased after their first letter, in the invariant culture: the writers, `Site.Frame`
+  (`<NAME>_TOPO`), `SiteFrame.Write`, the exporter's object, sensor, centre and body names, and the name check of
+  `astro propagate`. The bytes are unchanged outside the Turkish and Azeri cultures, and always under invariant
+  globalization (the text kernels, the CK, the spacecraft SPK and the catalog of a set and an export with lower-case
+  ASCII names compared byte for byte with 21d0e648); under tr or az a name with "i" now writes "I", and a name that
+  holds "ı" (U+0131) keeps it. `Site.Frame.Name` changes under tr and az only. Migration: none, but a kernel or a
+  catalog written before 11.0.0 under tr or az names its objects with "İ" (`KernelWriterCultureTests`, under tr-TR, red
+  before the change).
+- **`Spacecraft.WriteOrientation` said "it has not been propagated" of a spacecraft a `TLEPropagator` had run**
+  ([#546](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/546), lot L5c, decision 81 of
+  [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668), decided by S. Guillet,
+  2026-11-23): a `TLEPropagator` run stores SGP4's states and records no attitude, so the CK writer refused the
+  spacecraft it had just propagated, with a message that pointed nowhere. The `InvalidOperationException` of an empty
+  attitude record now says that a `TLEPropagator` run records none and names `SpacecraftFrame.AddStateOrientationToICRF`,
+  which gives the spacecraft attitudes to write (after the run, whose re-arm drops those added before it). Migration:
+  none (`KernelWriteContentTests`, red before the change).
+- **`CosmographiaExporter.ExportAsync` deleted the previous export before it wrote the new one**
+  ([#799](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/799)(b), lot L5c, decision 74 of
+  [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668), decided by S. Guillet,
+  2026-11-23): the export deleted `<Mission>_<Scenario>`, then wrote its kernels and its catalog, so a writer that threw
+  (a kernel variable SPICE cannot read, a spacecraft without attitude record) or the catalog that threw (the period of an
+  open orbit, [#824](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/824)) left no export at
+  all. The export checks its names, writes its kernels and its catalog into its scratch directory, and only then replaces
+  the previous export, which a failure before that leaves as it was; the kernels are the same bytes (compared with
+  21d0e648 on an export of a spacecraft, an instrument, a site and a star; the native SPKs of the site and the star hold
+  the path of the scratch directory they were written in, random in both). Migration: none (`ExportCheckTests`, red
+  before the change).
+- **A scenario named `/..` made `CosmographiaExporter.ExportAsync` delete the whole output directory**
+  ([#822](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/822), lot L5c, decision 105 of
+  [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668), decided by S. Guillet,
+  2026-11-25): `<Mission>_<Scenario>` resolved to the output directory itself, which the export deleted with everything
+  in it before it wrote. The mission and scenario names are checked as the name of the export directory they form, by the
+  portable file-name rule of #799(a) (under **Changed**), before anything is deleted. Migration: none
+  (`ExportCheckTests`, red before the change: the output directory and the file beside the export were deleted).
 **Changed**
 
 - **Breaking: the scale of a `Time` is a required argument** (lot L2, R24 of
@@ -7651,6 +7731,70 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   2026-11-19): `orientation`, the window searches, `frame-converter` and `orbital-parameters-converter` write UTC labels for
   a `Z` input where they wrote TDB (`ephemeris` already wrote the scale of its window), a converted label the nearest tick of
   the instant, which can sit one tick off it. Migration: `--time-scale tdb`.
+- **Breaking: the kernel writers of `Clock`, `SpacecraftFrame`, `Instrument`, `Site` and `SiteFrame` are synchronous**
+  (lot L5c, R14 and decision 78 of #668, decided by S. Guillet, 2026-11-23): `void Clock.Write(FileInfo)`,
+  `SpacecraftFrame.Write(FileInfo)`, `Instrument.WriteFrame(FileInfo)`, `Instrument.WriteKernel(FileInfo)` (abstract,
+  overridden by the three shapes), `Site.WriteFrame(FileInfo)` and `SiteFrame.Write(FileInfo)` replace the six `Write*Async`
+  methods, which returned a `Task` over a few kilobytes of text; the files are the same bytes. Migration:
+  `await clock.WriteAsync(f)` → `clock.Write(f)`; `await frame.WriteAsync(f)` → `frame.Write(f)`;
+  `await instrument.WriteFrameAsync(f)` → `instrument.WriteFrame(f)`; `await instrument.WriteKernelAsync(f)` →
+  `instrument.WriteKernel(f)`; `await site.WriteFrameAsync(f)` → `site.WriteFrame(f)`; `await siteFrame.WriteAsync(f)` →
+  `siteFrame.Write(f)`; or, for the kernels of a spacecraft, `spacecraft.WriteKernels(directory)`.
+- **Breaking: the constructor `SpacecraftFrame(Spacecraft)` is internal**
+  ([#799](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/799)(d), lot L5c, decision 78 of
+  #668, decided by S. Guillet, 2026-11-23): a frame built apart from its spacecraft held an empty attitude record, which
+  no propagation fills, and its CK writer threw. Migration: `spacecraft.Frame`, the frame the spacecraft builds.
+- **Breaking: `SpacecraftFrame.WriteOrientation(FileInfo, Spacecraft)` is internal**
+  ([#799](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/799)(d), lot L5c, decision 78 of
+  #668, decided by S. Guillet, 2026-11-23): it wrote the attitude record of the frame's spacecraft under the id of the
+  spacecraft it was given (measured: the record of one spacecraft written under the id of another, never propagated).
+  Migration: `spacecraft.WriteOrientation(file)` or `spacecraft.WriteKernels(directory)`.
+- **Breaking: `Spacecraft.WriteEphemeris` of a spacecraft that stores no state throws `InvalidOperationException`**
+  ([#799](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/799)(e), lot L5c, decision 81 of
+  #668, decided by S. Guillet, 2026-11-23): it threw the `ArgumentException` (`arcs`) of the SPK writer, which blamed the
+  file for what the spacecraft lacked; nothing is written. An arc of one state keeps its `ArgumentException` (decisions
+  87 and 89). Migration: catch `InvalidOperationException`, or test the stored states first (propagate the spacecraft,
+  or give it states with `AddPropagatedStates`).
+- **Breaking: `Star.WriteEphemeris` of a star that stores fewer than three states throws `InvalidOperationException`**
+  ([#799](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/799)(e), lot L5c, decision 81 of
+  #668, decided by S. Guillet, 2026-11-23): it threw the `ArgumentException` (`stateVectors`) of
+  `SpiceAPI.WriteEphemeris`, whose native writer writes three states or more; nothing is written. `SpiceAPI.WriteEphemeris`
+  and `Site.WriteEphemeris`, whose arguments are at fault, keep theirs. Migration: catch `InvalidOperationException`, or
+  propagate the star over three steps or more.
+- **Breaking: `CosmographiaExporter.ExportAsync` refuses to replace a previous export SPICE holds**
+  ([#799](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/799)(c), lot L5c, decision 103 of
+  #668, decided by S. Guillet, 2026-11-25): `<Mission>_<Scenario>` loaded with `LoadKernels`, a loaded directory above it
+  or inside it, or a file of it that SPICE holds, a meta-kernel's included (decision 102), throws
+  `InvalidOperationException` naming it, before anything is deleted or written. Before, the export deleted it under
+  SPICE's load: its text kernels stayed in the kernel pool with the old content, and a later unload that read them again
+  failed. The export never changes the kernels SPICE holds; a first export, with no `<Mission>_<Scenario>` to replace, is
+  written under a loaded directory as before. Migration: `UnloadKernels` the previous export (or the
+  meta-kernel that names its files) before the export, and load the new one after it.
+- **Breaking: the text kernel writers unload the file they replace** ([#799](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/799)(c),
+  lot L5c, decision 103 of #668, decided by S. Guillet, 2026-11-25): `Clock.Write`, `SpacecraftFrame.Write`,
+  `Instrument.WriteFrame`, `Instrument.WriteKernel`, `Site.WriteFrame` and `SiteFrame.Write`, as the SPK and CK writers
+  since [#706](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/706), first unload a file
+  `LoadKernels` loaded as `UnloadKernels` does, then every other load SPICE holds of it (a meta-kernel's, a name whose
+  symbolic links resolve through it), write it and leave it unloaded. Before, the file was rewritten under SPICE's load,
+  which a later `LoadKernels` skipped as a file already loaded: SPICE read the old content (measured: a frame kernel
+  rewritten for another spacecraft still named the first, `TextKernelReplaceTests`). The files are the same bytes; a
+  failed unload throws `SpiceException` and leaves the file as it was. Migration: load the file again after the write.
+- **Breaking: `CosmographiaExporter.ExportAsync` refuses a name that is not a portable file name**
+  ([#799](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/799)(a), lot L5c, decisions 74 and
+  105 of #668, decided by S. Guillet, 2026-11-23 and 2026-11-25): a spacecraft, instrument, site or star name, or the
+  export directory `<Mission>_<Scenario>` the mission and scenario names form, that is empty, holds one of
+  `/ \ : * ? " < > |` or a control character, is `.` or `..`, ends with a dot or a space, or is a device name Windows
+  reserves (CON, PRN, AUX, NUL, COM1 to COM9, LPT1 to LPT9, in any case, alone or before a dot) throws
+  `InvalidOperationException` naming the object and the reason, before anything is deleted or written (internal
+  `Kernels/PortableFileNames`, beside `TextKernelNames`). Before, a name holding a `/` or a `\` was written into nested
+  directories on Linux and macOS, a scenario named `/..` deleted the output directory (#822, under **Fixed**), and a
+  reserved name or a trailing dot wrote files Windows cannot open. The constructors do not check it. Migration: rename the
+  object (no name of the repository's tests and examples changes).
+- **Breaking: `astro propagate` refuses a spacecraft name that is not a portable file name**
+  ([#799](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/799)(a), lot L5c, decision 74 of
+  #668, decided by S. Guillet, 2026-11-23): the rule of the export, checked before the propagation, exit code 2
+  (`Error: name: …`), where the name propagated and was written into nested directories or failed after the propagation.
+  Migration: another name.
 
 **Removed**
 
@@ -7899,16 +8043,45 @@ not listed.
   [#655](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/655),
   [#661](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/661),
   [#706](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/706)). `Spacecraft.WriteOrientation`,
-  `SpiceAPI.WriteOrientation` and `SpiceAPI.WriteEphemeris` (under `Star.WriteEphemeris` and `Site.WriteEphemeris`)
-  leave the kernel they write unloaded: load it after writing. A file they replace is unloaded first under its path and
+  `SpiceAPI.WriteOrientation` and `SpiceAPI.WriteEphemeris` (under `Star.WriteEphemeris` and `Site.WriteEphemeris`),
+  and the text kernel writers since decision 103 of #668, leave the kernel they write unloaded: load it after writing. A file they replace is unloaded first under its path and
   the absolute names whose symbolic links resolve through it (#706), but not under a relative name other than its path
   (a meta-kernel's) nor through a hard link, through which SPICE goes on reading the replaced data: unload such a load
-  before rewriting the file. A spacecraft propagated by `TLEPropagator` has no attitude record, so its CK cannot be written and its
-  field-of-view searches throw ([#682](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/682)); give it its attitude with `AddStateOrientationToICRF`.
+  before rewriting the file. `Spacecraft.WriteKernels` loads what it writes, each file by its own path, and refuses a
+  directory inside a loaded one and a file SPICE holds, a meta-kernel's included; a load of the directory made while
+  its handle lives furnishes nothing for the handle's files and does not take them over, `Dispose` unloading them all
+  (load them again after it to keep them), and `IsLoaded` does not follow a user's `UnloadKernels` of them. A
+  spacecraft propagated by `TLEPropagator` has no attitude record, so its CK cannot be written (`WriteKernels` refuses
+  it too) and its field-of-view searches throw
+  ([#682](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/682)); give it its attitude with
+  `AddStateOrientationToICRF`, after the run.
   An instrument named `Frame` (any case) on a spacecraft `Sat` writes `FRAME_SAT_FRAME`, the variable of the spacecraft's
   own frame, in its frame kernel, so the kernel loaded last defines `SAT_FRAME`
   ([#812](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/812); `Add*Instrument` checks the names of the instruments among themselves only, decision 74 of #668):
-  give no instrument that name.
+  give no instrument that name; `WriteKernels` loads the instrument frame kernels after the spacecraft's, so the
+  instrument's wins there.
+  `Spacecraft.WriteEphemeris` refuses an arc of one state with `ArgumentException` (decisions 87 and 89 of #668), which
+  `WriteKernels` refuses with `InvalidOperationException` before it writes anything. `WriteKernels` finds a file SPICE
+  holds through a meta-kernel under its full path or an absolute name whose symbolic links resolve through it, not under
+  a relative name other than its path, as the writers find it; it writes into a new subdirectory of its directory first,
+  which a process killed meanwhile leaves, and a later load of the directory loads its files: delete it. Names composed
+  across spacecraft ([#825](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/825)): a spacecraft
+  `A` with an instrument `B` and a spacecraft `A_B` write the same file `A_B.tf`, and both define the body `A_B`, so
+  `WriteKernels` refuses the second while the first handle lives and overwrites the first's instrument frame kernel after
+  it; write one spacecraft per directory. `CosmographiaExporter.ExportAsync` writes two spacecraft, sites or stars of one
+  name onto the same files, the last one winning
+  ([#823](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/823)): give each object its own
+  name; and it throws `InvalidOperationException` at the trajectory plot of a spacecraft whose initial orbit is open,
+  which has no period ([#824](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/824)), the
+  previous export left as it was since #799.
+- **A window that leaves a spacecraft's stored states** (lots L6 and L7 of
+  [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668)). Decision 81 of #668 gives a
+  window argument that leaves a body's stored states `InvalidOperationException`, as `GetEphemeris` over a window and the
+  managed distance search throw ([Spacecraft](../reference/spacecraft.md#the-exceptions-of-the-reads-and-the-writes)),
+  but the field-of-view search (`Instrument.FindWindowsInFieldOfViewConstraint`) and the `ILocalizable` overloads of
+  `ConjunctionAssessment.Analyze` and `AnalyzeAll` still throw `ArgumentException` for such a window, for one that meets
+  a gap between the windows given to `AddPropagatedStates` (decision 86) and, for the conjunction, for a trajectory that
+  does not cover the window: lots L6 and L7 change them. Catch `ArgumentException` there until then.
 - **Kernel paths of more than 255 characters** ([#673](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/673)). `LoadKernels` and the command line hand SPICE the full path of
   each kernel, so a kernel whose full path is longer than 255 characters cannot be loaded through them
   (`SPICE(FILENAMETOOLONG)`, SPICE's message in the `InvalidOperationException` since #706, nothing on the standard

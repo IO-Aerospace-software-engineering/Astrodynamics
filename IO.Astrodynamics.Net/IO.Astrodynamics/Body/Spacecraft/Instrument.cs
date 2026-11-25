@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
-using System.Threading.Tasks;
 using IO.Astrodynamics.Frames;
 using IO.Astrodynamics.Math;
 using IO.Astrodynamics.SolarSystemObjects;
@@ -356,31 +355,37 @@ namespace IO.Astrodynamics.Body.Spacecraft
 
         /// <summary>
         /// Writes the frame kernel of the instrument, a TK frame relative to the spacecraft frame, whose kernel variable
-        /// <c>FRAME_&lt;SPACECRAFT&gt;_&lt;INSTRUMENT&gt;</c> holds the upper-cased names.
+        /// <c>FRAME_&lt;SPACECRAFT&gt;_&lt;INSTRUMENT&gt;</c> holds the upper-cased names. The names are upper-cased and the ids
+        /// written in the invariant culture, whatever the culture of the thread (#798, #821, decisions 101 and 104 of #668,
+        /// decided by S. Guillet, 2026-11-25: before, a culture whose minus sign is not '-', such as sv-SE, fi-FI or he-IL,
+        /// wrote a kernel SPICE could not load, and tr-TR or az wrote "İ" for an "i"). Synchronous since 11.0.0,
+        /// <c>WriteFrameAsync</c> before (decision 78 of #668, decided by S. Guillet, 2026-11-23).
+        /// A file it replaces is unloaded first, under every name SPICE holds it by (a meta-kernel's included), and the new file is left unloaded, as the SPK and CK writers do (#799(c), decision 103 of #668, decided by S. Guillet, 2026-11-25).
         /// </summary>
         /// <param name="outputFile">The frame kernel to write.</param>
         /// <exception cref="InvalidOperationException">The names make a kernel variable name SPICE cannot read: a blank, a
         /// tab or another whitespace or control character, a quote, a parenthesis, a comma or '=', or more than 32 bytes in
         /// UTF-8, so 25 ASCII characters at most for the two names (Kernel Required Reading, "Variable Name Rules", #676);
         /// nothing is written.</exception>
-        public async Task WriteFrameAsync(FileInfo outputFile)
+        /// <exception cref="Exceptions.SpiceException">The file it replaces is loaded and its unload fails (SPICE's error): the
+        /// file is kept as it was and nothing is written (#799(c), decision 103 of #668).</exception>
+        public void WriteFrame(FileInfo outputFile)
         {
             CheckFrameKernelName("frame kernel");
-            await using var stream = this.GetType().Assembly.GetManifestResourceStream("IO.Astrodynamics.Templates.InstrumentFrameTemplate.tf");
+            using var stream = this.GetType().Assembly.GetManifestResourceStream("IO.Astrodynamics.Templates.InstrumentFrameTemplate.tf");
             using StreamReader sr = new StreamReader(stream ?? throw new InvalidOperationException());
-            var templateData = await sr.ReadToEndAsync();
+            var templateData = sr.ReadToEnd();
             var data = templateData
-                .Replace("{spacecraftname}", Spacecraft.Name.ToUpper())
-                .Replace("{instrumentname}", Name.ToUpper())
-                .Replace("{instrumentid}", NaifId.ToString())
-                .Replace("{framename}", Spacecraft.Name.ToUpper() + "_" + Name.ToUpper())
-                .Replace("{spacecraftid}", Spacecraft.NaifId.ToString())
-                .Replace("{spacecraftframe}", Spacecraft.Frame.Name.ToUpper())
+                .Replace("{spacecraftname}", Spacecraft.Name.ToUpperInvariant())
+                .Replace("{instrumentname}", Name.ToUpperInvariant())
+                .Replace("{instrumentid}", NaifId.ToString(CultureInfo.InvariantCulture))
+                .Replace("{framename}", Spacecraft.Name.ToUpperInvariant() + "_" + Name.ToUpperInvariant())
+                .Replace("{spacecraftid}", Spacecraft.NaifId.ToString(CultureInfo.InvariantCulture))
+                .Replace("{spacecraftframe}", Spacecraft.Frame.Name.ToUpperInvariant())
                 .Replace("{x}", Orientation.X.ToString(CultureInfo.InvariantCulture))
                 .Replace("{y}", Orientation.Y.ToString(CultureInfo.InvariantCulture))
                 .Replace("{z}", Orientation.Z.ToString(CultureInfo.InvariantCulture));
-            await using var sw = new StreamWriter(outputFile.FullName);
-            await sw.WriteAsync(data);
+            SpiceAPI.Instance.WriteTextKernel(outputFile, data);
         }
 
         /// <summary>
@@ -405,13 +410,27 @@ namespace IO.Astrodynamics.Body.Spacecraft
 
         /// <summary>
         /// Writes the instrument kernel, whose <c>INS&lt;id&gt;_FOV_FRAME</c> names the frame of the instrument frame kernel,
-        /// <c>&lt;SPACECRAFT&gt;_&lt;INSTRUMENT&gt;</c> upper-cased.
+        /// <c>&lt;SPACECRAFT&gt;_&lt;INSTRUMENT&gt;</c> upper-cased. The names are upper-cased and the ids written in the
+        /// invariant culture, whatever the culture of the thread (#798, #821, decisions 101 and 104 of #668, decided by
+        /// S. Guillet, 2026-11-25: before, a culture whose minus sign is not '-', such as sv-SE, fi-FI or he-IL, wrote
+        /// <c>INS−…</c>, which SPICE does not read as the instrument's, and tr-TR or az wrote "İ" for an "i").
+        /// Synchronous since 11.0.0, <c>WriteKernelAsync</c> before (decision 78 of #668, decided by S. Guillet, 2026-11-23).
+        /// A file it replaces is unloaded first, under every name SPICE holds it by (a meta-kernel's included), and the new file is left unloaded, as the SPK and CK writers do (#799(c), decision 103 of #668, decided by S. Guillet, 2026-11-25).
         /// </summary>
         /// <param name="outputFile">The instrument kernel to write.</param>
         /// <exception cref="InvalidOperationException">The names make a frame the instrument frame kernel cannot define, by
-        /// the rule of <see cref="WriteFrameAsync"/> (#676): a quote would end the string value, which SPICE then rejects
+        /// the rule of <see cref="WriteFrame"/> (#676): a quote would end the string value, which SPICE then rejects
         /// (SPICE(TYPEMISMATCH) at <c>furnsh_c</c>); nothing is written.</exception>
-        public abstract Task WriteKernelAsync(FileInfo outputFile);
+        /// <exception cref="Exceptions.SpiceException">The file it replaces is loaded and its unload fails (SPICE's error): the
+        /// file is kept as it was and nothing is written (#799(c), decision 103 of #668).</exception>
+        public abstract void WriteKernel(FileInfo outputFile);
+
+        /// <summary>
+        /// Checks the kernel variable of the frame and instrument kernels before a writer of a set of kernels opens any file
+        /// (<see cref="Spacecraft.WriteKernels"/>): the check of <see cref="WriteFrame"/> and <see cref="WriteKernel"/>.
+        /// </summary>
+        /// <exception cref="InvalidOperationException">SPICE cannot read the variable.</exception>
+        internal void CheckKernelNames() => CheckFrameKernelName("frame kernel");
 
         /// <summary>
         /// Checks the kernel variable <c>FRAME_&lt;SPACECRAFT&gt;_&lt;INSTRUMENT&gt;</c> of the instrument frame kernel, whose
@@ -421,7 +440,7 @@ namespace IO.Astrodynamics.Body.Spacecraft
         /// <exception cref="InvalidOperationException">SPICE cannot read the variable.</exception>
         private protected void CheckFrameKernelName(string kernel)
         {
-            Kernels.TextKernelNames.Check("FRAME_" + Spacecraft.Name.ToUpper() + "_" + Name.ToUpper(),
+            Kernels.TextKernelNames.Check("FRAME_" + Spacecraft.Name.ToUpperInvariant() + "_" + Name.ToUpperInvariant(),
                 $"the instrument '{Name}' of the spacecraft '{Spacecraft.Name}'", kernel);
         }
 

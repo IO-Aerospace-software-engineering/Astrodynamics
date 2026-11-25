@@ -194,6 +194,26 @@ void IO::Astrodynamics::Kernels::KernelsLoader::UnloadEveryLoad(const std::strin
     }
 }
 
+bool IO::Astrodynamics::Kernels::KernelsLoader::Holds(const std::string &path)
+{
+    SpiceInt total{};
+    ktotal_c("ALL", &total);
+    for (SpiceInt i = 0; i < total && !failed_c(); ++i)
+    {
+        SpiceChar file[FileLength]{};
+        SpiceChar type[TypeLength]{};
+        SpiceChar source[FileLength]{};
+        SpiceInt handle{};
+        SpiceBoolean held{};
+        kdata_c(i, "ALL", FileLength, TypeLength, FileLength, file, type, source, &handle, &held);
+        if (held && !failed_c() && ResolvesThrough(file, path))
+        {
+            return true;
+        }
+    }
+    return false;
+}
+
 bool IO::Astrodynamics::Kernels::KernelsLoader::ResolvesThrough(const std::string &name, const std::string &path)
 {
     if (name == path)

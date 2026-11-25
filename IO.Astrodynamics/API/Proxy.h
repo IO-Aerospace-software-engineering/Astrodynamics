@@ -163,6 +163,17 @@ MODULE_API bool UnloadEveryLoadProxy(const char *path);
 MODULE_API bool KernelNameResolvesThroughProxy(const char *name, const char *path);
 
 /**
+ * Whether SPICE holds a file (KernelsLoader::Holds): a name KEEPER holds, of any kind, a meta-kernel and the files it names
+ * included, that resolves through it (KernelsLoader::ResolvesThrough), read only: nothing is unloaded, the deleted binary
+ * kernels included. The .NET layer refuses to write a kernel over a file SPICE holds, which its registry cannot tell for
+ * the files of a meta-kernel (decision 102 of #668, decided by S. Guillet, 2026-11-25)
+ * @param path Full path of the file
+ * @param held Receives whether SPICE holds the file
+ * @return true if successful, false otherwise, with SPICE's message in GetLastErrorProxy
+ */
+MODULE_API bool KernelHeldProxy(const char *path, bool *held);
+
+/**
  * Get the name SPICE gives to a frame id (frmnam_c), from its built-in frames and the loaded frame kernels
  * @param frameId Frame id
  * @param name Buffer of 33 characters that receives the name, empty when SPICE knows no frame of that id

@@ -78,7 +78,7 @@ namespace IO.Astrodynamics.Tests.Body
         [Theory]
         [InlineData(ShapeType.Point)]
         [InlineData(ShapeType.Ellipsoid)]
-        public async Task FindWindowInFieldOfView(ShapeType shape)
+        public void FindWindowInFieldOfView(ShapeType shape)
         {
             TimeSystem.Time start = TimeSystem.Time.CreateUTC(676555130.80).ToTDB();
             TimeSystem.Time end = start.AddSeconds(6448.0);
@@ -168,10 +168,10 @@ namespace IO.Astrodynamics.Tests.Body
             }
 
             // The clock and the frames first: the orientation is written in ticks of the clock
-            spacecraft.Clock.WriteAsync(files[0]).GetAwaiter().GetResult();
-            ((SpacecraftFrame)spacecraft.Frame).WriteAsync(files[1]).GetAwaiter().GetResult();
-            instrument.WriteFrameAsync(files[2]).GetAwaiter().GetResult();
-            instrument.WriteKernelAsync(files[3]).GetAwaiter().GetResult();
+            spacecraft.Clock.Write(files[0]);
+            spacecraft.Frame.Write(files[1]);
+            instrument.WriteFrame(files[2]);
+            instrument.WriteKernel(files[3]);
             foreach (var file in files.Take(4))
             {
                 SpiceAPI.Instance.LoadKernels(file);
@@ -343,7 +343,7 @@ namespace IO.Astrodynamics.Tests.Body
             Spacecraft spc = new Spacecraft(-1001, "MySpacecraft", 1000.0, new StateVector(new Vector3(1.0, 2.0, 3.0), new Vector3(1.0, 2.0, 3.0),
                 TestHelpers.EarthAtJ2000, new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB), Frames.Frame.ICRF), 10000.0, new Clock("clk1", 256));
             spc.AddCircularInstrument("CAM600", 1.5, Vector3.VectorZ, Vector3.VectorY, new Vector3(0.0, -System.Math.PI * 0.5, 0.0), naifId: -1001600, model: "mod1");
-            await spc.Instruments.First().WriteFrameAsync(new FileInfo("instrumentFrame.tf"));
+            spc.Instruments.First().WriteFrame(new FileInfo("instrumentFrame.tf"));
             TextReader tr = new StreamReader("instrumentFrame.tf");
             var res = await tr.ReadToEndAsync();
             Assert.Equal(
@@ -357,7 +357,7 @@ namespace IO.Astrodynamics.Tests.Body
             Spacecraft spc = new Spacecraft(-1001, "MySpacecraft", 1000.0, new StateVector(new Vector3(1.0, 2.0, 3.0), new Vector3(1.0, 2.0, 3.0),
                 TestHelpers.EarthAtJ2000, new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB), Frames.Frame.ICRF), 10000.0, new Clock("clk1", 256));
             spc.AddCircularInstrument("CAM600", 1.5, Vector3.VectorZ, Vector3.VectorY, new Vector3(0.0, -System.Math.PI * 0.5, 0.0), naifId: -1001600, model: "mod1");
-            await spc.Instruments.First().WriteKernelAsync(new FileInfo("instrumentKernel.ti"));
+            spc.Instruments.First().WriteKernel(new FileInfo("instrumentKernel.ti"));
             TextReader tr = new StreamReader("instrumentKernel.ti");
             var res = await tr.ReadToEndAsync();
             Assert.Equal(
@@ -379,7 +379,7 @@ namespace IO.Astrodynamics.Tests.Body
         /// and the reference vector in the spacecraft frame with it.
         /// </summary>
         [Fact]
-        public async Task RotationToSpacecraft_IsTheFrameKernel()
+        public void RotationToSpacecraft_IsTheFrameKernel()
         {
             Vector3[] orientations =
             [
@@ -398,11 +398,11 @@ namespace IO.Astrodynamics.Tests.Body
             string directory = "Data/User/AttitudeRecord537/EUL8601";
             Directory.CreateDirectory(directory);
             var files = new System.Collections.Generic.List<FileInfo> { new(Path.Combine(directory, "eul8601.tf")) };
-            await ((SpacecraftFrame)spacecraft.Frame).WriteAsync(files[0]);
+            spacecraft.Frame.Write(files[0]);
             foreach (var instrument in spacecraft.Instruments)
             {
                 var file = new FileInfo(Path.Combine(directory, $"eul8601_{instrument.Name.ToLowerInvariant()}.tf"));
-                await instrument.WriteFrameAsync(file);
+                instrument.WriteFrame(file);
                 files.Add(file);
             }
 
@@ -480,7 +480,7 @@ namespace IO.Astrodynamics.Tests.Body
         [Theory]
         [InlineData("HOST", "WIDE CAM")]
         [InlineData("ABCDEFGHIJKLM", "NOPQRSTUVWXYZ")]
-        public async Task WriteFrame_NameSpiceCannotRead_Throws(string spacecraftName, string instrumentName)
+        public void WriteFrame_NameSpiceCannotRead_Throws(string spacecraftName, string instrumentName)
         {
             // Arrange
             var spc = Host(-1321, spacecraftName);
@@ -488,7 +488,7 @@ namespace IO.Astrodynamics.Tests.Body
             var fk = FrameKernelFiles.NewFile("instrument_refused");
 
             // Act
-            var exception = await Record.ExceptionAsync(() => spc.Instruments.Single().WriteFrameAsync(fk));
+            var exception = Record.Exception(() => spc.Instruments.Single().WriteFrame(fk));
 
             // Assert
             var rejected = Assert.IsType<InvalidOperationException>(exception);
@@ -511,7 +511,7 @@ namespace IO.Astrodynamics.Tests.Body
         [InlineData("Circular", "ABCDEFGHIJKLM", "NOPQRSTUVWXYZ")]
         [InlineData("Rectangular", "HOST", "CAM'1")]
         [InlineData("Elliptical", "HOST", "CAM=1")]
-        public async Task WriteKernel_NameSpiceCannotRead_Throws(string shape, string spacecraftName, string instrumentName)
+        public void WriteKernel_NameSpiceCannotRead_Throws(string shape, string spacecraftName, string instrumentName)
         {
             // Arrange
             var spc = Host(-1323, spacecraftName);
@@ -519,7 +519,7 @@ namespace IO.Astrodynamics.Tests.Body
             var ik = FrameKernelFiles.NewFile("ik_refused", ".ti");
 
             // Act
-            var exception = await Record.ExceptionAsync(() => spc.Instruments.Single().WriteKernelAsync(ik));
+            var exception = Record.Exception(() => spc.Instruments.Single().WriteKernel(ik));
 
             // Assert
             var rejected = Assert.IsType<InvalidOperationException>(exception);
@@ -544,7 +544,7 @@ namespace IO.Astrodynamics.Tests.Body
             var ik = FrameKernelFiles.NewFile("ik_boundary", ".ti");
 
             // Act
-            await spc.Instruments.Single().WriteKernelAsync(ik);
+            spc.Instruments.Single().WriteKernel(ik);
 
             // Assert
             Assert.Contains("INS-1324001_FOV_FRAME            = 'ABCDEFGHIJKL_NOPQRSTUVWXYZ'", await System.IO.File.ReadAllTextAsync(ik.FullName));
@@ -572,7 +572,7 @@ namespace IO.Astrodynamics.Tests.Body
         /// it is relative to (#676).
         /// </summary>
         [Fact]
-        public async Task WriteFrame_BoundaryNames_LoadInSpice()
+        public void WriteFrame_BoundaryNames_LoadInSpice()
         {
             // Arrange
             var spc = Host(-1322, "ABCDEFGHIJKL");
@@ -582,8 +582,8 @@ namespace IO.Astrodynamics.Tests.Body
             Assert.Equal(32, System.Text.Encoding.UTF8.GetByteCount("FRAME_ABCDEFGHIJKL_NOPQRSTUVWXYZ"));
 
             // Act
-            await spc.Frame.WriteAsync(spacecraftFk);
-            await spc.Instruments.Single().WriteFrameAsync(fk);
+            spc.Frame.Write(spacecraftFk);
+            spc.Instruments.Single().WriteFrame(fk);
 
             // Assert: both load without error
             FrameKernelFiles.Load(spacecraftFk, () => FrameKernelFiles.Load(fk));
@@ -1287,7 +1287,7 @@ namespace IO.Astrodynamics.Tests.Body
             foreach (var instrument in spc.Instruments)
             {
                 var ik = FrameKernelFiles.NewFile($"ik707_{-instrument.NaifId}", ".ti");
-                await instrument.WriteKernelAsync(ik);
+                instrument.WriteKernel(ik);
                 files.Add(ik);
             }
 

@@ -152,9 +152,10 @@ Instance-level overrides can be set via constructor parameters (`bodyFront`, `bo
 | `Propagate(Window, IEnumerable, Integrator, bool, bool, TimeSpan, CovariancePropagationOptions)` | Propagate the orbit with the integrator, and the state transition matrix and the covariance of the initial orbital parameters ([Covariance Propagation](covariance-propagation.md)); null options for none |
 | `GetEphemeris(Time, ILocalizable, Frame, Aberration)` | Get state relative to observer |
 | `GetOrientation(Frame, Time)` | The rotation from the frame to the spacecraft frame (the C-matrix of a CK), with the angular velocity of the spacecraft relative to the frame, in the frame ([Attitude and kernels](#attitude-and-kernels)) |
-| `WriteEphemeris(FileInfo)` | Write the stored states to an SPK file, in J2000, one type-9 segment per arc, between impulses and between the windows given to `AddPropagatedStates` ([The stored states across an impulse](#the-stored-states-across-an-impulse)), an arc of one state refused (`ArgumentException`); positions and velocities only, never the covariance |
+| `WriteEphemeris(FileInfo)` | Write the stored states to an SPK file, in J2000, one type-9 segment per arc, between impulses and between the windows given to `AddPropagatedStates` ([The stored states across an impulse](#the-stored-states-across-an-impulse)), an arc of one state refused (`ArgumentException`), a spacecraft that stores no state `InvalidOperationException` (decision 81 of #668; `ArgumentException` before 11.0.0); positions and velocities only, never the covariance |
 | `AddPropagatedStates(params StateVector[])` | Add the states of one window to the stored states, in ICRF: one window per call, a new arc when it meets no stored arc, a read in the gap between two windows throwing ([The stored states across an impulse](#the-stored-states-across-an-impulse)); a propagation replaces them |
 | `WriteOrientation(FileInfo)` | Write the attitude of the last propagation as a type-3 CK, in J2000 ([Attitude and kernels](#attitude-and-kernels)) |
+| `WriteKernels(DirectoryInfo)` | Write the clock, frame, instrument, SPK and CK kernels into one directory and load them, each byte for byte what its writer writes; `Dispose` the returned `SpacecraftKernels` to unload exactly what the call loaded ([The kernels](#the-kernels); R14 and decisions 79 to 81 of #668) |
 | `ToOpm(...)` | Export to CCSDS OPM |
 
 Each propagation, by every path (`Propagate`, `Scenario.Simulate`, `BatchPropagator` and a `CentralBodyPropagator`
@@ -187,6 +188,23 @@ The exception types of these rules follow one rule (decided by S. Guillet, 2026-
 Guidelines: `ArgumentException` for a bad argument, `InvalidOperationException` for the state of an object):
 `ArgumentException` where the call receives the faulty object (`AddFuelTank`, `AddEngine`, the clock of a
 constructor), `InvalidOperationException` for the chain checked at a propagation, a state of the spacecraft.
+
+### The exceptions of the reads and the writes
+
+The reads and the writes of a body follow the same rule, the type naming the object whose state is at fault (decision 81
+of [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668), decided by S. Guillet,
+2026-11-23, with choice 8 of its re-baseline for the first two rows):
+
+| Case | Exception | Where |
+|------|-----------|-------|
+| A body read at an epoch where it has no data | `InvalidOperationException` | `GetEphemeris` and `GetGeometricStateRelativeTo` of a propagated spacecraft before its first stored state or after its last, its light-time margin aside ([#527](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/527)), or in a gap between the windows given to `AddPropagatedStates`; a body read outside the coverage of the kernels (`SpiceException`, an `InvalidOperationException`) |
+| A solution read outside its window | `ArgumentOutOfRangeException` | `PropagationSolution.GetStateVector` and the getters of the covariance propagation outside `PropagationSolution.Window` ([Propagators](propagators.md)) |
+| A write with nothing to write | `InvalidOperationException` | `WriteEphemeris` of a spacecraft that stores no state, `WriteOrientation` of an empty attitude record (a `TLEPropagator` run records none, [#546](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/546)), `WriteKernels` of either, `Star.WriteEphemeris` of a star that stores fewer than three states; nothing is written. An arc of one state keeps its `ArgumentException` in `WriteEphemeris` (decisions 87 and 89 of #668), which `WriteKernels` refuses with `InvalidOperationException`; `SpiceAPI.WriteEphemeris` and `Site.WriteEphemeris`, whose arguments are at fault, keep theirs |
+| A window argument that leaves a body's stored states | `InvalidOperationException` | `GetEphemeris` over a window and the managed distance search of `CelestialItem` past a propagated spacecraft's states. Until lots L6 and L7 of #668 the field-of-view search (`Instrument.FindWindowsInFieldOfViewConstraint`) and the `ILocalizable` overloads of `ConjunctionAssessment.Analyze` and `AnalyzeAll` still throw `ArgumentException` for a window that leaves the stored states or meets a gap between them (decision 86), and so does a conjunction trajectory that does not cover the window |
+
+Before 11.0.0 a write with nothing to write threw the `ArgumentException` of the SPK writer (`arcs`) or of
+`SpiceAPI.WriteEphemeris` (`stateVectors`), which blamed the file for what the spacecraft or the star lacked
+([#799](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/799)).
 
 ## Attitude and kernels
 
@@ -360,6 +378,47 @@ A kernel-backed spacecraft reads its frame kernel and its CK through SPICE at ev
 
 ### The kernels
 
+- **`WriteKernels(directory)`** writes the kernels of the spacecraft in one call and loads them (R14 and decisions 79 to
+  81 of #668, decided by S. Guillet, 2026-11-23): `<name>.tsc` (the clock), `<name>.tf` (the frame),
+  `<name>_<instrument>.tf` and `<name>_<instrument>.ti` for each instrument, `<name>.bsp` (`WriteEphemeris`) and
+  `<name>.bc` (`WriteOrientation`), each byte for byte what its writer writes, the names as the spacecraft and the
+  instruments hold them. It returns a `SpacecraftKernels` handle, whose `Clock`, `Frame`, `Ephemeris`, `Orientation` and
+  `Instruments` (`InstrumentKernelFiles`) give the files and whose `Dispose` unloads exactly what the call loaded, once,
+  leaving the files on disk; `IsLoaded` is true until then (a user's `UnloadKernels` of the files is not tracked). It
+  checks everything before it writes, creates or loads anything, with `InvalidOperationException`: a kernel-backed
+  spacecraft; no stored state, no arc an SPK can write (an arc of one state), or no attitude record (a `TLEPropagator`
+  run records none: give the spacecraft attitudes with `SpacecraftFrame.AddStateOrientationToICRF` after the run, and it
+  is written); a name SPICE cannot read in a kernel variable or that is not a portable file name; a directory that is,
+  or lies inside, a loaded directory (whose later load or unload would take the files), or a file it would write that
+  SPICE holds, from `LoadKernels`, a live handle or a loaded meta-kernel, through a symbolic link too (decisions 80 and
+  102): unload it, or dispose the handle, first. A path longer than SPICE takes throws `ArgumentException` naming
+  `directory`. The files are written into a new subdirectory first, the clock kernel loaded only while the CK is
+  written, then moved into the directory, replacing files of the same names, and loaded, the clock and the frames
+  first; a failure before the move leaves the directory as it was, one during the move can leave a mix of old and new
+  files, and a failed load unloads what the call loaded. A load of the directory, or of a directory above it, made while
+  the handle lives furnishes nothing for the handle's files and does not take them over: `Dispose` unloads them all,
+  and that entry of `GetLoadedKernels` is replaced by its other files; load them again after `Dispose` to keep them.
+  Two spacecraft can be written into one directory, the first handle alive; one spacecraft per directory is the
+  advice, since a spacecraft `A_B` and the instrument `B` of a spacecraft `A` write the same file. The call is not made
+  during a run on the spacecraft (one run at a time per spacecraft, decision 43).
+
+  For a spacecraft `Sat` with an instrument `Cam`, propagated:
+
+  ```csharp
+  // Inputs: sat (Spacecraft, propagated, with an instrument Cam)
+  // Writes out/Sat.tsc, Sat.tf, Sat_Cam.tf, Sat_Cam.ti, Sat.bsp and Sat.bc, and loads them
+  using (var kernels = sat.WriteKernels(new DirectoryInfo("out")))
+  {
+      Console.WriteLine(kernels.Ephemeris.FullName);
+      foreach (var instrument in kernels.Instruments)
+      {
+          Console.WriteLine($"{instrument.Instrument.Name}: {instrument.Frame.Name}, {instrument.Kernel.Name}");
+      }
+
+      // SPICE reads the spacecraft here: a kernel-backed twin, a CSPICE search, another tool through the files
+  }
+  // Disposed: the files the call loaded are unloaded, and stay on disk
+  ```
 - **`WriteEphemeris`** writes the stored states, in J2000: one segment of type 9 (Lagrange, unequal steps) per arc, in
   time order, of degree min(7, N − 1) for an arc of N states, the managed reader's window of 8 states; at an impulse the
   later segment, the state after it, is the one SPICE reads, and 1 µs before it the earlier one, the state before. The
@@ -378,17 +437,22 @@ A kernel-backed spacecraft reads its frame kernel and its CK through SPICE at ev
   law's sample there, when the propagation took one). The CK then gives the library's attitude everywhere but over that
   microsecond, where it turns to the new attitude (up to 0.79 rad in the tests); a field-of-view edge moves by at most
   that microsecond and the rounding of its encoded SCLK. The spacecraft clock kernel must be loaded.
-  `InvalidOperationException` for a kernel-backed spacecraft or one never propagated.
-- **The frame kernels** (`SpacecraftFrame.WriteAsync`, `Instrument.WriteFrameAsync`) put the upper-cased names in kernel
+  `InvalidOperationException` for a kernel-backed spacecraft or one whose attitude record is empty: never propagated
+  numerically, or sampled by a `TLEPropagator`, which records no attitude; its message names
+  `SpacecraftFrame.AddStateOrientationToICRF`, which gives it one (#546).
+- **The frame kernels** (`SpacecraftFrame.Write`, `Instrument.WriteFrame`) put the upper-cased names in kernel
   variable names, `FRAME_<SPACECRAFT>_FRAME` and `FRAME_<SPACECRAFT>_<INSTRUMENT>`, which SPICE reads with the rules of
   the Kernel Required Reading ("Variable Name Rules"): no blank, comma, parenthesis, '=' or TAB, and 32 characters at
   most, counted in the bytes of the file (UTF-8); a quote, which ends the string values the names are also written in,
   is refused too. A name outside the rule throws `InvalidOperationException` and nothing is written (#676; before, the
   FK was written and `LoadKernels` rejected it): 20 ASCII characters at most for a spacecraft, 25 for a spacecraft and an
   instrument together; `-`, `.`, `/` and non-ASCII letters are accepted within the 32 bytes. The instrument kernels
-  (`Instrument.WriteKernelAsync`) name the instrument frame, `<SPACECRAFT>_<INSTRUMENT>`, in the string
+  (`Instrument.WriteKernel`) name the instrument frame, `<SPACECRAFT>_<INSTRUMENT>`, in the string
   `INS<id>_FOV_FRAME`, and check the instrument FK's variable by the same rule: a quote ended that string, which SPICE
-  rejected at `furnsh_c` (SPICE(TYPEMISMATCH)), and a blank or a longer name named a frame no FK can define.
+  rejected at `furnsh_c` (SPICE(TYPEMISMATCH)), and a blank or a longer name named a frame no FK can define. The text
+  kernel writers (`Clock.Write`, `SpacecraftFrame.Write`, `Instrument.WriteFrame`, `Instrument.WriteKernel`) unload a
+  file they replace, as `WriteEphemeris` and `WriteOrientation` do, and leave the new one unloaded, so that a later
+  `LoadKernels` reads it (decision 103 of #668; before 11.0.0 SPICE went on reading the replaced content).
 - **The encoded SCLK.** The CK's epochs are the spacecraft clock of the library, 65 536 ticks per second from 1957: a
   double whose spacing is 2.4e-7 s up to 2025-01-19 03:13 TDB and 4.8e-7 s from then to 2093. It is the floor of the
   attitude read from the CK.
@@ -441,7 +505,8 @@ converts) away from the impulses; across an impulse they interpolate through the
 near a 635 m/s burn (#540): regenerate them. A CK of the identity attitude from ICRF is unaffected.
 
 **Not covered.** `TLEPropagator`, which `Spacecraft.Propagate` does not use, records no attitude: its SPK is written (in
-J2000), its CK is not (`InvalidOperationException`).
+J2000), its CK is not (`InvalidOperationException`), nor its set of kernels by `WriteKernels`, until the spacecraft is
+given attitudes by `SpacecraftFrame.AddStateOrientationToICRF` after the run.
 
 ## Components
 
@@ -549,7 +614,7 @@ was built with a NaN `RotationToSpacecraft` and NaN spacecraft-frame getters.
 #### Instrument orientation
 
 `Orientation` holds the Euler angles (x, y, z), in radians, of the frame kernel the library writes for the instrument
-(`WriteFrameAsync`): `TKFRAME_<id>_ANGLES = (x, y, z)`, `TKFRAME_<id>_AXES = (1, 2, 3)`, `UNITS = 'RADIANS'`, relative to
+(`WriteFrame`): `TKFRAME_<id>_ANGLES = (x, y, z)`, `TKFRAME_<id>_AXES = (1, 2, 3)`, `UNITS = 'RADIANS'`, relative to
 the spacecraft frame. NAIF's Frames Required Reading defines them in "Defining a TK Frame Using Euler Angles"
 (https://naif.jpl.nasa.gov/pub/naif/toolkit_docs/C/req/frames.html): "If M is the matrix that converts vectors relative
 to the TK frame to the RELATIVE frame by left multiplication, then the angles and axes must satisfy the following

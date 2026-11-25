@@ -109,7 +109,7 @@ public class KernelPathLengthTests : IDisposable
                 }
 
                 var clock = new FileInfo(Path.Combine(_root.FullName, "kpl8673.tsc"));
-                spacecraft.Clock.WriteAsync(clock).GetAwaiter().GetResult();
+                spacecraft.Clock.Write(clock);
                 SpiceAPI.Instance.LoadKernels(clock);
                 try
                 {
@@ -174,8 +174,8 @@ public class KernelPathLengthTests : IDisposable
         // Act
         spacecraft.WriteEphemeris(shortSpk);
         spacecraft.WriteEphemeris(longSpk);
-        spacecraft.Clock.WriteAsync(shortClock).GetAwaiter().GetResult();
-        spacecraft.Clock.WriteAsync(longClock).GetAwaiter().GetResult();
+        spacecraft.Clock.Write(shortClock);
+        spacecraft.Clock.Write(longClock);
 
         // Assert: the same bytes, whatever the length of the path
         Assert.Equal(File.ReadAllBytes(shortSpk.FullName), File.ReadAllBytes(longSpk.FullName));

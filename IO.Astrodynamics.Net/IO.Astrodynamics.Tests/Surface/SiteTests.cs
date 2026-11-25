@@ -390,7 +390,7 @@ namespace IO.Astrodynamics.Tests.Surface
         public async Task WriteFrame()
         {
             Site site = new Site(33, "S33", TestHelpers.EarthAtJ2000, new Planetodetic(30 * Astrodynamics.Constants.Deg2Rad, 10 * Astrodynamics.Constants.Deg2Rad, 1000.0));
-            await site.WriteFrameAsync(new FileInfo("sites33.tf"));
+            site.WriteFrame(new FileInfo("sites33.tf"));
             TextReader tr = new StreamReader("sites33.tf");
             var res = await tr.ReadToEndAsync();
             Assert.Equal(
@@ -423,7 +423,7 @@ namespace IO.Astrodynamics.Tests.Surface
             try
             {
                 // Act
-                await site.WriteFrameAsync(fk);
+                site.WriteFrame(fk);
 
                 // Assert: the kernel's name and id; SPICE reads the renamed copy as DSS-13_TOPO
                 var text = await File.ReadAllTextAsync(fk.FullName);
@@ -489,7 +489,7 @@ namespace IO.Astrodynamics.Tests.Surface
                 Assert.True(site.IsSpiceBacked);
 
                 // Act
-                var exception = await Record.ExceptionAsync(() => site.WriteFrameAsync(fk));
+                var exception = Record.Exception(() => site.WriteFrame(fk));
 
                 // Assert
                 var rejected = Assert.IsType<InvalidOperationException>(exception);
@@ -731,7 +731,7 @@ namespace IO.Astrodynamics.Tests.Surface
                 Assert.True(site.IsSpiceBacked);
 
                 // Act
-                await site.WriteFrameAsync(fk);
+                site.WriteFrame(fk);
 
                 // Assert: the site's name and id, nothing of Data/SolarSystem redefined
                 var text = await File.ReadAllTextAsync(fk.FullName);
@@ -786,7 +786,7 @@ namespace IO.Astrodynamics.Tests.Surface
         /// <see cref="SpiceAPI.TransformFrame(TimeSystem.Time, Frames.Frame, Frames.Frame)"/> with the frame of a site built from
         /// coordinates (#668, fourth round): the library's frame composed through ICRF, as for TEME, where SPICE, which does not
         /// know the frame, made it throw. The reference is SPICE's <c>sxform_c</c> in the frame kernel the library writes for
-        /// the site (<see cref="Site.WriteFrameAsync"/>: a TK frame of ITRF93), loaded with its frame and body renamed (1399874,
+        /// the site (<see cref="Site.WriteFrame"/>: a TK frame of ITRF93), loaded with its frame and body renamed (1399874,
         /// TF874_TOPO, 399874) so that the site keeps its own frame and nothing of Data/SolarSystem is redefined, to and from
         /// ICRF and ITRF93, at two epochs.
         /// </summary>
@@ -799,7 +799,7 @@ namespace IO.Astrodynamics.Tests.Surface
             var renamed = IO.Astrodynamics.Tests.Body.FrameKernelFiles.NewFile("site774_renamed");
             try
             {
-                await site.WriteFrameAsync(fk);
+                site.WriteFrame(fk);
                 var text = await File.ReadAllTextAsync(fk.FullName);
                 await File.WriteAllTextAsync(renamed.FullName, text.Replace("1399774", "1399874").Replace("399774", "399874")
                     .Replace("TF774_TOPO", "TF874_TOPO").Replace("'TF774'", "'TF874'"));
@@ -977,14 +977,14 @@ namespace IO.Astrodynamics.Tests.Surface
         [Theory]
         [InlineData("DSS 13")]
         [InlineData("ABCDEFGHIJKLMNOPQRSTUV")]
-        public async Task WriteFrame_NameSpiceCannotRead_Throws(string name)
+        public void WriteFrame_NameSpiceCannotRead_Throws(string name)
         {
             // Arrange
             var site = new Site(801, name, new CelestialBody(PlanetsAndMoons.EARTH), new Planetodetic(0.5, 0.6, 100.0));
             var fk = IO.Astrodynamics.Tests.Body.FrameKernelFiles.NewFile("site_refused");
 
             // Act
-            var exception = await Record.ExceptionAsync(() => site.WriteFrameAsync(fk));
+            var exception = Record.Exception(() => site.WriteFrame(fk));
 
             // Assert
             var rejected = Assert.IsType<InvalidOperationException>(exception);
@@ -998,7 +998,7 @@ namespace IO.Astrodynamics.Tests.Surface
         /// by its name through <c>sxform_c</c> (#676).
         /// </summary>
         [Fact]
-        public async Task WriteFrame_BoundaryNames_LoadInSpice()
+        public void WriteFrame_BoundaryNames_LoadInSpice()
         {
             // Arrange
             var site = new Site(802, "ABCDEFGHIJKLMNOPQRSTU", new CelestialBody(PlanetsAndMoons.EARTH), new Planetodetic(0.5, 0.6, 100.0));
@@ -1006,7 +1006,7 @@ namespace IO.Astrodynamics.Tests.Surface
             Assert.Equal(32, System.Text.Encoding.UTF8.GetByteCount("FRAME_ABCDEFGHIJKLMNOPQRSTU_TOPO"));
 
             // Act
-            await site.WriteFrameAsync(fk);
+            site.WriteFrame(fk);
 
             // Assert: loaded, and the frame known to SPICE by its name
             IO.Astrodynamics.Tests.Body.FrameKernelFiles.Load(fk, () =>
@@ -1235,7 +1235,7 @@ namespace IO.Astrodynamics.Tests.Surface
 
         /// <summary>
         /// #682: the read of a site built from coordinates in its frame, from the Moon, against CSPICE with the frame kernel
-        /// the library writes for it (<see cref="Site.WriteFrameAsync"/>), loaded after the library value: <c>spkezr_c</c> of
+        /// the library writes for it (<see cref="Site.WriteFrame"/>), loaded after the library value: <c>spkezr_c</c> of
         /// the Earth from the Moon in the site's TK frame, which SPICE builds from the kernel's Euler angles, plus
         /// <c>pxform_c</c>(ITRF93, site frame) · <c>georec_c</c> of the site; its velocity is <c>spkezr_c</c>'s, the site
         /// being fixed in its frame.
@@ -1252,7 +1252,7 @@ namespace IO.Astrodynamics.Tests.Surface
 
             var directory = Directory.CreateTempSubdirectory("f07site-");
             var frameKernel = new FileInfo(Path.Combine(directory.FullName, "f07site.tf"));
-            site.WriteFrameAsync(frameKernel).GetAwaiter().GetResult();
+            site.WriteFrame(frameKernel);
             Assert.Empty(KernelShadowing.Find([frameKernel], KernelShadowing.SolarSystem));
             SpiceAPI.Instance.LoadKernels(frameKernel);
             try

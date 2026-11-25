@@ -106,7 +106,7 @@ public class SpacecraftConstructionTests
     /// The default clock writes the SCLK of the explicit clock Name + "_CLK" at 65536 ticks per second, byte for byte.
     /// </summary>
     [Fact]
-    public async Task DefaultClock_WritesTheSclkOfTheExplicitClock()
+    public void DefaultClock_WritesTheSclkOfTheExplicitClock()
     {
         int id = NextId();
         var earth = Earth();
@@ -118,8 +118,8 @@ public class SpacecraftConstructionTests
         {
             var first = new FileInfo(Path.Combine(directory.FullName, "default.tsc"));
             var second = new FileInfo(Path.Combine(directory.FullName, "explicit.tsc"));
-            await byDefault.Clock.WriteAsync(first);
-            await explicitClock.Clock.WriteAsync(second);
+            byDefault.Clock.Write(first);
+            explicitClock.Clock.Write(second);
 
             Assert.Equal(File.ReadAllBytes(second.FullName), File.ReadAllBytes(first.FullName));
         }

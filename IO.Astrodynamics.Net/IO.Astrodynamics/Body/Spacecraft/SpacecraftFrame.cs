@@ -1,10 +1,10 @@
 // Copyright 2024. Sylvain Guillet (sylvain.guillet@tutamail.com)
 
 using System;
+using System.Globalization;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Threading.Tasks;
 using IO.Astrodynamics.DataProvider;
 using IO.Astrodynamics.Frames;
 using IO.Astrodynamics.Math;
@@ -30,7 +30,7 @@ namespace IO.Astrodynamics.Body.Spacecraft;
 /// earlier one, a sample never replaces an activation.
 /// </para>
 /// <para>
-/// <see cref="WriteOrientation"/> writes the record as SPICE defines a CK: the C-matrix, ICRF to the spacecraft frame
+/// <see cref="Spacecraft.WriteOrientation"/> writes the record as SPICE defines a CK: the C-matrix, ICRF to the spacecraft frame
 /// (the conjugate of the record's rotation, #529 part 1), in J2000, with the earlier attitude repeated
 /// <see cref="DiscreteChangeLead"/> before each discrete change (the law's last sample, when the propagation took one
 /// there), so that the CK's interpolation of its single interval is the record's attitude everywhere but in that lead.
@@ -76,8 +76,13 @@ public class SpacecraftFrame : Frame
     /// The frame of <paramref name="spacecraft"/>, named <c>Name + "_FRAME"</c>, of id NaifId × 1000, computed in checked
     /// arithmetic: the spacecraft constructors keep it an int (a NAIF id in [-2147483, -1], #676).
     /// </summary>
+    /// <remarks>
+    /// Internal since 11.0.0 (#799(d), decision 78 of #668, decided by S. Guillet, 2026-11-23): a spacecraft builds its
+    /// frame, <see cref="Spacecraft.Frame"/>; a frame built apart from it held an empty attitude record, which no
+    /// propagation fills.
+    /// </remarks>
     /// <exception cref="OverflowException">NaifId × 1000 is not an int.</exception>
-    public SpacecraftFrame(Spacecraft spacecraft) : base(spacecraft.Name + "_FRAME", checked(spacecraft.NaifId * 1000))
+    internal SpacecraftFrame(Spacecraft spacecraft) : base(spacecraft.Name + "_FRAME", checked(spacecraft.NaifId * 1000))
     {
         Spacecraft = spacecraft;
         _dataProvider = Configuration.Instance.DataProvider;
@@ -445,24 +450,37 @@ public class SpacecraftFrame : Frame
 
     /// <summary>
     /// Writes the frame kernel of the spacecraft frame, whose kernel variable <c>FRAME_&lt;NAME&gt;_FRAME</c> holds the
-    /// upper-cased name of the spacecraft.
+    /// upper-cased name of the spacecraft. The names are upper-cased and the ids written in the invariant culture, whatever
+    /// the culture of the thread (#798, #821, decisions 101 and 104 of #668, decided by S. Guillet, 2026-11-25: before, a
+    /// culture whose minus sign is not '-', such as sv-SE, fi-FI or he-IL, wrote a kernel SPICE could not load, and tr-TR or
+    /// az wrote "İ" for an "i"). Synchronous since 11.0.0, <c>WriteAsync</c> before (decision 78 of #668, decided by S. Guillet, 2026-11-23).
+    /// A file it replaces is unloaded first, under every name SPICE holds it by (a meta-kernel's included), and the new file is left unloaded, as the SPK and CK writers do (#799(c), decision 103 of #668, decided by S. Guillet, 2026-11-25).
     /// </summary>
     /// <param name="outputFile">The frame kernel to write.</param>
     /// <exception cref="InvalidOperationException">The name of the spacecraft makes a kernel variable name SPICE cannot read:
     /// a blank, a tab or another whitespace or control character, a quote, a parenthesis, a comma or '=', or more than 32
     /// bytes in UTF-8, so 20 ASCII characters at most for the name (Kernel Required Reading, "Variable Name Rules", #676);
     /// nothing is written.</exception>
-    public async Task WriteAsync(FileInfo outputFile)
+    /// <exception cref="Exceptions.SpiceException">The file it replaces is loaded and its unload fails (SPICE's error): the
+    /// file is kept as it was and nothing is written (#799(c), decision 103 of #668).</exception>
+    public void Write(FileInfo outputFile)
     {
-        Kernels.TextKernelNames.Check("FRAME_" + Name.ToUpper(), $"the spacecraft '{Spacecraft.Name}'");
-        await using var stream = this.GetType().Assembly.GetManifestResourceStream("IO.Astrodynamics.Templates.FrameTemplate.tf");
+        CheckKernelName();
+        using var stream = this.GetType().Assembly.GetManifestResourceStream("IO.Astrodynamics.Templates.FrameTemplate.tf");
         using StreamReader sr = new StreamReader(stream ?? throw new InvalidOperationException());
-        var templateData = await sr.ReadToEndAsync();
-        var data = templateData.Replace("{framename}", Name.ToUpper()).Replace("{frameid}", Id.ToString()).Replace("{spacecraftid}", Spacecraft.NaifId.ToString())
-            .Replace("{spacecraftname}", Spacecraft.Name.ToUpper());
-        await using var sw = new StreamWriter(outputFile.FullName);
-        await sw.WriteAsync(data);
+        var templateData = sr.ReadToEnd();
+        var data = templateData.Replace("{framename}", Name.ToUpperInvariant()).Replace("{frameid}", Id!.Value.ToString(CultureInfo.InvariantCulture)).Replace("{spacecraftid}", Spacecraft.NaifId.ToString(CultureInfo.InvariantCulture))
+            .Replace("{spacecraftname}", Spacecraft.Name.ToUpperInvariant());
+        SpiceAPI.Instance.WriteTextKernel(outputFile, data);
     }
+
+    /// <summary>
+    /// Checks the kernel variable <c>FRAME_&lt;NAME&gt;_FRAME</c> of the frame kernel (#676), as <see cref="Write"/> writes it:
+    /// the writer and the up-front checks of <see cref="Spacecraft.WriteKernels"/> share it.
+    /// </summary>
+    /// <exception cref="InvalidOperationException">SPICE cannot read the variable.</exception>
+    internal void CheckKernelName() =>
+        Kernels.TextKernelNames.Check("FRAME_" + Name.ToUpperInvariant(), $"the spacecraft '{Spacecraft.Name}'");
 
     /// <summary>
     /// The records of the CK of the attitude record (<see cref="SpacecraftFrame"/>'s remarks): the C-matrix (ICRF to the
@@ -477,7 +495,8 @@ public class SpacecraftFrame : Frame
             if (Spacecraft.IsSpiceBacked)
                 throw new InvalidOperationException("Cannot write the orientation of a kernel-backed spacecraft.");
             if (_record.Count == 0)
-                throw new InvalidOperationException($"Spacecraft {Spacecraft.Name} has no attitude to write: it has not been propagated.");
+                throw new InvalidOperationException(
+                    $"Spacecraft {Spacecraft.Name} has no attitude record to write: it has not been propagated numerically, and a TLEPropagator run records no attitude; propagate it, or give it attitudes with SpacecraftFrame.AddStateOrientationToICRF.");
 
             var records = new List<StateOrientation>(_record.Count + 8);
             for (int i = 0; i < _record.Count; i++)
@@ -508,9 +527,11 @@ public class SpacecraftFrame : Frame
 
     /// <summary>
     /// Writes the attitude record of a managed spacecraft as a type-3 CK (<see cref="CkRecords"/>). The spacecraft clock
-    /// kernel must be loaded.
+    /// kernel must be loaded. Internal since 11.0.0 (#799(d), decision 78 of #668, decided by S. Guillet, 2026-11-23): its
+    /// one caller is <see cref="Spacecraft.WriteOrientation"/>; public, it labelled the attitude of one spacecraft with the
+    /// id of another.
     /// </summary>
-    public void WriteOrientation(FileInfo outputFile, Spacecraft spacecraft)
+    internal void WriteOrientation(FileInfo outputFile, Spacecraft spacecraft)
     {
         SpiceAPI.Instance.WriteOrientation(outputFile, spacecraft.NaifId, CkRecords());
     }

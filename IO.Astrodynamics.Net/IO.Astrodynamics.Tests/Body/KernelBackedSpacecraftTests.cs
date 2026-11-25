@@ -407,16 +407,16 @@ public class KernelBackedSpacecraftTests
             InstrumentKernel = new FileInfo(Path.Combine(directory.FullName, "camera.ti"));
             Ephemeris = new FileInfo(Path.Combine(directory.FullName, "ksat.bsp"));
             Orientation = new FileInfo(Path.Combine(directory.FullName, "ksat.bc"));
-            Spacecraft.Clock.WriteAsync(Clock).GetAwaiter().GetResult();
-            Spacecraft.Frame.WriteAsync(FrameKernel).GetAwaiter().GetResult();
+            Spacecraft.Clock.Write(Clock);
+            Spacecraft.Frame.Write(FrameKernel);
             if (frameName != null)
             {
                 File.WriteAllText(FrameKernel.FullName, File.ReadAllText(FrameKernel.FullName).Replace("KSAT_FRAME", frameName));
             }
 
             var instrument = Spacecraft.Instruments.Single();
-            instrument.WriteFrameAsync(InstrumentFrame).GetAwaiter().GetResult();
-            instrument.WriteKernelAsync(InstrumentKernel).GetAwaiter().GetResult();
+            instrument.WriteFrame(InstrumentFrame);
+            instrument.WriteKernel(InstrumentKernel);
             Spacecraft.WriteEphemeris(Ephemeris);
             Load(Clock);
             Spacecraft.WriteOrientation(Orientation);

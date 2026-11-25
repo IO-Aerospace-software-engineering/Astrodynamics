@@ -149,7 +149,7 @@ public class InstrumentAdditionTests
     /// </summary>
     [Theory]
     [MemberData(nameof(Shapes))]
-    public async Task DefaultId_WritesTheKernelsOfTheExplicitId(string shape)
+    public void DefaultId_WritesTheKernelsOfTheExplicitId(string shape)
     {
         int id = NextId();
         var byDefault = Add(NewSpacecraft(id), shape, "Cam");
@@ -159,10 +159,10 @@ public class InstrumentAdditionTests
         try
         {
             string Path(string name) => System.IO.Path.Combine(directory.FullName, name);
-            await byDefault.WriteFrameAsync(new FileInfo(Path("default.tf")));
-            await explicitId.WriteFrameAsync(new FileInfo(Path("explicit.tf")));
-            await byDefault.WriteKernelAsync(new FileInfo(Path("default.ti")));
-            await explicitId.WriteKernelAsync(new FileInfo(Path("explicit.ti")));
+            byDefault.WriteFrame(new FileInfo(Path("default.tf")));
+            explicitId.WriteFrame(new FileInfo(Path("explicit.tf")));
+            byDefault.WriteKernel(new FileInfo(Path("default.ti")));
+            explicitId.WriteKernel(new FileInfo(Path("explicit.ti")));
 
             Assert.Equal(File.ReadAllBytes(Path("explicit.tf")), File.ReadAllBytes(Path("default.tf")));
             Assert.Equal(File.ReadAllBytes(Path("explicit.ti")), File.ReadAllBytes(Path("default.ti")));

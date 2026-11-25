@@ -54,7 +54,7 @@ too fast in right ascension, 77.9 times for Polaris (#718).
 | `GetGeometricStateRelativeTo(Time, CelestialItem)` | The position and the space velocity ([The velocity](#the-velocity)) minus the reference body's state, in ICRF |
 | `GetEphemeris(Time, ILocalizable, Frame, Aberration)` | The star from an observer at the epoch: a direction, no light time on the star whatever the correction, the stellar aberration of the `+S` corrections ([Occultations](occultations.md)); the velocity the space velocity minus the observer's |
 | `Propagate(Window, TimeSpan)` | The states every step from the start of the window, with the space velocity, replacing those held; synchronous (`PropagateAsync`, a bare `Task.Run` of it, is removed in 11.0.0, R28 of #668) |
-| `WriteEphemeris(FileInfo)` | The SPK of the last propagation |
+| `WriteEphemeris(FileInfo)` | The SPK of the last propagation, three states or more; a star that stores fewer throws `InvalidOperationException` and nothing is written (decision 81 of #668; `ArgumentException` before 11.0.0) |
 
 ## The catalog epoch and dt
 

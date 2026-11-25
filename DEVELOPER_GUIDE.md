@@ -1179,7 +1179,7 @@ Ground-based observation site.
 | `FindWindowsOnIlluminationConstraint(...)` | Find the windows of the incidence angle of a source; the emission and phase angles need an observer and throw, the method is ELLIPSOID (#682) |
 | `FindDayWindows(Window searchWindow, double twilight)` | Find daylight windows |
 | `IlluminationIncidence(Time date, ILocalizable source, Aberration aberration)` | Get solar incidence angle |
-| `WriteFrameAsync(FileInfo outputFile)` | Write site frame kernel: the frame of its coordinates, or for a site from the kernels whose frame id the loaded kernels define, that kernel frame under its kernel name (#690) |
+| `WriteFrame(FileInfo outputFile)` | Write site frame kernel: the frame of its coordinates, or for a site from the kernels whose frame id the loaded kernels define, that kernel frame under its kernel name (#690) |
 
 ```csharp
 var earth = PlanetsAndMoons.EARTH_BODY;
@@ -1379,7 +1379,9 @@ Represents a spacecraft with components.
 | `GetEphemeris(Time epoch, ILocalizable observer, Frame frame, Aberration aberration)` | Get state relative to observer (uses reference-body pattern) |
 | `GetGeometricStateRelativeTo(Time epoch, CelestialItem referenceBody)` | Get geometric state relative to a reference body (interpolates from cache) |
 | `GetOrientation(Frame frame, Time epoch)` | Get spacecraft orientation |
-| `WriteOrientation(FileInfo file)` | Write orientation kernel |
+| `WriteOrientation(FileInfo file)` | Write orientation kernel (a CK of the attitude record; `InvalidOperationException` for an empty record, a `TLEPropagator` run recording none, #546) |
+| `WriteEphemeris(FileInfo file)` | Write the stored states to an SPK, one segment per arc; `InvalidOperationException` for a spacecraft that stores no state, `ArgumentException` for an arc of one state (decisions 81 and 87 of #668) |
+| `WriteKernels(DirectoryInfo directory)` | Write the clock, frame, instrument, SPK and CK kernels into one directory, each byte for byte its writer's, and load them; the `SpacecraftKernels` it returns unloads exactly what the call loaded at `Dispose`; every check before anything is written, `InvalidOperationException` (R14 and decisions 78 to 81 of #668; `docs/reference/spacecraft.md#the-kernels`) |
 
 ```csharp
 var earth = PlanetsAndMoons.EARTH_BODY;

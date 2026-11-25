@@ -26,6 +26,7 @@ When propagating multiple spacecraft concurrently (via `BatchPropagator`, `Monte
 | Managed occultation search (`FindWindowsOnOccultationConstraint`, `IsOcculted`) and field-of-view search (`Instrument.FindWindowsInFieldOfViewConstraint`, `IsInFOV`) | Yes | They keep no state and read the kernels through the shared lock of `SpiceAPI`, so searches on separate propagations may run concurrently. A search reads the attitude without changing it: the attitude record of a managed spacecraft is filled by its propagation only (and `AddStateOrientationToICRF`), and a read stores nothing ([#523](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/523); see the next row), so the attitude a search reads depends neither on earlier reads nor on the order of the threads. The frame of a kernel-backed spacecraft reads SPICE at each call and caches nothing. Searches on the same spacecraft or on fresh ones, concurrently or in sequence, give the same windows to the tick (`FieldOfViewSearchTests.ConcurrentSearches_EqualSequentialSearches`, `OccultationSearchValidationTests.ConcurrentSearches_GiveTheResultsOfSequentialOnes`) |
 | Attitude record of a managed spacecraft (`SpacecraftFrame`) and the frames only the library holds | Yes | The record is read under a lock of the record. An ephemeris read in the frame of a managed spacecraft with an attitude record, or of a site built from coordinates, is read in J2000 and rotated by that frame under the shared SPICE lock ([#682](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/682)): the record lock nests inside the SPICE lock, so no region of the record lock calls SPICE, which keeps the two locks free of an inversion. A `SiteFrame` reads its body's frame through SPICE under the same lock, which is re-entrant |
 | `CovariancePropagationOptions`, `RtnProcessNoise`, `ConsiderParameters`, `ManeuverExecutionError` | Yes | Immutable |
+| `Spacecraft.WriteKernels` and the `SpacecraftKernels` it returns | Yes, outside a run on the spacecraft | The call holds the shared SPICE lock from its load-scope checks to its last load, and `Dispose`, idempotent, unloads under it; two calls on two spacecraft serialize. Not during a run on the spacecraft, whose states and attitude record it writes ([One Run at a Time per Spacecraft](#one-run-at-a-time-per-spacecraft)) |
 
 ## One Run at a Time per Spacecraft
 
@@ -51,6 +52,10 @@ spacecraft and a direct run, interleave with no exception: in the gap analysis o
   `SetManeuvers` from another thread, or from code the run calls, mixes the two plans (the plan [m1, m2] set again
   during a run of [m1, m2] left `ExecutedManeuvers` reading m1, m1 in the second review of L5a). Set it before the run,
   or once the run has returned.
+- Write the kernels of a spacecraft (`WriteKernels`, `WriteEphemeris`, `WriteOrientation`, a Cosmographia export) once
+  the run has returned: they read the stored states and the attitude record the run is replacing (decisions 43 and 96
+  of #668). `WriteKernels` itself holds the SPICE lock from its load-scope checks to its last load, so two calls on two
+  spacecraft, into one directory or two, serialize and both succeed.
 - Nothing checks the rule yet: a guard that refuses a second run on a spacecraft while one is in progress, with
   `InvalidOperationException` before anything changes, comes after lot L5 in #793, and the same guard makes
   `SetManeuvers` throw `InvalidOperationException` while a run holds the spacecraft.

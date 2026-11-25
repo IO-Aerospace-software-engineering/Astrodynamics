@@ -36,7 +36,7 @@ namespace IO.Astrodynamics.Tests.Body
             Spacecraft spc = new Spacecraft(-1001, "MySpacecraft", 1000.0, new StateVector(new Vector3(1.0, 2.0, 3.0), new Vector3(1.0, 2.0, 3.0), TestHelpers.EarthAtJ2000,
                     new TimeSystem.Time(DateTime.MinValue,TimeScale.TDB), Frames.Frame.ICRF), 10000.0,
                 clock);
-            await clock.WriteAsync(new FileInfo("clock.tsc"));
+            clock.Write(new FileInfo("clock.tsc"));
             TextReader tr = new StreamReader("clock.tsc");
             var res = await tr.ReadToEndAsync();
             Assert.Equal($"KPL/SCLK{Environment.NewLine}\\begindata{Environment.NewLine}SCLK_KERNEL_ID           = ( @1957-01-01/00:00:00.0 ){Environment.NewLine}SCLK_DATA_TYPE_1001        = ( 1 ){Environment.NewLine}SCLK01_TIME_SYSTEM_1001    = ( 1 ){Environment.NewLine}SCLK01_N_FIELDS_1001       = ( 2 ){Environment.NewLine}SCLK01_MODULI_1001         = ( 4294967296 256 ){Environment.NewLine}SCLK01_OFFSETS_1001        = ( 0 0 ){Environment.NewLine}SCLK01_OUTPUT_DELIM_1001   = ( 2 ){Environment.NewLine}SCLK_PARTITION_START_1001  = ( 0.0000000000000E+00 ){Environment.NewLine}SCLK_PARTITION_END_1001    = ( 2.8147497671065E+14 ){Environment.NewLine}SCLK01_COEFFICIENTS_1001   = ( 0.0000000000000E+00     -1.3569552000000E+09     1.0000000000000E+00 ){Environment.NewLine}\\begintext{Environment.NewLine}", res);
@@ -95,7 +95,7 @@ namespace IO.Astrodynamics.Tests.Body
             Assert.Equal("clock", rejected.ParamName);
             Assert.Same(first, clock.Spacecraft);
             var file = new FileInfo(Path.Combine(Constants.OutputPath.CreateSubdirectory("Clock676").FullName, $"first_{construction}.tsc"));
-            await first.Clock.WriteAsync(file);
+            first.Clock.Write(file);
             var text = await File.ReadAllTextAsync(file.FullName);
             Assert.Contains("SCLK_DATA_TYPE_1431 ", text);
             Assert.DoesNotContain("1432", text);
@@ -203,8 +203,8 @@ namespace IO.Astrodynamics.Tests.Body
             var sclk = new FileInfo(Path.Combine(directory.FullName, "ownclk.tsc"));
             var fk = new FileInfo(Path.Combine(directory.FullName, "ownclk.tf"));
             var ck = new FileInfo(Path.Combine(directory.FullName, "ownclk.bc"));
-            await spacecraft.Clock.WriteAsync(sclk);
-            await spacecraft.Frame.WriteAsync(fk);
+            spacecraft.Clock.Write(sclk);
+            spacecraft.Frame.Write(fk);
             Assert.Contains("SCLK_DATA_TYPE_1435 ", await File.ReadAllTextAsync(sclk.FullName));
 
             SpiceAPI.Instance.LoadKernels(sclk);

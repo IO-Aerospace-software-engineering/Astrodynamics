@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.IO;
 using System.Linq;
-using System.Threading.Tasks;
 using IO.Astrodynamics.Body;
 using IO.Astrodynamics.Coordinates;
 using IO.Astrodynamics.DataProvider;
@@ -38,6 +37,11 @@ namespace IO.Astrodynamics.Surface
 
         public OrbitalParameters.OrbitalParameters InitialOrbitalParameters { get; }
 
+        /// <summary>
+        /// The topocentric frame of the site, named <c>&lt;NAME&gt;_TOPO</c>, the name upper-cased in the invariant culture
+        /// whatever the culture of the thread (#798, decision 101 of #668, decided by S. Guillet, 2026-11-25: before, tr-TR or
+        /// az named the frame of a site "dss_i" <c>DSS_İ_TOPO</c>).
+        /// </summary>
         public SiteFrame Frame { get; }
         public double GM { get; } = 0.0;
         public double Mass { get; } = 0.0;
@@ -126,7 +130,7 @@ namespace IO.Astrodynamics.Surface
                 InitialOrbitalParameters = GetEphemeris(Time.J2000TDB, CelestialBody, CelestialBody.Frame, Aberration.None);
             }
 
-            Frame = new SiteFrame(name.ToUpper() + "_TOPO", this);
+            Frame = new SiteFrame(name.ToUpperInvariant() + "_TOPO", this);
         }
 
         /// <summary>
@@ -652,15 +656,19 @@ namespace IO.Astrodynamics.Surface
         }
 
         /// <summary>
-        /// Writes the frame kernel of the topocentric frame of the site (<see cref="SiteFrame.WriteAsync"/>): the frame of
+        /// Writes the frame kernel of the topocentric frame of the site (<see cref="SiteFrame.Write"/>): the frame of
         /// <see cref="Planetodetic"/>, or for a site from the kernels whose frame id the loaded kernels define, that kernel
-        /// frame under its kernel name (#690).
+        /// frame under its kernel name (#690). Synchronous since 11.0.0, <c>WriteFrameAsync</c> before (decision 78 of #668,
+        /// decided by S. Guillet, 2026-11-23).
+        /// A file it replaces is unloaded first, under every name SPICE holds it by (a meta-kernel's included), and the new file is left unloaded, as the SPK and CK writers do (#799(c), decision 103 of #668, decided by S. Guillet, 2026-11-25).
         /// </summary>
         /// <param name="outputFile">The frame kernel to write.</param>
-        /// <exception cref="InvalidOperationException">See <see cref="SiteFrame.WriteAsync"/>; nothing is written.</exception>
-        public async Task WriteFrameAsync(FileInfo outputFile)
+        /// <exception cref="InvalidOperationException">See <see cref="SiteFrame.Write"/>; nothing is written.</exception>
+        /// <exception cref="Exceptions.SpiceException">The file it replaces is loaded and its unload fails (SPICE's error): the
+        /// file is kept as it was and nothing is written (#799(c), decision 103 of #668).</exception>
+        public void WriteFrame(FileInfo outputFile)
         {
-            await Frame.WriteAsync(outputFile);
+            Frame.Write(outputFile);
         }
 
         /// <summary>

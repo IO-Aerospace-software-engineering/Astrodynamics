@@ -483,9 +483,9 @@ public class PropagatedEphemerisTests
         Assert.Throws<ArgumentNullException>(() => SpiceAPI.Instance.WriteEphemerisArcs(file, -540, null));
         Assert.False(file.Exists);
 
-        // A spacecraft without stored states has nothing to write
+        // A spacecraft without stored states has nothing to write (decision 81 of #668: the object, not the file, is at fault)
         var spacecraft = new IO.Astrodynamics.Body.Spacecraft.Spacecraft(-5401, "PE5401", 1000.0, State(0.0), 3000.0, new Clock("PE5401_CLK", 65536));
-        Assert.Throws<ArgumentException>(() => spacecraft.WriteEphemeris(file));
+        Assert.Throws<InvalidOperationException>(() => spacecraft.WriteEphemeris(file));
         Assert.Throws<ArgumentNullException>(() => spacecraft.WriteEphemeris(null));
     }
 

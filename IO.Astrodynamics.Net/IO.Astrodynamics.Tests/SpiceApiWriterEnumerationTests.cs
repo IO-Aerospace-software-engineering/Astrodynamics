@@ -115,7 +115,7 @@ public class SpiceApiWriterEnumerationTests
             new Clock("ISSUE661_CLK", 65536));
         var clock = new FileInfo(Path.Combine(directory.FullName, "issue661.tsc"));
         var ck = new FileInfo(Path.Combine(directory.FullName, "issue661.bc"));
-        spacecraft.Clock.WriteAsync(clock).GetAwaiter().GetResult();
+        spacecraft.Clock.Write(clock);
         var orientations = Enumerable.Range(0, 10).Select(i => new StateOrientation(
             new Quaternion(Vector3.VectorZ, i * 0.01), Vector3.Zero, TimeSystem.Time.J2000TDB.AddSeconds(i * 10.0),
             Frames.Frame.ICRF)).ToList();

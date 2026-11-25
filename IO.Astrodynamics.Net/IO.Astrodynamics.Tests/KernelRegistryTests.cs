@@ -720,7 +720,7 @@ public class KernelRegistryTests : IDisposable
         var clock = new Clock("IOA_K1_REG_CLOCK", 65536);
         var spacecraft = new Spacecraft(-1999724, "IOA_K1_REG", 3000.0, EarthStates(1, 6800000.0)[0], 10000.0, clock);
         var clockFile = new FileInfo(Path.Combine(folder.FullName, "clock.tsc"));
-        clock.WriteAsync(clockFile).GetAwaiter().GetResult();
+        clock.Write(clockFile);
         SpiceAPI.Instance.LoadKernels(clockFile);
         var turned = new Quaternion(Vector3.VectorZ, System.Math.PI / 2.0);
         var c = new FileInfo(Path.Combine(folder.FullName, "c.bc"));

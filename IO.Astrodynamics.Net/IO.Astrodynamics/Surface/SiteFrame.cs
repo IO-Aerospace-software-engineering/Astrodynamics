@@ -4,7 +4,6 @@ using System;
 using System.Globalization;
 using System.IO;
 using System.Linq;
-using System.Threading.Tasks;
 using IO.Astrodynamics.Frames;
 using IO.Astrodynamics.Math;
 using IO.Astrodynamics.TimeSystem;
@@ -34,7 +33,10 @@ public class SiteFrame : Frame
     /// <summary>
     /// Writes the frame kernel of the topocentric frame of the site, whose kernel variable <c>FRAME_&lt;SITE&gt;_TOPO</c>
     /// holds the upper-cased name of the site: a TK frame of the frame of its body, the frame
-    /// <see cref="GetStateOrientationToICRF"/> gives.
+    /// <see cref="GetStateOrientationToICRF"/> gives. The names are upper-cased and the ids written in the invariant culture,
+    /// whatever the culture of the thread (#798, #821, decisions 101 and 104 of #668, decided by S. Guillet, 2026-11-25).
+    /// Synchronous since 11.0.0, <c>WriteAsync</c> before (decision 78 of #668, decided by S. Guillet, 2026-11-23).
+    /// A file it replaces is unloaded first, under every name SPICE holds it by (a meta-kernel's included), and the new file is left unloaded, as the SPK and CK writers do (#799(c), decision 103 of #668, decided by S. Guillet, 2026-11-25).
     /// </summary>
     /// <remarks>
     /// For a site built from coordinates, or from the kernels when no loaded kernel defines its frame id, the frame of
@@ -53,27 +55,28 @@ public class SiteFrame : Frame
     /// '=', or more than 32 bytes in UTF-8, so 21 ASCII characters at most for the name (Kernel Required Reading, "Variable
     /// Name Rules", #676); or the kernel frame of a site from the kernels is not fixed in the frame of its body, which a TK
     /// frame of that body cannot hold. Nothing is written.</exception>
-    public async Task WriteAsync(FileInfo outputFile)
+    /// <exception cref="Exceptions.SpiceException">The file it replaces is loaded and its unload fails (SPICE's error): the
+    /// file is kept as it was and nothing is written (#799(c), decision 103 of #668).</exception>
+    public void Write(FileInfo outputFile)
     {
         var kernelFrameName = Site.IsSpiceBacked ? SpiceAPI.KernelFrameNameOf(Id!.Value) : null;
         var frameName = kernelFrameName ?? Name;
-        Kernels.TextKernelNames.Check("FRAME_" + frameName.ToUpper(), $"the site '{Site.Name}'");
+        Kernels.TextKernelNames.Check("FRAME_" + frameName.ToUpperInvariant(), $"the site '{Site.Name}'");
         string matrix = kernelFrameName != null ? KernelFrameMatrix(kernelFrameName) : null;
         var template = matrix != null ? "IO.Astrodynamics.Templates.SiteKernelFrameTemplate.tf" : "IO.Astrodynamics.Templates.SiteFrameTemplate.tf";
-        await using var stream = this.GetType().Assembly.GetManifestResourceStream(template);
+        using var stream = this.GetType().Assembly.GetManifestResourceStream(template);
         using StreamReader sr = new StreamReader(stream ?? throw new InvalidOperationException());
-        var templateData = await sr.ReadToEndAsync();
+        var templateData = sr.ReadToEnd();
         var data = templateData
-            .Replace("{sitename}", Site.Name.ToUpper())
-            .Replace("{siteid}", Site.NaifId.ToString())
-            .Replace("{sitenametopo}", frameName.ToUpper())
-            .Replace("{frameid}", Id.ToString())
-            .Replace("{fixedframe}", Site.CelestialBody.Frame.Name.ToUpper())
+            .Replace("{sitename}", Site.Name.ToUpperInvariant())
+            .Replace("{siteid}", Site.NaifId.ToString(CultureInfo.InvariantCulture))
+            .Replace("{sitenametopo}", frameName.ToUpperInvariant())
+            .Replace("{frameid}", Id!.Value.ToString(CultureInfo.InvariantCulture))
+            .Replace("{fixedframe}", Site.CelestialBody.Frame.Name.ToUpperInvariant())
             .Replace("{matrix}", matrix)
             .Replace("{long}", (-Site.Planetodetic.Longitude).ToString(CultureInfo.InvariantCulture))
             .Replace("{colat}", (-(Constants.HalfPi - Site.Planetodetic.Latitude)).ToString(CultureInfo.InvariantCulture));
-        await using var sw = new StreamWriter(outputFile.FullName);
-        await sw.WriteAsync(data);
+        SpiceAPI.Instance.WriteTextKernel(outputFile, data);
     }
 
     // The rotation from the kernel frame of the site to the frame of its body, as SPICE reads it, in column order: column i

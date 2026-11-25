@@ -34,7 +34,7 @@ Ground-based observation or tracking site.
 | `FindWindowsOnOccultationConstraint(...)` | Find occultation windows ([Occultations](occultations.md)) |
 | `FindWindowsOnIlluminationConstraint(...)` | Find the windows of the incidence angle of a source ([Illumination](#illumination)) |
 | `FindDayWindows(Window, double)` | Find daylight windows |
-| `WriteFrameAsync(FileInfo)` | Write the frame kernel of the topocentric frame `<NAME>_TOPO`; its kernel variable `FRAME_<NAME>_TOPO` follows SPICE's rules (Kernel Required Reading, "Variable Name Rules"): no blank, tab or other whitespace or control character, quote, parenthesis, comma or '=', 32 bytes at most in UTF-8, so 21 ASCII characters for the name; another name throws `InvalidOperationException` and nothing is written (#676). For a site from the kernels whose frame id the loaded kernels define, that kernel frame under its kernel name, as a TK matrix of the body frame; one not fixed in the body frame throws `InvalidOperationException` (#690) |
+| `WriteFrame(FileInfo)` | Write the frame kernel of the topocentric frame `<NAME>_TOPO`; its kernel variable `FRAME_<NAME>_TOPO` follows SPICE's rules (Kernel Required Reading, "Variable Name Rules"): no blank, tab or other whitespace or control character, quote, parenthesis, comma or '=', 32 bytes at most in UTF-8, so 21 ASCII characters for the name; another name throws `InvalidOperationException` and nothing is written (#676). For a site from the kernels whose frame id the loaded kernels define, that kernel frame under its kernel name, as a TK matrix of the body frame; one not fixed in the body frame throws `InvalidOperationException` (#690). A file it replaces is unloaded first, under every name SPICE holds it by, and the new one is left unloaded (decision 103 of #668) |
 
 ### Window searches
 
@@ -147,7 +147,7 @@ no window, or for a site named as a kernel frame searched in that kernel frame, 
 `SpiceAPI.FindWindowsOnCoordinateConstraint` throws `ArgumentException` for it unless a loaded kernel defines its id
 under its name. `SpiceAPI.TransformFrame` with it is the library's frame composed through ICRF, as for TEME: the
 orientation `ToFrame` uses, bit for bit, within 9.3e-16 rad and 5.7e-20 rad/s of SPICE's `sxform_c` in the frame kernel
-`WriteFrameAsync` writes for the site (the same on Linux x64, Windows x64 and macOS arm64, CI run 43773937161; fourth round of
+`WriteFrame` writes for the site (the same on Linux x64, Windows x64 and macOS arm64, CI run 43773937161; fourth round of
 [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668), before, it threw).
 
 A site from the kernels (`new Site(13, "DSS-13", earth)`) has the frame the loaded kernels define for its id,
@@ -173,7 +173,7 @@ kernel of its id is loaded; `SpiceAPI.FindWindowsOnCoordinateConstraint` with it
 of #668; before, it threw). `Planetodetic` and the illumination
 angles do not move: `IlluminationIncidence` and `IlluminationEmission` take the normal of the ellipsoid at
 `Planetodetic`, the normal `gfilum_c` takes for the site in `FindWindowsOnIlluminationConstraint` (#488), not the
-zenith of the kernel frame. `WriteFrameAsync` of such a site writes that kernel frame: its name and id in the
+zenith of the kernel frame. `WriteFrame` of such a site writes that kernel frame: its name and id in the
 kernels, and its rotation to the frame of the body read from SPICE, as `TKFRAME_<id>_MATRIX` (column order, one column
 per line, CSPICE reading 132 characters of a line), so that the file defines the frame the kernels define to the
 rounding of the matrix (2.1e-16 rad for DSS-13); loaded beside those kernels it assigns their frame again. A kernel

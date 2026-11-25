@@ -504,6 +504,28 @@ bool KernelNameResolvesThroughProxy(const char *name, const char *path)
     }
 }
 
+bool KernelHeldProxy(const char *path, bool *held)
+{
+    ActivateErrorManagement();
+    ClearLastError();
+    *held = false;
+    std::string message;
+    try
+    {
+        *held = IO::Astrodynamics::Kernels::KernelsLoader::Holds(path);
+    }
+    catch (const std::exception &e)
+    {
+        message = e.what();
+    }
+    const bool succeeded = ReportNativeErrors(std::move(message));
+    if (!succeeded)
+    {
+        *held = false;
+    }
+    return succeeded;
+}
+
 bool GetFrameNameProxy(int frameId, char name[33])
 {
     ActivateErrorManagement();

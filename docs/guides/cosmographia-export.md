@@ -5,7 +5,9 @@ Propagated trajectories can be exported as SPICE SPK kernels for visualization i
 ## Workflow
 
 1. **Propagate** the spacecraft trajectory using `CentralBodyPropagator` or any other propagator.
-2. **Write the ephemeris** to an SPK file using `Spacecraft.WriteEphemeris()`.
+2. **Write the ephemeris** to an SPK file using `Spacecraft.WriteEphemeris()`, or every kernel of the spacecraft (clock,
+   frames, instruments, SPK and CK) into one directory with `Spacecraft.WriteKernels()`, which also loads them until its
+   handle is disposed ([Spacecraft](../reference/spacecraft.md#the-kernels)).
 3. **Load the SPK** in Cosmographia (or another SPICE viewer) alongside the standard planetary kernels.
 
 ## Example
@@ -28,14 +30,45 @@ The exported SPK uses the spacecraft's NAIF ID and covers the propagated time wi
 instruments), site and star, and the Cosmographia catalog files, among them `spice.json`, which lists the kernels.
 `astro propagate` exports the same way ([command-line tool](../reference/cli.md)).
 
+The export checks its names first: each spacecraft, instrument, site and star name, and the export directory
+`<Mission>_<Scenario>` the mission and scenario names form, make directories and files, so each is a portable file name,
+the same on Linux, macOS and Windows: not empty, none of `/ \ : * ? " < > |` nor a control character, not `.` or `..`, no
+trailing dot or space, and not a device name Windows reserves (CON, PRN, AUX, NUL, COM1 to COM9, LPT1 to LPT9, in any case,
+alone or before a dot). A name that is not throws `InvalidOperationException` before anything is deleted or written
+([#799](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/799),
+[#822](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/822); before 11.0.0 a name holding a `/`
+was written into nested directories, and a scenario named `/..` made the export delete the whole output directory). The
+constructors of the objects do not check it: rename the object before the export.
+
+The export then writes its kernels and its catalog into a new scratch directory, and replaces the previous export only
+once everything is written: a writer that throws (a kernel variable SPICE cannot read, a spacecraft without stored states
+or attitude record, a star of fewer than three stored states) or the catalog that throws leaves the previous export as it
+was (#799; before 11.0.0 the previous export was deleted first). A failure while the previous export is deleted or the new
+one copied, a full disk for instance, leaves part of either. The scratch directory is deleted in every case, and the
+export leaves the kernels SPICE holds as they were: the clock kernel it loads while it writes a CK is unloaded after
+(the sequence of `Spacecraft.WriteKernels`; the frame kernel was loaded too before 11.0.0, which changed no byte).
+
+The export refuses, with `InvalidOperationException` before anything is deleted or written, to replace a previous export
+SPICE holds: `<Mission>_<Scenario>` loaded with `LoadKernels`, a loaded directory above it or inside it, or a file of it
+that SPICE holds, a meta-kernel's included (#799, decision 103 of
+[#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668); before 11.0.0 it deleted the
+export under SPICE's load, whose text kernels stayed in the kernel pool with the old content, and a later unload that
+read them again failed). Unload it before the export, and load the new one after it.
+
+Two limits remain. Two spacecraft, sites or stars of one name are written onto the same files, the last one winning
+with no exception ([#823](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/823)): give each
+object of a scenario its own name. The trajectory plot of a spacecraft reads the period of its initial orbit, which
+throws `InvalidOperationException` for an open orbit
+([#824](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/824)); since 11.0.0 the previous
+export is left as it was.
+
 The layout adds to the output directory `/<Mission>_<Scenario>/Spacecrafts/<name>/Orientation/<name>.ck` for the CK of
 a spacecraft, usually the longest kernel: 31 characters plus the mission and scenario names and twice the spacecraft
 name. SPICE takes a kernel path of at most 255 characters, so the export throws `ArgumentException` (parameter
 `outputDirectory`) for a directory whose kernels would be longer, before it deletes or writes anything
 ([#673](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/673)); choose a shorter directory.
-The export first writes the kernels under a new directory of the system temporary directory (`Path.GetTempPath()`:
-`TMPDIR` on Linux and macOS, `TEMP` on Windows), where it loads the clock and frame kernels of each spacecraft, then
-copies them; their paths there, `<temp>/<6 to 12 characters>/Spacecrafts/<name>/Orientation/<name>.ck` for the CK, are
+The scratch directory is a new directory of the system temporary directory (`Path.GetTempPath()`: `TMPDIR` on Linux and
+macOS, `TEMP` on Windows), where the export loads the clock kernel of each spacecraft; their paths there, `<temp>/<6 to 12 characters>/Spacecrafts/<name>/Orientation/<name>.ck` for the CK, are
 checked too, and the export throws `ArgumentException` without a parameter name when the temporary directory is the
 longer one: choose a shorter temporary directory.
 

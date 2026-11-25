@@ -243,7 +243,8 @@ public class StarTests
         // Assert: the rule of every step of the library (#674), and nothing stored
         Assert.Equal("stepSize", exception.ParamName);
         Assert.False(star.IsPropagated);
-        Assert.Throws<ArgumentException>(() => star.WriteEphemeris(new System.IO.FileInfo("star668001.bsp")));
+        // Nothing to write: the star stores no state (decision 81 of #668)
+        Assert.Throws<InvalidOperationException>(() => star.WriteEphemeris(new System.IO.FileInfo("star668001.bsp")));
     }
 
     [Fact]

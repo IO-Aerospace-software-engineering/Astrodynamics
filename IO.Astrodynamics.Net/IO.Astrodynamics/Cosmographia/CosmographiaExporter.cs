@@ -1,6 +1,7 @@
 // Copyright 2023. Sylvain Guillet (sylvain.guillet@tutamail.com)
 
 using System;
+using System.Globalization;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -36,17 +37,39 @@ public class CosmographiaExporter
     /// Exports the simulated scenario to <c>&lt;outputDirectory&gt;/&lt;Mission&gt;_&lt;Scenario&gt;</c>, which it replaces:
     /// its kernels under <c>Spacecrafts</c>, <c>Sites</c> and <c>Stars</c>, and the Cosmographia catalog files.
     /// </summary>
+    /// <remarks>
+    /// The export checks its names first, then writes its kernels and its catalog into a new scratch directory, and only
+    /// then replaces the previous export, so a check, a writer or the catalog that throws leaves the previous export and
+    /// the output directory as they were (#799(b), decision 74 of #668, decided by S. Guillet, 2026-11-23; before, the
+    /// previous export was deleted first). A failure while the previous export is deleted or the new one copied leaves part
+    /// of either. The scratch directory, under the system temporary directory, is deleted in every case; the clock kernel
+    /// of each spacecraft is loaded from it while its CK is written and unloaded after (the sequence of
+    /// <see cref="Spacecraft.WriteKernels"/>, R14 of #668; its frame kernel too before 11.0.0, which changed no byte of
+    /// the CK), so the export leaves the kernels SPICE holds as they were.
+    /// </remarks>
     /// <param name="scenario">The simulated scenario.</param>
     /// <param name="outputDirectory">The directory of the export.</param>
-    /// <exception cref="InvalidOperationException">The scenario has not been simulated.</exception>
+    /// <exception cref="InvalidOperationException">The scenario has not been simulated. Or a name is not a portable file
+    /// name (none of <c>/ \ : * ? " &lt; &gt; |</c> nor a control character, not <c>.</c> or <c>..</c>, no trailing dot or
+    /// space, not a reserved device name of Windows such as CON, NUL or COM1): a spacecraft, instrument, site or star name,
+    /// or the export directory <c>&lt;Mission&gt;_&lt;Scenario&gt;</c> the mission and scenario names form (#799(a), #822,
+    /// decisions 74 and 105 of #668, decided by S. Guillet, 2026-11-23 and 2026-11-25: before, a name holding a '/' was
+    /// written into nested directories, and a scenario named <c>/..</c> made the export delete the whole output directory).
+    /// Or the export directory <c>&lt;Mission&gt;_&lt;Scenario&gt;</c> exists and is a loaded kernel path, lies inside one or holds
+    /// one, or SPICE holds a file of it, from <see cref="SpiceAPI.LoadKernels(FileSystemInfo)"/> or a meta-kernel (#799(c),
+    /// decisions 102 and 103 of #668, decided by S. Guillet, 2026-11-25: before, the export deleted it under SPICE's load,
+    /// whose text kernels stayed in the pool with the old content); unload it first.
+    /// Or a kernel writer or the catalog throws (a kernel variable SPICE cannot read, a spacecraft without stored states or
+    /// attitude record, a star of fewer than three stored states, the period of an open orbit). Nothing is deleted.</exception>
     /// <exception cref="ArgumentException">A kernel of the export would have a full path longer than the 255 characters
     /// (UTF-8 bytes) of a kernel name SPICE takes, which <see cref="SpiceAPI.LoadKernels(FileSystemInfo)"/> could not load: under the output
     /// directory (parameter <c>outputDirectory</c>), or under the new directory of the system temporary directory
-    /// (<see cref="Path.GetTempPath"/>) where the export writes its kernels and loads the clock and frame kernels of each
+    /// (<see cref="Path.GetTempPath"/>) where the export writes its kernels and loads the clock kernel of each
     /// spacecraft before it copies them (no parameter). The longest is usually the CK of a spacecraft,
     /// <c>/&lt;Mission&gt;_&lt;Scenario&gt;/Spacecrafts/&lt;name&gt;/Orientation/&lt;name&gt;.ck</c> after the output
     /// directory, 31 characters plus the mission and scenario names and twice the spacecraft name. Nothing is deleted or
-    /// written (#673).</exception>
+    /// written (#673). A writer whose argument is at fault keeps its <see cref="ArgumentException"/> (the window of a site
+    /// shorter than its ephemeris needs, an arc of one stored state), nothing deleted either.</exception>
     public async Task ExportAsync(Scenario scenario, DirectoryInfo outputDirectory)
     {
         if (!scenario.IsSimulated)
@@ -54,44 +77,87 @@ public class CosmographiaExporter
             throw new InvalidOperationException("The scenario has not yet been simulated. Call the Simulate method on the scenario before calling the cosmographia exporter.");
         }
 
-        var missionOutputPath = Path.Combine(outputDirectory.FullName, $"{scenario.Mission.Name}_{scenario.Name}");
+        // The names first: a name that leaves its directory would make every path below meaningless (#799(a), #822)
+        var exportName = ExportName(scenario);
+        CheckNames(scenario, exportName);
+        var missionOutputPath = Path.Combine(outputDirectory.FullName, exportName);
         foreach (var kernel in KernelPaths(scenario))
         {
             Kernels.KernelPath.EnsureLoadable(Path.Combine(missionOutputPath, kernel), nameof(outputDirectory));
         }
 
-        // The kernels are written and loaded under a new scratch directory first: their paths there are checked too
-        var kernelsTemp = CreateScratchDirectory();
-        DirectoryInfo missionOutputDirectory;
+        // The previous export is replaced only when SPICE holds none of it (#799(c), decision 103): its deletion under a load
+        // would leave SPICE reading the deleted files, and the pool of SPICE is the caller's
+        SpiceAPI.Instance.ThrowIfDirectoryHeld(new DirectoryInfo(missionOutputPath), "The Cosmographia export");
+
+        // The kernels and the catalog are written under a new scratch directory first, their kernel paths there checked too;
+        // the previous export is replaced only once everything is written (#799(b))
+        var scratch = CreateScratchDirectory();
         try
         {
             foreach (var kernel in KernelPaths(scenario))
             {
-                Kernels.KernelPath.EnsureLoadable(Path.Combine(kernelsTemp.FullName, kernel), null);
+                Kernels.KernelPath.EnsureLoadable(Path.Combine(scratch.FullName, kernel), null);
             }
 
-            missionOutputDirectory = outputDirectory.CreateSubdirectory($"{scenario.Mission.Name}_{scenario.Name}");
-            missionOutputDirectory.Delete(true);
+            ExportRawData(scenario, scratch);
+
+            await ExportSpiceKernelsAsync(scenario, scratch);
+
+            await ExportSites(scenario, scratch);
+
+            await ExportSpacecraftsAsync(scenario, scratch);
+
+            await ExportSensors(scenario, scratch);
+
+            await ExportObservations(scenario, scratch);
+
+            await ExportLoader(scenario, scratch);
+
+            var missionOutputDirectory = new DirectoryInfo(missionOutputPath);
+            if (missionOutputDirectory.Exists)
+            {
+                missionOutputDirectory.Delete(true);
+            }
+
+            CopyDirectory(scratch, missionOutputDirectory, true);
         }
-        catch
+        finally
         {
-            kernelsTemp.Delete(true);
-            throw;
+            scratch.Delete(true);
+        }
+    }
+
+    // The name of the export directory, and of its loader file
+    private static string ExportName(Scenario scenario) => $"{scenario.Mission.Name}_{scenario.Name}";
+
+    /// <summary>
+    /// Checks that every name the export makes into a path is a portable file name (internal
+    /// <see cref="Kernels.PortableFileNames"/>): the export directory the mission and scenario names form, then each
+    /// spacecraft and its instruments, each site and each star.
+    /// </summary>
+    private static void CheckNames(Scenario scenario, string exportName)
+    {
+        Kernels.PortableFileNames.Check(exportName,
+            $"the export directory '{exportName}' of the mission '{scenario.Mission.Name}' and the scenario '{scenario.Name}'");
+        foreach (var spacecraft in scenario.Spacecrafts)
+        {
+            Kernels.PortableFileNames.Check(spacecraft.Name, $"the spacecraft '{spacecraft.Name}'");
+            foreach (var instrument in spacecraft.Instruments)
+            {
+                Kernels.PortableFileNames.Check(instrument.Name, $"the instrument '{instrument.Name}' of the spacecraft '{spacecraft.Name}'");
+            }
         }
 
-        await ExportRawDataAsync(scenario, kernelsTemp, missionOutputDirectory);
+        foreach (var site in scenario.Sites)
+        {
+            Kernels.PortableFileNames.Check(site.Name, $"the site '{site.Name}'");
+        }
 
-        await ExportSpiceKernelsAsync(scenario, missionOutputDirectory);
-
-        await ExportSites(scenario, missionOutputDirectory);
-
-        await ExportSpacecraftsAsync(scenario, missionOutputDirectory);
-
-        await ExportSensors(scenario, missionOutputDirectory);
-
-        await ExportObservations(scenario, missionOutputDirectory);
-
-        await ExportLoader(scenario, missionOutputDirectory);
+        foreach (var star in scenario.Stars)
+        {
+            Kernels.PortableFileNames.Check(star.Name, $"the star '{star.Name}'");
+        }
     }
 
     private async Task ExportSites(Scenario scenario, DirectoryInfo outputDirectory)
@@ -101,7 +167,7 @@ public class CosmographiaExporter
         {
             SiteRootObject siteJson = new SiteRootObject();
             siteJson.name = $"{scenario.Mission.Name}_{scenario.Name}";
-            var bodyName = char.ToUpper(siteByBody.Key.Name[0]) + siteByBody.Key.Name.Substring(1).ToLower();
+            var bodyName = CatalogBodyName(siteByBody.Key.Name);
             siteJson.version = "1.0";
             siteJson.items = new SiteItem[1];
             siteJson.items[0] = new SiteItem();
@@ -123,7 +189,7 @@ public class CosmographiaExporter
                 idx++;
             }
 
-            await using var fileStream = File.Create(Path.Combine(outputDirectory.FullName, $"{bodyName.ToLower()}-features.json"));
+            await using var fileStream = File.Create(Path.Combine(outputDirectory.FullName, $"{bodyName.ToLowerInvariant()}-features.json"));
             await JsonSerializer.SerializeAsync(fileStream, siteJson, CosmographiaJsonContext.Default.SiteRootObject);
         }
     }
@@ -164,24 +230,21 @@ public class CosmographiaExporter
             {
                 observationJson.items[idx] = new ObservationItems();
                 observationJson.items[idx].obsClass = "observation";
-                observationJson.items[idx].name = $"{spacecraft.Name.ToUpper()}_{maneuverByInstrument.Key.Name.ToUpper()}_OBSERVATIONS";
+                observationJson.items[idx].name = $"{spacecraft.Name.ToUpperInvariant()}_{maneuverByInstrument.Key.Name.ToUpperInvariant()}_OBSERVATIONS";
                 observationJson.items[idx].startTime = scenario.Window.StartDate.ToString();
                 observationJson.items[idx].endTime = scenario.Window.EndDate.ToString();
-                observationJson.items[idx].center = char.ToUpper(spacecraft.InitialOrbitalParameters.Observer.Name[0]) +
-                                                    spacecraft.InitialOrbitalParameters.Observer.Name.Substring(1).ToLower();
+                observationJson.items[idx].center = CatalogBodyName(spacecraft.InitialOrbitalParameters.Observer.Name);
                 observationJson.items[idx].trajectoryFrame = new ObservationTrajectoryFrame();
                 observationJson.items[idx].trajectoryFrame.type = "BodyFixed";
-                observationJson.items[idx].trajectoryFrame.body = char.ToUpper(spacecraft.InitialOrbitalParameters.Observer.Name[0]) +
-                                                                  spacecraft.InitialOrbitalParameters.Observer.Name.Substring(1).ToLower();
+                observationJson.items[idx].trajectoryFrame.body = CatalogBodyName(spacecraft.InitialOrbitalParameters.Observer.Name);
 
                 observationJson.items[idx].bodyFrame = new ObservationBodyFrame();
                 observationJson.items[idx].bodyFrame.type = "BodyFixed";
-                observationJson.items[idx].bodyFrame.body = char.ToUpper(spacecraft.InitialOrbitalParameters.Observer.Name[0]) +
-                                                            spacecraft.InitialOrbitalParameters.Observer.Name.Substring(1).ToLower();
+                observationJson.items[idx].bodyFrame.body = CatalogBodyName(spacecraft.InitialOrbitalParameters.Observer.Name);
 
                 observationJson.items[idx].geometry = new ObservationGeometry();
                 observationJson.items[idx].geometry.type = "Observations";
-                observationJson.items[idx].geometry.sensor = $"{spacecraft.Name.ToUpper()}_{maneuverByInstrument.Key.Name.ToUpper()}";
+                observationJson.items[idx].geometry.sensor = $"{spacecraft.Name.ToUpperInvariant()}_{maneuverByInstrument.Key.Name.ToUpperInvariant()}";
                 observationJson.items[idx].geometry.footprintColor = _instrumentColors[maneuverByInstrument.Key];
                 observationJson.items[idx].geometry.footprintOpacity = 0.4;
                 observationJson.items[idx].geometry.showResWithColor = false;
@@ -227,18 +290,17 @@ public class CosmographiaExporter
             foreach (var instrument in spacecraft.Instruments)
             {
                 sensorJson.items[idx] = new SensorItem();
-                sensorJson.items[idx].center = spacecraft.Name.ToUpper();
-                sensorJson.items[idx].name = $"{spacecraft.Name.ToUpper()}_{instrument.Name.ToUpper()}";
+                sensorJson.items[idx].center = spacecraft.Name.ToUpperInvariant();
+                sensorJson.items[idx].name = $"{spacecraft.Name.ToUpperInvariant()}_{instrument.Name.ToUpperInvariant()}";
                 sensorJson.items[idx].startTime = scenario.Window.StartDate.ToString();
                 sensorJson.items[idx].endTime = scenario.Window.EndDate.ToString();
-                sensorJson.items[idx].parent = spacecraft.Name.ToUpper();
+                sensorJson.items[idx].parent = spacecraft.Name.ToUpperInvariant();
                 sensorJson.items[idx].sensorClass = "sensor";
 
                 sensorJson.items[idx].geometry = new SensorGeometry();
                 sensorJson.items[idx].geometry.type = "Spice";
-                sensorJson.items[idx].geometry.instrName = $"{spacecraft.Name.ToUpper()}_{instrument.Name.ToUpper()}";
-                sensorJson.items[idx].geometry.target = char.ToUpper(spacecraft.InitialOrbitalParameters.Observer.Name[0]) +
-                                                        spacecraft.InitialOrbitalParameters.Observer.Name.Substring(1).ToLower();
+                sensorJson.items[idx].geometry.instrName = $"{spacecraft.Name.ToUpperInvariant()}_{instrument.Name.ToUpperInvariant()}";
+                sensorJson.items[idx].geometry.target = CatalogBodyName(spacecraft.InitialOrbitalParameters.Observer.Name);
                 sensorJson.items[idx].geometry.range = 100000;
                 sensorJson.items[idx].geometry.rangeTracking = true;
 
@@ -271,20 +333,19 @@ public class CosmographiaExporter
         foreach (var spacecraft in scenario.Spacecrafts)
         {
             spacecraftJson.items[idx] = new SpacecraftItem();
-            spacecraftJson.items[idx].name = spacecraft.Name.ToUpper();
-            spacecraftJson.items[idx].center = char.ToUpper(spacecraft.InitialOrbitalParameters.Observer.Name[0]) +
-                                               spacecraft.InitialOrbitalParameters.Observer.Name.Substring(1).ToLower();
+            spacecraftJson.items[idx].name = spacecraft.Name.ToUpperInvariant();
+            spacecraftJson.items[idx].center = CatalogBodyName(spacecraft.InitialOrbitalParameters.Observer.Name);
             spacecraftJson.items[idx].spacecraftClass = "spacecraft";
             spacecraftJson.items[idx].startTime = scenario.Window.StartDate.ToString();
             spacecraftJson.items[idx].endTime = scenario.Window.EndDate.ToString();
 
             spacecraftJson.items[idx].trajectory = new SpacecraftTrajectory();
             spacecraftJson.items[idx].trajectory.center = spacecraftJson.items[idx].center;
-            spacecraftJson.items[idx].trajectory.target = spacecraft.Name.ToUpper();
+            spacecraftJson.items[idx].trajectory.target = spacecraft.Name.ToUpperInvariant();
             spacecraftJson.items[idx].trajectory.type = "Spice";
 
             spacecraftJson.items[idx].bodyFrame = new SpacecraftBodyFrame();
-            spacecraftJson.items[idx].bodyFrame.name = spacecraft.Frame.Name.ToUpper();
+            spacecraftJson.items[idx].bodyFrame.name = spacecraft.Frame.Name.ToUpperInvariant();
             spacecraftJson.items[idx].bodyFrame.type = "Spice";
 
             spacecraftJson.items[idx].geometry = new SpacecraftGeometry();
@@ -298,9 +359,9 @@ public class CosmographiaExporter
             spacecraftJson.items[idx].label.color = GetSpacecraftColor(spacecraft);
             spacecraftJson.items[idx].trajectoryPlot = new SpacecraftTrajectoryPlot();
             spacecraftJson.items[idx].trajectoryPlot.color = spacecraftJson.items[idx].label.color;
-            spacecraftJson.items[idx].trajectoryPlot.duration = $"{spacecraft.InitialOrbitalParameters.Period().TotalDays} d";
+            spacecraftJson.items[idx].trajectoryPlot.duration = string.Create(CultureInfo.InvariantCulture, $"{spacecraft.InitialOrbitalParameters.Period().TotalDays} d");
             spacecraftJson.items[idx].trajectoryPlot.fade = 1;
-            spacecraftJson.items[idx].trajectoryPlot.lead = $"{spacecraft.InitialOrbitalParameters.Period().TotalDays * 0.1} d";
+            spacecraftJson.items[idx].trajectoryPlot.lead = string.Create(CultureInfo.InvariantCulture, $"{spacecraft.InitialOrbitalParameters.Period().TotalDays * 0.1} d");
             spacecraftJson.items[idx].trajectoryPlot.visible = true;
             spacecraftJson.items[idx].trajectoryPlot.lineWidth = 3;
 
@@ -310,6 +371,14 @@ public class CosmographiaExporter
         await using var fileStream = File.Create(Path.Combine(outputDirectory.FullName, "spacecrafts.json"));
         await JsonSerializer.SerializeAsync(fileStream, spacecraftJson, CosmographiaJsonContext.Default.SpacecraftRootObject);
     }
+
+    /// <summary>
+    /// The name of a body in the catalog, from its SPICE name: its first letter upper-cased and the others lower-cased, in
+    /// the invariant culture (<c>JUPITER</c> gives <c>Jupiter</c>, whatever the culture of the thread: under tr-TR the
+    /// current culture gave <c>Jupıter</c>, #798, decision 101 of #668, decided by S. Guillet, 2026-11-25).
+    /// </summary>
+    internal static string CatalogBodyName(string spiceName) =>
+        char.ToUpperInvariant(spiceName[0]) + spiceName.Substring(1).ToLowerInvariant();
 
     private double[] GetSpacecraftColor(Spacecraft spacecraft)
     {
@@ -339,7 +408,7 @@ public class CosmographiaExporter
         await JsonSerializer.SerializeAsync(fileStream, spiceJson, CosmographiaJsonContext.Default.SpiceRootObject);
     }
 
-    // The kernels of the export, relative to <Mission>_<Scenario>: the layout ExportRawDataAsync writes
+    // The kernels of the export, relative to <Mission>_<Scenario>: the layout ExportRawData writes
     private static string ClockPath(Spacecraft spacecraft) => Path.Combine("Spacecrafts", spacecraft.Name, "Clocks", $"{spacecraft.Name}.tsc");
     private static string FramePath(Spacecraft spacecraft) => Path.Combine("Spacecrafts", spacecraft.Name, "Frames", $"{spacecraft.Name}.tf");
     private static string OrientationPath(Spacecraft spacecraft) => Path.Combine("Spacecrafts", spacecraft.Name, "Orientation", $"{spacecraft.Name}.ck");
@@ -378,68 +447,43 @@ public class CosmographiaExporter
         }
     }
 
-    // Writes the kernels under kernelsTemp, whose kernel paths ExportAsync checked, copies them to outputDirectory, and
-    // deletes kernelsTemp
-    private async Task ExportRawDataAsync(Scenario scenario, DirectoryInfo kernelsTemp, DirectoryInfo outputDirectory)
+    // Writes the kernels under kernelsTemp, whose kernel paths ExportAsync checked; the clock kernel of each spacecraft is
+    // loaded while its CK is written, and unloaded after, whether the writing succeeded
+    private static void ExportRawData(Scenario scenario, DirectoryInfo kernelsTemp)
     {
         FileInfo Kernel(string relativePath) => new(Path.Combine(kernelsTemp.FullName, relativePath));
         var spacecraftFolder = kernelsTemp.CreateSubdirectory("Spacecrafts");
         var sitesFolder = kernelsTemp.CreateSubdirectory("Sites");
         kernelsTemp.CreateSubdirectory("Stars");
-        try
+        foreach (var spacecraft in scenario.Spacecrafts)
         {
-            foreach (var spacecraft in scenario.Spacecrafts)
-            {
-                var spacecraftOutputDirectory = spacecraftFolder.CreateSubdirectory(spacecraft.Name);
-                spacecraftOutputDirectory.CreateSubdirectory("Clocks");
-                spacecraftOutputDirectory.CreateSubdirectory("Ephemeris");
-                spacecraftOutputDirectory.CreateSubdirectory("Frames");
-                spacecraftOutputDirectory.CreateSubdirectory("Instruments");
-                spacecraftOutputDirectory.CreateSubdirectory("Orientation");
+            var spacecraftOutputDirectory = spacecraftFolder.CreateSubdirectory(spacecraft.Name);
+            spacecraftOutputDirectory.CreateSubdirectory("Clocks");
+            spacecraftOutputDirectory.CreateSubdirectory("Ephemeris");
+            spacecraftOutputDirectory.CreateSubdirectory("Frames");
+            spacecraftOutputDirectory.CreateSubdirectory("Instruments");
+            spacecraftOutputDirectory.CreateSubdirectory("Orientation");
 
-                var clockFile = Kernel(ClockPath(spacecraft));
-                var frameFile = Kernel(FramePath(spacecraft));
-
-                try
-                {
-                    await spacecraft.Clock.WriteAsync(clockFile);
-                    SpiceAPI.Instance.LoadKernels(clockFile);
-
-                    await spacecraft.Frame.WriteAsync(frameFile);
-                    SpiceAPI.Instance.LoadKernels(frameFile);
-                    spacecraft.WriteOrientation(Kernel(OrientationPath(spacecraft)));
-                    spacecraft.WriteEphemeris(Kernel(EphemerisPath(spacecraft)));
-                }
-                finally
-                {
-                    SpiceAPI.Instance.UnloadKernels(clockFile);
-                    SpiceAPI.Instance.UnloadKernels(frameFile);
-                }
-
-                foreach (var instrument in spacecraft.Instruments)
-                {
-                    await instrument.WriteFrameAsync(Kernel(InstrumentFramePath(spacecraft, instrument)));
-                    await instrument.WriteKernelAsync(Kernel(InstrumentKernelPath(spacecraft, instrument)));
-                }
-            }
-
-            foreach (var site in scenario.Sites)
-            {
-                sitesFolder.CreateSubdirectory(site.Name);
-                await site.WriteFrameAsync(Kernel(SiteFramePath(site)));
-                site.WriteEphemeris(scenario.Window, Kernel(SiteEphemerisPath(site)));
-            }
-
-            foreach (var star in scenario.Stars)
-            {
-                star.WriteEphemeris(Kernel(StarEphemerisPath(star)));
-            }
-
-            CopyDirectory(kernelsTemp, outputDirectory, true);
+            // The sequence of Spacecraft.WriteKernels in the layout of the export (R14 of #668): the content first, as the
+            // writers would refuse it, then the files, the clock kernel loaded while the CK is written and unloaded after
+            var orientation = spacecraft.Frame.CkRecords();
+            var ephemeris = spacecraft.EphemerisKernelBytes(asState: false);
+            spacecraft.WriteKernelSet(new SpacecraftKernels(Kernel(ClockPath(spacecraft)), Kernel(FramePath(spacecraft)),
+                Kernel(EphemerisPath(spacecraft)), Kernel(OrientationPath(spacecraft)),
+                spacecraft.Instruments.Select(x => new InstrumentKernelFiles(x, Kernel(InstrumentFramePath(spacecraft, x)),
+                    Kernel(InstrumentKernelPath(spacecraft, x)))).ToArray(), []), ephemeris, orientation);
         }
-        finally
+
+        foreach (var site in scenario.Sites)
         {
-            kernelsTemp.Delete(true);
+            sitesFolder.CreateSubdirectory(site.Name);
+            site.WriteFrame(Kernel(SiteFramePath(site)));
+            site.WriteEphemeris(scenario.Window, Kernel(SiteEphemerisPath(site)));
+        }
+
+        foreach (var star in scenario.Stars)
+        {
+            star.WriteEphemeris(Kernel(StarEphemerisPath(star)));
         }
     }
 

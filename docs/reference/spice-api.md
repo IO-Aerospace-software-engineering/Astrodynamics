@@ -96,7 +96,7 @@ site observer was built as a celestial body, which threw or was built from undef
 `spkezr_c`'s, which needs only the identifier. The commands of the CLI build their objects by identifier with the same
 rule and the same site (since 11.0.0; before, any identifier from 100001 to 999998 was a site named `site<id>`), so a
 site the loaded kernels do not name fails in both with "has no name in SPICE": load a kernel that names it, as the frame
-kernel of `Site.WriteFrameAsync` does, with its SPK. The two conditions, measured on a site from coordinates whose SPK
+kernel of `Site.WriteFrame` does, with its SPK. The two conditions, measured on a site from coordinates whose SPK
 `Site.WriteEphemeris` wrote over two days of 2024 (fourth round of
 [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668)): loaded alone, a read from the
 site throws `ArgumentException` (`naifId`, "The NAIF identifier 399786 has no name in SPICE"); with the naming frame
@@ -160,11 +160,22 @@ of the file (the reopening of the other SPKs or CKs, on a deleted one SPICE hold
 `InvalidOperationException` with SPICE's message and keeps the file on disk as it was, no longer loaded, nothing written:
 `Spacecraft.WriteEphemeris` ignored that failure and replaced the file before #706.
 
+The text kernel writers (`Clock.Write`, `SpacecraftFrame.Write`, `Instrument.WriteFrame`, `Instrument.WriteKernel`,
+`Site.WriteFrame`, `SiteFrame.Write`) follow the same rule since decision 103 of
+[#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668) (decided by S. Guillet,
+2026-11-25): they rewrote a loaded file under SPICE's load, which a later `LoadKernels` skipped as a file already
+loaded, so SPICE read the replaced content (a frame kernel rewritten for another spacecraft still named the first).
+`Spacecraft.WriteKernels` and `CosmographiaExporter.ExportAsync` replace nothing SPICE holds: they refuse, with
+`InvalidOperationException` before anything is written or deleted, a file or a directory SPICE holds, from
+`LoadKernels`, a live `SpacecraftKernels` handle or a loaded meta-kernel, whose files the registry of `SpiceAPI` does not
+list: a native query reads SPICE's own list by the rule above, unloading nothing (decisions 80, 102 and 103 of #668), so
+a meta-kernel's relative name other than the path is not found there either.
+
 `TransformFrame` composes a TEME end through ICRF (#451), and so the frame of a site built from coordinates or of a site
 from the kernels whose frame id no loaded kernel defines, the frame only the library holds, whose orientation is
 `SiteFrame.GetStateOrientationToICRF`, bit for bit `ToFrame`'s (fourth round of
 [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668); before, its name went to SPICE,
-which threw): within 9.3e-16 rad and 5.7e-20 rad/s of `sxform_c` in the frame kernel `Site.WriteFrameAsync` writes for
+which threw): within 9.3e-16 rad and 5.7e-20 rad/s of `sxform_c` in the frame kernel `Site.WriteFrame` writes for
 the site (the same on Linux x64, Windows x64 and macOS arm64, CI run 43773937161). The frame of a site whose frame the kernels define and the frame of a spacecraft are
 SPICE's by name. A CIRS or TIRS end, `Frame.CIRS`, `Frame.TIRS`, any `CirsFrame` or `TirsFrame` or a frame of those names
 in any case, is composed through ICRF by its managed orientation, as TEME's

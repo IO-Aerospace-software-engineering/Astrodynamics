@@ -3,7 +3,6 @@
 using System;
 using System.Globalization;
 using System.IO;
-using System.Threading.Tasks;
 using IO.Astrodynamics.Math;
 
 namespace IO.Astrodynamics.Body.Spacecraft;
@@ -22,16 +21,17 @@ public class RectangularInstrument : Instrument
         CrossAngle = CheckCrossAngle(crossAngle);
     }
 
-    public override async Task WriteKernelAsync(FileInfo outputFile)
+    /// <inheritdoc />
+    public override void WriteKernel(FileInfo outputFile)
     {
         CheckFrameKernelName("instrument kernel");
-        await using var stream = this.GetType().Assembly.GetManifestResourceStream("IO.Astrodynamics.Templates.InstrumentKernelRectangularTemplate.ti");
+        using var stream = this.GetType().Assembly.GetManifestResourceStream("IO.Astrodynamics.Templates.InstrumentKernelRectangularTemplate.ti");
         using StreamReader sr = new StreamReader(stream ?? throw new InvalidOperationException());
-        var templateData = await sr.ReadToEndAsync();
+        var templateData = sr.ReadToEnd();
         var data = templateData
-            .Replace("{instrumentid}", NaifId.ToString())
-            .Replace("{framename}", Spacecraft.Name.ToUpper() + "_" + Name.ToUpper())
-            .Replace("{spacecraftid}", Spacecraft.NaifId.ToString())
+            .Replace("{instrumentid}", NaifId.ToString(CultureInfo.InvariantCulture))
+            .Replace("{framename}", Spacecraft.Name.ToUpperInvariant() + "_" + Name.ToUpperInvariant())
+            .Replace("{spacecraftid}", Spacecraft.NaifId.ToString(CultureInfo.InvariantCulture))
             .Replace("{bx}", Boresight.X.ToString(CultureInfo.InvariantCulture))
             .Replace("{by}", Boresight.Y.ToString(CultureInfo.InvariantCulture))
             .Replace("{bz}", Boresight.Z.ToString(CultureInfo.InvariantCulture))
@@ -40,7 +40,6 @@ public class RectangularInstrument : Instrument
             .Replace("{rz}", RefVector.Z.ToString(CultureInfo.InvariantCulture))
             .Replace("{angle}", FieldOfView.ToString(CultureInfo.InvariantCulture))
             .Replace("{cangle}", CrossAngle.ToString(CultureInfo.InvariantCulture));
-        await using var sw = new StreamWriter(outputFile.FullName);
-        await sw.WriteAsync(data);
+        SpiceAPI.Instance.WriteTextKernel(outputFile, data);
     }
 }
