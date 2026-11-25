@@ -16,6 +16,7 @@ using IO.Astrodynamics.Propagator.Variational;
 using IO.Astrodynamics.SolarSystemObjects;
 using IO.Astrodynamics.TimeSystem;
 using Xunit;
+using Xunit.Abstractions;
 using Spacecraft = IO.Astrodynamics.Body.Spacecraft.Spacecraft;
 
 namespace IO.Astrodynamics.Tests.Propagators;
@@ -41,8 +42,11 @@ using Time = IO.Astrodynamics.TimeSystem.Time;
 /// </remarks>
 public class ManeuverInferenceTests
 {
-    public ManeuverInferenceTests()
+    private readonly ITestOutputHelper _output;
+
+    public ManeuverInferenceTests(ITestOutputHelper output)
     {
+        _output = output;
         TestKernels.EnsureSolarSystem();
     }
 
@@ -333,6 +337,7 @@ public class ManeuverInferenceTests
         var state = spacecraft.GetEphemeris(S.AddHours(1.0), earth, Frame.ICRF, Aberration.None);
         var front = spacecraft.BodyFront.Rotate(spacecraft.Frame.GetStateOrientationToICRF(S.AddHours(1.0)).Rotation);
         double angle = Separation(front, state.Velocity);
+        _output.WriteLine($"MEASURE ManeuverInference attitudes only {integrator}: front to velocity {angle:E3} rad");
         Assert.True(angle < 1e-9, $"{angle:E3} rad");
     }
 
@@ -478,7 +483,9 @@ public class ManeuverInferenceTests
             var epoch = S.AddHours(1.0);
             var fromEarth = spacecraft.GetEphemeris(epoch, earth, Frame.ICRF, Aberration.None).Position;
             var front = spacecraft.BodyFront.Rotate(spacecraft.Frame.GetStateOrientationToICRF(epoch).Rotation);
-            Assert.True(Separation(front, fromEarth) < 1e-9);
+            var angle = Separation(front, fromEarth);
+            _output.WriteLine($"MEASURE ManeuverInference SSB user attitude {integrator}: front to position from the Earth {angle:E3} rad");
+            Assert.True(angle < 1e-9, $"{angle:E3} rad");
         }
     }
 
@@ -507,7 +514,9 @@ public class ManeuverInferenceTests
         var state = spacecraft.GetEphemeris(epoch, sun, Frame.ICRF, Aberration.None);
         var expected = triad.ComputeOrientation(state);
         var recorded = spacecraft.Frame.GetStateOrientationToICRF(epoch).Rotation;
-        Assert.True(RotationAngle(expected, recorded) < 1e-9);
+        var angle = RotationAngle(expected, recorded);
+        _output.WriteLine($"MEASURE ManeuverInference SSB TRIAD {integrator}: recorded to law {angle:E3} rad");
+        Assert.True(angle < 1e-9, $"{angle:E3} rad");
     }
 
     [Theory]
@@ -528,6 +537,8 @@ public class ManeuverInferenceTests
         var epoch = S.AddHours(1.0);
         var boresight = Camera(spacecraft).GetBoresightInSpacecraftFrame().Rotate(spacecraft.Frame.GetStateOrientationToICRF(epoch).Rotation);
         var toMoon = moon.GetEphemeris(epoch, spacecraft, Frame.ICRF, Aberration.None).Position;
-        Assert.True(Separation(boresight, toMoon) < 1e-9);
+        var angle = Separation(boresight, toMoon);
+        _output.WriteLine($"MEASURE ManeuverInference SSB pointing {integrator}: boresight to the Moon {angle:E3} rad");
+        Assert.True(angle < 1e-9, $"{angle:E3} rad");
     }
 }

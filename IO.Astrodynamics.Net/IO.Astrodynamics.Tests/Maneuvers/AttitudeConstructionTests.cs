@@ -10,6 +10,7 @@ using IO.Astrodynamics.Math;
 using IO.Astrodynamics.OrbitalParameters;
 using IO.Astrodynamics.TimeSystem;
 using Xunit;
+using Xunit.Abstractions;
 
 namespace IO.Astrodynamics.Tests.Maneuvers;
 
@@ -25,8 +26,11 @@ using Time = IO.Astrodynamics.TimeSystem.Time;
 /// </summary>
 public class AttitudeConstructionTests
 {
-    public AttitudeConstructionTests()
+    private readonly ITestOutputHelper _output;
+
+    public AttitudeConstructionTests(ITestOutputHelper output)
     {
+        _output = output;
         TestKernels.EnsureSolarSystem();
     }
 
@@ -74,7 +78,9 @@ public class AttitudeConstructionTests
         };
         var pointed = axisVector.Rotate(q);
         var nadirDirection = state.Position.Inverse();
-        Assert.True(System.Math.Atan2(pointed.Cross(nadirDirection).Magnitude(), pointed.Dot(nadirDirection)) < 1e-15);
+        var angle = System.Math.Atan2(pointed.Cross(nadirDirection).Magnitude(), pointed.Dot(nadirDirection));
+        _output.WriteLine($"MEASURE AttitudeConstruction nadir {axis}: axis to nadir {angle:E3} rad");
+        Assert.True(angle < 1e-15, $"{angle:E3} rad");
         Assert.Equal(axis, nadir.BodyAxis);
     }
 
@@ -181,7 +187,9 @@ public class AttitudeConstructionTests
             var pointing = new InstrumentPointingToAttitude(camera, target, maneuverCenter: TestHelpers.EarthAtJ2000);
             var boresight = camera.GetBoresightInSpacecraftFrame().Rotate(pointing.ComputeOrientation(state));
             var direction = target.GetDirection(state);
-            Assert.True(System.Math.Atan2(boresight.Cross(direction).Magnitude(), boresight.Dot(direction)) < 1e-15);
+            var angle = System.Math.Atan2(boresight.Cross(direction).Magnitude(), boresight.Dot(direction));
+            _output.WriteLine($"MEASURE AttitudeConstruction pointing {(target is CelestialAttitudeTarget c ? "Moon " + c.Aberration : "prograde")}: boresight to target {angle:E3} rad");
+            Assert.True(angle < 1e-15, $"{angle:E3} rad");
         }
     }
 }

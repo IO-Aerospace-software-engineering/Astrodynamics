@@ -7,6 +7,7 @@ using IO.Astrodynamics.Math;
 using IO.Astrodynamics.OrbitalParameters;
 using IO.Astrodynamics.TimeSystem;
 using Xunit;
+using Xunit.Abstractions;
 
 namespace IO.Astrodynamics.Tests.Maneuvers;
 
@@ -18,8 +19,11 @@ namespace IO.Astrodynamics.Tests.Maneuvers;
 /// </summary>
 public class BodyAxisTests
 {
-    public BodyAxisTests()
+    private readonly ITestOutputHelper _output;
+
+    public BodyAxisTests(ITestOutputHelper output)
     {
+        _output = output;
         TestKernels.EnsureSolarSystem();
     }
 
@@ -125,11 +129,15 @@ public class BodyAxisTests
         var velocity = state.Velocity.Normalize();
 
         var before = prograde.ComputeStateOrientation(state);
-        Assert.True(Spacecraft.Front.Rotate(before.Rotation).Angle(velocity) < 1e-12);
+        var beforeAngle = Spacecraft.Front.Rotate(before.Rotation).Angle(velocity);
+        _output.WriteLine($"MEASURE BodyAxis preview before any plan: front to velocity {beforeAngle:E3} rad");
+        Assert.True(beforeAngle < 1e-12, $"{beforeAngle:E3} rad");
 
         spc.SetManeuvers(prograde);
         var inPlan = prograde.ComputeStateOrientation(state);
-        Assert.True(spc.BodyFront.Rotate(inPlan.Rotation).Angle(velocity) < 1e-12);
+        var inPlanAngle = spc.BodyFront.Rotate(inPlan.Rotation).Angle(velocity);
+        _output.WriteLine($"MEASURE BodyAxis preview in a plan: front to velocity {inPlanAngle:E3} rad");
+        Assert.True(inPlanAngle < 1e-12, $"{inPlanAngle:E3} rad");
         Assert.True(Spacecraft.Front.Rotate(inPlan.Rotation).Angle(velocity) > 1.0);
     }
 }
