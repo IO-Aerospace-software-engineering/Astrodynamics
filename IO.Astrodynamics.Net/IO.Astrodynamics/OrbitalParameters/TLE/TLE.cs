@@ -1,8 +1,11 @@
 // Copyright 2023. Sylvain Guillet (sylvain.guillet@tutamail.com)
 
 using System;
+using System.Collections.Generic;
 using System.ComponentModel;
+using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -32,7 +35,7 @@ namespace IO.Astrodynamics.OrbitalParameters.TLE;
 /// orbit, an eccentricity out of range) throws <see cref="InvalidOperationException"/> (#454).
 /// </para>
 /// </remarks>
-public class TLE : OrbitalParameters, IEquatable<TLE>
+public class TLE : OrbitalParameters, IEquatable<TLE>, IParsable<TLE>
 {
     private const double MAX_ECCENTRICITY = 0.9999999;
     private const int MAX_ELEMENT_SET_NUMBER = 9999;
@@ -1113,6 +1116,212 @@ public class TLE : OrbitalParameters, IEquatable<TLE>
     {
         return !Equals(left, right);
     }
+
+    #region Text
+
+    /// <summary>
+    /// Reads the one TLE of a text: two lines, or a name line and two lines (R21 of #668).
+    /// </summary>
+    /// <param name="text">The text: CR/LF or LF, trailing blanks and blank lines ignored; a name line is trimmed, the
+    /// <c>0 </c> Space-Track writes before it removed, and a set without one is named by its catalog field.</param>
+    /// <returns>The TLE the constructor builds from the lines and the name.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="text"/> is null.</exception>
+    /// <exception cref="TleFormatException">The text holds no set, more than one (<see cref="ParseAll(string)"/> reads
+    /// them), or a set that does not follow the format, at its line of the text and its column.</exception>
+    public static TLE Parse(string text)
+    {
+        ArgumentNullException.ThrowIfNull(text);
+        return Single(ReadSets(new StringReader(text)));
+    }
+
+    /// <summary>
+    /// Reads the one TLE of a reader, as <see cref="Parse(string)"/>.
+    /// </summary>
+    /// <param name="reader">The reader, read to its end.</param>
+    /// <returns>The TLE.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="reader"/> is null.</exception>
+    /// <exception cref="TleFormatException">The text holds no set, more than one, or a set that does not follow the
+    /// format.</exception>
+    public static TLE Parse(TextReader reader)
+    {
+        ArgumentNullException.ThrowIfNull(reader);
+        return Single(ReadSets(reader));
+    }
+
+    /// <summary>
+    /// <see cref="Parse(string)"/>, <paramref name="provider"/> unused (<see cref="IParsable{TSelf}"/>).
+    /// </summary>
+    /// <param name="s">The text.</param>
+    /// <param name="provider">Unused: the format is culture invariant.</param>
+    /// <returns>The TLE.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="s"/> is null.</exception>
+    /// <exception cref="TleFormatException">The text is not one TLE.</exception>
+    public static TLE Parse(string s, IFormatProvider provider) => Parse(s);
+
+    /// <summary>
+    /// Reads every TLE of a text, in its order: two- and three-line sets, mixed, as <see cref="Parse(string)"/> reads one.
+    /// </summary>
+    /// <param name="text">The text.</param>
+    /// <returns>The sets, none for a blank text.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="text"/> is null.</exception>
+    /// <exception cref="TleFormatException">The first set that does not follow the format, at its line of the text and its
+    /// column; no partial list.</exception>
+    public static IReadOnlyList<TLE> ParseAll(string text)
+    {
+        ArgumentNullException.ThrowIfNull(text);
+        return ParseAll(new StringReader(text));
+    }
+
+    /// <summary>
+    /// Reads every TLE of a reader, as <see cref="ParseAll(string)"/>.
+    /// </summary>
+    /// <param name="reader">The reader, read to its end.</param>
+    /// <returns>The sets, in their order.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="reader"/> is null.</exception>
+    /// <exception cref="TleFormatException">The first set that does not follow the format.</exception>
+    public static IReadOnlyList<TLE> ParseAll(TextReader reader)
+    {
+        ArgumentNullException.ThrowIfNull(reader);
+        return ReadSets(reader).Select(set => set.Tle).ToArray();
+    }
+
+    /// <summary>
+    /// Reads the one TLE of a file, as <see cref="Parse(string)"/>.
+    /// </summary>
+    /// <param name="path">The path of the file.</param>
+    /// <returns>The TLE.</returns>
+    /// <exception cref="TleFormatException">The file holds no set, more than one (<see cref="LoadAll"/> reads them), or a
+    /// set that does not follow the format, at its line of the file.</exception>
+    /// <exception cref="IOException">The file cannot be read, as <see cref="File.OpenText"/> throws.</exception>
+    public static TLE Load(string path)
+    {
+        using var reader = File.OpenText(path);
+        return Parse(reader);
+    }
+
+    /// <summary>
+    /// Reads every TLE of a file, in its order, as <see cref="ParseAll(string)"/>: a catalog of CelesTrak or Space-Track,
+    /// two- or three-line.
+    /// </summary>
+    /// <param name="path">The path of the file.</param>
+    /// <returns>The sets.</returns>
+    /// <exception cref="TleFormatException">The first set that does not follow the format, at its line of the file and its
+    /// column; no partial list (R21 of #668).</exception>
+    /// <exception cref="IOException">The file cannot be read, as <see cref="File.OpenText"/> throws.</exception>
+    public static IReadOnlyList<TLE> LoadAll(string path)
+    {
+        using var reader = File.OpenText(path);
+        return ParseAll(reader);
+    }
+
+    /// <summary>
+    /// <see cref="Parse(string)"/> without an exception for a text that is not one TLE.
+    /// </summary>
+    /// <param name="text">The text, or null.</param>
+    /// <param name="result">The TLE, or null.</param>
+    /// <returns>Whether the text is one TLE.</returns>
+    public static bool TryParse([NotNullWhen(true)] string text, out TLE result)
+    {
+        result = null;
+        if (text == null) return false;
+        try
+        {
+            result = Parse(text);
+            return true;
+        }
+        catch (TleFormatException)
+        {
+            return false;
+        }
+    }
+
+    /// <summary>
+    /// <see cref="TryParse(string, out TLE)"/>, <paramref name="provider"/> unused (<see cref="IParsable{TSelf}"/>).
+    /// </summary>
+    /// <param name="s">The text, or null.</param>
+    /// <param name="provider">Unused: the format is culture invariant.</param>
+    /// <param name="result">The TLE, or null.</param>
+    /// <returns>Whether the text is one TLE.</returns>
+    public static bool TryParse([NotNullWhen(true)] string s, IFormatProvider provider, out TLE result) => TryParse(s, out result);
+
+    /// <summary>
+    /// <see cref="Load"/> without an exception for a file that does not exist or is not one TLE.
+    /// </summary>
+    /// <param name="path">The path of the file.</param>
+    /// <param name="result">The TLE, or null.</param>
+    /// <returns>Whether the file exists and holds one TLE; an error reading an existing file throws, as
+    /// <see cref="File.ReadAllText(string)"/> does.</returns>
+    public static bool TryLoad(string path, out TLE result)
+    {
+        result = null;
+        return File.Exists(path) && TryParse(File.ReadAllText(path), out result);
+    }
+
+    // The one set of a text: none or several throw at the line of the text where the second starts
+    private static TLE Single(List<(TLE Tle, int Line)> sets)
+    {
+        if (sets.Count == 0)
+            throw new TleFormatException("The text holds no TLE.", 1, 1);
+        if (sets.Count > 1)
+        {
+            throw new TleFormatException(
+                $"The text holds {sets.Count} TLEs, the second at line {sets[1].Line}: ParseAll or LoadAll reads them all.", sets[1].Line, 1);
+        }
+
+        return sets[0].Tle;
+    }
+
+    // The sets of a text with the line each starts at (IC-21 of #668's lot L7): the lines trimmed at their end (CR, blanks)
+    // and the blank ones skipped; a line that starts with '1' followed by one that starts with '2' opens a set without a
+    // name, any other line is the name of the set of the next two (Space-Track's leading "0 " removed, trimmed); a set the
+    // constructor refuses throws its TleFormatException at the line of the text
+    private static List<(TLE Tle, int Line)> ReadSets(TextReader reader)
+    {
+        var lines = new List<(string Text, int Number)>();
+        int number = 0;
+        for (var line = reader.ReadLine(); line != null; line = reader.ReadLine())
+        {
+            number++;
+            var text = line.TrimEnd();
+            if (text.Length > 0) lines.Add((text, number));
+        }
+
+        var sets = new List<(TLE Tle, int Line)>();
+        int i = 0;
+        while (i < lines.Count)
+        {
+            int start = lines[i].Number;
+            string name = null;
+            if (!(lines[i].Text.StartsWith('1') && i + 1 < lines.Count && lines[i + 1].Text.StartsWith('2')))
+            {
+                var title = lines[i].Text;
+                name = (title.StartsWith("0 ", StringComparison.Ordinal) ? title.Substring(2) : title).Trim();
+                i++;
+            }
+
+            if (i + 1 >= lines.Count)
+            {
+                throw new TleFormatException($"The TLE that starts at line {start} ends before its two lines.", lines[^1].Number + 1, 1);
+            }
+
+            var (line1, number1) = lines[i];
+            var (line2, number2) = lines[i + 1];
+            try
+            {
+                sets.Add((new TLE(name, line1, line2), start));
+            }
+            catch (ArgumentException e) when (e.InnerException is TleFormatException format)
+            {
+                throw new TleFormatException(format.Message, format.Line == 1 ? number1 : number2, format.Column);
+            }
+
+            i += 2;
+        }
+
+        return sets;
+    }
+
+    #endregion
 
     #region OMM Conversion
 

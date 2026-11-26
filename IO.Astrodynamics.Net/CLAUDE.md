@@ -181,6 +181,8 @@ identifiers are `int` everywhere (`Configuration.NoradId`, `TLE.Create`) — nev
   `Omm.ToTle` without `ELEMENT_SET_NO`; #606)
 - Out-of-range identifiers, revolution numbers (> 99999) and element set numbers (> 9999) throw
   instead of being silently truncated
+- `TLE.Parse`, `ParseAll`, `Load`, `LoadAll`, `TryParse`, `TryLoad` (`IParsable<TLE>`) read TLE text: two- and three-line
+  sets mixed, CR/LF, blanks and Space-Track's `0 ` tolerated, a bad set `TleFormatException` at its line and column
 - The `TLE` constructor checks every field of the text before any kernel read and throws `ArgumentException` naming
   `line1` or `line2` with a `TleFormatException` (`Line`, `Column`) as inner exception, lines whose catalog numbers
   disagree included (line 2, column 3); a null or blank name is the catalog field as written; `CosparId` (null when

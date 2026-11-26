@@ -188,6 +188,29 @@ and the reads from any other body, are SGP4.
 `Spacecraft.ToOpm` writes the propagated state, in TEME, after a numerical propagation, and the SGP4 state otherwise,
 also when `TLEPropagator` sampled it (#658, decided by S. Guillet, 2026-11-17; the SGP4 state on every path before 11.0.0). For SGP4 itself, use `TLEPropagator` or `tle.ToStateVector(t)`.
 
+## Reading TLE text
+
+One verb set reads a TLE text, shared with the CCSDS messages (R21 of
+[#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668)): `TLE.Parse` (a `string` or a
+`TextReader`) and `TLE.Load` (a file) read one set, `ParseAll` and `LoadAll` every set in its order, `TryParse` and
+`TryLoad` return false where the others throw, and `TLE` is an `IParsable<TLE>`. A text holds two-line sets (named by
+their catalog field), three-line sets, or both: CR/LF or LF, trailing blanks and blank lines are ignored, and a name line
+is trimmed, the `0 ` Space-Track writes before it removed. A bad set throws `TleFormatException` at its line of the text
+and the column of its field, the first one in the text, with no partial list; `Parse` and `Load` throw it too for a text
+of no set or of several. The constructor stays strict: two lines of 69 characters.
+
+```csharp
+// Inputs: catalogPath (string)
+var catalog = TLE.LoadAll(catalogPath);
+var iss = TLE.Parse("ISS (ZARYA)\n" +
+    "1 25544U 98067A   21020.53488036  .00016717  00000-0  10270-3 0  9054\n" +
+    "2 25544  51.6423 353.0312 0000493 320.8755  39.2360 15.49309423 25703");
+// The lines again, from the properties, without slicing them
+var again = TLE.Create(iss.ToMeanKeplerianElements(), iss.Name, iss.NoradCatalogId, iss.CosparId, iss.RevolutionNumberAtEpoch,
+    iss.Classification, iss.BallisticCoefficient, iss.FirstDerivationMeanMotion, iss.SecondDerivativeMeanMotion,
+    iss.ElementSetNumber);
+```
+
 ## See Also
 
 - [TLE & OMM Tutorial](../tutorials/tle-and-omm.md)

@@ -639,6 +639,8 @@ Two-Line Element set for Earth-orbiting objects. TLE stores **mean** orbital ele
 
 | Method | Description |
 |--------|-------------|
+| `Parse(string)`, `ParseAll(string)`, `Load(string)`, `LoadAll(string)` | Read one set or every set of a text or a file, two- and three-line sets mixed; a bad set throws `TleFormatException` at its line and column |
+| `TryParse(string, out TLE)`, `TryLoad(string, out TLE)` | The same, false instead of an exception |
 | `ToStateVector()` | Propagate to TLE epoch using SGP4/SDP4 (returns osculating state) |
 | `ToStateVector(Time epoch)` | Propagate to specified epoch using SGP4/SDP4 |
 | `ToOsculating()` | Convert to osculating StateVector at TLE epoch (via SGP4) |

@@ -4,7 +4,8 @@ This tutorial covers Two-Line Element sets (TLE), Orbit Mean-Elements Message (O
 
 ## Parsing a TLE
 
-Parse a standard two-line element set from its three-line string form:
+Parse a standard two-line element set from its three-line string form (a text or a file of one or many sets is read by
+`TLE.Parse`, `TLE.ParseAll`, `TLE.Load` and `TLE.LoadAll`; see [Reading TLE text](../reference/tle.md#reading-tle-text)):
 
 ```csharp
 using IO.Astrodynamics;
@@ -213,7 +214,7 @@ Unlike TLE/OMM, OPM elements are osculating — they can be used directly for nu
 
 ## Summary
 
-- Parse TLEs from standard two-line format; use `ToOsculating()` or `ToStateVector(epoch)` for physical states.
+- Parse TLEs from standard two-line format, with the constructor or `TLE.Parse`/`TLE.LoadAll` (a malformed set throws at its line and column); use `ToOsculating()` or `ToStateVector(epoch)` for physical states.
 - Never call `ToStateVector()` on mean Keplerian elements — always go through the SGP4 propagator.
 - OMM and TLE are interchangeable when the OMM has TLE-compatible fields (`IsTleCompatible`): TLE parameters, the SGP4 theory, TEME and the Earth.
 - OPM provides osculating state vectors in CCSDS format, ready for direct use.

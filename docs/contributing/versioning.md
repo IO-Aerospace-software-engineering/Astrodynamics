@@ -508,6 +508,12 @@ release are listed under **Known limitations**.
   tle.Classification, …, tle.ElementSetNumber)` rebuilds the lines without slicing them (`TleFieldsTests`); a null or blank
   name is the catalog field of line 1 as written (`25544`, `T5544`), where it threw `ArgumentException`. `ToOmm` writes the
   same OMM. See [TLE](../reference/tle.md#constructor).
+- **`TLE.Parse`, `ParseAll`, `Load`, `LoadAll`, `TryParse`, `TryLoad` and `IParsable<TLE>`** (lot L7, R21 of
+  [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668), the verb set shared with the CCSDS
+  messages): one set or every set of a text (`string` or `TextReader`) or a file, two- and three-line sets mixed, CR/LF,
+  trailing blanks and blank lines ignored, a name trimmed and Space-Track's `0 ` before it removed; a bad set throws
+  `TleFormatException` at its line of the text and its column, the first one, with no partial list; `Parse` and `Load` take
+  one set, the `Try` forms return false (`TleVerbsTests`). See [Reading TLE text](../reference/tle.md#reading-tle-text).
 
 **Fixed**
 
