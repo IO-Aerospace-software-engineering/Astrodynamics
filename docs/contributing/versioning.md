@@ -8083,6 +8083,13 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   area was dropped without a word (`OpmTests.ToSpacecraft_OneArea_IsTheSectionalArea`,
   `ToSpacecraft_TwoDifferentAreas_Throws`). Every OPM the library writes (`Spacecraft.ToOpm`) holds one area twice.
   Migration: for an OPM of two different areas, `ToStateVector()` and the `Spacecraft` constructor with the area chosen.
+- **`Spacecraft.ToOpm(originator, epoch, options)`: the three bools of the export are one `OpmExportOptions`** (lot L7,
+  D1 of [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668), no forwarder).
+  **Breaking**: `includeKeplerianElements`, `includeSpacecraftParameters` and `includeManeuvers` are removed; the sealed
+  record `OpmExportOptions` holds them (`IncludeKeplerianElements`, `IncludeSpacecraftParameters`, `IncludeManeuvers`, all
+  true, `Default`), the default export unchanged, bit for bit (`SpacecraftToOpmTests.ExportOptions_LeaveOutTheirBlock_DefaultWritesEvery`).
+  Migration: `ToOpm(includeManeuvers: false)` → `ToOpm(options: new OpmExportOptions { IncludeManeuvers = false })`, and
+  likewise for the other two.
 **Removed**
 
 - **The window searches on the target: `FindWindowsOnDistanceConstraint`, `FindWindowsOnOccultationConstraint` and

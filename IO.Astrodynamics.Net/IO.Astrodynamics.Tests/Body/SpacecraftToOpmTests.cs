@@ -4,6 +4,7 @@ using System;
 using System.Linq;
 using IO.Astrodynamics.Body;
 using IO.Astrodynamics.Body.Spacecraft;
+using IO.Astrodynamics.CCSDS.OPM;
 using IO.Astrodynamics.Maneuver;
 using IO.Astrodynamics.Math;
 using IO.Astrodynamics.OrbitalParameters;
@@ -160,6 +161,38 @@ public class SpacecraftToOpmTests
     /// A TLE spacecraft propagated numerically writes its propagated state in TEME, the frame of its TLE, not SGP4 (53.7 km
     /// from it after 1 h for the ISS); one only sampled by <see cref="TLEPropagator"/> writes SGP4, as before (the control).
     /// </summary>
+    /// <summary>
+    /// The three switches of the export are one <see cref="OpmExportOptions"/> (D1 of #668, lot L7: the three bools of
+    /// <c>ToOpm</c> before 11.0.0), every block by default: the default writes the Keplerian elements, the spacecraft
+    /// parameters and the burn, each switch leaves its block out and changes nothing else.
+    /// </summary>
+    [Fact]
+    public void ExportOptions_LeaveOutTheirBlock_DefaultWritesEvery()
+    {
+        Assert.Equal(new OpmExportOptions(), OpmExportOptions.Default);
+        Assert.True(OpmExportOptions.Default.IncludeKeplerianElements);
+        Assert.True(OpmExportOptions.Default.IncludeSpacecraftParameters);
+        Assert.True(OpmExportOptions.Default.IncludeManeuvers);
+
+        var (spacecraft, _, _) = Propagated(-6585, "RK", "ICRF");
+        var epoch = S.AddSeconds(6000.0);
+        var all = spacecraft.ToOpm(epoch: epoch);
+        Assert.NotNull(all.Data.KeplerianElements);
+        Assert.NotNull(all.Data.Mass);
+        Assert.Single(all.Data.Maneuvers);
+        // The body of the default message, its CREATION_DATE aside (the instant of the call)
+        static string Body(Opm opm) => System.Xml.Linq.XDocument.Parse(opm.ToXml()).Descendants().First(e => e.Name.LocalName == "body").ToString();
+        Assert.Equal(Body(all), Body(spacecraft.ToOpm(epoch: epoch, options: OpmExportOptions.Default)));
+
+        var none = spacecraft.ToOpm(epoch: epoch, options: new OpmExportOptions
+            { IncludeKeplerianElements = false, IncludeSpacecraftParameters = false, IncludeManeuvers = false });
+        Assert.Null(none.Data.KeplerianElements);
+        Assert.Null(none.Data.Mass);
+        Assert.Null(none.Data.DragArea);
+        Assert.Empty(none.Data.Maneuvers);
+        Assert.Equal(all.Data.StateVector.X, none.Data.StateVector.X);
+    }
+
     [Fact]
     public void TleSpacecraft_PropagatedWritesItsStates_SampledWritesSgp4()
     {

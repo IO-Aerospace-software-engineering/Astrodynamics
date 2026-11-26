@@ -3,6 +3,7 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using IO.Astrodynamics.CCSDS.OPM;
 using IO.Astrodynamics.Body;
 using IO.Astrodynamics.Body.Spacecraft;
 using IO.Astrodynamics.Maneuver;
@@ -775,7 +776,7 @@ namespace IO.Astrodynamics.Tests.Body
             Assert.Equal("ICRF", opm.Metadata.ReferenceFrame);
             Assert.Contains("<MAN_REF_FRAME>ICRF</MAN_REF_FRAME>", opm.ToXml());
             Assert.DoesNotContain(opm.Validate().Issues, i => i.Path.Contains("ReferenceFrame") || i.Path.Contains("ManRefFrame"));
-            Assert.Null(spc.ToOpm(includeManeuvers: false).Data.Maneuvers.FirstOrDefault());
+            Assert.Null(spc.ToOpm(options: new OpmExportOptions { IncludeManeuvers = false }).Data.Maneuvers.FirstOrDefault());
         }
 
         /// <summary>

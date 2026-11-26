@@ -3,7 +3,6 @@
 # members with two bools or more (D1.bools) and doubles named Step, Duration or Tolerance without Seconds (D1.seconds),
 # a method keyed by its signature. The file may only shrink: a new member follows D1, and the lots that replace these
 # members (options L4 to L7, renames L9) remove their lines.
-D1.bools	IO.Astrodynamics.Body.Spacecraft.Spacecraft.ToOpm(string, Time?, bool, bool, bool)
 D1.bools	IO.Astrodynamics.Propagator.CentralBodyPropagator.BuildCentralBodyForces(CelestialItem, CelestialItem[], Spacecraft, bool, bool)
 D1.default	IO.Astrodynamics.Propagator.Variational.CovariancePropagationOptions
 D1.default	IO.Astrodynamics.SSA.AvoidanceSearchOptions

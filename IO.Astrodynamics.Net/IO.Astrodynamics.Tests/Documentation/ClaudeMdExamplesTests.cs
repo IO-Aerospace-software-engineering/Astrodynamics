@@ -248,7 +248,7 @@ public class ClaudeMdExamplesTests
     /// <summary>
     /// The maneuver export block runs on what its opening comment names, a propagated spacecraft with a COSPAR id, here one
     /// whose apogee raise (to 7000 km from the Earth's centre, at the first perigee of a two-hour window) executed: the
-    /// loop of the block then exports it, and the OPM of <c>ToOpm(includeManeuvers: true)</c> carries it in the units of
+    /// loop of the block then exports it, and the OPM of <c>ToOpm(epoch: end)</c> carries it in the units of
     /// CCSDS 502.0-B-3, Δv in km/s (the Δv in m/s divided by 1000), the expelled mass negative, the duration in seconds and
     /// the ignition epoch in UTC. On 608bcf6 <c>Block_Runs</c> passed an unpropagated spacecraft, so the loop ran zero
     /// times.

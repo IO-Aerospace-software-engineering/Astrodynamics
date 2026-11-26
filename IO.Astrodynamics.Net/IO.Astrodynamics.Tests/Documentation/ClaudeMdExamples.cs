@@ -144,9 +144,7 @@ namespace ClaudeMdSamples
                 1600.0, 2.2, "1998-067A", 1.5);
             var opm = spacecraft.ToOpm(
                 originator: "My Organization",
-                includeKeplerianElements: true,
-                includeSpacecraftParameters: true,
-                includeManeuvers: true);  // Includes executed maneuvers
+                options: OpmExportOptions.Default);  // Keplerian elements, spacecraft parameters, executed maneuvers
             opm.Save("iss.opm");
 
             // OPM to Spacecraft (for mission operations)
@@ -180,7 +178,7 @@ namespace ClaudeMdSamples
             #region net:8
             // spacecraft: a propagated spacecraft with a COSPAR id; end: an epoch of its propagation after its burns
             // The OPM carries the state of its epoch, with the mass and the maneuvers ignited by then (#658)
-            var opm = spacecraft.ToOpm(epoch: end, includeManeuvers: true);
+            var opm = spacecraft.ToOpm(epoch: end);   // the maneuvers included (OpmExportOptions.Default)
             // OPM will contain OpmManeuverParameters for each ImpulseManeuver ignited by then
 
             // Manual maneuver export from ImpulseManeuver

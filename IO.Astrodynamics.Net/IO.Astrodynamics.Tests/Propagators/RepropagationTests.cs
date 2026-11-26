@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
+using IO.Astrodynamics.CCSDS.OPM;
 using IO.Astrodynamics.Body;
 using IO.Astrodynamics.Body.Spacecraft;
 using IO.Astrodynamics.Maneuver;
@@ -396,7 +397,7 @@ public class RepropagationTests
 
         // At the window end, by which every maneuver of the run executed: an OPM carries the maneuvers executed by its epoch
         // (#658)
-        var opm = spacecraft.ToOpm(epoch: window.EndDate, includeKeplerianElements: false, includeManeuvers: true);
+        var opm = spacecraft.ToOpm(epoch: window.EndDate, options: new OpmExportOptions { IncludeKeplerianElements = false });
         return new Run
         {
             Window = window,

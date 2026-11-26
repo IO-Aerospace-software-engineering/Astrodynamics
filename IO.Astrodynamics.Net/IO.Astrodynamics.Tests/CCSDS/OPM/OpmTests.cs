@@ -948,7 +948,7 @@ namespace IO.Astrodynamics.Tests.CCSDS.OPM
             Assert.Equal(System.Math.PI, sv.Inclination(), 12);
             var spacecraft = new Spacecraft(-1000, "RETRO", 1000.0, sv, 5000.0, new Clock("OnboardClock", 256), 1.0, 2.2, "2024-001A", 1.0);
 
-            var opm = spacecraft.ToOpm(includeSpacecraftParameters: false, includeManeuvers: false);
+            var opm = spacecraft.ToOpm(options: new OpmExportOptions { IncludeSpacecraftParameters = false, IncludeManeuvers = false });
             var kep = opm.Data.KeplerianElements;
             foreach (var angle in new[] { kep.RightAscensionOfAscendingNode, kep.ArgumentOfPericenter, kep.TrueAnomaly!.Value })
             {

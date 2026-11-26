@@ -209,10 +209,13 @@ Before 11.0.0 the observer was the Earth whatever `CENTER_NAME` said.
 
 ## Spacecraft Export
 
-`Spacecraft.ToOpm(originator, epoch, includeKeplerianElements, includeSpacecraftParameters, includeManeuvers)` exports to OPM
+`Spacecraft.ToOpm(originator, epoch, options)` exports to OPM
 format the spacecraft at `epoch`, the epoch of its initial orbital parameters by default (kept, decided by S. Guillet, 2026-11-18): its state, its mass and its
 maneuvers at that instant ([#658](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/658), decided
-by S. Guillet, 2026-11-17).
+by S. Guillet, 2026-11-17). `OpmExportOptions` (`IncludeKeplerianElements`, `IncludeSpacecraftParameters`,
+`IncludeManeuvers`, all true, `null` for `Default`) chooses the blocks written besides the state; they were three bools
+of `ToOpm` before 11.0.0 (D1 of [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668),
+lot L7).
 
 - A spacecraft that holds propagated states (after `Propagate`, `Scenario.Simulate`, a
   `CentralBodyPropagator` built directly, or `AddPropagatedStates`) writes the state read from them,
