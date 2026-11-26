@@ -23,11 +23,11 @@ namespace IO.Astrodynamics.SmokeTests;
 /// and all entry points are reachable.
 /// </summary>
 [Collection(KernelCollection.Name)]
-public class SpiceAPISmokeTests
+public class SpiceApiSmokeTests
 {
     private static readonly DirectoryInfo SolarSystemKernelPath = new("Data/SolarSystem");
 
-    public SpiceAPISmokeTests()
+    public SpiceApiSmokeTests()
     {
         SpiceApi.Instance.LoadKernels(SolarSystemKernelPath);
     }

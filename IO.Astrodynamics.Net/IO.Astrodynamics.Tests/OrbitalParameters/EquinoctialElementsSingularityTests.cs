@@ -572,7 +572,7 @@ public class EquinoctialElementsSingularityTests
     [MemberData(nameof(TemeStates))]
     public void ToTle_OfAnEquatorialTemeState(string name, double a, double e, double i, double periapsis, double m)
     {
-        // Arrange: the state given directly in TEME, as TLETests, so that the fit does not depend on the rotation
+        // Arrange: the state given directly in TEME, as TleTests, so that the fit does not depend on the rotation
         // between ICRF and TEME, which #451 changes. Within 1e-10 rad of the equator, the fit threw after 15 iterations
         // before #452 (best 111 467.53 m and 522 853.27 m at this epoch, 2021-03-20 12:00 TDB)
         var s = new KeplerianElements(a, e, i, 0.0, periapsis, m, _earth, Epoch, Frames.Frame.TEME).ToStateVector();
@@ -582,7 +582,7 @@ public class EquinoctialElementsSingularityTests
         var tle = target.ToTle("TEST", 25666, "98067A");
         var fitted = tle.ToStateVector(Epoch);
 
-        // Assert, in m and m/s as TLETests, and the two lines of the fit at i = 1e-9 rad, which never took the special
+        // Assert, in m and m/s as TleTests, and the two lines of the fit at i = 1e-9 rad, which never took the special
         // branches. Twice the worst over Linux, Windows and macOS arm64 (CI run 40280932636, 2026-10-26): 1.588 m and
         // 2.30e-3 m/s at i = 0, 5e-11 and 1e-9 rad; 3.161 m and 3.45e-3 m/s at e = 0.001
         double position = (fitted.Position - target.Position).Magnitude();

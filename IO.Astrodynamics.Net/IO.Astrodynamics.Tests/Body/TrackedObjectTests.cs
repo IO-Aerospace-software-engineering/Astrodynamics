@@ -18,7 +18,7 @@ namespace IO.Astrodynamics.Tests.Body;
 /// </summary>
 public class TrackedObjectTests
 {
-    // The ISS set of the TLE tests, and the same set with the largest Alpha-5 number (TLENoradIdTests)
+    // The ISS set of the TLE tests, and the same set with the largest Alpha-5 number (TleNoradIdTests)
     private static readonly Tle Iss = new("ISS", "1 25544U 98067A   21020.53488036  .00016717  00000-0  10270-3 0  9054",
         "2 25544  51.6423 353.0312 0000493 320.8755  39.2360 15.49309423 25703");
 

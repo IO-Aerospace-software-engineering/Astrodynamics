@@ -11,12 +11,12 @@ namespace IO.Astrodynamics.Performance;
 [KurtosisColumn]
 [StatisticalTestColumn]
 [ShortRunJob]
-public class VelocityTLE
+public class VelocityTle
 {
     private Time _epoch;
     private StateVector _sv;
 
-    public VelocityTLE()
+    public VelocityTle()
     {
         SpiceApi.Instance.LoadKernels(new DirectoryInfo("Data"));
         _epoch = new TimeSystem.Time(new DateTime(2024, 1, 1), TimeScale.UTC);

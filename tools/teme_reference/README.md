@@ -6,7 +6,7 @@ Vallado et al. (2006) appendix C and the SGP4 states of five TLEs (Vallado's cod
 AFSPC mode), the ICRF state by GMAT R2026a (TEME → EarthICRF, run by the script) and by ERFA's CIP route with
 IAU 2006/2000A and IAU 2006/2000B (UT1 = UTC), and ERFA's GMST82. It writes
 `IO.Astrodynamics.Net/IO.Astrodynamics.Tests/Data/TemeReference/teme_reference.json`, read by `TemeFrameTests`,
-`TLETests.ToStateVector` and `ScenarioTests.PropagateSpacecraftFromTLE`. Developer tool, run by hand; the build and the tests never run it.
+`TleTests.ToStateVector` and `ScenarioTests.PropagateSpacecraftFromTLE`. Developer tool, run by hand; the build and the tests never run it.
 
 ```bash
 python3 -I tools/teme_reference/teme_ref.py <GMAT R2026a bin directory> <scratch directory> \

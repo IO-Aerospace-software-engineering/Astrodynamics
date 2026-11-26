@@ -17,7 +17,7 @@ using Window = IO.Astrodynamics.TimeSystem.Window;
 
 namespace IO.Astrodynamics.Tests.Propagators;
 
-public class TLEPropagatorTests
+public class TlePropagatorTests
 {
     // Twice the worst of InterpolatedVelocity_FollowsSgp4 over Linux x64, Windows and macOS arm64 (CI run 43591654097, 2026-11-14), rounded up at
     // the second significant digit: velocity 4.282e-4, 4.282e-4 and 4.282e-4 m/s; position 0.3762, 0.3762 and 0.3762 m
@@ -31,7 +31,7 @@ public class TLEPropagatorTests
 
     private readonly ITestOutputHelper _output;
 
-    public TLEPropagatorTests(ITestOutputHelper output)
+    public TlePropagatorTests(ITestOutputHelper output)
     {
         _output = output;
         TestKernels.EnsureSolarSystem();
@@ -75,7 +75,7 @@ public class TLEPropagatorTests
             worstPosition = System.Math.Max(worstPosition, (position - sgp4.Position).Magnitude());
         }
 
-        _output.WriteLine($"MEASURE TLEPropagatorTests.InterpolatedVelocity_FollowsSgp4: velocity {worstVelocity:E3} m/s, " +
+        _output.WriteLine($"MEASURE TlePropagatorTests.InterpolatedVelocity_FollowsSgp4: velocity {worstVelocity:E3} m/s, " +
                           $"position {worstPosition:E3} m");
         Assert.InRange(worstVelocity, 0.0, InterpolatedVelocityBound);
         Assert.InRange(worstPosition, 0.0, InterpolatedPositionBound);
@@ -265,7 +265,7 @@ public class TLEPropagatorTests
         var end = window.EndDate.ToTdb();
         var spacecraft = new Spacecraft(-1009, "S1009", 100.0, Iss, 10000.0, new Clock("c1009", 256));
         var solution = new TlePropagator(window, spacecraft, TimeSpan.FromSeconds(60.0)).Propagate();
-        _output.WriteLine($"MEASURE TLEPropagatorTests.WindowGivenInUtc_EndsAtItsTdbEnd: TDB length − 3600 s = {(end - start).Ticks - 36000000000L} ticks");
+        _output.WriteLine($"MEASURE TlePropagatorTests.WindowGivenInUtc_EndsAtItsTdbEnd: TDB length − 3600 s = {(end - start).Ticks - 36000000000L} ticks");
         Assert.Equal(61, solution.StateVectors.Count);
         for (int i = 0; i < 60; i++)
         {
@@ -296,7 +296,7 @@ public class TLEPropagatorTests
             worstPosition = System.Math.Max(worstPosition, (position - sgp4.Position).Magnitude());
         }
 
-        _output.WriteLine($"MEASURE TLEPropagatorTests.LastShortStep_InterpolatesSgp4: velocity {worstVelocity:E3} m/s, " +
+        _output.WriteLine($"MEASURE TlePropagatorTests.LastShortStep_InterpolatesSgp4: velocity {worstVelocity:E3} m/s, " +
                           $"position {worstPosition:E3} m");
         Assert.InRange(worstVelocity, 0.0, LastShortStepVelocityBound);
         Assert.InRange(worstPosition, 0.0, LastShortStepPositionBound);

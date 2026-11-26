@@ -20,7 +20,7 @@ namespace IO.Astrodynamics.Tests.OrbitalParameters;
 /// throw) and <see cref="object.GetHashCode"/> (two objects that compare as equal return the same hash code), so it is
 /// the same on every platform. Inputs: the sets of the issue, a = 7000 km, e = 0.1, i = 0.5 rad, Ω = 1 rad, ω = 2 rad,
 /// M = 3 rad (set 1), a = 26 560 km, e = 0.02, i = 55°, Ω = 1.2 rad, ω = 0.4 rad, M = 2.5 rad (set 2), and the ISS TLE of
-/// <see cref="TLETests"/>.
+/// <see cref="TleTests"/>.
 /// </summary>
 public class OrbitalParametersEqualityTests
 {

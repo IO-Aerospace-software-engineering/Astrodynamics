@@ -8,7 +8,7 @@ namespace IO.Astrodynamics.Tests.Atmosphere
     /// Unit tests for the NRLMSISE-00 atmospheric model.
     /// All inputs and expected outputs use SI units (meters, radians, m^-3, kg/m^3, Kelvin).
     /// </summary>
-    public class NRLMSISE00Tests
+    public class Nrlmsise00Tests
     {
         private const double Tolerance = 1e-6; // Relative tolerance for comparing scientific notation values (0.000001%)
 

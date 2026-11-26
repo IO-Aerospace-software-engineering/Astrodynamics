@@ -874,7 +874,7 @@ release are listed under **Known limitations**.
   samples its 62nd, 1.1 µs after the 61st, puts the stored-state read of the sampled spacecraft 4.336e3 m off SGP4 at
   +3570 s (`TlePropagationTests`, Linux x64), the defect of two stored states a few ticks apart listed under **Known
   limitations**, which the rule keeps `TlePropagator` from meeting without fixing it; a step of zero or less throws `ArgumentOutOfRangeException` (`deltaT`) as the integrators do since #674. A window given in TDB that a
-  whole-second step divides keeps its samples and its solution, bit for bit (`TLEPropagatorTests`: 121 samples at 0.5 s
+  whole-second step divides keeps its samples and its solution, bit for bit (`TlePropagatorTests`: 121 samples at 0.5 s
   over 1 min, 3 at 60 s over 90 s, 8 at 1.5 s over 10 s, 61 at 60 s over 3600.5 s and over one UTC hour, the last at the
   window end, red on a85098d; 61 at 60 s over 3600 s unchanged; between +60 s and +90 s the Hermite of the 30 s step is
   2.7e-5 m/s and 0.037 m off SGP4 on the three platforms, bounds 5.5e-5 m/s and 0.075 m; 251 m/s and 222 km before,
@@ -2649,7 +2649,7 @@ release are listed under **Known limitations**.
   with: 4.39 m/s off at mid-step, 48.7 m/s at a quarter step, 49.93 m/s at worst (ISS, 1 h at 60 s). The accelerations
   at the samples are now the central difference of SGP4's velocity at ±1 s: the velocity of `InterpolateAt` and
   `GetStateVector` is 4.28e-4 m/s off SGP4 at worst, the positions (0.376 m, the Hermite's own error) and the states
-  at the samples unchanged (`TLEPropagatorTests.InterpolatedVelocity_FollowsSgp4`, against SGP4 through `evsgp4_c`).
+  at the samples unchanged (`TlePropagatorTests.InterpolatedVelocity_FollowsSgp4`, against SGP4 through `evsgp4_c`).
 - **`astro propagate` ignored `--earth-geopotential-degree` (`-n`): every run used degree 10** ([#681](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/681)). The option was
   declared and read by no code: `PropagateCommand` built the initial orbit through the overload of
   `Helpers.ConvertToOrbitalParameters` that forwards no degree, so the default 10 reached `GeopotentialModelParameters`
@@ -4595,7 +4595,7 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   the IEEE 754 bounds (the largest double whose product is finite, 1.7976931348623156e305 for 1000 and
   1.7976931348623154e302 for 1e6, stored and converted as given) and the two roundings in exact rational arithmetic
   (`OpmStateVectorTests`, `CovarianceMatrixTests`, `OpmReaderTests`, `OmmReaderTests` `*OverflowingInSiUnits*` and
-  `TLETests.FromOMM_MeanMotionAboveTheOverflowOfTheProduct_IsTheExtendedExponentQuotient`: 100 rows red on a85098d).
+  `TleTests.FromOMM_MeanMotionAboveTheOverflowOfTheProduct_IsTheExtendedExponentQuotient`: 100 rows red on a85098d).
 
 - **`CdmCovarianceMatrix.StateCovarianceRtn` accepted a matrix that is not 6×6** ([#730](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/730)). Its init
   accessor checked the terms since #717, whatever the size: a 3×3 matrix or `default(Matrix)` built, and `CdmWriter`
@@ -9182,7 +9182,7 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   bit for bit the value of a TLE built after them (`ColdStartTests.Tle_ReadBeforeItsKernels_ThrowsSpicesError_AndWorksOnceTheyAreLoaded`).
   Before, the constructor read the Earth, and a TLE built before the kernels kept a GM of 0, a semi-major axis of 0 and a
   NaN `MeanMotion()` for its life. `ToString` prints the semi-major axis only when the provider gives the GM, and the mean
-  motion. With the kernels loaded nothing moves (`TLETests`, `Sgp4ReferenceTests`, the propagation of a TLE spacecraft).
+  motion. With the kernels loaded nothing moves (`TleTests`, `Sgp4ReferenceTests`, the propagation of a TLE spacecraft).
   Migration: none.
 - **`Tle.ToOmm` writes the mean motion of the field** (lot L7, decision 111 of #668, decided by S. Guillet, 2026-11-26):
   `MEAN_MOTION` is the field of line 2 as written, in rev/day; before, √(GM/a³)·86400/2π with a = ∛(GM/n²), which moved it

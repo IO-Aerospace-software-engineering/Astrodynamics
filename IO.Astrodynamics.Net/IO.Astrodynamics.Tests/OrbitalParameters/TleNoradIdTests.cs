@@ -11,11 +11,11 @@ namespace IO.Astrodynamics.Tests.OrbitalParameters;
 /// End-to-end tests for NORAD catalog numbers above the former <see cref="ushort"/> ceiling (65535),
 /// covering TLE generation, parsing, SGP4 propagation and OMM interoperability.
 /// </summary>
-public class TLENoradIdTests
+public class TleNoradIdTests
 {
     private static readonly TimeSystem.Time Epoch = new(2024, 6, 21, 12, 0, 0, TimeScale.TDB);
 
-    public TLENoradIdTests()
+    public TleNoradIdTests()
     {
         TestKernels.EnsureSolarSystem();
     }

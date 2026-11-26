@@ -29,7 +29,7 @@ public class MeanElementsTypeTests
     private readonly ITestOutputHelper _output;
     private readonly CelestialBody _earth;
 
-    // Case A of the issue: the ISS TLE of TLETests
+    // Case A of the issue: the ISS TLE of TleTests
     private static Tle IssTle() => new("ISS",
         "1 25544U 98067A   21020.53488036  .00016717  00000-0  10270-3 0  9054",
         "2 25544  51.6423 353.0312 0000493 320.8755  39.2360 15.49309423 25703");
