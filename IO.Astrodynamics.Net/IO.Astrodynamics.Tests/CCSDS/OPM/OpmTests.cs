@@ -818,6 +818,51 @@ namespace IO.Astrodynamics.Tests.CCSDS.OPM
         }
 
         /// <summary>
+        /// #805, decision 112 of #668 (decided by S. Guillet, 2026-11-26): a Spacecraft has one sectional area, for drag and
+        /// radiation pressure alike, so SOLAR_RAD_AREA alone gives it, and with DRAG_AREA equal values give it; before
+        /// 11.0.0 SOLAR_RAD_AREA was never read (1 m² for an OPM holding it alone).
+        /// </summary>
+        [Theory]
+        [InlineData(null, 12.5, 12.5)]
+        [InlineData(12.5, null, 12.5)]
+        [InlineData(12.5, 12.5, 12.5)]
+        [InlineData(null, null, 1.0)]
+        public void ToSpacecraft_OneArea_IsTheSectionalArea(double? dragArea, double? solarRadArea, double expected)
+        {
+            var stateVector = new OpmStateVector(_testEpoch, 6778.137, 0.0, 0.0, 0.0, 7.5, 0.0);
+            var data = new OpmData(stateVector, mass: 100.0, solarRadiationPressureArea: solarRadArea, dragArea: dragArea);
+            var opm = new Opm(CcsdsHeader.CreateDefault(), new OpmMetadata("SAT", "2024-001A", "EARTH", "ICRF", "UTC"), data);
+
+            var spacecraft = opm.ToSpacecraft(-1000, observer: new CelestialBody(PlanetsAndMoons.EARTH));
+
+            Assert.Equal(expected, spacecraft.SectionalArea);
+        }
+
+        /// <summary>
+        /// #805, decision 112 of #668: DRAG_AREA and SOLAR_RAD_AREA of different values throw, naming both keywords and their
+        /// values and pointing to ToStateVector and the Spacecraft constructor; before 11.0.0 DRAG_AREA was taken and
+        /// SOLAR_RAD_AREA dropped without a word.
+        /// </summary>
+        [Fact]
+        public void ToSpacecraft_TwoDifferentAreas_Throws()
+        {
+            var stateVector = new OpmStateVector(_testEpoch, 6778.137, 0.0, 0.0, 0.0, 7.5, 0.0);
+            var data = new OpmData(stateVector, mass: 100.0, solarRadiationPressureArea: 20.0, dragArea: 12.5);
+            var opm = new Opm(CcsdsHeader.CreateDefault(), new OpmMetadata("SAT", "2024-001A", "EARTH", "ICRF", "UTC"), data);
+            var clock = new Clock("SAT_CLK", 256);
+
+            var ex = Assert.Throws<InvalidOperationException>(() =>
+                opm.ToSpacecraft(-1000, clock: clock, observer: new CelestialBody(PlanetsAndMoons.EARTH)));
+
+            Assert.Contains("DRAG_AREA", ex.Message);
+            Assert.Contains("SOLAR_RAD_AREA", ex.Message);
+            Assert.Contains("12.5", ex.Message);
+            Assert.Contains("20", ex.Message);
+            Assert.Contains("ToStateVector", ex.Message);
+            Assert.Null(clock.Spacecraft);
+        }
+
+        /// <summary>
         /// A MASS above the maximum operating mass given throws, naming the parameter: the value the caller gave conflicts
         /// with the file (decision 77 of #668, decided by S. Guillet, 2026-11-23); before 11.0.0 the maximum was raised to
         /// the mass without a word.

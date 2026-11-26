@@ -8074,6 +8074,15 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   `omm.ToXml(new CcsdsWriteOptions { WrapInNdmContainer = w, Indent = i })`, `new OmmValidator().Validate(omm)` →
   `omm.Validate()`, `ValidateSchema(path)` → `Omm.Load(path)` and its `OmmValidationException`'s `ValidationResult`;
   likewise for the OPM and the CDM.
+- **`Opm.ToSpacecraft` reads `SOLAR_RAD_AREA`, and refuses two different areas** ([#805](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/805),
+  lot L7, decision 112 of [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668), decided
+  by S. Guillet, 2026-11-26). **Breaking**: a `Spacecraft` has one sectional area, which its drag and its radiation
+  pressure share: `DRAG_AREA` or `SOLAR_RAD_AREA`, whichever the OPM gives, the value when both are equal, and two
+  different values throw `InvalidOperationException` naming both keywords and their values, before anything is built.
+  Before, the area was `DRAG_AREA`, else 1 m²: an OPM that held `SOLAR_RAD_AREA` alone gave 1 m², and a second, different
+  area was dropped without a word (`OpmTests.ToSpacecraft_OneArea_IsTheSectionalArea`,
+  `ToSpacecraft_TwoDifferentAreas_Throws`). Every OPM the library writes (`Spacecraft.ToOpm`) holds one area twice.
+  Migration: for an OPM of two different areas, `ToStateVector()` and the `Spacecraft` constructor with the area chosen.
 **Removed**
 
 - **The window searches on the target: `FindWindowsOnDistanceConstraint`, `FindWindowsOnOccultationConstraint` and

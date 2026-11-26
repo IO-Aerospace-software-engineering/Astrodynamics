@@ -2,6 +2,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using IO.Astrodynamics.Body;
 using IO.Astrodynamics.Body.Spacecraft;
@@ -304,8 +305,15 @@ public class Opm
     /// The NAIF id is not part of the CCSDS OPM standard; the maximum operating mass and the clock are optional.
     /// If spacecraftParameters is not present in the OPM, default values are used for mass (1.0 kg),
     /// sectionalArea (1.0 m²), dragCoefficient (2.2), and solarRadiationCoefficient (1.0).
+    /// The sectional area, which the spacecraft's drag and radiation pressure share, is <c>DRAG_AREA</c> or
+    /// <c>SOLAR_RAD_AREA</c>, whichever is given, the value when both are given equal (#805, decision 112 of #668, decided by
+    /// S. Guillet, 2026-11-26; before 11.0.0 <c>SOLAR_RAD_AREA</c> was never read).
     /// The reference frame and the epoch's time system are mapped as described on <see cref="ToStateVector"/>.
     /// </remarks>
+    /// <exception cref="InvalidOperationException"><c>DRAG_AREA</c> and <c>SOLAR_RAD_AREA</c> are given with different
+    /// values, which one sectional area cannot hold (#805): read the state with <see cref="ToStateVector"/> and build the
+    /// <see cref="Spacecraft"/> with the area of your choice; checked before anything is built, a clock given left
+    /// unattached.</exception>
     /// <exception cref="ArgumentOutOfRangeException">Thrown when naifId is not in [-2147483, -1], or, naming it, when
     /// <paramref name="maxOperatingMass"/> is not finite or below the MASS of the OPM.</exception>
     /// <exception cref="ArgumentException">
@@ -314,12 +322,24 @@ public class Opm
     /// </exception>
     public Spacecraft ToSpacecraft(int naifId, double maxOperatingMass = double.MaxValue, Clock clock = null, ILocalizable observer = null)
     {
+        // The one sectional area of a spacecraft, for drag and radiation pressure alike: DRAG_AREA or SOLAR_RAD_AREA, equal
+        // when both are given (#805, decision 112 of #668, decided by S. Guillet, 2026-11-26)
+        if (Data.DragArea.HasValue && Data.SolarRadiationPressureArea.HasValue &&
+            Data.DragArea.Value != Data.SolarRadiationPressureArea.Value)
+        {
+            throw new InvalidOperationException(
+                $"DRAG_AREA {Data.DragArea.Value.ToString("R", CultureInfo.InvariantCulture)} m² and SOLAR_RAD_AREA " +
+                $"{Data.SolarRadiationPressureArea.Value.ToString("R", CultureInfo.InvariantCulture)} m² differ, and a " +
+                "Spacecraft has one sectional area for drag and radiation pressure: read the state with ToStateVector() and " +
+                "build the Spacecraft with the area of your choice.");
+        }
+
         // Get state vector
         var stateVector = ToStateVector(observer);
 
         // Extract spacecraft parameters from OPM (with defaults if not present)
         double mass = Data.Mass ?? 1.0;
-        double sectionalArea = Data.DragArea ?? 1.0;
+        double sectionalArea = Data.DragArea ?? Data.SolarRadiationPressureArea ?? 1.0;
         double dragCoefficient = Data.DragCoefficient ?? 2.2;
         double solarRadiationCoefficient = Data.SolarRadiationCoefficient ?? 1.0;
 
