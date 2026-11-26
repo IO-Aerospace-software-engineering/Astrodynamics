@@ -39,22 +39,14 @@ namespace ClaudeMdSamples
     internal static class ClaudeMdExamples
     {
         // IO.Astrodynamics.Net/CLAUDE.md, "Creating Mean Elements from OMM Data"
-        internal static KeplerianElements Net01(CelestialBody earth, Time epoch)
+        internal static KeplerianElements Net01(Omm omm)
         {
             #region net:1
-            // FromOMM accepts OMM native units: rev/day for mean motion, degrees for angles
-            var meanKep = KeplerianElements.FromOMM(
-                meanMotion: 15.49309423,        // rev/day
-                eccentricity: 0.0000493,
-                inclination: 51.6423,           // degrees
-                raan: 353.0312,                 // degrees
-                argumentOfPeriapsis: 320.8755,  // degrees
-                meanAnomaly: 39.2360,           // degrees
-                observer: earth,
-                epoch: epoch,
-                frame: Frame.TEME);
+            // omm: an OMM of SGP4 mean elements (CCSDS units: rev/day, degrees), as Omm.Load("iss.omm") reads it
+            // ToMeanElements gives them in SI units, about the centre CENTER_NAME names, in REF_FRAME, at the epoch of TIME_SYSTEM
+            var meanKep = omm.ToMeanElements();
 
-            // The mean motion is cached internally to preserve precision
+            // The mean motion of the OMM is kept as given, to preserve precision
             // when converting back to TLE format
             Assert.Equal(OrbitalElementsType.Mean, meanKep.ElementsType);
 

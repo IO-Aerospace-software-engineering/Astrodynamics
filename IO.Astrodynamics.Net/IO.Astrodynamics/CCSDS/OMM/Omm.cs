@@ -4,7 +4,10 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
+using IO.Astrodynamics.Body;
 using IO.Astrodynamics.CCSDS.Common;
+using IO.Astrodynamics.Frames;
+using IO.Astrodynamics.TimeSystem;
 
 namespace IO.Astrodynamics.CCSDS.OMM;
 
@@ -408,6 +411,59 @@ public class Omm
 
         // Return original if we can't parse it
         return cleanId;
+    }
+
+    #endregion
+
+    #region Epoch and mean elements (R22 of #668)
+
+    /// <summary>
+    /// The <c>EPOCH</c> of the mean elements as a <see cref="Time"/> in the <c>TIME_SYSTEM</c> of the metadata (R22 of
+    /// #668, lot L7): the clock reading of <see cref="Epoch"/> in UTC, TAI, TDB, TT or GPS, the epoch <see cref="ToTle"/>
+    /// and <see cref="ToMeanElements"/> read (#485).
+    /// </summary>
+    /// <returns>The epoch, labelled in the scale of <c>TIME_SYSTEM</c>.</returns>
+    /// <exception cref="InvalidOperationException">The <c>TIME_SYSTEM</c> is none of UTC, TAI, TDB, TT and GPS (UT1, TCB,
+    /// MET, ...), which a message may hold and <see cref="Time"/> does not.</exception>
+    public Time GetEpoch() =>
+        Common.Enums.CcsdsTimeSystemMapping.ToTime(Data.MeanElements.Epoch,
+            Common.Enums.CcsdsTimeSystemMapping.ToTimeScale(Metadata.TimeSystemEnum, Metadata.TimeSystem));
+
+    /// <summary>
+    /// The mean elements of the message in SI units (m, rad), mean Keplerian elements (R22 of #668, lot L7): about the
+    /// centre <c>CENTER_NAME</c> names, in the frame of <c>REF_FRAME</c>, at <see cref="GetEpoch"/>, as
+    /// <see cref="OPM.Opm.ToStateVector"/> reads an OPM.
+    /// </summary>
+    /// <param name="observer">The centre of the elements. If null, the centre <c>CENTER_NAME</c> names: a
+    /// <see cref="Barycenter"/> for the barycenters 0 to 9, otherwise a <see cref="CelestialBody"/> in ICRF at the epoch
+    /// (the Sun, a planet or a moon); a given observer that contradicts <c>CENTER_NAME</c> throws.</param>
+    /// <returns>Mean <see cref="OrbitalParameters.KeplerianElements"/>: from <c>MEAN_MOTION</c>, the mean motion of the message
+    /// kept as given (the elements of <c>KeplerianElements.FromOMM</c>, public before 11.0.0, bit for bit), the semi-major
+    /// axis ∛(GM/n²) of the observer's GM; from <c>SEMI_MAJOR_AXIS</c>, that axis in m.</returns>
+    /// <remarks>
+    /// The GM is the observer's, from the kernels, as <c>FromOMM</c> took it; a <c>GM</c> keyword of the message is not read.
+    /// <c>REF_FRAME</c> <c>ICRF</c>, <c>GCRF</c> and <c>EME2000</c> map onto <see cref="Frame.ICRF"/>, <c>TEME</c> onto
+    /// <see cref="Frame.TEME"/>. Mean elements give no state: an SGP4 message gives its state through <see cref="ToTle"/>.
+    /// </remarks>
+    /// <exception cref="InvalidOperationException">The <c>TIME_SYSTEM</c> is none of UTC, TAI, TDB, TT and GPS.</exception>
+    /// <exception cref="ArgumentException">No observer is given and <c>CENTER_NAME</c> is not a centre the library
+    /// identifies, or the observer contradicts it (parameter <c>observer</c>).</exception>
+    public OrbitalParameters.KeplerianElements ToMeanElements(ILocalizable observer = null)
+    {
+        var epoch = GetEpoch();
+        observer = CcsdsCenterNames.Observer(Metadata.CenterName, observer, epoch);
+        var frame = CcsdsFrameNames.ToFrame(Metadata.ReferenceFrameEnum, Metadata.ReferenceFrame);
+        var m = Data.MeanElements;
+        if (m.MeanMotion.HasValue)
+        {
+            return OrbitalParameters.KeplerianElements.FromOMM(m.MeanMotion.Value, m.Eccentricity, m.Inclination,
+                m.RightAscensionOfAscendingNode, m.ArgumentOfPericenter, m.MeanAnomaly, observer, epoch, frame);
+        }
+
+        return new OrbitalParameters.KeplerianElements(m.SemiMajorAxis!.Value * 1000.0, m.Eccentricity,
+            m.Inclination * Constants.Deg2Rad, m.RightAscensionOfAscendingNode * Constants.Deg2Rad,
+            m.ArgumentOfPericenter * Constants.Deg2Rad, m.MeanAnomaly * Constants.Deg2Rad, observer, epoch, frame,
+            OrbitalParameters.OrbitalElementsType.Mean);
     }
 
     #endregion

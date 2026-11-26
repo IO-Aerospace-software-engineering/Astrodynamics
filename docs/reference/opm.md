@@ -173,6 +173,7 @@ written as its clock reading under every time system. The library's own conversi
 |--------|-------------|
 | `ToStateVector(observer)` | Convert to a `StateVector` (applies unit conversion); `EPOCH` is read in `TIME_SYSTEM` (UTC, TAI, TDB, TT or GPS), another time system throws (#485). The library's writers write the epoch in UTC under `TIME_SYSTEM = UTC` (#479). The observer is optional: see [The centre](#the-centre) |
 | `ToSpacecraft(naifId, maxOperatingMass, clock, observer)` | Create a `Spacecraft` from OPM data, under the rules of its constructor (`maxOperatingMass` `double.MaxValue` and `clock` `OBJECT_NAME + "_CLK"` at 65536 ticks per second by default, a `MASS` above `maxOperatingMass` throwing `ArgumentOutOfRangeException`, decision 77 of #668; before 11.0.0 the maximum was raised to the mass and the clock required): `naifId` in [-2147483, -1], and `clock` not attached to a spacecraft of another NAIF id (`ArgumentException`, #676); the observer as on `ToStateVector` |
+| `GetEpoch()` | `EPOCH` as a `Time` in its `TIME_SYSTEM` (UTC, TAI, TDB, TT or GPS), the epoch `ToStateVector` reads; another time system, as UT1, throws `InvalidOperationException` (R22 of [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668), lot L7). `Epoch` keeps the `DateTime` of the message |
 | `Validate()` | Validate and return `OpmValidationResult` |
 | `IsValid()` | Whether `Validate()` reports no error (11.0.0) |
 

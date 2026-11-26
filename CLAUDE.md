@@ -135,7 +135,7 @@ The C# blocks of this file and of `IO.Astrodynamics.Net/CLAUDE.md` are compiled 
 - Use `TLE.ToOsculating()` to get a usable StateVector from a TLE; a spacecraft whose initial orbit is a TLE or an osculating TEME state propagates numerically on every path from its SGP4 state at the window start (or the state given), rotated once to ICRF on its observer (for a TLE its point-mass Earth, 53.7 km from SGP4 after 1 h for the ISS), a mean TEME set still rejected, the target orbit of an impulse given in ICRF or GCRF (#675; GCRF and ICRF, which share their axes, count as one frame in the target checks, third review of #685)
 - Read TLE text with `TLE.Parse`, `ParseAll`, `Load`, `LoadAll`, `TryParse`, `TryLoad` (`IParsable<TLE>`; two- and three-line sets mixed, CR/LF, blanks and Space-Track's `0 ` tolerated, a bad set `TleFormatException` at its line of the text and its column, no partial list), the verb set shared with the CCSDS messages (R21 of #668)
 - Use `TLE.ToMeanKeplerianElements()` to get mean elements for TLE creation
-- `KeplerianElements.FromOMM()` caches original mean motion to prevent precision loss on round-trip
+- `Omm.ToMeanElements()` gives the mean elements of an OMM in SI units (the centre of `CENTER_NAME`, `REF_FRAME`, the epoch of `TIME_SYSTEM`, `Omm.GetEpoch()`; the kernel GM), keeping the OMM's mean motion to prevent precision loss on round-trip (`KeplerianElements.FromOMM`, the one SI-side member of degrees and rev/day, internal since 11.0.0, R22 of #668)
 
 ### NORAD Catalog Numbers
 

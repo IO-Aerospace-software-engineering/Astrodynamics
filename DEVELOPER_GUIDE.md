@@ -485,7 +485,6 @@ Classical Keplerian orbital elements (osculating or mean).
 
 | Factory Method | Description |
 |----------------|-------------|
-| `FromOMM(double meanMotion, double e, double i, double raan, double aop, double m, ILocalizable observer, Time epoch, Frame frame)` | Create mean elements from OMM data (units: rev/day for mean motion, degrees for angles) |
 | `FromTrueAnomaly(double semiMajorAxis, double eccentricity, double inclination, double ascendingNode, double argumentOfPeriapsis, double trueAnomaly, ILocalizable observer, Time epoch, Frame frame)` | Elements given with their true anomaly: M(ν), `TrueAnomaly()` ν reduced to [0, 2π), the state from ν as given (#668, R23) |
 | `Parabolic(double perigeeRadius, double inclination, double ascendingNode, double argumentOfPeriapsis, double meanAnomaly, ILocalizable observer, Time epoch, Frame frame, double eccentricity = 1.0)` | Parabola, or orbit within 1e-6 of e = 1, from its perigee radius: a = q / (1 − e), +Infinity at e = 1 (#459; the `perigeeRadius` parameter of the constructor before 11.0.0) |
 
@@ -545,19 +544,12 @@ var futureState = kep.ToStateVector(epoch.AddHours(1.5));
 // Propagate using 2-body mechanics
 var laterKep = kep.AtEpoch(epoch.AddDays(1));
 
-// Create mean Keplerian elements from OMM data
-// FromOMM accepts OMM native units: rev/day for mean motion, degrees for angles
-var meanKep = KeplerianElements.FromOMM(
-    meanMotion: 15.49309423,             // rev/day
-    eccentricity: 0.0000493,
-    inclination: 51.6423,                // degrees
-    raan: 353.0312,                      // degrees
-    argumentOfPeriapsis: 320.8755,       // degrees
-    meanAnomaly: 39.2360,                // degrees
-    observer: earth,
-    epoch: epoch,
-    frame: Frame.TEME
-);
+// Create mean Keplerian elements from an OMM: its CCSDS units (rev/day, degrees) in, SI out
+var omm = Omm.CreateForTle("ISS (ZARYA)", "1998-067A", new DateTime(2021, 1, 20, 12, 50, 13, DateTimeKind.Utc),
+    meanMotion: 15.49309423, eccentricity: 0.0000493, inclination: 51.6423, raan: 353.0312,
+    argOfPericenter: 320.8755, meanAnomaly: 39.2360, bstar: 0.00010270, meanMotionDot: 0.00008358,
+    meanMotionDDot: 0.0, noradCatalogId: 25544);
+var meanKep = omm.ToMeanElements();   // about the Earth (CENTER_NAME), in TEME (REF_FRAME)
 
 Console.WriteLine($"Elements type: {meanKep.ElementsType}"); // Mean
 // Note: Mean elements cannot be directly converted to StateVector
@@ -729,6 +721,8 @@ Represents a complete CCSDS Orbit Mean-elements Message.
 | `Save(string path, CcsdsWriteOptions options = null)` | Save OMM to XML file, or to a `Stream`, the content validated, in an `<ndm>` and indented by default |
 | `ToXml(CcsdsWriteOptions options = null)` | Write OMM as an XML string, as `Save` writes it |
 | `ToTle()` | Convert OMM to TLE (requires TLE parameters in data) |
+| `ToMeanElements(ILocalizable observer = null)` | Mean `KeplerianElements` in SI units about the centre `CENTER_NAME` names, in `REF_FRAME`, at `GetEpoch()`, the OMM's mean motion kept (the internal `KeplerianElements.FromOMM`, public before 11.0.0) |
+| `GetEpoch()` | `EPOCH` as a `Time` in `TIME_SYSTEM` (UTC, TAI, TDB, TT, GPS; another throws `InvalidOperationException`) |
 | `Validate()` | Validate OMM content and return validation result |
 
 > `ToTle()` throws `InvalidOperationException` when a field cannot be represented in TLE form

@@ -527,6 +527,13 @@ release are listed under **Known limitations**.
   `CdmExportOptions.Default` (`CcsdsVerbsTests`, `NamingRuleTests.TextFormats_ShareOneVerbSet`). The texts written and
   the messages read are those of the former verbs (the internal writers and readers), bit for bit. See
   [OMM](../reference/omm.md#loading), [OPM](../reference/opm.md#loading) and [CDM](../reference/cdm.md#static-methods).
+- **`Omm.ToMeanElements(observer)`, `Omm.GetEpoch()` and `Opm.GetEpoch()`** (lot L7, R22 of
+  [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668)): the mean elements of an OMM in
+  SI units, mean `KeplerianElements` about the centre `CENTER_NAME` names (the rules of `Opm.ToStateVector`, #679), in
+  the frame of `REF_FRAME`, at its epoch, from `MEAN_MOTION` (the elements of `KeplerianElements.FromOMM` bit for bit,
+  the mean motion kept, the kernel GM) or `SEMI_MAJOR_AXIS` (km to m); and the `EPOCH` of an OMM or an OPM as a `Time`
+  in its `TIME_SYSTEM`, UT1 or another scale `Time` lacks throwing `InvalidOperationException`; the models keep their
+  `DateTime` (`OmmMeanElementsAndEpochTests`). See [OMM](../reference/omm.md#conversion-validation).
 **Fixed**
 
 - **The command line read its numbers in the culture of the machine** ([#814](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/814)):
@@ -8339,6 +8346,14 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   `Cdm.ReadFrom*` → `Cdm.Load`/`Parse`, `WriteToFile(path, wrap)` → `Save(path, …)`, `WriteToString(wrap)` →
   `ToXml(…)`, `ValidateSchema(path)` → `Cdm.Load(path)`, whose `CdmValidationException` carries the
   `CdmValidationResult`.
+- **`KeplerianElements.FromOMM`** (lot L7, R22 of #668, internal, no forwarder): the one SI-side member that took
+  degrees and rev/day. Migration: `omm.ToMeanElements()` for an OMM, the same elements bit for bit about the centre
+  `CENTER_NAME` names (pass the observer `FromOMM` was given to keep it), in the frame of `REF_FRAME`; for numbers
+  without an OMM, `new KeplerianElements(a, e, i, Ω, ω, M, observer, epoch, frame, OrbitalElementsType.Mean)` in SI
+  units, a = ∛(GM/n²).
+- **The constructor `MeanElements(epoch, meanMotion, …, bool useMeanMotion, …)`** (lot L7, R22 of #668, no forwarder):
+  its `useMeanMotion` had to be true. Migration: `MeanElements.CreateWithMeanMotion(epoch, meanMotion, …)`, the same
+  values.
 **Known limitations**
 
 The open defects a caller can meet at this release, grouped by cause; each line gives the workaround when there is

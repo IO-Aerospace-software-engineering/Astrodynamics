@@ -189,6 +189,18 @@ public class Opm
         return $"OPM[{ObjectName}, {ObjectId}, {Epoch:O}]";
     }
 
+    /// <summary>
+    /// The <c>EPOCH</c> of the state as a <see cref="Time"/> in the <c>TIME_SYSTEM</c> of the metadata (R22 of #668, lot
+    /// L7): the clock reading of <see cref="Epoch"/> in UTC, TAI, TDB, TT or GPS, the epoch <see cref="ToStateVector"/>
+    /// reads (#485).
+    /// </summary>
+    /// <returns>The epoch, labelled in the scale of <c>TIME_SYSTEM</c>.</returns>
+    /// <exception cref="InvalidOperationException">The <c>TIME_SYSTEM</c> is none of UTC, TAI, TDB, TT and GPS (UT1, TCB,
+    /// MET, ...), which a message may hold and <see cref="Time"/> does not.</exception>
+    public Time GetEpoch() =>
+        CcsdsTimeSystemMapping.ToTime(Data.StateVector.Epoch,
+            CcsdsTimeSystemMapping.ToTimeScale(Metadata.TimeSystemEnum, Metadata.TimeSystem));
+
     #region Framework Integration
 
     /// <summary>
@@ -241,30 +253,10 @@ public class Opm
         var timeScale = CcsdsTimeSystemMapping.ToTimeScale(Metadata.TimeSystemEnum, Metadata.TimeSystem);
 
         // The centre CENTER_NAME names (#679): built when no observer is given, checked against the one given
-        bool knownCenter = CcsdsCenterNames.TryGetNaifId(Metadata.CenterName, out var centerId);
-        if (observer == null)
-        {
-            if (!knownCenter)
-            {
-                throw new ArgumentException(
-                    $"CENTER_NAME '{Metadata.CenterName}' is not a barycenter, the Sun, a planet or a moon the library identifies: " +
-                    "pass the observer.", nameof(observer));
-            }
-
-            var epoch = CcsdsTimeSystemMapping.ToTime(Data.StateVector.Epoch, timeScale);
-            observer = centerId <= 9
-                ? new Barycenter(centerId, epoch)
-                : new CelestialBody(centerId, Frame.ICRF, epoch);
-        }
-        else if (knownCenter && observer.NaifId != centerId)
-        {
-            throw new ArgumentException(
-                $"The observer {observer.Name} ({observer.NaifId}) contradicts CENTER_NAME '{Metadata.CenterName}' ({centerId}): " +
-                "pass the centre CENTER_NAME names, or correct CENTER_NAME.", nameof(observer));
-        }
+        observer = CcsdsCenterNames.Observer(Metadata.CenterName, observer, CcsdsTimeSystemMapping.ToTime(Data.StateVector.Epoch, timeScale));
 
         // Get the reference frame from metadata
-        var frame = GetFrame();
+        var frame = CcsdsFrameNames.ToFrame(Metadata.ReferenceFrameEnum, Metadata.ReferenceFrame);
 
         // Convert covariance from CCSDS units (km²) to framework units (m²)
         // Note: If covariance is in a different frame than the state vector, the caller
@@ -342,29 +334,6 @@ public class Opm
             dragCoefficient,
             ObjectId,  // COSPAR ID from OPM OBJECT_ID
             solarRadiationCoefficient);
-    }
-
-    /// <summary>
-    /// Gets the reference frame from metadata.
-    /// ICRF, GCRF and EME2000 all map onto <see cref="Frame.ICRF"/>; for EME2000 the ~23 mas frame bias is ignored.
-    /// </summary>
-    /// <returns>The Frame object corresponding to the metadata reference frame.</returns>
-    private Frame GetFrame()
-    {
-        if (Metadata.ReferenceFrameEnum.HasValue)
-        {
-            return Metadata.ReferenceFrameEnum.Value switch
-            {
-                Common.Enums.CcsdsReferenceFrame.ICRF => Frame.ICRF,
-                Common.Enums.CcsdsReferenceFrame.EME2000 => Frame.ICRF,
-                Common.Enums.CcsdsReferenceFrame.GCRF => Frame.ICRF,
-                Common.Enums.CcsdsReferenceFrame.TEME => Frame.TEME,
-                Common.Enums.CcsdsReferenceFrame.ITRF93 => new Frame("ITRF93"),
-                _ => new Frame(Metadata.ReferenceFrame)
-            };
-        }
-
-        return new Frame(Metadata.ReferenceFrame);
     }
 
     #endregion

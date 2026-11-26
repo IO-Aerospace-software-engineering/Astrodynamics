@@ -20,7 +20,7 @@ NaN or ±∞, and for an angle (i, Ω, ω, M) that is not finite; `ArgumentOutOf
 eccentricity not finite or negative (#476), and `ArgumentException` (`eccentricity`) within 1e-6 of e = 1, which
 `Parabolic` builds. Outside the band the semi-major axis has the sign of the conic, a (1 − e) > 0: a > 0 for e < 1 and
 a < 0 for e > 1, a = 0 refused, or `ArgumentException` (`semiMajorAxis`, its message naming a and e; #738: before
-11.0.0, accepted, with a NaN velocity and an `AtEpoch` that named the mean anomaly). `FromOMM` checks the same, its mean
+11.0.0, accepted, with a NaN velocity and an `AtEpoch` that named the mean anomaly). `Omm.ToMeanElements` checks the same, its mean
 motion finite and above 0.
 
 ### Factory Methods
@@ -29,7 +29,6 @@ motion finite and above 0.
 |--------|-------------|
 | `FromTrueAnomaly(semiMajorAxis, eccentricity, inclination, ascendingNode, argumentOfPeriapsis, trueAnomaly, observer, epoch, frame)` | Osculating elements of the constructor's conics whose true anomaly is ν: M(ν) from the closed-form eccentric anomaly (`OrbitalParameters.TrueAnomalyToMeanAnomaly`), `TrueAnomaly()` ν reduced to [0, 2π), the range of the true anomaly computed from M (ν as given when in it), the state and the equinoctial elements computed from ν as given (its reduction would lose up to half an ulp of 2π, which the state near an apsis or an asymptote amplifies); `ArgumentException` (`trueAnomaly`) for a ν not finite, `ArgumentOutOfRangeException` (`trueAnomaly`) for a ν of a hyperbola whose reduction to (−π, π] is on or beyond its asymptotes |
 | `Parabolic(perigeeRadius, inclination, ascendingNode, argumentOfPeriapsis, meanAnomaly, observer, epoch, frame, eccentricity = 1.0)` | Osculating elements of a parabola, or of an orbit within 1e-6 of e = 1, from its perigee radius q: a = q / (1 − e), +∞ at e = 1, the mean anomaly Barker's; `ArgumentOutOfRangeException` (`perigeeRadius`) for a q not finite and above 0, (`eccentricity`) for an e outside the band |
-| `FromOMM(meanMotion, e, i, raan, aop, m, observer, epoch, frame)` | Create mean elements from OMM data (units: rev/day, degrees) |
 
 ```csharp
 // Inputs: earth (CelestialBody), epoch (Time)

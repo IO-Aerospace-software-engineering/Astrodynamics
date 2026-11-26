@@ -435,7 +435,7 @@ public class TLE : OrbitalParameters, IEquatable<TLE>, IParsable<TLE>
     {
         if (meanElements == null) throw new ArgumentNullException(nameof(meanElements));
         if (meanElements.ElementsType != OrbitalElementsType.Mean)
-            throw new ArgumentException("Orbital parameters must be mean elements. Use KeplerianElements.FromOMM() or ensure ElementsType is Mean.", nameof(meanElements));
+            throw new ArgumentException("Orbital parameters must be mean elements. Use Omm.ToMeanElements(), TLE.ToMeanKeplerianElements() or elements whose ElementsType is Mean.", nameof(meanElements));
 
         // A TLE holds SGP4 mean elements of an Earth orbit in TEME (#607)
         if (meanElements.Frame != Frame.TEME)

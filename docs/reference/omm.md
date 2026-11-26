@@ -93,7 +93,7 @@ and `new CovarianceMatrix(...)` and its factories `ArgumentOutOfRangeException` 
 naming `MEAN_MOTION` and its value for a mean motion above the 99.99999999 rev/day its 11-character TLE field holds, as
 for a `NORAD_CAT_ID` or a `REV_AT_EPOCH` the TLE cannot represent; before 11.0.0 it threw the TLE's line-length
 `ArgumentException`, and above about 2.86e307 rev/day, where the conversion to rad/s and back overflowed, it returned a
-TLE whose mean motion was the text `Infinity` ([#729](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/729)). `KeplerianElements.FromOMM` gives a finite mean motion in rad/s above about 2.86e307
+TLE whose mean motion was the text `Infinity` ([#729](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/729)). `Omm.ToMeanElements` (and `ToTle`) gives a finite mean motion in rad/s above about 2.86e307
 rev/day, where (n × 2π) / 86400 gave +Infinity; such elements carry no orbit a TLE can hold. A negative `REV_AT_EPOCH` names `revolutionNumberAtEpoch` in the `ArgumentOutOfRangeException` of
 `TleParameters` (its constructor and the four `CreateWith*` factories), the parameter they take, where it named
 `revNumber` ([#734](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/734)).
@@ -172,6 +172,8 @@ written as its clock reading under every time system. The library's own conversi
 | Method | Description |
 |--------|-------------|
 | `ToTle()` | Convert to a `TLE` object (requires `IsTleCompatible`; an OMM with TLE parameters that is not SGP4, TEME and Earth throws `InvalidOperationException` naming each keyword at fault and its value, #679); `EPOCH` is read in `TIME_SYSTEM` (UTC, TAI, TDB, TT or GPS) and written as its UTC, another time system throws (#485); a `NORAD_CAT_ID`, `REV_AT_EPOCH` or `MEAN_MOTION` its TLE field cannot hold throws `InvalidOperationException` naming it (#729 for `MEAN_MOTION`, above 99.99999999 rev/day) |
+| `ToMeanElements(observer?)` | The mean elements in SI units, mean `KeplerianElements` (R22 of [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668), lot L7): about the centre `CENTER_NAME` names, by the rules of `Opm.ToStateVector` (a barycenter, the Sun, a planet or a moon; another name without an observer, or an observer that contradicts it, `ArgumentException`), in the frame of `REF_FRAME` (`ICRF`, `GCRF` and `EME2000` as `Frame.ICRF`, `TEME` as `Frame.TEME`), at `GetEpoch()`; from `MEAN_MOTION` the mean motion kept as given and the semi-major axis ∛(GM/n²) of the observer's kernel GM (the `GM` keyword is not read), from `SEMI_MAJOR_AXIS` that axis in m. It gives the elements of the factory of degrees and rev/day public before 11.0.0, now the internal `KeplerianElements.FromOMM`, bit for bit on the same values |
+| `GetEpoch()` | `EPOCH` as a `Time` in its `TIME_SYSTEM` (UTC, TAI, TDB, TT or GPS); another time system, as UT1, which a message may hold, throws `InvalidOperationException`. `Epoch` keeps the `DateTime` of the message |
 | `Validate()` | Validate and return `OmmValidationResult` |
 | `IsValid()` | Quick validity check (returns `bool`) |
 

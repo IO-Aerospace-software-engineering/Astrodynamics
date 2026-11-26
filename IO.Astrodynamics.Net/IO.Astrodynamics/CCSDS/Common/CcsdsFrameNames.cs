@@ -1,6 +1,7 @@
 // Copyright 2023. Sylvain Guillet (sylvain.guillet@tutamail.com)
 
 using System;
+using IO.Astrodynamics.CCSDS.Common.Enums;
 using IO.Astrodynamics.Frames;
 
 namespace IO.Astrodynamics.CCSDS.Common;
@@ -34,4 +35,22 @@ internal static class CcsdsFrameNames
         ArgumentNullException.ThrowIfNull(frame);
         return string.Equals(frame.Name, Frame.ICRF.Name, StringComparison.OrdinalIgnoreCase) ? Icrf : frame.Name;
     }
+
+    /// <summary>
+    /// The frame of a <c>REF_FRAME</c>: CCSDS <c>ICRF</c>, <c>GCRF</c> and <c>EME2000</c> onto <see cref="Frame.ICRF"/> (the
+    /// ~23 mas frame bias of EME2000 ignored), <c>TEME</c> onto <see cref="Frame.TEME"/>, <c>ITRF93</c> onto the SPICE frame
+    /// of that name, any other value the frame of its name.
+    /// </summary>
+    /// <param name="frame">The parsed frame, null when the value is none of <see cref="CcsdsReferenceFrame"/>.</param>
+    /// <param name="name">The value of <c>REF_FRAME</c> as the message gives it.</param>
+    /// <returns>The frame of the message.</returns>
+    internal static Frame ToFrame(CcsdsReferenceFrame? frame, string name) => frame switch
+    {
+        CcsdsReferenceFrame.ICRF => Frame.ICRF,
+        CcsdsReferenceFrame.EME2000 => Frame.ICRF,
+        CcsdsReferenceFrame.GCRF => Frame.ICRF,
+        CcsdsReferenceFrame.TEME => Frame.TEME,
+        CcsdsReferenceFrame.ITRF93 => new Frame("ITRF93"),
+        _ => new Frame(name)
+    };
 }

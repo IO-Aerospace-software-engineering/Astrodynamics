@@ -258,19 +258,12 @@ internal static class DeveloperGuideExamples
         // Propagate using 2-body mechanics
         var laterKep = kep.AtEpoch(epoch.AddDays(1));
 
-        // Create mean Keplerian elements from OMM data
-        // FromOMM accepts OMM native units: rev/day for mean motion, degrees for angles
-        var meanKep = KeplerianElements.FromOMM(
-            meanMotion: 15.49309423,             // rev/day
-            eccentricity: 0.0000493,
-            inclination: 51.6423,                // degrees
-            raan: 353.0312,                      // degrees
-            argumentOfPeriapsis: 320.8755,       // degrees
-            meanAnomaly: 39.2360,                // degrees
-            observer: earth,
-            epoch: epoch,
-            frame: Frame.TEME
-        );
+        // Create mean Keplerian elements from an OMM: its CCSDS units (rev/day, degrees) in, SI out
+        var omm = Omm.CreateForTle("ISS (ZARYA)", "1998-067A", new DateTime(2021, 1, 20, 12, 50, 13, DateTimeKind.Utc),
+            meanMotion: 15.49309423, eccentricity: 0.0000493, inclination: 51.6423, raan: 353.0312,
+            argOfPericenter: 320.8755, meanAnomaly: 39.2360, bstar: 0.00010270, meanMotionDot: 0.00008358,
+            meanMotionDDot: 0.0, noradCatalogId: 25544);
+        var meanKep = omm.ToMeanElements();   // about the Earth (CENTER_NAME), in TEME (REF_FRAME)
 
         Console.WriteLine($"Elements type: {meanKep.ElementsType}"); // Mean
         // Note: Mean elements cannot be directly converted to StateVector
