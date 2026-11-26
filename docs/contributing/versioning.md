@@ -175,7 +175,7 @@ release are listed under **Known limitations**.
     (D1: the options types and parameters, the members with two bools or more, the doubles named `Step`, `Duration` or
     `Tolerance` without `Seconds`, the sibling settings) and of the members the documentation's tables cite (the public
     surface, an internal member only where the table says so)**, each a test with a baseline that may only shrink; the
-    CA naming rules run as warnings. See [Public API](public-api.md).
+    CA naming rules run as warnings until lot L9 makes them errors. See [Public API](public-api.md).
   - The later lots of #668 rename or remove a member outright, with no `[Obsolete]` forwarder (decided by S. Guillet,
     2026-11-19): each change is listed in these notes, under **Changed** as **Breaking** with its migration, or under
     **Removed**, and documented in the reference pages.
@@ -4986,7 +4986,10 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   runner, benchmarks, smoke tests and documentation. The naming and options tests of lot L0 now find no violation, and
   their baselines are removed; two checks of N8 are added, no duplicate simple name in the namespaces of the implicit
   usings or against the SDK's (`PackageImplicitUsingsTests`) and cspell over the public names with the project
-  dictionary `cspell.json` (see [Public API](public-api.md)).
+  dictionary `cspell.json`. The CA naming rules (`AnalysisModeNaming` All) and CA1050 are build errors (D2, N8), their
+  exceptions in `GlobalSuppressions.cs`, each with the decision that keeps the name: the six CA1724 pairs N8 allows and
+  the 11 diagnostics of names decided or released (decision 114 of #668, decided by S. Guillet, 2026-11-26). See
+  [Public API](public-api.md).
 
     | Kind | 10.x | 11.0.0 |
     |---|---|---|
