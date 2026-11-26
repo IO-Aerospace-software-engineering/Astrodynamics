@@ -8,7 +8,7 @@ using System.Xml;
 using System.Xml.Serialization;
 using IO.Astrodynamics.Helpers;
 
-namespace IO.Astrodynamics.PDS;
+namespace IO.Astrodynamics.Pds;
 
 /// <summary>
 /// Base class to manage PDS archives.

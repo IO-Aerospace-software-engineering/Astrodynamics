@@ -3,7 +3,7 @@ using System;
 using IO.Astrodynamics.Frames;
 using IO.Astrodynamics.Body;
 
-namespace IO.Astrodynamics.OrbitalParameters.TLE
+namespace IO.Astrodynamics.OrbitalParameters
 {
     /// <summary>
     /// Converts between osculating and mean orbital elements using fixed-point iteration

@@ -1,7 +1,7 @@
 # Conjunction Assessment
 
 !!! note
-    `ConjunctionAssessment` and its companion types live in the `IO.Astrodynamics.SSA` namespace.
+    `ConjunctionAssessment` and its companion types live in the `IO.Astrodynamics.Ssa` namespace.
 
 `ConjunctionAssessment` is the main SSA facade for screening, analyzing, and evaluating conjunction events between a protected spacecraft and candidate secondary objects.
 

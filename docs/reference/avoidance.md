@@ -1,7 +1,7 @@
 # Avoidance Studies
 
 !!! note
-    Avoidance studies live in the `IO.Astrodynamics.SSA` namespace.
+    Avoidance studies live in the `IO.Astrodynamics.Ssa` namespace.
 
 `ConjunctionAssessment.EvaluateAvoidance(...)` generates and ranks simple impulsive avoidance options for a conjunction encounter, and returns them in an `AvoidanceStudy` with the lead times that gave none.
 

@@ -4,7 +4,7 @@ using IO.Astrodynamics.Body.Spacecraft;
 using IO.Astrodynamics.Propagator;
 using IO.Astrodynamics.Propagator.Variational;
 
-namespace IO.Astrodynamics.SSA;
+namespace IO.Astrodynamics.Ssa;
 
 /// <summary>
 /// Configures how one conjunction pair is searched and evaluated.

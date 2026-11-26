@@ -2,7 +2,7 @@
 using System;
 using IO.Astrodynamics.Propagator.Variational;
 
-namespace IO.Astrodynamics.SSA;
+namespace IO.Astrodynamics.Ssa;
 
 /// <summary>
 /// Configures candidate screening for one protected spacecraft against a set of secondaries, read by

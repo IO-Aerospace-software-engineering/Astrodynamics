@@ -228,7 +228,7 @@ namespace IO.Astrodynamics.OrbitalParameters
 
         /// <summary>
         /// Creates mean Keplerian elements from OMM (Orbit Mean-elements Message) data, the path of
-        /// <see cref="CCSDS.OMM.Omm.ToMeanElements"/> and <see cref="CCSDS.OMM.Omm.ToTle"/> (internal since 11.0.0, R22 of
+        /// <see cref="Ccsds.Omm.ToMeanElements"/> and <see cref="Ccsds.Omm.ToTle"/> (internal since 11.0.0, R22 of
         /// #668: the one SI-side member that took degrees and rev/day).
         /// This factory method accepts values in OMM native units and handles all conversions internally.
         /// The resulting elements will have <see cref="OrbitalParameters.ElementsType"/> set to <see cref="OrbitalElementsType.Mean"/>.

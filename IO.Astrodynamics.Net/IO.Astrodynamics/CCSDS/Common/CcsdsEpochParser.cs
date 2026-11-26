@@ -2,7 +2,7 @@
 
 using System;
 
-namespace IO.Astrodynamics.CCSDS.Common;
+namespace IO.Astrodynamics.Ccsds;
 
 /// <summary>
 /// The parser of a CCSDS date, the date branch of the NDM/XML <c>epochType</c>

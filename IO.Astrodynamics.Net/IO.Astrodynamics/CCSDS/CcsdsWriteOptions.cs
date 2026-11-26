@@ -1,9 +1,9 @@
 // Copyright 2026. Sylvain Guillet (sylvain.guillet@tutamail.com)
 
-namespace IO.Astrodynamics.CCSDS;
+namespace IO.Astrodynamics.Ccsds;
 
 /// <summary>
-/// How <c>Save</c> and <c>ToXml</c> of <see cref="OMM.Omm"/>, <see cref="OPM.Opm"/> and <see cref="CDM.Cdm"/> write a
+/// How <c>Save</c> and <c>ToXml</c> of <see cref="Omm"/>, <see cref="Opm"/> and <see cref="Cdm"/> write a
 /// message (R22 of #668, D1's options of the CCSDS write, decided by S. Guillet, 2026-11-19).
 /// </summary>
 public sealed record CcsdsWriteOptions

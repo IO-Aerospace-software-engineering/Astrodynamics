@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using IO.Astrodynamics.Maneuver;
 
-namespace IO.Astrodynamics.SSA;
+namespace IO.Astrodynamics.Ssa;
 
 /// <summary>
 /// Configures the impulsive avoidance trade study performed for one encounter, read by

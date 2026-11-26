@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using IO.Astrodynamics.Body;
 using IO.Astrodynamics.Body.Spacecraft;
-using IO.Astrodynamics.CCSDS.OPM;
+using IO.Astrodynamics.Ccsds;
 using IO.Astrodynamics.Math;
 using IO.Astrodynamics.Propagator;
 using IO.Astrodynamics.OrbitalParameters;

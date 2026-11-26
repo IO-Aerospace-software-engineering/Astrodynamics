@@ -5,11 +5,11 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using IO.Astrodynamics.Body;
-using IO.Astrodynamics.CCSDS.Common;
+using IO.Astrodynamics.Ccsds;
 using IO.Astrodynamics.Frames;
 using IO.Astrodynamics.TimeSystem;
 
-namespace IO.Astrodynamics.CCSDS.OMM;
+namespace IO.Astrodynamics.Ccsds;
 
 /// <summary>
 /// Represents a CCSDS Orbit Mean-elements Message (OMM).
@@ -245,7 +245,7 @@ public class Omm
     /// </para>
     /// <para>
     /// The object ID (international designator) is used as the COSPAR ID in the TLE. <c>OBJECT_ID = UNKNOWN</c> (trimmed,
-    /// in any letter case), which <see cref="OrbitalParameters.TLE.Tle.ToOmm"/> writes for a TLE without a designator, gives
+    /// in any letter case), which <see cref="OrbitalParameters.Tle.ToOmm"/> writes for a TLE without a designator, gives
     /// blank columns 10-17 (#604, decided by S. Guillet, 2026-11-18; before 11.0.0 the TLE could not be built).
     /// </para>
     /// <para>
@@ -260,7 +260,7 @@ public class Omm
     /// UTC whatever the time system.
     /// </para>
     /// </remarks>
-    public OrbitalParameters.TLE.Tle ToTle()
+    public OrbitalParameters.Tle ToTle()
     {
         // Validate TLE compatibility
         if (!Data.HasTleParameters)
@@ -301,8 +301,8 @@ public class Omm
 
         // Create mean Keplerian elements from OMM data, at the epoch read in TIME_SYSTEM (#485), as UTC, the time scale of a
         // TLE epoch
-        var timeScale = Common.Enums.CcsdsTimeSystemMapping.ToTimeScale(Metadata.TimeSystemEnum, Metadata.TimeSystem);
-        var epoch = Common.Enums.CcsdsTimeSystemMapping.ToTime(meanElements.Epoch, timeScale).ToUtc();
+        var timeScale = CcsdsTimeSystemMapping.ToTimeScale(Metadata.TimeSystemEnum, Metadata.TimeSystem);
+        var epoch = CcsdsTimeSystemMapping.ToTime(meanElements.Epoch, timeScale).ToUtc();
         // The Earth in an inertial frame, as the TLE builds it (#597): ITRF93 would read the Earth's binary PCK at the epoch
         var earth = new Body.CelestialBody(399, Frames.Frame.ECLIPJ2000, epoch);
 
@@ -320,11 +320,11 @@ public class Omm
         // Extract TLE parameters. No narrowing cast here: the OMM fields are wider than the TLE
         // ones, so out-of-range values are reported rather than silently wrapped.
         var noradId = tleParams.NoradCatalogId.Value;
-        if (!OrbitalParameters.TLE.NoradCatalogNumber.IsValid(noradId))
+        if (!OrbitalParameters.NoradCatalogNumber.IsValid(noradId))
         {
             throw new InvalidOperationException(
                 $"NORAD catalog ID {noradId} cannot be represented in a TLE: the 5-character field holds at most " +
-                $"{OrbitalParameters.TLE.NoradCatalogNumber.MaxValue} (Alpha-5 encoded). Keep this object in OMM form.");
+                $"{OrbitalParameters.NoradCatalogNumber.MaxValue} (Alpha-5 encoded). Keep this object in OMM form.");
         }
 
         // Convert OMM Object ID (e.g., "1998-067A") to TLE COSPAR format (e.g., "98067A")
@@ -338,14 +338,14 @@ public class Omm
         }
 
         // Parse classification
-        var classification = OrbitalParameters.TLE.TleClassification.Unclassified;
+        var classification = OrbitalParameters.TleClassification.Unclassified;
         if (!string.IsNullOrEmpty(tleParams.ClassificationType))
         {
             classification = tleParams.ClassificationType.ToUpperInvariant() switch
             {
-                "C" => OrbitalParameters.TLE.TleClassification.Classified,
-                "S" => OrbitalParameters.TLE.TleClassification.Secret,
-                _ => OrbitalParameters.TLE.TleClassification.Unclassified
+                "C" => OrbitalParameters.TleClassification.Classified,
+                "S" => OrbitalParameters.TleClassification.Secret,
+                _ => OrbitalParameters.TleClassification.Unclassified
             };
         }
 
@@ -353,9 +353,9 @@ public class Omm
         var nDot = tleParams.MeanMotionDot;
         var nDDot = tleParams.MeanMotionDDot ?? 0.0;
         // One default with Tle.Create and the TLE Configuration (#606)
-        var elementSetNumber = tleParams.ElementSetNumber ?? OrbitalParameters.TLE.Tle.DefaultElementSetNumber;
+        var elementSetNumber = tleParams.ElementSetNumber ?? OrbitalParameters.Tle.DefaultElementSetNumber;
 
-        return OrbitalParameters.TLE.Tle.Create(
+        return OrbitalParameters.Tle.Create(
             keplerianElements,
             ObjectName,
             noradId,
@@ -426,13 +426,13 @@ public class Omm
     /// <exception cref="InvalidOperationException">The <c>TIME_SYSTEM</c> is none of UTC, TAI, TDB, TT and GPS (UT1, TCB,
     /// MET, ...), which a message may hold and <see cref="Time"/> does not.</exception>
     public Time GetEpoch() =>
-        Common.Enums.CcsdsTimeSystemMapping.ToTime(Data.MeanElements.Epoch,
-            Common.Enums.CcsdsTimeSystemMapping.ToTimeScale(Metadata.TimeSystemEnum, Metadata.TimeSystem));
+        CcsdsTimeSystemMapping.ToTime(Data.MeanElements.Epoch,
+            CcsdsTimeSystemMapping.ToTimeScale(Metadata.TimeSystemEnum, Metadata.TimeSystem));
 
     /// <summary>
     /// The mean elements of the message in SI units (m, rad), mean Keplerian elements (R22 of #668, lot L7): about the
     /// centre <c>CENTER_NAME</c> names, in the frame of <c>REF_FRAME</c>, at <see cref="GetEpoch"/>, as
-    /// <see cref="OPM.Opm.ToStateVector"/> reads an OPM.
+    /// <see cref="Opm.ToStateVector"/> reads an OPM.
     /// </summary>
     /// <param name="observer">The centre of the elements. If null, the centre <c>CENTER_NAME</c> names: a
     /// <see cref="Barycenter"/> for the barycenters 0 to 9, otherwise a <see cref="CelestialBody"/> in ICRF at the epoch

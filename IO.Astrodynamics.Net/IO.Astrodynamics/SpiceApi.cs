@@ -3079,7 +3079,7 @@ public class SpiceApi
         Time epoch)
     {
         return ConvertTleToStateVector(line1, line2, line3, ReadTleEpoch(line1, line2, line3),
-            OrbitalParameters.TLE.Tle.ExtractEpochFromTLE(line2), epoch);
+            OrbitalParameters.Tle.ExtractEpochFromTLE(line2), epoch);
     }
 
     /// <summary>
@@ -3385,7 +3385,7 @@ public class SpiceApi
     /// centre with a GM, and the conversion of the result threw for the others).</exception>
     /// <exception cref="ArgumentException">The periapsis radius of the elements is not finite and above 0, outside the domain
     /// of <c>CONICS</c> (#711: before, a zero state was returned): mean elements of e ≥ 1 (<see
-    /// cref="CCSDS.OMM.Omm.ToMeanElements"/>), or an a (1 − e) that overflows. Osculating elements of a
+    /// cref="Ccsds.Omm.ToMeanElements"/>), or an a (1 − e) that overflows. Osculating elements of a
     /// semi-major axis of the wrong sign are refused by their constructor since 11.0.0 (#738).</exception>
     /// <exception cref="ArgumentException">An element (e, i, RAAN, AOP, M) is not finite (#714: before, a NaN mean anomaly gave
     /// a finite state, silently, and a NaN inclination a NaN state, which threw an unrelated message).</exception>
@@ -3422,7 +3422,7 @@ public class SpiceApi
     /// </summary>
     /// <exception cref="ArgumentException">The periapsis radius of the elements is not finite and above 0, outside the domain
     /// of <c>CONICS</c> (#711: before, a zero state was returned): mean elements of e ≥ 1 (<see
-    /// cref="CCSDS.OMM.Omm.ToMeanElements"/>), or an a (1 − e) that overflows. Osculating elements of a
+    /// cref="Ccsds.Omm.ToMeanElements"/>), or an a (1 − e) that overflows. Osculating elements of a
     /// semi-major axis of the wrong sign are refused by their constructor since 11.0.0 (#738).</exception>
     /// <exception cref="ArgumentException">An element (e, i, RAAN, AOP, M) is not finite (#714: before, a NaN mean anomaly gave
     /// a finite state, silently, and a NaN inclination a NaN state, which threw an unrelated message).</exception>
@@ -3447,7 +3447,7 @@ public class SpiceApi
     /// <returns></returns>
     /// <exception cref="ArgumentException">The periapsis radius of the elements is not finite and above 0, outside the domain
     /// of <c>CONICS</c> (#711: before, a zero state was returned): mean elements of e ≥ 1 (<see
-    /// cref="CCSDS.OMM.Omm.ToMeanElements"/>), or an a (1 − e) that overflows. Osculating elements of a
+    /// cref="Ccsds.Omm.ToMeanElements"/>), or an a (1 − e) that overflows. Osculating elements of a
     /// semi-major axis of the wrong sign are refused by their constructor since 11.0.0 (#738).</exception>
     /// <exception cref="ArgumentException">An element (e, i, RAAN, AOP, M) is not finite (#714: before, a NaN mean anomaly gave
     /// a finite state, silently, and a NaN inclination a NaN state, which threw an unrelated message).</exception>

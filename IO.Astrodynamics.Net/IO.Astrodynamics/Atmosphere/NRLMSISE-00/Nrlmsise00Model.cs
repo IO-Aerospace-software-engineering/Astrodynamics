@@ -2,7 +2,7 @@
 
 using System;
 using IO.Astrodynamics.TimeSystem;
-namespace IO.Astrodynamics.Atmosphere.NRLMSISE_00;
+namespace IO.Astrodynamics.Atmosphere;
 
 /// <summary>
 /// NRLMSISE-00 atmospheric model adapter implementing the framework interface.

@@ -8,7 +8,6 @@ using IO.Astrodynamics.Body;
 using IO.Astrodynamics.Coordinates;
 using IO.Astrodynamics.Math;
 using IO.Astrodynamics.OrbitalParameters;
-using IO.Astrodynamics.OrbitalParameters.TLE;
 using IO.Astrodynamics.Surface;
 using IO.Astrodynamics.TimeSystem;
 using IO.Astrodynamics.Exceptions;
@@ -310,7 +309,7 @@ public class TLETests
         var sv = new StateVector(new Vector3(5465479.168061836, -4037598.9299125164, 3.8812307310800365), // Position vector (X, Y, Z)
             new Vector3(2821.2352501830983, 3825.849951628489, 6009.392701926987), TestHelpers.EarthAtJ2000, epoch, Frames.Frame.ICRF);
         // BSTAR " 21103-3" = 0.21103 × 10^-3 = 0.00021103
-        var config = new IO.Astrodynamics.OrbitalParameters.TLE.TleFitOptions { BStar = 0.00021103 };
+        var config = new IO.Astrodynamics.OrbitalParameters.TleFitOptions { BStar = 0.00021103 };
         var tle = sv.ToTle("TestSatellite", 25666, "98067A", config);
         Assert.NotNull(tle);
         Assert.Equal("TestSatellite", tle.Name);
@@ -705,7 +704,7 @@ public class TLETests
 
 // Configure the TLE parameters
         // BSTAR " 21103-3" = 0.21103 × 10^-3 = 0.00021103
-        var config = new IO.Astrodynamics.OrbitalParameters.TLE.TleFitOptions { BStar = 0.00021103 };
+        var config = new IO.Astrodynamics.OrbitalParameters.TleFitOptions { BStar = 0.00021103 };
 
 // Convert the state vector to a TLE
         var sw = Stopwatch.StartNew();
@@ -746,7 +745,7 @@ public class TLETests
 
         // Create modelled TLE from the osculating state at t0 with same B* as Space-Track TLE
         // BSTAR " 10270-3" = 0.10270 × 10^-3 = 0.0001027
-        var tleConfig = new IO.Astrodynamics.OrbitalParameters.TLE.TleFitOptions { BStar = 0.0001027 };
+        var tleConfig = new IO.Astrodynamics.OrbitalParameters.TleFitOptions { BStar = 0.0001027 };
         var modelledTLE = osculatingState.ToTle("ISS (ZARYA) MODEL", 25544, "98067A", tleConfig);
 
         // Update modelled TLE B* to match Space-Track TLE (this requires manual setting)

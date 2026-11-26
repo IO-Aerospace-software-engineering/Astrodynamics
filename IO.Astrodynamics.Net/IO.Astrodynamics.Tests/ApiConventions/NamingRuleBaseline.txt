@@ -2,12 +2,3 @@
 # f2a0376), one "rule<TAB>symbol" per line in ordinal order, read by NamingRuleTests: namespaces ("namespace X"), types,
 # members (a method by its signature, so each overload has its line) and parameters ("signature:name"). The file may only
 # shrink: a new public name follows N1 to N3, and a rename removes its lines. The renaming lot (L9) empties it.
-N1.acronym	namespace IO.Astrodynamics.Atmosphere.NRLMSISE_00
-N1.acronym	namespace IO.Astrodynamics.CCSDS
-N1.acronym	namespace IO.Astrodynamics.CCSDS.CDM
-N1.acronym	namespace IO.Astrodynamics.CCSDS.OMM
-N1.acronym	namespace IO.Astrodynamics.CCSDS.OPM
-N1.acronym	namespace IO.Astrodynamics.OrbitalParameters.TLE
-N1.acronym	namespace IO.Astrodynamics.PDS
-N1.acronym	namespace IO.Astrodynamics.SSA
-N1.underscore	namespace IO.Astrodynamics.Atmosphere.NRLMSISE_00

@@ -4,7 +4,7 @@ using IO.Astrodynamics.Tests.Propagators.Variational;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using IO.Astrodynamics.Atmosphere.NRLMSISE_00;
+using IO.Astrodynamics.Atmosphere;
 using IO.Astrodynamics.Body;
 using IO.Astrodynamics.Body.Spacecraft;
 using IO.Astrodynamics.Maneuver;

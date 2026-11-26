@@ -3,18 +3,18 @@ using System;
 using System.Globalization;
 using IO.Astrodynamics.Body;
 using IO.Astrodynamics.Body.Spacecraft;
-using IO.Astrodynamics.CCSDS.CDM;
+using IO.Astrodynamics.Ccsds;
 using IO.Astrodynamics.OrbitalParameters;
 using IO.Astrodynamics.Propagator;
 using IO.Astrodynamics.TimeSystem;
 
-namespace IO.Astrodynamics.SSA;
+namespace IO.Astrodynamics.Ssa;
 
 /// <summary>
 /// Represents one conjunction case, including geometry, risk metrics, and optional participant snapshots at TCA.
 /// </summary>
 /// <remarks>
-/// A result of the library: <see cref="ConjunctionAssessment"/> and <see cref="IO.Astrodynamics.CCSDS.CDM.Cdm.ToEncounter"/> build
+/// A result of the library: <see cref="ConjunctionAssessment"/> and <see cref="IO.Astrodynamics.Ccsds.Cdm.ToEncounter"/> build
 /// it, its constructors internal (R17 of #668, choice 4, lot L7; public before 11.0.0).
 /// </remarks>
 public sealed class EncounterCase
@@ -141,7 +141,7 @@ public sealed class EncounterCase
     public double RelativeSpeedMetersPerSecond => EncounterState.RelativeState.RelativeVelocityInertial.Magnitude();
 
     /// <summary>
-    /// Gets the probability of collision, <see cref="CollisionRisk"/>'s <see cref="SSA.CollisionRisk.ProbabilityOfCollision"/>;
+    /// Gets the probability of collision, <see cref="CollisionRisk"/>'s <see cref="Ssa.CollisionRisk.ProbabilityOfCollision"/>;
     /// null when it could not be computed.
     /// </summary>
     public double? ProbabilityOfCollision => CollisionRisk?.ProbabilityOfCollision;
@@ -152,7 +152,7 @@ public sealed class EncounterCase
     /// (R17 of #668).
     /// </summary>
     public override string ToString() => string.Create(CultureInfo.InvariantCulture,
-        $"TCA {Tca}, miss {MissDistanceMeters:F3} m, Pc {SSA.CollisionRisk.FormatProbability(ProbabilityOfCollision)}, HBR {CollisionRisk?.CombinedHardBodyRadiusMeters} m, {EncounterState.QualityFlags}");
+        $"TCA {Tca}, miss {MissDistanceMeters:F3} m, Pc {Ssa.CollisionRisk.FormatProbability(ProbabilityOfCollision)}, HBR {CollisionRisk?.CombinedHardBodyRadiusMeters} m, {EncounterState.QualityFlags}");
 
     /// <summary>
     /// Exports this encounter as a CCSDS Conjunction Data Message.

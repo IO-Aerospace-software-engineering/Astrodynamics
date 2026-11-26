@@ -377,7 +377,7 @@ public class PropagateTests
         if (activation == "t")
         {
             var lines = values.Split(',');
-            var sgp4 = new IO.Astrodynamics.OrbitalParameters.TLE.Tle("Reference", lines[0], lines[1]).ToStateVector(start);
+            var sgp4 = new IO.Astrodynamics.OrbitalParameters.Tle("Reference", lines[0], lines[1]).ToStateVector(start);
             return LibraryRunEnd(new IO.Astrodynamics.OrbitalParameters.StateVector(sgp4.Position, sgp4.Velocity, earth, start, Frames.Frame.TEME),
                 earth, start, end);
         }
@@ -434,7 +434,7 @@ public class PropagateTests
             res = CliRun.Ok(["propagate", "P675", "-K", "Data", "--output", outputDirectory, "--from", "tle", "--orbit", IssLine1, "--orbit", IssLine2,
                 "--begin", "2021-01-20T13:00:00Z", "--end", "2021-01-20T13:30:00Z", "--srp", .. LegacyDrag]);
 
-            var tle = new OrbitalParameters.TLE.Tle("ISS", IssLine1, IssLine2);
+            var tle = new OrbitalParameters.Tle("ISS", IssLine1, IssLine2);
             var t0 = window.StartDate.ToTdb();
             var cliEarth = new Body.CelestialBody(399, new Body.GeopotentialModelParameters(
                 typeof(PropagateCommand).Assembly.GetManifestResourceStream("IO.Astrodynamics.CLI.Data.EGM2008_to100_TideFree.txt"), 10),

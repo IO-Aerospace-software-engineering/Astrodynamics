@@ -2,7 +2,6 @@ using System;
 using IO.Astrodynamics.Body;
 using IO.Astrodynamics.CLI.Commands.Parameters;
 using IO.Astrodynamics.OrbitalParameters;
-using IO.Astrodynamics.OrbitalParameters.TLE;
 
 namespace IO.Astrodynamics.CLI.Cli;
 

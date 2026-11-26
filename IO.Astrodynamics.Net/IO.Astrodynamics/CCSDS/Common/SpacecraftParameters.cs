@@ -3,7 +3,7 @@
 using System;
 using System.Collections.Generic;
 
-namespace IO.Astrodynamics.CCSDS.Common;
+namespace IO.Astrodynamics.Ccsds;
 
 /// <summary>
 /// Represents spacecraft physical parameters used in CCSDS Navigation Data Messages.

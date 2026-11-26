@@ -1,6 +1,6 @@
 using System;
 
-namespace IO.Astrodynamics.Atmosphere.NRLMSISE_00
+namespace IO.Astrodynamics.Atmosphere
 {
     /// <summary>
     /// NRLMSISE-00 Empirical Atmosphere Model.

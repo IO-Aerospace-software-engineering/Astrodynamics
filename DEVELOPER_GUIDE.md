@@ -166,7 +166,7 @@ Console.WriteLine($"Orbital Period: {orbit.Period().TotalHours:F2} hours");
 ### Basic Example: Parse a TLE
 
 ```csharp
-using IO.Astrodynamics.OrbitalParameters.TLE;
+using IO.Astrodynamics.OrbitalParameters;
 using IO.Astrodynamics.TimeSystem;
 
 var tle = new Tle("ISS (ZARYA)",
@@ -590,7 +590,7 @@ Console.WriteLine($"Lv: {equinoctial.L0 * Constants.Rad2Deg}°");
 
 ---
 
-### IO.Astrodynamics.OrbitalParameters.TLE
+### IO.Astrodynamics.OrbitalParameters (TLE)
 
 #### Tle
 
@@ -681,7 +681,7 @@ Console.WriteLine(alpha5Tle.NoradCatalogId);        // 275544
 
 ---
 
-### IO.Astrodynamics.CCSDS.OMM
+### IO.Astrodynamics.Ccsds (OMM)
 
 The CCSDS OMM (Orbit Mean-elements Message) module provides support for reading, writing, and converting OMM files conforming to CCSDS 502.0-B-3 (ODM Blue Book) and CCSDS 505.0-B-3 (NDM/XML Blue Book).
 
@@ -723,7 +723,7 @@ Represents a complete CCSDS Orbit Mean-elements Message.
 > Such objects can only be carried in OMM form.
 
 ```csharp
-using IO.Astrodynamics.CCSDS.OMM;
+using IO.Astrodynamics.Ccsds;
 
 // Load OMM from file
 var omm = Omm.Load("satellite.omm");
@@ -766,8 +766,8 @@ newOmm.Save("output.omm");
 The `Tle` class provides a `ToOmm()` method for converting TLE data to CCSDS OMM format:
 
 ```csharp
-using IO.Astrodynamics.OrbitalParameters.TLE;
-using IO.Astrodynamics.CCSDS.OMM;
+using IO.Astrodynamics.OrbitalParameters;
+using IO.Astrodynamics.Ccsds;
 
 // Parse TLE
 var tle = new Tle("ISS (ZARYA)",
@@ -875,7 +875,7 @@ var newOmm = tle.ToOmm();                // ObjectId: "1998-067A"
 
 ---
 
-### IO.Astrodynamics.CCSDS.OPM
+### IO.Astrodynamics.Ccsds (OPM)
 
 The CCSDS OPM (Orbit Parameter Message) module provides support for reading, writing, and converting OPM files conforming to CCSDS 502.0-B-3 (ODM Blue Book) and CCSDS 505.0-B-3 (NDM/XML Blue Book). OPM is used for exchanging osculating orbital state data, including state vectors, Keplerian elements, covariance matrices, spacecraft parameters, and maneuver information.
 
@@ -912,7 +912,7 @@ Represents a complete CCSDS Orbit Parameter Message.
 | `Validate()` | Validate OPM content and return validation result |
 
 ```csharp
-using IO.Astrodynamics.CCSDS.OPM;
+using IO.Astrodynamics.Ccsds;
 
 // Load OPM from file
 var opm = Opm.Load("spacecraft.opm");
@@ -1916,7 +1916,6 @@ NRLMSISE-00 empirical atmosphere model (0-2000+ km). Requires full context with 
 
 ```csharp
 using IO.Astrodynamics.Atmosphere;
-using IO.Astrodynamics.Atmosphere.NRLMSISE_00;
 
 // Use nominal conditions
 var model = new Nrlmsise00Model();
@@ -2776,7 +2775,7 @@ await exporter.ExportAsync(scenario, new DirectoryInfo("CosmographiaExport"));
 Track satellites using Two-Line Element sets:
 
 ```csharp
-using IO.Astrodynamics.OrbitalParameters.TLE;
+using IO.Astrodynamics.OrbitalParameters;
 
 var earth = PlanetsAndMoons.EarthBody;
 

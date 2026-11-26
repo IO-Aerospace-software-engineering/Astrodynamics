@@ -130,7 +130,7 @@ public class OptionsConventionTests
     private static readonly (string A, string B)[] DecidedSiblings =
     [
         ("IO.Astrodynamics.Propagator.PropagationOptions.CovariancePropagation",
-            "IO.Astrodynamics.SSA.ConjunctionAnalysisOptions.CovariancePropagation"),
+            "IO.Astrodynamics.Ssa.ConjunctionAnalysisOptions.CovariancePropagation"),
         ("IO.Astrodynamics.FieldOfViewSearchOptions.Step", "IO.Astrodynamics.Propagator.Integrators.VVIntegratorOptions.Step"),
         ("IO.Astrodynamics.OccultationSearchOptions.Step", "IO.Astrodynamics.Propagator.Integrators.VVIntegratorOptions.Step"),
         ("IO.Astrodynamics.Propagator.Integrators.VVIntegratorOptions.Step", "IO.Astrodynamics.WindowSearchOptions.Step")

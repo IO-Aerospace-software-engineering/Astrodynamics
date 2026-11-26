@@ -10,7 +10,7 @@ using IO.Astrodynamics.CLI.Cli;
 using IO.Astrodynamics.CLI.Commands.Parameters;
 using IO.Astrodynamics.Cosmographia;
 using IO.Astrodynamics.Mission;
-using IO.Astrodynamics.OrbitalParameters.TLE;
+using IO.Astrodynamics.OrbitalParameters;
 using IO.Astrodynamics.Propagator;
 using IO.Astrodynamics.Propagator.Integrators;
 using IO.Astrodynamics.SolarSystemObjects;

@@ -3,7 +3,7 @@
 using System;
 using System.Globalization;
 
-namespace IO.Astrodynamics.OrbitalParameters.TLE;
+namespace IO.Astrodynamics.OrbitalParameters;
 
 /// <summary>
 /// Encodes and decodes the 5-character NORAD catalog number field of a TLE.
@@ -22,7 +22,7 @@ namespace IO.Astrodynamics.OrbitalParameters.TLE;
 /// </para>
 /// <para>
 /// Alpha-5 is a stopgap: the catalog will eventually exceed 339999 and only the CCSDS OMM
-/// format (9-digit NORAD_CAT_ID) can carry the full range. See <see cref="CCSDS.OMM.Omm"/>.
+/// format (9-digit NORAD_CAT_ID) can carry the full range. See <see cref="Ccsds.Omm"/>.
 /// </para>
 /// </remarks>
 public static class NoradCatalogNumber

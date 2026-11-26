@@ -3,7 +3,7 @@
 using IO.Astrodynamics.TimeSystem;
 using System;
 using System.Linq;
-using IO.Astrodynamics.SSA;
+using IO.Astrodynamics.Ssa;
 using Xunit;
 using Vector3 = IO.Astrodynamics.Math.Vector3;
 

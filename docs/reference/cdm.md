@@ -1,7 +1,7 @@
 # CCSDS CDM
 
 !!! note
-    The CDM types live in the `IO.Astrodynamics.CCSDS.CDM` namespace.
+    The CDM types live in the `IO.Astrodynamics.Ccsds` namespace.
 
 The CDM module supports constructing, reading, writing, and validating CCSDS Conjunction Data Messages in XML format.
 
@@ -31,7 +31,7 @@ a failure throwing `CdmValidationException` (a `CcsdsFormatException`) with its 
 false throws `ArgumentException` naming `options`.
 
 The exceptions of the CDM reader, `CdmParseException` and `CdmValidationException`, derive from `CcsdsFormatException`, a `FormatException` of
-`IO.Astrodynamics.CCSDS` shared by the OMM, OPM and CDM readers, so that one `catch (CcsdsFormatException)` covers a
+`IO.Astrodynamics.Ccsds` shared by the OMM, OPM and CDM readers, so that one `catch (CcsdsFormatException)` covers a
 document that cannot be read, at parsing or at validation (11.0.0, R03 of
 [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668): before, each derived from
 `Exception` alone).
@@ -263,7 +263,7 @@ single covariance (`SingleCovarianceMaximumPcUsed`), which no registered value n
 ## Example
 
 ```csharp
-using IO.Astrodynamics.CCSDS.CDM;
+using IO.Astrodynamics.Ccsds;
 
 // Inputs: encounter (EncounterCase)
 var cdm = encounter.ToCdm(new CdmExportOptions
@@ -295,9 +295,9 @@ of the transient spacecraft. The dates of the records have a `Time` accessor in 
 as UTC, as the writer takes it.
 
 ```csharp
-using IO.Astrodynamics.CCSDS.CDM;
+using IO.Astrodynamics.Ccsds;
 using IO.Astrodynamics.OrbitalParameters;
-using IO.Astrodynamics.SSA;
+using IO.Astrodynamics.Ssa;
 
 // Inputs: cdm (Cdm)
 StateVector object1 = cdm.ToStateVector(CdmObjectRole.Object1);

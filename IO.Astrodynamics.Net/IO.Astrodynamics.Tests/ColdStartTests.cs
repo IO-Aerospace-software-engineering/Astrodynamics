@@ -22,7 +22,7 @@ namespace IO.Astrodynamics.Tests;
 /// <para>
 /// Each mode pairs a method that takes the lock (thread A) with the first read of a static class whose initializer takes
 /// it (thread B): <c>direct</c> <see cref="SpiceApi.ConvertTleToStateVector(string, string, string, TimeSystem.Time)"/>
-/// and <c>tle</c> <see cref="OrbitalParameters.TLE.Tle.ToStateVector(TimeSystem.Time)"/> with
+/// and <c>tle</c> <see cref="OrbitalParameters.Tle.ToStateVector(TimeSystem.Time)"/> with
 /// <see cref="SolarSystemObjects.PlanetsAndMoons"/>, <c>lagrange</c> <see cref="SpiceApi.ReadEphemeris(TimeSystem.Time, int, int, Frames.Frame, Aberration)"/>
 /// and <c>lagrange-window</c> <see cref="SpiceApi.ReadEphemeris(TimeSystem.Window, int, int, Frames.Frame, Aberration, TimeSpan)"/>
 /// from L1 with <see cref="SolarSystemObjects.Barycenters"/>. Before #623 thread A read the static class while it held the

@@ -2,7 +2,7 @@
 
 using System;
 
-namespace IO.Astrodynamics.OrbitalParameters.TLE;
+namespace IO.Astrodynamics.OrbitalParameters;
 
 /// <summary>
 /// The settings of the fit of <see cref="OrbitalParameters.ToTle"/> and the fields it writes besides the elements, in the

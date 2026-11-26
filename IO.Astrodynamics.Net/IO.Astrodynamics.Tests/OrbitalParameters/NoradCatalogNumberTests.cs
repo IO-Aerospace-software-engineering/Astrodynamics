@@ -1,7 +1,7 @@
 // Copyright 2023. Sylvain Guillet (sylvain.guillet@tutamail.com)
 
 using System;
-using IO.Astrodynamics.OrbitalParameters.TLE;
+using IO.Astrodynamics.OrbitalParameters;
 using Xunit;
 
 namespace IO.Astrodynamics.Tests.OrbitalParameters;

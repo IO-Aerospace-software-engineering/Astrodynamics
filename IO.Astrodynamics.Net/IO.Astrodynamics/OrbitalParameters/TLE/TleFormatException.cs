@@ -2,7 +2,7 @@
 
 using System;
 
-namespace IO.Astrodynamics.OrbitalParameters.TLE;
+namespace IO.Astrodynamics.OrbitalParameters;
 
 /// <summary>
 /// The text of a Two-Line Element set does not follow the format: a line of another length or line number, a catalog number

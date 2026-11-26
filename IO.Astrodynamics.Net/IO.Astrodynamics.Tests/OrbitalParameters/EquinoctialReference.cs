@@ -223,7 +223,7 @@ internal sealed class EquinoctialReference
         internal ReferenceState At(double dt) => States.Single(s => s.Dt == dt);
     }
 
-    /// <summary>Mean elements for <see cref="IO.Astrodynamics.OrbitalParameters.TLE.Tle.Create"/>, and the fields of
+    /// <summary>Mean elements for <see cref="IO.Astrodynamics.OrbitalParameters.Tle.Create"/>, and the fields of
     /// line 2 under the conventions of #452, in degrees with 4 decimals.</summary>
     internal sealed record TleCreateCase(string Name, double P, double F, double G, double H, double K, double L,
         string Inclination, string Raan, string ArgumentOfPerigee, string MeanAnomaly)

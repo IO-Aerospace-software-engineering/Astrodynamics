@@ -6,15 +6,14 @@ using System.Globalization;
 using System.Linq;
 using IO.Astrodynamics.Body;
 using IO.Astrodynamics.Body.Spacecraft;
-using IO.Astrodynamics.CCSDS.Common;
-using IO.Astrodynamics.CCSDS.Common.Enums;
+using IO.Astrodynamics.Ccsds;
 using IO.Astrodynamics.Math;
 using IO.Astrodynamics.OrbitalParameters;
 using IO.Astrodynamics.Propagator;
 using IO.Astrodynamics.Propagator.Variational;
-using IO.Astrodynamics.SSA;
+using IO.Astrodynamics.Ssa;
 
-namespace IO.Astrodynamics.CCSDS.CDM;
+namespace IO.Astrodynamics.Ccsds;
 
 internal static class CdmExporter
 {
@@ -409,7 +408,7 @@ internal static class CdmExporter
     {
         if (source is TrackedObject tracked)
         {
-            return string.IsNullOrWhiteSpace(tracked.CosparId) ? OMM.OmmMetadata.UnknownObjectId : tracked.CosparId;
+            return string.IsNullOrWhiteSpace(tracked.CosparId) ? OmmMetadata.UnknownObjectId : tracked.CosparId;
         }
 
         if (source is Spacecraft spacecraft && !string.IsNullOrWhiteSpace(spacecraft.CosparId))

@@ -87,7 +87,7 @@ namespace IO.Astrodynamics.Tests.Body
             {
                 "Propagated" => new Spacecraft(-1432, "SECOND", 100.0, LeoAbout(earth, epoch), 1000.0, clock),
                 "KernelBacked" => new Spacecraft(-1432, "SECOND", epoch, clock: clock),
-                _ => IO.Astrodynamics.CCSDS.OPM.Opm.CreateFromStateVector("SECOND", "2024-001A", LeoAbout(earth, epoch)).ToSpacecraft(-1432, 1000.0, clock, earth)
+                _ => IO.Astrodynamics.Ccsds.Opm.CreateFromStateVector("SECOND", "2024-001A", LeoAbout(earth, epoch)).ToSpacecraft(-1432, 1000.0, clock, earth)
             });
 
             // Assert

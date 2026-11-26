@@ -456,7 +456,7 @@ public class TimeArgumentTests
         protectedSpacecraft.Propagate(window, new PropagationOptions { Integrator = new RK78IntegratorOptions { AbsoluteTolerance = 1e-13, RelativeTolerance = 1e-13 }, OutputStep = TimeSpan.FromSeconds(10.0), ThirdBodies = new CelestialItem[] { _earth }, CovariancePropagation = CovariancePropagationOptions.None });
 
         // Act
-        var encounter = IO.Astrodynamics.SSA.ConjunctionAssessment.Analyze(protectedSpacecraft,
+        var encounter = IO.Astrodynamics.Ssa.ConjunctionAssessment.Analyze(protectedSpacecraft,
             secondary, window);
 
         // Assert: both states at the TCA are Kepler over the TT seconds from the start to it: the two-body one between
@@ -560,7 +560,7 @@ public class TimeArgumentTests
     {
         // Arrange: the TLE propagator is not a PropagatorBase; SGP4 counts minutes from the epoch of the TLE (§3.2 of
         // the design of #501), and its solution keeps the TDB time argument of a solution built by hand
-        var tle = new IO.Astrodynamics.OrbitalParameters.TLE.Tle("ISS",
+        var tle = new IO.Astrodynamics.OrbitalParameters.Tle("ISS",
             "1 25544U 98067A   21020.53488036  .00016717  00000-0  10270-3 0  9054",
             "2 25544  51.6423 353.0312 0000493 320.8755  39.2360 15.49309423 25703");
         var spacecraft = new Spacecraft(-5101, "TIME5101", 100.0, tle, 10000.0, new Clock("time5101", 256));

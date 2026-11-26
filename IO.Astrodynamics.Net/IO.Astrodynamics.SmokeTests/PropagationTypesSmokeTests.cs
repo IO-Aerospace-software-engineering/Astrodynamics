@@ -1,11 +1,11 @@
 using System;
 using IO.Astrodynamics.Body;
-using IO.Astrodynamics.CCSDS.CDM;
+using IO.Astrodynamics.Ccsds;
 using IO.Astrodynamics.Frames;
 using IO.Astrodynamics.Propagator;
 using IO.Astrodynamics.Propagator.Integrators;
 using IO.Astrodynamics.Propagator.MonteCarlo;
-using IO.Astrodynamics.SSA;
+using IO.Astrodynamics.Ssa;
 using Xunit;
 
 namespace IO.Astrodynamics.SmokeTests;

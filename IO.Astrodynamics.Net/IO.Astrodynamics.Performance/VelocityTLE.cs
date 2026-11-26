@@ -2,7 +2,6 @@ using BenchmarkDotNet.Attributes;
 using IO.Astrodynamics.Body;
 using IO.Astrodynamics.Math;
 using IO.Astrodynamics.OrbitalParameters;
-using IO.Astrodynamics.OrbitalParameters.TLE;
 using IO.Astrodynamics.TimeSystem;
 
 namespace IO.Astrodynamics.Performance;
@@ -27,6 +26,6 @@ public class VelocityTLE
     // [Benchmark(Description = "Convert StateVector to TLE")]
     public void ComputeTLE()
     {
-        var tle = _sv.ToTle("TestSatellite", 25666, "98067A", new IO.Astrodynamics.OrbitalParameters.TLE.TleFitOptions { MaxIterations = 20000 });
+        var tle = _sv.ToTle("TestSatellite", 25666, "98067A", new IO.Astrodynamics.OrbitalParameters.TleFitOptions { MaxIterations = 20000 });
     }
 }

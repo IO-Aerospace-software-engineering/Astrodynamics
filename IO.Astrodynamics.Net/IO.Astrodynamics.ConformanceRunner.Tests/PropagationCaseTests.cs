@@ -4,7 +4,6 @@ using System;
 using System.IO;
 using System.Linq;
 using IO.Astrodynamics.Atmosphere;
-using IO.Astrodynamics.Atmosphere.NRLMSISE_00;
 using IO.Astrodynamics.Body;
 using IO.Astrodynamics.ConformanceRunner.Models;
 using IO.Astrodynamics.ConformanceRunner.Solvers;
@@ -15,7 +14,7 @@ using IO.Astrodynamics.SolarSystemObjects;
 using Xunit;
 using YamlDotNet.Serialization;
 using YamlDotNet.Serialization.NamingConventions;
-using Tle = IO.Astrodynamics.OrbitalParameters.TLE.Tle;
+using Tle = IO.Astrodynamics.OrbitalParameters.Tle;
 
 namespace IO.Astrodynamics.ConformanceRunner.Tests;
 

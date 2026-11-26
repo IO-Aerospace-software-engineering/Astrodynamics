@@ -15,7 +15,7 @@ using IO.Astrodynamics.Propagator.Events;
 using IO.Astrodynamics.Propagator.Forces;
 using IO.Astrodynamics.Propagator.Integrators;
 using IO.Astrodynamics.SolarSystemObjects;
-using IO.Astrodynamics.SSA;
+using IO.Astrodynamics.Ssa;
 using IO.Astrodynamics.Tests.Body;
 using IO.Astrodynamics.Tests.Propagators.Variational;
 using IO.Astrodynamics.Tests.SSA;

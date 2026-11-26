@@ -3,7 +3,7 @@
 using System;
 using System.Text;
 
-namespace IO.Astrodynamics.CCSDS.OPM;
+namespace IO.Astrodynamics.Ccsds;
 
 /// <summary>
 /// Exception thrown when OPM validation fails.

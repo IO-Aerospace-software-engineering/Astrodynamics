@@ -281,10 +281,10 @@ public class NamingRuleTests
     private static readonly string[] TextFormatVerbs = ["Load", "LoadAll", "Parse", "ParseAll", "TryLoad", "TryParse"];
 
     [Theory]
-    [InlineData(typeof(IO.Astrodynamics.OrbitalParameters.TLE.Tle))]
-    [InlineData(typeof(IO.Astrodynamics.CCSDS.OMM.Omm))]
-    [InlineData(typeof(IO.Astrodynamics.CCSDS.OPM.Opm))]
-    [InlineData(typeof(IO.Astrodynamics.CCSDS.CDM.Cdm))]
+    [InlineData(typeof(IO.Astrodynamics.OrbitalParameters.Tle))]
+    [InlineData(typeof(IO.Astrodynamics.Ccsds.Omm))]
+    [InlineData(typeof(IO.Astrodynamics.Ccsds.Opm))]
+    [InlineData(typeof(IO.Astrodynamics.Ccsds.Cdm))]
     public void TextFormats_ShareOneVerbSet(Type type)
     {
         var statics = type.GetMethods(BindingFlags.Public | BindingFlags.Static | BindingFlags.DeclaredOnly).Select(m => m.Name).ToHashSet();

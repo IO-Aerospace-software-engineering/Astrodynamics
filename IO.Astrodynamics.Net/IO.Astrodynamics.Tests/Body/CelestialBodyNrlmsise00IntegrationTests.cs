@@ -3,7 +3,6 @@ using Xunit;
 using IO.Astrodynamics.Coordinates;
 using IO.Astrodynamics;
 using IO.Astrodynamics.Atmosphere;
-using IO.Astrodynamics.Atmosphere.NRLMSISE_00;
 using IO.Astrodynamics.Body;
 using IO.Astrodynamics.TimeSystem;
 

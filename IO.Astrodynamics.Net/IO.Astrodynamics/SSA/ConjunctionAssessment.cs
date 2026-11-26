@@ -15,7 +15,7 @@ using IO.Astrodynamics.Propagator.Forces;
 using IO.Astrodynamics.Propagator.Variational;
 using IO.Astrodynamics.TimeSystem;
 
-namespace IO.Astrodynamics.SSA;
+namespace IO.Astrodynamics.Ssa;
 
 /// <summary>
 /// Provides the high-level SSA workflow for screening, conjunction analysis, and simple avoidance trade studies.
@@ -3189,9 +3189,9 @@ public static class ConjunctionAssessment
     {
         Spacecraft { IsSpiceBacked: true } => TrajectorySource.Kernel,
         Spacecraft spacecraft when spacecraft.InterpolatedStatesWindow is not null => TrajectorySource.Propagated,
-        Spacecraft { InitialOrbitalParameters: OrbitalParameters.TLE.Tle } => TrajectorySource.Sgp4,
+        Spacecraft { InitialOrbitalParameters: OrbitalParameters.Tle } => TrajectorySource.Sgp4,
         Spacecraft => TrajectorySource.TwoBody,
-        TrackedObject { InitialOrbitalParameters: OrbitalParameters.TLE.Tle } => TrajectorySource.Sgp4,
+        TrackedObject { InitialOrbitalParameters: OrbitalParameters.Tle } => TrajectorySource.Sgp4,
         TrackedObject => TrajectorySource.TwoBody,
         _ => TrajectorySource.Kernel
     };

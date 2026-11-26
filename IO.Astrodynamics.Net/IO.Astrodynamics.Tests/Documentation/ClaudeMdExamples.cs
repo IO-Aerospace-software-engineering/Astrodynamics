@@ -12,13 +12,10 @@ using System;
 using System.Collections.Generic;
 using IO.Astrodynamics;
 using IO.Astrodynamics.Atmosphere;
-using IO.Astrodynamics.Atmosphere.NRLMSISE_00;
 using IO.Astrodynamics.Body;
 using IO.Astrodynamics.Body.Spacecraft;
-using IO.Astrodynamics.CCSDS.Common;
+using IO.Astrodynamics.Ccsds;
 using IO.Astrodynamics.Coordinates;
-using IO.Astrodynamics.CCSDS.OMM;
-using IO.Astrodynamics.CCSDS.OPM;
 using IO.Astrodynamics.DataProvider;
 using IO.Astrodynamics.Frames;
 using IO.Astrodynamics.Maneuver;
@@ -31,7 +28,7 @@ using IO.Astrodynamics.Propagator.Forces;
 using IO.Astrodynamics.SolarSystemObjects;
 using IO.Astrodynamics.TimeSystem;
 using Xunit;
-using Tle = IO.Astrodynamics.OrbitalParameters.TLE.Tle;
+using Tle = IO.Astrodynamics.OrbitalParameters.Tle;
 
 namespace ClaudeMdSamples
 {

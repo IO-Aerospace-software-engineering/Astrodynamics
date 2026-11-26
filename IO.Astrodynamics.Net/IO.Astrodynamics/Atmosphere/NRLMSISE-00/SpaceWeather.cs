@@ -1,6 +1,6 @@
 // Copyright 2024. Sylvain Guillet (sylvain.guillet@tutamail.com)
 
-namespace IO.Astrodynamics.Atmosphere.NRLMSISE_00;
+namespace IO.Astrodynamics.Atmosphere;
 
 /// <summary>
 /// Encapsulates space weather data for atmospheric modeling.

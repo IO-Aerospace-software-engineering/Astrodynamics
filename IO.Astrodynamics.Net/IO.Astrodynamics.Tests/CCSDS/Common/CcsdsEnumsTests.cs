@@ -4,7 +4,7 @@ using System;
 using System.ComponentModel;
 using System.Linq;
 using System.Reflection;
-using IO.Astrodynamics.CCSDS.Common.Enums;
+using IO.Astrodynamics.Ccsds;
 using Xunit;
 
 namespace IO.Astrodynamics.Tests.CCSDS.Common

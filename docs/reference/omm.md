@@ -1,6 +1,6 @@
 # CCSDS OMM
 
-The `IO.Astrodynamics.CCSDS.OMM` module supports loading, validating, serializing, and converting CCSDS Orbit Mean-Elements Messages.
+The `IO.Astrodynamics.Ccsds` module supports loading, validating, serializing, and converting CCSDS Orbit Mean-Elements Messages.
 
 ## Omm Class
 
@@ -29,7 +29,7 @@ validator (`OmmReader`, `OmmWriter`, `OmmValidator`) are internal since 11.0.0, 
 `NORAD_CAT_ID`, the other checks kept.
 
 The exceptions of the OMM reader, `OmmParseException` and `OmmValidationException`, derive from `CcsdsFormatException`, a `FormatException` of
-`IO.Astrodynamics.CCSDS` shared by the OMM, OPM and CDM readers, so that one `catch (CcsdsFormatException)` covers a
+`IO.Astrodynamics.Ccsds` shared by the OMM, OPM and CDM readers, so that one `catch (CcsdsFormatException)` covers a
 document that cannot be read, at parsing or at validation (11.0.0, R03 of
 [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668): before, each derived from
 `Exception` alone).

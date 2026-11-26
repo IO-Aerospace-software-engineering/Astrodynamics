@@ -2,12 +2,11 @@
 #nullable enable
 using System;
 using System.Collections.Generic;
-using IO.Astrodynamics.CCSDS.Common;
-using IO.Astrodynamics.CCSDS.Common.Enums;
+using IO.Astrodynamics.Ccsds;
 using IO.Astrodynamics.Math;
 using IO.Astrodynamics.TimeSystem;
 
-namespace IO.Astrodynamics.CCSDS.CDM;
+namespace IO.Astrodynamics.Ccsds;
 
 public sealed record CdmHeader
 {
@@ -208,7 +207,7 @@ public sealed record CdmParticipantMetadata
     /// object (CCSDS 508.0-B-1 Cor. 2, Table 3-3, optional), not whether the object has a reflectivity coefficient.
     /// </summary>
     /// <remarks>
-    /// <see cref="IO.Astrodynamics.SSA.EncounterCase.ToCdm"/> infers it from the forces of the propagation for a participant
+    /// <see cref="IO.Astrodynamics.Ssa.EncounterCase.ToCdm"/> infers it from the forces of the propagation for a participant
     /// whose covariance the library propagated to TCA, as it fills the other force-model keywords; otherwise it infers
     /// nothing and the keyword is omitted, the library running no orbit determination. Set it in
     /// <see cref="CdmExportOptions.ProtectedParticipantMetadata"/> or <see cref="CdmExportOptions.SecondaryParticipantMetadata"/>
@@ -224,7 +223,7 @@ public sealed record CdmParticipantMetadata
     /// 508.0-B-1 Cor. 2, Table 3-3, optional), not whether the object can maneuver, which <see cref="Maneuverable"/> states.
     /// </summary>
     /// <remarks>
-    /// <see cref="IO.Astrodynamics.SSA.EncounterCase.ToCdm"/> infers <c>false</c> (<c>NO</c>) for a participant whose
+    /// <see cref="IO.Astrodynamics.Ssa.EncounterCase.ToCdm"/> infers <c>false</c> (<c>NO</c>) for a participant whose
     /// covariance the library propagated to TCA, whose force model holds no thrust, as it fills the other force-model
     /// keywords; otherwise it infers nothing and the keyword is omitted, the library running no orbit determination. Set
     /// it in <see cref="CdmExportOptions.ProtectedParticipantMetadata"/> or
@@ -709,9 +708,9 @@ public sealed record CdmExportOptions
     public string? CollisionProbabilityMethod { get; init; }
 
     /// <summary>
-    /// Allows the export of an encounter flagged <see cref="IO.Astrodynamics.SSA.EncounterQualityFlags.StaleCovarianceUsed"/>, whose
+    /// Allows the export of an encounter flagged <see cref="IO.Astrodynamics.Ssa.EncounterQualityFlags.StaleCovarianceUsed"/>, whose
     /// covariance was taken from a participant's initial state further from the TCA than
-    /// <see cref="IO.Astrodynamics.SSA.ConjunctionAnalysisOptions.StaleCovarianceThreshold"/>. Such an export is refused by default.
+    /// <see cref="IO.Astrodynamics.Ssa.ConjunctionAnalysisOptions.StaleCovarianceThreshold"/>. Such an export is refused by default.
     /// The age of each exported covariance is written in the CDM comments either way.
     /// </summary>
     public bool AllowStaleCovariance { get; init; }

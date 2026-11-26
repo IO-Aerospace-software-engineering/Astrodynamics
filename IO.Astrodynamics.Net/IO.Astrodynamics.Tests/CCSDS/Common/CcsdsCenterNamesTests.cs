@@ -4,7 +4,7 @@ using System;
 using System.Linq;
 using System.Reflection;
 using IO.Astrodynamics.Body;
-using IO.Astrodynamics.CCSDS.Common;
+using IO.Astrodynamics.Ccsds;
 using IO.Astrodynamics.SolarSystemObjects;
 using Xunit;
 

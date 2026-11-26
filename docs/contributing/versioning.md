@@ -212,7 +212,7 @@ release are listed under **Known limitations**.
   short and long messages beside its message (`GetLastErrorShortProxy`, `GetLastErrorLongProxy`, the P/Invoke
   declarations of `SpiceApi` in step), equal to those CSPICE gives for the same call (`SpiceExceptionTests`, the C++
   tests `AFailed*`). Under **Changed**, the calls that throw it.
-- **`CcsdsFormatException`**, a `FormatException` in `IO.Astrodynamics.CCSDS`, the common base of the five exceptions of
+- **`CcsdsFormatException`**, a `FormatException` in `IO.Astrodynamics.Ccsds`, the common base of the five exceptions of
   the CCSDS readers (R03 of #668, section A): one `catch (CcsdsFormatException)` covers a document an OMM, OPM or CDM
   reader cannot read, at parsing or at validation. Under **Changed**.
 - **`InsufficientFuelException.RequiredMass` and `AvailableMass`** (kg) and the constructor that takes them (R03 of
@@ -3977,7 +3977,7 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   named by its first comment (`// Inputs: ...`), and `DocumentationPagesExamplesTests` checks that each block equals its
   region, that every page with csharp blocks has its file, that each block declaring using directives compiles with
   those of its page alone and a console application's implicit ones, as a reader who copies it compiles it (the first
-  blocks of the TLE and coordinate conversion tutorials lacked `IO.Astrodynamics.OrbitalParameters.TLE`, and
+  blocks of the TLE and coordinate conversion tutorials lacked `IO.Astrodynamics.OrbitalParameters`, and
   `IO.Astrodynamics.OrbitalParameters` and `IO.Astrodynamics.SolarSystemObjects`), and runs the 18 blocks that need only
   `Data/SolarSystem`, the first TLE block so compiled (its printed catalog number and inclination against the columns of
   its lines), and the Lambert, frame, lunar eclipse, batch and thread-safety blocks with their inputs: the Lambert velocities
@@ -4028,8 +4028,8 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   only the blocks that declare using directives (15 of 174), so a block without a list of its own that used a namespace
   its page never imports passed: `Planetodetic` in the coordinate conversions tutorial (`IO.Astrodynamics.Coordinates`),
   `CentralBodyPropagator` and `CentralBodyPropagatorBuilder` in three blocks of the numerical propagation tutorial
-  (`IO.Astrodynamics.Propagator`), `Omm` and `Opm` in the TLE and OMM tutorial (`IO.Astrodynamics.CCSDS.OMM` and
-  `IO.Astrodynamics.CCSDS.OPM`), CS0246 and CS0103 for a reader. The test now compiles every block of a page that
+  (`IO.Astrodynamics.Propagator`), `Omm` and `Opm` in the TLE and OMM tutorial (`IO.Astrodynamics.Ccsds`),
+  CS0246 and CS0103 for a reader. The test now compiles every block of a page that
   declares directives with the block's own, the earlier blocks' and a console application's implicit ones (red on
   a80f6a5 on exactly these six blocks of three of the eight pages); the first blocks of the coordinate conversions and
   numerical propagation tutorials import the two namespaces, and the OMM and OPM blocks of the TLE tutorial import their

@@ -2,13 +2,13 @@
 using System.Globalization;
 using IO.Astrodynamics.Math;
 
-namespace IO.Astrodynamics.SSA;
+namespace IO.Astrodynamics.Ssa;
 
 /// <summary>
 /// Stores the collision-risk products derived from an encounter.
 /// </summary>
 /// <remarks>
-/// A result of the library: <see cref="ConjunctionAssessment"/> and <see cref="IO.Astrodynamics.CCSDS.CDM.Cdm.ToEncounter"/> build
+/// A result of the library: <see cref="ConjunctionAssessment"/> and <see cref="IO.Astrodynamics.Ccsds.Cdm.ToEncounter"/> build
 /// it, its constructors internal (R17 of #668, choice 4, lot L7; public before 11.0.0).
 /// </remarks>
 public sealed class CollisionRisk

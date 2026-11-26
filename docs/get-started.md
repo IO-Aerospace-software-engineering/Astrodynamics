@@ -116,7 +116,7 @@ Console.WriteLine($"Period: {orbit.Period().TotalHours:F2} hours");
 ## Parse A TLE
 
 ```csharp
-using IO.Astrodynamics.OrbitalParameters.TLE;
+using IO.Astrodynamics.OrbitalParameters;
 
 var tle = new Tle("ISS (ZARYA)",
     "1 25544U 98067A   21020.53488036  .00016717  00000-0  10270-3 0  9054",

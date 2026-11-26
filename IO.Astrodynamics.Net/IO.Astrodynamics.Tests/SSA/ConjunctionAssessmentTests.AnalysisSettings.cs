@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using IO.Astrodynamics.Body.Spacecraft;
 using IO.Astrodynamics.Propagator.Variational;
-using IO.Astrodynamics.SSA;
+using IO.Astrodynamics.Ssa;
 using Xunit;
 
 namespace IO.Astrodynamics.Tests.SSA;

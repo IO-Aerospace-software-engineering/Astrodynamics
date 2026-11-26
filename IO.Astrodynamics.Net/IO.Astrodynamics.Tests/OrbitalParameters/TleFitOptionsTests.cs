@@ -3,7 +3,7 @@
 using System;
 using System.Linq;
 using System.Reflection;
-using IO.Astrodynamics.OrbitalParameters.TLE;
+using IO.Astrodynamics.OrbitalParameters;
 using Xunit;
 
 namespace IO.Astrodynamics.Tests.OrbitalParameters;
@@ -49,7 +49,7 @@ public class TleFitOptionsTests
         Assert.NotNull(type.GetMethod("<Clone>$"));
         Assert.Null(type.GetProperty("Tolerance"));
         Assert.Equal(typeof(int), type.GetProperty(nameof(TleFitOptions.MaxIterations))!.PropertyType);
-        Assert.Null(typeof(Tle).Assembly.GetType("IO.Astrodynamics.OrbitalParameters.TLE.Configuration"));
+        Assert.Null(typeof(Tle).Assembly.GetType("IO.Astrodynamics.OrbitalParameters.Configuration"));
     }
 
     [Fact]

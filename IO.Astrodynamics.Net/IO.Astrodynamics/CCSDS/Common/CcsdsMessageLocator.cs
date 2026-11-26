@@ -5,7 +5,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Xml.Linq;
 
-namespace IO.Astrodynamics.CCSDS.Common;
+namespace IO.Astrodynamics.Ccsds;
 
 /// <summary>
 /// Finds the one message element of a type (<c>omm</c>, <c>opm</c>, <c>cdm</c>) that a single-message reader reads.

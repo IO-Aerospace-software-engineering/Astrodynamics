@@ -2,7 +2,7 @@
 
 using System.ComponentModel;
 
-namespace IO.Astrodynamics.CCSDS.Common.Enums;
+namespace IO.Astrodynamics.Ccsds;
 
 /// <summary>
 /// CCSDS reference frames supported by the IO.Astrodynamics framework.

@@ -25,7 +25,7 @@ public enum CovariancePropagationMode
     /// <summary>
     /// Nothing: no partial derivative and no covariance (<see cref="CovariancePropagationOptions.None"/>). Turns the
     /// propagation off where a null value means another rule: Auto in <see cref="PropagationOptions"/>, and in
-    /// <see cref="SSA.ConjunctionAnalysisOptions"/> the covariance of the initial state held in RTN (R06 of #668,
+    /// <see cref="Ssa.ConjunctionAnalysisOptions"/> the covariance of the initial state held in RTN (R06 of #668,
     /// structuring choice 3, decided by S. Guillet, 2026-11-19).
     /// </summary>
     None

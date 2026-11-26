@@ -7,13 +7,11 @@ using System.Xml.Linq;
 using IO.Astrodynamics;
 using IO.Astrodynamics.Body;
 using IO.Astrodynamics.Body.Spacecraft;
-using IO.Astrodynamics.CCSDS;
-using IO.Astrodynamics.CCSDS.CDM;
-using IO.Astrodynamics.CCSDS.Common.Enums;
+using IO.Astrodynamics.Ccsds;
 using IO.Astrodynamics.Frames;
 using IO.Astrodynamics.Math;
 using IO.Astrodynamics.OrbitalParameters;
-using IO.Astrodynamics.SSA;
+using IO.Astrodynamics.Ssa;
 using IO.Astrodynamics.SolarSystemObjects;
 using IO.Astrodynamics.TimeSystem;
 using Xunit;
@@ -356,7 +354,7 @@ public class CdmTests
     {
         var resolver = new EmbeddedNdmSchemaResolver();
         var schemas = new System.Xml.Schema.XmlSchemaSet { XmlResolver = resolver };
-        using (var master = IO.Astrodynamics.CCSDS.CcsdsSchemaLoader.GetSchemaStream("ndmxml-4.0.0-master-4.0.xsd"))
+        using (var master = IO.Astrodynamics.Ccsds.CcsdsSchemaLoader.GetSchemaStream("ndmxml-4.0.0-master-4.0.xsd"))
         using (var reader = System.Xml.XmlReader.Create(master,
                    new System.Xml.XmlReaderSettings { XmlResolver = resolver, DtdProcessing = System.Xml.DtdProcessing.Prohibit },
                    "file:///ndmxml/ndmxml-4.0.0-master-4.0.xsd"))
@@ -387,7 +385,7 @@ public class CdmTests
     {
         public override object GetEntity(Uri absoluteUri, string? role, Type? ofObjectToReturn)
         {
-            return IO.Astrodynamics.CCSDS.CcsdsSchemaLoader.GetSchemaStream(Path.GetFileName(absoluteUri.LocalPath));
+            return IO.Astrodynamics.Ccsds.CcsdsSchemaLoader.GetSchemaStream(Path.GetFileName(absoluteUri.LocalPath));
         }
     }
 

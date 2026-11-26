@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 using IO.Astrodynamics.Body;
 using IO.Astrodynamics.OrbitalParameters;
 using IO.Astrodynamics.SolarSystemObjects;
-using IO.Astrodynamics.SSA;
+using IO.Astrodynamics.Ssa;
 using IO.Astrodynamics.Propagator.Variational;
 using MathNet.Numerics.Distributions;
 using MathNet.Numerics.LinearAlgebra;

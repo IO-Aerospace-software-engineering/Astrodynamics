@@ -594,7 +594,7 @@ namespace IO.Astrodynamics.OrbitalParameters
         /// The propagation of the covariance (<see cref="Propagator.Variational.CovariancePropagationOptions"/> with
         /// <see cref="Propagator.Variational.CovariancePropagationMode.Covariance"/>) rejects a covariance that is not
         /// positive semi-definite, and never corrects it; the conjunction analysis remediates it, and raises
-        /// <see cref="SSA.EncounterQualityFlags.CovarianceRemediated"/>. This method is the remediation of the analysis,
+        /// <see cref="Ssa.EncounterQualityFlags.CovarianceRemediated"/>. This method is the remediation of the analysis,
         /// the same code and tolerances, for a user who wants to propagate such a covariance explicitly: call it first,
         /// then propagate <see cref="CovarianceRemediation.State"/>.
         /// </para>

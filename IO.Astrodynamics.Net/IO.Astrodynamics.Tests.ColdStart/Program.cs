@@ -10,7 +10,6 @@ using IO.Astrodynamics.DataProvider;
 using IO.Astrodynamics.Exceptions;
 using IO.Astrodynamics.Frames;
 using IO.Astrodynamics.OrbitalParameters;
-using IO.Astrodynamics.OrbitalParameters.TLE;
 using IO.Astrodynamics.SolarSystemObjects;
 using IO.Astrodynamics.TimeSystem;
 

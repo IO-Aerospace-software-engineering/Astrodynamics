@@ -5,7 +5,7 @@ using IO.Astrodynamics.Coordinates;
 using IO.Astrodynamics.Frames;
 using IO.Astrodynamics.Math;
 using IO.Astrodynamics.TimeSystem;
-using IO.Astrodynamics.OrbitalParameters.TLE;
+using IO.Astrodynamics.OrbitalParameters;
 
 namespace IO.Astrodynamics.OrbitalParameters;
 
@@ -702,7 +702,7 @@ public abstract class OrbitalParameters : IEquatable<OrbitalParameters>
     /// <exception cref="InvalidOperationException">
     /// Thrown when attempting to convert mean elements directly to a state vector.
     /// Mean elements require a specific propagator (e.g., SGP4/SDP4) for accurate position calculations.
-    /// For TLE data, use <see cref="TLE.Tle.ToOsculating()"/> or <see cref="TLE.Tle.ToOsculating(Time)"/> instead.
+    /// For TLE data, use <see cref="Tle.ToOsculating()"/> or <see cref="Tle.ToOsculating(Time)"/> instead.
     /// Also thrown when the true anomaly is computed from the mean anomaly and the mean anomaly or the eccentricity is
     /// not finite (#453).
     /// </exception>
@@ -930,7 +930,7 @@ public abstract class OrbitalParameters : IEquatable<OrbitalParameters>
     /// </para>
     /// </remarks>
     /// <exception cref="InvalidOperationException">Mean elements, which have no position, as <see cref="ToStateVector()"/>
-    /// throws (a <see cref="TLE.Tle"/> takes its osculating elements); or a <see cref="StateVector"/> at the centre
+    /// throws (a <see cref="Tle"/> takes its osculating elements); or a <see cref="StateVector"/> at the centre
     /// (r = 0) or non-finite, which has no orbit plane (#686, #687).</exception>
     public Vector3 PerigeeVector()
     {
@@ -990,7 +990,7 @@ public abstract class OrbitalParameters : IEquatable<OrbitalParameters>
     /// semi-major axis is not finite and above 0, has no apoapsis, as it has no period (#737; before 11.0.0, a point of the
     /// other branch of a hyperbola, ±Infinity for a parabola).</exception>
     /// <exception cref="InvalidOperationException">Mean elements, which have no position, as <see cref="ToStateVector()"/>
-    /// throws (a <see cref="TLE.Tle"/> takes its osculating elements); or a <see cref="StateVector"/> at the centre
+    /// throws (a <see cref="Tle"/> takes its osculating elements); or a <see cref="StateVector"/> at the centre
     /// (r = 0) or non-finite, which has no orbit plane (#686, #687).</exception>
     public Vector3 ApogeeVector()
     {
@@ -1052,7 +1052,7 @@ public abstract class OrbitalParameters : IEquatable<OrbitalParameters>
     /// The elements keep their <see cref="ElementsType"/> (#463; before 11.0.0 mean elements came back labelled
     /// osculating, which let <see cref="ToStateVector()"/> take mean numbers for a state). Of mean elements, the mean
     /// anomaly advances at the two-body mean motion only, without the secular rates of the node and of the periapsis of
-    /// the theory they belong to (SGP4 for a TLE set): a <see cref="TLE.Tle"/> overrides this method with SGP4.
+    /// the theory they belong to (SGP4 for a TLE set): a <see cref="Tle"/> overrides this method with SGP4.
     /// </para>
     /// </remarks>
     /// <exception cref="InvalidOperationException">A rectilinear or non-finite <see cref="StateVector"/> (r × v = 0) has no
@@ -1162,7 +1162,7 @@ public abstract class OrbitalParameters : IEquatable<OrbitalParameters>
     /// <returns>The Keplerian elements at the given epoch.</returns>
     /// <remarks>The elapsed time is that of <see cref="AtEpoch"/>: the dynamical time of the observer, TT seconds about
     /// the Earth, TDB seconds about any other body (#501, #508). The elements keep their <see cref="ElementsType"/> (#463);
-    /// a <see cref="TLE.Tle"/> moves its osculating set, which stays osculating.</remarks>
+    /// a <see cref="Tle"/> moves its osculating set, which stays osculating.</remarks>
     /// <exception cref="InvalidOperationException">A rectilinear or non-finite <see cref="StateVector"/> (r × v = 0) has no
     /// orbit plane and no elements (#687).</exception>
     public virtual KeplerianElements ToKeplerianElements(Time epoch)
@@ -1198,7 +1198,7 @@ public abstract class OrbitalParameters : IEquatable<OrbitalParameters>
     /// </summary>
     /// <param name="frame">The reference frame to which to convert the orbital parameters.</param>
     /// <returns>The orbital parameters in the new reference frame: these parameters themselves when they are in
-    /// <paramref name="frame"/> (a <see cref="TLE.Tle"/> in TEME stays the TLE), otherwise their
+    /// <paramref name="frame"/> (a <see cref="Tle"/> in TEME stays the TLE), otherwise their
     /// <see cref="StateVector"/> in the new frame; <see cref="StateVector.ToFrame(Frame)"/> is typed as that state vector
     /// (R20 of #668).</returns>
     /// <remarks>
@@ -1279,7 +1279,7 @@ public abstract class OrbitalParameters : IEquatable<OrbitalParameters>
     /// </summary>
     /// <returns>The velocity at perigee.</returns>
     /// <exception cref="InvalidOperationException">Mean elements, which have no position, as <see cref="ToStateVector()"/>
-    /// throws (a <see cref="TLE.Tle"/> takes its osculating elements); or a <see cref="StateVector"/> at the centre
+    /// throws (a <see cref="Tle"/> takes its osculating elements); or a <see cref="StateVector"/> at the centre
     /// (r = 0) or non-finite, which has no orbit plane (#686, #687).</exception>
     public double PerigeeVelocity()
     {
@@ -1294,7 +1294,7 @@ public abstract class OrbitalParameters : IEquatable<OrbitalParameters>
     /// <exception cref="InvalidOperationException">The orbit is not an ellipse and has no apoapsis (#737; before 11.0.0, 0
     /// for a parabola and the speed at the other branch of a hyperbola).</exception>
     /// <exception cref="InvalidOperationException">Mean elements, which have no position, as <see cref="ToStateVector()"/>
-    /// throws (a <see cref="TLE.Tle"/> takes its osculating elements); or a <see cref="StateVector"/> at the centre
+    /// throws (a <see cref="Tle"/> takes its osculating elements); or a <see cref="StateVector"/> at the centre
     /// (r = 0) or non-finite, which has no orbit plane (#686, #687).</exception>
     public double ApogeeVelocity()
     {
@@ -1488,14 +1488,14 @@ public abstract class OrbitalParameters : IEquatable<OrbitalParameters>
     /// <summary>
     /// Converts the current orbital parameters into a TLE (Two-Line Element) representation: a fit of SGP4 mean elements
     /// in TEME, written with the given identifiers and the fields of <paramref name="options"/>, in the order of
-    /// <see cref="TLE.Tle.Create"/> (decision 113 of #668, decided by S. Guillet, 2026-11-26: a
+    /// <see cref="Tle.Create"/> (decision 113 of #668, decided by S. Guillet, 2026-11-26: a
     /// <c>TLE.Configuration</c> record before 11.0.0).
     /// </summary>
     /// <param name="name">The name of the object.</param>
     /// <param name="noradId">The NORAD catalog number, 0 to <see cref="NoradCatalogNumber.MaxValue"/> (339999); a value above
     /// 99999 is written in the Alpha-5 form.</param>
     /// <param name="cosparId">The COSPAR international designator in TLE form (YYNNN and one to three capital letters, e.g.
-    /// "98067A"), or null or blank for none: columns 10-17 of line 1 are then blank, as <see cref="TLE.Tle.Create"/> writes
+    /// "98067A"), or null or blank for none: columns 10-17 of line 1 are then blank, as <see cref="Tle.Create"/> writes
     /// them (#604). A non-blank value of another form is not a designator: the fit then throws
     /// <see cref="InvalidOperationException"/>.</param>
     /// <param name="options">The settings of the fit and the other fields of the TLE; null for
@@ -1506,16 +1506,16 @@ public abstract class OrbitalParameters : IEquatable<OrbitalParameters>
     /// <remarks>
     /// The mean elements are fitted from the current orbital parameters, rotated to TEME. A null or blank
     /// <paramref name="cosparId"/> writes blank columns 10-17 of line 1, the TLE without an international designator of
-    /// <see cref="TLE.Tle.Create"/> (#604).
+    /// <see cref="Tle.Create"/> (#604).
     /// </remarks>
     /// <exception cref="InvalidOperationException">
     /// Thrown before the fit when these parameters are not about the Earth (NAIF id 399): a TLE describes an Earth orbit
     /// (#607; before 11.0.0, the fit took them for an Earth orbit and failed, or wrote a TLE of another orbit).
     /// </exception>
-    public TLE.Tle ToTle(string name, int noradId, string cosparId, TleFitOptions options = null)
+    public Tle ToTle(string name, int noradId, string cosparId, TleFitOptions options = null)
     {
         options ??= TleFitOptions.Default;
-        if (Observer.NaifId != TLE.Tle.EarthNaifId)
+        if (Observer.NaifId != Tle.EarthNaifId)
         {
             throw new InvalidOperationException(
                 $"The orbit is about {Observer.Name} ({Observer.NaifId}): a TLE describes an Earth orbit, so it cannot be converted to a TLE.");
@@ -1524,7 +1524,7 @@ public abstract class OrbitalParameters : IEquatable<OrbitalParameters>
         var meanElements = _sharedMeanElementsConverter.Convert(this, noradId, name, cosparId, options.RevolutionNumberAtEpoch,
             options.BStar, options.MaxIterations);
 
-        return TLE.Tle.Create(meanElements, name, noradId, cosparId, options.RevolutionNumberAtEpoch, options.Classification,
+        return Tle.Create(meanElements, name, noradId, cosparId, options.RevolutionNumberAtEpoch, options.Classification,
             options.BStar, options.MeanMotionDot, options.MeanMotionDDot, options.ElementSetNumber);
     }
 

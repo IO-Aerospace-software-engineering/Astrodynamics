@@ -1,9 +1,8 @@
 using System;
 using IO.Astrodynamics.Body;
-using IO.Astrodynamics.CCSDS.OMM;
+using IO.Astrodynamics.Ccsds;
 using IO.Astrodynamics.Math;
 using IO.Astrodynamics.OrbitalParameters;
-using IO.Astrodynamics.OrbitalParameters.TLE;
 using Xunit;
 using CelestialBody = IO.Astrodynamics.Body.CelestialBody;
 
@@ -69,7 +68,7 @@ public class TleCreateRulesTests
     [Fact]
     public void TleFitOptions_WithoutElementSetNumber_Is999()
     {
-        Assert.Equal(999, new IO.Astrodynamics.OrbitalParameters.TLE.TleFitOptions().ElementSetNumber);
+        Assert.Equal(999, new IO.Astrodynamics.OrbitalParameters.TleFitOptions().ElementSetNumber);
     }
 
     [Fact]

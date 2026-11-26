@@ -3,7 +3,6 @@
 using System;
 using IO.Astrodynamics.Coordinates;
 using IO.Astrodynamics.Atmosphere;
-using IO.Astrodynamics.Atmosphere.NRLMSISE_00;
 using IO.Astrodynamics.Body;
 using IO.Astrodynamics.SolarSystemObjects;
 using IO.Astrodynamics.Tests.Atmosphere;

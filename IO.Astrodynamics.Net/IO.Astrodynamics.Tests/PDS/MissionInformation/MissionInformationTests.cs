@@ -1,7 +1,7 @@
 // Copyright 2023. Sylvain Guillet (sylvain.guillet@tutamail.com)
 
 using System.IO;
-using IO.Astrodynamics.PDS.V4.MissionInformation;
+using IO.Astrodynamics.Pds.V4.MissionInformation;
 using Xunit;
 
 namespace IO.Astrodynamics.Tests.PDS.MissionInformation;

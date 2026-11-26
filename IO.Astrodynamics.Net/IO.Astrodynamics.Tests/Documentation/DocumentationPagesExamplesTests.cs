@@ -24,7 +24,7 @@ using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Xunit;
 using Xunit.Abstractions;
-using Tle = IO.Astrodynamics.OrbitalParameters.TLE.Tle;
+using Tle = IO.Astrodynamics.OrbitalParameters.Tle;
 
 namespace IO.Astrodynamics.Tests.Documentation;
 
@@ -301,14 +301,14 @@ public class DocumentationPagesExamplesTests
     /// directives the page gave compiles it. The regions compile in their file under the directives of every namespace of
     /// the library, and <see cref="PageBlocks_EqualTheirCompiledRegions"/> checks only that a block's directives name
     /// namespaces. Red on the first blocks of tle-and-omm.md (<c>TLE</c>, whose namespace
-    /// <c>IO.Astrodynamics.OrbitalParameters.TLE</c> the block did not import, CS0246) and coordinate-conversions.md
+    /// <c>IO.Astrodynamics.OrbitalParameters</c> the block did not import, CS0246) and coordinate-conversions.md
     /// (<c>StateVector</c> and <c>PlanetsAndMoons</c>, CS0246 and CS0103), which the first version of #705 left; and, once
     /// the blocks without directives of their own were compiled too (#716; #705 compiled only those that declare some), on
     /// a80f6a5 on six blocks of three pages whose namespace the page never imported: <c>Planetodetic</c> in block 5 of
     /// coordinate-conversions.md (<c>IO.Astrodynamics.Coordinates</c>, CS0246), <c>CentralBodyPropagator</c> and
     /// <c>CentralBodyPropagatorBuilder</c> in blocks 3, 6 and 7 of numerical-propagation.md
     /// (<c>IO.Astrodynamics.Propagator</c>, CS0246), <c>Omm</c> and <c>Opm</c> in blocks 7 and 10 of tle-and-omm.md
-    /// (<c>IO.Astrodynamics.CCSDS.OMM</c> and <c>.OPM</c>, CS0103). The pages that declare no directive are not read here:
+    /// (<c>IO.Astrodynamics.Ccsds</c>, CS0103). The pages that declare no directive are not read here:
     /// they give the reader none.
     /// </summary>
     [Theory]
@@ -431,7 +431,7 @@ public class DocumentationPagesExamplesTests
     /// The first block of the TLE tutorial, run as a reader compiles it with the page's directives, prints the TLE's name,
     /// catalog number and mean inclination as its lines write them: the columns 3 to 7 of line 1 and 9 to 16 of line 2
     /// (#705: it read <c>tle.NoradId</c>, which does not exist, and multiplied the method group <c>tle.Inclination</c>, and
-    /// its directives lacked <c>IO.Astrodynamics.OrbitalParameters.TLE</c>). The block's kernel load is not run: the test
+    /// its directives lacked <c>IO.Astrodynamics.OrbitalParameters</c>). The block's kernel load is not run: the test
     /// process holds Data/SolarSystem, which no test reloads. Red on the page of 46e6975 (CS0246 for <c>TLE</c>; with the
     /// directive added, CS1061 for <c>NoradId</c> and CS0019 for <c>Inclination</c>) and on the first version of #705
     /// (CS0246).

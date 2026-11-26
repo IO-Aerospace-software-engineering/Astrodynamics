@@ -3,9 +3,7 @@
 using System;
 using System.IO;
 using System.Text;
-using IO.Astrodynamics.CCSDS;
-using IO.Astrodynamics.CCSDS.Common;
-using IO.Astrodynamics.CCSDS.OMM;
+using IO.Astrodynamics.Ccsds;
 using IO.Astrodynamics.OrbitalParameters;
 using Xunit;
 

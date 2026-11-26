@@ -2,7 +2,7 @@
 
 using System;
 
-namespace IO.Astrodynamics.CCSDS.OMM;
+namespace IO.Astrodynamics.Ccsds;
 
 /// <summary>
 /// Severity level for OMM validation issues.

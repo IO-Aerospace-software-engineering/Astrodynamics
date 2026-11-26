@@ -7,7 +7,7 @@ using IO.Astrodynamics.Propagator;
 using IO.Astrodynamics.Propagator.Variational;
 using IO.Astrodynamics.TimeSystem;
 
-namespace IO.Astrodynamics.SSA;
+namespace IO.Astrodynamics.Ssa;
 
 /// <summary>
 /// Covariance of one participant at the encounter epoch, as used by the conjunction analysis and the CDM export.

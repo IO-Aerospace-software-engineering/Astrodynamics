@@ -1,4 +1,4 @@
-namespace IO.Astrodynamics.Atmosphere.NRLMSISE_00
+namespace IO.Astrodynamics.Atmosphere
 {
     /// <summary>
     /// Switch flags for controlling NRLMSISE-00 model variations.

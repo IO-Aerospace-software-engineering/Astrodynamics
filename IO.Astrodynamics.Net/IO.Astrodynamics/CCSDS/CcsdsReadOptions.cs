@@ -1,10 +1,10 @@
 // Copyright 2026. Sylvain Guillet (sylvain.guillet@tutamail.com)
 
-namespace IO.Astrodynamics.CCSDS;
+namespace IO.Astrodynamics.Ccsds;
 
 /// <summary>
 /// How <c>Load</c>, <c>LoadAll</c>, <c>Parse</c>, <c>ParseAll</c>, <c>TryLoad</c> and <c>TryParse</c> of
-/// <see cref="OMM.Omm"/>, <see cref="OPM.Opm"/> and <see cref="CDM.Cdm"/> read a document (R22 of #668, D1's options of the
+/// <see cref="Omm"/>, <see cref="Opm"/> and <see cref="Cdm"/> read a document (R22 of #668, D1's options of the
 /// CCSDS read, decided by S. Guillet, 2026-11-19).
 /// </summary>
 /// <remarks>
@@ -20,8 +20,8 @@ public sealed record CcsdsReadOptions
     /// <summary>
     /// Whether the document is validated against the CCSDS NDM/XML 4.0.0 schemas (CCSDS 505.0-B-3) in its form, before it is
     /// read, once per document; true by default. A failure throws the validation exception of the message type
-    /// (<see cref="OMM.OmmValidationException"/>, <see cref="OPM.OpmValidationException"/>,
-    /// <see cref="CDM.CdmValidationException"/>).
+    /// (<see cref="OmmValidationException"/>, <see cref="OpmValidationException"/>,
+    /// <see cref="CdmValidationException"/>).
     /// </summary>
     public bool ValidateSchema { get; init; } = true;
 

@@ -1502,14 +1502,14 @@ public abstract class PropagatorBase : IPropagator
 
     /// <summary>
     /// A numerical propagation starts from a state: mean elements have none without the theory they belong to (#463). A
-    /// <see cref="OrbitalParameters.TLE.Tle"/> is mean and starts from its SGP4 state (#675).
+    /// <see cref="OrbitalParameters.Tle"/> is mean and starts from its SGP4 state (#675).
     /// </summary>
     /// <exception cref="ArgumentException">The initial orbit of the spacecraft is a set of mean elements other than a
     /// TLE.</exception>
     internal static void ValidateOsculatingInitialOrbit(Spacecraft spacecraft)
     {
         var initial = spacecraft.InitialOrbitalParameters;
-        if (initial is not OrbitalParameters.TLE.Tle && initial.ElementsType == OrbitalElementsType.Mean)
+        if (initial is not OrbitalParameters.Tle && initial.ElementsType == OrbitalElementsType.Mean)
         {
             throw new ArgumentException(
                 $"The initial orbit of spacecraft {spacecraft.Name} ({spacecraft.NaifId}) is a set of mean elements, which have no " +
@@ -1546,7 +1546,7 @@ public abstract class PropagatorBase : IPropagator
     internal static OrbitalParameters.OrbitalParameters InertialInitialOrbit(OrbitalParameters.OrbitalParameters initial,
         in Time windowStart)
     {
-        if (initial is OrbitalParameters.TLE.Tle tle)
+        if (initial is OrbitalParameters.Tle tle)
         {
             var start = windowStart.ToTdb();
             var icrf = tle.ToStateVector(start).ToFrame(Frame.ICRF).ToStateVector();
@@ -1562,7 +1562,7 @@ public abstract class PropagatorBase : IPropagator
     /// osculating TEME orbit, rotated by <see cref="InertialInitialOrbit"/>, the frame of the orbit otherwise (#675).
     /// </summary>
     internal static Frame PropagationFrame(OrbitalParameters.OrbitalParameters initial) =>
-        initial is OrbitalParameters.TLE.Tle || IsOsculatingTeme(initial) ? Frame.ICRF : initial.Frame;
+        initial is OrbitalParameters.Tle || IsOsculatingTeme(initial) ? Frame.ICRF : initial.Frame;
 
     /// <summary>
     /// Whether the components of a state in <paramref name="a"/> are those of the state in <paramref name="b"/>: the same
@@ -1575,7 +1575,7 @@ public abstract class PropagatorBase : IPropagator
     private static bool IsIcrfAxes(Frame frame) => frame == Frame.ICRF || frame == Frame.GCRF;
 
     private static bool IsOsculatingTeme(OrbitalParameters.OrbitalParameters initial) =>
-        initial is not OrbitalParameters.TLE.Tle && initial.ElementsType == OrbitalElementsType.Osculating &&
+        initial is not OrbitalParameters.Tle && initial.ElementsType == OrbitalElementsType.Osculating &&
         SpiceApi.IsTeme(initial.Frame);
 
     /// <summary>

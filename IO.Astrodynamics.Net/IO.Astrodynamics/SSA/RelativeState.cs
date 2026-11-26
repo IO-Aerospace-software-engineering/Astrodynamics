@@ -3,13 +3,13 @@ using System;
 using IO.Astrodynamics.Math;
 using IO.Astrodynamics.TimeSystem;
 
-namespace IO.Astrodynamics.SSA;
+namespace IO.Astrodynamics.Ssa;
 
 /// <summary>
 /// Stores relative position and velocity at an encounter epoch in both inertial and RTN representations.
 /// </summary>
 /// <remarks>
-/// A result of the library: <see cref="ConjunctionAssessment"/> and <see cref="IO.Astrodynamics.CCSDS.CDM.Cdm.ToEncounter"/> build
+/// A result of the library: <see cref="ConjunctionAssessment"/> and <see cref="IO.Astrodynamics.Ccsds.Cdm.ToEncounter"/> build
 /// it, its constructors internal (R17 of #668, choice 4, lot L7; public before 11.0.0).
 /// </remarks>
 public sealed class RelativeState

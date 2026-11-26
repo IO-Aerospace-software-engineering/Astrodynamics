@@ -2,7 +2,6 @@
 
 using System;
 using IO.Astrodynamics.OrbitalParameters;
-using IO.Astrodynamics.OrbitalParameters.TLE;
 using IO.Astrodynamics.TimeSystem;
 using Xunit;
 
@@ -232,7 +231,7 @@ public class TLENoradIdTests
     [InlineData(339999)]
     public void OmmToTle_PreservesCatalogNumber(int noradCatalogId)
     {
-        var omm = IO.Astrodynamics.CCSDS.OMM.Omm.CreateForTle(
+        var omm = IO.Astrodynamics.Ccsds.Omm.CreateForTle(
             "TEST SAT", "1998-067A", Epoch.DateTime,
             meanMotion: 15.49309423, eccentricity: 0.0000493, inclination: 51.6423,
             raan: 353.0312, argOfPericenter: 320.8755, meanAnomaly: 39.2360,
@@ -252,7 +251,7 @@ public class TLENoradIdTests
     [InlineData(275544)]
     public void OmmToTleToOmm_RoundTripsCatalogNumber(int noradCatalogId)
     {
-        var omm = IO.Astrodynamics.CCSDS.OMM.Omm.CreateForTle(
+        var omm = IO.Astrodynamics.Ccsds.Omm.CreateForTle(
             "TEST SAT", "1998-067A", Epoch.DateTime,
             meanMotion: 15.49309423, eccentricity: 0.0000493, inclination: 51.6423,
             raan: 353.0312, argOfPericenter: 320.8755, meanAnomaly: 39.2360,
@@ -269,7 +268,7 @@ public class TLENoradIdTests
     [InlineData(999999999)]
     public void OmmToTle_CatalogNumberBeyondTleCapacity_ThrowsInsteadOfTruncating(int noradCatalogId)
     {
-        var omm = IO.Astrodynamics.CCSDS.OMM.Omm.CreateForTle(
+        var omm = IO.Astrodynamics.Ccsds.Omm.CreateForTle(
             "TEST SAT", "1998-067A", Epoch.DateTime,
             meanMotion: 15.49309423, eccentricity: 0.0000493, inclination: 51.6423,
             raan: 353.0312, argOfPericenter: 320.8755, meanAnomaly: 39.2360,
@@ -283,7 +282,7 @@ public class TLENoradIdTests
     [Fact]
     public void OmmToTle_RevolutionNumberBeyondTleCapacity_ThrowsInsteadOfTruncating()
     {
-        var omm = IO.Astrodynamics.CCSDS.OMM.Omm.CreateForTle(
+        var omm = IO.Astrodynamics.Ccsds.Omm.CreateForTle(
             "TEST SAT", "1998-067A", Epoch.DateTime,
             meanMotion: 15.49309423, eccentricity: 0.0000493, inclination: 51.6423,
             raan: 353.0312, argOfPericenter: 320.8755, meanAnomaly: 39.2360,
@@ -296,7 +295,7 @@ public class TLENoradIdTests
     [Fact]
     public void OmmToTle_RevolutionNumberAboveUshortCeiling_IsPreserved()
     {
-        var omm = IO.Astrodynamics.CCSDS.OMM.Omm.CreateForTle(
+        var omm = IO.Astrodynamics.Ccsds.Omm.CreateForTle(
             "TEST SAT", "1998-067A", Epoch.DateTime,
             meanMotion: 15.49309423, eccentricity: 0.0000493, inclination: 51.6423,
             raan: 353.0312, argOfPericenter: 320.8755, meanAnomaly: 39.2360,
@@ -322,7 +321,7 @@ public class TLENoradIdTests
             new IO.Astrodynamics.Math.Vector3(2821.2352501830983, 3825.849951628489, 6009.392701926987),
             TestHelpers.EarthAtJ2000, Epoch, Frames.Frame.TEME);
 
-        var config = new IO.Astrodynamics.OrbitalParameters.TLE.TleFitOptions { RevolutionNumberAtEpoch = 70000 };
+        var config = new IO.Astrodynamics.OrbitalParameters.TleFitOptions { RevolutionNumberAtEpoch = 70000 };
 
         var tle = stateVector.ToTle("TEST SAT", noradId, "98067A", config);
 

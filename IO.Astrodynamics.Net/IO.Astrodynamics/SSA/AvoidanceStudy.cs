@@ -2,7 +2,7 @@
 using System;
 using System.Collections.Generic;
 
-namespace IO.Astrodynamics.SSA;
+namespace IO.Astrodynamics.Ssa;
 
 /// <summary>
 /// The result of <see cref="ConjunctionAssessment.EvaluateAvoidance"/>: the avoidance options, ranked, and the lead times

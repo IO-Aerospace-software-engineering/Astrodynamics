@@ -1,4 +1,4 @@
-namespace IO.Astrodynamics.OrbitalParameters.TLE;
+namespace IO.Astrodynamics.OrbitalParameters;
 
 /// <summary>
 /// TLE classification levels according to US space surveillance standards

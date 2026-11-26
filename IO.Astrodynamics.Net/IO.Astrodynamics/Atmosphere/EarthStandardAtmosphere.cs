@@ -33,7 +33,7 @@ namespace IO.Astrodynamics.Atmosphere;
 /// <para>
 /// Atmospheric drag reads the density from the altitude without building a context
 /// (<see cref="IGeodeticDensityModel"/>), so a derived class that re-implements <see cref="IAtmosphericModel"/> is not
-/// used by drag, as for <see cref="NRLMSISE_00.Nrlmsise00Model"/>. Its density depends on the altitude alone, so the drag
+/// used by drag, as for <see cref="Nrlmsise00Model"/>. Its density depends on the altitude alone, so the drag
 /// partials take its derivative in closed form (<see cref="IAltitudeDensityDerivative"/>).
 /// </para>
 /// </remarks>

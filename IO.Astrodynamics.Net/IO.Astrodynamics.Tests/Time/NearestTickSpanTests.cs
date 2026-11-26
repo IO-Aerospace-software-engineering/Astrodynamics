@@ -218,7 +218,7 @@ public class NearestTickSpanTests
         {
             long sampleTicks = 16 * (37_500_000 + 7919 * k);
             var sampleStep = TimeSpan.FromTicks(sampleTicks);
-            var step = IO.Astrodynamics.SSA.ConjunctionAssessment.ComputeCloseApproachSearchStep(sampleStep, TimeSpan.FromDays(1.0), 1e-6);
+            var step = IO.Astrodynamics.Ssa.ConjunctionAssessment.ComputeCloseApproachSearchStep(sampleStep, TimeSpan.FromDays(1.0), 1e-6);
             Assert.Equal(sampleTicks / 16, step.Ticks);
             if (TimeSpan.FromSeconds(sampleStep.TotalSeconds / 16.0).Ticks != sampleTicks / 16)
             {

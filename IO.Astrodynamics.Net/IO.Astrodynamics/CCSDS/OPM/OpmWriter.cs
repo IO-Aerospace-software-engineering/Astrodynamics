@@ -6,9 +6,9 @@ using System.IO;
 using System.Text;
 using System.Xml;
 using System.Xml.Linq;
-using IO.Astrodynamics.CCSDS.Common;
+using IO.Astrodynamics.Ccsds;
 
-namespace IO.Astrodynamics.CCSDS.OPM;
+namespace IO.Astrodynamics.Ccsds;
 
 /// <summary>
 /// Writes OPM (Orbit Parameter Message) files in CCSDS NDM/XML format.

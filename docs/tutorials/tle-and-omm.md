@@ -10,7 +10,7 @@ Parse a standard two-line element set from its three-line string form (a text or
 ```csharp
 using IO.Astrodynamics;
 using IO.Astrodynamics.Body;
-using IO.Astrodynamics.OrbitalParameters.TLE;
+using IO.Astrodynamics.OrbitalParameters;
 using IO.Astrodynamics.TimeSystem;
 using IO.Astrodynamics.SolarSystemObjects;
 
@@ -85,7 +85,7 @@ at the start of the window, rotated once to ICRF, and integrates in ICRF. About 
 TEME on an Earth that carries them; `TlePropagator` gives SGP4 itself, for comparison:
 
 ```csharp
-using IO.Astrodynamics.Atmosphere.NRLMSISE_00;
+using IO.Astrodynamics.Atmosphere;
 using IO.Astrodynamics.Body.Spacecraft;
 using IO.Astrodynamics.Frames;
 using IO.Astrodynamics.OrbitalParameters;
@@ -146,7 +146,7 @@ Console.WriteLine(alpha5Tle.NoradCatalogId);         // 275544
 OMM is the CCSDS standard XML/KVN format for distributing mean elements. Load, validate, and convert:
 
 ```csharp
-using IO.Astrodynamics.CCSDS.OMM;
+using IO.Astrodynamics.Ccsds;
 
 var omm = Omm.Load("satellite.omm");
 
@@ -187,7 +187,7 @@ TLE uses a compact international designator (e.g., `98067A`) while OMM uses the 
 OPM carries a single osculating state vector in CCSDS format:
 
 ```csharp
-using IO.Astrodynamics.CCSDS.OPM;
+using IO.Astrodynamics.Ccsds;
 
 var earth = PlanetsAndMoons.EarthBody;
 

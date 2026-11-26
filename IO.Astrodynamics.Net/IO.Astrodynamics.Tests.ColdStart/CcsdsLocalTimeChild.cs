@@ -4,10 +4,7 @@ using System;
 using System.Globalization;
 using System.Linq;
 using System.Xml.Linq;
-using IO.Astrodynamics.CCSDS.CDM;
-using IO.Astrodynamics.CCSDS.Common;
-using IO.Astrodynamics.CCSDS.OMM;
-using IO.Astrodynamics.CCSDS.OPM;
+using IO.Astrodynamics.Ccsds;
 
 namespace IO.Astrodynamics.Tests.ColdStart;
 

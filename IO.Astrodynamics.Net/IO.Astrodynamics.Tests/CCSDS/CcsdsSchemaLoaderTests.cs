@@ -3,7 +3,7 @@
 using System;
 using System.IO;
 using System.Xml.Schema;
-using IO.Astrodynamics.CCSDS;
+using IO.Astrodynamics.Ccsds;
 using Xunit;
 
 namespace IO.Astrodynamics.Tests.CCSDS

@@ -2,7 +2,7 @@
 
 using System;
 using System.Linq;
-using IO.Astrodynamics.OrbitalParameters.TLE;
+using IO.Astrodynamics.OrbitalParameters;
 using Xunit;
 
 namespace IO.Astrodynamics.Tests.OrbitalParameters;

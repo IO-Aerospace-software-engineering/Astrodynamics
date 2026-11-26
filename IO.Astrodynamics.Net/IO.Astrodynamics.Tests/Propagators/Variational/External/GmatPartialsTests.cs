@@ -3,7 +3,7 @@
 using System.Globalization;
 using System.IO;
 using System.Linq;
-using IO.Astrodynamics.Atmosphere.NRLMSISE_00;
+using IO.Astrodynamics.Atmosphere;
 using IO.Astrodynamics.Body;
 using IO.Astrodynamics.Propagator.Forces;
 using IO.Astrodynamics.SolarSystemObjects;

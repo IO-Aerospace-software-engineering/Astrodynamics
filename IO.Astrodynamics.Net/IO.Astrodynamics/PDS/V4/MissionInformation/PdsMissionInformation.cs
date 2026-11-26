@@ -1,6 +1,6 @@
 ﻿using System.Reflection;
 
-namespace IO.Astrodynamics.PDS.V4.MissionInformation;
+namespace IO.Astrodynamics.Pds.V4.MissionInformation;
 
 public class PdsMissionInformation : PdsBase<Mission_Information_1K00_1300>
 {

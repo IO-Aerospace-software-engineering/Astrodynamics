@@ -16,7 +16,7 @@ using IO.Astrodynamics.Math;
 using IO.Astrodynamics.SolarSystemObjects;
 using IO.Astrodynamics.TimeSystem;
 
-namespace IO.Astrodynamics.OrbitalParameters.TLE;
+namespace IO.Astrodynamics.OrbitalParameters;
 
 /// <summary>
 /// Represents a Two-Line Element (TLE) set of orbital parameters.
@@ -1339,7 +1339,7 @@ public class Tle : OrbitalParameters, IEquatable<Tle>, IParsable<Tle>
     /// </para>
     /// <para>
     /// The international designator (COSPAR ID) is extracted from TLE line 1. Blank columns 10-17 (a TLE without a
-    /// designator) give <c>OBJECT_ID = UNKNOWN</c>, which <see cref="CCSDS.OMM.Omm.ToTle"/> reads back as blank columns
+    /// designator) give <c>OBJECT_ID = UNKNOWN</c>, which <see cref="Ccsds.Omm.ToTle"/> reads back as blank columns
     /// (#604, decided by S. Guillet, 2026-11-18; before 11.0.0 it threw <see cref="ArgumentException"/>).
     /// </para>
     /// <para>
@@ -1348,24 +1348,24 @@ public class Tle : OrbitalParameters, IEquatable<Tle>, IParsable<Tle>
     /// on about half the sets, e.g. 15.957445309999999 for 15.95744531).
     /// </para>
     /// </remarks>
-    public CCSDS.OMM.Omm ToOmm(string originator = null)
+    public Ccsds.Omm ToOmm(string originator = null)
     {
         // Create header
         var header = originator != null
-            ? CCSDS.Common.CcsdsHeader.Create(originator)
-            : CCSDS.Common.CcsdsHeader.CreateDefault();
+            ? Ccsds.CcsdsHeader.Create(originator)
+            : Ccsds.CcsdsHeader.CreateDefault();
 
         // Extract COSPAR ID (international designator) from line 1 positions 9-16
         // TLE format: "98067A" -> OMM format: "1998-067A"
         // Blank columns: OBJECT_ID UNKNOWN, the element being mandatory in the ODM (#604)
-        var objectId = CosparId == null ? CCSDS.OMM.OmmMetadata.UnknownObjectId : ConvertCosparIdToObjectId(CosparId);
+        var objectId = CosparId == null ? Ccsds.OmmMetadata.UnknownObjectId : ConvertCosparIdToObjectId(CosparId);
 
         // Create metadata for SGP4/TEME configuration
-        var metadata = CCSDS.OMM.OmmMetadata.CreateForSgp4(Name, objectId);
+        var metadata = Ccsds.OmmMetadata.CreateForSgp4(Name, objectId);
 
         // Create mean elements: angles from radians to degrees, the mean motion the field's own value in rev/day (decision
         // 111 of #668, decided by S. Guillet, 2026-11-26)
-        var meanElements = CCSDS.OMM.MeanElements.CreateWithMeanMotion(
+        var meanElements = Ccsds.MeanElements.CreateWithMeanMotion(
             Epoch.DateTime,
             _meanMotionRevolutionsPerDay,
             MeanEccentricity,
@@ -1383,7 +1383,7 @@ public class Tle : OrbitalParameters, IEquatable<Tle>, IParsable<Tle>
         var classChar = ((char)Classification).ToString();
 
         // Create TLE parameters with BSTAR and MEAN_MOTION_DDOT (standard SGP4)
-        var tleParams = CCSDS.OMM.TleParameters.CreateWithBStarAndDDot(
+        var tleParams = Ccsds.TleParameters.CreateWithBStarAndDDot(
             BStar,
             MeanMotionDot,
             MeanMotionDDot,
@@ -1394,9 +1394,9 @@ public class Tle : OrbitalParameters, IEquatable<Tle>, IParsable<Tle>
             revolutionNumberAtEpoch: revAtEpoch);
 
         // Create data section
-        var data = CCSDS.OMM.OmmData.CreateForTle(meanElements, tleParams);
+        var data = Ccsds.OmmData.CreateForTle(meanElements, tleParams);
 
-        return new CCSDS.OMM.Omm(header, metadata, data);
+        return new Ccsds.Omm(header, metadata, data);
     }
 
     /// <summary>

@@ -2,8 +2,8 @@
 
 using System;
 using System.Globalization;
-using IO.Astrodynamics.CCSDS.OMM;
-using IO.Astrodynamics.OrbitalParameters.TLE;
+using IO.Astrodynamics.Ccsds;
+using IO.Astrodynamics.OrbitalParameters;
 using Xunit;
 using Xunit.Abstractions;
 

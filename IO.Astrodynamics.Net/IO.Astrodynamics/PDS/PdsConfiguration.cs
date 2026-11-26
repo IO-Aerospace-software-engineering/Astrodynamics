@@ -4,7 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 
-namespace IO.Astrodynamics.PDS;
+namespace IO.Astrodynamics.Pds;
 
 /// <summary>
 /// This class handles configuration to manage PDS archive

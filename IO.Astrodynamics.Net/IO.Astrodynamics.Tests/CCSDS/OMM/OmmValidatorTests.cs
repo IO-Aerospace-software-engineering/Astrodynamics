@@ -2,9 +2,7 @@
 
 using System;
 using System.Linq;
-using IO.Astrodynamics.CCSDS;
-using IO.Astrodynamics.CCSDS.Common;
-using IO.Astrodynamics.CCSDS.OMM;
+using IO.Astrodynamics.Ccsds;
 using Xunit;
 
 namespace IO.Astrodynamics.Tests.CCSDS.OMM;
@@ -180,7 +178,7 @@ public class OmmValidatorTests
         {
             var xml = NdmDocuments.Mutated(issOmm, "omm", mutation);
 
-            var ex = Assert.Throws<OmmValidationException>(() => IO.Astrodynamics.CCSDS.OMM.Omm.Parse(xml));
+            var ex = Assert.Throws<OmmValidationException>(() => IO.Astrodynamics.Ccsds.Omm.Parse(xml));
             Assert.False(ex.ValidationResult.IsValid);
         }
     }

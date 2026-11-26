@@ -79,7 +79,7 @@ the search window less the crossings of `Equal` (#482; [Sites](sites.md#window-s
 ## EncounterQualityFlags
 
 !!! note
-    These flags are produced by the SSA workflow in `IO.Astrodynamics.SSA`.
+    These flags are produced by the SSA workflow in `IO.Astrodynamics.Ssa`.
 
 | Value | Description |
 |-------|-------------|
@@ -98,7 +98,7 @@ the search window less the crossings of `Equal` (#482; [Sites](sites.md#window-s
 
 How the trajectory of a participant of an encounter is computed (`EncounterState.ProtectedTrajectory`,
 `SecondaryTrajectory`), and that of an avoidance option after its burn (`AvoidanceOption.Trajectory`, `Propagated` or
-`TwoBody`; [Avoidance Studies](avoidance.md)); in the `IO.Astrodynamics.SSA` namespace (R17 of #668: `AvoidanceTrajectory`
+`TwoBody`; [Avoidance Studies](avoidance.md)); in the `IO.Astrodynamics.Ssa` namespace (R17 of #668: `AvoidanceTrajectory`
 before 11.0.0, of the avoidance options only).
 
 | Value | Description |
@@ -111,7 +111,7 @@ before 11.0.0, of the avoidance options only).
 ## CloseApproachSearch
 
 The search that found the epoch of an encounter (`EncounterCase.Search`, [Conjunction
-Assessment](conjunction-assessment.md#conjunctionassessment-methods)); in the `IO.Astrodynamics.SSA` namespace (R18 of
+Assessment](conjunction-assessment.md#conjunctionassessment-methods)); in the `IO.Astrodynamics.Ssa` namespace (R18 of
 #668).
 
 | Value | Description |
@@ -123,7 +123,7 @@ Assessment](conjunction-assessment.md#conjunctionassessment-methods)); in the `I
 ## AvoidanceSkipReason
 
 Why a lead time of the avoidance grid gave no option (`SkippedLeadTime.Reason`, `AvoidanceStudy.Skipped`,
-[Avoidance Studies](avoidance.md)); in the `IO.Astrodynamics.SSA` namespace.
+[Avoidance Studies](avoidance.md)); in the `IO.Astrodynamics.Ssa` namespace.
 
 | Value | Description |
 |-------|-------------|
@@ -133,7 +133,7 @@ Why a lead time of the avoidance grid gave no option (`SkippedLeadTime.Reason`, 
 ## CovarianceSource
 
 Where the covariance of one participant at TCA comes from, in the order the conjunction analysis resolves it
-([Conjunction Assessment](conjunction-assessment.md#covariance-at-tca)); in the `IO.Astrodynamics.SSA` namespace.
+([Conjunction Assessment](conjunction-assessment.md#covariance-at-tca)); in the `IO.Astrodynamics.Ssa` namespace.
 
 | Value | Description |
 |-------|-------------|
@@ -145,7 +145,7 @@ Where the covariance of one participant at TCA comes from, in the order the conj
 ## CDM Enumerations
 
 !!! note
-    These enumerations are in the `IO.Astrodynamics.CCSDS.CDM` namespace.
+    These enumerations are in the `IO.Astrodynamics.Ccsds` namespace.
 
 | Enumeration | Values |
 |-------------|--------|

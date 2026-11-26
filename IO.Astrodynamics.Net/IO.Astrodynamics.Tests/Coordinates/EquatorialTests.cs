@@ -6,7 +6,6 @@ using IO.Astrodynamics.Mission;
 using IO.Astrodynamics.OrbitalParameters;
 using IO.Astrodynamics.SolarSystemObjects;
 using IO.Astrodynamics.TimeSystem;
-using IO.Astrodynamics.OrbitalParameters.TLE;
 using Xunit;
 using Xunit.Abstractions;
 

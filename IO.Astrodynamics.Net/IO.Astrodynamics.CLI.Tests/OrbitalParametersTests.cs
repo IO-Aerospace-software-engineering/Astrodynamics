@@ -303,7 +303,7 @@ public class OrbitalParametersTests
             var res = CliRun.Ok("orbital-parameters-converter", "-K", "Data", "--from", "tle", "--orbit", line1, "--orbit", line2, "--as", "state",
                 "--target-epoch", "2021-01-20T13:00:00Z");
             SpiceApi.Instance.LoadKernels(new DirectoryInfo("Data"));
-            var tle = new OrbitalParameters.TLE.Tle("body", line1, line2);
+            var tle = new OrbitalParameters.Tle("body", line1, line2);
             var expected = tle.AtEpoch(TimeSystem.Time.Parse("2021-01-20T13:00:00Z")).ToFrame(Frames.Frame.ICRF).ToStateVector();
             Assert.Equal($"{expected}{Environment.NewLine}", res);
             Assert.StartsWith("Epoch : 2021-01-20T13:00:00.0000000Z ", res);

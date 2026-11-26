@@ -9,7 +9,7 @@ using System.Reflection;
 using System.Text.Json;
 using System.Xml.Linq;
 using IO.Astrodynamics.Body;
-using IO.Astrodynamics.OrbitalParameters.TLE;
+using IO.Astrodynamics.OrbitalParameters;
 using Xunit;
 using Xunit.Abstractions;
 
