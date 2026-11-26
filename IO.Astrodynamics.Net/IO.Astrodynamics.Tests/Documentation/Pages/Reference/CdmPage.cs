@@ -78,4 +78,17 @@ internal static class CdmPage
         var parsed = Cdm.Load("encounter.cdm.xml");
         #endregion
     }
+
+    // docs/reference/cdm.md, "Ingest"
+    internal static void Block02(Cdm cdm)
+    {
+        #region docs/reference/cdm.md:2
+        // Inputs: cdm (Cdm)
+        StateVector object1 = cdm.ToStateVector(CdmObjectRole.Object1);
+        StateVector object2 = cdm.ToStateVector(CdmObjectRole.Object2);
+        EncounterCase encounter = cdm.ToEncounter(combinedHardBodyRadiusMeters: 10.0);
+        double? pc = CollisionProbability.Foster2D(object1, object2, 10.0); // encounter.ProbabilityOfCollision, bit for bit
+        Console.WriteLine(encounter);
+        #endregion
+    }
 }

@@ -1,0 +1,161 @@
+// Copyright 2026. Sylvain Guillet (sylvain.guillet@tutamail.com)
+#nullable enable
+using System;
+using System.Collections.Generic;
+using IO.Astrodynamics.Body;
+using IO.Astrodynamics.CCSDS.CDM;
+using IO.Astrodynamics.Frames;
+using IO.Astrodynamics.Math;
+using IO.Astrodynamics.OrbitalParameters;
+using IO.Astrodynamics.SolarSystemObjects;
+using IO.Astrodynamics.TimeSystem;
+using Xunit;
+
+namespace IO.Astrodynamics.Tests.CCSDS.CDM;
+
+/// <summary>
+/// The ingest of a CDM (R19 of #668, lot L7): <see cref="Cdm.ToStateVector"/>, the state of an object at TCA with its
+/// covariance turned from RTN, and the <see cref="TimeSystem.Time"/> accessors beside the <see cref="DateTime"/> ones.
+/// </summary>
+public class CdmIngestTests
+{
+    private static readonly DateTime TcaUtc = new(2026, 3, 1, 12, 0, 0, DateTimeKind.Utc);
+    private static readonly Vector3 Position1 = new(6_778_137.0, 1000.0, -2000.0);
+    private static readonly Vector3 Velocity1 = new(10.0, 6_000.0, 4_300.0);
+    private static readonly Vector3 Position2 = new(6_778_000.0, 1500.0, -1800.0);
+    private static readonly Vector3 Velocity2 = new(-15.0, 4_300.0, 6_000.0);
+
+    public CdmIngestTests()
+    {
+        TestKernels.EnsureSolarSystem();
+    }
+
+    // A covariance in RTN with correlations, m², m²/s, m²/s²
+    private static Matrix CovarianceRtn(double scale) => Matrix.Create(6, 6, (i, j) =>
+        i == j ? scale * (i < 3 ? 100.0 * (i + 1) : 1.0e-4 * (i - 2)) : i < 3 && j < 3 ? scale * 20.0 : 0.0);
+
+    private static Cdm Message(CdmReferenceFrame? frame, string? orbitCenter = null, bool covariance = true)
+    {
+        CdmSegment Segment(CdmObjectRole role, Vector3 position, Vector3 velocity, double scale) => new()
+        {
+            Metadata = new CdmParticipantMetadata { Object = role, ReferenceFrame = frame, OrbitCenter = orbitCenter },
+            Data = new CdmData
+            {
+                StateVector = new CdmStateVector { PositionMeters = position, VelocityMetersPerSecond = velocity },
+                CovarianceMatrix = covariance ? CdmCovarianceMatrix.FromRtnCovariance(CovarianceRtn(scale)) : null,
+                OdParameters = new CdmOdParameters { TimeLastObservationStartUtc = TcaUtc.AddDays(-2.0), TimeLastObservationEndUtc = TcaUtc.AddDays(-1.0) }
+            }
+        };
+
+        return new Cdm(new CdmHeader { CreationDateUtc = TcaUtc.AddHours(-6.0), Originator = "TEST", MessageId = "INGEST" },
+            new CdmRelativeMetadataData
+            {
+                TcaUtc = TcaUtc,
+                StartScreenPeriodUtc = TcaUtc.AddDays(-1.0),
+                StopScreenPeriodUtc = TcaUtc.AddDays(1.0),
+                ScreenEntryTimeUtc = TcaUtc.AddSeconds(-30.0),
+                ScreenExitTimeUtc = TcaUtc.AddSeconds(30.0)
+            },
+            new List<CdmSegment> { Segment(CdmObjectRole.Object1, Position1, Velocity1, 1.0), Segment(CdmObjectRole.Object2, Position2, Velocity2, 4.0) });
+    }
+
+    [Theory]
+    [InlineData(CdmReferenceFrame.Eme2000)]
+    [InlineData(CdmReferenceFrame.Gcrf)]
+    public void ToStateVector_InertialFrames_IsTheStateInIcrf_ItsCovarianceTurnedFromRtn(CdmReferenceFrame frame)
+    {
+        // Act
+        var cdm = Message(frame);
+        var s1 = cdm.ToStateVector(CdmObjectRole.Object1);
+        var s2 = cdm.ToStateVector(CdmObjectRole.Object2);
+
+        // Assert: the state as given in ICRF about the Earth at TCA (UTC), the covariance the RTN covariance turned on that
+        // state, as the conformance runner's to_inertial turned it before 11.0.0 (bit for bit)
+        var epoch = new TimeSystem.Time(TcaUtc, TimeScale.UTC);
+        var earth = new CelestialBody(PlanetsAndMoons.EARTH, Frames.Frame.ICRF, epoch);
+        Assert.Equal(Frames.Frame.ICRF, s1.Frame);
+        Assert.Equal(399, s1.Observer.NaifId);
+        LabelAssert.Equal(epoch, s1.Epoch);
+        Assert.Equal(Position1, s1.Position);
+        Assert.Equal(Velocity2, s2.Velocity);
+        Assert.Equal(new StateVector(Position1, Velocity1, earth, epoch, Frames.Frame.ICRF).RotateCovarianceFromRtn(CovarianceRtn(1.0)), s1.Covariance);
+        Assert.Equal(new StateVector(Position2, Velocity2, earth, epoch, Frames.Frame.ICRF).RotateCovarianceFromRtn(CovarianceRtn(4.0)), s2.Covariance);
+
+        // Without a covariance, the state alone
+        Assert.Null(Message(frame, covariance: false).ToStateVector(CdmObjectRole.Object1).Covariance);
+    }
+
+    [Fact]
+    public void ToStateVector_Itrf_IsTheStateInItrf93_ItsCovarianceTurnedFromRtnOnTheInertialState()
+    {
+        // Act
+        var s1 = Message(CdmReferenceFrame.Itrf).ToStateVector(CdmObjectRole.Object1);
+
+        // Assert: the state of the CDM in ITRF93; its covariance, in ICRF, the RTN covariance turned on the inertial state
+        // (the frames of SPICE, ToFrame)
+        var epoch = new TimeSystem.Time(TcaUtc, TimeScale.UTC);
+        Assert.Equal(Frames.Frame.ITRF93, s1.Frame);
+        Assert.Equal(Position1, s1.Position);
+        Assert.Equal(Velocity1, s1.Velocity);
+        var inertial = s1.ToFrame(Frames.Frame.ICRF);
+        var expected = new StateVector(inertial.Position, inertial.Velocity, s1.Observer, epoch, Frames.Frame.ICRF)
+            .RotateCovarianceFromRtn(CovarianceRtn(1.0));
+        var actual = inertial.Covariance!.Value;
+        for (int i = 0; i < 6; i++)
+        {
+            for (int j = 0; j < 6; j++)
+            {
+                double scale = System.Math.Sqrt(expected[i, i] * expected[j, j]);
+                Assert.True(System.Math.Abs(actual[i, j] - expected[i, j]) <= 1.0e-12 * scale, $"({i}, {j}): {actual[i, j]:R} against {expected[i, j]:R}");
+            }
+        }
+    }
+
+    [Fact]
+    public void ToStateVector_TheOrbitCenter_IsTheObserver_AnUnknownOneThrows()
+    {
+        Assert.Equal(399, Message(CdmReferenceFrame.Eme2000, "earth ").ToStateVector(CdmObjectRole.Object1).Observer.NaifId);
+        Assert.Equal(301, Message(CdmReferenceFrame.Eme2000, "MOON").ToStateVector(CdmObjectRole.Object2).Observer.NaifId);
+        Assert.Contains("ORBIT_CENTER", Assert.Throws<InvalidOperationException>(() =>
+            Message(CdmReferenceFrame.Eme2000, "DSS-14").ToStateVector(CdmObjectRole.Object1)).Message);
+        Assert.Contains("ORBIT_CENTER", Assert.Throws<InvalidOperationException>(() =>
+            Message(CdmReferenceFrame.Itrf, "MOON").ToStateVector(CdmObjectRole.Object1)).Message);
+        Assert.Contains("REF_FRAME", Assert.Throws<InvalidOperationException>(() =>
+            Message(null).ToStateVector(CdmObjectRole.Object1)).Message);
+        Assert.Equal("role", Assert.Throws<ArgumentOutOfRangeException>(() =>
+            Message(CdmReferenceFrame.Eme2000).ToStateVector((CdmObjectRole)2)).ParamName);
+    }
+
+    [Fact]
+    public void ToStateVector_ASegmentWithoutState_Throws()
+    {
+        var cdm = Message(CdmReferenceFrame.Eme2000);
+        var bare = new Cdm(cdm.Header, cdm.RelativeMetadataData,
+            new List<CdmSegment> { cdm.Segments[0] with { Data = null }, cdm.Segments[1] });
+
+        Assert.Throws<InvalidOperationException>(() => bare.ToStateVector(CdmObjectRole.Object1));
+        Assert.Throws<InvalidOperationException>(() => bare.ToEncounter(10.0));
+    }
+
+    [Fact]
+    public void TimeAccessors_AreTheUtcDates()
+    {
+        var cdm = Message(CdmReferenceFrame.Eme2000);
+        var relative = cdm.RelativeMetadataData;
+        var od = cdm.Segments[0].Data!.OdParameters!;
+
+        LabelAssert.Equal(new TimeSystem.Time(TcaUtc.AddHours(-6.0), TimeScale.UTC), cdm.Header.CreationDate);
+        LabelAssert.Equal(new TimeSystem.Time(TcaUtc, TimeScale.UTC), relative.Tca);
+        LabelAssert.Equal(new TimeSystem.Time(TcaUtc.AddDays(-1.0), TimeScale.UTC), relative.StartScreenPeriod);
+        LabelAssert.Equal(new TimeSystem.Time(TcaUtc.AddDays(1.0), TimeScale.UTC), relative.StopScreenPeriod);
+        LabelAssert.Equal(new TimeSystem.Time(TcaUtc.AddSeconds(-30.0), TimeScale.UTC), relative.ScreenEntryTime);
+        LabelAssert.Equal(new TimeSystem.Time(TcaUtc.AddSeconds(30.0), TimeScale.UTC), relative.ScreenExitTime);
+        LabelAssert.Equal(new TimeSystem.Time(TcaUtc.AddDays(-2.0), TimeScale.UTC), od.TimeLastObservationStart);
+        LabelAssert.Equal(new TimeSystem.Time(TcaUtc.AddDays(-1.0), TimeScale.UTC), od.TimeLastObservationEnd);
+
+        // An unspecified kind is UTC, as the writer takes it (#617); an absent date is null
+        var unspecified = relative with { TcaUtc = DateTime.SpecifyKind(TcaUtc, DateTimeKind.Unspecified), StartScreenPeriodUtc = null };
+        LabelAssert.Equal(new TimeSystem.Time(TcaUtc, TimeScale.UTC), unspecified.Tca);
+        Assert.Null(unspecified.StartScreenPeriod);
+    }
+}

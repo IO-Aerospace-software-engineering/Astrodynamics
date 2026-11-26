@@ -2439,7 +2439,8 @@ public static class ConjunctionAssessment
         StateSamplingSource protectedSource,
         StateSamplingSource secondarySource,
         EncounterCovarianceResolver protectedResolver,
-        EncounterCovarianceResolver secondaryResolver)
+        EncounterCovarianceResolver secondaryResolver,
+        CloseApproachSearch? search = null)
     {
         // The closest end of a window without a close approach (#621); a close approach the search finds on an end (its
         // range-rate zero in the half-tick next to it, or exactly on it) is one the window holds, not flagged (adversarial
@@ -2517,11 +2518,72 @@ public static class ConjunctionAssessment
             SecondaryCovariance = secondaryCovariance,
             ProtectedSolution = protectedSource.Solution,
             AnalysisOptions = options,
-            Search = CanUseDensePolynomialSearch(protectedSource, secondarySource)
+            Search = search ?? (CanUseDensePolynomialSearch(protectedSource, secondarySource)
                 ? CloseApproachSearch.Polynomial
-                : CloseApproachSearch.Sampled
+                : CloseApproachSearch.Sampled)
         };
     }
+
+    // A NAIF id of the library's transient spacecraft, cycling over [-2 099 999, -2 000 000] (#676)
+    private static int NextTrialId() => TrialIdFirst - (int)((uint)Interlocked.Increment(ref _trialIdCounter) % TrialIdCount);
+
+    /// <summary>
+    /// The encounter of two objects given by their states at TCA (decision 110 of #668, decided by S. Guillet, 2026-11-26):
+    /// <see cref="BuildEncounterCase"/> on constant state sources, no search. Each object is a <see cref="Spacecraft"/> of
+    /// 100 kg on its state (a transient NAIF id), object 1 with the combined hard-body radius and object 2 with none, the
+    /// options <see cref="ConjunctionAnalysisOptions.Default"/> with a secondary radius of 0; each covariance is the one its
+    /// state carries, given at the encounter, so the probability is <see cref="CollisionProbability.Foster2D"/> (or
+    /// <see cref="CollisionProbability.FrisbeeMax"/>) of the two states bit for bit.
+    /// </summary>
+    /// <param name="protectedState">The state of object 1 in ICRF at TCA.</param>
+    /// <param name="protectedName">The name of object 1.</param>
+    /// <param name="secondaryState">The state of object 2 in ICRF at TCA, about the same observer.</param>
+    /// <param name="secondaryName">The name of object 2.</param>
+    /// <param name="combinedHardBodyRadiusMeters">The combined hard-body radius, finite and above 0.</param>
+    /// <param name="window">The screening window of the encounter, which holds TCA.</param>
+    internal static EncounterCase EncounterAt(StateVector protectedState, string protectedName, StateVector secondaryState,
+        string secondaryName, double combinedHardBodyRadiusMeters, in Window window)
+    {
+        var tca = protectedState.Epoch;
+        var protectedSpacecraft = new Spacecraft(NextTrialId(), protectedName, 100.0, protectedState,
+            hardBodyRadius: combinedHardBodyRadiusMeters);
+        var secondarySpacecraft = new Spacecraft(NextTrialId(), secondaryName, 100.0, secondaryState);
+        var knots = new[] { tca };
+        var protectedSource = new StateSamplingSource(_ => protectedState, knots, TrajectoryOf(protectedSpacecraft));
+        var secondarySource = new StateSamplingSource(_ => secondaryState, knots, TrajectoryOf(secondarySpacecraft));
+        return BuildEncounterCase(protectedSpacecraft, secondarySpacecraft, window, tca, false,
+            ConjunctionAnalysisOptions.Default with { SecondaryHardBodyRadiusMeters = 0.0 }, protectedSource, secondarySource,
+            new EncounterCovarianceResolver(protectedSpacecraft, null, null, tca),
+            new EncounterCovarianceResolver(secondarySpacecraft, null, null, tca), CloseApproachSearch.None);
+    }
+
+    /// <summary>
+    /// The collision risk of two states at TCA in ICRF about one observer, each covariance the one its state carries,
+    /// given at the encounter: the cores of <see cref="BuildEncounterCase"/> (the combined covariance, its RTN rotation and
+    /// <see cref="BuildCollisionRisk"/>), so that <see cref="CollisionProbability"/> and <see cref="EncounterAt"/> agree
+    /// bit for bit (R19 of #668).
+    /// </summary>
+    internal static CollisionRisk CollisionRiskAt(StateVector protectedState, StateVector secondaryState,
+        double combinedHardBodyRadiusMeters)
+    {
+        var qualityFlags = EncounterQualityFlags.None;
+        var combinedCovarianceIcrf = BuildCombinedCovarianceIcrf(GivenCovariance(protectedState), GivenCovariance(secondaryState),
+            ref qualityFlags);
+        var combinedCovarianceRtn = RotateCovarianceToRtn(combinedCovarianceIcrf, protectedState);
+        if (qualityFlags.HasFlag(EncounterQualityFlags.MissingProtectedCovariance) &&
+            qualityFlags.HasFlag(EncounterQualityFlags.MissingSecondaryCovariance))
+        {
+            qualityFlags |= EncounterQualityFlags.CovarianceUnavailable;
+        }
+
+        return BuildCollisionRisk(BuildRelativeState(protectedState, secondaryState), combinedCovarianceIcrf,
+            combinedCovarianceRtn, combinedHardBodyRadiusMeters, ref qualityFlags);
+    }
+
+    // The covariance a state carries, given at the encounter, as EncounterCovariance.Resolve takes it
+    private static EncounterCovariance GivenCovariance(StateVector state) => state.Covariance is { } covariance
+        ? new EncounterCovariance(covariance, TimeSpan.Zero, CovarianceSource.ProvidedAtEncounter)
+        : new EncounterCovariance(null, null, CovarianceSource.None);
 
     // The state retained by the encounter case carries the covariance the analysis used when it was propagated, so that
     // the CDM exports what the probability used; the other states are left as the source gave them
@@ -3275,9 +3337,8 @@ public static class ConjunctionAssessment
     private static Spacecraft CloneSpacecraft(Spacecraft template, StateVector initialState, double mass,
         double dragCoefficient, double reflectivityCoefficient)
     {
-        int trialId = TrialIdFirst - (int)((uint)Interlocked.Increment(ref _trialIdCounter) % TrialIdCount);
         return new Spacecraft(
-            trialId,
+            NextTrialId(),
             $"{template.Name}_SSA_TRIAL",
             mass,
             initialState,

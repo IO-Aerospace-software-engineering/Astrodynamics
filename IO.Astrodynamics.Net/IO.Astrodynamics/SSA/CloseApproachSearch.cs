@@ -20,5 +20,11 @@ public enum CloseApproachSearch
     /// refined on the range rate of the states (the <see cref="Propagator.PropagationSolution"/> overloads of
     /// <c>Analyze</c> and <c>AnalyzeAll</c>).
     /// </summary>
-    Polynomial
+    Polynomial,
+
+    /// <summary>
+    /// No search: the encounter was given at its TCA, by the states of its objects there
+    /// (<see cref="CCSDS.CDM.Cdm.ToEncounter"/>, decision 110 of #668, decided by S. Guillet, 2026-11-26).
+    /// </summary>
+    None
 }

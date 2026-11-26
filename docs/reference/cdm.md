@@ -278,6 +278,34 @@ cdm.Save("encounter.cdm.xml");
 var parsed = Cdm.Load("encounter.cdm.xml");
 ```
 
+## Ingest
+
+A CDM read from a provider gives the states of its objects and the encounter it describes (R19 of #668, lot L7):
+
+| Member | Description |
+|--------|-------------|
+| `ToStateVector(CdmObjectRole)` | The state of an object at `TCA` (UTC), about the centre `ORBIT_CENTER` names (the Earth without one): `EME2000` and `GCRF` in `Frame.ICRF`, its covariance the RTN covariance turned on that state (`RotateCovarianceFromRtn`); `ITRF` in `Frame.ITRF93`, its covariance turned on the state in ICRF, then carried into ITRF93 (`ToFrame`). An `ORBIT_CENTER` the library does not identify, an `ITRF` state about another centre than the Earth, a segment without a state or a `REF_FRAME` throw `InvalidOperationException`, a role outside the enumeration `ArgumentOutOfRangeException` |
+| `ToEncounter(combinedHardBodyRadiusMeters)` | The `EncounterCase` at `TCA` from the two states as given, in ICRF, no search (`Search` is `CloseApproachSearch.None`; decision 110 of #668, decided by S. Guillet, 2026-11-26): its Pc is `CollisionProbability.Foster2D` of the two states bit for bit (`FrisbeeMax` when one covariance is absent), its screening window `START_SCREEN_PERIOD` to `STOP_SCREEN_PERIOD` (`TCA` alone without them); the objects are `Spacecraft` of 100 kg on their states with transient NAIF ids, so `EvaluateAvoidance` follows their two-body orbits (`TrajectorySource.TwoBody`). The radius, which a CDM does not give, is finite and above 0, or `ArgumentOutOfRangeException` |
+
+`ToCdm` of such an encounter is not a re-export of the CDM read: the masses, areas and designators it writes are those
+of the transient spacecraft. The dates of the records have a `Time` accessor in UTC beside each `DateTime` one
+(`CdmHeader.CreationDate`, `CdmRelativeMetadataData.Tca`, `StartScreenPeriod`, `StopScreenPeriod`, `ScreenEntryTime`,
+`ScreenExitTime`, `CdmOdParameters.TimeLastObservationStart`, `TimeLastObservationEnd`), a date of unspecified kind taken
+as UTC, as the writer takes it.
+
+```csharp
+using IO.Astrodynamics.CCSDS.CDM;
+using IO.Astrodynamics.OrbitalParameters;
+using IO.Astrodynamics.SSA;
+
+// Inputs: cdm (Cdm)
+StateVector object1 = cdm.ToStateVector(CdmObjectRole.Object1);
+StateVector object2 = cdm.ToStateVector(CdmObjectRole.Object2);
+EncounterCase encounter = cdm.ToEncounter(combinedHardBodyRadiusMeters: 10.0);
+double? pc = CollisionProbability.Foster2D(object1, object2, 10.0); // encounter.ProbabilityOfCollision, bit for bit
+Console.WriteLine(encounter);
+```
+
 ## See Also
 
 - [Conjunction Assessment](conjunction-assessment.md)

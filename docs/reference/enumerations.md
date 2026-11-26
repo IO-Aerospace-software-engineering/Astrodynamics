@@ -118,6 +118,7 @@ Assessment](conjunction-assessment.md#conjunctionassessment-methods)); in the `I
 |-------|-------------|
 | `Sampled` | The range rate sampled over the window and bisected: the `ILocalizable` overloads, the screening, the avoidance options, two trajectories that do not share their observer and frame |
 | `Polynomial` | The minima of the cubic Hermite of the stored steps of two propagations that share their observer and frame, refined on the range rate of the states |
+| `None` | No search: the encounter given at its TCA by the states of its objects (`Cdm.ToEncounter`, decision 110 of #668) |
 
 ## AvoidanceSkipReason
 

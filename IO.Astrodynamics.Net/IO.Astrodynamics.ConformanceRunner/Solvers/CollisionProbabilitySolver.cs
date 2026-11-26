@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using IO.Astrodynamics.CCSDS.CDM;
 using IO.Astrodynamics.ConformanceRunner.Models;
 using IO.Astrodynamics.ConformanceRunner.Utilities;
 using IO.Astrodynamics.Math;
@@ -10,15 +11,16 @@ namespace IO.Astrodynamics.ConformanceRunner.Solvers;
 /// <summary>
 /// The <c>collision_probability</c> category (spec.md section 16.2): the 2D Pc of an encounter given at TCA, or
 /// Frisbee's maximum Pc when one covariance is absent, the sigmas of the encounter plane and whether the covariance was
-/// raised to CARA's clip, by the public conjunction analysis on straight-line trajectories
-/// (<see cref="StraightLineEncounter"/>).
+/// raised to CARA's clip, by the public <see cref="CollisionProbability"/> and the encounter of the CDM that holds the
+/// two states (<see cref="EncounterMessage"/>, <see cref="IO.Astrodynamics.CCSDS.CDM.Cdm.ToEncounter"/>; R19 and
+/// decision 110 of #668).
 /// </summary>
 /// <remarks>
 /// <para>
-/// The Pc is <see cref="CollisionRisk.ProbabilityOfCollision"/>: <c>collision_probability</c> with two covariances,
-/// <c>maximum_collision_probability</c> when the framework took Frisbee's maximum
-/// (<see cref="EncounterQualityFlags.SingleCovarianceMaximumPcUsed"/>); <c>remediated</c> is
-/// <see cref="EncounterQualityFlags.CovarianceRemediated"/>.
+/// The Pc is <see cref="CollisionProbability.Foster2D"/> of the two states (<c>collision_probability</c>), or
+/// <see cref="CollisionProbability.FrisbeeMax"/> when one covariance is absent (<c>maximum_collision_probability</c>);
+/// <c>remediated</c> is <see cref="EncounterQualityFlags.CovarianceRemediated"/> of the encounter, whose Pc is the same
+/// bit for bit.
 /// </para>
 /// <para>
 /// The sigmas are the square roots of the eigenvalues of the framework's encounter-plane covariance
@@ -30,10 +32,6 @@ namespace IO.Astrodynamics.ConformanceRunner.Solvers;
 /// </remarks>
 public class CollisionProbabilitySolver : ICategorySolver
 {
-    // The NAIF ids of the objects of the analysis and of the analysis of the sigmas
-    private const int NaifId = -1601;
-    private const int SigmaNaifId = -1611;
-
     // CARA's clip of an eigenvalue of the encounter-plane covariance: (1e-4 HBR)² (spec.md section 16.2)
     private const double ClipFactor = 1e-4;
 
@@ -44,19 +42,21 @@ public class CollisionProbabilitySolver : ICategorySolver
         var inputs = InputParser.ParseCollisionProbabilityInputs(caseInput.Inputs);
         var tca = EpochParser.Parse(inputs.Tca);
         double hardBodyRadius = UnitConversion.KmToM(inputs.HardBodyRadiusKm);
-        var encounter = StraightLineEncounter.Analyze(tca, inputs.Objects, 1e6, hardBodyRadius, NaifId);
-        var flags = encounter.EncounterState.QualityFlags;
+        var cdm = EncounterMessage.Of(tca, inputs.Objects);
+        var encounter = cdm.ToEncounter(hardBodyRadius);
+        var object1 = cdm.ToStateVector(CdmObjectRole.Object1);
+        var object2 = cdm.ToStateVector(CdmObjectRole.Object2);
+        bool oneAbsent = inputs.Objects.Exists(o => o.CovarianceRtn == null);
         var outputs = new Dictionary<string, object>
         {
-            [flags.HasFlag(EncounterQualityFlags.SingleCovarianceMaximumPcUsed) ? "maximum_collision_probability" : "collision_probability"] =
-                SolverOutput.Of(() => encounter.CollisionRisk.ProbabilityOfCollision ??
-                                      throw new InvalidOperationException($"The framework gives no Pc for this encounter (flags {flags}).")),
-            ["remediated"] = flags.HasFlag(EncounterQualityFlags.CovarianceRemediated)
+            [oneAbsent ? "maximum_collision_probability" : "collision_probability"] = SolverOutput.Of(() =>
+                (oneAbsent ? CollisionProbability.FrisbeeMax(object1, object2, hardBodyRadius) : CollisionProbability.Foster2D(object1, object2, hardBodyRadius)) ??
+                throw new InvalidOperationException($"The framework gives no Pc for this encounter (flags {encounter.EncounterState.QualityFlags}).")),
+            ["remediated"] = encounter.EncounterState.QualityFlags.HasFlag(EncounterQualityFlags.CovarianceRemediated)
         };
 
-        bool oneAbsent = inputs.Objects.Exists(o => o.CovarianceRtn == null);
         var given = oneAbsent
-            ? StraightLineEncounter.Analyze(tca, inputs.Objects, 1e6, hardBodyRadius, SigmaNaifId, absentAsZero: true)
+            ? EncounterMessage.Of(tca, inputs.Objects, absentAsZero: true).ToEncounter(hardBodyRadius)
             : encounter;
         var (major, minor) = Eigenvalues(given.CollisionRisk.ProjectedCovariance);
         double clip = ClipFactor * hardBodyRadius * (ClipFactor * hardBodyRadius);

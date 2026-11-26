@@ -4,7 +4,13 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
+using IO.Astrodynamics.Body;
 using IO.Astrodynamics.CCSDS.Common;
+using IO.Astrodynamics.Frames;
+using IO.Astrodynamics.OrbitalParameters;
+using IO.Astrodynamics.SolarSystemObjects;
+using IO.Astrodynamics.SSA;
+using IO.Astrodynamics.TimeSystem;
 
 namespace IO.Astrodynamics.CCSDS.CDM;
 
@@ -190,6 +196,140 @@ public sealed class Cdm
     /// </summary>
     /// <returns>True when the content holds no error.</returns>
     public bool IsValid() => Validate().IsValid;
+
+    #endregion
+
+    #region Ingest
+
+    /// <summary>
+    /// The state of an object at TCA, with its covariance turned from its RTN frame (R19 of #668, lot L7).
+    /// </summary>
+    /// <param name="role">The object: <see cref="CdmObjectRole.Object1"/> (the first segment) or
+    /// <see cref="CdmObjectRole.Object2"/> (the second).</param>
+    /// <returns>
+    /// The state of the segment at <c>TCA</c> (UTC), about the centre <c>ORBIT_CENTER</c> names (the Earth without one):
+    /// for <c>REF_FRAME</c> <c>EME2000</c> or <c>GCRF</c>, in <see cref="Frame.ICRF"/>, its covariance the RTN covariance
+    /// turned on that state (<see cref="StateVector.RotateCovarianceFromRtn"/>); for <c>ITRF</c>, in
+    /// <see cref="Frame.ITRF93"/>, its covariance the RTN covariance turned on the state in ICRF, then carried into
+    /// ITRF93 (<see cref="StateVector.ToFrame"/>). Without a covariance, the state alone.
+    /// </returns>
+    /// <exception cref="ArgumentOutOfRangeException"><paramref name="role"/> is not a role of the enumeration.</exception>
+    /// <exception cref="InvalidOperationException">The segment holds no state vector (a CDM built by hand: the reader
+    /// refuses one), names no <c>REF_FRAME</c>, or an <c>ORBIT_CENTER</c> the library does not identify, or an
+    /// <c>ITRF</c> state about another centre than the Earth.</exception>
+    public StateVector ToStateVector(CdmObjectRole role)
+    {
+        if (!Enum.IsDefined(role))
+        {
+            throw new ArgumentOutOfRangeException(nameof(role), role, "The role is Object1 or Object2.");
+        }
+
+        var segment = Segments[(int)role];
+        var state = segment.Data?.StateVector ??
+                    throw new InvalidOperationException($"The segment of {role} holds no state vector.");
+        var epoch = RelativeMetadataData.Tca;
+        var observer = OrbitCenter(segment.Metadata?.OrbitCenter, epoch, role);
+        var covarianceRtn = segment.Data.CovarianceMatrix?.StateCovarianceRtn;
+        switch (segment.Metadata?.ReferenceFrame)
+        {
+            case CdmReferenceFrame.Eme2000:
+            case CdmReferenceFrame.Gcrf:
+            {
+                var inertial = new StateVector(state.PositionMeters, state.VelocityMetersPerSecond, observer, epoch, Frame.ICRF);
+                return covarianceRtn is { } rtn
+                    ? new StateVector(state.PositionMeters, state.VelocityMetersPerSecond, observer, epoch, Frame.ICRF,
+                        inertial.RotateCovarianceFromRtn(rtn))
+                    : inertial;
+            }
+            case CdmReferenceFrame.Itrf:
+            {
+                if (observer.NaifId != PlanetsAndMoons.EARTH.NaifId)
+                {
+                    throw new InvalidOperationException(
+                        $"The segment of {role} gives an ITRF state about ORBIT_CENTER {segment.Metadata.OrbitCenter}: ITRF is the frame of the Earth.");
+                }
+
+                var fixedState = new StateVector(state.PositionMeters, state.VelocityMetersPerSecond, observer, epoch, Frame.ITRF93);
+                if (covarianceRtn is not { } rtn)
+                {
+                    return fixedState;
+                }
+
+                var inertial = fixedState.ToFrame(Frame.ICRF);
+                var withCovariance = new StateVector(inertial.Position, inertial.Velocity, observer, epoch, Frame.ICRF,
+                    inertial.RotateCovarianceFromRtn(rtn));
+                return new StateVector(state.PositionMeters, state.VelocityMetersPerSecond, observer, epoch, Frame.ITRF93,
+                    withCovariance.ToFrame(Frame.ITRF93).Covariance);
+            }
+            default:
+                throw new InvalidOperationException($"The segment of {role} names no REF_FRAME.");
+        }
+    }
+
+    /// <summary>
+    /// The encounter this CDM describes, at its TCA from the states of its two objects as given (decision 110 of #668,
+    /// decided by S. Guillet, 2026-11-26): no search, <see cref="EncounterCase.Search"/>
+    /// <see cref="CloseApproachSearch.None"/>.
+    /// </summary>
+    /// <param name="combinedHardBodyRadiusMeters">The radius of the sphere that bounds both objects, in m, finite and above
+    /// 0: a CDM gives none.</param>
+    /// <returns>
+    /// The encounter at <c>TCA</c> of the states of <see cref="ToStateVector"/> (in ICRF), each covariance given at the
+    /// encounter, so its <see cref="EncounterCase.ProbabilityOfCollision"/> is
+    /// <see cref="CollisionProbability.Foster2D"/> of the two states bit for bit, or
+    /// <see cref="CollisionProbability.FrisbeeMax"/> when one covariance is absent. The objects are
+    /// <see cref="Body.Spacecraft.Spacecraft"/> of 100 kg on their states, named by <c>OBJECT_NAME</c> (or the role), with
+    /// transient NAIF ids, object 1 bearing the combined radius; their trajectories are the two-body orbits of those
+    /// states (<see cref="TrajectorySource.TwoBody"/>), which <see cref="ConjunctionAssessment.EvaluateAvoidance"/>
+    /// follows. The screening window is <c>START_SCREEN_PERIOD</c> to <c>STOP_SCREEN_PERIOD</c>, TCA alone without them,
+    /// so an avoidance has its burns within it. <see cref="EncounterCase.ToCdm"/> of the encounter is not a re-export of
+    /// this CDM: the masses, areas and designators it writes are those of the transient spacecraft.
+    /// </returns>
+    /// <exception cref="ArgumentOutOfRangeException">The radius is not finite or not above 0.</exception>
+    /// <exception cref="InvalidOperationException">A segment cannot give its state (<see cref="ToStateVector"/>), or the
+    /// two objects are about two centres.</exception>
+    public EncounterCase ToEncounter(double combinedHardBodyRadiusMeters)
+    {
+        if (!double.IsFinite(combinedHardBodyRadiusMeters) || combinedHardBodyRadiusMeters <= 0.0)
+        {
+            throw new ArgumentOutOfRangeException(nameof(combinedHardBodyRadiusMeters), combinedHardBodyRadiusMeters,
+                "The combined hard-body radius must be finite and above 0.");
+        }
+
+        var object1 = InIcrf(ToStateVector(CdmObjectRole.Object1));
+        var object2 = InIcrf(ToStateVector(CdmObjectRole.Object2));
+        if (object1.Observer.NaifId != object2.Observer.NaifId)
+        {
+            throw new InvalidOperationException(
+                $"The two objects are about two centres, {object1.Observer.Name} and {object2.Observer.Name} (ORBIT_CENTER).");
+        }
+
+        var relative = RelativeMetadataData;
+        var window = relative.StartScreenPeriod is { } start && relative.StopScreenPeriod is { } stop
+            ? new Window(start, stop)
+            : new Window(relative.Tca, relative.Tca);
+        return ConjunctionAssessment.EncounterAt(object1, Segments[0].Metadata?.ObjectName ?? nameof(CdmObjectRole.Object1),
+            object2, Segments[1].Metadata?.ObjectName ?? nameof(CdmObjectRole.Object2), combinedHardBodyRadiusMeters, window);
+    }
+
+    private static StateVector InIcrf(StateVector state) => state.Frame.Equals(Frame.ICRF) ? state : state.ToFrame(Frame.ICRF);
+
+    // The centre of a segment: the Earth without ORBIT_CENTER, otherwise the centre it names
+    private static ILocalizable OrbitCenter(string? orbitCenter, Time epoch, CdmObjectRole role)
+    {
+        if (orbitCenter == null)
+        {
+            return new CelestialBody(PlanetsAndMoons.EARTH, Frame.ICRF, epoch);
+        }
+
+        if (!CcsdsCenterNames.TryGetNaifId(orbitCenter, out _))
+        {
+            throw new InvalidOperationException(
+                $"The ORBIT_CENTER '{orbitCenter}' of {role} is not a barycenter, the Sun, a planet or a moon the library identifies.");
+        }
+
+        return CcsdsCenterNames.Observer(orbitCenter, null!, epoch);
+    }
 
     #endregion
 }

@@ -315,7 +315,14 @@ of `StateTransitionOnly` or with `IncludeInStepControl` `ArgumentException`.
 
 ## Practical Limits
 
-- Collision probability uses a 2D Foster-style encounter-plane method.
+- Collision probability uses a 2D Foster-style encounter-plane method. `CollisionProbability.Foster2D(object1, object2,
+  combinedHardBodyRadiusMeters)` gives it for two states at TCA, each with its covariance, and
+  `CollisionProbability.FrisbeeMax` the maximum Pc of Frisbee when one covariance alone is known, by the cores of the
+  analysis, so the Pc of an encounter at the same states is the same bit for bit (R19 of #668, lot L7): the two states
+  at one instant, in one frame and about one observer (`ArgumentException` naming `object2` otherwise; a pair in another
+  inertial frame converted to ICRF), the radius finite and above 0 (`ArgumentOutOfRangeException`); `Foster2D` null when
+  a covariance is missing, `FrisbeeMax` null without one and `ArgumentException` with both. `Cdm.ToEncounter` builds the
+  encounter of a CDM at its TCA ([CDM](cdm.md#ingest)).
 - The relative state and the covariances at TCA are expressed in the RTN frame of a participant, which a rectilinear
   state (r × v = 0: at rest, at the centre, a radial motion) does not define: `Analyze`, `AnalyzeAll`,
   `EvaluateAvoidance` and the CDM export throw `InvalidOperationException` for a protected or secondary state at TCA

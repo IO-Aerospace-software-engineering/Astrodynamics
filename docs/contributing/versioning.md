@@ -554,6 +554,24 @@ release are listed under **Known limitations**.
   `Search_ReportsTheSearchThatRan_AndTheTrajectoryOfEachParticipant`,
   `TrajectorySource_OfAnSgp4Participant_AndOfABodyReadFromTheKernels`). No result moves. See
   [Conjunction Assessment](../reference/conjunction-assessment.md#encountercase).
+- **The ingest of a CDM and the public probability of collision** (lot L7, R19 of
+  [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668), decided by S. Guillet, 2026-11-19, and decision 110, decided by S. Guillet,
+  2026-11-26): `Cdm.ToStateVector(CdmObjectRole)`, the state of an object at TCA about the centre `ORBIT_CENTER` names
+  (the Earth without one), `EME2000` and `GCRF` in ICRF and `ITRF` in ITRF93, its covariance turned from RTN;
+  `Cdm.ToEncounter(combinedHardBodyRadiusMeters)`, the `EncounterCase` at the TCA of the CDM from its two states as
+  given, no search (`CloseApproachSearch.None`), its screening window the CDM's screening period, its objects transient
+  spacecraft whose avoidance follows their two-body orbits; the static `CollisionProbability.Foster2D` and `FrisbeeMax`
+  of two states at TCA, by the cores of the analysis, so `ToEncounter`'s Pc is `Foster2D`'s bit for bit; and a `Time`
+  accessor in UTC beside each `DateTime` of the CDM records (`CdmHeader.CreationDate`, `CdmRelativeMetadataData.Tca`,
+  `StartScreenPeriod`, `StopScreenPeriod`, `ScreenEntryTime`, `ScreenExitTime`, `CdmOdParameters.TimeLastObservationStart`,
+  `TimeLastObservationEnd`) (`CdmIngestTests`, `ConjunctionAssessmentTests.Foster2DAndFrisbeeMax_DesignedEncounters_AreTheInternalPcAndMatchTheExactPc`,
+  `ToEncounter_DesignedEncounters_IsTheEncounterAtTheTcaOfTheCdm_ItsPcFoster2D`). The conformance runner reads its
+  encounters through them, its `StraightLineEncounter` (the analysis on straight-line trajectories over TCA ± 10 s, whose
+  TCA and states left the given ones by noise) removed: on `collision_probability` 001 to 004 the Pc moves at noise level,
+  closer to the exact Pc (relative error against the golden 1.6e-11, 4.9e-12, 7.4e-11, 3.0e-12 before, 1.1e-11,
+  4.8e-13, 6.7e-12, 2.8e-13 after), the encounter-plane sigmas by up to 2.0e-15 relative, and on `cdm` 007 (export) the
+  Pc by 1.3e-15 relative and the covariances read back within 1.3e-14 km² of the golden (1.9e-14 before); every status PASS, `cdm` decode and `to_inertial`
+  bit for bit. See [CDM](../reference/cdm.md#ingest).
 
 **Fixed**
 
