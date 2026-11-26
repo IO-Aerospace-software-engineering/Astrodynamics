@@ -157,14 +157,15 @@ public class ObserverWindowSearchTests
     /// The move of the occultation of a kernel site observer (choice 4 and IC-10 of lot L6 of #668): the library's search,
     /// where the former <c>Site.FindWindowsOnOccultationConstraint</c> ran <c>gfoclt_c</c> (the raw search of
     /// <see cref="SpiceAPI"/> with the site as observer), LRO behind the Moon from DSS-13: the same windows, each edge within
-    /// 5.0e-7 s geometric and up to 6.2e-4 s with light time (measured on Linux, 2026-11-25: None 5.0e-7 s, LT 3.7e-4 s,
-    /// CN 1.2e-4 s, XLT 6.2e-4 s; the light-time difference is #828). The bounds are twice those.
+    /// 5.0e-7 s geometric and up to 6.2e-4 s with light time (measured by the CI of #832 at 222ed4be, 2026-11-26, identical on
+    /// Linux x64, Windows x64 and macOS arm64: None 5.00e-7 s, LT 3.74e-4 s, CN 1.24e-4 s, XLT 6.22e-4 s; the light-time
+    /// difference is #828). The bounds are twice those, rounded up at the second digit.
     /// </summary>
     [Theory]
     [InlineData(Aberration.None, 1.0e-6)]
-    [InlineData(Aberration.LT, 7.4e-4)]
-    [InlineData(Aberration.CN, 2.4e-4)]
-    [InlineData(Aberration.XLT, 1.24e-3)]
+    [InlineData(Aberration.LT, 7.5e-4)]
+    [InlineData(Aberration.CN, 2.5e-4)]
+    [InlineData(Aberration.XLT, 1.3e-3)]
     public void Occultation_SiteObserver_MovesFromGfocltWithinItsMeasure(Aberration aberration, double bound)
     {
         var lro = Lro;

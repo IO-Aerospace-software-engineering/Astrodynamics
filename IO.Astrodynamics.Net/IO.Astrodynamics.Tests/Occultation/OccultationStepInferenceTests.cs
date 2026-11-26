@@ -28,8 +28,8 @@ namespace IO.Astrodynamics.Tests.Occultation;
 public class OccultationStepInferenceTests
 {
     // The 16 eclipses of a LEO day at period/16 and at period/2 against a 1 min step, the edges of the three searches at
-    // 1 µs: twice the worst value, 2.000e-7 s on Linux x64 (2026-11-25; Windows x64 and macOS arm64 to be read from the CI
-    // logs, the MEASURE line)
+    // 1 µs: twice the worst value, 2.000e-7 s, identical on Linux x64, Windows x64 and macOS arm64 (CI of #832 at 222ed4be,
+    // 2026-11-26, the MEASURE line)
     private const double EdgeThreshold = 4.0e-7;
 
     private static readonly TimeSystem.Time Start = new(2026, 3, 20, TimeScale.TDB);
