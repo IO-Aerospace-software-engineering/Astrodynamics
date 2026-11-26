@@ -341,7 +341,7 @@ Represents a natural celestial body (planet, moon, star).
 | `SideralRotationPeriod(Time epoch)` | Get sidereal rotation period |
 | `TrueSolarDay(Time epoch)` | Get true solar day duration |
 | `GeosynchronousOrbit(double longitude, double latitude, Time epoch)` | Compute geosynchronous orbit |
-| `HelioSynchronousOrbit(double sma, double ecc, Time epochAtDescendingNode)` | Compute helio-synchronous orbit |
+| `HelioSynchronousOrbit(double sma, double ecc, Time descendingNodeEpoch)` | Compute helio-synchronous orbit |
 | `FindDistanceWindows(...)` | Find the windows of the distance of a target seen from this item, the observer (`WindowSearches`) |
 | `FindOccultationWindows(...)` | Find occultation/eclipse windows seen from this item, the observer (`WindowSearches`) |
 | `AngularSeparation(Time epoch, ILocalizable target1, ILocalizable target2, Aberration aberration)` | Compute angular separation |
@@ -443,7 +443,7 @@ Cartesian position and velocity state.
 | `ToPlanetocentric()` | Planetocentric coordinates in the body-fixed frame of the observer, a `CelestialBody` (11.0.0) |
 | `ToPlanetodetic()` | Geodetic coordinates on the ellipsoid of the observer, a `CelestialBody`, in one call (11.0.0) |
 | `Inverse()` | Invert position and velocity |
-| `ToTLE(Configuration config)` | Convert to TLE format (`IO.Astrodynamics.OrbitalParameters.TLE.Configuration`); an orbit about the Earth only, `InvalidOperationException` otherwise (#607); a null or blank `CosparId` writes blank columns 10-17 (#604) |
+| `ToTle(string name, int noradId, string cosparId, TleFitOptions options = null)` | Convert to TLE format, the other fields and the fit in `TleFitOptions` (decision 113 of #668); an orbit about the Earth only, `InvalidOperationException` otherwise (#607); a null or blank `cosparId` writes blank columns 10-17 (#604) |
 
 A rectilinear state (r × v = 0: a radial motion, a zero velocity, the centre) or a non-finite one has no orbit plane and
 no RTN frame: the members that read the plane (inclination, node, argument of periapsis, node vectors, longitudes, the
@@ -490,12 +490,6 @@ Classical Keplerian orbital elements (osculating or mean).
 
 | Property | Description |
 |----------|-------------|
-| `A` | Semi-major axis (m) |
-| `E` | Eccentricity |
-| `I` | Inclination (rad) |
-| `RAAN` | Right ascension of ascending node (rad) |
-| `AOP` | Argument of periapsis (rad) |
-| `M` | Mean anomaly (rad) |
 | `ElementsType` | Type indicator (Osculating or Mean) |
 
 | Method | Description |
@@ -578,9 +572,9 @@ The classical equinoctial set (GMAT's EquinoctialH, K, P and Q) is h = G, k = F,
 | `ArgumentOfPeriapsis()` | Argument of periapsis (rad) |
 | `ToStateVector()` | Convert to state vector |
 | `ToKeplerianElements()` | Convert to Keplerian elements |
-| `EquinoctialEx()` / `EquinoctialEy()` | Eccentricity components, `F` / `G` |
-| `Hx()` / `Hy()` | Inclination components, `H` / `K` |
-| `Lv()` | True longitude (rad), `L0` |
+| `F` / `G` | Eccentricity components (properties) |
+| `H` / `K` | Inclination components (properties) |
+| `L0` | True longitude (rad, property) |
 
 ```csharp
 var sv = new StateVector(
@@ -589,9 +583,9 @@ var sv = new StateVector(
 var equinoctial = sv.ToEquinoctial();
 
 // Access equinoctial components
-Console.WriteLine($"Ex: {equinoctial.EquinoctialEx()}");
-Console.WriteLine($"Ey: {equinoctial.EquinoctialEy()}");
-Console.WriteLine($"Lv: {equinoctial.Lv() * Constants.Rad2Deg}°");
+Console.WriteLine($"Ex: {equinoctial.F}");
+Console.WriteLine($"Ey: {equinoctial.G}");
+Console.WriteLine($"Lv: {equinoctial.L0 * Constants.Rad2Deg}°");
 ```
 
 ---
@@ -672,13 +666,10 @@ var epoch = new Time(2024, 1, 1, TimeScale.TDB);
 var state = new StateVector(
     new Vector3(6800000.0, 0.0, 0.0), new Vector3(0.0, 5413.8, 5413.8),
     PlanetsAndMoons.EARTH_BODY, epoch, Frame.ICRF);
-// The Configuration of IO.Astrodynamics.OrbitalParameters.TLE, not IO.Astrodynamics.Configuration
-var config = new IO.Astrodynamics.OrbitalParameters.TLE.Configuration(99999, "MY_SAT", "24001A");
-var newTle = state.ToTLE(config);
+var newTle = state.ToTle("MY_SAT", 99999, "24001A");
 
 // NORAD catalog numbers above 99999 use the Alpha-5 convention (up to 339999)
-var alpha5 = new IO.Astrodynamics.OrbitalParameters.TLE.Configuration(275544, "MY_SAT", "24001A");
-var alpha5Tle = state.ToTLE(alpha5);
+var alpha5Tle = state.ToTle("MY_SAT", 275544, "24001A");
 Console.WriteLine(alpha5Tle.Line1.Substring(2, 5)); // T5544
 Console.WriteLine(alpha5Tle.NoradCatalogId);        // 275544
 ```
@@ -871,7 +862,7 @@ OMM uses full COSPAR ID format ("1998-067A") while TLE uses abbreviated format (
 | Full COSPAR ID | 1998-067A | OMM ObjectId |
 | TLE COSPAR ID | 98067A | TLE Line 1 |
 | No designator | `UNKNOWN` | OMM ObjectId of a TLE whose columns 10-17 are blank (#604) |
-| No designator | 8 blanks | TLE Line 1 (`TLE.Create` with a null or blank `cosparId`, `ToTLE` with a null or blank `Configuration.CosparId`) |
+| No designator | 8 blanks | TLE Line 1 (`TLE.Create` with a null or blank `cosparId`, `ToTle` with a null or blank `cosparId`) |
 
 ```csharp
 // OMM automatically converts COSPAR ID format during ToTle()
@@ -1010,7 +1001,7 @@ var covariance = new CovarianceMatrix(
 // Maneuver parameters (optional) - units: s, kg, km/s
 var maneuver = new OpmManeuverParameters(
     manEpochIgnition: epoch.AddHours(2),
-    manDuration: 120.0,        // seconds
+    manDurationSeconds: 120.0,        // seconds
     manDeltaMass: -30.0,       // kg (negative = expelled)
     manRefFrame: "RSW",
     manDv1: 0.05,              // km/s (radial)
@@ -1066,7 +1057,7 @@ foreach (var maneuver in spacecraft.ExecutedManeuvers)
             comments: new[] { "Orbit raising maneuver" });
 
         Console.WriteLine($"Epoch: {opmManeuver.ManEpochIgnition}");
-        Console.WriteLine($"Duration: {opmManeuver.ManDuration} s");
+        Console.WriteLine($"Duration: {opmManeuver.ManDurationSeconds} s");
         Console.WriteLine($"Delta-V: {opmManeuver.DeltaVMagnitude:F6} km/s");
         Console.WriteLine($"Delta-Mass: {opmManeuver.ManDeltaMass} kg");
     }
@@ -1133,7 +1124,7 @@ Reference frame for spatial transformations.
 | Method | Description |
 |--------|-------------|
 | `ToFrame(Frame target, Time epoch)` | Get transformation to another frame |
-| `GetStateOrientationToICRF(Time date)` | Get orientation relative to ICRF |
+| `GetStateOrientationToICRF(Time epoch)` | Get orientation relative to ICRF |
 
 ```csharp
 // Use predefined frames
@@ -1185,7 +1176,7 @@ Ground-based observation site.
 | `FindOccultationWindows(...)` | Find occultation windows seen from the site (`WindowSearches`) |
 | `FindIlluminationWindows(...)` | Find the windows of the incidence angle of a source; the emission and phase angles need an observer and throw (#682) |
 | `FindDayWindows(Window searchWindow, double twilight)` | Find daylight windows |
-| `IlluminationIncidence(Time date, ILocalizable source, Aberration aberration)` | Get solar incidence angle |
+| `IlluminationIncidence(Time epoch, ILocalizable source, Aberration aberration)` | Get solar incidence angle |
 | `WriteFrame(FileInfo outputFile)` | Write site frame kernel: the frame of its coordinates, or for a site from the kernels whose frame id the loaded kernels define, that kernel frame under its kernel name (#690) |
 
 ```csharp
@@ -1480,10 +1471,10 @@ Base class for spacecraft instruments.
 
 | Method | Description |
 |--------|-------------|
-| `IsInFOV(Time date, ILocalizable target, Aberration aberration)` | Whether the target's center is in the field: CSPICE's `fovtrg` with `POINT`; throws for a managed spacecraft without attitude (#682) |
+| `IsInFOV(Time epoch, ILocalizable target, Aberration aberration)` | Whether the target's center is in the field: CSPICE's `fovtrg` with `POINT`; throws for a managed spacecraft without attitude (#682) |
 | `FindFieldOfViewWindows(...)` | The windows of CSPICE's `gftfov`, labelled in the scale of the search window's start: the target as a point or as its ellipsoid, every field shape, on both paths (see `docs/reference/spacecraft.md`, "Field-of-view search"); throws for a managed spacecraft without attitude, never propagated, from a TLE or propagated by `TLEPropagator`, until `AddStateOrientationToICRF` gives it one (#682) |
 | `GetBoresightInSpacecraftFrame()` | Get boresight in spacecraft frame |
-| `GetBoresightInICRFFrame(Time date)` | Get boresight in ICRF |
+| `GetBoresightInICRFFrame(Time epoch)` | Get boresight in ICRF |
 
 ---
 
@@ -1644,8 +1635,7 @@ Numerical orbit propagator using a segment-based architecture with event-driven 
 | Constructor | Description |
 |------------|-------------|
 | `CentralBodyPropagator(Window window, Spacecraft spacecraft, PropagationOptions options = null)` | Create propagator with auto force-building from the settings of `options` (RK7(8) at 1e-9 when given none; R06 and R07 of #668) |
-| `CentralBodyPropagator(Window window, Spacecraft spacecraft, IIntegrator integrator, TimeSpan step)` | Create propagator with custom integrator (forces pre-configured) |
-| `CentralBodyPropagator(Window window, Spacecraft spacecraft, IIntegrator integrator, TimeSpan step, CovariancePropagationOptions covariancePropagation)` | The same, with the state transition matrix, the sensitivity to Cd and Cr and the covariance propagated with the state (RK7(8) only; null for off) |
+| `CentralBodyPropagator(Window window, Spacecraft spacecraft, IIntegrator integrator, TimeSpan step, CovariancePropagationOptions options = null)` | Create propagator with custom integrator (forces pre-configured); with `options`, the state transition matrix, the sensitivity to Cd and Cr and the covariance propagated with the state (RK7(8) only; null for off) |
 
 The constructors of flags (bodies, drag, SRP, with or without an integrator) were removed in 11.0.0 (R07 of #668): their settings are those of `PropagationOptions`, a call without an integrator `new VVIntegratorOptions { Step = step }` with `OutputStep = step`, bit for bit.
 
@@ -2139,7 +2129,7 @@ Lagrange interpolation.
 | Method | Description |
 |--------|-------------|
 | `Interpolate((double x, double y)[] data, double idx)` | Interpolate value |
-| `Interpolate(StateVector[] stateVectors, Time date, int k)` | Interpolate state vector |
+| `Interpolate(StateVector[] stateVectors, Time epoch, int k)` | Interpolate state vector |
 
 ---
 
@@ -2182,8 +2172,8 @@ In-memory data provider for testing.
 | Method | Description |
 |--------|-------------|
 | `AddCelestialBodyInfo(params CelestialBodyInfo[] celestialBodyInfos)` | Add the information of bodies (NAIF id, name, radii, GM, frame), a `CelestialBodyInfo` since 11.0.0 (the interop struct, now internal, `IO.Astrodynamics.DTO.CelestialBody` before) |
-| `AddStateVector(int naifId, Time date, StateVector sv)` | Add state vector |
-| `AddStateOrientationToICRF(Frame frame, Time date, StateOrientation orientation)` | Add orientation; `ArgumentException` (`frame`) for ICRF, GCRF, TEME, CIRS and TIRS, which the provider defines and never reads from stored entries (#744) |
+| `AddStateVector(int naifId, Time epoch, StateVector sv)` | Add state vector |
+| `AddStateOrientationToICRF(Frame frame, Time epoch, StateOrientation orientation)` | Add orientation; `ArgumentException` (`frame`) for ICRF, GCRF, TEME, CIRS and TIRS, which the provider defines and never reads from stored entries (#744) |
 
 ```csharp
 // epoch: Time; earthState: a StateVector of the Earth

@@ -373,7 +373,7 @@ public class TimeArgumentTests
         Assert.Equal(2, solution.Segments.Count);
         var before = solution.Segments[0];
         var after = solution.Segments[1];
-        double eventTime = rk78 ? before.EventTime!.Value : before.Duration;
+        double eventTime = rk78 ? before.EventTime!.Value : before.DurationSeconds;
         double between = PropagationTimeArgument.Tt.SecondsBetween(before.BaseEpoch, after.BaseEpoch);
         _output.WriteLine($"{(rk78 ? "RK7(8)" : "Velocity-Verlet")}: event at {eventTime:R} s, bases {between:R} s " +
                           $"apart, {between - eventTime:E3} s");

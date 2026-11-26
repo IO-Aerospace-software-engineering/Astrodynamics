@@ -283,8 +283,7 @@ public class TLETests
     {
         var epoch = new TimeSystem.Time(new DateTime(2024, 1, 1), TimeScale.UTC);
         var sv = new StateVector(new Vector3(6800000.0, 0.0, 0.0), new Vector3(0.0, 8000.0, 0.0), TestHelpers.EarthAtJ2000, epoch, Frames.Frame.ICRF);
-        var config = new Astrodynamics.OrbitalParameters.TLE.Configuration(25666, "TestSatellite", "98067A");
-        var tle = sv.ToTLE(config);
+        var tle = sv.ToTle("TestSatellite", 25666, "98067A");
         Assert.NotNull(tle);
         Assert.Equal("TestSatellite", tle.Name);
         var computedSV = tle.ToStateVector().ToFrame(Frames.Frame.ICRF).ToStateVector();
@@ -311,8 +310,8 @@ public class TLETests
         var sv = new StateVector(new Vector3(5465479.168061836, -4037598.9299125164, 3.8812307310800365), // Position vector (X, Y, Z)
             new Vector3(2821.2352501830983, 3825.849951628489, 6009.392701926987), TestHelpers.EarthAtJ2000, epoch, Frames.Frame.ICRF);
         // BSTAR " 21103-3" = 0.21103 × 10^-3 = 0.00021103
-        var config = new Astrodynamics.OrbitalParameters.TLE.Configuration(25666, "TestSatellite", "98067A", BstarDragTerm: 0.00021103);
-        var tle = sv.ToTLE(config);
+        var config = new IO.Astrodynamics.OrbitalParameters.TLE.TleFitOptions { BStar = 0.00021103 };
+        var tle = sv.ToTle("TestSatellite", 25666, "98067A", config);
         Assert.NotNull(tle);
         Assert.Equal("TestSatellite", tle.Name);
         var computedSV = tle.ToStateVector().ToFrame(Frames.Frame.ICRF).ToStateVector();
@@ -706,16 +705,11 @@ public class TLETests
 
 // Configure the TLE parameters
         // BSTAR " 21103-3" = 0.21103 × 10^-3 = 0.00021103
-        var config = new IO.Astrodynamics.OrbitalParameters.TLE.Configuration(
-            25544, // NORAD ID
-            "ISS (ZARYA)", // Satellite name
-            "98067A", // COSPAR ID
-            BstarDragTerm: 0.00021103 // B* drag term
-        );
+        var config = new IO.Astrodynamics.OrbitalParameters.TLE.TleFitOptions { BStar = 0.00021103 };
 
 // Convert the state vector to a TLE
         var sw = Stopwatch.StartNew();
-        var tle = sv.ToTLE(config);
+        var tle = sv.ToTle("ISS (ZARYA)", 25544, "98067A", config);
         sw.Stop();
         _testOutputHelper.WriteLine($"TLE fitting took: {sw.ElapsedMilliseconds} ms");
 
@@ -752,8 +746,8 @@ public class TLETests
 
         // Create modelled TLE from the osculating state at t0 with same B* as Space-Track TLE
         // BSTAR " 10270-3" = 0.10270 × 10^-3 = 0.0001027
-        var tleConfig = new IO.Astrodynamics.OrbitalParameters.TLE.Configuration(25544, "ISS (ZARYA) MODEL", "98067A", BstarDragTerm: 0.0001027);
-        var modelledTLE = osculatingState.ToTLE(tleConfig);
+        var tleConfig = new IO.Astrodynamics.OrbitalParameters.TLE.TleFitOptions { BStar = 0.0001027 };
+        var modelledTLE = osculatingState.ToTle("ISS (ZARYA) MODEL", 25544, "98067A", tleConfig);
 
         // Update modelled TLE B* to match Space-Track TLE (this requires manual setting)
         // For this test, we'll work with what we have since B* setting might not be directly accessible
@@ -999,13 +993,13 @@ public class TLETests
         Assert.Equal(OrbitalElementsType.Mean, meanKep.ElementsType);
 
         // Verify angular elements are converted correctly (degrees to radians)
-        Assert.Equal(inclination * Astrodynamics.Constants.Deg2Rad, meanKep.I, 10);
-        Assert.Equal(raan * Astrodynamics.Constants.Deg2Rad, meanKep.RAAN, 10);
-        Assert.Equal(argumentOfPeriapsis * Astrodynamics.Constants.Deg2Rad, meanKep.AOP, 10);
-        Assert.Equal(meanAnomaly * Astrodynamics.Constants.Deg2Rad, meanKep.M, 10);
+        Assert.Equal(inclination * Astrodynamics.Constants.Deg2Rad, meanKep.Inclination(), 10);
+        Assert.Equal(raan * Astrodynamics.Constants.Deg2Rad, meanKep.AscendingNode(), 10);
+        Assert.Equal(argumentOfPeriapsis * Astrodynamics.Constants.Deg2Rad, meanKep.ArgumentOfPeriapsis(), 10);
+        Assert.Equal(meanAnomaly * Astrodynamics.Constants.Deg2Rad, meanKep.MeanAnomaly(), 10);
 
         // Verify eccentricity is preserved
-        Assert.Equal(eccentricity, meanKep.E, 10);
+        Assert.Equal(eccentricity, meanKep.Eccentricity(), 10);
 
         // Verify mean motion is preserved (convert back to rev/day)
         double meanMotionRadPerSec = meanKep.MeanMotion();

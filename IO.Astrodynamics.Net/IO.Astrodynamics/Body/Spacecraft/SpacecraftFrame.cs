@@ -91,58 +91,58 @@ public class SpacecraftFrame : Frame
     private protected override bool ReadsOrientationCache => false;
 
     /// <summary>
-    /// The rotation from the spacecraft frame to ICRF at <paramref name="date"/>. For a managed spacecraft: the identity of
+    /// The rotation from the spacecraft frame to ICRF at <paramref name="epoch"/>. For a managed spacecraft: the identity of
     /// ICRF before any propagation; the first entry before the record and the last after it; the interpolation of
     /// <see cref="SpacecraftFrame"/>'s remarks inside. The angular velocity follows <see cref="Frame.GetStateOrientationToICRF"/>:
     /// that of ICRF relative to the spacecraft, in the spacecraft frame.
     /// </summary>
-    public override StateOrientation GetStateOrientationToICRF(Time date)
+    public override StateOrientation GetStateOrientationToICRF(Time epoch)
     {
         // Kernel-backed spacecraft: SPICE at each call (requires FK+CK kernels loaded), nothing stored
         if (Spacecraft.IsSpiceBacked)
-            return ReadFromProvider(_dataProvider, date);
+            return ReadFromProvider(_dataProvider, epoch);
 
         lock (_recordLock)
         {
             if (_record.Count == 0)
             {
-                return new StateOrientation(Quaternion.Identity, Vector3.Zero, date, this);
+                return new StateOrientation(Quaternion.Identity, Vector3.Zero, epoch, this);
             }
 
-            int index = Find(date);
+            int index = Find(epoch);
             if (index >= 0)
             {
                 return EntryAt(index);
             }
 
-            // The entry before the date, ~index - 1, and the one after, ~index; outside the record, the first or the last held
+            // The entry before the epoch, ~index - 1, and the one after, ~index; outside the record, the first or the last held
             int next = ~index;
             if (next == 0)
             {
-                return At(_record[0].Orientation, date);
+                return At(_record[0].Orientation, epoch);
             }
 
             if (next == _record.Count)
             {
-                return At(_record[^1].Orientation, date);
+                return At(_record[^1].Orientation, epoch);
             }
 
             var before = _record[next - 1];
             var after = _record[next];
-            double fromBefore = (date - before.Orientation.Epoch).TotalSeconds;
+            double fromBefore = (epoch - before.Orientation.Epoch).TotalSeconds;
             double span = (after.Orientation.Epoch - before.Orientation.Epoch).TotalSeconds;
             if (Interpolates(before, after) || before.Orientation.Rotation == after.Orientation.Rotation)
             {
                 double fraction = fromBefore / span;
                 var (rotation, _) = Slerp(before.Orientation.Rotation, after.Orientation.Rotation, fraction, span);
-                return WithRate(rotation, NodeRate(next - 1) * (1.0 - fraction) + NodeRate(next) * fraction, date);
+                return WithRate(rotation, NodeRate(next - 1) * (1.0 - fraction) + NodeRate(next) * fraction, epoch);
             }
 
             // A discrete change: the earlier entry held; the rate of the CK, from the rate of the earlier record to zero at
             // the record DiscreteChangeLead before the change
             double hold = span - DiscreteChangeLead;
             var rate = fromBefore < hold ? NodeRate(next - 1) * (1.0 - fromBefore / hold) : Vector3.Zero;
-            return WithRate(before.Orientation.Rotation, rate, date);
+            return WithRate(before.Orientation.Rotation, rate, epoch);
         }
     }
 

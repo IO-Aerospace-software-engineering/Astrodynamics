@@ -107,7 +107,7 @@ public class CirsFrameTests
     [Fact]
     public void CirsAngularVelocityMatchesFreshRecomputationOverOneSecond()
     {
-        // The angular velocity follows the SPICE convention of the frames, not the one of StateOrientation.AtDate.
+        // The angular velocity follows the SPICE convention of the frames, not the one of StateOrientation.AtEpoch.
         var cirs = new CirsFrame();
         var epoch = new TimeSystem_Time(2024, 1, 1, 12, 0, 0, TimeScale.TDB);
         var propagated = TestHelpers.RotateWithFrameAngularVelocity(cirs.GetStateOrientationToICRF(epoch), 1.0);

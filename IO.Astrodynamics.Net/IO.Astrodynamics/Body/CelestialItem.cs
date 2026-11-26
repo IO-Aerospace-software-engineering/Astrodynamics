@@ -24,7 +24,7 @@ public abstract class CelestialItem : ILocalizable, IEquatable<CelestialItem>
     /// <see cref="PlanetsAndMoons"/> or <see cref="Stars"/> reads through <see cref="ItemProvider"/> instead: the provider
     /// it read its data from, or the global provider of the time of the read until its data are read.
     /// </summary>
-    protected readonly IDataProvider _dataProvider;
+    private protected readonly IDataProvider _dataProvider;
 
     /// <summary>
     /// The provider the item reads through: <see cref="_dataProvider"/> for an item built by a constructor; for a static
@@ -35,8 +35,8 @@ public abstract class CelestialItem : ILocalizable, IEquatable<CelestialItem>
     private protected IDataProvider ItemProvider =>
         _deferred == null ? _dataProvider : Volatile.Read(ref _resolved)?.Provider ?? Configuration.Instance.DataProvider;
 
-    protected const int TITLE_WIDTH = 32;
-    protected const int VALUE_WIDTH = 32;
+    private protected const int TITLE_WIDTH = 32;
+    private protected const int VALUE_WIDTH = 32;
 
     /// <summary>
     /// Gets the NAIF ID of the celestial item.

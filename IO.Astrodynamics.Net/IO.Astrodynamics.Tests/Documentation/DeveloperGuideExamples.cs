@@ -281,9 +281,9 @@ internal static class DeveloperGuideExamples
         var equinoctial = sv.ToEquinoctial();
 
         // Access equinoctial components
-        Console.WriteLine($"Ex: {equinoctial.EquinoctialEx()}");
-        Console.WriteLine($"Ey: {equinoctial.EquinoctialEy()}");
-        Console.WriteLine($"Lv: {equinoctial.Lv() * Constants.Rad2Deg}°");
+        Console.WriteLine($"Ex: {equinoctial.F}");
+        Console.WriteLine($"Ey: {equinoctial.G}");
+        Console.WriteLine($"Lv: {equinoctial.L0 * Constants.Rad2Deg}°");
         #endregion
     }
 
@@ -320,13 +320,10 @@ internal static class DeveloperGuideExamples
         var state = new StateVector(
             new Vector3(6800000.0, 0.0, 0.0), new Vector3(0.0, 5413.8, 5413.8),
             PlanetsAndMoons.EARTH_BODY, epoch, Frame.ICRF);
-        // The Configuration of IO.Astrodynamics.OrbitalParameters.TLE, not IO.Astrodynamics.Configuration
-        var config = new IO.Astrodynamics.OrbitalParameters.TLE.Configuration(99999, "MY_SAT", "24001A");
-        var newTle = state.ToTLE(config);
+        var newTle = state.ToTle("MY_SAT", 99999, "24001A");
 
         // NORAD catalog numbers above 99999 use the Alpha-5 convention (up to 339999)
-        var alpha5 = new IO.Astrodynamics.OrbitalParameters.TLE.Configuration(275544, "MY_SAT", "24001A");
-        var alpha5Tle = state.ToTLE(alpha5);
+        var alpha5Tle = state.ToTle("MY_SAT", 275544, "24001A");
         Console.WriteLine(alpha5Tle.Line1.Substring(2, 5)); // T5544
         Console.WriteLine(alpha5Tle.NoradCatalogId);        // 275544
         #endregion
@@ -560,7 +557,7 @@ internal static class DeveloperGuideExamples
         // Maneuver parameters (optional) - units: s, kg, km/s
         var maneuver = new OpmManeuverParameters(
             manEpochIgnition: epoch.AddHours(2),
-            manDuration: 120.0,        // seconds
+            manDurationSeconds: 120.0,        // seconds
             manDeltaMass: -30.0,       // kg (negative = expelled)
             manRefFrame: "RSW",
             manDv1: 0.05,              // km/s (radial)
@@ -608,7 +605,7 @@ internal static class DeveloperGuideExamples
                     comments: new[] { "Orbit raising maneuver" });
 
                 Console.WriteLine($"Epoch: {opmManeuver.ManEpochIgnition}");
-                Console.WriteLine($"Duration: {opmManeuver.ManDuration} s");
+                Console.WriteLine($"Duration: {opmManeuver.ManDurationSeconds} s");
                 Console.WriteLine($"Delta-V: {opmManeuver.DeltaVMagnitude:F6} km/s");
                 Console.WriteLine($"Delta-Mass: {opmManeuver.ManDeltaMass} kg");
             }

@@ -518,8 +518,8 @@ namespace IO.Astrodynamics.Tests.CCSDS.OPM
 
             Assert.True(loaded.HasManeuvers);
             Assert.Single(loaded.Data.Maneuvers);
-            Assert.Equal(original.Data.Maneuvers[0].ManDuration,
-                loaded.Data.Maneuvers[0].ManDuration, 3);
+            Assert.Equal(original.Data.Maneuvers[0].ManDurationSeconds,
+                loaded.Data.Maneuvers[0].ManDurationSeconds, 3);
         }
 
         #endregion
@@ -582,7 +582,7 @@ namespace IO.Astrodynamics.Tests.CCSDS.OPM
             // Verify maneuvers
             Assert.True(opm.HasManeuvers);
             Assert.Equal(2, opm.Data.Maneuvers.Count);
-            Assert.Equal(180.0, opm.Data.Maneuvers[0].ManDuration, 1);
+            Assert.Equal(180.0, opm.Data.Maneuvers[0].ManDurationSeconds, 1);
             Assert.Equal(-25.0, opm.Data.Maneuvers[0].ManDeltaMass, 1);
             Assert.Equal(0.05, opm.Data.Maneuvers[0].ManDv1, 2);
         }

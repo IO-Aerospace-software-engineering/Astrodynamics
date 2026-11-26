@@ -2060,7 +2060,7 @@ public static class ConjunctionAssessment
         Time intervalStart,
         double intervalDurationSeconds)
     {
-        double stepSize = denseStep.Step.StepSize;
+        double stepSize = denseStep.Step.StepSizeSeconds;
         // In the seconds of the time argument from the start of the step (#501); the scale, intervalDurationSeconds, is
         // in seconds of the labels, which differ from TT seconds by 3.4e-10 at most
         double intervalOffsetSeconds = denseStep.TimeArgument.SecondsIntoStep(denseStep.SegmentBaseEpoch,
@@ -3319,8 +3319,8 @@ public static class ConjunctionAssessment
     private static bool TryStepEpochs(PropagationSolution trajectory, PropagationSegment segment, in AcceptedStep step,
         out Time stepStart, out Time stepEnd)
     {
-        (stepStart, stepEnd) = trajectory.TimeArgument.StepEpochs(segment.BaseEpoch, step.CumulativeTime, step.StepSize);
-        if (segment.EventTime is not { } eventTime || eventTime >= step.CumulativeTime + step.StepSize)
+        (stepStart, stepEnd) = trajectory.TimeArgument.StepEpochs(segment.BaseEpoch, step.CumulativeTime, step.StepSizeSeconds);
+        if (segment.EventTime is not { } eventTime || eventTime >= step.CumulativeTime + step.StepSizeSeconds)
         {
             return true;
         }

@@ -137,7 +137,7 @@ internal static class CliOutput
     internal static Field[] Keplerian(KeplerianElements ke) =>
     [
         new("epoch", ke.Epoch.ToString()), new("frame", ke.Frame.Name),
-        new("a_m", ke.A), new("e", ke.E), new("i_rad", ke.I), new("raan_rad", ke.RAAN), new("aop_rad", ke.AOP), new("m_rad", ke.M)
+        new("a_m", ke.SemiMajorAxis()), new("e", ke.Eccentricity()), new("i_rad", ke.Inclination()), new("raan_rad", ke.AscendingNode()), new("aop_rad", ke.ArgumentOfPeriapsis()), new("m_rad", ke.MeanAnomaly())
     ];
 
     internal static readonly Field[] EquinoctialHeader = Header("epoch", "frame", "p_m", "f", "g", "h", "k", "l0_rad");

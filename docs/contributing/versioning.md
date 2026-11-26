@@ -89,7 +89,9 @@ on the protected `Spacecraft` with one `ConjunctionAnalysisOptions` for the scre
 `AvoidanceStudy` whose grid is the constraint, a window past the stored states `InvalidOperationException` and the
 constructors of its results internal, a `TLE` checked field by field and read without kernels, its mean motion the
 field's, one verb set for the CCSDS messages with the CDM checked when it is read and written, `Opm.ToSpacecraft` of one
-sectional area and `Spacecraft.ToOpm` of `OpmExportOptions`.
+sectional area and `Spacecraft.ToOpm` of `OpmExportOptions`, the fit `ToTle` of `TleFitOptions`, the time
+quantities in double seconds named so, one constructor of `CentralBodyPropagator` with an integrator and the `Time`
+parameters named `epoch`.
 **Removed** lists `Instrument.PositionInFOV`, `LowThrustManeuver`, `Quaternion.Zero`, `Star.PropagationOutput`,
 `Window.Merge` and `Window.Intersects(Time)` (now `Hull` and `Contains`), the window searches on the target
 (`FindWindowsOn…Constraint` of `CelestialItem`, `ILocalizable` and `Site`, `Instrument.FindWindowsInFieldOfViewConstraint`
@@ -107,7 +109,8 @@ and `MonteCarloPropagator` `PropagateAsync`), the token and progress of `BatchOp
 equality of `FuelTank`, `Engine` and `Payload`, the `ILocalizable` constructors of `TriadAttitude` and
 `InstrumentPointingToAttitude.Aberration`, `ProtectedSpacecraftProfile` and `ManeuverConstraints`, the covariance
 ages of `EncounterState`, `TLE.MeanMotion()`, the CCSDS verbs of 10.x (`LoadFrom…`, `SaveTo…`, `ToXmlString`, the
-CDM's `ReadFrom…` and `WriteTo…`), `KeplerianElements.FromOMM` and the `useMeanMotion` constructor of `MeanElements`. Several results change: see **Fixed** and **Changed**. The open defects a caller can meet at this
+CDM's `ReadFrom…` and `WriteTo…`), `KeplerianElements.FromOMM` and the `useMeanMotion` constructor of `MeanElements`, `TLE.Configuration`, `KeplerianElements.A` to `M` and
+the five methods of `EquinoctialElements` that repeated its symbols. Several results change: see **Fixed** and **Changed**. The open defects a caller can meet at this
 release are listed under **Known limitations**.
 
 **Added**
@@ -2958,7 +2961,7 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   quaternion. The constructor now divides the axis by its magnitude (scaled by its largest component outside about
   1e-150 to 1e150) and throws `ArgumentException` (parameter `axis`) for a zero axis or a component that is not finite.
   The library's own axis-angle quaternions (`Instrument`'s Euler angles, `PlaneAlignmentManeuver`, the SLERP of the
-  attitude record, `StateOrientation.AtDate`, whose zero angular velocity is a zero axis at a zero angle) go through an
+  attitude record, `StateOrientation.AtEpoch`, whose zero angular velocity is a zero axis at a zero angle) go through an
   internal factory, bit for bit as before. `QuaternionTests` checks 10 000 random axes of 1e-10 to 1e10 and angles in
   [−2π, 2π) against Rodrigues' formula (worst 6.4e-16 rad, |q| within 3.3e-16 of 1) and against CSPICE `vrotv` and
   `axisar` (rotation matrix within 8.9e-16), the table of the issue, and the zero and non-finite axes.
@@ -6246,7 +6249,7 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   tests; 5.9e-5 rad at 10 s for the TRIAD after an impulse since #539). Its angular velocity is that of the CK, no longer 0, in the convention of the frames (ICRF relative to the
   spacecraft, in the spacecraft frame), 2.3e-5 rad/s from the rate of the law at 10 s outputs; every read of the record
   returns it, the entries of `GetStateOrientationsToICRF` and `GetLatestStateOrientationToICRF` included, and the rate
-  given to `AddStateOrientationToICRF` is not kept. `StateOrientation.AtDate` is unchanged, and its documentation states
+  given to `AddStateOrientationToICRF` is not kept. `StateOrientation.AtEpoch` is unchanged, and its documentation states
   its convention, the opposite of the frames'. No migration: the attitude held between outputs was wrong; shorten the
   output step where the residual matters (#592).
 - **Breaking: velocities in the spacecraft frame.** The spacecraft frame now turns with the attitude, where its angular
@@ -8254,8 +8257,64 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   TCA → `Cdm.ToEncounter` of a CDM holding them, or `CollisionProbability.Foster2D` for the Pc alone; an encounter of
   two objects → `ConjunctionAssessment.Analyze`, a debris or catalogue object as a `TrackedObject`.
 
+- **Breaking: `ToTle(name, noradId, cosparId, TleFitOptions options = null)` in place of
+  `ToTLE(TLE.Configuration)`** (lot L9, decision 113 of [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668), decided by S. Guillet, 2026-11-26; no
+  forwarder). The fit takes the name, the NORAD id and the COSPAR id in the order of `TLE.Create`, and its other fields
+  and settings in the sealed record `TleFitOptions` (D1: `Default` equal to `new()`): `RevolutionNumberAtEpoch`,
+  `Classification`, `BStar`, `MeanMotionDot` (ṅ/2), `MeanMotionDDot` (n̈/6), `ElementSetNumber` and `MaxIterations`,
+  an `int` (a `ushort` before; a negative value throws `ArgumentOutOfRangeException` at init), each default that of
+  `TLE.Configuration`, so a fit without options is bit for bit the former fit of a configuration of three values
+  (`TleFitOptionsTests`). `Configuration.Tolerance`, which the fit never read, is removed
+  ([#833](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/833)). Migration:
+  `state.ToTLE(new Configuration(25544, "ISS", "98067A"))` → `state.ToTle("ISS", 25544, "98067A")`;
+  `new Configuration(id, name, cospar, RevolutionsAtEpoch: r, BstarDragTerm: b, MaxIterations: n)` →
+  `ToTle(name, id, cospar, new TleFitOptions { RevolutionNumberAtEpoch = r, BStar = b, MaxIterations = n })`, likewise
+  `FirstDerivativeMeanMotion` → `MeanMotionDot`, `SecondDerivativeMeanMotion` → `MeanMotionDDot`; drop `Tolerance`.
+- **Breaking: a time quantity in double seconds says so** (lot L9, D1 of [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668), sub-choice 7; no forwarder). The
+  values stay `double` seconds, unchanged: `OpmManeuverParameters.ManDuration` → `ManDurationSeconds` (its constructor's
+  `manDuration` → `manDurationSeconds`, the path of the OPM validator's error `…ManDurationSeconds`; the keyword stays
+  `MAN_DURATION`), `AcceptedStep.StepSize` → `StepSizeSeconds`, `PropagationSegment.Duration` → `DurationSeconds`, the
+  `duration` of `IIntegrator.IntegrateSegment` (and of `Integrator`, `RK78Integrator`, `VVIntegrator`) →
+  `durationSeconds`, the `fixedStepSize`, `initialStepSize`, `minStepSize` and `maxStepSize` of the `RK78Integrator`
+  constructors → `fixedStepSizeSeconds`, `initialStepSizeSeconds`, `minStepSizeSeconds`, `maxStepSizeSeconds`, and the
+  `tolerance` of `BisectionEventFinder.FindRoot` → `toleranceSeconds`. The tolerances that are no time (`Constants.AngularTolerance`,
+  `Matrix.Cholesky`, `Matrix.IsSymmetric`, `NewtonRaphson`) keep their names. Migration: rename the member read or the
+  named argument; a subclass of `Integrator` renames the parameter of its override.
+- **Breaking: one constructor of `CentralBodyPropagator` with an integrator** (lot L9, D1 of [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668); no
+  forwarder). `CentralBodyPropagator(window, spacecraft, integrator, deltaT)` and
+  `CentralBodyPropagator(window, spacecraft, integrator, deltaT, covariancePropagation)` are one constructor,
+  `(window, spacecraft, integrator, deltaT, CovariancePropagationOptions options = null)`, null for no covariance as the
+  first, bit for bit both; `CovariancePropagationOptions.Default` (`new()`, the state transition matrix without the
+  covariance) is added; `CentralBodyPropagator.BuildCentralBodyForces` is `private protected` (a subclass of the library's
+  only). Migration: `covariancePropagation: o` → `options: o`, or pass it positionally.
+- **Breaking: the `Time` parameters are named `epoch`** (lot L9, D2 N3 of [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668); no forwarder). The 26 public
+  parameters `Time date` (`IDataProvider.GetEphemeris` and `FrameTransformationToICRF`, their implementations,
+  `MemoryDataProvider.AddStateVector` and `AddStateOrientationToICRF`, `Frame.GetStateOrientationToICRF` and its
+  overrides, `Site.GetEphemeris` and the three illumination angles, `Instrument.IsInFOV`, `GetBoresightInICRFFrame` and
+  `GetRefVectorInICRFFrame`, `TLE.ToStateVector`, `StateOrientation.Interpolate`, `Lagrange.Interpolate`,
+  `Window.Contains`) are named `epoch`, `StateOrientation.AtDate` is `AtEpoch`, the `epochAtDescendingNode` of
+  `CelestialBody.HelioSynchronousOrbit` is `descendingNodeEpoch`, and the `P` of
+  `LegendreFunctions.ComputeGeodesyNormalizedLegendreTable` is `p`. Migration: a named argument `date:` → `epoch:`;
+  `AtDate(t)` → `AtEpoch(t)`.
+
 **Removed**
 
+- **`KeplerianElements.A`, `E`, `I`, `RAAN`, `AOP` and `M`** (lot L9, D2 of [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668), no forwarder): they
+  repeated the methods every `OrbitalParameters` has. Migration: `ke.A` → `ke.SemiMajorAxis()`, `E` → `Eccentricity()`,
+  `I` → `Inclination()`, `RAAN` → `AscendingNode()`, `AOP` → `ArgumentOfPeriapsis()`, `M` → `MeanAnomaly()`, the same
+  values.
+- **`EquinoctialElements.EquinoctialEx()`, `EquinoctialEy()`, `Hx()`, `Hy()` and `Lv()`** (lot L9, D2 of [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668), no
+  forwarder): they repeated the properties of the symbols. Migration: `F`, `G`, `H`, `K` and `L0`.
+- **`TLE.Configuration`** (lot L9, decision 113 of [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668), decided by S. Guillet, 2026-11-26): `ToTle` takes the
+  identifiers and `TleFitOptions` (under Changed).
+- **`BisectionMethod` and `MeanElementsConverter` public** (lot L9, D2 N4 of [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668)): internal, no public member
+  exposed them (`BisectionMethod`, in the global namespace, was not used; `MeanElementsConverter` had no public member).
+  Migration: `OrbitalParameters.ToTle` for the fit; a bisection of your own, or `NewtonRaphson`.
+- **The protected fields of `OrbitalParameters` and `CelestialItem`** (lot L9, R23 and D2 N1 of [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668)): the 13 caches of
+  `OrbitalParameters` (`_period`, `_meanMotion`, `_stateVector`, `_equinoctial`, `_keplerianElements`, `_ascendingNode`,
+  `_trueAnomaly`, `_perigeeRadius`, `_semiMajorAxis`, `_eccentricity`, `_inclination`, `_periapsisArgument`,
+  `_meanAnomaly`), `CelestialItem._dataProvider`, `TITLE_WIDTH` and `VALUE_WIDTH` are `private protected`. Migration: the
+  public members (`Period()`, `SemiMajorAxis()`, …); the widths of `ToString` have no replacement.
 - **`ProtectedSpacecraftProfile` and `ManeuverConstraints`** (lot L7, R17 of
   [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668), decided by S. Guillet,
   2026-11-19, no forwarder): the conjunction analysis takes the `Spacecraft` itself, and the grid of
@@ -9131,7 +9190,7 @@ and **Fixed**. The open issues known at this preview are listed under **Known li
   had its rotation term reversed: twice the rotation velocity, up to 1 km/s for a LEO state. CIRS had the same sign
   error on its 6e-12 rad/s rate (about 5 mm/s at lunar distance). The topocentric frame of a `Site` expressed the
   angular velocity of its body in the wrong axes: 1.5e-7 rad/s relative to ITRF93 in 2021, 44 m/s on the Moon seen
-  in the site frame. `StateOrientation.AtDate` keeps its attitude convention and does not apply to frame transforms.
+  in the site frame. `StateOrientation.AtEpoch` keeps its attitude convention and does not apply to frame transforms.
 - **Numerical propagation in an inertial frame other than ICRF** ([#357](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/357)).
   A propagation may start from a state in B1950, FK4, ECLIPJ2000, ECLIPB1950 or GALACTIC, and runs in that frame.
   Three force inputs were nevertheless in ICRF and were combined with the state as they were: the ephemeris cache of

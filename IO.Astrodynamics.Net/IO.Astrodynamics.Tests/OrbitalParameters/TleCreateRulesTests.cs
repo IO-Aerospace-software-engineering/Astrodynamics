@@ -6,12 +6,11 @@ using IO.Astrodynamics.OrbitalParameters;
 using IO.Astrodynamics.OrbitalParameters.TLE;
 using Xunit;
 using CelestialBody = IO.Astrodynamics.Body.CelestialBody;
-using TleConfiguration = IO.Astrodynamics.OrbitalParameters.TLE.Configuration;
 
 namespace IO.Astrodynamics.Tests.OrbitalParameters;
 
 /// <summary>
-/// What <see cref="TLE.Create"/>, <see cref="Astrodynamics.OrbitalParameters.OrbitalParameters.ToTLE"/> and
+/// What <see cref="TLE.Create"/>, <see cref="Astrodynamics.OrbitalParameters.OrbitalParameters.ToTle"/> and
 /// <see cref="Omm.ToTle"/> accept and write by default: SGP4 mean elements of an Earth orbit in TEME only (#607), and one
 /// default element set number, 999 (#606).
 /// </summary>
@@ -68,9 +67,9 @@ public class TleCreateRulesTests
     }
 
     [Fact]
-    public void Configuration_WithoutElementSetNumber_Is999()
+    public void TleFitOptions_WithoutElementSetNumber_Is999()
     {
-        Assert.Equal(999, new TleConfiguration(25544, "ISS", "98067A").ElementSetNumber);
+        Assert.Equal(999, new IO.Astrodynamics.OrbitalParameters.TLE.TleFitOptions().ElementSetNumber);
     }
 
     [Fact]
@@ -90,7 +89,7 @@ public class TleCreateRulesTests
             "1 25544U 98067A   21020.53488036  .00016717  00000-0  10270-3 0  9054",
             "2 25544  51.6423 353.0312 0000493 320.8755  39.2360 15.49309423 25703");
         var state = iss.ToStateVector().ToFrame(Frames.Frame.ICRF).ToStateVector();
-        var tle = state.ToTLE(new TleConfiguration(25544, "ISS", "98067A"));
+        var tle = state.ToTle("ISS", 25544, "98067A");
         AssertElementSetNumber999(tle.Line1);
     }
 
@@ -133,8 +132,8 @@ public class TleCreateRulesTests
     public void Create_MeanEquinoctialElementsInIcrf_Throws()
     {
         var keplerian = MeanElements(EarthAtEpoch, Frames.Frame.ICRF);
-        var equinoctial = new EquinoctialElements(keplerian.A * (1.0 - keplerian.E * keplerian.E), keplerian.E * System.Math.Cos(keplerian.AOP + keplerian.RAAN),
-            keplerian.E * System.Math.Sin(keplerian.AOP + keplerian.RAAN), 0.1, 0.2, 1.0, keplerian.Observer, Epoch,
+        var equinoctial = new EquinoctialElements(keplerian.SemiMajorAxis() * (1.0 - keplerian.Eccentricity() * keplerian.Eccentricity()), keplerian.Eccentricity() * System.Math.Cos(keplerian.ArgumentOfPeriapsis() + keplerian.AscendingNode()),
+            keplerian.Eccentricity() * System.Math.Sin(keplerian.ArgumentOfPeriapsis() + keplerian.AscendingNode()), 0.1, 0.2, 1.0, keplerian.Observer, Epoch,
             Frames.Frame.ICRF, elementsType: OrbitalElementsType.Mean);
         var ex = Assert.Throws<ArgumentException>(() => TLE.Create(equinoctial, "ISS", 25544, "98067A", 2570));
         Assert.Equal("meanElements", ex.ParamName);
@@ -157,7 +156,7 @@ public class TleCreateRulesTests
         // (√(GM⊕/r) = 7059 m/s), which the fit could reach, and a hyperbola about the Moon
         var moon = new CelestialBody(301, Frames.Frame.ECLIPTIC_J2000, Epoch);
         var state = new StateVector(new Vector3(8.0e6, 0.0, 0.0), new Vector3(0.0, 6113.0, 3529.0), moon, Epoch, Frames.Frame.ICRF);
-        var ex = Assert.Throws<InvalidOperationException>(() => state.ToTLE(new TleConfiguration(99001, "LUNAR", "21001A")));
+        var ex = Assert.Throws<InvalidOperationException>(() => state.ToTle("LUNAR", 99001, "21001A"));
         Assert.Contains("MOON", ex.Message);
     }
 

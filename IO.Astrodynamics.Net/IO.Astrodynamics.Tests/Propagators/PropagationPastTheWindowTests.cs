@@ -93,7 +93,7 @@ public class PropagationPastTheWindowTests
         double apartVelocity = (lastA.EndVelocity - lastB.EndVelocity).Magnitude();
         _output.WriteLine($"MEASURE #626 {integrator} L {length} s, step {step} s: {stepsA.Length} and {stepsB.Length} steps, " +
                           $"final state of A - B {apart:E3} m, {apartVelocity:E3} m/s");
-        Assert.Equal(PropagationTimeArgument.Tt.SecondsBetween(Start, Start.AddSeconds(length)), stepsA.Sum(s => s.StepSize), 9);
+        Assert.Equal(PropagationTimeArgument.Tt.SecondsBetween(Start, Start.AddSeconds(length)), stepsA.Sum(s => s.StepSizeSeconds), 9);
         Assert.Equal(stepsB.Length, stepsA.Length);
         for (int k = 0; k < stepsA.Length; k++)
         {

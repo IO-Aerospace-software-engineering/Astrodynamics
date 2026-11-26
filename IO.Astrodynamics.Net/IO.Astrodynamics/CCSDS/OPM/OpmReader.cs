@@ -391,7 +391,7 @@ internal class OpmReader
 
         return Construct(() => new OpmManeuverParameters(epoch, duration, deltaMass, refFrame, dv1, dv2, dv3, comments),
             "maneuverParameters",
-            new CcsdsKeyword("manDuration", "MAN_DURATION", durationStr),
+            new CcsdsKeyword("manDurationSeconds", "MAN_DURATION", durationStr),
             new CcsdsKeyword("manDeltaMass", "MAN_DELTA_MASS", deltaMassStr),
             new CcsdsKeyword("manRefFrame", "MAN_REF_FRAME", refFrame));
     }

@@ -363,7 +363,7 @@ public class MinimumEpochGateTests
             bool zero = gGate == 0.0 && !(gate < segment.BaseEpoch);
             foreach (var step in segment.Steps)
             {
-                double end = step.CumulativeTime + step.StepSize;
+                double end = step.CumulativeTime + step.StepSizeSeconds;
                 if (end <= tGate) continue;
                 var epoch = run.Solution.TimeArgument.EpochAt(segment.BaseEpoch, end);
                 double g = G(epoch, step.EndPosition, step.EndVelocity);
@@ -418,7 +418,7 @@ public class MinimumEpochGateTests
         bool nearTc = false;
         foreach (var step in segment.Steps)
         {
-            double t0 = step.CumulativeTime, t1 = t0 + step.StepSize;
+            double t0 = step.CumulativeTime, t1 = t0 + step.StepSizeSeconds;
             double G(double t)
             {
                 var (p, v) = PropagationSegment.HermiteInterpolate(step, t);
@@ -428,7 +428,7 @@ public class MinimumEpochGateTests
             foreach (double center in double.IsNaN(period) ? [tc] : new[] { tc - period, tc, tc + period })
             {
                 double c = center - origin;
-                if (t1 < c - step.StepSize - 1.0 || t0 > c + step.StepSize + 1.0) continue;
+                if (t1 < c - step.StepSizeSeconds - 1.0 || t0 > c + step.StepSizeSeconds + 1.0) continue;
                 double lo = t0, hi = t1, gLo = G(lo), gHi = G(hi);
                 bool crossing = gLo * gHi < 0.0 && direction switch
                 {
@@ -994,14 +994,14 @@ public class MinimumEpochGateTests
         };
         var solution = spacecraft.Propagate(new Window(S, S.AddSeconds(4.0 * 3600.0)), new PropagationOptions { Integrator = propagator, OutputStep = TimeSpan.FromSeconds(10.0), ThirdBodies = [center], CovariancePropagation = CovariancePropagationOptions.None });
         double perigee = ClosedFormOf(center, orbit).T / 2.0;
-        var step = solution.Segments[0].Steps.First(x => x.CumulativeTime + x.StepSize >= perigee);
+        var step = solution.Segments[0].Steps.First(x => x.CumulativeTime + x.StepSizeSeconds >= perigee);
         var start = PropagationTimeArgument.Tt.EpochAt(S, step.CumulativeTime);
         return edge switch
         {
             "step-start" => start,
             "step-start+1tick" => start.Add(TimeSpan.FromTicks(1)),
             "prev-step-end-1tick" => start.Add(TimeSpan.FromTicks(-1)),
-            "step-end" => PropagationTimeArgument.Tt.EpochAt(S, step.CumulativeTime + step.StepSize),
+            "step-end" => PropagationTimeArgument.Tt.EpochAt(S, step.CumulativeTime + step.StepSizeSeconds),
             _ => throw new ArgumentException(edge)
         };
     }

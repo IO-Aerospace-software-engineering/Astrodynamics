@@ -114,12 +114,12 @@ namespace IO.Astrodynamics.Tests.OrbitalParameters
         {
             KeplerianElements original = new KeplerianElements(42000000, 0.0, 1.0, 2.0, 1.0, 0.5, TestHelpers.EarthAtJ2000, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF);
             KeplerianElements transformed = original.ToStateVector().ToKeplerianElements();
-            Assert.Equal(original.A, transformed.A, 3);
-            Assert.Equal(original.E, transformed.E, 6);
-            Assert.Equal(original.I, transformed.I, 6);
-            Assert.Equal(original.RAAN, transformed.RAAN);
+            Assert.Equal(original.SemiMajorAxis(), transformed.SemiMajorAxis(), 3);
+            Assert.Equal(original.Eccentricity(), transformed.Eccentricity(), 6);
+            Assert.Equal(original.Inclination(), transformed.Inclination(), 6);
+            Assert.Equal(original.AscendingNode(), transformed.AscendingNode());
             Assert.Equal(original.MeanLongitude(), transformed.MeanLongitude(), 6);
-            Assert.Equal(original.AOP + original.M, (transformed.AOP + transformed.M) % Astrodynamics.Constants.TwoPi, 6);
+            Assert.Equal(original.ArgumentOfPeriapsis() + original.MeanAnomaly(), (transformed.ArgumentOfPeriapsis() + transformed.MeanAnomaly()) % Astrodynamics.Constants.TwoPi, 6);
         }
 
         [Fact]
@@ -128,9 +128,9 @@ namespace IO.Astrodynamics.Tests.OrbitalParameters
             KeplerianElements original = new KeplerianElements(42000000, 0.2, 0.3, 2.0, 1.0, 0.5, TestHelpers.EarthAtJ2000, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF);
             var originalSv = original.ToStateVector();
             KeplerianElements transformed = originalSv.ToKeplerianElements();
-            Assert.Equal(original.A, transformed.A, 3);
-            Assert.Equal(original.E, transformed.E, 6);
-            Assert.Equal(original.I, transformed.I, 6);
+            Assert.Equal(original.SemiMajorAxis(), transformed.SemiMajorAxis(), 3);
+            Assert.Equal(original.Eccentricity(), transformed.Eccentricity(), 6);
+            Assert.Equal(original.Inclination(), transformed.Inclination(), 6);
             Assert.Equal(original.MeanLongitude(), transformed.MeanLongitude(), 6);
         }
 
@@ -432,12 +432,12 @@ namespace IO.Astrodynamics.Tests.OrbitalParameters
             var ke = new KeplerianElements(-6800000.0, 1.2, 0.2, 0.3, 0.4, 0.5, TestHelpers.EarthAtJ2000, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF);
             var sv = ke.ToStateVector();
             var ke2 = sv.ToKeplerianElements();
-            Assert.Equal(ke.A, ke2.A, 3);
-            Assert.Equal(ke.E, ke2.E, 6);
-            Assert.Equal(ke.I, ke2.I, 6);
-            Assert.Equal(ke.RAAN, ke2.RAAN, 6);
-            Assert.Equal(ke.AOP, ke2.AOP, 6);
-            Assert.Equal(ke.M, ke2.M, 6);
+            Assert.Equal(ke.SemiMajorAxis(), ke2.SemiMajorAxis(), 3);
+            Assert.Equal(ke.Eccentricity(), ke2.Eccentricity(), 6);
+            Assert.Equal(ke.Inclination(), ke2.Inclination(), 6);
+            Assert.Equal(ke.AscendingNode(), ke2.AscendingNode(), 6);
+            Assert.Equal(ke.ArgumentOfPeriapsis(), ke2.ArgumentOfPeriapsis(), 6);
+            Assert.Equal(ke.MeanAnomaly(), ke2.MeanAnomaly(), 6);
             LabelAssert.Equal(ke.Epoch, ke2.Epoch);
             Assert.Equal(ke.Observer, ke2.Observer);
         }
@@ -457,12 +457,12 @@ namespace IO.Astrodynamics.Tests.OrbitalParameters
             var ke = new KeplerianElements(6800000.0, 0.2, 0.2, 0.3, 0.4, 0.5, TestHelpers.EarthAtJ2000, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF);
             var sv = ke.ToStateVector();
             var ke2 = sv.ToKeplerianElements();
-            Assert.Equal(ke.A, ke2.A, 3);
-            Assert.Equal(ke.E, ke2.E, 6);
-            Assert.Equal(ke.I, ke2.I, 6);
-            Assert.Equal(ke.RAAN, ke2.RAAN, 6);
-            Assert.Equal(ke.AOP, ke2.AOP, 6);
-            Assert.Equal(ke.M, ke2.M, 6);
+            Assert.Equal(ke.SemiMajorAxis(), ke2.SemiMajorAxis(), 3);
+            Assert.Equal(ke.Eccentricity(), ke2.Eccentricity(), 6);
+            Assert.Equal(ke.Inclination(), ke2.Inclination(), 6);
+            Assert.Equal(ke.AscendingNode(), ke2.AscendingNode(), 6);
+            Assert.Equal(ke.ArgumentOfPeriapsis(), ke2.ArgumentOfPeriapsis(), 6);
+            Assert.Equal(ke.MeanAnomaly(), ke2.MeanAnomaly(), 6);
             LabelAssert.Equal(ke.Epoch, ke2.Epoch);
             Assert.Equal(ke.Observer, ke2.Observer);
         }
@@ -613,14 +613,14 @@ namespace IO.Astrodynamics.Tests.OrbitalParameters
                 double worstAngleE = 0.0;
                 foreach (var ke in RandomApsisElements(e, 6860 + System.Array.IndexOf(ApsisEccentricities, e), 2000))
                 {
-                    var spicePerigee = SpiceConicPosition(ke.A, ke.E, ke.I, ke.RAAN, ke.AOP, 0.0);
-                    var (angle, length) = ApsisErrors(ke, spicePerigee, ke.A, ke.E);
+                    var spicePerigee = SpiceConicPosition(ke.SemiMajorAxis(), ke.Eccentricity(), ke.Inclination(), ke.AscendingNode(), ke.ArgumentOfPeriapsis(), 0.0);
+                    var (angle, length) = ApsisErrors(ke, spicePerigee, ke.SemiMajorAxis(), ke.Eccentricity());
                     worstAngleE = System.Math.Max(worstAngleE, angle);
                     worstLength = System.Math.Max(worstLength, length);
 
                     double gm = ke.Observer.GM;
-                    double vp = System.Math.Sqrt(gm * (2.0 / (ke.A * (1.0 - ke.E)) - 1.0 / ke.A));
-                    double va = System.Math.Sqrt(gm * (2.0 / (ke.A * (1.0 + ke.E)) - 1.0 / ke.A));
+                    double vp = System.Math.Sqrt(gm * (2.0 / (ke.SemiMajorAxis() * (1.0 - ke.Eccentricity())) - 1.0 / ke.SemiMajorAxis()));
+                    double va = System.Math.Sqrt(gm * (2.0 / (ke.SemiMajorAxis() * (1.0 + ke.Eccentricity())) - 1.0 / ke.SemiMajorAxis()));
                     worstVelocity = System.Math.Max(worstVelocity, System.Math.Max(System.Math.Abs(ke.PerigeeVelocity() / vp - 1.0),
                         System.Math.Abs(ke.ApogeeVelocity() / va - 1.0)));
                 }
@@ -683,7 +683,7 @@ namespace IO.Astrodynamics.Tests.OrbitalParameters
             var tle = new IO.Astrodynamics.OrbitalParameters.TLE.TLE(name, line1, line2);
             var state = tle.ToStateVector();
             var osculating = SpiceAPI.Instance.ConvertStateVectorToConicOrbitalElement(state);
-            var spicePerigee = SpiceConicPosition(osculating.A, osculating.E, osculating.I, osculating.RAAN, osculating.AOP, 0.0);
+            var spicePerigee = SpiceConicPosition(osculating.SemiMajorAxis(), osculating.Eccentricity(), osculating.Inclination(), osculating.AscendingNode(), osculating.ArgumentOfPeriapsis(), 0.0);
 
             double perigeeAngle = AngleBetween(tle.PerigeeVector(), spicePerigee);
             double apogeeAngle = AngleBetween(tle.ApogeeVector(), spicePerigee.Inverse());

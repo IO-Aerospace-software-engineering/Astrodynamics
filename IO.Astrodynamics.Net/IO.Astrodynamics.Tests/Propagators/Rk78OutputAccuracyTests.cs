@@ -70,11 +70,11 @@ public class Rk78OutputAccuracyTests
         // Assert
         var segment = solution.Segments.Single();
         double stepEndError = segment.Steps.Max(step =>
-            PositionError(mu, initial, step.CumulativeTime + step.StepSize, step.EndPosition));
+            PositionError(mu, initial, step.CumulativeTime + step.StepSizeSeconds, step.EndPosition));
         double outputError = solution.StateVectors.Max(state =>
             PositionError(mu, initial, Elapsed(state.Epoch), state.Position));
         double stepEndVelocityError = segment.Steps.Max(step =>
-            VelocityError(mu, initial, step.CumulativeTime + step.StepSize, step.EndVelocity));
+            VelocityError(mu, initial, step.CumulativeTime + step.StepSizeSeconds, step.EndVelocity));
         double outputVelocityError = solution.StateVectors.Max(state =>
             VelocityError(mu, initial, Elapsed(state.Epoch), state.Velocity));
         double hermiteError = solution.StateVectors.Max(state =>
@@ -82,7 +82,7 @@ public class Rk78OutputAccuracyTests
             double t = Elapsed(state.Epoch);
             return PositionError(mu, initial, t, segment.InterpolateAt(t).position);
         });
-        double medianStep = segment.Steps.Select(step => step.StepSize).OrderBy(h => h).ElementAt(segment.Steps.Count / 2);
+        double medianStep = segment.Steps.Select(step => step.StepSizeSeconds).OrderBy(h => h).ElementAt(segment.Steps.Count / 2);
         _output.WriteLine($"tolerance {tolerance:E0}, median step {medianStep:F1} s: worst position error at the step " +
                           $"ends {stepEndError:E3} m, at the outputs {outputError:E3} m; velocity " +
                           $"{stepEndVelocityError:E3} m/s and {outputVelocityError:E3} m/s; cubic Hermite at the " +
@@ -111,7 +111,7 @@ public class Rk78OutputAccuracyTests
         var te = Start.AddSeconds(3000.25);
         double t = (te - Start).TotalSeconds;
         var step = segment.Steps[segment.FindStepIndex(t)];
-        Assert.InRange(t - step.CumulativeTime, 1.0, step.StepSize - 1.0);
+        Assert.InRange(t - step.CumulativeTime, 1.0, step.StepSizeSeconds - 1.0);
 
         // Act
         var (position, velocity) = full.InterpolateAt(te);
@@ -146,14 +146,14 @@ public class Rk78OutputAccuracyTests
 
         // Act and assert
         force.Count = 0;
-        var (atBoundary, _) = dynamics.StateAt(segment, step.CumulativeTime + step.StepSize);
+        var (atBoundary, _) = dynamics.StateAt(segment, step.CumulativeTime + step.StepSizeSeconds);
         Assert.Equal(0, force.Count);
         AssertSameBits(step.EndPosition, atBoundary, "state at the boundary");
-        dynamics.StateAt(segment, step.CumulativeTime + 0.5 * step.StepSize);
+        dynamics.StateAt(segment, step.CumulativeTime + 0.5 * step.StepSizeSeconds);
         Assert.Equal(RK78ButcherTableau.Stages, force.Count);
         force.Count = 0;
         var (beforeStart, _) = dynamics.StateAt(segment, -1.0);
-        var (afterEnd, _) = dynamics.StateAt(segment, segment.Duration + 1.0);
+        var (afterEnd, _) = dynamics.StateAt(segment, segment.DurationSeconds + 1.0);
         Assert.Equal(0, force.Count);
         AssertSameBits(initial.Position, beforeStart, "state before the segment");
         AssertSameBits(segment.Steps[^1].EndPosition, afterEnd, "state after the segment");
@@ -195,7 +195,7 @@ public class Rk78OutputAccuracyTests
         var after = solution.Segments[1];
         int k = before.Steps.Count - 1;
         double te = PropagationTimeArgument.Tt.OnEpochGrid(Start, after.BaseEpoch, before.Steps[k].CumulativeTime,
-            before.Duration);
+            before.DurationSeconds);
         double semiMajorAxis = 1.0 / (2.0 / orbit.Position.Magnitude() - orbit.Velocity.MagnitudeSquared() / mu);
         double halfPeriod = System.Math.PI * System.Math.Sqrt(semiMajorAxis * semiMajorAxis * semiMajorAxis / mu);
         // Measured −5.28e-9 s with the TT time argument of #501 (Linux, 2026-11-01; 6.57e-8 s over the TDB seconds
@@ -257,7 +257,7 @@ public class Rk78OutputAccuracyTests
         var before = solution.Segments[0];
         var after = solution.Segments[1];
         double te = PropagationTimeArgument.Tt.OnEpochGrid(Start, after.BaseEpoch, before.Steps[^1].CumulativeTime,
-            before.Duration);
+            before.DurationSeconds);
         double semiMajorAxis = 1.0 / (2.0 / orbit.Position.Magnitude() - orbit.Velocity.MagnitudeSquared() / mu);
         double halfPeriod = System.Math.PI * System.Math.Sqrt(semiMajorAxis * semiMajorAxis * semiMajorAxis / mu);
         _output.WriteLine($"fixed step: event {te - halfPeriod:E3} s from the Keplerian perigee");

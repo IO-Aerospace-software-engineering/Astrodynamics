@@ -159,8 +159,7 @@ before 11.0.0 a propagation evaluated the field of the body, whose buffers are n
 | Constructor | Description |
 |-------------|-------------|
 | `CentralBodyPropagator(window, spacecraft, options)` | The settings of a `PropagationOptions` value, null for `PropagationOptions.Default` (above): the propagator builds its integrator and forces |
-| `CentralBodyPropagator(window, spacecraft, integrator, deltaT)` | Use a pre-configured integrator (forces already added), which the propagator initializes with its initial state: the path of a force list of your own (albedo or thermal radiation of a body other than the central body, a force of your own) |
-| `CentralBodyPropagator(window, spacecraft, integrator, deltaT, covariancePropagation)` | As the second (the integrator initialized by the propagator), with the covariance propagation; the columns of Ψ follow the forces of the integrator |
+| `CentralBodyPropagator(window, spacecraft, integrator, deltaT, options = null)` | Use a pre-configured integrator (forces already added), which the propagator initializes with its initial state: the path of a force list of your own (albedo or thermal radiation of a body other than the central body, a force of your own); with `CovariancePropagationOptions`, the covariance propagation, the columns of Ψ following the forces of the integrator (one constructor since 11.0.0, the overload of a `covariancePropagation` parameter before) |
 
 When the propagator builds the forces (the options constructor) the central body takes part with the models of the
 observer: it is inserted first when no listed body has its NAIF identifier (a run that lists it is unchanged), and a

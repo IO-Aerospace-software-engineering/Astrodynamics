@@ -59,7 +59,7 @@ the start of the window. This example runs as a smoke test against the packed Nu
 | Entry point | Member |
 |-------------|--------|
 | Options | `PropagationOptions.CovariancePropagation`, on `Spacecraft.Propagate(window, options)`, `CentralBodyPropagator(window, spacecraft, options)`, `Scenario.Simulate(options)`, `PropagationTask(spacecraft, window, options)` and `MonteCarloConfiguration.Propagation`: null for Auto (below) |
-| Propagator | `CentralBodyPropagator(window, spacecraft, integrator, deltaT, covariancePropagation)`, an integrator holding its forces |
+| Propagator | `CentralBodyPropagator(window, spacecraft, integrator, deltaT, options)`, an integrator holding its forces |
 
 The flag members of 10.x that took covariance options (the builder's `WithCovariancePropagation`, the flag constructor
 of `CentralBodyPropagator` and overload of `Spacecraft.Propagate`, `PropagationTask.CovariancePropagation`,
@@ -129,7 +129,7 @@ of `CentralBodyPropagator` and overload of `Spacecraft.Propagate`, `PropagationT
   tighter tolerance reduces the error a hundredfold or more, not below 1e-4 at every crossing. In the same case, Φ and
   Ψ_Cd stay below 2.1e-8 and 4.4e-7 (at 5.123 h; measured 2026-10-24; 2.0e-8 and 3.6e-7 on 2026-11-01, 2.0e-8 and
   2.7e-7 on 2026-11-11).
-- `IncludeInStepControl` has no effect with a fixed-step `RK78Integrator(fixedStepSize)`, which controls no step.
+- `IncludeInStepControl` has no effect with a fixed-step `RK78Integrator(fixedStepSizeSeconds)`, which controls no step.
 - With `IncludeInStepControl`, the step follows the error of Φ and Ψ, so it needs partial derivatives that are smooth
   along the trajectory. The density gradient of the drag partials is taken in geodetic coordinates, without rounding
   noise of its own (dρ/dh in closed form for the US 1976 and Mars atmospheres, the derivatives of NRLMSISE-00 in its
@@ -182,7 +182,7 @@ of `CentralBodyPropagator` and overload of `Spacecraft.Propagate`, `PropagationT
   Windows x64 and macOS arm64, CI run 44225490669; starts one ulp apart reach 2.3e-10 on Linux x64, the noise of two
   step sequences).
   - Only a step that its retry would repeat is accepted so: the step at the minimum step size, or the time remaining
-    below it. A first step below the minimum step size (`initialStepSize`) is retried at the minimum step size, as
+    below it. A first step below the minimum step size (`initialStepSizeSeconds`) is retried at the minimum step size, as
     before. So a propagation that completed before takes the same steps, bit for bit (on Linux, 586 of 586 initial
     steps 60 s ± 300 ulp of that case, 294 of 294 maneuvers that split it in dense air, 9 of 9 starts with a first step
     of 9.5e-7 s; the 15, 6 and 391 that stopped now complete).

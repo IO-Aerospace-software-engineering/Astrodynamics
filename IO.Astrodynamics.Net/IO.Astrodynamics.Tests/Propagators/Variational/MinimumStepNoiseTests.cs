@@ -146,8 +146,8 @@ public class MinimumStepNoiseTests
         // Assert: the first step is the minimum step size, and the propagation reaches the end of its window
         var steps = solution.Segments.SelectMany(s => s.Steps).ToArray();
         _output.WriteLine($"{steps.Length} steps, the first " +
-                          string.Join(", ", steps.Take(3).Select(s => s.StepSize.ToString("R"))));
-        Assert.Equal(1e-6, steps[0].StepSize);
+                          string.Join(", ", steps.Take(3).Select(s => s.StepSizeSeconds.ToString("R"))));
+        Assert.Equal(1e-6, steps[0].StepSizeSeconds);
         WindowEndAssert.ReachesTheEndOf(window, solution);
     }
 
@@ -190,7 +190,7 @@ public class MinimumStepNoiseTests
         _output.WriteLine($"burn of {maneuver.DeltaV.Magnitude():F3} m/s at " +
                           $"{(last.BaseEpoch - Epoch).TotalSeconds:F6} s; steps " +
                           string.Join(" + ", solution.Segments.Select(s => s.Steps.Count)) + "; first steps after it " +
-                          string.Join(", ", last.Steps.Take(3).Select(s => s.StepSize.ToString("E2"))));
+                          string.Join(", ", last.Steps.Take(3).Select(s => s.StepSizeSeconds.ToString("E2"))));
         Assert.Equal(2, solution.Segments.Count);
         Assert.True(maneuver.DeltaV.Magnitude() > 1.0, $"ΔV {maneuver.DeltaV.Magnitude()} m/s");
         WindowEndAssert.ReachesTheEndOf(Window, solution);

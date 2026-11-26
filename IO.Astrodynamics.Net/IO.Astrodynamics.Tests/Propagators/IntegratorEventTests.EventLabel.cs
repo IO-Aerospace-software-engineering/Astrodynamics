@@ -88,7 +88,7 @@ public partial class IntegratorEventTests
         {
             var previous = solution.Segments[i - 1];
             // The base of the next segment is the instant at which the previous one's state was taken
-            double offset = argument.SecondsBetween(previous.BaseEpoch, solution.Segments[i].BaseEpoch) - previous.Duration;
+            double offset = argument.SecondsBetween(previous.BaseEpoch, solution.Segments[i].BaseEpoch) - previous.DurationSeconds;
             worstLabel = System.Math.Max(worstLabel, System.Math.Abs(offset));
         }
 

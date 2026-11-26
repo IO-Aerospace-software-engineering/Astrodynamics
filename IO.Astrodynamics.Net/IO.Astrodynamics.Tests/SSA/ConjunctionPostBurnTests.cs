@@ -82,7 +82,7 @@ public class ConjunctionPostBurnTests
     {
         var segment = solution.Segments[0];
         var step = segment.Steps[^1];
-        return solution.TimeArgument.StepEpochs(segment.BaseEpoch, step.CumulativeTime, step.StepSize).End;
+        return solution.TimeArgument.StepEpochs(segment.BaseEpoch, step.CumulativeTime, step.StepSizeSeconds).End;
     }
 
     // A secondary 30 m from the protected trajectory at tc, at the relative velocity given, over [tc − 150 s, tc + 150 s]

@@ -109,8 +109,8 @@ public class GeopotentialVariationalTests : IClassFixture<GeopotentialPartialsBo
             Assert.Equal(reference.Count, steps.Count);
             for (int k = 0; k < steps.Count; k++)
             {
-                Assert.Equal(BitConverter.DoubleToInt64Bits(reference[k].StepSize),
-                    BitConverter.DoubleToInt64Bits(steps[k].StepSize));
+                Assert.Equal(BitConverter.DoubleToInt64Bits(reference[k].StepSizeSeconds),
+                    BitConverter.DoubleToInt64Bits(steps[k].StepSizeSeconds));
                 Assert.Equal(reference[k].EndPosition, steps[k].EndPosition);
                 Assert.Equal(reference[k].EndVelocity, steps[k].EndVelocity);
             }

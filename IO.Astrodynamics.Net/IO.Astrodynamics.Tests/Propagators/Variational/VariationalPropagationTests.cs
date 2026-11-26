@@ -214,7 +214,7 @@ public class VariationalPropagationTests : IClassFixture<PartialsTestCases>
         foreach (int k in new[] { 0, 1, count / 2, count - 1 })
         {
             // Act
-            var (position, velocity) = solution.Dynamics.ShortenedStep(segment, k, segment.Steps[k].StepSize, y, q);
+            var (position, velocity) = solution.Dynamics.ShortenedStep(segment, k, segment.Steps[k].StepSizeSeconds, y, q);
 
             // Assert
             AssertSameBits(data.StepEndY(k), y, $"Y, step {k}");
@@ -234,7 +234,7 @@ public class VariationalPropagationTests : IClassFixture<PartialsTestCases>
         var segment = full.Segments.Single();
         double t = (te - Start).TotalSeconds;
         var step = segment.Steps[segment.FindStepIndex(t)];
-        Assert.InRange(t - step.CumulativeTime, 1.0, step.StepSize - 1.0);
+        Assert.InRange(t - step.CumulativeTime, 1.0, step.StepSizeSeconds - 1.0);
         var stopped = PropagateLeo(te, FullOptions, true, TimeSpan.FromSeconds(t));
 
         // Act
@@ -316,7 +316,7 @@ public class VariationalPropagationTests : IClassFixture<PartialsTestCases>
         // te to 100 ns only).
         int k = before.Steps.Count - 1;
         double te = solution.TimeArgument.OnEpochGrid(before.BaseEpoch, after.BaseEpoch, before.Steps[k].CumulativeTime,
-            before.Duration);
+            before.DurationSeconds);
         var yBefore = new double[48];
         var qBefore = new double[VariationalEquations.CovarianceLength];
         solution.Dynamics.Evaluate(before, te, yBefore, qBefore);
@@ -434,7 +434,7 @@ public class VariationalPropagationTests : IClassFixture<PartialsTestCases>
         solution.EvaluateVariational(Start.AddHours(1.0), y, Array.Empty<double>());
         long afterBoundary = solution.Dynamics.StageJacobianEvaluations;
         solution.EvaluateVariational(
-            segment.BaseEpoch.AddSeconds(segment.Steps[3].CumulativeTime + 0.5 * segment.Steps[3].StepSize), y,
+            segment.BaseEpoch.AddSeconds(segment.Steps[3].CumulativeTime + 0.5 * segment.Steps[3].StepSizeSeconds), y,
             Array.Empty<double>());
 
         // Assert
@@ -496,8 +496,8 @@ public class VariationalPropagationTests : IClassFixture<PartialsTestCases>
         Assert.Equal(stepsWithout.Count, stepsWith.Count);
         for (int k = 0; k < stepsWith.Count; k++)
         {
-            Assert.Equal(BitConverter.DoubleToInt64Bits(stepsWithout[k].StepSize),
-                BitConverter.DoubleToInt64Bits(stepsWith[k].StepSize));
+            Assert.Equal(BitConverter.DoubleToInt64Bits(stepsWithout[k].StepSizeSeconds),
+                BitConverter.DoubleToInt64Bits(stepsWith[k].StepSizeSeconds));
             AssertSameBits(stepsWithout[k].EndPosition, stepsWith[k].EndPosition, $"position, step {k}");
             AssertSameBits(stepsWithout[k].EndVelocity, stepsWith[k].EndVelocity, $"velocity, step {k}");
         }

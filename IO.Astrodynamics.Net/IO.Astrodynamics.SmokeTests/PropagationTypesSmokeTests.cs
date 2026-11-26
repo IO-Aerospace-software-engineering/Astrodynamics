@@ -31,7 +31,7 @@ public class PropagationTypesSmokeTests
         var integrator = new RK78Integrator(
             absoluteTolerance: 1e-9,
             relativeTolerance: 1e-12,
-            initialStepSize: 60.0);
+            initialStepSizeSeconds: 60.0);
         Assert.NotNull(integrator);
     }
 

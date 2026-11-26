@@ -98,7 +98,7 @@ public sealed class PropagationSolution
         get
         {
             var last = LastSegment;
-            return WindowEnd ?? TimeArgument.EpochAt(last.BaseEpoch, last.Duration);
+            return WindowEnd ?? TimeArgument.EpochAt(last.BaseEpoch, last.DurationSeconds);
         }
     }
 
@@ -153,7 +153,7 @@ public sealed class PropagationSolution
     private PropagationSegment VariationalSegmentAtElapsed(double t, out double local)
     {
         var segment = SegmentAtElapsed(t, out local);
-        local = System.Math.Min(local, segment.Duration);
+        local = System.Math.Min(local, segment.DurationSeconds);
         if (Dynamics == null)
             throw new InvalidOperationException(
                 "The solution holds no variational data: the propagation did not integrate the variational equations.");
@@ -592,7 +592,7 @@ public sealed class PropagationSolution
 
         var last = _segments[^1];
         return TimeArgument.SecondsBetween(_segments[0].BaseEpoch, epoch) >= -EpochTick &&
-               TimeArgument.SecondsBetween(last.BaseEpoch, epoch) <= last.Duration + endAllowance;
+               TimeArgument.SecondsBetween(last.BaseEpoch, epoch) <= last.DurationSeconds + endAllowance;
     }
 
     // The segment of an epoch inside the solution, for the variational values; an epoch within one tick after the last
@@ -601,7 +601,7 @@ public sealed class PropagationSolution
     {
         CheckWithin(epoch);
         var segment = SegmentAt(epoch, out t);
-        t = System.Math.Min(t, segment.Duration);
+        t = System.Math.Min(t, segment.DurationSeconds);
         if (Dynamics == null)
             throw new InvalidOperationException(
                 "The solution holds no variational data: the propagation did not integrate the variational equations.");

@@ -349,12 +349,12 @@ namespace IO.Astrodynamics.Tests.OrbitalParameters
 
             // Against SPICE OSCELT: the node, 1.3e-5 rad, is where the former acos lost 5.8e-12 rad (#368)
             var expected = SpiceAPI.Instance.ConvertStateVectorToConicOrbitalElement(sv);
-            Assert.Equal(expected.A, ke.A, 1e-14 * expected.A);
-            Assert.Equal(expected.E, ke.E, 1e-14);
-            Assert.Equal(expected.I, ke.I, 1e-14);
-            Assert.Equal(expected.RAAN, ke.RAAN, 1e-14 * expected.RAAN);
-            Assert.Equal(expected.AOP, ke.AOP, 1e-14);
-            Assert.Equal(expected.M, ke.M, 1e-14);
+            Assert.Equal(expected.SemiMajorAxis(), ke.SemiMajorAxis(), 1e-14 * expected.SemiMajorAxis());
+            Assert.Equal(expected.Eccentricity(), ke.Eccentricity(), 1e-14);
+            Assert.Equal(expected.Inclination(), ke.Inclination(), 1e-14);
+            Assert.Equal(expected.AscendingNode(), ke.AscendingNode(), 1e-14 * expected.AscendingNode());
+            Assert.Equal(expected.ArgumentOfPeriapsis(), ke.ArgumentOfPeriapsis(), 1e-14);
+            Assert.Equal(expected.MeanAnomaly(), ke.MeanAnomaly(), 1e-14);
         }
 
         [Fact]
@@ -832,8 +832,8 @@ namespace IO.Astrodynamics.Tests.OrbitalParameters
             {
                 var sv = ke.ToStateVector();
                 var osculating = SpiceAPI.Instance.ConvertStateVectorToConicOrbitalElement(sv);
-                var spicePerigee = KeplerianElementsTests.SpiceConicPosition(osculating.A, osculating.E, osculating.I, osculating.RAAN, osculating.AOP, 0.0);
-                worst = System.Math.Max(worst, KeplerianElementsTests.ApsisErrors(sv, spicePerigee, osculating.A, osculating.E).Angle);
+                var spicePerigee = KeplerianElementsTests.SpiceConicPosition(osculating.SemiMajorAxis(), osculating.Eccentricity(), osculating.Inclination(), osculating.AscendingNode(), osculating.ArgumentOfPeriapsis(), 0.0);
+                worst = System.Math.Max(worst, KeplerianElementsTests.ApsisErrors(sv, spicePerigee, osculating.SemiMajorAxis(), osculating.Eccentricity()).Angle);
             }
 
             _output.WriteLine($"MEASURE #686 elliptic states e = {e:E1}: worst apsis angle against SPICE oscelt + conics {worst:E3} rad");

@@ -407,7 +407,7 @@ public class RepropagationTests
             V = v,
             Gates = sc.Chain.Select(m => m.MinEpoch).ToArray(),
             Executed = spacecraft.ExecutedManeuvers.Select(m => (Array.IndexOf(sc.Chain, m), m.ManeuverWindow, m.ThrustWindow)).ToArray(),
-            Opm = (opm.Data.Maneuvers ?? []).Select(m => (m.ManEpochIgnition, m.ManDuration, m.ManDeltaMass, m.ManDv1, m.ManDv2, m.ManDv3)).ToArray(),
+            Opm = (opm.Data.Maneuvers ?? []).Select(m => (m.ManEpochIgnition, m.ManDurationSeconds, m.ManDeltaMass, m.ManDv1, m.ManDv2, m.ManDv3)).ToArray(),
             Summary = (summary.ManeuverWindow, summary.FuelConsumption, summary.Maneuvers.Count()),
             P = covariance ? solution!.GetCovariance(window.EndDate) : null
         };

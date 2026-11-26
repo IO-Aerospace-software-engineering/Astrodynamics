@@ -98,7 +98,6 @@ Console.WriteLine($"L = Ω + ω + ν: {equinoctial.L0:F6} rad");
 
 These are the modified equinoctial elements p, f, g, h, k and L. The classical set (GMAT's EquinoctialH, EquinoctialK,
 EquinoctialP and EquinoctialQ) is h = G, k = F, p = K and q = H in these names.
-`EquinoctialEx()`, `EquinoctialEy()`, `Hx()`, `Hy()` and `Lv()` return F, G, H, K and L0.
 
 They are preferred for numerical orbit determination and low-eccentricity orbits where Keplerian elements become poorly defined.
 
@@ -137,7 +136,7 @@ Generate an SSO for a given altitude and eccentricity:
 var ssoOrbit = earth.HelioSynchronousOrbit(
     semiMajorAxis: 7000000.0,
     eccentricity: 0.001,
-    epochAtDescendingNode: epoch);
+    descendingNodeEpoch: epoch);
 
 Console.WriteLine($"SSO inclination: {ssoOrbit.Inclination() * Constants.Rad2Deg:F4} deg");
 ```

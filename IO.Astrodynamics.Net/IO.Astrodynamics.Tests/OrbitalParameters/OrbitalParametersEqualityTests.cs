@@ -223,7 +223,7 @@ public class OrbitalParametersEqualityTests
     public void TheEpochInAnotherTimeFrame_IsTheSameInstant()
     {
         var utc = Set1(OrbitalElementsType.Mean);
-        var tdb = new KeplerianElements(utc.A, utc.E, utc.I, utc.RAAN, utc.AOP, utc.M, Earth, Epoch.ToTDB(), Frames.Frame.ICRF,
+        var tdb = new KeplerianElements(utc.SemiMajorAxis(), utc.Eccentricity(), utc.Inclination(), utc.AscendingNode(), utc.ArgumentOfPeriapsis(), utc.MeanAnomaly(), Earth, Epoch.ToTDB(), Frames.Frame.ICRF,
             elementsType: OrbitalElementsType.Mean);
 
         Assert.True(utc == (Astrodynamics.OrbitalParameters.OrbitalParameters)tdb);

@@ -206,8 +206,8 @@ public class TLEPropagatorTests
         // The steps of the synthetic solution join the samples and end at the window end, where it reads SGP4 bit for bit
         var segment = Assert.Single(solution.Segments);
         Assert.Equal(expectedCount - 1, segment.Steps.Count);
-        Assert.Equal(windowSeconds, segment.Duration, 9);
-        Assert.Equal(windowSeconds - stepSeconds * (expectedCount - 2), segment.Steps[^1].StepSize, 9);
+        Assert.Equal(windowSeconds, segment.DurationSeconds, 9);
+        Assert.Equal(windowSeconds - stepSeconds * (expectedCount - 2), segment.Steps[^1].StepSizeSeconds, 9);
         var (endPosition, endVelocity) = solution.InterpolateAt(end);
         Assert.Equal(Iss.ToStateVector(end).Position, endPosition);
         Assert.Equal(Iss.ToStateVector(end).Velocity, endVelocity);

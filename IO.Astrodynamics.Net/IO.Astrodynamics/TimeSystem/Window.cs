@@ -108,14 +108,14 @@ public readonly record struct Window
     }
 
     /// <summary>
-    /// Whether the window holds the instant <paramref name="date"/>, its ends included, whatever the scales
+    /// Whether the window holds the instant <paramref name="epoch"/>, its ends included, whatever the scales
     /// (R16 of #668, decided by S. Guillet, 2026-11-19: <c>Intersects(Time)</c> before 11.0.0).
     /// </summary>
-    /// <param name="date">The instant.</param>
-    /// <returns>Whether <paramref name="date"/> is at or after the start and at or before the end.</returns>
-    public bool Contains(Time date)
+    /// <param name="epoch">The instant.</param>
+    /// <returns>Whether <paramref name="epoch"/> is at or after the start and at or before the end.</returns>
+    public bool Contains(Time epoch)
     {
-        return date >= StartDate && date <= EndDate;
+        return epoch >= StartDate && epoch <= EndDate;
     }
 
     /// <summary>

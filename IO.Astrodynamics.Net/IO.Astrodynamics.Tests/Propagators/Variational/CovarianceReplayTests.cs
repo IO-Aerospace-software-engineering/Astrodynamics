@@ -130,7 +130,7 @@ public class CovarianceReplayTests : IClassFixture<ReferenceCases>
         Assert.Equal(k + 1, replayed.Segments[0].Steps.Count);
         Assert.Equal(13L * (k + 1), replayed.Dynamics.StageJacobianEvaluations);
         Assert.Throws<ArgumentOutOfRangeException>(() =>
-            replayed.GetCovariance(end.AddSeconds(segment.Steps[k + 1].StepSize + segment.Steps[k].StepSize)));
+            replayed.GetCovariance(end.AddSeconds(segment.Steps[k + 1].StepSizeSeconds + segment.Steps[k].StepSizeSeconds)));
         var p = replayed.GetCovariance(end);
         Assert.True(p.Get(1, 1) > 0.0);
     }

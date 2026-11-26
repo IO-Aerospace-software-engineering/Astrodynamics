@@ -406,7 +406,7 @@ internal class OpmWriter
 
         element.Add(new XElement("MAN_EPOCH_IGNITION",
             FormatDateTime(InTimeSystem(maneuver.ManEpochIgnition, metadata, "MAN_EPOCH_IGNITION"))));
-        element.Add(CreateElementWithUnits("MAN_DURATION", maneuver.ManDuration, "s"));
+        element.Add(CreateElementWithUnits("MAN_DURATION", maneuver.ManDurationSeconds, "s"));
         element.Add(CreateElementWithUnits("MAN_DELTA_MASS", maneuver.ManDeltaMass, "kg"));
         element.Add(new XElement("MAN_REF_FRAME", maneuver.ManRefFrame));
         element.Add(CreateElementWithUnits("MAN_DV_1", maneuver.ManDv1, "km/s"));

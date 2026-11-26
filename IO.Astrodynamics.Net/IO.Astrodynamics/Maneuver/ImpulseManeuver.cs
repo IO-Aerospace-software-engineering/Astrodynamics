@@ -375,7 +375,7 @@ namespace IO.Astrodynamics.Maneuver
 
             return new OpmManeuverParameters(
                 manEpochIgnition: ThrustWindow.Value.StartDate.ToUTC().DateTime,
-                manDuration: ThrustWindow.Value.Length.TotalSeconds,
+                manDurationSeconds: ThrustWindow.Value.Length.TotalSeconds,
                 manDeltaMass: -FuelBurned, // OPM uses negative values for expelled mass
                 manRefFrame: referenceFrame,
                 manDv1: deltaVKmPerSec.X,

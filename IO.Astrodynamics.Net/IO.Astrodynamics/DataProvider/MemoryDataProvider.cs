@@ -41,7 +41,7 @@ public class MemoryDataProvider : IDataProvider
     /// <exception cref="ArgumentException">No orientation of <paramref name="source"/> was ever added, and the provider does not
     /// know it: neither ICRF, GCRF, ECLIPJ2000 (#559), nor TEME, CIRS or TIRS (#656), by name in any case for the last
     /// three.</exception>
-    /// <exception cref="InvalidOperationException"><paramref name="date"/> is outside the stored orientations of
+    /// <exception cref="InvalidOperationException"><paramref name="epoch"/> is outside the stored orientations of
     /// <paramref name="source"/> (#680; <see cref="ArgumentException"/> before 11.0.0).</exception>
     /// <remarks>
     /// A frame named TEME, CIRS or TIRS, in any case, is <see cref="Frame.TEME"/>, <see cref="Frame.CIRS"/> or
@@ -53,35 +53,35 @@ public class MemoryDataProvider : IDataProvider
     /// and <see cref="Frame.ECLIPTIC_J2000"/>, SPICE's fixed rotation of the J2000 obliquity (84381.448″ about x, the default
     /// frame of the bodies), so that a body built on this provider reads its orbit in it without stored orientations.
     /// </remarks>
-    public StateOrientation FrameTransformationToICRF(in Time date, Frame source)
+    public StateOrientation FrameTransformationToICRF(in Time epoch, Frame source)
     {
-        if (SpiceAPI.ManagedOrientationToIcrf(date, source) is { } managed)
+        if (SpiceAPI.ManagedOrientationToIcrf(epoch, source) is { } managed)
         {
             return managed;
         }
 
         if (!_stateOrientationsToICRF.TryGetValue(source.Name, out var stateOrientations))
         {
-            return DefinedOrientationToIcrf(date, source) ?? throw new ArgumentException(SpiceAPI.WithIcrfHint(source.Name,
+            return DefinedOrientationToIcrf(epoch, source) ?? throw new ArgumentException(SpiceAPI.WithIcrfHint(source.Name,
                 $"Frame not found ({source}): no orientation was added to this MemoryDataProvider under the name '{source.Name}', and it does not define it."));
         }
 
-        if (stateOrientations.TryGetValue(date, out var stateOrientation))
+        if (stateOrientations.TryGetValue(epoch, out var stateOrientation))
         {
             return stateOrientation;
         }
 
         // A frame is added with its first entry (AddStateOrientationToICRF): its entries are never empty
-        if (date < stateOrientations.Keys.First() || date > stateOrientations.Keys.Last())
+        if (epoch < stateOrientations.Keys.First() || epoch > stateOrientations.Keys.Last())
         {
-            throw new InvalidOperationException($"No state orientation found for the frame ({source}) at this date {date}");
+            throw new InvalidOperationException($"No state orientation found for the frame ({source}) at this epoch {epoch}");
         }
 
-        // The entries around the date, interpolated by the exact SLERP of StateOrientation.Interpolate; the result is not
+        // The entries around the epoch, interpolated by the exact SLERP of StateOrientation.Interpolate; the result is not
         // stored, so that a read depends on the entries only, not on the reads before it (#548)
         var dates = stateOrientations.Keys.ToList();
-        int next = ~dates.BinarySearch(date);
-        return stateOrientations[dates[next - 1]].Interpolate(stateOrientations[dates[next]], date);
+        int next = ~dates.BinarySearch(epoch);
+        return stateOrientations[dates[next - 1]].Interpolate(stateOrientations[dates[next]], epoch);
     }
 
     /// <summary>
@@ -167,11 +167,11 @@ public class MemoryDataProvider : IDataProvider
     /// </remarks>
     /// <exception cref="NotSupportedException"><paramref name="aberration"/> is not <see cref="Aberration.None"/> (#559).</exception>
     /// <exception cref="InvalidOperationException">The target or the observer has no stored state, or none around
-    /// <paramref name="date"/> (#680; <see cref="ArgumentException"/> before 11.0.0); or <paramref name="frame"/>, or the
+    /// <paramref name="epoch"/> (#680; <see cref="ArgumentException"/> before 11.0.0); or <paramref name="frame"/>, or the
     /// frame of a stored state, is read outside its stored orientations.</exception>
     /// <exception cref="ArgumentException"><paramref name="frame"/>, or the frame of a stored state, is neither stored nor
     /// known to the provider (<see cref="FrameTransformationToICRF"/>).</exception>
-    public StateVector GetEphemeris(in Time date, ILocalizable target, ILocalizable observer, Frame frame, Aberration aberration)
+    public StateVector GetEphemeris(in Time epoch, ILocalizable target, ILocalizable observer, Frame frame, Aberration aberration)
     {
         if (aberration != Aberration.None)
         {
@@ -181,15 +181,15 @@ public class MemoryDataProvider : IDataProvider
 
         if (target.NaifId == observer.NaifId)
         {
-            return new StateVector(Vector3.Zero, Vector3.Zero, observer, date, frame);
+            return new StateVector(Vector3.Zero, Vector3.Zero, observer, epoch, frame);
         }
 
-        var targetFromSSB = GetEphemerisFromICRF(date, target);
-        var observerFromSSB = GetEphemerisFromICRF(date, observer);
+        var targetFromSSB = GetEphemerisFromICRF(epoch, target);
+        var observerFromSSB = GetEphemerisFromICRF(epoch, observer);
         var position = targetFromSSB.Position - observerFromSSB.Position;
         var velocity = targetFromSSB.Velocity - observerFromSSB.Velocity;
 
-        var orientation = OrientationToIcrfForStates(date, frame);
+        var orientation = OrientationToIcrfForStates(epoch, frame);
         if (orientation != null)
         {
             var toFrame = orientation.Rotation.Conjugate();
@@ -197,7 +197,7 @@ public class MemoryDataProvider : IDataProvider
             velocity = velocity.Rotate(toFrame) + orientation.AngularVelocity.Cross(position);
         }
 
-        return new StateVector(position, velocity, observer, date, frame);
+        return new StateVector(position, velocity, observer, epoch, frame);
     }
 
     /// <exception cref="ArgumentException">No information was added for <paramref name="naifId"/>, the exception's
@@ -238,7 +238,7 @@ public class MemoryDataProvider : IDataProvider
     }
 
     /// <summary>
-    /// Store the orientation of <paramref name="frame"/> to ICRF at <paramref name="date"/>, read by
+    /// Store the orientation of <paramref name="frame"/> to ICRF at <paramref name="epoch"/>, read by
     /// <see cref="FrameTransformationToICRF"/> and by the ephemeris reads in that frame.
     /// </summary>
     /// <exception cref="ArgumentException"><paramref name="frame"/> is a frame the provider defines and never reads from
@@ -246,7 +246,7 @@ public class MemoryDataProvider : IDataProvider
     /// shares its axes, #543), and the managed TEME, CIRS and TIRS (#656) (#744, decided by S. Guillet, 2026-11-18; before
     /// 11.0.0 an orientation stored under ICRF or GCRF was returned by <see cref="FrameTransformationToICRF"/> while the
     /// ephemeris reads took the identity, and one stored under TEME, CIRS or TIRS was never read). Nothing is stored.</exception>
-    public void AddStateOrientationToICRF(Frame frame, Time date, StateOrientation stateOrientation)
+    public void AddStateOrientationToICRF(Frame frame, Time epoch, StateOrientation stateOrientation)
     {
         ArgumentNullException.ThrowIfNull(frame);
         if (HasIcrfAxes(frame) || SpiceAPI.ManagedFrame(frame) != null)
@@ -261,16 +261,16 @@ public class MemoryDataProvider : IDataProvider
             _stateOrientationsToICRF[frame.Name] = new SortedDictionary<Time, StateOrientation>();
         }
 
-        _stateOrientationsToICRF[frame.Name][date] = stateOrientation;
+        _stateOrientationsToICRF[frame.Name][epoch] = stateOrientation;
     }
 
-    public void AddStateVector(int naifId, Time date, StateVector stateVector)
+    public void AddStateVector(int naifId, Time epoch, StateVector stateVector)
     {
         if (!_stateVectors.ContainsKey(naifId))
         {
             _stateVectors[naifId] = new SortedDictionary<Time, StateVector>();
         }
 
-        _stateVectors[naifId][date] = stateVector;
+        _stateVectors[naifId][epoch] = stateVector;
     }
 }

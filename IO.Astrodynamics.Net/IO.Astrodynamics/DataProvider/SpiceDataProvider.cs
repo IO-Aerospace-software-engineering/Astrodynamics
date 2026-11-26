@@ -26,20 +26,20 @@ public class SpiceDataProvider : IDataProvider
     /// <exception cref="ArgumentException">SPICE knows no frame of the name of <paramref name="source"/>
     /// (<see cref="ArgumentException.ParamName"/> <c>source</c>): the message names the frame, SPICE's error its inner
     /// exception (R25 of #668, decided by S. Guillet, 2026-11-19).</exception>
-    /// <exception cref="InvalidOperationException">SPICE cannot orient the frame at <paramref name="date"/>.</exception>
-    public StateOrientation FrameTransformationToICRF(in Time date, Frame source)
+    /// <exception cref="InvalidOperationException">SPICE cannot orient the frame at <paramref name="epoch"/>.</exception>
+    public StateOrientation FrameTransformationToICRF(in Time epoch, Frame source)
     {
-        if (SpiceAPI.ManagedOrientationToIcrf(date, source) is { } managed)
+        if (SpiceAPI.ManagedOrientationToIcrf(epoch, source) is { } managed)
         {
             return managed;
         }
 
         // An unknown name names the parameter of this call, source (R25 of #668)
-        return SpiceAPI.Instance.TransformFrame(date, source, Frame.ICRF, nameof(source), null);
+        return SpiceAPI.Instance.TransformFrame(epoch, source, Frame.ICRF, nameof(source), null);
     }
 
     /// <inheritdoc />
-    public StateVector GetEphemeris(in Time date, ILocalizable target, ILocalizable observer, Frame frame, Aberration aberration)
+    public StateVector GetEphemeris(in Time epoch, ILocalizable target, ILocalizable observer, Frame frame, Aberration aberration)
     {
         // Use ReadEphemerisRaw to avoid CelestialItem.Create() which can't handle
         // spacecraft/site NAIF IDs. The actual observer object is passed through directly.
@@ -47,9 +47,9 @@ public class SpiceDataProvider : IDataProvider
         // a managed frame (TEME, CIRS, TIRS, #558; the frame of a site built from coordinates or of a managed spacecraft with an
         // attitude record, #682; the frame of a site of the kernels whose frame id no loaded kernel defines, third review of
         // #690) is read in J2000 and rotated by it (SpiceAPI.ManagedReadFrame)
-        var result = SpiceAPI.Instance.ReadEphemerisRaw(date, observer, target.NaifId, frame, aberration);
+        var result = SpiceAPI.Instance.ReadEphemerisRaw(epoch, observer, target.NaifId, frame, aberration);
         // ReadEphemeris always returns TDB epoch; preserve the caller's time scale.
-        return new StateVector(result.Position, result.Velocity, observer, date, result.Frame);
+        return new StateVector(result.Position, result.Velocity, observer, epoch, result.Frame);
     }
 
     /// <summary>The information of the celestial body of <paramref name="naifId"/> in the loaded kernels

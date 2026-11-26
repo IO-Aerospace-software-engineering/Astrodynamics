@@ -273,7 +273,7 @@ public class PropagationGoldenTests
                 segment.BaseEpoch.TimeSpanFromJ2000().TotalSeconds,
                 segment.Steps.Select(step => new[]
                 {
-                    step.CumulativeTime, step.StepSize,
+                    step.CumulativeTime, step.StepSizeSeconds,
                     step.StartPosition.X, step.StartPosition.Y, step.StartPosition.Z,
                     step.StartVelocity.X, step.StartVelocity.Y, step.StartVelocity.Z,
                     step.EndPosition.X, step.EndPosition.Y, step.EndPosition.Z,

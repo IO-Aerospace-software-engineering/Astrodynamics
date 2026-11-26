@@ -6,7 +6,6 @@ using IO.Astrodynamics.CCSDS.OMM;
 using IO.Astrodynamics.OrbitalParameters.TLE;
 using Xunit;
 using Xunit.Abstractions;
-using TleConfiguration = IO.Astrodynamics.OrbitalParameters.TLE.Configuration;
 
 namespace IO.Astrodynamics.Tests.OrbitalParameters;
 
@@ -86,8 +85,8 @@ public class TleBlankDesignatorTests
     }
 
     /// <summary>
-    /// The fit of <see cref="Astrodynamics.OrbitalParameters.OrbitalParameters.ToTLE"/> writes a null or blank
-    /// <see cref="TleConfiguration.CosparId"/> as the blank columns 10 to 17, as <see cref="TLE.Create"/> does (#604): the
+    /// The fit of <see cref="Astrodynamics.OrbitalParameters.OrbitalParameters.ToTle"/> writes a null or blank
+    /// the <c>cosparId</c> of <see cref="IO.Astrodynamics.OrbitalParameters.OrbitalParameters.ToTle"/> as the blank columns 10 to 17, as <see cref="TLE.Create"/> does (#604): the
     /// lines are those of the same fit with a designator, but for those columns and the checksum of line 1, which the
     /// designator's digits enter (NORAD's Spacetrack Report No. 3: the sum of the digits, each minus sign 1, modulo 10).
     /// Before 11.0.0 the <c>ArgumentException</c> of the designator was caught inside the fit, which threw
@@ -104,8 +103,8 @@ public class TleBlankDesignatorTests
             "2 25544  51.6423 353.0312 0000493 320.8755  39.2360 15.49309423 25703");
         var state = iss.ToOsculating();
 
-        var withDesignator = state.ToTLE(new TleConfiguration(25544, "ISS", "98067A"));
-        var blank = state.ToTLE(new TleConfiguration(25544, "ISS", cosparId));
+        var withDesignator = state.ToTle("ISS", 25544, "98067A");
+        var blank = state.ToTle("ISS", 25544, cosparId);
 
         Assert.Equal(new string(' ', 8), blank.Line1.Substring(9, 8));
         Assert.Equal(withDesignator.Line1[..9], blank.Line1[..9]);
@@ -115,7 +114,7 @@ public class TleBlankDesignatorTests
         // The TLE reads back: its constructor checks the lengths, line numbers, catalog numbers and checksums (#675)
         var read = new TLE("ISS", blank.Line1, blank.Line2);
         Assert.Equal(new string(' ', 8), read.Line1.Substring(9, 8));
-        _output.WriteLine($"MEASURE #604 ToTLE '{cosparId}': {blank.Line1}");
+        _output.WriteLine($"MEASURE #604 ToTle '{cosparId}': {blank.Line1}");
     }
 
     /// <summary>The TLE checksum of Spacetrack Report No. 3: the sum of the digits, each minus sign 1, modulo 10.</summary>

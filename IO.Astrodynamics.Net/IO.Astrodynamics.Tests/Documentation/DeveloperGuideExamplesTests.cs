@@ -169,11 +169,11 @@ public class DeveloperGuideExamplesTests
     // equation with the GM of the kernels (BODY399_GM), the orbit's RAAN and argument of periapsis zero
     private static (Vector3 Position, Vector3 Velocity) TwoBody(KeplerianElements orbit, double gm, double seconds)
     {
-        double a = orbit.A, e = orbit.E, i = orbit.I;
-        Assert.Equal(0.0, orbit.RAAN);
-        Assert.Equal(0.0, orbit.AOP);
+        double a = orbit.SemiMajorAxis(), e = orbit.Eccentricity(), i = orbit.Inclination();
+        Assert.Equal(0.0, orbit.AscendingNode());
+        Assert.Equal(0.0, orbit.ArgumentOfPeriapsis());
         double n = System.Math.Sqrt(gm / (a * a * a));
-        double m = orbit.M + n * seconds;
+        double m = orbit.MeanAnomaly() + n * seconds;
         double bigE = m;
         for (int k = 0; k < 50; k++)
         {

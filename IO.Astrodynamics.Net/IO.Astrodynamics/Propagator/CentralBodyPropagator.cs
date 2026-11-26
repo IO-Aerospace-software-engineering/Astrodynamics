@@ -324,45 +324,6 @@ public class CentralBodyPropagator : PropagatorBase
     }
 
     /// <summary>
-    /// Instantiate a central-body propagator with a custom integrator that already has its forces, as by the overload
-    /// without <paramref name="covariancePropagation"/>, which also propagates the state transition matrix and, in
-    /// <see cref="CovariancePropagationMode.Covariance"/>, the covariance of the initial orbital parameters. The columns
-    /// of Ψ follow the forces of the integrator at construction.
-    /// </summary>
-    /// <param name="window">The propagation window.</param>
-    /// <param name="spacecraft">The spacecraft.</param>
-    /// <param name="integrator">The integrator and its forces, given to no other propagator; the state transition matrix
-    /// needs an <see cref="RK78Integrator"/>. The propagator initializes it with its initial state at construction, at the
-    /// start of every run and after each event, as the overload without <paramref name="covariancePropagation"/>, so an
-    /// <see cref="IIntegrator.Initialize"/> by the caller has no effect on the run (#782).</param>
-    /// <param name="deltaT">The step of the output states.</param>
-    /// <param name="covariancePropagation">The propagation of the state transition matrix and of the covariance; null
-    /// for none.</param>
-    /// <exception cref="NotSupportedException"><paramref name="covariancePropagation"/> is given and the integrator is
-    /// not an <see cref="RK78Integrator"/>.</exception>
-    /// <exception cref="ArgumentException">Process noise or consider parameters without the covariance, or a consider
-    /// parameter without its force; or the integrator was already given to a propagator, or to a propagator constructor
-    /// that threw after claiming it (#782), naming <c>integrator</c>.</exception>
-    /// <remarks>
-    /// The integrator is claimed once the checks of the window, the spacecraft and its maneuvers pass, before anything
-    /// changes it, and the claim is never released: a constructor rejected by a later check (the GM of the central body,
-    /// the covariance options) leaves it claimed, and the caller builds a new one (decision 27 of lot L4 of #668, decided
-    /// by S. Guillet, 2026-11-22).
-    /// </remarks>
-    /// <exception cref="InvalidOperationException">The covariance is asked for, and the initial orbital parameters carry
-    /// none, carry it at another epoch than the start of the window, or carry one that is not symmetric and positive
-    /// semi-definite.</exception>
-    /// <exception cref="ArgumentException"><paramref name="spacecraft"/> orbits a central body whose GM is not above 0: a body
-    /// of the kernels whose <c>BODYnnn_GM</c> the kernel pool lacks (no GM kernel such as <c>gm_de440.tpc</c>), refused before
-    /// anything runs (R03 of #668: before 11.0.0 the propagation ran without central gravity).</exception>
-    public CentralBodyPropagator(in Window window, Spacecraft spacecraft, IIntegrator integrator, TimeSpan deltaT,
-        CovariancePropagationOptions covariancePropagation)
-        : this(window, spacecraft, integrator, deltaT)
-    {
-        EnableCovariancePropagation(covariancePropagation);
-    }
-
-    /// <summary>
     /// A central-body propagator with an integrator that already has its forces, the forces of another propagation, and
     /// the orientation cache of that propagation, which must cover <paramref name="window"/>: the propagation of an
     /// avoidance option from the state at its burn, with the force model of the trajectory it leaves (step 10, E4;
@@ -387,8 +348,18 @@ public class CentralBodyPropagator : PropagatorBase
     /// Instantiate central-body propagator with a custom integrator that already has forces configured.
     /// No forces are added; the integrator is initialized with the initial state of the propagation.
     /// The central body is inferred from the spacecraft's orbital parameters observer.
-    /// When the observer is a Star or Barycenter, the Sun is used as the central body.
+    /// When the observer is a Star or Barycenter, the Sun is used as the central body. With <paramref name="options"/>, it
+    /// also propagates the state transition matrix and, in <see cref="CovariancePropagationMode.Covariance"/>, the
+    /// covariance of the initial orbital parameters; the columns of Ψ follow the forces of the integrator at construction
+    /// (one constructor since 11.0.0, D1 of #668, lot L9: the overload with a <c>covariancePropagation</c> parameter
+    /// before).
     /// </summary>
+    /// <param name="window">The propagation window.</param>
+    /// <param name="spacecraft">The spacecraft.</param>
+    /// <param name="integrator">The integrator and its forces, given to no other propagator; the state transition matrix
+    /// needs an <see cref="RK78Integrator"/>.</param>
+    /// <param name="deltaT">The step of the output states.</param>
+    /// <param name="options">The propagation of the state transition matrix and of the covariance; null for none.</param>
     /// <remarks>
     /// The time argument follows the central body (#501): about the Earth the propagation integrates over the TT seconds
     /// between the instants of the window, the forces at t being those of TT₀ + t; about any other central body, the Sun
@@ -418,11 +389,20 @@ public class CentralBodyPropagator : PropagatorBase
     /// <exception cref="ArgumentException"><paramref name="spacecraft"/> orbits a central body whose GM is not above 0: a body
     /// of the kernels whose <c>BODYnnn_GM</c> the kernel pool lacks (no GM kernel such as <c>gm_de440.tpc</c>), refused before
     /// anything runs (R03 of #668: before 11.0.0 the propagation ran without central gravity).</exception>
-    public CentralBodyPropagator(in Window window, Spacecraft spacecraft, IIntegrator integrator, TimeSpan deltaT)
+    /// <exception cref="NotSupportedException"><paramref name="options"/> asks for the state transition matrix and the
+    /// integrator is not an <see cref="RK78Integrator"/>.</exception>
+    /// <exception cref="ArgumentException">Process noise or consider parameters without the covariance, or a consider
+    /// parameter without its force.</exception>
+    /// <exception cref="InvalidOperationException">The covariance is asked for, and the initial orbital parameters carry
+    /// none, carry it at another epoch than the start of the window, or carry one that is not symmetric and positive
+    /// semi-definite.</exception>
+    public CentralBodyPropagator(in Window window, Spacecraft spacecraft, IIntegrator integrator, TimeSpan deltaT,
+        CovariancePropagationOptions options = null)
         : this(window, spacecraft, integrator, RequirePositiveStep(deltaT, nameof(deltaT)),
             PropagationTimeArgument.For(spacecraft?.InitialOrbitalParameters?.Observer))
     {
         integrator.Initialize(InitialState);
+        EnableCovariancePropagation(options);
     }
 
     // Every constructor ends here; the internal one of the avoidance options and of the non-linearity index directly,
@@ -516,7 +496,7 @@ public class CentralBodyPropagator : PropagatorBase
     /// </remarks>
     /// <exception cref="InvalidOperationException">Drag is asked about a central body other than the Sun without an
     /// atmosphere, or about the Sun with no listed body that has one (no Earth, and no body with a model).</exception>
-    protected static List<ForceBase> BuildCentralBodyForces(CelestialItem centralBody,
+    private protected static List<ForceBase> BuildCentralBodyForces(CelestialItem centralBody,
         CelestialItem[] items, Spacecraft spacecraft,
         bool includeAtmosphericDrag, bool includeSolarRadiationPressure)
     {

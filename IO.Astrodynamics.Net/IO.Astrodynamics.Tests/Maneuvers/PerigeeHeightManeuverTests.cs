@@ -153,7 +153,7 @@ namespace IO.Astrodynamics.Tests.Maneuvers
                 System.Math.Abs(maneuver.TargetPerigeeRadius / r - 1.0), System.Math.Abs(ke.PerigeeVelocity() / v - 1.0),
                 System.Math.Abs(ke.ApogeeVelocity() / v - 1.0)
             }.Max();
-            System.Console.WriteLine($"MEASURE #686 issue elements e = {ke.E:E3}: worst apsis radius and velocity against 7178 km and sqrt(GM/r) {worst:E3}");
+            System.Console.WriteLine($"MEASURE #686 issue elements e = {ke.Eccentricity():E3}: worst apsis radius and velocity against 7178 km and sqrt(GM/r) {worst:E3}");
             Assert.True(worst <= Issue686Tolerance, $"{worst:E3}");
         }
 }

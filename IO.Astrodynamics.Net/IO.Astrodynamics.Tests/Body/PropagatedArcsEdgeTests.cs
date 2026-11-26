@@ -177,7 +177,7 @@ public class PropagatedArcsEdgeTests
                               $"SPK {spkPosition:E2} m {spkVelocity:E2} m/s, |v| solution {velocity.Magnitude():F2} m/s");
             Assert.True(apogee.ThrustWindow.HasValue);
             Assert.Equal(2, solution.Segments.Count);
-            if (solution.Segments[^1].Duration == 0.0)
+            if (solution.Segments[^1].DurationSeconds == 0.0)
             {
                 // The impulse at the end: the arc closed by the state before it, then the state after it alone; the SPK
                 // ends with the state before it
@@ -231,7 +231,7 @@ public class PropagatedArcsEdgeTests
         var outputStep = TimeSpan.FromSeconds(step);
         var solution = sc.Propagate(window, new PropagationOptions { Integrator = new VVIntegratorOptions { Step = outputStep }, OutputStep = outputStep, ThirdBodies = [earth], CovariancePropagation = CovariancePropagationOptions.None });
         Assert.True(apogee.ThrustWindow.HasValue);
-        Assert.Equal(0.0, solution.Segments[^1].Duration);
+        Assert.Equal(0.0, solution.Segments[^1].DurationSeconds);
         var end = window.EndDate;
         var after = Assert.Single(sc.PropagatedArcs[^1]);
         var before = solution.Segments[0].Steps[^1];

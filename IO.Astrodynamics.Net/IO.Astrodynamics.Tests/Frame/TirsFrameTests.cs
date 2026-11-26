@@ -135,7 +135,7 @@ public class TirsFrameTests
     [Fact]
     public void TirsAngularVelocityMatchesFreshRecomputationOverOneSecond()
     {
-        // The angular velocity follows the SPICE convention of the frames, not the one of StateOrientation.AtDate.
+        // The angular velocity follows the SPICE convention of the frames, not the one of StateOrientation.AtEpoch.
         // The residual, about 6e-12 rad, is the precession-nutation rate of the CIP, which TIRS leaves out.
         var tirs = new TirsFrame();
         var epoch = new TimeSystem_Time(2024, 1, 1, 12, 0, 0, TimeScale.TDB);

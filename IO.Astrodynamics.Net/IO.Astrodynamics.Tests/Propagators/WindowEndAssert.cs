@@ -54,7 +54,7 @@ internal static class WindowEndAssert
     {
         var first = solution.Segments[0];
         var last = solution.Segments[^1];
-        return solution.TimeArgument.SecondsBetween(first.BaseEpoch, last.BaseEpoch) + last.Duration;
+        return solution.TimeArgument.SecondsBetween(first.BaseEpoch, last.BaseEpoch) + last.DurationSeconds;
     }
 
     /// <summary>The length of <paramref name="window"/> in seconds of the time argument of the solution.</summary>

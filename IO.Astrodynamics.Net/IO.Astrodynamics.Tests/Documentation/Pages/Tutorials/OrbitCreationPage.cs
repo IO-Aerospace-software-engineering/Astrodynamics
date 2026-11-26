@@ -170,7 +170,7 @@ internal static class OrbitCreationPage
         var ssoOrbit = earth.HelioSynchronousOrbit(
             semiMajorAxis: 7000000.0,
             eccentricity: 0.001,
-            epochAtDescendingNode: epoch);
+            descendingNodeEpoch: epoch);
 
         Console.WriteLine($"SSO inclination: {ssoOrbit.Inclination() * Constants.Rad2Deg:F4} deg");
         #endregion

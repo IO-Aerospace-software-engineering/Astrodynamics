@@ -158,7 +158,7 @@ Assert.Equal(25544, tle.NoradCatalogId);
 **NORAD Catalog Numbers (Alpha-5)**
 
 The catalog number field is 5 characters wide on both lines. The catalog passed 65535 long ago, so
-identifiers are `int` everywhere (`Configuration.NoradId`, `TLE.Create`) — never `ushort`.
+identifiers are `int` everywhere (`ToTle`'s `noradId`, `TLE.Create`) — never `ushort`.
 
 | Range | Encoding | Example |
 |-------|----------|---------|
@@ -169,7 +169,7 @@ identifiers are `int` everywhere (`Configuration.NoradId`, `TLE.Create`) — nev
 - `NoradCatalogNumber.Format` / `.Parse` / `.TryParse` / `.IsValid` handle the encoding
 - `TLE.NoradCatalogId` returns the decoded numeric value
 - Alpha-5 letters count as 0 in the TLE checksum, and SGP4/SDP4 ignores the field entirely
-- The element set number defaults to `TLE.DefaultElementSetNumber`, 999, on every path (`TLE.Create`, `Configuration`,
+- The element set number defaults to `TLE.DefaultElementSetNumber`, 999, on every path (`TLE.Create`, `TleFitOptions`,
   `Omm.ToTle` without `ELEMENT_SET_NO`; #606)
 - Out-of-range identifiers, revolution numbers (> 99999) and element set numbers (> 9999) throw
   instead of being silently truncated
@@ -253,7 +253,7 @@ issOmm.Save("iss.omm");
 - OMM uses full format: `"1998-067A"` (9 chars with hyphen)
 - TLE uses abbreviated format: `"98067A"` (6-8 chars)
 - Conversion is automatic in `ToTle()` and `ToOmm()` methods
-- A TLE without a designator (blank columns 10-17) gives `OBJECT_ID = UNKNOWN`, which `ToTle()` reads back (trimmed, any case) as blank columns, and `TLE.Create` and the fit of `ToTLE` take a null or blank `cosparId`/`Configuration.CosparId` (#604); an empty `OBJECT_ID` stays refused (#708), the empty value of #604's decision reaching no public path (open, for S. Guillet to settle)
+- A TLE without a designator (blank columns 10-17) gives `OBJECT_ID = UNKNOWN`, which `ToTle()` reads back (trimmed, any case) as blank columns, and `TLE.Create` and the fit of `ToTle` take a null or blank `cosparId` (#604); an empty `OBJECT_ID` stays refused (#708), the empty value of #604's decision reaching no public path (open, for S. Guillet to settle)
 
 **TLE Precision Limitations**
 When converting OMM → TLE → OMM, expect some precision loss:
@@ -586,7 +586,7 @@ public interface IIntegrator
     void Initialize(StateVector initialState);
     IntegrationResult IntegrateSegment(
         Vector3 startPosition, Vector3 startVelocity,
-        Time baseEpoch, double duration,
+        Time baseEpoch, double durationSeconds,
         IReadOnlyList<IEventDetector> eventDetectors = null);
 }
 ```
@@ -860,7 +860,7 @@ var deg2Rad = IO.Astrodynamics.Constants.Deg2Rad; // not Constants.Deg2Rad (that
    - Use `ToOsculating()` for TLE position/velocity calculations
    - Never call `ToStateVector()` directly on mean KeplerianElements
    - Use `TLE.Create()` only with mean elements of an Earth orbit in TEME (it validates `ElementsType.Mean`, `Frame.TEME` and
-     the Earth, NAIF id 399, `ArgumentException` otherwise; `ToTLE` refuses an orbit not about the Earth with
+     the Earth, NAIF id 399, `ArgumentException` otherwise; `ToTle` refuses an orbit not about the Earth with
      `InvalidOperationException`, #607)
    - NORAD catalog numbers are `int`, not `ushort`; values above 99999 use Alpha-5 encoding, and
      `NoradCatalogNumber` handles the conversion — never format the field by hand

@@ -54,7 +54,7 @@ using IO.Astrodynamics.SolarSystemObjects;
 using IO.Astrodynamics.Surface;
 using IO.Astrodynamics.TimeSystem;
 using TLE = IO.Astrodynamics.OrbitalParameters.TLE.TLE;
-using TleConfiguration = IO.Astrodynamics.OrbitalParameters.TLE.Configuration;
+using TleFitOptions = IO.Astrodynamics.OrbitalParameters.TLE.TleFitOptions;
 
 namespace DocumentationPageSamples.Tutorials;
 
@@ -136,15 +136,8 @@ internal static class TleAndOmmPage
     {
         #region docs/tutorials/tle-and-omm.md:5
         // Inputs: sv (StateVector)
-        // TLE.Configuration collides with IO.Astrodynamics.Configuration, so the directive above aliases it
-
-        var config = new TleConfiguration(
-            NoradId: 25544,
-            Name: "ISS (ZARYA)",
-            CosparId: "98067A",
-            RevolutionsAtEpoch: 25703);
-
-        var newTle = sv.ToTLE(config);
+        var newTle = sv.ToTle("ISS (ZARYA)", 25544, "98067A",
+            new TleFitOptions { RevolutionNumberAtEpoch = 25703 });
         #endregion
     }
 
@@ -152,9 +145,8 @@ internal static class TleAndOmmPage
     internal static void Block06(StateVector sv)
     {
         #region docs/tutorials/tle-and-omm.md:6
-        // Inputs: sv (StateVector), and the TleConfiguration alias above
-        var alpha5 = new TleConfiguration(NoradId: 275544, Name: "MY_SAT", CosparId: "24001A");
-        var alpha5Tle = sv.ToTLE(alpha5);
+        // Inputs: sv (StateVector)
+        var alpha5Tle = sv.ToTle("MY_SAT", 275544, "24001A");
 
         Console.WriteLine(alpha5Tle.Line1.Substring(2, 5));  // T5544
         Console.WriteLine(alpha5Tle.NoradCatalogId);         // 275544

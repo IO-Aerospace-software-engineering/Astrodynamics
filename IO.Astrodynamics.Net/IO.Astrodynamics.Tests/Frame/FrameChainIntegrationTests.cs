@@ -164,7 +164,7 @@ public class FrameChainIntegrationTests
     public void SpiceFrameRotationFollowsItsAngularVelocity(string frameName)
     {
         // The convention every frame follows (xf2rav_c): the angular velocity of ICRF relative to the frame, in the
-        // frame axes. Over one second the measured residual is below 2e-13 rad. StateOrientation.AtDate, built for
+        // frame axes. Over one second the measured residual is below 2e-13 rad. StateOrientation.AtEpoch, built for
         // attitudes, would turn the other way.
         var frame = new Frames.Frame(frameName);
         var epoch = new TimeSystem_Time(2021, 1, 1, 12, 0, 0, TimeScale.TDB);

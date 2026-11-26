@@ -280,14 +280,14 @@ namespace IO.Astrodynamics.Surface
         /// from <c>spkcpt_c</c> seen from the Moon with LT, about 15000 km from the Sun, and the geometric state seen from
         /// its own body (640 m with LT). Without correction, the geometric state is unchanged, bit for bit.
         /// </remarks>
-        public StateVector GetEphemeris(in Time date, ILocalizable observer, Frame frame, Aberration aberration)
+        public StateVector GetEphemeris(in Time epoch, ILocalizable observer, Frame frame, Aberration aberration)
         {
             // For SPICE-backed CelestialItem observers (planets, moons, barycenters, kernel-backed spacecraft)
             if (observer is CelestialItem && observer.IsSpiceBacked)
             {
                 if (_isFromKernel)
                 {
-                    return _dataProvider.GetEphemeris(date, this, observer, frame, aberration);
+                    return _dataProvider.GetEphemeris(epoch, this, observer, frame, aberration);
                 }
 
                 if (aberration == Aberration.None)
@@ -295,14 +295,14 @@ namespace IO.Astrodynamics.Surface
                     // Custom site, geometric: body-fixed computation with RelativeTo for observer change
                     var siteInFrame = new StateVector(
                         Planetodetic.ToCartesianCoordinates(CelestialBody),
-                        Vector3.Zero, CelestialBody, date, CelestialBody.Frame).ToFrame(frame).ToStateVector();
+                        Vector3.Zero, CelestialBody, epoch, CelestialBody.Frame).ToFrame(frame).ToStateVector();
                     return siteInFrame.RelativeTo(observer, Aberration.None);
                 }
             }
 
             // Reference-body approach: non-SPICE observers (Spacecraft, other Sites), and a custom site corrected for any
             // observer (#489)
-            return CelestialItem.ApparentStateFromReferenceBody(this, date, observer, frame, aberration, CelestialBody);
+            return CelestialItem.ApparentStateFromReferenceBody(this, epoch, observer, frame, aberration, CelestialBody);
         }
 
         /// <summary>
@@ -460,7 +460,7 @@ namespace IO.Astrodynamics.Surface
         /// the ellipsoid of the body at <see cref="Planetodetic"/>, the normal CSPICE's <c>gfilum_c</c> takes for the site
         /// (<see cref="FindIlluminationWindows"/>, #488).
         /// </summary>
-        /// <param name="date">The epoch.</param>
+        /// <param name="epoch">The epoch.</param>
         /// <param name="observer">The observer.</param>
         /// <param name="aberration">The aberration correction of the direction.</param>
         /// <returns>The emission angle, rad.</returns>
@@ -469,9 +469,9 @@ namespace IO.Astrodynamics.Surface
         /// kernel is loaded has the kernel frame (#690), whose zenith departs from that normal (7.8e-8 rad for DSS-13): the
         /// angle keeps the normal at <see cref="Planetodetic"/>, so that it agrees with the illumination searches.
         /// </remarks>
-        public double IlluminationEmission(Time date, ILocalizable observer, Aberration aberration)
+        public double IlluminationEmission(Time epoch, ILocalizable observer, Aberration aberration)
         {
-            return observer.GetEphemeris(date, this, Frames.Frame.ICRF, aberration).Position.Angle(EllipsoidNormalInIcrf(date));
+            return observer.GetEphemeris(epoch, this, Frames.Frame.ICRF, aberration).Position.Angle(EllipsoidNormalInIcrf(epoch));
         }
 
         /// <summary>
@@ -479,16 +479,16 @@ namespace IO.Astrodynamics.Surface
         /// normal to the ellipsoid of the body at <see cref="Planetodetic"/>, the normal CSPICE's <c>gfilum_c</c> takes for
         /// the site (<see cref="FindIlluminationWindows"/>, #488).
         /// </summary>
-        /// <param name="date">The epoch.</param>
+        /// <param name="epoch">The epoch.</param>
         /// <param name="illuminationSource">The source of illumination.</param>
         /// <param name="aberration">The aberration correction of the direction.</param>
         /// <returns>The incidence angle, rad.</returns>
         /// <remarks>As <see cref="IlluminationEmission"/>: the normal at <see cref="Planetodetic"/>, the Z axis of
         /// <see cref="Frame"/> for a site from coordinates (#690).</remarks>
-        public double IlluminationIncidence(Time date, ILocalizable illuminationSource, Aberration aberration)
+        public double IlluminationIncidence(Time epoch, ILocalizable illuminationSource, Aberration aberration)
         {
-            var illuminationPosition = illuminationSource.GetEphemeris(date, this, Frames.Frame.ICRF, aberration).Position;
-            return EllipsoidNormalInIcrf(date).Angle(illuminationPosition);
+            var illuminationPosition = illuminationSource.GetEphemeris(epoch, this, Frames.Frame.ICRF, aberration).Position;
+            return EllipsoidNormalInIcrf(epoch).Angle(illuminationPosition);
         }
 
         // The normal to the ellipsoid of the body at the planetodetic coordinates of the site, fixed in the frame of the body,
@@ -504,15 +504,15 @@ namespace IO.Astrodynamics.Surface
         /// <summary>
         /// Get illumination phase angle
         /// </summary>
-        /// <param name="date"></param>
+        /// <param name="epoch"></param>
         /// <param name="illuminationSource"></param>
         /// <param name="observer"></param>
         /// <param name="aberration"></param>
         /// <returns></returns>
-        public double IlluminationPhase(Time date, ILocalizable illuminationSource, ILocalizable observer, Aberration aberration)
+        public double IlluminationPhase(Time epoch, ILocalizable illuminationSource, ILocalizable observer, Aberration aberration)
         {
-            var illuminationPosition = illuminationSource.GetEphemeris(date, this, Frames.Frame.ICRF, aberration).Position;
-            return observer.GetEphemeris(date, this, Frames.Frame.ICRF, aberration).Position.Angle(illuminationPosition);
+            var illuminationPosition = illuminationSource.GetEphemeris(epoch, this, Frames.Frame.ICRF, aberration).Position;
+            return observer.GetEphemeris(epoch, this, Frames.Frame.ICRF, aberration).Position.Angle(illuminationPosition);
         }
 
         /// <summary>

@@ -100,22 +100,22 @@ epoch `getelm_c` reads plus those seconds (#599). Against Vallado's code in this
 1.3e-8 m/s per component, CSPICE's own difference from it.
 
 The epoch is the UTC instant of the field, exact: the day fraction is read in decimal and rounded to the 100 ns tick
-(#603). `Create` and `ToTLE` write the UTC of the elements' epoch, whatever its time frame (#479), each field the
+(#603). `Create` and `ToTle` write the UTC of the elements' epoch, whatever its time frame (#479), each field the
 nearest value its columns hold: the epoch to the 1e-8 day with the carry into the next day and year (#600), B* and n̈/6
 as a five-digit mantissa and a one-digit exponent, zero below 5e-11 (#601), e in [0, 0.9999999] (#602), a zero without
-a sign (#480). Without an element set number, `Create`, the TLE `Configuration` of `ToTLE` and `Omm.ToTle` (an OMM
+a sign (#480). Without an element set number, `Create`, the `TleFitOptions` of `ToTle` and `Omm.ToTle` (an OMM
 without `ELEMENT_SET_NO`) write `TLE.DefaultElementSetNumber`, 999, as CelesTrak and Space-Track publish (#606, decided
-by S. Guillet, 2026-11-17; before 11.0.0, `Create` and `ToTLE` wrote 9999).
+by S. Guillet, 2026-11-17; before 11.0.0, `Create` and `ToTle` wrote 9999).
 
 A TLE holds SGP4 mean elements of an Earth orbit in TEME, so `Create` throws `ArgumentException` (`meanElements`) for
 elements that are not mean, not in `Frame.TEME` (frames compared by name) or not about the Earth (NAIF id 399), and
-`ToTLE` throws `InvalidOperationException` before its fit for orbital parameters that are not about the Earth, in any
+`ToTle` throws `InvalidOperationException` before its fit for orbital parameters that are not about the Earth, in any
 frame (#607, decided by S. Guillet, 2026-11-17; before 11.0.0, `Create` wrote elements in another frame or about another
-centre as if they were, their angles taken as TEME's and their mean motion from their centre's GM, and `ToTLE` took an
+centre as if they were, their angles taken as TEME's and their mean motion from their centre's GM, and `ToTle` took an
 orbit about another centre for an Earth orbit and failed in its fit). Rotate mean elements to TEME with
-`ToFrame(Frame.TEME)` before `Create`, or give `ToTLE` the osculating state, which it rotates to TEME itself.
+`ToFrame(Frame.TEME)` before `Create`, or give `ToTle` the osculating state, which it rotates to TEME itself.
 
-A TLE without an international designator (blank columns 10-17 of line 1, as 11801 and 88888 of Vallado's `SGP4-VER.TLE`) is carried through: `TLE.Create` takes a null or blank `cosparId` and writes eight blanks there, `TLE.ToOmm` writes `OBJECT_ID = UNKNOWN` (the element is mandatory in the ODM; CCSDS's value for an unknown designator, confirmed by S. Guillet, 2026-11-18), and `Omm.ToTle` reads `UNKNOWN`, trimmed and in any letter case, back as the blank columns ([#604](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/604), decided by S. Guillet, 2026-11-18). The fit of `OrbitalParameters.ToTLE(Configuration)` writes a null or blank `Configuration.CosparId` as the same blank columns. Before 11.0.0 `Create` threw `ArgumentException` (`cosparId`), `ToTLE` "TLE conversion using Equinoctial elements failed" (`InvalidOperationException`), `ToOmm` "Object ID is required." (`objectId`), and `ToTle` wrote `UNKNOWN ` in the designator columns. An empty `OBJECT_ID` is still refused by the reader and `OmmMetadata`, as #708 decided (2026-11-16): the decision of #604 also reads an empty value as the blank columns, but no OMM holds one, and whether the reader should accept it is open, for S. Guillet to settle.
+A TLE without an international designator (blank columns 10-17 of line 1, as 11801 and 88888 of Vallado's `SGP4-VER.TLE`) is carried through: `TLE.Create` takes a null or blank `cosparId` and writes eight blanks there, `TLE.ToOmm` writes `OBJECT_ID = UNKNOWN` (the element is mandatory in the ODM; CCSDS's value for an unknown designator, confirmed by S. Guillet, 2026-11-18), and `Omm.ToTle` reads `UNKNOWN`, trimmed and in any letter case, back as the blank columns ([#604](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/604), decided by S. Guillet, 2026-11-18). The fit of `OrbitalParameters.ToTle` writes a null or blank `cosparId` as the same blank columns. Before 11.0.0 `Create` threw `ArgumentException` (`cosparId`), `ToTle` "TLE conversion using Equinoctial elements failed" (`InvalidOperationException`), `ToOmm` "Object ID is required." (`objectId`), and `ToTle` wrote `UNKNOWN ` in the designator columns. An empty `OBJECT_ID` is still refused by the reader and `OmmMetadata`, as #708 decided (2026-11-16): the decision of #604 also reads an empty value as the blank columns, but no OMM holds one, and whether the reader should accept it is open, for S. Guillet to settle.
 
 The states of SGP4/SDP4 are in `Frame.TEME`, the managed TEME frame ([Frames](frames.md#teme)); `ToFrame(Frame.ICRF)`
 needs no Earth orientation kernel, at any epoch. The Earth a TLE refers to is built in an inertial frame, so that a TLE

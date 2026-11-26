@@ -45,10 +45,10 @@ public abstract class OrbitalParameters : IEquatable<OrbitalParameters>
     private double? _specificOrbitalEnergy;
     private Vector3? _ascendingNodeVector;
     private Vector3? _decendingNodeVector;
-    protected TimeSpan? _period;
-    protected double? _meanMotion;
-    protected StateVector _stateVector;
-    protected EquinoctialElements _equinoctial;
+    private protected TimeSpan? _period;
+    private protected double? _meanMotion;
+    private protected StateVector _stateVector;
+    private protected EquinoctialElements _equinoctial;
     private Vector3? _perigeevector;
     private Vector3? _apogeeVector;
     private double? _trueLongitude;
@@ -56,19 +56,19 @@ public abstract class OrbitalParameters : IEquatable<OrbitalParameters>
     private bool? _isCircular;
     private bool? _isParabolic;
     private bool? _isHyperbolic;
-    protected KeplerianElements _keplerianElements;
+    private protected KeplerianElements _keplerianElements;
     private Equatorial? _equatorial;
     private double? _perigeeVelocity;
     private double? _apogeeVelocity;
-    protected double? _ascendingNode;
-    protected double? _trueAnomaly;
+    private protected double? _ascendingNode;
+    private protected double? _trueAnomaly;
     private double? _eccentricAnomaly;
-    protected double? _perigeeRadius;
-    protected double? _semiMajorAxis;
-    protected double? _eccentricity;
-    protected double? _inclination;
-    protected double? _periapsisArgument;
-    protected double? _meanAnomaly;
+    private protected double? _perigeeRadius;
+    private protected double? _semiMajorAxis;
+    private protected double? _eccentricity;
+    private protected double? _inclination;
+    private protected double? _periapsisArgument;
+    private protected double? _meanAnomaly;
 
 
     /// <summary>
@@ -1486,46 +1486,46 @@ public abstract class OrbitalParameters : IEquatable<OrbitalParameters>
     }
 
     /// <summary>
-    /// Converts the current orbital parameters into a TLE (Two-Line Element) representation
-    /// using the provided configuration.
+    /// Converts the current orbital parameters into a TLE (Two-Line Element) representation: a fit of SGP4 mean elements
+    /// in TEME, written with the given identifiers and the fields of <paramref name="options"/>, in the order of
+    /// <see cref="TLE.TLE.Create"/> (decision 113 of #668, decided by S. Guillet, 2026-11-26: a
+    /// <c>TLE.Configuration</c> record before 11.0.0).
     /// </summary>
-    /// <param name="config">
-    /// A <see cref="Astrodynamics.OrbitalParameters.TLE.Configuration"/> object containing the necessary parameters for TLE generation,
-    /// such as NORAD ID, satellite name, COSPAR ID, and other optional settings.
-    /// </param>
+    /// <param name="name">The name of the object.</param>
+    /// <param name="noradId">The NORAD catalog number, 0 to <see cref="NoradCatalogNumber.MaxValue"/> (339999); a value above
+    /// 99999 is written in the Alpha-5 form.</param>
+    /// <param name="cosparId">The COSPAR international designator in TLE form (YYNNN and one to three capital letters, e.g.
+    /// "98067A"), or null or blank for none: columns 10-17 of line 1 are then blank, as <see cref="TLE.TLE.Create"/> writes
+    /// them (#604). A non-blank value of another form is not a designator: the fit then throws
+    /// <see cref="InvalidOperationException"/>.</param>
+    /// <param name="options">The settings of the fit and the other fields of the TLE; null for
+    /// <see cref="TleFitOptions.Default"/>.</param>
     /// <returns>
     /// A <see cref="TLE"/> object representing the orbital parameters in TLE format.
     /// </returns>
     /// <remarks>
-    /// This method uses the <see cref="MeanElementsConverter"/> to compute the mean orbital elements
-    /// from the current orbital parameters. The resulting TLE includes metadata such as the satellite's
-    /// classification, drag term, and epoch information. A null or blank <c>config.CosparId</c> writes blank columns 10-17 of
-    /// line 1, the TLE without an international designator of <see cref="TLE.TLE.Create"/> (#604).
+    /// The mean elements are fitted from the current orbital parameters, rotated to TEME. A null or blank
+    /// <paramref name="cosparId"/> writes blank columns 10-17 of line 1, the TLE without an international designator of
+    /// <see cref="TLE.TLE.Create"/> (#604).
     /// </remarks>
-    /// <exception cref="ArgumentNullException">
-    /// Thrown if the <paramref name="config"/> parameter is null.
-    /// </exception>
     /// <exception cref="InvalidOperationException">
     /// Thrown before the fit when these parameters are not about the Earth (NAIF id 399): a TLE describes an Earth orbit
     /// (#607; before 11.0.0, the fit took them for an Earth orbit and failed, or wrote a TLE of another orbit).
     /// </exception>
-    public TLE.TLE ToTLE(TLE.Configuration config)
+    public TLE.TLE ToTle(string name, int noradId, string cosparId, TleFitOptions options = null)
     {
-        ArgumentNullException.ThrowIfNull(config);
+        options ??= TleFitOptions.Default;
         if (Observer.NaifId != TLE.TLE.EarthNaifId)
         {
             throw new InvalidOperationException(
                 $"The orbit is about {Observer.Name} ({Observer.NaifId}): a TLE describes an Earth orbit, so it cannot be converted to a TLE.");
         }
 
-        var meanElements = _sharedMeanElementsConverter.Convert(this, config.NoradId,
-            config.Name, config.CosparId, config.RevolutionsAtEpoch,
-            config.BstarDragTerm, config.MaxIterations);
+        var meanElements = _sharedMeanElementsConverter.Convert(this, noradId, name, cosparId, options.RevolutionNumberAtEpoch,
+            options.BStar, options.MaxIterations);
 
-        return TLE.TLE.Create(meanElements, config.Name, config.NoradId,
-            config.CosparId, config.RevolutionsAtEpoch, config.Classification,
-            config.BstarDragTerm, config.FirstDerivativeMeanMotion,
-            config.SecondDerivativeMeanMotion, config.ElementSetNumber);
+        return TLE.TLE.Create(meanElements, name, noradId, cosparId, options.RevolutionNumberAtEpoch, options.Classification,
+            options.BStar, options.MeanMotionDot, options.MeanMotionDDot, options.ElementSetNumber);
     }
 
     #region Operators

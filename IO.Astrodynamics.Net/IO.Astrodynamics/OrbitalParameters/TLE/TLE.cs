@@ -42,7 +42,7 @@ public class TLE : OrbitalParameters, IEquatable<TLE>, IParsable<TLE>
 
     /// <summary>
     /// The element set number written when none is given, by <see cref="Create"/>, <see cref="Configuration"/> (so
-    /// <see cref="OrbitalParameters.ToTLE"/>) and <c>Omm.ToTle</c> for an OMM without <c>ELEMENT_SET_NO</c>: 999, the
+    /// <see cref="OrbitalParameters.ToTle"/>) and <c>Omm.ToTle</c> for an OMM without <c>ELEMENT_SET_NO</c>: 999, the
     /// value CelesTrak and Space-Track publish (#606, decided by S. Guillet, 2026-11-17; before 11.0.0,
     /// <see cref="Create"/> and <see cref="Configuration"/> wrote 9999). The field holds 0 to 9999.
     /// </summary>
@@ -495,12 +495,12 @@ public class TLE : OrbitalParameters, IEquatable<TLE>, IParsable<TLE>
         var kep = orbitalParams is TLE tle ? tle.ToMeanKeplerianElements() : orbitalParams.ToKeplerianElements();
 
         // Convert and normalize angles - single pass, no redundant calculations
-        double iDeg = System.Math.Clamp(kep.I * Constants.Rad2Deg, 0.0, 180.0);
+        double iDeg = System.Math.Clamp(kep.Inclination() * Constants.Rad2Deg, 0.0, 180.0);
         if (double.IsNaN(iDeg)) iDeg = 0.0;
 
-        double raanDeg = NormalizeAngle(kep.RAAN * Constants.Rad2Deg);
-        double argpDeg = NormalizeAngle(kep.AOP * Constants.Rad2Deg);
-        double mDeg = NormalizeAngle(kep.M * Constants.Rad2Deg);
+        double raanDeg = NormalizeAngle(kep.AscendingNode() * Constants.Rad2Deg);
+        double argpDeg = NormalizeAngle(kep.ArgumentOfPeriapsis() * Constants.Rad2Deg);
+        double mDeg = NormalizeAngle(kep.MeanAnomaly() * Constants.Rad2Deg);
 
         // For mean elements, use cached mean motion to preserve precision from OMM
         // MeanMotion() returns cached value (rad/s) if available, otherwise computes from semi-major axis
@@ -510,7 +510,7 @@ public class TLE : OrbitalParameters, IEquatable<TLE>, IParsable<TLE>
         string epochStr = FormatTleEpoch(kep.Epoch.ToUTC().DateTime);
 
         // Format eccentricity: 7 digits, no decimal point; e = 0 is written 0000000 (#602)
-        double clampedE = System.Math.Clamp(kep.E, 0.0, MAX_ECCENTRICITY);
+        double clampedE = System.Math.Clamp(kep.Eccentricity(), 0.0, MAX_ECCENTRICITY);
         string eStr = clampedE.ToString("0.0000000", CultureInfo.InvariantCulture).Substring(2, 7);
 
         // Format derivatives and drag term. A value that rounds to zero is written without a sign (#480)
@@ -862,9 +862,9 @@ public class TLE : OrbitalParameters, IEquatable<TLE>, IParsable<TLE>
     }
 
     /// <summary>
-    /// Converts the TLE to a state vector at a given date using the SGP4/SDP4 propagator.
+    /// Converts the TLE to a state vector at a given epoch using the SGP4/SDP4 propagator.
     /// </summary>
-    /// <param name="date">The epoch time at which to compute the state vector.</param>
+    /// <param name="epoch">The epoch time at which to compute the state vector.</param>
     /// <returns>The state vector at the given epoch.</returns>
     /// <remarks>
     /// <para>
@@ -873,9 +873,9 @@ public class TLE : OrbitalParameters, IEquatable<TLE>, IParsable<TLE>
     /// This method overrides the base class to use the SGP4/SDP4 propagator,
     /// which is the correct way to convert TLE mean elements to osculating state vectors.
     /// </remarks>
-    public override StateVector ToStateVector(Time date)
+    public override StateVector ToStateVector(Time epoch)
     {
-        return ToOsculating(date);
+        return ToOsculating(epoch);
     }
 
     /// <summary>
@@ -988,7 +988,7 @@ public class TLE : OrbitalParameters, IEquatable<TLE>, IParsable<TLE>
 
     public override double SemiMajorAxis()
     {
-        return ToKeplerianElements().A;
+        return ToKeplerianElements().SemiMajorAxis();
     }
 
     /// <summary>
@@ -1003,27 +1003,27 @@ public class TLE : OrbitalParameters, IEquatable<TLE>, IParsable<TLE>
 
     public override double Eccentricity()
     {
-        return ToKeplerianElements().E;
+        return ToKeplerianElements().Eccentricity();
     }
 
     public override double Inclination()
     {
-        return ToKeplerianElements().I;
+        return ToKeplerianElements().Inclination();
     }
 
     public override double AscendingNode()
     {
-        return ToKeplerianElements().RAAN;
+        return ToKeplerianElements().AscendingNode();
     }
 
     public override double ArgumentOfPeriapsis()
     {
-        return ToKeplerianElements().AOP;
+        return ToKeplerianElements().ArgumentOfPeriapsis();
     }
 
     public override double MeanAnomaly()
     {
-        return ToKeplerianElements().M;
+        return ToKeplerianElements().MeanAnomaly();
     }
 
     public override string ToString()

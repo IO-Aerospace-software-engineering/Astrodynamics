@@ -18,7 +18,8 @@ namespace IO.Astrodynamics.Tests.ApiConventions;
 /// set at init, with a static Default equal to new(), taken last as <c>options = null</c>; no member takes two bools; a
 /// time quantity in double seconds says so; sibling settings agree. Today's exceptions are the allow-list
 /// OptionsConventionBaseline.txt, which may only shrink: a new exception fails, and so does an entry that no longer is
-/// one. The options lots (L4 to L7) empty it.
+/// one. The options lots (L4 to L7) and lot L9 emptied it; the tolerances that are no time are exempt by their key
+/// (<see cref="NonTimeTolerances"/>).
 /// <list type="bullet">
 /// <item>D1.sealed-record: the type is a sealed record (rule 1; the closed abstract IntegratorOptions of rule 5 excepted,
 /// a record whose constructors are not visible outside the library).</item>
@@ -101,6 +102,19 @@ public class OptionsConventionTests
     // the design (R06 of #668, D1's Before/After), settled by lot L4 as the rule's doc foresees
     private static readonly string[] IntegratorErrorTolerances = ["AbsoluteTolerance", "RelativeTolerance"];
 
+    // The tolerances of the surface that are no time, exempt by their key: an angle, a matrix test and the residuals of the
+    // root finders, in the unit of their function (the exemptions of the options convention test, the tolerances that are
+    // not seconds, validated by S. Guillet, 2026-11-22; applied by lot L9 of #668, which empties the baseline)
+    private static readonly HashSet<string> NonTimeTolerances = new(StringComparer.Ordinal)
+    {
+        "IO.Astrodynamics.Constants.AngularTolerance",
+        "IO.Astrodynamics.Math.Matrix.Cholesky(double):tolerance",
+        "IO.Astrodynamics.Math.Matrix.IsSymmetric(double):tolerance",
+        "IO.Astrodynamics.Math.NewtonRaphson.BoundedNewtonRaphson(Func<double, double>, Func<double, double>, double, double, double, double, int):tolerance",
+        "IO.Astrodynamics.Math.NewtonRaphson.Solve(Func<double, double>, Func<double, double>, double, double, int):tolerance",
+        "IO.Astrodynamics.Math.NewtonRaphson.SolveVector(Func<double[], double[]>, Func<double[], double[,]>, double[], double, int):tolerance"
+    };
+
     // A time quantity by its name: Step, Duration or Tolerance in it, and not ...Seconds
     internal static bool LacksSecondsSuffix(string name) =>
         (name.Contains("step", StringComparison.OrdinalIgnoreCase) ||
@@ -166,7 +180,8 @@ public class OptionsConventionTests
                     FieldInfo f => f.FieldType,
                     _ => null
                 };
-                if (valueType != null && IsDouble(valueType) && LacksSecondsSuffix(member.Name))
+                if (valueType != null && IsDouble(valueType) && LacksSecondsSuffix(member.Name) &&
+                    !NonTimeTolerances.Contains(PublicSurface.Key(member)))
                 {
                     found.Add($"D1.seconds\t{PublicSurface.Key(member)}");
                 }
@@ -187,7 +202,8 @@ public class OptionsConventionTests
                     found.Add($"D1.bools\t{PublicSurface.Signature(method)}");
                 }
 
-                foreach (var p in parameters.Where(p => !p.IsOut && IsDouble(p.ParameterType) && LacksSecondsSuffix(p.Name!)))
+                foreach (var p in parameters.Where(p => !p.IsOut && IsDouble(p.ParameterType) && LacksSecondsSuffix(p.Name!) &&
+                                                        !NonTimeTolerances.Contains(PublicSurface.ParameterKey(method, p))))
                 {
                     found.Add($"D1.seconds\t{PublicSurface.ParameterKey(method, p)}");
                 }

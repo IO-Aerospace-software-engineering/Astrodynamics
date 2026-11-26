@@ -38,8 +38,8 @@ public sealed class PropagationSegment
     /// Total elapsed time from BaseEpoch to the end of the last step, in seconds of the time argument of the propagation:
     /// TT seconds about the Earth, TDB seconds about any other central body (#501).
     /// </summary>
-    public double Duration => _steps.Count > 0
-        ? _steps[^1].CumulativeTime + _steps[^1].StepSize
+    public double DurationSeconds => _steps.Count > 0
+        ? _steps[^1].CumulativeTime + _steps[^1].StepSizeSeconds
         : 0.0;
 
     /// <summary>
@@ -140,7 +140,7 @@ public sealed class PropagationSegment
         if (t <= 0.0)
             return (_steps[0].StartPosition, _steps[0].StartVelocity);
 
-        double duration = Duration;
+        double duration = DurationSeconds;
         if (t >= duration)
             return (_steps[^1].EndPosition, _steps[^1].EndVelocity);
 
@@ -163,7 +163,7 @@ public sealed class PropagationSegment
         while (lo < hi)
         {
             int mid = lo + (hi - lo) / 2;
-            double stepEnd = _steps[mid].CumulativeTime + _steps[mid].StepSize;
+            double stepEnd = _steps[mid].CumulativeTime + _steps[mid].StepSizeSeconds;
 
             if (t > stepEnd)
                 lo = mid + 1;
@@ -180,8 +180,8 @@ public sealed class PropagationSegment
     internal static (Vector3 position, Vector3 velocity) HermiteInterpolate(in AcceptedStep step, double t)
     {
         double localT = t - step.CumulativeTime;
-        double theta = localT / step.StepSize;
-        double h = step.StepSize;
+        double theta = localT / step.StepSizeSeconds;
+        double h = step.StepSizeSeconds;
 
         double t2 = theta * theta;
         double t3 = t2 * theta;

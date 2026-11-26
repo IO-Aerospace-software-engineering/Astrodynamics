@@ -108,7 +108,7 @@ public abstract class Integrator : IIntegrator
     /// </summary>
     public abstract IntegrationResult IntegrateSegment(
         Vector3 startPosition, Vector3 startVelocity,
-        Time baseEpoch, double duration,
+        Time baseEpoch, double durationSeconds,
         IReadOnlyList<IEventDetector> eventDetectors = null);
 
     /// <summary>

@@ -60,9 +60,9 @@ public sealed class TemeFrame : Frame
     /// the frame); TEME is never the body-fixed frame of a propagation, so it reads no orientation cache of a propagation
     /// (<see cref="Frame.UseOrientationCache"/>).
     /// </remarks>
-    public override StateOrientation GetStateOrientationToICRF(Time date)
+    public override StateOrientation GetStateOrientationToICRF(Time epoch)
     {
-        return LastOrientation(date, ComputeOrientation);
+        return LastOrientation(epoch, ComputeOrientation);
     }
 
     private StateOrientation ComputeOrientation(Time date)

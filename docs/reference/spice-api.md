@@ -344,8 +344,8 @@ A provider implements `IDataProvider`, three members in domain types:
 
 | Member | Returns |
 |--------|---------|
-| `FrameTransformationToICRF(in Time date, Frame source)` | The orientation of the frame relative to ICRF, a `StateOrientation` labelled with the frame |
-| `GetEphemeris(in Time date, ILocalizable target, ILocalizable observer, Frame frame, Aberration aberration)` | The state of the target from the observer, a `StateVector` (11.0.0: `OrbitalParameters` before) |
+| `FrameTransformationToICRF(in Time epoch, Frame source)` | The orientation of the frame relative to ICRF, a `StateOrientation` labelled with the frame |
+| `GetEphemeris(in Time epoch, ILocalizable target, ILocalizable observer, Frame frame, Aberration aberration)` | The state of the target from the observer, a `StateVector` (11.0.0: `OrbitalParameters` before) |
 | `GetCelestialBodyInfo(int naifId)` | The information of a celestial body, a `CelestialBodyInfo` (11.0.0: the interop struct IO.Astrodynamics.DTO.CelestialBody, now internal, before), never null |
 
 `CelestialBodyInfo` is a sealed record of SI values: `NaifId`, `Name`, `CenterOfMotionId`, `BarycenterOfMotionId`,
@@ -379,8 +379,8 @@ read it by three rules (structuring choice 1 of #668, decided by S. Guillet, 202
 | Method | Description |
 |--------|-------------|
 | `AddCelestialBodyInfo(params CelestialBodyInfo[] celestialBodyInfos)` | Add the information of bodies, each under its `NaifId` (`ArgumentNullException` for a null array or record); a `CelestialBodyInfo` since 11.0.0, the interop struct IO.Astrodynamics.DTO.CelestialBody, now internal, before |
-| `AddStateVector(int naifId, Time date, StateVector sv)` | Add state vector |
-| `AddStateOrientationToICRF(Frame frame, Time date, StateOrientation orientation)` | Add orientation; `ArgumentException` (`frame`) for ICRF, GCRF, TEME, CIRS and TIRS, which the provider defines (#744) |
+| `AddStateVector(int naifId, Time epoch, StateVector sv)` | Add state vector |
+| `AddStateOrientationToICRF(Frame frame, Time epoch, StateOrientation orientation)` | Add orientation; `ArgumentException` (`frame`) for ICRF, GCRF, TEME, CIRS and TIRS, which the provider defines (#744) |
 
 A read at an added epoch returns that entry. A read between entries is interpolated and never stored, so it depends on
 the entries only, not on the reads before it (#548): an orientation is the exact spherical linear interpolation of the two

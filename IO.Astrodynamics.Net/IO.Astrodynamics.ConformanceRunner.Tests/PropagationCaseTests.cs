@@ -94,12 +94,12 @@ public class PropagationCaseTests
         // Assert: the initial state holds the given elements
         var state = propagationCase.Spacecraft.InitialOrbitalParameters.ToStateVector();
         var elements = state.ToKeplerianElements();
-        Assert.Equal(6778137.0, elements.A, 6);
-        Assert.Equal(0.001, elements.E, 12);
-        Assert.Equal(51.6 * IO.Astrodynamics.Constants.Deg2Rad, elements.I, 12);
-        Assert.Equal(30.0 * IO.Astrodynamics.Constants.Deg2Rad, elements.RAAN, 12);
-        Assert.Equal(40.0 * IO.Astrodynamics.Constants.Deg2Rad, elements.AOP, 10);
-        Assert.Equal(50.0 * IO.Astrodynamics.Constants.Deg2Rad, elements.M, 10);
+        Assert.Equal(6778137.0, elements.SemiMajorAxis(), 6);
+        Assert.Equal(0.001, elements.Eccentricity(), 12);
+        Assert.Equal(51.6 * IO.Astrodynamics.Constants.Deg2Rad, elements.Inclination(), 12);
+        Assert.Equal(30.0 * IO.Astrodynamics.Constants.Deg2Rad, elements.AscendingNode(), 12);
+        Assert.Equal(40.0 * IO.Astrodynamics.Constants.Deg2Rad, elements.ArgumentOfPeriapsis(), 10);
+        Assert.Equal(50.0 * IO.Astrodynamics.Constants.Deg2Rad, elements.MeanAnomaly(), 10);
         Assert.Equal(Frames.Frame.ICRF, state.Frame);
 
         // The central body first, with the geopotential (J2 moves the acceleration by about 1e-3 from the point mass)

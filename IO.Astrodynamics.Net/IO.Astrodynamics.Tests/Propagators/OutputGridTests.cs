@@ -136,7 +136,7 @@ public class OutputGridTests
         }
 
         // Nothing past the window
-        Assert.Equal(argument.Length(window, window), steps.Sum(s => s.StepSize), 9);
+        Assert.Equal(argument.Length(window, window), steps.Sum(s => s.StepSizeSeconds), 9);
         _ = spacecraft.GetEphemeris(window.EndDate, (CelestialItem)initial.Observer, Frame.ICRF, Aberration.None);
     }
 

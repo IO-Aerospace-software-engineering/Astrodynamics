@@ -72,7 +72,7 @@ internal static class IntegratorsPage
     internal static void Block02()
     {
         #region docs/reference/integrators.md:2
-        var fixedStep = new RK78Integrator(fixedStepSize: 30.0);
+        var fixedStep = new RK78Integrator(fixedStepSizeSeconds: 30.0);
         #endregion
     }
 
@@ -84,10 +84,10 @@ internal static class IntegratorsPage
         var integrator = new RK78Integrator(
             absoluteTolerance: 1e-10,
             relativeTolerance: 1e-10,
-            initialStepSize: 30.0);
+            initialStepSizeSeconds: 30.0);
 
         // Fixed-step
-        var fixedIntegrator = new RK78Integrator(fixedStepSize: 10.0);
+        var fixedIntegrator = new RK78Integrator(fixedStepSizeSeconds: 10.0);
         #endregion
     }
 

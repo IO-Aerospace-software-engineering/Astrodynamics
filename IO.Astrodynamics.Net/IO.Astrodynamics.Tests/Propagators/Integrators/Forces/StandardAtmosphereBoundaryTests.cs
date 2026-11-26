@@ -399,7 +399,7 @@ public class StandardAtmosphereBoundaryTests
         for (int i = 0; i < expected.Length; i++)
         {
             Assert.Equal(expected[i].CumulativeTime, actual[i].CumulativeTime);
-            Assert.Equal(expected[i].StepSize, actual[i].StepSize);
+            Assert.Equal(expected[i].StepSizeSeconds, actual[i].StepSizeSeconds);
             Assert.Equal(expected[i].EndPosition, actual[i].EndPosition);
             Assert.Equal(expected[i].EndVelocity, actual[i].EndVelocity);
         }

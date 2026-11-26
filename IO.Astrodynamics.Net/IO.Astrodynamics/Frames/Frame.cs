@@ -215,7 +215,7 @@ public class Frame : IEquatable<Frame>
     /// angular velocity of ICRF relative to <c>this</c> frame, expressed in <c>this</c> frame, in rad/s. For an
     /// Earth-fixed frame it is close to (0, 0, -7.292e-5).
     /// </remarks>
-    /// <param name="date">Epoch of the transform.</param>
+    /// <param name="epoch">Epoch of the transform.</param>
     /// <returns>A state orientation whose rotation is <c>this → ICRF</c>.</returns>
     /// <remarks>
     /// Outside the orientation cache of a propagation, a frame keeps the orientation of the last epoch it read only, while
@@ -231,11 +231,11 @@ public class Frame : IEquatable<Frame>
     /// SPICE's error its inner exception, and no parameter is named (R25 of #668, decided by S. Guillet, 2026-11-19; before
     /// 11.0.0 an <see cref="InvalidOperationException"/>).</exception>
     /// <exception cref="InvalidOperationException">The data do not give the orientation of the frame at the epoch.</exception>
-    public virtual StateOrientation GetStateOrientationToICRF(Time date)
+    public virtual StateOrientation GetStateOrientationToICRF(Time epoch)
     {
         if (OrientationCache != null)
-            return OrientationCache.GetOrientation(date);
-        return LastOrientation(date, _readFromProvider);
+            return OrientationCache.GetOrientation(epoch);
+        return LastOrientation(epoch, _readFromProvider);
     }
 
     /// <summary>

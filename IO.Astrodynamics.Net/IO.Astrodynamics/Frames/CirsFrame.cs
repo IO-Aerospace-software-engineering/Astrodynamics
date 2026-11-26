@@ -21,12 +21,12 @@ public sealed class CirsFrame : Frame
     {
     }
 
-    public override StateOrientation GetStateOrientationToICRF(Time date)
+    public override StateOrientation GetStateOrientationToICRF(Time epoch)
     {
         if (OrientationCache != null)
-            return OrientationCache.GetOrientation(date);
+            return OrientationCache.GetOrientation(epoch);
 
-        return LastOrientation(date, ComputeOrientation);
+        return LastOrientation(epoch, ComputeOrientation);
     }
 
     private StateOrientation ComputeOrientation(Time date)

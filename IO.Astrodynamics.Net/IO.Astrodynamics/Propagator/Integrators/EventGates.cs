@@ -129,7 +129,7 @@ internal sealed class EventGates
         if (_closedCount == 0) return;
 
         double t0 = step.CumulativeTime;
-        double t1 = t0 + step.StepSize;
+        double t1 = t0 + step.StepSizeSeconds;
         for (int i = 0; i < _closed.Length; i++)
         {
             if (!_closed[i] || endEpoch < _gates[i]) continue;

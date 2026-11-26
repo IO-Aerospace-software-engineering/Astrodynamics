@@ -151,15 +151,14 @@ public class TleTextTests
         // state in TEME
         var tle = new TLE("ISS", "1 25544U 98067A   21020.53488036  .00016717  00000-0  10270-3 0  9054",
             "2 25544  51.6423 353.0312 0000493 320.8755  39.2360 15.49309423 25703");
-        var config = new IO.Astrodynamics.OrbitalParameters.TLE.Configuration(25544, "ISS", "98067A");
-        var fromState = tle.ToOsculating().ToTLE(config);
-        var fromTle = tle.ToTLE(config);
-        var fromElements = tle.ToOsculating().ToKeplerianElements().ToTLE(config);
+        var fromState = tle.ToOsculating().ToTle("ISS", 25544, "98067A");
+        var fromTle = tle.ToTle("ISS", 25544, "98067A");
+        var fromElements = tle.ToOsculating().ToKeplerianElements().ToTle("ISS", 25544, "98067A");
         Assert.Equal(fromState.Line1, fromTle.Line1);
         Assert.Equal(fromState.Line2, fromTle.Line2);
         Assert.Equal(Frames.Frame.TEME, tle.ToOsculating().ToKeplerianElements().Frame);
         Assert.Equal(fromState.Line2[..20], fromElements.Line2[..20]);
-        Assert.Throws<InvalidOperationException>(() => tle.ToMeanKeplerianElements().ToTLE(config));
+        Assert.Throws<InvalidOperationException>(() => tle.ToMeanKeplerianElements().ToTle("ISS", 25544, "98067A"));
     }
 
     private static Omm IssOmm(string timeSystem, DateTime epoch)

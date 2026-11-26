@@ -337,14 +337,14 @@ namespace IO.Astrodynamics.Body.Spacecraft
             return (Quaternion.FromAxisAngle(Vector3.VectorX, -orientation.X) * Quaternion.FromAxisAngle(Vector3.VectorY, -orientation.Y) * Quaternion.FromAxisAngle(Vector3.VectorZ, -orientation.Z)).NormalizeOrZero();
         }
 
-        public Vector3 GetBoresightInICRFFrame(in Time date)
+        public Vector3 GetBoresightInICRFFrame(in Time epoch)
         {
-            return Boresight.Rotate(RotationToICRF(date));
+            return Boresight.Rotate(RotationToICRF(epoch));
         }
 
-        public Vector3 GetRefVectorInICRFFrame(in Time date)
+        public Vector3 GetRefVectorInICRFFrame(in Time epoch)
         {
-            return RefVector.Rotate(RotationToICRF(date));
+            return RefVector.Rotate(RotationToICRF(epoch));
         }
 
         /// <summary>
@@ -403,7 +403,7 @@ namespace IO.Astrodynamics.Body.Spacecraft
         /// same field, the same corrections ("+S" included) and a <see cref="Star"/> read as a direction. The search does not
         /// call this method.
         /// </summary>
-        /// <param name="date">The epoch.</param>
+        /// <param name="epoch">The epoch.</param>
         /// <param name="target">The target.</param>
         /// <param name="aberration">The aberration correction.</param>
         /// <exception cref="ArgumentException">The target is the instrument's spacecraft.</exception>
@@ -412,9 +412,9 @@ namespace IO.Astrodynamics.Body.Spacecraft
         /// (distance 0: it has no direction; #715 and #721, before 11.0.0 an unrelated <see cref="ArgumentException"/> for a
         /// circle or an ellipse and <c>true</c> for a rectangle), or the spacecraft is managed and has no attitude (#682;
         /// before 11.0.0 the identity of ICRF was used).</exception>
-        public virtual bool IsInFOV(Time date, ILocalizable target, Aberration aberration)
+        public virtual bool IsInFOV(Time epoch, ILocalizable target, Aberration aberration)
         {
-            return new FieldOfViewEvaluator(this, target, ShapeType.Point, null, aberration).Margin(date) >= 0.0;
+            return new FieldOfViewEvaluator(this, target, ShapeType.Point, null, aberration).Margin(epoch) >= 0.0;
         }
 
         /// <summary>

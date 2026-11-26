@@ -123,8 +123,8 @@ public class KeplerianFactoriesTests
         var parabola = KeplerianElements.Parabolic(q, 0.5, 0.3, 0.2, 0.0, _earth, Epoch, Frames.Frame.ICRF);
 
         // a = +Infinity at e = 1, q kept, and at M = 0 the periapsis at q with the escape speed √(2μ/q)
-        Assert.Equal(1.0, parabola.E);
-        Assert.True(double.IsPositiveInfinity(parabola.A));
+        Assert.Equal(1.0, parabola.Eccentricity());
+        Assert.True(double.IsPositiveInfinity(parabola.SemiMajorAxis()));
         Assert.Equal(q, parabola.PerigeeRadius());
         var state = parabola.ToStateVector();
         Assert.Equal(q, state.Position.Magnitude(), 1e-9 * q);

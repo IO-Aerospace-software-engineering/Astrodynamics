@@ -99,24 +99,24 @@ public sealed class RK78Integrator : Integrator
     public RK78Integrator(
         double absoluteTolerance = 1e-9,
         double relativeTolerance = 1e-9,
-        double initialStepSize = 60.0,
-        double minStepSize = 1e-6,
-        double maxStepSize = 86400.0,
+        double initialStepSizeSeconds = 60.0,
+        double minStepSizeSeconds = 1e-6,
+        double maxStepSizeSeconds = 86400.0,
         double safetyFactor = 0.9,
         double minFactor = 0.2,
         double maxFactor = 5.0)
     {
         if (absoluteTolerance <= 0) throw new ArgumentOutOfRangeException(nameof(absoluteTolerance), "Must be positive.");
         if (relativeTolerance <= 0) throw new ArgumentOutOfRangeException(nameof(relativeTolerance), "Must be positive.");
-        if (initialStepSize <= 0) throw new ArgumentOutOfRangeException(nameof(initialStepSize), "Must be positive.");
+        if (initialStepSizeSeconds <= 0) throw new ArgumentOutOfRangeException(nameof(initialStepSizeSeconds), "Must be positive.");
 
         AbsoluteTolerance = absoluteTolerance;
         RelativeTolerance = relativeTolerance;
         AdaptiveMode = true;
 
-        _controller = new RK78StepController(safetyFactor, minFactor, maxFactor, minStepSize, maxStepSize);
-        _initialH = initialStepSize;
-        _currentH = initialStepSize;
+        _controller = new RK78StepController(safetyFactor, minFactor, maxFactor, minStepSizeSeconds, maxStepSizeSeconds);
+        _initialH = initialStepSizeSeconds;
+        _currentH = initialStepSizeSeconds;
 
         _stepper = new RK78Stepper(ForceList);
     }
@@ -125,17 +125,17 @@ public sealed class RK78Integrator : Integrator
     /// Create a fixed-step RK7(8) integrator (no error control).
     /// Uses the 8th-order solution unconditionally.
     /// </summary>
-    public RK78Integrator(double fixedStepSize)
+    public RK78Integrator(double fixedStepSizeSeconds)
     {
-        if (fixedStepSize <= 0) throw new ArgumentOutOfRangeException(nameof(fixedStepSize), "Must be positive.");
+        if (fixedStepSizeSeconds <= 0) throw new ArgumentOutOfRangeException(nameof(fixedStepSizeSeconds), "Must be positive.");
 
         AbsoluteTolerance = double.MaxValue;
         RelativeTolerance = double.MaxValue;
         AdaptiveMode = false;
 
         _controller = null;
-        _initialH = fixedStepSize;
-        _currentH = fixedStepSize;
+        _initialH = fixedStepSizeSeconds;
+        _currentH = fixedStepSizeSeconds;
 
         _stepper = new RK78Stepper(ForceList);
     }
@@ -248,19 +248,19 @@ public sealed class RK78Integrator : Integrator
     /// </summary>
     public override IntegrationResult IntegrateSegment(
         Vector3 startPosition, Vector3 startVelocity,
-        Time baseEpoch, double duration,
+        Time baseEpoch, double durationSeconds,
         IReadOnlyList<IEventDetector> eventDetectors = null)
     {
         int estimatedSteps = AdaptiveMode
-            ? (int)(duration / _currentH) + 16
-            : (int)(duration / _currentH) + 2;
+            ? (int)(durationSeconds / _currentH) + 16
+            : (int)(durationSeconds / _currentH) + 2;
         var segment = new PropagationSegment(baseEpoch, estimatedSteps);
         var variational = StartVariationalSegment(segment, estimatedSteps, startPosition, startVelocity);
 
         var pos = startPosition;
         var vel = startVelocity;
         double t = 0.0;
-        double h = System.Math.Min(_currentH, duration);
+        double h = System.Math.Min(_currentH, durationSeconds);
         int rejections = 0;
 
         // The guard against a collapse of the step held by the variational equations (#420): the accepted steps since
@@ -291,9 +291,9 @@ public sealed class RK78Integrator : Integrator
 
         while (true)
         {
-            double remaining = duration - t;
+            double remaining = durationSeconds - t;
 
-            if (remaining <= LandingTolerance * System.Math.Max(1.0, duration))
+            if (remaining <= LandingTolerance * System.Math.Max(1.0, durationSeconds))
                 break;
 
             if (h > remaining)
@@ -396,7 +396,7 @@ public sealed class RK78Integrator : Integrator
                 }
 
                 // Continue with new step size
-                double newRemaining = duration - t;
+                double newRemaining = durationSeconds - t;
                 h = System.Math.Min(hNew, newRemaining);
                 _currentH = hNew;
             }
@@ -537,7 +537,7 @@ public sealed class RK78Integrator : Integrator
         double gEnd, EventGates gates)
     {
         var step = segment.Steps[^1];
-        double stepEnd = step.CumulativeTime + step.StepSize;
+        double stepEnd = step.CumulativeTime + step.StepSizeSeconds;
         var baseEpoch = segment.BaseEpoch;
 
         double eventT;

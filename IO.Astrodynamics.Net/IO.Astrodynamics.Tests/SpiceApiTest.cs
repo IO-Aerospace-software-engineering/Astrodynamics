@@ -1327,12 +1327,12 @@ public partial class SpiceApiTest
         var ke = new KeplerianElements(6800000.0, 0.1, 0.2, 0.3, 0.4, 0.5, TestHelpers.EarthAtJ2000, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF);
         var state = SpiceAPI.Instance.ConvertConicElementsToStateVector(ke, TimeSystem.Time.J2000TDB);
         var ke2 = SpiceAPI.Instance.ConvertStateVectorToConicOrbitalElement(state);
-        Assert.Equal(ke.A, ke2.A, 6);
-        Assert.Equal(ke.E, ke2.E, 6);
-        Assert.Equal(ke.I, ke2.I, 6);
-        Assert.Equal(ke.RAAN, ke2.RAAN, 6);
-        Assert.Equal(ke.AOP, ke2.AOP, 6);
-        Assert.Equal(ke.M, ke2.M, 6);
+        Assert.Equal(ke.SemiMajorAxis(), ke2.SemiMajorAxis(), 6);
+        Assert.Equal(ke.Eccentricity(), ke2.Eccentricity(), 6);
+        Assert.Equal(ke.Inclination(), ke2.Inclination(), 6);
+        Assert.Equal(ke.AscendingNode(), ke2.AscendingNode(), 6);
+        Assert.Equal(ke.ArgumentOfPeriapsis(), ke2.ArgumentOfPeriapsis(), 6);
+        Assert.Equal(ke.MeanAnomaly(), ke2.MeanAnomaly(), 6);
         LabelAssert.Equal(ke.Epoch, ke2.Epoch);
         Assert.Equal(ke.Frame, ke2.Frame);
         Assert.Equal(ke.Observer, ke2.Observer);
@@ -1488,12 +1488,12 @@ public partial class SpiceApiTest
         var ke = new KeplerianElements(-6800000.0, 1.2, 0.2, 0.3, 0.4, 0.5, TestHelpers.EarthAtJ2000, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF);
         var state = SpiceAPI.Instance.ConvertConicElementsToStateVector(ke, TimeSystem.Time.J2000TDB);
         var ke2 = SpiceAPI.Instance.ConvertStateVectorToConicOrbitalElement(state);
-        Assert.Equal(ke.A, ke2.A, 6);
-        Assert.Equal(ke.E, ke2.E, 6);
-        Assert.Equal(ke.I, ke2.I, 6);
-        Assert.Equal(ke.RAAN, ke2.RAAN, 6);
-        Assert.Equal(ke.AOP, ke2.AOP, 6);
-        Assert.Equal(ke.M, ke2.M, 6);
+        Assert.Equal(ke.SemiMajorAxis(), ke2.SemiMajorAxis(), 6);
+        Assert.Equal(ke.Eccentricity(), ke2.Eccentricity(), 6);
+        Assert.Equal(ke.Inclination(), ke2.Inclination(), 6);
+        Assert.Equal(ke.AscendingNode(), ke2.AscendingNode(), 6);
+        Assert.Equal(ke.ArgumentOfPeriapsis(), ke2.ArgumentOfPeriapsis(), 6);
+        Assert.Equal(ke.MeanAnomaly(), ke2.MeanAnomaly(), 6);
         LabelAssert.Equal(ke.Epoch, ke2.Epoch);
         Assert.Equal(ke.Frame, ke2.Frame);
         Assert.Equal(ke.Observer, ke2.Observer);
@@ -1625,12 +1625,12 @@ public partial class SpiceApiTest
         var gm = TestHelpers.EarthAtJ2000.GM;
         var state = SpiceAPI.Instance.ConvertConicElementsToStateVector(ke, TimeSystem.Time.J2000TDB, gm);
         var ke2 = SpiceAPI.Instance.ConvertStateVectorToConicOrbitalElement(state, gm);
-        Assert.Equal(ke.A, ke2.A, 6);
-        Assert.Equal(ke.E, ke2.E, 6);
-        Assert.Equal(ke.I, ke2.I, 6);
-        Assert.Equal(ke.RAAN, ke2.RAAN, 6);
-        Assert.Equal(ke.AOP, ke2.AOP, 6);
-        Assert.Equal(ke.M, ke2.M, 6);
+        Assert.Equal(ke.SemiMajorAxis(), ke2.SemiMajorAxis(), 6);
+        Assert.Equal(ke.Eccentricity(), ke2.Eccentricity(), 6);
+        Assert.Equal(ke.Inclination(), ke2.Inclination(), 6);
+        Assert.Equal(ke.AscendingNode(), ke2.AscendingNode(), 6);
+        Assert.Equal(ke.ArgumentOfPeriapsis(), ke2.ArgumentOfPeriapsis(), 6);
+        Assert.Equal(ke.MeanAnomaly(), ke2.MeanAnomaly(), 6);
     }
 
     [Fact]
@@ -1915,12 +1915,12 @@ public partial class SpiceApiTest
         Assert.Equal(new Vector3(reference[3], reference[4], reference[5]), propagated.Velocity);
         var elements = Body.CspiceDirect.Oscltx(leoState, 0.0, gm).Elements;
         var converted = SpiceAPI.Instance.ConvertStateVectorToConicOrbitalElement(leo, gm);
-        Assert.Equal(elements[1], converted.E);
-        Assert.Equal(elements[2], converted.I);
-        Assert.Equal(elements[3], converted.RAAN);
-        Assert.Equal(elements[4], converted.AOP);
-        Assert.Equal(elements[5], converted.M);
-        Assert.Equal(elements[9], converted.A);
+        Assert.Equal(elements[1], converted.Eccentricity());
+        Assert.Equal(elements[2], converted.Inclination());
+        Assert.Equal(elements[3], converted.AscendingNode());
+        Assert.Equal(elements[4], converted.ArgumentOfPeriapsis());
+        Assert.Equal(elements[5], converted.MeanAnomaly());
+        Assert.Equal(elements[9], converted.SemiMajorAxis());
         AssertNothingPending();
     }
 

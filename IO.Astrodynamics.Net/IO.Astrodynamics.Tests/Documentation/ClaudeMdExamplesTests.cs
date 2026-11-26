@@ -267,7 +267,7 @@ public class ClaudeMdExamplesTests
         Assert.Equal(impulse.DeltaV.Z / 1000.0, exported.ManDv3);
         Assert.True(impulse.FuelBurned > 0.0);
         Assert.Equal(-impulse.FuelBurned, exported.ManDeltaMass);
-        Assert.Equal(impulse.ThrustWindow!.Value.Length.TotalSeconds, exported.ManDuration);
+        Assert.Equal(impulse.ThrustWindow!.Value.Length.TotalSeconds, exported.ManDurationSeconds);
         Assert.Equal(impulse.ThrustWindow.Value.StartDate.ToUTC().DateTime, exported.ManEpochIgnition);
 
         // The input of 608bcf6: unpropagated, no executed maneuver, nothing exported

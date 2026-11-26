@@ -174,7 +174,7 @@ public class ElementsValidationTests
     {
         // The one legitimate infinity: a = +∞ with e = 1 and a finite perigee radius (#373)
         var parabola = Parabola(6800000.0);
-        Assert.True(double.IsPositiveInfinity(parabola.A));
+        Assert.True(double.IsPositiveInfinity(parabola.SemiMajorAxis()));
         Assert.Equal(6800000.0, parabola.PerigeeRadius());
     }
 

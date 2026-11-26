@@ -148,7 +148,7 @@ public class DefaultIntegratorFiguresTests
             _output.WriteLine($"MEASURE #668 L4 Hohmann {name}: burn 1 thrust start {burns[0].ThrustWindow!.Value.StartDate}, " +
                               $"dv {burns[0].DeltaV.Magnitude():F6} m/s; burn 2 thrust start " +
                               $"{burns[1].ThrustWindow!.Value.StartDate}, dv {burns[1].DeltaV.Magnitude():F6} m/s; final e " +
-                              $"{final.E:E3}, a {final.A:F3} m");
+                              $"{final.Eccentricity():E3}, a {final.SemiMajorAxis():F3} m");
             if (integrator is RK78IntegratorOptions)
             {
                 // RK7(8) at its defaults gives the closed form to the millimetre per second

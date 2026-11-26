@@ -50,7 +50,7 @@ public interface IIntegrator
     /// an event with the same detector does not find it again (#580).
     /// </para>
     /// <para>
-    /// A <paramref name="duration"/> of zero gives a segment of one step of zero length, which holds the start state: the
+    /// A <paramref name="durationSeconds"/> of zero gives a segment of one step of zero length, which holds the start state: the
     /// propagator asks for it after an impulse executed with no time left (#575). For an implementation outside the library
     /// that returns no step there, the propagator adds that step itself, with the acceleration of the forces of an
     /// <see cref="Integrator"/> subclass at the start state, or the end acceleration of the previous segment for a bare
@@ -68,7 +68,7 @@ public interface IIntegrator
     /// <param name="startPosition">Initial position.</param>
     /// <param name="startVelocity">Initial velocity.</param>
     /// <param name="baseEpoch">Absolute start time of the segment.</param>
-    /// <param name="duration">Duration to integrate, in seconds of the time argument of the propagation: TT seconds
+    /// <param name="durationSeconds">Duration to integrate, in seconds of the time argument of the propagation: TT seconds
     /// about the Earth, TDB seconds about any other central body (#501).</param>
     /// <param name="eventDetectors">Optional event detectors to evaluate each step. The detectors of the maneuvers serve
     /// the run that passed them only: once it ends, completed, stopped or thrown, their
@@ -85,6 +85,6 @@ public interface IIntegrator
     /// <returns>The propagation segment and optional event info.</returns>
     IntegrationResult IntegrateSegment(
         Vector3 startPosition, Vector3 startVelocity,
-        Time baseEpoch, double duration,
+        Time baseEpoch, double durationSeconds,
         IReadOnlyList<IEventDetector> eventDetectors = null);
 }

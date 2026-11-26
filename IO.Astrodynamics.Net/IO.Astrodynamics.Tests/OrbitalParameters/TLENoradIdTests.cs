@@ -322,9 +322,9 @@ public class TLENoradIdTests
             new IO.Astrodynamics.Math.Vector3(2821.2352501830983, 3825.849951628489, 6009.392701926987),
             TestHelpers.EarthAtJ2000, Epoch, Frames.Frame.TEME);
 
-        var config = new IO.Astrodynamics.OrbitalParameters.TLE.Configuration(noradId, "TEST SAT", "98067A", RevolutionsAtEpoch: 70000);
+        var config = new IO.Astrodynamics.OrbitalParameters.TLE.TleFitOptions { RevolutionNumberAtEpoch = 70000 };
 
-        var tle = stateVector.ToTLE(config);
+        var tle = stateVector.ToTle("TEST SAT", noradId, "98067A", config);
 
         Assert.Equal(noradId, tle.NoradCatalogId);
         Assert.Equal(69, tle.Line1.Length);

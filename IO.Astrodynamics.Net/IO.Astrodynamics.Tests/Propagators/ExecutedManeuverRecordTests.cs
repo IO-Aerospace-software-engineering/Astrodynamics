@@ -360,7 +360,7 @@ public class ExecutedManeuverRecordTests
 
         Assert.Equal(new[] { a, b }, segment.Steps);
         LabelAssert.Equal(S, segment.BaseEpoch);
-        Assert.Equal(20.0, segment.Duration);
+        Assert.Equal(20.0, segment.DurationSeconds);
         Assert.Empty(new PropagationSegment(S).Steps);
         Assert.Throws<ArgumentNullException>(() => new PropagationSegment(S, null));
     }

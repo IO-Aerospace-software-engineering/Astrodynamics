@@ -80,7 +80,7 @@ public class NearCircularRoundTripTests
             // Assert: Ω, ω and M are each ill-conditioned near e = 0 and i = 0; their sum, the mean longitude, is not
             worstLongitude = System.Math.Max(worstLongitude, TestHelpers.AngleDifference(
                 state.AscendingNode() + state.ArgumentOfPeriapsis() + state.MeanAnomaly(),
-                expected.RAAN + expected.AOP + expected.M));
+                expected.AscendingNode() + expected.ArgumentOfPeriapsis() + expected.MeanAnomaly()));
             worstPosition = System.Math.Max(worstPosition, Relative(back.Position, state.Position));
             worstVelocity = System.Math.Max(worstVelocity, Relative(back.Velocity, state.Velocity));
         }

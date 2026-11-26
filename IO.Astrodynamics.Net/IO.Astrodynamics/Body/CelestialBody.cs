@@ -499,11 +499,11 @@ public class CelestialBody : CelestialItem, IOrientable<Frame>
     /// </summary>
     /// <param name="semiMajorAxis">The semi-major axis of the orbit.</param>
     /// <param name="eccentricity">The eccentricity of the orbit.</param>
-    /// <param name="epochAtDescendingNode">The epoch at the descending node.</param>
+    /// <param name="descendingNodeEpoch">The epoch at the descending node.</param>
     /// <returns>The Keplerian elements for the heliosynchronous orbit.</returns>
     /// <exception cref="System.ArgumentException">Thrown when
     /// the orbit perigee is lower than the equatorial radius.</exception>
-    public KeplerianElements HelioSynchronousOrbit(double semiMajorAxis, double eccentricity, Time epochAtDescendingNode)
+    public KeplerianElements HelioSynchronousOrbit(double semiMajorAxis, double eccentricity, Time descendingNodeEpoch)
     {
         CelestialBody sun = Stars.SUN_BODY;
         double p = semiMajorAxis * (1 - eccentricity);
@@ -517,11 +517,11 @@ public class CelestialBody : CelestialItem, IOrientable<Frame>
         double e22 = (1 - e2) * (1 - e2);
         double sqrtGM = System.Math.Sqrt(GM);
         double re2 = EquatorialRadius * EquatorialRadius;
-        var ephemeris = GetEphemeris(epochAtDescendingNode, sun, Frame.ICRF, Aberration.LT);
+        var ephemeris = GetEphemeris(descendingNodeEpoch, sun, Frame.ICRF, Aberration.LT);
         double i = System.Math.Acos((2.0 * a72 * e22 * ephemeris.MeanMotion()) / (3.0 * sqrtGM * -J2 * re2));
 
         var sunVector = ephemeris.ToStateVector().Position.Inverse();
-        Math.Plane sunPlane = new Math.Plane(Vector3.VectorZ.Rotate(Frame.ToFrame(Frame.ICRF, epochAtDescendingNode).Rotation).Cross(sunVector), 0.0);
+        Math.Plane sunPlane = new Math.Plane(Vector3.VectorZ.Rotate(Frame.ToFrame(Frame.ICRF, descendingNodeEpoch).Rotation).Cross(sunVector), 0.0);
         double raanLongitude = sunPlane.GetAngle(Vector3.VectorY);
 
         if (sunVector.Y > 0.0)
@@ -540,7 +540,7 @@ public class CelestialBody : CelestialItem, IOrientable<Frame>
         double m = OrbitalParameters.OrbitalParameters.TrueAnomalyToMeanAnomaly(trueAnomaly, eccentricity,
             OrbitalParameters.OrbitalParameters.EllipticAnomaly(trueAnomaly, eccentricity));
 
-        return new KeplerianElements(semiMajorAxis, eccentricity, i, raanLongitude, Constants.PI + Constants.HalfPi, m, this, epochAtDescendingNode, Frame.ICRF);
+        return new KeplerianElements(semiMajorAxis, eccentricity, i, raanLongitude, Constants.PI + Constants.HalfPi, m, this, descendingNodeEpoch, Frame.ICRF);
     }
 
     /// <summary>
@@ -576,15 +576,15 @@ public class CelestialBody : CelestialItem, IOrientable<Frame>
     /// orbit
     /// </summary>
     /// <param name="eccentricity">The eccentricity of the orbit</param>
-    /// <param name="epochAtDescendingNode">The epoch at the descending node</param>
+    /// <param name="descendingNodeEpoch">The epoch at the descending node</param>
     /// <param name="nbOrbitPerDay">The number of orbits per day</param>
     /// <returns>The calculated Keplerian elements</returns>
-    public KeplerianElements HelioSynchronousOrbit(double eccentricity, Time epochAtDescendingNode, int nbOrbitPerDay)
+    public KeplerianElements HelioSynchronousOrbit(double eccentricity, Time descendingNodeEpoch, int nbOrbitPerDay)
     {
-        var trueSolarDay = TrueSolarDay(epochAtDescendingNode);
+        var trueSolarDay = TrueSolarDay(descendingNodeEpoch);
         double t = trueSolarDay.TotalSeconds / nbOrbitPerDay;
         double a = System.Math.Cbrt(((t * t) * GM) / (4 * Constants.PI * Constants.PI));
-        return HelioSynchronousOrbit(a, eccentricity, epochAtDescendingNode);
+        return HelioSynchronousOrbit(a, eccentricity, descendingNodeEpoch);
     }
 
 

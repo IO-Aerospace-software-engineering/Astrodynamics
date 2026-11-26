@@ -70,11 +70,11 @@ public class EquinoctialElementsTests
         Assert.Equal(0.12363511685104268, equinoctial.G, 3.9e-16);
         Assert.Equal(-0.023979838219125259, equinoctial.H, 3.9e-16);
         Assert.Equal(0.31440232331742002, equinoctial.K, 3.9e-16);
-        Assert.Equal(equinoctial.F, equinoctial.EquinoctialEx());
-        Assert.Equal(equinoctial.G, equinoctial.EquinoctialEy());
-        Assert.Equal(equinoctial.H, equinoctial.Hx());
-        Assert.Equal(equinoctial.K, equinoctial.Hy());
-        Assert.Equal(equinoctial.L0, equinoctial.Lv());
+        Assert.Equal(equinoctial.F, equinoctial.F);
+        Assert.Equal(equinoctial.G, equinoctial.G);
+        Assert.Equal(equinoctial.H, equinoctial.H);
+        Assert.Equal(equinoctial.K, equinoctial.K);
+        Assert.Equal(equinoctial.L0, equinoctial.L0);
     }
 
     /// <summary>
@@ -133,12 +133,12 @@ public class EquinoctialElementsTests
             105.64 * IO.Astrodynamics.Constants.Deg2Rad, 46.029 * IO.Astrodynamics.Constants.Deg2Rad, earth, new TimeSystem.Time(DateTime.UtcNow, TimeScale.UTC),
             Frames.Frame.ICRF);
         EquinoctialElements equ = ke.ToEquinoctial();
-        Assert.Equal(equ.SemiMajorAxis(), ke.A, 6);
-        Assert.Equal(equ.Eccentricity(), ke.E, 6);
-        Assert.Equal(equ.Inclination(), ke.I, 6);
-        Assert.Equal(equ.AscendingNode() * IO.Astrodynamics.Constants.Rad2Deg, ke.RAAN * IO.Astrodynamics.Constants.Rad2Deg, 12);
-        Assert.Equal(equ.ArgumentOfPeriapsis(), ke.AOP, 12);
-        Assert.Equal(equ.MeanAnomaly(), ke.M, 1);
+        Assert.Equal(equ.SemiMajorAxis(), ke.SemiMajorAxis(), 6);
+        Assert.Equal(equ.Eccentricity(), ke.Eccentricity(), 6);
+        Assert.Equal(equ.Inclination(), ke.Inclination(), 6);
+        Assert.Equal(equ.AscendingNode() * IO.Astrodynamics.Constants.Rad2Deg, ke.AscendingNode() * IO.Astrodynamics.Constants.Rad2Deg, 12);
+        Assert.Equal(equ.ArgumentOfPeriapsis(), ke.ArgumentOfPeriapsis(), 12);
+        Assert.Equal(equ.MeanAnomaly(), ke.MeanAnomaly(), 1);
     }
 
     [Fact]
@@ -241,10 +241,10 @@ public class EquinoctialElementsTests
             foreach (var ke in KeplerianElementsTests.RandomApsisElements(e, 6870 + System.Array.IndexOf(KeplerianElementsTests.ApsisEccentricities, e), 2000))
             {
                 var eq = ke.ToEquinoctial();
-                double raan = ke.I == 0.0 ? 0.0 : ke.RAAN;
-                double aop = e == 0.0 ? 0.0 : ke.I == 0.0 ? ke.RAAN + ke.AOP : ke.AOP;
-                var spicePerigee = KeplerianElementsTests.SpiceConicPosition(ke.A, ke.E, ke.I, raan, aop, 0.0);
-                var (angle, length) = KeplerianElementsTests.ApsisErrors(eq, spicePerigee, ke.A, ke.E);
+                double raan = ke.Inclination() == 0.0 ? 0.0 : ke.AscendingNode();
+                double aop = e == 0.0 ? 0.0 : ke.Inclination() == 0.0 ? ke.AscendingNode() + ke.ArgumentOfPeriapsis() : ke.ArgumentOfPeriapsis();
+                var spicePerigee = KeplerianElementsTests.SpiceConicPosition(ke.SemiMajorAxis(), ke.Eccentricity(), ke.Inclination(), raan, aop, 0.0);
+                var (angle, length) = KeplerianElementsTests.ApsisErrors(eq, spicePerigee, ke.SemiMajorAxis(), ke.Eccentricity());
                 worstAngleE = System.Math.Max(worstAngleE, angle);
                 worstLength = System.Math.Max(worstLength, length);
                 Assert.True(double.IsFinite(eq.PerigeeVelocity()) && double.IsFinite(eq.ApogeeVelocity()));

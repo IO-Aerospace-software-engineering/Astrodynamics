@@ -41,13 +41,11 @@ Console.WriteLine($"{transfer.TrueAnomaly()} rad, {transfer.MeanAnomaly()} rad; 
 
 | Property | Description |
 |----------|-------------|
-| `A` | Semi-major axis (m) |
-| `E` | Eccentricity |
-| `I` | Inclination (rad) |
-| `RAAN` | Right ascension of ascending node (rad) |
-| `AOP` | Argument of periapsis (rad) |
-| `M` | Mean anomaly (rad) |
 | `ElementsType` | `Osculating` or `Mean` |
+
+The elements are read by the methods below, `SemiMajorAxis()`, `Eccentricity()`, `Inclination()`, `AscendingNode()`,
+`ArgumentOfPeriapsis()` and `MeanAnomaly()` (the properties `A`, `E`, `I`, `RAAN`, `AOP` and `M`, which repeated them,
+removed in 11.0.0).
 
 ## Methods
 
@@ -157,9 +155,9 @@ q = P / (1 + e), P / 2 at e = 1, derived when it is built, so that every path (`
 |--------|-------------|
 | `ToStateVector()` | Convert to state vector |
 | `ToKeplerianElements()` | Convert to Keplerian |
-| `EquinoctialEx()` / `EquinoctialEy()` | Eccentricity components, `F` / `G` |
-| `Hx()` / `Hy()` | Inclination components, `H` / `K` |
-| `Lv()` | True longitude (rad), `L0` |
+| `F` / `G` | Eccentricity components (properties) |
+| `H` / `K` | Inclination components (properties) |
+| `L0` | True longitude (rad, property) |
 
 ## See Also
 

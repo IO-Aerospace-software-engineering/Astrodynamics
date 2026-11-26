@@ -118,7 +118,7 @@ public class OrbitalParametersTests
                 new Body.CelestialBody(399), TimeSystem.Time.J2000TDB, Frames.Frame.ICRF);
             double dt = Propagator.PropagationTimeArgument.Tt.SecondsBetween(TimeSystem.Time.J2000TDB,
                 TimeSystem.Time.J2000TDB.AddSeconds(3600.0));
-            double m = IO.Astrodynamics.Math.SpecialFunctions.NormalizeAngle(elements.M + dt * elements.MeanMotion());
+            double m = IO.Astrodynamics.Math.SpecialFunctions.NormalizeAngle(elements.MeanAnomaly() + dt * elements.MeanMotion());
             Assert.Equal(
                 $"Epoch : 2000-01-01T13:00:00.0000000 TDB A : 6800803.544958167, Ecc. : 0.001353139738203394, Inc. : 0.9026706683232326, AN : 0.5685593860871466, AOP : 1.85454203659022, M : {m}, Frame : J2000{Environment.NewLine}",
                 res);

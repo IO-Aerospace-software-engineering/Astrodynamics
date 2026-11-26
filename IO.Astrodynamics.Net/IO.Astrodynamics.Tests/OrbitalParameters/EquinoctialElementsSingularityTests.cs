@@ -507,7 +507,7 @@ public class EquinoctialElementsSingularityTests
         // 2.7e-15 to 2.8e-15; the test passed with 2.7e-15: a re-measurement after an intended change of results, not
         // a relaxation
         var spice = SpiceAPI.Instance.ConvertStateVectorToConicOrbitalElement(state);
-        bool droppedTilt = spice.RAAN == 0.0 && (spice.I == 0.0 || spice.I == System.Math.PI) &&
+        bool droppedTilt = spice.AscendingNode() == 0.0 && (spice.Inclination() == 0.0 || spice.Inclination() == System.Math.PI) &&
                            state.SpecificAngularMomentum().X != 0.0;
         var (position, velocity) = RelativeError(back, state);
         var (positionK, velocityK) = RelativeError(backThroughKeplerian, state);
@@ -578,10 +578,9 @@ public class EquinoctialElementsSingularityTests
         // before #452 (best 111 467.53 m and 522 853.27 m at this epoch, 2021-03-20 12:00 TDB)
         var s = new KeplerianElements(a, e, i, 0.0, periapsis, m, _earth, Epoch, Frames.Frame.TEME).ToStateVector();
         var target = new StateVector(s.Position, s.Velocity, _earth, Epoch, Frames.Frame.TEME);
-        var configuration = new IO.Astrodynamics.OrbitalParameters.TLE.Configuration(25666, "TEST", "98067A");
 
         // Act
-        var tle = target.ToTLE(configuration);
+        var tle = target.ToTle("TEST", 25666, "98067A");
         var fitted = tle.ToStateVector(Epoch);
 
         // Assert, in m and m/s as TLETests, and the two lines of the fit at i = 1e-9 rad, which never took the special
@@ -592,7 +591,7 @@ public class EquinoctialElementsSingularityTests
         var atOneNanoradian = new KeplerianElements(a, e, 1e-9, 0.0, periapsis, m, _earth, Epoch, Frames.Frame.TEME)
             .ToStateVector();
         var tleAtOneNanoradian = new StateVector(atOneNanoradian.Position, atOneNanoradian.Velocity, _earth, Epoch,
-            Frames.Frame.TEME).ToTLE(configuration);
+            Frames.Frame.TEME).ToTle("TEST", 25666, "98067A");
         bool sameLines = tle.Line1 == tleAtOneNanoradian.Line1 && tle.Line2 == tleAtOneNanoradian.Line2;
         _output.WriteLine($"MEASURE #452 ToTle_OfAnEquatorialTemeState, {name}: position {position:F3} m, velocity " +
                           $"{velocity:E2} m/s; the lines of i = 1e-9 rad: {sameLines}");
@@ -616,10 +615,9 @@ public class EquinoctialElementsSingularityTests
                 reference.PositionHigh[2]), new Vector3(reference.VelocityHigh[0], reference.VelocityHigh[1],
                 reference.VelocityHigh[2]), _earth, Epoch, Frames.Frame.ICRF).ToFrame(Frames.Frame.TEME)
             .ToStateVector();
-        var configuration = new IO.Astrodynamics.OrbitalParameters.TLE.Configuration(25666, "TEST", "98067A");
 
         // Act
-        var tle = c.Elements(_earth, Epoch, Frames.Frame.ICRF).ToTLE(configuration);
+        var tle = c.Elements(_earth, Epoch, Frames.Frame.ICRF).ToTle("TEST", 25666, "98067A");
         var fitted = tle.ToStateVector(Epoch);
 
         // Assert, in m and m/s. The residual is the TLE's text grid (half a unit of the 4th decimal of M is 6.2e-3 m/s

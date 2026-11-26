@@ -420,7 +420,7 @@ public class NearParabolicBandTests
         var atEpoch = eq.ToStateVector(Epoch);
 
         // Assert: M back, and Barker's state at 60 digits (before: 5.1e7 m off at M = −0.3, 4.1e6 m at +0.3)
-        double mError = back.M - m;
+        double mError = back.MeanAnomaly() - m;
         double rError = Distance(state.Position, new Vector3(r[0], r[1], r[2]));
         double rErrorAtEpoch = Distance(atEpoch.Position, new Vector3(r[0], r[1], r[2]));
         Measure($"#478 exact parabola M = {m:R}: e − 1 of the equinoctial elements", eq.Eccentricity() - 1.0);
@@ -459,7 +459,7 @@ public class NearParabolicBandTests
             var expected = ke.ToStateVector();
             worstKeplerian = System.Math.Max(worstKeplerian,
                 Distance(keBack.ToStateVector().Position, expected.Position) / expected.Position.Magnitude());
-            worstM = System.Math.Max(worstM, System.Math.Abs(keBack.M - m));
+            worstM = System.Math.Max(worstM, System.Math.Abs(keBack.MeanAnomaly() - m));
         }
 
         Measure("#478 sweep, ToStateVector(own ν), worst |Δr| / |r|", worstOwnNu);
@@ -503,7 +503,7 @@ public class NearParabolicBandTests
         Assert.False(ke.IsParabolic());
         foreach (double nu in new[] { -1.0, 0.5, 1.0, 1.5 })
         {
-            Assert.Equal(IO.Astrodynamics.OrbitalParameters.OrbitalParameters.TrueAnomalyToMeanAnomaly(nu, ke.E, ke.EccentricAnomaly(nu)),
+            Assert.Equal(IO.Astrodynamics.OrbitalParameters.OrbitalParameters.TrueAnomalyToMeanAnomaly(nu, ke.Eccentricity(), ke.EccentricAnomaly(nu)),
                 ke.MeanAnomaly(nu));
         }
     }
@@ -689,7 +689,7 @@ public class NearParabolicBandTests
         Assert.False(ke.IsParabolic());
         var later = (KeplerianElements)ke.AtEpoch(Epoch.AddSeconds(600.0));
         double expected = 0.2 + 600.0 * ke.MeanMotion();
-        Assert.Equal(e < 1.0 - 1e-6 ? IO.Astrodynamics.Math.SpecialFunctions.NormalizeAngle(expected) : expected, later.M);
+        Assert.Equal(e < 1.0 - 1e-6 ? IO.Astrodynamics.Math.SpecialFunctions.NormalizeAngle(expected) : expected, later.MeanAnomaly());
     }
 
     [Fact]
@@ -712,7 +712,7 @@ public class NearParabolicBandTests
 
         // Assert: Barker's law, bit for bit: M + √(μ/(2q³)) Δt, the motion of an exact parabola
         Assert.Equal(0.3 + System.Math.Sqrt(IO.Astrodynamics.Constants.G * _earth.Mass / (2.0 * System.Math.Pow(7.0e6, 3))) * 600.0,
-            later.M);
+            later.MeanAnomaly());
     }
 
     [Fact]
@@ -851,7 +851,7 @@ public class NearParabolicBandTests
             foreach (var (path, ke) in paths)
             {
                 Assert.True(ke.IsParabolic(), $"{name} {path}");
-                double mismatch = ConicMismatch(ke.SemiMajorAxis(), ke.E, ke.PerigeeRadius());
+                double mismatch = ConicMismatch(ke.SemiMajorAxis(), ke.Eccentricity(), ke.PerigeeRadius());
                 Measure($"#459 {name} {path}: |q/a − (1 − e)| / (ε (1 + e))", mismatch);
                 Assert.InRange(mismatch, 0.0, 6.0);
             }
@@ -889,8 +889,8 @@ public class NearParabolicBandTests
                 count++;
                 var fromState = sv.ToKeplerianElements();
                 var fromSpice = SpiceAPI.Instance.ConvertStateVectorToConicOrbitalElement(sv);
-                worstState = System.Math.Max(worstState, ConicMismatch(fromState.SemiMajorAxis(), fromState.E, fromState.PerigeeRadius()));
-                worstSpice = System.Math.Max(worstSpice, ConicMismatch(fromSpice.SemiMajorAxis(), fromSpice.E, fromSpice.PerigeeRadius()));
+                worstState = System.Math.Max(worstState, ConicMismatch(fromState.SemiMajorAxis(), fromState.Eccentricity(), fromState.PerigeeRadius()));
+                worstSpice = System.Math.Max(worstSpice, ConicMismatch(fromSpice.SemiMajorAxis(), fromSpice.Eccentricity(), fromSpice.PerigeeRadius()));
             }
         }
 
@@ -1007,9 +1007,9 @@ public class NearParabolicBandTests
             Measure($"#477 {name} MeanMotion relative error", (meanMotion - nHi - nLo) / nHi);
             // Worst 4.1e-17 on Linux x64, Windows x64 and macOS arm64 (CI run 44225490669); twice the worst
             Assert.InRange((meanMotion - nHi - nLo) / nHi, -8.3e-17, 8.3e-17);
-            Assert.True(double.IsPositiveInfinity(ke.A));
+            Assert.True(double.IsPositiveInfinity(ke.SemiMajorAxis()));
             Assert.Equal(q, ke.PerigeeRadius());
-            double[] actual = [ke.I, ke.RAAN, ke.AOP, ke.M];
+            double[] actual = [ke.Inclination(), ke.AscendingNode(), ke.ArgumentOfPeriapsis(), ke.MeanAnomaly()];
             for (int k = 0; k < 4; k++)
             {
                 Measure($"#477 {name} angle {k} error (rad)", actual[k] - angles[k]);

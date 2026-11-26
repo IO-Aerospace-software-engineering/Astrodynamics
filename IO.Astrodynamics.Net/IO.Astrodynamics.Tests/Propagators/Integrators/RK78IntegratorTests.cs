@@ -125,7 +125,7 @@ public class RK78IntegratorTests
 
         for (int k = 0; k < 3; k++)
         {
-            var integrator = new RK78Integrator(fixedStepSize: stepSizes[k]);
+            var integrator = new RK78Integrator(fixedStepSizeSeconds: stepSizes[k]);
             integrator.AddForce(new GravitationalAcceleration(earth));
             integrator.Initialize(initialState);
 
@@ -171,7 +171,7 @@ public class RK78IntegratorTests
 
         var integrator = new RK78Integrator(
             absoluteTolerance: 1e-12, relativeTolerance: 1e-12,
-            initialStepSize: 30.0);
+            initialStepSizeSeconds: 30.0);
         integrator.AddForce(new GravitationalAcceleration(earth));
         integrator.Initialize(initialState);
 
@@ -222,7 +222,7 @@ public class RK78IntegratorTests
 
         var integrator = new RK78Integrator(
             absoluteTolerance: 1e-12, relativeTolerance: 1e-12,
-            initialStepSize: 30.0);
+            initialStepSizeSeconds: 30.0);
         integrator.AddForce(new GravitationalAcceleration(earth));
         integrator.Initialize(initialState);
 
@@ -262,7 +262,7 @@ public class RK78IntegratorTests
 
         IntegrationResult RunOnce()
         {
-            var integrator = new RK78Integrator(fixedStepSize: 10.0);
+            var integrator = new RK78Integrator(fixedStepSizeSeconds: 10.0);
             integrator.AddForce(new GravitationalAcceleration(earth));
             integrator.Initialize(initialState);
 
@@ -310,7 +310,7 @@ public class RK78IntegratorTests
 
         var integrator = new RK78Integrator(
             absoluteTolerance: 1e-10, relativeTolerance: 1e-10,
-            initialStepSize: 100.0); // initial step much larger than output
+            initialStepSizeSeconds: 100.0); // initial step much larger than output
         integrator.AddForce(new GravitationalAcceleration(earth));
         integrator.Initialize(initialState);
 
@@ -341,7 +341,7 @@ public class RK78IntegratorTests
 
         var integrator = new RK78Integrator(
             absoluteTolerance: 1e-10, relativeTolerance: 1e-10,
-            initialStepSize: 10.0);
+            initialStepSizeSeconds: 10.0);
         integrator.AddForce(new GravitationalAcceleration(earth));
         integrator.Initialize(initialState);
 
@@ -374,7 +374,7 @@ public class RK78IntegratorTests
 
         var integrator = new RK78Integrator(
             absoluteTolerance: 1e-10, relativeTolerance: 1e-10,
-            initialStepSize: 30.0, minStepSize: 1e-3);
+            initialStepSizeSeconds: 30.0, minStepSizeSeconds: 1e-3);
         integrator.AddForce(new GravitationalAcceleration(earth));
         integrator.Initialize(initialState);
 
@@ -411,7 +411,7 @@ public class RK78IntegratorTests
             new Vector3(r0, 0, 0), new Vector3(0, v0, 0),
             earth, epoch, Frames.Frame.ICRF);
 
-        var integrator = new RK78Integrator(fixedStepSize: 1.0);
+        var integrator = new RK78Integrator(fixedStepSizeSeconds: 1.0);
         integrator.AddForce(new GravitationalAcceleration(earth));
         integrator.Initialize(initialState);
 
@@ -442,16 +442,16 @@ public class RK78IntegratorTests
         Assert.Throws<ArgumentOutOfRangeException>(() =>
             new RK78Integrator(relativeTolerance: 0.0));
         Assert.Throws<ArgumentOutOfRangeException>(() =>
-            new RK78Integrator(initialStepSize: -10.0));
+            new RK78Integrator(initialStepSizeSeconds: -10.0));
     }
 
     [Fact]
     public void FixedConstructorRejectsInvalidStepSize()
     {
         Assert.Throws<ArgumentOutOfRangeException>(() =>
-            new RK78Integrator(fixedStepSize: 0.0));
+            new RK78Integrator(fixedStepSizeSeconds: 0.0));
         Assert.Throws<ArgumentOutOfRangeException>(() =>
-            new RK78Integrator(fixedStepSize: -5.0));
+            new RK78Integrator(fixedStepSizeSeconds: -5.0));
     }
 
     #endregion

@@ -63,6 +63,12 @@ public sealed record CovariancePropagationOptions
     public static CovariancePropagationOptions None { get; } = new() { Mode = CovariancePropagationMode.None };
 
     /// <summary>
+    /// The options of every default, as <c>new()</c>: the state transition matrix and the sensitivity, without the
+    /// covariance (<see cref="CovariancePropagationMode.StateTransitionOnly"/>; D1 of #668, lot L9).
+    /// </summary>
+    public static CovariancePropagationOptions Default { get; } = new();
+
+    /// <summary>
     /// What is integrated: Φ and Ψ only (the default), also the covariance, or nothing
     /// (<see cref="CovariancePropagationMode.None"/>, <see cref="None"/>).
     /// </summary>

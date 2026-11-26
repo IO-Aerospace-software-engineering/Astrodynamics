@@ -47,14 +47,14 @@ namespace IO.Astrodynamics.Math
         /// Interpolates the state vector at a given epoch using Lagrange interpolation.
         /// </summary>
         /// <param name="stateVectors">Array of state vectors to interpolate from.</param>
-        /// <param name="date">The date at which to interpolate the state vector.</param>
+        /// <param name="epoch">The epoch at which to interpolate the state vector.</param>
         /// <param name="k"></param>
         /// <returns>The interpolated state vector at the given epoch.</returns>
-        public static StateVector Interpolate(StateVector[] stateVectors, Time date, int k = 8)
+        public static StateVector Interpolate(StateVector[] stateVectors, Time epoch, int k = 8)
         {
             // Obtenir les k points les plus proches
-            List<StateVector> nearestStateVectors = GetNearestStateVectors(stateVectors, date, k);
-            return InterpolateNearest(nearestStateVectors, date);
+            List<StateVector> nearestStateVectors = GetNearestStateVectors(stateVectors, epoch, k);
+            return InterpolateNearest(nearestStateVectors, epoch);
         }
 
         /// <summary>

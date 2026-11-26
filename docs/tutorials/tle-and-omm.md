@@ -121,30 +121,21 @@ without aberration, which interpolates the samples (under a millimetre for the I
 Convert an osculating state vector back to a TLE:
 
 ```csharp
-using TleConfiguration = IO.Astrodynamics.OrbitalParameters.TLE.Configuration;
 // Inputs: sv (StateVector)
-// TLE.Configuration collides with IO.Astrodynamics.Configuration, so the directive above aliases it
-
-var config = new TleConfiguration(
-    NoradId: 25544,
-    Name: "ISS (ZARYA)",
-    CosparId: "98067A",
-    RevolutionsAtEpoch: 25703);
-
-var newTle = sv.ToTLE(config);
+var newTle = sv.ToTle("ISS (ZARYA)", 25544, "98067A",
+    new TleFitOptions { RevolutionNumberAtEpoch = 25703 });
 ```
 
 The fitting process converts osculating elements to mean elements consistent with SGP4. The state may be in any frame,
-elements already in TEME included, but must be about the Earth: `ToTLE` throws `InvalidOperationException` for an
+elements already in TEME included, but must be about the Earth: `ToTle` throws `InvalidOperationException` for an
 orbit about another centre (#607); the TLE's epoch is the UTC of the state's epoch, rounded to the 1e-8 day of the
 field. Each field of the text is the nearest value its columns hold.
 
-A `NoradId` above 99999 is encoded with the Alpha-5 convention, up to 339999:
+A `noradId` above 99999 is encoded with the Alpha-5 convention, up to 339999:
 
 ```csharp
-// Inputs: sv (StateVector), and the TleConfiguration alias above
-var alpha5 = new TleConfiguration(NoradId: 275544, Name: "MY_SAT", CosparId: "24001A");
-var alpha5Tle = sv.ToTLE(alpha5);
+// Inputs: sv (StateVector)
+var alpha5Tle = sv.ToTle("MY_SAT", 275544, "24001A");
 
 Console.WriteLine(alpha5Tle.Line1.Substring(2, 5));  // T5544
 Console.WriteLine(alpha5Tle.NoradCatalogId);         // 275544

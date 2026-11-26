@@ -308,7 +308,7 @@ public class ConjunctionCovariancePropagationTests : IClassFixture<ConjunctionCo
         var replayed = encounters[0].ProtectedCovariance.Solution;
         var last = replayed.Segments[^1];
         var lastTca = encounters.Max(e => e.EncounterState.Epoch);
-        Assert.True(last.BaseEpoch.AddSeconds(last.Duration) >= lastTca);
+        Assert.True(last.BaseEpoch.AddSeconds(last.DurationSeconds) >= lastTca);
         Assert.True(last.BaseEpoch.AddSeconds(last.Steps[^1].CumulativeTime) <= lastTca);
     }
 

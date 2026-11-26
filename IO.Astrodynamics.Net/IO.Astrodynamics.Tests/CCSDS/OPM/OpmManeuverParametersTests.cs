@@ -17,7 +17,7 @@ namespace IO.Astrodynamics.Tests.CCSDS.OPM
         {
             var maneuver = new OpmManeuverParameters(
                 manEpochIgnition: _testEpoch,
-                manDuration: 120.0,
+                manDurationSeconds: 120.0,
                 manDeltaMass: -50.0,
                 manRefFrame: "RSW",
                 manDv1: 0.1,
@@ -25,7 +25,7 @@ namespace IO.Astrodynamics.Tests.CCSDS.OPM
                 manDv3: 0.02);
 
             Assert.Equal(_testEpoch, maneuver.ManEpochIgnition);
-            Assert.Equal(120.0, maneuver.ManDuration);
+            Assert.Equal(120.0, maneuver.ManDurationSeconds);
             Assert.Equal(-50.0, maneuver.ManDeltaMass);
             Assert.Equal("RSW", maneuver.ManRefFrame);
             Assert.Equal(0.1, maneuver.ManDv1);
@@ -39,7 +39,7 @@ namespace IO.Astrodynamics.Tests.CCSDS.OPM
             var maneuver = new OpmManeuverParameters(
                 _testEpoch, 0.0, -50.0, "RSW", 0.1, 0.0, 0.0);
 
-            Assert.Equal(0.0, maneuver.ManDuration);
+            Assert.Equal(0.0, maneuver.ManDurationSeconds);
         }
 
         [Fact]
@@ -194,9 +194,9 @@ namespace IO.Astrodynamics.Tests.CCSDS.OPM
         #region Non-finite values (#708)
 
         [Theory]
-        [InlineData("manDuration", double.NaN)]
-        [InlineData("manDuration", double.PositiveInfinity)]
-        [InlineData("manDuration", double.NegativeInfinity)]
+        [InlineData("manDurationSeconds", double.NaN)]
+        [InlineData("manDurationSeconds", double.PositiveInfinity)]
+        [InlineData("manDurationSeconds", double.NegativeInfinity)]
         [InlineData("manDeltaMass", double.NaN)]
         [InlineData("manDeltaMass", double.PositiveInfinity)]
         [InlineData("manDeltaMass", double.NegativeInfinity)]
@@ -205,7 +205,7 @@ namespace IO.Astrodynamics.Tests.CCSDS.OPM
             // MAN_DURATION is a finite value of 0 or more (durationType: nonNegativeDouble), MAN_DELTA_MASS of 0 or less
             // (deltamassTypeZ: nonPositiveDouble); NaN, and -Infinity for the delta mass, passed the checks before
             var ex = Assert.Throws<ArgumentOutOfRangeException>(() => new OpmManeuverParameters(_testEpoch,
-                parameter == "manDuration" ? value : 120.0, parameter == "manDeltaMass" ? value : -50.0, "RSW", 0.1, 0.0, 0.0));
+                parameter == "manDurationSeconds" ? value : 120.0, parameter == "manDeltaMass" ? value : -50.0, "RSW", 0.1, 0.0, 0.0));
             Assert.Equal(parameter, ex.ParamName);
         }
 
@@ -213,7 +213,7 @@ namespace IO.Astrodynamics.Tests.CCSDS.OPM
         public void Constructor_ZeroDurationAndDeltaMass_AreStoredAsGiven()
         {
             var maneuver = new OpmManeuverParameters(_testEpoch, 0.0, 0.0, "RSW", 0.1, 0.0, 0.0);
-            Assert.Equal(0.0, maneuver.ManDuration);
+            Assert.Equal(0.0, maneuver.ManDurationSeconds);
             Assert.Equal(0.0, maneuver.ManDeltaMass);
         }
         [Theory]

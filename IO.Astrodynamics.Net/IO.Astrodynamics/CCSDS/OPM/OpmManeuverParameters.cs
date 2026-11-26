@@ -32,7 +32,7 @@ public class OpmManeuverParameters
     /// <remarks>
     /// Must be >= 0. A value of 0 represents an impulsive maneuver.
     /// </remarks>
-    public double ManDuration { get; }
+    public double ManDurationSeconds { get; }
 
     /// <summary>
     /// Gets the change in spacecraft mass due to the maneuver in kilograms.
@@ -91,7 +91,7 @@ public class OpmManeuverParameters
     /// Initializes a new instance of the <see cref="OpmManeuverParameters"/> class.
     /// </summary>
     /// <param name="manEpochIgnition">Epoch of maneuver ignition.</param>
-    /// <param name="manDuration">Duration in seconds (finite, >= 0).</param>
+    /// <param name="manDurationSeconds">Duration in seconds (finite, >= 0).</param>
     /// <param name="manDeltaMass">Mass change in kg (finite, &lt;= 0).</param>
     /// <param name="manRefFrame">Reference frame for delta-V components.</param>
     /// <param name="manDv1">First delta-V component in km/s (finite).</param>
@@ -102,7 +102,7 @@ public class OpmManeuverParameters
     /// and 0 or less (#708), or a ΔV component is NaN or ±Infinity (#717).</exception>
     public OpmManeuverParameters(
         DateTime manEpochIgnition,
-        double manDuration,
+        double manDurationSeconds,
         double manDeltaMass,
         string manRefFrame,
         double manDv1,
@@ -111,8 +111,8 @@ public class OpmManeuverParameters
         IReadOnlyList<string> comments = null)
     {
         // Finite values (#708: NaN, and -Infinity for the delta mass, passed the checks)
-        if (!(double.IsFinite(manDuration) && manDuration >= 0))
-            throw new ArgumentOutOfRangeException(nameof(manDuration), "Maneuver duration must be finite and cannot be negative.");
+        if (!(double.IsFinite(manDurationSeconds) && manDurationSeconds >= 0))
+            throw new ArgumentOutOfRangeException(nameof(manDurationSeconds), "Maneuver duration must be finite and cannot be negative.");
         if (!(double.IsFinite(manDeltaMass) && manDeltaMass <= 0))
             throw new ArgumentOutOfRangeException(nameof(manDeltaMass),
                 "Maneuver delta mass must be finite and non-positive. Use negative values for expelled mass (e.g., -25.0 kg means 25 kg of propellant burned).");
@@ -120,7 +120,7 @@ public class OpmManeuverParameters
             throw new ArgumentException("Maneuver reference frame is required.", nameof(manRefFrame));
 
         ManEpochIgnition = manEpochIgnition;
-        ManDuration = manDuration;
+        ManDurationSeconds = manDurationSeconds;
         ManDeltaMass = manDeltaMass;
         ManRefFrame = manRefFrame;
         // The ΔV components carry no range but are real numbers, as the reader reads them (#717)
@@ -173,12 +173,12 @@ public class OpmManeuverParameters
     /// <summary>
     /// Gets whether this is an impulsive maneuver (duration = 0).
     /// </summary>
-    public bool IsImpulsive => ManDuration == 0;
+    public bool IsImpulsive => ManDurationSeconds == 0;
 
     /// <inheritdoc />
     public override string ToString()
     {
-        string type = IsImpulsive ? "Impulsive" : $"Duration={ManDuration:F1}s";
+        string type = IsImpulsive ? "Impulsive" : $"Duration={ManDurationSeconds:F1}s";
         return $"OpmManeuver[{ManEpochIgnition:O}, {type}, ΔV={DeltaVMagnitude:F6}km/s, Frame={ManRefFrame}]";
     }
 }

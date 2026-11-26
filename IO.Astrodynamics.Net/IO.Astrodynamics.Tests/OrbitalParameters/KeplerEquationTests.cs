@@ -427,8 +427,8 @@ public class KeplerEquationTests
                     eccentricity + 4.0 * Epsilon * System.Math.Abs(meanAnomaly), $"E = {anomaly:R}");
         Assert.Equal(System.Math.Sign(meanAnomaly), System.Math.Sign(anomaly));
         Assert.InRange(iterations, 1, Iterations);
-        Assert.Equal(eccentricity == LargestEllipticEccentricity, elements.M == meanAnomaly);
-        if (elements.M == meanAnomaly)
+        Assert.Equal(eccentricity == LargestEllipticEccentricity, elements.MeanAnomaly() == meanAnomaly);
+        if (elements.MeanAnomaly() == meanAnomaly)
         {
             Assert.Equal(anomaly, elements.EccentricAnomaly());
             Assert.True(double.IsFinite(elements.ToStateVector().Position.Magnitude()));
@@ -546,7 +546,7 @@ public class KeplerEquationTests
     private static KeplerianElements ElementsOf(ReferencePoint p, CelestialBody earth)
     {
         double[] given = p.M == IO.Astrodynamics.Constants.TwoPi ? [p.M, -1e-17] : [p.M];
-        return given.Select(m => Elements(p.Eccentricity, m, earth)).FirstOrDefault(elements => elements.M == p.M);
+        return given.Select(m => Elements(p.Eccentricity, m, earth)).FirstOrDefault(elements => elements.MeanAnomaly() == p.M);
     }
 
     // The points at e = 1 − 1e-6, and those alone, reached through KeplerianElements, whose constructor keeps their M

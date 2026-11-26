@@ -3176,8 +3176,8 @@ public class SpiceAPI
     // semi-major axis of a parabola is infinite: its periapsis radius is checked by ThrowIfOutsideConicsDomain
     private static void ThrowIfNotFinite(OrbitalParameters.KeplerianElements keplerianElements, string paramName)
     {
-        ThrowIfNotFinite(paramName, ("e", keplerianElements.E), ("i", keplerianElements.I), ("RAAN", keplerianElements.RAAN),
-            ("AOP", keplerianElements.AOP), ("M", keplerianElements.M));
+        ThrowIfNotFinite(paramName, ("e", keplerianElements.Eccentricity()), ("i", keplerianElements.Inclination()), ("RAAN", keplerianElements.AscendingNode()),
+            ("AOP", keplerianElements.ArgumentOfPeriapsis()), ("M", keplerianElements.MeanAnomaly()));
     }
 
     private static void ThrowIfNotFinite(OrbitalParameters.EquinoctialElements equinoctialElements, string paramName)
@@ -3227,7 +3227,7 @@ public class SpiceAPI
         if (!(rp > 0.0) || double.IsInfinity(rp))
         {
             throw new ArgumentException(
-                $"The periapsis radius of the elements, {rp} m (a = {keplerianElements.A} m, e = {keplerianElements.E}), is not finite and above 0, as CONICS requires.",
+                $"The periapsis radius of the elements, {rp} m (a = {keplerianElements.SemiMajorAxis()} m, e = {keplerianElements.Eccentricity()}), is not finite and above 0, as CONICS requires.",
                 paramName);
         }
     }
@@ -3399,7 +3399,7 @@ public class SpiceAPI
         // The native conic elements solve the elliptic Kepler equation when they are built, an iteration that may never
         // end on an open orbit (#372): an open orbit goes to SPICE CONICS at the epoch of its elements, as the other
         // overloads
-        if (keplerianElements.E >= 1.0)
+        if (keplerianElements.Eccentricity() >= 1.0)
         {
             return ConvertConicElementsToStateVector(keplerianElements, keplerianElements.Epoch);
         }

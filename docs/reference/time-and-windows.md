@@ -313,8 +313,8 @@ A numerical propagation integrates over the seconds of the dynamical time of its
   window, as before 11.0.0, bit for bit.
 
 The labels stay TDB: every segment base, stage epoch, event epoch and output epoch is a TDB `Time`, which the caches,
-SPICE and the stored states read as they did. About the Earth only the instant a label names changes. `PropagationSegment.Duration`,
-`AcceptedStep.CumulativeTime` and `StepSize`, the event time and the duration passed to `IIntegrator.IntegrateSegment`
+SPICE and the stored states read as they did. About the Earth only the instant a label names changes. `PropagationSegment.DurationSeconds`,
+`AcceptedStep.CumulativeTime` and `StepSizeSeconds`, the event time and the duration passed to `IIntegrator.IntegrateSegment`
 count the seconds of the time argument (TT about the Earth).
 
 The maneuver chain counts the same seconds (#547): about the Earth the thrust and maneuver windows of an impulse are

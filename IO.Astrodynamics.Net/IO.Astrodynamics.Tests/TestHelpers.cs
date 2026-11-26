@@ -92,9 +92,9 @@ namespace IO.Astrodynamics.Tests
         internal static bool KeplerComparer(KeplerianElements k1, KeplerianElements k2)
         {
             var tolerance = 1E-06;
-            return SameShape(k1, k2, k1.A, k2.A, tolerance) &&
-                   System.Math.Abs(k1.E - k2.E) < tolerance && System.Math.Abs(k1.I - k2.I) < tolerance &&
-                   AngleDifference(k1.RAAN, k2.RAAN) < tolerance && AngleDifference(k1.AOP, k2.AOP) < tolerance && AngleDifference(k1.M, k2.M) < tolerance &&
+            return SameShape(k1, k2, k1.SemiMajorAxis(), k2.SemiMajorAxis(), tolerance) &&
+                   System.Math.Abs(k1.Eccentricity() - k2.Eccentricity()) < tolerance && System.Math.Abs(k1.Inclination() - k2.Inclination()) < tolerance &&
+                   AngleDifference(k1.AscendingNode(), k2.AscendingNode()) < tolerance && AngleDifference(k1.ArgumentOfPeriapsis(), k2.ArgumentOfPeriapsis()) < tolerance && AngleDifference(k1.MeanAnomaly(), k2.MeanAnomaly()) < tolerance &&
                    k1.Epoch == k2.Epoch && k1.Frame == k2.Frame && Equals(k1.Observer, k2.Observer);
         }
 

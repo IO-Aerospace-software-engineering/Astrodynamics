@@ -157,7 +157,7 @@ public sealed record RK78IntegratorOptions : IntegratorOptions
     }
 
     /// <summary>
-    /// The step of the fixed-step mode, without error control (<c>new RK78Integrator(fixedStepSize)</c>); null (the
+    /// The step of the fixed-step mode, without error control (<c>new RK78Integrator(fixedStepSizeSeconds)</c>); null (the
     /// default) for the adaptive mode. Set with another setting than its default, it throws
     /// <see cref="ArgumentException"/> at the start of the call that takes the options (R06 of #668, section A of the
     /// re-baseline, decided by S. Guillet, 2026-11-19).

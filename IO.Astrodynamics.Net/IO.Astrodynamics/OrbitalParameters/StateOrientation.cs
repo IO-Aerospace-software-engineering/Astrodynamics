@@ -21,7 +21,7 @@ namespace IO.Astrodynamics.OrbitalParameters
     /// <see cref="Frame.GetStateOrientationToICRF(Time)"/> (the frame of a spacecraft included: ICRF relative to the
     /// spacecraft, in the spacecraft frame, managed or kernel-backed), <c>Spacecraft.GetOrientation</c> and
     /// <see cref="SpiceAPI.ReadOrientation"/> (the spacecraft relative to the reference frame, in the reference frame, for
-    /// the C-matrix of a CK). <see cref="AtDate"/> takes the other convention.
+    /// the C-matrix of a CK). <see cref="AtEpoch"/> takes the other convention.
     /// </param>
     /// <param name="Epoch">The time at which the state is defined.</param>
     /// <param name="ReferenceFrame">Source frame of the rotation.</param>
@@ -71,35 +71,35 @@ namespace IO.Astrodynamics.OrbitalParameters
         /// <see cref="Frame.GetStateOrientationToICRF(Time)"/>). It therefore does not extrapolate a frame transform nor the
         /// attitude of a spacecraft as the library returns them; the attitude record of a spacecraft does not use it.
         /// </remarks>
-        public StateOrientation AtDate(in Time date)
+        public StateOrientation AtEpoch(in Time epoch)
         {
-            var deltaT = (date - Epoch).TotalSeconds;
+            var deltaT = (epoch - Epoch).TotalSeconds;
             return new StateOrientation(
-                (Quaternion.FromAxisAngle(AngularVelocity.NormalizeOrZero(), AngularVelocity.Magnitude() * deltaT).NormalizeOrZero() * Rotation.NormalizeOrZero()).NormalizeOrZero(), AngularVelocity, date,
+                (Quaternion.FromAxisAngle(AngularVelocity.NormalizeOrZero(), AngularVelocity.Magnitude() * deltaT).NormalizeOrZero() * Rotation.NormalizeOrZero()).NormalizeOrZero(), AngularVelocity, epoch,
                 ReferenceFrame);
         }
 
         /// <summary>
         /// Interpolates between two state orientations: the exact spherical linear interpolation of the rotations (about the
         /// axis of the rotation from this one to <paramref name="other"/>, at the fraction of the angle that
-        /// <paramref name="date"/> is of the interval, with no linear fallback for close rotations), and the linear
+        /// <paramref name="epoch"/> is of the interval, with no linear fallback for close rotations), and the linear
         /// interpolation of the angular velocities.
         /// </summary>
         /// <param name="other">The later state orientation, in the same reference frame.</param>
-        /// <param name="date">The date, between the epochs of the two.</param>
-        /// <returns>The state orientation at <paramref name="date"/>.</returns>
-        /// <exception cref="ArgumentException">The reference frames differ, or the date is outside the interval.</exception>
-        public StateOrientation Interpolate(StateOrientation other, Time date)
+        /// <param name="epoch">The epoch, between the epochs of the two.</param>
+        /// <returns>The state orientation at <paramref name="epoch"/>.</returns>
+        /// <exception cref="ArgumentException">The reference frames differ, or the epoch is outside the interval.</exception>
+        public StateOrientation Interpolate(StateOrientation other, Time epoch)
         {
             if (ReferenceFrame != other.ReferenceFrame)
             {
                 throw new ArgumentException("Cannot interpolate between two different reference frames.");
             }
-            if(date < Epoch || date > other.Epoch)
+            if(epoch < Epoch || epoch > other.Epoch)
             {
                 throw new ArgumentException("Date is out of range.");
             }
-            var ratio = (date - Epoch).TotalSeconds / (other.Epoch - Epoch).TotalSeconds;
+            var ratio = (epoch - Epoch).TotalSeconds / (other.Epoch - Epoch).TotalSeconds;
 
             // Quaternion.SLERP switches to a normalised Lerp below about 0.028 rad between the rotations, 6e-8 rad off the
             // SLERP at 0.025 rad (#548)
