@@ -463,6 +463,9 @@ The TEME outputs take their operational tolerance; the ICRF outputs of `sgp4` 01
 cases take the overrides of the suite, set by GMAT's kinematic terms of the 1994 equation of the equinoxes (§15.3, T1)
 and the 2000A/2000B spread: a runner exact to Vallado's definition sits at about half of them. Release, Linux,
 2026-11-08, the runner on the suite at b10b925: the worst ratio of each key over the cases, and of each case over its keys.
+With decision 111 of [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668) (lot L7,
+Release, Linux, 2026-11-26, the suite's 33286d2, 201 of 201) `TLE.ToOmm` writes the mean motion of the field, so the
+`MEAN_MOTION` deltas fell to 0; the rows it moved give the new figure, the figure before it in brackets.
 
 | Key | Worst delta | Ratio | Case and output |
 |-----|-------------|-------|-----------------|
@@ -471,7 +474,7 @@ and the 2000A/2000B spread: a runner exact to Vallado's definition sits at about
 | `sgp4_icrf_position_km` | 0.125 m | 0.50 | `sgp4_24h_near_earth_2000_icrf_013`, `states[10].icrf.position_km` |
 | `sgp4_icrf_velocity_km_s` | 9.8e-5 m/s | 0.49 | 013, `states[15].icrf.velocity_km_s` |
 | `tle_epoch_s` | 0 | 0 | every epoch |
-| `tle_value_rel` | 5.3e-15 | 3.4e-4 | `tle_conversion_tle_to_omm_leo_001`, `items[1].MEAN_MOTION` |
+| `tle_value_rel` | 2.0e-16 relative | 2.0e-4 (3.4e-4) | `tle_conversion_tle_to_omm_leo_001`, `items[0].BSTAR` (`items[1].MEAN_MOTION`) |
 | `tle_field_*` (6 keys) | 0 | 0 | every field of every written TLE |
 | `position_km` (overrides of 032 to 036) | 7.4 mm | 0.62 | `frame_transformation_icrf_teme_leo_1990_035` |
 | `velocity_km_s` (overrides of 032 to 036) | 7.7e-6 m/s | 0.64 | 035 |
@@ -492,9 +495,9 @@ and the 2000A/2000B spread: a runner exact to Vallado's definition sits at about
 | `sgp4_24h_deep_molniya_icrf_012` | 0.46 | `states[5].icrf.position_km` |
 | `sgp4_24h_near_earth_2000_icrf_013` | 0.50 | `states[10].icrf.position_km` |
 | `sgp4_24h_deep_backward_icrf_014` | 0.50 | `states[24].icrf.position_km` |
-| `tle_conversion_tle_to_omm_leo_001` | 3.4e-4 | `items[1].MEAN_MOTION` |
-| `tle_conversion_tle_to_omm_deep_002` | 2.5e-4 | `items[1].MEAN_MOTION` |
-| `tle_conversion_tle_to_omm_alpha5_pivot_003` | 1.6e-4 | `items[1].MEAN_MOTION` |
+| `tle_conversion_tle_to_omm_leo_001` | 2.0e-4 (3.4e-4) | `items[0].BSTAR` (`items[1].MEAN_MOTION`) |
+| `tle_conversion_tle_to_omm_deep_002` | 1.2e-4 (2.5e-4) | `items[4].INCLINATION` (`items[1].MEAN_MOTION`) |
+| `tle_conversion_tle_to_omm_alpha5_pivot_003` | 0 (1.6e-4) | every output (`items[2].MEAN_MOTION`) |
 | `tle_conversion_omm_to_tle_synthetic_004` | 0 | every field |
 | `tle_conversion_omm_to_tle_edges_005` | 0 | every field |
 | `tle_conversion_omm_to_tle_celestrak_006` | 0 | every field |
@@ -556,7 +559,12 @@ fixture of `Lot6CaseTests`) a TCA of the search on two propagations is labelled 
 UTC for these cases, at the tick of that frame nearer the zero of the range rate, where it was the TDB of a step epoch
 most of the time: `tca_s` moved by 8.7e-8 s at most and the relative position by 0.30 mm at most; the rows it moved
 give the new figure, the figure before #683 in brackets (the rows of 001 to 003 and 008 before it are those of the
-paragraph above).
+paragraph above). With decision 110 of #668 (lot L7, Release, Linux, 2026-11-26, the suite's 33286d2, 201 of 201) the
+runner reads `collision_probability` through the CDM of the two states, `Cdm.ToEncounter` and
+`CollisionProbability.Foster2D`, and exports `cdm` 007 from `Cdm.ToEncounter`, where it analyzed straight-line
+trajectories: the Pc of `collision_probability` 001 to 004 moved by up to 6.7e-11 relative, each nearer the golden, and
+the sigmas and the covariances of `cdm` 007 by a few ulps; the rows it moved give the new figure, the earlier figures in
+brackets.
 
 | Key | Worst delta | Ratio | Case and output |
 |-----|-------------|-------|-----------------|
@@ -566,9 +574,9 @@ paragraph above).
 | `covariance_sigma_rel` | 1.1e-6 | 0.11 | `conjunction_6h_leo400_grav10_drag_crossing_006`, `objects[1].sigma_rtn` |
 | `covariance_correlation` | 3.0e-6 | 0.30 | 006, `objects[0].correlation_rtn` |
 | `collision_probability_rel` | 1.1e-6 | 0.0011 | 006, `collision_probability` |
-| `encounter_plane_sigma_rel` | 7.3e-16 | 7.3e-10 (7.5e-6) | `collision_probability_synthetic_frisbee_max_007`, minor sigma (002 before) |
+| `encounter_plane_sigma_rel` | 2.0e-15 | 2.0e-9 (7.3e-10, 7.5e-6) | `collision_probability_synthetic_mid_002`, minor sigma (007 before lot L7, 002 before #624) |
 | `cdm_value_rel` | 2.1e-16 | 2.1e-4 | `cdm_decode_synthetic_optional_003`, `objects[1].covariance_consider` |
-| `cdm_covariance_corr` | 1.9e-14 | 0.019 (0.017) | `cdm_export_synthetic_leo_007`, `objects[0].covariance_rtn` |
+| `cdm_covariance_corr` | 1.2e-14 | 0.012 (0.019, 0.017) | `cdm_export_synthetic_leo_007`, `objects[0].covariance_rtn` |
 | `cdm_epoch_s` | 0 s | 0 (0.10) | cdm 007, `tca` |
 | `cdm_position_km` | 4.3e-10 m | 4.3e-7 (0.66) | cdm 007, `relative_position_rtn_km` |
 | `cdm_velocity_km_s` | 1.3e-12 m/s | 1.3e-6 (0.43) | cdm 007, `relative_velocity_rtn_km_s` |
@@ -585,20 +593,20 @@ paragraph above).
 | `conjunction_6h_leo400_grav10_drag_crossing_006` | 0.30 | `objects[0].correlation_rtn` |
 | `conjunction_12h_leo500_spk_crossing_007` | 0.027 (0.50) | `tca_s` (`relative_velocity_rtn_km_s`) |
 | `conjunction_12h_leo500_grav10_allminima_008` | 0.0063 (0.0064) | `minima[14].tca_s` |
-| `collision_probability_synthetic_high_001` | 1.6e-8 | `collision_probability` |
-| `collision_probability_synthetic_mid_002` | 4.9e-9 (7.5e-6) | `collision_probability` (`encounter_plane_sigma_minor_km`) |
-| `collision_probability_synthetic_low_003` | 7.4e-8 | `collision_probability` |
-| `collision_probability_synthetic_floor_004` | 3.0e-9 (1.5e-6) | `collision_probability` (`encounter_plane_sigma_minor_km`) |
+| `collision_probability_synthetic_high_001` | 1.1e-8 (1.6e-8) | `collision_probability` |
+| `collision_probability_synthetic_mid_002` | 2.0e-9 (4.9e-9, 7.5e-6) | `encounter_plane_sigma_minor_km` (`collision_probability`, `encounter_plane_sigma_minor_km`) |
+| `collision_probability_synthetic_low_003` | 6.7e-9 (7.4e-8) | `collision_probability` |
+| `collision_probability_synthetic_floor_004` | 5.4e-10 (3.0e-9, 1.5e-6) | `encounter_plane_sigma_minor_km` (`collision_probability`, `encounter_plane_sigma_minor_km`) |
 | `collision_probability_synthetic_large_hbr_005` | 4.0e-8 (1.8e-6) | `collision_probability` (`encounter_plane_sigma_major_km`) |
 | `collision_probability_synthetic_npd_006` | 2.3e-10 | `encounter_plane_sigma_major_km` |
-| `collision_probability_synthetic_frisbee_max_007` | 7.3e-10 | `encounter_plane_sigma_minor_km` |
+| `collision_probability_synthetic_frisbee_max_007` | 2.5e-10 (7.3e-10) | `maximum_collision_probability` (`encounter_plane_sigma_minor_km`) |
 | `cdm_decode_synthetic_obligatory_001` | 2.1e-4 | `objects[1].covariance_rtn` |
 | `cdm_decode_synthetic_relative_002` | 2.1e-4 | `objects[1].covariance_rtn` |
 | `cdm_decode_synthetic_optional_003` | 2.1e-4 | `objects[1].covariance_consider` |
 | `cdm_to_inertial_synthetic_cara_form_004` | 3.7e-4 | `objects[1].covariance_inertial` |
 | `cdm_decode_synthetic_day_of_year_005` | 2.1e-4 | `objects[1].covariance_rtn` |
 | `cdm_decode_synthetic_default_units_006` | 2.1e-4 | `objects[1].covariance_rtn` |
-| `cdm_export_synthetic_leo_007` | 0.019 (0.66) | `objects[0].covariance_rtn` (`relative_position_rtn_km`) |
+| `cdm_export_synthetic_leo_007` | 0.012 (0.019, 0.66) | `objects[0].covariance_rtn` (the same, `relative_position_rtn_km`) |
 | `stm_24h_leo_twobody_001` | 8.0e-5 | Φ, every block (8.0e-12) |
 | `stm_24h_leo_grav10_002` | 0.0019 | Φ, every block |
 | `stm_24h_geo_grav70_003` | 6.0e-4 | `final_y_km` (Φ 1.7e-11, 1.7e-4) |
