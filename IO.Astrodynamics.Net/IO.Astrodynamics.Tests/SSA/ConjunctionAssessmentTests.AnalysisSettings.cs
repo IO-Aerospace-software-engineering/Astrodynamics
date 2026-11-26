@@ -32,7 +32,7 @@ public partial class ConjunctionAssessmentTests
         foreach (double seconds in new[] { 0.0, -5.0 })
         {
             yield return new object[] { "SampleStep", seconds };
-            yield return new object[] { "MaximumEventSearchStep", seconds };
+            yield return new object[] { "MaxEventSearchStep", seconds };
         }
 
         foreach (double value in new[] { double.NaN, double.PositiveInfinity, double.NegativeInfinity, -1.0 })
@@ -54,14 +54,14 @@ public partial class ConjunctionAssessmentTests
         Func<ConjunctionAnalysisOptions> build = property switch
         {
             "SampleStep" => () => new ConjunctionAnalysisOptions { SampleStep = TimeSpan.FromSeconds(value) },
-            "MaximumEventSearchStep" => () => new ConjunctionAnalysisOptions { MaximumEventSearchStep = TimeSpan.FromSeconds(value) },
+            "MaxEventSearchStep" => () => new ConjunctionAnalysisOptions { MaxEventSearchStep = TimeSpan.FromSeconds(value) },
             "SecondaryHardBodyRadiusMeters" => () => new ConjunctionAnalysisOptions { SecondaryHardBodyRadiusMeters = value },
             _ => () => new ConjunctionAnalysisOptions { NonlinearityIndexThreshold = value }
         };
         Func<ConjunctionAnalysisOptions> copy = property switch
         {
             "SampleStep" => () => ConjunctionAnalysisOptions.Default with { SampleStep = TimeSpan.FromSeconds(value) },
-            "MaximumEventSearchStep" => () => ConjunctionAnalysisOptions.Default with { MaximumEventSearchStep = TimeSpan.FromSeconds(value) },
+            "MaxEventSearchStep" => () => ConjunctionAnalysisOptions.Default with { MaxEventSearchStep = TimeSpan.FromSeconds(value) },
             "SecondaryHardBodyRadiusMeters" => () => ConjunctionAnalysisOptions.Default with { SecondaryHardBodyRadiusMeters = value },
             _ => () => ConjunctionAnalysisOptions.Default with { NonlinearityIndexThreshold = value }
         };

@@ -86,7 +86,7 @@ public class ZeroLengthWindowTests
             "2 25544  51.6423 353.0312 0000493 320.8755  39.2360 15.49309423 25703");
         int id = System.Threading.Interlocked.Decrement(ref _nextId);
         var spacecraft = new Spacecraft(id, "ZERO" + -id, 100.0, tle, 10000.0, new Clock("zero" + -id, 256));
-        var epoch = scale == TimeScale.UTC ? tle.Epoch.ToUTC() : tle.Epoch.ToTDB();
+        var epoch = scale == TimeScale.UTC ? tle.Epoch.ToUtc() : tle.Epoch.ToTdb();
         var empty = new Window(epoch, epoch);
 
         // Act

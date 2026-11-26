@@ -81,7 +81,7 @@ public class TimeTests
         {
             var res = CliRun.Ok(Args("0.0 TDB", true, false, false, true, false, false));
 
-            Assert.Equal($"{Time.JULIAN_J2000} JD TDB{Environment.NewLine}", res);
+            Assert.Equal($"{Time.JulianDateJ2000} JD TDB{Environment.NewLine}", res);
         }
     }
 
@@ -101,7 +101,7 @@ public class TimeTests
     {
         using (Configuration.Lock())
         {
-            var res = CliRun.Ok(Args($"{Time.JULIAN_J2000} JD TDB", true, false, false, false, true, false));
+            var res = CliRun.Ok(Args($"{Time.JulianDateJ2000} JD TDB", true, false, false, false, true, false));
 
             Assert.Equal($"0 TDB{Environment.NewLine}", res);
         }
@@ -112,7 +112,7 @@ public class TimeTests
     {
         using (Configuration.Lock())
         {
-            var res = CliRun.Ok(Args($"{Time.JULIAN_J2000} JD TDB", true, false, false, false, false, true));
+            var res = CliRun.Ok(Args($"{Time.JulianDateJ2000} JD TDB", true, false, false, false, false, true));
 
             Assert.Equal($"2000-01-01T12:00:00.0000000 TDB{Environment.NewLine}", res);
         }
@@ -123,7 +123,7 @@ public class TimeTests
     {
         using (Configuration.Lock())
         {
-            var res = CliRun.Ok(Args($"{Time.JULIAN_J2000} JD TDB", false, true, false, true, false, false));
+            var res = CliRun.Ok(Args($"{Time.JulianDateJ2000} JD TDB", false, true, false, true, false, false));
 
             // J2000 TDB is 11:58:55.816074 UTC (TDB - TT is about -74 µs at J2000). The value used to be
             // truncated to the millisecond (...2571296).
@@ -163,16 +163,16 @@ public class TimeTests
     [Fact]
     public void Compare()
     {
-        // J2000TDB and J2000UTC represent the same calendar date but different physical instants
+        // J2000Tdb and J2000Utc represent the same calendar date but different physical instants
         // When converted to TAI, they differ, so they are not equal
-        Assert.Equal(-1, Time.J2000TDB.CompareTo(Time.J2000UTC));
-        Assert.Equal(0, Time.J2000TDB.CompareTo(Time.J2000TDB));
-        Assert.Equal(1, Time.J2000TDB.CompareTo(Time.J2000TDB.AddMonths(-1)));
-        Assert.Equal(1, Time.J2000TDB.CompareTo(Time.J2000TDB.AddMilliseconds(-1)));
-        Assert.Equal(-1, Time.J2000TDB.CompareTo(Time.J2000TDB.AddMicroseconds(1)));
-        Assert.Equal(1, Time.J2000TDB.CompareTo(null));
-        Assert.Equal(1, Time.J2000TDB.CompareTo((object)Time.J2000TDB.AddMonths(-1)));
-        Assert.Equal(1, Time.J2000TDB.CompareTo((object)Time.J2000TDB.AddMilliseconds(-1)));
-        Assert.Equal(-1, Time.J2000TDB.CompareTo((object)Time.J2000TDB.AddMicroseconds(1)));
+        Assert.Equal(-1, Time.J2000Tdb.CompareTo(Time.J2000Utc));
+        Assert.Equal(0, Time.J2000Tdb.CompareTo(Time.J2000Tdb));
+        Assert.Equal(1, Time.J2000Tdb.CompareTo(Time.J2000Tdb.AddMonths(-1)));
+        Assert.Equal(1, Time.J2000Tdb.CompareTo(Time.J2000Tdb.AddMilliseconds(-1)));
+        Assert.Equal(-1, Time.J2000Tdb.CompareTo(Time.J2000Tdb.AddMicroseconds(1)));
+        Assert.Equal(1, Time.J2000Tdb.CompareTo(null));
+        Assert.Equal(1, Time.J2000Tdb.CompareTo((object)Time.J2000Tdb.AddMonths(-1)));
+        Assert.Equal(1, Time.J2000Tdb.CompareTo((object)Time.J2000Tdb.AddMilliseconds(-1)));
+        Assert.Equal(-1, Time.J2000Tdb.CompareTo((object)Time.J2000Tdb.AddMicroseconds(1)));
     }
 }

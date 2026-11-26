@@ -37,7 +37,7 @@ public class PropagationFrameTests
 
     private static Frames.Frame FrameNamed(string name) => name switch
     {
-        "ECLIPJ2000" => Frames.Frame.ECLIPTIC_J2000,
+        "ECLIPJ2000" => Frames.Frame.ECLIPJ2000,
         "B1950" => Frames.Frame.B1950,
         "GCRF" => Frames.Frame.GCRF,
         _ => throw new ArgumentOutOfRangeException(nameof(name))
@@ -73,7 +73,7 @@ public class PropagationFrameTests
         var moon = new CelestialBody(PlanetsAndMoons.MOON, Frames.Frame.ICRF, Epoch);
         var icrfState = LeoState(earth);
         var state = icrfState.ToFrame(frame).ToStateVector();
-        var window = new Window(Epoch.ToTDB().AddHours(-1.0), Epoch.ToTDB().AddHours(1.0));
+        var window = new Window(Epoch.ToTdb().AddHours(-1.0), Epoch.ToTdb().AddHours(1.0));
         var entries = new (CelestialItem, Aberration)[] { (moon, Aberration.None) };
 
         foreach (var withCache in new[] { false, true })

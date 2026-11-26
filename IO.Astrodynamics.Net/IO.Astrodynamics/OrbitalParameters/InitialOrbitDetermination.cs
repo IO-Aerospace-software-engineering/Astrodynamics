@@ -22,7 +22,7 @@ public class InitialOrbitDetermination
     /// <param name="expectedCenterOfMotion"></param>
     /// <param name="expectedRangeFromObserver"></param>
     /// <returns></returns>
-    public static OrbitDetermination CreateFromObservation_Gauss(Equatorial observation1, Equatorial observation2, Equatorial observation3, ILocalizable observer,
+    public static OrbitDetermination CreateFromGaussMethod(Equatorial observation1, Equatorial observation2, Equatorial observation3, ILocalizable observer,
         CelestialItem expectedCenterOfMotion, double expectedRangeFromObserver)
     {
         var distanceScale = expectedCenterOfMotion.IsSun ? Constants.AU : 1E03;

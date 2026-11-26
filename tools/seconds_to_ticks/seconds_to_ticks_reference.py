@@ -22,7 +22,7 @@ milliseconds and as microseconds (the ticks nearest value x 1e4 and value x 10),
 AddMicroseconds: ms_ticks and us_ticks.
 
 The LRO state is spkezr(-85, a, J2000, NONE, 399) and spkezr(-85, b, ...) in m and m/s, what new Spacecraft(-85, "LRO",
-Time.CreateTDB(a)) reads about the Earth (#620).
+Time.CreateTdb(a)) reads about the Earth (#620).
 
 Run: python3 -I seconds_to_ticks_reference.py > seconds_to_ticks_reference.json (needs spiceypy), from this directory,
 and copy the output to IO.Astrodynamics.Net/IO.Astrodynamics.Tests/Data/SecondsToTicksReference/.

@@ -76,7 +76,7 @@ public class Nrlmsise00Model : IAtmosphericModel, IGeodeticDensityModel, IDensit
 
         return new Atmosphere
         {
-            Temperature = output.T[1] - Constants.Kelvin,
+            Temperature = output.T[1] - Constants.ZeroCelsiusInKelvin,
             Pressure = pressurePa / 1000.0,
             Density = output.D[5],
             Details = new NrlmsiseDetails
@@ -103,7 +103,7 @@ public class Nrlmsise00Model : IAtmosphericModel, IGeodeticDensityModel, IDensit
     public double GetTemperature(IAtmosphericContext context)
     {
         var output = ComputeAtmosphere(context);
-        return output.T[1] - Constants.Kelvin; // T[1] is temperature at altitude, convert to Celsius
+        return output.T[1] - Constants.ZeroCelsiusInKelvin; // T[1] is temperature at altitude, convert to Celsius
     }
 
     /// <summary>
@@ -253,7 +253,7 @@ public class Nrlmsise00Model : IAtmosphericModel, IGeodeticDensityModel, IDensit
     private NrlmsiseModelInput BuildInput(double altitude, double geodeticLatitude, double geodeticLongitude,
         in Time epoch)
     {
-        var dateTime = (epoch.Scale == TimeScale.UTC ? epoch : epoch.ToUTC()).DateTime;
+        var dateTime = (epoch.Scale == TimeScale.UTC ? epoch : epoch.ToUtc()).DateTime;
         var doy = dateTime.DayOfYear;
         // The time of day to the tick (100 ns); it used to be truncated to the millisecond
         var sec = dateTime.TimeOfDay.TotalSeconds;

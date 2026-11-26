@@ -202,7 +202,7 @@ public class StarVelocityTests
     /// <summary>The star of a row, built as a caller builds one from its catalog values, and the epoch of its horizon.</summary>
     private static (Star Star, TimeSystem.Time At) StarOf(VelocityCase row, int index)
     {
-        var epoch = TimeSystem.Time.CreateTDB(row.EpochDays * 86400.0);
+        var epoch = TimeSystem.Time.CreateTdb(row.EpochDays * 86400.0);
         var star = new Star(731000 + index, $"star{731000 + index}", 1E+30, "spec", 2, row.Parallax, Equatorial.FromRightAscensionDeclination(row.RightAscension, row.Declination, epoch),
             row.DeclinationProperMotion, row.RightAscensionProperMotion, 0, 0, 0, 0, epoch);
         var at = epoch + TimeSpan.FromTicks((long)System.Math.Round(row.Years * 365.25 * TimeSpan.TicksPerDay));
@@ -305,7 +305,7 @@ public class StarVelocityTests
             var velocity = star.GetGeometricStateRelativeTo(at, ssb).Velocity;
 
             // Assert: iauStarpm's terms added, then in catalog distances per Julian year
-            const double c = Astrodynamics.Constants.C;
+            const double c = Astrodynamics.Constants.SpeedOfLight;
             double beta = velocity.Magnitude() / c;
             double radial = -c * beta * beta / (System.Math.Sqrt(1.0 - beta * beta) + 1.0);
             var inertial = velocity + u0 * radial;
@@ -389,7 +389,7 @@ public class StarVelocityTests
         // Arrange
         const double deg = System.Math.PI / 180.0;
         const double mas = System.Math.PI / 180.0 / 3600.0 / 1000.0;
-        var j2016 = TimeSystem.Time.CreateTDB(5844.0 * 86400.0);
+        var j2016 = TimeSystem.Time.CreateTdb(5844.0 * 86400.0);
         var barnard = new Star(4472832, "Barnard", 2.9e29, "M4V", 9.5, 546.9759 / 1000.0,
             Equatorial.FromRightAscensionDeclination(269.44850252544 * deg, 4.73942005111 * deg, j2016),
             10362.394 * mas, -801.551 * mas, 0.0, 0.0, 0.0, 0.0, j2016);
@@ -436,7 +436,7 @@ public class StarVelocityTests
     {
         const double deg = System.Math.PI / 180.0;
         const double mas = System.Math.PI / 180.0 / 3600.0 / 1000.0;
-        var j2016 = TimeSystem.Time.CreateTDB(5844.0 * 86400.0);
+        var j2016 = TimeSystem.Time.CreateTdb(5844.0 * 86400.0);
         return new Star(naifId, $"Barnard{naifId}", 2.9e29, "M4V", 9.5, 546.9759 / 1000.0,
             Equatorial.FromRightAscensionDeclination(269.44850252544 * deg, 4.73942005111 * deg, j2016),
             10362.394 * mas, -801.551 * mas, 0.0, 0.0, 0.0, 0.0, j2016);
@@ -586,7 +586,7 @@ public class StarVelocityTests
     {
         const double deg = System.Math.PI / 180.0;
         const double mas = System.Math.PI / 180.0 / 3600.0 / 1000.0;
-        var j2016 = TimeSystem.Time.CreateTDB(5844.0 * 86400.0);
+        var j2016 = TimeSystem.Time.CreateTdb(5844.0 * 86400.0);
         var start = new TimeSystem.Time(2001, 1, 1, TimeScale.TDB);
         var stars = new[]
         {

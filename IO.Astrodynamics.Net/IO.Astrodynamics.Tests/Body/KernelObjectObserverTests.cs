@@ -29,7 +29,7 @@ namespace IO.Astrodynamics.Tests.Body;
 public sealed class NotoKernel : IDisposable
 {
     internal const int NotoId = 398989;
-    internal static readonly TimeSystem.Time Epoch = TimeSystem.Time.CreateTDB(757425600.0); // 2024-01-01 12:00:00 TDB
+    internal static readonly TimeSystem.Time Epoch = TimeSystem.Time.CreateTdb(757425600.0); // 2024-01-01 12:00:00 TDB
 
     internal static Planetodetic Coordinates => new(14.989 * IO.Astrodynamics.Constants.Deg2Rad, 36.876 * IO.Astrodynamics.Constants.Deg2Rad, 100.0);
 
@@ -72,8 +72,8 @@ public class KernelObjectObserverTests : IClassFixture<NotoKernel>
 
     private static readonly Aberration[] Flags =
     [
-        Aberration.None, Aberration.LT, Aberration.LTS, Aberration.CN, Aberration.CNS, Aberration.XLT, Aberration.XLTS,
-        Aberration.XCN, Aberration.XCNS
+        Aberration.None, Aberration.LT, Aberration.LtS, Aberration.CN, Aberration.CnS, Aberration.XLT, Aberration.XltS,
+        Aberration.XCN, Aberration.XcnS
     ];
 
     // The NOTO SPK against the site it was written from, the interpolation of the native writer's segment between its 60 s
@@ -225,13 +225,13 @@ public class KernelObjectObserverTests : IClassFixture<NotoKernel>
             var frame = new Frames.Frame("NOTO750_TK");
             Assert.Equal(NotoKernel.NotoId, SpiceApi.NonInertialFrameCenter(frame));
             double worstPosition = 0.0, worstVelocity = 0.0;
-            foreach (var flag in new[] { Aberration.LT, Aberration.CN, Aberration.XLT, Aberration.XCNS })
+            foreach (var flag in new[] { Aberration.LT, Aberration.CN, Aberration.XLT, Aberration.XcnS })
             {
                 foreach (var t in Epochs)
                 {
                     var read = moon.GetEphemeris(t, site, frame, flag);
                     var icrf = moon.GetEphemeris(t, site, Frames.Frame.ICRF, flag);
-                    var lightTimeOnly = flag == Aberration.XCNS ? Aberration.XCN : flag;
+                    var lightTimeOnly = flag == Aberration.XcnS ? Aberration.XCN : flag;
                     var center = noto.GetEphemeris(t, site, Frames.Frame.ICRF, lightTimeOnly);
                     double sign = flag is Aberration.LT or Aberration.CN ? -1.0 : 1.0;
                     var expected = LightTimeCorrectionTests.RotatedAtTheCentreEpoch(icrf, center, itrf93, sign);

@@ -43,7 +43,7 @@ public class Star : CelestialBody
     private readonly Vector3 _spaceVelocity;
 
     // The seconds of a Julian year of TDB, the unit of time of the proper motions
-    private const double JulianYearSeconds = Time.JULIAN_YEAR * 86400.0;
+    private const double JulianYearSeconds = Time.JulianYear * 86400.0;
     /// <summary>
     /// Initializes a new instance of the <see cref="Star"/> class.
     /// </summary>
@@ -95,7 +95,7 @@ public class Star : CelestialBody
         SpectralType = spectralType ?? throw new ArgumentNullException(nameof(spectralType));
         VisualMagnitude = visualMagnitude;
         Epoch = epoch;
-        _epochTdb = epoch.ToTDB();
+        _epochTdb = epoch.ToTdb();
         Parallax = parallax;
         EquatorialCoordinatesAtEpoch = equatorialCoordinatesAtEpoch;
         RightAscensionProperMotion = rightAscensionProperMotion;
@@ -219,7 +219,7 @@ public class Star : CelestialBody
     /// </remarks>
     private double JulianYearsFromCatalogEpoch(Time epoch)
     {
-        return (epoch.ToTDB().DateTime.Ticks - _epochTdb.DateTime.Ticks) / (double)TimeSpan.TicksPerDay / Time.JULIAN_YEAR;
+        return (epoch.ToTdb().DateTime.Ticks - _epochTdb.DateTime.Ticks) / (double)TimeSpan.TicksPerDay / Time.JulianYear;
     }
 
     /// <summary>
@@ -322,7 +322,7 @@ public class Star : CelestialBody
     /// </remarks>
     /// <param name="epoch">The epoch time for the sigma value.</param>
     /// <returns>The sigma value for right ascension at the specified epoch.</returns>
-    public double GetRightAscensionSigma(Time epoch)
+    public double RightAscensionSigmaAt(Time epoch)
     {
         var dt = JulianYearsFromCatalogEpoch(epoch);
         return System.Math.Sqrt(System.Math.Pow(RightAscensionSigma, 2) + System.Math.Pow(dt * RightAscensionSigmaProperMotion, 2));
@@ -337,7 +337,7 @@ public class Star : CelestialBody
     /// </remarks>
     /// <param name="epoch">The epoch time for the sigma value.</param>
     /// <returns>The sigma value for declination at the specified epoch.</returns>
-    public double GetDeclinationSigma(Time epoch)
+    public double DeclinationSigmaAt(Time epoch)
     {
         var dt = JulianYearsFromCatalogEpoch(epoch);
         return System.Math.Sqrt(System.Math.Pow(DeclinationSigma, 2) + System.Math.Pow(dt * DeclinationSigmaProperMotion, 2));
@@ -398,10 +398,10 @@ public class Star : CelestialBody
             starSsb.Velocity - observerSsb.Velocity,
             observer, epoch, Frame.ICRF);
 
-        if (aberration is Aberration.LTS or Aberration.CNS or Aberration.XLTS or Aberration.XCNS)
+        if (aberration is Aberration.LtS or Aberration.CnS or Aberration.XltS or Aberration.XcnS)
         {
             var (position, velocity) = ApplyStellarAberration(relative.Position, relative.Velocity, observerSsb.Velocity, observer, epoch, ssb,
-                aberration is Aberration.XLTS or Aberration.XCNS);
+                aberration is Aberration.XltS or Aberration.XcnS);
             relative = new StateVector(position, velocity, observer, epoch, Frame.ICRF);
         }
 

@@ -84,7 +84,7 @@ public class AttitudeTimelineEdgeTests
     // The epochs of the record strictly increase, and the activations of the rules never decrease
     private static void AssertMonotone(AttitudeTimelineTests.TimelineRun run, AttitudeTimelineTests.Measures m)
     {
-        var record = run.Spacecraft.Frame.GetStateOrientationsToICRF().ToArray();
+        var record = run.Spacecraft.Frame.GetStateOrientationsToIcrf().ToArray();
         Assert.True(record.Zip(record.Skip(1), (x, y) => y.Epoch > x.Epoch).All(x => x), "the record is not monotone");
         var activations = m.Expected.Activations;
         Assert.True(activations.Zip(activations.Skip(1), (x, y) => y.Epoch >= x.Epoch).All(x => x), "the activations decrease");
@@ -180,7 +180,7 @@ public class AttitudeTimelineEdgeTests
         var detector = new ManeuverEventDetector(impulse);
         var state = spacecraft.InitialOrbitalParameters.ToStateVector();
         var velocity = state.Velocity;
-        int records = spacecraft.Frame.GetStateOrientationsToICRF().Count();
+        int records = spacecraft.Frame.GetStateOrientationsToIcrf().Count();
 
         var result = detector.HandleEvent(state, spacecraft);
 
@@ -197,7 +197,7 @@ public class AttitudeTimelineEdgeTests
         Assert.Null(chain[2].ManeuverWindow);
         Assert.Equal(new[] { impulse }, spacecraft.ExecutedManeuvers.ToArray());
         Assert.Same(chain[1], spacecraft.StandbyManeuver);
-        Assert.Equal(records, spacecraft.Frame.GetStateOrientationsToICRF().Count());
+        Assert.Equal(records, spacecraft.Frame.GetStateOrientationsToIcrf().Count());
     }
 
     /// <summary>When the preconditions of the impulse fail, <c>HandleEvent</c> continues with the same detector and changes
@@ -242,7 +242,7 @@ public class AttitudeTimelineEdgeTests
     {
         var run = AttitudeTimelineTests.TimelineRun.Run(NextId(), key);
         var m = Verified(key, run);
-        var first = run.Spacecraft.Frame.GetStateOrientationsToICRF().First();
+        var first = run.Spacecraft.Frame.GetStateOrientationsToIcrf().First();
         LabelAssert.Equal(S, first.Epoch);
         Assert.True(AttitudeRecordTests.RotationAngle(v => v, v => v.Rotate(first.Rotation)) < 1e-15);
         AttitudeTimelineTests.AssertMeasures(run, m);
@@ -286,14 +286,14 @@ public class AttitudeTimelineEdgeTests
             case "MinPast":
                 Assert.Empty(run.Burns);
                 Assert.Empty(run.Spacecraft.ExecutedManeuvers);
-                Assert.Single(run.Spacecraft.Frame.GetStateOrientationsToICRF(), x => x.Epoch < run.Window.EndDate);
+                Assert.Single(run.Spacecraft.Frame.GetStateOrientationsToIcrf(), x => x.Epoch < run.Window.EndDate);
                 break;
             case "Npast":
                 Assert.DoesNotContain(m.Expected.Activations, a => a.Kind == "resumed");
                 break;
         }
 
-        LabelAssert.Equal(run.Window.EndDate, run.Spacecraft.Frame.GetStateOrientationsToICRF().Last().Epoch);
+        LabelAssert.Equal(run.Window.EndDate, run.Spacecraft.Frame.GetStateOrientationsToIcrf().Last().Epoch);
     }
 
     // ---------------------------------------------------------------------------------------------------------------------
@@ -343,7 +343,7 @@ public class AttitudeTimelineEdgeTests
             if (TimelineRules.Checked)
             {
                 // MAN_EPOCH_IGNITION is the UTC of the ignition, the time system of the OPM (#479)
-                Assert.True(System.Math.Abs((thrust.StartDate.ToUTC().DateTime - opm[k].ManEpochIgnition).TotalSeconds) <= TimelineRules.RuleBound, $"impulse {k}: ignition");
+                Assert.True(System.Math.Abs((thrust.StartDate.ToUtc().DateTime - opm[k].ManEpochIgnition).TotalSeconds) <= TimelineRules.RuleBound, $"impulse {k}: ignition");
             }
         }
 
@@ -465,7 +465,7 @@ public class AttitudeTimelineEdgeTests
     /// #508): its windows and the nadir after it are labelled TDB. About the Earth (TT) and about the Moon (TDB) across the
     /// leap second of 2016-12-31, a hold of 60 s ends 60 s of the time argument after the activation, where the nadir
     /// activates (by the calendar of UTC it ended 61 s after it, the leap second counted twice, the TDB path only). The
-    /// rules: the activation at <c>ToTDB()</c> of the minimum epoch, its end 60 TT seconds (Earth) or 60 TDB seconds (Moon)
+    /// rules: the activation at <c>ToTdb()</c> of the minimum epoch, its end 60 TT seconds (Earth) or 60 TDB seconds (Moon)
     /// after it.
     /// </summary>
     [Theory]
@@ -476,7 +476,7 @@ public class AttitudeTimelineEdgeTests
     public void AttitudeAtAUtcMinimumEpoch_LabelledTdb_HeldAcrossALeapSecond(string centre, string integrator)
     {
         var minimum = new Time(new DateTime(2016, 12, 31, 23, 59, 30), TimeScale.UTC);
-        var start = minimum.ToTDB().AddSeconds(-30.0);
+        var start = minimum.ToTdb().AddSeconds(-30.0);
         var body = new CelestialBody(centre == "Moon" ? PlanetsAndMoons.MOON : PlanetsAndMoons.EARTH, Frame.ICRF, start);
         double ra = centre == "Moon" ? MoonRadius + 300000.0 : MinimumEpochGateTests.Apogee0;
         double rp = centre == "Moon" ? MoonRadius + 100000.0 : 6778137.0;
@@ -491,7 +491,7 @@ public class AttitudeTimelineEdgeTests
         _output.WriteLine($"MEASURE #539 attitude at a UTC minimum epoch, {centre} {integrator}: activation {activation.Scale} - minimum " +
                           $"{(activation - minimum).TotalSeconds:E2} s, hold {hold - 60.0:E2} s from 60 s, nadir - end {(nadir.ThrustWindow!.Value.StartDate - end).TotalSeconds:E2} s");
         Assert.Equal(IO.Astrodynamics.TimeSystem.TimeScale.TDB, activation.Scale);
-        LabelAssert.Equal(minimum.ToTDB(), activation);
+        LabelAssert.Equal(minimum.ToTdb(), activation);
         LabelAssert.Equal(activation, prograde.ManeuverWindow.Value.StartDate);
         Assert.Equal(IO.Astrodynamics.TimeSystem.TimeScale.TDB, prograde.ManeuverWindow.Value.StartDate.Scale);
         Assert.Equal(IO.Astrodynamics.TimeSystem.TimeScale.TDB, end.Scale);
@@ -551,8 +551,8 @@ public class AttitudeTimelineEdgeTests
                 foreach (var t in reads)
                 {
                     if (changes.Any(c => (t - c).TotalSeconds >= -1.5e-6 && (t - c).TotalSeconds <= 0.3e-6 + TimelineRules.RuleBound)) continue;
-                    var managed = sc.Frame.GetStateOrientationToICRF(t).Rotation;
-                    var read = kernel.Frame.GetStateOrientationToICRF(t).Rotation;
+                    var managed = sc.Frame.GetStateOrientationToIcrf(t).Rotation;
+                    var read = kernel.Frame.GetStateOrientationToIcrf(t).Rotation;
                     worst = System.Math.Max(worst, AttitudeRecordTests.RotationAngle(managed, read));
                     count++;
                 }

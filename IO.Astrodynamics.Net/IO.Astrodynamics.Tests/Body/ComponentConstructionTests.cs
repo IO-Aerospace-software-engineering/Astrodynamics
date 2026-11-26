@@ -60,7 +60,7 @@ public class ComponentConstructionTests
         Assert.Equal(("Tank", 3000.0, 2000.0, 2000.0), (tank.Name, tank.Capacity, tank.InitialQuantity, tank.Quantity));
         Assert.Null(tank.Model);
         Assert.Null(tank.SerialNumber);
-        Assert.Equal(("Main", 320.0, 5.0), (engine.Name, engine.ISP, engine.FuelFlow));
+        Assert.Equal(("Main", 320.0, 5.0), (engine.Name, engine.Isp, engine.FuelFlow));
         Assert.Same(tank, engine.FuelTank);
         Assert.Null(engine.Model);
         Assert.Null(engine.SerialNumber);

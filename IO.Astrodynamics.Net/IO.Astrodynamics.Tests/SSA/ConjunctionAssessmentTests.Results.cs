@@ -172,7 +172,7 @@ public partial class ConjunctionAssessmentTests
 
         // Two trajectories in different frames, which the polynomial search cannot take
         var eclipticCraft = InputRuleSpacecraft(NextInputRuleId(),
-            secondaryStart.ToFrame(Frames.Frame.ECLIPTIC_J2000).ToStateVector(), 3.0);
+            secondaryStart.ToFrame(Frames.Frame.ECLIPJ2000).ToStateVector(), 3.0);
         var protectedTrajectory = PropagateRk78(protectedCraft, earth);
         var eclipticTrajectory = PropagateRk78(eclipticCraft, earth);
         Assert.Equal("options", Assert.Throws<ArgumentException>(() =>

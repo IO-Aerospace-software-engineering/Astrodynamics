@@ -2,33 +2,6 @@
 # f2a0376), one "rule<TAB>symbol" per line in ordinal order, read by NamingRuleTests: namespaces ("namespace X"), types,
 # members (a method by its signature, so each overload has its line) and parameters ("signature:name"). The file may only
 # shrink: a new public name follows N1 to N3, and a rename removes its lines. The renaming lot (L9) empties it.
-N1.acronym	IO.Astrodynamics.Aberration.CNS
-N1.acronym	IO.Astrodynamics.Aberration.LTS
-N1.acronym	IO.Astrodynamics.Aberration.XCNS
-N1.acronym	IO.Astrodynamics.Aberration.XLTS
-N1.acronym	IO.Astrodynamics.Body.Spacecraft.Engine.ISP
-N1.acronym	IO.Astrodynamics.Body.Spacecraft.Instrument.GetBoresightInICRFFrame(in Time)
-N1.acronym	IO.Astrodynamics.Body.Spacecraft.Instrument.GetRefVectorInICRFFrame(in Time)
-N1.acronym	IO.Astrodynamics.Body.Spacecraft.Instrument.IsInFOV(Time, ILocalizable, Aberration)
-N1.acronym	IO.Astrodynamics.Body.Spacecraft.Spacecraft.GetTotalISP()
-N1.acronym	IO.Astrodynamics.Body.Spacecraft.SpacecraftFrame.AddStateOrientationToICRF(StateOrientation)
-N1.acronym	IO.Astrodynamics.Body.Spacecraft.SpacecraftFrame.GetLatestStateOrientationToICRF()
-N1.acronym	IO.Astrodynamics.Body.Spacecraft.SpacecraftFrame.GetStateOrientationToICRF(Time)
-N1.acronym	IO.Astrodynamics.Body.Spacecraft.SpacecraftFrame.GetStateOrientationsToICRF()
-N1.acronym	IO.Astrodynamics.DataProvider.IDataProvider.FrameTransformationToICRF(in Time, Frame)
-N1.acronym	IO.Astrodynamics.DataProvider.MemoryDataProvider.AddStateOrientationToICRF(Frame, Time, StateOrientation)
-N1.acronym	IO.Astrodynamics.DataProvider.MemoryDataProvider.FrameTransformationToICRF(in Time, Frame)
-N1.acronym	IO.Astrodynamics.DataProvider.SpiceDataProvider.FrameTransformationToICRF(in Time, Frame)
-N1.acronym	IO.Astrodynamics.Frames.CirsFrame.GetStateOrientationToICRF(Time)
-N1.acronym	IO.Astrodynamics.Frames.Frame.ECLIPTIC_B1950
-N1.acronym	IO.Astrodynamics.Frames.Frame.ECLIPTIC_J2000
-N1.acronym	IO.Astrodynamics.Frames.Frame.GALACTIC_SYSTEM2
-N1.acronym	IO.Astrodynamics.Frames.Frame.GetStateOrientationToICRF(Time)
-N1.acronym	IO.Astrodynamics.Frames.GcrfFrame.GetStateOrientationToICRF(Time)
-N1.acronym	IO.Astrodynamics.Frames.TemeFrame.GetStateOrientationToICRF(Time)
-N1.acronym	IO.Astrodynamics.Frames.TirsFrame.GetStateOrientationToICRF(Time)
-N1.acronym	IO.Astrodynamics.Math.Quaternion.SLERP(Quaternion, double)
-N1.acronym	IO.Astrodynamics.OrbitalParameters.StateOrientation.RelativeToICRF()
 N1.acronym	IO.Astrodynamics.SolarSystemObjects.Asteroids.ARROKOTH
 N1.acronym	IO.Astrodynamics.SolarSystemObjects.Asteroids.BENNU
 N1.acronym	IO.Astrodynamics.SolarSystemObjects.Asteroids.BRAILLE
@@ -432,19 +405,6 @@ N1.acronym	IO.Astrodynamics.SolarSystemObjects.PlanetsAndMoons.URANUS
 N1.acronym	IO.Astrodynamics.SolarSystemObjects.PlanetsAndMoons.VENUS
 N1.acronym	IO.Astrodynamics.SolarSystemObjects.PlanetsAndMoons.YMIR
 N1.acronym	IO.Astrodynamics.SolarSystemObjects.Stars.SUN_BODY
-N1.acronym	IO.Astrodynamics.Surface.SiteFrame.GetStateOrientationToICRF(Time)
-N1.acronym	IO.Astrodynamics.TimeSystem.Time.CreateTDB(double)
-N1.acronym	IO.Astrodynamics.TimeSystem.Time.CreateUTC(double)
-N1.acronym	IO.Astrodynamics.TimeSystem.Time.J2000TDB
-N1.acronym	IO.Astrodynamics.TimeSystem.Time.J2000UTC
-N1.acronym	IO.Astrodynamics.TimeSystem.Time.JULIAN_J1950
-N1.acronym	IO.Astrodynamics.TimeSystem.Time.JULIAN_J2000
-N1.acronym	IO.Astrodynamics.TimeSystem.Time.JULIAN_YEAR
-N1.acronym	IO.Astrodynamics.TimeSystem.Time.SECONDS_PER_DAY
-N1.acronym	IO.Astrodynamics.TimeSystem.Time.ToGPS()
-N1.acronym	IO.Astrodynamics.TimeSystem.Time.ToTAI()
-N1.acronym	IO.Astrodynamics.TimeSystem.Time.ToTDB()
-N1.acronym	IO.Astrodynamics.TimeSystem.Time.ToUTC()
 N1.acronym	namespace IO.Astrodynamics.Atmosphere.NRLMSISE_00
 N1.acronym	namespace IO.Astrodynamics.CCSDS
 N1.acronym	namespace IO.Astrodynamics.CCSDS.CDM
@@ -453,14 +413,9 @@ N1.acronym	namespace IO.Astrodynamics.CCSDS.OPM
 N1.acronym	namespace IO.Astrodynamics.OrbitalParameters.TLE
 N1.acronym	namespace IO.Astrodynamics.PDS
 N1.acronym	namespace IO.Astrodynamics.SSA
-N1.case	IO.Astrodynamics.Constants.g0
 N1.case	IO.Astrodynamics.SolarSystemObjects.Asteroids._1992KD
 N1.case	IO.Astrodynamics.SolarSystemObjects.Asteroids._52_EUROPA
 N1.case	IO.Astrodynamics.SolarSystemObjects.Comets._67P_CHURYUMOV_GERASIMENKO_1969_R1
-N1.underscore	IO.Astrodynamics.Frames.Frame.ECLIPTIC_B1950
-N1.underscore	IO.Astrodynamics.Frames.Frame.ECLIPTIC_J2000
-N1.underscore	IO.Astrodynamics.Frames.Frame.GALACTIC_SYSTEM2
-N1.underscore	IO.Astrodynamics.OrbitalParameters.InitialOrbitDetermination.CreateFromObservation_Gauss(Equatorial, Equatorial, Equatorial, ILocalizable, CelestialItem, double)
 N1.underscore	IO.Astrodynamics.SolarSystemObjects.Asteroids.DIDYMOS_BARYCENTER
 N1.underscore	IO.Astrodynamics.SolarSystemObjects.Asteroids.EURYBATES_BARYCENTER
 N1.underscore	IO.Astrodynamics.SolarSystemObjects.Asteroids.PATROCLUS_BARYCENTER
@@ -625,10 +580,4 @@ N1.underscore	IO.Astrodynamics.SolarSystemObjects.GroundStations.DSS_69
 N1.underscore	IO.Astrodynamics.SolarSystemObjects.PlanetsAndMoons.EARTH_BODY
 N1.underscore	IO.Astrodynamics.SolarSystemObjects.PlanetsAndMoons.MOON_BODY
 N1.underscore	IO.Astrodynamics.SolarSystemObjects.Stars.SUN_BODY
-N1.underscore	IO.Astrodynamics.TimeSystem.Time.JULIAN_J1950
-N1.underscore	IO.Astrodynamics.TimeSystem.Time.JULIAN_J2000
-N1.underscore	IO.Astrodynamics.TimeSystem.Time.JULIAN_YEAR
-N1.underscore	IO.Astrodynamics.TimeSystem.Time.SECONDS_PER_DAY
 N1.underscore	namespace IO.Astrodynamics.Atmosphere.NRLMSISE_00
-N3.deny	IO.Astrodynamics.Body.CelestialBody.SideralRotationPeriod(Time)
-N3.deny	IO.Astrodynamics.OrbitalParameters.TLE.Tle.FirstDerivationMeanMotion

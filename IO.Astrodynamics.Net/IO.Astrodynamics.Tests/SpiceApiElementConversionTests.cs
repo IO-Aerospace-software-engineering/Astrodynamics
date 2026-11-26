@@ -69,7 +69,7 @@ public class SpiceApiElementConversionTests
     {
         // Arrange
         var observer = Observer(observerName);
-        var frame = SpiceFrame.ECLIPTIC_J2000;
+        var frame = SpiceFrame.ECLIPJ2000;
         double gm = observer.GM;
         var state = new StateVector(new Vector3(6800000.0, 1000.0, 2000.0), new Vector3(10.0, 7500.0, 1000.0), observer, Epoch, frame);
         var ellipse = new KeplerianElements(7.0e6, 0.1, 0.5, 1.0, 2.0, 0.3, observer, Epoch, frame);

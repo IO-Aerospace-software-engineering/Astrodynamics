@@ -185,7 +185,7 @@ public abstract class PropagatorBase : IPropagator
     /// </summary>
     internal static PropagationSpan SpanOf(PropagationTimeArgument timeArgument, in Window window, TimeSpan deltaT)
     {
-        var tdbWindow = new Window(window.StartDate.ToTDB(), window.EndDate.ToTDB());
+        var tdbWindow = new Window(window.StartDate.ToTdb(), window.EndDate.ToTdb());
         return SpanOf(timeArgument, timeArgument.Length(window, tdbWindow), tdbWindow, deltaT);
     }
 
@@ -272,7 +272,7 @@ public abstract class PropagatorBase : IPropagator
 
         _initialOrbit = spacecraft.InitialOrbitalParameters;
         OriginalObserver = spacecraft.InitialOrbitalParameters.Observer as CelestialItem;
-        Window = new Window(window.StartDate.ToTDB(), window.EndDate.ToTDB());
+        Window = new Window(window.StartDate.ToTdb(), window.EndDate.ToTdb());
         DeltaT = deltaT;
         TimeArgument = timeArgument ?? throw new ArgumentNullException(nameof(timeArgument));
         _windowLength = TimeArgument.Length(window, Window);
@@ -459,10 +459,10 @@ public abstract class PropagatorBase : IPropagator
 
         // Compared as TDB labels, as the message prints them: a UTC epoch and its TDB label differ through TAI by a tick
         // at some instants (#510)
-        if (initial.Epoch.ToTDB() != start.ToTDB())
+        if (initial.Epoch.ToTdb() != start.ToTdb())
         {
             throw InitialCovarianceError(participant,
-                $"The initial covariance is given at {initial.Epoch.ToTDB()}, and the propagation starts at " +
+                $"The initial covariance is given at {initial.Epoch.ToTdb()}, and the propagation starts at " +
                 $"{start}: the propagator does not carry a covariance from another epoch. Start the window " +
                 "at the epoch of the initial orbital parameters.");
         }
@@ -699,7 +699,7 @@ public abstract class PropagatorBase : IPropagator
     /// The re-arm drops the stored states and the attitude record of the spacecraft whatever
     /// <see cref="Spacecraft.IsPropagated"/> says, those added by hand included (decision 38 of #668, decided by S.
     /// Guillet, 2026-11-23: before 11.0.0 a first run kept the attitudes added by
-    /// <see cref="SpacecraftFrame.AddStateOrientationToICRF"/>, a quarter turn off a fresh run over half its window in
+    /// <see cref="SpacecraftFrame.AddStateOrientationToIcrf"/>, a quarter turn off a fresh run over half its window in
     /// the gap analysis of L5), so every run, the first included, is a fresh run.
     /// </para>
     /// <para>
@@ -1229,7 +1229,7 @@ public abstract class PropagatorBase : IPropagator
             if (minimumTau > tau)
             {
                 // Labelled TDB, as every epoch of the propagation (#501, #508), whatever the frame of the minimum epoch
-                start = minimumEpoch.ToTDB();
+                start = minimumEpoch.ToTdb();
                 tau = minimumTau;
             }
 
@@ -1525,9 +1525,9 @@ public abstract class PropagatorBase : IPropagator
             && frame != Frame.GCRF
             && frame != Frame.B1950
             && frame != Frame.FK4
-            && frame != Frame.ECLIPTIC_J2000
-            && frame != Frame.ECLIPTIC_B1950
-            && frame != Frame.GALACTIC_SYSTEM2)
+            && frame != Frame.ECLIPJ2000
+            && frame != Frame.ECLIPB1950
+            && frame != Frame.GALACTIC)
         {
             throw new ArgumentException("Spacecraft initial orbital parameters must be defined in inertial frame", nameof(spacecraft));
         }
@@ -1548,7 +1548,7 @@ public abstract class PropagatorBase : IPropagator
     {
         if (initial is OrbitalParameters.TLE.Tle tle)
         {
-            var start = windowStart.ToTDB();
+            var start = windowStart.ToTdb();
             var icrf = tle.ToStateVector(start).ToFrame(Frame.ICRF).ToStateVector();
             // SGP4 builds a new Earth for its state: the start keeps the observer of the TLE
             return new StateVector(icrf.Position, icrf.Velocity, tle.Observer, start, Frame.ICRF);

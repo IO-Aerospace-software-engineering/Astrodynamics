@@ -57,7 +57,7 @@ internal static class FrameMemoryChild
         // Warm-up: each path once, at an epoch the measured reads do not use
         foreach (var (_, frame, _) in frames)
         {
-            frame.GetStateOrientationToICRF(start.AddSeconds(-1.0));
+            frame.GetStateOrientationToIcrf(start.AddSeconds(-1.0));
         }
 
         int exitCode = 0;
@@ -67,7 +67,7 @@ internal static class FrameMemoryChild
             var sum = Vector3.Zero;
             for (int i = 0; i < reads; i++)
             {
-                sum += frame.GetStateOrientationToICRF(start.AddSeconds(0.5 * i)).AngularVelocity;
+                sum += frame.GetStateOrientationToIcrf(start.AddSeconds(0.5 * i)).AngularVelocity;
             }
 
             long retained = GC.GetTotalMemory(true) - before;

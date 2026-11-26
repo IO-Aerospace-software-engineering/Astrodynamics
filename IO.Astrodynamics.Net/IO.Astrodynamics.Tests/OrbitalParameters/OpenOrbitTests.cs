@@ -41,7 +41,7 @@ public class OpenOrbitTests
     // TDB labels from J2000 is 1.21e-6 s short of an hour of TT, n·δ of M off a reference in TDB seconds, up to 3.7e-9
     // for the hyperbolas and 2.5e-10 for the parabolas
     private static double Elapsed(TimeSystem.Time epoch) =>
-        PropagationTimeArgument.Tt.SecondsBetween(TimeSystem.Time.J2000TDB, epoch);
+        PropagationTimeArgument.Tt.SecondsBetween(TimeSystem.Time.J2000Tdb, epoch);
 
     [Theory]
     [MemberData(nameof(HyperbolicCases))]
@@ -49,8 +49,8 @@ public class OpenOrbitTests
     {
         // Arrange
         var elements = new KeplerianElements(PeriapsisRadius / (1.0 - e), e, 0.3, 0.2, 0.4, m, TestHelpers.EarthAtJ2000,
-            TimeSystem.Time.J2000TDB, Frames.Frame.ICRF);
-        var laterEpoch = TimeSystem.Time.J2000TDB.AddSeconds(3600.0);
+            TimeSystem.Time.J2000Tdb, Frames.Frame.ICRF);
+        var laterEpoch = TimeSystem.Time.J2000Tdb.AddSeconds(3600.0);
         double dt = Elapsed(laterEpoch);
 
         // Act
@@ -76,8 +76,8 @@ public class OpenOrbitTests
     {
         // Arrange
         var elements = KeplerianElements.Parabolic(PeriapsisRadius, 0.3, 0.2, 0.4, m, TestHelpers.EarthAtJ2000,
-            TimeSystem.Time.J2000TDB, Frames.Frame.ICRF);
-        var laterEpoch = TimeSystem.Time.J2000TDB.AddSeconds(3600.0);
+            TimeSystem.Time.J2000Tdb, Frames.Frame.ICRF);
+        var laterEpoch = TimeSystem.Time.J2000Tdb.AddSeconds(3600.0);
         double dt = Elapsed(laterEpoch);
 
         // Act
@@ -108,7 +108,7 @@ public class OpenOrbitTests
     {
         // Arrange
         var elements = KeplerianElements.Parabolic(PeriapsisRadius, 0.3, 0.2, 0.4, m, TestHelpers.EarthAtJ2000,
-            TimeSystem.Time.J2000TDB, Frames.Frame.ICRF);
+            TimeSystem.Time.J2000Tdb, Frames.Frame.ICRF);
         var state = elements.ToStateVector();
 
         // Act: before #373, the conversion threw, SPICE giving no semi-major axis to a parabola
@@ -155,9 +155,9 @@ public class OpenOrbitTests
         // Arrange
         var elements = e == 1.0
             ? KeplerianElements.Parabolic(PeriapsisRadius, 0.3, 0.2, 0.4, m, TestHelpers.EarthAtJ2000,
-                TimeSystem.Time.J2000TDB, Frames.Frame.ICRF)
+                TimeSystem.Time.J2000Tdb, Frames.Frame.ICRF)
             : new KeplerianElements(PeriapsisRadius / (1.0 - e), e, 0.3, 0.2, 0.4, m, TestHelpers.EarthAtJ2000,
-                TimeSystem.Time.J2000TDB, Frames.Frame.ICRF);
+                TimeSystem.Time.J2000Tdb, Frames.Frame.ICRF);
 
         // Act: before #372, the native conversion never returned on a hyperbola before its periapsis (M = -2 and
         // -10 at e = 1.5). A regression fails this case after 10 s instead of hanging it, but the conversion that does

@@ -154,7 +154,7 @@ public sealed class Lot4CaseTests : IDisposable
     [Theory]
     [InlineData("none", Aberration.None)]
     [InlineData("lt", Aberration.LT)]
-    [InlineData("lt+s", Aberration.LTS)]
+    [InlineData("lt+s", Aberration.LtS)]
     [InlineData("xlt", Aberration.XLT)]
     public void TheStationFlags_MapToTheCorrectionsOfSpice(string flag, Aberration aberration)
     {

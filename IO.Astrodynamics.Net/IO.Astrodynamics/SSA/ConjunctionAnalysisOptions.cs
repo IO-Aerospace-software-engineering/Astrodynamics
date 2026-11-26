@@ -52,16 +52,16 @@ public sealed record ConjunctionAnalysisOptions
     /// a step), so a larger spacing costs less: the measured costs are in <c>docs/reference/conjunction-assessment.md</c>.
     /// </remarks>
     /// <exception cref="ArgumentOutOfRangeException">The value is not positive.</exception>
-    public TimeSpan MaximumEventSearchStep
+    public TimeSpan MaxEventSearchStep
     {
         get => _maximumEventSearchStep;
-        init => _maximumEventSearchStep = RequirePositive(value, nameof(MaximumEventSearchStep));
+        init => _maximumEventSearchStep = RequirePositive(value, nameof(MaxEventSearchStep));
     }
 
     /// <summary>
     /// Gets whether the polynomial search of two propagations (the <see cref="PropagationSolution"/> overloads of
     /// <c>Analyze</c> and <c>AnalyzeAll</c>) also reads the range rate of the states over the whole window, at every
-    /// candidate of the polynomial search and at most <see cref="MaximumEventSearchStep"/> (and one tick) apart between
+    /// candidate of the polynomial search and at most <see cref="MaxEventSearchStep"/> (and one tick) apart between
     /// them, and bisects each change from negative to positive between two reads (#628). Default: false (decision 54 of
     /// #457, S. Guillet, 2026-11-11).
     /// </summary>
@@ -77,7 +77,7 @@ public sealed record ConjunctionAnalysisOptions
     /// </para>
     /// <para>
     /// With it, those minima are listed, but for a change of sign over an interval narrower than
-    /// <see cref="MaximumEventSearchStep"/> that no search from a seed reaches. It costs a state of each propagation per
+    /// <see cref="MaxEventSearchStep"/> that no search from a seed reaches. It costs a state of each propagation per
     /// read: over one day of two LEO propagations at the default steps, the dense <c>Analyze</c> takes about 100 ms
     /// against about 18 ms without it at the default 60 s spacing (see <c>docs/reference/conjunction-assessment.md</c>).
     /// Ask for it on slow co-orbital formations (relative speeds of metres per second or less) propagated with long or

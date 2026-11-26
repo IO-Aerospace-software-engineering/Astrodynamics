@@ -131,11 +131,11 @@ public class StateVectorFrameCovarianceTests
         // Arrange
         var covariance = CreateCovariance();
         var state = CreateLeoState(covariance);
-        var orientation = Frames.Frame.ICRF.ToFrame(Frames.Frame.ECLIPTIC_J2000, Epoch);
+        var orientation = Frames.Frame.ICRF.ToFrame(Frames.Frame.ECLIPJ2000, Epoch);
         var expected = Matrix.TransformCovariance(covariance, orientation.Rotation);
 
         // Act
-        var transformed = state.ToFrame(Frames.Frame.ECLIPTIC_J2000).ToStateVector().Covariance!.Value;
+        var transformed = state.ToFrame(Frames.Frame.ECLIPJ2000).ToStateVector().Covariance!.Value;
 
         // Assert: between inertial frames the Jacobian is diag(R, R); only the symmetrization rounding differs.
         for (int row = 0; row < 6; row += 3)

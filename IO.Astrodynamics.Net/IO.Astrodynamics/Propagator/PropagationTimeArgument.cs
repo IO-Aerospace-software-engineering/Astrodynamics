@@ -77,7 +77,7 @@ internal abstract class PropagationTimeArgument
     /// epochs, UTC calendar seconds for two UTC epochs, without their leap seconds, and TT seconds otherwise.
     /// </remarks>
     internal static double ElapsedSeconds(ILocalizable centralBody, in Time from, in Time to) =>
-        from.ToTDB() == to.ToTDB() ? 0.0 : For(centralBody).SecondsBetween(from, to);
+        from.ToTdb() == to.ToTdb() ? 0.0 : For(centralBody).SecondsBetween(from, to);
 
     /// <summary>
     /// The epoch, in the frame of <paramref name="from"/>, <paramref name="seconds"/> of the dynamical time of
@@ -101,7 +101,7 @@ internal abstract class PropagationTimeArgument
 
         return argument == Tt
             ? from.ToTT().AddSeconds(seconds).ConvertTo(from.Scale)
-            : from.ToTDB().AddSeconds(seconds).ConvertTo(from.Scale);
+            : from.ToTdb().AddSeconds(seconds).ConvertTo(from.Scale);
     }
 
     /// <summary>
@@ -131,7 +131,7 @@ internal abstract class PropagationTimeArgument
     /// A difference of two <see cref="Time"/>s in different frames is a difference of TAI, so TT seconds: a UTC epoch
     /// read on a TDB solution as <c>(epoch - baseEpoch)</c> would name another instant, by the change of TDB − TT
     /// since the base (0.22 m after a day in LEO, #507). The TDB time argument converts the epoch to the frame of the
-    /// labels first, as the propagator converts its window (<c>ToTDB</c>), so an epoch read in the frame the caller
+    /// labels first, as the propagator converts its window (<c>ToTdb</c>), so an epoch read in the frame the caller
     /// gave reads the state of its label.
     /// </remarks>
     internal abstract double SecondsBetween(in Time baseEpoch, in Time epoch);
@@ -238,9 +238,9 @@ internal abstract class PropagationTimeArgument
         internal override (Time Start, Time End) StepEpochs(in Time baseEpoch, double cumulativeTime, double stepSize) =>
             (EpochAt(baseEpoch, cumulativeTime), EpochAt(baseEpoch, cumulativeTime + stepSize));
 
-        // ToTDB is the identity on a TDB label (#510): two labels give (epoch - baseEpoch), the former expression
+        // ToTdb is the identity on a TDB label (#510): two labels give (epoch - baseEpoch), the former expression
         internal override double SecondsBetween(in Time baseEpoch, in Time epoch) =>
-            (epoch.ToTDB() - baseEpoch.ToTDB()).TotalSeconds;
+            (epoch.ToTdb() - baseEpoch.ToTdb()).TotalSeconds;
 
         internal override double SecondsIntoStep(in Time segmentBase, in Time stepStart, double cumulativeTime,
             in Time epoch) => SecondsBetween(stepStart, epoch);

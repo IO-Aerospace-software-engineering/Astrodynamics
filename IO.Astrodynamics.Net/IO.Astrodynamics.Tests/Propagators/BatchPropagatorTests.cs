@@ -38,12 +38,12 @@ public class BatchPropagatorTests
         double v0 = System.Math.Sqrt(earth.GM / r0);
         var orbit = new StateVector(
             new Vector3(r0, 0, 0), new Vector3(0, v0, 0),
-            earth, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF);
+            earth, TimeSystem.Time.J2000Tdb, Frames.Frame.ICRF);
         return new Spacecraft(naifId, name, 100.0, orbit, 10000.0, new Clock("clk", 256));
     }
 
     private static Window DefaultWindow =>
-        new(TimeSystem.Time.J2000TDB, TimeSystem.Time.J2000TDB.AddHours(1));
+        new(TimeSystem.Time.J2000Tdb, TimeSystem.Time.J2000Tdb.AddHours(1));
 
     private static PropagationTask CreateTask(Spacecraft sc)
     {
@@ -159,7 +159,7 @@ public class BatchPropagatorTests
         // Drag about the Moon, which has no atmosphere: the task fails with InvalidOperationException (#674)
         var moon = new CelestialBody(PlanetsAndMoons.MOON);
         var badSc = new Spacecraft(-5002, "Bad", 100.0, new StateVector(new Vector3(2.0e6, 0, 0), new Vector3(0, System.Math.Sqrt(moon.GM / 2.0e6), 0), moon,
-                TimeSystem.Time.J2000TDB, Frames.Frame.ICRF), 10000.0,
+                TimeSystem.Time.J2000Tdb, Frames.Frame.ICRF), 10000.0,
             new Clock("clk", 256));
 
         var tasks = new List<PropagationTask>
@@ -328,7 +328,7 @@ public class BatchPropagatorTests
             double v0 = System.Math.Sqrt(earth.GM / r0);
             var orbit = new StateVector(
                 new Vector3(r0, 0, 0), new Vector3(0, v0, 0),
-                earth, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF);
+                earth, TimeSystem.Time.J2000Tdb, Frames.Frame.ICRF);
 
             var sc = new Spacecraft(-(11001 + i), $"GeoSat{i}", 100.0, orbit,
                 10000.0, new Clock($"clk{i}", 256));

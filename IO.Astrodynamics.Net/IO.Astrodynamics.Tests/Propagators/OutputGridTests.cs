@@ -197,7 +197,7 @@ public class OutputGridTests
         var tle = new Tle("ISS",
             "1 25544U 98067A   21020.53488036  .00016717  00000-0  10270-3 0  9054",
             "2 25544  51.6423 353.0312 0000493 320.8755  39.2360 15.49309423 25703");
-        var start = path == "TlePropagator" ? tle.Epoch.ToTDB() : Start;
+        var start = path == "TlePropagator" ? tle.Epoch.ToTdb() : Start;
         var window = new Window(start, start.AddSeconds(3590.0));
         var step = TimeSpan.FromSeconds(60.0);
         var initial = Orbit("Earth");

@@ -42,11 +42,11 @@ public class TleTextTests
             .EnumerateArray().ToArray());
 
     private static Tle Create(TimeSystem.Time epoch, double e = 0.001, double i = I, double raan = Raan, double aop = Aop, double m = M,
-        double bstar = 0.0001, double nDot = 0.0, double nDDot = 0.0)
+        double bStar = 0.0001, double meanMotionDot = 0.0, double meanMotionDDot = 0.0)
     {
-        var earth = new CelestialBody(399, Frames.Frame.ECLIPTIC_J2000, epoch);
+        var earth = new CelestialBody(399, Frames.Frame.ECLIPJ2000, epoch);
         var mean = new KeplerianElements(A, e, i, raan, aop, m, earth, epoch, Frames.Frame.TEME, elementsType: OrbitalElementsType.Mean);
-        return Tle.Create(mean, "TEXT", 25666, "98067A", 100, bstar: bstar, nDot: nDot, nDDot: nDDot);
+        return Tle.Create(mean, "TEXT", 25666, "98067A", 100, bStar: bStar, meanMotionDot: meanMotionDot, meanMotionDDot: meanMotionDDot);
     }
 
     private static TimeSystem.Time Utc(string iso) => new(DateTime.ParseExact(iso, "yyyy-MM-ddTHH:mm:ss.FFFFFFF", CultureInfo.InvariantCulture,
@@ -92,17 +92,17 @@ public class TleTextTests
         // #601: below 1e-10 the exponent took two digits, a 70-character line that threw; now the nearest value of a
         // five-digit mantissa and a one-digit exponent: 0 below 5e-11, 0.10000e-9 from 5e-11 to 1e-10
         var epoch = Utc("2026-11-07T12:00:00");
-        Assert.Equal(" 00000-0", Create(epoch, bstar: 1.5e-11).Line1.Substring(53, 8));
-        Assert.Equal(" 00000-0", Create(epoch, nDDot: 1.2e-13).Line1.Substring(44, 8));
-        Assert.Equal(" 10000-9", Create(epoch, bstar: 7e-11).Line1.Substring(53, 8));
-        Assert.Equal("-10000-9", Create(epoch, bstar: -9.99996e-11).Line1.Substring(53, 8));
-        Assert.Equal(" 10000-9", Create(epoch, nDDot: 1e-10).Line1.Substring(44, 8));
-        Assert.Equal(" 12345-9", Create(epoch, bstar: 1.2345e-10).Line1.Substring(53, 8));
-        Assert.Equal(" 10270-3", Create(epoch, bstar: 1.027e-4).Line1.Substring(53, 8));
-        Assert.Equal("-44346-2", Create(epoch, bstar: -4.4346e-3).Line1.Substring(53, 8));
-        Assert.Equal(" 99999+9", Create(epoch, bstar: 9.9999e8).Line1.Substring(53, 8));
-        Assert.Throws<ArgumentOutOfRangeException>(() => Create(epoch, bstar: 1e10));
-        Assert.Throws<ArgumentOutOfRangeException>(() => Create(epoch, bstar: double.NaN));
+        Assert.Equal(" 00000-0", Create(epoch, bStar: 1.5e-11).Line1.Substring(53, 8));
+        Assert.Equal(" 00000-0", Create(epoch, meanMotionDDot: 1.2e-13).Line1.Substring(44, 8));
+        Assert.Equal(" 10000-9", Create(epoch, bStar: 7e-11).Line1.Substring(53, 8));
+        Assert.Equal("-10000-9", Create(epoch, bStar: -9.99996e-11).Line1.Substring(53, 8));
+        Assert.Equal(" 10000-9", Create(epoch, meanMotionDDot: 1e-10).Line1.Substring(44, 8));
+        Assert.Equal(" 12345-9", Create(epoch, bStar: 1.2345e-10).Line1.Substring(53, 8));
+        Assert.Equal(" 10270-3", Create(epoch, bStar: 1.027e-4).Line1.Substring(53, 8));
+        Assert.Equal("-44346-2", Create(epoch, bStar: -4.4346e-3).Line1.Substring(53, 8));
+        Assert.Equal(" 99999+9", Create(epoch, bStar: 9.9999e8).Line1.Substring(53, 8));
+        Assert.Throws<ArgumentOutOfRangeException>(() => Create(epoch, bStar: 1e10));
+        Assert.Throws<ArgumentOutOfRangeException>(() => Create(epoch, bStar: double.NaN));
     }
 
     [Fact]
@@ -124,10 +124,10 @@ public class TleTextTests
         var line2 = Create(epoch, i: -0.0, raan: -0.0, aop: -0.0, m: -0.0).Line2;
         Assert.Equal(["  0.0000", "  0.0000", "  0.0000", "  0.0000"],
             new[] { line2.Substring(8, 8), line2.Substring(17, 8), line2.Substring(34, 8), line2.Substring(43, 8) });
-        foreach (var nDot in new[] { -0.0, -1e-12, -1e-9, -4.99e-9, 4e-9 })
-            Assert.Equal(" .00000000", Create(epoch, nDot: nDot).Line1.Substring(33, 10));
-        Assert.Equal("-.00000001", Create(epoch, nDot: -6e-9).Line1.Substring(33, 10));
-        Assert.Equal("-.00000001", Create(epoch, nDot: -5.000001e-9).Line1.Substring(33, 10));
+        foreach (var meanMotionDot in new[] { -0.0, -1e-12, -1e-9, -4.99e-9, 4e-9 })
+            Assert.Equal(" .00000000", Create(epoch, meanMotionDot: meanMotionDot).Line1.Substring(33, 10));
+        Assert.Equal("-.00000001", Create(epoch, meanMotionDot: -6e-9).Line1.Substring(33, 10));
+        Assert.Equal("-.00000001", Create(epoch, meanMotionDot: -5.000001e-9).Line1.Substring(33, 10));
     }
 
     [Fact]
@@ -191,7 +191,7 @@ public class TleTextTests
     {
         // #485 (reader) and #479 (writer). CSPICE: 2021-03-20 12:00 TDB is 11:58:50.8143932 UTC; the library's UTC of a
         // TDB instant is within 1.1 us of it
-        var earth = new CelestialBody(399, Frames.Frame.ICRF, TimeSystem.Time.J2000TDB);
+        var earth = new CelestialBody(399, Frames.Frame.ICRF, TimeSystem.Time.J2000Tdb);
         var cspiceUtc = new DateTime(2021, 3, 20, 11, 58, 50).AddTicks(8143932);
         var tdb = new TimeSystem.Time(new DateTime(2021, 3, 20, 12, 0, 0), TimeScale.TDB);
         var state = new StateVector(new Vector3(7000000.0, 0.0, 0.0), new Vector3(0.0, 7500.0, 0.0), earth, tdb, Frames.Frame.ICRF);
@@ -221,7 +221,7 @@ public class TleTextTests
     {
         // #479: MAN_EPOCH_IGNITION took the calendar of the thrust window, TDB in a propagation
         var engine = new Engine("engine", 350.0, 50.0, new FuelTank("tank", 4000.0, 3000.0, "model", "sn"), "model", "sn");
-        var maneuver = new ApogeeHeightManeuver(7000000.0, engine, TimeSystem.Time.J2000TDB, TimeSpan.Zero, TestHelpers.EarthAtJ2000);
+        var maneuver = new ApogeeHeightManeuver(7000000.0, engine, TimeSystem.Time.J2000Tdb, TimeSpan.Zero, TestHelpers.EarthAtJ2000);
         maneuver.ThrustWindow = new Window(new TimeSystem.Time(new DateTime(2021, 3, 20, 12, 0, 0), TimeScale.TDB), TimeSpan.FromSeconds(10.0));
         var parameters = maneuver.ToOpmManeuverParameters();
         Assert.InRange(System.Math.Abs((parameters.ManEpochIgnition - new DateTime(2021, 3, 20, 11, 58, 50).AddTicks(8143932)).TotalSeconds), 0.0, 1.1e-6);

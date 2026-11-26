@@ -200,8 +200,8 @@ internal static class WindowSearchSettings
         Time Label(Time t)
         {
             // A bound, as the CSPICE and occultation searches label it (its TDB conversion) or as given
-            if (t == start || t.EqualsExact(start.ToTDB())) return start;
-            if (t == end || t.EqualsExact(end.ToTDB())) return end;
+            if (t == start || t.EqualsExact(start.ToTdb())) return start;
+            if (t == end || t.EqualsExact(end.ToTdb())) return end;
             var label = t.ConvertTo(start.Scale);
             return label == t ? label : t;
         }

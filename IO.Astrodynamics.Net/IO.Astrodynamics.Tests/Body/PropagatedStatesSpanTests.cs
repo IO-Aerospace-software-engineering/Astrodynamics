@@ -61,7 +61,7 @@ public class PropagatedStatesSpanTests
     {
         earth = new CelestialBody(PlanetsAndMoons.EARTH, Frame.ICRF, S);
         var icrf = new StateVector(new Vector3(6800000.0, 0.0, 0.0), new Vector3(0.0, 5400.0, 5400.0), earth, S, Frame.ICRF);
-        var initial = frame == "ICRF" ? icrf : icrf.ToFrame(Frame.ECLIPTIC_J2000).ToStateVector();
+        var initial = frame == "ICRF" ? icrf : icrf.ToFrame(Frame.ECLIPJ2000).ToStateVector();
         var spacecraft = new Spacecraft(naifId, $"SPAN{-naifId}", 1000.0, initial, 3000.0, new Clock($"SPAN{-naifId}_CLK", 65536));
         IntegratorOptions integratorInstance = integrator == "RK" ? new RK78IntegratorOptions { AbsoluteTolerance = 1e-12, RelativeTolerance = 1e-12 } : new VVIntegratorOptions { Step = TimeSpan.FromSeconds(1.0) };
         spacecraft.Propagate(new Window(S, S.AddHours(2.0)), new PropagationOptions { Integrator = integratorInstance, OutputStep = Output, ThirdBodies = [earth], CovariancePropagation = CovariancePropagationOptions.None });
@@ -108,7 +108,7 @@ public class PropagatedStatesSpanTests
             Assert.Throws<InvalidOperationException>(() => spacecraft.GetEphemeris(t, earth, Frame.ICRF, Aberration.None));
             Assert.Throws<InvalidOperationException>(() => spacecraft.GetEphemeris(t, moon, Frame.ICRF, Aberration.None));
             Assert.Throws<InvalidOperationException>(() => spacecraft.GetEphemeris(t, moon, Frame.ICRF, Aberration.LT));
-            Assert.Throws<InvalidOperationException>(() => spacecraft.GetEphemeris(t, earth, Frame.ECLIPTIC_J2000, Aberration.XCN));
+            Assert.Throws<InvalidOperationException>(() => spacecraft.GetEphemeris(t, earth, Frame.ECLIPJ2000, Aberration.XCN));
         }
 
         // The managed distance search over a window past the states reads them outside: it throws
@@ -143,13 +143,13 @@ public class PropagatedStatesSpanTests
             }
 
             // spkltc: one light time from the geometric distance (LT, XLT), or iterated to convergence (CN, XCN)
-            double lt = (Target(0.0) - observer).Magnitude() / IO.Astrodynamics.Constants.C;
+            double lt = (Target(0.0) - observer).Magnitude() / IO.Astrodynamics.Constants.SpeedOfLight;
             int iterations = aberration is Aberration.LT or Aberration.XLT ? 1 : 5;
             var expected = Vector3.Zero;
             for (int i = 0; i < iterations; i++)
             {
                 expected = Target(sign * lt) - observer;
-                lt = expected.Magnitude() / IO.Astrodynamics.Constants.C;
+                lt = expected.Magnitude() / IO.Astrodynamics.Constants.SpeedOfLight;
             }
 
             var read = spacecraft.GetEphemeris(t, moon, Frame.ICRF, aberration);
@@ -197,13 +197,13 @@ public class PropagatedStatesSpanTests
                 return earthState.Position + targetState.Position + (earthState.Velocity + targetState.Velocity) * residual;
             }
 
-            double lt = (Target(0.0) - observerFromSsb).Magnitude() / IO.Astrodynamics.Constants.C;
+            double lt = (Target(0.0) - observerFromSsb).Magnitude() / IO.Astrodynamics.Constants.SpeedOfLight;
             int iterations = aberration is Aberration.LT or Aberration.XLT ? 1 : 5;
             var expected = Vector3.Zero;
             for (int i = 0; i < iterations; i++)
             {
                 expected = Target(sign * lt) - observerFromSsb;
-                lt = expected.Magnitude() / IO.Astrodynamics.Constants.C;
+                lt = expected.Magnitude() / IO.Astrodynamics.Constants.SpeedOfLight;
             }
 
             // Act
@@ -238,7 +238,7 @@ public class PropagatedStatesSpanTests
         var hidden = observer.FindOccultationWindows(window, target, earth, new OccultationSearchOptions { Step = step, TargetShape = ShapeType.Point, FrontShape = ShapeType.Ellipsoid }).ToArray();
         Assert.NotEmpty(geometric);
 
-        foreach (var aberration in new[] { Aberration.LT, Aberration.LTS, Aberration.CN, Aberration.CNS, Aberration.XLT, Aberration.XLTS, Aberration.XCN, Aberration.XCNS })
+        foreach (var aberration in new[] { Aberration.LT, Aberration.LtS, Aberration.CN, Aberration.CnS, Aberration.XLT, Aberration.XltS, Aberration.XCN, Aberration.XcnS })
         {
             // Act
             var corrected = instrument.FindFieldOfViewWindows(window, target, new FieldOfViewSearchOptions { Step = step, Aberration = aberration, TargetShape = ShapeType.Point, TargetFrame = Frame.ICRF }).ToArray();

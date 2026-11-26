@@ -23,7 +23,7 @@ public class TleCreateRulesTests
         TestKernels.EnsureSolarSystem();
     }
 
-    private static CelestialBody EarthAtEpoch => new(399, Frames.Frame.ECLIPTIC_J2000, Epoch);
+    private static CelestialBody EarthAtEpoch => new(399, Frames.Frame.ECLIPJ2000, Epoch);
 
     private static KeplerianElements MeanElements(ILocalizable observer, Frames.Frame frame) =>
         new(6_796_882.0, 0.0000493, 51.6423 * IO.Astrodynamics.Constants.Deg2Rad, 353.0312 * IO.Astrodynamics.Constants.Deg2Rad,
@@ -112,7 +112,7 @@ public class TleCreateRulesTests
     public void Create_MeanElementsAboutTheMoon_Throws()
     {
         // #607: mean elements about the Moon were written as a TLE, their mean motion from the Moon's GM
-        var moon = new CelestialBody(301, Frames.Frame.ECLIPTIC_J2000, Epoch);
+        var moon = new CelestialBody(301, Frames.Frame.ECLIPJ2000, Epoch);
         var ex = Assert.Throws<ArgumentException>(() =>
             Tle.Create(MeanElements(moon, Frames.Frame.TEME), "LUNAR", 25544, "98067A", 2570));
         Assert.Equal("meanElements", ex.ParamName);
@@ -154,7 +154,7 @@ public class TleCreateRulesTests
         // Earth orbit through that position; a TLE describes an Earth orbit, so the conversion of an orbit about another
         // centre is refused before the fit. The state is a circular Earth orbit of 8000 km by its velocity
         // (√(GM⊕/r) = 7059 m/s), which the fit could reach, and a hyperbola about the Moon
-        var moon = new CelestialBody(301, Frames.Frame.ECLIPTIC_J2000, Epoch);
+        var moon = new CelestialBody(301, Frames.Frame.ECLIPJ2000, Epoch);
         var state = new StateVector(new Vector3(8.0e6, 0.0, 0.0), new Vector3(0.0, 6113.0, 3529.0), moon, Epoch, Frames.Frame.ICRF);
         var ex = Assert.Throws<InvalidOperationException>(() => state.ToTle("LUNAR", 99001, "21001A"));
         Assert.Contains("MOON", ex.Message);

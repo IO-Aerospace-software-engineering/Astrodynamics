@@ -67,7 +67,7 @@ public class OccultationSearchTests
         var site = new Site(65, "DSS-65", TestHelpers.EarthAtJ2000);
         var managed = site.FindOccultationWindows(Eclipse2005Window, TestHelpers.Sun, TestHelpers.MoonAtJ2000, new OccultationSearchOptions { Step = TimeSpan.FromSeconds(360.0), TargetShape = targetShape, FrontShape = frontShape, OccultationType = type }).ToArray();
         var expected = JsonSerializer.Deserialize<Dictionary<string, double[][]>>(File.ReadAllText("Data/OccultationReference/occultation_reference.json"))[reference]
-            .Select(w => new Window(TimeSystem.Time.CreateTDB(w[0]), TimeSystem.Time.CreateTDB(w[1]))).ToArray();
+            .Select(w => new Window(TimeSystem.Time.CreateTdb(w[0]), TimeSystem.Time.CreateTdb(w[1]))).ToArray();
         double worst = WorstEdge(managed, expected);
         _output.WriteLine($"MEASURE #277 dss65_2005 point {(targetShape == ShapeType.Point ? "back" : "front")} {type}: {expected.Length} windows, worst {worst:E3} s");
         Assert.Single(expected);
@@ -102,7 +102,7 @@ public class OccultationSearchTests
         // Any for a point front body), gfoclt at its 1e-6 s
         var expected = JsonSerializer.Deserialize<Dictionary<string, double[][]>>(File.ReadAllText("Data/OccultationReference/occultation_reference.json"))[
                 "dss65_2005_point_front ANY NONE POINT"]
-            .Select(w => new Window(TimeSystem.Time.CreateTDB(w[0]), TimeSystem.Time.CreateTDB(w[1]))).ToArray();
+            .Select(w => new Window(TimeSystem.Time.CreateTdb(w[0]), TimeSystem.Time.CreateTdb(w[1]))).ToArray();
         var spice = type == OccultationType.Any
             ? SpiceApi.Instance.FindWindowsOnOccultationConstraint(Eclipse2005Window, 399065, 10, ShapeType.Ellipsoid, 301, ShapeType.Point, type,
                 Aberration.None, TimeSpan.FromSeconds(360.0)).ToArray()
@@ -160,7 +160,7 @@ public class OccultationSearchTests
 
         OccultationType? At(double seconds, CelestialItem target, CelestialItem by)
         {
-            var epoch = TimeSystem.Time.CreateTDB(seconds);
+            var epoch = TimeSystem.Time.CreateTdb(seconds);
             var from = site.GetEphemeris(epoch, TestHelpers.EarthAtJ2000, Frames.Frame.ICRF, Aberration.None);
             return target.IsOcculted(by, from, Aberration.None);
         }
@@ -176,11 +176,11 @@ public class OccultationSearchTests
     public void IsOcculted_FullEclipseOfASpacecraft()
     {
         // In the middle of the first umbra of eclipse 001 (gfoclt: 827237996.05 to 827240060.05 TDB seconds)
-        var epoch = TimeSystem.Time.CreateTDB(827239000.0);
+        var epoch = TimeSystem.Time.CreateTdb(827239000.0);
         var spacecraft = new Spacecraft(-470001, "eclipse_001", epoch: epoch);
         var from = spacecraft.GetEphemeris(epoch, TestHelpers.EarthAtJ2000, Frames.Frame.ICRF, Aberration.None);
         Assert.Equal(OccultationType.Full, TestHelpers.Sun.IsOcculted(TestHelpers.EarthAtJ2000, from, Aberration.LT));
-        var later = TimeSystem.Time.CreateTDB(827242000.0);
+        var later = TimeSystem.Time.CreateTdb(827242000.0);
         var fromLater = spacecraft.GetEphemeris(later, TestHelpers.EarthAtJ2000, Frames.Frame.ICRF, Aberration.None);
         Assert.Equal(OccultationType.None, TestHelpers.Sun.IsOcculted(TestHelpers.EarthAtJ2000, fromLater, Aberration.None));
     }

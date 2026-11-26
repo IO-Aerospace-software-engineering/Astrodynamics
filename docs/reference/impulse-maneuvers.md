@@ -359,7 +359,7 @@ one on another spacecraft's tank burnt that spacecraft's fuel.
 var maneuver = new ApogeeHeightManeuver(
     42164000.0,
     engine,
-    Time.J2000TDB,
+    Time.J2000Tdb,
     TimeSpan.Zero,
     earth);
 

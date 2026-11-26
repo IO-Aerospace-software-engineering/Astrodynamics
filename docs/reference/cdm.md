@@ -182,7 +182,7 @@ Inferred metadata, which `ProtectedParticipantMetadata` and `SecondaryParticipan
   propagation (below). Set `ProtectedParticipantMetadata.SolarRadPressure` or
   `SecondaryParticipantMetadata.SolarRadPressure` to state the value of an OD; `null` keeps the inferred value (third
   round of [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668): `YES` for a
-  spacecraft whose `SolarRadiationCoeff` is above 0 before, whether or not any solar radiation pressure was modeled).
+  spacecraft whose `SolarRadiationCoefficient` is above 0 before, whether or not any solar radiation pressure was modeled).
 
 ### Propagated covariance
 
@@ -197,7 +197,7 @@ For a participant whose covariance was propagated (`CovarianceSource.Propagated`
   EGM2008, its default; `GEOPOTENTIAL: nD nO` for harmonics evaluated with other constants, given to
   `GeopotentialModelParameters` or those of another body; `POINT MASS` otherwise), `ATMOSPHERIC_MODEL` (`NRLMSISE-00`,
   `US STANDARD ATMOSPHERE 1976`, `MARS STANDARD ATMOSPHERE`, `NONE` without drag), `N_BODY_PERTURBATIONS` (the third
-  bodies, `NONE` without any) and `SOLAR_RAD_PRESSURE` (`YES` or `NO`, whatever the `SolarRadiationCoeff` of the
+  bodies, `NONE` without any) and `SOLAR_RAD_PRESSURE` (`YES` or `NO`, whatever the `SolarRadiationCoefficient` of the
   spacecraft) describe the forces the propagation actually used. The library
   does not know the name of a model whose constants are given; set it through `ProtectedParticipantMetadata` or
   `SecondaryParticipantMetadata` (`GravityModel = "EGM-96: 36D 36O"`), which take precedence;

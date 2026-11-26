@@ -40,9 +40,9 @@ public class PropagatorTests
         // Use a GEO orbit around Earth with no perturbations to isolate integrator behavior.
         Clock clk = new Clock("My clock", 256);
         var earth = new CelestialBody(PlanetsAndMoons.EARTH);
-        var orbit = new KeplerianElements(42164000.0, 0, 0, 0, 0, 0, earth, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF);
+        var orbit = new KeplerianElements(42164000.0, 0, 0, 0, 0, 0, earth, TimeSystem.Time.J2000Tdb, Frames.Frame.ICRF);
         Spacecraft spc = new Spacecraft(-1001, "MySpacecraft", 100.0, orbit, 10000.0, clk);
-        var propagator = new Propagator.CentralBodyPropagator(new Window(TimeSystem.Time.J2000TDB, TimeSystem.Time.J2000TDB.AddDays(1)), spc, new PropagationOptions { Integrator = new VVIntegratorOptions { Step = TimeSpan.FromSeconds(10.0) }, OutputStep = TimeSpan.FromSeconds(10.0), ThirdBodies = System.Array.Empty<CelestialItem>() });
+        var propagator = new Propagator.CentralBodyPropagator(new Window(TimeSystem.Time.J2000Tdb, TimeSystem.Time.J2000Tdb.AddDays(1)), spc, new PropagationOptions { Integrator = new VVIntegratorOptions { Step = TimeSpan.FromSeconds(10.0) }, OutputStep = TimeSpan.FromSeconds(10.0), ThirdBodies = System.Array.Empty<CelestialItem>() });
         var solution = propagator.Propagate();
         var energy = solution.StateVectors
             .Select(x => x.RelativeTo(earth, Aberration.None).ToStateVector().SpecificOrbitalEnergy())
@@ -57,9 +57,9 @@ public class PropagatorTests
     public void CheckInitialStep()
     {
         Clock clk = new Clock("My clock", 256);
-        var orbit = new StateVector(new Vector3(6800000.0, 0, 0), new Vector3(0, 7500.0, 0), new CelestialBody(PlanetsAndMoons.EARTH), TimeSystem.Time.J2000TDB, Frames.Frame.ICRF);
+        var orbit = new StateVector(new Vector3(6800000.0, 0, 0), new Vector3(0, 7500.0, 0), new CelestialBody(PlanetsAndMoons.EARTH), TimeSystem.Time.J2000Tdb, Frames.Frame.ICRF);
         Spacecraft spc = new Spacecraft(-1001, "MySpacecraft", 100.0, orbit, 10000.0, clk);
-        var propagator = new Propagator.CentralBodyPropagator(new Window(TimeSystem.Time.J2000TDB, TimeSystem.Time.J2000TDB.AddHours(2)), spc, new PropagationOptions { Integrator = new VVIntegratorOptions { Step = TimeSpan.FromSeconds(1.0) }, OutputStep = TimeSpan.FromSeconds(1.0), ThirdBodies = [PlanetsAndMoons.MOON_BODY, Stars.SUN_BODY] });
+        var propagator = new Propagator.CentralBodyPropagator(new Window(TimeSystem.Time.J2000Tdb, TimeSystem.Time.J2000Tdb.AddHours(2)), spc, new PropagationOptions { Integrator = new VVIntegratorOptions { Step = TimeSpan.FromSeconds(1.0) }, OutputStep = TimeSpan.FromSeconds(1.0), ThirdBodies = [PlanetsAndMoons.MOON_BODY, Stars.SUN_BODY] });
         var solution = propagator.Propagate();
         var orbitalParams = solution.StateVectors.First().RelativeTo(PlanetsAndMoons.EARTH_BODY, Aberration.None) as StateVector;
         Assert.Equal(orbit, orbitalParams, TestHelpers.StateVectorComparer);
@@ -69,9 +69,9 @@ public class PropagatorTests
     public void CheckNonFittingStepSize()
     {
         Clock clk = new Clock("My clock", 256);
-        var orbit = new KeplerianElements(150000000000.0, 0, 0, 0, 0, 0, Barycenters.SOLAR_SYSTEM_BARYCENTER, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF);
+        var orbit = new KeplerianElements(150000000000.0, 0, 0, 0, 0, 0, Barycenters.SOLAR_SYSTEM_BARYCENTER, TimeSystem.Time.J2000Tdb, Frames.Frame.ICRF);
         Spacecraft spc = new Spacecraft(-1001, "MySpacecraft", 100.0, orbit, 10000.0, clk);
-        var propagator = new Propagator.CentralBodyPropagator(new Window(TimeSystem.Time.J2000TDB, TimeSystem.Time.J2000TDB.AddSeconds(5)), spc, new PropagationOptions { Integrator = new VVIntegratorOptions { Step = TimeSpan.FromSeconds(2.0) }, OutputStep = TimeSpan.FromSeconds(2.0), ThirdBodies = [Barycenters.SOLAR_SYSTEM_BARYCENTER] });
+        var propagator = new Propagator.CentralBodyPropagator(new Window(TimeSystem.Time.J2000Tdb, TimeSystem.Time.J2000Tdb.AddSeconds(5)), spc, new PropagationOptions { Integrator = new VVIntegratorOptions { Step = TimeSpan.FromSeconds(2.0) }, OutputStep = TimeSpan.FromSeconds(2.0), ThirdBodies = [Barycenters.SOLAR_SYSTEM_BARYCENTER] });
 
         var solution = propagator.Propagate();
         var state = solution.StateVectors[0];
@@ -90,10 +90,10 @@ public class PropagatorTests
     public void CacheSizeAndTimeSpanAreConsistent(double windowSeconds, double stepSeconds)
     {
         Clock clk = new Clock("My clock", 256);
-        var orbit = new KeplerianElements(150000000000.0, 0, 0, 0, 0, 0, Barycenters.SOLAR_SYSTEM_BARYCENTER, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF);
+        var orbit = new KeplerianElements(150000000000.0, 0, 0, 0, 0, 0, Barycenters.SOLAR_SYSTEM_BARYCENTER, TimeSystem.Time.J2000Tdb, Frames.Frame.ICRF);
         Spacecraft spc = new Spacecraft(-1001, "MySpacecraft", 100.0, orbit, 10000.0, clk);
 
-        var windowStart = TimeSystem.Time.J2000TDB;
+        var windowStart = TimeSystem.Time.J2000Tdb;
         var windowEnd = windowStart.AddSeconds(windowSeconds);
         var window = new Window(windowStart, windowEnd);
         var deltaT = TimeSpan.FromSeconds(stepSeconds);
@@ -165,18 +165,18 @@ public class PropagatorTests
         Clock clk1 = new Clock("My clock", 256);
         Clock clk2 = new Clock("My clock", 256);
         var earth = new CelestialBody(PlanetsAndMoons.EARTH);
-        var orbit1 = new StateVector(new Vector3(6800000.0, 0, 0), new Vector3(0, 7500.0, 0), earth, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF);
-        var orbit2 = new StateVector(new Vector3(6800000.0, 0, 0), new Vector3(0, 7500.0, 0), earth, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF);
+        var orbit1 = new StateVector(new Vector3(6800000.0, 0, 0), new Vector3(0, 7500.0, 0), earth, TimeSystem.Time.J2000Tdb, Frames.Frame.ICRF);
+        var orbit2 = new StateVector(new Vector3(6800000.0, 0, 0), new Vector3(0, 7500.0, 0), earth, TimeSystem.Time.J2000Tdb, Frames.Frame.ICRF);
         Spacecraft spc1 = new Spacecraft(-1001, "MySpacecraft1", 100.0, orbit1, 10000.0, clk1);
         Spacecraft spc2 = new Spacecraft(-1002, "MySpacecraft2", 100.0, orbit2, 10000.0, clk2);
 
-        var window = new Window(TimeSystem.Time.J2000TDB, TimeSystem.Time.J2000TDB.AddHours(2));
+        var window = new Window(TimeSystem.Time.J2000Tdb, TimeSystem.Time.J2000Tdb.AddHours(2));
         var deltaT = TimeSpan.FromSeconds(1.0);
         CelestialItem[] bodies = [PlanetsAndMoons.EARTH_BODY, PlanetsAndMoons.MOON_BODY, Stars.SUN_BODY];
 
         var propagator1 = new Propagator.CentralBodyPropagator(window, spc1, new PropagationOptions { Integrator = new VVIntegratorOptions { Step = deltaT }, OutputStep = deltaT, ThirdBodies = bodies });
 
-        var initialState = spc2.InitialOrbitalParameters.AtEpoch(window.StartDate.ToTDB()).ToStateVector()
+        var initialState = spc2.InitialOrbitalParameters.AtEpoch(window.StartDate.ToTdb()).ToStateVector()
             .RelativeTo(earth, Aberration.None).ToStateVector();
         var forces = new List<ForceBase>();
         forces.Add(new GravitationalAcceleration(earth));
@@ -212,10 +212,10 @@ public class PropagatorTests
         Clock clk = new Clock("My clock", 256);
         var earth = new CelestialBody(PlanetsAndMoons.EARTH);
         var orbit = new StateVector(new Vector3(6800000.0, 0, 0), new Vector3(0, 7500.0, 0),
-            earth, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF);
+            earth, TimeSystem.Time.J2000Tdb, Frames.Frame.ICRF);
         Spacecraft spc = new Spacecraft(-1001, "MySpacecraft", 100.0, orbit, 10000.0, clk);
 
-        var propagator = new Propagator.CentralBodyPropagator(new Window(TimeSystem.Time.J2000TDB, TimeSystem.Time.J2000TDB.AddHours(2)), spc, new PropagationOptions { Integrator = new VVIntegratorOptions { Step = TimeSpan.FromSeconds(1.0) }, OutputStep = TimeSpan.FromSeconds(1.0), ThirdBodies = [PlanetsAndMoons.MOON_BODY, Stars.SUN_BODY] });
+        var propagator = new Propagator.CentralBodyPropagator(new Window(TimeSystem.Time.J2000Tdb, TimeSystem.Time.J2000Tdb.AddHours(2)), spc, new PropagationOptions { Integrator = new VVIntegratorOptions { Step = TimeSpan.FromSeconds(1.0) }, OutputStep = TimeSpan.FromSeconds(1.0), ThirdBodies = [PlanetsAndMoons.MOON_BODY, Stars.SUN_BODY] });
 
         var solution = propagator.Propagate();
 

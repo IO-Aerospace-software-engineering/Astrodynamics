@@ -134,7 +134,7 @@ public class SpiceExceptionTests : IDisposable
 
         var unknown = Assert.Throws<ArgumentException>(() =>
             SpiceApi.Instance.TransformFrame(new TimeSystem.Time(2021, 1, 1, TimeScale.TDB), IO.Astrodynamics.Frames.Frame.ICRF, new IO.Astrodynamics.Frames.Frame("IOA_R03_NO_FRAME")));
-        var unknownSxform = CspiceDirect.SxformMessages("J2000", "IOA_R03_NO_FRAME", new TimeSystem.Time(2021, 1, 1, TimeScale.TDB).ToTDB().TimeSpanFromJ2000().TotalSeconds);
+        var unknownSxform = CspiceDirect.SxformMessages("J2000", "IOA_R03_NO_FRAME", new TimeSystem.Time(2021, 1, 1, TimeScale.TDB).ToTdb().TimeSpanFromJ2000().TotalSeconds);
         var inner = Assert.IsType<SpiceException>(unknown.InnerException);
         Assert.Equal((unknownSxform.Short, unknownSxform.Long), (inner.ShortMessage, inner.LongMessage));
         Assert.False(CspiceDirect.ErrorPending());

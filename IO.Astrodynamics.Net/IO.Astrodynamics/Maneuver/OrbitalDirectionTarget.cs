@@ -18,20 +18,20 @@ public sealed class OrbitalDirectionTarget : IAttitudeTarget
     public static readonly OrbitalDirectionTarget Normal = new(OrbitalDirection.Normal);
     public static readonly OrbitalDirectionTarget AntiNormal = new(OrbitalDirection.AntiNormal);
 
-    public OrbitalDirection Direction { get; }
+    public OrbitalDirection OrbitalDirection { get; }
 
-    public string Name => Direction.ToString();
+    public string Name => OrbitalDirection.ToString();
 
     public OrbitalDirectionTarget(OrbitalDirection direction)
     {
-        Direction = direction;
+        OrbitalDirection = direction;
     }
 
     public Vector3 GetDirection(StateVector observerState)
     {
         if (observerState == null) throw new ArgumentNullException(nameof(observerState));
 
-        return Direction switch
+        return OrbitalDirection switch
         {
             OrbitalDirection.Prograde => observerState.Velocity.NormalizeOrZero(),
             OrbitalDirection.Retrograde => observerState.Velocity.Inverse().NormalizeOrZero(),
@@ -39,7 +39,7 @@ public sealed class OrbitalDirectionTarget : IAttitudeTarget
             OrbitalDirection.Zenith => observerState.Position.NormalizeOrZero(),
             OrbitalDirection.Normal => NormalDirection(observerState),
             OrbitalDirection.AntiNormal => NormalDirection(observerState).Inverse(),
-            _ => throw new ArgumentOutOfRangeException(nameof(Direction), Direction, "Unknown orbital direction.")
+            _ => throw new ArgumentOutOfRangeException(nameof(OrbitalDirection), OrbitalDirection, "Unknown orbital direction.")
         };
     }
 

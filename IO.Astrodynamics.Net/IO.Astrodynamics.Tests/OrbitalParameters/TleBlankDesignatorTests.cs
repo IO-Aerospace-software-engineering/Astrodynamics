@@ -46,7 +46,7 @@ public class TleBlankDesignatorTests
         int elementSetNumber = int.Parse(tle.Line1.Substring(64, 4), CultureInfo.InvariantCulture);
         int revolutions = int.Parse(tle.Line2.Substring(63, 5), CultureInfo.InvariantCulture);
         return Tle.Create(tle.ToMeanKeplerianElements(), tle.Name, tle.NoradCatalogId, cosparId, revolutions, TleClassification.Unclassified,
-            tle.BallisticCoefficient, tle.FirstDerivationMeanMotion, tle.SecondDerivativeMeanMotion, elementSetNumber);
+            tle.BStar, tle.MeanMotionDot, tle.MeanMotionDDot, elementSetNumber);
     }
 
     [Theory]

@@ -789,7 +789,7 @@ namespace IO.Astrodynamics.Tests.CCSDS.OPM
             Assert.Equal(500000.0, spacecraft.MaxOperatingMass);
             Assert.Equal(1.0, spacecraft.SectionalArea); // Default
             Assert.Equal(2.2, spacecraft.DragCoefficient); // Default
-            Assert.Equal(1.0, spacecraft.SolarRadiationCoeff); // Default
+            Assert.Equal(1.0, spacecraft.SolarRadiationCoefficient); // Default
             Assert.Same(clock, spacecraft.Clock);
         }
 
@@ -814,7 +814,7 @@ namespace IO.Astrodynamics.Tests.CCSDS.OPM
             Assert.Equal(420000.0, spacecraft.Mass);
             Assert.Equal(1600.0, spacecraft.SectionalArea);
             Assert.Equal(2.2, spacecraft.DragCoefficient);
-            Assert.Equal(1.5, spacecraft.SolarRadiationCoeff);
+            Assert.Equal(1.5, spacecraft.SolarRadiationCoefficient);
         }
 
         /// <summary>
@@ -993,7 +993,7 @@ namespace IO.Astrodynamics.Tests.CCSDS.OPM
             Assert.Equal(originalSpacecraft.Mass, newSpacecraft.Mass, 0);
             Assert.Equal(originalSpacecraft.SectionalArea, newSpacecraft.SectionalArea, 0);
             Assert.Equal(originalSpacecraft.DragCoefficient, newSpacecraft.DragCoefficient, 1);
-            Assert.Equal(originalSpacecraft.SolarRadiationCoeff, newSpacecraft.SolarRadiationCoeff, 1);
+            Assert.Equal(originalSpacecraft.SolarRadiationCoefficient, newSpacecraft.SolarRadiationCoefficient, 1);
         }
 
         [Fact]
@@ -1595,7 +1595,7 @@ namespace IO.Astrodynamics.Tests.CCSDS.OPM
                 "ICRF" => Frames.Frame.ICRF,
                 "GCRF" => Frames.Frame.GCRF,
                 "TEME" => Frames.Frame.TEME,
-                _ => Frames.Frame.ECLIPTIC_J2000
+                _ => Frames.Frame.ECLIPJ2000
             };
             var earth = new CelestialBody(PlanetsAndMoons.EARTH, Frames.Frame.ICRF, CentreEpoch);
             var written = new StateVector(new Vector3(6778137.0, 1000.0, -2000.0), new Vector3(10.0, 7500.0, 1.0), earth, CentreEpoch, frame);

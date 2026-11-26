@@ -32,7 +32,7 @@ public class Nrlmsise00TimeScaleTests
     {
         // Arrange
         var model = new Nrlmsise00Model(SpaceWeather.Nominal);
-        var utcEpoch = TdbEpoch.ToUTC();
+        var utcEpoch = TdbEpoch.ToUtc();
 
         // Act
         double tdb = model.GetDensity(AtmosphericContext.FromPlanetodetic(new Planetodetic(Longitude, Latitude, Altitude), TdbEpoch));
@@ -47,7 +47,7 @@ public class Nrlmsise00TimeScaleTests
     {
         // Arrange: the low-level model (SI inputs) with the UTC calendar of the instant, written out (UT, and the local
         // solar time sec/3600 + longitude/15° of the notes on the input variables)
-        var utc = TdbEpoch.ToUTC().DateTime;
+        var utc = TdbEpoch.ToUtc().DateTime;
         double sec = utc.TimeOfDay.TotalSeconds;
         double longitudeDeg = Longitude * IO.Astrodynamics.Constants.Rad2Deg;
         double lst = sec / 3600.0 + longitudeDeg / 15.0;
@@ -98,7 +98,7 @@ public class Nrlmsise00TimeScaleTests
     {
         // Arrange: the model takes UTC for UT (#409); UT1 − UTC stays within 0.9 s, the bound kept by the leap seconds
         var model = new Nrlmsise00Model(SpaceWeather.Nominal);
-        var utc = TdbEpoch.ToUTC();
+        var utc = TdbEpoch.ToUtc();
         var ut1 = utc + System.TimeSpan.FromSeconds(0.9);
         double worst = 0.0;
 

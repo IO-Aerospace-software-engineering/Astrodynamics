@@ -319,7 +319,7 @@ public class PropagatedEphemerisTests
         file.Delete();
 
         // Two epochs one tick apart that are one TDB double
-        double Seconds(Time t) => t.ToTDB().TimeSpanFromJ2000().TotalSeconds;
+        double Seconds(Time t) => t.ToTdb().TimeSpanFromJ2000().TotalSeconds;
         var t0 = t2026.AddSeconds(100.0);
         while (Seconds(t0) != Seconds(t0.AddSeconds(1e-7))) t0 = t0.AddSeconds(1e-7);
         var a0 = new[] { new StateVector(new Vector3(7.0e6, 0.0, 0.0), new Vector3(0.0, 7.5e3, 0.0), Earth, t0.AddSeconds(-20.0), Frame.ICRF),
@@ -401,7 +401,7 @@ public class PropagatedEphemerisTests
         Assert.Equal(count % 25, (int)summaries);
         if (OperatingSystem.IsLinux())
         {
-            var reference = arcs.Select((arc, k) => (Earth.NaifId, System.Math.Min(7, arc.Length - 1), arc.Select(x => x.Epoch.ToTDB().TimeSpanFromJ2000().TotalSeconds).ToArray(),
+            var reference = arcs.Select((arc, k) => (Earth.NaifId, System.Math.Min(7, arc.Length - 1), arc.Select(x => x.Epoch.ToTdb().TimeSpanFromJ2000().TotalSeconds).ToArray(),
                 arc.SelectMany(x => new[] { x.Position.X * 1e-3, x.Position.Y * 1e-3, x.Position.Z * 1e-3, x.Velocity.X * 1e-3, x.Velocity.Y * 1e-3, x.Velocity.Z * 1e-3 }).ToArray(),
                 $"Seg{k + 1}")).ToList();
             var spkw09 = Path.Combine(directory, "s.spkw09.bsp");
@@ -553,7 +553,7 @@ public class PropagatedEphemerisTests
             // and the data of the segments do not
             var segments = CspiceDirect.ReadSegments(file.FullName);
             Assert.Equal(60, segments.Count);
-            var reference = arcs.Select((arc, k) => (Earth.NaifId, System.Math.Min(7, arc.Length - 1), arc.Select(x => x.Epoch.ToTDB().TimeSpanFromJ2000().TotalSeconds).ToArray(),
+            var reference = arcs.Select((arc, k) => (Earth.NaifId, System.Math.Min(7, arc.Length - 1), arc.Select(x => x.Epoch.ToTdb().TimeSpanFromJ2000().TotalSeconds).ToArray(),
                 arc.SelectMany(x => new[] { x.Position.X * 1e-3, x.Position.Y * 1e-3, x.Position.Z * 1e-3, x.Velocity.X * 1e-3, x.Velocity.Y * 1e-3, x.Velocity.Z * 1e-3 }).ToArray(),
                 $"Seg{k + 1}")).ToList();
             var spkw09 = Path.Combine(directory.FullName, "sixty.spkw09.bsp");

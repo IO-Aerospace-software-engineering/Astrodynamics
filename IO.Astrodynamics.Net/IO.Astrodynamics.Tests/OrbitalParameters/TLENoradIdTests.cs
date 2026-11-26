@@ -124,7 +124,7 @@ public class TLENoradIdTests
     {
         var ex = Assert.Throws<ArgumentOutOfRangeException>(
             () => Tle.Create(MeanElements(), "TEST SAT", 25544, "98067A", revolutions));
-        Assert.Equal("revolutionsAtEpoch", ex.ParamName);
+        Assert.Equal("revolutionNumberAtEpoch", ex.ParamName);
     }
 
     [Theory]
@@ -236,7 +236,7 @@ public class TLENoradIdTests
             "TEST SAT", "1998-067A", Epoch.DateTime,
             meanMotion: 15.49309423, eccentricity: 0.0000493, inclination: 51.6423,
             raan: 353.0312, argOfPericenter: 320.8755, meanAnomaly: 39.2360,
-            bstar: 0.0001027, meanMotionDot: 0.00016717, meanMotionDDot: 0.0,
+            bStar: 0.0001027, meanMotionDot: 0.00016717, meanMotionDDot: 0.0,
             noradCatalogId: noradCatalogId, elementSetNumber: 999, revolutionNumber: 25703);
 
         var tle = omm.ToTle();
@@ -256,7 +256,7 @@ public class TLENoradIdTests
             "TEST SAT", "1998-067A", Epoch.DateTime,
             meanMotion: 15.49309423, eccentricity: 0.0000493, inclination: 51.6423,
             raan: 353.0312, argOfPericenter: 320.8755, meanAnomaly: 39.2360,
-            bstar: 0.0001027, meanMotionDot: 0.00016717, meanMotionDDot: 0.0,
+            bStar: 0.0001027, meanMotionDot: 0.00016717, meanMotionDDot: 0.0,
             noradCatalogId: noradCatalogId, elementSetNumber: 999, revolutionNumber: 25703);
 
         var reconverted = omm.ToTle().ToOmm();
@@ -273,7 +273,7 @@ public class TLENoradIdTests
             "TEST SAT", "1998-067A", Epoch.DateTime,
             meanMotion: 15.49309423, eccentricity: 0.0000493, inclination: 51.6423,
             raan: 353.0312, argOfPericenter: 320.8755, meanAnomaly: 39.2360,
-            bstar: 0.0001027, meanMotionDot: 0.00016717, meanMotionDDot: 0.0,
+            bStar: 0.0001027, meanMotionDot: 0.00016717, meanMotionDDot: 0.0,
             noradCatalogId: noradCatalogId, elementSetNumber: 999, revolutionNumber: 25703);
 
         var ex = Assert.Throws<InvalidOperationException>(() => omm.ToTle());
@@ -287,7 +287,7 @@ public class TLENoradIdTests
             "TEST SAT", "1998-067A", Epoch.DateTime,
             meanMotion: 15.49309423, eccentricity: 0.0000493, inclination: 51.6423,
             raan: 353.0312, argOfPericenter: 320.8755, meanAnomaly: 39.2360,
-            bstar: 0.0001027, meanMotionDot: 0.00016717, meanMotionDDot: 0.0,
+            bStar: 0.0001027, meanMotionDot: 0.00016717, meanMotionDDot: 0.0,
             noradCatalogId: 25544, elementSetNumber: 999, revolutionNumber: 123456);
 
         Assert.Throws<InvalidOperationException>(() => omm.ToTle());
@@ -300,7 +300,7 @@ public class TLENoradIdTests
             "TEST SAT", "1998-067A", Epoch.DateTime,
             meanMotion: 15.49309423, eccentricity: 0.0000493, inclination: 51.6423,
             raan: 353.0312, argOfPericenter: 320.8755, meanAnomaly: 39.2360,
-            bstar: 0.0001027, meanMotionDot: 0.00016717, meanMotionDDot: 0.0,
+            bStar: 0.0001027, meanMotionDot: 0.00016717, meanMotionDDot: 0.0,
             noradCatalogId: 25544, elementSetNumber: 999, revolutionNumber: 70000);
 
         var tle = omm.ToTle();

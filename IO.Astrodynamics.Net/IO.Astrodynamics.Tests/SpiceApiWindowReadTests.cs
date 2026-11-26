@@ -22,10 +22,10 @@ namespace IO.Astrodynamics.Tests;
 public partial class SpiceApiTest
 {
     // 2026-04-01 00:00:00 TDB, the start of the measurement of #563
-    private static readonly TimeSystem.Time WindowReadStart = TimeSystem.Time.CreateTDB(828273600.0);
+    private static readonly TimeSystem.Time WindowReadStart = TimeSystem.Time.CreateTdb(828273600.0);
 
     // The PHSRM CK of the tests, within its coverage (ReadOrientationFromExternalCKKernel)
-    private static readonly TimeSystem.Time PhsrmStart = TimeSystem.Time.CreateTDB(374100000.0);
+    private static readonly TimeSystem.Time PhsrmStart = TimeSystem.Time.CreateTdb(374100000.0);
 
     [Theory]
     [InlineData(600.0, 0.1, 6001)]
@@ -102,7 +102,7 @@ public partial class SpiceApiTest
         {
             var epoch = start + stepSize * i;
             LabelAssert.Equal(epoch, states[i].Epoch);
-            double et = epoch.ToTDB().TimeSpanFromJ2000().TotalSeconds;
+            double et = epoch.ToTdb().TimeSpanFromJ2000().TotalSeconds;
             double spiceEt = CspiceDirect.Str2et(epoch.DateTime.ToString("yyyy-MM-ddTHH:mm:ss.fffffff", System.Globalization.CultureInfo.InvariantCulture));
             worstEt = System.Math.Max(worstEt, System.Math.Abs(et - spiceEt));
             var spkezr = CspiceDirect.Spkezr("301", et, "J2000", "NONE", "399");
@@ -267,7 +267,7 @@ public partial class SpiceApiTest
             for (int i = 0; i < records.Length; i++)
             {
                 var epoch = start + stepSize * i;
-                worst = System.Math.Max(worst, System.Math.Abs((records[i].Epoch - epoch.ToTDB()).TotalSeconds));
+                worst = System.Math.Max(worst, System.Math.Abs((records[i].Epoch - epoch.ToTdb()).TotalSeconds));
                 var single = SpiceApi.Instance.ReadOrientation(new Window(epoch, epoch), -555, tolerance, Frames.Frame.ICRF, stepSize).Single();
                 LabelAssert.Equal(single.Epoch, records[i].Epoch);
                 Assert.Equal(single.Rotation, records[i].Rotation);
@@ -311,7 +311,7 @@ public partial class SpiceApiTest
                 var reference = CspiceDirect.Ckgpav(-555, CspiceDirect.Sce2c(-555, et), toleranceTicks, "J2000");
                 Assert.NotNull(reference);
                 var (cmat, av, recordEt) = reference.Value;
-                LabelAssert.Equal(TimeSystem.Time.CreateTDB(recordEt), records[i].Epoch);
+                LabelAssert.Equal(TimeSystem.Time.CreateTdb(recordEt), records[i].Epoch);
                 worstEpoch = System.Math.Max(worstEpoch, System.Math.Abs((records[i].Epoch - epoch).TotalSeconds));
                 Assert.Equal(new IO.Astrodynamics.Math.Vector3(av[0], av[1], av[2]), records[i].AngularVelocity);
                 for (int axis = 0; axis < 3; axis++)

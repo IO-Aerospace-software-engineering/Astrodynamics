@@ -479,7 +479,7 @@ public class PropagatedArcsTests
         {
             var arc = arcs[k];
             int n = arc.Length;
-            var epochs = arc.Select(x => x.Epoch.ToTDB().TimeSpanFromJ2000().TotalSeconds).ToArray();
+            var epochs = arc.Select(x => x.Epoch.ToTdb().TimeSpanFromJ2000().TotalSeconds).ToArray();
             var states = arc.SelectMany(x => new[] { x.Position.X * 1e-3, x.Position.Y * 1e-3, x.Position.Z * 1e-3, x.Velocity.X * 1e-3, x.Velocity.Y * 1e-3, x.Velocity.Z * 1e-3 })
                 .ToArray();
             int degree = System.Math.Min(7, n - 1);
@@ -670,9 +670,9 @@ public class PropagatedArcsTests
             if (chain4)
             {
                 // The chain of ScenarioTests.PropagateSpacecraft, its orbit, its bodies and its window
-                var initialEpoch = Time.CreateUTC(667915269.18539762).ToTDB();
-                start = Time.CreateUTC(668085555.829810).ToTDB();
-                window = new Window(start, Time.CreateUTC(668174400.000000).ToTDB());
+                var initialEpoch = Time.CreateUtc(667915269.18539762).ToTdb();
+                start = Time.CreateUtc(668085555.829810).ToTdb();
+                window = new Window(start, Time.CreateUtc(668174400.000000).ToTdb());
                 center = new CelestialBody(PlanetsAndMoons.EARTH, Frame.ICRF, initialEpoch);
                 bodies = [new CelestialBody(PlanetsAndMoons.MOON, Frame.ICRF, initialEpoch), center, new CelestialBody(Stars.Sun, Frame.ICRF, initialEpoch)];
                 orbit = new StateVector(new Vector3(5056554.1874925727, 4395595.4942363985, 0.0), new Vector3(-3708.6305608890916, 4266.2914313011433, 6736.8538488755494),

@@ -65,7 +65,7 @@ var lro = new Spacecraft(naifId: -85, name: "LRO",
 
 | Parameter | Default | Description |
 |-----------|---------|-------------|
-| `epoch` | `Time.J2000TDB` | Epoch for initial state lookup |
+| `epoch` | `Time.J2000Tdb` | Epoch for initial state lookup |
 | `mass` | `0.0` | Dry mass (kg) |
 | `maxOperatingMass` | `double.MaxValue` | Maximum operating mass (kg) |
 | `clock` | Auto-created | A new `Clock` named `"{name}_CLK"`, 256 ticks per second (as before 11.0.0) |
@@ -99,7 +99,7 @@ reads the frame of its own id.
 | `MaxOperatingMass` | Maximum operating mass (kg): informational, finite and at least the dry mass, checked against the dry mass only (`MaximumOperatingMass` before 11.0.0) |
 | `SectionalArea` | Cross-sectional area for drag and SRP (m2): finite and above 0 |
 | `DragCoefficient` | Cd (default 2.2): finite and not negative |
-| `SolarRadiationCoeff` | Cr (default 1.0): typically 1.0 to 2.0; finite and not negative |
+| `SolarRadiationCoefficient` | Cr (default 1.0): typically 1.0 to 2.0; finite and not negative |
 | `CosparId` | COSPAR international designator |
 | `HardBodyRadius` | Hard-body radius for conjunction assessment (m): finite and not negative, 0 (the default) for none, both constructors throwing `ArgumentOutOfRangeException` otherwise; the radius of the spacecraft as a secondary object too, an option of the analysis that gives another value throwing ([#683](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/683), [Conjunction Assessment](conjunction-assessment.md#conjunctionassessment-methods)) |
 | `BodyFront` / `BodyRight` / `BodyUp` | Instance body axes (override static defaults) |
@@ -143,7 +143,7 @@ Instance-level overrides can be set via constructor parameters (`bodyFront`, `bo
 | `GetTotalMass()` | Total mass including fuel |
 | `GetInitialFuel()` | The fuel of the spacecraft's own tanks at the start of a run, the sum of their initial quantities, the child's tanks aside (decision 60 of #668, decided by S. Guillet, 2026-11-23; `GetTotalFuel` before 11.0.0, the same value) |
 | `GetRemainingFuel()` | The fuel left in the spacecraft's own tanks, the sum of their quantities: what the last run left |
-| `GetTotalISP()`, `GetTotalFuelFlow()` | The specific impulse of the engines fired together (Σ thrust / g0 / Σ fuel flow) and their total fuel flow, over every engine, whatever its tank holds: an engine on an empty tank counts, so engines of 300 s at 10 kg/s and 200 s at 30 kg/s give 225 s whatever the second tank holds ([#801](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/801) part 1, decision 60 of #668; before lot L5b, the engines whose tank held fuel at the start of a run, which left out the engine of a tank of NaN quantity, refused since [#800](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/800)); `GetTotalISP` is NaN (0 / 0) and `GetTotalFuelFlow` 0 without an engine |
+| `GetTotalIsp()`, `GetTotalFuelFlow()` | The specific impulse of the engines fired together (Σ thrust / g0 / Σ fuel flow) and their total fuel flow, over every engine, whatever its tank holds: an engine on an empty tank counts, so engines of 300 s at 10 kg/s and 200 s at 30 kg/s give 225 s whatever the second tank holds ([#801](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/801) part 1, decision 60 of #668; before lot L5b, the engines whose tank held fuel at the start of a run, which left out the engine of a tank of NaN quantity, refused since [#800](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/800)); `GetTotalIsp` is NaN (0 / 0) and `GetTotalFuelFlow` 0 without an engine |
 | `ExecutedManeuvers` | The maneuvers the last run executed, attitudes included, in execution order: a new read-only list at each run, empty at the re-arm and replaced by a new list at each maneuver the run executes, so a list once read never changes (decision 58 of #668); the definitions, whose values are those of their last run: the stable values of a run are its records, `PropagationSolution.Maneuvers` |
 | `SetManeuvers(params Maneuver[])` | Set the maneuver plan, in order, each maneuver linked to the next, the one way to link a plan: a second call replaces the first, no maneuver clears it, and nothing is added to `ExecutedManeuvers` (#584); it claims each maneuver for the spacecraft and throws `ArgumentException` (`maneuvers`) for a maneuver of another spacecraft's plan, a maneuver listed twice, an impulse given an engine that is not one of its `Engines` (added with `AddEngine`, by reference, decision 92) or whose tank is not the spacecraft's (an impulse given none takes the spacecraft's only engine at the run, decision 61), an attitude that points an instrument of another spacecraft (by reference, [#797](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/797), decision 66 of #668; the run re-checks it with `InvalidOperationException`) or a target orbit in another frame, so the tanks, engines, instruments and initial orbit come first; a frame changed after it throws `ArgumentException` (`spacecraft`) from a propagator built after the change (`Propagate`, a scenario, a batch; decision 94) and `InvalidOperationException` at the `Propagate` of one built before it ([Maneuver Plan](impulse-maneuvers.md#maneuver-plan); decisions 45 to 47 of #668, decided by S. Guillet, 2026-11-23: SetStandbyManeuver, its minimum epoch now the maneuver's own, and Maneuver.SetNextManeuver removed); the plan is not changed during a run on the spacecraft (decision 96 of #668, decided by S. Guillet, 2026-11-24: a call during a run mixes the two plans, `ExecutedManeuvers` reading m1, m1 for the plan [m1, m2] set again mid-run; the run guard of [#793](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/793), after lot L5, will make it throw `InvalidOperationException` while a run holds the spacecraft) |
 | `Maneuvers` | The plan, as `SetManeuvers` set it, whatever a run executed; empty for none |
@@ -335,14 +335,14 @@ Linux x64. The SPK against it is the resolution of the ET doubles (1.2e-7 s) tim
 
 `Spacecraft.Frame` holds the attitude record of a managed spacecraft: the rotation from the spacecraft frame to ICRF at
 each epoch, `vectorIcrf = vectorInSpacecraft.Rotate(q)`, labelled with the spacecraft frame, its source, as
-`GetStateOrientationToICRF` returns it.
+`GetStateOrientationToIcrf` returns it.
 
 - **What fills it.** The propagation only, from its attitude timeline ([Attitudes](attitudes.md#the-attitude-timeline)):
   the identity of ICRF at the start, which an attitude activated there replaces; each activation at its epoch (an
   attitude law executed on the state of the solution there, a law resumed after an impulse, the attitude of an impulse,
   its front along ΔV, at the opening of its thrust window); the samples of each law at every output epoch of its
   interval; and the latest attitude at the end of the window. Every attitude is computed
-  on the state in ICRF ([Attitudes](attitudes.md#frames-and-interpolation)). `AddStateOrientationToICRF` adds a discrete
+  on the state in ICRF ([Attitudes](attitudes.md#frames-and-interpolation)). `AddStateOrientationToIcrf` adds a discrete
   attitude, labelled with the spacecraft frame (`ArgumentException` otherwise); it replaces an entry at the same epoch.
   A read never adds an entry, and reads before, during or after a propagation leave the record and the CK unchanged
   ([#523](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/523)).
@@ -359,19 +359,19 @@ each epoch, `vectorIcrf = vectorInSpacecraft.Rotate(q)`, labelled with the space
   start to it (6.0e-7 s at S + 3 400 s in the tests, about 1.5e-5 s a day later): one epoch with the output sample while
   that stays under 2 µs, two entries beyond.
 - **Outside the record** the first or the last entry holds; a spacecraft never propagated has the identity of ICRF, which
-  `Frame.GetStateOrientationToICRF` and getters such as `GetBoresightInICRFFrame` return, but which the field-of-view
+  `Frame.GetStateOrientationToIcrf` and getters such as `GetBoresightInIcrfFrame` return, but which the field-of-view
   search does not take for an attitude: it throws ([Field-of-view search](#field-of-view-search), [#682](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/682)). An
   ephemeris read in the frame of a managed spacecraft is rotated by its record once the record holds an entry; with an
   empty record the frame is read by name in SPICE, as before 11.0.0, which reads the frame kernel and the CK of that id
   when they are loaded and throws SPICE(UNKNOWNFRAME) otherwise ([Frames](frames.md)).
 - **The angular velocity** is that of the CK: at each entry the mean of the rates of the interpolated intervals on either
   side, linear between two samples of a law. Over a hold it is zero between discrete entries; after a sample of a law
-  that no lead follows (an attitude added by `AddStateOrientationToICRF` after a propagation, or a lead whose change was
+  that no lead follows (an attitude added by `AddStateOrientationToIcrf` after a propagation, or a lead whose change was
   replaced), it ramps linearly from the law's rate at that sample (about 1.1e-3 rad/s for a nadir attitude in LEO) to
   zero 1 µs before the next entry, the CK's own model. It is returned in the convention of the frames
   ([Frames](frames.md#angular-velocity)): ICRF relative to the spacecraft, in the spacecraft frame. The entries of
-  `GetStateOrientationsToICRF` and `GetLatestStateOrientationToICRF` carry the rate that `GetStateOrientationToICRF`
-  gives at their epochs; the rate an orientation given to `AddStateOrientationToICRF` carries is not kept. A velocity
+  `GetStateOrientationsToIcrf` and `GetLatestStateOrientationToIcrf` carry the rate that `GetStateOrientationToIcrf`
+  gives at their epochs; the rate an orientation given to `AddStateOrientationToIcrf` carries is not kept. A velocity
   expressed in the spacecraft frame (`ToFrame`, `GetEphemeris`, `GetOrientation`) takes this rotation,
   v' = R v − (R ω) × r': 7.7e3 m/s for the Earth's centre seen from a nadir-pointing LEO (it was 0 before 11.0.0).
 
@@ -388,7 +388,7 @@ A kernel-backed spacecraft reads its frame kernel and its CK through SPICE at ev
   leaving the files on disk; `IsLoaded` is true until then (a user's `UnloadKernels` of the files is not tracked). It
   checks everything before it writes, creates or loads anything, with `InvalidOperationException`: a kernel-backed
   spacecraft; no stored state, no arc an SPK can write (an arc of one state), or no attitude record (a `TlePropagator`
-  run records none: give the spacecraft attitudes with `SpacecraftFrame.AddStateOrientationToICRF` after the run, and it
+  run records none: give the spacecraft attitudes with `SpacecraftFrame.AddStateOrientationToIcrf` after the run, and it
   is written); a name SPICE cannot read in a kernel variable or that is not a portable file name; a directory that is,
   or lies inside, a loaded directory (whose later load or unload would take the files), or a file it would write that
   SPICE holds, from `LoadKernels`, a live handle or a loaded meta-kernel, through a symbolic link too (decisions 80 and
@@ -440,7 +440,7 @@ A kernel-backed spacecraft reads its frame kernel and its CK through SPICE at ev
   that microsecond and the rounding of its encoded SCLK. The spacecraft clock kernel must be loaded.
   `InvalidOperationException` for a kernel-backed spacecraft or one whose attitude record is empty: never propagated
   numerically, or sampled by a `TlePropagator`, which records no attitude; its message names
-  `SpacecraftFrame.AddStateOrientationToICRF`, which gives it one (#546).
+  `SpacecraftFrame.AddStateOrientationToIcrf`, which gives it one (#546).
 - **The frame kernels** (`SpacecraftFrame.Write`, `Instrument.WriteFrame`) put the upper-cased names in kernel
   variable names, `FRAME_<SPACECRAFT>_FRAME` and `FRAME_<SPACECRAFT>_<INSTRUMENT>`, which SPICE reads with the rules of
   the Kernel Required Reading ("Variable Name Rules"): no blank, comma, parenthesis, '=' or TAB, and 32 characters at
@@ -507,7 +507,7 @@ near a 635 m/s burn (#540): regenerate them. A CK of the identity attitude from 
 
 **Not covered.** `TlePropagator`, which `Spacecraft.Propagate` does not use, records no attitude: its SPK is written (in
 J2000), its CK is not (`InvalidOperationException`), nor its set of kernels by `WriteKernels`, until the spacecraft is
-given attitudes by `SpacecraftFrame.AddStateOrientationToICRF` after the run.
+given attitudes by `SpacecraftFrame.AddStateOrientationToIcrf` after the run.
 
 ## Components
 
@@ -518,7 +518,7 @@ given attitudes by `SpacecraftFrame.AddStateOrientationToICRF` after the run.
 | `Name` | Engine name, unique among the engines of its spacecraft |
 | `Model` | Engine model identifier, informational; null when none was given |
 | `SerialNumber` | Serial number, informational; null when none was given |
-| `ISP` | Specific impulse (s): finite and above 0 |
+| `Isp` | Specific impulse (s): finite and above 0 |
 | `FuelFlow` | Fuel mass flow rate (kg/s): finite and above 0 |
 | `Thrust` | Computed thrust (N) |
 | `FuelTank` | Associated fuel tank; a maneuver on the engine is propagated with the spacecraft that holds this tank, and with no other (#676, #586) |
@@ -562,7 +562,7 @@ var tank = new FuelTank("MainTank", capacity: 1000.0, initialQuantity: 800.0,
 
 | Method | Description |
 |--------|-------------|
-| `IsInFOV(Time, ILocalizable, Aberration)` | Whether the center of the target is in the field at an epoch: the `POINT` condition of CSPICE's `fovtrg`, with the corrections of the search |
+| `IsInFov(Time, ILocalizable, Aberration)` | Whether the center of the target is in the field at an epoch: the `POINT` condition of CSPICE's `fovtrg`, with the corrections of the search |
 | `FindFieldOfViewWindows(Window, ILocalizable, FieldOfViewSearchOptions)` | The windows where the target is in the field, labelled in the scale of the search window's start: those of CSPICE's `gftfov` ([Field-of-view search](#field-of-view-search)) |
 | `GetBoresightInSpacecraftFrame()` | Transform boresight to spacecraft body frame |
 | `GetRefVectorInSpacecraftFrame()` | Transform reference vector to spacecraft body frame |
@@ -704,7 +704,7 @@ reference plane), and where the squares of its semi-axes underflow at the target
 6e-171 rad at the Moon's distance) it throws `InvalidOperationException`, the field cannot be searched
 ([#715](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/715); before, an unrelated
 `ArgumentException`, "The semi-axes of an ellipsoid must have positive lengths"). A point target at the observer,
-distance 0 (two spacecraft of the same state), has no direction: `IsInFOV` and the search of every shape throw
+distance 0 (two spacecraft of the same state), has no direction: `IsInFov` and the search of every shape throw
 `InvalidOperationException` naming the target at the observer, not the field (before 11.0.0, for a circle or an
 ellipse the same unrelated `ArgumentException`, and for a rectangle, whose point margin took the angles of the zero
 vector as 0, the target in view; the rectangle throws as the circle and the ellipse do since
@@ -754,14 +754,14 @@ ellipse are too small for its cone at the target's distance ([Tiny half-angles](
 its attitude record is empty: never propagated and with no orientation added, built from a TLE and not propagated by
 `Spacecraft.Propagate` ([#675](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/675)), or propagated by
 `TlePropagator` ([#546](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/546)); its CK cannot be written either. Propagate it, or give it its attitude,
-`spacecraft.Frame.AddStateOrientationToICRF(new StateOrientation(q, Vector3.Zero, epoch, spacecraft.Frame))`, held from
+`spacecraft.Frame.AddStateOrientationToIcrf(new StateOrientation(q, Vector3.Zero, epoch, spacecraft.Frame))`, held from
 then on ([#682](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/682); before 11.0.0 the identity of ICRF was searched). This check comes after those of the
 arguments and of the field, whose errors come first. On the CSPICE path an error of `gftfov` (a missing kernel, an
 epoch outside the coverage of the kernels) throws `InvalidOperationException` with SPICE's message (fourth round of
 [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668); before, the native layer dropped it
 and the search returned no window).
 
-`IsInFOV` is the `POINT` condition with the same field and corrections, and the same field and attitude errors
+`IsInFov` is the `POINT` condition with the same field and corrections, and the same field and attitude errors
 (`InvalidOperationException`) and target error (`ArgumentException`, the instrument's own spacecraft); the search does
 not call it, so an override does not change the search.
 
@@ -785,7 +785,7 @@ rows it bounds, rounded up at the second significant digit.
 | An impulse followed by a TRIAD attitude, a nadir attitude, the six inertial initial frames, the path of the scenario (CI run 41522747911, 2026-11-02: the variants of #515 the same on the three platforms, those of #537 on Linux only) | `gftfov` at 1 µs on the kernels the library writes | 1.2e-6 s (SSB mode); TRIAD 1.0e-6 s, nadir 4e-7 s |
 | Fields that graze the Earth's limb (a margin of slope 1.2e-6 rad/s at the contact) | `gftfov` at a step of 1 s | 2.5e-4 s |
 | A slow edge (an ellipse, slope 6.1e-4 per second, `LT+S`) | same | 4.4e-6 s |
-| `IsInFOV` on a grid of epochs more than 1 ms from an edge | `fovtrg` and `fovray` | every epoch equal |
+| `IsInFov` on a grid of epochs more than 1 ms from an edge | `fovtrg` and `fovray` | every epoch equal |
 
 Off the grazing and slow edges, the differences are the rounding of the light-time corrected epochs to a double ET on
 both sides (up to 1.8 mm on the Earth's position). At a grazing contact the margin changes slowly, and the same

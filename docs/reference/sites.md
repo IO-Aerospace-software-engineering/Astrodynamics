@@ -217,7 +217,7 @@ the `+S` corrections the stellar aberration of `stelab` (`stlabx` for transmissi
 ([#489](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/489); the reference-body path of
 [Celestial bodies](celestial-bodies.md)). It agrees with `spkcpt_c` to 2.4e-5 m and 3.7e-9 m/s from the Moon, the Earth
 and LRO, the sites at the poles and on the equator included, and to 6.8e-5 m from the Sun and the Mars barycenter.
-Without correction the state is unchanged, bit for bit. The window searches, `SubObserverPoint` and `IsInFOV` of such a
+Without correction the state is unchanged, bit for bit. The window searches, `SubObserverPoint` and `IsInFov` of such a
 site read it this way: the 400000 km window of the example below, with `LT`, is within 1e-7 s of the window of
 `spkcpt_c`, and so are its coordinate windows seen from the Moon with `LT` (its range and declination in J2000, its
 declination in the frame of another site given by its coordinates). A copy of a site of the kernels built from its

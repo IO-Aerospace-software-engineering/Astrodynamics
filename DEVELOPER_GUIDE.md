@@ -52,10 +52,10 @@ IO.Astrodynamics uses the **International System of Units (SI)** throughout:
 Defined in `IO.Astrodynamics.Constants`:
 
 ```csharp
-public const double G = 6.67430e-11;           // Gravitational constant (m³/kg/s²)
+public const double GravitationalConstant = 6.67430e-11;           // Gravitational constant (m³/kg/s²)
 public const double AU = 149597870700.0;       // Astronomical Unit (m)
-public const double C = 299792458.0;           // Speed of light (m/s)
-public const double g0 = 9.80665;              // Standard gravity (m/s²)
+public const double SpeedOfLight = 299792458.0;           // Speed of light (m/s)
+public const double StandardGravity = 9.80665;              // Standard gravity (m/s²)
 public const double Deg2Rad = Math.PI / 180.0; // Degrees to radians
 public const double Rad2Deg = 180.0 / Math.PI; // Radians to degrees
 ```
@@ -243,11 +243,11 @@ argument (D3 of #668).
 | `Parse(string s)` | One grammar (`yyyy-MM-dd` or `yyyy-DDD`, an optional time, then `Z`, `±hh:mm` or a tag `UTC`, `TT`, `TDB`, `TAI`, `GPS`; or `JD n TAG`); an untagged string throws `FormatException` unless `Parse(s, scale)` names its scale, and a tag of another scale than `scale` throws; `TryParse` returns false instead and never throws |
 | `FromDayOfYear(int year, int dayOfYear, double seconds, TimeScale scale)` | Create from a day of year and the seconds of that day |
 | `Create(double secondsFromJ2000, TimeScale scale)` | Create from seconds since J2000 |
-| `CreateTDB(double secondsFromJ2000)` | Create TDB time from J2000 seconds |
-| `CreateUTC(double secondsFromJ2000)` | Create UTC time from J2000 seconds |
-| `ToTDB()` | Convert to TDB |
-| `ToUTC()` | Convert to UTC |
-| `ToTAI()` | Convert to TAI |
+| `CreateTdb(double secondsFromJ2000)` | Create TDB time from J2000 seconds |
+| `CreateUtc(double secondsFromJ2000)` | Create UTC time from J2000 seconds |
+| `ToTdb()` | Convert to TDB |
+| `ToUtc()` | Convert to UTC |
+| `ToTai()` | Convert to TAI |
 | `ToTT()` | Convert to TT |
 | `ToJulianDate()` | Get Julian Date |
 | `TimeSpanFromJ2000()` | Get TimeSpan from J2000 epoch |
@@ -255,18 +255,18 @@ argument (D3 of #668).
 | `AddDays(double days)` | Add days, to the nearest tick (#637); a non-finite argument throws `ArgumentOutOfRangeException` (#680) |
 | `AddHours(double hours)` | Add hours, to the nearest tick (#637); a non-finite argument throws `ArgumentOutOfRangeException` (#680) |
 | `AddSeconds(double seconds)` | Add seconds, to the nearest tick (#625) |
-| `==`, `Equals`, `CompareTo` | The same instant, whatever the scales: equality follows `CompareTo`, by the ticks converted to TAI, and equal times hash alike (#512), so `utc == utc.ToTDB()`; the default time is 0001-01-01 TDB; `EqualsExact` (and `Time.ExactComparer`) tells two labels apart, the calendar and the scale (a test of a label: `LabelAssert`, not `Assert.Equal`) |
+| `==`, `Equals`, `CompareTo` | The same instant, whatever the scales: equality follows `CompareTo`, by the ticks converted to TAI, and equal times hash alike (#512), so `utc == utc.ToTdb()`; the default time is 0001-01-01 TDB; `EqualsExact` (and `Time.ExactComparer`) tells two labels apart, the calendar and the scale (a test of a label: `LabelAssert`, not `Assert.Equal`) |
 | `ToString()`, `ToString(string format, IFormatProvider provider)` | The round-trip form, then the tag (`Z`, ` TDB`, ` TT`, ` TAI`, ` GPS`), which `Parse` reads back; another format is a `DateTime` format followed by the tag |
 
 ```csharp
 // Create times
 var t1 = new Time(2024, 6, 21, 12, 0, 0, TimeScale.TDB);
 var t2 = Time.Parse("2024-06-21T12:00:00.000 UTC");
-var t3 = Time.CreateTDB(788400000.0);  // Seconds from J2000
+var t3 = Time.CreateTdb(788400000.0);  // Seconds from J2000
 
 // Convert between time scales
-var tdb = t1.ToTDB();
-var utc = tdb.ToUTC();
+var tdb = t1.ToTdb();
+var utc = tdb.ToUtc();
 
 // Arithmetic
 var t4 = t1.AddDays(1.0);
@@ -338,10 +338,10 @@ Represents a natural celestial body (planet, moon, star).
 | `GetEphemeris(Time epoch, ILocalizable observer, Frame frame, Aberration aberration)` | Get state at epoch |
 | `GetEphemeris(Window window, ILocalizable observer, Frame frame, Aberration aberration, TimeSpan step)` | Get states over window: every step from the start, in the window's calendar, up to its end (across a leap second the end bounds them, #682) |
 | `GetOrientation(Frame referenceFrame, Time epoch)` | Get body orientation |
-| `SideralRotationPeriod(Time epoch)` | Get sidereal rotation period |
+| `SiderealRotationPeriod(Time epoch)` | Get sidereal rotation period |
 | `TrueSolarDay(Time epoch)` | Get true solar day duration |
 | `GeosynchronousOrbit(double longitude, double latitude, Time epoch)` | Compute geosynchronous orbit |
-| `HelioSynchronousOrbit(double sma, double ecc, Time descendingNodeEpoch)` | Compute helio-synchronous orbit |
+| `SunSynchronousOrbit(double sma, double ecc, Time descendingNodeEpoch)` | Compute helio-synchronous orbit |
 | `FindDistanceWindows(...)` | Find the windows of the distance of a target seen from this item, the observer (`WindowSearches`) |
 | `FindOccultationWindows(...)` | Find occultation/eclipse windows seen from this item, the observer (`WindowSearches`) |
 | `AngularSeparation(Time epoch, ILocalizable target1, ILocalizable target2, Aberration aberration)` | Compute angular separation |
@@ -354,7 +354,7 @@ var moon = new CelestialBody(PlanetsAndMoons.MOON);
 var sun = new CelestialBody(Stars.Sun);
 
 // Get ephemeris
-var state = earth.GetEphemeris(Time.J2000TDB, sun, Frame.ICRF, Aberration.None);
+var state = earth.GetEphemeris(Time.J2000Tdb, sun, Frame.ICRF, Aberration.None);
 var sv = state.ToStateVector();
 
 // Compute geosynchronous orbit
@@ -471,7 +471,7 @@ Console.WriteLine($"Period: {sv.Period().TotalMinutes:F2} min");
 var kep = sv.ToKeplerianElements();
 
 // Transform to different frame
-var svEcliptic = sv.ToFrame(Frame.ECLIPTIC_J2000);
+var svEcliptic = sv.ToFrame(Frame.ECLIPJ2000);
 ```
 
 #### KeplerianElements
@@ -541,7 +541,7 @@ var laterKep = kep.AtEpoch(epoch.AddDays(1));
 // Create mean Keplerian elements from an OMM: its CCSDS units (rev/day, degrees) in, SI out
 var omm = Omm.CreateForTle("ISS (ZARYA)", "1998-067A", new DateTime(2021, 1, 20, 12, 50, 13, DateTimeKind.Utc),
     meanMotion: 15.49309423, eccentricity: 0.0000493, inclination: 51.6423, raan: 353.0312,
-    argOfPericenter: 320.8755, meanAnomaly: 39.2360, bstar: 0.00010270, meanMotionDot: 0.00008358,
+    argOfPericenter: 320.8755, meanAnomaly: 39.2360, bStar: 0.00010270, meanMotionDot: 0.00008358,
     meanMotionDDot: 0.0, noradCatalogId: 25544);
 var meanKep = omm.ToMeanElements();   // about the Earth (CENTER_NAME), in TEME (REF_FRAME)
 
@@ -619,9 +619,9 @@ Two-Line Element set for Earth-orbiting objects. TLE stores **mean** orbital ele
 | `MeanAscendingNode` | Mean RAAN (rad) |
 | `MeanArgumentOfPeriapsis` | Mean argument of periapsis (rad) |
 | `MeanMeanAnomaly` | Mean mean anomaly (rad) |
-| `BallisticCoefficient` | B* drag coefficient |
-| `FirstDerivationMeanMotion` | First derivative of mean motion |
-| `SecondDerivativeMeanMotion` | Second derivative of mean motion |
+| `BStar` | B* drag coefficient |
+| `MeanMotionDot` | First derivative of mean motion |
+| `MeanMotionDDot` | Second derivative of mean motion |
 
 | Method | Description |
 |--------|-------------|
@@ -752,7 +752,7 @@ var newOmm = Omm.CreateForTle(
     raan: 100.0,                // degrees
     argOfPericenter: 90.0,      // degrees
     meanAnomaly: 0.0,           // degrees
-    bstar: 0.0001,
+    bStar: 0.0001,
     meanMotionDot: 0.00001,
     meanMotionDDot: 0.0
 );
@@ -1114,7 +1114,7 @@ Reference frame for spatial transformations.
 | Static Properties | Description |
 |------------------|-------------|
 | `Frame.ICRF` | International Celestial Reference Frame (J2000) |
-| `Frame.ECLIPTIC_J2000` | Ecliptic plane at J2000 |
+| `Frame.ECLIPJ2000` | Ecliptic plane at J2000 |
 | `Frame.TEME` | True Equator Mean Equinox (for TLE) |
 
 | Constructor | Description |
@@ -1124,23 +1124,23 @@ Reference frame for spatial transformations.
 | Method | Description |
 |--------|-------------|
 | `ToFrame(Frame target, Time epoch)` | Get transformation to another frame |
-| `GetStateOrientationToICRF(Time epoch)` | Get orientation relative to ICRF |
+| `GetStateOrientationToIcrf(Time epoch)` | Get orientation relative to ICRF |
 
 ```csharp
 // Use predefined frames
 var icrf = Frame.ICRF;
-var ecliptic = Frame.ECLIPTIC_J2000;
+var ecliptic = Frame.ECLIPJ2000;
 
 // Create body-fixed frame
 var earthFrame = new Frame("IAU_EARTH");
 
 // Transform state vector
 var svICRF = new StateVector(new Vector3(6800000.0, 0.0, 0.0), new Vector3(0.0, 7656.2, 0.0),
-    PlanetsAndMoons.EARTH_BODY, Time.J2000TDB, icrf);
+    PlanetsAndMoons.EARTH_BODY, Time.J2000Tdb, icrf);
 var svEcliptic = svICRF.ToFrame(ecliptic);
 
 // Get frame transformation
-var rotation = icrf.ToFrame(ecliptic, Time.J2000TDB);
+var rotation = icrf.ToFrame(ecliptic, Time.J2000Tdb);
 ```
 
 ---
@@ -1350,7 +1350,7 @@ Represents a spacecraft with components.
 | `Clock` | Onboard clock, of this spacecraft's NAIF id alone: a clock attached to a spacecraft of another id is rejected (#676) |
 | `SectionalArea` | Mean cross-sectional area for drag and SRP (m²) |
 | `DragCoefficient` | Drag coefficient Cd (default 2.2) |
-| `SolarRadiationCoeff` | Solar radiation pressure coefficient Cr (default 1.0; typically 1.0 to 2.0, finite and not negative) |
+| `SolarRadiationCoefficient` | Solar radiation pressure coefficient Cr (default 1.0; typically 1.0 to 2.0, finite and not negative) |
 | `InitialOrbitalParameters` | Initial orbit |
 | `BodyFront` | Instance body front axis (default: +Y, same as `Spacecraft.Front`) |
 | `BodyRight` | Instance body right axis (default: +X, same as `Spacecraft.Right`) |
@@ -1370,7 +1370,7 @@ Represents a spacecraft with components.
 | `GetTotalMass()` | Get total mass including fuel |
 | `GetInitialFuel()` | The fuel of the spacecraft's own tanks at the start of a run (`GetTotalFuel` before 11.0.0, decision 60 of #668) |
 | `GetRemainingFuel()` | The fuel left in the spacecraft's own tanks |
-| `GetTotalISP()` | The specific impulse of every engine fired together (Σ thrust / g0 / Σ fuel flow), whatever their tanks hold; NaN without an engine (decision 60 of #668, #801) |
+| `GetTotalIsp()` | The specific impulse of every engine fired together (Σ thrust / g0 / Σ fuel flow), whatever their tanks hold; NaN without an engine (decision 60 of #668, #801) |
 | `GetTotalFuelFlow()` | The fuel flow of every engine, whatever their tanks hold; 0 without an engine |
 | `SetManeuvers(params Maneuver[] maneuvers)` | Set the maneuver plan, in order, which every propagation runs from its first maneuver: the one way to link it (a second call replaces the first, no maneuver clears it, #584); it claims each maneuver for the spacecraft, `ArgumentException` for a maneuver of another spacecraft's plan, a repeated one, an impulse given an engine whose tank is not the spacecraft's or a target orbit in another frame (decisions 45 and 46 of #668); an impulse given no engine takes the spacecraft's only one, and a maneuver given no centre the observer of the initial orbit, at the run (decisions 61 and 64) |
 | `Maneuvers` | The plan, as `SetManeuvers` set it |
@@ -1443,7 +1443,7 @@ Propulsion engine.
 | `Name` | Engine name |
 | `Model` | Engine model |
 | `SerialNumber` | Engine serial number |
-| `ISP` | Specific impulse (s) |
+| `Isp` | Specific impulse (s) |
 | `FuelFlow` | Fuel flow rate (kg/s) |
 | `Thrust` | Thrust force (N): ISP × g0 × fuel flow |
 | `FuelTank` | The tank the engine draws on, given to the constructor |
@@ -1471,10 +1471,10 @@ Base class for spacecraft instruments.
 
 | Method | Description |
 |--------|-------------|
-| `IsInFOV(Time epoch, ILocalizable target, Aberration aberration)` | Whether the target's center is in the field: CSPICE's `fovtrg` with `POINT`; throws for a managed spacecraft without attitude (#682) |
-| `FindFieldOfViewWindows(...)` | The windows of CSPICE's `gftfov`, labelled in the scale of the search window's start: the target as a point or as its ellipsoid, every field shape, on both paths (see `docs/reference/spacecraft.md`, "Field-of-view search"); throws for a managed spacecraft without attitude, never propagated, from a TLE or propagated by `TlePropagator`, until `AddStateOrientationToICRF` gives it one (#682) |
+| `IsInFov(Time epoch, ILocalizable target, Aberration aberration)` | Whether the target's center is in the field: CSPICE's `fovtrg` with `POINT`; throws for a managed spacecraft without attitude (#682) |
+| `FindFieldOfViewWindows(...)` | The windows of CSPICE's `gftfov`, labelled in the scale of the search window's start: the target as a point or as its ellipsoid, every field shape, on both paths (see `docs/reference/spacecraft.md`, "Field-of-view search"); throws for a managed spacecraft without attitude, never propagated, from a TLE or propagated by `TlePropagator`, until `AddStateOrientationToIcrf` gives it one (#682) |
 | `GetBoresightInSpacecraftFrame()` | Get boresight in spacecraft frame |
-| `GetBoresightInICRFFrame(Time epoch)` | Get boresight in ICRF |
+| `GetBoresightInIcrfFrame(Time epoch)` | Get boresight in ICRF |
 
 ---
 
@@ -1531,7 +1531,7 @@ Base class for impulse maneuvers. Uses industry-standard g-function event detect
 
 An attitude takes no engine (decisions 48 and 93 of #668): it orients the spacecraft whose plan holds it, so a spacecraft without a tank or an engine runs a plan of attitudes. A null centre is inferred by the run as for an impulse; in SSB mode, where it cannot be, the library's `TriadAttitude` or `InstrumentPointingToAttitude` whose targets are all library `CelestialAttitudeTarget`s takes the central body of the run, and any other law (an orbital direction, a user `IAttitudeTarget`, a user `Attitude` subclass, one of `TriadAttitude` or `InstrumentPointingToAttitude` included) requires `maneuverCenter`, the propagator constructor and `Propagate` throwing `InvalidOperationException` (decision 99 of #668, decided by S. Guillet, 2026-11-24).
 
-The preview of an attitude is `ComputeStateOrientation(StateVector)`, the rotation from the spacecraft frame to ICRF at the state, pure; `Attitude.StateOrientation` is removed: in a run, the attitude at an activation is in the attitude record (`spacecraft.Frame.GetStateOrientationToICRF(epoch)`) (decisions 50 and 52 of #668).
+The preview of an attitude is `ComputeStateOrientation(StateVector)`, the rotation from the spacecraft frame to ICRF at the state, pure; `Attitude.StateOrientation` is removed: in a run, the attitude at an activation is in the attitude record (`spacecraft.Frame.GetStateOrientationToIcrf(epoch)`) (decisions 50 and 52 of #668).
 
 The single-vector attitudes support configurable body axes via the protected `GetBodyAxis(BodyAxis)` of `Maneuver` (`enum BodyAxis` {Front, Back, Right, Left, Up, Down}), which reads the instance axes (`Spacecraft.BodyFront`, ...) of the spacecraft whose plan last held the maneuver (`SetManeuvers`), with the static axes (`Spacecraft.Front`, +Y, ...) before any plan (decisions 46, 48, 69 and 93 of #668; `GetBodyFront()` on the spacecraft of the engine's tank before 11.0.0). The TRIAD factories read `BodyDown`/`BodyFront` and `BodyFront`/`BodyUp` through the same rule (#677).
 
@@ -1691,7 +1691,7 @@ RK7(8) to the time of closest approach. See `docs/reference/covariance-propagati
 - **Third-body perturbation**: Battin's numerically stable formula for each celestial body beyond the central body, the direct difference within half the distance of the perturbing body to the central body (SSB mode near the Earth, #576).
 - **Atmospheric drag** (when `PropagationOptions.AtmosphericDrag` is true): uses the central body's atmosphere with atmosphere-relative velocity (accounts for body co-rotation): its atmospheric model, or NRLMSISE-00 at nominal space weather for an Earth built without one; another central body without a model throws `InvalidOperationException`; the other listed bodies with an atmosphere add their drag, and about the Sun (a star or barycentre observer) they give it, an Earth always having one (#674). Default Cd = 2.2 (free-molecular flow). Mass ratio is dynamic (tracks fuel consumption via `GetTotalMass()`).
 - **The central body** takes part whether or not it is listed, with the observer's models; listed bodies of one NAIF identifier, the observer's included, must have the same models (`ArgumentException` otherwise). The integrator of a force-building path must be a new instance, and the step positive (#674).
-- **Solar radiation pressure** (when `PropagationOptions.SolarRadiationPressure` is true): cannonball model with reflectivity coefficient Cr (`Spacecraft.SolarRadiationCoeff`, default 1.0). Uses continuous shadow fraction for partial/annular eclipse geometry instead of binary eclipse detection. Mass ratio is dynamic.
+- **Solar radiation pressure** (when `PropagationOptions.SolarRadiationPressure` is true): cannonball model with reflectivity coefficient Cr (`Spacecraft.SolarRadiationCoefficient`, default 1.0). Uses continuous shadow fraction for partial/annular eclipse geometry instead of binary eclipse detection. Mass ratio is dynamic.
 - **Albedo radiation pressure** (via `PropagationOptions.AlbedoRadiationPressure`): Lambertian sphere model for reflected sunlight. Requires `CelestialBody` with `albedo > 0`. Phase-angle dependent visibility function naturally zeroes on the dark side.
 - **Thermal radiation pressure** (via `PropagationOptions.ThermalRadiationPressure`): Isotropic emitter model for infrared body radiation. Requires `CelestialBody` with `thermalEffectiveTemperature > 0` and `thermalEmissivity > 0`. Always present regardless of Sun geometry or eclipse state.
 - **Ephemeris cache**: 60-second grid with 8-point Lagrange interpolation, injected into all force models to eliminate redundant SPICE calls during integration; with the orientation cache of the central body (exact SLERP, #561) it covers the span the propagation integrates, the window, and a read outside its grid reads the data provider (#626).
@@ -1797,7 +1797,7 @@ Computes the full 3D gravitational acceleration including spherical harmonic per
 
 The orientation cache of a propagation is active only on the thread that propagates (`Frame.UseOrientationCache`), never set on the shared `Frame`, so propagations sharing a central body without geopotential may run concurrently.
 
-`CelestialBody` instances *without* geopotential are safe to share across threads — two-body gravity is stateless, and the `Frame.GetStateOrientationToICRF` fallback uses a `ConcurrentDictionary` cache. Third-body perturbation bodies (Sun, Moon, etc.) that do not use geopotential can also be shared safely.
+`CelestialBody` instances *without* geopotential are safe to share across threads — two-body gravity is stateless, and the `Frame.GetStateOrientationToIcrf` fallback uses a `ConcurrentDictionary` cache. Third-body perturbation bodies (Sun, Moon, etc.) that do not use geopotential can also be shared safely.
 
 **Degree selection guidelines:**
 
@@ -2095,7 +2095,7 @@ Rotation representation.
 | `Normalize()` | Get unit quaternion of any finite non-zero quaternion; `InvalidOperationException` for the zero quaternion (#680) or a component that is not finite |
 | `Conjugate()` | Get conjugate |
 | `ToEuler()` | Convert to Euler angles |
-| `SLERP(Quaternion q, double t)` | Spherical linear interpolation of the rotations of the two quaternions, normalized first; throws for a zero or non-finite quaternion |
+| `Slerp(Quaternion q, double t)` | Spherical linear interpolation of the rotations of the two quaternions, normalized first; throws for a zero or non-finite quaternion |
 | `Lerp(Quaternion q, double t)` | Linear interpolation, normalized; throws for a zero or non-finite quaternion and for a chord through zero (q to −q at t = 0.5) |
 
 #### Matrix
@@ -2173,7 +2173,7 @@ In-memory data provider for testing.
 |--------|-------------|
 | `AddCelestialBodyInfo(params CelestialBodyInfo[] celestialBodyInfos)` | Add the information of bodies (NAIF id, name, radii, GM, frame), a `CelestialBodyInfo` since 11.0.0 (the interop struct, now internal, `IO.Astrodynamics.DTO.CelestialBody` before) |
 | `AddStateVector(int naifId, Time epoch, StateVector sv)` | Add state vector |
-| `AddStateOrientationToICRF(Frame frame, Time epoch, StateOrientation orientation)` | Add orientation; `ArgumentException` (`frame`) for ICRF, GCRF, TEME, CIRS and TIRS, which the provider defines and never reads from stored entries (#744) |
+| `AddStateOrientationToIcrf(Frame frame, Time epoch, StateOrientation orientation)` | Add orientation; `ArgumentException` (`frame`) for ICRF, GCRF, TEME, CIRS and TIRS, which the provider defines and never reads from stored entries (#744) |
 
 ```csharp
 // epoch: Time; earthState: a StateVector of the Earth
@@ -2231,9 +2231,9 @@ Light-time and stellar aberration corrections.
 |-------|-------------|
 | `None` | No correction |
 | `LT` | Light-time correction |
-| `LTS` | Light-time + stellar aberration |
+| `LtS` | Light-time + stellar aberration |
 | `CN` | Converged Newtonian light-time |
-| `CNS` | CN + stellar aberration |
+| `CnS` | CN + stellar aberration |
 | `XLT` | Transmission light-time |
 | `XCN` | Transmission converged Newtonian |
 
@@ -2330,13 +2330,13 @@ var tdbNoon = new Time(2024, 1, 1, 12, 0, 0, TimeScale.TDB);
 var utc = new Time(new DateTime(2024, 1, 1, 12, 0, 0), TimeScale.UTC);
 
 // Convert as needed
-var tdb = utc.ToTDB();
-var tai = utc.ToTAI();
+var tdb = utc.ToTdb();
+var tai = utc.ToTai();
 
 // Use TDB for dynamical calculations
 var earth = PlanetsAndMoons.EARTH_BODY;
 var sun = new CelestialBody(Stars.Sun);
-var state = earth.GetEphemeris(utc.ToTDB(), sun, Frame.ICRF, Aberration.None);
+var state = earth.GetEphemeris(utc.ToTdb(), sun, Frame.ICRF, Aberration.None);
 ```
 
 ### Reference Frame Awareness
@@ -2525,7 +2525,7 @@ var earth = PlanetsAndMoons.EARTH_BODY;
 var moon = new CelestialBody(PlanetsAndMoons.MOON);
 
 // Define departure state (LEO)
-var departureEpoch = Time.J2000TDB;
+var departureEpoch = Time.J2000Tdb;
 var departureState = new StateVector(
     new Vector3(7000000.0, 0.0, 0.0),
     new Vector3(0.0, 8000.0, 0.0),
@@ -2666,7 +2666,7 @@ var farMoonWindows = earth.FindDistanceWindows(
 Console.WriteLine($"\nMoon > 400,000 km from Earth:");
 foreach (var w in farMoonWindows.Take(5))
 {
-    Console.WriteLine($"  {w.StartDate.ToUTC()} to {w.EndDate.ToUTC()}");
+    Console.WriteLine($"  {w.StartDate.ToUtc()} to {w.EndDate.ToUtc()}");
 }
 ```
 
@@ -2738,7 +2738,7 @@ foreach (var window in visibilityWindows)
 
 // Check if a specific target is in FOV at a given time
 bool isVisible = spacecraft.Instruments.First()
-    .IsInFOV(start.AddMinutes(30), earth, Aberration.LT);
+    .IsInFov(start.AddMinutes(30), earth, Aberration.LT);
 Console.WriteLine($"Earth in FOV at T+30min: {isVisible}");
 ```
 
@@ -2805,7 +2805,7 @@ for (var t = trackStart; t < trackEnd; t = t.AddMinutes(10))
 
     if (horizontal.Elevation > 0)  // Above horizon
     {
-        Console.WriteLine($"{t.ToUTC()}: " +
+        Console.WriteLine($"{t.ToUtc()}: " +
             $"Az={horizontal.Azimuth * Constants.Rad2Deg:F1}° " +
             $"El={horizontal.Elevation * Constants.Rad2Deg:F1}° " +
             $"Range={horizontal.Range / 1000:F0} km");
@@ -2827,7 +2827,7 @@ var visibilityWindows = iss.FindDistanceWindows(
 High-fidelity propagation including gravitational effects from multiple bodies:
 
 ```csharp
-var moon = new CelestialBody(PlanetsAndMoons.MOON, Frame.ICRF, Time.J2000TDB);
+var moon = new CelestialBody(PlanetsAndMoons.MOON, Frame.ICRF, Time.J2000Tdb);
 var sun = new CelestialBody(Stars.Sun);
 
 // The Moon moves about the Earth under the attraction of both masses, so the Earth's central term is GM_Earth + GM_Moon:
@@ -2838,9 +2838,9 @@ var earthMoonField = new GeopotentialModelParameters("Data/SolarSystem/EGM2008_t
 {
     CentralTerm = GeopotentialCentralTerm.ModelGravitationalParameter
 };
-var earth = new CelestialBody(PlanetsAndMoons.EARTH, Frame.ICRF, Time.J2000TDB, earthMoonField);
+var earth = new CelestialBody(PlanetsAndMoons.EARTH, Frame.ICRF, Time.J2000Tdb, earthMoonField);
 
-var start = Time.J2000TDB;
+var start = Time.J2000Tdb;
 var end = start.AddDays(25);
 
 var mission = new Mission("DeepSpaceTest");

@@ -111,7 +111,7 @@ public class Iau2006SofaSweepTests
         {
             // Two-part Julian date, as TirsFrame does: a single double would only resolve ~40 us.
             var utc = new TimeSystem_Time(epoch.Utc, TimeScale.UTC);
-            double era = Iau2006Model.EarthRotationAngle(TimeSystem_Time.JULIAN_J2000, utc.DaysFromJ2000());
+            double era = Iau2006Model.EarthRotationAngle(TimeSystem_Time.JulianDateJ2000, utc.DaysFromJ2000());
             worst = System.Math.Max(worst, AngleDifference(era, epoch.Era));
         }
 
@@ -127,7 +127,7 @@ public class Iau2006SofaSweepTests
         foreach (var epoch in Sweep.Value)
         {
             var utc = new TimeSystem_Time(epoch.Utc, TimeScale.UTC);
-            var tirsToIcrf = Matrix.FromQuaternion(tirs.GetStateOrientationToICRF(utc).Rotation);
+            var tirsToIcrf = Matrix.FromQuaternion(tirs.GetStateOrientationToIcrf(utc).Rotation);
 
             // SOFA gives GCRS -> TIRS, which is the transpose of TIRS -> ICRF (pivot = GCRS axes).
             var sofaTerms = new double[3, 3];

@@ -106,7 +106,7 @@ public class CustomItemCenterOfMotionTests
     {
         // Arrange: LRO (-85, Data/LRO), read about the Earth by default and about the Moon when given
         TestKernels.EnsureLro();
-        var epoch = TimeSystem.Time.CreateTDB(757339200.0);
+        var epoch = TimeSystem.Time.CreateTdb(757339200.0);
 
         // Act
         var aboutEarth = new Spacecraft(-85, "LRO", epoch: epoch);

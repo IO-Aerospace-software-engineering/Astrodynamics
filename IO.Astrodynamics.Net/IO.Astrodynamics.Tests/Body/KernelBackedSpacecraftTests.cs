@@ -44,8 +44,8 @@ public class KernelBackedSpacecraftTests
     public void StarIsNotSpiceBacked()
     {
         var star = new Star(1, "TestStar", 1.989e30, "G2V", 4.83, 0.772,
-            Equatorial.FromRightAscensionDeclination(0.0, 0.0, 1.0, TimeSystem.Time.J2000TDB),
-            0.0, 0.0, 0.0, 0.0, 0.0, 0.0, TimeSystem.Time.J2000TDB);
+            Equatorial.FromRightAscensionDeclination(0.0, 0.0, 1.0, TimeSystem.Time.J2000Tdb),
+            0.0, 0.0, 0.0, 0.0, 0.0, 0.0, TimeSystem.Time.J2000Tdb);
         Assert.False(star.IsSpiceBacked);
     }
 
@@ -88,7 +88,7 @@ public class KernelBackedSpacecraftTests
             SpiceApi.Instance.LoadKernels(spkFile);
 
             var sc = new Spacecraft(-9901, "KernelSC_Construct",
-                epoch: TimeSystem.Time.J2000TDB);
+                epoch: TimeSystem.Time.J2000Tdb);
 
             Assert.True(sc.IsSpiceBacked);
             Assert.False(sc.IsPropagated);
@@ -114,7 +114,7 @@ public class KernelBackedSpacecraftTests
             SpiceApi.Instance.LoadKernels(spkFile);
 
             var sc = new Spacecraft(-9902, "KernelSC_SpiceBacked",
-                epoch: TimeSystem.Time.J2000TDB);
+                epoch: TimeSystem.Time.J2000Tdb);
 
             Assert.True(sc.IsSpiceBacked);
         }
@@ -134,9 +134,9 @@ public class KernelBackedSpacecraftTests
             SpiceApi.Instance.LoadKernels(spkFile);
 
             var sc = new Spacecraft(-9903, "KernelSC_Eph",
-                epoch: TimeSystem.Time.J2000TDB);
+                epoch: TimeSystem.Time.J2000Tdb);
 
-            var epoch = TimeSystem.Time.J2000TDB.Add(TimeSpan.FromSeconds(5));
+            var epoch = TimeSystem.Time.J2000Tdb.Add(TimeSpan.FromSeconds(5));
             var earth = TestHelpers.EarthAtJ2000;
 
             // Get ephemeris via kernel-backed SC
@@ -169,9 +169,9 @@ public class KernelBackedSpacecraftTests
             SpiceApi.Instance.LoadKernels(spkFile);
 
             var sc = new Spacecraft(-9904, "KernelSC_GeoState",
-                epoch: TimeSystem.Time.J2000TDB);
+                epoch: TimeSystem.Time.J2000Tdb);
 
-            var epoch = TimeSystem.Time.J2000TDB.Add(TimeSpan.FromSeconds(5));
+            var epoch = TimeSystem.Time.J2000Tdb.Add(TimeSpan.FromSeconds(5));
             var earth = TestHelpers.EarthAtJ2000;
 
             // Get geometric state via kernel-backed SC
@@ -207,9 +207,9 @@ public class KernelBackedSpacecraftTests
             SpiceApi.Instance.LoadKernels(spkFile);
 
             var sc = new Spacecraft(-9905, "KernelSC_PropThrow",
-                epoch: TimeSystem.Time.J2000TDB);
+                epoch: TimeSystem.Time.J2000Tdb);
 
-            var window = new Window(TimeSystem.Time.J2000TDB, TimeSystem.Time.J2000TDB.Add(TimeSpan.FromHours(1)));
+            var window = new Window(TimeSystem.Time.J2000Tdb, TimeSystem.Time.J2000Tdb.Add(TimeSpan.FromHours(1)));
             Assert.Throws<InvalidOperationException>(() =>
                 sc.Propagate(window, new PropagationOptions { Integrator = new VVIntegratorOptions { Step = TimeSpan.FromSeconds(1) }, OutputStep = TimeSpan.FromSeconds(1), ThirdBodies = [TestHelpers.EarthAtJ2000] }));
         }
@@ -229,7 +229,7 @@ public class KernelBackedSpacecraftTests
             SpiceApi.Instance.LoadKernels(spkFile);
 
             var sc = new Spacecraft(-9907, "KernelSC_WriteThrow",
-                epoch: TimeSystem.Time.J2000TDB);
+                epoch: TimeSystem.Time.J2000Tdb);
 
             Assert.Throws<InvalidOperationException>(() =>
                 sc.WriteEphemeris(new FileInfo("dummy.spk")));
@@ -250,10 +250,10 @@ public class KernelBackedSpacecraftTests
             SpiceApi.Instance.LoadKernels(spkFile);
 
             var sc = new Spacecraft(-9908, "KernelSC_AddStatesThrow",
-                epoch: TimeSystem.Time.J2000TDB);
+                epoch: TimeSystem.Time.J2000Tdb);
 
             var sv = new StateVector(Vector3.VectorX, Vector3.VectorY, TestHelpers.EarthAtJ2000,
-                TimeSystem.Time.J2000TDB, Frames.Frame.ICRF);
+                TimeSystem.Time.J2000Tdb, Frames.Frame.ICRF);
             Assert.Throws<InvalidOperationException>(() => sc.AddPropagatedStates(sv));
         }
         finally
@@ -266,7 +266,7 @@ public class KernelBackedSpacecraftTests
     public void KernelBackedSpacecraftPositiveNaifIdThrows()
     {
         Assert.Throws<ArgumentOutOfRangeException>(() =>
-            new Spacecraft(100, "BadSC", epoch: TimeSystem.Time.J2000TDB));
+            new Spacecraft(100, "BadSC", epoch: TimeSystem.Time.J2000Tdb));
     }
 
     #endregion
@@ -283,9 +283,9 @@ public class KernelBackedSpacecraftTests
             SpiceApi.Instance.LoadKernels(spkFile);
 
             var sc = new Spacecraft(-9909, "KernelSC_Observer",
-                epoch: TimeSystem.Time.J2000TDB);
+                epoch: TimeSystem.Time.J2000Tdb);
 
-            var epoch = TimeSystem.Time.J2000TDB.Add(TimeSpan.FromSeconds(5));
+            var epoch = TimeSystem.Time.J2000Tdb.Add(TimeSpan.FromSeconds(5));
             var moon = TestHelpers.MoonAtJ2000;
 
             // Moon ephemeris as seen from kernel SC observer — uses SPICE direct path
@@ -309,12 +309,12 @@ public class KernelBackedSpacecraftTests
             SpiceApi.Instance.LoadKernels(spkFile);
 
             var kernelSc = new Spacecraft(-9910, "KernelSC_NonSpiceObs",
-                epoch: TimeSystem.Time.J2000TDB);
+                epoch: TimeSystem.Time.J2000Tdb);
 
             // Propagated SC as observer → uses reference-body approach
             var propagatedSc = TestHelpers.Spacecraft;
 
-            var epoch = TimeSystem.Time.J2000TDB.Add(TimeSpan.FromSeconds(5));
+            var epoch = TimeSystem.Time.J2000Tdb.Add(TimeSpan.FromSeconds(5));
             var ephemeris = kernelSc.GetEphemeris(epoch, propagatedSc, Frames.Frame.ICRF, Aberration.None);
 
             Assert.NotEqual(0.0, ephemeris.Position.Magnitude());
@@ -339,7 +339,7 @@ public class KernelBackedSpacecraftTests
         try
         {
             SpiceApi.Instance.LoadKernels(spkFile);
-            Spacecraft Create() => new(-9911, "KernelSC_HardBodyRadius", epoch: TimeSystem.Time.J2000TDB,
+            Spacecraft Create() => new(-9911, "KernelSC_HardBodyRadius", epoch: TimeSystem.Time.J2000Tdb,
                 hardBodyRadius: hardBodyRadius);
 
             if (throws)
@@ -457,7 +457,7 @@ public class KernelBackedSpacecraftTests
         // Act
         var instrument = kernels.Spacecraft.Instruments.Single();
         var spice = SpiceApi.Instance.TransformFrame(KSatRead, new Frames.Frame("KSAT_CAMERA"), Frames.Frame.ICRF).Rotation;
-        var managed = kernels.Spacecraft.Frame.GetStateOrientationToICRF(KSatRead).Rotation * instrument.RotationToSpacecraft;
+        var managed = kernels.Spacecraft.Frame.GetStateOrientationToIcrf(KSatRead).Rotation * instrument.RotationToSpacecraft;
 
         // Assert
         double angle = AttitudeRecordTests.RotationAngle(spice, managed);
@@ -480,7 +480,7 @@ public class KernelBackedSpacecraftTests
 
         // Act
         var twin = new Spacecraft(-1401, "SatK", KSatEpoch, clock: new Clock("SatKClk", 256));
-        var read = twin.Frame.GetStateOrientationToICRF(KSatRead).Rotation;
+        var read = twin.Frame.GetStateOrientationToIcrf(KSatRead).Rotation;
 
         // Assert: the twin's frame keeps its name
         Assert.Equal("SatK_FRAME", twin.Frame.Name);
@@ -506,13 +506,13 @@ public class KernelBackedSpacecraftTests
 
         // Act: the FK loaded after the twin is built
         kernels.Load(kernels.FrameKernel);
-        var read = twin.Frame.GetStateOrientationToICRF(KSatRead).Rotation;
+        var read = twin.Frame.GetStateOrientationToIcrf(KSatRead).Rotation;
 
         // Assert
         var spice = SpiceApi.Instance.TransformFrame(KSatRead, new Frames.Frame("KSAT_BUS"), Frames.Frame.ICRF).Rotation;
         Assert.Equal(0.0, AttitudeRecordTests.RotationAngle(spice, read));
         Assert.Equal("KSat_FRAME", twin.Frame.Name);
-        double angle = AttitudeRecordTests.RotationAngle(kernels.Spacecraft.Frame.GetStateOrientationToICRF(KSatRead).Rotation, read);
+        double angle = AttitudeRecordTests.RotationAngle(kernels.Spacecraft.Frame.GetStateOrientationToIcrf(KSatRead).Rotation, read);
         Assert.True(angle <= CkAccuracy2024, $"{angle:E3} rad");
     }
 
@@ -530,7 +530,7 @@ public class KernelBackedSpacecraftTests
         var twin = new Spacecraft(-1401, "SatK", KSatEpoch, clock: new Clock("SatKClk", 256));
 
         // Act
-        var exception = Record.Exception(() => twin.Frame.GetStateOrientationToICRF(KSatRead));
+        var exception = Record.Exception(() => twin.Frame.GetStateOrientationToIcrf(KSatRead));
 
         // Assert
         var rejected = Assert.IsType<ArgumentException>(exception);
@@ -553,7 +553,7 @@ public class KernelBackedSpacecraftTests
 
         const int size = 201;
         var states = new StateVector[size];
-        var baseEpoch = TimeSystem.Time.J2000TDB.Add(TimeSpan.FromSeconds(-100));
+        var baseEpoch = TimeSystem.Time.J2000Tdb.Add(TimeSpan.FromSeconds(-100));
 
         for (int i = 0; i < size; i++)
         {

@@ -31,7 +31,7 @@ internal readonly record struct ForceEvaluationContext(
 {
     /// <summary>
     /// The context of a spacecraft as it is now: <see cref="Spacecraft.GetTotalMass"/>,
-    /// <see cref="Spacecraft.DragCoefficient"/> and <see cref="Spacecraft.SolarRadiationCoeff"/>.
+    /// <see cref="Spacecraft.DragCoefficient"/> and <see cref="Spacecraft.SolarRadiationCoefficient"/>.
     /// </summary>
     /// <param name="spacecraft">The spacecraft.</param>
     /// <returns>The context.</returns>
@@ -40,6 +40,6 @@ internal readonly record struct ForceEvaluationContext(
     {
         ArgumentNullException.ThrowIfNull(spacecraft);
         return new ForceEvaluationContext(spacecraft.GetTotalMass(), spacecraft.DragCoefficient,
-            spacecraft.SolarRadiationCoeff);
+            spacecraft.SolarRadiationCoefficient);
     }
 }

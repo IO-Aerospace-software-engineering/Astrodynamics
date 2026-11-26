@@ -36,7 +36,7 @@ public class PropagationOptionsForceTests
     private static CelestialBody CreateEarth(double albedo = 0.0,
         double thermalEffectiveTemperature = 0.0, double thermalEmissivity = 0.0)
     {
-        return new CelestialBody(PlanetsAndMoons.EARTH, Frames.Frame.ICRF, TimeSystem.Time.J2000TDB, albedo: albedo,
+        return new CelestialBody(PlanetsAndMoons.EARTH, Frames.Frame.ICRF, TimeSystem.Time.J2000Tdb, albedo: albedo,
             thermalEffectiveTemperature: thermalEffectiveTemperature, thermalEmissivity: thermalEmissivity);
     }
 
@@ -44,7 +44,7 @@ public class PropagationOptionsForceTests
     {
         Clock clk = new Clock("My clock", 256);
         return new Spacecraft(-1001, "MySpacecraft", 100.0, new StateVector(new Vector3(6800000.0, 0.0, 0.0), new Vector3(0.0, 7656.2204182967143, 0.0),
-                earth, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF), 10000.0,
+                earth, TimeSystem.Time.J2000Tdb, Frames.Frame.ICRF), 10000.0,
             clk);
     }
 
@@ -65,7 +65,7 @@ public class PropagationOptionsForceTests
     {
         var earth = CreateEarth();
         var spc = CreateSpacecraft(earth);
-        var window = new Window(TimeSystem.Time.J2000TDB, TimeSystem.Time.J2000TDB + TimeSpan.FromHours(1));
+        var window = new Window(TimeSystem.Time.J2000Tdb, TimeSystem.Time.J2000Tdb + TimeSpan.FromHours(1));
 
         var propagator = new CentralBodyPropagator(window, spc, Options(1e-10, Stars.SUN_BODY));
 
@@ -77,7 +77,7 @@ public class PropagationOptionsForceTests
     {
         var earth = CreateEarth(albedo: 0.306);
         var spc = CreateSpacecraft(earth);
-        var window = new Window(TimeSystem.Time.J2000TDB, TimeSystem.Time.J2000TDB + TimeSpan.FromHours(1));
+        var window = new Window(TimeSystem.Time.J2000Tdb, TimeSystem.Time.J2000Tdb + TimeSpan.FromHours(1));
 
         var propagator = new CentralBodyPropagator(window, spc, Options(1e-10, Stars.SUN_BODY) with { AlbedoRadiationPressure = true });
 
@@ -88,9 +88,9 @@ public class PropagationOptionsForceTests
     public void TheCentralBody_TakesPart_SoThatDragApplies()
     {
         // Arrange: an Earth with an atmosphere, the observer of the spacecraft, not listed in the first run
-        var earth = new CelestialBody(PlanetsAndMoons.EARTH, Frames.Frame.ICRF, TimeSystem.Time.J2000TDB, null,
+        var earth = new CelestialBody(PlanetsAndMoons.EARTH, Frames.Frame.ICRF, TimeSystem.Time.J2000Tdb, null,
             new Nrlmsise00Model(SpaceWeather.Nominal));
-        var window = new Window(TimeSystem.Time.J2000TDB, TimeSystem.Time.J2000TDB + TimeSpan.FromMinutes(90));
+        var window = new Window(TimeSystem.Time.J2000Tdb, TimeSystem.Time.J2000Tdb + TimeSpan.FromMinutes(90));
 
         CentralBodyPropagator Build(bool listEarth, bool drag)
         {
@@ -118,7 +118,7 @@ public class PropagationOptionsForceTests
     {
         // Arrange: SRP with the Sun only listed, and with the Earth listed too; one orbit crosses the Earth's shadow
         var earth = CreateEarth();
-        var window = new Window(TimeSystem.Time.J2000TDB, TimeSystem.Time.J2000TDB + TimeSpan.FromMinutes(90));
+        var window = new Window(TimeSystem.Time.J2000Tdb, TimeSystem.Time.J2000Tdb + TimeSpan.FromMinutes(90));
 
         StateVector Final(bool listEarth)
         {
@@ -141,7 +141,7 @@ public class PropagationOptionsForceTests
     {
         var earth = CreateEarth(albedo: 0.306);
         var earthNoAlbedo = CreateEarth();
-        var window = new Window(TimeSystem.Time.J2000TDB, TimeSystem.Time.J2000TDB + TimeSpan.FromMinutes(90));
+        var window = new Window(TimeSystem.Time.J2000Tdb, TimeSystem.Time.J2000Tdb + TimeSpan.FromMinutes(90));
 
         // Without albedo
         var spc1 = CreateSpacecraft(earthNoAlbedo);
@@ -164,10 +164,10 @@ public class PropagationOptionsForceTests
     {
         var earth = CreateEarth();
         var spc = CreateSpacecraft(earth);
-        var window = new Window(TimeSystem.Time.J2000TDB, TimeSystem.Time.J2000TDB + TimeSpan.FromHours(1));
+        var window = new Window(TimeSystem.Time.J2000Tdb, TimeSystem.Time.J2000Tdb + TimeSpan.FromHours(1));
 
         var propagator = new CentralBodyPropagator(window, spc,
-            Options(1e-10, Stars.SUN_BODY, new CelestialBody(PlanetsAndMoons.MOON, Frames.Frame.ICRF, TimeSystem.Time.J2000TDB))
+            Options(1e-10, Stars.SUN_BODY, new CelestialBody(PlanetsAndMoons.MOON, Frames.Frame.ICRF, TimeSystem.Time.J2000Tdb))
                 with { SolarRadiationPressure = true });
 
         Assert.NotNull(propagator);
@@ -179,7 +179,7 @@ public class PropagationOptionsForceTests
     {
         var earth = CreateEarth(thermalEffectiveTemperature: 254.0, thermalEmissivity: 0.95);
         var spc = CreateSpacecraft(earth);
-        var window = new Window(TimeSystem.Time.J2000TDB, TimeSystem.Time.J2000TDB + TimeSpan.FromHours(1));
+        var window = new Window(TimeSystem.Time.J2000Tdb, TimeSystem.Time.J2000Tdb + TimeSpan.FromHours(1));
 
         var propagator = new CentralBodyPropagator(window, spc, Options(1e-10, Stars.SUN_BODY) with { ThermalRadiationPressure = true });
 
@@ -191,7 +191,7 @@ public class PropagationOptionsForceTests
     {
         var earth = CreateEarth(thermalEffectiveTemperature: 254.0, thermalEmissivity: 0.95);
         var earthNoThermal = CreateEarth();
-        var window = new Window(TimeSystem.Time.J2000TDB, TimeSystem.Time.J2000TDB + TimeSpan.FromMinutes(90));
+        var window = new Window(TimeSystem.Time.J2000Tdb, TimeSystem.Time.J2000Tdb + TimeSpan.FromMinutes(90));
 
         // Without thermal
         var spc1 = CreateSpacecraft(earthNoThermal);
@@ -218,9 +218,9 @@ public class PropagationOptionsForceTests
     {
         // Arrange: the orbit on a model-less Earth, an Earth with a geopotential given as a third body
         var earth = CreateEarth();
-        var twin = new CelestialBody(PlanetsAndMoons.EARTH, Frames.Frame.ICRF, TimeSystem.Time.J2000TDB,
+        var twin = new CelestialBody(PlanetsAndMoons.EARTH, Frames.Frame.ICRF, TimeSystem.Time.J2000Tdb,
             new GeopotentialModelParameters("Data/SolarSystem/EGM2008_to70_TideFree", 10));
-        var window = new Window(TimeSystem.Time.J2000TDB, TimeSystem.Time.J2000TDB + TimeSpan.FromHours(1));
+        var window = new Window(TimeSystem.Time.J2000Tdb, TimeSystem.Time.J2000Tdb + TimeSpan.FromHours(1));
 
         // Act
         var exception = Assert.Throws<ArgumentException>(() =>
@@ -235,7 +235,7 @@ public class PropagationOptionsForceTests
     {
         // Arrange: a separately built Earth with the same models as the observer
         var earth = CreateEarth();
-        var window = new Window(TimeSystem.Time.J2000TDB, TimeSystem.Time.J2000TDB + TimeSpan.FromHours(1));
+        var window = new Window(TimeSystem.Time.J2000Tdb, TimeSystem.Time.J2000Tdb + TimeSpan.FromHours(1));
         StateVector Run(params CelestialItem[] bodies)
         {
             var spc = CreateSpacecraft(earth);

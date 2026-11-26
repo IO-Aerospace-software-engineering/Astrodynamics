@@ -180,7 +180,7 @@ public class TemeFrameTests
         foreach (var p in FramePoints)
         {
             var utc = Utc(p.Utc);
-            double gmst = TemeFrame.Gmst82(TimeSystem_Time.JULIAN_J2000, utc.DaysFromJ2000());
+            double gmst = TemeFrame.Gmst82(TimeSystem_Time.JulianDateJ2000, utc.DaysFromJ2000());
             double difference = System.Math.Abs(System.Math.IEEERemainder(gmst - p.Gmst82Rad, IO.Astrodynamics.Constants.TwoPi));
             worst = System.Math.Max(worst, difference);
             Assert.InRange(gmst, 0.0, IO.Astrodynamics.Constants.TwoPi);
@@ -196,7 +196,7 @@ public class TemeFrameTests
     {
         // v' = R v: no angular velocity (Vallado's teme2eci, GMAT)
         var epoch = Utc("2021-03-20T11:58:50.814");
-        Assert.Equal(Vector3.Zero, Frames.Frame.TEME.GetStateOrientationToICRF(epoch).AngularVelocity);
+        Assert.Equal(Vector3.Zero, Frames.Frame.TEME.GetStateOrientationToIcrf(epoch).AngularVelocity);
         Assert.Equal(Vector3.Zero, Frames.Frame.TEME.ToFrame(Frames.Frame.ICRF, epoch).AngularVelocity);
         Assert.IsType<TemeFrame>(Frames.Frame.TEME);
     }
@@ -239,8 +239,8 @@ public class TemeFrameTests
         // since an object another test class builds during a swap would keep the empty provider
         var provider = new MemoryDataProvider();
         var epoch = Utc("2012-02-17T00:00:00.000");
-        var orientation = provider.FrameTransformationToICRF(epoch, new Frames.Frame("TEME"));
-        Assert.InRange(Angle(orientation.Rotation, Frames.Frame.TEME.GetStateOrientationToICRF(epoch).Rotation), 0.0, 1e-15);
+        var orientation = provider.FrameTransformationToIcrf(epoch, new Frames.Frame("TEME"));
+        Assert.InRange(Angle(orientation.Rotation, Frames.Frame.TEME.GetStateOrientationToIcrf(epoch).Rotation), 0.0, 1e-15);
         Assert.Equal("TEME", orientation.ReferenceFrame.Name);
     }
 
@@ -357,7 +357,7 @@ public class TemeFrameTests
         Assert.Throws<ArgumentException>(() => SpiceApi.Instance.ReadEphemeris(epoch, 399, 301, frame, Aberration.None));
 
         // An attitude other than the identity, given by hand
-        frame.AddStateOrientationToICRF(new StateOrientation(new Quaternion(new Vector3(1.0, 2.0, 3.0).Normalize(), 0.7), Vector3.Zero, epoch, frame));
+        frame.AddStateOrientationToIcrf(new StateOrientation(new Quaternion(new Vector3(1.0, 2.0, 3.0).Normalize(), 0.7), Vector3.Zero, epoch, frame));
         var icrf = moon.GetEphemeris(epoch, earth, Frames.Frame.ICRF, Aberration.LT);
         var read = moon.GetEphemeris(epoch, earth, frame, Aberration.LT);
         var converted = icrf.ToFrame(frame).ToStateVector();
@@ -411,7 +411,7 @@ public class TemeFrameTests
             Writer = new IO.Astrodynamics.Body.Spacecraft.Spacecraft(id, name, 1000.0, orbit, 3000.0, new IO.Astrodynamics.Body.Spacecraft.Clock(name + "_CLK", 65536));
             for (int k = 0; k <= 120; k++)
             {
-                Writer.Frame.AddStateOrientationToICRF(new StateOrientation(CkAttitude(k), Vector3.Zero, start.AddSeconds(60.0 * k), Writer.Frame));
+                Writer.Frame.AddStateOrientationToIcrf(new StateOrientation(CkAttitude(k), Vector3.Zero, start.AddSeconds(60.0 * k), Writer.Frame));
             }
 
             _directory = Directory.CreateTempSubdirectory("f07ck-");
@@ -463,7 +463,7 @@ public class TemeFrameTests
         using var kernels = new ManagedSpacecraftFrameKernels(-6826, "F07CK", start);
         var fresh = new IO.Astrodynamics.Body.Spacecraft.Spacecraft(-6826, "F07CK", 1000.0, kernels.Writer.InitialOrbitalParameters, 3000.0,
             new IO.Astrodynamics.Body.Spacecraft.Clock("F07CK_CLK", 65536));
-        Assert.Null(fresh.Frame.GetLatestStateOrientationToICRF());
+        Assert.Null(fresh.Frame.GetLatestStateOrientationToIcrf());
 
         double worst = 0.0;
         foreach (int k in new[] { 7, 30, 59, 61, 90, 119 })
@@ -487,7 +487,7 @@ public class TemeFrameTests
         Assert.True(worst < CkFrameReadAngle, $"{worst:E3} rad");
 
         // An attitude recorded, the identity: the record is read, not the kernels
-        fresh.Frame.AddStateOrientationToICRF(new StateOrientation(Quaternion.Identity, Vector3.Zero, start, fresh.Frame));
+        fresh.Frame.AddStateOrientationToIcrf(new StateOrientation(Quaternion.Identity, Vector3.Zero, start, fresh.Frame));
         var epoch = start.AddSeconds(600.0);
         var fromRecord = moon.GetEphemeris(epoch, earth, fresh.Frame, Aberration.None);
         Assert.Same(fresh.Frame, fromRecord.Frame);
@@ -512,7 +512,7 @@ public class TemeFrameTests
         {
             var t = start.AddSeconds(60.0 * k + 17.0);
             var library = moon.GetEphemeris(t, earth, kernels.Writer.Frame, Aberration.None);
-            double et = t.ToTDB().TimeSpanFromJ2000().TotalSeconds;
+            double et = t.ToTdb().TimeSpanFromJ2000().TotalSeconds;
             var st = IO.Astrodynamics.Tests.Body.CspiceDirect.Spkezr("MOON", et, "F07CKV_FRAME", "NONE", "EARTH");
             worstPosition = System.Math.Max(worstPosition, (library.Position - new Vector3(st[0], st[1], st[2]) * 1000.0).Magnitude());
             worstVelocity = System.Math.Max(worstVelocity, (library.Velocity - new Vector3(st[3], st[4], st[5]) * 1000.0).Magnitude());

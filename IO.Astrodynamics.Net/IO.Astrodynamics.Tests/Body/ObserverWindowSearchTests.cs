@@ -26,8 +26,8 @@ namespace IO.Astrodynamics.Tests.Body;
 /// </summary>
 public class ObserverWindowSearchTests
 {
-    private static readonly Window DistanceWindow = new(TimeSystem.Time.CreateTDB(755870700.0), TimeSystem.Time.CreateTDB(755913900.0));
-    private static readonly Window DayWindow = new(TimeSystem.Time.CreateTDB(755870700.0), TimeSystem.Time.CreateTDB(755957100.0));
+    private static readonly Window DistanceWindow = new(TimeSystem.Time.CreateTdb(755870700.0), TimeSystem.Time.CreateTdb(755913900.0));
+    private static readonly Window DayWindow = new(TimeSystem.Time.CreateTdb(755870700.0), TimeSystem.Time.CreateTdb(755957100.0));
     private static readonly Window Eclipse001Window = new(TimeSystem.Time.Parse("2026-03-20T00:00:00 TDB"), TimeSystem.Time.Parse("2026-03-20T12:00:00 TDB"));
     private static readonly Window Eclipse2005Window = new(TimeSystem.Time.Parse("2005-10-03 00:00:00", TimeScale.TDB), TimeSystem.Time.Parse("2005-10-04 00:00:00", TimeScale.TDB));
     private static readonly TimeSpan Step = TimeSpan.FromSeconds(60.0);
@@ -188,12 +188,12 @@ public class ObserverWindowSearchTests
     {
         // gfilum_c for a site of the kernels, the library's search for a site from coordinates
         var dss13 = Dss13;
-        var lts = Options with { Aberration = Aberration.LTS };
+        var lts = Options with { Aberration = Aberration.LtS };
         Same(SpiceApi.Instance.FindWindowsOnIlluminationConstraint(DayWindow, dss13.NaifId, Earth.NaifId, Earth.Frame, dss13.Planetodetic,
-                IlluminationAngle.Incidence, RelationalOperator.LessThan, 1.5, 0.0, Aberration.LTS, Step, Sun.NaifId, "ELLIPSOID"),
+                IlluminationAngle.Incidence, RelationalOperator.LessThan, 1.5, 0.0, Aberration.LtS, Step, Sun.NaifId, "ELLIPSOID"),
             dss13.FindIlluminationWindows(DayWindow, IlluminationAngle.Incidence, RelationalOperator.LessThan, 1.5, Sun, lts));
         var fromCoordinates = Dss13FromCoordinates;
-        Same(GeometryFinder.FindWindows(DayWindow, t => fromCoordinates.IlluminationIncidence(t, Sun, Aberration.LTS), RelationalOperator.LessThan, 1.5, Options),
+        Same(GeometryFinder.FindWindows(DayWindow, t => fromCoordinates.IlluminationIncidence(t, Sun, Aberration.LtS), RelationalOperator.LessThan, 1.5, Options),
             fromCoordinates.FindIlluminationWindows(DayWindow, IlluminationAngle.Incidence, RelationalOperator.LessThan, 1.5, Sun, lts));
 
         Assert.Throws<ArgumentException>(() => Dss13FromCoordinates.FindIlluminationWindows(DayWindow, IlluminationAngle.Emission, RelationalOperator.LessThan,

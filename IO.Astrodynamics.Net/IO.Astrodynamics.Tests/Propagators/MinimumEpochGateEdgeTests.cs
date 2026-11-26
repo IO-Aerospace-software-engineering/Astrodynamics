@@ -173,8 +173,8 @@ public class MinimumEpochGateEdgeTests
     {
         var from = new Time(new DateTime(2024, 3, 19, 23, 17, 0), TimeScale.TDB);
         var gate = new Time(new DateTime(2024, 3, 19, 23, 17, 12, DateTimeKind.Utc).AddTicks(8864997), TimeScale.UTC);
-        Assert.True(gate.ToTDB() < gate);
-        var firstTickNotBefore = gate.ToTDB();
+        Assert.True(gate.ToTdb() < gate);
+        var firstTickNotBefore = gate.ToTdb();
         while (firstTickNotBefore < gate) firstTickNotBefore += TimeSpan.FromTicks(1);
 
         double gateSeconds = PropagationTimeArgument.Tt.SecondsBetween(from, gate);
@@ -190,7 +190,7 @@ public class MinimumEpochGateEdgeTests
         Assert.NotNull(result.Event);
         double t = result.Event.Value.EventTime;
         var epoch = integrator.TimeArgument.EpochAt(from, t);
-        long ticks = epoch.ToTAI().DateTime.Ticks - gate.ToTAI().DateTime.Ticks;
+        long ticks = epoch.ToTai().DateTime.Ticks - gate.ToTai().DateTime.Ticks;
         _output.WriteLine($"MEASURE #569 gate UTC {integratorName} {timeArgument}: gate {gate.DateTime:O} UTC at {gateSeconds:R} TT s, event {epoch.DateTime:O} TDB at {t:R} s, {ticks} ticks (TAI) from the gate");
         Assert.False(epoch < gate);
         if (integratorName.StartsWith("RK"))

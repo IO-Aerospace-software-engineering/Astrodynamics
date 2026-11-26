@@ -147,7 +147,7 @@ public class SsbModeThirdBodyTests
     public void FrameTwins_EndTogether(string frameName, string integrator)
     {
         // Arrange
-        var frame = frameName == "ECLIPJ2000" ? Frames.Frame.ECLIPTIC_J2000 : Frames.Frame.GALACTIC_SYSTEM2;
+        var frame = frameName == "ECLIPJ2000" ? Frames.Frame.ECLIPJ2000 : Frames.Frame.GALACTIC;
         int id = frameName == "ECLIPJ2000" ? -5763 : -5765;
         if (integrator == "RK") id -= 10;
 

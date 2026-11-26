@@ -11,14 +11,14 @@ namespace IO.Astrodynamics.OrbitalParameters
     /// <param name="Rotation">
     /// Rotation that maps vectors from <paramref name="ReferenceFrame"/> into the destination frame
     /// implied by the calling context.
-    /// For example, <c>frame.GetStateOrientationToICRF(epoch)</c> returns a rotation
+    /// For example, <c>frame.GetStateOrientationToIcrf(epoch)</c> returns a rotation
     /// <c>frame → ICRF</c>.
     /// </param>
     /// <param name="AngularVelocity">
     /// Angular velocity associated with <paramref name="Rotation"/>, in rad/s. The library returns it in the SPICE
     /// convention (<c>xf2rav_c</c>): the angular velocity of the destination frame relative to the source frame, expressed
     /// in the source frame. So do <see cref="Frame.ToFrame(Frame, Time)"/>,
-    /// <see cref="Frame.GetStateOrientationToICRF(Time)"/> (the frame of a spacecraft included: ICRF relative to the
+    /// <see cref="Frame.GetStateOrientationToIcrf(Time)"/> (the frame of a spacecraft included: ICRF relative to the
     /// spacecraft, in the spacecraft frame, managed or kernel-backed), <c>Spacecraft.GetOrientation</c> and
     /// <see cref="SpiceApi.ReadOrientation"/> (the spacecraft relative to the reference frame, in the reference frame, for
     /// the C-matrix of a CK). <see cref="AtEpoch"/> takes the other convention.
@@ -37,7 +37,7 @@ namespace IO.Astrodynamics.OrbitalParameters
         /// Re-expresses the current orientation so that it maps from the same source frame into ICRF.
         /// </summary>
         /// <returns>A new <see cref="StateOrientation"/> instance relative to the ICRF.</returns>
-        public StateOrientation RelativeToICRF()
+        public StateOrientation RelativeToIcrf()
         {
             return RelativeTo(Frame.ICRF);
         }
@@ -68,7 +68,7 @@ namespace IO.Astrodynamics.OrbitalParameters
         /// The incremental rotation is left-multiplied: <see cref="AngularVelocity"/> is taken as the angular velocity of
         /// the source frame relative to the destination frame, expressed in the destination frame, the opposite of the
         /// convention in which the library returns it (−R ω, R the rotation and ω the angular velocity of
-        /// <see cref="Frame.GetStateOrientationToICRF(Time)"/>). It therefore does not extrapolate a frame transform nor the
+        /// <see cref="Frame.GetStateOrientationToIcrf(Time)"/>). It therefore does not extrapolate a frame transform nor the
         /// attitude of a spacecraft as the library returns them; the attitude record of a spacecraft does not use it.
         /// </remarks>
         public StateOrientation AtEpoch(in Time epoch)
@@ -101,7 +101,7 @@ namespace IO.Astrodynamics.OrbitalParameters
             }
             var ratio = (epoch - Epoch).TotalSeconds / (other.Epoch - Epoch).TotalSeconds;
 
-            // Quaternion.SLERP switches to a normalised Lerp below about 0.028 rad between the rotations, 6e-8 rad off the
+            // Quaternion.Slerp switches to a normalised Lerp below about 0.028 rad between the rotations, 6e-8 rad off the
             // SLERP at 0.025 rad (#548)
             return new StateOrientation(Quaternion.SlerpByAxisAngle(Rotation, other.Rotation, ratio).Rotation,
                 AngularVelocity.LinearInterpolation(other.AngularVelocity, ratio),
@@ -114,7 +114,7 @@ namespace IO.Astrodynamics.OrbitalParameters
         /// <returns>A string that represents the current state orientation.</returns>
         public override string ToString()
         {
-            return $"Epoch : {Epoch.ToTDB().ToString()} Orientation : {Rotation} Angular velocity : {AngularVelocity} Frame : {ReferenceFrame.Name}";
+            return $"Epoch : {Epoch.ToTdb().ToString()} Orientation : {Rotation} Angular velocity : {AngularVelocity} Frame : {ReferenceFrame.Name}";
         }
     }
 }

@@ -284,7 +284,7 @@ public class ManeuverPlanTests
                 new Clock("PLAN" + -id, 65536));
             var tank = new FuelTank("ft", 1000.0, 1000.0, "m", "sn");
             var engine = new Engine("eng", 300.0, 10.0, tank, "m", "sn");
-            var target = new KeplerianElements(7100e3, 0.01, 0.5, 0.0, 0.0, 0.0, earth, S, Frames.Frame.ECLIPTIC_J2000);
+            var target = new KeplerianElements(7100e3, 0.01, 0.5, 0.0, 0.0, 0.0, earth, S, Frames.Frame.ECLIPJ2000);
             maneuver = new ApsidalAlignmentManeuver(target, engine, S, TimeSpan.Zero);
             spacecraft.AddFuelTank(tank);
             spacecraft.AddEngine(engine);

@@ -33,11 +33,11 @@ public class ExporterTests
     public async Task ExportSimplePropagation()
     {
         Astrodynamics.Mission.Mission mission = new Astrodynamics.Mission.Mission("Cosmographia");
-        Scenario scenario = new Scenario("export1", mission, new Window(TimeSystem.Time.J2000TDB.AddYears(21), TimeSystem.Time.J2000TDB.AddYears(21).AddDays(1.0)));
+        Scenario scenario = new Scenario("export1", mission, new Window(TimeSystem.Time.J2000Tdb.AddYears(21), TimeSystem.Time.J2000Tdb.AddYears(21).AddDays(1.0)));
         scenario.AddCelestialItem(TestHelpers.EarthAtJ2000);
         scenario.AddCelestialItem(TestHelpers.Sun);
         scenario.AddCelestialItem(TestHelpers.MoonAtJ2000);
-        Spacecraft spacecraft = new Spacecraft(-333, "spc1", 1000.0, new KeplerianElements(6800000.0, 0.0, 0.0, 0.0, 0.0, 0.0, TestHelpers.EarthAtJ2000, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF), 2000.0,
+        Spacecraft spacecraft = new Spacecraft(-333, "spc1", 1000.0, new KeplerianElements(6800000.0, 0.0, 0.0, 0.0, 0.0, 0.0, TestHelpers.EarthAtJ2000, TimeSystem.Time.J2000Tdb, Frames.Frame.ICRF), 2000.0,
             new Clock("clockspc1", 256));
         scenario.AddSpacecraft(spacecraft);
         scenario.Simulate(new PropagationOptions { Integrator = new VVIntegratorOptions { Step = TimeSpan.FromSeconds(1.0) }, OutputStep = TimeSpan.FromSeconds(1.0) });
@@ -50,11 +50,11 @@ public class ExporterTests
     public async Task ExportSimplePropagationWithoutManeuver()
     {
         Astrodynamics.Mission.Mission mission = new Astrodynamics.Mission.Mission("CosmographiaWM");
-        Scenario scenario = new Scenario("exportWM", mission, new Window(TimeSystem.Time.J2000TDB.AddYears(21), TimeSystem.Time.J2000TDB.AddYears(21).AddHours(2.0)));
+        Scenario scenario = new Scenario("exportWM", mission, new Window(TimeSystem.Time.J2000Tdb.AddYears(21), TimeSystem.Time.J2000Tdb.AddYears(21).AddHours(2.0)));
         scenario.AddCelestialItem(TestHelpers.EarthAtJ2000);
         scenario.AddCelestialItem(TestHelpers.Sun);
         scenario.AddCelestialItem(TestHelpers.MoonAtJ2000);
-        Spacecraft spacecraft = new Spacecraft(-334, "spcWM", 1000.0, new KeplerianElements(6800000.0, 0.0, 0.0, 0.0, 0.0, 0.0, TestHelpers.EarthAtJ2000, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF), 2000.0,
+        Spacecraft spacecraft = new Spacecraft(-334, "spcWM", 1000.0, new KeplerianElements(6800000.0, 0.0, 0.0, 0.0, 0.0, 0.0, TestHelpers.EarthAtJ2000, TimeSystem.Time.J2000Tdb, Frames.Frame.ICRF), 2000.0,
             new Clock("clockspcWM", 256));
         scenario.AddSpacecraft(spacecraft);
         scenario.AddCelestialItem(TestHelpers.MoonAtJ2000);
@@ -69,11 +69,11 @@ public class ExporterTests
     public async Task ExportSimpleLongPropagationWithoutManeuver()
     {
         Astrodynamics.Mission.Mission mission = new Astrodynamics.Mission.Mission("CosmographiaLongExport");
-        Scenario scenario = new Scenario("LongExport", mission, new Window(TimeSystem.Time.J2000TDB.AddYears(21), TimeSystem.Time.J2000TDB.AddYears(21).AddHours(4.0)));
+        Scenario scenario = new Scenario("LongExport", mission, new Window(TimeSystem.Time.J2000Tdb.AddYears(21), TimeSystem.Time.J2000Tdb.AddYears(21).AddHours(4.0)));
         scenario.AddCelestialItem(TestHelpers.EarthAtJ2000);
         scenario.AddCelestialItem(TestHelpers.Sun);
         scenario.AddCelestialItem(TestHelpers.MoonAtJ2000);
-        Spacecraft spacecraft = new Spacecraft(-337, "spcLongMission", 1000.0, new KeplerianElements(6800000.0, 0.0, 0.0, 0.0, 0.0, 0.0, TestHelpers.EarthAtJ2000, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF), 2000.0,
+        Spacecraft spacecraft = new Spacecraft(-337, "spcLongMission", 1000.0, new KeplerianElements(6800000.0, 0.0, 0.0, 0.0, 0.0, 0.0, TestHelpers.EarthAtJ2000, TimeSystem.Time.J2000Tdb, Frames.Frame.ICRF), 2000.0,
             new Clock("clockSpcLongMission", 65536));
         var a = spacecraft.InitialOrbitalParameters.ToStateVector();
         var b = a.RelativeTo(TestHelpers.Sun, Aberration.None);
@@ -92,13 +92,13 @@ public class ExporterTests
         Astrodynamics.Mission.Mission mission = new Astrodynamics.Mission.Mission("Cosmographia");
 
         //Create a scenario for the mission
-        Scenario scenario = new Scenario("EarthObservation", mission, new Window(TimeSystem.Time.J2000TDB.AddYears(21), TimeSystem.Time.J2000TDB.AddYears(21).AddDays(1.0)));
+        Scenario scenario = new Scenario("EarthObservation", mission, new Window(TimeSystem.Time.J2000Tdb.AddYears(21), TimeSystem.Time.J2000Tdb.AddYears(21).AddDays(1.0)));
         scenario.AddCelestialItem(TestHelpers.EarthAtJ2000);
         scenario.AddCelestialItem(TestHelpers.Sun);
         scenario.AddCelestialItem(TestHelpers.MoonAtJ2000);
 
         //Configure a spacecraft
-        Spacecraft spacecraft = new Spacecraft(-334, "EarthExplorer", 1000.0, new KeplerianElements(6800000.0, 0.0, 1.0, 0.0, 0.0, 0.0, TestHelpers.EarthAtJ2000, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF), 2000.0,
+        Spacecraft spacecraft = new Spacecraft(-334, "EarthExplorer", 1000.0, new KeplerianElements(6800000.0, 0.0, 1.0, 0.0, 0.0, 0.0, TestHelpers.EarthAtJ2000, TimeSystem.Time.J2000Tdb, Frames.Frame.ICRF), 2000.0,
             new Clock("clockspc1", 256));
 
         //Configure and attach an instrument to the spacecraft
@@ -139,7 +139,7 @@ public class ExporterTests
     public async Task ExportWithObservationAndSitePropagation()
     {
         Astrodynamics.Mission.Mission mission = new Astrodynamics.Mission.Mission("Cosmographia");
-        Scenario scenario = new Scenario("SiteObservation", mission, new Window(TimeSystem.Time.J2000TDB.AddYears(21), TimeSystem.Time.J2000TDB.AddYears(21).AddDays(1.0)));
+        Scenario scenario = new Scenario("SiteObservation", mission, new Window(TimeSystem.Time.J2000Tdb.AddYears(21), TimeSystem.Time.J2000Tdb.AddYears(21).AddDays(1.0)));
         Site site3 = new Site(14, "DSS-14", TestHelpers.EarthAtJ2000);
         Site site = new Site(34, "DSS-34", TestHelpers.EarthAtJ2000);
         Site site2 = new Site(65, "DSS-65", TestHelpers.EarthAtJ2000);
@@ -151,7 +151,7 @@ public class ExporterTests
         scenario.AddCelestialItem(TestHelpers.Sun);
         scenario.AddCelestialItem(TestHelpers.MoonAtJ2000);
         scenario.AddCelestialItem(TestHelpers.EarthAtJ2000);
-        Spacecraft spacecraft = new Spacecraft(-334, "Spacecraft", 1000.0, new KeplerianElements(11800000.0, 0.3, 1.0, 0.0, 0.0, 0.0, TestHelpers.EarthAtJ2000, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF), 2000.0,
+        Spacecraft spacecraft = new Spacecraft(-334, "Spacecraft", 1000.0, new KeplerianElements(11800000.0, 0.3, 1.0, 0.0, 0.0, 0.0, TestHelpers.EarthAtJ2000, TimeSystem.Time.J2000Tdb, Frames.Frame.ICRF), 2000.0,
             new Clock("clockspc1", 256));
         spacecraft.AddCircularInstrument("Antenna", 0.2, Vector3.VectorZ, Vector3.VectorY, Vector3.Zero, naifId: -334100, model: "antdeluxe");
         spacecraft.AddFuelTank(new FuelTank("fuelTank1", 2000.0, 2000.0, "fuelTankModel", "456"));
@@ -168,9 +168,9 @@ public class ExporterTests
     [Fact]
     public async Task ExportSpacecraftReachTarget()
     {
-        TimeSystem.Time start = TimeSystem.Time.CreateUTC(667915269.18539762).ToTDB(); //3/2/2021 00:02:18
-        TimeSystem.Time startPropagator = TimeSystem.Time.CreateUTC(668085555.829810).ToTDB(); //3/3/2021 23:20:25
-        TimeSystem.Time end = TimeSystem.Time.CreateUTC(668174400.000000).ToTDB(); // 3/5/2021 00:01:09
+        TimeSystem.Time start = TimeSystem.Time.CreateUtc(667915269.18539762).ToTdb(); //3/2/2021 00:02:18
+        TimeSystem.Time startPropagator = TimeSystem.Time.CreateUtc(668085555.829810).ToTdb(); //3/3/2021 23:20:25
+        TimeSystem.Time end = TimeSystem.Time.CreateUtc(668174400.000000).ToTdb(); // 3/5/2021 00:01:09
 
         Astrodynamics.Mission.Mission mission = new Astrodynamics.Mission.Mission("ReachTarget");
         Scenario scenario = new Scenario("Scenario1", mission, new Window(startPropagator, end));
@@ -253,10 +253,10 @@ public class ExporterTests
     private static async Task<Scenario> PathLimitScenarioAsync()
     {
         var mission = new Astrodynamics.Mission.Mission("PathLimit");
-        var start = TimeSystem.Time.J2000TDB.AddYears(21);
+        var start = TimeSystem.Time.J2000Tdb.AddYears(21);
         var scenario = new Scenario("Export673", mission, new Window(start, start.AddMinutes(10.0)));
         scenario.AddCelestialItem(TestHelpers.EarthAtJ2000);
-        var spacecraft = new Spacecraft(-8674, PathLimitSpacecraft, 1000.0, new KeplerianElements(6800000.0, 0.0, 0.0, 0.0, 0.0, 0.0, TestHelpers.EarthAtJ2000, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF), 2000.0,
+        var spacecraft = new Spacecraft(-8674, PathLimitSpacecraft, 1000.0, new KeplerianElements(6800000.0, 0.0, 0.0, 0.0, 0.0, 0.0, TestHelpers.EarthAtJ2000, TimeSystem.Time.J2000Tdb, Frames.Frame.ICRF), 2000.0,
             new Clock("EXP8674_CLK", 65536));
         scenario.AddSpacecraft(spacecraft);
         scenario.AddStar(new Astrodynamics.Body.Star(674, "star674", 1E+30, "spec", 2, 0.3792, Astrodynamics.Coordinates.Equatorial.FromRightAscensionDeclination(1, 1, start), 0.1, 0.1, 0, 0, 0, 0, start));

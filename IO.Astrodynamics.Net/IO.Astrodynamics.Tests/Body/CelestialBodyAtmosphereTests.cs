@@ -148,7 +148,7 @@ public class CelestialBodyAtmosphereTests
     {
         // Act
         var earth = PlanetsAndMoons.EARTH_BODY;
-        double t = earth.GetAirTemperature(altitude) + IO.Astrodynamics.Constants.Kelvin;
+        double t = earth.GetAirTemperature(altitude) + IO.Astrodynamics.Constants.ZeroCelsiusInKelvin;
         double p = earth.GetAirPressure(altitude);
 
         // Assert: to the last digit of the table, as EarthStandardAtmosphereReferenceTests

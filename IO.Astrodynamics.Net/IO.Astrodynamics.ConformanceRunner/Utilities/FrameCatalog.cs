@@ -29,7 +29,7 @@ public static class FrameCatalog
         return name switch
         {
             "ICRF" => Frame.ICRF,
-            "ECLIPJ2000" => Frame.ECLIPTIC_J2000,
+            "ECLIPJ2000" => Frame.ECLIPJ2000,
             "TEME" => Frame.TEME,
             "ITRF93" or "IAU_EARTH" or "IAU_MOON" or "MOON_PA" or "MOON_ME" => new Frame(name),
             _ => throw new ArgumentException(

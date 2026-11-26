@@ -132,7 +132,7 @@ public class KernelWriteContentTests
 
         Assert.Contains(spacecraft.Name, exception.Message);
         Assert.Contains("TlePropagator", exception.Message);
-        Assert.Contains("AddStateOrientationToICRF", exception.Message);
+        Assert.Contains("AddStateOrientationToIcrf", exception.Message);
     }
 
     [Fact]
@@ -143,12 +143,12 @@ public class KernelWriteContentTests
             "1 25544U 98067A   21020.53488036  .00016717  00000-0  10270-3 0  9054",
             "2 25544  51.6423 353.0312 0000493 320.8755  39.2360 15.49309423 25703");
         var spacecraft = new Spacecraft(-8814, "WC8814", 420000.0, tle);
-        var window = new Window(tle.Epoch.ToTDB(), tle.Epoch.ToTDB().AddMinutes(10.0));
+        var window = new Window(tle.Epoch.ToTdb(), tle.Epoch.ToTdb().AddMinutes(10.0));
         new TlePropagator(window, spacecraft, TimeSpan.FromSeconds(60.0)).Propagate();
 
         var exception = Assert.Throws<InvalidOperationException>(() => spacecraft.WriteOrientation(NewFile("tle.bc")));
 
         Assert.Contains("TlePropagator", exception.Message);
-        Assert.Contains("AddStateOrientationToICRF", exception.Message);
+        Assert.Contains("AddStateOrientationToIcrf", exception.Message);
     }
 }

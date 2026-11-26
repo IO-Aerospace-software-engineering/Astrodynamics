@@ -57,13 +57,13 @@ internal sealed class ApparentPositionReader
         (_iterations, _lightTimeSign) = aberration switch
         {
             Aberration.None => (0, 0.0),
-            Aberration.LT or Aberration.LTS => (1, -1.0),
-            Aberration.CN or Aberration.CNS => (ConvergedIterations, -1.0),
-            Aberration.XLT or Aberration.XLTS => (1, 1.0),
-            Aberration.XCN or Aberration.XCNS => (ConvergedIterations, 1.0),
+            Aberration.LT or Aberration.LtS => (1, -1.0),
+            Aberration.CN or Aberration.CnS => (ConvergedIterations, -1.0),
+            Aberration.XLT or Aberration.XltS => (1, 1.0),
+            Aberration.XCN or Aberration.XcnS => (ConvergedIterations, 1.0),
             _ => throw new ArgumentOutOfRangeException(nameof(aberration))
         };
-        _stellar = stellar && aberration is Aberration.LTS or Aberration.CNS or Aberration.XLTS or Aberration.XCNS;
+        _stellar = stellar && aberration is Aberration.LtS or Aberration.CnS or Aberration.XltS or Aberration.XcnS;
         _starsAsDirections = starsAsDirections;
     }
 
@@ -95,7 +95,7 @@ internal sealed class ApparentPositionReader
         if (_iterations > 0 && !(_starsAsDirections && item is Star))
         {
             double epochSeconds = epoch.TimeSpanFromJ2000().TotalSeconds;
-            double lightTime = position.Magnitude() / Constants.C;
+            double lightTime = position.Magnitude() / Constants.SpeedOfLight;
             for (int i = 0; i < _iterations; i++)
             {
                 // The states are read at the corrected epoch rounded to the 100 ns of a Time, and carried to the exact
@@ -112,7 +112,7 @@ internal sealed class ApparentPositionReader
                 }
 
                 double previous = lightTime;
-                lightTime = position.Magnitude() / Constants.C;
+                lightTime = position.Magnitude() / Constants.SpeedOfLight;
                 double change = System.Math.Abs(lightTime - previous) / System.Math.Max(1.0, System.Math.Abs(epochSeconds + shift));
                 if (change <= ConvergenceThreshold)
                 {
@@ -159,7 +159,7 @@ internal sealed class ApparentPositionReader
     internal static Vector3 StellarAberration(in Vector3 position, in Vector3 observerVelocity)
     {
         var u = position.NormalizeOrZero();
-        var h = u.Cross(observerVelocity / Constants.C);
+        var h = u.Cross(observerVelocity / Constants.SpeedOfLight);
         double sinPhi = h.Magnitude();
         if (sinPhi == 0.0)
         {

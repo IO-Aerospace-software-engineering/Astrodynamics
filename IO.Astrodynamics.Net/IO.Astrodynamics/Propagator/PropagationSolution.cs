@@ -114,7 +114,7 @@ public sealed class PropagationSolution
     /// <exception cref="InvalidOperationException">The solution holds no segment.</exception>
     public Window Window => new(_segments.Count > 0
         ? _segments[0].BaseEpoch
-        : throw new InvalidOperationException("Solution contains no segments."), End.ToTDB());
+        : throw new InvalidOperationException("Solution contains no segments."), End.ToTdb());
 
     private PropagationSegment LastSegment =>
         _segments.Count > 0 ? _segments[^1] : throw new InvalidOperationException("Solution contains no segments.");

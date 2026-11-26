@@ -28,7 +28,7 @@ public class TimeToRadiusTests
     // A body built from custom parameters: no heliocentric orbit, so an infinite sphere of influence
     private sealed class CustomBody : CelestialBody
     {
-        internal CustomBody() : base(1000627, "CUSTOM627", 4.28e13 / IO.Astrodynamics.Constants.G, 3.0e6, 3.0e6)
+        internal CustomBody() : base(1000627, "CUSTOM627", 4.28e13 / IO.Astrodynamics.Constants.GravitationalConstant, 3.0e6, 3.0e6)
         {
         }
     }

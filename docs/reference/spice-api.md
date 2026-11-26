@@ -173,7 +173,7 @@ a meta-kernel's relative name other than the path is not found there either.
 
 `TransformFrame` composes a TEME end through ICRF (#451), and so the frame of a site built from coordinates or of a site
 from the kernels whose frame id no loaded kernel defines, the frame only the library holds, whose orientation is
-`SiteFrame.GetStateOrientationToICRF`, bit for bit `ToFrame`'s (fourth round of
+`SiteFrame.GetStateOrientationToIcrf`, bit for bit `ToFrame`'s (fourth round of
 [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668); before, its name went to SPICE,
 which threw): within 9.3e-16 rad and 5.7e-20 rad/s of `sxform_c` in the frame kernel `Site.WriteFrame` writes for
 the site (the same on Linux x64, Windows x64 and macOS arm64, CI run 43773937161). The frame of a site whose frame the kernels define and the frame of a spacecraft are
@@ -344,7 +344,7 @@ A provider implements `IDataProvider`, three members in domain types:
 
 | Member | Returns |
 |--------|---------|
-| `FrameTransformationToICRF(in Time epoch, Frame source)` | The orientation of the frame relative to ICRF, a `StateOrientation` labelled with the frame |
+| `FrameTransformationToIcrf(in Time epoch, Frame source)` | The orientation of the frame relative to ICRF, a `StateOrientation` labelled with the frame |
 | `GetEphemeris(in Time epoch, ILocalizable target, ILocalizable observer, Frame frame, Aberration aberration)` | The state of the target from the observer, a `StateVector` (11.0.0: `OrbitalParameters` before) |
 | `GetCelestialBodyInfo(int naifId)` | The information of a celestial body, a `CelestialBodyInfo` (11.0.0: the interop struct IO.Astrodynamics.DTO.CelestialBody, now internal, before), never null |
 
@@ -372,7 +372,7 @@ read it by three rules (structuring choice 1 of #668, decided by S. Guillet, 202
 |--------|-------------------|
 | An object the caller builds: `new CelestialBody(...)`, `new Site(...)`, `new Frame(name)`, a spacecraft | The provider set when it is built, for its life |
 | A static body: `PlanetsAndMoons.EARTH_BODY`, `MOON_BODY`, `Stars.SUN_BODY`, the `Barycenters` | The provider of its first read that succeeds, for its life (see below) |
-| A static frame: `Frame.ICRF`, `Frame.ECLIPTIC_J2000`, `Frame.ITRF93` and the other SPICE frames of `Frame` | The provider of the process at each transform (11.0.0; before, the provider set when the type `Frame` was first used, for the life of the process) |
+| A static frame: `Frame.ICRF`, `Frame.ECLIPJ2000`, `Frame.ITRF93` and the other SPICE frames of `Frame` | The provider of the process at each transform (11.0.0; before, the provider set when the type `Frame` was first used, for the life of the process) |
 
 ### MemoryDataProvider
 
@@ -380,7 +380,7 @@ read it by three rules (structuring choice 1 of #668, decided by S. Guillet, 202
 |--------|-------------|
 | `AddCelestialBodyInfo(params CelestialBodyInfo[] celestialBodyInfos)` | Add the information of bodies, each under its `NaifId` (`ArgumentNullException` for a null array or record); a `CelestialBodyInfo` since 11.0.0, the interop struct IO.Astrodynamics.DTO.CelestialBody, now internal, before |
 | `AddStateVector(int naifId, Time epoch, StateVector sv)` | Add state vector |
-| `AddStateOrientationToICRF(Frame frame, Time epoch, StateOrientation orientation)` | Add orientation; `ArgumentException` (`frame`) for ICRF, GCRF, TEME, CIRS and TIRS, which the provider defines (#744) |
+| `AddStateOrientationToIcrf(Frame frame, Time epoch, StateOrientation orientation)` | Add orientation; `ArgumentException` (`frame`) for ICRF, GCRF, TEME, CIRS and TIRS, which the provider defines (#744) |
 
 A read at an added epoch returns that entry. A read between entries is interpolated and never stored, so it depends on
 the entries only, not on the reads before it (#548): an orientation is the exact spherical linear interpolation of the two
@@ -406,9 +406,9 @@ provider's orientation of that frame, r' = R r and v' = R v + ω × r' as `ToFra
 stored difference, unrotated. Besides the frames whose orientations were added, the provider knows ICRF and GCRF (the
 identity), ECLIPJ2000 (SPICE's rotation of the J2000 obliquity, 84381.448″ about x; the default frame of the bodies)
 and the managed TEME, CIRS and TIRS, in any case; another frame throws `ArgumentException`. No orientation can be added
-under ICRF, GCRF, TEME, CIRS or TIRS, the frames it defines and never reads from stored entries: `AddStateOrientationToICRF`
+under ICRF, GCRF, TEME, CIRS or TIRS, the frames it defines and never reads from stored entries: `AddStateOrientationToIcrf`
 throws `ArgumentException` naming `frame` for them, by name in any case, and stores nothing (#744, decided by S. Guillet,
-2026-11-18; before, an orientation stored under ICRF or GCRF was returned by `FrameTransformationToICRF` while
+2026-11-18; before, an orientation stored under ICRF or GCRF was returned by `FrameTransformationToIcrf` while
 `GetEphemeris` took the identity, and one stored under TEME, CIRS or TIRS was never read). It holds geometric states
 only: an aberration other than `Aberration.None` throws `NotSupportedException` (#559, decided by S. Guillet,
 2026-11-17). Before 11.0.0 the ICRF difference came back labelled with the frame asked, and an aberrated read was

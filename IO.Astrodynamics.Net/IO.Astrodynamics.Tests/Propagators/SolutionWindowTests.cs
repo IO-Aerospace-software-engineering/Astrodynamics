@@ -99,15 +99,15 @@ public class SolutionWindowTests
     {
         // Arrange
         var tle = Iss();
-        var start = scale == TimeScale.UTC ? tle.Epoch.ToUTC() : tle.Epoch.ToTDB();
+        var start = scale == TimeScale.UTC ? tle.Epoch.ToUtc() : tle.Epoch.ToTdb();
         var window = new Window(start, start.AddHours(1.0));
 
         // Act
         var solution = new TlePropagator(window, NewSpacecraft(tle), Step).Propagate();
 
         // Assert: the TDB labels of the window, exactly
-        LabelAssert.Equal(window.StartDate.ToTDB(), solution.Window.StartDate);
-        LabelAssert.Equal(window.EndDate.ToTDB(), solution.Window.EndDate);
+        LabelAssert.Equal(window.StartDate.ToTdb(), solution.Window.StartDate);
+        LabelAssert.Equal(window.EndDate.ToTdb(), solution.Window.EndDate);
         Assert.Equal(TimeScale.TDB, solution.Window.StartDate.Scale);
         Assert.Equal(TimeScale.TDB, solution.Window.EndDate.Scale);
     }
@@ -123,7 +123,7 @@ public class SolutionWindowTests
             ThirdBodies = orbit == "SSB" ? [Stars.SUN_BODY, Earth] : [Earth],
             CovariancePropagation = CovariancePropagationOptions.None
         };
-        var epoch = window.StartDate.ToTDB();
+        var epoch = window.StartDate.ToTdb();
         Spacecraft spacecraft;
         switch (orbit)
         {
@@ -135,7 +135,7 @@ public class SolutionWindowTests
                 break;
             case "ECLIPJ2000":
                 spacecraft = NewSpacecraft(new StateVector(new Vector3(6700000.0, 0.0, 0.0),
-                    new Vector3(0.0, 8000.0, 0.0), Earth, epoch, Frames.Frame.ECLIPTIC_J2000));
+                    new Vector3(0.0, 8000.0, 0.0), Earth, epoch, Frames.Frame.ECLIPJ2000));
                 break;
             default:
                 spacecraft = NewSpacecraft(new StateVector(new Vector3(6700000.0, 0.0, 0.0),
@@ -173,9 +173,9 @@ public class SolutionWindowTests
 
         // Assert: the first segment base and the end, TDB labels, the window to one tick
         LabelAssert.Equal(solution.Segments[0].BaseEpoch, solution.Window.StartDate);
-        LabelAssert.Equal(window.StartDate.ToTDB(), solution.Window.StartDate);
+        LabelAssert.Equal(window.StartDate.ToTdb(), solution.Window.StartDate);
         Assert.Equal(TimeScale.TDB, solution.Window.EndDate.Scale);
-        Assert.InRange(System.Math.Abs((solution.Window.EndDate - window.EndDate.ToTDB()).Ticks), 0L, 1L);
+        Assert.InRange(System.Math.Abs((solution.Window.EndDate - window.EndDate.ToTdb()).Ticks), 0L, 1L);
         if (orbit == "Impulse")
         {
             Assert.True(solution.Segments.Count > 1);

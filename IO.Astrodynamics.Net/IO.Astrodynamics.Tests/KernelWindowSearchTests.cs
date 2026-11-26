@@ -53,9 +53,9 @@ public class KernelWindowSearchTests : IClassFixture<KernelWindowSearchKernels>
     private static readonly Lazy<Dictionary<string, double[][]>> Reference = new(() =>
         JsonSerializer.Deserialize<Dictionary<string, double[][]>>(File.ReadAllText("Data/GeometryReference/kernel_search_reference.json")));
 
-    private static readonly Window DistanceWindow = new(TimeSystem.Time.CreateTDB(755870700.0), TimeSystem.Time.CreateTDB(755913900.0));
-    private static readonly Window IlluminationWindow = new(TimeSystem.Time.CreateTDB(755870700.0), TimeSystem.Time.CreateTDB(755957100.0));
-    private static readonly Window MoonIlluminationWindow = new(TimeSystem.Time.CreateTDB(755870700.0), TimeSystem.Time.CreateTDB(758462700.0));
+    private static readonly Window DistanceWindow = new(TimeSystem.Time.CreateTdb(755870700.0), TimeSystem.Time.CreateTdb(755913900.0));
+    private static readonly Window IlluminationWindow = new(TimeSystem.Time.CreateTdb(755870700.0), TimeSystem.Time.CreateTdb(755957100.0));
+    private static readonly Window MoonIlluminationWindow = new(TimeSystem.Time.CreateTdb(755870700.0), TimeSystem.Time.CreateTdb(758462700.0));
     private static readonly TimeSpan Step = TimeSpan.FromSeconds(60.0);
     private const double LroMoonDistance = 1815148.0;
 
@@ -82,8 +82,8 @@ public class KernelWindowSearchTests : IClassFixture<KernelWindowSearchKernels>
         double worst = 0.0;
         for (int i = 0; i < expected.Length; i++)
         {
-            worst = System.Math.Max(worst, System.Math.Abs(windows[i].StartDate.ToTDB().TimeSpanFromJ2000().TotalSeconds - expected[i][0]));
-            worst = System.Math.Max(worst, System.Math.Abs(windows[i].EndDate.ToTDB().TimeSpanFromJ2000().TotalSeconds - expected[i][1]));
+            worst = System.Math.Max(worst, System.Math.Abs(windows[i].StartDate.ToTdb().TimeSpanFromJ2000().TotalSeconds - expected[i][0]));
+            worst = System.Math.Max(worst, System.Math.Abs(windows[i].EndDate.ToTdb().TimeSpanFromJ2000().TotalSeconds - expected[i][1]));
         }
 
         _output.WriteLine($"MEASURE {label} ({path}): worst |library - CSPICE| {worst:E3} s");
@@ -151,8 +151,8 @@ public class KernelWindowSearchTests : IClassFixture<KernelWindowSearchKernels>
         double halfPi = IO.Astrodynamics.Constants.HalfPi;
         double deg = IO.Astrodynamics.Constants.Deg2Rad;
         yield return ["dss13_sun_incidence > 90 deg NONE", RelationalOperator.GreaterThan, halfPi, Aberration.None];
-        yield return ["dss13_sun_incidence < 90.8 deg LT+S", RelationalOperator.LessThan, halfPi + 0.8 * deg, Aberration.LTS];
-        yield return ["dss13_sun_incidence > 60 deg CN+S", RelationalOperator.GreaterThan, 60.0 * deg, Aberration.CNS];
+        yield return ["dss13_sun_incidence < 90.8 deg LT+S", RelationalOperator.LessThan, halfPi + 0.8 * deg, Aberration.LtS];
+        yield return ["dss13_sun_incidence > 60 deg CN+S", RelationalOperator.GreaterThan, 60.0 * deg, Aberration.CnS];
     }
 
     [Theory]
@@ -236,7 +236,7 @@ public class KernelWindowSearchTests : IClassFixture<KernelWindowSearchKernels>
             Frames.Frame.ICRF);
         var all = new Maneuver.Launch(launchSite, dss13, target, IO.Astrodynamics.Constants.CivilTwilight, null).FindLaunchWindows(IlluminationWindow).ToArray();
         var recoveryDays = Reference.Value["dss13_sun_incidence < 96 deg LT+S"]
-            .Select(w => new Window(TimeSystem.Time.CreateTDB(w[0]), TimeSystem.Time.CreateTDB(w[1]))).ToArray();
+            .Select(w => new Window(TimeSystem.Time.CreateTdb(w[0]), TimeSystem.Time.CreateTdb(w[1]))).ToArray();
         var launchDays = launchSite.FindDayWindows(IlluminationWindow, IO.Astrodynamics.Constants.CivilTwilight).ToArray();
         var expected = all.Where(w =>
         {
@@ -272,7 +272,7 @@ public class KernelWindowSearchTests : IClassFixture<KernelWindowSearchKernels>
     // #678: a two-body LEO over 2024-03-01 TDB (a = 6800 km, e = 1e-4, i = 51.6 deg, the Earth's GM of the kernels), the
     // CSPICE windows of the same orbit written as kernel_search_leo.bsp (-67801), each state at the TT seconds from the epoch
     private static readonly FileInfo LeoSpkPath = new("Data/GeometryReference/kernel_search_leo.bsp");
-    private static readonly Window LeoWindow = new(TimeSystem.Time.CreateTDB(762523200.0), TimeSystem.Time.CreateTDB(762609600.0));
+    private static readonly Window LeoWindow = new(TimeSystem.Time.CreateTdb(762523200.0), TimeSystem.Time.CreateTdb(762609600.0));
     // The elevation in DSS-13_TOPO, the frame of the kernels of DSS-13, which the managed searches of the kernel site take
     // (#690): before, the frame the library built from the planetodetic coordinates of DSS-13 at J2000 on pck00011,
     // 7.6e-8 rad away in longitude, 1.07e-5 s on these crossings, compared with a reference of its own
@@ -404,15 +404,15 @@ public class KernelWindowSearchTests : IClassFixture<KernelWindowSearchKernels>
         var fromCoordinates = new Site(99, "DSS13GEO", Earth, dss13.Planetodetic);
         foreach (var site in new[] { dss13, fromCoordinates })
         {
-            var expected = site.FindIlluminationWindows(IlluminationWindow, IlluminationAngle.Incidence, RelationalOperator.LessThan, angle, TestHelpers.Sun, new WindowSearchOptions { Step = Step, Aberration = Aberration.LTS }).ToArray();
+            var expected = site.FindIlluminationWindows(IlluminationWindow, IlluminationAngle.Incidence, RelationalOperator.LessThan, angle, TestHelpers.Sun, new WindowSearchOptions { Step = Step, Aberration = Aberration.LtS }).ToArray();
             foreach (var method in new[] { "ELLIPSOID", "ellipsoid", " Ellipsoid ", "eLLipsoid  " })
             {
-                var actual = site.FindIlluminationWindows(IlluminationWindow, IlluminationAngle.Incidence, RelationalOperator.LessThan, angle, TestHelpers.Sun, new WindowSearchOptions { Step = Step, Aberration = Aberration.LTS }).ToArray();
+                var actual = site.FindIlluminationWindows(IlluminationWindow, IlluminationAngle.Incidence, RelationalOperator.LessThan, angle, TestHelpers.Sun, new WindowSearchOptions { Step = Step, Aberration = Aberration.LtS }).ToArray();
                 LabelAssert.Equal(expected, actual);
             }
         }
 
-        AssertWindows(label, dss13.FindIlluminationWindows(IlluminationWindow, IlluminationAngle.Incidence, RelationalOperator.LessThan, angle, TestHelpers.Sun, new WindowSearchOptions { Step = Step, Aberration = Aberration.LTS }), NativeThreshold, "kernel site, method ' ellipsoid'");
+        AssertWindows(label, dss13.FindIlluminationWindows(IlluminationWindow, IlluminationAngle.Incidence, RelationalOperator.LessThan, angle, TestHelpers.Sun, new WindowSearchOptions { Step = Step, Aberration = Aberration.LtS }), NativeThreshold, "kernel site, method ' ellipsoid'");
     }
 
     // The planetographic longitude east of the prime meridian of the body-fixed frame of the observer's body, in (−π, π]:
@@ -606,8 +606,8 @@ public class KernelWindowSearchTests : IClassFixture<KernelWindowSearchKernels>
         double worst = 0.0;
         for (int i = 0; i < expected.Length; i++)
         {
-            worst = System.Math.Max(worst, System.Math.Abs((actual[i].StartDate.ToTDB() - expected[i].StartDate.ToTDB()).TotalSeconds));
-            worst = System.Math.Max(worst, System.Math.Abs((actual[i].EndDate.ToTDB() - expected[i].EndDate.ToTDB()).TotalSeconds));
+            worst = System.Math.Max(worst, System.Math.Abs((actual[i].StartDate.ToTdb() - expected[i].StartDate.ToTdb()).TotalSeconds));
+            worst = System.Math.Max(worst, System.Math.Abs((actual[i].EndDate.ToTdb() - expected[i].EndDate.ToTdb()).TotalSeconds));
         }
 
         _output.WriteLine($"MEASURE {label}: {expected.Length} windows, worst |library - gfposc| {worst:E3} s");
@@ -622,7 +622,7 @@ public class KernelWindowSearchTests : IClassFixture<KernelWindowSearchKernels>
         var spk = IO.Astrodynamics.Tests.Body.FrameKernelFiles.NewFile($"site{id}", ".bsp");
         var spkAtJ2000 = IO.Astrodynamics.Tests.Body.FrameKernelFiles.NewFile($"site{id}_j2000", ".bsp");
         site.WriteEphemeris(new Window(LeoWindow.StartDate.AddHours(-1.0), LeoWindow.EndDate.AddHours(1.0)), spk);
-        site.WriteEphemeris(new Window(TimeSystem.Time.J2000TDB.AddHours(-1.0), TimeSystem.Time.J2000TDB.AddHours(1.0)), spkAtJ2000);
+        site.WriteEphemeris(new Window(TimeSystem.Time.J2000Tdb.AddHours(-1.0), TimeSystem.Time.J2000Tdb.AddHours(1.0)), spkAtJ2000);
         return (spk, spkAtJ2000);
     }
 

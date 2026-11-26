@@ -10,9 +10,9 @@ Controls light-time and stellar-aberration correction in ephemeris queries.
 |-------|-------------|
 | `None` | No correction |
 | `LT` | Light-time correction |
-| `LTS` | Light-time plus stellar aberration |
+| `LtS` | Light-time plus stellar aberration |
 | `CN` | Converged Newtonian light-time |
-| `CNS` | Converged Newtonian light-time plus stellar aberration |
+| `CnS` | Converged Newtonian light-time plus stellar aberration |
 | `XLT` | Transmission light-time |
 | `XCN` | Transmission converged Newtonian |
 

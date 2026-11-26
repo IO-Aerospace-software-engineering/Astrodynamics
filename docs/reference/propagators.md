@@ -222,7 +222,7 @@ to propagate from another initial orbit. `Spacecraft.Propagate`, `Scenario.Simul
 maneuver chain, the tanks and the coefficients of the spacecraft are read at each run.
 
 The re-arm of a run drops the stored states and the attitude record of the spacecraft whatever `IsPropagated` says,
-those added by hand (`AddPropagatedStates`, `AddStateOrientationToICRF`) included, on every path (decision 38 of #668,
+those added by hand (`AddPropagatedStates`, `AddStateOrientationToIcrf`) included, on every path (decision 38 of #668,
 decided by S. Guillet, 2026-11-23): before 11.0.0 they were dropped only after a numerical propagation, so a first run
 kept the attitudes added by hand, a quarter turn off a fresh run over half of its window and outside it in the gap
 analysis of L5, while a second run dropped them (`RunIndependenceTests`).
@@ -438,7 +438,7 @@ var config = new MonteCarloConfiguration
     RunCount = 100,
     Seed = 42,
     TemplateSpacecraft = spacecraft,
-    Window = new Window(Time.J2000TDB, Time.J2000TDB.AddHours(2)),
+    Window = new Window(Time.J2000Tdb, Time.J2000Tdb.AddHours(2)),
     Propagation = new PropagationOptions
     {
         Integrator = new RK78IntegratorOptions
@@ -504,7 +504,7 @@ Linux x64, Windows x64 and macOS arm64 in the CI of #789, run 45145382114; `Canc
 What a stopped run leaves (C2 of lot L4):
 
 - the spacecraft it stopped in holds no stored state and no attitude record (those added by hand to a spacecraft never
-  propagated, `AddPropagatedStates` and `AddStateOrientationToICRF`, included), is not `IsPropagated`, and keeps nothing
+  propagated, `AddPropagatedStates` and `AddStateOrientationToIcrf`, included), is not `IsPropagated`, and keeps nothing
   for the conjunction analysis; a TLE spacecraft reads SGP4 again, any other its initial orbit;
 - its fuel, `ExecutedManeuvers` and standby chain are advanced up to the stop: an impulse executed before it has burnt
   its fuel, and `ExecutedManeuvers` lists the maneuvers executed up to the stop (decision 58 of #668); until the fix of

@@ -166,7 +166,7 @@ public class GeopotentialOptionsTests
         var tle = new Tle("ISS", "1 25544U 98067A   21020.53488036  .00016717  00000-0  10270-3 0  9054",
             "2 25544  51.6423 353.0312 0000493 320.8755  39.2360 15.49309423 25703");
         var window = new Window(tle.Epoch, tle.Epoch.AddHours(1.0));
-        var t0 = window.StartDate.ToTDB();
+        var t0 = window.StartDate.ToTdb();
         var start = tle.ToOsculating(t0).ToFrame(Frames.Frame.ICRF).ToStateVector();
         var earth = Earth(GeopotentialModelParameters.Egm2008(10));
         var twin = PropagationOptionsPathTests.NewSpacecraft(new StateVector(start.Position, start.Velocity, earth, t0,

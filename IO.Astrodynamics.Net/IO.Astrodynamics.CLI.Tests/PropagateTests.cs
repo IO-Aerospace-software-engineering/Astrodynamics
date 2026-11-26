@@ -107,7 +107,7 @@ public class PropagateTests
             try
             {
                 SpiceApi.Instance.LoadKernels(ephemeris);
-                start = SpiceApi.Instance.ReadEphemeris(TimeSystem.Time.J2000TDB, 399, -1000, Frames.Frame.ICRF,
+                start = SpiceApi.Instance.ReadEphemeris(TimeSystem.Time.J2000Tdb, 399, -1000, Frames.Frame.ICRF,
                     Aberration.None);
                 gm = new Body.CelestialBody(399).GM;
             }
@@ -155,7 +155,7 @@ public class PropagateTests
     [InlineData("q", (ushort)2, "ICRF", EquinoctialValues)]
     public async Task EarthGeopotentialDegree_IsTheDegreeOfTheRun(string activation, ushort degree, string frame, string values)
     {
-        var end = Time.J2000TDB.AddSeconds(600.0);
+        var end = Time.J2000Tdb.AddSeconds(600.0);
         var name = $"N{degree}{activation}";
 
         using (await Configuration.LockAsync())
@@ -180,7 +180,7 @@ public class PropagateTests
     [Fact]
     public async Task DefaultDegree_IsDegree10()
     {
-        var end = Time.J2000TDB.AddSeconds(600.0);
+        var end = Time.J2000Tdb.AddSeconds(600.0);
 
         using (await Configuration.LockAsync())
         {
@@ -226,7 +226,7 @@ public class PropagateTests
             Assert.Contains(maximum.ToString(CultureInfo.InvariantCulture), refused);
             Assert.False(Directory.Exists(output));
 
-            var end = Time.J2000TDB.AddSeconds(10.0);
+            var end = Time.J2000Tdb.AddSeconds(10.0);
             var cli = await RunAndReadEnd("s", StateValues, "ICRF", "NM", end, (ushort)maximum);
             var library = LibraryRunEnd("s", StateValues, "ICRF", (ushort)maximum, end);
             var error = (cli - library).Magnitude();
@@ -239,7 +239,7 @@ public class PropagateTests
     /// The start of the TLE runs below: 2021-01-20 13:00 UTC, 47 min after the epoch of the ISS TLE, rounded to the TDB
     /// second, so that the window the CLI parses from its seconds is the window of the reference to the tick.
     /// </summary>
-    private static Time TleStart => Time.CreateTDB(System.Math.Round(Time.Parse("2021-01-20T13:00:00Z").ToTDB().TimeSpanFromJ2000().TotalSeconds));
+    private static Time TleStart => Time.CreateTdb(System.Math.Round(Time.Parse("2021-01-20T13:00:00Z").ToTdb().TimeSpanFromJ2000().TotalSeconds));
 
     /// <summary>
     /// Since #675, <c>-t</c> starts from the SGP4 state on the Earth of the CLI, so <c>-n</c> reaches the TLE path too:
@@ -325,7 +325,7 @@ public class PropagateTests
             Directory.Delete(output, true);
         }
 
-        var begin = (start ?? Time.J2000TDB).TimeSpanFromJ2000().TotalSeconds.ToString("R", CultureInfo.InvariantCulture);
+        var begin = (start ?? Time.J2000Tdb).TimeSpanFromJ2000().TotalSeconds.ToString("R", CultureInfo.InvariantCulture);
         var stop = end.TimeSpanFromJ2000().TotalSeconds.ToString("R", CultureInfo.InvariantCulture);
         string[] orbit = activation == "t"
             ? ["--from", "tle", "--orbit", values.Split(',')[0], "--orbit", values.Split(',')[1]]
@@ -373,7 +373,7 @@ public class PropagateTests
         var stream = typeof(PropagateCommand).Assembly.GetManifestResourceStream(EmbeddedModel)!;
         var earth = new CelestialBody(399, new GeopotentialModelParameters(stream, degree), new EarthStandardAtmosphere());
         var inputFrame = new Frames.Frame(frame == "ICRF" ? "J2000" : frame);
-        var start = startEpoch ?? Time.J2000TDB;
+        var start = startEpoch ?? Time.J2000Tdb;
         if (activation == "t")
         {
             var lines = values.Split(',');
@@ -425,7 +425,7 @@ public class PropagateTests
         const string outputDirectory = "P675T";
         string res;
         var window = new TimeSystem.Window(TimeSystem.Time.Parse("2021-01-20T13:00:00Z"), TimeSystem.Time.Parse("2021-01-20T13:30:00Z"));
-        var epochs = Enumerable.Range(0, 31).Select(i => window.StartDate.ToTDB().AddSeconds(60.0 * i)).ToArray();
+        var epochs = Enumerable.Range(0, 31).Select(i => window.StartDate.ToTdb().AddSeconds(60.0 * i)).ToArray();
         double worst = 0.0, fromPointMass = double.MaxValue;
 
         using (await Configuration.LockAsync())
@@ -435,7 +435,7 @@ public class PropagateTests
                 "--begin", "2021-01-20T13:00:00Z", "--end", "2021-01-20T13:30:00Z", "--srp", .. LegacyDrag]);
 
             var tle = new OrbitalParameters.TLE.Tle("ISS", IssLine1, IssLine2);
-            var t0 = window.StartDate.ToTDB();
+            var t0 = window.StartDate.ToTdb();
             var cliEarth = new Body.CelestialBody(399, new Body.GeopotentialModelParameters(
                 typeof(PropagateCommand).Assembly.GetManifestResourceStream("IO.Astrodynamics.CLI.Data.EGM2008_to100_TideFree.txt"), 10),
                 new Atmosphere.EarthStandardAtmosphere());
@@ -506,7 +506,7 @@ public class PropagateTests
     public async Task Defaults_AreTheLibrarysRun()
     {
         const string output = "PDEF";
-        var window = new Window(Time.J2000TDB, Time.J2000TDB.AddSeconds(1800.0));
+        var window = new Window(Time.J2000Tdb, Time.J2000Tdb.AddSeconds(1800.0));
         var outputs = Enumerable.Range(0, 31).Select(i => window.StartDate.AddSeconds(60.0 * i)).ToArray();
         using (await Configuration.LockAsync())
         {

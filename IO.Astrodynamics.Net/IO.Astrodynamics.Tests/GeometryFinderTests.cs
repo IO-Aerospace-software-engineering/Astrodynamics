@@ -24,7 +24,7 @@ public class GeometryFinderTests
     private const double RootTolerance = 1.0e-6 + 0.5e-7;
 
 
-    private static readonly TimeSystem.Time Start = TimeSystem.Time.CreateTDB(762480000.0);
+    private static readonly TimeSystem.Time Start = TimeSystem.Time.CreateTdb(762480000.0);
     private static readonly Window SearchWindow = new(Start, Start.AddSeconds(600.0));
     private static readonly TimeSpan Step = TimeSpan.FromSeconds(60.0);
 
@@ -290,7 +290,7 @@ public class GeometryFinderTests
     [Fact]
     public void EarthMoonDistance_AgainstGfdist()
     {
-                var window = new Window(TimeSystem.Time.J2000TDB, TimeSystem.Time.Parse("2000-04-01 12:00:00.0000 TDB"));
+                var window = new Window(TimeSystem.Time.J2000Tdb, TimeSystem.Time.Parse("2000-04-01 12:00:00.0000 TDB"));
         var step = TimeSpan.FromDays(1.0);
         var moon = TestHelpers.MoonAtJ2000;
         var earth = TestHelpers.EarthAtJ2000;
@@ -313,7 +313,7 @@ public class GeometryFinderTests
     public void MoonFromSite_AgainstGfposc()
     {
                 Site site = new Site(13, "DSS-13", TestHelpers.EarthAtJ2000);
-        var window = new Window(TimeSystem.Time.J2000TDB, TimeSystem.Time.Parse("2000-01-02 12:00:00.0000 TDB"));
+        var window = new Window(TimeSystem.Time.J2000Tdb, TimeSystem.Time.Parse("2000-01-02 12:00:00.0000 TDB"));
         var step = TimeSpan.FromSeconds(60.0);
         var moon = TestHelpers.MoonAtJ2000;
         IReadOnlyList<Window> Search(CoordinateSystem system, Coordinate coordinate, RelationalOperator relation) =>
@@ -596,8 +596,8 @@ internal static class GeometryReference
         double worst = 0.0;
         for (int i = 0; i < expected.Length; i++)
         {
-            double ds = actual[i].StartDate.ToTDB().TimeSpanFromJ2000().TotalSeconds - expected[i][0];
-            double de = actual[i].EndDate.ToTDB().TimeSpanFromJ2000().TotalSeconds - expected[i][1];
+            double ds = actual[i].StartDate.ToTdb().TimeSpanFromJ2000().TotalSeconds - expected[i][0];
+            double de = actual[i].EndDate.ToTdb().TimeSpanFromJ2000().TotalSeconds - expected[i][1];
             worst = System.Math.Max(worst, System.Math.Max(System.Math.Abs(ds), System.Math.Abs(de)));
         }
 

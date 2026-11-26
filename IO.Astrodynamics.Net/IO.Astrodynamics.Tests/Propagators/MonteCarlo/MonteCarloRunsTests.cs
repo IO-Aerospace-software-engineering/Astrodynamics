@@ -43,7 +43,7 @@ public class MonteCarloRunsTests : IClassFixture<ReferenceCases>
         {
             Assert.True(runs.Results[k].Succeeded);
             Assert.Equal(coefficients[k].DragCoefficient, runs.Results[k].Spacecraft.DragCoefficient);
-            Assert.Equal(coefficients[k].ReflectivityCoefficient, runs.Results[k].Spacecraft.SolarRadiationCoeff);
+            Assert.Equal(coefficients[k].ReflectivityCoefficient, runs.Results[k].Spacecraft.SolarRadiationCoefficient);
             Assert.Equal(config.BaseNaifId - 7 - k, runs.Results[k].Spacecraft.NaifId);
             Assert.Equal(states[k].Position, runs.Results[k].Spacecraft.InitialOrbitalParameters.ToStateVector().Position);
         }

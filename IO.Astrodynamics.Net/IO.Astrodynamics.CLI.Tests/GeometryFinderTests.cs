@@ -67,8 +67,8 @@ public class GeometryFinderTests
             var tdb = CliRun.Ok(Distance("<", "2024-03-01T00:00:00Z", "2024-03-21T00:00:00Z", options: ["--time-scale", "tdb"]));
             var found = SpiceApi.Instance.FindWindowsOnDistanceConstraint(new TimeSystem.Window(TimeSystem.Time.Parse("2024-03-01T00:00:00Z"),
                 TimeSystem.Time.Parse("2024-03-21T00:00:00Z")), 399, 301, RelationalOperator.LessThan, 400000000.0, Aberration.None, TimeSpan.FromDays(10)).Single();
-            Assert.Equal($"{new TimeSystem.Window(found.StartDate.ToTDB(), found.EndDate.ToTDB())}{Environment.NewLine}", tdb);
-            Assert.Equal($"{new TimeSystem.Window(found.StartDate.ToUTC(), found.EndDate.ToUTC())}{Environment.NewLine}", utc);
+            Assert.Equal($"{new TimeSystem.Window(found.StartDate.ToTdb(), found.EndDate.ToTdb())}{Environment.NewLine}", tdb);
+            Assert.Equal($"{new TimeSystem.Window(found.StartDate.ToUtc(), found.EndDate.ToUtc())}{Environment.NewLine}", utc);
             Assert.StartsWith("From 2024-03-01T00:00:00.0000000Z to 2024-03-19T", utc);
             Assert.StartsWith("From 2024-03-01T00:01:09.1853864 TDB to 2024-03-19T18:04:11.9364660 TDB", tdb);
 
@@ -188,7 +188,7 @@ public class GeometryFinderTests
             var expected = SpiceApi.Instance.FindWindowsOnIlluminationConstraint(
                     new TimeSystem.Window(TimeSystem.Time.Create(674524800.0, TimeSystem.TimeScale.TDB), TimeSystem.Time.Create(674611200.0, TimeSystem.TimeScale.TDB)),
                     10, 399, new Frames.Frame("ITRF93"), new Coordinates.Planetodetic(-0.0349, 0.8378, 1000.0), IlluminationAngle.Incidence,
-                    RelationalOperator.LessThan, value, 0.0, Aberration.CNS, TimeSpan.FromHours(4.5), 10)
+                    RelationalOperator.LessThan, value, 0.0, Aberration.CnS, TimeSpan.FromHours(4.5), 10)
                 .Select(x => x + Environment.NewLine);
             Assert.Equal(string.Join("", expected), res);
             Assert.Equal(2, res.Split(Environment.NewLine, StringSplitOptions.RemoveEmptyEntries).Length);

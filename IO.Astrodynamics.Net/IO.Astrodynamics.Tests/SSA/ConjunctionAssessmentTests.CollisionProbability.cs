@@ -115,7 +115,7 @@ public partial class ConjunctionAssessmentTests
         // Arrange: the runner's path, each object a spacecraft whose initial state and covariance are its state at TCA,
         // straight-line trajectories over TCA ± 10 s, the combined hard-body radius on the protected object
         var earth = CreateEarth();
-        var tca = TimeSystem.Time.J2000TDB.AddSeconds(10.0);
+        var tca = TimeSystem.Time.J2000Tdb.AddSeconds(10.0);
         var window = new Window(tca.AddSeconds(-10.0), tca.AddSeconds(10.0));
         double worst = 0.0;
         int id = 0;
@@ -145,7 +145,7 @@ public partial class ConjunctionAssessmentTests
                 new ConjunctionAnalysisOptions
                 {
                     SampleStep = TimeSpan.FromDays(1.0),
-                    MaximumEventSearchStep = TimeSpan.FromDays(1.0),
+                    MaxEventSearchStep = TimeSpan.FromDays(1.0),
                     SecondaryHardBodyRadiusMeters = 0.0,
                     LowRelativeSpeedThresholdMetersPerSecond = 0.0
                 });

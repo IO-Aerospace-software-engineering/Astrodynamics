@@ -227,7 +227,7 @@ public class IntegratorInitializationTests
         var spacecraft = NewLeo(earth);
         var recorder = new RecordingIntegrator((RK78Integrator)NewIntegrator("RK78", earth));
         // A window given in UTC: the initial state is at its TDB start
-        var window = new Window(Epoch.ToUTC(), Epoch.ToUTC().AddHours(1.0));
+        var window = new Window(Epoch.ToUtc(), Epoch.ToUtc().AddHours(1.0));
 
         // Act
         var propagator = new CentralBodyPropagator(window, spacecraft, recorder, Step);
@@ -242,7 +242,7 @@ public class IntegratorInitializationTests
             Assert.Same(earth, state.Observer);
             Assert.Equal(Frames.Frame.ICRF, state.Frame);
             Assert.Equal(TimeScale.TDB, state.Epoch.Scale);
-            LabelAssert.Equal(window.StartDate.ToTDB(), state.Epoch);
+            LabelAssert.Equal(window.StartDate.ToTdb(), state.Epoch);
         }
 
         Assert.NotEmpty(spacecraft.PropagatedStates);
@@ -282,7 +282,7 @@ public class IntegratorInitializationTests
     {
         // Arrange: the initial state in ECLIPJ2000, the frame of the integration (#529)
         var earth = new CelestialBody(PlanetsAndMoons.EARTH);
-        var spacecraft = NewLeo(earth, Frames.Frame.ECLIPTIC_J2000);
+        var spacecraft = NewLeo(earth, Frames.Frame.ECLIPJ2000);
         var initial = (StateVector)spacecraft.InitialOrbitalParameters;
         var recorder = new RecordingIntegrator((RK78Integrator)NewIntegrator("RK78", earth));
         var window = OneHour;
@@ -293,7 +293,7 @@ public class IntegratorInitializationTests
 
         // Assert
         Assert.Equal(2, recorder.Initializations.Count);
-        Assert.All(recorder.Initializations, state => Assert.Equal(Frames.Frame.ECLIPTIC_J2000, state.Frame));
+        Assert.All(recorder.Initializations, state => Assert.Equal(Frames.Frame.ECLIPJ2000, state.Frame));
         double elapsed = PropagationTimeArgument.Tt.SecondsBetween(window.StartDate, window.EndDate);
         double error = KeplerError(initial, solution, window, elapsed);
         _output.WriteLine($"MEASURE IntegratorInitializationTests ECLIPJ2000: Kepler {error:E3} m");
@@ -401,7 +401,7 @@ public class IntegratorInitializationTests
         var expected = reference.Propagator.Propagate().StateVectors;
         var (propagator, spacecraft) = New();
         var callerState = state == "ECLIPJ2000"
-            ? ((StateVector)spacecraft.InitialOrbitalParameters).ToFrame(Frames.Frame.ECLIPTIC_J2000)
+            ? ((StateVector)spacecraft.InitialOrbitalParameters).ToFrame(Frames.Frame.ECLIPJ2000)
             : spacecraft.InitialOrbitalParameters.ToStateVector();
 
         // Act

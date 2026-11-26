@@ -711,7 +711,7 @@ public class NearParabolicBandTests
         var later = (KeplerianElements)ke.AtEpoch(Epoch.AddSeconds(600.0));
 
         // Assert: Barker's law, bit for bit: M + √(μ/(2q³)) Δt, the motion of an exact parabola
-        Assert.Equal(0.3 + System.Math.Sqrt(IO.Astrodynamics.Constants.G * _earth.Mass / (2.0 * System.Math.Pow(7.0e6, 3))) * 600.0,
+        Assert.Equal(0.3 + System.Math.Sqrt(IO.Astrodynamics.Constants.GravitationalConstant * _earth.Mass / (2.0 * System.Math.Pow(7.0e6, 3))) * 600.0,
             later.MeanAnomaly());
     }
 
@@ -781,7 +781,7 @@ public class NearParabolicBandTests
         // e = 1 exactly: a = +Infinity, n = √(μ/(2q³)), as before, bit for bit
         var ke = KeplerianElements.Parabolic(6800000.0, 0.2, 0.3, 0.4, 0.5, _earth, Epoch, Frames.Frame.ICRF);
         Assert.True(double.IsPositiveInfinity(ke.SemiMajorAxis()));
-        Assert.Equal(System.Math.Sqrt(IO.Astrodynamics.Constants.G * _earth.Mass / (2.0 * System.Math.Pow(6800000.0, 3))), ke.MeanMotion());
+        Assert.Equal(System.Math.Sqrt(IO.Astrodynamics.Constants.GravitationalConstant * _earth.Mass / (2.0 * System.Math.Pow(6800000.0, 3))), ke.MeanMotion());
 
         // A finite a at e = 1 exactly has no meaning: refused by the elements the library builds (internal since #668, R23;
         // Parabolic computes a)
@@ -1192,7 +1192,7 @@ public class NearParabolicBandTests
         var direct = sv.ToEquinoctial().P;
         var throughKeplerian = sv.ToKeplerianElements().ToEquinoctial().P;
         var later = sv.AtEpoch(Epoch.AddSeconds(3600.0)).ToEquinoctial().P;
-        var ecliptic = sv.ToFrame(Frames.Frame.ECLIPTIC_J2000).ToEquinoctial().P;
+        var ecliptic = sv.ToFrame(Frames.Frame.ECLIPJ2000).ToEquinoctial().P;
 
         // Assert: h²/μ (before: +∞ below e = 1, −∞ above)
         foreach (var (path, p) in new[] { ("direct", direct), ("Keplerian", throughKeplerian), ("+1 h", later), ("ecliptic", ecliptic) })
@@ -1212,7 +1212,7 @@ public class NearParabolicBandTests
         // Arrange: the input of StateVectorTests.ParabolicToEquinoctial, whose e is off 1 by its rounding
         var ke = KeplerianElements.Parabolic(6800000.0, 0.2, 0.3, 0.4, 0.0, _earth, Epoch, Frames.Frame.ICRF);
         var sv = ke.ToStateVector();
-        var ecliptic = sv.ToFrame(Frames.Frame.ECLIPTIC_J2000).ToStateVector();
+        var ecliptic = sv.ToFrame(Frames.Frame.ECLIPJ2000).ToStateVector();
 
         foreach (var (name, state) in new[] { ("ICRF", sv), ("ECLIPTIC_J2000", ecliptic) })
         {

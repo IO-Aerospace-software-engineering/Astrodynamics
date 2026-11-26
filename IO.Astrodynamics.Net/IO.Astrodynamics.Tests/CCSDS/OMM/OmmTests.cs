@@ -112,7 +112,7 @@ namespace IO.Astrodynamics.Tests.CCSDS.OMM
                 raan: 120.0,
                 argOfPericenter: 90.0,
                 meanAnomaly: 45.0,
-                bstar: 0.0001,
+                bStar: 0.0001,
                 meanMotionDot: 0.00001,
                 meanMotionDDot: 0.000001);
 
@@ -163,7 +163,7 @@ namespace IO.Astrodynamics.Tests.CCSDS.OMM
                 raan: 353.0312,
                 argOfPericenter: 320.8755,
                 meanAnomaly: 39.2360,
-                bstar: 0.0001027,
+                bStar: 0.0001027,
                 meanMotionDot: 0.00016717,
                 meanMotionDDot: 0.0,
                 noradCatalogId: 25544,
@@ -515,7 +515,7 @@ namespace IO.Astrodynamics.Tests.CCSDS.OMM
                 raan: 353.0312,
                 argOfPericenter: 320.8755,
                 meanAnomaly: 39.2360,
-                bstar: 0.0001027,
+                bStar: 0.0001027,
                 meanMotionDot: 0.00016717,
                 meanMotionDDot: 0.0,
                 noradCatalogId: 25544);
@@ -613,8 +613,8 @@ namespace IO.Astrodynamics.Tests.CCSDS.OMM
             Assert.Equal(omm.Data.MeanElements.MeanAnomaly * Deg2Rad, tle.MeanMeanAnomaly, 6);
 
             // Verify TLE parameters (TLE format has limited precision for these values)
-            Assert.Equal(omm.Data.TleParameters.BStar.Value, tle.BallisticCoefficient, 6);
-            Assert.Equal(omm.Data.TleParameters.MeanMotionDot, tle.FirstDerivationMeanMotion, 6);
+            Assert.Equal(omm.Data.TleParameters.BStar.Value, tle.BStar, 6);
+            Assert.Equal(omm.Data.TleParameters.MeanMotionDot, tle.MeanMotionDot, 6);
         }
 
         [Fact]

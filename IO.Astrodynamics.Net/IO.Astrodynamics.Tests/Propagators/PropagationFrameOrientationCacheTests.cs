@@ -30,7 +30,7 @@ public class PropagationFrameOrientationCacheTests
     public void InterpolatedOrientationMatchesSpiceAtGridPoint()
     {
         var earth = new CelestialBody(PlanetsAndMoons.EARTH);
-        var start = TimeSystem.Time.J2000TDB;
+        var start = TimeSystem.Time.J2000Tdb;
         var end = start.AddSeconds(3600);
         var window = new Window(start, end);
 
@@ -39,7 +39,7 @@ public class PropagationFrameOrientationCacheTests
         // Query at an exact grid point (t=300s from start)
         var queryEpoch = start.AddSeconds(300);
         var cached = cache.GetOrientation(queryEpoch);
-        var direct = earth.Frame.GetStateOrientationToICRF(queryEpoch);
+        var direct = earth.Frame.GetStateOrientationToIcrf(queryEpoch);
 
         // At grid points, should match very closely (just floating-point arithmetic)
         AssertQuaternionClose(direct.Rotation, cached.Rotation, 1e-12);
@@ -50,7 +50,7 @@ public class PropagationFrameOrientationCacheTests
     public void InterpolatedOrientationMatchesSpiceMidGrid()
     {
         var earth = new CelestialBody(PlanetsAndMoons.EARTH);
-        var start = TimeSystem.Time.J2000TDB;
+        var start = TimeSystem.Time.J2000Tdb;
         var end = start.AddSeconds(3600);
         var window = new Window(start, end);
 
@@ -59,7 +59,7 @@ public class PropagationFrameOrientationCacheTests
         // Query at mid-grid point (t=330s = midway between 300s and 360s grid points)
         var queryEpoch = start.AddSeconds(330);
         var cached = cache.GetOrientation(queryEpoch);
-        var direct = earth.Frame.GetStateOrientationToICRF(queryEpoch);
+        var direct = earth.Frame.GetStateOrientationToIcrf(queryEpoch);
 
         // SLERP over 60s for Earth rotation should be extremely accurate
         // Earth rotates ~0.0042 deg/s, so 60s = 0.25 deg, SLERP error is negligible
@@ -71,7 +71,7 @@ public class PropagationFrameOrientationCacheTests
     public void InterpolatedOrientationMatchesSpiceAtWindowBoundaries()
     {
         var earth = new CelestialBody(PlanetsAndMoons.EARTH);
-        var start = TimeSystem.Time.J2000TDB;
+        var start = TimeSystem.Time.J2000Tdb;
         var end = start.AddSeconds(3600);
         var window = new Window(start, end);
 
@@ -79,12 +79,12 @@ public class PropagationFrameOrientationCacheTests
 
         // Query at exact window start
         var cachedStart = cache.GetOrientation(start);
-        var directStart = earth.Frame.GetStateOrientationToICRF(start);
+        var directStart = earth.Frame.GetStateOrientationToIcrf(start);
         AssertQuaternionClose(directStart.Rotation, cachedStart.Rotation, 1e-9);
 
         // Query at exact window end
         var cachedEnd = cache.GetOrientation(end);
-        var directEnd = earth.Frame.GetStateOrientationToICRF(end);
+        var directEnd = earth.Frame.GetStateOrientationToIcrf(end);
         AssertQuaternionClose(directEnd.Rotation, cachedEnd.Rotation, 1e-9);
     }
 
@@ -92,7 +92,7 @@ public class PropagationFrameOrientationCacheTests
     public void CacheWorksWithArbitraryQueryTimes()
     {
         var earth = new CelestialBody(PlanetsAndMoons.EARTH);
-        var start = TimeSystem.Time.J2000TDB;
+        var start = TimeSystem.Time.J2000Tdb;
         var end = start.AddSeconds(86400);
         var window = new Window(start, end);
 
@@ -104,7 +104,7 @@ public class PropagationFrameOrientationCacheTests
         {
             var queryEpoch = start.AddSeconds(offset);
             var cached = cache.GetOrientation(queryEpoch);
-            var direct = earth.Frame.GetStateOrientationToICRF(queryEpoch);
+            var direct = earth.Frame.GetStateOrientationToIcrf(queryEpoch);
 
             AssertQuaternionClose(direct.Rotation, cached.Rotation, 1e-9);
             AssertVector3Close(direct.AngularVelocity, cached.AngularVelocity, 1e-10);
@@ -114,7 +114,7 @@ public class PropagationFrameOrientationCacheTests
     [Fact]
     public void ConstructorThrowsOnNullFrame()
     {
-        var start = TimeSystem.Time.J2000TDB;
+        var start = TimeSystem.Time.J2000Tdb;
         var window = new Window(start, start.AddSeconds(3600));
 
         Assert.Throws<ArgumentNullException>(() =>
@@ -125,7 +125,7 @@ public class PropagationFrameOrientationCacheTests
     public void ConstructorThrowsOnNonPositiveGridStep()
     {
         var earth = new CelestialBody(PlanetsAndMoons.EARTH);
-        var start = TimeSystem.Time.J2000TDB;
+        var start = TimeSystem.Time.J2000Tdb;
         var window = new Window(start, start.AddSeconds(3600));
 
         Assert.Throws<ArgumentOutOfRangeException>(() =>
@@ -138,12 +138,12 @@ public class PropagationFrameOrientationCacheTests
     public void FrameOrientationCacheBypassWorks()
     {
         var earth = new CelestialBody(PlanetsAndMoons.EARTH);
-        var start = TimeSystem.Time.J2000TDB;
+        var start = TimeSystem.Time.J2000Tdb;
         var end = start.AddSeconds(3600);
         var window = new Window(start, end);
 
         // Get direct result first (no cache)
-        var directResult = earth.Frame.GetStateOrientationToICRF(start.AddSeconds(30));
+        var directResult = earth.Frame.GetStateOrientationToIcrf(start.AddSeconds(30));
 
         // Make the cache active on this thread
         var cache = new PropagationFrameOrientationCache(window, earth.Frame, TimeSpan.FromSeconds(60));
@@ -151,7 +151,7 @@ public class PropagationFrameOrientationCacheTests
         {
             // Should now go through cache
             Assert.Same(cache, earth.Frame.OrientationCache);
-            var cachedResult = earth.Frame.GetStateOrientationToICRF(start.AddSeconds(30));
+            var cachedResult = earth.Frame.GetStateOrientationToIcrf(start.AddSeconds(30));
             AssertQuaternionClose(directResult.Rotation, cachedResult.Rotation, 1e-9);
         }
 
@@ -164,7 +164,7 @@ public class PropagationFrameOrientationCacheTests
     {
         var earth = new CelestialBody(PlanetsAndMoons.EARTH);
         var otherEarth = new CelestialBody(PlanetsAndMoons.EARTH);
-        var start = TimeSystem.Time.J2000TDB;
+        var start = TimeSystem.Time.J2000Tdb;
         var cache = new PropagationFrameOrientationCache(new Window(start, start.AddSeconds(3600)), earth.Frame,
             TimeSpan.FromSeconds(60));
 
@@ -186,7 +186,7 @@ public class PropagationFrameOrientationCacheTests
     {
         var earth = new CelestialBody(PlanetsAndMoons.EARTH);
         var moon = new CelestialBody(PlanetsAndMoons.MOON);
-        var start = TimeSystem.Time.J2000TDB;
+        var start = TimeSystem.Time.J2000Tdb;
         var window = new Window(start, start.AddSeconds(3600));
         var earthCache = new PropagationFrameOrientationCache(window, earth.Frame, TimeSpan.FromSeconds(60));
         var moonCache = new PropagationFrameOrientationCache(window, moon.Frame, TimeSpan.FromSeconds(60));
@@ -215,7 +215,7 @@ public class PropagationFrameOrientationCacheTests
 
     /// <summary>
     /// Every cell of the 60 s grid of the Earth over 6 h, at 19 fractions of each (0.05 to 0.95), against CSPICE
-    /// <c>sxform</c>: the exact SLERP of the grid points (#561). The normalised-Lerp fallback of <c>Quaternion.SLERP</c>,
+    /// <c>sxform</c>: the exact SLERP of the grid points (#561). The normalised-Lerp fallback of <c>Quaternion.Slerp</c>,
     /// which every cell of the grid took (4.4e-3 rad between two points), was up to 3.4e-10 rad off; the exact SLERP of the
     /// same points 2.4e-12 rad (measured in #561, 2026-11-03).
     /// </summary>
@@ -284,7 +284,7 @@ public class PropagationFrameOrientationCacheTests
     public void WindowEndingInsideTheCoverage_ReadsEveryEpochOfTheWindow(double endFromCoverageEnd, double length)
     {
         var earth = new CelestialBody(PlanetsAndMoons.EARTH);
-        var end = TimeSystem.Time.CreateTDB(CoverageEnd + endFromCoverageEnd);
+        var end = TimeSystem.Time.CreateTdb(CoverageEnd + endFromCoverageEnd);
         var start = end.AddSeconds(-length);
         var cache = new PropagationFrameOrientationCache(new Window(start, end), earth.Frame, TimeSpan.FromSeconds(60));
 
@@ -319,12 +319,12 @@ public class PropagationFrameOrientationCacheTests
     public void ReadPastTheCoverage_ThrowsWithSpicesMessage()
     {
         var earth = new CelestialBody(PlanetsAndMoons.EARTH);
-        var end = TimeSystem.Time.CreateTDB(CoverageEnd + 1.0);
+        var end = TimeSystem.Time.CreateTdb(CoverageEnd + 1.0);
         var cache = new PropagationFrameOrientationCache(new Window(end.AddSeconds(-UnalignedLength), end), earth.Frame,
             TimeSpan.FromSeconds(60));
 
         // Inside the coverage, the orientation; past it, SPICE's message
-        var inside = TimeSystem.Time.CreateTDB(CoverageEnd - 1.0);
+        var inside = TimeSystem.Time.CreateTdb(CoverageEnd - 1.0);
         Assert.True(RotationAngle(SpiceApi.Instance.TransformFrame(inside, earth.Frame, Frames.Frame.ICRF).Rotation,
             cache.GetOrientation(inside).Rotation) < AngleBound);
         var spice = Assert.Throws<SpiceException>(() =>
@@ -333,7 +333,7 @@ public class PropagationFrameOrientationCacheTests
         Assert.Contains("ITRF93", exception.Message);
         Assert.Contains(spice.Message, exception.Message);
         Assert.IsType<SpiceException>(exception.InnerException);
-        Assert.Throws<InvalidOperationException>(() => cache.GetOrientation(TimeSystem.Time.CreateTDB(CoverageEnd + 0.001)));
+        Assert.Throws<InvalidOperationException>(() => cache.GetOrientation(TimeSystem.Time.CreateTdb(CoverageEnd + 0.001)));
     }
 
     [Fact]
@@ -345,7 +345,7 @@ public class PropagationFrameOrientationCacheTests
         {
             // The first tick inside the coverage: the start, −431358160871.88 ticks, has its nearest tick 12 ns before it
             // (#625; the truncation toward zero put it 88 ns after)
-            var start = TimeSystem.Time.CreateTDB(CoverageStart + fromCoverageStart);
+            var start = TimeSystem.Time.CreateTdb(CoverageStart + fromCoverageStart);
             if (start.TimeSpanFromJ2000().TotalSeconds < CoverageStart + fromCoverageStart) start = start.AddTicks(1);
             var cache = new PropagationFrameOrientationCache(new Window(start, start.AddSeconds(UnalignedLength)), earth.Frame,
                 TimeSpan.FromSeconds(60));
@@ -366,7 +366,7 @@ public class PropagationFrameOrientationCacheTests
         _output.WriteLine($"MEASURE KR-1 cache start worst {worst:E3} rad, {worstAngularVelocity:E3} rad/s");
 
         // Before the coverage, SPICE's message
-        var early = TimeSystem.Time.CreateTDB(CoverageStart - 1.0);
+        var early = TimeSystem.Time.CreateTdb(CoverageStart - 1.0);
         var before = new PropagationFrameOrientationCache(new Window(early, early.AddSeconds(UnalignedLength)), earth.Frame,
             TimeSpan.FromSeconds(60));
         Assert.Throws<InvalidOperationException>(() => before.GetOrientation(early));
@@ -386,7 +386,7 @@ public class PropagationFrameOrientationCacheTests
     public void Propagation_EndingAtTheCoverageEnd_Runs(double endFromCoverageEnd, double length, bool throws)
     {
         // A geopotential reads the orientation of the Earth at every stage, up to the window end
-        var end = TimeSystem.Time.CreateTDB(CoverageEnd + endFromCoverageEnd);
+        var end = TimeSystem.Time.CreateTdb(CoverageEnd + endFromCoverageEnd);
         var start = end.AddSeconds(-length);
         var earth = new CelestialBody(PlanetsAndMoons.EARTH, Frames.Frame.ICRF, start,
             new GeopotentialModelParameters("Data/SolarSystem/EGM2008_to70_TideFree", 10));

@@ -49,7 +49,7 @@ namespace IO.Astrodynamics.Tests.ColdStart;
 /// </remarks>
 internal static class StaticBodiesChild
 {
-    private static readonly Time J2000 = Time.J2000TDB;
+    private static readonly Time J2000 = Time.J2000Tdb;
 
     private static readonly BodyInfo EarthInfo = new(399, "EARTH", 10, 3, new Vector3(6378137.0, 6378137.0, 6356752.0), 3.986004418e14,
         "ITRF93", 13000, 1.08e-3, 0.0, 0.0);
@@ -166,10 +166,10 @@ internal static class StaticBodiesChild
             Check($"MOON_BODY.GM {PlanetsAndMoons.MOON_BODY.GM:R}, SPICE {SpiceApi.Instance.GetCelestialBodyInfo(301).GM:R}",
                 PlanetsAndMoons.MOON_BODY.GM == SpiceApi.Instance.GetCelestialBodyInfo(301).GM);
 
-            var spkezr = SpiceApi.Instance.ReadEphemeris(J2000, 3, 399, Frame.ECLIPTIC_J2000, Aberration.None);
+            var spkezr = SpiceApi.Instance.ReadEphemeris(J2000, 3, 399, Frame.ECLIPJ2000, Aberration.None);
             var orbit = earth.InitialOrbitalParameters.ToStateVector();
             Check("EARTH_BODY's orbit is spkezr's state of 399 about 3 in ECLIPJ2000 at J2000 TDB",
-                orbit.Position == spkezr.Position && orbit.Velocity == spkezr.Velocity && orbit.Frame == Frame.ECLIPTIC_J2000);
+                orbit.Position == spkezr.Position && orbit.Velocity == spkezr.Velocity && orbit.Frame == Frame.ECLIPJ2000);
             Check("SOLAR_SYSTEM_BARYCENTER has no orbit", Barycenters.SOLAR_SYSTEM_BARYCENTER.InitialOrbitalParameters == null);
             return 0;
         }
@@ -217,11 +217,11 @@ internal static class StaticBodiesChild
             Check($"EARTH_BODY.Frame after the switch {PlanetsAndMoons.EARTH_BODY.Frame.Name}, SPICE {earthInfo.FrameName}",
                 PlanetsAndMoons.EARTH_BODY.Frame.Name == earthInfo.FrameName);
 
-            var barycenterOrbit = SpiceApi.Instance.ReadEphemeris(J2000, 0, 3, Frame.ECLIPTIC_J2000, Aberration.None);
+            var barycenterOrbit = SpiceApi.Instance.ReadEphemeris(J2000, 0, 3, Frame.ECLIPJ2000, Aberration.None);
             var barycenterState = Barycenters.EARTH_BARYCENTER.InitialOrbitalParameters.ToStateVector();
             Check("EARTH_BARYCENTER's orbit after the switch is spkezr's state of 3 about 0 in ECLIPJ2000 at J2000 TDB",
                 barycenterState.Position == barycenterOrbit.Position && barycenterState.Velocity == barycenterOrbit.Velocity);
-            var earthOrbit = SpiceApi.Instance.ReadEphemeris(J2000, 3, 399, Frame.ECLIPTIC_J2000, Aberration.None);
+            var earthOrbit = SpiceApi.Instance.ReadEphemeris(J2000, 3, 399, Frame.ECLIPJ2000, Aberration.None);
             var earthState = PlanetsAndMoons.EARTH_BODY.InitialOrbitalParameters.ToStateVector();
             Check("EARTH_BODY's orbit after the switch is spkezr's state of 399 about 3 in ECLIPJ2000 at J2000 TDB",
                 earthState.Position == earthOrbit.Position && earthState.Velocity == earthOrbit.Velocity);
@@ -349,7 +349,7 @@ internal static class StaticBodiesChild
             Check($"EARTH_BODY.J2 after the kernels {earth.J2:R}, SPICE {earthInfo.J2:R}", earth.J2.Equals(earthInfo.J2) && double.IsFinite(earth.J2));
             Check($"EARTH_BODY.Frame after the kernels {earth.Frame.Name}, SPICE {earthInfo.FrameName}",
                 earth.Frame.Name == earthInfo.FrameName && earth.Frame.Name == "ITRF93");
-            var earthOrbit = SpiceApi.Instance.ReadEphemeris(J2000, 3, 399, Frame.ECLIPTIC_J2000, Aberration.None);
+            var earthOrbit = SpiceApi.Instance.ReadEphemeris(J2000, 3, 399, Frame.ECLIPJ2000, Aberration.None);
             var earthState = earth.InitialOrbitalParameters.ToStateVector();
             Check("EARTH_BODY's orbit after the kernels is spkezr's state of 399 about 3 in ECLIPJ2000 at J2000 TDB",
                 earthState.Position == earthOrbit.Position && earthState.Velocity == earthOrbit.Velocity);
@@ -436,7 +436,7 @@ internal static class StaticBodiesChild
         double c = System.Math.Cos(eps), s = System.Math.Sin(eps);
         Vector3 Rotate(Vector3 v) => new(v.X, c * v.Y + s * v.Z, -s * v.Y + c * v.Z);
         bool Close(Vector3 actual, Vector3 icrf) => (actual - Rotate(icrf)).Magnitude() <= 4.4e-16 * icrf.Magnitude();
-        return state.Frame == Frame.ECLIPTIC_J2000 && Close(state.Position, icrfPosition) && Close(state.Velocity, icrfVelocity);
+        return state.Frame == Frame.ECLIPJ2000 && Close(state.Position, icrfPosition) && Close(state.Velocity, icrfVelocity);
     }
 
     private static void Check(string label, bool condition)

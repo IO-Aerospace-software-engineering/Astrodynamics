@@ -86,7 +86,7 @@ public class Tle : OrbitalParameters, IEquatable<Tle>, IParsable<Tle>
     /// It is typically a small value, indicating the amount of drag experienced by the satellite.
     /// For example, a value of 0.0001 means that the satellite experiences a drag force equivalent to 0.0001 times the gravitational force at the Earth's surface.
     /// </summary>
-    public double BallisticCoefficient { get; }
+    public double BStar { get; }
 
     /// <summary>
     /// Gets the value of the first-derivative field of line 1 (columns 34-43), ṅ/2: half the first time derivative of
@@ -96,7 +96,7 @@ public class Tle : OrbitalParameters, IEquatable<Tle>, IParsable<Tle>
     /// SGP4 does not read it; it is kept for the text of the TLE and its OMM. Before 11.0.0 this documentation called it
     /// ṅ (#605).
     /// </remarks>
-    public double FirstDerivationMeanMotion { get; }
+    public double MeanMotionDot { get; }
 
     /// <summary>
     /// Gets the value of the second-derivative field of line 1 (columns 45-52), n̈/6: a sixth of the second time
@@ -107,7 +107,7 @@ public class Tle : OrbitalParameters, IEquatable<Tle>, IParsable<Tle>
     /// SGP4 does not read it; it is kept for the text of the TLE and its OMM. Before 11.0.0 this documentation called it
     /// n̈ (#605).
     /// </remarks>
-    public double SecondDerivativeMeanMotion { get; }
+    public double MeanMotionDDot { get; }
 
     /// <summary>
     /// Gets the mean semi-major axis of the orbit in meters: a = ∛(GM/n²), n the <see cref="MeanMeanMotion"/> and GM the
@@ -252,9 +252,9 @@ public class Tle : OrbitalParameters, IEquatable<Tle>, IParsable<Tle>
         MeanMeanAnomaly = double.Parse(line2.Substring(43, 8), CultureInfo.InvariantCulture) * Constants.Deg2Rad;
 
         // Parse line 1 for additional parameters
-        FirstDerivationMeanMotion = ParseTleDouble(line1.Substring(33, 10));
-        SecondDerivativeMeanMotion = ParseTleExponent(line1.Substring(44, 8));
-        BallisticCoefficient = ParseTleExponent(line1.Substring(53, 8));
+        MeanMotionDot = ParseTleDouble(line1.Substring(33, 10));
+        MeanMotionDDot = ParseTleExponent(line1.Substring(44, 8));
+        BStar = ParseTleExponent(line1.Substring(53, 8));
 
         // PublicationOnly: a failed read (no kernel loaded yet) is not cached, so that the TLE reads its epoch once the kernels
         // are loaded (#711: before, the epoch of a failed read was kept for the life of the TLE). The read takes the SpiceApi
@@ -317,7 +317,7 @@ public class Tle : OrbitalParameters, IEquatable<Tle>, IParsable<Tle>
     /// from the Earth's binary PCK at the epoch (#597). Its data (GM, radii, frame, orbit) are read from the data provider
     /// at the first member that needs them, retried on failure (R21 of #668: before 11.0.0 the constructor read them).
     /// </summary>
-    private static CelestialBody EarthAt(Time epoch) => CelestialBody.CreateDeferred(PlanetsAndMoons.EARTH, Frame.ECLIPTIC_J2000, epoch);
+    private static CelestialBody EarthAt(Time epoch) => CelestialBody.CreateDeferred(PlanetsAndMoons.EARTH, Frame.ECLIPJ2000, epoch);
 
     /// <summary>
     /// Extracts the epoch time from TLE line 1.
@@ -406,12 +406,12 @@ public class Tle : OrbitalParameters, IEquatable<Tle>, IParsable<Tle>
     /// <param name="cosparId">The COSPAR international designator in TLE form, YYNNN and one to three capital letters
     /// (<c>98067A</c>), or null or blank for none: columns 10-17 of line 1 are then blank, as a TLE without a designator
     /// holds them (#604; before 11.0.0 it threw).</param>
-    /// <param name="revolutionsAtEpoch">The revolution number at epoch (0 to 99999).</param>
+    /// <param name="revolutionNumberAtEpoch">The revolution number at epoch (0 to 99999).</param>
     /// <param name="classification">The security classification of the object (default: Unclassified).</param>
-    /// <param name="bstar">The ballistic coefficient (drag term) in units of 1/earth radii (default: 0.0001).</param>
-    /// <param name="nDot">The value of the first-derivative field, ṅ/2 (half the first derivative of the mean motion), in
+    /// <param name="bStar">The ballistic coefficient (drag term) in units of 1/earth radii (default: 0.0001).</param>
+    /// <param name="meanMotionDot">The value of the first-derivative field, ṅ/2 (half the first derivative of the mean motion), in
     /// revolutions/day² (default: 0.0), as OMM's <c>MEAN_MOTION_DOT</c> (#605).</param>
-    /// <param name="nDDot">The value of the second-derivative field, n̈/6 (a sixth of the second derivative of the mean
+    /// <param name="meanMotionDDot">The value of the second-derivative field, n̈/6 (a sixth of the second derivative of the mean
     /// motion), in revolutions/day³ (default: 0.0), as OMM's <c>MEAN_MOTION_DDOT</c> (#605).</param>
     /// <param name="elementSetNumber">The element set number, 0 to 9999 (default: <see cref="DefaultElementSetNumber"/>, 999,
     /// #606).</param>
@@ -430,10 +430,10 @@ public class Tle : OrbitalParameters, IEquatable<Tle>, IParsable<Tle>
     /// three capital letters, the exception naming <c>cosparId</c> (R21 of #668: 6 to 8 characters of any kind before
     /// 11.0.0).</exception>
     /// <exception cref="ArgumentOutOfRangeException">
-    /// Thrown when noradId, revolutionsAtEpoch or elementSetNumber falls outside the range its TLE field can represent.
+    /// Thrown when noradId, revolutionNumberAtEpoch or elementSetNumber falls outside the range its TLE field can represent.
     /// </exception>
-    public static Tle Create(OrbitalParameters meanElements, string name, int noradId, string cosparId, int revolutionsAtEpoch,
-        TleClassification classification = TleClassification.Unclassified, double bstar = 0.0001, double nDot = 0.0, double nDDot = 0.0, int elementSetNumber = DefaultElementSetNumber)
+    public static Tle Create(OrbitalParameters meanElements, string name, int noradId, string cosparId, int revolutionNumberAtEpoch,
+        TleClassification classification = TleClassification.Unclassified, double bStar = 0.0001, double meanMotionDot = 0.0, double meanMotionDDot = 0.0, int elementSetNumber = DefaultElementSetNumber)
     {
         if (meanElements == null) throw new ArgumentNullException(nameof(meanElements));
         if (meanElements.ElementsType != OrbitalElementsType.Mean)
@@ -449,15 +449,15 @@ public class Tle : OrbitalParameters, IEquatable<Tle>, IParsable<Tle>
                 $"The mean elements are about {meanElements.Observer.Name} ({meanElements.Observer.NaifId}): a TLE holds SGP4 mean " +
                 "elements of an Earth orbit in TEME.", nameof(meanElements));
 
-        return CreateInternal(meanElements, name, noradId, cosparId, revolutionsAtEpoch, classification, bstar, nDot, nDDot, elementSetNumber);
+        return CreateInternal(meanElements, name, noradId, cosparId, revolutionNumberAtEpoch, classification, bStar, meanMotionDot, meanMotionDDot, elementSetNumber);
     }
 
     /// <summary>
     /// Internal method for creating TLE from orbital parameters during the fitting process.
     /// This method does not validate ElementsType, allowing iterative convergence from osculating to mean elements.
     /// </summary>
-    internal static Tle CreateInternal(OrbitalParameters orbitalParams, string name, int noradId, string cosparId, int revolutionsAtEpoch,
-        TleClassification classification = TleClassification.Unclassified, double bstar = 0.0001, double nDot = 0.0, double nDDot = 0.0, int elementSetNumber = DefaultElementSetNumber)
+    internal static Tle CreateInternal(OrbitalParameters orbitalParams, string name, int noradId, string cosparId, int revolutionNumberAtEpoch,
+        TleClassification classification = TleClassification.Unclassified, double bStar = 0.0001, double meanMotionDot = 0.0, double meanMotionDDot = 0.0, int elementSetNumber = DefaultElementSetNumber)
     {
         if (orbitalParams == null) throw new ArgumentNullException(nameof(orbitalParams));
         if (name == null) throw new ArgumentNullException(nameof(name));
@@ -480,9 +480,9 @@ public class Tle : OrbitalParameters, IEquatable<Tle>, IParsable<Tle>
                 $"(values above {NoradCatalogNumber.MaxNumericValue} use the Alpha-5 convention).");
         }
 
-        if (revolutionsAtEpoch is < 0 or > MAX_REVOLUTIONS_AT_EPOCH)
+        if (revolutionNumberAtEpoch is < 0 or > MAX_REVOLUTIONS_AT_EPOCH)
         {
-            throw new ArgumentOutOfRangeException(nameof(revolutionsAtEpoch),
+            throw new ArgumentOutOfRangeException(nameof(revolutionNumberAtEpoch),
                 $"Revolution number at epoch must be between 0 and {MAX_REVOLUTIONS_AT_EPOCH} to fit the 5-character TLE field.");
         }
 
@@ -507,16 +507,16 @@ public class Tle : OrbitalParameters, IEquatable<Tle>, IParsable<Tle>
         double meanMotion = kep.MeanMotion() * 86400.0 / Constants.TwoPi;
 
         // Format epoch: YYDDD.DDDDDDDD, in UTC whatever the time scale of the elements' epoch (#479)
-        string epochStr = FormatTleEpoch(kep.Epoch.ToUTC().DateTime);
+        string epochStr = FormatTleEpoch(kep.Epoch.ToUtc().DateTime);
 
         // Format eccentricity: 7 digits, no decimal point; e = 0 is written 0000000 (#602)
         double clampedE = System.Math.Clamp(kep.Eccentricity(), 0.0, MAX_ECCENTRICITY);
         string eStr = clampedE.ToString("0.0000000", CultureInfo.InvariantCulture).Substring(2, 7);
 
         // Format derivatives and drag term. A value that rounds to zero is written without a sign (#480)
-        string nDotStr = nDot.ToString(" .00000000;-.00000000; .00000000", CultureInfo.InvariantCulture).PadLeft(10);
-        string nDDotStr = FormatTleExponent(nDDot, 5);
-        string bstarStr = FormatTleExponent(bstar, 5);
+        string nDotStr = meanMotionDot.ToString(" .00000000;-.00000000; .00000000", CultureInfo.InvariantCulture).PadLeft(10);
+        string nDDotStr = FormatTleExponent(meanMotionDDot, 5);
+        string bstarStr = FormatTleExponent(bStar, 5);
 
         // Build line 1 - use single ToString call
         var line1Builder = new StringBuilder(69);
@@ -556,7 +556,7 @@ public class Tle : OrbitalParameters, IEquatable<Tle>, IParsable<Tle>
             .Append(mDeg.ToString(AngleFormat, CultureInfo.InvariantCulture).PadLeft(8))
             .Append(' ')
             .Append(meanMotion.ToString("0.00000000", CultureInfo.InvariantCulture).PadLeft(11))
-            .Append(revolutionsAtEpoch.ToString().PadLeft(5));
+            .Append(revolutionNumberAtEpoch.ToString().PadLeft(5));
 
         int checksum2 = ComputeTleChecksumFromBuilder(line2Builder);
         line2Builder.Append(checksum2);
@@ -1384,9 +1384,9 @@ public class Tle : OrbitalParameters, IEquatable<Tle>, IParsable<Tle>
 
         // Create TLE parameters with BSTAR and MEAN_MOTION_DDOT (standard SGP4)
         var tleParams = CCSDS.OMM.TleParameters.CreateWithBStarAndDDot(
-            BallisticCoefficient,
-            FirstDerivationMeanMotion,
-            SecondDerivativeMeanMotion,
+            BStar,
+            MeanMotionDot,
+            MeanMotionDDot,
             ephemerisType: 0,
             classificationType: classChar,
             noradCatalogId: noradCatId,

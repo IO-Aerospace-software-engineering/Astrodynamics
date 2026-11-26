@@ -212,7 +212,7 @@ public class ImpulseConstructionTests
         var spacecraft = new Spacecraft(-899903, "FrameOfTarget", 1000.0, Orbit(earth));
         var tank = spacecraft.AddFuelTank(new FuelTank("tank", 1000.0, 1000.0));
         var engine = spacecraft.AddEngine(new Engine("engine", 300.0, 10.0, tank));
-        var ecliptic = Orbit(earth).ToStateVector().ToFrame(Frames.Frame.ECLIPTIC_J2000);
+        var ecliptic = Orbit(earth).ToStateVector().ToFrame(Frames.Frame.ECLIPJ2000);
 
         var maneuver = new PlaneAlignmentManeuver(ecliptic, engine);
 

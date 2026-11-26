@@ -13,7 +13,7 @@ namespace IO.Astrodynamics.Body.Spacecraft
     {
         public string Name { get; }
         public string Model { get; }
-        public double ISP { get; }
+        public double Isp { get; }
         public double FuelFlow { get; }
         public double Thrust { get; }
         public FuelTank FuelTank { get; }
@@ -56,11 +56,11 @@ namespace IO.Astrodynamics.Body.Spacecraft
 
             Name = name;
             Model = model;
-            ISP = isp;
+            Isp = isp;
             FuelFlow = fuelFlow;
             FuelTank = fuelTank ?? throw new ArgumentNullException(nameof(fuelTank));
             SerialNumber = serialNumber;
-            Thrust = isp * fuelFlow * Constants.g0;
+            Thrust = isp * fuelFlow * Constants.StandardGravity;
         }
 
         /// <summary>
@@ -71,7 +71,7 @@ namespace IO.Astrodynamics.Body.Spacecraft
         /// </summary>
         internal double Ignite(in Vector3 deltaV)
         {
-            var fuelBurned = Tsiolkovsky.DeltaM(ISP, FuelTank.Spacecraft.GetTotalMass(), deltaV.Magnitude());
+            var fuelBurned = Tsiolkovsky.DeltaM(Isp, FuelTank.Spacecraft.GetTotalMass(), deltaV.Magnitude());
             FuelTank.Burn(fuelBurned);
             return fuelBurned;
         }

@@ -41,7 +41,7 @@ namespace IO.Astrodynamics.Tests;
 public class SpiceOperatorTests
 {
     // 2023-12-15 00:00:51 to 12:00:51 UTC, inside the LRO SPK, a step of 60 s (#482's setup on whole TDB seconds)
-    private static readonly Window LroWindow = new(TimeSystem.Time.CreateTDB(755870520.0), TimeSystem.Time.CreateTDB(755913720.0));
+    private static readonly Window LroWindow = new(TimeSystem.Time.CreateTdb(755870520.0), TimeSystem.Time.CreateTdb(755913720.0));
     private static readonly TimeSpan LroStep = TimeSpan.FromSeconds(60.0);
 
     public SpiceOperatorTests()
@@ -99,7 +99,7 @@ public class SpiceOperatorTests
     {
         // The Earth-Moon distance against 400 000 km, as SpiceApiTest.FindWindowsOnDistanceConstraintProxy
         var res = SpiceApi.Instance.FindWindowsOnDistanceConstraint(
-            new Window(TimeSystem.Time.CreateTDB(220881665.18391809), TimeSystem.Time.CreateTDB(228657665.18565452)),
+            new Window(TimeSystem.Time.CreateTdb(220881665.18391809), TimeSystem.Time.CreateTdb(228657665.18565452)),
             399, 301, relation, 400000000, Aberration.None, TimeSpan.FromSeconds(86400.0));
         AssertWindows(Distance[relation], res);
     }
@@ -125,7 +125,7 @@ public class SpiceOperatorTests
         var site = new Site(13, "DSS-13", TestHelpers.EarthAtJ2000,
             new Planetodetic(-116.7944627147624 * IO.Astrodynamics.Constants.Deg2Rad, 35.2471635434595 * IO.Astrodynamics.Constants.Deg2Rad, 0.107));
         var res = SpiceApi.Instance.FindWindowsOnCoordinateConstraint(
-            new Window(TimeSystem.Time.CreateTDB(730036800.0), TimeSystem.Time.CreateTDB(730123200)), site.NaifId, 301, site.Frame,
+            new Window(TimeSystem.Time.CreateTdb(730036800.0), TimeSystem.Time.CreateTdb(730123200)), site.NaifId, 301, site.Frame,
             CoordinateSystem.Rectangular, Astrodynamics.Coordinate.Z, relation, 0.0, 0.0, Aberration.None, TimeSpan.FromSeconds(60.0));
         AssertWindows(Coordinate[relation], res);
     }
@@ -154,10 +154,10 @@ public class SpiceOperatorTests
     {
         // The Sun's incidence at a point against 90.8 deg, as SpiceApiTest.FindWindowsOnIlluminationConstraint
         var res = SpiceApi.Instance.FindWindowsOnIlluminationConstraint(
-            new Window(TimeSystem.Time.CreateTDB(674524800), TimeSystem.Time.CreateTDB(674611200)), 10, 399, new Frames.Frame("ITRF93"),
+            new Window(TimeSystem.Time.CreateTdb(674524800), TimeSystem.Time.CreateTdb(674611200)), 10, 399, new Frames.Frame("ITRF93"),
             new Planetodetic(2.2 * IO.Astrodynamics.Constants.Deg2Rad, 48.0 * IO.Astrodynamics.Constants.Deg2Rad, 0.0),
             IlluminationAngle.Incidence, relation, System.Math.PI * 0.5 - (-0.8 * IO.Astrodynamics.Constants.Deg2Rad), 0.0,
-            Aberration.CNS, TimeSpan.FromHours(4.5), 10);
+            Aberration.CnS, TimeSpan.FromHours(4.5), 10);
         AssertWindows(Illumination[relation], res);
     }
 
@@ -165,7 +165,7 @@ public class SpiceOperatorTests
     public void SpiceApi_AValueOutsideTheEnumeration_Throws()
     {
         Assert.Throws<ArgumentOutOfRangeException>(() => SpiceApi.Instance.FindWindowsOnDistanceConstraint(
-            new Window(TimeSystem.Time.CreateTDB(220881665.0), TimeSystem.Time.CreateTDB(220981665.0)), 399, 301, (RelationalOperator)42,
+            new Window(TimeSystem.Time.CreateTdb(220881665.0), TimeSystem.Time.CreateTdb(220981665.0)), 399, 301, (RelationalOperator)42,
             400000000, Aberration.None, TimeSpan.FromSeconds(86400.0)));
     }
 
@@ -303,7 +303,7 @@ public class SpiceOperatorTests
         // The Sun's incidence at DSS-13 against 90 deg over a day: gfilum at the surface point the native layer builds
         var earth = new CelestialBody(PlanetsAndMoons.EARTH);
         var dss13 = new Site(13, "DSS-13", earth);
-        var search = new Window(TimeSystem.Time.CreateTDB(755870520.0), TimeSystem.Time.CreateTDB(755956920.0));
+        var search = new Window(TimeSystem.Time.CreateTdb(755870520.0), TimeSystem.Time.CreateTdb(755956920.0));
         AssertAgainstOwnSearches(search, r => dss13.FindIlluminationWindows(search, IlluminationAngle.Incidence, r, System.Math.PI * 0.5, new CelestialBody(Stars.Sun), new WindowSearchOptions { Step = LroStep }));
     }
 }

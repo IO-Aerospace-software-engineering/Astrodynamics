@@ -507,7 +507,7 @@ public class ForceModelDefectTests
         bool drag = forces.StartsWith("drag");
         bool srp = forces.Contains("SRP");
         bool ssb = frame == "SSB";
-        Spacecraft NewOne() => ssb ? NewSsbSpacecraft(earth) : NewSpacecraft(earth, frame == "ECLIPJ2000" ? Frames.Frame.ECLIPTIC_J2000 : null);
+        Spacecraft NewOne() => ssb ? NewSsbSpacecraft(earth) : NewSpacecraft(earth, frame == "ECLIPJ2000" ? Frames.Frame.ECLIPJ2000 : null);
         CelestialItem central = ssb ? Stars.SUN_BODY : earth;
         CelestialItem[] unlisted = list switch
         {

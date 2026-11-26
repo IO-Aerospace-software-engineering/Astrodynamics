@@ -203,7 +203,7 @@ public class MemoryDataProviderBodyTests
             _output.WriteLine(line);
         }
 
-        Assert.Contains("OK Frame.GALACTIC_SYSTEM2 follows the provider set since, at the same epoch: 30°", output);
+        Assert.Contains("OK Frame.GALACTIC follows the provider set since, at the same epoch: 30°", output);
         Assert.Contains("OK Frame.ITRF93 follows it too: 30°", output);
         Assert.Contains("OK a frame built by name keeps the provider of its construction: 90°", output);
         Assert.Contains("OK the memory provider's EME2000: ArgumentException", output);

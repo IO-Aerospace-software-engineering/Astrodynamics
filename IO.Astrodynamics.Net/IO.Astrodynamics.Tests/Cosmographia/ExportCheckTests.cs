@@ -45,11 +45,11 @@ public class ExportCheckTests
         string instrumentName = "CAM799", string siteName = "SITE799", string starName = "STAR799", Astrodynamics.OrbitalParameters.OrbitalParameters orbit = null)
     {
         var earth = TestHelpers.EarthAtJ2000;
-        var start = TimeSystem.Time.J2000TDB.AddYears(21);
+        var start = TimeSystem.Time.J2000Tdb.AddYears(21);
         var scenario = new Scenario(scenarioName, new Astrodynamics.Mission.Mission(mission), new Window(start, start.AddMinutes(10.0)));
         scenario.AddCelestialItem(earth);
         var spacecraft = new Spacecraft(SpacecraftId, spacecraftName, 1000.0,
-            orbit ?? new KeplerianElements(6800000.0, 0.0, 0.5, 0.0, 0.0, 0.0, earth, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF), 2000.0,
+            orbit ?? new KeplerianElements(6800000.0, 0.0, 0.5, 0.0, 0.0, 0.0, earth, TimeSystem.Time.J2000Tdb, Frames.Frame.ICRF), 2000.0,
             new Clock("CLK799", 65536));
         spacecraft.AddCircularInstrument(instrumentName, 0.2, Vector3.VectorZ, Vector3.VectorX);
         scenario.AddSpacecraft(spacecraft);
@@ -173,7 +173,7 @@ public class ExportCheckTests
     public async Task Export_WhoseCatalogThrows_LeavesThePreviousExport()
     {
         var earth = TestHelpers.EarthAtJ2000;
-        var hyperbola = new StateVector(new Vector3(6800000.0, 0.0, 0.0), new Vector3(0.0, 12000.0, 0.0), earth, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF);
+        var hyperbola = new StateVector(new Vector3(6800000.0, 0.0, 0.0), new Vector3(0.0, 12000.0, 0.0), earth, TimeSystem.Time.J2000Tdb, Frames.Frame.ICRF);
 
         await RefusedAsync(Simulated(orbit: hyperbola));
     }

@@ -148,7 +148,7 @@ public class RepropagationTests
             OrbitalParams orbit = new KeplerianElements(a, e, 0.9, 0.3, 1.1, m, Center, epoch, Frame.ICRF);
             if (FrameName == "ECLIPJ2000")
             {
-                orbit = orbit.ToStateVector().ToFrame(Frame.ECLIPTIC_J2000).ToStateVector();
+                orbit = orbit.ToStateVector().ToFrame(Frame.ECLIPJ2000).ToStateVector();
             }
             else if (Ssb)
             {

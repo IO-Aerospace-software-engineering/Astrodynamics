@@ -79,7 +79,7 @@ namespace IO.Astrodynamics.Tests.Propagators;
 /// 0.31 mm and 2.2e-8 m/s (GEO), 0.82 mm and 9.0e-7 m/s (maneuver) at most, at the scale of |v| times a tick (0.77 mm in
 /// LEO, 0.31 mm at GEO) and of the integration error at 1e-11 of other steps (see #410 above).
 /// Recaptured with #561: the orientation cache of the Earth interpolates its 60 s points by the exact SLERP instead of the
-/// normalised-Lerp fallback of <c>Quaternion.SLERP</c>, which was up to 3.4e-10 rad off (the exact SLERP 2.4e-12 rad from
+/// normalised-Lerp fallback of <c>Quaternion.Slerp</c>, which was up to 3.4e-10 rad off (the exact SLERP 2.4e-12 rad from
 /// <c>sxform</c>); every case has a geopotential and moved from its first step. The GEO case by 2.1e-6 m and 1.4e-10 m/s at
 /// most, the same 46 steps; the maneuver case by 1.1e-6 m and 1.0e-9 m/s, the same 22 and 72 steps, the maneuver epoch
 /// unchanged; the SRP case by 1.66 mm and 1.9e-6 m/s, 100 steps instead of 103, the integration error at 1e-11 of other
@@ -283,7 +283,7 @@ public class PropagationGoldenTests
                 }).ToList())).ToList();
             var states = solution.StateVectors.Select(state => new[]
             {
-                state.Epoch.ToTDB().TimeSpanFromJ2000().TotalSeconds,
+                state.Epoch.ToTdb().TimeSpanFromJ2000().TotalSeconds,
                 state.Position.X, state.Position.Y, state.Position.Z,
                 state.Velocity.X, state.Velocity.Y, state.Velocity.Z
             }).ToList();

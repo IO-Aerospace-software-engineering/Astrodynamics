@@ -8,7 +8,7 @@ namespace IO.Astrodynamics.Tests.Time;
 
 /// <summary>
 /// The TDB − TT series of <see cref="TimeScaleConversions.TdbMinusTt"/>, shared by its conversions and the time argument of the
-/// propagation (#501): <see cref="TimeSystem.Time.ToTAI"/> of a TDB time and <see cref="TimeSystem.Time.ToTDB"/> of a TAI time give, tick
+/// propagation (#501): <see cref="TimeSystem.Time.ToTai"/> of a TDB time and <see cref="TimeSystem.Time.ToTdb"/> of a TAI time give, tick
 /// for tick, what the expressions they held before gave, on the TT instants every 0.05 day from 1972 to 2100 (935 041)
 /// and on 2 000 000 random ticks of the same span, the offset rounded to the nearest tick since #625. The reference is
 /// the former code of the two conversions, copied below, its truncation of the offset (TimeSpan.FromSeconds) replaced
@@ -63,8 +63,8 @@ public class TdbSeriesTests
     {
         var tdb = new TimeSystem.Time(new DateTime(ticks), TimeScale.TDB);
         var tai = new TimeSystem.Time(new DateTime(ticks), TimeScale.TAI);
-        long toTai = tdb.ToTAI().DateTime.Ticks;
-        long fromTai = tai.ToTDB().DateTime.Ticks;
+        long toTai = tdb.ToTai().DateTime.Ticks;
+        long fromTai = tai.ToTdb().DateTime.Ticks;
         if (toTai != FormerConvertToTai(tdb) || fromTai != FormerConvertFromTai(tai))
         {
             Assert.Fail($"{ticks}: to TAI {toTai} against {FormerConvertToTai(tdb)}, from TAI {fromTai} against " +

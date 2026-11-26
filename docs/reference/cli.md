@@ -42,7 +42,7 @@ or a file SPICE refuses, ends with exit code 3. `time-converter` reads no kernel
   (TEME, CIRS, TIRS, GCRF) or of the loaded kernels, checked once they are loaded.
 - **Enumerations.** The aberration, the relation, the coordinate system and coordinate, the shapes, the occultation and the
   illumination angle are read by their SPICE name (`LT+S`, `<=`, `RA/DEC`, `RIGHT ASCENSION`) or their member name
-  (`LTS`, `LessThanOrEqual`, `RaDec`, `RightAscension`), in any case.
+  (`LtS`, `LessThanOrEqual`, `RaDec`, `RightAscension`), in any case.
 
 ## Output
 

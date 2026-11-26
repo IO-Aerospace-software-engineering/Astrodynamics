@@ -25,7 +25,7 @@ public class StateSamplerTests
         double v0 = System.Math.Sqrt(earth.GM / r0);
         return new StateVector(
             new Vector3(r0, 0, 0), new Vector3(0, v0, 0),
-            earth, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF, covariance);
+            earth, TimeSystem.Time.J2000Tdb, Frames.Frame.ICRF, covariance);
     }
 
     private static Matrix CreateDiagonalCovariance()

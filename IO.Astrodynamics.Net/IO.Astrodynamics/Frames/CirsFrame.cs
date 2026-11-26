@@ -8,7 +8,7 @@ namespace IO.Astrodynamics.Frames;
 /// Celestial Intermediate Reference System (CIRS).
 /// Uses IAU 2006 precession with IAU 2000B nutation.
 /// The CIO-based Q(t) matrix produced by the model is <c>ICRF → CIRS</c>, so
-/// <see cref="GetStateOrientationToICRF(Time)"/> returns its transpose, <c>CIRS → ICRF</c>.
+/// <see cref="GetStateOrientationToIcrf(Time)"/> returns its transpose, <c>CIRS → ICRF</c>.
 /// </summary>
 /// <remarks>
 /// CIRS depends on precession-nutation only, so it takes no Earth orientation parameters:
@@ -21,7 +21,7 @@ public sealed class CirsFrame : Frame
     {
     }
 
-    public override StateOrientation GetStateOrientationToICRF(Time epoch)
+    public override StateOrientation GetStateOrientationToIcrf(Time epoch)
     {
         if (OrientationCache != null)
             return OrientationCache.GetOrientation(epoch);
@@ -44,7 +44,7 @@ public sealed class CirsFrame : Frame
         var rotation = cirs2icrf.ToQuaternion();
 
         // Angular velocity of ICRF relative to CIRS, in CIRS axes (convention of the SPICE frames, see
-        // GetStateOrientationToICRF), derived numerically from the returned CIRS -> ICRF rotation.
+        // GetStateOrientationToIcrf), derived numerically from the returned CIRS -> ICRF rotation.
         var angularVelocity = ComputeAngularVelocity(t);
 
         return new StateOrientation(rotation, angularVelocity, date, this);

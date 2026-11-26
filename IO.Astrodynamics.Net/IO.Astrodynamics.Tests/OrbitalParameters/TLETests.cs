@@ -46,10 +46,10 @@ public class TLETests
         Assert.Equal(6.1615568022666061, tle.MeanAscendingNode, 6);
         Assert.Equal(5.6003339639830649, tle.MeanArgumentOfPeriapsis, 6);
         Assert.Equal(0.68479738531249512, tle.MeanMeanAnomaly, 6);
-        Assert.Equal(664419082.84759152, tle.Epoch.ToTDB().TimeSpanFromJ2000().TotalSeconds, 6);
-        Assert.Equal(0.00016716999999999999, tle.FirstDerivationMeanMotion, 6);
-        Assert.Equal(0.0001027, tle.BallisticCoefficient, 6);
-        Assert.Equal(0.0, tle.SecondDerivativeMeanMotion, 6);
+        Assert.Equal(664419082.84759152, tle.Epoch.ToTdb().TimeSpanFromJ2000().TotalSeconds, 6);
+        Assert.Equal(0.00016716999999999999, tle.MeanMotionDot, 6);
+        Assert.Equal(0.0001027, tle.BStar, 6);
+        Assert.Equal(0.0, tle.MeanMotionDDot, 6);
     }
 
     [Fact]
@@ -101,7 +101,7 @@ public class TLETests
         var tle = new Tle("11801", "1 11801U          80230.29629788  .01431103  00000-0  14311-1      13",
             "2 11801  46.7916 230.4354 7318036  47.4722  10.4117  2.28537848    13");
         var earth = tle.Observer.InitialOrbitalParameters;
-        Assert.Equal(Frames.Frame.ECLIPTIC_J2000, earth.Frame);
+        Assert.Equal(Frames.Frame.ECLIPJ2000, earth.Frame);
         LabelAssert.Equal(tle.Epoch, earth.Epoch);
         Assert.Equal(3, earth.Observer.NaifId);
         Assert.InRange(earth.ToStateVector().Position.Magnitude(), 4.2e6, 5.0e6);
@@ -450,7 +450,7 @@ public class TLETests
             "1 25544U 98067A   21020.53488036  .00016717  00000-0  10270-3 0  9054",
             "2 25544  51.6423 353.0312 0000493 320.8755  39.2360 15.49309423 25703");
 
-        var futureTime = TimeSystem.Time.CreateTDB(664419082.84759152 + 3600); // 1 hour later
+        var futureTime = TimeSystem.Time.CreateTdb(664419082.84759152 + 3600); // 1 hour later
         var futureStateVector = tle.ToStateVector(futureTime);
 
         Assert.NotNull(futureStateVector);
@@ -466,7 +466,7 @@ public class TLETests
             "1 25544U 98067A   21020.53488036  .00016717  00000-0  10270-3 0  9054",
             "2 25544  51.6423 353.0312 0000493 320.8755  39.2360 15.49309423 25703");
 
-        var pastTime = TimeSystem.Time.CreateTDB(664419082.84759152 - 3600); // 1 hour earlier
+        var pastTime = TimeSystem.Time.CreateTdb(664419082.84759152 - 3600); // 1 hour earlier
         var pastStateVector = tle.ToStateVector(pastTime);
 
         Assert.NotNull(pastStateVector);
@@ -620,9 +620,9 @@ public class TLETests
         Assert.True(tle.MeanMeanAnomaly >= 0 && tle.MeanMeanAnomaly < 2 * System.Math.PI);
 
         // Test derived parameters
-        Assert.True(tle.FirstDerivationMeanMotion != 0); // Should have some drag for ISS
-        Assert.True(tle.BallisticCoefficient > 0); // Should be positive
-        Assert.Equal(0.0, tle.SecondDerivativeMeanMotion); // Usually zero for most satellites
+        Assert.True(tle.MeanMotionDot != 0); // Should have some drag for ISS
+        Assert.True(tle.BStar > 0); // Should be positive
+        Assert.Equal(0.0, tle.MeanMotionDDot); // Usually zero for most satellites
     }
 
     [Fact]
@@ -679,7 +679,7 @@ public class TLETests
         Assert.Equal(expectedTleField, actualBstarField);
 
         // Assert: Parsed BSTAR should equal original value (within floating point tolerance)
-        Assert.Equal(bstarValue, tle.BallisticCoefficient, 10);
+        Assert.Equal(bstarValue, tle.BStar, 10);
     }
 
     [Fact]

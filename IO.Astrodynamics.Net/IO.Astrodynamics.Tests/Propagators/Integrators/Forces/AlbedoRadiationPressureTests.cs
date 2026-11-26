@@ -23,7 +23,7 @@ public class AlbedoRadiationPressureTests
 
     private static CelestialBody CreateEarth(double albedo = 0.306)
     {
-        return new CelestialBody(PlanetsAndMoons.EARTH, Frames.Frame.ICRF, TimeSystem.Time.J2000TDB, albedo: albedo);
+        return new CelestialBody(PlanetsAndMoons.EARTH, Frames.Frame.ICRF, TimeSystem.Time.J2000Tdb, albedo: albedo);
     }
 
     private static Spacecraft CreateSpacecraft(CelestialBody observer, double mass = 100.0,
@@ -31,7 +31,7 @@ public class AlbedoRadiationPressureTests
     {
         Clock clk = new Clock("My clock", 256);
         return new Spacecraft(-1001, "MySpacecraft", mass, new StateVector(new Vector3(6800000.0, 0.0, 0.0), new Vector3(0.0, 7656.2204182967143, 0.0),
-                observer, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF), 10000.0,
+                observer, TimeSystem.Time.J2000Tdb, Frames.Frame.ICRF), 10000.0,
             clk,
             sectionalArea: sectionalArea, solarRadiationCoefficient: solarRadiationCoeff);
     }
@@ -48,7 +48,7 @@ public class AlbedoRadiationPressureTests
         double lambertian = (System.Math.PI - phi) * System.Math.Cos(phi) + System.Math.Sin(phi);
         if (lambertian <= 0.0) return 0.0;
 
-        return (IO.Astrodynamics.Constants.SolarMeanRadiativeLuminosity / (4.0 * System.Math.PI * IO.Astrodynamics.Constants.C))
+        return (IO.Astrodynamics.Constants.SolarMeanRadiativeLuminosity / (4.0 * System.Math.PI * IO.Astrodynamics.Constants.SpeedOfLight))
                * alpha * cr * (area / mass)
                * (2.0 / (3.0 * System.Math.PI))
                * (rBody / dSunBody) * (rBody / dSunBody)
@@ -94,7 +94,7 @@ public class AlbedoRadiationPressureTests
     [Fact]
     public void ConstructorThrowsOnZeroAlbedo()
     {
-        var earth = new CelestialBody(PlanetsAndMoons.EARTH, Frames.Frame.ICRF, TimeSystem.Time.J2000TDB, albedo: 0.0);
+        var earth = new CelestialBody(PlanetsAndMoons.EARTH, Frames.Frame.ICRF, TimeSystem.Time.J2000Tdb, albedo: 0.0);
         var spc = CreateSpacecraft(earth);
         Assert.Throws<ArgumentException>(() => new AlbedoRadiationPressure(spc, earth));
     }
@@ -102,7 +102,7 @@ public class AlbedoRadiationPressureTests
     [Fact]
     public void ConstructorThrowsOnNegativeAlbedo()
     {
-        var earth = new CelestialBody(PlanetsAndMoons.EARTH, Frames.Frame.ICRF, TimeSystem.Time.J2000TDB, albedo: -0.1);
+        var earth = new CelestialBody(PlanetsAndMoons.EARTH, Frames.Frame.ICRF, TimeSystem.Time.J2000Tdb, albedo: -0.1);
         var spc = CreateSpacecraft(earth);
         Assert.Throws<ArgumentException>(() => new AlbedoRadiationPressure(spc, earth));
     }
@@ -116,7 +116,7 @@ public class AlbedoRadiationPressureTests
     {
         // At sub-solar point (phi=0), Lambertian factor = pi
         var earth = CreateEarth();
-        var epoch = TimeSystem.Time.J2000TDB;
+        var epoch = TimeSystem.Time.J2000Tdb;
         double rSc = 6800000.0;
 
         var (state, dSunBody, _) = CreateSubSolarState(earth, rSc, epoch);
@@ -139,7 +139,7 @@ public class AlbedoRadiationPressureTests
     {
         // At anti-solar point (phi=pi), Lambertian factor = (pi-pi)*cos(pi) + sin(pi) = 0
         var earth = CreateEarth();
-        var epoch = TimeSystem.Time.J2000TDB;
+        var epoch = TimeSystem.Time.J2000Tdb;
 
         var sunPos = Stars.SUN_BODY.GetEphemeris(epoch, earth, Frames.Frame.ICRF, Aberration.None).Position;
         var sunDir = sunPos.Normalize();
@@ -164,7 +164,7 @@ public class AlbedoRadiationPressureTests
     {
         // At sub-solar point, acceleration direction must equal the body-to-SC unit vector
         var earth = CreateEarth();
-        var epoch = TimeSystem.Time.J2000TDB;
+        var epoch = TimeSystem.Time.J2000Tdb;
         double rSc = 6800000.0;
 
         var (state, _, sunDir) = CreateSubSolarState(earth, rSc, epoch);
@@ -187,7 +187,7 @@ public class AlbedoRadiationPressureTests
         // a ∝ α, so a(0.30)/a(0.15) = 2.0 exactly
         var earth1 = CreateEarth(albedo: 0.15);
         var earth2 = CreateEarth(albedo: 0.30);
-        var epoch = TimeSystem.Time.J2000TDB;
+        var epoch = TimeSystem.Time.J2000Tdb;
         double rSc = 6800000.0;
 
         var (state1, _, _) = CreateSubSolarState(earth1, rSc, epoch);
@@ -209,7 +209,7 @@ public class AlbedoRadiationPressureTests
     {
         // a ∝ Cr, so a(1.8)/a(1.0) = 1.8 exactly
         var earth = CreateEarth();
-        var epoch = TimeSystem.Time.J2000TDB;
+        var epoch = TimeSystem.Time.J2000Tdb;
         double rSc = 6800000.0;
 
         var (state, _, _) = CreateSubSolarState(earth, rSc, epoch);
@@ -230,7 +230,7 @@ public class AlbedoRadiationPressureTests
     {
         // a ∝ 1/m, so a(100)/a(200) = 2.0 exactly
         var earth = CreateEarth();
-        var epoch = TimeSystem.Time.J2000TDB;
+        var epoch = TimeSystem.Time.J2000Tdb;
         double rSc = 6800000.0;
 
         var (state, _, _) = CreateSubSolarState(earth, rSc, epoch);
@@ -251,7 +251,7 @@ public class AlbedoRadiationPressureTests
     {
         // a ∝ A, so a(5)/a(1) = 5.0 exactly
         var earth = CreateEarth();
-        var epoch = TimeSystem.Time.J2000TDB;
+        var epoch = TimeSystem.Time.J2000Tdb;
         double rSc = 6800000.0;
 
         var (state, _, _) = CreateSubSolarState(earth, rSc, epoch);
@@ -274,7 +274,7 @@ public class AlbedoRadiationPressureTests
         //   ratio = alpha * (2/3) * (R_body / r_sc)^2 * (d_sun_sc / d_sun_body)^2
         // where d_sun_sc = d_sun_body - r_sc (spacecraft between Sun and Earth)
         var earth = CreateEarth();
-        var epoch = TimeSystem.Time.J2000TDB;
+        var epoch = TimeSystem.Time.J2000Tdb;
         double rSc = 6800000.0;
 
         var (state, dSunBody, _) = CreateSubSolarState(earth, rSc, epoch);
@@ -305,7 +305,7 @@ public class AlbedoRadiationPressureTests
     {
         // a ∝ 1/r_sc², so at same phase angle: a_leo/a_geo = (r_geo/r_leo)²
         var earth = CreateEarth();
-        var epoch = TimeSystem.Time.J2000TDB;
+        var epoch = TimeSystem.Time.J2000Tdb;
 
         double rLeo = 6800000.0;
         double rGeo = 42164000.0;
@@ -330,8 +330,8 @@ public class AlbedoRadiationPressureTests
     public void MoonAlbedoMatchesAnalyticalFormula()
     {
         // Verify full formula for Moon (albedo 0.12) at sub-solar point
-        var moon = new CelestialBody(PlanetsAndMoons.MOON, Frames.Frame.ICRF, TimeSystem.Time.J2000TDB, albedo: 0.12);
-        var epoch = TimeSystem.Time.J2000TDB;
+        var moon = new CelestialBody(PlanetsAndMoons.MOON, Frames.Frame.ICRF, TimeSystem.Time.J2000Tdb, albedo: 0.12);
+        var epoch = TimeSystem.Time.J2000Tdb;
         double rSc = 1837400.0; // ~100 km above Moon surface
 
         var (state, dSunBody, _) = CreateSubSolarState(moon, rSc, epoch);

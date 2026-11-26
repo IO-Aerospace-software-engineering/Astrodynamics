@@ -113,7 +113,7 @@ internal static class TleAndOmmPage
         #region docs/tutorials/tle-and-omm.md:4
         // Inputs: tle (TLE)
         var window = new Window(tle.Epoch, tle.Epoch.AddHours(6.0));
-        var start = window.StartDate.ToTDB();
+        var start = window.StartDate.ToTdb();
         var earth = new CelestialBody(PlanetsAndMoons.EARTH, Frame.ICRF, start,
             new GeopotentialModelParameters("Data/SolarSystem/EGM2008_to70_TideFree", 10),
             new Nrlmsise00Model(SpaceWeather.Nominal));

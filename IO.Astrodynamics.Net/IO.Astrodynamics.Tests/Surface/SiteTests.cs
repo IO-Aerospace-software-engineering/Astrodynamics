@@ -183,7 +183,7 @@ namespace IO.Astrodynamics.Tests.Surface
         [Fact]
         public void GetEphemerisLT()
         {
-            var epoch = TimeSystem.Time.J2000TDB;
+            var epoch = TimeSystem.Time.J2000Tdb;
             CelestialBody earth = PlanetsAndMoons.EARTH_BODY;
             Site site = new Site(13, "DSS-13", earth);
 
@@ -236,7 +236,7 @@ namespace IO.Astrodynamics.Tests.Surface
             CelestialBody moon = new CelestialBody(PlanetsAndMoons.MOON);
             Site site = new Site(13, "DSS-13", TestHelpers.EarthAtJ2000);
 
-            var res = TestHelpers.MoonAtJ2000.FindDistanceWindows(new Window(TimeSystem.Time.CreateTDB(220881665.18391809), TimeSystem.Time.CreateTDB(228657665.18565452)), site, RelationalOperator.GreaterThan, 400000000, new WindowSearchOptions { Step = TimeSpan.FromSeconds(3600.0) });
+            var res = TestHelpers.MoonAtJ2000.FindDistanceWindows(new Window(TimeSystem.Time.CreateTdb(220881665.18391809), TimeSystem.Time.CreateTdb(228657665.18565452)), site, RelationalOperator.GreaterThan, 400000000, new WindowSearchOptions { Step = TimeSpan.FromSeconds(3600.0) });
             // CSPICE gfdist (tools/geometry_reference, converged to 1e-9 s): 24 windows
             GeometryReference.AssertWindows(null, "dss13_moon_distance > 400000 km", res, GeometryReference.ThresholdCrossing);
         }
@@ -251,8 +251,8 @@ namespace IO.Astrodynamics.Tests.Surface
             var windows = res as Window[] ?? res.ToArray();
             Assert.Single(windows);
             // CSPICE gfoclt (tools/occultation_reference, converged to 1e-9 s), TDB seconds past J2000
-            Assert.Equal(TimeSystem.Time.CreateTDB(181600668.40108371), windows.ElementAt(0).StartDate, TestHelpers.TimeComparer);
-            Assert.Equal(TimeSystem.Time.CreateTDB(181606520.06240487), windows.ElementAt(0).EndDate, TestHelpers.TimeComparer);
+            Assert.Equal(TimeSystem.Time.CreateTdb(181600668.40108371), windows.ElementAt(0).StartDate, TestHelpers.TimeComparer);
+            Assert.Equal(TimeSystem.Time.CreateTdb(181606520.06240487), windows.ElementAt(0).EndDate, TestHelpers.TimeComparer);
         }
 
         [Fact]
@@ -260,7 +260,7 @@ namespace IO.Astrodynamics.Tests.Surface
         {
             Site site = new Site(13, "DSS-13", TestHelpers.EarthAtJ2000);
 
-            var res = TestHelpers.MoonAtJ2000.FindCoordinateWindows(new Window(TimeSystem.Time.Parse("2000-01-01 12:00:00", TimeScale.TDB).ToTDB(), TimeSystem.Time.Parse("2000-02-01 12:00:00", TimeScale.TDB).ToTDB()), site, TestHelpers.MoonAtJ2000.Frame, CoordinateSystem.RaDec, Coordinate.Declination, RelationalOperator.GreaterThan, 0.0, new WindowSearchOptions { Step = TimeSpan.FromSeconds(60.0) });
+            var res = TestHelpers.MoonAtJ2000.FindCoordinateWindows(new Window(TimeSystem.Time.Parse("2000-01-01 12:00:00", TimeScale.TDB).ToTdb(), TimeSystem.Time.Parse("2000-02-01 12:00:00", TimeScale.TDB).ToTdb()), site, TestHelpers.MoonAtJ2000.Frame, CoordinateSystem.RaDec, Coordinate.Declination, RelationalOperator.GreaterThan, 0.0, new WindowSearchOptions { Step = TimeSpan.FromSeconds(60.0) });
 
             // CSPICE gfposc (tools/geometry_reference, converged to 1e-9 s): DSS-13 above the Moon's equator
             GeometryReference.AssertWindows(null, "moon_dss13_declination > 0", res, GeometryReference.ThresholdCrossing);
@@ -271,26 +271,26 @@ namespace IO.Astrodynamics.Tests.Surface
         {
             Site site = new Site(13, "DSS-13", TestHelpers.EarthAtJ2000);
 
-            var res = site.FindCoordinateWindows(new Window(TimeSystem.Time.Parse("2000-01-01 12:00:00", TimeScale.TDB).ToTDB(), TimeSystem.Time.Parse("2000-01-02 12:00:00", TimeScale.TDB).ToTDB()), TestHelpers.MoonAtJ2000, site.Frame, CoordinateSystem.Rectangular, Coordinate.Z, RelationalOperator.GreaterThan, 0.0, new WindowSearchOptions { Step = TimeSpan.FromSeconds(60.0) });
+            var res = site.FindCoordinateWindows(new Window(TimeSystem.Time.Parse("2000-01-01 12:00:00", TimeScale.TDB).ToTdb(), TimeSystem.Time.Parse("2000-01-02 12:00:00", TimeScale.TDB).ToTdb()), TestHelpers.MoonAtJ2000, site.Frame, CoordinateSystem.Rectangular, Coordinate.Z, RelationalOperator.GreaterThan, 0.0, new WindowSearchOptions { Step = TimeSpan.FromSeconds(60.0) });
 
             // CSPICE gfposc (tools/geometry_reference, converged to 1e-9 s) in DSS-13_TOPO, the frame of the kernels of the
             // station (#690): the Moon is up at the start and at the end of the search window, whose bounds close the windows
             var windows = res as Window[] ?? res.ToArray();
             GeometryReference.AssertWindows(null, "dss13_moon_z > 0", windows, GeometryReference.ThresholdCrossing);
-            LabelAssert.Equal(TimeSystem.Time.J2000TDB, windows[0].StartDate);
-            LabelAssert.Equal(TimeSystem.Time.Parse("2000-01-02 12:00:00", TimeScale.TDB).ToTDB(), windows[1].EndDate);
+            LabelAssert.Equal(TimeSystem.Time.J2000Tdb, windows[0].StartDate);
+            LabelAssert.Equal(TimeSystem.Time.Parse("2000-01-02 12:00:00", TimeScale.TDB).ToTdb(), windows[1].EndDate);
         }
 
         [Theory]
         [InlineData(Aberration.None, "site_sun_elevation > -0.8 deg NONE")]
         [InlineData(Aberration.LT, "site_sun_elevation > -0.8 deg LT")]
-        [InlineData(Aberration.LTS, "site_sun_elevation > -0.8 deg LT+S")]
+        [InlineData(Aberration.LtS, "site_sun_elevation > -0.8 deg LT+S")]
         public void FindWindowsOnIlluminationConstraint(Aberration aberration, string reference)
         {
             Site site = new Site(13, "DSS-13", TestHelpers.EarthAtJ2000,
                 new Planetodetic(-116.79445837 * Astrodynamics.Constants.Deg2Rad, 35.24716450 * Astrodynamics.Constants.Deg2Rad, 1070.85059));
 
-            var res = site.FindIlluminationWindows(new Window(TimeSystem.Time.CreateTDB(674524800), TimeSystem.Time.CreateTDB(674611200)), IlluminationAngle.Incidence, RelationalOperator.LessThan, System.Math.PI * 0.5 - (-0.8 * IO.Astrodynamics.Constants.Deg2Rad), TestHelpers.Sun, new WindowSearchOptions { Step = TimeSpan.FromSeconds(3600), Aberration = aberration });
+            var res = site.FindIlluminationWindows(new Window(TimeSystem.Time.CreateTdb(674524800), TimeSystem.Time.CreateTdb(674611200)), IlluminationAngle.Incidence, RelationalOperator.LessThan, System.Math.PI * 0.5 - (-0.8 * IO.Astrodynamics.Constants.Deg2Rad), TestHelpers.Sun, new WindowSearchOptions { Step = TimeSpan.FromSeconds(3600), Aberration = aberration });
 
             // CSPICE gfposc (tools/geometry_reference, converged to 1e-9 s): the Sun above -0.8° of elevation in the site's
             // frame, the incidence below 90.8°, with the same correction (LT+S: the 1.13 s of #491 before its fix)
@@ -355,7 +355,7 @@ namespace IO.Astrodynamics.Tests.Surface
                     TestHelpers.VectorComparer);
                 Assert.Equal(new Vector3(349.96683087822703, 295.68160057531139, 0.01769212216143207), orbitalParametersEnumerable.ElementAt(0).ToStateVector().Velocity,
                     TestHelpers.VectorComparer);
-                LabelAssert.Equal(TimeSystem.Time.J2000TDB, orbitalParametersEnumerable.ElementAt(0).Epoch);
+                LabelAssert.Equal(TimeSystem.Time.J2000Tdb, orbitalParametersEnumerable.ElementAt(0).Epoch);
                 Assert.Equal(Frames.Frame.ICRF, orbitalParametersEnumerable.ElementAt(0).Frame);
                 Assert.Equal(TestHelpers.EarthAtJ2000, orbitalParametersEnumerable.ElementAt(0).Observer);
 
@@ -464,7 +464,7 @@ namespace IO.Astrodynamics.Tests.Surface
             var frameKernel = IO.Astrodynamics.Tests.Body.FrameKernelFiles.NewFile("site777_inertial");
             var fk = IO.Astrodynamics.Tests.Body.FrameKernelFiles.NewFile("site777_written");
             new Site(777, "RV690", earth, new Planetodetic(0.1, 0.6, 100.0))
-                .WriteEphemeris(new Window(TimeSystem.Time.J2000TDB.AddDays(-1.0), TimeSystem.Time.J2000TDB.AddDays(1.0)), spk);
+                .WriteEphemeris(new Window(TimeSystem.Time.J2000Tdb.AddDays(-1.0), TimeSystem.Time.J2000Tdb.AddDays(1.0)), spk);
             await File.WriteAllTextAsync(frameKernel.FullName,
                 "KPL/FK\n\\begindata\nFRAME_RV690_TOPO = 1399777\nFRAME_1399777_NAME = 'RV690_TOPO'\nFRAME_1399777_CLASS = 4\n" +
                 "FRAME_1399777_CLASS_ID = 1399777\nFRAME_1399777_CENTER = 399777\nTKFRAME_1399777_SPEC = 'MATRIX'\n" +
@@ -522,18 +522,18 @@ namespace IO.Astrodynamics.Tests.Surface
         {
             var spk = IO.Astrodynamics.Tests.Body.FrameKernelFiles.NewFile($"site{id}", ".bsp");
             new Site(id, name, PlanetsAndMoons.EARTH_BODY, new Planetodetic(0.1, 0.6, 100.0))
-                .WriteEphemeris(new Window(TimeSystem.Time.J2000TDB.AddDays(-1.0), TimeSystem.Time.J2000TDB.AddDays(3.0)), spk);
+                .WriteEphemeris(new Window(TimeSystem.Time.J2000Tdb.AddDays(-1.0), TimeSystem.Time.J2000Tdb.AddDays(3.0)), spk);
             return spk;
         }
 
         private static readonly TimeSystem.Time[] KernelSiteEpochs =
         [
-            TimeSystem.Time.J2000TDB.AddHours(12.0), TimeSystem.Time.J2000TDB.AddHours(30.0), TimeSystem.Time.J2000TDB.AddHours(54.0)
+            TimeSystem.Time.J2000Tdb.AddHours(12.0), TimeSystem.Time.J2000Tdb.AddHours(30.0), TimeSystem.Time.J2000Tdb.AddHours(54.0)
         ];
 
         /// <summary>
         /// A site from the kernels whose frame id no loaded kernel defines has the frame of its J2000 coordinates (its
-        /// orientation, <see cref="SiteFrame.GetStateOrientationToICRF"/>), and an ephemeris read in it is read in J2000 and
+        /// orientation, <see cref="SiteFrame.GetStateOrientationToIcrf"/>), and an ephemeris read in it is read in J2000 and
         /// rotated by it, as for a site built from coordinates (third review of #690): it reached <c>spkezr_c</c> by its own
         /// name, RV780_TOPO, which SPICE does not know (SPICE(UNKNOWNFRAME)), on every path, while the frame converted to ICRF
         /// and the horizontal coordinates used the orientation. The reference is SPICE in a frame kernel written by the test
@@ -641,7 +641,7 @@ namespace IO.Astrodynamics.Tests.Surface
             try
             {
                 var site = new Site(781, "RV781", earth);
-                var epoch = TimeSystem.Time.J2000TDB.AddHours(12.0);
+                var epoch = TimeSystem.Time.J2000Tdb.AddHours(12.0);
                 var window = new Window(epoch, epoch.AddHours(2.0));
 
                 // Act: the managed read, without the frame kernel
@@ -855,7 +855,7 @@ namespace IO.Astrodynamics.Tests.Surface
         /// <summary>
         /// <see cref="SpiceApi.TransformFrame(TimeSystem.Time, Frames.Frame, Frames.Frame)"/> with the frame of a site from the
         /// kernels whose frame id no loaded kernel defines is the frame of its J2000 coordinates
-        /// (<see cref="SiteFrame.GetStateOrientationToICRF"/>), bit for bit, where it threw (#668, fourth round); with the frame
+        /// (<see cref="SiteFrame.GetStateOrientationToIcrf"/>), bit for bit, where it threw (#668, fourth round); with the frame
         /// of a site whose frame the kernels define (DSS-13), SPICE's frame, as before. CIRS is composed through ICRF by its
         /// managed orientation since #656, where it threw (<c>ManagedFrameByNameTests</c> checks it against SOFA).
         /// </summary>
@@ -871,7 +871,7 @@ namespace IO.Astrodynamics.Tests.Surface
                 Assert.False(SpiceApi.KernelDefinesFrame(site.Frame.Id!.Value));
                 foreach (var epoch in KernelSiteEpochs)
                 {
-                    var expected = site.Frame.GetStateOrientationToICRF(epoch).Rotation;
+                    var expected = site.Frame.GetStateOrientationToIcrf(epoch).Rotation;
                     Assert.Equal(expected, SpiceApi.Instance.TransformFrame(epoch, site.Frame, Frames.Frame.ICRF).Rotation);
                     Assert.Equal(expected.Conjugate(), SpiceApi.Instance.TransformFrame(epoch, Frames.Frame.ICRF, site.Frame).Rotation);
                 }
@@ -886,7 +886,7 @@ namespace IO.Astrodynamics.Tests.Surface
             var at = TimeSystem.Time.Parse("2024-03-01T12:00:00 TDB");
             Assert.Equal(SpiceApi.Instance.TransformFrame(at, new Frames.Frame("DSS-13_TOPO"), Frames.Frame.ICRF).Rotation,
                 SpiceApi.Instance.TransformFrame(at, dss13.Frame, Frames.Frame.ICRF).Rotation);
-            Assert.Equal(Frames.Frame.CIRS.GetStateOrientationToICRF(at).Rotation,
+            Assert.Equal(Frames.Frame.CIRS.GetStateOrientationToIcrf(at).Rotation,
                 SpiceApi.Instance.TransformFrame(at, Frames.Frame.CIRS, Frames.Frame.ICRF).Rotation);
         }
 
@@ -904,7 +904,7 @@ namespace IO.Astrodynamics.Tests.Surface
         public void IlluminationIncidence()
         {
             Site site = new Site(13, "DSS-13", TestHelpers.EarthAtJ2000);
-            var res = site.IlluminationIncidence(TimeSystem.Time.J2000TDB, TestHelpers.Sun, Aberration.None);
+            var res = site.IlluminationIncidence(TimeSystem.Time.J2000Tdb, TestHelpers.Sun, Aberration.None);
             // SPICE: the angle of the Sun to the normal of the ellipsoid of pck00011 at the geodetic coordinates of DSS-13 at
             // J2000 TDB, gfilum's normal for the site (tools/geodetic_reference/dss13_topo.c, its zenith of the 'pck00011
             // frame'), not the zenith of DSS-13_TOPO, the frame of the site since #690
@@ -915,7 +915,7 @@ namespace IO.Astrodynamics.Tests.Surface
         public void IlluminationEmission()
         {
             Site site = new Site(13, "DSS-13", TestHelpers.EarthAtJ2000);
-            var res = site.IlluminationEmission(TimeSystem.Time.J2000TDB, TestHelpers.Sun, Aberration.None);
+            var res = site.IlluminationEmission(TimeSystem.Time.J2000Tdb, TestHelpers.Sun, Aberration.None);
             // SPICE: the angle of the Sun to the normal of the ellipsoid of pck00011 at the geodetic coordinates of DSS-13 at
             // J2000 TDB, gfilum's normal for the site (tools/geodetic_reference/dss13_topo.c, its zenith of the 'pck00011
             // frame'), not the zenith of DSS-13_TOPO, the frame of the site since #690
@@ -926,7 +926,7 @@ namespace IO.Astrodynamics.Tests.Surface
         public void IlluminationPhase()
         {
             Site site = new Site(13, "DSS-13", TestHelpers.EarthAtJ2000);
-            var res = site.IlluminationPhase(TimeSystem.Time.J2000TDB, TestHelpers.Sun, TestHelpers.Sun, Aberration.None);
+            var res = site.IlluminationPhase(TimeSystem.Time.J2000Tdb, TestHelpers.Sun, TestHelpers.Sun, Aberration.None);
             Assert.Equal(0.0, res,6);
         }
         
@@ -934,7 +934,7 @@ namespace IO.Astrodynamics.Tests.Surface
         public void IlluminationIncidenceFromMoon()
         {
             Site site = new Site(13, "DSS-13", TestHelpers.EarthAtJ2000);
-            var res = site.IlluminationIncidence(TimeSystem.Time.J2000TDB, TestHelpers.Sun, Aberration.None);
+            var res = site.IlluminationIncidence(TimeSystem.Time.J2000Tdb, TestHelpers.Sun, Aberration.None);
             // SPICE: the angle of the Sun to the normal of the ellipsoid of pck00011 at the geodetic coordinates of DSS-13 at
             // J2000 TDB, gfilum's normal for the site (tools/geodetic_reference/dss13_topo.c, its zenith of the 'pck00011
             // frame'), not the zenith of DSS-13_TOPO, the frame of the site since #690
@@ -945,7 +945,7 @@ namespace IO.Astrodynamics.Tests.Surface
         public void IlluminationEmissionFromMoon()
         {
             Site site = new Site(13, "DSS-13", TestHelpers.EarthAtJ2000);
-            var res = site.IlluminationEmission(TimeSystem.Time.J2000TDB, TestHelpers.Moon, Aberration.None);
+            var res = site.IlluminationEmission(TimeSystem.Time.J2000Tdb, TestHelpers.Moon, Aberration.None);
             // SPICE, as for the Sun (tools/geodetic_reference/dss13_topo.c)
             Assert.Equal(1.2777447332497456, res, 12);
         }
@@ -954,7 +954,7 @@ namespace IO.Astrodynamics.Tests.Surface
         public void IlluminationPhaseFromMoon()
         {
             Site site = new Site(13, "DSS-13", TestHelpers.EarthAtJ2000);
-            var res = site.IlluminationPhase(TimeSystem.Time.J2000TDB, TestHelpers.Sun, TestHelpers.Moon, Aberration.None);
+            var res = site.IlluminationPhase(TimeSystem.Time.J2000Tdb, TestHelpers.Sun, TestHelpers.Moon, Aberration.None);
             Assert.Equal(0.98449746814087213, res,6 );
         }
 
@@ -1025,7 +1025,7 @@ namespace IO.Astrodynamics.Tests.Surface
             var searches = new (string Path, Func<string, Window[]> Search)[]
             {
                 ("SpiceApi", m => SpiceApi.Instance.FindWindowsOnIlluminationConstraint(window, 399013, 399, earth.Frame, dss13.Planetodetic,
-                    IlluminationAngle.Incidence, RelationalOperator.LessThan, IO.Astrodynamics.Constants.HalfPi, 0.0, Aberration.LTS, step, 10, m).ToArray())
+                    IlluminationAngle.Incidence, RelationalOperator.LessThan, IO.Astrodynamics.Constants.HalfPi, 0.0, Aberration.LtS, step, 10, m).ToArray())
             };
             foreach (var (path, search) in searches)
             {
@@ -1133,12 +1133,12 @@ namespace IO.Astrodynamics.Tests.Surface
         /// </summary>
         internal static StateVector RotatedAtTheTargetEpoch(Func<TimeSystem.Time, StateVector> icrfRead, TimeSystem.Time t, Frames.Frame frame)
         {
-            const double c = IO.Astrodynamics.Constants.C;
+            const double c = IO.Astrodynamics.Constants.SpeedOfLight;
             var state = icrfRead(t);
             double lightTime = state.Position.Magnitude() / c;
             double rate = state.Position.Normalize().Dot(state.Velocity) / c;
             var centerEpoch = t.AddSeconds(-lightTime);
-            double residual = (t.ToTDB().TimeSpanFromJ2000().TotalSeconds - lightTime) - centerEpoch.ToTDB().TimeSpanFromJ2000().TotalSeconds;
+            double residual = (t.ToTdb().TimeSpanFromJ2000().TotalSeconds - lightTime) - centerEpoch.ToTdb().TimeSpanFromJ2000().TotalSeconds;
             var orientation = Frames.Frame.ICRF.ToFrame(frame, centerEpoch);
             var angularVelocity = orientation.AngularVelocity.Rotate(orientation.Rotation);
             var position = state.Position.Rotate(orientation.Rotation);
@@ -1241,7 +1241,7 @@ namespace IO.Astrodynamics.Tests.Surface
                 double worstPosition = 0.0, worstVelocity = 0.0;
                 for (int k = 0; k < epochs.Length; k++)
                 {
-                    double et = epochs[k].ToTDB().TimeSpanFromJ2000().TotalSeconds;
+                    double et = epochs[k].ToTdb().TimeSpanFromJ2000().TotalSeconds;
                     var st = IO.Astrodynamics.Tests.Body.CspiceDirect.Spkezr("EARTH", et, "F07SITE_TOPO", "NONE", "MOON");
                     var m = IO.Astrodynamics.Tests.Body.CspiceDirect.Pxform("ITRF93", "F07SITE_TOPO", et);
                     var position = new Vector3(st[0] + m[0] * p[0] + m[1] * p[1] + m[2] * p[2], st[1] + m[3] * p[0] + m[4] * p[1] + m[5] * p[2],

@@ -24,7 +24,7 @@ internal sealed class KernelObject : CelestialItem
 {
     /// <summary>The object of <paramref name="naifId"/>, read from the data provider.</summary>
     /// <exception cref="System.ArgumentException">SPICE does not name <paramref name="naifId"/>.</exception>
-    internal KernelObject(int naifId) : base(naifId, Frame.ICRF, TimeSystem.Time.J2000TDB)
+    internal KernelObject(int naifId) : base(naifId, Frame.ICRF, TimeSystem.Time.J2000Tdb)
     {
         RegisterWithObserver();
     }

@@ -113,7 +113,7 @@ internal static class EphemerisQueriesPage
         #region docs/tutorials/ephemeris-queries.md:5
         // Inputs: earth and moon (CelestialBody), epoch (Time)
         var geometric = earth.GetEphemeris(epoch, moon, Frame.ICRF, Aberration.None);
-        var apparent = earth.GetEphemeris(epoch, moon, Frame.ICRF, Aberration.LTS);
+        var apparent = earth.GetEphemeris(epoch, moon, Frame.ICRF, Aberration.LtS);
         #endregion
     }
 

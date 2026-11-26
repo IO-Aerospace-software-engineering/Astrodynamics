@@ -133,7 +133,7 @@ Generate an SSO for a given altitude and eccentricity:
 
 ```csharp
 // Inputs: earth (CelestialBody), epoch (Time)
-var ssoOrbit = earth.HelioSynchronousOrbit(
+var ssoOrbit = earth.SunSynchronousOrbit(
     semiMajorAxis: 7000000.0,
     eccentricity: 0.001,
     descendingNodeEpoch: epoch);
@@ -148,4 +148,4 @@ The inclination is computed to produce the required nodal precession rate (~0.98
 - Use `StateVector` for Cartesian, `KeplerianElements` for classical, and `ToEquinoctial` for a representation without singularity at e = 0 or i = 0.
 - All representations share the same property methods (`SemiMajorAxis()`, `Eccentricity()`, `Period()`, etc.).
 - `AtEpoch` provides fast two-body analytical propagation from Keplerian elements.
-- `GeosynchronousOrbit` and `HelioSynchronousOrbit` are convenience builders for common orbit types.
+- `GeosynchronousOrbit` and `SunSynchronousOrbit` are convenience builders for common orbit types.

@@ -23,7 +23,7 @@ public sealed class GcrfFrame : Frame
 
     private protected override bool ReadsOrientationCache => true;
 
-    public override StateOrientation GetStateOrientationToICRF(Time epoch)
+    public override StateOrientation GetStateOrientationToIcrf(Time epoch)
     {
         if (OrientationCache != null)
             return OrientationCache.GetOrientation(epoch);

@@ -108,7 +108,7 @@ public sealed class PartialsTestCases
     internal static PropagationEphemerisCache Cache(Frames.Frame frame, ILocalizable observer,
         params CelestialItem[] bodies)
     {
-        var window = new TimeSystem.Window(Epoch.ToTDB().AddHours(-1.0), Epoch.ToTDB().AddHours(1.0));
+        var window = new TimeSystem.Window(Epoch.ToTdb().AddHours(-1.0), Epoch.ToTdb().AddHours(1.0));
         var entries = new System.Collections.Generic.List<(CelestialItem, Aberration)>();
         foreach (var body in bodies)
         {

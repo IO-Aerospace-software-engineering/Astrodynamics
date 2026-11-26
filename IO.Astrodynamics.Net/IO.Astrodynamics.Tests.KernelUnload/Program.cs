@@ -660,7 +660,7 @@ internal static class Program
     private static StateVector[] EarthStatesInTwoFrames()
     {
         var states = EarthStates();
-        states[2] = new StateVector(states[2].Position, states[2].Velocity, states[2].Observer, states[2].Epoch, Frame.ECLIPTIC_J2000);
+        states[2] = new StateVector(states[2].Position, states[2].Velocity, states[2].Observer, states[2].Epoch, Frame.ECLIPJ2000);
         return states;
     }
 
@@ -894,7 +894,7 @@ internal static class Program
         var moon = ReadMoon();
         Check(double.IsFinite(moon.Position.Magnitude()) && moon.Position.Magnitude() > 0.0, $"{what}: the Moon is read ({moon.Position})");
         if (!OperatingSystem.IsLinux()) return;
-        var spice = CspiceDirect.Spkezr("301", Epoch.ToTDB().TimeSpanFromJ2000().TotalSeconds, "J2000", "NONE", "399");
+        var spice = CspiceDirect.Spkezr("301", Epoch.ToTdb().TimeSpanFromJ2000().TotalSeconds, "J2000", "NONE", "399");
         var expected = new Vector3(spice[0], spice[1], spice[2]) * 1000.0;
         Check(moon.Position == expected, $"{what}: the Moon is spkezr_c's state ({moon.Position} against {expected})");
     }

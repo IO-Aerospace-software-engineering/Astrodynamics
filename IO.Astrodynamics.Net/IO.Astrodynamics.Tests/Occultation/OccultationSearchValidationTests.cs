@@ -86,7 +86,7 @@ public class OccultationSearchValidationTests
 
     private static Window Eclipse2005Window => new(TimeSystem.Time.Parse("2005-10-03 00:00:00", TimeScale.TDB), TimeSystem.Time.Parse("2005-10-04 00:00:00", TimeScale.TDB));
 
-    private static Window Eclipse2001Window => new(TimeSystem.Time.CreateTDB(61473664.183390938), TimeSystem.Time.CreateTDB(61646464.183445148));
+    private static Window Eclipse2001Window => new(TimeSystem.Time.CreateTdb(61473664.183390938), TimeSystem.Time.CreateTdb(61646464.183445148));
 
     /// <summary>The largest difference between the edges of two lists of windows, in seconds; they must pair.</summary>
     private static double WorstEdge(IReadOnlyList<Window> actual, IReadOnlyList<Window> expected)
@@ -109,8 +109,8 @@ public class OccultationSearchValidationTests
         double worst = 0.0;
         for (int i = 0; i < reference.Length; i++)
         {
-            worst = System.Math.Max(worst, System.Math.Abs(actual[i].StartDate.ToTDB().TimeSpanFromJ2000().TotalSeconds - reference[i][0]));
-            worst = System.Math.Max(worst, System.Math.Abs(actual[i].EndDate.ToTDB().TimeSpanFromJ2000().TotalSeconds - reference[i][1]));
+            worst = System.Math.Max(worst, System.Math.Abs(actual[i].StartDate.ToTdb().TimeSpanFromJ2000().TotalSeconds - reference[i][0]));
+            worst = System.Math.Max(worst, System.Math.Abs(actual[i].EndDate.ToTdb().TimeSpanFromJ2000().TotalSeconds - reference[i][1]));
         }
 
         return worst;
@@ -121,9 +121,9 @@ public class OccultationSearchValidationTests
     private static string CspiceName(Aberration aberration) => aberration switch
     {
         Aberration.None => "NONE",
-        Aberration.LT or Aberration.LTS => "LT",
-        Aberration.CN or Aberration.CNS => "CN",
-        Aberration.XLT or Aberration.XLTS => "XLT",
+        Aberration.LT or Aberration.LtS => "LT",
+        Aberration.CN or Aberration.CnS => "CN",
+        Aberration.XLT or Aberration.XltS => "XLT",
         _ => "XCN"
     };
 
@@ -184,7 +184,7 @@ public class OccultationSearchValidationTests
     [InlineData(Aberration.CN)]
     [InlineData(Aberration.XLT)]
     [InlineData(Aberration.XCN)]
-    [InlineData(Aberration.LTS)]
+    [InlineData(Aberration.LtS)]
     public void Eclipse001_LightTime_MatchesCspice(Aberration aberration)
     {
         // LT+S is LT: gfoclt ignores the stellar aberration, and so does the managed search

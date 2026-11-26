@@ -48,7 +48,7 @@ public class InputRangeTests
     }
 
     private static StateVector Leo() => new(new Vector3(6800000.0, 0.0, 0.0), new Vector3(0.0, 7656.0, 0.0),
-        new CelestialBody(PlanetsAndMoons.EARTH), TimeSystem.Time.J2000TDB, Frames.Frame.ICRF);
+        new CelestialBody(PlanetsAndMoons.EARTH), TimeSystem.Time.J2000Tdb, Frames.Frame.ICRF);
 
     // mass 100 and a maximum of 1000 unless the value under test replaces one of them
     private static (double mass, double max, double area, double cd, double cr) Arguments(string parameter, double value) =>
@@ -83,7 +83,7 @@ public class InputRangeTests
     {
         var (mass, max, area, cd, cr) = Arguments(parameter, value);
 
-        var exception = Record.Exception(() => new Spacecraft(-1801, "SC1801", TimeSystem.Time.J2000TDB, mass, max,
+        var exception = Record.Exception(() => new Spacecraft(-1801, "SC1801", TimeSystem.Time.J2000Tdb, mass, max,
             sectionalArea: area, dragCoefficient: cd, solarRadiationCoefficient: cr));
 
         var rejected = Assert.IsType<ArgumentOutOfRangeException>(exception);
@@ -93,7 +93,7 @@ public class InputRangeTests
     [Fact]
     public void KernelBackedSpacecraft_RejectsAHardBodyRadius_BeforeReadingTheKernels()
     {
-        var exception = Record.Exception(() => new Spacecraft(-1802, "SC1802", TimeSystem.Time.J2000TDB, hardBodyRadius: double.NaN));
+        var exception = Record.Exception(() => new Spacecraft(-1802, "SC1802", TimeSystem.Time.J2000Tdb, hardBodyRadius: double.NaN));
 
         var rejected = Assert.IsType<ArgumentOutOfRangeException>(exception);
         Assert.Equal("hardBodyRadius", rejected.ParamName);
@@ -109,7 +109,7 @@ public class InputRangeTests
         Assert.Equal(0.0, spacecraft.MaxOperatingMass);
         Assert.Equal(double.Epsilon, spacecraft.SectionalArea);
         Assert.Equal(0.0, spacecraft.DragCoefficient);
-        Assert.Equal(0.0, spacecraft.SolarRadiationCoeff);
+        Assert.Equal(0.0, spacecraft.SolarRadiationCoefficient);
     }
 
     [Theory]

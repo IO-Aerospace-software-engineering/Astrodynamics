@@ -17,14 +17,14 @@ calendar without a frame was TDB, 69.18 s from the UTC most callers meant.
 | `TimeScale.GPS` | GPS time, TAI − 19 s |
 
 A local time is not a scale: its instant depends on the zone of the machine. The calendar of an instant in the zone of
-the machine is `t.ToUTC().DateTime.ToLocalTime()`.
+the machine is `t.ToUtc().DateTime.ToLocalTime()`.
 
 ### Static Constants
 
 | Constant | Description |
 |----------|-------------|
-| `Time.J2000TDB` | J2000, 2000-01-01T12:00:00 TDB |
-| `Time.J2000UTC` | 2000-01-01T12:00:00 UTC |
+| `Time.J2000Tdb` | J2000, 2000-01-01T12:00:00 TDB |
+| `Time.J2000Utc` | 2000-01-01T12:00:00 UTC |
 | `Time.UtcNow` | The clock of the machine, in UTC |
 
 ### Constructors
@@ -69,12 +69,12 @@ the same grammar: `T` and the seconds required, no tag (#619).
 |--------|-------------|
 | `Create(double secondsFromJ2000, TimeScale scale)` | The calendar of 2000-01-01T12:00:00 of the scale plus the seconds, to the nearest tick |
 | `FromDayOfYear(int year, int dayOfYear, double seconds, TimeScale scale)` | A day of year (1 to 365, or 366 in a Gregorian leap year) of a year (1 to 9999) and the seconds of that day (finite, in [0, 86400)), to the nearest tick, in the scale; `ArgumentOutOfRangeException` names an argument out of its range (#680). It replaces Create(year, doy, sec), which was UTC |
-| `CreateTDB(double secondsFromJ2000)` | Create TDB time from J2000 seconds, to the nearest tick |
-| `CreateUTC(double secondsFromJ2000)` | Create UTC time from J2000 seconds, to the nearest tick |
+| `CreateTdb(double secondsFromJ2000)` | Create TDB time from J2000 seconds, to the nearest tick |
+| `CreateUtc(double secondsFromJ2000)` | Create UTC time from J2000 seconds, to the nearest tick |
 | `CreateFromJD(double julianDate, TimeScale scale)` | Create from Julian Date, J2000 plus the nearest tick of the days `julianDate` − 2451545.0 (#637); a non-finite date throws `ArgumentOutOfRangeException` (#680) |
 
 A span of seconds becomes the nearest tick (100 ns) of the exact value of its double, ties to even, in `Create`,
-`CreateTDB`, `CreateUTC`, `AddSeconds`, `AddMilliseconds`, `AddMicroseconds` and the TDB − TT offset of the TDB
+`CreateTdb`, `CreateUtc`, `AddSeconds`, `AddMilliseconds`, `AddMicroseconds` and the TDB − TT offset of the TDB
 conversions ([#625](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/625)); a value that is
 not finite, or whose ticks do not fit in a `long`, throws `ArgumentOutOfRangeException`. Before 11.0.0 these truncated
 toward zero: up to a tick early after J2000 and late before it, so that a spacecraft built at the first instant of its
@@ -105,7 +105,7 @@ Sterbenz's lemma), which throw for a non-finite argument (#680: NaN returned the
 and for the spans the library computes outside `Time` (internal `Time.SecondsToSpan`, which keeps the exception types
 of `TimeSpan.FromSeconds`, `ArgumentException` for NaN and `OverflowException` for an infinity or from 922 337 203 685 s,
 the bound of `SecondsToTicks`, 0.48 s below the 922 337 203 685.477 s `TimeSpan.FromSeconds` accepted):
-`OrbitalParameters.Period()`, `CelestialBody.SideralRotationPeriod` and `TrueSolarDay`, the
+`OrbitalParameters.Period()`, `CelestialBody.SiderealRotationPeriod` and `TrueSolarDay`, the
 offsets of the launch windows after the first (`Launch`: half the sidereal period in seconds plus ±2 δL/ω, rounded
 once), the thrust window of an impulse (`Tsiolkovsky.DeltaT`), the
 hold of `PhasingManeuver`, the step, candidate, seed, secant and subdivision epochs of the conjunction search and the
@@ -133,7 +133,7 @@ The conversions between the scales are managed and read no kernel:
   1.055 µs (rms 0.710 µs) once rounded to the tick; it is within 37.34 µs of the full Fairhead & Bretagnon series (ERFA
   `dtdb`, rms 17.11 µs). Over the 6 679 epochs every 7 days of #455, it is within 0.232 µs of GMAT R2026a's series.
 
-CSPICE is given the managed TDB as its ephemeris time (`ToTDB()`). The NAIF LSK kernel, which CSPICE needs loaded, does
+CSPICE is given the managed TDB as its ephemeris time (`ToTdb()`). The NAIF LSK kernel, which CSPICE needs loaded, does
 not enter the managed conversions.
 
 ### Conversion Methods
@@ -141,11 +141,11 @@ not enter the managed conversions.
 | Method | Description |
 |--------|-------------|
 | `ConvertTo(TimeScale scale)` | Convert to any scale; to the scale of the time, the time itself ([#510](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/510)) |
-| `ToTDB()` | Convert to TDB |
-| `ToUTC()` | Convert to UTC |
-| `ToTAI()` | Convert to TAI |
+| `ToTdb()` | Convert to TDB |
+| `ToUtc()` | Convert to UTC |
+| `ToTai()` | Convert to TAI |
 | `ToTT()` | Convert to TT (ToTDT before 11.0.0) |
-| `ToGPS()` | Convert to GPS time |
+| `ToGps()` | Convert to GPS time |
 | `ToJulianDate()` | Get the Julian date |
 
 ### Arithmetic Methods
@@ -186,7 +186,7 @@ not enter the managed conversions.
 
 Two times are equal when they are the same instant, whatever their scales (#512, decided by S. Guillet, 2026-11-17; the
 TAI tick confirmed as the key by S. Guillet, 2026-11-19, D3 as amended): `==`, `!=`, `Equals` and `GetHashCode` follow
-`CompareTo`, the one order of times, which compares their ticks converted to TAI. So `utc == utc.ToTDB()`, both hash
+`CompareTo`, the one order of times, which compares their ticks converted to TAI. So `utc == utc.ToTdb()`, both hash
 alike, and a `Dictionary`, a `HashSet`, `Distinct` or `IndexOf` keyed by times finds the same instant in another scale,
 as `SortedSet` did. Within UTC, TAI, TT and GPS the order is that of the calendars; within TDB too for times two ticks or
 more apart, but two consecutive TDB ticks can convert to one TAI tick (TDB − TT, rounded to the tick, gains one there,
@@ -211,7 +211,7 @@ var t3 = Time.Parse("2024-173T12:00:00Z");
 var t4 = Time.Parse("JD 2460483.0 UTC");
 var doy = Time.FromDayOfYear(2024, 173, 43200.0, TimeScale.UTC);
 bool sameLabel = t1.EqualsExact(t2) && t1.EqualsExact(t3) && t1.EqualsExact(t4) && t1.EqualsExact(doy); // true
-var tdb = t1.ToTDB();
+var tdb = t1.ToTdb();
 bool sameInstant = tdb == t1; // true: one instant in two scales
 string text = $"{tdb:yyyy-MM-dd HH:mm:ss}"; // 2024-06-21 12:01:09 TDB
 var later = t1.AddDays(1.0);

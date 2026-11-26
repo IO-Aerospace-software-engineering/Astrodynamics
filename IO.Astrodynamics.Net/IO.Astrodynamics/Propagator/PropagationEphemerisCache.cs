@@ -103,7 +103,7 @@ internal sealed class PropagationEphemerisCache : IDisposable
             for (int i = 0; i < _gridSize; i++)
             {
                 double epochSec = _startEpochSeconds + i * _gridStepSeconds;
-                var epoch = Time.CreateTDB(epochSec);
+                var epoch = Time.CreateTdb(epochSec);
                 var sv = body.GetEphemeris(epoch, observer, frame, aberration);
                 points[i] = new EphemerisPoint(sv.Position, sv.Velocity, epochSec);
             }

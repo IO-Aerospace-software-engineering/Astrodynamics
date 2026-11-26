@@ -116,7 +116,7 @@ public class EclipseSolver : ICategorySolver
     // The search window in TDB: the occultation searches label their windows in the scale of the window's start, so a UTC
     // window would give UTC labels and lengths in TT seconds; the TDB window keeps the TDB labels and lengths of the cases
     // (IC-9 of lot L6 of #668)
-    private static Window InTdb(Window window) => new(window.StartDate.ToTDB(), window.EndDate.ToTDB());
+    private static Window InTdb(Window window) => new(window.StartDate.ToTdb(), window.EndDate.ToTdb());
 
     // The second branch (002 to 006): every event of every occulting body, about the Earth, in time order
     private Dictionary<string, object> EveryEvent(EclipseInputs inputs)

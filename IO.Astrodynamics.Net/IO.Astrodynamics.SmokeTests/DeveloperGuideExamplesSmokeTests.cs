@@ -64,8 +64,8 @@ public class DeveloperGuideExamplesSmokeTests
         _output.WriteLine($"Range {horizontal.Range:R} m, {horizontal.Range - 399039486.050:E3} m from spkcpo; {string.Join(", ", windows)}");
         Assert.Equal(399039486.050, horizontal.Range, RangeBound);
         var window = Assert.Single(windows);
-        double start = (window.StartDate - Time.CreateTDB(757374144.9969522)).TotalSeconds;
-        double end = (window.EndDate - Time.CreateTDB(757390843.0285655)).TotalSeconds;
+        double start = (window.StartDate - Time.CreateTdb(757374144.9969522)).TotalSeconds;
+        double end = (window.EndDate - Time.CreateTdb(757390843.0285655)).TotalSeconds;
         _output.WriteLine($"MEASURE window start {start:E3} s, end {end:E3} s from spkcpt_c");
         Assert.InRange(start, -WindowBound, WindowBound);
         Assert.InRange(end, -WindowBound, WindowBound);

@@ -259,7 +259,7 @@ public class PropagatorReuseTests
             Outputs = solution.StateVectors.ToArray(),
             Steps = solution.Segments.Select(segment => segment.Steps.ToArray()).ToArray(),
             Arcs = spacecraft.PropagatedArcs.Select(arc => arc.ToArray()).ToArray(),
-            Attitudes = spacecraft.Frame.GetStateOrientationsToICRF().ToArray(),
+            Attitudes = spacecraft.Frame.GetStateOrientationsToIcrf().ToArray(),
             Maneuvers = spacecraft.ExecutedManeuvers.Select(m => (m.GetType(), m.ManeuverWindow, m.ThrustWindow,
                 (m as ImpulseManeuver)?.DeltaV, m.FuelBurned)).ToArray(),
             FuelLeft = spacecraft.FuelTanks.Sum(tank => tank.Quantity),

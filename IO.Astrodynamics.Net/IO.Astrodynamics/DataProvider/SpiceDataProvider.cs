@@ -27,7 +27,7 @@ public class SpiceDataProvider : IDataProvider
     /// (<see cref="ArgumentException.ParamName"/> <c>source</c>): the message names the frame, SPICE's error its inner
     /// exception (R25 of #668, decided by S. Guillet, 2026-11-19).</exception>
     /// <exception cref="InvalidOperationException">SPICE cannot orient the frame at <paramref name="epoch"/>.</exception>
-    public StateOrientation FrameTransformationToICRF(in Time epoch, Frame source)
+    public StateOrientation FrameTransformationToIcrf(in Time epoch, Frame source)
     {
         if (SpiceApi.ManagedOrientationToIcrf(epoch, source) is { } managed)
         {

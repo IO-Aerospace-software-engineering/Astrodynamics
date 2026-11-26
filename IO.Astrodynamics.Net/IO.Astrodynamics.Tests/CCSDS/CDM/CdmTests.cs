@@ -52,7 +52,7 @@ public class CdmTests
         Assert.Equal(options.MessageFor, cdm.Header.MessageFor);
         Assert.Equal(options.MessageId, cdm.Header.MessageId);
 
-        Assert.Equal(encounter.EncounterState.Epoch.ToUTC().DateTime, cdm.RelativeMetadataData.TcaUtc);
+        Assert.Equal(encounter.EncounterState.Epoch.ToUtc().DateTime, cdm.RelativeMetadataData.TcaUtc);
         Assert.Equal(encounter.EncounterState.MissDistanceMeters, cdm.RelativeMetadataData.MissDistanceMeters, 9);
         Assert.NotNull(cdm.RelativeMetadataData.RelativeSpeedMetersPerSecond);
         Assert.Equal(encounter.EncounterState.RelativeState.RelativeVelocityInertial.Magnitude(),
@@ -74,8 +74,8 @@ public class CdmTests
             encounter.EncounterState.RelativeState.RelativeVelocityRtn,
             cdm.RelativeMetadataData.RelativeStateVector.RelativeVelocityRtnMetersPerSecond,
             1.0e-12);
-        Assert.Equal(encounter.ScreeningWindow.StartDate.ToUTC().DateTime, cdm.RelativeMetadataData.StartScreenPeriodUtc);
-        Assert.Equal(encounter.ScreeningWindow.EndDate.ToUTC().DateTime, cdm.RelativeMetadataData.StopScreenPeriodUtc);
+        Assert.Equal(encounter.ScreeningWindow.StartDate.ToUtc().DateTime, cdm.RelativeMetadataData.StartScreenPeriodUtc);
+        Assert.Equal(encounter.ScreeningWindow.EndDate.ToUtc().DateTime, cdm.RelativeMetadataData.StopScreenPeriodUtc);
 
         var protectedSegment = cdm.Segments[0];
         var secondarySegment = cdm.Segments[1];
@@ -136,7 +136,7 @@ public class CdmTests
         Assert.Equal(encounter.ProtectedSpacecraft.DragCoefficient * encounter.ProtectedSpacecraft.SectionalArea /
                      encounter.ProtectedSpacecraft.GetTotalMass(),
             protectedSegment.Data.AdditionalParameters.CdAreaOverMass!.Value, 12);
-        Assert.Equal(encounter.ProtectedSpacecraft.SolarRadiationCoeff * encounter.ProtectedSpacecraft.SectionalArea /
+        Assert.Equal(encounter.ProtectedSpacecraft.SolarRadiationCoefficient * encounter.ProtectedSpacecraft.SectionalArea /
                      encounter.ProtectedSpacecraft.GetTotalMass(),
             protectedSegment.Data.AdditionalParameters.CrAreaOverMass!.Value, 12);
 
@@ -1203,7 +1203,7 @@ public class CdmTests
         var encounter = ConjunctionAssessment.Analyze(
             protectedSpacecraft,
             secondarySpacecraft,
-            new Window(TimeSystem.Time.J2000TDB, TimeSystem.Time.J2000TDB.AddMinutes(10.0)));
+            new Window(TimeSystem.Time.J2000Tdb, TimeSystem.Time.J2000Tdb.AddMinutes(10.0)));
 
         Assert.NotNull(encounter.ProtectedState);
         Assert.NotNull(encounter.SecondaryState);
@@ -1218,7 +1218,7 @@ public class CdmTests
         var schemaValidation = new CdmValidator().ValidateSchemaFromXml(cdm.ToXml());
 
         Assert.True(schemaValidation.IsValid, FormatValidationIssues(schemaValidation.Issues));
-        Assert.Equal(encounter.EncounterState.Epoch.ToUTC().DateTime, cdm.RelativeMetadataData.TcaUtc);
+        Assert.Equal(encounter.EncounterState.Epoch.ToUtc().DateTime, cdm.RelativeMetadataData.TcaUtc);
         Assert.Equal(encounter.EncounterState.MissDistanceMeters, cdm.RelativeMetadataData.MissDistanceMeters, 9);
         Assert.Equal(encounter.ProtectedSpacecraft.Name, cdm.Segments[0].Metadata!.ObjectName);
         Assert.Equal(encounter.SecondaryObject.Name, cdm.Segments[1].Metadata!.ObjectName);
@@ -1242,7 +1242,7 @@ public class CdmTests
         }
 
         return ConjunctionAssessment.Analyze(protectedSpacecraft, secondarySpacecraft,
-            new Window(TimeSystem.Time.J2000TDB, TimeSystem.Time.J2000TDB.AddMinutes(10.0)));
+            new Window(TimeSystem.Time.J2000Tdb, TimeSystem.Time.J2000Tdb.AddMinutes(10.0)));
     }
 
     [Fact]
@@ -1474,7 +1474,7 @@ public class CdmTests
         var encounter = ConjunctionAssessment.Analyze(
             protectedSpacecraft,
             secondarySpacecraft,
-            new Window(TimeSystem.Time.J2000TDB, TimeSystem.Time.J2000TDB.AddMinutes(10.0)));
+            new Window(TimeSystem.Time.J2000Tdb, TimeSystem.Time.J2000Tdb.AddMinutes(10.0)));
 
         var exception = Assert.Throws<InvalidOperationException>(() => encounter.ToCdm());
         Assert.Contains("covariance", exception.Message, StringComparison.OrdinalIgnoreCase);
@@ -1484,8 +1484,8 @@ public class CdmTests
         EncounterQualityFlags qualityFlags = EncounterQualityFlags.None)
     {
         var earth = CreateEarth();
-        var epoch = TimeSystem.Time.J2000TDB.AddMinutes(5.0);
-        var screeningWindow = new Window(TimeSystem.Time.J2000TDB, TimeSystem.Time.J2000TDB.AddMinutes(10.0));
+        var epoch = TimeSystem.Time.J2000Tdb.AddMinutes(5.0);
+        var screeningWindow = new Window(TimeSystem.Time.J2000Tdb, TimeSystem.Time.J2000Tdb.AddMinutes(10.0));
 
         var protectedCovariance = BuildStateCovariance(
             new[] { 25.0, 36.0, 49.0, 0.01, 0.02, 0.03 },
@@ -1584,7 +1584,7 @@ public class CdmTests
 
     private static CelestialBody CreateEarth()
     {
-        return new CelestialBody(PlanetsAndMoons.EARTH, Frames.Frame.ICRF, TimeSystem.Time.J2000TDB);
+        return new CelestialBody(PlanetsAndMoons.EARTH, Frames.Frame.ICRF, TimeSystem.Time.J2000Tdb);
     }
 
     private static Spacecraft CreateSpacecraft(
@@ -1596,7 +1596,7 @@ public class CdmTests
         Matrix covariance,
         double hardBodyRadius = 8.0)
     {
-        var orbit = new StateVector(position, velocity, earth, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF, covariance);
+        var orbit = new StateVector(position, velocity, earth, TimeSystem.Time.J2000Tdb, Frames.Frame.ICRF, covariance);
         return new Spacecraft(
             naifId,
             name,
@@ -1619,7 +1619,7 @@ public class CdmTests
         Vector3 velocity,
         double hardBodyRadius = 8.0)
     {
-        var orbit = new StateVector(position, velocity, earth, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF);
+        var orbit = new StateVector(position, velocity, earth, TimeSystem.Time.J2000Tdb, Frames.Frame.ICRF);
         return new Spacecraft(
             naifId,
             name,

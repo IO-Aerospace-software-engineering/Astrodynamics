@@ -83,7 +83,7 @@ public class TimeConverterCommand
             }
 
             // A local time is not a scale: the UTC instant in the zone of the machine
-            res = input.ToUTC().DateTime.ToLocalTime().ToString("O", CultureInfo.InvariantCulture);
+            res = input.ToUtc().DateTime.ToLocalTime().ToString("O", CultureInfo.InvariantCulture);
         }
         else
         {

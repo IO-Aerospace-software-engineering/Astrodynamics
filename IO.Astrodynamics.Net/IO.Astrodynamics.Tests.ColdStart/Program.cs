@@ -437,7 +437,7 @@ internal static class Program
     private static int CheckTwoBodyAsFirstNativeCall(bool propagate)
     {
         var sv = new StateVector(new IO.Astrodynamics.Math.Vector3(7.0e6, 0.0, 0.0), IO.Astrodynamics.Math.Vector3.Zero, new CustomEarth(),
-            Time.J2000TDB, Frame.ICRF);
+            Time.J2000Tdb, Frame.ICRF);
         const double gm = 3.986004418e14;
         return propagate
             ? Expect<SpiceException>("Propagate2Bodies", () => SpiceApi.Instance.Propagate2Bodies(sv, gm, TimeSpan.FromSeconds(60.0)),
@@ -468,7 +468,7 @@ internal static class Program
                 new Window(past, past.AddDays(9.0)), 399, 301, RelationalOperator.GreaterThan, 4.0e8, Aberration.None, TimeSpan.FromDays(1.0)),
             e => e.Message.Contains("Insufficient ephemeris data", StringComparison.Ordinal));
         failures += Expect<SpiceException>("ReadOrientation", () => SpiceApi.Instance.ReadOrientation(
-                new Window(Time.J2000TDB, Time.J2000TDB.AddSeconds(10.0)), -727, TimeSpan.Zero, Frame.ICRF, TimeSpan.FromSeconds(1.0)),
+                new Window(Time.J2000Tdb, Time.J2000Tdb.AddSeconds(10.0)), -727, TimeSpan.Zero, Frame.ICRF, TimeSpan.FromSeconds(1.0)),
             e => e.Message.Length > 0);
         return failures == 0 ? 0 : 1;
     }
@@ -514,8 +514,8 @@ internal static class Program
 
         internal ManualResetEventSlim Entered { get; } = new(false);
 
-        public StateOrientation FrameTransformationToICRF(in Time date, Frame source) =>
-            _inner.FrameTransformationToICRF(date, source);
+        public StateOrientation FrameTransformationToIcrf(in Time date, Frame source) =>
+            _inner.FrameTransformationToIcrf(date, source);
 
         public StateVector GetEphemeris(in Time date, ILocalizable target, ILocalizable observer, Frame frame,
             Aberration aberration) => _inner.GetEphemeris(date, target, observer, frame, aberration);

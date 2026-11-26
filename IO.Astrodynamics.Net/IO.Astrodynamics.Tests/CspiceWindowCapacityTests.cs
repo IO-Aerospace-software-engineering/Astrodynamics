@@ -33,10 +33,10 @@ public class CspiceWindowCapacityTests
     private const double JoinedThreshold = 8.0e-7;
 
     // The Moon's X in IAU_EARTH from the Earth crosses 0 about twice a day: 2126 crossings over 1100 days (#653)
-    private static readonly Window CoordinateWindow = new(TimeSystem.Time.J2000TDB, TimeSystem.Time.J2000TDB.AddDays(1100.0));
+    private static readonly Window CoordinateWindow = new(TimeSystem.Time.J2000Tdb, TimeSystem.Time.J2000Tdb.AddDays(1100.0));
 
     // LRO's SPK of the tests, 91 days: 1121 orbits of about 2 h (gfdist LOCMIN), 1121 passes behind the Moon from the Sun
-    private static readonly Window LroWindow = new(TimeSystem.Time.CreateTDB(755870700.0), TimeSystem.Time.CreateTDB(763732800.0));
+    private static readonly Window LroWindow = new(TimeSystem.Time.CreateTdb(755870700.0), TimeSystem.Time.CreateTdb(763732800.0));
 
     private const double LroMoonDistance = 1815148.0;
 
@@ -96,7 +96,7 @@ public class CspiceWindowCapacityTests
         // reference is the relation it stands for, at the extreme of the search without an adjustment (one window)
         const double adjust = 1.0e5;
         double extreme = Coordinate(CoordinateWindow, relation, 0.0).Single().StartDate.TimeSpanFromJ2000().TotalSeconds;
-        double x = SpiceApi.Instance.ReadEphemeris(TimeSystem.Time.CreateTDB(extreme), 399, 301, new Frames.Frame("IAU_EARTH"), Aberration.None).Position.X / 1000.0;
+        double x = SpiceApi.Instance.ReadEphemeris(TimeSystem.Time.CreateTdb(extreme), 399, 301, new Frames.Frame("IAU_EARTH"), Aberration.None).Position.X / 1000.0;
         var whole = Coordinate(CoordinateWindow, relation, 0.0, adjust).ToArray();
         var joined = relation == RelationalOperator.AbsoluteMax
             ? Joined(CoordinateWindow, w => Coordinate(w, RelationalOperator.GreaterThan, x - adjust))
@@ -180,7 +180,7 @@ public class CspiceWindowCapacityTests
         // More windows than the 10000 of the native cell: the X crossings of the Moon over 6000 days, 11594 (gfposc_c with a
         // larger cell): SPICE(WINDOWEXCESS), never a partial list. The exception carries SPICE's long message, the size of
         // the cell counted in endpoints, without the short code
-        var window = new Window(TimeSystem.Time.J2000TDB, TimeSystem.Time.J2000TDB.AddDays(6000.0));
+        var window = new Window(TimeSystem.Time.J2000Tdb, TimeSystem.Time.J2000Tdb.AddDays(6000.0));
         var exception = Assert.Throws<SpiceException>(() => Coordinate(window, RelationalOperator.Equal, 0.0).ToArray());
         Assert.Contains("Window has size, 20000, cardinality 20000. Cannot insert an additional interval into the window.", exception.Message);
     }
@@ -264,31 +264,31 @@ public class CspiceWindowCapacityTests
         ToWindows(CspiceDirect.Gfposc(Seconds(CoordinateWindow.StartDate), Seconds(CoordinateWindow.EndDate), "301", "IAU_EARTH", "NONE", "399",
             "RECTANGULAR", "X", relation, 0.0, adjust, 3600.0), CoordinateWindow);
 
-    private static double Seconds(TimeSystem.Time time) => time.ToTDB().TimeSpanFromJ2000().TotalSeconds;
+    private static double Seconds(TimeSystem.Time time) => time.ToTdb().TimeSpanFromJ2000().TotalSeconds;
 
     // CSPICE's windows labelled as SpiceApi labels them: an end at an end of the search window is that end, a transition
     // inside the nearest tick of its seconds
     private static Window[] ToWindows(double[][] windows, Window searchWindow)
     {
-        var start = searchWindow.StartDate.ToTDB();
-        var end = searchWindow.EndDate.ToTDB();
+        var start = searchWindow.StartDate.ToTdb();
+        var end = searchWindow.EndDate.ToTdb();
         return windows.Select(w => new Window(Label(w[0]), Label(w[1]))).ToArray();
 
         TimeSystem.Time Label(double seconds) =>
-            seconds <= Seconds(start) ? start : seconds >= Seconds(end) ? end : TimeSystem.Time.CreateTDB(seconds);
+            seconds <= Seconds(start) ? start : seconds >= Seconds(end) ? end : TimeSystem.Time.CreateTdb(seconds);
     }
 
     // The search over four equal parts of the window, joined: a window that ends at a seam and the one that starts there are
     // one window
     private static Window[] Joined(Window window, Func<Window, IEnumerable<Window>> search)
     {
-        var start = window.StartDate.ToTDB();
-        long part = (window.EndDate.ToTDB() - start).Ticks / 4;
+        var start = window.StartDate.ToTdb();
+        long part = (window.EndDate.ToTdb() - start).Ticks / 4;
         var windows = new List<Window>();
         for (int i = 0; i < 4; i++)
         {
             var partStart = start + TimeSpan.FromTicks(i * part);
-            var partEnd = i == 3 ? window.EndDate.ToTDB() : start + TimeSpan.FromTicks((i + 1) * part);
+            var partEnd = i == 3 ? window.EndDate.ToTdb() : start + TimeSpan.FromTicks((i + 1) * part);
             var found = search(new Window(partStart, partEnd)).ToArray();
             Assert.True(found.Length < 1000, $"{found.Length} windows in a part");
             foreach (var w in found)
@@ -309,7 +309,7 @@ public class CspiceWindowCapacityTests
     // The search window less the windows, which are sorted and disjoint, as SpiceApi forms NotEqual
     private static Window[] Complement(IEnumerable<Window> windows, Window searchWindow)
     {
-        var cursor = searchWindow.StartDate.ToTDB();
+        var cursor = searchWindow.StartDate.ToTdb();
         var result = new List<Window>();
         foreach (var w in windows)
         {
@@ -317,7 +317,7 @@ public class CspiceWindowCapacityTests
             if (w.EndDate > cursor) cursor = w.EndDate;
         }
 
-        if (searchWindow.EndDate.ToTDB() > cursor) result.Add(new Window(cursor, searchWindow.EndDate.ToTDB()));
+        if (searchWindow.EndDate.ToTdb() > cursor) result.Add(new Window(cursor, searchWindow.EndDate.ToTdb()));
         return result.ToArray();
     }
 

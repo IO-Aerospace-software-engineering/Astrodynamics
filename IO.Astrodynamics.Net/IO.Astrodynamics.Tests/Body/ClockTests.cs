@@ -223,7 +223,7 @@ namespace IO.Astrodynamics.Tests.Body
                     var spice = SpiceApi.Instance.TransformFrame(t, new Frames.Frame("OWNCLK_FRAME"), Frames.Frame.ICRF).Rotation;
 
                     // Assert
-                    double angle = AttitudeRecordTests.RotationAngle(spacecraft.Frame.GetStateOrientationToICRF(t).Rotation, spice);
+                    double angle = AttitudeRecordTests.RotationAngle(spacecraft.Frame.GetStateOrientationToIcrf(t).Rotation, spice);
                     Assert.True(angle <= 6.1e-10, $"{angle:E3} rad");
                 }
                 finally

@@ -42,6 +42,6 @@ public class TimeConversionSolver : ICategorySolver
     /// </summary>
     internal static double SecondsFromJ2000(Time time)
     {
-        return (time.DateTime.Ticks - Time.J2000TDB.DateTime.Ticks) / (double)TimeSpan.TicksPerSecond;
+        return (time.DateTime.Ticks - Time.J2000Tdb.DateTime.Ticks) / (double)TimeSpan.TicksPerSecond;
     }
 }

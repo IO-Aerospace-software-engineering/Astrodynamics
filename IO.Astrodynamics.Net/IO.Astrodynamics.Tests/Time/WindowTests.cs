@@ -29,7 +29,7 @@ public class WindowTests
     void CreateWindowFromReversedDatesInTwoScales_Throws()
     {
         var start = new TimeSystem.Time(2021, 01, 03, TimeScale.UTC);
-        Assert.Throws<ArgumentException>(() => new Window(start, start.ToTDB().Add(TimeSpan.FromTicks(-1))));
+        Assert.Throws<ArgumentException>(() => new Window(start, start.ToTdb().Add(TimeSpan.FromTicks(-1))));
     }
 
     // R11 of #668: a negative length throws ArgumentOutOfRangeException; before 11.0.0 the window ended before it started
@@ -95,10 +95,10 @@ public class WindowTests
         var a = new TimeSystem.Time(2016, 12, 31, 23, 59, 0, TimeScale.UTC);
         var b = new TimeSystem.Time(2017, 01, 01, 0, 1, 0, TimeScale.UTC);
         var utc = new Window(a, b);
-        var tdbTie = new Window(a.ToTDB(), b.ToTDB());
-        var tdbInside = new Window(a.ToTDB().Add(TimeSpan.FromSeconds(10)), b.ToTDB());
-        var tdbLater = new Window(b.ToTDB().Add(TimeSpan.FromHours(1)), b.ToTDB().Add(TimeSpan.FromHours(2)));
-        Assert.Equal(a, a.ToTDB());
+        var tdbTie = new Window(a.ToTdb(), b.ToTdb());
+        var tdbInside = new Window(a.ToTdb().Add(TimeSpan.FromSeconds(10)), b.ToTdb());
+        var tdbLater = new Window(b.ToTdb().Add(TimeSpan.FromHours(1)), b.ToTdb().Add(TimeSpan.FromHours(2)));
+        Assert.Equal(a, a.ToTdb());
         foreach (var (w1, w2) in new[] { (utc, tdbTie), (tdbTie, utc), (utc, tdbInside), (tdbInside, utc), (utc, tdbLater), (tdbLater, utc) })
         {
             // The body of the removed Window.Merge (10.2.0-preview-1 to lot L5c of 11.0.0)
@@ -203,9 +203,9 @@ public class WindowTests
     {
         var start = new TimeSystem.Time(2024, 03, 01, TimeScale.UTC);
         var w = new Window(start, TimeSpan.FromHours(1));
-        Assert.True(w.Contains(start.ToTDB()));
-        Assert.True(w.Contains(w.EndDate.ToTDB()));
-        Assert.True(new Window(start, start).Contains(start.ToTDB()));
+        Assert.True(w.Contains(start.ToTdb()));
+        Assert.True(w.Contains(w.EndDate.ToTdb()));
+        Assert.True(new Window(start, start).Contains(start.ToTdb()));
     }
 
     [Fact]
@@ -312,7 +312,7 @@ public class WindowTests
     void Sample_EndInAnotherScale_ComparedAsAnInstant()
     {
         var start = new TimeSystem.Time(2021, 01, 02, TimeScale.TDB);
-        var end = start.AddHours(1).ToUTC();
+        var end = start.AddHours(1).ToUtc();
         var w = new Window(start, end);
         var points = w.Sample(TimeSpan.FromMinutes(30), includeEnd: true).ToArray();
         LabelsEqual([start, start.AddMinutes(30), start.AddMinutes(60)], points);

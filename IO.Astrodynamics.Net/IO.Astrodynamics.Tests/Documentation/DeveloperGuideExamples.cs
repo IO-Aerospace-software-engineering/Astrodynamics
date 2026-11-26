@@ -151,11 +151,11 @@ internal static class DeveloperGuideExamples
         // Create times
         var t1 = new Time(2024, 6, 21, 12, 0, 0, TimeScale.TDB);
         var t2 = Time.Parse("2024-06-21T12:00:00.000 UTC");
-        var t3 = Time.CreateTDB(788400000.0);  // Seconds from J2000
+        var t3 = Time.CreateTdb(788400000.0);  // Seconds from J2000
 
         // Convert between time scales
-        var tdb = t1.ToTDB();
-        var utc = tdb.ToUTC();
+        var tdb = t1.ToTdb();
+        var utc = tdb.ToUtc();
 
         // Arithmetic
         var t4 = t1.AddDays(1.0);
@@ -191,7 +191,7 @@ internal static class DeveloperGuideExamples
         var sun = new CelestialBody(Stars.Sun);
 
         // Get ephemeris
-        var state = earth.GetEphemeris(Time.J2000TDB, sun, Frame.ICRF, Aberration.None);
+        var state = earth.GetEphemeris(Time.J2000Tdb, sun, Frame.ICRF, Aberration.None);
         var sv = state.ToStateVector();
 
         // Compute geosynchronous orbit
@@ -228,7 +228,7 @@ internal static class DeveloperGuideExamples
         var kep = sv.ToKeplerianElements();
 
         // Transform to different frame
-        var svEcliptic = sv.ToFrame(Frame.ECLIPTIC_J2000);
+        var svEcliptic = sv.ToFrame(Frame.ECLIPJ2000);
         #endregion
     }
 
@@ -261,7 +261,7 @@ internal static class DeveloperGuideExamples
         // Create mean Keplerian elements from an OMM: its CCSDS units (rev/day, degrees) in, SI out
         var omm = Omm.CreateForTle("ISS (ZARYA)", "1998-067A", new DateTime(2021, 1, 20, 12, 50, 13, DateTimeKind.Utc),
             meanMotion: 15.49309423, eccentricity: 0.0000493, inclination: 51.6423, raan: 353.0312,
-            argOfPericenter: 320.8755, meanAnomaly: 39.2360, bstar: 0.00010270, meanMotionDot: 0.00008358,
+            argOfPericenter: 320.8755, meanAnomaly: 39.2360, bStar: 0.00010270, meanMotionDot: 0.00008358,
             meanMotionDDot: 0.0, noradCatalogId: 25544);
         var meanKep = omm.ToMeanElements();   // about the Earth (CENTER_NAME), in TEME (REF_FRAME)
 
@@ -360,7 +360,7 @@ internal static class DeveloperGuideExamples
             raan: 100.0,                // degrees
             argOfPericenter: 90.0,      // degrees
             meanAnomaly: 0.0,           // degrees
-            bstar: 0.0001,
+            bStar: 0.0001,
             meanMotionDot: 0.00001,
             meanMotionDDot: 0.0
         );
@@ -640,18 +640,18 @@ internal static class DeveloperGuideExamples
         #region guide:25
         // Use predefined frames
         var icrf = Frame.ICRF;
-        var ecliptic = Frame.ECLIPTIC_J2000;
+        var ecliptic = Frame.ECLIPJ2000;
 
         // Create body-fixed frame
         var earthFrame = new Frame("IAU_EARTH");
 
         // Transform state vector
         var svICRF = new StateVector(new Vector3(6800000.0, 0.0, 0.0), new Vector3(0.0, 7656.2, 0.0),
-            PlanetsAndMoons.EARTH_BODY, Time.J2000TDB, icrf);
+            PlanetsAndMoons.EARTH_BODY, Time.J2000Tdb, icrf);
         var svEcliptic = svICRF.ToFrame(ecliptic);
 
         // Get frame transformation
-        var rotation = icrf.ToFrame(ecliptic, Time.J2000TDB);
+        var rotation = icrf.ToFrame(ecliptic, Time.J2000Tdb);
         #endregion
     }
 
@@ -1054,13 +1054,13 @@ internal static class DeveloperGuideExamples
         var utc = new Time(new DateTime(2024, 1, 1, 12, 0, 0), TimeScale.UTC);
 
         // Convert as needed
-        var tdb = utc.ToTDB();
-        var tai = utc.ToTAI();
+        var tdb = utc.ToTdb();
+        var tai = utc.ToTai();
 
         // Use TDB for dynamical calculations
         var earth = PlanetsAndMoons.EARTH_BODY;
         var sun = new CelestialBody(Stars.Sun);
-        var state = earth.GetEphemeris(utc.ToTDB(), sun, Frame.ICRF, Aberration.None);
+        var state = earth.GetEphemeris(utc.ToTdb(), sun, Frame.ICRF, Aberration.None);
         #endregion
     }
 
@@ -1237,7 +1237,7 @@ internal static class DeveloperGuideExamples
         var moon = new CelestialBody(PlanetsAndMoons.MOON);
 
         // Define departure state (LEO)
-        var departureEpoch = Time.J2000TDB;
+        var departureEpoch = Time.J2000Tdb;
         var departureState = new StateVector(
             new Vector3(7000000.0, 0.0, 0.0),
             new Vector3(0.0, 8000.0, 0.0),
@@ -1374,7 +1374,7 @@ internal static class DeveloperGuideExamples
         Console.WriteLine($"\nMoon > 400,000 km from Earth:");
         foreach (var w in farMoonWindows.Take(5))
         {
-            Console.WriteLine($"  {w.StartDate.ToUTC()} to {w.EndDate.ToUTC()}");
+            Console.WriteLine($"  {w.StartDate.ToUtc()} to {w.EndDate.ToUtc()}");
         }
         #endregion
     }
@@ -1444,7 +1444,7 @@ internal static class DeveloperGuideExamples
 
         // Check if a specific target is in FOV at a given time
         bool isVisible = spacecraft.Instruments.First()
-            .IsInFOV(start.AddMinutes(30), earth, Aberration.LT);
+            .IsInFov(start.AddMinutes(30), earth, Aberration.LT);
         Console.WriteLine($"Earth in FOV at T+30min: {isVisible}");
         #endregion
     }
@@ -1507,7 +1507,7 @@ internal static class DeveloperGuideExamples
 
             if (horizontal.Elevation > 0)  // Above horizon
             {
-                Console.WriteLine($"{t.ToUTC()}: " +
+                Console.WriteLine($"{t.ToUtc()}: " +
                     $"Az={horizontal.Azimuth * Constants.Rad2Deg:F1}° " +
                     $"El={horizontal.Elevation * Constants.Rad2Deg:F1}° " +
                     $"Range={horizontal.Range / 1000:F0} km");
@@ -1529,7 +1529,7 @@ internal static class DeveloperGuideExamples
     internal static async Task<(Spacecraft Spacecraft, StateVector MoonState, Time Start, Time End)> Block54()
     {
         #region guide:54
-        var moon = new CelestialBody(PlanetsAndMoons.MOON, Frame.ICRF, Time.J2000TDB);
+        var moon = new CelestialBody(PlanetsAndMoons.MOON, Frame.ICRF, Time.J2000Tdb);
         var sun = new CelestialBody(Stars.Sun);
 
         // The Moon moves about the Earth under the attraction of both masses, so the Earth's central term is GM_Earth + GM_Moon:
@@ -1540,9 +1540,9 @@ internal static class DeveloperGuideExamples
         {
             CentralTerm = GeopotentialCentralTerm.ModelGravitationalParameter
         };
-        var earth = new CelestialBody(PlanetsAndMoons.EARTH, Frame.ICRF, Time.J2000TDB, earthMoonField);
+        var earth = new CelestialBody(PlanetsAndMoons.EARTH, Frame.ICRF, Time.J2000Tdb, earthMoonField);
 
-        var start = Time.J2000TDB;
+        var start = Time.J2000Tdb;
         var end = start.AddDays(25);
 
         var mission = new Mission("DeepSpaceTest");

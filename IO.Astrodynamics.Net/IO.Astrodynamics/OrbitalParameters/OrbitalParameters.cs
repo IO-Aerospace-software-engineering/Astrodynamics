@@ -605,7 +605,7 @@ public abstract class OrbitalParameters : IEquatable<OrbitalParameters>
 
         if (IsElliptical())
         {
-            _meanMotion = System.Math.Sqrt(Constants.G * (Observer.Mass + orbitingBodyMass) / System.Math.Pow(SemiMajorAxis(), 3));
+            _meanMotion = System.Math.Sqrt(Constants.GravitationalConstant * (Observer.Mass + orbitingBodyMass) / System.Math.Pow(SemiMajorAxis(), 3));
         }
         else if (IsParabolic())
         {
@@ -615,11 +615,11 @@ public abstract class OrbitalParameters : IEquatable<OrbitalParameters>
             // (#368). The conic of a finite a in the band, either side of e = 1: √(μ/|a|³) (#459)
             _meanMotion = double.IsPositiveInfinity(a)
                 ? BarkerMeanMotion(orbitingBodyMass)
-                : System.Math.Sqrt(Constants.G * (Observer.Mass + orbitingBodyMass) / System.Math.Pow(System.Math.Abs(a), 3));
+                : System.Math.Sqrt(Constants.GravitationalConstant * (Observer.Mass + orbitingBodyMass) / System.Math.Pow(System.Math.Abs(a), 3));
         }
         else
         {
-            _meanMotion = System.Math.Sqrt(Constants.G * (Observer.Mass + orbitingBodyMass) / System.Math.Pow(-SemiMajorAxis(), 3));
+            _meanMotion = System.Math.Sqrt(Constants.GravitationalConstant * (Observer.Mass + orbitingBodyMass) / System.Math.Pow(-SemiMajorAxis(), 3));
         }
 
         return _meanMotion.Value;
@@ -629,7 +629,7 @@ public abstract class OrbitalParameters : IEquatable<OrbitalParameters>
     /// Barker's mean motion √(μ/(2q³)), q the perigee radius: the rate of Barker's mean anomaly D + D³/3 (#368).
     /// </summary>
     private double BarkerMeanMotion(double orbitingBodyMass = 0.0) =>
-        System.Math.Sqrt(Constants.G * (Observer.Mass + orbitingBodyMass) / (2.0 * System.Math.Pow(PerigeeRadius(), 3)));
+        System.Math.Sqrt(Constants.GravitationalConstant * (Observer.Mass + orbitingBodyMass) / (2.0 * System.Math.Pow(PerigeeRadius(), 3)));
 
     /// <summary>
     /// The rate of <see cref="MeanAnomaly()"/> in the two-body motion: Barker's √(μ/(2q³)) at e = 1 exactly (a parabola,

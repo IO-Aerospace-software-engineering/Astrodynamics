@@ -31,7 +31,7 @@ public class TimeEqualityTests
         "TAI" => new TimeSystem.Time(new DateTime(2025, 3, 28, 0, 0, 37), TimeScale.TAI),
         "TT" => new TimeSystem.Time(new DateTime(2025, 3, 28, 0, 1, 9, 184), TimeScale.TT),
         "GPS" => new TimeSystem.Time(new DateTime(2025, 3, 28, 0, 0, 18), TimeScale.GPS),
-        _ => Utc.ToTDB()
+        _ => Utc.ToTdb()
     };
 
     [Theory]
@@ -107,9 +107,9 @@ public class TimeEqualityTests
     {
         // Arrange: the first TDB tick after 2025-01-04 where TDB − TT, rising, gains a tick (about every 300 s there)
         var (first, second) = TdbTicksOfOneTaiTick(new DateTime(2025, 1, 4));
-        var tai = first.ToTAI();
-        var utc = first.ToUTC();
-        Assert.Equal(tai.DateTime, second.ToTAI().DateTime);
+        var tai = first.ToTai();
+        var utc = first.ToUtc();
+        Assert.Equal(tai.DateTime, second.ToTai().DateTime);
         Assert.Equal(1, second.DateTime.Ticks - first.DateTime.Ticks);
 
         // Act and assert: one instant, in three frames
@@ -151,8 +151,8 @@ public class TimeEqualityTests
             var a = tai.ConvertTo(frames[random.Next(frames.Length)]);
             var b = tai.ConvertTo(frames[random.Next(frames.Length)]).AddTicks(random.Next(-2, 3));
 
-            long ta = a.ToTAI().DateTime.Ticks;
-            long tb = b.ToTAI().DateTime.Ticks;
+            long ta = a.ToTai().DateTime.Ticks;
+            long tb = b.ToTai().DateTime.Ticks;
             Assert.Equal(System.Math.Sign(ta.CompareTo(tb)), System.Math.Sign(a.CompareTo(b)));
             Assert.Equal(ta == tb, a == b);
             Assert.Equal(ta == tb, a.Equals(b));
@@ -173,7 +173,7 @@ public class TimeEqualityTests
     public void WindowsOfTheSameInstants_AreEqual()
     {
         var utc = new Window(Utc, Utc.AddDays(1.0));
-        var tdb = new Window(Utc.ToTDB(), Utc.AddDays(1.0).ToTDB());
+        var tdb = new Window(Utc.ToTdb(), Utc.AddDays(1.0).ToTdb());
 
         Assert.True(utc == tdb);
         Assert.True(utc.Equals(tdb));
@@ -229,7 +229,7 @@ public class TimeEqualityTests
     /// </summary>
     internal static (TimeSystem.Time First, TimeSystem.Time Second) TdbTicksOfOneTaiTick(DateTime from)
     {
-        long Offset(long ticks) => new TimeSystem.Time(new DateTime(ticks), TimeScale.TDB).ToTAI().DateTime.Ticks - ticks;
+        long Offset(long ticks) => new TimeSystem.Time(new DateTime(ticks), TimeScale.TDB).ToTai().DateTime.Ticks - ticks;
 
         long lo = from.Ticks;
         long hi = lo + 600L * TimeSpan.TicksPerSecond;

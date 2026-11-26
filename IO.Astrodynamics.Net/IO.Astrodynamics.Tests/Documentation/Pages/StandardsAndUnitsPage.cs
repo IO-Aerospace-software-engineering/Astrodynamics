@@ -67,7 +67,7 @@ internal static class StandardsAndUnitsPage
     {
         #region docs/standards-and-units.md:1
         // Inputs: epoch (Time), positionIcrf (Vector3)
-        var so = Frame.CIRS.GetStateOrientationToICRF(epoch);
+        var so = Frame.CIRS.GetStateOrientationToIcrf(epoch);
         var positionCirs = positionIcrf.Rotate(so.Rotation.Conjugate());  // ICRF -> CIRS
         var positionBack = positionCirs.Rotate(so.Rotation);              // CIRS -> ICRF, positionIcrf again
         #endregion

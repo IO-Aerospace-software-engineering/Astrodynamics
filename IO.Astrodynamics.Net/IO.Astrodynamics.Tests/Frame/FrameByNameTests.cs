@@ -121,9 +121,9 @@ public class FrameByNameTests
         AssertUnknownFrame(Assert.Throws<ArgumentException>(() => Frames.Frame.ICRF.ToFrame(unknownFrame, Epoch)), "targetFrame", "NOT_A_FRAME");
         AssertUnknownFrame(Assert.Throws<ArgumentException>(() => Frames.Frame.TEME.ToFrame(unknownFrame, Epoch)), "targetFrame", "NOT_A_FRAME");
         AssertUnknownFrame(Assert.Throws<ArgumentException>(() => unknownFrame.ToFrame(Frames.Frame.ICRF, Epoch)), null, "NOT_A_FRAME");
-        AssertUnknownFrame(Assert.Throws<ArgumentException>(() => new Frames.Frame("NOT_A_FRAME").GetStateOrientationToICRF(Epoch)), null,
+        AssertUnknownFrame(Assert.Throws<ArgumentException>(() => new Frames.Frame("NOT_A_FRAME").GetStateOrientationToIcrf(Epoch)), null,
             "NOT_A_FRAME");
-        AssertUnknownFrame(Assert.Throws<ArgumentException>(() => new SpiceDataProvider().FrameTransformationToICRF(Epoch, unknownFrame)),
+        AssertUnknownFrame(Assert.Throws<ArgumentException>(() => new SpiceDataProvider().FrameTransformationToIcrf(Epoch, unknownFrame)),
             "source", "NOT_A_FRAME");
     }
 
@@ -197,8 +197,8 @@ public class FrameByNameTests
         var byName = new Frames.Frame("ITRF93");
 
         // Act
-        var fromStatic = Frames.Frame.ITRF93.GetStateOrientationToICRF(Epoch);
-        var fromName = byName.GetStateOrientationToICRF(Epoch);
+        var fromStatic = Frames.Frame.ITRF93.GetStateOrientationToIcrf(Epoch);
+        var fromName = byName.GetStateOrientationToIcrf(Epoch);
         var spice = SpiceApi.Instance.TransformFrame(Epoch, new Frames.Frame("ITRF93"), Frames.Frame.ICRF);
 
         // Assert: one frame (equality by name), the orientation of SPICE's ITRF93 bit for bit

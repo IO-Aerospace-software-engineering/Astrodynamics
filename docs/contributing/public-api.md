@@ -21,7 +21,7 @@ says what each check asks of a pull request, and how a change of the surface is 
 The tests live in `IO.Astrodynamics.Tests/ApiConventions/`. Each baseline lists the violations of the day the check
 landed, one per line in ordinal order, and may only shrink: a test fails on a violation that is not in its baseline, and
 on a baseline line that is no longer a violation, and its message gives the lines to fix or to remove. A method or a
-constructor is keyed by its signature (`Spacecraft.GetTotalISP()`), a parameter by its method's signature and its name
+constructor is keyed by its signature (`Spacecraft.GetTotalIsp()`), a parameter by its method's signature and its name
 (`LegendreFunctions.ComputeGeodesyNormalizedLegendreTable(int, double, double, double[][], double[][]):P`), so a new
 overload of a name in the baseline is a new violation.
 

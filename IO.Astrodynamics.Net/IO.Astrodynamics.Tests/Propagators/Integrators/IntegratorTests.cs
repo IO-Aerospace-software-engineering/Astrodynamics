@@ -26,7 +26,7 @@ public class IntegratorTests
         var moon = TestHelpers.MoonAtJ2000;
         var earth = TestHelpers.EarthWithAtmAndGeoAtJ2000;
         Clock clk = new Clock("My clock", 256);
-        Spacecraft spc = new Spacecraft(-1001, "MySpacecraft", 100.0, new StateVector(new Vector3(6800000.0, 0.0, 0.0), new Vector3(0.0, 7656.2204182967143, 0.0), earth, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF), 10000.0,
+        Spacecraft spc = new Spacecraft(-1001, "MySpacecraft", 100.0, new StateVector(new Vector3(6800000.0, 0.0, 0.0), new Vector3(0.0, 7656.2204182967143, 0.0), earth, TimeSystem.Time.J2000Tdb, Frames.Frame.ICRF), 10000.0,
             clk);
 
         List<ForceBase> forces = new List<ForceBase>();

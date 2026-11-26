@@ -111,7 +111,7 @@ public class FrameTests
         }
 
         // Act
-        var actual = site.Frame.GetStateOrientationToICRF(epoch);
+        var actual = site.Frame.GetStateOrientationToIcrf(epoch);
 
         // Assert
         double againstSpice = AngleBetween(AxesInIcrf(spice), AxesInIcrf(actual));
@@ -163,15 +163,15 @@ public class FrameTests
     [Fact]
     public void ToInertialFrame()
     {
-        var so = Frames.Frame.ICRF.ToFrame(Frames.Frame.ECLIPTIC_J2000, TimeSystem.Time.J2000TDB);
+        var so = Frames.Frame.ICRF.ToFrame(Frames.Frame.ECLIPJ2000, TimeSystem.Time.J2000Tdb);
         LabelAssert.Equal(
-            new StateOrientation(new Quaternion(0.9791532214288993, new Vector3(-0.20312303898231013, 0.0, 0.0)), Vector3.Zero, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF), so);
+            new StateOrientation(new Quaternion(0.9791532214288993, new Vector3(-0.20312303898231013, 0.0, 0.0)), Vector3.Zero, TimeSystem.Time.J2000Tdb, Frames.Frame.ICRF), so);
     }
 
     [Fact]
     public void ToNonInertialFrame()
     {
-        var epoch = TimeSystem.Time.J2000TDB;
+        var epoch = TimeSystem.Time.J2000Tdb;
         var moonFrame = new Frames.Frame("IAU_MOON");
         var earthFrame = new Frames.Frame("ITRF93");
         var q = moonFrame.ToFrame(earthFrame, epoch);
@@ -190,9 +190,9 @@ public class FrameTests
     public void SiteFrame()
     {
         var site = new Site(339, "TestSite", TestHelpers.EarthAtJ2000, new Planetodetic(-2.0384478466737517, 0.61517960506340708, 1073.2434632601216));
-        var res = site.Frame.ToFrame(Frames.Frame.ICRF, Astrodynamics.TimeSystem.Time.J2000TDB);
+        var res = site.Frame.ToFrame(Frames.Frame.ICRF, Astrodynamics.TimeSystem.Time.J2000Tdb);
         Assert.Equal(new Quaternion(0.8786982934817295, -0.06636828545847888, -0.4550266984882364, -0.12820009118754105), res.Rotation, TestHelpers.QuaternionComparer);
-        Assert.Equal(SpiceDss13TopocentricFrame.ToFrame(Frames.Frame.ICRF, Astrodynamics.TimeSystem.Time.J2000TDB).AngularVelocity, res.AngularVelocity,
+        Assert.Equal(SpiceDss13TopocentricFrame.ToFrame(Frames.Frame.ICRF, Astrodynamics.TimeSystem.Time.J2000Tdb).AngularVelocity, res.AngularVelocity,
             TestHelpers.VelocityVectorComparer);
     }
     
@@ -200,9 +200,9 @@ public class FrameTests
     public void SiteFrameRelativeToMoon()
     {
         var site = new Site(339, "TestSite", TestHelpers.EarthAtJ2000, new Planetodetic(-2.0384478466737517, 0.61517960506340708, 1073.2434632601216));
-        var res = site.Frame.ToFrame(TestHelpers.MoonAtJ2000.Frame, Astrodynamics.TimeSystem.Time.J2000TDB);
+        var res = site.Frame.ToFrame(TestHelpers.MoonAtJ2000.Frame, Astrodynamics.TimeSystem.Time.J2000Tdb);
         Assert.Equal(new Quaternion(0.7944038930635089, -0.3881980140265745, -0.3544407946772864, -0.30429669676139814), res.Rotation, TestHelpers.QuaternionComparer);
-        Assert.Equal(SpiceDss13TopocentricFrame.ToFrame(TestHelpers.MoonAtJ2000.Frame, Astrodynamics.TimeSystem.Time.J2000TDB).AngularVelocity,
+        Assert.Equal(SpiceDss13TopocentricFrame.ToFrame(TestHelpers.MoonAtJ2000.Frame, Astrodynamics.TimeSystem.Time.J2000Tdb).AngularVelocity,
             res.AngularVelocity, TestHelpers.VelocityVectorComparer);
     }
     
@@ -210,9 +210,9 @@ public class FrameTests
     public void SiteFrameRelativeToMoonFromSpice()
     {
         Site site = new Site(13, "DSS-13", TestHelpers.EarthAtJ2000);
-        var res = site.Frame.ToFrame(TestHelpers.MoonAtJ2000.Frame, Astrodynamics.TimeSystem.Time.J2000TDB);
+        var res = site.Frame.ToFrame(TestHelpers.MoonAtJ2000.Frame, Astrodynamics.TimeSystem.Time.J2000Tdb);
         Assert.Equal(new Quaternion(0.7944038930635089, -0.3881980140265745, -0.3544407946772864, -0.30429669676139814), res.Rotation, TestHelpers.QuaternionComparer);
-        Assert.Equal(SpiceDss13TopocentricFrame.ToFrame(TestHelpers.MoonAtJ2000.Frame, Astrodynamics.TimeSystem.Time.J2000TDB).AngularVelocity,
+        Assert.Equal(SpiceDss13TopocentricFrame.ToFrame(TestHelpers.MoonAtJ2000.Frame, Astrodynamics.TimeSystem.Time.J2000Tdb).AngularVelocity,
             res.AngularVelocity, TestHelpers.VelocityVectorComparer);
     }
 
@@ -227,8 +227,8 @@ public class FrameTests
         var epoch = new TimeSystem.Time(year, 1, 1, 12, 0, 0, TimeScale.TDB);
         var site = CreateSiteAtSpiceDss13Coordinates();
 
-        var actual = site.Frame.GetStateOrientationToICRF(epoch);
-        var expected = new Frames.Frame("DSS-13_TOPO").GetStateOrientationToICRF(epoch);
+        var actual = site.Frame.GetStateOrientationToIcrf(epoch);
+        var expected = new Frames.Frame("DSS-13_TOPO").GetStateOrientationToIcrf(epoch);
 
         var relative = expected.Rotation.Conjugate() * actual.Rotation;
         double angle = 2.0 * System.Math.Atan2(relative.VectorPart.Magnitude(), System.Math.Abs(relative.W));
@@ -289,12 +289,12 @@ public class FrameTests
     {
         Assert.Equal(new Frames.Frame("J2000"), Frames.Frame.ICRF);
         Assert.True(new Frames.Frame("J2000") == Frames.Frame.ICRF);
-        Assert.True(Frames.Frame.ECLIPTIC_J2000 != Frames.Frame.ICRF);
-        Assert.True(Frames.Frame.ECLIPTIC_J2000.Equals(Frames.Frame.ECLIPTIC_J2000));
-        Assert.True(Frames.Frame.ECLIPTIC_J2000.Equals((object)Frames.Frame.ECLIPTIC_J2000));
-        Assert.False(Frames.Frame.ECLIPTIC_J2000.Equals(null));
-        Assert.False(Frames.Frame.ECLIPTIC_J2000.Equals((object)null));
-        Assert.False(Frames.Frame.ECLIPTIC_J2000.Equals("null"));
+        Assert.True(Frames.Frame.ECLIPJ2000 != Frames.Frame.ICRF);
+        Assert.True(Frames.Frame.ECLIPJ2000.Equals(Frames.Frame.ECLIPJ2000));
+        Assert.True(Frames.Frame.ECLIPJ2000.Equals((object)Frames.Frame.ECLIPJ2000));
+        Assert.False(Frames.Frame.ECLIPJ2000.Equals(null));
+        Assert.False(Frames.Frame.ECLIPJ2000.Equals((object)null));
+        Assert.False(Frames.Frame.ECLIPJ2000.Equals("null"));
     }
 
     // #562: the frames of the library and the frames built by name a caller can give (a CCSDS file, the CLI, user code),
@@ -312,7 +312,7 @@ public class FrameTests
         "TIRS" => Frames.Frame.TIRS,
         "TEME" => Frames.Frame.TEME,
         "ICRF" => Frames.Frame.ICRF,
-        "ECLIPTIC_J2000" => Frames.Frame.ECLIPTIC_J2000,
+        "ECLIPTIC_J2000" => Frames.Frame.ECLIPJ2000,
         _ => throw new ArgumentOutOfRangeException(nameof(name))
     };
 
@@ -348,8 +348,8 @@ public class FrameTests
         // every relation. ICRF is named J2000: "ICRF" is another name. Null is equal to null only
         Frames.Frame[] frames =
         [
-            Frames.Frame.ICRF, Frames.Frame.GCRF, Frames.Frame.CIRS, Frames.Frame.TIRS, Frames.Frame.TEME, Frames.Frame.ECLIPTIC_J2000,
-            Frames.Frame.ECLIPTIC_B1950, Frames.Frame.B1950, Frames.Frame.FK4, Frames.Frame.GALACTIC_SYSTEM2, new Frames.Frame("ITRF93"),
+            Frames.Frame.ICRF, Frames.Frame.GCRF, Frames.Frame.CIRS, Frames.Frame.TIRS, Frames.Frame.TEME, Frames.Frame.ECLIPJ2000,
+            Frames.Frame.ECLIPB1950, Frames.Frame.B1950, Frames.Frame.FK4, Frames.Frame.GALACTIC, new Frames.Frame("ITRF93"),
             new Frames.Frame("ICRF"), new Frames.Frame("TEME_OF_DATE")
         ];
         for (int i = 0; i < frames.Length; i++)
@@ -380,7 +380,7 @@ public class FrameTests
         // The subclasses that are not static frames: a SpacecraftFrame and a SiteFrame are equal to a frame built by their
         // name, in any case, for every relation (they were different for == and Equals(object))
         var spacecraft = new IO.Astrodynamics.Body.Spacecraft.Spacecraft(-1562, "EQ562", 1000.0, new StateVector(new Vector3(6778137.0, 0.0, 0.0), new Vector3(0.0, 7668.6, 0.0), TestHelpers.EarthAtJ2000,
-                TimeSystem.Time.J2000TDB, Frames.Frame.ICRF), 3000.0,
+                TimeSystem.Time.J2000Tdb, Frames.Frame.ICRF), 3000.0,
             new IO.Astrodynamics.Body.Spacecraft.Clock("eq562", 65536));
         var site = new Site(339, "EQ562SITE", TestHelpers.EarthAtJ2000, new Planetodetic(-2.0384478466737517, 0.61517960506340708, 1073.2434632601216));
         foreach (var frame in new Frames.Frame[] { spacecraft.Frame, site.Frame })
@@ -434,7 +434,7 @@ public class FrameTests
         // #541 (decided by S. Guillet, 2026-11-17): a frame no longer stores the orientations it reads, by epoch, for its
         // life; the attitude record API, which only a spacecraft frame implements, is SpacecraftFrame's. Before, Frame had a
         // protected ConcurrentDictionary keyed by epoch, and the four virtual members of the record
-        string[] recordMembers = ["AddStateOrientationToICRF", "GetStateOrientationsToICRF", "GetLatestStateOrientationToICRF", "ClearStateOrientations"];
+        string[] recordMembers = ["AddStateOrientationToIcrf", "GetStateOrientationsToIcrf", "GetLatestStateOrientationToIcrf", "ClearStateOrientations"];
         const BindingFlags all = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static | BindingFlags.DeclaredOnly;
         foreach (var name in recordMembers.Concat(["_stateOrientationsToICRF", "StateOrientationsToICRF"]))
         {
@@ -469,13 +469,13 @@ public class FrameTests
         // frame compares the labels, so a read in UTC after a read in TDB of the same instant carries the UTC epoch asked,
         // as each read did when the frame kept one orientation per label
         var tdb = new TimeSystem.Time(2024, 3, 1, 12, 0, 0, TimeScale.TDB);
-        var utc = tdb.ToUTC();
+        var utc = tdb.ToUtc();
         Assert.True(tdb == utc);
         foreach (var frame in new[] { new CirsFrame(), new TirsFrame(), new TemeFrame(), new Frames.Frame("ITRF93") })
         {
-            LabelAssert.Equal(tdb, frame.GetStateOrientationToICRF(tdb).Epoch);
-            LabelAssert.Equal(utc, frame.GetStateOrientationToICRF(utc).Epoch);
-            LabelAssert.Equal(tdb, frame.GetStateOrientationToICRF(tdb).Epoch);
+            LabelAssert.Equal(tdb, frame.GetStateOrientationToIcrf(tdb).Epoch);
+            LabelAssert.Equal(utc, frame.GetStateOrientationToIcrf(utc).Epoch);
+            LabelAssert.Equal(tdb, frame.GetStateOrientationToIcrf(tdb).Epoch);
         }
     }
 
@@ -492,11 +492,11 @@ public class FrameTests
                      (new Frames.Frame("ITRF93"), () => new Frames.Frame("ITRF93"))
                  })
         {
-            var first = frame.GetStateOrientationToICRF(t1);
-            var second = frame.GetStateOrientationToICRF(t2);
-            var again = frame.GetStateOrientationToICRF(t1);
-            Assert.Equal(fresh().GetStateOrientationToICRF(t1).Rotation, first.Rotation);
-            Assert.Equal(fresh().GetStateOrientationToICRF(t2).Rotation, second.Rotation);
+            var first = frame.GetStateOrientationToIcrf(t1);
+            var second = frame.GetStateOrientationToIcrf(t2);
+            var again = frame.GetStateOrientationToIcrf(t1);
+            Assert.Equal(fresh().GetStateOrientationToIcrf(t1).Rotation, first.Rotation);
+            Assert.Equal(fresh().GetStateOrientationToIcrf(t2).Rotation, second.Rotation);
             Assert.Equal(first.Rotation, again.Rotation);
             Assert.Equal(first.AngularVelocity, again.AngularVelocity);
             LabelAssert.Equal(t1, again.Epoch);

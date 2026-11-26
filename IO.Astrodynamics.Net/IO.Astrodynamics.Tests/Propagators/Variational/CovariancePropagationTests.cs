@@ -464,19 +464,19 @@ public class CovariancePropagationTests : IClassFixture<PartialsTestCases>, ICla
         // the start the second, among 2 000 from 12:00 TDB, whose label falls furthest below it, the end the first second
         // from 21 600.3 s later whose label falls less; the evaluations used to throw past the last step (H3 review of
         // lots A to C, where Time.AddSeconds left a TDB window one tick short)
-        double Residual(TimeSystem.Time utc) => PropagationTimeArgument.Tt.SecondsBetween(utc.ToTDB(), utc);
-        var start = Enumerable.Range(0, 2000).Select(k => Start.ToUTC().AddSeconds(k)).MaxBy(Residual);
+        double Residual(TimeSystem.Time utc) => PropagationTimeArgument.Tt.SecondsBetween(utc.ToTdb(), utc);
+        var start = Enumerable.Range(0, 2000).Select(k => Start.ToUtc().AddSeconds(k)).MaxBy(Residual);
         var end = Enumerable.Range(0, 2000).Select(k => start.AddSeconds(21600.3 + k))
             .First(e => Residual(e) < Residual(start));
 
         var window = new TimeSystem.Window(start, end);
         var state = Leo;
         var solution = PartialsTestCases.Spacecraft(WithCovariance(new StateVector(state.Position, state.Velocity,
-                state.Observer, start.ToTDB(), state.Frame)))
+                state.Observer, start.ToTdb(), state.Frame)))
             .PropagateWithVariational(window,
                 new PropagationOptions { Integrator = new RK78IntegratorOptions { AbsoluteTolerance = 1e-9, RelativeTolerance = 1e-9 }, OutputStep = TimeSpan.FromSeconds(600.0), ThirdBodies = Bodies, AtmosphericDrag = true, SolarRadiationPressure = true },
                 new VariationalOptions(ForceParameters.DragCoefficient, new RtnProcessNoise(1e-12, 1e-11, 1e-12), PropagateCovariance: true, ConsiderParameters: new ConsiderParameters(0.1)));
-        var endLabel = window.EndDate.ToTDB();
+        var endLabel = window.EndDate.ToTdb();
 
         // Act and assert: the end label is past the last step, by less than a tick, and reads the values at the end of
         // the window bit for bit, as the end tag does; beyond that tick, the epoch is outside the propagation
@@ -574,7 +574,7 @@ public class CovariancePropagationTests : IClassFixture<PartialsTestCases>, ICla
         // C): it comes from the shadow crossings of SRP, and depends on where the steps fall, hence the two frames of the
         // same physics
         var parameters = ForceParameters.DragCoefficient | ForceParameters.ReflectivityCoefficient;
-        var frame = frameName == "J2000" ? Frames.Frame.ICRF : Frames.Frame.ECLIPTIC_J2000;
+        var frame = frameName == "J2000" ? Frames.Frame.ICRF : Frames.Frame.ECLIPJ2000;
 
         // Act
         var expected = EclipsingCase(-1963, frame, 1e-12, new VariationalOptions(parameters, IncludeInStepControl: true));

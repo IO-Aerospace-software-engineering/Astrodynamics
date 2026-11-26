@@ -202,9 +202,9 @@ public class PropagationToTheWindowEndTests
         // Assert
         var states = spacecraft.PropagatedStates;
         Assert.Equal(62, states.Length);
-        LabelAssert.Equal(window.EndDate.ToTDB(), states[^1].Epoch);
+        LabelAssert.Equal(window.EndDate.ToTdb(), states[^1].Epoch);
         var read = spacecraft.GetEphemeris(window.EndDate, (CelestialItem)initial.Observer, Frame.ICRF, Aberration.None);
-        Assert.Equal(0.0, (read.Position - solution.InterpolateAt(window.EndDate.ToTDB()).position).Magnitude());
+        Assert.Equal(0.0, (read.Position - solution.InterpolateAt(window.EndDate.ToTdb()).position).Magnitude());
     }
 
     /// <summary>

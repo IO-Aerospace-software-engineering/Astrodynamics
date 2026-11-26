@@ -57,10 +57,10 @@ public class PropagationSolutionTimeFrameTests
         var states = new Dictionary<string, (Vector3 Position, Vector3 Velocity)>
         {
             ["UTC"] = solution.InterpolateAt(utc),
-            ["TAI"] = solution.InterpolateAt(utc.ToTAI()),
+            ["TAI"] = solution.InterpolateAt(utc.ToTai()),
             ["TT"] = solution.InterpolateAt(utc.ToTT()),
-            ["GPS"] = solution.InterpolateAt(utc.ToGPS()),
-            ["TDB"] = solution.InterpolateAt(utc.ToTDB())
+            ["GPS"] = solution.InterpolateAt(utc.ToGps()),
+            ["TDB"] = solution.InterpolateAt(utc.ToTdb())
         };
 
         // Assert: UTC, TAI, TT and GPS differ by whole ticks, so they name the same t in both time arguments
@@ -80,7 +80,7 @@ public class PropagationSolutionTimeFrameTests
         }
         else
         {
-            // About the Earth the TDB label of the instant is up to a tick before it (ToTDB truncates)
+            // About the Earth the TDB label of the instant is up to a tick before it (ToTdb truncates)
             Assert.True(tdbDeparture <= states["UTC"].Velocity.Magnitude() * 1e-7,
                 $"The TDB label reads {tdbDeparture} m from the UTC tag.");
         }
@@ -118,7 +118,7 @@ public class PropagationSolutionTimeFrameTests
     {
         // Arrange
         var solution = Propagate("Moon", true, out _, withCovariance: true);
-        var tdb = ReadEpoch.ToTDB();
+        var tdb = ReadEpoch.ToTdb();
 
         // Act
         var phiUtc = solution.GetStateTransitionMatrix(ReadEpoch);
@@ -149,7 +149,7 @@ public class PropagationSolutionTimeFrameTests
         // Act
         var phi = solution.GetStateTransitionMatrix(end);
         var (position, velocity) = solution.InterpolateAt(end);
-        var (labelPosition, _) = solution.InterpolateAt(end.ToTDB());
+        var (labelPosition, _) = solution.InterpolateAt(end.ToTdb());
 
         // Assert: inside the solution, at the instant of the end: about the Moon its TDB label itself, about the Earth
         // within a tick of motion of it (the propagation about the Moon runs on to its output grid, 2.4e-5 s later, as
@@ -184,11 +184,11 @@ public class PropagationSolutionTimeFrameTests
         // it through TAI; before the start bound was read in the time argument, the readers below threw
         // ArgumentOutOfRangeException there, as on main (#507)
         var start = LabelLaterInTai;
-        Assert.True(start.ToTDB().ToTAI() > start.ToTAI());
+        Assert.True(start.ToTdb().ToTai() > start.ToTai());
         var centralBody = new CelestialBody(body == "Earth" ? PlanetsAndMoons.EARTH : PlanetsAndMoons.MOON,
             Frames.Frame.ICRF, start);
         var orbit = new KeplerianElements(body == "Earth" ? 6778137.0 : 1837400.0, 0.001, 0.9, 0.2, 0.3, 0.0,
-            centralBody, start.ToTDB(), Frames.Frame.ICRF).ToStateVector();
+            centralBody, start.ToTdb(), Frames.Frame.ICRF).ToStateVector();
         var initial = new StateVector(orbit.Position, orbit.Velocity, centralBody, orbit.Epoch, Frames.Frame.ICRF,
             Diagonal(100.0, 1e-4));
         var spacecraft = ReferenceCase.NewSpacecraft(body == "Earth" ? -1509 : -1510, initial);
@@ -229,7 +229,7 @@ public class PropagationSolutionTimeFrameTests
         // before the epochs were compared as TDB labels the propagation of the covariance was rejected there, with a
         // message printing two equal epochs, and the start state went through the Keplerian round trip (#510)
         var start = LabelOffInTai;
-        Assert.NotEqual(start.ToTAI(), start.ToTDB().ToTAI());
+        Assert.NotEqual(start.ToTai(), start.ToTdb().ToTai());
         var centralBody = new CelestialBody(body == "Earth" ? PlanetsAndMoons.EARTH : PlanetsAndMoons.MOON,
             Frames.Frame.ICRF, start);
         var orbit = new KeplerianElements(body == "Earth" ? 6778137.0 : 1837400.0, 0.001, 0.9, 0.2, 0.3, 0.0,
@@ -257,7 +257,7 @@ public class PropagationSolutionTimeFrameTests
         Assert.Equal(initial.Velocity, solution.StateVectors[0].Velocity);
         Assert.NotNull(resolver.PropagatedSolution(start.AddMinutes(30.0)));
         Assert.NotNull(resolver.Replayed);
-        Assert.Equal(orbitState.Position, orbit.AtEpoch(start.ToTDB()).ToStateVector().Position);
+        Assert.Equal(orbitState.Position, orbit.AtEpoch(start.ToTdb()).ToStateVector().Position);
     }
 
     private static PropagationSolution Propagate(string body, bool rk78, out StateVector initial,

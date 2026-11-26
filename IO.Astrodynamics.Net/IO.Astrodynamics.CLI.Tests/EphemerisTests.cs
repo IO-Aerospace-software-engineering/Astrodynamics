@@ -195,7 +195,7 @@ public class EphemerisTests
             Assert.StartsWith("Epoch : 2023-01-01T01:01:00.0000000Z ", utc[1]);
 
             var tdb = CliRun.Ok(Utc("--time-scale", "TDB")).Split(Environment.NewLine, StringSplitOptions.RemoveEmptyEntries);
-            var start = Time.Parse("2023-01-01T01:00:00Z").ToTDB();
+            var start = Time.Parse("2023-01-01T01:00:00Z").ToTdb();
             Assert.StartsWith($"Epoch : {start} ", tdb[0]);
             Assert.Equal(utc[0][utc[0].IndexOf(" Position", StringComparison.Ordinal)..], tdb[0][tdb[0].IndexOf(" Position", StringComparison.Ordinal)..]);
 
@@ -295,7 +295,7 @@ public class EphemerisTests
         using (Configuration.Lock())
         {
             SpiceApi.Instance.LoadKernels(new DirectoryInfo("Data"));
-            var begin = Time.J2000TDB;
+            var begin = Time.J2000Tdb;
             var directory = Directory.CreateTempSubdirectory("clisite-");
             var spk = new FileInfo(Path.Combine(directory.FullName, "site777.bsp"));
             var frameKernel = new FileInfo(Path.Combine(directory.FullName, "site777.tf"));

@@ -216,7 +216,7 @@ public class DeveloperGuideExamplesTests
         var engine = Assert.Single(spacecraft.Engines);
         Assert.Same(tank, engine.FuelTank);
         Assert.Equal(100.0, tank.Quantity);
-        Assert.Equal(300.0 * 0.05 * IO.Astrodynamics.Constants.g0, engine.Thrust);
+        Assert.Equal(300.0 * 0.05 * IO.Astrodynamics.Constants.StandardGravity, engine.Thrust);
         Assert.Equal(600.0, spacecraft.GetTotalMass());
         Assert.Single(spacecraft.Instruments);
 
@@ -271,7 +271,7 @@ public class DeveloperGuideExamplesTests
 
         Vector3 Acceleration(Vector3 r, double t)
         {
-            var at = tt0.AddSeconds(t).ToTDB();
+            var at = tt0.AddSeconds(t).ToTdb();
             var a = r * (-central / System.Math.Pow(r.Magnitude(), 3));
             for (int k = 0; k < DeepSpaceThirdBodies.Length; k++)
             {

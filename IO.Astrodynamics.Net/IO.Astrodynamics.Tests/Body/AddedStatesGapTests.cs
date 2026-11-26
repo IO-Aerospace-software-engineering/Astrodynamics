@@ -94,7 +94,7 @@ public class AddedStatesGapTests
     public void TwoDisjointWindows_MakeTwoArcs_AReadInTheGapThrows_AndEachWindowReadsAsAlone(string frameName, int naifId)
     {
         // Arrange: states over [0, 1 h] and [5 h, 6 h], added in two calls; the same windows each on a spacecraft alone
-        var frame = frameName == "ICRF" ? Frame.ICRF : Frame.ECLIPTIC_J2000;
+        var frame = frameName == "ICRF" ? Frame.ICRF : Frame.ECLIPJ2000;
         var earth = Earth();
         var orbit = Orbit(earth);
         var first = States(orbit, 0.0, 3600.0);
@@ -358,9 +358,9 @@ public class AddedStatesGapTests
     /// </summary>
     [Theory]
     [InlineData(Aberration.LT)]
-    [InlineData(Aberration.CNS)]
+    [InlineData(Aberration.CnS)]
     [InlineData(Aberration.XLT)]
-    [InlineData(Aberration.XCNS)]
+    [InlineData(Aberration.XcnS)]
     public void ALightTimeReadWithinTheMarginOfAnArc_ReadsThatArc(Aberration aberration)
     {
         var earth = Earth();
@@ -379,7 +379,7 @@ public class AddedStatesGapTests
         var twoBody = NewSpacecraft(id * 10 - 3, orbit);
 
         // The ends of each arc: by reception the corrected epoch lies before the observation, by transmission after it
-        bool reception = aberration is Aberration.LT or Aberration.CNS;
+        bool reception = aberration is Aberration.LT or Aberration.CnS;
         double worst = 0.0;
         foreach (var (alone, s) in new[] { (firstAlone, 0.0), (firstAlone, 3600.0), (secondAlone, 18000.0), (secondAlone, 21600.0) })
         {
@@ -510,7 +510,7 @@ public class AddedStatesGapTests
         var orbit = Orbit(earth);
         var spacecraft = new Spacecraft(-7985, "GA7985", 1000.0, orbit, 3000.0, new Clock("GA7985_CLK", 65536), cosparId: "2026-001A");
         spacecraft.AddPropagatedStates(new StateVector(new Vector3(8000000.0, 0.0, 0.0), new Vector3(0.0, 7000.0, 0.0), earth,
-            Start.AddSeconds(3600.0), Frame.ECLIPTIC_J2000));
+            Start.AddSeconds(3600.0), Frame.ECLIPJ2000));
         var lone = Assert.Single(Assert.Single(spacecraft.PropagatedArcs));
         LabelAssert.Equal(new Window(lone.Epoch, lone.Epoch), spacecraft.InterpolatedStatesWindow);
 

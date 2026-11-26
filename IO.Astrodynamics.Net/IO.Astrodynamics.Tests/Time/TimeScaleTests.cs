@@ -76,7 +76,7 @@ public class TimeScaleTests
     {
         Assert.Throws<ArgumentOutOfRangeException>(() => new TimeSystem.Time(Calendar, (TimeScale)5));
         Assert.Throws<ArgumentOutOfRangeException>(() => new TimeSystem.Time(2024, 1, 1, (TimeScale)(-1)));
-        Assert.Throws<ArgumentOutOfRangeException>(() => TimeSystem.Time.J2000TDB.ConvertTo((TimeScale)5));
+        Assert.Throws<ArgumentOutOfRangeException>(() => TimeSystem.Time.J2000Tdb.ConvertTo((TimeScale)5));
         Assert.Throws<ArgumentOutOfRangeException>(() => TimeSystem.Time.Parse("2024-01-01", (TimeScale)5));
         Assert.False(TimeSystem.Time.TryParse("2024-01-01", (TimeScale)5, out _));
     }
@@ -380,11 +380,11 @@ public class TimeScaleTests
         Assert.False(utc.EqualsExact(utc.AddTicks(1)));
 
         var byInstant = new HashSet<TimeSystem.Time> { utc, tai };
-        var byLabel = new HashSet<TimeSystem.Time>(TimeSystem.Time.ExactComparer) { utc, tai, tai.ToUTC() };
+        var byLabel = new HashSet<TimeSystem.Time>(TimeSystem.Time.ExactComparer) { utc, tai, tai.ToUtc() };
         Assert.Single(byInstant);
         Assert.Equal(2, byLabel.Count);
-        Assert.True(TimeSystem.Time.ExactComparer.Equals(utc, tai.ToUTC()));
-        Assert.Equal(TimeSystem.Time.ExactComparer.GetHashCode(utc), TimeSystem.Time.ExactComparer.GetHashCode(tai.ToUTC()));
+        Assert.True(TimeSystem.Time.ExactComparer.Equals(utc, tai.ToUtc()));
+        Assert.Equal(TimeSystem.Time.ExactComparer.GetHashCode(utc), TimeSystem.Time.ExactComparer.GetHashCode(tai.ToUtc()));
     }
 
     [Fact]

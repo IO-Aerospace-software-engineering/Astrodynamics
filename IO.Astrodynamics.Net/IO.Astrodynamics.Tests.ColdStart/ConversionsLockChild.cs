@@ -99,10 +99,10 @@ internal static class ConversionsLockChild
             }
         }
 
-        public StateOrientation FrameTransformationToICRF(in Time date, Frame source)
+        public StateOrientation FrameTransformationToIcrf(in Time date, Frame source)
         {
             Count();
-            return _inner.FrameTransformationToICRF(date, source);
+            return _inner.FrameTransformationToIcrf(date, source);
         }
 
         public StateVector GetEphemeris(in Time date, ILocalizable target, ILocalizable observer, Frame frame,

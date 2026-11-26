@@ -28,7 +28,7 @@ var cov = Matrix.Diagonal(
 var orbit = new StateVector(
     new Vector3(r0, 0, 0),
     new Vector3(0, v0, 0),
-    earth, Time.J2000TDB, Frame.ICRF, cov);
+    earth, Time.J2000Tdb, Frame.ICRF, cov);
 ```
 
 Use a full (non-diagonal) covariance when available from orbit determination.
@@ -46,7 +46,7 @@ var config = new MonteCarloConfiguration
     RunCount = 100,
     Seed = 42,
     TemplateSpacecraft = spacecraft,
-    Window = new Window(Time.J2000TDB, Time.J2000TDB.AddHours(2)),
+    Window = new Window(Time.J2000Tdb, Time.J2000Tdb.AddHours(2)),
     Propagation = new PropagationOptions
     {
         Integrator = new RK78IntegratorOptions

@@ -146,7 +146,7 @@ public class TleFieldsTests
     {
         var tle = new Tle("ISS", Line1, Line2);
         var again = Tle.Create(tle.ToMeanKeplerianElements(), tle.Name, tle.NoradCatalogId, tle.CosparId, tle.RevolutionNumberAtEpoch,
-            tle.Classification, tle.BallisticCoefficient, tle.FirstDerivationMeanMotion, tle.SecondDerivativeMeanMotion, tle.ElementSetNumber);
+            tle.Classification, tle.BStar, tle.MeanMotionDot, tle.MeanMotionDDot, tle.ElementSetNumber);
         Assert.Equal(Line1, again.Line1);
         Assert.Equal(Line2, again.Line2);
     }

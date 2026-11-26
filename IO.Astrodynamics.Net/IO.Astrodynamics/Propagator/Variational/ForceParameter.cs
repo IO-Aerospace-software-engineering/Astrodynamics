@@ -13,7 +13,7 @@ public enum ForceParameter
     DragCoefficient,
 
     /// <summary>
-    /// The reflectivity coefficient Cr (<see cref="Body.Spacecraft.Spacecraft.SolarRadiationCoeff"/>), dimensionless,
+    /// The reflectivity coefficient Cr (<see cref="Body.Spacecraft.Spacecraft.SolarRadiationCoefficient"/>), dimensionless,
     /// shared by solar radiation, albedo and thermal radiation pressure.
     /// </summary>
     ReflectivityCoefficient

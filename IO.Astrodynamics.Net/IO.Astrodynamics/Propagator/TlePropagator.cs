@@ -59,7 +59,7 @@ public class TlePropagator : IPropagator
     public TlePropagator(Window window, Spacecraft spacecraft, TimeSpan deltaT)
     {
         PropagatorBase.RequireWindowLength(window);
-        Window = new Window(window.StartDate.ToTDB(), window.EndDate.ToTDB());
+        Window = new Window(window.StartDate.ToTdb(), window.EndDate.ToTdb());
         Spacecraft = spacecraft ?? throw new ArgumentNullException(nameof(spacecraft));
         if (Spacecraft.InitialOrbitalParameters is not Tle tle)
         {

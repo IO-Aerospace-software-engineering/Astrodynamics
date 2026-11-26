@@ -39,7 +39,7 @@ public class ThermalRadiationPressure : ForceBase
         double t = emittingBody.ThermalEffectiveTemperature;
         double t4 = t * t * t * t;
         double r = emittingBody.EquatorialRadius;
-        _thermalTerm = emittingBody.ThermalEmissivity * Constants.StefanBoltzmann * t4 * r * r / Constants.C;
+        _thermalTerm = emittingBody.ThermalEmissivity * Constants.StefanBoltzmann * t4 * r * r / Constants.SpeedOfLight;
     }
 
     public override Vector3 Apply(StateVector stateVector)

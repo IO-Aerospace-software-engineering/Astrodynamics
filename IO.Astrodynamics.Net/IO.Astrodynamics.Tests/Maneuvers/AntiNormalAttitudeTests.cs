@@ -28,7 +28,7 @@ public class AntiNormalAttitudeTests
     public void Execute_EquatorialOrbit_AntiNormalIsNegativeZ()
     {
         // For r=(+X, 0, 0) and v=(0, +Y, 0): h = r x v = +Z, so anti-normal = -Z
-        var orbitalParams = new KeplerianElements(42164000.0, 0.0, 0.0, 0.0, 0.0, 0.0, TestHelpers.EarthAtJ2000, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF);
+        var orbitalParams = new KeplerianElements(42164000.0, 0.0, 0.0, 0.0, 0.0, 0.0, TestHelpers.EarthAtJ2000, TimeSystem.Time.J2000Tdb, Frames.Frame.ICRF);
         var spc = new Spacecraft(-672, "AntiNormalTestSC", 1000.0, orbitalParams, 3000.0, new Clock("GenericClk", 65536));
         spc.AddFuelTank(new FuelTank("ft", 1000.0, 900.0, "ftA", "123456"));
         spc.AddEngine(new Engine("eng", 450, 50, spc.FuelTanks.First(), "engmk1", "12345"));
@@ -47,7 +47,7 @@ public class AntiNormalAttitudeTests
     [Fact]
     public void Execute_OppositeToNormal()
     {
-        var orbitalParams = new KeplerianElements(42164000.0, 0.0, 0.0, 0.0, 0.0, 0.0, TestHelpers.EarthAtJ2000, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF);
+        var orbitalParams = new KeplerianElements(42164000.0, 0.0, 0.0, 0.0, 0.0, 0.0, TestHelpers.EarthAtJ2000, TimeSystem.Time.J2000Tdb, Frames.Frame.ICRF);
         var spc = new Spacecraft(-673, "TestSC", 1000.0, orbitalParams, 3000.0, new Clock("GenericClk", 65536));
         spc.AddFuelTank(new FuelTank("ft", 1000.0, 900.0, "ftA", "123456"));
         spc.AddEngine(new Engine("eng", 450, 50, spc.FuelTanks.First(), "engmk1", "12345"));
@@ -70,7 +70,7 @@ public class AntiNormalAttitudeTests
     [Fact]
     public void Execute_FuelNotBurned()
     {
-        var orbitalParams = new KeplerianElements(42164000.0, 0.0, 0.0, 0.0, 0.0, 0.0, TestHelpers.EarthAtJ2000, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF);
+        var orbitalParams = new KeplerianElements(42164000.0, 0.0, 0.0, 0.0, 0.0, 0.0, TestHelpers.EarthAtJ2000, TimeSystem.Time.J2000Tdb, Frames.Frame.ICRF);
         var spc = new Spacecraft(-674, "TestSC", 1000.0, orbitalParams, 3000.0, new Clock("GenericClk", 65536));
         spc.AddFuelTank(new FuelTank("ft", 1000.0, 900.0, "ftA", "123456"));
         spc.AddEngine(new Engine("eng", 450, 50, spc.FuelTanks.First(), "engmk1", "12345"));
@@ -89,7 +89,7 @@ public class AntiNormalAttitudeTests
             7000000.0, 0.0,
             90.0 * Astrodynamics.Constants.Deg2Rad,
             0.0, 0.0, 0.0,
-            TestHelpers.EarthAtJ2000, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF);
+            TestHelpers.EarthAtJ2000, TimeSystem.Time.J2000Tdb, Frames.Frame.ICRF);
         var spc = new Spacecraft(-681, "PolarAntiNormalSC", 1000.0, orbitalParams, 3000.0, new Clock("GenericClk", 65536));
         spc.AddFuelTank(new FuelTank("ft", 1000.0, 900.0, "ftA", "123456"));
         spc.AddEngine(new Engine("eng", 450, 50, spc.FuelTanks.First(), "engmk1", "12345"));
@@ -126,7 +126,7 @@ public class AntiNormalAttitudeTests
             new Vector3(6678000.0, 0.0, 0.0),
             new Vector3(1000.0, 0.0, 0.0), // parallel to r
             TestHelpers.EarthAtJ2000,
-            TimeSystem.Time.J2000TDB,
+            TimeSystem.Time.J2000Tdb,
             Frames.Frame.ICRF);
 
         var spc = new Spacecraft(-682, "DegAntiNormalSC", 1000.0, sv, 3000.0, new Clock("GenericClk", 65536));
@@ -143,7 +143,7 @@ public class AntiNormalAttitudeTests
     {
         // Mirror of NormalAttitudeTests.Execute_WithCustomBodyAxes but for anti-normal.
         // Spacecraft with +X as front; for equatorial orbit anti-normal = -Z.
-        var orbitalParams = new KeplerianElements(42164000.0, 0.0, 0.0, 0.0, 0.0, 0.0, TestHelpers.EarthAtJ2000, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF);
+        var orbitalParams = new KeplerianElements(42164000.0, 0.0, 0.0, 0.0, 0.0, 0.0, TestHelpers.EarthAtJ2000, TimeSystem.Time.J2000Tdb, Frames.Frame.ICRF);
         var spc = new Spacecraft(-683, "AntiNormalCustomAxesSC", 1000.0, orbitalParams, 3000.0, new Clock("GenericClk", 65536),
             bodyFront: Vector3.VectorX, bodyRight: Vector3.VectorY.Inverse(), bodyUp: Vector3.VectorZ);
         spc.AddFuelTank(new FuelTank("ft", 1000.0, 900.0, "ftA", "123456"));

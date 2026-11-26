@@ -549,7 +549,7 @@ public class AttitudeRecordTests
     internal static Measures Measure(PropagatedCase run)
     {
         var sc = run.Spacecraft;
-        var record = sc.Frame.GetStateOrientationsToICRF().ToArray();
+        var record = sc.Frame.GetStateOrientationsToIcrf().ToArray();
         var entries = new HashSet<Time>(record.Select(x => x.Epoch));
         var outputs = new HashSet<Time>(sc.PropagatedStates.Select(x => x.Epoch));
         var changes = run.DiscreteChanges();
@@ -576,8 +576,8 @@ public class AttitudeRecordTests
         foreach (var t in epochs)
         {
             bool lead = changes.Any(c => (t - c).TotalSeconds >= -1.5e-6 && (t - c).TotalSeconds <= 0.3e-6);
-            var managed = sc.Frame.GetStateOrientationToICRF(t);
-            var ck = run.Kernel.Frame.GetStateOrientationToICRF(t);
+            var managed = sc.Frame.GetStateOrientationToIcrf(t);
+            var ck = run.Kernel.Frame.GetStateOrientationToIcrf(t);
             double angle = RotationAngle(managed.Rotation, ck.Rotation);
             if (lead)
             {
@@ -593,8 +593,8 @@ public class AttitudeRecordTests
             {
                 var instrument = sc.Instruments.ElementAt(i);
                 var q = SpiceApi.Instance.TransformFrame(t, instrumentFrames[i], Frame.ICRF).Rotation;
-                m.Instruments = System.Math.Max(m.Instruments, Angle(instrument.GetBoresightInICRFFrame(t), instrument.Boresight.Rotate(q)));
-                m.Instruments = System.Math.Max(m.Instruments, Angle(instrument.GetRefVectorInICRFFrame(t), instrument.RefVector.Rotate(q)));
+                m.Instruments = System.Math.Max(m.Instruments, Angle(instrument.GetBoresightInIcrfFrame(t), instrument.Boresight.Rotate(q)));
+                m.Instruments = System.Math.Max(m.Instruments, Angle(instrument.GetRefVectorInIcrfFrame(t), instrument.RefVector.Rotate(q)));
             }
 
             if (positions)
@@ -667,7 +667,7 @@ public class AttitudeRecordTests
             m.RateCkAgainstLaw = System.Math.Max(m.RateCkAgainstLaw, (ck.AngularVelocity - lawRate).Magnitude());
         }
 
-        m.RecordUnchanged = record.SequenceEqual(sc.Frame.GetStateOrientationsToICRF());
+        m.RecordUnchanged = record.SequenceEqual(sc.Frame.GetStateOrientationsToIcrf());
         return m;
     }
 
@@ -703,16 +703,16 @@ public class AttitudeRecordTests
                 var start = sc.InitialOrbitalParameters.Epoch;
                 // Before the propagation the spacecraft has no attitude to test the field of view with (#682): the read
                 // throws, and leaves the record as the others do
-                Assert.Throws<InvalidOperationException>(() => sc.Instruments.First().IsInFOV(start.AddSeconds(-10.0), earth, Aberration.None));
+                Assert.Throws<InvalidOperationException>(() => sc.Instruments.First().IsInFov(start.AddSeconds(-10.0), earth, Aberration.None));
                 sc.GetOrientation(Frame.ICRF, start.AddSeconds(100.0));
-                sc.Frame.GetStateOrientationToICRF(start.AddSeconds(-10.0));
+                sc.Frame.GetStateOrientationToIcrf(start.AddSeconds(-10.0));
             },
             During = (sc, token) =>
             {
                 var start = sc.InitialOrbitalParameters.Epoch;
                 while (!token.IsCancellationRequested)
                 {
-                    sc.Frame.GetStateOrientationToICRF(start.AddSeconds(during % 3700 + 0.37));
+                    sc.Frame.GetStateOrientationToIcrf(start.AddSeconds(during % 3700 + 0.37));
                     during++;
                 }
             },
@@ -722,15 +722,15 @@ public class AttitudeRecordTests
                 var instrument = sc.Instruments.First();
                 // Outside the propagated states the reads throw (#527: they extrapolated the states before 11.0.0), and
                 // leave the record as the others do
-                Assert.Throws<InvalidOperationException>(() => instrument.IsInFOV(start.AddSeconds(-10.0), earth, Aberration.None));
-                Assert.Throws<InvalidOperationException>(() => instrument.IsInFOV(start.AddSeconds(Length + 3.3), earth, Aberration.None));
+                Assert.Throws<InvalidOperationException>(() => instrument.IsInFov(start.AddSeconds(-10.0), earth, Aberration.None));
+                Assert.Throws<InvalidOperationException>(() => instrument.IsInFov(start.AddSeconds(Length + 3.3), earth, Aberration.None));
                 for (int k = 0; k <= 360; k++)
                 {
-                    instrument.IsInFOV(start.AddSeconds(k * 10.0), earth, Aberration.None);
-                    if (k < 360) instrument.IsInFOV(start.AddSeconds(k * 10.0 + 3.3), earth, Aberration.None);
+                    instrument.IsInFov(start.AddSeconds(k * 10.0), earth, Aberration.None);
+                    if (k < 360) instrument.IsInFov(start.AddSeconds(k * 10.0 + 3.3), earth, Aberration.None);
                 }
 
-                instrument.GetBoresightInICRFFrame(start.AddSeconds(Length + 100.0));
+                instrument.GetBoresightInIcrfFrame(start.AddSeconds(Length + 100.0));
                 instrument.FindFieldOfViewWindows(new Window(start.AddSeconds(10.0), start.AddSeconds(Length - 10.0)), sun, new FieldOfViewSearchOptions { Step = TimeSpan.FromSeconds(60.0), TargetShape = ShapeType.Point, TargetFrame = Frame.ICRF }).ToArray();
             }
         };
@@ -738,8 +738,8 @@ public class AttitudeRecordTests
         using var twin = PropagatedCase.Run(naifId - 1, "Nadir", "VV", FrameOf(frame), "Propagate", 2024);
         _output.WriteLine($"{frame}: {during} reads during the propagation");
 
-        var a = read.Spacecraft.Frame.GetStateOrientationsToICRF().ToArray();
-        var b = twin.Spacecraft.Frame.GetStateOrientationsToICRF().ToArray();
+        var a = read.Spacecraft.Frame.GetStateOrientationsToIcrf().ToArray();
+        var b = twin.Spacecraft.Frame.GetStateOrientationsToIcrf().ToArray();
         Assert.Equal(b.Length, a.Length);
         for (int i = 0; i < a.Length; i++)
         {
@@ -753,7 +753,7 @@ public class AttitudeRecordTests
         for (int k = 0; k <= 36000; k++)
         {
             var t = read.Start.AddSeconds(k * 0.1);
-            worst = System.Math.Max(worst, RotationAngle(read.Kernel.Frame.GetStateOrientationToICRF(t).Rotation, twin.Kernel.Frame.GetStateOrientationToICRF(t).Rotation));
+            worst = System.Math.Max(worst, RotationAngle(read.Kernel.Frame.GetStateOrientationToIcrf(t).Rotation, twin.Kernel.Frame.GetStateOrientationToIcrf(t).Rotation));
         }
 
         _output.WriteLine($"MEASURE #523 reads {frame}: CK with reads - CK of the twin {worst:E2} rad");
@@ -787,7 +787,7 @@ public class AttitudeRecordTests
             Assert.True(rule <= TimelineRules.RuleBound, $"change - rule {rule:E3} s");
         }
 
-        var record = run.Spacecraft.Frame.GetStateOrientationsToICRF().ToArray();
+        var record = run.Spacecraft.Frame.GetStateOrientationsToIcrf().ToArray();
         // The entry before the lead: the last output sample of the law before the change
         var lead = record.Single(x => x.Epoch == change.AddSeconds(-1e-6));
         var lastSample = record.Last(x => x.Epoch < lead.Epoch);
@@ -800,8 +800,8 @@ public class AttitudeRecordTests
         {
             var (law, continuous) = run.LawAt(t);
             Assert.True(continuous);
-            managed = System.Math.Max(managed, RotationAngle(law, v => v.Rotate(run.Spacecraft.Frame.GetStateOrientationToICRF(t).Rotation)));
-            ck = System.Math.Max(ck, RotationAngle(law, v => v.Rotate(run.Kernel.Frame.GetStateOrientationToICRF(t).Rotation)));
+            managed = System.Math.Max(managed, RotationAngle(law, v => v.Rotate(run.Spacecraft.Frame.GetStateOrientationToIcrf(t).Rotation)));
+            ck = System.Math.Max(ck, RotationAngle(law, v => v.Rotate(run.Kernel.Frame.GetStateOrientationToIcrf(t).Rotation)));
         }
 
         double atLead = RotationAngle(run.LawAt(lead.Epoch).Law, v => v.Rotate(lead.Rotation));
@@ -854,7 +854,7 @@ public class AttitudeRecordTests
         };
         // The impulse of the chain needs the orbit below circular: the grid's impulse orbit
         using var run = PropagatedCase.Run(naifId, "Custom", "VV", Frame.ICRF, "Propagate", 2024, hooks);
-        var record = run.Spacecraft.Frame.GetStateOrientationsToICRF().ToArray();
+        var record = run.Spacecraft.Frame.GetStateOrientationsToIcrf().ToArray();
         var gaps = record.Zip(record.Skip(1), (x, y) => (y.Epoch - x.Epoch).TotalSeconds).ToArray();
         double smallest = gaps.Min();
         var activation = run.Start.AddSeconds(3400.0);
@@ -1020,7 +1020,7 @@ public class AttitudeRecordTests
     {
         var start = new Time(2024, 3, 1, 12, 0, 0, TimeScale.TDB);
         var earth = new CelestialBody(PlanetsAndMoons.EARTH, Frame.ICRF, start);
-        var f = Frame.ECLIPTIC_J2000;
+        var f = Frame.ECLIPJ2000;
         var leo = new KeplerianElements(6778137.0, 0.001, 51.6 * IO.Astrodynamics.Constants.Deg2Rad, 0.4, 1.1, 0.3, earth, start, Frame.ICRF).ToStateVector();
         var inF = leo.ToFrame(f).ToStateVector();
         var p0 = new double[36];
@@ -1080,7 +1080,7 @@ public class AttitudeRecordTests
     {
         var start = new Time(2024, 3, 1, 12, 0, 0, TimeScale.TDB);
         var earth = new CelestialBody(PlanetsAndMoons.EARTH, Frame.ICRF, start);
-        var f = Frame.ECLIPTIC_J2000;
+        var f = Frame.ECLIPJ2000;
         var leo = new KeplerianElements(6778137.0, 0.001, 51.6 * IO.Astrodynamics.Constants.Deg2Rad, 0.4, 1.1, 0.3, earth, start, Frame.ICRF).ToStateVector();
         var inF = leo.ToFrame(f).ToStateVector();
         var q = SpiceApi.Instance.TransformFrame(start, f, Frame.ICRF).Rotation;
@@ -1148,7 +1148,7 @@ public class AttitudeRecordTests
     private void SlerpResidual(string law, double step, int naifId)
     {
         using var run = PropagatedCase.Run(naifId, law, "RK78", Frame.ICRF, "Propagate", 2024, new PropagatedCase.Hooks { Step = TimeSpan.FromSeconds(step) });
-        var record = run.Spacecraft.Frame.GetStateOrientationsToICRF().ToArray();
+        var record = run.Spacecraft.Frame.GetStateOrientationsToIcrf().ToArray();
         double worst = 0.0;
         // Every interval at 60 s, one in ten at 1 s
         int stride = step < 10.0 ? 10 : 1;
@@ -1159,7 +1159,7 @@ public class AttitudeRecordTests
                 var t = record[i].Epoch.AddSeconds((record[i + 1].Epoch - record[i].Epoch).TotalSeconds * fraction);
                 var (closedForm, continuous) = run.LawAt(t);
                 Assert.True(continuous);
-                worst = System.Math.Max(worst, RotationAngle(closedForm, v => v.Rotate(run.Spacecraft.Frame.GetStateOrientationToICRF(t).Rotation)));
+                worst = System.Math.Max(worst, RotationAngle(closedForm, v => v.Rotate(run.Spacecraft.Frame.GetStateOrientationToIcrf(t).Rotation)));
             }
         }
 

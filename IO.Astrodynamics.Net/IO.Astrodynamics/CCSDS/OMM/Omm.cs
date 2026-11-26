@@ -137,7 +137,7 @@ public class Omm
     /// <param name="raan">Right ascension of ascending node in degrees.</param>
     /// <param name="argOfPericenter">Argument of pericenter in degrees.</param>
     /// <param name="meanAnomaly">Mean anomaly in degrees.</param>
-    /// <param name="bstar">BSTAR drag term in 1/Earth radii.</param>
+    /// <param name="bStar">BSTAR drag term in 1/Earth radii.</param>
     /// <param name="meanMotionDot">First derivative of mean motion in rev/day².</param>
     /// <param name="meanMotionDDot">Second derivative of mean motion in rev/day³.</param>
     /// <param name="noradCatalogId">Optional NORAD catalog ID.</param>
@@ -155,7 +155,7 @@ public class Omm
         double raan,
         double argOfPericenter,
         double meanAnomaly,
-        double bstar,
+        double bStar,
         double meanMotionDot,
         double meanMotionDDot,
         int? noradCatalogId = null,
@@ -173,7 +173,7 @@ public class Omm
             epoch, meanMotion, eccentricity, inclination, raan, argOfPericenter, meanAnomaly);
 
         var tleParams = TleParameters.CreateWithBStarAndDDot(
-            bstar, meanMotionDot, meanMotionDDot,
+            bStar, meanMotionDot, meanMotionDDot,
             noradCatalogId: noradCatalogId,
             elementSetNumber: elementSetNumber,
             revolutionNumberAtEpoch: revolutionNumber,
@@ -302,9 +302,9 @@ public class Omm
         // Create mean Keplerian elements from OMM data, at the epoch read in TIME_SYSTEM (#485), as UTC, the time scale of a
         // TLE epoch
         var timeScale = Common.Enums.CcsdsTimeSystemMapping.ToTimeScale(Metadata.TimeSystemEnum, Metadata.TimeSystem);
-        var epoch = Common.Enums.CcsdsTimeSystemMapping.ToTime(meanElements.Epoch, timeScale).ToUTC();
+        var epoch = Common.Enums.CcsdsTimeSystemMapping.ToTime(meanElements.Epoch, timeScale).ToUtc();
         // The Earth in an inertial frame, as the TLE builds it (#597): ITRF93 would read the Earth's binary PCK at the epoch
-        var earth = new Body.CelestialBody(399, Frames.Frame.ECLIPTIC_J2000, epoch);
+        var earth = new Body.CelestialBody(399, Frames.Frame.ECLIPJ2000, epoch);
 
         var keplerianElements = OrbitalParameters.KeplerianElements.FromOMM(
             meanElements.MeanMotion.Value,
@@ -349,7 +349,7 @@ public class Omm
             };
         }
 
-        var bstar = tleParams.BStar.Value;
+        var bStar = tleParams.BStar.Value;
         var nDot = tleParams.MeanMotionDot;
         var nDDot = tleParams.MeanMotionDDot ?? 0.0;
         // One default with Tle.Create and the TLE Configuration (#606)
@@ -362,7 +362,7 @@ public class Omm
             cosparId,
             revolutionsAtEpoch,
             classification,
-            bstar,
+            bStar,
             nDot,
             nDDot,
             elementSetNumber);

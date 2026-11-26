@@ -172,8 +172,8 @@ public class ManagedFrameByNameTests
         var byName = new Frames.Frame(name);
         foreach (var epoch in Epochs)
         {
-            var orientation = provider.FrameTransformationToICRF(epoch.Utc, byName);
-            var managed = StaticFrameOf(name).GetStateOrientationToICRF(epoch.Utc);
+            var orientation = provider.FrameTransformationToIcrf(epoch.Utc, byName);
+            var managed = StaticFrameOf(name).GetStateOrientationToIcrf(epoch.Utc);
             Assert.Equal(managed.Rotation, orientation.Rotation);
             Assert.Equal(managed.AngularVelocity, orientation.AngularVelocity);
             Assert.Same(byName, orientation.ReferenceFrame);
@@ -189,8 +189,8 @@ public class ManagedFrameByNameTests
         var byName = new Frames.Frame(name);
         foreach (var epoch in Epochs)
         {
-            var orientation = provider.FrameTransformationToICRF(epoch.Utc, byName);
-            var managed = StaticFrameOf(name).GetStateOrientationToICRF(epoch.Utc);
+            var orientation = provider.FrameTransformationToIcrf(epoch.Utc, byName);
+            var managed = StaticFrameOf(name).GetStateOrientationToIcrf(epoch.Utc);
             Assert.Equal(managed.Rotation, orientation.Rotation);
             Assert.Equal(managed.AngularVelocity, orientation.AngularVelocity);
             Assert.Same(byName, orientation.ReferenceFrame);
@@ -239,7 +239,7 @@ public class ManagedFrameByNameTests
 
     private const string AberrationNone = nameof(Aberration.None);
     private const string AberrationLt = nameof(Aberration.LT);
-    private const string AberrationCnS = nameof(Aberration.CNS);
+    private const string AberrationCnS = nameof(Aberration.CnS);
 
     [Theory]
     [MemberData(nameof(Names))]

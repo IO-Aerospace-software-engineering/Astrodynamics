@@ -72,14 +72,14 @@ The `Aberration` parameter controls light-time and stellar aberration correction
 |-------|---------|
 | `Aberration.None` | Geometric position — no corrections |
 | `Aberration.LT` | One-way light-time correction |
-| `Aberration.LTS` | Light-time plus stellar aberration |
+| `Aberration.LtS` | Light-time plus stellar aberration |
 
-Use `None` for propagation and force-model queries. Use `LT` or `LTS` for observational geometry (e.g., where does the Moon appear from Earth?).
+Use `None` for propagation and force-model queries. Use `LT` or `LtS` for observational geometry (e.g., where does the Moon appear from Earth?).
 
 ```csharp
 // Inputs: earth and moon (CelestialBody), epoch (Time)
 var geometric = earth.GetEphemeris(epoch, moon, Frame.ICRF, Aberration.None);
-var apparent = earth.GetEphemeris(epoch, moon, Frame.ICRF, Aberration.LTS);
+var apparent = earth.GetEphemeris(epoch, moon, Frame.ICRF, Aberration.LtS);
 ```
 
 ## Angular Separation
@@ -97,5 +97,5 @@ The result is in radians. Near-zero values indicate the Moon is close to the Sun
 ## Summary
 
 - Use `GetEphemeris` with a single epoch for point queries and with a `Window` for time series.
-- Choose the aberration correction that matches your use case: `None` for dynamics, `LT`/`LTS` for observation.
+- Choose the aberration correction that matches your use case: `None` for dynamics, `LT`/`LtS` for observation.
 - `AngularSeparation` measures the apparent angle between two targets from an observer.

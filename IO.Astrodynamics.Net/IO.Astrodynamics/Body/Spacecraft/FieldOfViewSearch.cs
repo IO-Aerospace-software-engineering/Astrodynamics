@@ -89,7 +89,7 @@ internal static class FieldOfViewSearch
         if (instrument.Spacecraft.Frame is SpacecraftFrame frame && !frame.HasAttitude)
         {
             throw new InvalidOperationException(
-                $"Spacecraft {instrument.Spacecraft.Name} has no attitude to search the field of view of {instrument.Name} with: it has not been propagated, and no orientation was added to its frame (SpacecraftFrame.AddStateOrientationToICRF).");
+                $"Spacecraft {instrument.Spacecraft.Name} has no attitude to search the field of view of {instrument.Name} with: it has not been propagated, and no orientation was added to its frame (SpacecraftFrame.AddStateOrientationToIcrf).");
         }
     }
 

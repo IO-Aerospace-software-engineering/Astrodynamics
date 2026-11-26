@@ -173,7 +173,7 @@ internal static class GeodeticCoordinates
     /// Particulars): west for a prograde spin, east for a retrograde one, "the spin is retrograde if [the first degree term
     /// of W] is negative and prograde otherwise", and east for the Earth, the Moon and the Sun, its exceptions. The rate of W
     /// is read as the opposite of the z component of the angular velocity of the body's frame at <paramref name="epoch"/>
-    /// (<see cref="Frames.Frame.GetStateOrientationToICRF"/>: that of ICRF relative to the body, in its axes). The kernel
+    /// (<see cref="Frames.Frame.GetStateOrientationToIcrf"/>: that of ICRF relative to the body, in its axes). The kernel
     /// variable <c>BODY&lt;id&gt;_PGR_POSITIVE_LON</c>, by which a kernel overrides that sense for <c>recpgr_c</c> and
     /// <c>gfposc_c</c> (GF Required Reading, "Meridian crossing"), is not read: no kernel of the library's data defines it.
     /// </summary>
@@ -184,7 +184,7 @@ internal static class GeodeticCoordinates
             return false;
         }
 
-        return body.Frame.GetStateOrientationToICRF(epoch).AngularVelocity.Z <= 0.0;
+        return body.Frame.GetStateOrientationToIcrf(epoch).AngularVelocity.Z <= 0.0;
     }
 
     /// <summary>

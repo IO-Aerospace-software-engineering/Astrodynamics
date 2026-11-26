@@ -11,10 +11,10 @@ namespace IO.Astrodynamics.Body
     public class Barycenter : CelestialItem
     {
         /// <summary>
-        /// Initializes a new instance of the <see cref="Barycenter"/> class with the specified NAIF ID and the default epoch (J2000TDB).
+        /// Initializes a new instance of the <see cref="Barycenter"/> class with the specified NAIF ID and the default epoch (J2000Tdb).
         /// </summary>
         /// <param name="naifId">The NAIF ID of the barycenter.</param>
-        public Barycenter(int naifId) : this(naifId, TimeSystem.Time.J2000TDB)
+        public Barycenter(int naifId) : this(naifId, TimeSystem.Time.J2000Tdb)
         {
         }
 
@@ -23,7 +23,7 @@ namespace IO.Astrodynamics.Body
         /// </summary>
         /// <param name="naifId">The NAIF ID of the barycenter.</param>
         /// <param name="epoch">The epoch time for the barycenter.</param>
-        public Barycenter(int naifId, Time epoch) : base(naifId, Frame.ECLIPTIC_J2000, epoch)
+        public Barycenter(int naifId, Time epoch) : base(naifId, Frame.ECLIPJ2000, epoch)
         {
             RegisterWithObserver();
         }
@@ -37,7 +37,7 @@ namespace IO.Astrodynamics.Body
         internal static Barycenter CreateDeferred(int naifId, string name) => new(new NaifObject(naifId, name), true);
 
         // The constructor of CreateDeferred: the parameter deferred tells it apart from the public constructors
-        private Barycenter(NaifObject knownObject, bool deferred) : base(knownObject, Frame.ECLIPTIC_J2000, TimeSystem.Time.J2000TDB)
+        private Barycenter(NaifObject knownObject, bool deferred) : base(knownObject, Frame.ECLIPJ2000, TimeSystem.Time.J2000Tdb)
         {
             _ = deferred;
         }

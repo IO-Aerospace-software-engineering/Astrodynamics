@@ -7,7 +7,7 @@ namespace IO.Astrodynamics.ConformanceRunner.Utilities;
 /// <summary>
 /// The light-time flags of the suite (spec.md sections 12.2 and 14.1) and the library's corrections, SPICE's:
 /// <c>none</c> → <see cref="Aberration.None"/>, <c>lt</c> → <see cref="Aberration.LT"/>, <c>lt+s</c> →
-/// <see cref="Aberration.LTS"/>, <c>xlt</c> → <see cref="Aberration.XLT"/>, <c>cn</c> → <see cref="Aberration.CN"/>.
+/// <see cref="Aberration.LtS"/>, <c>xlt</c> → <see cref="Aberration.XLT"/>, <c>cn</c> → <see cref="Aberration.CN"/>.
 /// </summary>
 public static class LightTimeFlags
 {
@@ -15,7 +15,7 @@ public static class LightTimeFlags
     {
         ["none"] = Aberration.None,
         ["lt"] = Aberration.LT,
-        ["lt+s"] = Aberration.LTS,
+        ["lt+s"] = Aberration.LtS,
         ["xlt"] = Aberration.XLT,
         ["cn"] = Aberration.CN
     };

@@ -61,7 +61,7 @@ internal static class TimelineRules
     // TT - TDB at a TDB epoch, s, by unitim_c
     private static double TtMinusTdb(double et) => CspiceDirect.TdbToTt(et) - et;
 
-    private static double Et(Time t) => t.ToTDB().TimeSpanFromJ2000().TotalSeconds;
+    private static double Et(Time t) => t.ToTdb().TimeSpanFromJ2000().TotalSeconds;
 
     /// <summary>The TDB epoch <paramref name="seconds"/> after <paramref name="from"/>: TT seconds by <c>unitim_c</c>
     /// when <paramref name="tt"/> (about the Earth), TDB seconds otherwise.</summary>

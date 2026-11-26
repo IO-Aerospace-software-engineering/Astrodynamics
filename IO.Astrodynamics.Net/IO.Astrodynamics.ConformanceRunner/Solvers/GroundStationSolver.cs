@@ -132,7 +132,7 @@ public class GroundStationSolver : ICategorySolver
         {
             // In TDB, as the occultation windows were labelled before lot L6, so that the pass ends they give keep their labels
             // and the culminations searched from them their grid (IC-9 of lot L6 of #668)
-            var hidden = site.FindOccultationWindows(new Window(window.StartDate.ToTDB(), window.EndDate.ToTDB()), target, occulter, new OccultationSearchOptions
+            var hidden = site.FindOccultationWindows(new Window(window.StartDate.ToTdb(), window.EndDate.ToTdb()), target, occulter, new OccultationSearchOptions
             {
                 Step = step, Aberration = aberration, TargetShape = ShapeType.Point, FrontShape = ShapeType.Ellipsoid, OccultationType = OccultationType.Full
             }).ToList();

@@ -34,7 +34,7 @@ public partial class ConjunctionAssessmentTests
 
     private static int NextInputRuleId() => Interlocked.Decrement(ref _inputRuleIds);
 
-    private static readonly TimeSystem.Time InputRuleStart = TimeSystem.Time.J2000TDB;
+    private static readonly TimeSystem.Time InputRuleStart = TimeSystem.Time.J2000Tdb;
 
     // The window of the propagations and analyses, the TCA in its middle; the longer window leaves the propagations
     private static readonly Window InputRuleWindow = new(InputRuleStart, InputRuleStart.AddHours(1.0));
@@ -321,7 +321,7 @@ public partial class ConjunctionAssessmentTests
         // of the reference split between the two spacecraft (0.6 R on the protected one, 0.4 R on the secondary), no
         // option: the analysis must add the secondary's own radius (before #683, 5 m in its place)
         var earth = CreateEarth();
-        var tca = TimeSystem.Time.J2000TDB.AddSeconds(10.0);
+        var tca = TimeSystem.Time.J2000Tdb.AddSeconds(10.0);
         var window = new Window(tca.AddSeconds(-10.0), tca.AddSeconds(10.0));
         double worst = 0.0;
         int id = 0;
@@ -349,7 +349,7 @@ public partial class ConjunctionAssessmentTests
                 new ConjunctionAnalysisOptions
                 {
                     SampleStep = TimeSpan.FromDays(1.0),
-                    MaximumEventSearchStep = TimeSpan.FromDays(1.0),
+                    MaxEventSearchStep = TimeSpan.FromDays(1.0),
                     LowRelativeSpeedThresholdMetersPerSecond = 0.0
                 });
 
@@ -493,7 +493,7 @@ public partial class ConjunctionAssessmentTests
 
         var (protectedStart, secondaryStart) = InputRulePair(earth);
         var window = producer == "Tle"
-            ? new Window(InputRuleTle.Epoch.ToTDB(), InputRuleTle.Epoch.ToTDB().AddMinutes(30.0))
+            ? new Window(InputRuleTle.Epoch.ToTdb(), InputRuleTle.Epoch.ToTdb().AddMinutes(30.0))
             : InputRuleWindow;
         int protectedId = NextInputRuleId();
         int secondaryId = NextInputRuleId();
@@ -606,7 +606,7 @@ public partial class ConjunctionAssessmentTests
     {
         foreach (var path in new[] { "twoBody", "forceModel", "propagatedCovariance" })
         {
-            foreach (var option in new[] { "MaximumEventSearchStep", "SampleStep" })
+            foreach (var option in new[] { "MaxEventSearchStep", "SampleStep" })
             {
                 foreach (double seconds in new[] { 0.0, -5.0 })
                 {
@@ -637,8 +637,8 @@ public partial class ConjunctionAssessmentTests
         Assert.Equal(path == "propagatedCovariance" ? CovarianceSource.Propagated : CovarianceSource.InitialStateHeldInRtn,
             encounter.EncounterState.ProtectedCovariance.Source);
         var step = TimeSpan.FromSeconds(seconds);
-        Func<AvoidanceSearchOptions> options = () => option == "MaximumEventSearchStep"
-            ? InputRuleAvoidance with { Analysis = ConjunctionAnalysisOptions.Default with { MaximumEventSearchStep = step } }
+        Func<AvoidanceSearchOptions> options = () => option == "MaxEventSearchStep"
+            ? InputRuleAvoidance with { Analysis = ConjunctionAnalysisOptions.Default with { MaxEventSearchStep = step } }
             : InputRuleAvoidance with { Analysis = ConjunctionAnalysisOptions.Default with { SampleStep = step } };
 
         // Act: bounded, so that a regression fails instead of filling the memory (#640: 0 s ended in an

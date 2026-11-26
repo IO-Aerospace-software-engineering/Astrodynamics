@@ -210,7 +210,7 @@ public class NativeAbortGuardTests
     public void Occultation_UnnamedEllipsoid_Throws(bool front)
     {
         // The frame of an ellipsoid read from the record of an unnamed identifier was the stack's (#672)
-        var window = new Window(TimeSystem.Time.J2000TDB, TimeSystem.Time.J2000TDB.AddSeconds(3600.0));
+        var window = new Window(TimeSystem.Time.J2000Tdb, TimeSystem.Time.J2000Tdb.AddSeconds(3600.0));
         var e = Assert.Throws<ArgumentException>(() => front
             ? SpiceApi.Instance.FindWindowsOnOccultationConstraint(window, 399, 10, ShapeType.Ellipsoid, 12345678, ShapeType.Ellipsoid,
                 OccultationType.Any, Aberration.None, TimeSpan.FromSeconds(60.0))
@@ -258,7 +258,7 @@ public class NativeAbortGuardTests
     public void ReadEphemeris_ObserverNotACelestialBody_Throws()
     {
         // The observer of the reads by identifiers is built as a celestial body: a spacecraft identifier ended the process
-        var window = new Window(TimeSystem.Time.J2000TDB, TimeSystem.Time.J2000TDB.AddSeconds(60.0));
+        var window = new Window(TimeSystem.Time.J2000Tdb, TimeSystem.Time.J2000Tdb.AddSeconds(60.0));
         Assert.Throws<ArgumentException>(() =>
             SpiceApi.Instance.ReadEphemeris(window, -82, 301, Frames.Frame.ICRF, Aberration.None, TimeSpan.FromSeconds(10.0)));
     }
@@ -269,7 +269,7 @@ public class NativeAbortGuardTests
     public void Occultation_EllipsoidOfASpacecraft_Throws(bool front)
     {
         // The frame of an ellipsoid read from the body information of a spacecraft identifier ended the process
-        var window = new Window(TimeSystem.Time.J2000TDB, TimeSystem.Time.J2000TDB.AddSeconds(3600.0));
+        var window = new Window(TimeSystem.Time.J2000Tdb, TimeSystem.Time.J2000Tdb.AddSeconds(3600.0));
         var e = Assert.Throws<ArgumentException>(() => front
             ? SpiceApi.Instance.FindWindowsOnOccultationConstraint(window, 399, 10, ShapeType.Ellipsoid, -82, ShapeType.Ellipsoid,
                 OccultationType.Any, Aberration.None, TimeSpan.FromSeconds(60.0))
@@ -294,7 +294,7 @@ public class NativeAbortGuardTests
         for (int i = 0; i < records.Length; i++)
         {
             records[i] = new StateOrientation(new Quaternion(1.0, 0.0, 0.0, 0.0),
-                Vector3.Zero, TimeSystem.Time.J2000TDB.AddSeconds(i), i == eclipticIndex ? Frames.Frame.ECLIPTIC_J2000 : Frames.Frame.ICRF);
+                Vector3.Zero, TimeSystem.Time.J2000Tdb.AddSeconds(i), i == eclipticIndex ? Frames.Frame.ECLIPJ2000 : Frames.Frame.ICRF);
         }
 
         var e = Assert.Throws<ArgumentException>(() => SpiceApi.Instance.WriteOrientation(file, -1560, records));
@@ -306,7 +306,7 @@ public class NativeAbortGuardTests
     // Equally spaced states of a circular orbit about the Earth in ICRF, 60 s apart from J2000
     private static StateVector[] EarthStates(int count, ILocalizable centre = null) => Enumerable.Range(0, count)
         .Select(i => new StateVector(new Vector3(6800000.0, 0.0, 0.0), new Vector3(0.0, 8000.0, 0.0), centre ?? TestHelpers.EarthAtJ2000,
-            TimeSystem.Time.J2000TDB.AddSeconds(60.0 * i), Frames.Frame.ICRF)).ToArray();
+            TimeSystem.Time.J2000Tdb.AddSeconds(60.0 * i), Frames.Frame.ICRF)).ToArray();
 
     /// <summary>
     /// The native writer of SPKs rejects fewer than three states (<c>EphemerisKernel::WriteData</c>, whose message said "2
@@ -353,7 +353,7 @@ public class NativeAbortGuardTests
     {
         var states = EarthStates(3);
         states[eclipticIndex] = new StateVector(states[eclipticIndex].Position, states[eclipticIndex].Velocity, states[eclipticIndex].Observer,
-            states[eclipticIndex].Epoch, Frames.Frame.ECLIPTIC_J2000);
+            states[eclipticIndex].Epoch, Frames.Frame.ECLIPJ2000);
         AssertWriteEphemerisRejected(states, "frame of the first one");
     }
 
@@ -379,7 +379,7 @@ public class NativeAbortGuardTests
         try
         {
             var file = new FileInfo(Path.Combine(folder.FullName, "site.bsp"));
-            var start = TimeSystem.Time.J2000TDB;
+            var start = TimeSystem.Time.J2000Tdb;
             var e = Assert.Throws<ArgumentException>(() => site.WriteEphemeris(new Window(start, start.AddSeconds(90.0)), file));
             Assert.Equal("stateVectors", e.ParamName);
             Assert.False(File.Exists(file.FullName));

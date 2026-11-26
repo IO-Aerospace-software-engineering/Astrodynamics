@@ -167,7 +167,7 @@ public sealed class KernelShadowingTests : IDisposable
     private static byte[] Spk(int target)
     {
         var states = Enumerable.Range(0, 2).Select(i => new StateVector(new Vector3(7.0e6, 0.0, 0.0), new Vector3(0.0, 7.5e3, 0.0),
-            TestHelpers.EarthAtJ2000, TimeSystem.Time.CreateTDB(i), Frames.Frame.ICRF)).ToArray();
+            TestHelpers.EarthAtJ2000, TimeSystem.Time.CreateTdb(i), Frames.Frame.ICRF)).ToArray();
         return SpkWriter.BuildType9(target, 1, [states]);
     }
 }

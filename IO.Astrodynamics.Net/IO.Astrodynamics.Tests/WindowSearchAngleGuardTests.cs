@@ -22,7 +22,7 @@ namespace IO.Astrodynamics.Tests;
 /// </summary>
 public class WindowSearchAngleGuardTests
 {
-    private static readonly Window SearchWindow = new(TimeSystem.Time.CreateTDB(755870700.0), TimeSystem.Time.CreateTDB(755957100.0));
+    private static readonly Window SearchWindow = new(TimeSystem.Time.CreateTdb(755870700.0), TimeSystem.Time.CreateTdb(755957100.0));
     private static readonly TimeSpan Step = TimeSpan.FromHours(1.0);
     private const double Tiny = 1.0e-9;
 

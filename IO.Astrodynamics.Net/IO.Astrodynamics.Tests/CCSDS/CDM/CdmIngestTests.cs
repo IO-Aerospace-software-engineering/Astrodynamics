@@ -99,7 +99,7 @@ public class CdmIngestTests
         Assert.Equal(Frames.Frame.ITRF93, s1.Frame);
         Assert.Equal(Position1, s1.Position);
         Assert.Equal(Velocity1, s1.Velocity);
-        double et = epoch.ToTDB().TimeSpanFromJ2000().TotalSeconds;
+        double et = epoch.ToTdb().TimeSpanFromJ2000().TotalSeconds;
         var toItrf = Body.CspiceDirect.Sxform("J2000", "ITRF93", et);
         var fromItrf = Body.CspiceDirect.Sxform("ITRF93", "J2000", et);
         var m = Matrix.Create(6, 6, (i, j) => toItrf[6 * i + j]);

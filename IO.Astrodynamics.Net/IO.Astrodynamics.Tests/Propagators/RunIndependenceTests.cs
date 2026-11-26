@@ -119,7 +119,7 @@ public class RunIndependenceTests
         PropagationSolution LastPropagation, Maneuver.Maneuver[] Executed, double Fuel);
 
     private static Left Take(Spacecraft spacecraft) => new(spacecraft.PropagatedStates.ToArray(),
-        spacecraft.PropagatedArcs.Count, spacecraft.Frame.GetStateOrientationsToICRF().ToArray(), spacecraft.IsPropagated,
+        spacecraft.PropagatedArcs.Count, spacecraft.Frame.GetStateOrientationsToIcrf().ToArray(), spacecraft.IsPropagated,
         spacecraft.LastPropagation, spacecraft.ExecutedManeuvers.ToArray(), spacecraft.FuelTanks.Sum(t => t.Quantity));
 
     private static void AssertSameStates(IReadOnlyList<StateVector> expected, IReadOnlyList<StateVector> actual)
@@ -204,8 +204,8 @@ public class RunIndependenceTests
         switch (orbit)
         {
             case "ECLIPJ2000":
-                spacecraft = Leo(Frames.Frame.ECLIPTIC_J2000);
-                again = () => LeoState(Frames.Frame.ECLIPTIC_J2000);
+                spacecraft = Leo(Frames.Frame.ECLIPJ2000);
+                again = () => LeoState(Frames.Frame.ECLIPJ2000);
                 break;
             case "SSB":
                 var heliocentric = new StateVector(new Vector3(1.5e11, 0.0, 0.0), new Vector3(0.0, 29780.0, 1000.0),
@@ -306,7 +306,7 @@ public class RunIndependenceTests
         spacecraft.AddPropagatedStates(spacecraft.InitialOrbitalParameters.ToStateVector(before));
         foreach (var epoch in new[] { before, window.StartDate.AddSeconds(1830.5), window.EndDate.AddHours(1.0) })
         {
-            spacecraft.Frame.AddStateOrientationToICRF(new StateOrientation(QuarterTurn, Vector3.Zero, epoch,
+            spacecraft.Frame.AddStateOrientationToIcrf(new StateOrientation(QuarterTurn, Vector3.Zero, epoch,
                 spacecraft.Frame));
         }
     }
@@ -359,8 +359,8 @@ public class RunIndependenceTests
 
         // Assert
         AssertSameStates(reference.PropagatedStates, spacecraft.PropagatedStates);
-        AssertSameAttitudes(reference.Frame.GetStateOrientationsToICRF().ToArray(),
-            spacecraft.Frame.GetStateOrientationsToICRF().ToArray());
+        AssertSameAttitudes(reference.Frame.GetStateOrientationsToIcrf().ToArray(),
+            spacecraft.Frame.GetStateOrientationsToIcrf().ToArray());
     }
 
     [Fact]
@@ -373,7 +373,7 @@ public class RunIndependenceTests
         reference.Propagate(window, Options("RK"));
         var spacecraft = NewSpacecraft(tle);
         new TlePropagator(window, spacecraft, Step).Propagate();
-        spacecraft.Frame.AddStateOrientationToICRF(new StateOrientation(QuarterTurn, Vector3.Zero,
+        spacecraft.Frame.AddStateOrientationToIcrf(new StateOrientation(QuarterTurn, Vector3.Zero,
             window.StartDate.AddSeconds(-600.0), spacecraft.Frame));
 
         // Act
@@ -381,8 +381,8 @@ public class RunIndependenceTests
 
         // Assert
         AssertSameStates(reference.PropagatedStates, spacecraft.PropagatedStates);
-        AssertSameAttitudes(reference.Frame.GetStateOrientationsToICRF().ToArray(),
-            spacecraft.Frame.GetStateOrientationsToICRF().ToArray());
+        AssertSameAttitudes(reference.Frame.GetStateOrientationsToIcrf().ToArray(),
+            spacecraft.Frame.GetStateOrientationsToIcrf().ToArray());
     }
 
     #endregion
@@ -399,11 +399,11 @@ public class RunIndependenceTests
         // Arrange: a numerical run with a burn, then the plan cleared (a TlePropagator refuses a plan, decision 40)
         var tle = Iss();
         var spacecraft = NewSpacecraft(tle);
-        AddPlan(spacecraft, tle.Epoch.ToTDB());
+        AddPlan(spacecraft, tle.Epoch.ToTdb());
         spacecraft.Propagate(new Window(tle.Epoch, tle.Epoch.AddHours(2.0)), Options("RK"));
         Assert.Single(spacecraft.ExecutedManeuvers);
         Assert.True(spacecraft.FuelTanks.Single().Quantity < 1000.0);
-        Assert.NotEmpty(spacecraft.Frame.GetStateOrientationsToICRF());
+        Assert.NotEmpty(spacecraft.Frame.GetStateOrientationsToIcrf());
         Assert.True(spacecraft.IsPropagated);
         spacecraft.SetManeuvers();
 
@@ -417,7 +417,7 @@ public class RunIndependenceTests
         Assert.Null(spacecraft.LastForceModel);
         Assert.Empty(spacecraft.ExecutedManeuvers);
         Assert.Equal(1000.0, spacecraft.FuelTanks.Single().Quantity);
-        Assert.Empty(spacecraft.Frame.GetStateOrientationsToICRF());
+        Assert.Empty(spacecraft.Frame.GetStateOrientationsToIcrf());
         Assert.Equal(1, spacecraft.PropagatedArcs.Count);
         AssertSameStates(StoredSamples(solution), spacecraft.PropagatedStates);
         Assert.Null(spacecraft.InterpolatedStatesWindow);
@@ -529,7 +529,7 @@ public class RunIndependenceTests
         // Arrange
         var tle = Iss();
         var spacecraft = NewSpacecraft(tle);
-        AddPlan(spacecraft, tle.Epoch.ToTDB());
+        AddPlan(spacecraft, tle.Epoch.ToTdb());
 
         // Act
         var exception = Assert.Throws<ArgumentException>(() =>
@@ -549,7 +549,7 @@ public class RunIndependenceTests
         var spacecraft = NewSpacecraft(tle);
         var propagator = new TlePropagator(new Window(tle.Epoch, tle.Epoch.AddHours(1.0)), spacecraft, Step);
         propagator.Propagate();
-        AddPlan(spacecraft, tle.Epoch.ToTDB());
+        AddPlan(spacecraft, tle.Epoch.ToTdb());
         var before = Take(spacecraft);
 
         // Act

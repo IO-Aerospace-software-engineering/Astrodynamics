@@ -60,9 +60,9 @@ loaded. Before 11.0.0 a TLE built before the kernels kept a GM of 0 for its life
 | `MeanEccentricity` | Mean eccentricity |
 | `MeanInclination` | Mean inclination (rad) |
 | `MeanAscendingNode` | Mean RAAN (rad) |
-| `BallisticCoefficient` | B* drag coefficient (1/earth radii) |
-| `FirstDerivationMeanMotion` | ṅ/2, the first-derivative field of line 1 (rev/day²), OMM's `MEAN_MOTION_DOT` |
-| `SecondDerivativeMeanMotion` | n̈/6, the second-derivative field of line 1 (rev/day³), OMM's `MEAN_MOTION_DDOT` |
+| `BStar` | B* drag coefficient (1/earth radii) |
+| `MeanMotionDot` | ṅ/2, the first-derivative field of line 1 (rev/day²), OMM's `MEAN_MOTION_DOT` |
+| `MeanMotionDDot` | n̈/6, the second-derivative field of line 1 (rev/day³), OMM's `MEAN_MOTION_DDOT` |
 | `NoradCatalogId` | NORAD catalog number, Alpha-5 decoded (`T5544` reads as 275544) |
 | `CosparId` | International designator of line 1 as written (`98067A`), null when blank |
 | `Classification` | Classification of line 1 (`Unclassified`, `Classified`, `Secret`) |
@@ -146,7 +146,7 @@ Earth that carries them:
 
 ```csharp
 // Inputs: window (Window), tle (TLE)
-var start = window.StartDate.ToTDB();
+var start = window.StartDate.ToTdb();
 var earth = new CelestialBody(PlanetsAndMoons.EARTH, Frame.ICRF, start,
     new GeopotentialModelParameters("Data/SolarSystem/EGM2008_to70_TideFree", 10), new Nrlmsise00Model(SpaceWeather.Nominal));
 var sgp4 = tle.ToStateVector(start);
@@ -207,7 +207,7 @@ var iss = Tle.Parse("ISS (ZARYA)\n" +
     "2 25544  51.6423 353.0312 0000493 320.8755  39.2360 15.49309423 25703");
 // The lines again, from the properties, without slicing them
 var again = Tle.Create(iss.ToMeanKeplerianElements(), iss.Name, iss.NoradCatalogId, iss.CosparId, iss.RevolutionNumberAtEpoch,
-    iss.Classification, iss.BallisticCoefficient, iss.FirstDerivationMeanMotion, iss.SecondDerivativeMeanMotion,
+    iss.Classification, iss.BStar, iss.MeanMotionDot, iss.MeanMotionDDot,
     iss.ElementSetNumber);
 ```
 

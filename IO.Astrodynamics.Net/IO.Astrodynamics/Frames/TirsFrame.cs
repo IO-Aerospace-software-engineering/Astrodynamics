@@ -8,7 +8,7 @@ namespace IO.Astrodynamics.Frames;
 /// Terrestrial Intermediate Reference System (TIRS).
 /// Combines CIRS with Earth rotation angle (ERA).
 /// The CIO-based model first forms <c>ICRF → TIRS</c>; this class returns the inverse,
-/// <c>TIRS → ICRF</c>, from <see cref="GetStateOrientationToICRF(Time)"/>.
+/// <c>TIRS → ICRF</c>, from <see cref="GetStateOrientationToIcrf(Time)"/>.
 /// </summary>
 /// <remarks>
 /// TIRS is the last frame of the IAU chain: polar motion, which leads to the ITRS, is not applied.
@@ -47,7 +47,7 @@ public sealed class TirsFrame : Frame
         _eop = eop ?? NullEop.Instance;
     }
 
-    public override StateOrientation GetStateOrientationToICRF(Time epoch)
+    public override StateOrientation GetStateOrientationToIcrf(Time epoch)
     {
         if (OrientationCache != null)
             return OrientationCache.GetOrientation(epoch);
@@ -69,7 +69,7 @@ public sealed class TirsFrame : Frame
         var utc = date.ConvertTo(TimeScale.UTC);
         double deltaUT1 = _eop.GetDeltaUT1(utc);
         // Two-part Julian date (J2000 + days elapsed), so that the ERA keeps the 0.1 µs resolution of the epoch.
-        double jdUt1High = TimeSystem.Time.JULIAN_J2000;
+        double jdUt1High = TimeSystem.Time.JulianDateJ2000;
         double jdUt1Low = utc.DaysFromJ2000() + deltaUT1 / 86400.0;
         double era = Iau2006Model.EarthRotationAngle(jdUt1High, jdUt1Low);
 
@@ -79,7 +79,7 @@ public sealed class TirsFrame : Frame
         var rotation = tirs2icrf.ToQuaternion();
 
         // Angular velocity of ICRF relative to TIRS, in TIRS axes: the convention of the SPICE frames, see
-        // GetStateOrientationToICRF. TIRS turns at the ERA rate about the CIP, its z-axis.
+        // GetStateOrientationToIcrf. TIRS turns at the ERA rate about the CIP, its z-axis.
         var angularVelocity = new Vector3(0.0, 0.0, -EarthRotationRate);
 
         return new StateOrientation(rotation, angularVelocity, date, this);

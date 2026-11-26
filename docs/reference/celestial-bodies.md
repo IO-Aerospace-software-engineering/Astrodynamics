@@ -69,7 +69,7 @@ identifiers they are objects of the kernels read by their identifier
 | `GetOrientation(Frame, Time)` | Get body orientation |
 | `GeosynchronousOrbit(double, double, Time)` | Compute geosynchronous orbit, of the sidereal rotation period of the body frame at the epoch |
 | `GeosynchronousOrbit(double, double, Time, TimeSpan)` | Compute geosynchronous orbit of a declared period |
-| `HelioSynchronousOrbit(double, double, Time)` | Compute helio-synchronous orbit |
+| `SunSynchronousOrbit(double, double, Time)` | Compute helio-synchronous orbit |
 | `FindDistanceWindows(...)` | Find the windows of the distance of a target seen from this item, the observer (`WindowSearches`) |
 | `FindCoordinateWindows(...)` | Find the windows of a coordinate of a target seen from this item, the observer (`WindowSearches`) |
 | `FindOccultationWindows(...)` | Find occultation/eclipse windows seen from this item, the observer (`WindowSearches`, [Occultations](occultations.md)) |

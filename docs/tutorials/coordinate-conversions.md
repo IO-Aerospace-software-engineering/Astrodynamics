@@ -28,7 +28,7 @@ var svICRF = new StateVector(
     new Vector3(0.0, 7700.0, 0.0),
     earth, epoch, Frame.ICRF);
 
-var svEcliptic = svICRF.ToFrame(Frame.ECLIPTIC_J2000);
+var svEcliptic = svICRF.ToFrame(Frame.ECLIPJ2000);
 
 Console.WriteLine($"ICRF position:     {svICRF.Position}");
 Console.WriteLine($"Ecliptic position: {svEcliptic.Position}");
@@ -71,7 +71,7 @@ These three frames follow the CIO-based IAU chain, IAU 2006 precession with IAU 
 ```csharp
 // Inputs: svICRF (StateVector), epoch (Time)
 // Get the CIRS-to-ICRF orientation at a given epoch
-var cirsToIcrf = Frame.CIRS.GetStateOrientationToICRF(epoch);
+var cirsToIcrf = Frame.CIRS.GetStateOrientationToIcrf(epoch);
 
 // Rotate a position from ICRF to CIRS (use the conjugate)
 var positionIcrf = svICRF.Position;

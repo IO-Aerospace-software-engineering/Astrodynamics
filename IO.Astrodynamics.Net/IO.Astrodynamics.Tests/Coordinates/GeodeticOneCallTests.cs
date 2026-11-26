@@ -324,8 +324,8 @@ public class GeodeticOneCallTests
     {
         var earth = new CelestialBody(PlanetsAndMoons.EARTH);
         var state = new StateVector(new Vector3(6800e3, 0.0, 0.0), new Vector3(0.0, 7600.0, 1000.0), earth, Epoch, Frames.Frame.ICRF);
-        StateVector ecliptic = state.ToFrame(Frames.Frame.ECLIPTIC_J2000);
-        var throughBase = (StateVector)((Astrodynamics.OrbitalParameters.OrbitalParameters)state).ToFrame(Frames.Frame.ECLIPTIC_J2000);
+        StateVector ecliptic = state.ToFrame(Frames.Frame.ECLIPJ2000);
+        var throughBase = (StateVector)((Astrodynamics.OrbitalParameters.OrbitalParameters)state).ToFrame(Frames.Frame.ECLIPJ2000);
         AssertSameBits(throughBase.Position.X, ecliptic.Position.X);
         AssertSameBits(throughBase.Position.Y, ecliptic.Position.Y);
         AssertSameBits(throughBase.Velocity.Z, ecliptic.Velocity.Z);

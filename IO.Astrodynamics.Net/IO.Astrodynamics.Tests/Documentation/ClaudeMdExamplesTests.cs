@@ -186,7 +186,7 @@ public class ClaudeMdExamplesTests
             case "net:27":
                 var (frame, epoch, deg2Rad) = ClaudeMdTestProcessExamples.Net27();
                 Assert.Same(IO.Astrodynamics.Frames.Frame.ICRF, frame);
-                LabelAssert.Equal(TimeSystem.Time.J2000TDB, epoch);
+                LabelAssert.Equal(TimeSystem.Time.J2000Tdb, epoch);
                 Assert.Equal(System.Math.PI / 180.0, deg2Rad);
                 break;
             case "root:2": ClaudeMdTestProcessExamples.Root02(); break;
@@ -268,7 +268,7 @@ public class ClaudeMdExamplesTests
         Assert.True(impulse.FuelBurned > 0.0);
         Assert.Equal(-impulse.FuelBurned, exported.ManDeltaMass);
         Assert.Equal(impulse.ThrustWindow!.Value.Length.TotalSeconds, exported.ManDurationSeconds);
-        Assert.Equal(impulse.ThrustWindow.Value.StartDate.ToUTC().DateTime, exported.ManEpochIgnition);
+        Assert.Equal(impulse.ThrustWindow.Value.StartDate.ToUtc().DateTime, exported.ManEpochIgnition);
 
         // The input of 608bcf6: unpropagated, no executed maneuver, nothing exported
         var unpropagated = SpacecraftWithEngine(-6734, out _, "2024-001A");

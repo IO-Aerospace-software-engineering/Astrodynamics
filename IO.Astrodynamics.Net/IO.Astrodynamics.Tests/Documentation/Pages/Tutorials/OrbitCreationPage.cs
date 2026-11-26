@@ -167,7 +167,7 @@ internal static class OrbitCreationPage
     {
         #region docs/tutorials/orbit-creation.md:8
         // Inputs: earth (CelestialBody), epoch (Time)
-        var ssoOrbit = earth.HelioSynchronousOrbit(
+        var ssoOrbit = earth.SunSynchronousOrbit(
             semiMajorAxis: 7000000.0,
             eccentricity: 0.001,
             descendingNodeEpoch: epoch);

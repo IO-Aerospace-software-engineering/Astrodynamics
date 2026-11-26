@@ -14,7 +14,7 @@ public class HorizontalTests
         double azimuth = 45.0;
         double elevation = 30.0;
         double range = 1000.0;
-        TimeSystem.Time epoch = TimeSystem.Time.J2000UTC;
+        TimeSystem.Time epoch = TimeSystem.Time.J2000Utc;
 
         // Act
         var horizontal = new Horizontal(azimuth, elevation, range, epoch);
@@ -33,7 +33,7 @@ public class HorizontalTests
         double azimuth = 45.0;
         double elevation = 30.0;
         double range = 1000.0;
-        TimeSystem.Time epoch = TimeSystem.Time.J2000UTC;
+        TimeSystem.Time epoch = TimeSystem.Time.J2000Utc;
 
         var horizontal1 = new Horizontal(azimuth, elevation, range, epoch);
         var horizontal2 = new Horizontal(azimuth, elevation, range, epoch);
@@ -49,12 +49,12 @@ public class HorizontalTests
         double azimuth1 = 45.0;
         double elevation1 = 30.0;
         double range1 = 1000.0;
-        TimeSystem.Time epoch1 = TimeSystem.Time.J2000UTC;
+        TimeSystem.Time epoch1 = TimeSystem.Time.J2000Utc;
 
         double azimuth2 = 50.0;
         double elevation2 = 35.0;
         double range2 = 1100.0;
-        TimeSystem.Time epoch2 = TimeSystem.Time.J2000UTC.AddHours(1);
+        TimeSystem.Time epoch2 = TimeSystem.Time.J2000Utc.AddHours(1);
 
         var horizontal1 = new Horizontal(azimuth1, elevation1, range1, epoch1);
         var horizontal2 = new Horizontal(azimuth2, elevation2, range2, epoch2);
@@ -70,7 +70,7 @@ public class HorizontalTests
         double azimuth = 45.0;
         double elevation = 30.0;
         double range = 1000.0;
-        TimeSystem.Time epoch = TimeSystem.Time.J2000UTC;
+        TimeSystem.Time epoch = TimeSystem.Time.J2000Utc;
 
         var horizontal1 = new Horizontal(azimuth, elevation, range, epoch);
         var horizontal2 = new Horizontal(azimuth, elevation, range, epoch);
@@ -90,7 +90,7 @@ public class HorizontalTests
         double azimuth = 45.0;
         double elevation = 30.0;
         double range = 1000.0;
-        TimeSystem.Time epoch = TimeSystem.Time.J2000UTC;
+        TimeSystem.Time epoch = TimeSystem.Time.J2000Utc;
 
         var horizontal = new Horizontal(azimuth, elevation, range, epoch);
 
@@ -109,7 +109,7 @@ public class HorizontalTests
         double azimuth = 45.0;
         double elevation = 30.0;
         double range = 1000.0;
-        TimeSystem.Time epoch = TimeSystem.Time.J2000UTC;
+        TimeSystem.Time epoch = TimeSystem.Time.J2000Utc;
 
         var horizontal = new Horizontal(azimuth, elevation, range, epoch);
 

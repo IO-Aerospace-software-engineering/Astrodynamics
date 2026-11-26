@@ -134,7 +134,7 @@ namespace IO.Astrodynamics.Body.Spacecraft
         /// <remarks>
         /// Typically 1.0 (absorbing surface) to 2.0 (reflecting surface); finite and not negative (#800). Default is 1.0.
         /// </remarks>
-        public double SolarRadiationCoeff { get; }
+        public double SolarRadiationCoefficient { get; }
 
         /// <summary>
         /// Gets the hard-body radius in meters used for conjunction assessment collision probability.
@@ -213,7 +213,7 @@ namespace IO.Astrodynamics.Body.Spacecraft
             SectionalArea = sectionalArea;
             DragCoefficient = dragCoefficient;
             CosparId = cosparId;
-            SolarRadiationCoeff = solarRadiationCoefficient;
+            SolarRadiationCoefficient = solarRadiationCoefficient;
             HardBodyRadius = hardBodyRadius;
 
             BodyFront = CheckedBodyAxis(bodyFront, Vector3.VectorY, nameof(bodyFront));
@@ -280,7 +280,7 @@ namespace IO.Astrodynamics.Body.Spacecraft
             string cosparId = null, double solarRadiationCoefficient = 1.0, double hardBodyRadius = 0.0,
             CelestialItem centerOfMotion = null)
             : base(naifId, name, CheckedPhysicalProperties(mass, maxOperatingMass, sectionalArea, dragCoefficient, solarRadiationCoefficient, hardBodyRadius),
-                ReadKernelInitialState(naifId, name, epoch ?? TimeSystem.Time.J2000TDB, centerOfMotion, clock))
+                ReadKernelInitialState(naifId, name, epoch ?? TimeSystem.Time.J2000Tdb, centerOfMotion, clock))
         {
             _isFromKernel = true;
             MaxOperatingMass = maxOperatingMass;
@@ -289,7 +289,7 @@ namespace IO.Astrodynamics.Body.Spacecraft
             SectionalArea = sectionalArea;
             DragCoefficient = dragCoefficient;
             CosparId = cosparId;
-            SolarRadiationCoeff = solarRadiationCoefficient;
+            SolarRadiationCoefficient = solarRadiationCoefficient;
             HardBodyRadius = hardBodyRadius;
             BodyFront = Vector3.VectorY;
             BodyRight = Vector3.VectorX;
@@ -914,9 +914,9 @@ namespace IO.Astrodynamics.Body.Spacecraft
         /// 0), which left out the engine of a tank of NaN quantity (300 s in that case), a quantity the tanks refuse since
         /// #800. NaN (0 / 0) for a spacecraft without an engine.
         /// </summary>
-        public double GetTotalISP()
+        public double GetTotalIsp()
         {
-            return (Engines.Sum(x => x.Thrust) / Constants.g0) / GetTotalFuelFlow();
+            return (Engines.Sum(x => x.Thrust) / Constants.StandardGravity) / GetTotalFuelFlow();
         }
 
         /// <summary>
@@ -1133,7 +1133,7 @@ namespace IO.Astrodynamics.Body.Spacecraft
         /// <param name="outputFile">The CK to write.</param>
         /// <exception cref="InvalidOperationException">The spacecraft is kernel-backed, or its attitude record is empty: never
         /// propagated numerically, or sampled by a <see cref="Propagator.TlePropagator"/>, which records no attitude; the
-        /// message names <see cref="SpacecraftFrame.AddStateOrientationToICRF"/>, which gives it one (#546, decision 81 of
+        /// message names <see cref="SpacecraftFrame.AddStateOrientationToIcrf"/>, which gives it one (#546, decision 81 of
         /// #668, decided by S. Guillet, 2026-11-23).</exception>
         public void WriteOrientation(FileInfo outputFile)
         {
@@ -1171,7 +1171,7 @@ namespace IO.Astrodynamics.Body.Spacecraft
         /// </para>
         /// <para>
         /// A spacecraft sampled by a <see cref="Propagator.TlePropagator"/> records no attitude: it is written once given
-        /// attitudes by <see cref="SpacecraftFrame.AddStateOrientationToICRF"/>, after the run, whose re-arm drops those
+        /// attitudes by <see cref="SpacecraftFrame.AddStateOrientationToIcrf"/>, after the run, whose re-arm drops those
         /// added before it (decision 81 of #668: refused by content, not by provenance). The centre of the SPK is not
         /// checked (decision 79: the managed SPK writer writes any centre, #655). The call is not made during a run on the
         /// spacecraft (decisions 43 and 96 of #668: one run at a time per spacecraft).
@@ -1618,14 +1618,14 @@ namespace IO.Astrodynamics.Body.Spacecraft
         private InvalidOperationException OutsidePropagatedStates(in Time epoch, double margin)
         {
             return new InvalidOperationException(
-                $"The epoch {epoch.ToTDB()} lies outside the propagated states of {Name}, {DescribeStoredWindows()}" +
+                $"The epoch {epoch.ToTdb()} lies outside the propagated states of {Name}, {DescribeStoredWindows()}" +
                 (margin > 0.0 ? $" widened by the light time, {margin:R} s" : "") +
                 ": they would be extrapolated. Read the spacecraft within its propagation window, or propagate it over the epochs read.");
         }
 
         // The windows of the stored states, as [start, end] in TDB, separated by commas
         private string DescribeStoredWindows() =>
-            string.Join(", ", _propagatedStates.Windows.Select(w => $"[{w.StartDate.ToTDB()}, {w.EndDate.ToTDB()}]"));
+            string.Join(", ", _propagatedStates.Windows.Select(w => $"[{w.StartDate.ToTdb()}, {w.EndDate.ToTdb()}]"));
 
         // The initial state of a kernel-backed spacecraft relative to its centre of motion, the Earth by default (#620); the
         // identifier and the clock checked before the read (#676)
@@ -1657,7 +1657,7 @@ namespace IO.Astrodynamics.Body.Spacecraft
             }
 
             var message =
-                $"The {description} [{window.StartDate.ToTDB()}, {window.EndDate.ToTDB()}] leaves the propagated states of {Name}, {DescribeStoredWindows()}: they would be extrapolated.";
+                $"The {description} [{window.StartDate.ToTdb()}, {window.EndDate.ToTdb()}] leaves the propagated states of {Name}, {DescribeStoredWindows()}: they would be extrapolated.";
             throw new InvalidOperationException(message);
         }
 
@@ -1855,7 +1855,7 @@ namespace IO.Astrodynamics.Body.Spacecraft
                 keplerianElements: keplerianElements,
                 mass: includeSpacecraftParameters ? GetTotalMass() + laterFuel : null,
                 solarRadiationPressureArea: includeSpacecraftParameters ? SectionalArea : null,
-                solarRadiationCoefficient: includeSpacecraftParameters ? SolarRadiationCoeff : null,
+                solarRadiationCoefficient: includeSpacecraftParameters ? SolarRadiationCoefficient : null,
                 dragArea: includeSpacecraftParameters ? SectionalArea : null,
                 dragCoefficient: includeSpacecraftParameters ? DragCoefficient : null,
                 covariance: covariance,
@@ -1895,7 +1895,7 @@ namespace IO.Astrodynamics.Body.Spacecraft
 
         /// <summary>
         /// Drops the stored states and the attitude record, whatever filled them (a propagation, <see cref="AddPropagatedStates"/>,
-        /// <see cref="SpacecraftFrame.AddStateOrientationToICRF"/>), and marks the spacecraft not propagated: the re-arm of
+        /// <see cref="SpacecraftFrame.AddStateOrientationToIcrf"/>), and marks the spacecraft not propagated: the re-arm of
         /// every run (decision 38 of #668), and a run stopped after the re-arm (C2 of lot L4 of #668), so that a TLE
         /// spacecraft reads SGP4 again and any other its initial orbit.
         /// </summary>

@@ -51,14 +51,14 @@ public enum CcsdsReferenceFrame
 
     /// <summary>
     /// Ecliptic coordinate system at epoch J2000.
-    /// Maps to Frame.ECLIPTIC_J2000.
+    /// Maps to Frame.ECLIPJ2000.
     /// </summary>
     [Description("ECLIPJ2000")]
     ECLIPJ2000,
 
     /// <summary>
     /// Ecliptic coordinate system at epoch B1950.
-    /// Maps to Frame.ECLIPTIC_B1950.
+    /// Maps to Frame.ECLIPB1950.
     /// </summary>
     [Description("ECLIPB1950")]
     ECLIPB1950,

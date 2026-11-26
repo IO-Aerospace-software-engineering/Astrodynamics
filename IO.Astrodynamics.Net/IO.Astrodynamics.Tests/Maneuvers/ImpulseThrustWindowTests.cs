@@ -187,8 +187,8 @@ public class ImpulseThrustWindowTests
         // The impulse's attitude from the opening of its thrust window, its front along the delta-V: 1 ms after it the
         // record holds it, 1 ms before it the identity of no attitude
         var expectedFront = new Vector3(0.0, 1.0, 0.0);
-        var after = spacecraft.Frame.GetStateOrientationToICRF(thrust.StartDate.AddSeconds(1.0e-3));
-        var before = spacecraft.Frame.GetStateOrientationToICRF(thrust.StartDate.AddSeconds(-1.0e-3));
+        var after = spacecraft.Frame.GetStateOrientationToIcrf(thrust.StartDate.AddSeconds(1.0e-3));
+        var before = spacecraft.Frame.GetStateOrientationToIcrf(thrust.StartDate.AddSeconds(-1.0e-3));
         double frontAfter = Spacecraft.Front.Rotate(after.Rotation).Angle(expectedFront);
         double frontBefore = Spacecraft.Front.Rotate(before.Rotation).Angle(Spacecraft.Front);
         Assert.True(frontAfter < 1.0e-9, $"{frontAfter:E3} rad");

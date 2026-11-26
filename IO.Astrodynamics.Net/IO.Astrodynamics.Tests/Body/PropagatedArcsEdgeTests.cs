@@ -800,7 +800,7 @@ public class PropagatedArcsEdgeTests
 
         // So does a state at the same instant labelled in another time frame: one instant, one state (#512)
         var utcReplacement = new StateVector(outputs[6].Position + new Vector3(1.0, 0.0, 0.0), outputs[6].Velocity, earth,
-            outputs[6].Epoch.ToUTC(), Frame.ICRF);
+            outputs[6].Epoch.ToUtc(), Frame.ICRF);
         added.AddPropagatedStates(utcReplacement);
         Assert.Equal(outputs.Length, added.PropagatedStates.Length);
         Assert.Same(utcReplacement, added.PropagatedStates[6]);
@@ -985,7 +985,7 @@ public class PropagatedArcsEdgeTests
         {
             tc = probe.Solution.Segments[1].BaseEpoch;
             before = probe.StateAt(tc.AddSeconds(-30.0)).Position.Inverse().Normalize();
-            var q = probe.Spacecraft.Frame.GetStateOrientationToICRF(tc.AddSeconds(30.0)).Rotation;
+            var q = probe.Spacecraft.Frame.GetStateOrientationToIcrf(tc.AddSeconds(30.0)).Rotation;
             after = probe.StateAt(tc.AddSeconds(30.0)).Position.Inverse().Normalize().Rotate(q.Conjugate());
         }
 

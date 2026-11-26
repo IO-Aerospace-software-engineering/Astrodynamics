@@ -110,7 +110,7 @@ public class CentralBodyPropagator : PropagatorBase
         AddRadiationForces(forces, centralBody, spacecraft, options);
 
         var integrator = options.Integrator.CreateIntegrator();
-        var tdbStart = window.StartDate.ToTDB();
+        var tdbStart = window.StartDate.ToTdb();
         var (covariance, absence) = ResolveCovariance(spacecraft, tdbStart, integrator, options.CovariancePropagation);
         integrator.ClaimForForces();
 
@@ -259,9 +259,9 @@ public class CentralBodyPropagator : PropagatorBase
                           "used Velocity-Verlet.");
         }
 
-        if (initial.Epoch.ToTDB() != tdbStart)
+        if (initial.Epoch.ToTdb() != tdbStart)
         {
-            return (null, $"the covariance of the initial orbital parameters is given at {initial.Epoch.ToTDB()}, and the " +
+            return (null, $"the covariance of the initial orbital parameters is given at {initial.Epoch.ToTdb()}, and the " +
                           $"propagation starts at {tdbStart}: the propagator does not carry a covariance from another " +
                           "epoch.");
         }
@@ -433,7 +433,7 @@ public class CentralBodyPropagator : PropagatorBase
     /// </remarks>
     private static StateVector StartState(OrbitalParameters.OrbitalParameters orbitalParameters, in Time start)
     {
-        if (orbitalParameters is StateVector state && state.Epoch.ToTDB() == start.ToTDB())
+        if (orbitalParameters is StateVector state && state.Epoch.ToTdb() == start.ToTdb())
         {
             return new StateVector(state.Position, state.Velocity, state.Observer, start, state.Frame);
         }

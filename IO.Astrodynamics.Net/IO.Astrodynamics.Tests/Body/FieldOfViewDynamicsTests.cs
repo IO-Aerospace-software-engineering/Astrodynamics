@@ -41,7 +41,7 @@ namespace IO.Astrodynamics.Tests.Body;
 /// </para>
 /// <para>
 /// The unpropagated TLE spacecraft reads SGP4 and records no attitude: the test gives it the identity of ICRF by hand
-/// (<c>AddStateOrientationToICRF</c>), without which its search throws (#682), and writes its SPK, the SGP4 states every
+/// (<c>AddStateOrientationToIcrf</c>), without which its search throws (#682), and writes its SPK, the SGP4 states every
 /// 10 s, and its CK, that identity, with the raw writers (a read no longer adds to the attitude record, #523). The TLE
 /// spacecraft propagated by <c>Spacecraft.Propagate</c> (#675) writes its kernels as any propagated spacecraft does.
 /// </para>
@@ -73,7 +73,7 @@ public class FieldOfViewDynamicsTests
         TestKernels.EnsureSolarSystem();
     }
 
-    private static readonly TimeSystem.Time Start = TimeSystem.Time.CreateUTC(676555130.80).ToTDB();
+    private static readonly TimeSystem.Time Start = TimeSystem.Time.CreateUtc(676555130.80).ToTdb();
 
     private static void AddInstruments(Spacecraft spacecraft)
     {
@@ -154,7 +154,7 @@ public class FieldOfViewDynamicsTests
             }
             case "ECLIPJ2000":
             {
-                var (spacecraft, _) = Create(-5175, leo.ToFrame(Frames.Frame.ECLIPTIC_J2000).ToStateVector());
+                var (spacecraft, _) = Create(-5175, leo.ToFrame(Frames.Frame.ECLIPJ2000).ToStateVector());
                 spacecraft.Propagate(propagation, new PropagationOptions { Integrator = new VVIntegratorOptions { Step = oneSecond }, OutputStep = oneSecond, ThirdBodies = bodies });
                 return (spacecraft, window);
             }
@@ -178,9 +178,9 @@ public class FieldOfViewDynamicsTests
                     "2 25544  51.6423 353.0312 0000493 320.8755  39.2360 15.49309423 25703");
                 var spacecraft = new Spacecraft(-5177, "FOV5177", 1000.0, tle, 3000.0, new Clock("FOV5177_CLK", 65536));
                 AddInstruments(spacecraft);
-                var tleStart = tle.Epoch.ToTDB();
+                var tleStart = tle.Epoch.ToTdb();
                 // Its attitude, given by hand as the CK the test writes holds it: without one the search throws (#682)
-                spacecraft.Frame.AddStateOrientationToICRF(new StateOrientation(Quaternion.Identity, Vector3.Zero, tleStart, spacecraft.Frame));
+                spacecraft.Frame.AddStateOrientationToIcrf(new StateOrientation(Quaternion.Identity, Vector3.Zero, tleStart, spacecraft.Frame));
                 return (spacecraft, new Window(tleStart.AddSeconds(1.0), tleStart.AddSeconds(2999.0)));
             }
             case "TLEPropagated":
@@ -191,7 +191,7 @@ public class FieldOfViewDynamicsTests
                     "2 25544  51.6423 353.0312 0000493 320.8755  39.2360 15.49309423 25703");
                 var spacecraft = new Spacecraft(-5179, "FOV5179", 1000.0, tle, 3000.0, new Clock("FOV5179_CLK", 65536));
                 AddInstruments(spacecraft);
-                var tleStart = tle.Epoch.ToTDB();
+                var tleStart = tle.Epoch.ToTdb();
                 spacecraft.Propagate(new Window(tleStart, tleStart.AddSeconds(3000.0)), new PropagationOptions { Integrator = new RK78IntegratorOptions { AbsoluteTolerance = 1e-12, RelativeTolerance = 1e-12 }, OutputStep = oneSecond, ThirdBodies = new CelestialItem[] { moon, sun }, CovariancePropagation = CovariancePropagationOptions.None });
                 return (spacecraft, new Window(tleStart.AddSeconds(1.0), tleStart.AddSeconds(2999.0)));
             }
@@ -209,7 +209,7 @@ public class FieldOfViewDynamicsTests
     private static readonly Row[] ConstantAttitude =
     [
         new(789, "EARTH", ShapeType.Ellipsoid, Aberration.LT, 1), new(790, "EARTH", ShapeType.Point, Aberration.LT, 1),
-        new(791, "EARTH", ShapeType.Ellipsoid, Aberration.LTS, 1), new(789, "DSS-13", ShapeType.Point, Aberration.LT, 1),
+        new(791, "EARTH", ShapeType.Ellipsoid, Aberration.LtS, 1), new(789, "DSS-13", ShapeType.Point, Aberration.LT, 1),
         new(792, "DSS-13", ShapeType.Point, Aberration.LT, 2), new(792, "EARTH", ShapeType.Ellipsoid, Aberration.LT, 2)
     ];
 
@@ -221,26 +221,26 @@ public class FieldOfViewDynamicsTests
         ["ImpulseThenTriad"] =
         [
             new(789, "EARTH", ShapeType.Ellipsoid, Aberration.LT, 2), new(790, "EARTH", ShapeType.Point, Aberration.LT, 2),
-            new(791, "EARTH", ShapeType.Ellipsoid, Aberration.LTS, 2), new(792, "DSS-13", ShapeType.Point, Aberration.LT, 3),
-            new(792, "SUN", ShapeType.Point, Aberration.LTS, 2), new(792, "SUN", ShapeType.Ellipsoid, Aberration.LTS, 2)
+            new(791, "EARTH", ShapeType.Ellipsoid, Aberration.LtS, 2), new(792, "DSS-13", ShapeType.Point, Aberration.LT, 3),
+            new(792, "SUN", ShapeType.Point, Aberration.LtS, 2), new(792, "SUN", ShapeType.Ellipsoid, Aberration.LtS, 2)
         ],
         // The nadir attitude: the Earth stays in place in a nadir frame, no edge
         ["Nadir"] =
         [
-            new(792, "SUN", ShapeType.Point, Aberration.LTS, 1), new(792, "SUN", ShapeType.Ellipsoid, Aberration.LTS, 1),
+            new(792, "SUN", ShapeType.Point, Aberration.LtS, 1), new(792, "SUN", ShapeType.Ellipsoid, Aberration.LtS, 1),
             new(792, "MOON", ShapeType.Point, Aberration.LT, 1)
         ],
         ["TLEPropagated"] =
         [
             new(789, "EARTH", ShapeType.Ellipsoid, Aberration.LT, 1), new(790, "EARTH", ShapeType.Point, Aberration.LT, 1),
-            new(791, "EARTH", ShapeType.Ellipsoid, Aberration.LTS, 1), new(789, "DSS-13", ShapeType.Point, Aberration.LT, 1),
-            new(790, "DSS-13", ShapeType.Point, Aberration.LT, 1), new(791, "DSS-13", ShapeType.Point, Aberration.LTS, 1)
+            new(791, "EARTH", ShapeType.Ellipsoid, Aberration.LtS, 1), new(789, "DSS-13", ShapeType.Point, Aberration.LT, 1),
+            new(790, "DSS-13", ShapeType.Point, Aberration.LT, 1), new(791, "DSS-13", ShapeType.Point, Aberration.LtS, 1)
         ],
         ["TLE"] =
         [
             new(789, "EARTH", ShapeType.Ellipsoid, Aberration.LT, 1), new(790, "EARTH", ShapeType.Point, Aberration.LT, 1),
-            new(791, "EARTH", ShapeType.Ellipsoid, Aberration.LTS, 1), new(789, "DSS-13", ShapeType.Point, Aberration.LT, 1),
-            new(790, "DSS-13", ShapeType.Point, Aberration.LT, 1), new(791, "DSS-13", ShapeType.Point, Aberration.LTS, 1)
+            new(791, "EARTH", ShapeType.Ellipsoid, Aberration.LtS, 1), new(789, "DSS-13", ShapeType.Point, Aberration.LT, 1),
+            new(790, "DSS-13", ShapeType.Point, Aberration.LT, 1), new(791, "DSS-13", ShapeType.Point, Aberration.LtS, 1)
         ]
     };
 

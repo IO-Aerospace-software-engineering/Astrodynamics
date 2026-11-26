@@ -133,7 +133,7 @@ internal static class PropagatorsPage
             RunCount = 100,
             Seed = 42,
             TemplateSpacecraft = spacecraft,
-            Window = new Window(Time.J2000TDB, Time.J2000TDB.AddHours(2)),
+            Window = new Window(Time.J2000Tdb, Time.J2000Tdb.AddHours(2)),
             Propagation = new PropagationOptions
             {
                 Integrator = new RK78IntegratorOptions

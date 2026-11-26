@@ -24,7 +24,7 @@ public class StandardAtmosphereDerivativeTests
         model.GetDensityAltitudeDerivative(altitude);
 
     private static double Density(IGeodeticDensityModel model, double altitude) =>
-        model.GetDensity(altitude, 0.0, 0.0, TimeSystem.Time.J2000TDB);
+        model.GetDensity(altitude, 0.0, 0.0, TimeSystem.Time.J2000Tdb);
 
     [Theory]
     [InlineData("Earth", -3000.0)] // the first layer below sea level

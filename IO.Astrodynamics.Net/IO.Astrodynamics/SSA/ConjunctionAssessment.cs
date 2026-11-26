@@ -800,7 +800,7 @@ public static class ConjunctionAssessment
             secondarySource,
             screeningWindow,
             options.SampleStep,
-            options.MaximumEventSearchStep,
+            options.MaxEventSearchStep,
             options.BisectionToleranceSeconds,
             readRangeRateOverWindow: options.ReadRangeRateOverWindow);
 
@@ -834,7 +834,7 @@ public static class ConjunctionAssessment
             secondarySource,
             screeningWindow,
             options.SampleStep,
-            options.MaximumEventSearchStep,
+            options.MaxEventSearchStep,
             options.BisectionToleranceSeconds,
             readRangeRateOverWindow: options.ReadRangeRateOverWindow);
 
@@ -1038,7 +1038,7 @@ public static class ConjunctionAssessment
     /// The range rates of the states read by the dense search on this thread (each epoch once per search), counted for the
     /// tests of decision 54 of #457: without <see cref="ConjunctionAnalysisOptions.ReadRangeRateOverWindow"/>, the public
     /// <c>Analyze</c> and <c>AnalyzeAll</c> read no more than the seeds need, whatever
-    /// <see cref="ConjunctionAnalysisOptions.MaximumEventSearchStep"/>. One increment per read, no result depends on it.
+    /// <see cref="ConjunctionAnalysisOptions.MaxEventSearchStep"/>. One increment per read, no result depends on it.
     /// </summary>
     [ThreadStatic] internal static long DenseRangeRateReads;
 
@@ -1068,7 +1068,7 @@ public static class ConjunctionAssessment
     /// <param name="window">The window searched.</param>
     /// <param name="toleranceSeconds">The tolerance of the bisection of the range rate, in seconds.</param>
     /// <param name="maximumReadSpacing">The largest spacing of the reads of the range rate over the window, the
-    /// <see cref="ConjunctionAnalysisOptions.MaximumEventSearchStep"/> of the sampled search (60 s by default), with
+    /// <see cref="ConjunctionAnalysisOptions.MaxEventSearchStep"/> of the sampled search (60 s by default), with
     /// <see cref="ConjunctionAnalysisOptions.ReadRangeRateOverWindow"/>; null without it: the seeds alone.</param>
     private static List<Time> FindDenseCloseApproaches(
         StateSamplingSource protectedSource,
@@ -3338,7 +3338,7 @@ public static class ConjunctionAssessment
     private static Spacecraft CloneSpacecraft(Spacecraft template, StateVector initialState)
     {
         return CloneSpacecraft(template, initialState, template.DryOperatingMass, template.DragCoefficient,
-            template.SolarRadiationCoeff);
+            template.SolarRadiationCoefficient);
     }
 
     // The trial spacecraft of an avoidance option: the template with the given mass, without tanks or engines, and the
@@ -3370,7 +3370,7 @@ public static class ConjunctionAssessment
             return 0.0;
         }
 
-        double isp = spacecraft.GetTotalISP();
+        double isp = spacecraft.GetTotalIsp();
         if (isp <= 0.0)
         {
             return 0.0;

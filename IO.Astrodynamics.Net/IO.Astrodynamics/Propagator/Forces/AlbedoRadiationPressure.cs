@@ -45,7 +45,7 @@ public class AlbedoRadiationPressure : ForceBase
                 nameof(reflectingBody));
 
         _albedo = reflectingBody.Albedo;
-        _luminosityTerm = Constants.SolarMeanRadiativeLuminosity / (4.0 * System.Math.PI * Constants.C);
+        _luminosityTerm = Constants.SolarMeanRadiativeLuminosity / (4.0 * System.Math.PI * Constants.SpeedOfLight);
         _bodyRadius = reflectingBody.EquatorialRadius;
     }
 

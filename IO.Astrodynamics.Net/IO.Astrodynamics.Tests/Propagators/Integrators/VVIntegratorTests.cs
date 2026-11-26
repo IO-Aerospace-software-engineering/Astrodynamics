@@ -33,7 +33,7 @@ public class VVIntegratorTests
     public void GlobalErrorIsSecondOrderInTheStep()
     {
         var earth = new CelestialBody(PlanetsAndMoons.EARTH);
-        var epoch = TimeSystem.Time.J2000TDB;
+        var epoch = TimeSystem.Time.J2000Tdb;
         var initialState = new StateVector(
             new Vector3(5442162.5926801835, -4068949.8468206248, -13456.851447751518),
             new Vector3(2858.1975428173836, 3809.7859312745794, 6002.1266931226886),

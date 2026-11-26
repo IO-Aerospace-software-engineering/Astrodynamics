@@ -147,7 +147,7 @@ public class OpmStateVector
 
         // Convert m to km, m/s to km/s
         return new OpmStateVector(
-            stateVector.Epoch.ToUTC().DateTime,
+            stateVector.Epoch.ToUtc().DateTime,
             stateVector.Position.X / 1000.0,
             stateVector.Position.Y / 1000.0,
             stateVector.Position.Z / 1000.0,

@@ -21,10 +21,10 @@ public class CirsFrameTests
     {
         var cirs = new CirsFrame();
         var gcrf = new GcrfFrame();
-        var epoch = TimeSystem_Time.J2000TDB;
+        var epoch = TimeSystem_Time.J2000Tdb;
 
-        var cirsOrientation = cirs.GetStateOrientationToICRF(epoch);
-        var gcrfOrientation = gcrf.GetStateOrientationToICRF(epoch);
+        var cirsOrientation = cirs.GetStateOrientationToIcrf(epoch);
+        var gcrfOrientation = gcrf.GetStateOrientationToIcrf(epoch);
 
         // At J2000, CIRS differs from GCRF only by the J2000 nutation
         // (precession is zero). The nutation at J2000 is ~14" in longitude,
@@ -43,7 +43,7 @@ public class CirsFrameTests
         // 2024-01-01 12:00:00 TDB
         var epoch = new TimeSystem_Time(2024, 1, 1, 12, 0, 0, TimeScale.TDB);
 
-        var orientation = cirs.GetStateOrientationToICRF(epoch);
+        var orientation = cirs.GetStateOrientationToIcrf(epoch);
 
         // At 2024 (~24 years from J2000), precession is ~490" ≈ 2.4e-3 rad
         // The CIP X coordinate should be ~2.3e-3 rad
@@ -59,7 +59,7 @@ public class CirsFrameTests
         var cirs = new CirsFrame();
         var epoch = new TimeSystem_Time(2024, 1, 1, 12, 0, 0, TimeScale.TDB);
 
-        var orientation = cirs.GetStateOrientationToICRF(epoch);
+        var orientation = cirs.GetStateOrientationToIcrf(epoch);
         double omegaMag = orientation.AngularVelocity.Magnitude();
 
         // Precession rate: ~50"/year = 50 * 4.848e-6 / (365.25 * 86400) ≈ 7.7e-12 rad/s
@@ -74,7 +74,7 @@ public class CirsFrameTests
         var cirs = new CirsFrame();
         var epoch = new TimeSystem_Time(2010, 6, 15, 12, 0, 0, TimeScale.TDB);
 
-        var orientation = cirs.GetStateOrientationToICRF(epoch);
+        var orientation = cirs.GetStateOrientationToIcrf(epoch);
         var rotMatrix = Matrix.FromQuaternion(orientation.Rotation);
         var product = rotMatrix.Transpose().Multiply(rotMatrix);
 
@@ -99,7 +99,7 @@ public class CirsFrameTests
     public void CirsReferenceFrameIsSelf()
     {
         var cirs = new CirsFrame();
-        var orientation = cirs.GetStateOrientationToICRF(TimeSystem_Time.J2000TDB);
+        var orientation = cirs.GetStateOrientationToIcrf(TimeSystem_Time.J2000Tdb);
 
         Assert.Same(cirs, orientation.ReferenceFrame);
     }
@@ -110,8 +110,8 @@ public class CirsFrameTests
         // The angular velocity follows the SPICE convention of the frames, not the one of StateOrientation.AtEpoch.
         var cirs = new CirsFrame();
         var epoch = new TimeSystem_Time(2024, 1, 1, 12, 0, 0, TimeScale.TDB);
-        var propagated = TestHelpers.RotateWithFrameAngularVelocity(cirs.GetStateOrientationToICRF(epoch), 1.0);
-        var recomputed = cirs.GetStateOrientationToICRF(epoch.AddSeconds(1));
+        var propagated = TestHelpers.RotateWithFrameAngularVelocity(cirs.GetStateOrientationToIcrf(epoch), 1.0);
+        var recomputed = cirs.GetStateOrientationToIcrf(epoch.AddSeconds(1));
 
         double angle = QuaternionAngleDifference(propagated, recomputed.Rotation);
 

@@ -43,7 +43,7 @@ public class CrossingEncounterCase : IDisposable
         ProtectedId = id1;
         SecondaryId = id2;
         TestKernels.EnsureSolarSystem();
-        T0 = new TimeSystem.Time(2026, 1, 20, 6, 0, 0, TimeScale.UTC).ToTDB();
+        T0 = new TimeSystem.Time(2026, 1, 20, 6, 0, 0, TimeScale.UTC).ToTdb();
         var earth = new CelestialBody(PlanetsAndMoons.EARTH, Frames.Frame.ICRF, T0);
         var (s1, s2) = states(earth, T0);
 

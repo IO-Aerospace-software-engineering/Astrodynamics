@@ -140,7 +140,7 @@ public class PropagationCaseTests
         Assert.Equal(800.0, propagationCase.Spacecraft.MaxOperatingMass);
         Assert.Equal(4.0, propagationCase.Spacecraft.SectionalArea);
         Assert.Equal(2.1, propagationCase.Spacecraft.DragCoefficient);
-        Assert.Equal(1.3, propagationCase.Spacecraft.SolarRadiationCoeff);
+        Assert.Equal(1.3, propagationCase.Spacecraft.SolarRadiationCoefficient);
         Assert.True(propagationCase.Drag);
         Assert.True(propagationCase.SolarRadiationPressure);
         Assert.Equal(TimeSpan.FromSeconds(30.0), propagationCase.StepSize);
@@ -551,7 +551,7 @@ public class PropagationCaseTests
         Assert.Equal(1000.0, propagationCase.Spacecraft.MaxOperatingMass);
         Assert.Equal(1.0, propagationCase.Spacecraft.SectionalArea);
         Assert.Equal(2.2, propagationCase.Spacecraft.DragCoefficient);
-        Assert.Equal(1.0, propagationCase.Spacecraft.SolarRadiationCoeff);
+        Assert.Equal(1.0, propagationCase.Spacecraft.SolarRadiationCoefficient);
         Assert.False(propagationCase.Drag);
         Assert.False(propagationCase.SolarRadiationPressure);
     }

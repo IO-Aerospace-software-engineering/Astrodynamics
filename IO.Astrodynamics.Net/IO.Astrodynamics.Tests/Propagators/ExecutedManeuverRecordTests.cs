@@ -61,7 +61,7 @@ public class ExecutedManeuverRecordTests
         switch (frame)
         {
             case "ECLIPJ2000":
-                return icrf.ToStateVector().ToFrame(Frames.Frame.ECLIPTIC_J2000);
+                return icrf.ToStateVector().ToFrame(Frames.Frame.ECLIPJ2000);
             case "SSB":
                 var sv = icrf.ToStateVector();
                 var fromSsb = earth.GetGeometricStateRelativeTo(S, Barycenters.SOLAR_SYSTEM_BARYCENTER);
@@ -148,7 +148,7 @@ public class ExecutedManeuverRecordTests
             {
                 impulses++;
                 Assert.Equal(impulse.DeltaV, record.DeltaV);
-                Assert.Equal(Tsiolkovsky.DeltaM(c.Engine.ISP, record.MassBefore, record.DeltaV.Magnitude()), record.FuelBurned);
+                Assert.Equal(Tsiolkovsky.DeltaM(c.Engine.Isp, record.MassBefore, record.DeltaV.Magnitude()), record.FuelBurned);
                 Assert.True(record.FuelBurned > 0.0);
                 Assert.Equal(record.MassBefore - record.FuelBurned, record.MassAfter, 9);
 

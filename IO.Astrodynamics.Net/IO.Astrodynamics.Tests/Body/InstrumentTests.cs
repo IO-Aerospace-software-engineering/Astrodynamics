@@ -80,7 +80,7 @@ namespace IO.Astrodynamics.Tests.Body
         [InlineData(ShapeType.Ellipsoid)]
         public void FindWindowInFieldOfView(ShapeType shape)
         {
-            TimeSystem.Time start = TimeSystem.Time.CreateUTC(676555130.80).ToTDB();
+            TimeSystem.Time start = TimeSystem.Time.CreateUtc(676555130.80).ToTdb();
             TimeSystem.Time end = start.AddSeconds(6448.0);
 
             //Configure scenario
@@ -190,7 +190,7 @@ namespace IO.Astrodynamics.Tests.Body
         [Fact]
         public void IsInFieldOfView()
         {
-            TimeSystem.Time start = TimeSystem.Time.J2000TDB;
+            TimeSystem.Time start = TimeSystem.Time.J2000Tdb;
 
             //Define parking orbit
             StateVector parkingOrbit = new StateVector(
@@ -209,16 +209,16 @@ namespace IO.Astrodynamics.Tests.Body
 
             // Never propagated, it has no attitude to test with (#682); with the identity given by hand, the target 10 km
             // below it is in the field
-            Assert.Throws<InvalidOperationException>(() => spacecraft.Instruments.First().IsInFOV(start, target, Aberration.None));
-            spacecraft.Frame.AddStateOrientationToICRF(new StateOrientation(Quaternion.Identity, Vector3.Zero, start, spacecraft.Frame));
-            var res = spacecraft.Instruments.First().IsInFOV(start, target, Aberration.None);
+            Assert.Throws<InvalidOperationException>(() => spacecraft.Instruments.First().IsInFov(start, target, Aberration.None));
+            spacecraft.Frame.AddStateOrientationToIcrf(new StateOrientation(Quaternion.Identity, Vector3.Zero, start, spacecraft.Frame));
+            var res = spacecraft.Instruments.First().IsInFov(start, target, Aberration.None);
             Assert.True(res);
         }
 
         [Fact]
         public void GetBoresightInICRF()
         {
-            TimeSystem.Time start = TimeSystem.Time.J2000TDB;
+            TimeSystem.Time start = TimeSystem.Time.J2000Tdb;
 
             //Define parking orbit
             StateVector parkingOrbit = new StateVector(
@@ -231,14 +231,14 @@ namespace IO.Astrodynamics.Tests.Body
             spacecraft.AddCircularInstrument("CAMERA789", 0.75, Vector3.VectorZ, Vector3.VectorY, new Vector3(0.0, System.Math.PI * 0.5, 0.0), naifId: -179789, model: "mod1");
 
 
-            var boresightICRF = spacecraft.Instruments.First().GetBoresightInICRFFrame(start);
+            var boresightICRF = spacecraft.Instruments.First().GetBoresightInIcrfFrame(start);
             Assert.Equal(new Vector3(-1.0, 0.0, 0.0), boresightICRF, TestHelpers.VectorComparer);
         }
         
         [Fact]
         public void GetBoresightInICRF2()
         {
-            TimeSystem.Time start = TimeSystem.Time.J2000TDB;
+            TimeSystem.Time start = TimeSystem.Time.J2000Tdb;
 
             //Define parking orbit
             StateVector parkingOrbit = new StateVector(
@@ -249,17 +249,17 @@ namespace IO.Astrodynamics.Tests.Body
             Clock clock = new Clock("clk1", 65536);
             Spacecraft spacecraft = new Spacecraft(-179, "SC179", 1000.0, parkingOrbit, 3000.0, clock);
             spacecraft.AddCircularInstrument("CAMERA789", 0.75, Vector3.VectorZ, Vector3.VectorY, new Vector3(0.0, System.Math.PI * 0.5, 0.0), naifId: -179789, model: "mod1");
-            spacecraft.Frame.AddStateOrientationToICRF(new StateOrientation(new Quaternion(Vector3.VectorZ, -Astrodynamics.Constants.HalfPi), Vector3.Zero, start, spacecraft.Frame));
+            spacecraft.Frame.AddStateOrientationToIcrf(new StateOrientation(new Quaternion(Vector3.VectorZ, -Astrodynamics.Constants.HalfPi), Vector3.Zero, start, spacecraft.Frame));
 
 
-            var boresightICRF = spacecraft.Instruments.First().GetBoresightInICRFFrame(start);
+            var boresightICRF = spacecraft.Instruments.First().GetBoresightInIcrfFrame(start);
             Assert.Equal(new Vector3(0.0, 1.0, 0.0), boresightICRF, TestHelpers.VectorComparer);
         }
 
         [Fact]
         public void GetRefVectorInICRF()
         {
-            TimeSystem.Time start = TimeSystem.Time.J2000TDB;
+            TimeSystem.Time start = TimeSystem.Time.J2000Tdb;
             StateVector parkingOrbit = new StateVector(
                 new Vector3(6800000.0, 0.0, 0.0), new Vector3(0.0, 7656.2204182967143, 0.0), TestHelpers.EarthAtJ2000,
                 start, Frames.Frame.ICRF);
@@ -268,7 +268,7 @@ namespace IO.Astrodynamics.Tests.Body
 
             // The rotation of pi/2 about +Y leaves the reference vector +Y, and the attitude is the identity
             var instrument = spacecraft.Instruments.First();
-            var refVectorICRF = instrument.GetRefVectorInICRFFrame(start);
+            var refVectorICRF = instrument.GetRefVectorInIcrfFrame(start);
             Assert.Equal(Vector3.VectorY, refVectorICRF, TestHelpers.VectorComparer);
             Assert.Equal(refVectorICRF, instrument.GetFieldOfViewAxesInICRFFrame(start).Ref, TestHelpers.VectorComparer);
         }
@@ -276,17 +276,17 @@ namespace IO.Astrodynamics.Tests.Body
         [Fact]
         public void GetRefVectorInICRF2()
         {
-            TimeSystem.Time start = TimeSystem.Time.J2000TDB;
+            TimeSystem.Time start = TimeSystem.Time.J2000Tdb;
             StateVector parkingOrbit = new StateVector(
                 new Vector3(6800000.0, 0.0, 0.0), new Vector3(0.0, 7656.2204182967143, 0.0), TestHelpers.EarthAtJ2000,
                 start, Frames.Frame.ICRF);
             Spacecraft spacecraft = new Spacecraft(-179, "SC179", 1000.0, parkingOrbit, 3000.0, new Clock("clk1", 65536));
             spacecraft.AddCircularInstrument("CAMERA789", 0.75, Vector3.VectorZ, Vector3.VectorY, new Vector3(0.0, System.Math.PI * 0.5, 0.0), naifId: -179789, model: "mod1");
-            spacecraft.Frame.AddStateOrientationToICRF(new StateOrientation(new Quaternion(Vector3.VectorZ, -Astrodynamics.Constants.HalfPi), Vector3.Zero, start, spacecraft.Frame));
+            spacecraft.Frame.AddStateOrientationToIcrf(new StateOrientation(new Quaternion(Vector3.VectorZ, -Astrodynamics.Constants.HalfPi), Vector3.Zero, start, spacecraft.Frame));
 
             // The attitude takes the boresight -X to +Y (GetBoresightInICRF2): a rotation of -pi/2 about +Z, which takes +Y to +X
             var instrument = spacecraft.Instruments.First();
-            var refVectorICRF = instrument.GetRefVectorInICRFFrame(start);
+            var refVectorICRF = instrument.GetRefVectorInIcrfFrame(start);
             Assert.Equal(Vector3.VectorX, refVectorICRF, TestHelpers.VectorComparer);
             var axes = instrument.GetFieldOfViewAxesInICRFFrame(start);
             Assert.Equal(Vector3.VectorY, axes.Boresight, TestHelpers.VectorComparer);
@@ -1095,7 +1095,7 @@ namespace IO.Astrodynamics.Tests.Body
         /// 4.9e-324), and the ellipsoid of the occultation search rejected it with <see cref="ArgumentException"/>, "The
         /// semi-axes of an ellipsoid must have positive lengths", not the <see cref="InvalidOperationException"/> of a field
         /// that cannot be searched. <c>gftfov</c> is already degenerate far above (SPICE(DEGENERATECASE) up to about 1.5e-17 rad
-        /// with the boresight at the Moon, #715). <see cref="Instrument.IsInFOV"/> and the managed search, for a point and an
+        /// with the boresight at the Moon, #715). <see cref="Instrument.IsInFov"/> and the managed search, for a point and an
         /// ellipsoid target, throw <see cref="InvalidOperationException"/> naming the underflow. Control: a half-angle of 1e-10
         /// is searched, the Moon at the boresight in view (its margin is the half-angle, less the rounding of the axes,
         /// about 1e-16 rad).
@@ -1115,7 +1115,7 @@ namespace IO.Astrodynamics.Tests.Body
             // Arrange: a managed spacecraft with an attitude, its instrument's boresight at the Moon
             var epoch = new TimeSystem.Time(2024, 1, 1, TimeScale.TDB);
             var spc = Host(-7156, "T715");
-            spc.Frame.AddStateOrientationToICRF(new StateOrientation(Quaternion.Identity, Vector3.Zero, epoch, spc.Frame));
+            spc.Frame.AddStateOrientationToIcrf(new StateOrientation(Quaternion.Identity, Vector3.Zero, epoch, spc.Frame));
             var moon = new CelestialBody(301);
             var boresight = moon.GetEphemeris(epoch, spc, Frames.Frame.ICRF, Aberration.None).Position.Normalize();
             var refVector = boresight.Cross(Vector3.VectorZ).Normalize();
@@ -1128,7 +1128,7 @@ namespace IO.Astrodynamics.Tests.Body
 
             // Act
             bool? inView = null;
-            var point = Record.Exception(() => inView = instrument.IsInFOV(epoch, moon, Aberration.None));
+            var point = Record.Exception(() => inView = instrument.IsInFov(epoch, moon, Aberration.None));
             System.Collections.Generic.List<Window> windows = null;
             var ellipsoid = Record.Exception(() => windows = instrument.FindFieldOfViewWindows(window, moon, new FieldOfViewSearchOptions { Step = TimeSpan.FromSeconds(60.0), TargetShape = ShapeType.Ellipsoid, TargetFrame = moon.Frame }).ToList());
 
@@ -1153,7 +1153,7 @@ namespace IO.Astrodynamics.Tests.Body
         /// undefined). The cone of a circle or an ellipse at that distance has semi-axes of 0 m: on a80f6a5 the ellipsoid of the
         /// occultation search threw an unrelated <see cref="ArgumentException"/>, "The semi-axes of an ellipsoid must have
         /// positive lengths", and after the underflow guard of #715 an <see cref="InvalidOperationException"/> that blamed
-        /// the half-angles of a normal field (0.1 rad). <see cref="Instrument.IsInFOV"/> throws
+        /// the half-angles of a normal field (0.1 rad). <see cref="Instrument.IsInFov"/> throws
         /// <see cref="InvalidOperationException"/> naming the target at the observer, not the field. #721: the rectangle
         /// does too (decision 9 of #719, decided by S. Guillet, 2026-11-17); on a85098d its margin took atan2(0, 0) = 0 for
         /// both angles and reported the target in view.
@@ -1169,7 +1169,7 @@ namespace IO.Astrodynamics.Tests.Body
             var (instrument, twin) = TwinAtTheObserver(shape, epoch);
 
             // Act
-            var exception = Record.Exception(() => instrument.IsInFOV(epoch, twin, Aberration.None));
+            var exception = Record.Exception(() => instrument.IsInFov(epoch, twin, Aberration.None));
 
             // Assert
             var failed = Assert.IsType<InvalidOperationException>(exception);
@@ -1209,7 +1209,7 @@ namespace IO.Astrodynamics.Tests.Body
         {
             var spc = Host(-7157, "T715A");
             var twin = Host(-7158, "T715B");
-            spc.Frame.AddStateOrientationToICRF(new StateOrientation(Quaternion.Identity, Vector3.Zero, epoch, spc.Frame));
+            spc.Frame.AddStateOrientationToIcrf(new StateOrientation(Quaternion.Identity, Vector3.Zero, epoch, spc.Frame));
             if (shape == "Circular")
                 spc.AddCircularInstrument("CAM", 0.1, Vector3.VectorZ, Vector3.VectorX, Vector3.Zero, naifId: -7157001, model: "M");
             else if (shape == "Elliptical")

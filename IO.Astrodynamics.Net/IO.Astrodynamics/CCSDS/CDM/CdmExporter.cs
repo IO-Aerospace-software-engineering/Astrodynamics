@@ -135,7 +135,7 @@ internal static class CdmExporter
         return new CdmRelativeMetadataData
         {
             Comments = comments,
-            TcaUtc = CcsdsDates.ToUtc(encounterCase.EncounterState.Epoch.ToUTC().DateTime),
+            TcaUtc = CcsdsDates.ToUtc(encounterCase.EncounterState.Epoch.ToUtc().DateTime),
             MissDistanceMeters = encounterCase.EncounterState.MissDistanceMeters,
             RelativeSpeedMetersPerSecond = encounterCase.EncounterState.RelativeState.RelativeVelocityInertial.Magnitude(),
             RelativeStateVector = options.IncludeRelativeStateVector
@@ -146,10 +146,10 @@ internal static class CdmExporter
                 }
                 : null,
             StartScreenPeriodUtc = options.IncludeScreeningWindow
-                ? CcsdsDates.ToUtc(encounterCase.ScreeningWindow.StartDate.ToUTC().DateTime)
+                ? CcsdsDates.ToUtc(encounterCase.ScreeningWindow.StartDate.ToUtc().DateTime)
                 : null,
             StopScreenPeriodUtc = options.IncludeScreeningWindow
-                ? CcsdsDates.ToUtc(encounterCase.ScreeningWindow.EndDate.ToUTC().DateTime)
+                ? CcsdsDates.ToUtc(encounterCase.ScreeningWindow.EndDate.ToUtc().DateTime)
                 : null,
             CollisionProbability = encounterCase.CollisionRisk.ProbabilityOfCollision,
             CollisionProbabilityMethod = options.CollisionProbabilityMethod ?? FosterCollisionProbabilityMethod
@@ -313,7 +313,7 @@ internal static class CdmExporter
                 AreaDragSquareMeters = spacecraft.SectionalArea,
                 AreaSrpSquareMeters = spacecraft.SectionalArea,
                 CdAreaOverMass = totalMass > 0.0 ? spacecraft.DragCoefficient * spacecraft.SectionalArea / totalMass : null,
-                CrAreaOverMass = totalMass > 0.0 ? spacecraft.SolarRadiationCoeff * spacecraft.SectionalArea / totalMass : null
+                CrAreaOverMass = totalMass > 0.0 ? spacecraft.SolarRadiationCoefficient * spacecraft.SectionalArea / totalMass : null
             };
         }
 
@@ -474,7 +474,7 @@ internal static class CdmExporter
     {
         return string.Create(
             CultureInfo.InvariantCulture,
-            $"CDM-{System.Math.Abs(encounterCase.ProtectedSpacecraft.NaifId)}-{System.Math.Abs(encounterCase.SecondaryObject.NaifId)}-{encounterCase.EncounterState.Epoch.ToUTC().DateTime:yyyyMMddHHmmssfff}");
+            $"CDM-{System.Math.Abs(encounterCase.ProtectedSpacecraft.NaifId)}-{System.Math.Abs(encounterCase.SecondaryObject.NaifId)}-{encounterCase.EncounterState.Epoch.ToUtc().DateTime:yyyyMMddHHmmssfff}");
     }
 
     private static string FormatAge(TimeSpan? age)

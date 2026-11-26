@@ -109,7 +109,7 @@ public class RK78IntegratorTests
         // 1600s is exactly divisible by 800, 400, 200
         double totalTime = 1600.0;
 
-        var epoch = TimeSystem.Time.J2000TDB;
+        var epoch = TimeSystem.Time.J2000Tdb;
         var initialState = new StateVector(
             new Vector3(r0, 0, 0), new Vector3(0, v0, 0),
             earth, epoch, Frames.Frame.ICRF);
@@ -164,7 +164,7 @@ public class RK78IntegratorTests
         double v0 = System.Math.Sqrt(mu / r0);
         double period = 2.0 * System.Math.PI * System.Math.Sqrt(r0 * r0 * r0 / mu);
         double totalTime = 10.0 * period;
-        var epoch = TimeSystem.Time.J2000TDB;
+        var epoch = TimeSystem.Time.J2000Tdb;
         var initialState = new StateVector(
             new Vector3(r0, 0, 0), new Vector3(0, v0, 0),
             earth, epoch, Frames.Frame.ICRF);
@@ -215,7 +215,7 @@ public class RK78IntegratorTests
         double vPeri = System.Math.Sqrt(mu * (2.0 / rPeri - 1.0 / a));
         double period = 2.0 * System.Math.PI * System.Math.Sqrt(a * a * a / mu);
 
-        var epoch = TimeSystem.Time.J2000TDB;
+        var epoch = TimeSystem.Time.J2000Tdb;
         var initialState = new StateVector(
             new Vector3(rPeri, 0, 0), new Vector3(0, vPeri, 0),
             earth, epoch, Frames.Frame.ICRF);
@@ -255,7 +255,7 @@ public class RK78IntegratorTests
         double v0 = System.Math.Sqrt(mu / r0);
         double totalTime = 1000.0; // 100 steps * 10s
 
-        var epoch = TimeSystem.Time.J2000TDB;
+        var epoch = TimeSystem.Time.J2000Tdb;
         var initialState = new StateVector(
             new Vector3(r0, 0, 0), new Vector3(0, v0, 0),
             earth, epoch, Frames.Frame.ICRF);
@@ -303,7 +303,7 @@ public class RK78IntegratorTests
         double v0 = System.Math.Sqrt(mu / r0);
         double totalTime = 1.0; // 10 * 0.1s
 
-        var epoch = TimeSystem.Time.J2000TDB;
+        var epoch = TimeSystem.Time.J2000Tdb;
         var initialState = new StateVector(
             new Vector3(r0, 0, 0), new Vector3(0, v0, 0),
             earth, epoch, Frames.Frame.ICRF);
@@ -334,7 +334,7 @@ public class RK78IntegratorTests
         double v0 = System.Math.Sqrt(mu / r0);
         double totalTime = 3600.0; // 1 hour
 
-        var epoch = TimeSystem.Time.J2000TDB;
+        var epoch = TimeSystem.Time.J2000Tdb;
         var initialState = new StateVector(
             new Vector3(r0, 0, 0), new Vector3(0, v0, 0),
             earth, epoch, Frames.Frame.ICRF);
@@ -367,7 +367,7 @@ public class RK78IntegratorTests
         double vPeri = System.Math.Sqrt(mu * (2.0 / rPeri - 1.0 / a));
         double period = 2.0 * System.Math.PI * System.Math.Sqrt(a * a * a / mu);
 
-        var epoch = TimeSystem.Time.J2000TDB;
+        var epoch = TimeSystem.Time.J2000Tdb;
         var initialState = new StateVector(
             new Vector3(rPeri, 0, 0), new Vector3(0, vPeri, 0),
             earth, epoch, Frames.Frame.ICRF);
@@ -406,7 +406,7 @@ public class RK78IntegratorTests
         double r0 = 6800000.0;
         double v0 = System.Math.Sqrt(mu / r0);
 
-        var epoch = TimeSystem.Time.J2000TDB;
+        var epoch = TimeSystem.Time.J2000Tdb;
         var initialState = new StateVector(
             new Vector3(r0, 0, 0), new Vector3(0, v0, 0),
             earth, epoch, Frames.Frame.ICRF);
@@ -469,10 +469,10 @@ public class RK78IntegratorTests
         Clock clk = new Clock("My clock", 256);
         var orbit = new StateVector(
             new Vector3(6800000.0, 0, 0), new Vector3(0, 7656.2204182967143, 0),
-            earth, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF);
+            earth, TimeSystem.Time.J2000Tdb, Frames.Frame.ICRF);
         Spacecraft spc = new Spacecraft(-1001, "TestSat", 100.0, orbit, 10000.0, clk);
 
-        var propWindow = new Window(TimeSystem.Time.J2000TDB, TimeSystem.Time.J2000TDB.AddHours(2));
+        var propWindow = new Window(TimeSystem.Time.J2000Tdb, TimeSystem.Time.J2000Tdb.AddHours(2));
 
         IntegratorOptions integrator = new RK78IntegratorOptions { AbsoluteTolerance = 1e-10, RelativeTolerance = 1e-10, InitialStep = TimeSpan.FromSeconds(30.0) };
 
@@ -503,10 +503,10 @@ public class RK78IntegratorTests
         Clock clk = new Clock("My clock", 256);
         var orbit = new StateVector(
             new Vector3(6800000.0, 0, 0), new Vector3(0, 7656.2204182967143, 0),
-            earth, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF);
+            earth, TimeSystem.Time.J2000Tdb, Frames.Frame.ICRF);
         Spacecraft spc = new Spacecraft(-1001, "TestSat_CB", 100.0, orbit, 10000.0, clk);
 
-        var propWindow = new Window(TimeSystem.Time.J2000TDB, TimeSystem.Time.J2000TDB.AddHours(2));
+        var propWindow = new Window(TimeSystem.Time.J2000Tdb, TimeSystem.Time.J2000Tdb.AddHours(2));
 
         IntegratorOptions integrator = new RK78IntegratorOptions { AbsoluteTolerance = 1e-10, RelativeTolerance = 1e-10, InitialStep = TimeSpan.FromSeconds(30.0) };
 

@@ -243,7 +243,7 @@ public abstract class CelestialItem : ILocalizable, IEquatable<CelestialItem>
 
         RequireKernelData(information);
         data.Information = information;
-        data.Mass = information.GM / Constants.G;
+        data.Mass = information.GM / Constants.GravitationalConstant;
         data.GM = information.GM;
         data.GravitationalField = CreateGravitationalField(NaifId, information.GM, null);
         data.InitialOrbitalParameters = NaifId != 0 && (IsPlanet || IsMoon || IsBarycenter || IsSun)
@@ -398,7 +398,7 @@ public abstract class CelestialItem : ILocalizable, IEquatable<CelestialItem>
                 "Celestial celestialItem name can't be defined, please check if you have loaded associated kernels")
             : ExtendedInformation.Name;
 
-        _mass = ExtendedInformation.GM / Constants.G;
+        _mass = ExtendedInformation.GM / Constants.GravitationalConstant;
         _gm = ExtendedInformation.GM;
         _gravitationalField = CreateGravitationalField(naifId, _gm, geopotentialModelParameters);
         GeopotentialModel = geopotentialModelParameters;
@@ -488,7 +488,7 @@ public abstract class CelestialItem : ILocalizable, IEquatable<CelestialItem>
         NaifId = naifId;
         Name = name;
         _mass = mass;
-        _gm = mass * Constants.G;
+        _gm = mass * Constants.GravitationalConstant;
         InitialOrbitalParameters = initialOrbitalParameters;
         _gravitationalField = CreateGravitationalField(naifId, _gm, geopotentialModelParameters);
         GeopotentialModel = geopotentialModelParameters;
@@ -777,7 +777,7 @@ public abstract class CelestialItem : ILocalizable, IEquatable<CelestialItem>
         var epoch = corrected.Epoch;
         double shift = sign * centerLightTime;
         var centerEpoch = ApparentPositionReader.Shift(epoch, shift);
-        double residual = (epoch.ToTDB().TimeSpanFromJ2000().TotalSeconds + shift) - centerEpoch.ToTDB().TimeSpanFromJ2000().TotalSeconds;
+        double residual = (epoch.ToTdb().TimeSpanFromJ2000().TotalSeconds + shift) - centerEpoch.ToTdb().TimeSpanFromJ2000().TotalSeconds;
         var orientation = Frame.ICRF.ToFrame(orientationFrame, centerEpoch);
         // The angular velocity of the frame relative to ICRF, in the frame, as OrbitalParameters.ToFrame forms it
         var angularVelocity = orientation.AngularVelocity.Rotate(orientation.Rotation);
@@ -882,7 +882,7 @@ public abstract class CelestialItem : ILocalizable, IEquatable<CelestialItem>
         var lightTime = target is Star ? Aberration.None : LightTimeOnly(aberration);
         var position = CorrectFromAberrationCB(target, epoch, observerState.Observer, lightTime, relative, observerCB,
             referenceBody).Position;
-        if (aberration is Aberration.LTS or Aberration.CNS or Aberration.XLTS or Aberration.XCNS)
+        if (aberration is Aberration.LtS or Aberration.CnS or Aberration.XltS or Aberration.XcnS)
         {
             var observerSsbVelocity = referenceBody.NaifId == 0
                 ? observerCB.Velocity
@@ -942,10 +942,10 @@ public abstract class CelestialItem : ILocalizable, IEquatable<CelestialItem>
     /// <summary>The light-time part of a correction: LT, CN, XLT or XCN for their "+S" forms.</summary>
     private static Aberration LightTimeOnly(Aberration aberration) => aberration switch
     {
-        Aberration.LTS => Aberration.LT,
-        Aberration.CNS => Aberration.CN,
-        Aberration.XLTS => Aberration.XLT,
-        Aberration.XCNS => Aberration.XCN,
+        Aberration.LtS => Aberration.LT,
+        Aberration.CnS => Aberration.CN,
+        Aberration.XltS => Aberration.XLT,
+        Aberration.XcnS => Aberration.XCN,
         _ => aberration
     };
 
@@ -954,10 +954,10 @@ public abstract class CelestialItem : ILocalizable, IEquatable<CelestialItem>
     private static (int Iterations, double Sign) LightTimeIterations(Aberration aberration) => aberration switch
     {
         Aberration.None => (0, 0.0),
-        Aberration.LT or Aberration.LTS => (1, -1.0),
-        Aberration.CN or Aberration.CNS => (ConvergedLightTimeIterations, -1.0),
-        Aberration.XLT or Aberration.XLTS => (1, 1.0),
-        Aberration.XCN or Aberration.XCNS => (ConvergedLightTimeIterations, 1.0),
+        Aberration.LT or Aberration.LtS => (1, -1.0),
+        Aberration.CN or Aberration.CnS => (ConvergedLightTimeIterations, -1.0),
+        Aberration.XLT or Aberration.XltS => (1, 1.0),
+        Aberration.XCN or Aberration.XcnS => (ConvergedLightTimeIterations, 1.0),
         _ => throw new ArgumentOutOfRangeException(nameof(aberration))
     };
 
@@ -1068,17 +1068,17 @@ public abstract class CelestialItem : ILocalizable, IEquatable<CelestialItem>
         // The epochs as CSPICE sees them, TDB seconds in double: the corrected epoch is et ∓ lt in double, as spkltc forms
         // it, and a state read at the 100 ns of a Time is carried there by its velocity (the double of a 2024 epoch
         // resolves 1.2e-7 s, 3.6 mm at the 30 km/s of the Earth)
-        double epochSeconds = epoch.ToTDB().TimeSpanFromJ2000().TotalSeconds;
+        double epochSeconds = epoch.ToTdb().TimeSpanFromJ2000().TotalSeconds;
 
         var position = relativeState.Position;
-        double lightTime = position.Magnitude() / Constants.C;
+        double lightTime = position.Magnitude() / Constants.SpeedOfLight;
         Vector3 targetVelocity = Vector3.Zero; // the target's velocity relative to the reference body at the corrected epoch
         Vector3 referenceVelocityChange = Vector3.Zero; // the reference body's velocity there minus at the epoch
         for (int i = 0; i < iterations; i++)
         {
             double shift = sign * lightTime;
             var corrected = ApparentPositionReader.Shift(epoch, shift);
-            double residual = (epochSeconds + shift) - corrected.ToTDB().TimeSpanFromJ2000().TotalSeconds;
+            double residual = (epochSeconds + shift) - corrected.ToTdb().TimeSpanFromJ2000().TotalSeconds;
             // A propagated spacecraft is read up to the light time outside its stored states (#527)
             var targetState = targetRelativeToReference(corrected, shift);
             targetVelocity = targetState.Velocity;
@@ -1091,7 +1091,7 @@ public abstract class CelestialItem : ILocalizable, IEquatable<CelestialItem>
             }
 
             double previous = lightTime;
-            lightTime = position.Magnitude() / Constants.C;
+            lightTime = position.Magnitude() / Constants.SpeedOfLight;
             if (System.Math.Abs(lightTime - previous) <= LightTimeConvergence * System.Math.Max(1.0, System.Math.Abs(epochSeconds + shift)))
             {
                 break;
@@ -1111,14 +1111,14 @@ public abstract class CelestialItem : ILocalizable, IEquatable<CelestialItem>
         if (distance > 0.0)
         {
             var direction = position / distance;
-            lightTimeRate = direction.Dot(geometricVelocity) / (Constants.C - sign * direction.Dot(targetSsbVelocity));
+            lightTimeRate = direction.Dot(geometricVelocity) / (Constants.SpeedOfLight - sign * direction.Dot(targetSsbVelocity));
         }
 
         var velocity = geometricVelocity + targetSsbVelocity * (sign * lightTimeRate);
         lightTimeOut = lightTime;
         lightTimeRateOut = lightTimeRate;
 
-        if (aberration is Aberration.LTS or Aberration.CNS or Aberration.XLTS or Aberration.XCNS)
+        if (aberration is Aberration.LtS or Aberration.CnS or Aberration.XltS or Aberration.XcnS)
         {
             (position, velocity) = ApplyStellarAberration(position, velocity, observerSsbVelocity, observer, epoch, referenceBody, sign > 0.0);
         }
@@ -1172,8 +1172,8 @@ public abstract class CelestialItem : ILocalizable, IEquatable<CelestialItem>
         }
 
         var u = position / r;
-        var w = observerVelocity / Constants.C;
-        var wDot = observerAcceleration / Constants.C;
+        var w = observerVelocity / Constants.SpeedOfLight;
+        var wDot = observerAcceleration / Constants.SpeedOfLight;
         double rDot = u.Dot(velocity);
         var uDot = (velocity - u * rDot) / r;
         double uw = u.Dot(w);
@@ -1337,8 +1337,8 @@ public abstract class CelestialItem : ILocalizable, IEquatable<CelestialItem>
         double lightTime = aberration switch
         {
             Aberration.None => 0.0,
-            Aberration.XLT or Aberration.XLTS or Aberration.XCN or Aberration.XCNS => position.Magnitude() / Constants.C,
-            _ => -position.Magnitude() / Constants.C
+            Aberration.XLT or Aberration.XltS or Aberration.XCN or Aberration.XcnS => position.Magnitude() / Constants.SpeedOfLight,
+            _ => -position.Magnitude() / Constants.SpeedOfLight
         };
         return model.ToBody(position, ApparentPositionReader.Shift(from.Epoch, lightTime));
     }

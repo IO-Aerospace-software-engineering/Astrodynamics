@@ -148,9 +148,9 @@ public class OrientationCacheConcurrencyTests
     {
         Assert.Null(earth.Frame.OrientationCache);
         var later = EpochA.AddDays(30.0);
-        var expected = PointMassEarth().Frame.GetStateOrientationToICRF(later);
-        var actual = RunConcurrently(() => earth.Frame.GetStateOrientationToICRF(later),
-            () => earth.Frame.GetStateOrientationToICRF(later));
+        var expected = PointMassEarth().Frame.GetStateOrientationToIcrf(later);
+        var actual = RunConcurrently(() => earth.Frame.GetStateOrientationToIcrf(later),
+            () => earth.Frame.GetStateOrientationToIcrf(later));
         foreach (var orientation in new[] { actual.A, actual.B })
         {
             Assert.Equal(expected.Rotation, orientation.Rotation);

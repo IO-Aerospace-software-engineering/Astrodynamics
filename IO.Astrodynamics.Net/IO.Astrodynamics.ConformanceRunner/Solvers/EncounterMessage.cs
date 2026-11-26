@@ -23,7 +23,7 @@ internal static class EncounterMessage
     /// one alone, without Frisbee's maximum.</param>
     public static Cdm Of(Time tca, IReadOnlyList<EncounterObject> objects, bool absentAsZero = false)
     {
-        var tcaUtc = tca.ToUTC().DateTime;
+        var tcaUtc = tca.ToUtc().DateTime;
         var segments = new List<CdmSegment>();
         for (int k = 0; k < 2; k++)
         {

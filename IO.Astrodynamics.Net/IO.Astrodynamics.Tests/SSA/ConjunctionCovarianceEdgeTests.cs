@@ -342,7 +342,7 @@ public class ConjunctionCovarianceEdgeTests : IClassFixture<ConjunctionCovarianc
     public void Resolver_PropagationInAnotherInertialFrame_RotatesTheCovarianceToTheFrameOfTheEncounter()
     {
         // Arrange: the protected participant in ECLIPJ2000, and its encounter state in ICRF
-        var ecliptic = _case.ProtectedStart.ToFrame(Frames.Frame.ECLIPTIC_J2000).ToStateVector();
+        var ecliptic = _case.ProtectedStart.ToFrame(Frames.Frame.ECLIPJ2000).ToStateVector();
         var spacecraft = ConjunctionCovarianceCase.NewSpacecraft(-6911, ecliptic);
         var solution = _case.Propagate(spacecraft, Covariance);
         var epoch = ConjunctionCovarianceCase.Tca;
@@ -354,7 +354,7 @@ public class ConjunctionCovarianceEdgeTests : IClassFixture<ConjunctionCovarianc
 
         // Assert: the covariance of the solution, rotated to ICRF, as ToFrame rotates it
         Assert.Equal(CovarianceSource.Propagated, covariance.Source);
-        Assert.Equal(Frames.Frame.ECLIPTIC_J2000, solution.Frame);
+        Assert.Equal(Frames.Frame.ECLIPJ2000, solution.Frame);
         Assert.Equal(encounterState.Covariance.Value.ToArray(), covariance.CovarianceInertial.Value.ToArray());
     }
 

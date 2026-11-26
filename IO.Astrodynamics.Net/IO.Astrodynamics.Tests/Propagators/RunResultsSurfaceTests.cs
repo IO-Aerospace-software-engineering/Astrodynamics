@@ -300,7 +300,7 @@ public class RunResultsSurfaceTests
     {
         var tt = TimeSpan.FromSeconds(32.184);
         var first = new Window(S.AddSeconds(600.0), S.AddSeconds(900.0));
-        var earlierStart = new Window(S.AddSeconds(100.0).ToTAI(), S.AddSeconds(1200.0).ToTAI());
+        var earlierStart = new Window(S.AddSeconds(100.0).ToTai(), S.AddSeconds(1200.0).ToTai());
         var tiedEnds = new Window(new Time(earlierStart.StartDate.DateTime + tt, TimeScale.TT),
             new Time(earlierStart.EndDate.DateTime + tt, TimeScale.TT));
         Assert.True(tiedEnds.StartDate == earlierStart.StartDate && !tiedEnds.StartDate.EqualsExact(earlierStart.StartDate));
@@ -321,12 +321,12 @@ public class RunResultsSurfaceTests
     }
 
     // ---------------------------------------------------------------------------------------------------------------------
-    // Decision 60: the fuel accessors, and GetTotalISP and GetTotalFuelFlow over every engine (lot L5b, after the tanks
+    // Decision 60: the fuel accessors, and GetTotalIsp and GetTotalFuelFlow over every engine (lot L5b, after the tanks
     // refuse a non-finite quantity, #800: L5-20 as amended, #801 part 1)
     // ---------------------------------------------------------------------------------------------------------------------
 
     /// <summary>
-    /// GetTotalISP and GetTotalFuelFlow count every engine, whatever its tank holds (decision 60 of #668, L5-20 as
+    /// GetTotalIsp and GetTotalFuelFlow count every engine, whatever its tank holds (decision 60 of #668, L5-20 as
     /// amended, #801 part 1): they counted only the engines whose tank held fuel at the start of a run, which made them
     /// 0 / 0 when none did. The empty tank is set by reflection, the constructor refusing an initial quantity of 0 in this
     /// lot: the analog of L5-20, engines of 300 s at 10 kg/s and 200 s at 30 kg/s, 300 s with the filter, 225 s without.
@@ -341,11 +341,11 @@ public class RunResultsSurfaceTests
         typeof(FuelTank).GetField("<InitialQuantity>k__BackingField", Everything)!.SetValue(empty, 0.0);
 
         Assert.Equal(40.0, spacecraft.GetTotalFuelFlow());
-        Assert.Equal(225.0, spacecraft.GetTotalISP(), 1e-12);
+        Assert.Equal(225.0, spacecraft.GetTotalIsp(), 1e-12);
     }
 
     /// <summary>
-    /// Without an engine, GetTotalISP is 0 / 0, NaN, as before (#801 part 1 changes the filter only; IC-12 of the gap
+    /// Without an engine, GetTotalIsp is 0 / 0, NaN, as before (#801 part 1 changes the filter only; IC-12 of the gap
     /// analysis of L5b), and GetTotalFuelFlow 0.
     /// </summary>
     [Fact]
@@ -356,7 +356,7 @@ public class RunResultsSurfaceTests
             new Clock("RR" + -id, 65536));
 
         Assert.Equal(0.0, spacecraft.GetTotalFuelFlow());
-        Assert.True(double.IsNaN(spacecraft.GetTotalISP()));
+        Assert.True(double.IsNaN(spacecraft.GetTotalIsp()));
     }
 
     [Fact]

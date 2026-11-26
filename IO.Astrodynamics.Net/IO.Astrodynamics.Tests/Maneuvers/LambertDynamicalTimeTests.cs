@@ -85,9 +85,9 @@ public class LambertDynamicalTimeTests
     private static TimeSystem.Time Tagged(TimeSystem.Time utc, string tag) => tag switch
     {
         "UTC" => utc,
-        "TAI" => utc.ToTAI(),
+        "TAI" => utc.ToTai(),
         "TT" => utc.ToTT(),
-        "TDB" => utc.ToTDB(),
+        "TDB" => utc.ToTdb(),
         _ => throw new ArgumentOutOfRangeException(nameof(tag), tag, null)
     };
 

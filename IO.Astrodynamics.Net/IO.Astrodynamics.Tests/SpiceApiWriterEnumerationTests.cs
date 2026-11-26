@@ -81,7 +81,7 @@ public class SpiceApiWriterEnumerationTests
     public void WriteEphemeris_EnumeratesTheStatesOnce_BeforeTheLock()
     {
         // Arrange: 10 states of a circular orbit about the Earth, as KernelBackedSpacecraftTests writes them
-        var start = TimeSystem.Time.J2000TDB;
+        var start = TimeSystem.Time.J2000Tdb;
         var states = Enumerable.Range(0, 10).Select(i => new StateVector(
             new Vector3(6800000.0 * System.Math.Cos(i * 0.001), 6800000.0 * System.Math.Sin(i * 0.001), 0.0),
             new Vector3(-7656.0 * System.Math.Sin(i * 0.001), 7656.0 * System.Math.Cos(i * 0.001), 0.0),
@@ -111,13 +111,13 @@ public class SpiceApiWriterEnumerationTests
         // Arrange: a spacecraft's clock kernel, which the CK writer encodes the epochs with, and 10 orientations in J2000
         var directory = Constants.OutputPath.CreateSubdirectory("Issue661");
         var spacecraft = new Spacecraft(-661002, "ISSUE661", 1000.0, new StateVector(new Vector3(6800000.0, 0.0, 0.0), new Vector3(0.0, 7656.0, 0.0), TestHelpers.EarthAtJ2000,
-                TimeSystem.Time.J2000TDB, Frames.Frame.ICRF), 2000.0,
+                TimeSystem.Time.J2000Tdb, Frames.Frame.ICRF), 2000.0,
             new Clock("ISSUE661_CLK", 65536));
         var clock = new FileInfo(Path.Combine(directory.FullName, "issue661.tsc"));
         var ck = new FileInfo(Path.Combine(directory.FullName, "issue661.bc"));
         spacecraft.Clock.Write(clock);
         var orientations = Enumerable.Range(0, 10).Select(i => new StateOrientation(
-            new Quaternion(Vector3.VectorZ, i * 0.01), Vector3.Zero, TimeSystem.Time.J2000TDB.AddSeconds(i * 10.0),
+            new Quaternion(Vector3.VectorZ, i * 0.01), Vector3.Zero, TimeSystem.Time.J2000Tdb.AddSeconds(i * 10.0),
             Frames.Frame.ICRF)).ToList();
         var sequence = new ProbedSequence<StateOrientation>(orientations);
 

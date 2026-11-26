@@ -388,7 +388,7 @@ public class SpiceApi
             return null;
         }
 
-        var orientation = managed.GetStateOrientationToICRF(date);
+        var orientation = managed.GetStateOrientationToIcrf(date);
         return new OrbitalParameters.StateOrientation(orientation.Rotation, orientation.AngularVelocity, date, source);
     }
 
@@ -400,7 +400,7 @@ public class SpiceApi
     /// and the <see cref="Body.Spacecraft.SpacecraftFrame"/> of a managed spacecraft whose attitude record holds an entry
     /// (#682), which only the library holds; the <see cref="Surface.SiteFrame"/> of a site of the kernels whose frame id,
     /// 1000000 + NaifId, no loaded kernel defines, the frame of its J2000 coordinates that
-    /// <see cref="Surface.SiteFrame.GetStateOrientationToICRF"/> gives it (third review of #690; before, its own name,
+    /// <see cref="Surface.SiteFrame.GetStateOrientationToIcrf"/> gives it (third review of #690; before, its own name,
     /// <c>Name + "_TOPO"</c>, reached <c>spkezr_c</c>, which threw SPICE(UNKNOWNFRAME), while the frame converted to ICRF
     /// and the horizontal coordinates used that orientation), decided at each read, under the lock the caller holds, so
     /// that a frame kernel loaded later is read by name. SPICE knows none of these, or, for TEME, the native construction
@@ -1696,8 +1696,8 @@ public class SpiceApi
     /// </summary>
     private static IReadOnlyList<TimeSystem.Window> WithinSearchWindow(Window[] windows, int count, TimeSystem.Window searchWindow)
     {
-        var start = searchWindow.StartDate.ToTDB();
-        var end = searchWindow.EndDate.ToTDB();
+        var start = searchWindow.StartDate.ToTdb();
+        var end = searchWindow.EndDate.ToTdb();
         double startSeconds = start.TimeSpanFromJ2000().TotalSeconds;
         double endSeconds = end.TimeSpanFromJ2000().TotalSeconds;
         var result = new TimeSystem.Window[count];
@@ -1793,8 +1793,8 @@ public class SpiceApi
             return search(SpiceRelation(relationalOperator));
         }
 
-        var end = searchWindow.EndDate.ToTDB();
-        var cursor = searchWindow.StartDate.ToTDB();
+        var end = searchWindow.EndDate.ToTdb();
+        var cursor = searchWindow.StartDate.ToTdb();
         var windows = new List<TimeSystem.Window>();
         foreach (var crossing in search("=").OrderBy(x => x.StartDate))
         {
@@ -2206,7 +2206,7 @@ public class SpiceApi
 
     // The TDB seconds past J2000 of the epochs, as the read of one epoch takes them
     private static double[] TdbSeconds(Time[] epochs) =>
-        epochs.Select(epoch => epoch.ToTDB().TimeSpanFromJ2000().TotalSeconds).ToArray();
+        epochs.Select(epoch => epoch.ToTdb().TimeSpanFromJ2000().TotalSeconds).ToArray();
 
     /// <summary>
     /// Return state vector at given epoch using NAIF IDs directly.
@@ -2353,13 +2353,13 @@ public class SpiceApi
     {
         var managed = ManagedReadFrame(frame);
         string frameName = managed == null ? SpiceFrameName(frame) : Frame.ICRF.Name;
-        var stateVector = ReadEphemerisAtGivenEpochProxy(epoch.ToTDB().TimeSpanFromJ2000().TotalSeconds,
+        var stateVector = ReadEphemerisAtGivenEpochProxy(epoch.ToTdb().TimeSpanFromJ2000().TotalSeconds,
             observer.NaifId, targetId, frameName, aberration.GetDescription());
         ThrowOnFailedRead(stateVector, frameName, frame);
         // Labelled with the epoch asked, the instant SPICE read at, as SpiceDataProvider.GetEphemeris does: where an ulp
         // of the seconds is coarser than a tick (2017 to 2028, 1971 to 1983), the epoch SPICE returns, made a Time again,
         // is the neighbouring tick for about 16 % of ticks (#625)
-        var tdb = epoch.ToTDB();
+        var tdb = epoch.ToTdb();
         return managed == null
             ? new OrbitalParameters.StateVector(stateVector.Position.Convert(), stateVector.Velocity.Convert(), observer, tdb, frame)
             : ToManagedFrame(stateVector.Position.Convert(), stateVector.Velocity.Convert(), observer, tdb, managed, frame, aberration);
@@ -2421,7 +2421,7 @@ public class SpiceApi
     /// </returns>
     /// <remarks>
     ///     The rotation of a spacecraft's attitude in the frames' convention, spacecraft to reference, is its conjugate,
-    ///     which <c>GetStateOrientationToICRF</c> of the frame of a kernel-backed spacecraft returns. On a CK written by
+    ///     which <c>GetStateOrientationToIcrf</c> of the frame of a kernel-backed spacecraft returns. On a CK written by
     ///     <see cref="Body.Spacecraft.Spacecraft.WriteOrientation"/> before 11.0.0, which holds the inverse of the
     ///     attitude (#529), this method returns that inverse.
     ///     Each record is the read of its epoch alone, in a buffer of the epochs read, whatever their number (#563: before
@@ -2920,7 +2920,7 @@ public class SpiceApi
     /// A TEME frame, <see cref="Frame.TEME"/> or a frame named TEME, is the managed <see cref="TemeFrame"/> (#451): the
     /// transform is composed through ICRF, the other frame from SPICE. So is the <see cref="Surface.SiteFrame"/> of a site
     /// built from coordinates, or of a site from the kernels whose frame id (1000000 + NaifId) no loaded kernel defines,
-    /// decided at each call: its orientation is <see cref="Surface.SiteFrame.GetStateOrientationToICRF"/>, the frame the
+    /// decided at each call: its orientation is <see cref="Surface.SiteFrame.GetStateOrientationToIcrf"/>, the frame the
     /// reads in it, <see cref="Frame.ToFrame"/> and the horizontal coordinates use (fourth round of #668; before, the call
     /// handed its name, <c>Name + "_TOPO"</c>, to SPICE, which does not know it, and threw). The frame of a site whose frame
     /// the kernels define is that kernel frame, read by SPICE, and the frame of a spacecraft is SPICE's by name, which reads
@@ -2978,7 +2978,7 @@ public class SpiceApi
         {
             string fromName = SpiceFrameName(fromFrame);
             string toName = SpiceFrameName(toFrame);
-            var res = TransformFrameProxy(fromName, toName, epoch.ToTDB().TimeSpanFromJ2000().TotalSeconds);
+            var res = TransformFrameProxy(fromName, toName, epoch.ToTdb().TimeSpanFromJ2000().TotalSeconds);
 
             // A failed transformation returns a NaN rotation with SPICE's message (#714; the zero quaternion with no message
             // before, #454): a rotation is a unit quaternion. Read before any other native call; then a name SPICE does not
@@ -2986,7 +2986,7 @@ public class SpiceApi
             var rotation = new Quaternion(res.Rotation.W, res.Rotation.X, res.Rotation.Y, res.Rotation.Z);
             if (!(System.Math.Abs(rotation.Magnitude() - 1.0) <= UnitQuaternionTolerance))
             {
-                var error = NativeException($"SPICE gives no transformation from {fromFrame.Name} to {toFrame.Name} at {epoch.ToTDB()}");
+                var error = NativeException($"SPICE gives no transformation from {fromFrame.Name} to {toFrame.Name} at {epoch.ToTdb()}");
                 var unknownFrom = FrameErrorOrInner(error, fromName, fromFrame, fromParamName);
                 throw unknownFrom != error ? unknownFrom : FrameErrorOrInner(error, toName, toFrame, toParamName);
             }
@@ -3023,7 +3023,7 @@ public class SpiceApi
     private OrbitalParameters.StateOrientation OrientationToIcrf(Time epoch, Frame frame, Frame managed, string paramName)
     {
         // TransformFrame throws when SPICE gives no rotation (#454)
-        return managed != null ? managed.GetStateOrientationToICRF(epoch) : TransformFrame(epoch, frame, Frame.ICRF, paramName, null);
+        return managed != null ? managed.GetStateOrientationToIcrf(epoch) : TransformFrame(epoch, frame, Frame.ICRF, paramName, null);
     }
 
     /// <summary>
@@ -3109,17 +3109,17 @@ public class SpiceApi
         var position = res.Position.Convert();
         if (!IsFinite(res))
         {
-            throw NativeException($"SGP4 failed for the TLE {name} ({line1}) at {epoch.ToTDB()}");
+            throw NativeException($"SGP4 failed for the TLE {name} ({line1}) at {epoch.ToTdb()}");
         }
 
         if (position.Magnitude() == 0.0)
         {
             throw new InvalidOperationException(
-                $"SGP4 failed for the TLE {name} ({line1}) at {epoch.ToTDB()}: the native layer returned a zero state.");
+                $"SGP4 failed for the TLE {name} ({line1}) at {epoch.ToTdb()}: the native layer returned a zero state.");
         }
 
         return new OrbitalParameters.StateVector(position, res.Velocity.Convert(),
-            new Body.CelestialBody(PlanetsAndMoons.EARTH, Frame.ECLIPTIC_J2000, epoch), epoch,
+            new Body.CelestialBody(PlanetsAndMoons.EARTH, Frame.ECLIPJ2000, epoch), epoch,
             Frame.TEME);
     }
 
@@ -3465,7 +3465,7 @@ public class SpiceApi
         }
 
         var input = keplerianElements.Convert();
-        double et = epoch.ToTDB().TimeSpanFromJ2000().TotalSeconds;
+        double et = epoch.ToTdb().TimeSpanFromJ2000().TotalSeconds;
         StateVector state;
         lock (lockObject)
         {

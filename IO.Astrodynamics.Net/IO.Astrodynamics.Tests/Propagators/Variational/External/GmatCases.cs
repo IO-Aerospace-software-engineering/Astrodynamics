@@ -275,7 +275,7 @@ internal static class GmatCases
     // short without notice, so it is refused (H3 review of #408, nit 5)
     internal static string TdbEpoch(TimeSystem.Time epoch)
     {
-        var dateTime = epoch.ToTDB().DateTime;
+        var dateTime = epoch.ToTdb().DateTime;
         if (dateTime.Ticks % TimeSpan.TicksPerMillisecond != 0)
         {
             throw new ArgumentException($"{dateTime:O} TDB is not on the millisecond grid of GMAT's epochs", nameof(epoch));

@@ -134,7 +134,7 @@ internal static class OccultationFinder
     /// <exception cref="ArgumentException">The search window ends before it starts.</exception>
     internal static void CheckWindow(in Window searchWindow)
     {
-        if ((searchWindow.EndDate.ToTDB() - searchWindow.StartDate.ToTDB()).Ticks < 0)
+        if ((searchWindow.EndDate.ToTdb() - searchWindow.StartDate.ToTdb()).Ticks < 0)
         {
             throw new ArgumentException("The search window must not end before it starts.", nameof(searchWindow));
         }
@@ -152,8 +152,8 @@ internal static class OccultationFinder
         internal Sampling(in Window searchWindow, in TimeSpan step, in TimeSpan tolerance)
         {
             CheckWindow(searchWindow);
-            _start = searchWindow.StartDate.ToTDB();
-            _end = searchWindow.EndDate.ToTDB();
+            _start = searchWindow.StartDate.ToTdb();
+            _end = searchWindow.EndDate.ToTdb();
             long totalTicks = (_end - _start).Ticks;
 
             // The samples: every step from the start, and the end

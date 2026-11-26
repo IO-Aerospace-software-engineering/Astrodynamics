@@ -43,7 +43,7 @@ internal static class ProfilesConfiguration
 
     internal static DTO.StateVector Convert(this StateVector stateVector)
     {
-        return new DTO.StateVector(stateVector.Observer.NaifId, stateVector.Epoch.ToTDB().TimeSpanFromJ2000().TotalSeconds, stateVector.Frame.Name, stateVector.Position.Convert(),
+        return new DTO.StateVector(stateVector.Observer.NaifId, stateVector.Epoch.ToTdb().TimeSpanFromJ2000().TotalSeconds, stateVector.Frame.Name, stateVector.Position.Convert(),
             stateVector.Velocity.Convert());
     }
 
@@ -61,13 +61,13 @@ internal static class ProfilesConfiguration
 
     internal static DTO.StateOrientation Convert(this StateOrientation stateOrientation)
     {
-        return new DTO.StateOrientation(stateOrientation.Rotation.Convert(), stateOrientation.AngularVelocity.Convert(), stateOrientation.Epoch.ToTDB().TimeSpanFromJ2000().TotalSeconds,
+        return new DTO.StateOrientation(stateOrientation.Rotation.Convert(), stateOrientation.AngularVelocity.Convert(), stateOrientation.Epoch.ToTdb().TimeSpanFromJ2000().TotalSeconds,
             stateOrientation.ReferenceFrame.Name);
     }
 
     internal static DTO.Window Convert(this Window window)
     {
-        return new DTO.Window(window.StartDate.ToTDB().TimeSpanFromJ2000().TotalSeconds, window.EndDate.ToTDB().TimeSpanFromJ2000().TotalSeconds);
+        return new DTO.Window(window.StartDate.ToTdb().TimeSpanFromJ2000().TotalSeconds, window.EndDate.ToTdb().TimeSpanFromJ2000().TotalSeconds);
     }
 
     internal static Window Convert(this in DTO.Window window)
@@ -93,7 +93,7 @@ internal static class ProfilesConfiguration
 
     internal static DTO.KeplerianElements Convert(this IO.Astrodynamics.OrbitalParameters.KeplerianElements keplerianElements)
     {
-        return new DTO.KeplerianElements(keplerianElements.Observer.NaifId, keplerianElements.Epoch.ToTDB().TimeSpanFromJ2000().TotalSeconds, keplerianElements.PerigeeRadius(),
+        return new DTO.KeplerianElements(keplerianElements.Observer.NaifId, keplerianElements.Epoch.ToTdb().TimeSpanFromJ2000().TotalSeconds, keplerianElements.PerigeeRadius(),
             keplerianElements.Eccentricity(), keplerianElements.Inclination(), keplerianElements.AscendingNode(),
             keplerianElements.ArgumentOfPeriapsis(), keplerianElements.MeanAnomaly(), keplerianElements.Frame.Name);
     }
@@ -134,7 +134,7 @@ internal static class ProfilesConfiguration
     /// </summary>
     internal static DTO.EquinoctialElements Convert(this OrbitalParameters.EquinoctialElements equinoctialElements)
     {
-        return new EquinoctialElements(equinoctialElements.Epoch.ToTDB().TimeSpanFromJ2000().TotalSeconds, equinoctialElements.Observer.NaifId, equinoctialElements.Frame.Name,
+        return new EquinoctialElements(equinoctialElements.Epoch.ToTdb().TimeSpanFromJ2000().TotalSeconds, equinoctialElements.Observer.NaifId, equinoctialElements.Frame.Name,
             equinoctialElements.SemiMajorAxis(), equinoctialElements.G, equinoctialElements.F,
             equinoctialElements.K, equinoctialElements.H, equinoctialElements.MeanLongitude(), 0.0, -Constants.HalfPi, Constants.HalfPi, 0.0);
     }

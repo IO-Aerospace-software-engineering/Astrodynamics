@@ -57,7 +57,7 @@ public class MarsStandardAtmosphere : IAtmosphericModel, IGeodeticDensityModel, 
     /// reaches <see cref="IsothermalLayerTemperature"/> on the Celsius scale (−134.15 °C), about 49 887.387 m. With the
     /// curve fit's own offset (273.1) its absolute temperature there is 138.95 K; the transition takes it to 139 K (#438).
     /// </summary>
-    internal const double IsothermalLayerBase = (Constants.Kelvin - 23.4 - IsothermalLayerTemperature) / 0.00222;
+    internal const double IsothermalLayerBase = (Constants.ZeroCelsiusInKelvin - 23.4 - IsothermalLayerTemperature) / 0.00222;
 
     // GM (m³/s²) and volumetric mean radius (m) of Mars, NSSDC Mars fact sheet (confirmed by S. Guillet, 2026-10-24)
     private const double MarsGravitationalParameter = 4.2828e13;
@@ -68,7 +68,7 @@ public class MarsStandardAtmosphere : IAtmosphericModel, IGeodeticDensityModel, 
 
     /// <summary>
     /// The offset from °C to K of the curve fit of the NASA Glenn Research Center, ρ = p / [0.1921 (T + 273.1)]: its own
-    /// 273.1, not the 273.15 of the Celsius scale (<see cref="Constants.Kelvin"/>), which takes over in the layer (#438).
+    /// 273.1, not the 273.15 of the Celsius scale (<see cref="Constants.ZeroCelsiusInKelvin"/>), which takes over in the layer (#438).
     /// </summary>
     internal const double CurveFitKelvin = 273.1;
 
@@ -236,8 +236,8 @@ public class MarsStandardAtmosphere : IAtmosphericModel, IGeodeticDensityModel, 
 
         var (w, _) = Blend(altitude);
         return w >= 1.0
-            ? IsothermalLayerTemperature - Constants.Kelvin
-            : (1.0 - w) * UpperCurveFitTemperature(altitude) + w * (IsothermalLayerTemperature - Constants.Kelvin);
+            ? IsothermalLayerTemperature - Constants.ZeroCelsiusInKelvin
+            : (1.0 - w) * UpperCurveFitTemperature(altitude) + w * (IsothermalLayerTemperature - Constants.ZeroCelsiusInKelvin);
     }
 
     // Absolute temperature, K: the curve fit's °C plus its own 273.1 below the layer, its blend with 139 K in the

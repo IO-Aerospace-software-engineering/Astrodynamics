@@ -38,10 +38,10 @@ See [Covariance Propagation](reference/covariance-propagation.md).
 Defined in `IO.Astrodynamics.Constants`:
 
 ```csharp
-public const double G = 6.67430e-11;
+public const double GravitationalConstant = 6.67430e-11;
 public const double AU = 149597870700.0;
-public const double C = 299792458.0;
-public const double g0 = 9.80665;
+public const double SpeedOfLight = 299792458.0;
+public const double StandardGravity = 9.80665;
 public const double Deg2Rad = Math.PI / 180.0;
 public const double Rad2Deg = 180.0 / Math.PI;
 ```
@@ -59,7 +59,7 @@ public const double Rad2Deg = 180.0 / Math.PI;
 
 Frame transforms in the managed API use a consistent source-to-destination convention.
 
-- `frame.GetStateOrientationToICRF(epoch)` returns a rotation `frame -> ICRF`
+- `frame.GetStateOrientationToIcrf(epoch)` returns a rotation `frame -> ICRF`
 - `frame.ToFrame(targetFrame, epoch)` returns a rotation `frame -> targetFrame`
 - applying the returned quaternion rotates a vector from the source frame into the destination frame
 
@@ -67,7 +67,7 @@ Example:
 
 ```csharp
 // Inputs: epoch (Time), positionIcrf (Vector3)
-var so = Frame.CIRS.GetStateOrientationToICRF(epoch);
+var so = Frame.CIRS.GetStateOrientationToIcrf(epoch);
 var positionCirs = positionIcrf.Rotate(so.Rotation.Conjugate());  // ICRF -> CIRS
 var positionBack = positionCirs.Rotate(so.Rotation);              // CIRS -> ICRF, positionIcrf again
 ```

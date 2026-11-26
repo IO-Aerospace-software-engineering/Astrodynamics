@@ -70,7 +70,7 @@ internal static class TimeAndWindowsPage
         var t4 = Time.Parse("JD 2460483.0 UTC");
         var doy = Time.FromDayOfYear(2024, 173, 43200.0, TimeScale.UTC);
         bool sameLabel = t1.EqualsExact(t2) && t1.EqualsExact(t3) && t1.EqualsExact(t4) && t1.EqualsExact(doy); // true
-        var tdb = t1.ToTDB();
+        var tdb = t1.ToTdb();
         bool sameInstant = tdb == t1; // true: one instant in two scales
         string text = $"{tdb:yyyy-MM-dd HH:mm:ss}"; // 2024-06-21 12:01:09 TDB
         var later = t1.AddDays(1.0);

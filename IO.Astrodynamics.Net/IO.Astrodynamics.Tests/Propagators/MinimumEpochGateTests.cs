@@ -502,7 +502,7 @@ public class MinimumEpochGateTests
         public OrbitalParams InitialIcrf { get; private init; }
 
         /// <summary>The seconds of the reference from S: TT about the Earth, TDB about the Moon.</summary>
-        public double Seconds(Time t) => Case.Moon ? (t.ToTDB() - S).TotalSeconds : Tt(t);
+        public double Seconds(Time t) => Case.Moon ? (t.ToTdb() - S).TotalSeconds : Tt(t);
 
         /// <summary>The minimum epoch of the k-th executed impulse, as the library set it.</summary>
         public Time Gate(int k) => Executed[k].MinEpoch;
@@ -551,7 +551,7 @@ public class MinimumEpochGateTests
             CelestialItem[] bodies = [center];
             if (frameName == "ECLIPJ2000")
             {
-                orbit = orbitIcrf.ToStateVector().ToFrame(Frame.ECLIPTIC_J2000).ToStateVector();
+                orbit = orbitIcrf.ToStateVector().ToFrame(Frame.ECLIPJ2000).ToStateVector();
             }
             else if (frameName == "SSB")
             {

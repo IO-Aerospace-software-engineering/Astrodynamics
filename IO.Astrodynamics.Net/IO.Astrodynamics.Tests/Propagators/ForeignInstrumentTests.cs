@@ -183,7 +183,7 @@ public class ForeignInstrumentTests
         Assert.Contains(spacecraft.Name, rejected.Message);
         Assert.False(spacecraft.IsPropagated);
         Assert.Empty(spacecraft.ExecutedManeuvers);
-        Assert.Empty(spacecraft.Frame.GetStateOrientationsToICRF());
+        Assert.Empty(spacecraft.Frame.GetStateOrientationsToIcrf());
     }
 
     /// <summary>

@@ -61,7 +61,7 @@ public class SpacecraftToOpmTests
         var earth = new CelestialBody(PlanetsAndMoons.EARTH, Frame.ICRF, S);
         double ra = 6378137.0 + 1000000.0, rp = 6378137.0 + 400000.0, a = (ra + rp) / 2.0;
         var orbit = new KeplerianElements(a, (ra - rp) / (ra + rp), 0.9, 0.3, 1.1, System.Math.PI, earth, S, Frame.ICRF).ToStateVector();
-        var initial = frame == "ICRF" ? orbit : orbit.ToFrame(Frame.ECLIPTIC_J2000).ToStateVector();
+        var initial = frame == "ICRF" ? orbit : orbit.ToFrame(Frame.ECLIPJ2000).ToStateVector();
         var spacecraft = new Spacecraft(naifId, $"OPM{-naifId}", Dry, initial, 5000.0, new Clock($"OPM{-naifId}_CLK", 65536), cosparId: "2024-001A");
         var tank = new FuelTank("ft", Fuel, Fuel, "model", "sn");
         spacecraft.AddFuelTank(tank);
@@ -98,7 +98,7 @@ public class SpacecraftToOpmTests
         Assert.InRange((tc - S).TotalSeconds, 1000.0, 5000.0);
         var initialFrame = spacecraft.InitialOrbitalParameters.Frame;
         var earth = (CelestialItem)spacecraft.InitialOrbitalParameters.Observer;
-        double massAfter = (Dry + Fuel) * System.Math.Exp(-burn.DeltaV.Magnitude() / (Isp * IO.Astrodynamics.Constants.g0));
+        double massAfter = (Dry + Fuel) * System.Math.Exp(-burn.DeltaV.Magnitude() / (Isp * IO.Astrodynamics.Constants.StandardGravity));
         var ignition = burn.ThrustWindow!.Value.StartDate;
         Assert.True(ignition.AddSeconds(1.0) < tc);
 
@@ -148,7 +148,7 @@ public class SpacecraftToOpmTests
             Assert.Equal(executed ? 1 : 0, maneuvers);
             if (executed)
             {
-                Assert.Equal(burn.ThrustWindow!.Value.StartDate.ToUTC().DateTime, opm.Data.Maneuvers.Single().ManEpochIgnition);
+                Assert.Equal(burn.ThrustWindow!.Value.StartDate.ToUtc().DateTime, opm.Data.Maneuvers.Single().ManEpochIgnition);
             }
         }
 

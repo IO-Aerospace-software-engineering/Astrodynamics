@@ -54,8 +54,8 @@ public partial class SpiceApiTest
     {
         //Find time windows when the moon will be 400000 km away from the Earth
         var res = SpiceApi.Instance.FindWindowsOnDistanceConstraint(
-            new Window(TimeSystem.Time.CreateTDB(220881665.18391809),
-                TimeSystem.Time.CreateTDB(228657665.18565452)),
+            new Window(TimeSystem.Time.CreateTdb(220881665.18391809),
+                TimeSystem.Time.CreateTdb(228657665.18565452)),
             TestHelpers.EarthAtJ2000.NaifId, TestHelpers.MoonAtJ2000.NaifId, RelationalOperator.GreaterThan, 400000000, Aberration.None,
             TimeSpan.FromSeconds(86400.0));
         var windows = res as Window[] ?? res.ToArray();
@@ -71,8 +71,8 @@ public partial class SpiceApiTest
     {
         //Find time windows when the moon will be 400000 km away from the Earth
         var res = SpiceApi.Instance.FindWindowsOnDistanceConstraint(
-            new Window(TimeSystem.Time.CreateTDB(220881665.18391809),
-                TimeSystem.Time.CreateTDB(228657665.18565452)),
+            new Window(TimeSystem.Time.CreateTdb(220881665.18391809),
+                TimeSystem.Time.CreateTdb(228657665.18565452)),
             TestHelpers.EarthAtJ2000.NaifId, TestHelpers.MoonAtJ2000.NaifId, RelationalOperator.GreaterThan, 400000000, Aberration.None,
             TimeSpan.FromSeconds(86400.0));
         var windows = res as Window[] ?? res.ToArray();
@@ -88,8 +88,8 @@ public partial class SpiceApiTest
     {
         //Find time windows when the Sun will be occulted by the moon
         var res = SpiceApi.Instance.FindWindowsOnOccultationConstraint(
-            new Window(TimeSystem.Time.CreateTDB(61473664.183390938),
-                TimeSystem.Time.CreateTDB(61646464.183445148)), TestHelpers.EarthAtJ2000.NaifId, TestHelpers.Sun.NaifId,
+            new Window(TimeSystem.Time.CreateTdb(61473664.183390938),
+                TimeSystem.Time.CreateTdb(61646464.183445148)), TestHelpers.EarthAtJ2000.NaifId, TestHelpers.Sun.NaifId,
             ShapeType.Ellipsoid, TestHelpers.MoonAtJ2000.NaifId, ShapeType.Ellipsoid, OccultationType.Any, Aberration.LT,
             TimeSpan.FromSeconds(3600.0));
         var windows = res as Window[] ?? res.ToArray();
@@ -103,11 +103,11 @@ public partial class SpiceApiTest
     {
         //Find time windows when the planetodetic point is illuminated by the sun (Official twilight 0.8° bellow horizon)
         var res = SpiceApi.Instance.FindWindowsOnIlluminationConstraint(
-            new Window(TimeSystem.Time.CreateTDB(674524800), TimeSystem.Time.CreateTDB(674611200)),
+            new Window(TimeSystem.Time.CreateTdb(674524800), TimeSystem.Time.CreateTdb(674611200)),
             TestHelpers.Sun.NaifId, TestHelpers.EarthAtJ2000.NaifId, new Frames.Frame("ITRF93"),
             new Planetodetic(2.2 * IO.Astrodynamics.Constants.Deg2Rad, 48.0 * IO.Astrodynamics.Constants.Deg2Rad, 0.0),
             IlluminationAngle.Incidence, RelationalOperator.LessThan,
-            System.Math.PI * 0.5 - (-0.8 * IO.Astrodynamics.Constants.Deg2Rad), 0.0, Aberration.CNS,
+            System.Math.PI * 0.5 - (-0.8 * IO.Astrodynamics.Constants.Deg2Rad), 0.0, Aberration.CnS,
             TimeSpan.FromHours(4.5), TestHelpers.Sun.NaifId);
         var windows = res as Window[] ?? res.ToArray();
         Assert.Equal(2, windows.Count());
@@ -125,7 +125,7 @@ public partial class SpiceApiTest
                 35.2471635434595 * IO.Astrodynamics.Constants.Deg2Rad, 0.107));
         //Find time windows when the moon will be above the horizon relative to Deep Space Station 13
         var res = SpiceApi.Instance.FindWindowsOnCoordinateConstraint(
-            new Window(TimeSystem.Time.CreateTDB(730036800.0), TimeSystem.Time.CreateTDB(730123200)), site.NaifId,
+            new Window(TimeSystem.Time.CreateTdb(730036800.0), TimeSystem.Time.CreateTdb(730123200)), site.NaifId,
             TestHelpers.MoonAtJ2000.NaifId, site.Frame, CoordinateSystem.Rectangular, Coordinate.Z,
             RelationalOperator.GreaterThan,
             0.0, 0.0, Aberration.None, TimeSpan.FromSeconds(60.0));
@@ -141,11 +141,11 @@ public partial class SpiceApiTest
     {
         //Find time windows when the planetodetic point is illuminated by the sun (Official twilight 0.8° bellow horizon)
         var res = SpiceApi.Instance.FindWindowsOnIlluminationConstraint(
-            new Window(TimeSystem.Time.CreateTDB(674524800), TimeSystem.Time.CreateTDB(674611200)),
+            new Window(TimeSystem.Time.CreateTdb(674524800), TimeSystem.Time.CreateTdb(674611200)),
             TestHelpers.Sun.NaifId, TestHelpers.EarthAtJ2000.NaifId, new Frames.Frame("ITRF93"),
             new Planetodetic(2.2 * IO.Astrodynamics.Constants.Deg2Rad, 48.0 * IO.Astrodynamics.Constants.Deg2Rad, 0.0),
             IlluminationAngle.Incidence, RelationalOperator.LessThan,
-            System.Math.PI * 0.5 - (-0.8 * IO.Astrodynamics.Constants.Deg2Rad), 0.0, Aberration.CNS,
+            System.Math.PI * 0.5 - (-0.8 * IO.Astrodynamics.Constants.Deg2Rad), 0.0, Aberration.CnS,
             TimeSpan.FromHours(4.5), TestHelpers.Sun.NaifId);
         var windows = res as Window[] ?? res.ToArray();
         Assert.Equal(2, windows.Count());
@@ -158,7 +158,7 @@ public partial class SpiceApiTest
     [Fact]
     public void ReadEphemeris()
     {
-        var searchWindow = new Window(TimeSystem.Time.CreateTDB(0.0), TimeSystem.Time.CreateTDB(100.0));
+        var searchWindow = new Window(TimeSystem.Time.CreateTdb(0.0), TimeSystem.Time.CreateTdb(100.0));
         var res = SpiceApi.Instance.ReadEphemeris(searchWindow, TestHelpers.EarthAtJ2000.NaifId, TestHelpers.MoonAtJ2000.NaifId,
             Frames.Frame.ICRF, Aberration.LT, TimeSpan.FromSeconds(10.0)).Select(x => x.ToStateVector());
 
@@ -177,7 +177,7 @@ public partial class SpiceApiTest
     [Fact]
     public void ReadEphemerisUTC()
     {
-        var searchWindow = new Window(TimeSystem.Time.CreateUTC(0.0), TimeSystem.Time.CreateUTC(100.0));
+        var searchWindow = new Window(TimeSystem.Time.CreateUtc(0.0), TimeSystem.Time.CreateUtc(100.0));
         var res = SpiceApi.Instance.ReadEphemeris(searchWindow, TestHelpers.EarthAtJ2000.NaifId, TestHelpers.MoonAtJ2000.NaifId,
             Frames.Frame.ICRF, Aberration.LT, TimeSpan.FromSeconds(10.0)).Select(x => x.ToStateVector());
 
@@ -192,7 +192,7 @@ public partial class SpiceApiTest
     [Fact]
     public void ReadLongEphemeris()
     {
-        var searchWindow = new Window(TimeSystem.Time.CreateTDB(0.0), TimeSystem.Time.CreateTDB(15000.0));
+        var searchWindow = new Window(TimeSystem.Time.CreateTdb(0.0), TimeSystem.Time.CreateTdb(15000.0));
         var res = SpiceApi.Instance.ReadEphemeris(searchWindow, TestHelpers.EarthAtJ2000.NaifId, TestHelpers.MoonAtJ2000.NaifId,
             Frames.Frame.ICRF, Aberration.LT, TimeSpan.FromSeconds(1.0)).Select(x => x.ToStateVector());
 
@@ -213,7 +213,7 @@ public partial class SpiceApiTest
     [Fact]
     public void ReadOrientation()
     {
-        TimeSystem.Time start = TimeSystem.Time.CreateTDB(662778000.0);
+        TimeSystem.Time start = TimeSystem.Time.CreateTdb(662778000.0);
         TimeSystem.Time end = start.AddSeconds(60.0);
         Window window = new Window(start, end);
 
@@ -318,7 +318,7 @@ public partial class SpiceApiTest
         try
         {
             // Window safely within the CK coverage (~1.6 days past SCLK epoch)
-            var start = TimeSystem.Time.CreateTDB(374100000.0);
+            var start = TimeSystem.Time.CreateTdb(374100000.0);
             var window = new Window(start, start.AddSeconds(300.0));
 
             var results = SpiceApi.Instance.ReadOrientation(
@@ -359,7 +359,7 @@ public partial class SpiceApiTest
     private static Frames.Frame SiteObserverFrame(string name) => name switch
     {
         "ICRF" => Frames.Frame.ICRF,
-        "ECLIPJ2000" => Frames.Frame.ECLIPTIC_J2000,
+        "ECLIPJ2000" => Frames.Frame.ECLIPJ2000,
         _ => Frames.Frame.TEME
     };
 
@@ -544,7 +544,7 @@ public partial class SpiceApiTest
     [Theory]
     [InlineData(Aberration.None)]
     [InlineData(Aberration.LT)]
-    [InlineData(Aberration.CNS)]
+    [InlineData(Aberration.CnS)]
     public void ReadEphemeris_InGcrf_IsTheJ2000Read(Aberration aberration)
     {
         // GCRF has the axes of J2000 (GcrfFrame): the reference is SPICE's read of the Moon from the Earth in J2000, at an
@@ -586,7 +586,7 @@ public partial class SpiceApiTest
         // The reference is SPICE's transformation from and to J2000 (sxform); from or to GCRF it is the same, through
         // SpiceApi and through Frame.ToFrame of a frame built from the name, which the data provider hands to SPICE
         var epoch = new TimeSystem.Time(2024, 3, 1, 12, 0, 0, TimeScale.TDB);
-        foreach (var other in new[] { Frames.Frame.ECLIPTIC_J2000, new Frames.Frame("IAU_EARTH"), Frames.Frame.ICRF })
+        foreach (var other in new[] { Frames.Frame.ECLIPJ2000, new Frames.Frame("IAU_EARTH"), Frames.Frame.ICRF })
         {
             var fromJ2000 = SpiceApi.Instance.TransformFrame(epoch, Frames.Frame.ICRF, other);
             var toJ2000 = SpiceApi.Instance.TransformFrame(epoch, other, Frames.Frame.ICRF);
@@ -617,7 +617,7 @@ public partial class SpiceApiTest
     {
         // The windows where the Moon is north of the equator of J2000 seen from the Earth, over 40 days (gfposc): in GCRF the
         // same windows
-        var searchWindow = new Window(TimeSystem.Time.CreateTDB(730036800.0), TimeSystem.Time.CreateTDB(730036800.0 + 40.0 * 86400.0));
+        var searchWindow = new Window(TimeSystem.Time.CreateTdb(730036800.0), TimeSystem.Time.CreateTdb(730036800.0 + 40.0 * 86400.0));
         Window[] Search(Frames.Frame frame) => SpiceApi.Instance.FindWindowsOnCoordinateConstraint(searchWindow, 399, 301, frame,
             CoordinateSystem.Rectangular, Coordinate.Z, RelationalOperator.GreaterThan, 0.0, 0.0, Aberration.None, TimeSpan.FromHours(1.0)).ToArray();
 
@@ -644,7 +644,7 @@ public partial class SpiceApiTest
         try
         {
             // A day before the CK starts (2011-11-08), within the clock (from 2011-11-07)
-            var start = TimeSystem.Time.CreateTDB(373970000.0);
+            var start = TimeSystem.Time.CreateTdb(373970000.0);
             var exception = Assert.Throws<InvalidOperationException>(() => SpiceApi.Instance.ReadOrientation(
                 new Window(start, start), -555, TimeSpan.Zero, Frames.Frame.ICRF, TimeSpan.FromSeconds(1.0)).ToArray());
             Assert.Contains("No orientation found", exception.Message);
@@ -671,7 +671,7 @@ public partial class SpiceApiTest
         SpiceApi.Instance.LoadKernels(ckFile);
         try
         {
-            var start = TimeSystem.Time.CreateTDB(374100000.0);
+            var start = TimeSystem.Time.CreateTdb(374100000.0);
             // Use a step size (7.5 s) smaller than the CK sample interval so query epochs
             // fall between CK data points — tolerance must bridge the gap.
             var window = new Window(start, start.AddSeconds(120.0));
@@ -815,7 +815,7 @@ public partial class SpiceApiTest
         SpiceApi.Instance.LoadKernels(ckFile);
         try
         {
-            var start = TimeSystem.Time.CreateTDB(374100000.0);
+            var start = TimeSystem.Time.CreateTdb(374100000.0);
             var window = new Window(start, start.AddSeconds(300.0));
             var j2000 = SpiceApi.Instance.ReadOrientation(window, -555, TimeSpan.FromSeconds(60.0), Frames.Frame.ICRF, TimeSpan.FromSeconds(60.0)).ToArray();
             Assert.NotEmpty(j2000);
@@ -849,14 +849,14 @@ public partial class SpiceApiTest
         var spacecraft = new Spacecraft(-135, "Spc1", 3000.0, new StateVector(new Vector3(6800, 0, 0),
             new Vector3(0, 8.0, 0),
             TestHelpers.EarthAtJ2000,
-            TimeSystem.Time.CreateTDB(0.0), Frames.Frame.ICRF), 10000.0, clock);
+            TimeSystem.Time.CreateTdb(0.0), Frames.Frame.ICRF), 10000.0, clock);
 
         var sv = new StateVector[size];
         for (int i = 0; i < size; ++i)
         {
             sv[i] = new StateVector(new Vector3(6800 + i, i, i), new Vector3(i, 8.0 + i * 0.001, i),
                 TestHelpers.EarthAtJ2000,
-                TimeSystem.Time.CreateTDB(i), Frames.Frame.ICRF);
+                TimeSystem.Time.CreateTdb(i), Frames.Frame.ICRF);
         }
 
         //Write ephemeris file
@@ -870,7 +870,7 @@ public partial class SpiceApiTest
         SpiceApi.Instance.LoadKernels(file);
         try
         {
-            var window = new Window(TimeSystem.Time.J2000TDB, TimeSystem.Time.J2000TDB.AddSeconds(9.0));
+            var window = new Window(TimeSystem.Time.J2000Tdb, TimeSystem.Time.J2000Tdb.AddSeconds(9.0));
             var stateVectors = SpiceApi.Instance.ReadEphemeris(window, TestHelpers.EarthAtJ2000.NaifId, spacecraft.NaifId, Frames.Frame.ICRF,
                     Aberration.None, TimeSpan.FromSeconds(1.0))
                 .Select(x => x.ToStateVector()).ToArray();
@@ -902,12 +902,12 @@ public partial class SpiceApiTest
         var spacecraft = new Spacecraft(-175, "Spc1", 3000.0, new StateVector(new Vector3(6800, 0, 0),
             new Vector3(0, 8.0, 0),
             TestHelpers.EarthAtJ2000,
-            TimeSystem.Time.CreateTDB(0.0), Frames.Frame.ICRF), 10000.0, clock);
+            TimeSystem.Time.CreateTdb(0.0), Frames.Frame.ICRF), 10000.0, clock);
 
         var so = new StateOrientation[size];
         for (int i = 0; i < size; ++i)
         {
-            so[i] = new StateOrientation(new Quaternion(i, 1 + i * 0.1, 1 + i * 0.2, 1 + i * 0.3), Vector3.Zero, TimeSystem.Time.CreateTDB(i), Frames.Frame.ICRF);
+            so[i] = new StateOrientation(new Quaternion(i, 1 + i * 0.1, 1 + i * 0.2, 1 + i * 0.3), Vector3.Zero, TimeSystem.Time.CreateTdb(i), Frames.Frame.ICRF);
         }
 
         var clockFile = new FileInfo("OrientationClockTest.tsc");
@@ -926,7 +926,7 @@ public partial class SpiceApiTest
             //Load ephemeris file
             SpiceApi.Instance.LoadKernels(file);
 
-            var window = new Window(TimeSystem.Time.J2000TDB, TimeSystem.Time.J2000TDB.AddSeconds(9.0));
+            var window = new Window(TimeSystem.Time.J2000Tdb, TimeSystem.Time.J2000Tdb.AddSeconds(9.0));
             var stateOrientation = SpiceApi.Instance.ReadOrientation(window, spacecraft.NaifId, TimeSpan.Zero, Frames.Frame.ICRF, TimeSpan.FromSeconds(1.0))
                 .Select(x => x).ToArray();
 
@@ -1017,7 +1017,7 @@ public partial class SpiceApiTest
     void TransformFrame()
     {
         //Get the quaternion to transform
-        var res = SpiceApi.Instance.TransformFrame(TimeSystem.Time.J2000TDB, Frames.Frame.ICRF, new Frames.Frame("ITRF93"));
+        var res = SpiceApi.Instance.TransformFrame(TimeSystem.Time.J2000Tdb, Frames.Frame.ICRF, new Frames.Frame("ITRF93"));
         Assert.Equal(0.76713121207787449, res.Rotation.W, 6);
         Assert.Equal(-1.8618836714990174E-05, res.Rotation.VectorPart.X, 6);
         Assert.Equal(8.4688405480964646E-07, res.Rotation.VectorPart.Y, 6);
@@ -1031,7 +1031,7 @@ public partial class SpiceApiTest
     void TransformFrameWindows()
     {
         //Get the quaternion to transform
-        var res = SpiceApi.Instance.TransformFrame(new TimeSystem.Window(TimeSystem.Time.J2000TDB, TimeSystem.Time.J2000TDB.AddDays(1.0)), Frames.Frame.ICRF,
+        var res = SpiceApi.Instance.TransformFrame(new TimeSystem.Window(TimeSystem.Time.J2000Tdb, TimeSystem.Time.J2000Tdb.AddDays(1.0)), Frames.Frame.ICRF,
             new Frames.Frame("ITRF93"), TimeSpan.FromDays(1.0));
         // The start and the end, which lies on the grid (#781: before 11.0.0 the end was dropped)
         Assert.Equal(2, res.Count());
@@ -1049,9 +1049,9 @@ public partial class SpiceApiTest
     {
         //Get the quaternion to transform
         Assert.Throws<ArgumentNullException>(() =>
-            SpiceApi.Instance.TransformFrame(TimeSystem.Time.J2000TDB, Frames.Frame.ICRF, null));
+            SpiceApi.Instance.TransformFrame(TimeSystem.Time.J2000Tdb, Frames.Frame.ICRF, null));
         Assert.Throws<ArgumentNullException>(() =>
-            SpiceApi.Instance.TransformFrame(TimeSystem.Time.J2000TDB, null, new Frames.Frame("ITRF93")));
+            SpiceApi.Instance.TransformFrame(TimeSystem.Time.J2000Tdb, null, new Frames.Frame("ITRF93")));
     }
 
     [Fact]
@@ -1223,7 +1223,7 @@ public partial class SpiceApiTest
         SpiceApi.Instance.LoadKernels(new FileInfo(@"Data/UserDataTest/scn100/Spacecrafts/DRAGONFLY32/Ephemeris/DRAGONFLY32.spk"));
         SpiceApi.Instance.LoadKernels(new DirectoryInfo(@"Data/UserDataTest/scn100"));
         var spk = new FileInfo(@"Data/UserDataTest/scn100/Spacecrafts/DRAGONFLY32/Ephemeris/DRAGONFLY32.spk");
-        var epoch = TimeSystem.Time.CreateTDB(668100000.0);
+        var epoch = TimeSystem.Time.CreateTdb(668100000.0);
         Assert.True(SpiceApi.Instance.ReadEphemeris(epoch, 399, -1785, Frames.Frame.ICRF, Aberration.None).Position.Magnitude() > 6.0e6);
         SpiceApi.Instance.UnloadKernels(spk);
 
@@ -1324,8 +1324,8 @@ public partial class SpiceApiTest
     [Fact]
     void ConvertConicToState()
     {
-        var ke = new KeplerianElements(6800000.0, 0.1, 0.2, 0.3, 0.4, 0.5, TestHelpers.EarthAtJ2000, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF);
-        var state = SpiceApi.Instance.ConvertConicElementsToStateVector(ke, TimeSystem.Time.J2000TDB);
+        var ke = new KeplerianElements(6800000.0, 0.1, 0.2, 0.3, 0.4, 0.5, TestHelpers.EarthAtJ2000, TimeSystem.Time.J2000Tdb, Frames.Frame.ICRF);
+        var state = SpiceApi.Instance.ConvertConicElementsToStateVector(ke, TimeSystem.Time.J2000Tdb);
         var ke2 = SpiceApi.Instance.ConvertStateVectorToConicOrbitalElement(state);
         Assert.Equal(ke.SemiMajorAxis(), ke2.SemiMajorAxis(), 6);
         Assert.Equal(ke.Eccentricity(), ke2.Eccentricity(), 6);
@@ -1345,7 +1345,7 @@ public partial class SpiceApiTest
     void ConvertConicElementsToStateVector_AboutABodyWithoutGm_ThrowsSpiceException()
     {
         Assert.False(KernelTextValues.HasGravitationalParameter(507));
-        var ke = new KeplerianElements(7.0e6, 0.1, 0.2, 0.3, 0.4, 0.5, new IO.Astrodynamics.Body.CelestialBody(507), TimeSystem.Time.J2000TDB, Frames.Frame.ICRF);
+        var ke = new KeplerianElements(7.0e6, 0.1, 0.2, 0.3, 0.4, 0.5, new IO.Astrodynamics.Body.CelestialBody(507), TimeSystem.Time.J2000Tdb, Frames.Frame.ICRF);
         var error = Assert.Throws<SpiceException>(() => SpiceApi.Instance.ConvertConicElementsToStateVector(ke));
         // The same message on every run (#714: before, "can't be found" on some runs only, the name read after the failed GM
         // read indeterminate)
@@ -1360,7 +1360,7 @@ public partial class SpiceApiTest
     {
         Assert.False(KernelTextValues.HasGravitationalParameter(507));
         var eq = new IO.Astrodynamics.OrbitalParameters.EquinoctialElements(7.0e6, 0.01, 0.0, 0.1, 0.0, 0.5, new IO.Astrodynamics.Body.CelestialBody(507),
-            TimeSystem.Time.J2000TDB, Frames.Frame.ICRF);
+            TimeSystem.Time.J2000Tdb, Frames.Frame.ICRF);
         var error = Assert.Throws<SpiceException>(() => SpiceApi.Instance.ConvertEquinoctialElementsToStateVector(eq));
         Assert.Equal(ElaraWithoutGmMessage, error.Message);
     }
@@ -1373,10 +1373,10 @@ public partial class SpiceApiTest
     {
         Assert.False(KernelTextValues.HasGravitationalParameter(507));
         var elara = new IO.Astrodynamics.Body.CelestialBody(507);
-        var ke = new KeplerianElements(-7.0e6, 1.5, 0.2, 0.3, 0.4, 0.5, elara, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF);
+        var ke = new KeplerianElements(-7.0e6, 1.5, 0.2, 0.3, 0.4, 0.5, elara, TimeSystem.Time.J2000Tdb, Frames.Frame.ICRF);
         var error = Assert.Throws<InvalidOperationException>(() => SpiceApi.Instance.ConvertConicElementsToStateVector(ke));
         Assert.Contains("BODY507_GM", error.Message);
-        error = Assert.Throws<InvalidOperationException>(() => SpiceApi.Instance.ConvertConicElementsToStateVector(ke, TimeSystem.Time.J2000TDB));
+        error = Assert.Throws<InvalidOperationException>(() => SpiceApi.Instance.ConvertConicElementsToStateVector(ke, TimeSystem.Time.J2000Tdb));
         Assert.Contains("BODY507_GM", error.Message);
         AssertNothingPending();
     }
@@ -1392,8 +1392,8 @@ public partial class SpiceApiTest
     [InlineData(double.PositiveInfinity)]
     void ConvertConicElementsToStateVector_WithAGmNotFiniteAndAboveZero_ThrowsArgumentOutOfRangeException(double gm)
     {
-        var ke = new KeplerianElements(6800000.0, 0.1, 0.2, 0.3, 0.4, 0.5, TestHelpers.EarthAtJ2000, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF);
-        var error = Assert.Throws<ArgumentOutOfRangeException>(() => SpiceApi.Instance.ConvertConicElementsToStateVector(ke, TimeSystem.Time.J2000TDB, gm));
+        var ke = new KeplerianElements(6800000.0, 0.1, 0.2, 0.3, 0.4, 0.5, TestHelpers.EarthAtJ2000, TimeSystem.Time.J2000Tdb, Frames.Frame.ICRF);
+        var error = Assert.Throws<ArgumentOutOfRangeException>(() => SpiceApi.Instance.ConvertConicElementsToStateVector(ke, TimeSystem.Time.J2000Tdb, gm));
         Assert.Equal("gm", error.ParamName);
         AssertNothingPending();
     }
@@ -1409,8 +1409,8 @@ public partial class SpiceApiTest
     private static KeplerianElements ElementsOutsideTheConicsDomainNamed(string name) => name switch
     {
         "mean elements of e = 1.5" => KeplerianElements.FromOMM(15.5, 1.5, 51.6, 10.0, 20.0, 30.0, TestHelpers.EarthAtJ2000,
-            TimeSystem.Time.J2000TDB, Frames.Frame.ICRF),
-        _ => new KeplerianElements(-1.0e300, 1.0e10, 0.2, 0.3, 0.4, 0.5, TestHelpers.EarthAtJ2000, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF)
+            TimeSystem.Time.J2000Tdb, Frames.Frame.ICRF),
+        _ => new KeplerianElements(-1.0e300, 1.0e10, 0.2, 0.3, 0.4, 0.5, TestHelpers.EarthAtJ2000, TimeSystem.Time.J2000Tdb, Frames.Frame.ICRF)
     };
 
     [Theory]
@@ -1423,8 +1423,8 @@ public partial class SpiceApiTest
         foreach (var conversion in new Func<IO.Astrodynamics.OrbitalParameters.StateVector>[]
                  {
                      () => SpiceApi.Instance.ConvertConicElementsToStateVector(ke),
-                     () => SpiceApi.Instance.ConvertConicElementsToStateVector(ke, TimeSystem.Time.J2000TDB),
-                     () => SpiceApi.Instance.ConvertConicElementsToStateVector(ke, TimeSystem.Time.J2000TDB, gm)
+                     () => SpiceApi.Instance.ConvertConicElementsToStateVector(ke, TimeSystem.Time.J2000Tdb),
+                     () => SpiceApi.Instance.ConvertConicElementsToStateVector(ke, TimeSystem.Time.J2000Tdb, gm)
                  })
         {
             var error = Assert.Throws<ArgumentException>(conversion);
@@ -1443,7 +1443,7 @@ public partial class SpiceApiTest
     void KeplerianElements_OfASemiMajorAxisOfTheWrongSign_NeverReachTheConversion(double a, double e)
     {
         var error = Assert.Throws<ArgumentException>(() =>
-            new KeplerianElements(a, e, 0.2, 0.3, 0.4, 0.5, TestHelpers.EarthAtJ2000, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF));
+            new KeplerianElements(a, e, 0.2, 0.3, 0.4, 0.5, TestHelpers.EarthAtJ2000, TimeSystem.Time.J2000Tdb, Frames.Frame.ICRF));
         Assert.Equal("semiMajorAxis", error.ParamName);
         AssertNothingPending();
     }
@@ -1460,13 +1460,13 @@ public partial class SpiceApiTest
         if (p <= 0.0)
         {
             var refused = Assert.Throws<ArgumentOutOfRangeException>(() => new IO.Astrodynamics.OrbitalParameters.EquinoctialElements(p,
-                f, 0.0, 0.1, 0.0, 0.5, TestHelpers.EarthAtJ2000, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF));
+                f, 0.0, 0.1, 0.0, 0.5, TestHelpers.EarthAtJ2000, TimeSystem.Time.J2000Tdb, Frames.Frame.ICRF));
             Assert.Equal("p", refused.ParamName);
             return;
         }
 
         var eq = new IO.Astrodynamics.OrbitalParameters.EquinoctialElements(p, f, 0.0, 0.1, 0.0, 0.5, TestHelpers.EarthAtJ2000,
-            TimeSystem.Time.J2000TDB, Frames.Frame.ICRF);
+            TimeSystem.Time.J2000Tdb, Frames.Frame.ICRF);
         Assert.True(eq.SemiMajorAxis() < 0.0 || f > 0.9);
         var error = Assert.Throws<ArgumentException>(() => SpiceApi.Instance.ConvertEquinoctialElementsToStateVector(eq));
         Assert.Equal("equinoctialElements", error.ParamName);
@@ -1485,8 +1485,8 @@ public partial class SpiceApiTest
     [Fact]
     void ConvertConicHyperbolicToState()
     {
-        var ke = new KeplerianElements(-6800000.0, 1.2, 0.2, 0.3, 0.4, 0.5, TestHelpers.EarthAtJ2000, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF);
-        var state = SpiceApi.Instance.ConvertConicElementsToStateVector(ke, TimeSystem.Time.J2000TDB);
+        var ke = new KeplerianElements(-6800000.0, 1.2, 0.2, 0.3, 0.4, 0.5, TestHelpers.EarthAtJ2000, TimeSystem.Time.J2000Tdb, Frames.Frame.ICRF);
+        var state = SpiceApi.Instance.ConvertConicElementsToStateVector(ke, TimeSystem.Time.J2000Tdb);
         var ke2 = SpiceApi.Instance.ConvertStateVectorToConicOrbitalElement(state);
         Assert.Equal(ke.SemiMajorAxis(), ke2.SemiMajorAxis(), 6);
         Assert.Equal(ke.Eccentricity(), ke2.Eccentricity(), 6);
@@ -1502,7 +1502,7 @@ public partial class SpiceApiTest
     [Fact]
     public void ReadEphemerisFromIds()
     {
-        var searchWindow = new Window(TimeSystem.Time.CreateTDB(0.0), TimeSystem.Time.CreateTDB(100.0));
+        var searchWindow = new Window(TimeSystem.Time.CreateTdb(0.0), TimeSystem.Time.CreateTdb(100.0));
         var res = SpiceApi.Instance.ReadEphemeris(searchWindow, PlanetsAndMoons.EARTH.NaifId, PlanetsAndMoons.MOON.NaifId,
             Frames.Frame.ICRF, Aberration.LT, TimeSpan.FromSeconds(10.0)).Select(x => x.ToStateVector());
 
@@ -1521,7 +1521,7 @@ public partial class SpiceApiTest
     [Fact]
     public void ReadEphemerisAtEpochFromIds()
     {
-        var epoch = TimeSystem.Time.CreateTDB(0.0);
+        var epoch = TimeSystem.Time.CreateTdb(0.0);
         var res = SpiceApi.Instance.ReadEphemeris(epoch, PlanetsAndMoons.EARTH.NaifId, PlanetsAndMoons.MOON.NaifId,
             Frames.Frame.ICRF, Aberration.LT);
 
@@ -1536,7 +1536,7 @@ public partial class SpiceApiTest
     public void ReadEphemerisFromSsbObserver()
     {
         // Test with SSB observer (naifId = 0) — CelestialItem.Create(0) returns a Barycenter
-        var epoch = TimeSystem.Time.CreateTDB(0.0);
+        var epoch = TimeSystem.Time.CreateTdb(0.0);
         var res = SpiceApi.Instance.ReadEphemeris(epoch, 0, PlanetsAndMoons.EARTH.NaifId,
             Frames.Frame.ICRF, Aberration.None);
 
@@ -1554,7 +1554,7 @@ public partial class SpiceApiTest
         {
             sv[i] = new StateVector(new Vector3(6800 + i, i, i), new Vector3(i, 8.0 + i * 0.001, i),
                 TestHelpers.EarthAtJ2000,
-                TimeSystem.Time.CreateTDB(i), Frames.Frame.ICRF);
+                TimeSystem.Time.CreateTdb(i), Frames.Frame.ICRF);
         }
 
         FileInfo file = new FileInfo("EphemerisTestFileFromId.spk");
@@ -1562,7 +1562,7 @@ public partial class SpiceApiTest
         SpiceApi.Instance.LoadKernels(file);
         try
         {
-            var window = new Window(TimeSystem.Time.J2000TDB, TimeSystem.Time.J2000TDB.AddSeconds(9.0));
+            var window = new Window(TimeSystem.Time.J2000Tdb, TimeSystem.Time.J2000Tdb.AddSeconds(9.0));
             var stateVectors = SpiceApi.Instance.ReadEphemeris(window, PlanetsAndMoons.EARTH.NaifId, -136,
                     Frames.Frame.ICRF, Aberration.None, TimeSpan.FromSeconds(1.0))
                 .Select(x => x.ToStateVector()).ToArray();
@@ -1587,12 +1587,12 @@ public partial class SpiceApiTest
         var spacecraft = new Spacecraft(-176, "Spc2", 3000.0, new StateVector(new Vector3(6800, 0, 0),
             new Vector3(0, 8.0, 0),
             TestHelpers.EarthAtJ2000,
-            TimeSystem.Time.CreateTDB(0.0), Frames.Frame.ICRF), 10000.0, clock);
+            TimeSystem.Time.CreateTdb(0.0), Frames.Frame.ICRF), 10000.0, clock);
 
         var so = new StateOrientation[size];
         for (int i = 0; i < size; ++i)
         {
-            so[i] = new StateOrientation(new Quaternion(i, 1 + i * 0.1, 1 + i * 0.2, 1 + i * 0.3), Vector3.Zero, TimeSystem.Time.CreateTDB(i), Frames.Frame.ICRF);
+            so[i] = new StateOrientation(new Quaternion(i, 1 + i * 0.1, 1 + i * 0.2, 1 + i * 0.3), Vector3.Zero, TimeSystem.Time.CreateTdb(i), Frames.Frame.ICRF);
         }
 
         var clockFile = new FileInfo("OrientationClockTestFromId.tsc");
@@ -1604,7 +1604,7 @@ public partial class SpiceApiTest
             SpiceApi.Instance.WriteOrientation(file, spacecraft.NaifId, so);
             SpiceApi.Instance.LoadKernels(file);
 
-            var window = new Window(TimeSystem.Time.J2000TDB, TimeSystem.Time.J2000TDB.AddSeconds(9.0));
+            var window = new Window(TimeSystem.Time.J2000Tdb, TimeSystem.Time.J2000Tdb.AddSeconds(9.0));
             var stateOrientation = SpiceApi.Instance.ReadOrientation(window, spacecraft.NaifId, TimeSpan.Zero, Frames.Frame.ICRF, TimeSpan.FromSeconds(1.0))
                 .ToArray();
 
@@ -1621,9 +1621,9 @@ public partial class SpiceApiTest
     [Fact]
     void ConvertConicToStateWithExplicitGm()
     {
-        var ke = new KeplerianElements(6800000.0, 0.1, 0.2, 0.3, 0.4, 0.5, TestHelpers.EarthAtJ2000, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF);
+        var ke = new KeplerianElements(6800000.0, 0.1, 0.2, 0.3, 0.4, 0.5, TestHelpers.EarthAtJ2000, TimeSystem.Time.J2000Tdb, Frames.Frame.ICRF);
         var gm = TestHelpers.EarthAtJ2000.GM;
-        var state = SpiceApi.Instance.ConvertConicElementsToStateVector(ke, TimeSystem.Time.J2000TDB, gm);
+        var state = SpiceApi.Instance.ConvertConicElementsToStateVector(ke, TimeSystem.Time.J2000Tdb, gm);
         var ke2 = SpiceApi.Instance.ConvertStateVectorToConicOrbitalElement(state, gm);
         Assert.Equal(ke.SemiMajorAxis(), ke2.SemiMajorAxis(), 6);
         Assert.Equal(ke.Eccentricity(), ke2.Eccentricity(), 6);
@@ -1637,7 +1637,7 @@ public partial class SpiceApiTest
     void Propagate2BodiesWithExplicitGm()
     {
         var sv = new StateVector(new Vector3(6800000.0, 0.0, 0.0), new Vector3(0.0, 7656.2204182967143, 0.0),
-            TestHelpers.EarthAtJ2000, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF);
+            TestHelpers.EarthAtJ2000, TimeSystem.Time.J2000Tdb, Frames.Frame.ICRF);
         var gm = TestHelpers.EarthAtJ2000.GM;
         var result = SpiceApi.Instance.Propagate2Bodies(sv, gm, TimeSpan.FromSeconds(60.0));
         Assert.NotEqual(0.0, result.Position.Magnitude());
@@ -1653,7 +1653,7 @@ public partial class SpiceApiTest
         //
         // Customer-specified start: 2024-01-08T08:16:18.771 (UTC)
         // UTC 08:16:18.771 → TDB ≈ 08:17:27.955 (exactly at CK coverage start)
-        // Without ToTDB() fix, SPICE receives TDB 08:16:18.771 → before CK start → crash
+        // Without ToTdb() fix, SPICE receives TDB 08:16:18.771 → before CK start → crash
         var sclkFile = new FileInfo(Path.Combine(Constants.ClpsDataPath.FullName,
             "clps_to2ab_apm1_v02.tsc"));
         var ckFile = new FileInfo(Path.Combine(Constants.ClpsDataPath.FullName,
@@ -1674,7 +1674,7 @@ public partial class SpiceApiTest
             Assert.NotEmpty(results);
 
             // Verify returned epochs are near 2024 (far from J2000)
-            var windowStartTdbSeconds = window.StartDate.ToTDB().TimeSpanFromJ2000().TotalSeconds;
+            var windowStartTdbSeconds = window.StartDate.ToTdb().TimeSpanFromJ2000().TotalSeconds;
             foreach (var orientation in results)
             {
                 var epochSeconds = orientation.Epoch.TimeSpanFromJ2000().TotalSeconds;
@@ -1764,18 +1764,18 @@ public partial class SpiceApiTest
     void Propagate2BodiesAndConicOverloads()
     {
         var sv = new StateVector(new Vector3(6800000.0, 0.0, 0.0), new Vector3(0.0, 7656.2204182967143, 0.0),
-            TestHelpers.EarthAtJ2000, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF);
+            TestHelpers.EarthAtJ2000, TimeSystem.Time.J2000Tdb, Frames.Frame.ICRF);
         var gm = TestHelpers.EarthAtJ2000.GM;
         var explicitGm = SpiceApi.Instance.Propagate2Bodies(sv, gm, TimeSpan.FromSeconds(60.0));
         var byDuration = SpiceApi.Instance.Propagate2Bodies(sv, TimeSpan.FromSeconds(60.0));
-        var byEpoch = SpiceApi.Instance.Propagate2Bodies(sv, TimeSystem.Time.J2000TDB.AddSeconds(60.0));
+        var byEpoch = SpiceApi.Instance.Propagate2Bodies(sv, TimeSystem.Time.J2000Tdb.AddSeconds(60.0));
         Assert.Equal(explicitGm.Position, byDuration.Position);
         Assert.Equal(explicitGm.Velocity, byDuration.Velocity);
         Assert.Equal(explicitGm.Position, byEpoch.Position);
         Assert.Equal(explicitGm.Velocity, byEpoch.Velocity);
 
         const double a = 6800000.0;
-        var ke = new KeplerianElements(a, 0.0, 0.0, 0.0, 0.0, 0.0, TestHelpers.EarthAtJ2000, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF);
+        var ke = new KeplerianElements(a, 0.0, 0.0, 0.0, 0.0, 0.0, TestHelpers.EarthAtJ2000, TimeSystem.Time.J2000Tdb, Frames.Frame.ICRF);
         var state = SpiceApi.Instance.ConvertConicElementsToStateVector(ke);
         double positionError = (state.Position - new Vector3(a, 0.0, 0.0)).Magnitude();
         double velocityError = (state.Velocity - new Vector3(0.0, System.Math.Sqrt(gm / a), 0.0)).Magnitude();
@@ -1785,7 +1785,7 @@ public partial class SpiceApiTest
         Assert.Equal(0.0, velocityError);
 
         // The same circular equatorial orbit as equinoctial elements (p = a, f = g = h = k = 0, the longitude 0), through eqncpv
-        var equinoctial = new IO.Astrodynamics.OrbitalParameters.EquinoctialElements(a, 0.0, 0.0, 0.0, 0.0, 0.0, TestHelpers.EarthAtJ2000, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF);
+        var equinoctial = new IO.Astrodynamics.OrbitalParameters.EquinoctialElements(a, 0.0, 0.0, 0.0, 0.0, 0.0, TestHelpers.EarthAtJ2000, TimeSystem.Time.J2000Tdb, Frames.Frame.ICRF);
         var fromEquinoctial = SpiceApi.Instance.ConvertEquinoctialElementsToStateVector(equinoctial);
         double equinoctialPositionError = (fromEquinoctial.Position - new Vector3(a, 0.0, 0.0)).Magnitude();
         double equinoctialVelocityError = (fromEquinoctial.Velocity - new Vector3(0.0, System.Math.Sqrt(gm / a), 0.0)).Magnitude();
@@ -1805,7 +1805,7 @@ public partial class SpiceApiTest
     // prop2b.c and oscelt.c, SPICE(NONPOSITIVEMASS) for a GM not above 0; a GM that is not finite and a state that is not
     // finite raise no SPICE error (prop2b_c returns NaN), so they are checked before the native call
     private static StateVector LeoState(Vector3 velocity, IO.Astrodynamics.Body.CelestialItem observer = null) =>
-        new(new Vector3(6800000.0, 0.0, 0.0), velocity, observer ?? TestHelpers.EarthAtJ2000, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF);
+        new(new Vector3(6800000.0, 0.0, 0.0), velocity, observer ?? TestHelpers.EarthAtJ2000, TimeSystem.Time.J2000Tdb, Frames.Frame.ICRF);
 
     [Theory]
     [InlineData(0.0)]
@@ -1828,7 +1828,7 @@ public partial class SpiceApiTest
         var gm = TestHelpers.EarthAtJ2000.GM;
         foreach (var sv in new[]
                  {
-                     new StateVector(new Vector3(double.NaN, 0.0, 0.0), new Vector3(0.0, 7.5e3, 0.0), TestHelpers.EarthAtJ2000, TimeSystem.Time.J2000TDB,
+                     new StateVector(new Vector3(double.NaN, 0.0, 0.0), new Vector3(0.0, 7.5e3, 0.0), TestHelpers.EarthAtJ2000, TimeSystem.Time.J2000Tdb,
                          Frames.Frame.ICRF),
                      LeoState(new Vector3(0.0, double.PositiveInfinity, 0.0))
                  })
@@ -1841,7 +1841,7 @@ public partial class SpiceApiTest
 
         Assert.Throws<ArgumentNullException>(() => SpiceApi.Instance.Propagate2Bodies(null, gm, TimeSpan.FromSeconds(60.0)));
         Assert.Throws<ArgumentNullException>(() => SpiceApi.Instance.Propagate2Bodies(null, TimeSpan.FromSeconds(60.0)));
-        Assert.Throws<ArgumentNullException>(() => SpiceApi.Instance.Propagate2Bodies(null, TimeSystem.Time.J2000TDB));
+        Assert.Throws<ArgumentNullException>(() => SpiceApi.Instance.Propagate2Bodies(null, TimeSystem.Time.J2000Tdb));
         Assert.Throws<ArgumentNullException>(() => SpiceApi.Instance.ConvertStateVectorToConicOrbitalElement(null, gm));
         Assert.Throws<ArgumentNullException>(() => SpiceApi.Instance.ConvertStateVectorToConicOrbitalElement(null));
         AssertNothingPending();
@@ -1856,7 +1856,7 @@ public partial class SpiceApiTest
         var sv = LeoState(new Vector3(0.0, 7.5e3, 0.0), new IO.Astrodynamics.Body.CelestialBody(507));
         Assert.Contains("BODY507_GM", Assert.Throws<InvalidOperationException>(() => SpiceApi.Instance.Propagate2Bodies(sv, TimeSpan.FromSeconds(60.0))).Message);
         Assert.Contains("BODY507_GM",
-            Assert.Throws<InvalidOperationException>(() => SpiceApi.Instance.Propagate2Bodies(sv, TimeSystem.Time.J2000TDB.AddSeconds(60.0))).Message);
+            Assert.Throws<InvalidOperationException>(() => SpiceApi.Instance.Propagate2Bodies(sv, TimeSystem.Time.J2000Tdb.AddSeconds(60.0))).Message);
         Assert.Contains("BODY507_GM", Assert.Throws<InvalidOperationException>(() => SpiceApi.Instance.ConvertStateVectorToConicOrbitalElement(sv)).Message);
         AssertNothingPending();
     }
@@ -1867,14 +1867,14 @@ public partial class SpiceApiTest
     {
         var sv = LeoState(Vector3.Zero);
         var gm = TestHelpers.EarthAtJ2000.GM;
-        var before = SpiceApi.Instance.ReadEphemeris(TimeSystem.Time.J2000TDB, 399, 301, Frames.Frame.ICRF, Aberration.None);
+        var before = SpiceApi.Instance.ReadEphemeris(TimeSystem.Time.J2000Tdb, 399, 301, Frames.Frame.ICRF, Aberration.None);
         var error = Assert.Throws<SpiceException>(() => SpiceApi.Instance.Propagate2Bodies(sv, gm, TimeSpan.FromSeconds(60.0)));
         _output.WriteLine($"MESSAGE #714 Propagate2Bodies of a zero velocity: {error.Message}");
         Assert.EndsWith(": SPICE(ZEROVELOCITY)", error.Message);
         error = Assert.Throws<SpiceException>(() => SpiceApi.Instance.ConvertStateVectorToConicOrbitalElement(sv, gm));
         _output.WriteLine($"MESSAGE #714 ConvertStateVectorToConicOrbitalElement of a zero velocity: {error.Message}");
         Assert.EndsWith(": Zero vector for input velocity vector.", error.Message);
-        var moon = SpiceApi.Instance.ReadEphemeris(TimeSystem.Time.J2000TDB, 399, 301, Frames.Frame.ICRF, Aberration.None);
+        var moon = SpiceApi.Instance.ReadEphemeris(TimeSystem.Time.J2000Tdb, 399, 301, Frames.Frame.ICRF, Aberration.None);
         Assert.Equal(before.Position, moon.Position);
         Assert.Equal(before.Velocity, moon.Velocity);
         AssertNothingPending();
@@ -1896,7 +1896,7 @@ public partial class SpiceApiTest
         };
         foreach (var (position, velocity, mu) in cases)
         {
-            var sv = new StateVector(position, velocity, TestHelpers.EarthAtJ2000, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF);
+            var sv = new StateVector(position, velocity, TestHelpers.EarthAtJ2000, TimeSystem.Time.J2000Tdb, Frames.Frame.ICRF);
             double[] state = [position.X, position.Y, position.Z, velocity.X, velocity.Y, velocity.Z];
             var prop2b = Body.CspiceDirect.Prop2b(mu, state, 60.0);
             var error = Assert.Throws<SpiceException>(() => SpiceApi.Instance.Propagate2Bodies(sv, mu, TimeSpan.FromSeconds(60.0)));
@@ -1937,14 +1937,14 @@ public partial class SpiceApiTest
     {
         // An unknown name is a bad argument since R25 of #668: the error of #714 is the inner exception
         var argument = Assert.Throws<ArgumentException>(() =>
-            SpiceApi.Instance.TransformFrame(TimeSystem.Time.J2000TDB, Frames.Frame.ICRF, new Frames.Frame("NOT_A_FRAME")));
+            SpiceApi.Instance.TransformFrame(TimeSystem.Time.J2000Tdb, Frames.Frame.ICRF, new Frames.Frame("NOT_A_FRAME")));
         Assert.Equal("toFrame", argument.ParamName);
         var unknown = Assert.IsType<SpiceException>(argument.InnerException);
         _output.WriteLine($"MESSAGE #714 {unknown.Message}");
-        Assert.StartsWith($"SPICE gives no transformation from {Frames.Frame.ICRF.Name} to NOT_A_FRAME at {TimeSystem.Time.J2000TDB}: ", unknown.Message);
+        Assert.StartsWith($"SPICE gives no transformation from {Frames.Frame.ICRF.Name} to NOT_A_FRAME at {TimeSystem.Time.J2000Tdb}: ", unknown.Message);
         Assert.EndsWith(UnknownFrameMessage, unknown.Message);
 
-        var epoch = TimeSystem.Time.CreateTDB(6.3e9);
+        var epoch = TimeSystem.Time.CreateTdb(6.3e9);
         var itrf93 = new Frames.Frame("ITRF93");
         var uncovered = Assert.Throws<SpiceException>(() => SpiceApi.Instance.TransformFrame(epoch, Frames.Frame.ICRF, itrf93));
         _output.WriteLine($"MESSAGE #714 {uncovered.Message}");
@@ -1967,7 +1967,7 @@ public partial class SpiceApiTest
             var expected = Body.CspiceDirect.SxformError("J2000", to, et);
             Assert.False(string.IsNullOrEmpty(expected));
             var thrown = Record.Exception(() =>
-                SpiceApi.Instance.TransformFrame(TimeSystem.Time.CreateTDB(et), Frames.Frame.ICRF, new Frames.Frame(to)));
+                SpiceApi.Instance.TransformFrame(TimeSystem.Time.CreateTdb(et), Frames.Frame.ICRF, new Frames.Frame(to)));
             // The unknown name an ArgumentException since R25 of #668, SPICE's message on its inner exception
             var error = Assert.IsType<SpiceException>(to == "NOT_A_FRAME" ? Assert.IsType<ArgumentException>(thrown).InnerException : thrown);
             Assert.EndsWith(": " + expected, error.Message);
@@ -1989,7 +1989,7 @@ public partial class SpiceApiTest
     void ConvertConicElementsToStateVector_OfElementsNotFinite_ThrowsArgumentException(double i, double m, double raan, double aop)
     {
         var error = Assert.Throws<ArgumentException>(() => new KeplerianElements(7.0e6, 0.1, i, raan, aop, m, TestHelpers.EarthAtJ2000,
-            TimeSystem.Time.J2000TDB, Frames.Frame.ICRF));
+            TimeSystem.Time.J2000Tdb, Frames.Frame.ICRF));
         Assert.Equal(!double.IsFinite(i) ? "inclination" : !double.IsFinite(raan) ? "ascendingNode" :
             !double.IsFinite(aop) ? "argumentOfPeriapsis" : "meanAnomaly", error.ParamName);
         AssertNothingPending();
@@ -2003,7 +2003,7 @@ public partial class SpiceApiTest
     void ConvertEquinoctialElementsToStateVector_OfElementsNotFinite_ThrowsArgumentException(double h, double k, double l)
     {
         var error = Assert.Throws<ArgumentException>(() => new IO.Astrodynamics.OrbitalParameters.EquinoctialElements(7.0e6, 0.01, 0.0,
-            h, k, l, TestHelpers.EarthAtJ2000, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF));
+            h, k, l, TestHelpers.EarthAtJ2000, TimeSystem.Time.J2000Tdb, Frames.Frame.ICRF));
         Assert.Equal(!double.IsFinite(h) ? "h" : !double.IsFinite(k) ? "k" : "l0", error.ParamName);
         AssertNothingPending();
     }
@@ -2047,7 +2047,7 @@ public partial class SpiceApiTest
         var clockFile = new FileInfo(Path.Combine(dir.FullName, "clock.tsc"));
         var ckFile = new FileInfo(Path.Combine(dir.FullName, "pointing.bc"));
         var orbit = new StateVector(new Vector3(7.0e6, 0.0, 0.0), new Vector3(0.0, 7.5e3, 0.0), TestHelpers.EarthAtJ2000,
-            TimeSystem.Time.J2000TDB, Frames.Frame.ICRF);
+            TimeSystem.Time.J2000Tdb, Frames.Frame.ICRF);
         var spacecraft = new Spacecraft(id, $"IOA714CK{-id}", 1000.0, orbit, 10000.0, new Clock($"IOA714CLOCK{-id}", 65536));
         spacecraft.Clock.Write(clockFile);
         SpiceApi.Instance.LoadKernels(clockFile);
@@ -2069,7 +2069,7 @@ public partial class SpiceApiTest
             SpiceApi.Instance.LoadKernels(ckFile);
             try
             {
-                var records = SpiceApi.Instance.ReadOrientation(new Window(TimeSystem.Time.CreateTDB(0.0), TimeSystem.Time.CreateTDB(1000.0)), id,
+                var records = SpiceApi.Instance.ReadOrientation(new Window(TimeSystem.Time.CreateTdb(0.0), TimeSystem.Time.CreateTdb(1000.0)), id,
                     TimeSpan.FromSeconds(10.0), Frames.Frame.ICRF, TimeSpan.FromSeconds(100.0)).ToArray();
                 Assert.Equal(11, records.Length);
                 double worstSpice = 0.0, worstClosedForm = 0.0;
@@ -2079,7 +2079,7 @@ public partial class SpiceApiTest
                     var matrix = Body.CspiceDirect.Q2m(q.W, q.VectorPart.X, q.VectorPart.Y, q.VectorPart.Z);
                     var cmat = Body.CspiceDirect.Ckgp(id * 1000, sclk[i], 0.0, "J2000");
                     Assert.NotNull(cmat);
-                    double t = (records[i].Epoch - TimeSystem.Time.J2000TDB).TotalSeconds;
+                    double t = (records[i].Epoch - TimeSystem.Time.J2000Tdb).TotalSeconds;
                     double c = System.Math.Cos(rate * t), s = System.Math.Sin(rate * t);
                     worstSpice = System.Math.Max(worstSpice, RotationAngle(matrix, cmat));
                     worstClosedForm = System.Math.Max(worstClosedForm, RotationAngle(matrix, [c, -s, 0.0, s, c, 0.0, 0.0, 0.0, 1.0]));
@@ -2140,9 +2140,9 @@ public partial class SpiceApiTest
         try
         {
             // The grid 0, 50, ..., 1000 s, then 299.5 s and 700.5 s
-            var records = SpiceApi.Instance.ReadOrientation(new Window(TimeSystem.Time.CreateTDB(0.0), TimeSystem.Time.CreateTDB(1000.0)),
+            var records = SpiceApi.Instance.ReadOrientation(new Window(TimeSystem.Time.CreateTdb(0.0), TimeSystem.Time.CreateTdb(1000.0)),
                     CkPrioritySpacecraft, TimeSpan.FromSeconds(1.0), Frames.Frame.ICRF, TimeSpan.FromSeconds(50.0))
-                .Concat(SpiceApi.Instance.ReadOrientation(new Window(TimeSystem.Time.CreateTDB(299.5), TimeSystem.Time.CreateTDB(700.5)),
+                .Concat(SpiceApi.Instance.ReadOrientation(new Window(TimeSystem.Time.CreateTdb(299.5), TimeSystem.Time.CreateTdb(700.5)),
                     CkPrioritySpacecraft, TimeSpan.FromSeconds(1.0), Frames.Frame.ICRF, TimeSpan.FromSeconds(401.0))).ToArray();
             Assert.Equal(expected.Length, records.Length);
             var (worstSpice, worstClosedForm, recordsWithoutRates) =
@@ -2189,7 +2189,7 @@ public partial class SpiceApiTest
             double[] closedForm = noRates ? [1.0, 0.0, 0.0, 0.0, c, -s, 0.0, s, c] : [c, -s, 0.0, s, c, 0.0, 0.0, 0.0, 1.0];
             worstSpice = System.Math.Max(worstSpice, RotationAngle(matrix, cmat));
             worstClosedForm = System.Math.Max(worstClosedForm, RotationAngle(matrix, closedForm));
-            Assert.Equal(TimeSystem.Time.CreateTDB(et), records[i].Epoch);
+            Assert.Equal(TimeSystem.Time.CreateTdb(et), records[i].Epoch);
             Assert.Equal(noRates ? Vector3.Zero : new Vector3(0.0, 0.0, 1.0e-3), records[i].AngularVelocity);
             Assert.Equal(Frames.Frame.ICRF, records[i].ReferenceFrame);
         }
@@ -2199,7 +2199,7 @@ public partial class SpiceApiTest
 
     // The record of one epoch, read alone (a window of one epoch)
     private static StateOrientation ReadCkPriorityRecord(double epoch) =>
-        SpiceApi.Instance.ReadOrientation(new Window(TimeSystem.Time.CreateTDB(epoch), TimeSystem.Time.CreateTDB(epoch)),
+        SpiceApi.Instance.ReadOrientation(new Window(TimeSystem.Time.CreateTdb(epoch), TimeSystem.Time.CreateTdb(epoch)),
             CkPrioritySpacecraft, TimeSpan.FromSeconds(1.0), Frames.Frame.ICRF, TimeSpan.FromSeconds(1.0)).Single();
 
     private static System.Text.Json.JsonElement CkPriorityEntry(System.Text.Json.JsonElement[] entries, double epoch) =>
@@ -2231,7 +2231,7 @@ public partial class SpiceApiTest
         try
         {
             static bool ReadsGap(double et) => et is >= 300.0 and <= 400.0 or >= 600.0 and <= 700.0;
-            var grid = SpiceApi.Instance.ReadOrientation(new Window(TimeSystem.Time.CreateTDB(0.0), TimeSystem.Time.CreateTDB(1000.0)),
+            var grid = SpiceApi.Instance.ReadOrientation(new Window(TimeSystem.Time.CreateTdb(0.0), TimeSystem.Time.CreateTdb(1000.0)),
                 CkPrioritySpacecraft, TimeSpan.FromSeconds(1.0), Frames.Frame.ICRF, TimeSpan.FromSeconds(50.0)).ToArray();
             Assert.Equal(21, grid.Length);
             var (gridSpice, gridClosedForm, gridWithoutRates) = CompareCkPriorityRecords(grid, expected.Take(21).ToArray(), ReadsGap);
@@ -2279,7 +2279,7 @@ public partial class SpiceApiTest
         SpiceApi.Instance.LoadKernels(noRates);
         try
         {
-            var transformation = SpiceApi.Instance.TransformFrame(TimeSystem.Time.CreateTDB(500.0), Frames.Frame.ICRF, new Frames.Frame("CKPRIO_SC"));
+            var transformation = SpiceApi.Instance.TransformFrame(TimeSystem.Time.CreateTdb(500.0), Frames.Frame.ICRF, new Frames.Frame("CKPRIO_SC"));
             // sxform_c reads the CK with rates: its angular velocity, (0, 0, 1e-3) rad/s
             Assert.Equal(1.0e-3, transformation.AngularVelocity.Magnitude(), 15);
 
@@ -2367,8 +2367,8 @@ public partial class SpiceApiTest
         SpiceApi.Instance.LoadKernels(last);
         try
         {
-            var records = SpiceApi.Instance.ReadOrientation(new Window(TimeSystem.Time.CreateTDB(0.0), TimeSystem.Time.CreateTDB(1000.0)),
-                CkPrioritySpacecraft, TimeSpan.FromSeconds(1.0), Frames.Frame.ECLIPTIC_J2000, TimeSpan.FromSeconds(50.0)).ToArray();
+            var records = SpiceApi.Instance.ReadOrientation(new Window(TimeSystem.Time.CreateTdb(0.0), TimeSystem.Time.CreateTdb(1000.0)),
+                CkPrioritySpacecraft, TimeSpan.FromSeconds(1.0), Frames.Frame.ECLIPJ2000, TimeSpan.FromSeconds(50.0)).ToArray();
             Assert.Equal(21, records.Length);
             double worstAngle = 0.0, worstRate = 0.0;
             for (int i = 0; i < records.Length; i++)
@@ -2392,7 +2392,7 @@ public partial class SpiceApiTest
                     worstRate = System.Math.Max(worstRate, (records[i].AngularVelocity - new Vector3(av[0], av[1], av[2])).Magnitude());
                 }
 
-                Assert.Equal(Frames.Frame.ECLIPTIC_J2000, records[i].ReferenceFrame);
+                Assert.Equal(Frames.Frame.ECLIPJ2000, records[i].ReferenceFrame);
             }
 
             _output.WriteLine(
@@ -2431,7 +2431,7 @@ public partial class SpiceApiTest
 
     private static StateVector[] StatesAbout(IO.Astrodynamics.Body.CelestialItem centre) =>
         Enumerable.Range(0, 5).Select(i => new StateVector(new Vector3(7.0e6 + i, 0.0, 0.0), new Vector3(0.0, 7.5e3, 0.0), centre,
-            TimeSystem.Time.J2000TDB.AddSeconds(60.0 * i), Frames.Frame.ICRF)).ToArray();
+            TimeSystem.Time.J2000Tdb.AddSeconds(60.0 * i), Frames.Frame.ICRF)).ToArray();
 
     [Theory]
     [InlineData(false)]

@@ -87,8 +87,8 @@ public class WindowListTests
             var start = Epoch.AddSeconds(seconds[0]);
             var end = Epoch.AddSeconds(seconds[1]);
             if (!tdb) return new Window(start, end);
-            Assert.True(start.ToTDB() == start && end.ToTDB() == end);
-            return new Window(start.ToTDB(), end.ToTDB());
+            Assert.True(start.ToTdb() == start && end.ToTdb() == end);
+            return new Window(start.ToTdb(), end.ToTdb());
         }).ToList();
     }
 
@@ -112,7 +112,7 @@ public class WindowListTests
         var f = reference.Split('|');
         var a = Parse(f[0], false);
         var b = Parse(f[1], true);
-        var within = new Window(Epoch.AddSeconds(2.0).ToTDB(), Epoch.AddSeconds(10.0).ToTDB());
+        var within = new Window(Epoch.AddSeconds(2.0).ToTdb(), Epoch.AddSeconds(10.0).ToTdb());
 
         AssertResult(Parse(f[2], false), a.IntersectWindows(b), a, b);
         AssertResult(Parse(f[3], false), a.UnionWindows(b), a, b);
@@ -126,7 +126,7 @@ public class WindowListTests
     public void OnATieTheReceiversLabelIsKept()
     {
         var utc = new Window(Epoch, Epoch.AddHours(1));
-        var tdb = new Window(Epoch.ToTDB(), Epoch.AddHours(1).ToTDB());
+        var tdb = new Window(Epoch.ToTdb(), Epoch.AddHours(1).ToTdb());
 
         Assert.True(new[] { utc }.UnionWindows(new[] { tdb }).Single().StartDate.EqualsExact(utc.StartDate));
         Assert.True(new[] { utc }.UnionWindows(new[] { tdb }).Single().EndDate.EqualsExact(utc.EndDate));

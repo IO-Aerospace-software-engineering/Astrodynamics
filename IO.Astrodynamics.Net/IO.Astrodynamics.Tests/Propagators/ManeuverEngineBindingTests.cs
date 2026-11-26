@@ -194,7 +194,7 @@ public class ManeuverEngineBindingTests
         var integrator = IntegratorOf(integratorName);
         var tle = new Tle("ISS", "1 25544U 98067A   21020.53488036  .00016717  00000-0  10270-3 0  9054",
             "2 25544  51.6423 353.0312 0000493 320.8755  39.2360 15.49309423 25703");
-        var epoch = tle.Epoch.ToTDB();
+        var epoch = tle.Epoch.ToTdb();
         var window = new Window(epoch, epoch.AddSeconds(7200.0));
         CelestialBody earth;
         IO.Astrodynamics.OrbitalParameters.OrbitalParameters orbit;
@@ -228,7 +228,7 @@ public class ManeuverEngineBindingTests
         var mid = epoch.AddSeconds(3600.0);
         var midState = spacecraft.GetGeometricStateRelativeTo(mid, earth);
         var lastPropagation = spacecraft.LastPropagation;
-        var record = spacecraft.Frame.GetStateOrientationsToICRF().ToArray();
+        var record = spacecraft.Frame.GetStateOrientationsToIcrf().ToArray();
         var executed = spacecraft.ExecutedManeuvers.ToArray();
         double ownQuantity = ownTank.Quantity;
         double foreignQuantity = foreignEngine.FuelTank.Quantity;
@@ -247,7 +247,7 @@ public class ManeuverEngineBindingTests
         Assert.Equal(midState.Position, midAfter.Position);
         Assert.Equal(midState.Velocity, midAfter.Velocity);
         Assert.Same(lastPropagation, spacecraft.LastPropagation);
-        Assert.Equal(record, spacecraft.Frame.GetStateOrientationsToICRF().ToArray());
+        Assert.Equal(record, spacecraft.Frame.GetStateOrientationsToIcrf().ToArray());
         Assert.Equal(executed, spacecraft.ExecutedManeuvers.ToArray());
         Assert.Equal(ownQuantity, ownTank.Quantity);
         Assert.Equal(foreignQuantity, foreignEngine.FuelTank.Quantity);
@@ -279,7 +279,7 @@ public class ManeuverEngineBindingTests
         var states = spacecraft.InterpolatedStatesWindow;
         var midState = spacecraft.GetGeometricStateRelativeTo(Epoch.AddSeconds(3600.0), earth);
         var lastPropagation = spacecraft.LastPropagation;
-        var record = spacecraft.Frame.GetStateOrientationsToICRF().ToArray();
+        var record = spacecraft.Frame.GetStateOrientationsToIcrf().ToArray();
         var executed = spacecraft.ExecutedManeuvers.ToArray();
         double ownQuantity = ownTank.Quantity;
         double foreignQuantity = foreignEngine.FuelTank.Quantity;
@@ -297,7 +297,7 @@ public class ManeuverEngineBindingTests
         Assert.Equal(midState.Position, midAfter.Position);
         Assert.Equal(midState.Velocity, midAfter.Velocity);
         Assert.Same(lastPropagation, spacecraft.LastPropagation);
-        Assert.Equal(record, spacecraft.Frame.GetStateOrientationsToICRF().ToArray());
+        Assert.Equal(record, spacecraft.Frame.GetStateOrientationsToIcrf().ToArray());
         Assert.Equal(executed, spacecraft.ExecutedManeuvers.ToArray());
         Assert.Equal(ownQuantity, ownTank.Quantity);
         Assert.Equal(foreignQuantity, foreignEngine.FuelTank.Quantity);
@@ -463,7 +463,7 @@ public class ManeuverEngineBindingTests
         for (var t = Epoch; t <= Window.EndDate; t = t.AddSeconds(Output.TotalSeconds))
         {
             var velocity = spacecraft.GetGeometricStateRelativeTo(t, earth).Velocity;
-            var front = spacecraft.BodyFront.Rotate(spacecraft.Frame.GetStateOrientationToICRF(t).Rotation);
+            var front = spacecraft.BodyFront.Rotate(spacecraft.Frame.GetStateOrientationToIcrf(t).Rotation);
             worst = System.Math.Max(worst, AttitudeRecordTests.Angle(front, velocity));
         }
 

@@ -122,9 +122,9 @@ build it: `new CelestialBody(399)` reads the kernels once.
 |----------|-------------|
 | `Frame.ICRF` | International Celestial Reference Frame |
 | `Frame.TEME` | True Equator Mean Equinox (SGP4 output frame) |
-| `Frame.ECLIPTIC_J2000` | Ecliptic plane at J2000 epoch |
-| `Frame.ECLIPTIC_B1950` | Ecliptic plane at B1950 epoch |
-| `Frame.GALACTIC_SYSTEM2` | Galactic coordinate system II |
+| `Frame.ECLIPJ2000` | Ecliptic plane at J2000 epoch |
+| `Frame.ECLIPB1950` | Ecliptic plane at B1950 epoch |
+| `Frame.GALACTIC` | Galactic coordinate system II |
 | `Frame.B1950` | Mean equator and equinox of B1950 |
 | `Frame.FK4` | Fundamental Katalog 4 frame |
 

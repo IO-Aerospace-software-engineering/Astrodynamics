@@ -27,7 +27,7 @@ public sealed record ScreeningOptions
     /// that gives none takes it, or 5 m when it is null (decided by S. Guillet, 2026-11-14, on #683). The analysis of each
     /// candidate carries its resolved radius, and <see cref="ConjunctionAssessment.EvaluateAvoidance"/> re-analyzes with it.
     /// A record that propagates the covariance (<see cref="ConjunctionAnalysisOptions.Default"/>) gives each candidate the
-    /// Pc of <c>Analyze</c>, at its cost. Before 11.0.0 the screening took <c>SampleStep</c>, <c>MaximumEventSearchStep</c>,
+    /// Pc of <c>Analyze</c>, at its cost. Before 11.0.0 the screening took <c>SampleStep</c>, <c>MaxEventSearchStep</c>,
     /// <c>DefaultSecondaryHardBodyRadiusMeters</c> and <c>LowRelativeSpeedThresholdMetersPerSecond</c> of its own.
     /// </remarks>
     public ConjunctionAnalysisOptions Analysis { get; init; }

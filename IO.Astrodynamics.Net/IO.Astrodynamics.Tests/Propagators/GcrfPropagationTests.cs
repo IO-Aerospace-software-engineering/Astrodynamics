@@ -59,7 +59,7 @@ public class GcrfPropagationTests
     public void GcrfToIcrf_IsTheIdentity()
     {
         // The rotation the library uses between GCRF and ICRF, both ways: the identity, no angular velocity
-        foreach (var epoch in new[] { TimeSystem.Time.J2000TDB, Start, new TimeSystem.Time(2050, 1, 1, 0, 0, 0, TimeScale.TDB) })
+        foreach (var epoch in new[] { TimeSystem.Time.J2000Tdb, Start, new TimeSystem.Time(2050, 1, 1, 0, 0, 0, TimeScale.TDB) })
         {
             var toIcrf = Frames.Frame.GCRF.ToFrame(Frames.Frame.ICRF, epoch);
             var fromIcrf = Frames.Frame.ICRF.ToFrame(Frames.Frame.GCRF, epoch);
@@ -73,7 +73,7 @@ public class GcrfPropagationTests
     [Theory]
     [InlineData(Aberration.None)]
     [InlineData(Aberration.LT)]
-    [InlineData(Aberration.CNS)]
+    [InlineData(Aberration.CnS)]
     public void SpiceEphemeris_InGcrf_IsTheIcrfState(Aberration aberration)
     {
         // The SPICE path of an ephemeris read: the Moon and the Sun from the Earth, labelled GCRF, in Frame.GCRF and in a
@@ -165,15 +165,15 @@ public class GcrfPropagationTests
             var expected = icrfSpacecraft.GetEphemeris(epoch, observer, Frames.Frame.ICRF, Aberration.None);
             AssertSameState(expected, gcrfSpacecraft.GetEphemeris(epoch, observer, Frames.Frame.ICRF, Aberration.None));
             AssertSameState(expected, byNameSpacecraft.GetEphemeris(epoch, observer, Frames.Frame.ICRF, Aberration.None));
-            Assert.Equal(icrfSpacecraft.Frame.GetStateOrientationToICRF(epoch).Rotation, gcrfSpacecraft.Frame.GetStateOrientationToICRF(epoch).Rotation);
-            Assert.Equal(icrfSpacecraft.Frame.GetStateOrientationToICRF(epoch).Rotation, byNameSpacecraft.Frame.GetStateOrientationToICRF(epoch).Rotation);
+            Assert.Equal(icrfSpacecraft.Frame.GetStateOrientationToIcrf(epoch).Rotation, gcrfSpacecraft.Frame.GetStateOrientationToIcrf(epoch).Rotation);
+            Assert.Equal(icrfSpacecraft.Frame.GetStateOrientationToIcrf(epoch).Rotation, byNameSpacecraft.Frame.GetStateOrientationToIcrf(epoch).Rotation);
         }
 
         if (variant.Contains("Impulse"))
         {
             // The impulse fired and the nadir attitude followed it
             Assert.Single(gcrfSpacecraft.ExecutedManeuvers.OfType<ApogeeHeightManeuver>());
-            Assert.NotEqual(Quaternion.Identity, gcrfSpacecraft.Frame.GetStateOrientationToICRF(Window.EndDate).Rotation);
+            Assert.NotEqual(Quaternion.Identity, gcrfSpacecraft.Frame.GetStateOrientationToIcrf(Window.EndDate).Rotation);
         }
     }
 

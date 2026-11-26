@@ -456,7 +456,7 @@ public class AvoidanceFallbackTests : IClassFixture<AvoidanceFallbackCase>
         var settings = InheritedSettings with
         {
             SampleStep = TimeSpan.FromMinutes(2.0),
-            MaximumEventSearchStep = TimeSpan.FromSeconds(30.0),
+            MaxEventSearchStep = TimeSpan.FromSeconds(30.0),
             LowRelativeSpeedThresholdMetersPerSecond = 0.5
         };
         Spacecraft protectedCraft;
@@ -516,7 +516,7 @@ public class AvoidanceFallbackTests : IClassFixture<AvoidanceFallbackCase>
         var settings = InheritedSettings with
         {
             SampleStep = TimeSpan.FromMinutes(sampleStepMinutes),
-            MaximumEventSearchStep = TimeSpan.FromSeconds(maximumEventSearchStepSeconds),
+            MaxEventSearchStep = TimeSpan.FromSeconds(maximumEventSearchStepSeconds),
             BisectionToleranceSeconds = 10.0
         };
         var protectedCraft = ReferenceCase.NewSpacecraft(id, _case.ProtectedStart);

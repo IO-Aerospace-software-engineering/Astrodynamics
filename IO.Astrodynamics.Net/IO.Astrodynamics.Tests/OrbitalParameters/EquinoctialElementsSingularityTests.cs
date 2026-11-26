@@ -801,7 +801,7 @@ public class EquinoctialElementsSingularityTests
         {
             var c = _reference.Case(name);
             var icrf = c.Elements(_earth, Epoch, Frames.Frame.ICRF).ToStateVector();
-            foreach (var frame in new[] { Frames.Frame.TEME, Frames.Frame.ECLIPTIC_J2000, new Frames.Frame("ITRF93") })
+            foreach (var frame in new[] { Frames.Frame.TEME, Frames.Frame.ECLIPJ2000, new Frames.Frame("ITRF93") })
             {
                 // Act
                 var state = c.Elements(_earth, Epoch, frame).ToStateVector();

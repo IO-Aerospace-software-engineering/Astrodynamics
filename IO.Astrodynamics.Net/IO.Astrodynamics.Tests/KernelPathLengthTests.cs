@@ -104,7 +104,7 @@ public class KernelPathLengthTests : IDisposable
                 var spacecraft = CreateSpacecraft();
                 for (int i = 0; i < 3; i++)
                 {
-                    spacecraft.Frame.AddStateOrientationToICRF(new StateOrientation(new Quaternion(Vector3.VectorZ, 0.1 * i), Vector3.Zero,
+                    spacecraft.Frame.AddStateOrientationToIcrf(new StateOrientation(new Quaternion(Vector3.VectorZ, 0.1 * i), Vector3.Zero,
                         Start.AddSeconds(60.0 * i), spacecraft.Frame));
                 }
 

@@ -115,7 +115,7 @@ public class CancellationTests
     private static void AssertLeftAsAStoppedRun(Spacecraft spacecraft)
     {
         Assert.Empty(spacecraft.PropagatedStates);
-        Assert.Empty(((SpacecraftFrame)spacecraft.Frame).GetStateOrientationsToICRF());
+        Assert.Empty(((SpacecraftFrame)spacecraft.Frame).GetStateOrientationsToIcrf());
         Assert.False(spacecraft.IsPropagated);
         Assert.Null(spacecraft.LastPropagation);
         Assert.Null(spacecraft.LastForceModel);
@@ -202,7 +202,7 @@ public class CancellationTests
         var spacecraft = NewSpacecraft(earth);
         spacecraft.Propagate(TwoHours, Options(kind));
         var states = spacecraft.PropagatedStates;
-        var attitudes = ((SpacecraftFrame)spacecraft.Frame).GetStateOrientationsToICRF().ToArray();
+        var attitudes = ((SpacecraftFrame)spacecraft.Frame).GetStateOrientationsToIcrf().ToArray();
         var executed = spacecraft.ExecutedManeuvers.ToArray();
         double fuel = Fuel(spacecraft);
         var standby = spacecraft.StandbyManeuver;
@@ -220,7 +220,7 @@ public class CancellationTests
         Assert.Equal(cts.Token, exception.CancellationToken);
         Assert.True(spacecraft.IsPropagated);
         AssertSameStates(states, spacecraft.PropagatedStates);
-        Assert.Equal(attitudes, ((SpacecraftFrame)spacecraft.Frame).GetStateOrientationsToICRF().ToArray());
+        Assert.Equal(attitudes, ((SpacecraftFrame)spacecraft.Frame).GetStateOrientationsToIcrf().ToArray());
         Assert.Equal(executed, spacecraft.ExecutedManeuvers.ToArray());
         Assert.Equal(fuel, Fuel(spacecraft));
         Assert.Same(standby, spacecraft.StandbyManeuver);
@@ -275,7 +275,7 @@ public class CancellationTests
         var before = spacecraft.PropagatedStates.ToArray();
         Assert.NotEmpty(before);
         bool propagatedBefore = spacecraft.IsPropagated;
-        var attitudesBefore = ((SpacecraftFrame)spacecraft.Frame).GetStateOrientationsToICRF().ToArray();
+        var attitudesBefore = ((SpacecraftFrame)spacecraft.Frame).GetStateOrientationsToIcrf().ToArray();
         var second = new TlePropagator(new Window(start.AddHours(1.0), start.AddHours(2.0)), spacecraft, Output);
         using var cts = new CancellationTokenSource();
         tle.CancelAt(cts, 10);
@@ -288,7 +288,7 @@ public class CancellationTests
         Assert.Equal(10, tle.Calls);
         AssertSameStates(before, spacecraft.PropagatedStates);
         Assert.Equal(propagatedBefore, spacecraft.IsPropagated);
-        Assert.Equal(attitudesBefore, ((SpacecraftFrame)spacecraft.Frame).GetStateOrientationsToICRF().ToArray());
+        Assert.Equal(attitudesBefore, ((SpacecraftFrame)spacecraft.Frame).GetStateOrientationsToIcrf().ToArray());
     }
 
     // A TLE that cancels a token from inside its SGP4 call of a given rank, once armed: the seam of a stop in the middle
@@ -529,14 +529,14 @@ public class CancellationTests
     public void AStop_DropsTheStatesAndAttitudesAddedByHand_OfASpacecraftNeverPropagated(string kind)
     {
         // Arrange: a spacecraft never propagated that holds states (AddPropagatedStates, the second 1 km off the initial
-        // orbit, so that the read can tell them apart) and an attitude (AddStateOrientationToICRF), as C2 of lot L4 covers
+        // orbit, so that the read can tell them apart) and an attitude (AddStateOrientationToIcrf), as C2 of lot L4 covers
         var earth = NewEarth();
         var spacecraft = NewSpacecraft(earth);
         var first = spacecraft.InitialOrbitalParameters.ToStateVector(Epoch);
         var second = spacecraft.InitialOrbitalParameters.ToStateVector(Epoch.AddMinutes(1.0));
         spacecraft.AddPropagatedStates(first, new StateVector(second.Position + new Vector3(1000.0, 0.0, 0.0),
             second.Velocity, second.Observer, second.Epoch, second.Frame));
-        spacecraft.Frame.AddStateOrientationToICRF(new StateOrientation(Quaternion.Identity, Vector3.Zero, Epoch,
+        spacecraft.Frame.AddStateOrientationToIcrf(new StateOrientation(Quaternion.Identity, Vector3.Zero, Epoch,
             spacecraft.Frame));
         Assert.False(spacecraft.IsPropagated);
         Assert.Equal(2, spacecraft.PropagatedStates.Length);

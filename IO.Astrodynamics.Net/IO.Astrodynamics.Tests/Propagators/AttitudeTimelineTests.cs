@@ -273,7 +273,7 @@ public class AttitudeTimelineTests
         public bool Tt => !Ssb && !Moon;
 
         /// <summary>The seconds from S of the time argument: TT about the Earth, TDB about the Moon and in SSB mode.</summary>
-        public double Seconds(Time t) => Tt ? MinimumEpochGateTests.Tt(t) : (t.ToTDB() - S).TotalSeconds;
+        public double Seconds(Time t) => Tt ? MinimumEpochGateTests.Tt(t) : (t.ToTdb() - S).TotalSeconds;
 
         public static TimelineRun Run(int naifId, string key, Action<Spacecraft, Maneuver.Maneuver[]> before = null)
         {
@@ -692,7 +692,7 @@ public class AttitudeTimelineTests
         }
 
         // The attitude: every second, at each entry, and about each activation
-        var record = run.Spacecraft.Frame.GetStateOrientationsToICRF().ToArray();
+        var record = run.Spacecraft.Frame.GetStateOrientationsToIcrf().ToArray();
         var entries = new HashSet<Time>(record.Select(x => x.Epoch));
         var epochs = new SortedSet<Time>();
         double length = (run.Window.EndDate - run.Window.StartDate).TotalSeconds;
@@ -706,7 +706,7 @@ public class AttitudeTimelineTests
         {
             var law = ExpectedAt(run, expected, t);
             if (law == null) continue;
-            var managed = run.Spacecraft.Frame.GetStateOrientationToICRF(t).Rotation;
+            var managed = run.Spacecraft.Frame.GetStateOrientationToIcrf(t).Rotation;
             double angle = AttitudeRecordTests.RotationAngle(law.Value.Map, v => v.Rotate(managed));
             m.Checks++;
             if (!law.Value.Law) m.Discrete = System.Math.Max(m.Discrete, angle);

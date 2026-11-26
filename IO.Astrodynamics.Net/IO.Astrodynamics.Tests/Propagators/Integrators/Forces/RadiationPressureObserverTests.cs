@@ -100,9 +100,9 @@ public class RadiationPressureObserverTests
         var spacecraft = CreateSpacecraft(state);
         var earthFromSun = _earth.GetEphemeris(Epoch, Stars.SUN_BODY, Frames.Frame.ICRF, Aberration.None).Position;
         double areaMassRatio = spacecraft.SectionalArea / spacecraft.GetTotalMass();
-        double cr = spacecraft.SolarRadiationCoeff;
+        double cr = spacecraft.SolarRadiationCoefficient;
         double luminosityTerm = IO.Astrodynamics.Constants.SolarMeanRadiativeLuminosity /
-                                (4.0 * System.Math.PI * IO.Astrodynamics.Constants.C);
+                                (4.0 * System.Math.PI * IO.Astrodynamics.Constants.SpeedOfLight);
         var r = state.Position;
         var earthToSc = r - earthFromSun;
 
@@ -120,7 +120,7 @@ public class RadiationPressureObserverTests
             (3.0 * System.Math.PI) * radiusOverSun * radiusOverSun * lambertian / earthToSc.MagnitudeSquared());
         double t2 = 254.0 * 254.0;
         var expectedThermal = earthToSc.Normalize() * (cr * areaMassRatio * 0.95 * IO.Astrodynamics.Constants.StefanBoltzmann *
-            t2 * t2 * _earth.EquatorialRadius * _earth.EquatorialRadius / IO.Astrodynamics.Constants.C /
+            t2 * t2 * _earth.EquatorialRadius * _earth.EquatorialRadius / IO.Astrodynamics.Constants.SpeedOfLight /
             earthToSc.MagnitudeSquared());
 
         var expected = new[] { expectedSrp, expectedAlbedo, expectedThermal };

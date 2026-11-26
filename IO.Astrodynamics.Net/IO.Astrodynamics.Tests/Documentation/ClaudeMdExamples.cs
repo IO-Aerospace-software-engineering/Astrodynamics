@@ -517,7 +517,7 @@ namespace IO.Astrodynamics.Tests.Documentation
         {
             #region net:27
             var icrf = Frames.Frame.ICRF;                     // not Frame.ICRF
-            var j2000 = TimeSystem.Time.J2000TDB;             // not Time.J2000TDB
+            var j2000 = TimeSystem.Time.J2000Tdb;             // not Time.J2000Tdb
             var deg2Rad = IO.Astrodynamics.Constants.Deg2Rad; // not Constants.Deg2Rad (that is the test helper)
             #endregion
             return (icrf, j2000, deg2Rad);

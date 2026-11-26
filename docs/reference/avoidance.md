@@ -120,7 +120,7 @@ Moon, Sun, SRP, in RK7(8) and by Velocity-Verlet).
 both paths (the covariance propagated or not)
 ([#683](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/683); one record, structuring choice 2
 of #668, decided by S. Guillet, 2026-11-19: before 11.0.0 the avoidance had an `AnalysisSampleStep`, a
-`MaximumEventSearchStep`, a `SecondaryHardBodyRadiusMeters` and a `LowRelativeSpeedThresholdMetersPerSecond` of its own,
+`MaxEventSearchStep`, a `SecondaryHardBodyRadiusMeters` and a `LowRelativeSpeedThresholdMetersPerSecond` of its own,
 each null for the encounter's). To change one value, start from the settings of the encounter
 (`AvoidanceSearchOptions.Default with { Analysis = settings with { SampleStep = ... } }`, `settings` the options given to
 `Analyze`). Before 11.0.0 every other setting went back to its default: an encounter analyzed with a stale

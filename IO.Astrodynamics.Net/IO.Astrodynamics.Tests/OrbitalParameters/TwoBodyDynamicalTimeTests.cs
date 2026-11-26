@@ -101,7 +101,7 @@ public class TwoBodyDynamicalTimeTests
         var elements = Orbit(body, StartUtc);
         var state = elements.ToStateVector();
 
-        foreach (var epoch in new[] { StartUtc.ToTAI(), StartUtc.ToTT(), StartUtc.ToGPS(), StartUtc.ToTDB() })
+        foreach (var epoch in new[] { StartUtc.ToTai(), StartUtc.ToTT(), StartUtc.ToGps(), StartUtc.ToTdb() })
         {
             // Act
             var at = elements.AtEpoch(epoch);
@@ -203,9 +203,9 @@ public class TwoBodyDynamicalTimeTests
     private static TimeSystem.Time Tagged(TimeSystem.Time utc, string tag) => tag switch
     {
         "UTC" => utc,
-        "TAI" => utc.ToTAI(),
+        "TAI" => utc.ToTai(),
         "TT" => utc.ToTT(),
-        "TDB" => utc.ToTDB(),
+        "TDB" => utc.ToTdb(),
         _ => throw new ArgumentOutOfRangeException(nameof(tag), tag, null)
     };
 

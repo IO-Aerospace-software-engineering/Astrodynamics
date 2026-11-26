@@ -109,7 +109,7 @@ public class Sgp4ReferenceTests
                 v = System.Math.Max(v, MaxComponent(sv.Velocity - Km(sample.GetProperty("v_km_s"))));
 
                 // The same instant in TDB gives the same state: tsince is the TT seconds, whatever the frame of the epoch
-                var tdb = tle.ToOsculating(Utc(sample.GetProperty("utc").GetString()).ToTDB());
+                var tdb = tle.ToOsculating(Utc(sample.GetProperty("utc").GetString()).ToTdb());
                 Assert.InRange((tdb.Position - sv.Position).Magnitude(), 0.0, 1e-3);
             }
 

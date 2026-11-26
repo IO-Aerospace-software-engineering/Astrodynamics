@@ -65,7 +65,7 @@ internal static class FramesPage
     {
         #region docs/reference/frames.md:1
         // Inputs: epoch (Time), positionCirs (Vector3)
-        var cirsToIcrf = Frame.CIRS.GetStateOrientationToICRF(epoch);
+        var cirsToIcrf = Frame.CIRS.GetStateOrientationToIcrf(epoch);
         var positionIcrf = positionCirs.Rotate(cirsToIcrf.Rotation);
         #endregion
     }

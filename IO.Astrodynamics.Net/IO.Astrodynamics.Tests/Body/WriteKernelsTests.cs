@@ -194,18 +194,18 @@ public sealed class WriteKernelsTests : IDisposable
             "1 25544U 98067A   21020.53488036  .00016717  00000-0  10270-3 0  9054",
             "2 25544  51.6423 353.0312 0000493 320.8755  39.2360 15.49309423 25703");
         var spacecraft = new Spacecraft(-9303, "WK9303", 420000.0, tle);
-        var start = tle.Epoch.ToTDB();
+        var start = tle.Epoch.ToTdb();
         new TlePropagator(new Window(start, start.AddMinutes(10.0)), spacecraft, TimeSpan.FromSeconds(60.0)).Propagate();
         var target = new DirectoryInfo(Path.Combine(_root.FullName, "tle"));
 
         var exception = Assert.Throws<InvalidOperationException>(() => spacecraft.WriteKernels(target));
         Assert.Contains("TlePropagator", exception.Message);
-        Assert.Contains("AddStateOrientationToICRF", exception.Message);
+        Assert.Contains("AddStateOrientationToIcrf", exception.Message);
         Assert.False(target.Exists);
 
         // Attitudes given after the run (its re-arm drops those added before it)
-        spacecraft.Frame.AddStateOrientationToICRF(new StateOrientation(Quaternion.Identity, Vector3.Zero, start, spacecraft.Frame));
-        spacecraft.Frame.AddStateOrientationToICRF(new StateOrientation(Quaternion.Identity, Vector3.Zero, start.AddMinutes(10.0), spacecraft.Frame));
+        spacecraft.Frame.AddStateOrientationToIcrf(new StateOrientation(Quaternion.Identity, Vector3.Zero, start, spacecraft.Frame));
+        spacecraft.Frame.AddStateOrientationToIcrf(new StateOrientation(Quaternion.Identity, Vector3.Zero, start.AddMinutes(10.0), spacecraft.Frame));
         using var kernels = spacecraft.WriteKernels(target);
         Assert.True(kernels.IsLoaded);
         Assert.Empty(kernels.Instruments);
@@ -254,7 +254,7 @@ public sealed class WriteKernelsTests : IDisposable
         // States without an attitude record (#546)
         var states = new Spacecraft(-9306, "WK9306", 1000.0, orbit);
         states.AddPropagatedStates([orbit, orbit.AtEpoch(Start.AddSeconds(60.0)).ToStateVector(), orbit.AtEpoch(Start.AddSeconds(120.0)).ToStateVector()]);
-        AssertRefusedUnchanged(states, target, "AddStateOrientationToICRF");
+        AssertRefusedUnchanged(states, target, "AddStateOrientationToIcrf");
 
         // Null
         Assert.Throws<ArgumentNullException>(() => never.WriteKernels(null));

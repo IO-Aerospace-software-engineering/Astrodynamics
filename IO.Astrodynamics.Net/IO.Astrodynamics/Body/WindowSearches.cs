@@ -216,7 +216,7 @@ public static class WindowSearches
             return given;
         }
 
-        var halfWindow = (window.EndDate.ToTDB() - window.StartDate.ToTDB()) / 2;
+        var halfWindow = (window.EndDate.ToTdb() - window.StartDate.ToTdb()) / 2;
         var cap = halfWindow > TimeSpan.Zero ? halfWindow : TimeSpan.FromTicks(1);
         var inferred = period.Value / 16;
         return inferred < cap ? inferred : cap;

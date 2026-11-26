@@ -75,7 +75,7 @@ internal static class TlePage
     {
         #region docs/reference/tle.md:2
         // Inputs: window (Window), tle (TLE)
-        var start = window.StartDate.ToTDB();
+        var start = window.StartDate.ToTdb();
         var earth = new CelestialBody(PlanetsAndMoons.EARTH, Frame.ICRF, start,
             new GeopotentialModelParameters("Data/SolarSystem/EGM2008_to70_TideFree", 10), new Nrlmsise00Model(SpaceWeather.Nominal));
         var sgp4 = tle.ToStateVector(start);
@@ -112,7 +112,7 @@ internal static class TlePage
             "2 25544  51.6423 353.0312 0000493 320.8755  39.2360 15.49309423 25703");
         // The lines again, from the properties, without slicing them
         var again = Tle.Create(iss.ToMeanKeplerianElements(), iss.Name, iss.NoradCatalogId, iss.CosparId, iss.RevolutionNumberAtEpoch,
-            iss.Classification, iss.BallisticCoefficient, iss.FirstDerivationMeanMotion, iss.SecondDerivativeMeanMotion,
+            iss.Classification, iss.BStar, iss.MeanMotionDot, iss.MeanMotionDDot,
             iss.ElementSetNumber);
         #endregion
     }

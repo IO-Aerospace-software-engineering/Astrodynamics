@@ -16,7 +16,7 @@ namespace IO.Astrodynamics.Surface;
 /// The topocentric frame of a site, <c>NAME_TOPO</c> of id 1000000 + NaifId: X toward the north, Y toward the west, Z
 /// toward the zenith. For a site from coordinates, the frame of those coordinates; for a site from the kernels, the frame
 /// the loaded kernels define for its id (DSS-13_TOPO for DSS-13, #690), or the frame of its J2000 coordinates when none
-/// does (<see cref="GetStateOrientationToICRF"/>). An ephemeris read in the frame of a site from coordinates, or of a site
+/// does (<see cref="GetStateOrientationToIcrf"/>). An ephemeris read in the frame of a site from coordinates, or of a site
 /// from the kernels whose frame id no loaded kernel defines, is read in J2000 and rotated by that orientation (#682, third
 /// review of #690); in a kernel frame, SPICE reads it by the kernel's name. <see cref="SpiceApi.TransformFrame(Time, Frame, Frame)"/>
 /// with such a frame composes that orientation through ICRF, as for TEME (fourth round of #668; before, it threw).
@@ -33,7 +33,7 @@ public class SiteFrame : Frame
     /// <summary>
     /// Writes the frame kernel of the topocentric frame of the site, whose kernel variable <c>FRAME_&lt;SITE&gt;_TOPO</c>
     /// holds the upper-cased name of the site: a TK frame of the frame of its body, the frame
-    /// <see cref="GetStateOrientationToICRF"/> gives. The names are upper-cased and the ids written in the invariant culture,
+    /// <see cref="GetStateOrientationToIcrf"/> gives. The names are upper-cased and the ids written in the invariant culture,
     /// whatever the culture of the thread (#798, #821, decisions 101 and 104 of #668, decided by S. Guillet, 2026-11-25).
     /// Synchronous since 11.0.0, <c>WriteAsync</c> before (decision 78 of #668, decided by S. Guillet, 2026-11-23).
     /// A file it replaces is unloaded first, under every name SPICE holds it by (a meta-kernel's included), and the new file is left unloaded, as the SPK and CK writers do (#799(c), decision 103 of #668, decided by S. Guillet, 2026-11-25).
@@ -85,8 +85,8 @@ public class SiteFrame : Frame
     private string KernelFrameMatrix(string kernelFrameName)
     {
         var bodyFrame = Site.CelestialBody.Frame;
-        var atJ2000 = SpiceApi.Instance.TransformFrame(Time.J2000TDB, this, bodyFrame).Rotation;
-        var later = SpiceApi.Instance.TransformFrame(Time.J2000TDB.AddSeconds(6.0 * 3600.0), this, bodyFrame).Rotation;
+        var atJ2000 = SpiceApi.Instance.TransformFrame(Time.J2000Tdb, this, bodyFrame).Rotation;
+        var later = SpiceApi.Instance.TransformFrame(Time.J2000Tdb.AddSeconds(6.0 * 3600.0), this, bodyFrame).Rotation;
         var difference = atJ2000.Conjugate() * later;
         double angle = 2.0 * System.Math.Atan2(difference.VectorPart.Magnitude(), System.Math.Abs(difference.W));
         if (angle > KernelFrameFixedTolerance)
@@ -124,7 +124,7 @@ public class SiteFrame : Frame
     /// it rotates by that frame, as for a site from coordinates (third review of #690; before, it reached SPICE by the
     /// site's own name and threw SPICE(UNKNOWNFRAME)).
     /// </remarks>
-    public override StateOrientation GetStateOrientationToICRF(Time epoch)
+    public override StateOrientation GetStateOrientationToIcrf(Time epoch)
     {
         if (Site.IsSpiceBacked)
         {
@@ -155,7 +155,7 @@ public class SiteFrame : Frame
         var bodyToTopocentric = mtx.ToQuaternion();
         var rotation = celestialBodyFrameToICRF.Rotation * bodyToTopocentric.Conjugate();
         // The site frame is fixed in the body frame: same angular velocity of ICRF relative to it, which comes
-        // in body axes (SPICE convention, see Frame.GetStateOrientationToICRF) and goes to topocentric axes.
+        // in body axes (SPICE convention, see Frame.GetStateOrientationToIcrf) and goes to topocentric axes.
         var angularVelocity = celestialBodyFrameToICRF.AngularVelocity.Rotate(bodyToTopocentric);
         return new StateOrientation(rotation, angularVelocity, epoch, this);
     }

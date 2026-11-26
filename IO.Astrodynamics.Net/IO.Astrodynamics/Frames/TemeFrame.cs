@@ -60,7 +60,7 @@ public sealed class TemeFrame : Frame
     /// the frame); TEME is never the body-fixed frame of a propagation, so it reads no orientation cache of a propagation
     /// (<see cref="Frame.UseOrientationCache"/>).
     /// </remarks>
-    public override StateOrientation GetStateOrientationToICRF(Time epoch)
+    public override StateOrientation GetStateOrientationToIcrf(Time epoch)
     {
         return LastOrientation(epoch, ComputeOrientation);
     }
@@ -76,8 +76,8 @@ public sealed class TemeFrame : Frame
         // UT1 as a two-part Julian date (J2000 + days), so that both angles keep the 0.1 µs resolution of the epoch
         var utc = date.ConvertTo(TimeScale.UTC);
         double jdUt1Low = utc.DaysFromJ2000() + _eop.GetDeltaUT1(utc) / 86400.0;
-        double era = Iau2006Model.EarthRotationAngle(Time.JULIAN_J2000, jdUt1Low);
-        double gmst = Gmst82(Time.JULIAN_J2000, jdUt1Low);
+        double era = Iau2006Model.EarthRotationAngle(Time.JulianDateJ2000, jdUt1Low);
+        double gmst = Gmst82(Time.JulianDateJ2000, jdUt1Low);
 
         // TEME -> TIRS = Rz(-GMST82) (r_PEF = R3(GMST82) r_TEME), TIRS -> ICRF = Q^T Rz(ERA)
         var teme2icrf = qt.Transpose().Multiply(Matrix.CreateRotationMatrixZ(era - gmst));
@@ -101,7 +101,7 @@ public sealed class TemeFrame : Frame
         // The smaller part first, as SOFA, for the precision of the fraction of the day
         double d1 = jdUt1High < jdUt1Low ? jdUt1High : jdUt1Low;
         double d2 = jdUt1High < jdUt1Low ? jdUt1Low : jdUt1High;
-        double t = (d1 + (d2 - Time.JULIAN_J2000)) / 36525.0;
+        double t = (d1 + (d2 - Time.JulianDateJ2000)) / 36525.0;
         double f = 86400.0 * (d1 % 1.0 + d2 % 1.0);
 
         double gmst = Constants.TwoPi / 86400.0 * (a + (b + (c + d * t) * t) * t + f);

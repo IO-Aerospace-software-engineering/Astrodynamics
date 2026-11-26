@@ -146,7 +146,7 @@ namespace IO.Astrodynamics.OrbitalParameters
         /// </exception>
         public override StateVector ToStateVector(Time epoch)
         {
-            if (epoch.ToTDB() != Epoch.ToTDB())
+            if (epoch.ToTdb() != Epoch.ToTdb())
             {
                 return base.ToStateVector(epoch);
             }

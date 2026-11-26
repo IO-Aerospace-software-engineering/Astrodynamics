@@ -84,7 +84,7 @@ public class StateVectorAngleTests
         var earth = TestHelpers.EarthAtJ2000;
         for (double periapsis = 0.25; periapsis < IO.Astrodynamics.Constants.TwoPi; periapsis += 0.5)
         {
-            var elements = new KeplerianElements(7000000.0, 0.1, 0.0, 0.0, periapsis, 1.0, earth, TimeSystem.Time.J2000TDB,
+            var elements = new KeplerianElements(7000000.0, 0.1, 0.0, 0.0, periapsis, 1.0, earth, TimeSystem.Time.J2000Tdb,
                 Frames.Frame.ICRF);
             var state = elements.ToStateVector();
 
@@ -99,7 +99,7 @@ public class StateVectorAngleTests
     private static StateVector State(string name)
     {
         var earth = TestHelpers.EarthAtJ2000;
-        var epoch = TimeSystem.Time.J2000TDB;
+        var epoch = TimeSystem.Time.J2000Tdb;
         var frame = Frames.Frame.ICRF;
         return name switch
         {

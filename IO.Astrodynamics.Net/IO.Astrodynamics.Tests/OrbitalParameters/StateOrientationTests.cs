@@ -30,16 +30,16 @@ namespace IO.Astrodynamics.Tests.OrbitalParameters
         }
 
         [Fact]
-        public void RelativeToICRF()
+        public void RelativeToIcrf()
         {
             var so = new StateOrientation(new Quaternion(Vector3.VectorX, 10.0 * IO.Astrodynamics.Constants.Deg2Rad),
-                Vector3.Zero, TimeSystem.Time.J2000TDB, Frames.Frame.ECLIPTIC_J2000);
-            var res = so.RelativeToICRF();
+                Vector3.Zero, TimeSystem.Time.J2000Tdb, Frames.Frame.ECLIPJ2000);
+            var res = so.RelativeToIcrf();
             Assert.NotNull(so);
             //Which is equal to ecliptic (23.44° + 10° relative to ecliptic)
             Assert.Equal(new Quaternion(0.9577239084752576, 0.2876889207718582, 0, 0), res.Rotation);
             Assert.Equal(Vector3.Zero, res.AngularVelocity);
-            LabelAssert.Equal(TimeSystem.Time.J2000TDB, res.Epoch);
+            LabelAssert.Equal(TimeSystem.Time.J2000Tdb, res.Epoch);
             Assert.Equal(Frames.Frame.ICRF, res.ReferenceFrame);
         }
 
@@ -47,8 +47,8 @@ namespace IO.Astrodynamics.Tests.OrbitalParameters
         public void RelativeToICRFInSameFrame()
         {
             var so = new StateOrientation(new Quaternion(Vector3.VectorX, 10.0 * IO.Astrodynamics.Constants.Deg2Rad),
-                Vector3.Zero, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF);
-            var res = so.RelativeToICRF();
+                Vector3.Zero, TimeSystem.Time.J2000Tdb, Frames.Frame.ICRF);
+            var res = so.RelativeToIcrf();
             Assert.NotNull(so);
             LabelAssert.Equal(so, res);
         }
@@ -57,10 +57,10 @@ namespace IO.Astrodynamics.Tests.OrbitalParameters
         public void RelativeToTargetAndGoBack()
         {
             var so = new StateOrientation(new Quaternion(Vector3.VectorX, 10.0 * IO.Astrodynamics.Constants.Deg2Rad),
-                Vector3.Zero, TimeSystem.Time.J2000TDB, Frames.Frame.ECLIPTIC_J2000);
-            var res = so.RelativeToICRF();
+                Vector3.Zero, TimeSystem.Time.J2000Tdb, Frames.Frame.ECLIPJ2000);
+            var res = so.RelativeToIcrf();
 
-            var resOrigin = res.RelativeTo(Frames.Frame.ECLIPTIC_J2000); //Go to the origin
+            var resOrigin = res.RelativeTo(Frames.Frame.ECLIPJ2000); //Go to the origin
             Assert.NotNull(so);
 
             Assert.Equal(so, resOrigin, TestHelpers.StateOrientationComparer);
@@ -70,14 +70,14 @@ namespace IO.Astrodynamics.Tests.OrbitalParameters
         public void RelativeTo()
         {
             var so = new StateOrientation(new Quaternion(Vector3.VectorX, 10.0 * IO.Astrodynamics.Constants.Deg2Rad),
-                Vector3.Zero, TimeSystem.Time.J2000TDB, Frames.Frame.ECLIPTIC_J2000);
-            var res = so.RelativeTo(Frames.Frame.GALACTIC_SYSTEM2);
+                Vector3.Zero, TimeSystem.Time.J2000Tdb, Frames.Frame.ECLIPJ2000);
+            var res = so.RelativeTo(Frames.Frame.GALACTIC);
             Assert.NotNull(so);
 
             Assert.Equal(new Quaternion(0.6072910782107768, -0.3221176440801108, 0.2767233690846851, 0.6714625430359408), res.Rotation);
             Assert.Equal(Vector3.Zero, res.AngularVelocity);
-            LabelAssert.Equal(TimeSystem.Time.J2000TDB, res.Epoch);
-            Assert.Equal(Frames.Frame.GALACTIC_SYSTEM2, res.ReferenceFrame);
+            LabelAssert.Equal(TimeSystem.Time.J2000Tdb, res.Epoch);
+            Assert.Equal(Frames.Frame.GALACTIC, res.ReferenceFrame);
         }
 
         [Fact]
@@ -85,25 +85,25 @@ namespace IO.Astrodynamics.Tests.OrbitalParameters
         {
             var earth = TestHelpers.EarthAtJ2000;
             var so = new StateOrientation(Quaternion.Identity,
-                Vector3.Zero, TimeSystem.Time.J2000TDB, Frames.Frame.ECLIPTIC_J2000);
+                Vector3.Zero, TimeSystem.Time.J2000Tdb, Frames.Frame.ECLIPJ2000);
             var res = so.RelativeTo(earth.Frame);
             Assert.NotNull(so);
 
             Assert.Equal(new Quaternion(0.75114277947940278, 0.15580379240149217, 0.13030227231228195, 0.62811704398107715), res.Rotation,TestHelpers.QuaternionComparer);
             Assert.Equal(new Vector3(-1.9637713280161757E-09, 2.9004497224156795E-05, 6.6904658702357438E-05), res.AngularVelocity,TestHelpers.VectorComparer);
-            LabelAssert.Equal(TimeSystem.Time.J2000TDB, res.Epoch);
+            LabelAssert.Equal(TimeSystem.Time.J2000Tdb, res.Epoch);
             Assert.Equal(earth.Frame, res.ReferenceFrame);
         }
 
         [Fact]
         public void AtEpoch()
         {
-            var so = new StateOrientation(new Quaternion(1.0, 0.1, 0.2, 0.3), new Vector3(0.1, 0, 0), TimeSystem.Time.J2000TDB, Frames.Frame.ECLIPTIC_J2000);
-            var res = so.AtEpoch(TimeSystem.Time.J2000TDB.AddSeconds(10));
+            var so = new StateOrientation(new Quaternion(1.0, 0.1, 0.2, 0.3), new Vector3(0.1, 0, 0), TimeSystem.Time.J2000Tdb, Frames.Frame.ECLIPJ2000);
+            var res = so.AtEpoch(TimeSystem.Time.J2000Tdb.AddSeconds(10));
             Assert.Equal(new Quaternion(0.7770290602413761, 0.531216294762412, 0.02967932804162496, 0.3363840442207327), res.Rotation);
             Assert.Equal(new Vector3(0.1, 0.0, 0.0), res.AngularVelocity);
-            LabelAssert.Equal(TimeSystem.Time.J2000TDB.AddSeconds(10), res.Epoch);
-            Assert.Equal(Frames.Frame.ECLIPTIC_J2000, res.ReferenceFrame);
+            LabelAssert.Equal(TimeSystem.Time.J2000Tdb.AddSeconds(10), res.Epoch);
+            Assert.Equal(Frames.Frame.ECLIPJ2000, res.ReferenceFrame);
         }
         
         // #680: a zero angular velocity rotates nothing. AtEpoch normalizes the zero axis through the library's lenient
@@ -111,12 +111,12 @@ namespace IO.Astrodynamics.Tests.OrbitalParameters
         [Fact]
         public void AtDate_WithZeroAngularVelocity_IsTheSameRotation()
         {
-            var identity = new StateOrientation(Quaternion.Identity, Vector3.Zero, TimeSystem.Time.J2000TDB, Frames.Frame.ECLIPTIC_J2000);
-            Assert.Equal(Quaternion.Identity, identity.AtEpoch(TimeSystem.Time.J2000TDB.AddSeconds(60.0)).Rotation);
+            var identity = new StateOrientation(Quaternion.Identity, Vector3.Zero, TimeSystem.Time.J2000Tdb, Frames.Frame.ECLIPJ2000);
+            Assert.Equal(Quaternion.Identity, identity.AtEpoch(TimeSystem.Time.J2000Tdb.AddSeconds(60.0)).Rotation);
 
             var rotation = new Quaternion(new Vector3(0.0, 0.6, 0.8), 0.3);
-            var so = new StateOrientation(rotation, Vector3.Zero, TimeSystem.Time.J2000TDB, Frames.Frame.ECLIPTIC_J2000);
-            var res = so.AtEpoch(TimeSystem.Time.J2000TDB.AddSeconds(60.0));
+            var so = new StateOrientation(rotation, Vector3.Zero, TimeSystem.Time.J2000Tdb, Frames.Frame.ECLIPJ2000);
+            var res = so.AtEpoch(TimeSystem.Time.J2000Tdb.AddSeconds(60.0));
             var delta = res.Rotation * rotation.Conjugate();
             Assert.True(2.0 * System.Math.Atan2(delta.VectorPart.Magnitude(), System.Math.Abs(delta.W)) < 1e-15);
             Assert.Equal(Vector3.Zero, res.AngularVelocity);
@@ -126,9 +126,9 @@ namespace IO.Astrodynamics.Tests.OrbitalParameters
         public void Interpolate_SameReferenceFrame_ReturnsInterpolatedState()
         {
             // Arrange
-            var initialOrientation = new StateOrientation(new Quaternion(1, 0, 0, 0), new Vector3(10, 20, 30), TimeSystem.Time.J2000TDB, Frames.Frame.ICRF);
-            var finalOrientation = new StateOrientation(new Quaternion(0, 1, 0, 0), new Vector3(20, 30, 40), TimeSystem.Time.J2000TDB.AddSeconds(10), Frames.Frame.ICRF);
-            var date = TimeSystem.Time.J2000TDB.AddSeconds(5);
+            var initialOrientation = new StateOrientation(new Quaternion(1, 0, 0, 0), new Vector3(10, 20, 30), TimeSystem.Time.J2000Tdb, Frames.Frame.ICRF);
+            var finalOrientation = new StateOrientation(new Quaternion(0, 1, 0, 0), new Vector3(20, 30, 40), TimeSystem.Time.J2000Tdb.AddSeconds(10), Frames.Frame.ICRF);
+            var date = TimeSystem.Time.J2000Tdb.AddSeconds(5);
 
             // Act
             var result = initialOrientation.Interpolate(finalOrientation, date);
@@ -155,15 +155,15 @@ namespace IO.Astrodynamics.Tests.OrbitalParameters
         public void Interpolate_IsTheRotationAtTheInterpolatedAngle(double angle, bool oppositeSign)
         {
             // Arrange: a rotation by angle about a fixed axis after q0; the later quaternion of either sign (the same
-            // rotation). Below 0.028 rad Quaternion.SLERP is a normalised Lerp, 5.9e-9 rad off at 0.0113 rad (#548)
+            // rotation). Below 0.028 rad Quaternion.Slerp is a normalised Lerp, 5.9e-9 rad off at 0.0113 rad (#548)
             var axis = new Vector3(0.3, -0.5, 0.81).Normalize();
             var q0 = new Quaternion(new Vector3(1.0, 2.0, 3.0).Normalize(), 0.7);
             var q1 = (new Quaternion(axis, angle) * q0).Normalize();
-            var initial = new StateOrientation(q0, Vector3.Zero, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF);
-            var final = new StateOrientation(oppositeSign ? q1 * -1.0 : q1, Vector3.Zero, TimeSystem.Time.J2000TDB.AddSeconds(10), Frames.Frame.ICRF);
+            var initial = new StateOrientation(q0, Vector3.Zero, TimeSystem.Time.J2000Tdb, Frames.Frame.ICRF);
+            var final = new StateOrientation(oppositeSign ? q1 * -1.0 : q1, Vector3.Zero, TimeSystem.Time.J2000Tdb.AddSeconds(10), Frames.Frame.ICRF);
 
             // Act
-            var result = initial.Interpolate(final, TimeSystem.Time.J2000TDB.AddSeconds(3));
+            var result = initial.Interpolate(final, TimeSystem.Time.J2000Tdb.AddSeconds(3));
 
             // Assert: the closed form. Measured 0 rad in the four cases on Linux, Windows and macOS arm64 (run 41571571334,
             // 2026-11-03); the bound is the record of MemoryDataProviderTests (twice 2.388e-16 rad over 999 fractions, the
@@ -177,10 +177,10 @@ namespace IO.Astrodynamics.Tests.OrbitalParameters
         public void Interpolate_EqualRotations_IsThatRotation()
         {
             var q = new Quaternion(new Vector3(1.0, 2.0, 3.0).Normalize(), 0.7);
-            var initial = new StateOrientation(q, Vector3.Zero, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF);
-            var final = new StateOrientation(q, Vector3.VectorX, TimeSystem.Time.J2000TDB.AddSeconds(10), Frames.Frame.ICRF);
+            var initial = new StateOrientation(q, Vector3.Zero, TimeSystem.Time.J2000Tdb, Frames.Frame.ICRF);
+            var final = new StateOrientation(q, Vector3.VectorX, TimeSystem.Time.J2000Tdb.AddSeconds(10), Frames.Frame.ICRF);
 
-            var result = initial.Interpolate(final, TimeSystem.Time.J2000TDB.AddSeconds(4));
+            var result = initial.Interpolate(final, TimeSystem.Time.J2000Tdb.AddSeconds(4));
 
             Assert.Equal(q, result.Rotation);
             Assert.Equal(new Vector3(0.4, 0.0, 0.0), result.AngularVelocity);
@@ -190,9 +190,9 @@ namespace IO.Astrodynamics.Tests.OrbitalParameters
         public void Interpolate_DifferentReferenceFrames_ThrowsArgumentException()
         {
             // Arrange
-            var initialOrientation = new StateOrientation(new Quaternion(1, 0, 0, 0), new Vector3(0, 0, 0), TimeSystem.Time.J2000TDB, Frames.Frame.ICRF);
-            var finalOrientation = new StateOrientation(new Quaternion(0, 1, 0, 0), new Vector3(0, 0, 0), TimeSystem.Time.J2000TDB.AddSeconds(10), Frames.Frame.ECLIPTIC_J2000);
-            var date = TimeSystem.Time.J2000TDB.AddSeconds(5);
+            var initialOrientation = new StateOrientation(new Quaternion(1, 0, 0, 0), new Vector3(0, 0, 0), TimeSystem.Time.J2000Tdb, Frames.Frame.ICRF);
+            var finalOrientation = new StateOrientation(new Quaternion(0, 1, 0, 0), new Vector3(0, 0, 0), TimeSystem.Time.J2000Tdb.AddSeconds(10), Frames.Frame.ECLIPJ2000);
+            var date = TimeSystem.Time.J2000Tdb.AddSeconds(5);
 
             // Act & Assert
             Assert.Throws<ArgumentException>(() => initialOrientation.Interpolate(finalOrientation, date));
@@ -202,9 +202,9 @@ namespace IO.Astrodynamics.Tests.OrbitalParameters
         public void Interpolate_DateOutOfRange_ThrowsArgumentException()
         {
             // Arrange
-            var initialOrientation = new StateOrientation(new Quaternion(1, 0, 0, 0), new Vector3(0, 0, 0), TimeSystem.Time.J2000TDB, Frames.Frame.ICRF);
-            var finalOrientation = new StateOrientation(new Quaternion(0, 1, 0, 0), new Vector3(0, 0, 0), TimeSystem.Time.J2000TDB.AddSeconds(10), Frames.Frame.ICRF);
-            var date = TimeSystem.Time.J2000TDB.AddSeconds(15);
+            var initialOrientation = new StateOrientation(new Quaternion(1, 0, 0, 0), new Vector3(0, 0, 0), TimeSystem.Time.J2000Tdb, Frames.Frame.ICRF);
+            var finalOrientation = new StateOrientation(new Quaternion(0, 1, 0, 0), new Vector3(0, 0, 0), TimeSystem.Time.J2000Tdb.AddSeconds(10), Frames.Frame.ICRF);
+            var date = TimeSystem.Time.J2000Tdb.AddSeconds(15);
 
             // Act & Assert
             Assert.Throws<ArgumentException>(() => initialOrientation.Interpolate(finalOrientation, date));
@@ -213,9 +213,9 @@ namespace IO.Astrodynamics.Tests.OrbitalParameters
         [Fact]
         public void ToString_NamesItsEpochRotationAngularVelocityAndSourceFrame()
         {
-            var so = new StateOrientation(new Quaternion(1, 0, 0, 0), Vector3.VectorX, TimeSystem.Time.J2000TDB, Frames.Frame.ECLIPTIC_J2000);
+            var so = new StateOrientation(new Quaternion(1, 0, 0, 0), Vector3.VectorX, TimeSystem.Time.J2000Tdb, Frames.Frame.ECLIPJ2000);
             var text = so.ToString();
-            Assert.Contains(TimeSystem.Time.J2000TDB.ToString(), text);
+            Assert.Contains(TimeSystem.Time.J2000Tdb.ToString(), text);
             Assert.Contains(so.Rotation.ToString(), text);
             Assert.Contains(Vector3.VectorX.ToString(), text);
             Assert.EndsWith("Frame : ECLIPJ2000", text);

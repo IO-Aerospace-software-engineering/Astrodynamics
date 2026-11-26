@@ -62,7 +62,7 @@ propagator can pass its whole body list, Sun included.
 
 | Property | Default | Description |
 |----------|---------|-------------|
-| `SolarRadiationCoeff` (Cr) | 1.0 | Set on the `Spacecraft` constructor |
+| `SolarRadiationCoefficient` (Cr) | 1.0 | Set on the `Spacecraft` constructor |
 
 !!! note "Shadow fraction"
     The SRP is scaled by `1 − ν`, `ν` the largest shadow fraction of the occulting bodies

@@ -139,7 +139,7 @@ public class SpacecraftKernelsTests
             var begin = Start.AddSeconds(3.25);
             var end = Start.AddSeconds(590.0);
             var output = CliRun.Ok("orientation", SpacecraftId.ToString(CultureInfo.InvariantCulture), "-K", kernels,
-                "--begin", utcWindow ? begin.ToUTC().ToString() : begin.ToString(), "--end", utcWindow ? end.ToUTC().ToString() : end.ToString(),
+                "--begin", utcWindow ? begin.ToUtc().ToString() : begin.ToString(), "--end", utcWindow ? end.ToUtc().ToString() : end.ToString(),
                 "--step", "6.5s", "--frame", frameArgument);
 
             var lines = output.Split(Environment.NewLine, StringSplitOptions.RemoveEmptyEntries);

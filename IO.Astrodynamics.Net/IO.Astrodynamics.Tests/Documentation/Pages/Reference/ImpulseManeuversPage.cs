@@ -70,7 +70,7 @@ internal static class ImpulseManeuversPage
         var maneuver = new ApogeeHeightManeuver(
             42164000.0,
             engine,
-            Time.J2000TDB,
+            Time.J2000Tdb,
             TimeSpan.Zero,
             earth);
 

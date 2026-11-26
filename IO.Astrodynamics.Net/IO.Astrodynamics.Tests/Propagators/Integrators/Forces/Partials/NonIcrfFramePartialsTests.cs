@@ -14,7 +14,7 @@ namespace IO.Astrodynamics.Tests.Propagators.Integrators.Forces.Partials;
 /// </summary>
 public class NonIcrfFramePartialsTests : IClassFixture<PartialsTestCases>
 {
-    private static readonly Frames.Frame Ecliptic = Frames.Frame.ECLIPTIC_J2000;
+    private static readonly Frames.Frame Ecliptic = Frames.Frame.ECLIPJ2000;
 
     private readonly PartialsTestCases _cases;
     private readonly ITestOutputHelper _output;

@@ -78,7 +78,7 @@ public class ConjunctionSolver : ICategorySolver
             encounters = closest
                 ? [ConjunctionAssessment.Analyze(objects[0], objects[1], window, options)]
                 : ConjunctionAssessment.AnalyzeAll(objects[0], objects[1], window, options);
-            seconds = t => (t.ToTDB() - epoch.ToTDB()).TotalSeconds;
+            seconds = t => (t.ToTdb() - epoch.ToTdb()).TotalSeconds;
         }
         else
         {

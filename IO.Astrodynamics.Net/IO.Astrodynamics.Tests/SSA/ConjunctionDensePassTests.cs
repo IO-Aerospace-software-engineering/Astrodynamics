@@ -306,7 +306,7 @@ public abstract class ConjunctionDensePassTestBase
     protected void ByDefault_TheRangeRateIsNotReadOverTheWindow(string fixture, double start, double end)
     {
         // Decision 54 of #457, through the public Analyze and AnalyzeAll: by default the dense search reads the range rate
-        // the seeds need only, so MaximumEventSearchStep changes neither its reads nor its results, and at a spacing of 1 s
+        // the seeds need only, so MaxEventSearchStep changes neither its reads nor its results, and at a spacing of 1 s
         // it reads fewer states than the reads over the window alone need (one per second of the window); with
         // ReadRangeRateOverWindow it reads at least those (the review of decision 54: a search that always read over the
         // window passed every other test)
@@ -332,7 +332,7 @@ public abstract class ConjunctionDensePassTestBase
                 $"{encounter.EncounterState.Epoch.TimeSpanFromJ2000().Ticks} {encounter.EncounterState.MissDistanceMeters:R}");
         }
 
-        var fine = Options with { MaximumEventSearchStep = TimeSpan.FromSeconds(1.0) };
+        var fine = Options with { MaxEventSearchStep = TimeSpan.FromSeconds(1.0) };
         foreach (var search in new Func<ConjunctionAnalysisOptions, (long Reads, string Result)>[] { All, One })
         {
             var byDefault = search(Options);
@@ -906,10 +906,10 @@ public class ConjunctionDensePassCTests : ConjunctionDensePassTestBase, IClassFi
     public void Dense_TheReadsOfTheRangeRate_AreMaximumEventSearchStepApart(double start, double end, int count)
     {
         // The fold of CWFM, positive over [7065.14, 7067.49] s with no minimum of the Hermite before it: at a
-        // MaximumEventSearchStep of 1 s the reads over the window land in it, and AnalyzeAll lists every minimum of CSPICE
+        // MaxEventSearchStep of 1 s the reads over the window land in it, and AnalyzeAll lists every minimum of CSPICE
         // (the round-1 review of #628: the option reaches the dense search; the 60 s reads step over this fold, the
         // documented limit, which this test does not assert)
-        var options = ReadOverWindowOptions with { MaximumEventSearchStep = TimeSpan.FromSeconds(1.0) };
+        var options = ReadOverWindowOptions with { MaxEventSearchStep = TimeSpan.FromSeconds(1.0) };
         AssertSlowPassMatchesCspice(_cwFoldMixedCase, _cwFoldMixedCase.Seconds(start, end), count, options: options);
     }
 

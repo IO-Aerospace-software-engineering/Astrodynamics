@@ -26,7 +26,7 @@ public partial class ConjunctionAssessmentTests
     public void Foster2DAndFrisbeeMax_DesignedEncounters_AreTheInternalPcAndMatchTheExactPc()
     {
         var earth = CreateEarth();
-        var tca = TimeSystem.Time.J2000TDB;
+        var tca = TimeSystem.Time.J2000Tdb;
         foreach (var encounter in CollisionProbabilityReference.Value.RootElement.GetProperty("encounters").EnumerateArray())
         {
             // Arrange: the states in km, as the internal test of the integral, each with its covariance in ICRF
@@ -65,7 +65,7 @@ public partial class ConjunctionAssessmentTests
     {
         // Arrange
         var earth = CreateEarth();
-        var tca = TimeSystem.Time.J2000TDB;
+        var tca = TimeSystem.Time.J2000Tdb;
         var covariance = BuildStateCovarianceFromPosition(BuildPositionCovariance(new[,] { { 100.0, 0.0, 0.0 }, { 0.0, 400.0, 0.0 }, { 0.0, 0.0, 50.0 } }));
         var s1 = new StateVector(new Vector3(7.0e6, 0.0, 0.0), new Vector3(0.0, 7.5e3, 0.0), earth, tca, Frames.Frame.ICRF, covariance);
         var s2 = new StateVector(new Vector3(7.0e6, 10.0, 0.0), new Vector3(0.0, 0.0, 7.5e3), earth, tca, Frames.Frame.ICRF, covariance);
@@ -81,7 +81,7 @@ public partial class ConjunctionAssessmentTests
 
         // Two epochs, two frames, two observers
         var later = new StateVector(s2.Position, s2.Velocity, earth, tca.AddSeconds(1.0), Frames.Frame.ICRF, covariance);
-        var ecliptic = s2.ToFrame(Frames.Frame.ECLIPTIC_J2000);
+        var ecliptic = s2.ToFrame(Frames.Frame.ECLIPJ2000);
         var moon = new StateVector(s2.Position, s2.Velocity, new CelestialBody(SolarSystemObjects.PlanetsAndMoons.MOON), tca, Frames.Frame.ICRF, covariance);
         foreach (var other in new[] { later, ecliptic, moon })
         {
@@ -96,7 +96,7 @@ public partial class ConjunctionAssessmentTests
 
         // A pair in one other inertial frame is the pair in ICRF
         Assert.Equal(CollisionProbability.Foster2D(s1, s2, 10.0)!.Value,
-            CollisionProbability.Foster2D(s1.ToFrame(Frames.Frame.ECLIPTIC_J2000), s2.ToFrame(Frames.Frame.ECLIPTIC_J2000), 10.0)!.Value, 12);
+            CollisionProbability.Foster2D(s1.ToFrame(Frames.Frame.ECLIPJ2000), s2.ToFrame(Frames.Frame.ECLIPJ2000), 10.0)!.Value, 12);
     }
 
     [Fact]

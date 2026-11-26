@@ -46,7 +46,7 @@ public class ConvertToOwnFrameTests
         var tdb = new TimeSystem.Time(new DateTime(ticks), TimeScale.TDB);
 
         // Act
-        var converted = tdb.ToTDB();
+        var converted = tdb.ToTdb();
 
         // Assert
         Assert.Equal(ticks, converted.DateTime.Ticks);
@@ -73,7 +73,7 @@ public class ConvertToOwnFrameTests
         // The TDB time of the instant of the rounding, to TT and back to TDB: the series at two arguments rounded on
         // either side of a half tick, a tick away
         var tdb = new TimeSystem.Time(new DateTime(2032, 12, 20, 20, 24, 0), TimeScale.TDB);
-        Assert.Equal(1, tdb.ToTT().ToTDB().DateTime.Ticks - tdb.DateTime.Ticks);
+        Assert.Equal(1, tdb.ToTT().ToTdb().DateTime.Ticks - tdb.DateTime.Ticks);
     }
 
     [Fact]

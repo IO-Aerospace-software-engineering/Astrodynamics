@@ -37,7 +37,7 @@ public interface IDataProvider
     /// <param name="source">The frame to orient.</param>
     /// <exception cref="ArgumentException">The provider knows no frame of that name.</exception>
     /// <exception cref="InvalidOperationException">The provider has no orientation of the frame at that epoch.</exception>
-    StateOrientation FrameTransformationToICRF(in Time epoch, Frame source);
+    StateOrientation FrameTransformationToIcrf(in Time epoch, Frame source);
 
     /// <summary>The state of <paramref name="target"/> relative to <paramref name="observer"/> in <paramref name="frame"/>
     /// at <paramref name="epoch"/>, corrected by <paramref name="aberration"/>, labelled with <paramref name="epoch"/>, the

@@ -51,7 +51,7 @@ public class MeanElementsTypeTests
     private IO.Astrodynamics.OrbitalParameters.OrbitalParameters[] MeanSets()
     {
         var fromConstructor = new KeplerianElements(6800000.0, 0.001, 0.9, 1.0, 2.0, 0.5, _earth, EpochB,
-            Frames.Frame.ECLIPTIC_J2000, elementsType: OrbitalElementsType.Mean);
+            Frames.Frame.ECLIPJ2000, elementsType: OrbitalElementsType.Mean);
         return
         [
             IssTle().ToMeanKeplerianElements(), CaseB(Frames.Frame.ICRF), fromConstructor, CaseB(Frames.Frame.ICRF).ToEquinoctial(),
@@ -132,10 +132,10 @@ public class MeanElementsTypeTests
         var mean = tle.ToMeanKeplerianElements();
 
         // Act
-        var direct = Tle.Create(mean, "ISS", 25544, "98067A", 2570, bstar: 0.10270e-3, nDot: 0.00016717);
-        var moved = Tle.Create(mean.AtEpoch(tle.Epoch), "ISS", 25544, "98067A", 2570, bstar: 0.10270e-3, nDot: 0.00016717);
-        var throughKeplerian = Tle.Create(mean.ToKeplerianElements(tle.Epoch), "ISS", 25544, "98067A", 2570, bstar: 0.10270e-3,
-            nDot: 0.00016717);
+        var direct = Tle.Create(mean, "ISS", 25544, "98067A", 2570, bStar: 0.10270e-3, meanMotionDot: 0.00016717);
+        var moved = Tle.Create(mean.AtEpoch(tle.Epoch), "ISS", 25544, "98067A", 2570, bStar: 0.10270e-3, meanMotionDot: 0.00016717);
+        var throughKeplerian = Tle.Create(mean.ToKeplerianElements(tle.Epoch), "ISS", 25544, "98067A", 2570, bStar: 0.10270e-3,
+            meanMotionDot: 0.00016717);
 
         // Assert: the same two lines
         Assert.Equal(direct.Line1, moved.Line1);
@@ -154,7 +154,7 @@ public class MeanElementsTypeTests
         var sets = new IO.Astrodynamics.OrbitalParameters.OrbitalParameters[]
         {
             CaseB(Frames.Frame.ICRF), CaseB(Frames.Frame.ICRF).ToEquinoctial(),
-            new KeplerianElements(6800000.0, 0.001, 0.9, 1.0, 2.0, 0.5, _earth, EpochB, Frames.Frame.ECLIPTIC_J2000,
+            new KeplerianElements(6800000.0, 0.001, 0.9, 1.0, 2.0, 0.5, _earth, EpochB, Frames.Frame.ECLIPJ2000,
                 elementsType: OrbitalElementsType.Mean),
         };
         int naifId = -4630;

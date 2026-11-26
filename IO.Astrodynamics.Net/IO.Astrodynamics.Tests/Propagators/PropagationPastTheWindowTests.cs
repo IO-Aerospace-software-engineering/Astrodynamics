@@ -114,7 +114,7 @@ public class PropagationPastTheWindowTests
     {
         // Arrange: a window of 3 900 s, whose grid of 60 s from 120 s before its start ends at 4 020 s
         var earth = new CelestialBody(PlanetsAndMoons.EARTH);
-        var tdbStart = Start.ToTDB();
+        var tdbStart = Start.ToTdb();
         var cache = new PropagationFrameOrientationCache(new Window(tdbStart, tdbStart.AddSeconds(3900.0)), earth.Frame,
             TimeSpan.FromSeconds(60.0));
         var epoch = tdbStart.AddSeconds(4020.0 + pastTheGrid);
@@ -142,7 +142,7 @@ public class PropagationPastTheWindowTests
     {
         // Arrange: a window of 3 900 s, whose grid of 60 s from 240 s before its start ends 240 s after its end
         var earth = new CelestialBody(PlanetsAndMoons.EARTH);
-        var tdbStart = Start.ToTDB();
+        var tdbStart = Start.ToTdb();
         using var cache = new PropagationEphemerisCache(new Window(tdbStart, tdbStart.AddSeconds(3900.0)),
             new (CelestialItem, Aberration)[] { (PlanetsAndMoons.MOON_BODY, Aberration.None) }, earth,
             TimeSpan.FromSeconds(60.0));

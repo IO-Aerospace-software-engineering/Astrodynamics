@@ -120,13 +120,13 @@ namespace IO.Astrodynamics.Surface
             if (double.IsNaN(planetodetic.Latitude))
             {
                 _isFromKernel = true;
-                InitialOrbitalParameters = GetEphemeris(Time.J2000TDB, celestialItem, celestialItem.Frame, Aberration.None);
+                InitialOrbitalParameters = GetEphemeris(Time.J2000Tdb, celestialItem, celestialItem.Frame, Aberration.None);
                 Planetodetic = GetPlanetocentricCoordinates().ToPlanetodetic(CelestialBody);
             }
             else
             {
                 Planetodetic = planetodetic;
-                InitialOrbitalParameters = GetEphemeris(Time.J2000TDB, CelestialBody, CelestialBody.Frame, Aberration.None);
+                InitialOrbitalParameters = GetEphemeris(Time.J2000Tdb, CelestialBody, CelestialBody.Frame, Aberration.None);
             }
 
             Frame = new SiteFrame(name.ToUpperInvariant() + "_TOPO", this);
@@ -583,7 +583,7 @@ namespace IO.Astrodynamics.Surface
         {
             GeometryFinder.CheckAngle(twilight, -Constants.HalfPi, Constants.HalfPi, "[−π/2, π/2]", "twilight", nameof(twilight));
             return FindIlluminationWindows(searchWindow, IlluminationAngle.Incidence, RelationalOperator.LessThan, Constants.HalfPi + twilight, Stars.SUN_BODY,
-                new WindowSearchOptions { Step = TimeSpan.FromMinutes(1.0), Aberration = Aberration.LTS });
+                new WindowSearchOptions { Step = TimeSpan.FromMinutes(1.0), Aberration = Aberration.LtS });
         }
 
         #region operators

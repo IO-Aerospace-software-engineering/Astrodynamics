@@ -186,7 +186,7 @@ namespace IO.Astrodynamics.Maneuver
                 double inertialInsertionVelocity = GetInertialInsertionVelocity();
                 double inertialAscendingAzimuthLaunch = GetInertialAscendingAzimuthLaunch();
 
-                double launchSiteVelocityMagnitude = LaunchSite.GetEphemeris(Time.J2000TDB, LaunchSite.CelestialBody,Frame.ICRF, Aberration.None).Velocity.Magnitude();
+                double launchSiteVelocityMagnitude = LaunchSite.GetEphemeris(Time.J2000Tdb, LaunchSite.CelestialBody,Frame.ICRF, Aberration.None).Velocity.Magnitude();
 
                 double vrotx = inertialInsertionVelocity * System.Math.Sin(inertialAscendingAzimuthLaunch) -
                                launchSiteVelocityMagnitude;
@@ -256,7 +256,7 @@ namespace IO.Astrodynamics.Maneuver
                 double inertialInsertionVelocity = GetInertialInsertionVelocity();
                 double inertialAscendingAzimuthLaunch = GetInertialAscendingAzimuthLaunch();
 
-                double launchSiteVelocityMagnitude = LaunchSite.GetEphemeris(Time.J2000TDB, LaunchSite.CelestialBody,Frame.ICRF, Aberration.None).Velocity.Magnitude();
+                double launchSiteVelocityMagnitude = LaunchSite.GetEphemeris(Time.J2000Tdb, LaunchSite.CelestialBody,Frame.ICRF, Aberration.None).Velocity.Magnitude();
 
                 double vrotx = inertialInsertionVelocity * System.Math.Sin(inertialAscendingAzimuthLaunch) -
                                launchSiteVelocityMagnitude;

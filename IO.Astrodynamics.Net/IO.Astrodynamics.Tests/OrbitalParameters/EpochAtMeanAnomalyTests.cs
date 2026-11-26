@@ -42,7 +42,7 @@ public class EpochAtMeanAnomalyTests
         TestKernels.EnsureSolarSystem();
     }
 
-    private static readonly TimeSystem.Time Epoch = TimeSystem.Time.J2000TDB;
+    private static readonly TimeSystem.Time Epoch = TimeSystem.Time.J2000Tdb;
 
     private static KeplerianElements EarthOrbit(double meanAnomaly, double a = 1e7, double e = 0.3) =>
         new(a, e, 0.5, 0.3, 0.2, meanAnomaly, TestHelpers.EarthAtJ2000, Epoch, Frames.Frame.ICRF);
@@ -120,7 +120,7 @@ public class EpochAtMeanAnomalyTests
     {
         // e = 0.999999, the one double at which KeplerianElements keeps M as given: before #474 its passage, beyond the epochs a Time holds,
         // threw (OverflowException in 10.x, ArgumentOutOfRangeException since #625)
-        var comet = new KeplerianElements(1e4 * Au, 1.0 - 1e-6, 0.5, 0.3, 0.2, -0.02, TestHelpers.Sun, Epoch, Frames.Frame.ECLIPTIC_J2000);
+        var comet = new KeplerianElements(1e4 * Au, 1.0 - 1e-6, 0.5, 0.3, 0.2, -0.02, TestHelpers.Sun, Epoch, Frames.Frame.ECLIPJ2000);
         Assert.Equal(-0.02, comet.MeanAnomaly());
         var passage = comet.EpochAtMeanAnomaly(IO.Astrodynamics.Constants.TwoPi - 0.01);
         AssertSeconds(50226428909.255040238, (passage - Epoch).TotalSeconds, CometTolerance, "comet M -0.02");
@@ -147,7 +147,7 @@ public class EpochAtMeanAnomalyTests
         // M = 2π − 0.001 rad moved by 300 Julian years past the perihelion, held unreduced (6.284 rad): −61.3 years before
         // #474 for a passage beyond TimeSpan, a past epoch
         var comet = new KeplerianElements(1e4 * Au, 1.0 - 1e-6, 0.5, 0.3, 0.2, IO.Astrodynamics.Constants.TwoPi - 0.001, TestHelpers.Sun, Epoch,
-            Frames.Frame.ECLIPTIC_J2000);
+            Frames.Frame.ECLIPJ2000);
         var later = comet.AtEpoch(Epoch.AddSeconds(9467280000.0));
         Assert.True(later.MeanAnomaly() > IO.Astrodynamics.Constants.TwoPi);
         var passage = later.EpochAtMeanAnomaly(0.002);

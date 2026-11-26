@@ -43,7 +43,7 @@ public class MonteCarloPropagatorTests
 
         var orbit = new StateVector(
             new Vector3(r0, 0, 0), new Vector3(0, v0, 0),
-            earth, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF, cov);
+            earth, TimeSystem.Time.J2000Tdb, Frames.Frame.ICRF, cov);
 
         return new Spacecraft(-1000, "Template", 100.0, orbit, 10000.0, new Clock("clk", 256));
     }
@@ -56,7 +56,7 @@ public class MonteCarloPropagatorTests
             RunCount = runCount,
             Seed = seed,
             TemplateSpacecraft = template,
-            Window = new Window(TimeSystem.Time.J2000TDB, TimeSystem.Time.J2000TDB.AddHours(1)),
+            Window = new Window(TimeSystem.Time.J2000Tdb, TimeSystem.Time.J2000Tdb.AddHours(1)),
             Propagation = new PropagationOptions { Integrator = new VVIntegratorOptions { Step = TimeSpan.FromSeconds(60) }, OutputStep = TimeSpan.FromSeconds(60), ThirdBodies = [new CelestialBody(PlanetsAndMoons.EARTH), Stars.SUN_BODY, PlanetsAndMoons.MOON_BODY] },
         };
     }
@@ -198,7 +198,7 @@ public class MonteCarloPropagatorTests
             RunCount = 2,
             Seed = 42,
             TemplateSpacecraft = null,
-            Window = new Window(TimeSystem.Time.J2000TDB, TimeSystem.Time.J2000TDB.AddHours(1)),
+            Window = new Window(TimeSystem.Time.J2000Tdb, TimeSystem.Time.J2000Tdb.AddHours(1)),
             Propagation = new PropagationOptions { Integrator = new VVIntegratorOptions { Step = TimeSpan.FromSeconds(60) }, OutputStep = TimeSpan.FromSeconds(60), ThirdBodies = Array.Empty<CelestialItem>() },
         };
 
@@ -213,7 +213,7 @@ public class MonteCarloPropagatorTests
         double v0 = System.Math.Sqrt(earth.GM / r0);
         var orbit = new StateVector(
             new Vector3(r0, 0, 0), new Vector3(0, v0, 0),
-            earth, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF); // no covariance
+            earth, TimeSystem.Time.J2000Tdb, Frames.Frame.ICRF); // no covariance
 
         var sc = new Spacecraft(-1000, "NoCov", 100.0, orbit, 10000.0, new Clock("clk", 256));
 
@@ -222,7 +222,7 @@ public class MonteCarloPropagatorTests
             RunCount = 2,
             Seed = 42,
             TemplateSpacecraft = sc,
-            Window = new Window(TimeSystem.Time.J2000TDB, TimeSystem.Time.J2000TDB.AddHours(1)),
+            Window = new Window(TimeSystem.Time.J2000Tdb, TimeSystem.Time.J2000Tdb.AddHours(1)),
             Propagation = new PropagationOptions { Integrator = new VVIntegratorOptions { Step = TimeSpan.FromSeconds(60) }, OutputStep = TimeSpan.FromSeconds(60), ThirdBodies = [earth] },
         };
 
@@ -239,13 +239,13 @@ public class MonteCarloPropagatorTests
             RunCount = 3,
             Seed = 42,
             TemplateSpacecraft = template,
-            Window = new Window(TimeSystem.Time.J2000TDB, TimeSystem.Time.J2000TDB.AddMinutes(10)),
+            Window = new Window(TimeSystem.Time.J2000Tdb, TimeSystem.Time.J2000Tdb.AddMinutes(10)),
             Propagation = new PropagationOptions
             {
                 Integrator = new VVIntegratorOptions { Step = TimeSpan.FromSeconds(60) }, OutputStep = TimeSpan.FromSeconds(60),
                 ThirdBodies =
                 [
-                    new CelestialBody(PlanetsAndMoons.EARTH, Frames.Frame.ICRF, TimeSystem.Time.J2000TDB,
+                    new CelestialBody(PlanetsAndMoons.EARTH, Frames.Frame.ICRF, TimeSystem.Time.J2000Tdb,
                         new GeopotentialModelParameters("Data/SolarSystem/EGM2008_to70_TideFree", 10)),
                     Stars.SUN_BODY,
                     PlanetsAndMoons.MOON_BODY
@@ -276,14 +276,14 @@ public class MonteCarloPropagatorTests
         }
         var cov = new Matrix(covTerms);
 
-        var nominal = new StateVector(new Vector3(r0, 0, 0), new Vector3(0, 0.6 * v0, 0.8 * v0), earth, TimeSystem.Time.J2000TDB,
+        var nominal = new StateVector(new Vector3(r0, 0, 0), new Vector3(0, 0.6 * v0, 0.8 * v0), earth, TimeSystem.Time.J2000Tdb,
             Frames.Frame.TEME, cov);
         var config = new MonteCarloConfiguration
         {
             RunCount = 3,
             Seed = 675,
             TemplateSpacecraft = new Spacecraft(-1675, "TemeTemplate", 100.0, nominal, 10000.0, new Clock("clk675", 256)),
-            Window = new Window(TimeSystem.Time.J2000TDB, TimeSystem.Time.J2000TDB.AddMinutes(10)),
+            Window = new Window(TimeSystem.Time.J2000Tdb, TimeSystem.Time.J2000Tdb.AddMinutes(10)),
             Propagation = new PropagationOptions { Integrator = new VVIntegratorOptions { Step = TimeSpan.FromSeconds(60) }, OutputStep = TimeSpan.FromSeconds(60), ThirdBodies = [new CelestialBody(PlanetsAndMoons.EARTH)] },
             BaseNaifId = -1680
         };
@@ -312,7 +312,7 @@ public class MonteCarloPropagatorTests
 
     private static Spacecraft CreateTemplateSpacecraftWithGeopotential()
     {
-        var earth = new CelestialBody(PlanetsAndMoons.EARTH, Frames.Frame.ICRF, TimeSystem.Time.J2000TDB,
+        var earth = new CelestialBody(PlanetsAndMoons.EARTH, Frames.Frame.ICRF, TimeSystem.Time.J2000Tdb,
             new GeopotentialModelParameters("Data/SolarSystem/EGM2008_to70_TideFree", 10));
         double r0 = 6800000.0;
         double v0 = System.Math.Sqrt(earth.GM / r0);
@@ -328,7 +328,7 @@ public class MonteCarloPropagatorTests
 
         var orbit = new StateVector(
             new Vector3(r0, 0, 0), new Vector3(0, v0, 0),
-            earth, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF, cov);
+            earth, TimeSystem.Time.J2000Tdb, Frames.Frame.ICRF, cov);
 
         return new Spacecraft(-1000, "Template", 100.0, orbit, 10000.0, new Clock("clk", 256));
     }

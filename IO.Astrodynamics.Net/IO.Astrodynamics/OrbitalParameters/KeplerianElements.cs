@@ -215,7 +215,7 @@ namespace IO.Astrodynamics.OrbitalParameters
             RequireFinite(meanAnomaly, meanAnomalyName);
 
             // Compute semi-major axis from mean motion using Kepler's third law: n = sqrt(GM/a^3)
-            _a = System.Math.Cbrt(Constants.G * observer.Mass / (meanMotion * meanMotion));
+            _a = System.Math.Cbrt(Constants.GravitationalConstant * observer.Mass / (meanMotion * meanMotion));
             _e = eccentricity;
             _i = inclination;
             _raan = SpecialFunctions.NormalizeAngle(rightAscendingNode);

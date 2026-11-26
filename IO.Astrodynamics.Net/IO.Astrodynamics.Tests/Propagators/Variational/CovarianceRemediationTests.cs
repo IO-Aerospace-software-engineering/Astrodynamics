@@ -179,7 +179,7 @@ public class CovarianceRemediationTests : IClassFixture<PartialsTestCases>
     public void WithRemediatedCovariance_InAnotherInertialFrame_ClipsInThatFrame()
     {
         // Arrange: the indefinite state in ECLIPJ2000, its covariance rotated by ToFrame
-        var state = Indefinite.ToFrame(Frames.Frame.ECLIPTIC_J2000).ToStateVector();
+        var state = Indefinite.ToFrame(Frames.Frame.ECLIPJ2000).ToStateVector();
         Assert.NotNull(PropagatorBase.InitialCovarianceRejection(state.Covariance.Value, out _));
 
         // Act
@@ -187,7 +187,7 @@ public class CovarianceRemediationTests : IClassFixture<PartialsTestCases>
 
         // Assert: the clipping of the covariance in its frame, the frame kept
         Assert.True(remediation.Remediated);
-        Assert.Equal(Frames.Frame.ECLIPTIC_J2000, remediation.State.Frame);
+        Assert.Equal(Frames.Frame.ECLIPJ2000, remediation.State.Frame);
         var reference = ConjunctionCovarianceEdgeTests.ClipCorrelation(state.Covariance.Value);
         Assert.True(Distance(remediation.State.Covariance.Value, reference) < 1e-12);
     }
