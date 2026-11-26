@@ -66,8 +66,8 @@ public class GeometryFinderCommand
             var targetId = CliValues.Object(target, "target");
             var searchFrame = CliValues.Frame(frame, "--frame");
 
-            search.Write(SpiceAPI.Instance.FindWindowsOnCoordinateConstraint(search.Window, observerId, targetId, searchFrame, coordinateSystem,
-                coordinateValue, operation, number, adjustment, search.Aberration, search.Step));
+            search.Write(ValueChecked(() => SpiceAPI.Instance.FindWindowsOnCoordinateConstraint(search.Window, observerId, targetId, searchFrame,
+                coordinateSystem, coordinateValue, operation, number, adjustment, search.Aberration, search.Step)));
         });
     }
 
@@ -227,10 +227,23 @@ public class GeometryFinderCommand
             var sourceId = CliValues.Object(source, "source");
             var frame = CliValues.Frame(Required(fixedFrame, "--fixed-frame"), "--fixed-frame");
 
-            search.Write(SpiceAPI.Instance.FindWindowsOnIlluminationConstraint(search.Window, observerId, targetId, frame,
+            search.Write(ValueChecked(() => SpiceAPI.Instance.FindWindowsOnIlluminationConstraint(search.Window, observerId, targetId, frame,
                 new Planetodetic(coordinates[0], coordinates[1], coordinates[2]), illuminationAngle, operation, number, adjustment,
-                search.Aberration, search.Step, sourceId));
+                search.Aberration, search.Step, sourceId)));
         });
+    }
+
+    // An angular threshold outside the range of its angle is the input's (R11 of #668, lot L6): --value
+    private static IReadOnlyList<Window> ValueChecked(Func<IReadOnlyList<Window>> search)
+    {
+        try
+        {
+            return search();
+        }
+        catch (ArgumentOutOfRangeException e) when (e.ParamName == "value")
+        {
+            throw new CliInputException($"--value: {e.Message}", e);
+        }
     }
 
     private static string Required(string text, string argument) =>

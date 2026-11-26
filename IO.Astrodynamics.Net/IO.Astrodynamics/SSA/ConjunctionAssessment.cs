@@ -415,7 +415,7 @@ public static class ConjunctionAssessment
         foreach (var leadTime in options.LeadTimes.Where(lead => lead >= constraints.MinimumLeadTime && lead <= constraints.MaximumLeadTime))
         {
             var burnEpoch = tca - leadTime;
-            if (!encounterCase.ScreeningWindow.Intersects(burnEpoch))
+            if (!encounterCase.ScreeningWindow.Contains(burnEpoch))
             {
                 continue;
             }

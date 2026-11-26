@@ -377,6 +377,35 @@ public class StarTests
             return mu / System.Math.Sqrt(1.0 + mu * dt * mu * dt) * 1e-6 / (365.25 * 86400.0);
         });
 
+    /// <summary>
+    /// A propagation over a window of zero length throws <see cref="ArgumentException"/> naming <c>window</c> before anything
+    /// is replaced, the rule of every propagation path (decisions 7, 15 and 18 of #668, decided by S. Guillet, 2026-11-22).
+    /// Before 11.0.0 it stored the one state of the start in place of the star's states, which <see cref="Star.WriteEphemeris"/>
+    /// then refused.
+    /// </summary>
+    [Fact]
+    public void Propagate_AZeroLengthWindow_Throws_KeepingTheStates()
+    {
+        // Arrange: a first propagation over four days
+        var epoch = new TimeSystem.Time(2001, 1, 1, TimeScale.TDB);
+        var star = NewStar(668014, epoch);
+        var first = new Window(epoch, epoch.AddDays(4.0));
+        star.Propagate(first, TimeSpan.FromDays(1.0));
+        var instant = new TimeSystem.Time(2001, 3, 1, TimeScale.TDB);
+
+        // Act: the window checked before the step
+        var exception = Assert.Throws<ArgumentException>(() => star.Propagate(new Window(instant, instant), TimeSpan.FromDays(1.0)));
+        var beforeTheStep = Assert.Throws<ArgumentException>(() => star.Propagate(new Window(instant, instant), TimeSpan.Zero));
+
+        // Assert: the SPK holds the first grid alone, no state at the instant
+        Assert.Equal("window", exception.ParamName);
+        Assert.Equal("window", beforeTheStep.ParamName);
+        Assert.True(star.IsPropagated);
+        double worst = CheckSpkHoldsOnly(star, Grid(first, TimeSpan.FromDays(1.0)), [instant],
+            "StarTests.Propagate_AZeroLengthWindow_Throws_KeepingTheStates", _output);
+        Assert.True(worst <= CatalogPositionTolerance, $"{worst:E3}");
+    }
+
     [Fact]
     public void Propagate_Twice_ReplacesTheStates()
     {

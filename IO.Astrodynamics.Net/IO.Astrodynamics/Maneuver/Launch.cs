@@ -34,12 +34,14 @@ namespace IO.Astrodynamics.Maneuver
         /// <param name="twilight"></param>
         /// <param name="launchByDay">Define if launch should occur by day. If undefined launch can occur everytime</param>
         /// <exception cref="ArgumentNullException"></exception>
+        /// <exception cref="ArgumentOutOfRangeException"><paramref name="twilight"/> is outside [−π/2, π/2], or NaN: the angles are in radians (R11 of #668, lot L6).</exception>
         public Launch(LaunchSite launchSite, Site recoverySite, OrbitalParameters.OrbitalParameters targetOrbit,
             double twilight, bool? launchByDay)
         {
             LaunchSite = launchSite ?? throw new ArgumentNullException(nameof(launchSite));
             RecoverySite = recoverySite ?? throw new ArgumentNullException(nameof(recoverySite));
             TargetOrbit = targetOrbit ?? throw new ArgumentNullException(nameof(targetOrbit));
+            GeometryFinder.CheckAngle(twilight, -Constants.HalfPi, Constants.HalfPi, "[−π/2, π/2]", "twilight", nameof(twilight));
             LaunchByDay = launchByDay;
             Twilight = twilight;
             _deltaL= System.Math.Asin(System.Math.Tan(LaunchSite.Planetodetic.Latitude) / System.Math.Tan(targetOrbit.Inclination()));

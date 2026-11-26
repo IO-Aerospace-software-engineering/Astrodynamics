@@ -309,7 +309,7 @@ public class FieldOfViewReferenceTests : IClassFixture<FieldOfViewReferenceKerne
         double worstManaged = WorstEdge(managed, reference);
 
         var spiceStep = SpiceStep(instrument);
-        var publicPath = instrument.FindWindowsInFieldOfViewConstraint(SearchWindow, instrument.Spacecraft, target, frame, shape, aberration, spiceStep).ToArray();
+        var publicPath = instrument.FindFieldOfViewWindows(SearchWindow, target, new FieldOfViewSearchOptions { Step = spiceStep, Aberration = aberration, TargetShape = shape, TargetFrame = frame }).ToArray();
         double worstPublic = WorstEdge(publicPath, reference);
         _output.WriteLine($"MEASURE #515 reference {key}, {reference.Length} windows: |managed (step {ManagedStep(instrument).TotalSeconds} s) - gftfov (1e-9 s)| " +
                           $"{worstManaged:E2} s, |public path (step {spiceStep.TotalSeconds} s) - gftfov (1e-9 s)| {worstPublic:E2} s");
@@ -354,15 +354,13 @@ public class FieldOfViewReferenceTests : IClassFixture<FieldOfViewReferenceKerne
         foreach (var aberration in Enum.GetValues<Aberration>())
         {
             var reference = Windows(_root.GetProperty("gfrfov").GetProperty($"{instrumentId} FOVSTAR1 {RayCorrection(aberration)}"));
-            var managed = instrument.FindWindowsInFieldOfViewConstraint(SearchWindow, instrument.Spacecraft, star, Frames.Frame.ICRF, ShapeType.Point, aberration,
-                ManagedStep(instrument)).ToArray();
+            var managed = instrument.FindFieldOfViewWindows(SearchWindow, star, new FieldOfViewSearchOptions { Step = ManagedStep(instrument), Aberration = aberration, TargetShape = ShapeType.Point, TargetFrame = Frames.Frame.ICRF }).ToArray();
             double worst = WorstEdge(managed, reference);
             _output.WriteLine($"MEASURE #515 reference {instrumentId} FOVSTAR1 {aberration}, {reference.Length} windows: |managed - gfrfov {RayCorrection(aberration)} (1e-9 s)| {worst:E2} s");
             Assert.True(worst < ReferenceLimit, $"{worst:E2} s");
         }
 
-        Assert.Throws<ArgumentException>(() => instrument.FindWindowsInFieldOfViewConstraint(SearchWindow, instrument.Spacecraft, star, Frames.Frame.ICRF,
-            ShapeType.Ellipsoid, Aberration.None, TimeSpan.FromSeconds(2.0)));
+        Assert.Throws<ArgumentException>(() => instrument.FindFieldOfViewWindows(SearchWindow, star, new FieldOfViewSearchOptions { Step = TimeSpan.FromSeconds(2.0), TargetShape = ShapeType.Ellipsoid, TargetFrame = Frames.Frame.ICRF }));
     }
 
     /// <summary>
@@ -446,11 +444,11 @@ public class FieldOfViewReferenceTests : IClassFixture<FieldOfViewReferenceKerne
     }
 
     /// <summary>
-    /// A search window tagged UTC: both paths return TDB windows, the same as with the TDB window (the managed path returned
-    /// the frame of the search window before #515).
+    /// A search window tagged UTC: the managed search returns TDB windows, and the public search the same instants labelled
+    /// UTC, the scale of the search window's start (R15 of #668, lot L6; TDB before).
     /// </summary>
     [Fact]
-    public void UtcSearchWindow_ReturnsTdbWindows()
+    public void UtcSearchWindow_ReturnsTheSameInstants_LabelledUtc()
     {
         var instrument = InstrumentOf(-470101001);
         var utcWindow = new Window(SearchWindow.StartDate.ToUTC(), SearchWindow.EndDate.ToUTC());
@@ -463,10 +461,11 @@ public class FieldOfViewReferenceTests : IClassFixture<FieldOfViewReferenceKerne
             var frame = shape == ShapeType.Point ? Frames.Frame.ICRF : new Frames.Frame(parts[2]);
             var reference = Windows(_root.GetProperty("gftfov").GetProperty(key));
             var managed = FieldOfViewSearch.Managed(instrument, utcWindow, target, shape, frame, Aberration.LT, TimeSpan.FromSeconds(60.0));
-            var publicPath = instrument.FindWindowsInFieldOfViewConstraint(utcWindow, instrument.Spacecraft, target, frame, shape, Aberration.LT, TimeSpan.FromSeconds(60.0))
+            var publicPath = instrument.FindFieldOfViewWindows(utcWindow, target, new FieldOfViewSearchOptions { Step = TimeSpan.FromSeconds(60.0), Aberration = Aberration.LT, TargetShape = shape, TargetFrame = frame })
                 .ToArray();
             Assert.True(WorstEdge(managed, reference) < LightTimeReferenceLimit);
-            Assert.True(WorstEdge(publicPath, reference) < PublicPathLimit);
+            Assert.All(publicPath, w => Assert.True(w.StartDate.Scale == TimeScale.UTC && w.EndDate.Scale == TimeScale.UTC));
+            Assert.True(WorstEdge(publicPath.Select(w => new Window(w.StartDate.ToTDB(), w.EndDate.ToTDB())).ToArray(), reference) < PublicPathLimit);
         }
     }
 
@@ -482,8 +481,7 @@ public class FieldOfViewReferenceTests : IClassFixture<FieldOfViewReferenceKerne
         var instrument = InstrumentOf(-470101001);
         var earth = new CelestialBody(PlanetsAndMoons.EARTH);
         var outside = new Window(SearchWindow.EndDate.AddSeconds(3600.0), SearchWindow.EndDate.AddSeconds(7200.0));
-        var exception = Assert.Throws<SpiceException>(() => instrument.FindWindowsInFieldOfViewConstraint(outside, instrument.Spacecraft, earth,
-            Frames.Frame.ICRF, ShapeType.Point, Aberration.LT, TimeSpan.FromSeconds(60.0)).ToArray());
+        var exception = Assert.Throws<SpiceException>(() => instrument.FindFieldOfViewWindows(outside, earth, new FieldOfViewSearchOptions { Step = TimeSpan.FromSeconds(60.0), Aberration = Aberration.LT, TargetShape = ShapeType.Point, TargetFrame = Frames.Frame.ICRF }).ToArray());
         Assert.Contains("Insufficient ephemeris data", exception.Message);
         Assert.Contains("-470101", exception.Message);
     }

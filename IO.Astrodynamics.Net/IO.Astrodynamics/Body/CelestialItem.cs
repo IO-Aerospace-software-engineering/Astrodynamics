@@ -310,8 +310,6 @@ public abstract class CelestialItem : ILocalizable, IEquatable<CelestialItem>
     /// </remarks>
     private protected CelestialBodyInfo ExtendedInformation;
 
-    private readonly GeometryFinder _geometryFinder = new GeometryFinder();
-
     /// <summary>
     /// Gets a value indicating whether the celestial item is a spacecraft.
     /// </summary>
@@ -637,7 +635,7 @@ public abstract class CelestialItem : ILocalizable, IEquatable<CelestialItem>
     /// </summary>
     /// <remarks>
     /// The states every <paramref name="stepSize"/> from the start of the window, placed in its calendar
-    /// (<c>StartDate + i · stepSize</c>), up to its end. Across a leap second the window's <see cref="Window.Length"/> counts
+    /// (<c>StartDate + i · stepSize</c>), up to its end: the points of <see cref="Window.Sample"/>. Across a leap second the window's <see cref="Window.Length"/> counts
     /// one second more than its calendar: the end bounds the samples, so that none lies past it (#682; before 11.0.0 the
     /// last state of such a window could lie one second past its end).
     /// </remarks>
@@ -652,17 +650,9 @@ public abstract class CelestialItem : ILocalizable, IEquatable<CelestialItem>
     public IEnumerable<StateVector> GetEphemeris(in Window searchWindow, ILocalizable observer, Frame frame, Aberration aberration, in TimeSpan stepSize)
     {
         RequirePositiveEphemerisStep(stepSize);
-        // An upper bound of the count: the Length counts the leap seconds the calendar placement does not
-        var occurences = (int)((searchWindow.Length / stepSize) + 1);
-        var ephemeris = new List<StateVector>(occurences);
-        for (int i = 0; i < occurences; i++)
+        var ephemeris = new List<StateVector>();
+        foreach (var epoch in searchWindow.Sample(stepSize))
         {
-            var epoch = searchWindow.StartDate + stepSize * i;
-            if (epoch > searchWindow.EndDate)
-            {
-                break;
-            }
-
             ephemeris.Add(GetEphemeris(epoch, observer, frame, aberration));
         }
 
@@ -1302,7 +1292,7 @@ public abstract class CelestialItem : ILocalizable, IEquatable<CelestialItem>
     /// Know if the celestialItem is occulted by another celestialItem, as seen from a position.
     /// </summary>
     /// <remarks>
-    /// The geometry of the occultation searches (<see cref="FindWindowsOnOccultationConstraint(in Window, ILocalizable, ShapeType, INaifObject, ShapeType, OccultationType, Aberration, in TimeSpan, OccultationSearchOptions)"/>):
+    /// The geometry of the occultation searches (<see cref="WindowSearches.FindOccultationWindows"/>):
     /// a <see cref="CelestialBody"/> is the ellipsoid of its radii oriented by its own frame, any other item a point. The
     /// positions are those of the bodies relative to the observer of <paramref name="from"/>, with the aberration
     /// correction, minus the position of <paramref name="from"/>; each frame is read at the epoch minus the light time
@@ -1594,179 +1584,29 @@ public abstract class CelestialItem : ILocalizable, IEquatable<CelestialItem>
     #region FindWindows
 
     /// <summary>
-    /// Find windows on distance constraint
+    /// Whether CSPICE runs a search of this item, the target, seen from <paramref name="observer"/>: both from the kernels,
+    /// one of them a spacecraft (the routing of the searches on the observer, R15 of #668, lot L6).
     /// </summary>
-    /// <param name="searchWindow"></param>
-    /// <param name="observer"></param>
-    /// <param name="relationalOperator"></param>
-    /// <param name="value">The distance, m.</param>
-    /// <param name="aberration"></param>
-    /// <param name="stepSize">The step of the samples. The library's search (<see cref="GeometryFinder"/>) finds every
-    /// window and gap when it is at most half the time between two extremes of the quantity, down to the resolution of
-    /// Brent's <c>localmin</c> (a window or gap narrower than about 2 √ε h + 2τ/3, h the step and τ 1 µs, can be missed,
-    /// a tangency between samples is not found; the remarks of <see cref="GeometryFinder"/>); CSPICE's, when it is
-    /// shorter than the shortest interval where the quantity is monotone.</param>
-    /// <returns></returns>
-    /// <remarks>When both objects come from the kernels and one of them is a spacecraft, CSPICE's <c>gfdist_c</c>
-    /// searches; otherwise the library does (<see cref="GeometryFinder"/>). Both take the distance in metres (#466).</remarks>
-    /// <exception cref="InvalidOperationException">On the path of CSPICE's <c>gfdist_c</c>, SPICE cannot run the search (a
-    /// body or an epoch without ephemeris data, a frame it does not know, an epoch outside the coverage of the frame data,
-    /// more windows than the 10000 of its result cell, #653), with SPICE's message (fourth round of #668; before 11.0.0 the
-    /// search returned no window, and a search of more than 1000 windows its first 1000, #653).</exception>
-    public IEnumerable<Window> FindWindowsOnDistanceConstraint(in Window searchWindow, ILocalizable observer,
-        RelationnalOperator relationalOperator, double value, Aberration aberration, in TimeSpan stepSize)
-    {
-        // SpiceAPI takes metres, as this method: the native layer converts them to km for gfdist_c (#466)
-        if (IsSpiceBacked && observer is CelestialItem ci1 && ci1.IsSpiceBacked
-            && (IsSpacecraft || ci1.IsSpacecraft))
-            return SpiceAPI.Instance.FindWindowsOnDistanceConstraint(
-                searchWindow, observer.NaifId, NaifId, relationalOperator, value, aberration, stepSize);
+    internal bool SearchesOnSpice(ILocalizable observer) =>
+        IsSpiceBacked && observer is CelestialItem item && item.IsSpiceBacked && (IsSpacecraft || item.IsSpacecraft);
 
-        Func<Time, double> calculateDistance = date => { return GetEphemeris(date, observer, Frame.ICRF, aberration).Position.Magnitude(); };
-
-        return _geometryFinder.FindWindowsWithCondition(searchWindow, calculateDistance, relationalOperator, value, stepSize);
-    }
+    #endregion
 
     /// <summary>
-    /// Find the windows when <paramref name="frontBody"/> occults this item (the target, or back body) as
-    /// <paramref name="observer"/> sees them, with the bodies' own frames and a convergence tolerance of 1 µs; see the
-    /// overload with <see cref="OccultationSearchOptions"/>.
+    /// The coordinate of <paramref name="target"/> seen from <paramref name="observer"/> in <paramref name="frame"/> at an
+    /// epoch, the quantity of the managed coordinate searches (the planetographic sense of the longitude read once, at
+    /// <paramref name="start"/>); null for a coordinate system it does not know.
     /// </summary>
-    /// <param name="searchWindow">The search window.</param>
-    /// <param name="observer">The observer.</param>
-    /// <param name="targetShape">The shape of this item.</param>
-    /// <param name="frontBody">The occulting body.</param>
-    /// <param name="frontShape">The shape of the occulting body.</param>
-    /// <param name="occultationType">The type of occultation.</param>
-    /// <param name="aberration">The aberration correction.</param>
-    /// <param name="stepSize">The step of the search.</param>
-    /// <returns>The windows, in TDB.</returns>
-    /// <exception cref="InvalidOperationException">On the path of CSPICE's <c>gfoclt_c</c>, SPICE cannot run the search (a
-    /// body or an epoch without ephemeris data, a frame it does not know, an epoch outside the coverage of the frame data,
-    /// more windows than the 10000 of its result cell, #653), with SPICE's message (fourth round of #668; before 11.0.0 the
-    /// search returned no window, and a search of more than 1000 windows its first 1000, #653).</exception>
-    public IEnumerable<Window> FindWindowsOnOccultationConstraint(in Window searchWindow, ILocalizable observer,
-        ShapeType targetShape, INaifObject frontBody, ShapeType frontShape, OccultationType occultationType, Aberration aberration, in TimeSpan stepSize)
+    internal static Func<Time, double> CoordinateQuantity(ILocalizable target, ILocalizable observer, Frame frame, CoordinateSystem coordinateSystem,
+        Coordinate coordinate, Aberration aberration, Time start)
     {
-        return FindWindowsOnOccultationConstraint(searchWindow, observer, targetShape, frontBody, frontShape, occultationType, aberration, stepSize,
-            OccultationSearchOptions.Default);
-    }
-
-    /// <summary>
-    /// Find the windows when <paramref name="frontBody"/> occults this item (the target, or back body) as
-    /// <paramref name="observer"/> sees them.
-    /// </summary>
-    /// <remarks>
-    /// <para>
-    /// The types have the meaning of CSPICE's <c>gfoclt</c>: <see cref="OccultationType.Full"/>, the target is hidden;
-    /// <see cref="OccultationType.Annular"/>, the front body is seen within the target's disc;
-    /// <see cref="OccultationType.Partial"/>, the front body hides part of the target's limb;
-    /// <see cref="OccultationType.Any"/>, any of them; and <see cref="OccultationType.None"/>, the rest of the search
-    /// window. A body modeled as <see cref="ShapeType.Ellipsoid"/> is the ellipsoid of its radii
-    /// (<see cref="CelestialBody.Radii"/>) oriented by its body-fixed frame (<see cref="OccultationSearchOptions"/>). A
-    /// point target can only be hidden (<see cref="OccultationType.Full"/> or <see cref="OccultationType.Any"/>), a
-    /// point front body can only transit (<see cref="OccultationType.Any"/> or <see cref="OccultationType.Annular"/>);
-    /// the other types give no window.
-    /// </para>
-    /// <para>
-    /// When the observer and this item are in the kernels and one of them is a spacecraft, CSPICE's <c>gfoclt</c>
-    /// searches. Otherwise, for a propagated spacecraft, a site or two natural bodies, the library searches: the
-    /// geometry of the ellipsoids (the method of CSPICE's <c>zzocced</c>) gives continuous margins, located by Brent's
-    /// root finder to <see cref="OccultationSearchOptions.ConvergenceTolerance"/>; it reads the states and the
-    /// orientations, never writes a kernel, and keeps no state, so searches on separate propagations may run
-    /// concurrently. Its step rule: every window, even shorter than the step, is found when the step is at most half the
-    /// time between the extremes of the margins (a quarter of the period for the eclipses of a satellite), down to the
-    /// resolution of Brent's <c>localmin</c>: a window or a gap narrower than about 2 √ε h + 2τ/3 (h the step, τ the
-    /// convergence tolerance; 19 µs at a 10 min step with τ = 1 µs) can be missed, and a tangency between samples is not
-    /// found (#668); see the reference page on occultations.
-    /// </para>
-    /// </remarks>
-    /// <param name="searchWindow">The search window.</param>
-    /// <param name="observer">The observer.</param>
-    /// <param name="targetShape">The shape of this item.</param>
-    /// <param name="frontBody">The occulting body.</param>
-    /// <param name="frontShape">The shape of the occulting body.</param>
-    /// <param name="occultationType">The type of occultation.</param>
-    /// <param name="aberration">The aberration correction: none or a light time (LT, CN, XLT, XCN); the stellar
-    /// aberration of the "+S" corrections is ignored, as <c>gfoclt</c> does.</param>
-    /// <param name="stepSize">The step of the search.</param>
-    /// <param name="options">The frames of the ellipsoids and the convergence tolerance; null for the defaults.</param>
-    /// <returns>The windows, in TDB.</returns>
-    /// <exception cref="ArgumentException">Both bodies are points, or a body modeled as an ellipsoid has no radii.</exception>
-    /// <exception cref="InvalidOperationException">On the path of CSPICE's <c>gfoclt_c</c>, SPICE cannot run the search (a
-    /// body or an epoch without ephemeris data, a frame it does not know, an epoch outside the coverage of the frame data,
-    /// more windows than the 10000 of its result cell, #653), with SPICE's message (fourth round of #668; before 11.0.0 the
-    /// search returned no window, and a search of more than 1000 windows its first 1000, #653).</exception>
-    public IEnumerable<Window> FindWindowsOnOccultationConstraint(in Window searchWindow, ILocalizable observer,
-        ShapeType targetShape, INaifObject frontBody, ShapeType frontShape, OccultationType occultationType, Aberration aberration, in TimeSpan stepSize,
-        OccultationSearchOptions options)
-    {
-        ArgumentNullException.ThrowIfNull(observer);
-        ArgumentNullException.ThrowIfNull(frontBody);
-        if (IsSpiceBacked && observer is CelestialItem ci2 && ci2.IsSpiceBacked
-            && frontBody is ILocalizable fb && fb.IsSpiceBacked
-            && (IsSpacecraft || ci2.IsSpacecraft))
-            return OccultationSearch.Spice(searchWindow, observer.NaifId, NaifId, targetShape, frontBody.NaifId, frontShape, occultationType, aberration,
-                stepSize, options);
-
-        return OccultationSearch.Managed(searchWindow, observer, this, targetShape, frontBody, frontShape, occultationType, aberration, stepSize, options);
-    }
-
-    /// <summary>
-    /// Find windows on coordinate constraint
-    /// </summary>
-    /// <param name="searchWindow"></param>
-    /// <param name="observer"></param>
-    /// <param name="frame"></param>
-    /// <param name="coordinateSystem"></param>
-    /// <param name="coordinate"></param>
-    /// <param name="relationalOperator"></param>
-    /// <param name="value"></param>
-    /// <param name="adjustValue"></param>
-    /// <param name="aberration"></param>
-    /// <param name="stepSize">The step of the samples. The library's search (<see cref="GeometryFinder"/>) finds every
-    /// window and gap when it is at most half the time between two extremes of the quantity, down to the resolution of
-    /// Brent's <c>localmin</c> (a window or gap narrower than about 2 √ε h + 2τ/3, h the step and τ 1 µs, can be missed,
-    /// a tangency between samples is not found; the remarks of <see cref="GeometryFinder"/>); CSPICE's, when it is
-    /// shorter than the shortest interval where the quantity is monotone.</param>
-    /// <returns></returns>
-    /// <remarks>
-    /// CSPICE's <c>gfposc_c</c> searches when the item and the observer are from the kernels, one of them a spacecraft, and
-    /// the frame is one SPICE reads as the library does; in a frame whose reads are the library's (TEME, CIRS, TIRS, the
-    /// frame of a site built from coordinates, of a site from the kernels whose frame id no loaded kernel defines, of a
-    /// managed spacecraft with an attitude record) the library searches, on the reads in that frame (third review of #690;
-    /// before, <c>gfposc_c</c> got a name SPICE does not know and returned no window).
-    /// </remarks>
-    /// <exception cref="ArgumentOutOfRangeException"></exception>
-    /// <exception cref="InvalidOperationException">On the path of CSPICE's <c>gfposc_c</c>, SPICE cannot run the search (a
-    /// body or an epoch without ephemeris data, a frame it does not know, an epoch outside the coverage of the frame data,
-    /// more windows than the 10000 of its result cell, #653), with SPICE's message (fourth round of #668; before 11.0.0 the
-    /// search returned no window, and a search of more than 1000 windows its first 1000, #653).</exception>
-    public IEnumerable<Window> FindWindowsOnCoordinateConstraint(in Window searchWindow, ILocalizable observer, Frame frame,
-        CoordinateSystem coordinateSystem, Coordinate coordinate, RelationnalOperator relationalOperator, double value, double adjustValue, Aberration aberration,
-        in TimeSpan stepSize)
-    {
-        // CSPICE searches only in a frame SPICE reads as the library does (third review of #690)
-        if (IsSpiceBacked && observer is CelestialItem ci3 && ci3.IsSpiceBacked
-            && (IsSpacecraft || ci3.IsSpacecraft) && !SpiceAPI.IsManagedFrame(frame))
-        {
-            // SPICE uses km for distance coordinates; framework uses m. Angles are radians in both.
-            bool isDistanceCoord = coordinate is Coordinate.X or Coordinate.Y or Coordinate.Z
-                or Coordinate.Range or Coordinate.Radius or Coordinate.Altitude;
-            double spiceValue = isDistanceCoord ? value / 1000.0 : value;
-            double spiceAdjust = isDistanceCoord ? adjustValue / 1000.0 : adjustValue;
-            return SpiceAPI.Instance.FindWindowsOnCoordinateConstraint(
-                searchWindow, observer.NaifId, NaifId, frame,
-                coordinateSystem, coordinate, relationalOperator, spiceValue, spiceAdjust, aberration, stepSize);
-        }
-
         Func<Time, double> evaluateCoordinates = null;
         switch (coordinateSystem)
         {
             case CoordinateSystem.Rectangular:
                 evaluateCoordinates = date =>
                 {
-                    var stateVector = GetEphemeris(date, observer, frame, aberration);
+                    var stateVector = target.GetEphemeris(date, observer, frame, aberration);
                     return coordinate switch
                     {
                         Coordinate.X => stateVector.Position.X,
@@ -1779,7 +1619,7 @@ public abstract class CelestialItem : ILocalizable, IEquatable<CelestialItem>
             case CoordinateSystem.RaDec:
                 evaluateCoordinates = date =>
                 {
-                    var stateVector = GetEphemeris(date, observer, frame, aberration);
+                    var stateVector = target.GetEphemeris(date, observer, frame, aberration);
                     // The angles in the search frame, as gfposc, not rotated to ICRF as ToEquatorial (#680)
                     var equatorial = Equatorial.FromPositionInFrame(stateVector.Position, stateVector.Epoch);
                     return coordinate switch
@@ -1794,7 +1634,7 @@ public abstract class CelestialItem : ILocalizable, IEquatable<CelestialItem>
             case CoordinateSystem.Geodetic:
                 evaluateCoordinates = date =>
                 {
-                    var stateVector = GetEphemeris(date, observer, frame, aberration);
+                    var stateVector = target.GetEphemeris(date, observer, frame, aberration);
                     var geodetic = stateVector.ToPlanetodetic();
                     return coordinate switch
                     {
@@ -1808,16 +1648,14 @@ public abstract class CelestialItem : ILocalizable, IEquatable<CelestialItem>
             case CoordinateSystem.Planetographic:
                 // CSPICE's PLANETOGRAPHIC (#682): the sense of the longitude of the observer's body read once, at the start
                 bool positiveWest = observer is CelestialBody observerBody &&
-                                    GeodeticCoordinates.IsPlanetographicLongitudePositiveWest(observerBody, searchWindow.StartDate);
+                                    GeodeticCoordinates.IsPlanetographicLongitudePositiveWest(observerBody, start);
                 evaluateCoordinates = date =>
-                    GeodeticCoordinates.PlanetographicCoordinate(GetEphemeris(date, observer, frame, aberration), coordinate, positiveWest);
+                    GeodeticCoordinates.PlanetographicCoordinate(target.GetEphemeris(date, observer, frame, aberration), coordinate, positiveWest);
                 break;
         }
 
-        return _geometryFinder.FindWindowsWithCondition(searchWindow, evaluateCoordinates, relationalOperator, value, adjustValue, stepSize);
+        return evaluateCoordinates;
     }
-
-    #endregion
 
     #region Operators
 

@@ -21,9 +21,7 @@ D1.default	IO.Astrodynamics.Propagator.Variational.CovariancePropagationOptions
 D1.default	IO.Astrodynamics.SSA.AvoidanceSearchOptions
 D1.default	IO.Astrodynamics.SSA.ConjunctionAnalysisOptions
 D1.default	IO.Astrodynamics.SSA.ScreeningOptions
-D1.parameter	IO.Astrodynamics.Body.CelestialItem.FindWindowsOnOccultationConstraint(in Window, ILocalizable, ShapeType, INaifObject, ShapeType, OccultationType, Aberration, in TimeSpan, OccultationSearchOptions):options
 D1.parameter	IO.Astrodynamics.Propagator.CentralBodyPropagator.ctor(in Window, Spacecraft, IIntegrator, TimeSpan, CovariancePropagationOptions):covariancePropagation
-D1.parameter	IO.Astrodynamics.Surface.Site.FindWindowsOnOccultationConstraint(in Window, ILocalizable, ShapeType, INaifObject, ShapeType, OccultationType, Aberration, in TimeSpan, OccultationSearchOptions):options
 D1.seconds	BisectionMethod.Solve(Func<double, double>, double, double, double, int):tolerance
 D1.seconds	IO.Astrodynamics.CCSDS.OPM.OpmManeuverParameters.ManDuration
 D1.seconds	IO.Astrodynamics.CCSDS.OPM.OpmManeuverParameters.ctor(DateTime, double, double, string, double, double, double, IReadOnlyList<string>):manDuration

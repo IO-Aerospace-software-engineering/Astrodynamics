@@ -312,7 +312,7 @@ public class FieldOfViewDynamicsTests
         {
             var row = rows[i];
             var instrument = spacecraft.Instruments.First(x => x.NaifId == spacecraft.NaifId * 1000 - row.Number);
-            var actual = instrument.FindWindowsInFieldOfViewConstraint(window, spacecraft, targets[row.Target], TargetFrame(row), row.Shape, row.Aberration, SpiceStep(variant)).ToArray();
+            var actual = instrument.FindFieldOfViewWindows(window, targets[row.Target], new FieldOfViewSearchOptions { Step = SpiceStep(variant), Aberration = row.Aberration, TargetShape = row.Shape, TargetFrame = TargetFrame(row) }).ToArray();
             var expected = Gftfov(spacecraft, window, row, targets, SpiceStep(variant));
             _output.WriteLine($"  {variant} {row}: managed {FieldOfViewKernels.Format(actual)}; gftfov {FieldOfViewKernels.Format(expected)}");
             Assert.Equal(row.Windows, expected.Length);

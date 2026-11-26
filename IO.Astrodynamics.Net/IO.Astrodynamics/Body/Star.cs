@@ -432,11 +432,12 @@ public class Star : CelestialBody
     /// <summary>
     /// Propagates the star.
     /// </summary>
-    /// <param name="timeWindow">The time window for propagation.</param>
+    /// <param name="window">The time window for propagation, of a length above zero.</param>
     /// <param name="stepSize">The step size for propagation, positive.</param>
     /// <remarks>
     /// The states of the propagation replace those the star held, as <c>Spacecraft.Propagate</c> replaces the states of a
-    /// spacecraft: a state at the start of the window and every <paramref name="stepSize"/> up to its end, published at once
+    /// spacecraft: a state at the start of the window and every <paramref name="stepSize"/> up to its end (the points of
+    /// <see cref="Window.Sample"/>), published at once
     /// when they are all computed, each the position of <see cref="GetEquatorialCoordinates"/> and the space velocity of
     /// <see cref="GetGeometricStateRelativeTo"/> (before 11.0.0 a zero velocity, #731). Before 11.0.0 each propagation added its states to those of the previous ones (the
     /// first state of an epoch kept), so that <see cref="WriteEphemeris"/> wrote every window ever propagated, the gaps
@@ -446,11 +447,15 @@ public class Star : CelestialBody
     /// <exception cref="ArgumentOutOfRangeException"><paramref name="stepSize"/> is zero or negative, the rule of every
     /// step of the library (#674); nothing is stored. Before 11.0.0 the call never returned (a negative step also stored
     /// states without bound).</exception>
-    public void Propagate(Window timeWindow, TimeSpan stepSize)
+    /// <exception cref="ArgumentException"><paramref name="window"/> has zero length, checked first, the rule of every
+    /// propagation path (decisions 7, 15 and 18 of #668, decided by S. Guillet, 2026-11-22); the states the star held are
+    /// kept. Before 11.0.0 the one state of the start replaced them.</exception>
+    public void Propagate(Window window, TimeSpan stepSize)
     {
+        PropagatorBase.RequireWindowLength(window);
         PropagatorBase.RequirePositiveStep(stepSize, nameof(stepSize));
         var states = new List<StateVector>();
-        for (Time epoch = timeWindow.StartDate; epoch <= timeWindow.EndDate; epoch += stepSize)
+        foreach (var epoch in window.Sample(stepSize))
         {
             var position = GetEquatorialCoordinates(epoch).ToCartesian();
             states.Add(new StateVector(position, _spaceVelocity, Barycenters.SOLAR_SYSTEM_BARYCENTER, epoch, Frame.ICRF));

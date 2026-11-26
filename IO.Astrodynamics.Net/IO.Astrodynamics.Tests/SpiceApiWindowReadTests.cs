@@ -133,6 +133,63 @@ public partial class SpiceApiTest
         }
     }
 
+    // The two UTC minutes around the leap second of 2012-06-30, inside the PHSRM CK: 121 s (Window.Length) for 120 s of the
+    // UTC calendar
+    private static readonly Window AcrossLeapSecond2012 = new(new TimeSystem.Time(2012, 6, 30, 23, 59, 0, TimeSystem.TimeScale.UTC),
+        new TimeSystem.Time(2012, 7, 1, 0, 1, 0, TimeSystem.TimeScale.UTC));
+
+    [Fact]
+    public void ReadEphemeris_UtcWindowAcrossALeapSecond_StopsAtTheEnd()
+    {
+        // #829 (decision 107 of #668): the grid of a UTC window is start + i·step in the UTC calendar up to the end, the points of
+        // Window.Sample: 121 states at 1 s, the last at the end, each the read of its epoch alone. Before, the count came from
+        // the window's length, leap second included, and the read went one epoch past the end (122 states, the last at
+        // 2012-07-01T00:01:01Z)
+        var stepSize = TimeSpan.FromSeconds(1.0);
+        var states = SpiceAPI.Instance.ReadEphemeris(AcrossLeapSecond2012, 399, 301, Frames.Frame.ICRF, Aberration.LT, stepSize).ToArray();
+        Assert.Equal(121, states.Length);
+        LabelAssert.Equal(AcrossLeapSecond2012.EndDate, states[^1].Epoch);
+        for (int i = 0; i < states.Length; i++)
+        {
+            var epoch = AcrossLeapSecond2012.StartDate + stepSize * i;
+            LabelAssert.Equal(epoch, states[i].Epoch);
+            var single = SpiceAPI.Instance.ReadEphemeris(epoch, 399, 301, Frames.Frame.ICRF, Aberration.LT);
+            Assert.Equal(single.Position, states[i].Position);
+            Assert.Equal(single.Velocity, states[i].Velocity);
+        }
+    }
+
+    [Fact]
+    public void ReadOrientation_UtcWindowAcrossALeapSecond_StopsAtTheEnd()
+    {
+        // #829: PHSRM's CK over the same window, 121 records, the last the read of the end alone; before, 122, the last the read
+        // of 2012-07-01T00:01:01Z
+        var sclkFile = new FileInfo(Path.Combine(Constants.PhsrmDataPath.FullName, "phsrm_201008031645.tsc"));
+        var ckFile = new FileInfo(Path.Combine(Constants.PhsrmDataPath.FullName, "phsrm_sc_test2_111108_130214_v00.bc"));
+        SpiceAPI.Instance.LoadKernels(sclkFile);
+        SpiceAPI.Instance.LoadKernels(ckFile);
+        try
+        {
+            var stepSize = TimeSpan.FromSeconds(1.0);
+            var tolerance = TimeSpan.FromSeconds(60.0);
+            var records = SpiceAPI.Instance.ReadOrientation(AcrossLeapSecond2012, -555, tolerance, Frames.Frame.ICRF, stepSize).ToArray();
+            Assert.Equal(121, records.Length);
+            for (int i = 0; i < records.Length; i++)
+            {
+                var epoch = AcrossLeapSecond2012.StartDate + stepSize * i;
+                var single = SpiceAPI.Instance.ReadOrientation(new Window(epoch, epoch), -555, tolerance, Frames.Frame.ICRF, stepSize).Single();
+                LabelAssert.Equal(single.Epoch, records[i].Epoch);
+                Assert.Equal(single.Rotation, records[i].Rotation);
+                Assert.Equal(single.AngularVelocity, records[i].AngularVelocity);
+            }
+        }
+        finally
+        {
+            SpiceAPI.Instance.UnloadKernels(ckFile);
+            SpiceAPI.Instance.UnloadKernels(sclkFile);
+        }
+    }
+
     [Theory]
     [InlineData(0.0)]
     [InlineData(-1.0)]

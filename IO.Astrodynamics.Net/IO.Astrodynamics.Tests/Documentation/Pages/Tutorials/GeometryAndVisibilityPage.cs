@@ -66,15 +66,18 @@ internal static class GeometryAndVisibilityPage
         #region docs/tutorials/geometry-and-visibility.md:1
         // Inputs: moon, sun and earth (CelestialBody), searchWindow (Window)
         // Find lunar eclipses (the Earth occults the Moon as seen from the Sun)
-        var lunarEclipses = moon.FindWindowsOnOccultationConstraint(
+        var lunarEclipses = sun.FindOccultationWindows(
             searchWindow,
-            observer: sun,
-            targetShape: ShapeType.Ellipsoid,
-            frontBody: earth,
-            frontShape: ShapeType.Ellipsoid,
-            occultationType: OccultationType.Any,
-            aberration: Aberration.None,
-            stepSize: TimeSpan.FromHours(1));
+            target: moon,
+            front: earth,
+            new OccultationSearchOptions
+            {
+                Step = TimeSpan.FromHours(1),
+                TargetShape = ShapeType.Ellipsoid,
+                FrontShape = ShapeType.Ellipsoid,
+                OccultationType = OccultationType.Any,
+                Aberration = Aberration.None
+            });
         #endregion
         return lunarEclipses;
     }
@@ -84,15 +87,11 @@ internal static class GeometryAndVisibilityPage
     {
         #region docs/tutorials/geometry-and-visibility.md:2
         // Inputs: sun and earth (CelestialBody), searchWindow (Window), spacecraft (Spacecraft)
-        var eclipseWindows = sun.FindWindowsOnOccultationConstraint(
+        var eclipseWindows = spacecraft.FindOccultationWindows(
             searchWindow,
-            observer: spacecraft,
-            targetShape: ShapeType.Ellipsoid,
-            frontBody: earth,
-            frontShape: ShapeType.Ellipsoid,
-            occultationType: OccultationType.Any,
-            aberration: Aberration.None,
-            stepSize: TimeSpan.FromMinutes(5));
+            target: sun,
+            front: earth,
+            new OccultationSearchOptions { Step = TimeSpan.FromMinutes(5) });
         #endregion
     }
 
@@ -102,13 +101,12 @@ internal static class GeometryAndVisibilityPage
         #region docs/tutorials/geometry-and-visibility.md:3
         // Inputs: earth and moon (CelestialBody), searchWindow (Window)
         // Find when the Moon is farther than 400,000 km from Earth
-        var farMoonWindows = earth.FindWindowsOnDistanceConstraint(
+        var farMoonWindows = earth.FindDistanceWindows(
             searchWindow,
             moon,
             RelationnalOperator.Greater,
             400000000,          // meters
-            Aberration.None,
-            TimeSpan.FromHours(24));
+            new WindowSearchOptions { Step = TimeSpan.FromHours(24) });
         #endregion
     }
 
@@ -118,14 +116,16 @@ internal static class GeometryAndVisibilityPage
         #region docs/tutorials/geometry-and-visibility.md:4
         // Inputs: spacecraft (Spacecraft), window (Window), earth (CelestialBody)
         var visibilityWindows = spacecraft.Instruments.First()
-            .FindWindowsInFieldOfViewConstraint(
+            .FindFieldOfViewWindows(
                 window,
-                spacecraft,
                 earth,
-                earth.Frame,
-                ShapeType.Ellipsoid,
-                Aberration.LT,
-                TimeSpan.FromSeconds(60));
+                new FieldOfViewSearchOptions
+                {
+                    Step = TimeSpan.FromSeconds(60),
+                    Aberration = Aberration.LT,
+                    TargetShape = ShapeType.Ellipsoid,
+                    TargetFrame = earth.Frame
+                });
         #endregion
     }
 
@@ -186,17 +186,13 @@ internal static class GeometryAndVisibilityPage
     {
         #region docs/tutorials/geometry-and-visibility.md:9
         // Inputs: spacecraft (Spacecraft), searchWindow (Window), mySite (Site)
-        var visibleWindows = spacecraft.FindWindowsOnCoordinateConstraint(
+        var visibleWindows = mySite.FindHorizontalWindows(
             searchWindow,
-            mySite,
-            mySite.Frame,
-            CoordinateSystem.RaDec,
-            Coordinate.Declination,
+            spacecraft,
+            HorizontalCoordinate.Elevation,
             RelationnalOperator.Greater,
             10.0 * Constants.Deg2Rad,
-            0.0,
-            Aberration.LT,
-            TimeSpan.FromMinutes(1));
+            new WindowSearchOptions { Step = TimeSpan.FromMinutes(1), Aberration = Aberration.LT });
         #endregion
     }
 

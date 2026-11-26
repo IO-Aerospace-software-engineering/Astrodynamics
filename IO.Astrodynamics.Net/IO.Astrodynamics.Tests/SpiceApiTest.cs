@@ -1033,6 +1033,8 @@ public partial class SpiceApiTest
         //Get the quaternion to transform
         var res = SpiceAPI.Instance.TransformFrame(new TimeSystem.Window(TimeSystem.Time.J2000TDB, TimeSystem.Time.J2000TDB.AddDays(1.0)), Frames.Frame.ICRF,
             new Frames.Frame("ITRF93"), TimeSpan.FromDays(1.0));
+        // The start and the end, which lies on the grid (#781: before 11.0.0 the end was dropped)
+        Assert.Equal(2, res.Count());
         Assert.Equal(0.76713121207787449, res.First().Rotation.W, 6);
         Assert.Equal(-1.8618836714990174E-05, res.First().Rotation.VectorPart.X, 6);
         Assert.Equal(8.4688405480964646E-07, res.First().Rotation.VectorPart.Y, 6);

@@ -227,7 +227,7 @@ public class TimeEqualityTests
     /// rounded to the tick, gains one where the TDB time gains one. Bisects on the rounded offset, which rises over the
     /// 600 s searched there.
     /// </summary>
-    private static (TimeSystem.Time First, TimeSystem.Time Second) TdbTicksOfOneTaiTick(DateTime from)
+    internal static (TimeSystem.Time First, TimeSystem.Time Second) TdbTicksOfOneTaiTick(DateTime from)
     {
         long Offset(long ticks) => new TimeSystem.Time(new DateTime(ticks), TimeScale.TDB).ToTAI().DateTime.Ticks - ticks;
 

@@ -1694,7 +1694,7 @@ public class SpiceAPI
     /// within the search window: the rounding is monotone, and where an ulp is coarser than a tick the double after the seconds of a
     /// tick is more than half a tick past that tick (the double before, more than half a tick before it).
     /// </summary>
-    private static IEnumerable<TimeSystem.Window> WithinSearchWindow(Window[] windows, int count, TimeSystem.Window searchWindow)
+    private static IReadOnlyList<TimeSystem.Window> WithinSearchWindow(Window[] windows, int count, TimeSystem.Window searchWindow)
     {
         var start = searchWindow.StartDate.ToTDB();
         var end = searchWindow.EndDate.ToTDB();
@@ -1729,7 +1729,7 @@ public class SpiceAPI
     /// returned its first 1000 (#653).
     /// </summary>
     /// <exception cref="InvalidOperationException">The native search failed: SPICE's message.</exception>
-    private static IEnumerable<TimeSystem.Window> RunWindowSearch(TimeSystem.Window searchWindow, NativeWindowSearch search,
+    private static IReadOnlyList<TimeSystem.Window> RunWindowSearch(TimeSystem.Window searchWindow, NativeWindowSearch search,
         params (string Name, Frame Frame, string ParamName)[] frames)
     {
         var windows = System.Buffers.ArrayPool<Window>.Shared.Rent(WindowSearchCapacity);
@@ -1785,8 +1785,8 @@ public class SpiceAPI
     /// <see cref="RelationnalOperator.NotEqual"/>, which CSPICE has not, the rest of the search window once the instants
     /// of <c>=</c> are taken out, a window from each crossing to the next, as the managed search defines it (#482).
     /// </summary>
-    private static IEnumerable<TimeSystem.Window> SearchWindows(TimeSystem.Window searchWindow, RelationnalOperator relationalOperator,
-        Func<string, IEnumerable<TimeSystem.Window>> search)
+    private static IReadOnlyList<TimeSystem.Window> SearchWindows(TimeSystem.Window searchWindow, RelationnalOperator relationalOperator,
+        Func<string, IReadOnlyList<TimeSystem.Window>> search)
     {
         if (relationalOperator != RelationnalOperator.NotEqual)
         {
@@ -1839,7 +1839,7 @@ public class SpiceAPI
     /// an epoch outside the coverage of the frame data, a step SPICE rejects, more windows than its result cell holds (10000, #653), with
     /// SPICE's message (fourth round of #668; before 11.0.0 the native layer dropped the error and the search returned no
     /// window).</exception>
-    public IEnumerable<TimeSystem.Window> FindWindowsOnDistanceConstraint(TimeSystem.Window searchWindow, int observerId,
+    public IReadOnlyList<TimeSystem.Window> FindWindowsOnDistanceConstraint(TimeSystem.Window searchWindow, int observerId,
         int targetId, RelationnalOperator relationalOperator, double value, Aberration aberration,
         TimeSpan stepSize)
     {
@@ -1847,7 +1847,7 @@ public class SpiceAPI
             value, aberration, stepSize));
     }
 
-    private IEnumerable<TimeSystem.Window> DistanceWindows(TimeSystem.Window searchWindow, int observerId, int targetId, string relation,
+    private IReadOnlyList<TimeSystem.Window> DistanceWindows(TimeSystem.Window searchWindow, int observerId, int targetId, string relation,
         double value, Aberration aberration, TimeSpan stepSize)
     {
         lock (lockObject)
@@ -1876,7 +1876,7 @@ public class SpiceAPI
     /// radii it does not know, the frame the kernels associate with an ellipsoid when SPICE does not know it, with SPICE's
     /// message (fourth round of #668; before 11.0.0 the native layer dropped the error and the search returned no
     /// window).</exception>
-    public IEnumerable<TimeSystem.Window> FindWindowsOnOccultationConstraint(TimeSystem.Window searchWindow, int observerId,
+    public IReadOnlyList<TimeSystem.Window> FindWindowsOnOccultationConstraint(TimeSystem.Window searchWindow, int observerId,
         int targetId, ShapeType targetShape, int frontBodyId, ShapeType frontShape,
         OccultationType occultationType, Aberration aberration, TimeSpan stepSize)
     {
@@ -1914,7 +1914,7 @@ public class SpiceAPI
     /// radii it does not know, the frame the kernels associate with an ellipsoid when SPICE does not know it, with SPICE's
     /// message (fourth round of #668; before 11.0.0 the native layer dropped the error and the search returned no
     /// window).</exception>
-    public IEnumerable<TimeSystem.Window> FindWindowsOnOccultationConstraint(TimeSystem.Window searchWindow, int observerId,
+    public IReadOnlyList<TimeSystem.Window> FindWindowsOnOccultationConstraint(TimeSystem.Window searchWindow, int observerId,
         int targetId, ShapeType targetShape, int frontBodyId, ShapeType frontShape,
         OccultationType occultationType, Aberration aberration, TimeSpan stepSize, Frame frontFrame, Frame targetFrame)
     {
@@ -1968,8 +1968,7 @@ public class SpiceAPI
     /// spacecraft whose frame id no loaded kernel defines under the name handed, third review of #690; before, the proxy
     /// dropped the error of <c>gfposc_c</c> and the search returned no window). The frame of a site built from coordinates
     /// or of a managed spacecraft whose name a loaded kernel gives its id is still searched in that kernel frame, by name.
-    /// <see cref="Body.CelestialItem.FindWindowsOnCoordinateConstraint"/> and
-    /// <see cref="Surface.Site.FindWindowsOnCoordinateConstraint"/> search in every frame whose reads are the library's
+    /// <see cref="Body.WindowSearches.FindCoordinateWindows"/> searches in every frame whose reads are the library's
     /// (<see cref="ManagedReadFrame"/>) as the library reads it.
     /// </remarks>
     /// <exception cref="ArgumentNullException"></exception>
@@ -1977,20 +1976,22 @@ public class SpiceAPI
     /// knows no frame of the name handed (read through <c>namfrm_c</c> after the failed search): the message names the
     /// frame, the <see cref="SpiceException"/> of the search, with SPICE's message, its inner exception (R25 of #668,
     /// decided by S. Guillet, 2026-11-19; before 11.0.0 that exception). Both name <c>frame</c>.</exception>
+    /// <exception cref="ArgumentOutOfRangeException">With a comparison operator, <paramref name="value"/> is an angle outside its range, or NaN: a right ascension or a planetographic longitude outside [0, 2π], a geodetic longitude outside [−π, π], a declination or a latitude outside [−π/2, π/2], in radians (R11 of #668, lot L6; before 11.0.0 it was searched as given).</exception>
     /// <exception cref="SpiceException">SPICE cannot run the search: a body or an epoch without ephemeris data,
     /// an epoch outside the coverage of the frame data, a step SPICE rejects, more windows than its result cell holds (10000, #653),
     /// with SPICE's message (fourth round of #668; before 11.0.0 the native layer dropped the error and the search returned
     /// no window).</exception>
-    public IEnumerable<TimeSystem.Window> FindWindowsOnCoordinateConstraint(TimeSystem.Window searchWindow, int observerId,
+    public IReadOnlyList<TimeSystem.Window> FindWindowsOnCoordinateConstraint(TimeSystem.Window searchWindow, int observerId,
         int targetId, Frame frame, CoordinateSystem coordinateSystem, Coordinate coordinate,
         RelationnalOperator relationalOperator, double value, double adjustValue, Aberration aberration,
         TimeSpan stepSize)
     {
         if (frame == null) throw new ArgumentNullException(nameof(frame));
+        GeometryFinder.CheckCoordinateThreshold(coordinateSystem, coordinate, relationalOperator, value);
         if (!SpiceKnowsFrame(frame))
         {
             throw new ArgumentException(
-                $"CSPICE cannot search in the frame {frame.Name}: SPICE does not know it (a frame of the library, or a site or spacecraft frame that no loaded kernel defines). CelestialItem.FindWindowsOnCoordinateConstraint and Site.FindWindowsOnCoordinateConstraint search in it.",
+                $"CSPICE cannot search in the frame {frame.Name}: SPICE does not know it (a frame of the library, or a site or spacecraft frame that no loaded kernel defines). FindCoordinateWindows searches in it.",
                 nameof(frame));
         }
 
@@ -2027,6 +2028,7 @@ public class SpiceAPI
     /// and its leading or trailing whitespace (#682).</param>
     /// <returns>The windows where the constraint holds.</returns>
     /// <exception cref="ArgumentNullException"><paramref name="fixedFrame"/> or <paramref name="method"/> is null.</exception>
+    /// <exception cref="ArgumentOutOfRangeException">With a comparison operator, <paramref name="value"/> is outside [0, π], or NaN: the angles are in radians (R11 of #668, lot L6; before 11.0.0 it was searched as given).</exception>
     /// <exception cref="ArgumentException"><paramref name="method"/> is not ELLIPSOID; before 11.0.0 such a method gave no
     /// window, <c>gfilum_c</c>'s error dropped by the native proxy (#682). Or SPICE knows no frame of the name of
     /// <paramref name="fixedFrame"/> (<c>fixedFrame</c>, read through <c>namfrm_c</c> after the failed search): the message
@@ -2044,12 +2046,13 @@ public class SpiceAPI
     /// an epoch outside the coverage of the frame data, a step SPICE rejects, more windows than its result cell holds (10000, #653),
     /// with SPICE's message (fourth round of #668; before 11.0.0 the native layer dropped the error and the search returned
     /// no window).</exception>
-    public IEnumerable<TimeSystem.Window> FindWindowsOnIlluminationConstraint(TimeSystem.Window searchWindow, int observerId,
+    public IReadOnlyList<TimeSystem.Window> FindWindowsOnIlluminationConstraint(TimeSystem.Window searchWindow, int observerId,
         int targetBodyId, Frame fixedFrame, Coordinates.Planetodetic planetodetic, IlluminationAngle illuminationType, RelationnalOperator relationalOperator,
         double value, double adjustValue, Aberration aberration, TimeSpan stepSize, int illuminationSourceId,
         string method = "Ellipsoid")
     {
         if (fixedFrame == null) throw new ArgumentNullException(nameof(fixedFrame));
+        GeometryFinder.CheckIlluminationThreshold(relationalOperator, value);
         method = CheckIlluminationMethod(method);
         return SearchWindows(searchWindow, relationalOperator, relation =>
         {
@@ -2088,7 +2091,7 @@ public class SpiceAPI
     /// an epoch outside the coverage of the frame data, a step SPICE rejects, more windows than its result cell holds (10000, #653), an
     /// instrument whose field of view no loaded instrument kernel defines, with SPICE's message (fourth round of #668;
     /// before 11.0.0 the native layer dropped the error and the search returned no window).</exception>
-    public IEnumerable<TimeSystem.Window> FindWindowsInFieldOfViewConstraint(TimeSystem.Window searchWindow, int observerId,
+    public IReadOnlyList<TimeSystem.Window> FindWindowsInFieldOfViewConstraint(TimeSystem.Window searchWindow, int observerId,
         int instrumentId, int targetId, Frame targetFrame, ShapeType targetShape, Aberration aberration, TimeSpan stepSize)
     {
         if (targetFrame == null) throw new ArgumentNullException(nameof(targetFrame));
@@ -2139,7 +2142,7 @@ public class SpiceAPI
         Aberration aberration, TimeSpan stepSize)
     {
         ArgumentNullException.ThrowIfNull(frame);
-        var grid = new WindowGrid(searchWindow, stepSize);
+        var grid = WindowGrid(searchWindow, stepSize);
         // Built before the lock (#623): the observer of a Lagrange point reads Barycenters, whose type initializer takes it
         var observer = CreateObserver(observerId);
         lock (lockObject)
@@ -2148,9 +2151,9 @@ public class SpiceAPI
             // A managed frame is read in J2000, then rotated (#558)
             var managed = ManagedReadFrame(frame);
             string frameName = managed == null ? SpiceFrameName(frame) : Frame.ICRF.Name;
-            for (long first = 0; first < grid.Count; first += WindowReadChunk)
+            foreach (var chunk in grid.Chunk(WindowReadChunk))
             {
-                double[] epochs = grid.Seconds(first, WindowReadChunk);
+                double[] epochs = TdbSeconds(chunk);
                 var stateVectors = new StateVector[epochs.Length];
                 if (!ReadEphemerisProxy(epochs, epochs.Length, observerId, targetId, frameName, aberration.GetDescription(), stateVectors))
                     ThrowLastProxyError(frameName, frame, nameof(frame));
@@ -2165,7 +2168,7 @@ public class SpiceAPI
                 for (int i = 0; i < stateVectors.Length; i++)
                 {
                     // Labelled with the epoch read, start + i·step in the frame of the window start (#563, #625)
-                    var epoch = grid.Epoch(first + i);
+                    var epoch = chunk[i];
                     var x = stateVectors[i];
                     orbitalParameters.Add(managed == null
                         ? new OrbitalParameters.StateVector(x.Position.Convert(), x.Velocity.Convert(), observer, epoch, frame)
@@ -2181,52 +2184,29 @@ public class SpiceAPI
     private const int WindowReadChunk = 10000;
 
     /// <summary>
-    /// The epochs of a window read (#563): start + i·step in the time scale of the window start, i from 0 while within the
-    /// window, in exact tick arithmetic, the end of the window included when it falls on the grid; each epoch read at its TDB
-    /// seconds, as the read of that epoch alone takes them. Before 11.0.0 the native proxies stepped their epoch by
-    /// epoch += step in double TDB seconds, so that sample i drifted from start + i·step (1.43e-4 s after 6000 steps of
-    /// 0.1 s, 4.29e-4 s after 9000 of 1.2 s) and the last epoch of the window could be dropped; a grid taken in TDB for a
-    /// window of another frame still dropped it where TDB − TT made the window shorter in TDB (a UTC window of 600 s at
-    /// 0.1 s from the first of May to that of October 2026: 6000 states for 6001, review of #563), and its labels were off
-    /// start + i·step by up to 2 ticks.
+    /// The epochs of a window read (#563): the points of <see cref="TimeSystem.Window.Sample"/>, start + i·step in the time
+    /// scale of the window start, i from 0 while within the window, in exact tick arithmetic, the end of the window included
+    /// when it falls on the grid. Before 11.0.0 the native proxies stepped their epoch by epoch += step in double TDB
+    /// seconds, so that sample i drifted from start + i·step (1.43e-4 s after 6000 steps of 0.1 s, 4.29e-4 s after 9000 of
+    /// 1.2 s) and the last epoch of the window could be dropped; a grid taken in TDB for a window of another frame still
+    /// dropped it where TDB − TT made the window shorter in TDB (review of #563); and a grid counted from the length of a
+    /// UTC window that spans a leap second read one epoch past its end (#829, decision 107 of #668, decided by
+    /// S. Guillet, 2026-11-25).
     /// </summary>
-    private readonly struct WindowGrid
+    /// <exception cref="ArgumentOutOfRangeException"><paramref name="stepSize"/> is not positive.</exception>
+    private static Time[] WindowGrid(TimeSystem.Window searchWindow, TimeSpan stepSize)
     {
-        private readonly Time _start;
-        private readonly long _stepTicks;
-
-        /// <summary>The number of epochs.</summary>
-        internal long Count { get; }
-
-        /// <exception cref="ArgumentOutOfRangeException"><paramref name="stepSize"/> is not positive.</exception>
-        internal WindowGrid(TimeSystem.Window searchWindow, TimeSpan stepSize)
+        if (stepSize <= TimeSpan.Zero)
         {
-            if (stepSize <= TimeSpan.Zero)
-            {
-                throw new ArgumentOutOfRangeException(nameof(stepSize), stepSize, "The step of a window read must be positive.");
-            }
-
-            _start = searchWindow.StartDate;
-            _stepTicks = stepSize.Ticks;
-            Count = (searchWindow.EndDate.ConvertTo(_start.Scale) - _start).Ticks / _stepTicks + 1;
+            throw new ArgumentOutOfRangeException(nameof(stepSize), stepSize, "The step of a window read must be positive.");
         }
 
-        /// <summary>Epoch <paramref name="index"/>, in the time scale of the window start.</summary>
-        internal Time Epoch(long index) => _start + TimeSpan.FromTicks(_stepTicks * index);
-
-        /// <summary>The TDB seconds past J2000 of at most <paramref name="length"/> epochs from <paramref name="first"/>, as the
-        /// read of one epoch takes them.</summary>
-        internal double[] Seconds(long first, int length)
-        {
-            var seconds = new double[(int)System.Math.Min(length, Count - first)];
-            for (int i = 0; i < seconds.Length; i++)
-            {
-                seconds[i] = Epoch(first + i).ToTDB().TimeSpanFromJ2000().TotalSeconds;
-            }
-
-            return seconds;
-        }
+        return searchWindow.Sample(stepSize).ToArray();
     }
+
+    // The TDB seconds past J2000 of the epochs, as the read of one epoch takes them
+    private static double[] TdbSeconds(Time[] epochs) =>
+        epochs.Select(epoch => epoch.ToTDB().TimeSpanFromJ2000().TotalSeconds).ToArray();
 
     /// <summary>
     /// Return state vector at given epoch using NAIF IDs directly.
@@ -2461,14 +2441,14 @@ public class SpiceAPI
         Frame referenceFrame, TimeSpan stepSize)
     {
         if (referenceFrame == null) throw new ArgumentNullException(nameof(referenceFrame));
-        var grid = new WindowGrid(searchWindow, stepSize);
+        var grid = WindowGrid(searchWindow, stepSize);
         lock (lockObject)
         {
             string frameName = SpiceFrameName(referenceFrame);
             List<OrbitalParameters.StateOrientation> records = [];
-            for (long first = 0; first < grid.Count; first += WindowReadChunk)
+            foreach (var chunk in grid.Chunk(WindowReadChunk))
             {
-                double[] epochs = grid.Seconds(first, WindowReadChunk);
+                double[] epochs = TdbSeconds(chunk);
                 // A buffer of the epochs read (#563: before, 10000 records whatever the window, 1.4 ms for one epoch)
                 var stateOrientations = new StateOrientation[epochs.Length];
                 if (!ReadOrientationProxy(epochs, epochs.Length, naifId, tolerance.TotalSeconds, frameName, stateOrientations))
@@ -3048,13 +3028,15 @@ public class SpiceAPI
 
     /// <summary>
     /// The orientations of <paramref name="fromFrame"/> to <paramref name="toFrame"/> at start + i·<paramref name="stepSize"/>
-    /// while before the end of <paramref name="window"/>, read lazily as <see cref="TransformFrame(Time, Frame, Frame)"/>.
+    /// up to the end of <paramref name="window"/>, the points of <see cref="TimeSystem.Window.Sample"/>, read lazily as
+    /// <see cref="TransformFrame(Time, Frame, Frame)"/>.
     /// </summary>
     /// <param name="window">The window of the reads.</param>
     /// <param name="fromFrame">The frame from which the orientation is read.</param>
     /// <param name="toFrame">The frame to which it is read.</param>
     /// <param name="stepSize">The step between two reads, positive.</param>
-    /// <returns>The orientations; the end of the window is not read, even on the grid (#781, lot L6 of #668).</returns>
+    /// <returns>The orientations, the end of the window read when it lies on the grid (#781, decision 9 of #668: before
+    /// 11.0.0 it was dropped even on the grid).</returns>
     /// <exception cref="ArgumentOutOfRangeException"><paramref name="stepSize"/> is zero or negative, at the call (decision
     /// 10 of lot L4 of #668: before 11.0.0 a zero step enumerated without end).</exception>
     public IEnumerable<OrbitalParameters.StateOrientation> TransformFrame(TimeSystem.Window window, Frame fromFrame, Frame toFrame, TimeSpan stepSize)
@@ -3066,15 +3048,7 @@ public class SpiceAPI
             throw new ArgumentOutOfRangeException(nameof(stepSize), stepSize, "The step of a frame read must be positive.");
         }
 
-        return Read();
-
-        IEnumerable<OrbitalParameters.StateOrientation> Read()
-        {
-            for (Time i = window.StartDate; i < window.EndDate; i += stepSize)
-            {
-                yield return TransformFrame(i, fromFrame, toFrame);
-            }
-        }
+        return window.Sample(stepSize).Select(epoch => TransformFrame(epoch, fromFrame, toFrame));
     }
 
     /// <summary>

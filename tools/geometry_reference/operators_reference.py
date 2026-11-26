@@ -12,8 +12,8 @@ The searches:
   - SpiceApiTest's: the Earth-Moon distance > 400 000 km, 2007-01-01 to 2007-04-01, step 1 day; the Moon's Z in
     DSS-13_TOPO from DSS-13 against 0, 2023-02-19 12:00 to 2023-02-20 12:00 TDB, step 60 s; the incidence of the Sun at
     longitude 2.2 deg, latitude 48 deg, altitude 0 on pck00011 against 90.8 deg, CN+S, 2021-05-17/18, step 4.5 h;
-  - with the LRO SPK of the tests: the declination in J2000 of LRO seen from the Moon (lro.FindWindowsOnCoordinateConstraint
-    (moon, ...)) against 0 rad, and the range of DSS-13 seen from LRO (dss13.FindWindowsOnCoordinateConstraint(lro, ...))
+  - with the LRO SPK of the tests: the declination in J2000 of LRO seen from the Moon (moon.FindCoordinateWindows(window,
+    lro, ...)) against 0 rad, and the range of DSS-13 seen from LRO (lro.FindCoordinateWindows(window, dss13, ...))
     against 372 000 km,
     755870520 to 755913720 s TDB (2023-12-15 00:00:51 to 12:00:51 UTC), step 60 s, no aberration (#482's
     setup, on whole TDB seconds);

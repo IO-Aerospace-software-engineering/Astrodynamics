@@ -130,8 +130,10 @@ internal static class SpacecraftPage
         #region docs/reference/spacecraft.md:6
         // Inputs: spacecraft (Spacecraft), window (Window), earth (CelestialBody)
         var camera = spacecraft.Instruments.First();
-        var windows = camera.FindWindowsInFieldOfViewConstraint(window, spacecraft, earth, new Frame("ITRF93"),
-            ShapeType.Ellipsoid, Aberration.LT, TimeSpan.FromSeconds(60.0));
+        var windows = camera.FindFieldOfViewWindows(window, earth, new FieldOfViewSearchOptions
+        {
+            Step = TimeSpan.FromSeconds(60.0), Aberration = Aberration.LT, TargetShape = ShapeType.Ellipsoid, TargetFrame = new Frame("ITRF93")
+        });
         #endregion
     }
 

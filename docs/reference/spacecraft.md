@@ -200,7 +200,7 @@ of [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/iss
 | A body read at an epoch where it has no data | `InvalidOperationException` | `GetEphemeris` and `GetGeometricStateRelativeTo` of a propagated spacecraft before its first stored state or after its last, its light-time margin aside ([#527](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/527)), or in a gap between the windows given to `AddPropagatedStates`; a body read outside the coverage of the kernels (`SpiceException`, an `InvalidOperationException`) |
 | A solution read outside its window | `ArgumentOutOfRangeException` | `PropagationSolution.GetStateVector` and the getters of the covariance propagation outside `PropagationSolution.Window` ([Propagators](propagators.md)) |
 | A write with nothing to write | `InvalidOperationException` | `WriteEphemeris` of a spacecraft that stores no state, `WriteOrientation` of an empty attitude record (a `TLEPropagator` run records none, [#546](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/546)), `WriteKernels` of either, `Star.WriteEphemeris` of a star that stores fewer than three states; nothing is written. An arc of one state keeps its `ArgumentException` in `WriteEphemeris` (decisions 87 and 89 of #668), which `WriteKernels` refuses with `InvalidOperationException`; `SpiceAPI.WriteEphemeris` and `Site.WriteEphemeris`, whose arguments are at fault, keep theirs |
-| A window argument that leaves a body's stored states | `InvalidOperationException` | `GetEphemeris` over a window and the managed distance search of `CelestialItem` past a propagated spacecraft's states. Until lots L6 and L7 of #668 the field-of-view search (`Instrument.FindWindowsInFieldOfViewConstraint`) and the `ILocalizable` overloads of `ConjunctionAssessment.Analyze` and `AnalyzeAll` still throw `ArgumentException` for a window that leaves the stored states or meets a gap between them (decision 86), and so does a conjunction trajectory that does not cover the window |
+| A window argument that leaves a body's stored states | `InvalidOperationException` | `GetEphemeris` over a window and the managed distance search (`FindDistanceWindows`) past a propagated spacecraft's states; the managed field-of-view search (`Instrument.FindFieldOfViewWindows`) for a search window that leaves the stored states of the instrument's spacecraft or of a spacecraft target, or meets a gap between them (decision 86; `ArgumentException` before lot L6). Until lot L7 of #668 the `ILocalizable` overloads of `ConjunctionAssessment.Analyze` and `AnalyzeAll` still throw `ArgumentException` for such a window, and so does a conjunction trajectory that does not cover the window |
 
 Before 11.0.0 a write with nothing to write threw the `ArgumentException` of the SPK writer (`arcs`) or of
 `SpiceAPI.WriteEphemeris` (`stateVectors`), which blamed the file for what the spacecraft or the star lacked
@@ -281,8 +281,9 @@ across the jump:
   two windows throws `InvalidOperationException`, as a read outside them, the light time of a corrected read allowed
   outside each arc (an epoch inside an arc is read by that arc, as before, bit for bit; a corrected epoch in a gap
   within the light time of two arcs is read by the nearer, the later one on a tie, decision 91), and a window
-  argument that meets a gap (a field-of-view search, the `ILocalizable` overloads of the conjunction analysis) is refused
-  up front with `ArgumentException`. An arc of one state (a call of one state apart from every arc) is read at its exact
+  argument that meets a gap is refused up front, by a field-of-view search with `InvalidOperationException` (decision 81
+  of #668, lot L6) and by the `ILocalizable` overloads of the conjunction analysis with `ArgumentException` until lot
+  L7. An arc of one state (a call of one state apart from every arc) is read at its exact
   epoch only, any other read throwing as in a gap, and `WriteEphemeris` refuses it with `ArgumentException` (a segment
   needs two epochs); so is a spacecraft that stores one state only, whose window is that epoch (decision 89: before
   11.0.0 it read the two-body orbit of its initial orbital parameters, at every epoch, its own one included). Only a
@@ -562,7 +563,7 @@ var tank = new FuelTank("MainTank", capacity: 1000.0, initialQuantity: 800.0,
 | Method | Description |
 |--------|-------------|
 | `IsInFOV(Time, ILocalizable, Aberration)` | Whether the center of the target is in the field at an epoch: the `POINT` condition of CSPICE's `fovtrg`, with the corrections of the search |
-| `FindWindowsInFieldOfViewConstraint(Window, Spacecraft, ILocalizable, Frame, ShapeType, Aberration, TimeSpan)` | The windows, in TDB, where the target is in the field: those of CSPICE's `gftfov` ([Field-of-view search](#field-of-view-search)) |
+| `FindFieldOfViewWindows(Window, ILocalizable, FieldOfViewSearchOptions)` | The windows where the target is in the field, labelled in the scale of the search window's start: those of CSPICE's `gftfov` ([Field-of-view search](#field-of-view-search)) |
 | `GetBoresightInSpacecraftFrame()` | Transform boresight to spacecraft body frame |
 | `GetRefVectorInSpacecraftFrame()` | Transform reference vector to spacecraft body frame |
 
@@ -634,14 +635,16 @@ decade, #715; every finite angle accepted, decided by S. Guillet, 2026-11-17). G
 
 #### Field-of-view search
 
-`FindWindowsInFieldOfViewConstraint` finds the windows when a target is in the field of view of an instrument, its
-spacecraft the observer (the `observer` argument is not used). It computes what CSPICE's `gftfov` computes.
+`FindFieldOfViewWindows` finds the windows when a target is in the field of view of an instrument, its spacecraft the
+observer. It computes what CSPICE's `gftfov` computes.
 
 ```csharp
 // Inputs: spacecraft (Spacecraft), window (Window), earth (CelestialBody)
 var camera = spacecraft.Instruments.First();
-var windows = camera.FindWindowsInFieldOfViewConstraint(window, spacecraft, earth, new Frame("ITRF93"),
-    ShapeType.Ellipsoid, Aberration.LT, TimeSpan.FromSeconds(60.0));
+var windows = camera.FindFieldOfViewWindows(window, earth, new FieldOfViewSearchOptions
+{
+    Step = TimeSpan.FromSeconds(60.0), Aberration = Aberration.LT, TargetShape = ShapeType.Ellipsoid, TargetFrame = new Frame("ITRF93")
+});
 ```
 
 **The field.** The field of the instrument kernel: `FieldOfView` is the half-angle in the plane of the boresight and the
@@ -657,7 +660,8 @@ boresight, as `getfov` does, and the axes are read at each epoch through the spa
 | Rectangle | the ray within the rectangle of half-sides tan `FieldOfView` and tan `CrossAngle` | a ray of the pyramid meets the ellipsoid in front of the observer |
 
 An ellipsoid target is the triaxial ellipsoid of the radii of a `CelestialBody` (`BODYnnn_RADII`), oriented by
-`targetFrame` at the light-time corrected epoch. The frame is used as given, without a check of its center; `gftfov`
+`FieldOfViewSearchOptions.TargetFrame` (the target's own frame when null) at the light-time corrected epoch; a null
+`TargetShape` is an ellipsoid for a body with radii and a point otherwise. The frame is used as given, without a check of its center; `gftfov`
 requires a body-fixed frame centered on the target. It is ignored for a point, as `gftfov` ignores it.
 
 **Two paths.**
@@ -674,7 +678,11 @@ requires a body-fixed frame centered on the target. It is ignored for a point, a
   rectangle against an ellipsoid, the largest discriminant over the rectangle of the ray through the ellipsoid, in
   closed form.
 
-Both paths return TDB windows, whatever the time frame of the search window, and count the step in TDB seconds. A
+Both paths count the step in TDB seconds, and label the windows in the scale of the search window's start (lot L6 of
+[#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668)): an end at a bound of the search
+window is that bound, every other end the same instant in that scale, an end inside a UTC leap second kept in TDB;
+before 11.0.0 both returned TDB windows. The step is required (`ArgumentException`, `options`, naming `Step`); a
+`ConvergenceTolerance` applies to the managed path (1 µs when null) and throws `ArgumentException` on CSPICE's. A
 window that holds at the start or the end of the search window, or whose transition lies within 1 µs of them, starts or
 ends there. The managed path reads no state outside the search window, except the target at its light-time corrected
 epoch: up to its light time before the start (reception, `LT` and `CN`) or after the end (transmission, `XLT` and
@@ -720,9 +728,11 @@ search for a `+S` correction.
 
 **Errors.** Both paths check the same rules before the search, and throw:
 
-- `ArgumentOutOfRangeException`: a step that is not positive;
-- `ArgumentException`: a search window that ends before it starts, a target that is the instrument's spacecraft, an
-  ellipsoid target without radii (a site, a spacecraft, a barycenter, a Lagrange point, a star);
+- `ArgumentOutOfRangeException`: a step or a convergence tolerance that is not positive, when the options are built
+  (`init`, so through `with` too);
+- `ArgumentException`: no step (`options`), a target that is the instrument's spacecraft, an ellipsoid target without
+  radii (a site, a spacecraft, a barycenter, a Lagrange point, a star), a `TargetFrame` SPICE does not know
+  (`options`, SPICE's error as inner exception); a `Window` cannot end before it starts (its constructor throws);
 - `InvalidOperationException`: a field whose angular radius (the larger half-angle of a circle or an ellipse, the angle
   of the corner of a rectangle) exceeds π/2 − 1e-6, as `gftfov` rejects it (before 11.0.0 also a shape other than a
   circle on an instrument of a subclass outside the library, which the closed hierarchy no longer allows, decision 72
@@ -730,7 +740,9 @@ search for a `+S` correction.
   vector, the field of view and the cross angle, whose half-angles are positive, are checked when the instrument is
   built ([#707](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/707), [#715](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/715), [Instrument](#instrument)).
 
-The managed path also throws `ArgumentException` when the search window leaves the propagated states of the
+The managed path also throws `InvalidOperationException` (decisions 81 and 86 of
+[#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668), lot L6; `ArgumentException`
+before 11.0.0) when the search window leaves the propagated states of the
 instrument's spacecraft or of a spacecraft target, which would be extrapolated, or meets a gap between the windows given
 to `AddPropagatedStates` ([#792](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/792)) (a spacecraft target is read up to its
 light time before the start for the reception corrections, or after the end for the transmission ones, `XLT` and `XCN`,

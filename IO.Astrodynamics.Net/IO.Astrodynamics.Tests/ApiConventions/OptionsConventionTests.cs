@@ -111,11 +111,15 @@ public class OptionsConventionTests
 
     // The siblings whose defaults differ by decision: CovariancePropagation, null (Auto) in PropagationOptions and
     // Covariance mode in ConjunctionAnalysisOptions, whose null throws (R06 of #668, structuring choice 3, decided by
-    // S. Guillet, 2026-11-19)
+    // S. Guillet, 2026-11-19); and Step, an integration step of 1 s in VVIntegratorOptions (D1.11, lot L4) and a search step, null where it is
+    // inferred or required, in the three window search records (R15 of #668, lot L6)
     private static readonly (string A, string B)[] DecidedSiblings =
     [
         ("IO.Astrodynamics.Propagator.PropagationOptions.CovariancePropagation",
-            "IO.Astrodynamics.SSA.ConjunctionAnalysisOptions.CovariancePropagation")
+            "IO.Astrodynamics.SSA.ConjunctionAnalysisOptions.CovariancePropagation"),
+        ("IO.Astrodynamics.FieldOfViewSearchOptions.Step", "IO.Astrodynamics.Propagator.Integrators.VVIntegratorOptions.Step"),
+        ("IO.Astrodynamics.OccultationSearchOptions.Step", "IO.Astrodynamics.Propagator.Integrators.VVIntegratorOptions.Step"),
+        ("IO.Astrodynamics.Propagator.Integrators.VVIntegratorOptions.Step", "IO.Astrodynamics.WindowSearchOptions.Step")
     ];
 
     /// <summary>Every violation of D1 by the given types, as "rule&lt;TAB&gt;symbol".</summary>

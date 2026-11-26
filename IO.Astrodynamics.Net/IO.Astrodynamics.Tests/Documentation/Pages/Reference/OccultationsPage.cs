@@ -68,11 +68,9 @@ internal static class OccultationsPage
         var earth = new CelestialBody(PlanetsAndMoons.EARTH);
         var sun = new CelestialBody(Stars.Sun);
         // spacecraft: propagated, from a TLE, or from the kernels
-        var options = new OccultationSearchOptions { FrontFrame = new Frame("IAU_EARTH") };
-        var penumbra = sun.FindWindowsOnOccultationConstraint(window, spacecraft, ShapeType.Ellipsoid, earth, ShapeType.Ellipsoid,
-            OccultationType.Any, Aberration.None, TimeSpan.FromSeconds(60.0), options);
-        var umbra = sun.FindWindowsOnOccultationConstraint(window, spacecraft, ShapeType.Ellipsoid, earth, ShapeType.Ellipsoid,
-            OccultationType.Full, Aberration.None, TimeSpan.FromSeconds(60.0), options);
+        var options = new OccultationSearchOptions { Step = TimeSpan.FromSeconds(60.0), FrontFrame = new Frame("IAU_EARTH") };
+        var penumbra = spacecraft.FindOccultationWindows(window, sun, earth, options);
+        var umbra = spacecraft.FindOccultationWindows(window, sun, earth, options with { OccultationType = OccultationType.Full });
         #endregion
     }
 }

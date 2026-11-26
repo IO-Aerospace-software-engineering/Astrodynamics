@@ -284,10 +284,13 @@ Represents a time interval.
 | `StartDate` | Get start time |
 | `EndDate` | Get end time |
 | `Length` | Get window duration |
-| `Merge(Window other)` | Merge two overlapping windows |
-| `Intersects(Window other)` | Check if windows overlap |
-| `Intersects(Time time)` | Check if time is within window |
-| `GetIntersection(Window other)` | Get overlapping portion |
+| `Contains(Time time)` | Check if time is within window, ends included |
+| `Intersects(Window other)` | Check if windows share an instant (touching windows do) |
+| `Hull(Window other)` | The earlier start and the later end (`Merge` before 11.0.0) |
+| `TryMerge(Window other, out Window merged)` | The hull of two windows that share an instant |
+| `GetIntersection(Window other)` | Get overlapping portion (throws when there is none) |
+| `TryGetIntersection(Window other, out Window intersection)` | Get overlapping portion, false when there is none |
+| `Sample(TimeSpan step, bool includeEnd = false)` | The instants start + i·step at or before the end, lazily, the grid of the window reads (with `includeEnd` the end appended off the grid) |
 | `==`, `Equals` | The same two ends as instants, whatever their frames, `Length` excluded (#512) |
 
 ```csharp
@@ -300,9 +303,13 @@ Console.WriteLine($"Duration: {window.Length.TotalDays} days");
 
 // Check intersection
 var t = new Time(2024, 1, 15, TimeScale.TDB);
-if (window.Intersects(t))
+if (window.Contains(t))
     Console.WriteLine("Time is within window");
 ```
+
+Lists of windows, as the window searches return them (`IReadOnlyList<Window>`), combine with the extensions of
+`WindowList`, the algebra of CSPICE's `wn*` routines on closed windows: `IntersectWindows`, `UnionWindows`,
+`ExceptWindows`, `ComplementWithin(Window)` and `TotalDuration()` (see `docs/reference/time-and-windows.md#window-lists`).
 
 ---
 
@@ -335,8 +342,8 @@ Represents a natural celestial body (planet, moon, star).
 | `TrueSolarDay(Time epoch)` | Get true solar day duration |
 | `GeosynchronousOrbit(double longitude, double latitude, Time epoch)` | Compute geosynchronous orbit |
 | `HelioSynchronousOrbit(double sma, double ecc, Time epochAtDescendingNode)` | Compute helio-synchronous orbit |
-| `FindWindowsOnDistanceConstraint(...)` | Find windows when distance constraint met |
-| `FindWindowsOnOccultationConstraint(...)` | Find occultation/eclipse windows |
+| `FindDistanceWindows(...)` | Find the windows of the distance of a target seen from this item, the observer (`WindowSearches`) |
+| `FindOccultationWindows(...)` | Find occultation/eclipse windows seen from this item, the observer (`WindowSearches`) |
 | `AngularSeparation(Time epoch, ILocalizable target1, ILocalizable target2, Aberration aberration)` | Compute angular separation |
 | `SubObserverPoint(CelestialBody target, Time epoch, Aberration aberration)` | Get sub-observer point |
 
@@ -353,11 +360,10 @@ var sv = state.ToStateVector();
 // Compute geosynchronous orbit
 var geoOrbit = earth.GeosynchronousOrbit(0.0, 0.0, new Time(2024, 1, 1, TimeScale.TDB));
 
-// Find solar eclipses: the Sun (this item) behind the Moon, seen from the Earth's center
-var eclipses = sun.FindWindowsOnOccultationConstraint(
+// Find solar eclipses: the Sun behind the Moon, seen from the Earth's center (the observer)
+var eclipses = earth.FindOccultationWindows(
     new Window(new Time(2024, 1, 1, TimeScale.TDB), new Time(2024, 12, 31, TimeScale.TDB)),
-    earth, ShapeType.Ellipsoid, moon, ShapeType.Ellipsoid,
-    OccultationType.Any, Aberration.None, TimeSpan.FromHours(1));
+    sun, moon, new OccultationSearchOptions { Step = TimeSpan.FromHours(1) });
 ```
 
 #### CelestialItem
@@ -1174,9 +1180,10 @@ Ground-based observation site.
 | `GetEphemeris(Window window, ILocalizable observer, Frame frame, Aberration aberration, TimeSpan step)` | Get site states over window |
 | `GetGeometricStateRelativeTo(Time epoch, CelestialItem referenceBody)` | Get geometric state relative to a reference body |
 | `AngularSeparation(Time epoch, ILocalizable target1, ILocalizable target2, Aberration aberration)` | Compute angular separation |
-| `FindWindowsOnDistanceConstraint(...)` | Find distance constraint windows |
-| `FindWindowsOnOccultationConstraint(...)` | Find occultation windows |
-| `FindWindowsOnIlluminationConstraint(...)` | Find the windows of the incidence angle of a source; the emission and phase angles need an observer and throw, the method is ELLIPSOID (#682) |
+| `FindDistanceWindows(...)` | Find the windows of the distance of a target seen from the site (`WindowSearches`) |
+| `FindHorizontalWindows(...)` | Find the windows of the azimuth, elevation or range of a target seen from the site |
+| `FindOccultationWindows(...)` | Find occultation windows seen from the site (`WindowSearches`) |
+| `FindIlluminationWindows(...)` | Find the windows of the incidence angle of a source; the emission and phase angles need an observer and throw (#682) |
 | `FindDayWindows(Window searchWindow, double twilight)` | Find daylight windows |
 | `IlluminationIncidence(Time date, ILocalizable source, Aberration aberration)` | Get solar incidence angle |
 | `WriteFrame(FileInfo outputFile)` | Write site frame kernel: the frame of its coordinates, or for a site from the kernels whose frame id the loaded kernels define, that kernel frame under its kernel name (#690) |
@@ -1204,10 +1211,11 @@ Console.WriteLine($"Azimuth: {horizontal.Azimuth * Constants.Rad2Deg:F2}°");
 Console.WriteLine($"Elevation: {horizontal.Elevation * Constants.Rad2Deg:F2}°");
 Console.WriteLine($"Range: {horizontal.Range / 1000:F0} km");
 
-// Find visibility windows
-var windows = mySite.FindWindowsOnDistanceConstraint(
+// Find visibility windows: the distance of the site from the Moon (the observer)
+var windows = moon.FindDistanceWindows(
     new Window(new Time(2024, 1, 1, TimeScale.TDB), new Time(2024, 1, 2, TimeScale.TDB)),
-    moon, RelationnalOperator.Lower, 400000000, Aberration.LT, TimeSpan.FromMinutes(10));
+    mySite, RelationnalOperator.Lower, 400000000,
+    new WindowSearchOptions { Step = TimeSpan.FromMinutes(10), Aberration = Aberration.LT });
 // One window, 2024-01-01 09:42:24.997 to 14:20:43.029 TDB, as CSPICE's spkcpt_c corrects the site (#489)
 ```
 
@@ -1473,7 +1481,7 @@ Base class for spacecraft instruments.
 | Method | Description |
 |--------|-------------|
 | `IsInFOV(Time date, ILocalizable target, Aberration aberration)` | Whether the target's center is in the field: CSPICE's `fovtrg` with `POINT`; throws for a managed spacecraft without attitude (#682) |
-| `FindWindowsInFieldOfViewConstraint(...)` | The windows, in TDB, of CSPICE's `gftfov`: the target as a point or as its ellipsoid, every field shape, on both paths (see `docs/reference/spacecraft.md`, "Field-of-view search"); throws for a managed spacecraft without attitude, never propagated, from a TLE or propagated by `TLEPropagator`, until `AddStateOrientationToICRF` gives it one (#682) |
+| `FindFieldOfViewWindows(...)` | The windows of CSPICE's `gftfov`, labelled in the scale of the search window's start: the target as a point or as its ellipsoid, every field shape, on both paths (see `docs/reference/spacecraft.md`, "Field-of-view search"); throws for a managed spacecraft without attitude, never propagated, from a TLE or propagated by `TLEPropagator`, until `AddStateOrientationToICRF` gives it one (#682) |
 | `GetBoresightInSpacecraftFrame()` | Get boresight in spacecraft frame |
 | `GetBoresightInICRFFrame(Time date)` | Get boresight in ICRF |
 
@@ -2641,16 +2649,12 @@ var searchWindow = new Window(
     new Time(2024, 12, 31, TimeScale.TDB)
 );
 
-// Find lunar eclipses: the Moon (this item) behind the Earth, seen from the Sun
-var lunarEclipses = moon.FindWindowsOnOccultationConstraint(
+// Find lunar eclipses: the Moon behind the Earth, seen from the Sun (the observer)
+var lunarEclipses = sun.FindOccultationWindows(
     searchWindow,
-    observer: sun,
-    targetShape: ShapeType.Ellipsoid,
-    frontBody: earth,
-    frontShape: ShapeType.Ellipsoid,
-    occultationType: OccultationType.Any,
-    aberration: Aberration.None,
-    stepSize: TimeSpan.FromHours(1)
+    target: moon,
+    front: earth,
+    new OccultationSearchOptions { Step = TimeSpan.FromHours(1), OccultationType = OccultationType.Any }
 ).ToArray();
 
 Console.WriteLine($"Found {lunarEclipses.Length} lunar eclipses in 2024:");
@@ -2661,13 +2665,12 @@ foreach (var eclipse in lunarEclipses)
 }
 
 // Find distance constraint windows (Moon farther than 400,000 km from Earth)
-var farMoonWindows = earth.FindWindowsOnDistanceConstraint(
+var farMoonWindows = earth.FindDistanceWindows(
     searchWindow,
     moon,
     RelationnalOperator.Greater,
     400000000,  // 400,000 km in meters
-    Aberration.None,
-    TimeSpan.FromHours(24)
+    new WindowSearchOptions { Step = TimeSpan.FromHours(24) }
 ).ToArray();
 
 Console.WriteLine($"\nMoon > 400,000 km from Earth:");
@@ -2725,16 +2728,15 @@ scenario.Simulate(new PropagationOptions
 });
 
 // Find windows when Earth is in the camera's field of view: any part of its ellipsoid, oriented by its frame, with the light time.
-// The spacecraft is propagated, so the library searches; the windows are those of CSPICE's gftfov, in TDB, to 1 µs
+// The spacecraft is propagated, so the library searches; the windows are those of CSPICE's gftfov, to 1 µs
 var visibilityWindows = spacecraft.Instruments.First()
-    .FindWindowsInFieldOfViewConstraint(
+    .FindFieldOfViewWindows(
         new Window(start, end),
-        spacecraft,
         earth,
-        earth.Frame,
-        ShapeType.Ellipsoid,
-        Aberration.LT,
-        TimeSpan.FromSeconds(60)
+        new FieldOfViewSearchOptions
+        {
+            Step = TimeSpan.FromSeconds(60), Aberration = Aberration.LT, TargetShape = ShapeType.Ellipsoid, TargetFrame = earth.Frame
+        }
     ).ToArray();
 
 Console.WriteLine($"Earth visibility windows:");
@@ -2820,14 +2822,13 @@ for (var t = trackStart; t < trackEnd; t = t.AddMinutes(10))
     }
 }
 
-// Find visibility windows from ground station
-var visibilityWindows = goldstone.FindWindowsOnDistanceConstraint(
+// Find visibility windows from ground station: the distance of the station from the ISS (the observer)
+var visibilityWindows = iss.FindDistanceWindows(
     new Window(trackStart, trackEnd),
-    iss,
+    goldstone,
     RelationnalOperator.Lower,
     2000000,  // Within 2000 km
-    Aberration.LT,
-    TimeSpan.FromMinutes(1)
+    new WindowSearchOptions { Step = TimeSpan.FromMinutes(1), Aberration = Aberration.LT }
 );
 ```
 

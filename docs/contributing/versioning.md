@@ -79,8 +79,14 @@ optional and inferred by the run, the radii of the impulses checked, the axes of
 `TriadAttitude` and an `InstrumentPointingToAttitude` of `IAttitudeTarget` targets, and an attitude that points only
 the instruments of its own spacecraft, and the text kernel writers synchronous, with the frame of a spacecraft built by
 the spacecraft alone, a write with nothing to write that throws `InvalidOperationException`, and a Cosmographia export
-(and `astro propagate`) that refuses a name that is not a portable file name and a previous export SPICE holds.
+(and `astro propagate`) that refuses a name that is not a portable file name and a previous export SPICE holds, and
+the window searches on the observer with one options record per kind, their windows an `IReadOnlyList<Window>`
+labelled in the scale of the search window, the occultation of a site observer searched by the library, an angular
+threshold checked against its range, and the window reads on the grid of `Window.Sample`.
 **Removed** lists `Instrument.PositionInFOV`, `LowThrustManeuver`, `Quaternion.Zero`, `Star.PropagationOutput`,
+`Window.Merge` and `Window.Intersects(Time)` (now `Hull` and `Contains`), the window searches on the target
+(`FindWindowsOn…Constraint` of `CelestialItem`, `ILocalizable` and `Site`, `Instrument.FindWindowsInFieldOfViewConstraint`
+and the instance `GeometryFinder`, now the searches on the observer),
 `ExceptionBase`, `Matrix.Set`, `Vector3 * Vector3`, six exports of the native library that .NET never called, the
 public interop structs of `IO.Astrodynamics.DTO`, the ten raw conversions of `SpiceAPI`, the public helpers of the
 implementation, the `Equatorial` constructors of two angles and the coordinate conversions taking a flattening and a
@@ -413,6 +419,74 @@ release are listed under **Known limitations**.
   first, the clock kernel loaded only while the CK is written, then moved into place and loaded (decision 79); the
   centre of the SPK is not checked (decision 79, #655: the managed writer writes any centre). Two spacecraft are written
   into one directory with the first handle alive. See [Spacecraft](../reference/spacecraft.md#the-kernels).
+- **`Window.Contains`, `Hull`, `TryMerge` and `TryGetIntersection`** (lot L6, R16 of
+  [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668), decided by S. Guillet,
+  2026-11-19): `Contains(Time)` whether the window holds an instant, its ends included; `Hull(Window)` the earlier start
+  and the later end, on a tie of instants the argument's end, the removed `Merge` bit for bit; `TryMerge(Window, out
+  Window)` the hull of two windows that share an instant, touching ones included, as CSPICE's `wninsd`; and
+  `TryGetIntersection(Window, out Window)` the window of `GetIntersection`, false where `GetIntersection` throws
+  (`WindowTests`). See [Time Systems](../reference/time-and-windows.md#window).
+- **`WindowList`: the algebra of window lists** (lot L6, R16 of
+  [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668), decided by S. Guillet,
+  2026-11-19): extensions of `IEnumerable<Window>`, `IntersectWindows`, `UnionWindows`, `ExceptWindows`,
+  `ComplementWithin(Window)` and `TotalDuration`, each list the set of instants its closed windows hold and each result
+  an `IReadOnlyList<Window>` sorted, disjoint and closed, as CSPICE's `wnintd`, `wnunid`, `wndifd` and `wncomd` give it
+  (zero-length windows kept, touching windows merged, so the touching windows of a `NotEqual` search are one), each end
+  an end of an input with its label; `ComplementWithin` is `wndifd` of the window and the list, which is `wncomd` as its
+  header defines it (`wncomd` returns a window past its right end where a window of the list ends before the window and
+  the next one starts after it, 1 of the 50 reference cases). Checked against spiceypy 8.4.0 (CSPICE N0067) on the 50
+  lists of `tools/window_list_reference`, A in UTC and B in TDB (`WindowListTests`). LINQ's `Intersect`, `Union` and
+  `Except` compare windows as values. See [Time Systems](../reference/time-and-windows.md#window-lists).
+- **`Window.Sample(step, includeEnd = false)`** (lot L6, R11 of
+  [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668), decision 9, decided by
+  S. Guillet, 2026-11-22): the instants start + i·step at or before the end, computed lazily, each the start plus i steps
+  in the calendar of its scale, compared with the end as an instant (the end a point when it lies on the grid); with
+  `includeEnd` the end appended when the last point precedes it, however close; a step of zero or less
+  `ArgumentOutOfRangeException` (`step`) at the call; across a UTC leap second the UTC calendar's points
+  (`WindowTests`). The grid of the library's window reads. See [Time Systems](../reference/time-and-windows.md#window).
+- **`WindowSearchOptions` and `FieldOfViewSearchOptions`; `OccultationSearchOptions` extended** (lot L6, R15 of
+  [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668), D1, decided by S. Guillet,
+  2026-11-19): one sealed record per kind of window search, of init properties, `Default` equal to `new()`, the settings
+  of the searches on the observer. `WindowSearchOptions` (distance, coordinate, horizontal, illumination and the static
+  `GeometryFinder.FindWindows`): `Step`, `Aberration`, `ConvergenceTolerance`, `AdjustValue`; `FieldOfViewSearchOptions`:
+  `Step`, `Aberration`, `ConvergenceTolerance`, `TargetShape`, `TargetFrame`; `OccultationSearchOptions` gains `Step`,
+  `Aberration`, `TargetShape`, `FrontShape` and `OccultationType` (`Any` by default) beside `FrontFrame`, `TargetFrame`
+  and `ConvergenceTolerance`. The three repeat `Step`, `Aberration` and `ConvergenceTolerance` with one type and default
+  (`TimeSpan?`, `Aberration?` and `TimeSpan?`, null): a null step is required or inferred by the search, a null
+  aberration `None`, a null tolerance 1 µs, a null shape an ellipsoid for a body with radii and a point otherwise, a null
+  frame the body's own. A step or a tolerance that is not positive throws `ArgumentOutOfRangeException` naming the
+  property, and an `AdjustValue` negative or not finite naming `AdjustValue`, in `init`, so again through `with`
+  (`WindowSearchOptionsTests`).
+- **The window searches on the observer** (lot L6, R15 of
+  [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668), choices 1 to 7, decided by
+  S. Guillet, 2026-11-19): the receiver is the observer and the settings one options record. `WindowSearches`, extensions
+  of `ILocalizable`: `observer.FindDistanceWindows(window, target, relation, value, options)`,
+  `FindCoordinateWindows(window, target, frame, system, coordinate, relation, value, options)` and
+  `FindOccultationWindows(window, target, front, options)`; `Site.FindHorizontalWindows(window, target,
+  HorizontalCoordinate, relation, value, options)` (`Azimuth`, `Elevation`, `Range`, as `GetHorizontalCoordinates`
+  gives them: the declination, 2π minus the right ascension with the relation mirrored, and the range in the site's
+  frame) and `Site.FindIlluminationWindows(window, angle, relation, value, source, options)`;
+  `Instrument.FindFieldOfViewWindows(window, target, options)`; and the static `GeometryFinder.FindWindows(window,
+  quantity, relation, value, options)` of a `double` or `bool` quantity. Each search runs where the former search of the
+  target with the observer as argument ran, CSPICE's or the library's, and returns its windows bit for bit, but for the
+  occultation of a site observer, which the library searches (choice 4), as the search of the target from the site did
+  (`ObserverWindowSearchTests`, `FieldOfViewSearchTests`). The step is required (`ArgumentException`, `options`, naming
+  `Step`), but for the library's occultation search of a propagated or TLE spacecraft whose centre of propagation is the
+  front body (decision 106 of #668, decided by S. Guillet, 2026-11-25): there a null step is the smallest period of its
+  orbit about that body over the window (the osculating period at the window start and after each impulse inside it;
+  the mean motion of a TLE) over 16, capped at half the window, and a step above half that period throws
+  `ArgumentOutOfRangeException` (`options`); the 16 eclipses of an equatorial LEO day at the equinox are found at
+  period/16 and at period/2 within 2.0e-7 s of a 1 min step, and period/2 + 2 min throws
+  (`OccultationStepInferenceTests`); a null aberration is `None`; a convergence tolerance applies to the library's search (`GeometryFinder`, the
+  occultation and field-of-view searches) and throws on CSPICE's (choice 6); an `AdjustValue` applies to `AbsoluteMin`
+  and `AbsoluteMax` only and throws on `gfdist_c`, which the native layer gives none; a frame SPICE does not know in the
+  occultation or field-of-view options throws `ArgumentException` (`options`) with SPICE's error inside; the static
+  search throws for an aberration. The windows are labelled in the scale of the search window's start (IC-7 and IC-8 of
+  lot L6): an end at a bound of the search window is that bound, every other end the same instant in that scale (the
+  former CSPICE and occultation searches labelled TDB), an end inside a UTC leap second, which no UTC label holds, TDB;
+  on a UTC or TT window `Window.Length` counts TT seconds (#508), up to 3.3e-10 of the length plus 100 ns for each
+  converted end from the TDB lengths of the former searches (3.2e-10 on the passes of LRO, 3.8e-10 on a window of 261 s,
+  `ObserverWindowLabelTests`).
 - **The command-line tool: names, kernels from the environment, csv and json, the scale of its epochs** (lot L8 of the
   ergonomics review, R29 of #668, choice 12, decided by S. Guillet, 2026-11-19; `docs/reference/cli.md`, its help
   generated from the tool and compared by `CliPageTests`). An object is a NAIF identifier or a name SPICE knows (`MOON`,
@@ -4760,6 +4834,20 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   in it before it wrote. The mission and scenario names are checked as the name of the export directory they form, by the
   portable file-name rule of #799(a) (under **Changed**), before anything is deleted. Migration: none
   (`ExportCheckTests`, red before the change: the output directory and the file beside the export were deleted).
+- **`SpiceAPI.TransformFrame` over a window dropped the end of the window even on the grid**
+  ([#781](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/781), lot L6, decision 9 of
+  [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668), decided by S. Guillet,
+  2026-11-22): its loop stopped strictly before the end, while the other window reads read it, so one hour at 20 min
+  gave 3 orientations for 4. Its epochs are the points of `Window.Sample(stepSize)`, the grid of every window read,
+  the end read when it lies on the grid (Breaking, under **Changed**; `EphemerisWindowStepTests`, `SpiceApiTest`, red
+  before the change).
+- **`SpiceAPI.ReadEphemeris` and `ReadOrientation` over a UTC window across a leap second read one epoch past its end**
+  ([#829](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/829), lot L6, decision 107 of
+  [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668), decided by S. Guillet,
+  2026-11-25): the number of epochs counted the leap second while the epochs followed the UTC calendar, so the two UTC
+  minutes around the leap second of 2012-06-30 at 1 s gave 122 states for 121, the last at 2012-07-01T00:01:01Z, and a
+  read whose data ended at the window end threw `SpiceException`. The epochs are the points of `Window.Sample(stepSize)`
+  (Breaking, under **Changed**; `SpiceApiWindowReadTests`, red before the change).
 **Changed**
 
 - **Breaking: the scale of a `Time` is a required argument** (lot L2, R24 of
@@ -4943,6 +5031,19 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   and the Moon in TDB seconds, every path). The force caches cover the window (#626), and a propagation no
   longer reads data past it. Migration: none for a step that divides the window; a caller that read the state at
   round(L/ΔT)·ΔT reads it from a window that long.
+- **Breaking: the window searches return `IReadOnlyList<Window>`** (lot L6, R16 of
+  [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668), choice 2, decided by
+  S. Guillet, 2026-11-19): the 21 public searches (`FindWindowsOnDistanceConstraint`,
+  `FindWindowsOnOccultationConstraint`, `FindWindowsOnCoordinateConstraint` of `CelestialItem`, `ILocalizable` and
+  `Site`, `Site.FindWindowsOnIlluminationConstraint` and `FindDayWindows`, `Instrument.FindWindowsInFieldOfViewConstraint`,
+  `GeometryFinder.FindWindowsWithCondition` and the six searches of `SpiceAPI`) returned the arrays and lists they build
+  as an `IEnumerable<Window>`; they return them as an `IReadOnlyList<Window>`, the same windows bit for bit, with `Count`
+  and the indexer. A dependent compiled against 10.x must be rebuilt, an implementer of `ILocalizable` changes the return
+  type of its three searches, and a `var` result later assigned a LINQ query no longer compiles (CS0266). Migration:
+  rebuild; in an `ILocalizable` implementation, return `IReadOnlyList<Window>` (an array or a list); declare as
+  `IEnumerable<Window>` a variable that a query is later assigned to, or end the query with `.ToArray()`. The searches of
+  `CelestialItem`, `ILocalizable`, `Site` (but `FindDayWindows`), `Instrument` and `GeometryFinder` are removed since,
+  in lot L6 (see **Removed**), and the searches on the observer that replace them return an `IReadOnlyList<Window>` too.
 - **Breaking: a reversed window throws** (R11 of #668, section A of the re-baseline, decided by S. Guillet, 2026-11-19): `new Window(start, end)` throws `ArgumentException`
   (`endDate`) for an end before its start, and `new Window(start, length)` `ArgumentOutOfRangeException` (`length`) for a
   negative length, where they built a window of negative length; a window of zero length is accepted, and each end keeps
@@ -4959,8 +5060,8 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   decided by S. Guillet, 2026-11-22) at the start of the call, before anything changes: `Spacecraft.Propagate`, both
   `CentralBodyPropagator` constructors and `Scenario.Simulate` (before its stars, whatever the scenario holds: a scenario
   of stars alone throws too, its stars not propagated and `IsSimulated` unchanged, decision 18 of lot L4, decided by
-  S. Guillet, 2026-11-22, where it propagated its stars and reported itself simulated; `Star.Propagate` itself unchanged,
-  its grid left to L6); a batch task reports it as its error. Before, the propagation re-armed the spacecraft and threw `InvalidOperationException` "Solution
+  S. Guillet, 2026-11-22, where it propagated its stars and reported itself simulated; `Star.Propagate` itself since
+  lot L6, the entry below); a batch task reports it as its error. Before, the propagation re-armed the spacecraft and threw `InvalidOperationException` "Solution
   contains no segments". The `TLEPropagator` constructor throws it too, for a window in TDB or in UTC, one rule on every
   propagation path (decision 15 of lot L4, decided by S. Guillet, 2026-11-22), where it returned one sample at the start,
   and so does `MonteCarloPropagator.Propagate` for a `MonteCarloConfiguration.Window` of zero length, before anything is
@@ -5046,7 +5147,93 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   site and asked a list of `int.MaxValue` states on a body, and a negative one threw the list's `capacity` exception or
   returned the start alone, and so does `SpiceAPI.TransformFrame(window, fromFrame, toFrame, stepSize)` at the call, not
   at the enumeration, where a zero step enumerated without end (decision 10 of lot L4, decided by S. Guillet, 2026-11-22;
-  its end, dropped even on the grid, is #781, lot L6) (`EphemerisWindowStepTests`). Migration: a positive step.
+  its end, dropped even on the grid, is read since lot L6, #781, the entry below) (`EphemerisWindowStepTests`).
+  Migration: a positive step.
+- **Breaking: `SpiceAPI.TransformFrame(window, fromFrame, toFrame, stepSize)` reads the end of the window when it lies on
+  the grid** ([#781](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/781), lot L6, decision 9
+  of #668, decided by S. Guillet, 2026-11-22): its epochs are the points of `Window.Sample(stepSize)`, start + i·step up
+  to the end, as the other window reads. Before, the loop stopped strictly before the end, so a step that divides the
+  window dropped its last orientation: one hour at 20 min gave 3 orientations for 4, one day at 1 day 1 for 2. Every
+  other orientation is unchanged, bit for bit, and so is a grid whose end lies off it (`EphemerisWindowStepTests`,
+  `SpiceApiTest`). The grids of `GetEphemeris` over a window (`CelestialItem`, `Site`), `Star.Propagate` and the command
+  `orientation` take `Window.Sample` too, bit for bit. Migration: none for the end; to keep the former orientations,
+  drop the last one when the end lies on the grid.
+- **Breaking: `Star.Propagate(window, stepSize)` over a window of zero length throws `ArgumentException` (`window`)**
+  (lot L6, decisions 7, 15 and 18 of #668, decided by S. Guillet, 2026-11-22), checked before the step, the states the
+  star held kept: the rule of every propagation path. Before, it stored the one state of the start in place of the
+  star's states, which `WriteEphemeris` then refused (fewer than three). The parameter `timeWindow` is renamed `window`,
+  the name of every propagation's window (`StarTests`). Migration: a window with a length; a named argument
+  `timeWindow:` becomes `window:`.
+- **Breaking: `SpiceAPI.ReadEphemeris(window, …, stepSize)` and `ReadOrientation(window, …, stepSize)` stop at the end of
+  a UTC window that spans a leap second** ([#829](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/829),
+  lot L6, decision 107 of #668, decided by S. Guillet, 2026-11-25): their epochs are the points of
+  `Window.Sample(stepSize)`, start + i·step in the UTC calendar up to the end, as their documentation said ("while within
+  the window"). Before, the number of epochs came from the window's length, which counts the leap second, while the
+  epochs followed the calendar, so the read went one step past the end: the two UTC minutes around the leap second of
+  2012-06-30 at 1 s gave 122 states (and 122 CK records) for 121, the last at 2012-07-01T00:01:01Z, and a read whose data
+  end at the window end threw `SpiceException` there. Every other window is read as before, bit for bit
+  (`SpiceApiWindowReadTests`). Migration: none; a caller that counted on the extra state reads it by its epoch.
+- **Breaking: an angular threshold outside the range of its angle throws `ArgumentOutOfRangeException`** (lot L6, R11 of
+  [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668), section A of the re-baseline,
+  decided by S. Guillet, 2026-11-19: range guards on the comparison operators only): the threshold (`value`) of
+  `FindWindowsOnCoordinateConstraint` (`CelestialItem`, `Site`, `SpiceAPI`) for a right ascension or a planetographic
+  longitude outside [0, 2π], a geodetic longitude outside [−π, π], a declination or a latitude outside [−π/2, π/2], and
+  of `Site.FindWindowsOnIlluminationConstraint` and `SpiceAPI.FindWindowsOnIlluminationConstraint` outside [0, π], or
+  NaN, with `Greater`, `Lower`, `Equal`, `NotEqual`, `GreaterOrEqual` or `LowerOrEqual`, before any search, on the managed
+  and the CSPICE paths; the twilight (`twilight`) of `Site.FindDayWindows` and of the `Launch` constructor outside
+  [−π/2, π/2]. Each range is closed; the four extremes and the lengths are not checked. The message says the angles are
+  in radians; the command line maps it to an error of `--value`, exit code 2. Before, the search ran on the value given:
+  a threshold in degrees gave no window or the whole search window, without an error (`WindowSearchAngleGuardTests`).
+  Every threshold in its range searches as before, bit for bit. The searches of `CelestialItem` and `Site` are removed
+  since, in lot L6 (see **Removed**): the guard is that of `FindCoordinateWindows`, `Site.FindHorizontalWindows` (an
+  elevation in [−π/2, π/2], an azimuth in [0, 2π]) and `Site.FindIlluminationWindows` that replace them. Migration: give
+  the angle in radians (`Constants.Deg2Rad`).
+- **Breaking: the field-of-view search throws `InvalidOperationException` for a search window that leaves the stored
+  states** (lot L6, decisions 81 and 86 of [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668),
+  decided by S. Guillet, 2026-11-23): the managed `Instrument.FindWindowsInFieldOfViewConstraint` refuses a search window
+  that leaves the stored states of the instrument's spacecraft or of a spacecraft target, or meets a gap between the
+  windows given to `AddPropagatedStates`, with `InvalidOperationException`, the state of the spacecraft, as
+  `GetEphemeris` over a window and the managed distance search; it threw `ArgumentException` (`searchWindow`), the same
+  message. The `ILocalizable` overloads of the conjunction analysis keep `ArgumentException` until lot L7; a target that
+  is the instrument's spacecraft or an ellipsoid without radii keeps `ArgumentException` (`FieldOfViewSearchTests`,
+  `AddedStatesGapTests`); the search is `Instrument.FindFieldOfViewWindows` since lot L6 (see **Removed**). Migration:
+  catch `InvalidOperationException` there.
+- **Breaking: `Site.FindDayWindows` labels its windows in the scale of the search window's start** (lot L6, R15 of
+  [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668), IC-12, decided by S. Guillet,
+  2026-11-19): it is `FindIlluminationWindows` with a step of 1 min and `LTS`, the same instants, bit for bit on a TDB
+  window. On a UTC or TT window the path of `gfilum_c` (a site from the kernels) labelled TDB; the labels are now in the
+  scale of the start, an end inside a UTC leap second kept TDB, so `Window.Length` and `EndDate − StartDate` count TT
+  seconds, not TDB seconds (#508): up to 3.3e-10 of the length plus 100 ns for each converted end, 3.1e-10 on a day
+  window of DSS-13 (`ObserverWindowLabelTests`). `Launch`, which compares the day windows as instants, is unchanged.
+  Migration: compare the windows as instants (`Window` equality), or read `ToTDB()` of their ends for TDB labels.
+- **Breaking: `OccultationSearchOptions.ConvergenceTolerance` is a `TimeSpan?`, null for 1 µs** (lot L6, R15 of
+  [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668), D1 rule 2 and choice 6,
+  decided by S. Guillet, 2026-11-19): the three window search records repeat it with one type and default; a tolerance
+  that is not positive throws `ArgumentOutOfRangeException` naming `ConvergenceTolerance` (it named `value`), and the
+  public field `OccultationSearchOptions.DefaultConvergenceTolerance` is internal. The searches are unchanged, bit for
+  bit. Migration: `options.ConvergenceTolerance ?? TimeSpan.FromTicks(10)` where a `TimeSpan` is read; `TimeSpan.FromTicks(10)`
+  for `DefaultConvergenceTolerance`.
+- **Breaking: the occultation search of a site observer is the library's** (lot L6, R15 of
+  [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668), choice 4 and IC-10, decided by
+  S. Guillet, 2026-11-19): `site.FindOccultationWindows(window, target, front, options)` runs the managed occultation
+  search whatever the site, as the search of the target from the site did (`target.FindWindowsOnOccultationConstraint(window,
+  site, …)`), equal to it bit for bit (`ObserverWindowSearchTests`). The removed `Site.FindWindowsOnOccultationConstraint`
+  ran CSPICE's `gfoclt_c` for a site, a spacecraft target and a front body all from the kernels: there the windows move,
+  the same windows with each edge within 5.0e-7 s geometric, 3.7e-4 s with LT, 1.2e-4 s with CN and 6.2e-4 s with XLT
+  (LRO behind the Moon from DSS-13, 7 windows over 12 h at a 60 s step, `Occultation_SiteObserver_MovesFromGfocltWithinItsMeasure`;
+  which of the two light-time models is right is [#828](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/828)),
+  and the windows are labelled in the scale of the search window's start. A site built from coordinates, the case of the
+  conformance runner, searched with the library before as now. Migration: none; for `gfoclt_c`'s windows from a site of the
+  kernels, call `SpiceAPI.FindWindowsOnOccultationConstraint` with the site's NAIF id as observer.
+- **Breaking: the searches on the observer label their windows in the scale of the search window's start** (lot L6, R15
+  of [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668), IC-7 and IC-8, decided by
+  S. Guillet, 2026-11-19), where the removed searches on the target labelled TDB on the paths of CSPICE and of the
+  occultation and field-of-view searches: the same instants, an end at a bound of the search window that bound, an end
+  inside a UTC leap second kept in TDB. On a UTC or TT search window, `Window.Length` and `EndDate − StartDate` of a result
+  count TT seconds, not TDB seconds (#508): up to 3.3e-10 of the length plus 100 ns for each converted end (3.2e-10 on the
+  passes of LRO, 3.8e-10 on a window of 261 s, `ObserverWindowLabelTests`). The conformance runner gives its occultation
+  searches the search window in TDB, its report unchanged, bit for bit. Migration: compare the windows as instants
+  (`Window` equality); for TDB labels and lengths, search over `new Window(start.ToTDB(), end.ToTDB())`.
 - **Breaking: `EquinoctialElements` takes a perigee radius with a non-finite P only** (R23 of #668, choice 3 of the
   first annex): a finite P fixes q = P / (1 + e), so a perigee radius beside it throws `ArgumentException`
   (`perigeeRadius`); before, it was stored, and `PerigeeRadius()` returned 1 m for P = 7000 km given 1 m. The library's
@@ -7798,6 +7985,50 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
 
 **Removed**
 
+- **The window searches on the target: `FindWindowsOnDistanceConstraint`, `FindWindowsOnOccultationConstraint` and
+  `FindWindowsOnCoordinateConstraint` of `CelestialItem`, `ILocalizable` and `Site`, `Site.FindWindowsOnIlluminationConstraint`,
+  `Instrument.FindWindowsInFieldOfViewConstraint`, and the public constructor, `FindWindowsWithCondition` and
+  `EvaluateCondition` of `GeometryFinder`, now a static class** (lot L6, R15 of
+  [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668), choice 1 and §7 of the
+  re-baseline, decided by S. Guillet, 2026-11-19, no forwarder): the searches are on the observer, their settings one
+  options record per kind (`WindowSearchOptions`, `OccultationSearchOptions`, `FieldOfViewSearchOptions`), each on the
+  path of the former search of the target with the observer as argument, the same windows but for the two Breaking
+  entries above (a site observer's occultation, the labels). The raw searches of `SpiceAPI`, by NAIF identifiers, stay;
+  an implementer of `ILocalizable` drops its three searches, which the extensions replace for any `ILocalizable` (the
+  library's search, through `GetEphemeris`). Migration:
+  - `target.FindWindowsOnDistanceConstraint(window, observer, relation, value, aberration, step)` →
+    `observer.FindDistanceWindows(window, target, relation, value, new WindowSearchOptions { Step = step, Aberration = aberration })`;
+  - `target.FindWindowsOnCoordinateConstraint(window, observer, frame, system, coordinate, relation, value, adjust, aberration, step)`
+    → `observer.FindCoordinateWindows(window, target, frame, system, coordinate, relation, value, new WindowSearchOptions
+    { Step = step, Aberration = aberration, AdjustValue = adjust })`, `AdjustValue` left null but for `AbsoluteMin` and
+    `AbsoluteMax` (with another relation, or on `gfdist_c`, it throws `ArgumentException`; the former searches ignored
+    it); the visibility of a spacecraft from a site, its declination in `site.Frame`, is
+    `site.FindHorizontalWindows(window, spacecraft, HorizontalCoordinate.Elevation, relation, mask, options)`, bit for bit;
+  - `target.FindWindowsOnOccultationConstraint(window, observer, targetShape, front, frontShape, type, aberration, step[, options])`
+    and `site.FindWindowsOnOccultationConstraint(window, target, …)` → `observer.FindOccultationWindows(window, target,
+    front, new OccultationSearchOptions { Step = step, Aberration = aberration, TargetShape = targetShape, FrontShape =
+    frontShape, OccultationType = type, FrontFrame = …, TargetFrame = … })` (a null shape an ellipsoid for a body with
+    radii, a point otherwise; the step inferred for a propagated or TLE spacecraft about the front body, decision 106),
+    `ConvergenceTolerance` left null on CSPICE's `gfoclt_c` path, where it throws `ArgumentException` (`options`) while
+    the former search ignored it;
+  - `site.FindWindowsOnIlluminationConstraint(window, angle, relation, value, adjust, aberration, step, source[, method])`
+    → `site.FindIlluminationWindows(window, angle, relation, value, source, new WindowSearchOptions { Step = step,
+    Aberration = aberration, AdjustValue = adjust })`, `AdjustValue` left null but for `AbsoluteMin` and `AbsoluteMax`, as
+    for the coordinates, the method ELLIPSOID, the only one (`SpiceAPI.FindWindowsOnIlluminationConstraint` keeps
+    its `method`, and the emission and phase angles with an observer);
+  - `instrument.FindWindowsInFieldOfViewConstraint(window, spacecraft, target, targetFrame, targetShape, aberration, step)`
+    → `instrument.FindFieldOfViewWindows(window, target, new FieldOfViewSearchOptions { Step = step, Aberration =
+    aberration, TargetShape = targetShape, TargetFrame = targetFrame })`, the observer the instrument's spacecraft;
+  - `new GeometryFinder().FindWindowsWithCondition(window, quantity, relation, value, step)` →
+    `GeometryFinder.FindWindows(window, quantity, relation, value, new WindowSearchOptions { Step = step })`, a
+    `Func<Time, double>` or a `Func<Time, bool>`; `EvaluateCondition`, which no search used, has no replacement (compare
+    the values).
+- **`Window.Merge` and `Window.Intersects(Time)`** (lot L6, R16 of
+  [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668), decided by S. Guillet,
+  2026-11-19, no forwarder): renamed outright, so that the names say what they compute (a hull, which spans the gap
+  between two disjoint windows, and the membership of an instant). Migration: `w1.Merge(w2)` → `w1.Hull(w2)`, the same
+  window bit for bit (or `w1.TryMerge(w2, out var merged)` to merge only windows that share an instant);
+  `window.Intersects(time)` → `window.Contains(time)`. `Intersects(Window)` is unchanged.
 - **The `ILocalizable` constructors of `TriadAttitude`, `PrimaryAttitudeTarget` and `SecondaryAttitudeTarget`, and
   `InstrumentPointingToAttitude.Aberration`** (lot L5b, decisions 67 and 69 of #668, decided by S. Guillet, 2026-11-23):
   the three TRIAD forms of `ILocalizable` targets (literal vectors, one instrument, two instruments), whose targets were
@@ -8030,7 +8261,7 @@ not listed.
   the polar axis with a negative-zero x (and y), the longitude is ±π (atan2 of signed zeros), where both give 0 (with
   +0, latitude ±π/2 exactly, longitude 0).
 - **A boolean quantity in the managed window search**
-  ([#678](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/678)). `GeometryFinder.FindWindowsWithCondition` of a `Func<Time, bool>`
+  ([#678](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/678)). `GeometryFinder.FindWindows` of a `Func<Time, bool>`
   has no margin to search between its samples: a window or a gap shorter than the step can be lost. Use a step shorter
   than every window and gap, or a `double` quantity whose sign is the condition. A `double` quantity's search finds a
   window or a gap between two samples down to the resolution of `localmin`, about 2 √ε h + 2τ/3 for a step h and
@@ -8038,6 +8269,22 @@ not listed.
   exactly at the value). The occultation and field-of-view searches have the same limit, the bound scaling with
   `OccultationSearchOptions.ConvergenceTolerance` (#668: their documentation said "however short", and the `stepSize`
   of the distance, coordinate and illumination searches of `CelestialItem` and `Site` "every window and gap").
+- **The light time of the occultation search with a spacecraft of the kernels**
+  ([#828](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/828)). With `LT`, `CN`, `XLT` or
+  `XCN` and a spacecraft of the kernels taking part, the library's occultation search and `gfoclt` find the same
+  windows with edges up to 6.2e-4 s apart (LRO behind the Moon from DSS-13: 3.7e-4 s with `LT`, 1.2e-4 s with `CN`,
+  6.2e-4 s with `XLT`; 5.0e-7 s geometric), though the states agree: the two light-time models differ, and which one is
+  right is not established. Since lot L6 the occultation search of a site observer is the library's whatever the site
+  (under **Changed**), so its edges move by those amounts from the former `gfoclt` path. Workaround: for `gfoclt`'s
+  windows from a site of the kernels, `SpiceAPI.FindWindowsOnOccultationConstraint` with the site's NAIF id
+  ([Occultations](../reference/occultations.md#accuracy)).
+- **A crossing during a UTC leap second in the library's threshold search**
+  ([#830](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/830)). `GeometryFinder`, the
+  library's distance, coordinate, horizontal and illumination search, samples and solves in the calendar of the search
+  window's start: on a UTC search window that spans a leap second, a crossing during the leap second is labelled at
+  00:00:00, up to 1 s from its instant (found by reading the code, not measured). The CSPICE, occultation and
+  field-of-view searches keep such an end in TDB. Workaround: search over the window in TDB,
+  `new Window(start.ToTDB(), end.ToTDB())` ([Time Systems](../reference/time-and-windows.md#the-windows-of-a-search)).
 - **Kernels the library writes** ([#545](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/545),
   [#546](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/546),
   [#655](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/655),
@@ -8074,14 +8321,14 @@ not listed.
   name; and it throws `InvalidOperationException` at the trajectory plot of a spacecraft whose initial orbit is open,
   which has no period ([#824](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/824)), the
   previous export left as it was since #799.
-- **A window that leaves a spacecraft's stored states** (lots L6 and L7 of
+- **A window that leaves a spacecraft's stored states** (lot L7 of
   [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668)). Decision 81 of #668 gives a
-  window argument that leaves a body's stored states `InvalidOperationException`, as `GetEphemeris` over a window and the
-  managed distance search throw ([Spacecraft](../reference/spacecraft.md#the-exceptions-of-the-reads-and-the-writes)),
-  but the field-of-view search (`Instrument.FindWindowsInFieldOfViewConstraint`) and the `ILocalizable` overloads of
-  `ConjunctionAssessment.Analyze` and `AnalyzeAll` still throw `ArgumentException` for such a window, for one that meets
-  a gap between the windows given to `AddPropagatedStates` (decision 86) and, for the conjunction, for a trajectory that
-  does not cover the window: lots L6 and L7 change them. Catch `ArgumentException` there until then.
+  window argument that leaves a body's stored states `InvalidOperationException`, as `GetEphemeris` over a window, the
+  managed distance search and, since lot L6, the field-of-view search throw
+  ([Spacecraft](../reference/spacecraft.md#the-exceptions-of-the-reads-and-the-writes)), but the `ILocalizable`
+  overloads of `ConjunctionAssessment.Analyze` and `AnalyzeAll` still throw `ArgumentException` for such a window, for
+  one that meets a gap between the windows given to `AddPropagatedStates` (decision 86) and for a trajectory that does
+  not cover the window: lot L7 changes them. Catch `ArgumentException` there until then.
 - **Kernel paths of more than 255 characters** ([#673](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/673)). `LoadKernels` and the command line hand SPICE the full path of
   each kernel, so a kernel whose full path is longer than 255 characters cannot be loaded through them
   (`SPICE(FILENAMETOOLONG)`, SPICE's message in the `InvalidOperationException` since #706, nothing on the standard

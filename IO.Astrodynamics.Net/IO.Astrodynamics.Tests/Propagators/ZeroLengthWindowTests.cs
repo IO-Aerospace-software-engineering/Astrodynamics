@@ -127,7 +127,7 @@ public class ZeroLengthWindowTests
     /// <see cref="Scenario.Simulate"/> checks the window whatever the scenario holds (decision 18 of lot L4 of #668,
     /// decided by S. Guillet, 2026-11-22): a scenario of stars alone over a zero-length window throws before anything
     /// runs, its star not propagated and <see cref="Scenario.IsSimulated"/> unchanged. Before, the stars were propagated
-    /// and the scenario reported simulated. <see cref="Star.Propagate"/> itself is unchanged (left to L6).
+    /// and the scenario reported simulated. <see cref="Star.Propagate"/> throws itself since lot L6 (<c>StarTests</c>).
     /// </summary>
     [Fact]
     public void Scenario_OfStarsAlone_AZeroLengthWindow_Throws_NamingTheWindow()

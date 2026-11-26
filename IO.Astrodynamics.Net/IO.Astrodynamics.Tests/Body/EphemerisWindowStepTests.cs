@@ -70,14 +70,32 @@ public class EphemerisWindowStepTests
     }
 
     /// <summary>
-    /// A positive step still reads start + i·step while before the end (#781 tracks the end dropped on the grid, L6).
+    /// A positive step reads start + i·step up to the end of the window, the end included when it lies on the grid, the
+    /// grid of <see cref="Window.Sample"/> (#781, decision 9 of #668): before 11.0.0 the end was dropped even on the grid,
+    /// 3 orientations here.
     /// </summary>
     [Fact]
-    public void TransformFrame_PositiveStep_ReadsTheGrid()
+    public void TransformFrame_PositiveStep_ReadsTheGridToTheEnd()
     {
         var orientations = SpiceAPI.Instance.TransformFrame(OneHour, Frames.Frame.ICRF, Frames.Frame.ITRF93,
             TimeSpan.FromMinutes(20.0)).ToArray();
+        Assert.Equal(4, orientations.Length);
+        LabelAssert.Equal(Start.AddMinutes(40.0), orientations[^2].Epoch);
+        LabelAssert.Equal(OneHour.EndDate, orientations[^1].Epoch);
+        var atTheEnd = SpiceAPI.Instance.TransformFrame(OneHour.EndDate, Frames.Frame.ICRF, Frames.Frame.ITRF93);
+        // The rotation angle between the two reads, 2 asin |v| of q1* q2
+        Assert.Equal(0.0, (atTheEnd.Rotation.Conjugate() * orientations[^1].Rotation).VectorPart.Magnitude(), 15);
+    }
+
+    /// <summary>
+    /// An end off the grid is not read: the grid stops at the last point before it.
+    /// </summary>
+    [Fact]
+    public void TransformFrame_EndOffTheGrid_NotRead()
+    {
+        var orientations = SpiceAPI.Instance.TransformFrame(OneHour, Frames.Frame.ICRF, Frames.Frame.ITRF93,
+            TimeSpan.FromMinutes(25.0)).ToArray();
         Assert.Equal(3, orientations.Length);
-        LabelAssert.Equal(Start.AddMinutes(40.0), orientations[^1].Epoch);
+        LabelAssert.Equal(Start.AddMinutes(50.0), orientations[^1].Epoch);
     }
 }

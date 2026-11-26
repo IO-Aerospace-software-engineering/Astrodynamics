@@ -9,25 +9,28 @@ operations.
 An **occultation** occurs when a front body blocks an observer's view of a target, the
 back body. Eclipse searches are a special case where the Sun is the target.
 
-`FindWindowsOnOccultationConstraint` is a method of the target: it takes the observer, the
-target's shape, the front body and its shape, and searches for the time windows when the
-geometry is satisfied (see [Occultations and eclipses](../reference/occultations.md)):
+`FindOccultationWindows` is a method of the observer: it takes the target, the front body
+and the options (the step, the shapes, the type of occultation, the aberration), and searches
+for the time windows when the geometry is satisfied (see [Occultations and eclipses](../reference/occultations.md)):
 
 ```csharp
 // Inputs: moon, sun and earth (CelestialBody), searchWindow (Window)
 // Find lunar eclipses (the Earth occults the Moon as seen from the Sun)
-var lunarEclipses = moon.FindWindowsOnOccultationConstraint(
+var lunarEclipses = sun.FindOccultationWindows(
     searchWindow,
-    observer: sun,
-    targetShape: ShapeType.Ellipsoid,
-    frontBody: earth,
-    frontShape: ShapeType.Ellipsoid,
-    occultationType: OccultationType.Any,
-    aberration: Aberration.None,
-    stepSize: TimeSpan.FromHours(1));
+    target: moon,
+    front: earth,
+    new OccultationSearchOptions
+    {
+        Step = TimeSpan.FromHours(1),
+        TargetShape = ShapeType.Ellipsoid,
+        FrontShape = ShapeType.Ellipsoid,
+        OccultationType = OccultationType.Any,
+        Aberration = Aberration.None
+    });
 ```
 
-The `occultationType` parameter controls what you are looking for:
+The `OccultationType` option controls what you are looking for:
 
 | Value | Meaning |
 |-------|---------|
@@ -36,7 +39,7 @@ The `occultationType` parameter controls what you are looking for:
 | `OccultationType.Annular` | Front body inside the target's disc |
 | `OccultationType.Any` | Any of the above |
 
-The `stepSize` sets the initial search grid. Use a step smaller than the
+`Step` sets the search grid. Use a step smaller than the
 shortest event you expect to find.
 
 ### Spacecraft eclipse windows
@@ -46,15 +49,11 @@ the spacecraft sees it:
 
 ```csharp
 // Inputs: sun and earth (CelestialBody), searchWindow (Window), spacecraft (Spacecraft)
-var eclipseWindows = sun.FindWindowsOnOccultationConstraint(
+var eclipseWindows = spacecraft.FindOccultationWindows(
     searchWindow,
-    observer: spacecraft,
-    targetShape: ShapeType.Ellipsoid,
-    frontBody: earth,
-    frontShape: ShapeType.Ellipsoid,
-    occultationType: OccultationType.Any,
-    aberration: Aberration.None,
-    stepSize: TimeSpan.FromMinutes(5));
+    target: sun,
+    front: earth,
+    new OccultationSearchOptions { Step = TimeSpan.FromMinutes(5) });
 ```
 
 ## Distance constraints
@@ -65,13 +64,12 @@ relational constraint:
 ```csharp
 // Inputs: earth and moon (CelestialBody), searchWindow (Window)
 // Find when the Moon is farther than 400,000 km from Earth
-var farMoonWindows = earth.FindWindowsOnDistanceConstraint(
+var farMoonWindows = earth.FindDistanceWindows(
     searchWindow,
     moon,
     RelationnalOperator.Greater,
     400000000,          // meters
-    Aberration.None,
-    TimeSpan.FromHours(24));
+    new WindowSearchOptions { Step = TimeSpan.FromHours(24) });
 ```
 
 Available operators: `Greater`, `Lower`, `Equal` (with tolerance), their
@@ -92,23 +90,26 @@ negations `LowerOrEqual`, `GreaterOrEqual` and `NotEqual`, and the extremes
 ## Instrument field of view
 
 Spacecraft instruments have a field of view: a circle, an ellipse or a
-rectangle about their boresight. Use `FindWindowsInFieldOfViewConstraint` to
+rectangle about their boresight. Use `FindFieldOfViewWindows` to
 determine when a target is in it:
 
 ```csharp
 // Inputs: spacecraft (Spacecraft), window (Window), earth (CelestialBody)
 var visibilityWindows = spacecraft.Instruments.First()
-    .FindWindowsInFieldOfViewConstraint(
+    .FindFieldOfViewWindows(
         window,
-        spacecraft,
         earth,
-        earth.Frame,
-        ShapeType.Ellipsoid,
-        Aberration.LT,
-        TimeSpan.FromSeconds(60));
+        new FieldOfViewSearchOptions
+        {
+            Step = TimeSpan.FromSeconds(60),
+            Aberration = Aberration.LT,
+            TargetShape = ShapeType.Ellipsoid,
+            TargetFrame = earth.Frame
+        });
 ```
 
-The method returns a collection of `Window` objects, in TDB, representing
+The method returns a collection of `Window` objects, labelled in the scale of
+the search window's start (see [the windows of a search](../reference/time-and-windows.md#the-windows-of-a-search)), representing
 contiguous intervals when the target is inside the instrument's field of view:
 the windows of CSPICE's `gftfov`, to 1 µs.
 
@@ -203,22 +204,17 @@ Objects below the horizon have negative elevation.
 ### Site visibility windows
 
 Combine horizontal coordinates with an elevation mask to find visibility
-windows: the spacecraft seen from the site, its declination in the site's
-topocentric frame being its elevation:
+windows: the elevation of the spacecraft seen from the site:
 
 ```csharp
 // Inputs: spacecraft (Spacecraft), searchWindow (Window), mySite (Site)
-var visibleWindows = spacecraft.FindWindowsOnCoordinateConstraint(
+var visibleWindows = mySite.FindHorizontalWindows(
     searchWindow,
-    mySite,
-    mySite.Frame,
-    CoordinateSystem.RaDec,
-    Coordinate.Declination,
+    spacecraft,
+    HorizontalCoordinate.Elevation,
     RelationnalOperator.Greater,
     10.0 * Constants.Deg2Rad,
-    0.0,
-    Aberration.LT,
-    TimeSpan.FromMinutes(1));
+    new WindowSearchOptions { Step = TimeSpan.FromMinutes(1), Aberration = Aberration.LT });
 ```
 
 Each rise and set is located to 1 µs. The culmination of a pass is the same
@@ -252,9 +248,9 @@ var coords = mySite.GetHorizontalCoordinates(epoch, iss, Aberration.None);
 
 ## Summary
 
-- Use `FindWindowsOnOccultationConstraint` for eclipse and occultation searches.
-- Use `FindWindowsOnDistanceConstraint` for range-based event detection.
-- Instrument FOV analysis uses `FindWindowsInFieldOfViewConstraint`: the
+- Use `FindOccultationWindows` for eclipse and occultation searches.
+- Use `FindDistanceWindows` for range-based event detection.
+- Instrument FOV analysis uses `FindFieldOfViewWindows`: the
   windows of CSPICE's `gftfov`, with the target's shape, for every field shape.
 - Ground sites provide horizontal coordinates (azimuth, elevation, range).
 - TLE-based spacecraft work with all geometry functions through SGP4/SDP4

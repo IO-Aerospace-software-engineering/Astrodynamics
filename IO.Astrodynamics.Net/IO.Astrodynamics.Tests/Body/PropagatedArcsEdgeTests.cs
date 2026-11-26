@@ -938,8 +938,7 @@ public class PropagatedArcsEdgeTests
         var tc = run.ImpulseEpochs[0];
         var sun = new CelestialBody(Stars.Sun, Frame.ICRF, run.Window.StartDate);
         var search = new Window(tc.AddSeconds(-150.0), tc.AddSeconds(150.0));
-        Window[] Search(Spacecraft observer, OccultationType type) => sun.FindWindowsOnOccultationConstraint(search, observer, ShapeType.Ellipsoid, run.ReadCenter,
-            ShapeType.Ellipsoid, type, Aberration.None, TimeSpan.FromSeconds(1.0)).ToArray();
+        Window[] Search(Spacecraft observer, OccultationType type) => observer.FindOccultationWindows(search, sun, run.ReadCenter, new OccultationSearchOptions { Step = TimeSpan.FromSeconds(1.0), TargetShape = ShapeType.Ellipsoid, FrontShape = ShapeType.Ellipsoid, OccultationType = type }).ToArray();
         double worst = 0.0;
         var edges = new List<double>();
         foreach (var type in new[] { OccultationType.Any, OccultationType.Full })
@@ -1008,7 +1007,7 @@ public class PropagatedArcsEdgeTests
         var edges = new List<double>();
         foreach (var instrument in run.Spacecraft.Instruments.Where(x => x.Name is "BEFORE" or "AFTER"))
         {
-            var managed = instrument.FindWindowsInFieldOfViewConstraint(search, run.Spacecraft, run.Earth, run.Earth.Frame, ShapeType.Point, Aberration.None, step).ToArray();
+            var managed = instrument.FindFieldOfViewWindows(search, run.Earth, new FieldOfViewSearchOptions { Step = step, TargetShape = ShapeType.Point, TargetFrame = run.Earth.Frame }).ToArray();
             var spice = SpiceAPI.Instance.FindWindowsInFieldOfViewConstraint(search, run.Spacecraft.NaifId, instrument.NaifId, run.Earth.NaifId, run.Earth.Frame, ShapeType.Point,
                 Aberration.None, step).ToArray();
             Assert.Single(managed);

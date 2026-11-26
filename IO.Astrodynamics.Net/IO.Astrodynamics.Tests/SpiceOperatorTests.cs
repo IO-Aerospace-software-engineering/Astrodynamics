@@ -30,10 +30,9 @@ namespace IO.Astrodynamics.Tests;
 /// <see cref="SpiceApiTest"/> compares the windows of the same searches.
 /// </para>
 /// <para>
-/// The paths: the three <see cref="SpiceAPI"/> searches; <see cref="CelestialItem.FindWindowsOnCoordinateConstraint"/> of
-/// a kernel spacecraft (LRO from the Moon) and <see cref="Site.FindWindowsOnCoordinateConstraint"/> of a kernel site
-/// (DSS-13 from LRO), on the LRO SPK of the tests. <see cref="CelestialItem.FindWindowsOnDistanceConstraint"/> and
-/// <see cref="Site.FindWindowsOnIlluminationConstraint"/> on their CSPICE path are checked against their own
+/// The paths: the three <see cref="SpiceAPI"/> searches; <see cref="WindowSearches.FindCoordinateWindows"/> of the Moon
+/// observing a kernel spacecraft (LRO) and of LRO observing a kernel site (DSS-13), on the LRO SPK of the tests.
+/// <see cref="WindowSearches.FindDistanceWindows"/> and <see cref="Site.FindIlluminationWindows"/> on their CSPICE path are checked against their own
 /// <see cref="RelationnalOperator.Greater"/>, <see cref="RelationnalOperator.Lower"/> and <see cref="RelationnalOperator.Equal"/>
 /// searches, CSPICE's: the threshold of the first is in m, as the library reads it since #466, and the surface point
 /// of the second in m, its altitude converted to km since #488.
@@ -222,8 +221,7 @@ public class SpiceOperatorTests
         // The declination of LRO seen from the Moon in J2000 against 0 rad: gfposc
         var moon = new CelestialBody(PlanetsAndMoons.MOON);
         var lro = new Spacecraft(-85, "LRO", epoch: LroWindow.StartDate);
-        var res = lro.FindWindowsOnCoordinateConstraint(LroWindow, moon, Frames.Frame.ICRF, CoordinateSystem.RaDec,
-            Astrodynamics.Coordinate.Declination, relation, 0.0, 0.0, Aberration.None, LroStep);
+        var res = moon.FindCoordinateWindows(LroWindow, lro, Frames.Frame.ICRF, CoordinateSystem.RaDec, Astrodynamics.Coordinate.Declination, relation, 0.0, new WindowSearchOptions { Step = LroStep });
         AssertWindows(LroDeclination[relation], res);
     }
 
@@ -258,8 +256,7 @@ public class SpiceOperatorTests
         var earth = new CelestialBody(PlanetsAndMoons.EARTH);
         var dss13 = new Site(13, "DSS-13", earth);
         var lro = new Spacecraft(-85, "LRO", epoch: LroWindow.StartDate);
-        var res = dss13.FindWindowsOnCoordinateConstraint(LroWindow, lro, Frames.Frame.ICRF, CoordinateSystem.RaDec,
-            Astrodynamics.Coordinate.Range, relation, 3.72e8, 0.0, Aberration.None, LroStep);
+        var res = lro.FindCoordinateWindows(LroWindow, dss13, Frames.Frame.ICRF, CoordinateSystem.RaDec, Astrodynamics.Coordinate.Range, relation, 3.72e8, new WindowSearchOptions { Step = LroStep });
         AssertWindows(Dss13Range[relation], res);
     }
 
@@ -296,8 +293,8 @@ public class SpiceOperatorTests
         // 1000 twice, and this test passed 1 815 148 000 m to reach gfdist with 1 815.148 km)
         var moon = new CelestialBody(PlanetsAndMoons.MOON);
         var lro = new Spacecraft(-85, "LRO", epoch: LroWindow.StartDate);
-        AssertAgainstOwnSearches(LroWindow, r => lro.FindWindowsOnDistanceConstraint(LroWindow, moon, r, 1815148.0, Aberration.None, LroStep));
-        AssertAgainstOwnSearches(LroWindow, r => moon.FindWindowsOnDistanceConstraint(LroWindow, lro, r, 1815148.0, Aberration.None, LroStep));
+        AssertAgainstOwnSearches(LroWindow, r => moon.FindDistanceWindows(LroWindow, lro, r, 1815148.0, new WindowSearchOptions { Step = LroStep }));
+        AssertAgainstOwnSearches(LroWindow, r => lro.FindDistanceWindows(LroWindow, moon, r, 1815148.0, new WindowSearchOptions { Step = LroStep }));
     }
 
     [Fact]
@@ -307,7 +304,6 @@ public class SpiceOperatorTests
         var earth = new CelestialBody(PlanetsAndMoons.EARTH);
         var dss13 = new Site(13, "DSS-13", earth);
         var search = new Window(TimeSystem.Time.CreateTDB(755870520.0), TimeSystem.Time.CreateTDB(755956920.0));
-        AssertAgainstOwnSearches(search, r => dss13.FindWindowsOnIlluminationConstraint(search, IlluminationAngle.Incidence, r,
-            System.Math.PI * 0.5, 0.0, Aberration.None, LroStep, new CelestialBody(Stars.Sun)));
+        AssertAgainstOwnSearches(search, r => dss13.FindIlluminationWindows(search, IlluminationAngle.Incidence, r, System.Math.PI * 0.5, new CelestialBody(Stars.Sun), new WindowSearchOptions { Step = LroStep }));
     }
 }

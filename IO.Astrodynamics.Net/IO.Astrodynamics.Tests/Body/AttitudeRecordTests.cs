@@ -731,8 +731,7 @@ public class AttitudeRecordTests
                 }
 
                 instrument.GetBoresightInICRFFrame(start.AddSeconds(Length + 100.0));
-                instrument.FindWindowsInFieldOfViewConstraint(new Window(start.AddSeconds(10.0), start.AddSeconds(Length - 10.0)), sc, sun, Frame.ICRF,
-                    ShapeType.Point, Aberration.None, TimeSpan.FromSeconds(60.0)).ToArray();
+                instrument.FindFieldOfViewWindows(new Window(start.AddSeconds(10.0), start.AddSeconds(Length - 10.0)), sun, new FieldOfViewSearchOptions { Step = TimeSpan.FromSeconds(60.0), TargetShape = ShapeType.Point, TargetFrame = Frame.ICRF }).ToArray();
             }
         };
         using var read = PropagatedCase.Run(naifId, "Nadir", "VV", FrameOf(frame), "Propagate", 2024, hooks);
@@ -1114,8 +1113,7 @@ public class AttitudeRecordTests
         using var galactic = PropagatedCase.Run(-8481, "None", "VV", FrameOf("GALACTIC"), "Propagate", 2024);
         using var icrf = PropagatedCase.Run(-8482, "None", "VV", Frame.ICRF, "Propagate", 2024, new PropagatedCase.Hooks { WriteKernels = false });
         var window = new Window(galactic.Start.AddSeconds(60.0), galactic.Start.AddSeconds(3540.0));
-        Window[] Search(Spacecraft observer, CelestialBody sun, CelestialBody earth) => sun.FindWindowsOnOccultationConstraint(window, observer, ShapeType.Ellipsoid, earth,
-            ShapeType.Ellipsoid, OccultationType.Any, Aberration.None, TimeSpan.FromSeconds(60.0)).ToArray();
+        Window[] Search(Spacecraft observer, CelestialBody sun, CelestialBody earth) => observer.FindOccultationWindows(window, sun, earth, new OccultationSearchOptions { Step = TimeSpan.FromSeconds(60.0), TargetShape = ShapeType.Ellipsoid, FrontShape = ShapeType.Ellipsoid }).ToArray();
         var managed = Search(galactic.Spacecraft, galactic.Sun, galactic.Earth);
         var twin = Search(icrf.Spacecraft, icrf.Sun, icrf.Earth);
         // Both the observer and the target in the kernels, the observer a spacecraft: gfoclt

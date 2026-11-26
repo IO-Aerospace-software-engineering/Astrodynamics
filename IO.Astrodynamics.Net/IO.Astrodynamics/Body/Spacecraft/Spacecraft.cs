@@ -1555,6 +1555,43 @@ namespace IO.Astrodynamics.Body.Spacecraft
         }
 
         /// <summary>
+        /// The smallest period of the orbit the library computes for this spacecraft about <paramref name="center"/> over a
+        /// window, which infers and guards the step of the library's occultation search (decision 106 of #668, decided by
+        /// S. Guillet, 2026-11-25): for propagated states about that body, the osculating period at the window start and at
+        /// the start of each arc of the states inside it (each impulse opens one), an open orbit not counted; for a TLE that
+        /// no numerical propagation stored states for, about the Earth, the period of its mean motion; null otherwise (a
+        /// kernel-backed spacecraft, another centre, no closed orbit).
+        /// </summary>
+        internal TimeSpan? SmallestPeriodAbout(INaifObject center, in Window window)
+        {
+            if (InterpolatedStatesWindow is not null)
+            {
+                var body = (CelestialItem)_propagatedStates.First.Observer;
+                if (body.NaifId != center.NaifId) return null;
+                var start = window.StartDate;
+                var end = window.EndDate;
+                TimeSpan? smallest = null;
+                foreach (var epoch in _propagatedStates.Arcs.Select(a => a[0].Epoch).Where(e => e > start && e < end).Prepend(start))
+                {
+                    var state = GetGeometricStateRelativeTo(epoch, body);
+                    double a = state.SemiMajorAxis();
+                    if (!(double.IsFinite(a) && a > 0.0)) continue;
+                    var period = state.Period();
+                    if (smallest is null || period < smallest) smallest = period;
+                }
+
+                return smallest;
+            }
+
+            if (!_isFromKernel && InitialOrbitalParameters is TLE tle && tle.Observer.NaifId == center.NaifId)
+            {
+                return Time.SecondsToSpan(Constants.TwoPi / tle.MeanMotion());
+            }
+
+            return null;
+        }
+
+        /// <summary>
         /// The window of the propagated states that <see cref="GetGeometricStateRelativeTo(in IO.Astrodynamics.TimeSystem.Time, IO.Astrodynamics.Body.CelestialItem)"/> interpolates, from the first
         /// to the last, the gaps between the windows given to <see cref="AddPropagatedStates"/> included (#792); null when it
         /// reads no such states: a kernel-backed spacecraft, a TLE that no numerical propagation
@@ -1609,21 +1646,23 @@ namespace IO.Astrodynamics.Body.Spacecraft
         /// </summary>
         /// <param name="window">The window read.</param>
         /// <param name="description">What the window is, for the message.</param>
-        /// <param name="paramName">The parameter of the window.</param>
-        /// <exception cref="ArgumentException">The window leaves the propagated states or meets a gap between them.</exception>
-        internal void CheckInterpolatedStatesCover(in Window window, string description, string paramName)
+        /// <param name="paramName">The parameter of the window, for the <see cref="ArgumentException"/> the conjunction analysis
+        /// keeps until lot L7 of #668; null for <see cref="InvalidOperationException"/>, the state of the spacecraft (decisions
+        /// 81 and 86 of #668, the field-of-view search since lot L6).</param>
+        /// <exception cref="InvalidOperationException">The window leaves the propagated states or meets a gap between them, and
+        /// <paramref name="paramName"/> is null.</exception>
+        /// <exception cref="ArgumentException">The window leaves the propagated states or meets a gap between them, and
+        /// <paramref name="paramName"/> names its parameter.</exception>
+        internal void CheckInterpolatedStatesCover(in Window window, string description, string paramName = null)
         {
-            if (InterpolatedStatesWindow is null)
+            if (InterpolatedStatesWindow is null || _propagatedStates.Covers(window))
             {
                 return;
             }
 
-            if (!_propagatedStates.Covers(window))
-            {
-                throw new ArgumentException(
-                    $"The {description} [{window.StartDate.ToTDB()}, {window.EndDate.ToTDB()}] leaves the propagated states of {Name}, {DescribeStoredWindows()}: they would be extrapolated.",
-                    paramName);
-            }
+            var message =
+                $"The {description} [{window.StartDate.ToTDB()}, {window.EndDate.ToTDB()}] leaves the propagated states of {Name}, {DescribeStoredWindows()}: they would be extrapolated.";
+            throw paramName is null ? new InvalidOperationException(message) : new ArgumentException(message, paramName);
         }
 
         /// <summary>

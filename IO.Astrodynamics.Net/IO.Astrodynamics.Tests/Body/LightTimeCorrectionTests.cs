@@ -228,8 +228,7 @@ public class LightTimeCorrectionTests
     public void CoordinateSiteGuideWindow()
     {
         var expected = _reference.GetProperty("guide_window_lt").EnumerateArray().Select(e => TimeSystem.Time.CreateTDB(e.GetDouble())).ToArray();
-        var windows = _site.FindWindowsOnDistanceConstraint(new TimeSystem.Window(new TimeSystem.Time(2024, 1, 1, TimeScale.TDB), new TimeSystem.Time(2024, 1, 2, TimeScale.TDB)), _moon,
-            RelationnalOperator.Lower, 400000000, Aberration.LT, System.TimeSpan.FromMinutes(10)).ToArray();
+        var windows = _moon.FindDistanceWindows(new TimeSystem.Window(new TimeSystem.Time(2024, 1, 1, TimeScale.TDB), new TimeSystem.Time(2024, 1, 2, TimeScale.TDB)), _site, RelationnalOperator.Lower, 400000000, new WindowSearchOptions { Step = System.TimeSpan.FromMinutes(10), Aberration = Aberration.LT }).ToArray();
         Assert.Single(windows);
         double start = (windows[0].StartDate - expected[0]).TotalSeconds;
         double end = (windows[0].EndDate - expected[1]).TotalSeconds;
@@ -669,8 +668,7 @@ public class LightTimeCorrectionTests
         value = coordinate == Coordinate.Range ? value * 1000.0 : value * global::IO.Astrodynamics.Constants.Deg2Rad;
         var expected = row.GetProperty("windows").EnumerateArray().Select(e => TimeSystem.Time.CreateTDB(e.GetDouble())).ToArray();
         var frame = inOtherSiteFrame ? OtherSite().Frame : Frames.Frame.ICRF;
-        var windows = _site.FindWindowsOnCoordinateConstraint(new TimeSystem.Window(TimeSystem.Time.CreateTDB(757339200.0), TimeSystem.Time.CreateTDB(757425600.0)),
-            _moon, frame, CoordinateSystem.RaDec, coordinate, RelationnalOperator.Greater, value, 0.0, Aberration.LT, System.TimeSpan.FromMinutes(10)).ToArray();
+        var windows = _moon.FindCoordinateWindows(new TimeSystem.Window(TimeSystem.Time.CreateTDB(757339200.0), TimeSystem.Time.CreateTDB(757425600.0)), _site, frame, CoordinateSystem.RaDec, coordinate, RelationnalOperator.Greater, value, new WindowSearchOptions { Step = System.TimeSpan.FromMinutes(10), Aberration = Aberration.LT }).ToArray();
         Assert.Equal(expected.Length / 2, windows.Length);
         double worst = 0.0;
         for (int k = 0; k < windows.Length; k++)

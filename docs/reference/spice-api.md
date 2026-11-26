@@ -48,13 +48,13 @@ catch (SpiceException e) when (e.ShortMessage == "SPICE(SPKINSUFFDATA)")
 | `ClearKernels()` | Unload all kernels (`kclear_c`) |
 | `GetLoadedKernels()` | Inspect the loaded paths; a deleted SPK, CK, binary PCK or EK leaves the listing at the next native load, unload or write (#668), and a file a writer replaces leaves it before the write (#706) |
 | `GetSpiceVersion()` | Read the underlying CSPICE version |
-| `ReadEphemeris(...)` | Read state data, a `StateVector` (over a window, `StateVector`s; 11.0.0: typed `OrbitalParameters` before, R20 of #668) (throws `InvalidOperationException` with SPICE's message when the kernels give no state, #454); over a window, at start + i·step in the time frame of the window start (UTC steps for a UTC window), i from 0 while within the window, the end included when it falls on the grid, each state the read of its epoch alone and labelled with it in that frame (#563) |
-| `ReadOrientation(...)` | Read orientation data (throws `InvalidOperationException` on native error); a record of a CK segment without angular velocity has a zero angular velocity (#714); at start + i·step in the time frame of the window start, i from 0 while within the window, in a buffer of the epochs read, each record labelled with the TDB epoch of the CK's record (#563) |
+| `ReadEphemeris(...)` | Read state data, a `StateVector` (over a window, `StateVector`s; 11.0.0: typed `OrbitalParameters` before, R20 of #668) (throws `InvalidOperationException` with SPICE's message when the kernels give no state, #454); over a window, at the points of `Window.Sample(step)`, start + i·step in the time frame of the window start (UTC steps for a UTC window), i from 0 while within the window, the end included when it falls on the grid, each state the read of its epoch alone and labelled with it in that frame (#563; 11.0.0, #829: before, a UTC window across a leap second was read one step past its end) |
+| `ReadOrientation(...)` | Read orientation data (throws `InvalidOperationException` on native error); a record of a CK segment without angular velocity has a zero angular velocity (#714); at the points of `Window.Sample(step)`, start + i·step in the time frame of the window start, i from 0 while within the window, in a buffer of the epochs read, each record labelled with the TDB epoch of the CK's record (#563; 11.0.0, #829: before, a UTC window across a leap second was read one step past its end) |
 | `WriteOrientation(FileInfo, int, IEnumerable<StateOrientation>)` | Write orientation records as a type-3 CK (throws `ArgumentException` for records in more than one frame, #560, and for a path longer than 255 characters, #673; `InvalidOperationException` with SPICE's message when the writing or the last unload of the written CK fails, #668, or with the file system's for a path it rejects, #706); a file it replaces that `LoadKernels` loaded is unloaded first (#706) |
 | `WriteEphemeris(FileInfo, int, IEnumerable<StateVector>)` | Write states as an SPK through the native writer, under `Star` and `Site` (throws `ArgumentException` for fewer than three states, states in more than one frame or a centre that is not a celestial body, #706, or that SPICE does not name, #714, and for a path longer than 255 characters, #673; `InvalidOperationException` with SPICE's message when the writing or the last unload of the written SPK fails, #668, or with the file system's for a path it rejects, #706); a file it replaces that `LoadKernels` loaded is unloaded first (#706) |
 | `GetCelestialBodyInfo(int)` | Read the name, centre of motion, radii, GM and frame of a celestial body as a `CelestialBodyInfo` (11.0.0: the interop struct IO.Astrodynamics.DTO.CelestialBody, now internal, before, the same values; throws `ArgumentException` for an identifier that is not one, #560, or that SPICE does not name, #672) |
 | `TransformFrame(Time, Frame, Frame)` | The rotation and angular velocity from one frame to another (throws `ArgumentException` naming `fromFrame` or `toFrame` for a name SPICE does not know, the error below its inner exception, 11.0.0; `InvalidOperationException` naming the frames and the epoch, then SPICE's message, when SPICE gives none for frames it knows: frame data that do not cover the epoch, #714) |
-| `TransformFrame(Window, Frame, Frame, TimeSpan)` | The orientations at start + i·step while before the window end, read lazily (the end is not read even on the grid, #781, lot L6); a step of zero or less throws `ArgumentOutOfRangeException` (`stepSize`) at the call (decision 10 of lot L4 of #668: before, a zero step enumerated without end) |
+| `TransformFrame(Window, Frame, Frame, TimeSpan)` | The orientations at the points of `Window.Sample(step)`, start + i·step up to the window end, read lazily, the end read when it lies on the grid (11.0.0, #781: before, it was dropped even on the grid); a step of zero or less throws `ArgumentOutOfRangeException` (`stepSize`) at the call (decision 10 of lot L4 of #668: before, a zero step enumerated without end) |
 
 `GetCelestialBodyInfo`, and so `new CelestialBody(id)` and the command `celestial-body-info`, take the identifier of a
 celestial body: a barycenter (0 to 9), the Sun (10), a planet, a moon or a Lagrange point (101 to 999), or an identifier
@@ -202,11 +202,11 @@ label what SPICE returns with the frame given (#543).
 
 The window searches take the units of the library, except the coordinate search:
 
-- `FindWindowsOnDistanceConstraint`: the distance in m, as `CelestialItem` and `Site` take it (the native layer hands
+- `FindWindowsOnDistanceConstraint`: the distance in m, as `FindDistanceWindows` takes it (the native layer hands
   km to `gfdist_c`). Before 11.0.0 the kernel-spacecraft branch of `CelestialItem` and `Site` divided it by 1000 once
   more ([#466](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/466)).
 - `FindWindowsOnCoordinateConstraint`: the value as `gfposc_c` takes it, km for a distance coordinate (X, Y, Z, range,
-  radius, altitude) and rad for an angle; `CelestialItem` and `Site` convert their metres.
+  radius, altitude) and rad for an angle; `FindCoordinateWindows` converts its metres.
 - `FindWindowsOnIlluminationConstraint`: the surface point as `Planetodetic`, longitude and latitude in rad and the
   altitude in m above the ellipsoid of the body (equatorial radius and flattening of the kernels); before 11.0.0 the
   altitude was read in km ([#488](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/488)). So
@@ -220,7 +220,7 @@ The window searches take the units of the library, except the coordinate search:
 A search CSPICE cannot run throws `InvalidOperationException` with SPICE's message: a frame name SPICE does not know, a
 body or an epoch without ephemeris data, an epoch outside the coverage of the frame data or of the C-kernel, an
 instrument whose kernel is not loaded (`INS<id>_FOV_FRAME` not found), a step SPICE rejects, a result cell that
-overflows. So do the CSPICE paths of the searches of `CelestialItem`, `Site` and `Instrument`, `Site.FindDayWindows`
+overflows. So do the CSPICE paths of the searches on an observer (`WindowSearches`, `Site`, `Instrument`), `Site.FindDayWindows`
 and the launch windows of a kernel site, and the CLI commands `find-windows-from-*-constraint` end with it (exit code 1). Before the fourth round of
 [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668) the native proxies printed the
 error on standard output, dropped it and returned no window, which a caller could not tell from a condition that never

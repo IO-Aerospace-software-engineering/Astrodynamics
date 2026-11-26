@@ -18,7 +18,6 @@ namespace IO.Astrodynamics.Surface
     public class Site : ILocalizable, IEquatable<Site>
     {
         private readonly IDataProvider _dataProvider;
-        private readonly GeometryFinder _geometryFinder = new GeometryFinder();
         private readonly bool _isFromKernel = false;
 
         public int Id { get; }
@@ -29,7 +28,7 @@ namespace IO.Astrodynamics.Surface
         /// <summary>
         /// The planetodetic coordinates of the site: longitude and latitude in rad, altitude in m above the ellipsoid of
         /// its body. For a site from the kernels, those of its position at J2000 TDB, which a search of
-        /// <see cref="FindWindowsOnIlluminationConstraint"/> and <see cref="FindDayWindows"/> by CSPICE takes as the
+        /// <see cref="FindIlluminationWindows"/> and <see cref="FindDayWindows"/> by CSPICE takes as the
         /// site (#488), and whose ellipsoid normal the illumination angles take. The frame of a site from the kernels is
         /// not built from them when a loaded kernel defines the frame of its id (<see cref="SiteFrame"/>, #690).
         /// </summary>
@@ -220,7 +219,8 @@ namespace IO.Astrodynamics.Surface
         /// <param name="observer"></param>
         /// <param name="frame"></param>
         /// <param name="aberration"></param>
-        /// <param name="stepSize">The step between two states, positive.</param>
+        /// <param name="stepSize">The step between two states, positive: the points of <see cref="Window.Sample"/>, from the
+        /// start up to the end.</param>
         /// <returns></returns>
         /// <exception cref="ArgumentOutOfRangeException"><paramref name="stepSize"/> is zero or negative (R11 of #668: before
         /// 11.0.0 a zero step read without end).</exception>
@@ -229,9 +229,9 @@ namespace IO.Astrodynamics.Surface
         {
             CelestialItem.RequirePositiveEphemerisStep(stepSize);
             var ephemeris = new List<StateVector>();
-            for (Time i = searchWindow.StartDate; i <= searchWindow.EndDate; i += stepSize)
+            foreach (var epoch in searchWindow.Sample(stepSize))
             {
-                ephemeris.Add(GetEphemeris(i, observer, frame, aberration));
+                ephemeris.Add(GetEphemeris(epoch, observer, frame, aberration));
             }
 
             return ephemeris;
@@ -322,265 +322,143 @@ namespace IO.Astrodynamics.Surface
 
 
         /// <summary>
-        /// Find when distance constraint occurs
+        /// Whether CSPICE runs a search of this site, the target, seen from <paramref name="observer"/>: the site and the
+        /// observer from the kernels, the observer a spacecraft (the routing of the searches on the observer, R15 of #668,
+        /// lot L6).
         /// </summary>
-        /// <param name="searchWindow"></param>
-        /// <param name="observer"></param>
-        /// <param name="relationalOperator"></param>
-        /// <param name="value">The distance, m.</param>
-        /// <param name="aberration"></param>
-        /// <param name="stepSize">The step of the samples. The library's search (<see cref="GeometryFinder"/>) finds every
-        /// window and gap when it is at most half the time between two extremes of the quantity, down to the resolution of
-        /// Brent's <c>localmin</c> (a window or gap narrower than about 2 √ε h + 2τ/3, h the step and τ 1 µs, can be missed,
-        /// a tangency between samples is not found; the remarks of <see cref="GeometryFinder"/>); CSPICE's, when it is
-        /// shorter than the shortest interval where the quantity is monotone.</param>
-        /// <returns></returns>
-        /// <remarks>For a site from the kernels and a spacecraft from the kernels, CSPICE's <c>gfdist_c</c> searches;
-        /// otherwise the library does (<see cref="GeometryFinder"/>). Both take the distance in metres (#466).</remarks>
-        /// <exception cref="InvalidOperationException">On the path of CSPICE's <c>gfdist_c</c>, SPICE cannot run the search (a
-        /// body or an epoch without ephemeris data, a frame it does not know, an epoch outside the coverage of the frame data,
-        /// more windows than the 10000 of its result cell, #653), with SPICE's message (fourth round of #668; before 11.0.0 the
-        /// search returned no window, and a search of more than 1000 windows its first 1000, #653).</exception>
-        public IEnumerable<Window> FindWindowsOnDistanceConstraint(in Window searchWindow, ILocalizable observer, RelationnalOperator relationalOperator, double value,
-            Aberration aberration, in TimeSpan stepSize)
+        internal bool SearchesOnSpice(ILocalizable observer) =>
+            IsSpiceBacked && observer is CelestialItem item && item.IsSpiceBacked && item.IsSpacecraft;
+
+        // The illumination search, its arguments checked: gfilum_c for a site of the kernels, the library's search otherwise,
+        // to the convergence tolerance given (1 µs when null), which gfilum_c cannot take
+        private IReadOnlyList<Window> IlluminationWindows(in Window searchWindow, IlluminationAngle illuminationType, RelationnalOperator relationalOperator,
+            double value, double adjustValue, Aberration aberration, in TimeSpan stepSize, ILocalizable illuminationSource, TimeSpan? tolerance)
         {
-            // SpiceAPI takes metres, as this method: the native layer converts them to km for gfdist_c (#466)
-            if (IsSpiceBacked && observer is CelestialItem ci1 && ci1.IsSpiceBacked && ci1.IsSpacecraft)
-                return SpiceAPI.Instance.FindWindowsOnDistanceConstraint(
-                    searchWindow, observer.NaifId, NaifId, relationalOperator, value, aberration, stepSize);
-
-            Func<Time, double> calculateDistance = date => { return GetEphemeris(date, observer, Frames.Frame.ICRF, aberration).Position.Magnitude(); };
-
-            return _geometryFinder.FindWindowsWithCondition(searchWindow, calculateDistance, relationalOperator, value, stepSize);
-        }
-
-        /// <summary>
-        /// Find when occultation constraint occurs: the windows when <paramref name="frontBody"/> occults
-        /// <paramref name="target"/> as this site sees them, with the bodies' own frames and a convergence tolerance of
-        /// 1 µs; see the overload with <see cref="OccultationSearchOptions"/>.
-        /// </summary>
-        /// <param name="searchWindow"></param>
-        /// <param name="target"></param>
-        /// <param name="targetShape"></param>
-        /// <param name="frontBody"></param>
-        /// <param name="frontShape"></param>
-        /// <param name="occultationType"></param>
-        /// <param name="aberration"></param>
-        /// <param name="stepSize"></param>
-        /// <returns>The windows, in TDB.</returns>
-        /// <exception cref="InvalidOperationException">On the path of CSPICE's <c>gfoclt_c</c>, SPICE cannot run the search (a
-        /// body or an epoch without ephemeris data, a frame it does not know, an epoch outside the coverage of the frame data,
-        /// more windows than the 10000 of its result cell, #653), with SPICE's message (fourth round of #668; before 11.0.0 the
-        /// search returned no window, and a search of more than 1000 windows its first 1000, #653).</exception>
-        public IEnumerable<Window> FindWindowsOnOccultationConstraint(in Window searchWindow, ILocalizable target, ShapeType targetShape, INaifObject frontBody,
-            ShapeType frontShape, OccultationType occultationType, Aberration aberration, in TimeSpan stepSize)
-        {
-            return FindWindowsOnOccultationConstraint(searchWindow, target, targetShape, frontBody, frontShape, occultationType, aberration, stepSize,
-                OccultationSearchOptions.Default);
-        }
-
-        /// <summary>
-        /// Find when occultation constraint occurs: the windows when <paramref name="frontBody"/> occults
-        /// <paramref name="target"/> as this site sees them. CSPICE's <c>gfoclt</c> searches when the site, the target
-        /// (a spacecraft) and the front body are in the kernels, the library otherwise, with the same rules as
-        /// <see cref="CelestialItem.FindWindowsOnOccultationConstraint(in Window, ILocalizable, ShapeType, INaifObject, ShapeType, OccultationType, Aberration, in TimeSpan, OccultationSearchOptions)"/>.
-        /// </summary>
-        /// <param name="searchWindow"></param>
-        /// <param name="target"></param>
-        /// <param name="targetShape"></param>
-        /// <param name="frontBody"></param>
-        /// <param name="frontShape"></param>
-        /// <param name="occultationType"></param>
-        /// <param name="aberration"></param>
-        /// <param name="stepSize"></param>
-        /// <param name="options">The frames of the ellipsoids and the convergence tolerance; null for the defaults.</param>
-        /// <returns>The windows, in TDB.</returns>
-        /// <exception cref="InvalidOperationException">On the path of CSPICE's <c>gfoclt_c</c>, SPICE cannot run the search (a
-        /// body or an epoch without ephemeris data, a frame it does not know, an epoch outside the coverage of the frame data,
-        /// more windows than the 10000 of its result cell, #653), with SPICE's message (fourth round of #668; before 11.0.0 the
-        /// search returned no window, and a search of more than 1000 windows its first 1000, #653).</exception>
-        public IEnumerable<Window> FindWindowsOnOccultationConstraint(in Window searchWindow, ILocalizable target, ShapeType targetShape, INaifObject frontBody,
-            ShapeType frontShape, OccultationType occultationType, Aberration aberration, in TimeSpan stepSize, OccultationSearchOptions options)
-        {
-            ArgumentNullException.ThrowIfNull(target);
-            ArgumentNullException.ThrowIfNull(frontBody);
-            if (IsSpiceBacked && target is CelestialItem ciTgt && ciTgt.IsSpiceBacked && ciTgt.IsSpacecraft
-                && frontBody is ILocalizable fb && fb.IsSpiceBacked)
-                return OccultationSearch.Spice(searchWindow, NaifId, target.NaifId, targetShape, frontBody.NaifId, frontShape, occultationType, aberration,
-                    stepSize, options);
-
-            return OccultationSearch.Managed(searchWindow, this, target, targetShape, frontBody, frontShape, occultationType, aberration, stepSize, options);
-        }
-
-        /// <summary>
-        /// Find when coordinate constraint occurs
-        /// </summary>
-        /// <param name="searchWindow"></param>
-        /// <param name="observer"></param>
-        /// <param name="frame"></param>
-        /// <param name="coordinateSystem"></param>
-        /// <param name="coordinate"></param>
-        /// <param name="relationalOperator"></param>
-        /// <param name="value"></param>
-        /// <param name="adjustValue"></param>
-        /// <param name="aberration"></param>
-        /// <param name="stepSize">The step of the samples. The library's search (<see cref="GeometryFinder"/>) finds every
-        /// window and gap when it is at most half the time between two extremes of the quantity, down to the resolution of
-        /// Brent's <c>localmin</c> (a window or gap narrower than about 2 √ε h + 2τ/3, h the step and τ 1 µs, can be missed,
-        /// a tangency between samples is not found; the remarks of <see cref="GeometryFinder"/>); CSPICE's, when it is
-        /// shorter than the shortest interval where the quantity is monotone.</param>
-        /// <returns></returns>
-        /// <remarks>
-        /// CSPICE's <c>gfposc_c</c> searches when the site is from the kernels, the observer a spacecraft from the kernels and
-        /// the frame one SPICE reads as the library does; in a frame whose reads are the library's (TEME, CIRS, TIRS, the
-        /// frame of a site built from coordinates, of a site from the kernels whose frame id no loaded kernel defines, of a
-        /// managed spacecraft with an attitude record) the library searches, on the reads in that frame (third review of
-        /// #690; before, <c>gfposc_c</c> got a name SPICE does not know and returned no window).
-        /// </remarks>
-        /// <exception cref="InvalidOperationException">On the path of CSPICE's <c>gfposc_c</c>, SPICE cannot run the search (a
-        /// body or an epoch without ephemeris data, a frame it does not know, an epoch outside the coverage of the frame data,
-        /// more windows than the 10000 of its result cell, #653), with SPICE's message (fourth round of #668; before 11.0.0 the
-        /// search returned no window, and a search of more than 1000 windows its first 1000, #653).</exception>
-        public IEnumerable<Window> FindWindowsOnCoordinateConstraint(in Window searchWindow, ILocalizable observer, Frame frame, CoordinateSystem coordinateSystem,
-            Coordinate coordinate, RelationnalOperator relationalOperator, double value, double adjustValue, Aberration aberration, in TimeSpan stepSize)
-        {
-            // CSPICE searches only in a frame SPICE reads as the library does (third review of #690)
-            if (IsSpiceBacked && observer is CelestialItem ci3 && ci3.IsSpiceBacked && ci3.IsSpacecraft && !SpiceAPI.IsManagedFrame(frame))
-            {
-                bool isDistanceCoord = coordinate is Coordinate.X or Coordinate.Y or Coordinate.Z
-                    or Coordinate.Range or Coordinate.Radius or Coordinate.Altitude;
-                double spiceValue = isDistanceCoord ? value / 1000.0 : value;
-                double spiceAdjust = isDistanceCoord ? adjustValue / 1000.0 : adjustValue;
-                return SpiceAPI.Instance.FindWindowsOnCoordinateConstraint(
-                    searchWindow, observer.NaifId, NaifId, frame,
-                    coordinateSystem, coordinate, relationalOperator, spiceValue, spiceAdjust, aberration, stepSize);
-            }
-
-            Func<Time, double> evaluateCoordinates = null;
-            switch (coordinateSystem)
-            {
-                case CoordinateSystem.Rectangular:
-                    evaluateCoordinates = date =>
-                    {
-                        var stateVector = GetEphemeris(date, observer, frame, aberration);
-                        return coordinate switch
-                        {
-                            Coordinate.X => stateVector.Position.X,
-                            Coordinate.Y => stateVector.Position.Y,
-                            Coordinate.Z => stateVector.Position.Z,
-                            _ => throw new ArgumentOutOfRangeException()
-                        };
-                    };
-                    break;
-                case CoordinateSystem.RaDec:
-                    evaluateCoordinates = date =>
-                    {
-                        var stateVector = GetEphemeris(date, observer, frame, aberration);
-                        // The angles in the search frame, as gfposc, not rotated to ICRF as ToEquatorial (#680)
-                        var equatorial = Equatorial.FromPositionInFrame(stateVector.Position, stateVector.Epoch);
-                        return coordinate switch
-                        {
-                            Coordinate.Declination => equatorial.Declination,
-                            Coordinate.RightAscension => equatorial.RightAscension,
-                            Coordinate.Range => equatorial.Distance,
-                            _ => throw new ArgumentOutOfRangeException()
-                        };
-                    };
-                    break;
-                case CoordinateSystem.Geodetic:
-                    evaluateCoordinates = date =>
-                    {
-                        var stateVector = GetEphemeris(date, observer, frame, aberration);
-                        var geodetic = stateVector.ToPlanetodetic();
-                        return coordinate switch
-                        {
-                            Coordinate.Latitude => geodetic.Latitude,
-                            Coordinate.Longitude => geodetic.Longitude,
-                            Coordinate.Altitude => geodetic.Altitude,
-                            _ => throw new ArgumentOutOfRangeException()
-                        };
-                    };
-                    break;
-                case CoordinateSystem.Planetographic:
-                    // CSPICE's PLANETOGRAPHIC (#682): the sense of the longitude of the observer's body read once, at the start
-                    bool positiveWest = observer is CelestialBody observerBody &&
-                                        GeodeticCoordinates.IsPlanetographicLongitudePositiveWest(observerBody, searchWindow.StartDate);
-                    evaluateCoordinates = date =>
-                        GeodeticCoordinates.PlanetographicCoordinate(GetEphemeris(date, observer, frame, aberration), coordinate, positiveWest);
-                    break;
-            }
-
-            return _geometryFinder.FindWindowsWithCondition(searchWindow, evaluateCoordinates, relationalOperator, value, adjustValue, stepSize);
-        }
-
-        /// <summary>
-        /// Find when illumination constraint occurs: the windows where the incidence angle of the source at the site
-        /// satisfies the constraint, by CSPICE's <c>gfilum_c</c> for a site of the kernels, by the managed search otherwise.
-        /// </summary>
-        /// <remarks>
-        /// The emission and phase angles are angles at the point towards an observer (<c>gfilum_c</c> Particulars: the
-        /// vector "from the surface point to the observer"), which this search does not take: its observer would be the
-        /// site itself, where that vector is zero and the angles are undefined, so it throws for them (#682; before 11.0.0
-        /// the managed path measured them as 0, a window of the whole search, and <c>gfilum_c</c> was given the site as its
-        /// observer). With an observer, search them with
-        /// <see cref="SpiceAPI.FindWindowsOnIlluminationConstraint"/> (the observer's NAIF id, for objects of the kernels),
-        /// or with <see cref="GeometryFinder"/>'s <c>FindWindowsWithCondition</c> on <see cref="IlluminationEmission"/> or
-        /// <see cref="IlluminationPhase"/> and the observer.
-        /// </remarks>
-        /// <param name="searchWindow"></param>
-        /// <param name="illuminationType">The angle: <see cref="IlluminationAngle.Incidence"/>.</param>
-        /// <param name="relationalOperator"></param>
-        /// <param name="value"></param>
-        /// <param name="adjustValue"></param>
-        /// <param name="aberration"></param>
-        /// <param name="stepSize">The step of the samples. The library's search (<see cref="GeometryFinder"/>) finds every
-        /// window and gap when it is at most half the time between two extremes of the quantity, down to the resolution of
-        /// Brent's <c>localmin</c> (a window or gap narrower than about 2 √ε h + 2τ/3, h the step and τ 1 µs, can be missed,
-        /// a tangency between samples is not found; the remarks of <see cref="GeometryFinder"/>); CSPICE's, when it is
-        /// shorter than the shortest interval where the quantity is monotone.</param>
-        /// <param name="illuminationSource"></param>
-        /// <param name="method">ELLIPSOID, the only method, whatever its case and its leading or trailing whitespace
-        /// (<c>gfilum_c</c> Detailed_Input <c>method</c>, #682).</param>
-        /// <returns></returns>
-        /// <exception cref="ArgumentException"><paramref name="illuminationType"/> is <see cref="IlluminationAngle.Emission"/> or
-        /// <see cref="IlluminationAngle.Phase"/>, which need an observer; or <paramref name="method"/> is not ELLIPSOID, which
-        /// before 11.0.0 gave no window on the path of <c>gfilum_c</c> and was ignored on the managed one (#682).</exception>
-        /// <exception cref="ArgumentNullException"><paramref name="method"/> is null.</exception>
-        /// <exception cref="InvalidOperationException">On the path of CSPICE's <c>gfilum_c</c>, SPICE cannot run the search (a
-        /// body or an epoch without ephemeris data, a frame it does not know, an epoch outside the coverage of the frame data,
-        /// more windows than the 10000 of its result cell, #653), with SPICE's message (fourth round of #668; before 11.0.0 the
-        /// search returned no window, and its result cell held 1000 windows, #653).</exception>
-        public IEnumerable<Window> FindWindowsOnIlluminationConstraint(in Window searchWindow, IlluminationAngle illuminationType,
-            RelationnalOperator relationalOperator, double value, double adjustValue, Aberration aberration, in TimeSpan stepSize, ILocalizable illuminationSource,
-            string method = "Ellipsoid")
-        {
-            if (illuminationType is IlluminationAngle.Emission or IlluminationAngle.Phase)
-            {
-                throw new ArgumentException(
-                    $"The {illuminationType} angle of {Name} is measured towards an observer, which this search does not take (it would be the site itself, where the angle is undefined). Search it with SpiceAPI.FindWindowsOnIlluminationConstraint and the observer's NAIF id, or with GeometryFinder.FindWindowsWithCondition on IlluminationEmission or IlluminationPhase with an observer.",
-                    nameof(illuminationType));
-            }
-
-            method = SpiceAPI.CheckIlluminationMethod(method);
             if (_isFromKernel && illuminationSource is INaifObject src)
+            {
+                WindowSearchSettings.RejectToleranceOnCspice(tolerance, nameof(WindowSearchOptions), "gfilum_c");
                 return SpiceAPI.Instance.FindWindowsOnIlluminationConstraint(
                     searchWindow, NaifId, CelestialBody.NaifId, CelestialBody.Frame,
                     Planetodetic, illuminationType, relationalOperator, value, adjustValue,
-                    aberration, stepSize, src.NaifId, method);
+                    aberration, stepSize, src.NaifId, "ELLIPSOID");
+            }
 
             if (illuminationType != IlluminationAngle.Incidence)
             {
                 throw new ArgumentOutOfRangeException(nameof(illuminationType), illuminationType, null);
             }
 
-            return _geometryFinder.FindWindowsWithCondition(searchWindow, date => IlluminationIncidence(date, illuminationSource, aberration), relationalOperator,
-                value, adjustValue, stepSize);
+            return GeometryFinder.Find(searchWindow, date => IlluminationIncidence(date, illuminationSource, aberration), relationalOperator, value, adjustValue,
+                stepSize, GeometryFinder.ToleranceOf(tolerance));
         }
+
+        /// <summary>
+        /// The windows where the illumination angle of <paramref name="source"/> at the site satisfies the relation: the
+        /// incidence, the angle between the direction of the source and the normal to the ellipsoid of the body at
+        /// <see cref="Planetodetic"/> (R15 of #668, lot L6, decided by S. Guillet, 2026-11-19). CSPICE's <c>gfilum_c</c>
+        /// searches for a site of the kernels, the library otherwise (<see cref="GeometryFinder"/>).
+        /// </summary>
+        /// <remarks>
+        /// The emission and phase angles are angles at the point towards an observer, which this search does not take: they
+        /// throw (#682). With an observer, search them with <see cref="SpiceAPI.FindWindowsOnIlluminationConstraint"/>
+        /// (objects of the kernels) or with <see cref="GeometryFinder.FindWindows(Window, Func{Time, double}, RelationnalOperator, double, WindowSearchOptions)"/>
+        /// on <see cref="IlluminationEmission"/> or <see cref="IlluminationPhase"/>.
+        /// </remarks>
+        /// <param name="window">The search window.</param>
+        /// <param name="angle">The angle: <see cref="IlluminationAngle.Incidence"/>.</param>
+        /// <param name="relationalOperator">The relation.</param>
+        /// <param name="value">The angle, rad; ignored by the extremes.</param>
+        /// <param name="source">The source of the illumination, the Sun for the day.</param>
+        /// <param name="options">The step (required), the aberration, the convergence tolerance and the adjustment value.</param>
+        /// <returns>The windows, in time order, labelled in the scale of the search window's start (<see cref="Body.WindowSearches"/>).</returns>
+        /// <exception cref="ArgumentNullException"><paramref name="source"/> is null.</exception>
+        /// <exception cref="ArgumentException"><paramref name="angle"/> is <see cref="IlluminationAngle.Emission"/> or
+        /// <see cref="IlluminationAngle.Phase"/>; the step is not given, an adjustment value is given with a relation other
+        /// than an absolute extreme, or a convergence tolerance on CSPICE's search (<c>options</c>).</exception>
+        /// <exception cref="ArgumentOutOfRangeException">With a comparison operator, <paramref name="value"/> is outside
+        /// [0, π], or NaN: the angles are in radians (R11 of #668).</exception>
+        /// <exception cref="InvalidOperationException">On the path of CSPICE, SPICE cannot run the search, with its
+        /// message.</exception>
+        public IReadOnlyList<Window> FindIlluminationWindows(in Window window, IlluminationAngle angle, RelationnalOperator relationalOperator, double value,
+            ILocalizable source, WindowSearchOptions options = null)
+        {
+            ArgumentNullException.ThrowIfNull(source);
+            if (angle is IlluminationAngle.Emission or IlluminationAngle.Phase)
+            {
+                throw new ArgumentException(
+                    $"The {angle} angle of {Name} is measured towards an observer, which this search does not take (it would be the site itself, where the angle is undefined). Search it with SpiceAPI.FindWindowsOnIlluminationConstraint and the observer's NAIF id, or with GeometryFinder.FindWindows on IlluminationEmission or IlluminationPhase with an observer.",
+                    nameof(angle));
+            }
+
+            GeometryFinder.CheckIlluminationThreshold(relationalOperator, value);
+            options ??= WindowSearchOptions.Default;
+            WindowSearchSettings.CheckAdjustValue(options, relationalOperator);
+            var step = WindowSearchSettings.RequireStep(options.Step, nameof(WindowSearchOptions));
+            return WindowSearchSettings.InScaleOf(IlluminationWindows(window, angle, relationalOperator, value, options.AdjustValue ?? 0.0,
+                options.Aberration ?? Aberration.None, step, source, options.ConvergenceTolerance), window);
+        }
+
+        /// <summary>
+        /// The windows where a horizontal coordinate of <paramref name="target"/> seen from the site, in its topocentric
+        /// frame, satisfies the relation, as <see cref="GetHorizontalCoordinates"/> gives it (R15 of #668, lot L6, choice
+        /// 3, decided by S. Guillet, 2026-11-19): the elevation is the declination in <see cref="Frame"/>, the range its
+        /// range, and the azimuth, −atan2(y, x) in [0, 2π), 2π minus the right ascension, its relation mirrored (a
+        /// threshold of 0, the north, the right ascension 0 with the same relation). The library searches
+        /// (<see cref="GeometryFinder"/>), whatever the target: the coordinate search of
+        /// <see cref="WindowSearches.FindCoordinateWindows"/> with the site as observer.
+        /// </summary>
+        /// <param name="window">The search window.</param>
+        /// <param name="target">The target.</param>
+        /// <param name="coordinate">The horizontal coordinate.</param>
+        /// <param name="relationalOperator">The relation.</param>
+        /// <param name="value">The value, rad or m; ignored by the extremes.</param>
+        /// <param name="options">The step (required), the aberration, the convergence tolerance and the adjustment value.</param>
+        /// <returns>The windows, in time order, labelled in the scale of the search window's start (<see cref="Body.WindowSearches"/>).</returns>
+        /// <exception cref="ArgumentNullException"><paramref name="target"/> is null.</exception>
+        /// <exception cref="ArgumentOutOfRangeException">With a comparison operator, an azimuth outside [0, 2π] or an
+        /// elevation outside [−π/2, π/2], or NaN: the angles are in radians (R11 of #668).</exception>
+        /// <exception cref="ArgumentException">The step is not given, or an adjustment value is given with a relation other
+        /// than an absolute extreme (<c>options</c>).</exception>
+        public IReadOnlyList<Window> FindHorizontalWindows(in Window window, ILocalizable target, HorizontalCoordinate coordinate,
+            RelationnalOperator relationalOperator, double value, WindowSearchOptions options = null)
+        {
+            bool extreme = GeometryFinder.IsExtremeOperator(relationalOperator);
+            switch (coordinate)
+            {
+                case HorizontalCoordinate.Elevation:
+                    if (!extreme) GeometryFinder.CheckAngle(value, -Constants.HalfPi, Constants.HalfPi, "[−π/2, π/2]", "elevation threshold", nameof(value));
+                    return this.FindCoordinateWindows(window, target, Frame, CoordinateSystem.RaDec, Coordinate.Declination, relationalOperator, value, options);
+                case HorizontalCoordinate.Range:
+                    return this.FindCoordinateWindows(window, target, Frame, CoordinateSystem.RaDec, Coordinate.Range, relationalOperator, value, options);
+                case HorizontalCoordinate.Azimuth:
+                    if (!extreme) GeometryFinder.CheckAngle(value, 0.0, Constants.TwoPi, "[0, 2π]", "azimuth threshold", nameof(value));
+                    // az = 2π − ra for ra > 0, az = 0 for ra = 0: a relation to 0 is the same relation of ra to 0
+                    bool north = !extreme && value == 0.0;
+                    return this.FindCoordinateWindows(window, target, Frame, CoordinateSystem.RaDec, Coordinate.RightAscension,
+                        north ? relationalOperator : Mirrored(relationalOperator), north ? 0.0 : Constants.TwoPi - value, options);
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(coordinate), coordinate, null);
+            }
+        }
+
+        // The relation of the right ascension to 2π minus a value, of the azimuth to the value
+        private static RelationnalOperator Mirrored(RelationnalOperator relationalOperator) => relationalOperator switch
+        {
+            RelationnalOperator.Greater => RelationnalOperator.Lower,
+            RelationnalOperator.Lower => RelationnalOperator.Greater,
+            RelationnalOperator.GreaterOrEqual => RelationnalOperator.LowerOrEqual,
+            RelationnalOperator.LowerOrEqual => RelationnalOperator.GreaterOrEqual,
+            RelationnalOperator.AbsoluteMin => RelationnalOperator.AbsoluteMax,
+            RelationnalOperator.AbsoluteMax => RelationnalOperator.AbsoluteMin,
+            RelationnalOperator.LocalMin => RelationnalOperator.LocalMax,
+            RelationnalOperator.LocalMax => RelationnalOperator.LocalMin,
+            _ => relationalOperator
+        };
 
         /// <summary>
         /// The emission angle at the site: the angle between the direction of <paramref name="observer"/> and the normal to
         /// the ellipsoid of the body at <see cref="Planetodetic"/>, the normal CSPICE's <c>gfilum_c</c> takes for the site
-        /// (<see cref="FindWindowsOnIlluminationConstraint"/>, #488).
+        /// (<see cref="FindIlluminationWindows"/>, #488).
         /// </summary>
         /// <param name="date">The epoch.</param>
         /// <param name="observer">The observer.</param>
@@ -599,7 +477,7 @@ namespace IO.Astrodynamics.Surface
         /// <summary>
         /// The incidence angle at the site: the angle between the direction of <paramref name="illuminationSource"/> and the
         /// normal to the ellipsoid of the body at <see cref="Planetodetic"/>, the normal CSPICE's <c>gfilum_c</c> takes for
-        /// the site (<see cref="FindWindowsOnIlluminationConstraint"/>, #488).
+        /// the site (<see cref="FindIlluminationWindows"/>, #488).
         /// </summary>
         /// <param name="date">The epoch.</param>
         /// <param name="illuminationSource">The source of illumination.</param>
@@ -690,20 +568,22 @@ namespace IO.Astrodynamics.Surface
 
         /// <summary>
         /// The windows where the Sun's incidence at the site is below 90° plus the twilight angle, with light time and
-        /// stellar aberration, sampled every minute.
+        /// stellar aberration, sampled every minute: <see cref="FindIlluminationWindows"/>, its windows labelled in the scale
+        /// of the search window's start (R15 of #668, lot L6; TDB on the path of <c>gfilum_c</c> before).
         /// </summary>
         /// <remarks>For a site from the kernels CSPICE's <c>gfilum_c</c> searches; for a site built from its coordinates
         /// the library does (<see cref="GeometryFinder"/>), and a day or a night shorter than the minute (the Sun grazing
         /// the twilight angle) is found as an extreme of the incidence between two samples (#678).</remarks>
+        /// <exception cref="ArgumentOutOfRangeException"><paramref name="twilight"/> is outside [−π/2, π/2], or NaN: the angles are in radians (R11 of #668, lot L6).</exception>
         /// <exception cref="InvalidOperationException">On the path of CSPICE's <c>gfilum_c</c>, SPICE cannot run the search (a
         /// body or an epoch without ephemeris data, a frame it does not know, an epoch outside the coverage of the frame data,
         /// more windows than the 10000 of its result cell, #653), with SPICE's message (fourth round of #668; before 11.0.0 the
         /// search returned no window, and its result cell held 1000 windows, #653).</exception>
-        public IEnumerable<Window> FindDayWindows(in Window searchWindow, double twilight)
+        public IReadOnlyList<Window> FindDayWindows(in Window searchWindow, double twilight)
         {
-            var sun = Stars.SUN_BODY;
-            return FindWindowsOnIlluminationConstraint(searchWindow, IlluminationAngle.Incidence, RelationnalOperator.Lower, Constants.HalfPi + twilight, 0.0,
-                Aberration.LTS, TimeSpan.FromMinutes(1.0), sun);
+            GeometryFinder.CheckAngle(twilight, -Constants.HalfPi, Constants.HalfPi, "[−π/2, π/2]", "twilight", nameof(twilight));
+            return FindIlluminationWindows(searchWindow, IlluminationAngle.Incidence, RelationnalOperator.Lower, Constants.HalfPi + twilight, Stars.SUN_BODY,
+                new WindowSearchOptions { Step = TimeSpan.FromMinutes(1.0), Aberration = Aberration.LTS });
         }
 
         #region operators

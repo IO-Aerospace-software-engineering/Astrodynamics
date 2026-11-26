@@ -65,8 +65,7 @@ public class OccultationSearchTests
         // reference is gfoclt at 1e-9 s (tools/occultation_reference); the CSPICE path is measured against it in
         // SpicePath_PointFrontBody_MatchesGfocltAny
         var site = new Site(65, "DSS-65", TestHelpers.EarthAtJ2000);
-        var managed = site.FindWindowsOnOccultationConstraint(Eclipse2005Window, TestHelpers.Sun, targetShape, TestHelpers.MoonAtJ2000, frontShape, type,
-            Aberration.None, TimeSpan.FromSeconds(360.0)).ToArray();
+        var managed = site.FindOccultationWindows(Eclipse2005Window, TestHelpers.Sun, TestHelpers.MoonAtJ2000, new OccultationSearchOptions { Step = TimeSpan.FromSeconds(360.0), TargetShape = targetShape, FrontShape = frontShape, OccultationType = type }).ToArray();
         var expected = JsonSerializer.Deserialize<Dictionary<string, double[][]>>(File.ReadAllText("Data/OccultationReference/occultation_reference.json"))[reference]
             .Select(w => new Window(TimeSystem.Time.CreateTDB(w[0]), TimeSystem.Time.CreateTDB(w[1]))).ToArray();
         double worst = WorstEdge(managed, expected);
@@ -83,14 +82,12 @@ public class OccultationSearchTests
     public void PointBody_TypesThatCannotHappen_GiveNoWindow(ShapeType targetShape, ShapeType frontShape, OccultationType type)
     {
         var site = new Site(65, "DSS-65", TestHelpers.EarthAtJ2000);
-        Assert.Empty(site.FindWindowsOnOccultationConstraint(Eclipse2005Window, TestHelpers.Sun, targetShape, TestHelpers.MoonAtJ2000, frontShape, type,
-            Aberration.None, TimeSpan.FromSeconds(360.0)));
+        Assert.Empty(site.FindOccultationWindows(Eclipse2005Window, TestHelpers.Sun, TestHelpers.MoonAtJ2000, new OccultationSearchOptions { Step = TimeSpan.FromSeconds(360.0), TargetShape = targetShape, FrontShape = frontShape, OccultationType = type }));
 
         // The CSPICE path, a spacecraft of the kernels, applies the same rule
         var spacecraft = new Spacecraft(-470001, "eclipse_001", epoch: Eclipse001Window.StartDate);
         var earthType = type == OccultationType.Annular ? OccultationType.Partial : type;
-        Assert.Empty(TestHelpers.Sun.FindWindowsOnOccultationConstraint(Eclipse001Window, spacecraft, targetShape, TestHelpers.EarthAtJ2000, frontShape, earthType,
-            Aberration.None, TimeSpan.FromSeconds(60.0)));
+        Assert.Empty(spacecraft.FindOccultationWindows(Eclipse001Window, TestHelpers.Sun, TestHelpers.EarthAtJ2000, new OccultationSearchOptions { Step = TimeSpan.FromSeconds(60.0), TargetShape = targetShape, FrontShape = frontShape, OccultationType = earthType }));
     }
 
     [Theory]
@@ -121,8 +118,7 @@ public class OccultationSearchTests
     public void SpicePath_PointBackBody_FullIsAny()
     {
         var spacecraft = new Spacecraft(-470001, "eclipse_001", epoch: Eclipse001Window.StartDate);
-        var full = TestHelpers.Sun.FindWindowsOnOccultationConstraint(Eclipse001Window, spacecraft, ShapeType.Point, TestHelpers.EarthAtJ2000, ShapeType.Ellipsoid,
-            OccultationType.Full, Aberration.None, TimeSpan.FromSeconds(60.0)).ToArray();
+        var full = spacecraft.FindOccultationWindows(Eclipse001Window, TestHelpers.Sun, TestHelpers.EarthAtJ2000, new OccultationSearchOptions { Step = TimeSpan.FromSeconds(60.0), TargetShape = ShapeType.Point, FrontShape = ShapeType.Ellipsoid, OccultationType = OccultationType.Full }).ToArray();
         var any = SpiceAPI.Instance.FindWindowsOnOccultationConstraint(Eclipse001Window, -470001, 10, ShapeType.Point, 399, ShapeType.Ellipsoid, OccultationType.Any,
             Aberration.None, TimeSpan.FromSeconds(60.0)).ToArray();
         Assert.Equal(8, any.Length);
@@ -133,10 +129,8 @@ public class OccultationSearchTests
     public void None_IsTheComplementOfAny_OnBothPaths()
     {
         var spacecraft = new Spacecraft(-470001, "eclipse_001", epoch: Eclipse001Window.StartDate);
-        var any = TestHelpers.Sun.FindWindowsOnOccultationConstraint(Eclipse001Window, spacecraft, ShapeType.Ellipsoid, TestHelpers.EarthAtJ2000, ShapeType.Ellipsoid,
-            OccultationType.Any, Aberration.None, TimeSpan.FromSeconds(60.0)).ToArray();
-        var none = TestHelpers.Sun.FindWindowsOnOccultationConstraint(Eclipse001Window, spacecraft, ShapeType.Ellipsoid, TestHelpers.EarthAtJ2000, ShapeType.Ellipsoid,
-            OccultationType.None, Aberration.None, TimeSpan.FromSeconds(60.0)).ToArray();
+        var any = spacecraft.FindOccultationWindows(Eclipse001Window, TestHelpers.Sun, TestHelpers.EarthAtJ2000, new OccultationSearchOptions { Step = TimeSpan.FromSeconds(60.0), TargetShape = ShapeType.Ellipsoid, FrontShape = ShapeType.Ellipsoid }).ToArray();
+        var none = spacecraft.FindOccultationWindows(Eclipse001Window, TestHelpers.Sun, TestHelpers.EarthAtJ2000, new OccultationSearchOptions { Step = TimeSpan.FromSeconds(60.0), TargetShape = ShapeType.Ellipsoid, FrontShape = ShapeType.Ellipsoid, OccultationType = OccultationType.None }).ToArray();
         var managedNone = OccultationSearch.Managed(Eclipse001Window, spacecraft, TestHelpers.Sun, ShapeType.Ellipsoid, TestHelpers.EarthAtJ2000, ShapeType.Ellipsoid,
             OccultationType.None, Aberration.None, TimeSpan.FromSeconds(60.0), null).ToArray();
 
@@ -198,22 +192,17 @@ public class OccultationSearchTests
         var sun = TestHelpers.Sun;
         var moon = TestHelpers.MoonAtJ2000;
         var step = TimeSpan.FromSeconds(360.0);
-        Assert.Throws<ArgumentException>(() => site.FindWindowsOnOccultationConstraint(Eclipse2005Window, sun, ShapeType.Point, moon, ShapeType.Point,
-            OccultationType.Any, Aberration.None, step).ToArray());
+        Assert.Throws<ArgumentException>(() => site.FindOccultationWindows(Eclipse2005Window, sun, moon, new OccultationSearchOptions { Step = step, TargetShape = ShapeType.Point, FrontShape = ShapeType.Point }).ToArray());
         Assert.Throws<ArgumentException>(() => OccultationSearch.Spice(Eclipse2005Window, 399065, 10, ShapeType.Point, 301, ShapeType.Point, OccultationType.Any,
             Aberration.None, step, null));
-        Assert.Throws<ArgumentException>(() => site.FindWindowsOnOccultationConstraint(Eclipse2005Window, sun, ShapeType.Ellipsoid, sun, ShapeType.Ellipsoid,
-            OccultationType.Any, Aberration.None, step).ToArray());
-        Assert.Throws<ArgumentOutOfRangeException>(() => site.FindWindowsOnOccultationConstraint(Eclipse2005Window, sun, ShapeType.Ellipsoid, moon, ShapeType.Ellipsoid,
-            OccultationType.Any, Aberration.None, TimeSpan.Zero).ToArray());
+        Assert.Throws<ArgumentException>(() => site.FindOccultationWindows(Eclipse2005Window, sun, sun, new OccultationSearchOptions { Step = step, TargetShape = ShapeType.Ellipsoid, FrontShape = ShapeType.Ellipsoid }).ToArray());
+        Assert.Throws<ArgumentOutOfRangeException>(() => site.FindOccultationWindows(Eclipse2005Window, sun, moon, new OccultationSearchOptions { Step = TimeSpan.Zero, TargetShape = ShapeType.Ellipsoid, FrontShape = ShapeType.Ellipsoid }).ToArray());
         Assert.Throws<ArgumentOutOfRangeException>(() => new OccultationSearchOptions { ConvergenceTolerance = TimeSpan.Zero });
-        Assert.Throws<ArgumentNullException>(() => site.FindWindowsOnOccultationConstraint(Eclipse2005Window, null, ShapeType.Ellipsoid, moon, ShapeType.Ellipsoid,
-            OccultationType.Any, Aberration.None, step));
+        Assert.Throws<ArgumentNullException>(() => site.FindOccultationWindows(Eclipse2005Window, null, moon, new OccultationSearchOptions { Step = step, TargetShape = ShapeType.Ellipsoid, FrontShape = ShapeType.Ellipsoid }));
 
         // A spacecraft is no ellipsoid
         var spacecraft = new Spacecraft(-470001, "eclipse_001", epoch: Eclipse001Window.StartDate);
-        Assert.Throws<ArgumentException>(() => sun.FindWindowsOnOccultationConstraint(Eclipse001Window, TestHelpers.EarthAtJ2000, ShapeType.Ellipsoid, spacecraft,
-            ShapeType.Ellipsoid, OccultationType.Any, Aberration.None, step).ToArray());
+        Assert.Throws<ArgumentException>(() => TestHelpers.EarthAtJ2000.FindOccultationWindows(Eclipse001Window, sun, spacecraft, new OccultationSearchOptions { Step = step, TargetShape = ShapeType.Ellipsoid, FrontShape = ShapeType.Ellipsoid }).ToArray());
 
         // An observer inside a body
         var center = new StateVector(Vector3.Zero, Vector3.Zero, TestHelpers.EarthAtJ2000, Eclipse001Window.StartDate, Frames.Frame.ICRF);

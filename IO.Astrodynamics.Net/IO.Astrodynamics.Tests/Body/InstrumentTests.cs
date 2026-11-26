@@ -113,10 +113,7 @@ namespace IO.Astrodynamics.Tests.Body
 
             // Find windows when the earth is in field of view of the camera, over the propagated states: the search
             // starts at the first state (choice 16 of #501); it reads nothing before it (#515)
-            var res = instrument.FindWindowsInFieldOfViewConstraint(searchWindow, spacecraft,
-                TestHelpers.EarthAtJ2000, TestHelpers.EarthAtJ2000.Frame,
-                shape, Aberration.LT,
-                TimeSpan.FromSeconds(360.0)).ToArray();
+            var res = instrument.FindFieldOfViewWindows(searchWindow, TestHelpers.EarthAtJ2000, new FieldOfViewSearchOptions { Step = TimeSpan.FromSeconds(360.0), Aberration = Aberration.LT, TargetShape = shape, TargetFrame = TestHelpers.EarthAtJ2000.Frame }).ToArray();
 
             //Read results: the windows of gftfov, every edge, the first start included: the Earth is in the field of view
             // at the first state, and both searches start there. As an ellipsoid, the Earth is in view 1 080 s longer
@@ -140,15 +137,7 @@ namespace IO.Astrodynamics.Tests.Body
                 LabelAssert.Equal(searchWindow.EndDate, res[1].EndDate);
             }
 
-            Assert.Throws<ArgumentNullException>(() => spacecraft.Instruments.First().FindWindowsInFieldOfViewConstraint(
-                new Window(TimeSystem.Time.Create(676555200.0, TimeScale.TDB), TimeSystem.Time.Create(676561647.0, TimeScale.TDB)), null,
-                TestHelpers.EarthAtJ2000, TestHelpers.EarthAtJ2000.Frame, ShapeType.Ellipsoid, Aberration.LT, TimeSpan.FromHours(1.0)));
-            Assert.Throws<ArgumentNullException>(() => spacecraft.Instruments.First().FindWindowsInFieldOfViewConstraint(
-                new Window(TimeSystem.Time.Create(676555200.0, TimeScale.TDB), TimeSystem.Time.Create(676561647.0, TimeScale.TDB)), spacecraft,
-                null, TestHelpers.EarthAtJ2000.Frame, ShapeType.Ellipsoid, Aberration.LT, TimeSpan.FromHours(1.0)));
-            Assert.Throws<ArgumentNullException>(() => spacecraft.Instruments.First().FindWindowsInFieldOfViewConstraint(
-                new Window(TimeSystem.Time.Create(676555200.0, TimeScale.TDB), TimeSystem.Time.Create(676561647.0, TimeScale.TDB)), spacecraft,
-                TestHelpers.EarthAtJ2000, null, ShapeType.Ellipsoid, Aberration.LT, TimeSpan.FromHours(1.0)));
+            Assert.Throws<ArgumentNullException>(() => spacecraft.Instruments.First().FindFieldOfViewWindows(new Window(TimeSystem.Time.Create(676555200.0, TimeScale.TDB), TimeSystem.Time.Create(676561647.0, TimeScale.TDB)), null, new FieldOfViewSearchOptions { Step = TimeSpan.FromHours(1.0), Aberration = Aberration.LT, TargetShape = ShapeType.Ellipsoid, TargetFrame = TestHelpers.EarthAtJ2000.Frame }));
         }
 
         // The windows of SPICE gftfov over the kernels written from the propagation of the spacecraft, unloaded after
@@ -1141,8 +1130,7 @@ namespace IO.Astrodynamics.Tests.Body
             bool? inView = null;
             var point = Record.Exception(() => inView = instrument.IsInFOV(epoch, moon, Aberration.None));
             System.Collections.Generic.List<Window> windows = null;
-            var ellipsoid = Record.Exception(() => windows = instrument.FindWindowsInFieldOfViewConstraint(window, spc, moon, moon.Frame, ShapeType.Ellipsoid,
-                Aberration.None, TimeSpan.FromSeconds(60.0)).ToList());
+            var ellipsoid = Record.Exception(() => windows = instrument.FindFieldOfViewWindows(window, moon, new FieldOfViewSearchOptions { Step = TimeSpan.FromSeconds(60.0), TargetShape = ShapeType.Ellipsoid, TargetFrame = moon.Frame }).ToList());
 
             // Assert
             if (searched)
@@ -1207,8 +1195,7 @@ namespace IO.Astrodynamics.Tests.Body
             var window = new Window(epoch, epoch.AddSeconds(120.0));
 
             // Act
-            var exception = Record.Exception(() => instrument.FindWindowsInFieldOfViewConstraint(window, instrument.Spacecraft, twin, twin.Frame, ShapeType.Point,
-                Aberration.None, TimeSpan.FromSeconds(60.0)).ToList());
+            var exception = Record.Exception(() => instrument.FindFieldOfViewWindows(window, twin, new FieldOfViewSearchOptions { Step = TimeSpan.FromSeconds(60.0), TargetShape = ShapeType.Point, TargetFrame = twin.Frame }).ToList());
 
             // Assert
             var failed = Assert.IsType<InvalidOperationException>(exception);

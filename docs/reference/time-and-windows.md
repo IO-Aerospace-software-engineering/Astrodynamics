@@ -221,7 +221,8 @@ var fromJD = Time.CreateFromJD(2451545.0, TimeScale.TDB);
 
 ## Window
 
-`Window` models a time interval with intersection and merge operations.
+`Window` models a closed time interval, with the operations of one window below and those of lists of windows in
+[Window Lists](#window-lists).
 
 ### Constructors
 
@@ -237,15 +238,63 @@ var fromJD = Time.CreateFromJD(2451545.0, TimeScale.TDB);
 | `StartDate` / `EndDate` | Interval boundaries |
 | `==`, `!=`, `Equals` | The same two ends, instants compared whatever their scales (#512): a window and the window of the same instants in TDB are equal; `Length` does not take part |
 | `Length` | Window duration, `EndDate - StartDate`: 121 s for the two UTC minutes around the leap second of 2016-12-31; the length given to `Window(Time, TimeSpan)`, whose `EndDate` is `start + length` in calendar arithmetic, so a UTC window built from a length across a leap second keeps that length while `EndDate - StartDate`, and a propagation over it, count the leap second |
-| `Merge(Window)` | Merge two overlapping windows |
-| `Intersects(Window)` / `Intersects(Time)` | Check overlap |
-| `GetIntersection(Window)` | Get overlapping portion |
+| `Contains(Time)` | Whether the window holds the instant, its ends included, whatever the scales (`Intersects(Time)` before 11.0.0) |
+| `Intersects(Window)` | Whether the two windows share an instant: the ends are closed, so touching windows intersect |
+| `Hull(Window)` | The earlier start and the later end; on a tie of instants the argument's end, in its scale (`Merge` before 11.0.0, bit for bit) |
+| `TryMerge(Window, out Window)` | The hull of two windows that share an instant, touching ones included (as CSPICE's `wninsd`); false otherwise |
+| `Sample(TimeSpan step, bool includeEnd = false)` | The instants start + i·step, i from 0, at or before the end, computed lazily: each the start plus i steps in the calendar of the start's scale (exact to the tick), compared with the end as an instant, so the end is a point when it lies on the grid; with `includeEnd` the end, in its scale, is also appended when the last point precedes it, however close; a step of zero or less throws `ArgumentOutOfRangeException` (`step`) at the call (11.0.0, R11 of #668). Across a leap second the points follow the UTC calendar: the window from 2016-12-31T23:59:00Z to 2017-01-01T00:01:00Z (121 s) gives 121 points at 1 s, the last its end. The grid of the window reads: `GetEphemeris` over a window, `Star.Propagate`, `SpiceAPI.TransformFrame`, `ReadEphemeris` and `ReadOrientation` over a window, and the command `orientation` |
+| `GetIntersection(Window)` / `TryGetIntersection(Window, out Window)` | The instants both windows hold, one instant for touching windows (as CSPICE's `wnintd`); `GetIntersection` throws `ArgumentException` and `TryGetIntersection` returns false when they share none |
 
 ### Example
 
 ```csharp
 var window = new Window(new Time(2024, 1, 1, TimeScale.TDB), new Time(2024, 1, 31, TimeScale.TDB));
 Console.WriteLine($"Duration: {window.Length.TotalDays} days");
+```
+
+### The Windows of a Search
+
+The window searches on an observer (`FindDistanceWindows`, `FindCoordinateWindows`, `FindOccultationWindows`, the
+searches of a `Site` and of an `Instrument`, `GeometryFinder.FindWindows`) and `Site.FindDayWindows` label their
+windows in the scale of the search window's start (lot L6 of #668): an end at a bound of the search window is that
+bound, every other end the same instant in that scale. A `Time` holds no leap second, so an end inside a UTC leap
+second, which no UTC label holds, keeps its TDB label. On a UTC or TT search window, `Length` of a result counts TT
+seconds ([The Length of a Window](#the-length-of-a-window)); before 11.0.0 the CSPICE, occultation and field-of-view
+searches labelled TDB, and their lengths counted TDB seconds, up to 3.3e-10 of the length apart. The six raw searches
+of `SpiceAPI` keep their TDB labels. The library's distance, coordinate and illumination search (`GeometryFinder`)
+samples and solves in the calendar of the start's scale: on a UTC window, a crossing during a leap second is labelled
+up to 1 s from its instant
+([#830](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/830), under **Known limitations** of
+11.0.0); search such a window in TDB.
+
+### Window Lists
+
+The static class `WindowList` (R16 of #668) extends `IEnumerable<Window>` with the algebra of CSPICE's `wn*` routines:
+each list is the set of instants its closed windows hold, and each result is an `IReadOnlyList<Window>`, sorted,
+disjoint and closed, a window of zero length kept. Their names are not LINQ's: `Intersect`, `Union` and `Except` of
+LINQ compare the windows as values, so that [0, 2 h] and [1 h, 3 h] have no window in common.
+
+| Member | Description |
+|--------|-------------|
+| `IntersectWindows(IEnumerable<Window>)` | The instants both lists hold, as `wnintd`: touching windows share one instant |
+| `UnionWindows(IEnumerable<Window>)` | The instants either list holds, as `wnunid`: overlapping and touching windows merged |
+| `ExceptWindows(IEnumerable<Window>)` | The instants of the list the other does not hold, closed, as `wndifd`: taking one instant out of a window leaves it whole |
+| `ComplementWithin(Window)` | The instants of the window the list does not hold, closed: `wndifd` of the window and the list, which is `wncomd` as its header defines it (`wncomd` itself returns a window past its right end where a window of the list ends before the window and the next one starts after it) |
+| `TotalDuration()` | The sum of `EndDate - StartDate` over the union of the list, the leap seconds between UTC ends counted (#508) |
+
+Each list is first normalised as `wninsd` inserts windows: sorted by start and merged where windows overlap or touch, so
+the touching windows of a `NotEqual` search are one window. The instants are compared whatever their scales
+(`Time.CompareTo`); each end of a result is an end of an input with its label, on a tie of instants that of the first
+window that holds it, the receiver's before the argument's. A null list throws `ArgumentNullException`. The algebra is
+checked against `wnintd`, `wnunid`, `wndifd` and `wncomd` on the lists of `tools/window_list_reference`.
+
+```csharp
+var day = new Window(new Time(2024, 1, 1, TimeScale.TDB), TimeSpan.FromDays(1.0));
+var inView = new[] { new Window(day.StartDate.AddHours(1.0), TimeSpan.FromHours(3.0)) };
+var lit = new[] { new Window(day.StartDate, TimeSpan.FromHours(2.0)), new Window(day.StartDate.AddHours(3.0), TimeSpan.FromHours(6.0)) };
+IReadOnlyList<Window> both = inView.IntersectWindows(lit); // 01:00 to 02:00 and 03:00 to 04:00
+IReadOnlyList<Window> gaps = both.ComplementWithin(day);    // 00:00 to 01:00, 02:00 to 03:00, 04:00 to 24:00
+TimeSpan total = both.TotalDuration();                      // 2 h
 ```
 
 ## The Time Argument of a Propagation

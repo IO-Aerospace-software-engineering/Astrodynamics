@@ -40,12 +40,19 @@ internal sealed class OccultationBodyModel
     /// <exception cref="ArgumentException">An ellipsoid is asked for a body without radii.</exception>
     internal static void CheckShape(ILocalizable item, ShapeType shape)
     {
-        if (shape != ShapeType.Point &&
-            (item is not CelestialBody body || !(body.Radii.X > 0.0 && body.Radii.Y > 0.0 && body.Radii.Z > 0.0)))
+        if (shape != ShapeType.Point && !HasRadii(item))
         {
             throw new ArgumentException($"{item.Name} has no radii: it cannot be modeled as an ellipsoid.");
         }
     }
+
+    /// <summary>Whether a body has radii, so can be modeled as an ellipsoid: the default shape of the searches on the
+    /// observer, an ellipsoid with radii and a point otherwise (R15 of #668, lot L6).</summary>
+    internal static bool HasRadii(ILocalizable item) =>
+        item is CelestialBody body && body.Radii.X > 0.0 && body.Radii.Y > 0.0 && body.Radii.Z > 0.0;
+
+    /// <summary>The shape of a body given none: an ellipsoid when it has radii, a point otherwise.</summary>
+    internal static ShapeType DefaultShape(ILocalizable item) => HasRadii(item) ? ShapeType.Ellipsoid : ShapeType.Point;
 
     /// <summary>The body.</summary>
     internal ILocalizable Item { get; }

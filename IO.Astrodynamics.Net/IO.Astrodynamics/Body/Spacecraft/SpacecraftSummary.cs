@@ -21,7 +21,7 @@ public sealed class SpacecraftSummary
         Maneuvers = maneuvers;
 
         // The hull of the maneuver windows and the sum of the fuel, in execution order: on equal ends the later window's,
-        // as Window.Merge took them before 11.0.0, bit for bit
+        // as Window.Hull takes them (Window.Merge before 11.0.0), bit for bit
         if (maneuvers.Count > 0)
         {
             var start = maneuvers[0].ManeuverWindow.StartDate;
