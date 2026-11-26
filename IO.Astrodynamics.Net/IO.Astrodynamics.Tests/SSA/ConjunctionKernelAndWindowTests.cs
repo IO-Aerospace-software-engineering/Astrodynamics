@@ -387,7 +387,7 @@ public class ConjunctionKernelAndWindowTests : ConjunctionDensePassTestBase, ICl
         var k2 = new Spacecraft(CrossingEncounterCase.Id2, "K2", _case.T0.AddSeconds(10.0));
         Assert.Equal(PlanetsAndMoons.EARTH.NaifId, k1.InitialOrbitalParameters.Observer.NaifId);
 
-        var encounter = ConjunctionAssessment.Analyze(new ProtectedSpacecraftProfile(k1), k2, _case.Seconds(1200.0, 2400.0), Options);
+        var encounter = ConjunctionAssessment.Analyze(k1, k2, _case.Seconds(1200.0, 2400.0), Options);
 
         var (position, velocity) = CspiceRtn(encounter.EncounterState.Epoch, PlanetsAndMoons.EARTH.NaifId);
         AssertRtn(encounter, position, velocity, "Earth");
@@ -414,7 +414,7 @@ public class ConjunctionKernelAndWindowTests : ConjunctionDensePassTestBase, ICl
         var k2 = new Spacecraft(CrossingEncounterCase.Id2, "K2", _case.T0.AddSeconds(10.0), centerOfMotion: ssb);
         Assert.Equal(0, k1.InitialOrbitalParameters.Observer.NaifId);
 
-        var encounter = ConjunctionAssessment.Analyze(new ProtectedSpacecraftProfile(k1), k2, _case.Seconds(1200.0, 2400.0), Options);
+        var encounter = ConjunctionAssessment.Analyze(k1, k2, _case.Seconds(1200.0, 2400.0), Options);
 
         var (position, velocity) = CspiceRtn(encounter.EncounterState.Epoch, 0);
         AssertRtn(encounter, position, velocity, "SSB");
@@ -453,7 +453,7 @@ public class ConjunctionKernelAndWindowTests : ConjunctionDensePassTestBase, ICl
     [Fact]
     public void AnalyzeAll_Dense_ListsTheLocalMinimaOfCspice()
     {
-        var all = ConjunctionAssessment.AnalyzeAll(new ProtectedSpacecraftProfile(_case.Sat1), _case.Solution1, _case.Sat2,
+        var all = ConjunctionAssessment.AnalyzeAll(_case.Sat1, _case.Solution1, _case.Sat2,
             _case.Solution2, _case.Window, Options);
         var locmin = CspiceLocalMinima(_case.Window);
 
@@ -476,7 +476,7 @@ public class ConjunctionKernelAndWindowTests : ConjunctionDensePassTestBase, ICl
             RelationnalOperator.AbsoluteMin, 0.0, Aberration.None, TimeSpan.FromSeconds(60.0)).Single();
         Assert.Equal(0.0, (absmin.StartDate - window.StartDate).TotalSeconds, 3);
 
-        var encounter = ConjunctionAssessment.Analyze(new ProtectedSpacecraftProfile(_case.Sat1), _case.Solution1, _case.Sat2,
+        var encounter = ConjunctionAssessment.Analyze(_case.Sat1, _case.Solution1, _case.Sat2,
             _case.Solution2, window, Options);
 
         AssertIsMinimum(encounter, CspiceLocalMinima(window).Single());
@@ -509,18 +509,17 @@ public class ConjunctionKernelAndWindowTests : ConjunctionDensePassTestBase, ICl
         var absolute = SpiceAPI.Instance.FindWindowsOnDistanceConstraint(window, _case.ProtectedId, _case.SecondaryId,
             RelationnalOperator.AbsoluteMin, 0.0, Aberration.None, TimeSpan.FromSeconds(60.0)).Single();
         var (position, _) = CspiceRelative(absolute.StartDate, _case);
-        var profile = new ProtectedSpacecraftProfile(_case.Sat1);
 
         // Act
         var encounter = path switch
         {
-            "dense" => ConjunctionAssessment.Analyze(profile, _case.Solution1, _case.Sat2, _case.Solution2, window, Options),
-            "sampled" => ConjunctionAssessment.Analyze(profile, _case.Sat2, window, Options),
-            _ => Assert.Single(ConjunctionAssessment.Screen(profile, new ILocalizable[] { _case.Sat2 }, window))
+            "dense" => ConjunctionAssessment.Analyze(_case.Sat1, _case.Solution1, _case.Sat2, _case.Solution2, window, Options),
+            "sampled" => ConjunctionAssessment.Analyze(_case.Sat1, _case.Sat2, window, Options),
+            _ => Assert.Single(ConjunctionAssessment.Screen(_case.Sat1, new ILocalizable[] { _case.Sat2 }, window))
         };
         var all = path == "dense"
-            ? ConjunctionAssessment.AnalyzeAll(profile, _case.Solution1, _case.Sat2, _case.Solution2, window, Options)
-            : ConjunctionAssessment.AnalyzeAll(profile, _case.Sat2, window, Options);
+            ? ConjunctionAssessment.AnalyzeAll(_case.Sat1, _case.Solution1, _case.Sat2, _case.Solution2, window, Options)
+            : ConjunctionAssessment.AnalyzeAll(_case.Sat1, _case.Sat2, window, Options);
 
         // Assert: the end of CSPICE's absolute minimum, the end itself, flagged; AnalyzeAll lists nothing on both paths
         var state = encounter.EncounterState;
@@ -551,10 +550,9 @@ public class ConjunctionKernelAndWindowTests : ConjunctionDensePassTestBase, ICl
     {
         // The encounter at t0 + 1800 s inside the window, on both paths: an interior minimum, no flag (#621)
         var window = _case.Seconds(1700.0, 1900.0);
-        var profile = new ProtectedSpacecraftProfile(_case.Sat1);
 
-        var dense = ConjunctionAssessment.Analyze(profile, _case.Solution1, _case.Sat2, _case.Solution2, window, Options);
-        var sampled = ConjunctionAssessment.Analyze(profile, _case.Sat2, window, Options);
+        var dense = ConjunctionAssessment.Analyze(_case.Sat1, _case.Solution1, _case.Sat2, _case.Solution2, window, Options);
+        var sampled = ConjunctionAssessment.Analyze(_case.Sat1, _case.Sat2, window, Options);
 
         AssertIsMinimum(dense, CspiceLocalMinima(window).Single());
         foreach (var state in new[] { dense.EncounterState, sampled.EncounterState })
@@ -572,9 +570,8 @@ public class ConjunctionKernelAndWindowTests : ConjunctionDensePassTestBase, ICl
         // TcaAtWindowEnd says that the window holds none, so it is not raised, and AnalyzeAll lists it (adversarial review
         // of #621: listed flagged, the flag saying to widen the window). The reference: CSPICE's LOCMIN on the SPKs of the
         // two propagations, the TCA within the bound of AssertIsMinimum of its zero
-        var profile = new ProtectedSpacecraftProfile(_case.Sat1);
         var reference = CspiceLocalMinima(_case.Seconds(1700.0, 1900.0)).Single();
-        var sampled = Assert.Single(ConjunctionAssessment.AnalyzeAll(profile, _case.Sat2, _case.Seconds(1700.0, 1900.0), Options));
+        var sampled = Assert.Single(ConjunctionAssessment.AnalyzeAll(_case.Sat1, _case.Sat2, _case.Seconds(1700.0, 1900.0), Options));
         var tick = sampled.EncounterState.Epoch;
         double tickError = (tick - reference.Epoch).TotalSeconds - reference.Offset;
         Assert.True(System.Math.Abs(tickError) <= 1.8e-7, $"TCA {tickError:E3} s");
@@ -585,8 +582,8 @@ public class ConjunctionKernelAndWindowTests : ConjunctionDensePassTestBase, ICl
                      new Window(tick, _case.Seconds(1700.0, 1900.0).EndDate) })
         {
             // Act
-            var all = ConjunctionAssessment.AnalyzeAll(profile, _case.Sat2, window, Options);
-            var analyzed = ConjunctionAssessment.Analyze(profile, _case.Sat2, window, Options);
+            var all = ConjunctionAssessment.AnalyzeAll(_case.Sat1, _case.Sat2, window, Options);
+            var analyzed = ConjunctionAssessment.Analyze(_case.Sat1, _case.Sat2, window, Options);
 
             // Assert: the close approach at the tick, listed and returned, unflagged
             _output.WriteLine($"[{(window.StartDate - _case.T0).TotalSeconds:F7}, {(window.EndDate - _case.T0).TotalSeconds:F7}] s: " +
@@ -758,7 +755,6 @@ public class ConjunctionKernelAndWindowTests : ConjunctionDensePassTestBase, ICl
         // lists the minimum: AnalyzeAll lists it, within #621's bounds, and Analyze returns it
         var crossing = _case;
         var tca = CspiceLocalMinima(crossing.Window, crossing)[minimum].Epoch;
-        var profile = new ProtectedSpacecraftProfile(crossing.Sat1);
         const long farTicks = 400 * TimeSpan.TicksPerSecond;
         for (long ticks = 1; ticks <= 3; ticks++)
         {
@@ -768,9 +764,9 @@ public class ConjunctionKernelAndWindowTests : ConjunctionDensePassTestBase, ICl
                 var locmin = CspiceLocalMinima(window, crossing);
                 double startRate = CspiceRangeRate(window.StartDate, crossing);
                 double endRate = CspiceRangeRate(window.EndDate, crossing);
-                var all = ConjunctionAssessment.AnalyzeAll(profile, crossing.Solution1, crossing.Sat2, crossing.Solution2,
+                var all = ConjunctionAssessment.AnalyzeAll(crossing.Sat1, crossing.Solution1, crossing.Sat2, crossing.Solution2,
                     window, Options);
-                var encounter = ConjunctionAssessment.Analyze(profile, crossing.Solution1, crossing.Sat2,
+                var encounter = ConjunctionAssessment.Analyze(crossing.Sat1, crossing.Solution1, crossing.Sat2,
                     crossing.Solution2, window, Options);
                 double analyzeSeconds = (encounter.EncounterState.Epoch - crossing.T0).TotalSeconds;
                 _output.WriteLine($"[{startTicks}, {endTicks}] ticks: CSPICE range rate {startRate:E3} {endRate:E3} m²/s, " +
@@ -799,11 +795,10 @@ public class ConjunctionKernelAndWindowTests : ConjunctionDensePassTestBase, ICl
     // returns the closest of them; without one, the closest window end by CSPICE's distance, flagged (#621)
     private void AssertWindowMatchesCspice(CrossingEncounterCase crossing, Window window, int expectedCount)
     {
-        var profile = new ProtectedSpacecraftProfile(crossing.Sat1);
         var locmin = CspiceLocalMinima(window, crossing);
         Assert.Equal(expectedCount, locmin.Length);
 
-        var all = ConjunctionAssessment.AnalyzeAll(profile, crossing.Solution1, crossing.Sat2, crossing.Solution2, window, Options);
+        var all = ConjunctionAssessment.AnalyzeAll(crossing.Sat1, crossing.Solution1, crossing.Sat2, crossing.Solution2, window, Options);
         Assert.Equal(locmin.Length, all.Count);
         double missBound = MissBound(crossing);
         for (int i = 0; i < all.Count; i++)
@@ -811,7 +806,7 @@ public class ConjunctionKernelAndWindowTests : ConjunctionDensePassTestBase, ICl
             AssertIsMinimum(all[i], locmin[i], missBound);
         }
 
-        var encounter = ConjunctionAssessment.Analyze(profile, crossing.Solution1, crossing.Sat2, crossing.Solution2, window, Options);
+        var encounter = ConjunctionAssessment.Analyze(crossing.Sat1, crossing.Solution1, crossing.Sat2, crossing.Solution2, window, Options);
         if (locmin.Length > 0)
         {
             AssertIsMinimum(encounter, locmin.MinBy(m => m.Distance), missBound);
@@ -828,21 +823,20 @@ public class ConjunctionKernelAndWindowTests : ConjunctionDensePassTestBase, ICl
     [Fact]
     public void Localizable_WindowPastThePropagatedStates_Throws()
     {
-        var profile = new ProtectedSpacecraftProfile(_case.Sat1);
         var beyond = _case.Seconds(10200.0, 11400.0);
-        var exception = Assert.Throws<ArgumentException>(() => ConjunctionAssessment.Analyze(profile, _case.Sat2, beyond, Options));
+        var exception = Assert.Throws<ArgumentException>(() => ConjunctionAssessment.Analyze(_case.Sat1, _case.Sat2, beyond, Options));
         Assert.Equal("screeningWindow", exception.ParamName);
-        Assert.Throws<ArgumentException>(() => ConjunctionAssessment.AnalyzeAll(profile, _case.Sat2, beyond, Options));
-        Assert.Throws<ArgumentException>(() => ConjunctionAssessment.Screen(profile, new ILocalizable[] { _case.Sat2 }, beyond));
+        Assert.Throws<ArgumentException>(() => ConjunctionAssessment.AnalyzeAll(_case.Sat1, _case.Sat2, beyond, Options));
+        Assert.Throws<ArgumentException>(() => ConjunctionAssessment.Screen(_case.Sat1, new ILocalizable[] { _case.Sat2 }, beyond));
 
         // The secondary alone leaves its states: a protected spacecraft without stored states, read in two-body motion
         var twoBody = new Spacecraft(-620003, "TWOBODY", 100.0, _case.Sat1.InitialOrbitalParameters, 1000.0,
             new Clock("TWOBODY_CLK", 256));
         Assert.Throws<ArgumentException>(() =>
-            ConjunctionAssessment.Analyze(new ProtectedSpacecraftProfile(twoBody), _case.Sat2, beyond, Options));
+            ConjunctionAssessment.Analyze(twoBody, _case.Sat2, beyond, Options));
 
         // Inside the states, the ILocalizable path finds the encounter
-        var inside = ConjunctionAssessment.Analyze(profile, _case.Sat2, _case.Seconds(1200.0, 2400.0), Options);
+        var inside = ConjunctionAssessment.Analyze(_case.Sat1, _case.Sat2, _case.Seconds(1200.0, 2400.0), Options);
         Assert.Equal(250.0, inside.EncounterState.MissDistanceMeters, 3);
     }
 
@@ -864,7 +858,7 @@ public class ConjunctionKernelAndWindowTests : ConjunctionDensePassTestBase, ICl
         // The analysis of kernel-backed spacecraft past their SPKs: before, a TCA with a miss of 0 m
         var k1 = new Spacecraft(CrossingEncounterCase.Id1, "K1", _case.T0.AddSeconds(10.0));
         var k2 = new Spacecraft(CrossingEncounterCase.Id2, "K2", _case.T0.AddSeconds(10.0));
-        Assert.Throws<SpiceException>(() => ConjunctionAssessment.Analyze(new ProtectedSpacecraftProfile(k1), k2,
+        Assert.Throws<SpiceException>(() => ConjunctionAssessment.Analyze(k1, k2,
             _case.Seconds(12600.0, 18000.0), Options));
 
         // A frame past its PCK (earth_latest_high_prec.bpc ends in 2026): before, the zero quaternion

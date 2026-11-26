@@ -126,9 +126,9 @@ public class ConjunctionCovariancePropagationTests : IClassFixture<ConjunctionCo
         var secondaryReference = _case.Propagate(ConjunctionCovarianceCase.NewSpacecraft(-6204, _case.SecondaryStart), Covariance);
 
         // Act: the defaults, then the former behaviour
-        var encounter = ConjunctionAssessment.Analyze(new ProtectedSpacecraftProfile(protectedCraft), secondaryCraft,
+        var encounter = ConjunctionAssessment.Analyze(protectedCraft, secondaryCraft,
             ConjunctionCovarianceCase.AnalysisWindow);
-        var held = ConjunctionAssessment.Analyze(new ProtectedSpacecraftProfile(protectedCraft), secondaryCraft,
+        var held = ConjunctionAssessment.Analyze(protectedCraft, secondaryCraft,
             ConjunctionCovarianceCase.AnalysisWindow, new ConjunctionAnalysisOptions { CovariancePropagation = CovariancePropagationOptions.None });
 
         // Assert: the same TCA and miss distance; the covariance used is that of the propagation with the covariance at
@@ -177,9 +177,9 @@ public class ConjunctionCovariancePropagationTests : IClassFixture<ConjunctionCo
         var secondaryReference = _case.Propagate(ConjunctionCovarianceCase.NewSpacecraft(-6234, _case.SecondaryStart), noisy);
 
         // Act: with the process noise of the analysis, then the former behaviour
-        var encounter = ConjunctionAssessment.Analyze(new ProtectedSpacecraftProfile(protectedCraft), secondaryCraft,
+        var encounter = ConjunctionAssessment.Analyze(protectedCraft, secondaryCraft,
             ConjunctionCovarianceCase.AnalysisWindow, new ConjunctionAnalysisOptions { CovariancePropagation = noisy ?? CovariancePropagationOptions.None });
-        var held = ConjunctionAssessment.Analyze(new ProtectedSpacecraftProfile(protectedCraft), secondaryCraft,
+        var held = ConjunctionAssessment.Analyze(protectedCraft, secondaryCraft,
             ConjunctionCovarianceCase.AnalysisWindow, new ConjunctionAnalysisOptions { CovariancePropagation = CovariancePropagationOptions.None });
 
         // Assert: the stored Φ are not read; the replay applies the options of the analysis, the process noise included,
@@ -205,7 +205,7 @@ public class ConjunctionCovariancePropagationTests : IClassFixture<ConjunctionCo
         _case.Propagate(secondaryCraft);
 
         // Act
-        var encounter = ConjunctionAssessment.Analyze(new ProtectedSpacecraftProfile(protectedCraft), secondaryCraft,
+        var encounter = ConjunctionAssessment.Analyze(protectedCraft, secondaryCraft,
             ConjunctionCovarianceCase.AnalysisWindow);
 
         // Assert: P = Φ P0 Φᵀ with Φ the Keplerian STM of Lagrange's f and g (F2), at the C2 threshold, over the TT seconds
@@ -238,7 +238,7 @@ public class ConjunctionCovariancePropagationTests : IClassFixture<ConjunctionCo
         var secondaryReference = _case.Propagate(ConjunctionCovarianceCase.NewSpacecraft(-6223, _case.SecondaryStart), Covariance);
 
         // Act
-        var encounter = ConjunctionAssessment.Analyze(new ProtectedSpacecraftProfile(protectedCraft), protectedSolution,
+        var encounter = ConjunctionAssessment.Analyze(protectedCraft, protectedSolution,
             secondaryCraft, secondarySolution, ConjunctionCovarianceCase.AnalysisWindow);
 
         // Assert
@@ -262,10 +262,9 @@ public class ConjunctionCovariancePropagationTests : IClassFixture<ConjunctionCo
         var secondaryCraft = ConjunctionCovarianceCase.NewSpacecraft(-6232, _case.SecondaryStart);
         var protectedSolution = _case.Propagate(protectedCraft);
         var secondarySolution = _case.Propagate(secondaryCraft);
-        var profile = new ProtectedSpacecraftProfile(protectedCraft);
 
         // Act: a screening, which ranks by probability
-        var ranked = ConjunctionAssessment.Screen(profile, new ILocalizable[] { secondaryCraft },
+        var ranked = ConjunctionAssessment.Screen(protectedCraft, new ILocalizable[] { secondaryCraft },
             ConjunctionCovarianceCase.AnalysisWindow);
 
         // Assert: no partial evaluated on the forces of either propagation; the covariance held in RTN
@@ -299,7 +298,7 @@ public class ConjunctionCovariancePropagationTests : IClassFixture<ConjunctionCo
         var window = new Window(ConjunctionCovarianceCase.Tca.AddHours(-3.0), ConjunctionCovarianceCase.Tca.AddHours(1.0));
 
         // Act
-        var encounters = ConjunctionAssessment.AnalyzeAll(new ProtectedSpacecraftProfile(protectedCraft), secondaryCraft,
+        var encounters = ConjunctionAssessment.AnalyzeAll(protectedCraft, secondaryCraft,
             window);
 
         // Assert: every encounter with its covariance propagated, the same replay for all of them
@@ -327,9 +326,9 @@ public class ConjunctionCovariancePropagationTests : IClassFixture<ConjunctionCo
         foreach (var secondary in new[] { notPropagated, later })
         {
             // Act
-            var withDefaults = ConjunctionAssessment.Analyze(new ProtectedSpacecraftProfile(vv), secondary,
+            var withDefaults = ConjunctionAssessment.Analyze(vv, secondary,
                 ConjunctionCovarianceCase.AnalysisWindow);
-            var withoutPropagation = ConjunctionAssessment.Analyze(new ProtectedSpacecraftProfile(vv), secondary,
+            var withoutPropagation = ConjunctionAssessment.Analyze(vv, secondary,
                 ConjunctionCovarianceCase.AnalysisWindow, new ConjunctionAnalysisOptions { CovariancePropagation = CovariancePropagationOptions.None });
 
             // Assert: the fallback, the same results bit for bit as without the propagation of the covariance
@@ -350,22 +349,21 @@ public class ConjunctionCovariancePropagationTests : IClassFixture<ConjunctionCo
         var protectedCraft = ConjunctionCovarianceCase.NewSpacecraft(-6261, _case.ProtectedStart);
         var secondaryCraft = ConjunctionCovarianceCase.NewSpacecraft(-6262, _case.SecondaryStart);
         _case.Propagate(protectedCraft);
-        var profile = new ProtectedSpacecraftProfile(protectedCraft);
         var window = ConjunctionCovarianceCase.AnalysisWindow;
 
         // Act, assert: the state transition matrix alone, the step control on Φ and Ψ, a consider parameter whose force
         // the propagation lacks (it names the participant), a threshold that is not positive
-        Assert.Throws<ArgumentException>(() => ConjunctionAssessment.Analyze(profile, secondaryCraft, window,
+        Assert.Throws<ArgumentException>(() => ConjunctionAssessment.Analyze(protectedCraft, secondaryCraft, window,
             new ConjunctionAnalysisOptions { CovariancePropagation = new CovariancePropagationOptions() }));
-        Assert.Throws<ArgumentException>(() => ConjunctionAssessment.Analyze(profile, secondaryCraft, window,
+        Assert.Throws<ArgumentException>(() => ConjunctionAssessment.Analyze(protectedCraft, secondaryCraft, window,
             new ConjunctionAnalysisOptions { CovariancePropagation = Covariance with { IncludeInStepControl = true } }));
-        var error = Assert.Throws<ArgumentException>(() => ConjunctionAssessment.Analyze(profile, secondaryCraft, window,
+        var error = Assert.Throws<ArgumentException>(() => ConjunctionAssessment.Analyze(protectedCraft, secondaryCraft, window,
             new ConjunctionAnalysisOptions
             {
                 CovariancePropagation = Covariance with { ConsiderParameters = new ConsiderParameters(0.1) }
             }));
         Assert.Contains(protectedCraft.Name, error.Message);
-        Assert.Throws<ArgumentOutOfRangeException>(() => ConjunctionAssessment.Analyze(profile, secondaryCraft, window,
+        Assert.Throws<ArgumentOutOfRangeException>(() => ConjunctionAssessment.Analyze(protectedCraft, secondaryCraft, window,
             new ConjunctionAnalysisOptions { NonlinearityIndexThreshold = 0.0 }));
     }
 

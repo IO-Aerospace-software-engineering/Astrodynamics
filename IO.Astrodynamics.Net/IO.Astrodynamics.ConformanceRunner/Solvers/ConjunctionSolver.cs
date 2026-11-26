@@ -28,7 +28,7 @@ namespace IO.Astrodynamics.ConformanceRunner.Solvers;
 /// the case loaded, analyzed through the <see cref="ILocalizable"/> overloads.
 /// </para>
 /// <para>
-/// <c>closest</c> is <see cref="ConjunctionAssessment.Analyze(ProtectedSpacecraftProfile, PropagationSolution, ILocalizable, PropagationSolution, Window, ConjunctionAnalysisOptions)"/>,
+/// <c>closest</c> is <see cref="ConjunctionAssessment.Analyze(Spacecraft, PropagationSolution, ILocalizable, PropagationSolution, Window, ConjunctionAnalysisOptions)"/>,
 /// the interior minimum of least miss; <c>all_minima</c> is <c>AnalyzeAll</c>, its encounters in time order. The
 /// combined hard-body radius is object 1's, none on object 2. <c>tca_s</c> counts the TT seconds from the epoch, the TDB
 /// seconds for kernel objects (the time argument of their SPKs). A covariance the framework did not propagate (held in
@@ -75,19 +75,17 @@ public class ConjunctionSolver : ICategorySolver
         {
             var objects = inputs.Objects.Select(o => new Spacecraft(o.NaifId!.Value, o.Name, epoch,
                 hardBodyRadius: o == inputs.Objects[0] ? hardBodyRadius : 0.0)).ToArray();
-            var profile = new ProtectedSpacecraftProfile(objects[0]);
             encounters = closest
-                ? [ConjunctionAssessment.Analyze(profile, objects[1], window, options)]
-                : ConjunctionAssessment.AnalyzeAll(profile, objects[1], window, options);
+                ? [ConjunctionAssessment.Analyze(objects[0], objects[1], window, options)]
+                : ConjunctionAssessment.AnalyzeAll(objects[0], objects[1], window, options);
             seconds = t => (t.ToTDB() - epoch.ToTDB()).TotalSeconds;
         }
         else
         {
             var propagated = Enumerable.Range(0, 2).Select(k => Propagate(caseInput, inputs, k, window, hardBodyRadius)).ToArray();
-            var profile = new ProtectedSpacecraftProfile(propagated[0].Spacecraft);
             encounters = closest
-                ? [ConjunctionAssessment.Analyze(profile, propagated[0].Solution, propagated[1].Spacecraft, propagated[1].Solution, window, options)]
-                : ConjunctionAssessment.AnalyzeAll(profile, propagated[0].Solution, propagated[1].Spacecraft, propagated[1].Solution, window, options);
+                ? [ConjunctionAssessment.Analyze(propagated[0].Spacecraft, propagated[0].Solution, propagated[1].Spacecraft, propagated[1].Solution, window, options)]
+                : ConjunctionAssessment.AnalyzeAll(propagated[0].Spacecraft, propagated[0].Solution, propagated[1].Spacecraft, propagated[1].Solution, window, options);
             seconds = t => TerrestrialSeconds.Between(epoch, t);
         }
 

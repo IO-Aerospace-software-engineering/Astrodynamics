@@ -1,6 +1,7 @@
 // Copyright 2026. Sylvain Guillet (sylvain.guillet@tutamail.com)
 using System;
 using IO.Astrodynamics.Body;
+using IO.Astrodynamics.Body.Spacecraft;
 using IO.Astrodynamics.CCSDS.CDM;
 using IO.Astrodynamics.OrbitalParameters;
 using IO.Astrodynamics.Propagator;
@@ -17,13 +18,13 @@ public sealed class EncounterCase
     /// Initializes an encounter case without retaining per-object state snapshots.
     /// </summary>
     public EncounterCase(
-        ProtectedSpacecraftProfile protectedAsset,
+        Spacecraft protectedSpacecraft,
         ILocalizable secondaryObject,
         Window screeningWindow,
         EncounterState encounterState,
         CollisionRisk collisionRisk)
         : this(
-            protectedAsset,
+            protectedSpacecraft,
             secondaryObject,
             screeningWindow,
             encounterState,
@@ -37,7 +38,7 @@ public sealed class EncounterCase
     /// Initializes an encounter case and retains the participant state vectors evaluated at the encounter epoch.
     /// </summary>
     public EncounterCase(
-        ProtectedSpacecraftProfile protectedAsset,
+        Spacecraft protectedSpacecraft,
         ILocalizable secondaryObject,
         Window screeningWindow,
         EncounterState encounterState,
@@ -45,7 +46,7 @@ public sealed class EncounterCase
         StateVector protectedState,
         StateVector secondaryState)
     {
-        ProtectedAsset = protectedAsset ?? throw new ArgumentNullException(nameof(protectedAsset));
+        ProtectedSpacecraft = protectedSpacecraft ?? throw new ArgumentNullException(nameof(protectedSpacecraft));
         SecondaryObject = secondaryObject ?? throw new ArgumentNullException(nameof(secondaryObject));
         ScreeningWindow = screeningWindow;
         EncounterState = encounterState ?? throw new ArgumentNullException(nameof(encounterState));
@@ -55,9 +56,9 @@ public sealed class EncounterCase
     }
 
     /// <summary>
-    /// Gets the protected spacecraft profile that was analyzed.
+    /// Gets the protected spacecraft that was analyzed (R17 of #668: the <c>ProtectedAsset</c> profile before 11.0.0).
     /// </summary>
-    public ProtectedSpacecraftProfile ProtectedAsset { get; }
+    public Spacecraft ProtectedSpacecraft { get; }
 
     /// <summary>
     /// Gets the secondary object that was analyzed against the protected asset.

@@ -108,7 +108,7 @@ public class CdmPropagatedCovarianceTests : IClassFixture<CdmPropagatedCovarianc
         _case.Propagate(protectedCraft);
         _case.Propagate(secondaryCraft);
         var reference = _case.Propagate(ReferenceSpacecraft(-6303, _case.ProtectedStart), CdmPropagatedCovarianceCase.Options);
-        var encounter = ConjunctionAssessment.Analyze(new ProtectedSpacecraftProfile(protectedCraft), secondaryCraft,
+        var encounter = ConjunctionAssessment.Analyze(protectedCraft, secondaryCraft,
             CdmPropagatedCovarianceCase.AnalysisWindow,
             new ConjunctionAnalysisOptions { CovariancePropagation = CdmPropagatedCovarianceCase.Options });
 
@@ -210,7 +210,7 @@ public class CdmPropagatedCovarianceTests : IClassFixture<CdmPropagatedCovarianc
         secondaryCraft.AddEngine(new Engine("engine6312", 300.0, 10.0, tank, "model", "sn1"));
         _case.Propagate(protectedCraft);
         _case.Propagate(secondaryCraft);
-        var encounter = ConjunctionAssessment.Analyze(new ProtectedSpacecraftProfile(protectedCraft), secondaryCraft,
+        var encounter = ConjunctionAssessment.Analyze(protectedCraft, secondaryCraft,
             CdmPropagatedCovarianceCase.AnalysisWindow);
 
         // Act
@@ -231,7 +231,7 @@ public class CdmPropagatedCovarianceTests : IClassFixture<CdmPropagatedCovarianc
         Assert.False(cdm.Segments[0].Metadata.IntrackThrust);
 
         // The former behaviour still refuses a stale covariance by default
-        var held = ConjunctionAssessment.Analyze(new ProtectedSpacecraftProfile(protectedCraft), secondaryCraft,
+        var held = ConjunctionAssessment.Analyze(protectedCraft, secondaryCraft,
             CdmPropagatedCovarianceCase.AnalysisWindow, new ConjunctionAnalysisOptions { CovariancePropagation = CovariancePropagationOptions.None });
         Assert.Throws<InvalidOperationException>(() => held.ToCdm());
         var heldCdm = held.ToCdm(new CdmExportOptions { AllowStaleCovariance = true });
@@ -268,7 +268,7 @@ public class CdmPropagatedCovarianceTests : IClassFixture<CdmPropagatedCovarianc
 
         // Act and assert: an RK7(8) covariance propagated to TCA states the forces of its propagation, NO (CCSDS 508.0-B-1
         // Cor. 2, Table 3-3: whether solar radiation pressure was used; YES from Cr before)
-        var encounter = ConjunctionAssessment.Analyze(new ProtectedSpacecraftProfile(protectedCraft), secondaryCraft,
+        var encounter = ConjunctionAssessment.Analyze(protectedCraft, secondaryCraft,
             CdmPropagatedCovarianceCase.AnalysisWindow);
         var cdm = encounter.ToCdm(export);
         if (integrator == "RK7(8)")
@@ -288,7 +288,7 @@ public class CdmPropagatedCovarianceTests : IClassFixture<CdmPropagatedCovarianc
         }
 
         // The covariance held in RTN was not propagated: omitted, as the other force-model keywords (YES from Cr before)
-        var held = ConjunctionAssessment.Analyze(new ProtectedSpacecraftProfile(protectedCraft), secondaryCraft,
+        var held = ConjunctionAssessment.Analyze(protectedCraft, secondaryCraft,
             CdmPropagatedCovarianceCase.AnalysisWindow, new ConjunctionAnalysisOptions { CovariancePropagation = CovariancePropagationOptions.None });
         AssertOmitted(held.ToCdm(export));
 

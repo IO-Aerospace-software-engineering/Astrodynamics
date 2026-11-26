@@ -66,7 +66,7 @@ internal static class ConjunctionAssessmentPage
         #region docs/reference/conjunction-assessment.md:1
         // Inputs: protectedSpacecraft and secondarySpacecraft (Spacecraft), epoch (Time)
         var encounter = ConjunctionAssessment.Analyze(
-            new ProtectedSpacecraftProfile(protectedSpacecraft),
+            protectedSpacecraft,
             secondarySpacecraft,
             new Window(epoch, epoch.AddMinutes(10.0)));
 

@@ -268,9 +268,8 @@ public partial class ConjunctionAssessmentTests
             new Vector3(6_800_000.0, 0.0, 50.0),
             new Vector3(0.0, 7_656.2204182967143, 0.0));
         var window = new Window(TimeSystem.Time.J2000TDB, TimeSystem.Time.J2000TDB.AddMinutes(10.0));
-        var profile = new ProtectedSpacecraftProfile(protected1);
 
-        var encounter = ConjunctionAssessment.Analyze(profile, secondary1, window);
+        var encounter = ConjunctionAssessment.Analyze(protected1, secondary1, window);
 
         // The reference: the distance of the two-body states at each end
         double Distance(TimeSystem.Time epoch) => (secondary1.GetEphemeris(epoch, earth, Frames.Frame.ICRF, Aberration.None).Position - protected1.GetEphemeris(epoch, earth, Frames.Frame.ICRF, Aberration.None).Position).Magnitude();
@@ -291,10 +290,9 @@ public partial class ConjunctionAssessmentTests
             new Vector3(6_800_000.0, 0.0, 100.0),
             new Vector3(0.0, 7_656.2204182967143, 0.0));
         var window = new Window(TimeSystem.Time.J2000TDB, TimeSystem.Time.J2000TDB.AddMinutes(10.0));
-        var profile = new ProtectedSpacecraftProfile(protected1);
 
         // No close approach: an empty list, as on two propagations (#621: a single midpoint encounter before 11.0.0)
-        Assert.Empty(ConjunctionAssessment.AnalyzeAll(profile, secondary1, window));
+        Assert.Empty(ConjunctionAssessment.AnalyzeAll(protected1, secondary1, window));
     }
 
     [Fact]
@@ -303,11 +301,10 @@ public partial class ConjunctionAssessmentTests
         var earth = CreateEarth();
         var moon = new CelestialBody(PlanetsAndMoons.MOON, Frames.Frame.ICRF, TimeSystem.Time.J2000TDB);
         var sun = new CelestialBody(Stars.Sun, Frames.Frame.ICRF, TimeSystem.Time.J2000TDB);
-        var profile = new ProtectedSpacecraftProfile(
-            CreateSpacecraftFromBody(moon, -5501, "MOON_SC", 1737400.0));
+        var protectedCraft = CreateSpacecraftFromBody(moon, -5501, "MOON_SC", 1737400.0);
         var window = new Window(TimeSystem.Time.J2000TDB, TimeSystem.Time.J2000TDB.AddDays(60));
 
-        var encounters = ConjunctionAssessment.AnalyzeAll(profile, sun, window,
+        var encounters = ConjunctionAssessment.AnalyzeAll(protectedCraft, sun, window,
             new ConjunctionAnalysisOptions { SampleStep = TimeSpan.FromHours(6) });
 
         Assert.True(encounters.Count >= 2, $"Expected ≥2 encounters over 60 days, got {encounters.Count}");
@@ -346,7 +343,6 @@ public partial class ConjunctionAssessmentTests
             earth,
             new Vector3(10.0, 0.0, 0.0) + UniformOffsetPosition,
             new Vector3(0.0, 100.0 * System.Math.PI, 0.0) + UniformOffsetVelocity);
-        var profile = new ProtectedSpacecraftProfile(protectedSpacecraft);
 
         var protectedTrajectory = CreatePropagationSolution(
             earth,
@@ -369,7 +365,7 @@ public partial class ConjunctionAssessmentTests
             });
 
         var encounters = ConjunctionAssessment.AnalyzeAll(
-            profile,
+            protectedSpacecraft,
             protectedTrajectory,
             secondarySpacecraft,
             secondaryTrajectory,
@@ -397,7 +393,6 @@ public partial class ConjunctionAssessmentTests
         // The option gives the secondary its radius of 0 m, which the spacecraft then carries (#683: a differing option throws)
         var secondarySpacecraft = CreateSpacecraft(-5506, "S", earth, new Vector3(10.0, 0.0, 0.0) + UniformOffsetPosition, UniformOffsetVelocity,
             hardBodyRadius: 0.0);
-        var profile = new ProtectedSpacecraftProfile(protectedSpacecraft);
         const double root1 = 0.75;
         const double root2 = 1.50;
         const double root3 = 2.25;
@@ -429,7 +424,7 @@ public partial class ConjunctionAssessmentTests
             });
 
         var encounters = ConjunctionAssessment.AnalyzeAll(
-            profile,
+            protectedSpacecraft,
             protectedTrajectory,
             secondarySpacecraft,
             secondaryTrajectory,
@@ -460,7 +455,6 @@ public partial class ConjunctionAssessmentTests
         // The option gives the secondary its radius of 0 m, which the spacecraft then carries (#683: a differing option throws)
         var secondarySpacecraft = CreateSpacecraft(-5508, "S", earth, new Vector3(10.0, 200.0, 0.0) + UniformOffsetPosition,
             new Vector3(0.0, -100.0, 0.0) + UniformOffsetVelocity, hardBodyRadius: 0.0);
-        var profile = new ProtectedSpacecraftProfile(protectedSpacecraft);
 
         var protectedTrajectory = CreatePropagationSolution(
             earth,
@@ -479,7 +473,7 @@ public partial class ConjunctionAssessmentTests
                 Vector3.Zero)));
 
         var encounter = ConjunctionAssessment.Analyze(
-            profile,
+            protectedSpacecraft,
             protectedTrajectory,
             secondarySpacecraft,
             secondaryTrajectory,
@@ -511,7 +505,7 @@ public partial class ConjunctionAssessmentTests
 
     // A rectilinear pass in a 2 s window: the secondary at (x, y0 + vy t) m from the protected spacecraft, one accepted
     // step; closest, x m, where y = 0; both with the uniform motion above
-    private static (ProtectedSpacecraftProfile, PropagationSolution, Spacecraft, PropagationSolution, Window)
+    private static (Spacecraft, PropagationSolution, Spacecraft, PropagationSolution, Window)
         RectilinearPass(int naifId, double y0, double vy, double x = 10.0)
     {
         var earth = CreateEarth();
@@ -524,7 +518,7 @@ public partial class ConjunctionAssessmentTests
             stateAtSeconds: t => WithUniformOffset(t, (Vector3.Zero, Vector3.Zero, Vector3.Zero)));
         var secondaryTrajectory = CreatePropagationSolution(earth, start, durationSeconds: 2.0, stepSeconds: 2.0,
             stateAtSeconds: t => WithUniformOffset(t, (new Vector3(x, y0 + vy * t, 0.0), new Vector3(0.0, vy, 0.0), Vector3.Zero)));
-        return (new ProtectedSpacecraftProfile(protectedSpacecraft), protectedTrajectory, secondarySpacecraft,
+        return (protectedSpacecraft, protectedTrajectory, secondarySpacecraft,
             secondaryTrajectory, new Window(start, start.AddSeconds(2.0)));
     }
 
@@ -545,12 +539,12 @@ public partial class ConjunctionAssessmentTests
         // end is never a close approach (design of lot 6 of #457, §2.1: "A window end is never a TCA"; §8.3 row 7:
         // AnalyzeAll lists the interior minima only), so AnalyzeAll lists nothing; Analyze keeps its end fallback, the end
         // itself, not the tick before it (the lower tick that the bisection returned before #624)
-        var (profile, protectedTrajectory, secondary, secondaryTrajectory, window) = RectilinearPass(-5524, y0, vy);
+        var (protectedCraft, protectedTrajectory, secondary, secondaryTrajectory, window) = RectilinearPass(-5524, y0, vy);
         var expected = window.StartDate.AddSeconds(-y0 / vy);
 
-        var encounter = ConjunctionAssessment.Analyze(profile, protectedTrajectory, secondary, secondaryTrajectory,
+        var encounter = ConjunctionAssessment.Analyze(protectedCraft, protectedTrajectory, secondary, secondaryTrajectory,
             window, RectilinearPassOptions);
-        var encounters = ConjunctionAssessment.AnalyzeAll(profile, protectedTrajectory, secondary, secondaryTrajectory,
+        var encounters = ConjunctionAssessment.AnalyzeAll(protectedCraft, protectedTrajectory, secondary, secondaryTrajectory,
             window, RectilinearPassOptions);
 
         LabelAssert.Equal(expected, encounter.EncounterState.Epoch);
@@ -574,14 +568,14 @@ public partial class ConjunctionAssessmentTests
     {
         const double vy = 0.113;
         const double m = 1.00000005;
-        var (profile, protectedTrajectory, secondary, secondaryTrajectory, fullWindow) =
+        var (protectedCraft, protectedTrajectory, secondary, secondaryTrajectory, fullWindow) =
             RectilinearPass(-5528, -vy * m, vy, x: 50.0);
         var oneSecond = fullWindow.StartDate.AddTicks(TimeSpan.TicksPerSecond);
         var window = new Window(oneSecond.AddTicks(startTicks), oneSecond.AddTicks(endTicks));
 
-        var encounters = ConjunctionAssessment.AnalyzeAll(profile, protectedTrajectory, secondary, secondaryTrajectory,
+        var encounters = ConjunctionAssessment.AnalyzeAll(protectedCraft, protectedTrajectory, secondary, secondaryTrajectory,
             window, RectilinearPassOptions);
-        var encounter = ConjunctionAssessment.Analyze(profile, protectedTrajectory, secondary, secondaryTrajectory,
+        var encounter = ConjunctionAssessment.Analyze(protectedCraft, protectedTrajectory, secondary, secondaryTrajectory,
             window, RectilinearPassOptions);
 
         // The closed form: the TCA within one tick of m, strictly inside the window, 50 m
@@ -624,14 +618,14 @@ public partial class ConjunctionAssessmentTests
         long startTicks, long endTicks, long expectedTicks)
     {
         double m = 1.0 + fraction * 1.0e-7;
-        var (profile, protectedTrajectory, secondary, secondaryTrajectory, fullWindow) =
+        var (protectedCraft, protectedTrajectory, secondary, secondaryTrajectory, fullWindow) =
             RectilinearPass(-5536, -vy * m, vy, x);
         var oneSecond = fullWindow.StartDate.AddTicks(TimeSpan.TicksPerSecond);
         var window = new Window(oneSecond.AddTicks(startTicks), oneSecond.AddTicks(endTicks));
 
-        var encounters = ConjunctionAssessment.AnalyzeAll(profile, protectedTrajectory, secondary, secondaryTrajectory,
+        var encounters = ConjunctionAssessment.AnalyzeAll(protectedCraft, protectedTrajectory, secondary, secondaryTrajectory,
             window, RectilinearPassOptions);
-        var encounter = ConjunctionAssessment.Analyze(profile, protectedTrajectory, secondary, secondaryTrajectory,
+        var encounter = ConjunctionAssessment.Analyze(protectedCraft, protectedTrajectory, secondary, secondaryTrajectory,
             window, RectilinearPassOptions);
 
         // The closed form: closest at m, x m away; the TCA the expected tick, strictly inside the window
@@ -652,14 +646,14 @@ public partial class ConjunctionAssessmentTests
         // Analyze returns the closer end, 1 s, never the midpoint
         const double vy = 0.113;
         const double m = 1.00000003;
-        var (profile, protectedTrajectory, secondary, secondaryTrajectory, fullWindow) =
+        var (protectedCraft, protectedTrajectory, secondary, secondaryTrajectory, fullWindow) =
             RectilinearPass(-5532, -vy * m, vy, x: 50.0);
         var oneSecond = fullWindow.StartDate.AddTicks(TimeSpan.TicksPerSecond);
         var window = new Window(oneSecond, oneSecond.AddTicks(1));
 
-        Assert.Empty(ConjunctionAssessment.AnalyzeAll(profile, protectedTrajectory, secondary, secondaryTrajectory,
+        Assert.Empty(ConjunctionAssessment.AnalyzeAll(protectedCraft, protectedTrajectory, secondary, secondaryTrajectory,
             window, RectilinearPassOptions));
-        var encounter = ConjunctionAssessment.Analyze(profile, protectedTrajectory, secondary, secondaryTrajectory,
+        var encounter = ConjunctionAssessment.Analyze(protectedCraft, protectedTrajectory, secondary, secondaryTrajectory,
             window, RectilinearPassOptions);
         LabelAssert.Equal(oneSecond, encounter.EncounterState.Epoch);
         Assert.Equal(System.Math.Sqrt(2500.0 + System.Math.Pow(vy * 3.0e-8, 2.0)),
@@ -670,13 +664,13 @@ public partial class ConjunctionAssessmentTests
     public void Dense_WindowOfZeroLength_AnalyzeReturnsItsEpoch_AnalyzeAllNothing()
     {
         // [1 s, 1 s] on the pass closest at 1 s: no epoch inside, so AnalyzeAll lists nothing; Analyze returns that epoch
-        var (profile, protectedTrajectory, secondary, secondaryTrajectory, fullWindow) = RectilinearPass(-5534, -100.0, 100.0);
+        var (protectedCraft, protectedTrajectory, secondary, secondaryTrajectory, fullWindow) = RectilinearPass(-5534, -100.0, 100.0);
         var oneSecond = fullWindow.StartDate.AddTicks(TimeSpan.TicksPerSecond);
         var window = new Window(oneSecond, oneSecond);
 
-        Assert.Empty(ConjunctionAssessment.AnalyzeAll(profile, protectedTrajectory, secondary, secondaryTrajectory,
+        Assert.Empty(ConjunctionAssessment.AnalyzeAll(protectedCraft, protectedTrajectory, secondary, secondaryTrajectory,
             window, RectilinearPassOptions));
-        var encounter = ConjunctionAssessment.Analyze(profile, protectedTrajectory, secondary, secondaryTrajectory,
+        var encounter = ConjunctionAssessment.Analyze(protectedCraft, protectedTrajectory, secondary, secondaryTrajectory,
             window, RectilinearPassOptions);
         LabelAssert.Equal(oneSecond, encounter.EncounterState.Epoch);
         Assert.Equal(10.0, encounter.EncounterState.MissDistanceMeters, 9);
@@ -692,20 +686,20 @@ public partial class ConjunctionAssessmentTests
         // midpoint; AnalyzeAll lists nothing
         const double vy = 0.113;
         const double m = 1.0;
-        var (profile, protectedTrajectory, secondary, secondaryTrajectory, fullWindow) =
+        var (protectedCraft, protectedTrajectory, secondary, secondaryTrajectory, fullWindow) =
             RectilinearPass(-5530, -vy * m, vy, x: 50.0);
         var oneSecond = fullWindow.StartDate.AddTicks(TimeSpan.TicksPerSecond);
         var window = new Window(oneSecond.AddTicks((long)System.Math.Round(startOffset * TimeSpan.TicksPerSecond)),
             oneSecond.AddTicks((long)System.Math.Round(endOffset * TimeSpan.TicksPerSecond)));
 
-        var encounter = ConjunctionAssessment.Analyze(profile, protectedTrajectory, secondary, secondaryTrajectory,
+        var encounter = ConjunctionAssessment.Analyze(protectedCraft, protectedTrajectory, secondary, secondaryTrajectory,
             window, RectilinearPassOptions);
 
         var expected = startOffset < 0.0 ? window.EndDate : window.StartDate;
         LabelAssert.Equal(expected, encounter.EncounterState.Epoch);
         Assert.Equal(System.Math.Sqrt(2500.0 + System.Math.Pow(vy * expectedFromMinimum, 2.0)),
             encounter.EncounterState.MissDistanceMeters, 9);
-        Assert.Empty(ConjunctionAssessment.AnalyzeAll(profile, protectedTrajectory, secondary, secondaryTrajectory,
+        Assert.Empty(ConjunctionAssessment.AnalyzeAll(protectedCraft, protectedTrajectory, secondary, secondaryTrajectory,
             window, RectilinearPassOptions));
     }
 
@@ -724,12 +718,11 @@ public partial class ConjunctionAssessmentTests
             stateAtSeconds: _ => (Vector3.Zero, Vector3.Zero, Vector3.Zero));
         var secondaryTrajectory = CreatePropagationSolution(earth, start, durationSeconds: 2.0, stepSeconds: 2.0,
             stateAtSeconds: t => (new Vector3(10.0, -100.0 + 100.0 * t, 0.0), new Vector3(0.0, 100.0, 0.0), Vector3.Zero));
-        var profile = new ProtectedSpacecraftProfile(protectedSpacecraft);
         var window = new Window(start, start.AddSeconds(2.0));
 
-        Assert.Throws<InvalidOperationException>(() => ConjunctionAssessment.Analyze(profile, protectedTrajectory, secondarySpacecraft,
+        Assert.Throws<InvalidOperationException>(() => ConjunctionAssessment.Analyze(protectedSpacecraft, protectedTrajectory, secondarySpacecraft,
             secondaryTrajectory, window, RectilinearPassOptions));
-        Assert.Throws<InvalidOperationException>(() => ConjunctionAssessment.AnalyzeAll(profile, protectedTrajectory, secondarySpacecraft,
+        Assert.Throws<InvalidOperationException>(() => ConjunctionAssessment.AnalyzeAll(protectedSpacecraft, protectedTrajectory, secondarySpacecraft,
             secondaryTrajectory, window, RectilinearPassOptions));
     }
 
@@ -739,11 +732,11 @@ public partial class ConjunctionAssessmentTests
     public void Analyze_DenseMonotonicWindow_ReturnsTheEndWhereTheDistanceGrowsIntoIt_AndAnalyzeAllNothing(double y0,
         double vy, double expectedSeconds)
     {
-        var (profile, protectedTrajectory, secondary, secondaryTrajectory, window) = RectilinearPass(-5526, y0, vy);
+        var (protectedCraft, protectedTrajectory, secondary, secondaryTrajectory, window) = RectilinearPass(-5526, y0, vy);
 
-        var encounter = ConjunctionAssessment.Analyze(profile, protectedTrajectory, secondary, secondaryTrajectory,
+        var encounter = ConjunctionAssessment.Analyze(protectedCraft, protectedTrajectory, secondary, secondaryTrajectory,
             window, RectilinearPassOptions);
-        var encounters = ConjunctionAssessment.AnalyzeAll(profile, protectedTrajectory, secondary, secondaryTrajectory,
+        var encounters = ConjunctionAssessment.AnalyzeAll(protectedCraft, protectedTrajectory, secondary, secondaryTrajectory,
             window, RectilinearPassOptions);
 
         LabelAssert.Equal(window.StartDate.AddSeconds(expectedSeconds), encounter.EncounterState.Epoch);
@@ -765,9 +758,8 @@ public partial class ConjunctionAssessmentTests
 
         var moonSc = CreateSpacecraftFromBody(moon, -5601, "MOON_SC", 1737400.0);
         var window = new Window(TimeSystem.Time.J2000TDB, TimeSystem.Time.J2000TDB.AddDays(30));
-        var profile = new ProtectedSpacecraftProfile(moonSc);
 
-        var encounter = ConjunctionAssessment.Analyze(profile, sun, window,
+        var encounter = ConjunctionAssessment.Analyze(moonSc, sun, window,
             new ConjunctionAnalysisOptions { SampleStep = TimeSpan.FromHours(6) });
 
         // Independently query the SAME objects (spacecraft + Sun) at TCA epoch
@@ -786,13 +778,12 @@ public partial class ConjunctionAssessmentTests
         var spacecraft = CreateSpacecraft(-2501, "P", earth,
             new Vector3(6_800_000.0, 0.0, 0.0),
             new Vector3(0.0, 7_656.2204182967143, 0.0));
-        var profile = new ProtectedSpacecraftProfile(spacecraft);
         var secondary = CreateSpacecraft(-2502, "S", earth,
             new Vector3(6_800_000.0, 100.0, 50.0),
             new Vector3(0.0, 7_656.2204182967143, 0.0));
         var window = new Window(TimeSystem.Time.J2000TDB, TimeSystem.Time.J2000TDB.AddSeconds(1.0));
 
-        var encounter = ConjunctionAssessment.Analyze(profile, secondary, window,
+        var encounter = ConjunctionAssessment.Analyze(spacecraft, secondary, window,
             new ConjunctionAnalysisOptions { SampleStep = TimeSpan.FromSeconds(0.5) });
 
         var rtn = encounter.EncounterState.RelativeState.RelativePositionRtn;
@@ -816,10 +807,9 @@ public partial class ConjunctionAssessmentTests
         var secondary1 = CreateSpacecraft(-2504, "S", earth,
             new Vector3(6_800_000.0, 100.0, 25.0),
             new Vector3(0.0, 7_656.2204182967143, 0.0));
-        var profile = new ProtectedSpacecraftProfile(protected1);
         var window = new Window(TimeSystem.Time.J2000TDB, TimeSystem.Time.J2000TDB.AddMinutes(5.0));
 
-        var encounter = ConjunctionAssessment.Analyze(profile, secondary1, window);
+        var encounter = ConjunctionAssessment.Analyze(protected1, secondary1, window);
         var combinedCovariance = encounter.EncounterState.CombinedCovarianceRtn;
 
         for (int i = 0; i < 3; i++)
@@ -859,9 +849,8 @@ public partial class ConjunctionAssessmentTests
         var secondary1 = CreateSpacecraft(-2506, "S", earth,
             new Vector3(6_800_000.0, 100.0, 50.0),
             new Vector3(0.0, 7_656.2204182967143, 0.0));
-        var profile = new ProtectedSpacecraftProfile(protected1);
         var encounter = ConjunctionAssessment.Analyze(
-            profile,
+            protected1,
             secondary1,
             new Window(TimeSystem.Time.J2000TDB, TimeSystem.Time.J2000TDB.AddMinutes(5.0)));
 
@@ -1023,10 +1012,9 @@ public partial class ConjunctionAssessmentTests
             new Vector3(6_800_000.0, 0.0, 0.0), new Vector3(0.0, 7_656.2204182967143, 0.0));
         var secondary = CreateSpacecraftWithoutCovariance(-2702, "S", earth,
             new Vector3(6_800_000.0, 100.0, 0.0), new Vector3(0.0, 7_656.2204182967143, 0.0));
-        var profile = new ProtectedSpacecraftProfile(protectedSpacecraft);
         var window = new Window(TimeSystem.Time.J2000TDB, TimeSystem.Time.J2000TDB.AddMinutes(5.0));
 
-        var encounter = ConjunctionAssessment.Analyze(profile, secondary, window);
+        var encounter = ConjunctionAssessment.Analyze(protectedSpacecraft, secondary, window);
 
         Assert.Null(encounter.CollisionRisk.ProbabilityOfCollision);
         Assert.True(encounter.EncounterState.QualityFlags.HasFlag(EncounterQualityFlags.CovarianceUnavailable));
@@ -1289,7 +1277,6 @@ public partial class ConjunctionAssessmentTests
             v2,
             BuildStateCovarianceFromPosition(cov2),
             hardBodyRadius: 0.0);
-        var profile = new ProtectedSpacecraftProfile(protectedSpacecraft);
 
         var protectedTrajectory = CreatePropagationSolution(
             earth,
@@ -1313,7 +1300,7 @@ public partial class ConjunctionAssessmentTests
             });
 
         var encounter = ConjunctionAssessment.Analyze(
-            profile,
+            protectedSpacecraft,
             protectedTrajectory,
             secondarySpacecraft,
             secondaryTrajectory,
@@ -1385,7 +1372,6 @@ public partial class ConjunctionAssessmentTests
             v2,
             BuildStateCovarianceFromPosition(cov2),
             hardBodyRadius: 0.0);
-        var profile = new ProtectedSpacecraftProfile(protectedSpacecraft);
 
         var protectedTrajectory = CreatePropagationSolution(
             earth,
@@ -1409,7 +1395,7 @@ public partial class ConjunctionAssessmentTests
             });
 
         var encounters = ConjunctionAssessment.AnalyzeAll(
-            profile,
+            protectedSpacecraft,
             protectedTrajectory,
             secondarySpacecraft,
             secondaryTrajectory,
@@ -1463,14 +1449,14 @@ public partial class ConjunctionAssessmentTests
             { 1.69905293875632, 1.24957388457206, -1.04174164279599 },
             { -1.41701645776610, -1.04174164279599, 0.869260558223714 }
         });
-        var profile = new ProtectedSpacecraftProfile(CreateSpacecraft(
+        var protectedCraft = CreateSpacecraft(
             -5705,
             "OMITRON_P_ALL",
             earth,
             r1,
             v1,
             BuildStateCovarianceFromPosition(cov1),
-            hardBodyRadius: combinedHardBodyRadius));
+            hardBodyRadius: combinedHardBodyRadius);
         var secondarySpacecraft = CreateSpacecraft(
             -5706,
             "OMITRON_S_ALL",
@@ -1501,7 +1487,7 @@ public partial class ConjunctionAssessmentTests
             });
 
         var encounter = Assert.Single(ConjunctionAssessment.AnalyzeAll(
-            profile,
+            protectedCraft,
             protectedTrajectory,
             secondarySpacecraft,
             secondaryTrajectory,
@@ -1571,7 +1557,6 @@ public partial class ConjunctionAssessmentTests
             v2,
             BuildStateCovarianceFromPosition(cov2),
             hardBodyRadius: 0.0);
-        var profile = new ProtectedSpacecraftProfile(protectedSpacecraft);
         var protectedTrajectory = CreatePropagationSolution(
             earth,
             window.StartDate,
@@ -1594,7 +1579,7 @@ public partial class ConjunctionAssessmentTests
             });
 
         var encounter = ConjunctionAssessment.Analyze(
-            profile,
+            protectedSpacecraft,
             protectedTrajectory,
             secondarySpacecraft,
             secondaryTrajectory,
@@ -1630,10 +1615,9 @@ public partial class ConjunctionAssessmentTests
         var earth = CreateEarth();
         var spacecraft = CreateSpacecraft(-2801, "P", earth,
             new Vector3(6_800_000.0, 0.0, 0.0), new Vector3(0.0, 7_656.2204182967143, 0.0));
-        var profile = new ProtectedSpacecraftProfile(spacecraft);
         var window = new Window(TimeSystem.Time.J2000TDB, TimeSystem.Time.J2000TDB.AddMinutes(10.0));
 
-        var result = ConjunctionAssessment.Screen(profile, Array.Empty<ILocalizable>(), window);
+        var result = ConjunctionAssessment.Screen(spacecraft, Array.Empty<ILocalizable>(), window);
 
         Assert.Empty(result);
     }
@@ -1646,10 +1630,9 @@ public partial class ConjunctionAssessmentTests
             new Vector3(6_800_000.0, 0.0, 0.0), new Vector3(0.0, 7_656.2204182967143, 0.0));
         var far = CreateSpacecraft(-2902, "FAR", earth,
             new Vector3(7_000_000.0, 0.0, 0.0), new Vector3(0.0, 7_546.0, 0.0));
-        var profile = new ProtectedSpacecraftProfile(spacecraft);
         var window = new Window(TimeSystem.Time.J2000TDB, TimeSystem.Time.J2000TDB.AddMinutes(10.0));
 
-        var result = ConjunctionAssessment.Screen(profile,
+        var result = ConjunctionAssessment.Screen(spacecraft,
             new ILocalizable[] { far }, window,
             new ScreeningOptions { MaxMissDistanceMeters = 1000.0 });
 
@@ -1662,13 +1645,12 @@ public partial class ConjunctionAssessmentTests
         var earth = CreateEarth();
         var spacecraft = CreateSpacecraft(-3001, "P", earth,
             new Vector3(6_800_000.0, 0.0, 0.0), new Vector3(0.0, 7_656.2204182967143, 0.0));
-        var profile = new ProtectedSpacecraftProfile(spacecraft);
         var window = new Window(TimeSystem.Time.J2000TDB, TimeSystem.Time.J2000TDB.AddMinutes(10.0));
 
         var self = CreateSpacecraft(-3001, "SELF", earth,
             new Vector3(6_800_000.0, 10.0, 0.0), new Vector3(0.0, 7_656.2204182967143, 0.0));
 
-        var result = ConjunctionAssessment.Screen(profile,
+        var result = ConjunctionAssessment.Screen(spacecraft,
             new ILocalizable[] { self }, window);
 
         Assert.Empty(result);
@@ -1684,11 +1666,10 @@ public partial class ConjunctionAssessmentTests
             new Vector3(6_800_000.0, 100.0, 0.0), new Vector3(0.0, 7_656.2204182967143, 0.0));
         var farCandidate = CreateSpacecraft(-1203, "FAR", earth,
             new Vector3(6_800_000.0, 5_000.0, 0.0), new Vector3(0.0, 7_656.2204182967143, 0.0));
-        var profile = new ProtectedSpacecraftProfile(protectedSpacecraft);
         var window = new Window(TimeSystem.Time.J2000TDB, TimeSystem.Time.J2000TDB.AddMinutes(10.0));
 
         var encounters = ConjunctionAssessment.Screen(
-            profile,
+            protectedSpacecraft,
             new ILocalizable[] { farCandidate, closeCandidate },
             window,
             new ScreeningOptions
@@ -1726,11 +1707,10 @@ public partial class ConjunctionAssessmentTests
             Before(earth, closeAtTca, tca).Velocity, BuildCovariance(positionVariance: 1.0e-12, velocityVariance: 1.0e-6));
         var highProbabilityFar = CreateSpacecraft(-1206, "HIGH_PC_FAR", earth, Before(earth, farAtTca, tca).Position,
             Before(earth, farAtTca, tca).Velocity, BuildCovariance(positionVariance: 10_000.0, velocityVariance: 0.01));
-        var profile = new ProtectedSpacecraftProfile(protectedSpacecraft);
         var window = new Window(TimeSystem.Time.J2000TDB, TimeSystem.Time.J2000TDB.AddMinutes(10.0));
 
         var encounters = ConjunctionAssessment.Screen(
-            profile,
+            protectedSpacecraft,
             new ILocalizable[] { lowProbabilityClose, highProbabilityFar },
             window,
             new ScreeningOptions
@@ -1766,10 +1746,9 @@ public partial class ConjunctionAssessmentTests
             new Vector3(6_800_000.0, 0.0, 0.0), new Vector3(0.0, 7_656.2204182967143, 0.0));
         var s = CreateSpacecraftWithoutCovariance(-3102, "S", earth,
             new Vector3(6_800_000.0, 100.0, 0.0), new Vector3(0.0, 7_656.2204182967143, 0.0));
-        var profile = new ProtectedSpacecraftProfile(p);
         var window = new Window(TimeSystem.Time.J2000TDB, TimeSystem.Time.J2000TDB.AddMinutes(5.0));
 
-        var encounter = ConjunctionAssessment.Analyze(profile, s, window);
+        var encounter = ConjunctionAssessment.Analyze(p, s, window);
 
         Assert.True(encounter.EncounterState.QualityFlags.HasFlag(EncounterQualityFlags.CovarianceUnavailable));
         Assert.True(encounter.EncounterState.QualityFlags.HasFlag(EncounterQualityFlags.MissingProtectedCovariance));
@@ -1785,10 +1764,9 @@ public partial class ConjunctionAssessmentTests
             new Vector3(6_800_000.0, 0.0, 0.0), new Vector3(0.0, 7_656.2204182967143, 0.0));
         var s = CreateSpacecraftWithoutCovariance(-3202, "S", earth,
             new Vector3(6_800_000.0, 100.0, 0.0), new Vector3(0.0, 7_656.2204182967143, 0.0));
-        var profile = new ProtectedSpacecraftProfile(p);
         var window = new Window(TimeSystem.Time.J2000TDB, TimeSystem.Time.J2000TDB.AddMinutes(5.0));
 
-        var encounter = ConjunctionAssessment.Analyze(profile, s, window);
+        var encounter = ConjunctionAssessment.Analyze(p, s, window);
 
         Assert.True(encounter.EncounterState.QualityFlags.HasFlag(EncounterQualityFlags.MissingSecondaryCovariance));
         Assert.False(encounter.EncounterState.QualityFlags.HasFlag(EncounterQualityFlags.CovarianceUnavailable));
@@ -1832,7 +1810,6 @@ public partial class ConjunctionAssessmentTests
             r2,
             v2,
             hardBodyRadius: 0.0);
-        var profile = new ProtectedSpacecraftProfile(protectedSpacecraft);
         var protectedTrajectory = CreatePropagationSolution(
             earth,
             window.StartDate,
@@ -1855,7 +1832,7 @@ public partial class ConjunctionAssessmentTests
             });
 
         var encounter = ConjunctionAssessment.Analyze(
-            profile,
+            protectedSpacecraft,
             protectedTrajectory,
             secondarySpacecraft,
             secondaryTrajectory,
@@ -1898,10 +1875,9 @@ public partial class ConjunctionAssessmentTests
             new Vector3(6_800_000.0, 0.0, 0.0), new Vector3(0.0, 7_656.2204182967143, 0.0));
         var s = CreateSpacecraft(-3302, "S", earth,
             new Vector3(6_800_000.0, 100.0, 0.0), new Vector3(0.0, 7_656.2204182967143, 0.0));
-        var profile = new ProtectedSpacecraftProfile(p);
         var window = new Window(TimeSystem.Time.J2000TDB, TimeSystem.Time.J2000TDB.AddMinutes(5.0));
 
-        var encounter = ConjunctionAssessment.Analyze(profile, s, window);
+        var encounter = ConjunctionAssessment.Analyze(p, s, window);
 
         // GetEphemeris returns states without covariance, so ResolveCovariance
         // falls back to InitialOrbitalParameters → StaleCovarianceUsed flag
@@ -2008,7 +1984,7 @@ public partial class ConjunctionAssessmentTests
             seconds => (r2 + v2 * (seconds - 10.0), v2, Vector3.Zero));
 
         var encounter = ConjunctionAssessment.Analyze(
-            new ProtectedSpacecraftProfile(protectedSpacecraft),
+            protectedSpacecraft,
             protectedTrajectory,
             secondarySpacecraft,
             secondaryTrajectory,
@@ -2067,7 +2043,7 @@ public partial class ConjunctionAssessmentTests
             MaximumEventSearchStep = TimeSpan.FromDays(1.0),
             LowRelativeSpeedThresholdMetersPerSecond = 0.0
         };
-        var encounter = ConjunctionAssessment.Analyze(new ProtectedSpacecraftProfile(protectedSpacecraft), protectedTrajectory,
+        var encounter = ConjunctionAssessment.Analyze(protectedSpacecraft, protectedTrajectory,
             secondarySpacecraft, secondaryTrajectory, window, options);
 
         Assert.Equal(TimeSpan.FromSeconds(60), options.StaleCovarianceThreshold);
@@ -2075,7 +2051,7 @@ public partial class ConjunctionAssessmentTests
         Assert.Equal(45.0, encounter.EncounterState.ProtectedCovarianceAge!.Value.TotalSeconds, 1.0e-2);
 
         // A tighter threshold flags the same encounter.
-        var strict = ConjunctionAssessment.Analyze(new ProtectedSpacecraftProfile(protectedSpacecraft), protectedTrajectory,
+        var strict = ConjunctionAssessment.Analyze(protectedSpacecraft, protectedTrajectory,
             secondarySpacecraft, secondaryTrajectory, window, options with { StaleCovarianceThreshold = TimeSpan.FromSeconds(30) });
         Assert.True(strict.EncounterState.QualityFlags.HasFlag(EncounterQualityFlags.StaleCovarianceUsed));
     }
@@ -2094,7 +2070,7 @@ public partial class ConjunctionAssessmentTests
             new Vector3(0.0, 7_656.2204182967143, 0.0),
             tinyCovariance);
         var encounter = ConjunctionAssessment.Analyze(
-            new ProtectedSpacecraftProfile(protectedSpacecraft),
+            protectedSpacecraft,
             secondary,
             new Window(TimeSystem.Time.J2000TDB, TimeSystem.Time.J2000TDB.AddMinutes(1.0)));
 
@@ -2116,7 +2092,7 @@ public partial class ConjunctionAssessmentTests
             new Vector3(0.0, 7_656.1704182967140, 0.0));
 
         var encounter = ConjunctionAssessment.Analyze(
-            new ProtectedSpacecraftProfile(protectedSpacecraft),
+            protectedSpacecraft,
             secondary,
             new Window(TimeSystem.Time.J2000TDB, TimeSystem.Time.J2000TDB.AddMinutes(1.0)),
             new ConjunctionAnalysisOptions
@@ -2142,17 +2118,8 @@ public partial class ConjunctionAssessmentTests
 
         var secondarySpacecraft = CreateSpacecraft(-1302, "SECONDARY", earth,
             new Vector3(6_800_000.0, 120.0, 0.0), new Vector3(0.0, 7_656.2204182967143, 0.0));
-        var profile = new ProtectedSpacecraftProfile(
-            protectedSpacecraft,
-            new ManeuverConstraints
-            {
-                MaxDeltaVMetersPerSecond = 0.5,
-                MinimumLeadTime = TimeSpan.FromMinutes(5),
-                MaximumLeadTime = TimeSpan.FromHours(6)
-            });
-
         var window = new Window(TimeSystem.Time.J2000TDB, TimeSystem.Time.J2000TDB.AddHours(3.0));
-        var nominalEncounter = ConjunctionAssessment.Analyze(profile, secondarySpacecraft, window);
+        var nominalEncounter = ConjunctionAssessment.Analyze(protectedSpacecraft, secondarySpacecraft, window);
 
         var options = ConjunctionAssessment.EvaluateAvoidance(
             nominalEncounter,
@@ -2162,7 +2129,7 @@ public partial class ConjunctionAssessmentTests
                 DeltaVMagnitudesMetersPerSecond = new[] { 0.05, 0.10 },
                 Analysis = ConjunctionAnalysisOptions.Default with { SampleStep = TimeSpan.FromMinutes(2) },
                 MaxReturnedOptions = 5
-            });
+            }).Options;
 
         Assert.NotEmpty(options);
         // Best option should improve or maintain miss distance
@@ -2182,15 +2149,8 @@ public partial class ConjunctionAssessmentTests
             new Vector3(6_800_000.0, 0.0, 0.0), new Vector3(0.0, 7_656.2204182967143, 0.0));
         var secondary = CreateSpacecraft(-3402, "S", earth,
             new Vector3(6_800_000.0, 120.0, 0.0), new Vector3(0.0, 7_656.2204182967143, 0.0));
-        var profile = new ProtectedSpacecraftProfile(spacecraft,
-            new ManeuverConstraints
-            {
-                MaxDeltaVMetersPerSecond = 0.5,
-                MinimumLeadTime = TimeSpan.FromMinutes(5),
-                MaximumLeadTime = TimeSpan.FromHours(6)
-            });
         var window = new Window(TimeSystem.Time.J2000TDB, TimeSystem.Time.J2000TDB.AddHours(3.0));
-        var encounter = ConjunctionAssessment.Analyze(profile, secondary, window);
+        var encounter = ConjunctionAssessment.Analyze(spacecraft, secondary, window);
 
         var avoidance = ConjunctionAssessment.EvaluateAvoidance(encounter,
             new AvoidanceSearchOptions
@@ -2198,39 +2158,36 @@ public partial class ConjunctionAssessmentTests
                 LeadTimes = new[] { TimeSpan.FromMinutes(30) },
                 DeltaVMagnitudesMetersPerSecond = new[] { 0.1 },
                 MaxReturnedOptions = 3
-            });
+            }).Options;
 
         Assert.NotEmpty(avoidance);
         Assert.All(avoidance, opt => Assert.Equal(0.0, opt.FuelCostEstimateKilograms));
     }
 
     [Fact]
-    public void EvaluateAvoidance_LeadTimeOutsideConstraints_ReturnsEmpty()
+    public void EvaluateAvoidance_EveryLeadTimeOfTheGrid_IsEvaluatedOrSkippedWithItsReason()
     {
         var earth = CreateEarth();
         var spacecraft = CreateSpacecraft(-3501, "P", earth,
             new Vector3(6_800_000.0, 0.0, 0.0), new Vector3(0.0, 7_656.2204182967143, 0.0));
         var secondary = CreateSpacecraft(-3502, "S", earth,
             new Vector3(6_800_000.0, 120.0, 0.0), new Vector3(0.0, 7_656.2204182967143, 0.0));
-        var profile = new ProtectedSpacecraftProfile(spacecraft,
-            new ManeuverConstraints
-            {
-                MaxDeltaVMetersPerSecond = 0.5,
-                MinimumLeadTime = TimeSpan.FromHours(1),
-                MaximumLeadTime = TimeSpan.FromHours(2)
-            });
         var window = new Window(TimeSystem.Time.J2000TDB, TimeSystem.Time.J2000TDB.AddHours(3.0));
-        var encounter = ConjunctionAssessment.Analyze(profile, secondary, window);
+        var encounter = ConjunctionAssessment.Analyze(spacecraft, secondary, window);
 
-        var avoidance = ConjunctionAssessment.EvaluateAvoidance(encounter,
+        var study = ConjunctionAssessment.EvaluateAvoidance(encounter,
             new AvoidanceSearchOptions
             {
                 LeadTimes = new[] { TimeSpan.FromMinutes(5), TimeSpan.FromMinutes(30) },
                 DeltaVMagnitudesMetersPerSecond = new[] { 0.1 },
-                MaxReturnedOptions = 10
+                MaxReturnedOptions = 20
             });
 
-        Assert.Empty(avoidance);
+        // The grid is the constraint (R17 of #668): each lead time gives its six options or is listed as skipped, with its
+        // reason (before 11.0.0, ManeuverConstraints of 1 h to 2 h dropped both leads without a word)
+        Assert.Equal(12, study.Options.Count + 6 * study.Skipped.Count);
+        Assert.All(study.Skipped, skipped => Assert.Equal(AvoidanceSkipReason.BeforeWindow, skipped.Reason));
+        Assert.All(study.Options, option => Assert.True(window.Contains(option.BurnEpoch)));
     }
 
     [Fact]
@@ -2241,15 +2198,8 @@ public partial class ConjunctionAssessmentTests
             new Vector3(6_800_000.0, 0.0, 0.0), new Vector3(0.0, 7_656.2204182967143, 0.0));
         var secondary = CreateSpacecraft(-3602, "S", earth,
             new Vector3(6_800_000.0, 100.0, 0.0), new Vector3(0.0, 7_656.2204182967143, 0.0));
-        var profile = new ProtectedSpacecraftProfile(spacecraft,
-            new ManeuverConstraints
-            {
-                MaxDeltaVMetersPerSecond = 1.0,
-                MinimumLeadTime = TimeSpan.FromMinutes(5),
-                MaximumLeadTime = TimeSpan.FromHours(6)
-            });
         var window = new Window(TimeSystem.Time.J2000TDB, TimeSystem.Time.J2000TDB.AddHours(3.0));
-        var encounter = ConjunctionAssessment.Analyze(profile, secondary, window);
+        var encounter = ConjunctionAssessment.Analyze(spacecraft, secondary, window);
 
         var avoidance = ConjunctionAssessment.EvaluateAvoidance(encounter,
             new AvoidanceSearchOptions
@@ -2258,7 +2208,7 @@ public partial class ConjunctionAssessmentTests
                 DeltaVMagnitudesMetersPerSecond = new[] { 0.05, 0.25, 0.50 },
                 PcThreshold = 1.0, // very lenient → all meet threshold
                 MaxReturnedOptions = 20
-            });
+            }).Options;
 
         Assert.NotEmpty(avoidance);
         // All ranking scores < 1e9 means Pc met threshold; tiebreaker is delta-V
@@ -2268,27 +2218,20 @@ public partial class ConjunctionAssessmentTests
     }
 
     [Fact]
-    public void EvaluateAvoidance_FiltersInvalidLeadTimesAndDeltaV()
+    public void EvaluateAvoidance_EveryValueOfTheGrid_TheBurnsBeforeTheWindowSkipped()
     {
         var earth = CreateEarth();
         var spacecraft = CreateSpacecraft(-3603, "P", earth,
             new Vector3(6_800_000.0, 0.0, 0.0), new Vector3(0.0, 7_656.2204182967143, 0.0));
         var secondary = CreateSpacecraft(-3604, "S", earth,
             new Vector3(6_800_000.0, 0.0, 120.0), new Vector3(0.0, 7_656.2204182967143, 0.0));
-        var profile = new ProtectedSpacecraftProfile(spacecraft,
-            new ManeuverConstraints
-            {
-                MaxDeltaVMetersPerSecond = 0.2,
-                MinimumLeadTime = TimeSpan.FromMinutes(1),
-                MaximumLeadTime = TimeSpan.FromMinutes(20)
-            });
         var window = new Window(TimeSystem.Time.J2000TDB, TimeSystem.Time.J2000TDB.AddMinutes(10.0));
-        var encounter = ConjunctionAssessment.Analyze(profile, secondary, window);
+        var encounter = ConjunctionAssessment.Analyze(spacecraft, secondary, window);
 
         // No close approach: the TCA is the closest window end, the end here (#621: the midpoint before 11.0.0), so that a
         // lead time of 12 min puts the burn before the window
         LabelAssert.Equal(window.EndDate, encounter.EncounterState.Epoch);
-        var avoidance = ConjunctionAssessment.EvaluateAvoidance(encounter,
+        var study = ConjunctionAssessment.EvaluateAvoidance(encounter,
             new AvoidanceSearchOptions
             {
                 LeadTimes = new[]
@@ -2297,19 +2240,23 @@ public partial class ConjunctionAssessmentTests
                     TimeSpan.FromMinutes(2.0),
                     TimeSpan.FromMinutes(12.0)
                 },
-                DeltaVMagnitudesMetersPerSecond = new[] { 0.0, 0.1, 0.25 },
-                MaxReturnedOptions = 20
+                DeltaVMagnitudesMetersPerSecond = new[] { 0.1, 0.25 },
+                MaxReturnedOptions = 30
             });
 
-        Assert.Equal(6, avoidance.Count);
-        Assert.All(avoidance, option =>
-        {
-            Assert.True(window.Contains(option.BurnEpoch), "Burn epoch must stay inside the screening window");
-            Assert.True(System.Math.Abs(option.DeltaVInertial.Magnitude() - 0.1) < 1e-12,
-                $"Only the valid 0.1 m/s delta-V should remain, got {option.DeltaVInertial.Magnitude():E6}");
-            Assert.True(System.Math.Abs((encounter.EncounterState.Epoch - option.BurnEpoch).TotalSeconds - 120.0) < 1e-9,
-                $"Only the valid 2-minute lead time should remain, got {(encounter.EncounterState.Epoch - option.BurnEpoch).TotalSeconds:F6}s");
-        });
+        // Every value of the grid (before 11.0.0, ManeuverConstraints of 1 min to 20 min and 0.2 m/s dropped the lead of
+        // 30 s and the 0.25 m/s, and a magnitude of 0 was dropped: it throws at init now), but the burn before the window
+        Assert.Equal(2 * 2 * 6, study.Options.Count);
+        Assert.All(study.Options, option =>
+            Assert.True(window.Contains(option.BurnEpoch), "Burn epoch must stay inside the screening window"));
+        Assert.Equal(new[] { 30.0, 120.0 }, study.Options
+            .Select(option => System.Math.Round((encounter.EncounterState.Epoch - option.BurnEpoch).TotalSeconds, 6))
+            .Distinct().OrderBy(lead => lead));
+        Assert.Equal(new[] { 0.1, 0.25 }, study.Options
+            .Select(option => System.Math.Round(option.DeltaVInertial.Magnitude(), 12)).Distinct().OrderBy(m => m));
+        var skipped = Assert.Single(study.Skipped);
+        Assert.Equal(TimeSpan.FromMinutes(12.0), skipped.LeadTime);
+        Assert.Equal(AvoidanceSkipReason.BeforeWindow, skipped.Reason);
     }
 
     // ========== Helpers ==========
@@ -2408,7 +2355,7 @@ public partial class ConjunctionAssessmentTests
         // The fixtures put the TCA geometry on the initial states, so this transport is a rotation of about
         // 1e-7 rad (the found TCA is within 1e-4 s of the nominal one); it is applied here with the test's own
         // RTN construction so that the direct and entry-point Pc can be compared to rounding level.
-        var protectedInitial = Assert.IsType<StateVector>(encounter.ProtectedAsset.Spacecraft.InitialOrbitalParameters);
+        var protectedInitial = Assert.IsType<StateVector>(encounter.ProtectedSpacecraft.InitialOrbitalParameters);
         var secondaryInitial = Assert.IsType<StateVector>(encounter.SecondaryObject.InitialOrbitalParameters);
         primaryPositionCovariance = HoldPositionCovarianceInRtn(primaryPositionCovariance, protectedInitial,
             primaryPositionAtEpoch, primaryVelocityAtEpoch);

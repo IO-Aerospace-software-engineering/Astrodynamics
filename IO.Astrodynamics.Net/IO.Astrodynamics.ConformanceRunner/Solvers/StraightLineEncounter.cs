@@ -16,7 +16,7 @@ namespace IO.Astrodynamics.ConformanceRunner.Solvers;
 
 /// <summary>
 /// An encounter given by the states of its two objects at TCA (spec.md sections 16.2 and 16.3), analyzed by the public
-/// <see cref="ConjunctionAssessment.Analyze(ProtectedSpacecraftProfile, PropagationSolution, ILocalizable, PropagationSolution, Window, ConjunctionAnalysisOptions)"/>
+/// <see cref="ConjunctionAssessment.Analyze(Spacecraft, PropagationSolution, ILocalizable, PropagationSolution, Window, ConjunctionAnalysisOptions)"/>
 /// on straight-line trajectories over TCA ± 10 s (design of lot 6 of #457, open choice 16): each object a spacecraft
 /// whose initial state is its state at TCA, carrying its covariance rotated from its RTN, the combined hard-body radius
 /// on object 1 and none on object 2.
@@ -66,7 +66,7 @@ internal static class StraightLineEncounter
             trajectories[k] = StraightLine(earth, window.StartDate, position - velocity * HalfSpanSeconds, velocity);
         }
 
-        return ConjunctionAssessment.Analyze(new ProtectedSpacecraftProfile(spacecraft[0]), trajectories[0], spacecraft[1],
+        return ConjunctionAssessment.Analyze(spacecraft[0], trajectories[0], spacecraft[1],
             trajectories[1], window, new ConjunctionAnalysisOptions
             {
                 // Longer than the window: one interval, the TCA refined on the trajectories (as the library's tests)

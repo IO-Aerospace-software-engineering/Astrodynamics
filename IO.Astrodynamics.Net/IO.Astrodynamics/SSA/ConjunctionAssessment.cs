@@ -22,7 +22,7 @@ namespace IO.Astrodynamics.SSA;
 /// </summary>
 /// <remarks>
 /// <para>
-/// For most end-user scenarios, use <see cref="Analyze(ProtectedSpacecraftProfile, ILocalizable, Window, ConjunctionAnalysisOptions)"/>
+/// For most end-user scenarios, use <see cref="Analyze(Spacecraft, ILocalizable, Window, ConjunctionAnalysisOptions)"/>
 /// to assess one protected-vs-secondary pair and use <see cref="Screen"/> to rank many candidates.
 /// </para>
 /// <para>
@@ -123,7 +123,7 @@ public static class ConjunctionAssessment
     /// <summary>
     /// Screens a set of candidate objects against one protected spacecraft and returns the highest-priority encounters.
     /// </summary>
-    /// <param name="protectedAsset">Protected spacecraft profile, including maneuver constraints.</param>
+    /// <param name="protectedSpacecraft">Spacecraft to protect.</param>
     /// <param name="candidates">Candidate secondary objects to analyze.</param>
     /// <param name="screeningWindow">Time window over which conjunctions are searched.</param>
     /// <param name="options">Screening configuration. Defaults are used when <see langword="null"/>.</param>
@@ -142,12 +142,12 @@ public static class ConjunctionAssessment
     /// closing at the window end could be dropped).
     /// </remarks>
     public static IReadOnlyList<EncounterCase> Screen(
-        ProtectedSpacecraftProfile protectedAsset,
+        Spacecraft protectedSpacecraft,
         IEnumerable<ILocalizable> candidates,
         Window screeningWindow,
         ScreeningOptions options = null)
     {
-        ArgumentNullException.ThrowIfNull(protectedAsset);
+        ArgumentNullException.ThrowIfNull(protectedSpacecraft);
         ArgumentNullException.ThrowIfNull(candidates);
 
         options ??= ScreeningOptions.Default;
@@ -155,14 +155,14 @@ public static class ConjunctionAssessment
 
         var rankedCases = new List<EncounterCase>();
         foreach (var candidate in candidates.Where(candidate =>
-                     candidate != null && candidate.NaifId != protectedAsset.Spacecraft.NaifId))
+                     candidate != null && candidate.NaifId != protectedSpacecraft.NaifId))
         {
             // The option is a fallback over a catalogue: the radius a candidate gives wins, and is the option of its
             // analysis, so that the re-analysis of its avoidance options carries it too (decision of 2026-11-14 on #683)
             double own = OwnHardBodyRadius(candidate);
             double radius = own > 0.0 ? own : analysis.SecondaryHardBodyRadiusMeters ?? DefaultSecondaryHardBodyRadiusMeters;
             var encounter = Analyze(
-                protectedAsset,
+                protectedSpacecraft,
                 candidate,
                 screeningWindow,
                 analysis with { SecondaryHardBodyRadiusMeters = radius });
@@ -183,7 +183,7 @@ public static class ConjunctionAssessment
     /// <summary>
     /// Analyzes one protected-vs-secondary pair and returns the single best conjunction found in the window.
     /// </summary>
-    /// <param name="protectedAsset">Protected spacecraft profile, including maneuver constraints.</param>
+    /// <param name="protectedSpacecraft">Spacecraft to protect.</param>
     /// <param name="secondaryObject">Secondary object to analyze against the protected asset.</param>
     /// <param name="screeningWindow">Time window over which close approaches are searched.</param>
     /// <param name="options">Analysis configuration. Defaults are used when <see langword="null"/>.</param>
@@ -200,28 +200,28 @@ public static class ConjunctionAssessment
     /// <exception cref="ArgumentOutOfRangeException">An option is out of its range, the radius of the secondary not finite
     /// or negative included (#683).</exception>
     public static EncounterCase Analyze(
-        ProtectedSpacecraftProfile protectedAsset,
+        Spacecraft protectedSpacecraft,
         ILocalizable secondaryObject,
         Window screeningWindow,
         ConjunctionAnalysisOptions options = null)
     {
-        ArgumentNullException.ThrowIfNull(protectedAsset);
+        ArgumentNullException.ThrowIfNull(protectedSpacecraft);
         ArgumentNullException.ThrowIfNull(secondaryObject);
-        ThrowIfProtectedAsSecondary(protectedAsset, secondaryObject);
+        ThrowIfProtectedAsSecondary(protectedSpacecraft, secondaryObject);
 
         options = ResolveAnalysisOptions(options, secondaryObject);
 
-        CheckStatesCover(protectedAsset.Spacecraft, secondaryObject, screeningWindow);
-        var observer = protectedAsset.Spacecraft.InitialOrbitalParameters.Observer;
-        var protectedSource = CreateLocalizableStateSource(protectedAsset.Spacecraft, observer);
+        CheckStatesCover(protectedSpacecraft, secondaryObject, screeningWindow);
+        var observer = protectedSpacecraft.InitialOrbitalParameters.Observer;
+        var protectedSource = CreateLocalizableStateSource(protectedSpacecraft, observer);
         var secondarySource = CreateLocalizableStateSource(secondaryObject, observer);
-        return AnalyzeInternal(protectedAsset, secondaryObject, screeningWindow, options, protectedSource, secondarySource);
+        return AnalyzeInternal(protectedSpacecraft, secondaryObject, screeningWindow, options, protectedSource, secondarySource);
     }
 
     /// <summary>
     /// Analyzes one protected-vs-secondary pair using precomputed propagated trajectories for both participants.
     /// </summary>
-    /// <param name="protectedAsset">Protected spacecraft profile, including maneuver constraints.</param>
+    /// <param name="protectedSpacecraft">Spacecraft to protect.</param>
     /// <param name="protectedTrajectory">Propagated trajectory of the protected spacecraft.</param>
     /// <param name="secondaryObject">Secondary object represented by <paramref name="secondaryTrajectory"/>.</param>
     /// <param name="secondaryTrajectory">Propagated trajectory of the secondary object.</param>
@@ -246,36 +246,36 @@ public static class ConjunctionAssessment
     /// <exception cref="ArgumentOutOfRangeException">An option is out of its range, the radius of the secondary not finite
     /// or negative included (#683).</exception>
     public static EncounterCase Analyze(
-        ProtectedSpacecraftProfile protectedAsset,
+        Spacecraft protectedSpacecraft,
         PropagationSolution protectedTrajectory,
         ILocalizable secondaryObject,
         PropagationSolution secondaryTrajectory,
         Window screeningWindow,
         ConjunctionAnalysisOptions options = null)
     {
-        ArgumentNullException.ThrowIfNull(protectedAsset);
+        ArgumentNullException.ThrowIfNull(protectedSpacecraft);
         ArgumentNullException.ThrowIfNull(protectedTrajectory);
         ArgumentNullException.ThrowIfNull(secondaryObject);
         ArgumentNullException.ThrowIfNull(secondaryTrajectory);
-        ThrowIfProtectedAsSecondary(protectedAsset, secondaryObject);
-        ThrowIfTrajectoryOfAnother(protectedTrajectory, protectedAsset.Spacecraft, nameof(protectedTrajectory));
+        ThrowIfProtectedAsSecondary(protectedSpacecraft, secondaryObject);
+        ThrowIfTrajectoryOfAnother(protectedTrajectory, protectedSpacecraft, nameof(protectedTrajectory));
         ThrowIfTrajectoryOfAnother(secondaryTrajectory, secondaryObject, nameof(secondaryTrajectory));
 
         options = ResolveAnalysisOptions(options, secondaryObject);
 
-        var observer = protectedAsset.Spacecraft.InitialOrbitalParameters.Observer;
+        var observer = protectedSpacecraft.InitialOrbitalParameters.Observer;
         ValidateTrajectoryCoverage(protectedTrajectory, screeningWindow, nameof(protectedTrajectory));
         ValidateTrajectoryCoverage(secondaryTrajectory, screeningWindow, nameof(secondaryTrajectory));
 
-        var protectedSource = CreateTrajectoryStateSource(protectedAsset.Spacecraft, protectedTrajectory, observer, screeningWindow);
+        var protectedSource = CreateTrajectoryStateSource(protectedSpacecraft, protectedTrajectory, observer, screeningWindow);
         var secondarySource = CreateTrajectoryStateSource(secondaryObject, secondaryTrajectory, observer, screeningWindow);
-        return AnalyzeInternal(protectedAsset, secondaryObject, screeningWindow, options, protectedSource, secondarySource);
+        return AnalyzeInternal(protectedSpacecraft, secondaryObject, screeningWindow, options, protectedSource, secondarySource);
     }
 
     /// <summary>
     /// Analyzes one protected-vs-secondary pair and returns every close approach found in the window.
     /// </summary>
-    /// <param name="protectedAsset">Protected spacecraft profile, including maneuver constraints.</param>
+    /// <param name="protectedSpacecraft">Spacecraft to protect.</param>
     /// <param name="secondaryObject">Secondary object to analyze against the protected asset.</param>
     /// <param name="screeningWindow">Time window over which close approaches are searched.</param>
     /// <param name="options">Analysis configuration. Defaults are used when <see langword="null"/>.</param>
@@ -292,28 +292,28 @@ public static class ConjunctionAssessment
     /// <exception cref="ArgumentOutOfRangeException">An option is out of its range, the radius of the secondary not finite
     /// or negative included (#683).</exception>
     public static IReadOnlyList<EncounterCase> AnalyzeAll(
-        ProtectedSpacecraftProfile protectedAsset,
+        Spacecraft protectedSpacecraft,
         ILocalizable secondaryObject,
         Window screeningWindow,
         ConjunctionAnalysisOptions options = null)
     {
-        ArgumentNullException.ThrowIfNull(protectedAsset);
+        ArgumentNullException.ThrowIfNull(protectedSpacecraft);
         ArgumentNullException.ThrowIfNull(secondaryObject);
-        ThrowIfProtectedAsSecondary(protectedAsset, secondaryObject);
+        ThrowIfProtectedAsSecondary(protectedSpacecraft, secondaryObject);
 
         options = ResolveAnalysisOptions(options, secondaryObject);
 
-        CheckStatesCover(protectedAsset.Spacecraft, secondaryObject, screeningWindow);
-        var observer = protectedAsset.Spacecraft.InitialOrbitalParameters.Observer;
-        var protectedSource = CreateLocalizableStateSource(protectedAsset.Spacecraft, observer);
+        CheckStatesCover(protectedSpacecraft, secondaryObject, screeningWindow);
+        var observer = protectedSpacecraft.InitialOrbitalParameters.Observer;
+        var protectedSource = CreateLocalizableStateSource(protectedSpacecraft, observer);
         var secondarySource = CreateLocalizableStateSource(secondaryObject, observer);
-        return AnalyzeAllInternal(protectedAsset, secondaryObject, screeningWindow, options, protectedSource, secondarySource);
+        return AnalyzeAllInternal(protectedSpacecraft, secondaryObject, screeningWindow, options, protectedSource, secondarySource);
     }
 
     /// <summary>
     /// Analyzes one protected-vs-secondary pair using precomputed propagated trajectories and returns every close approach found.
     /// </summary>
-    /// <param name="protectedAsset">Protected spacecraft profile, including maneuver constraints.</param>
+    /// <param name="protectedSpacecraft">Spacecraft to protect.</param>
     /// <param name="protectedTrajectory">Propagated trajectory of the protected spacecraft.</param>
     /// <param name="secondaryObject">Secondary object represented by <paramref name="secondaryTrajectory"/>.</param>
     /// <param name="secondaryTrajectory">Propagated trajectory of the secondary object.</param>
@@ -338,30 +338,30 @@ public static class ConjunctionAssessment
     /// <exception cref="ArgumentOutOfRangeException">An option is out of its range, the radius of the secondary not finite
     /// or negative included (#683).</exception>
     public static IReadOnlyList<EncounterCase> AnalyzeAll(
-        ProtectedSpacecraftProfile protectedAsset,
+        Spacecraft protectedSpacecraft,
         PropagationSolution protectedTrajectory,
         ILocalizable secondaryObject,
         PropagationSolution secondaryTrajectory,
         Window screeningWindow,
         ConjunctionAnalysisOptions options = null)
     {
-        ArgumentNullException.ThrowIfNull(protectedAsset);
+        ArgumentNullException.ThrowIfNull(protectedSpacecraft);
         ArgumentNullException.ThrowIfNull(protectedTrajectory);
         ArgumentNullException.ThrowIfNull(secondaryObject);
         ArgumentNullException.ThrowIfNull(secondaryTrajectory);
-        ThrowIfProtectedAsSecondary(protectedAsset, secondaryObject);
-        ThrowIfTrajectoryOfAnother(protectedTrajectory, protectedAsset.Spacecraft, nameof(protectedTrajectory));
+        ThrowIfProtectedAsSecondary(protectedSpacecraft, secondaryObject);
+        ThrowIfTrajectoryOfAnother(protectedTrajectory, protectedSpacecraft, nameof(protectedTrajectory));
         ThrowIfTrajectoryOfAnother(secondaryTrajectory, secondaryObject, nameof(secondaryTrajectory));
 
         options = ResolveAnalysisOptions(options, secondaryObject);
 
-        var observer = protectedAsset.Spacecraft.InitialOrbitalParameters.Observer;
+        var observer = protectedSpacecraft.InitialOrbitalParameters.Observer;
         ValidateTrajectoryCoverage(protectedTrajectory, screeningWindow, nameof(protectedTrajectory));
         ValidateTrajectoryCoverage(secondaryTrajectory, screeningWindow, nameof(secondaryTrajectory));
 
-        var protectedSource = CreateTrajectoryStateSource(protectedAsset.Spacecraft, protectedTrajectory, observer, screeningWindow);
+        var protectedSource = CreateTrajectoryStateSource(protectedSpacecraft, protectedTrajectory, observer, screeningWindow);
         var secondarySource = CreateTrajectoryStateSource(secondaryObject, secondaryTrajectory, observer, screeningWindow);
-        return AnalyzeAllInternal(protectedAsset, secondaryObject, screeningWindow, options, protectedSource, secondarySource);
+        return AnalyzeAllInternal(protectedSpacecraft, secondaryObject, screeningWindow, options, protectedSource, secondarySource);
     }
 
     /// <summary>
@@ -370,7 +370,8 @@ public static class ConjunctionAssessment
     /// <param name="encounterCase">Encounter to mitigate.</param>
     /// <param name="options">Avoidance search configuration. Defaults are used when <see langword="null"/>.</param>
     /// <returns>
-    /// Candidate avoidance maneuvers ordered by internal ranking score, where lower values are better.
+    /// The candidate avoidance maneuvers ordered by internal ranking score, where lower values are better, and the lead
+    /// times of the grid that gave none, with the reason (R17 of #668; before 11.0.0 the options alone).
     /// </returns>
     /// <remarks>
     /// Each option is re-analyzed with <see cref="AvoidanceSearchOptions.Analysis"/>, or, when it is null, with the
@@ -379,7 +380,7 @@ public static class ConjunctionAssessment
     /// <exception cref="ArgumentException">The <see cref="ConjunctionAnalysisOptions.SecondaryHardBodyRadiusMeters"/> of
     /// <see cref="AvoidanceSearchOptions.Analysis"/> differs from the hard-body radius the secondary spacecraft gives
     /// (#683).</exception>
-    public static IReadOnlyList<AvoidanceOption> EvaluateAvoidance(
+    public static AvoidanceStudy EvaluateAvoidance(
         EncounterCase encounterCase,
         AvoidanceSearchOptions options = null)
     {
@@ -387,10 +388,10 @@ public static class ConjunctionAssessment
 
         options ??= AvoidanceSearchOptions.Default;
         var reanalysis = ReanalysisOptions(encounterCase, options);
-        var constraints = encounterCase.ProtectedAsset.ManeuverConstraints;
-        var observer = encounterCase.ProtectedAsset.Spacecraft.InitialOrbitalParameters.Observer;
+        var observer = encounterCase.ProtectedSpacecraft.InitialOrbitalParameters.Observer;
         var burnDirections = BuildBurnDirections().ToArray();
         var avoidanceOptions = new List<AvoidanceOption>();
+        var skipped = new List<SkippedLeadTime>();
         var tca = encounterCase.EncounterState.Epoch;
 
         // With the covariance of the protected participant propagated, each option is propagated numerically from the
@@ -400,16 +401,20 @@ public static class ConjunctionAssessment
         var fallback = propagated == null ? new FallbackAvoidance(encounterCase, observer, reanalysis) : null;
         var trajectory = propagated != null || fallback.Propagated ? AvoidanceTrajectory.Propagated : AvoidanceTrajectory.TwoBody;
 
-        foreach (var leadTime in options.LeadTimes.Where(lead => lead >= constraints.MinimumLeadTime && lead <= constraints.MaximumLeadTime))
+        // The grid is the constraint (R17 of #668): every lead time and magnitude, a lead time whose burn the window or the
+        // trajectory does not hold listed with its reason
+        foreach (var leadTime in options.LeadTimes)
         {
             var burnEpoch = tca - leadTime;
             if (!encounterCase.ScreeningWindow.Contains(burnEpoch))
             {
+                skipped.Add(new SkippedLeadTime(leadTime, AvoidanceSkipReason.BeforeWindow));
                 continue;
             }
 
             if (propagated != null ? !propagated.Covers(burnEpoch) : !fallback.Covers(burnEpoch))
             {
+                skipped.Add(new SkippedLeadTime(leadTime, AvoidanceSkipReason.OutsideTrajectory));
                 continue;
             }
 
@@ -418,12 +423,12 @@ public static class ConjunctionAssessment
             // The fuel from the mass at the burn, not the mass of the spacecraft after its whole propagation (#415)
             var massAtBurn = propagated?.Context(burnEpoch).TotalMass ?? fallback.MassAt(burnEpoch);
 
-            foreach (var magnitude in options.DeltaVMagnitudesMetersPerSecond.Where(mag => mag > 0.0 && mag <= constraints.MaxDeltaVMetersPerSecond))
+            foreach (var magnitude in options.DeltaVMagnitudesMetersPerSecond)
             {
                 foreach (var direction in burnDirections)
                 {
                     var deltaV = burnState.FromRtn(direction * magnitude);
-                    var fuelCost = EstimateFuelCost(encounterCase.ProtectedAsset.Spacecraft, massAtBurn, magnitude);
+                    var fuelCost = EstimateFuelCost(encounterCase.ProtectedSpacecraft, massAtBurn, magnitude);
                     var postEncounter = propagated != null
                         ? propagated.Analyze(burnState, deltaV, fuelCost)
                         : fallback.Analyze(burnState, deltaV, fuelCost);
@@ -441,10 +446,12 @@ public static class ConjunctionAssessment
             }
         }
 
-        return avoidanceOptions
-            .OrderBy(option => option.RankingScore)
-            .Take(options.MaxReturnedOptions)
-            .ToArray();
+        return new AvoidanceStudy(
+            avoidanceOptions
+                .OrderBy(option => option.RankingScore)
+                .Take(options.MaxReturnedOptions)
+                .ToArray(),
+            skipped.ToArray());
     }
 
     /// <summary>
@@ -483,7 +490,7 @@ public static class ConjunctionAssessment
             _encounterCase = encounterCase;
             _analysisOptions = reanalysis with { CovariancePropagation = CovariancePropagationOptions.None };
             _observer = observer;
-            _spacecraft = encounterCase.ProtectedAsset.Spacecraft;
+            _spacecraft = encounterCase.ProtectedSpacecraft;
             _trajectory = encounterCase.ProtectedTrajectory;
             _forceModel = _trajectory != null ? _trajectory.ForceModel : _spacecraft.LastForceModel;
 
@@ -566,10 +573,9 @@ public static class ConjunctionAssessment
                 protectedSource = CreateTrajectoryStateSource(trial, trajectory, _observer, window);
             }
 
-            var profile = new ProtectedSpacecraftProfile(trial, _encounterCase.ProtectedAsset.ManeuverConstraints);
             var protectedResolver = new EncounterCovarianceResolver(trial, protectedSource.Solution, null, window.EndDate,
                 heldCovarianceEpoch: heldEpoch);
-            return AnalyzeInternal(profile, _encounterCase.SecondaryObject, window, _analysisOptions, protectedSource,
+            return AnalyzeInternal(trial, _encounterCase.SecondaryObject, window, _analysisOptions, protectedSource,
                 _secondarySource, protectedResolver, _secondaryResolver);
         }
     }
@@ -670,7 +676,7 @@ public static class ConjunctionAssessment
 
         // The mass and coefficients of the trajectory at the burn: those of its segment there
         internal ForceEvaluationContext Context(in Time burnEpoch) =>
-            _solution.ContextAt(burnEpoch) ?? ForceEvaluationContext.FromSpacecraft(_encounterCase.ProtectedAsset.Spacecraft);
+            _solution.ContextAt(burnEpoch) ?? ForceEvaluationContext.FromSpacecraft(_encounterCase.ProtectedSpacecraft);
 
         internal EncounterCase Analyze(StateVector burnState, Vector3 deltaV, double fuelCost)
         {
@@ -693,7 +699,7 @@ public static class ConjunctionAssessment
             var postBurn = new StateVector(burnState.Position, burnState.Velocity + deltaV, burnState.Observer, burnEpoch,
                 burnState.Frame, covariance);
             var context = Context(burnEpoch);
-            var trial = CloneSpacecraft(_encounterCase.ProtectedAsset.Spacecraft, postBurn,
+            var trial = CloneSpacecraft(_encounterCase.ProtectedSpacecraft, postBurn,
                 System.Math.Max(context.TotalMass - fuelCost, 0.0), context.DragCoefficient, context.ReflectivityCoefficient);
 
             // The state integrated with the mass and coefficients of the option, as its variational equations (#415)
@@ -718,8 +724,7 @@ public static class ConjunctionAssessment
         private EncounterCase AnalyzeOption(Spacecraft trial, PropagationSolution trajectory, in Window window)
         {
             var protectedSource = CreateTrajectoryStateSource(trial, trajectory, _observer, window);
-            var profile = new ProtectedSpacecraftProfile(trial, _encounterCase.ProtectedAsset.ManeuverConstraints);
-            return AnalyzeInternal(profile, _encounterCase.SecondaryObject, window, _analysisOptions, protectedSource,
+            return AnalyzeInternal(trial, _encounterCase.SecondaryObject, window, _analysisOptions, protectedSource,
                 _secondarySource, secondaryResolver: _secondaryResolver);
         }
 
@@ -741,7 +746,7 @@ public static class ConjunctionAssessment
     }
 
     private static EncounterCase AnalyzeInternal(
-        ProtectedSpacecraftProfile protectedAsset,
+        Spacecraft protectedSpacecraft,
         ILocalizable secondaryObject,
         Window screeningWindow,
         ConjunctionAnalysisOptions options,
@@ -760,9 +765,9 @@ public static class ConjunctionAssessment
             readRangeRateOverWindow: options.ReadRangeRateOverWindow);
 
         Time tca = SelectBestTcaEpoch(tcaEpochs, screeningWindow, protectedSource, secondarySource);
-        return BuildEncounterCase(protectedAsset, secondaryObject, screeningWindow, tca, tcaEpochs.Count == 0, options,
+        return BuildEncounterCase(protectedSpacecraft, secondaryObject, screeningWindow, tca, tcaEpochs.Count == 0, options,
             protectedSource, secondarySource,
-            protectedResolver ?? CreateResolver(protectedAsset.Spacecraft, protectedSource, options, tca),
+            protectedResolver ?? CreateResolver(protectedSpacecraft, protectedSource, options, tca),
             secondaryResolver ?? CreateResolver(secondaryObject, secondarySource, options, tca));
     }
 
@@ -777,7 +782,7 @@ public static class ConjunctionAssessment
     }
 
     private static IReadOnlyList<EncounterCase> AnalyzeAllInternal(
-        ProtectedSpacecraftProfile protectedAsset,
+        Spacecraft protectedSpacecraft,
         ILocalizable secondaryObject,
         Window screeningWindow,
         ConjunctionAnalysisOptions options,
@@ -801,10 +806,10 @@ public static class ConjunctionAssessment
         }
 
         var lastTca = tcaEpochs.Max();
-        var protectedResolver = CreateResolver(protectedAsset.Spacecraft, protectedSource, options, lastTca);
+        var protectedResolver = CreateResolver(protectedSpacecraft, protectedSource, options, lastTca);
         var secondaryResolver = CreateResolver(secondaryObject, secondarySource, options, lastTca);
         return tcaEpochs
-            .Select(tca => BuildEncounterCase(protectedAsset, secondaryObject, screeningWindow, tca, false, options,
+            .Select(tca => BuildEncounterCase(protectedSpacecraft, secondaryObject, screeningWindow, tca, false, options,
                 protectedSource, secondarySource, protectedResolver, secondaryResolver))
             .ToArray();
     }
@@ -2386,7 +2391,7 @@ public static class ConjunctionAssessment
     // --- Core encounter building ---
 
     private static EncounterCase BuildEncounterCase(
-        ProtectedSpacecraftProfile protectedAsset,
+        Spacecraft protectedSpacecraft,
         ILocalizable secondaryObject,
         Window screeningWindow,
         Time tca,
@@ -2444,7 +2449,7 @@ public static class ConjunctionAssessment
             relativeState,
             combinedCovarianceIcrf,
             combinedCovarianceRtn,
-            protectedAsset.Spacecraft.HardBodyRadius + options.SecondaryHardBodyRadiusMeters!.Value,
+            protectedSpacecraft.HardBodyRadius + options.SecondaryHardBodyRadiusMeters!.Value,
             ref qualityFlags);
 
         var encounterState = new EncounterState(
@@ -2457,7 +2462,7 @@ public static class ConjunctionAssessment
             qualityFlags);
 
         return new EncounterCase(
-            protectedAsset,
+            protectedSpacecraft,
             secondaryObject,
             screeningWindow,
             encounterState,
@@ -2990,13 +2995,13 @@ public static class ConjunctionAssessment
     }
 
     // An object does not conjunct with itself: the NAIF rule of Screen, which skips the protected spacecraft (#683)
-    private static void ThrowIfProtectedAsSecondary(ProtectedSpacecraftProfile protectedAsset, ILocalizable secondaryObject)
+    private static void ThrowIfProtectedAsSecondary(Spacecraft protectedSpacecraft, ILocalizable secondaryObject)
     {
-        if (secondaryObject.NaifId == protectedAsset.Spacecraft.NaifId)
+        if (secondaryObject.NaifId == protectedSpacecraft.NaifId)
         {
             throw new ArgumentException(
                 $"The secondary object {secondaryObject.Name} has the NAIF identifier of the protected spacecraft " +
-                $"({protectedAsset.Spacecraft.NaifId}): an object does not conjunct with itself.", nameof(secondaryObject));
+                $"({protectedSpacecraft.NaifId}): an object does not conjunct with itself.", nameof(secondaryObject));
         }
     }
 

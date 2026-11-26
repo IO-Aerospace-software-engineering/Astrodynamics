@@ -429,10 +429,9 @@ public class AddedStatesGapTests
 
         // The conjunction analysis of the ILocalizable overloads refuses it before any search
         var secondary = NewSpacecraft(-7972, new StateVector(new Vector3(-7378137.0, 0.0, 1000.0), new Vector3(0.0, -5509.9, -4623.4), earth, Start, Frame.ICRF));
-        var profile = new ProtectedSpacecraftProfile(spacecraft);
         var across = new Window(Start.AddSeconds(3000.0), Start.AddSeconds(19000.0));
-        Assert.Equal("screeningWindow", Assert.Throws<ArgumentException>(() => ConjunctionAssessment.Analyze(profile, secondary, across)).ParamName);
-        Assert.Equal("screeningWindow", Assert.Throws<ArgumentException>(() => ConjunctionAssessment.AnalyzeAll(profile, secondary, across)).ParamName);
+        Assert.Equal("screeningWindow", Assert.Throws<ArgumentException>(() => ConjunctionAssessment.Analyze(spacecraft, secondary, across)).ParamName);
+        Assert.Equal("screeningWindow", Assert.Throws<ArgumentException>(() => ConjunctionAssessment.AnalyzeAll(spacecraft, secondary, across)).ParamName);
 
         // The field-of-view search too, with InvalidOperationException, the state of the spacecraft (decisions 81 and 86 of
         // #668, lot L6; ArgumentException before 11.0.0)
@@ -542,8 +541,7 @@ public class AddedStatesGapTests
         var wider = new Window(lone.Epoch, lone.Epoch.AddSeconds(600.0));
         Assert.Equal("searchWindow", Assert.Throws<ArgumentException>(() => spacecraft.CheckInterpolatedStatesCover(wider, "search window", "searchWindow")).ParamName);
         var secondary = NewSpacecraft(-7986, new StateVector(new Vector3(-7378137.0, 0.0, 1000.0), new Vector3(0.0, -5509.9, -4623.4), earth, Start, Frame.ICRF));
-        var profile = new ProtectedSpacecraftProfile(spacecraft);
-        Assert.Equal("screeningWindow", Assert.Throws<ArgumentException>(() => ConjunctionAssessment.Analyze(profile, secondary, wider)).ParamName);
+        Assert.Equal("screeningWindow", Assert.Throws<ArgumentException>(() => ConjunctionAssessment.Analyze(spacecraft, secondary, wider)).ParamName);
         Assert.Throws<InvalidOperationException>(() => moon.FindDistanceWindows(wider, spacecraft, RelationnalOperator.Greater, 1.0, new WindowSearchOptions { Step = TimeSpan.FromSeconds(60.0) }).ToArray());
 
         // The SPK refuses it

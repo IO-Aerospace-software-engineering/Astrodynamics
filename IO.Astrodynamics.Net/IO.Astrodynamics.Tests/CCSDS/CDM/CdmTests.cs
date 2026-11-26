@@ -85,8 +85,8 @@ public class CdmTests
 
         Assert.Equal("41001", protectedSegment.Metadata.ObjectDesignator);
         Assert.Equal("NAIF", protectedSegment.Metadata.CatalogName);
-        Assert.Equal(encounter.ProtectedAsset.Spacecraft.Name, protectedSegment.Metadata.ObjectName);
-        Assert.Equal(encounter.ProtectedAsset.Spacecraft.CosparId, protectedSegment.Metadata.InternationalDesignator);
+        Assert.Equal(encounter.ProtectedSpacecraft.Name, protectedSegment.Metadata.ObjectName);
+        Assert.Equal(encounter.ProtectedSpacecraft.CosparId, protectedSegment.Metadata.InternationalDesignator);
         Assert.Equal(ObjectType.Payload, protectedSegment.Metadata.ObjectType);
         Assert.Equal("IO.Astrodynamics", protectedSegment.Metadata.EphemerisName);
         Assert.Equal(CdmCovarianceMethod.Calculated, protectedSegment.Metadata.CovarianceMethod);
@@ -123,24 +123,24 @@ public class CdmTests
         Assert.NotNull(protectedSegment.Data.AdditionalParameters);
         Assert.NotNull(secondarySegment.Data.AdditionalParameters);
         Assert.NotNull(protectedSegment.Data.AdditionalParameters!.MassKilograms);
-        Assert.Equal(encounter.ProtectedAsset.Spacecraft.GetTotalMass(), protectedSegment.Data.AdditionalParameters.MassKilograms!.Value, 12);
+        Assert.Equal(encounter.ProtectedSpacecraft.GetTotalMass(), protectedSegment.Data.AdditionalParameters.MassKilograms!.Value, 12);
         Assert.NotNull(protectedSegment.Data.AdditionalParameters.AreaPcSquareMeters);
-        Assert.Equal(System.Math.PI * System.Math.Pow(encounter.ProtectedAsset.Spacecraft.HardBodyRadius, 2.0),
+        Assert.Equal(System.Math.PI * System.Math.Pow(encounter.ProtectedSpacecraft.HardBodyRadius, 2.0),
             protectedSegment.Data.AdditionalParameters.AreaPcSquareMeters!.Value, 12);
         Assert.NotNull(protectedSegment.Data.AdditionalParameters.AreaDragSquareMeters);
         Assert.NotNull(protectedSegment.Data.AdditionalParameters.AreaSrpSquareMeters);
-        Assert.Equal(encounter.ProtectedAsset.Spacecraft.SectionalArea, protectedSegment.Data.AdditionalParameters.AreaDragSquareMeters!.Value, 12);
-        Assert.Equal(encounter.ProtectedAsset.Spacecraft.SectionalArea, protectedSegment.Data.AdditionalParameters.AreaSrpSquareMeters!.Value, 12);
+        Assert.Equal(encounter.ProtectedSpacecraft.SectionalArea, protectedSegment.Data.AdditionalParameters.AreaDragSquareMeters!.Value, 12);
+        Assert.Equal(encounter.ProtectedSpacecraft.SectionalArea, protectedSegment.Data.AdditionalParameters.AreaSrpSquareMeters!.Value, 12);
         Assert.NotNull(protectedSegment.Data.AdditionalParameters.CdAreaOverMass);
         Assert.NotNull(protectedSegment.Data.AdditionalParameters.CrAreaOverMass);
-        Assert.Equal(encounter.ProtectedAsset.Spacecraft.DragCoefficient * encounter.ProtectedAsset.Spacecraft.SectionalArea /
-                     encounter.ProtectedAsset.Spacecraft.GetTotalMass(),
+        Assert.Equal(encounter.ProtectedSpacecraft.DragCoefficient * encounter.ProtectedSpacecraft.SectionalArea /
+                     encounter.ProtectedSpacecraft.GetTotalMass(),
             protectedSegment.Data.AdditionalParameters.CdAreaOverMass!.Value, 12);
-        Assert.Equal(encounter.ProtectedAsset.Spacecraft.SolarRadiationCoeff * encounter.ProtectedAsset.Spacecraft.SectionalArea /
-                     encounter.ProtectedAsset.Spacecraft.GetTotalMass(),
+        Assert.Equal(encounter.ProtectedSpacecraft.SolarRadiationCoeff * encounter.ProtectedSpacecraft.SectionalArea /
+                     encounter.ProtectedSpacecraft.GetTotalMass(),
             protectedSegment.Data.AdditionalParameters.CrAreaOverMass!.Value, 12);
 
-        var secondaryRadius = encounter.CollisionRisk.CombinedHardBodyRadiusMeters - encounter.ProtectedAsset.Spacecraft.HardBodyRadius;
+        var secondaryRadius = encounter.CollisionRisk.CombinedHardBodyRadiusMeters - encounter.ProtectedSpacecraft.HardBodyRadius;
         Assert.NotNull(secondarySegment.Data.AdditionalParameters!.AreaPcSquareMeters);
         Assert.Equal(System.Math.PI * secondaryRadius * secondaryRadius,
             secondarySegment.Data.AdditionalParameters.AreaPcSquareMeters!.Value, 12);
@@ -1167,8 +1167,8 @@ public class CdmTests
         Assert.Equal("Protected Ops", protectedMetadata.OperatorOrganization);
         Assert.Equal("protected.ops@example.test", protectedMetadata.OperatorEmail);
         Assert.Equal(CdmManeuverable.No, protectedMetadata.Maneuverable);
-        Assert.Equal(encounter.ProtectedAsset.Spacecraft.Name, protectedMetadata.ObjectName);
-        Assert.Equal(encounter.ProtectedAsset.Spacecraft.CosparId, protectedMetadata.InternationalDesignator);
+        Assert.Equal(encounter.ProtectedSpacecraft.Name, protectedMetadata.ObjectName);
+        Assert.Equal(encounter.ProtectedSpacecraft.CosparId, protectedMetadata.InternationalDesignator);
         Assert.Equal("IO.Astrodynamics", protectedMetadata.EphemerisName);
 
         Assert.Equal("EXTERNAL-CAT", secondaryMetadata.CatalogName);
@@ -1201,7 +1201,7 @@ public class CdmTests
             hardBodyRadius: 3.0);
 
         var encounter = ConjunctionAssessment.Analyze(
-            new ProtectedSpacecraftProfile(protectedSpacecraft),
+            protectedSpacecraft,
             secondarySpacecraft,
             new Window(TimeSystem.Time.J2000TDB, TimeSystem.Time.J2000TDB.AddMinutes(10.0)));
 
@@ -1220,7 +1220,7 @@ public class CdmTests
         Assert.True(schemaValidation.IsValid, FormatValidationIssues(schemaValidation.Issues));
         Assert.Equal(encounter.EncounterState.Epoch.ToUTC().DateTime, cdm.RelativeMetadataData.TcaUtc);
         Assert.Equal(encounter.EncounterState.MissDistanceMeters, cdm.RelativeMetadataData.MissDistanceMeters, 9);
-        Assert.Equal(encounter.ProtectedAsset.Spacecraft.Name, cdm.Segments[0].Metadata!.ObjectName);
+        Assert.Equal(encounter.ProtectedSpacecraft.Name, cdm.Segments[0].Metadata!.ObjectName);
         Assert.Equal(encounter.SecondaryObject.Name, cdm.Segments[1].Metadata!.ObjectName);
     }
 
@@ -1241,7 +1241,7 @@ public class CdmTests
             secondarySpacecraft.AddEngine(new Engine("engine" + -naifId, 300.0, 10.0, tank, "model", "sn1"));
         }
 
-        return ConjunctionAssessment.Analyze(new ProtectedSpacecraftProfile(protectedSpacecraft), secondarySpacecraft,
+        return ConjunctionAssessment.Analyze(protectedSpacecraft, secondarySpacecraft,
             new Window(TimeSystem.Time.J2000TDB, TimeSystem.Time.J2000TDB.AddMinutes(10.0)));
     }
 
@@ -1412,7 +1412,7 @@ public class CdmTests
         // Frame.ICRF (SPICE J2000) and Frame.GCRF share the ICRF axes, so the GCRF label of the CDM is exact for both.
         var icrfEncounter = CreateManualEncounterCase();
         var gcrfEncounter = new EncounterCase(
-            icrfEncounter.ProtectedAsset,
+            icrfEncounter.ProtectedSpacecraft,
             icrfEncounter.SecondaryObject,
             icrfEncounter.ScreeningWindow,
             icrfEncounter.EncounterState,
@@ -1472,7 +1472,7 @@ public class CdmTests
             hardBodyRadius: 3.0);
 
         var encounter = ConjunctionAssessment.Analyze(
-            new ProtectedSpacecraftProfile(protectedSpacecraft),
+            protectedSpacecraft,
             secondarySpacecraft,
             new Window(TimeSystem.Time.J2000TDB, TimeSystem.Time.J2000TDB.AddMinutes(10.0)));
 
@@ -1573,7 +1573,7 @@ public class CdmTests
             crossTrackSigmaMeters: System.Math.Sqrt(combinedCovarianceRtn.Get(2, 2)));
 
         return new EncounterCase(
-            new ProtectedSpacecraftProfile(protectedSpacecraft),
+            protectedSpacecraft,
             secondarySpacecraft,
             screeningWindow,
             encounterState,

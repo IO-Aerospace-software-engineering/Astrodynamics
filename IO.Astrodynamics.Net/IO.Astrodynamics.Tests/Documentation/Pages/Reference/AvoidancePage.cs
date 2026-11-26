@@ -65,7 +65,7 @@ internal static class AvoidancePage
     {
         #region docs/reference/avoidance.md:1
         // Inputs: encounter (EncounterCase)
-        var options = ConjunctionAssessment.EvaluateAvoidance(
+        var study = ConjunctionAssessment.EvaluateAvoidance(
             encounter,
             new AvoidanceSearchOptions
             {
@@ -78,10 +78,15 @@ internal static class AvoidancePage
                 DeltaVMagnitudesMetersPerSecond = new[] { 0.05, 0.10, 0.25 }
             });
 
-        foreach (var opt in options.OrderBy(o => o.RankingScore))
+        foreach (var opt in study.Options)
         {
             Console.WriteLine($"Burn at {opt.BurnEpoch}: dV={opt.DeltaVInertial.Magnitude():F3} m/s, "
                 + $"post-miss={opt.PostManeuverEncounter.EncounterState.MissDistanceMeters:F0} m");
+        }
+
+        foreach (var skipped in study.Skipped)
+        {
+            Console.WriteLine(skipped);   // for instance "06:00:00: before the window"
         }
         #endregion
     }

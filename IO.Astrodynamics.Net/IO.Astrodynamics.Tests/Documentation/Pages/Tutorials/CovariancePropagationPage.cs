@@ -251,10 +251,9 @@ internal static class CovariancePropagationPage
                 CovariancePropagation = CovariancePropagationOptions.None
             });
 
-        var profile = new ProtectedSpacecraftProfile(protectedCraft);
         var window = new Window(tca.AddHours(-1.0), tca.AddHours(1.0));
-        var encounter = ConjunctionAssessment.Analyze(profile, secondaryCraft, window);
-        var held = ConjunctionAssessment.Analyze(profile, secondaryCraft, window,
+        var encounter = ConjunctionAssessment.Analyze(protectedCraft, secondaryCraft, window);
+        var held = ConjunctionAssessment.Analyze(protectedCraft, secondaryCraft, window,
             new ConjunctionAnalysisOptions { CovariancePropagation = CovariancePropagationOptions.None });
 
         var source = encounter.EncounterState.ProtectedCovariance.Source;   // CovarianceSource.Propagated

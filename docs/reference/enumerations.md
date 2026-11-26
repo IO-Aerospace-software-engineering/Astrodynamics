@@ -104,6 +104,16 @@ How the trajectory of an avoidance option after its burn is computed (`Avoidance
 | `Propagated` | Propagated from the state after the burn with the force model of the protected participant's propagation (RK7(8) or Velocity-Verlet) |
 | `TwoBody` | The two-body orbit of the state after the burn: the participant has no numerical propagation (not propagated, TLE, SPICE kernel) |
 
+## AvoidanceSkipReason
+
+Why a lead time of the avoidance grid gave no option (`SkippedLeadTime.Reason`, `AvoidanceStudy.Skipped`,
+[Avoidance Studies](avoidance.md)); in the `IO.Astrodynamics.SSA` namespace.
+
+| Value | Description |
+|-------|-------------|
+| `BeforeWindow` | The burn falls before the start of the window of the encounter |
+| `OutsideTrajectory` | The burn falls outside the propagation of the protected spacecraft the options are propagated on |
+
 ## CovarianceSource
 
 Where the covariance of one participant at TCA comes from, in the order the conjunction analysis resolves it

@@ -103,12 +103,11 @@ public partial class ConjunctionAssessmentTests
         var secondaryCraft = InputRuleSpacecraft(NextInputRuleId(), secondaryStart, 3.0);
         PropagateRk78(protectedCraft, earth);
         PropagateRk78(secondaryCraft, earth);
-        var profile = new ProtectedSpacecraftProfile(protectedCraft);
         var screening = ScreeningOptions.Default with { MaxMissDistanceMeters = double.MaxValue };
 
         // Act
-        var screened = Assert.Single(ConjunctionAssessment.Screen(profile, new[] { secondaryCraft }, InputRuleWindow, screening));
-        var analyzed = ConjunctionAssessment.Analyze(profile, secondaryCraft, InputRuleWindow, ConjunctionAnalysisOptions.Default with
+        var screened = Assert.Single(ConjunctionAssessment.Screen(protectedCraft, new[] { secondaryCraft }, InputRuleWindow, screening));
+        var analyzed = ConjunctionAssessment.Analyze(protectedCraft, secondaryCraft, InputRuleWindow, ConjunctionAnalysisOptions.Default with
         {
             SampleStep = TimeSpan.FromMinutes(5.0),
             CovariancePropagation = CovariancePropagationOptions.None
@@ -136,13 +135,12 @@ public partial class ConjunctionAssessmentTests
         var secondaryCraft = InputRuleSpacecraft(NextInputRuleId(), secondaryStart, 0.0);
         PropagateRk78(protectedCraft, earth);
         PropagateRk78(secondaryCraft, earth);
-        var profile = new ProtectedSpacecraftProfile(protectedCraft);
         var analysis = ConjunctionAnalysisOptions.Default with { SecondaryHardBodyRadiusMeters = 2.0 };
 
         // Act
-        var screened = Assert.Single(ConjunctionAssessment.Screen(profile, new[] { secondaryCraft }, InputRuleWindow,
+        var screened = Assert.Single(ConjunctionAssessment.Screen(protectedCraft, new[] { secondaryCraft }, InputRuleWindow,
             ScreeningOptions.Default with { Analysis = analysis, MaxMissDistanceMeters = double.MaxValue }));
-        var analyzed = ConjunctionAssessment.Analyze(profile, secondaryCraft, InputRuleWindow, analysis);
+        var analyzed = ConjunctionAssessment.Analyze(protectedCraft, secondaryCraft, InputRuleWindow, analysis);
 
         // Assert: the analysis of Analyze with the same settings, its covariance propagated (#668, R17, choice 6 of the
         // annex: one mechanism, no hidden override), the option the fallback radius of a candidate that gives none
@@ -161,16 +159,15 @@ public partial class ConjunctionAssessmentTests
         var (protectedStart, secondaryStart) = InputRulePair(earth);
         var protectedCraft = InputRuleSpacecraft(NextInputRuleId(), protectedStart, ProtectedHardBodyRadius);
         var secondaryCraft = InputRuleSpacecraft(NextInputRuleId(), secondaryStart, 3.0);
-        var profile = new ProtectedSpacecraftProfile(protectedCraft);
         var fresh = ConjunctionAnalysisOptions.Default with { StaleCovarianceThreshold = TimeSpan.FromDays(1.0) };
-        var staleEncounter = ConjunctionAssessment.Analyze(profile, secondaryCraft, InputRuleWindow);
-        var freshEncounter = ConjunctionAssessment.Analyze(profile, secondaryCraft, InputRuleWindow, fresh);
+        var staleEncounter = ConjunctionAssessment.Analyze(protectedCraft, secondaryCraft, InputRuleWindow);
+        var freshEncounter = ConjunctionAssessment.Analyze(protectedCraft, secondaryCraft, InputRuleWindow, fresh);
         Assert.True(staleEncounter.EncounterState.QualityFlags.HasFlag(EncounterQualityFlags.StaleCovarianceUsed));
         Assert.False(freshEncounter.EncounterState.QualityFlags.HasFlag(EncounterQualityFlags.StaleCovarianceUsed));
 
         // Act
-        var inherited = ConjunctionAssessment.EvaluateAvoidance(freshEncounter, InputRuleAvoidance);
-        var given = ConjunctionAssessment.EvaluateAvoidance(staleEncounter, InputRuleAvoidance with { Analysis = fresh });
+        var inherited = ConjunctionAssessment.EvaluateAvoidance(freshEncounter, InputRuleAvoidance).Options;
+        var given = ConjunctionAssessment.EvaluateAvoidance(staleEncounter, InputRuleAvoidance with { Analysis = fresh }).Options;
 
         // Assert: null takes the settings of the encounter (#683), a given record replaces them; both the same options
         Assert.Equal(6, inherited.Count);
@@ -187,7 +184,7 @@ public partial class ConjunctionAssessmentTests
 
         // A radius of the given record that differs from the secondary's own is refused, naming the options
         var conflict = Assert.Throws<ArgumentException>(() => ConjunctionAssessment.EvaluateAvoidance(staleEncounter,
-            InputRuleAvoidance with { Analysis = fresh with { SecondaryHardBodyRadiusMeters = 2.0 } }));
+            InputRuleAvoidance with { Analysis = fresh with { SecondaryHardBodyRadiusMeters = 2.0 } }).Options);
         Assert.Equal("options", conflict.ParamName);
         Assert.True(given.All(o => o.PostManeuverEncounter.CollisionRisk.CombinedHardBodyRadiusMeters == ProtectedHardBodyRadius + 3.0));
     }

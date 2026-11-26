@@ -78,7 +78,7 @@ Keplerian orbit (SGP4 for a TLE); propagate it first, or use the
 ```csharp
 // Inputs: protectedSpacecraft and secondarySpacecraft (Spacecraft), epoch (Time)
 var encounter = ConjunctionAssessment.Analyze(
-    new ProtectedSpacecraftProfile(protectedSpacecraft),
+    protectedSpacecraft,
     secondarySpacecraft,
     new Window(epoch, epoch.AddMinutes(10.0)));
 
@@ -88,8 +88,8 @@ Console.WriteLine($"Probability:    {encounter.CollisionRisk.ProbabilityOfCollis
 Console.WriteLine($"Relative speed: {encounter.EncounterState.RelativeState.RelativeVelocityInertial.Magnitude():F1} m/s");
 ```
 
-The `ProtectedSpacecraftProfile` wraps the protected spacecraft with the
-maneuver constraints used by avoidance studies (`ManeuverConstraints`).
+The calls take the protected `Spacecraft` itself (a `ProtectedSpacecraftProfile` with its `ManeuverConstraints`
+before 11.0.0): the avoidance grid of `AvoidanceSearchOptions` is the constraint of an avoidance study.
 
 ## Analyzing all encounters
 
@@ -99,7 +99,7 @@ to return every encounter rather than just the closest:
 ```csharp
 // Inputs: protectedSpacecraft and secondarySpacecraft (Spacecraft), epoch (Time)
 var allEncounters = ConjunctionAssessment.AnalyzeAll(
-    new ProtectedSpacecraftProfile(protectedSpacecraft),
+    protectedSpacecraft,
     secondarySpacecraft,
     new Window(epoch, epoch.AddHours(24.0)));
 
@@ -119,7 +119,7 @@ probability thresholds, and returns a ranked list.
 ```csharp
 // Inputs: protectedSpacecraft, secondary1, secondary2 and secondary3 (Spacecraft), window (Window)
 var encounters = ConjunctionAssessment.Screen(
-    new ProtectedSpacecraftProfile(protectedSpacecraft),
+    protectedSpacecraft,
     new ILocalizable[] { secondary1, secondary2, secondary3 },
     window,
     new ScreeningOptions
@@ -160,12 +160,12 @@ var protectedTrajectory = protectedSpacecraft.Propagate(window, options);
 var secondaryTrajectory = secondarySpacecraft.Propagate(window, options);
 
 var encounter = ConjunctionAssessment.Analyze(
-    new ProtectedSpacecraftProfile(protectedSpacecraft), protectedTrajectory,
+    protectedSpacecraft, protectedTrajectory,
     secondarySpacecraft, secondaryTrajectory,
     window);
 ```
 
-The profile itself caches nothing: each call samples the trajectories it is
+The analysis caches nothing: each call samples the trajectories it is
 given.
 
 ### With the propagated covariance
@@ -189,7 +189,7 @@ protectedSpacecraft.Propagate(window, options);
 secondarySpacecraft.Propagate(window, options);
 
 var encounter = ConjunctionAssessment.Analyze(
-    new ProtectedSpacecraftProfile(protectedSpacecraft), secondarySpacecraft, window,
+    protectedSpacecraft, secondarySpacecraft, window,
     new ConjunctionAnalysisOptions
     {
         // The default is the covariance without process noise: add the noise and the consider parameters you trust
@@ -231,7 +231,7 @@ var options = ConjunctionAssessment.EvaluateAvoidance(
             TimeSpan.FromHours(6)
         },
         DeltaVMagnitudesMetersPerSecond = new[] { 0.05, 0.10, 0.25 }
-    });
+    }).Options;
 
 foreach (var opt in options)
 {
@@ -358,10 +358,10 @@ A typical operational SSA workflow proceeds as follows:
 
 2. **Screen** the protected asset against the catalog:
     ```csharp
-    // Inputs: profile (ProtectedSpacecraftProfile), catalog (IEnumerable<ILocalizable>), window (Window),
+    // Inputs: protectedSpacecraft (Spacecraft), catalog (IEnumerable<ILocalizable>), window (Window),
     //   screeningOptions (ScreeningOptions)
     var encounters = ConjunctionAssessment.Screen(
-        profile, catalog, window, screeningOptions);
+        protectedSpacecraft, catalog, window, screeningOptions);
     ```
 
 3. **Triage** the ranked results. Focus on encounters exceeding your
@@ -369,16 +369,16 @@ A typical operational SSA workflow proceeds as follows:
 
 4. **Analyze** high-priority encounters in detail:
     ```csharp
-    // Inputs: profile (ProtectedSpacecraftProfile), highPrioritySecondary (Spacecraft), refinedWindow (Window)
+    // Inputs: protectedSpacecraft (Spacecraft), highPrioritySecondary (Spacecraft), refinedWindow (Window)
     var details = ConjunctionAssessment.Analyze(
-        profile, highPrioritySecondary, refinedWindow);
+        protectedSpacecraft, highPrioritySecondary, refinedWindow);
     ```
 
 5. **Evaluate avoidance** if the risk is unacceptable:
     ```csharp
     // Inputs: details (EncounterCase), avoidanceOptions (AvoidanceSearchOptions)
     var trades = ConjunctionAssessment.EvaluateAvoidance(
-        details, avoidanceOptions);
+        details, avoidanceOptions).Options;
     ```
 
 6. **Export CDM** for coordination with partner agencies:

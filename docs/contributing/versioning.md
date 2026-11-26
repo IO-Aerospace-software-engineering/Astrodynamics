@@ -534,6 +534,14 @@ release are listed under **Known limitations**.
   the mean motion kept, the kernel GM) or `SEMI_MAJOR_AXIS` (km to m); and the `EPOCH` of an OMM or an OPM as a `Time`
   in its `TIME_SYSTEM`, UT1 or another scale `Time` lacks throwing `InvalidOperationException`; the models keep their
   `DateTime` (`OmmMeanElementsAndEpochTests`). See [OMM](../reference/omm.md#conversion-validation).
+- **`AvoidanceStudy`, `SkippedLeadTime` and `AvoidanceSkipReason`** (lot L7, R17 of
+  [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668), decided by S. Guillet,
+  2026-11-19): the result of `ConjunctionAssessment.EvaluateAvoidance`, its ranked `Options` and the lead times of the
+  grid that gave none, `Skipped`, each with its `LeadTime` and `Reason` (`BeforeWindow`, a burn before the window;
+  `OutsideTrajectory`, a burn the propagation of the options does not hold), its `ToString` the lead time and the reason
+  (`ConjunctionAssessmentTests.EvaluateAvoidance_TheGridIsTheConstraint_TheLeadsBeforeTheWindowSkipped`). See
+  [Avoidance](../reference/avoidance.md#evaluateavoidance).
+
 **Fixed**
 
 - **The command line read its numbers in the culture of the machine** ([#814](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/814)):
@@ -8116,9 +8124,37 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   (`DefaultSecondaryHardBodyRadiusMeters` → `SecondaryHardBodyRadiusMeters`, likewise the other two);
   `new AvoidanceSearchOptions { AnalysisSampleStep = s }` → `new AvoidanceSearchOptions { Analysis = settings with
   { SampleStep = s } }`, `settings` the options the encounter was analyzed with (likewise the other three).
+- **The conjunction analysis takes the protected `Spacecraft`; `EvaluateAvoidance` returns an `AvoidanceStudy`, its grid
+  the constraint; `MANEUVERABLE` of object 1 always `YES`** (lot L7, R17 of
+  [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668), decided by S. Guillet,
+  2026-11-19, and decision 109, decided by S. Guillet, 2026-11-26; no forwarder). **Breaking**: the first parameter of
+  `Screen`, `Analyze` and `AnalyzeAll` (both families) is `Spacecraft protectedSpacecraft`, null throwing
+  `ArgumentNullException` naming it, and `EncounterCase.ProtectedAsset` (a `ProtectedSpacecraftProfile`) is
+  `ProtectedSpacecraft` (a `Spacecraft`), the constructors of `EncounterCase` taking it; the analyses are bit for bit
+  those of the profile. `EvaluateAvoidance` returns an `AvoidanceStudy` (Added) instead of the list of options, the same
+  options in the same order. Every lead time and magnitude of `AvoidanceSearchOptions` is evaluated: the
+  `ManeuverConstraints` of the profile (10 min to 24 h and 5 m/s by default) dropped the others, so a lead time below
+  10 min or above 24 h and a magnitude above 5 m/s now give options; a lead time whose burn falls before the window, which
+  gave none without a word, is listed in `Skipped`. `LeadTimes` and `DeltaVMagnitudesMetersPerSecond` empty, or holding a
+  value not positive (a magnitude not finite) throw `ArgumentOutOfRangeException` at init, null `ArgumentNullException`
+  (a magnitude of 0 was dropped). The default grid (1 h, 3 h, 6 h; 0.05, 0.10, 0.25 m/s) lies inside the former
+  constraints, so the default study gives the options of 10.x bit for bit. In a CDM, `MANEUVERABLE` of object 1 is
+  always `YES`, the post-maneuver encounter of an option included, `ProtectedParticipantMetadata` overriding it; it was
+  `YES` when the profile's `MaxDeltaVMetersPerSecond` was positive (5 m/s by default), `NO` otherwise: no CDM the library
+  writes with the default profile moves (the 183 CDMs of the CDM, SSA and documentation tests byte for byte but their
+  `CREATION_DATE`). Migration: `Analyze(new ProtectedSpacecraftProfile(sc), …)` → `Analyze(sc, …)`, likewise `Screen` and
+  `AnalyzeAll`; `encounter.ProtectedAsset.Spacecraft` → `encounter.ProtectedSpacecraft`;
+  `var options = EvaluateAvoidance(encounter, o)` → `var options = EvaluateAvoidance(encounter, o).Options`; for
+  operational limits, a grid inside them; a `MaxDeltaVMetersPerSecond` of 0 that wrote `NO` →
+  `new CdmExportOptions { ProtectedParticipantMetadata = new CdmParticipantMetadata { Maneuverable = CdmManeuverable.No } }`.
 
 **Removed**
 
+- **`ProtectedSpacecraftProfile` and `ManeuverConstraints`** (lot L7, R17 of
+  [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668), decided by S. Guillet,
+  2026-11-19, no forwarder): the conjunction analysis takes the `Spacecraft` itself, and the grid of
+  `AvoidanceSearchOptions` is the constraint of the avoidance (under Changed). Migration: pass the spacecraft; give
+  `LeadTimes` and `DeltaVMagnitudesMetersPerSecond` within the limits `ManeuverConstraints` held.
 - **The window searches on the target: `FindWindowsOnDistanceConstraint`, `FindWindowsOnOccultationConstraint` and
   `FindWindowsOnCoordinateConstraint` of `CelestialItem`, `ILocalizable` and `Site`, `Site.FindWindowsOnIlluminationConstraint`,
   `Instrument.FindWindowsInFieldOfViewConstraint`, and the public constructor, `FindWindowsWithCondition` and

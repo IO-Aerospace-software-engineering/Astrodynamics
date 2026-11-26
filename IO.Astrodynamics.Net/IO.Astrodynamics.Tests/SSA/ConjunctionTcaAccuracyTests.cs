@@ -88,7 +88,7 @@ public class ConjunctionTcaAccuracyTests
         double referenceMiss = (Position(s) - Position(p)).Magnitude();
 
         // Act
-        var encounter = ConjunctionAssessment.Analyze(new ProtectedSpacecraftProfile(protectedSpacecraft),
+        var encounter = ConjunctionAssessment.Analyze(protectedSpacecraft,
             protectedTrajectory, secondarySpacecraft, secondaryTrajectory, window);
 
         // Assert
@@ -163,14 +163,13 @@ public class ConjunctionTcaAccuracyTests
         int naifId = -2101 - 2 * (Array.IndexOf(new[] { "UTC", "TT", "TAI", "TDB" }, frame) * 4 + (rk78 ? 2 : 0) + (all ? 1 : 0));
         var pair = LabelPair(rk78, naifId);
         var window = LabelWindow(frame);
-        var profile = new ProtectedSpacecraftProfile(pair.Protected);
 
         // Act: the polynomial search of the two trajectories, and the sampled search of the same spacecraft (their last
         // propagations) as the second reader of the scale
         var dense = all
-            ? ConjunctionAssessment.AnalyzeAll(profile, pair.ProtectedTrajectory, pair.Secondary, pair.SecondaryTrajectory, window)
-            : new[] { ConjunctionAssessment.Analyze(profile, pair.ProtectedTrajectory, pair.Secondary, pair.SecondaryTrajectory, window) };
-        var sampled = ConjunctionAssessment.Analyze(profile, pair.Secondary, window);
+            ? ConjunctionAssessment.AnalyzeAll(pair.Protected, pair.ProtectedTrajectory, pair.Secondary, pair.SecondaryTrajectory, window)
+            : new[] { ConjunctionAssessment.Analyze(pair.Protected, pair.ProtectedTrajectory, pair.Secondary, pair.SecondaryTrajectory, window) };
+        var sampled = ConjunctionAssessment.Analyze(pair.Protected, pair.Secondary, window);
 
         // Assert: one label, the scale of the window start, on both paths (#683: the dense TCA took the TDB scale of the
         // step that opens its bracket), the states read at it, never a window end
@@ -209,7 +208,7 @@ public class ConjunctionTcaAccuracyTests
         var window = LabelWindow(frame);
 
         // Act
-        var encounter = ConjunctionAssessment.Analyze(new ProtectedSpacecraftProfile(pair.Protected), pair.ProtectedTrajectory,
+        var encounter = ConjunctionAssessment.Analyze(pair.Protected, pair.ProtectedTrajectory,
             pair.Secondary, pair.SecondaryTrajectory, window);
 
         // Assert: the label in the window scale is the tick of that scale nearer the zero of the range rate of the states

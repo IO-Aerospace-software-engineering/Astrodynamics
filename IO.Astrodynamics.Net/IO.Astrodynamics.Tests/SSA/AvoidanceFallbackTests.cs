@@ -156,12 +156,12 @@ public class AvoidanceFallbackTests : IClassFixture<AvoidanceFallbackCase>
         _case.Propagate(protectedCraft, rk78,
             stateTransitionOnly ? new CovariancePropagationOptions { Mode = CovariancePropagationMode.StateTransitionOnly } : null);
         var secondary = Secondary(id - 1);
-        var encounter = ConjunctionAssessment.Analyze(new ProtectedSpacecraftProfile(protectedCraft), secondary,
+        var encounter = ConjunctionAssessment.Analyze(protectedCraft, secondary,
             AvoidanceFallbackCase.ScreeningWindow, HeldInRtn);
         Assert.Equal(CovarianceSource.InitialStateHeldInRtn, encounter.EncounterState.ProtectedCovariance.Source);
 
         // Act
-        var avoidance = ConjunctionAssessment.EvaluateAvoidance(encounter, Options);
+        var avoidance = ConjunctionAssessment.EvaluateAvoidance(encounter, Options).Options;
 
         // Assert
         AssertOptionsAreTheirReferences(avoidance, rk78, secondary, id - 2, _case.ProtectedStart);
@@ -178,14 +178,14 @@ public class AvoidanceFallbackTests : IClassFixture<AvoidanceFallbackCase>
         var protectedTrajectory = _case.Propagate(protectedCraft, rk78);
         var secondary = Secondary(id - 1);
         var secondaryTrajectory = _case.PropagateTwoBody(secondary);
-        var encounter = ConjunctionAssessment.AnalyzeAll(new ProtectedSpacecraftProfile(protectedCraft), protectedTrajectory,
+        var encounter = ConjunctionAssessment.AnalyzeAll(protectedCraft, protectedTrajectory,
                 secondary, secondaryTrajectory, AvoidanceFallbackCase.ScreeningWindow, HeldInRtn)
             .OrderBy(e => e.EncounterState.MissDistanceMeters).First();
 
         // Act: the protected spacecraft propagated again afterwards, with another window: the options follow the
         // trajectory passed to the analysis, not the last propagation of the spacecraft
         _case.Propagate(protectedCraft, !rk78);
-        var avoidance = ConjunctionAssessment.EvaluateAvoidance(encounter, Options);
+        var avoidance = ConjunctionAssessment.EvaluateAvoidance(encounter, Options).Options;
 
         // Assert
         Assert.Same(protectedTrajectory, encounter.ProtectedTrajectory);
@@ -199,12 +199,12 @@ public class AvoidanceFallbackTests : IClassFixture<AvoidanceFallbackCase>
         var protectedCraft = AvoidanceFallbackCase.WithEngine(-6760, _case.ProtectedStartWithoutCovariance, out _);
         _case.Propagate(protectedCraft, true);
         var secondary = Secondary(-6761);
-        var encounter = ConjunctionAssessment.Analyze(new ProtectedSpacecraftProfile(protectedCraft), secondary,
+        var encounter = ConjunctionAssessment.Analyze(protectedCraft, secondary,
             AvoidanceFallbackCase.ScreeningWindow);
         Assert.Equal(CovarianceSource.None, encounter.EncounterState.ProtectedCovariance.Source);
 
         // Act
-        var avoidance = ConjunctionAssessment.EvaluateAvoidance(encounter, Options);
+        var avoidance = ConjunctionAssessment.EvaluateAvoidance(encounter, Options).Options;
 
         // Assert: propagated, without a protected covariance (the single-covariance maximum Pc)
         AssertOptionsAreTheirReferences(avoidance, true, secondary, -6762, _case.ProtectedStartWithoutCovariance);
@@ -225,11 +225,11 @@ public class AvoidanceFallbackTests : IClassFixture<AvoidanceFallbackCase>
             AvoidanceFallbackCase.Start.AddHours(1.5), _case.ProtectedStart.Velocity.Normalize() * 300.0, engine));
         _case.Propagate(protectedCraft, true);
         var secondary = Secondary(-6771);
-        var encounter = ConjunctionAssessment.Analyze(new ProtectedSpacecraftProfile(protectedCraft), secondary,
+        var encounter = ConjunctionAssessment.Analyze(protectedCraft, secondary,
             new Window(AvoidanceFallbackCase.Start.AddMinutes(30.0), AvoidanceFallbackCase.ScreeningWindow.EndDate), HeldInRtn);
 
         // Act
-        var avoidance = ConjunctionAssessment.EvaluateAvoidance(encounter, Options with { LeadTimes = new[] { TimeSpan.FromMinutes(40.0) } });
+        var avoidance = ConjunctionAssessment.EvaluateAvoidance(encounter, Options with { LeadTimes = new[] { TimeSpan.FromMinutes(40.0) } }).Options;
 
         // Assert: each option against the spacecraft propagated from the start with the first burn and the burn of the
         // option, its mass after the first burn less its fuel; the second burn is not part of the option (open loop)
@@ -256,11 +256,11 @@ public class AvoidanceFallbackTests : IClassFixture<AvoidanceFallbackCase>
             ConjunctionCovarianceCase.WithRtnCovariance(protectedOrbit, new[] { 50.0, 200.0, 30.0, 0.2, 0.05, 0.03 }));
         var secondary = ReferenceCase.NewSpacecraft(-6781,
             AvoidanceFallbackCase.SecondaryNear(protectedOrbit.ToStateVector(AvoidanceFallbackCase.Tca)));
-        var encounter = ConjunctionAssessment.Analyze(new ProtectedSpacecraftProfile(protectedCraft), secondary,
+        var encounter = ConjunctionAssessment.Analyze(protectedCraft, secondary,
             AvoidanceFallbackCase.ScreeningWindow);
 
         // Act
-        var avoidance = ConjunctionAssessment.EvaluateAvoidance(encounter, Options);
+        var avoidance = ConjunctionAssessment.EvaluateAvoidance(encounter, Options).Options;
 
         // Assert: the two-body orbit of the state after the burn, stated; the initial covariance held in RTN from the
         // initial state to the TCA of the option (before #402, none), aged from the initial state
@@ -291,11 +291,11 @@ public class AvoidanceFallbackTests : IClassFixture<AvoidanceFallbackCase>
         var tca = tle.Epoch.AddHours(2.0);
         var secondary = ReferenceCase.NewSpacecraft(-6791,
             AvoidanceFallbackCase.SecondaryNear(protectedCraft.GetEphemeris(tca, tle.Observer, Frames.Frame.ICRF, Aberration.None)));
-        var encounter = ConjunctionAssessment.Analyze(new ProtectedSpacecraftProfile(protectedCraft), secondary,
+        var encounter = ConjunctionAssessment.Analyze(protectedCraft, secondary,
             new Window(tle.Epoch, tle.Epoch.AddHours(2.5)));
 
         // Act
-        var avoidance = ConjunctionAssessment.EvaluateAvoidance(encounter, Options);
+        var avoidance = ConjunctionAssessment.EvaluateAvoidance(encounter, Options).Options;
 
         // Assert
         Assert.Equal(6, avoidance.Count);
@@ -317,14 +317,14 @@ public class AvoidanceFallbackTests : IClassFixture<AvoidanceFallbackCase>
         var secondary = ReferenceCase.NewSpacecraft(-6801, new StateVector(secondaryAtStart.Position, secondaryAtStart.Velocity,
             secondaryAtStart.Observer, secondaryAtStart.Epoch, secondaryAtStart.Frame, _case.ProtectedStart.Covariance));
         _case.PropagateTwoBody(secondary);
-        var encounter = ConjunctionAssessment.Analyze(new ProtectedSpacecraftProfile(protectedCraft), secondary,
+        var encounter = ConjunctionAssessment.Analyze(protectedCraft, secondary,
             AvoidanceFallbackCase.ScreeningWindow);
         Assert.Equal(CovarianceSource.InitialStateHeldInRtn, encounter.EncounterState.ProtectedCovariance.Source);
         Assert.Equal(CovarianceSource.Propagated, encounter.EncounterState.SecondaryCovariance.Source);
 
         // Act
-        var without = ConjunctionAssessment.EvaluateAvoidance(encounter, Options);
-        var with = ConjunctionAssessment.EvaluateAvoidance(encounter, Options with { ExecutionError = AvoidanceFallbackCase.Gates });
+        var without = ConjunctionAssessment.EvaluateAvoidance(encounter, Options).Options;
+        var with = ConjunctionAssessment.EvaluateAvoidance(encounter, Options with { ExecutionError = AvoidanceFallbackCase.Gates }).Options;
 
         // Assert: the same options and probabilities; the secondary keeps its propagated covariance
         Assert.Equal(without.Select(o => o.PostManeuverEncounter.CollisionRisk.ProbabilityOfCollision),
@@ -382,16 +382,15 @@ public class AvoidanceFallbackTests : IClassFixture<AvoidanceFallbackCase>
             secondary = Secondary(id - 1);
         }
 
-        var profile = new ProtectedSpacecraftProfile(protectedCraft);
         var window = AvoidanceFallbackCase.ScreeningWindow;
         var encounter = entry switch
         {
-            "Analyze" => ConjunctionAssessment.Analyze(profile, secondary, window, InheritedSettings),
-            "AnalyzeAll" => ConjunctionAssessment.AnalyzeAll(profile, secondary, window, InheritedSettings)
+            "Analyze" => ConjunctionAssessment.Analyze(protectedCraft, secondary, window, InheritedSettings),
+            "AnalyzeAll" => ConjunctionAssessment.AnalyzeAll(protectedCraft, secondary, window, InheritedSettings)
                 .OrderBy(e => e.EncounterState.MissDistanceMeters).First(),
-            "AnalyzeDense" => ConjunctionAssessment.Analyze(profile, protectedTrajectory, secondary,
+            "AnalyzeDense" => ConjunctionAssessment.Analyze(protectedCraft, protectedTrajectory, secondary,
                 _case.PropagateTwoBody(secondary), window, InheritedSettings),
-            _ => Assert.Single(ConjunctionAssessment.Screen(profile, new ILocalizable[] { secondary }, window,
+            _ => Assert.Single(ConjunctionAssessment.Screen(protectedCraft, new ILocalizable[] { secondary }, window,
                 new ScreeningOptions
                 {
                     Analysis = ConjunctionAnalysisOptions.Default with
@@ -418,7 +417,7 @@ public class AvoidanceFallbackTests : IClassFixture<AvoidanceFallbackCase>
         Assert.Equal(2.0, encounter.CollisionRisk.CombinedHardBodyRadiusMeters);
 
         // Act
-        var avoidance = ConjunctionAssessment.EvaluateAvoidance(encounter, Options);
+        var avoidance = ConjunctionAssessment.EvaluateAvoidance(encounter, Options).Options;
 
         // Assert: each option re-analyzed with the settings of the encounter (#683: the radius of the avoidance options, 5 m
         // for the secondary, their stale threshold of 60 s and their low-speed threshold of 1 m/s): its radius, the stale
@@ -475,15 +474,15 @@ public class AvoidanceFallbackTests : IClassFixture<AvoidanceFallbackCase>
             secondary = Secondary(id - 1);
         }
 
-        var encounter = ConjunctionAssessment.Analyze(new ProtectedSpacecraftProfile(protectedCraft), secondary,
+        var encounter = ConjunctionAssessment.Analyze(protectedCraft, secondary,
             AvoidanceFallbackCase.ScreeningWindow, settings);
 
         // Act: Analysis left null, and given the settings of the encounter
-        var inherited = ConjunctionAssessment.EvaluateAvoidance(encounter, Options);
+        var inherited = ConjunctionAssessment.EvaluateAvoidance(encounter, Options).Options;
         var explicitly = ConjunctionAssessment.EvaluateAvoidance(encounter, Options with
         {
             Analysis = settings with { SecondaryHardBodyRadiusMeters = 2.0 }
-        });
+        }).Options;
 
         // Assert: the same options, bit for bit (#683: the defaults of the avoidance replaced the settings of the encounter)
         Assert.Equal(6, inherited.Count);
@@ -527,7 +526,7 @@ public class AvoidanceFallbackTests : IClassFixture<AvoidanceFallbackCase>
 
         // Every close approach of the window, the one of the crossing 2 h after the start the encounter (a TCA up to
         // 3.75 s off at 8.8 km/s leaves its miss above that of other minima of the window, which Analyze would return)
-        var encounters = ConjunctionAssessment.AnalyzeAll(new ProtectedSpacecraftProfile(protectedCraft), secondary, window, settings);
+        var encounters = ConjunctionAssessment.AnalyzeAll(protectedCraft, secondary, window, settings);
         var encounter = encounters.OrderBy(e => System.Math.Abs((e.EncounterState.Epoch - AvoidanceFallbackCase.Tca).TotalSeconds)).First();
         Assert.True(System.Math.Abs((encounter.EncounterState.Epoch - AvoidanceFallbackCase.Tca).TotalSeconds) < 60.0);
 
@@ -558,7 +557,7 @@ public class AvoidanceFallbackTests : IClassFixture<AvoidanceFallbackCase>
         }
 
         // Act
-        var avoidance = ConjunctionAssessment.EvaluateAvoidance(encounter, Options);
+        var avoidance = ConjunctionAssessment.EvaluateAvoidance(encounter, Options).Options;
 
         // Assert: each option searched on the window from its burn with the steps and the tolerance of the encounter
         // (#683: the avoidance re-analyzed with a sample step of 1 min, a maximum search step of 60 s and a tolerance of
@@ -580,13 +579,13 @@ public class AvoidanceFallbackTests : IClassFixture<AvoidanceFallbackCase>
         int id = rk78 ? -6810 : -6820;
         var protectedCraft = AvoidanceFallbackCase.WithEngine(id, _case.ProtectedStart, out _);
         _case.Propagate(protectedCraft, rk78);
-        var encounter = ConjunctionAssessment.Analyze(new ProtectedSpacecraftProfile(protectedCraft), Secondary(id - 1),
+        var encounter = ConjunctionAssessment.Analyze(protectedCraft, Secondary(id - 1),
             AvoidanceFallbackCase.ScreeningWindow, HeldInRtn);
-        var sequential = ConjunctionAssessment.EvaluateAvoidance(encounter, Options);
+        var sequential = ConjunctionAssessment.EvaluateAvoidance(encounter, Options).Options;
 
         // Act: three studies at once, sharing the forces of the protected trajectory under its lock
         var concurrent = Task.WhenAll(Enumerable.Range(0, 3)
-            .Select(_ => Task.Run(() => ConjunctionAssessment.EvaluateAvoidance(encounter, Options)))).GetAwaiter().GetResult();
+            .Select(_ => Task.Run(() => ConjunctionAssessment.EvaluateAvoidance(encounter, Options).Options))).GetAwaiter().GetResult();
 
         // Assert: bit for bit
         foreach (var study in concurrent)
@@ -673,7 +672,7 @@ public class AvoidanceFallbackTests : IClassFixture<AvoidanceFallbackCase>
         Spacecraft secondary, bool rk78)
     {
         var post = option.PostManeuverEncounter;
-        var expected = ConjunctionAssessment.Analyze(new ProtectedSpacecraftProfile(reference), secondary,
+        var expected = ConjunctionAssessment.Analyze(reference, secondary,
             new Window(option.BurnEpoch, AvoidanceFallbackCase.ScreeningWindow.EndDate),
             new ConjunctionAnalysisOptions { CovariancePropagation = CovariancePropagationOptions.None });
         var tca = post.EncounterState.Epoch;

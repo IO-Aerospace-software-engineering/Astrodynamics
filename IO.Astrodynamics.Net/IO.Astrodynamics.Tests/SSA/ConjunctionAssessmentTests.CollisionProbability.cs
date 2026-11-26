@@ -16,7 +16,7 @@ namespace IO.Astrodynamics.Tests.SSA;
 /// The 2D probability of collision (#610, #611, #612) against its exact value: the seven designed encounters of lot 6 of
 /// #457 (high, mid, low, near 5e-12, a hard-body radius much larger than the covariance, a covariance not positive
 /// definite in the encounter plane, Frisbee's maximum), through the internal integral and the public
-/// <see cref="ConjunctionAssessment.Analyze(ProtectedSpacecraftProfile, Propagator.PropagationSolution, Body.Spacecraft.Spacecraft, Propagator.PropagationSolution, Window, ConjunctionAnalysisOptions)"/>,
+/// <see cref="ConjunctionAssessment.Analyze(Spacecraft, Propagator.PropagationSolution, Body.Spacecraft.Spacecraft, Propagator.PropagationSolution, Window, ConjunctionAnalysisOptions)"/>,
 /// the reproductions of the three issues, and the private erf and erfc of the Pc path.
 /// </summary>
 /// <remarks>
@@ -137,7 +137,7 @@ public partial class ConjunctionAssessmentTests
 
             // Act
             var result = ConjunctionAssessment.Analyze(
-                new ProtectedSpacecraftProfile(protectedSpacecraft),
+                protectedSpacecraft,
                 protectedTrajectory,
                 secondarySpacecraft,
                 secondaryTrajectory,

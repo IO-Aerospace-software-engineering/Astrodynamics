@@ -153,8 +153,10 @@ initial-state covariance held fixed in RTN (not propagated), whose age at TCA a 
 
 Inferred metadata, which `ProtectedParticipantMetadata` and `SecondaryParticipantMetadata` override:
 
-- `MANEUVERABLE` of object 1 is `YES` when the `ManeuverConstraints.MaxDeltaVMetersPerSecond` of the protected profile
-  is positive, `NO` otherwise. Object 2 is `YES` for a spacecraft with at least one engine, `N/A` otherwise: N/A means
+- `MANEUVERABLE` of object 1, the protected spacecraft whose avoidance the library computes, is always `YES`, the
+  post-maneuver encounter of an avoidance option included (decision 109 of #668, decided by S. Guillet, 2026-11-26;
+  before 11.0.0, `YES` when the `ManeuverConstraints.MaxDeltaVMetersPerSecond` of the protected profile was positive,
+  5 m/s by default). Object 2 is `YES` for a spacecraft with at least one engine, `N/A` otherwise: N/A means
   "not available" or "not applicable" (CCSDS 508.0-B-1 Cor. 2, 1.4.3.1, to which the `MANEUVERABLE` row of Table 3-3
   refers), and the library knows the model of the object, not its maneuver capacity
   ([#683](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/683): `YES` for any spacecraft

@@ -32,7 +32,7 @@ internal static class CdmExporter
         // The covariance the analysis used, with its source; for a case built by hand, the same resolution as the analysis
         // without propagation: covariance at TCA, otherwise the initial-state covariance held fixed in RTN.
         var protectedCovariance = encounterCase.ProtectedCovariance ??
-                                  EncounterCovariance.Resolve(encounterCase.ProtectedAsset.Spacecraft, encounterCase.ProtectedState);
+                                  EncounterCovariance.Resolve(encounterCase.ProtectedSpacecraft, encounterCase.ProtectedState);
         var secondaryCovariance = encounterCase.SecondaryCovariance ??
                                   EncounterCovariance.Resolve(encounterCase.SecondaryObject, encounterCase.SecondaryState);
 
@@ -71,7 +71,7 @@ internal static class CdmExporter
             InferMetadata(
                 encounterCase,
                 CdmObjectRole.Object1,
-                encounterCase.ProtectedAsset.Spacecraft,
+                encounterCase.ProtectedSpacecraft,
                 encounterCase.ProtectedState,
                 protectedCovariance),
             options.ProtectedParticipantMetadata);
@@ -85,7 +85,7 @@ internal static class CdmExporter
                 secondaryCovariance),
             options.SecondaryParticipantMetadata);
 
-        var protectedRadius = encounterCase.ProtectedAsset.Spacecraft.HardBodyRadius;
+        var protectedRadius = encounterCase.ProtectedSpacecraft.HardBodyRadius;
         var secondaryRadius = System.Math.Max(
             encounterCase.CollisionRisk.CombinedHardBodyRadiusMeters - protectedRadius,
             0.0);
@@ -94,7 +94,7 @@ internal static class CdmExporter
         {
             BuildSegment(
                 protectedMetadata,
-                encounterCase.ProtectedAsset.Spacecraft,
+                encounterCase.ProtectedSpacecraft,
                 encounterCase.ProtectedState,
                 RotateCovarianceToRtn(protectedCovariance.CovarianceInertial!.Value, encounterCase.ProtectedState),
                 protectedRadius,
@@ -353,14 +353,15 @@ internal static class CdmExporter
             ? CdmForceModel.From(dynamics)
             : null;
 
+        // Object 1, the protected spacecraft whose avoidance the library computes: always YES, its post-maneuver trial
+        // without engines included (decision 109 of #668, decided by S. Guillet, 2026-11-26; YES from the default
+        // ManeuverConstraints of its profile before 11.0.0); ProtectedParticipantMetadata overrides it.
         // Object 2: YES for a spacecraft with an engine; otherwise N/A, "not available" or "not applicable" (CCSDS 508.0-B-1
         // Cor. 2, 1.4.3.1, which the MANEUVERABLE row of Table 3-3 refers to): the library knows the model of the object,
         // not its maneuver capacity (#683: YES for any spacecraft). An engine counts whatever its tank holds, an empty tank
         // (lot L5b, R10) included: the letter of #683's rule; SecondaryParticipantMetadata overrides it
         var maneuverable = role == CdmObjectRole.Object1
-            ? encounterCase.ProtectedAsset.ManeuverConstraints.MaxDeltaVMetersPerSecond > 0.0
-                ? CdmManeuverable.Yes
-                : CdmManeuverable.No
+            ? CdmManeuverable.Yes
             : source is Spacecraft { Engines.Count: > 0 }
                 ? CdmManeuverable.Yes
                 : CdmManeuverable.NotApplicable;
@@ -462,7 +463,7 @@ internal static class CdmExporter
     {
         return string.Create(
             CultureInfo.InvariantCulture,
-            $"CDM-{System.Math.Abs(encounterCase.ProtectedAsset.Spacecraft.NaifId)}-{System.Math.Abs(encounterCase.SecondaryObject.NaifId)}-{encounterCase.EncounterState.Epoch.ToUTC().DateTime:yyyyMMddHHmmssfff}");
+            $"CDM-{System.Math.Abs(encounterCase.ProtectedSpacecraft.NaifId)}-{System.Math.Abs(encounterCase.SecondaryObject.NaifId)}-{encounterCase.EncounterState.Epoch.ToUTC().DateTime:yyyyMMddHHmmssfff}");
     }
 
     private static string FormatAge(TimeSpan? age)

@@ -3,7 +3,7 @@
 !!! note
     Avoidance studies live in the `IO.Astrodynamics.SSA` namespace.
 
-`ConjunctionAssessment.EvaluateAvoidance(...)` generates and ranks simple impulsive avoidance options for a conjunction encounter.
+`ConjunctionAssessment.EvaluateAvoidance(...)` generates and ranks simple impulsive avoidance options for a conjunction encounter, and returns them in an `AvoidanceStudy` with the lead times that gave none.
 
 ## EvaluateAvoidance
 
@@ -12,7 +12,14 @@
 | `encounter` | `EncounterCase` | The conjunction to mitigate |
 | `options` | `AvoidanceSearchOptions` | Search grid parameters |
 
-The method applies candidate burns in the protected spacecraft's RTN frame at each combination of lead time and delta-V magnitude, then reanalyzes the encounter after each candidate. The burn epoch must lie in the screening window of the encounter.
+The method applies candidate burns in the protected spacecraft's RTN frame at each combination of lead time and delta-V magnitude, then reanalyzes the encounter after each candidate. The grid is the constraint: every lead time and magnitude is evaluated (R17 of [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668), decided by S. Guillet, 2026-11-19; before 11.0.0 the `ManeuverConstraints` of the protected profile, 10 min to 24 h and 5 m/s by default, dropped the others, a magnitude of 0 included). The burn epoch must lie in the screening window of the encounter: a lead time whose burn falls before it gives no option and is listed in `AvoidanceStudy.Skipped` with the reason `AvoidanceSkipReason.BeforeWindow` (dropped without a word before 11.0.0), and so is one whose burn the propagation the options are propagated on does not hold (`OutsideTrajectory`, which the library's own analyses do not reach: their propagations cover the window).
+
+The method returns an `AvoidanceStudy` (before 11.0.0 the list of options; `EvaluateAvoidance(...).Options` is that list):
+
+| Property | Type | Description |
+|----------|------|-------------|
+| `Options` | `IReadOnlyList<AvoidanceOption>` | The options, by ranking score, lower first, at most `MaxReturnedOptions` |
+| `Skipped` | `IReadOnlyList<SkippedLeadTime>` | The lead times that gave no option, in the order of the grid, each with its `LeadTime` and `Reason` (`AvoidanceSkipReason`); its `ToString` the lead time and the reason |
 
 ### Trajectory and covariance of each option
 
@@ -102,14 +109,14 @@ Moon, Sun, SRP, in RK7(8) and by Velocity-Verlet).
 
 | Property | Type | Description |
 |----------|------|-------------|
-| `LeadTimes` | `TimeSpan[]` | Burn lead times before TCA |
-| `DeltaVMagnitudesMetersPerSecond` | `double[]` | Candidate delta-V magnitudes (m/s) |
+| `LeadTimes` | `IReadOnlyList<TimeSpan>` | Burn lead times before TCA (1 h, 3 h and 6 h); empty or a lead time not positive throws `ArgumentOutOfRangeException` at init |
+| `DeltaVMagnitudesMetersPerSecond` | `IReadOnlyList<double>` | Candidate delta-V magnitudes (m/s; 0.05, 0.10 and 0.25); empty or a magnitude not positive and finite throws `ArgumentOutOfRangeException` at init |
 | `ExecutionError` | `ManeuverExecutionError` | Execution error of the burns (model of Gates), added to the covariance at the burn when the covariance is propagated, not used otherwise; null by default |
 | `Analysis` | `ConjunctionAnalysisOptions` | The settings of the re-analysis of each option; null (default) for those the encounter was analyzed with; a record given replaces them whole, its `SecondaryHardBodyRadiusMeters` by the rule of [Conjunction Assessment](conjunction-assessment.md#conjunctionassessment-methods) (a value that differs from the radius a secondary spacecraft gives throws `ArgumentException` naming `options`) |
 | `MaxReturnedOptions` | `int` | Number of options returned after ranking (10) |
 | `PcThreshold` | `double` | Pc below which an option ranks first (1e-4) |
 
-Each option is re-analyzed with `Analysis`, or, when it is null, with the settings the encounter was analyzed with, on
+`AvoidanceSearchOptions.Default` is `new AvoidanceSearchOptions()`. Each option is re-analyzed with `Analysis`, or, when it is null, with the settings the encounter was analyzed with, on
 both paths (the covariance propagated or not)
 ([#683](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/683); one record, structuring choice 2
 of #668, decided by S. Guillet, 2026-11-19: before 11.0.0 the avoidance had an `AnalysisSampleStep`, a
@@ -145,7 +152,7 @@ The ranking score is useful for sorting candidates but should not replace missio
 
 ```csharp
 // Inputs: encounter (EncounterCase)
-var options = ConjunctionAssessment.EvaluateAvoidance(
+var study = ConjunctionAssessment.EvaluateAvoidance(
     encounter,
     new AvoidanceSearchOptions
     {
@@ -158,10 +165,15 @@ var options = ConjunctionAssessment.EvaluateAvoidance(
         DeltaVMagnitudesMetersPerSecond = new[] { 0.05, 0.10, 0.25 }
     });
 
-foreach (var opt in options.OrderBy(o => o.RankingScore))
+foreach (var opt in study.Options)
 {
     Console.WriteLine($"Burn at {opt.BurnEpoch}: dV={opt.DeltaVInertial.Magnitude():F3} m/s, "
         + $"post-miss={opt.PostManeuverEncounter.EncounterState.MissDistanceMeters:F0} m");
+}
+
+foreach (var skipped in study.Skipped)
+{
+    Console.WriteLine(skipped);   // for instance "06:00:00: before the window"
 }
 ```
 

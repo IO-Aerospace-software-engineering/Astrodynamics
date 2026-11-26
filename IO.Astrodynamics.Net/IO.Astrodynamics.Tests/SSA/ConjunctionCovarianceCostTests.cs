@@ -53,27 +53,28 @@ public class ConjunctionCovarianceCostTests : IClassFixture<ReferenceCases>
         }
 
         double propagation = watch.Elapsed.TotalMilliseconds / 2.0;
-        var profile = new ProtectedSpacecraftProfile(protectedCraft);
         var window = new TimeSystem.Window(start.AddHours(22.0), start.AddHours(24.0));
 
         // Act: the analysis without the propagated covariance, with the replay only, and with the index
-        double held = Median(() => ConjunctionAssessment.Analyze(profile, secondaryCraft, window,
+        double held = Median(() => ConjunctionAssessment.Analyze(protectedCraft, secondaryCraft, window,
             new ConjunctionAnalysisOptions { CovariancePropagation = CovariancePropagationOptions.None }));
-        double replay = Median(() => ConjunctionAssessment.Analyze(profile, secondaryCraft, window));
-        double withIndex = Median(() => ConjunctionAssessment.Analyze(profile, secondaryCraft, window,
+        double replay = Median(() => ConjunctionAssessment.Analyze(protectedCraft, secondaryCraft, window));
+        double withIndex = Median(() => ConjunctionAssessment.Analyze(protectedCraft, secondaryCraft, window,
             new ConjunctionAnalysisOptions { ComputeNonlinearityIndex = true }), 3);
         // The avoidance burns must lie in the screening window: three lead times from the TCA found in it, up to 6 h, with
-        // the default magnitudes and directions (up to 54 options; those below the minimum lead time of 10 min are
-        // skipped). The pair meets more than once in the window: the TCA found is the best one, 12.3 h after the start,
-        // not the crossing near 23 h, so the lead times reach 0.32 h only
+        // the default magnitudes and directions (up to 54 options; those below 10 min left out, the minimum lead time of
+        // the ManeuverConstraints of 10.x, so that the published figure keeps its 36 options: the grid is the constraint
+        // since 11.0.0, R17 of #668). The pair meets more than once in the window: the TCA found is the best one, 12.3 h
+        // after the start, not the crossing near 23 h, so the lead times reach 0.32 h only
         var screening = new TimeSystem.Window(start.AddHours(12.0), start.AddHours(24.0));
-        var encounter = ConjunctionAssessment.Analyze(profile, secondaryCraft, screening,
+        var encounter = ConjunctionAssessment.Analyze(protectedCraft, secondaryCraft, screening,
             new ConjunctionAnalysisOptions { ComputeNonlinearityIndex = false });
         double lead = System.Math.Min(6.0 * 3600.0, (encounter.EncounterState.Epoch - screening.StartDate).TotalSeconds - 60.0);
-        var leads = new[] { lead / 3.0, 2.0 * lead / 3.0, lead }.Select(TimeSpan.FromSeconds).ToArray();
+        var leads = new[] { lead / 3.0, 2.0 * lead / 3.0, lead }.Select(TimeSpan.FromSeconds)
+            .Where(leadTime => leadTime >= TimeSpan.FromMinutes(10.0)).ToArray();
         watch.Restart();
         var options = ConjunctionAssessment.EvaluateAvoidance(encounter,
-            new AvoidanceSearchOptions { LeadTimes = leads, MaxReturnedOptions = 54 });
+            new AvoidanceSearchOptions { LeadTimes = leads, MaxReturnedOptions = 54 }).Options;
         double avoidance = watch.Elapsed.TotalMilliseconds;
 
         // Assert
@@ -106,12 +107,12 @@ public class ConjunctionCovarianceCostTests : IClassFixture<ReferenceCases>
             protectedCraft.Propagate(propagation, new PropagationOptions { Integrator = new VVIntegratorOptions { Step = TimeSpan.FromSeconds(1.0) }, OutputStep = TimeSpan.FromSeconds(1.0), ThirdBodies = r2.Bodies, AtmosphericDrag = true });
         var secondaryCraft = ReferenceCase.NewSpacecraft(rk78 ? -6813 : -6814, AvoidanceFallbackCase.SecondaryNear(
             protectedCraft.GetEphemeris(tca, r2.InitialState.Observer, r2.InitialState.Frame, Aberration.None)));
-        var encounter = ConjunctionAssessment.Analyze(new ProtectedSpacecraftProfile(protectedCraft), secondaryCraft,
+        var encounter = ConjunctionAssessment.Analyze(protectedCraft, secondaryCraft,
             new TimeSystem.Window(start, start.AddHours(7.0)), new ConjunctionAnalysisOptions { CovariancePropagation = CovariancePropagationOptions.None });
 
         // Act: the default grid (lead times 1 h, 3 h and 6 h; 0.05, 0.10 and 0.25 m/s; six directions)
         var watch = Stopwatch.StartNew();
-        var options = ConjunctionAssessment.EvaluateAvoidance(encounter, new AvoidanceSearchOptions { MaxReturnedOptions = 54 });
+        var options = ConjunctionAssessment.EvaluateAvoidance(encounter, new AvoidanceSearchOptions { MaxReturnedOptions = 54 }).Options;
         double avoidance = watch.Elapsed.TotalMilliseconds;
 
         // Assert
