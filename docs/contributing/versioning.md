@@ -19,14 +19,17 @@ Current version information and release notes since 8.0. Breaking changes are ca
 ## Releasing
 
 1. **The release PR**, `chore(release): prepare <version>`, sets the version in `IO.Astrodynamics.csproj`,
-   `IO.Astrodynamics.CLI.csproj`, the table above and the "Version Information" of `DEVELOPER_GUIDE.md`. The CI docs
-   job runs `tools/ci/check-versions.sh`, which fails when they disagree. The PR also finalizes the release notes,
+   `IO.Astrodynamics.CLI.csproj` and the table above. The CI docs job runs `tools/ci/check-versions.sh`, which fails
+   when they disagree. The PR also finalizes the release notes,
    with the issues still open under **Known limitations**.
 2. **Before it merges**:
    - `long-validation.yml` green on the tree being released, or on a tree that differs from it only in comments
      and documentation;
    - `gmat-reference.yml` green if what GMAT reads has changed;
    - the conformance job green on the three platforms;
+   - the smoke tests green against the packed package: `dotnet pack IO.Astrodynamics -c Release -o local-feed`, then
+     `dotnet test IO.Astrodynamics.SmokeTests -p:IOAstrodynamicsVersion=<version>`, from `IO.Astrodynamics.Net/`, which
+     no CI job of a pull request runs (#834);
    - no citation left "to be verified".
 3. **After the merge**, tag the merge commit with the version itself, without a `v`: `10.1.0`, or
    `10.2.0-preview-1` for a preview (the suffix of the earlier previews).
@@ -6041,6 +6044,24 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
           done
         ```
 
+- **`DEVELOPER_GUIDE.md` is a pointer to the documentation site** (lot L9, R05 of
+  [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668)): one paragraph and a table from
+  each of its former sections to its page. Its content a page did not hold moved to the pages, its code compiled there:
+  the atmosphere API to [Force Models](../reference/force-models.md#the-atmosphere-api), the OPM data model to
+  [OPM](../reference/opm.md#building-an-opm), the TLE fields and `NoradCatalogNumber` to [TLE](../reference/tle.md),
+  `TimeToRadius` and `TimeToSphereOfInfluence` to [Keplerian Elements](../reference/keplerian-elements.md), the members
+  of `Launch` to [Mission Design](../tutorials/mission-design.md#launch-window-computation), the window search of the
+  site example to [Sites](../reference/sites.md#example), the tracking of a TLE spacecraft to
+  [TLE & OMM](../tutorials/tle-and-omm.md#tracking-from-a-ground-station), the deep space example and its test (#704)
+  to [High-Fidelity Propagation](../guides/high-fidelity-propagation.md#deep-space-the-moon-as-a-probe), and the
+  breaking changes of 8.5.0 and 8.6.0 to their entries below; the rest repeated the pages and the tutorials, and went
+  with its stale lines ([#831](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/831): the
+  `InstrumentPointingAttitude` of its attitude list, which never existed). `tools/ci/check-versions.sh` reads the
+  versions of the table above alone, and the `LaunchSite` constructor of [Sites](../reference/sites.md#launchsite) is
+  the library's, its coordinates included. `DeveloperGuideExamples.cs` and `DeveloperGuideExamplesTests` are removed, the
+  test of #704 is `DocumentationPagesExamplesTests`'s, and the smoke tests of the two examples of #483 are
+  `DocumentationExamplesSmokeTests`.
+
 - **Breaking: the scale of a `Time` is a required argument** (lot L2, R24 of
   [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668), D3, decided by S. Guillet,
   2026-11-13 and amended 2026-11-19: no forwarder). `ITimeFrame`, `TimeFrame`, `TimeSystem.Frames` (`TDBTimeFrame`,
@@ -10527,15 +10548,27 @@ on precession-nutation only. Use `new TirsFrame(eop)` where Earth orientation pa
 
 ### 8.6.0
 
-- `SpacecraftPropagator` was renamed to `CentralBodyPropagator`.
-- Maneuver triggering moved to event-detection g-functions.
-- The integrator interface was redesigned around segmented propagation.
-- `Propagate()` now returns `PropagationSolution`.
-- Several SSB-specific APIs were removed from the public surface.
+The propagator and maneuver systems have been redesigned:
+
+- **`SpacecraftPropagator` renamed to `CentralBodyPropagator`**: Handles all numerical propagation (LEO through interplanetary). Central body is inferred from the spacecraft's initial observer. `SsbPropagator` has been removed.
+- **`Maneuver.CanExecute()` removed**: Maneuver triggering now uses industry-standard g-function event detection. Each `ImpulseManeuver` implements `ComputeEventValue(StateVector)` → continuous scalar and `EventCrossingDirection` → crossing direction.
+- **`Maneuver.ComputeManeuverPoint()` removed**: Replaced by g-function zero-crossing in `ComputeEventValue()`.
+- **`Attitude.ComputeOrientation()` is now `public`** (was `protected`): Enables continuous attitude recomputation at output epochs.
+- **New `ImpulseManeuver` abstract members**: `ComputeEventValue(StateVector)`, `EventCrossingDirection`, and optional `CheckPreconditions(StateVector)` must be implemented by custom maneuver subclasses.
+- **New integrator interface**: `IIntegrator` with `Initialize(StateVector)` and `IntegrateSegment()` replaces the previous tight coupling between propagator and integrator.
+- **New event detection system**: `IEventDetector`, `ManeuverEventDetector`, `CrossingDirection` in `IO.Astrodynamics.Propagator.Events`.
+- **Segment-based propagation**: `PropagationSolution`, `PropagationSegment`, `AcceptedStep` enable cubic Hermite dense output for all integrators.
+- **`Spacecraft.Propagate()` simplified**: Always uses `CentralBodyPropagator` — no auto-routing between different propagator types.
+- **`Propagate()` returns `PropagationSolution`**: `PropagatorBase.Propagate()`, `CentralBodyPropagator.Propagate()`, `TLEPropagator.Propagate()`, and `Spacecraft.Propagate()` now return a `PropagationSolution` for dense output via `InterpolateAt(epoch)`. Previously callers had to access `StateVectorsRelativeToICRF` directly.
+- **SSB-specific methods removed from public API**: `GetGeometricStateFromICRF` removed from `ILocalizable` interface and changed to `internal` on `CelestialItem`, `Spacecraft`, `Star`, and `Site`. `GetEphemerisFromICRF` removed from `IDataProvider` interface and `SpiceDataProvider`. Use `GetEphemeris(epoch, target, observer, frame, aberration)` with SSB as observer for equivalent functionality. SSB-relative states are now an internal implementation detail used only for aberration correction and star positions.
+- **`Spacecraft.WriteEphemeris()` writes CB-relative states**: SPK files now contain states relative to the central body instead of SSB. SPICE handles ephemeris chaining automatically via the center body ID in the SPK segment.
 
 ### 8.5.0
 
-- Native error propagation now returns managed failures safely across the P/Invoke boundary.
-- Ephemeris write behavior was corrected to use the per-element center of motion.
-- Native buffer and memory handling were tightened.
-- Native binaries must be rebuilt to match the new signatures.
+The native C++ proxy layer has been updated for safety and correctness:
+
+- **Native error propagation**: `ReadOrientationProxy`, `ReadEphemerisProxy`, and `LaunchProxy` now return `bool` instead of `void`. C++ exceptions no longer cross the P/Invoke boundary (which previously could crash the .NET process). Errors are retrieved via `GetLastErrorProxy()` and surfaced as `InvalidOperationException` in .NET.
+- **Ephemeris write fix**: `WriteEphemerisProxy` now correctly uses the per-element center of motion ID (`sv[i]`) instead of always using the first element (`sv[0]`).
+- **Buffer safety**: All `FindWindows*` functions are bounds-checked to their declared array size (1000). `ReadOrientation`/`ReadEphemeris` loops are bounds-checked to 10000. All DTO string setters use `strncpy` instead of `strcpy`.
+- **Memory safety**: `ReadOrientationProxy` no longer uses heap-allocated matrices; uses the stack-based `Matrix(double[3][3])` constructor instead, eliminating memory leak risk.
+- **Native library**: Both `libIO.Astrodynamics.so` (Linux) and `IO.Astrodynamics.dll` (Windows) must be rebuilt from this version. Old native binaries are **incompatible** with the new .NET P/Invoke signatures.

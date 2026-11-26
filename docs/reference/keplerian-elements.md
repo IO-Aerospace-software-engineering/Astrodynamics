@@ -60,6 +60,8 @@ removed in 11.0.0).
 | `PerigeeRadius()` / `ApogeeVector().Magnitude()` | Apse radii (m) |
 | `PerigeeVector()` / `ApogeeVector()` | Apse position vectors, a(1 − e) P̂ and −a(1 + e) P̂, P̂ the perifocal axis of Ω, ω and i, defined at e = 0 (#686); within 1e-6 of e = 1 the periapsis is q P̂, q the perigee radius, and `PerigeeVelocity()` √(2μ/q) for a parabola (#737: NaN before 11.0.0); an open orbit (a not finite and above 0) has no apoapsis, and `ApogeeVector()` and `ApogeeVelocity()` throw `InvalidOperationException` naming e and a, as `Period()` (#737); mean elements have no position and throw `InvalidOperationException`, as `ToStateVector()` does: read `PerigeeRadius()` |
 | `IsCircular()` / `IsElliptical()` / `IsParabolic()` / `IsHyperbolic()` | Orbit type checks |
+| `TimeToRadius(double radius)` | Epoch at a radius after the periapsis: the next on an ellipse (e ≤ 1 − 1e-6), before `Epoch` on an open orbit already past it, `Epoch` on a circular orbit; throws when the orbit never reaches it or `Time` cannot hold the epoch; within 1e-6 of e = 1 the conic's time in universal variables (#753) |
+| `TimeToSphereOfInfluence()` | Epoch at the sphere of influence of the centre of motion (`TimeToRadius`); throws when the sphere is infinite |
 
 ## The near-parabolic band
 

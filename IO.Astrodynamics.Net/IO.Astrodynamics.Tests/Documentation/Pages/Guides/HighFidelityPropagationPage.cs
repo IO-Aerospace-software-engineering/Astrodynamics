@@ -89,4 +89,63 @@ internal static class HighFidelityPropagationPage
         var solution = spacecraft.Propagate(window, options);
         #endregion
     }
+
+    // docs/guides/high-fidelity-propagation.md, "Deep Space: The Moon As A Probe"
+    internal static (Spacecraft Spacecraft, StateVector MoonState, Time Start, Time End) Block02()
+    {
+        #region docs/guides/high-fidelity-propagation.md:2
+        var moon = new CelestialBody(PlanetsAndMoons.Moon, Frame.ICRF, Time.J2000Tdb);
+        var sun = new CelestialBody(Stars.Sun);
+
+        // The Moon moves about the Earth under the attraction of both masses, so the Earth's central term is GM_Earth + GM_Moon:
+        // a field of degree 0 with the GM of the model is a point mass of that GM. With the Earth's GM alone, a massless probe
+        // started at the Moon's state would end about 54 310 km from the Moon after 25 days
+        double gmEarthMoon = PlanetsAndMoons.EarthBody.GM + moon.GM;
+        var earthMoonField = new GeopotentialModelParameters("Data/SolarSystem/EGM2008_to70_TideFree", 0, gmEarthMoon, 6378136.3)
+        {
+            CentralTerm = GeopotentialCentralTerm.ModelGravitationalParameter
+        };
+        var earth = new CelestialBody(PlanetsAndMoons.Earth, Frame.ICRF, Time.J2000Tdb, earthMoonField);
+
+        var start = Time.J2000Tdb;
+        var end = start.AddDays(25);
+
+        var mission = new Mission("DeepSpaceTest");
+        var scenario = new Scenario("LunarOrbit", mission, new Window(start, end));
+
+        // Start at the Moon's position and velocity
+        var moonState = moon.GetEphemeris(start, earth, Frame.ICRF, Aberration.None);
+
+        var clock = new Clock("Clock", 256);
+        var spacecraft = new Spacecraft(-1001, "Probe", 100.0, moonState, 10000.0, clock);
+
+        scenario.AddSpacecraft(spacecraft);
+
+        // Add gravitational perturbations from multiple bodies
+        scenario.AddCelestialItem(sun);
+        scenario.AddCelestialItem(earth);
+        scenario.AddCelestialItem(new Barycenter(5));  // Jupiter barycenter
+        scenario.AddCelestialItem(new Barycenter(6));  // Saturn barycenter
+
+        // Propagate at a 5-minute step. Velocity-Verlet is of the second order: it ends about 470 m from an exact integration of
+        // these forces after 25 days
+        var summary = scenario.Simulate(new PropagationOptions
+        {
+            Integrator = new VVIntegratorOptions { Step = TimeSpan.FromMinutes(5) },
+            OutputStep = TimeSpan.FromMinutes(5)
+        });
+
+        // Compare the propagated Moon with the Moon of the ephemeris (DE440)
+        var propagatedMoon = spacecraft.GetEphemeris(end, earth, Frame.ICRF, Aberration.None);
+        var ephemerisMoon = moon.GetEphemeris(end, earth, Frame.ICRF, Aberration.None);
+
+        var positionDifference = (propagatedMoon.Position - ephemerisMoon.Position).Magnitude();
+        var velocityDifference = (propagatedMoon.Velocity - ephemerisMoon.Velocity).Magnitude();
+
+        Console.WriteLine($"Propagated Moon - DE440 Moon after 25 days:");
+        Console.WriteLine($"  Position difference: {positionDifference:F1} m");
+        Console.WriteLine($"  Velocity difference: {velocityDifference:F4} m/s");
+        #endregion
+        return (spacecraft, moonState, start, end);
+    }
 }

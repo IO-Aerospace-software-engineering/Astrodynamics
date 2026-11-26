@@ -30,8 +30,8 @@ namespace IO.Astrodynamics.Tests.Documentation;
 
 /// <summary>
 /// The C# examples of the pages of docs/ and README.md (#705): each csharp block equals its compiled region of the page's
-/// file under Documentation/Pages (one method per block, in a namespace outside IO.Astrodynamics, as for
-/// DEVELOPER_GUIDE.md), so a page cannot drift from code the compiler checks, and the blocks that need only
+/// file under Documentation/Pages (one method per block, in a namespace outside IO.Astrodynamics, as an application's),
+/// so a page cannot drift from code the compiler checks, and the blocks that need only
 /// Data/SolarSystem run. Before #705 the blocks were read for two text rules only (<see cref="DocumentationPagesTests"/>):
 /// 34 lines in 12 pages did not compile against the library (members that do not exist, as <c>tle.NoradId</c> and
 /// <c>LambertSolution.DepartureVelocity</c>, parameters of other names, as <c>shortWay:</c> and <c>occultingBody:</c>, a
@@ -388,6 +388,7 @@ public class DocumentationPagesExamplesTests
         new (string Page, int Block)[]
             {
                 ("docs/get-started.md", 4), ("docs/get-started.md", 5),
+                ("docs/reference/force-models.md", 4), ("docs/reference/force-models.md", 5), ("docs/reference/force-models.md", 6),
                 ("docs/reference/integrators.md", 1), ("docs/reference/integrators.md", 2), ("docs/reference/integrators.md", 3),
                 ("docs/reference/math.md", 1), ("docs/reference/math.md", 2), ("docs/reference/math.md", 3),
                 ("docs/reference/predefined-objects.md", 1),
@@ -396,6 +397,7 @@ public class DocumentationPagesExamplesTests
                 ("docs/tutorials/coordinate-conversions.md", 1), ("docs/tutorials/coordinate-conversions.md", 5),
                 ("docs/tutorials/ephemeris-queries.md", 2),
                 ("docs/tutorials/numerical-propagation.md", 2), ("docs/tutorials/orbit-creation.md", 1),
+                ("docs/tutorials/tle-and-omm.md", 11),
             }
             .Select(b => new object[] { b.Page, b.Block });
 
@@ -672,6 +674,120 @@ public class DocumentationPagesExamplesTests
         var result = BatchPropagator.Propagate(tasks);
         Assert.Equal(2, result.Failed.Count);
         Assert.All(result.Failed, f => Assert.IsType<ArgumentException>(f.Error));
+    }
+
+    // The NAIF identifiers of the example's perturbing bodies: the Sun and the barycentres of Jupiter and Saturn
+    private static readonly int[] DeepSpaceThirdBodies = { 10, 5, 6 };
+
+    // The reference of the deep space example (#704): the same forces integrated independently of the library. A massless
+    // probe in the Earth-centred ICRF, the point masses of the kernels (BODYnnn_GM of gm_de440.tpc through
+    // GetCelestialBodyInfo), the third-body terms direct minus indirect, the bodies' positions read from SPICE (de440s) at
+    // the TDB of TT0 + t over the TT seconds of the window (#501), classical RK4 at about 300 s. The central GM is the
+    // Earth's, or the Earth's and the Moon's when moonMass is true (the Earth-Moon two-body problem of the Moon's SPK).
+    private static (Vector3 Position, Vector3 Velocity) DeepSpaceReference(StateVector initial, TimeSystem.Time start, TimeSystem.Time end, bool moonMass)
+    {
+        var spice = SpiceApi.Instance;
+        double central = spice.GetCelestialBodyInfo(399).GM + (moonMass ? spice.GetCelestialBodyInfo(301).GM : 0.0);
+        var gm = DeepSpaceThirdBodies.Select(id => spice.GetCelestialBodyInfo(id).GM).ToArray();
+        var tt0 = start.ToTT();
+        double length = PropagationTimeArgument.Tt.SecondsBetween(start, end);
+
+        Vector3 Acceleration(Vector3 r, double t)
+        {
+            var at = tt0.AddSeconds(t).ToTdb();
+            var a = r * (-central / System.Math.Pow(r.Magnitude(), 3));
+            for (int k = 0; k < DeepSpaceThirdBodies.Length; k++)
+            {
+                var body = spice.ReadEphemeris(at, 399, DeepSpaceThirdBodies[k], Frames.Frame.ICRF, Aberration.None).Position;
+                var d = body - r;
+                a += d * (gm[k] / System.Math.Pow(d.Magnitude(), 3)) - body * (gm[k] / System.Math.Pow(body.Magnitude(), 3));
+            }
+
+            return a;
+        }
+
+        int steps = (int)System.Math.Ceiling(length / 300.0);
+        double h = length / steps;
+        var position = initial.Position;
+        var velocity = initial.Velocity;
+        double time = 0.0;
+        for (int k = 0; k < steps; k++)
+        {
+            var k1r = velocity;
+            var k1v = Acceleration(position, time);
+            var k2r = velocity + k1v * (h / 2);
+            var k2v = Acceleration(position + k1r * (h / 2), time + h / 2);
+            var k3r = velocity + k2v * (h / 2);
+            var k3v = Acceleration(position + k2r * (h / 2), time + h / 2);
+            var k4r = velocity + k3v * h;
+            var k4v = Acceleration(position + k3r * h, time + h);
+            position += (k1r + k2r * 2 + k3r * 2 + k4r) * (h / 6);
+            velocity += (k1v + k2v * 2 + k3v * 2 + k4v) * (h / 6);
+            time += h;
+        }
+
+        return (position, velocity);
+    }
+
+    // Twice the worst over Linux x64, Windows x64 and macOS arm64 (the same on all three, CI runs 43906476725 and
+    // 43926830045; MEASURE lines below), rounded up at the second significant digit: the example's Velocity-Verlet
+    // propagation at 5 min against the reference with GM_Earth + GM_Moon after 25 days, 4.684e2 m and 1.197e-3 m/s, the
+    // integrator's own error (second order; the reference's own spread over its steps, 600 to 60 s, is about 1e-4 m)
+    private const double DeepSpaceExamplePositionLimit = 9.4e2;
+    private const double DeepSpaceExampleVelocityLimit = 2.4e-3;
+
+    // Twice the worst over the three platforms (the same on all three), as above: the reference with GM_Earth + GM_Moon
+    // against the Moon's SPK (de440s) after 25 days, 1.514e3 m, the perturbations the reference leaves out (the Earth's
+    // and the Moon's figures, the other planets, relativity), and the example's propagated Moon against the SPK,
+    // 1.972e3 m, both errors together
+    private const double DeepSpaceMoonMassLimit = 3.1e3;
+    private const double DeepSpaceExampleMoonLimit = 4.0e3;
+
+    /// <summary>
+    /// The deep space example of high-fidelity-propagation.md, the guide's before lot L9 of #668, propagates the Moon (#704): a massless probe at the Moon's state of J2000 TDB,
+    /// 25 days about an Earth of GM_Earth + GM_Moon (a field of degree 0 with the model's GM), with the Sun and the
+    /// barycentres of Jupiter and Saturn as point masses. It ends where an independent integration of these forces ends,
+    /// the error of Velocity-Verlet at 5 min, and that integration ends within 1.5 km of the Moon's SPK, the physical
+    /// reference the example prints its difference to. With the Earth's GM alone the reference ends about 54 310 km from
+    /// the Moon, the Moon's own mass, which is what the example printed before #704 as its "position difference". Red on
+    /// 46e6975: the block returned nothing to compare; red on the example of the first version of #704, which kept the
+    /// Earth's GM alone: 5.431e7 m from the reference.
+    /// </summary>
+    [Fact]
+    public void HighFidelityGuide_DeepSpaceExample_FollowsTheMoonOfTheEphemeris()
+    {
+        var (spacecraft, moonState, start, end) = DocumentationPageSamples.Guides.HighFidelityPropagationPage.Block02();
+        var earth = moonState.Observer;
+        var moon = SpiceApi.Instance.ReadEphemeris(end, 399, 301, Frames.Frame.ICRF, Aberration.None);
+
+        var final = spacecraft.GetEphemeris(end, earth, Frames.Frame.ICRF, Aberration.None);
+        var reference = DeepSpaceReference(moonState, start, end, moonMass: true);
+        double dr = (final.Position - reference.Position).Magnitude();
+        double dv = (final.Velocity - reference.Velocity).Magnitude();
+        _output.WriteLine($"MEASURE #704 high-fidelity-propagation.md deep space example against the N-body reference with GM_Earth + GM_Moon after 25 days: |dr| {dr:E3} m, |dv| {dv:E3} m/s");
+        Assert.True(dr < DeepSpaceExamplePositionLimit, $"{dr:E3} m");
+        Assert.True(dv < DeepSpaceExampleVelocityLimit, $"{dv:E3} m/s");
+
+        double referenceToMoon = (reference.Position - moon.Position).Magnitude();
+        double exampleToMoon = (final.Position - moon.Position).Magnitude();
+        var earthOnly = DeepSpaceReference(moonState, start, end, moonMass: false);
+        double earthOnlyToMoon = (earthOnly.Position - moon.Position).Magnitude();
+        _output.WriteLine($"MEASURE #704 against the Moon's SPK after 25 days: the reference {referenceToMoon:E3} m, the example {exampleToMoon:E3} m, the reference with GM_Earth alone {earthOnlyToMoon:E3} m");
+        Assert.True(referenceToMoon < DeepSpaceMoonMassLimit, $"{referenceToMoon:E3} m");
+        Assert.True(exampleToMoon < DeepSpaceExampleMoonLimit, $"{exampleToMoon:E3} m");
+        // The Moon's own mass: tens of thousands of km without it
+        Assert.True(earthOnlyToMoon > 1.0e7, $"{earthOnlyToMoon:E3} m");
+    }
+
+    /// <summary>
+    /// The example of sites.md runs with its inputs: the site within 400000 km of the Moon with LT, one window, which
+    /// LightTimeCorrectionTests.CoordinateSiteGuideWindow compares with spkcpt_c (#489).
+    /// </summary>
+    [Fact]
+    public void SitesReference_Example_Runs()
+    {
+        DocumentationPageSamples.Reference.SitesPage.Block02(PlanetsAndMoons.EarthBody, new TimeSystem.Time(2024, 1, 1, 12, 0, 0, TimeScale.TDB),
+            new CelestialBody(PlanetsAndMoons.Moon));
     }
 
     #endregion

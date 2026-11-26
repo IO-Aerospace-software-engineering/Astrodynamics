@@ -261,6 +261,96 @@ var loaded = Opm.Load("state.opm.xml");
 var sv = loaded.ToStateVector(earth);
 ```
 
+## Building an OPM
+
+The data model builds a message field by field, in CCSDS units: `OpmStateVector` the required state (km, km/s),
+`OpmKeplerianElements` (km, degrees), `CovarianceMatrix` (km², km²/s, km²/s²), `OpmManeuverParameters` (s, kg, km/s)
+and `OpmUserDefinedParameters` the optional blocks, assembled by `OpmData`.
+
+```csharp
+// Inputs: epoch (DateTime), the epoch of the state; x, y, z (double, km) and vx, vy, vz (double, km/s), its components
+var header = CcsdsHeader.Create("My Organization");
+var metadata = new OpmMetadata("SAT-1", "2024-001A", "EARTH", "ICRF", "UTC");
+
+// State vector (required) - units: km, km/s
+var stateVector = new OpmStateVector(epoch, x, y, z, vx, vy, vz);
+
+// Keplerian elements (optional) - units: km, degrees
+var keplerianElements = OpmKeplerianElements.CreateWithTrueAnomaly(
+    semiMajorAxis: 6878.137,   // km
+    eccentricity: 0.001,
+    inclination: 51.6,         // degrees
+    raan: 120.0,               // degrees
+    aop: 90.0,                 // degrees
+    trueAnomaly: 45.0,         // degrees
+    gm: 398600.4418);          // km³/s²
+
+// Covariance matrix (optional) - units: km², km²/s, km²/s²
+var covariance = new CovarianceMatrix(
+    cxX: 1.0e-6, cyX: 0.0, cyY: 1.0e-6, czX: 0.0, czY: 0.0, czZ: 1.0e-6,
+    cxDotX: 0.0, cxDotY: 0.0, cxDotZ: 0.0, cxDotXDot: 1.0e-9,
+    cyDotX: 0.0, cyDotY: 0.0, cyDotZ: 0.0, cyDotXDot: 0.0, cyDotYDot: 1.0e-9,
+    czDotX: 0.0, czDotY: 0.0, czDotZ: 0.0, czDotXDot: 0.0, czDotYDot: 0.0, czDotZDot: 1.0e-9,
+    referenceFrame: "ICRF");
+
+// Maneuver parameters (optional) - units: s, kg, km/s
+var maneuver = new OpmManeuverParameters(
+    manEpochIgnition: epoch.AddHours(2),
+    manDurationSeconds: 120.0,        // seconds
+    manDeltaMass: -30.0,       // kg (negative = expelled)
+    manRefFrame: "RSW",
+    manDv1: 0.05,              // km/s (radial)
+    manDv2: 0.0,               // km/s (along-track)
+    manDv3: 0.01);             // km/s (cross-track)
+
+// User-defined parameters (optional)
+var userParams = new OpmUserDefinedParameters(
+    new Dictionary<string, string>
+    {
+        ["MISSION_ID"] = "MISSION-001",
+        ["OPERATOR"] = "Space Agency"
+    });
+
+// Assemble OPM data
+var data = new OpmData(
+    stateVector: stateVector,
+    keplerianElements: keplerianElements,
+    mass: 2000.0,                         // kg
+    dragArea: 30.0,                       // m²
+    dragCoefficient: 2.2,
+    solarRadiationPressureArea: 35.0,     // m²
+    solarRadiationCoefficient: 1.5,
+    covariance: covariance,
+    maneuvers: new[] { maneuver },
+    userDefinedParameters: userParams);
+
+var opm = new Opm(header, metadata, data);
+opm.Save("complete_opm.xml");
+```
+
+## The maneuvers of a propagation
+
+`ImpulseManeuver.ToOpmManeuverParameters` gives the OPM block of an executed impulse, which `Spacecraft.ToOpm` writes
+for each impulse ignited by its epoch.
+
+```csharp
+// Inputs: spacecraft (Spacecraft), propagated with impulse maneuvers
+foreach (var maneuver in spacecraft.ExecutedManeuvers)
+{
+    if (maneuver is ImpulseManeuver impulseManeuver && impulseManeuver.ThrustWindow.HasValue)
+    {
+        var opmManeuver = impulseManeuver.ToOpmManeuverParameters(
+            referenceFrame: "EME2000",
+            comments: new[] { "Orbit raising maneuver" });
+
+        Console.WriteLine($"Epoch: {opmManeuver.ManEpochIgnition}");
+        Console.WriteLine($"Duration: {opmManeuver.ManDurationSeconds} s");
+        Console.WriteLine($"Delta-V: {opmManeuver.DeltaVMagnitude:F6} km/s");
+        Console.WriteLine($"Delta-Mass: {opmManeuver.ManDeltaMass} kg");
+    }
+}
+```
+
 ## See Also
 
 - [OMM](omm.md)

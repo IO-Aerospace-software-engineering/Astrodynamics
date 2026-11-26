@@ -50,12 +50,7 @@ error a proxy drops, performance), with its P/Invoke declarations in the same pu
   double without `Seconds`), and a member a table of the documentation cites that is not public (#668). A member
   renamed, replaced or removed goes outright, without an `[Obsolete]` forwarder, and its change is listed in the
   release notes ([Versioning](versioning.md)) with its migration.
-- Each C# block of `DEVELOPER_GUIDE.md` is compiled: it is the region `guide:<n>` of a method of
-  `IO.Astrodynamics.Tests/Documentation/DeveloperGuideExamples.cs` (n its rank among the guide's csharp blocks, the
-  excerpt of `Constants` excepted), and `DeveloperGuideExamplesTests` fails when a block and its region differ. Change
-  the block and its region together; a block that continues an earlier one names its inputs in its first comment, and
-  the method declares them (#668).
-- So is each csharp block of the pages of `docs/` and of `README.md` (the changelog aside): it is the region
+- Each csharp block of the pages of `docs/` and of `README.md` (the changelog aside) is compiled: it is the region
   `<page>:<n>` of a method of the page's file under `IO.Astrodynamics.Tests/Documentation/Pages/`
   (`docs/tutorials/tle-and-omm.md` in `Tutorials/TleAndOmmPage.cs`, n its rank among the page's compiled csharp
   blocks), whose parameters are the inputs its first comment names (`// Inputs: ...`), and

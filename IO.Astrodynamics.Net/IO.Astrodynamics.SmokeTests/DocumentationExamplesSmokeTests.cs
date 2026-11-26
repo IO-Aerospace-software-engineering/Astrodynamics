@@ -13,17 +13,17 @@ using Xunit.Abstractions;
 namespace IO.Astrodynamics.SmokeTests;
 
 /// <summary>
-/// The two examples of DEVELOPER_GUIDE.md that #483 corrected, the Site example (section "Site") and the TLE tracking
-/// example (section "TLE-Based Spacecraft Tracking"), against the packed package. Keep both in step: a change to one
-/// is a change to the other.
+/// The two examples that #483 corrected, the example of docs/reference/sites.md and the ground station tracking of
+/// docs/tutorials/tle-and-omm.md (the Site and TLE tracking examples of DEVELOPER_GUIDE.md before lot L9 of #668), against
+/// the packed package. Keep both in step with their pages: a change to one is a change to the other.
 /// </summary>
 [Collection(KernelCollection.Name)]
-public class DeveloperGuideExamplesSmokeTests
+public class DocumentationExamplesSmokeTests
 {
     private static readonly DirectoryInfo SolarSystemKernelPath = new("Data/SolarSystem");
     private readonly ITestOutputHelper _output;
 
-    public DeveloperGuideExamplesSmokeTests(ITestOutputHelper output)
+    public DocumentationExamplesSmokeTests(ITestOutputHelper output)
     {
         _output = output;
         SpiceApi.Instance.LoadKernels(SolarSystemKernelPath);
@@ -79,7 +79,7 @@ public class DeveloperGuideExamplesSmokeTests
     public void TheTleTrackingExampleRuns()
     {
         var earth = PlanetsAndMoons.EarthBody;
-        var issTLE = new Tle(
+        var issTle = new Tle(
             "ISS (ZARYA)",
             "1 25544U 98067A   24153.17509025  .00020162  00000+0  35104-3 0  9990",
             "2 25544  51.6393  34.6631 0005642 260.2910 238.1766 15.50732314456064"
@@ -87,7 +87,7 @@ public class DeveloperGuideExamplesSmokeTests
 
         // Create spacecraft from TLE
         var clock = new Clock("ISSClock", 65536);
-        var iss = new Spacecraft(-25544, "ISS", 420000.0, issTLE, 450000.0, clock);
+        var iss = new Spacecraft(-25544, "ISS", 420000.0, issTle, 450000.0, clock);
 
         // Track from a ground station
         var goldstone = new Site(13, "DSS-13", earth);

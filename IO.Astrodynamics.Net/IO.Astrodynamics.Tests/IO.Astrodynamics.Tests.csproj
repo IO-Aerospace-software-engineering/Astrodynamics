@@ -288,13 +288,6 @@
       <Content Include="Data\CkPriorityReference\*">
         <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       </Content>
-      <!-- The developer guide and its compiled examples, compared by DeveloperGuideExamplesTests (#668). -->
-      <None Include="..\..\DEVELOPER_GUIDE.md" Link="Docs\DEVELOPER_GUIDE.md">
-        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      </None>
-      <None Include="Documentation\DeveloperGuideExamples.cs" Link="Docs\DeveloperGuideExamples.cs">
-        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      </None>
       <!-- The two CLAUDE.md files and their compiled examples, compared by ClaudeMdExamplesTests (#668, third round). -->
       <None Include="..\..\CLAUDE.md" Link="Docs\CLAUDE.root.md">
         <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>

@@ -73,6 +73,13 @@ internal static class SitesPage
         var mySite = new Site(100, "MySite", earth,
             new Planetodetic(-117.0 * Constants.Deg2Rad, 34.0 * Constants.Deg2Rad, 1000.0));
         var horizontal = mySite.GetHorizontalCoordinates(epoch, moon, Aberration.LT);
+
+        // The windows of the site within 400000 km of the Moon, the observer, with LT: one window, 2024-01-01 09:42:24.997 to
+        // 14:20:43.029 TDB, as CSPICE's spkcpt_c corrects the site (#489)
+        var windows = moon.FindDistanceWindows(
+            new Window(new Time(2024, 1, 1, TimeScale.TDB), new Time(2024, 1, 2, TimeScale.TDB)),
+            mySite, RelationalOperator.LessThan, 400000000,
+            new WindowSearchOptions { Step = TimeSpan.FromMinutes(10), Aberration = Aberration.LT });
         #endregion
     }
 }

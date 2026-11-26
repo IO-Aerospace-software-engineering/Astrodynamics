@@ -220,7 +220,7 @@ public class LightTimeCorrectionTests
     }
 
     /// <summary>
-    /// The window of the Site example of DEVELOPER_GUIDE.md (#483), the site within 400000 km of the Moon with LT, against
+    /// The window of the example of docs/reference/sites.md (DEVELOPER_GUIDE.md's Site example before lot L9 of #668, #483), the site within 400000 km of the Moon with LT, against
     /// the window of <c>spkcpt_c</c> (60 s samples and a bisection, <c>tools/light_time_reference</c>): before 11.0.0 about
     /// 340 s wider at each end (#489).
     /// </summary>

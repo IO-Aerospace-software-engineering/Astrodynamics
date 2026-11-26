@@ -279,7 +279,7 @@ public class DateTimeTests
     [Fact]
     public void TheUtcExampleOfTheDocumentationIsTheUtcInstant()
     {
-        // docs/reference/time-and-windows.md and DEVELOPER_GUIDE.md: the same instant as its Z form
+        // docs/reference/time-and-windows.md: the same instant as its Z form
         LabelAssert.Equal(TimeSystem.Time.Parse("2024-06-21T12:00:00.000Z"), TimeSystem.Time.Parse("2024-06-21T12:00:00.000 UTC"));
     }
 

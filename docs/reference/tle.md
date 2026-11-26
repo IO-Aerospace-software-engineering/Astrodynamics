@@ -53,6 +53,7 @@ loaded. Before 11.0.0 a TLE built before the kernels kept a GM of 0 for its life
 | Property | Description |
 |----------|-------------|
 | `Name` | Object name |
+| `Line1`, `Line2` | The two lines as given |
 | `Epoch` | Epoch of elements |
 | `ElementsType` | Always `Mean` |
 | `MeanSemiMajorAxis` | Mean semi-major axis (m), ∛(GM/n²) with the kernel GM of the Earth, read at the first use |
@@ -60,6 +61,8 @@ loaded. Before 11.0.0 a TLE built before the kernels kept a GM of 0 for its life
 | `MeanEccentricity` | Mean eccentricity |
 | `MeanInclination` | Mean inclination (rad) |
 | `MeanAscendingNode` | Mean RAAN (rad) |
+| `MeanArgumentOfPeriapsis` | Mean argument of periapsis (rad) |
+| `MeanMeanAnomaly` | Mean mean anomaly (rad) |
 | `BStar` | B* drag coefficient (1/earth radii) |
 | `MeanMotionDot` | ṅ/2, the first-derivative field of line 1 (rev/day²), OMM's `MEAN_MOTION_DOT` |
 | `MeanMotionDDot` | n̈/6, the second-derivative field of line 1 (rev/day³), OMM's `MEAN_MOTION_DDOT` |
@@ -78,6 +81,7 @@ loaded. Before 11.0.0 a TLE built before the kernels kept a GM of 0 for its life
 | `ToOsculating()` | Convert to osculating StateVector at TLE epoch |
 | `ToOsculating(Time)` | Convert to osculating StateVector at epoch |
 | `ToMeanKeplerianElements()` | Get mean Keplerian elements directly |
+| `ToKeplerianElements()` | Osculating Keplerian elements of the SGP4 state at the epoch |
 | `ToOmm(string originator)` | Convert to CCSDS OMM, `MEAN_MOTION` the field of line 2 as written, without kernels |
 | `Create(OrbitalParameters, string, int, string, ...)` | Create TLE from mean orbital parameters about the Earth in `Frame.TEME` |
 
@@ -85,6 +89,11 @@ The inherited members of `OrbitalParameters` (`MeanMotion()`, `SemiMajorAxis()`,
 the osculating SGP4 set at the epoch; the mean values are the `Mean…` properties. `MeanMeanMotion` replaces the method
 `MeanMotion()` of 10.x, √(GM/a³) with a = ∛(GM/n²), within 2 ulp of the field (decision 111 of #668, decided by
 S. Guillet, 2026-11-26): `tle.MeanMotion()` now binds to the osculating one, 0.14 % off for the ISS.
+
+The 5-character catalog field holds plain numbers up to 99999 and Alpha-5 numbers up to 339999
+(`NoradCatalogNumber.MaxValue`): a leading letter, `A` = 10 to `Z` = 33 without `I` and `O`, then four digits (`T5544`
+is 275544). `NoradCatalogNumber.Format` and `Parse` encode and decode the field, and `Tle.NoradCatalogId` gives the
+decoded value. A larger number cannot be written in a TLE: use a CCSDS OMM, whose `NORAD_CAT_ID` takes 9 digits.
 
 ## SGP4/SDP4
 

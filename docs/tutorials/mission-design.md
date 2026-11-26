@@ -76,6 +76,13 @@ foreach (var w in windows)
 Each `LaunchWindow` includes the inertial launch azimuth, the non-inertial
 (ground-track) azimuth, and the insertion state vector.
 
+| Member of `Launch` | Description |
+|--------------------|-------------|
+| `Launch(LaunchSite launchSite, Site recoverySite, OrbitalParameters targetOrbit, double twilight, bool? launchByDay)` | Launch by day (true), by night (false) or either (null), `twilight` the solar elevation that bounds the day, in [−π/2, π/2] rad |
+| `FindLaunchWindows(Window searchWindow)` | The launch windows of the search window |
+| `GetInertialAscendingAzimuthLaunch()`, `GetInertialDescendingAzimuthLaunch()` | The inertial launch azimuths toward the ascending and the descending node (rad) |
+| `GetInertialInsertionVelocity()` | The insertion velocity of the target orbit (m/s) |
+
 ## Mission and Scenario
 
 The `Mission` and `Scenario` classes provide a top-level simulation container.

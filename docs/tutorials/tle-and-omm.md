@@ -201,6 +201,58 @@ Console.WriteLine($"Epoch:    {stateVector.Epoch}");
 
 Unlike TLE/OMM, OPM elements are osculating — they can be used directly for numerical propagation without conversion.
 
+## Tracking from a ground station
+
+A spacecraft built from a TLE moves by SGP4 until a numerical propagation stores its states; a site reads it at any
+epoch.
+
+```csharp
+using IO.Astrodynamics.Surface;
+
+var earth = PlanetsAndMoons.EarthBody;
+
+// Parse ISS TLE
+var issTle = new Tle(
+    "ISS (ZARYA)",
+    "1 25544U 98067A   24153.17509025  .00020162  00000+0  35104-3 0  9990",
+    "2 25544  51.6393  34.6631 0005642 260.2910 238.1766 15.50732314456064"
+);
+
+// Create spacecraft from TLE
+var clock = new Clock("ISSClock", 65536);
+var iss = new Spacecraft(-25544, "ISS", 420000.0, issTle, 450000.0, clock);
+
+// Track from a ground station
+var goldstone = new Site(13, "DSS-13", earth);
+
+var trackStart = new Time(2024, 6, 3, TimeScale.TDB);
+var trackEnd = trackStart.AddDays(1);
+
+// Get ISS position relative to ground station over time
+Console.WriteLine("ISS tracking from Goldstone:");
+for (var t = trackStart; t < trackEnd; t = t.AddMinutes(10))
+{
+    var horizontal = goldstone.GetHorizontalCoordinates(t, iss, Aberration.LT);
+
+    if (horizontal.Elevation > 0)  // Above horizon
+    {
+        Console.WriteLine($"{t.ToUtc()}: " +
+            $"Az={horizontal.Azimuth * Constants.Rad2Deg:F1}° " +
+            $"El={horizontal.Elevation * Constants.Rad2Deg:F1}° " +
+            $"Range={horizontal.Range / 1000:F0} km");
+    }
+}
+
+// Find visibility windows from ground station: the distance of the station from the ISS (the observer)
+var visibilityWindows = iss.FindDistanceWindows(
+    new Window(trackStart, trackEnd),
+    goldstone,
+    RelationalOperator.LessThan,
+    2000000,  // Within 2000 km
+    new WindowSearchOptions { Step = TimeSpan.FromMinutes(1), Aberration = Aberration.LT }
+);
+```
+
 ## Summary
 
 - Parse TLEs from standard two-line format, with the constructor or `Tle.Parse`/`Tle.LoadAll` (a malformed set throws at its line and column); use `ToOsculating()` or `ToStateVector(epoch)` for physical states.

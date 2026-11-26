@@ -19,7 +19,7 @@ The reference documentation lives at **[docs.io-aerospace.org](https://docs.io-a
 - [Standards & Units](https://docs.io-aerospace.org/standards-and-units/) — SI units, frame and time conventions
 - [Contributing](https://docs.io-aerospace.org/contributing/) — how to contribute, versioning policy, migration notes
 
-A single-file companion reference is also kept in this repository: [DEVELOPER_GUIDE.md](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/blob/main/DEVELOPER_GUIDE.md).
+The single-file `DEVELOPER_GUIDE.md` of 10.x is a pointer to these pages since 11.0.0.
 
 ## Install
 

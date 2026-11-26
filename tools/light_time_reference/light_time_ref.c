@@ -19,7 +19,7 @@
  * Rows of #489: G as target (spkcpt_c) seen from the Moon, the Earth (its own body), the Sun, the Mars barycenter and LRO
  * (the reconstructed SPK of Data/LRO, -85), and three more sites given by their coordinates, on the equator (longitude
  * 0, latitude 0, altitude 0) and at the poles (longitude 0, latitude +-90 deg, altitude 0), seen from the Moon; the window
- * of the Site example of DEVELOPER_GUIDE.md (G within 400000 km of the Moon with LT, 2024-01-01 TDB to 2024-01-02 TDB),
+ * of the example of docs/reference/sites.md, DEVELOPER_GUIDE.md's Site example before 11.0.0 (G within 400000 km of the Moon with LT, 2024-01-01 TDB to 2024-01-02 TDB),
  * from 60 s samples of spkcpt_c and a bisection to adjacent doubles (1.2e-7 s).
  *
  * Rows of #593: states in a non-inertial frame (ITRF93, centred on the Earth; MOON_ME, centred on the Moon; DSS-13_TOPO,
@@ -142,7 +142,7 @@ static double guide_distance(double et) {
     return vnorm_c(state) - 400000.0;
 }
 
-/* #489: the window of the Site example of DEVELOPER_GUIDE.md, 60 s samples and a bisection of each sign change to adjacent doubles */
+/* #489: the window of the example of docs/reference/sites.md (DEVELOPER_GUIDE.md's before 11.0.0), 60 s samples and a bisection of each sign change to adjacent doubles */
 static void guide_window(void) {
     double start, end;
     str2et_c("2024-01-01 00:00:00 TDB", &start);

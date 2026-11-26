@@ -3,7 +3,7 @@
 // The C# examples of docs/standards-and-units.md, compiled (#705). Each csharp block of the page but the first is the
 // region "docs/standards-and-units.md:<n>" of one method, n its rank among the page's csharp blocks after the first: the
 // first, the excerpt of Constants, declarations and not statements, stays fenced csharp, has no region and is checked by
-// value (StandardsConstants_EqualTheLibrary), as the excerpt of DEVELOPER_GUIDE.md. The parameters of a method give the
+// value (StandardsConstants_EqualTheLibrary). The parameters of a method give the
 // inputs of a block that continues an earlier one, as the comment opening the block names them
 // ("// Inputs: ..."). DocumentationPagesExamplesTests checks that each block equals its region (the block's using
 // directives aside, which are this file's) and runs the blocks that need only Data/SolarSystem. The namespace is
