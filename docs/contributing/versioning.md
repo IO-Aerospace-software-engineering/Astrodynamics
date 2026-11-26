@@ -91,13 +91,13 @@ constructors of its results internal, a `Tle` checked field by field and read wi
 field's, one verb set for the CCSDS messages with the CDM checked when it is read and written, `Opm.ToSpacecraft` of one
 sectional area and `Spacecraft.ToOpm` of `OpmExportOptions`, the fit `ToTle` of `TleFitOptions`, the time
 quantities in double seconds named so, one constructor of `CentralBodyPropagator` with an integrator and the `Time`
-parameters named `epoch`.
+parameters named `epoch`, and the public names after the .NET conventions, with a script that renames them.
 **Removed** lists `Instrument.PositionInFOV`, `LowThrustManeuver`, `Quaternion.Zero`, `Star.PropagationOutput`,
 `Window.Merge` and `Window.Intersects(Time)` (now `Hull` and `Contains`), the window searches on the target
 (`FindWindowsOn…Constraint` of `CelestialItem`, `ILocalizable` and `Site`, `Instrument.FindWindowsInFieldOfViewConstraint`
 and the instance `GeometryFinder`, now the searches on the observer),
 `ExceptionBase`, `Matrix.Set`, `Vector3 * Vector3`, six exports of the native library that .NET never called, the
-public interop structs of `IO.Astrodynamics.DTO`, the ten raw conversions of `SpiceApi`, the public helpers of the
+public interop structs of `IO.Astrodynamics.DTO`, the ten raw conversions of `SpiceAPI`, the public helpers of the
 implementation, the `Equatorial` constructors of two angles and the coordinate conversions taking a flattening and a
 radius, `GeopotentialModelParameters.GeopotentialModelPath`, the public constructors of `GeopotentialGravitationalField`
 and `VVIntegrator.DeltaTs`, and the members that propagate without `PropagationOptions` or an integrator that holds its
@@ -108,7 +108,7 @@ and `MonteCarloPropagator` `PropagateAsync`), the token and progress of `BatchOp
 `InitialManeuver` and `Maneuver.SetNextManeuver`, `Attitude.StateOrientation`, `Spacecraft.GetTotalFuel`, the value
 equality of `FuelTank`, `Engine` and `Payload`, the `ILocalizable` constructors of `TriadAttitude` and
 `InstrumentPointingToAttitude.Aberration`, `ProtectedSpacecraftProfile` and `ManeuverConstraints`, the covariance
-ages of `EncounterState`, `Tle.MeanMotion()`, the CCSDS verbs of 10.x (`LoadFrom…`, `SaveTo…`, `ToXmlString`, the
+ages of `EncounterState`, `TLE.MeanMotion()`, the CCSDS verbs of 10.x (`LoadFrom…`, `SaveTo…`, `ToXmlString`, the
 CDM's `ReadFrom…` and `WriteTo…`), `KeplerianElements.FromOMM` and the `useMeanMotion` constructor of `MeanElements`, `TLE.Configuration`, `KeplerianElements.A` to `M` and
 the five methods of `EquinoctialElements` that repeated its symbols. Several results change: see **Fixed** and **Changed**. The open defects a caller can meet at this
 release are listed under **Known limitations**.
@@ -2173,7 +2173,7 @@ release are listed under **Known limitations**.
     `Period()` for e ≥ 1 (item 3) is fixed by [#663](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/663), under **Changed**; the ephemeris time given to CSPICE is still the managed TDB,
     not the LSK formula (item 4, [#665](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/665)). Both are under **Known limitations**.
 
-- **The documentation named `RelationalOperator.Less`, `AbsMin` and `AbsMax`, which do not exist** ([#483](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/483)). The
+- **The documentation named `RelationnalOperator.Less`, `AbsMin` and `AbsMax`, which do not exist** ([#483](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/483)). The
   `Site` and TLE tracking examples of `DEVELOPER_GUIDE.md` did not compile (CS0117), and the operator tables of
   `DEVELOPER_GUIDE.md` and [Enumerations](../reference/enumerations.md#relationaloperator) left out `NotEqual`,
   `GreaterThanOrEqual` and `LessThanOrEqual`. The examples pass `LessThan`; the `Site` example names the members of `Planetodetic`
@@ -4963,6 +4963,1078 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   the change).
 **Changed**
 
+- **Breaking: the public names follow the .NET conventions** (lot L9, R27 with the renames of R02 and D2's N1 to N4 of
+  [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668), decided by S. Guillet, 2026-11-13 and amended 2026-11-19: no forwarder). The catalogues are in
+  PascalCase (`PlanetsAndMoons.EARTH_BODY` → `PlanetsAndMoons.EarthBody`, `EARTH` → `Earth`), an acronym of three
+  capitals or more is a word (`SpiceAPI` → `SpiceApi`, `TLE` → `Tle`, `ToUTC` → `ToUtc`, the `…ToICRF` members →
+  `…ToIcrf`), a name has no underscore and no misspelling (`RelationnalOperator`, `SideralRotationPeriod`,
+  `Tsiolkovski`), the constants are words (`Constants.G` → `GravitationalConstant`), the TLE fields take their OMM names
+  (`BallisticCoefficient` → `BStar`), the comparisons of a window search those of `System.Linq.Expressions.ExpressionType`
+  (`Greater` → `GreaterThan`), and the namespaces `CCSDS.*`, `SSA`, `PDS`, `OrbitalParameters.TLE` and
+  `Atmosphere.NRLMSISE_00` are `Ccsds`, `Ssa`, `Pds`, `OrbitalParameters` and `Atmosphere`. A symbol a standard writes
+  keeps its spelling (N2: `Frame.ICRF`, `TimeScale.TDB`, `Aberration.LT`, `CcsdsReferenceFrame.EME2000`, and the
+  `Frame` statics now named as SPICE names their frames, `Frame.ECLIPJ2000`). Nothing else changes (N6): the values, the
+  results, the strings handed to SPICE (the descriptions `LT+S` and `>=` of `Aberration` and `RelationalOperator`, the
+  names of the catalogue objects), the files written, the resource names of the embedded schemas and the syntax of
+  the command line, which reads an aberration or a relation by its SPICE string or its member name in any case
+  (`LTS` and `LT+S` both read). Migration: run the script below over the sources (GNU sed and awk; it removes the `using`
+  directives the merged namespaces repeat), then rename by hand the two names marked ¹ in the table, which the script
+  cannot tell from others (`EventInfo` of `IO.Astrodynamics.Propagator`, whose `System.Reflection` namesake keeps its
+  name, and the `Direction` of an `OrbitalDirectionTarget` read on an instance), a catalogue member written without its
+  class (`using static`) and a name qualified relative to a merged namespace (`OMM.Omm` inside `IO.Astrodynamics.CCSDS`);
+  the method marked ² takes the arguments of the `ToTle` entry below. The script was run over this repository's tests, CLI, conformance
+  runner, benchmarks, smoke tests and documentation.
+
+    | Kind | 10.x | 11.0.0 |
+    |---|---|---|
+    | Namespace | `IO.Astrodynamics.CCSDS` | `IO.Astrodynamics.Ccsds` |
+    | Namespace | `IO.Astrodynamics.CCSDS.CDM` | `IO.Astrodynamics.Ccsds` |
+    | Namespace | `IO.Astrodynamics.CCSDS.Common` | `IO.Astrodynamics.Ccsds` |
+    | Namespace | `IO.Astrodynamics.CCSDS.Common.Enums` | `IO.Astrodynamics.Ccsds` |
+    | Namespace | `IO.Astrodynamics.CCSDS.OMM` | `IO.Astrodynamics.Ccsds` |
+    | Namespace | `IO.Astrodynamics.CCSDS.OPM` | `IO.Astrodynamics.Ccsds` |
+    | Namespace | `IO.Astrodynamics.SSA` | `IO.Astrodynamics.Ssa` |
+    | Namespace | `IO.Astrodynamics.PDS` | `IO.Astrodynamics.Pds` |
+    | Namespace | `IO.Astrodynamics.PDS.V4.MissionInformation` | `IO.Astrodynamics.Pds.V4.MissionInformation` |
+    | Namespace | `Schemas` (the generated PDS types) | `IO.Astrodynamics.Pds.V4.Schemas` |
+    | Namespace | `IO.Astrodynamics.OrbitalParameters.TLE` | `IO.Astrodynamics.OrbitalParameters` |
+    | Namespace | `IO.Astrodynamics.Atmosphere.NRLMSISE_00` | `IO.Astrodynamics.Atmosphere` |
+    | Type | `SpiceAPI` | `SpiceApi` |
+    | Type | `TLE` | `Tle` |
+    | Type | `TLEPropagator` | `TlePropagator` |
+    | Type | `Classification` (of a TLE) | `TleClassification` |
+    | Type | `RelationnalOperator` | `RelationalOperator` |
+    | Type | `NRLMSISE00` | `Nrlmsise00` |
+    | Type | `PDSBase` | `PdsBase` |
+    | Type | `PDSConfiguration` | `PdsConfiguration` |
+    | Type | `PDSMissionInformation` | `PdsMissionInformation` |
+    | Type | `PDSSurfaceMissionInformation` | `PdsSurfaceMissionInformation` |
+    | Type | `Tsiolkovski` | `Tsiolkovsky` |
+    | Type | `EventInfo` (of IO.Astrodynamics.Propagator) ¹ | `IntegrationEvent` |
+    | Enum member | `RelationnalOperator.Greater` | `RelationalOperator.GreaterThan` |
+    | Enum member | `RelationnalOperator.Lower` | `RelationalOperator.LessThan` |
+    | Enum member | `RelationnalOperator.GreaterOrEqual` | `RelationalOperator.GreaterThanOrEqual` |
+    | Enum member | `RelationnalOperator.LowerOrEqual` | `RelationalOperator.LessThanOrEqual` |
+    | Enum member | `Aberration.LTS` | `Aberration.LtS` |
+    | Enum member | `Aberration.CNS` | `Aberration.CnS` |
+    | Enum member | `Aberration.XLTS` | `Aberration.XltS` |
+    | Enum member | `Aberration.XCNS` | `Aberration.XcnS` |
+    | Field | `Frame.ECLIPTIC_J2000` | `Frame.ECLIPJ2000` |
+    | Field | `Frame.ECLIPTIC_B1950` | `Frame.ECLIPB1950` |
+    | Field | `Frame.GALACTIC_SYSTEM2` | `Frame.GALACTIC` |
+    | Constant | `Constants.G` | `Constants.GravitationalConstant` |
+    | Constant | `Constants.g0` | `Constants.StandardGravity` |
+    | Constant | `Constants.C` | `Constants.SpeedOfLight` |
+    | Constant | `Constants.Kelvin` | `Constants.ZeroCelsiusInKelvin` |
+    | Field | `Time.J2000TDB` | `Time.J2000Tdb` |
+    | Field | `Time.J2000UTC` | `Time.J2000Utc` |
+    | Constant | `Time.JULIAN_J2000` | `Time.JulianDateJ2000` |
+    | Constant | `Time.JULIAN_J1950` | `Time.JulianDateJ1950` |
+    | Constant | `Time.JULIAN_YEAR` | `Time.JulianYear` |
+    | Constant | `Time.SECONDS_PER_DAY` | `Time.SecondsPerDay` |
+    | Method | `Time.CreateTDB` | `Time.CreateTdb` |
+    | Method | `Time.CreateUTC` | `Time.CreateUtc` |
+    | Method | `Time.ToTDB` | `Time.ToTdb` |
+    | Method | `Time.ToUTC` | `Time.ToUtc` |
+    | Method | `Time.ToTAI` | `Time.ToTai` |
+    | Method | `Time.ToGPS` | `Time.ToGps` |
+    | Method | `Frame.GetStateOrientationToICRF` (and its overrides) | `Frame.GetStateOrientationToIcrf` |
+    | Method | `IDataProvider.FrameTransformationToICRF` (and its implementations) | `IDataProvider.FrameTransformationToIcrf` |
+    | Method | `SpacecraftFrame.AddStateOrientationToICRF`, `MemoryDataProvider.AddStateOrientationToICRF` | `SpacecraftFrame.AddStateOrientationToIcrf`, `MemoryDataProvider.AddStateOrientationToIcrf` |
+    | Method | `SpacecraftFrame.GetStateOrientationsToICRF` | `SpacecraftFrame.GetStateOrientationsToIcrf` |
+    | Method | `SpacecraftFrame.GetLatestStateOrientationToICRF` | `SpacecraftFrame.GetLatestStateOrientationToIcrf` |
+    | Method | `StateOrientation.RelativeToICRF` | `StateOrientation.RelativeToIcrf` |
+    | Method | `Instrument.GetBoresightInICRFFrame` | `Instrument.GetBoresightInIcrfFrame` |
+    | Method | `Instrument.GetRefVectorInICRFFrame` | `Instrument.GetRefVectorInIcrfFrame` |
+    | Method | `Instrument.IsInFOV` | `Instrument.IsInFov` |
+    | Method | `Spacecraft.GetTotalISP` | `Spacecraft.GetTotalIsp` |
+    | Property | `Engine.ISP` | `Engine.Isp` |
+    | Method | `Quaternion.SLERP` | `Quaternion.Slerp` |
+    | Method | `OrbitalParameters.ToTLE` | `OrbitalParameters.ToTle` ² |
+    | Method | `CelestialBody.SideralRotationPeriod` | `CelestialBody.SiderealRotationPeriod` |
+    | Method | `CelestialBody.HelioSynchronousOrbit` | `CelestialBody.SunSynchronousOrbit` |
+    | Method | `InitialOrbitDetermination.CreateFromObservation_Gauss` | `InitialOrbitDetermination.CreateFromGaussMethod` |
+    | Method | `Star.GetRightAscensionSigma` | `Star.RightAscensionSigmaAt` |
+    | Method | `Star.GetDeclinationSigma` | `Star.DeclinationSigmaAt` |
+    | Property | `ConjunctionAnalysisOptions.MaximumEventSearchStep` | `ConjunctionAnalysisOptions.MaxEventSearchStep` |
+    | Property | `Spacecraft.SolarRadiationCoeff` | `Spacecraft.SolarRadiationCoefficient` |
+    | Property | `OrbitalDirectionTarget.Direction` ¹ | `OrbitalDirectionTarget.OrbitalDirection` |
+    | Property | `TLE.BallisticCoefficient` | `Tle.BStar` |
+    | Property | `TLE.FirstDerivationMeanMotion` | `Tle.MeanMotionDot` |
+    | Property | `TLE.SecondDerivativeMeanMotion` | `Tle.MeanMotionDDot` |
+    | Parameter | `TLE.Create`: `revolutionsAtEpoch`, `bstar`, `nDot`, `nDDot` | `Tle.Create`: `revolutionNumberAtEpoch`, `bStar`, `meanMotionDot`, `meanMotionDDot` |
+    | Parameter | the `bstar` of the OMM factories and of `TleParameters` | `bStar` |
+    | Catalogue members | 406 members of `PlanetsAndMoons`, `Stars`, `Barycenters`, `GroundStations`, `Asteroids`, `Comets` | below |
+
+    ??? note "The 406 catalogue members, 10.x → 11.0.0"
+
+        | Class | 10.x | 11.0.0 |
+        |---|---|---|
+        | `PlanetsAndMoons` | `MERCURY` | `Mercury` |
+        | `PlanetsAndMoons` | `VENUS` | `Venus` |
+        | `PlanetsAndMoons` | `EARTH` | `Earth` |
+        | `PlanetsAndMoons` | `MOON` | `Moon` |
+        | `PlanetsAndMoons` | `MARS` | `Mars` |
+        | `PlanetsAndMoons` | `PHOBOS` | `Phobos` |
+        | `PlanetsAndMoons` | `DEIMOS` | `Deimos` |
+        | `PlanetsAndMoons` | `JUPITER` | `Jupiter` |
+        | `PlanetsAndMoons` | `IO` | `Io` |
+        | `PlanetsAndMoons` | `EUROPA` | `Europa` |
+        | `PlanetsAndMoons` | `GANYMEDE` | `Ganymede` |
+        | `PlanetsAndMoons` | `CALLISTO` | `Callisto` |
+        | `PlanetsAndMoons` | `AMALTHEA` | `Amalthea` |
+        | `PlanetsAndMoons` | `HIMALIA` | `Himalia` |
+        | `PlanetsAndMoons` | `ELARA` | `Elara` |
+        | `PlanetsAndMoons` | `PASIPHAE` | `Pasiphae` |
+        | `PlanetsAndMoons` | `SINOPE` | `Sinope` |
+        | `PlanetsAndMoons` | `LYSITHEA` | `Lysithea` |
+        | `PlanetsAndMoons` | `CARME` | `Carme` |
+        | `PlanetsAndMoons` | `ANANKE` | `Ananke` |
+        | `PlanetsAndMoons` | `LEDA` | `Leda` |
+        | `PlanetsAndMoons` | `THEBE` | `Thebe` |
+        | `PlanetsAndMoons` | `ADRASTEA` | `Adrastea` |
+        | `PlanetsAndMoons` | `METIS` | `Metis` |
+        | `PlanetsAndMoons` | `CALLIRRHOE` | `Callirrhoe` |
+        | `PlanetsAndMoons` | `THEMISTO` | `Themisto` |
+        | `PlanetsAndMoons` | `MEGACLITE` | `Megaclite` |
+        | `PlanetsAndMoons` | `TAYGETE` | `Taygete` |
+        | `PlanetsAndMoons` | `CHALDENE` | `Chaldene` |
+        | `PlanetsAndMoons` | `HARPALYKE` | `Harpalyke` |
+        | `PlanetsAndMoons` | `KALYKE` | `Kalyke` |
+        | `PlanetsAndMoons` | `IOCASTE` | `Iocaste` |
+        | `PlanetsAndMoons` | `ERINOME` | `Erinome` |
+        | `PlanetsAndMoons` | `ISONOE` | `Isonoe` |
+        | `PlanetsAndMoons` | `PRAXIDIKE` | `Praxidike` |
+        | `PlanetsAndMoons` | `AUTONOE` | `Autonoe` |
+        | `PlanetsAndMoons` | `THYONE` | `Thyone` |
+        | `PlanetsAndMoons` | `HERMIPPE` | `Hermippe` |
+        | `PlanetsAndMoons` | `AITNE` | `Aitne` |
+        | `PlanetsAndMoons` | `EURYDOME` | `Eurydome` |
+        | `PlanetsAndMoons` | `EUANTHE` | `Euanthe` |
+        | `PlanetsAndMoons` | `EUPORIE` | `Euporie` |
+        | `PlanetsAndMoons` | `ORTHOSIE` | `Orthosie` |
+        | `PlanetsAndMoons` | `SPONDE` | `Sponde` |
+        | `PlanetsAndMoons` | `KALE` | `Kale` |
+        | `PlanetsAndMoons` | `PASITHEE` | `Pasithee` |
+        | `PlanetsAndMoons` | `HEGEMONE` | `Hegemone` |
+        | `PlanetsAndMoons` | `MNEME` | `Mneme` |
+        | `PlanetsAndMoons` | `AOEDE` | `Aoede` |
+        | `PlanetsAndMoons` | `THELXINOE` | `Thelxinoe` |
+        | `PlanetsAndMoons` | `ARCHE` | `Arche` |
+        | `PlanetsAndMoons` | `KALLICHORE` | `Kallichore` |
+        | `PlanetsAndMoons` | `HELIKE` | `Helike` |
+        | `PlanetsAndMoons` | `CARPO` | `Carpo` |
+        | `PlanetsAndMoons` | `EUKELADE` | `Eukelade` |
+        | `PlanetsAndMoons` | `CYLLENE` | `Cyllene` |
+        | `PlanetsAndMoons` | `KORE` | `Kore` |
+        | `PlanetsAndMoons` | `HERSE` | `Herse` |
+        | `PlanetsAndMoons` | `DIA` | `Dia` |
+        | `PlanetsAndMoons` | `SATURN` | `Saturn` |
+        | `PlanetsAndMoons` | `MIMAS` | `Mimas` |
+        | `PlanetsAndMoons` | `ENCELADUS` | `Enceladus` |
+        | `PlanetsAndMoons` | `TETHYS` | `Tethys` |
+        | `PlanetsAndMoons` | `DIONE` | `Dione` |
+        | `PlanetsAndMoons` | `RHEA` | `Rhea` |
+        | `PlanetsAndMoons` | `TITAN` | `Titan` |
+        | `PlanetsAndMoons` | `HYPERION` | `Hyperion` |
+        | `PlanetsAndMoons` | `IAPETUS` | `Iapetus` |
+        | `PlanetsAndMoons` | `PHOEBE` | `Phoebe` |
+        | `PlanetsAndMoons` | `JANUS` | `Janus` |
+        | `PlanetsAndMoons` | `EPIMETHEUS` | `Epimetheus` |
+        | `PlanetsAndMoons` | `HELENE` | `Helene` |
+        | `PlanetsAndMoons` | `TELESTO` | `Telesto` |
+        | `PlanetsAndMoons` | `CALYPSO` | `Calypso` |
+        | `PlanetsAndMoons` | `ATLAS` | `Atlas` |
+        | `PlanetsAndMoons` | `PROMETHEUS` | `Prometheus` |
+        | `PlanetsAndMoons` | `PANDORA` | `Pandora` |
+        | `PlanetsAndMoons` | `PAN` | `Pan` |
+        | `PlanetsAndMoons` | `YMIR` | `Ymir` |
+        | `PlanetsAndMoons` | `PAALIAQ` | `Paaliaq` |
+        | `PlanetsAndMoons` | `TARVOS` | `Tarvos` |
+        | `PlanetsAndMoons` | `IJIRAQ` | `Ijiraq` |
+        | `PlanetsAndMoons` | `SUTTUNGR` | `Suttungr` |
+        | `PlanetsAndMoons` | `KIVIUQ` | `Kiviuq` |
+        | `PlanetsAndMoons` | `MUNDILFARI` | `Mundilfari` |
+        | `PlanetsAndMoons` | `ALBIORIX` | `Albiorix` |
+        | `PlanetsAndMoons` | `SKATHI` | `Skathi` |
+        | `PlanetsAndMoons` | `ERRIAPUS` | `Erriapus` |
+        | `PlanetsAndMoons` | `SIARNAQ` | `Siarnaq` |
+        | `PlanetsAndMoons` | `THRYMR` | `Thrymr` |
+        | `PlanetsAndMoons` | `NARVI` | `Narvi` |
+        | `PlanetsAndMoons` | `METHONE` | `Methone` |
+        | `PlanetsAndMoons` | `PALLENE` | `Pallene` |
+        | `PlanetsAndMoons` | `POLYDEUCES` | `Polydeuces` |
+        | `PlanetsAndMoons` | `DAPHNIS` | `Daphnis` |
+        | `PlanetsAndMoons` | `AEGIR` | `Aegir` |
+        | `PlanetsAndMoons` | `BEBHIONN` | `Bebhionn` |
+        | `PlanetsAndMoons` | `BERGELMIR` | `Bergelmir` |
+        | `PlanetsAndMoons` | `BESTLA` | `Bestla` |
+        | `PlanetsAndMoons` | `FARBAUTI` | `Farbauti` |
+        | `PlanetsAndMoons` | `FENRIR` | `Fenrir` |
+        | `PlanetsAndMoons` | `FORNJOT` | `Fornjot` |
+        | `PlanetsAndMoons` | `HATI` | `Hati` |
+        | `PlanetsAndMoons` | `HYRROKKIN` | `Hyrrokkin` |
+        | `PlanetsAndMoons` | `KARI` | `Kari` |
+        | `PlanetsAndMoons` | `LOGE` | `Loge` |
+        | `PlanetsAndMoons` | `SKOLL` | `Skoll` |
+        | `PlanetsAndMoons` | `SURTUR` | `Surtur` |
+        | `PlanetsAndMoons` | `ANTHE` | `Anthe` |
+        | `PlanetsAndMoons` | `JARNSAXA` | `Jarnsaxa` |
+        | `PlanetsAndMoons` | `GREIP` | `Greip` |
+        | `PlanetsAndMoons` | `TARQEQ` | `Tarqeq` |
+        | `PlanetsAndMoons` | `AEGAEON` | `Aegaeon` |
+        | `PlanetsAndMoons` | `URANUS` | `Uranus` |
+        | `PlanetsAndMoons` | `ARIEL` | `Ariel` |
+        | `PlanetsAndMoons` | `UMBRIEL` | `Umbriel` |
+        | `PlanetsAndMoons` | `TITANIA` | `Titania` |
+        | `PlanetsAndMoons` | `OBERON` | `Oberon` |
+        | `PlanetsAndMoons` | `MIRANDA` | `Miranda` |
+        | `PlanetsAndMoons` | `CORDELIA` | `Cordelia` |
+        | `PlanetsAndMoons` | `OPHELIA` | `Ophelia` |
+        | `PlanetsAndMoons` | `BIANCA` | `Bianca` |
+        | `PlanetsAndMoons` | `CRESSIDA` | `Cressida` |
+        | `PlanetsAndMoons` | `DESDEMONA` | `Desdemona` |
+        | `PlanetsAndMoons` | `JULIET` | `Juliet` |
+        | `PlanetsAndMoons` | `PORTIA` | `Portia` |
+        | `PlanetsAndMoons` | `ROSALIND` | `Rosalind` |
+        | `PlanetsAndMoons` | `BELINDA` | `Belinda` |
+        | `PlanetsAndMoons` | `PUCK` | `Puck` |
+        | `PlanetsAndMoons` | `CALIBAN` | `Caliban` |
+        | `PlanetsAndMoons` | `SYCORAX` | `Sycorax` |
+        | `PlanetsAndMoons` | `PROSPERO` | `Prospero` |
+        | `PlanetsAndMoons` | `SETEBOS` | `Setebos` |
+        | `PlanetsAndMoons` | `STEPHANO` | `Stephano` |
+        | `PlanetsAndMoons` | `TRINCULO` | `Trinculo` |
+        | `PlanetsAndMoons` | `FRANCISCO` | `Francisco` |
+        | `PlanetsAndMoons` | `MARGARET` | `Margaret` |
+        | `PlanetsAndMoons` | `FERDINAND` | `Ferdinand` |
+        | `PlanetsAndMoons` | `PERDITA` | `Perdita` |
+        | `PlanetsAndMoons` | `MAB` | `Mab` |
+        | `PlanetsAndMoons` | `CUPID` | `Cupid` |
+        | `PlanetsAndMoons` | `NEPTUNE` | `Neptune` |
+        | `PlanetsAndMoons` | `TRITON` | `Triton` |
+        | `PlanetsAndMoons` | `NEREID` | `Nereid` |
+        | `PlanetsAndMoons` | `NAIAD` | `Naiad` |
+        | `PlanetsAndMoons` | `THALASSA` | `Thalassa` |
+        | `PlanetsAndMoons` | `DESPINA` | `Despina` |
+        | `PlanetsAndMoons` | `GALATEA` | `Galatea` |
+        | `PlanetsAndMoons` | `LARISSA` | `Larissa` |
+        | `PlanetsAndMoons` | `PROTEUS` | `Proteus` |
+        | `PlanetsAndMoons` | `HALIMEDE` | `Halimede` |
+        | `PlanetsAndMoons` | `PSAMATHE` | `Psamathe` |
+        | `PlanetsAndMoons` | `SAO` | `Sao` |
+        | `PlanetsAndMoons` | `LAOMEDEIA` | `Laomedeia` |
+        | `PlanetsAndMoons` | `NESO` | `Neso` |
+        | `PlanetsAndMoons` | `PLUTO` | `Pluto` |
+        | `PlanetsAndMoons` | `CHARON` | `Charon` |
+        | `PlanetsAndMoons` | `NIX` | `Nix` |
+        | `PlanetsAndMoons` | `HYDRA` | `Hydra` |
+        | `PlanetsAndMoons` | `KERBEROS` | `Kerberos` |
+        | `PlanetsAndMoons` | `STYX` | `Styx` |
+        | `PlanetsAndMoons` | `EARTH_BODY` | `EarthBody` |
+        | `PlanetsAndMoons` | `MOON_BODY` | `MoonBody` |
+        | `Stars` | `SUN_BODY` | `SunBody` |
+        | `Barycenters` | `SOLAR_SYSTEM_BARYCENTER` | `SolarSystemBarycenter` |
+        | `Barycenters` | `MERCURY_BARYCENTER` | `MercuryBarycenter` |
+        | `Barycenters` | `VENUS_BARYCENTER` | `VenusBarycenter` |
+        | `Barycenters` | `EARTH_BARYCENTER` | `EarthBarycenter` |
+        | `Barycenters` | `MARS_BARYCENTER` | `MarsBarycenter` |
+        | `Barycenters` | `JUPITER_BARYCENTER` | `JupiterBarycenter` |
+        | `Barycenters` | `SATURN_BARYCENTER` | `SaturnBarycenter` |
+        | `Barycenters` | `URANUS_BARYCENTER` | `UranusBarycenter` |
+        | `Barycenters` | `NEPTUNE_BARYCENTER` | `NeptuneBarycenter` |
+        | `Barycenters` | `PLUTO_BARYCENTER` | `PlutoBarycenter` |
+        | `GroundStations` | `NOTO` | `Noto` |
+        | `GroundStations` | `NORCIA` | `Norcia` |
+        | `GroundStations` | `GOLDSTONE` | `Goldstone` |
+        | `GroundStations` | `CANBERRA` | `Canberra` |
+        | `GroundStations` | `MADRID` | `Madrid` |
+        | `GroundStations` | `USUDA` | `Usuda` |
+        | `GroundStations` | `DSS_05` | `Dss05` |
+        | `GroundStations` | `PARKES` | `Parkes` |
+        | `GroundStations` | `DSS_12` | `Dss12` |
+        | `GroundStations` | `DSS_13` | `Dss13` |
+        | `GroundStations` | `DSS_14` | `Dss14` |
+        | `GroundStations` | `DSS_15` | `Dss15` |
+        | `GroundStations` | `DSS_16` | `Dss16` |
+        | `GroundStations` | `DSS_17` | `Dss17` |
+        | `GroundStations` | `DSS_23` | `Dss23` |
+        | `GroundStations` | `DSS_24` | `Dss24` |
+        | `GroundStations` | `DSS_25` | `Dss25` |
+        | `GroundStations` | `DSS_26` | `Dss26` |
+        | `GroundStations` | `DSS_27` | `Dss27` |
+        | `GroundStations` | `DSS_28` | `Dss28` |
+        | `GroundStations` | `DSS_33` | `Dss33` |
+        | `GroundStations` | `DSS_34` | `Dss34` |
+        | `GroundStations` | `DSS_35` | `Dss35` |
+        | `GroundStations` | `DSS_36` | `Dss36` |
+        | `GroundStations` | `DSS_42` | `Dss42` |
+        | `GroundStations` | `DSS_43` | `Dss43` |
+        | `GroundStations` | `DSS_45` | `Dss45` |
+        | `GroundStations` | `DSS_46` | `Dss46` |
+        | `GroundStations` | `DSS_49` | `Dss49` |
+        | `GroundStations` | `DSS_53` | `Dss53` |
+        | `GroundStations` | `DSS_54` | `Dss54` |
+        | `GroundStations` | `DSS_55` | `Dss55` |
+        | `GroundStations` | `DSS_56` | `Dss56` |
+        | `GroundStations` | `DSS_61` | `Dss61` |
+        | `GroundStations` | `DSS_63` | `Dss63` |
+        | `GroundStations` | `DSS_64` | `Dss64` |
+        | `GroundStations` | `DSS_65` | `Dss65` |
+        | `GroundStations` | `DSS_66` | `Dss66` |
+        | `GroundStations` | `DSS_69` | `Dss69` |
+        | `Asteroids` | `CERES` | `Ceres` |
+        | `Asteroids` | `PALLAS` | `Pallas` |
+        | `Asteroids` | `VESTA` | `Vesta` |
+        | `Asteroids` | `PSYCHE` | `Psyche` |
+        | `Asteroids` | `LUTETIA` | `Lutetia` |
+        | `Asteroids` | `_52_EUROPA` | `Asteroid52Europa` |
+        | `Asteroids` | `KLEOPATRA` | `Kleopatra` |
+        | `Asteroids` | `MATHILDE` | `Mathilde` |
+        | `Asteroids` | `EROS` | `Eros` |
+        | `Asteroids` | `DAVIDA` | `Davida` |
+        | `Asteroids` | `STEINS` | `Steins` |
+        | `Asteroids` | `WILSON_HARRINGTON` | `WilsonHarrington` |
+        | `Asteroids` | `TOUTATIS` | `Toutatis` |
+        | `Asteroids` | `_1992KD` | `Asteroid1992Kd` |
+        | `Asteroids` | `BRAILLE` | `Braille` |
+        | `Asteroids` | `ITOKAWA` | `Itokawa` |
+        | `Asteroids` | `BENNU` | `Bennu` |
+        | `Asteroids` | `RYUGU` | `Ryugu` |
+        | `Asteroids` | `IDA` | `Ida` |
+        | `Asteroids` | `DACTYL` | `Dactyl` |
+        | `Asteroids` | `ARROKOTH` | `Arrokoth` |
+        | `Asteroids` | `GASPRA` | `Gaspra` |
+        | `Asteroids` | `PATROCLUS_BARYCENTER` | `PatroclusBarycenter` |
+        | `Asteroids` | `EURYBATES_BARYCENTER` | `EurybatesBarycenter` |
+        | `Asteroids` | `LEUCUS` | `Leucus` |
+        | `Asteroids` | `POLYMELE` | `Polymele` |
+        | `Asteroids` | `ORUS` | `Orus` |
+        | `Asteroids` | `DONALDJOHANSON` | `Donaldjohanson` |
+        | `Asteroids` | `DIDYMOS_BARYCENTER` | `DidymosBarycenter` |
+        | `Asteroids` | `MENOETIUS` | `Menoetius` |
+        | `Asteroids` | `QUETA` | `Queta` |
+        | `Asteroids` | `DIMORPHOS` | `Dimorphos` |
+        | `Asteroids` | `PATROCLUS` | `Patroclus` |
+        | `Asteroids` | `EURYBATES` | `Eurybates` |
+        | `Asteroids` | `DIDYMOS` | `Didymos` |
+        | `Comets` | `SHOEMAKER_LEVY_9_W` | `ShoemakerLevy9W` |
+        | `Comets` | `SHOEMAKER_LEVY_9_V` | `ShoemakerLevy9V` |
+        | `Comets` | `SHOEMAKER_LEVY_9_U` | `ShoemakerLevy9U` |
+        | `Comets` | `SHOEMAKER_LEVY_9_T` | `ShoemakerLevy9T` |
+        | `Comets` | `SHOEMAKER_LEVY_9_S` | `ShoemakerLevy9S` |
+        | `Comets` | `SHOEMAKER_LEVY_9_R` | `ShoemakerLevy9R` |
+        | `Comets` | `SHOEMAKER_LEVY_9_Q` | `ShoemakerLevy9Q` |
+        | `Comets` | `SHOEMAKER_LEVY_9_P` | `ShoemakerLevy9P` |
+        | `Comets` | `SHOEMAKER_LEVY_9_N` | `ShoemakerLevy9N` |
+        | `Comets` | `SHOEMAKER_LEVY_9_M` | `ShoemakerLevy9M` |
+        | `Comets` | `SHOEMAKER_LEVY_9_L` | `ShoemakerLevy9L` |
+        | `Comets` | `SHOEMAKER_LEVY_9_K` | `ShoemakerLevy9K` |
+        | `Comets` | `SHOEMAKER_LEVY_9_J` | `ShoemakerLevy9J` |
+        | `Comets` | `SHOEMAKER_LEVY_9_H` | `ShoemakerLevy9H` |
+        | `Comets` | `SHOEMAKER_LEVY_9_G` | `ShoemakerLevy9G` |
+        | `Comets` | `SHOEMAKER_LEVY_9_F` | `ShoemakerLevy9F` |
+        | `Comets` | `SHOEMAKER_LEVY_9_E` | `ShoemakerLevy9E` |
+        | `Comets` | `SHOEMAKER_LEVY_9_D` | `ShoemakerLevy9D` |
+        | `Comets` | `SHOEMAKER_LEVY_9_C` | `ShoemakerLevy9C` |
+        | `Comets` | `SHOEMAKER_LEVY_9_B` | `ShoemakerLevy9B` |
+        | `Comets` | `SHOEMAKER_LEVY_9_A` | `ShoemakerLevy9A` |
+        | `Comets` | `SHOEMAKER_LEVY_9_Q1` | `ShoemakerLevy9Q1` |
+        | `Comets` | `SHOEMAKER_LEVY_9_P2` | `ShoemakerLevy9P2` |
+        | `Comets` | `AREND` | `Arend` |
+        | `Comets` | `AREND_RIGAUX` | `ArendRigaux` |
+        | `Comets` | `ASHBROOK_JACKSON` | `AshbrookJackson` |
+        | `Comets` | `BOETHIN` | `Boethin` |
+        | `Comets` | `BORRELLY` | `Borrelly` |
+        | `Comets` | `BOWELL_SKIFF` | `BowellSkiff` |
+        | `Comets` | `BRADFIELD` | `Bradfield` |
+        | `Comets` | `BROOKS_2` | `Brooks2` |
+        | `Comets` | `BRORSEN_METCALF` | `BrorsenMetcalf` |
+        | `Comets` | `BUS` | `Bus` |
+        | `Comets` | `CHERNYKH` | `Chernykh` |
+        | `Comets` | `_67P_CHURYUMOV_GERASIMENKO_1969_R1` | `Comet67PChuryumovGerasimenko1969R1` |
+        | `Comets` | `CHURYUMOV_GERASIMENKO` | `ChuryumovGerasimenko` |
+        | `Comets` | `CIFFREO` | `Ciffreo` |
+        | `Comets` | `CLARK` | `Clark` |
+        | `Comets` | `COMAS_SOLA` | `ComasSola` |
+        | `Comets` | `CROMMELIN` | `Crommelin` |
+        | `Comets` | `D_ARREST` | `DArrest` |
+        | `Comets` | `DANIEL` | `Daniel` |
+        | `Comets` | `DE_VICO_SWIFT` | `DeVicoSwift` |
+        | `Comets` | `DENNING_FUJIKAWA` | `DenningFujikawa` |
+        | `Comets` | `DU_TOIT_1` | `DuToit1` |
+        | `Comets` | `DU_TOIT_HARTLEY` | `DuToitHartley` |
+        | `Comets` | `DUTOIT_NEUJMIN_DELPORTE` | `DutoitNeujminDelporte` |
+        | `Comets` | `DUBIAGO` | `Dubiago` |
+        | `Comets` | `ENCKE` | `Encke` |
+        | `Comets` | `FAYE` | `Faye` |
+        | `Comets` | `FINLAY` | `Finlay` |
+        | `Comets` | `FORBES` | `Forbes` |
+        | `Comets` | `GEHRELS_1` | `Gehrels1` |
+        | `Comets` | `GEHRELS_2` | `Gehrels2` |
+        | `Comets` | `GEHRELS_3` | `Gehrels3` |
+        | `Comets` | `GIACOBINI_ZINNER` | `GiacobiniZinner` |
+        | `Comets` | `GICLAS` | `Giclas` |
+        | `Comets` | `GRIGG_SKJELLERUP` | `GriggSkjellerup` |
+        | `Comets` | `GUNN` | `Gunn` |
+        | `Comets` | `HALLEY` | `Halley` |
+        | `Comets` | `HANEDA_CAMPOS` | `HanedaCampos` |
+        | `Comets` | `HARRINGTON` | `Harrington` |
+        | `Comets` | `HARRINGTON_ABELL` | `HarringtonAbell` |
+        | `Comets` | `HARTLEY_1` | `Hartley1` |
+        | `Comets` | `HARTLEY_2` | `Hartley2` |
+        | `Comets` | `HARTLEY_IRAS` | `HartleyIras` |
+        | `Comets` | `HERSCHEL_RIGOLLET` | `HerschelRigollet` |
+        | `Comets` | `HOLMES` | `Holmes` |
+        | `Comets` | `HONDA_MRKOS_PAJDUSAKOVA` | `HondaMrkosPajdusakova` |
+        | `Comets` | `HOWELL` | `Howell` |
+        | `Comets` | `IRAS` | `Iras` |
+        | `Comets` | `JACKSON_NEUJMIN` | `JacksonNeujmin` |
+        | `Comets` | `JOHNSON` | `Johnson` |
+        | `Comets` | `KEARNS_KWEE` | `KearnsKwee` |
+        | `Comets` | `KLEMOLA` | `Klemola` |
+        | `Comets` | `KOHOUTEK` | `Kohoutek` |
+        | `Comets` | `KOJIMA` | `Kojima` |
+        | `Comets` | `KOPFF` | `Kopff` |
+        | `Comets` | `KOWAL_1` | `Kowal1` |
+        | `Comets` | `KOWAL_2` | `Kowal2` |
+        | `Comets` | `KOWAL_MRKOS` | `KowalMrkos` |
+        | `Comets` | `KOWAL_VAVROVA` | `KowalVavrova` |
+        | `Comets` | `LONGMORE` | `Longmore` |
+        | `Comets` | `LOVAS_1` | `Lovas1` |
+        | `Comets` | `MACHHOLZ` | `Machholz` |
+        | `Comets` | `MAURY` | `Maury` |
+        | `Comets` | `NEUJMIN_1` | `Neujmin1` |
+        | `Comets` | `NEUJMIN_2` | `Neujmin2` |
+        | `Comets` | `NEUJMIN_3` | `Neujmin3` |
+        | `Comets` | `OLBERS` | `Olbers` |
+        | `Comets` | `PETERS_HARTLEY` | `PetersHartley` |
+        | `Comets` | `PONS_BROOKS` | `PonsBrooks` |
+        | `Comets` | `PONS_WINNECKE` | `PonsWinnecke` |
+        | `Comets` | `REINMUTH_1` | `Reinmuth1` |
+        | `Comets` | `REINMUTH_2` | `Reinmuth2` |
+        | `Comets` | `RUSSELL_1` | `Russell1` |
+        | `Comets` | `RUSSELL_2` | `Russell2` |
+        | `Comets` | `RUSSELL_3` | `Russell3` |
+        | `Comets` | `RUSSELL_4` | `Russell4` |
+        | `Comets` | `SANGUIN` | `Sanguin` |
+        | `Comets` | `SCHAUMASSE` | `Schaumasse` |
+        | `Comets` | `SCHUSTER` | `Schuster` |
+        | `Comets` | `SCHWASSMANN_WACHMANN_1` | `SchwassmannWachmann1` |
+        | `Comets` | `SCHWASSMANN_WACHMANN_2` | `SchwassmannWachmann2` |
+        | `Comets` | `SCHWASSMANN_WACHMANN_3` | `SchwassmannWachmann3` |
+        | `Comets` | `SHAJN_SCHALDACH` | `ShajnSchaldach` |
+        | `Comets` | `SHOEMAKER_1` | `Shoemaker1` |
+        | `Comets` | `SHOEMAKER_2` | `Shoemaker2` |
+        | `Comets` | `SHOEMAKER_3` | `Shoemaker3` |
+        | `Comets` | `SINGER_BREWSTER` | `SingerBrewster` |
+        | `Comets` | `SLAUGHTER_BURNHAM` | `SlaughterBurnham` |
+        | `Comets` | `SMIRNOVA_CHERNYKH` | `SmirnovaChernykh` |
+        | `Comets` | `STEPHAN_OTERMA` | `StephanOterma` |
+        | `Comets` | `SWIFT_GEHRELS` | `SwiftGehrels` |
+        | `Comets` | `TAKAMIZAWA` | `Takamizawa` |
+        | `Comets` | `TAYLOR` | `Taylor` |
+        | `Comets` | `TEMPEL_1` | `Tempel1` |
+        | `Comets` | `TEMPEL_2` | `Tempel2` |
+        | `Comets` | `TEMPEL_TUTTLE` | `TempelTuttle` |
+        | `Comets` | `TRITTON` | `Tritton` |
+        | `Comets` | `TSUCHINSHAN_1` | `Tsuchinshan1` |
+        | `Comets` | `TSUCHINSHAN_2` | `Tsuchinshan2` |
+        | `Comets` | `TUTTLE` | `Tuttle` |
+        | `Comets` | `TUTTLE_GIACOBINI_KRESAK` | `TuttleGiacobiniKresak` |
+        | `Comets` | `VAISALA_1` | `Vaisala1` |
+        | `Comets` | `VAN_BIESBROECK` | `VanBiesbroeck` |
+        | `Comets` | `VAN_HOUTEN` | `VanHouten` |
+        | `Comets` | `WEST_KOHOUTEK_IKEMURA` | `WestKohoutekIkemura` |
+        | `Comets` | `WHIPPLE` | `Whipple` |
+        | `Comets` | `WILD_1` | `Wild1` |
+        | `Comets` | `WILD_2` | `Wild2` |
+        | `Comets` | `WILD_3` | `Wild3` |
+        | `Comets` | `WIRTANEN` | `Wirtanen` |
+        | `Comets` | `WOLF` | `Wolf` |
+        | `Comets` | `WOLF_HARRINGTON` | `WolfHarrington` |
+        | `Comets` | `LOVAS_2` | `Lovas2` |
+        | `Comets` | `URATA_NIIJIMA` | `UrataNiijima` |
+        | `Comets` | `WISEMAN_SKIFF` | `WisemanSkiff` |
+        | `Comets` | `HELIN` | `Helin` |
+        | `Comets` | `MUELLER` | `Mueller` |
+        | `Comets` | `SHOEMAKER_HOLT_1` | `ShoemakerHolt1` |
+        | `Comets` | `HELIN_ROMAN_CROCKETT` | `HelinRomanCrockett` |
+        | `Comets` | `HARTLEY_3` | `Hartley3` |
+        | `Comets` | `PARKER_HARTLEY` | `ParkerHartley` |
+        | `Comets` | `HELIN_ROMAN_ALU_1` | `HelinRomanAlu1` |
+        | `Comets` | `WILD_4` | `Wild4` |
+        | `Comets` | `MUELLER_2` | `Mueller2` |
+        | `Comets` | `MUELLER_3` | `Mueller3` |
+        | `Comets` | `SHOEMAKER_LEVY_1` | `ShoemakerLevy1` |
+        | `Comets` | `SHOEMAKER_LEVY_2` | `ShoemakerLevy2` |
+        | `Comets` | `HOLT_OLMSTEAD` | `HoltOlmstead` |
+        | `Comets` | `METCALF_BREWINGTON` | `MetcalfBrewington` |
+        | `Comets` | `LEVY` | `Levy` |
+        | `Comets` | `SHOEMAKER_LEVY_9` | `ShoemakerLevy9` |
+        | `Comets` | `HYAKUTAKE` | `Hyakutake` |
+        | `Comets` | `HALE_BOPP` | `HaleBopp` |
+        | `Comets` | `C_2013_A1` | `C2013A1` |
+        | `Comets` | `SIDING_SPRING` | `SidingSpring` |
+
+    ??? example "The script, rename-11.sh"
+
+        ```bash
+        #!/usr/bin/env bash
+        # The renames of IO.Astrodynamics 11.0.0 over a source tree (.cs, .csx and .md files): rename-11.sh <directory>.
+        # GNU sed and awk. Commit first and review the diff: a name of your own that matches a pattern is renamed too.
+        set -euo pipefail
+        sed_script=$(mktemp)
+        trap 'rm -f "$sed_script"' EXIT
+        cat > "$sed_script" <<'SED'
+        # --- 11.0.0 renames, part 1: types (R27 of #668, lot L9). GNU sed -E, LC_ALL=C. ---
+        # SpiceAPI -> SpiceApi
+        s/\bSpiceAPI\b/SpiceApi/g
+        # TLEPropagator -> TlePropagator
+        s/\bTLEPropagator\b/TlePropagator/g
+        # RelationnalOperator -> RelationalOperator, its comparisons under the names of System.Linq.Expressions.ExpressionType
+        s/\bRelationnalOperator\.GreaterOrEqual\b/RelationalOperator.GreaterThanOrEqual/g
+        s/\bRelationnalOperator\.LowerOrEqual\b/RelationalOperator.LessThanOrEqual/g
+        s/\bRelationnalOperator\.Greater\b/RelationalOperator.GreaterThan/g
+        s/\bRelationnalOperator\.Lower\b/RelationalOperator.LessThan/g
+        s/\bRelationnalOperator\b/RelationalOperator/g
+        s/\bGreaterOrEqual\b/GreaterThanOrEqual/g
+        s/\bLowerOrEqual\b/LessThanOrEqual/g
+        s/`Greater`/`GreaterThan`/g
+        s/`Lower`/`LessThan`/g
+        # Classification (the TLE's) -> TleClassification; the property Tle.Classification keeps its name
+        s/\bClassification\.(Unclassified|Classified|Secret)\b/TleClassification.\1/g
+        s/\bClassification (classification|Classification)\b/TleClassification \1/g
+        s/\(Classification\)/(TleClassification)/g
+        # NRLMSISE00 -> Nrlmsise00 (the low-level model; Nrlmsise00Model keeps its name)
+        s/\bNRLMSISE00\b/Nrlmsise00/g
+        # PDSBase, PDSConfiguration, PDSMissionInformation, PDSSurfaceMissionInformation -> Pds...
+        s/\bPDS(Base|Configuration|MissionInformation|SurfaceMissionInformation)\b/Pds\1/g
+        # Tsiolkovski -> Tsiolkovsky
+        s/\bTsiolkovski\b/Tsiolkovsky/g
+        # Propagator.EventInfo -> IntegrationEvent: in code, rename by hand (System.Reflection.EventInfo has the same name)
+        s/`EventInfo`/`IntegrationEvent`/g
+        # TLE -> Tle (the type; the namespace OrbitalParameters.TLE and the format's name in prose stay)
+        s/\bTLE\.TLE\b/TLE.Tle/g
+        s/\busing TLE = /using Tle = /g
+        s/(^|[^.[:alnum:]_])TLE\.([A-Z])/\1Tle.\2/g
+        s/\bTle\.(Tle|NoradCatalogNumber|TleFitOptions|TleFormatException|TleClassification|MeanElementsConverter|Configuration)\b/TLE.\1/g
+        s/\bnew TLE\(/new Tle(/g
+        s/cref="TLE(["(])/cref="Tle\1/g
+        s/<TLE>/<Tle>/g
+        s/<TLE,/<Tle,/g
+        s/, TLE>/, Tle>/g
+        s/\b(typeof|nameof)\(TLE\)/\1(Tle)/g
+        s/\(TLE\)([A-Za-z_(])/(Tle)\1/g
+        s/\bTLE\[\]/Tle[]/g
+        s/\bTLE\?/Tle?/g
+        s/`TLE`/`Tle`/g
+        s/`TLE\(/`Tle(/g
+        s/\b(is|as) (not )?TLE([^-[:alnum:]_]|$)/\1 \2Tle\3/g
+        s/(^[[:space:]]*|[(,][[:space:]]*|\b(static|readonly|public|private|internal|protected|out|params)[[:space:]]+)TLE ([A-Za-z_][A-Za-z0-9_]*[[:space:]]*[=;,)(])/\1Tle \3/g
+        s/(^[[:space:]]*|[(,][[:space:]]*|\b(static|readonly|public|private|internal|protected|out|params)[[:space:]]+)TLE ([A-Za-z_][A-Za-z0-9_]*[[:space:]]*[=;,)(])/\1Tle \3/g
+        s/\b(out|in|ref) TLE\)/\1 Tle)/g
+        s/, TLE\)/, Tle)/g
+        s/\) : TLE\(/) : Tle(/g
+        s/\bTle (parameters|form|format|columns|column|epoch|epochs|fields|field|line|lines|set|sets|data|text|elements|spacecraft|propagator|tutorial|number|catalog|path|mean|record|records|string|strings|object|objects|category|categories|conversion|conversions|and|or|of|to|in|is|with|from|the)\b/TLE \1/g
+        # --- 11.0.0 renames, part 2: members (R27 of #668, lot L9). GNU sed -E, LC_ALL=C. ---
+        # The ...ToICRF members of frames, data providers and the attitude record (IDataProvider and the Frame virtuals included)
+        s/\b(GetStateOrientation|FrameTransformation|AddStateOrientation|GetLatestStateOrientation|GetStateOrientations|Relative)ToICRF\b/\1ToIcrf/g
+        s/\bGet(Boresight|RefVector)InICRFFrame\b/Get\1InIcrfFrame/g
+        # Time: J2000TDB, J2000UTC, CreateTDB, CreateUTC, ToTDB, ToUTC, ToTAI, ToGPS and the constants (TimeScale.TDB and the like stay)
+        s/\bJ2000(TDB|UTC)\b/J2000\L\u\1/g
+        s/\bCreateTDB\b/CreateTdb/g
+        s/\bCreateUTC\b/CreateUtc/g
+        s/\bTo(TDB|UTC|TAI|GPS)\b/To\L\u\1/g
+        s/\bJULIAN_J2000\b/JulianDateJ2000/g
+        s/\bJULIAN_J1950\b/JulianDateJ1950/g
+        s/\bJULIAN_YEAR\b/JulianYear/g
+        s/\bSECONDS_PER_DAY\b/SecondsPerDay/g
+        # Constants: G, g0, C and Kelvin (the same values)
+        s/\bConstants\.G\b/Constants.GravitationalConstant/g
+        s/\bConstants\.g0\b/Constants.StandardGravity/g
+        s/\bConstants\.C\b/Constants.SpeedOfLight/g
+        s/\bConstants\.Kelvin\b/Constants.ZeroCelsiusInKelvin/g
+        # Frame statics: the SPICE names they pass
+        s/\bFrame\.ECLIPTIC_J2000\b/Frame.ECLIPJ2000/g
+        s/\bFrame\.ECLIPTIC_B1950\b/Frame.ECLIPB1950/g
+        s/\bFrame\.GALACTIC_SYSTEM2\b/Frame.GALACTIC/g
+        s/(^|[^"[:alnum:]_])ECLIPTIC_J2000([^"[:alnum:]_]|$)/\1ECLIPJ2000\2/g
+        s/(^|[^"[:alnum:]_])ECLIPTIC_B1950([^"[:alnum:]_]|$)/\1ECLIPB1950\2/g
+        s/(^|[^"[:alnum:]_])GALACTIC_SYSTEM2([^"[:alnum:]_]|$)/\1GALACTIC\2/g
+        # Aberration: LTS, CNS, XLTS, XCNS (the SPICE strings LT+S, CN+S, XLT+S, XCN+S stay)
+        s/\bAberration\.LTS\b/Aberration.LtS/g
+        s/\bAberration\.CNS\b/Aberration.CnS/g
+        s/\bAberration\.XLTS\b/Aberration.XltS/g
+        s/\bAberration\.XCNS\b/Aberration.XcnS/g
+        s/`LTS`/`LtS`/g
+        s/`CNS`/`CnS`/g
+        s/`XLTS`/`XltS`/g
+        s/`XCNS`/`XcnS`/g
+        # Acronyms
+        s/\bIsInFOV\b/IsInFov/g
+        s/\bGetTotalISP\b/GetTotalIsp/g
+        s/\.ISP\b/.Isp/g
+        s/`ISP`/`Isp`/g
+        s/\.SLERP\b/.Slerp/g
+        s/cref="SLERP/cref="Slerp/g
+        s/`SLERP\(/`Slerp(/g
+        s/\bToTLE\(/ToTle(/g
+        # Words
+        s/\bSideralRotationPeriod\b/SiderealRotationPeriod/g
+        s/\bHelioSynchronousOrbit\b/SunSynchronousOrbit/g
+        s/\bCreateFromObservation_Gauss\b/CreateFromGaussMethod/g
+        s/\bMaximumEventSearchStep\b/MaxEventSearchStep/g
+        s/\bSolarRadiationCoeff\b/SolarRadiationCoefficient/g
+        s/\bGetRightAscensionSigma\b/RightAscensionSigmaAt/g
+        s/\bGetDeclinationSigma\b/DeclinationSigmaAt/g
+        # OrbitalDirectionTarget.Direction -> OrbitalDirection: on an instance (target.Direction), rename by hand
+        s/\bOrbitalDirectionTarget\.Direction\b/OrbitalDirectionTarget.OrbitalDirection/g
+        # The TLE fields under their OMM names, and the parameters of Tle.Create (bstar also that of the OMM factories and TleParameters)
+        s/\bBallisticCoefficient\b/BStar/g
+        s/\bFirstDerivationMeanMotion\b/MeanMotionDot/g
+        s/\bSecondDerivativeMeanMotion\b/MeanMotionDDot/g
+        s/\bbstar:/bStar:/g
+        s/\bnDot:/meanMotionDot:/g
+        s/\bnDDot:/meanMotionDDot:/g
+        s/\brevolutionsAtEpoch:/revolutionNumberAtEpoch:/g
+        # --- 11.0.0 renames, part 3: the catalogues in PascalCase (R02 and R27 of #668, lot L9). GNU sed -E, LC_ALL=C. ---
+        # PlanetsAndMoons, Stars, Barycenters, GroundStations, Asteroids, Comets: each word capitalised (EARTH_BODY -> EarthBody, EARTH -> Earth);
+        # a digit-led name takes the catalogue's singular (Asteroids._52_EUROPA -> Asteroid52Europa). A name without its class is renamed by hand.
+        s/\bPlanetsAndMoons\.MERCURY\b/PlanetsAndMoons.Mercury/g
+        s/\bPlanetsAndMoons\.VENUS\b/PlanetsAndMoons.Venus/g
+        s/\bPlanetsAndMoons\.EARTH\b/PlanetsAndMoons.Earth/g
+        s/\bPlanetsAndMoons\.MOON\b/PlanetsAndMoons.Moon/g
+        s/\bPlanetsAndMoons\.MARS\b/PlanetsAndMoons.Mars/g
+        s/\bPlanetsAndMoons\.PHOBOS\b/PlanetsAndMoons.Phobos/g
+        s/\bPlanetsAndMoons\.DEIMOS\b/PlanetsAndMoons.Deimos/g
+        s/\bPlanetsAndMoons\.JUPITER\b/PlanetsAndMoons.Jupiter/g
+        s/\bPlanetsAndMoons\.IO\b/PlanetsAndMoons.Io/g
+        s/\bPlanetsAndMoons\.EUROPA\b/PlanetsAndMoons.Europa/g
+        s/\bPlanetsAndMoons\.GANYMEDE\b/PlanetsAndMoons.Ganymede/g
+        s/\bPlanetsAndMoons\.CALLISTO\b/PlanetsAndMoons.Callisto/g
+        s/\bPlanetsAndMoons\.AMALTHEA\b/PlanetsAndMoons.Amalthea/g
+        s/\bPlanetsAndMoons\.HIMALIA\b/PlanetsAndMoons.Himalia/g
+        s/\bPlanetsAndMoons\.ELARA\b/PlanetsAndMoons.Elara/g
+        s/\bPlanetsAndMoons\.PASIPHAE\b/PlanetsAndMoons.Pasiphae/g
+        s/\bPlanetsAndMoons\.SINOPE\b/PlanetsAndMoons.Sinope/g
+        s/\bPlanetsAndMoons\.LYSITHEA\b/PlanetsAndMoons.Lysithea/g
+        s/\bPlanetsAndMoons\.CARME\b/PlanetsAndMoons.Carme/g
+        s/\bPlanetsAndMoons\.ANANKE\b/PlanetsAndMoons.Ananke/g
+        s/\bPlanetsAndMoons\.LEDA\b/PlanetsAndMoons.Leda/g
+        s/\bPlanetsAndMoons\.THEBE\b/PlanetsAndMoons.Thebe/g
+        s/\bPlanetsAndMoons\.ADRASTEA\b/PlanetsAndMoons.Adrastea/g
+        s/\bPlanetsAndMoons\.METIS\b/PlanetsAndMoons.Metis/g
+        s/\bPlanetsAndMoons\.CALLIRRHOE\b/PlanetsAndMoons.Callirrhoe/g
+        s/\bPlanetsAndMoons\.THEMISTO\b/PlanetsAndMoons.Themisto/g
+        s/\bPlanetsAndMoons\.MEGACLITE\b/PlanetsAndMoons.Megaclite/g
+        s/\bPlanetsAndMoons\.TAYGETE\b/PlanetsAndMoons.Taygete/g
+        s/\bPlanetsAndMoons\.CHALDENE\b/PlanetsAndMoons.Chaldene/g
+        s/\bPlanetsAndMoons\.HARPALYKE\b/PlanetsAndMoons.Harpalyke/g
+        s/\bPlanetsAndMoons\.KALYKE\b/PlanetsAndMoons.Kalyke/g
+        s/\bPlanetsAndMoons\.IOCASTE\b/PlanetsAndMoons.Iocaste/g
+        s/\bPlanetsAndMoons\.ERINOME\b/PlanetsAndMoons.Erinome/g
+        s/\bPlanetsAndMoons\.ISONOE\b/PlanetsAndMoons.Isonoe/g
+        s/\bPlanetsAndMoons\.PRAXIDIKE\b/PlanetsAndMoons.Praxidike/g
+        s/\bPlanetsAndMoons\.AUTONOE\b/PlanetsAndMoons.Autonoe/g
+        s/\bPlanetsAndMoons\.THYONE\b/PlanetsAndMoons.Thyone/g
+        s/\bPlanetsAndMoons\.HERMIPPE\b/PlanetsAndMoons.Hermippe/g
+        s/\bPlanetsAndMoons\.AITNE\b/PlanetsAndMoons.Aitne/g
+        s/\bPlanetsAndMoons\.EURYDOME\b/PlanetsAndMoons.Eurydome/g
+        s/\bPlanetsAndMoons\.EUANTHE\b/PlanetsAndMoons.Euanthe/g
+        s/\bPlanetsAndMoons\.EUPORIE\b/PlanetsAndMoons.Euporie/g
+        s/\bPlanetsAndMoons\.ORTHOSIE\b/PlanetsAndMoons.Orthosie/g
+        s/\bPlanetsAndMoons\.SPONDE\b/PlanetsAndMoons.Sponde/g
+        s/\bPlanetsAndMoons\.KALE\b/PlanetsAndMoons.Kale/g
+        s/\bPlanetsAndMoons\.PASITHEE\b/PlanetsAndMoons.Pasithee/g
+        s/\bPlanetsAndMoons\.HEGEMONE\b/PlanetsAndMoons.Hegemone/g
+        s/\bPlanetsAndMoons\.MNEME\b/PlanetsAndMoons.Mneme/g
+        s/\bPlanetsAndMoons\.AOEDE\b/PlanetsAndMoons.Aoede/g
+        s/\bPlanetsAndMoons\.THELXINOE\b/PlanetsAndMoons.Thelxinoe/g
+        s/\bPlanetsAndMoons\.ARCHE\b/PlanetsAndMoons.Arche/g
+        s/\bPlanetsAndMoons\.KALLICHORE\b/PlanetsAndMoons.Kallichore/g
+        s/\bPlanetsAndMoons\.HELIKE\b/PlanetsAndMoons.Helike/g
+        s/\bPlanetsAndMoons\.CARPO\b/PlanetsAndMoons.Carpo/g
+        s/\bPlanetsAndMoons\.EUKELADE\b/PlanetsAndMoons.Eukelade/g
+        s/\bPlanetsAndMoons\.CYLLENE\b/PlanetsAndMoons.Cyllene/g
+        s/\bPlanetsAndMoons\.KORE\b/PlanetsAndMoons.Kore/g
+        s/\bPlanetsAndMoons\.HERSE\b/PlanetsAndMoons.Herse/g
+        s/\bPlanetsAndMoons\.DIA\b/PlanetsAndMoons.Dia/g
+        s/\bPlanetsAndMoons\.SATURN\b/PlanetsAndMoons.Saturn/g
+        s/\bPlanetsAndMoons\.MIMAS\b/PlanetsAndMoons.Mimas/g
+        s/\bPlanetsAndMoons\.ENCELADUS\b/PlanetsAndMoons.Enceladus/g
+        s/\bPlanetsAndMoons\.TETHYS\b/PlanetsAndMoons.Tethys/g
+        s/\bPlanetsAndMoons\.DIONE\b/PlanetsAndMoons.Dione/g
+        s/\bPlanetsAndMoons\.RHEA\b/PlanetsAndMoons.Rhea/g
+        s/\bPlanetsAndMoons\.TITAN\b/PlanetsAndMoons.Titan/g
+        s/\bPlanetsAndMoons\.HYPERION\b/PlanetsAndMoons.Hyperion/g
+        s/\bPlanetsAndMoons\.IAPETUS\b/PlanetsAndMoons.Iapetus/g
+        s/\bPlanetsAndMoons\.PHOEBE\b/PlanetsAndMoons.Phoebe/g
+        s/\bPlanetsAndMoons\.JANUS\b/PlanetsAndMoons.Janus/g
+        s/\bPlanetsAndMoons\.EPIMETHEUS\b/PlanetsAndMoons.Epimetheus/g
+        s/\bPlanetsAndMoons\.HELENE\b/PlanetsAndMoons.Helene/g
+        s/\bPlanetsAndMoons\.TELESTO\b/PlanetsAndMoons.Telesto/g
+        s/\bPlanetsAndMoons\.CALYPSO\b/PlanetsAndMoons.Calypso/g
+        s/\bPlanetsAndMoons\.ATLAS\b/PlanetsAndMoons.Atlas/g
+        s/\bPlanetsAndMoons\.PROMETHEUS\b/PlanetsAndMoons.Prometheus/g
+        s/\bPlanetsAndMoons\.PANDORA\b/PlanetsAndMoons.Pandora/g
+        s/\bPlanetsAndMoons\.PAN\b/PlanetsAndMoons.Pan/g
+        s/\bPlanetsAndMoons\.YMIR\b/PlanetsAndMoons.Ymir/g
+        s/\bPlanetsAndMoons\.PAALIAQ\b/PlanetsAndMoons.Paaliaq/g
+        s/\bPlanetsAndMoons\.TARVOS\b/PlanetsAndMoons.Tarvos/g
+        s/\bPlanetsAndMoons\.IJIRAQ\b/PlanetsAndMoons.Ijiraq/g
+        s/\bPlanetsAndMoons\.SUTTUNGR\b/PlanetsAndMoons.Suttungr/g
+        s/\bPlanetsAndMoons\.KIVIUQ\b/PlanetsAndMoons.Kiviuq/g
+        s/\bPlanetsAndMoons\.MUNDILFARI\b/PlanetsAndMoons.Mundilfari/g
+        s/\bPlanetsAndMoons\.ALBIORIX\b/PlanetsAndMoons.Albiorix/g
+        s/\bPlanetsAndMoons\.SKATHI\b/PlanetsAndMoons.Skathi/g
+        s/\bPlanetsAndMoons\.ERRIAPUS\b/PlanetsAndMoons.Erriapus/g
+        s/\bPlanetsAndMoons\.SIARNAQ\b/PlanetsAndMoons.Siarnaq/g
+        s/\bPlanetsAndMoons\.THRYMR\b/PlanetsAndMoons.Thrymr/g
+        s/\bPlanetsAndMoons\.NARVI\b/PlanetsAndMoons.Narvi/g
+        s/\bPlanetsAndMoons\.METHONE\b/PlanetsAndMoons.Methone/g
+        s/\bPlanetsAndMoons\.PALLENE\b/PlanetsAndMoons.Pallene/g
+        s/\bPlanetsAndMoons\.POLYDEUCES\b/PlanetsAndMoons.Polydeuces/g
+        s/\bPlanetsAndMoons\.DAPHNIS\b/PlanetsAndMoons.Daphnis/g
+        s/\bPlanetsAndMoons\.AEGIR\b/PlanetsAndMoons.Aegir/g
+        s/\bPlanetsAndMoons\.BEBHIONN\b/PlanetsAndMoons.Bebhionn/g
+        s/\bPlanetsAndMoons\.BERGELMIR\b/PlanetsAndMoons.Bergelmir/g
+        s/\bPlanetsAndMoons\.BESTLA\b/PlanetsAndMoons.Bestla/g
+        s/\bPlanetsAndMoons\.FARBAUTI\b/PlanetsAndMoons.Farbauti/g
+        s/\bPlanetsAndMoons\.FENRIR\b/PlanetsAndMoons.Fenrir/g
+        s/\bPlanetsAndMoons\.FORNJOT\b/PlanetsAndMoons.Fornjot/g
+        s/\bPlanetsAndMoons\.HATI\b/PlanetsAndMoons.Hati/g
+        s/\bPlanetsAndMoons\.HYRROKKIN\b/PlanetsAndMoons.Hyrrokkin/g
+        s/\bPlanetsAndMoons\.KARI\b/PlanetsAndMoons.Kari/g
+        s/\bPlanetsAndMoons\.LOGE\b/PlanetsAndMoons.Loge/g
+        s/\bPlanetsAndMoons\.SKOLL\b/PlanetsAndMoons.Skoll/g
+        s/\bPlanetsAndMoons\.SURTUR\b/PlanetsAndMoons.Surtur/g
+        s/\bPlanetsAndMoons\.ANTHE\b/PlanetsAndMoons.Anthe/g
+        s/\bPlanetsAndMoons\.JARNSAXA\b/PlanetsAndMoons.Jarnsaxa/g
+        s/\bPlanetsAndMoons\.GREIP\b/PlanetsAndMoons.Greip/g
+        s/\bPlanetsAndMoons\.TARQEQ\b/PlanetsAndMoons.Tarqeq/g
+        s/\bPlanetsAndMoons\.AEGAEON\b/PlanetsAndMoons.Aegaeon/g
+        s/\bPlanetsAndMoons\.URANUS\b/PlanetsAndMoons.Uranus/g
+        s/\bPlanetsAndMoons\.ARIEL\b/PlanetsAndMoons.Ariel/g
+        s/\bPlanetsAndMoons\.UMBRIEL\b/PlanetsAndMoons.Umbriel/g
+        s/\bPlanetsAndMoons\.TITANIA\b/PlanetsAndMoons.Titania/g
+        s/\bPlanetsAndMoons\.OBERON\b/PlanetsAndMoons.Oberon/g
+        s/\bPlanetsAndMoons\.MIRANDA\b/PlanetsAndMoons.Miranda/g
+        s/\bPlanetsAndMoons\.CORDELIA\b/PlanetsAndMoons.Cordelia/g
+        s/\bPlanetsAndMoons\.OPHELIA\b/PlanetsAndMoons.Ophelia/g
+        s/\bPlanetsAndMoons\.BIANCA\b/PlanetsAndMoons.Bianca/g
+        s/\bPlanetsAndMoons\.CRESSIDA\b/PlanetsAndMoons.Cressida/g
+        s/\bPlanetsAndMoons\.DESDEMONA\b/PlanetsAndMoons.Desdemona/g
+        s/\bPlanetsAndMoons\.JULIET\b/PlanetsAndMoons.Juliet/g
+        s/\bPlanetsAndMoons\.PORTIA\b/PlanetsAndMoons.Portia/g
+        s/\bPlanetsAndMoons\.ROSALIND\b/PlanetsAndMoons.Rosalind/g
+        s/\bPlanetsAndMoons\.BELINDA\b/PlanetsAndMoons.Belinda/g
+        s/\bPlanetsAndMoons\.PUCK\b/PlanetsAndMoons.Puck/g
+        s/\bPlanetsAndMoons\.CALIBAN\b/PlanetsAndMoons.Caliban/g
+        s/\bPlanetsAndMoons\.SYCORAX\b/PlanetsAndMoons.Sycorax/g
+        s/\bPlanetsAndMoons\.PROSPERO\b/PlanetsAndMoons.Prospero/g
+        s/\bPlanetsAndMoons\.SETEBOS\b/PlanetsAndMoons.Setebos/g
+        s/\bPlanetsAndMoons\.STEPHANO\b/PlanetsAndMoons.Stephano/g
+        s/\bPlanetsAndMoons\.TRINCULO\b/PlanetsAndMoons.Trinculo/g
+        s/\bPlanetsAndMoons\.FRANCISCO\b/PlanetsAndMoons.Francisco/g
+        s/\bPlanetsAndMoons\.MARGARET\b/PlanetsAndMoons.Margaret/g
+        s/\bPlanetsAndMoons\.FERDINAND\b/PlanetsAndMoons.Ferdinand/g
+        s/\bPlanetsAndMoons\.PERDITA\b/PlanetsAndMoons.Perdita/g
+        s/\bPlanetsAndMoons\.MAB\b/PlanetsAndMoons.Mab/g
+        s/\bPlanetsAndMoons\.CUPID\b/PlanetsAndMoons.Cupid/g
+        s/\bPlanetsAndMoons\.NEPTUNE\b/PlanetsAndMoons.Neptune/g
+        s/\bPlanetsAndMoons\.TRITON\b/PlanetsAndMoons.Triton/g
+        s/\bPlanetsAndMoons\.NEREID\b/PlanetsAndMoons.Nereid/g
+        s/\bPlanetsAndMoons\.NAIAD\b/PlanetsAndMoons.Naiad/g
+        s/\bPlanetsAndMoons\.THALASSA\b/PlanetsAndMoons.Thalassa/g
+        s/\bPlanetsAndMoons\.DESPINA\b/PlanetsAndMoons.Despina/g
+        s/\bPlanetsAndMoons\.GALATEA\b/PlanetsAndMoons.Galatea/g
+        s/\bPlanetsAndMoons\.LARISSA\b/PlanetsAndMoons.Larissa/g
+        s/\bPlanetsAndMoons\.PROTEUS\b/PlanetsAndMoons.Proteus/g
+        s/\bPlanetsAndMoons\.HALIMEDE\b/PlanetsAndMoons.Halimede/g
+        s/\bPlanetsAndMoons\.PSAMATHE\b/PlanetsAndMoons.Psamathe/g
+        s/\bPlanetsAndMoons\.SAO\b/PlanetsAndMoons.Sao/g
+        s/\bPlanetsAndMoons\.LAOMEDEIA\b/PlanetsAndMoons.Laomedeia/g
+        s/\bPlanetsAndMoons\.NESO\b/PlanetsAndMoons.Neso/g
+        s/\bPlanetsAndMoons\.PLUTO\b/PlanetsAndMoons.Pluto/g
+        s/\bPlanetsAndMoons\.CHARON\b/PlanetsAndMoons.Charon/g
+        s/\bPlanetsAndMoons\.NIX\b/PlanetsAndMoons.Nix/g
+        s/\bPlanetsAndMoons\.HYDRA\b/PlanetsAndMoons.Hydra/g
+        s/\bPlanetsAndMoons\.KERBEROS\b/PlanetsAndMoons.Kerberos/g
+        s/\bPlanetsAndMoons\.STYX\b/PlanetsAndMoons.Styx/g
+        s/\bPlanetsAndMoons\.EARTH_BODY\b/PlanetsAndMoons.EarthBody/g
+        s/\bPlanetsAndMoons\.MOON_BODY\b/PlanetsAndMoons.MoonBody/g
+        s/\bStars\.SUN_BODY\b/Stars.SunBody/g
+        s/\bBarycenters\.SOLAR_SYSTEM_BARYCENTER\b/Barycenters.SolarSystemBarycenter/g
+        s/\bBarycenters\.MERCURY_BARYCENTER\b/Barycenters.MercuryBarycenter/g
+        s/\bBarycenters\.VENUS_BARYCENTER\b/Barycenters.VenusBarycenter/g
+        s/\bBarycenters\.EARTH_BARYCENTER\b/Barycenters.EarthBarycenter/g
+        s/\bBarycenters\.MARS_BARYCENTER\b/Barycenters.MarsBarycenter/g
+        s/\bBarycenters\.JUPITER_BARYCENTER\b/Barycenters.JupiterBarycenter/g
+        s/\bBarycenters\.SATURN_BARYCENTER\b/Barycenters.SaturnBarycenter/g
+        s/\bBarycenters\.URANUS_BARYCENTER\b/Barycenters.UranusBarycenter/g
+        s/\bBarycenters\.NEPTUNE_BARYCENTER\b/Barycenters.NeptuneBarycenter/g
+        s/\bBarycenters\.PLUTO_BARYCENTER\b/Barycenters.PlutoBarycenter/g
+        s/\bGroundStations\.NOTO\b/GroundStations.Noto/g
+        s/\bGroundStations\.NORCIA\b/GroundStations.Norcia/g
+        s/\bGroundStations\.GOLDSTONE\b/GroundStations.Goldstone/g
+        s/\bGroundStations\.CANBERRA\b/GroundStations.Canberra/g
+        s/\bGroundStations\.MADRID\b/GroundStations.Madrid/g
+        s/\bGroundStations\.USUDA\b/GroundStations.Usuda/g
+        s/\bGroundStations\.DSS_05\b/GroundStations.Dss05/g
+        s/\bGroundStations\.PARKES\b/GroundStations.Parkes/g
+        s/\bGroundStations\.DSS_12\b/GroundStations.Dss12/g
+        s/\bGroundStations\.DSS_13\b/GroundStations.Dss13/g
+        s/\bGroundStations\.DSS_14\b/GroundStations.Dss14/g
+        s/\bGroundStations\.DSS_15\b/GroundStations.Dss15/g
+        s/\bGroundStations\.DSS_16\b/GroundStations.Dss16/g
+        s/\bGroundStations\.DSS_17\b/GroundStations.Dss17/g
+        s/\bGroundStations\.DSS_23\b/GroundStations.Dss23/g
+        s/\bGroundStations\.DSS_24\b/GroundStations.Dss24/g
+        s/\bGroundStations\.DSS_25\b/GroundStations.Dss25/g
+        s/\bGroundStations\.DSS_26\b/GroundStations.Dss26/g
+        s/\bGroundStations\.DSS_27\b/GroundStations.Dss27/g
+        s/\bGroundStations\.DSS_28\b/GroundStations.Dss28/g
+        s/\bGroundStations\.DSS_33\b/GroundStations.Dss33/g
+        s/\bGroundStations\.DSS_34\b/GroundStations.Dss34/g
+        s/\bGroundStations\.DSS_35\b/GroundStations.Dss35/g
+        s/\bGroundStations\.DSS_36\b/GroundStations.Dss36/g
+        s/\bGroundStations\.DSS_42\b/GroundStations.Dss42/g
+        s/\bGroundStations\.DSS_43\b/GroundStations.Dss43/g
+        s/\bGroundStations\.DSS_45\b/GroundStations.Dss45/g
+        s/\bGroundStations\.DSS_46\b/GroundStations.Dss46/g
+        s/\bGroundStations\.DSS_49\b/GroundStations.Dss49/g
+        s/\bGroundStations\.DSS_53\b/GroundStations.Dss53/g
+        s/\bGroundStations\.DSS_54\b/GroundStations.Dss54/g
+        s/\bGroundStations\.DSS_55\b/GroundStations.Dss55/g
+        s/\bGroundStations\.DSS_56\b/GroundStations.Dss56/g
+        s/\bGroundStations\.DSS_61\b/GroundStations.Dss61/g
+        s/\bGroundStations\.DSS_63\b/GroundStations.Dss63/g
+        s/\bGroundStations\.DSS_64\b/GroundStations.Dss64/g
+        s/\bGroundStations\.DSS_65\b/GroundStations.Dss65/g
+        s/\bGroundStations\.DSS_66\b/GroundStations.Dss66/g
+        s/\bGroundStations\.DSS_69\b/GroundStations.Dss69/g
+        s/\bAsteroids\.CERES\b/Asteroids.Ceres/g
+        s/\bAsteroids\.PALLAS\b/Asteroids.Pallas/g
+        s/\bAsteroids\.VESTA\b/Asteroids.Vesta/g
+        s/\bAsteroids\.PSYCHE\b/Asteroids.Psyche/g
+        s/\bAsteroids\.LUTETIA\b/Asteroids.Lutetia/g
+        s/\bAsteroids\._52_EUROPA\b/Asteroids.Asteroid52Europa/g
+        s/\bAsteroids\.KLEOPATRA\b/Asteroids.Kleopatra/g
+        s/\bAsteroids\.MATHILDE\b/Asteroids.Mathilde/g
+        s/\bAsteroids\.EROS\b/Asteroids.Eros/g
+        s/\bAsteroids\.DAVIDA\b/Asteroids.Davida/g
+        s/\bAsteroids\.STEINS\b/Asteroids.Steins/g
+        s/\bAsteroids\.WILSON_HARRINGTON\b/Asteroids.WilsonHarrington/g
+        s/\bAsteroids\.TOUTATIS\b/Asteroids.Toutatis/g
+        s/\bAsteroids\._1992KD\b/Asteroids.Asteroid1992Kd/g
+        s/\bAsteroids\.BRAILLE\b/Asteroids.Braille/g
+        s/\bAsteroids\.ITOKAWA\b/Asteroids.Itokawa/g
+        s/\bAsteroids\.BENNU\b/Asteroids.Bennu/g
+        s/\bAsteroids\.RYUGU\b/Asteroids.Ryugu/g
+        s/\bAsteroids\.IDA\b/Asteroids.Ida/g
+        s/\bAsteroids\.DACTYL\b/Asteroids.Dactyl/g
+        s/\bAsteroids\.ARROKOTH\b/Asteroids.Arrokoth/g
+        s/\bAsteroids\.GASPRA\b/Asteroids.Gaspra/g
+        s/\bAsteroids\.PATROCLUS_BARYCENTER\b/Asteroids.PatroclusBarycenter/g
+        s/\bAsteroids\.EURYBATES_BARYCENTER\b/Asteroids.EurybatesBarycenter/g
+        s/\bAsteroids\.LEUCUS\b/Asteroids.Leucus/g
+        s/\bAsteroids\.POLYMELE\b/Asteroids.Polymele/g
+        s/\bAsteroids\.ORUS\b/Asteroids.Orus/g
+        s/\bAsteroids\.DONALDJOHANSON\b/Asteroids.Donaldjohanson/g
+        s/\bAsteroids\.DIDYMOS_BARYCENTER\b/Asteroids.DidymosBarycenter/g
+        s/\bAsteroids\.MENOETIUS\b/Asteroids.Menoetius/g
+        s/\bAsteroids\.QUETA\b/Asteroids.Queta/g
+        s/\bAsteroids\.DIMORPHOS\b/Asteroids.Dimorphos/g
+        s/\bAsteroids\.PATROCLUS\b/Asteroids.Patroclus/g
+        s/\bAsteroids\.EURYBATES\b/Asteroids.Eurybates/g
+        s/\bAsteroids\.DIDYMOS\b/Asteroids.Didymos/g
+        s/\bComets\.SHOEMAKER_LEVY_9_W\b/Comets.ShoemakerLevy9W/g
+        s/\bComets\.SHOEMAKER_LEVY_9_V\b/Comets.ShoemakerLevy9V/g
+        s/\bComets\.SHOEMAKER_LEVY_9_U\b/Comets.ShoemakerLevy9U/g
+        s/\bComets\.SHOEMAKER_LEVY_9_T\b/Comets.ShoemakerLevy9T/g
+        s/\bComets\.SHOEMAKER_LEVY_9_S\b/Comets.ShoemakerLevy9S/g
+        s/\bComets\.SHOEMAKER_LEVY_9_R\b/Comets.ShoemakerLevy9R/g
+        s/\bComets\.SHOEMAKER_LEVY_9_Q\b/Comets.ShoemakerLevy9Q/g
+        s/\bComets\.SHOEMAKER_LEVY_9_P\b/Comets.ShoemakerLevy9P/g
+        s/\bComets\.SHOEMAKER_LEVY_9_N\b/Comets.ShoemakerLevy9N/g
+        s/\bComets\.SHOEMAKER_LEVY_9_M\b/Comets.ShoemakerLevy9M/g
+        s/\bComets\.SHOEMAKER_LEVY_9_L\b/Comets.ShoemakerLevy9L/g
+        s/\bComets\.SHOEMAKER_LEVY_9_K\b/Comets.ShoemakerLevy9K/g
+        s/\bComets\.SHOEMAKER_LEVY_9_J\b/Comets.ShoemakerLevy9J/g
+        s/\bComets\.SHOEMAKER_LEVY_9_H\b/Comets.ShoemakerLevy9H/g
+        s/\bComets\.SHOEMAKER_LEVY_9_G\b/Comets.ShoemakerLevy9G/g
+        s/\bComets\.SHOEMAKER_LEVY_9_F\b/Comets.ShoemakerLevy9F/g
+        s/\bComets\.SHOEMAKER_LEVY_9_E\b/Comets.ShoemakerLevy9E/g
+        s/\bComets\.SHOEMAKER_LEVY_9_D\b/Comets.ShoemakerLevy9D/g
+        s/\bComets\.SHOEMAKER_LEVY_9_C\b/Comets.ShoemakerLevy9C/g
+        s/\bComets\.SHOEMAKER_LEVY_9_B\b/Comets.ShoemakerLevy9B/g
+        s/\bComets\.SHOEMAKER_LEVY_9_A\b/Comets.ShoemakerLevy9A/g
+        s/\bComets\.SHOEMAKER_LEVY_9_Q1\b/Comets.ShoemakerLevy9Q1/g
+        s/\bComets\.SHOEMAKER_LEVY_9_P2\b/Comets.ShoemakerLevy9P2/g
+        s/\bComets\.AREND\b/Comets.Arend/g
+        s/\bComets\.AREND_RIGAUX\b/Comets.ArendRigaux/g
+        s/\bComets\.ASHBROOK_JACKSON\b/Comets.AshbrookJackson/g
+        s/\bComets\.BOETHIN\b/Comets.Boethin/g
+        s/\bComets\.BORRELLY\b/Comets.Borrelly/g
+        s/\bComets\.BOWELL_SKIFF\b/Comets.BowellSkiff/g
+        s/\bComets\.BRADFIELD\b/Comets.Bradfield/g
+        s/\bComets\.BROOKS_2\b/Comets.Brooks2/g
+        s/\bComets\.BRORSEN_METCALF\b/Comets.BrorsenMetcalf/g
+        s/\bComets\.BUS\b/Comets.Bus/g
+        s/\bComets\.CHERNYKH\b/Comets.Chernykh/g
+        s/\bComets\._67P_CHURYUMOV_GERASIMENKO_1969_R1\b/Comets.Comet67PChuryumovGerasimenko1969R1/g
+        s/\bComets\.CHURYUMOV_GERASIMENKO\b/Comets.ChuryumovGerasimenko/g
+        s/\bComets\.CIFFREO\b/Comets.Ciffreo/g
+        s/\bComets\.CLARK\b/Comets.Clark/g
+        s/\bComets\.COMAS_SOLA\b/Comets.ComasSola/g
+        s/\bComets\.CROMMELIN\b/Comets.Crommelin/g
+        s/\bComets\.D_ARREST\b/Comets.DArrest/g
+        s/\bComets\.DANIEL\b/Comets.Daniel/g
+        s/\bComets\.DE_VICO_SWIFT\b/Comets.DeVicoSwift/g
+        s/\bComets\.DENNING_FUJIKAWA\b/Comets.DenningFujikawa/g
+        s/\bComets\.DU_TOIT_1\b/Comets.DuToit1/g
+        s/\bComets\.DU_TOIT_HARTLEY\b/Comets.DuToitHartley/g
+        s/\bComets\.DUTOIT_NEUJMIN_DELPORTE\b/Comets.DutoitNeujminDelporte/g
+        s/\bComets\.DUBIAGO\b/Comets.Dubiago/g
+        s/\bComets\.ENCKE\b/Comets.Encke/g
+        s/\bComets\.FAYE\b/Comets.Faye/g
+        s/\bComets\.FINLAY\b/Comets.Finlay/g
+        s/\bComets\.FORBES\b/Comets.Forbes/g
+        s/\bComets\.GEHRELS_1\b/Comets.Gehrels1/g
+        s/\bComets\.GEHRELS_2\b/Comets.Gehrels2/g
+        s/\bComets\.GEHRELS_3\b/Comets.Gehrels3/g
+        s/\bComets\.GIACOBINI_ZINNER\b/Comets.GiacobiniZinner/g
+        s/\bComets\.GICLAS\b/Comets.Giclas/g
+        s/\bComets\.GRIGG_SKJELLERUP\b/Comets.GriggSkjellerup/g
+        s/\bComets\.GUNN\b/Comets.Gunn/g
+        s/\bComets\.HALLEY\b/Comets.Halley/g
+        s/\bComets\.HANEDA_CAMPOS\b/Comets.HanedaCampos/g
+        s/\bComets\.HARRINGTON\b/Comets.Harrington/g
+        s/\bComets\.HARRINGTON_ABELL\b/Comets.HarringtonAbell/g
+        s/\bComets\.HARTLEY_1\b/Comets.Hartley1/g
+        s/\bComets\.HARTLEY_2\b/Comets.Hartley2/g
+        s/\bComets\.HARTLEY_IRAS\b/Comets.HartleyIras/g
+        s/\bComets\.HERSCHEL_RIGOLLET\b/Comets.HerschelRigollet/g
+        s/\bComets\.HOLMES\b/Comets.Holmes/g
+        s/\bComets\.HONDA_MRKOS_PAJDUSAKOVA\b/Comets.HondaMrkosPajdusakova/g
+        s/\bComets\.HOWELL\b/Comets.Howell/g
+        s/\bComets\.IRAS\b/Comets.Iras/g
+        s/\bComets\.JACKSON_NEUJMIN\b/Comets.JacksonNeujmin/g
+        s/\bComets\.JOHNSON\b/Comets.Johnson/g
+        s/\bComets\.KEARNS_KWEE\b/Comets.KearnsKwee/g
+        s/\bComets\.KLEMOLA\b/Comets.Klemola/g
+        s/\bComets\.KOHOUTEK\b/Comets.Kohoutek/g
+        s/\bComets\.KOJIMA\b/Comets.Kojima/g
+        s/\bComets\.KOPFF\b/Comets.Kopff/g
+        s/\bComets\.KOWAL_1\b/Comets.Kowal1/g
+        s/\bComets\.KOWAL_2\b/Comets.Kowal2/g
+        s/\bComets\.KOWAL_MRKOS\b/Comets.KowalMrkos/g
+        s/\bComets\.KOWAL_VAVROVA\b/Comets.KowalVavrova/g
+        s/\bComets\.LONGMORE\b/Comets.Longmore/g
+        s/\bComets\.LOVAS_1\b/Comets.Lovas1/g
+        s/\bComets\.MACHHOLZ\b/Comets.Machholz/g
+        s/\bComets\.MAURY\b/Comets.Maury/g
+        s/\bComets\.NEUJMIN_1\b/Comets.Neujmin1/g
+        s/\bComets\.NEUJMIN_2\b/Comets.Neujmin2/g
+        s/\bComets\.NEUJMIN_3\b/Comets.Neujmin3/g
+        s/\bComets\.OLBERS\b/Comets.Olbers/g
+        s/\bComets\.PETERS_HARTLEY\b/Comets.PetersHartley/g
+        s/\bComets\.PONS_BROOKS\b/Comets.PonsBrooks/g
+        s/\bComets\.PONS_WINNECKE\b/Comets.PonsWinnecke/g
+        s/\bComets\.REINMUTH_1\b/Comets.Reinmuth1/g
+        s/\bComets\.REINMUTH_2\b/Comets.Reinmuth2/g
+        s/\bComets\.RUSSELL_1\b/Comets.Russell1/g
+        s/\bComets\.RUSSELL_2\b/Comets.Russell2/g
+        s/\bComets\.RUSSELL_3\b/Comets.Russell3/g
+        s/\bComets\.RUSSELL_4\b/Comets.Russell4/g
+        s/\bComets\.SANGUIN\b/Comets.Sanguin/g
+        s/\bComets\.SCHAUMASSE\b/Comets.Schaumasse/g
+        s/\bComets\.SCHUSTER\b/Comets.Schuster/g
+        s/\bComets\.SCHWASSMANN_WACHMANN_1\b/Comets.SchwassmannWachmann1/g
+        s/\bComets\.SCHWASSMANN_WACHMANN_2\b/Comets.SchwassmannWachmann2/g
+        s/\bComets\.SCHWASSMANN_WACHMANN_3\b/Comets.SchwassmannWachmann3/g
+        s/\bComets\.SHAJN_SCHALDACH\b/Comets.ShajnSchaldach/g
+        s/\bComets\.SHOEMAKER_1\b/Comets.Shoemaker1/g
+        s/\bComets\.SHOEMAKER_2\b/Comets.Shoemaker2/g
+        s/\bComets\.SHOEMAKER_3\b/Comets.Shoemaker3/g
+        s/\bComets\.SINGER_BREWSTER\b/Comets.SingerBrewster/g
+        s/\bComets\.SLAUGHTER_BURNHAM\b/Comets.SlaughterBurnham/g
+        s/\bComets\.SMIRNOVA_CHERNYKH\b/Comets.SmirnovaChernykh/g
+        s/\bComets\.STEPHAN_OTERMA\b/Comets.StephanOterma/g
+        s/\bComets\.SWIFT_GEHRELS\b/Comets.SwiftGehrels/g
+        s/\bComets\.TAKAMIZAWA\b/Comets.Takamizawa/g
+        s/\bComets\.TAYLOR\b/Comets.Taylor/g
+        s/\bComets\.TEMPEL_1\b/Comets.Tempel1/g
+        s/\bComets\.TEMPEL_2\b/Comets.Tempel2/g
+        s/\bComets\.TEMPEL_TUTTLE\b/Comets.TempelTuttle/g
+        s/\bComets\.TRITTON\b/Comets.Tritton/g
+        s/\bComets\.TSUCHINSHAN_1\b/Comets.Tsuchinshan1/g
+        s/\bComets\.TSUCHINSHAN_2\b/Comets.Tsuchinshan2/g
+        s/\bComets\.TUTTLE\b/Comets.Tuttle/g
+        s/\bComets\.TUTTLE_GIACOBINI_KRESAK\b/Comets.TuttleGiacobiniKresak/g
+        s/\bComets\.VAISALA_1\b/Comets.Vaisala1/g
+        s/\bComets\.VAN_BIESBROECK\b/Comets.VanBiesbroeck/g
+        s/\bComets\.VAN_HOUTEN\b/Comets.VanHouten/g
+        s/\bComets\.WEST_KOHOUTEK_IKEMURA\b/Comets.WestKohoutekIkemura/g
+        s/\bComets\.WHIPPLE\b/Comets.Whipple/g
+        s/\bComets\.WILD_1\b/Comets.Wild1/g
+        s/\bComets\.WILD_2\b/Comets.Wild2/g
+        s/\bComets\.WILD_3\b/Comets.Wild3/g
+        s/\bComets\.WIRTANEN\b/Comets.Wirtanen/g
+        s/\bComets\.WOLF\b/Comets.Wolf/g
+        s/\bComets\.WOLF_HARRINGTON\b/Comets.WolfHarrington/g
+        s/\bComets\.LOVAS_2\b/Comets.Lovas2/g
+        s/\bComets\.URATA_NIIJIMA\b/Comets.UrataNiijima/g
+        s/\bComets\.WISEMAN_SKIFF\b/Comets.WisemanSkiff/g
+        s/\bComets\.HELIN\b/Comets.Helin/g
+        s/\bComets\.MUELLER\b/Comets.Mueller/g
+        s/\bComets\.SHOEMAKER_HOLT_1\b/Comets.ShoemakerHolt1/g
+        s/\bComets\.HELIN_ROMAN_CROCKETT\b/Comets.HelinRomanCrockett/g
+        s/\bComets\.HARTLEY_3\b/Comets.Hartley3/g
+        s/\bComets\.PARKER_HARTLEY\b/Comets.ParkerHartley/g
+        s/\bComets\.HELIN_ROMAN_ALU_1\b/Comets.HelinRomanAlu1/g
+        s/\bComets\.WILD_4\b/Comets.Wild4/g
+        s/\bComets\.MUELLER_2\b/Comets.Mueller2/g
+        s/\bComets\.MUELLER_3\b/Comets.Mueller3/g
+        s/\bComets\.SHOEMAKER_LEVY_1\b/Comets.ShoemakerLevy1/g
+        s/\bComets\.SHOEMAKER_LEVY_2\b/Comets.ShoemakerLevy2/g
+        s/\bComets\.HOLT_OLMSTEAD\b/Comets.HoltOlmstead/g
+        s/\bComets\.METCALF_BREWINGTON\b/Comets.MetcalfBrewington/g
+        s/\bComets\.LEVY\b/Comets.Levy/g
+        s/\bComets\.SHOEMAKER_LEVY_9\b/Comets.ShoemakerLevy9/g
+        s/\bComets\.HYAKUTAKE\b/Comets.Hyakutake/g
+        s/\bComets\.HALE_BOPP\b/Comets.HaleBopp/g
+        s/\bComets\.C_2013_A1\b/Comets.C2013A1/g
+        s/\bComets\.SIDING_SPRING\b/Comets.SidingSpring/g
+        # --- 11.0.0 renames, part 4: the namespaces (N4 of D2, #668, lot L9). GNU sed -E, LC_ALL=C. ---
+        # OrbitalParameters.TLE merged into OrbitalParameters, Atmosphere.NRLMSISE_00 into Atmosphere; CCSDS and its namespaces
+        # CDM, OMM, OPM, Common and Common.Enums into Ccsds; SSA to Ssa; PDS to Pds. Then remove the using directives that became
+        # duplicates (CS0105 is a warning). The resource names of the embedded schemas (IO.Astrodynamics.CCSDS.Schema.*,
+        # IO.Astrodynamics.PDS.V4.Schemas.*) do not change.
+        s/\bIO\.Astrodynamics\.OrbitalParameters\.TLE\b/IO.Astrodynamics.OrbitalParameters/g
+        s/\bOrbitalParameters\.TLE\.([A-Z])/OrbitalParameters.\1/g
+        s/(^|[^.[:alnum:]_])TLE\.(Tle|TleFitOptions|TleClassification|TleFormatException|NoradCatalogNumber)\b/\1\2/g
+        s/\bIO\.Astrodynamics\.Atmosphere\.NRLMSISE_00\b/IO.Astrodynamics.Atmosphere/g
+        s/(^|[^.[:alnum:]_])NRLMSISE_00\.([A-Z])/\1\2/g
+        s/\bIO\.Astrodynamics\.CCSDS(\.(CDM|OMM|OPM|Common\.Enums|Common))?\b/IO.Astrodynamics.Ccsds/g
+        s/(^|[^.[:alnum:]_])CCSDS\.(CDM|OMM|OPM|Common\.Enums|Common)\./\1Ccsds./g
+        s/\bIO\.Astrodynamics\.SSA\b/IO.Astrodynamics.Ssa/g
+        s/\bIO\.Astrodynamics\.PDS\b/IO.Astrodynamics.Pds/g
+        SED
+        find "${1:-.}" -type f \( -name '*.cs' -o -name '*.csx' -o -name '*.md' \) -not -path '*/bin/*' -not -path '*/obj/*' -print0 |
+          while IFS= read -r -d '' f; do
+            LC_ALL=C sed -E -i -f "$sed_script" "$f"
+            # The merged namespaces leave duplicate using directives (CS0105): keep the first of each
+            case "$f" in
+              *.md) ;;
+              *) awk '!(/^[[:space:]]*using[[:space:]]+[A-Za-z0-9_.]+;[[:space:]]*$/ && seen[$0]++)' "$f" > "$sed_script.cs"
+                 if ! cmp -s <(tr -d '\n' < "$f") <(tr -d '\n' < "$sed_script.cs"); then cat "$sed_script.cs" > "$f"; fi
+                 rm -f "$sed_script.cs" ;;
+            esac
+          done
+        ```
+
 - **Breaking: the scale of a `Time` is a required argument** (lot L2, R24 of
   [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668), D3, decided by S. Guillet,
   2026-11-13 and amended 2026-11-19: no forwarder). `ITimeFrame`, `TimeFrame`, `TimeSystem.Frames` (`TDBTimeFrame`,
@@ -5438,7 +6510,7 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   frame kernels) and for NEW NORCIA (`NEW NORCIA_TOPO`), empty for the comets and asteroids and null for the Lagrange
   points. A catalogue entry is now accepted where an `INaifObject` is asked. Results do not move: the bodies built
   from an entry read their frame from the kernels, as before. Migration: `new NaifObject(id, name, frame)` becomes
-  `new NaifObject(id, name)`; `PlanetsAndMoons.Earth.Frame` becomes the frame of the body, `new CelestialBody(PlanetsAndMoons.Earth).Frame`
+  `new NaifObject(id, name)`; `PlanetsAndMoons.EARTH.Frame` becomes the frame of the body, `new CelestialBody(PlanetsAndMoons.Earth).Frame`
   (`ITRF93` with `earth_assoc_itrf93.tf`, `IAU_EARTH` without), or the literal name (`new Frame("ITRF93")`).
 - **Breaking: a repeated `LoadKernels` hands SPICE only the files it does not hold** (lot L1, R01 of
   [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668), structuring choice 9, decided
@@ -7223,7 +8295,7 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
 
 - **Breaking: `EvaluateAvoidance` refuses a step of zero or less** ([#640](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/640), Fixed above).
   The steps of the re-analysis of the options, `SampleStep` and `MaxEventSearchStep` of `AvoidanceSearchOptions.Analysis`
-  (`AnalysisSampleStep` and `MaxEventSearchStep` of the avoidance in 10.2.0-preview-1, removed in lot L7), must be
+  (`AnalysisSampleStep` and `MaximumEventSearchStep` of the avoidance in 10.2.0-preview-1, removed in lot L7), must be
   positive, the rule of `ConjunctionAnalysisOptions`, checked where it is built since lot L7:
   `ArgumentOutOfRangeException` (its `ParamName` the step), where a negative step was accepted or the call ran out of
   memory. Migration: give a positive step, or a null `Analysis` for the encounter's.
@@ -8258,7 +9330,7 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   two objects → `ConjunctionAssessment.Analyze`, a debris or catalogue object as a `TrackedObject`.
 
 - **Breaking: `ToTle(name, noradId, cosparId, TleFitOptions options = null)` in place of
-  `ToTle(TLE.Configuration)`** (lot L9, decision 113 of [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668), decided by S. Guillet, 2026-11-26; no
+  `ToTLE(TLE.Configuration)`** (lot L9, decision 113 of [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668), decided by S. Guillet, 2026-11-26; no
   forwarder). The fit takes the name, the NORAD id and the COSPAR id in the order of `Tle.Create`, and its other fields
   and settings in the sealed record `TleFitOptions` (D1: `Default` equal to `new()`): `RevolutionNumberAtEpoch`,
   `Classification`, `BStar`, `MeanMotionDot` (ṅ/2), `MeanMotionDDot` (n̈/6), `ElementSetNumber` and `MaxIterations`,
@@ -8266,10 +9338,10 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   `TLE.Configuration`, so a fit without options is bit for bit the former fit of a configuration of three values
   (`TleFitOptionsTests`). `Configuration.Tolerance`, which the fit never read, is removed
   ([#833](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/833)). Migration:
-  `state.ToTle(new Configuration(25544, "ISS", "98067A"))` → `state.ToTle("ISS", 25544, "98067A")`;
+  `state.ToTLE(new Configuration(25544, "ISS", "98067A"))` → `state.ToTle("ISS", 25544, "98067A")`;
   `new Configuration(id, name, cospar, RevolutionsAtEpoch: r, BstarDragTerm: b, MaxIterations: n)` →
   `ToTle(name, id, cospar, new TleFitOptions { RevolutionNumberAtEpoch = r, BStar = b, MaxIterations = n })`, likewise
-  `FirstDerivativeMeanMotion` → `MeanMotionDot`, `MeanMotionDDot` → `MeanMotionDDot`; drop `Tolerance`.
+  `FirstDerivativeMeanMotion` → `MeanMotionDot`, `SecondDerivativeMeanMotion` → `MeanMotionDDot`; drop `Tolerance`.
 - **Breaking: a time quantity in double seconds says so** (lot L9, D1 of [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668), sub-choice 7; no forwarder). The
   values stay `double` seconds, unchanged: `OpmManeuverParameters.ManDuration` → `ManDurationSeconds` (its constructor's
   `manDuration` → `manDurationSeconds`, the path of the OPM validator's error `…ManDurationSeconds`; the keyword stays
@@ -8439,7 +9511,7 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   `GetCelestialBodyInfo` reached one. Migration: `CelestialBodyInfo` for the body information (Changed above); the
   domain types (`IO.Astrodynamics.Math.Vector3`, `Quaternion`, `OrbitalParameters.StateVector`, `TimeSystem.Window`,
   `Coordinates.Planetodetic`, ...) for the others.
-- **The ten raw conversions of `SpiceApi`** (lot L3, R04 of #668, choice 1 as amended by section 7 of the re-baseline,
+- **The ten raw conversions of `SpiceAPI`** (lot L3, R04 of #668, choice 1 as amended by section 7 of the re-baseline,
   decided by S. Guillet, 2026-11-19: removed from the public API outright, no forwarder): `ConvertTleToStateVector(line1,
   line2, line3, epoch)`, `ConvertStateVectorToConicOrbitalElement(stateVector)` and `(stateVector, gm)`,
   `ConvertEquinoctialElementsToStateVector(elements)`, `ConvertConicElementsToStateVector(elements)`, `(elements, epoch)`
@@ -8556,7 +9628,7 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   `Task.Run(() => BatchPropagator.Propagate(tasks, options, token), token)`.
 - **`BatchOptions.CancellationToken` and `BatchOptions.Progress`** (R28 of #668, D1, decision 4 of lot L4): the token
   and the progress are parameters of `BatchPropagator.Propagate` and `MonteCarloPropagator.Propagate` (under Changed).
-- **`Dispose` of `PropagatorBase` and `TlePropagator`, and `IDisposable` on `IPropagator`** (R28 of #668): under Changed.
+- **`Dispose` of `PropagatorBase` and `TLEPropagator`, and `IDisposable` on `IPropagator`** (R28 of #668): under Changed.
 - **`OrbitalParameters.ToPlanetocentric(Aberration)`** (R20 of #668), whose correction was not used. Migration:
   `ToPlanetocentric()`, the same values, bit for bit; `ToPlanetodetic()` for the geodetic coordinates.
 - **`AtmosphericContext.FromPlanetodetic(altitude, geodeticLatitude, geodeticLongitude, epoch)`** (R20 of #668), whose
@@ -8578,7 +9650,7 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
 - **`Spacecraft.GetTotalFuel()`** (lot L5a, R09 of #668, decision 60, decided by S. Guillet, 2026-11-23): it returned
   the initial fuel whatever a run burnt. Migration: `GetInitialFuel()`, the same value, or `GetRemainingFuel()` for the
   fuel left.
-- **`Tle.MeanMotion()`** (lot L7, R21 of #668, decision 111, decided by S. Guillet, 2026-11-26, no forwarder): √(GM/a³)
+- **`TLE.MeanMotion()`** (lot L7, R21 of #668, decision 111, decided by S. Guillet, 2026-11-26, no forwarder): √(GM/a³)
   of the mean semi-major axis, which needed the kernels. **Breaking**: `tle.MeanMotion()` still compiles and now binds to
   `OrbitalParameters.MeanMotion(double)`, the mean motion of the osculating SGP4 set at the epoch, 0.14 % off the mean one
   for the ISS (15.4709 against 15.4931 rev/day). Migration: `tle.MeanMotion()` → `tle.MeanMeanMotion`, within 2 ulp of
@@ -9190,7 +10262,7 @@ and **Fixed**. The open issues known at this preview are listed under **Known li
   had its rotation term reversed: twice the rotation velocity, up to 1 km/s for a LEO state. CIRS had the same sign
   error on its 6e-12 rad/s rate (about 5 mm/s at lunar distance). The topocentric frame of a `Site` expressed the
   angular velocity of its body in the wrong axes: 1.5e-7 rad/s relative to ITRF93 in 2021, 44 m/s on the Moon seen
-  in the site frame. `StateOrientation.AtEpoch` keeps its attitude convention and does not apply to frame transforms.
+  in the site frame. `StateOrientation.AtDate` keeps its attitude convention and does not apply to frame transforms.
 - **Numerical propagation in an inertial frame other than ICRF** ([#357](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/357)).
   A propagation may start from a state in B1950, FK4, ECLIPJ2000, ECLIPB1950 or GALACTIC, and runs in that frame.
   Three force inputs were nevertheless in ICRF and were combined with the state as they were: the ephemeris cache of
