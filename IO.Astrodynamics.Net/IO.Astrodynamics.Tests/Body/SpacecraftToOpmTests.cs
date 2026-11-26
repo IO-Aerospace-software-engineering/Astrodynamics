@@ -158,10 +158,6 @@ public class SpacecraftToOpmTests
     }
 
     /// <summary>
-    /// A TLE spacecraft propagated numerically writes its propagated state in TEME, the frame of its TLE, not SGP4 (53.7 km
-    /// from it after 1 h for the ISS); one only sampled by <see cref="TLEPropagator"/> writes SGP4, as before (the control).
-    /// </summary>
-    /// <summary>
     /// The three switches of the export are one <see cref="OpmExportOptions"/> (D1 of #668, lot L7: the three bools of
     /// <c>ToOpm</c> before 11.0.0), every block by default: the default writes the Keplerian elements, the spacecraft
     /// parameters and the burn, each switch leaves its block out and changes nothing else.
@@ -193,6 +189,10 @@ public class SpacecraftToOpmTests
         Assert.Equal(all.Data.StateVector.X, none.Data.StateVector.X);
     }
 
+    /// <summary>
+    /// A TLE spacecraft propagated numerically writes its propagated state in TEME, the frame of its TLE, not SGP4 (53.7 km
+    /// from it after 1 h for the ISS); one only sampled by <see cref="TLEPropagator"/> writes SGP4, as before (the control).
+    /// </summary>
     [Fact]
     public void TleSpacecraft_PropagatedWritesItsStates_SampledWritesSgp4()
     {
