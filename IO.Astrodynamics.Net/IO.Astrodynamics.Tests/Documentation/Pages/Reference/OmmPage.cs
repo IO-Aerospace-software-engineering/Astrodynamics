@@ -65,8 +65,7 @@ internal static class OmmPage
     {
         #region docs/reference/omm.md:1
         // Load and convert to TLE
-        var omm = Omm.LoadFromFile("satellite.omm",
-            validateSchema: true, validateContent: true);
+        var omm = Omm.Load("satellite.omm");
 
         if (omm.IsTleCompatible)
         {
@@ -76,7 +75,7 @@ internal static class OmmPage
         }
 
         // Save back to XML
-        omm.SaveToFile("output.omm");
+        omm.Save("output.omm");
         #endregion
     }
 }

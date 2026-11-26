@@ -294,7 +294,7 @@ var source = encounter.EncounterState.ProtectedCovariance.Source;   // Covarianc
 ```csharp
 // Inputs: encounter (EncounterCase)
 var cdm = encounter.ToCdm(new CdmExportOptions { Originator = "MyOpsCenter", MessageId = "CDM-001" });
-cdm.WriteToFile("encounter.cdm.xml");
+cdm.Save("encounter.cdm.xml");
 ```
 
 A propagated covariance is exported with `COVARIANCE_METHOD` `CALCULATED`, the force model of the propagation

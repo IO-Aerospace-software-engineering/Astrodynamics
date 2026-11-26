@@ -18,6 +18,7 @@ using IO.Astrodynamics.Atmosphere;
 using IO.Astrodynamics.Atmosphere.NRLMSISE_00;
 using IO.Astrodynamics.Body;
 using IO.Astrodynamics.Body.Spacecraft;
+using IO.Astrodynamics.CCSDS;
 using IO.Astrodynamics.CCSDS.Common;
 using IO.Astrodynamics.CCSDS.OMM;
 using IO.Astrodynamics.CCSDS.OPM;
@@ -343,7 +344,7 @@ internal static class DeveloperGuideExamples
     {
         #region guide:14
         // Load OMM from file
-        var omm = Omm.LoadFromFile("satellite.omm", validateSchema: true, validateContent: true);
+        var omm = Omm.Load("satellite.omm");
 
         Console.WriteLine($"Object: {omm.ObjectName}");
         Console.WriteLine($"COSPAR ID: {omm.ObjectId}");
@@ -375,7 +376,7 @@ internal static class DeveloperGuideExamples
         );
 
         // Save to file
-        newOmm.SaveToFile("output.omm", validateBeforeSave: true);
+        newOmm.Save("output.omm");
         #endregion
     }
 
@@ -392,7 +393,7 @@ internal static class DeveloperGuideExamples
         var omm = tle.ToOmm(originator: "My Organization");
 
         // Save to file for sharing/archiving
-        omm.SaveToFile("iss.omm");
+        omm.Save("iss.omm");
 
         // Or get as XML string
         var xml = omm.ToXml();
@@ -404,7 +405,7 @@ internal static class DeveloperGuideExamples
     {
         #region guide:16
         // Load OMM
-        var originalOmm = Omm.LoadFromFile("satellite.omm", validateSchema: false);
+        var originalOmm = Omm.Load("satellite.omm", new CcsdsReadOptions { ValidateSchema = false });
 
         // Convert to TLE
         var tle = originalOmm.ToTle();
@@ -416,34 +417,28 @@ internal static class DeveloperGuideExamples
         var newOmm = tle.ToOmm();
 
         // Save new OMM
-        newOmm.SaveToFile("satellite_updated.omm");
+        newOmm.Save("satellite_updated.omm");
 
         // Note: Due to TLE precision limitations, some values may differ slightly
         // from the original OMM (typically 4-6 decimal places for angles)
         #endregion
     }
 
-    // DEVELOPER_GUIDE.md, "OmmWriter / OmmReader"
+    // DEVELOPER_GUIDE.md, "CcsdsReadOptions / CcsdsWriteOptions"
     internal static void Block17()
     {
         #region guide:17
-        // OmmReader for parsing
-        var reader = new OmmReader();
-        var omm = reader.ReadFromFile("input.omm");
+        // The checks of a read: the schema and the content by default
+        var omm = Omm.Load("input.omm", new CcsdsReadOptions { ValidateSchema = false });
 
-        // OmmWriter for custom output options
-        var writer = new OmmWriter
-        {
-            WrapInNdmContainer = true,  // Wrap in <ndm> element
-            IndentOutput = true         // Pretty-print XML
-        };
-
-        var xml = writer.WriteToString(omm);
-        writer.WriteToFile(omm, "output.omm");
+        // The output of a write: validated, wrapped in <ndm> and indented by default
+        var options = new CcsdsWriteOptions { WrapInNdmContainer = false, Indent = true };
+        var xml = omm.ToXml(options);
+        omm.Save("output.omm", options);
         #endregion
     }
 
-    // DEVELOPER_GUIDE.md, "OmmValidator"
+    // DEVELOPER_GUIDE.md, "Validation"
     internal static void Block18()
     {
         var omm = new TLE("ISS (ZARYA)",
@@ -451,8 +446,7 @@ internal static class DeveloperGuideExamples
             "2 25544  51.6423 353.0312 0000493 320.8755  39.2360 15.49309423 25703").ToOmm();
         #region guide:18
         // omm: an Omm, loaded or converted as above (tle.ToOmm())
-        var validator = new OmmValidator();
-        var result = validator.Validate(omm);
+        var result = omm.Validate();
 
         if (result.IsValid)
         {
@@ -479,7 +473,7 @@ internal static class DeveloperGuideExamples
     {
         #region guide:19
         // OMM automatically converts COSPAR ID format during ToTle()
-        var omm = Omm.LoadFromFile("iss.omm");  // ObjectId: "1998-067A"
+        var omm = Omm.Load("iss.omm");  // ObjectId: "1998-067A"
         var tle = omm.ToTle();                   // Uses "98067A" internally
 
         // TLE.ToOmm() converts back to full format
@@ -492,7 +486,7 @@ internal static class DeveloperGuideExamples
     {
         #region guide:20
         // Load OPM from file
-        var opm = Opm.LoadFromFile("spacecraft.opm", validateSchema: true, validateContent: true);
+        var opm = Opm.Load("spacecraft.opm");
 
         Console.WriteLine($"Object: {opm.ObjectName}");
         Console.WriteLine($"COSPAR ID: {opm.ObjectId}");
@@ -530,7 +524,7 @@ internal static class DeveloperGuideExamples
             includeManeuvers: true);          // Include the maneuvers ignited by the epoch
 
         // Save for archival/sharing
-        opm.SaveToFile("iss_state.opm");
+        opm.Save("iss_state.opm");
         #endregion
     }
 
@@ -596,7 +590,7 @@ internal static class DeveloperGuideExamples
             userDefinedParameters: userParams);
 
         var opm = new Opm(header, metadata, data);
-        opm.SaveToFile("complete_opm.xml");
+        opm.Save("complete_opm.xml");
         #endregion
     }
 
@@ -623,13 +617,12 @@ internal static class DeveloperGuideExamples
         #endregion
     }
 
-    // DEVELOPER_GUIDE.md, "OpmValidator"
+    // DEVELOPER_GUIDE.md, "Validation"
     internal static void Block24(Opm opm)
     {
         #region guide:24
         // opm: an Opm, loaded or built as above
-        var validator = new OpmValidator();
-        var result = validator.Validate(opm);
+        var result = opm.Validate();
 
         if (result.IsValid)
         {

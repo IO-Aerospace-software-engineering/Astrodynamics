@@ -67,10 +67,10 @@ internal static class OpmPage
         // Inputs: spacecraft (Spacecraft), epoch (Time), earth (CelestialBody)
         // Export spacecraft state to OPM, in the frame of its state
         var opm = spacecraft.ToOpm(epoch: epoch);
-        opm.SaveToFile("state.opm.xml");
+        opm.Save("state.opm.xml");
 
         // Load and convert back
-        var loaded = Opm.LoadFromFile("state.opm.xml");
+        var loaded = Opm.Load("state.opm.xml");
         var sv = loaded.ToStateVector(earth);
         #endregion
     }

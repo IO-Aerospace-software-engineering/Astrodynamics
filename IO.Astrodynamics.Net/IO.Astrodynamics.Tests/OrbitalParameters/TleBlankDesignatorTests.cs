@@ -74,7 +74,7 @@ public class TleBlankDesignatorTests
 
         var omm = tle.ToOmm();
         var xml = omm.ToXml();
-        var read = Omm.LoadFromString(xml);
+        var read = Omm.Parse(xml);
         var back = read.ToTle();
 
         Assert.Equal("UNKNOWN", omm.ObjectId);

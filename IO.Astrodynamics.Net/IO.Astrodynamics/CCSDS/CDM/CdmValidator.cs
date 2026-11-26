@@ -12,7 +12,7 @@ using IO.Astrodynamics.CCSDS.Common.Enums;
 
 namespace IO.Astrodynamics.CCSDS.CDM;
 
-public sealed class CdmValidator
+internal sealed class CdmValidator
 {
     private const string SchemaValidationCode = "CDM001";
     private const string ContentValidationCode = "CDM002";

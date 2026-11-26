@@ -282,6 +282,9 @@ public class NamingRuleTests
 
     [Theory]
     [InlineData(typeof(IO.Astrodynamics.OrbitalParameters.TLE.TLE))]
+    [InlineData(typeof(IO.Astrodynamics.CCSDS.OMM.Omm))]
+    [InlineData(typeof(IO.Astrodynamics.CCSDS.OPM.Opm))]
+    [InlineData(typeof(IO.Astrodynamics.CCSDS.CDM.Cdm))]
     public void TextFormats_ShareOneVerbSet(Type type)
     {
         var statics = type.GetMethods(BindingFlags.Public | BindingFlags.Static | BindingFlags.DeclaredOnly).Select(m => m.Name).ToHashSet();

@@ -22,12 +22,12 @@ namespace IO.Astrodynamics.ConformanceRunner.Solvers;
 /// </summary>
 /// <remarks>
 /// <para>
-/// <c>decode</c> reads the CDM next to <c>inputs.yaml</c> with <see cref="Cdm.ReadFromFile"/>; the framework holds its
+/// <c>decode</c> reads the CDM next to <c>inputs.yaml</c> with <see cref="Cdm.Load"/>, which checks its schema and content; the framework holds its
 /// fields in SI units (m, m/s, m², the consider terms in the units of CCSDS 508.0 table 3-2), which the solver gives in
 /// the suite's (km: a value in m^p times 10^(−3p)). <c>to_inertial</c> turns each RTN covariance by
 /// <see cref="StateVector.RotateCovarianceFromRtn"/> on the object's state. <c>export</c> analyzes the encounter on
 /// straight-line trajectories (<see cref="StraightLineEncounter"/>), writes its CDM by <c>EncounterCase.ToCdm</c> and
-/// <see cref="Cdm.WriteToString"/>, reads it back with <see cref="Cdm.ReadFromString"/> and gives the fields read.
+/// <see cref="Cdm.ToXml"/>, reads it back with <see cref="Cdm.Parse(string, IO.Astrodynamics.CCSDS.CcsdsReadOptions)"/> and gives the fields read.
 /// </para>
 /// </remarks>
 public class CdmSolver : ICategorySolver
@@ -62,8 +62,8 @@ public class CdmSolver : ICategorySolver
         {
             var tca = EpochParser.Parse(inputs.Tca);
             var encounter = StraightLineEncounter.Analyze(tca, inputs.Objects, 1e6, UnitConversion.KmToM(inputs.HardBodyRadiusKm!.Value), NaifId);
-            var written = encounter.ToCdm().WriteToString();
-            return Fields(Cdm.ReadFromString(written), false);
+            var written = encounter.ToCdm().ToXml();
+            return Fields(Cdm.Parse(written), false);
         }
 
         if (caseInput.Directory == null)
@@ -71,7 +71,7 @@ public class CdmSolver : ICategorySolver
             throw new InvalidOperationException("The runner gives no directory of the case, where its CDM lies.");
         }
 
-        var cdm = Cdm.ReadFromFile(Path.Combine(caseInput.Directory, inputs.CdmFile));
+        var cdm = Cdm.Load(Path.Combine(caseInput.Directory, inputs.CdmFile));
         return Fields(cdm, inputs.Operation == CdmInputs.ToInertial);
     }
 

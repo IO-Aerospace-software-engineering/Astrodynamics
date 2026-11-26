@@ -114,10 +114,10 @@ public class CdmPropagatedCovarianceTests : IClassFixture<CdmPropagatedCovarianc
 
         // Act
         var cdm = encounter.ToCdm(new CdmExportOptions { CreationDateUtc = new DateTime(2024, 3, 1, 0, 0, 0, DateTimeKind.Utc) });
-        var xml = cdm.WriteToString();
-        var schema = Cdm.ValidateSchemaFromXml(xml);
+        var xml = cdm.ToXml();
+        var schema = new CdmValidator().ValidateSchemaFromXml(xml);
         var content = cdm.Validate();
-        var reread = Cdm.ReadFromString(xml);
+        var reread = Cdm.Parse(xml);
 
         // Assert: valid; read back to the digit (G17)
         Assert.True(schema.IsValid, string.Join("; ", schema.Issues.Select(i => i.Message)));
@@ -217,7 +217,7 @@ public class CdmPropagatedCovarianceTests : IClassFixture<CdmPropagatedCovarianc
         var cdm = encounter.ToCdm();
 
         // Assert: the covariance at TCA, never stale, so exported without the opt-in; no CDRG or CSRP row
-        Assert.True(Cdm.ValidateSchemaFromXml(cdm.WriteToString()).IsValid);
+        Assert.True(new CdmValidator().ValidateSchemaFromXml(cdm.ToXml()).IsValid);
         var matrix = cdm.Segments[1].Data.CovarianceMatrix;
         Assert.Null(matrix.CdrgR);
         Assert.Null(matrix.CsrpSrp);
@@ -277,7 +277,7 @@ public class CdmPropagatedCovarianceTests : IClassFixture<CdmPropagatedCovarianc
             Assert.Equal(CovarianceSource.Propagated, encounter.SecondaryCovariance.Source);
             Assert.False(cdm.Segments[0].Metadata.SolarRadPressure);
             Assert.False(cdm.Segments[1].Metadata.SolarRadPressure);
-            Assert.Equal(2, System.Xml.Linq.XDocument.Parse(cdm.WriteToString()).Descendants()
+            Assert.Equal(2, System.Xml.Linq.XDocument.Parse(cdm.ToXml()).Descendants()
                 .Count(e => e.Name.LocalName == "SOLAR_RAD_PRESSURE" && e.Value == "NO"));
         }
         else
@@ -297,9 +297,9 @@ public class CdmPropagatedCovarianceTests : IClassFixture<CdmPropagatedCovarianc
             Assert.Null(cdm.Segments[0].Metadata.SolarRadPressure);
             Assert.Null(cdm.Segments[1].Metadata.SolarRadPressure);
             Assert.Null(cdm.Segments[0].Metadata.GravityModel);
-            var xml = cdm.WriteToString();
+            var xml = cdm.ToXml();
             Assert.DoesNotContain("SOLAR_RAD_PRESSURE", xml);
-            var schema = Cdm.ValidateSchemaFromXml(xml);
+            var schema = new CdmValidator().ValidateSchemaFromXml(xml);
             Assert.True(schema.IsValid, string.Join("; ", schema.Issues.Select(i => i.Message)));
             Assert.True(cdm.Validate().IsValid);
         }

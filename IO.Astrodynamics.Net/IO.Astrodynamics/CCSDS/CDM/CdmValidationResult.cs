@@ -66,3 +66,34 @@ public sealed class CdmParseException : CcsdsFormatException
     {
     }
 }
+
+/// <summary>
+/// A CDM that the checks of <see cref="Cdm.Load"/>, <see cref="Cdm.Parse(string, CcsdsReadOptions)"/> and their siblings,
+/// or of <see cref="Cdm.Save(string, CcsdsWriteOptions)"/> and <see cref="Cdm.ToXml"/>, refuse: the NDM/XML schema or the
+/// content (R22 of #668, IC-24 of lot L7), as <see cref="OMM.OmmValidationException"/> and
+/// <see cref="OPM.OpmValidationException"/> for theirs.
+/// </summary>
+public sealed class CdmValidationException : CcsdsFormatException
+{
+    /// <summary>A CDM refused by its checks.</summary>
+    /// <param name="message">The message.</param>
+    /// <param name="validationResult">The result of the check that failed.</param>
+    public CdmValidationException(string message, CdmValidationResult validationResult)
+        : base(FormatMessage(message, validationResult))
+    {
+        ValidationResult = validationResult ?? throw new ArgumentNullException(nameof(validationResult));
+    }
+
+    /// <summary>The result of the check that failed, its errors and warnings.</summary>
+    public CdmValidationResult ValidationResult { get; }
+
+    // The message, then each error, as the OMM and OPM validation exceptions write theirs
+    private static string FormatMessage(string message, CdmValidationResult? result)
+    {
+        if (result == null || !result.Errors.Any())
+            return message;
+
+        return message + Environment.NewLine + string.Join(Environment.NewLine,
+            result.Errors.Select(error => $"  {error.Code}: {error.Message} ({error.Path})"));
+    }
+}

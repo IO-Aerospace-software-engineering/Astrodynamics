@@ -4,6 +4,7 @@ using System;
 using System.IO;
 using System.Linq;
 using System.Xml.Linq;
+using IO.Astrodynamics.CCSDS;
 using IO.Astrodynamics.CCSDS.Common;
 using IO.Astrodynamics.CCSDS.OMM;
 using Xunit;
@@ -401,11 +402,11 @@ namespace IO.Astrodynamics.Tests.CCSDS.OMM
             Action read = path switch
             {
                 "OmmReader.ReadFromString" => () => _reader.ReadFromString(xml),
-                "Omm.LoadFromString" => () => Omm.LoadFromString(xml),
-                "Omm.LoadFromStream" => () => Omm.LoadFromStream(new MemoryStream(System.Text.Encoding.UTF8.GetBytes(xml))),
+                "Omm.LoadFromString" => () => Omm.Parse(xml),
+                "Omm.LoadFromStream" => () => Omm.Parse(new StreamReader(new MemoryStream(System.Text.Encoding.UTF8.GetBytes(xml)))),
                 "OmmReader.ReadFromFile" => () => NdmDocuments.WithTempFile(xml, file => _reader.ReadFromFile(file)),
                 "OmmReader.ReadFromStream" => () => _reader.ReadFromStream(new MemoryStream(System.Text.Encoding.UTF8.GetBytes(xml))),
-                _ => () => NdmDocuments.WithTempFile(xml, file => Omm.LoadFromFile(file))
+                _ => () => NdmDocuments.WithTempFile(xml, file => Omm.Load(file))
             };
 
             var ex = Assert.Throws<OmmParseException>(read);
@@ -432,7 +433,7 @@ namespace IO.Astrodynamics.Tests.CCSDS.OMM
 
             var ex = Assert.Throws<OmmParseException>(() => _reader.ReadFromString(xml));
             Assert.Contains("2 OMM messages", ex.Message);
-            var exLoad = Assert.Throws<OmmParseException>(() => Omm.LoadFromString(xml, validateSchema: false));
+            var exLoad = Assert.Throws<OmmParseException>(() => Omm.Parse(xml, new CcsdsReadOptions { ValidateSchema = false }));
             Assert.Contains("2 OMM messages", exLoad.Message);
         }
 
@@ -519,12 +520,12 @@ namespace IO.Astrodynamics.Tests.CCSDS.OMM
             Action read = path switch
             {
                 "OmmReader.ReadFromString" => () => _reader.ReadFromString(xml),
-                "Omm.LoadFromString" => () => Omm.LoadFromString(xml),
-                "Omm.LoadFromString without schema validation" => () => Omm.LoadFromString(xml, validateSchema: false),
-                "Omm.LoadFromStream" => () => Omm.LoadFromStream(new MemoryStream(System.Text.Encoding.UTF8.GetBytes(xml))),
+                "Omm.LoadFromString" => () => Omm.Parse(xml),
+                "Omm.LoadFromString without schema validation" => () => Omm.Parse(xml, new CcsdsReadOptions { ValidateSchema = false }),
+                "Omm.LoadFromStream" => () => Omm.Parse(new StreamReader(new MemoryStream(System.Text.Encoding.UTF8.GetBytes(xml)))),
                 "OmmReader.ReadFromFile" => () => NdmDocuments.WithTempFile(xml, file => _reader.ReadFromFile(file)),
                 "OmmReader.ReadFromStream" => () => _reader.ReadFromStream(new MemoryStream(System.Text.Encoding.UTF8.GetBytes(xml))),
-                _ => () => NdmDocuments.WithTempFile(xml, file => Omm.LoadFromFile(file))
+                _ => () => NdmDocuments.WithTempFile(xml, file => Omm.Load(file))
             };
 
             // Before: the first segment, ISS (ZARYA), the second dropped. Under default validation the schema rejects it first
@@ -558,7 +559,7 @@ namespace IO.Astrodynamics.Tests.CCSDS.OMM
 
             var ex = Assert.Throws<OmmParseException>(() => _reader.ReadFromString(duplicated));
             Assert.Contains($"2 {path.Split('/')[^1]} elements", ex.Message);
-            var exLoad = Assert.Throws<OmmParseException>(() => Omm.LoadFromString(duplicated, validateSchema: false, validateContent: false));
+            var exLoad = Assert.Throws<OmmParseException>(() => Omm.Parse(duplicated, new CcsdsReadOptions { ValidateSchema = false, ValidateContent = false }));
             Assert.Contains($"2 {path.Split('/')[^1]} elements", exLoad.Message);
         }
 
@@ -699,7 +700,7 @@ namespace IO.Astrodynamics.Tests.CCSDS.OMM
             var schema = new OmmValidator().ValidateSchemaFromXml(xml);
             Assert.True(schema.IsValid, string.Join("; ", schema.Errors.Select(e => e.Message)));
 
-            var omm = Omm.LoadFromString(xml);
+            var omm = Omm.Parse(xml);
             Assert.Equal(398600.4418, omm.Data.MeanElements.GravitationalParameter);
             Assert.Equal(420000.0, omm.Data.SpacecraftParameters.Mass);
         }
@@ -754,9 +755,9 @@ namespace IO.Astrodynamics.Tests.CCSDS.OMM
             var xml = OmmWithKeyword(keyword, value);
             Assert.True(new OmmValidator().ValidateSchemaFromXml(xml).IsValid);
 
-            var omm = Omm.LoadFromString(xml, validateSchema: true, validateContent: false);
+            var omm = Omm.Parse(xml, new CcsdsReadOptions { ValidateContent = false });
             Assert.Equal(omm.ToXml(), _reader.ReadFromString(xml).ToXml());
-            Assert.Equal(omm.ToXml(), Omm.LoadFromString(xml).ToXml());
+            Assert.Equal(omm.ToXml(), Omm.Parse(xml).ToXml());
 
             double expected = double.Parse(value, System.Globalization.CultureInfo.InvariantCulture);
             double actual = keyword switch

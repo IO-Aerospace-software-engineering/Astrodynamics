@@ -267,7 +267,7 @@ internal static class CovariancePropagationPage
         #region docs/tutorials/covariance-propagation.md:8
         // Inputs: encounter (EncounterCase)
         var cdm = encounter.ToCdm(new CdmExportOptions { Originator = "MyOpsCenter", MessageId = "CDM-001" });
-        cdm.WriteToFile("encounter.cdm.xml");
+        cdm.Save("encounter.cdm.xml");
         #endregion
     }
 }

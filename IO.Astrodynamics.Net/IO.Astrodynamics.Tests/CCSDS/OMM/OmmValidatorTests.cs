@@ -180,7 +180,7 @@ public class OmmValidatorTests
         {
             var xml = NdmDocuments.Mutated(issOmm, "omm", mutation);
 
-            var ex = Assert.Throws<OmmValidationException>(() => IO.Astrodynamics.CCSDS.OMM.Omm.LoadFromString(xml));
+            var ex = Assert.Throws<OmmValidationException>(() => IO.Astrodynamics.CCSDS.OMM.Omm.Parse(xml));
             Assert.False(ex.ValidationResult.IsValid);
         }
     }
@@ -194,7 +194,7 @@ public class OmmValidatorTests
     [InlineData("qualified-ndm")]
     public void ValidateSchema_NdmWithoutOmm_IsInvalid(string? opmForm)
     {
-        var xml = opmForm == null ? "<ndm/>" : NdmDocuments.InForm(OPM.OpmReaderTests.FullOpm().ToXmlString(), "opm", opmForm);
+        var xml = opmForm == null ? "<ndm/>" : NdmDocuments.InForm(OPM.OpmReaderTests.FullOpm().ToXml(), "opm", opmForm);
         var parse = Assert.Throws<OmmParseException>(() => _reader.ReadFromString(xml));
         Assert.Equal("Could not find OMM element in document.", parse.Message);
 
@@ -205,7 +205,7 @@ public class OmmValidatorTests
         Assert.Equal("OMM007", error.Code);
         Assert.Contains("<omm>", error.Message);
         Assert.Empty(result.Warnings);
-        var ex = Assert.Throws<OmmValidationException>(() => Omm.LoadFromString(xml));
+        var ex = Assert.Throws<OmmValidationException>(() => Omm.Parse(xml));
         Assert.Equal(error.Message, Assert.Single(ex.ValidationResult.Errors).Message);
         NdmDocuments.WithTempFile(xml, file => Assert.Contains(_validator.ValidateFile(file).Errors, e => e.Message == error.Message));
     }
@@ -1013,7 +1013,7 @@ public class OmmValidatorTests
         var xml = OmmReaderTests.OmmWithKeyword(keyword, value);
         Assert.True(_validator.ValidateSchemaFromXml(xml).IsValid);
 
-        var omm = Omm.LoadFromString(xml);
+        var omm = Omm.Parse(xml);
         double expected = double.Parse(value, System.Globalization.CultureInfo.InvariantCulture);
         double actual = keyword switch
         {
@@ -1035,7 +1035,7 @@ public class OmmValidatorTests
         var xml = OmmReaderTests.OmmWithKeyword("MASS", "0");
         Assert.True(_validator.ValidateSchemaFromXml(xml).IsValid);
 
-        var omm = Omm.LoadFromString(xml);
+        var omm = Omm.Parse(xml);
         Assert.Equal(0.0, omm.Data.SpacecraftParameters.Mass);
         Assert.Empty(_validator.Validate(omm).Errors);
         NdmDocuments.WithTempFile(xml, file => Assert.True(_validator.ValidateFile(file).IsValid));
@@ -1048,7 +1048,7 @@ public class OmmValidatorTests
         // which the reader of a document refuses first (the schema rejects it)
         var xml = OmmReaderTests.OmmWithKeyword("MASS", "-1");
         Assert.False(_validator.ValidateSchemaFromXml(xml).IsValid);
-        Assert.Throws<OmmValidationException>(() => Omm.LoadFromString(xml));
+        Assert.Throws<OmmValidationException>(() => Omm.Parse(xml));
     }
 
     #endregion

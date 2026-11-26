@@ -95,7 +95,7 @@ namespace ClaudeMdSamples
         {
             #region net:3
             // Load OMM from file (with optional validation)
-            var omm = Omm.LoadFromFile("satellite.omm", validateSchema: true, validateContent: true);
+            var omm = Omm.Load("satellite.omm");
 
             // Access data
             Console.WriteLine($"Object: {omm.ObjectName}");
@@ -103,7 +103,7 @@ namespace ClaudeMdSamples
             Console.WriteLine($"Mean Motion: {omm.Data.MeanElements.MeanMotion} rev/day");
 
             // Save OMM to file
-            omm.SaveToFile("output.omm", validateBeforeSave: true);
+            omm.Save("output.omm");
             #endregion
         }
 
@@ -112,7 +112,7 @@ namespace ClaudeMdSamples
         {
             #region net:4
             // OMM to TLE (for SGP4 propagation)
-            var omm = Omm.LoadFromFile("iss.omm");
+            var omm = Omm.Load("iss.omm");
             if (omm.IsTleCompatible)
             {
                 var tle = omm.ToTle();
@@ -122,7 +122,7 @@ namespace ClaudeMdSamples
             // TLE to OMM (for archiving/sharing)
             var issTle = new TLE("ISS", line1, line2);
             var issOmm = issTle.ToOmm(originator: "My Organization");
-            issOmm.SaveToFile("iss.omm");
+            issOmm.Save("iss.omm");
             #endregion
         }
 
@@ -131,7 +131,7 @@ namespace ClaudeMdSamples
         {
             #region net:5
             // Load OPM from file (with optional validation)
-            var opm = Opm.LoadFromFile("spacecraft.opm", validateSchema: true, validateContent: true);
+            var opm = Opm.Load("spacecraft.opm");
 
             // Access data
             Console.WriteLine($"Object: {opm.ObjectName}");
@@ -139,7 +139,7 @@ namespace ClaudeMdSamples
             Console.WriteLine($"Position: {opm.Data.StateVector.X}, {opm.Data.StateVector.Y}, {opm.Data.StateVector.Z} km");
 
             // Save OPM to file
-            opm.SaveToFile("output.opm", validateBeforeSave: true, wrapInNdm: true, indent: true);
+            opm.Save("output.opm");
             #endregion
         }
 
@@ -155,10 +155,10 @@ namespace ClaudeMdSamples
                 includeKeplerianElements: true,
                 includeSpacecraftParameters: true,
                 includeManeuvers: true);  // Includes executed maneuvers
-            opm.SaveToFile("iss.opm");
+            opm.Save("iss.opm");
 
             // OPM to Spacecraft (for mission operations)
-            var restoredOpm = Opm.LoadFromFile("iss.opm");
+            var restoredOpm = Opm.Load("iss.opm");
             var restored = restoredOpm.ToSpacecraft(
                 naifId: -1000,
                 maxOperatingMass: 500000.0,
@@ -172,7 +172,7 @@ namespace ClaudeMdSamples
         {
             #region net:7
             // OPM to StateVector (simple conversion)
-            var opm = Opm.LoadFromFile("spacecraft.opm");
+            var opm = Opm.Load("spacecraft.opm");
             var stateVector = opm.ToStateVector(observer: earth);
             // Units converted: km → m, km/s → m/s
 

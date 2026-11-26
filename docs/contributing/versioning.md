@@ -515,6 +515,18 @@ release are listed under **Known limitations**.
   `TleFormatException` at its line of the text and its column, the first one, with no partial list; `Parse` and `Load` take
   one set, the `Try` forms return false (`TleVerbsTests`). See [Reading TLE text](../reference/tle.md#reading-tle-text).
 
+- **One verb set for the CCSDS messages: `Load`, `LoadAll`, `Parse`, `ParseAll`, `TryLoad`, `TryParse`, `Save`, `ToXml`,
+  `Validate` and `IsValid` on `Omm`, `Opm` and `Cdm`, with `CcsdsReadOptions` and `CcsdsWriteOptions`** (lot L7, R22 of
+  [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668), the verb set of the TLE):
+  `Load(path, options)`, `Parse(xml | reader, options)` and `TryLoad`/`TryParse(…, out result, options)` read one message,
+  `LoadAll` and `ParseAll` every message of a document in document order (an NDM catalog; the schema checked once, the
+  content of each message), `Save(path | stream, options)` and `ToXml(options)` write; `CcsdsReadOptions`
+  (`ValidateSchema`, `ValidateContent`) and `CcsdsWriteOptions` (`ValidateContent`, `WrapInNdmContainer`, `Indent`) are
+  sealed records, every setting true, `null` their `Default`; `Opm.IsValid()` and `Cdm.IsValid()` are new;
+  `CdmValidationException : CcsdsFormatException` carries the `CdmValidationResult` of a CDM its checks refuse;
+  `CdmExportOptions.Default` (`CcsdsVerbsTests`, `NamingRuleTests.TextFormats_ShareOneVerbSet`). The texts written and
+  the messages read are those of the former verbs (the internal writers and readers), bit for bit. See
+  [OMM](../reference/omm.md#loading), [OPM](../reference/opm.md#loading) and [CDM](../reference/cdm.md#static-methods).
 **Fixed**
 
 - **The command line read its numbers in the culture of the machine** ([#814](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/814)):
@@ -8029,6 +8041,32 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   `ArgumentException` (`line1`) for a designator that is not of that form. Migration: catch `ArgumentException` (its
   `InnerException` is the `TleFormatException`) where `InvalidOperationException` or `FormatException` was caught.
 
+- **The CDM is checked when it is read and when it is written, and `ToXml` validates** (lot L7, R22 of
+  [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668), "validation stays on by
+  default" for the three messages). **Breaking**: `Cdm.Load` and `Cdm.Parse` check the NDM/XML schema and the content by
+  default, a failure throwing `CdmValidationException`, where `Cdm.ReadFrom*` ran no check (a value the schema refuses,
+  as `MANEUVERABLE = MAYBE`, now throws `CdmValidationException` before the reader's `CdmParseException`); `Cdm.Save`
+  and `Cdm.ToXml` validate the content (`WriteTo*` did not: a blank `MESSAGE_ID` was written); `Omm.ToXml` and `Opm.ToXml`
+  validate the content as `Save` does (`ToXml()` and `ToXmlString` did not: an OMM with TLE parameters and no
+  `NORAD_CAT_ID` is refused). Every CDM `EncounterCase.ToCdm` builds, the conformance suite's CDMs 001 to 006 and its
+  `export` 007 pass the checks, the runner's report unchanged. Migration: `new CcsdsReadOptions { ValidateSchema = false,
+  ValidateContent = false }` reads as `ReadFrom*` did, `new CcsdsWriteOptions { ValidateContent = false }` writes as
+  `WriteTo*` and `ToXml()` did.
+- **The arguments of the CCSDS verbs** (lot L7, R22 of #668). **Breaking**: a blank text given to `Parse` throws the parse
+  exception of its type (a text that holds no message), where `LoadFromString` threw `ArgumentNullException`; an empty
+  path given to `Load` throws `FileNotFoundException` and one given to `Save` `ArgumentException`, where `LoadFromFile`
+  and `SaveToFile` threw `ArgumentNullException`; null throws `ArgumentNullException` as before. The parse exception of
+  a document of several messages names `LoadAll` and `ParseAll` ("Load and Parse read a single message: LoadAll or
+  ParseAll reads them all."), where it asked to split the NDM. Migration: none, or `LoadAll`.
+- **`OmmReader`, `OmmWriter`, `OmmValidator`, `OpmReader`, `OpmWriter`, `OpmValidator`, `CdmReader`, `CdmWriter` and
+  `CdmValidator` are internal** (lot L7, R22 of #668, no forwarder). **Breaking**: the verbs of `Omm`, `Opm` and `Cdm`
+  replace them; the validators' `ValidatePhysicalConstraints`, `ValidateTleRequirements` and
+  `WarnOnMissingOptionalFields` have no option, the first gating checks the data model makes too, the last warnings no
+  read reports. Migration: `new OmmReader().ReadFromFile(path)` → `Omm.Load(path)`, `ReadFromString(xml)` →
+  `Omm.Parse(xml)`, `new OmmWriter { WrapInNdmContainer = w, IndentOutput = i }.WriteToString(omm)` →
+  `omm.ToXml(new CcsdsWriteOptions { WrapInNdmContainer = w, Indent = i })`, `new OmmValidator().Validate(omm)` →
+  `omm.Validate()`, `ValidateSchema(path)` → `Omm.Load(path)` and its `OmmValidationException`'s `ValidationResult`;
+  likewise for the OPM and the CDM.
 **Removed**
 
 - **The window searches on the target: `FindWindowsOnDistanceConstraint`, `FindWindowsOnOccultationConstraint` and
@@ -8288,6 +8326,19 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   `OrbitalParameters.MeanMotion(double)`, the mean motion of the osculating SGP4 set at the epoch, 0.14 % off the mean one
   for the ISS (15.4709 against 15.4931 rev/day). Migration: `tle.MeanMotion()` → `tle.MeanMeanMotion`, within 2 ulp of
   the former value.
+- **The CCSDS verbs of 10.x** (lot L7, R22 of #668, no forwarder): `Omm.LoadFromFile`, `LoadFromString`,
+  `LoadFromStream`, `TryLoadFromFile`, `SaveToFile`, `SaveToStream` and `ToXml()`; `Opm.LoadFromFile`, `LoadFromString`,
+  `LoadFromStream`, `TryLoadFromFile`, `SaveToFile`, `SaveToStream` and `ToXmlString`; `Cdm.ReadFromFile`,
+  `ReadFromString`, `ReadFromStream`, `WriteToFile`, `WriteToString`, `WriteToStream`, `ValidateSchema` and
+  `ValidateSchemaFromXml`. Migration: `LoadFromFile(path, validateSchema, validateContent)` →
+  `Load(path, new CcsdsReadOptions { ValidateSchema = …, ValidateContent = … })`, `LoadFromString(xml, …)` →
+  `Parse(xml, …)`, `LoadFromStream(stream, …)` → `Parse(new StreamReader(stream), …)`, `TryLoadFromFile(path, out m,
+  out result, …)` → `TryLoad(path, out m, options)` (the reason of a refusal from `Load`), `SaveToFile(path,
+  validateBeforeSave, wrapInNdm, indent)` → `Save(path, new CcsdsWriteOptions { ValidateContent = …, WrapInNdmContainer
+  = …, Indent = … })`, `SaveToStream` → `Save(stream, …)`, `ToXmlString(wrapInNdm, indent)` → `ToXml(…)`;
+  `Cdm.ReadFrom*` → `Cdm.Load`/`Parse`, `WriteToFile(path, wrap)` → `Save(path, …)`, `WriteToString(wrap)` →
+  `ToXml(…)`, `ValidateSchema(path)` → `Cdm.Load(path)`, whose `CdmValidationException` carries the
+  `CdmValidationResult`.
 **Known limitations**
 
 The open defects a caller can meet at this release, grouped by cause; each line gives the workaround when there is

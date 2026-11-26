@@ -22,10 +22,19 @@ The managed API stores values in SI units internally. The OPM reader and writer 
 
 | Method | Description |
 |--------|-------------|
-| `Opm.LoadFromFile(path, validateSchema?, validateContent?)` | Load from file with optional validation |
-| `Opm.LoadFromString(xml, validateSchema?, validateContent?)` | Load from XML string |
-| `Opm.LoadFromStream(stream, validateSchema?, validateContent?)` | Load from stream |
-| `Opm.TryLoadFromFile(path, out opm, out result, ...)` | Non-throwing load with validation result |
+| `Opm.Load(path, options?)` | The one OPM of a file, with the checks of `CcsdsReadOptions`: the schema, then the content, both by default |
+| `Opm.LoadAll(path, options?)` | Every OPM of a file, an NDM of several messages included, in document order |
+| `Opm.Parse(xml, options?)` | The one OPM of an XML text, or of a `TextReader` read to its end |
+| `Opm.ParseAll(xml, options?)` | Every OPM of an XML text, or of a `TextReader` |
+| `Opm.TryLoad(path, out opm, options?)` | `Load` without an exception: false for a missing file or a document the checks or the reader refuse |
+| `Opm.TryParse(xml, out opm, options?)` | `Parse` without an exception |
+
+One verb set reads and writes the three CCSDS messages, `Opm`, `Omm` and `Cdm`, as the `TLE` reads its text (R22 of
+[#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668), lot L7): `CcsdsReadOptions`
+(`ValidateSchema`, `ValidateContent`, both true) and `CcsdsWriteOptions` (`ValidateContent`, `WrapInNdmContainer`,
+`Indent`, all true) are the options of every read and every write, `null` for `Default`. Before 11.0.0 the loads were
+`LoadFromFile`, `LoadFromString`, `LoadFromStream` and `TryLoadFromFile` with two bools; the reader, the writer and the
+validator (`OpmReader`, `OpmWriter`, `OpmValidator`) are internal since 11.0.0.
 
 The exceptions of the OPM reader, `OpmParseException` and `OpmValidationException`, derive from `CcsdsFormatException`, a `FormatException` of
 `IO.Astrodynamics.CCSDS` shared by the OMM, OPM and CDM readers, so that one `catch (CcsdsFormatException)` covers a
@@ -35,16 +44,14 @@ document that cannot be read, at parsing or at validation (11.0.0, R03 of
 
 Each load reads one OPM: a standalone `<opm>`, or the one `<opm>` of an `<ndm>` or of another root (messages of
 another type beside it are ignored). A document that holds several OPMs, such as a catalog NDM, or a second OPM at any depth below the root, throws
-`OpmParseException` naming their number, `TryLoadFromFile` returns false with a `PARSE_ERROR` and
-`OpmValidator.ValidateFile` reports it invalid (#679); before 11.0.0 the first one was read. Split such a document into
-one OPM per document.
+`OpmParseException` naming their number and `LoadAll`, and `TryLoad` returns false (#679); before 11.0.0 the first one
+was read. `LoadAll` and `ParseAll` read every OPM of such a document, the schema checked once and the content of each.
 
 The OPM itself holds one header and one body, the body one segment, the segment one metadata and one data section, and
 the data at most one of each block, the maneuvers excepted (NDM/XML 4.0.0, `ndmxml-4.0.0-opm-3.0.xsd`; CCSDS 502.0-B-3). An OPM
 with a second segment, or a second header, body, metadata, data section or block, throws `OpmParseException` naming
-the element and its count without `validateSchema`; with it the schema rejects the document first, an
-`OpmValidationException` (`TryLoadFromFile` returns false with the schema error and `OpmValidator.ValidateFile` reports it
-invalid; without schema validation, a `PARSE_ERROR` and the reader's error). Before 11.0.0 the first one was read and
+the element and its count without the schema check (`ValidateSchema = false`); with it the schema rejects the document
+first, an `OpmValidationException` (`TryLoad` returns false either way). Before 11.0.0 the first one was read and
 the others dropped, a whole second segment included. Split such a document into one message per segment.
 
 A keyword whose value the data model refuses throws `OpmParseException` naming the keyword, its value, its block and the
@@ -57,7 +64,7 @@ before 11.0.0, so a document read without the schema step kept an angle of 1000 
 `DRAG_AREA` or `DRAG_COEFF`, a negative `MAN_DURATION`, a positive `MAN_DELTA_MASS`, or an empty `MAN_REF_FRAME`,
 `OBJECT_NAME`, `OBJECT_ID`, `CENTER_NAME`, `REF_FRAME`, `TIME_SYSTEM` or `ORIGINATOR`, for example
 `SEMI_MAJOR_AXIS '-6878.137' in keplerianElements with ECCENTRICITY '0.0001234' is invalid: Semi-major axis must be positive for elliptical orbits (e < 1).` Before 11.0.0 the `ArgumentOutOfRangeException` or
-`ArgumentException` of the data model's constructor crossed the reader, naming its parameter. With `validateSchema` the
+`ArgumentException` of the data model's constructor crossed the reader, naming its parameter. With the schema check the
 schema rejects most of these values first (`OpmValidationException`), but not those its types allow: `SEMI_MAJOR_AXIS`
 is `xsd:double` and the strings `xsd:string`, so a `SEMI_MAJOR_AXIS` of the wrong sign or an empty `OBJECT_NAME` throws
 `OpmParseException` with the default validation too. These rules go beyond the schema and are the library's
@@ -67,7 +74,7 @@ non-empty value (7.5.1; 8.13.1 for ODM/XML), and the parse exception names the k
 values, as before 11.0.0. A `MASS` of 0 is read, `massType` being a `nonNegativeDouble` (its
 `minInclusive` 0.0), as for the `MASS` of an OMM: `OpmData` and `OpmValidator` take a mass of 0 or more ([#708](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/708); before
 11.0.0 a mass of 0 threw `OpmParseException`, `Mass must be positive.`). `ToSpacecraft` builds a spacecraft of mass 0.
-`TryLoadFromFile` returns false with a `PARSE_ERROR` and `OpmValidator.ValidateFile` an error, both naming the keyword.
+`TryLoad` returns false.
 The constructors of the data model (`OpmKeplerianElements`, `OpmData`, ...) keep their `ArgumentException`; a ranged
 parameter of `OpmKeplerianElements` (a, e, i, GM, and the four angles in [-360, 360) since [#708](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/708)), `OpmData` (the five spacecraft parameters) or `OpmManeuverParameters`
 (`MAN_DURATION`, `MAN_DELTA_MASS`) refuses NaN and ±Infinity with its `ArgumentOutOfRangeException`, and so does
@@ -87,8 +94,7 @@ case, or a value beyond the range of a `double` such as `1e400`, which .NET roun
 `Failed to parse numeric value 'NaN' for field 'ECCENTRICITY': not a finite number.` Before 11.0.0 the document loaded
 with the value, which every range check passed, the comparisons with NaN being false. The schema step does not stop
 these values: .NET's schema validator accepts NaN against the bound facets of NDM/XML 4.0.0 and `Infinity` or an
-overflow as an `xsd:double`. `TryLoadFromFile` returns false with a `PARSE_ERROR` and `OpmValidator.ValidateFile` an error,
-both naming the keyword. The lexical `INF` and `-INF` of `xsd:double` throw the parse exception, as before.
+overflow as an `xsd:double`. `TryLoad` returns false. The lexical `INF` and `-INF` of `xsd:double` throw the parse exception, as before.
 
 A date (`EPOCH`, `CREATION_DATE`, `MAN_EPOCH_IGNITION`) is read in the two forms of CCSDS 502.0-B-3: calendar
 (`2026-01-13T05:00:55.752768`) or day of year (`2026-013T05:00:55.752768`), each field with its leading zeros, any
@@ -107,12 +113,12 @@ in the state or its covariance.
 
 ### Schema validation
 
-`validateSchema` and `OpmValidator.ValidateSchema` check the document against the CCSDS NDM/XML 4.0.0 schemas (CCSDS
+`CcsdsReadOptions.ValidateSchema` checks the document against the CCSDS NDM/XML 4.0.0 schemas (CCSDS
 505.0-B-3) in its form, as SANA publishes them: a root `ndm` or `opm` without a namespace, every element unqualified (the
 form of Space-Track and of the writer, SANA's `ndmxml_unqualified` set) or every element below the root in the
 namespace `urn:ccsds:schema:ndmxml` (the qualified set). Any other root is an error, and so is an `ndm` that holds no
 `opm` child (an empty `ndm`, or one of other messages only), which the NDM master accepts but in which the reader
-finds no OPM (`OPM006`; reported valid before 11.0.0, `Load*` then throwing `OpmParseException`).
+finds no OPM (`OPM006`; reported valid before 11.0.0, `Load` then throwing `OpmParseException`).
 A root in the namespace, the library's earlier form of a bare message, is checked as before, against the OPM schema with that root declared in the
 namespace (an `ndm` root in the namespace has no declaration and is rejected, by SANA too). The unqualified set is the
 embedded one with its `elementFormDefault` set to `unqualified`, the one difference between the two sets SANA publishes.
@@ -120,13 +126,13 @@ embedded one with its `elementFormDefault` set to `unqualified`, the one differe
 Before the third round of [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668) an
 unqualified document matched no declaration of the validator, so it was reported valid with a warning per element and
 nothing below its root was checked: an OPM whose `X` is in `units="m"` loaded with its value read as km, and undeclared
-elements were ignored. Such a document now makes `Load*` throw `OpmValidationException`; fix the document, or pass
-`validateSchema: false` to read it without the schema step, where a keyword out of its range throws `OpmParseException`
+elements were ignored. Such a document now makes `Load` throw `OpmValidationException`; fix the document, or pass
+`new CcsdsReadOptions { ValidateSchema = false }` to read it without the schema step, where a keyword out of its range throws `OpmParseException`
 since the fourth round (above). A valid document, the writer's output included, validates without a warning.
 
 ### Content validation
 
-`validateContent`, `Validate()` and `OpmValidator.Validate` check the physical constraints of the data model's values. Each
+`CcsdsReadOptions.ValidateContent`, `CcsdsWriteOptions.ValidateContent` and `Validate()` check the physical constraints of the data model's values. Each
 error check is the negation of its admitted range, so that NaN, in no range, is an error (`OPM002`), as is an infinite
 value where the range is half-open: a covariance variance must be finite and non-negative; the covariance constructors
 refuse a non-finite term ([#717](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/717)) but take a negative one, which the validator reports ([#708](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/708); before 11.0.0 a NaN
@@ -137,9 +143,8 @@ information levels (an unusual drag coefficient, a large eccentricity) are uncha
 
 | Method | Description |
 |--------|-------------|
-| `SaveToFile(path, validateBeforeSave?, wrapInNdm?, indent?)` | Save to file |
-| `SaveToStream(stream, validateBeforeSave?, wrapInNdm?, indent?)` | Save to stream |
-| `ToXmlString(wrapInNdm?, indent?)` | Serialize to XML string |
+| `Save(path, options?)` | Write to a file, in UTF-8, with the output of `CcsdsWriteOptions`: the content validated, wrapped in an `ndm` and indented by default; a `Stream` too, left open |
+| `ToXml(options?)` | The XML text, as `Save` writes it; validated by default since 11.0.0, as `Save` was |
 
 Each real value is written in its shortest round-trip form (`"R"`, invariant culture), which reads back bit for bit
 ([#728](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/728)). Before 11.0.0 a value written
@@ -169,6 +174,7 @@ written as its clock reading under every time system. The library's own conversi
 | `ToStateVector(observer)` | Convert to a `StateVector` (applies unit conversion); `EPOCH` is read in `TIME_SYSTEM` (UTC, TAI, TDB, TT or GPS), another time system throws (#485). The library's writers write the epoch in UTC under `TIME_SYSTEM = UTC` (#479). The observer is optional: see [The centre](#the-centre) |
 | `ToSpacecraft(naifId, maxOperatingMass, clock, observer)` | Create a `Spacecraft` from OPM data, under the rules of its constructor (`maxOperatingMass` `double.MaxValue` and `clock` `OBJECT_NAME + "_CLK"` at 65536 ticks per second by default, a `MASS` above `maxOperatingMass` throwing `ArgumentOutOfRangeException`, decision 77 of #668; before 11.0.0 the maximum was raised to the mass and the clock required): `naifId` in [-2147483, -1], and `clock` not attached to a spacecraft of another NAIF id (`ArgumentException`, #676); the observer as on `ToStateVector` |
 | `Validate()` | Validate and return `OpmValidationResult` |
+| `IsValid()` | Whether `Validate()` reports no error (11.0.0) |
 
 ### The centre
 
@@ -241,10 +247,10 @@ OPM carries no covariance: moving it there would take the state transition matri
 // Inputs: spacecraft (Spacecraft), epoch (Time), earth (CelestialBody)
 // Export spacecraft state to OPM, in the frame of its state
 var opm = spacecraft.ToOpm(epoch: epoch);
-opm.SaveToFile("state.opm.xml");
+opm.Save("state.opm.xml");
 
 // Load and convert back
-var loaded = Opm.LoadFromFile("state.opm.xml");
+var loaded = Opm.Load("state.opm.xml");
 var sv = loaded.ToStateVector(earth);
 ```
 

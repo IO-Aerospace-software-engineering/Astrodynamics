@@ -72,13 +72,10 @@ internal static class CdmPage
             MessageFor = "Protected"
         });
 
-        cdm.WriteToFile("encounter.cdm.xml");
+        // Save validates the content and Load the schema and the content, throwing CdmValidationException
+        cdm.Save("encounter.cdm.xml");
 
-        var validation = Cdm.ValidateSchema("encounter.cdm.xml");
-        if (!validation.IsValid)
-            throw new InvalidOperationException("CDM failed schema validation.");
-
-        var parsed = Cdm.ReadFromFile("encounter.cdm.xml");
+        var parsed = Cdm.Load("encounter.cdm.xml");
         #endregion
     }
 }

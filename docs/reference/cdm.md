@@ -13,21 +13,30 @@ The CDM module supports constructing, reading, writing, and validating CCSDS Con
 
 | Method | Description |
 |--------|-------------|
-| `Cdm.ReadFromFile(path)` | Parse a CDM XML file into a `Cdm` object |
-| `Cdm.ReadFromString(xml)` | Parse a CDM XML string |
-| `Cdm.ReadFromStream(stream)` | Parse from a stream |
-| `Cdm.ValidateSchema(path)` | Validate a CDM file against the CCSDS schema |
-| `Cdm.ValidateSchemaFromXml(xml)` | Validate a CDM XML string against the schema |
+| `Cdm.Load(path, options?)` | The one CDM of a file, with the checks of `CcsdsReadOptions`: the schema, then the content, both by default |
+| `Cdm.LoadAll(path, options?)` | Every CDM of a file, in document order |
+| `Cdm.Parse(xml, options?)` | The one CDM of an XML text, or of a `TextReader` read to its end |
+| `Cdm.ParseAll(xml, options?)` | Every CDM of an XML text, or of a `TextReader` |
+| `Cdm.TryLoad(path, out cdm, options?)` | `Load` without an exception: false for a missing file or a document the checks or the reader refuse |
+| `Cdm.TryParse(xml, out cdm, options?)` | `Parse` without an exception |
 
-The exceptions of the CDM reader, `CdmParseException`, derive from `CcsdsFormatException`, a `FormatException` of
+The CDM shares the verb set of the OMM and the OPM (R22 of
+[#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668), lot L7). Before 11.0.0 it was read
+by `Cdm.ReadFromFile`, `ReadFromString` and `ReadFromStream`, which ran no check, and validated by the static
+`Cdm.ValidateSchema` and `ValidateSchemaFromXml`: `Load` and `Parse` now check the schema and the content by default,
+a failure throwing `CdmValidationException` (a `CcsdsFormatException`) with its `CdmValidationResult`;
+`new CcsdsReadOptions { ValidateSchema = false, ValidateContent = false }` reads as the former readers did. `CdmReader`,
+`CdmWriter` and `CdmValidator` are internal.
+
+The exceptions of the CDM reader, `CdmParseException` and `CdmValidationException`, derive from `CcsdsFormatException`, a `FormatException` of
 `IO.Astrodynamics.CCSDS` shared by the OMM, OPM and CDM readers, so that one `catch (CcsdsFormatException)` covers a
 document that cannot be read, at parsing or at validation (11.0.0, R03 of
 [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668): before, each derived from
 `Exception` alone).
 
 The readers read one CDM: a standalone `<cdm>`, or the one `<cdm>` of an `<ndm>` or of another root. A document that holds
-several CDMs, at any depth below the root, throws `CdmParseException` naming their number (#679); before 11.0.0 the first one was returned. Split such
-a document into one CDM per document.
+several CDMs, at any depth below the root, throws `CdmParseException` naming their number and `LoadAll` (#679); before 11.0.0 the first one was returned.
+`LoadAll` and `ParseAll` read every CDM of such a document.
 
 The CDM itself holds one header and one body, the body one `relativeMetadataData` and exactly two segments, one per
 object, each segment one metadata and one data section, and each data section and the `relativeMetadataData` at most
@@ -41,8 +50,8 @@ An enumerated keyword whose value is not one of its own (`OBJECT`, `REF_FRAME`, 
 table 3-3) throws `CdmParseException` naming the keyword and its value, the `FormatException` of the enumeration as
 `InnerException`, for example `REF_FRAME 'TEME' is not one of the values of the keyword: Unsupported CDM reference frame
 'TEME'.` Before 11.0.0 that `FormatException` crossed the reader (fourth round of
-[#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668)). The readers do not check the
-schema: `Cdm.ValidateSchemaFromXml` rejects these values too.
+[#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668)). With the schema check
+(`CcsdsReadOptions.ValidateSchema`, the default) the schema rejects these values first, `CdmValidationException`.
 
 A numeric value is a real number: a text that .NET reads as NaN or ±Infinity (`NaN`, `Infinity` or `-Infinity` in any
 case, or a value beyond the range of a `double` such as `1e400`) throws `CdmParseException` naming the keyword and the
@@ -64,7 +73,7 @@ The records of a CDM hold real numbers only, as the reader reads them ([#717](ht
 throws `ArgumentOutOfRangeException` naming the property for NaN or ±Infinity, whether set by an object initializer, a
 `with` expression or `CdmCovarianceMatrix.FromRtnCovariance`; an optional value may stay null. `EncounterCase.ToCdm`,
 which builds these records, throws it for such a value in an encounter built by hand. Before 11.0.0 the record built,
-`Cdm.Validate` passed it (but the miss distance) and `WriteToString` wrote `NaN`, `Infinity` or `-Infinity`, which the
+`Cdm.Validate` passed it (but the miss distance) and `WriteToString` (`ToXml` since 11.0.0) wrote `NaN`, `Infinity` or `-Infinity`, which the
 reader refuses. `Cdm.Validate` keeps its own check of a miss distance of 0 or more. `StateCovarianceRtn` refuses a
 matrix that is not 6×6, `default(Matrix)` included, with `ArgumentException` naming the property, before its terms
 ([#730](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/730)): before 11.0.0 it built, and `WriteToString` threw `IndexOutOfRangeException` or
@@ -76,7 +85,7 @@ matrix that is not 6×6, `default(Matrix)` included, with `ArgumentException` na
 
 ### Schema validation
 
-`Cdm.ValidateSchema` and `Cdm.ValidateSchemaFromXml` check a document whose root, `ndm` or `cdm`, has no namespace
+`CcsdsReadOptions.ValidateSchema` checks a document whose root, `ndm` or `cdm`, has no namespace
 against the CCSDS NDM/XML 4.0.0 schemas (CCSDS 505.0-B-3) in its form, as SANA publishes them: every element unqualified
 (SANA's `ndmxml_unqualified` set) or every element below the root in the namespace `urn:ccsds:schema:ndmxml` (the
 qualified set). Any other root is a `CDM001` error, and so is an `ndm`, without a namespace or in it, that holds no `cdm`
@@ -91,8 +100,8 @@ was checked: a `COLLISION_PROBABILITY` of 1.5 was reported valid
 
 ### Written form
 
-`CdmWriter`, `Cdm.WriteToString`, `Cdm.WriteToFile` and so `EncounterCase.ToCdm(...).WriteTo*` write the qualified form
-of CCSDS 508.0-B-1 Cor. 2, 4.3.3: the root, `cdm` or the `ndm` that wraps it (`wrapInNdmContainer`, the default), in no
+`Cdm.ToXml` and `Cdm.Save`, and so `EncounterCase.ToCdm(...).Save(...)`, write the qualified form
+of CCSDS 508.0-B-1 Cor. 2, 4.3.3: the root, `cdm` or the `ndm` that wraps it (`CcsdsWriteOptions.WrapInNdmContainer`, the default), in no
 namespace with `xmlns:ndm="urn:ccsds:schema:ndmxml"` declared on it, and every element below it in that namespace under
 the prefix `ndm`:
 
@@ -107,23 +116,22 @@ The SANA NDM/XML 4.0.0 qualified master, which declares `ndm` and `cdm` in no na
 `xsi:noNamespaceSchemaLocation` names (4.3.3.4), accepts it. Before 11.0.0 the
 root was in the namespace too (`<ndm xmlns="urn:ccsds:schema:ndmxml">`,
 [#615](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/615)), which that master rejects at the
-root ("No matching global declaration available for the validation root"); the reader and `Cdm.ValidateSchema` still
-accept that form. A reader that matches local names reads both.
+root ("No matching global declaration available for the validation root"); `Cdm.Load` and `Cdm.Parse`, schema check
+included, still accept that form. A reader that matches local names reads both.
 
 ## Instance Methods
 
 | Method | Description |
 |--------|-------------|
-| `WriteToFile(path)` | Serialize the CDM to an XML file |
-| `WriteToString()` | Serialize the CDM to an XML string |
+| `Save(path, options?)` | Write the CDM to a file, in UTF-8, or to a `Stream` left open, with the output of `CcsdsWriteOptions`: the content validated, wrapped in an `ndm` and indented by default |
+| `ToXml(options?)` | The XML text, as `Save` writes it |
+| `Validate()` | The content check, a `CdmValidationResult` |
+| `IsValid()` | Whether `Validate()` reports no error |
 
-## Supporting Types
-
-| Type | Description |
-|------|-------------|
-| `CdmWriter` | Direct object-to-XML writer |
-| `CdmReader` | Direct XML-to-object reader |
-| `CdmValidator` | Schema and content validation |
+Before 11.0.0 the writers, `WriteToFile`, `WriteToString` and `WriteToStream`, did not validate: `Save` and `ToXml`
+throw `CdmValidationException` for a CDM whose content `Validate()` refuses (a blank `MESSAGE_ID`, a negative miss
+distance, a segment without metadata), `new CcsdsWriteOptions { ValidateContent = false }` writing it as before.
+`EncounterCase.ToCdm` builds CDMs that validate.
 
 ## Export from EncounterCase
 
@@ -262,13 +270,10 @@ var cdm = encounter.ToCdm(new CdmExportOptions
     MessageFor = "Protected"
 });
 
-cdm.WriteToFile("encounter.cdm.xml");
+// Save validates the content and Load the schema and the content, throwing CdmValidationException
+cdm.Save("encounter.cdm.xml");
 
-var validation = Cdm.ValidateSchema("encounter.cdm.xml");
-if (!validation.IsValid)
-    throw new InvalidOperationException("CDM failed schema validation.");
-
-var parsed = Cdm.ReadFromFile("encounter.cdm.xml");
+var parsed = Cdm.Load("encounter.cdm.xml");
 ```
 
 ## See Also

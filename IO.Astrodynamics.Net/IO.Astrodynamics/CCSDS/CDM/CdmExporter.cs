@@ -21,7 +21,7 @@ internal static class CdmExporter
     public static Cdm Export(EncounterCase encounterCase, CdmExportOptions? options)
     {
         ArgumentNullException.ThrowIfNull(encounterCase);
-        options ??= new CdmExportOptions();
+        options ??= CdmExportOptions.Default;
 
         if (encounterCase.ProtectedState == null || encounterCase.SecondaryState == null)
         {

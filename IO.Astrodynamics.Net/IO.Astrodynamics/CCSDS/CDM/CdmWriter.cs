@@ -25,7 +25,7 @@ namespace IO.Astrodynamics.CCSDS.CDM;
 /// Before 11.0.0 the root was in the namespace too (#615), which the SANA master rejects at the root; the reader and
 /// <see cref="CdmValidator"/> still accept that form.
 /// </remarks>
-public sealed class CdmWriter
+internal sealed class CdmWriter
 {
     private static readonly XNamespace CcsdsNamespace = "urn:ccsds:schema:ndmxml";
     private static readonly XNamespace XsiNamespace = "http://www.w3.org/2001/XMLSchema-instance";

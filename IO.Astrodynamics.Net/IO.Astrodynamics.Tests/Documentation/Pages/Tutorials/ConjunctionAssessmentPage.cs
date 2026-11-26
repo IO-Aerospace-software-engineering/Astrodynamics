@@ -256,7 +256,7 @@ internal static class ConjunctionAssessmentPage
         });
 
         // Write to XML file
-        cdm.WriteToFile("encounter.cdm.xml");
+        cdm.Save("encounter.cdm.xml");
         #endregion
     }
 
@@ -264,13 +264,17 @@ internal static class ConjunctionAssessmentPage
     internal static void Block10()
     {
         #region docs/tutorials/conjunction-assessment.md:10
-        var validation = Cdm.ValidateSchema("encounter.cdm.xml");
-
-        if (validation.IsValid)
-            Console.WriteLine("CDM is schema-valid.");
-        else
-            foreach (var error in validation.Errors)
+        // Load checks the NDM/XML schema and the content, and throws CdmValidationException with the issues
+        try
+        {
+            var read = Cdm.Load("encounter.cdm.xml");
+            Console.WriteLine($"CDM {read.Header.MessageId} is valid.");
+        }
+        catch (CdmValidationException e)
+        {
+            foreach (var error in e.ValidationResult.Errors)
                 Console.WriteLine($"Validation error: {error.Message}");
+        }
         #endregion
     }
 
@@ -311,7 +315,7 @@ internal static class ConjunctionAssessmentPage
         #region docs/tutorials/conjunction-assessment.md:14
         // Inputs: details (EncounterCase), exportOptions (CdmExportOptions)
         var cdm = details.ToCdm(exportOptions);
-        cdm.WriteToFile("cdm_report.xml");
+        cdm.Save("cdm_report.xml");
         #endregion
     }
 }

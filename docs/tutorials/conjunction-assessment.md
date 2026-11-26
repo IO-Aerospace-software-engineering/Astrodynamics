@@ -262,21 +262,25 @@ var cdm = encounter.ToCdm(new CdmExportOptions
 });
 
 // Write to XML file
-cdm.WriteToFile("encounter.cdm.xml");
+cdm.Save("encounter.cdm.xml");
 ```
 
 ### Validating a CDM
 
-Validate any CDM file against the CCSDS schema:
+`Cdm.Load` validates a CDM file against the CCSDS schema and its content (`CcsdsReadOptions`):
 
 ```csharp
-var validation = Cdm.ValidateSchema("encounter.cdm.xml");
-
-if (validation.IsValid)
-    Console.WriteLine("CDM is schema-valid.");
-else
-    foreach (var error in validation.Errors)
+// Load checks the NDM/XML schema and the content, and throws CdmValidationException with the issues
+try
+{
+    var read = Cdm.Load("encounter.cdm.xml");
+    Console.WriteLine($"CDM {read.Header.MessageId} is valid.");
+}
+catch (CdmValidationException e)
+{
+    foreach (var error in e.ValidationResult.Errors)
         Console.WriteLine($"Validation error: {error.Message}");
+}
 ```
 
 ### CDM fields
@@ -381,7 +385,7 @@ A typical operational SSA workflow proceeds as follows:
     ```csharp
     // Inputs: details (EncounterCase), exportOptions (CdmExportOptions)
     var cdm = details.ToCdm(exportOptions);
-    cdm.WriteToFile("cdm_report.xml");
+    cdm.Save("cdm_report.xml");
     ```
 
 7. **Execute** the chosen avoidance maneuver and return to step 2 to verify
@@ -393,7 +397,7 @@ A typical operational SSA workflow proceeds as follows:
   screening.
 - `AnalyzeAll` returns every encounter in the window, not just the closest.
 - `EvaluateAvoidance` produces a lead-time/delta-v trade matrix.
-- Export encounters as CCSDS CDMs with `ToCdm` and validate with
-  `Cdm.ValidateSchema`.
+- Export encounters as CCSDS CDMs with `ToCdm`, write them with `Save` and read
+  them with `Cdm.Load`, which validate them.
 - Covariance quality is the single most important factor in collision
   probability accuracy.

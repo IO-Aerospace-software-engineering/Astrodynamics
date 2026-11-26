@@ -24,7 +24,7 @@ namespace IO.Astrodynamics.CCSDS.OPM;
 /// UTC, a local one converted (#617, decided by S. Guillet, 2026-11-17).
 /// </para>
 /// </remarks>
-public class OpmWriter
+internal class OpmWriter
 {
     private const string CcsdsSchemaLocation = "https://sanaregistry.org/r/ndmxml_unqualified/ndmxml-4.0.0-master-4.0.xsd";
     private static readonly XNamespace XsiNamespace = "http://www.w3.org/2001/XMLSchema-instance";

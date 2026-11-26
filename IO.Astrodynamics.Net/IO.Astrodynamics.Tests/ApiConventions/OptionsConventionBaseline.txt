@@ -4,19 +4,7 @@
 # a method keyed by its signature. The file may only shrink: a new member follows D1, and the lots that replace these
 # members (options L4 to L7, renames L9) remove their lines.
 D1.bools	IO.Astrodynamics.Body.Spacecraft.Spacecraft.ToOpm(string, Time?, bool, bool, bool)
-D1.bools	IO.Astrodynamics.CCSDS.OMM.Omm.LoadFromFile(string, bool, bool)
-D1.bools	IO.Astrodynamics.CCSDS.OMM.Omm.LoadFromStream(Stream, bool, bool)
-D1.bools	IO.Astrodynamics.CCSDS.OMM.Omm.LoadFromString(string, bool, bool)
-D1.bools	IO.Astrodynamics.CCSDS.OMM.Omm.TryLoadFromFile(string, out Omm, out OmmValidationResult, bool, bool)
-D1.bools	IO.Astrodynamics.CCSDS.OPM.Opm.LoadFromFile(string, bool, bool)
-D1.bools	IO.Astrodynamics.CCSDS.OPM.Opm.LoadFromStream(Stream, bool, bool)
-D1.bools	IO.Astrodynamics.CCSDS.OPM.Opm.LoadFromString(string, bool, bool)
-D1.bools	IO.Astrodynamics.CCSDS.OPM.Opm.SaveToFile(string, bool, bool, bool)
-D1.bools	IO.Astrodynamics.CCSDS.OPM.Opm.SaveToStream(Stream, bool, bool, bool)
-D1.bools	IO.Astrodynamics.CCSDS.OPM.Opm.ToXmlString(bool, bool)
-D1.bools	IO.Astrodynamics.CCSDS.OPM.Opm.TryLoadFromFile(string, out Opm, out OpmValidationResult, bool, bool)
 D1.bools	IO.Astrodynamics.Propagator.CentralBodyPropagator.BuildCentralBodyForces(CelestialItem, CelestialItem[], Spacecraft, bool, bool)
-D1.default	IO.Astrodynamics.CCSDS.CDM.CdmExportOptions
 D1.default	IO.Astrodynamics.Propagator.Variational.CovariancePropagationOptions
 D1.default	IO.Astrodynamics.SSA.AvoidanceSearchOptions
 D1.default	IO.Astrodynamics.SSA.ConjunctionAnalysisOptions

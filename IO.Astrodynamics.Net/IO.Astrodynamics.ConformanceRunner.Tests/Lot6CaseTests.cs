@@ -203,8 +203,8 @@ public sealed class Lot6CaseTests : IDisposable
         // cdm 003 without its CTHR rows (an 8x8 covariance), and without its CSRP and CTHR rows (7x7): the terms present,
         // in their order, each scaled as in the 9x9 case, which its golden (tools/legacy_goldens/cdm.py) checks
         var text = File.ReadAllText(Path.Combine(SuiteFixture.Lot6.Root, "cases/cdm/003/cdm.xml"));
-        var full = CdmSolver.Fields(Cdm.ReadFromString(text), false);
-        var partial = CdmSolver.Fields(Cdm.ReadFromString(WithoutLines(text, removedRows)), false);
+        var full = CdmSolver.Fields(Cdm.Parse(text), false);
+        var partial = CdmSolver.Fields(Cdm.Parse(WithoutLines(text, removedRows)), false);
         using var golden = JsonDocument.Parse(File.ReadAllText(Path.Combine(SuiteFixture.Lot6.Root, "cases/cdm/003/expected-result.json")));
         for (int k = 0; k < 2; k++)
         {
@@ -229,7 +229,7 @@ public sealed class Lot6CaseTests : IDisposable
     {
         // A hole inside a row, or a later row without an earlier one, which CCSDS 508.0 does not allow
         var text = File.ReadAllText(Path.Combine(SuiteFixture.Lot6.Root, "cases/cdm/003/cdm.xml"));
-        var partial = CdmSolver.Fields(Cdm.ReadFromString(WithoutLines(text, removedRows)), false);
+        var partial = CdmSolver.Fields(Cdm.Parse(WithoutLines(text, removedRows)), false);
         var error = Assert.IsType<InvalidOperationException>(partial[OutputComparer.IndexedOutput(CdmSolver.Objects, 0, "covariance_consider")]);
         Assert.Contains("not whole rows", error.Message);
         Assert.Contains(missing, error.Message);

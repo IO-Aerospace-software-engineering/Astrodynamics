@@ -157,8 +157,7 @@ OMM is the CCSDS standard XML/KVN format for distributing mean elements. Load, v
 ```csharp
 using IO.Astrodynamics.CCSDS.OMM;
 
-var omm = Omm.LoadFromFile("satellite.omm",
-    validateSchema: true, validateContent: true);
+var omm = Omm.Load("satellite.omm");
 
 Console.WriteLine($"Object name: {omm.ObjectName}");
 Console.WriteLine($"Object ID:   {omm.ObjectId}");
@@ -201,8 +200,7 @@ using IO.Astrodynamics.CCSDS.OPM;
 
 var earth = PlanetsAndMoons.EARTH_BODY;
 
-var opm = Opm.LoadFromFile("spacecraft.opm",
-    validateSchema: true, validateContent: true);
+var opm = Opm.Load("spacecraft.opm");
 var stateVector = opm.ToStateVector(earth);
 
 Console.WriteLine($"Position: {stateVector.Position}");

@@ -259,7 +259,7 @@ public class CovariancePropagationTutorialSmokeTests
 
         // Section "The CDM"
         var cdm = encounter.ToCdm(new CdmExportOptions { Originator = "MyOpsCenter", MessageId = "CDM-001" });
-        string xml = cdm.WriteToString();
+        string xml = cdm.ToXml();
 
         _output.WriteLine($"Pc propagated {encounter.CollisionRisk.ProbabilityOfCollision:E4}, held in RTN " +
                           $"{held.CollisionRisk.ProbabilityOfCollision:E4}");
@@ -268,7 +268,7 @@ public class CovariancePropagationTutorialSmokeTests
         Assert.Equal(CovarianceSource.InitialStateHeldInRtn, held.EncounterState.ProtectedCovariance.Source);
         Assert.True(held.EncounterState.QualityFlags.HasFlag(EncounterQualityFlags.StaleCovarianceUsed));
         Assert.NotEqual(held.CollisionRisk.ProbabilityOfCollision, encounter.CollisionRisk.ProbabilityOfCollision);
-        Assert.True(Cdm.ValidateSchemaFromXml(xml).IsValid);
+        Assert.Equal("CDM-001", Cdm.Parse(xml).Header.MessageId);   // Parse checks the schema and the content
         Assert.Contains("CALCULATED", xml);
     }
 

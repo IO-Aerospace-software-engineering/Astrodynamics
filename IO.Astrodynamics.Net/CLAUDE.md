@@ -78,7 +78,7 @@ One grammar for every command (R29 of #668, lot L8; `docs/reference/cli.md`, its
 - `IO.Astrodynamics.OrbitalParameters.TLE`: Two-Line Element sets and OMM support
 - `IO.Astrodynamics.CCSDS.OMM`: CCSDS Orbit Mean-elements Message support (read/write/validate/convert); a numeric value NaN or ±Infinity throws `OmmParseException` naming its keyword (#708); `TleParameters` and `CovarianceMatrix` refuse a non-finite value with `ArgumentOutOfRangeException` naming the parameter (#717), and `CovarianceMatrix` a term whose value in m², m²/s or m²/s² (times 1e6) is not finite (#729); `Omm.ToTle` throws `InvalidOperationException` naming `MEAN_MOTION` above the 99.99999999 rev/day of its TLE field (#729: a TLE whose mean motion was the text `Infinity` above 2.86e307 rev/day); a negative revolution number names `revolutionNumberAtEpoch` (#734); a date outside the two CCSDS forms (`yyyy-mm-ddThh:mm:ss[.d…][Z|±hh:mm]`, `yyyy-dddThh:mm:ss…`) throws `OmmParseException` (#619)
 - `IO.Astrodynamics.CCSDS.OPM`: CCSDS Orbit Parameter Message support (read/write/validate/convert); a numeric value NaN or ±Infinity throws `OpmParseException` naming its keyword, and the four angles of `OpmKeplerianElements` are in [-360, 360), the schema's `angleRange` (#708); `OpmStateVector`, `CovarianceMatrix` and the ΔV of `OpmManeuverParameters` refuse a non-finite value with `ArgumentOutOfRangeException` naming the parameter (#717), and `OpmStateVector` and `CovarianceMatrix` a value whose value in SI units (times 1000 or 1e6) is not finite, which the reader reports naming the keyword (#729); a date outside the two CCSDS forms throws `OpmParseException` (#619)
-- `IO.Astrodynamics.CCSDS.CDM`: CCSDS Conjunction Data Message support (read/write/validate, `EncounterCase.ToCdm()`; `CdmWriter` writes the root, `cdm` or the wrapping `ndm`, in no namespace with `xmlns:ndm` on it and every element below it under the prefix `ndm`, the qualified form of CCSDS 508.0-B-1 Cor. 2 §4.3.3 that the SANA master accepts, #615; `ToCdm` writes `COLLISION_PROBABILITY_METHOD = FOSTER-1992` and refuses a single-covariance maximum Pc, #618; an enumerated keyword whose value is not one of its own throws `CdmParseException` naming it, the `FormatException` of the enumeration as inner exception, fourth round of #668; a numeric value NaN or ±Infinity throws `CdmParseException` naming its keyword, and so does a value in km or km/s that overflows in m or m/s, #708, a value with a comma, #717, a `lengthTypeUO` length (`MISS_DISTANCE`, `RELATIVE_POSITION_R/T/N`, `SCREEN_VOLUME_X/Y/Z`) with units other than m, and a date outside the two CCSDS forms, #619; every real value of the CDM records refuses NaN and ±Infinity at init with `ArgumentOutOfRangeException` naming the property, and `CdmCovarianceMatrix` copies its covariance `Matrix` in and out, #717, and refuses one that is not 6×6 with `ArgumentException` naming `StateCovarianceRtn`, #730)
+- `IO.Astrodynamics.CCSDS.CDM`: CCSDS Conjunction Data Message support (read/write/validate, `EncounterCase.ToCdm()`; `Cdm.Save` and `ToXml` write the root, `cdm` or the wrapping `ndm`, in no namespace with `xmlns:ndm` on it and every element below it under the prefix `ndm`, the qualified form of CCSDS 508.0-B-1 Cor. 2 §4.3.3 that the SANA master accepts, #615; `ToCdm` writes `COLLISION_PROBABILITY_METHOD = FOSTER-1992` and refuses a single-covariance maximum Pc, #618; an enumerated keyword whose value is not one of its own throws `CdmParseException` naming it, the `FormatException` of the enumeration as inner exception, fourth round of #668; a numeric value NaN or ±Infinity throws `CdmParseException` naming its keyword, and so does a value in km or km/s that overflows in m or m/s, #708, a value with a comma, #717, a `lengthTypeUO` length (`MISS_DISTANCE`, `RELATIVE_POSITION_R/T/N`, `SCREEN_VOLUME_X/Y/Z`) with units other than m, and a date outside the two CCSDS forms, #619; every real value of the CDM records refuses NaN and ±Infinity at init with `ArgumentOutOfRangeException` naming the property, and `CdmCovarianceMatrix` copies its covariance `Matrix` in and out, #717, and refuses one that is not 6×6 with `ArgumentException` naming `StateCovarianceRtn`, #730)
 - `IO.Astrodynamics.Maneuver`: Lambert solvers, launch windows, maneuver planning, attitude maneuvers, IAttitudeTarget system (orbital direction targets, celestial attitude targets)
 - `IO.Astrodynamics.Frames`: Reference frames and transformations, including the CIO-based IAU chain (IAU 2006 precession with IAU 2000B nutation) exposed as `Frame.GCRF`, `Frame.CIRS` and `Frame.TIRS` (`GcrfFrame`, `CirsFrame`, `TirsFrame`, `Iau2006Model`, `IEarthOrientationParameters`), and the managed TEME of SGP4, `Frame.TEME` (`TemeFrame`, Vallado et al. 2006: Q(t)ᵀ · Rz(ERA − GMST82), quasi-inertial, no kernel; a frame named TEME is routed to it, #451); a frame named TEME, CIRS or TIRS, in any case, is routed to `Frame.TEME`, `Frame.CIRS` or `Frame.TIRS` by both data providers, the ephemeris reads and `SpiceAPI.TransformFrame`, which composes such an end through ICRF (#656); a frame keeps the orientation of its last epoch only, not one per epoch, and the attitude record API (`AddStateOrientationToICRF`, `GetStateOrientationsToICRF`, ...) is `SpacecraftFrame`'s (#541)
 - `IO.Astrodynamics.TimeSystem`: `Time`, a calendar in a `TimeScale` (TDB, TT, TAI, UTC, GPS), the scale a required argument (R24 of #668: no frameless constructor, no `Time(string)`, no `ITimeFrame`, no local time; a `DateTime` of kind `Local`, or `Utc` with another scale, throws); `Parse`/`TryParse`/`ISpanParsable` on one grammar (ISO 8601 or day of year, then `Z`, an offset or a scale tag; `JD n TAG`), an untagged string refused unless `Parse(s, scale)` names its scale, a tag of another scale than `scale` refused; `ToString` writes TT as TT, `IFormattable` a custom `DateTime` format then the tag (standard formats and zone specifiers refused); two times are equal when they are the same instant, whatever their scales, `Equals`, `==` and `GetHashCode` following `CompareTo` by the TAI ticks, and so does `Window` equality, by its ends (#512); `Window.Sample(step, includeEnd = false)` gives the lazy points start + i·step at or before the end, the grid of every window read (`GetEphemeris`, `Star.Propagate`, `SpiceAPI.TransformFrame`, which reads the end on the grid since lot L6, #781); `EqualsExact` and `Time.ExactComparer` compare the labels (calendar and scale); a test of a label uses the tests' `LabelAssert`, not `Assert.Equal`
@@ -224,15 +224,13 @@ The `IO.Astrodynamics.CCSDS.OMM` namespace provides full support for CCSDS Orbit
 
 **Key Classes**
 - `Omm`: Main class representing a complete OMM document
-- `OmmReader`: Parses OMM from XML files/strings/streams
-- `OmmWriter`: Writes OMM to XML files/strings/streams
-- `OmmValidator`: Validates OMM content for CCSDS compliance
+- `Omm.Load`, `LoadAll`, `Parse`, `ParseAll`, `TryLoad`, `TryParse`, `Save`, `ToXml`, `Validate`, `IsValid`: the one verb set of the OMM, OPM and CDM, with `CcsdsReadOptions` (`ValidateSchema`, `ValidateContent`) and `CcsdsWriteOptions` (`ValidateContent`, `WrapInNdmContainer`, `Indent`), every check on by default (R22 of #668; the reader, writer and validator classes internal, the `LoadFrom*`, `SaveTo*`, `TryLoadFromFile` and `ToXmlString` of 10.x removed)
 - `MeanElements`, `TleParameters`, `OmmMetadata`: Data structures
 
 **Loading and Saving OMM**
 ```csharp
 // Load OMM from file (with optional validation)
-var omm = Omm.LoadFromFile("satellite.omm", validateSchema: true, validateContent: true);
+var omm = Omm.Load("satellite.omm");
 
 // Access data
 Console.WriteLine($"Object: {omm.ObjectName}");
@@ -240,13 +238,13 @@ Console.WriteLine($"COSPAR ID: {omm.ObjectId}");  // Format: "1998-067A"
 Console.WriteLine($"Mean Motion: {omm.Data.MeanElements.MeanMotion} rev/day");
 
 // Save OMM to file
-omm.SaveToFile("output.omm", validateBeforeSave: true);
+omm.Save("output.omm");
 ```
 
 **OMM ↔ TLE Bidirectional Conversion**
 ```csharp
 // OMM to TLE (for SGP4 propagation)
-var omm = Omm.LoadFromFile("iss.omm");
+var omm = Omm.Load("iss.omm");
 if (omm.IsTleCompatible)
 {
     var tle = omm.ToTle();
@@ -256,7 +254,7 @@ if (omm.IsTleCompatible)
 // TLE to OMM (for archiving/sharing)
 var issTle = new TLE("ISS", line1, line2);
 var issOmm = issTle.ToOmm(originator: "My Organization");
-issOmm.SaveToFile("iss.omm");
+issOmm.Save("iss.omm");
 ```
 
 **COSPAR ID Format Handling**
@@ -284,9 +282,7 @@ The `IO.Astrodynamics.CCSDS.OPM` namespace provides full support for CCSDS Orbit
 
 **Key Classes**
 - `Opm`: Main class representing a complete OPM document
-- `OpmReader`: Parses OPM from XML files/strings/streams
-- `OpmWriter`: Writes OPM to XML files/strings/streams (with units attributes per CCSDS standard)
-- `OpmValidator`: Validates OPM content for CCSDS compliance
+- `Opm.Load`, `LoadAll`, `Parse`, `ParseAll`, `TryLoad`, `TryParse`, `Save`, `ToXml`, `Validate`, `IsValid`: the verb set of the OMM (the writer writes the units attributes per CCSDS standard)
 - `OpmData`, `OpmStateVector`, `OpmKeplerianElements`, `OpmMetadata`: Data structures
 - `OpmManeuverParameters`: Maneuver data (epoch, duration, delta-V, delta-mass)
 - `OpmUserDefinedParameters`: Custom user-defined parameters
@@ -295,7 +291,7 @@ The `IO.Astrodynamics.CCSDS.OPM` namespace provides full support for CCSDS Orbit
 **Loading and Saving OPM**
 ```csharp
 // Load OPM from file (with optional validation)
-var opm = Opm.LoadFromFile("spacecraft.opm", validateSchema: true, validateContent: true);
+var opm = Opm.Load("spacecraft.opm");
 
 // Access data
 Console.WriteLine($"Object: {opm.ObjectName}");
@@ -303,7 +299,7 @@ Console.WriteLine($"COSPAR ID: {opm.ObjectId}");  // Format: "1998-067A"
 Console.WriteLine($"Position: {opm.Data.StateVector.X}, {opm.Data.StateVector.Y}, {opm.Data.StateVector.Z} km");
 
 // Save OPM to file
-opm.SaveToFile("output.opm", validateBeforeSave: true, wrapInNdm: true, indent: true);
+opm.Save("output.opm");
 ```
 
 **OPM ↔ Spacecraft Bidirectional Conversion**
@@ -316,10 +312,10 @@ var opm = spacecraft.ToOpm(
     includeKeplerianElements: true,
     includeSpacecraftParameters: true,
     includeManeuvers: true);  // Includes executed maneuvers
-opm.SaveToFile("iss.opm");
+opm.Save("iss.opm");
 
 // OPM to Spacecraft (for mission operations)
-var restoredOpm = Opm.LoadFromFile("iss.opm");
+var restoredOpm = Opm.Load("iss.opm");
 var restored = restoredOpm.ToSpacecraft(
     naifId: -1000,
     maxOperatingMass: 500000.0,
@@ -330,7 +326,7 @@ var restored = restoredOpm.ToSpacecraft(
 **OPM ↔ StateVector Conversion**
 ```csharp
 // OPM to StateVector (simple conversion)
-var opm = Opm.LoadFromFile("spacecraft.opm");
+var opm = Opm.Load("spacecraft.opm");
 var stateVector = opm.ToStateVector(observer: earth);
 // Units converted: km → m, km/s → m/s
 
@@ -879,17 +875,17 @@ var deg2Rad = IO.Astrodynamics.Constants.Deg2Rad; // not Constants.Deg2Rad (that
    - NORAD catalog numbers are `int`, not `ushort`; values above 99999 use Alpha-5 encoding, and
      `NoradCatalogNumber` handles the conversion — never format the field by hand
 8. **CCSDS OMM Handling**: When working with OMM files:
-   - Use `Omm.LoadFromFile()` with validation for production code
-   - A document with several OMM messages (#679), or an OMM with several segments, headers, bodies, metadata or data sections, or blocks of a data section, throws `OmmParseException` without `validateSchema`; with it (the default) the NDM/XML 4.0.0 schema, checked in the form of the document (a root `ndm` or `omm` without a namespace, every element unqualified as Space-Track and the writer write it, or every element below the root in the namespace; third round of #668), rejects the repeated elements first, `OmmValidationException`, but not several OMMs of an NDM; split it into one message per segment. An `ndm` without an OMM (empty, or of other messages only), which the NDM master accepts, is a schema error too, `OmmValidationException` where the reader's `OmmParseException` came before
-   - A keyword whose value the data model refuses (out of its range, or an empty required string) throws `OmmParseException` naming the keyword and its value, with the data model's `ArgumentException` as inner exception, with or without `validateSchema` for a value the schema accepts (the library's rules beyond the schema, #708, decided by S. Guillet, 2026-11-16; fourth round of #668; before, the `ArgumentException` crossed the reader); the data-model constructors keep their `ArgumentException`
+   - Use `Omm.Load()` (or `LoadAll()` for a catalog NDM), which checks the schema and the content by default
+   - A document with several OMM messages (#679), or an OMM with several segments, headers, bodies, metadata or data sections, or blocks of a data section, throws `OmmParseException` (naming `LoadAll` for several messages) without the schema check (`CcsdsReadOptions.ValidateSchema`); with it (the default) the NDM/XML 4.0.0 schema, checked in the form of the document (a root `ndm` or `omm` without a namespace, every element unqualified as Space-Track and the writer write it, or every element below the root in the namespace; third round of #668), rejects the repeated elements first, `OmmValidationException`, but not several OMMs of an NDM; split it into one message per segment. An `ndm` without an OMM (empty, or of other messages only), which the NDM master accepts, is a schema error too, `OmmValidationException` where the reader's `OmmParseException` came before
+   - A keyword whose value the data model refuses (out of its range, or an empty required string) throws `OmmParseException` naming the keyword and its value, with the data model's `ArgumentException` as inner exception, with or without the schema check for a value the schema accepts (the library's rules beyond the schema, #708, decided by S. Guillet, 2026-11-16; fourth round of #668; before, the `ArgumentException` crossed the reader); the data-model constructors keep their `ArgumentException`
    - Check `IsTleCompatible` (TLE parameters, `MEAN_ELEMENT_THEORY` SGP4, `REF_FRAME` TEME, `CENTER_NAME` EARTH) before calling `ToTle()`, which otherwise throws naming the keywords at fault (#679)
    - Use `TLE.ToOmm()` to convert TLE data for CCSDS-compliant archiving
    - COSPAR ID format conversion is automatic (OMM: "1998-067A" ↔ TLE: "98067A")
    - `ToTle()` throws when `NORAD_CAT_ID` (> 339999) or `REV_AT_EPOCH` (> 99999) exceeds TLE capacity
 9. **CCSDS OPM Handling**: When working with OPM files:
-   - Use `Opm.LoadFromFile()` with validation for production code
-   - A document with several OPM messages (#679), or an OPM with several segments, headers, bodies, metadata or data sections, or blocks of a data section, throws `OpmParseException` without `validateSchema`; with it (the default) the NDM/XML 4.0.0 schema, checked in the form of the document (a root `ndm` or `opm` without a namespace, every element unqualified as Space-Track and the writer write it, or every element below the root in the namespace; third round of #668), rejects the repeated elements first, `OpmValidationException`, but not several OPMs of an NDM; split it into one message per segment. An `ndm` without an OPM (empty, or of other messages only), which the NDM master accepts, is a schema error too, `OpmValidationException` where the reader's `OpmParseException` came before
-   - A keyword whose value the data model refuses (out of its range, or an empty required string) throws `OpmParseException` naming the keyword and its value, with the data model's `ArgumentException` as inner exception, with or without `validateSchema` for a value the schema accepts (the library's rules beyond the schema, #708, decided by S. Guillet, 2026-11-16; fourth round of #668; before, the `ArgumentException` crossed the reader); the data-model constructors keep their `ArgumentException`
+   - Use `Opm.Load()` (or `LoadAll()`), which checks the schema and the content by default
+   - A document with several OPM messages (#679), or an OPM with several segments, headers, bodies, metadata or data sections, or blocks of a data section, throws `OpmParseException` (naming `LoadAll` for several messages) without the schema check (`CcsdsReadOptions.ValidateSchema`); with it (the default) the NDM/XML 4.0.0 schema, checked in the form of the document (a root `ndm` or `opm` without a namespace, every element unqualified as Space-Track and the writer write it, or every element below the root in the namespace; third round of #668), rejects the repeated elements first, `OpmValidationException`, but not several OPMs of an NDM; split it into one message per segment. An `ndm` without an OPM (empty, or of other messages only), which the NDM master accepts, is a schema error too, `OpmValidationException` where the reader's `OpmParseException` came before
+   - A keyword whose value the data model refuses (out of its range, or an empty required string) throws `OpmParseException` naming the keyword and its value, with the data model's `ArgumentException` as inner exception, with or without the schema check for a value the schema accepts (the library's rules beyond the schema, #708, decided by S. Guillet, 2026-11-16; fourth round of #668; before, the `ArgumentException` crossed the reader); the data-model constructors keep their `ArgumentException`
    - Use `Spacecraft.ToOpm()` for archiving spacecraft state with maneuvers
    - Use `Opm.ToSpacecraft()` to restore spacecraft (requires naifId; `maxOperatingMass` and `clock` optional, a MASS above the maximum throwing, decision 77 of #668)
    - Use `Opm.ToStateVector()` for simple state vector extraction

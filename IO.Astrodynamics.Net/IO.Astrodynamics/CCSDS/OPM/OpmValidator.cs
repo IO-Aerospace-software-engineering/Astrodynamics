@@ -14,7 +14,7 @@ namespace IO.Astrodynamics.CCSDS.OPM;
 /// <summary>
 /// Validates OPM documents against CCSDS standards and physical constraints.
 /// </summary>
-public class OpmValidator
+internal class OpmValidator
 {
     // Error codes
     private const string RequiredField = "OPM001";

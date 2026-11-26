@@ -165,8 +165,7 @@ internal static class TleAndOmmPage
     internal static void Block07()
     {
         #region docs/tutorials/tle-and-omm.md:7
-        var omm = Omm.LoadFromFile("satellite.omm",
-            validateSchema: true, validateContent: true);
+        var omm = Omm.Load("satellite.omm");
 
         Console.WriteLine($"Object name: {omm.ObjectName}");
         Console.WriteLine($"Object ID:   {omm.ObjectId}");
@@ -203,8 +202,7 @@ internal static class TleAndOmmPage
         #region docs/tutorials/tle-and-omm.md:10
         var earth = PlanetsAndMoons.EARTH_BODY;
 
-        var opm = Opm.LoadFromFile("spacecraft.opm",
-            validateSchema: true, validateContent: true);
+        var opm = Opm.Load("spacecraft.opm");
         var stateVector = opm.ToStateVector(earth);
 
         Console.WriteLine($"Position: {stateVector.Position}");

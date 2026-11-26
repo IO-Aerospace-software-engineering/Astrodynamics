@@ -4,6 +4,7 @@ using System;
 using System.IO;
 using System.Linq;
 using System.Xml.Linq;
+using IO.Astrodynamics.CCSDS;
 using IO.Astrodynamics.CCSDS.OPM;
 using Xunit;
 
@@ -62,7 +63,7 @@ namespace IO.Astrodynamics.Tests.CCSDS
         internal static string OneOmmOneOpm(Opm opm)
         {
             var omm = XDocument.Load(IssOmmPath).Root!.Elements().Single(e => e.Name.LocalName == "omm");
-            var opmElement = XDocument.Parse(opm.ToXmlString(wrapInNdm: false)).Root!;
+            var opmElement = XDocument.Parse(opm.ToXml(new CcsdsWriteOptions { WrapInNdmContainer = false })).Root!;
             var xml = new XElement("ndm", new XElement(omm), StripXsi(opmElement)).ToString();
             AssertMessageCount(xml, "ndm", "omm", 1);
             AssertMessageCount(xml, "ndm", "opm", 1);
@@ -75,8 +76,8 @@ namespace IO.Astrodynamics.Tests.CCSDS
         internal static string TwoOpm(Opm first, Opm second)
         {
             var xml = new XElement("ndm",
-                StripXsi(XDocument.Parse(first.ToXmlString(wrapInNdm: false)).Root!),
-                StripXsi(XDocument.Parse(second.ToXmlString(wrapInNdm: false)).Root!)).ToString();
+                StripXsi(XDocument.Parse(first.ToXml(new CcsdsWriteOptions { WrapInNdmContainer = false })).Root!),
+                StripXsi(XDocument.Parse(second.ToXml(new CcsdsWriteOptions { WrapInNdmContainer = false })).Root!)).ToString();
             AssertMessageCount(xml, "ndm", "opm", 2);
             return xml;
         }
@@ -113,7 +114,7 @@ namespace IO.Astrodynamics.Tests.CCSDS
         /// </summary>
         internal static string TwoSegmentOpm(Opm opm)
         {
-            return WithDuplicatedElement(opm.ToXmlString(), "opm", "body/segment");
+            return WithDuplicatedElement(opm.ToXml(), "opm", "body/segment");
         }
 
         /// <summary>

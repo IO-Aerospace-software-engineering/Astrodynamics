@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using IO.Astrodynamics.CCSDS;
 using IO.Astrodynamics.CCSDS.Common;
 using IO.Astrodynamics.CCSDS.OMM;
 using IO.Astrodynamics.Tests.CCSDS.Common;
@@ -70,7 +71,7 @@ namespace IO.Astrodynamics.Tests.CCSDS.OMM
             foreach (var omm in new[] { CreateMinimalOmm(), OmmReaderTests.FullOmm(), _reader.ReadFromFile("CCSDS/H2ADEB.omm") })
             {
                 _writer.WrapInNdmContainer = wrapInNdm;
-                foreach (var xml in new[] { _writer.WriteToString(omm), wrapInNdm ? omm.ToXml() : _writer.WriteToString(omm) })
+                foreach (var xml in new[] { _writer.WriteToString(omm), wrapInNdm ? omm.ToXml(new CcsdsWriteOptions { ValidateContent = false }) : _writer.WriteToString(omm) })
                 {
                     var result = validator.ValidateSchemaFromXml(xml);
                     Assert.True(result.IsValid, string.Join("; ", System.Linq.Enumerable.Select(result.Errors, e => e.Message)));
@@ -79,7 +80,7 @@ namespace IO.Astrodynamics.Tests.CCSDS.OMM
 
                 NdmDocuments.WithTempFile("", file =>
                 {
-                    omm.SaveToFile(file, validateBeforeSave: false);
+                    omm.Save(file, new CcsdsWriteOptions { ValidateContent = false });
                     var saved = validator.ValidateSchema(file);
                     Assert.True(saved.IsValid, string.Join("; ", System.Linq.Enumerable.Select(saved.Errors, e => e.Message)));
                     Assert.Empty(saved.Warnings);

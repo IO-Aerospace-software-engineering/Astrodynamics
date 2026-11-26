@@ -633,6 +633,9 @@ public sealed record CdmSegment
 
 public sealed record CdmExportOptions
 {
+    /// <summary>The options of the default export, as <c>new()</c> (D1 of #668, lot L7).</summary>
+    public static CdmExportOptions Default { get; } = new();
+
     public DateTime? CreationDateUtc { get; init; }
 
     public string Originator { get; init; } = "IO.Astrodynamics";
