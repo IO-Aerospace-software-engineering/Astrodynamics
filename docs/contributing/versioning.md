@@ -4983,7 +4983,10 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   name, and the `Direction` of an `OrbitalDirectionTarget` read on an instance), a catalogue member written without its
   class (`using static`) and a name qualified relative to a merged namespace (`OMM.Omm` inside `IO.Astrodynamics.CCSDS`);
   the method marked ² takes the arguments of the `ToTle` entry below. The script was run over this repository's tests, CLI, conformance
-  runner, benchmarks, smoke tests and documentation.
+  runner, benchmarks, smoke tests and documentation. The naming and options tests of lot L0 now find no violation, and
+  their baselines are removed; two checks of N8 are added, no duplicate simple name in the namespaces of the implicit
+  usings or against the SDK's (`PackageImplicitUsingsTests`) and cspell over the public names with the project
+  dictionary `cspell.json` (see [Public API](public-api.md)).
 
     | Kind | 10.x | 11.0.0 |
     |---|---|---|

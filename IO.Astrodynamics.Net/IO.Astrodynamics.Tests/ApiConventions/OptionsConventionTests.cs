@@ -16,10 +16,9 @@ namespace IO.Astrodynamics.Tests.ApiConventions;
 /// D1's options rule (#668, design PR #671, the reflection test of D1's "Tests") over the public surface, read by
 /// reflection (<see cref="PublicSurface"/>): every public type named *Options is one sealed record per operation, of values
 /// set at init, with a static Default equal to new(), taken last as <c>options = null</c>; no member takes two bools; a
-/// time quantity in double seconds says so; sibling settings agree. Today's exceptions are the allow-list
-/// OptionsConventionBaseline.txt, which may only shrink: a new exception fails, and so does an entry that no longer is
-/// one. The options lots (L4 to L7) and lot L9 emptied it; the tolerances that are no time are exempt by their key
-/// (<see cref="NonTimeTolerances"/>).
+/// time quantity in double seconds says so; sibling settings agree. The surface has no exception since the options lots
+/// (L4 to L7) and lot L9 emptied the allow-list of lot L0 (26 entries), removed with it: any violation fails. The tolerances
+/// that are no time are exempt by their key (<see cref="NonTimeTolerances"/>).
 /// <list type="bullet">
 /// <item>D1.sealed-record: the type is a sealed record (rule 1; the closed abstract IntegratorOptions of rule 5 excepted,
 /// a record whose constructors are not visible outside the library).</item>
@@ -45,13 +44,11 @@ namespace IO.Astrodynamics.Tests.ApiConventions;
 /// </summary>
 public class OptionsConventionTests
 {
-    internal const string BaselineFile = "OptionsConventionBaseline.txt";
-
     [Fact]
-    public void OptionsTypes_FollowD1_OrAreInTheBaseline()
+    public void OptionsTypes_FollowD1()
     {
         Assert.NotEmpty(OptionsTypes(PublicSurface.Types));
-        PublicSurface.AssertMatchesBaseline(BaselineFile, Violations(PublicSurface.Types));
+        PublicSurface.AssertNoViolation("D1", Violations(PublicSurface.Types));
     }
 
     // The options types among the given ones: a type whose name ends with Options
@@ -104,7 +101,7 @@ public class OptionsConventionTests
 
     // The tolerances of the surface that are no time, exempt by their key: an angle, a matrix test and the residuals of the
     // root finders, in the unit of their function (the exemptions of the options convention test, the tolerances that are
-    // not seconds, validated by S. Guillet, 2026-11-22; applied by lot L9 of #668, which empties the baseline)
+    // not seconds, validated by S. Guillet, 2026-11-22; applied by lot L9 of #668, which emptied the baseline)
     private static readonly HashSet<string> NonTimeTolerances = new(StringComparer.Ordinal)
     {
         "IO.Astrodynamics.Constants.AngularTolerance",

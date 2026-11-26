@@ -11,8 +11,8 @@ namespace IO.Astrodynamics.Tests.ApiConventions;
 /// <summary>
 /// The casing and word rules N1 to N3 of D2 (#668, design PR #671) over the public surface of the library, read by
 /// reflection (<see cref="PublicSurface"/>): no CA rule checks acronym casing (CA1709 is not in the SDK, IDE1006 accepts
-/// <c>ToUTC</c>), so this test is the rule. Today's violations are the checked-in baseline NamingRuleBaseline.txt, which
-/// may only shrink: a new violation fails, and so does an entry no longer violated. The renaming lot (L9) empties it.
+/// <c>ToUTC</c>), so this test is the rule. The surface has no violation since the renaming lot L9 of #668, which emptied
+/// the baseline of lot L0 (676 entries) and removed it: any violation fails.
 /// <list type="bullet">
 /// <item>N1.case: a type, member or enum member starts with a capital letter, a parameter with a small one.</item>
 /// <item>N1.underscore: no underscore in a name.</item>
@@ -26,20 +26,18 @@ namespace IO.Astrodynamics.Tests.ApiConventions;
 /// </list>
 /// Each segment of a namespace that holds an exported type (the namespaces of the generated PDS types included: N4 renames
 /// PDS to Pds) is a name of N1 and N3, reported as "namespace Namespace" by the namespace it ends. A method is keyed by its
-/// signature and a parameter by its method's signature and its name (<see cref="PublicSurface.Signature"/>), so that a new
-/// overload of a name in the baseline is a new violation.
+/// signature and a parameter by its method's signature and its name (<see cref="PublicSurface.Signature"/>), so that each
+/// overload of a name is reported on its own.
 /// A parameter of a record's primary constructor or of its <c>Deconstruct</c> that bears the name of a property of the
 /// record of the same type is the property's name, PascalCase (D1 sub-choice 1, <c>PropagationTask(..., Options)</c>).
 /// </summary>
 public class NamingRuleTests
 {
-    internal const string BaselineFile = "NamingRuleBaseline.txt";
-
     /// <summary>
     /// The closed list of N2: each entry is "Type.Member" (the type by its simple name), an enum member or a static
     /// instance of its own type whose whole name is a symbol of SPICE (frame names, aberration codes), IAU/IERS (frames,
     /// time scales) or CCSDS (keyword values: REF_FRAME, TIME_SYSTEM, MEAN_ELEMENT_THEORY). An entry whose spelling the
-    /// standard does not write (Aberration.LTS for "LT+S") is not a symbol: it stays in the baseline until L9 renames it.
+    /// standard does not write (Aberration.LTS for "LT+S") is not a symbol: lot L9 renamed those (Aberration.LtS).
     /// The entries named by the design (D2 N2, resolution C1) are there whether the member exists yet or not.
     /// </summary>
     internal static readonly IReadOnlySet<string> StandardSymbols = new HashSet<string>(StringComparer.Ordinal)
@@ -65,20 +63,61 @@ public class NamingRuleTests
         ["Relationnal", "Sideral", "Derivation", "Rigth", "Oject", "Dictionnary", "Tsiolkovski", "Bissection"];
 
     [Fact]
-    public void PublicSurface_FollowsN1ToN3_OrIsInTheBaseline()
+    public void PublicSurface_FollowsN1ToN3()
     {
         var violations = Violations(PublicSurface.Types, NamespacesOf(PublicSurface.Library.GetExportedTypes())).ToList();
         Assert.NotEmpty(PublicSurface.Types);
-        PublicSurface.AssertMatchesBaseline(BaselineFile, violations);
+        PublicSurface.AssertNoViolation("N1 to N3 of D2", violations);
     }
 
+    /// <summary>The word file of the public names, which the cspell step of the CI spells (N8 of D2).</summary>
+    internal const string PublicNamesFile = "public-names.txt";
+
+    /// <summary>
+    /// N8 of D2 (cspell): writes the simple names of the public surface, one per line in ordinal order, to
+    /// ApiConventions/public-names.txt beside the tests (the namespace segments, the types, the members and the
+    /// parameters, the symbols of N2 aside, written as their standard writes them), which the CI spells with cspell and
+    /// the project dictionary cspell.json at the root of the repository (the words of astrodynamics, SPICE, CCSDS, the
+    /// catalogue names and <c>Spacecrafts</c>, R27). The deny-list of N3 above stays the check of the known misspellings.
+    /// </summary>
     [Fact]
-    public void Baseline_IsSortedAndHasNoDuplicate()
+    public void PublicNames_AreWrittenForCspell()
     {
-        // The file is kept in ordinal order, so that a lot's removals read as one block in the diff
-        var lines = System.IO.File.ReadAllLines(System.IO.Path.Combine(AppContext.BaseDirectory, "ApiConventions", BaselineFile))
-            .Where(l => l.Length > 0 && !l.StartsWith('#')).ToList();
-        Assert.Equal(lines.OrderBy(l => l, StringComparer.Ordinal).Distinct(), lines);
+        var names = PublicNames(PublicSurface.Types, NamespacesOf(PublicSurface.Library.GetExportedTypes()));
+        Assert.Contains("SpiceApi", names);
+        Assert.DoesNotContain("ICRF", names);
+        System.IO.File.WriteAllLines(System.IO.Path.Combine(AppContext.BaseDirectory, "ApiConventions", PublicNamesFile), names);
+    }
+
+    // The simple names of the given surface, the symbols of N2 aside
+    internal static IReadOnlyList<string> PublicNames(IEnumerable<Type> types, IEnumerable<string> namespaces)
+    {
+        var names = new SortedSet<string>(StringComparer.Ordinal);
+        names.UnionWith(namespaces.Select(ns => ns[(ns.LastIndexOf('.') + 1)..]));
+        foreach (var type in types)
+        {
+            names.Add(PublicSurface.SimpleName(type));
+            foreach (var member in PublicSurface.Members(type))
+            {
+                if (member is ConstructorInfo || member is MethodInfo { IsSpecialName: true } || member.Name == "value__" ||
+                    IsStandardSymbol(member))
+                {
+                    continue;
+                }
+
+                names.Add(member.Name);
+            }
+
+            foreach (var parameter in PublicSurface.MethodsAndConstructors(type).SelectMany(m => m.GetParameters()))
+            {
+                if (!string.IsNullOrEmpty(parameter.Name))
+                {
+                    names.Add(parameter.Name);
+                }
+            }
+        }
+
+        return names.ToList();
     }
 
     [Theory]
@@ -260,8 +299,7 @@ public class NamingRuleTests
         return found;
     }
 
-    // The review's probes of lot L0: a namespace with an underscore and an acronym, and a new overload of a name the
-    // baseline already holds
+    // The review's probes of lot L0: a namespace with an underscore and an acronym, and each overload of a name reported
     [Fact]
     public void Violations_ReportANamespaceAndANewOverload()
     {

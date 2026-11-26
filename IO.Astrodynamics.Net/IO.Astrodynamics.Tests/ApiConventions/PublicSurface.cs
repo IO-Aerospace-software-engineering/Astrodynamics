@@ -189,6 +189,17 @@ internal static class PublicSurface
     }
 
     /// <summary>
+    /// Fails on any violation found, each listed: the rule of a convention test whose baseline lot L9 of #668 emptied
+    /// (<see cref="NamingRuleTests"/>, <see cref="OptionsConventionTests"/>), so a new name or member that breaks it fails.
+    /// </summary>
+    internal static void AssertNoViolation(string rules, IEnumerable<string> violations)
+    {
+        var found = new SortedSet<string>(violations, StringComparer.Ordinal);
+        Assert.True(found.Count == 0, $"{found.Count} violation(s) of {rules}; fix the name or the member:\n  " +
+                                      string.Join("\n  ", found));
+    }
+
+    /// <summary>
     /// Compares the violations found with a baseline that may only shrink: a violation that is not in the baseline fails,
     /// and so does an entry of the baseline that is no longer a violation (remove it), each listed as the line to add or
     /// remove.
