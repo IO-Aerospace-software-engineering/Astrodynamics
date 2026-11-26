@@ -3,6 +3,7 @@
 using System;
 using System.IO;
 using System.Linq;
+using IO.Astrodynamics.CCSDS;
 using IO.Astrodynamics.CCSDS.Common;
 using IO.Astrodynamics.CCSDS.OPM;
 using Xunit;
@@ -22,8 +23,8 @@ public class OpmValidatorTests
     /// <summary>The OPMs of the tests: the writer's, wrapped in an NDM or not, and satellite_complete.xml.</summary>
     private static string Source(string source) => source switch
     {
-        "writer, ndm" => OpmReaderTests.FullOpm().ToXmlString(),
-        "writer, opm" => OpmReaderTests.FullOpm().ToXmlString(wrapInNdm: false),
+        "writer, ndm" => OpmReaderTests.FullOpm().ToXml(),
+        "writer, opm" => OpmReaderTests.FullOpm().ToXml(new CcsdsWriteOptions { WrapInNdmContainer = false }),
         _ => SatelliteComplete
     };
 
@@ -128,13 +129,13 @@ public class OpmValidatorTests
         foreach (var opm in new[] { OpmReaderTests.FullOpm(), Opm.CreateMinimal("OPM SAT", "2024-001A", "EARTH", "ICRF", "UTC",
                      new OpmStateVector(new DateTime(2024, 1, 15, 12, 0, 0, DateTimeKind.Utc), 6778.137, 0.0, 0.0, 0.0, 7.5, 0.0)) })
         {
-            var result = _validator.ValidateSchemaFromXml(opm.ToXmlString(wrapInNdm));
+            var result = _validator.ValidateSchemaFromXml(opm.ToXml(new CcsdsWriteOptions { WrapInNdmContainer = wrapInNdm }));
             Assert.True(result.IsValid, string.Join("; ", result.Errors.Select(e => e.Message)));
             Assert.Empty(result.Warnings);
 
             NdmDocuments.WithTempFile("", file =>
             {
-                opm.SaveToFile(file, validateBeforeSave: true, wrapInNdm: wrapInNdm);
+                opm.Save(file, new CcsdsWriteOptions { WrapInNdmContainer = wrapInNdm });
                 var saved = _validator.ValidateSchema(file);
                 Assert.True(saved.IsValid, string.Join("; ", saved.Errors.Select(e => e.Message)));
                 Assert.Empty(saved.Warnings);
@@ -149,7 +150,7 @@ public class OpmValidatorTests
         // <ndm> root in the namespace has no declaration, rejected as before (satellite_complete.xml as it is on disk)
         var minimal = Opm.CreateMinimal("OPM SAT", "2024-001A", "EARTH", "ICRF", "UTC",
             new OpmStateVector(new DateTime(2024, 1, 15, 12, 0, 0, DateTimeKind.Utc), 6778.137, 0.0, 0.0, 0.0, 7.5, 0.0));
-        var valid = _validator.ValidateSchemaFromXml(NdmDocuments.QualifiedMessage(minimal.ToXmlString(), "opm"));
+        var valid = _validator.ValidateSchemaFromXml(NdmDocuments.QualifiedMessage(minimal.ToXml(), "opm"));
         Assert.True(valid.IsValid, string.Join("; ", valid.Errors.Select(e => e.Message)));
         Assert.False(_validator.ValidateSchemaFromXml(NdmDocuments.QualifiedMessage(NdmDocuments.TwoSegmentOpm(minimal), "opm")).IsValid);
         Assert.False(_validator.ValidateSchemaFromXml(SatelliteComplete).IsValid);
@@ -175,7 +176,7 @@ public class OpmValidatorTests
         Assert.Equal("OPM006", error.Code);
         Assert.Contains("<opm>", error.Message);
         Assert.Empty(result.Warnings);
-        var ex = Assert.Throws<OpmValidationException>(() => Opm.LoadFromString(xml));
+        var ex = Assert.Throws<OpmValidationException>(() => Opm.Parse(xml));
         Assert.Equal(error.Message, Assert.Single(ex.ValidationResult.Errors).Message);
         NdmDocuments.WithTempFile(xml, file => Assert.Contains(_validator.ValidateFile(file).Errors, e => e.Message == error.Message));
     }
@@ -206,7 +207,7 @@ public class OpmValidatorTests
             0, 0, 0, 0, V("CY_DOT_Y_DOT", value),
             0, 0, 0, 0, 0, V("CZ_DOT_Z_DOT", value), "ICRF");
 
-        var read = Opm.LoadFromString(OpmReaderTests.KeywordBaseOpm());
+        var read = Opm.Parse(OpmReaderTests.KeywordBaseOpm());
         var opm = new Opm(read.Header, read.Metadata, DataWith(read.Data, read.Data.Mass, Covariance(-1.0e-6)));
         var error = Assert.Single(_validator.Validate(opm).Errors);
         Assert.Equal("OPM002", error.Code);
@@ -221,7 +222,7 @@ public class OpmValidatorTests
     {
         // massType of ndmxml-4.0.0-common-4.0.xsd extends nonNegativeDouble (minInclusive 0.0), the type of the MASS of the
         // OMM too: an Opm built with mass 0 is valid (before: OpmData threw, and the validator reported "Mass must be positive")
-        var read = Opm.LoadFromString(OpmReaderTests.KeywordBaseOpm());
+        var read = Opm.Parse(OpmReaderTests.KeywordBaseOpm());
         var opm = new Opm(read.Header, read.Metadata, DataWith(read.Data, 0.0, read.Data.Covariance));
         Assert.Equal(0.0, opm.Data.Mass);
         Assert.Empty(_validator.Validate(opm).Errors);

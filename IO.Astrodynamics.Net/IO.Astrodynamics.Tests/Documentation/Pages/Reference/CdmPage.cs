@@ -72,13 +72,23 @@ internal static class CdmPage
             MessageFor = "Protected"
         });
 
-        cdm.WriteToFile("encounter.cdm.xml");
+        // Save validates the content and Load the schema and the content, throwing CdmValidationException
+        cdm.Save("encounter.cdm.xml");
 
-        var validation = Cdm.ValidateSchema("encounter.cdm.xml");
-        if (!validation.IsValid)
-            throw new InvalidOperationException("CDM failed schema validation.");
+        var parsed = Cdm.Load("encounter.cdm.xml");
+        #endregion
+    }
 
-        var parsed = Cdm.ReadFromFile("encounter.cdm.xml");
+    // docs/reference/cdm.md, "Ingest"
+    internal static void Block02(Cdm cdm)
+    {
+        #region docs/reference/cdm.md:2
+        // Inputs: cdm (Cdm)
+        StateVector object1 = cdm.ToStateVector(CdmObjectRole.Object1);
+        StateVector object2 = cdm.ToStateVector(CdmObjectRole.Object2);
+        EncounterCase encounter = cdm.ToEncounter(combinedHardBodyRadiusMeters: 10.0);
+        double? pc = CollisionProbability.Foster2D(object1, object2, 10.0); // encounter.ProbabilityOfCollision, bit for bit
+        Console.WriteLine(encounter);
         #endregion
     }
 }

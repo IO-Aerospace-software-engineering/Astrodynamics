@@ -7,6 +7,7 @@ using System.Xml.Linq;
 using IO.Astrodynamics;
 using IO.Astrodynamics.Body;
 using IO.Astrodynamics.Body.Spacecraft;
+using IO.Astrodynamics.CCSDS;
 using IO.Astrodynamics.CCSDS.CDM;
 using IO.Astrodynamics.CCSDS.Common.Enums;
 using IO.Astrodynamics.Frames;
@@ -21,6 +22,9 @@ namespace IO.Astrodynamics.Tests.CCSDS.CDM;
 
 public class CdmTests
 {
+    // The reads of these tests check the reader: no schema or content check, as Cdm.ReadFrom* before 11.0.0 (R22 of #668)
+    private static readonly CcsdsReadOptions NoChecks = new() { ValidateSchema = false, ValidateContent = false };
+
     public CdmTests()
     {
         TestKernels.EnsureSolarSystem();
@@ -59,7 +63,7 @@ public class CdmTests
         // cdm_cpm (CCSDS 508.0-B-1 Cor. 2, annex E, E1, which gives it as an example) and in the standard's examples
         // (3.6.3, 4.4); FOSTER-2D, written before #618, is not registered
         Assert.Equal("FOSTER-1992", cdm.RelativeMetadataData.CollisionProbabilityMethod);
-        Assert.Equal("FOSTER-1992", XDocument.Parse(cdm.WriteToString()).Descendants()
+        Assert.Equal("FOSTER-1992", XDocument.Parse(cdm.ToXml()).Descendants()
             .Single(e => e.Name.LocalName == "COLLISION_PROBABILITY_METHOD").Value);
         Assert.NotNull(cdm.RelativeMetadataData.RelativeStateVector);
         AssertVectorApproximatelyEqual(
@@ -81,8 +85,8 @@ public class CdmTests
 
         Assert.Equal("41001", protectedSegment.Metadata.ObjectDesignator);
         Assert.Equal("NAIF", protectedSegment.Metadata.CatalogName);
-        Assert.Equal(encounter.ProtectedAsset.Spacecraft.Name, protectedSegment.Metadata.ObjectName);
-        Assert.Equal(encounter.ProtectedAsset.Spacecraft.CosparId, protectedSegment.Metadata.InternationalDesignator);
+        Assert.Equal(encounter.ProtectedSpacecraft.Name, protectedSegment.Metadata.ObjectName);
+        Assert.Equal(encounter.ProtectedSpacecraft.CosparId, protectedSegment.Metadata.InternationalDesignator);
         Assert.Equal(ObjectType.Payload, protectedSegment.Metadata.ObjectType);
         Assert.Equal("IO.Astrodynamics", protectedSegment.Metadata.EphemerisName);
         Assert.Equal(CdmCovarianceMethod.Calculated, protectedSegment.Metadata.CovarianceMethod);
@@ -93,7 +97,7 @@ public class CdmTests
         // 508.0-B-1 Cor. 2, Table 3-3; YES from Cr > 0, a capability, before)
         Assert.Null(protectedSegment.Metadata.SolarRadPressure);
         Assert.Null(secondarySegment.Metadata!.SolarRadPressure);
-        Assert.DoesNotContain(XDocument.Parse(cdm.WriteToString()).Descendants(), e => e.Name.LocalName == "SOLAR_RAD_PRESSURE");
+        Assert.DoesNotContain(XDocument.Parse(cdm.ToXml()).Descendants(), e => e.Name.LocalName == "SOLAR_RAD_PRESSURE");
         // No OD and no propagated covariance: whether in-track thrust was modeled for the OD is not stated (#684; NO, from
         // the absent engines, before)
         Assert.Null(protectedSegment.Metadata.IntrackThrust);
@@ -119,24 +123,24 @@ public class CdmTests
         Assert.NotNull(protectedSegment.Data.AdditionalParameters);
         Assert.NotNull(secondarySegment.Data.AdditionalParameters);
         Assert.NotNull(protectedSegment.Data.AdditionalParameters!.MassKilograms);
-        Assert.Equal(encounter.ProtectedAsset.Spacecraft.GetTotalMass(), protectedSegment.Data.AdditionalParameters.MassKilograms!.Value, 12);
+        Assert.Equal(encounter.ProtectedSpacecraft.GetTotalMass(), protectedSegment.Data.AdditionalParameters.MassKilograms!.Value, 12);
         Assert.NotNull(protectedSegment.Data.AdditionalParameters.AreaPcSquareMeters);
-        Assert.Equal(System.Math.PI * System.Math.Pow(encounter.ProtectedAsset.Spacecraft.HardBodyRadius, 2.0),
+        Assert.Equal(System.Math.PI * System.Math.Pow(encounter.ProtectedSpacecraft.HardBodyRadius, 2.0),
             protectedSegment.Data.AdditionalParameters.AreaPcSquareMeters!.Value, 12);
         Assert.NotNull(protectedSegment.Data.AdditionalParameters.AreaDragSquareMeters);
         Assert.NotNull(protectedSegment.Data.AdditionalParameters.AreaSrpSquareMeters);
-        Assert.Equal(encounter.ProtectedAsset.Spacecraft.SectionalArea, protectedSegment.Data.AdditionalParameters.AreaDragSquareMeters!.Value, 12);
-        Assert.Equal(encounter.ProtectedAsset.Spacecraft.SectionalArea, protectedSegment.Data.AdditionalParameters.AreaSrpSquareMeters!.Value, 12);
+        Assert.Equal(encounter.ProtectedSpacecraft.SectionalArea, protectedSegment.Data.AdditionalParameters.AreaDragSquareMeters!.Value, 12);
+        Assert.Equal(encounter.ProtectedSpacecraft.SectionalArea, protectedSegment.Data.AdditionalParameters.AreaSrpSquareMeters!.Value, 12);
         Assert.NotNull(protectedSegment.Data.AdditionalParameters.CdAreaOverMass);
         Assert.NotNull(protectedSegment.Data.AdditionalParameters.CrAreaOverMass);
-        Assert.Equal(encounter.ProtectedAsset.Spacecraft.DragCoefficient * encounter.ProtectedAsset.Spacecraft.SectionalArea /
-                     encounter.ProtectedAsset.Spacecraft.GetTotalMass(),
+        Assert.Equal(encounter.ProtectedSpacecraft.DragCoefficient * encounter.ProtectedSpacecraft.SectionalArea /
+                     encounter.ProtectedSpacecraft.GetTotalMass(),
             protectedSegment.Data.AdditionalParameters.CdAreaOverMass!.Value, 12);
-        Assert.Equal(encounter.ProtectedAsset.Spacecraft.SolarRadiationCoeff * encounter.ProtectedAsset.Spacecraft.SectionalArea /
-                     encounter.ProtectedAsset.Spacecraft.GetTotalMass(),
+        Assert.Equal(encounter.ProtectedSpacecraft.SolarRadiationCoeff * encounter.ProtectedSpacecraft.SectionalArea /
+                     encounter.ProtectedSpacecraft.GetTotalMass(),
             protectedSegment.Data.AdditionalParameters.CrAreaOverMass!.Value, 12);
 
-        var secondaryRadius = encounter.CollisionRisk.CombinedHardBodyRadiusMeters - encounter.ProtectedAsset.Spacecraft.HardBodyRadius;
+        var secondaryRadius = encounter.CollisionRisk.CombinedHardBodyRadiusMeters - encounter.ProtectedSpacecraft.HardBodyRadius;
         Assert.NotNull(secondarySegment.Data.AdditionalParameters!.AreaPcSquareMeters);
         Assert.Equal(System.Math.PI * secondaryRadius * secondaryRadius,
             secondarySegment.Data.AdditionalParameters.AreaPcSquareMeters!.Value, 12);
@@ -176,7 +180,7 @@ public class CdmTests
             CollisionProbabilityMethod = "ALFANO-2005"
         });
 
-        Assert.Equal("ALFANO-2005", Cdm.ReadFromString(cdm.WriteToString()).RelativeMetadataData.CollisionProbabilityMethod);
+        Assert.Equal("ALFANO-2005", Cdm.Parse(cdm.ToXml(), NoChecks).RelativeMetadataData.CollisionProbabilityMethod);
     }
 
     [Fact]
@@ -189,11 +193,11 @@ public class CdmTests
             MessageId = "CDM-UNIT-002"
         });
 
-        var wrappedXml = cdm.WriteToString();
-        var standaloneXml = cdm.WriteToString(wrapInNdmContainer: false);
+        var wrappedXml = cdm.ToXml();
+        var standaloneXml = cdm.ToXml(new CcsdsWriteOptions { WrapInNdmContainer = false });
 
-        var wrappedValidation = Cdm.ValidateSchemaFromXml(wrappedXml);
-        var standaloneValidation = Cdm.ValidateSchemaFromXml(standaloneXml);
+        var wrappedValidation = new CdmValidator().ValidateSchemaFromXml(wrappedXml);
+        var standaloneValidation = new CdmValidator().ValidateSchemaFromXml(standaloneXml);
 
         Assert.True(wrappedValidation.IsValid, FormatValidationIssues(wrappedValidation.Issues));
         Assert.True(standaloneValidation.IsValid, FormatValidationIssues(standaloneValidation.Issues));
@@ -223,7 +227,7 @@ public class CdmTests
         string xml;
         if (output.StartsWith("string", StringComparison.Ordinal))
         {
-            xml = cdm.WriteToString(wrapped);
+            xml = cdm.ToXml(new CcsdsWriteOptions { WrapInNdmContainer = wrapped });
         }
         else if (output.StartsWith("stream", StringComparison.Ordinal))
         {
@@ -237,7 +241,7 @@ public class CdmTests
             var path = Path.Combine(Path.GetTempPath(), $"cdm_615_{Guid.NewGuid():N}.xml");
             try
             {
-                cdm.WriteToFile(path, wrapped);
+                cdm.Save(path, new CcsdsWriteOptions { WrapInNdmContainer = wrapped });
                 xml = File.ReadAllText(path);
             }
             finally
@@ -261,8 +265,8 @@ public class CdmTests
         }
 
         Assert.Empty(SanaQualifiedMasterIssues(xml));
-        AssertCdmEquivalent(cdm, Cdm.ReadFromString(xml));
-        var validation = Cdm.ValidateSchemaFromXml(xml);
+        AssertCdmEquivalent(cdm, Cdm.Parse(xml, NoChecks));
+        var validation = new CdmValidator().ValidateSchemaFromXml(xml);
         Assert.True(validation.IsValid, FormatValidationIssues(validation.Issues));
         Assert.Empty(validation.Issues);
     }
@@ -299,7 +303,7 @@ public class CdmTests
                 }
             }).ToList());
 
-        var document = XDocument.Parse(cdm.WriteToString());
+        var document = XDocument.Parse(cdm.ToXml());
 
         var dates = new[]
         {
@@ -327,7 +331,7 @@ public class CdmTests
             MessageId = "CDM-UNIT-615-OLD"
         });
         XNamespace ndm = "urn:ccsds:schema:ndmxml";
-        var document = XDocument.Parse(cdm.WriteToString(wrapped));
+        var document = XDocument.Parse(cdm.ToXml(new CcsdsWriteOptions { WrapInNdmContainer = wrapped }));
         var root = document.Root!;
         foreach (var element in root.DescendantsAndSelf())
         {
@@ -341,8 +345,8 @@ public class CdmTests
         Assert.Equal(ndm, XDocument.Parse(old).Root!.Name.Namespace);
         Assert.NotEmpty(SanaQualifiedMasterIssues(old));
 
-        AssertCdmEquivalent(cdm, Cdm.ReadFromString(old));
-        var validation = Cdm.ValidateSchemaFromXml(old);
+        AssertCdmEquivalent(cdm, Cdm.Parse(old, NoChecks));
+        var validation = new CdmValidator().ValidateSchemaFromXml(old);
         Assert.True(validation.IsValid, FormatValidationIssues(validation.Issues));
     }
 
@@ -423,13 +427,13 @@ public class CdmTests
             Originator = "IO.Astrodynamics.Tests",
             MessageId = "CDM-UNIT-614"
         });
-        var xml = NdmDocuments.InForm(cdm.WriteToString(), "cdm", form);
+        var xml = NdmDocuments.InForm(cdm.ToXml(), "cdm", form);
         if (mutation != null)
         {
             xml = NdmDocuments.Mutated(xml, "cdm", mutation);
         }
 
-        var result = Cdm.ValidateSchemaFromXml(xml);
+        var result = new CdmValidator().ValidateSchemaFromXml(xml);
 
         if (mutation == null)
         {
@@ -466,17 +470,17 @@ public class CdmTests
                 XElement.Parse(NdmDocuments.QualifiedMessage(issOmm, "omm"))).ToString(),
             _ => NdmDocuments.InForm(issOmm, "omm", document)
         };
-        var parse = Assert.Throws<CdmParseException>(() => Cdm.ReadFromString(xml));
+        var parse = Assert.Throws<CdmParseException>(() => Cdm.Parse(xml, NoChecks));
         Assert.Equal("Could not find CDM element in document.", parse.Message);
 
-        var result = Cdm.ValidateSchemaFromXml(xml);
+        var result = new CdmValidator().ValidateSchemaFromXml(xml);
 
         Assert.False(result.IsValid);
         var error = Assert.Single(result.Issues);
         Assert.Equal(CdmValidationSeverity.Error, error.Severity);
         Assert.Equal("CDM001", error.Code);
         Assert.Contains("<cdm>", error.Message);
-        NdmDocuments.WithTempFile(xml, file => Assert.Equal(error.Message, Assert.Single(Cdm.ValidateSchema(file).Issues).Message));
+        NdmDocuments.WithTempFile(xml, file => Assert.Equal(error.Message, Assert.Single(new CdmValidator().ValidateSchema(file).Issues).Message));
     }
 
     [Fact]
@@ -489,11 +493,11 @@ public class CdmTests
             MessageId = "CDM-UNIT-003"
         });
 
-        var qualifiedXml = original.WriteToString();
+        var qualifiedXml = original.ToXml();
         var unqualifiedXml = RemoveNamespaces(qualifiedXml);
 
-        var parsedQualified = Cdm.ReadFromString(qualifiedXml);
-        var parsedUnqualified = Cdm.ReadFromString(unqualifiedXml);
+        var parsedQualified = Cdm.Parse(qualifiedXml, NoChecks);
+        var parsedUnqualified = Cdm.Parse(unqualifiedXml, NoChecks);
 
         AssertCdmEquivalent(original, parsedQualified);
         AssertCdmEquivalent(original, parsedUnqualified);
@@ -508,20 +512,20 @@ public class CdmTests
             Originator = "IO.Astrodynamics.Tests",
             MessageId = "FIRST"
         });
-        var xml = NdmDocuments.TwoCdm(RemoveNamespaces(cdm.WriteToString(wrapInNdmContainer: false)));
+        var xml = NdmDocuments.TwoCdm(RemoveNamespaces(cdm.ToXml(new CcsdsWriteOptions { WrapInNdmContainer = false })));
 
-        var ex = Assert.Throws<CdmParseException>(() => Cdm.ReadFromString(xml));
+        var ex = Assert.Throws<CdmParseException>(() => Cdm.Parse(xml, NoChecks));
         Assert.Contains("2 CDM messages", ex.Message);
         using var stream = new MemoryStream(System.Text.Encoding.UTF8.GetBytes(xml));
-        var exStream = Assert.Throws<CdmParseException>(() => Cdm.ReadFromStream(stream));
+        var exStream = Assert.Throws<CdmParseException>(() => Cdm.Parse(new StreamReader(stream), NoChecks));
         Assert.Contains("2 CDM messages", exStream.Message);
-        var exFile = Assert.Throws<CdmParseException>(() => NdmDocuments.WithTempFile(xml, file => Cdm.ReadFromFile(file)));
+        var exFile = Assert.Throws<CdmParseException>(() => NdmDocuments.WithTempFile(xml, file => Cdm.Load(file, NoChecks)));
         Assert.Contains("2 CDM messages", exFile.Message);
 
         // Two nested CDMs under a root that is not an NDM
         var cdmElement = XDocument.Parse(xml).Root!.Elements().First();
         var nested = new XElement("wrapper", new XElement("a", new XElement(cdmElement)), new XElement("b", new XElement(cdmElement))).ToString();
-        var exNested = Assert.Throws<CdmParseException>(() => Cdm.ReadFromString(nested));
+        var exNested = Assert.Throws<CdmParseException>(() => Cdm.Parse(nested, NoChecks));
         Assert.Contains("2 CDM messages", exNested.Message);
     }
 
@@ -546,7 +550,7 @@ public class CdmTests
         };
         var cdm = new Cdm(exported.Header, exported.RelativeMetadataData,
             exported.Segments.Select(segment => segment with { Data = segment.Data! with { OdParameters = odParameters } }).ToList());
-        var xml = cdm.WriteToString(wrapInNdmContainer: false);
+        var xml = cdm.ToXml(new CcsdsWriteOptions { WrapInNdmContainer = false });
         return qualified ? xml : RemoveNamespaces(xml);
     }
 
@@ -554,7 +558,7 @@ public class CdmTests
     // and SOLAR_RAD_PRESSURE, EARTH_TIDES and INTRACK_THRUST in both segments
     private static string EnumeratedKeywordCdmXml()
     {
-        var cdm = Cdm.ReadFromString(ManualCdmXml(qualified: true));
+        var cdm = Cdm.Parse(ManualCdmXml(qualified: true), NoChecks);
         var withKeywords = new Cdm(cdm.Header,
             cdm.RelativeMetadataData with
             {
@@ -568,7 +572,7 @@ public class CdmTests
             {
                 Metadata = segment.Metadata! with { SolarRadPressure = true, EarthTides = false, IntrackThrust = false }
             }).ToList());
-        return withKeywords.WriteToString(wrapInNdmContainer: false);
+        return withKeywords.ToXml(new CcsdsWriteOptions { WrapInNdmContainer = false });
     }
 
     // The enumerated keywords of a CDM with a value that is none of theirs: CCSDS 508.0-B-1 table 3-3 and the enumerations
@@ -588,10 +592,10 @@ public class CdmTests
     public void ReadFromString_KeywordNotOneOfItsValues_ThrowsCdmParseException(string keyword, string value)
     {
         var baseXml = EnumeratedKeywordCdmXml();
-        Assert.True(Cdm.ValidateSchemaFromXml(baseXml).IsValid);
+        Assert.True(new CdmValidator().ValidateSchemaFromXml(baseXml).IsValid);
         var xml = NdmDocuments.WithElementValue(baseXml, keyword, value);
         // The schema, the oracle that the value is not one of the keyword's, rejects the document
-        Assert.False(Cdm.ValidateSchemaFromXml(xml).IsValid);
+        Assert.False(new CdmValidator().ValidateSchemaFromXml(xml).IsValid);
 
         // Before: the FormatException of CdmEnumExtensions, not the reader's documented exception
         void AssertNamesKeyword(CdmParseException ex)
@@ -601,11 +605,11 @@ public class CdmTests
             Assert.IsType<FormatException>(ex.InnerException);
         }
 
-        AssertNamesKeyword(Assert.Throws<CdmParseException>(() => Cdm.ReadFromString(xml)));
-        AssertNamesKeyword(Assert.Throws<CdmParseException>(() => Cdm.ReadFromString(RemoveNamespaces(xml))));
+        AssertNamesKeyword(Assert.Throws<CdmParseException>(() => Cdm.Parse(xml, NoChecks)));
+        AssertNamesKeyword(Assert.Throws<CdmParseException>(() => Cdm.Parse(RemoveNamespaces(xml), NoChecks)));
         using var stream = new MemoryStream(System.Text.Encoding.UTF8.GetBytes(xml));
-        AssertNamesKeyword(Assert.Throws<CdmParseException>(() => Cdm.ReadFromStream(stream)));
-        NdmDocuments.WithTempFile(xml, file => AssertNamesKeyword(Assert.Throws<CdmParseException>(() => Cdm.ReadFromFile(file))));
+        AssertNamesKeyword(Assert.Throws<CdmParseException>(() => Cdm.Parse(new StreamReader(stream), NoChecks)));
+        NdmDocuments.WithTempFile(xml, file => AssertNamesKeyword(Assert.Throws<CdmParseException>(() => Cdm.Load(file, NoChecks))));
     }
 
     // A comma is not in the lexical space of xsd:double (XML Schema Part 2, 3.2.5.1: decimal digits, a period, an exponent,
@@ -627,7 +631,7 @@ public class CdmTests
     public void ReadFromString_CommaInValue_ThrowsCdmParseException(string keyword, string value)
     {
         var xml = NdmDocuments.WithElementValue(ManualCdmXml(), keyword, value);
-        var ex = Assert.Throws<CdmParseException>(() => Cdm.ReadFromString(xml));
+        var ex = Assert.Throws<CdmParseException>(() => Cdm.Parse(xml, NoChecks));
         Assert.Equal($"Invalid numeric value for {keyword}: '{value}'.", ex.Message);
     }
 
@@ -641,7 +645,7 @@ public class CdmTests
     {
         // The forms of the xsd:double lexical space a writer uses (a sign, no integer digit, an exponent of either case,
         // whitespace the schema collapses) read as before, bit for bit the double nearest the decimal value
-        var cdm = Cdm.ReadFromString(NdmDocuments.WithElementValue(ManualCdmXml(), keyword, value));
+        var cdm = Cdm.Parse(NdmDocuments.WithElementValue(ManualCdmXml(), keyword, value), NoChecks);
         var read = keyword == "MISS_DISTANCE" ? cdm.RelativeMetadataData.MissDistanceMeters : cdm.RelativeMetadataData.CollisionProbability!.Value;
         Assert.Equal(BitConverter.DoubleToInt64Bits(expected), BitConverter.DoubleToInt64Bits(read));
     }
@@ -674,11 +678,11 @@ public class CdmTests
             Assert.Contains("not a finite number", ex.Message);
         }
 
-        AssertNamesKeyword(Assert.Throws<CdmParseException>(() => Cdm.ReadFromString(xml)));
+        AssertNamesKeyword(Assert.Throws<CdmParseException>(() => Cdm.Parse(xml, NoChecks)));
         AssertNamesKeyword(Assert.Throws<CdmParseException>(() => new CdmReader().ReadFromString(xml)));
         using var stream = new MemoryStream(System.Text.Encoding.UTF8.GetBytes(xml));
-        AssertNamesKeyword(Assert.Throws<CdmParseException>(() => Cdm.ReadFromStream(stream)));
-        NdmDocuments.WithTempFile(xml, file => AssertNamesKeyword(Assert.Throws<CdmParseException>(() => Cdm.ReadFromFile(file))));
+        AssertNamesKeyword(Assert.Throws<CdmParseException>(() => Cdm.Parse(new StreamReader(stream), NoChecks)));
+        NdmDocuments.WithTempFile(xml, file => AssertNamesKeyword(Assert.Throws<CdmParseException>(() => Cdm.Load(file, NoChecks))));
     }
 
     // A finite text in km or km/s whose value in m or m/s, the text times 1000, is beyond the range of a double
@@ -708,11 +712,11 @@ public class CdmTests
             Assert.Contains("not a finite number", ex.Message);
         }
 
-        AssertNamesKeyword(Assert.Throws<CdmParseException>(() => Cdm.ReadFromString(xml)));
+        AssertNamesKeyword(Assert.Throws<CdmParseException>(() => Cdm.Parse(xml, NoChecks)));
         AssertNamesKeyword(Assert.Throws<CdmParseException>(() => new CdmReader().ReadFromString(xml)));
         using var stream = new MemoryStream(System.Text.Encoding.UTF8.GetBytes(xml));
-        AssertNamesKeyword(Assert.Throws<CdmParseException>(() => Cdm.ReadFromStream(stream)));
-        NdmDocuments.WithTempFile(xml, file => AssertNamesKeyword(Assert.Throws<CdmParseException>(() => Cdm.ReadFromFile(file))));
+        AssertNamesKeyword(Assert.Throws<CdmParseException>(() => Cdm.Parse(new StreamReader(stream), NoChecks)));
+        NdmDocuments.WithTempFile(xml, file => AssertNamesKeyword(Assert.Throws<CdmParseException>(() => Cdm.Load(file, NoChecks))));
     }
 
     [Fact]
@@ -722,12 +726,12 @@ public class CdmTests
         // = 1e308 m, below double.MaxValue), as a value in m up to double.MaxValue
         var document = XDocument.Parse(NdmDocuments.WithElementValue(ManualCdmXml(), "X", "1e305"));
         document.Descendants().First(e => e.Name.LocalName == "X").SetAttributeValue("units", "km");
-        var cdm = Cdm.ReadFromString(document.ToString());
+        var cdm = Cdm.Parse(document.ToString(), NoChecks);
         Assert.Equal(BitConverter.DoubleToInt64Bits(1e305 * 1000.0), BitConverter.DoubleToInt64Bits(cdm.Segments[0].Data!.StateVector!.PositionMeters.X));
 
         var inMeters = XDocument.Parse(NdmDocuments.WithElementValue(ManualCdmXml(), "MISS_DISTANCE", "1.7976931348623157E+308"));
         Assert.Equal("m", inMeters.Descendants().First(e => e.Name.LocalName == "MISS_DISTANCE").Attribute("units")!.Value);
-        Assert.Equal(double.MaxValue, Cdm.ReadFromString(inMeters.ToString()).RelativeMetadataData.MissDistanceMeters);
+        Assert.Equal(double.MaxValue, Cdm.Parse(inMeters.ToString(), NoChecks).RelativeMetadataData.MissDistanceMeters);
     }
 
     [Fact]
@@ -739,7 +743,7 @@ public class CdmTests
         Assert.Equal("m", units);
         foreach (var text in new[] { "0", "-0", "1.0e-300" })
         {
-            var cdm = Cdm.ReadFromString(NdmDocuments.WithElementValue(ManualCdmXml(), "MISS_DISTANCE", text));
+            var cdm = Cdm.Parse(NdmDocuments.WithElementValue(ManualCdmXml(), "MISS_DISTANCE", text), NoChecks);
             double expected = double.Parse(text, System.Globalization.CultureInfo.InvariantCulture);
             Assert.Equal(BitConverter.DoubleToInt64Bits(expected), BitConverter.DoubleToInt64Bits(cdm.RelativeMetadataData.MissDistanceMeters));
         }
@@ -750,7 +754,7 @@ public class CdmTests
     {
         // A CDM built from its records with a negative miss distance: not non-negative, so invalid. A NaN miss distance,
         // reported invalid since #708, no longer builds (#717)
-        var read = Cdm.ReadFromString(ManualCdmXml());
+        var read = Cdm.Parse(ManualCdmXml(), NoChecks);
         Assert.True(read.Validate().IsValid);
         var cdm = new Cdm(read.Header, read.RelativeMetadataData with { MissDistanceMeters = -1.0 }, read.Segments);
         var result = cdm.Validate();
@@ -935,7 +939,7 @@ public class CdmTests
         Assert.Contains("6x6", ex.Message);
 
         // A with expression on a covariance read from a document, the same refusal
-        var read = Cdm.ReadFromString(ManualCdmXml()).Segments[0].Data!.CovarianceMatrix!;
+        var read = Cdm.Parse(ManualCdmXml(), NoChecks).Segments[0].Data!.CovarianceMatrix!;
         ex = Assert.Throws<ArgumentException>(() => read with { StateCovarianceRtn = matrix });
         Assert.Equal(nameof(CdmCovarianceMatrix.StateCovarianceRtn), ex.ParamName);
     }
@@ -966,12 +970,12 @@ public class CdmTests
     {
         // The reproduction of #717: a with expression on a CDM read back, which built and wrote <COLLISION_PROBABILITY>NaN
         // that the reader refuses; every CDM the records can hold is written and read back
-        var read = Cdm.ReadFromString(ManualCdmXml());
+        var read = Cdm.Parse(ManualCdmXml(), NoChecks);
         var ex = Assert.Throws<ArgumentOutOfRangeException>(() => read.RelativeMetadataData with { CollisionProbability = double.NaN });
         Assert.Equal(nameof(CdmRelativeMetadataData.CollisionProbability), ex.ParamName);
 
         var extreme = new Cdm(read.Header, read.RelativeMetadataData with { CollisionProbability = double.Epsilon }, read.Segments);
-        var back = Cdm.ReadFromString(extreme.WriteToString());
+        var back = Cdm.Parse(extreme.ToXml(), NoChecks);
         Assert.Equal(BitConverter.DoubleToInt64Bits(double.Epsilon), BitConverter.DoubleToInt64Bits(back.RelativeMetadataData.CollisionProbability!.Value));
     }
 
@@ -1010,7 +1014,7 @@ public class CdmTests
     {
         // A CDM read from a document: the matrix its getter returns is the caller's, so a term set on it reaches neither the
         // record, nor Validate, nor the document written
-        var read = Cdm.ReadFromString(ManualCdmXml());
+        var read = Cdm.Parse(ManualCdmXml(), NoChecks);
         var covariance = read.Segments[0].Data!.CovarianceMatrix!;
         var expected = covariance.StateCovarianceRtn.Get(row, column);
 
@@ -1018,7 +1022,7 @@ public class CdmTests
 
         Assert.Equal(expected, covariance.StateCovarianceRtn.Get(row, column));
         Assert.True(read.Validate().IsValid);
-        var back = Cdm.ReadFromString(read.WriteToString());
+        var back = Cdm.Parse(read.ToXml(), NoChecks);
         Assert.Equal(expected, back.Segments[0].Data!.CovarianceMatrix!.StateCovarianceRtn.Get(row, column));
     }
 
@@ -1051,17 +1055,17 @@ public class CdmTests
     public void ReadFromString_CdmWithOneOrThreeSegments_ThrowsParseException(int count)
     {
         // The embedded schema rejects the qualified document: a CDM holds exactly two segments
-        Assert.True(Cdm.ValidateSchemaFromXml(ManualCdmXml(qualified: true)).IsValid);
-        Assert.False(Cdm.ValidateSchemaFromXml(WithSegmentCount(ManualCdmXml(qualified: true), count)).IsValid);
+        Assert.True(new CdmValidator().ValidateSchemaFromXml(ManualCdmXml(qualified: true)).IsValid);
+        Assert.False(new CdmValidator().ValidateSchemaFromXml(WithSegmentCount(ManualCdmXml(qualified: true), count)).IsValid);
 
         // Before: ArgumentException from the Cdm constructor, not the reader's documented exception
         foreach (var xml in new[] { WithSegmentCount(ManualCdmXml(), count), WithSegmentCount(ManualCdmXml(qualified: true), count) })
         {
-            var ex = Assert.Throws<CdmParseException>(() => Cdm.ReadFromString(xml));
+            var ex = Assert.Throws<CdmParseException>(() => Cdm.Parse(xml, NoChecks));
             Assert.Contains($"{count} segment elements", ex.Message);
             using var stream = new MemoryStream(System.Text.Encoding.UTF8.GetBytes(xml));
-            Assert.Throws<CdmParseException>(() => Cdm.ReadFromStream(stream));
-            Assert.Throws<CdmParseException>(() => NdmDocuments.WithTempFile(xml, file => Cdm.ReadFromFile(file)));
+            Assert.Throws<CdmParseException>(() => Cdm.Parse(new StreamReader(stream), NoChecks));
+            Assert.Throws<CdmParseException>(() => NdmDocuments.WithTempFile(xml, file => Cdm.Load(file, NoChecks)));
         }
     }
 
@@ -1081,7 +1085,7 @@ public class CdmTests
         // The first segment's element when the path goes through a segment; before, the first was read (a second
         // relativeMetadataData's miss distance dropped)
         var xml = ManualCdmXml();
-        Assert.All(Cdm.ReadFromString(xml).Segments, segment => Assert.NotNull(segment.Data!.OdParameters));
+        Assert.All(Cdm.Parse(xml, NoChecks).Segments, segment => Assert.NotNull(segment.Data!.OdParameters));
         var document = XDocument.Parse(xml);
         if (path.StartsWith("body/segment/", StringComparison.Ordinal))
         {
@@ -1098,7 +1102,7 @@ public class CdmTests
             xml = NdmDocuments.WithDuplicatedElement(xml, "cdm", path);
         }
 
-        var ex = Assert.Throws<CdmParseException>(() => Cdm.ReadFromString(xml));
+        var ex = Assert.Throws<CdmParseException>(() => Cdm.Parse(xml, NoChecks));
         Assert.Contains($"2 {path.Split('/')[^1]} elements", ex.Message);
     }
 
@@ -1116,12 +1120,12 @@ public class CdmTests
 
         try
         {
-            original.WriteToFile(filePath);
+            original.Save(filePath);
 
-            var schemaValidation = Cdm.ValidateSchema(filePath);
+            var schemaValidation = new CdmValidator().ValidateSchema(filePath);
             Assert.True(schemaValidation.IsValid, FormatValidationIssues(schemaValidation.Issues));
 
-            var parsed = Cdm.ReadFromFile(filePath);
+            var parsed = Cdm.Load(filePath, NoChecks);
             AssertCdmEquivalent(original, parsed);
         }
         finally
@@ -1163,8 +1167,8 @@ public class CdmTests
         Assert.Equal("Protected Ops", protectedMetadata.OperatorOrganization);
         Assert.Equal("protected.ops@example.test", protectedMetadata.OperatorEmail);
         Assert.Equal(CdmManeuverable.No, protectedMetadata.Maneuverable);
-        Assert.Equal(encounter.ProtectedAsset.Spacecraft.Name, protectedMetadata.ObjectName);
-        Assert.Equal(encounter.ProtectedAsset.Spacecraft.CosparId, protectedMetadata.InternationalDesignator);
+        Assert.Equal(encounter.ProtectedSpacecraft.Name, protectedMetadata.ObjectName);
+        Assert.Equal(encounter.ProtectedSpacecraft.CosparId, protectedMetadata.InternationalDesignator);
         Assert.Equal("IO.Astrodynamics", protectedMetadata.EphemerisName);
 
         Assert.Equal("EXTERNAL-CAT", secondaryMetadata.CatalogName);
@@ -1197,7 +1201,7 @@ public class CdmTests
             hardBodyRadius: 3.0);
 
         var encounter = ConjunctionAssessment.Analyze(
-            new ProtectedSpacecraftProfile(protectedSpacecraft),
+            protectedSpacecraft,
             secondarySpacecraft,
             new Window(TimeSystem.Time.J2000TDB, TimeSystem.Time.J2000TDB.AddMinutes(10.0)));
 
@@ -1211,12 +1215,12 @@ public class CdmTests
             MessageId = "CDM-UNIT-005"
         });
 
-        var schemaValidation = Cdm.ValidateSchemaFromXml(cdm.WriteToString());
+        var schemaValidation = new CdmValidator().ValidateSchemaFromXml(cdm.ToXml());
 
         Assert.True(schemaValidation.IsValid, FormatValidationIssues(schemaValidation.Issues));
         Assert.Equal(encounter.EncounterState.Epoch.ToUTC().DateTime, cdm.RelativeMetadataData.TcaUtc);
         Assert.Equal(encounter.EncounterState.MissDistanceMeters, cdm.RelativeMetadataData.MissDistanceMeters, 9);
-        Assert.Equal(encounter.ProtectedAsset.Spacecraft.Name, cdm.Segments[0].Metadata!.ObjectName);
+        Assert.Equal(encounter.ProtectedSpacecraft.Name, cdm.Segments[0].Metadata!.ObjectName);
         Assert.Equal(encounter.SecondaryObject.Name, cdm.Segments[1].Metadata!.ObjectName);
     }
 
@@ -1237,7 +1241,7 @@ public class CdmTests
             secondarySpacecraft.AddEngine(new Engine("engine" + -naifId, 300.0, 10.0, tank, "model", "sn1"));
         }
 
-        return ConjunctionAssessment.Analyze(new ProtectedSpacecraftProfile(protectedSpacecraft), secondarySpacecraft,
+        return ConjunctionAssessment.Analyze(protectedSpacecraft, secondarySpacecraft,
             new Window(TimeSystem.Time.J2000TDB, TimeSystem.Time.J2000TDB.AddMinutes(10.0)));
     }
 
@@ -1259,7 +1263,7 @@ public class CdmTests
         // (the exporter's convention; #683: π·5², the 5 m of the option in its place)
         Assert.Equal(8.0 + 3.0, encounter.CollisionRisk.CombinedHardBodyRadiusMeters);
         Assert.Equal(System.Math.PI * 3.0 * 3.0, cdm.Segments[1].Data!.AdditionalParameters!.AreaPcSquareMeters!.Value, 12);
-        var schemaValidation = Cdm.ValidateSchemaFromXml(cdm.WriteToString());
+        var schemaValidation = new CdmValidator().ValidateSchemaFromXml(cdm.ToXml());
         Assert.True(schemaValidation.IsValid, FormatValidationIssues(schemaValidation.Issues));
     }
 
@@ -1284,15 +1288,15 @@ public class CdmTests
 
         // Act
         var cdm = encounter.ToCdm(options);
-        var xml = cdm.WriteToString();
+        var xml = cdm.ToXml();
 
         // Assert: YES with an engine, N/A ("not available" or "not applicable", CCSDS 508.0-B-1 Cor. 2, 1.4.3.1) without
         // one, the value given winning (#683: YES for any spacecraft); the message valid against the bundled NDM/XML 4.0.0
         // schema, which reads the value back
         Assert.Equal(expected, cdm.Segments[1].Metadata!.Maneuverable);
-        var schemaValidation = Cdm.ValidateSchemaFromXml(xml);
+        var schemaValidation = new CdmValidator().ValidateSchemaFromXml(xml);
         Assert.True(schemaValidation.IsValid, FormatValidationIssues(schemaValidation.Issues));
-        Assert.Equal(expected, Cdm.ReadFromString(xml).Segments[1].Metadata!.Maneuverable);
+        Assert.Equal(expected, Cdm.Parse(xml, NoChecks).Segments[1].Metadata!.Maneuverable);
     }
 
     [Fact]
@@ -1308,7 +1312,7 @@ public class CdmTests
             Originator = "IO.Astrodynamics.Tests",
             MessageId = "CDM-UNIT-684"
         });
-        var xml = cdm.WriteToString();
+        var xml = cdm.ToXml();
 
         // Assert: INTRACK_THRUST states "whether in-track thrust modeling was used for the OD of the object" (CCSDS 508.0-B-1
         // Cor. 2, Table 3-3, Obligatory No; Annex A2.1.5 item 39, status O), not the capability MANEUVERABLE states: the
@@ -1317,9 +1321,9 @@ public class CdmTests
         Assert.Null(cdm.Segments[1].Metadata!.IntrackThrust);
         Assert.Equal(CdmManeuverable.Yes, cdm.Segments[1].Metadata!.Maneuverable);
         Assert.DoesNotContain(XDocument.Parse(xml).Descendants(), e => e.Name.LocalName == "INTRACK_THRUST");
-        var schemaValidation = Cdm.ValidateSchemaFromXml(xml);
+        var schemaValidation = new CdmValidator().ValidateSchemaFromXml(xml);
         Assert.True(schemaValidation.IsValid, FormatValidationIssues(schemaValidation.Issues));
-        var reread = Cdm.ReadFromString(xml);
+        var reread = Cdm.Parse(xml, NoChecks);
         Assert.Null(reread.Segments[0].Metadata!.IntrackThrust);
         Assert.Null(reread.Segments[1].Metadata!.IntrackThrust);
     }
@@ -1348,7 +1352,7 @@ public class CdmTests
 
         // Act
         var cdm = encounter.ToCdm(options);
-        var xml = cdm.WriteToString();
+        var xml = cdm.ToXml();
 
         // Assert: YES or NO as given, read back; omitted for null; the other participant omitted
         int given = participant - 1;
@@ -1357,9 +1361,9 @@ public class CdmTests
         var written = XDocument.Parse(xml).Descendants().Where(e => e.Name.LocalName == "INTRACK_THRUST")
             .Select(e => e.Value).ToArray();
         Assert.Equal(value switch { true => new[] { "YES" }, false => new[] { "NO" }, _ => Array.Empty<string>() }, written);
-        var schemaValidation = Cdm.ValidateSchemaFromXml(xml);
+        var schemaValidation = new CdmValidator().ValidateSchemaFromXml(xml);
         Assert.True(schemaValidation.IsValid, FormatValidationIssues(schemaValidation.Issues));
-        Assert.Equal(value, Cdm.ReadFromString(xml).Segments[given].Metadata!.IntrackThrust);
+        Assert.Equal(value, Cdm.Parse(xml, NoChecks).Segments[given].Metadata!.IntrackThrust);
     }
 
     [Theory]
@@ -1386,7 +1390,7 @@ public class CdmTests
 
         // Act
         var cdm = encounter.ToCdm(options);
-        var xml = cdm.WriteToString();
+        var xml = cdm.ToXml();
 
         // Assert: YES or NO as given, read back; omitted for null; the other participant omitted; the CDM schema-valid (the
         // keyword is optional, minOccurs 0 in ndmxml-4.0.0-cdm-1.0.xsd)
@@ -1396,10 +1400,10 @@ public class CdmTests
         var written = XDocument.Parse(xml).Descendants().Where(e => e.Name.LocalName == "SOLAR_RAD_PRESSURE")
             .Select(e => e.Value).ToArray();
         Assert.Equal(value switch { true => new[] { "YES" }, false => new[] { "NO" }, _ => Array.Empty<string>() }, written);
-        var schemaValidation = Cdm.ValidateSchemaFromXml(xml);
+        var schemaValidation = new CdmValidator().ValidateSchemaFromXml(xml);
         Assert.True(schemaValidation.IsValid, FormatValidationIssues(schemaValidation.Issues));
         Assert.True(cdm.Validate().IsValid);
-        Assert.Equal(value, Cdm.ReadFromString(xml).Segments[given].Metadata!.SolarRadPressure);
+        Assert.Equal(value, Cdm.Parse(xml, NoChecks).Segments[given].Metadata!.SolarRadPressure);
     }
 
     [Fact]
@@ -1408,7 +1412,7 @@ public class CdmTests
         // Frame.ICRF (SPICE J2000) and Frame.GCRF share the ICRF axes, so the GCRF label of the CDM is exact for both.
         var icrfEncounter = CreateManualEncounterCase();
         var gcrfEncounter = new EncounterCase(
-            icrfEncounter.ProtectedAsset,
+            icrfEncounter.ProtectedSpacecraft,
             icrfEncounter.SecondaryObject,
             icrfEncounter.ScreeningWindow,
             icrfEncounter.EncounterState,
@@ -1468,7 +1472,7 @@ public class CdmTests
             hardBodyRadius: 3.0);
 
         var encounter = ConjunctionAssessment.Analyze(
-            new ProtectedSpacecraftProfile(protectedSpacecraft),
+            protectedSpacecraft,
             secondarySpacecraft,
             new Window(TimeSystem.Time.J2000TDB, TimeSystem.Time.J2000TDB.AddMinutes(10.0)));
 
@@ -1569,7 +1573,7 @@ public class CdmTests
             crossTrackSigmaMeters: System.Math.Sqrt(combinedCovarianceRtn.Get(2, 2)));
 
         return new EncounterCase(
-            new ProtectedSpacecraftProfile(protectedSpacecraft),
+            protectedSpacecraft,
             secondarySpacecraft,
             screeningWindow,
             encounterState,
@@ -1793,7 +1797,7 @@ public class CdmTests
     [InlineData("m", 1.0)]
     public void ReadFromString_OptionalUnitLengths_AreMetersByDefault(string? units, double scale)
     {
-        var cdm = Cdm.ReadFromString(OptionalUnitLengthsDocument(units).ToString());
+        var cdm = Cdm.Parse(OptionalUnitLengthsDocument(units).ToString(), NoChecks);
 
         var data = cdm.RelativeMetadataData;
         var read = new[]
@@ -1838,11 +1842,11 @@ public class CdmTests
             Assert.Contains($"'{units}'", ex.Message);
         }
 
-        AssertNamesKeyword(Assert.Throws<CdmParseException>(() => Cdm.ReadFromString(xml)));
+        AssertNamesKeyword(Assert.Throws<CdmParseException>(() => Cdm.Parse(xml, NoChecks)));
         AssertNamesKeyword(Assert.Throws<CdmParseException>(() => new CdmReader().ReadFromString(xml)));
 
         // The other fields of the document read in m, as written
-        Assert.Equal(715.0, Cdm.ReadFromString(OptionalUnitLengthsDocument("m").ToString()).RelativeMetadataData.MissDistanceMeters);
+        Assert.Equal(715.0, Cdm.Parse(OptionalUnitLengthsDocument("m").ToString(), NoChecks).RelativeMetadataData.MissDistanceMeters);
     }
 
     private static XDocument OptionalUnitLengthsDocument(string? units)
@@ -1852,7 +1856,7 @@ public class CdmTests
             CreationDateUtc = new DateTime(2026, 3, 15, 10, 0, 0, DateTimeKind.Utc),
             Originator = "IO.Astrodynamics.Tests",
             MessageId = "CDM-UNITS-613"
-        }).WriteToString()));
+        }).ToXml()));
         var relativeMetadata = document.Descendants("relativeMetadataData").Single();
         foreach (var (name, text, _) in OptionalUnitLengths)
         {
@@ -1903,9 +1907,9 @@ public class CdmTests
         });
         foreach (var field in new[] { "TCA", "CREATION_DATE" })
         {
-            var document = XDocument.Parse(RemoveNamespaces(original.WriteToString()));
+            var document = XDocument.Parse(RemoveNamespaces(original.ToXml()));
             document.Descendants(field).Single().Value = text;
-            var ex = Assert.Throws<CdmParseException>(() => Cdm.ReadFromString(document.ToString()));
+            var ex = Assert.Throws<CdmParseException>(() => Cdm.Parse(document.ToString(), NoChecks));
             Assert.Contains(field, ex.Message);
             Assert.Contains($"'{text}'", ex.Message);
         }
@@ -1923,11 +1927,11 @@ public class CdmTests
             Originator = "IO.Astrodynamics.Tests",
             MessageId = "CDM-DOY-490"
         });
-        var document = XDocument.Parse(RemoveNamespaces(original.WriteToString()));
+        var document = XDocument.Parse(RemoveNamespaces(original.ToXml()));
         document.Descendants("CREATION_DATE").Single().Value = "2014-021T17:42:47.000";
         document.Descendants("TCA").Single().Value = "2026-013T05:00:55.752768Z";
 
-        var cdm = Cdm.ReadFromString(document.ToString());
+        var cdm = Cdm.Parse(document.ToString(), NoChecks);
 
         Assert.Equal(tca, cdm.RelativeMetadataData.TcaUtc);
         Assert.Equal(DateTimeKind.Utc, cdm.RelativeMetadataData.TcaUtc.Kind);
@@ -1935,7 +1939,7 @@ public class CdmTests
 
         // The literal DDD was read as 1 January
         document.Descendants("TCA").Single().Value = "2026-DDDT05:00:55.752768Z";
-        Assert.Throws<CdmParseException>(() => Cdm.ReadFromString(document.ToString()));
+        Assert.Throws<CdmParseException>(() => Cdm.Parse(document.ToString(), NoChecks));
     }
 
     [Theory]
@@ -1952,13 +1956,13 @@ public class CdmTests
             Originator = "IO.Astrodynamics.Tests",
             MessageId = "CDM-EPOCH-0000"
         });
-        var document = XDocument.Parse(RemoveNamespaces(original.WriteToString()));
+        var document = XDocument.Parse(RemoveNamespaces(original.ToXml()));
         document.Descendants("CREATION_DATE").Single().Value = text;
-        Assert.Throws<CdmParseException>(() => Cdm.ReadFromString(document.ToString()));
+        Assert.Throws<CdmParseException>(() => Cdm.Parse(document.ToString(), NoChecks));
 
-        document = XDocument.Parse(RemoveNamespaces(original.WriteToString()));
+        document = XDocument.Parse(RemoveNamespaces(original.ToXml()));
         document.Descendants("TCA").Single().Value = text;
-        Assert.Throws<CdmParseException>(() => Cdm.ReadFromString(document.ToString()));
+        Assert.Throws<CdmParseException>(() => Cdm.Parse(document.ToString(), NoChecks));
     }
 
     private static string FormatValidationIssues(IEnumerable<CdmValidationError> issues)

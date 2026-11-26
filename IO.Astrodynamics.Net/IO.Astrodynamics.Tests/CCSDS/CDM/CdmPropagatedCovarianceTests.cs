@@ -108,16 +108,16 @@ public class CdmPropagatedCovarianceTests : IClassFixture<CdmPropagatedCovarianc
         _case.Propagate(protectedCraft);
         _case.Propagate(secondaryCraft);
         var reference = _case.Propagate(ReferenceSpacecraft(-6303, _case.ProtectedStart), CdmPropagatedCovarianceCase.Options);
-        var encounter = ConjunctionAssessment.Analyze(new ProtectedSpacecraftProfile(protectedCraft), secondaryCraft,
+        var encounter = ConjunctionAssessment.Analyze(protectedCraft, secondaryCraft,
             CdmPropagatedCovarianceCase.AnalysisWindow,
             new ConjunctionAnalysisOptions { CovariancePropagation = CdmPropagatedCovarianceCase.Options });
 
         // Act
         var cdm = encounter.ToCdm(new CdmExportOptions { CreationDateUtc = new DateTime(2024, 3, 1, 0, 0, 0, DateTimeKind.Utc) });
-        var xml = cdm.WriteToString();
-        var schema = Cdm.ValidateSchemaFromXml(xml);
+        var xml = cdm.ToXml();
+        var schema = new CdmValidator().ValidateSchemaFromXml(xml);
         var content = cdm.Validate();
-        var reread = Cdm.ReadFromString(xml);
+        var reread = Cdm.Parse(xml);
 
         // Assert: valid; read back to the digit (G17)
         Assert.True(schema.IsValid, string.Join("; ", schema.Issues.Select(i => i.Message)));
@@ -210,14 +210,14 @@ public class CdmPropagatedCovarianceTests : IClassFixture<CdmPropagatedCovarianc
         secondaryCraft.AddEngine(new Engine("engine6312", 300.0, 10.0, tank, "model", "sn1"));
         _case.Propagate(protectedCraft);
         _case.Propagate(secondaryCraft);
-        var encounter = ConjunctionAssessment.Analyze(new ProtectedSpacecraftProfile(protectedCraft), secondaryCraft,
+        var encounter = ConjunctionAssessment.Analyze(protectedCraft, secondaryCraft,
             CdmPropagatedCovarianceCase.AnalysisWindow);
 
         // Act
         var cdm = encounter.ToCdm();
 
         // Assert: the covariance at TCA, never stale, so exported without the opt-in; no CDRG or CSRP row
-        Assert.True(Cdm.ValidateSchemaFromXml(cdm.WriteToString()).IsValid);
+        Assert.True(new CdmValidator().ValidateSchemaFromXml(cdm.ToXml()).IsValid);
         var matrix = cdm.Segments[1].Data.CovarianceMatrix;
         Assert.Null(matrix.CdrgR);
         Assert.Null(matrix.CsrpSrp);
@@ -231,7 +231,7 @@ public class CdmPropagatedCovarianceTests : IClassFixture<CdmPropagatedCovarianc
         Assert.False(cdm.Segments[0].Metadata.IntrackThrust);
 
         // The former behaviour still refuses a stale covariance by default
-        var held = ConjunctionAssessment.Analyze(new ProtectedSpacecraftProfile(protectedCraft), secondaryCraft,
+        var held = ConjunctionAssessment.Analyze(protectedCraft, secondaryCraft,
             CdmPropagatedCovarianceCase.AnalysisWindow, new ConjunctionAnalysisOptions { CovariancePropagation = CovariancePropagationOptions.None });
         Assert.Throws<InvalidOperationException>(() => held.ToCdm());
         var heldCdm = held.ToCdm(new CdmExportOptions { AllowStaleCovariance = true });
@@ -268,7 +268,7 @@ public class CdmPropagatedCovarianceTests : IClassFixture<CdmPropagatedCovarianc
 
         // Act and assert: an RK7(8) covariance propagated to TCA states the forces of its propagation, NO (CCSDS 508.0-B-1
         // Cor. 2, Table 3-3: whether solar radiation pressure was used; YES from Cr before)
-        var encounter = ConjunctionAssessment.Analyze(new ProtectedSpacecraftProfile(protectedCraft), secondaryCraft,
+        var encounter = ConjunctionAssessment.Analyze(protectedCraft, secondaryCraft,
             CdmPropagatedCovarianceCase.AnalysisWindow);
         var cdm = encounter.ToCdm(export);
         if (integrator == "RK7(8)")
@@ -277,7 +277,7 @@ public class CdmPropagatedCovarianceTests : IClassFixture<CdmPropagatedCovarianc
             Assert.Equal(CovarianceSource.Propagated, encounter.SecondaryCovariance.Source);
             Assert.False(cdm.Segments[0].Metadata.SolarRadPressure);
             Assert.False(cdm.Segments[1].Metadata.SolarRadPressure);
-            Assert.Equal(2, System.Xml.Linq.XDocument.Parse(cdm.WriteToString()).Descendants()
+            Assert.Equal(2, System.Xml.Linq.XDocument.Parse(cdm.ToXml()).Descendants()
                 .Count(e => e.Name.LocalName == "SOLAR_RAD_PRESSURE" && e.Value == "NO"));
         }
         else
@@ -288,7 +288,7 @@ public class CdmPropagatedCovarianceTests : IClassFixture<CdmPropagatedCovarianc
         }
 
         // The covariance held in RTN was not propagated: omitted, as the other force-model keywords (YES from Cr before)
-        var held = ConjunctionAssessment.Analyze(new ProtectedSpacecraftProfile(protectedCraft), secondaryCraft,
+        var held = ConjunctionAssessment.Analyze(protectedCraft, secondaryCraft,
             CdmPropagatedCovarianceCase.AnalysisWindow, new ConjunctionAnalysisOptions { CovariancePropagation = CovariancePropagationOptions.None });
         AssertOmitted(held.ToCdm(export));
 
@@ -297,9 +297,9 @@ public class CdmPropagatedCovarianceTests : IClassFixture<CdmPropagatedCovarianc
             Assert.Null(cdm.Segments[0].Metadata.SolarRadPressure);
             Assert.Null(cdm.Segments[1].Metadata.SolarRadPressure);
             Assert.Null(cdm.Segments[0].Metadata.GravityModel);
-            var xml = cdm.WriteToString();
+            var xml = cdm.ToXml();
             Assert.DoesNotContain("SOLAR_RAD_PRESSURE", xml);
-            var schema = Cdm.ValidateSchemaFromXml(xml);
+            var schema = new CdmValidator().ValidateSchemaFromXml(xml);
             Assert.True(schema.IsValid, string.Join("; ", schema.Issues.Select(i => i.Message)));
             Assert.True(cdm.Validate().IsValid);
         }

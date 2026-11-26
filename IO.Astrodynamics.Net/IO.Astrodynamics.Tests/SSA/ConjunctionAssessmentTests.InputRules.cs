@@ -48,6 +48,13 @@ public partial class ConjunctionAssessmentTests
         MaxReturnedOptions = 6
     };
 
+    // The analysis of a screening given none: the analysis's defaults, a sample step of 5 min, the covariance held in RTN
+    private static readonly ConjunctionAnalysisOptions ScreeningAnalysis = ConjunctionAnalysisOptions.Default with
+    {
+        SampleStep = TimeSpan.FromMinutes(5.0),
+        CovariancePropagation = CovariancePropagationOptions.None
+    };
+
     // A pair meeting 200 m apart 30 min after the start in the two-body problem (ConjunctionCovarianceCase.Pair), each
     // with an RTN covariance
     private static (StateVector Protected, StateVector Secondary) InputRulePair(CelestialBody earth)
@@ -126,35 +133,36 @@ public partial class ConjunctionAssessmentTests
         // S. Guillet, 2026-11-14, on #683); the options of the analysis and of the avoidance name one secondary
         bool conflict = entryPoint != "Screen" && secondaryHasRadius && given.HasValue && given.Value != secondaryRadius;
         double expected = ProtectedHardBodyRadius + (secondaryHasRadius ? secondaryRadius : given ?? FallbackSecondaryHardBodyRadius);
-        var profile = new ProtectedSpacecraftProfile(protectedCraft);
         var analysisOptions = given is { } a ? new ConjunctionAnalysisOptions { SecondaryHardBodyRadiusMeters = a } : new ConjunctionAnalysisOptions();
 
         // A conflict is refused before any state is read: the window then leaves the propagated states
         var window = conflict && !entryPoint.StartsWith("Avoidance") ? InputRuleWindowPastTheStates : InputRuleWindow;
         Func<IReadOnlyList<EncounterCase>> act = entryPoint switch
         {
-            "Analyze" => () => new[] { ConjunctionAssessment.Analyze(profile, secondary, window, analysisOptions) },
-            "AnalyzeAll" => () => ConjunctionAssessment.AnalyzeAll(profile, secondary, window, analysisOptions),
+            "Analyze" => () => new[] { ConjunctionAssessment.Analyze(protectedCraft, secondary, window, analysisOptions) },
+            "AnalyzeAll" => () => ConjunctionAssessment.AnalyzeAll(protectedCraft, secondary, window, analysisOptions),
             "AnalyzeDense" => () => new[]
             {
-                ConjunctionAssessment.Analyze(profile, protectedTrajectory, secondary, secondaryTrajectory, window,
+                ConjunctionAssessment.Analyze(protectedCraft, protectedTrajectory, secondary, secondaryTrajectory, window,
                     analysisOptions)
             },
             "AnalyzeAllDense" => () =>
-                ConjunctionAssessment.AnalyzeAll(profile, protectedTrajectory, secondary, secondaryTrajectory, window,
+                ConjunctionAssessment.AnalyzeAll(protectedCraft, protectedTrajectory, secondary, secondaryTrajectory, window,
                     analysisOptions),
-            "Screen" => () => ConjunctionAssessment.Screen(profile, new[] { secondary }, window,
-                given is { } d
-                    ? new ScreeningOptions { DefaultSecondaryHardBodyRadiusMeters = d, MaxMissDistanceMeters = double.MaxValue }
-                    : new ScreeningOptions { MaxMissDistanceMeters = double.MaxValue }),
+            "Screen" => () => ConjunctionAssessment.Screen(protectedCraft, new[] { secondary }, window,
+                new ScreeningOptions
+                {
+                    Analysis = ScreeningAnalysis with { SecondaryHardBodyRadiusMeters = given },
+                    MaxMissDistanceMeters = double.MaxValue
+                }),
             _ => () =>
             {
                 // The encounter analyzed with the default options, the avoidance with the option
-                var encounter = ConjunctionAssessment.Analyze(profile, secondary, window);
+                var encounter = ConjunctionAssessment.Analyze(protectedCraft, secondary, window);
                 var avoidanceOptions = given is { } o
-                    ? InputRuleAvoidance with { SecondaryHardBodyRadiusMeters = o }
+                    ? InputRuleAvoidance with { Analysis = ConjunctionAnalysisOptions.Default with { SecondaryHardBodyRadiusMeters = o } }
                     : InputRuleAvoidance;
-                var avoidance = ConjunctionAssessment.EvaluateAvoidance(encounter, avoidanceOptions);
+                var avoidance = ConjunctionAssessment.EvaluateAvoidance(encounter, avoidanceOptions).Options;
                 if (secondaryKind == "spacecraft")
                 {
                     Assert.Equal(6, avoidance.Count);
@@ -217,15 +225,14 @@ public partial class ConjunctionAssessmentTests
         {
             (small, 2.0, true), (large, 6.0, true), (none, radiusOfNone, false), (moon, radiusOfNone, false)
         };
-        var profile = new ProtectedSpacecraftProfile(protectedCraft);
         var screeningOptions = new ScreeningOptions
         {
-            DefaultSecondaryHardBodyRadiusMeters = given,
+            Analysis = ScreeningAnalysis with { SecondaryHardBodyRadiusMeters = given },
             MaxMissDistanceMeters = double.MaxValue
         };
 
         // Act
-        var screened = ConjunctionAssessment.Screen(profile, catalogue.Select(c => c.Candidate), InputRuleWindow,
+        var screened = ConjunctionAssessment.Screen(protectedCraft, catalogue.Select(c => c.Candidate), InputRuleWindow,
             screeningOptions);
 
         // Assert: each candidate screened (before the decision of 2026-11-14 on #683, the explicit fallback of 3 m
@@ -236,21 +243,15 @@ public partial class ConjunctionAssessmentTests
         {
             var encounter = Assert.Single(screened, e => ReferenceEquals(e.SecondaryObject, candidate));
             Assert.Equal(ProtectedHardBodyRadius + secondaryRadius, encounter.CollisionRisk.CombinedHardBodyRadiusMeters);
-            var analyzed = ConjunctionAssessment.Analyze(profile, candidate, InputRuleWindow, new ConjunctionAnalysisOptions
-            {
-                SampleStep = screeningOptions.SampleStep,
-                MaximumEventSearchStep = screeningOptions.MaximumEventSearchStep,
-                SecondaryHardBodyRadiusMeters = ownRadius ? null : secondaryRadius,
-                LowRelativeSpeedThresholdMetersPerSecond = screeningOptions.LowRelativeSpeedThresholdMetersPerSecond,
-                CovariancePropagation = CovariancePropagationOptions.None
-            });
+            var analyzed = ConjunctionAssessment.Analyze(protectedCraft, candidate, InputRuleWindow,
+                ScreeningAnalysis with { SecondaryHardBodyRadiusMeters = ownRadius ? null : secondaryRadius });
             Assert.Equal(analyzed.CollisionRisk.CombinedHardBodyRadiusMeters, encounter.CollisionRisk.CombinedHardBodyRadiusMeters);
             LabelAssert.Equal(analyzed.EncounterState.Epoch, encounter.EncounterState.Epoch);
             Assert.Equal(analyzed.CollisionRisk.ProbabilityOfCollision, encounter.CollisionRisk.ProbabilityOfCollision);
 
             // The avoidance re-analyzes each option with the radius the screening resolved for the candidate: no conflict
             // with the radius the candidate gives
-            var avoidance = ConjunctionAssessment.EvaluateAvoidance(encounter, InputRuleAvoidance);
+            var avoidance = ConjunctionAssessment.EvaluateAvoidance(encounter, InputRuleAvoidance).Options;
             if (candidate is Spacecraft)
             {
                 Assert.Equal(6, avoidance.Count);
@@ -260,13 +261,14 @@ public partial class ConjunctionAssessmentTests
                 o.PostManeuverEncounter.CollisionRisk.CombinedHardBodyRadiusMeters));
         }
 
-        // A fallback not finite or negative still throws, though every spacecraft of the catalogue but one gives its own
+        // A fallback not finite or negative still throws, though every spacecraft of the catalogue but one gives its own:
+        // where it is set (before 11.0.0, at the start of the screening)
         foreach (double invalid in new[] { double.NaN, -1.0 })
         {
-            var exception = Assert.Throws<ArgumentOutOfRangeException>(() => ConjunctionAssessment.Screen(profile,
+            var exception = Assert.Throws<ArgumentOutOfRangeException>(() => ConjunctionAssessment.Screen(protectedCraft,
                 new ILocalizable[] { small, large }, InputRuleWindow,
-                screeningOptions with { DefaultSecondaryHardBodyRadiusMeters = invalid }));
-            Assert.Equal("DefaultSecondaryHardBodyRadiusMeters", exception.ParamName);
+                screeningOptions with { Analysis = screeningOptions.Analysis with { SecondaryHardBodyRadiusMeters = invalid } }));
+            Assert.Equal("SecondaryHardBodyRadiusMeters", exception.ParamName);
         }
     }
 
@@ -290,28 +292,26 @@ public partial class ConjunctionAssessmentTests
         var (protectedStart, secondaryStart) = InputRulePair(earth);
         var protectedCraft = InputRuleSpacecraft(NextInputRuleId(), protectedStart, ProtectedHardBodyRadius);
         var secondaryCraft = InputRuleSpacecraft(NextInputRuleId(), secondaryStart, 0.0);
-        var profile = new ProtectedSpacecraftProfile(protectedCraft);
 
         // Act
         Action act = optionsType switch
         {
-            "analysis" => () => ConjunctionAssessment.Analyze(profile, secondaryCraft, InputRuleWindow,
+            "analysis" => () => ConjunctionAssessment.Analyze(protectedCraft, secondaryCraft, InputRuleWindow,
                 new ConjunctionAnalysisOptions { SecondaryHardBodyRadiusMeters = value }),
-            "analysisDense" => () => ConjunctionAssessment.AnalyzeAll(profile, PropagateRk78(protectedCraft, earth),
+            "analysisDense" => () => ConjunctionAssessment.AnalyzeAll(protectedCraft, PropagateRk78(protectedCraft, earth),
                 secondaryCraft, PropagateRk78(secondaryCraft, earth), InputRuleWindow,
                 new ConjunctionAnalysisOptions { SecondaryHardBodyRadiusMeters = value }),
-            "screening" => () => ConjunctionAssessment.Screen(profile, new ILocalizable[] { secondaryCraft }, InputRuleWindow,
-                new ScreeningOptions { DefaultSecondaryHardBodyRadiusMeters = value }),
+            "screening" => () => ConjunctionAssessment.Screen(protectedCraft, new ILocalizable[] { secondaryCraft }, InputRuleWindow,
+                new ScreeningOptions { Analysis = new ConjunctionAnalysisOptions { SecondaryHardBodyRadiusMeters = value } }),
             _ => () => ConjunctionAssessment.EvaluateAvoidance(
-                ConjunctionAssessment.Analyze(profile, secondaryCraft, InputRuleWindow),
-                InputRuleAvoidance with { SecondaryHardBodyRadiusMeters = value })
+                ConjunctionAssessment.Analyze(protectedCraft, secondaryCraft, InputRuleWindow),
+                InputRuleAvoidance with { Analysis = new ConjunctionAnalysisOptions { SecondaryHardBodyRadiusMeters = value } })
         };
 
         // Assert: a radius is finite and not negative (before #683, a negative option was subtracted and a NaN or an
-        // infinite one gave no Pc and no flag)
+        // infinite one gave no Pc and no flag), refused where it is set (D1 of #668)
         var exception = Assert.Throws<ArgumentOutOfRangeException>(act);
-        Assert.Equal(optionsType == "screening" ? "DefaultSecondaryHardBodyRadiusMeters" : "SecondaryHardBodyRadiusMeters",
-            exception.ParamName);
+        Assert.Equal("SecondaryHardBodyRadiusMeters", exception.ParamName);
     }
 
     [Fact]
@@ -344,7 +344,7 @@ public partial class ConjunctionAssessmentTests
                 seconds => (r2 + v2 * (seconds - 10.0), v2, Vector3.Zero));
 
             // Act
-            var result = ConjunctionAssessment.Analyze(new ProtectedSpacecraftProfile(protectedSpacecraft),
+            var result = ConjunctionAssessment.Analyze(protectedSpacecraft,
                 protectedTrajectory, secondarySpacecraft, secondaryTrajectory, window,
                 new ConjunctionAnalysisOptions
                 {
@@ -391,16 +391,15 @@ public partial class ConjunctionAssessmentTests
         var protectedTrajectory = PropagateRk78(protectedCraft, earth);
         var secondary = distinctInstance ? InputRuleSpacecraft(naifId, protectedStart, 3.0) : protectedCraft;
         var secondaryTrajectory = distinctInstance ? PropagateRk78(secondary, earth) : protectedTrajectory;
-        var profile = new ProtectedSpacecraftProfile(protectedCraft);
         var window = InputRuleWindowPastTheStates;
 
         // Act
         Action act = overload switch
         {
-            "Analyze" => () => ConjunctionAssessment.Analyze(profile, secondary, window),
-            "AnalyzeAll" => () => ConjunctionAssessment.AnalyzeAll(profile, secondary, window),
-            "AnalyzeDense" => () => ConjunctionAssessment.Analyze(profile, protectedTrajectory, secondary, secondaryTrajectory, window),
-            _ => () => ConjunctionAssessment.AnalyzeAll(profile, protectedTrajectory, secondary, secondaryTrajectory, window)
+            "Analyze" => () => ConjunctionAssessment.Analyze(protectedCraft, secondary, window),
+            "AnalyzeAll" => () => ConjunctionAssessment.AnalyzeAll(protectedCraft, secondary, window),
+            "AnalyzeDense" => () => ConjunctionAssessment.Analyze(protectedCraft, protectedTrajectory, secondary, secondaryTrajectory, window),
+            _ => () => ConjunctionAssessment.AnalyzeAll(protectedCraft, protectedTrajectory, secondary, secondaryTrajectory, window)
         };
 
         // Assert: Screen's NAIF-id rule (before #683: a miss of 0 and a Pc of 0.815, or an empty list on the dense
@@ -417,11 +416,10 @@ public partial class ConjunctionAssessmentTests
         var (protectedStart, secondaryStart) = InputRulePair(earth);
         var protectedCraft = InputRuleSpacecraft(NextInputRuleId(), protectedStart, ProtectedHardBodyRadius);
         var secondaryCraft = InputRuleSpacecraft(NextInputRuleId(), secondaryStart, 3.0);
-        var profile = new ProtectedSpacecraftProfile(protectedCraft);
 
         // Act
-        var screened = ConjunctionAssessment.Screen(profile, new ILocalizable[] { protectedCraft, secondaryCraft }, InputRuleWindow);
-        var alone = ConjunctionAssessment.Screen(profile, new ILocalizable[] { secondaryCraft }, InputRuleWindow);
+        var screened = ConjunctionAssessment.Screen(protectedCraft, new ILocalizable[] { protectedCraft, secondaryCraft }, InputRuleWindow);
+        var alone = ConjunctionAssessment.Screen(protectedCraft, new ILocalizable[] { secondaryCraft }, InputRuleWindow);
 
         // Assert: the same encounter as without the protected spacecraft among the candidates
         var encounter = Assert.Single(screened);
@@ -513,12 +511,11 @@ public partial class ConjunctionAssessmentTests
             "sameNaifIdProtected" => (Produce(producer, twinOfProtected, earth, window), secondaryTrajectory, "protectedTrajectory"),
             _ => (protectedTrajectory, Produce(producer, twinOfSecondary, earth, window), "secondaryTrajectory")
         };
-        var profile = new ProtectedSpacecraftProfile(protectedCraft);
 
         // Act
         Action act = all
-            ? () => ConjunctionAssessment.AnalyzeAll(profile, first, secondaryCraft, second, window)
-            : () => ConjunctionAssessment.Analyze(profile, first, secondaryCraft, second, window);
+            ? () => ConjunctionAssessment.AnalyzeAll(protectedCraft, first, secondaryCraft, second, window)
+            : () => ConjunctionAssessment.Analyze(protectedCraft, first, secondaryCraft, second, window);
 
         // Assert: a trajectory describes the spacecraft it was propagated for, compared by reference (before #683, a miss
         // of 0 and a Pc of 0.676, or the covariances of the other objects)
@@ -527,8 +524,8 @@ public partial class ConjunctionAssessmentTests
 
         // The own trajectories are accepted
         Assert.NotNull(all
-            ? ConjunctionAssessment.AnalyzeAll(profile, protectedTrajectory, secondaryCraft, secondaryTrajectory, window)
-            : new[] { ConjunctionAssessment.Analyze(profile, protectedTrajectory, secondaryCraft, secondaryTrajectory, window) });
+            ? ConjunctionAssessment.AnalyzeAll(protectedCraft, protectedTrajectory, secondaryCraft, secondaryTrajectory, window)
+            : new[] { ConjunctionAssessment.Analyze(protectedCraft, protectedTrajectory, secondaryCraft, secondaryTrajectory, window) });
     }
 
     // From the MEASURE line below (CI run 43601908000, 2026-11-14): the TCAs the same tick on Linux x64, Windows x64 and
@@ -554,14 +551,13 @@ public partial class ConjunctionAssessmentTests
             var state = secondaryStart.ToStateVector(InputRuleStart.AddSeconds(seconds));
             return (state.Position, state.Velocity, state.Position * (-gm / System.Math.Pow(state.Position.Magnitude(), 3)));
         });
-        var profile = new ProtectedSpacecraftProfile(protectedCraft);
 
         // Act
-        var byHand = ConjunctionAssessment.Analyze(profile, protectedTrajectory, secondaryCraft, secondaryByHand, InputRuleWindow,
+        var byHand = ConjunctionAssessment.Analyze(protectedCraft, protectedTrajectory, secondaryCraft, secondaryByHand, InputRuleWindow,
             new ConjunctionAnalysisOptions { CovariancePropagation = CovariancePropagationOptions.None });
-        var own = ConjunctionAssessment.Analyze(profile, protectedTrajectory, secondaryCraft, secondaryOwn, InputRuleWindow,
+        var own = ConjunctionAssessment.Analyze(protectedCraft, protectedTrajectory, secondaryCraft, secondaryOwn, InputRuleWindow,
             new ConjunctionAnalysisOptions { CovariancePropagation = CovariancePropagationOptions.None });
-        var all = ConjunctionAssessment.AnalyzeAll(profile, protectedTrajectory, secondaryCraft, secondaryByHand, InputRuleWindow);
+        var all = ConjunctionAssessment.AnalyzeAll(protectedCraft, protectedTrajectory, secondaryCraft, secondaryByHand, InputRuleWindow);
 
         // Assert: accepted, and the same close approach within the Hermite of the solution built by hand (its steps of 60 s
         // carry the two-body states and accelerations)
@@ -582,13 +578,13 @@ public partial class ConjunctionAssessmentTests
         var (protectedStart, secondaryStart) = InputRulePair(earth);
         var protectedCraft = InputRuleSpacecraft(NextInputRuleId(), protectedStart, ProtectedHardBodyRadius);
         var secondaryCraft = InputRuleSpacecraft(NextInputRuleId(), secondaryStart, 3.0);
-        var analyzed = ConjunctionAssessment.Analyze(new ProtectedSpacecraftProfile(protectedCraft), secondaryCraft, InputRuleWindow);
-        var byHand = new EncounterCase(analyzed.ProtectedAsset, analyzed.SecondaryObject, analyzed.ScreeningWindow,
+        var analyzed = ConjunctionAssessment.Analyze(protectedCraft, secondaryCraft, InputRuleWindow);
+        var byHand = new EncounterCase(analyzed.ProtectedSpacecraft, analyzed.SecondaryObject, analyzed.ScreeningWindow,
             analyzed.EncounterState, analyzed.CollisionRisk, analyzed.ProtectedState, analyzed.SecondaryState);
 
         // Act
-        var fromAnalysis = ConjunctionAssessment.EvaluateAvoidance(analyzed, InputRuleAvoidance);
-        var fromHand = ConjunctionAssessment.EvaluateAvoidance(byHand, InputRuleAvoidance);
+        var fromAnalysis = ConjunctionAssessment.EvaluateAvoidance(analyzed, InputRuleAvoidance).Options;
+        var fromHand = ConjunctionAssessment.EvaluateAvoidance(byHand, InputRuleAvoidance).Options;
 
         // Assert: the defaults of ConjunctionAnalysisOptions, those the analysis used, and the radius of the secondary
         // resolved from the secondary itself (#683)
@@ -610,7 +606,7 @@ public partial class ConjunctionAssessmentTests
     {
         foreach (var path in new[] { "twoBody", "forceModel", "propagatedCovariance" })
         {
-            foreach (var option in new[] { "MaximumEventSearchStep", "AnalysisSampleStep" })
+            foreach (var option in new[] { "MaximumEventSearchStep", "SampleStep" })
             {
                 foreach (double seconds in new[] { 0.0, -5.0 })
                 {
@@ -636,22 +632,22 @@ public partial class ConjunctionAssessmentTests
             PropagateRk78(protectedCraft, earth);
         }
 
-        var encounter = ConjunctionAssessment.Analyze(new ProtectedSpacecraftProfile(protectedCraft), secondaryCraft,
+        var encounter = ConjunctionAssessment.Analyze(protectedCraft, secondaryCraft,
             InputRuleWindow, path == "forceModel" ? new ConjunctionAnalysisOptions { CovariancePropagation = CovariancePropagationOptions.None } : null);
         Assert.Equal(path == "propagatedCovariance" ? CovarianceSource.Propagated : CovarianceSource.InitialStateHeldInRtn,
             encounter.EncounterState.ProtectedCovariance.Source);
         var step = TimeSpan.FromSeconds(seconds);
-        var options = option == "MaximumEventSearchStep"
-            ? InputRuleAvoidance with { MaximumEventSearchStep = step }
-            : InputRuleAvoidance with { AnalysisSampleStep = step };
+        Func<AvoidanceSearchOptions> options = () => option == "MaximumEventSearchStep"
+            ? InputRuleAvoidance with { Analysis = ConjunctionAnalysisOptions.Default with { MaximumEventSearchStep = step } }
+            : InputRuleAvoidance with { Analysis = ConjunctionAnalysisOptions.Default with { SampleStep = step } };
 
         // Act: bounded, so that a regression fails instead of filling the memory (#640: 0 s ended in an
         // OutOfMemoryException after about 15 s, -5 s was accepted, a sample step of -5 s stepped backwards without end)
-        var avoidance = System.Threading.Tasks.Task.Run(() => ConjunctionAssessment.EvaluateAvoidance(encounter, options));
+        var avoidance = System.Threading.Tasks.Task.Run(() => ConjunctionAssessment.EvaluateAvoidance(encounter, options()).Options);
         var completed = await System.Threading.Tasks.Task.WhenAny(avoidance,
             System.Threading.Tasks.Task.Delay(TimeSpan.FromMinutes(1)));
 
-        // Assert: the rule of the analysis, ArgumentOutOfRangeException naming the option of the avoidance
+        // Assert: the rule of the analysis, ArgumentOutOfRangeException naming the step of its Analysis, where it is set
         Assert.Same(avoidance, completed);
         var exception = await Assert.ThrowsAsync<ArgumentOutOfRangeException>(() => avoidance);
         Assert.Equal(option, exception.ParamName);

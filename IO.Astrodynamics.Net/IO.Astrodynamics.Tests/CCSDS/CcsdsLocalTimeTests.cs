@@ -69,7 +69,7 @@ public class CcsdsLocalTimeTests
         Dictionary<string, string> lines;
         try
         {
-            cdm.WriteToFile(path);
+            cdm.Save(path);
             var output = ColdStartTests.RunChildWithEnvironment($"(ccsds-local-time, {zone})",
                 new Dictionary<string, string> { ["TZ"] = zone }, "ccsds-local-time", path);
             _output.WriteLine(output);

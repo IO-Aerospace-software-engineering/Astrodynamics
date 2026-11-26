@@ -186,11 +186,10 @@ public class ConjunctionPostBurnTests
         var closest = reference.MinBy(m => m.Distance);
         var afterBurn = reference.Where(m => k > 0.0 ? m.Epoch > burn : m.Epoch < burn)
             .MinBy(m => System.Math.Abs((m.Epoch - tc).TotalSeconds));
-        var profile = new ProtectedSpacecraftProfile(spacecraft);
 
         // Act
-        var all = ConjunctionAssessment.AnalyzeAll(profile, solution, secondary, secondarySolution, window, Options);
-        var encounter = ConjunctionAssessment.Analyze(profile, solution, secondary, secondarySolution, window, Options);
+        var all = ConjunctionAssessment.AnalyzeAll(spacecraft, solution, secondary, secondarySolution, window, Options);
+        var encounter = ConjunctionAssessment.Analyze(spacecraft, solution, secondary, secondarySolution, window, Options);
 
         // Assert: the close approach on the side of the burn the secondary was built on is listed, and Analyze returns the
         // closest minimum of the states
@@ -230,11 +229,10 @@ public class ConjunctionPostBurnTests
         var (secondary, secondarySolution, window) = Secondary(solution, tc,
             velocity.Cross(position).Normalize() * 100.0 + velocity.Normalize() * 20.0);
         var closest = BruteForceMinima(solution, secondarySolution, window).MinBy(m => m.Distance);
-        var profile = new ProtectedSpacecraftProfile(spacecraft);
 
         // Act
-        var all = ConjunctionAssessment.AnalyzeAll(profile, solution, secondary, secondarySolution, window, Options);
-        var encounter = ConjunctionAssessment.Analyze(profile, solution, secondary, secondarySolution, window, Options);
+        var all = ConjunctionAssessment.AnalyzeAll(spacecraft, solution, secondary, secondarySolution, window, Options);
+        var encounter = ConjunctionAssessment.Analyze(spacecraft, solution, secondary, secondarySolution, window, Options);
 
         // Assert
         AssertNear(Assert.Single(all).EncounterState, closest, "Continue, AnalyzeAll");

@@ -456,7 +456,7 @@ public class TimeArgumentTests
         protectedSpacecraft.Propagate(window, new PropagationOptions { Integrator = new RK78IntegratorOptions { AbsoluteTolerance = 1e-13, RelativeTolerance = 1e-13 }, OutputStep = TimeSpan.FromSeconds(10.0), ThirdBodies = new CelestialItem[] { _earth }, CovariancePropagation = CovariancePropagationOptions.None });
 
         // Act
-        var encounter = IO.Astrodynamics.SSA.ConjunctionAssessment.Analyze(new IO.Astrodynamics.SSA.ProtectedSpacecraftProfile(protectedSpacecraft),
+        var encounter = IO.Astrodynamics.SSA.ConjunctionAssessment.Analyze(protectedSpacecraft,
             secondary, window);
 
         // Assert: both states at the TCA are Kepler over the TT seconds from the start to it: the two-body one between

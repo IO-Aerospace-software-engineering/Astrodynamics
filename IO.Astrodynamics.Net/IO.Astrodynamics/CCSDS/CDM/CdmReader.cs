@@ -29,7 +29,7 @@ namespace IO.Astrodynamics.CCSDS.CDM;
 /// of #668). A numeric value that is not finite (NaN, Infinity or -Infinity in any case, an overflow such as 1e400) throws
 /// <see cref="CdmParseException"/> naming the keyword and its text, where before 11.0.0 it was read (#708).
 /// </remarks>
-public sealed class CdmReader
+internal sealed class CdmReader
 {
     public Cdm ReadFromFile(string filePath)
     {
@@ -87,7 +87,26 @@ public sealed class CdmReader
     {
         var root = document.Root ?? throw new CdmParseException("XML document has no root element.");
         var cdmElement = FindCdmElement(root) ?? throw new CdmParseException("Could not find CDM element in document.");
+        return ParseCdmElement(cdmElement);
+    }
 
+    // The one CDM of a document (all false) or every CDM of it (all true, LoadAll and ParseAll, R22 of #668): a document
+    // that holds none throws, as Load does
+    internal IReadOnlyList<Cdm> Read(XDocument document, bool all)
+    {
+        if (!all)
+            return [ParseDocument(document)];
+
+        var root = document.Root ?? throw new CdmParseException("XML document has no root element.");
+        var elements = CcsdsMessageLocator.FindAll(root, "cdm");
+        if (elements.Count == 0)
+            throw new CdmParseException("Could not find CDM element in document.");
+
+        return elements.Select(ParseCdmElement).ToArray();
+    }
+
+    private Cdm ParseCdmElement(XElement cdmElement)
+    {
         var header = ParseHeader(GetSingleElement(cdmElement, "header"));
         var body = GetSingleElement(cdmElement, "body");
         var relativeMetadataData = ParseRelativeMetadataData(GetSingleElement(body, "relativeMetadataData"));

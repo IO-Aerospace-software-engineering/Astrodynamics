@@ -78,7 +78,7 @@ One grammar for every command (R29 of #668, lot L8; `docs/reference/cli.md`, its
 - `IO.Astrodynamics.OrbitalParameters.TLE`: Two-Line Element sets and OMM support
 - `IO.Astrodynamics.CCSDS.OMM`: CCSDS Orbit Mean-elements Message support (read/write/validate/convert); a numeric value NaN or ±Infinity throws `OmmParseException` naming its keyword (#708); `TleParameters` and `CovarianceMatrix` refuse a non-finite value with `ArgumentOutOfRangeException` naming the parameter (#717), and `CovarianceMatrix` a term whose value in m², m²/s or m²/s² (times 1e6) is not finite (#729); `Omm.ToTle` throws `InvalidOperationException` naming `MEAN_MOTION` above the 99.99999999 rev/day of its TLE field (#729: a TLE whose mean motion was the text `Infinity` above 2.86e307 rev/day); a negative revolution number names `revolutionNumberAtEpoch` (#734); a date outside the two CCSDS forms (`yyyy-mm-ddThh:mm:ss[.d…][Z|±hh:mm]`, `yyyy-dddThh:mm:ss…`) throws `OmmParseException` (#619)
 - `IO.Astrodynamics.CCSDS.OPM`: CCSDS Orbit Parameter Message support (read/write/validate/convert); a numeric value NaN or ±Infinity throws `OpmParseException` naming its keyword, and the four angles of `OpmKeplerianElements` are in [-360, 360), the schema's `angleRange` (#708); `OpmStateVector`, `CovarianceMatrix` and the ΔV of `OpmManeuverParameters` refuse a non-finite value with `ArgumentOutOfRangeException` naming the parameter (#717), and `OpmStateVector` and `CovarianceMatrix` a value whose value in SI units (times 1000 or 1e6) is not finite, which the reader reports naming the keyword (#729); a date outside the two CCSDS forms throws `OpmParseException` (#619)
-- `IO.Astrodynamics.CCSDS.CDM`: CCSDS Conjunction Data Message support (read/write/validate, `EncounterCase.ToCdm()`; `CdmWriter` writes the root, `cdm` or the wrapping `ndm`, in no namespace with `xmlns:ndm` on it and every element below it under the prefix `ndm`, the qualified form of CCSDS 508.0-B-1 Cor. 2 §4.3.3 that the SANA master accepts, #615; `ToCdm` writes `COLLISION_PROBABILITY_METHOD = FOSTER-1992` and refuses a single-covariance maximum Pc, #618; an enumerated keyword whose value is not one of its own throws `CdmParseException` naming it, the `FormatException` of the enumeration as inner exception, fourth round of #668; a numeric value NaN or ±Infinity throws `CdmParseException` naming its keyword, and so does a value in km or km/s that overflows in m or m/s, #708, a value with a comma, #717, a `lengthTypeUO` length (`MISS_DISTANCE`, `RELATIVE_POSITION_R/T/N`, `SCREEN_VOLUME_X/Y/Z`) with units other than m, and a date outside the two CCSDS forms, #619; every real value of the CDM records refuses NaN and ±Infinity at init with `ArgumentOutOfRangeException` naming the property, and `CdmCovarianceMatrix` copies its covariance `Matrix` in and out, #717, and refuses one that is not 6×6 with `ArgumentException` naming `StateCovarianceRtn`, #730)
+- `IO.Astrodynamics.CCSDS.CDM`: CCSDS Conjunction Data Message support (read/write/validate, `EncounterCase.ToCdm()`; `Cdm.ToStateVector(role)` and `Cdm.ToEncounter(hbr)`, the encounter at the CDM's TCA from its states, its Pc `CollisionProbability.Foster2D` of them bit for bit, decision 110 of #668; a UTC `Time` beside each `DateTime` of the records, R19 of #668; `Cdm.Save` and `ToXml` write the root, `cdm` or the wrapping `ndm`, in no namespace with `xmlns:ndm` on it and every element below it under the prefix `ndm`, the qualified form of CCSDS 508.0-B-1 Cor. 2 §4.3.3 that the SANA master accepts, #615; `ToCdm` writes `COLLISION_PROBABILITY_METHOD = FOSTER-1992` and refuses a single-covariance maximum Pc, #618; an enumerated keyword whose value is not one of its own throws `CdmParseException` naming it, the `FormatException` of the enumeration as inner exception, fourth round of #668; a numeric value NaN or ±Infinity throws `CdmParseException` naming its keyword, and so does a value in km or km/s that overflows in m or m/s, #708, a value with a comma, #717, a `lengthTypeUO` length (`MISS_DISTANCE`, `RELATIVE_POSITION_R/T/N`, `SCREEN_VOLUME_X/Y/Z`) with units other than m, and a date outside the two CCSDS forms, #619; every real value of the CDM records refuses NaN and ±Infinity at init with `ArgumentOutOfRangeException` naming the property, and `CdmCovarianceMatrix` copies its covariance `Matrix` in and out, #717, and refuses one that is not 6×6 with `ArgumentException` naming `StateCovarianceRtn`, #730)
 - `IO.Astrodynamics.Maneuver`: Lambert solvers, launch windows, maneuver planning, attitude maneuvers, IAttitudeTarget system (orbital direction targets, celestial attitude targets)
 - `IO.Astrodynamics.Frames`: Reference frames and transformations, including the CIO-based IAU chain (IAU 2006 precession with IAU 2000B nutation) exposed as `Frame.GCRF`, `Frame.CIRS` and `Frame.TIRS` (`GcrfFrame`, `CirsFrame`, `TirsFrame`, `Iau2006Model`, `IEarthOrientationParameters`), and the managed TEME of SGP4, `Frame.TEME` (`TemeFrame`, Vallado et al. 2006: Q(t)ᵀ · Rz(ERA − GMST82), quasi-inertial, no kernel; a frame named TEME is routed to it, #451); a frame named TEME, CIRS or TIRS, in any case, is routed to `Frame.TEME`, `Frame.CIRS` or `Frame.TIRS` by both data providers, the ephemeris reads and `SpiceAPI.TransformFrame`, which composes such an end through ICRF (#656); a frame keeps the orientation of its last epoch only, not one per epoch, and the attitude record API (`AddStateOrientationToICRF`, `GetStateOrientationsToICRF`, ...) is `SpacecraftFrame`'s (#541)
 - `IO.Astrodynamics.TimeSystem`: `Time`, a calendar in a `TimeScale` (TDB, TT, TAI, UTC, GPS), the scale a required argument (R24 of #668: no frameless constructor, no `Time(string)`, no `ITimeFrame`, no local time; a `DateTime` of kind `Local`, or `Utc` with another scale, throws); `Parse`/`TryParse`/`ISpanParsable` on one grammar (ISO 8601 or day of year, then `Z`, an offset or a scale tag; `JD n TAG`), an untagged string refused unless `Parse(s, scale)` names its scale, a tag of another scale than `scale` refused; `ToString` writes TT as TT, `IFormattable` a custom `DateTime` format then the tag (standard formats and zone specifiers refused); two times are equal when they are the same instant, whatever their scales, `Equals`, `==` and `GetHashCode` following `CompareTo` by the TAI ticks, and so does `Window` equality, by its ends (#512); `Window.Sample(step, includeEnd = false)` gives the lazy points start + i·step at or before the end, the grid of every window read (`GetEphemeris`, `Star.Propagate`, `SpiceAPI.TransformFrame`, which reads the end on the grid since lot L6, #781); `EqualsExact` and `Time.ExactComparer` compare the labels (calendar and scale); a test of a label uses the tests' `LabelAssert`, not `Assert.Equal`
@@ -89,7 +89,7 @@ One grammar for every command (R29 of #668, lot L8; `docs/reference/cli.md`, its
 - `IO.Astrodynamics.Propagator.Events`: IEventDetector, EventResult, EventAction, CrossingDirection; `ManeuverEventDetector` internal (decision 88 of #668, #802), serving the run that built it only: disarmed when the run ends (completed, stopped or thrown), its `Evaluate` and `HandleEvent` then throwing `InvalidOperationException` (decision 95 of #668) for the calls that start after the end, a call in progress when the run ends completing (decision 98 of #668, no lock: only an integrator that keeps a detector past its `IntegrateSegment` call meets it); it executes its impulse once at most for calls that do not overlap, disarming itself as its `HandleEvent` starts to execute it (an execution that throws included), a later call throwing `InvalidOperationException`, one that skipped the occurrence (`Continue`) staying armed (decision 97 of #668)
 - `IO.Astrodynamics.Propagator.Variational`: state transition matrix Φ, sensitivity Ψ to Cd and Cr, and covariance P propagated with the state by RK7(8) (`CovariancePropagationOptions`; off by default on the paths that take them alone, an initial covariance then not propagated; Auto on the options entry points, `PropagationOptions.CovariancePropagation` null: propagated under RK7(8) from a covariance at the window start, an indefinite one throwing; `CovariancePropagationOptions.None` off); Φ, Ψ, P and the extended covariance read from `PropagationSolution` (`GetStateTransitionMatrix`, `GetParameterSensitivity`, `GetCovariance`, `GetExtendedCovariance`, `GetStateVector`); maneuver execution error by `ImpulseManeuver.ExecutionError` (`ManeuverExecutionError`, in `IO.Astrodynamics.Maneuver`; model of Gates); an initial covariance that rounding made indefinite is rejected by the propagation, remediated beforehand by `StateVector.WithRemediatedCovariance()` (the eigenvalue clipping of the conjunction analysis, `CovarianceRemediation`), a defect deeper than −1e-3 of the trace of the correlation matrix in the frame of the state and in its RTN frame refused by both (#443), clipped in the frame of the state where its depth passes there, in its RTN frame and rotated back otherwise. See `docs/reference/covariance-propagation.md`
 - `IO.Astrodynamics.Propagator.MonteCarlo`: MonteCarloPropagator, StateSampler, StatisticsAggregator, per-epoch statistics and RSS percentiles
-- `IO.Astrodynamics.SSA`: ConjunctionAssessment (Screen, Analyze, AnalyzeAll, EvaluateAvoidance), Foster 2D collision probability, maximum probability, encounter quality flags (a window without a close approach: an empty `AnalyzeAll`, the closest window end from `Analyze` and `Screen`, flagged `TcaAtWindowEnd`, on both paths, #621); the covariance at TCA propagated for participants propagated in RK7(8) with an initial covariance (replay of the variational equations, `ConjunctionAnalysisOptions.CovariancePropagation`, on by default, `CovariancePropagationOptions.None` for the covariance held in RTN, null throwing since 11.0.0), its source per participant (`CovarianceSource`, `ParticipantCovariance`) and the non-linearity index; avoidance options propagated numerically from the covariance at their burn, and without it with the force model of the participant's propagation (RK7(8) or Velocity-Verlet), the two-body orbit stated by `AvoidanceOption.Trajectory` without one; CDM export of the consider parameters (`CDRG_*`, `CSRP_*`) and of the force model
+- `IO.Astrodynamics.SSA`: ConjunctionAssessment (Screen, Analyze, AnalyzeAll, EvaluateAvoidance; the protected `Spacecraft` itself as first argument, `EvaluateAvoidance` an `AvoidanceStudy` of `Options` and `Skipped` lead times, the grid of `AvoidanceSearchOptions` the constraint, one `ConjunctionAnalysisOptions` in `ScreeningOptions.Analysis` and `AvoidanceSearchOptions.Analysis`, R17 and structuring choice 2 of #668), catalogue objects (`TrackedObject` in `IO.Astrodynamics.Body`: `FromTle`, `FromOmm`, `FromState`, its own hard-body radius, NORAD and COSPAR ids and `ObjectType`, NAIF id −100000 − NORAD by default, exported to a CDM under its NORAD number in the SATCAT; R19 of #668), Foster 2D collision probability, maximum probability (public for two states at TCA: `CollisionProbability.Foster2D`, `FrisbeeMax`), encounter quality flags (a window without a close approach: an empty `AnalyzeAll`, the closest window end from `Analyze` and `Screen`, flagged `TcaAtWindowEnd`, on both paths, #621); the covariance at TCA propagated for participants propagated in RK7(8) with an initial covariance (replay of the variational equations, `ConjunctionAnalysisOptions.CovariancePropagation`, on by default, `CovariancePropagationOptions.None` for the covariance held in RTN, null throwing since 11.0.0), its source per participant (`CovarianceSource`, `ParticipantCovariance`) and the non-linearity index; `EncounterCase` shortcuts (`Tca`, `MissDistanceMeters`, `RelativeSpeedMetersPerSecond`, `ProbabilityOfCollision`, `ToString`), its public `AnalysisOptions` and `Search` (`CloseApproachSearch`), and the trajectory of each participant (`TrajectorySource`) (R17 and R18 of #668, lot L7), the constructors of the result types internal (R17 choice 4); `ReadRangeRateOverWindow = true` throws where the search is sampled; avoidance options propagated numerically from the covariance at their burn, and without it with the force model of the participant's propagation (RK7(8) or Velocity-Verlet), the two-body orbit stated by `AvoidanceOption.Trajectory` (`TrajectorySource`) without one; CDM export of the consider parameters (`CDRG_*`, `CSRP_*`) and of the force model
 - `IO.Astrodynamics.Atmosphere`: Atmospheric density, temperature, and pressure models for Earth and Mars
 - `IO.Astrodynamics.Math`: Vectors, matrices, quaternions, Legendre functions; `Matrix` is immutable (R26 of #668: the indexer, `With`, `Create`, `Diagonal`, `Identity(n)`; no public `Set`), `new Matrix(double[,])` copies the caller's array (#745), and its public holders (`StateVector.Covariance`, `EncounterState`, `CollisionRisk`, `EpochStatistics`, `CdmCovarianceMatrix`, `Iau2006Model.FrameBias()`) copy it in and out (#722); `Vector3.Dot` is the dot product (no operator `*` between vectors), with the unary minus, `double * v` and `Matrix * v`; the public methods that normalize (`Normalize()` of `Vector3` and `Quaternion`, `Matrix.FromQuaternion`, `TransformCovariance`, `Lerp`, `SLERP`, the axis-angle constructor, `Vector3.To`, the plane normal of the signed `Angle`, `Plane.GetAngle`) throw for a zero or non-finite input and accept every finite non-zero one, scaled outside the ordinary range of its squares (by the power of two of its largest component, `Vector3.To` by its largest component; the ranges in the root `CLAUDE.md`), bit for bit inside it; the vectors of `Angle(Vector3)` and the signed `Angle` are scaled likewise, 0 when zero, NaN when not finite (third round of #668)
 - `IO.Astrodynamics.Physics`: Geopotential model reader, coefficients
@@ -121,19 +121,11 @@ The framework distinguishes between two types of orbital elements using `Orbital
 
 **Creating Mean Elements from OMM Data**
 ```csharp
-// FromOMM accepts OMM native units: rev/day for mean motion, degrees for angles
-var meanKep = KeplerianElements.FromOMM(
-    meanMotion: 15.49309423,        // rev/day
-    eccentricity: 0.0000493,
-    inclination: 51.6423,           // degrees
-    raan: 353.0312,                 // degrees
-    argumentOfPeriapsis: 320.8755,  // degrees
-    meanAnomaly: 39.2360,           // degrees
-    observer: earth,
-    epoch: epoch,
-    frame: Frame.TEME);
+// omm: an OMM of SGP4 mean elements (CCSDS units: rev/day, degrees), as Omm.Load("iss.omm") reads it
+// ToMeanElements gives them in SI units, about the centre CENTER_NAME names, in REF_FRAME, at the epoch of TIME_SYSTEM
+var meanKep = omm.ToMeanElements();
 
-// The mean motion is cached internally to preserve precision
+// The mean motion of the OMM is kept as given, to preserve precision
 // when converting back to TLE format
 Assert.Equal(OrbitalElementsType.Mean, meanKep.ElementsType);
 
@@ -181,13 +173,18 @@ identifiers are `int` everywhere (`Configuration.NoradId`, `TLE.Create`) — nev
   `Omm.ToTle` without `ELEMENT_SET_NO`; #606)
 - Out-of-range identifiers, revolution numbers (> 99999) and element set numbers (> 9999) throw
   instead of being silently truncated
-- The `TLE` constructor rejects lines whose catalog numbers disagree (`InvalidOperationException`)
+- `TLE.Parse`, `ParseAll`, `Load`, `LoadAll`, `TryParse`, `TryLoad` (`IParsable<TLE>`) read TLE text: two- and three-line
+  sets mixed, CR/LF, blanks and Space-Track's `0 ` tolerated, a bad set `TleFormatException` at its line and column
+- The `TLE` constructor checks every field of the text before any kernel read and throws `ArgumentException` naming
+  `line1` or `line2` with a `TleFormatException` (`Line`, `Column`) as inner exception, lines whose catalog numbers
+  disagree included (line 2, column 3); a null or blank name is the catalog field as written; `CosparId` (null when
+  blank), `Classification`, `ElementSetNumber` and `RevolutionNumberAtEpoch` (0 when blank) read the lines (R21 of #668)
 
 **Mean Motion Precision Preservation**
 When converting OMM → KeplerianElements → TLE, mean motion is cached to avoid precision loss from round-trip conversions:
 ```
 OMM: meanMotion = 15.49309423 rev/day
-  → FromOMM() caches original mean motion
+  → Omm.ToMeanElements() keeps the original mean motion
   → MeanMotion() returns cached value (not recomputed from semi-major axis)
   → TLE output: 15.49309423 rev/day (EXACT)
 ```
@@ -195,6 +192,11 @@ OMM: meanMotion = 15.49309423 rev/day
 **SGP4 model and TLE text**
 - SGP4 is CSPICE `evsgp4_c`: Vallado's 2006 code, AFSPC mode, WGS-72 old (KE 7.43669161e-2), no other mode or constants;
   tsince is the TT seconds from the TLE epoch (UTC, exact to the tick) to the instant, whatever its time frame (#599)
+- The constructor reads no kernel (R21 of #668): the TLE's Earth reads its data at the first member that needs them, so
+  a valid TLE gives its fields, `MeanMeanMotion` (the field of line 2 in rad/s) and `ToOmm` (`MEAN_MOTION` the field as
+  written) without kernels, `MeanSemiMajorAxis` and SGP4 throwing `InvalidOperationException` (`BODY399_GM`) before them
+  and working once they are loaded; `MeanMotion()` is removed, `tle.MeanMotion()` the osculating one of the base class
+  (decision 111 of #668, decided by S. Guillet, 2026-11-26)
 - `FirstDerivationMeanMotion` and `SecondDerivativeMeanMotion` hold the TLE fields ṅ/2 and n̈/6 (OMM's
   `MEAN_MOTION_DOT`, `MEAN_MOTION_DDOT`); `TLE.Create` writes the UTC of the epoch and the nearest value of each field
   (#479, #480, #600 to #602)
@@ -203,7 +205,7 @@ OMM: meanMotion = 15.49309423 rev/day
 **Osculating vs Mean Accessors in TLE**
 | Accessor | Returns | Use Case |
 |----------|---------|----------|
-| `MeanSemiMajorAxis`, `MeanEccentricity`, etc. | Mean elements | Creating TLEs, orbit comparison |
+| `MeanSemiMajorAxis`, `MeanEccentricity`, `MeanMeanMotion` (rad/s, the field of line 2), etc. | Mean elements | Creating TLEs, orbit comparison |
 | `SemiMajorAxis()`, `Eccentricity()`, etc. | Osculating (via SGP4) | Physical calculations |
 | `ToOsculating()` | Osculating StateVector | Position/velocity calculations |
 | `ToMeanKeplerianElements()` | Mean KeplerianElements | TLE creation |
@@ -214,15 +216,13 @@ The `IO.Astrodynamics.CCSDS.OMM` namespace provides full support for CCSDS Orbit
 
 **Key Classes**
 - `Omm`: Main class representing a complete OMM document
-- `OmmReader`: Parses OMM from XML files/strings/streams
-- `OmmWriter`: Writes OMM to XML files/strings/streams
-- `OmmValidator`: Validates OMM content for CCSDS compliance
+- `Omm.Load`, `LoadAll`, `Parse`, `ParseAll`, `TryLoad`, `TryParse`, `Save`, `ToXml`, `Validate`, `IsValid`: the one verb set of the OMM, OPM and CDM, with `CcsdsReadOptions` (`ValidateSchema`, `ValidateContent`, and the validator switches `ValidatePhysicalConstraints`, `ValidateTleRequirements`, `WarnOnMissingOptionalFields`, `bool?`, false on a type without the check throwing) and `CcsdsWriteOptions` (`ValidateContent`, `WrapInNdmContainer`, `Indent`), every check on by default (R22 of #668; the reader, writer and validator classes internal, the `LoadFrom*`, `SaveTo*`, `TryLoadFromFile` and `ToXmlString` of 10.x removed)
 - `MeanElements`, `TleParameters`, `OmmMetadata`: Data structures
 
 **Loading and Saving OMM**
 ```csharp
 // Load OMM from file (with optional validation)
-var omm = Omm.LoadFromFile("satellite.omm", validateSchema: true, validateContent: true);
+var omm = Omm.Load("satellite.omm");
 
 // Access data
 Console.WriteLine($"Object: {omm.ObjectName}");
@@ -230,13 +230,13 @@ Console.WriteLine($"COSPAR ID: {omm.ObjectId}");  // Format: "1998-067A"
 Console.WriteLine($"Mean Motion: {omm.Data.MeanElements.MeanMotion} rev/day");
 
 // Save OMM to file
-omm.SaveToFile("output.omm", validateBeforeSave: true);
+omm.Save("output.omm");
 ```
 
 **OMM ↔ TLE Bidirectional Conversion**
 ```csharp
 // OMM to TLE (for SGP4 propagation)
-var omm = Omm.LoadFromFile("iss.omm");
+var omm = Omm.Load("iss.omm");
 if (omm.IsTleCompatible)
 {
     var tle = omm.ToTle();
@@ -246,7 +246,7 @@ if (omm.IsTleCompatible)
 // TLE to OMM (for archiving/sharing)
 var issTle = new TLE("ISS", line1, line2);
 var issOmm = issTle.ToOmm(originator: "My Organization");
-issOmm.SaveToFile("iss.omm");
+issOmm.Save("iss.omm");
 ```
 
 **COSPAR ID Format Handling**
@@ -274,9 +274,7 @@ The `IO.Astrodynamics.CCSDS.OPM` namespace provides full support for CCSDS Orbit
 
 **Key Classes**
 - `Opm`: Main class representing a complete OPM document
-- `OpmReader`: Parses OPM from XML files/strings/streams
-- `OpmWriter`: Writes OPM to XML files/strings/streams (with units attributes per CCSDS standard)
-- `OpmValidator`: Validates OPM content for CCSDS compliance
+- `Opm.Load`, `LoadAll`, `Parse`, `ParseAll`, `TryLoad`, `TryParse`, `Save`, `ToXml`, `Validate`, `IsValid`: the verb set of the OMM (the writer writes the units attributes per CCSDS standard)
 - `OpmData`, `OpmStateVector`, `OpmKeplerianElements`, `OpmMetadata`: Data structures
 - `OpmManeuverParameters`: Maneuver data (epoch, duration, delta-V, delta-mass)
 - `OpmUserDefinedParameters`: Custom user-defined parameters
@@ -285,7 +283,7 @@ The `IO.Astrodynamics.CCSDS.OPM` namespace provides full support for CCSDS Orbit
 **Loading and Saving OPM**
 ```csharp
 // Load OPM from file (with optional validation)
-var opm = Opm.LoadFromFile("spacecraft.opm", validateSchema: true, validateContent: true);
+var opm = Opm.Load("spacecraft.opm");
 
 // Access data
 Console.WriteLine($"Object: {opm.ObjectName}");
@@ -293,7 +291,7 @@ Console.WriteLine($"COSPAR ID: {opm.ObjectId}");  // Format: "1998-067A"
 Console.WriteLine($"Position: {opm.Data.StateVector.X}, {opm.Data.StateVector.Y}, {opm.Data.StateVector.Z} km");
 
 // Save OPM to file
-opm.SaveToFile("output.opm", validateBeforeSave: true, wrapInNdm: true, indent: true);
+opm.Save("output.opm");
 ```
 
 **OPM ↔ Spacecraft Bidirectional Conversion**
@@ -303,13 +301,11 @@ var spacecraft = new Spacecraft(-1000, "ISS", 420000.0, stateVector, 500000.0, c
     1600.0, 2.2, "1998-067A", 1.5);
 var opm = spacecraft.ToOpm(
     originator: "My Organization",
-    includeKeplerianElements: true,
-    includeSpacecraftParameters: true,
-    includeManeuvers: true);  // Includes executed maneuvers
-opm.SaveToFile("iss.opm");
+    options: OpmExportOptions.Default);  // Keplerian elements, spacecraft parameters, executed maneuvers
+opm.Save("iss.opm");
 
 // OPM to Spacecraft (for mission operations)
-var restoredOpm = Opm.LoadFromFile("iss.opm");
+var restoredOpm = Opm.Load("iss.opm");
 var restored = restoredOpm.ToSpacecraft(
     naifId: -1000,
     maxOperatingMass: 500000.0,
@@ -320,7 +316,7 @@ var restored = restoredOpm.ToSpacecraft(
 **OPM ↔ StateVector Conversion**
 ```csharp
 // OPM to StateVector (simple conversion)
-var opm = Opm.LoadFromFile("spacecraft.opm");
+var opm = Opm.Load("spacecraft.opm");
 var stateVector = opm.ToStateVector(observer: earth);
 // Units converted: km → m, km/s → m/s
 
@@ -333,7 +329,7 @@ var newOpm = Opm.CreateFromStateVector("SAT-1", "2024-001A", stateVector,
 ```csharp
 // spacecraft: a propagated spacecraft with a COSPAR id; end: an epoch of its propagation after its burns
 // The OPM carries the state of its epoch, with the mass and the maneuvers ignited by then (#658)
-var opm = spacecraft.ToOpm(epoch: end, includeManeuvers: true);
+var opm = spacecraft.ToOpm(epoch: end);   // the maneuvers included (OpmExportOptions.Default)
 // OPM will contain OpmManeuverParameters for each ImpulseManeuver ignited by then
 
 // Manual maneuver export from ImpulseManeuver
@@ -581,7 +577,7 @@ PropagatorBase (abstract)
 2. Segment loop: `Integrator.IntegrateSegment()` advances with event detection
 3. On event: `IEventDetector.HandleEvent()` → execute maneuver, reinitialize integrator
 4. Output: interpolate solution every output step from the start inside the window, then at the window end (in place of a grid point within ΔT/10 of it, #741), whether round(L/ΔT) rounds the window down or up (choice 6 of #668, every path, `TLEPropagator` included; before 11.0.0 a grid that rounded up ran up to ΔT/2 past the window: only its last output moves in RK7(8), and in Velocity-Verlet the outputs inside the last integration step too when the step does not divide ΔT, decision 8 of lot L4), so the stored states run to the window end, then the attitude record from the timeline: each law at its activation, at every output epoch of its interval on the ICRF state, and once more 1 µs before each discrete change that follows it; the impulse's attitude over [tc − f dt, end of its maneuver window] (#539; tc the centroid of the acceleration of the equivalent constant-thrust burn, f = 1/x + 1/ln(1 − x) for the mass fraction burned x, #335, a fixed 0.666 before 11.0.0); the spacecraft stores its states and attitude record in ICRF (#523, #529, #534, #535; `docs/reference/spacecraft.md#attitude-and-kernels`)
-5. Stored states: split into arcs at each impulse with the states of the integrator before and after it (`ImpulseBoundary`, `PropagatorBase.Impulses`), read per arc and written as one type-9 SPK segment per arc by the managed writer (#540, #522; `docs/reference/spacecraft.md#the-stored-states-across-an-impulse`); `Spacecraft.AddPropagatedStates` takes one window per call, a new arc when its hull meets no stored arc, a call over a gap merging the arcs on either side (never at an impulse), a read in a gap between windows throwing as outside the stored states and a window argument that meets one refused up front (`InvalidOperationException` from the field-of-view search since lot L6, `ArgumentException` from the conjunction analysis until lot L7), an arc of one state read at its exact epoch only, a spacecraft that stores one state only included (the two-body orbit for one that stores none), an epoch in a gap within the light-time margin of two arcs read by the nearer (the later on a tie), the arc of one state of an impulse at the end of a propagation (#575) read within the margin past it, the state after the impulse, and left out of the SPK, a window added after it or not (decisions 42, 83 to 87 and 89 to 91 of #668, #792)
+5. Stored states: split into arcs at each impulse with the states of the integrator before and after it (`ImpulseBoundary`, `PropagatorBase.Impulses`), read per arc and written as one type-9 SPK segment per arc by the managed writer (#540, #522; `docs/reference/spacecraft.md#the-stored-states-across-an-impulse`); `Spacecraft.AddPropagatedStates` takes one window per call, a new arc when its hull meets no stored arc, a call over a gap merging the arcs on either side (never at an impulse), a read in a gap between windows throwing as outside the stored states and a window argument that meets one refused up front (`InvalidOperationException` from the field-of-view search since lot L6 and the conjunction analysis since lot L7), an arc of one state read at its exact epoch only, a spacecraft that stores one state only included (the two-body orbit for one that stores none), an epoch in a gap within the light-time margin of two arcs read by the nearer (the later on a tie), the arc of one state of an impulse at the end of a propagation (#575) read within the margin past it, the state after the impulse, and left out of the SPK, a window added after it or not (decisions 42, 83 to 87 and 89 to 91 of #668, #792)
 
 **Integrator Interface**
 ```csharp
@@ -869,19 +865,19 @@ var deg2Rad = IO.Astrodynamics.Constants.Deg2Rad; // not Constants.Deg2Rad (that
    - NORAD catalog numbers are `int`, not `ushort`; values above 99999 use Alpha-5 encoding, and
      `NoradCatalogNumber` handles the conversion — never format the field by hand
 8. **CCSDS OMM Handling**: When working with OMM files:
-   - Use `Omm.LoadFromFile()` with validation for production code
-   - A document with several OMM messages (#679), or an OMM with several segments, headers, bodies, metadata or data sections, or blocks of a data section, throws `OmmParseException` without `validateSchema`; with it (the default) the NDM/XML 4.0.0 schema, checked in the form of the document (a root `ndm` or `omm` without a namespace, every element unqualified as Space-Track and the writer write it, or every element below the root in the namespace; third round of #668), rejects the repeated elements first, `OmmValidationException`, but not several OMMs of an NDM; split it into one message per segment. An `ndm` without an OMM (empty, or of other messages only), which the NDM master accepts, is a schema error too, `OmmValidationException` where the reader's `OmmParseException` came before
-   - A keyword whose value the data model refuses (out of its range, or an empty required string) throws `OmmParseException` naming the keyword and its value, with the data model's `ArgumentException` as inner exception, with or without `validateSchema` for a value the schema accepts (the library's rules beyond the schema, #708, decided by S. Guillet, 2026-11-16; fourth round of #668; before, the `ArgumentException` crossed the reader); the data-model constructors keep their `ArgumentException`
+   - Use `Omm.Load()` (or `LoadAll()` for a catalog NDM), which checks the schema and the content by default
+   - A document with several OMM messages (#679), or an OMM with several segments, headers, bodies, metadata or data sections, or blocks of a data section, throws `OmmParseException` (naming `LoadAll` for several messages) without the schema check (`CcsdsReadOptions.ValidateSchema`); with it (the default) the NDM/XML 4.0.0 schema, checked in the form of the document (a root `ndm` or `omm` without a namespace, every element unqualified as Space-Track and the writer write it, or every element below the root in the namespace; third round of #668), rejects the repeated elements first, `OmmValidationException`, but not several OMMs of an NDM; split it into one message per segment. An `ndm` without an OMM (empty, or of other messages only), which the NDM master accepts, is a schema error too, `OmmValidationException` where the reader's `OmmParseException` came before
+   - A keyword whose value the data model refuses (out of its range, or an empty required string) throws `OmmParseException` naming the keyword and its value, with the data model's `ArgumentException` as inner exception, with or without the schema check for a value the schema accepts (the library's rules beyond the schema, #708, decided by S. Guillet, 2026-11-16; fourth round of #668; before, the `ArgumentException` crossed the reader); the data-model constructors keep their `ArgumentException`
    - Check `IsTleCompatible` (TLE parameters, `MEAN_ELEMENT_THEORY` SGP4, `REF_FRAME` TEME, `CENTER_NAME` EARTH) before calling `ToTle()`, which otherwise throws naming the keywords at fault (#679)
    - Use `TLE.ToOmm()` to convert TLE data for CCSDS-compliant archiving
    - COSPAR ID format conversion is automatic (OMM: "1998-067A" ↔ TLE: "98067A")
    - `ToTle()` throws when `NORAD_CAT_ID` (> 339999) or `REV_AT_EPOCH` (> 99999) exceeds TLE capacity
 9. **CCSDS OPM Handling**: When working with OPM files:
-   - Use `Opm.LoadFromFile()` with validation for production code
-   - A document with several OPM messages (#679), or an OPM with several segments, headers, bodies, metadata or data sections, or blocks of a data section, throws `OpmParseException` without `validateSchema`; with it (the default) the NDM/XML 4.0.0 schema, checked in the form of the document (a root `ndm` or `opm` without a namespace, every element unqualified as Space-Track and the writer write it, or every element below the root in the namespace; third round of #668), rejects the repeated elements first, `OpmValidationException`, but not several OPMs of an NDM; split it into one message per segment. An `ndm` without an OPM (empty, or of other messages only), which the NDM master accepts, is a schema error too, `OpmValidationException` where the reader's `OpmParseException` came before
-   - A keyword whose value the data model refuses (out of its range, or an empty required string) throws `OpmParseException` naming the keyword and its value, with the data model's `ArgumentException` as inner exception, with or without `validateSchema` for a value the schema accepts (the library's rules beyond the schema, #708, decided by S. Guillet, 2026-11-16; fourth round of #668; before, the `ArgumentException` crossed the reader); the data-model constructors keep their `ArgumentException`
+   - Use `Opm.Load()` (or `LoadAll()`), which checks the schema and the content by default
+   - A document with several OPM messages (#679), or an OPM with several segments, headers, bodies, metadata or data sections, or blocks of a data section, throws `OpmParseException` (naming `LoadAll` for several messages) without the schema check (`CcsdsReadOptions.ValidateSchema`); with it (the default) the NDM/XML 4.0.0 schema, checked in the form of the document (a root `ndm` or `opm` without a namespace, every element unqualified as Space-Track and the writer write it, or every element below the root in the namespace; third round of #668), rejects the repeated elements first, `OpmValidationException`, but not several OPMs of an NDM; split it into one message per segment. An `ndm` without an OPM (empty, or of other messages only), which the NDM master accepts, is a schema error too, `OpmValidationException` where the reader's `OpmParseException` came before
+   - A keyword whose value the data model refuses (out of its range, or an empty required string) throws `OpmParseException` naming the keyword and its value, with the data model's `ArgumentException` as inner exception, with or without the schema check for a value the schema accepts (the library's rules beyond the schema, #708, decided by S. Guillet, 2026-11-16; fourth round of #668; before, the `ArgumentException` crossed the reader); the data-model constructors keep their `ArgumentException`
    - Use `Spacecraft.ToOpm()` for archiving spacecraft state with maneuvers
-   - Use `Opm.ToSpacecraft()` to restore spacecraft (requires naifId; `maxOperatingMass` and `clock` optional, a MASS above the maximum throwing, decision 77 of #668)
+   - Use `Opm.ToSpacecraft()` to restore spacecraft (requires naifId; its one sectional area `DRAG_AREA` or `SOLAR_RAD_AREA`, two different values throwing `InvalidOperationException`, #805, decision 112 of #668; `maxOperatingMass` and `clock` optional, a MASS above the maximum throwing, decision 77 of #668)
    - Use `Opm.ToStateVector()` for simple state vector extraction
    - Unit conversions (km↔m, deg↔rad) are automatic
    - Maneuver conversion is one-way: Spacecraft→OPM (OPM maneuvers are archival only)

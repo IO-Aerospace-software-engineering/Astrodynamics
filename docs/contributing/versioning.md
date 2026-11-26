@@ -48,7 +48,9 @@ Changes since 10.2.0-preview-1: the conformance runner of the six lots of
 [#457](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/457) and the defects its references
 found, the integration over TT seconds about the Earth, the managed occultation, field-of-view and window searches to
 1 µs, the managed TEME, the attitude timeline of a propagation and the kernels it writes, with the kernels of a spacecraft
-written and loaded in one call (`Spacecraft.WriteKernels`), the 2D Pc and the CDM.
+written and loaded in one call (`Spacecraft.WriteKernels`), the 2D Pc and the CDM, read into an encounter
+(`Cdm.ToEncounter`, `CollisionProbability.Foster2D`), and the catalogue objects of the conjunction analysis
+(`TrackedObject`).
 
 A major version, because it breaks the API. The entries marked **Breaking** under **Changed** list each change a
 caller can meet, with its migration: among them the maneuver chain on the attitude timeline, the kernels and the
@@ -82,7 +84,12 @@ the spacecraft alone, a write with nothing to write that throws `InvalidOperatio
 (and `astro propagate`) that refuses a name that is not a portable file name and a previous export SPICE holds, and
 the window searches on the observer with one options record per kind, their windows an `IReadOnlyList<Window>`
 labelled in the scale of the search window, the occultation of a site observer searched by the library, an angular
-threshold checked against its range, and the window reads on the grid of `Window.Sample`.
+threshold checked against its range, and the window reads on the grid of `Window.Sample`, and the conjunction analysis
+on the protected `Spacecraft` with one `ConjunctionAnalysisOptions` for the screening and the avoidance, an
+`AvoidanceStudy` whose grid is the constraint, a window past the stored states `InvalidOperationException` and the
+constructors of its results internal, a `TLE` checked field by field and read without kernels, its mean motion the
+field's, one verb set for the CCSDS messages with the CDM checked when it is read and written, `Opm.ToSpacecraft` of one
+sectional area and `Spacecraft.ToOpm` of `OpmExportOptions`.
 **Removed** lists `Instrument.PositionInFOV`, `LowThrustManeuver`, `Quaternion.Zero`, `Star.PropagationOutput`,
 `Window.Merge` and `Window.Intersects(Time)` (now `Hull` and `Contains`), the window searches on the target
 (`FindWindowsOn…Constraint` of `CelestialItem`, `ILocalizable` and `Site`, `Instrument.FindWindowsInFieldOfViewConstraint`
@@ -98,7 +105,9 @@ factories and flags of `MonteCarloConfiguration`), the asynchronous members over
 and `MonteCarloPropagator` `PropagateAsync`), the token and progress of `BatchOptions`, `Spacecraft.SetStandbyManeuver`,
 `InitialManeuver` and `Maneuver.SetNextManeuver`, `Attitude.StateOrientation`, `Spacecraft.GetTotalFuel`, the value
 equality of `FuelTank`, `Engine` and `Payload`, the `ILocalizable` constructors of `TriadAttitude` and
-`InstrumentPointingToAttitude.Aberration`. Several results change: see **Fixed** and **Changed**. The open defects a caller can meet at this
+`InstrumentPointingToAttitude.Aberration`, `ProtectedSpacecraftProfile` and `ManeuverConstraints`, the covariance
+ages of `EncounterState`, `TLE.MeanMotion()`, the CCSDS verbs of 10.x (`LoadFrom…`, `SaveTo…`, `ToXmlString`, the
+CDM's `ReadFrom…` and `WriteTo…`), `KeplerianElements.FromOMM` and the `useMeanMotion` constructor of `MeanElements`. Several results change: see **Fixed** and **Changed**. The open defects a caller can meet at this
 release are listed under **Known limitations**.
 
 **Added**
@@ -497,6 +506,97 @@ release are listed under **Known limitations**.
   round-trip form; `--time-scale tdb|tt|tai|utc|gps` writes the epochs in another scale than the input's; a value takes
   a unit (`400000km`, `7.5km/s`, `51.6deg`); `propagate --integrator rk78|vv` and `--atmosphere nrlmsise00|standard`
   choose the integrator and the atmosphere of the Earth; `--verbose` writes the trace of an error.
+- **`TLE.MeanMeanMotion`** (lot L7, R21 of [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668),
+  decision 111, decided by S. Guillet, 2026-11-26): the mean motion of the field of line 2 in rad/s, the field (rev/day)
+  × 2π / 86400, read without kernels; mean, like `MeanInclination` (`TleMeanMotionTests`). See [TLE](../reference/tle.md).
+- **`TleFormatException`, the fields of a TLE as properties, and a TLE without a name** (lot L7, R21 of
+  [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668)): `TleFormatException`, a
+  `FormatException` with the `Line` and `Column` (1-based) of the field at fault; `TLE.CosparId` (columns 10-17 trimmed,
+  null when blank), `Classification`, `ElementSetNumber` and `RevolutionNumberAtEpoch` (0 when blank), so that
+  `TLE.Create(tle.ToMeanKeplerianElements(), tle.Name, tle.NoradCatalogId, tle.CosparId, tle.RevolutionNumberAtEpoch,
+  tle.Classification, …, tle.ElementSetNumber)` rebuilds the lines without slicing them (`TleFieldsTests`); a null or blank
+  name is the catalog field of line 1 as written (`25544`, `T5544`), where it threw `ArgumentException`. `ToOmm` writes the
+  same OMM. See [TLE](../reference/tle.md#constructor).
+- **`TLE.Parse`, `ParseAll`, `Load`, `LoadAll`, `TryParse`, `TryLoad` and `IParsable<TLE>`** (lot L7, R21 of
+  [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668), the verb set shared with the CCSDS
+  messages): one set or every set of a text (`string` or `TextReader`) or a file, two- and three-line sets mixed, CR/LF,
+  trailing blanks and blank lines ignored, a name trimmed and Space-Track's `0 ` before it removed; a bad set throws
+  `TleFormatException` at its line of the text and its column, the first one, with no partial list; `Parse` and `Load` take
+  one set, the `Try` forms return false (`TleVerbsTests`). See [Reading TLE text](../reference/tle.md#reading-tle-text).
+
+- **One verb set for the CCSDS messages: `Load`, `LoadAll`, `Parse`, `ParseAll`, `TryLoad`, `TryParse`, `Save`, `ToXml`,
+  `Validate` and `IsValid` on `Omm`, `Opm` and `Cdm`, with `CcsdsReadOptions` and `CcsdsWriteOptions`** (lot L7, R22 of
+  [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668), the verb set of the TLE):
+  `Load(path, options)`, `Parse(xml | reader, options)` and `TryLoad`/`TryParse(…, out result, options)` read one message,
+  `LoadAll` and `ParseAll` every message of a document in document order (an NDM catalog; the schema checked once, the
+  content of each message), `Save(path | stream, options)` and `ToXml(options)` write; `CcsdsReadOptions`
+  (`ValidateSchema`, `ValidateContent`, and the validator switches of the content check `ValidatePhysicalConstraints`,
+  `ValidateTleRequirements` and `WarnOnMissingOptionalFields`, `bool?`, null running the check, false on a message type
+  without that check throwing `ArgumentException` naming `options`: the TLE switch on an OPM, any of the three on a CDM)
+  and `CcsdsWriteOptions` (`ValidateContent`, `WrapInNdmContainer`, `Indent`) are sealed records, every setting true or
+  null, `null` their `Default`; `Opm.IsValid()` and `Cdm.IsValid()` are new;
+  `CdmValidationException : CcsdsFormatException` carries the `CdmValidationResult` of a CDM its checks refuse;
+  `CdmExportOptions.Default` (`CcsdsVerbsTests`, `NamingRuleTests.TextFormats_ShareOneVerbSet`). The texts written and
+  the messages read are those of the former verbs (the internal writers and readers), bit for bit. See
+  [OMM](../reference/omm.md#loading), [OPM](../reference/opm.md#loading) and [CDM](../reference/cdm.md#static-methods).
+- **`Omm.ToMeanElements(observer)`, `Omm.GetEpoch()` and `Opm.GetEpoch()`** (lot L7, R22 of
+  [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668)): the mean elements of an OMM in
+  SI units, mean `KeplerianElements` about the centre `CENTER_NAME` names (the rules of `Opm.ToStateVector`, #679), in
+  the frame of `REF_FRAME`, at its epoch, from `MEAN_MOTION` (the elements of `KeplerianElements.FromOMM` bit for bit,
+  the mean motion kept, the kernel GM) or `SEMI_MAJOR_AXIS` (km to m); and the `EPOCH` of an OMM or an OPM as a `Time`
+  in its `TIME_SYSTEM`, UT1 or another scale `Time` lacks throwing `InvalidOperationException`; the models keep their
+  `DateTime` (`OmmMeanElementsAndEpochTests`). See [OMM](../reference/omm.md#conversion-validation).
+- **`AvoidanceStudy`, `SkippedLeadTime` and `AvoidanceSkipReason`** (lot L7, R17 of
+  [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668), decided by S. Guillet,
+  2026-11-19): the result of `ConjunctionAssessment.EvaluateAvoidance`, its ranked `Options` and the lead times of the
+  grid that gave none, `Skipped`, each with its `LeadTime` and `Reason` (`BeforeWindow`, a burn before the window;
+  `OutsideTrajectory`, a burn the propagation of the options does not hold), its `ToString` the lead time and the reason
+  (`ConjunctionAssessmentTests.EvaluateAvoidance_TheGridIsTheConstraint_TheLeadsBeforeTheWindowSkipped`). See
+  [Avoidance](../reference/avoidance.md#evaluateavoidance).
+- **The results of the conjunction analysis read at a glance** (lot L7, R17 and R18 of
+  [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668), decided by S. Guillet, 2026-11-19): `EncounterCase.Tca`, `MissDistanceMeters`,
+  `RelativeSpeedMetersPerSecond` (the norm of the relative velocity, the CDM's `RELATIVE_SPEED`) and
+  `ProbabilityOfCollision`, each the value it stands for; `ToString` on `EncounterCase` (TCA, miss, Pc, combined radius,
+  flags; `Pc n/a` without a probability), `EncounterState` and `CollisionRisk`; `EncounterCase.AnalysisOptions` public
+  (internal before), the options the analysis used, the radius of the secondary resolved, the start of
+  `AvoidanceSearchOptions.Analysis = encounter.AnalysisOptions with { … }`; `EncounterCase.Search`
+  (`CloseApproachSearch`: `Sampled`, `Polynomial`), the search that ran; `EncounterState.ProtectedTrajectory` and
+  `SecondaryTrajectory` (`TrajectorySource`: `Propagated`, `TwoBody`, `Sgp4`, `Kernel`), how each participant's
+  trajectory was computed (`ConjunctionAssessmentTests.EncounterCase_Shortcuts_AreTheNestedValues_AndToStringReadsThem`,
+  `Search_ReportsTheSearchThatRan_AndTheTrajectoryOfEachParticipant`,
+  `TrajectorySource_OfAnSgp4Participant_AndOfABodyReadFromTheKernels`). No result moves. See
+  [Conjunction Assessment](../reference/conjunction-assessment.md#encountercase).
+- **The ingest of a CDM and the public probability of collision** (lot L7, R19 of
+  [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668), decided by S. Guillet, 2026-11-19, and decision 110, decided by S. Guillet,
+  2026-11-26): `Cdm.ToStateVector(CdmObjectRole)`, the state of an object at TCA about the centre `ORBIT_CENTER` names
+  (the Earth without one), `EME2000` and `GCRF` in ICRF and `ITRF` in ITRF93, its covariance turned from RTN;
+  `Cdm.ToEncounter(combinedHardBodyRadiusMeters)`, the `EncounterCase` at the TCA of the CDM from its two states as
+  given, no search (`CloseApproachSearch.None`), its screening window the CDM's screening period (the TCA alone without one, where `EvaluateAvoidance` skips every lead time as before the window), its objects transient
+  spacecraft whose avoidance follows their two-body orbits; the static `CollisionProbability.Foster2D` and `FrisbeeMax`
+  of two states at TCA, by the cores of the analysis, so `ToEncounter`'s Pc is `Foster2D`'s bit for bit; and a `Time`
+  accessor in UTC beside each `DateTime` of the CDM records (`CdmHeader.CreationDate`, `CdmRelativeMetadataData.Tca`,
+  `StartScreenPeriod`, `StopScreenPeriod`, `ScreenEntryTime`, `ScreenExitTime`, `CdmOdParameters.TimeLastObservationStart`,
+  `TimeLastObservationEnd`) (`CdmIngestTests`, `ConjunctionAssessmentTests.Foster2DAndFrisbeeMax_DesignedEncounters_AreTheInternalPcAndMatchTheExactPc`,
+  `ToEncounter_DesignedEncounters_IsTheEncounterAtTheTcaOfTheCdm_ItsPcFoster2D`). The conformance runner reads its
+  encounters through them, its `StraightLineEncounter` (the analysis on straight-line trajectories over TCA ± 10 s, whose
+  TCA and states left the given ones by noise) removed: on `collision_probability` 001 to 004 the Pc moves at noise level,
+  closer to the exact Pc (relative error against the golden 1.6e-11, 4.9e-12, 7.4e-11, 3.0e-12 before, 1.1e-11,
+  4.8e-13, 6.7e-12, 2.8e-13 after), the encounter-plane sigmas by up to 2.0e-15 relative, and on `cdm` 007 (export) the
+  Pc by 1.3e-15 relative and the covariances read back within 1.3e-14 km² of the golden (1.9e-14 before); every status PASS, `cdm` decode and `to_inertial`
+  bit for bit. See [CDM](../reference/cdm.md#ingest).
+- **Catalogue objects** (lot L7, R19 of
+  [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668), decided by S. Guillet, 2026-11-19; the default identifier
+  confirmed by S. Guillet, 2026-11-13): `TrackedObject` (`IO.Astrodynamics.Body`), a debris, rocket body or other
+  catalogue object as the secondary of the conjunction analysis, built by `FromTle`, `FromOmm` (a TLE-compatible OMM) or
+  `FromState`, with its `HardBodyRadius` (the secondary's own radius, as a spacecraft's), `NoradCatalogId`, `CosparId`
+  and `ObjectType`, without a clock, an engine or a mass; its motion that of a `Spacecraft` of the same orbit without
+  stored states, bit for bit (SGP4, `TrajectorySource.Sgp4`, or the two-body orbit, `TwoBody`), as target and as
+  observer; its NAIF identifier −100000 − NORAD by default (mkspk's convention, which overlaps
+  `MonteCarloConfiguration.BaseNaifId`); `EncounterCase.ToCdm` writes it under its NORAD number with
+  `CATALOG_NAME = SATCAT`, its international designator (`UNKNOWN` without one), its `OBJECT_TYPE` and
+  `MANEUVERABLE = N/A` (`TrackedObjectTests`). Before, such an object was wrapped in a `Spacecraft`, exported as a
+  payload under its NAIF identifier. No result moves. See
+  [Conjunction Assessment](../reference/conjunction-assessment.md#catalogue-objects).
 
 **Fixed**
 
@@ -4114,9 +4214,11 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   values (either step, 0 s or −5 s) ended in `OutOfMemoryException` (about 15 s without the limit; a
   `MaximumEventSearchStep` of −5 s gave a search step of four bisection tolerances, an `AnalysisSampleStep` of −5 s
   stepped backwards); on the paths of a propagated participant (its force model, or its propagated covariance) a
-  `MaximumEventSearchStep` of 0 s ended the same way, −5 s and a sample step of 0 s or −5 s were accepted silently. Both now throw `ArgumentOutOfRangeException` naming the option of the avoidance, before any
-  option is analyzed (`ConjunctionAssessmentTests.EvaluateAvoidance_StepNotPositive_Throws`, the three paths, 0 s and
-  −5 s, 12 rows, red on a85098d).
+  `MaximumEventSearchStep` of 0 s ended the same way, −5 s and a sample step of 0 s or −5 s were accepted silently. Both now throw `ArgumentOutOfRangeException` naming the step, before any
+  option is analyzed: since lot L7 the steps of the avoidance are those of its `AvoidanceSearchOptions.Analysis`, a
+  `ConjunctionAnalysisOptions` that refuses them where it is built (under **Changed**;
+  `ConjunctionAssessmentTests.EvaluateAvoidance_StepNotPositive_Throws`, the three paths, 0 s and −5 s, 12 rows, red on
+  a85098d).
 
 - **A window without a close approach gave its midpoint on the sampled path** ([#621](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/621)).
   `Screen` and the `ILocalizable` overloads of `Analyze` and `AnalyzeAll` returned the window midpoint when the range
@@ -4848,6 +4950,14 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   minutes around the leap second of 2012-06-30 at 1 s gave 122 states for 121, the last at 2012-07-01T00:01:01Z, and a
   read whose data ended at the window end threw `SpiceException`. The epochs are the points of `Window.Sample(stepSize)`
   (Breaking, under **Changed**; `SpiceApiWindowReadTests`, red before the change).
+- **`Opm.ToSpacecraft` dropped `SOLAR_RAD_AREA`**
+  ([#805](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/805), lot L7, decision 112 of
+  [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668), decided by S. Guillet,
+  2026-11-26): the sectional area of the spacecraft was `DRAG_AREA`, else 1 m², so an OPM that held `SOLAR_RAD_AREA`
+  alone gave 1 m², and a second, different area was dropped without a word. The area is the one the OPM gives, the value
+  when both are equal, and two different values throw `InvalidOperationException` naming both keywords (Breaking, under
+  **Changed**; `OpmTests.ToSpacecraft_OneArea_IsTheSectionalArea`, `ToSpacecraft_TwoDifferentAreas_Throws`, red before
+  the change).
 **Changed**
 
 - **Breaking: the scale of a `Time` is a required argument** (lot L2, R24 of
@@ -5194,7 +5304,7 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   that leaves the stored states of the instrument's spacecraft or of a spacecraft target, or meets a gap between the
   windows given to `AddPropagatedStates`, with `InvalidOperationException`, the state of the spacecraft, as
   `GetEphemeris` over a window and the managed distance search; it threw `ArgumentException` (`searchWindow`), the same
-  message. The `ILocalizable` overloads of the conjunction analysis keep `ArgumentException` until lot L7; a target that
+  message. The `ILocalizable` overloads of the conjunction analysis followed in lot L7 (under Changed); a target that
   is the instrument's spacecraft or an ellipsoid without radii keeps `ArgumentException` (`FieldOfViewSearchTests`,
   `AddedStatesGapTests`); the search is `Instrument.FindFieldOfViewWindows` since lot L6 (see **Removed**). Migration:
   catch `InvalidOperationException` there.
@@ -6402,33 +6512,37 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   `PolarRadius` instead.
 
 - **Breaking: the hard-body radius of the secondary is its own** ([#683](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/683), Fixed above).
-  `ConjunctionAnalysisOptions.SecondaryHardBodyRadiusMeters`, `ScreeningOptions.DefaultSecondaryHardBodyRadiusMeters`
-  and `AvoidanceSearchOptions.SecondaryHardBodyRadiusMeters` are `double?`, null by default (5.0 before). The radius of
-  the secondary is the `HardBodyRadius` of a secondary spacecraft when it is above 0, the option when the secondary
-  gives none (a radius of 0, or not a spacecraft), 5 m when neither does; an option of `Analyze`, `AnalyzeAll` or
+  `ConjunctionAnalysisOptions.SecondaryHardBodyRadiusMeters` is `double?`, null by default (5.0 before), the one radius
+  setting of the analysis, the screening (`ScreeningOptions.Analysis`) and the avoidance (`AvoidanceSearchOptions.Analysis`)
+  since lot L7 (`ScreeningOptions.DefaultSecondaryHardBodyRadiusMeters` and
+  `AvoidanceSearchOptions.SecondaryHardBodyRadiusMeters` of 10.2.0-preview-1 removed, under the L7 entry below). The radius of
+  the secondary is the `HardBodyRadius` of a secondary spacecraft or `TrackedObject` when it is above 0, the option when the secondary
+  gives none (a radius of 0, or another object), 5 m when neither does; an option of `Analyze`, `AnalyzeAll` or
   `EvaluateAvoidance` that differs from the radius of the secondary throws `ArgumentException` naming the secondary and
-  the option, while `ScreeningOptions.DefaultSecondaryHardBodyRadiusMeters` is a fallback: a candidate that gives a
+  the option, while the radius of `ScreeningOptions.Analysis` is a fallback: a candidate that gives a
   radius keeps it whatever the option, so `Screen` never throws for a candidate's radius and screens a catalogue of
   spacecraft with different radii (decided by S. Guillet, 2026-11-14), each analysis and the re-analysis of its avoidance
   options carrying the candidate's resolved radius; an option that is NaN, infinite or negative throws
-  `ArgumentOutOfRangeException`.
+  `ArgumentOutOfRangeException` (where the `ConjunctionAnalysisOptions` is built since lot L7).
   Both `Spacecraft` constructors throw `ArgumentOutOfRangeException` for a `hardBodyRadius` that is not finite or is
   negative, the kernel-backed one included. The combined radius and the Pc move for every secondary spacecraft with a
   radius under the default options (p + 5 m to p + s): `Screen`'s ranking, `EvaluateAvoidance`'s Pc and ranking, and
   the CDM's `COLLISION_PROBABILITY` and `AREA_PC` with them; secondaries of 0 m and other objects are bit for bit.
-  Migration: read the properties as `double?`; drop an option of `Analyze`, `AnalyzeAll` or `EvaluateAvoidance` that
+  Migration: read `SecondaryHardBodyRadiusMeters` as `double?`; drop an option of `Analyze`, `AnalyzeAll` or `EvaluateAvoidance` that
   restated or overrode the radius of the secondary spacecraft (or give the same value), and set `HardBodyRadius` on the
   secondary instead (a screening fallback that overrode a candidate's radius now leaves it its own); code compiled against
   10.2.0-preview-1 must be recompiled.
 - **Breaking: the avoidance options inherit the settings of the encounter** ([#683](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/683), Fixed above).
-  `AvoidanceSearchOptions.AnalysisSampleStep` and `MaximumEventSearchStep` are `TimeSpan?`,
-  `LowRelativeSpeedThresholdMetersPerSecond` and `SecondaryHardBodyRadiusMeters` `double?`, null by default for the
-  value the encounter was analyzed with (1 min, 60 s, 1.0 and 5.0 before). The stale threshold, the bisection tolerance
-  and the non-linearity threshold are those of the encounter (their defaults before). An encounter analyzed with the
+  A null `AvoidanceSearchOptions.Analysis` (the default) re-analyzes each option with the `ConjunctionAnalysisOptions`
+  the encounter was analyzed with (`EncounterCase.AnalysisOptions`), a given one replaces them whole (lot L7; the four
+  settings `AnalysisSampleStep`, `MaximumEventSearchStep`, `LowRelativeSpeedThresholdMetersPerSecond` and
+  `SecondaryHardBodyRadiusMeters` of 10.2.0-preview-1, 1 min, 60 s, 1.0 and 5.0, removed, under the L7 entry below). The
+  stale threshold, the bisection tolerance and the non-linearity threshold are those of the encounter (their defaults
+  before). An encounter analyzed with the
   default options gives the same options as before, bit for bit, apart from the radius; one of `Screen` carries its 5
   min sample step, whose search step on the two-body orbit is then 18.75 s instead of 3.75 s (no option of the two
-  measured pairs moved). Migration: read the four properties as nullable; give a value to override the encounter's;
-  recompile.
+  measured pairs moved). Migration: leave `Analysis` null for the encounter's settings, or give
+  `encounter.AnalysisOptions with { … }` to override some of them.
 - **Breaking: `Analyze` and `AnalyzeAll` refuse the protected spacecraft as secondary and a trajectory of another
   spacecraft** ([#683](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/683), Fixed above): `ArgumentException` naming `secondaryObject` for a secondary with the protected NAIF
   identifier, and naming `protectedTrajectory` or `secondaryTrajectory` for a `PropagationSolution` propagated for
@@ -7105,9 +7219,11 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   there); a caller that wanted the initial orbit writes `Opm.CreateFromStateVector` from `InitialOrbitalParameters`.
 
 - **Breaking: `EvaluateAvoidance` refuses a step of zero or less** ([#640](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/640), Fixed above).
-  `AvoidanceSearchOptions.AnalysisSampleStep` and `MaximumEventSearchStep`, when given, must be positive, the rule of
-  `ConjunctionAnalysisOptions`: `ArgumentOutOfRangeException` (its `ParamName` the option), where a negative step was
-  accepted or the call ran out of memory. Migration: give a positive step, or null for the encounter's.
+  The steps of the re-analysis of the options, `SampleStep` and `MaximumEventSearchStep` of `AvoidanceSearchOptions.Analysis`
+  (`AnalysisSampleStep` and `MaximumEventSearchStep` of the avoidance in 10.2.0-preview-1, removed in lot L7), must be
+  positive, the rule of `ConjunctionAnalysisOptions`, checked where it is built since lot L7:
+  `ArgumentOutOfRangeException` (its `ParamName` the step), where a negative step was accepted or the call ran out of
+  memory. Migration: give a positive step, or a null `Analysis` for the encounter's.
 
 - **Breaking: a window without a close approach gives its closest end, flagged, and `AnalyzeAll` nothing** ([#621](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/621), Fixed above).
   `Analyze`, `Screen` and the re-analysis of each avoidance option return the closest window end where the sampled path
@@ -7982,9 +8098,175 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   #668, decided by S. Guillet, 2026-11-23): the rule of the export, checked before the propagation, exit code 2
   (`Error: name: …`), where the name propagated and was written into nested directories or failed after the propagation.
   Migration: another name.
+- **A `TLE` reads no kernel when it is built** (lot L7, R21 of
+  [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668)): its Earth reads its GM, radii,
+  frame and orbit from the data provider at the first member that needs them (`MeanSemiMajorAxis`,
+  `ToMeanKeplerianElements`, SGP4), from the provider set at that time, a failed read keeping nothing; so a valid set gives
+  its fields, `NoradCatalogId`, `MeanMeanMotion` and `ToOmm` without kernels, and `MeanSemiMajorAxis` throws
+  `InvalidOperationException` naming `BODY399_GM` before them, then gives ∛(GM/n²) of the kernel GM once they are loaded,
+  bit for bit the value of a TLE built after them (`ColdStartTests.Tle_ReadBeforeItsKernels_ThrowsSpicesError_AndWorksOnceTheyAreLoaded`).
+  Before, the constructor read the Earth, and a TLE built before the kernels kept a GM of 0, a semi-major axis of 0 and a
+  NaN `MeanMotion()` for its life. `ToString` prints the semi-major axis only when the provider gives the GM, and the mean
+  motion. With the kernels loaded nothing moves (`TLETests`, `Sgp4ReferenceTests`, the propagation of a TLE spacecraft).
+  Migration: none.
+- **`TLE.ToOmm` writes the mean motion of the field** (lot L7, decision 111 of #668, decided by S. Guillet, 2026-11-26):
+  `MEAN_MOTION` is the field of line 2 as written, in rev/day; before, √(GM/a³)·86400/2π with a = ∛(GM/n²), which moved it
+  on 22 of the 31 sets of `Data/Sgp4Reference` by up to 3 ulp (3.4e-16 relative, e.g. 15.957445309999999 for 15.95744531;
+  `TleMeanMotionTests`), so the conformance runner's `tle_to_omm` deltas fall to 0. The occultation step a TLE spacecraft
+  infers (decision 106) takes `MeanMeanMotion`, within 2 ulp of the former `MeanMotion()`, under a tick of its period.
+  Migration: none.
+- **Breaking: the `TLE` constructor checks every field and throws `ArgumentException` for any bad line** (lot L7, R21 of
+  [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668)): `ArgumentException` naming
+  `line1` or `line2`, with a `TleFormatException` (line, column) as inner exception, for the length, the line number, the
+  catalog number, two catalog numbers (line 2, column 3) and the checksum, as before but with the parameter named, and now
+  for every field: the classification U, C or S, the international designator blank or YYNNN with one to three capital
+  letters, the epoch YYDDD.DDDDDDDD with a day from 1 to the length of its year, ṅ/2, n̈/6 and B*, the ephemeris type, the
+  element set and revolution numbers, the four angles, e (seven digits) and n (`TleFieldsTests`); no physical range. Before,
+  a wrong checksum and two catalog numbers threw `InvalidOperationException`, a malformed field a `FormatException` without
+  its column (or nothing: a day 000 or 400 rolled into the neighbouring year), and the length and line-number errors named no parameter. Every TLE of the repository and of the conformance
+  suite passes, so no result moves; `TLE.Create`, whose `cosparId` was any text of 6 to 8 characters, now throws
+  `ArgumentException` naming `cosparId` for a designator that is not of that form (`ABCDEF`, `98067a`), before it
+  builds its lines (`ToTLE` still `InvalidOperationException`, its fit failing). Migration: catch `ArgumentException` (its
+  `InnerException` is the `TleFormatException`) where `InvalidOperationException` or `FormatException` was caught.
+
+- **The CDM is checked when it is read and when it is written, and `ToXml` validates** (lot L7, R22 of
+  [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668), "validation stays on by
+  default" for the three messages). **Breaking**: `Cdm.Load` and `Cdm.Parse` check the NDM/XML schema and the content by
+  default, a failure throwing `CdmValidationException`, where `Cdm.ReadFrom*` ran no check (a value the schema refuses,
+  as `MANEUVERABLE = MAYBE`, now throws `CdmValidationException` before the reader's `CdmParseException`); `Cdm.Save`
+  and `Cdm.ToXml` validate the content (`WriteTo*` did not: a blank `MESSAGE_ID` was written); `Omm.ToXml` and `Opm.ToXml`
+  validate the content as `Save` does (`ToXml()` and `ToXmlString` did not: an OMM with TLE parameters and no
+  `NORAD_CAT_ID` is refused). Every CDM `EncounterCase.ToCdm` builds, the conformance suite's CDMs 001 to 006 and its
+  `export` 007 pass the checks, the runner's report unchanged. Migration: `new CcsdsReadOptions { ValidateSchema = false,
+  ValidateContent = false }` reads as `ReadFrom*` did, `new CcsdsWriteOptions { ValidateContent = false }` writes as
+  `WriteTo*` and `ToXml()` did.
+- **The arguments of the CCSDS verbs** (lot L7, R22 of #668). **Breaking**: a blank text given to `Parse` throws the parse
+  exception of its type (a text that holds no message), where `LoadFromString` threw `ArgumentNullException`; an empty
+  path given to `Load` throws `FileNotFoundException` and one given to `Save` `ArgumentException`, where `LoadFromFile`
+  and `SaveToFile` threw `ArgumentNullException`; null throws `ArgumentNullException` as before. The parse exception of
+  a document of several messages names `LoadAll` and `ParseAll` ("Load and Parse read a single message: LoadAll or
+  ParseAll reads them all."), where it asked to split the NDM. Migration: none, or `LoadAll`.
+- **`OmmReader`, `OmmWriter`, `OmmValidator`, `OpmReader`, `OpmWriter`, `OpmValidator`, `CdmReader`, `CdmWriter` and
+  `CdmValidator` are internal** (lot L7, R22 of #668, no forwarder). **Breaking**: the verbs of `Omm`, `Opm` and `Cdm`
+  replace them; the validators' switches `ValidatePhysicalConstraints`, `ValidateTleRequirements` and
+  `WarnOnMissingOptionalFields` are those of `CcsdsReadOptions` (a read only: `Validate()`, `IsValid()` and the check
+  before a write run every check, `CcsdsWriteOptions.ValidateContent = false` turning the whole check off). Migration:
+  `new OmmValidator { ValidateTleRequirements = false }` → `Omm.Load(path, new CcsdsReadOptions {
+  ValidateTleRequirements = false })`, likewise `ValidatePhysicalConstraints` and `WarnOnMissingOptionalFields` (OMM and
+  OPM); `new OmmReader().ReadFromFile(path)` → `Omm.Load(path)`, `ReadFromString(xml)` →
+  `Omm.Parse(xml)`, `new OmmWriter { WrapInNdmContainer = w, IndentOutput = i }.WriteToString(omm)` →
+  `omm.ToXml(new CcsdsWriteOptions { WrapInNdmContainer = w, Indent = i })`, `new OmmValidator().Validate(omm)` →
+  `omm.Validate()`, `ValidateSchema(path)` → `Omm.Load(path)` and its `OmmValidationException`'s `ValidationResult`;
+  likewise for the OPM and the CDM.
+- **`Opm.ToSpacecraft` reads `SOLAR_RAD_AREA`, and refuses two different areas** ([#805](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/805),
+  lot L7, decision 112 of [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668), decided
+  by S. Guillet, 2026-11-26). **Breaking**: a `Spacecraft` has one sectional area, which its drag and its radiation
+  pressure share: `DRAG_AREA` or `SOLAR_RAD_AREA`, whichever the OPM gives, the value when both are equal, and two
+  different values throw `InvalidOperationException` naming both keywords and their values, before anything is built.
+  Before, the area was `DRAG_AREA`, else 1 m²: an OPM that held `SOLAR_RAD_AREA` alone gave 1 m², and a second, different
+  area was dropped without a word (`OpmTests.ToSpacecraft_OneArea_IsTheSectionalArea`,
+  `ToSpacecraft_TwoDifferentAreas_Throws`). Every OPM the library writes (`Spacecraft.ToOpm`) holds one area twice.
+  Migration: for an OPM of two different areas, `ToStateVector()` and the `Spacecraft` constructor with the area chosen.
+- **`Spacecraft.ToOpm(originator, epoch, options)`: the three bools of the export are one `OpmExportOptions`** (lot L7,
+  D1 of [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668), no forwarder).
+  **Breaking**: `includeKeplerianElements`, `includeSpacecraftParameters` and `includeManeuvers` are removed; the sealed
+  record `OpmExportOptions` holds them (`IncludeKeplerianElements`, `IncludeSpacecraftParameters`, `IncludeManeuvers`, all
+  true, `Default`), the default export unchanged, bit for bit (`SpacecraftToOpmTests.ExportOptions_LeaveOutTheirBlock_DefaultWritesEvery`).
+  Migration: `ToOpm(includeManeuvers: false)` → `ToOpm(options: new OpmExportOptions { IncludeManeuvers = false })`, and
+  likewise for the other two.
+- **One `ConjunctionAnalysisOptions` for the screening and the avoidance: `ScreeningOptions.Analysis` and
+  `AvoidanceSearchOptions.Analysis`, a `Default` on the three records, their values checked at init** (lot L7, R17 and
+  structuring choice 2 of [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668), decided
+  by S. Guillet, 2026-11-19, no forwarder). **Breaking**: `ScreeningOptions.SampleStep`, `MaximumEventSearchStep`,
+  `DefaultSecondaryHardBodyRadiusMeters` and `LowRelativeSpeedThresholdMetersPerSecond`, and
+  `AvoidanceSearchOptions.AnalysisSampleStep`, `MaximumEventSearchStep`, `SecondaryHardBodyRadiusMeters` and
+  `LowRelativeSpeedThresholdMetersPerSecond` are removed; each record holds one `ConjunctionAnalysisOptions Analysis`, null
+  by default. A null `ScreeningOptions.Analysis` is `ConjunctionAnalysisOptions.Default` with a `SampleStep` of 5 min and
+  `CovariancePropagationOptions.None`, the screening of 10.x bit for bit
+  (`ConjunctionAssessmentTests.Screen_AnalysisNull_IsTheScreeningDefaultBitForBit`); a given one is honoured as given,
+  its covariance propagation included (before, the screening always held the covariance in RTN), its
+  `SecondaryHardBodyRadiusMeters` the fallback of the candidates that give no radius. A null
+  `AvoidanceSearchOptions.Analysis` is the settings of the encounter (#683), bit for bit the four null mirrors; a given
+  one replaces them whole, its radius resolved as by `Analyze` (`EvaluateAvoidance_Analysis_NullInheritsTheEncounterAndAGivenOneIsUsed`).
+  `ConjunctionAnalysisOptions.Default`, `ScreeningOptions.Default` and `AvoidanceSearchOptions.Default` equal
+  `new()` (the default grids of the avoidance shared read only). A `SampleStep` or `MaximumEventSearchStep` that is not
+  positive, a `SecondaryHardBodyRadiusMeters` not finite or negative and a `NonlinearityIndexThreshold` not positive and
+  finite throw `ArgumentOutOfRangeException` naming the property, and a `CovariancePropagation` of `StateTransitionOnly`
+  or with `IncludeInStepControl` `ArgumentException` naming it, where the record is built (D1 of #668); before, at the
+  start of the analysis (`ArgumentException` naming `options` for the covariance), of the screening (the radius, naming
+  `DefaultSecondaryHardBodyRadiusMeters`) or of `EvaluateAvoidance` (the mirrors, naming `AnalysisSampleStep` for its
+  sample step). Migration: `new ScreeningOptions { SampleStep = s }` → `new ScreeningOptions { Analysis =
+  ConjunctionAnalysisOptions.Default with { SampleStep = s, CovariancePropagation = CovariancePropagationOptions.None } }`
+  (`DefaultSecondaryHardBodyRadiusMeters` → `SecondaryHardBodyRadiusMeters`, likewise the other two);
+  `new AvoidanceSearchOptions { AnalysisSampleStep = s }` → `new AvoidanceSearchOptions { Analysis = settings with
+  { SampleStep = s } }`, `settings` the options the encounter was analyzed with (likewise the other three).
+- **The conjunction analysis takes the protected `Spacecraft`; `EvaluateAvoidance` returns an `AvoidanceStudy`, its grid
+  the constraint; `MANEUVERABLE` of object 1 always `YES`** (lot L7, R17 of
+  [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668), decided by S. Guillet,
+  2026-11-19, and decision 109, decided by S. Guillet, 2026-11-26; no forwarder). **Breaking**: the first parameter of
+  `Screen`, `Analyze` and `AnalyzeAll` (both families) is `Spacecraft protectedSpacecraft`, null throwing
+  `ArgumentNullException` naming it, and `EncounterCase.ProtectedAsset` (a `ProtectedSpacecraftProfile`) is
+  `ProtectedSpacecraft` (a `Spacecraft`); the analyses are bit for bit
+  those of the profile. `EvaluateAvoidance` returns an `AvoidanceStudy` (Added) instead of the list of options, the same
+  options in the same order. Every lead time and magnitude of `AvoidanceSearchOptions` is evaluated: the
+  `ManeuverConstraints` of the profile (10 min to 24 h and 5 m/s by default) dropped the others, so a lead time below
+  10 min or above 24 h and a magnitude above 5 m/s now give options; a lead time whose burn falls before the window, which
+  gave none without a word, is listed in `Skipped`. `LeadTimes` and `DeltaVMagnitudesMetersPerSecond` empty, or holding a
+  value not positive (a magnitude not finite) throw `ArgumentOutOfRangeException` at init, null `ArgumentNullException`
+  (a magnitude of 0 was dropped). The default grid (1 h, 3 h, 6 h; 0.05, 0.10, 0.25 m/s) lies inside the former
+  constraints, so the default study gives the options of 10.x bit for bit. In a CDM, `MANEUVERABLE` of object 1 is
+  always `YES`, the post-maneuver encounter of an option included, `ProtectedParticipantMetadata` overriding it; it was
+  `YES` when the profile's `MaxDeltaVMetersPerSecond` was positive (5 m/s by default), `NO` otherwise: no CDM the library
+  writes with the default profile moves (the 183 CDMs of the CDM, SSA and documentation tests byte for byte but their
+  `CREATION_DATE`). Migration: `Analyze(new ProtectedSpacecraftProfile(sc), …)` → `Analyze(sc, …)`, likewise `Screen` and
+  `AnalyzeAll`; `encounter.ProtectedAsset.Spacecraft` → `encounter.ProtectedSpacecraft`;
+  `var options = EvaluateAvoidance(encounter, o)` → `var options = EvaluateAvoidance(encounter, o).Options`; for
+  operational limits, a grid inside them; a `MaxDeltaVMetersPerSecond` of 0 that wrote `NO` →
+  `new CdmExportOptions { ProtectedParticipantMetadata = new CdmParticipantMetadata { Maneuverable = CdmManeuverable.No } }`.
+- **`ReadRangeRateOverWindow = true` throws where the search is sampled; a window past the stored states throws
+  `InvalidOperationException` from the conjunction analysis; `AvoidanceTrajectory` is `TrajectorySource`** (lot L7, R17
+  and R18 of [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668), decided by S. Guillet, 2026-11-19, and decisions 81 and 86, decided by
+  S. Guillet, 2026-11-23; no forwarder). **Breaking**: `ConjunctionAnalysisOptions.ReadRangeRateOverWindow = true`, read
+  by the polynomial search of two propagations only and ignored without a word elsewhere, throws `ArgumentException`
+  naming `options` before any search where the search is sampled: the `ILocalizable` overloads of `Analyze` and
+  `AnalyzeAll`, `ScreeningOptions.Analysis` (`Screen`), an `AvoidanceSearchOptions.Analysis` given to
+  `EvaluateAvoidance`, and two trajectories that do not share their observer and frame; the options an avoidance
+  inherits from its encounter clear it, as before. The `ILocalizable` overloads of `Analyze`, `AnalyzeAll` and `Screen`
+  refuse a window that leaves the stored states of a propagated spacecraft, or meets a gap between the windows given to
+  its `AddPropagatedStates`, with `InvalidOperationException`, the state of the spacecraft, the message unchanged
+  (`ArgumentException` naming `screeningWindow` before; a `PropagationSolution` that does not cover the window keeps
+  `ArgumentException` naming it, an argument). The enumeration `AvoidanceTrajectory` (`Propagated`, `TwoBody`) is
+  `TrajectorySource`, which adds `Sgp4` and `Kernel` for the participants of an encounter (under Added), and
+  `AvoidanceOption.Trajectory` is of that type, its values unchanged. Every result of a call still accepted is bit for
+  bit (`ConjunctionAssessmentTests.ReadRangeRateOverWindow_WhereTheSampledSearchRuns_Throws`,
+  `ConjunctionKernelAndWindowTests.Localizable_WindowPastThePropagatedStates_Throws`, `AddedStatesGapTests`). Migration:
+  leave `ReadRangeRateOverWindow` false on those calls (`encounter.AnalysisOptions with { ReadRangeRateOverWindow = false }`
+  to reuse the options of a polynomial search); catch `InvalidOperationException` for a window past the stored states;
+  `AvoidanceTrajectory.TwoBody` → `TrajectorySource.TwoBody`, likewise `Propagated`.
+- **The constructors of the results of the conjunction analysis are internal** (lot L7, R17 of
+  [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668), choice 4, decided by S. Guillet, 2026-11-19; no forwarder). **Breaking**: the
+  public constructors of `EncounterCase` (two), `EncounterState` (two), `CollisionRisk`, `AvoidanceOption` and
+  `RelativeState`, and the `init` accessor of `AvoidanceOption.Trajectory`, are internal: these are results, built by
+  `ConjunctionAssessment` (`Screen`, `Analyze`, `AnalyzeAll`, `EvaluateAvoidance`) and `Cdm.ToEncounter`, whose
+  encounters always carry their `AnalysisOptions`. Before, a case built by hand had null `AnalysisOptions`, its
+  avoidance re-analyzed with the defaults, and a `Propagated` trajectory for each participant. No result of the library
+  moves (`ConjunctionAssessmentTests.ResultTypes_HaveNoPublicConstructor`). Migration: an encounter from two states at
+  TCA → `Cdm.ToEncounter` of a CDM holding them, or `CollisionProbability.Foster2D` for the Pc alone; an encounter of
+  two objects → `ConjunctionAssessment.Analyze`, a debris or catalogue object as a `TrackedObject`.
 
 **Removed**
 
+- **`ProtectedSpacecraftProfile` and `ManeuverConstraints`** (lot L7, R17 of
+  [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668), decided by S. Guillet,
+  2026-11-19, no forwarder): the conjunction analysis takes the `Spacecraft` itself, and the grid of
+  `AvoidanceSearchOptions` is the constraint of the avoidance (under Changed). Migration: pass the spacecraft; give
+  `LeadTimes` and `DeltaVMagnitudesMetersPerSecond` within the limits `ManeuverConstraints` held.
+- **`EncounterState.ProtectedCovarianceAge`, `SecondaryCovarianceAge` and the constructor of `EncounterState` with the two
+  ages** (lot L7, R17 of [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668), decided by S. Guillet, 2026-11-19, no forwarder): the ages
+  are the `Age` of `ParticipantCovariance`, which carries the source with them. Migration:
+  `state.ProtectedCovarianceAge` → `state.ProtectedCovariance.Age`, likewise the secondary; the constructor of the ages →
+  the one of the two `ParticipantCovariance` (`new ParticipantCovariance(CovarianceSource.InitialStateHeldInRtn, age)`,
+  `ProvidedAtEncounter` for an age of zero, `ParticipantCovariance.None` for none).
 - **The window searches on the target: `FindWindowsOnDistanceConstraint`, `FindWindowsOnOccultationConstraint` and
   `FindWindowsOnCoordinateConstraint` of `CelestialItem`, `ILocalizable` and `Site`, `Site.FindWindowsOnIlluminationConstraint`,
   `Instrument.FindWindowsInFieldOfViewConstraint`, and the public constructor, `FindWindowsWithCondition` and
@@ -8237,6 +8519,32 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
 - **`Spacecraft.GetTotalFuel()`** (lot L5a, R09 of #668, decision 60, decided by S. Guillet, 2026-11-23): it returned
   the initial fuel whatever a run burnt. Migration: `GetInitialFuel()`, the same value, or `GetRemainingFuel()` for the
   fuel left.
+- **`TLE.MeanMotion()`** (lot L7, R21 of #668, decision 111, decided by S. Guillet, 2026-11-26, no forwarder): √(GM/a³)
+  of the mean semi-major axis, which needed the kernels. **Breaking**: `tle.MeanMotion()` still compiles and now binds to
+  `OrbitalParameters.MeanMotion(double)`, the mean motion of the osculating SGP4 set at the epoch, 0.14 % off the mean one
+  for the ISS (15.4709 against 15.4931 rev/day). Migration: `tle.MeanMotion()` → `tle.MeanMeanMotion`, within 2 ulp of
+  the former value.
+- **The CCSDS verbs of 10.x** (lot L7, R22 of #668, no forwarder): `Omm.LoadFromFile`, `LoadFromString`,
+  `LoadFromStream`, `TryLoadFromFile`, `SaveToFile`, `SaveToStream` and `ToXml()`; `Opm.LoadFromFile`, `LoadFromString`,
+  `LoadFromStream`, `TryLoadFromFile`, `SaveToFile`, `SaveToStream` and `ToXmlString`; `Cdm.ReadFromFile`,
+  `ReadFromString`, `ReadFromStream`, `WriteToFile`, `WriteToString`, `WriteToStream`, `ValidateSchema` and
+  `ValidateSchemaFromXml`. Migration: `LoadFromFile(path, validateSchema, validateContent)` →
+  `Load(path, new CcsdsReadOptions { ValidateSchema = …, ValidateContent = … })`, `LoadFromString(xml, …)` →
+  `Parse(xml, …)`, `LoadFromStream(stream, …)` → `Parse(new StreamReader(stream), …)`, `TryLoadFromFile(path, out m,
+  out result, …)` → `TryLoad(path, out m, options)` (the reason of a refusal from `Load`), `SaveToFile(path,
+  validateBeforeSave, wrapInNdm, indent)` → `Save(path, new CcsdsWriteOptions { ValidateContent = …, WrapInNdmContainer
+  = …, Indent = … })`, `SaveToStream` → `Save(stream, …)`, `ToXmlString(wrapInNdm, indent)` → `ToXml(…)`;
+  `Cdm.ReadFrom*` → `Cdm.Load`/`Parse`, `WriteToFile(path, wrap)` → `Save(path, …)`, `WriteToString(wrap)` →
+  `ToXml(…)`, `ValidateSchema(path)` → `Cdm.Load(path)`, whose `CdmValidationException` carries the
+  `CdmValidationResult`.
+- **`KeplerianElements.FromOMM`** (lot L7, R22 of #668, internal, no forwarder): the one SI-side member that took
+  degrees and rev/day. Migration: `omm.ToMeanElements()` for an OMM, the same elements bit for bit about the centre
+  `CENTER_NAME` names (pass the observer `FromOMM` was given to keep it), in the frame of `REF_FRAME`; for numbers
+  without an OMM, `new KeplerianElements(a, e, i, Ω, ω, M, observer, epoch, frame, OrbitalElementsType.Mean)` in SI
+  units, a = ∛(GM/n²).
+- **The constructor `MeanElements(epoch, meanMotion, …, bool useMeanMotion, …)`** (lot L7, R22 of #668, no forwarder):
+  its `useMeanMotion` had to be true. Migration: `MeanElements.CreateWithMeanMotion(epoch, meanMotion, …)`, the same
+  values.
 **Known limitations**
 
 The open defects a caller can meet at this release, grouped by cause; each line gives the workaround when there is
@@ -8321,14 +8629,6 @@ not listed.
   name; and it throws `InvalidOperationException` at the trajectory plot of a spacecraft whose initial orbit is open,
   which has no period ([#824](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/824)), the
   previous export left as it was since #799.
-- **A window that leaves a spacecraft's stored states** (lot L7 of
-  [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668)). Decision 81 of #668 gives a
-  window argument that leaves a body's stored states `InvalidOperationException`, as `GetEphemeris` over a window, the
-  managed distance search and, since lot L6, the field-of-view search throw
-  ([Spacecraft](../reference/spacecraft.md#the-exceptions-of-the-reads-and-the-writes)), but the `ILocalizable`
-  overloads of `ConjunctionAssessment.Analyze` and `AnalyzeAll` still throw `ArgumentException` for such a window, for
-  one that meets a gap between the windows given to `AddPropagatedStates` (decision 86) and for a trajectory that does
-  not cover the window: lot L7 changes them. Catch `ArgumentException` there until then.
 - **Kernel paths of more than 255 characters** ([#673](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/673)). `LoadKernels` and the command line hand SPICE the full path of
   each kernel, so a kernel whose full path is longer than 255 characters cannot be loaded through them
   (`SPICE(FILENAMETOOLONG)`, SPICE's message in the `InvalidOperationException` since #706, nothing on the standard
@@ -8426,6 +8726,9 @@ not listed.
   after lot L5 (the mass limited by the fuel on board, the shortfall reported).
 - **CDM dates** ([#616](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/616)). A date in a
   leap second throws `CdmParseException`.
+- **The tolerance of a TLE fit** ([#833](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/833)).
+  `TLE.Configuration.Tolerance` is never read: the fit of `OrbitalParameters.ToTLE` converges on its own constants, so
+  setting it changes nothing (the fitted TLE is not wrong). Leave it at its default.
 - **Angles brought into [0, 2π)**
   ([#471](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/471)). Angle normalization takes
   fl(2π) as 2π: each turn added to Ω, ω, ν or M leaves it 2.45e-16 rad low, each turn removed that much high, and

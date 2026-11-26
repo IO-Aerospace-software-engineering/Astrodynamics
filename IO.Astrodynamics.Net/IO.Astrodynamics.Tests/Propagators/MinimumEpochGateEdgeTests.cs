@@ -469,11 +469,11 @@ public class MinimumEpochGateEdgeTests
 
         var tca = S.AddSeconds(8000.0);
         var secondary = ReferenceCase.NewSpacecraft(-7842, AvoidanceFallbackCase.SecondaryNear(protectedCraft.GetEphemeris(tca, earth, Frame.ICRF, Aberration.None)));
-        var encounter = ConjunctionAssessment.Analyze(new ProtectedSpacecraftProfile(protectedCraft), secondary, new Window(S.AddSeconds(6500.0), S.AddSeconds(9500.0)));
+        var encounter = ConjunctionAssessment.Analyze(protectedCraft, secondary, new Window(S.AddSeconds(6500.0), S.AddSeconds(9500.0)));
         var avoidance = ConjunctionAssessment.EvaluateAvoidance(encounter, new AvoidanceSearchOptions
         {
             LeadTimes = [TimeSpan.FromMinutes(20.0)], DeltaVMagnitudesMetersPerSecond = [0.1], MaxReturnedOptions = 6
-        });
+        }).Options;
 
         Assert.NotEmpty(avoidance);
         double worst = 0.0;

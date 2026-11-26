@@ -32,7 +32,7 @@ namespace IO.Astrodynamics.CCSDS.OMM;
 /// not stop these values (#708).
 /// Conforms to CCSDS 502.0-B-3 (ODM Blue Book) and CCSDS 505.0-B-3 (NDM/XML Blue Book).
 /// </remarks>
-public class OmmReader
+internal class OmmReader
 {
     private static readonly XNamespace CcsdsNamespace = "urn:ccsds:schema:ndmxml";
 
@@ -120,6 +120,21 @@ public class OmmReader
             throw new OmmParseException("Could not find OMM element in document.");
 
         return ParseOmmElement(ommElement);
+    }
+
+    // The one OMM of a document (all false) or every OMM of it (all true, LoadAll and ParseAll, R22 of #668): a document
+    // that holds none throws, as Load does
+    internal IReadOnlyList<Omm> Read(XDocument document, bool all)
+    {
+        if (!all)
+            return [ParseDocument(document)];
+
+        var root = document.Root ?? throw new OmmParseException("XML document has no root element.");
+        var elements = CcsdsMessageLocator.FindAll(root, "omm");
+        if (elements.Count == 0)
+            throw new OmmParseException("Could not find OMM element in document.");
+
+        return elements.Select(ParseOmmElement).ToArray();
     }
 
     // The root OMM, the one OMM child of an NDM or the one OMM descendant of another root; several throw (#679)

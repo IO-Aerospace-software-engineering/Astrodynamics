@@ -1,6 +1,7 @@
 // Copyright 2023. Sylvain Guillet (sylvain.guillet@tutamail.com)
 
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Xml.Linq;
 
@@ -41,12 +42,32 @@ internal static class CcsdsMessageLocator
         {
             var type = messageName.ToUpperInvariant();
             throw parseException(
-                $"The document holds {messages.Count()} {type} messages; this reader reads a single message. Split the NDM " +
-                $"into one {type} message per document.");
+                $"The document holds {messages.Count()} {type} messages; Load and Parse read a single message: LoadAll or " +
+                "ParseAll reads them all.");
         }
 
         return root.Name.LocalName.Equals("ndm", StringComparison.OrdinalIgnoreCase)
             ? root.Elements().FirstOrDefault(IsMessage)
             : messages.FirstOrDefault();
+    }
+
+    /// <summary>
+    /// Finds every message element of the type, in document order, that <c>LoadAll</c> and <c>ParseAll</c> read (IC-25 of
+    /// #668's lot L7): the root itself when it is the message, otherwise the message children of an <c>&lt;ndm&gt;</c> root,
+    /// or the message descendants of any other root, as <see cref="FindSingle"/> chooses its element; messages of other
+    /// types are not counted.
+    /// </summary>
+    /// <param name="root">The root element of the document.</param>
+    /// <param name="messageName">The local name of the message element (<c>omm</c>, <c>opm</c>, <c>cdm</c>).</param>
+    /// <returns>The message elements, none when the document holds none.</returns>
+    internal static IReadOnlyList<XElement> FindAll(XElement root, string messageName)
+    {
+        bool IsMessage(XElement e) => e.Name.LocalName.Equals(messageName, StringComparison.OrdinalIgnoreCase);
+        if (IsMessage(root))
+            return [root];
+
+        return root.Name.LocalName.Equals("ndm", StringComparison.OrdinalIgnoreCase)
+            ? root.Elements().Where(IsMessage).ToArray()
+            : root.Descendants().Where(IsMessage).ToArray();
     }
 }

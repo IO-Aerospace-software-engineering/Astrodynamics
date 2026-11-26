@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using IO.Astrodynamics.CCSDS.Common;
 using IO.Astrodynamics.CCSDS.Common.Enums;
 using IO.Astrodynamics.Math;
+using IO.Astrodynamics.TimeSystem;
 
 namespace IO.Astrodynamics.CCSDS.CDM;
 
@@ -13,6 +14,12 @@ public sealed record CdmHeader
     public IReadOnlyList<string> Comments { get; init; } = Array.Empty<string>();
 
     public DateTime CreationDateUtc { get; init; }
+
+    /// <summary>
+    /// <see cref="CreationDateUtc"/> as a UTC <see cref="Time"/>, an unspecified kind taken as UTC as the writer takes it (#617;
+    /// R19 of #668, lot L7).
+    /// </summary>
+    public Time CreationDate => CcsdsDates.ToUtcTime(CreationDateUtc);
 
     public string Originator { get; init; } = string.Empty;
 
@@ -61,6 +68,12 @@ public sealed record CdmRelativeMetadataData
 
     public DateTime TcaUtc { get; init; }
 
+    /// <summary>
+    /// <see cref="TcaUtc"/> as a UTC <see cref="Time"/>, an unspecified kind taken as UTC as the writer takes it (#617;
+    /// R19 of #668, lot L7).
+    /// </summary>
+    public Time Tca => CcsdsDates.ToUtcTime(TcaUtc);
+
     private readonly double _missDistanceMeters;
 
     public double MissDistanceMeters
@@ -81,7 +94,19 @@ public sealed record CdmRelativeMetadataData
 
     public DateTime? StartScreenPeriodUtc { get; init; }
 
+    /// <summary>
+    /// <see cref="StartScreenPeriodUtc"/> as a UTC <see cref="Time"/>, an unspecified kind taken as UTC as the writer takes it (#617;
+    /// R19 of #668, lot L7); null without it.
+    /// </summary>
+    public Time? StartScreenPeriod => CcsdsDates.ToUtcTime(StartScreenPeriodUtc);
+
     public DateTime? StopScreenPeriodUtc { get; init; }
+
+    /// <summary>
+    /// <see cref="StopScreenPeriodUtc"/> as a UTC <see cref="Time"/>, an unspecified kind taken as UTC as the writer takes it (#617;
+    /// R19 of #668, lot L7); null without it.
+    /// </summary>
+    public Time? StopScreenPeriod => CcsdsDates.ToUtcTime(StopScreenPeriodUtc);
 
     public CdmScreenVolumeFrame? ScreenVolumeFrame { get; init; }
 
@@ -113,7 +138,19 @@ public sealed record CdmRelativeMetadataData
 
     public DateTime? ScreenEntryTimeUtc { get; init; }
 
+    /// <summary>
+    /// <see cref="ScreenEntryTimeUtc"/> as a UTC <see cref="Time"/>, an unspecified kind taken as UTC as the writer takes it (#617;
+    /// R19 of #668, lot L7); null without it.
+    /// </summary>
+    public Time? ScreenEntryTime => CcsdsDates.ToUtcTime(ScreenEntryTimeUtc);
+
     public DateTime? ScreenExitTimeUtc { get; init; }
+
+    /// <summary>
+    /// <see cref="ScreenExitTimeUtc"/> as a UTC <see cref="Time"/>, an unspecified kind taken as UTC as the writer takes it (#617;
+    /// R19 of #668, lot L7); null without it.
+    /// </summary>
+    public Time? ScreenExitTime => CcsdsDates.ToUtcTime(ScreenExitTimeUtc);
 
     private readonly double? _collisionProbability;
 
@@ -210,7 +247,19 @@ public sealed record CdmOdParameters
 
     public DateTime? TimeLastObservationStartUtc { get; init; }
 
+    /// <summary>
+    /// <see cref="TimeLastObservationStartUtc"/> as a UTC <see cref="Time"/>, an unspecified kind taken as UTC as the writer takes it (#617;
+    /// R19 of #668, lot L7); null without it.
+    /// </summary>
+    public Time? TimeLastObservationStart => CcsdsDates.ToUtcTime(TimeLastObservationStartUtc);
+
     public DateTime? TimeLastObservationEndUtc { get; init; }
+
+    /// <summary>
+    /// <see cref="TimeLastObservationEndUtc"/> as a UTC <see cref="Time"/>, an unspecified kind taken as UTC as the writer takes it (#617;
+    /// R19 of #668, lot L7); null without it.
+    /// </summary>
+    public Time? TimeLastObservationEnd => CcsdsDates.ToUtcTime(TimeLastObservationEndUtc);
 
     private readonly double? _recommendedOdSpanDays;
 
@@ -633,6 +682,9 @@ public sealed record CdmSegment
 
 public sealed record CdmExportOptions
 {
+    /// <summary>The options of the default export, as <c>new()</c> (D1 of #668, lot L7).</summary>
+    public static CdmExportOptions Default { get; } = new();
+
     public DateTime? CreationDateUtc { get; init; }
 
     public string Originator { get; init; } = "IO.Astrodynamics";

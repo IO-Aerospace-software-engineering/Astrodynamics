@@ -269,10 +269,9 @@ foreach (var craft in new[] { protectedCraft, secondaryCraft })
         CovariancePropagation = CovariancePropagationOptions.None
     });
 
-var profile = new ProtectedSpacecraftProfile(protectedCraft);
 var window = new Window(tca.AddHours(-1.0), tca.AddHours(1.0));
-var encounter = ConjunctionAssessment.Analyze(profile, secondaryCraft, window);
-var held = ConjunctionAssessment.Analyze(profile, secondaryCraft, window,
+var encounter = ConjunctionAssessment.Analyze(protectedCraft, secondaryCraft, window);
+var held = ConjunctionAssessment.Analyze(protectedCraft, secondaryCraft, window,
     new ConjunctionAnalysisOptions { CovariancePropagation = CovariancePropagationOptions.None });
 
 var source = encounter.EncounterState.ProtectedCovariance.Source;   // CovarianceSource.Propagated
@@ -294,7 +293,7 @@ var source = encounter.EncounterState.ProtectedCovariance.Source;   // Covarianc
 ```csharp
 // Inputs: encounter (EncounterCase)
 var cdm = encounter.ToCdm(new CdmExportOptions { Originator = "MyOpsCenter", MessageId = "CDM-001" });
-cdm.WriteToFile("encounter.cdm.xml");
+cdm.Save("encounter.cdm.xml");
 ```
 
 A propagated covariance is exported with `COVARIANCE_METHOD` `CALCULATED`, the force model of the propagation

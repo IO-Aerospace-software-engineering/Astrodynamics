@@ -105,20 +105,9 @@ public class MeanElements
         Comments = comments ?? Array.Empty<string>();
     }
 
-    /// <summary>
-    /// Initializes a new instance of the <see cref="MeanElements"/> class with mean motion.
-    /// </summary>
-    /// <param name="epoch">The epoch of the orbital elements.</param>
-    /// <param name="meanMotion">The mean motion in revolutions per day.</param>
-    /// <param name="eccentricity">The eccentricity.</param>
-    /// <param name="inclination">The inclination in degrees.</param>
-    /// <param name="rightAscensionOfAscendingNode">The RAAN in degrees.</param>
-    /// <param name="argumentOfPericenter">The argument of pericenter in degrees.</param>
-    /// <param name="meanAnomaly">The mean anomaly in degrees.</param>
-    /// <param name="useMeanMotion">Disambiguator parameter (must be true).</param>
-    /// <param name="gravitationalParameter">Optional GM in km³/s².</param>
-    /// <param name="comments">Optional comments.</param>
-    public MeanElements(
+    // The elements of a mean motion, the constructor of CreateWithMeanMotion, the one public way to them; the bool tells
+    // it from the semi-major axis constructor (public with a useMeanMotion that had to be true before 11.0.0, R22 of #668)
+    private MeanElements(
         DateTime epoch,
         double meanMotion,
         double eccentricity,
@@ -130,9 +119,6 @@ public class MeanElements
         double? gravitationalParameter = null,
         IReadOnlyList<string> comments = null)
     {
-        if (!useMeanMotion)
-            throw new ArgumentException("useMeanMotion must be true when using this constructor.", nameof(useMeanMotion));
-
         if (!(double.IsFinite(meanMotion) && meanMotion > 0))
             throw new ArgumentOutOfRangeException(nameof(meanMotion), "Mean motion must be a finite positive value.");
 

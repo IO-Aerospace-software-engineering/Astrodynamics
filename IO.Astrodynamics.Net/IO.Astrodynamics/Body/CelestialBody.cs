@@ -279,8 +279,15 @@ public class CelestialBody : CelestialItem, IOrientable<Frame>
     /// (information, GM, radii, J2 to J4, frame, orbit and sphere of influence) are read at the first read of a member
     /// that needs them, retried on failure (see <see cref="CelestialItem.Mass"/>).
     /// </summary>
-    internal static CelestialBody CreateDeferred(NaifObject naifObject) =>
-        new(naifObject, Frame.ECLIPTIC_J2000, TimeSystem.Time.J2000TDB, deferred: true);
+    internal static CelestialBody CreateDeferred(NaifObject naifObject) => CreateDeferred(naifObject, Frame.ECLIPTIC_J2000, TimeSystem.Time.J2000TDB);
+
+    /// <summary>
+    /// A body whose provider data are read at the first read of a member that needs them, as a static object's, its orbit
+    /// about the barycentre of its system at <paramref name="epoch"/> in <paramref name="frame"/>: the Earth of a TLE,
+    /// which reads no kernel when it is built (R21 of #668).
+    /// </summary>
+    internal static CelestialBody CreateDeferred(NaifObject naifObject, Frame frame, Time epoch) =>
+        new(naifObject, frame, epoch, deferred: true);
 
     // The constructor of CreateDeferred: the parameter deferred tells it apart from the public constructors
     private CelestialBody(NaifObject naifObject, Frame frame, Time epoch, bool deferred) : base(naifObject, frame, epoch)

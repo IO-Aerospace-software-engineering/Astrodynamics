@@ -985,6 +985,8 @@ public abstract class CelestialItem : ILocalizable, IEquatable<CelestialItem>
             Spacecraft.Spacecraft sc => sc.InitialOrbitalParameters?.Observer as CelestialItem
                                         ?? Barycenters.SOLAR_SYSTEM_BARYCENTER,
             Surface.Site site => site.CelestialBody,
+            // A catalogue object, the observer of its initial orbit, as a spacecraft without stored states (R19 of #668)
+            TrackedObject tracked => tracked.ReferenceBody,
             _ => Barycenters.SOLAR_SYSTEM_BARYCENTER
         };
     }

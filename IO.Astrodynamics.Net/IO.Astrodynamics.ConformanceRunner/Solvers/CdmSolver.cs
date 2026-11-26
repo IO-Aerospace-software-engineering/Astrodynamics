@@ -2,15 +2,11 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using IO.Astrodynamics.Body;
 using IO.Astrodynamics.CCSDS.CDM;
 using IO.Astrodynamics.ConformanceRunner.Comparison;
 using IO.Astrodynamics.ConformanceRunner.Models;
 using IO.Astrodynamics.ConformanceRunner.Utilities;
-using IO.Astrodynamics.Frames;
 using IO.Astrodynamics.Math;
-using IO.Astrodynamics.OrbitalParameters;
-using IO.Astrodynamics.SolarSystemObjects;
 using IO.Astrodynamics.TimeSystem;
 
 namespace IO.Astrodynamics.ConformanceRunner.Solvers;
@@ -22,19 +18,16 @@ namespace IO.Astrodynamics.ConformanceRunner.Solvers;
 /// </summary>
 /// <remarks>
 /// <para>
-/// <c>decode</c> reads the CDM next to <c>inputs.yaml</c> with <see cref="Cdm.ReadFromFile"/>; the framework holds its
+/// <c>decode</c> reads the CDM next to <c>inputs.yaml</c> with <see cref="Cdm.Load"/>, which checks its schema and content; the framework holds its
 /// fields in SI units (m, m/s, m², the consider terms in the units of CCSDS 508.0 table 3-2), which the solver gives in
 /// the suite's (km: a value in m^p times 10^(−3p)). <c>to_inertial</c> turns each RTN covariance by
-/// <see cref="StateVector.RotateCovarianceFromRtn"/> on the object's state. <c>export</c> analyzes the encounter on
-/// straight-line trajectories (<see cref="StraightLineEncounter"/>), writes its CDM by <c>EncounterCase.ToCdm</c> and
-/// <see cref="Cdm.WriteToString"/>, reads it back with <see cref="Cdm.ReadFromString"/> and gives the fields read.
+/// <see cref="Cdm.ToStateVector"/>, on the object's state. <c>export</c> builds the encounter at the given TCA from the
+/// CDM of its states (<see cref="EncounterMessage"/>, <see cref="Cdm.ToEncounter"/>), writes its CDM by <c>EncounterCase.ToCdm</c> and
+/// <see cref="Cdm.ToXml"/>, reads it back with <see cref="Cdm.Parse(string, IO.Astrodynamics.CCSDS.CcsdsReadOptions)"/> and gives the fields read.
 /// </para>
 /// </remarks>
 public class CdmSolver : ICategorySolver
 {
-    // The NAIF id of object 1 of an exported encounter
-    private const int NaifId = -1701;
-
     // The consider terms of a 9x9 covariance (spec.md section 16.3), in their order, each with the power of m of its unit
     // in CCSDS 508.0 table 3-2 (m³/kg: 3); a CDM gives whole rows, CDRG (7 terms), then CSRP (15), then CTHR (24)
     private static readonly (string Name, Func<CdmCovarianceMatrix, double?> Value, int Power)[] ConsiderTerms =
@@ -61,9 +54,9 @@ public class CdmSolver : ICategorySolver
         if (inputs.Operation == CdmInputs.Export)
         {
             var tca = EpochParser.Parse(inputs.Tca);
-            var encounter = StraightLineEncounter.Analyze(tca, inputs.Objects, 1e6, UnitConversion.KmToM(inputs.HardBodyRadiusKm!.Value), NaifId);
-            var written = encounter.ToCdm().WriteToString();
-            return Fields(Cdm.ReadFromString(written), false);
+            var encounter = EncounterMessage.Of(tca, inputs.Objects).ToEncounter(UnitConversion.KmToM(inputs.HardBodyRadiusKm!.Value));
+            var written = encounter.ToCdm().ToXml();
+            return Fields(Cdm.Parse(written), false);
         }
 
         if (caseInput.Directory == null)
@@ -71,7 +64,7 @@ public class CdmSolver : ICategorySolver
             throw new InvalidOperationException("The runner gives no directory of the case, where its CDM lies.");
         }
 
-        var cdm = Cdm.ReadFromFile(Path.Combine(caseInput.Directory, inputs.CdmFile));
+        var cdm = Cdm.Load(Path.Combine(caseInput.Directory, inputs.CdmFile));
         return Fields(cdm, inputs.Operation == CdmInputs.ToInertial);
     }
 
@@ -111,14 +104,15 @@ public class CdmSolver : ICategorySolver
         outputs[Objects] = cdm.Segments.Count;
         for (int k = 0; k < cdm.Segments.Count; k++)
         {
-            AddObject(outputs, k, cdm.Segments[k], relative.TcaUtc, inertial);
+            AddObject(outputs, k, cdm, inertial);
         }
 
         return outputs;
     }
 
-    private static void AddObject(Dictionary<string, object> outputs, int k, CdmSegment segment, DateTime tca, bool inertial)
+    private static void AddObject(Dictionary<string, object> outputs, int k, Cdm cdm, bool inertial)
     {
+        var segment = cdm.Segments[k];
         string Name(string field) => OutputComparer.IndexedOutput(Objects, k, field);
         if (segment.Metadata?.ReferenceFrame is { } frame)
         {
@@ -144,7 +138,7 @@ public class CdmSolver : ICategorySolver
 
             if (inertial)
             {
-                outputs[Name("covariance_inertial")] = SolverOutput.Of(() => Inertial(state, covariance.StateCovarianceRtn, tca, k));
+                outputs[Name("covariance_inertial")] = SolverOutput.Of(() => LowerTriangle.Of(cdm.ToStateVector((CdmObjectRole)k).Covariance!.Value, 1e-6));
             }
         }
 
@@ -169,20 +163,6 @@ public class CdmSolver : ICategorySolver
         var missing = consider.Take(rowsEnd).Where(t => !t.Value.HasValue).Select(t => t.Name);
         throw new InvalidOperationException(
             $"The consider terms of object {k + 1} are not whole rows CDRG, then CSRP, then CTHR: no {string.Join(", ", missing)}.");
-    }
-
-    // The covariance of an object in inertial axes, km: the RTN covariance turned on its state
-    private static double[] Inertial(CdmStateVector state, Matrix covarianceRtn, DateTime tca, int k)
-    {
-        if (state == null)
-        {
-            throw new InvalidOperationException($"The CDM gives object {k + 1} no state, whose RTN axes its covariance is in.");
-        }
-
-        var epoch = Utc(tca);
-        var vector = new StateVector(state.PositionMeters, state.VelocityMetersPerSecond, new CelestialBody(PlanetsAndMoons.EARTH, Frame.ICRF, epoch),
-            epoch, Frame.ICRF);
-        return LowerTriangle.Of(vector.RotateCovarianceFromRtn(covarianceRtn), 1e-6);
     }
 
     // The REF_FRAME keyword of a frame the framework reads (CCSDS 508.0 table 3-3)

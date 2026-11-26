@@ -247,7 +247,9 @@ namespace IO.Astrodynamics.OrbitalParameters
         }
 
         /// <summary>
-        /// Creates mean Keplerian elements from OMM (Orbit Mean-elements Message) data.
+        /// Creates mean Keplerian elements from OMM (Orbit Mean-elements Message) data, the path of
+        /// <see cref="CCSDS.OMM.Omm.ToMeanElements"/> and <see cref="CCSDS.OMM.Omm.ToTle"/> (internal since 11.0.0, R22 of
+        /// #668: the one SI-side member that took degrees and rev/day).
         /// This factory method accepts values in OMM native units and handles all conversions internally.
         /// The resulting elements will have <see cref="OrbitalParameters.ElementsType"/> set to <see cref="OrbitalElementsType.Mean"/>.
         /// </summary>
@@ -271,7 +273,7 @@ namespace IO.Astrodynamics.OrbitalParameters
         /// scalings), so the result is the one an unbounded exponent would give, finite, not +Infinity (#729); below, the
         /// result is unchanged, bit for bit.
         /// </remarks>
-        public static KeplerianElements FromOMM(
+        internal static KeplerianElements FromOMM(
             double meanMotion,
             double eccentricity,
             double inclination,

@@ -275,4 +275,21 @@ public class NamingRuleTests
         Assert.Contains($"N1.acronym\t{reader}.GetTotalISP(int)", violations);
         Assert.Contains($"N1.acronym\t{reader}.GetTotalISP(int):probeUTCValue", violations);
     }
+
+    // R21 and R22 of #668 (C14 of the design): the text formats share one verb set, Load, LoadAll, Parse, ParseAll, TryLoad
+    // and TryParse, public and static, and no other public static read verb (Load…, Read…, Parse…, TryLoad…, TryParse…)
+    private static readonly string[] TextFormatVerbs = ["Load", "LoadAll", "Parse", "ParseAll", "TryLoad", "TryParse"];
+
+    [Theory]
+    [InlineData(typeof(IO.Astrodynamics.OrbitalParameters.TLE.TLE))]
+    [InlineData(typeof(IO.Astrodynamics.CCSDS.OMM.Omm))]
+    [InlineData(typeof(IO.Astrodynamics.CCSDS.OPM.Opm))]
+    [InlineData(typeof(IO.Astrodynamics.CCSDS.CDM.Cdm))]
+    public void TextFormats_ShareOneVerbSet(Type type)
+    {
+        var statics = type.GetMethods(BindingFlags.Public | BindingFlags.Static | BindingFlags.DeclaredOnly).Select(m => m.Name).ToHashSet();
+        Assert.All(TextFormatVerbs, verb => Assert.Contains(verb, statics));
+        string[] readPrefixes = ["Load", "Read", "Parse", "TryLoad", "TryParse"];
+        Assert.DoesNotContain(statics, name => readPrefixes.Any(prefix => name.StartsWith(prefix, StringComparison.Ordinal)) && !TextFormatVerbs.Contains(name));
+    }
 }

@@ -1585,7 +1585,7 @@ namespace IO.Astrodynamics.Body.Spacecraft
 
             if (!_isFromKernel && InitialOrbitalParameters is TLE tle && tle.Observer.NaifId == center.NaifId)
             {
-                return Time.SecondsToSpan(Constants.TwoPi / tle.MeanMotion());
+                return Time.SecondsToSpan(Constants.TwoPi / tle.MeanMeanMotion);
             }
 
             return null;
@@ -1646,14 +1646,10 @@ namespace IO.Astrodynamics.Body.Spacecraft
         /// </summary>
         /// <param name="window">The window read.</param>
         /// <param name="description">What the window is, for the message.</param>
-        /// <param name="paramName">The parameter of the window, for the <see cref="ArgumentException"/> the conjunction analysis
-        /// keeps until lot L7 of #668; null for <see cref="InvalidOperationException"/>, the state of the spacecraft (decisions
-        /// 81 and 86 of #668, the field-of-view search since lot L6).</param>
-        /// <exception cref="InvalidOperationException">The window leaves the propagated states or meets a gap between them, and
-        /// <paramref name="paramName"/> is null.</exception>
-        /// <exception cref="ArgumentException">The window leaves the propagated states or meets a gap between them, and
-        /// <paramref name="paramName"/> names its parameter.</exception>
-        internal void CheckInterpolatedStatesCover(in Window window, string description, string paramName = null)
+        /// <exception cref="InvalidOperationException">The window leaves the propagated states or meets a gap between them:
+        /// the state of the spacecraft (decisions 81 and 86 of #668: the field-of-view search since lot L6, the conjunction
+        /// analysis since lot L7, which threw <see cref="ArgumentException"/> before).</exception>
+        internal void CheckInterpolatedStatesCover(in Window window, string description)
         {
             if (InterpolatedStatesWindow is null || _propagatedStates.Covers(window))
             {
@@ -1662,7 +1658,7 @@ namespace IO.Astrodynamics.Body.Spacecraft
 
             var message =
                 $"The {description} [{window.StartDate.ToTDB()}, {window.EndDate.ToTDB()}] leaves the propagated states of {Name}, {DescribeStoredWindows()}: they would be extrapolated.";
-            throw paramName is null ? new InvalidOperationException(message) : new ArgumentException(message, paramName);
+            throw new InvalidOperationException(message);
         }
 
         /// <summary>
@@ -1733,10 +1729,10 @@ namespace IO.Astrodynamics.Body.Spacecraft
         /// </summary>
         /// <param name="originator">The message originator. If null, uses "IO.Astrodynamics".</param>
         /// <param name="epoch">The epoch of the state. If null, the epoch of the initial orbital parameters.</param>
-        /// <param name="includeKeplerianElements">If true, includes optional Keplerian elements in the OPM.</param>
-        /// <param name="includeSpacecraftParameters">If true, includes spacecraft parameters (mass, drag, SRP).</param>
-        /// <param name="includeManeuvers">If true, includes the maneuvers ignited by the epoch (all those executed for a
-        /// spacecraft without propagated states).</param>
+        /// <param name="options">The blocks written besides the state, every one by default (<see cref="OpmExportOptions.Default"/>):
+        /// the Keplerian elements, the spacecraft parameters (mass, drag, SRP) and the maneuvers ignited by the epoch (all
+        /// those executed for a spacecraft without propagated states); the three bools of this method before 11.0.0 (D1 of
+        /// #668, lot L7).</param>
         /// <returns>A new OPM instance representing this spacecraft's state.</returns>
         /// <exception cref="InvalidOperationException">CosparId is not set; or the spacecraft holds propagated states and
         /// the epoch, given or by default, lies outside them (#527).</exception>
@@ -1770,8 +1766,12 @@ namespace IO.Astrodynamics.Body.Spacecraft
         /// compute (<see cref="StateVector.ToStateVector(Time)"/>).
         /// </para>
         /// </remarks>
-        public Opm ToOpm(string originator = null, Time? epoch = null, bool includeKeplerianElements = true, bool includeSpacecraftParameters = true, bool includeManeuvers = true)
+        public Opm ToOpm(string originator = null, Time? epoch = null, OpmExportOptions options = null)
         {
+            options ??= OpmExportOptions.Default;
+            bool includeKeplerianElements = options.IncludeKeplerianElements;
+            bool includeSpacecraftParameters = options.IncludeSpacecraftParameters;
+            bool includeManeuvers = options.IncludeManeuvers;
             if (string.IsNullOrWhiteSpace(CosparId))
             {
                 throw new InvalidOperationException("CosparId must be set to create an OPM. Use the spacecraft constructor's cosparId parameter.");

@@ -86,7 +86,7 @@ public class ConjunctionCovarianceEdgeTests : IClassFixture<ConjunctionCovarianc
         var referenceSolution = _case.Propagate(reference, Covariance);
 
         // Act
-        var encounter = ConjunctionAssessment.Analyze(new ProtectedSpacecraftProfile(protectedCraft), secondaryCraft,
+        var encounter = ConjunctionAssessment.Analyze(protectedCraft, secondaryCraft,
             ConjunctionCovarianceCase.AnalysisWindow);
 
         // Assert: no exception; the covariance of the protected object propagated from the remediated P0, and
@@ -126,9 +126,9 @@ public class ConjunctionCovarianceEdgeTests : IClassFixture<ConjunctionCovarianc
         _case.Propagate(secondary);
 
         // Act
-        var remediatedInside = ConjunctionAssessment.Analyze(new ProtectedSpacecraftProfile(inside), secondary,
+        var remediatedInside = ConjunctionAssessment.Analyze(inside, secondary,
             ConjunctionCovarianceCase.AnalysisWindow);
-        var remediatedBeforehand = ConjunctionAssessment.Analyze(new ProtectedSpacecraftProfile(beforehand), secondary,
+        var remediatedBeforehand = ConjunctionAssessment.Analyze(beforehand, secondary,
             ConjunctionCovarianceCase.AnalysisWindow);
 
         // Assert: one implementation, the same covariance at TCA bit for bit; the flag raised by the analysis only, the
@@ -164,7 +164,7 @@ public class ConjunctionCovarianceEdgeTests : IClassFixture<ConjunctionCovarianc
         _case.Propagate(secondaryCraft);
 
         // Act
-        var encounter = ConjunctionAssessment.Analyze(new ProtectedSpacecraftProfile(protectedCraft), secondaryCraft,
+        var encounter = ConjunctionAssessment.Analyze(protectedCraft, secondaryCraft,
             ConjunctionCovarianceCase.AnalysisWindow);
 
         // Assert: no exception, the covariance held in RTN as without the propagation
@@ -188,7 +188,7 @@ public class ConjunctionCovarianceEdgeTests : IClassFixture<ConjunctionCovarianc
         _case.Propagate(secondaryCraft);
 
         // Act
-        var encounter = ConjunctionAssessment.Analyze(new ProtectedSpacecraftProfile(protectedCraft), secondaryCraft,
+        var encounter = ConjunctionAssessment.Analyze(protectedCraft, secondaryCraft,
             ConjunctionCovarianceCase.AnalysisWindow);
 
         // Assert: within the bound, remediated and propagated, flagged; beyond it, held in RTN as the other covariances
@@ -376,11 +376,11 @@ public class ConjunctionCovarianceEdgeTests : IClassFixture<ConjunctionCovarianc
         // Act: both overload families, the spacecraft and their solutions
         var encounters = new[]
         {
-            ConjunctionAssessment.Analyze(new ProtectedSpacecraftProfile(fromTeme), secondary, ConjunctionCovarianceCase.AnalysisWindow, options),
-            ConjunctionAssessment.Analyze(new ProtectedSpacecraftProfile(twin), secondary, ConjunctionCovarianceCase.AnalysisWindow, options),
-            ConjunctionAssessment.Analyze(new ProtectedSpacecraftProfile(fromTeme), temeSolution, secondary, secondarySolution,
+            ConjunctionAssessment.Analyze(fromTeme, secondary, ConjunctionCovarianceCase.AnalysisWindow, options),
+            ConjunctionAssessment.Analyze(twin, secondary, ConjunctionCovarianceCase.AnalysisWindow, options),
+            ConjunctionAssessment.Analyze(fromTeme, temeSolution, secondary, secondarySolution,
                 ConjunctionCovarianceCase.AnalysisWindow, options),
-            ConjunctionAssessment.Analyze(new ProtectedSpacecraftProfile(twin), twinSolution, secondary, secondarySolution,
+            ConjunctionAssessment.Analyze(twin, twinSolution, secondary, secondarySolution,
                 ConjunctionCovarianceCase.AnalysisWindow, options)
         };
 
@@ -405,8 +405,8 @@ public class ConjunctionCovarianceEdgeTests : IClassFixture<ConjunctionCovarianc
             spacecraft.Propagate(ConjunctionCovarianceCase.PropagationWindow, new PropagationOptions { Integrator = new VVIntegratorOptions { Step = TimeSpan.FromSeconds(60.0) }, OutputStep = TimeSpan.FromSeconds(60.0), ThirdBodies = new CelestialItem[] { _case.Earth } });
         }
 
-        var held = ConjunctionAssessment.Analyze(new ProtectedSpacecraftProfile(temeVv), secondary, ConjunctionCovarianceCase.AnalysisWindow);
-        var twinHeld = ConjunctionAssessment.Analyze(new ProtectedSpacecraftProfile(twinVv), secondary, ConjunctionCovarianceCase.AnalysisWindow);
+        var held = ConjunctionAssessment.Analyze(temeVv, secondary, ConjunctionCovarianceCase.AnalysisWindow);
+        var twinHeld = ConjunctionAssessment.Analyze(twinVv, secondary, ConjunctionCovarianceCase.AnalysisWindow);
         Assert.Equal(CovarianceSource.InitialStateHeldInRtn, held.EncounterState.ProtectedCovariance.Source);
         LabelAssert.Equal(twinHeld.EncounterState.Epoch, held.EncounterState.Epoch);
         var a = held.ProtectedCovariance.CovarianceInertial.Value;
@@ -449,9 +449,9 @@ public class ConjunctionCovarianceEdgeTests : IClassFixture<ConjunctionCovarianc
         var referenceSolution = _case.Propagate(reference, Covariance);
 
         // Act
-        var encounter = ConjunctionAssessment.Analyze(new ProtectedSpacecraftProfile(fromTeme), secondary,
+        var encounter = ConjunctionAssessment.Analyze(fromTeme, secondary,
             ConjunctionCovarianceCase.AnalysisWindow);
-        var twinEncounter = ConjunctionAssessment.Analyze(new ProtectedSpacecraftProfile(twin), secondary,
+        var twinEncounter = ConjunctionAssessment.Analyze(twin, secondary,
             ConjunctionCovarianceCase.AnalysisWindow);
 
         // Assert: rotated to ICRF, then remediated: the twin's covariance at TCA bit for bit, the reference's within

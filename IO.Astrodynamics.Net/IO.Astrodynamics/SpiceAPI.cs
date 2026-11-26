@@ -3219,7 +3219,7 @@ public class SpiceAPI
     // The domain of CONICS (conics.c: SPICE(BADPERIAPSEVALUE) for a periapsis radius not above 0; the eccentricity, never
     // negative, is checked by KeplerianElements), checked before the native call: elements outside it are a bad argument (#711:
     // before, a zero state was returned). Since #738 the constructor of osculating elements refuses a semi-major axis of the
-    // wrong sign, so the elements that reach this check are mean elements of e >= 1 (FromOMM, whose a > 0 comes from the mean
+    // wrong sign, so the elements that reach this check are mean elements of e >= 1 (Omm.ToMeanElements, whose a > 0 comes from the mean
     // motion) and a hyperbola whose a (1 - e) overflows to +Infinity
     private static void ThrowIfOutsideConicsDomain(OrbitalParameters.KeplerianElements keplerianElements, string paramName)
     {
@@ -3385,7 +3385,7 @@ public class SpiceAPI
     /// centre with a GM, and the conversion of the result threw for the others).</exception>
     /// <exception cref="ArgumentException">The periapsis radius of the elements is not finite and above 0, outside the domain
     /// of <c>CONICS</c> (#711: before, a zero state was returned): mean elements of e ≥ 1 (<see
-    /// cref="OrbitalParameters.KeplerianElements.FromOMM"/>), or an a (1 − e) that overflows. Osculating elements of a
+    /// cref="CCSDS.OMM.Omm.ToMeanElements"/>), or an a (1 − e) that overflows. Osculating elements of a
     /// semi-major axis of the wrong sign are refused by their constructor since 11.0.0 (#738).</exception>
     /// <exception cref="ArgumentException">An element (e, i, RAAN, AOP, M) is not finite (#714: before, a NaN mean anomaly gave
     /// a finite state, silently, and a NaN inclination a NaN state, which threw an unrelated message).</exception>
@@ -3422,7 +3422,7 @@ public class SpiceAPI
     /// </summary>
     /// <exception cref="ArgumentException">The periapsis radius of the elements is not finite and above 0, outside the domain
     /// of <c>CONICS</c> (#711: before, a zero state was returned): mean elements of e ≥ 1 (<see
-    /// cref="OrbitalParameters.KeplerianElements.FromOMM"/>), or an a (1 − e) that overflows. Osculating elements of a
+    /// cref="CCSDS.OMM.Omm.ToMeanElements"/>), or an a (1 − e) that overflows. Osculating elements of a
     /// semi-major axis of the wrong sign are refused by their constructor since 11.0.0 (#738).</exception>
     /// <exception cref="ArgumentException">An element (e, i, RAAN, AOP, M) is not finite (#714: before, a NaN mean anomaly gave
     /// a finite state, silently, and a NaN inclination a NaN state, which threw an unrelated message).</exception>
@@ -3447,7 +3447,7 @@ public class SpiceAPI
     /// <returns></returns>
     /// <exception cref="ArgumentException">The periapsis radius of the elements is not finite and above 0, outside the domain
     /// of <c>CONICS</c> (#711: before, a zero state was returned): mean elements of e ≥ 1 (<see
-    /// cref="OrbitalParameters.KeplerianElements.FromOMM"/>), or an a (1 − e) that overflows. Osculating elements of a
+    /// cref="CCSDS.OMM.Omm.ToMeanElements"/>), or an a (1 − e) that overflows. Osculating elements of a
     /// semi-major axis of the wrong sign are refused by their constructor since 11.0.0 (#738).</exception>
     /// <exception cref="ArgumentException">An element (e, i, RAAN, AOP, M) is not finite (#714: before, a NaN mean anomaly gave
     /// a finite state, silently, and a NaN inclination a NaN state, which threw an unrelated message).</exception>

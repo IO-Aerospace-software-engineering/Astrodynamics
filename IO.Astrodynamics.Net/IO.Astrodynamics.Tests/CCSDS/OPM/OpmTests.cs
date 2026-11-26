@@ -4,6 +4,7 @@ using System;
 using System.IO;
 using IO.Astrodynamics.Body;
 using IO.Astrodynamics.Body.Spacecraft;
+using IO.Astrodynamics.CCSDS;
 using IO.Astrodynamics.CCSDS.Common;
 using IO.Astrodynamics.CCSDS.OPM;
 using IO.Astrodynamics.Frames;
@@ -367,7 +368,7 @@ namespace IO.Astrodynamics.Tests.CCSDS.OPM
         {
             var opm = CreateMinimalOpm("ISS", "1998-067A");
 
-            var xml = opm.ToXmlString();
+            var xml = opm.ToXml();
 
             Assert.NotNull(xml);
             Assert.Contains("<OBJECT_NAME>ISS</OBJECT_NAME>", xml);
@@ -380,7 +381,7 @@ namespace IO.Astrodynamics.Tests.CCSDS.OPM
         {
             var opm = CreateMinimalOpm("ISS", "1998-067A");
 
-            var xml = opm.ToXmlString(wrapInNdm: true);
+            var xml = opm.ToXml();
 
             Assert.Contains("<ndm", xml);
             Assert.Contains("<opm", xml);
@@ -391,7 +392,7 @@ namespace IO.Astrodynamics.Tests.CCSDS.OPM
         {
             var opm = CreateMinimalOpm("ISS", "1998-067A");
 
-            var xml = opm.ToXmlString(wrapInNdm: false);
+            var xml = opm.ToXml(new CcsdsWriteOptions { WrapInNdmContainer = false });
 
             Assert.DoesNotContain("<ndm", xml);
             Assert.StartsWith("<?xml", xml);
@@ -401,9 +402,9 @@ namespace IO.Astrodynamics.Tests.CCSDS.OPM
         public void LoadFromString_ValidXml_ReturnsOpm()
         {
             var original = CreateMinimalOpm("ISS", "1998-067A");
-            var xml = original.ToXmlString();
+            var xml = original.ToXml();
 
-            var loaded = Opm.LoadFromString(xml, validateSchema: false, validateContent: false);
+            var loaded = Opm.Parse(xml, new CcsdsReadOptions { ValidateSchema = false, ValidateContent = false });
 
             Assert.NotNull(loaded);
             Assert.Equal(original.ObjectName, loaded.ObjectName);
@@ -413,23 +414,24 @@ namespace IO.Astrodynamics.Tests.CCSDS.OPM
         [Fact]
         public void LoadFromString_NullXml_ThrowsArgumentNullException()
         {
-            Assert.Throws<ArgumentNullException>(() => Opm.LoadFromString(null));
+            Assert.Throws<ArgumentNullException>(() => Opm.Parse((string)null));
         }
 
         [Fact]
-        public void LoadFromString_EmptyXml_ThrowsArgumentNullException()
+        public void Parse_EmptyXml_ThrowsParseException()
         {
-            Assert.Throws<ArgumentNullException>(() => Opm.LoadFromString(""));
+            // Before 11.0.0 ArgumentNullException: a blank text is a text that holds no OPM (R22 of #668)
+            Assert.Throws<OpmParseException>(() => Opm.Parse(""));
         }
 
         [Fact]
         public void LoadFromStream_ValidStream_ReturnsOpm()
         {
             var original = CreateMinimalOpm("ISS", "1998-067A");
-            var xml = original.ToXmlString();
+            var xml = original.ToXml();
             using var stream = new MemoryStream(System.Text.Encoding.UTF8.GetBytes(xml));
 
-            var loaded = Opm.LoadFromStream(stream, validateSchema: false, validateContent: false);
+            var loaded = Opm.Parse(new StreamReader(stream), new CcsdsReadOptions { ValidateSchema = false, ValidateContent = false });
 
             Assert.NotNull(loaded);
             Assert.Equal(original.ObjectName, loaded.ObjectName);
@@ -438,7 +440,7 @@ namespace IO.Astrodynamics.Tests.CCSDS.OPM
         [Fact]
         public void LoadFromStream_NullStream_ThrowsArgumentNullException()
         {
-            Assert.Throws<ArgumentNullException>(() => Opm.LoadFromStream(null));
+            Assert.Throws<ArgumentNullException>(() => Opm.Parse((TextReader)null));
         }
 
         [Fact]
@@ -447,7 +449,7 @@ namespace IO.Astrodynamics.Tests.CCSDS.OPM
             var opm = CreateMinimalOpm("ISS", "1998-067A");
             using var stream = new MemoryStream();
 
-            opm.SaveToStream(stream, validateBeforeSave: false);
+            opm.Save(stream, new CcsdsWriteOptions { ValidateContent = false });
 
             stream.Position = 0;
             using var reader = new StreamReader(stream);
@@ -461,7 +463,7 @@ namespace IO.Astrodynamics.Tests.CCSDS.OPM
         {
             var opm = CreateMinimalOpm("ISS", "1998-067A");
 
-            Assert.Throws<ArgumentNullException>(() => opm.SaveToStream(null));
+            Assert.Throws<ArgumentNullException>(() => opm.Save((Stream)null));
         }
 
         [Fact]
@@ -469,8 +471,8 @@ namespace IO.Astrodynamics.Tests.CCSDS.OPM
         {
             var original = CreateMinimalOpm("ISS (ZARYA)", "1998-067A");
 
-            var xml = original.ToXmlString();
-            var loaded = Opm.LoadFromString(xml, validateSchema: false, validateContent: false);
+            var xml = original.ToXml();
+            var loaded = Opm.Parse(xml, new CcsdsReadOptions { ValidateSchema = false, ValidateContent = false });
 
             Assert.Equal(original.ObjectName, loaded.ObjectName);
             Assert.Equal(original.ObjectId, loaded.ObjectId);
@@ -484,8 +486,8 @@ namespace IO.Astrodynamics.Tests.CCSDS.OPM
         {
             var original = CreateOpmWithKeplerianElements();
 
-            var xml = original.ToXmlString();
-            var loaded = Opm.LoadFromString(xml, validateSchema: false, validateContent: false);
+            var xml = original.ToXml();
+            var loaded = Opm.Parse(xml, new CcsdsReadOptions { ValidateSchema = false, ValidateContent = false });
 
             Assert.True(loaded.HasKeplerianElements);
             Assert.Equal(original.Data.KeplerianElements.SemiMajorAxis,
@@ -499,8 +501,8 @@ namespace IO.Astrodynamics.Tests.CCSDS.OPM
         {
             var original = CreateOpmWithCovariance();
 
-            var xml = original.ToXmlString();
-            var loaded = Opm.LoadFromString(xml, validateSchema: false, validateContent: false);
+            var xml = original.ToXml();
+            var loaded = Opm.Parse(xml, new CcsdsReadOptions { ValidateSchema = false, ValidateContent = false });
 
             Assert.True(loaded.HasCovariance);
             Assert.Equal(original.Data.Covariance.CxX, loaded.Data.Covariance.CxX, 10);
@@ -511,8 +513,8 @@ namespace IO.Astrodynamics.Tests.CCSDS.OPM
         {
             var original = CreateOpmWithManeuvers();
 
-            var xml = original.ToXmlString();
-            var loaded = Opm.LoadFromString(xml, validateSchema: false, validateContent: false);
+            var xml = original.ToXml();
+            var loaded = Opm.Parse(xml, new CcsdsReadOptions { ValidateSchema = false, ValidateContent = false });
 
             Assert.True(loaded.HasManeuvers);
             Assert.Single(loaded.Data.Maneuvers);
@@ -532,7 +534,7 @@ namespace IO.Astrodynamics.Tests.CCSDS.OPM
         {
             var filePath = GetTestFilePath("iss_minimal.xml");
 
-            var opm = Opm.LoadFromFile(filePath, validateSchema: false, validateContent: true);
+            var opm = Opm.Load(filePath, new CcsdsReadOptions { ValidateSchema = false });
 
             Assert.NotNull(opm);
             Assert.Equal("ISS (ZARYA)", opm.ObjectName);
@@ -549,7 +551,7 @@ namespace IO.Astrodynamics.Tests.CCSDS.OPM
         {
             var filePath = GetTestFilePath("satellite_complete.xml");
 
-            var opm = Opm.LoadFromFile(filePath, validateSchema: false, validateContent: true);
+            var opm = Opm.Load(filePath, new CcsdsReadOptions { ValidateSchema = false });
 
             Assert.NotNull(opm);
             Assert.Equal("TEST SATELLITE", opm.ObjectName);
@@ -588,20 +590,21 @@ namespace IO.Astrodynamics.Tests.CCSDS.OPM
         [Fact]
         public void LoadFromFile_NullPath_ThrowsArgumentNullException()
         {
-            Assert.Throws<ArgumentNullException>(() => Opm.LoadFromFile(null));
+            Assert.Throws<ArgumentNullException>(() => Opm.Load(null));
         }
 
         [Fact]
-        public void LoadFromFile_EmptyPath_ThrowsArgumentNullException()
+        public void LoadFromFile_EmptyPath_ThrowsFileNotFoundException()
         {
-            Assert.Throws<ArgumentNullException>(() => Opm.LoadFromFile(""));
+            // Before 11.0.0 ArgumentNullException: an empty path names no file (R22 of #668)
+            Assert.Throws<FileNotFoundException>(() => Opm.Load(""));
         }
 
         [Fact]
         public void LoadFromFile_FileNotFound_ThrowsFileNotFoundException()
         {
             Assert.Throws<FileNotFoundException>(() =>
-                Opm.LoadFromFile("/nonexistent/path/opm.xml"));
+                Opm.Load("/nonexistent/path/opm.xml"));
         }
 
         [Fact]
@@ -610,7 +613,7 @@ namespace IO.Astrodynamics.Tests.CCSDS.OPM
             var filePath = GetTestFilePath("invalid_missing_epoch.xml");
 
             var ex = Assert.Throws<OpmValidationException>(() =>
-                Opm.LoadFromFile(filePath, validateSchema: true, validateContent: false));
+                Opm.Load(filePath, new CcsdsReadOptions { ValidateContent = false }));
 
             Assert.Contains("Schema validation failed", ex.Message);
             Assert.NotNull(ex.ValidationResult);
@@ -625,7 +628,7 @@ namespace IO.Astrodynamics.Tests.CCSDS.OPM
             // Should not throw when schema validation is disabled
             // Note: The reader may still fail to parse, but that's a parse error, not validation
             var ex = Assert.ThrowsAny<Exception>(() =>
-                Opm.LoadFromFile(filePath, validateSchema: false, validateContent: false));
+                Opm.Load(filePath, new CcsdsReadOptions { ValidateSchema = false, ValidateContent = false }));
 
             // The file is malformed so it will fail parsing, but not due to validation
             Assert.IsNotType<OpmValidationException>(ex);
@@ -639,7 +642,7 @@ namespace IO.Astrodynamics.Tests.CCSDS.OPM
 
             try
             {
-                opm.SaveToFile(tempPath, validateBeforeSave: false);
+                opm.Save(tempPath, new CcsdsWriteOptions { ValidateContent = false });
 
                 Assert.True(File.Exists(tempPath));
 
@@ -660,15 +663,16 @@ namespace IO.Astrodynamics.Tests.CCSDS.OPM
         {
             var opm = CreateMinimalOpm("TEST", "2024-001A");
 
-            Assert.Throws<ArgumentNullException>(() => opm.SaveToFile(null));
+            Assert.Throws<ArgumentNullException>(() => opm.Save((string)null));
         }
 
         [Fact]
-        public void SaveToFile_EmptyPath_ThrowsArgumentNullException()
+        public void SaveToFile_EmptyPath_ThrowsArgumentException()
         {
             var opm = CreateMinimalOpm("TEST", "2024-001A");
 
-            Assert.Throws<ArgumentNullException>(() => opm.SaveToFile(""));
+            // Before 11.0.0 ArgumentNullException
+            Assert.Throws<ArgumentException>(() => opm.Save(""));
         }
 
         [Fact]
@@ -680,10 +684,10 @@ namespace IO.Astrodynamics.Tests.CCSDS.OPM
             try
             {
                 // Save to file
-                original.SaveToFile(tempPath, validateBeforeSave: false);
+                original.Save(tempPath, new CcsdsWriteOptions { ValidateContent = false });
 
                 // Load from file
-                var loaded = Opm.LoadFromFile(tempPath, validateSchema: false, validateContent: false);
+                var loaded = Opm.Load(tempPath, new CcsdsReadOptions { ValidateSchema = false, ValidateContent = false });
 
                 // Verify data preserved
                 Assert.Equal(original.ObjectName, loaded.ObjectName);
@@ -733,8 +737,8 @@ namespace IO.Astrodynamics.Tests.CCSDS.OPM
 
             try
             {
-                original.SaveToFile(tempPath, validateBeforeSave: false);
-                var loaded = Opm.LoadFromFile(tempPath, validateSchema: false, validateContent: false);
+                original.Save(tempPath, new CcsdsWriteOptions { ValidateContent = false });
+                var loaded = Opm.Load(tempPath, new CcsdsReadOptions { ValidateSchema = false, ValidateContent = false });
 
                 Assert.Equal(original.ObjectName, loaded.ObjectName);
                 Assert.True(loaded.HasKeplerianElements);
@@ -759,13 +763,10 @@ namespace IO.Astrodynamics.Tests.CCSDS.OPM
         [Fact]
         public void TryLoadFromFile_FileNotFound_ReturnsFalse()
         {
-            var result = Opm.TryLoadFromFile("/nonexistent/path/opm.xml",
-                out var opm, out var validationResult);
+            var result = Opm.TryLoad("/nonexistent/path/opm.xml", out var opm);
 
             Assert.False(result);
             Assert.Null(opm);
-            Assert.NotNull(validationResult);
-            Assert.False(validationResult.IsValid);
         }
 
         #endregion
@@ -814,6 +815,51 @@ namespace IO.Astrodynamics.Tests.CCSDS.OPM
             Assert.Equal(1600.0, spacecraft.SectionalArea);
             Assert.Equal(2.2, spacecraft.DragCoefficient);
             Assert.Equal(1.5, spacecraft.SolarRadiationCoeff);
+        }
+
+        /// <summary>
+        /// #805, decision 112 of #668 (decided by S. Guillet, 2026-11-26): a Spacecraft has one sectional area, for drag and
+        /// radiation pressure alike, so SOLAR_RAD_AREA alone gives it, and with DRAG_AREA equal values give it; before
+        /// 11.0.0 SOLAR_RAD_AREA was never read (1 m² for an OPM holding it alone).
+        /// </summary>
+        [Theory]
+        [InlineData(null, 12.5, 12.5)]
+        [InlineData(12.5, null, 12.5)]
+        [InlineData(12.5, 12.5, 12.5)]
+        [InlineData(null, null, 1.0)]
+        public void ToSpacecraft_OneArea_IsTheSectionalArea(double? dragArea, double? solarRadArea, double expected)
+        {
+            var stateVector = new OpmStateVector(_testEpoch, 6778.137, 0.0, 0.0, 0.0, 7.5, 0.0);
+            var data = new OpmData(stateVector, mass: 100.0, solarRadiationPressureArea: solarRadArea, dragArea: dragArea);
+            var opm = new Opm(CcsdsHeader.CreateDefault(), new OpmMetadata("SAT", "2024-001A", "EARTH", "ICRF", "UTC"), data);
+
+            var spacecraft = opm.ToSpacecraft(-1000, observer: new CelestialBody(PlanetsAndMoons.EARTH));
+
+            Assert.Equal(expected, spacecraft.SectionalArea);
+        }
+
+        /// <summary>
+        /// #805, decision 112 of #668: DRAG_AREA and SOLAR_RAD_AREA of different values throw, naming both keywords and their
+        /// values and pointing to ToStateVector and the Spacecraft constructor; before 11.0.0 DRAG_AREA was taken and
+        /// SOLAR_RAD_AREA dropped without a word.
+        /// </summary>
+        [Fact]
+        public void ToSpacecraft_TwoDifferentAreas_Throws()
+        {
+            var stateVector = new OpmStateVector(_testEpoch, 6778.137, 0.0, 0.0, 0.0, 7.5, 0.0);
+            var data = new OpmData(stateVector, mass: 100.0, solarRadiationPressureArea: 20.0, dragArea: 12.5);
+            var opm = new Opm(CcsdsHeader.CreateDefault(), new OpmMetadata("SAT", "2024-001A", "EARTH", "ICRF", "UTC"), data);
+            var clock = new Clock("SAT_CLK", 256);
+
+            var ex = Assert.Throws<InvalidOperationException>(() =>
+                opm.ToSpacecraft(-1000, clock: clock, observer: new CelestialBody(PlanetsAndMoons.EARTH)));
+
+            Assert.Contains("DRAG_AREA", ex.Message);
+            Assert.Contains("SOLAR_RAD_AREA", ex.Message);
+            Assert.Contains("12.5", ex.Message);
+            Assert.Contains("20", ex.Message);
+            Assert.Contains("ToStateVector", ex.Message);
+            Assert.Null(clock.Spacecraft);
         }
 
         /// <summary>
@@ -902,7 +948,7 @@ namespace IO.Astrodynamics.Tests.CCSDS.OPM
             Assert.Equal(System.Math.PI, sv.Inclination(), 12);
             var spacecraft = new Spacecraft(-1000, "RETRO", 1000.0, sv, 5000.0, new Clock("OnboardClock", 256), 1.0, 2.2, "2024-001A", 1.0);
 
-            var opm = spacecraft.ToOpm(includeSpacecraftParameters: false, includeManeuvers: false);
+            var opm = spacecraft.ToOpm(options: new OpmExportOptions { IncludeSpacecraftParameters = false, IncludeManeuvers = false });
             var kep = opm.Data.KeplerianElements;
             foreach (var angle in new[] { kep.RightAscensionOfAscendingNode, kep.ArgumentOfPericenter, kep.TrueAnomaly!.Value })
             {
@@ -914,10 +960,10 @@ namespace IO.Astrodynamics.Tests.CCSDS.OPM
             Assert.Equal(180.0, kep.Inclination, 9);
 
             // The schema is the oracle of the written document, which reads back
-            var xml = opm.ToXmlString();
+            var xml = opm.ToXml();
             var schema = new OpmValidator().ValidateSchemaFromXml(xml);
             Assert.True(schema.IsValid, string.Join("; ", System.Linq.Enumerable.Select(schema.Errors, e => e.Message)));
-            Assert.Equal(kep.ArgumentOfPericenter, Opm.LoadFromString(xml).Data.KeplerianElements.ArgumentOfPericenter, 9);
+            Assert.Equal(kep.ArgumentOfPericenter, Opm.Parse(xml).Data.KeplerianElements.ArgumentOfPericenter, 9);
         }
 
         [Fact]
@@ -972,7 +1018,7 @@ namespace IO.Astrodynamics.Tests.CCSDS.OPM
         {
             var opm = CreateMinimalOpm("ISS", "1998-067A");
 
-            var xml = opm.ToXmlString();
+            var xml = opm.ToXml();
 
             Assert.Contains("units=\"km\"", xml);
             Assert.Contains("units=\"km/s\"", xml);
@@ -983,7 +1029,7 @@ namespace IO.Astrodynamics.Tests.CCSDS.OPM
         {
             var opm = CreateOpmWithKeplerianElements();
 
-            var xml = opm.ToXmlString();
+            var xml = opm.ToXml();
 
             Assert.Contains("SEMI_MAJOR_AXIS", xml);
             Assert.Contains("units=\"km\"", xml);
@@ -1000,7 +1046,7 @@ namespace IO.Astrodynamics.Tests.CCSDS.OPM
             var data = new OpmData(stateVector, mass: 420000.0, dragArea: 1600.0);
             var opm = new Opm(header, metadata, data);
 
-            var xml = opm.ToXmlString();
+            var xml = opm.ToXml();
 
             Assert.Contains("units=\"kg\"", xml);
             Assert.Contains("units=\"m**2\"", xml);
@@ -1011,7 +1057,7 @@ namespace IO.Astrodynamics.Tests.CCSDS.OPM
         {
             var opm = CreateOpmWithCovariance();
 
-            var xml = opm.ToXmlString();
+            var xml = opm.ToXml();
 
             Assert.Contains("units=\"km**2\"", xml);
             Assert.Contains("units=\"km**2/s\"", xml);
@@ -1023,7 +1069,7 @@ namespace IO.Astrodynamics.Tests.CCSDS.OPM
         {
             var opm = CreateOpmWithManeuvers();
 
-            var xml = opm.ToXmlString();
+            var xml = opm.ToXml();
 
             Assert.Contains("units=\"s\"", xml); // MAN_DURATION
             Assert.Contains("units=\"kg\"", xml); // MAN_DELTA_MASS
@@ -1040,8 +1086,8 @@ namespace IO.Astrodynamics.Tests.CCSDS.OPM
             var data = new OpmData(stateVector, comments: comments);
             var original = new Opm(header, metadata, data);
 
-            var xml = original.ToXmlString();
-            var loaded = Opm.LoadFromString(xml, validateSchema: false, validateContent: false);
+            var xml = original.ToXml();
+            var loaded = Opm.Parse(xml, new CcsdsReadOptions { ValidateSchema = false, ValidateContent = false });
 
             Assert.Equal(2, loaded.Data.Comments.Count);
             Assert.Equal("This is a data-level comment", loaded.Data.Comments[0]);
@@ -1058,7 +1104,7 @@ namespace IO.Astrodynamics.Tests.CCSDS.OPM
             var data = new OpmData(stateVector, comments: comments);
             var opm = new Opm(header, metadata, data);
 
-            var xml = opm.ToXmlString();
+            var xml = opm.ToXml();
 
             var commentIndex = xml.IndexOf("<COMMENT>Data section comment</COMMENT>", StringComparison.Ordinal);
             var stateVectorIndex = xml.IndexOf("<stateVector>", StringComparison.Ordinal);
@@ -1083,8 +1129,8 @@ namespace IO.Astrodynamics.Tests.CCSDS.OPM
             var data = new OpmData(stateVector, userDefinedParameters: userParams);
             var original = new Opm(header, metadata, data);
 
-            var xml = original.ToXmlString();
-            var loaded = Opm.LoadFromString(xml, validateSchema: false, validateContent: false);
+            var xml = original.ToXml();
+            var loaded = Opm.Parse(xml, new CcsdsReadOptions { ValidateSchema = false, ValidateContent = false });
 
             Assert.True(loaded.Data.HasUserDefinedParameters);
             Assert.Equal("STS-001", loaded.Data.UserDefinedParameters.GetValue("MISSION_ID"));
@@ -1107,7 +1153,7 @@ namespace IO.Astrodynamics.Tests.CCSDS.OPM
             var data = new OpmData(stateVector, userDefinedParameters: userParams);
             var opm = new Opm(header, metadata, data);
 
-            var xml = opm.ToXmlString();
+            var xml = opm.ToXml();
 
             Assert.Contains("<userDefinedParameters>", xml);
             Assert.Contains("parameter=\"CUSTOM_PARAM\"", xml);
@@ -1130,7 +1176,7 @@ namespace IO.Astrodynamics.Tests.CCSDS.OPM
             var data = new OpmData(stateVector, maneuvers: new[] { maneuver }, userDefinedParameters: userParams);
             var opm = new Opm(header, metadata, data);
 
-            var xml = opm.ToXmlString();
+            var xml = opm.ToXml();
 
             var maneuverIndex = xml.IndexOf("</maneuverParameters>", StringComparison.Ordinal);
             var userDefinedIndex = xml.IndexOf("<userDefinedParameters>", StringComparison.Ordinal);
@@ -1185,8 +1231,8 @@ namespace IO.Astrodynamics.Tests.CCSDS.OPM
 
             var original = new Opm(header, metadata, data);
 
-            var xml = original.ToXmlString();
-            var loaded = Opm.LoadFromString(xml, validateSchema: false, validateContent: false);
+            var xml = original.ToXml();
+            var loaded = Opm.Parse(xml, new CcsdsReadOptions { ValidateSchema = false, ValidateContent = false });
 
             // Verify all features preserved
             Assert.Equal("COMPLIANCE TEST", loaded.ObjectName);
@@ -1211,7 +1257,7 @@ namespace IO.Astrodynamics.Tests.CCSDS.OPM
         {
             var opm = CreateMinimalOpm("ISS", "1998-067A");
 
-            var xml = opm.ToXmlString();
+            var xml = opm.ToXml();
 
             // Should reference NDM/XML 4.0.0 schema
             Assert.Contains("ndmxml-4.0.0", xml);
@@ -1225,7 +1271,7 @@ namespace IO.Astrodynamics.Tests.CCSDS.OPM
 
         private static Opm WriteAndLoad(string objectName, StateVector stateVector)
         {
-            return Opm.LoadFromString(Opm.CreateFromStateVector(objectName, "2024-002A", stateVector).ToXmlString());
+            return Opm.Parse(Opm.CreateFromStateVector(objectName, "2024-002A", stateVector).ToXml());
         }
 
         private static StateVector LunarState()
@@ -1438,39 +1484,35 @@ namespace IO.Astrodynamics.Tests.CCSDS.OPM
 
             // Without the schema: every entry point throws the reader's exception (before: ArgumentException of the model)
             OpmReaderTests.AssertNamesKeyword(Assert.Throws<OpmParseException>(() =>
-                Opm.LoadFromString(xml, validateSchema: false)), keyword, value, with);
+                Opm.Parse(xml, new CcsdsReadOptions { ValidateSchema = false })), keyword, value, with);
             using (var stream = new MemoryStream(System.Text.Encoding.UTF8.GetBytes(xml)))
             {
                 OpmReaderTests.AssertNamesKeyword(Assert.Throws<OpmParseException>(() =>
-                    Opm.LoadFromStream(stream, validateSchema: false)), keyword, value, with);
+                    Opm.Parse(new StreamReader(stream), new CcsdsReadOptions { ValidateSchema = false })), keyword, value, with);
             }
 
             NdmDocuments.WithTempFile(xml, file =>
             {
                 OpmReaderTests.AssertNamesKeyword(Assert.Throws<OpmParseException>(() =>
-                    Opm.LoadFromFile(file, validateSchema: false)), keyword, value, with);
+                    Opm.Load(file, new CcsdsReadOptions { ValidateSchema = false })), keyword, value, with);
 
                 // With the default validation: the schema's exception where it has a facet, the reader's otherwise
                 if (schemaRejects)
                 {
-                    Assert.Throws<OpmValidationException>(() => Opm.LoadFromString(xml));
-                    Assert.Throws<OpmValidationException>(() => Opm.LoadFromFile(file));
+                    Assert.Throws<OpmValidationException>(() => Opm.Parse(xml));
+                    Assert.Throws<OpmValidationException>(() => Opm.Load(file));
                 }
                 else
                 {
-                    OpmReaderTests.AssertNamesKeyword(Assert.Throws<OpmParseException>(() => Opm.LoadFromString(xml)), keyword, value, with);
-                    OpmReaderTests.AssertNamesKeyword(Assert.Throws<OpmParseException>(() => Opm.LoadFromFile(file)), keyword, value, with);
+                    OpmReaderTests.AssertNamesKeyword(Assert.Throws<OpmParseException>(() => Opm.Parse(xml)), keyword, value, with);
+                    OpmReaderTests.AssertNamesKeyword(Assert.Throws<OpmParseException>(() => Opm.Load(file)), keyword, value, with);
                 }
 
-                // TryLoadFromFile: false, the parse error naming the keyword (before: the constructor's parameter)
+                // TryLoad: false (before: the constructor's parameter)
                 foreach (var validateSchema in schemaRejects ? new[] { false } : new[] { false, true })
                 {
-                    Assert.False(Opm.TryLoadFromFile(file, out var opm, out var result, validateSchema));
+                    Assert.False(Opm.TryLoad(file, out var opm, new CcsdsReadOptions { ValidateSchema = validateSchema }));
                     Assert.Null(opm);
-                    var error = Assert.Single(result.Errors);
-                    Assert.Equal("PARSE_ERROR", error.Code);
-                    Assert.Contains(keyword, error.Message);
-                    Assert.Contains($"'{value}'", error.Message);
                 }
             });
         }
@@ -1494,31 +1536,28 @@ namespace IO.Astrodynamics.Tests.CCSDS.OPM
             {
                 if (schemaRejects)
                 {
-                    Assert.Throws<OpmValidationException>(() => Opm.LoadFromString(xml));
-                    Assert.Throws<OpmValidationException>(() => Opm.LoadFromFile(file));
+                    Assert.Throws<OpmValidationException>(() => Opm.Parse(xml));
+                    Assert.Throws<OpmValidationException>(() => Opm.Load(file));
                 }
                 else
                 {
-                    OpmReaderTests.AssertNamesNonFiniteKeyword(Assert.Throws<OpmParseException>(() => Opm.LoadFromString(xml)), keyword, value);
-                    OpmReaderTests.AssertNamesNonFiniteKeyword(Assert.Throws<OpmParseException>(() => Opm.LoadFromFile(file)), keyword, value);
+                    OpmReaderTests.AssertNamesNonFiniteKeyword(Assert.Throws<OpmParseException>(() => Opm.Parse(xml)), keyword, value);
+                    OpmReaderTests.AssertNamesNonFiniteKeyword(Assert.Throws<OpmParseException>(() => Opm.Load(file)), keyword, value);
                     using var stream = new MemoryStream(System.Text.Encoding.UTF8.GetBytes(xml));
-                    OpmReaderTests.AssertNamesNonFiniteKeyword(Assert.Throws<OpmParseException>(() => Opm.LoadFromStream(stream)), keyword, value);
+                    OpmReaderTests.AssertNamesNonFiniteKeyword(Assert.Throws<OpmParseException>(() => Opm.Parse(new StreamReader(stream))), keyword, value);
                 }
 
                 // Without the schema, and without the content validation: the reader's exception
                 OpmReaderTests.AssertNamesNonFiniteKeyword(Assert.Throws<OpmParseException>(() =>
-                    Opm.LoadFromString(xml, validateSchema: false)), keyword, value);
+                    Opm.Parse(xml, new CcsdsReadOptions { ValidateSchema = false })), keyword, value);
                 OpmReaderTests.AssertNamesNonFiniteKeyword(Assert.Throws<OpmParseException>(() =>
-                    Opm.LoadFromString(xml, validateSchema: false, validateContent: false)), keyword, value);
+                    Opm.Parse(xml, new CcsdsReadOptions { ValidateSchema = false, ValidateContent = false })), keyword, value);
 
-                // TryLoadFromFile: false, one PARSE_ERROR naming the keyword
+                // TryLoad: false
                 foreach (var validateSchema in schemaRejects ? new[] { false } : new[] { false, true })
                 {
-                    Assert.False(Opm.TryLoadFromFile(file, out var opm, out var result, validateSchema));
+                    Assert.False(Opm.TryLoad(file, out var opm, new CcsdsReadOptions { ValidateSchema = validateSchema }));
                     Assert.Null(opm);
-                    var error = Assert.Single(result.Errors);
-                    Assert.Equal("PARSE_ERROR", error.Code);
-                    OpmReaderTests.AssertNamesNonFiniteKeyword(new Exception(error.Message), keyword, value);
                 }
 
                 // ValidateFile: invalid (before: valid), the parser's error naming the keyword where the schema passes
@@ -1562,7 +1601,7 @@ namespace IO.Astrodynamics.Tests.CCSDS.OPM
             var written = new StateVector(new Vector3(6778137.0, 1000.0, -2000.0), new Vector3(10.0, 7500.0, 1.0), earth, CentreEpoch, frame);
 
             var opm = Opm.CreateFromStateVector("SAT", "2024-002A", written);
-            var xml = opm.ToXmlString();
+            var xml = opm.ToXml();
 
             Assert.Equal(expected, opm.Metadata.ReferenceFrame);
             Assert.Contains($"<REF_FRAME>{expected}</REF_FRAME>", xml);
@@ -1570,7 +1609,7 @@ namespace IO.Astrodynamics.Tests.CCSDS.OPM
             Assert.DoesNotContain(opm.Validate().Issues, i => i.Path == "Metadata.ReferenceFrame");
 
             // Read back: ICRF and GCRF in Frame.ICRF, the others in their own frame; the state is the state written
-            var read = Opm.LoadFromString(xml).ToStateVector(earth);
+            var read = Opm.Parse(xml).ToStateVector(earth);
             var expectedFrame = frameName is "ICRF" or "GCRF" ? Frames.Frame.ICRF : frame;
             Assert.Equal(expectedFrame.Name, read.Frame.Name);
             Assert.Equal(written.Position, read.Position);

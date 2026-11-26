@@ -13,12 +13,40 @@ var tle = new TLE("ISS (ZARYA)",
     "2 25544  51.6423 353.0312 0000493 320.8755  39.2360 15.49309423 25703");
 ```
 
-The constructor checks the text before it reads any kernel (#675): a null or empty line or name, a line of another
-length than 69 characters or that does not start with its line number (`ArgumentException`), catalog numbers that
-differ or a wrong checksum (`InvalidOperationException`). Before 11.0.0 it built the Earth of the TLE first, so that
-without kernels a malformed TLE threw the kernel error, and CSPICE printed the banners of its failed reads on the
-standard output. A valid TLE still needs the kernels that define the Earth (its GM, radii and frame, which its
-`Observer` carries and `MeanSemiMajorAxis` uses): it throws `InvalidOperationException` without them.
+The constructor checks the text before it reads any kernel (#675; before 11.0.0 it built the Earth of the TLE first, so
+that without kernels a malformed TLE threw the kernel error). A null or empty line throws `ArgumentException` naming it;
+any other bad line throws `ArgumentException` naming `line1` or `line2`, with a `TleFormatException` (a
+`FormatException`) as inner exception, whose `Line` (1 or 2) and `Column` (1-based) locate the field (R21 of
+[#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668), 11.0.0). The checks run in this
+order: the length (69 characters, the column the first one missing or 70), the line number (column 1), the catalog
+number of each line and their agreement (column 3, line 2 for the agreement), the checksum (column 69), then each field:
+
+| Line | Columns | Field | Syntax |
+|------|---------|-------|--------|
+| 1 | 8 | Classification | `U`, `C` or `S` |
+| 1 | 10-17 | International designator | blank, or YYNNN and one to three capital letters (`98067A`) |
+| 1 | 19-32 | Epoch | YYDDD.DDDDDDDD, the day from 1 to the length of its year |
+| 1 | 34-43 | ṅ/2 | a decimal number or blank |
+| 1 | 45-52, 54-61 | n̈/6, B* | sign, five digits, sign, one digit (` 10270-3`), or blank |
+| 1 | 63 | Ephemeris type | a digit or blank |
+| 1 | 65-68 | Element set number | right-aligned digits or blank (0) |
+| 2 | 9-16, 18-25, 35-42, 44-51, 53-63 | i, Ω, ω, M, n | a decimal number |
+| 2 | 27-33 | Eccentricity | seven digits, the decimal point assumed |
+| 2 | 64-68 | Revolution number at epoch | right-aligned digits or blank (0) |
+
+No physical range is checked: SGP4 reports a set it cannot evaluate (#454). Before 11.0.0 a wrong checksum and two
+catalog numbers threw `InvalidOperationException`, a malformed field a `FormatException` without its column, and a day
+of year out of range (000, 400) rolled into the neighbouring year. A null or blank name is the catalog field of line 1
+as written (`25544`, `T5544`), as a two-line set from Space-Track has no name line; before 11.0.0 it threw
+`ArgumentException`.
+
+The constructor reads no kernel at all (R21 of
+[#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668), 11.0.0): the Earth of the TLE (its
+`Observer`) reads its GM, radii and frame from the data provider at the first member that needs them, retried on
+failure. A valid TLE gives its fields, `NoradCatalogId`, `MeanMeanMotion` and `ToOmm` without kernels;
+`MeanSemiMajorAxis`, `ToMeanKeplerianElements` and SGP4 need the kernels that define the Earth and throw
+`InvalidOperationException` without them (`BODY399_GM`), keeping nothing, so that the same `TLE` works once they are
+loaded. Before 11.0.0 a TLE built before the kernels kept a GM of 0 for its life.
 
 ## Properties
 
@@ -27,7 +55,8 @@ standard output. A valid TLE still needs the kernels that define the Earth (its 
 | `Name` | Object name |
 | `Epoch` | Epoch of elements |
 | `ElementsType` | Always `Mean` |
-| `MeanSemiMajorAxis` | Mean semi-major axis (m) |
+| `MeanSemiMajorAxis` | Mean semi-major axis (m), ∛(GM/n²) with the kernel GM of the Earth, read at the first use |
+| `MeanMeanMotion` | Mean motion n of line 2 (rad/s): the field (rev/day) × 2π / 86400, read without kernels (decision 111 of #668) |
 | `MeanEccentricity` | Mean eccentricity |
 | `MeanInclination` | Mean inclination (rad) |
 | `MeanAscendingNode` | Mean RAAN (rad) |
@@ -35,6 +64,10 @@ standard output. A valid TLE still needs the kernels that define the Earth (its 
 | `FirstDerivationMeanMotion` | ṅ/2, the first-derivative field of line 1 (rev/day²), OMM's `MEAN_MOTION_DOT` |
 | `SecondDerivativeMeanMotion` | n̈/6, the second-derivative field of line 1 (rev/day³), OMM's `MEAN_MOTION_DDOT` |
 | `NoradCatalogId` | NORAD catalog number, Alpha-5 decoded (`T5544` reads as 275544) |
+| `CosparId` | International designator of line 1 as written (`98067A`), null when blank |
+| `Classification` | Classification of line 1 (`Unclassified`, `Classified`, `Secret`) |
+| `ElementSetNumber` | Element set number of line 1, 0 when blank |
+| `RevolutionNumberAtEpoch` | Revolution number at epoch of line 2, 0 when blank |
 
 ## Methods
 
@@ -45,8 +78,13 @@ standard output. A valid TLE still needs the kernels that define the Earth (its 
 | `ToOsculating()` | Convert to osculating StateVector at TLE epoch |
 | `ToOsculating(Time)` | Convert to osculating StateVector at epoch |
 | `ToMeanKeplerianElements()` | Get mean Keplerian elements directly |
-| `ToOmm(string originator)` | Convert to CCSDS OMM |
+| `ToOmm(string originator)` | Convert to CCSDS OMM, `MEAN_MOTION` the field of line 2 as written, without kernels |
 | `Create(OrbitalParameters, string, int, string, ...)` | Create TLE from mean orbital parameters about the Earth in `Frame.TEME` |
+
+The inherited members of `OrbitalParameters` (`MeanMotion()`, `SemiMajorAxis()`, `Eccentricity()`, ...) are those of
+the osculating SGP4 set at the epoch; the mean values are the `Mean…` properties. `MeanMeanMotion` replaces the method
+`MeanMotion()` of 10.x, √(GM/a³) with a = ∛(GM/n²), within 2 ulp of the field (decision 111 of #668, decided by
+S. Guillet, 2026-11-26): `tle.MeanMotion()` now binds to the osculating one, 0.14 % off for the ISS.
 
 ## SGP4/SDP4
 
@@ -149,6 +187,36 @@ reads SGP4 outside them (#527; it extrapolated them before, 20.7 m 6 min before 
 and the reads from any other body, are SGP4.
 `Spacecraft.ToOpm` writes the propagated state, in TEME, after a numerical propagation, and the SGP4 state otherwise,
 also when `TLEPropagator` sampled it (#658, decided by S. Guillet, 2026-11-17; the SGP4 state on every path before 11.0.0). For SGP4 itself, use `TLEPropagator` or `tle.ToStateVector(t)`.
+
+## Reading TLE text
+
+One verb set reads a TLE text, shared with the CCSDS messages (R21 of
+[#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668)): `TLE.Parse` (a `string` or a
+`TextReader`) and `TLE.Load` (a file) read one set, `ParseAll` and `LoadAll` every set in its order, `TryParse` and
+`TryLoad` return false where the others throw, and `TLE` is an `IParsable<TLE>`. A text holds two-line sets (named by
+their catalog field), three-line sets, or both: CR/LF or LF, trailing blanks and blank lines are ignored, and a name line
+is trimmed, the `0 ` Space-Track writes before it removed. A bad set throws `TleFormatException` at its line of the text
+and the column of its field, the first one in the text, with no partial list; `Parse` and `Load` throw it too for a text
+of no set or of several. The constructor stays strict: two lines of 69 characters.
+
+```csharp
+// Inputs: catalogPath (string)
+var catalog = TLE.LoadAll(catalogPath);
+var iss = TLE.Parse("ISS (ZARYA)\n" +
+    "1 25544U 98067A   21020.53488036  .00016717  00000-0  10270-3 0  9054\n" +
+    "2 25544  51.6423 353.0312 0000493 320.8755  39.2360 15.49309423 25703");
+// The lines again, from the properties, without slicing them
+var again = TLE.Create(iss.ToMeanKeplerianElements(), iss.Name, iss.NoradCatalogId, iss.CosparId, iss.RevolutionNumberAtEpoch,
+    iss.Classification, iss.BallisticCoefficient, iss.FirstDerivationMeanMotion, iss.SecondDerivativeMeanMotion,
+    iss.ElementSetNumber);
+```
+
+## A TLE as a catalogue object
+
+`TrackedObject.FromTle(tle, hardBodyRadiusMeters)` makes a TLE the secondary of the conjunction analysis and of the CDM
+export, moving by SGP4 bit for bit as a `Spacecraft` of the same TLE, its NAIF identifier −100000 − NORAD by default
+(R19 of [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668); see
+[Conjunction Assessment](conjunction-assessment.md#catalogue-objects)).
 
 ## See Also
 

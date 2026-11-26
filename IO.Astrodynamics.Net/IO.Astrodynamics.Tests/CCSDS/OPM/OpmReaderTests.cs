@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Xml.Linq;
+using IO.Astrodynamics.CCSDS;
 using IO.Astrodynamics.CCSDS.Common;
 using IO.Astrodynamics.CCSDS.OPM;
 using Xunit;
@@ -25,13 +26,13 @@ namespace IO.Astrodynamics.Tests.CCSDS.OPM
         {
             // An OPM states its position in km (positionUnits, ndmxml-4.0.0-common-4.0.xsd): X in m is rejected by the
             // schema under default validation (before: loaded, 6778.137 read as km)
-            var xml = NdmDocuments.Mutated(OpmReaderTests.FullOpm().ToXmlString(), "opm", "X units=m");
+            var xml = NdmDocuments.Mutated(OpmReaderTests.FullOpm().ToXml(), "opm", "X units=m");
 
-            var ex = Assert.Throws<OpmValidationException>(() => Opm.LoadFromString(xml));
+            var ex = Assert.Throws<OpmValidationException>(() => Opm.Parse(xml));
             Assert.Contains(ex.ValidationResult.Errors, e => e.Message.Contains("units", StringComparison.Ordinal));
-            NdmDocuments.WithTempFile(xml, file => Assert.Throws<OpmValidationException>(() => Opm.LoadFromFile(file)));
-            Assert.Throws<OpmValidationException>(() => Opm.LoadFromStream(new MemoryStream(Encoding.UTF8.GetBytes(xml))));
-            Assert.Equal(6778.137, Opm.LoadFromString(xml, validateSchema: false).Data.StateVector.X);
+            NdmDocuments.WithTempFile(xml, file => Assert.Throws<OpmValidationException>(() => Opm.Load(file)));
+            Assert.Throws<OpmValidationException>(() => Opm.Parse(new StreamReader(new MemoryStream(Encoding.UTF8.GetBytes(xml)))));
+            Assert.Equal(6778.137, Opm.Parse(xml, new CcsdsReadOptions { ValidateSchema = false }).Data.StateVector.X);
         }
 
         [Fact]
@@ -367,12 +368,12 @@ namespace IO.Astrodynamics.Tests.CCSDS.OPM
             Action read = path switch
             {
                 "OpmReader.ReadFromString" => () => _reader.ReadFromString(xml),
-                "Opm.LoadFromString" => () => Opm.LoadFromString(xml),
-                "Opm.LoadFromFile" => () => NdmDocuments.WithTempFile(xml, file => Opm.LoadFromFile(file)),
-                "Opm.LoadFromStream" => () => Opm.LoadFromStream(new MemoryStream(Encoding.UTF8.GetBytes(xml))),
+                "Opm.LoadFromString" => () => Opm.Parse(xml),
+                "Opm.LoadFromFile" => () => NdmDocuments.WithTempFile(xml, file => Opm.Load(file)),
+                "Opm.LoadFromStream" => () => Opm.Parse(new StreamReader(new MemoryStream(Encoding.UTF8.GetBytes(xml)))),
                 "OpmReader.ReadFromFile" => () => NdmDocuments.WithTempFile(xml, file => _reader.ReadFromFile(file)),
                 "OpmReader.ReadFromStream" => () => _reader.ReadFromStream(new MemoryStream(Encoding.UTF8.GetBytes(xml))),
-                _ => () => Opm.LoadFromString(xml, validateSchema: false)
+                _ => () => Opm.Parse(xml, new CcsdsReadOptions { ValidateSchema = false })
             };
 
             var ex = Assert.Throws<OpmParseException>(read);
@@ -384,13 +385,11 @@ namespace IO.Astrodynamics.Tests.CCSDS.OPM
         {
             NdmDocuments.WithTempFile(TwoOpmNdm(), file =>
             {
-                var loaded = Opm.TryLoadFromFile(file, out var opm, out var result);
+                var loaded = Opm.TryLoad(file, out var opm);
 
                 Assert.False(loaded);
                 Assert.Null(opm);
-                var error = Assert.Single(result.Errors);
-                Assert.Equal("PARSE_ERROR", error.Code);
-                Assert.Contains("2 OPM messages", error.Message);
+                Assert.Contains("2 OPM messages", Assert.Throws<OpmParseException>(() => Opm.Load(file)).Message);
             });
         }
 
@@ -456,7 +455,7 @@ namespace IO.Astrodynamics.Tests.CCSDS.OPM
         {
             // The qualified copy is rejected by the embedded SANA NDM/XML 4.0.0 schema, its one-segment original accepted
             var validator = new OpmValidator();
-            var original = validator.ValidateSchemaFromXml(NdmDocuments.QualifiedMessage(MinimalOpm().ToXmlString(), "opm"));
+            var original = validator.ValidateSchemaFromXml(NdmDocuments.QualifiedMessage(MinimalOpm().ToXml(), "opm"));
             Assert.True(original.IsValid, string.Join("; ", original.Errors.Select(e => e.Message)));
             var qualified = validator.ValidateSchemaFromXml(NdmDocuments.QualifiedMessage(NdmDocuments.TwoSegmentOpm(MinimalOpm()), "opm"));
             Assert.False(qualified.IsValid);
@@ -484,12 +483,12 @@ namespace IO.Astrodynamics.Tests.CCSDS.OPM
             Action read = path switch
             {
                 "OpmReader.ReadFromString" => () => _reader.ReadFromString(xml),
-                "Opm.LoadFromString" => () => Opm.LoadFromString(xml),
-                "Opm.LoadFromFile" => () => NdmDocuments.WithTempFile(xml, file => Opm.LoadFromFile(file)),
-                "Opm.LoadFromStream" => () => Opm.LoadFromStream(new MemoryStream(Encoding.UTF8.GetBytes(xml))),
+                "Opm.LoadFromString" => () => Opm.Parse(xml),
+                "Opm.LoadFromFile" => () => NdmDocuments.WithTempFile(xml, file => Opm.Load(file)),
+                "Opm.LoadFromStream" => () => Opm.Parse(new StreamReader(new MemoryStream(Encoding.UTF8.GetBytes(xml)))),
                 "OpmReader.ReadFromFile" => () => NdmDocuments.WithTempFile(xml, file => _reader.ReadFromFile(file)),
                 "OpmReader.ReadFromStream" => () => _reader.ReadFromStream(new MemoryStream(Encoding.UTF8.GetBytes(xml))),
-                _ => () => Opm.LoadFromString(xml, validateSchema: false)
+                _ => () => Opm.Parse(xml, new CcsdsReadOptions { ValidateSchema = false })
             };
 
             // Before: the first segment, OPM SAT, the second dropped. Under default validation the schema rejects it first
@@ -517,13 +516,13 @@ namespace IO.Astrodynamics.Tests.CCSDS.OPM
         [InlineData("body/segment/data/userDefinedParameters")]
         public void Read_OpmWithDuplicateStructuralElement_Throws(string path)
         {
-            var xml = FullOpm().ToXmlString();
+            var xml = FullOpm().ToXml();
             Assert.Equal(2, _reader.ReadFromString(xml).Data.Maneuvers.Count);
             var duplicated = NdmDocuments.WithDuplicatedElement(xml, "opm", path);
 
             var ex = Assert.Throws<OpmParseException>(() => _reader.ReadFromString(duplicated));
             Assert.Contains($"2 {path.Split('/')[^1]} elements", ex.Message);
-            var exLoad = Assert.Throws<OpmParseException>(() => Opm.LoadFromString(duplicated, validateSchema: false, validateContent: false));
+            var exLoad = Assert.Throws<OpmParseException>(() => Opm.Parse(duplicated, new CcsdsReadOptions { ValidateSchema = false, ValidateContent = false }));
             Assert.Contains($"2 {path.Split('/')[^1]} elements", exLoad.Message);
         }
 
@@ -533,20 +532,20 @@ namespace IO.Astrodynamics.Tests.CCSDS.OPM
             NdmDocuments.WithTempFile(NdmDocuments.TwoSegmentOpm(MinimalOpm()), file =>
             {
                 // The schema rejects the second segment (third round of #668: a PARSE_ERROR of the reader before)
-                var loaded = Opm.TryLoadFromFile(file, out var opm, out var result);
+                var loaded = Opm.TryLoad(file, out var opm);
 
                 Assert.False(loaded);
                 Assert.Null(opm);
-                Assert.Contains(result.Errors, e => e.Code == "OPM006" && e.Message.Contains("segment"));
+                Assert.Contains(Assert.Throws<OpmValidationException>(() => Opm.Load(file)).ValidationResult.Errors,
+                    e => e.Code == "OPM006" && e.Message.Contains("segment"));
 
                 // Without schema validation, the reader rejects it
-                loaded = Opm.TryLoadFromFile(file, out opm, out result, validateSchema: false);
+                var noSchema = new CcsdsReadOptions { ValidateSchema = false };
+                loaded = Opm.TryLoad(file, out opm, noSchema);
 
                 Assert.False(loaded);
                 Assert.Null(opm);
-                var error = Assert.Single(result.Errors);
-                Assert.Equal("PARSE_ERROR", error.Code);
-                Assert.Contains("2 segment elements", error.Message);
+                Assert.Contains("2 segment elements", Assert.Throws<OpmParseException>(() => Opm.Load(file, noSchema)).Message);
             });
         }
 
@@ -646,7 +645,7 @@ namespace IO.Astrodynamics.Tests.CCSDS.OPM
             var xml = KeywordBaseOpm();
             var schema = new OpmValidator().ValidateSchemaFromXml(xml);
             Assert.True(schema.IsValid, string.Join("; ", schema.Errors.Select(e => e.Message)));
-            Assert.Equal(1500.0, Opm.LoadFromString(xml).Data.Mass);
+            Assert.Equal(1500.0, Opm.Parse(xml).Data.Mass);
         }
 
         [Fact]
@@ -659,18 +658,19 @@ namespace IO.Astrodynamics.Tests.CCSDS.OPM
             Assert.True(new OpmValidator().ValidateSchemaFromXml(xml).IsValid);
 
             Assert.Equal(0.0, _reader.ReadFromString(xml).Data.Mass);
-            Assert.Equal(0.0, Opm.LoadFromString(xml).Data.Mass);
-            Assert.Equal(0.0, Opm.LoadFromString(xml, validateSchema: true, validateContent: false).Data.Mass);
+            Assert.Equal(0.0, Opm.Parse(xml).Data.Mass);
+            Assert.Equal(0.0, Opm.Parse(xml, new CcsdsReadOptions { ValidateContent = false }).Data.Mass);
             NdmDocuments.WithTempFile(xml, file =>
             {
-                Assert.True(Opm.TryLoadFromFile(file, out var opm, out var result));
+                Assert.True(Opm.TryLoad(file, out var opm));
                 Assert.Equal(0.0, opm.Data.Mass);
-                Assert.True(result.IsValid);
+                Assert.True(opm.IsValid());
                 Assert.True(new OpmValidator().ValidateFile(file).IsValid);
             });
 
-            // A spacecraft of mass 0, which CelestialItem allows
-            var spacecraft = Opm.LoadFromString(xml).ToSpacecraft(-1000, 1000.0, new IO.Astrodynamics.Body.Spacecraft.Clock("OnboardClock", 256),
+            // A spacecraft of mass 0, which CelestialItem allows; its one sectional area from equal DRAG_AREA and
+            // SOLAR_RAD_AREA (#805: the base OPM holds 22 and 25.5 m², which ToSpacecraft refuses)
+            var spacecraft = Opm.Parse(NdmDocuments.WithElementValue(xml, "SOLAR_RAD_AREA", "22")).ToSpacecraft(-1000, 1000.0, new IO.Astrodynamics.Body.Spacecraft.Clock("OnboardClock", 256),
                 new IO.Astrodynamics.Body.CelestialBody(IO.Astrodynamics.SolarSystemObjects.PlanetsAndMoons.EARTH));
             Assert.Equal(0.0, spacecraft.Mass);
         }
@@ -688,9 +688,8 @@ namespace IO.Astrodynamics.Tests.CCSDS.OPM
                 NdmDocuments.WithElementValue(KeywordBaseOpm(), "TRUE_ANOMALY", "-10", renameTo: "MEAN_ANOMALY")).IsValid);
 
             AssertNamesKeyword(Assert.Throws<OpmParseException>(() => _reader.ReadFromString(xml)), "MEAN_ANOMALY", value);
-            AssertNamesKeyword(Assert.Throws<OpmParseException>(() => Opm.LoadFromString(xml, validateSchema: false)), "MEAN_ANOMALY", value);
-            Assert.Equal(-10.0, Opm.LoadFromString(
-                NdmDocuments.WithElementValue(KeywordBaseOpm(), "TRUE_ANOMALY", "-10", renameTo: "MEAN_ANOMALY")).Data.KeplerianElements.MeanAnomaly);
+            AssertNamesKeyword(Assert.Throws<OpmParseException>(() => Opm.Parse(xml, new CcsdsReadOptions { ValidateSchema = false })), "MEAN_ANOMALY", value);
+            Assert.Equal(-10.0, Opm.Parse(NdmDocuments.WithElementValue(KeywordBaseOpm(), "TRUE_ANOMALY", "-10", renameTo: "MEAN_ANOMALY")).Data.KeplerianElements.MeanAnomaly);
         }
 
         [Theory]

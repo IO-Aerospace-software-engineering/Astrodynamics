@@ -100,4 +100,20 @@ internal static class TlePage
         });
         #endregion
     }
+
+    // docs/reference/tle.md, "Reading TLE text"
+    internal static void Block04(string catalogPath)
+    {
+        #region docs/reference/tle.md:4
+        // Inputs: catalogPath (string)
+        var catalog = TLE.LoadAll(catalogPath);
+        var iss = TLE.Parse("ISS (ZARYA)\n" +
+            "1 25544U 98067A   21020.53488036  .00016717  00000-0  10270-3 0  9054\n" +
+            "2 25544  51.6423 353.0312 0000493 320.8755  39.2360 15.49309423 25703");
+        // The lines again, from the properties, without slicing them
+        var again = TLE.Create(iss.ToMeanKeplerianElements(), iss.Name, iss.NoradCatalogId, iss.CosparId, iss.RevolutionNumberAtEpoch,
+            iss.Classification, iss.BallisticCoefficient, iss.FirstDerivationMeanMotion, iss.SecondDerivativeMeanMotion,
+            iss.ElementSetNumber);
+        #endregion
+    }
 }

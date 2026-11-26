@@ -259,6 +259,19 @@ internal static partial class CspiceDirect
         }
     }
 
+    /// <summary>The state transformation from one frame to another at an epoch (<c>sxform_c</c>), 6×6 row-major, the reference
+    /// of a covariance turned into ITRF93 (R19 of #668).</summary>
+    internal static double[] Sxform(string from, string to, double et)
+    {
+        lock (SpiceAPI.SyncRoot)
+        {
+            var transformation = new double[36];
+            sxform_c(from, to, et, transformation);
+            Check("sxform");
+            return transformation;
+        }
+    }
+
     /// <summary>The rotation matrix of a SPICE quaternion (<c>q2m_c</c>, scalar first), row-major.</summary>
     internal static double[] Q2m(double w, double x, double y, double z)
     {

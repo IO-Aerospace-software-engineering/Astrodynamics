@@ -154,7 +154,7 @@ public class CovariancePropagationBenchmarks
 }
 
 /// <summary>
-/// The cost of the covariance propagated to TCA in <see cref="ConjunctionAssessment.Analyze(ProtectedSpacecraftProfile, ILocalizable, Window, ConjunctionAnalysisOptions)"/>:
+/// The cost of the covariance propagated to TCA in <see cref="ConjunctionAssessment.Analyze(Spacecraft, ILocalizable, Window, ConjunctionAnalysisOptions)"/>:
 /// two participants on a sun-synchronous orbit at 700 km in the force model of R2 (EGM2008 10×10, Sun, Moon,
 /// NRLMSISE-00 drag) crossing 23 h after the start, each
 /// propagated once over one day in RK7(8) at 1e-11 without the variational equations, with an RTN covariance at the start;
@@ -167,7 +167,7 @@ public class CovariancePropagationBenchmarks
 [SimpleJob(RunStrategy.Monitoring, launchCount: 1, warmupCount: 2, iterationCount: 10)]
 public class ConjunctionCovarianceBenchmarks
 {
-    private ProtectedSpacecraftProfile _protected = null!;
+    private Spacecraft _protected = null!;
     private Spacecraft _secondary = null!;
     private Window _window;
 
@@ -203,7 +203,7 @@ public class ConjunctionCovarianceBenchmarks
             });
         }
 
-        _protected = new ProtectedSpacecraftProfile(protectedCraft);
+        _protected = protectedCraft;
         _window = new Window(epoch.AddHours(22.0), epoch.AddHours(24.0));
     }
 

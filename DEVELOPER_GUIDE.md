@@ -485,7 +485,6 @@ Classical Keplerian orbital elements (osculating or mean).
 
 | Factory Method | Description |
 |----------------|-------------|
-| `FromOMM(double meanMotion, double e, double i, double raan, double aop, double m, ILocalizable observer, Time epoch, Frame frame)` | Create mean elements from OMM data (units: rev/day for mean motion, degrees for angles) |
 | `FromTrueAnomaly(double semiMajorAxis, double eccentricity, double inclination, double ascendingNode, double argumentOfPeriapsis, double trueAnomaly, ILocalizable observer, Time epoch, Frame frame)` | Elements given with their true anomaly: M(ν), `TrueAnomaly()` ν reduced to [0, 2π), the state from ν as given (#668, R23) |
 | `Parabolic(double perigeeRadius, double inclination, double ascendingNode, double argumentOfPeriapsis, double meanAnomaly, ILocalizable observer, Time epoch, Frame frame, double eccentricity = 1.0)` | Parabola, or orbit within 1e-6 of e = 1, from its perigee radius: a = q / (1 − e), +Infinity at e = 1 (#459; the `perigeeRadius` parameter of the constructor before 11.0.0) |
 
@@ -545,19 +544,12 @@ var futureState = kep.ToStateVector(epoch.AddHours(1.5));
 // Propagate using 2-body mechanics
 var laterKep = kep.AtEpoch(epoch.AddDays(1));
 
-// Create mean Keplerian elements from OMM data
-// FromOMM accepts OMM native units: rev/day for mean motion, degrees for angles
-var meanKep = KeplerianElements.FromOMM(
-    meanMotion: 15.49309423,             // rev/day
-    eccentricity: 0.0000493,
-    inclination: 51.6423,                // degrees
-    raan: 353.0312,                      // degrees
-    argumentOfPeriapsis: 320.8755,       // degrees
-    meanAnomaly: 39.2360,                // degrees
-    observer: earth,
-    epoch: epoch,
-    frame: Frame.TEME
-);
+// Create mean Keplerian elements from an OMM: its CCSDS units (rev/day, degrees) in, SI out
+var omm = Omm.CreateForTle("ISS (ZARYA)", "1998-067A", new DateTime(2021, 1, 20, 12, 50, 13, DateTimeKind.Utc),
+    meanMotion: 15.49309423, eccentricity: 0.0000493, inclination: 51.6423, raan: 353.0312,
+    argOfPericenter: 320.8755, meanAnomaly: 39.2360, bstar: 0.00010270, meanMotionDot: 0.00008358,
+    meanMotionDDot: 0.0, noradCatalogId: 25544);
+var meanKep = omm.ToMeanElements();   // about the Earth (CENTER_NAME), in TEME (REF_FRAME)
 
 Console.WriteLine($"Elements type: {meanKep.ElementsType}"); // Mean
 // Note: Mean elements cannot be directly converted to StateVector
@@ -612,7 +604,7 @@ Two-Line Element set for Earth-orbiting objects. TLE stores **mean** orbital ele
 
 | Constructor | Description |
 |------------|-------------|
-| `TLE(string name, string line1, string line2)` | Parse from standard 3-line format |
+| `TLE(string name, string line1, string line2)` | Parse from standard 3-line format; a null or blank name is the catalog field, a bad line `ArgumentException` (`line1`, `line2`) with a `TleFormatException` (line, column) inside |
 
 | Property | Description |
 |----------|-------------|
@@ -620,9 +612,14 @@ Two-Line Element set for Earth-orbiting objects. TLE stores **mean** orbital ele
 | `Line1` | First line of TLE |
 | `Line2` | Second line of TLE |
 | `NoradCatalogId` | NORAD catalog number, Alpha-5 decoded (`T5544` → 275544) |
+| `CosparId` | International designator of line 1 (`98067A`), null when blank |
+| `Classification` | Classification of line 1 |
+| `ElementSetNumber` | Element set number of line 1, 0 when blank |
+| `RevolutionNumberAtEpoch` | Revolution number at epoch of line 2, 0 when blank |
 | `Epoch` | Epoch of elements |
 | `ElementsType` | Always returns `OrbitalElementsType.Mean` |
-| `MeanSemiMajorAxis` | Mean semi-major axis (m) |
+| `MeanSemiMajorAxis` | Mean semi-major axis (m), from the kernel GM of the Earth, read at the first use |
+| `MeanMeanMotion` | Mean motion of line 2 (rad/s), read without kernels (decision 111 of #668) |
 | `MeanEccentricity` | Mean eccentricity |
 | `MeanInclination` | Mean inclination (rad) |
 | `MeanAscendingNode` | Mean RAAN (rad) |
@@ -634,6 +631,8 @@ Two-Line Element set for Earth-orbiting objects. TLE stores **mean** orbital ele
 
 | Method | Description |
 |--------|-------------|
+| `Parse(string)`, `ParseAll(string)`, `Load(string)`, `LoadAll(string)` | Read one set or every set of a text or a file, two- and three-line sets mixed; a bad set throws `TleFormatException` at its line and column |
+| `TryParse(string, out TLE)`, `TryLoad(string, out TLE)` | The same, false instead of an exception |
 | `ToStateVector()` | Propagate to TLE epoch using SGP4/SDP4 (returns osculating state) |
 | `ToStateVector(Time epoch)` | Propagate to specified epoch using SGP4/SDP4 |
 | `ToOsculating()` | Convert to osculating StateVector at TLE epoch (via SGP4) |
@@ -701,9 +700,10 @@ Represents a complete CCSDS Orbit Mean-elements Message.
 
 | Factory Method | Description |
 |----------------|-------------|
-| `LoadFromFile(string filePath, bool validateSchema, bool validateContent)` | Load OMM from XML file; a document with several OMM messages (#679), or an OMM with several segments, headers, bodies, metadata or data sections, or blocks of a data section, throws `OmmParseException`, as do `LoadFromString` and `LoadFromStream`; with schema validation (the default), checked in the document's form, unqualified or qualified below a root `ndm` or `omm` without a namespace, a document the NDM/XML 4.0.0 schema rejects, a repeated element included, or an `ndm` that holds no `omm`, throws `OmmValidationException` (third round of #668); a keyword whose value the data model refuses throws `OmmParseException` naming the keyword and its value, with or without schema validation for a value the schema accepts (`ArgumentException` of the data model before 11.0.0, fourth round of #668), and so does a numeric value NaN or ±Infinity (`NaN`, `Infinity` in any case, an overflow such as `1e400`; loaded before 11.0.0, #708), a covariance term whose value in m² overflows (above about 1.8e302 km², #729) and a date outside the two CCSDS forms (a time alone, a date alone, a bare number; read by `DateTime.TryParse` before 11.0.0, #619) |
-| `LoadFromString(string xml, bool validateSchema, bool validateContent)` | Load OMM from XML string |
-| `LoadFromStream(Stream stream, bool validateSchema, bool validateContent)` | Load OMM from stream |
+| `Load(string path, CcsdsReadOptions options = null)` | Load OMM from XML file, with the checks of `CcsdsReadOptions` (the schema, then the content, by default); a document with several OMM messages (#679; `LoadAll` reads them), or an OMM with several segments, headers, bodies, metadata or data sections, or blocks of a data section, throws `OmmParseException`, as does `Parse`; with schema validation (the default), checked in the document's form, unqualified or qualified below a root `ndm` or `omm` without a namespace, a document the NDM/XML 4.0.0 schema rejects, a repeated element included, or an `ndm` that holds no `omm`, throws `OmmValidationException` (third round of #668); a keyword whose value the data model refuses throws `OmmParseException` naming the keyword and its value, with or without schema validation for a value the schema accepts (`ArgumentException` of the data model before 11.0.0, fourth round of #668), and so does a numeric value NaN or ±Infinity (`NaN`, `Infinity` in any case, an overflow such as `1e400`; loaded before 11.0.0, #708), a covariance term whose value in m² overflows (above about 1.8e302 km², #729) and a date outside the two CCSDS forms (a time alone, a date alone, a bare number; read by `DateTime.TryParse` before 11.0.0, #619) |
+| `LoadAll(string path, CcsdsReadOptions options = null)` | Every OMM of an XML file, in document order |
+| `Parse(string xml, CcsdsReadOptions options = null)` | Load OMM from XML string, or from a `TextReader` (`ParseAll` for every message) |
+| `TryLoad(string path, out Omm result, CcsdsReadOptions options = null)` | `Load` without an exception (`TryParse` for a text) |
 | `CreateForTle(string objectName, string objectId, DateTime epoch, double meanMotion, ...)` | Create OMM for SGP4 propagation (mean elements and TLE parameters) |
 | `CreateMinimal(...)` | Create OMM with the required fields only |
 
@@ -718,10 +718,11 @@ Represents a complete CCSDS Orbit Mean-elements Message.
 
 | Method | Description |
 |--------|-------------|
-| `SaveToFile(string filePath, bool validateBeforeSave)` | Save OMM to XML file |
-| `SaveToStream(Stream stream, bool validateBeforeSave)` | Save OMM to a stream |
-| `ToXml()` | Write OMM as an XML string (`OmmWriter` for the NDM container and indentation options) |
+| `Save(string path, CcsdsWriteOptions options = null)` | Save OMM to XML file, or to a `Stream`, the content validated, in an `<ndm>` and indented by default |
+| `ToXml(CcsdsWriteOptions options = null)` | Write OMM as an XML string, as `Save` writes it |
 | `ToTle()` | Convert OMM to TLE (requires TLE parameters in data) |
+| `ToMeanElements(ILocalizable observer = null)` | Mean `KeplerianElements` in SI units about the centre `CENTER_NAME` names, in `REF_FRAME`, at `GetEpoch()`, the OMM's mean motion kept (the internal `KeplerianElements.FromOMM`, public before 11.0.0) |
+| `GetEpoch()` | `EPOCH` as a `Time` in `TIME_SYSTEM` (UTC, TAI, TDB, TT, GPS; another throws `InvalidOperationException`) |
 | `Validate()` | Validate OMM content and return validation result |
 
 > `ToTle()` throws `InvalidOperationException` when a field cannot be represented in TLE form
@@ -734,7 +735,7 @@ Represents a complete CCSDS Orbit Mean-elements Message.
 using IO.Astrodynamics.CCSDS.OMM;
 
 // Load OMM from file
-var omm = Omm.LoadFromFile("satellite.omm", validateSchema: true, validateContent: true);
+var omm = Omm.Load("satellite.omm");
 
 Console.WriteLine($"Object: {omm.ObjectName}");
 Console.WriteLine($"COSPAR ID: {omm.ObjectId}");
@@ -766,7 +767,7 @@ var newOmm = Omm.CreateForTle(
 );
 
 // Save to file
-newOmm.SaveToFile("output.omm", validateBeforeSave: true);
+newOmm.Save("output.omm");
 ```
 
 #### TLE.ToOmm() - Convert TLE to OMM
@@ -786,7 +787,7 @@ var tle = new TLE("ISS (ZARYA)",
 var omm = tle.ToOmm(originator: "My Organization");
 
 // Save to file for sharing/archiving
-omm.SaveToFile("iss.omm");
+omm.Save("iss.omm");
 
 // Or get as XML string
 var xml = omm.ToXml();
@@ -798,7 +799,7 @@ OMM and TLE can be converted back and forth. Note that TLE format has precision 
 
 ```csharp
 // Load OMM
-var originalOmm = Omm.LoadFromFile("satellite.omm", validateSchema: false);
+var originalOmm = Omm.Load("satellite.omm", new CcsdsReadOptions { ValidateSchema = false });
 
 // Convert to TLE
 var tle = originalOmm.ToTle();
@@ -810,40 +811,37 @@ var sv = tle.ToStateVector(new Time(2024, 6, 15, 12, 0, 0, TimeScale.TDB));
 var newOmm = tle.ToOmm();
 
 // Save new OMM
-newOmm.SaveToFile("satellite_updated.omm");
+newOmm.Save("satellite_updated.omm");
 
 // Note: Due to TLE precision limitations, some values may differ slightly
 // from the original OMM (typically 4-6 decimal places for angles)
 ```
 
-#### OmmWriter / OmmReader
+#### CcsdsReadOptions / CcsdsWriteOptions
 
-Low-level classes for reading and writing OMM XML files:
+The options of every read and write of the OMM, OPM and CDM (the reader, writer and validator classes are internal since
+11.0.0, R22 of #668):
 
 ```csharp
-// OmmReader for parsing
-var reader = new OmmReader();
-var omm = reader.ReadFromFile("input.omm");
+// The checks of a read: the schema and the content by default
+var omm = Omm.Load("input.omm", new CcsdsReadOptions { ValidateSchema = false });
 
-// OmmWriter for custom output options
-var writer = new OmmWriter
-{
-    WrapInNdmContainer = true,  // Wrap in <ndm> element
-    IndentOutput = true         // Pretty-print XML
-};
+// A switch of the content check: TLE parameters without NORAD_CAT_ID accepted, the other checks kept
+var lenient = Omm.Load("input.omm", new CcsdsReadOptions { ValidateTleRequirements = false });
 
-var xml = writer.WriteToString(omm);
-writer.WriteToFile(omm, "output.omm");
+// The output of a write: validated, wrapped in <ndm> and indented by default
+var options = new CcsdsWriteOptions { WrapInNdmContainer = false, Indent = true };
+var xml = omm.ToXml(options);
+omm.Save("output.omm", options);
 ```
 
-#### OmmValidator
+#### Validation
 
 Validates OMM content for physical constraints and CCSDS compliance:
 
 ```csharp
 // omm: an Omm, loaded or converted as above (tle.ToOmm())
-var validator = new OmmValidator();
-var result = validator.Validate(omm);
+var result = omm.Validate();
 
 if (result.IsValid)
 {
@@ -877,7 +875,7 @@ OMM uses full COSPAR ID format ("1998-067A") while TLE uses abbreviated format (
 
 ```csharp
 // OMM automatically converts COSPAR ID format during ToTle()
-var omm = Omm.LoadFromFile("iss.omm");  // ObjectId: "1998-067A"
+var omm = Omm.Load("iss.omm");  // ObjectId: "1998-067A"
 var tle = omm.ToTle();                   // Uses "98067A" internally
 
 // TLE.ToOmm() converts back to full format
@@ -896,9 +894,10 @@ Represents a complete CCSDS Orbit Parameter Message.
 
 | Factory Method | Description |
 |----------------|-------------|
-| `LoadFromFile(string filePath, bool validateSchema, bool validateContent)` | Load OPM from XML file; a document with several OPM messages (#679), or an OPM with several segments, headers, bodies, metadata or data sections, or blocks of a data section, throws `OpmParseException`, as do `LoadFromString` and `LoadFromStream`; with schema validation (the default), checked in the document's form, unqualified or qualified below a root `ndm` or `opm` without a namespace, a document the NDM/XML 4.0.0 schema rejects, a repeated element included, or an `ndm` that holds no `opm`, throws `OpmValidationException` (third round of #668); a keyword whose value the data model refuses throws `OpmParseException` naming the keyword and its value, with or without schema validation for a value the schema accepts (`ArgumentException` of the data model before 11.0.0, fourth round of #668), and so does a numeric value NaN or ±Infinity (`NaN`, `Infinity` in any case, an overflow such as `1e400`; loaded before 11.0.0, #708), a state or covariance value whose value in SI units overflows (above about 1.8e305 km or 1.8e302 km²; ±Infinity from `ToStateVector` before 11.0.0, #729) and a date outside the two CCSDS forms (a time alone, a date alone, a bare number; read by `DateTime.TryParse` before 11.0.0, #619) |
-| `LoadFromString(string xml, bool validateSchema, bool validateContent)` | Load OPM from XML string |
-| `LoadFromStream(Stream stream, bool validateSchema, bool validateContent)` | Load OPM from stream |
+| `Load(string path, CcsdsReadOptions options = null)` | Load OPM from XML file, with the checks of `CcsdsReadOptions` (the schema, then the content, by default); a document with several OPM messages (#679; `LoadAll` reads them), or an OPM with several segments, headers, bodies, metadata or data sections, or blocks of a data section, throws `OpmParseException`, as does `Parse`; with schema validation (the default), checked in the document's form, unqualified or qualified below a root `ndm` or `opm` without a namespace, a document the NDM/XML 4.0.0 schema rejects, a repeated element included, or an `ndm` that holds no `opm`, throws `OpmValidationException` (third round of #668); a keyword whose value the data model refuses throws `OpmParseException` naming the keyword and its value, with or without schema validation for a value the schema accepts (`ArgumentException` of the data model before 11.0.0, fourth round of #668), and so does a numeric value NaN or ±Infinity (`NaN`, `Infinity` in any case, an overflow such as `1e400`; loaded before 11.0.0, #708), a state or covariance value whose value in SI units overflows (above about 1.8e305 km or 1.8e302 km²; ±Infinity from `ToStateVector` before 11.0.0, #729) and a date outside the two CCSDS forms (a time alone, a date alone, a bare number; read by `DateTime.TryParse` before 11.0.0, #619) |
+| `LoadAll(string path, CcsdsReadOptions options = null)` | Every OPM of an XML file, in document order |
+| `Parse(string xml, CcsdsReadOptions options = null)` | Load OPM from XML string, or from a `TextReader` (`ParseAll` for every message) |
+| `TryLoad(string path, out Opm result, CcsdsReadOptions options = null)` | `Load` without an exception (`TryParse` for a text) |
 | `CreateFromStateVector(string objectName, string objectId, StateVector sv, ...)` | Create OPM from state vector; writes `REF_FRAME` as the CCSDS name of the state's frame: `ICRF` for `Frame.ICRF` (SPICE `J2000`), the frame's own name otherwise (`GCRF`, `TEME`, `ECLIPJ2000`, ...); `J2000` before 11.0.0 ([#339](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/339)) |
 
 | Property | Description |
@@ -915,9 +914,8 @@ Represents a complete CCSDS Orbit Parameter Message.
 
 | Method | Description |
 |--------|-------------|
-| `SaveToFile(string filePath, bool validateBeforeSave, bool wrapInNdm, bool indent)` | Save OPM to XML file |
-| `SaveToStream(Stream stream, bool validateBeforeSave, bool wrapInNdm, bool indent)` | Save OPM to a stream |
-| `ToXmlString(bool wrapInNdm, bool indent)` | Convert to XML string without validation |
+| `Save(string path, CcsdsWriteOptions options = null)` | Save OPM to XML file, or to a `Stream`, the content validated, in an `<ndm>` and indented by default |
+| `ToXml(CcsdsWriteOptions options = null)` | Convert to XML string, as `Save` writes it (validated since 11.0.0) |
 | `ToStateVector(ILocalizable observer)` | Convert OPM to framework StateVector (km→m, km/s→m/s); without an observer, the centre `CENTER_NAME` names (a barycenter, the Sun, a planet or a moon; another name throws `ArgumentException`), and an observer that contradicts it throws (#679) |
 | `ToSpacecraft(int naifId, double maxOperatingMass = double.MaxValue, Clock clock = null, ILocalizable observer = null)` | Convert OPM to Spacecraft object; the observer as on `ToStateVector`; the defaults of the propagated constructor, a MASS above `maxOperatingMass` throwing `ArgumentOutOfRangeException` (decision 77 of #668) |
 | `Validate()` | Validate OPM content and return validation result |
@@ -926,7 +924,7 @@ Represents a complete CCSDS Orbit Parameter Message.
 using IO.Astrodynamics.CCSDS.OPM;
 
 // Load OPM from file
-var opm = Opm.LoadFromFile("spacecraft.opm", validateSchema: true, validateContent: true);
+var opm = Opm.Load("spacecraft.opm");
 
 Console.WriteLine($"Object: {opm.ObjectName}");
 Console.WriteLine($"COSPAR ID: {opm.ObjectId}");
@@ -959,12 +957,15 @@ var spacecraft = new Spacecraft(-1000, "ISS", 420000.0, stateVector, 500000.0,
 var opm = spacecraft.ToOpm(
     originator: "Mission Control",
     epoch: null,                      // The initial epoch (or one within the propagation, #658)
-    includeKeplerianElements: true,   // Include optional Keplerian elements
-    includeSpacecraftParameters: true, // Include mass, drag, SRP
-    includeManeuvers: true);          // Include the maneuvers ignited by the epoch
+    options: new OpmExportOptions
+    {
+        IncludeKeplerianElements = true,    // Include optional Keplerian elements
+        IncludeSpacecraftParameters = true, // Include mass, drag, SRP
+        IncludeManeuvers = true             // Include the maneuvers ignited by the epoch
+    });
 
 // Save for archival/sharing
-opm.SaveToFile("iss_state.opm");
+opm.Save("iss_state.opm");
 ```
 
 `REF_FRAME` and each `MAN_REF_FRAME` carry the CCSDS name of the frame of the initial orbital parameters: `ICRF` for
@@ -1038,7 +1039,7 @@ var data = new OpmData(
     userDefinedParameters: userParams);
 
 var opm = new Opm(header, metadata, data);
-opm.SaveToFile("complete_opm.xml");
+opm.Save("complete_opm.xml");
 ```
 
 Every real value of the data model is a real number, as the readers read it: the components of `OpmStateVector`, the
@@ -1072,14 +1073,13 @@ foreach (var maneuver in spacecraft.ExecutedManeuvers)
 }
 ```
 
-#### OpmValidator
+#### Validation
 
 Validates OPM content for physical constraints and CCSDS compliance:
 
 ```csharp
 // opm: an Opm, loaded or built as above
-var validator = new OpmValidator();
-var result = validator.Validate(opm);
+var result = opm.Validate();
 
 if (result.IsValid)
 {

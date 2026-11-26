@@ -10,6 +10,7 @@ using IO.Astrodynamics.Atmosphere;
 using IO.Astrodynamics.Atmosphere.NRLMSISE_00;
 using IO.Astrodynamics.Body;
 using IO.Astrodynamics.Body.Spacecraft;
+using IO.Astrodynamics.CCSDS.OMM;
 using IO.Astrodynamics.Maneuver;
 using IO.Astrodynamics.Math;
 using IO.Astrodynamics.OrbitalParameters;
@@ -139,7 +140,7 @@ public class ClaudeMdExamplesTests
         Engine engine;
         switch (block)
         {
-            case "net:1": Assert.NotNull(ClaudeMdExamples.Net01(Earth, Epoch)); break;
+            case "net:1": Assert.NotNull(ClaudeMdExamples.Net01(Omm.Load(CCSDS.NdmDocuments.IssOmmPath))); break;
             case "net:2": Assert.NotNull(ClaudeMdExamples.Net02(new TimeSystem.Time(2021, 1, 21, TimeScale.TDB))); break;
             case "net:8": Assert.Single(ClaudeMdExamples.Net08(PropagatedWithImpulse(-6701, out _), Epoch.AddHours(2.0)).Data.Maneuvers); break;
             case "net:9": Assert.NotNull(ClaudeMdExamples.Net09(Orbit().ToStateVector())); break;
@@ -210,15 +211,15 @@ public class ClaudeMdExamplesTests
     }
 
     /// <summary>
-    /// The elements of the OMM block are mean, with the mean motion of the OMM in rad/s: 15.49309423 rev/day × 2π / 86400 s
-    /// (CCSDS 502.0-B-3, MEAN_MOTION in rev/day), within the rounding of that product.
+    /// The elements of the OMM block are mean, with the mean motion of the OMM in rad/s: iss.omm's MEAN_MOTION, 15.49269250
+    /// rev/day, × 2π / 86400 s (CCSDS 502.0-B-3, MEAN_MOTION in rev/day), within the rounding of that product.
     /// </summary>
     [Fact]
     public void MeanElementsBlock_IsMean()
     {
-        var elements = ClaudeMdExamples.Net01(Earth, Epoch);
+        var elements = ClaudeMdExamples.Net01(Omm.Load(CCSDS.NdmDocuments.IssOmmPath));
         Assert.Equal(OrbitalElementsType.Mean, elements.ElementsType);
-        double expected = 15.49309423 * 2.0 * System.Math.PI / 86400.0;
+        double expected = 15.49269250 * 2.0 * System.Math.PI / 86400.0;
         Assert.True(System.Math.Abs(elements.MeanMotion() - expected) <= System.Math.Abs(expected) * 2.3e-16,
             $"{elements.MeanMotion():R} against {expected:R}");
     }
@@ -247,7 +248,7 @@ public class ClaudeMdExamplesTests
     /// <summary>
     /// The maneuver export block runs on what its opening comment names, a propagated spacecraft with a COSPAR id, here one
     /// whose apogee raise (to 7000 km from the Earth's centre, at the first perigee of a two-hour window) executed: the
-    /// loop of the block then exports it, and the OPM of <c>ToOpm(includeManeuvers: true)</c> carries it in the units of
+    /// loop of the block then exports it, and the OPM of <c>ToOpm(epoch: end)</c> carries it in the units of
     /// CCSDS 502.0-B-3, Δv in km/s (the Δv in m/s divided by 1000), the expelled mass negative, the duration in seconds and
     /// the ignition epoch in UTC. On 608bcf6 <c>Block_Runs</c> passed an unpropagated spacecraft, so the loop ran zero
     /// times.

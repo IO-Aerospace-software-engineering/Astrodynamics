@@ -31,10 +31,10 @@ public class CcsdsFormatExceptionTests
     [Fact]
     public void ADocumentThatIsNotXml_ThrowsACcsdsFormatException_ForEachMessage()
     {
-        Assert.IsAssignableFrom<CcsdsFormatException>(Record.Exception(() => Omm.LoadFromString("garbage")));
-        Assert.IsAssignableFrom<CcsdsFormatException>(Record.Exception(() => Omm.LoadFromString("garbage", validateSchema: false)));
-        Assert.IsAssignableFrom<CcsdsFormatException>(Record.Exception(() => Opm.LoadFromString("garbage")));
-        Assert.IsAssignableFrom<CcsdsFormatException>(Record.Exception(() => Opm.LoadFromString("garbage", validateSchema: false)));
+        Assert.IsAssignableFrom<CcsdsFormatException>(Record.Exception(() => Omm.Parse("garbage")));
+        Assert.IsAssignableFrom<CcsdsFormatException>(Record.Exception(() => Omm.Parse("garbage", new CcsdsReadOptions { ValidateSchema = false })));
+        Assert.IsAssignableFrom<CcsdsFormatException>(Record.Exception(() => Opm.Parse("garbage")));
+        Assert.IsAssignableFrom<CcsdsFormatException>(Record.Exception(() => Opm.Parse("garbage", new CcsdsReadOptions { ValidateSchema = false })));
         Assert.IsAssignableFrom<CcsdsFormatException>(Record.Exception(() => new CdmReader().ReadFromString("garbage")));
     }
 

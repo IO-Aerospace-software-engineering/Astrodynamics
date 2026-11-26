@@ -2,6 +2,9 @@
 
 using System;
 using System.Collections.Generic;
+using IO.Astrodynamics.Body;
+using IO.Astrodynamics.Frames;
+using IO.Astrodynamics.TimeSystem;
 
 namespace IO.Astrodynamics.CCSDS.Common;
 
@@ -229,6 +232,42 @@ internal static class CcsdsCenterNames
     {
         naifId = 0;
         return centerName != null && Ids.TryGetValue(centerName.Trim(), out naifId);
+    }
+
+    /// <summary>
+    /// The centre of a message (#679): without an observer, the centre <paramref name="centerName"/> names, a
+    /// <see cref="Barycenter"/> for the barycenters 0 to 9, otherwise a <see cref="CelestialBody"/> in ICRF at
+    /// <paramref name="epoch"/>; a given observer is checked against it, and used as given for a name outside the table.
+    /// </summary>
+    /// <param name="centerName">The <c>CENTER_NAME</c> of the message.</param>
+    /// <param name="observer">The observer the caller gives, or null.</param>
+    /// <param name="epoch">The epoch of the message, at which the body is built.</param>
+    /// <returns>The observer of the message's state or elements.</returns>
+    /// <exception cref="ArgumentException">No observer is given and the table does not hold the name, or the observer's
+    /// NAIF id differs from the centre the name names; the parameter is <c>observer</c>.</exception>
+    internal static ILocalizable Observer(string centerName, ILocalizable observer, Time epoch)
+    {
+        bool knownCenter = TryGetNaifId(centerName, out var centerId);
+        if (observer == null)
+        {
+            if (!knownCenter)
+            {
+                throw new ArgumentException(
+                    $"CENTER_NAME '{centerName}' is not a barycenter, the Sun, a planet or a moon the library identifies: " +
+                    "pass the observer.", nameof(observer));
+            }
+
+            return centerId <= 9 ? new Barycenter(centerId, epoch) : new CelestialBody(centerId, Frame.ICRF, epoch);
+        }
+
+        if (knownCenter && observer.NaifId != centerId)
+        {
+            throw new ArgumentException(
+                $"The observer {observer.Name} ({observer.NaifId}) contradicts CENTER_NAME '{centerName}' ({centerId}): " +
+                "pass the centre CENTER_NAME names, or correct CENTER_NAME.", nameof(observer));
+        }
+
+        return observer;
     }
 
     private static Dictionary<string, int> Build()

@@ -107,7 +107,7 @@ internal static class ConjunctionAssessmentPage
         #region docs/tutorials/conjunction-assessment.md:3
         // Inputs: protectedSpacecraft and secondarySpacecraft (Spacecraft), epoch (Time)
         var encounter = ConjunctionAssessment.Analyze(
-            new ProtectedSpacecraftProfile(protectedSpacecraft),
+            protectedSpacecraft,
             secondarySpacecraft,
             new Window(epoch, epoch.AddMinutes(10.0)));
 
@@ -124,7 +124,7 @@ internal static class ConjunctionAssessmentPage
         #region docs/tutorials/conjunction-assessment.md:4
         // Inputs: protectedSpacecraft and secondarySpacecraft (Spacecraft), epoch (Time)
         var allEncounters = ConjunctionAssessment.AnalyzeAll(
-            new ProtectedSpacecraftProfile(protectedSpacecraft),
+            protectedSpacecraft,
             secondarySpacecraft,
             new Window(epoch, epoch.AddHours(24.0)));
 
@@ -142,7 +142,7 @@ internal static class ConjunctionAssessmentPage
         #region docs/tutorials/conjunction-assessment.md:5
         // Inputs: protectedSpacecraft, secondary1, secondary2 and secondary3 (Spacecraft), window (Window)
         var encounters = ConjunctionAssessment.Screen(
-            new ProtectedSpacecraftProfile(protectedSpacecraft),
+            protectedSpacecraft,
             new ILocalizable[] { secondary1, secondary2, secondary3 },
             window,
             new ScreeningOptions
@@ -171,7 +171,7 @@ internal static class ConjunctionAssessmentPage
         var secondaryTrajectory = secondarySpacecraft.Propagate(window, options);
 
         var encounter = ConjunctionAssessment.Analyze(
-            new ProtectedSpacecraftProfile(protectedSpacecraft), protectedTrajectory,
+            protectedSpacecraft, protectedTrajectory,
             secondarySpacecraft, secondaryTrajectory,
             window);
         #endregion
@@ -195,7 +195,7 @@ internal static class ConjunctionAssessmentPage
         secondarySpacecraft.Propagate(window, options);
 
         var encounter = ConjunctionAssessment.Analyze(
-            new ProtectedSpacecraftProfile(protectedSpacecraft), secondarySpacecraft, window,
+            protectedSpacecraft, secondarySpacecraft, window,
             new ConjunctionAnalysisOptions
             {
                 // The default is the covariance without process noise: add the noise and the consider parameters you trust
@@ -231,7 +231,7 @@ internal static class ConjunctionAssessmentPage
                     TimeSpan.FromHours(6)
                 },
                 DeltaVMagnitudesMetersPerSecond = new[] { 0.05, 0.10, 0.25 }
-            });
+            }).Options;
 
         foreach (var opt in options)
         {
@@ -256,7 +256,7 @@ internal static class ConjunctionAssessmentPage
         });
 
         // Write to XML file
-        cdm.WriteToFile("encounter.cdm.xml");
+        cdm.Save("encounter.cdm.xml");
         #endregion
     }
 
@@ -264,34 +264,38 @@ internal static class ConjunctionAssessmentPage
     internal static void Block10()
     {
         #region docs/tutorials/conjunction-assessment.md:10
-        var validation = Cdm.ValidateSchema("encounter.cdm.xml");
-
-        if (validation.IsValid)
-            Console.WriteLine("CDM is schema-valid.");
-        else
-            foreach (var error in validation.Errors)
+        // Load checks the NDM/XML schema and the content, and throws CdmValidationException with the issues
+        try
+        {
+            var read = Cdm.Load("encounter.cdm.xml");
+            Console.WriteLine($"CDM {read.Header.MessageId} is valid.");
+        }
+        catch (CdmValidationException e)
+        {
+            foreach (var error in e.ValidationResult.Errors)
                 Console.WriteLine($"Validation error: {error.Message}");
+        }
         #endregion
     }
 
     // docs/tutorials/conjunction-assessment.md, "Recommended workflow"
-    internal static void Block11(ProtectedSpacecraftProfile profile, IEnumerable<ILocalizable> catalog, Window window, ScreeningOptions screeningOptions)
+    internal static void Block11(Spacecraft protectedSpacecraft, IEnumerable<ILocalizable> catalog, Window window, ScreeningOptions screeningOptions)
     {
         #region docs/tutorials/conjunction-assessment.md:11
-        // Inputs: profile (ProtectedSpacecraftProfile), catalog (IEnumerable<ILocalizable>), window (Window),
+        // Inputs: protectedSpacecraft (Spacecraft), catalog (IEnumerable<ILocalizable>), window (Window),
         //   screeningOptions (ScreeningOptions)
         var encounters = ConjunctionAssessment.Screen(
-            profile, catalog, window, screeningOptions);
+            protectedSpacecraft, catalog, window, screeningOptions);
         #endregion
     }
 
     // docs/tutorials/conjunction-assessment.md, "Recommended workflow"
-    internal static void Block12(ProtectedSpacecraftProfile profile, Spacecraft highPrioritySecondary, Window refinedWindow)
+    internal static void Block12(Spacecraft protectedSpacecraft, Spacecraft highPrioritySecondary, Window refinedWindow)
     {
         #region docs/tutorials/conjunction-assessment.md:12
-        // Inputs: profile (ProtectedSpacecraftProfile), highPrioritySecondary (Spacecraft), refinedWindow (Window)
+        // Inputs: protectedSpacecraft (Spacecraft), highPrioritySecondary (Spacecraft), refinedWindow (Window)
         var details = ConjunctionAssessment.Analyze(
-            profile, highPrioritySecondary, refinedWindow);
+            protectedSpacecraft, highPrioritySecondary, refinedWindow);
         #endregion
     }
 
@@ -301,7 +305,7 @@ internal static class ConjunctionAssessmentPage
         #region docs/tutorials/conjunction-assessment.md:13
         // Inputs: details (EncounterCase), avoidanceOptions (AvoidanceSearchOptions)
         var trades = ConjunctionAssessment.EvaluateAvoidance(
-            details, avoidanceOptions);
+            details, avoidanceOptions).Options;
         #endregion
     }
 
@@ -311,7 +315,7 @@ internal static class ConjunctionAssessmentPage
         #region docs/tutorials/conjunction-assessment.md:14
         // Inputs: details (EncounterCase), exportOptions (CdmExportOptions)
         var cdm = details.ToCdm(exportOptions);
-        cdm.WriteToFile("cdm_report.xml");
+        cdm.Save("cdm_report.xml");
         #endregion
     }
 }

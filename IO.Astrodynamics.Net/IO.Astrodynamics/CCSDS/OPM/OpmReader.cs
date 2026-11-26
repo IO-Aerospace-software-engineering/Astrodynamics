@@ -32,7 +32,7 @@ namespace IO.Astrodynamics.CCSDS.OPM;
 /// not stop these values (#708).
 /// Conforms to CCSDS 502.0-B-3 (ODM Blue Book) and CCSDS 505.0-B-3 (NDM/XML Blue Book).
 /// </remarks>
-public class OpmReader
+internal class OpmReader
 {
     /// <summary>
     /// Reads an OPM from the specified file path.
@@ -118,6 +118,21 @@ public class OpmReader
             throw new OpmParseException("Could not find OPM element in document.");
 
         return ParseOpmElement(opmElement);
+    }
+
+    // The one OPM of a document (all false) or every OPM of it (all true, LoadAll and ParseAll, R22 of #668): a document
+    // that holds none throws, as Load does
+    internal IReadOnlyList<Opm> Read(XDocument document, bool all)
+    {
+        if (!all)
+            return [ParseDocument(document)];
+
+        var root = document.Root ?? throw new OpmParseException("XML document has no root element.");
+        var elements = CcsdsMessageLocator.FindAll(root, "opm");
+        if (elements.Count == 0)
+            throw new OpmParseException("Could not find OPM element in document.");
+
+        return elements.Select(ParseOpmElement).ToArray();
     }
 
     // The root OPM, the one OPM child of an NDM or the one OPM descendant of another root; several throw (#679)

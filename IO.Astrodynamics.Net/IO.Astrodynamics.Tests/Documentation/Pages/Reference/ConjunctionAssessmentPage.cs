@@ -60,13 +60,24 @@ namespace DocumentationPageSamples.Reference;
 /// <summary>The C# examples of docs/reference/conjunction-assessment.md, one method per block (#705).</summary>
 internal static class ConjunctionAssessmentPage
 {
-    // docs/reference/conjunction-assessment.md, "Example"
-    internal static void Block01(Spacecraft protectedSpacecraft, Spacecraft secondarySpacecraft, Time epoch)
+    // docs/reference/conjunction-assessment.md, "Catalogue objects"
+    internal static void Block01(Spacecraft protectedSpacecraft, TLE tle, Window window)
     {
         #region docs/reference/conjunction-assessment.md:1
+        // Inputs: protectedSpacecraft (Spacecraft), tle (TLE of a debris), window (Window)
+        var debris = TrackedObject.FromTle(tle, hardBodyRadiusMeters: 1.0, objectType: ObjectType.Debris);
+        var encounter = ConjunctionAssessment.Analyze(protectedSpacecraft, debris, window);
+        Console.WriteLine(encounter.EncounterState.SecondaryTrajectory); // Sgp4
+        #endregion
+    }
+
+    // docs/reference/conjunction-assessment.md, "Example"
+    internal static void Block02(Spacecraft protectedSpacecraft, Spacecraft secondarySpacecraft, Time epoch)
+    {
+        #region docs/reference/conjunction-assessment.md:2
         // Inputs: protectedSpacecraft and secondarySpacecraft (Spacecraft), epoch (Time)
         var encounter = ConjunctionAssessment.Analyze(
-            new ProtectedSpacecraftProfile(protectedSpacecraft),
+            protectedSpacecraft,
             secondarySpacecraft,
             new Window(epoch, epoch.AddMinutes(10.0)));
 

@@ -3,6 +3,7 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using IO.Astrodynamics.CCSDS.OPM;
 using IO.Astrodynamics.Body;
 using IO.Astrodynamics.Body.Spacecraft;
 using IO.Astrodynamics.Maneuver;
@@ -773,9 +774,9 @@ namespace IO.Astrodynamics.Tests.Body
             // The CCSDS names of Frame.ICRF (SPICE J2000), in REF_FRAME and MAN_REF_FRAME alike (#339); J2000 before 11.0.0
             Assert.Equal("ICRF", maneuver.ManRefFrame);
             Assert.Equal("ICRF", opm.Metadata.ReferenceFrame);
-            Assert.Contains("<MAN_REF_FRAME>ICRF</MAN_REF_FRAME>", opm.ToXmlString());
+            Assert.Contains("<MAN_REF_FRAME>ICRF</MAN_REF_FRAME>", opm.ToXml());
             Assert.DoesNotContain(opm.Validate().Issues, i => i.Path.Contains("ReferenceFrame") || i.Path.Contains("ManRefFrame"));
-            Assert.Null(spc.ToOpm(includeManeuvers: false).Data.Maneuvers.FirstOrDefault());
+            Assert.Null(spc.ToOpm(options: new OpmExportOptions { IncludeManeuvers = false }).Data.Maneuvers.FirstOrDefault());
         }
 
         /// <summary>

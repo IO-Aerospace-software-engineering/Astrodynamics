@@ -2,6 +2,7 @@
 #nullable enable
 using System;
 using IO.Astrodynamics.CCSDS.Common.Enums;
+using IO.Astrodynamics.TimeSystem;
 
 namespace IO.Astrodynamics.CCSDS.Common;
 
@@ -41,6 +42,15 @@ internal static class CcsdsDates
             _ => DateTime.SpecifyKind(value, DateTimeKind.Utc)
         };
     }
+
+    /// <summary>
+    /// The UTC <see cref="Time"/> of <paramref name="value"/>, a date the standard states in UTC (<see cref="ToUtc"/>): the
+    /// <see cref="Time"/> accessors of the CDM records (R19 of #668).
+    /// </summary>
+    internal static Time ToUtcTime(DateTime value) => new(ToUtc(value), TimeScale.UTC);
+
+    /// <summary>The UTC <see cref="Time"/> of <paramref name="value"/>, null for none.</summary>
+    internal static Time? ToUtcTime(DateTime? value) => value is { } date ? ToUtcTime(date) : null;
 
     /// <summary>
     /// The clock reading in <c>TIME_SYSTEM</c> of <paramref name="value"/>, the date of <paramref name="keyword"/>.

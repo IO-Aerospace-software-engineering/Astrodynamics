@@ -65,7 +65,7 @@ internal static class CcsdsLocalTimeChild
 
     private static void WriteCdm(string cdmPath)
     {
-        var cdm = Cdm.ReadFromFile(cdmPath);
+        var cdm = Cdm.Load(cdmPath);
         var unspecified = DateTime.SpecifyKind(Clock, DateTimeKind.Unspecified);
         var segments = cdm.Segments.Select((segment, index) => index == 0
             ? segment with
@@ -88,7 +88,7 @@ internal static class CcsdsLocalTimeChild
             ScreenEntryTimeUtc = unspecified,
             ScreenExitTimeUtc = unspecified
         };
-        var written = XDocument.Parse(new Cdm(cdm.Header with { CreationDateUtc = unspecified }, relative, segments).WriteToString());
+        var written = XDocument.Parse(new Cdm(cdm.Header with { CreationDateUtc = unspecified }, relative, segments).ToXml());
         foreach (var keyword in new[]
                  {
                      "CREATION_DATE", "TCA", "START_SCREEN_PERIOD", "STOP_SCREEN_PERIOD", "SCREEN_ENTRY_TIME",
@@ -100,7 +100,7 @@ internal static class CcsdsLocalTimeChild
 
         var local = new Cdm(cdm.Header, cdm.RelativeMetadataData with { TcaUtc = DateTime.SpecifyKind(Clock, DateTimeKind.Local) },
             cdm.Segments);
-        Console.WriteLine($"CDM-LOCAL-TCA {Text(XDocument.Parse(local.WriteToString()), "TCA")}");
+        Console.WriteLine($"CDM-LOCAL-TCA {Text(XDocument.Parse(local.ToXml()), "TCA")}");
     }
 
     private static void WriteOpm()

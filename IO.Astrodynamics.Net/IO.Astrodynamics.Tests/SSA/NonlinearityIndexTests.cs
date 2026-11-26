@@ -69,17 +69,16 @@ public class NonlinearityIndexTests : IClassFixture<ConjunctionCovarianceCase>, 
         var secondaryCraft = ConjunctionCovarianceCase.NewSpacecraft(-6512, _case.SecondaryStart);
         _case.Propagate(protectedCraft);
         _case.Propagate(secondaryCraft);
-        var profile = new ProtectedSpacecraftProfile(protectedCraft);
 
         // Act
-        var encounter = ConjunctionAssessment.Analyze(profile, secondaryCraft, ConjunctionCovarianceCase.AnalysisWindow,
+        var encounter = ConjunctionAssessment.Analyze(protectedCraft, secondaryCraft, ConjunctionCovarianceCase.AnalysisWindow,
             new ConjunctionAnalysisOptions { ComputeNonlinearityIndex = true });
         double nu = encounter.EncounterState.ProtectedCovariance.NonlinearityIndex!.Value;
-        var flagged = ConjunctionAssessment.Analyze(profile, secondaryCraft, ConjunctionCovarianceCase.AnalysisWindow,
+        var flagged = ConjunctionAssessment.Analyze(protectedCraft, secondaryCraft, ConjunctionCovarianceCase.AnalysisWindow,
             new ConjunctionAnalysisOptions { ComputeNonlinearityIndex = true, NonlinearityIndexThreshold = 0.5 * nu });
 
         // Off by default
-        var off = ConjunctionAssessment.Analyze(profile, secondaryCraft, ConjunctionCovarianceCase.AnalysisWindow);
+        var off = ConjunctionAssessment.Analyze(protectedCraft, secondaryCraft, ConjunctionCovarianceCase.AnalysisWindow);
 
         // Assert
         _output.WriteLine($"ν protected {nu:E3}, secondary {encounter.EncounterState.SecondaryCovariance.NonlinearityIndex:E3}");

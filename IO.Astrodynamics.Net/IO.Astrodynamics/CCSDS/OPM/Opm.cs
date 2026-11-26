@@ -1,6 +1,8 @@
 // Copyright 2023. Sylvain Guillet (sylvain.guillet@tutamail.com)
 
 using System;
+using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using IO.Astrodynamics.Body;
 using IO.Astrodynamics.Body.Spacecraft;
@@ -188,6 +190,18 @@ public class Opm
         return $"OPM[{ObjectName}, {ObjectId}, {Epoch:O}]";
     }
 
+    /// <summary>
+    /// The <c>EPOCH</c> of the state as a <see cref="Time"/> in the <c>TIME_SYSTEM</c> of the metadata (R22 of #668, lot
+    /// L7): the clock reading of <see cref="Epoch"/> in UTC, TAI, TDB, TT or GPS, the epoch <see cref="ToStateVector"/>
+    /// reads (#485).
+    /// </summary>
+    /// <returns>The epoch, labelled in the scale of <c>TIME_SYSTEM</c>.</returns>
+    /// <exception cref="InvalidOperationException">The <c>TIME_SYSTEM</c> is none of UTC, TAI, TDB, TT and GPS (UT1, TCB,
+    /// MET, ...), which a message may hold and <see cref="Time"/> does not.</exception>
+    public Time GetEpoch() =>
+        CcsdsTimeSystemMapping.ToTime(Data.StateVector.Epoch,
+            CcsdsTimeSystemMapping.ToTimeScale(Metadata.TimeSystemEnum, Metadata.TimeSystem));
+
     #region Framework Integration
 
     /// <summary>
@@ -240,30 +254,10 @@ public class Opm
         var timeScale = CcsdsTimeSystemMapping.ToTimeScale(Metadata.TimeSystemEnum, Metadata.TimeSystem);
 
         // The centre CENTER_NAME names (#679): built when no observer is given, checked against the one given
-        bool knownCenter = CcsdsCenterNames.TryGetNaifId(Metadata.CenterName, out var centerId);
-        if (observer == null)
-        {
-            if (!knownCenter)
-            {
-                throw new ArgumentException(
-                    $"CENTER_NAME '{Metadata.CenterName}' is not a barycenter, the Sun, a planet or a moon the library identifies: " +
-                    "pass the observer.", nameof(observer));
-            }
-
-            var epoch = CcsdsTimeSystemMapping.ToTime(Data.StateVector.Epoch, timeScale);
-            observer = centerId <= 9
-                ? new Barycenter(centerId, epoch)
-                : new CelestialBody(centerId, Frame.ICRF, epoch);
-        }
-        else if (knownCenter && observer.NaifId != centerId)
-        {
-            throw new ArgumentException(
-                $"The observer {observer.Name} ({observer.NaifId}) contradicts CENTER_NAME '{Metadata.CenterName}' ({centerId}): " +
-                "pass the centre CENTER_NAME names, or correct CENTER_NAME.", nameof(observer));
-        }
+        observer = CcsdsCenterNames.Observer(Metadata.CenterName, observer, CcsdsTimeSystemMapping.ToTime(Data.StateVector.Epoch, timeScale));
 
         // Get the reference frame from metadata
-        var frame = GetFrame();
+        var frame = CcsdsFrameNames.ToFrame(Metadata.ReferenceFrameEnum, Metadata.ReferenceFrame);
 
         // Convert covariance from CCSDS units (km²) to framework units (m²)
         // Note: If covariance is in a different frame than the state vector, the caller
@@ -311,8 +305,15 @@ public class Opm
     /// The NAIF id is not part of the CCSDS OPM standard; the maximum operating mass and the clock are optional.
     /// If spacecraftParameters is not present in the OPM, default values are used for mass (1.0 kg),
     /// sectionalArea (1.0 m²), dragCoefficient (2.2), and solarRadiationCoefficient (1.0).
+    /// The sectional area, which the spacecraft's drag and radiation pressure share, is <c>DRAG_AREA</c> or
+    /// <c>SOLAR_RAD_AREA</c>, whichever is given, the value when both are given equal (#805, decision 112 of #668, decided by
+    /// S. Guillet, 2026-11-26; before 11.0.0 <c>SOLAR_RAD_AREA</c> was never read).
     /// The reference frame and the epoch's time system are mapped as described on <see cref="ToStateVector"/>.
     /// </remarks>
+    /// <exception cref="InvalidOperationException"><c>DRAG_AREA</c> and <c>SOLAR_RAD_AREA</c> are given with different
+    /// values, which one sectional area cannot hold (#805): read the state with <see cref="ToStateVector"/> and build the
+    /// <see cref="Spacecraft"/> with the area of your choice; checked before anything is built, a clock given left
+    /// unattached.</exception>
     /// <exception cref="ArgumentOutOfRangeException">Thrown when naifId is not in [-2147483, -1], or, naming it, when
     /// <paramref name="maxOperatingMass"/> is not finite or below the MASS of the OPM.</exception>
     /// <exception cref="ArgumentException">
@@ -321,12 +322,24 @@ public class Opm
     /// </exception>
     public Spacecraft ToSpacecraft(int naifId, double maxOperatingMass = double.MaxValue, Clock clock = null, ILocalizable observer = null)
     {
+        // The one sectional area of a spacecraft, for drag and radiation pressure alike: DRAG_AREA or SOLAR_RAD_AREA, equal
+        // when both are given (#805, decision 112 of #668, decided by S. Guillet, 2026-11-26)
+        if (Data.DragArea.HasValue && Data.SolarRadiationPressureArea.HasValue &&
+            Data.DragArea.Value != Data.SolarRadiationPressureArea.Value)
+        {
+            throw new InvalidOperationException(
+                $"DRAG_AREA {Data.DragArea.Value.ToString("R", CultureInfo.InvariantCulture)} m² and SOLAR_RAD_AREA " +
+                $"{Data.SolarRadiationPressureArea.Value.ToString("R", CultureInfo.InvariantCulture)} m² differ, and a " +
+                "Spacecraft has one sectional area for drag and radiation pressure: read the state with ToStateVector() and " +
+                "build the Spacecraft with the area of your choice.");
+        }
+
         // Get state vector
         var stateVector = ToStateVector(observer);
 
         // Extract spacecraft parameters from OPM (with defaults if not present)
         double mass = Data.Mass ?? 1.0;
-        double sectionalArea = Data.DragArea ?? 1.0;
+        double sectionalArea = Data.DragArea ?? Data.SolarRadiationPressureArea ?? 1.0;
         double dragCoefficient = Data.DragCoefficient ?? 2.2;
         double solarRadiationCoefficient = Data.SolarRadiationCoefficient ?? 1.0;
 
@@ -343,344 +356,185 @@ public class Opm
             solarRadiationCoefficient);
     }
 
-    /// <summary>
-    /// Gets the reference frame from metadata.
-    /// ICRF, GCRF and EME2000 all map onto <see cref="Frame.ICRF"/>; for EME2000 the ~23 mas frame bias is ignored.
-    /// </summary>
-    /// <returns>The Frame object corresponding to the metadata reference frame.</returns>
-    private Frame GetFrame()
-    {
-        if (Metadata.ReferenceFrameEnum.HasValue)
-        {
-            return Metadata.ReferenceFrameEnum.Value switch
-            {
-                Common.Enums.CcsdsReferenceFrame.ICRF => Frame.ICRF,
-                Common.Enums.CcsdsReferenceFrame.EME2000 => Frame.ICRF,
-                Common.Enums.CcsdsReferenceFrame.GCRF => Frame.ICRF,
-                Common.Enums.CcsdsReferenceFrame.TEME => Frame.TEME,
-                Common.Enums.CcsdsReferenceFrame.ITRF93 => new Frame("ITRF93"),
-                _ => new Frame(Metadata.ReferenceFrame)
-            };
-        }
-
-        return new Frame(Metadata.ReferenceFrame);
-    }
-
     #endregion
 
-    #region Factory Methods (Load)
+    #region Read and write (R22 of #668)
 
-    /// <summary>
-    /// Loads an OPM from a file with optional validation.
-    /// </summary>
-    /// <param name="filePath">The path to the OPM XML file.</param>
-    /// <param name="validateSchema">If true, validates the XML against the CCSDS NDM/XML 4.0.0 schema (CCSDS 505.0-B-3) in the
-    /// form of the document, whose root is an <c>ndm</c> or <c>opm</c> without a namespace: every element unqualified (the
-    /// form of Space-Track and of the writer) or every element below the root in the NDM/XML namespace, as SANA publishes
-    /// them; a root in the namespace against the OPM schema with that root, as before. Before the third round of #668 an
-    /// unqualified document was not checked.</param>
-    /// <param name="validateContent">If true, validates the content for physical constraints and consistency.</param>
-    /// <returns>The loaded and validated OPM instance.</returns>
-    /// <exception cref="ArgumentNullException">Thrown when filePath is null or empty.</exception>
-    /// <exception cref="FileNotFoundException">Thrown when the file does not exist.</exception>
-    /// <exception cref="OpmValidationException">Thrown when validation fails with errors.</exception>
-    /// <exception cref="OpmParseException">Thrown when the document cannot be parsed, holds several OPM messages (#679), or
-    /// several headers, bodies, segments, metadata or data sections, or blocks of a data section, without
-    /// <c>validateSchema</c>; with it, the schema rejects the latter first, an <see cref="OpmValidationException"/>
-    /// (third round of #668), but not a second OPM of an NDM, which the schema allows. Also when a keyword holds a value the
-    /// data model refuses (ECCENTRICITY negative, SEMI_MAJOR_AXIS of the wrong sign for its ECCENTRICITY, MASS negative, an empty OBJECT_NAME), naming the keyword and its value, without <c>validateSchema</c> or with it for a value
-    /// the schema accepts (the SEMI_MAJOR_AXIS sign, an empty string: the library's rules beyond the schema, #708, decided by
-    /// S. Guillet, 2026-11-16); before 11.0.0 the <see cref="ArgumentOutOfRangeException"/> or <see cref="ArgumentException"/>
-    /// of the data model's constructor (fourth round of #668).</exception>
-    public static Opm LoadFromFile(string filePath, bool validateSchema = true, bool validateContent = true)
+    // The one verb set of the CCSDS messages over the internal reader and validator
+    private static readonly CcsdsMessageIO<Opm, OpmValidationResult> Format = new("OPM",
+        DefaultValidator.ValidateSchema, DefaultValidator.ValidateSchemaFromXml, DefaultReader.Read, ContentValidator,
+        result => result.IsValid, (message, result) => new OpmValidationException(message, result),
+        (message, inner) => new OpmParseException(message, inner));
+
+    // The content check with the validator switches of the read options, the default validator when none is set; an OPM
+    // has no TLE parameters to check
+    private static Func<Opm, OpmValidationResult> ContentValidator(CcsdsReadOptions options)
     {
-        if (string.IsNullOrWhiteSpace(filePath))
-            throw new ArgumentNullException(nameof(filePath));
+        if (options.ValidateTleRequirements == false)
+            throw new ArgumentException("An OPM holds no TLE parameters: ValidateTleRequirements cannot be turned off for it.", nameof(options));
 
-        if (!File.Exists(filePath))
-            throw new FileNotFoundException($"OPM file not found: {filePath}", filePath);
-
-        // Schema validation
-        if (validateSchema)
-        {
-            var schemaResult = DefaultValidator.ValidateSchema(filePath);
-            if (!schemaResult.IsValid)
+        return options.ValidatePhysicalConstraints is null && options.WarnOnMissingOptionalFields is null
+            ? DefaultValidator.Validate
+            : new OpmValidator
             {
-                throw new OpmValidationException("Schema validation failed.", schemaResult);
-            }
-        }
-
-        // Parse the file
-        var opm = DefaultReader.ReadFromFile(filePath);
-
-        // Content validation
-        if (validateContent)
-        {
-            var contentResult = DefaultValidator.Validate(opm);
-            if (!contentResult.IsValid)
-            {
-                throw new OpmValidationException("Content validation failed.", contentResult);
-            }
-        }
-
-        return opm;
+                ValidatePhysicalConstraints = options.ValidatePhysicalConstraints ?? true,
+                WarnOnMissingOptionalFields = options.WarnOnMissingOptionalFields ?? true
+            }.Validate;
     }
 
     /// <summary>
-    /// Loads an OPM from an XML string with optional validation.
+    /// Reads the one OPM of a file: a standalone <c>opm</c> or an <c>ndm</c> that holds one (R22 of #668).
     /// </summary>
-    /// <param name="xml">The OPM XML content.</param>
-    /// <param name="validateSchema">If true, validates the XML against the CCSDS NDM/XML 4.0.0 schema (CCSDS 505.0-B-3) in the
-    /// form of the document, whose root is an <c>ndm</c> or <c>opm</c> without a namespace: every element unqualified (the
-    /// form of Space-Track and of the writer) or every element below the root in the NDM/XML namespace, as SANA publishes
-    /// them; a root in the namespace against the OPM schema with that root, as before. Before the third round of #668 an
-    /// unqualified document was not checked.</param>
-    /// <param name="validateContent">If true, validates the content for physical constraints and consistency.</param>
-    /// <returns>The loaded and validated OPM instance.</returns>
-    /// <exception cref="ArgumentNullException">Thrown when xml is null or empty.</exception>
-    /// <exception cref="OpmValidationException">Thrown when validation fails with errors.</exception>
-    /// <exception cref="OpmParseException">Thrown when the document cannot be parsed, holds several OPM messages (#679), or
-    /// several headers, bodies, segments, metadata or data sections, or blocks of a data section, without
-    /// <c>validateSchema</c>; with it, the schema rejects the latter first, an <see cref="OpmValidationException"/>
-    /// (third round of #668), but not a second OPM of an NDM, which the schema allows. Also when a keyword holds a value the
-    /// data model refuses (ECCENTRICITY negative, SEMI_MAJOR_AXIS of the wrong sign for its ECCENTRICITY, MASS negative, an empty OBJECT_NAME), naming the keyword and its value, without <c>validateSchema</c> or with it for a value
-    /// the schema accepts (the SEMI_MAJOR_AXIS sign, an empty string: the library's rules beyond the schema, #708, decided by
-    /// S. Guillet, 2026-11-16); before 11.0.0 the <see cref="ArgumentOutOfRangeException"/> or <see cref="ArgumentException"/>
-    /// of the data model's constructor (fourth round of #668).</exception>
-    public static Opm LoadFromString(string xml, bool validateSchema = true, bool validateContent = true)
+    /// <param name="path">The path of the file.</param>
+    /// <param name="options">The checks, every one by default (<see cref="CcsdsReadOptions.Default"/>): the NDM/XML 4.0.0
+    /// schema in the form of the document, then the content.</param>
+    /// <returns>The OPM.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="path"/> is null.</exception>
+    /// <exception cref="FileNotFoundException">The file does not exist.</exception>
+    /// <exception cref="OpmValidationException">The schema or the content check fails.</exception>
+    /// <exception cref="OpmParseException">The document cannot be read: no OPM, several (<see cref="LoadAll"/> reads them), or a
+    /// keyword whose value the data model refuses, naming the keyword and its value.</exception>
+    public static Opm Load(string path, CcsdsReadOptions options = null) => Format.Load(path, options, false)[0];
+
+    /// <summary>
+    /// Reads every OPM of a file, in document order, as <see cref="Load"/> reads one: the schema checked once for the
+    /// document, the content of each message (R22 of #668).
+    /// </summary>
+    /// <param name="path">The path of the file.</param>
+    /// <param name="options">The checks, every one by default.</param>
+    /// <returns>The messages; a document that holds none throws.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="path"/> is null.</exception>
+    /// <exception cref="FileNotFoundException">The file does not exist.</exception>
+    /// <exception cref="OpmValidationException">The schema or the content check of a message fails.</exception>
+    /// <exception cref="OpmParseException">The document holds no OPM or one that cannot be read.</exception>
+    public static IReadOnlyList<Opm> LoadAll(string path, CcsdsReadOptions options = null) => Format.Load(path, options, true);
+
+    /// <summary>
+    /// Reads the one OPM of an XML text, as <see cref="Load"/> reads a file.
+    /// </summary>
+    /// <param name="xml">The XML text.</param>
+    /// <param name="options">The checks, every one by default.</param>
+    /// <returns>The OPM.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="xml"/> is null.</exception>
+    /// <exception cref="OpmValidationException">The schema or the content check fails.</exception>
+    /// <exception cref="OpmParseException">The text is blank or cannot be read, or holds no OPM or several
+    /// (<see cref="ParseAll(string, CcsdsReadOptions)"/> reads them).</exception>
+    public static Opm Parse(string xml, CcsdsReadOptions options = null) => Format.Parse(xml, options, false)[0];
+
+    /// <summary>
+    /// Reads the one OPM of a reader, read to its end, as <see cref="Parse(string, CcsdsReadOptions)"/>.
+    /// </summary>
+    /// <param name="reader">The reader.</param>
+    /// <param name="options">The checks, every one by default.</param>
+    /// <returns>The OPM.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="reader"/> is null.</exception>
+    /// <exception cref="OpmValidationException">The schema or the content check fails.</exception>
+    /// <exception cref="OpmParseException">The text cannot be read, or holds no OPM or several.</exception>
+    public static Opm Parse(TextReader reader, CcsdsReadOptions options = null) => Format.Parse(reader, options, false)[0];
+
+    /// <summary>
+    /// Reads every OPM of an XML text, as <see cref="LoadAll"/> reads a file.
+    /// </summary>
+    /// <param name="xml">The XML text.</param>
+    /// <param name="options">The checks, every one by default.</param>
+    /// <returns>The messages, in document order.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="xml"/> is null.</exception>
+    /// <exception cref="OpmValidationException">The schema or the content check of a message fails.</exception>
+    /// <exception cref="OpmParseException">The text is blank or cannot be read, or holds no OPM.</exception>
+    public static IReadOnlyList<Opm> ParseAll(string xml, CcsdsReadOptions options = null) => Format.Parse(xml, options, true);
+
+    /// <summary>
+    /// Reads every OPM of a reader, read to its end, as <see cref="ParseAll(string, CcsdsReadOptions)"/>.
+    /// </summary>
+    /// <param name="reader">The reader.</param>
+    /// <param name="options">The checks, every one by default.</param>
+    /// <returns>The messages, in document order.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="reader"/> is null.</exception>
+    /// <exception cref="OpmValidationException">The schema or the content check of a message fails.</exception>
+    /// <exception cref="OpmParseException">The text cannot be read, or holds no OPM.</exception>
+    public static IReadOnlyList<Opm> ParseAll(TextReader reader, CcsdsReadOptions options = null) => Format.Parse(reader, options, true);
+
+    /// <summary>
+    /// <see cref="Load"/> without an exception for a file that does not exist or that the checks or the reader refuse.
+    /// </summary>
+    /// <param name="path">The path of the file, or null.</param>
+    /// <param name="result">The OPM, or null.</param>
+    /// <param name="options">The checks, every one by default.</param>
+    /// <returns>Whether the file exists and holds one OPM that passes the checks; an error reading an existing file
+    /// throws, as <see cref="Load"/> does. Use <see cref="Load"/> for the reason of a refusal.</returns>
+    public static bool TryLoad(string path, out Opm result, CcsdsReadOptions options = null) => Format.TryLoad(path, options, out result);
+
+    /// <summary>
+    /// <see cref="Parse(string, CcsdsReadOptions)"/> without an exception for a text that the checks or the reader refuse.
+    /// </summary>
+    /// <param name="xml">The XML text, or null.</param>
+    /// <param name="result">The OPM, or null.</param>
+    /// <param name="options">The checks, every one by default.</param>
+    /// <returns>Whether the text holds one OPM that passes the checks.</returns>
+    public static bool TryParse(string xml, out Opm result, CcsdsReadOptions options = null) => Format.TryParse(xml, options, out result);
+
+    /// <summary>
+    /// Writes the OPM to a file, in UTF-8, replacing it (R22 of #668).
+    /// </summary>
+    /// <param name="path">The path of the file.</param>
+    /// <param name="options">The output, by default validated, wrapped in an <c>ndm</c> and indented
+    /// (<see cref="CcsdsWriteOptions.Default"/>).</param>
+    /// <exception cref="ArgumentNullException"><paramref name="path"/> is null.</exception>
+    /// <exception cref="ArgumentException"><paramref name="path"/> is empty or blank. Or a date of the message of kind <see cref="DateTimeKind.Local"/> under a <c>TIME_SYSTEM</c> other than UTC (#617).</exception>
+    /// <exception cref="OpmValidationException">The content check fails; nothing is written.</exception>
+    public void Save(string path, CcsdsWriteOptions options = null)
     {
-        if (string.IsNullOrWhiteSpace(xml))
-            throw new ArgumentNullException(nameof(xml));
-
-        // Schema validation
-        if (validateSchema)
-        {
-            var schemaResult = DefaultValidator.ValidateSchemaFromXml(xml);
-            if (!schemaResult.IsValid)
-            {
-                throw new OpmValidationException("Schema validation failed.", schemaResult);
-            }
-        }
-
-        // Parse the string
-        var opm = DefaultReader.ReadFromString(xml);
-
-        // Content validation
-        if (validateContent)
-        {
-            var contentResult = DefaultValidator.Validate(opm);
-            if (!contentResult.IsValid)
-            {
-                throw new OpmValidationException("Content validation failed.", contentResult);
-            }
-        }
-
-        return opm;
+        ArgumentNullException.ThrowIfNull(path);
+        if (string.IsNullOrWhiteSpace(path))
+            throw new ArgumentException("The path is empty or blank.", nameof(path));
+        options ??= CcsdsWriteOptions.Default;
+        Format.CheckBeforeWrite(this, options);
+        new OpmWriter { WrapInNdmContainer = options.WrapInNdmContainer, IndentOutput = options.Indent }.WriteToFile(this, path);
     }
 
     /// <summary>
-    /// Loads an OPM from a stream with optional validation.
+    /// Writes the OPM to a stream, in UTF-8, as <see cref="Save(string, CcsdsWriteOptions)"/>; the stream stays open.
     /// </summary>
-    /// <param name="stream">The stream containing OPM XML content.</param>
-    /// <param name="validateSchema">If true, validates the XML against the CCSDS NDM/XML 4.0.0 schema (CCSDS 505.0-B-3) in the
-    /// form of the document, whose root is an <c>ndm</c> or <c>opm</c> without a namespace: every element unqualified (the
-    /// form of Space-Track and of the writer) or every element below the root in the NDM/XML namespace, as SANA publishes
-    /// them; a root in the namespace against the OPM schema with that root, as before. Before the third round of #668 an
-    /// unqualified document was not checked.</param>
-    /// <param name="validateContent">If true, validates the content for physical constraints and consistency.</param>
-    /// <returns>The loaded and validated OPM instance.</returns>
-    /// <exception cref="ArgumentNullException">Thrown when stream is null.</exception>
-    /// <exception cref="OpmValidationException">Thrown when validation fails with errors.</exception>
-    /// <exception cref="OpmParseException">Thrown when the document cannot be parsed, holds several OPM messages (#679), or
-    /// several headers, bodies, segments, metadata or data sections, or blocks of a data section, without
-    /// <c>validateSchema</c>; with it, the schema rejects the latter first, an <see cref="OpmValidationException"/>
-    /// (third round of #668), but not a second OPM of an NDM, which the schema allows. Also when a keyword holds a value the
-    /// data model refuses (ECCENTRICITY negative, SEMI_MAJOR_AXIS of the wrong sign for its ECCENTRICITY, MASS negative, an empty OBJECT_NAME), naming the keyword and its value, without <c>validateSchema</c> or with it for a value
-    /// the schema accepts (the SEMI_MAJOR_AXIS sign, an empty string: the library's rules beyond the schema, #708, decided by
-    /// S. Guillet, 2026-11-16); before 11.0.0 the <see cref="ArgumentOutOfRangeException"/> or <see cref="ArgumentException"/>
-    /// of the data model's constructor (fourth round of #668).</exception>
-    public static Opm LoadFromStream(Stream stream, bool validateSchema = true, bool validateContent = true)
+    /// <param name="stream">The stream.</param>
+    /// <param name="options">The output, by default validated, wrapped in an <c>ndm</c> and indented.</param>
+    /// <exception cref="ArgumentNullException"><paramref name="stream"/> is null.</exception>
+    /// <exception cref="OpmValidationException">The content check fails; nothing is written.</exception>
+    /// <exception cref="ArgumentException">A date of the message of kind <see cref="DateTimeKind.Local"/> under a <c>TIME_SYSTEM</c> other than UTC (#617).</exception>
+    public void Save(Stream stream, CcsdsWriteOptions options = null)
     {
-        if (stream == null)
-            throw new ArgumentNullException(nameof(stream));
-
-        using var reader = new StreamReader(stream, leaveOpen: true);
-        var xml = reader.ReadToEnd();
-
-        return LoadFromString(xml, validateSchema, validateContent);
+        ArgumentNullException.ThrowIfNull(stream);
+        options ??= CcsdsWriteOptions.Default;
+        Format.CheckBeforeWrite(this, options);
+        new OpmWriter { WrapInNdmContainer = options.WrapInNdmContainer, IndentOutput = options.Indent }.WriteToStream(this, stream);
     }
 
     /// <summary>
-    /// Tries to load an OPM from a file, returning validation result instead of throwing.
+    /// The OPM as an XML text, as <see cref="Save(string, CcsdsWriteOptions)"/> writes it (R22 of #668).
     /// </summary>
-    /// <param name="filePath">The path to the OPM XML file.</param>
-    /// <param name="opm">The loaded OPM instance if successful, or null if validation failed.</param>
-    /// <param name="validationResult">The validation result containing any errors or warnings.</param>
-    /// <param name="validateSchema">If true, validates the XML against the CCSDS NDM/XML 4.0.0 schema (CCSDS 505.0-B-3) in the
-    /// form of the document, whose root is an <c>ndm</c> or <c>opm</c> without a namespace: every element unqualified (the
-    /// form of Space-Track and of the writer) or every element below the root in the NDM/XML namespace, as SANA publishes
-    /// them; a root in the namespace against the OPM schema with that root, as before. Before the third round of #668 an
-    /// unqualified document was not checked.</param>
-    /// <param name="validateContent">If true, validates the content for physical constraints and consistency.</param>
-    /// <returns>True if the OPM was loaded successfully with no errors, false otherwise.</returns>
-    /// <remarks>A document that holds several OPM messages (#679), or an OPM with several segments, headers, bodies,
-    /// metadata or data sections, or blocks of a data section, or a keyword whose value the data model refuses, or a numeric
-    /// keyword whose value is not finite (#708), is not loaded: false, with a <c>PARSE_ERROR</c>, which names that keyword
-    /// and its value (fourth round of #668).</remarks>
-    public static bool TryLoadFromFile(
-        string filePath,
-        out Opm opm,
-        out OpmValidationResult validationResult,
-        bool validateSchema = true,
-        bool validateContent = true)
+    /// <param name="options">The output, by default validated, wrapped in an <c>ndm</c> and indented; before 11.0.0
+    /// the text was not validated.</param>
+    /// <returns>The XML text.</returns>
+    /// <exception cref="OpmValidationException">The content check fails.</exception>
+    /// <exception cref="ArgumentException">A date of the message of kind <see cref="DateTimeKind.Local"/> under a <c>TIME_SYSTEM</c> other than UTC (#617).</exception>
+    public string ToXml(CcsdsWriteOptions options = null)
     {
-        opm = null;
-        validationResult = new OpmValidationResult();
-
-        if (string.IsNullOrWhiteSpace(filePath) || !File.Exists(filePath))
-        {
-            validationResult.AddError(
-                "FILE_NOT_FOUND",
-                $"File not found: {filePath}",
-                "FilePath");
-            return false;
-        }
-
-        // Schema validation
-        if (validateSchema)
-        {
-            var schemaResult = DefaultValidator.ValidateSchema(filePath);
-            if (!schemaResult.IsValid)
-            {
-                validationResult = schemaResult;
-                return false;
-            }
-        }
-
-        // Parse the file
-        try
-        {
-            opm = DefaultReader.ReadFromFile(filePath);
-        }
-        catch (Exception ex)
-        {
-            validationResult.AddError(
-                "PARSE_ERROR",
-                $"Failed to parse OPM: {ex.Message}",
-                "File");
-            return false;
-        }
-
-        // Content validation
-        if (validateContent)
-        {
-            validationResult = DefaultValidator.Validate(opm);
-            if (!validationResult.IsValid)
-            {
-                opm = null;
-                return false;
-            }
-        }
-
-        return true;
-    }
-
-    #endregion
-
-    #region Instance Methods (Save/Validate)
-
-    /// <summary>
-    /// Saves the OPM to a file with optional validation.
-    /// </summary>
-    /// <param name="filePath">The file path to save to.</param>
-    /// <param name="validateBeforeSave">If true, validates the OPM before saving.</param>
-    /// <param name="wrapInNdm">If true, wraps the OPM in an NDM container element.</param>
-    /// <param name="indent">If true, indents the XML output for readability.</param>
-    /// <exception cref="ArgumentNullException">Thrown when filePath is null or empty.</exception>
-    /// <exception cref="OpmValidationException">Thrown when validation fails and validateBeforeSave is true.</exception>
-    /// <exception cref="ArgumentException">Thrown when the <c>EPOCH</c>, <c>REF_FRAME_EPOCH</c> or a <c>MAN_EPOCH_IGNITION</c> is a <see cref="DateTime"/> of kind <see cref="DateTimeKind.Local"/> under a <c>TIME_SYSTEM</c> other than UTC (parameter <c>opm</c>, #617).</exception>
-    public void SaveToFile(string filePath, bool validateBeforeSave = true, bool wrapInNdm = true, bool indent = true)
-    {
-        if (string.IsNullOrWhiteSpace(filePath))
-            throw new ArgumentNullException(nameof(filePath));
-
-        if (validateBeforeSave)
-        {
-            var result = Validate();
-            if (!result.IsValid)
-            {
-                throw new OpmValidationException("Validation failed before save.", result);
-            }
-        }
-
-        var writer = new OpmWriter
-        {
-            WrapInNdmContainer = wrapInNdm,
-            IndentOutput = indent
-        };
-
-        writer.WriteToFile(this, filePath);
+        options ??= CcsdsWriteOptions.Default;
+        Format.CheckBeforeWrite(this, options);
+        return new OpmWriter { WrapInNdmContainer = options.WrapInNdmContainer, IndentOutput = options.Indent }.WriteToString(this);
     }
 
     /// <summary>
-    /// Saves the OPM to a stream with optional validation.
+    /// Validates the content of this OPM: required values, ranges, consistency.
     /// </summary>
-    /// <param name="stream">The stream to write to.</param>
-    /// <param name="validateBeforeSave">If true, validates the OPM before saving.</param>
-    /// <param name="wrapInNdm">If true, wraps the OPM in an NDM container element.</param>
-    /// <param name="indent">If true, indents the XML output for readability.</param>
-    /// <exception cref="ArgumentNullException">Thrown when stream is null.</exception>
-    /// <exception cref="OpmValidationException">Thrown when validation fails and validateBeforeSave is true.</exception>
-    /// <exception cref="ArgumentException">Thrown when the <c>EPOCH</c>, <c>REF_FRAME_EPOCH</c> or a <c>MAN_EPOCH_IGNITION</c> is a <see cref="DateTime"/> of kind <see cref="DateTimeKind.Local"/> under a <c>TIME_SYSTEM</c> other than UTC (parameter <c>opm</c>, #617).</exception>
-    public void SaveToStream(Stream stream, bool validateBeforeSave = true, bool wrapInNdm = true, bool indent = true)
-    {
-        if (stream == null)
-            throw new ArgumentNullException(nameof(stream));
-
-        if (validateBeforeSave)
-        {
-            var result = Validate();
-            if (!result.IsValid)
-            {
-                throw new OpmValidationException("Validation failed before save.", result);
-            }
-        }
-
-        var writer = new OpmWriter
-        {
-            WrapInNdmContainer = wrapInNdm,
-            IndentOutput = indent
-        };
-
-        writer.WriteToStream(this, stream);
-    }
+    /// <returns>The errors, warnings and notes.</returns>
+    public OpmValidationResult Validate() => DefaultValidator.Validate(this);
 
     /// <summary>
-    /// Converts the OPM to an XML string.
+    /// Whether <see cref="Validate"/> reports no error.
     /// </summary>
-    /// <param name="wrapInNdm">If true, wraps the OPM in an NDM container element.</param>
-    /// <param name="indent">If true, indents the XML output for readability.</param>
-    /// <returns>The OPM as an XML string.</returns>
-    /// <exception cref="ArgumentException">Thrown when the <c>EPOCH</c>, <c>REF_FRAME_EPOCH</c> or a <c>MAN_EPOCH_IGNITION</c> is a <see cref="DateTime"/> of kind <see cref="DateTimeKind.Local"/> under a <c>TIME_SYSTEM</c> other than UTC (parameter <c>opm</c>, #617).</exception>
-    public string ToXmlString(bool wrapInNdm = true, bool indent = true)
-    {
-        var writer = new OpmWriter
-        {
-            WrapInNdmContainer = wrapInNdm,
-            IndentOutput = indent
-        };
-
-        return writer.WriteToString(this);
-    }
-
-    /// <summary>
-    /// Validates this OPM instance.
-    /// </summary>
-    /// <returns>The validation result containing any errors or warnings.</returns>
-    public OpmValidationResult Validate()
-    {
-        return DefaultValidator.Validate(this);
-    }
+    /// <returns>True when the content holds no error.</returns>
+    public bool IsValid() => Validate().IsValid;
 
     #endregion
 }
+

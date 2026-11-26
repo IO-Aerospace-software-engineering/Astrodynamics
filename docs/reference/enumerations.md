@@ -94,15 +94,41 @@ the search window less the crossings of `Equal` (#482; [Sites](sites.md#window-s
 | `NonlinearCovariancePropagation` | A propagated covariance has a non-linearity index above `ConjunctionAnalysisOptions.NonlinearityIndexThreshold`: beyond the domain where Foster was validated against a Monte Carlo, not a wrong Pc; confirm a Pc that matters by a Monte Carlo |
 | `TcaAtWindowEnd` | The window holds no close approach (no range-rate zero from negative to positive): the TCA of `Analyze` and `Screen` is the closest window end, CSPICE's `ABSMIN`, where the objects are still closing or already receding; widen the window to find the closest approach. `AnalyzeAll` lists no such encounter; a close approach found on a window end (its range-rate zero in the half-tick next to it) is not flagged ([#621](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/621), new in 11.0.0, `1 << 8`) |
 
-## AvoidanceTrajectory
+## TrajectorySource
 
-How the trajectory of an avoidance option after its burn is computed (`AvoidanceOption.Trajectory`,
+How the trajectory of a participant of an encounter is computed (`EncounterState.ProtectedTrajectory`,
+`SecondaryTrajectory`), and that of an avoidance option after its burn (`AvoidanceOption.Trajectory`, `Propagated` or
+`TwoBody`; [Avoidance Studies](avoidance.md)); in the `IO.Astrodynamics.SSA` namespace (R17 of #668: `AvoidanceTrajectory`
+before 11.0.0, of the avoidance options only).
+
+| Value | Description |
+|-------|-------------|
+| `Propagated` | Propagated numerically: a `PropagationSolution` given to the analysis or the states a numerical propagation stored; for an option, from the state after the burn with the force model of the protected participant's propagation (RK7(8) or Velocity-Verlet) |
+| `TwoBody` | The two-body orbit of the initial orbital parameters of a spacecraft without stored states; for an option, of the state after the burn, the participant having no numerical propagation (not propagated, TLE, SPICE kernel) |
+| `Sgp4` | SGP4 from the TLE of a spacecraft that no numerical propagation stored states for |
+| `Kernel` | Read through the data provider: a kernel-backed spacecraft, or an object that is not a spacecraft |
+
+## CloseApproachSearch
+
+The search that found the epoch of an encounter (`EncounterCase.Search`, [Conjunction
+Assessment](conjunction-assessment.md#conjunctionassessment-methods)); in the `IO.Astrodynamics.SSA` namespace (R18 of
+#668).
+
+| Value | Description |
+|-------|-------------|
+| `Sampled` | The range rate sampled over the window and bisected: the `ILocalizable` overloads, the screening, the avoidance options, two trajectories that do not share their observer and frame |
+| `Polynomial` | The minima of the cubic Hermite of the stored steps of two propagations that share their observer and frame, refined on the range rate of the states |
+| `None` | No search: the encounter given at its TCA by the states of its objects (`Cdm.ToEncounter`, decision 110 of #668) |
+
+## AvoidanceSkipReason
+
+Why a lead time of the avoidance grid gave no option (`SkippedLeadTime.Reason`, `AvoidanceStudy.Skipped`,
 [Avoidance Studies](avoidance.md)); in the `IO.Astrodynamics.SSA` namespace.
 
 | Value | Description |
 |-------|-------------|
-| `Propagated` | Propagated from the state after the burn with the force model of the protected participant's propagation (RK7(8) or Velocity-Verlet) |
-| `TwoBody` | The two-body orbit of the state after the burn: the participant has no numerical propagation (not propagated, TLE, SPICE kernel) |
+| `BeforeWindow` | The burn falls before the start of the window of the encounter |
+| `OutsideTrajectory` | The burn falls outside the propagation of the protected spacecraft the options are propagated on |
 
 ## CovarianceSource
 

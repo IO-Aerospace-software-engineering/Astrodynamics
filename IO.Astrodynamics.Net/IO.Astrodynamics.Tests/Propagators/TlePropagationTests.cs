@@ -440,7 +440,7 @@ public class TlePropagationTests
         var secondary = NewSpacecraft(id - 1, new StateVector(last.Position + new Vector3(1000.0, 0.0, 0.0), last.Velocity * -1.0, earth, last.Epoch,
             Frames.Frame.ICRF));
         var past = new Window(window.StartDate, window.EndDate.AddMinutes(10.0));
-        Assert.Throws<ArgumentException>(() => ConjunctionAssessment.Analyze(new ProtectedSpacecraftProfile(spacecraft), secondary, past));
+        Assert.Throws<InvalidOperationException>(() => ConjunctionAssessment.Analyze(spacecraft, secondary, past));
     }
 
     [Fact]
@@ -463,17 +463,17 @@ public class TlePropagationTests
         };
 
         // Act
-        var avoidance = ConjunctionAssessment.EvaluateAvoidance(ConjunctionAssessment.Analyze(new ProtectedSpacecraftProfile(fromTle),
-            NewSpacecraft(-7033, secondaryState), screening), options);
-        var twinAvoidance = ConjunctionAssessment.EvaluateAvoidance(ConjunctionAssessment.Analyze(new ProtectedSpacecraftProfile(twin),
-            NewSpacecraft(-7034, secondaryState), screening), options);
+        var avoidance = ConjunctionAssessment.EvaluateAvoidance(ConjunctionAssessment.Analyze(fromTle,
+            NewSpacecraft(-7033, secondaryState), screening), options).Options;
+        var twinAvoidance = ConjunctionAssessment.EvaluateAvoidance(ConjunctionAssessment.Analyze(twin,
+            NewSpacecraft(-7034, secondaryState), screening), options).Options;
 
         // Assert: the force model of its propagation, not the two-body orbit, bit for bit the twin's
         Assert.Equal(twinAvoidance.Count, avoidance.Count);
         Assert.NotEmpty(avoidance);
         for (int i = 0; i < avoidance.Count; i++)
         {
-            Assert.Equal(AvoidanceTrajectory.Propagated, avoidance[i].Trajectory);
+            Assert.Equal(TrajectorySource.Propagated, avoidance[i].Trajectory);
             LabelAssert.Equal(twinAvoidance[i].BurnEpoch, avoidance[i].BurnEpoch);
             Assert.Equal(twinAvoidance[i].DeltaVInertial, avoidance[i].DeltaVInertial);
             LabelAssert.Equal(twinAvoidance[i].PostManeuverEncounter.EncounterState.Epoch, avoidance[i].PostManeuverEncounter.EncounterState.Epoch);

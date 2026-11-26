@@ -63,7 +63,7 @@ public class AvoidanceCovarianceTests : IClassFixture<ConjunctionCovarianceCase>
         var secondaryCraft = ConjunctionCovarianceCase.NewSpacecraft(-6402, _twoBody.SecondaryStart);
         _twoBody.Propagate(protectedCraft);
         _twoBody.Propagate(secondaryCraft);
-        var encounter = ConjunctionAssessment.Analyze(new ProtectedSpacecraftProfile(protectedCraft), secondaryCraft,
+        var encounter = ConjunctionAssessment.Analyze(protectedCraft, secondaryCraft,
             AvoidanceWindow);
         var options = new AvoidanceSearchOptions
         {
@@ -73,8 +73,8 @@ public class AvoidanceCovarianceTests : IClassFixture<ConjunctionCovarianceCase>
         };
 
         // Act
-        var without = ConjunctionAssessment.EvaluateAvoidance(encounter, options);
-        var with = ConjunctionAssessment.EvaluateAvoidance(encounter, options with { ExecutionError = Gates });
+        var without = ConjunctionAssessment.EvaluateAvoidance(encounter, options).Options;
+        var with = ConjunctionAssessment.EvaluateAvoidance(encounter, options with { ExecutionError = Gates }).Options;
 
         // Assert: six options each; for each, the same trajectory and TCA, and P(with) − P(without) = Φ B L_e Bᵀ Φᵀ
         // (C5 propagated through Φ(tca, t_b) of the option, the A5 threshold); the probability changes
@@ -133,7 +133,7 @@ public class AvoidanceCovarianceTests : IClassFixture<ConjunctionCovarianceCase>
             secondary.Velocity, secondary.Observer, secondary.Epoch, secondary.Frame));
         _twoBody.Propagate(protectedCraft, stepControl);
         _twoBody.Propagate(secondaryCraft);
-        var encounter = ConjunctionAssessment.Analyze(new ProtectedSpacecraftProfile(protectedCraft), secondaryCraft,
+        var encounter = ConjunctionAssessment.Analyze(protectedCraft, secondaryCraft,
             AvoidanceWindow);
         var options = new AvoidanceSearchOptions
         {
@@ -143,7 +143,7 @@ public class AvoidanceCovarianceTests : IClassFixture<ConjunctionCovarianceCase>
         };
 
         // Act
-        var avoidance = ConjunctionAssessment.EvaluateAvoidance(encounter, options);
+        var avoidance = ConjunctionAssessment.EvaluateAvoidance(encounter, options).Options;
 
         // Assert
         _output.WriteLine($"{avoidance.Count} options");
@@ -181,7 +181,7 @@ public class AvoidanceCovarianceTests : IClassFixture<ConjunctionCovarianceCase>
         // steps of its own propagation (the covariance adds no term to the step control): the covariance its replay gives
         var reference = _twoBody.Propagate(ConjunctionCovarianceCase.NewSpacecraft(-6433, _twoBody.SecondaryStart),
             stepControl with { IncludeInStepControl = secondaryStepControl });
-        var encounter = ConjunctionAssessment.Analyze(new ProtectedSpacecraftProfile(protectedCraft), secondaryCraft,
+        var encounter = ConjunctionAssessment.Analyze(protectedCraft, secondaryCraft,
             AvoidanceWindow);
         var options = new AvoidanceSearchOptions
         {
@@ -191,7 +191,7 @@ public class AvoidanceCovarianceTests : IClassFixture<ConjunctionCovarianceCase>
         };
 
         // Act
-        var avoidance = ConjunctionAssessment.EvaluateAvoidance(encounter, options);
+        var avoidance = ConjunctionAssessment.EvaluateAvoidance(encounter, options).Options;
 
         // Assert: every option keeps the step control of the protected participant, and the covariance of the secondary
         // participant at its TCA is that of the reference, bit for bit
@@ -216,7 +216,7 @@ public class AvoidanceCovarianceTests : IClassFixture<ConjunctionCovarianceCase>
         var secondaryCraft = ReferenceCase.NewSpacecraft(-6412, _full.PointMassSecondaryStart);
         _full.Propagate(protectedCraft, pointMass: true, tolerance: AvoidanceTolerance);
         _full.Propagate(secondaryCraft, pointMass: true, tolerance: AvoidanceTolerance);
-        var encounter = ConjunctionAssessment.Analyze(new ProtectedSpacecraftProfile(protectedCraft), secondaryCraft,
+        var encounter = ConjunctionAssessment.Analyze(protectedCraft, secondaryCraft,
             new Window(CdmPropagatedCovarianceCase.Start.AddMinutes(30.0), CdmPropagatedCovarianceCase.Start.AddHours(2.5)),
             new ConjunctionAnalysisOptions { CovariancePropagation = CdmPropagatedCovarianceCase.Options });
         var lead = TimeSpan.FromHours(1.0);
@@ -230,7 +230,7 @@ public class AvoidanceCovarianceTests : IClassFixture<ConjunctionCovarianceCase>
 
 
         // Act
-        var avoidance = ConjunctionAssessment.EvaluateAvoidance(encounter, options);
+        var avoidance = ConjunctionAssessment.EvaluateAvoidance(encounter, options).Options;
 
         // Assert: each option against the same spacecraft propagated from the start with a burn fixed in epoch and ΔV and
         // its execution error, the open-loop model (FixedImpulse): the state, the covariance and the extended covariance at
@@ -280,7 +280,7 @@ public class AvoidanceCovarianceTests : IClassFixture<ConjunctionCovarianceCase>
         _full.Propagate(protectedCraft, pointMass: true, tolerance: AvoidanceTolerance);
         _full.Propagate(secondaryCraft, pointMass: true, tolerance: AvoidanceTolerance);
         var window = new Window(CdmPropagatedCovarianceCase.Start.AddMinutes(30.0), CdmPropagatedCovarianceCase.Start.AddHours(2.5));
-        var encounter = ConjunctionAssessment.Analyze(new ProtectedSpacecraftProfile(protectedCraft), secondaryCraft,
+        var encounter = ConjunctionAssessment.Analyze(protectedCraft, secondaryCraft,
             window, new ConjunctionAnalysisOptions { CovariancePropagation = CdmPropagatedCovarianceCase.Options });
         var options = new AvoidanceSearchOptions
         {
@@ -290,7 +290,7 @@ public class AvoidanceCovarianceTests : IClassFixture<ConjunctionCovarianceCase>
         };
 
         // Act
-        var avoidance = ConjunctionAssessment.EvaluateAvoidance(encounter, options);
+        var avoidance = ConjunctionAssessment.EvaluateAvoidance(encounter, options).Options;
 
         // Assert: each option against the spacecraft propagated from the start with the burn of the option alone, the
         // open-loop model: the later burn of the protected spacecraft is not part of the option, nor is its fuel
@@ -330,14 +330,14 @@ public class AvoidanceCovarianceTests : IClassFixture<ConjunctionCovarianceCase>
         var secondaryCraft = ConjunctionCovarianceCase.NewSpacecraft(-6422, _twoBody.SecondaryStart);
         _twoBody.Propagate(protectedCraft);
         _twoBody.Propagate(secondaryCraft);
-        var encounter = ConjunctionAssessment.Analyze(new ProtectedSpacecraftProfile(protectedCraft), secondaryCraft,
+        var encounter = ConjunctionAssessment.Analyze(protectedCraft, secondaryCraft,
             AvoidanceWindow, new ConjunctionAnalysisOptions { CovariancePropagation = CovariancePropagationOptions.None });
         var options = new AvoidanceSearchOptions
             { LeadTimes = new[] { TimeSpan.FromHours(1.0) }, DeltaVMagnitudesMetersPerSecond = new[] { 0.1 } };
 
         // Act
-        var without = ConjunctionAssessment.EvaluateAvoidance(encounter, options);
-        var with = ConjunctionAssessment.EvaluateAvoidance(encounter, options with { ExecutionError = Gates });
+        var without = ConjunctionAssessment.EvaluateAvoidance(encounter, options).Options;
+        var with = ConjunctionAssessment.EvaluateAvoidance(encounter, options with { ExecutionError = Gates }).Options;
 
         // Assert: the execution error is not used; the trial is propagated with the force model of the trajectory (#402),
         // its covariance is not
@@ -345,7 +345,7 @@ public class AvoidanceCovarianceTests : IClassFixture<ConjunctionCovarianceCase>
             with.Select(o => o.PostManeuverEncounter.CollisionRisk.ProbabilityOfCollision));
         Assert.All(with, o =>
         {
-            Assert.Equal(AvoidanceTrajectory.Propagated, o.Trajectory);
+            Assert.Equal(TrajectorySource.Propagated, o.Trajectory);
             Assert.NotEqual(CovarianceSource.Propagated, o.PostManeuverEncounter.EncounterState.ProtectedCovariance.Source);
         });
     }
@@ -368,7 +368,7 @@ public class AvoidanceCovarianceTests : IClassFixture<ConjunctionCovarianceCase>
             LowRelativeSpeedThresholdMetersPerSecond = 1.0e5,
             BisectionToleranceSeconds = 1e-6
         };
-        var encounter = ConjunctionAssessment.Analyze(new ProtectedSpacecraftProfile(protectedCraft), secondaryCraft,
+        var encounter = ConjunctionAssessment.Analyze(protectedCraft, secondaryCraft,
             AvoidanceWindow, settings);
         Assert.Equal(CovarianceSource.Propagated, encounter.EncounterState.ProtectedCovariance.Source);
         Assert.Equal(CovarianceSource.InitialStateHeldInRtn, encounter.EncounterState.SecondaryCovariance.Source);
@@ -379,28 +379,22 @@ public class AvoidanceCovarianceTests : IClassFixture<ConjunctionCovarianceCase>
             MaxReturnedOptions = 6
         };
 
-        // Act: the mirrors left null, and given the values of the encounter
-        var avoidance = ConjunctionAssessment.EvaluateAvoidance(encounter, options);
-        var explicitly = ConjunctionAssessment.EvaluateAvoidance(encounter, options with
-        {
-            AnalysisSampleStep = settings.SampleStep,
-            MaximumEventSearchStep = settings.MaximumEventSearchStep,
-            SecondaryHardBodyRadiusMeters = 2.0,
-            LowRelativeSpeedThresholdMetersPerSecond = 1.0e5
-        });
+        // Act: Analysis left null, and given the settings of the encounter
+        var avoidance = ConjunctionAssessment.EvaluateAvoidance(encounter, options).Options;
+        var explicitly = ConjunctionAssessment.EvaluateAvoidance(encounter, options with { Analysis = settings }).Options;
 
         // Assert: each option on the propagated path re-analyzed with the settings of the encounter (#683: 5 m for the
         // secondary, a stale threshold of 60 s and a low-speed threshold of 1 m/s): the radius of the encounter, the stale
         // flag by the rule of its threshold on the sources and ages the option reports (the secondary about a day old: not
         // stale against two days), the low-speed flag by the rule of its threshold on the relative speed of the option
-        // (raised); the null mirrors are the values of the encounter, bit for bit
+        // (raised); a null Analysis is the settings of the encounter, bit for bit
         Assert.Equal(6, avoidance.Count);
         Assert.Equal(explicitly.Count, avoidance.Count);
         for (int i = 0; i < avoidance.Count; i++)
         {
             var post = avoidance[i].PostManeuverEncounter;
             var state = post.EncounterState;
-            Assert.Equal(AvoidanceTrajectory.Propagated, avoidance[i].Trajectory);
+            Assert.Equal(TrajectorySource.Propagated, avoidance[i].Trajectory);
             Assert.Equal(CovarianceSource.Propagated, state.ProtectedCovariance.Source);
             Assert.Equal(CovarianceSource.InitialStateHeldInRtn, state.SecondaryCovariance.Source);
             Assert.True(state.SecondaryCovariance.Age > TimeSpan.FromSeconds(60.0) && state.SecondaryCovariance.Age < TimeSpan.FromDays(2.0));

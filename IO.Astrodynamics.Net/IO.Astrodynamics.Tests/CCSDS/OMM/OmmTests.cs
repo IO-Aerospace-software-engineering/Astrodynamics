@@ -3,6 +3,7 @@
 using System;
 using System.IO;
 using System.Text;
+using IO.Astrodynamics.CCSDS;
 using IO.Astrodynamics.CCSDS.Common;
 using IO.Astrodynamics.CCSDS.OMM;
 using IO.Astrodynamics.OrbitalParameters;
@@ -273,7 +274,7 @@ namespace IO.Astrodynamics.Tests.CCSDS.OMM
         [Fact]
         public void LoadFromFile_ValidOmm_ReturnsOmm()
         {
-            var omm = Omm.LoadFromFile(IssOmmPath, validateSchema: false);
+            var omm = Omm.Load(IssOmmPath, new CcsdsReadOptions { ValidateSchema = false });
 
             Assert.NotNull(omm);
             Assert.Equal("ISS (ZARYA)", omm.ObjectName);
@@ -287,7 +288,7 @@ namespace IO.Astrodynamics.Tests.CCSDS.OMM
         [Fact]
         public void LoadFromFile_ValidOmm_ParsesMeanElements()
         {
-            var omm = Omm.LoadFromFile(IssOmmPath, validateSchema: false);
+            var omm = Omm.Load(IssOmmPath, new CcsdsReadOptions { ValidateSchema = false });
 
             Assert.Equal(15.49269250, omm.Data.MeanElements.MeanMotion.Value, 6);
             Assert.Equal(0.00077414, omm.Data.MeanElements.Eccentricity, 8);
@@ -300,7 +301,7 @@ namespace IO.Astrodynamics.Tests.CCSDS.OMM
         [Fact]
         public void LoadFromFile_ValidOmm_ParsesTleParameters()
         {
-            var omm = Omm.LoadFromFile(IssOmmPath, validateSchema: false);
+            var omm = Omm.Load(IssOmmPath, new CcsdsReadOptions { ValidateSchema = false });
 
             Assert.NotNull(omm.Data.TleParameters);
             Assert.Equal(25544, omm.Data.TleParameters.NoradCatalogId);
@@ -315,7 +316,7 @@ namespace IO.Astrodynamics.Tests.CCSDS.OMM
         public void LoadFromString_ValidXml_ReturnsOmm()
         {
             var xml = File.ReadAllText(IssOmmPath);
-            var omm = Omm.LoadFromString(xml, validateSchema: false);
+            var omm = Omm.Parse(xml, new CcsdsReadOptions { ValidateSchema = false });
 
             Assert.NotNull(omm);
             Assert.Equal("ISS (ZARYA)", omm.ObjectName);
@@ -325,13 +326,14 @@ namespace IO.Astrodynamics.Tests.CCSDS.OMM
         [Fact]
         public void LoadFromString_NullXml_ThrowsArgumentNullException()
         {
-            Assert.Throws<ArgumentNullException>(() => Omm.LoadFromString(null));
+            Assert.Throws<ArgumentNullException>(() => Omm.Parse((string)null));
         }
 
         [Fact]
-        public void LoadFromString_EmptyXml_ThrowsArgumentNullException()
+        public void Parse_EmptyXml_ThrowsParseException()
         {
-            Assert.Throws<ArgumentNullException>(() => Omm.LoadFromString(""));
+            // Before 11.0.0 ArgumentNullException: a blank text is a text that holds no OMM (R22 of #668)
+            Assert.Throws<OmmParseException>(() => Omm.Parse(""));
         }
 
         [Fact]
@@ -345,7 +347,7 @@ namespace IO.Astrodynamics.Tests.CCSDS.OMM
 
             // Should throw either OmmValidationException (schema validation) or InvalidOperationException (parsing)
             Assert.ThrowsAny<Exception>(() =>
-                Omm.LoadFromString(invalidXml, validateSchema: true));
+                Omm.Parse(invalidXml));
         }
 
         [Fact]
@@ -355,14 +357,14 @@ namespace IO.Astrodynamics.Tests.CCSDS.OMM
             var malformedXml = @"<?xml version=""1.0""?><omm><unclosed>";
 
             Assert.ThrowsAny<Exception>(() =>
-                Omm.LoadFromString(malformedXml, validateSchema: false));
+                Omm.Parse(malformedXml, new CcsdsReadOptions { ValidateSchema = false }));
         }
 
         [Fact]
         public void LoadFromString_SkipSchemaValidation_Succeeds()
         {
             var xml = File.ReadAllText(IssOmmPath);
-            var omm = Omm.LoadFromString(xml, validateSchema: false);
+            var omm = Omm.Parse(xml, new CcsdsReadOptions { ValidateSchema = false });
 
             Assert.NotNull(omm);
             Assert.Equal("ISS (ZARYA)", omm.ObjectName);
@@ -372,7 +374,7 @@ namespace IO.Astrodynamics.Tests.CCSDS.OMM
         public void LoadFromString_SkipContentValidation_Succeeds()
         {
             var xml = File.ReadAllText(IssOmmPath);
-            var omm = Omm.LoadFromString(xml, validateSchema: false, validateContent: false);
+            var omm = Omm.Parse(xml, new CcsdsReadOptions { ValidateSchema = false, ValidateContent = false });
 
             Assert.NotNull(omm);
         }
@@ -381,7 +383,7 @@ namespace IO.Astrodynamics.Tests.CCSDS.OMM
         public void LoadFromStream_ValidStream_ReturnsOmm()
         {
             using var stream = File.OpenRead(IssOmmPath);
-            var omm = Omm.LoadFromStream(stream, validateSchema: false);
+            var omm = Omm.Parse(new StreamReader(stream), new CcsdsReadOptions { ValidateSchema = false });
 
             Assert.NotNull(omm);
             Assert.Equal("ISS (ZARYA)", omm.ObjectName);
@@ -390,51 +392,45 @@ namespace IO.Astrodynamics.Tests.CCSDS.OMM
         [Fact]
         public void LoadFromStream_NullStream_ThrowsArgumentNullException()
         {
-            Assert.Throws<ArgumentNullException>(() => Omm.LoadFromStream(null));
+            Assert.Throws<ArgumentNullException>(() => Omm.Parse((TextReader)null));
         }
 
         [Fact]
         public void LoadFromFile_FileNotFound_ThrowsFileNotFoundException()
         {
             Assert.Throws<FileNotFoundException>(() =>
-                Omm.LoadFromFile("/nonexistent/path/omm.xml"));
+                Omm.Load("/nonexistent/path/omm.xml"));
         }
 
         [Fact]
         public void LoadFromFile_NullPath_ThrowsArgumentNullException()
         {
-            Assert.Throws<ArgumentNullException>(() => Omm.LoadFromFile(null));
+            Assert.Throws<ArgumentNullException>(() => Omm.Load(null));
         }
 
         [Fact]
         public void TryLoadFromFile_FileNotFound_ReturnsFalse()
         {
-            var result = Omm.TryLoadFromFile("/nonexistent/path/omm.xml",
-                out var omm, out var validationResult);
+            var result = Omm.TryLoad("/nonexistent/path/omm.xml", out var omm);
 
             Assert.False(result);
             Assert.Null(omm);
-            Assert.NotNull(validationResult);
-            Assert.False(validationResult.IsValid);
         }
 
         [Fact]
         public void TryLoadFromFile_ValidFile_ReturnsTrue()
         {
-            var result = Omm.TryLoadFromFile(IssOmmPath,
-                out var omm, out var validationResult,
-                validateSchema: false);
+            var result = Omm.TryLoad(IssOmmPath, out var omm, new CcsdsReadOptions { ValidateSchema = false });
 
             Assert.True(result);
             Assert.NotNull(omm);
             Assert.Equal("ISS (ZARYA)", omm.ObjectName);
-            Assert.True(validationResult.IsValid);
         }
 
         [Fact]
         public void LoadFromFile_RealOmm_ValidatesSuccessfully()
         {
-            var omm = Omm.LoadFromFile(IssOmmPath, validateSchema: false, validateContent: true);
+            var omm = Omm.Load(IssOmmPath, new CcsdsReadOptions { ValidateSchema = false });
 
             Assert.True(omm.IsValid());
             Assert.True(omm.Validate().IsStrictlyValid);
@@ -481,7 +477,7 @@ namespace IO.Astrodynamics.Tests.CCSDS.OMM
             var omm = CreateMinimalOmm("ISS", "1998-067A");
             using var stream = new MemoryStream();
 
-            omm.SaveToStream(stream);
+            omm.Save(stream);
 
             stream.Position = 0;
             using var reader = new StreamReader(stream);
@@ -495,7 +491,7 @@ namespace IO.Astrodynamics.Tests.CCSDS.OMM
         {
             var omm = CreateMinimalOmm("ISS", "1998-067A");
 
-            Assert.Throws<ArgumentNullException>(() => omm.SaveToStream(null));
+            Assert.Throws<ArgumentNullException>(() => omm.Save((Stream)null));
         }
 
         [Fact]
@@ -503,7 +499,7 @@ namespace IO.Astrodynamics.Tests.CCSDS.OMM
         {
             var omm = CreateMinimalOmm("ISS", "1998-067A");
 
-            Assert.Throws<ArgumentNullException>(() => omm.SaveToFile(null));
+            Assert.Throws<ArgumentNullException>(() => omm.Save((string)null));
         }
 
         [Fact]
@@ -526,7 +522,7 @@ namespace IO.Astrodynamics.Tests.CCSDS.OMM
 
             var xml = original.ToXml();
             // Skip schema validation - schema validator has encoding issues with string content
-            var loaded = Omm.LoadFromString(xml, validateSchema: false);
+            var loaded = Omm.Parse(xml, new CcsdsReadOptions { ValidateSchema = false });
 
             Assert.Equal(original.ObjectName, loaded.ObjectName);
             Assert.Equal(original.ObjectId, loaded.ObjectId);
@@ -539,11 +535,11 @@ namespace IO.Astrodynamics.Tests.CCSDS.OMM
         public void RoundTrip_LoadFileAndRewrite_PreservesData()
         {
             // Load real OMM file
-            var original = Omm.LoadFromFile(IssOmmPath, validateSchema: false);
+            var original = Omm.Load(IssOmmPath, new CcsdsReadOptions { ValidateSchema = false });
 
             // Convert to XML and reload
             var xml = original.ToXml();
-            var reloaded = Omm.LoadFromString(xml, validateSchema: false);
+            var reloaded = Omm.Parse(xml, new CcsdsReadOptions { ValidateSchema = false });
 
             // Verify key data preserved
             Assert.Equal(original.ObjectName, reloaded.ObjectName);
@@ -598,7 +594,7 @@ namespace IO.Astrodynamics.Tests.CCSDS.OMM
         public void ToTle_ValidOmm_ConvertsTle()
         {
             // Load OMM from file
-            var omm = Omm.LoadFromFile(IssOmmPath, validateSchema: false);
+            var omm = Omm.Load(IssOmmPath, new CcsdsReadOptions { ValidateSchema = false });
 
             // Convert to TLE
             var tle = omm.ToTle();
@@ -644,7 +640,7 @@ namespace IO.Astrodynamics.Tests.CCSDS.OMM
         [Fact]
         public void ToTle_TleLinesHaveCorrectFormat()
         {
-            var omm = Omm.LoadFromFile(IssOmmPath, validateSchema: false);
+            var omm = Omm.Load(IssOmmPath, new CcsdsReadOptions { ValidateSchema = false });
 
             var tle = omm.ToTle();
 
@@ -659,7 +655,7 @@ namespace IO.Astrodynamics.Tests.CCSDS.OMM
         public void ToTle_RoundTrip_OmmToTleToOmm_PreservesData()
         {
             // Load OMM
-            var originalOmm = Omm.LoadFromFile(IssOmmPath, validateSchema: false);
+            var originalOmm = Omm.Load(IssOmmPath, new CcsdsReadOptions { ValidateSchema = false });
 
             // Convert to TLE
             var tle = originalOmm.ToTle();
@@ -696,7 +692,7 @@ namespace IO.Astrodynamics.Tests.CCSDS.OMM
             // The final TLE should match the intermediate TLE (proving serialization works)
 
             // Step 1: Load original OMM and convert to TLE
-            var originalOmm = Omm.LoadFromFile(IssOmmPath, validateSchema: false);
+            var originalOmm = Omm.Load(IssOmmPath, new CcsdsReadOptions { ValidateSchema = false });
             var tle1 = originalOmm.ToTle();
 
             // Step 2: Convert TLE back to OMM
@@ -706,10 +702,10 @@ namespace IO.Astrodynamics.Tests.CCSDS.OMM
             var tempFile = Path.GetTempFileName();
             try
             {
-                reconvertedOmm.SaveToFile(tempFile, validateBeforeSave: false);
+                reconvertedOmm.Save(tempFile, new CcsdsWriteOptions { ValidateContent = false });
 
                 // Step 4: Load the saved file
-                var reloadedOmm = Omm.LoadFromFile(tempFile, validateSchema: false, validateContent: false);
+                var reloadedOmm = Omm.Load(tempFile, new CcsdsReadOptions { ValidateSchema = false, ValidateContent = false });
 
                 // Step 5: Convert reloaded OMM to TLE
                 var tle2 = reloadedOmm.ToTle();
@@ -737,13 +733,11 @@ namespace IO.Astrodynamics.Tests.CCSDS.OMM
         {
             NdmDocuments.WithTempFile(NdmDocuments.TwoOmm(), file =>
             {
-                var loaded = Omm.TryLoadFromFile(file, out var omm, out var result);
+                var loaded = Omm.TryLoad(file, out var omm);
 
                 Assert.False(loaded);
                 Assert.Null(omm);
-                var error = Assert.Single(result.Errors);
-                Assert.Equal("PARSE_ERROR", error.Code);
-                Assert.Contains("2 OMM messages", error.Message);
+                Assert.Contains("2 OMM messages", Assert.Throws<OmmParseException>(() => Omm.Load(file)).Message);
             });
         }
 
@@ -753,20 +747,20 @@ namespace IO.Astrodynamics.Tests.CCSDS.OMM
             NdmDocuments.WithTempFile(NdmDocuments.TwoSegmentOmm(), file =>
             {
                 // The schema rejects the second segment (third round of #668: a PARSE_ERROR of the reader before)
-                var loaded = Omm.TryLoadFromFile(file, out var omm, out var result);
+                var loaded = Omm.TryLoad(file, out var omm);
 
                 Assert.False(loaded);
                 Assert.Null(omm);
-                Assert.Contains(result.Errors, e => e.Code == "OMM007" && e.Message.Contains("segment"));
+                Assert.Contains(Assert.Throws<OmmValidationException>(() => Omm.Load(file)).ValidationResult.Errors,
+                    e => e.Code == "OMM007" && e.Message.Contains("segment"));
 
                 // Without schema validation, the reader rejects it
-                loaded = Omm.TryLoadFromFile(file, out omm, out result, validateSchema: false);
+                var noSchema = new CcsdsReadOptions { ValidateSchema = false };
+                loaded = Omm.TryLoad(file, out omm, noSchema);
 
                 Assert.False(loaded);
                 Assert.Null(omm);
-                var error = Assert.Single(result.Errors);
-                Assert.Equal("PARSE_ERROR", error.Code);
-                Assert.Contains("2 segment elements", error.Message);
+                Assert.Contains("2 segment elements", Assert.Throws<OmmParseException>(() => Omm.Load(file, noSchema)).Message);
             });
         }
 
@@ -858,7 +852,7 @@ namespace IO.Astrodynamics.Tests.CCSDS.OMM
         {
             var xml = CreateTleOmm("MOON", "TEME", "SGP4").ToXml();
 
-            var loaded = Omm.LoadFromString(xml);
+            var loaded = Omm.Parse(xml);
 
             Assert.False(loaded.IsTleCompatible);
             var ex = Assert.Throws<InvalidOperationException>(() => loaded.ToTle());
@@ -895,8 +889,8 @@ namespace IO.Astrodynamics.Tests.CCSDS.OMM
 
             // The same through the reader, from iss.omm
             var iss = File.ReadAllText("CCSDS/iss.omm");
-            var issTle = Omm.LoadFromString(iss).ToTle();
-            var loaded = Omm.LoadFromString(iss
+            var issTle = Omm.Parse(iss).ToTle();
+            var loaded = Omm.Parse(iss
                 .Replace("<REF_FRAME>TEME<", "<REF_FRAME> TEME <")
                 .Replace("<MEAN_ELEMENT_THEORY>SGP4<", "<MEAN_ELEMENT_THEORY>SGP4 <"));
             Assert.Equal(" TEME ", loaded.Metadata.ReferenceFrame);
@@ -930,39 +924,35 @@ namespace IO.Astrodynamics.Tests.CCSDS.OMM
 
             // Without the schema: every entry point throws the reader's exception (before: ArgumentException of the model)
             OmmReaderTests.AssertNamesKeyword(Assert.Throws<OmmParseException>(() =>
-                Omm.LoadFromString(xml, validateSchema: false)), keyword, value);
+                Omm.Parse(xml, new CcsdsReadOptions { ValidateSchema = false })), keyword, value);
             using (var stream = new MemoryStream(Encoding.UTF8.GetBytes(xml)))
             {
                 OmmReaderTests.AssertNamesKeyword(Assert.Throws<OmmParseException>(() =>
-                    Omm.LoadFromStream(stream, validateSchema: false)), keyword, value);
+                    Omm.Parse(new StreamReader(stream), new CcsdsReadOptions { ValidateSchema = false })), keyword, value);
             }
 
             NdmDocuments.WithTempFile(xml, file =>
             {
                 OmmReaderTests.AssertNamesKeyword(Assert.Throws<OmmParseException>(() =>
-                    Omm.LoadFromFile(file, validateSchema: false)), keyword, value);
+                    Omm.Load(file, new CcsdsReadOptions { ValidateSchema = false })), keyword, value);
 
                 // With the default validation: the schema's exception where it has a facet, the reader's otherwise
                 if (schemaRejects)
                 {
-                    Assert.Throws<OmmValidationException>(() => Omm.LoadFromString(xml));
-                    Assert.Throws<OmmValidationException>(() => Omm.LoadFromFile(file));
+                    Assert.Throws<OmmValidationException>(() => Omm.Parse(xml));
+                    Assert.Throws<OmmValidationException>(() => Omm.Load(file));
                 }
                 else
                 {
-                    OmmReaderTests.AssertNamesKeyword(Assert.Throws<OmmParseException>(() => Omm.LoadFromString(xml)), keyword, value);
-                    OmmReaderTests.AssertNamesKeyword(Assert.Throws<OmmParseException>(() => Omm.LoadFromFile(file)), keyword, value);
+                    OmmReaderTests.AssertNamesKeyword(Assert.Throws<OmmParseException>(() => Omm.Parse(xml)), keyword, value);
+                    OmmReaderTests.AssertNamesKeyword(Assert.Throws<OmmParseException>(() => Omm.Load(file)), keyword, value);
                 }
 
-                // TryLoadFromFile: false, the parse error naming the keyword (before: the constructor's parameter)
+                // TryLoad: false (before: the constructor's parameter)
                 foreach (var validateSchema in schemaRejects ? new[] { false } : new[] { false, true })
                 {
-                    Assert.False(Omm.TryLoadFromFile(file, out var omm, out var result, validateSchema));
+                    Assert.False(Omm.TryLoad(file, out var omm, new CcsdsReadOptions { ValidateSchema = validateSchema }));
                     Assert.Null(omm);
-                    var error = Assert.Single(result.Errors);
-                    Assert.Equal("PARSE_ERROR", error.Code);
-                    Assert.Contains(keyword, error.Message);
-                    Assert.Contains($"'{value}'", error.Message);
                 }
             });
         }
@@ -986,29 +976,26 @@ namespace IO.Astrodynamics.Tests.CCSDS.OMM
             {
                 if (schemaRejects)
                 {
-                    Assert.Throws<OmmValidationException>(() => Omm.LoadFromString(xml));
-                    Assert.Throws<OmmValidationException>(() => Omm.LoadFromFile(file));
+                    Assert.Throws<OmmValidationException>(() => Omm.Parse(xml));
+                    Assert.Throws<OmmValidationException>(() => Omm.Load(file));
                 }
                 else
                 {
-                    OmmReaderTests.AssertNamesNonFiniteKeyword(Assert.Throws<OmmParseException>(() => Omm.LoadFromString(xml)), keyword, value);
-                    OmmReaderTests.AssertNamesNonFiniteKeyword(Assert.Throws<OmmParseException>(() => Omm.LoadFromFile(file)), keyword, value);
+                    OmmReaderTests.AssertNamesNonFiniteKeyword(Assert.Throws<OmmParseException>(() => Omm.Parse(xml)), keyword, value);
+                    OmmReaderTests.AssertNamesNonFiniteKeyword(Assert.Throws<OmmParseException>(() => Omm.Load(file)), keyword, value);
                     using var stream = new MemoryStream(Encoding.UTF8.GetBytes(xml));
-                    OmmReaderTests.AssertNamesNonFiniteKeyword(Assert.Throws<OmmParseException>(() => Omm.LoadFromStream(stream)), keyword, value);
+                    OmmReaderTests.AssertNamesNonFiniteKeyword(Assert.Throws<OmmParseException>(() => Omm.Parse(new StreamReader(stream))), keyword, value);
                 }
 
                 // Without the schema, and without the content validation: the reader's exception
                 OmmReaderTests.AssertNamesNonFiniteKeyword(Assert.Throws<OmmParseException>(() =>
-                    Omm.LoadFromString(xml, validateSchema: false, validateContent: false)), keyword, value);
+                    Omm.Parse(xml, new CcsdsReadOptions { ValidateSchema = false, ValidateContent = false })), keyword, value);
 
-                // TryLoadFromFile: false, one PARSE_ERROR naming the keyword
+                // TryLoad: false
                 foreach (var validateSchema in schemaRejects ? new[] { false } : new[] { false, true })
                 {
-                    Assert.False(Omm.TryLoadFromFile(file, out var omm, out var result, validateSchema));
+                    Assert.False(Omm.TryLoad(file, out var omm, new CcsdsReadOptions { ValidateSchema = validateSchema }));
                     Assert.Null(omm);
-                    var error = Assert.Single(result.Errors);
-                    Assert.Equal("PARSE_ERROR", error.Code);
-                    OmmReaderTests.AssertNamesNonFiniteKeyword(new Exception(error.Message), keyword, value);
                 }
 
                 // ValidateFile: invalid (before: valid), the parser's error naming the keyword where the schema passes

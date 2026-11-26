@@ -1,24 +1,36 @@
 // Copyright 2026. Sylvain Guillet (sylvain.guillet@tutamail.com)
 using System;
+using IO.Astrodynamics.Propagator.Variational;
 
 namespace IO.Astrodynamics.SSA;
 
 /// <summary>
-/// Configures candidate screening for one protected spacecraft against a set of secondaries.
+/// Configures candidate screening for one protected spacecraft against a set of secondaries, read by
+/// <see cref="ConjunctionAssessment.Screen"/>.
 /// </summary>
 public sealed record ScreeningOptions
 {
-    /// <summary>
-    /// Gets the coarse search cadence used for each candidate pair during screening.
-    /// </summary>
-    public TimeSpan SampleStep { get; init; } = TimeSpan.FromMinutes(5);
+    /// <summary>The default settings, those of <c>new ScreeningOptions()</c>.</summary>
+    public static ScreeningOptions Default { get; } = new();
 
     /// <summary>
-    /// Gets the largest interval that SSA is allowed to subdivide internally while refining event detection: the largest
-    /// interval between the search epochs of the sampled search, which the screening uses (it reads the candidates as
-    /// <see cref="IO.Astrodynamics.Body.ILocalizable"/>, never by the polynomial search of two propagations).
+    /// The settings of the screening's analysis of each candidate (structuring choice 2 of #668, decided by S. Guillet,
+    /// 2026-11-19), honoured as given; null (the default) for the analysis's defaults (<see cref="ConjunctionAnalysisOptions.Default"/>)
+    /// with a sample step of 5 min and the covariance held in RTN (<see cref="CovariancePropagationOptions.None"/>), the
+    /// screening of 10.x bit for bit.
     /// </summary>
-    public TimeSpan MaximumEventSearchStep { get; init; } = TimeSpan.FromSeconds(60);
+    /// <remarks>
+    /// Its <see cref="ConjunctionAnalysisOptions.SecondaryHardBodyRadiusMeters"/> is a fallback over the catalogue: a
+    /// candidate <see cref="IO.Astrodynamics.Body.Spacecraft.Spacecraft"/> with a
+    /// <see cref="IO.Astrodynamics.Body.Spacecraft.Spacecraft.HardBodyRadius"/> greater than 0 keeps its own, as a
+    /// <see cref="IO.Astrodynamics.Body.TrackedObject"/> with one (R19 of #668), a candidate
+    /// that gives none takes it, or 5 m when it is null (decided by S. Guillet, 2026-11-14, on #683). The analysis of each
+    /// candidate carries its resolved radius, and <see cref="ConjunctionAssessment.EvaluateAvoidance"/> re-analyzes with it.
+    /// A record that propagates the covariance (<see cref="ConjunctionAnalysisOptions.Default"/>) gives each candidate the
+    /// Pc of <c>Analyze</c>, at its cost. Before 11.0.0 the screening took <c>SampleStep</c>, <c>MaximumEventSearchStep</c>,
+    /// <c>DefaultSecondaryHardBodyRadiusMeters</c> and <c>LowRelativeSpeedThresholdMetersPerSecond</c> of its own.
+    /// </remarks>
+    public ConjunctionAnalysisOptions Analysis { get; init; }
 
     /// <summary>
     /// Gets the maximum miss distance allowed for a candidate to remain in the ranked results.
@@ -31,22 +43,12 @@ public sealed record ScreeningOptions
     public int MaxResults { get; init; } = 25;
 
     /// <summary>
-    /// Gets the hard-body radius, in m, of the candidates that do not give one: a candidate
-    /// <see cref="IO.Astrodynamics.Body.Spacecraft.Spacecraft"/> with a <see cref="IO.Astrodynamics.Body.Spacecraft.Spacecraft.HardBodyRadius"/>
-    /// greater than 0 gives its own (#683). Default: null, 5 m for a candidate that gives none.
+    /// The analysis of a screening given no <see cref="Analysis"/>: <see cref="ConjunctionAnalysisOptions.Default"/> with a
+    /// sample step of 5 min and the covariance held in RTN; a screening ranks many candidates.
     /// </summary>
-    /// <remarks>
-    /// A fallback over the catalogue: a candidate that gives a radius keeps it whatever this value, so a catalogue of
-    /// spacecraft with different radii is screened with one fallback for the others. A value that is not finite or is
-    /// negative throws <see cref="ArgumentOutOfRangeException"/> before the first analysis. The analysis of each candidate
-    /// carries its resolved radius as <see cref="ConjunctionAnalysisOptions.SecondaryHardBodyRadiusMeters"/>, and
-    /// <see cref="ConjunctionAssessment.EvaluateAvoidance"/> re-analyzes with it. Before 11.0.0 this value (5 m by
-    /// default) was used whatever the radius of the candidate.
-    /// </remarks>
-    public double? DefaultSecondaryHardBodyRadiusMeters { get; init; }
-
-    /// <summary>
-    /// Gets the relative-speed threshold below which an encounter is flagged as a low-velocity case.
-    /// </summary>
-    public double LowRelativeSpeedThresholdMetersPerSecond { get; init; } = 1.0;
+    internal static ConjunctionAnalysisOptions ScreeningDefault { get; } = ConjunctionAnalysisOptions.Default with
+    {
+        SampleStep = TimeSpan.FromMinutes(5),
+        CovariancePropagation = CovariancePropagationOptions.None
+    };
 }

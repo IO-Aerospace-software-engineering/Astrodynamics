@@ -8,10 +8,10 @@ namespace IO.Astrodynamics.OrbitalParameters.TLE;
 /// Values above 99999 are written using the Alpha-5 convention.
 /// </param>
 /// <param name="Name">Satellite name.</param>
-/// <param name="CosparId">COSPAR international designator in TLE form (6 to 8 characters, e.g. "98067A"), or null or blank
+/// <param name="CosparId">COSPAR international designator in TLE form (YYNNN and one to three capital letters, e.g. "98067A"), or null or blank
 /// for none: columns 10-17 of line 1 are then blank, as <see cref="TLE.Create"/> writes them (#604, decided by S. Guillet,
 /// 2026-11-18; before 11.0.0 the fit threw <see cref="System.InvalidOperationException"/>). A non-blank value of another
-/// length is not a designator: <c>ToTLE</c> then throws <see cref="System.InvalidOperationException"/>, its fit failing.</param>
+/// form is not a designator: <c>ToTLE</c> then throws <see cref="System.InvalidOperationException"/>, its fit failing.</param>
 /// <param name="RevolutionsAtEpoch">Revolution number at epoch, between 0 and 99999.</param>
 /// <param name="Classification">Security classification of the object.</param>
 /// <param name="FirstDerivativeMeanMotion">First derivative of the mean motion, in rev/day².</param>

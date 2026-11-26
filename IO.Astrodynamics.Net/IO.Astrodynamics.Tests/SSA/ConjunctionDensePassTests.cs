@@ -312,13 +312,12 @@ public abstract class ConjunctionDensePassTestBase
         // window passed every other test)
         var crossing = Pass(fixture);
         var window = crossing.Seconds(start, end);
-        var profile = new ProtectedSpacecraftProfile(crossing.Sat1);
         double length = (window.EndDate - window.StartDate).TotalSeconds;
 
         (long Reads, string Result) All(ConjunctionAnalysisOptions options)
         {
             ConjunctionAssessment.DenseRangeRateReads = 0;
-            var all = ConjunctionAssessment.AnalyzeAll(profile, crossing.Solution1, crossing.Sat2, crossing.Solution2, window,
+            var all = ConjunctionAssessment.AnalyzeAll(crossing.Sat1, crossing.Solution1, crossing.Sat2, crossing.Solution2, window,
                 options);
             return (ConjunctionAssessment.DenseRangeRateReads, string.Join("; ",
                 all.Select(e => $"{e.EncounterState.Epoch.TimeSpanFromJ2000().Ticks} {e.EncounterState.MissDistanceMeters:R}")));
@@ -327,7 +326,7 @@ public abstract class ConjunctionDensePassTestBase
         (long Reads, string Result) One(ConjunctionAnalysisOptions options)
         {
             ConjunctionAssessment.DenseRangeRateReads = 0;
-            var encounter = ConjunctionAssessment.Analyze(profile, crossing.Solution1, crossing.Sat2, crossing.Solution2,
+            var encounter = ConjunctionAssessment.Analyze(crossing.Sat1, crossing.Solution1, crossing.Sat2, crossing.Solution2,
                 window, options);
             return (ConjunctionAssessment.DenseRangeRateReads,
                 $"{encounter.EncounterState.Epoch.TimeSpanFromJ2000().Ticks} {encounter.EncounterState.MissDistanceMeters:R}");
@@ -405,7 +404,7 @@ public abstract class ConjunctionDensePassTestBase
         var minima = CspiceLocalMinima(crossing.Window, crossing)
             .Select(m => (m.Epoch - crossing.T0).TotalSeconds)
             .ToArray();
-        var listed = ConjunctionAssessment.AnalyzeAll(new ProtectedSpacecraftProfile(crossing.Sat1), crossing.Solution1,
+        var listed = ConjunctionAssessment.AnalyzeAll(crossing.Sat1, crossing.Solution1,
                 crossing.Sat2, crossing.Solution2, crossing.Window, options)
             .Select(e => (e.EncounterState.Epoch - crossing.T0).TotalSeconds)
             .ToArray();
@@ -489,11 +488,10 @@ public abstract class ConjunctionDensePassTestBase
     protected void AssertSlowPassListsOnlyMinima(CrossingEncounterCase crossing, Window window,
         ConjunctionAnalysisOptions options, bool log)
     {
-        var profile = new ProtectedSpacecraftProfile(crossing.Sat1);
         var (tcaBound, missBound) = SlowPassBounds(crossing);
         var locmin = CspiceLocalMinima(window, crossing);
-        var all = ConjunctionAssessment.AnalyzeAll(profile, crossing.Solution1, crossing.Sat2, crossing.Solution2, window, options);
-        var encounter = ConjunctionAssessment.Analyze(profile, crossing.Solution1, crossing.Sat2, crossing.Solution2, window, options);
+        var all = ConjunctionAssessment.AnalyzeAll(crossing.Sat1, crossing.Solution1, crossing.Sat2, crossing.Solution2, window, options);
+        var encounter = ConjunctionAssessment.Analyze(crossing.Sat1, crossing.Solution1, crossing.Sat2, crossing.Solution2, window, options);
         string listed = $"[{(window.StartDate - crossing.T0).TotalSeconds:F7}, {(window.EndDate - crossing.T0).TotalSeconds:F7}] s: " +
                         $"LOCMIN [{string.Join("; ", locmin.Select(m => $"{(m.Epoch - crossing.T0).TotalSeconds:F7} s {m.Distance:R} m"))}], " +
                         $"AnalyzeAll [{string.Join("; ", all.Select(e => $"{(e.EncounterState.Epoch - crossing.T0).TotalSeconds:F7} s {e.EncounterState.MissDistanceMeters:R} m"))}], " +
@@ -563,12 +561,11 @@ public abstract class ConjunctionDensePassTestBase
         bool log = true, ConjunctionAnalysisOptions options = null)
     {
         options ??= Options;
-        var profile = new ProtectedSpacecraftProfile(crossing.Sat1);
         var (tcaBound, missBound) = SlowPassBounds(crossing);
         var locmin = CspiceLocalMinima(window, crossing);
 
-        var all = ConjunctionAssessment.AnalyzeAll(profile, crossing.Solution1, crossing.Sat2, crossing.Solution2, window, options);
-        var encounter = ConjunctionAssessment.Analyze(profile, crossing.Solution1, crossing.Sat2, crossing.Solution2, window, options);
+        var all = ConjunctionAssessment.AnalyzeAll(crossing.Sat1, crossing.Solution1, crossing.Sat2, crossing.Solution2, window, options);
+        var encounter = ConjunctionAssessment.Analyze(crossing.Sat1, crossing.Solution1, crossing.Sat2, crossing.Solution2, window, options);
         string listed = $"[{(window.StartDate - crossing.T0).TotalSeconds:F7}, {(window.EndDate - crossing.T0).TotalSeconds:F7}] s: " +
                           $"LOCMIN [{string.Join("; ", locmin.Select(m => $"{(m.Epoch - crossing.T0).TotalSeconds:F7} s {m.Distance:R} m"))}], " +
                           $"AnalyzeAll [{string.Join("; ", all.Select(e => $"{(e.EncounterState.Epoch - crossing.T0).TotalSeconds:F7} s {e.EncounterState.MissDistanceMeters:R} m"))}], " +

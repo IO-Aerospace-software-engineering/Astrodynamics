@@ -908,9 +908,8 @@ public class PropagatedArcsEdgeTests
         var protectedSolution = protectedCraft.Propagate(window, new PropagationOptions { Integrator = new RK78IntegratorOptions { AbsoluteTolerance = 1e-12, RelativeTolerance = 1e-12 }, OutputStep = step, ThirdBodies = [earth], CovariancePropagation = CovariancePropagationOptions.None });
 
         var search = new Window(tc.AddSeconds(-100.0), tc.AddSeconds(300.0));
-        var profile = new ProtectedSpacecraftProfile(protectedCraft);
-        var throughStates = ConjunctionAssessment.Analyze(profile, secondary, search);
-        var throughSolutions = ConjunctionAssessment.Analyze(profile, protectedSolution, secondary, secondarySolution, search);
+        var throughStates = ConjunctionAssessment.Analyze(protectedCraft, secondary, search);
+        var throughSolutions = ConjunctionAssessment.Analyze(protectedCraft, protectedSolution, secondary, secondarySolution, search);
         double tcaDelta = System.Math.Abs((throughStates.EncounterState.Epoch - throughSolutions.EncounterState.Epoch).TotalSeconds);
         double missDelta = System.Math.Abs(throughStates.EncounterState.MissDistanceMeters - throughSolutions.EncounterState.MissDistanceMeters);
         _output.WriteLine($"MEASURE #540 conjunction with a maneuvering ILocalizable: TCA S + {(throughSolutions.EncounterState.Epoch - Start).TotalSeconds:F6} s (designed {(tca - Start).TotalSeconds:F6} s), " +

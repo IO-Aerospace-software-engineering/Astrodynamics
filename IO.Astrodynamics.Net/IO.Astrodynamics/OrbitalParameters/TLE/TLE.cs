@@ -1,14 +1,19 @@
 // Copyright 2023. Sylvain Guillet (sylvain.guillet@tutamail.com)
 
 using System;
+using System.Collections.Generic;
 using System.ComponentModel;
+using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
+using System.IO;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading;
 using IO.Astrodynamics.Body;
 using IO.Astrodynamics.Frames;
 using IO.Astrodynamics.Math;
+using IO.Astrodynamics.SolarSystemObjects;
 using IO.Astrodynamics.TimeSystem;
 
 namespace IO.Astrodynamics.OrbitalParameters.TLE;
@@ -30,7 +35,7 @@ namespace IO.Astrodynamics.OrbitalParameters.TLE;
 /// orbit, an eccentricity out of range) throws <see cref="InvalidOperationException"/> (#454).
 /// </para>
 /// </remarks>
-public class TLE : OrbitalParameters, IEquatable<TLE>
+public class TLE : OrbitalParameters, IEquatable<TLE>, IParsable<TLE>
 {
     private const double MAX_ECCENTRICITY = 0.9999999;
     private const int MAX_ELEMENT_SET_NUMBER = 9999;
@@ -105,16 +110,35 @@ public class TLE : OrbitalParameters, IEquatable<TLE>
     public double SecondDerivativeMeanMotion { get; }
 
     /// <summary>
-    /// Gets the mean semi-major axis of the orbit in meters.
-    /// This value represents the average distance from the center of the Earth to the satellite's orbit.
-    /// It is a key parameter in determining the size of the orbit and is calculated based on
-    /// the mean motion and gravitational parameters of the Earth.
-    /// For example, a value of 7000 kilometers means that the average distance from the
-    /// center of the Earth to the satellite's orbit is 7000 kilometers.
-    /// This parameter is crucial for understanding the satellite's orbital characteristics,
-    /// including its altitude and orbital period.
+    /// Gets the mean semi-major axis of the orbit in meters: a = ∛(GM/n²), n the <see cref="MeanMeanMotion"/> and GM the
+    /// kernel GM of the Earth (<c>BODY399_GM</c>).
     /// </summary>
-    public double MeanSemiMajorAxis { get; }
+    /// <remarks>
+    /// Read at the first use, from the data provider set at that time, and kept once read: a TLE built before the kernels
+    /// are loaded throws <see cref="InvalidOperationException"/> naming <c>BODY399_GM</c> here, keeps nothing, and gives the
+    /// value once they are loaded (R21 of #668: before 11.0.0 the constructor read the Earth and kept a = ∛(0) without
+    /// kernels).
+    /// </remarks>
+    /// <exception cref="InvalidOperationException">The data provider gives no GM of the Earth.</exception>
+    public double MeanSemiMajorAxis => _meanSemiMajorAxis.Value;
+
+    // PublicationOnly: a failed read (no kernel loaded yet) is not cached, as the epoch of SGP4
+    private readonly Lazy<double> _meanSemiMajorAxis;
+
+    // The mean motion field of line 2 (columns 53-63), in revolutions per day, as written
+    private readonly double _meanMotionRevolutionsPerDay;
+
+    /// <summary>
+    /// Gets the mean motion of the TLE in radians per second: the field of line 2 (columns 53-63, revolutions per day) times
+    /// 2π / 86400, read without kernels; mean, like <see cref="MeanInclination"/>.
+    /// </summary>
+    /// <remarks>
+    /// Decision 111 of #668, decided by S. Guillet, 2026-11-26: it replaces the method <c>MeanMotion()</c> of 10.x,
+    /// √(GM/a³) with a = ∛(GM/n²), which needed the kernels and was 1 ulp off the field on about half the sets. The
+    /// inherited <see cref="OrbitalParameters.MeanMotion(double)"/> is the mean motion of the osculating SGP4 set at the
+    /// epoch, 0.14 % off this one for the ISS.
+    /// </remarks>
+    public double MeanMeanMotion { get; }
 
     /// <summary>
     /// Gets the mean eccentricity of the orbit.
@@ -180,30 +204,45 @@ public class TLE : OrbitalParameters, IEquatable<TLE>
     /// <summary>
     /// Initializes a new instance of the TLE class.
     /// </summary>
-    /// <param name="name">Line 1 - TLE Name</param>
+    /// <param name="name">The name of the object (the title line of a three-line set); null or blank for the catalog field
+    /// of line 1 (columns 3-7, as written: <c>25544</c>, <c>T5544</c>).</param>
     /// <param name="line1">the first line</param>
     /// <param name="line2">the second line</param>
-    /// <exception cref="ArgumentException">Thrown when the name or a line is null or empty, or when a line has not the
-    /// length, the line number or a valid catalog number of its format.</exception>
-    /// <exception cref="InvalidOperationException">Thrown when checksum validation fails, when the catalog numbers of the
-    /// two lines differ, or when the loaded kernels do not define the Earth (its GM, radii and frame).</exception>
+    /// <exception cref="ArgumentException">Thrown when a line is null or empty, or does not follow the format, naming
+    /// <c>line1</c> or <c>line2</c> with a <see cref="TleFormatException"/> (its line and column) as inner exception: the
+    /// length (69 characters), the line number, the catalog number (both lines one object), the checksum, and every field
+    /// (R21 of #668: the classification U, C or S, the international designator blank or YYNNNPPP, the epoch YYDDD.DDDDDDDD
+    /// with a day of its year, the derivatives and B*, the ephemeris type, the element set and revolution numbers, the
+    /// angles, the eccentricity and the mean motion; before 11.0.0 a wrong checksum or two catalog numbers threw
+    /// <see cref="InvalidOperationException"/>, a malformed field a raw <see cref="FormatException"/>, and a day of year
+    /// out of range rolled into the next year silently). No physical range is checked: SGP4 reports a set it cannot
+    /// evaluate (#454).</exception>
     /// <remarks>
-    /// The text is checked before the Earth of the TLE is built, which reads the kernels (#675): without kernels, a
-    /// malformed TLE throws the error of its text. A valid TLE needs the kernels that define the Earth.
+    /// The constructor reads no kernel (R21 of #668): the text is checked first (#675), and the Earth of the TLE reads its
+    /// data from the data provider at the first member that needs them (<see cref="MeanSemiMajorAxis"/>, SGP4), so that a
+    /// valid TLE gives its fields, <see cref="MeanMeanMotion"/> and <see cref="ToOmm"/> without kernels. Before 11.0.0 it
+    /// built the Earth from the kernels, and a TLE built before them kept a GM of 0.
     /// </remarks>
-    public TLE(string name, string line1, string line2) : base(EarthAt(ValidatedEpoch(name, line1, line2)), ExtractEpochFromTLE(line1),
+    public TLE(string name, string line1, string line2) : base(EarthAt(ValidatedEpoch(line1, line2)), ExtractEpochFromTLE(line1),
         Frame.TEME, OrbitalElementsType.Mean)
     {
         Line1 = line1;
         Line2 = line2;
-        Name = name;
+        // Without a name, the catalog field as written (R21 of #668)
+        Name = string.IsNullOrWhiteSpace(name) ? line1.Substring(2, NoradCatalogNumber.FieldLength).Trim() : name;
         NoradCatalogId = NoradCatalogNumber.Parse(line1.Substring(2, NoradCatalogNumber.FieldLength));
+        Classification = (Classification)line1[7];
+        var designator = line1.Substring(9, 8).Trim();
+        CosparId = designator.Length == 0 ? null : designator;
+        ElementSetNumber = ParseCount(line1.Substring(64, 4));
+        RevolutionNumberAtEpoch = ParseCount(line2.Substring(63, 5));
 
         // Parse line 2 for orbital elements - FIXED: Use InvariantCulture
-        var meanMotionRevPerDay = double.Parse(line2.Substring(52, 11), CultureInfo.InvariantCulture);
-        double n = meanMotionRevPerDay * Constants.TwoPi / 86400.0; // Convert rev/day to rad/s
-        // The GM of the Earth of the TLE, built once from the kernels at the epoch
-        MeanSemiMajorAxis = System.Math.Cbrt(((CelestialBody)Observer).GM / (n * n));
+        _meanMotionRevolutionsPerDay = double.Parse(line2.Substring(52, 11), CultureInfo.InvariantCulture);
+        double n = _meanMotionRevolutionsPerDay * Constants.TwoPi / 86400.0; // Convert rev/day to rad/s
+        MeanMeanMotion = n;
+        // The GM of the Earth of the TLE, read at the first use (R21 of #668)
+        _meanSemiMajorAxis = new Lazy<double>(() => System.Math.Cbrt(((CelestialBody)Observer).GM / (n * n)), LazyThreadSafetyMode.PublicationOnly);
 
         // Cache mean motion to preserve precision for TLE recreation
         MeanEccentricity = double.Parse("0." + line2.Substring(26, 7), CultureInfo.InvariantCulture);
@@ -224,27 +263,61 @@ public class TLE : OrbitalParameters, IEquatable<TLE>
     }
 
     /// <summary>
-    /// The epoch of line 1, read once the text has passed every check of the constructor, in their order: the null or
-    /// empty lines and name (line 1, line 2, then the name), then <see cref="ValidateTleFormat"/>. Evaluated as the first
-    /// argument of the base constructor, so that no check waits for a kernel read (#675).
+    /// Gets the security classification of line 1 (column 8).
     /// </summary>
-    private static Time ValidatedEpoch(string name, string line1, string line2)
+    public Classification Classification { get; }
+
+    /// <summary>
+    /// Gets the international designator of line 1 (columns 10-17) as written, trimmed (<c>98067A</c>), or null when the
+    /// columns are blank; the argument <c>cosparId</c> of <see cref="Create"/>.
+    /// </summary>
+    public string CosparId { get; }
+
+    /// <summary>
+    /// Gets the element set number of line 1 (columns 65-68), 0 when the columns are blank.
+    /// </summary>
+    public int ElementSetNumber { get; }
+
+    /// <summary>
+    /// Gets the revolution number at epoch of line 2 (columns 64-68), 0 when the columns are blank.
+    /// </summary>
+    public int RevolutionNumberAtEpoch { get; }
+
+    // A count field of digits right-aligned in its columns, 0 when blank (checked by ValidateText)
+    private static int ParseCount(string field)
+    {
+        var digits = field.Trim();
+        return digits.Length == 0 ? 0 : int.Parse(digits, NumberStyles.None, CultureInfo.InvariantCulture);
+    }
+
+    /// <summary>
+    /// The epoch of line 1, read once the text has passed every check of <see cref="ValidateText"/>, a failure thrown as
+    /// <see cref="ArgumentException"/> naming its line with the <see cref="TleFormatException"/> as inner exception.
+    /// Evaluated as the first argument of the base constructor, so that no check waits for a kernel read (#675).
+    /// </summary>
+    private static Time ValidatedEpoch(string line1, string line2)
     {
         if (string.IsNullOrEmpty(line1)) throw new ArgumentException("Value cannot be null or empty.", nameof(line1));
         if (string.IsNullOrEmpty(line2)) throw new ArgumentException("Value cannot be null or empty.", nameof(line2));
-        if (string.IsNullOrEmpty(name)) throw new ArgumentException("Value cannot be null or empty.", nameof(name));
 
-        // Validate TLE format and checksums
-        ValidateTleFormat(line1, line2);
+        try
+        {
+            ValidateText(line1, line2);
+        }
+        catch (TleFormatException e)
+        {
+            throw new ArgumentException(e.Message, e.Line == 1 ? nameof(line1) : nameof(line2), e);
+        }
+
         return ExtractEpochFromTLE(line1);
     }
 
     /// <summary>
     /// The Earth of a TLE, in an inertial frame: nothing on the TLE path needs its orientation, which ITRF93 would read
-    /// from the Earth's binary PCK at the epoch (#597). It reads the kernels, after <see cref="ValidatedEpoch"/>, and the
-    /// static frames only once the text is checked.
+    /// from the Earth's binary PCK at the epoch (#597). Its data (GM, radii, frame, orbit) are read from the data provider
+    /// at the first member that needs them, retried on failure (R21 of #668: before 11.0.0 the constructor read them).
     /// </summary>
-    private static CelestialBody EarthAt(Time epoch) => new(399, Frame.ECLIPTIC_J2000, epoch);
+    private static CelestialBody EarthAt(Time epoch) => CelestialBody.CreateDeferred(PlanetsAndMoons.EARTH, Frame.ECLIPTIC_J2000, epoch);
 
     /// <summary>
     /// Extracts the epoch time from TLE line 1.
@@ -330,8 +403,9 @@ public class TLE : OrbitalParameters, IEquatable<TLE>
     /// The NORAD catalog number, between 0 and <see cref="NoradCatalogNumber.MaxValue"/> (339999).
     /// Values above 99999 are encoded with the Alpha-5 convention.
     /// </param>
-    /// <param name="cosparId">The COSPAR international designator (6-8 characters), or null or blank for none: columns 10-17
-    /// of line 1 are then blank, as a TLE without a designator holds them (#604; before 11.0.0 it threw).</param>
+    /// <param name="cosparId">The COSPAR international designator in TLE form, YYNNN and one to three capital letters
+    /// (<c>98067A</c>), or null or blank for none: columns 10-17 of line 1 are then blank, as a TLE without a designator
+    /// holds them (#604; before 11.0.0 it threw).</param>
     /// <param name="revolutionsAtEpoch">The revolution number at epoch (0 to 99999).</param>
     /// <param name="classification">The security classification of the object (default: Unclassified).</param>
     /// <param name="bstar">The ballistic coefficient (drag term) in units of 1/earth radii (default: 0.0001).</param>
@@ -352,8 +426,9 @@ public class TLE : OrbitalParameters, IEquatable<TLE>
     /// <exception cref="ArgumentException">Thrown when meanElements are not mean elements, are not in <see cref="Frame.TEME"/>
     /// or are not about the Earth (NAIF id 399): a TLE holds SGP4 mean elements of an Earth orbit in TEME (#607; before
     /// 11.0.0, elements in another frame or about another centre were written as if they were, their angles taken as
-    /// TEME's and their mean motion from their centre's GM); or when cosparId is neither null nor blank and not between 6-8
-    /// characters.</exception>
+    /// TEME's and their mean motion from their centre's GM); or when cosparId is neither null nor blank nor YYNNN and one to
+    /// three capital letters, the exception naming <c>cosparId</c> (R21 of #668: 6 to 8 characters of any kind before
+    /// 11.0.0).</exception>
     /// <exception cref="ArgumentOutOfRangeException">
     /// Thrown when noradId, revolutionsAtEpoch or elementSetNumber falls outside the range its TLE field can represent.
     /// </exception>
@@ -362,7 +437,7 @@ public class TLE : OrbitalParameters, IEquatable<TLE>
     {
         if (meanElements == null) throw new ArgumentNullException(nameof(meanElements));
         if (meanElements.ElementsType != OrbitalElementsType.Mean)
-            throw new ArgumentException("Orbital parameters must be mean elements. Use KeplerianElements.FromOMM() or ensure ElementsType is Mean.", nameof(meanElements));
+            throw new ArgumentException("Orbital parameters must be mean elements. Use Omm.ToMeanElements(), TLE.ToMeanKeplerianElements() or elements whose ElementsType is Mean.", nameof(meanElements));
 
         // A TLE holds SGP4 mean elements of an Earth orbit in TEME (#607)
         if (meanElements.Frame != Frame.TEME)
@@ -391,10 +466,11 @@ public class TLE : OrbitalParameters, IEquatable<TLE>
         {
             cosparId = string.Empty;
         }
-        else if (cosparId.Length is < 6 or > 8)
+        else if (!DesignatorField.IsMatch(cosparId.PadRight(8)))
         {
-            throw new ArgumentException("COSPAR Identifier must be between 6 and 8 characters long, or null or blank for no designator.",
-                nameof(cosparId));
+            throw new ArgumentException(
+                $"COSPAR Identifier '{cosparId}' must be YYNNN and one to three capital letters (98067A), the syntax of columns 10-17 " +
+                "of a TLE, or null or blank for no designator.", nameof(cosparId));
         }
 
         if (!NoradCatalogNumber.IsValid(noradId))
@@ -603,74 +679,104 @@ public class TLE : OrbitalParameters, IEquatable<TLE>
     }
 
     /// <summary>
-    /// Validates the format and checksums of the TLE lines.
+    /// Checks the text of the two lines of a set against the format, in this order: the lengths and line numbers, the
+    /// catalog numbers and their agreement, the checksums, then every field of line 1 and of line 2 (R21 of #668).
     /// </summary>
-    /// <param name="line1">The first line of the TLE.</param>
-    /// <param name="line2">The second line of the TLE.</param>
-    /// <exception cref="InvalidOperationException">Thrown when checksum validation fails.</exception>
-    /// <exception cref="ArgumentException">Thrown when TLE format is invalid.</exception>
-    private static void ValidateTleFormat(string line1, string line2)
+    /// <exception cref="TleFormatException">The line (1 or 2) and the first column of the field at fault.</exception>
+    internal static void ValidateText(string line1, string line2)
     {
-        // Validate line length
-        if (line1.Length != 69)
-            throw new ArgumentException($"TLE line 1 must be exactly 69 characters long, got {line1.Length}: {line1}");
-        if (line2.Length != 69)
-            throw new ArgumentException($"TLE line 2 must be exactly 69 characters long, got {line2.Length}: {line2}");
-
-        // Validate line numbers
+        CheckLength(line1, 1);
+        CheckLength(line2, 2);
         if (line1[0] != '1')
-            throw new ArgumentException($"TLE line 1 must start with '1', got '{line1[0]}': {line1}");
+            throw new TleFormatException($"TLE line 1 must start with '1', got '{line1[0]}': {line1}", 1, 1);
         if (line2[0] != '2')
-            throw new ArgumentException($"TLE line 2 must start with '2', got '{line2[0]}': {line2}");
+            throw new TleFormatException($"TLE line 2 must start with '2', got '{line2[0]}': {line2}", 2, 1);
 
-        // Validate the NORAD catalog number field (columns 3-7), which both lines must carry identically
+        // The NORAD catalog number field (columns 3-7), which both lines must carry identically
         var noradField1 = line1.Substring(2, NoradCatalogNumber.FieldLength);
         var noradField2 = line2.Substring(2, NoradCatalogNumber.FieldLength);
-
         if (!NoradCatalogNumber.TryParse(noradField1, out int noradId1))
-            throw new ArgumentException($"Invalid NORAD catalog number '{noradField1}' in TLE line 1: {line1}");
+            throw new TleFormatException($"Invalid NORAD catalog number '{noradField1}' in TLE line 1: {line1}", 1, 3);
         if (!NoradCatalogNumber.TryParse(noradField2, out int noradId2))
-            throw new ArgumentException($"Invalid NORAD catalog number '{noradField2}' in TLE line 2: {line2}");
+            throw new TleFormatException($"Invalid NORAD catalog number '{noradField2}' in TLE line 2: {line2}", 2, 3);
         if (noradId1 != noradId2)
         {
-            // Reported as an invalid state rather than an invalid argument, consistently with the
-            // checksum validation below: each line is well-formed, only their pairing is wrong.
-            throw new InvalidOperationException(
+            throw new TleFormatException(
                 $"NORAD catalog numbers differ between TLE lines: {noradId1} in line 1, {noradId2} in line 2. " +
-                "The two lines do not belong to the same object.");
+                "The two lines do not belong to the same object.", 2, 3);
         }
 
-        // Validate checksums
-        ValidateLineChecksum(line1, 1);
-        ValidateLineChecksum(line2, 2);
+        CheckChecksum(line1, 1);
+        CheckChecksum(line2, 2);
+
+        // Line 1
+        CheckField(line1, 1, 8, 1, ClassificationField, "classification (U, C or S)");
+        CheckField(line1, 1, 10, 8, DesignatorField, "international designator (YYNNNPPP or blank)");
+        CheckField(line1, 1, 19, 14, EpochField, "epoch (YYDDD.DDDDDDDD)");
+        int year = int.Parse(line1.AsSpan(18, 2), NumberStyles.None, CultureInfo.InvariantCulture);
+        year += year < 57 ? 2000 : 1900;
+        int day = int.Parse(line1.AsSpan(20, 3), NumberStyles.None, CultureInfo.InvariantCulture);
+        if (day < 1 || day > (DateTime.IsLeapYear(year) ? 366 : 365))
+            throw new TleFormatException($"Invalid day of year {day} of {year} in the epoch of TLE line 1, columns 19-32: {line1}", 1, 19);
+        CheckField(line1, 1, 34, 10, DecimalFieldOrBlank, "first derivative of the mean motion");
+        CheckField(line1, 1, 45, 8, ExponentField, "second derivative of the mean motion");
+        CheckField(line1, 1, 54, 8, ExponentField, "B*");
+        CheckField(line1, 1, 63, 1, DigitOrBlank, "ephemeris type");
+        CheckField(line1, 1, 65, 4, CountField, "element set number");
+
+        // Line 2
+        CheckField(line2, 2, 9, 8, DecimalField, "inclination");
+        CheckField(line2, 2, 18, 8, DecimalField, "right ascension of the ascending node");
+        CheckField(line2, 2, 27, 7, EccentricityField, "eccentricity (seven digits, no decimal point)");
+        CheckField(line2, 2, 35, 8, DecimalField, "argument of perigee");
+        CheckField(line2, 2, 44, 8, DecimalField, "mean anomaly");
+        CheckField(line2, 2, 53, 11, DecimalField, "mean motion");
+        CheckField(line2, 2, 64, 5, CountField, "revolution number at epoch");
     }
 
-    /// <summary>
-    /// Validates the checksum of a single TLE line.
-    /// </summary>
-    /// <param name="line">The TLE line to validate.</param>
-    /// <param name="lineNumber">The line number (1 or 2) for error reporting.</param>
-    /// <exception cref="InvalidOperationException">Thrown when checksum validation fails.</exception>
-    private static void ValidateLineChecksum(string line, int lineNumber)
+    // The syntax of the fields (ASCII digits only): a decimal number with an optional sign and blanks around it, or blank
+    // for the first derivative; the exponent fields [sign]ddddd[sign]d or blank; counts right-aligned digits or blank
+    private static readonly Regex ClassificationField = new("^[UCS]$", RegexOptions.CultureInvariant);
+    private static readonly Regex DesignatorField = new("^( {8}|[0-9]{5}[A-Z]{1,3} *)$", RegexOptions.CultureInvariant);
+    private static readonly Regex EpochField = new(@"^[0-9]{5}\.[0-9]{8}$", RegexOptions.CultureInvariant);
+    private static readonly Regex DecimalField = new(@"^ *[+-]?[0-9]*\.[0-9]+ *$", RegexOptions.CultureInvariant);
+    private static readonly Regex DecimalFieldOrBlank = new(@"^( *[+-]?[0-9]*\.[0-9]+ *| *)$", RegexOptions.CultureInvariant);
+    private static readonly Regex ExponentField = new("^([ +-][0-9]{5}[+-][0-9]| *)$", RegexOptions.CultureInvariant);
+    private static readonly Regex DigitOrBlank = new("^[0-9 ]$", RegexOptions.CultureInvariant);
+    private static readonly Regex CountField = new("^ *[0-9]*$", RegexOptions.CultureInvariant);
+    private static readonly Regex EccentricityField = new("^[0-9]{7}$", RegexOptions.CultureInvariant);
+
+    private static void CheckLength(string line, int number)
     {
-        // Extract the first 68 characters (excluding the checksum)
-        string lineWithoutChecksum = line.Substring(0, 68);
+        if (line.Length != 69)
+        {
+            throw new TleFormatException($"TLE line {number} must be exactly 69 characters long, got {line.Length}: {line}", number,
+                System.Math.Min(line.Length, 69) + 1);
+        }
+    }
 
-        // Compute the expected checksum
-        int computedChecksum = ComputeTleChecksum(lineWithoutChecksum);
+    private static void CheckField(string line, int number, int column, int width, Regex syntax, string field)
+    {
+        var text = line.Substring(column - 1, width);
+        if (!syntax.IsMatch(text))
+        {
+            throw new TleFormatException(
+                $"Invalid {field} '{text}' in TLE line {number}, columns {column}-{column + width - 1}: {line}", number, column);
+        }
+    }
 
-        // Get the actual checksum from the last character
-        if (!char.IsDigit(line[68]))
-            throw new InvalidOperationException($"Invalid checksum character in line {lineNumber}: '{line[68]}' in {line}");
+    private static void CheckChecksum(string line, int number)
+    {
+        if (line[68] is < '0' or > '9')
+            throw new TleFormatException($"Invalid checksum character in line {number}: '{line[68]}' in {line}", number, 69);
 
+        int computedChecksum = ComputeTleChecksum(line.Substring(0, 68));
         int actualChecksum = line[68] - '0';
-
-        // Compare checksums
         if (computedChecksum != actualChecksum)
         {
-            throw new InvalidOperationException(
-                $"Checksum validation failed for TLE line {lineNumber}. " +
-                $"Expected: {computedChecksum}, Actual: {actualChecksum}, Line: {line}");
+            throw new TleFormatException(
+                $"Checksum validation failed for TLE line {number}. Expected: {computedChecksum}, Actual: {actualChecksum}, Line: {line}",
+                number, 69);
         }
     }
 
@@ -685,7 +791,7 @@ public class TLE : OrbitalParameters, IEquatable<TLE>
         int sum = 0;
         foreach (char c in line)
         {
-            if (char.IsDigit(c))
+            if (c is >= '0' and <= '9')
                 sum += c - '0';
             else if (c == '-')
                 sum += 1;
@@ -927,13 +1033,33 @@ public class TLE : OrbitalParameters, IEquatable<TLE>
         sb.AppendLine($"Line 1: {Line1}");
         sb.AppendLine($"Line 2: {Line2}");
         sb.AppendLine($"Epoch: {Epoch}");
-        sb.AppendLine($"Mean Semi-Major Axis: {MeanSemiMajorAxis} m");
+        // The semi-major axis needs the GM of the Earth: printed only when the data provider gives it
+        if (TryGetMeanSemiMajorAxis(out double meanSemiMajorAxis))
+        {
+            sb.AppendLine($"Mean Semi-Major Axis: {meanSemiMajorAxis} m");
+        }
+
+        sb.AppendLine($"Mean Mean Motion: {MeanMeanMotion} rad/s");
         sb.AppendLine($"Mean Eccentricity: {MeanEccentricity}");
         sb.AppendLine($"Mean Inclination: {MeanInclination} rad");
         sb.AppendLine($"Mean Ascending Node: {MeanAscendingNode} rad");
         sb.AppendLine($"Mean Argument of Periapsis: {MeanArgumentOfPeriapsis} rad");
         sb.AppendLine($"Mean Mean Anomaly: {MeanMeanAnomaly} rad");
         return sb.ToString();
+    }
+
+    private bool TryGetMeanSemiMajorAxis(out double value)
+    {
+        try
+        {
+            value = MeanSemiMajorAxis;
+            return true;
+        }
+        catch (InvalidOperationException)
+        {
+            value = double.NaN;
+            return false;
+        }
     }
 
     /// <summary>
@@ -994,6 +1120,212 @@ public class TLE : OrbitalParameters, IEquatable<TLE>
         return !Equals(left, right);
     }
 
+    #region Text
+
+    /// <summary>
+    /// Reads the one TLE of a text: two lines, or a name line and two lines (R21 of #668).
+    /// </summary>
+    /// <param name="text">The text: CR/LF or LF, trailing blanks and blank lines ignored; a name line is trimmed, the
+    /// <c>0 </c> Space-Track writes before it removed, and a set without one is named by its catalog field.</param>
+    /// <returns>The TLE the constructor builds from the lines and the name.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="text"/> is null.</exception>
+    /// <exception cref="TleFormatException">The text holds no set, more than one (<see cref="ParseAll(string)"/> reads
+    /// them), or a set that does not follow the format, at its line of the text and its column.</exception>
+    public static TLE Parse(string text)
+    {
+        ArgumentNullException.ThrowIfNull(text);
+        return Single(ReadSets(new StringReader(text)));
+    }
+
+    /// <summary>
+    /// Reads the one TLE of a reader, as <see cref="Parse(string)"/>.
+    /// </summary>
+    /// <param name="reader">The reader, read to its end.</param>
+    /// <returns>The TLE.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="reader"/> is null.</exception>
+    /// <exception cref="TleFormatException">The text holds no set, more than one, or a set that does not follow the
+    /// format.</exception>
+    public static TLE Parse(TextReader reader)
+    {
+        ArgumentNullException.ThrowIfNull(reader);
+        return Single(ReadSets(reader));
+    }
+
+    /// <summary>
+    /// <see cref="Parse(string)"/>, <paramref name="provider"/> unused (<see cref="IParsable{TSelf}"/>).
+    /// </summary>
+    /// <param name="s">The text.</param>
+    /// <param name="provider">Unused: the format is culture invariant.</param>
+    /// <returns>The TLE.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="s"/> is null.</exception>
+    /// <exception cref="TleFormatException">The text is not one TLE.</exception>
+    public static TLE Parse(string s, IFormatProvider provider) => Parse(s);
+
+    /// <summary>
+    /// Reads every TLE of a text, in its order: two- and three-line sets, mixed, as <see cref="Parse(string)"/> reads one.
+    /// </summary>
+    /// <param name="text">The text.</param>
+    /// <returns>The sets, none for a blank text.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="text"/> is null.</exception>
+    /// <exception cref="TleFormatException">The first set that does not follow the format, at its line of the text and its
+    /// column; no partial list.</exception>
+    public static IReadOnlyList<TLE> ParseAll(string text)
+    {
+        ArgumentNullException.ThrowIfNull(text);
+        return ParseAll(new StringReader(text));
+    }
+
+    /// <summary>
+    /// Reads every TLE of a reader, as <see cref="ParseAll(string)"/>.
+    /// </summary>
+    /// <param name="reader">The reader, read to its end.</param>
+    /// <returns>The sets, in their order.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="reader"/> is null.</exception>
+    /// <exception cref="TleFormatException">The first set that does not follow the format.</exception>
+    public static IReadOnlyList<TLE> ParseAll(TextReader reader)
+    {
+        ArgumentNullException.ThrowIfNull(reader);
+        return ReadSets(reader).Select(set => set.Tle).ToArray();
+    }
+
+    /// <summary>
+    /// Reads the one TLE of a file, as <see cref="Parse(string)"/>.
+    /// </summary>
+    /// <param name="path">The path of the file.</param>
+    /// <returns>The TLE.</returns>
+    /// <exception cref="TleFormatException">The file holds no set, more than one (<see cref="LoadAll"/> reads them), or a
+    /// set that does not follow the format, at its line of the file.</exception>
+    /// <exception cref="IOException">The file cannot be read, as <see cref="File.OpenText"/> throws.</exception>
+    public static TLE Load(string path)
+    {
+        using var reader = File.OpenText(path);
+        return Parse(reader);
+    }
+
+    /// <summary>
+    /// Reads every TLE of a file, in its order, as <see cref="ParseAll(string)"/>: a catalog of CelesTrak or Space-Track,
+    /// two- or three-line.
+    /// </summary>
+    /// <param name="path">The path of the file.</param>
+    /// <returns>The sets.</returns>
+    /// <exception cref="TleFormatException">The first set that does not follow the format, at its line of the file and its
+    /// column; no partial list (R21 of #668).</exception>
+    /// <exception cref="IOException">The file cannot be read, as <see cref="File.OpenText"/> throws.</exception>
+    public static IReadOnlyList<TLE> LoadAll(string path)
+    {
+        using var reader = File.OpenText(path);
+        return ParseAll(reader);
+    }
+
+    /// <summary>
+    /// <see cref="Parse(string)"/> without an exception for a text that is not one TLE.
+    /// </summary>
+    /// <param name="text">The text, or null.</param>
+    /// <param name="result">The TLE, or null.</param>
+    /// <returns>Whether the text is one TLE.</returns>
+    public static bool TryParse([NotNullWhen(true)] string text, out TLE result)
+    {
+        result = null;
+        if (text == null) return false;
+        try
+        {
+            result = Parse(text);
+            return true;
+        }
+        catch (TleFormatException)
+        {
+            return false;
+        }
+    }
+
+    /// <summary>
+    /// <see cref="TryParse(string, out TLE)"/>, <paramref name="provider"/> unused (<see cref="IParsable{TSelf}"/>).
+    /// </summary>
+    /// <param name="s">The text, or null.</param>
+    /// <param name="provider">Unused: the format is culture invariant.</param>
+    /// <param name="result">The TLE, or null.</param>
+    /// <returns>Whether the text is one TLE.</returns>
+    public static bool TryParse([NotNullWhen(true)] string s, IFormatProvider provider, out TLE result) => TryParse(s, out result);
+
+    /// <summary>
+    /// <see cref="Load"/> without an exception for a file that does not exist or is not one TLE.
+    /// </summary>
+    /// <param name="path">The path of the file.</param>
+    /// <param name="result">The TLE, or null.</param>
+    /// <returns>Whether the file exists and holds one TLE; an error reading an existing file throws, as
+    /// <see cref="File.ReadAllText(string)"/> does.</returns>
+    public static bool TryLoad(string path, out TLE result)
+    {
+        result = null;
+        return File.Exists(path) && TryParse(File.ReadAllText(path), out result);
+    }
+
+    // The one set of a text: none or several throw at the line of the text where the second starts
+    private static TLE Single(List<(TLE Tle, int Line)> sets)
+    {
+        if (sets.Count == 0)
+            throw new TleFormatException("The text holds no TLE.", 1, 1);
+        if (sets.Count > 1)
+        {
+            throw new TleFormatException(
+                $"The text holds {sets.Count} TLEs, the second at line {sets[1].Line}: ParseAll or LoadAll reads them all.", sets[1].Line, 1);
+        }
+
+        return sets[0].Tle;
+    }
+
+    // The sets of a text with the line each starts at (IC-21 of #668's lot L7): the lines trimmed at their end (CR, blanks)
+    // and the blank ones skipped; a line that starts with '1' followed by one that starts with '2' opens a set without a
+    // name, any other line is the name of the set of the next two (Space-Track's leading "0 " removed, trimmed); a set the
+    // constructor refuses throws its TleFormatException at the line of the text
+    private static List<(TLE Tle, int Line)> ReadSets(TextReader reader)
+    {
+        var lines = new List<(string Text, int Number)>();
+        int number = 0;
+        for (var line = reader.ReadLine(); line != null; line = reader.ReadLine())
+        {
+            number++;
+            var text = line.TrimEnd();
+            if (text.Length > 0) lines.Add((text, number));
+        }
+
+        var sets = new List<(TLE Tle, int Line)>();
+        int i = 0;
+        while (i < lines.Count)
+        {
+            int start = lines[i].Number;
+            string name = null;
+            if (!(lines[i].Text.StartsWith('1') && i + 1 < lines.Count && lines[i + 1].Text.StartsWith('2')))
+            {
+                var title = lines[i].Text;
+                name = (title.StartsWith("0 ", StringComparison.Ordinal) ? title.Substring(2) : title).Trim();
+                i++;
+            }
+
+            if (i + 1 >= lines.Count)
+            {
+                throw new TleFormatException($"The TLE that starts at line {start} ends before its two lines.", lines[^1].Number + 1, 1);
+            }
+
+            var (line1, number1) = lines[i];
+            var (line2, number2) = lines[i + 1];
+            try
+            {
+                sets.Add((new TLE(name, line1, line2), start));
+            }
+            catch (ArgumentException e) when (e.InnerException is TleFormatException format)
+            {
+                throw new TleFormatException(format.Message, format.Line == 1 ? number1 : number2, format.Column);
+            }
+
+            i += 2;
+        }
+
+        return sets;
+    }
+
+    #endregion
+
     #region OMM Conversion
 
     /// <summary>
@@ -1010,6 +1342,11 @@ public class TLE : OrbitalParameters, IEquatable<TLE>
     /// designator) give <c>OBJECT_ID = UNKNOWN</c>, which <see cref="CCSDS.OMM.Omm.ToTle"/> reads back as blank columns
     /// (#604, decided by S. Guillet, 2026-11-18; before 11.0.0 it threw <see cref="ArgumentException"/>).
     /// </para>
+    /// <para>
+    /// <c>MEAN_MOTION</c> is the field of line 2 as written, in revolutions per day, and the conversion reads no kernel
+    /// (decision 111 of #668, decided by S. Guillet, 2026-11-26; before 11.0.0 it was √(GM/a³)·86400/2π, 1 ulp off the field
+    /// on about half the sets, e.g. 15.957445309999999 for 15.95744531).
+    /// </para>
     /// </remarks>
     public CCSDS.OMM.Omm ToOmm(string originator = null)
     {
@@ -1021,19 +1358,16 @@ public class TLE : OrbitalParameters, IEquatable<TLE>
         // Extract COSPAR ID (international designator) from line 1 positions 9-16
         // TLE format: "98067A" -> OMM format: "1998-067A"
         // Blank columns: OBJECT_ID UNKNOWN, the element being mandatory in the ODM (#604)
-        var tleCosparId = Line1.Substring(9, 8).Trim();
-        var objectId = tleCosparId.Length == 0 ? CCSDS.OMM.OmmMetadata.UnknownObjectId : ConvertCosparIdToObjectId(tleCosparId);
+        var objectId = CosparId == null ? CCSDS.OMM.OmmMetadata.UnknownObjectId : ConvertCosparIdToObjectId(CosparId);
 
         // Create metadata for SGP4/TEME configuration
         var metadata = CCSDS.OMM.OmmMetadata.CreateForSgp4(Name, objectId);
 
-        // Create mean elements
-        // Convert angles from radians to degrees, mean motion from rad/s to rev/day
-        var meanMotionRevPerDay = MeanMotion() * 86400.0 / Constants.TwoPi;
-
+        // Create mean elements: angles from radians to degrees, the mean motion the field's own value in rev/day (decision
+        // 111 of #668, decided by S. Guillet, 2026-11-26)
         var meanElements = CCSDS.OMM.MeanElements.CreateWithMeanMotion(
             Epoch.DateTime,
-            meanMotionRevPerDay,
+            _meanMotionRevolutionsPerDay,
             MeanEccentricity,
             MeanInclination * Constants.Rad2Deg,
             MeanAscendingNode * Constants.Rad2Deg,
@@ -1043,16 +1377,10 @@ public class TLE : OrbitalParameters, IEquatable<TLE>
         // NORAD catalog ID, decoded from Alpha-5 when applicable (validated at construction)
         int? noradCatId = NoradCatalogId;
 
-        // Extract element set number from line 1 positions 64-67
-        var elementSetNoStr = Line1.Substring(64, 4).Trim();
-        int? elementSetNo = int.TryParse(elementSetNoStr, CultureInfo.InvariantCulture, out var esn) ? esn : null;
-
-        // Extract revolution number at epoch from line 2 positions 63-67
-        var revAtEpochStr = Line2.Substring(63, 5).Trim();
-        int? revAtEpoch = int.TryParse(revAtEpochStr, CultureInfo.InvariantCulture, out var rev) ? rev : null;
-
-        // Extract classification from line 1 position 7
-        var classChar = Line1[7].ToString().ToUpperInvariant();
+        // The element set number and the revolution number, omitted when their columns are blank
+        int? elementSetNo = string.IsNullOrWhiteSpace(Line1.Substring(64, 4)) ? null : ElementSetNumber;
+        int? revAtEpoch = string.IsNullOrWhiteSpace(Line2.Substring(63, 5)) ? null : RevolutionNumberAtEpoch;
+        var classChar = ((char)Classification).ToString();
 
         // Create TLE parameters with BSTAR and MEAN_MOTION_DDOT (standard SGP4)
         var tleParams = CCSDS.OMM.TleParameters.CreateWithBStarAndDDot(
@@ -1072,19 +1400,6 @@ public class TLE : OrbitalParameters, IEquatable<TLE>
     }
 
     /// <summary>
-    /// Gets the mean motion in radians per second.
-    /// </summary>
-    /// <returns>Mean motion in rad/s.</returns>
-    /// <remarks>
-    /// This is computed from the mean semi-major axis using Kepler's third law:
-    /// n = sqrt(GM/a³)
-    /// </remarks>
-    public double MeanMotion()
-    {
-        return System.Math.Sqrt(Observer.GM / (MeanSemiMajorAxis * MeanSemiMajorAxis * MeanSemiMajorAxis));
-    }
-
-    /// <summary>
     /// Converts a TLE COSPAR ID to OMM Object ID format.
     /// </summary>
     /// <param name="cosparId">The TLE COSPAR ID (e.g., "98067A").</param>
@@ -1096,7 +1411,7 @@ public class TLE : OrbitalParameters, IEquatable<TLE>
     /// - NNN: Sequential launch number
     /// - P: Piece identifier (A, B, C, etc.)
     /// </remarks>
-    private static string ConvertCosparIdToObjectId(string cosparId)
+    internal static string ConvertCosparIdToObjectId(string cosparId)
     {
         if (string.IsNullOrWhiteSpace(cosparId) || cosparId.Length < 6)
             return cosparId;

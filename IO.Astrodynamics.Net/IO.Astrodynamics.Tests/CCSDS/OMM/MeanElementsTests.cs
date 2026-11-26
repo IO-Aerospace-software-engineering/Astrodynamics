@@ -34,15 +34,15 @@ namespace IO.Astrodynamics.Tests.CCSDS.OMM
         [Fact]
         public void Constructor_WithMeanMotion_Succeeds()
         {
-            var elements = new MeanElements(
+            // CreateWithMeanMotion, the constructor of a useMeanMotion that had to be true removed (R22 of #668)
+            var elements = MeanElements.CreateWithMeanMotion(
                 _testEpoch,
                 meanMotion: 15.5,
                 eccentricity: 0.0001,
                 inclination: 51.6,
-                rightAscensionOfAscendingNode: 120.0,
-                argumentOfPericenter: 90.0,
-                meanAnomaly: 45.0,
-                useMeanMotion: true);
+                raan: 120.0,
+                argOfPericenter: 90.0,
+                meanAnomaly: 45.0);
 
             Assert.Equal(_testEpoch, elements.Epoch);
             Assert.Null(elements.SemiMajorAxis);
@@ -110,7 +110,7 @@ namespace IO.Astrodynamics.Tests.CCSDS.OMM
         public void Constructor_NegativeMeanMotion_ThrowsArgumentOutOfRangeException()
         {
             Assert.Throws<ArgumentOutOfRangeException>(() =>
-                new MeanElements(_testEpoch, -15.5, 0.001, 51.6, 120.0, 90.0, 45.0, true));
+                MeanElements.CreateWithMeanMotion(_testEpoch, -15.5, 0.001, 51.6, 120.0, 90.0, 45.0));
         }
 
         [Fact]
@@ -136,13 +136,6 @@ namespace IO.Astrodynamics.Tests.CCSDS.OMM
             Assert.Throws<ArgumentOutOfRangeException>(() =>
                 new MeanElements(_testEpoch, 7000.0, 0.001, 51.6, 120.0, 90.0, 45.0,
                     gravitationalParameter: -1.0));
-        }
-
-        [Fact]
-        public void Constructor_UseMeanMotionFalse_ThrowsArgumentException()
-        {
-            Assert.Throws<ArgumentException>(() =>
-                new MeanElements(_testEpoch, 15.5, 0.001, 51.6, 120.0, 90.0, 45.0, false));
         }
 
         [Fact]
@@ -229,8 +222,6 @@ namespace IO.Astrodynamics.Tests.CCSDS.OMM
             {
                 yield return () => MeanElements.CreateWithMeanMotion(_testEpoch, V("meanMotion", 15.5), V("eccentricity", 0.0005),
                     V("inclination", 51.6), V("raan", 120.0), V("argOfPericenter", 90.0), V("meanAnomaly", 45.0), V("gm", 398600.4418));
-                yield return () => new MeanElements(_testEpoch, V("meanMotion", 15.5), V("eccentricity", 0.0005),
-                    V("inclination", 51.6), V("raan", 120.0), V("argOfPericenter", 90.0), V("meanAnomaly", 45.0), true, V("gm", 398600.4418));
             }
         }
 

@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using IO.Astrodynamics.CCSDS.OPM;
 using IO.Astrodynamics.Body;
 using IO.Astrodynamics.Body.Spacecraft;
 using IO.Astrodynamics.Maneuver;
@@ -329,7 +330,7 @@ public class AttitudeTimelineEdgeTests
 
         // ToOpm: the impulses
         // At the last stored state, by which every impulse executed: an OPM carries the maneuvers executed by its epoch (#658)
-        var opm = run.Spacecraft.ToOpm(epoch: run.Spacecraft.PropagatedStates[^1].Epoch, includeKeplerianElements: false, includeManeuvers: true).Data.Maneuvers.ToArray();
+        var opm = run.Spacecraft.ToOpm(epoch: run.Spacecraft.PropagatedStates[^1].Epoch, options: new OpmExportOptions { IncludeKeplerianElements = false }).Data.Maneuvers.ToArray();
         var impulses = executed.OfType<ImpulseManeuver>().ToArray();
         Assert.Equal(impulses.Length, opm.Length);
         double mass = 2000.0;
