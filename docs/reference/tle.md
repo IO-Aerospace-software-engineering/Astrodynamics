@@ -211,6 +211,13 @@ var again = TLE.Create(iss.ToMeanKeplerianElements(), iss.Name, iss.NoradCatalog
     iss.ElementSetNumber);
 ```
 
+## A TLE as a catalogue object
+
+`TrackedObject.FromTle(tle, hardBodyRadiusMeters)` makes a TLE the secondary of the conjunction analysis and of the CDM
+export, moving by SGP4 bit for bit as a `Spacecraft` of the same TLE, its NAIF identifier −100000 − NORAD by default
+(R19 of [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668); see
+[Conjunction Assessment](conjunction-assessment.md#catalogue-objects)).
+
 ## See Also
 
 - [TLE & OMM Tutorial](../tutorials/tle-and-omm.md)

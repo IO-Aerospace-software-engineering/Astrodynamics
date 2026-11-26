@@ -572,6 +572,19 @@ release are listed under **Known limitations**.
   4.8e-13, 6.7e-12, 2.8e-13 after), the encounter-plane sigmas by up to 2.0e-15 relative, and on `cdm` 007 (export) the
   Pc by 1.3e-15 relative and the covariances read back within 1.3e-14 km² of the golden (1.9e-14 before); every status PASS, `cdm` decode and `to_inertial`
   bit for bit. See [CDM](../reference/cdm.md#ingest).
+- **Catalogue objects** (lot L7, R19 of
+  [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668), decided by S. Guillet, 2026-11-19; the default identifier
+  confirmed by S. Guillet, 2026-11-13): `TrackedObject` (`IO.Astrodynamics.Body`), a debris, rocket body or other
+  catalogue object as the secondary of the conjunction analysis, built by `FromTle`, `FromOmm` (a TLE-compatible OMM) or
+  `FromState`, with its `HardBodyRadius` (the secondary's own radius, as a spacecraft's), `NoradCatalogId`, `CosparId`
+  and `ObjectType`, without a clock, an engine or a mass; its motion that of a `Spacecraft` of the same orbit without
+  stored states, bit for bit (SGP4, `TrajectorySource.Sgp4`, or the two-body orbit, `TwoBody`), as target and as
+  observer; its NAIF identifier −100000 − NORAD by default (mkspk's convention, which overlaps
+  `MonteCarloConfiguration.BaseNaifId`); `EncounterCase.ToCdm` writes it under its NORAD number with
+  `CATALOG_NAME = SATCAT`, its international designator (`UNKNOWN` without one), its `OBJECT_TYPE` and
+  `MANEUVERABLE = N/A` (`TrackedObjectTests`). Before, such an object was wrapped in a `Spacecraft`, exported as a
+  payload under its NAIF identifier. No result moves. See
+  [Conjunction Assessment](../reference/conjunction-assessment.md#catalogue-objects).
 
 **Fixed**
 

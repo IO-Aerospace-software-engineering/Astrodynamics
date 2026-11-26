@@ -22,7 +22,8 @@ public sealed record ScreeningOptions
     /// <remarks>
     /// Its <see cref="ConjunctionAnalysisOptions.SecondaryHardBodyRadiusMeters"/> is a fallback over the catalogue: a
     /// candidate <see cref="IO.Astrodynamics.Body.Spacecraft.Spacecraft"/> with a
-    /// <see cref="IO.Astrodynamics.Body.Spacecraft.Spacecraft.HardBodyRadius"/> greater than 0 keeps its own, a candidate
+    /// <see cref="IO.Astrodynamics.Body.Spacecraft.Spacecraft.HardBodyRadius"/> greater than 0 keeps its own, as a
+    /// <see cref="IO.Astrodynamics.Body.TrackedObject"/> with one (R19 of #668), a candidate
     /// that gives none takes it, or 5 m when it is null (decided by S. Guillet, 2026-11-14, on #683). The analysis of each
     /// candidate carries its resolved radius, and <see cref="ConjunctionAssessment.EvaluateAvoidance"/> re-analyzes with it.
     /// A record that propagates the covariance (<see cref="ConjunctionAnalysisOptions.Default"/>) gives each candidate the

@@ -1408,7 +1408,7 @@ public class TLE : OrbitalParameters, IEquatable<TLE>, IParsable<TLE>
     /// - NNN: Sequential launch number
     /// - P: Piece identifier (A, B, C, etc.)
     /// </remarks>
-    private static string ConvertCosparIdToObjectId(string cosparId)
+    internal static string ConvertCosparIdToObjectId(string cosparId)
     {
         if (string.IsNullOrWhiteSpace(cosparId) || cosparId.Length < 6)
             return cosparId;

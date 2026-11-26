@@ -371,7 +371,7 @@ internal static class CdmExporter
             Comments = comments,
             Object = role,
             ObjectDesignator = InferObjectDesignator(source),
-            CatalogName = "NAIF",
+            CatalogName = source is TrackedObject { NoradCatalogId: not null } ? "SATCAT" : "NAIF",
             ObjectName = source.Name,
             InternationalDesignator = InferInternationalDesignator(source),
             ObjectType = InferObjectType(source),
@@ -395,13 +395,23 @@ internal static class CdmExporter
         };
     }
 
+    // A catalogue object (TrackedObject, R19 of #668) is written under its NORAD number in the SATCAT, its international
+    // designator in the form YYYY-NNNP or UNKNOWN and its own object type; without a NORAD number, under its NAIF
+    // identifier in the NAIF catalogue, as any other object
     private static string InferObjectDesignator(ILocalizable source)
     {
-        return System.Math.Abs(source.NaifId).ToString(CultureInfo.InvariantCulture);
+        return source is TrackedObject { NoradCatalogId: { } norad }
+            ? norad.ToString(CultureInfo.InvariantCulture)
+            : System.Math.Abs(source.NaifId).ToString(CultureInfo.InvariantCulture);
     }
 
     private static string InferInternationalDesignator(ILocalizable source)
     {
+        if (source is TrackedObject tracked)
+        {
+            return string.IsNullOrWhiteSpace(tracked.CosparId) ? OMM.OmmMetadata.UnknownObjectId : tracked.CosparId;
+        }
+
         if (source is Spacecraft spacecraft && !string.IsNullOrWhiteSpace(spacecraft.CosparId))
         {
             return spacecraft.CosparId;
@@ -415,6 +425,7 @@ internal static class CdmExporter
         return source switch
         {
             Spacecraft => ObjectType.Payload,
+            TrackedObject tracked => tracked.ObjectType,
             _ => ObjectType.Other
         };
     }

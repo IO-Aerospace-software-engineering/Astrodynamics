@@ -139,8 +139,9 @@ public static class ConjunctionAssessment
     /// Each candidate is analyzed with <see cref="ScreeningOptions.Analysis"/> as given, or, when it is null, with the
     /// analysis's defaults with a sample step of 5 min and the covariance held in RTN (the screening of 10.x bit for bit;
     /// structuring choice 2 of #668). The hard-body radius of each candidate is its own, a candidate <see cref="Spacecraft"/> with a
-    /// <see cref="Spacecraft.HardBodyRadius"/> greater than 0, whatever the <see cref="ConjunctionAnalysisOptions.SecondaryHardBodyRadiusMeters"/>
-    /// of that analysis; the option, or 5 m when it is null, for a candidate that gives none (a radius of 0, or not a spacecraft) (#683).
+    /// <see cref="Spacecraft.HardBodyRadius"/> greater than 0 (or a <see cref="TrackedObject"/>, R19 of #668), whatever the
+    /// <see cref="ConjunctionAnalysisOptions.SecondaryHardBodyRadiusMeters"/> of that analysis; the option, or 5 m when it is
+    /// null, for a candidate that gives none (a radius of 0, or neither) (#683).
     /// The analysis of each candidate, and the re-analysis of its avoidance options, carry that radius.
     /// A candidate whose window holds no close approach is judged at the closest window end, flagged
     /// <see cref="EncounterQualityFlags.TcaAtWindowEnd"/> (#621: at the window midpoint before 11.0.0, so that an object
@@ -3057,7 +3058,7 @@ public static class ConjunctionAssessment
     }
 
     /// <summary>
-    /// The hard-body radius of the secondary object (#683): that of a secondary spacecraft greater than 0, alone or equal
+    /// The hard-body radius of the secondary object (#683): that of a secondary spacecraft or tracked object (R19 of #668) greater than 0, alone or equal
     /// to the option; the option when the secondary gives none (a radius of 0, not a spacecraft); 5 m when neither gives
     /// one. An option that differs from the radius the secondary gives throws.
     /// </summary>
@@ -3083,9 +3084,14 @@ public static class ConjunctionAssessment
         return option ?? DefaultSecondaryHardBodyRadiusMeters;
     }
 
-    // The hard-body radius a secondary gives: that of a spacecraft, 0 (none) for any other object
-    private static double OwnHardBodyRadius(ILocalizable secondary) =>
-        secondary is Spacecraft spacecraft ? spacecraft.HardBodyRadius : 0.0;
+    // The hard-body radius a secondary gives: that of a spacecraft or a catalogue object (R19 of #668), 0 (none) for any
+    // other object
+    private static double OwnHardBodyRadius(ILocalizable secondary) => secondary switch
+    {
+        Spacecraft spacecraft => spacecraft.HardBodyRadius,
+        TrackedObject tracked => tracked.HardBodyRadius,
+        _ => 0.0
+    };
 
     // The options of the re-analysis of the avoidance options: those the avoidance gives, or those of the encounter (the
     // defaults for a case built by hand; #683), the radius of the secondary resolved as by Analyze; the reads over the
@@ -3176,7 +3182,8 @@ public static class ConjunctionAssessment
     }
 
     // How the ephemeris of an object is computed (R17 of #668): a spacecraft from its kernels, its stored states, SGP4 or
-    // the two-body orbit of its initial orbital parameters, as GetGeometricStateRelativeTo reads them; any other object
+    // the two-body orbit of its initial orbital parameters, as GetGeometricStateRelativeTo reads them, a catalogue object
+    // (TrackedObject, R19) from SGP4 or its two-body orbit; any other object
     // through the data provider
     private static TrajectorySource TrajectoryOf(ILocalizable localizable) => localizable switch
     {
@@ -3184,6 +3191,8 @@ public static class ConjunctionAssessment
         Spacecraft spacecraft when spacecraft.InterpolatedStatesWindow is not null => TrajectorySource.Propagated,
         Spacecraft { InitialOrbitalParameters: OrbitalParameters.TLE.TLE } => TrajectorySource.Sgp4,
         Spacecraft => TrajectorySource.TwoBody,
+        TrackedObject { InitialOrbitalParameters: OrbitalParameters.TLE.TLE } => TrajectorySource.Sgp4,
+        TrackedObject => TrajectorySource.TwoBody,
         _ => TrajectorySource.Kernel
     };
 

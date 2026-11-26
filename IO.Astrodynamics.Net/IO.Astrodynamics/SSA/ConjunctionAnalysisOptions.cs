@@ -93,11 +93,11 @@ public sealed record ConjunctionAnalysisOptions
     /// <summary>
     /// Gets the hard-body radius of the secondary object, in m, when the secondary does not give one: a secondary
     /// <see cref="IO.Astrodynamics.Body.Spacecraft.Spacecraft"/> with a <see cref="IO.Astrodynamics.Body.Spacecraft.Spacecraft.HardBodyRadius"/>
-    /// greater than 0 gives its own (#683). Default: null.
+    /// greater than 0 gives its own (#683), and so does a <see cref="IO.Astrodynamics.Body.TrackedObject"/> (R19 of #668). Default: null.
     /// </summary>
     /// <remarks>
-    /// The radius of the secondary is that of the secondary spacecraft when it is greater than 0 and this value is null or
-    /// equal to it; this value when the secondary gives none (a radius of 0, or not a spacecraft); 5 m when neither gives
+    /// The radius of the secondary is that of the secondary spacecraft or tracked object when it is greater than 0 and this
+    /// value is null or equal to it; this value when the secondary gives none (a radius of 0, or neither); 5 m when neither gives
     /// one. A value that differs from a radius the secondary gives throws <see cref="ArgumentException"/>, and a value that
     /// is not finite or is negative throws <see cref="ArgumentOutOfRangeException"/>, before any search. Before 11.0.0 this
     /// value (5 m by default) was used whatever the radius of the secondary. In
