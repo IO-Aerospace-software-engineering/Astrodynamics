@@ -408,13 +408,19 @@ internal static class Program
         // Another catalog number in line 2, its checksum corrected (the digit 4 replaced by 5 adds 1)
         string otherNorad = "2 25545" + Line2.Substring(7, 61) + (char)('0' + (Line2[68] - '0' + 1) % 10);
 
+        // ArgumentException naming the line, with the TleFormatException of the text (R21 of #668)
         int failures = 0;
-        failures += Expect<InvalidOperationException>("checksum", () => new TLE(Name, badChecksum, Line2),
-            e => e.Message.StartsWith("Checksum validation failed for TLE line 1", StringComparison.Ordinal));
+        failures += Expect<ArgumentException>("checksum", () => new TLE(Name, badChecksum, Line2),
+            e => e.Message.StartsWith("Checksum validation failed for TLE line 1", StringComparison.Ordinal)
+                 && e.ParamName == "line1" && e.InnerException is TleFormatException { Line: 1, Column: 69 });
         failures += Expect<ArgumentException>("length", () => new TLE(Name, shortLine1, Line2),
-            e => e.Message.StartsWith("TLE line 1 must be exactly 69 characters", StringComparison.Ordinal));
-        failures += Expect<InvalidOperationException>("catalog number", () => new TLE(Name, Line1, otherNorad),
-            e => e.Message.StartsWith("NORAD catalog numbers differ", StringComparison.Ordinal));
+            e => e.Message.StartsWith("TLE line 1 must be exactly 69 characters", StringComparison.Ordinal)
+                 && e.ParamName == "line1" && e.InnerException is TleFormatException { Line: 1, Column: 69 });
+        failures += Expect<ArgumentException>("catalog number", () => new TLE(Name, Line1, otherNorad),
+            e => e.Message.StartsWith("NORAD catalog numbers differ", StringComparison.Ordinal)
+                 && e.ParamName == "line2" && e.InnerException is TleFormatException { Line: 2, Column: 3 });
+        failures += Expect<ArgumentException>("epoch", () => new TLE(Name, "1 25544U 98067A   21400.53488036  .00016717  00000-0  10270-3 0  9056", Line2),
+            e => e.ParamName == "line1" && e.InnerException is TleFormatException { Line: 1, Column: 19 });
         failures += Expect<ArgumentException>("null line 1", () => new TLE(Name, null, Line2),
             e => e.ParamName == "line1");
         return failures == 0 ? 0 : 1;

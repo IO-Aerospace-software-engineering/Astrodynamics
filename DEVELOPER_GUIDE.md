@@ -612,7 +612,7 @@ Two-Line Element set for Earth-orbiting objects. TLE stores **mean** orbital ele
 
 | Constructor | Description |
 |------------|-------------|
-| `TLE(string name, string line1, string line2)` | Parse from standard 3-line format |
+| `TLE(string name, string line1, string line2)` | Parse from standard 3-line format; a null or blank name is the catalog field, a bad line `ArgumentException` (`line1`, `line2`) with a `TleFormatException` (line, column) inside |
 
 | Property | Description |
 |----------|-------------|
@@ -620,6 +620,10 @@ Two-Line Element set for Earth-orbiting objects. TLE stores **mean** orbital ele
 | `Line1` | First line of TLE |
 | `Line2` | Second line of TLE |
 | `NoradCatalogId` | NORAD catalog number, Alpha-5 decoded (`T5544` → 275544) |
+| `CosparId` | International designator of line 1 (`98067A`), null when blank |
+| `Classification` | Classification of line 1 |
+| `ElementSetNumber` | Element set number of line 1, 0 when blank |
+| `RevolutionNumberAtEpoch` | Revolution number at epoch of line 2, 0 when blank |
 | `Epoch` | Epoch of elements |
 | `ElementsType` | Always returns `OrbitalElementsType.Mean` |
 | `MeanSemiMajorAxis` | Mean semi-major axis (m), from the kernel GM of the Earth, read at the first use |

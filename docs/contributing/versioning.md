@@ -500,6 +500,14 @@ release are listed under **Known limitations**.
 - **`TLE.MeanMeanMotion`** (lot L7, R21 of [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668),
   decision 111, decided by S. Guillet, 2026-11-26): the mean motion of the field of line 2 in rad/s, the field (rev/day)
   × 2π / 86400, read without kernels; mean, like `MeanInclination` (`TleMeanMotionTests`). See [TLE](../reference/tle.md).
+- **`TleFormatException`, the fields of a TLE as properties, and a TLE without a name** (lot L7, R21 of
+  [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668)): `TleFormatException`, a
+  `FormatException` with the `Line` and `Column` (1-based) of the field at fault; `TLE.CosparId` (columns 10-17 trimmed,
+  null when blank), `Classification`, `ElementSetNumber` and `RevolutionNumberAtEpoch` (0 when blank), so that
+  `TLE.Create(tle.ToMeanKeplerianElements(), tle.Name, tle.NoradCatalogId, tle.CosparId, tle.RevolutionNumberAtEpoch,
+  tle.Classification, …, tle.ElementSetNumber)` rebuilds the lines without slicing them (`TleFieldsTests`); a null or blank
+  name is the catalog field of line 1 as written (`25544`, `T5544`), where it threw `ArgumentException`. `ToOmm` writes the
+  same OMM. See [TLE](../reference/tle.md#constructor).
 
 **Fixed**
 
@@ -8002,6 +8010,18 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   `TleMeanMotionTests`), so the conformance runner's `tle_to_omm` deltas fall to 0. The occultation step a TLE spacecraft
   infers (decision 106) takes `MeanMeanMotion`, within 2 ulp of the former `MeanMotion()`, under a tick of its period.
   Migration: none.
+- **Breaking: the `TLE` constructor checks every field and throws `ArgumentException` for any bad line** (lot L7, R21 of
+  [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668)): `ArgumentException` naming
+  `line1` or `line2`, with a `TleFormatException` (line, column) as inner exception, for the length, the line number, the
+  catalog number, two catalog numbers (line 2, column 3) and the checksum, as before but with the parameter named, and now
+  for every field: the classification U, C or S, the international designator blank or YYNNN with one to three capital
+  letters, the epoch YYDDD.DDDDDDDD with a day from 1 to the length of its year, ṅ/2, n̈/6 and B*, the ephemeris type, the
+  element set and revolution numbers, the four angles, e (seven digits) and n (`TleFieldsTests`); no physical range. Before,
+  a wrong checksum and two catalog numbers threw `InvalidOperationException`, a malformed field a `FormatException` without
+  its column (or nothing: a day 000 or 400 rolled into the neighbouring year), and the length and line-number errors named no parameter. Every TLE of the repository and of the conformance
+  suite passes, so no result moves; `TLE.Create`, whose `cosparId` is any text of 6 to 8 characters, now throws this
+  `ArgumentException` (`line1`) for a designator that is not of that form. Migration: catch `ArgumentException` (its
+  `InnerException` is the `TleFormatException`) where `InvalidOperationException` or `FormatException` was caught.
 
 **Removed**
 

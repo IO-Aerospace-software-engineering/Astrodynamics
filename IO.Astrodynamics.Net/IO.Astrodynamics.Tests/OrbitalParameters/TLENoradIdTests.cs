@@ -202,7 +202,7 @@ public class TLENoradIdTests
     {
         // Lines belonging to two different objects must not silently form one TLE.
         // Both lines are individually well-formed (valid checksums), only the identifiers differ.
-        var ex = Assert.Throws<InvalidOperationException>(() => new TLE("SAT",
+        var ex = Assert.Throws<ArgumentException>(() => new TLE("SAT",
             "1 25544U 98067A   21020.53488036  .00016717  00000-0  10270-3 0  9054",
             "2 25545  51.6423 353.0312 0000493 320.8755  39.2360 15.49309423 25704"));
         Assert.Contains("do not belong to the same object", ex.Message);

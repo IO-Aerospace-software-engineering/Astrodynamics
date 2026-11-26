@@ -33,9 +33,6 @@ public class TLETests
         TLE tle = new TLE("ISS",
             "1 25544U 98067A   21020.53488036  .00016717  00000-0  10270-3 0  9054",
             "2 25544  51.6423 353.0312 0000493 320.8755  39.2360 15.49309423 25703");
-        Assert.ThrowsAny<Exception>(() => new TLE("",
-            "1 25544U 98067A   21020.53488036  .00016717  00000-0  10270-3 0  9054",
-            "2 25544  51.6423 353.0312 0000493 320.8755  39.2360 15.49309423 25703"));
         Assert.ThrowsAny<Exception>(() => new TLE("ISS",
             "",
             "2 25544  51.6423 353.0312 0000493 320.8755  39.2360 15.49309423 25703"));
@@ -184,7 +181,8 @@ public class TLETests
     [Fact]
     public void InvalidTLE()
     {
-        Assert.Throws<InvalidOperationException>(() => new TLE("ISS",
+        // A wrong checksum: ArgumentException since R21 of #668 (InvalidOperationException before)
+        Assert.Throws<ArgumentException>(() => new TLE("ISS",
             "1 25544U 98067A   21021.53488036  .00016717  00000-0  10270-3 0  9054",
             "2 25544  51.6423 353.0312 0000493 320.8755  39.2360 15.49309423 25703"));
     }
@@ -206,11 +204,12 @@ public class TLETests
     }
 
     [Fact]
-    public void InvalidName()
+    public void EmptyName_IsTheCatalogField()
     {
-        Assert.Throws<ArgumentException>(() => new TLE("",
+        // R21 of #668: a set without a name is named by its catalog field (ArgumentException before)
+        Assert.Equal("25544", new TLE("",
             "1 25544U 98067A   21020.53488036  .00016717  00000-0  10270-3 0  9054",
-            "2 25544  51.6423 353.0312 0000493 320.8755  39.2360 15.49309423 25703"));
+            "2 25544  51.6423 353.0312 0000493 320.8755  39.2360 15.49309423 25703").Name);
     }
 
     [Fact]
@@ -386,7 +385,8 @@ public class TLETests
         string line1 = "1 25544U 98067A   21020.53488036  .00016717  00000-0  10270-3 0  9055"; // Invalid checksum
         string line2 = "2 25544  51.6423 353.0312 0000493 320.8755  39.2360 15.49309423 25703";
 
-        Assert.Throws<InvalidOperationException>(() => new TLE("ISS", line1, line2));
+        var exception = Assert.Throws<ArgumentException>(() => new TLE("ISS", line1, line2));
+        Assert.Equal("line1", exception.ParamName);
     }
 
     [Fact]
@@ -395,7 +395,8 @@ public class TLETests
         string line1 = "1 25544U 98067A   21020.53488036  .00016717  00000-0  10270-3 0  9054";
         string line2 = "2 25545  51.6423 353.0312 0000493 320.8755  39.2360 15.49309423 25703"; // Different NORAD ID
 
-        Assert.Throws<InvalidOperationException>(() => new TLE("ISS", line1, line2));
+        var exception = Assert.Throws<ArgumentException>(() => new TLE("ISS", line1, line2));
+        Assert.Equal("line2", exception.ParamName);
     }
 
     [Fact]
@@ -428,8 +429,8 @@ public class TLETests
         var shortLine = Assert.Throws<ArgumentException>(() => new TLE("ISS", "1 25544U 98067A   21020", line2));
         Assert.StartsWith("TLE line 1 must be exactly 69 characters long", shortLine.Message);
 
-        // A line 1 whose epoch does not parse and whose checksum is wrong reports the checksum, a text check
-        var badEpoch = Assert.Throws<InvalidOperationException>(() => new TLE("ISS",
+        // A line 1 whose epoch does not parse and whose checksum is wrong reports the checksum, checked before the fields
+        var badEpoch = Assert.Throws<ArgumentException>(() => new TLE("ISS",
             "1 25544U 98067A   2X020.53488036  .00016717  00000-0  10270-3 0  9054", line2));
         Assert.StartsWith("Checksum validation failed for TLE line 1", badEpoch.Message);
     }

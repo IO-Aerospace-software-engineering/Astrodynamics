@@ -5,6 +5,7 @@ using System.ComponentModel;
 using System.Globalization;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading;
 using IO.Astrodynamics.Body;
 using IO.Astrodynamics.Frames;
@@ -200,26 +201,38 @@ public class TLE : OrbitalParameters, IEquatable<TLE>
     /// <summary>
     /// Initializes a new instance of the TLE class.
     /// </summary>
-    /// <param name="name">Line 1 - TLE Name</param>
+    /// <param name="name">The name of the object (the title line of a three-line set); null or blank for the catalog field
+    /// of line 1 (columns 3-7, as written: <c>25544</c>, <c>T5544</c>).</param>
     /// <param name="line1">the first line</param>
     /// <param name="line2">the second line</param>
-    /// <exception cref="ArgumentException">Thrown when the name or a line is null or empty, or when a line has not the
-    /// length, the line number or a valid catalog number of its format.</exception>
-    /// <exception cref="InvalidOperationException">Thrown when checksum validation fails, when the catalog numbers of the
-    /// two lines differ, or when the loaded kernels do not define the Earth (its GM, radii and frame).</exception>
+    /// <exception cref="ArgumentException">Thrown when a line is null or empty, or does not follow the format, naming
+    /// <c>line1</c> or <c>line2</c> with a <see cref="TleFormatException"/> (its line and column) as inner exception: the
+    /// length (69 characters), the line number, the catalog number (both lines one object), the checksum, and every field
+    /// (R21 of #668: the classification U, C or S, the international designator blank or YYNNNPPP, the epoch YYDDD.DDDDDDDD
+    /// with a day of its year, the derivatives and B*, the ephemeris type, the element set and revolution numbers, the
+    /// angles, the eccentricity and the mean motion; before 11.0.0 a wrong checksum or two catalog numbers threw
+    /// <see cref="InvalidOperationException"/>, a malformed field a raw <see cref="FormatException"/>, and a day of year
+    /// out of range rolled into the next year silently). No physical range is checked: SGP4 reports a set it cannot
+    /// evaluate (#454).</exception>
     /// <remarks>
     /// The constructor reads no kernel (R21 of #668): the text is checked first (#675), and the Earth of the TLE reads its
     /// data from the data provider at the first member that needs them (<see cref="MeanSemiMajorAxis"/>, SGP4), so that a
     /// valid TLE gives its fields, <see cref="MeanMeanMotion"/> and <see cref="ToOmm"/> without kernels. Before 11.0.0 it
     /// built the Earth from the kernels, and a TLE built before them kept a GM of 0.
     /// </remarks>
-    public TLE(string name, string line1, string line2) : base(EarthAt(ValidatedEpoch(name, line1, line2)), ExtractEpochFromTLE(line1),
+    public TLE(string name, string line1, string line2) : base(EarthAt(ValidatedEpoch(line1, line2)), ExtractEpochFromTLE(line1),
         Frame.TEME, OrbitalElementsType.Mean)
     {
         Line1 = line1;
         Line2 = line2;
-        Name = name;
+        // Without a name, the catalog field as written (R21 of #668)
+        Name = string.IsNullOrWhiteSpace(name) ? line1.Substring(2, NoradCatalogNumber.FieldLength).Trim() : name;
         NoradCatalogId = NoradCatalogNumber.Parse(line1.Substring(2, NoradCatalogNumber.FieldLength));
+        Classification = (Classification)line1[7];
+        var designator = line1.Substring(9, 8).Trim();
+        CosparId = designator.Length == 0 ? null : designator;
+        ElementSetNumber = ParseCount(line1.Substring(64, 4));
+        RevolutionNumberAtEpoch = ParseCount(line2.Substring(63, 5));
 
         // Parse line 2 for orbital elements - FIXED: Use InvariantCulture
         _meanMotionRevolutionsPerDay = double.Parse(line2.Substring(52, 11), CultureInfo.InvariantCulture);
@@ -247,18 +260,52 @@ public class TLE : OrbitalParameters, IEquatable<TLE>
     }
 
     /// <summary>
-    /// The epoch of line 1, read once the text has passed every check of the constructor, in their order: the null or
-    /// empty lines and name (line 1, line 2, then the name), then <see cref="ValidateTleFormat"/>. Evaluated as the first
-    /// argument of the base constructor, so that no check waits for a kernel read (#675).
+    /// Gets the security classification of line 1 (column 8).
     /// </summary>
-    private static Time ValidatedEpoch(string name, string line1, string line2)
+    public Classification Classification { get; }
+
+    /// <summary>
+    /// Gets the international designator of line 1 (columns 10-17) as written, trimmed (<c>98067A</c>), or null when the
+    /// columns are blank; the argument <c>cosparId</c> of <see cref="Create"/>.
+    /// </summary>
+    public string CosparId { get; }
+
+    /// <summary>
+    /// Gets the element set number of line 1 (columns 65-68), 0 when the columns are blank.
+    /// </summary>
+    public int ElementSetNumber { get; }
+
+    /// <summary>
+    /// Gets the revolution number at epoch of line 2 (columns 64-68), 0 when the columns are blank.
+    /// </summary>
+    public int RevolutionNumberAtEpoch { get; }
+
+    // A count field of digits right-aligned in its columns, 0 when blank (checked by ValidateText)
+    private static int ParseCount(string field)
+    {
+        var digits = field.Trim();
+        return digits.Length == 0 ? 0 : int.Parse(digits, NumberStyles.None, CultureInfo.InvariantCulture);
+    }
+
+    /// <summary>
+    /// The epoch of line 1, read once the text has passed every check of <see cref="ValidateText"/>, a failure thrown as
+    /// <see cref="ArgumentException"/> naming its line with the <see cref="TleFormatException"/> as inner exception.
+    /// Evaluated as the first argument of the base constructor, so that no check waits for a kernel read (#675).
+    /// </summary>
+    private static Time ValidatedEpoch(string line1, string line2)
     {
         if (string.IsNullOrEmpty(line1)) throw new ArgumentException("Value cannot be null or empty.", nameof(line1));
         if (string.IsNullOrEmpty(line2)) throw new ArgumentException("Value cannot be null or empty.", nameof(line2));
-        if (string.IsNullOrEmpty(name)) throw new ArgumentException("Value cannot be null or empty.", nameof(name));
 
-        // Validate TLE format and checksums
-        ValidateTleFormat(line1, line2);
+        try
+        {
+            ValidateText(line1, line2);
+        }
+        catch (TleFormatException e)
+        {
+            throw new ArgumentException(e.Message, e.Line == 1 ? nameof(line1) : nameof(line2), e);
+        }
+
         return ExtractEpochFromTLE(line1);
     }
 
@@ -626,74 +673,104 @@ public class TLE : OrbitalParameters, IEquatable<TLE>
     }
 
     /// <summary>
-    /// Validates the format and checksums of the TLE lines.
+    /// Checks the text of the two lines of a set against the format, in this order: the lengths and line numbers, the
+    /// catalog numbers and their agreement, the checksums, then every field of line 1 and of line 2 (R21 of #668).
     /// </summary>
-    /// <param name="line1">The first line of the TLE.</param>
-    /// <param name="line2">The second line of the TLE.</param>
-    /// <exception cref="InvalidOperationException">Thrown when checksum validation fails.</exception>
-    /// <exception cref="ArgumentException">Thrown when TLE format is invalid.</exception>
-    private static void ValidateTleFormat(string line1, string line2)
+    /// <exception cref="TleFormatException">The line (1 or 2) and the first column of the field at fault.</exception>
+    internal static void ValidateText(string line1, string line2)
     {
-        // Validate line length
-        if (line1.Length != 69)
-            throw new ArgumentException($"TLE line 1 must be exactly 69 characters long, got {line1.Length}: {line1}");
-        if (line2.Length != 69)
-            throw new ArgumentException($"TLE line 2 must be exactly 69 characters long, got {line2.Length}: {line2}");
-
-        // Validate line numbers
+        CheckLength(line1, 1);
+        CheckLength(line2, 2);
         if (line1[0] != '1')
-            throw new ArgumentException($"TLE line 1 must start with '1', got '{line1[0]}': {line1}");
+            throw new TleFormatException($"TLE line 1 must start with '1', got '{line1[0]}': {line1}", 1, 1);
         if (line2[0] != '2')
-            throw new ArgumentException($"TLE line 2 must start with '2', got '{line2[0]}': {line2}");
+            throw new TleFormatException($"TLE line 2 must start with '2', got '{line2[0]}': {line2}", 2, 1);
 
-        // Validate the NORAD catalog number field (columns 3-7), which both lines must carry identically
+        // The NORAD catalog number field (columns 3-7), which both lines must carry identically
         var noradField1 = line1.Substring(2, NoradCatalogNumber.FieldLength);
         var noradField2 = line2.Substring(2, NoradCatalogNumber.FieldLength);
-
         if (!NoradCatalogNumber.TryParse(noradField1, out int noradId1))
-            throw new ArgumentException($"Invalid NORAD catalog number '{noradField1}' in TLE line 1: {line1}");
+            throw new TleFormatException($"Invalid NORAD catalog number '{noradField1}' in TLE line 1: {line1}", 1, 3);
         if (!NoradCatalogNumber.TryParse(noradField2, out int noradId2))
-            throw new ArgumentException($"Invalid NORAD catalog number '{noradField2}' in TLE line 2: {line2}");
+            throw new TleFormatException($"Invalid NORAD catalog number '{noradField2}' in TLE line 2: {line2}", 2, 3);
         if (noradId1 != noradId2)
         {
-            // Reported as an invalid state rather than an invalid argument, consistently with the
-            // checksum validation below: each line is well-formed, only their pairing is wrong.
-            throw new InvalidOperationException(
+            throw new TleFormatException(
                 $"NORAD catalog numbers differ between TLE lines: {noradId1} in line 1, {noradId2} in line 2. " +
-                "The two lines do not belong to the same object.");
+                "The two lines do not belong to the same object.", 2, 3);
         }
 
-        // Validate checksums
-        ValidateLineChecksum(line1, 1);
-        ValidateLineChecksum(line2, 2);
+        CheckChecksum(line1, 1);
+        CheckChecksum(line2, 2);
+
+        // Line 1
+        CheckField(line1, 1, 8, 1, ClassificationField, "classification (U, C or S)");
+        CheckField(line1, 1, 10, 8, DesignatorField, "international designator (YYNNNPPP or blank)");
+        CheckField(line1, 1, 19, 14, EpochField, "epoch (YYDDD.DDDDDDDD)");
+        int year = int.Parse(line1.AsSpan(18, 2), NumberStyles.None, CultureInfo.InvariantCulture);
+        year += year < 57 ? 2000 : 1900;
+        int day = int.Parse(line1.AsSpan(20, 3), NumberStyles.None, CultureInfo.InvariantCulture);
+        if (day < 1 || day > (DateTime.IsLeapYear(year) ? 366 : 365))
+            throw new TleFormatException($"Invalid day of year {day} of {year} in the epoch of TLE line 1, columns 19-32: {line1}", 1, 19);
+        CheckField(line1, 1, 34, 10, DecimalFieldOrBlank, "first derivative of the mean motion");
+        CheckField(line1, 1, 45, 8, ExponentField, "second derivative of the mean motion");
+        CheckField(line1, 1, 54, 8, ExponentField, "B*");
+        CheckField(line1, 1, 63, 1, DigitOrBlank, "ephemeris type");
+        CheckField(line1, 1, 65, 4, CountField, "element set number");
+
+        // Line 2
+        CheckField(line2, 2, 9, 8, DecimalField, "inclination");
+        CheckField(line2, 2, 18, 8, DecimalField, "right ascension of the ascending node");
+        CheckField(line2, 2, 27, 7, EccentricityField, "eccentricity (seven digits, no decimal point)");
+        CheckField(line2, 2, 35, 8, DecimalField, "argument of perigee");
+        CheckField(line2, 2, 44, 8, DecimalField, "mean anomaly");
+        CheckField(line2, 2, 53, 11, DecimalField, "mean motion");
+        CheckField(line2, 2, 64, 5, CountField, "revolution number at epoch");
     }
 
-    /// <summary>
-    /// Validates the checksum of a single TLE line.
-    /// </summary>
-    /// <param name="line">The TLE line to validate.</param>
-    /// <param name="lineNumber">The line number (1 or 2) for error reporting.</param>
-    /// <exception cref="InvalidOperationException">Thrown when checksum validation fails.</exception>
-    private static void ValidateLineChecksum(string line, int lineNumber)
+    // The syntax of the fields (ASCII digits only): a decimal number with an optional sign and blanks around it, or blank
+    // for the first derivative; the exponent fields [sign]ddddd[sign]d or blank; counts right-aligned digits or blank
+    private static readonly Regex ClassificationField = new("^[UCS]$", RegexOptions.CultureInvariant);
+    private static readonly Regex DesignatorField = new("^( {8}|[0-9]{5}[A-Z]{1,3} *)$", RegexOptions.CultureInvariant);
+    private static readonly Regex EpochField = new(@"^[0-9]{5}\.[0-9]{8}$", RegexOptions.CultureInvariant);
+    private static readonly Regex DecimalField = new(@"^ *[+-]?[0-9]*\.[0-9]+ *$", RegexOptions.CultureInvariant);
+    private static readonly Regex DecimalFieldOrBlank = new(@"^( *[+-]?[0-9]*\.[0-9]+ *| *)$", RegexOptions.CultureInvariant);
+    private static readonly Regex ExponentField = new("^([ +-][0-9]{5}[+-][0-9]| *)$", RegexOptions.CultureInvariant);
+    private static readonly Regex DigitOrBlank = new("^[0-9 ]$", RegexOptions.CultureInvariant);
+    private static readonly Regex CountField = new("^ *[0-9]*$", RegexOptions.CultureInvariant);
+    private static readonly Regex EccentricityField = new("^[0-9]{7}$", RegexOptions.CultureInvariant);
+
+    private static void CheckLength(string line, int number)
     {
-        // Extract the first 68 characters (excluding the checksum)
-        string lineWithoutChecksum = line.Substring(0, 68);
+        if (line.Length != 69)
+        {
+            throw new TleFormatException($"TLE line {number} must be exactly 69 characters long, got {line.Length}: {line}", number,
+                System.Math.Min(line.Length, 69) + 1);
+        }
+    }
 
-        // Compute the expected checksum
-        int computedChecksum = ComputeTleChecksum(lineWithoutChecksum);
+    private static void CheckField(string line, int number, int column, int width, Regex syntax, string field)
+    {
+        var text = line.Substring(column - 1, width);
+        if (!syntax.IsMatch(text))
+        {
+            throw new TleFormatException(
+                $"Invalid {field} '{text}' in TLE line {number}, columns {column}-{column + width - 1}: {line}", number, column);
+        }
+    }
 
-        // Get the actual checksum from the last character
-        if (!char.IsDigit(line[68]))
-            throw new InvalidOperationException($"Invalid checksum character in line {lineNumber}: '{line[68]}' in {line}");
+    private static void CheckChecksum(string line, int number)
+    {
+        if (line[68] is < '0' or > '9')
+            throw new TleFormatException($"Invalid checksum character in line {number}: '{line[68]}' in {line}", number, 69);
 
+        int computedChecksum = ComputeTleChecksum(line.Substring(0, 68));
         int actualChecksum = line[68] - '0';
-
-        // Compare checksums
         if (computedChecksum != actualChecksum)
         {
-            throw new InvalidOperationException(
-                $"Checksum validation failed for TLE line {lineNumber}. " +
-                $"Expected: {computedChecksum}, Actual: {actualChecksum}, Line: {line}");
+            throw new TleFormatException(
+                $"Checksum validation failed for TLE line {number}. Expected: {computedChecksum}, Actual: {actualChecksum}, Line: {line}",
+                number, 69);
         }
     }
 
@@ -708,7 +785,7 @@ public class TLE : OrbitalParameters, IEquatable<TLE>
         int sum = 0;
         foreach (char c in line)
         {
-            if (char.IsDigit(c))
+            if (c is >= '0' and <= '9')
                 sum += c - '0';
             else if (c == '-')
                 sum += 1;
@@ -1069,8 +1146,7 @@ public class TLE : OrbitalParameters, IEquatable<TLE>
         // Extract COSPAR ID (international designator) from line 1 positions 9-16
         // TLE format: "98067A" -> OMM format: "1998-067A"
         // Blank columns: OBJECT_ID UNKNOWN, the element being mandatory in the ODM (#604)
-        var tleCosparId = Line1.Substring(9, 8).Trim();
-        var objectId = tleCosparId.Length == 0 ? CCSDS.OMM.OmmMetadata.UnknownObjectId : ConvertCosparIdToObjectId(tleCosparId);
+        var objectId = CosparId == null ? CCSDS.OMM.OmmMetadata.UnknownObjectId : ConvertCosparIdToObjectId(CosparId);
 
         // Create metadata for SGP4/TEME configuration
         var metadata = CCSDS.OMM.OmmMetadata.CreateForSgp4(Name, objectId);
@@ -1089,16 +1165,10 @@ public class TLE : OrbitalParameters, IEquatable<TLE>
         // NORAD catalog ID, decoded from Alpha-5 when applicable (validated at construction)
         int? noradCatId = NoradCatalogId;
 
-        // Extract element set number from line 1 positions 64-67
-        var elementSetNoStr = Line1.Substring(64, 4).Trim();
-        int? elementSetNo = int.TryParse(elementSetNoStr, CultureInfo.InvariantCulture, out var esn) ? esn : null;
-
-        // Extract revolution number at epoch from line 2 positions 63-67
-        var revAtEpochStr = Line2.Substring(63, 5).Trim();
-        int? revAtEpoch = int.TryParse(revAtEpochStr, CultureInfo.InvariantCulture, out var rev) ? rev : null;
-
-        // Extract classification from line 1 position 7
-        var classChar = Line1[7].ToString().ToUpperInvariant();
+        // The element set number and the revolution number, omitted when their columns are blank
+        int? elementSetNo = string.IsNullOrWhiteSpace(Line1.Substring(64, 4)) ? null : ElementSetNumber;
+        int? revAtEpoch = string.IsNullOrWhiteSpace(Line2.Substring(63, 5)) ? null : RevolutionNumberAtEpoch;
+        var classChar = ((char)Classification).ToString();
 
         // Create TLE parameters with BSTAR and MEAN_MOTION_DDOT (standard SGP4)
         var tleParams = CCSDS.OMM.TleParameters.CreateWithBStarAndDDot(

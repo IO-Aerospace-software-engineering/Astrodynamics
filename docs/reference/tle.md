@@ -13,11 +13,32 @@ var tle = new TLE("ISS (ZARYA)",
     "2 25544  51.6423 353.0312 0000493 320.8755  39.2360 15.49309423 25703");
 ```
 
-The constructor checks the text before it reads any kernel (#675): a null or empty line or name, a line of another
-length than 69 characters or that does not start with its line number (`ArgumentException`), catalog numbers that
-differ or a wrong checksum (`InvalidOperationException`). Before 11.0.0 it built the Earth of the TLE first, so that
-without kernels a malformed TLE threw the kernel error, and CSPICE printed the banners of its failed reads on the
-standard output.
+The constructor checks the text before it reads any kernel (#675; before 11.0.0 it built the Earth of the TLE first, so
+that without kernels a malformed TLE threw the kernel error). A null or empty line throws `ArgumentException` naming it;
+any other bad line throws `ArgumentException` naming `line1` or `line2`, with a `TleFormatException` (a
+`FormatException`) as inner exception, whose `Line` (1 or 2) and `Column` (1-based) locate the field (R21 of
+[#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668), 11.0.0). The checks run in this
+order: the length (69 characters, the column the first one missing or 70), the line number (column 1), the catalog
+number of each line and their agreement (column 3, line 2 for the agreement), the checksum (column 69), then each field:
+
+| Line | Columns | Field | Syntax |
+|------|---------|-------|--------|
+| 1 | 8 | Classification | `U`, `C` or `S` |
+| 1 | 10-17 | International designator | blank, or YYNNN and one to three capital letters (`98067A`) |
+| 1 | 19-32 | Epoch | YYDDD.DDDDDDDD, the day from 1 to the length of its year |
+| 1 | 34-43 | ṅ/2 | a decimal number or blank |
+| 1 | 45-52, 54-61 | n̈/6, B* | sign, five digits, sign, one digit (` 10270-3`), or blank |
+| 1 | 63 | Ephemeris type | a digit or blank |
+| 1 | 65-68 | Element set number | right-aligned digits or blank (0) |
+| 2 | 9-16, 18-25, 35-42, 44-51, 53-63 | i, Ω, ω, M, n | a decimal number |
+| 2 | 27-33 | Eccentricity | seven digits, the decimal point assumed |
+| 2 | 64-68 | Revolution number at epoch | right-aligned digits or blank (0) |
+
+No physical range is checked: SGP4 reports a set it cannot evaluate (#454). Before 11.0.0 a wrong checksum and two
+catalog numbers threw `InvalidOperationException`, a malformed field a `FormatException` without its column, and a day
+of year out of range (000, 400) rolled into the neighbouring year. A null or blank name is the catalog field of line 1
+as written (`25544`, `T5544`), as a two-line set from Space-Track has no name line; before 11.0.0 it threw
+`ArgumentException`.
 
 The constructor reads no kernel at all (R21 of
 [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668), 11.0.0): the Earth of the TLE (its
@@ -43,6 +64,10 @@ loaded. Before 11.0.0 a TLE built before the kernels kept a GM of 0 for its life
 | `FirstDerivationMeanMotion` | ṅ/2, the first-derivative field of line 1 (rev/day²), OMM's `MEAN_MOTION_DOT` |
 | `SecondDerivativeMeanMotion` | n̈/6, the second-derivative field of line 1 (rev/day³), OMM's `MEAN_MOTION_DDOT` |
 | `NoradCatalogId` | NORAD catalog number, Alpha-5 decoded (`T5544` reads as 275544) |
+| `CosparId` | International designator of line 1 as written (`98067A`), null when blank |
+| `Classification` | Classification of line 1 (`Unclassified`, `Classified`, `Secret`) |
+| `ElementSetNumber` | Element set number of line 1, 0 when blank |
+| `RevolutionNumberAtEpoch` | Revolution number at epoch of line 2, 0 when blank |
 
 ## Methods
 

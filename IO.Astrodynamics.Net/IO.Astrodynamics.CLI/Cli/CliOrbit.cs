@@ -59,15 +59,8 @@ internal static class CliOrbit
         {
             if (kind == "tle")
             {
-                try
-                {
-                    return new TLE("body", options.Orbit[0], options.Orbit[1]);
-                }
-                catch (InvalidOperationException e)
-                {
-                    // Lines whose catalog numbers disagree
-                    throw new ArgumentException(e.Message, e);
-                }
+                // A malformed TLE throws ArgumentException (R21 of #668)
+                return new TLE("body", options.Orbit[0], options.Orbit[1]);
             }
 
             var epoch = CliValues.Epoch(options.Epoch, "--epoch");

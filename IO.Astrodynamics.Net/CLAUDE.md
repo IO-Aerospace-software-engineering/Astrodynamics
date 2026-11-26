@@ -181,7 +181,10 @@ identifiers are `int` everywhere (`Configuration.NoradId`, `TLE.Create`) — nev
   `Omm.ToTle` without `ELEMENT_SET_NO`; #606)
 - Out-of-range identifiers, revolution numbers (> 99999) and element set numbers (> 9999) throw
   instead of being silently truncated
-- The `TLE` constructor rejects lines whose catalog numbers disagree (`InvalidOperationException`)
+- The `TLE` constructor checks every field of the text before any kernel read and throws `ArgumentException` naming
+  `line1` or `line2` with a `TleFormatException` (`Line`, `Column`) as inner exception, lines whose catalog numbers
+  disagree included (line 2, column 3); a null or blank name is the catalog field as written; `CosparId` (null when
+  blank), `Classification`, `ElementSetNumber` and `RevolutionNumberAtEpoch` (0 when blank) read the lines (R21 of #668)
 
 **Mean Motion Precision Preservation**
 When converting OMM → KeplerianElements → TLE, mean motion is cached to avoid precision loss from round-trip conversions:
