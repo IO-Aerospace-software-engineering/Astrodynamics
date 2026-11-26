@@ -144,7 +144,7 @@ Each result describes one candidate impulsive burn.
 | `FuelCostEstimateKilograms` | `double` | Estimated fuel consumption (kg) |
 | `PostManeuverEncounter` | `EncounterCase` | Reanalyzed encounter after the burn |
 | `RankingScore` | `double` | Internal heuristic for ordering candidates |
-| `Trajectory` | `AvoidanceTrajectory` | `Propagated` with the force model of the protected participant, or `TwoBody` without one |
+| `Trajectory` | `TrajectorySource` | `Propagated` with the force model of the protected participant, or `TwoBody` without one (`AvoidanceTrajectory` before 11.0.0) |
 
 The ranking score is useful for sorting candidates but should not replace mission-specific operational rules.
 

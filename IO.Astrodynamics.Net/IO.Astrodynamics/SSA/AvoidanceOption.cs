@@ -60,7 +60,9 @@ public sealed class AvoidanceOption
     /// <summary>
     /// Gets how the trajectory of the option after its burn was computed: propagated with the force model of the protected
     /// participant, or its two-body orbit when the participant has no numerical propagation. Set by
-    /// <see cref="ConjunctionAssessment.EvaluateAvoidance"/>; <see cref="AvoidanceTrajectory.TwoBody"/> unless set.
+    /// <see cref="ConjunctionAssessment.EvaluateAvoidance"/>: <see cref="TrajectorySource.Propagated"/> or
+    /// <see cref="TrajectorySource.TwoBody"/> (<c>AvoidanceTrajectory</c> before 11.0.0, R17 of #668);
+    /// <see cref="TrajectorySource.TwoBody"/> unless set.
     /// </summary>
-    public AvoidanceTrajectory Trajectory { get; init; } = AvoidanceTrajectory.TwoBody;
+    public TrajectorySource Trajectory { get; init; } = TrajectorySource.TwoBody;
 }

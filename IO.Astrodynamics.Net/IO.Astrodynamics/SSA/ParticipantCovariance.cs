@@ -30,16 +30,4 @@ public sealed record ParticipantCovariance(
     /// The participant without a covariance.
     /// </summary>
     public static ParticipantCovariance None { get; } = new(CovarianceSource.None, null);
-
-    /// <summary>
-    /// The source inferred from the age alone, as the constructors of <see cref="EncounterState"/> without the source
-    /// do: null for none, zero for a covariance given at the encounter epoch, otherwise the initial covariance held in
-    /// RTN.
-    /// </summary>
-    internal static ParticipantCovariance FromAge(TimeSpan? age) => age switch
-    {
-        null => None,
-        { } a when a == TimeSpan.Zero => new ParticipantCovariance(CovarianceSource.ProvidedAtEncounter, a),
-        { } a => new ParticipantCovariance(CovarianceSource.InitialStateHeldInRtn, a)
-    };
 }

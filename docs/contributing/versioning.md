@@ -541,6 +541,19 @@ release are listed under **Known limitations**.
   `OutsideTrajectory`, a burn the propagation of the options does not hold), its `ToString` the lead time and the reason
   (`ConjunctionAssessmentTests.EvaluateAvoidance_TheGridIsTheConstraint_TheLeadsBeforeTheWindowSkipped`). See
   [Avoidance](../reference/avoidance.md#evaluateavoidance).
+- **The results of the conjunction analysis read at a glance** (lot L7, R17 and R18 of
+  [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668), decided by S. Guillet, 2026-11-19): `EncounterCase.Tca`, `MissDistanceMeters`,
+  `RelativeSpeedMetersPerSecond` (the norm of the relative velocity, the CDM's `RELATIVE_SPEED`) and
+  `ProbabilityOfCollision`, each the value it stands for; `ToString` on `EncounterCase` (TCA, miss, Pc, combined radius,
+  flags; `Pc n/a` without a probability), `EncounterState` and `CollisionRisk`; `EncounterCase.AnalysisOptions` public
+  (internal before), the options the analysis used, the radius of the secondary resolved, the start of
+  `AvoidanceSearchOptions.Analysis = encounter.AnalysisOptions with { … }`; `EncounterCase.Search`
+  (`CloseApproachSearch`: `Sampled`, `Polynomial`), the search that ran; `EncounterState.ProtectedTrajectory` and
+  `SecondaryTrajectory` (`TrajectorySource`: `Propagated`, `TwoBody`, `Sgp4`, `Kernel`), how each participant's
+  trajectory was computed (`ConjunctionAssessmentTests.EncounterCase_Shortcuts_AreTheNestedValues_AndToStringReadsThem`,
+  `Search_ReportsTheSearchThatRan_AndTheTrajectoryOfEachParticipant`,
+  `TrajectorySource_OfAnSgp4Participant_AndOfABodyReadFromTheKernels`). No result moves. See
+  [Conjunction Assessment](../reference/conjunction-assessment.md#encountercase).
 
 **Fixed**
 
@@ -5238,7 +5251,7 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   that leaves the stored states of the instrument's spacecraft or of a spacecraft target, or meets a gap between the
   windows given to `AddPropagatedStates`, with `InvalidOperationException`, the state of the spacecraft, as
   `GetEphemeris` over a window and the managed distance search; it threw `ArgumentException` (`searchWindow`), the same
-  message. The `ILocalizable` overloads of the conjunction analysis keep `ArgumentException` until lot L7; a target that
+  message. The `ILocalizable` overloads of the conjunction analysis followed in lot L7 (under Changed); a target that
   is the instrument's spacecraft or an ellipsoid without radii keeps `ArgumentException` (`FieldOfViewSearchTests`,
   `AddedStatesGapTests`); the search is `Instrument.FindFieldOfViewWindows` since lot L6 (see **Removed**). Migration:
   catch `InvalidOperationException` there.
@@ -8147,6 +8160,26 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   `var options = EvaluateAvoidance(encounter, o)` → `var options = EvaluateAvoidance(encounter, o).Options`; for
   operational limits, a grid inside them; a `MaxDeltaVMetersPerSecond` of 0 that wrote `NO` →
   `new CdmExportOptions { ProtectedParticipantMetadata = new CdmParticipantMetadata { Maneuverable = CdmManeuverable.No } }`.
+- **`ReadRangeRateOverWindow = true` throws where the search is sampled; a window past the stored states throws
+  `InvalidOperationException` from the conjunction analysis; `AvoidanceTrajectory` is `TrajectorySource`** (lot L7, R17
+  and R18 of [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668), decided by S. Guillet, 2026-11-19, and decisions 81 and 86, decided by
+  S. Guillet, 2026-11-23; no forwarder). **Breaking**: `ConjunctionAnalysisOptions.ReadRangeRateOverWindow = true`, read
+  by the polynomial search of two propagations only and ignored without a word elsewhere, throws `ArgumentException`
+  naming `options` before any search where the search is sampled: the `ILocalizable` overloads of `Analyze` and
+  `AnalyzeAll`, `ScreeningOptions.Analysis` (`Screen`), an `AvoidanceSearchOptions.Analysis` given to
+  `EvaluateAvoidance`, and two trajectories that do not share their observer and frame; the options an avoidance
+  inherits from its encounter clear it, as before. The `ILocalizable` overloads of `Analyze`, `AnalyzeAll` and `Screen`
+  refuse a window that leaves the stored states of a propagated spacecraft, or meets a gap between the windows given to
+  its `AddPropagatedStates`, with `InvalidOperationException`, the state of the spacecraft, the message unchanged
+  (`ArgumentException` naming `screeningWindow` before; a `PropagationSolution` that does not cover the window keeps
+  `ArgumentException` naming it, an argument). The enumeration `AvoidanceTrajectory` (`Propagated`, `TwoBody`) is
+  `TrajectorySource`, which adds `Sgp4` and `Kernel` for the participants of an encounter (under Added), and
+  `AvoidanceOption.Trajectory` is of that type, its values unchanged. Every result of a call still accepted is bit for
+  bit (`ConjunctionAssessmentTests.ReadRangeRateOverWindow_WhereTheSampledSearchRuns_Throws`,
+  `ConjunctionKernelAndWindowTests.Localizable_WindowPastThePropagatedStates_Throws`, `AddedStatesGapTests`). Migration:
+  leave `ReadRangeRateOverWindow` false on those calls (`encounter.AnalysisOptions with { ReadRangeRateOverWindow = false }`
+  to reuse the options of a polynomial search); catch `InvalidOperationException` for a window past the stored states;
+  `AvoidanceTrajectory.TwoBody` → `TrajectorySource.TwoBody`, likewise `Propagated`.
 
 **Removed**
 
@@ -8155,6 +8188,12 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   2026-11-19, no forwarder): the conjunction analysis takes the `Spacecraft` itself, and the grid of
   `AvoidanceSearchOptions` is the constraint of the avoidance (under Changed). Migration: pass the spacecraft; give
   `LeadTimes` and `DeltaVMagnitudesMetersPerSecond` within the limits `ManeuverConstraints` held.
+- **`EncounterState.ProtectedCovarianceAge`, `SecondaryCovarianceAge` and the constructor of `EncounterState` with the two
+  ages** (lot L7, R17 of [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668), decided by S. Guillet, 2026-11-19, no forwarder): the ages
+  are the `Age` of `ParticipantCovariance`, which carries the source with them. Migration:
+  `state.ProtectedCovarianceAge` → `state.ProtectedCovariance.Age`, likewise the secondary; the constructor of the ages →
+  the one of the two `ParticipantCovariance` (`new ParticipantCovariance(CovarianceSource.InitialStateHeldInRtn, age)`,
+  `ProvidedAtEncounter` for an age of zero, `ParticipantCovariance.None` for none).
 - **The window searches on the target: `FindWindowsOnDistanceConstraint`, `FindWindowsOnOccultationConstraint` and
   `FindWindowsOnCoordinateConstraint` of `CelestialItem`, `ILocalizable` and `Site`, `Site.FindWindowsOnIlluminationConstraint`,
   `Instrument.FindWindowsInFieldOfViewConstraint`, and the public constructor, `FindWindowsWithCondition` and

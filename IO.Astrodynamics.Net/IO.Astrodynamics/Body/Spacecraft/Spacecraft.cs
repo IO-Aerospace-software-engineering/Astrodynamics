@@ -1646,14 +1646,10 @@ namespace IO.Astrodynamics.Body.Spacecraft
         /// </summary>
         /// <param name="window">The window read.</param>
         /// <param name="description">What the window is, for the message.</param>
-        /// <param name="paramName">The parameter of the window, for the <see cref="ArgumentException"/> the conjunction analysis
-        /// keeps until lot L7 of #668; null for <see cref="InvalidOperationException"/>, the state of the spacecraft (decisions
-        /// 81 and 86 of #668, the field-of-view search since lot L6).</param>
-        /// <exception cref="InvalidOperationException">The window leaves the propagated states or meets a gap between them, and
-        /// <paramref name="paramName"/> is null.</exception>
-        /// <exception cref="ArgumentException">The window leaves the propagated states or meets a gap between them, and
-        /// <paramref name="paramName"/> names its parameter.</exception>
-        internal void CheckInterpolatedStatesCover(in Window window, string description, string paramName = null)
+        /// <exception cref="InvalidOperationException">The window leaves the propagated states or meets a gap between them:
+        /// the state of the spacecraft (decisions 81 and 86 of #668: the field-of-view search since lot L6, the conjunction
+        /// analysis since lot L7, which threw <see cref="ArgumentException"/> before).</exception>
+        internal void CheckInterpolatedStatesCover(in Window window, string description)
         {
             if (InterpolatedStatesWindow is null || _propagatedStates.Covers(window))
             {
@@ -1662,7 +1658,7 @@ namespace IO.Astrodynamics.Body.Spacecraft
 
             var message =
                 $"The {description} [{window.StartDate.ToTDB()}, {window.EndDate.ToTDB()}] leaves the propagated states of {Name}, {DescribeStoredWindows()}: they would be extrapolated.";
-            throw paramName is null ? new InvalidOperationException(message) : new ArgumentException(message, paramName);
+            throw new InvalidOperationException(message);
         }
 
         /// <summary>

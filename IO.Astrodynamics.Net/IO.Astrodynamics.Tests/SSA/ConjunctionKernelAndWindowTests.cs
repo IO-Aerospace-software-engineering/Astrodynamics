@@ -824,15 +824,16 @@ public class ConjunctionKernelAndWindowTests : ConjunctionDensePassTestBase, ICl
     public void Localizable_WindowPastThePropagatedStates_Throws()
     {
         var beyond = _case.Seconds(10200.0, 11400.0);
-        var exception = Assert.Throws<ArgumentException>(() => ConjunctionAssessment.Analyze(_case.Sat1, _case.Sat2, beyond, Options));
-        Assert.Equal("screeningWindow", exception.ParamName);
-        Assert.Throws<ArgumentException>(() => ConjunctionAssessment.AnalyzeAll(_case.Sat1, _case.Sat2, beyond, Options));
-        Assert.Throws<ArgumentException>(() => ConjunctionAssessment.Screen(_case.Sat1, new ILocalizable[] { _case.Sat2 }, beyond));
+        // InvalidOperationException, the state of the spacecraft (decisions 81 and 86 of #668, lot L7; ArgumentException
+        // naming screeningWindow before 11.0.0)
+        Assert.Throws<InvalidOperationException>(() => ConjunctionAssessment.Analyze(_case.Sat1, _case.Sat2, beyond, Options));
+        Assert.Throws<InvalidOperationException>(() => ConjunctionAssessment.AnalyzeAll(_case.Sat1, _case.Sat2, beyond, Options));
+        Assert.Throws<InvalidOperationException>(() => ConjunctionAssessment.Screen(_case.Sat1, new ILocalizable[] { _case.Sat2 }, beyond));
 
         // The secondary alone leaves its states: a protected spacecraft without stored states, read in two-body motion
         var twoBody = new Spacecraft(-620003, "TWOBODY", 100.0, _case.Sat1.InitialOrbitalParameters, 1000.0,
             new Clock("TWOBODY_CLK", 256));
-        Assert.Throws<ArgumentException>(() =>
+        Assert.Throws<InvalidOperationException>(() =>
             ConjunctionAssessment.Analyze(twoBody, _case.Sat2, beyond, Options));
 
         // Inside the states, the ILocalizable path finds the encounter

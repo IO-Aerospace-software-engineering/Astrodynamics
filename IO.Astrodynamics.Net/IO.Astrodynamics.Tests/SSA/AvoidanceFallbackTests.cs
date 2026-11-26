@@ -188,7 +188,7 @@ public class AvoidanceFallbackTests : IClassFixture<AvoidanceFallbackCase>
         var avoidance = ConjunctionAssessment.EvaluateAvoidance(encounter, Options).Options;
 
         // Assert
-        Assert.Same(protectedTrajectory, encounter.ProtectedTrajectory);
+        Assert.Same(protectedTrajectory, encounter.ProtectedSolution);
         AssertOptionsAreTheirReferences(avoidance, rk78, secondary, id - 2, _case.ProtectedStart);
     }
 
@@ -272,10 +272,10 @@ public class AvoidanceFallbackTests : IClassFixture<AvoidanceFallbackCase>
             var burnState = protectedOrbit.ToStateVector(option.BurnEpoch);
             var expected = new StateVector(burnState.Position, burnState.Velocity + option.DeltaVInertial, burnState.Observer,
                 option.BurnEpoch, burnState.Frame).ToStateVector(tca);
-            Assert.Equal(AvoidanceTrajectory.TwoBody, option.Trajectory);
+            Assert.Equal(TrajectorySource.TwoBody, option.Trajectory);
             Assert.True((post.ProtectedState.Position - expected.Position).Magnitude() < 1e-6);
             Assert.Equal(CovarianceSource.InitialStateHeldInRtn, post.EncounterState.ProtectedCovariance.Source);
-            Assert.Equal((tca - AvoidanceFallbackCase.Start).Duration(), post.EncounterState.ProtectedCovarianceAge);
+            Assert.Equal((tca - AvoidanceFallbackCase.Start).Duration(), post.EncounterState.ProtectedCovariance.Age);
             Assert.True(post.EncounterState.QualityFlags.HasFlag(EncounterQualityFlags.StaleCovarianceUsed));
             AssertHeldInRtn(protectedOrbit, post.ProtectedCovariance.CovarianceInertial.Value, post.ProtectedState);
         }
@@ -301,7 +301,7 @@ public class AvoidanceFallbackTests : IClassFixture<AvoidanceFallbackCase>
         Assert.Equal(6, avoidance.Count);
         Assert.All(avoidance, o =>
         {
-            Assert.Equal(AvoidanceTrajectory.TwoBody, o.Trajectory);
+            Assert.Equal(TrajectorySource.TwoBody, o.Trajectory);
             Assert.Equal(CovarianceSource.None, o.PostManeuverEncounter.EncounterState.ProtectedCovariance.Source);
         });
     }
@@ -331,7 +331,7 @@ public class AvoidanceFallbackTests : IClassFixture<AvoidanceFallbackCase>
             with.Select(o => o.PostManeuverEncounter.CollisionRisk.ProbabilityOfCollision));
         Assert.All(with, o =>
         {
-            Assert.Equal(AvoidanceTrajectory.Propagated, o.Trajectory);
+            Assert.Equal(TrajectorySource.Propagated, o.Trajectory);
             Assert.Equal(CovarianceSource.InitialStateHeldInRtn, o.PostManeuverEncounter.EncounterState.ProtectedCovariance.Source);
             Assert.Equal(CovarianceSource.Propagated, o.PostManeuverEncounter.EncounterState.SecondaryCovariance.Source);
         });
@@ -565,7 +565,7 @@ public class AvoidanceFallbackTests : IClassFixture<AvoidanceFallbackCase>
         Assert.Equal(6, avoidance.Count);
         foreach (var option in avoidance)
         {
-            Assert.Equal(AvoidanceTrajectory.TwoBody, option.Trajectory);
+            Assert.Equal(TrajectorySource.TwoBody, option.Trajectory);
             AssertOnTheLattice(option.PostManeuverEncounter.EncounterState.Epoch, option.BurnEpoch, "option");
         }
     }
@@ -685,12 +685,12 @@ public class AvoidanceFallbackTests : IClassFixture<AvoidanceFallbackCase>
         _output.WriteLine($"{(rk78 ? "RK7(8)" : "VV")} option {option.DeltaVInertial}: TCA {tcaError:E2} s, state {stateError:E2} m, " +
                           $"miss {post.EncounterState.MissDistanceMeters:F3} m ({missError:E2} m), Pc {post.CollisionRisk.ProbabilityOfCollision:E4} " +
                           $"({pcError:E2}), fuel {option.FuelCostEstimateKilograms:E4} kg");
-        Assert.Equal(AvoidanceTrajectory.Propagated, option.Trajectory);
+        Assert.Equal(TrajectorySource.Propagated, option.Trajectory);
         Assert.Equal(expected.EncounterState.ProtectedCovariance.Source, post.EncounterState.ProtectedCovariance.Source);
 
-        if (post.EncounterState.ProtectedCovarianceAge.HasValue)
+        if (post.EncounterState.ProtectedCovariance.Age.HasValue)
         {
-            Assert.Equal((tca - AvoidanceFallbackCase.Start).Duration(), post.EncounterState.ProtectedCovarianceAge);
+            Assert.Equal((tca - AvoidanceFallbackCase.Start).Duration(), post.EncounterState.ProtectedCovariance.Age);
         }
 
         // Twice the worst departure over Linux x64, Windows x64 and macOS arm64, rounded up at the second significant digit

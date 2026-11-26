@@ -416,22 +416,22 @@ public class AddedStatesGapTests
         spacecraft.AddPropagatedStates(States(orbit, 18000.0, 21600.0));
 
         // Inside one arc: accepted, its ends included
-        spacecraft.CheckInterpolatedStatesCover(new Window(Start, Start.AddSeconds(3600.0)), "search window", "searchWindow");
-        spacecraft.CheckInterpolatedStatesCover(new Window(Start.AddSeconds(18000.0), Start.AddSeconds(21600.0)), "search window", "searchWindow");
+        spacecraft.CheckInterpolatedStatesCover(new Window(Start, Start.AddSeconds(3600.0)), "search window");
+        spacecraft.CheckInterpolatedStatesCover(new Window(Start.AddSeconds(18000.0), Start.AddSeconds(21600.0)), "search window");
 
         // Across the gap, over it, in it: refused
         foreach (var (from, to) in new[] { (0.0, 21600.0), (3000.0, 3601.0), (3600.0, 18000.0), (7200.0, 10800.0), (17999.0, 18600.0) })
         {
             var window = new Window(Start.AddSeconds(from), Start.AddSeconds(to));
-            var exception = Assert.Throws<ArgumentException>(() => spacecraft.CheckInterpolatedStatesCover(window, "search window", "searchWindow"));
-            Assert.Equal("searchWindow", exception.ParamName);
+            Assert.Throws<InvalidOperationException>(() => spacecraft.CheckInterpolatedStatesCover(window, "search window"));
         }
 
-        // The conjunction analysis of the ILocalizable overloads refuses it before any search
+        // The conjunction analysis of the ILocalizable overloads refuses it before any search, with InvalidOperationException,
+        // the state of the spacecraft (decisions 81 and 86 of #668, lot L7; ArgumentException naming screeningWindow before)
         var secondary = NewSpacecraft(-7972, new StateVector(new Vector3(-7378137.0, 0.0, 1000.0), new Vector3(0.0, -5509.9, -4623.4), earth, Start, Frame.ICRF));
         var across = new Window(Start.AddSeconds(3000.0), Start.AddSeconds(19000.0));
-        Assert.Equal("screeningWindow", Assert.Throws<ArgumentException>(() => ConjunctionAssessment.Analyze(spacecraft, secondary, across)).ParamName);
-        Assert.Equal("screeningWindow", Assert.Throws<ArgumentException>(() => ConjunctionAssessment.AnalyzeAll(spacecraft, secondary, across)).ParamName);
+        Assert.Throws<InvalidOperationException>(() => ConjunctionAssessment.Analyze(spacecraft, secondary, across));
+        Assert.Throws<InvalidOperationException>(() => ConjunctionAssessment.AnalyzeAll(spacecraft, secondary, across));
 
         // The field-of-view search too, with InvalidOperationException, the state of the spacecraft (decisions 81 and 86 of
         // #668, lot L6; ArgumentException before 11.0.0)
@@ -475,8 +475,8 @@ public class AddedStatesGapTests
         Assert.Throws<InvalidOperationException>(() => spacecraft.GetEphemeris(lone.Epoch, moon, Frame.ICRF, Aberration.LT));
 
         // The window of its epoch alone is covered; any wider is not
-        spacecraft.CheckInterpolatedStatesCover(new Window(lone.Epoch, lone.Epoch), "search window", "searchWindow");
-        Assert.Throws<ArgumentException>(() => spacecraft.CheckInterpolatedStatesCover(new Window(lone.Epoch, lone.Epoch.AddSeconds(1.0)), "search window", "searchWindow"));
+        spacecraft.CheckInterpolatedStatesCover(new Window(lone.Epoch, lone.Epoch), "search window");
+        Assert.Throws<InvalidOperationException>(() => spacecraft.CheckInterpolatedStatesCover(new Window(lone.Epoch, lone.Epoch.AddSeconds(1.0)), "search window"));
 
         var directory = Directory.CreateDirectory(Path.Combine("Data/User/AddedStatesGap", "one"));
         var file = new FileInfo(Path.Combine(directory.FullName, "lone.bsp"));
@@ -537,11 +537,11 @@ public class AddedStatesGapTests
         Assert.Throws<InvalidOperationException>(() => spacecraft.GetEphemeris(lone.Epoch, moon, Frame.ICRF, Aberration.LT));
 
         // A window argument: its epoch alone is covered, any wider is refused before any search
-        spacecraft.CheckInterpolatedStatesCover(new Window(lone.Epoch, lone.Epoch), "search window", "searchWindow");
+        spacecraft.CheckInterpolatedStatesCover(new Window(lone.Epoch, lone.Epoch), "search window");
         var wider = new Window(lone.Epoch, lone.Epoch.AddSeconds(600.0));
-        Assert.Equal("searchWindow", Assert.Throws<ArgumentException>(() => spacecraft.CheckInterpolatedStatesCover(wider, "search window", "searchWindow")).ParamName);
+        Assert.Throws<InvalidOperationException>(() => spacecraft.CheckInterpolatedStatesCover(wider, "search window"));
         var secondary = NewSpacecraft(-7986, new StateVector(new Vector3(-7378137.0, 0.0, 1000.0), new Vector3(0.0, -5509.9, -4623.4), earth, Start, Frame.ICRF));
-        Assert.Equal("screeningWindow", Assert.Throws<ArgumentException>(() => ConjunctionAssessment.Analyze(spacecraft, secondary, wider)).ParamName);
+        Assert.Throws<InvalidOperationException>(() => ConjunctionAssessment.Analyze(spacecraft, secondary, wider));
         Assert.Throws<InvalidOperationException>(() => moon.FindDistanceWindows(wider, spacecraft, RelationnalOperator.Greater, 1.0, new WindowSearchOptions { Step = TimeSpan.FromSeconds(60.0) }).ToArray());
 
         // The SPK refuses it

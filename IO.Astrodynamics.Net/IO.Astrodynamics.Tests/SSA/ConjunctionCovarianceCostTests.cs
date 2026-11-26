@@ -119,7 +119,7 @@ public class ConjunctionCovarianceCostTests : IClassFixture<ReferenceCases>
         _output.WriteLine($"EvaluateAvoidance without a propagated covariance, {(rk78 ? "RK7(8) at 1e-11" : "Velocity-Verlet at 1 s")}: " +
                           $"{options.Count} options in {avoidance:F0} ms, each propagated from its burn to the end of the window");
         Assert.NotEmpty(options);
-        Assert.All(options, o => Assert.Equal(AvoidanceTrajectory.Propagated, o.Trajectory));
+        Assert.All(options, o => Assert.Equal(TrajectorySource.Propagated, o.Trajectory));
     }
 
     // The median of the elapsed time of several calls after one warm-up call, in ms

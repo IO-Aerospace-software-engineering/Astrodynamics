@@ -39,8 +39,8 @@ public enum EncounterQualityFlags
     /// <summary>
     /// A participant had no covariance at the encounter epoch, and the covariance of its initial state, used
     /// instead, is older than <see cref="ConjunctionAnalysisOptions.StaleCovarianceThreshold"/> (60 s by default).
-    /// That covariance is not propagated: it is held fixed in the RTN frame. See
-    /// <see cref="EncounterState.ProtectedCovarianceAge"/> and <see cref="EncounterState.SecondaryCovarianceAge"/>.
+    /// That covariance is not propagated: it is held fixed in the RTN frame. See the <see cref="ParticipantCovariance.Age"/>
+    /// of <see cref="EncounterState.ProtectedCovariance"/> and <see cref="EncounterState.SecondaryCovariance"/>.
     /// </summary>
     StaleCovarianceUsed = 1 << 4,
 

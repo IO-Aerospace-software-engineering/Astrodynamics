@@ -1,5 +1,6 @@
 // Copyright 2026. Sylvain Guillet (sylvain.guillet@tutamail.com)
 using System;
+using System.Globalization;
 using IO.Astrodynamics.Math;
 using IO.Astrodynamics.TimeSystem;
 
@@ -19,31 +20,14 @@ public sealed class EncounterState
         double missDistanceMeters,
         Matrix combinedCovarianceRtn,
         EncounterQualityFlags qualityFlags)
-        : this(epoch, relativeState, missDistanceMeters, combinedCovarianceRtn, qualityFlags, null, null)
-    {
-    }
-
-    /// <summary>
-    /// Initializes an encounter-state snapshot, with the age of each participant's covariance.
-    /// </summary>
-    public EncounterState(
-        Time epoch,
-        RelativeState relativeState,
-        double missDistanceMeters,
-        Matrix combinedCovarianceRtn,
-        EncounterQualityFlags qualityFlags,
-        TimeSpan? protectedCovarianceAge,
-        TimeSpan? secondaryCovarianceAge)
-        : this(epoch, relativeState, missDistanceMeters, combinedCovarianceRtn,
-            ParticipantCovariance.FromAge(protectedCovarianceAge), ParticipantCovariance.FromAge(secondaryCovarianceAge),
-            qualityFlags)
+        : this(epoch, relativeState, missDistanceMeters, combinedCovarianceRtn, ParticipantCovariance.None,
+            ParticipantCovariance.None, qualityFlags)
     {
     }
 
     /// <summary>
     /// Initializes an encounter-state snapshot, with the covariance of each participant: its source, its age, whether a
-    /// process noise was applied and its non-linearity index. The quality flags come last, so that this overload and the
-    /// one with the ages never compete for the same arguments.
+    /// process noise was applied and its non-linearity index.
     /// </summary>
     /// <exception cref="ArgumentNullException"><paramref name="relativeState"/>, <paramref name="protectedCovariance"/>
     /// or <paramref name="secondaryCovariance"/> is null.</exception>
@@ -94,19 +78,6 @@ public sealed class EncounterState
     public EncounterQualityFlags QualityFlags { get; }
 
     /// <summary>
-    /// Gets the time between the epoch of the protected object's covariance and the encounter epoch:
-    /// zero when the covariance was available at, or propagated to, the encounter epoch, the distance to the initial
-    /// state epoch when the initial covariance was held in RTN, null when the protected object has no covariance.
-    /// </summary>
-    public TimeSpan? ProtectedCovarianceAge => ProtectedCovariance.Age;
-
-    /// <summary>
-    /// Gets the time between the epoch of the secondary object's covariance and the encounter epoch, with the same
-    /// conventions as <see cref="ProtectedCovarianceAge"/>.
-    /// </summary>
-    public TimeSpan? SecondaryCovarianceAge => SecondaryCovariance.Age;
-
-    /// <summary>
     /// Gets the covariance of the protected object at the encounter epoch: its source, its age, whether a process noise
     /// was applied and its non-linearity index.
     /// </summary>
@@ -117,4 +88,24 @@ public sealed class EncounterState
     /// <see cref="ProtectedCovariance"/>.
     /// </summary>
     public ParticipantCovariance SecondaryCovariance { get; }
+
+    /// <summary>
+    /// Gets how the trajectory of the protected object was computed: propagated (a solution, or the states a numerical
+    /// propagation stored), the two-body orbit of its initial orbital parameters, SGP4, or read from the kernels (R17 of
+    /// #668, decided by S. Guillet, 2026-11-19). <see cref="TrajectorySource.Propagated"/> for a state built by hand.
+    /// </summary>
+    public TrajectorySource ProtectedTrajectory { get; internal init; }
+
+    /// <summary>
+    /// Gets how the trajectory of the secondary object was computed, with the conventions of
+    /// <see cref="ProtectedTrajectory"/>.
+    /// </summary>
+    public TrajectorySource SecondaryTrajectory { get; internal init; }
+
+    /// <summary>
+    /// The epoch, the miss distance, the relative speed and the quality flags, in invariant culture, for instance
+    /// "2024-01-01T12:00:00.0000000 TDB, miss 250.000 m, relative speed 14523.112 m/s, None" (R17 of #668).
+    /// </summary>
+    public override string ToString() => string.Create(CultureInfo.InvariantCulture,
+        $"{Epoch}, miss {MissDistanceMeters:F3} m, relative speed {RelativeState.RelativeVelocityInertial.Magnitude():F3} m/s, {QualityFlags}");
 }

@@ -44,14 +44,19 @@ public static class ConjunctionAssessment
         public StateSamplingSource(
             Func<Time, StateVector> getState,
             IReadOnlyList<Time> searchKnots,
+            TrajectorySource trajectory,
             DenseTrajectorySource denseTrajectory = null,
             PropagationSolution solution = null)
         {
             GetState = getState;
             SearchKnots = searchKnots;
+            Trajectory = trajectory;
             DenseTrajectory = denseTrajectory;
             Solution = solution;
         }
+
+        // How the states are computed, reported on the encounter (R17 of #668)
+        public TrajectorySource Trajectory { get; }
 
         public Func<Time, StateVector> GetState { get; }
 
@@ -141,6 +146,11 @@ public static class ConjunctionAssessment
     /// <see cref="EncounterQualityFlags.TcaAtWindowEnd"/> (#621: at the window midpoint before 11.0.0, so that an object
     /// closing at the window end could be dropped).
     /// </remarks>
+    /// <exception cref="ArgumentException">The <see cref="ConjunctionAnalysisOptions.ReadRangeRateOverWindow"/> of
+    /// <see cref="ScreeningOptions.Analysis"/> is true, which the sampled search of the screening does not read (R18 of
+    /// #668).</exception>
+    /// <exception cref="InvalidOperationException">The window leaves the propagated states of the protected spacecraft or
+    /// of a propagated candidate, or meets a gap between them (decisions 81 and 86 of #668).</exception>
     public static IReadOnlyList<EncounterCase> Screen(
         Spacecraft protectedSpacecraft,
         IEnumerable<ILocalizable> candidates,
@@ -152,6 +162,7 @@ public static class ConjunctionAssessment
 
         options ??= ScreeningOptions.Default;
         var analysis = options.Analysis ?? ScreeningOptions.ScreeningDefault;
+        ThrowIfReadsOverWindowOnSampledSearch(analysis, nameof(options));
 
         var rankedCases = new List<EncounterCase>();
         foreach (var candidate in candidates.Where(candidate =>
@@ -192,11 +203,14 @@ public static class ConjunctionAssessment
     /// to positive); without one, the closest window end, the absolute minimum of the distance over the window, flagged
     /// <see cref="EncounterQualityFlags.TcaAtWindowEnd"/> (#621: the window midpoint before 11.0.0).
     /// </returns>
-    /// <exception cref="ArgumentException">The window leaves the propagated states of the protected spacecraft or of a
-    /// propagated secondary spacecraft, which would be extrapolated (#527), or meets a gap between the windows given to its
-    /// <see cref="Spacecraft.AddPropagatedStates"/> (#792); the secondary object has the NAIF identifier of
-    /// the protected spacecraft, or <see cref="ConjunctionAnalysisOptions.SecondaryHardBodyRadiusMeters"/> differs from the
-    /// hard-body radius the secondary spacecraft gives (#683).</exception>
+    /// <exception cref="InvalidOperationException">The window leaves the propagated states of the protected spacecraft or of
+    /// a propagated secondary spacecraft, which would be extrapolated (#527), or meets a gap between the windows given to its
+    /// <see cref="Spacecraft.AddPropagatedStates"/> (#792): the state of the spacecraft (decisions 81 and 86 of #668, lot
+    /// L7: <see cref="ArgumentException"/> naming <paramref name="screeningWindow"/> before 11.0.0).</exception>
+    /// <exception cref="ArgumentException">The secondary object has the NAIF identifier of the protected spacecraft, or
+    /// <see cref="ConjunctionAnalysisOptions.SecondaryHardBodyRadiusMeters"/> differs from the hard-body radius the
+    /// secondary spacecraft gives (#683); <see cref="ConjunctionAnalysisOptions.ReadRangeRateOverWindow"/> is true, which
+    /// this sampled search does not read (R18 of #668).</exception>
     /// <exception cref="ArgumentOutOfRangeException">An option is out of its range, the radius of the secondary not finite
     /// or negative included (#683).</exception>
     public static EncounterCase Analyze(
@@ -210,6 +224,7 @@ public static class ConjunctionAssessment
         ThrowIfProtectedAsSecondary(protectedSpacecraft, secondaryObject);
 
         options = ResolveAnalysisOptions(options, secondaryObject);
+        ThrowIfReadsOverWindowOnSampledSearch(options, nameof(options));
 
         CheckStatesCover(protectedSpacecraft, secondaryObject, screeningWindow);
         var observer = protectedSpacecraft.InitialOrbitalParameters.Observer;
@@ -242,7 +257,9 @@ public static class ConjunctionAssessment
     /// <exception cref="ArgumentException">The secondary object has the NAIF identifier of the protected spacecraft; a
     /// trajectory was propagated for another spacecraft than its participant (compared by reference: the instance that was
     /// propagated; a solution built by hand is accepted); <see cref="ConjunctionAnalysisOptions.SecondaryHardBodyRadiusMeters"/>
-    /// differs from the hard-body radius the secondary spacecraft gives (#683); a trajectory does not cover the window.</exception>
+    /// differs from the hard-body radius the secondary spacecraft gives (#683); a trajectory does not cover the window;
+    /// <see cref="ConjunctionAnalysisOptions.ReadRangeRateOverWindow"/> is true and the trajectories do not share their
+    /// observer and frame, so the search is sampled (R18 of #668).</exception>
     /// <exception cref="ArgumentOutOfRangeException">An option is out of its range, the radius of the secondary not finite
     /// or negative included (#683).</exception>
     public static EncounterCase Analyze(
@@ -269,6 +286,11 @@ public static class ConjunctionAssessment
 
         var protectedSource = CreateTrajectoryStateSource(protectedSpacecraft, protectedTrajectory, observer, screeningWindow);
         var secondarySource = CreateTrajectoryStateSource(secondaryObject, secondaryTrajectory, observer, screeningWindow);
+        if (!CanUseDensePolynomialSearch(protectedSource, secondarySource))
+        {
+            ThrowIfReadsOverWindowOnSampledSearch(options, nameof(options));
+        }
+
         return AnalyzeInternal(protectedSpacecraft, secondaryObject, screeningWindow, options, protectedSource, secondarySource);
     }
 
@@ -284,11 +306,14 @@ public static class ConjunctionAssessment
     /// its zero (#624): a window end for a zero in the half-tick next to it, unflagged; an empty list when the window holds
     /// none (#621: a single encounter at the window midpoint before 11.0.0).
     /// </returns>
-    /// <exception cref="ArgumentException">The window leaves the propagated states of the protected spacecraft or of a
-    /// propagated secondary spacecraft, which would be extrapolated (#527), or meets a gap between the windows given to its
-    /// <see cref="Spacecraft.AddPropagatedStates"/> (#792); the secondary object has the NAIF identifier of
-    /// the protected spacecraft, or <see cref="ConjunctionAnalysisOptions.SecondaryHardBodyRadiusMeters"/> differs from the
-    /// hard-body radius the secondary spacecraft gives (#683).</exception>
+    /// <exception cref="InvalidOperationException">The window leaves the propagated states of the protected spacecraft or of
+    /// a propagated secondary spacecraft, which would be extrapolated (#527), or meets a gap between the windows given to its
+    /// <see cref="Spacecraft.AddPropagatedStates"/> (#792): the state of the spacecraft (decisions 81 and 86 of #668, lot
+    /// L7: <see cref="ArgumentException"/> naming <paramref name="screeningWindow"/> before 11.0.0).</exception>
+    /// <exception cref="ArgumentException">The secondary object has the NAIF identifier of the protected spacecraft, or
+    /// <see cref="ConjunctionAnalysisOptions.SecondaryHardBodyRadiusMeters"/> differs from the hard-body radius the
+    /// secondary spacecraft gives (#683); <see cref="ConjunctionAnalysisOptions.ReadRangeRateOverWindow"/> is true, which
+    /// this sampled search does not read (R18 of #668).</exception>
     /// <exception cref="ArgumentOutOfRangeException">An option is out of its range, the radius of the secondary not finite
     /// or negative included (#683).</exception>
     public static IReadOnlyList<EncounterCase> AnalyzeAll(
@@ -302,6 +327,7 @@ public static class ConjunctionAssessment
         ThrowIfProtectedAsSecondary(protectedSpacecraft, secondaryObject);
 
         options = ResolveAnalysisOptions(options, secondaryObject);
+        ThrowIfReadsOverWindowOnSampledSearch(options, nameof(options));
 
         CheckStatesCover(protectedSpacecraft, secondaryObject, screeningWindow);
         var observer = protectedSpacecraft.InitialOrbitalParameters.Observer;
@@ -334,7 +360,9 @@ public static class ConjunctionAssessment
     /// <exception cref="ArgumentException">The secondary object has the NAIF identifier of the protected spacecraft; a
     /// trajectory was propagated for another spacecraft than its participant (compared by reference: the instance that was
     /// propagated; a solution built by hand is accepted); <see cref="ConjunctionAnalysisOptions.SecondaryHardBodyRadiusMeters"/>
-    /// differs from the hard-body radius the secondary spacecraft gives (#683); a trajectory does not cover the window.</exception>
+    /// differs from the hard-body radius the secondary spacecraft gives (#683); a trajectory does not cover the window;
+    /// <see cref="ConjunctionAnalysisOptions.ReadRangeRateOverWindow"/> is true and the trajectories do not share their
+    /// observer and frame, so the search is sampled (R18 of #668).</exception>
     /// <exception cref="ArgumentOutOfRangeException">An option is out of its range, the radius of the secondary not finite
     /// or negative included (#683).</exception>
     public static IReadOnlyList<EncounterCase> AnalyzeAll(
@@ -361,6 +389,11 @@ public static class ConjunctionAssessment
 
         var protectedSource = CreateTrajectoryStateSource(protectedSpacecraft, protectedTrajectory, observer, screeningWindow);
         var secondarySource = CreateTrajectoryStateSource(secondaryObject, secondaryTrajectory, observer, screeningWindow);
+        if (!CanUseDensePolynomialSearch(protectedSource, secondarySource))
+        {
+            ThrowIfReadsOverWindowOnSampledSearch(options, nameof(options));
+        }
+
         return AnalyzeAllInternal(protectedSpacecraft, secondaryObject, screeningWindow, options, protectedSource, secondarySource);
     }
 
@@ -379,7 +412,8 @@ public static class ConjunctionAssessment
     /// </remarks>
     /// <exception cref="ArgumentException">The <see cref="ConjunctionAnalysisOptions.SecondaryHardBodyRadiusMeters"/> of
     /// <see cref="AvoidanceSearchOptions.Analysis"/> differs from the hard-body radius the secondary spacecraft gives
-    /// (#683).</exception>
+    /// (#683), or its <see cref="ConjunctionAnalysisOptions.ReadRangeRateOverWindow"/> is true, which the sampled search of
+    /// the options does not read (R18 of #668; inherited from the encounter, it is cleared).</exception>
     public static AvoidanceStudy EvaluateAvoidance(
         EncounterCase encounterCase,
         AvoidanceSearchOptions options = null)
@@ -387,6 +421,11 @@ public static class ConjunctionAssessment
         ArgumentNullException.ThrowIfNull(encounterCase);
 
         options ??= AvoidanceSearchOptions.Default;
+        if (options.Analysis != null)
+        {
+            ThrowIfReadsOverWindowOnSampledSearch(options.Analysis, nameof(options));
+        }
+
         var reanalysis = ReanalysisOptions(encounterCase, options);
         var observer = encounterCase.ProtectedSpacecraft.InitialOrbitalParameters.Observer;
         var burnDirections = BuildBurnDirections().ToArray();
@@ -399,7 +438,7 @@ public static class ConjunctionAssessment
         // it has one, or on the two-body orbit of the state after the burn, the covariance held in RTN (#402)
         var propagated = PropagatedAvoidance.TryCreate(encounterCase, options, observer, reanalysis);
         var fallback = propagated == null ? new FallbackAvoidance(encounterCase, observer, reanalysis) : null;
-        var trajectory = propagated != null || fallback.Propagated ? AvoidanceTrajectory.Propagated : AvoidanceTrajectory.TwoBody;
+        var trajectory = propagated != null || fallback.Propagated ? TrajectorySource.Propagated : TrajectorySource.TwoBody;
 
         // The grid is the constraint (R17 of #668): every lead time and magnitude, a lead time whose burn the window or the
         // trajectory does not hold listed with its reason
@@ -457,11 +496,11 @@ public static class ConjunctionAssessment
     /// <summary>
     /// The avoidance options of an encounter whose protected covariance is not propagated (#402). Each option is
     /// propagated from the state after its burn with the force model of the propagation of the protected participant the
-    /// analysis sampled (<see cref="EncounterCase.ProtectedTrajectory"/>, or the force model the spacecraft keeps from
+    /// analysis sampled (<see cref="EncounterCase.ProtectedSolution"/>, or the force model the spacecraft keeps from
     /// its last propagation, <see cref="Spacecraft.LastForceModel"/>): its forces, its integrator and step settings
     /// (RK7(8) or Velocity-Verlet), its orientation cache, under its lock, with the mass of the trajectory at the burn
     /// less the fuel of the option. Without such a propagation (not propagated, TLE, SPICE kernel), the option is the
-    /// two-body orbit of the state after the burn, as before (<see cref="AvoidanceTrajectory.TwoBody"/>).
+    /// two-body orbit of the state after the burn, as before (<see cref="TrajectorySource.TwoBody"/>).
     /// </summary>
     /// <remarks>
     /// The covariance of the protected participant is the one the analysis resolves for it at the burn (given there by
@@ -491,7 +530,7 @@ public static class ConjunctionAssessment
             _analysisOptions = reanalysis with { CovariancePropagation = CovariancePropagationOptions.None };
             _observer = observer;
             _spacecraft = encounterCase.ProtectedSpacecraft;
-            _trajectory = encounterCase.ProtectedTrajectory;
+            _trajectory = encounterCase.ProtectedSolution;
             _forceModel = _trajectory != null ? _trajectory.ForceModel : _spacecraft.LastForceModel;
 
             // Within the window and the force model of the propagation, whose ephemeris and orientation caches cover it
@@ -2459,7 +2498,11 @@ public static class ConjunctionAssessment
             combinedCovarianceRtn,
             protectedCovariance.ToParticipantCovariance(),
             secondaryCovariance.ToParticipantCovariance(),
-            qualityFlags);
+            qualityFlags)
+        {
+            ProtectedTrajectory = protectedSource.Trajectory,
+            SecondaryTrajectory = secondarySource.Trajectory
+        };
 
         return new EncounterCase(
             protectedSpacecraft,
@@ -2472,8 +2515,11 @@ public static class ConjunctionAssessment
         {
             ProtectedCovariance = protectedCovariance,
             SecondaryCovariance = secondaryCovariance,
-            ProtectedTrajectory = protectedSource.Solution,
-            AnalysisOptions = options
+            ProtectedSolution = protectedSource.Solution,
+            AnalysisOptions = options,
+            Search = CanUseDensePolynomialSearch(protectedSource, secondarySource)
+                ? CloseApproachSearch.Polynomial
+                : CloseApproachSearch.Sampled
         };
     }
 
@@ -2994,6 +3040,19 @@ public static class ConjunctionAssessment
         };
     }
 
+    // The reads of the range rate over the window serve the polynomial search only: asked where the sampled search runs,
+    // they would be ignored (R18 of #668, decided by S. Guillet, 2026-11-19: silently ignored before 11.0.0)
+    private static void ThrowIfReadsOverWindowOnSampledSearch(ConjunctionAnalysisOptions options, string paramName)
+    {
+        if (options.ReadRangeRateOverWindow)
+        {
+            throw new ArgumentException(
+                "ReadRangeRateOverWindow applies to the polynomial search of two propagations that share their observer and " +
+                "frame (the PropagationSolution overloads of Analyze and AnalyzeAll); this search is sampled: leave it false.",
+                paramName);
+        }
+    }
+
     // An object does not conjunct with itself: the NAIF rule of Screen, which skips the protected spacecraft (#683)
     private static void ThrowIfProtectedAsSecondary(Spacecraft protectedSpacecraft, ILocalizable secondaryObject)
     {
@@ -3019,11 +3078,12 @@ public static class ConjunctionAssessment
     }
 
     // The ILocalizable overloads read the stored states of a propagated spacecraft, which must cover the window (#527), as
-    // a trajectory must (ValidateTrajectoryCoverage)
+    // a trajectory must (ValidateTrajectoryCoverage); InvalidOperationException, the state of the spacecraft (decisions 81
+    // and 86 of #668, lot L7: ArgumentException before)
     private static void CheckStatesCover(Spacecraft protectedSpacecraft, ILocalizable secondaryObject, in Window window)
     {
-        protectedSpacecraft.CheckInterpolatedStatesCover(window, "screening window", "screeningWindow");
-        (secondaryObject as Spacecraft)?.CheckInterpolatedStatesCover(window, "screening window", "screeningWindow");
+        protectedSpacecraft.CheckInterpolatedStatesCover(window, "screening window");
+        (secondaryObject as Spacecraft)?.CheckInterpolatedStatesCover(window, "screening window");
     }
 
     private static void ValidateTrajectoryCoverage(PropagationSolution trajectory, Window window, string paramName)
@@ -3049,8 +3109,21 @@ public static class ConjunctionAssessment
         return new StateSamplingSource(
             epoch => GetState(localizable, epoch, observer),
             Array.Empty<Time>(),
+            TrajectoryOf(localizable),
             solution: (localizable as Spacecraft)?.LastPropagation);
     }
+
+    // How the ephemeris of an object is computed (R17 of #668): a spacecraft from its kernels, its stored states, SGP4 or
+    // the two-body orbit of its initial orbital parameters, as GetGeometricStateRelativeTo reads them; any other object
+    // through the data provider
+    private static TrajectorySource TrajectoryOf(ILocalizable localizable) => localizable switch
+    {
+        Spacecraft { IsSpiceBacked: true } => TrajectorySource.Kernel,
+        Spacecraft spacecraft when spacecraft.InterpolatedStatesWindow is not null => TrajectorySource.Propagated,
+        Spacecraft { InitialOrbitalParameters: OrbitalParameters.TLE.TLE } => TrajectorySource.Sgp4,
+        Spacecraft => TrajectorySource.TwoBody,
+        _ => TrajectorySource.Kernel
+    };
 
     private static StateSamplingSource CreateTrajectoryStateSource(
         ILocalizable localizable,
@@ -3080,6 +3153,7 @@ public static class ConjunctionAssessment
                     : state.RelativeTo(observer, Aberration.None).ToStateVector();
             },
             searchKnots,
+            TrajectorySource.Propagated,
             denseTrajectory,
             trajectory);
     }

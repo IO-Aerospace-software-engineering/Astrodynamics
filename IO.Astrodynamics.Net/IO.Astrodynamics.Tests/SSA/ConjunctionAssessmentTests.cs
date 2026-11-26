@@ -1998,8 +1998,8 @@ public partial class ConjunctionAssessmentTests
             });
 
         Assert.Equal(EncounterQualityFlags.StaleCovarianceUsed, encounter.EncounterState.QualityFlags);
-        Assert.Equal(10800.0, encounter.EncounterState.ProtectedCovarianceAge!.Value.TotalSeconds, 1.0e-3);
-        Assert.Equal(10800.0, encounter.EncounterState.SecondaryCovarianceAge!.Value.TotalSeconds, 1.0e-3);
+        Assert.Equal(10800.0, encounter.EncounterState.ProtectedCovariance.Age!.Value.TotalSeconds, 1.0e-3);
+        Assert.Equal(10800.0, encounter.EncounterState.SecondaryCovariance.Age!.Value.TotalSeconds, 1.0e-3);
         // The initial states carry the TCA geometry, so holding the covariances in RTN leaves them unchanged:
         // the exact Pc is still reproduced.
         double staleError = System.Math.Abs(encounter.CollisionRisk.ProbabilityOfCollision!.Value - OmitronCase01ExactPc) / OmitronCase01ExactPc;
@@ -2048,7 +2048,7 @@ public partial class ConjunctionAssessmentTests
 
         Assert.Equal(TimeSpan.FromSeconds(60), options.StaleCovarianceThreshold);
         Assert.False(encounter.EncounterState.QualityFlags.HasFlag(EncounterQualityFlags.StaleCovarianceUsed));
-        Assert.Equal(45.0, encounter.EncounterState.ProtectedCovarianceAge!.Value.TotalSeconds, 1.0e-2);
+        Assert.Equal(45.0, encounter.EncounterState.ProtectedCovariance.Age!.Value.TotalSeconds, 1.0e-2);
 
         // A tighter threshold flags the same encounter.
         var strict = ConjunctionAssessment.Analyze(protectedSpacecraft, protectedTrajectory,
@@ -2390,10 +2390,10 @@ public partial class ConjunctionAssessmentTests
 
         // The covariances are 10 s old at TCA, below the 60 s stale threshold: no quality flag.
         Assert.Equal(EncounterQualityFlags.None, encounter.EncounterState.QualityFlags);
-        Assert.NotNull(encounter.EncounterState.ProtectedCovarianceAge);
-        Assert.NotNull(encounter.EncounterState.SecondaryCovarianceAge);
-        Assert.Equal(10.0, encounter.EncounterState.ProtectedCovarianceAge!.Value.TotalSeconds, 1.0e-3);
-        Assert.Equal(10.0, encounter.EncounterState.SecondaryCovarianceAge!.Value.TotalSeconds, 1.0e-3);
+        Assert.NotNull(encounter.EncounterState.ProtectedCovariance.Age);
+        Assert.NotNull(encounter.EncounterState.SecondaryCovariance.Age);
+        Assert.Equal(10.0, encounter.EncounterState.ProtectedCovariance.Age!.Value.TotalSeconds, 1.0e-3);
+        Assert.Equal(10.0, encounter.EncounterState.SecondaryCovariance.Age!.Value.TotalSeconds, 1.0e-3);
         Assert.Equal(expectedCombinedHardBodyRadius, encounter.CollisionRisk.CombinedHardBodyRadiusMeters, 12);
         Assert.NotNull(encounter.CollisionRisk.ProbabilityOfCollision);
         Assert.NotNull(expectedPc);

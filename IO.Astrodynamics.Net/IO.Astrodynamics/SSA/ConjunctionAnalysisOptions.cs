@@ -81,8 +81,11 @@ public sealed record ConjunctionAnalysisOptions
     /// read: over one day of two LEO propagations at the default steps, the dense <c>Analyze</c> takes about 100 ms
     /// against about 18 ms without it at the default 60 s spacing (see <c>docs/reference/conjunction-assessment.md</c>).
     /// Ask for it on slow co-orbital formations (relative speeds of metres per second or less) propagated with long or
-    /// mixed steps. The sampled search (<see cref="IO.Astrodynamics.Body.ILocalizable"/> participants, the screening and
-    /// the avoidance options) does not use it.
+    /// mixed steps. The sampled search (<see cref="IO.Astrodynamics.Body.ILocalizable"/> participants, the screening, the
+    /// avoidance options and two propagations that do not share their observer and frame) does not use it: true throws
+    /// <see cref="System.ArgumentException"/> naming the options before any search there (R18 of #668, decided by
+    /// S. Guillet, 2026-11-19; ignored before 11.0.0), but for the options an avoidance inherits from its encounter, which
+    /// clear it.
     /// </para>
     /// </remarks>
     public bool ReadRangeRateOverWindow { get; init; }

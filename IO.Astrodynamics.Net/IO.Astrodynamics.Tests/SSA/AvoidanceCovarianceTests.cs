@@ -345,7 +345,7 @@ public class AvoidanceCovarianceTests : IClassFixture<ConjunctionCovarianceCase>
             with.Select(o => o.PostManeuverEncounter.CollisionRisk.ProbabilityOfCollision));
         Assert.All(with, o =>
         {
-            Assert.Equal(AvoidanceTrajectory.Propagated, o.Trajectory);
+            Assert.Equal(TrajectorySource.Propagated, o.Trajectory);
             Assert.NotEqual(CovarianceSource.Propagated, o.PostManeuverEncounter.EncounterState.ProtectedCovariance.Source);
         });
     }
@@ -394,7 +394,7 @@ public class AvoidanceCovarianceTests : IClassFixture<ConjunctionCovarianceCase>
         {
             var post = avoidance[i].PostManeuverEncounter;
             var state = post.EncounterState;
-            Assert.Equal(AvoidanceTrajectory.Propagated, avoidance[i].Trajectory);
+            Assert.Equal(TrajectorySource.Propagated, avoidance[i].Trajectory);
             Assert.Equal(CovarianceSource.Propagated, state.ProtectedCovariance.Source);
             Assert.Equal(CovarianceSource.InitialStateHeldInRtn, state.SecondaryCovariance.Source);
             Assert.True(state.SecondaryCovariance.Age > TimeSpan.FromSeconds(60.0) && state.SecondaryCovariance.Age < TimeSpan.FromDays(2.0));

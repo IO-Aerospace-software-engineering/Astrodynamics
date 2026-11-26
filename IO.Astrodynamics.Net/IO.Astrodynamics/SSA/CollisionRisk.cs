@@ -1,4 +1,5 @@
 // Copyright 2026. Sylvain Guillet (sylvain.guillet@tutamail.com)
+using System.Globalization;
 using IO.Astrodynamics.Math;
 
 namespace IO.Astrodynamics.SSA;
@@ -59,4 +60,15 @@ public sealed class CollisionRisk
     /// Gets the cross-track 1-sigma value from the combined RTN covariance, in meters.
     /// </summary>
     public double CrossTrackSigmaMeters { get; }
+
+    /// <summary>
+    /// The probability (4 significant digits, "Pc n/a" without one), the combined radius and the RTN sigmas, in invariant
+    /// culture, for instance "Pc 2.715E-04, HBR 13 m, sigma R/T/N 94.3/360.6/67.1 m" (R17 of #668).
+    /// </summary>
+    public override string ToString() => string.Create(CultureInfo.InvariantCulture,
+        $"Pc {FormatProbability(ProbabilityOfCollision)}, HBR {CombinedHardBodyRadiusMeters} m, sigma R/T/N {RadialSigmaMeters:F1}/{InTrackSigmaMeters:F1}/{CrossTrackSigmaMeters:F1} m");
+
+    // A probability with 4 significant digits, "n/a" without one
+    internal static string FormatProbability(double? probability) =>
+        probability?.ToString("G4", CultureInfo.InvariantCulture) ?? "n/a";
 }

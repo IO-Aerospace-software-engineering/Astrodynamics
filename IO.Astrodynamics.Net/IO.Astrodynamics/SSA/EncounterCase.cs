@@ -1,5 +1,6 @@
 // Copyright 2026. Sylvain Guillet (sylvain.guillet@tutamail.com)
 using System;
+using System.Globalization;
 using IO.Astrodynamics.Body;
 using IO.Astrodynamics.Body.Spacecraft;
 using IO.Astrodynamics.CCSDS.CDM;
@@ -104,13 +105,51 @@ public sealed class EncounterCase
     /// propagation of the spacecraft in RK7(8); null otherwise. The avoidance options are propagated with its force model
     /// (#402).
     /// </summary>
-    internal PropagationSolution ProtectedTrajectory { get; init; }
+    internal PropagationSolution ProtectedSolution { get; init; }
 
     /// <summary>
-    /// The options the analysis used, the radius of the secondary resolved (#683); null for a case built by hand. The
-    /// avoidance options are re-analyzed with them, but for the values <see cref="AvoidanceSearchOptions"/> gives.
+    /// Gets the options the analysis used, the radius of the secondary resolved (#683): the options given, or the defaults,
+    /// with <see cref="ConjunctionAnalysisOptions.SecondaryHardBodyRadiusMeters"/> the radius the analysis took for the
+    /// secondary. <see cref="ConjunctionAssessment.EvaluateAvoidance"/> re-analyzes its options with them unless
+    /// <see cref="AvoidanceSearchOptions.Analysis"/> gives others, and <c>AnalysisOptions with { … }</c> is the start of
+    /// such options. Null for a case built by hand (R17 of #668, decided by S. Guillet, 2026-11-19; internal before
+    /// 11.0.0).
     /// </summary>
-    internal ConjunctionAnalysisOptions AnalysisOptions { get; init; }
+    public ConjunctionAnalysisOptions AnalysisOptions { get; internal init; }
+
+    /// <summary>
+    /// Gets the search that found the epoch of the encounter: <see cref="CloseApproachSearch.Polynomial"/> on two
+    /// propagations that share their observer and frame (the <see cref="PropagationSolution"/> overloads),
+    /// <see cref="CloseApproachSearch.Sampled"/> otherwise (R18 of #668, decided by S. Guillet, 2026-11-19). The two
+    /// searches differ in cost and in their rule at the window ends; see the conjunction assessment reference.
+    /// </summary>
+    public CloseApproachSearch Search { get; internal init; }
+
+    /// <summary>Gets the time of closest approach, <see cref="EncounterState"/>'s <see cref="EncounterState.Epoch"/>.</summary>
+    public Time Tca => EncounterState.Epoch;
+
+    /// <summary>Gets the miss distance at TCA, in m, <see cref="EncounterState"/>'s <see cref="EncounterState.MissDistanceMeters"/>.</summary>
+    public double MissDistanceMeters => EncounterState.MissDistanceMeters;
+
+    /// <summary>
+    /// Gets the relative speed at TCA, in m/s: the norm of the relative velocity
+    /// (<see cref="RelativeState.RelativeVelocityInertial"/>), the <c>RELATIVE_SPEED</c> of the CDM.
+    /// </summary>
+    public double RelativeSpeedMetersPerSecond => EncounterState.RelativeState.RelativeVelocityInertial.Magnitude();
+
+    /// <summary>
+    /// Gets the probability of collision, <see cref="CollisionRisk"/>'s <see cref="SSA.CollisionRisk.ProbabilityOfCollision"/>;
+    /// null when it could not be computed.
+    /// </summary>
+    public double? ProbabilityOfCollision => CollisionRisk?.ProbabilityOfCollision;
+
+    /// <summary>
+    /// The TCA, the miss, the probability ("Pc n/a" without one), the combined hard-body radius and the quality flags, in
+    /// invariant culture, for instance "TCA 2024-01-01T12:00:00.0000000 TDB, miss 250.000 m, Pc 2.715E-04, HBR 13 m, None"
+    /// (R17 of #668).
+    /// </summary>
+    public override string ToString() => string.Create(CultureInfo.InvariantCulture,
+        $"TCA {Tca}, miss {MissDistanceMeters:F3} m, Pc {SSA.CollisionRisk.FormatProbability(ProbabilityOfCollision)}, HBR {CollisionRisk?.CombinedHardBodyRadiusMeters} m, {EncounterState.QualityFlags}");
 
     /// <summary>
     /// Exports this encounter as a CCSDS Conjunction Data Message.

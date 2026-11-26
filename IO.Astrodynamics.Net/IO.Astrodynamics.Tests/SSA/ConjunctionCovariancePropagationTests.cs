@@ -140,7 +140,7 @@ public class ConjunctionCovariancePropagationTests : IClassFixture<ConjunctionCo
         Assert.True(System.Math.Abs((state.Epoch - ConjunctionCovarianceCase.Tca).TotalSeconds) < 1.0);
         Assert.Equal(CovarianceSource.Propagated, state.ProtectedCovariance.Source);
         Assert.Equal(CovarianceSource.Propagated, state.SecondaryCovariance.Source);
-        Assert.Equal(TimeSpan.Zero, state.ProtectedCovarianceAge);
+        Assert.Equal(TimeSpan.Zero, state.ProtectedCovariance.Age);
         Assert.False(state.ProtectedCovariance.ProcessNoiseApplied);
         Assert.False(state.QualityFlags.HasFlag(EncounterQualityFlags.StaleCovarianceUsed));
 
@@ -368,30 +368,25 @@ public class ConjunctionCovariancePropagationTests : IClassFixture<ConjunctionCo
     }
 
     [Fact]
-    public void EncounterState_ConstructorsWithTheAges_InferTheSource()
+    public void EncounterState_Constructors_TakeTheParticipantCovariances()
     {
         // Arrange
         var relative = new RelativeState(ConjunctionCovarianceCase.Tca, Vector3.VectorX, Vector3.VectorY, Vector3.VectorX,
             Vector3.VectorY);
 
-        // Act
+        // Act (the constructor of the two ages removed in 11.0.0, R17 of #668: ParticipantCovariance carries them)
         var none = new EncounterState(ConjunctionCovarianceCase.Tca, relative, 1.0, new Matrix(6, 6),
             EncounterQualityFlags.None);
-        var aged = new EncounterState(ConjunctionCovarianceCase.Tca, relative, 1.0, new Matrix(6, 6),
-            EncounterQualityFlags.None, TimeSpan.Zero, TimeSpan.FromHours(3.0));
         var full = new EncounterState(ConjunctionCovarianceCase.Tca, relative, 1.0, new Matrix(6, 6),
             new ParticipantCovariance(CovarianceSource.Propagated, TimeSpan.Zero, true, 0.02), ParticipantCovariance.None,
             EncounterQualityFlags.None);
 
         // Assert
         Assert.Same(ParticipantCovariance.None, none.ProtectedCovariance);
-        Assert.Null(none.SecondaryCovarianceAge);
-        Assert.Equal(CovarianceSource.ProvidedAtEncounter, aged.ProtectedCovariance.Source);
-        Assert.Equal(CovarianceSource.InitialStateHeldInRtn, aged.SecondaryCovariance.Source);
-        Assert.Equal(TimeSpan.FromHours(3.0), aged.SecondaryCovarianceAge);
+        Assert.Null(none.SecondaryCovariance.Age);
         Assert.True(full.ProtectedCovariance.ProcessNoiseApplied);
         Assert.Equal(0.02, full.ProtectedCovariance.NonlinearityIndex);
-        Assert.Equal(TimeSpan.Zero, full.ProtectedCovarianceAge);
+        Assert.Equal(TimeSpan.Zero, full.ProtectedCovariance.Age);
         Assert.Throws<ArgumentNullException>(() => new EncounterState(ConjunctionCovarianceCase.Tca, relative, 1.0,
             new Matrix(6, 6), null, ParticipantCovariance.None, EncounterQualityFlags.None));
     }
