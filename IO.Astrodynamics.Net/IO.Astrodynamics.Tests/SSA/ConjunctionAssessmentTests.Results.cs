@@ -192,4 +192,20 @@ public partial class ConjunctionAssessmentTests
         Assert.Equal(CloseApproachSearch.Polynomial, dense.Search);
         Assert.True(dense.AnalysisOptions.ReadRangeRateOverWindow);
     }
+
+    /// <summary>
+    /// The results are the library's (R17 of #668, choice 4, lot L7): no public constructor on the five result types, and
+    /// the trajectory of an avoidance option set by the library only.
+    /// </summary>
+    [Theory]
+    [InlineData(typeof(EncounterCase))]
+    [InlineData(typeof(EncounterState))]
+    [InlineData(typeof(CollisionRisk))]
+    [InlineData(typeof(AvoidanceOption))]
+    [InlineData(typeof(RelativeState))]
+    public void ResultTypes_HaveNoPublicConstructor(Type type)
+    {
+        Assert.Empty(type.GetConstructors());
+        Assert.All(type.GetProperties(), p => Assert.True(p.SetMethod is null || !p.SetMethod.IsPublic, p.Name));
+    }
 }

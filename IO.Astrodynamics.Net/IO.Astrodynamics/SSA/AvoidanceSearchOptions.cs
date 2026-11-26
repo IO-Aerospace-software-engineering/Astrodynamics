@@ -88,8 +88,7 @@ public sealed record AvoidanceSearchOptions
 
     /// <summary>
     /// The settings of the re-analysis of each option (structuring choice 2 of #668, decided by S. Guillet, 2026-11-19);
-    /// null (the default) for those the encounter was analyzed with (#683), the defaults of
-    /// <see cref="ConjunctionAnalysisOptions"/> for an encounter built by hand.
+    /// null (the default) for those the encounter was analyzed with (#683).
     /// </summary>
     /// <remarks>
     /// A record given replaces the encounter's whole: start from the encounter's settings to change one value. Its

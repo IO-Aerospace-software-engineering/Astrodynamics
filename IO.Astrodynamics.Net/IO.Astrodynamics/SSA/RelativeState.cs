@@ -8,12 +8,16 @@ namespace IO.Astrodynamics.SSA;
 /// <summary>
 /// Stores relative position and velocity at an encounter epoch in both inertial and RTN representations.
 /// </summary>
+/// <remarks>
+/// A result of the library: <see cref="ConjunctionAssessment"/> and <see cref="IO.Astrodynamics.CCSDS.CDM.Cdm.ToEncounter"/> build
+/// it, its constructors internal (R17 of #668, choice 4, lot L7; public before 11.0.0).
+/// </remarks>
 public sealed class RelativeState
 {
     /// <summary>
     /// Initializes a relative-state snapshot.
     /// </summary>
-    public RelativeState(
+    internal RelativeState(
         Time epoch,
         Vector3 relativePositionInertial,
         Vector3 relativeVelocityInertial,

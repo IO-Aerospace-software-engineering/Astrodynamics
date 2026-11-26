@@ -8174,7 +8174,7 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   2026-11-19, and decision 109, decided by S. Guillet, 2026-11-26; no forwarder). **Breaking**: the first parameter of
   `Screen`, `Analyze` and `AnalyzeAll` (both families) is `Spacecraft protectedSpacecraft`, null throwing
   `ArgumentNullException` naming it, and `EncounterCase.ProtectedAsset` (a `ProtectedSpacecraftProfile`) is
-  `ProtectedSpacecraft` (a `Spacecraft`), the constructors of `EncounterCase` taking it; the analyses are bit for bit
+  `ProtectedSpacecraft` (a `Spacecraft`); the analyses are bit for bit
   those of the profile. `EvaluateAvoidance` returns an `AvoidanceStudy` (Added) instead of the list of options, the same
   options in the same order. Every lead time and magnitude of `AvoidanceSearchOptions` is evaluated: the
   `ManeuverConstraints` of the profile (10 min to 24 h and 5 m/s by default) dropped the others, so a lead time below
@@ -8211,6 +8211,16 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   leave `ReadRangeRateOverWindow` false on those calls (`encounter.AnalysisOptions with { ReadRangeRateOverWindow = false }`
   to reuse the options of a polynomial search); catch `InvalidOperationException` for a window past the stored states;
   `AvoidanceTrajectory.TwoBody` → `TrajectorySource.TwoBody`, likewise `Propagated`.
+- **The constructors of the results of the conjunction analysis are internal** (lot L7, R17 of
+  [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668), choice 4, decided by S. Guillet, 2026-11-19; no forwarder). **Breaking**: the
+  public constructors of `EncounterCase` (two), `EncounterState` (two), `CollisionRisk`, `AvoidanceOption` and
+  `RelativeState`, and the `init` accessor of `AvoidanceOption.Trajectory`, are internal: these are results, built by
+  `ConjunctionAssessment` (`Screen`, `Analyze`, `AnalyzeAll`, `EvaluateAvoidance`) and `Cdm.ToEncounter`, whose
+  encounters always carry their `AnalysisOptions`. Before, a case built by hand had null `AnalysisOptions`, its
+  avoidance re-analyzed with the defaults, and a `Propagated` trajectory for each participant. No result of the library
+  moves (`ConjunctionAssessmentTests.ResultTypes_HaveNoPublicConstructor`). Migration: an encounter from two states at
+  TCA → `Cdm.ToEncounter` of a CDM holding them, or `CollisionProbability.Foster2D` for the Pc alone; an encounter of
+  two objects → `ConjunctionAssessment.Analyze`, a debris or catalogue object as a `TrackedObject`.
 
 **Removed**
 

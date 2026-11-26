@@ -130,8 +130,7 @@ index stay off for the options, and the covariance is propagated as the [paths a
 state. An encounter of `Screen` carries the settings of the screening, a sample step of 5 min by default: without
 stored steps (the two-body orbit) the search step of the options is then 18.75 s instead of 3.75 s (none of the 90
 options of a measured two-body pair moved, none of the 10 of a propagated pair; two minima within one search step would
-be one). An encounter built by hand takes the defaults of `ConjunctionAnalysisOptions` (1 min, 60 s, 1 m/s, 60 s,
-1e-9 s), those of the avoidance before 11.0.0.
+be one).
 
 ## AvoidanceOption
 

@@ -7,12 +7,16 @@ namespace IO.Astrodynamics.SSA;
 /// <summary>
 /// Stores the collision-risk products derived from an encounter.
 /// </summary>
+/// <remarks>
+/// A result of the library: <see cref="ConjunctionAssessment"/> and <see cref="IO.Astrodynamics.CCSDS.CDM.Cdm.ToEncounter"/> build
+/// it, its constructors internal (R17 of #668, choice 4, lot L7; public before 11.0.0).
+/// </remarks>
 public sealed class CollisionRisk
 {
     /// <summary>
     /// Initializes a collision-risk result.
     /// </summary>
-    public CollisionRisk(
+    internal CollisionRisk(
         double combinedHardBodyRadiusMeters,
         double? probabilityOfCollision,
         Matrix projectedCovariance,

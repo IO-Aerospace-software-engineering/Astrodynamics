@@ -71,8 +71,7 @@ The records of a CDM hold real numbers only, as the reader reads them ([#717](ht
 `CdmRelativeMetadataData`, `CdmRelativeStateVector`, `CdmOdParameters`, `CdmAdditionalParameters`, `CdmStateVector` and
 `CdmCovarianceMatrix` (a `double`, a `double?`, each component of a `Vector3`, each term of the covariance `Matrix`)
 throws `ArgumentOutOfRangeException` naming the property for NaN or ±Infinity, whether set by an object initializer, a
-`with` expression or `CdmCovarianceMatrix.FromRtnCovariance`; an optional value may stay null. `EncounterCase.ToCdm`,
-which builds these records, throws it for such a value in an encounter built by hand. Before 11.0.0 the record built,
+`with` expression or `CdmCovarianceMatrix.FromRtnCovariance`; an optional value may stay null. Before 11.0.0 the record built,
 `Cdm.Validate` passed it (but the miss distance) and `WriteToString` (`ToXml` since 11.0.0) wrote `NaN`, `Infinity` or `-Infinity`, which the
 reader refuses. `Cdm.Validate` keeps its own check of a miss distance of 0 or more. `StateCovarianceRtn` refuses a
 matrix that is not 6×6, `default(Matrix)` included, with `ArgumentException` naming the property, before its terms

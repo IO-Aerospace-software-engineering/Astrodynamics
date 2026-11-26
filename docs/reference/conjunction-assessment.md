@@ -257,6 +257,10 @@ Results are ordered by descending collision probability, then by miss distance.
 
 Top-level conjunction result packaging all assessment products.
 
+`EncounterCase`, `EncounterState`, `CollisionRisk`, `RelativeState` and `AvoidanceOption` are results of the library,
+built by `ConjunctionAssessment` and `Cdm.ToEncounter`; their constructors are internal (R17 of
+[#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668), choice 4; public before 11.0.0).
+
 | Property | Type | Description |
 |----------|------|-------------|
 | `ProtectedSpacecraft` | `Spacecraft` | The protected spacecraft (`ProtectedAsset`, a profile, before 11.0.0) |
@@ -269,7 +273,7 @@ Top-level conjunction result packaging all assessment products.
 | `MissDistanceMeters` | `double` | `EncounterState.MissDistanceMeters` (m) |
 | `RelativeSpeedMetersPerSecond` | `double` | Norm of `EncounterState.RelativeState.RelativeVelocityInertial` (m/s), the CDM's `RELATIVE_SPEED` |
 | `ProbabilityOfCollision` | `double?` | `CollisionRisk.ProbabilityOfCollision`; null when it could not be computed |
-| `AnalysisOptions` | `ConjunctionAnalysisOptions` | The options the analysis used, the radius of the secondary resolved; the avoidance re-analyzes with them unless `AvoidanceSearchOptions.Analysis` gives others; null for a case built by hand (internal before 11.0.0) |
+| `AnalysisOptions` | `ConjunctionAnalysisOptions` | The options the analysis used, the radius of the secondary resolved; the avoidance re-analyzes with them unless `AvoidanceSearchOptions.Analysis` gives others (internal before 11.0.0) |
 | `Search` | `CloseApproachSearch` | `Polynomial` on two propagations that share their observer and frame, `Sampled` otherwise |
 | `ToCdm(CdmExportOptions)` | `Cdm` | Export to CCSDS CDM |
 

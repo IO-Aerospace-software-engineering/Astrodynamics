@@ -13,12 +13,16 @@ namespace IO.Astrodynamics.SSA;
 /// <summary>
 /// Represents one conjunction case, including geometry, risk metrics, and optional participant snapshots at TCA.
 /// </summary>
+/// <remarks>
+/// A result of the library: <see cref="ConjunctionAssessment"/> and <see cref="IO.Astrodynamics.CCSDS.CDM.Cdm.ToEncounter"/> build
+/// it, its constructors internal (R17 of #668, choice 4, lot L7; public before 11.0.0).
+/// </remarks>
 public sealed class EncounterCase
 {
     /// <summary>
     /// Initializes an encounter case without retaining per-object state snapshots.
     /// </summary>
-    public EncounterCase(
+    internal EncounterCase(
         Spacecraft protectedSpacecraft,
         ILocalizable secondaryObject,
         Window screeningWindow,
@@ -38,7 +42,7 @@ public sealed class EncounterCase
     /// <summary>
     /// Initializes an encounter case and retains the participant state vectors evaluated at the encounter epoch.
     /// </summary>
-    public EncounterCase(
+    internal EncounterCase(
         Spacecraft protectedSpacecraft,
         ILocalizable secondaryObject,
         Window screeningWindow,
@@ -112,8 +116,7 @@ public sealed class EncounterCase
     /// with <see cref="ConjunctionAnalysisOptions.SecondaryHardBodyRadiusMeters"/> the radius the analysis took for the
     /// secondary. <see cref="ConjunctionAssessment.EvaluateAvoidance"/> re-analyzes its options with them unless
     /// <see cref="AvoidanceSearchOptions.Analysis"/> gives others, and <c>AnalysisOptions with { … }</c> is the start of
-    /// such options. Null for a case built by hand (R17 of #668, decided by S. Guillet, 2026-11-19; internal before
-    /// 11.0.0).
+    /// such options (R17 of #668, decided by S. Guillet, 2026-11-19; internal before 11.0.0).
     /// </summary>
     public ConjunctionAnalysisOptions AnalysisOptions { get; internal init; }
 

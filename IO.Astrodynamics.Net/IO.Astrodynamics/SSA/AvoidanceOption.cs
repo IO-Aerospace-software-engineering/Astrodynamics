@@ -8,6 +8,9 @@ namespace IO.Astrodynamics.SSA;
 /// <summary>
 /// Describes one candidate impulsive avoidance maneuver and the encounter that would result after applying it.
 /// </summary>
+/// <remarks>
+/// A result of the library: <see cref="ConjunctionAssessment.EvaluateAvoidance"/> builds it, its constructors internal (R17 of #668, choice 4, lot L7; public before 11.0.0).
+/// </remarks>
 public sealed class AvoidanceOption
 {
     /// <summary>
@@ -18,7 +21,7 @@ public sealed class AvoidanceOption
     /// <param name="fuelCostEstimateKilograms">Estimated fuel cost associated with the maneuver.</param>
     /// <param name="postManeuverEncounter">Encounter produced by reanalyzing the post-maneuver state.</param>
     /// <param name="rankingScore">Internal ranking score used to sort candidate maneuvers. Lower is better.</param>
-    public AvoidanceOption(
+    internal AvoidanceOption(
         Time burnEpoch,
         Vector3 deltaVInertial,
         double fuelCostEstimateKilograms,
@@ -64,5 +67,5 @@ public sealed class AvoidanceOption
     /// <see cref="TrajectorySource.TwoBody"/> (<c>AvoidanceTrajectory</c> before 11.0.0, R17 of #668);
     /// <see cref="TrajectorySource.TwoBody"/> unless set.
     /// </summary>
-    public TrajectorySource Trajectory { get; init; } = TrajectorySource.TwoBody;
+    public TrajectorySource Trajectory { get; internal init; } = TrajectorySource.TwoBody;
 }

@@ -9,12 +9,16 @@ namespace IO.Astrodynamics.SSA;
 /// <summary>
 /// Captures the geometric and covariance state of one encounter at the reported epoch.
 /// </summary>
+/// <remarks>
+/// A result of the library: <see cref="ConjunctionAssessment"/> and <see cref="IO.Astrodynamics.CCSDS.CDM.Cdm.ToEncounter"/> build
+/// it, its constructors internal (R17 of #668, choice 4, lot L7; public before 11.0.0).
+/// </remarks>
 public sealed class EncounterState
 {
     /// <summary>
     /// Initializes an encounter-state snapshot.
     /// </summary>
-    public EncounterState(
+    internal EncounterState(
         Time epoch,
         RelativeState relativeState,
         double missDistanceMeters,
@@ -31,7 +35,7 @@ public sealed class EncounterState
     /// </summary>
     /// <exception cref="ArgumentNullException"><paramref name="relativeState"/>, <paramref name="protectedCovariance"/>
     /// or <paramref name="secondaryCovariance"/> is null.</exception>
-    public EncounterState(
+    internal EncounterState(
         Time epoch,
         RelativeState relativeState,
         double missDistanceMeters,
@@ -92,7 +96,7 @@ public sealed class EncounterState
     /// <summary>
     /// Gets how the trajectory of the protected object was computed: propagated (a solution, or the states a numerical
     /// propagation stored), the two-body orbit of its initial orbital parameters, SGP4, or read from the kernels (R17 of
-    /// #668, decided by S. Guillet, 2026-11-19). <see cref="TrajectorySource.Propagated"/> for a state built by hand.
+    /// #668, decided by S. Guillet, 2026-11-19).
     /// </summary>
     public TrajectorySource ProtectedTrajectory { get; internal init; }
 
