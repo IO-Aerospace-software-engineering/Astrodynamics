@@ -131,16 +131,16 @@ public static class ConjunctionAssessment
     /// Ranked encounter cases ordered by decreasing collision probability and then by miss distance.
     /// </returns>
     /// <remarks>
-    /// The hard-body radius of each candidate is its own, a candidate <see cref="Spacecraft"/> with a
-    /// <see cref="Spacecraft.HardBodyRadius"/> greater than 0, whatever <see cref="ScreeningOptions.DefaultSecondaryHardBodyRadiusMeters"/>;
-    /// the option, or 5 m when it is null, for a candidate that gives none (a radius of 0, or not a spacecraft) (#683).
+    /// Each candidate is analyzed with <see cref="ScreeningOptions.Analysis"/> as given, or, when it is null, with the
+    /// analysis's defaults with a sample step of 5 min and the covariance held in RTN (the screening of 10.x bit for bit;
+    /// structuring choice 2 of #668). The hard-body radius of each candidate is its own, a candidate <see cref="Spacecraft"/> with a
+    /// <see cref="Spacecraft.HardBodyRadius"/> greater than 0, whatever the <see cref="ConjunctionAnalysisOptions.SecondaryHardBodyRadiusMeters"/>
+    /// of that analysis; the option, or 5 m when it is null, for a candidate that gives none (a radius of 0, or not a spacecraft) (#683).
     /// The analysis of each candidate, and the re-analysis of its avoidance options, carry that radius.
     /// A candidate whose window holds no close approach is judged at the closest window end, flagged
     /// <see cref="EncounterQualityFlags.TcaAtWindowEnd"/> (#621: at the window midpoint before 11.0.0, so that an object
     /// closing at the window end could be dropped).
     /// </remarks>
-    /// <exception cref="ArgumentOutOfRangeException"><see cref="ScreeningOptions.DefaultSecondaryHardBodyRadiusMeters"/>
-    /// is not finite or is negative.</exception>
     public static IReadOnlyList<EncounterCase> Screen(
         ProtectedSpacecraftProfile protectedAsset,
         IEnumerable<ILocalizable> candidates,
@@ -150,8 +150,8 @@ public static class ConjunctionAssessment
         ArgumentNullException.ThrowIfNull(protectedAsset);
         ArgumentNullException.ThrowIfNull(candidates);
 
-        options ??= new ScreeningOptions();
-        ThrowIfInvalidHardBodyRadius(options.DefaultSecondaryHardBodyRadiusMeters, nameof(options.DefaultSecondaryHardBodyRadiusMeters));
+        options ??= ScreeningOptions.Default;
+        var analysis = options.Analysis ?? ScreeningOptions.ScreeningDefault;
 
         var rankedCases = new List<EncounterCase>();
         foreach (var candidate in candidates.Where(candidate =>
@@ -160,21 +160,12 @@ public static class ConjunctionAssessment
             // The option is a fallback over a catalogue: the radius a candidate gives wins, and is the option of its
             // analysis, so that the re-analysis of its avoidance options carries it too (decision of 2026-11-14 on #683)
             double own = OwnHardBodyRadius(candidate);
-            double radius = own > 0.0 ? own : options.DefaultSecondaryHardBodyRadiusMeters ?? DefaultSecondaryHardBodyRadiusMeters;
+            double radius = own > 0.0 ? own : analysis.SecondaryHardBodyRadiusMeters ?? DefaultSecondaryHardBodyRadiusMeters;
             var encounter = Analyze(
                 protectedAsset,
                 candidate,
                 screeningWindow,
-                new ConjunctionAnalysisOptions
-                {
-                    SampleStep = options.SampleStep,
-                    MaximumEventSearchStep = options.MaximumEventSearchStep,
-                    SecondaryHardBodyRadiusMeters = radius,
-                    LowRelativeSpeedThresholdMetersPerSecond = options.LowRelativeSpeedThresholdMetersPerSecond,
-
-                    // The screening ranks many candidates and never propagates the covariance (E2)
-                    CovariancePropagation = CovariancePropagationOptions.None
-                });
+                analysis with { SecondaryHardBodyRadiusMeters = radius });
 
             if (encounter.EncounterState.MissDistanceMeters <= options.MaxMissDistanceMeters)
             {
@@ -382,22 +373,19 @@ public static class ConjunctionAssessment
     /// Candidate avoidance maneuvers ordered by internal ranking score, where lower values are better.
     /// </returns>
     /// <remarks>
-    /// Each option is re-analyzed with the settings the encounter was analyzed with, but for the values
-    /// <paramref name="options"/> gives (#683: the defaults of the avoidance before 11.0.0).
+    /// Each option is re-analyzed with <see cref="AvoidanceSearchOptions.Analysis"/>, or, when it is null, with the
+    /// settings the encounter was analyzed with (#683: the defaults of the avoidance before 11.0.0).
     /// </remarks>
-    /// <exception cref="ArgumentOutOfRangeException"><see cref="AvoidanceSearchOptions.SecondaryHardBodyRadiusMeters"/>
-    /// is not finite or is negative; <see cref="AvoidanceSearchOptions.AnalysisSampleStep"/> or
-    /// <see cref="AvoidanceSearchOptions.MaximumEventSearchStep"/> is given and not positive, the rule of the analysis (#640:
-    /// 0 s ended in an <see cref="OutOfMemoryException"/> and a negative step was accepted before 11.0.0).</exception>
-    /// <exception cref="ArgumentException"><see cref="AvoidanceSearchOptions.SecondaryHardBodyRadiusMeters"/> differs from
-    /// the hard-body radius the secondary spacecraft gives (#683).</exception>
+    /// <exception cref="ArgumentException">The <see cref="ConjunctionAnalysisOptions.SecondaryHardBodyRadiusMeters"/> of
+    /// <see cref="AvoidanceSearchOptions.Analysis"/> differs from the hard-body radius the secondary spacecraft gives
+    /// (#683).</exception>
     public static IReadOnlyList<AvoidanceOption> EvaluateAvoidance(
         EncounterCase encounterCase,
         AvoidanceSearchOptions options = null)
     {
         ArgumentNullException.ThrowIfNull(encounterCase);
 
-        options ??= new AvoidanceSearchOptions();
+        options ??= AvoidanceSearchOptions.Default;
         var reanalysis = ReanalysisOptions(encounterCase, options);
         var constraints = encounterCase.ProtectedAsset.ManeuverConstraints;
         var observer = encounterCase.ProtectedAsset.Spacecraft.InitialOrbitalParameters.Observer;
@@ -2941,69 +2929,18 @@ public static class ConjunctionAssessment
         }
     }
 
-    private static void ValidateAnalysisOptions(ConjunctionAnalysisOptions options)
-    {
-        if (options.SampleStep <= TimeSpan.Zero)
-        {
-            throw new ArgumentOutOfRangeException(nameof(options.SampleStep), "Sample step must be positive.");
-        }
-
-        if (options.MaximumEventSearchStep <= TimeSpan.Zero)
-        {
-            throw new ArgumentOutOfRangeException(nameof(options.MaximumEventSearchStep), "Maximum event search step must be positive.");
-        }
-
-        if (options.CovariancePropagation is { IsActive: true } covariance)
-        {
-            if (covariance.Mode != CovariancePropagationMode.Covariance)
-            {
-                throw new ArgumentException(
-                    "The conjunction analysis propagates the covariance: CovariancePropagation.Mode must be " +
-                    $"{nameof(CovariancePropagationMode.Covariance)}, or CovariancePropagation " +
-                    "CovariancePropagationOptions.None to hold the initial covariance in RTN.", nameof(options));
-            }
-
-            if (covariance.IncludeInStepControl)
-            {
-                throw new ArgumentException(
-                    "The conjunction analysis replays the variational equations along the steps of the propagation of each " +
-                    "participant, controlled on the state only: IncludeInStepControl cannot be set. Propagate the " +
-                    "participant with the covariance and this option instead, and pass its solution.", nameof(options));
-            }
-        }
-
-        if (!(options.NonlinearityIndexThreshold > 0.0) || double.IsInfinity(options.NonlinearityIndexThreshold))
-        {
-            throw new ArgumentOutOfRangeException(nameof(options.NonlinearityIndexThreshold),
-                "The non-linearity index threshold must be positive and finite.");
-        }
-
-        ThrowIfInvalidHardBodyRadius(options.SecondaryHardBodyRadiusMeters, nameof(options.SecondaryHardBodyRadiusMeters));
-    }
-
     /// <summary>The hard-body radius of a secondary that gives none (a radius of 0, not a spacecraft) and no option.</summary>
     internal const double DefaultSecondaryHardBodyRadiusMeters = 5.0;
 
-    // The options of a public analysis, validated, the radius of the secondary resolved (#683)
+    // The options of a public analysis, the radius of the secondary resolved (#683); each value was checked at init
     private static ConjunctionAnalysisOptions ResolveAnalysisOptions(ConjunctionAnalysisOptions options, ILocalizable secondaryObject)
     {
-        options ??= new ConjunctionAnalysisOptions();
-        ValidateAnalysisOptions(options);
+        options ??= ConjunctionAnalysisOptions.Default;
         return options with
         {
             SecondaryHardBodyRadiusMeters = ResolveSecondaryHardBodyRadius(secondaryObject, options.SecondaryHardBodyRadiusMeters,
                 nameof(options.SecondaryHardBodyRadiusMeters), nameof(secondaryObject))
         };
-    }
-
-    // A radius given as an option is finite and not negative, the rule of a spacecraft's (#683: a negative one was
-    // subtracted, a NaN or an infinite one gave no probability and no flag)
-    private static void ThrowIfInvalidHardBodyRadius(double? radius, string optionName)
-    {
-        if (radius is { } value)
-        {
-            Spacecraft.ThrowIfInvalidHardBodyRadius(value, optionName);
-        }
     }
 
     /// <summary>
@@ -3037,36 +2974,16 @@ public static class ConjunctionAssessment
     private static double OwnHardBodyRadius(ILocalizable secondary) =>
         secondary is Spacecraft spacecraft ? spacecraft.HardBodyRadius : 0.0;
 
-    // The options of the re-analysis of the avoidance options: those of the encounter (the defaults for a case built by
-    // hand), but for the values the avoidance options give (#683); the reads over the window and the non-linearity index
-    // off, as before; the covariance propagation is set by each path
+    // The options of the re-analysis of the avoidance options: those the avoidance gives, or those of the encounter (the
+    // defaults for a case built by hand; #683), the radius of the secondary resolved as by Analyze; the reads over the
+    // window and the non-linearity index off, as before; the covariance propagation is set by each path
     private static ConjunctionAnalysisOptions ReanalysisOptions(EncounterCase encounterCase, AvoidanceSearchOptions options)
     {
-        // The steps of the re-analysis follow the rule of the analysis (ValidateAnalysisOptions), named after the options of
-        // the avoidance (#640: 0 s ended in an OutOfMemoryException, a negative step was accepted or stepped backwards)
-        if (options.AnalysisSampleStep <= TimeSpan.Zero)
+        var analysis = options.Analysis ?? encounterCase.AnalysisOptions ?? ConjunctionAnalysisOptions.Default;
+        return analysis with
         {
-            throw new ArgumentOutOfRangeException(nameof(options.AnalysisSampleStep), options.AnalysisSampleStep,
-                "The sample step of the re-analysis must be positive.");
-        }
-
-        if (options.MaximumEventSearchStep <= TimeSpan.Zero)
-        {
-            throw new ArgumentOutOfRangeException(nameof(options.MaximumEventSearchStep), options.MaximumEventSearchStep,
-                "The maximum event search step of the re-analysis must be positive.");
-        }
-
-        ThrowIfInvalidHardBodyRadius(options.SecondaryHardBodyRadiusMeters, nameof(options.SecondaryHardBodyRadiusMeters));
-        var encounter = encounterCase.AnalysisOptions ?? new ConjunctionAnalysisOptions();
-        return encounter with
-        {
-            SampleStep = options.AnalysisSampleStep ?? encounter.SampleStep,
-            MaximumEventSearchStep = options.MaximumEventSearchStep ?? encounter.MaximumEventSearchStep,
             SecondaryHardBodyRadiusMeters = ResolveSecondaryHardBodyRadius(encounterCase.SecondaryObject,
-                options.SecondaryHardBodyRadiusMeters ?? encounter.SecondaryHardBodyRadiusMeters,
-                nameof(options.SecondaryHardBodyRadiusMeters), nameof(options)),
-            LowRelativeSpeedThresholdMetersPerSecond =
-                options.LowRelativeSpeedThresholdMetersPerSecond ?? encounter.LowRelativeSpeedThresholdMetersPerSecond,
+                analysis.SecondaryHardBodyRadiusMeters, nameof(analysis.SecondaryHardBodyRadiusMeters), nameof(options)),
             ReadRangeRateOverWindow = false,
             ComputeNonlinearityIndex = false
         };

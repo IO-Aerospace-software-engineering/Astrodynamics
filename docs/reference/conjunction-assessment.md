@@ -53,8 +53,9 @@ during the search, in this order:
 
 The source is reported for each participant in `EncounterState.ProtectedCovariance` and `SecondaryCovariance`
 (`ParticipantCovariance`), with `ProcessNoiseApplied`, false for a propagated covariance without process noise: a purely
-linear covariance, often optimistic. `Screen` never propagates the covariance: it ranks candidates with the covariance
-held in RTN.
+linear covariance, often optimistic. `Screen` holds the covariance in RTN by default: its `ScreeningOptions.Analysis`,
+null by default, is then the analysis's defaults with a sample step of 5 min and `CovariancePropagationOptions.None`; an
+`Analysis` given is honoured as given, its covariance propagation included (structuring choice 2 of #668).
 
 !!! note "Change of results in 10.2.0-preview-1"
     The covariance propagation is on by default (`CovariancePropagationMode.Covariance`, no process noise, no consider
@@ -156,8 +157,8 @@ which `Screen` skips it ([#683](https://github.com/IO-Aerospace-software-enginee
 of 0 and a Pc of 0.815 before, or an empty list on two propagations).
 
 The **hard-body radius of the secondary** is resolved before any search, from the secondary and the option of the
-call (`ConjunctionAnalysisOptions.SecondaryHardBodyRadiusMeters`, `AvoidanceSearchOptions.SecondaryHardBodyRadiusMeters`,
-each naming one secondary):
+call (`ConjunctionAnalysisOptions.SecondaryHardBodyRadiusMeters`, given to `Analyze` and `AnalyzeAll` or as
+`AvoidanceSearchOptions.Analysis`, each naming one secondary):
 
 | Secondary | Option | Radius of the secondary |
 |-----------|--------|-------------------------|
@@ -167,18 +168,19 @@ each naming one secondary):
 | a radius of 0, or not a `Spacecraft` | a value | that value |
 | a radius of 0, or not a `Spacecraft` | null | 5 m |
 
-`ScreeningOptions.DefaultSecondaryHardBodyRadiusMeters` is a fallback over the catalogue of `Screen` (decided by
+The `SecondaryHardBodyRadiusMeters` of `ScreeningOptions.Analysis` is a fallback over the catalogue of `Screen` (decided by
 S. Guillet, 2026-11-14, on [#683](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/683)): a
 candidate `Spacecraft` with `HardBodyRadius` > 0 keeps its own radius whatever the option, and a candidate that gives
 none (a radius of 0, or not a `Spacecraft`) takes the option, or 5 m when it is null; no candidate throws for its radius,
 so a catalogue of spacecraft with different radii is screened with one fallback. The analysis of each candidate carries
 its resolved radius as its `SecondaryHardBodyRadiusMeters`, and `EvaluateAvoidance` re-analyzes a screened encounter
-with it: with a null `AvoidanceSearchOptions.SecondaryHardBodyRadiusMeters` the table above applies to the radius the
+with it: with a null `AvoidanceSearchOptions.Analysis` the table above applies to the radius the
 screening resolved, which never conflicts (a candidate of 0 m or a body screened with a fallback of 3 m is re-analyzed
 with 3 m, not the 5 m of the null row). A radius of 0 is the default of both `Spacecraft` constructors, so it cannot be
 told from a radius left unset and gives none; a fallback of 0 m keeps every such candidate at 0 m.
 
-An option that is NaN, infinite or negative throws `ArgumentOutOfRangeException` naming it. Before 11.0.0 the option,
+An option that is NaN, infinite or negative throws `ArgumentOutOfRangeException` naming it where it is set, at init
+(D1 of #668). Before 11.0.0 the option,
 5 m by default, was used whatever the radius of the secondary
 ([#683](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/683): a secondary of 3 m beside a
 protected spacecraft of 10 m gave a combined radius of 15 m and a Pc 33 % high, 3.6145e-4 for 2.7147e-4).
@@ -211,12 +213,13 @@ Packages the protected `Spacecraft` with maneuver constraints used by avoidance 
 
 | Property | Default | Description |
 |----------|---------|-------------|
-| `SampleStep` | 5 min | Coarse search cadence for each candidate pair (1 min in `ConjunctionAnalysisOptions`) |
-| `MaximumEventSearchStep` | 60 s | Largest interval subdivided while refining the event detection |
+| `Analysis` | null | The `ConjunctionAnalysisOptions` of the analysis of each candidate, honoured as given; null for `ConjunctionAnalysisOptions.Default` with a `SampleStep` of 5 min and `CovariancePropagation` `CovariancePropagationOptions.None`, the screening of 10.x bit for bit; its `SecondaryHardBodyRadiusMeters` the fallback of the candidates that give no radius (see above, [#683](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/683)) |
 | `MaxMissDistanceMeters` | 25 000 m | Filter threshold for miss distance |
 | `MaxResults` | 25 | Maximum number of ranked results to return |
-| `DefaultSecondaryHardBodyRadiusMeters` | null | Hard-body radius of a candidate that gives none (5 m when null); a candidate spacecraft with a radius above 0 keeps its own whatever this value (a fallback, see above, [#683](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/683)) |
-| `LowRelativeSpeedThresholdMetersPerSecond` | 1 m/s | Relative speed below which an encounter is flagged as a low-velocity case |
+
+`ScreeningOptions.Default` is `new ScreeningOptions()`. Before 11.0.0 the screening had a `SampleStep`, a
+`MaximumEventSearchStep`, a `DefaultSecondaryHardBodyRadiusMeters` and a `LowRelativeSpeedThresholdMetersPerSecond` of
+its own, removed for `Analysis` (structuring choice 2 of #668, decided by S. Guillet, 2026-11-19).
 
 Results are ordered by descending collision probability, then by miss distance.
 
@@ -290,6 +293,14 @@ infer the source from the age (null: `None`, zero: `ProvidedAtEncounter`, otherw
 | `CovariancePropagation` | `Covariance` mode, no noise, no consider parameter | Propagation of the covariance of the participants to TCA; `CovariancePropagationOptions.None` for the covariance held in RTN, null throwing `ArgumentNullException` in `init` (R06 of #668, structuring choice 3, decided by S. Guillet, 2026-11-19: null held it in RTN before 11.0.0, and is Auto in `PropagationOptions`). `StateTransitionOnly` and `IncludeInStepControl` are rejected (`ArgumentException`), as is a consider parameter whose force a propagated participant lacks |
 | `ComputeNonlinearityIndex` | false | Whether the non-linearity index of each propagated covariance is computed (12 STM propagations per participant) |
 | `NonlinearityIndexThreshold` | 1.0 | Index above which `NonlinearCovariancePropagation` is raised |
+
+`ConjunctionAnalysisOptions.Default` is `new ConjunctionAnalysisOptions()`, the one record of the settings of an analysis,
+read by `Analyze` and `AnalyzeAll` and contained in `ScreeningOptions.Analysis` and `AvoidanceSearchOptions.Analysis`
+(structuring choice 2 of #668). A value out of its range throws where it is set, at init, naming the property (D1 of
+#668; before 11.0.0, at the start of the analysis): a `SampleStep` or a `MaximumEventSearchStep` that is not positive and
+a `SecondaryHardBodyRadiusMeters` that is not finite or is negative `ArgumentOutOfRangeException`, a
+`NonlinearityIndexThreshold` that is not positive and finite `ArgumentOutOfRangeException`, a `CovariancePropagation`
+of `StateTransitionOnly` or with `IncludeInStepControl` `ArgumentException`.
 
 ## Practical Limits
 

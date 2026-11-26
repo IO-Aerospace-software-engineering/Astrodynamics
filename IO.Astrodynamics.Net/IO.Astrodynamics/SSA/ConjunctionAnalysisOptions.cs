@@ -1,5 +1,6 @@
 // Copyright 2026. Sylvain Guillet (sylvain.guillet@tutamail.com)
 using System;
+using IO.Astrodynamics.Body.Spacecraft;
 using IO.Astrodynamics.Propagator;
 using IO.Astrodynamics.Propagator.Variational;
 
@@ -8,12 +9,32 @@ namespace IO.Astrodynamics.SSA;
 /// <summary>
 /// Configures how one conjunction pair is searched and evaluated.
 /// </summary>
+/// <remarks>
+/// Read by <c>ConjunctionAssessment.Analyze</c> and <c>AnalyzeAll</c>, and, contained, by
+/// <see cref="ConjunctionAssessment.Screen"/> (<see cref="ScreeningOptions.Analysis"/>) and
+/// <see cref="ConjunctionAssessment.EvaluateAvoidance"/> (<see cref="AvoidanceSearchOptions.Analysis"/>), the one record of
+/// the settings of an analysis (structuring choice 2 of #668, decided by S. Guillet, 2026-11-19). A value out of its range
+/// throws where it is set, at init (D1 of #668; before 11.0.0, at the start of the analysis).
+/// </remarks>
 public sealed record ConjunctionAnalysisOptions
 {
+    /// <summary>The default settings, those of <c>new ConjunctionAnalysisOptions()</c>.</summary>
+    public static ConjunctionAnalysisOptions Default { get; } = new();
+
+    private readonly TimeSpan _sampleStep = TimeSpan.FromMinutes(1);
+    private readonly TimeSpan _maximumEventSearchStep = TimeSpan.FromSeconds(60);
+    private readonly double? _secondaryHardBodyRadiusMeters;
+    private readonly double _nonlinearityIndexThreshold = DefaultNonlinearityIndexThreshold;
+
     /// <summary>
-    /// Gets the coarse search cadence used when sampling for candidate close approaches.
+    /// Gets the coarse search cadence used when sampling for candidate close approaches. Default: 1 min.
     /// </summary>
-    public TimeSpan SampleStep { get; init; } = TimeSpan.FromMinutes(1);
+    /// <exception cref="ArgumentOutOfRangeException">The value is not positive.</exception>
+    public TimeSpan SampleStep
+    {
+        get => _sampleStep;
+        init => _sampleStep = RequirePositive(value, nameof(SampleStep));
+    }
 
     /// <summary>
     /// Gets the largest interval that SSA is allowed to subdivide internally while refining event detection: on the
@@ -30,7 +51,12 @@ public sealed record ConjunctionAnalysisOptions
     /// found; a smaller spacing resolves a narrower one. Each read costs a state of each propagation (an RK7(8) step inside
     /// a step), so a larger spacing costs less: the measured costs are in <c>docs/reference/conjunction-assessment.md</c>.
     /// </remarks>
-    public TimeSpan MaximumEventSearchStep { get; init; } = TimeSpan.FromSeconds(60);
+    /// <exception cref="ArgumentOutOfRangeException">The value is not positive.</exception>
+    public TimeSpan MaximumEventSearchStep
+    {
+        get => _maximumEventSearchStep;
+        init => _maximumEventSearchStep = RequirePositive(value, nameof(MaximumEventSearchStep));
+    }
 
     /// <summary>
     /// Gets whether the polynomial search of two propagations (the <see cref="PropagationSolution"/> overloads of
@@ -71,9 +97,24 @@ public sealed record ConjunctionAnalysisOptions
     /// equal to it; this value when the secondary gives none (a radius of 0, or not a spacecraft); 5 m when neither gives
     /// one. A value that differs from a radius the secondary gives throws <see cref="ArgumentException"/>, and a value that
     /// is not finite or is negative throws <see cref="ArgumentOutOfRangeException"/>, before any search. Before 11.0.0 this
-    /// value (5 m by default) was used whatever the radius of the secondary.
+    /// value (5 m by default) was used whatever the radius of the secondary. In
+    /// <see cref="ScreeningOptions.Analysis"/> it is the fallback of the candidates that give no radius, and never
+    /// conflicts with a candidate's own (decided by S. Guillet, 2026-11-14, on #683).
     /// </remarks>
-    public double? SecondaryHardBodyRadiusMeters { get; init; }
+    /// <exception cref="ArgumentOutOfRangeException">The value is not finite or is negative.</exception>
+    public double? SecondaryHardBodyRadiusMeters
+    {
+        get => _secondaryHardBodyRadiusMeters;
+        init
+        {
+            if (value is { } radius)
+            {
+                Spacecraft.ThrowIfInvalidHardBodyRadius(radius, nameof(SecondaryHardBodyRadiusMeters));
+            }
+
+            _secondaryHardBodyRadiusMeters = value;
+        }
+    }
 
     /// <summary>
     /// Gets the time tolerance used when polishing close-approach epochs.
@@ -125,12 +166,39 @@ public sealed record ConjunctionAnalysisOptions
     /// </remarks>
     /// <exception cref="ArgumentNullException">The value is null: <see cref="CovariancePropagationOptions.None"/> holds
     /// the covariance in RTN.</exception>
+    /// <exception cref="ArgumentException">The value propagates in another mode than
+    /// <see cref="CovariancePropagationMode.Covariance"/>, or sets <see cref="CovariancePropagationOptions.IncludeInStepControl"/>.</exception>
     public CovariancePropagationOptions CovariancePropagation
     {
         get => _covariancePropagation;
-        init => _covariancePropagation = value ?? throw new ArgumentNullException(nameof(CovariancePropagation),
-            "CovariancePropagation cannot be null: pass CovariancePropagationOptions.None to hold the covariance of the " +
-            "initial state in RTN (a null value did so before 11.0.0).");
+        init
+        {
+            if (value == null)
+            {
+                throw new ArgumentNullException(nameof(CovariancePropagation),
+                    "CovariancePropagation cannot be null: pass CovariancePropagationOptions.None to hold the covariance of " +
+                    "the initial state in RTN (a null value did so before 11.0.0).");
+            }
+
+            if (value.IsActive && value.Mode != CovariancePropagationMode.Covariance)
+            {
+                throw new ArgumentException(
+                    "The conjunction analysis propagates the covariance: CovariancePropagation.Mode must be " +
+                    $"{nameof(CovariancePropagationMode.Covariance)}, or CovariancePropagation " +
+                    "CovariancePropagationOptions.None to hold the initial covariance in RTN.", nameof(CovariancePropagation));
+            }
+
+            if (value.IncludeInStepControl)
+            {
+                throw new ArgumentException(
+                    "The conjunction analysis replays the variational equations along the steps of the propagation of each " +
+                    "participant, controlled on the state only: IncludeInStepControl cannot be set. Propagate the " +
+                    "participant with the covariance and this option instead, and pass its solution.",
+                    nameof(CovariancePropagation));
+            }
+
+            _covariancePropagation = value;
+        }
     }
 
     private readonly CovariancePropagationOptions _covariancePropagation =
@@ -154,9 +222,22 @@ public sealed record ConjunctionAnalysisOptions
     /// reference): the flag marks a propagated covariance beyond the domain where Foster was validated, not a measured
     /// failure of Foster.
     /// </summary>
-    public double NonlinearityIndexThreshold { get; init; } = DefaultNonlinearityIndexThreshold;
+    /// <exception cref="ArgumentOutOfRangeException">The value is not positive and finite.</exception>
+    public double NonlinearityIndexThreshold
+    {
+        get => _nonlinearityIndexThreshold;
+        init => _nonlinearityIndexThreshold = value > 0.0 && !double.IsInfinity(value)
+            ? value
+            : throw new ArgumentOutOfRangeException(nameof(NonlinearityIndexThreshold), value,
+                "The non-linearity index threshold must be positive and finite.");
+    }
 
     /// <summary>The default threshold of the non-linearity index, set by the measurement of
     /// <c>FosterMonteCarloValidationTests</c>.</summary>
     internal const double DefaultNonlinearityIndexThreshold = 1.0;
+
+    private static TimeSpan RequirePositive(TimeSpan value, string property) =>
+        value > TimeSpan.Zero
+            ? value
+            : throw new ArgumentOutOfRangeException(property, value, $"{property} must be positive.");
 }

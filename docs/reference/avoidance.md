@@ -105,18 +105,18 @@ Moon, Sun, SRP, in RK7(8) and by Velocity-Verlet).
 | `LeadTimes` | `TimeSpan[]` | Burn lead times before TCA |
 | `DeltaVMagnitudesMetersPerSecond` | `double[]` | Candidate delta-V magnitudes (m/s) |
 | `ExecutionError` | `ManeuverExecutionError` | Execution error of the burns (model of Gates), added to the covariance at the burn when the covariance is propagated, not used otherwise; null by default |
-| `AnalysisSampleStep` | `TimeSpan?` | Sample step of the re-analysis of each option; null (default) for the `SampleStep` the encounter was analyzed with; a value of zero or less throws `ArgumentOutOfRangeException` ([#640](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/640)) |
-| `MaximumEventSearchStep` | `TimeSpan?` | Largest interval between the search epochs of the re-analysis; null (default) for the encounter's; a value of zero or less throws `ArgumentOutOfRangeException` (#640: 0 s ended in `OutOfMemoryException`, a negative step was accepted, before 11.0.0) |
-| `SecondaryHardBodyRadiusMeters` | `double?` | Hard-body radius of the secondary; null (default) for the radius the encounter resolved; a value that differs from the radius a secondary spacecraft gives throws `ArgumentException`, a value not finite or negative `ArgumentOutOfRangeException` (the rule of [Conjunction Assessment](conjunction-assessment.md#conjunctionassessment-methods)) |
-| `LowRelativeSpeedThresholdMetersPerSecond` | `double?` | Relative speed below which an option is flagged `LowRelativeVelocityEncounter`; null (default) for the encounter's |
+| `Analysis` | `ConjunctionAnalysisOptions` | The settings of the re-analysis of each option; null (default) for those the encounter was analyzed with; a record given replaces them whole, its `SecondaryHardBodyRadiusMeters` by the rule of [Conjunction Assessment](conjunction-assessment.md#conjunctionassessment-methods) (a value that differs from the radius a secondary spacecraft gives throws `ArgumentException` naming `options`) |
 | `MaxReturnedOptions` | `int` | Number of options returned after ranking (10) |
 | `PcThreshold` | `double` | Pc below which an option ranks first (1e-4) |
 
-Each option is re-analyzed with the settings the encounter was analyzed with, on both paths (the covariance propagated
-or not), but for the values these options give
-([#683](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/683)): its
-`StaleCovarianceThreshold`, `BisectionToleranceSeconds` and `NonlinearityIndexThreshold`, and the four values above
-when they are null. Before 11.0.0 every other setting went back to its default: an encounter analyzed with a stale
+Each option is re-analyzed with `Analysis`, or, when it is null, with the settings the encounter was analyzed with, on
+both paths (the covariance propagated or not)
+([#683](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/683); one record, structuring choice 2
+of #668, decided by S. Guillet, 2026-11-19: before 11.0.0 the avoidance had an `AnalysisSampleStep`, a
+`MaximumEventSearchStep`, a `SecondaryHardBodyRadiusMeters` and a `LowRelativeSpeedThresholdMetersPerSecond` of its own,
+each null for the encounter's). To change one value, start from the settings of the encounter
+(`AvoidanceSearchOptions.Default with { Analysis = settings with { SampleStep = ... } }`, `settings` the options given to
+`Analyze`). Before 11.0.0 every other setting went back to its default: an encounter analyzed with a stale
 threshold of a day, a secondary radius of 0 m and no low-speed threshold had a combined radius of 8 m and no flag, and
 each of its options 13 m and `StaleCovarianceUsed`. The reads of the range rate over the window and the non-linearity
 index stay off for the options, and the covariance is propagated as the [paths above](#trajectory-and-covariance-of-each-option)

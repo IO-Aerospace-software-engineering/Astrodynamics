@@ -379,21 +379,15 @@ public class AvoidanceCovarianceTests : IClassFixture<ConjunctionCovarianceCase>
             MaxReturnedOptions = 6
         };
 
-        // Act: the mirrors left null, and given the values of the encounter
+        // Act: Analysis left null, and given the settings of the encounter
         var avoidance = ConjunctionAssessment.EvaluateAvoidance(encounter, options);
-        var explicitly = ConjunctionAssessment.EvaluateAvoidance(encounter, options with
-        {
-            AnalysisSampleStep = settings.SampleStep,
-            MaximumEventSearchStep = settings.MaximumEventSearchStep,
-            SecondaryHardBodyRadiusMeters = 2.0,
-            LowRelativeSpeedThresholdMetersPerSecond = 1.0e5
-        });
+        var explicitly = ConjunctionAssessment.EvaluateAvoidance(encounter, options with { Analysis = settings });
 
         // Assert: each option on the propagated path re-analyzed with the settings of the encounter (#683: 5 m for the
         // secondary, a stale threshold of 60 s and a low-speed threshold of 1 m/s): the radius of the encounter, the stale
         // flag by the rule of its threshold on the sources and ages the option reports (the secondary about a day old: not
         // stale against two days), the low-speed flag by the rule of its threshold on the relative speed of the option
-        // (raised); the null mirrors are the values of the encounter, bit for bit
+        // (raised); a null Analysis is the settings of the encounter, bit for bit
         Assert.Equal(6, avoidance.Count);
         Assert.Equal(explicitly.Count, avoidance.Count);
         for (int i = 0; i < avoidance.Count; i++)

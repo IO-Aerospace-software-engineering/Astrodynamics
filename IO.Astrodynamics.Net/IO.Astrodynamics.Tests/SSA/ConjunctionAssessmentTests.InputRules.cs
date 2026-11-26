@@ -48,6 +48,13 @@ public partial class ConjunctionAssessmentTests
         MaxReturnedOptions = 6
     };
 
+    // The analysis of a screening given none: the analysis's defaults, a sample step of 5 min, the covariance held in RTN
+    private static readonly ConjunctionAnalysisOptions ScreeningAnalysis = ConjunctionAnalysisOptions.Default with
+    {
+        SampleStep = TimeSpan.FromMinutes(5.0),
+        CovariancePropagation = CovariancePropagationOptions.None
+    };
+
     // A pair meeting 200 m apart 30 min after the start in the two-body problem (ConjunctionCovarianceCase.Pair), each
     // with an RTN covariance
     private static (StateVector Protected, StateVector Secondary) InputRulePair(CelestialBody earth)
@@ -144,15 +151,17 @@ public partial class ConjunctionAssessmentTests
                 ConjunctionAssessment.AnalyzeAll(profile, protectedTrajectory, secondary, secondaryTrajectory, window,
                     analysisOptions),
             "Screen" => () => ConjunctionAssessment.Screen(profile, new[] { secondary }, window,
-                given is { } d
-                    ? new ScreeningOptions { DefaultSecondaryHardBodyRadiusMeters = d, MaxMissDistanceMeters = double.MaxValue }
-                    : new ScreeningOptions { MaxMissDistanceMeters = double.MaxValue }),
+                new ScreeningOptions
+                {
+                    Analysis = ScreeningAnalysis with { SecondaryHardBodyRadiusMeters = given },
+                    MaxMissDistanceMeters = double.MaxValue
+                }),
             _ => () =>
             {
                 // The encounter analyzed with the default options, the avoidance with the option
                 var encounter = ConjunctionAssessment.Analyze(profile, secondary, window);
                 var avoidanceOptions = given is { } o
-                    ? InputRuleAvoidance with { SecondaryHardBodyRadiusMeters = o }
+                    ? InputRuleAvoidance with { Analysis = ConjunctionAnalysisOptions.Default with { SecondaryHardBodyRadiusMeters = o } }
                     : InputRuleAvoidance;
                 var avoidance = ConjunctionAssessment.EvaluateAvoidance(encounter, avoidanceOptions);
                 if (secondaryKind == "spacecraft")
@@ -220,7 +229,7 @@ public partial class ConjunctionAssessmentTests
         var profile = new ProtectedSpacecraftProfile(protectedCraft);
         var screeningOptions = new ScreeningOptions
         {
-            DefaultSecondaryHardBodyRadiusMeters = given,
+            Analysis = ScreeningAnalysis with { SecondaryHardBodyRadiusMeters = given },
             MaxMissDistanceMeters = double.MaxValue
         };
 
@@ -236,14 +245,8 @@ public partial class ConjunctionAssessmentTests
         {
             var encounter = Assert.Single(screened, e => ReferenceEquals(e.SecondaryObject, candidate));
             Assert.Equal(ProtectedHardBodyRadius + secondaryRadius, encounter.CollisionRisk.CombinedHardBodyRadiusMeters);
-            var analyzed = ConjunctionAssessment.Analyze(profile, candidate, InputRuleWindow, new ConjunctionAnalysisOptions
-            {
-                SampleStep = screeningOptions.SampleStep,
-                MaximumEventSearchStep = screeningOptions.MaximumEventSearchStep,
-                SecondaryHardBodyRadiusMeters = ownRadius ? null : secondaryRadius,
-                LowRelativeSpeedThresholdMetersPerSecond = screeningOptions.LowRelativeSpeedThresholdMetersPerSecond,
-                CovariancePropagation = CovariancePropagationOptions.None
-            });
+            var analyzed = ConjunctionAssessment.Analyze(profile, candidate, InputRuleWindow,
+                ScreeningAnalysis with { SecondaryHardBodyRadiusMeters = ownRadius ? null : secondaryRadius });
             Assert.Equal(analyzed.CollisionRisk.CombinedHardBodyRadiusMeters, encounter.CollisionRisk.CombinedHardBodyRadiusMeters);
             LabelAssert.Equal(analyzed.EncounterState.Epoch, encounter.EncounterState.Epoch);
             Assert.Equal(analyzed.CollisionRisk.ProbabilityOfCollision, encounter.CollisionRisk.ProbabilityOfCollision);
@@ -260,13 +263,14 @@ public partial class ConjunctionAssessmentTests
                 o.PostManeuverEncounter.CollisionRisk.CombinedHardBodyRadiusMeters));
         }
 
-        // A fallback not finite or negative still throws, though every spacecraft of the catalogue but one gives its own
+        // A fallback not finite or negative still throws, though every spacecraft of the catalogue but one gives its own:
+        // where it is set (before 11.0.0, at the start of the screening)
         foreach (double invalid in new[] { double.NaN, -1.0 })
         {
             var exception = Assert.Throws<ArgumentOutOfRangeException>(() => ConjunctionAssessment.Screen(profile,
                 new ILocalizable[] { small, large }, InputRuleWindow,
-                screeningOptions with { DefaultSecondaryHardBodyRadiusMeters = invalid }));
-            Assert.Equal("DefaultSecondaryHardBodyRadiusMeters", exception.ParamName);
+                screeningOptions with { Analysis = screeningOptions.Analysis with { SecondaryHardBodyRadiusMeters = invalid } }));
+            Assert.Equal("SecondaryHardBodyRadiusMeters", exception.ParamName);
         }
     }
 
@@ -301,17 +305,16 @@ public partial class ConjunctionAssessmentTests
                 secondaryCraft, PropagateRk78(secondaryCraft, earth), InputRuleWindow,
                 new ConjunctionAnalysisOptions { SecondaryHardBodyRadiusMeters = value }),
             "screening" => () => ConjunctionAssessment.Screen(profile, new ILocalizable[] { secondaryCraft }, InputRuleWindow,
-                new ScreeningOptions { DefaultSecondaryHardBodyRadiusMeters = value }),
+                new ScreeningOptions { Analysis = new ConjunctionAnalysisOptions { SecondaryHardBodyRadiusMeters = value } }),
             _ => () => ConjunctionAssessment.EvaluateAvoidance(
                 ConjunctionAssessment.Analyze(profile, secondaryCraft, InputRuleWindow),
-                InputRuleAvoidance with { SecondaryHardBodyRadiusMeters = value })
+                InputRuleAvoidance with { Analysis = new ConjunctionAnalysisOptions { SecondaryHardBodyRadiusMeters = value } })
         };
 
         // Assert: a radius is finite and not negative (before #683, a negative option was subtracted and a NaN or an
-        // infinite one gave no Pc and no flag)
+        // infinite one gave no Pc and no flag), refused where it is set (D1 of #668)
         var exception = Assert.Throws<ArgumentOutOfRangeException>(act);
-        Assert.Equal(optionsType == "screening" ? "DefaultSecondaryHardBodyRadiusMeters" : "SecondaryHardBodyRadiusMeters",
-            exception.ParamName);
+        Assert.Equal("SecondaryHardBodyRadiusMeters", exception.ParamName);
     }
 
     [Fact]
@@ -610,7 +613,7 @@ public partial class ConjunctionAssessmentTests
     {
         foreach (var path in new[] { "twoBody", "forceModel", "propagatedCovariance" })
         {
-            foreach (var option in new[] { "MaximumEventSearchStep", "AnalysisSampleStep" })
+            foreach (var option in new[] { "MaximumEventSearchStep", "SampleStep" })
             {
                 foreach (double seconds in new[] { 0.0, -5.0 })
                 {
@@ -641,17 +644,17 @@ public partial class ConjunctionAssessmentTests
         Assert.Equal(path == "propagatedCovariance" ? CovarianceSource.Propagated : CovarianceSource.InitialStateHeldInRtn,
             encounter.EncounterState.ProtectedCovariance.Source);
         var step = TimeSpan.FromSeconds(seconds);
-        var options = option == "MaximumEventSearchStep"
-            ? InputRuleAvoidance with { MaximumEventSearchStep = step }
-            : InputRuleAvoidance with { AnalysisSampleStep = step };
+        Func<AvoidanceSearchOptions> options = () => option == "MaximumEventSearchStep"
+            ? InputRuleAvoidance with { Analysis = ConjunctionAnalysisOptions.Default with { MaximumEventSearchStep = step } }
+            : InputRuleAvoidance with { Analysis = ConjunctionAnalysisOptions.Default with { SampleStep = step } };
 
         // Act: bounded, so that a regression fails instead of filling the memory (#640: 0 s ended in an
         // OutOfMemoryException after about 15 s, -5 s was accepted, a sample step of -5 s stepped backwards without end)
-        var avoidance = System.Threading.Tasks.Task.Run(() => ConjunctionAssessment.EvaluateAvoidance(encounter, options));
+        var avoidance = System.Threading.Tasks.Task.Run(() => ConjunctionAssessment.EvaluateAvoidance(encounter, options()));
         var completed = await System.Threading.Tasks.Task.WhenAny(avoidance,
             System.Threading.Tasks.Task.Delay(TimeSpan.FromMinutes(1)));
 
-        // Assert: the rule of the analysis, ArgumentOutOfRangeException naming the option of the avoidance
+        // Assert: the rule of the analysis, ArgumentOutOfRangeException naming the step of its Analysis, where it is set
         Assert.Same(avoidance, completed);
         var exception = await Assert.ThrowsAsync<ArgumentOutOfRangeException>(() => avoidance);
         Assert.Equal(option, exception.ParamName);

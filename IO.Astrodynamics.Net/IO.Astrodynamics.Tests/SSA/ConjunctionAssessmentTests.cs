@@ -1693,7 +1693,10 @@ public partial class ConjunctionAssessmentTests
             window,
             new ScreeningOptions
             {
-                SampleStep = TimeSpan.FromMinutes(1),
+                Analysis = ConjunctionAnalysisOptions.Default with
+                {
+                    CovariancePropagation = IO.Astrodynamics.Propagator.Variational.CovariancePropagationOptions.None
+                },
                 MaxMissDistanceMeters = 50_000.0,
                 MaxResults = 5
             });
@@ -1732,7 +1735,10 @@ public partial class ConjunctionAssessmentTests
             window,
             new ScreeningOptions
             {
-                SampleStep = TimeSpan.FromMinutes(1),
+                Analysis = ConjunctionAnalysisOptions.Default with
+                {
+                    CovariancePropagation = IO.Astrodynamics.Propagator.Variational.CovariancePropagationOptions.None
+                },
                 MaxMissDistanceMeters = 1_000.0,
                 MaxResults = 5
             });
@@ -2154,7 +2160,7 @@ public partial class ConjunctionAssessmentTests
             {
                 LeadTimes = new[] { TimeSpan.FromMinutes(10), TimeSpan.FromMinutes(30) },
                 DeltaVMagnitudesMetersPerSecond = new[] { 0.05, 0.10 },
-                AnalysisSampleStep = TimeSpan.FromMinutes(2),
+                Analysis = ConjunctionAnalysisOptions.Default with { SampleStep = TimeSpan.FromMinutes(2) },
                 MaxReturnedOptions = 5
             });
 

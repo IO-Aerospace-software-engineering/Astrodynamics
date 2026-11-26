@@ -8090,6 +8090,33 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   true, `Default`), the default export unchanged, bit for bit (`SpacecraftToOpmTests.ExportOptions_LeaveOutTheirBlock_DefaultWritesEvery`).
   Migration: `ToOpm(includeManeuvers: false)` → `ToOpm(options: new OpmExportOptions { IncludeManeuvers = false })`, and
   likewise for the other two.
+- **One `ConjunctionAnalysisOptions` for the screening and the avoidance: `ScreeningOptions.Analysis` and
+  `AvoidanceSearchOptions.Analysis`, a `Default` on the three records, their values checked at init** (lot L7, R17 and
+  structuring choice 2 of [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668), decided
+  by S. Guillet, 2026-11-19, no forwarder). **Breaking**: `ScreeningOptions.SampleStep`, `MaximumEventSearchStep`,
+  `DefaultSecondaryHardBodyRadiusMeters` and `LowRelativeSpeedThresholdMetersPerSecond`, and
+  `AvoidanceSearchOptions.AnalysisSampleStep`, `MaximumEventSearchStep`, `SecondaryHardBodyRadiusMeters` and
+  `LowRelativeSpeedThresholdMetersPerSecond` are removed; each record holds one `ConjunctionAnalysisOptions Analysis`, null
+  by default. A null `ScreeningOptions.Analysis` is `ConjunctionAnalysisOptions.Default` with a `SampleStep` of 5 min and
+  `CovariancePropagationOptions.None`, the screening of 10.x bit for bit
+  (`ConjunctionAssessmentTests.Screen_AnalysisNull_IsTheScreeningDefaultBitForBit`); a given one is honoured as given,
+  its covariance propagation included (before, the screening always held the covariance in RTN), its
+  `SecondaryHardBodyRadiusMeters` the fallback of the candidates that give no radius. A null
+  `AvoidanceSearchOptions.Analysis` is the settings of the encounter (#683), bit for bit the four null mirrors; a given
+  one replaces them whole, its radius resolved as by `Analyze` (`EvaluateAvoidance_Analysis_NullInheritsTheEncounterAndAGivenOneIsUsed`).
+  `ConjunctionAnalysisOptions.Default`, `ScreeningOptions.Default` and `AvoidanceSearchOptions.Default` equal
+  `new()` (the default grids of the avoidance shared read only). A `SampleStep` or `MaximumEventSearchStep` that is not
+  positive, a `SecondaryHardBodyRadiusMeters` not finite or negative and a `NonlinearityIndexThreshold` not positive and
+  finite throw `ArgumentOutOfRangeException` naming the property, and a `CovariancePropagation` of `StateTransitionOnly`
+  or with `IncludeInStepControl` `ArgumentException` naming it, where the record is built (D1 of #668); before, at the
+  start of the analysis (`ArgumentException` naming `options` for the covariance), of the screening (the radius, naming
+  `DefaultSecondaryHardBodyRadiusMeters`) or of `EvaluateAvoidance` (the mirrors, naming `AnalysisSampleStep` for its
+  sample step). Migration: `new ScreeningOptions { SampleStep = s }` → `new ScreeningOptions { Analysis =
+  ConjunctionAnalysisOptions.Default with { SampleStep = s, CovariancePropagation = CovariancePropagationOptions.None } }`
+  (`DefaultSecondaryHardBodyRadiusMeters` → `SecondaryHardBodyRadiusMeters`, likewise the other two);
+  `new AvoidanceSearchOptions { AnalysisSampleStep = s }` → `new AvoidanceSearchOptions { Analysis = settings with
+  { SampleStep = s } }`, `settings` the options the encounter was analyzed with (likewise the other three).
+
 **Removed**
 
 - **The window searches on the target: `FindWindowsOnDistanceConstraint`, `FindWindowsOnOccultationConstraint` and

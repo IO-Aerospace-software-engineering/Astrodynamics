@@ -5,9 +5,6 @@
 # members (options L4 to L7, renames L9) remove their lines.
 D1.bools	IO.Astrodynamics.Propagator.CentralBodyPropagator.BuildCentralBodyForces(CelestialItem, CelestialItem[], Spacecraft, bool, bool)
 D1.default	IO.Astrodynamics.Propagator.Variational.CovariancePropagationOptions
-D1.default	IO.Astrodynamics.SSA.AvoidanceSearchOptions
-D1.default	IO.Astrodynamics.SSA.ConjunctionAnalysisOptions
-D1.default	IO.Astrodynamics.SSA.ScreeningOptions
 D1.parameter	IO.Astrodynamics.Propagator.CentralBodyPropagator.ctor(in Window, Spacecraft, IIntegrator, TimeSpan, CovariancePropagationOptions):covariancePropagation
 D1.seconds	BisectionMethod.Solve(Func<double, double>, double, double, double, int):tolerance
 D1.seconds	IO.Astrodynamics.CCSDS.OPM.OpmManeuverParameters.ManDuration
@@ -32,8 +29,3 @@ D1.seconds	IO.Astrodynamics.Propagator.Integrators.RK78Integrator.ctor(double, d
 D1.seconds	IO.Astrodynamics.Propagator.Integrators.RK78Integrator.ctor(double, double, double, double, double, double, double, double):minStepSize
 D1.seconds	IO.Astrodynamics.Propagator.Integrators.VVIntegrator.IntegrateSegment(Vector3, Vector3, Time, double, IReadOnlyList<IEventDetector>):duration
 D1.seconds	IO.Astrodynamics.Propagator.PropagationSegment.Duration
-D1.siblings	IO.Astrodynamics.SSA.AvoidanceSearchOptions.LowRelativeSpeedThresholdMetersPerSecond ~ IO.Astrodynamics.SSA.ConjunctionAnalysisOptions.LowRelativeSpeedThresholdMetersPerSecond
-D1.siblings	IO.Astrodynamics.SSA.AvoidanceSearchOptions.LowRelativeSpeedThresholdMetersPerSecond ~ IO.Astrodynamics.SSA.ScreeningOptions.LowRelativeSpeedThresholdMetersPerSecond
-D1.siblings	IO.Astrodynamics.SSA.AvoidanceSearchOptions.MaximumEventSearchStep ~ IO.Astrodynamics.SSA.ConjunctionAnalysisOptions.MaximumEventSearchStep
-D1.siblings	IO.Astrodynamics.SSA.AvoidanceSearchOptions.MaximumEventSearchStep ~ IO.Astrodynamics.SSA.ScreeningOptions.MaximumEventSearchStep
-D1.siblings	IO.Astrodynamics.SSA.ConjunctionAnalysisOptions.SampleStep ~ IO.Astrodynamics.SSA.ScreeningOptions.SampleStep

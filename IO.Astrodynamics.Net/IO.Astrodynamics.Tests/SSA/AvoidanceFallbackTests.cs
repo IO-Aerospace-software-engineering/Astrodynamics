@@ -394,8 +394,13 @@ public class AvoidanceFallbackTests : IClassFixture<AvoidanceFallbackCase>
             _ => Assert.Single(ConjunctionAssessment.Screen(profile, new ILocalizable[] { secondary }, window,
                 new ScreeningOptions
                 {
-                    DefaultSecondaryHardBodyRadiusMeters = 2.0,
-                    LowRelativeSpeedThresholdMetersPerSecond = InheritedLowSpeedThreshold,
+                    Analysis = ConjunctionAnalysisOptions.Default with
+                    {
+                        SampleStep = TimeSpan.FromMinutes(5.0),
+                        CovariancePropagation = CovariancePropagationOptions.None,
+                        SecondaryHardBodyRadiusMeters = 2.0,
+                        LowRelativeSpeedThresholdMetersPerSecond = InheritedLowSpeedThreshold
+                    },
                     MaxMissDistanceMeters = double.MaxValue
                 }))
         };
@@ -445,7 +450,7 @@ public class AvoidanceFallbackTests : IClassFixture<AvoidanceFallbackCase>
     [Theory]
     [InlineData("TwoBody")]
     [InlineData("Rk78")]
-    public void EvaluateAvoidance_NullMirrors_EqualTheEncounterValuesGivenExplicitly(string model)
+    public void EvaluateAvoidance_AnalysisNull_EqualsTheEncounterSettingsGivenExplicitly(string model)
     {
         // Arrange: the encounter analyzed with settings other than the defaults of the avoidance
         int id = model == "TwoBody" ? -6990 : -6995;
@@ -473,14 +478,11 @@ public class AvoidanceFallbackTests : IClassFixture<AvoidanceFallbackCase>
         var encounter = ConjunctionAssessment.Analyze(new ProtectedSpacecraftProfile(protectedCraft), secondary,
             AvoidanceFallbackCase.ScreeningWindow, settings);
 
-        // Act: the mirrors left null, and given the values of the encounter
+        // Act: Analysis left null, and given the settings of the encounter
         var inherited = ConjunctionAssessment.EvaluateAvoidance(encounter, Options);
         var explicitly = ConjunctionAssessment.EvaluateAvoidance(encounter, Options with
         {
-            AnalysisSampleStep = settings.SampleStep,
-            MaximumEventSearchStep = settings.MaximumEventSearchStep,
-            SecondaryHardBodyRadiusMeters = 2.0,
-            LowRelativeSpeedThresholdMetersPerSecond = settings.LowRelativeSpeedThresholdMetersPerSecond
+            Analysis = settings with { SecondaryHardBodyRadiusMeters = 2.0 }
         });
 
         // Assert: the same options, bit for bit (#683: the defaults of the avoidance replaced the settings of the encounter)
