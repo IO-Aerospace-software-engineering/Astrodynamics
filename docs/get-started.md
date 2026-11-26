@@ -15,6 +15,14 @@ The package targets `net10.0` and bundles the native CSPICE interop library for 
 `linux-x64`, `osx-arm64` (Apple Silicon) and `osx-x64` (Intel). The right one is resolved
 automatically at build time.
 
+A project that turns `ImplicitUsings` on (`<ImplicitUsings>enable</ImplicitUsings>`, the default of `dotnet new console`)
+also imports eleven namespaces of the package, beside the SDK's: `IO.Astrodynamics`, `IO.Astrodynamics.Body`,
+`IO.Astrodynamics.Body.Spacecraft`, `IO.Astrodynamics.TimeSystem`, `IO.Astrodynamics.Frames`,
+`IO.Astrodynamics.OrbitalParameters`, `IO.Astrodynamics.SolarSystemObjects`, `IO.Astrodynamics.Propagator`,
+`IO.Astrodynamics.Propagator.Integrators`, `IO.Astrodynamics.Maneuver` and `IO.Astrodynamics.Math` (the package's
+`build/IO.Astrodynamics.props`, 11.0.0). `<IOAstrodynamicsImplicitUsings>false</IOAstrodynamicsImplicitUsings>` turns
+them off; the other namespaces (`IO.Astrodynamics.Ccsds`, `IO.Astrodynamics.Ssa`, ...) are imported as usual.
+
 !!! note "Coming from `IO.Astrodynamics.Pro`"
     Replace the package reference with `IO.Astrodynamics` 10.0.0 or later and drop the licence key.
     Namespaces are unchanged. The only code edit concerns the static `Frames` accessor, which is

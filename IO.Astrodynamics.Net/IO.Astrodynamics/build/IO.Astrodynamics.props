@@ -1,0 +1,20 @@
+<Project>
+    <!-- The implicit usings of IO.Astrodynamics (N7 of D2, #668, lot L9): a project that references the package and turns
+         ImplicitUsings on imports the eleven namespaces most programs read, beside the SDK's; the property
+         IOAstrodynamicsImplicitUsings set to false turns them off. NuGet imports this file into every project that
+         references the package (build/<PackageId>.props); the items are evaluated after the project's properties, so the
+         conditions read the project's own ImplicitUsings. -->
+    <ItemGroup Condition="('$(ImplicitUsings)' == 'enable' Or '$(ImplicitUsings)' == 'true') And '$(IOAstrodynamicsImplicitUsings)' != 'false'">
+        <Using Include="IO.Astrodynamics" />
+        <Using Include="IO.Astrodynamics.Body" />
+        <Using Include="IO.Astrodynamics.Body.Spacecraft" />
+        <Using Include="IO.Astrodynamics.TimeSystem" />
+        <Using Include="IO.Astrodynamics.Frames" />
+        <Using Include="IO.Astrodynamics.OrbitalParameters" />
+        <Using Include="IO.Astrodynamics.SolarSystemObjects" />
+        <Using Include="IO.Astrodynamics.Propagator" />
+        <Using Include="IO.Astrodynamics.Propagator.Integrators" />
+        <Using Include="IO.Astrodynamics.Maneuver" />
+        <Using Include="IO.Astrodynamics.Math" />
+    </ItemGroup>
+</Project>

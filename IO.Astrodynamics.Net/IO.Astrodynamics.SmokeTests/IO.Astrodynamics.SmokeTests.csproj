@@ -1,7 +1,8 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
-        <ImplicitUsings>disable</ImplicitUsings>
+        <!-- On, as a console application: the SDK's implicit usings and the eleven the package adds (N7 of D2, #668) -->
+        <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>disable</Nullable>
         <IsPackable>false</IsPackable>
         <TargetFramework>net10.0</TargetFramework>

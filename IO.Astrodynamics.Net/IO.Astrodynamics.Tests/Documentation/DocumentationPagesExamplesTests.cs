@@ -204,9 +204,17 @@ public class DocumentationPagesExamplesTests
 
     #region The blocks as a reader compiles them
 
-    // The using directives a console application of the .NET SDK holds implicitly (ImplicitUsings of Microsoft.NET.Sdk)
+    // The using directives a console application of the .NET SDK holds implicitly (ImplicitUsings of Microsoft.NET.Sdk),
+    // then the eleven the package adds to it, read from the props file it packs (build/IO.Astrodynamics.props, N7 of D2,
+    // #668, lot L9)
     private static readonly string[] ImplicitUsings =
-        { "System", "System.Collections.Generic", "System.IO", "System.Linq", "System.Net.Http", "System.Threading", "System.Threading.Tasks" };
+        new[] { "System", "System.Collections.Generic", "System.IO", "System.Linq", "System.Net.Http", "System.Threading", "System.Threading.Tasks" }
+            .Concat(PackageImplicitUsings()).ToArray();
+
+    // The namespaces of the Using items of the package's props file
+    internal static IReadOnlyList<string> PackageImplicitUsings() =>
+        System.Xml.Linq.XDocument.Load(Path.Combine(Docs, "IO.Astrodynamics.props")).Descendants("Using")
+            .Select(u => (string)u.Attribute("Include")).ToList();
 
     // The references of a reader's application: the assemblies of the runtime, the library and those it references
     private static readonly Lazy<List<MetadataReference>> ReaderReferences = new(() =>

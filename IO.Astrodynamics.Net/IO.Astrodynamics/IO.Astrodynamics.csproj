@@ -122,6 +122,8 @@
     <!-- NuGet package content: icon, readme -->
     <ItemGroup>
       <None Include="..\..\README.md" Pack="true" PackagePath="/" />
+      <!-- The implicit usings of the package, imported by NuGet into the projects that reference it (N7 of D2, #668) -->
+      <None Update="build\IO.Astrodynamics.props" Pack="true" PackagePath="build\IO.Astrodynamics.props" />
     </ItemGroup>
 
     <ItemGroup>
