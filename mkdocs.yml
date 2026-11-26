@@ -126,3 +126,7 @@ markdown_extensions:
   - pymdownx.superfences
   - pymdownx.tabbed:
       alternate_style: true
+
+# A link to a heading that does not exist fails the strict build (R05 of #668, lot L9)
+validation:
+  anchors: warn
