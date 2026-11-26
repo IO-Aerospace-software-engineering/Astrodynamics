@@ -160,7 +160,7 @@ namespace IO.Astrodynamics.Body.Spacecraft
 
         // Whether the stored states are those of a numerical propagation, by any path: a TLE spacecraft then reads them, SGP4
         // otherwise (#675).
-        // Set by SetPropagatedStates, cleared with the stored states; AddPropagatedStates (TLEPropagator's samples
+        // Set by SetPropagatedStates, cleared with the stored states; AddPropagatedStates (TlePropagator's samples
         // included) leaves it
         private bool _holdsPropagatedStates;
 
@@ -1132,7 +1132,7 @@ namespace IO.Astrodynamics.Body.Spacecraft
         /// </summary>
         /// <param name="outputFile">The CK to write.</param>
         /// <exception cref="InvalidOperationException">The spacecraft is kernel-backed, or its attitude record is empty: never
-        /// propagated numerically, or sampled by a <see cref="Propagator.TLEPropagator"/>, which records no attitude; the
+        /// propagated numerically, or sampled by a <see cref="Propagator.TlePropagator"/>, which records no attitude; the
         /// message names <see cref="SpacecraftFrame.AddStateOrientationToICRF"/>, which gives it one (#546, decision 81 of
         /// #668, decided by S. Guillet, 2026-11-23).</exception>
         public void WriteOrientation(FileInfo outputFile)
@@ -1155,7 +1155,7 @@ namespace IO.Astrodynamics.Body.Spacecraft
         /// Every check runs before anything is written, created or loaded: the content (stored states, an arc an SPK can
         /// write, an attitude record), the names (the kernel variables SPICE reads, #676, and the portable file-name rule,
         /// #799(a)), the length of each path SPICE takes (#673), then, under the lock of SPICE, the load scope: the directory
-        /// must not be, or lie inside, a loaded directory of <see cref="SpiceAPI.GetLoadedKernels"/>, which would take the
+        /// must not be, or lie inside, a loaded directory of <see cref="SpiceApi.GetLoadedKernels"/>, which would take the
         /// files written in it, and SPICE must hold none of the files it writes, from a load of the library, a meta-kernel's
         /// or a live <see cref="SpacecraftKernels"/> (decisions 80 and 102 of #668): unload them first, or Dispose the
         /// handle. Two spacecraft are written into one directory with the first handle alive; one spacecraft per directory
@@ -1170,7 +1170,7 @@ namespace IO.Astrodynamics.Body.Spacecraft
         /// every case, but a process killed meanwhile leaves it, and a later load of the directory loads its files.
         /// </para>
         /// <para>
-        /// A spacecraft sampled by a <see cref="Propagator.TLEPropagator"/> records no attitude: it is written once given
+        /// A spacecraft sampled by a <see cref="Propagator.TlePropagator"/> records no attitude: it is written once given
         /// attitudes by <see cref="SpacecraftFrame.AddStateOrientationToICRF"/>, after the run, whose re-arm drops those
         /// added before it (decision 81 of #668: refused by content, not by provenance). The centre of the SPK is not
         /// checked (decision 79: the managed SPK writer writes any centre, #655). The call is not made during a run on the
@@ -1223,9 +1223,9 @@ namespace IO.Astrodynamics.Body.Spacecraft
                 Kernels.KernelPath.EnsureLoadable(file.FullName, nameof(directory));
             }
 
-            lock (SpiceAPI.SyncRoot)
+            lock (SpiceApi.SyncRoot)
             {
-                SpiceAPI.Instance.ThrowIfKernelSetTargetHeld(target, files.Files, $"the spacecraft '{Name}'");
+                SpiceApi.Instance.ThrowIfKernelSetTargetHeld(target, files.Files, $"the spacecraft '{Name}'");
                 bool created = !Directory.Exists(target.FullName);
                 Directory.CreateDirectory(target.FullName);
                 while (Directory.Exists(Path.Combine(target.FullName, scratchName)) || File.Exists(Path.Combine(target.FullName, scratchName)))
@@ -1260,7 +1260,7 @@ namespace IO.Astrodynamics.Body.Spacecraft
                     }
                 }
 
-                var loaded = SpiceAPI.Instance.LoadKernelFilesScoped(files.Files);
+                var loaded = SpiceApi.Instance.LoadKernelFilesScoped(files.Files);
                 return new SpacecraftKernels(files.Clock, files.Frame, files.Ephemeris, files.Orientation, files.Instruments, loaded);
             }
         }
@@ -1290,17 +1290,17 @@ namespace IO.Astrodynamics.Body.Spacecraft
                 instrument.Instrument.WriteKernel(instrument.Kernel);
             }
 
-            SpiceAPI.Instance.LoadKernels(files.Clock);
+            SpiceApi.Instance.LoadKernels(files.Clock);
             try
             {
-                SpiceAPI.Instance.WriteOrientation(files.Orientation, NaifId, orientation);
+                SpiceApi.Instance.WriteOrientation(files.Orientation, NaifId, orientation);
             }
             finally
             {
-                SpiceAPI.Instance.UnloadKernels(files.Clock);
+                SpiceApi.Instance.UnloadKernels(files.Clock);
             }
 
-            SpiceAPI.Instance.WriteEphemerisBytes(files.Ephemeris, ephemeris);
+            SpiceApi.Instance.WriteEphemerisBytes(files.Ephemeris, ephemeris);
         }
 
         /// <summary>
@@ -1409,7 +1409,7 @@ namespace IO.Astrodynamics.Body.Spacecraft
                 return base.GetGeometricStateRelativeTo(epoch, referenceBody);
 
             // TLE fallback: SGP4, unless a numerical propagation stored its states (#675)
-            if (InitialOrbitalParameters is TLE && !_holdsPropagatedStates)
+            if (InitialOrbitalParameters is Tle && !_holdsPropagatedStates)
                 return InitialOrbitalParameters.ToStateVector(epoch)
                     .ToFrame(Frames.Frame.ICRF)
                     .RelativeTo(referenceBody, Aberration.None).ToStateVector();
@@ -1461,7 +1461,7 @@ namespace IO.Astrodynamics.Body.Spacecraft
 
             // Short-circuit: observer IS the CB, no aberration, have cached states, the epoch within them (#527: outside,
             // or in a gap between added windows (#792), the reference-body path throws for propagated states, and a TLE
-            // spacecraft sampled by TLEPropagator reads SGP4)
+            // spacecraft sampled by TlePropagator reads SGP4)
             if (aberration == Aberration.None && _propagatedStates.Count > 0
                                               && cb.NaifId == observer.NaifId && cb.NaifId != 0
                                               && _propagatedStates.InterpolateWithin(epoch, 0.0) is { } read)
@@ -1480,8 +1480,8 @@ namespace IO.Astrodynamics.Body.Spacecraft
         /// center of the segments, so SPICE chains the ephemerides; they are stored in ICRF whatever the frame of the initial
         /// state, so the SPK is in J2000 (#535). The file is written by the library's managed writer
         /// (<see cref="Kernels.SpkWriter"/>), in SSB mode and about any central body alike: an existing file is unloaded and
-        /// replaced, and the new one is left unloaded, as the native writer did. A file <see cref="SpiceAPI.LoadKernels(FileSystemInfo)"/>
-        /// loaded is unloaded as <see cref="SpiceAPI.UnloadKernels(FileSystemInfo)"/> does, so that <see cref="SpiceAPI.GetLoadedKernels"/>
+        /// replaced, and the new one is left unloaded, as the native writer did. A file <see cref="SpiceApi.LoadKernels(FileSystemInfo)"/>
+        /// loaded is unloaded as <see cref="SpiceApi.UnloadKernels(FileSystemInfo)"/> does, so that <see cref="SpiceApi.GetLoadedKernels"/>
         /// no longer lists it (#706).
         /// </summary>
         /// <remarks>
@@ -1509,7 +1509,7 @@ namespace IO.Astrodynamics.Body.Spacecraft
         {
             if (_isFromKernel) throw new InvalidOperationException("Cannot write ephemeris for a kernel-backed spacecraft.");
             ArgumentNullException.ThrowIfNull(outputFile);
-            SpiceAPI.Instance.WriteEphemerisBytes(outputFile, EphemerisKernelBytes(asState: false));
+            SpiceApi.Instance.WriteEphemerisBytes(outputFile, EphemerisKernelBytes(asState: false));
         }
 
         // The arcs an SPK holds: an impulse at the end of a propagation opens an arc of one state at the epoch where the arc
@@ -1583,7 +1583,7 @@ namespace IO.Astrodynamics.Body.Spacecraft
                 return smallest;
             }
 
-            if (!_isFromKernel && InitialOrbitalParameters is TLE tle && tle.Observer.NaifId == center.NaifId)
+            if (!_isFromKernel && InitialOrbitalParameters is Tle tle && tle.Observer.NaifId == center.NaifId)
             {
                 return Time.SecondsToSpan(Constants.TwoPi / tle.MeanMeanMotion);
             }
@@ -1595,7 +1595,7 @@ namespace IO.Astrodynamics.Body.Spacecraft
         /// The window of the propagated states that <see cref="GetGeometricStateRelativeTo(in IO.Astrodynamics.TimeSystem.Time, IO.Astrodynamics.Body.CelestialItem)"/> interpolates, from the first
         /// to the last, the gaps between the windows given to <see cref="AddPropagatedStates"/> included (#792); null when it
         /// reads no such states: a kernel-backed spacecraft, a TLE that no numerical propagation
-        /// stored states for (unpropagated, or sampled by <see cref="TLEPropagator"/>), or no stored state (the initial
+        /// stored states for (unpropagated, or sampled by <see cref="TlePropagator"/>), or no stored state (the initial
         /// orbital parameters are then propagated in two-body motion to the epoch). A store of one state is read through the
         /// arcs, at its epoch only, its window of zero length (decision 89 of #668, decided by S. Guillet, 2026-11-23: before,
         /// fewer than two states read the two-body orbit).
@@ -1604,7 +1604,7 @@ namespace IO.Astrodynamics.Body.Spacecraft
         {
             get
             {
-                if (_isFromKernel || (InitialOrbitalParameters is TLE && !_holdsPropagatedStates) || _propagatedStates.Count == 0)
+                if (_isFromKernel || (InitialOrbitalParameters is Tle && !_holdsPropagatedStates) || _propagatedStates.Count == 0)
                 {
                     return null;
                 }
@@ -1634,7 +1634,7 @@ namespace IO.Astrodynamics.Body.Spacecraft
             if (naifId >= 0) throw new ArgumentOutOfRangeException(nameof(naifId), "Kernel-backed spacecraft NAIF ID must be negative.");
             CheckFrameIdRange(naifId);
             clock?.CheckAttachableTo(naifId, name);
-            return SpiceAPI.Instance.ReadEphemerisRaw(epoch, centerOfMotion ?? new CelestialBody(PlanetsAndMoons.EARTH), naifId,
+            return SpiceApi.Instance.ReadEphemerisRaw(epoch, centerOfMotion ?? new CelestialBody(PlanetsAndMoons.EARTH), naifId,
                 Frames.Frame.ICRF, Aberration.None);
         }
 
@@ -1700,7 +1700,7 @@ namespace IO.Astrodynamics.Body.Spacecraft
         /// every state joined the arc of its epoch, so two windows made one arc read across the gap between them.
         /// They are kept in ICRF, the frame of the readers (#535). Every propagation replaces every stored state, those
         /// added before it included, on every path (11.0.0, #540: they were merged with the propagated ones before), and so
-        /// does a <see cref="TLEPropagator"/> run, which re-arms the spacecraft and stores its samples alone (decision 38 of
+        /// does a <see cref="TlePropagator"/> run, which re-arms the spacecraft and stores its samples alone (decision 38 of
         /// #668, decided by S. Guillet, 2026-11-23: before 11.0.0 it added them to the stored states).
         /// </summary>
         /// <param name="stateVectors">The states, relative to one central body.</param>
@@ -1724,7 +1724,7 @@ namespace IO.Astrodynamics.Body.Spacecraft
         /// <see cref="AddPropagatedStates"/>) writes the state read from them, <see cref="GetEphemeris"/> relative to the
         /// observer and in the frame of its initial orbital parameters without aberration, with the mass and the impulses
         /// ignited by then; one without them, the motion of its initial orbital parameters (two-body for
-        /// osculating elements, SGP4 for a TLE, also when <see cref="TLEPropagator"/> sampled it) with its mass now and the
+        /// osculating elements, SGP4 for a TLE, also when <see cref="TlePropagator"/> sampled it) with its mass now and the
         /// maneuvers of its last propagation, none for a spacecraft never propagated, as before 11.0.0.
         /// </summary>
         /// <param name="originator">The message originator. If null, uses "IO.Astrodynamics".</param>
@@ -1874,7 +1874,7 @@ namespace IO.Astrodynamics.Body.Spacecraft
         /// in standby. <see cref="PropagatorBase.Propagate"/> calls it once its checks pass, on every path: before 11.0.0
         /// only <c>Spacecraft.Propagate</c> did, so a second run through the builder of 10.x or a
         /// <see cref="CentralBodyPropagator"/> built directly fired no burn and started with the fuel left by the first.
-        /// <see cref="TLEPropagator"/> calls it too, once every sample is computed, before it stores them.
+        /// <see cref="TlePropagator"/> calls it too, once every sample is computed, before it stores them.
         /// </summary>
         internal void ResetPropagation()
         {

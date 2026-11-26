@@ -134,7 +134,7 @@ public sealed class Lot6CaseTests : IDisposable
     {
         // Arrange: 007, object 2 without covariance; then with a zero covariance
         var caseInput = SuiteFixture.ReadCaseFromFixture(SuiteFixture.Lot6, FrisbeeCase);
-        SpiceAPI.Instance.LoadKernels(new DirectoryInfo(KernelsPath));
+        SpiceApi.Instance.LoadKernels(new DirectoryInfo(KernelsPath));
         var solver = new CollisionProbabilitySolver();
 
         // Act

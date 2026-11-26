@@ -29,13 +29,13 @@ public class SpiceDataProvider : IDataProvider
     /// <exception cref="InvalidOperationException">SPICE cannot orient the frame at <paramref name="epoch"/>.</exception>
     public StateOrientation FrameTransformationToICRF(in Time epoch, Frame source)
     {
-        if (SpiceAPI.ManagedOrientationToIcrf(epoch, source) is { } managed)
+        if (SpiceApi.ManagedOrientationToIcrf(epoch, source) is { } managed)
         {
             return managed;
         }
 
         // An unknown name names the parameter of this call, source (R25 of #668)
-        return SpiceAPI.Instance.TransformFrame(epoch, source, Frame.ICRF, nameof(source), null);
+        return SpiceApi.Instance.TransformFrame(epoch, source, Frame.ICRF, nameof(source), null);
     }
 
     /// <inheritdoc />
@@ -43,22 +43,22 @@ public class SpiceDataProvider : IDataProvider
     {
         // Use ReadEphemerisRaw to avoid CelestialItem.Create() which can't handle
         // spacecraft/site NAIF IDs. The actual observer object is passed through directly.
-        // A frame named GCRF is read from SPICE in J2000 and labelled with the caller's frame (SpiceAPI.SpiceFrameName, #543);
+        // A frame named GCRF is read from SPICE in J2000 and labelled with the caller's frame (SpiceApi.SpiceFrameName, #543);
         // a managed frame (TEME, CIRS, TIRS, #558; the frame of a site built from coordinates or of a managed spacecraft with an
         // attitude record, #682; the frame of a site of the kernels whose frame id no loaded kernel defines, third review of
-        // #690) is read in J2000 and rotated by it (SpiceAPI.ManagedReadFrame)
-        var result = SpiceAPI.Instance.ReadEphemerisRaw(epoch, observer, target.NaifId, frame, aberration);
+        // #690) is read in J2000 and rotated by it (SpiceApi.ManagedReadFrame)
+        var result = SpiceApi.Instance.ReadEphemerisRaw(epoch, observer, target.NaifId, frame, aberration);
         // ReadEphemeris always returns TDB epoch; preserve the caller's time scale.
         return new StateVector(result.Position, result.Velocity, observer, epoch, result.Frame);
     }
 
     /// <summary>The information of the celestial body of <paramref name="naifId"/> in the loaded kernels
-    /// (<see cref="SpiceAPI.GetCelestialBodyInfo"/>).</summary>
+    /// (<see cref="SpiceApi.GetCelestialBodyInfo"/>).</summary>
     /// <param name="naifId">The NAIF identifier of the body.</param>
     /// <exception cref="ArgumentException">The identifier is not a celestial body's, or SPICE does not name it
     /// (<c>naifId</c>).</exception>
     CelestialBodyInfo IDataProvider.GetCelestialBodyInfo(int naifId)
     {
-        return SpiceAPI.Instance.GetCelestialBodyInfo(naifId);
+        return SpiceApi.Instance.GetCelestialBodyInfo(naifId);
     }
 }

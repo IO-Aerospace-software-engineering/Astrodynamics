@@ -83,7 +83,7 @@ public class PropagateCommand
             // choice 16 of decision 100), and a TLE starts from its SGP4 state at the window start on its own Earth (#675),
             // which the options fill
             var initialOrbit = CliOrbit.Read(orbit, id => new CelestialBody(id));
-            var centerId = initialOrbit is TLE ? PlanetsAndMoons.EARTH.NaifId : initialOrbit.Observer.NaifId;
+            var centerId = initialOrbit is Tle ? PlanetsAndMoons.EARTH.NaifId : initialOrbit.Observer.NaifId;
             settings.CheckCenter(centerId);
 
             var bodyIds = (body ?? []).Select(x => CliValues.Object(x, "--body")).ToArray();

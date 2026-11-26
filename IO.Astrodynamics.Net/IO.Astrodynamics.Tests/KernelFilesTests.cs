@@ -9,7 +9,7 @@ using Xunit;
 namespace IO.Astrodynamics.Tests;
 
 /// <summary>
-/// The files <see cref="SpiceAPI.LoadKernels"/> hands to SPICE: the kernels only, so that the native loader never opens
+/// The files <see cref="SpiceApi.LoadKernels"/> hands to SPICE: the kernels only, so that the native loader never opens
 /// the other files of a directory, such as the geopotential model it used to lock on Windows.
 /// </summary>
 public class KernelFilesTests : IDisposable
@@ -30,7 +30,7 @@ public class KernelFilesTests : IDisposable
         var directory = Constants.SolarSystemKernelPath;
 
         // Act
-        var kernels = SpiceAPI.KernelFiles(directory).Select(Path.GetFileName).ToArray();
+        var kernels = SpiceApi.KernelFiles(directory).Select(Path.GetFileName).ToArray();
 
         // Assert: the ordinal order of the names (11.0.0; the listing order before), without the geopotential model
         var expected = Directory.EnumerateFileSystemEntries(directory.FullName).Select(Path.GetFileName)
@@ -59,7 +59,7 @@ public class KernelFilesTests : IDisposable
         var file = Write("file", Encoding.ASCII.GetBytes(content));
 
         // Act and assert
-        Assert.Equal(expected, SpiceAPI.IsKernelFile(file));
+        Assert.Equal(expected, SpiceApi.IsKernelFile(file));
     }
 
     [Theory]
@@ -75,8 +75,8 @@ public class KernelFilesTests : IDisposable
         var without = Write("comments.txt", Encoding.ASCII.GetBytes(new string('c', commentLength) + "\\begintext\n"));
 
         // Act and assert
-        Assert.True(SpiceAPI.IsKernelFile(file));
-        Assert.False(SpiceAPI.IsKernelFile(without));
+        Assert.True(SpiceApi.IsKernelFile(file));
+        Assert.False(SpiceApi.IsKernelFile(without));
     }
 
     [Fact]
@@ -87,7 +87,7 @@ public class KernelFilesTests : IDisposable
         using var holder = new FileStream(file, FileMode.Open, FileAccess.ReadWrite, FileShare.ReadWrite);
 
         // Act and assert
-        Assert.True(SpiceAPI.IsKernelFile(file));
+        Assert.True(SpiceApi.IsKernelFile(file));
     }
 
     [Fact]
@@ -102,11 +102,11 @@ public class KernelFilesTests : IDisposable
         var notAKernel = Write("model.txt", Encoding.ASCII.GetBytes("2 0 1.0\n"));
 
         // Act
-        var kernels = SpiceAPI.KernelFiles(_directory).ToArray();
+        var kernels = SpiceApi.KernelFiles(_directory).ToArray();
 
         // Assert: a file named explicitly is handed to SPICE, kernel or not
         Assert.Equal(new[] { nested, top }.OrderBy(x => x), kernels.OrderBy(x => x));
-        Assert.Equal(new[] { notAKernel }, SpiceAPI.KernelFiles(new FileInfo(notAKernel)));
+        Assert.Equal(new[] { notAKernel }, SpiceApi.KernelFiles(new FileInfo(notAKernel)));
     }
 
     [Fact]
@@ -130,7 +130,7 @@ public class KernelFilesTests : IDisposable
         }
 
         // Act
-        var kernels = SpiceAPI.KernelFiles(_directory).ToArray();
+        var kernels = SpiceApi.KernelFiles(_directory).ToArray();
 
         // Assert
         Assert.Equal(expected.OrderBy(x => x), kernels.OrderBy(x => x));
@@ -143,12 +143,12 @@ public class KernelFilesTests : IDisposable
         Write("model.txt", Encoding.ASCII.GetBytes("2 0 1.0\n"));
 
         // Act
-        SpiceAPI.Instance.LoadKernels(_directory);
+        SpiceApi.Instance.LoadKernels(_directory);
 
         // Assert
-        Assert.Contains(SpiceAPI.Instance.GetLoadedKernels(), kernel => kernel.FullName == _directory.FullName);
-        SpiceAPI.Instance.UnloadKernels(_directory);
-        Assert.DoesNotContain(SpiceAPI.Instance.GetLoadedKernels(), kernel => kernel.FullName == _directory.FullName);
+        Assert.Contains(SpiceApi.Instance.GetLoadedKernels(), kernel => kernel.FullName == _directory.FullName);
+        SpiceApi.Instance.UnloadKernels(_directory);
+        Assert.DoesNotContain(SpiceApi.Instance.GetLoadedKernels(), kernel => kernel.FullName == _directory.FullName);
     }
 
     [Fact]
@@ -161,8 +161,8 @@ public class KernelFilesTests : IDisposable
         {
             while (!stop.IsCancellationRequested)
             {
-                SpiceAPI.Instance.LoadKernels(_directory);
-                SpiceAPI.Instance.UnloadKernels(_directory);
+                SpiceApi.Instance.LoadKernels(_directory);
+                SpiceApi.Instance.UnloadKernels(_directory);
             }
         });
 
@@ -173,7 +173,7 @@ public class KernelFilesTests : IDisposable
             var deadline = DateTime.UtcNow.AddSeconds(2.0);
             while (DateTime.UtcNow < deadline)
             {
-                foreach (var kernel in SpiceAPI.Instance.GetLoadedKernels())
+                foreach (var kernel in SpiceApi.Instance.GetLoadedKernels())
                 {
                     _ = kernel.FullName;
                 }
@@ -184,7 +184,7 @@ public class KernelFilesTests : IDisposable
 
         // Assert
         Assert.Null(exception);
-        Assert.DoesNotContain(SpiceAPI.Instance.GetLoadedKernels(), kernel => kernel.FullName == _directory.FullName);
+        Assert.DoesNotContain(SpiceApi.Instance.GetLoadedKernels(), kernel => kernel.FullName == _directory.FullName);
     }
 
     private string Write(string name, byte[] content)

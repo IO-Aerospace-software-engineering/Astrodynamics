@@ -58,7 +58,7 @@ nav:
   - API Reference:
     - reference/index.md
     - Core:
-      - SpiceAPI & Data Providers: reference/spice-api.md
+      - SpiceApi & Data Providers: reference/spice-api.md
       - Time & Windows: reference/time-and-windows.md
       - Frames & Orientation: reference/frames.md
       - Celestial Bodies: reference/celestial-bodies.md

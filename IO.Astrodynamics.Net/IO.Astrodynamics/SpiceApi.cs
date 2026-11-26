@@ -34,7 +34,7 @@ namespace IO.Astrodynamics;
 /// <summary>
 ///     API to communicate with IO.Astrodynamics
 /// </summary>
-public class SpiceAPI
+public class SpiceApi
 {
     private static IntPtr _libHandle = IntPtr.Zero;
     private readonly List<KernelEntry> _kernels = [];
@@ -52,12 +52,12 @@ public class SpiceAPI
     /// <summary>
     ///     Instantiate API
     /// </summary>
-    private SpiceAPI()
+    private SpiceApi()
     {
-        NativeLibrary.SetDllImportResolver(typeof(SpiceAPI).Assembly, Resolver);
+        NativeLibrary.SetDllImportResolver(typeof(SpiceApi).Assembly, Resolver);
     }
 
-    public static SpiceAPI Instance { get; } = new();
+    public static SpiceApi Instance { get; } = new();
 
     [DllImport(@"IO.Astrodynamics", CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi)]
     private static extern IntPtr GetSpiceVersionProxy();
@@ -212,7 +212,7 @@ public class SpiceAPI
         else if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX)) sharedLibName = "resources/libIO.Astrodynamics.dylib";
 
         if (!string.IsNullOrEmpty(sharedLibName))
-            NativeLibrary.TryLoad(sharedLibName, typeof(SpiceAPI).Assembly, DllImportSearchPath.AssemblyDirectory, out _libHandle);
+            NativeLibrary.TryLoad(sharedLibName, typeof(SpiceApi).Assembly, DllImportSearchPath.AssemblyDirectory, out _libHandle);
         else
             throw new PlatformNotSupportedException();
 
@@ -1761,34 +1761,34 @@ public class SpiceAPI
     /// The relation CSPICE's geometry finder takes for <paramref name="relationalOperator"/> (#482). CSPICE knows only
     /// <c>&gt;</c>, <c>&lt;</c>, <c>=</c>, <c>ABSMIN</c>, <c>ABSMAX</c>, <c>LOCMIN</c> and <c>LOCMAX</c>, and the native
     /// parser of the relation ends the process on any other string (a C++ exception across P/Invoke).
-    /// <see cref="RelationnalOperator.GreaterOrEqual"/> and <see cref="RelationnalOperator.LowerOrEqual"/> are sent as
+    /// <see cref="RelationalOperator.GreaterThanOrEqual"/> and <see cref="RelationalOperator.LessThanOrEqual"/> are sent as
     /// <c>&gt;</c> and <c>&lt;</c>: CSPICE's windows are closed, so for a quantity that crosses the value they already hold
     /// the instants where it equals the value, as the managed search's windows do; the two differ only where the quantity
-    /// stays equal to the value over an interval, which <c>&gt;</c> leaves out. <see cref="RelationnalOperator.NotEqual"/>
+    /// stays equal to the value over an interval, which <c>&gt;</c> leaves out. <see cref="RelationalOperator.NotEqual"/>
     /// is never sent: <see cref="SearchWindows"/> forms it from <c>=</c>.
     /// </summary>
     /// <exception cref="ArgumentOutOfRangeException">The value is not one of the enumeration.</exception>
-    private static string SpiceRelation(RelationnalOperator relationalOperator) => relationalOperator switch
+    private static string SpiceRelation(RelationalOperator relationalOperator) => relationalOperator switch
     {
-        RelationnalOperator.Greater or RelationnalOperator.GreaterOrEqual => ">",
-        RelationnalOperator.Lower or RelationnalOperator.LowerOrEqual => "<",
-        RelationnalOperator.Equal => "=",
-        RelationnalOperator.AbsoluteMin or RelationnalOperator.AbsoluteMax or RelationnalOperator.LocalMin
-            or RelationnalOperator.LocalMax => relationalOperator.GetDescription(),
+        RelationalOperator.GreaterThan or RelationalOperator.GreaterThanOrEqual => ">",
+        RelationalOperator.LessThan or RelationalOperator.LessThanOrEqual => "<",
+        RelationalOperator.Equal => "=",
+        RelationalOperator.AbsoluteMin or RelationalOperator.AbsoluteMax or RelationalOperator.LocalMin
+            or RelationalOperator.LocalMax => relationalOperator.GetDescription(),
         _ => throw new ArgumentOutOfRangeException(nameof(relationalOperator), relationalOperator,
-            "CSPICE's window searches accept Greater, GreaterOrEqual, Lower, LowerOrEqual, Equal, NotEqual, AbsoluteMin, " +
+            "CSPICE's window searches accept GreaterThan, GreaterThanOrEqual, LessThan, LessThanOrEqual, Equal, NotEqual, AbsoluteMin, " +
             "AbsoluteMax, LocalMin and LocalMax.")
     };
 
     /// <summary>
     /// The windows of a CSPICE search for <paramref name="relationalOperator"/>: the search itself, or for
-    /// <see cref="RelationnalOperator.NotEqual"/>, which CSPICE has not, the rest of the search window once the instants
+    /// <see cref="RelationalOperator.NotEqual"/>, which CSPICE has not, the rest of the search window once the instants
     /// of <c>=</c> are taken out, a window from each crossing to the next, as the managed search defines it (#482).
     /// </summary>
-    private static IReadOnlyList<TimeSystem.Window> SearchWindows(TimeSystem.Window searchWindow, RelationnalOperator relationalOperator,
+    private static IReadOnlyList<TimeSystem.Window> SearchWindows(TimeSystem.Window searchWindow, RelationalOperator relationalOperator,
         Func<string, IReadOnlyList<TimeSystem.Window>> search)
     {
-        if (relationalOperator != RelationnalOperator.NotEqual)
+        if (relationalOperator != RelationalOperator.NotEqual)
         {
             return search(SpiceRelation(relationalOperator));
         }
@@ -1829,10 +1829,10 @@ public class SpiceAPI
     /// <param name="stepSize">The step of the search.</param>
     /// <returns>The windows, in TDB.</returns>
     /// <remarks>
-    /// CSPICE has no <c>&gt;=</c>, <c>&lt;=</c> or <c>!=</c> (#482): <see cref="RelationnalOperator.GreaterOrEqual"/>
-    /// and <see cref="RelationnalOperator.LowerOrEqual"/> are searched as <c>&gt;</c> and <c>&lt;</c>, whose windows are
+    /// CSPICE has no <c>&gt;=</c>, <c>&lt;=</c> or <c>!=</c> (#482): <see cref="RelationalOperator.GreaterThanOrEqual"/>
+    /// and <see cref="RelationalOperator.LessThanOrEqual"/> are searched as <c>&gt;</c> and <c>&lt;</c>, whose windows are
     /// closed (they differ only where the distance stays equal to the value over an interval);
-    /// <see cref="RelationnalOperator.NotEqual"/> is the search window less the instants of <c>=</c>, a window from each
+    /// <see cref="RelationalOperator.NotEqual"/> is the search window less the instants of <c>=</c>, a window from each
     /// crossing to the next, as the managed search gives it.
     /// </remarks>
     /// <exception cref="SpiceException">SPICE cannot run the search: a body or an epoch without ephemeris data,
@@ -1840,7 +1840,7 @@ public class SpiceAPI
     /// SPICE's message (fourth round of #668; before 11.0.0 the native layer dropped the error and the search returned no
     /// window).</exception>
     public IReadOnlyList<TimeSystem.Window> FindWindowsOnDistanceConstraint(TimeSystem.Window searchWindow, int observerId,
-        int targetId, RelationnalOperator relationalOperator, double value, Aberration aberration,
+        int targetId, RelationalOperator relationalOperator, double value, Aberration aberration,
         TimeSpan stepSize)
     {
         return SearchWindows(searchWindow, relationalOperator, relation => DistanceWindows(searchWindow, observerId, targetId, relation,
@@ -1958,10 +1958,10 @@ public class SpiceAPI
     /// <param name="stepSize"></param>
     /// <returns></returns>
     /// <remarks>
-    /// CSPICE has no <c>&gt;=</c>, <c>&lt;=</c> or <c>!=</c> (#482): <see cref="RelationnalOperator.GreaterOrEqual"/>
-    /// and <see cref="RelationnalOperator.LowerOrEqual"/> are searched as <c>&gt;</c> and <c>&lt;</c>, whose windows are
+    /// CSPICE has no <c>&gt;=</c>, <c>&lt;=</c> or <c>!=</c> (#482): <see cref="RelationalOperator.GreaterThanOrEqual"/>
+    /// and <see cref="RelationalOperator.LessThanOrEqual"/> are searched as <c>&gt;</c> and <c>&lt;</c>, whose windows are
     /// closed (they differ only where the quantity stays equal to the value over an interval);
-    /// <see cref="RelationnalOperator.NotEqual"/> is the search window less the instants of <c>=</c>, a window from each
+    /// <see cref="RelationalOperator.NotEqual"/> is the search window less the instants of <c>=</c>, a window from each
     /// crossing to the next, as the managed search gives it.
     /// The frame is handed to <c>gfposc_c</c> by name (<see cref="SpiceFrameName"/>). A frame of the library that SPICE
     /// does not know by that name throws (<see cref="SpiceKnowsFrame"/>: TEME, CIRS, TIRS, the frame of a site or a
@@ -1983,7 +1983,7 @@ public class SpiceAPI
     /// no window).</exception>
     public IReadOnlyList<TimeSystem.Window> FindWindowsOnCoordinateConstraint(TimeSystem.Window searchWindow, int observerId,
         int targetId, Frame frame, CoordinateSystem coordinateSystem, Coordinate coordinate,
-        RelationnalOperator relationalOperator, double value, double adjustValue, Aberration aberration,
+        RelationalOperator relationalOperator, double value, double adjustValue, Aberration aberration,
         TimeSpan stepSize)
     {
         if (frame == null) throw new ArgumentNullException(nameof(frame));
@@ -2035,10 +2035,10 @@ public class SpiceAPI
     /// names the frame, the <see cref="SpiceException"/> of the search, with SPICE's message, its inner exception (R25 of
     /// #668, decided by S. Guillet, 2026-11-19; before 11.0.0 that exception).</exception>
     /// <remarks>
-    /// CSPICE has no <c>&gt;=</c>, <c>&lt;=</c> or <c>!=</c> (#482): <see cref="RelationnalOperator.GreaterOrEqual"/>
-    /// and <see cref="RelationnalOperator.LowerOrEqual"/> are searched as <c>&gt;</c> and <c>&lt;</c>, whose windows are
+    /// CSPICE has no <c>&gt;=</c>, <c>&lt;=</c> or <c>!=</c> (#482): <see cref="RelationalOperator.GreaterThanOrEqual"/>
+    /// and <see cref="RelationalOperator.LessThanOrEqual"/> are searched as <c>&gt;</c> and <c>&lt;</c>, whose windows are
     /// closed (they differ only where the quantity stays equal to the value over an interval);
-    /// <see cref="RelationnalOperator.NotEqual"/> is the search window less the instants of <c>=</c>, a window from each
+    /// <see cref="RelationalOperator.NotEqual"/> is the search window less the instants of <c>=</c>, a window from each
     /// crossing to the next, as the managed search gives it.
     /// Before 11.0.0 the altitude was read in km (#488).
     /// </remarks>
@@ -2047,7 +2047,7 @@ public class SpiceAPI
     /// with SPICE's message (fourth round of #668; before 11.0.0 the native layer dropped the error and the search returned
     /// no window).</exception>
     public IReadOnlyList<TimeSystem.Window> FindWindowsOnIlluminationConstraint(TimeSystem.Window searchWindow, int observerId,
-        int targetBodyId, Frame fixedFrame, Coordinates.Planetodetic planetodetic, IlluminationAngle illuminationType, RelationnalOperator relationalOperator,
+        int targetBodyId, Frame fixedFrame, Coordinates.Planetodetic planetodetic, IlluminationAngle illuminationType, RelationalOperator relationalOperator,
         double value, double adjustValue, Aberration aberration, TimeSpan stepSize, int illuminationSourceId,
         string method = "Ellipsoid")
     {
@@ -3079,7 +3079,7 @@ public class SpiceAPI
         Time epoch)
     {
         return ConvertTleToStateVector(line1, line2, line3, ReadTleEpoch(line1, line2, line3),
-            OrbitalParameters.TLE.TLE.ExtractEpochFromTLE(line2), epoch);
+            OrbitalParameters.TLE.Tle.ExtractEpochFromTLE(line2), epoch);
     }
 
     /// <summary>

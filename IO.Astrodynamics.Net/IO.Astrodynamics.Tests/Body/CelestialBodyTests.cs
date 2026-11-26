@@ -92,7 +92,7 @@ public class CelestialBodyTests
     [Fact]
     public void FindWindowsOnDistanceConstraint()
     {
-        var res = TestHelpers.MoonAtJ2000.FindDistanceWindows(new Window(TimeSystem.Time.Parse("2000-01-01 12:00:00.0000 TDB"), TimeSystem.Time.Parse("2000-04-01 12:00:00.0000 TDB")), TestHelpers.EarthAtJ2000, RelationnalOperator.Greater, 400000000, new WindowSearchOptions { Step = TimeSpan.FromSeconds(86400.0) });
+        var res = TestHelpers.MoonAtJ2000.FindDistanceWindows(new Window(TimeSystem.Time.Parse("2000-01-01 12:00:00.0000 TDB"), TimeSystem.Time.Parse("2000-04-01 12:00:00.0000 TDB")), TestHelpers.EarthAtJ2000, RelationalOperator.GreaterThan, 400000000, new WindowSearchOptions { Step = TimeSpan.FromSeconds(86400.0) });
         // CSPICE gfdist (tools/geometry_reference, converged to 1e-9 s); the first window holds at the start of the search
         // window (#461: it started 18.5 h before it)
         var windows = res as Window[] ?? res.ToArray();

@@ -20,7 +20,7 @@ namespace IO.Astrodynamics.OrbitalParameters
     /// in the source frame. So do <see cref="Frame.ToFrame(Frame, Time)"/>,
     /// <see cref="Frame.GetStateOrientationToICRF(Time)"/> (the frame of a spacecraft included: ICRF relative to the
     /// spacecraft, in the spacecraft frame, managed or kernel-backed), <c>Spacecraft.GetOrientation</c> and
-    /// <see cref="SpiceAPI.ReadOrientation"/> (the spacecraft relative to the reference frame, in the reference frame, for
+    /// <see cref="SpiceApi.ReadOrientation"/> (the spacecraft relative to the reference frame, in the reference frame, for
     /// the C-matrix of a CK). <see cref="AtEpoch"/> takes the other convention.
     /// </param>
     /// <param name="Epoch">The time at which the state is defined.</param>

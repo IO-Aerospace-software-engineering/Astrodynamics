@@ -53,7 +53,7 @@ using IO.Astrodynamics.SSA;
 using IO.Astrodynamics.SolarSystemObjects;
 using IO.Astrodynamics.Surface;
 using IO.Astrodynamics.TimeSystem;
-using TLE = IO.Astrodynamics.OrbitalParameters.TLE.TLE;
+using Tle = IO.Astrodynamics.OrbitalParameters.TLE.Tle;
 
 namespace DocumentationPageSamples.Reference;
 
@@ -61,7 +61,7 @@ namespace DocumentationPageSamples.Reference;
 internal static class ConjunctionAssessmentPage
 {
     // docs/reference/conjunction-assessment.md, "Catalogue objects"
-    internal static void Block01(Spacecraft protectedSpacecraft, TLE tle, Window window)
+    internal static void Block01(Spacecraft protectedSpacecraft, Tle tle, Window window)
     {
         #region docs/reference/conjunction-assessment.md:1
         // Inputs: protectedSpacecraft (Spacecraft), tle (TLE of a debris), window (Window)

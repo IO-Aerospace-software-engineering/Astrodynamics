@@ -49,71 +49,71 @@ public class CspiceWindowCapacityTests
         TestKernels.EnsureLro();
     }
 
-    private static IEnumerable<Window> Coordinate(Window window, RelationnalOperator relation, double value, double adjust = 0.0) =>
-        SpiceAPI.Instance.FindWindowsOnCoordinateConstraint(window, 399, 301, new Frames.Frame("IAU_EARTH"), CoordinateSystem.Rectangular,
+    private static IEnumerable<Window> Coordinate(Window window, RelationalOperator relation, double value, double adjust = 0.0) =>
+        SpiceApi.Instance.FindWindowsOnCoordinateConstraint(window, 399, 301, new Frames.Frame("IAU_EARTH"), CoordinateSystem.Rectangular,
             IO.Astrodynamics.Coordinate.X, relation, value, adjust, Aberration.None, TimeSpan.FromHours(1.0));
 
-    private static IEnumerable<Window> Distance(Window window, RelationnalOperator relation, double value) =>
-        SpiceAPI.Instance.FindWindowsOnDistanceConstraint(window, 301, -85, relation, value, Aberration.None, TimeSpan.FromSeconds(60.0));
+    private static IEnumerable<Window> Distance(Window window, RelationalOperator relation, double value) =>
+        SpiceApi.Instance.FindWindowsOnDistanceConstraint(window, 301, -85, relation, value, Aberration.None, TimeSpan.FromSeconds(60.0));
 
-    private static IEnumerable<Window> Illumination(Window window, RelationnalOperator relation) =>
-        SpiceAPI.Instance.FindWindowsOnIlluminationConstraint(window, 301, 399, new Frames.Frame("IAU_EARTH"), new Planetodetic(0.0, 0.0, 0.0),
+    private static IEnumerable<Window> Illumination(Window window, RelationalOperator relation) =>
+        SpiceApi.Instance.FindWindowsOnIlluminationConstraint(window, 301, 399, new Frames.Frame("IAU_EARTH"), new Planetodetic(0.0, 0.0, 0.0),
             IlluminationAngle.Incidence, relation, System.Math.PI / 2.0, 0.0, Aberration.None, TimeSpan.FromHours(1.0), 10);
 
     private static IEnumerable<Window> Occultation(Window window) =>
-        SpiceAPI.Instance.FindWindowsOnOccultationConstraint(window, -85, 10, ShapeType.Ellipsoid, 301, ShapeType.Ellipsoid, OccultationType.Any,
+        SpiceApi.Instance.FindWindowsOnOccultationConstraint(window, -85, 10, ShapeType.Ellipsoid, 301, ShapeType.Ellipsoid, OccultationType.Any,
             Aberration.None, TimeSpan.FromSeconds(300.0));
 
-    public static TheoryData<string, RelationnalOperator, int> CoordinateRelations => new()
+    public static TheoryData<string, RelationalOperator, int> CoordinateRelations => new()
     {
-        { "=", RelationnalOperator.Equal, 2126 },
-        { ">", RelationnalOperator.Greater, 1064 },
-        { "<", RelationnalOperator.Lower, 1063 },
-        { ">=", RelationnalOperator.GreaterOrEqual, 1064 },
-        { "<=", RelationnalOperator.LowerOrEqual, 1063 },
-        { "LOCMAX", RelationnalOperator.LocalMax, 1062 },
-        { "LOCMIN", RelationnalOperator.LocalMin, 1063 },
-        { "!=", RelationnalOperator.NotEqual, 2127 }
+        { "=", RelationalOperator.Equal, 2126 },
+        { ">", RelationalOperator.GreaterThan, 1064 },
+        { "<", RelationalOperator.LessThan, 1063 },
+        { ">=", RelationalOperator.GreaterThanOrEqual, 1064 },
+        { "<=", RelationalOperator.LessThanOrEqual, 1063 },
+        { "LOCMAX", RelationalOperator.LocalMax, 1062 },
+        { "LOCMIN", RelationalOperator.LocalMin, 1063 },
+        { "!=", RelationalOperator.NotEqual, 2127 }
     };
 
     [Theory]
     [MemberData(nameof(CoordinateRelations))]
-    public void Coordinate_PastAThousandWindows_EveryWindow(string label, RelationnalOperator relation, int count)
+    public void Coordinate_PastAThousandWindows_EveryWindow(string label, RelationalOperator relation, int count)
     {
         var whole = Coordinate(CoordinateWindow, relation, 0.0).ToArray();
-        var joined = relation == RelationnalOperator.NotEqual
-            ? Complement(Joined(CoordinateWindow, w => Coordinate(w, RelationnalOperator.Equal, 0.0)), CoordinateWindow)
+        var joined = relation == RelationalOperator.NotEqual
+            ? Complement(Joined(CoordinateWindow, w => Coordinate(w, RelationalOperator.Equal, 0.0)), CoordinateWindow)
             : Joined(CoordinateWindow, w => Coordinate(w, relation, 0.0));
         Compare($"coordinate {label}", whole, joined, count);
     }
 
     [Theory]
-    [InlineData(RelationnalOperator.AbsoluteMax)]
-    [InlineData(RelationnalOperator.AbsoluteMin)]
-    public void Coordinate_AbsoluteExtremeWithAnAdjustment_PastAThousandWindows_EveryWindow(RelationnalOperator relation)
+    [InlineData(RelationalOperator.AbsoluteMax)]
+    [InlineData(RelationalOperator.AbsoluteMin)]
+    public void Coordinate_AbsoluteExtremeWithAnAdjustment_PastAThousandWindows_EveryWindow(RelationalOperator relation)
     {
         // An adjustment of 1e5 km: every window where X is within 1e5 km of its absolute extreme, about one per day. The
         // reference is the relation it stands for, at the extreme of the search without an adjustment (one window)
         const double adjust = 1.0e5;
         double extreme = Coordinate(CoordinateWindow, relation, 0.0).Single().StartDate.TimeSpanFromJ2000().TotalSeconds;
-        double x = SpiceAPI.Instance.ReadEphemeris(TimeSystem.Time.CreateTDB(extreme), 399, 301, new Frames.Frame("IAU_EARTH"), Aberration.None).Position.X / 1000.0;
+        double x = SpiceApi.Instance.ReadEphemeris(TimeSystem.Time.CreateTDB(extreme), 399, 301, new Frames.Frame("IAU_EARTH"), Aberration.None).Position.X / 1000.0;
         var whole = Coordinate(CoordinateWindow, relation, 0.0, adjust).ToArray();
-        var joined = relation == RelationnalOperator.AbsoluteMax
-            ? Joined(CoordinateWindow, w => Coordinate(w, RelationnalOperator.Greater, x - adjust))
-            : Joined(CoordinateWindow, w => Coordinate(w, RelationnalOperator.Lower, x + adjust));
-        Compare($"coordinate {relation} adjust 1e5 km", whole, joined, relation == RelationnalOperator.AbsoluteMax ? 1062 : 1063);
+        var joined = relation == RelationalOperator.AbsoluteMax
+            ? Joined(CoordinateWindow, w => Coordinate(w, RelationalOperator.GreaterThan, x - adjust))
+            : Joined(CoordinateWindow, w => Coordinate(w, RelationalOperator.LessThan, x + adjust));
+        Compare($"coordinate {relation} adjust 1e5 km", whole, joined, relation == RelationalOperator.AbsoluteMax ? 1062 : 1063);
     }
 
     [Theory]
-    [InlineData(RelationnalOperator.Equal, 1904)]
-    [InlineData(RelationnalOperator.NotEqual, 1905)]
-    [InlineData(RelationnalOperator.LocalMin, 1121)]
-    [InlineData(RelationnalOperator.LocalMax, 1121)]
-    public void Distance_PastAThousandWindows_EveryWindow(RelationnalOperator relation, int count)
+    [InlineData(RelationalOperator.Equal, 1904)]
+    [InlineData(RelationalOperator.NotEqual, 1905)]
+    [InlineData(RelationalOperator.LocalMin, 1121)]
+    [InlineData(RelationalOperator.LocalMax, 1121)]
+    public void Distance_PastAThousandWindows_EveryWindow(RelationalOperator relation, int count)
     {
         var whole = Distance(LroWindow, relation, LroMoonDistance).ToArray();
-        var joined = relation == RelationnalOperator.NotEqual
-            ? Complement(Joined(LroWindow, w => Distance(w, RelationnalOperator.Equal, LroMoonDistance)), LroWindow)
+        var joined = relation == RelationalOperator.NotEqual
+            ? Complement(Joined(LroWindow, w => Distance(w, RelationalOperator.Equal, LroMoonDistance)), LroWindow)
             : Joined(LroWindow, w => Distance(w, relation, LroMoonDistance));
         Compare($"distance {relation}", whole, joined, count);
     }
@@ -123,8 +123,8 @@ public class CspiceWindowCapacityTests
     {
         // The night at the point (0°, 0°) of the Earth's ellipsoid, one window a day: 1100 windows, more than the 1000 of
         // gfilum_c's former cell (SPICE(WINDOWEXCESS) before 11.0.0)
-        var whole = Illumination(CoordinateWindow, RelationnalOperator.Greater).ToArray();
-        var joined = Joined(CoordinateWindow, w => Illumination(w, RelationnalOperator.Greater));
+        var whole = Illumination(CoordinateWindow, RelationalOperator.GreaterThan).ToArray();
+        var joined = Joined(CoordinateWindow, w => Illumination(w, RelationalOperator.GreaterThan));
         Compare("illumination >", whole, joined, 1100);
     }
 
@@ -155,7 +155,7 @@ public class CspiceWindowCapacityTests
     }
 
     private static IEnumerable<Window> FieldOfView(Window window) =>
-        SpiceAPI.Instance.FindWindowsInFieldOfViewConstraint(window, 399, MeridianInstrument, 301, new Frames.Frame("IAU_MOON"), ShapeType.Point,
+        SpiceApi.Instance.FindWindowsInFieldOfViewConstraint(window, 399, MeridianInstrument, 301, new Frames.Frame("IAU_MOON"), ShapeType.Point,
             Aberration.None, TimeSpan.FromHours(1.0));
 
     [Fact]
@@ -181,17 +181,17 @@ public class CspiceWindowCapacityTests
         // larger cell): SPICE(WINDOWEXCESS), never a partial list. The exception carries SPICE's long message, the size of
         // the cell counted in endpoints, without the short code
         var window = new Window(TimeSystem.Time.J2000TDB, TimeSystem.Time.J2000TDB.AddDays(6000.0));
-        var exception = Assert.Throws<SpiceException>(() => Coordinate(window, RelationnalOperator.Equal, 0.0).ToArray());
+        var exception = Assert.Throws<SpiceException>(() => Coordinate(window, RelationalOperator.Equal, 0.0).ToArray());
         Assert.Contains("Window has size, 20000, cardinality 20000. Cannot insert an additional interval into the window.", exception.Message);
     }
 
     [Theory]
     [Trait("Category", "Validation")]
     [MemberData(nameof(CoordinateRelations))]
-    public void Coordinate_PastAThousandWindows_EqualsGfposc(string label, RelationnalOperator relation, int count)
+    public void Coordinate_PastAThousandWindows_EqualsGfposc(string label, RelationalOperator relation, int count)
     {
         var whole = Coordinate(CoordinateWindow, relation, 0.0).ToArray();
-        var reference = relation == RelationnalOperator.NotEqual
+        var reference = relation == RelationalOperator.NotEqual
             ? Complement(Gfposc("=", 0.0), CoordinateWindow)
             : Gfposc(label is ">=" ? ">" : label is "<=" ? "<" : label, 0.0);
         Assert.Equal(count, reference.Length);
@@ -200,9 +200,9 @@ public class CspiceWindowCapacityTests
 
     [Theory]
     [Trait("Category", "Validation")]
-    [InlineData(RelationnalOperator.AbsoluteMax, "ABSMAX", 1062)]
-    [InlineData(RelationnalOperator.AbsoluteMin, "ABSMIN", 1063)]
-    public void Coordinate_AbsoluteExtremeWithAnAdjustment_EqualsGfposc(RelationnalOperator relation, string spiceRelation, int count)
+    [InlineData(RelationalOperator.AbsoluteMax, "ABSMAX", 1062)]
+    [InlineData(RelationalOperator.AbsoluteMin, "ABSMIN", 1063)]
+    public void Coordinate_AbsoluteExtremeWithAnAdjustment_EqualsGfposc(RelationalOperator relation, string spiceRelation, int count)
     {
         var whole = Coordinate(CoordinateWindow, relation, 0.0, 1.0e5).ToArray();
         var reference = Gfposc(spiceRelation, 1.0e5);
@@ -212,10 +212,10 @@ public class CspiceWindowCapacityTests
 
     [Theory]
     [Trait("Category", "Validation")]
-    [InlineData(RelationnalOperator.Equal, "=", 1904)]
-    [InlineData(RelationnalOperator.LocalMin, "LOCMIN", 1121)]
-    [InlineData(RelationnalOperator.LocalMax, "LOCMAX", 1121)]
-    public void Distance_PastAThousandWindows_EqualsGfdist(RelationnalOperator relation, string spiceRelation, int count)
+    [InlineData(RelationalOperator.Equal, "=", 1904)]
+    [InlineData(RelationalOperator.LocalMin, "LOCMIN", 1121)]
+    [InlineData(RelationalOperator.LocalMax, "LOCMAX", 1121)]
+    public void Distance_PastAThousandWindows_EqualsGfdist(RelationalOperator relation, string spiceRelation, int count)
     {
         var whole = Distance(LroWindow, relation, LroMoonDistance).ToArray();
         var reference = ToWindows(CspiceDirect.Gfdist(Seconds(LroWindow.StartDate), Seconds(LroWindow.EndDate), "-85", "NONE", "301",
@@ -229,15 +229,15 @@ public class CspiceWindowCapacityTests
     public void IlluminationAndOccultation_PastAThousandWindows_EqualGfilumAndGfoclt()
     {
         // The point as the native layer builds it: georec_c at (0, 0, 0) on the equatorial radius in km, read in m and scaled
-        double radius = SpiceAPI.Instance.GetCelestialBodyInfo(399).Radii.X * 0.001;
+        double radius = SpiceApi.Instance.GetCelestialBodyInfo(399).Radii.X * 0.001;
         var point = CspiceDirect.Georec(0.0, 0.0, 0.0, radius, 0.0);
         var illumination = ToWindows(CspiceDirect.Gfilum(Seconds(CoordinateWindow.StartDate), Seconds(CoordinateWindow.EndDate), "INCIDENCE",
             "399", "10", "IAU_EARTH", "NONE", "301", point, ">", System.Math.PI / 2.0, 0.0, 3600.0), CoordinateWindow);
         Assert.Equal(1100, illumination.Length);
-        LabelAssert.Equal(illumination, Illumination(CoordinateWindow, RelationnalOperator.Greater).ToArray());
+        LabelAssert.Equal(illumination, Illumination(CoordinateWindow, RelationalOperator.GreaterThan).ToArray());
 
         var occultation = ToWindows(CspiceDirect.Gfoclt(Seconds(LroWindow.StartDate), Seconds(LroWindow.EndDate), "ANY", "301", "ELLIPSOID",
-            SpiceAPI.Instance.GetCelestialBodyInfo(301).FrameName, "10", "ELLIPSOID", SpiceAPI.Instance.GetCelestialBodyInfo(10).FrameName, "NONE",
+            SpiceApi.Instance.GetCelestialBodyInfo(301).FrameName, "10", "ELLIPSOID", SpiceApi.Instance.GetCelestialBodyInfo(10).FrameName, "NONE",
             "-85", 300.0), LroWindow);
         Assert.Equal(1121, occultation.Length);
         LabelAssert.Equal(occultation, Occultation(LroWindow).ToArray());
@@ -266,7 +266,7 @@ public class CspiceWindowCapacityTests
 
     private static double Seconds(TimeSystem.Time time) => time.ToTDB().TimeSpanFromJ2000().TotalSeconds;
 
-    // CSPICE's windows labelled as SpiceAPI labels them: an end at an end of the search window is that end, a transition
+    // CSPICE's windows labelled as SpiceApi labels them: an end at an end of the search window is that end, a transition
     // inside the nearest tick of its seconds
     private static Window[] ToWindows(double[][] windows, Window searchWindow)
     {
@@ -306,7 +306,7 @@ public class CspiceWindowCapacityTests
         return windows.ToArray();
     }
 
-    // The search window less the windows, which are sorted and disjoint, as SpiceAPI forms NotEqual
+    // The search window less the windows, which are sorted and disjoint, as SpiceApi forms NotEqual
     private static Window[] Complement(IEnumerable<Window> windows, Window searchWindow)
     {
         var cursor = searchWindow.StartDate.ToTDB();

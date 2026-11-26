@@ -41,18 +41,18 @@ public class TleTextTests
         JsonDocument.Parse(File.ReadAllText("Data/Sgp4Reference/sgp4_reference.json")).RootElement.GetProperty("epoch_fields")
             .EnumerateArray().ToArray());
 
-    private static TLE Create(TimeSystem.Time epoch, double e = 0.001, double i = I, double raan = Raan, double aop = Aop, double m = M,
+    private static Tle Create(TimeSystem.Time epoch, double e = 0.001, double i = I, double raan = Raan, double aop = Aop, double m = M,
         double bstar = 0.0001, double nDot = 0.0, double nDDot = 0.0)
     {
         var earth = new CelestialBody(399, Frames.Frame.ECLIPTIC_J2000, epoch);
         var mean = new KeplerianElements(A, e, i, raan, aop, m, earth, epoch, Frames.Frame.TEME, elementsType: OrbitalElementsType.Mean);
-        return TLE.Create(mean, "TEXT", 25666, "98067A", 100, bstar: bstar, nDot: nDot, nDDot: nDDot);
+        return Tle.Create(mean, "TEXT", 25666, "98067A", 100, bstar: bstar, nDot: nDot, nDDot: nDDot);
     }
 
     private static TimeSystem.Time Utc(string iso) => new(DateTime.ParseExact(iso, "yyyy-MM-ddTHH:mm:ss.FFFFFFF", CultureInfo.InvariantCulture,
         DateTimeStyles.AssumeUniversal | DateTimeStyles.AdjustToUniversal), TimeScale.UTC);
 
-    private static string EpochField(TLE tle) => tle.Line1.Substring(18, 14);
+    private static string EpochField(Tle tle) => tle.Line1.Substring(18, 14);
 
     [Fact]
     public void Epoch_RoundsToTheNearestLatticeValueWithTheCarry()
@@ -135,13 +135,13 @@ public class TleTextTests
     {
         // #603: 26311.28305435 is 06:47:35.89584 exactly; it was read 06:47:35.8958399, and its OMM text 35.895839
         // (CALSPHERE 1, CelesTrak GP data of 2026-11-07)
-        var tle = new TLE("CALSPHERE 1", "1 00900U 64063C   26311.28305435  .00000638  00000+0  63900-3 0  9998",
+        var tle = new Tle("CALSPHERE 1", "1 00900U 64063C   26311.28305435  .00000638  00000+0  63900-3 0  9998",
             "2 00900  90.2232  75.0898 0025865 215.7471 230.6709 13.76755757 91111");
         var expected = new DateTime(2026, 11, 7, 6, 47, 35).AddTicks(8958400);
         Assert.Equal(expected, tle.Epoch.DateTime);
         Assert.Equal(TimeScale.UTC, tle.Epoch.Scale);
         Assert.Equal(expected, tle.ToOmm().Data.MeanElements.Epoch);
-        Assert.Equal("26311.28305435", EpochField(TLE.Create(tle.ToMeanKeplerianElements(), "CALSPHERE 1", 900, "64063C", 9111)));
+        Assert.Equal("26311.28305435", EpochField(Tle.Create(tle.ToMeanKeplerianElements(), "CALSPHERE 1", 900, "64063C", 9111)));
     }
 
     [Fact]
@@ -149,7 +149,7 @@ public class TleTextTests
     {
         // #464: elements in TEME (a TLE, osculating Keplerian elements) threw InvalidCastException; they fit as their
         // state in TEME
-        var tle = new TLE("ISS", "1 25544U 98067A   21020.53488036  .00016717  00000-0  10270-3 0  9054",
+        var tle = new Tle("ISS", "1 25544U 98067A   21020.53488036  .00016717  00000-0  10270-3 0  9054",
             "2 25544  51.6423 353.0312 0000493 320.8755  39.2360 15.49309423 25703");
         var fromState = tle.ToOsculating().ToTle("ISS", 25544, "98067A");
         var fromTle = tle.ToTle("ISS", 25544, "98067A");

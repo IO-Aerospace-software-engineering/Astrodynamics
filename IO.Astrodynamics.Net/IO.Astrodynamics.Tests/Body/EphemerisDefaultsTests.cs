@@ -21,7 +21,7 @@ namespace IO.Astrodynamics.Tests.Body;
 
 /// <summary>
 /// The ephemeris reads of R20 (#668, lot L3): <see cref="ILocalizable.GetEphemeris(in TimeSystem.Time, ILocalizable, Frames.Frame, Aberration)"/>,
-/// its window form and <see cref="SpiceAPI.ReadEphemeris(TimeSystem.Time, int, int, Frames.Frame, Aberration)"/> return the
+/// its window form and <see cref="SpiceApi.ReadEphemeris(TimeSystem.Time, int, int, Frames.Frame, Aberration)"/> return the
 /// <see cref="StateVector"/> they build, and <see cref="CelestialItem"/> and <see cref="Site"/> read in ICRF without
 /// correction when no frame and no aberration are given, bit for bit the explicit read, on every kind of target: a body, a
 /// propagated spacecraft, a spacecraft of the kernels, a site of the kernels or of coordinates, and a star.
@@ -108,16 +108,16 @@ public class EphemerisDefaultsTests
             return new StateVector(new Vector3(6800000.0 * System.Math.Cos(angle), 6800000.0 * System.Math.Sin(angle), 0.0),
                 new Vector3(-7656.0 * System.Math.Sin(angle), 7656.0 * System.Math.Cos(angle), 0.0), earth, Epoch.AddSeconds(i), Frames.Frame.ICRF);
         }).ToArray();
-        SpiceAPI.Instance.WriteEphemeris(spk, -9920, states);
+        SpiceApi.Instance.WriteEphemeris(spk, -9920, states);
         try
         {
-            SpiceAPI.Instance.LoadKernels(spk);
+            SpiceApi.Instance.LoadKernels(spk);
             var spacecraft = new Spacecraft(-9920, "R20KernelDefaults", epoch: Epoch);
             AssertDefaultsOfItem(spacecraft, earth, Epoch.AddSeconds(100.0));
         }
         finally
         {
-            SpiceAPI.Instance.UnloadKernels(spk);
+            SpiceApi.Instance.UnloadKernels(spk);
         }
     }
 
@@ -167,8 +167,8 @@ public class EphemerisDefaultsTests
     public void ReadEphemeris_ReturnsTheStateVectorOfSpice()
     {
         // The state of the Moon from the Earth, typed as the StateVector it is, at an epoch and over a window
-        StateVector state = SpiceAPI.Instance.ReadEphemeris(Epoch, PlanetsAndMoons.EARTH.NaifId, PlanetsAndMoons.MOON.NaifId, Frames.Frame.ICRF, Aberration.None);
-        IEnumerable<StateVector> states = SpiceAPI.Instance.ReadEphemeris(new Window(Epoch, Epoch.AddSeconds(60.0)), PlanetsAndMoons.EARTH.NaifId,
+        StateVector state = SpiceApi.Instance.ReadEphemeris(Epoch, PlanetsAndMoons.EARTH.NaifId, PlanetsAndMoons.MOON.NaifId, Frames.Frame.ICRF, Aberration.None);
+        IEnumerable<StateVector> states = SpiceApi.Instance.ReadEphemeris(new Window(Epoch, Epoch.AddSeconds(60.0)), PlanetsAndMoons.EARTH.NaifId,
             PlanetsAndMoons.MOON.NaifId, Frames.Frame.ICRF, Aberration.None, TimeSpan.FromSeconds(60.0));
         AssertBitForBit(state, states.First());
         AssertBitForBit(state, new CelestialBody(PlanetsAndMoons.MOON).GetEphemeris(Epoch, new CelestialBody(PlanetsAndMoons.EARTH)));

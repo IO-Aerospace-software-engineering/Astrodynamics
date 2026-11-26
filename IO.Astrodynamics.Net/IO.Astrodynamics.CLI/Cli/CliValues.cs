@@ -224,7 +224,7 @@ internal static class CliValues
 
     /// <summary>
     /// The NAIF identifier of an object: an integer (<c>399</c>, <c>-1000</c>), or a name SPICE knows, built in or given by
-    /// the loaded kernels (<see cref="SpiceAPI.TryGetNaifId"/>, choice 12 of #668). An identifier is not checked here: the
+    /// the loaded kernels (<see cref="SpiceApi.TryGetNaifId"/>, choice 12 of #668). An identifier is not checked here: the
     /// spacecraft a propagation wrote, for instance, has no name.
     /// </summary>
     internal static int Object(string text, string argument)
@@ -236,7 +236,7 @@ internal static class CliValues
             return id;
         }
 
-        if (SpiceAPI.Instance.TryGetNaifId(trimmed, out id))
+        if (SpiceApi.Instance.TryGetNaifId(trimmed, out id))
         {
             return id;
         }
@@ -253,7 +253,7 @@ internal static class CliValues
     {
         if (string.IsNullOrWhiteSpace(text)) throw new CliInputException($"{argument}: a frame is required.");
         var frame = Helpers.ResolveFrame(text.Trim());
-        if (!SpiceAPI.KnowsFrame(frame))
+        if (!SpiceApi.KnowsFrame(frame))
         {
             throw new CliInputException($"{argument}: '{text}' is not a frame of the library or of the loaded kernels.");
         }

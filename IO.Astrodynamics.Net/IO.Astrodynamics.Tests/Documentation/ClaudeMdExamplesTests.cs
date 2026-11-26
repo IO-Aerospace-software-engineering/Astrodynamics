@@ -348,7 +348,7 @@ public class ClaudeMdExamplesTests
     /// <summary>
     /// The corrected Earth observation block points <c>Spacecraft.Down</c> at nadir, −r/|r| (the closed form), and
     /// <c>Spacecraft.Right</c> (+X) at the component of the Sun direction perpendicular to nadir (TRIAD's
-    /// secondary), the Sun's geometric state from the Earth read from SPICE (<c>SpiceAPI.ReadEphemeris</c>), over 24 epochs
+    /// secondary), the Sun's geometric state from the Earth read from SPICE (<c>SpiceApi.ReadEphemeris</c>), over 24 epochs
     /// 4 min apart of a LEO.
     /// </summary>
     [Fact]
@@ -363,7 +363,7 @@ public class ClaudeMdExamplesTests
             var state = orbit.AtEpoch(Epoch.AddSeconds(240.0 * k)).ToStateVector();
             var q = attitude.ComputeOrientation(state);
             var nadir = state.Position.Inverse() / state.Position.Magnitude();
-            var sunFromEarth = SpiceAPI.Instance.ReadEphemeris(state.Epoch, PlanetsAndMoons.EARTH.NaifId, Stars.Sun.NaifId, Frames.Frame.ICRF,
+            var sunFromEarth = SpiceApi.Instance.ReadEphemeris(state.Epoch, PlanetsAndMoons.EARTH.NaifId, Stars.Sun.NaifId, Frames.Frame.ICRF,
                 Aberration.None).Position;
             var sunDirection = sunFromEarth - state.Position;
             var perpendicular = sunDirection - nadir * sunDirection.Dot(nadir);

@@ -11,7 +11,7 @@ namespace IO.Astrodynamics.CLI.Commands;
 
 /// <summary>
 /// The window searches of CSPICE (<c>gfdist</c>, <c>gfposc</c>, <c>gfoclt</c>, <c>gftfov</c>, <c>gfilum</c>) through
-/// <see cref="SpiceAPI"/>: the CLI runs the CSPICE searches only, on objects of the kernels (R29 of #668, a known
+/// <see cref="SpiceApi"/>: the CLI runs the CSPICE searches only, on objects of the kernels (R29 of #668, a known
 /// limitation).
 /// </summary>
 public class GeometryFinderCommand
@@ -57,7 +57,7 @@ public class GeometryFinderCommand
             var dimension = coordinateValue is Coordinate.X or Coordinate.Y or Coordinate.Z or Coordinate.Altitude or Coordinate.Radius or Coordinate.Range
                 ? Dimension.Length
                 : Dimension.Angle;
-            var operation = CliValues.Enumeration<RelationnalOperator>(Required(relation, "--relation"), "--relation");
+            var operation = CliValues.Enumeration<RelationalOperator>(Required(relation, "--relation"), "--relation");
             var number = CliValues.Quantity(Required(value, "--value"), dimension, "--value");
             var adjustment = CliValues.Quantity(adjust, dimension, "--adjust");
 
@@ -66,7 +66,7 @@ public class GeometryFinderCommand
             var targetId = CliValues.Object(target, "target");
             var searchFrame = CliValues.Frame(frame, "--frame");
 
-            search.Write(ValueChecked(() => SpiceAPI.Instance.FindWindowsOnCoordinateConstraint(search.Window, observerId, targetId, searchFrame,
+            search.Write(ValueChecked(() => SpiceApi.Instance.FindWindowsOnCoordinateConstraint(search.Window, observerId, targetId, searchFrame,
                 coordinateSystem, coordinateValue, operation, number, adjustment, search.Aberration, search.Step)));
         });
     }
@@ -93,14 +93,14 @@ public class GeometryFinderCommand
         {
             CliValues.NoMore(unexpected);
             var search = Search.Read(window, aberration, timeScale, output);
-            var operation = CliValues.Enumeration<RelationnalOperator>(Required(relation, "--relation"), "--relation");
+            var operation = CliValues.Enumeration<RelationalOperator>(Required(relation, "--relation"), "--relation");
             var distance = CliValues.Quantity(Required(value, "--value"), Dimension.Length, "--value");
 
             CliKernels.Load(kernels.Kernels);
             var observerId = CliValues.Object(observer, "observer");
             var targetId = CliValues.Object(target, "target");
 
-            search.Write(SpiceAPI.Instance.FindWindowsOnDistanceConstraint(search.Window, observerId, targetId, operation, distance,
+            search.Write(SpiceApi.Instance.FindWindowsOnDistanceConstraint(search.Window, observerId, targetId, operation, distance,
                 search.Aberration, search.Step));
         });
     }
@@ -140,7 +140,7 @@ public class GeometryFinderCommand
             var targetId = CliValues.Object(target, "target");
             var frontId = CliValues.Object(front, "front");
 
-            search.Write(SpiceAPI.Instance.FindWindowsOnOccultationConstraint(search.Window, observerId, targetId, targetShapeType, frontId,
+            search.Write(SpiceApi.Instance.FindWindowsOnOccultationConstraint(search.Window, observerId, targetId, targetShapeType, frontId,
                 frontShapeType, occultationType, search.Aberration, search.Step));
         });
     }
@@ -178,7 +178,7 @@ public class GeometryFinderCommand
             var targetId = CliValues.Object(target, "target");
             var frame = CliValues.Frame(Required(targetFrame, "--target-frame"), "--target-frame");
 
-            search.Write(SpiceAPI.Instance.FindWindowsInFieldOfViewConstraint(search.Window, observerId, instrumentId, targetId, frame, shape,
+            search.Write(SpiceApi.Instance.FindWindowsInFieldOfViewConstraint(search.Window, observerId, instrumentId, targetId, frame, shape,
                 search.Aberration, search.Step));
         });
     }
@@ -217,7 +217,7 @@ public class GeometryFinderCommand
             var search = Search.Read(window, aberration, timeScale, output);
             var coordinates = CliValues.Quantities([Required(site, "--site")], [Dimension.Angle, Dimension.Angle, Dimension.Length], "--site");
             var illuminationAngle = CliValues.Enumeration<IlluminationAngle>(Required(angle, "--angle"), "--angle");
-            var operation = CliValues.Enumeration<RelationnalOperator>(Required(relation, "--relation"), "--relation");
+            var operation = CliValues.Enumeration<RelationalOperator>(Required(relation, "--relation"), "--relation");
             var number = CliValues.Quantity(Required(value, "--value"), Dimension.Angle, "--value");
             var adjustment = CliValues.Quantity(adjust, Dimension.Angle, "--adjust");
 
@@ -227,7 +227,7 @@ public class GeometryFinderCommand
             var sourceId = CliValues.Object(source, "source");
             var frame = CliValues.Frame(Required(fixedFrame, "--fixed-frame"), "--fixed-frame");
 
-            search.Write(ValueChecked(() => SpiceAPI.Instance.FindWindowsOnIlluminationConstraint(search.Window, observerId, targetId, frame,
+            search.Write(ValueChecked(() => SpiceApi.Instance.FindWindowsOnIlluminationConstraint(search.Window, observerId, targetId, frame,
                 new Planetodetic(coordinates[0], coordinates[1], coordinates[2]), illuminationAngle, operation, number, adjustment,
                 search.Aberration, search.Step, sourceId)));
         });

@@ -14,7 +14,7 @@ namespace IO.Astrodynamics.ConformanceRunner.Solvers;
 /// </summary>
 /// <remarks>
 /// <para>
-/// <c>tle_to_omm</c>: <see cref="TLE.ToOmm"/> of the framework's <see cref="TLE"/>, its mean elements, TLE parameters
+/// <c>tle_to_omm</c>: <see cref="Tle.ToOmm"/> of the framework's <see cref="Tle"/>, its mean elements, TLE parameters
 /// and epoch, the UTC calendar date of the TLE epoch (#603).
 /// </para>
 /// <para>
@@ -37,7 +37,7 @@ public class TleConversionSolver : ICategorySolver
             for (int k = 0; k < inputs.Tles.Count; k++)
             {
                 var input = inputs.Tles[k];
-                AddFields(outputs, k, new TLE(string.IsNullOrEmpty(input.Name) ? "TLE" : input.Name, input.Line1, input.Line2).ToOmm());
+                AddFields(outputs, k, new Tle(string.IsNullOrEmpty(input.Name) ? "TLE" : input.Name, input.Line1, input.Line2).ToOmm());
             }
         }
         else

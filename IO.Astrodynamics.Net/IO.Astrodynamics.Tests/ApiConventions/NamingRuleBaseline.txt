@@ -6,7 +6,6 @@ N1.acronym	IO.Astrodynamics.Aberration.CNS
 N1.acronym	IO.Astrodynamics.Aberration.LTS
 N1.acronym	IO.Astrodynamics.Aberration.XCNS
 N1.acronym	IO.Astrodynamics.Aberration.XLTS
-N1.acronym	IO.Astrodynamics.Atmosphere.NRLMSISE_00.NRLMSISE00
 N1.acronym	IO.Astrodynamics.Body.Spacecraft.Engine.ISP
 N1.acronym	IO.Astrodynamics.Body.Spacecraft.Instrument.GetBoresightInICRFFrame(in Time)
 N1.acronym	IO.Astrodynamics.Body.Spacecraft.Instrument.GetRefVectorInICRFFrame(in Time)
@@ -30,12 +29,6 @@ N1.acronym	IO.Astrodynamics.Frames.TemeFrame.GetStateOrientationToICRF(Time)
 N1.acronym	IO.Astrodynamics.Frames.TirsFrame.GetStateOrientationToICRF(Time)
 N1.acronym	IO.Astrodynamics.Math.Quaternion.SLERP(Quaternion, double)
 N1.acronym	IO.Astrodynamics.OrbitalParameters.StateOrientation.RelativeToICRF()
-N1.acronym	IO.Astrodynamics.OrbitalParameters.TLE.TLE
-N1.acronym	IO.Astrodynamics.PDS.PDSBase
-N1.acronym	IO.Astrodynamics.PDS.PDSConfiguration
-N1.acronym	IO.Astrodynamics.PDS.V4.MissionInformation.PDSMissionInformation
-N1.acronym	IO.Astrodynamics.PDS.V4.MissionInformation.PDSSurfaceMissionInformation
-N1.acronym	IO.Astrodynamics.Propagator.TLEPropagator
 N1.acronym	IO.Astrodynamics.SolarSystemObjects.Asteroids.ARROKOTH
 N1.acronym	IO.Astrodynamics.SolarSystemObjects.Asteroids.BENNU
 N1.acronym	IO.Astrodynamics.SolarSystemObjects.Asteroids.BRAILLE
@@ -439,7 +432,6 @@ N1.acronym	IO.Astrodynamics.SolarSystemObjects.PlanetsAndMoons.URANUS
 N1.acronym	IO.Astrodynamics.SolarSystemObjects.PlanetsAndMoons.VENUS
 N1.acronym	IO.Astrodynamics.SolarSystemObjects.PlanetsAndMoons.YMIR
 N1.acronym	IO.Astrodynamics.SolarSystemObjects.Stars.SUN_BODY
-N1.acronym	IO.Astrodynamics.SpiceAPI
 N1.acronym	IO.Astrodynamics.Surface.SiteFrame.GetStateOrientationToICRF(Time)
 N1.acronym	IO.Astrodynamics.TimeSystem.Time.CreateTDB(double)
 N1.acronym	IO.Astrodynamics.TimeSystem.Time.CreateUTC(double)
@@ -639,6 +631,4 @@ N1.underscore	IO.Astrodynamics.TimeSystem.Time.JULIAN_YEAR
 N1.underscore	IO.Astrodynamics.TimeSystem.Time.SECONDS_PER_DAY
 N1.underscore	namespace IO.Astrodynamics.Atmosphere.NRLMSISE_00
 N3.deny	IO.Astrodynamics.Body.CelestialBody.SideralRotationPeriod(Time)
-N3.deny	IO.Astrodynamics.OrbitalParameters.TLE.TLE.FirstDerivationMeanMotion
-N3.deny	IO.Astrodynamics.Physics.Tsiolkovski
-N3.deny	IO.Astrodynamics.RelationnalOperator
+N3.deny	IO.Astrodynamics.OrbitalParameters.TLE.Tle.FirstDerivationMeanMotion

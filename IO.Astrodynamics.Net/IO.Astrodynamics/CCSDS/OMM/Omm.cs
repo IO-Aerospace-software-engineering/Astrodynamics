@@ -245,7 +245,7 @@ public class Omm
     /// </para>
     /// <para>
     /// The object ID (international designator) is used as the COSPAR ID in the TLE. <c>OBJECT_ID = UNKNOWN</c> (trimmed,
-    /// in any letter case), which <see cref="OrbitalParameters.TLE.TLE.ToOmm"/> writes for a TLE without a designator, gives
+    /// in any letter case), which <see cref="OrbitalParameters.TLE.Tle.ToOmm"/> writes for a TLE without a designator, gives
     /// blank columns 10-17 (#604, decided by S. Guillet, 2026-11-18; before 11.0.0 the TLE could not be built).
     /// </para>
     /// <para>
@@ -260,7 +260,7 @@ public class Omm
     /// UTC whatever the time system.
     /// </para>
     /// </remarks>
-    public OrbitalParameters.TLE.TLE ToTle()
+    public OrbitalParameters.TLE.Tle ToTle()
     {
         // Validate TLE compatibility
         if (!Data.HasTleParameters)
@@ -338,24 +338,24 @@ public class Omm
         }
 
         // Parse classification
-        var classification = OrbitalParameters.TLE.Classification.Unclassified;
+        var classification = OrbitalParameters.TLE.TleClassification.Unclassified;
         if (!string.IsNullOrEmpty(tleParams.ClassificationType))
         {
             classification = tleParams.ClassificationType.ToUpperInvariant() switch
             {
-                "C" => OrbitalParameters.TLE.Classification.Classified,
-                "S" => OrbitalParameters.TLE.Classification.Secret,
-                _ => OrbitalParameters.TLE.Classification.Unclassified
+                "C" => OrbitalParameters.TLE.TleClassification.Classified,
+                "S" => OrbitalParameters.TLE.TleClassification.Secret,
+                _ => OrbitalParameters.TLE.TleClassification.Unclassified
             };
         }
 
         var bstar = tleParams.BStar.Value;
         var nDot = tleParams.MeanMotionDot;
         var nDDot = tleParams.MeanMotionDDot ?? 0.0;
-        // One default with TLE.Create and the TLE Configuration (#606)
-        var elementSetNumber = tleParams.ElementSetNumber ?? OrbitalParameters.TLE.TLE.DefaultElementSetNumber;
+        // One default with Tle.Create and the TLE Configuration (#606)
+        var elementSetNumber = tleParams.ElementSetNumber ?? OrbitalParameters.TLE.Tle.DefaultElementSetNumber;
 
-        return OrbitalParameters.TLE.TLE.Create(
+        return OrbitalParameters.TLE.Tle.Create(
             keplerianElements,
             ObjectName,
             noradId,

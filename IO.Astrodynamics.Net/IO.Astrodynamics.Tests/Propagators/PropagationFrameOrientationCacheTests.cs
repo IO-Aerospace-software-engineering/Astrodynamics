@@ -239,7 +239,7 @@ public class PropagationFrameOrientationCacheTests
             for (int k = 1; k <= 19; k++)
             {
                 var epoch = start.AddSeconds(60.0 * cell + 3.0 * k);
-                var spice = SpiceAPI.Instance.TransformFrame(epoch, earth.Frame, Frames.Frame.ICRF);
+                var spice = SpiceApi.Instance.TransformFrame(epoch, earth.Frame, Frames.Frame.ICRF);
                 var cached = cache.GetOrientation(epoch);
                 worst = System.Math.Max(worst, RotationAngle(spice.Rotation, cached.Rotation));
                 worstRate = System.Math.Max(worstRate, (spice.AngularVelocity - cached.AngularVelocity).Magnitude());
@@ -295,7 +295,7 @@ public class PropagationFrameOrientationCacheTests
         {
             var epoch = end.AddSeconds(fromEnd);
             var cached = cache.GetOrientation(epoch);
-            var direct = SpiceAPI.Instance.TransformFrame(epoch, earth.Frame, Frames.Frame.ICRF);
+            var direct = SpiceApi.Instance.TransformFrame(epoch, earth.Frame, Frames.Frame.ICRF);
             double angle = RotationAngle(direct.Rotation, cached.Rotation);
             double angularVelocity = (direct.AngularVelocity - cached.AngularVelocity).Magnitude();
             worstAngle = System.Math.Max(worstAngle, angle);
@@ -311,7 +311,7 @@ public class PropagationFrameOrientationCacheTests
         // resolution of the angle (1.1e-16 rad), a floor rather than a measurement; passed on Linux x64, Windows x64
         // and macOS arm64 (CI of #622 at 7f5e6dfb, 2026-11-10), which print no figure
         var atEnd = cache.GetOrientation(end);
-        var spiceAtEnd = SpiceAPI.Instance.TransformFrame(end, earth.Frame, Frames.Frame.ICRF);
+        var spiceAtEnd = SpiceApi.Instance.TransformFrame(end, earth.Frame, Frames.Frame.ICRF);
         Assert.True(RotationAngle(spiceAtEnd.Rotation, atEnd.Rotation) < 2.3e-16);
     }
 
@@ -325,10 +325,10 @@ public class PropagationFrameOrientationCacheTests
 
         // Inside the coverage, the orientation; past it, SPICE's message
         var inside = TimeSystem.Time.CreateTDB(CoverageEnd - 1.0);
-        Assert.True(RotationAngle(SpiceAPI.Instance.TransformFrame(inside, earth.Frame, Frames.Frame.ICRF).Rotation,
+        Assert.True(RotationAngle(SpiceApi.Instance.TransformFrame(inside, earth.Frame, Frames.Frame.ICRF).Rotation,
             cache.GetOrientation(inside).Rotation) < AngleBound);
         var spice = Assert.Throws<SpiceException>(() =>
-            SpiceAPI.Instance.TransformFrame(end, earth.Frame, Frames.Frame.ICRF));
+            SpiceApi.Instance.TransformFrame(end, earth.Frame, Frames.Frame.ICRF));
         var exception = Assert.Throws<InvalidOperationException>(() => cache.GetOrientation(end));
         Assert.Contains("ITRF93", exception.Message);
         Assert.Contains(spice.Message, exception.Message);
@@ -352,7 +352,7 @@ public class PropagationFrameOrientationCacheTests
             foreach (double fromStart in new[] { 0.0, 1.0, 30.0, 61.0 }.Concat(EvenlySpaced(0.0, UnalignedLength)))
             {
                 var epoch = start.AddSeconds(fromStart);
-                var direct = SpiceAPI.Instance.TransformFrame(epoch, earth.Frame, Frames.Frame.ICRF);
+                var direct = SpiceApi.Instance.TransformFrame(epoch, earth.Frame, Frames.Frame.ICRF);
                 var cached = cache.GetOrientation(epoch);
                 double angle = RotationAngle(direct.Rotation, cached.Rotation);
                 double angularVelocity = (direct.AngularVelocity - cached.AngularVelocity).Magnitude();
@@ -370,7 +370,7 @@ public class PropagationFrameOrientationCacheTests
         var before = new PropagationFrameOrientationCache(new Window(early, early.AddSeconds(UnalignedLength)), earth.Frame,
             TimeSpan.FromSeconds(60));
         Assert.Throws<InvalidOperationException>(() => before.GetOrientation(early));
-        Assert.True(RotationAngle(SpiceAPI.Instance.TransformFrame(early.AddSeconds(2.0), earth.Frame, Frames.Frame.ICRF).Rotation,
+        Assert.True(RotationAngle(SpiceApi.Instance.TransformFrame(early.AddSeconds(2.0), earth.Frame, Frames.Frame.ICRF).Rotation,
             before.GetOrientation(early.AddSeconds(2.0)).Rotation) < AngleBound);
     }
 

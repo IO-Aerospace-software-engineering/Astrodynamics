@@ -37,7 +37,7 @@ public class VVBenchmarks
     [GlobalSetup]
     public void GlobalSetup()
     {
-        SpiceAPI.Instance.LoadKernels(new DirectoryInfo("Data"));
+        SpiceApi.Instance.LoadKernels(new DirectoryInfo("Data"));
         _earthLeo = new CelestialBody(PlanetsAndMoons.EARTH, Frame.ICRF, LeoEpoch,
             new GeopotentialModelParameters("Data/SolarSystem/EGM2008_to70_TideFree", 10));
     }

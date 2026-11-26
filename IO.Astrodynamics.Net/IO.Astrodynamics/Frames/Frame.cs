@@ -197,9 +197,9 @@ public class Frame : IEquatable<Frame>
         {
             return provider.FrameTransformationToICRF(date, this);
         }
-        catch (ArgumentException e) when (SpiceAPI.IsUnknownFrameErrorOfAnotherParameter(e, this, null))
+        catch (ArgumentException e) when (SpiceApi.IsUnknownFrameErrorOfAnotherParameter(e, this, null))
         {
-            throw SpiceAPI.UnknownFrameError(e, this, null);
+            throw SpiceApi.UnknownFrameError(e, this, null);
         }
     }
 
@@ -219,7 +219,7 @@ public class Frame : IEquatable<Frame>
     /// <returns>A state orientation whose rotation is <c>this → ICRF</c>.</returns>
     /// <remarks>
     /// Outside the orientation cache of a propagation, a frame keeps the orientation of the last epoch it read only, while
-    /// the kernel pool is unchanged (<c>SpiceAPI.LoadKernels</c>, <c>UnloadKernels</c> and
+    /// the kernel pool is unchanged (<c>SpiceApi.LoadKernels</c>, <c>UnloadKernels</c> and
     /// <c>ClearKernels</c> make the next read read again), and so do the frames the library computes
     /// (<see cref="CirsFrame"/>, <see cref="TirsFrame"/>, <see cref="TemeFrame"/>, the frame of a site from coordinates):
     /// at most one orientation per frame, whatever the number of epochs read (#541, decided by S. Guillet, 2026-11-17).
@@ -250,14 +250,14 @@ public class Frame : IEquatable<Frame>
 
     /// <summary>
     /// The orientation of this frame at <paramref name="date"/>, kept from its last read when that was at the same epoch and
-    /// the same generation of the kernel pool (<see cref="SpiceAPI.KernelPoolGeneration"/>), else read by
+    /// the same generation of the kernel pool (<see cref="SpiceApi.KernelPoolGeneration"/>), else read by
     /// <paramref name="read"/> and kept in place of the previous one: at most one orientation per frame, whatever the
     /// number of epochs read (#541). The entry is replaced as a whole, so a read on another thread sees either entry, each
     /// consistent.
     /// </summary>
     private protected StateOrientation LastOrientation(in Time date, Func<Time, StateOrientation> read)
     {
-        long generation = SpiceAPI.KernelPoolGeneration;
+        long generation = SpiceApi.KernelPoolGeneration;
         // The provider read: a static frame's follows the process, so an orientation of another provider is read again
         var provider = Provider;
         var last = Volatile.Read(ref _lastOrientation);
@@ -314,9 +314,9 @@ public class Frame : IEquatable<Frame>
         {
             return frame.GetStateOrientationToICRF(epoch);
         }
-        catch (ArgumentException e) when (SpiceAPI.IsUnknownFrameErrorOfAnotherParameter(e, frame, paramName))
+        catch (ArgumentException e) when (SpiceApi.IsUnknownFrameErrorOfAnotherParameter(e, frame, paramName))
         {
-            throw SpiceAPI.UnknownFrameError(e, frame, paramName);
+            throw SpiceApi.UnknownFrameError(e, frame, paramName);
         }
     }
 

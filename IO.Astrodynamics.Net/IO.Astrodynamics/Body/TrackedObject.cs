@@ -79,13 +79,13 @@ public sealed class TrackedObject : CelestialItem
     /// <exception cref="ArgumentNullException"><paramref name="tle"/> is null.</exception>
     /// <exception cref="ArgumentOutOfRangeException"><paramref name="hardBodyRadiusMeters"/> is not finite or is negative, or
     /// <paramref name="naifId"/> is not negative.</exception>
-    public static TrackedObject FromTle(TLE tle, double hardBodyRadiusMeters = 0.0, int? naifId = null,
+    public static TrackedObject FromTle(Tle tle, double hardBodyRadiusMeters = 0.0, int? naifId = null,
         ObjectType objectType = ObjectType.Unknown, string name = null)
     {
         ArgumentNullException.ThrowIfNull(tle);
         return new TrackedObject(naifId ?? CatalogueNaifIdBase - tle.NoradCatalogId,
             string.IsNullOrWhiteSpace(name) ? tle.Name : name, tle, hardBodyRadiusMeters, tle.NoradCatalogId,
-            tle.CosparId == null ? null : TLE.ConvertCosparIdToObjectId(tle.CosparId), objectType);
+            tle.CosparId == null ? null : Tle.ConvertCosparIdToObjectId(tle.CosparId), objectType);
     }
 
     /// <summary>

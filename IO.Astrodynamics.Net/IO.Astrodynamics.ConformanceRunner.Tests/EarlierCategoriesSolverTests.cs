@@ -31,7 +31,7 @@ public sealed class EarlierCategoriesSolverTests : IDisposable
     public EarlierCategoriesSolverTests(ITestOutputHelper output)
     {
         _output = output;
-        SpiceAPI.Instance.LoadKernels(new DirectoryInfo(KernelsPath));
+        SpiceApi.Instance.LoadKernels(new DirectoryInfo(KernelsPath));
 
         // A suite whose data/ holds the field file that carries the GM of an eclipse case
         _suite = Path.Combine(Path.GetTempPath(), "earlier-categories-" + Guid.NewGuid().ToString("N"));

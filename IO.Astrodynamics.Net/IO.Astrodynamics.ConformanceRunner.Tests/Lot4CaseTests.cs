@@ -136,7 +136,7 @@ public sealed class Lot4CaseTests : IDisposable
     {
         // Arrange: the annular eclipse of 2026-02-17 crossed from a LEO
         SuiteFixture.Lot4.WriteSuite(_directory, AnnularCase);
-        SpiceAPI.Instance.LoadKernels(new DirectoryInfo(KernelsPath));
+        SpiceApi.Instance.LoadKernels(new DirectoryInfo(KernelsPath));
 
         // Act
         var outputs = new EclipseSolver(_directory).Solve(SuiteFixture.ReadCase(_directory, AnnularCase));

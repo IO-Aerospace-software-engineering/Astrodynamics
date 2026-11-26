@@ -101,10 +101,10 @@ Before any computation, load the required SPICE kernel files:
 using IO.Astrodynamics;
 
 // Load kernels from a directory
-SpiceAPI.Instance.LoadKernels(new DirectoryInfo("path/to/kernels"));
+SpiceApi.Instance.LoadKernels(new DirectoryInfo("path/to/kernels"));
 
 // Or load a specific kernel file
-SpiceAPI.Instance.LoadKernels(new FileInfo("de440.bsp"));
+SpiceApi.Instance.LoadKernels(new FileInfo("de440.bsp"));
 ```
 
 ### Basic Example: Compute Earth Position
@@ -117,7 +117,7 @@ using IO.Astrodynamics.TimeSystem;
 using IO.Astrodynamics.SolarSystemObjects;
 
 // Load kernels
-SpiceAPI.Instance.LoadKernels(new DirectoryInfo("Data/SolarSystem"));
+SpiceApi.Instance.LoadKernels(new DirectoryInfo("Data/SolarSystem"));
 
 // Create celestial bodies
 var earth = PlanetsAndMoons.EARTH_BODY;
@@ -169,7 +169,7 @@ Console.WriteLine($"Orbital Period: {orbit.Period().TotalHours:F2} hours");
 using IO.Astrodynamics.OrbitalParameters.TLE;
 using IO.Astrodynamics.TimeSystem;
 
-var tle = new TLE("ISS (ZARYA)",
+var tle = new Tle("ISS (ZARYA)",
     "1 25544U 98067A   21020.53488036  .00016717  00000-0  10270-3 0  9054",
     "2 25544  51.6423 353.0312 0000493 320.8755  39.2360 15.49309423 25703");
 
@@ -186,7 +186,7 @@ Console.WriteLine($"ISS Position: {sv.Position}");
 
 ### IO.Astrodynamics (Core)
 
-#### SpiceAPI
+#### SpiceApi
 
 Singleton class providing access to SPICE operations.
 
@@ -205,10 +205,10 @@ Singleton class providing access to SPICE operations.
 
 ```csharp
 // Load all kernels from a directory
-SpiceAPI.Instance.LoadKernels(new DirectoryInfo("kernels/"));
+SpiceApi.Instance.LoadKernels(new DirectoryInfo("kernels/"));
 
 // Check loaded kernels
-foreach (var kernel in SpiceAPI.Instance.GetLoadedKernels())
+foreach (var kernel in SpiceApi.Instance.GetLoadedKernels())
     Console.WriteLine(kernel);
 ```
 
@@ -397,7 +397,7 @@ equality within one concrete type, computing no state (#475): the type's values 
 band |e − 1| < 1e-6 among them, #459), the observer's NAIF id, the epoch (an instant), the frame and `ElementsType`. A set and its own `ToStateVector()`, a mean and an osculating set of the same
 numbers, and a TLE and its mean elements are different; to compare two orbits, compare their states.
 
-All orbital parameter classes (`StateVector`, `KeplerianElements`, `EquinoctialElements`, `TLE`) have an `ElementsType` property indicating whether elements are osculating or mean. Most conversions preserve the elements type. **Important:** Mean elements cannot be directly converted to `StateVector` as they require a propagation model (e.g., SGP4 for TLE).
+All orbital parameter classes (`StateVector`, `KeplerianElements`, `EquinoctialElements`, `Tle`) have an `ElementsType` property indicating whether elements are osculating or mean. Most conversions preserve the elements type. **Important:** Mean elements cannot be directly converted to `StateVector` as they require a propagation model (e.g., SGP4 for TLE).
 
 #### StateVector
 
@@ -547,7 +547,7 @@ var meanKep = omm.ToMeanElements();   // about the Earth (CENTER_NAME), in TEME 
 
 Console.WriteLine($"Elements type: {meanKep.ElementsType}"); // Mean
 // Note: Mean elements cannot be directly converted to StateVector
-// Use TLE.ToOsculating() or TLE.ToStateVector() for SGP4-based conversion
+// Use Tle.ToOsculating() or Tle.ToStateVector() for SGP4-based conversion
 ```
 
 #### EquinoctialElements
@@ -592,13 +592,13 @@ Console.WriteLine($"Lv: {equinoctial.L0 * Constants.Rad2Deg}°");
 
 ### IO.Astrodynamics.OrbitalParameters.TLE
 
-#### TLE
+#### Tle
 
 Two-Line Element set for Earth-orbiting objects. TLE stores **mean** orbital elements that must be propagated using SGP4/SDP4 to obtain physical position/velocity.
 
 | Constructor | Description |
 |------------|-------------|
-| `TLE(string name, string line1, string line2)` | Parse from standard 3-line format; a null or blank name is the catalog field, a bad line `ArgumentException` (`line1`, `line2`) with a `TleFormatException` (line, column) inside |
+| `Tle(string name, string line1, string line2)` | Parse from standard 3-line format; a null or blank name is the catalog field, a bad line `ArgumentException` (`line1`, `line2`) with a `TleFormatException` (line, column) inside |
 
 | Property | Description |
 |----------|-------------|
@@ -626,7 +626,7 @@ Two-Line Element set for Earth-orbiting objects. TLE stores **mean** orbital ele
 | Method | Description |
 |--------|-------------|
 | `Parse(string)`, `ParseAll(string)`, `Load(string)`, `LoadAll(string)` | Read one set or every set of a text or a file, two- and three-line sets mixed; a bad set throws `TleFormatException` at its line and column |
-| `TryParse(string, out TLE)`, `TryLoad(string, out TLE)` | The same, false instead of an exception |
+| `TryParse(string, out Tle)`, `TryLoad(string, out Tle)` | The same, false instead of an exception |
 | `ToStateVector()` | Propagate to TLE epoch using SGP4/SDP4 (returns osculating state) |
 | `ToStateVector(Time epoch)` | Propagate to specified epoch using SGP4/SDP4 |
 | `ToOsculating()` | Convert to osculating StateVector at TLE epoch (via SGP4) |
@@ -638,7 +638,7 @@ Two-Line Element set for Earth-orbiting objects. TLE stores **mean** orbital ele
 
 ```csharp
 // Parse TLE
-var tle = new TLE("ISS (ZARYA)",
+var tle = new Tle("ISS (ZARYA)",
     "1 25544U 98067A   21020.53488036  .00016717  00000-0  10270-3 0  9054",
     "2 25544  51.6423 353.0312 0000493 320.8755  39.2360 15.49309423 25703");
 
@@ -761,16 +761,16 @@ var newOmm = Omm.CreateForTle(
 newOmm.Save("output.omm");
 ```
 
-#### TLE.ToOmm() - Convert TLE to OMM
+#### Tle.ToOmm() - Convert TLE to OMM
 
-The `TLE` class provides a `ToOmm()` method for converting TLE data to CCSDS OMM format:
+The `Tle` class provides a `ToOmm()` method for converting TLE data to CCSDS OMM format:
 
 ```csharp
 using IO.Astrodynamics.OrbitalParameters.TLE;
 using IO.Astrodynamics.CCSDS.OMM;
 
 // Parse TLE
-var tle = new TLE("ISS (ZARYA)",
+var tle = new Tle("ISS (ZARYA)",
     "1 25544U 98067A   21020.53488036  .00016717  00000-0  10270-3 0  9054",
     "2 25544  51.6423 353.0312 0000493 320.8755  39.2360 15.49309423 25703");
 
@@ -862,14 +862,14 @@ OMM uses full COSPAR ID format ("1998-067A") while TLE uses abbreviated format (
 | Full COSPAR ID | 1998-067A | OMM ObjectId |
 | TLE COSPAR ID | 98067A | TLE Line 1 |
 | No designator | `UNKNOWN` | OMM ObjectId of a TLE whose columns 10-17 are blank (#604) |
-| No designator | 8 blanks | TLE Line 1 (`TLE.Create` with a null or blank `cosparId`, `ToTle` with a null or blank `cosparId`) |
+| No designator | 8 blanks | TLE Line 1 (`Tle.Create` with a null or blank `cosparId`, `ToTle` with a null or blank `cosparId`) |
 
 ```csharp
 // OMM automatically converts COSPAR ID format during ToTle()
 var omm = Omm.Load("iss.omm");  // ObjectId: "1998-067A"
 var tle = omm.ToTle();                   // Uses "98067A" internally
 
-// TLE.ToOmm() converts back to full format
+// Tle.ToOmm() converts back to full format
 var newOmm = tle.ToOmm();                // ObjectId: "1998-067A"
 ```
 
@@ -1205,7 +1205,7 @@ Console.WriteLine($"Range: {horizontal.Range / 1000:F0} km");
 // Find visibility windows: the distance of the site from the Moon (the observer)
 var windows = moon.FindDistanceWindows(
     new Window(new Time(2024, 1, 1, TimeScale.TDB), new Time(2024, 1, 2, TimeScale.TDB)),
-    mySite, RelationnalOperator.Lower, 400000000,
+    mySite, RelationalOperator.LessThan, 400000000,
     new WindowSearchOptions { Step = TimeSpan.FromMinutes(10), Aberration = Aberration.LT });
 // One window, 2024-01-01 09:42:24.997 to 14:20:43.029 TDB, as CSPICE's spkcpt_c corrects the site (#489)
 ```
@@ -1378,7 +1378,7 @@ Represents a spacecraft with components.
 | `GetEphemeris(Time epoch, ILocalizable observer, Frame frame, Aberration aberration)` | Get state relative to observer (uses reference-body pattern) |
 | `GetGeometricStateRelativeTo(Time epoch, CelestialItem referenceBody)` | Get geometric state relative to a reference body (interpolates from cache) |
 | `GetOrientation(Frame frame, Time epoch)` | Get spacecraft orientation |
-| `WriteOrientation(FileInfo file)` | Write orientation kernel (a CK of the attitude record; `InvalidOperationException` for an empty record, a `TLEPropagator` run recording none, #546) |
+| `WriteOrientation(FileInfo file)` | Write orientation kernel (a CK of the attitude record; `InvalidOperationException` for an empty record, a `TlePropagator` run recording none, #546) |
 | `WriteEphemeris(FileInfo file)` | Write the stored states to an SPK, one segment per arc; `InvalidOperationException` for a spacecraft that stores no state, `ArgumentException` for an arc of one state (decisions 81 and 87 of #668) |
 | `WriteKernels(DirectoryInfo directory)` | Write the clock, frame, instrument, SPK and CK kernels into one directory, each byte for byte its writer's, and load them; the `SpacecraftKernels` it returns unloads exactly what the call loaded at `Dispose`; every check before anything is written, `InvalidOperationException` (R14 and decisions 78 to 81 of #668; `docs/reference/spacecraft.md#the-kernels`) |
 
@@ -1449,7 +1449,7 @@ Propulsion engine.
 | `FuelTank` | The tank the engine draws on, given to the constructor |
 
 The engine burns its fuel in a run only: `Ignite` is internal since 11.0.0 (decision 49 of #668); the fuel of a ΔV is
-`Tsiolkovski.DeltaM(isp, mass, deltaV)`.
+`Tsiolkovsky.DeltaM(isp, mass, deltaV)`.
 
 #### FuelTank
 
@@ -1472,7 +1472,7 @@ Base class for spacecraft instruments.
 | Method | Description |
 |--------|-------------|
 | `IsInFOV(Time epoch, ILocalizable target, Aberration aberration)` | Whether the target's center is in the field: CSPICE's `fovtrg` with `POINT`; throws for a managed spacecraft without attitude (#682) |
-| `FindFieldOfViewWindows(...)` | The windows of CSPICE's `gftfov`, labelled in the scale of the search window's start: the target as a point or as its ellipsoid, every field shape, on both paths (see `docs/reference/spacecraft.md`, "Field-of-view search"); throws for a managed spacecraft without attitude, never propagated, from a TLE or propagated by `TLEPropagator`, until `AddStateOrientationToICRF` gives it one (#682) |
+| `FindFieldOfViewWindows(...)` | The windows of CSPICE's `gftfov`, labelled in the scale of the search window's start: the target as a point or as its ellipsoid, every field shape, on both paths (see `docs/reference/spacecraft.md`, "Field-of-view search"); throws for a managed spacecraft without attitude, never propagated, from a TLE or propagated by `TlePropagator`, until `AddStateOrientationToICRF` gives it one (#682) |
 | `GetBoresightInSpacecraftFrame()` | Get boresight in spacecraft frame |
 | `GetBoresightInICRFFrame(Time epoch)` | Get boresight in ICRF |
 
@@ -1671,7 +1671,7 @@ RK7(8) to the time of closest approach. See `docs/reference/covariance-propagati
 - `PropagationSolution`: Multi-segment container with `GetStateVector(epoch)` for dense output (shortened RK7(8) step for RK7(8), cubic Hermite otherwise; `InterpolateAt` internal since 11.0.0, decision 54 of #668), immutable from outside (decision 55, #796), its `Maneuvers` the `ExecutedManeuver` records of the run (decision 57)
 - `PropagationSegment`: Ordered list of `AcceptedStep` records with binary-search Hermite interpolation, built once by `new PropagationSegment(baseEpoch, steps)` outside the library (`AddStep` internal, decision 55 of #668)
 - `AcceptedStep`: Stores position, velocity, and acceleration at step start/end for cubic Hermite interpolation
-- `IntegrationResult`: Integration segment + optional `EventInfo` (detector index, precise event time and state)
+- `IntegrationResult`: Integration segment + optional `IntegrationEvent` (detector index, precise event time and state)
 
 **Integrator Interface (`IIntegrator`):**
 - `Initialize(StateVector initialState)` — set observer, frame, workspace and reset every state a run depends on; called by every `CentralBodyPropagator` constructor with the initial state of the propagation (the constructors that take an integrator with its forces included), at the start of every run of `Propagate` (so each run of one propagator instance is a fresh run, and an `Initialize` by the caller between construction and the run has no effect on it, #782) and after each event; an integrator belongs to one propagator, a second one given it throwing `ArgumentException` (`integrator`)
@@ -1732,13 +1732,13 @@ var middle = solution.GetStateVector(epoch.AddHours(12));
 
 **Accuracy:** With degree-10 EGM2008, Moon, and Sun perturbations, 24h LEO propagation achieves sub-kilometer position accuracy compared to GMAT reference solutions.
 
-#### TLEPropagator
+#### TlePropagator
 
 SGP4/SDP4 propagator for TLE elements.
 
 | Constructor | Description |
 |------------|-------------|
-| `TLEPropagator(Window window, Spacecraft spacecraft, TimeSpan step)` | Create propagator for a spacecraft whose initial orbital parameters are a TLE, sampled every step from the start and at the window end (#598); a step of zero or less throws `ArgumentOutOfRangeException` |
+| `TlePropagator(Window window, Spacecraft spacecraft, TimeSpan step)` | Create propagator for a spacecraft whose initial orbital parameters are a TLE, sampled every step from the start and at the window end (#598); a step of zero or less throws `ArgumentOutOfRangeException` |
 
 | Method | Description |
 |--------|-------------|
@@ -2135,7 +2135,7 @@ Lagrange interpolation.
 
 ### IO.Astrodynamics.Physics
 
-#### Tsiolkovski
+#### Tsiolkovsky
 
 Tsiolkovsky rocket equation calculations.
 
@@ -2150,10 +2150,10 @@ double isp = 300;          // seconds
 double m0 = 1000;          // kg initial
 double mf = 800;           // kg final
 
-double deltaV = Tsiolkovski.DeltaV(isp, m0, mf);
+double deltaV = Tsiolkovsky.DeltaV(isp, m0, mf);
 Console.WriteLine($"Delta-V: {deltaV:F1} m/s");
 
-double fuelNeeded = Tsiolkovski.DeltaM(isp, m0, 500);  // 500 m/s delta-V
+double fuelNeeded = Tsiolkovsky.DeltaM(isp, m0, 500);  // 500 m/s delta-V
 Console.WriteLine($"Fuel needed: {fuelNeeded:F1} kg");
 ```
 
@@ -2237,18 +2237,18 @@ Light-time and stellar aberration corrections.
 | `XLT` | Transmission light-time |
 | `XCN` | Transmission converged Newtonian |
 
-### RelationnalOperator
+### RelationalOperator
 
 Comparison operators for geometry finding.
 
 | Value | Description |
 |-------|-------------|
-| `Greater` | Value > threshold (`>`) |
-| `Lower` | Value < threshold (`<`) |
+| `GreaterThan` | Value > threshold (`>`) |
+| `LessThan` | Value < threshold (`<`) |
 | `Equal` | Value = threshold (`=`) |
 | `NotEqual` | Value ≠ threshold (`!`) |
-| `GreaterOrEqual` | Value ≥ threshold (`>=`) |
-| `LowerOrEqual` | Value ≤ threshold (`<=`) |
+| `GreaterThanOrEqual` | Value ≥ threshold (`>=`) |
+| `LessThanOrEqual` | Value ≤ threshold (`<=`) |
 | `AbsoluteMin` | Absolute minimum (`ABSMIN`) |
 | `AbsoluteMax` | Absolute maximum (`ABSMAX`) |
 | `LocalMin` | Local minimum (`LOCMIN`) |
@@ -2310,7 +2310,7 @@ Body shape models.
 
 ```csharp
 // Load all required kernels at startup
-SpiceAPI.Instance.LoadKernels(new DirectoryInfo("kernels"));
+SpiceApi.Instance.LoadKernels(new DirectoryInfo("kernels"));
 
 // Required kernel types:
 // - LSK (leap seconds): naif0012.tls
@@ -2319,7 +2319,7 @@ SpiceAPI.Instance.LoadKernels(new DirectoryInfo("kernels"));
 // - FK (frames): earth_assoc_itrf93.tf
 
 // Clean up when done
-SpiceAPI.Instance.ClearKernels();
+SpiceApi.Instance.ClearKernels();
 ```
 
 ### Time Handling
@@ -2351,7 +2351,7 @@ var earthFrame = new Frame("IAU_EARTH");
 var bodyFixed = sv.ToFrame(earthFrame);
 
 // TEME for TLE propagation (handled automatically)
-var tle = new TLE("ISS (ZARYA)",
+var tle = new Tle("ISS (ZARYA)",
     "1 25544U 98067A   21020.53488036  .00016717  00000-0  10270-3 0  9054",
     "2 25544  51.6423 353.0312 0000493 320.8755  39.2360 15.49309423 25703");
 var tleSv = tle.ToStateVector();  // Returns in TEME
@@ -2658,7 +2658,7 @@ foreach (var eclipse in lunarEclipses)
 var farMoonWindows = earth.FindDistanceWindows(
     searchWindow,
     moon,
-    RelationnalOperator.Greater,
+    RelationalOperator.GreaterThan,
     400000000,  // 400,000 km in meters
     new WindowSearchOptions { Step = TimeSpan.FromHours(24) }
 ).ToArray();
@@ -2781,7 +2781,7 @@ using IO.Astrodynamics.OrbitalParameters.TLE;
 var earth = PlanetsAndMoons.EARTH_BODY;
 
 // Parse ISS TLE
-var issTLE = new TLE(
+var issTLE = new Tle(
     "ISS (ZARYA)",
     "1 25544U 98067A   24153.17509025  .00020162  00000+0  35104-3 0  9990",
     "2 25544  51.6393  34.6631 0005642 260.2910 238.1766 15.50732314456064"
@@ -2816,7 +2816,7 @@ for (var t = trackStart; t < trackEnd; t = t.AddMinutes(10))
 var visibilityWindows = iss.FindDistanceWindows(
     new Window(trackStart, trackEnd),
     goldstone,
-    RelationnalOperator.Lower,
+    RelationalOperator.LessThan,
     2000000,  // Within 2000 km
     new WindowSearchOptions { Step = TimeSpan.FromMinutes(1), Aberration = Aberration.LT }
 );
@@ -3119,7 +3119,7 @@ See the [LICENSE](../LICENSE) file for complete warranty disclaimer terms.
 
 The breaking changes of 11.0.0, each with its migration, are the **Breaking** entries under **Changed** and the entries under **Removed** of the 11.0.0 release notes (`docs/contributing/versioning.md#1100`).
 
-The native proxies of 11.0.0 let no C++ exception cross P/Invoke and leave no SPICE error pending when they fail: a failed proxy returns `false`, or a NaN result for the element conversions (`ConvertConicElementsToStateVectorAtEpochProxy` included) and the TLE proxies (#711), with the exception's message then SPICE's in `GetLastErrorProxy()`, SPICE reset (#706, #711, #712); `Propagate2BodiesProxy` and `ConvertStateVectorToConicOrbitalElementProxy` return a NaN result and `TransformFrameProxy` a NaN rotation and angular velocity, with SPICE's message (#714: before, they dropped it, the two-body proxies aborted a process whose first native call they were and otherwise returned the stack's contents, and the transformation returned the zero quaternion). Each proxy that reports through `GetLastErrorProxy()` clears it when it starts, so the message read after a call is that call's, and a SPICE error with no long message is reported by its short one (#714); `GetLastErrorShortProxy()` and `GetLastErrorLongProxy()` give SPICE's short and long messages of that error, empty when the failure is not SPICE's, which `SpiceAPI` throws as `SpiceException` (R03 of #668); a native caller checks the result before using it. The six exports .NET never called (`LaunchProxy`, `TDBToStringProxy`, `UTCToStringProxy`, `ConvertTDBToUTCProxy`, `ConvertUTCToTDBProxy`, `ConvertStateVectorToEquatorialCoordinatesProxy`) are removed in 11.0.0; a native caller uses the C++ classes they called.
+The native proxies of 11.0.0 let no C++ exception cross P/Invoke and leave no SPICE error pending when they fail: a failed proxy returns `false`, or a NaN result for the element conversions (`ConvertConicElementsToStateVectorAtEpochProxy` included) and the TLE proxies (#711), with the exception's message then SPICE's in `GetLastErrorProxy()`, SPICE reset (#706, #711, #712); `Propagate2BodiesProxy` and `ConvertStateVectorToConicOrbitalElementProxy` return a NaN result and `TransformFrameProxy` a NaN rotation and angular velocity, with SPICE's message (#714: before, they dropped it, the two-body proxies aborted a process whose first native call they were and otherwise returned the stack's contents, and the transformation returned the zero quaternion). Each proxy that reports through `GetLastErrorProxy()` clears it when it starts, so the message read after a call is that call's, and a SPICE error with no long message is reported by its short one (#714); `GetLastErrorShortProxy()` and `GetLastErrorLongProxy()` give SPICE's short and long messages of that error, empty when the failure is not SPICE's, which `SpiceApi` throws as `SpiceException` (R03 of #668); a native caller checks the result before using it. The six exports .NET never called (`LaunchProxy`, `TDBToStringProxy`, `UTCToStringProxy`, `ConvertTDBToUTCProxy`, `ConvertUTCToTDBProxy`, `ConvertStateVectorToEquatorialCoordinatesProxy`) are removed in 11.0.0; a native caller uses the C++ classes they called.
 
 ### Breaking Changes in 8.5.0
 
@@ -3144,7 +3144,7 @@ The propagator and maneuver systems have been redesigned:
 - **New event detection system**: `IEventDetector`, `ManeuverEventDetector`, `CrossingDirection` in `IO.Astrodynamics.Propagator.Events`.
 - **Segment-based propagation**: `PropagationSolution`, `PropagationSegment`, `AcceptedStep` enable cubic Hermite dense output for all integrators.
 - **`Spacecraft.Propagate()` simplified**: Always uses `CentralBodyPropagator` — no auto-routing between different propagator types.
-- **`Propagate()` returns `PropagationSolution`**: `PropagatorBase.Propagate()`, `CentralBodyPropagator.Propagate()`, `TLEPropagator.Propagate()`, and `Spacecraft.Propagate()` now return a `PropagationSolution` for dense output via `InterpolateAt(epoch)`. Previously callers had to access `StateVectorsRelativeToICRF` directly.
+- **`Propagate()` returns `PropagationSolution`**: `PropagatorBase.Propagate()`, `CentralBodyPropagator.Propagate()`, `TlePropagator.Propagate()`, and `Spacecraft.Propagate()` now return a `PropagationSolution` for dense output via `InterpolateAt(epoch)`. Previously callers had to access `StateVectorsRelativeToICRF` directly.
 - **SSB-specific methods removed from public API**: `GetGeometricStateFromICRF` removed from `ILocalizable` interface and changed to `internal` on `CelestialItem`, `Spacecraft`, `Star`, and `Site`. `GetEphemerisFromICRF` removed from `IDataProvider` interface and `SpiceDataProvider`. Use `GetEphemeris(epoch, target, observer, frame, aberration)` with SSB as observer for equivalent functionality. SSB-relative states are now an internal implementation detail used only for aberration correction and star positions.
 - **`Spacecraft.WriteEphemeris()` writes CB-relative states**: SPK files now contain states relative to the central body instead of SSB. SPICE handles ephemeris chaining automatically via the center body ID in the SPK segment.
 

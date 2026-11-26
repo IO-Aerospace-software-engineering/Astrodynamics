@@ -17,9 +17,9 @@ namespace IO.Astrodynamics.Tests;
 /// (<see cref="KernelReloadGuardCollection"/>).
 /// </summary>
 /// <remarks>
-/// A reload (<see cref="SpiceAPI.ReloadKernels(FileSystemInfo)"/>; a repeated <see cref="SpiceAPI.LoadKernels(FileSystemInfo)"/>
+/// A reload (<see cref="SpiceApi.ReloadKernels(FileSystemInfo)"/>; a repeated <see cref="SpiceApi.LoadKernels(FileSystemInfo)"/>
 /// before 11.0.0) moves the folder after its anchor (<see cref="SharedKernels.ReloadObserved"/>, kept by every later call of
-/// <see cref="TestKernels.EnsureSolarSystem"/>); a removal, a <see cref="SpiceAPI.ClearKernels"/> included, leaves the
+/// <see cref="TestKernels.EnsureSolarSystem"/>); a removal, a <see cref="SpiceApi.ClearKernels"/> included, leaves the
 /// folder or its anchor out of the loaded kernels at the next call (<see cref="SharedKernels.RemovalObserved"/>); a first
 /// load by another caller leaves the helper's loads at 0; the load of a parent replaces the folder's entry by the
 /// parent's; the unload of a file inside the folder replaces the folder's entry by its other files (#673). In a filtered
@@ -35,7 +35,7 @@ public class KernelReloadGuardTests
         TestKernels.EnsureSolarSystem();
 
         // Act
-        var loaded = SpiceAPI.Instance.GetLoadedKernels().Select(k => k.FullName).ToArray();
+        var loaded = SpiceApi.Instance.GetLoadedKernels().Select(k => k.FullName).ToArray();
         string list = string.Join(Environment.NewLine, loaded);
         var solarSystem = TestKernels.SolarSystem;
 
@@ -57,9 +57,9 @@ public class KernelReloadGuardTests
 
         // No file inside the folder is loaded on its own (a class that loads the SPK itself, as each of the five classes
         // that read LRO did before), and the orbiter SPK of KernelWindowSearchTests was unloaded by its fixture
-        var loaded = SpiceAPI.Instance.GetLoadedKernels().Select(k => k.FullName).ToArray();
+        var loaded = SpiceApi.Instance.GetLoadedKernels().Select(k => k.FullName).ToArray();
         string list = string.Join(Environment.NewLine, loaded);
-        Assert.True(!loaded.Any(k => k != TestKernels.Lro.Path.FullName && SpiceAPI.IsSameOrInside(k, TestKernels.Lro.Path.FullName)),
+        Assert.True(!loaded.Any(k => k != TestKernels.Lro.Path.FullName && SpiceApi.IsSameOrInside(k, TestKernels.Lro.Path.FullName)),
             $"A test loaded a kernel inside {TestKernels.Lro.Path.FullName}: call TestKernels.EnsureLro(). Loaded:{Environment.NewLine}{list}");
         Assert.True(!loaded.Any(k => k.EndsWith("kernel_search_orbiter.bsp", StringComparison.Ordinal)),
             $"The orbiter SPK of KernelWindowSearchTests is still loaded. Loaded:{Environment.NewLine}{list}");
@@ -75,8 +75,8 @@ public class KernelReloadGuardTests
     public void TheFieldOfViewReferenceKernelsWereUnloaded()
     {
         // FieldOfViewReferenceKernels unloads its folder in Dispose, after the class
-        var loaded = SpiceAPI.Instance.GetLoadedKernels().Select(k => k.FullName).ToArray();
-        Assert.True(!loaded.Any(k => SpiceAPI.IsSameOrInside(k, Body.FieldOfViewReferenceKernels.Path.FullName)),
+        var loaded = SpiceApi.Instance.GetLoadedKernels().Select(k => k.FullName).ToArray();
+        Assert.True(!loaded.Any(k => SpiceApi.IsSameOrInside(k, Body.FieldOfViewReferenceKernels.Path.FullName)),
             $"{Body.FieldOfViewReferenceKernels.Path.FullName} is still loaded. Loaded:{Environment.NewLine}{string.Join(Environment.NewLine, loaded)}");
     }
 
@@ -87,7 +87,7 @@ public class KernelReloadGuardTests
         ensure();
 
         // Act
-        var loaded = SpiceAPI.Instance.GetLoadedKernels().Select(k => k.FullName).ToArray();
+        var loaded = SpiceApi.Instance.GetLoadedKernels().Select(k => k.FullName).ToArray();
         string list = string.Join(Environment.NewLine, loaded);
 
         // Assert
@@ -107,7 +107,7 @@ public class KernelReloadGuardTests
         // Arrange: the kernels still loaded, those the tests wrote included, which stay above Data/SolarSystem; a file
         // deleted after its load can no longer be read
         TestKernels.EnsureSolarSystem();
-        var loaded = SpiceAPI.Instance.GetLoadedKernels()
+        var loaded = SpiceApi.Instance.GetLoadedKernels()
             .Where(k => k.FullName != TestKernels.SolarSystem.Path.FullName && (File.Exists(k.FullName) || Directory.Exists(k.FullName)))
             .ToArray();
 

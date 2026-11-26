@@ -219,7 +219,7 @@ public class GeodeticOneCallTests
         var spacecraft = new Spacecraft(-2003, "R20Search", 100.0, new StateVector(new Vector3(6800e3, 0.0, 0.0), new Vector3(0.0, 7600.0, 0.0), earth, Epoch, Frames.Frame.ICRF), 1000.0,
             new Clock("R20SearchClk", 65536));
         var moon = new CelestialBody(PlanetsAndMoons.MOON);
-        Assert.Throws<InvalidOperationException>(() => spacecraft.FindCoordinateWindows(new Window(Epoch, Epoch.AddSeconds(600.0)), moon, Frames.Frame.ICRF, CoordinateSystem.Geodetic, Coordinate.Latitude, RelationnalOperator.Greater, 0.0, new WindowSearchOptions { Step = TimeSpan.FromSeconds(60.0) }).ToArray());
+        Assert.Throws<InvalidOperationException>(() => spacecraft.FindCoordinateWindows(new Window(Epoch, Epoch.AddSeconds(600.0)), moon, Frames.Frame.ICRF, CoordinateSystem.Geodetic, Coordinate.Latitude, RelationalOperator.GreaterThan, 0.0, new WindowSearchOptions { Step = TimeSpan.FromSeconds(60.0) }).ToArray());
     }
 
     [Fact]
@@ -355,7 +355,7 @@ public class GeodeticOneCallTests
     [Fact]
     public void ToFrame_OfATle_InItsFrame_IsTheTle()
     {
-        var tle = new Astrodynamics.OrbitalParameters.TLE.TLE("ISS", "1 25544U 98067A   21020.53488036  .00016717  00000-0  10270-3 0  9054",
+        var tle = new Astrodynamics.OrbitalParameters.TLE.Tle("ISS", "1 25544U 98067A   21020.53488036  .00016717  00000-0  10270-3 0  9054",
             "2 25544  51.6423 353.0312 0000493 320.8755  39.2360 15.49309423 25703");
         Assert.Same(tle, tle.ToFrame(Frames.Frame.TEME));
         Assert.IsType<StateVector>(tle.ToFrame(Frames.Frame.ICRF));

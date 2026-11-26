@@ -29,25 +29,25 @@ see [Time & Windows](time-and-windows.md#time-scales).
 | `UTC` | Coordinated Universal Time |
 | `GPS` | GPS time, TAI − 19 s |
 
-## RelationnalOperator
+## RelationalOperator
 
 Used in geometry-finder constraint searches.
 
 | Value | Description |
 |-------|-------------|
-| `Greater` | Greater than threshold (`>`) |
-| `Lower` | Lower than threshold (`<`) |
+| `GreaterThan` | Greater than threshold (`>`) |
+| `LessThan` | Lower than threshold (`<`) |
 | `Equal` | Equal to threshold (`=`) |
 | `NotEqual` | Not equal to threshold (`!`) |
-| `GreaterOrEqual` | Greater than or equal to threshold (`>=`) |
-| `LowerOrEqual` | Lower than or equal to threshold (`<=`) |
+| `GreaterThanOrEqual` | Greater than or equal to threshold (`>=`) |
+| `LessThanOrEqual` | Lower than or equal to threshold (`<=`) |
 | `AbsoluteMin` | Absolute minimum (`ABSMIN`) |
 | `AbsoluteMax` | Absolute maximum (`ABSMAX`) |
 | `LocalMin` | Local minimum (`LOCMIN`) |
 | `LocalMax` | Local maximum (`LOCMAX`) |
 
-`NotEqual`, `GreaterOrEqual` and `LowerOrEqual` are accepted by every search: on the CSPICE path, which has no such
-relation, `GreaterOrEqual` and `LowerOrEqual` are searched as `Greater` and `Lower` (closed windows), and `NotEqual` is
+`NotEqual`, `GreaterThanOrEqual` and `LessThanOrEqual` are accepted by every search: on the CSPICE path, which has no such
+relation, `GreaterThanOrEqual` and `LessThanOrEqual` are searched as `GreaterThan` and `LessThan` (closed windows), and `NotEqual` is
 the search window less the crossings of `Equal` (#482; [Sites](sites.md#window-searches)).
 
 ## OccultationType
@@ -74,7 +74,7 @@ the search window less the crossings of `Equal` (#482; [Sites](sites.md#window-s
 | `Mean` | Mean elements (e.g., from TLE/OMM): no state vector without their theory; `AtEpoch` and `ToKeplerianElements(Time)` keep the type, and a numerical propagation refuses them as initial orbit (#463) |
 
 !!! warning
-    Mean elements cannot call `ToStateVector()` directly. Use `TLE.ToOsculating()` instead.
+    Mean elements cannot call `ToStateVector()` directly. Use `Tle.ToOsculating()` instead.
 
 ## EncounterQualityFlags
 
@@ -240,7 +240,7 @@ maneuver, the static axes before any plan ([Body Axes](attitudes.md#body-axes)).
 | `Emission` | Angle between surface normal and observer direction; needs an observer: `Site.FindIlluminationWindows`, which takes none, throws for it (#682) |
 | `Phase` | Angle between illumination and observer directions; needs an observer, as `Emission` |
 
-## Classification (TLE)
+## TleClassification
 
 | Value | Description |
 |-------|-------------|

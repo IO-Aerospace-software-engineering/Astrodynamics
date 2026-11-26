@@ -12,7 +12,7 @@ using Xunit.Abstractions;
 namespace IO.Astrodynamics.Tests;
 
 /// <summary>
-/// No deadlock between the SpiceAPI lock and the type initializers that read SPICE (#623), in fresh processes: in this
+/// No deadlock between the SpiceApi lock and the type initializers that read SPICE (#623), in fresh processes: in this
 /// process another test has already run every initializer, so the test starts the child process
 /// <c>IO.Astrodynamics.Tests.ColdStart</c> (copied to <c>ColdStart/</c> by the build, or built beside the tests when the
 /// output directory is given on the command line), which calls the library on two threads before any static class of
@@ -21,10 +21,10 @@ namespace IO.Astrodynamics.Tests;
 /// <remarks>
 /// <para>
 /// Each mode pairs a method that takes the lock (thread A) with the first read of a static class whose initializer takes
-/// it (thread B): <c>direct</c> <see cref="SpiceAPI.ConvertTleToStateVector(string, string, string, TimeSystem.Time)"/>
-/// and <c>tle</c> <see cref="OrbitalParameters.TLE.TLE.ToStateVector(TimeSystem.Time)"/> with
-/// <see cref="SolarSystemObjects.PlanetsAndMoons"/>, <c>lagrange</c> <see cref="SpiceAPI.ReadEphemeris(TimeSystem.Time, int, int, Frames.Frame, Aberration)"/>
-/// and <c>lagrange-window</c> <see cref="SpiceAPI.ReadEphemeris(TimeSystem.Window, int, int, Frames.Frame, Aberration, TimeSpan)"/>
+/// it (thread B): <c>direct</c> <see cref="SpiceApi.ConvertTleToStateVector(string, string, string, TimeSystem.Time)"/>
+/// and <c>tle</c> <see cref="OrbitalParameters.TLE.Tle.ToStateVector(TimeSystem.Time)"/> with
+/// <see cref="SolarSystemObjects.PlanetsAndMoons"/>, <c>lagrange</c> <see cref="SpiceApi.ReadEphemeris(TimeSystem.Time, int, int, Frames.Frame, Aberration)"/>
+/// and <c>lagrange-window</c> <see cref="SpiceApi.ReadEphemeris(TimeSystem.Window, int, int, Frames.Frame, Aberration, TimeSpan)"/>
 /// from L1 with <see cref="SolarSystemObjects.Barycenters"/>. Before #623 thread A read the static class while it held the
 /// lock and the process hung forever.
 /// </para>
@@ -154,7 +154,7 @@ public class ColdStartTests
     public void ElementConversions_ReadNoProviderUnderTheSpiceLock()
     {
         // A child with a probe provider set as the global provider (#664): each element conversion and two-body propagation
-        // of SpiceAPI, every overload, makes no provider call under the SpiceAPI lock, checked by the child. Before the fix
+        // of SpiceApi, every overload, makes no provider call under the SpiceApi lock, checked by the child. Before the fix
         // each built the observer of its result under the lock: 9 provider calls about the Earth, all under the lock
         string output = RunChild("conversions-lock");
         foreach (var line in output.Split('\n').Where(x => x.StartsWith("MEASURE", StringComparison.Ordinal)))
@@ -222,7 +222,7 @@ public class ColdStartTests
             process.Kill(entireProcessTree: true);
             process.WaitForExit();
             Assert.Fail($"The child {description} did not end within {ChildTimeout.TotalSeconds} s: a thread holding the " +
-                        $"SpiceAPI lock waits for a type initializer that waits for the lock (#623). Output: {output.Result} {error.Result}");
+                        $"SpiceApi lock waits for a type initializer that waits for the lock (#623). Output: {output.Result} {error.Result}");
         }
 
         // The parameterless wait also waits for the end of the redirected streams

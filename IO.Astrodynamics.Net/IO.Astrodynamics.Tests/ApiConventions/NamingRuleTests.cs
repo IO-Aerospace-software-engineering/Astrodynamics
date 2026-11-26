@@ -281,7 +281,7 @@ public class NamingRuleTests
     private static readonly string[] TextFormatVerbs = ["Load", "LoadAll", "Parse", "ParseAll", "TryLoad", "TryParse"];
 
     [Theory]
-    [InlineData(typeof(IO.Astrodynamics.OrbitalParameters.TLE.TLE))]
+    [InlineData(typeof(IO.Astrodynamics.OrbitalParameters.TLE.Tle))]
     [InlineData(typeof(IO.Astrodynamics.CCSDS.OMM.Omm))]
     [InlineData(typeof(IO.Astrodynamics.CCSDS.OPM.Opm))]
     [InlineData(typeof(IO.Astrodynamics.CCSDS.CDM.Cdm))]

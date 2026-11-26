@@ -542,7 +542,7 @@ public class AddedStatesGapTests
         Assert.Throws<InvalidOperationException>(() => spacecraft.CheckInterpolatedStatesCover(wider, "search window"));
         var secondary = NewSpacecraft(-7986, new StateVector(new Vector3(-7378137.0, 0.0, 1000.0), new Vector3(0.0, -5509.9, -4623.4), earth, Start, Frame.ICRF));
         Assert.Throws<InvalidOperationException>(() => ConjunctionAssessment.Analyze(spacecraft, secondary, wider));
-        Assert.Throws<InvalidOperationException>(() => moon.FindDistanceWindows(wider, spacecraft, RelationnalOperator.Greater, 1.0, new WindowSearchOptions { Step = TimeSpan.FromSeconds(60.0) }).ToArray());
+        Assert.Throws<InvalidOperationException>(() => moon.FindDistanceWindows(wider, spacecraft, RelationalOperator.GreaterThan, 1.0, new WindowSearchOptions { Step = TimeSpan.FromSeconds(60.0) }).ToArray());
 
         // The SPK refuses it
         var directory = Directory.CreateDirectory(Path.Combine("Data/User/AddedStatesGap", "store-of-one"));
@@ -613,21 +613,21 @@ public class AddedStatesGapTests
 
     #endregion
 
-    #region A TLE spacecraft sampled by TLEPropagator
+    #region A TLE spacecraft sampled by TlePropagator
 
     /// <summary>
-    /// A TLE spacecraft sampled by <see cref="TLEPropagator"/> over [0, 1 h], then given SGP4 states over [3 h, 4 h]: two
+    /// A TLE spacecraft sampled by <see cref="TlePropagator"/> over [0, 1 h], then given SGP4 states over [3 h, 4 h]: two
     /// arcs; a read in the gap from the Earth without aberration reads SGP4, as outside its samples (before, the short-circuit
     /// interpolated across the gap, 1.648e7 m off SGP4 at 2 h in the probes of R08).
     /// </summary>
     [Fact]
     public void ATleSpacecraft_ReadsSgp4InTheGap()
     {
-        var tle = new TLE("ISS",
+        var tle = new Tle("ISS",
             "1 25544U 98067A   21020.53488036  .00016717  00000-0  10270-3 0  9054",
             "2 25544  51.6423 353.0312 0000493 320.8755  39.2360 15.49309423 25703");
         var spacecraft = new Spacecraft(-7991, "GA7991", 100.0, tle, 10000.0, new Clock("GA7991_CLK", 65536));
-        new TLEPropagator(new Window(tle.Epoch, tle.Epoch.AddHours(1.0)), spacecraft, TimeSpan.FromSeconds(60.0)).Propagate();
+        new TlePropagator(new Window(tle.Epoch, tle.Epoch.AddHours(1.0)), spacecraft, TimeSpan.FromSeconds(60.0)).Propagate();
         var later = Enumerable.Range(0, 61)
             .Select(i => tle.ToStateVector(tle.Epoch.AddHours(3.0).AddSeconds(60.0 * i)).ToFrame(Frame.ICRF).ToStateVector()).ToArray();
         spacecraft.AddPropagatedStates(later);

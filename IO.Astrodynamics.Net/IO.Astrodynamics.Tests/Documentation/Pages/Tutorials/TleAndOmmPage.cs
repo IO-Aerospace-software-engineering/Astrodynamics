@@ -53,7 +53,7 @@ using IO.Astrodynamics.SSA;
 using IO.Astrodynamics.SolarSystemObjects;
 using IO.Astrodynamics.Surface;
 using IO.Astrodynamics.TimeSystem;
-using TLE = IO.Astrodynamics.OrbitalParameters.TLE.TLE;
+using Tle = IO.Astrodynamics.OrbitalParameters.TLE.Tle;
 using TleFitOptions = IO.Astrodynamics.OrbitalParameters.TLE.TleFitOptions;
 
 namespace DocumentationPageSamples.Tutorials;
@@ -65,9 +65,9 @@ internal static class TleAndOmmPage
     internal static void Block01()
     {
         #region docs/tutorials/tle-and-omm.md:1
-        SpiceAPI.Instance.LoadKernels(new DirectoryInfo("Data/SolarSystem"));
+        SpiceApi.Instance.LoadKernels(new DirectoryInfo("Data/SolarSystem"));
 
-        var tle = new TLE("ISS (ZARYA)",
+        var tle = new Tle("ISS (ZARYA)",
             "1 25544U 98067A   21020.53488036  .00016717  00000-0  10270-3 0  9054",
             "2 25544  51.6423 353.0312 0000493 320.8755  39.2360 15.49309423 25703");
 
@@ -79,7 +79,7 @@ internal static class TleAndOmmPage
     }
 
     // docs/tutorials/tle-and-omm.md, "Mean vs Osculating Elements"
-    internal static void Block02(TLE tle)
+    internal static void Block02(Tle tle)
     {
         #region docs/tutorials/tle-and-omm.md:2
         // Inputs: tle (TLE)
@@ -95,7 +95,7 @@ internal static class TleAndOmmPage
     }
 
     // docs/tutorials/tle-and-omm.md, "SGP4 Propagation"
-    internal static void Block03(TLE tle)
+    internal static void Block03(Tle tle)
     {
         #region docs/tutorials/tle-and-omm.md:3
         // Inputs: tle (TLE)
@@ -108,7 +108,7 @@ internal static class TleAndOmmPage
     }
 
     // docs/tutorials/tle-and-omm.md, "Numerical Propagation of a TLE"
-    internal static void Block04(TLE tle)
+    internal static void Block04(Tle tle)
     {
         #region docs/tutorials/tle-and-omm.md:4
         // Inputs: tle (TLE)
@@ -123,7 +123,7 @@ internal static class TleAndOmmPage
         var solution = numerical.Propagate(window, new PropagationOptions { AtmosphericDrag = true });
 
         var sampled = new Spacecraft(-1002, "ISS-SGP4", 420000.0, tle, 450000.0, new Clock("issgp4", 65536));
-        new TLEPropagator(window, sampled, TimeSpan.FromSeconds(60.0)).Propagate();
+        new TlePropagator(window, sampled, TimeSpan.FromSeconds(60.0)).Propagate();
 
         var end = solution.StateVectors[^1];
         var sgp4AtEnd = tle.ToStateVector(end.Epoch).ToFrame(Frame.ICRF);
@@ -180,7 +180,7 @@ internal static class TleAndOmmPage
     }
 
     // docs/tutorials/tle-and-omm.md, "TLE to OMM"
-    internal static void Block09(TLE tle)
+    internal static void Block09(Tle tle)
     {
         #region docs/tutorials/tle-and-omm.md:9
         // Inputs: tle (TLE)

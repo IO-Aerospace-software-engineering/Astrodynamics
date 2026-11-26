@@ -18,7 +18,7 @@ public class Nrlmsise00Model : IAtmosphericModel, IGeodeticDensityModel, IDensit
     // The default 3 hr AP indices, one instance: the model only reads them.
     private static readonly ApArray DefaultApArray = ApArray.Default;
 
-    private readonly NRLMSISE00 _model;
+    private readonly Nrlmsise00 _model;
     private readonly NrlmsiseFlags _flags;
     private readonly SpaceWeather _spaceWeather;
     private readonly object _lock = new object();
@@ -40,7 +40,7 @@ public class Nrlmsise00Model : IAtmosphericModel, IGeodeticDensityModel, IDensit
     /// <param name="spaceWeather">Space weather data containing F10.7, Ap indices, etc.</param>
     public Nrlmsise00Model(SpaceWeather spaceWeather)
     {
-        _model = new NRLMSISE00();
+        _model = new Nrlmsise00();
         _flags = NrlmsiseFlags.CreateStandard();
         _spaceWeather = spaceWeather ?? throw new ArgumentNullException(nameof(spaceWeather));
     }
@@ -52,7 +52,7 @@ public class Nrlmsise00Model : IAtmosphericModel, IGeodeticDensityModel, IDensit
     /// <param name="spaceWeather">Space weather data containing F10.7, Ap indices, etc.</param>
     public Nrlmsise00Model(NrlmsiseFlags flags, SpaceWeather spaceWeather)
     {
-        _model = new NRLMSISE00();
+        _model = new Nrlmsise00();
         _flags = flags ?? throw new ArgumentNullException(nameof(flags));
         _spaceWeather = spaceWeather ?? throw new ArgumentNullException(nameof(spaceWeather));
     }
@@ -157,14 +157,14 @@ public class Nrlmsise00Model : IAtmosphericModel, IGeodeticDensityModel, IDensit
     /// jumps, when flag 15 is on; none when it is off (#413).
     /// </summary>
     ReadOnlySpan<double> IDensityDiscontinuities.DensityDiscontinuities =>
-        MixingCutoffsApply ? NRLMSISE00.MixingCutoffAltitudes : ReadOnlySpan<double>.Empty;
+        MixingCutoffsApply ? Nrlmsise00.MixingCutoffAltitudes : ReadOnlySpan<double>.Empty;
 
     /// <summary>
     /// The interval between the mixing cutoffs in which the model places an altitude, from the altitude in km as the model
     /// takes it (<see cref="NrlmsiseModelInput.FromSi(int, double, double, double, double, double, double, double, double, ApArray)"/>).
     /// </summary>
     int IDensityDiscontinuities.DensityInterval(double altitude) =>
-        MixingCutoffsApply ? NRLMSISE00.MixingInterval(altitude / 1000.0) : 0;
+        MixingCutoffsApply ? Nrlmsise00.MixingInterval(altitude / 1000.0) : 0;
 
     /// <summary>
     /// Whether <paramref name="other"/> has the same switches and space weather, so that both give the same values: F10.7,

@@ -166,8 +166,8 @@ public readonly record struct Window
     /// </summary>
     /// <remarks>
     /// The grid of the library's window reads (<c>GetEphemeris</c> of a <see cref="Body.CelestialItem"/> or a
-    /// <see cref="Surface.Site"/>, <c>Star.Propagate</c>, <c>SpiceAPI.TransformFrame</c>, <c>SpiceAPI.ReadEphemeris</c>,
-    /// <c>SpiceAPI.ReadOrientation</c>), each without the end off the grid. Across a UTC leap second the points follow the
+    /// <see cref="Surface.Site"/>, <c>Star.Propagate</c>, <c>SpiceApi.TransformFrame</c>, <c>SpiceApi.ReadEphemeris</c>,
+    /// <c>SpiceApi.ReadOrientation</c>), each without the end off the grid. Across a UTC leap second the points follow the
     /// UTC calendar, so a window from 2016-12-31T23:59:00Z to 2017-01-01T00:01:00Z (121 s, <see cref="Length"/>) gives 121
     /// points at 1 s, the last its end. The points are computed as they are enumerated; a point past the last tick of the
     /// calendar ends them.

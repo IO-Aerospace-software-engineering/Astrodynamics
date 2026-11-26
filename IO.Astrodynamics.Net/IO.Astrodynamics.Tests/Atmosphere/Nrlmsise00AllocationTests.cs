@@ -67,7 +67,7 @@ public class Nrlmsise00AllocationTests
     public void Calculate_ReusedInstance_GivesTheValuesOfAFreshInstance_BitForBit()
     {
         // Arrange
-        var model = new NRLMSISE00();
+        var model = new Nrlmsise00();
         var flags = NrlmsiseFlags.CreateStandard();
         foreach (var context in Grid())
         {
@@ -79,7 +79,7 @@ public class Nrlmsise00AllocationTests
 
             // Act
             var reused = model.Calculate(input, flags);
-            var fresh = new NRLMSISE00().Calculate(input, flags);
+            var fresh = new Nrlmsise00().Calculate(input, flags);
 
             // Assert
             for (int i = 0; i < 9; i++)

@@ -207,7 +207,7 @@ namespace IO.Astrodynamics.Tests.Body
             spacecraft.Frame.Write(fk);
             Assert.Contains("SCLK_DATA_TYPE_1435 ", await File.ReadAllTextAsync(sclk.FullName));
 
-            SpiceAPI.Instance.LoadKernels(sclk);
+            SpiceApi.Instance.LoadKernels(sclk);
             try
             {
                 // Act
@@ -215,12 +215,12 @@ namespace IO.Astrodynamics.Tests.Body
                 fk.Refresh();
                 ck.Refresh();
                 Assert.True(fk.Exists && ck.Exists);
-                SpiceAPI.Instance.LoadKernels(fk);
-                SpiceAPI.Instance.LoadKernels(ck);
+                SpiceApi.Instance.LoadKernels(fk);
+                SpiceApi.Instance.LoadKernels(ck);
                 try
                 {
                     var t = epoch.AddSeconds(1800.0);
-                    var spice = SpiceAPI.Instance.TransformFrame(t, new Frames.Frame("OWNCLK_FRAME"), Frames.Frame.ICRF).Rotation;
+                    var spice = SpiceApi.Instance.TransformFrame(t, new Frames.Frame("OWNCLK_FRAME"), Frames.Frame.ICRF).Rotation;
 
                     // Assert
                     double angle = AttitudeRecordTests.RotationAngle(spacecraft.Frame.GetStateOrientationToICRF(t).Rotation, spice);
@@ -228,13 +228,13 @@ namespace IO.Astrodynamics.Tests.Body
                 }
                 finally
                 {
-                    SpiceAPI.Instance.UnloadKernels(ck);
-                    SpiceAPI.Instance.UnloadKernels(fk);
+                    SpiceApi.Instance.UnloadKernels(ck);
+                    SpiceApi.Instance.UnloadKernels(fk);
                 }
             }
             finally
             {
-                SpiceAPI.Instance.UnloadKernels(sclk);
+                SpiceApi.Instance.UnloadKernels(sclk);
             }
         }
     }

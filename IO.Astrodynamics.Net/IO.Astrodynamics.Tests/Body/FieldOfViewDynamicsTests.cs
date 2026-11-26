@@ -174,7 +174,7 @@ public class FieldOfViewDynamicsTests
             case "TLE":
             {
                 // Not propagated: the spacecraft reads SGP4 at each epoch, and its SPK holds the SGP4 states every 10 s
-                var tle = new TLE("ISS", "1 25544U 98067A   21020.53488036  .00016717  00000-0  10270-3 0  9054",
+                var tle = new Tle("ISS", "1 25544U 98067A   21020.53488036  .00016717  00000-0  10270-3 0  9054",
                     "2 25544  51.6423 353.0312 0000493 320.8755  39.2360 15.49309423 25703");
                 var spacecraft = new Spacecraft(-5177, "FOV5177", 1000.0, tle, 3000.0, new Clock("FOV5177_CLK", 65536));
                 AddInstruments(spacecraft);
@@ -187,7 +187,7 @@ public class FieldOfViewDynamicsTests
             {
                 // Propagated by RK7(8) about the point-mass Earth of the TLE, with the Moon and the Sun (#675): the spacecraft
                 // reads its stored states, about 50 km from SGP4 at the end
-                var tle = new TLE("ISS", "1 25544U 98067A   21020.53488036  .00016717  00000-0  10270-3 0  9054",
+                var tle = new Tle("ISS", "1 25544U 98067A   21020.53488036  .00016717  00000-0  10270-3 0  9054",
                     "2 25544  51.6423 353.0312 0000493 320.8755  39.2360 15.49309423 25703");
                 var spacecraft = new Spacecraft(-5179, "FOV5179", 1000.0, tle, 3000.0, new Clock("FOV5179_CLK", 65536));
                 AddInstruments(spacecraft);
@@ -300,7 +300,7 @@ public class FieldOfViewDynamicsTests
                 orientations.Add(new StateOrientation(Quaternion.Identity, Vector3.Zero, epoch, Frames.Frame.ICRF));
             }
 
-            FieldOfViewKernels.WriteAndLoad(directory, spacecraft, [], [], window, file => SpiceAPI.Instance.WriteEphemeris(file, spacecraft.NaifId, states.ToArray()), orientations);
+            FieldOfViewKernels.WriteAndLoad(directory, spacecraft, [], [], window, file => SpiceApi.Instance.WriteEphemeris(file, spacecraft.NaifId, states.ToArray()), orientations);
         }
         else
         {
@@ -328,7 +328,7 @@ public class FieldOfViewDynamicsTests
 
     private static Window[] Gftfov(Spacecraft spacecraft, Window window, Row row, IReadOnlyDictionary<string, ILocalizable> targets, TimeSpan step)
     {
-        return SpiceAPI.Instance.FindWindowsInFieldOfViewConstraint(window, spacecraft.NaifId, spacecraft.NaifId * 1000 - row.Number, targets[row.Target].NaifId,
+        return SpiceApi.Instance.FindWindowsInFieldOfViewConstraint(window, spacecraft.NaifId, spacecraft.NaifId * 1000 - row.Number, targets[row.Target].NaifId,
             TargetFrame(row), row.Shape, row.Aberration, step).ToArray();
     }
 

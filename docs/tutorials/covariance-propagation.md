@@ -38,7 +38,7 @@ references and their tests. The code of this tutorial runs as a smoke test again
 A LEO at 400 km, with the EGM2008 geopotential to degree 10, NRLMSISE-00 drag, SRP, the Moon and the Sun:
 
 ```csharp
-SpiceAPI.Instance.LoadKernels(new DirectoryInfo("Data/SolarSystem"));
+SpiceApi.Instance.LoadKernels(new DirectoryInfo("Data/SolarSystem"));
 
 var epoch = new Time(2021, 3, 20, 12, 0, 0, TimeScale.TDB);
 var earth = new CelestialBody(PlanetsAndMoons.EARTH, Frame.ICRF, epoch,

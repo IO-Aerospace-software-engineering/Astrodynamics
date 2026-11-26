@@ -53,7 +53,7 @@ using IO.Astrodynamics.SSA;
 using IO.Astrodynamics.SolarSystemObjects;
 using IO.Astrodynamics.Surface;
 using IO.Astrodynamics.TimeSystem;
-using TLE = IO.Astrodynamics.OrbitalParameters.TLE.TLE;
+using Tle = IO.Astrodynamics.OrbitalParameters.TLE.Tle;
 
 namespace DocumentationPageSamples.Guides;
 
@@ -65,15 +65,15 @@ internal static class KernelManagementPage
     {
         #region docs/guides/kernel-management.md:1
         // Load all kernels from a directory at startup
-        SpiceAPI.Instance.LoadKernels(new DirectoryInfo("kernels/"));
+        SpiceApi.Instance.LoadKernels(new DirectoryInfo("kernels/"));
 
-        foreach (var kernel in SpiceAPI.Instance.GetLoadedKernels())
+        foreach (var kernel in SpiceApi.Instance.GetLoadedKernels())
             Console.WriteLine(kernel);
 
         // ... perform analysis ...
 
         // Clean up on shutdown
-        SpiceAPI.Instance.ClearKernels();
+        SpiceApi.Instance.ClearKernels();
         #endregion
     }
 
@@ -81,7 +81,7 @@ internal static class KernelManagementPage
     internal static void Block02()
     {
         #region docs/guides/kernel-management.md:2
-        SpiceAPI.Instance.LoadKernels(new DirectoryInfo("kernels/lro"));
+        SpiceApi.Instance.LoadKernels(new DirectoryInfo("kernels/lro"));
 
         var lro = new Spacecraft(naifId: -85, name: "LRO",
             epoch: new Time(2024, 6, 1, 12, 0, 0, TimeScale.TDB));

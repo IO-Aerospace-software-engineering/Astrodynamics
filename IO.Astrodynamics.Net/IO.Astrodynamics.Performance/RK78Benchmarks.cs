@@ -15,7 +15,7 @@ using IO.Astrodynamics.Propagator.Variational;
 using IO.Astrodynamics.Propagator.Integrators;
 using IO.Astrodynamics.SolarSystemObjects;
 using IO.Astrodynamics.TimeSystem;
-using TLE = IO.Astrodynamics.OrbitalParameters.TLE.TLE;
+using Tle = IO.Astrodynamics.OrbitalParameters.TLE.Tle;
 
 namespace IO.Astrodynamics.Performance;
 
@@ -55,7 +55,7 @@ public class RK78Benchmarks
     [GlobalSetup]
     public void GlobalSetup()
     {
-        SpiceAPI.Instance.LoadKernels(new DirectoryInfo("Data"));
+        SpiceApi.Instance.LoadKernels(new DirectoryInfo("Data"));
 
         _earthLeo = new CelestialBody(PlanetsAndMoons.EARTH, Frame.ICRF, LeoEpoch,
             new GeopotentialModelParameters("Data/SolarSystem/EGM2008_to70_TideFree", 10));
@@ -63,7 +63,7 @@ public class RK78Benchmarks
         _earthSso = new CelestialBody(PlanetsAndMoons.EARTH, Frame.ICRF, SsoEpoch,
             new GeopotentialModelParameters("Data/SolarSystem/EGM2008_to70_TideFree", 10));
 
-        var geoTle = new TLE("INTELSAT 901",
+        var geoTle = new Tle("INTELSAT 901",
             "1 26824U 01024A   26040.43262683 -.00000207  00000-0  00000+0 0  9994",
             "2 26824   0.9230  86.6125 0002726 324.4840  12.2632  0.98820941 21659");
         _geoTleEpoch = geoTle.Epoch;
@@ -178,7 +178,7 @@ public class RK78Benchmarks
     private CentralBodyPropagator BuildGeoPropagator()
     {
         var clk = new Clock("BenchClock", 256);
-        var tle = new TLE("INTELSAT 901",
+        var tle = new Tle("INTELSAT 901",
             "1 26824U 01024A   26040.43262683 -.00000207  00000-0  00000+0 0  9994",
             "2 26824   0.9230  86.6125 0002726 324.4840  12.2632  0.98820941 21659");
         var osculatingIcrf = tle.ToStateVector().ToFrame(Frame.ICRF).ToStateVector();

@@ -112,7 +112,7 @@ public class PropagatedStatesSpanTests
         }
 
         // The managed distance search over a window past the states reads them outside: it throws
-        Assert.Throws<InvalidOperationException>(() => moon.FindDistanceWindows(new Window(last.Epoch.AddSeconds(-600.0), last.Epoch.AddSeconds(600.0)), spacecraft, RelationnalOperator.Greater, 1.0, new WindowSearchOptions { Step = TimeSpan.FromSeconds(60.0) }).ToArray());
+        Assert.Throws<InvalidOperationException>(() => moon.FindDistanceWindows(new Window(last.Epoch.AddSeconds(-600.0), last.Epoch.AddSeconds(600.0)), spacecraft, RelationalOperator.GreaterThan, 1.0, new WindowSearchOptions { Step = TimeSpan.FromSeconds(60.0) }).ToArray());
     }
 
     /// <summary>
@@ -281,17 +281,17 @@ public class PropagatedStatesSpanTests
     }
 
     /// <summary>
-    /// A TLE spacecraft sampled by <see cref="TLEPropagator"/> reads SGP4 outside its samples, from the Earth without
+    /// A TLE spacecraft sampled by <see cref="TlePropagator"/> reads SGP4 outside its samples, from the Earth without
     /// aberration as from any other body: before the fix the short-circuit of <c>GetEphemeris</c> extrapolated the samples.
     /// </summary>
     [Fact]
     public void SampledTleSpacecraft_ReadsSgp4OutsideItsSamples()
     {
-        var tle = new TLE("ISS", "1 25544U 98067A   21020.53488036  .00016717  00000-0  10270-3 0  9054",
+        var tle = new Tle("ISS", "1 25544U 98067A   21020.53488036  .00016717  00000-0  10270-3 0  9054",
             "2 25544  51.6423 353.0312 0000493 320.8755  39.2360 15.49309423 25703");
         var spacecraft = new Spacecraft(-5277, "SPAN5277", 1000.0, tle, 3000.0, new Clock("SPAN5277_CLK", 65536));
         var window = new Window(tle.Epoch, tle.Epoch.AddHours(1.0));
-        new TLEPropagator(window, spacecraft, TimeSpan.FromSeconds(60.0)).Propagate();
+        new TlePropagator(window, spacecraft, TimeSpan.FromSeconds(60.0)).Propagate();
         var earth = (CelestialItem)tle.Observer;
         double worst = 0.0;
         foreach (var t in new[] { window.StartDate.AddSeconds(-360.0), window.EndDate.AddSeconds(360.0) })

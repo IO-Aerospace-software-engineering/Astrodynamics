@@ -72,7 +72,7 @@ public class ExportCheckTests
     // The export leaves loaded no kernel of its own, under its output directory or its scratch root (other classes load and
     // unload theirs meanwhile, so the whole list is not compared)
     private static void AssertNothingLoadedUnder(DirectoryInfo root) =>
-        Assert.DoesNotContain(SpiceAPI.Instance.GetLoadedKernels(), x => x.FullName.StartsWith(root.FullName, StringComparison.Ordinal));
+        Assert.DoesNotContain(SpiceApi.Instance.GetLoadedKernels(), x => x.FullName.StartsWith(root.FullName, StringComparison.Ordinal));
 
     private static string[] Entries(DirectoryInfo directory) =>
         Directory.EnumerateFileSystemEntries(directory.FullName, "*", SearchOption.AllDirectories).Order(StringComparer.Ordinal).ToArray();
@@ -245,14 +245,14 @@ public class ExportCheckTests
             instrument.WriteFrame(File("cam.tf"));
             instrument.WriteKernel(File("cam.ti"));
             spacecraft.WriteEphemeris(File("sc.spk"));
-            SpiceAPI.Instance.LoadKernels(File("sc.tsc"));
+            SpiceApi.Instance.LoadKernels(File("sc.tsc"));
             try
             {
                 spacecraft.WriteOrientation(File("sc.ck"));
             }
             finally
             {
-                SpiceAPI.Instance.UnloadKernels(File("sc.tsc"));
+                SpiceApi.Instance.UnloadKernels(File("sc.tsc"));
             }
 
             foreach (var (mine, theirs) in new[]
@@ -301,18 +301,18 @@ public class ExportCheckTests
                 _ => MetaKernel(new FileInfo(Path.Combine(root.FullName, "mission.tm")), clock)
             };
             var before = Entries(output);
-            SpiceAPI.Instance.LoadKernels(loaded);
+            SpiceApi.Instance.LoadKernels(loaded);
             try
             {
                 var exception = await Assert.ThrowsAsync<InvalidOperationException>(() => new CosmographiaExporter().ExportAsync(scenario, output));
 
                 Assert.Contains(held == "meta-kernel" ? clock.FullName : loaded.FullName, exception.Message);
                 Assert.Equal(before, Entries(output));
-                Assert.True(SpiceAPI.Instance.HoldsKernelFile(clock));
+                Assert.True(SpiceApi.Instance.HoldsKernelFile(clock));
             }
             finally
             {
-                SpiceAPI.Instance.UnloadKernels(loaded);
+                SpiceApi.Instance.UnloadKernels(loaded);
             }
 
             // Once unloaded, the export replaces it
@@ -340,14 +340,14 @@ public class ExportCheckTests
             var kernel = new FileInfo(Path.Combine(root.FullName, "user.tk"));
             File.WriteAllText(kernel.FullName, "KPL/PCK\n\\begindata\nCHECK799_FIRST_EXPORT = 1\n\\begintext\n");
             var output = new DirectoryInfo(Path.Combine(root.FullName, "output"));
-            SpiceAPI.Instance.LoadKernels(root);
+            SpiceApi.Instance.LoadKernels(root);
             try
             {
                 await new CosmographiaExporter().ExportAsync(scenario, output);
 
                 Assert.True(File.Exists(Path.Combine(output.FullName, $"{Mission}_{ScenarioName}", "spice.json")));
                 Assert.Equal([root.FullName],
-                    SpiceAPI.Instance.GetLoadedKernels().Select(x => x.FullName).Where(x => x.StartsWith(root.FullName, StringComparison.Ordinal)));
+                    SpiceApi.Instance.GetLoadedKernels().Select(x => x.FullName).Where(x => x.StartsWith(root.FullName, StringComparison.Ordinal)));
 
                 var before = Entries(output);
                 var exception = await Assert.ThrowsAsync<InvalidOperationException>(() => new CosmographiaExporter().ExportAsync(scenario, output));
@@ -356,7 +356,7 @@ public class ExportCheckTests
             }
             finally
             {
-                SpiceAPI.Instance.UnloadKernels(root);
+                SpiceApi.Instance.UnloadKernels(root);
             }
 
             AssertNothingLoadedUnder(root);

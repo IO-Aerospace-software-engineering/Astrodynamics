@@ -20,7 +20,7 @@ namespace IO.Astrodynamics.Tests.Propagators;
 /// <summary>
 /// The reader of a solution, lot L5a of #668 (R09, decision 53, decided by S. Guillet, 2026-11-23): the public get-only
 /// <see cref="PropagationSolution.Observer"/> and <see cref="PropagationSolution.Frame"/> of its states, those of the
-/// samples on a <see cref="TLEPropagator"/> solution (the TLE's Earth and TEME), so that
+/// samples on a <see cref="TlePropagator"/> solution (the TLE's Earth and TEME), so that
 /// <see cref="PropagationSolution.GetStateVector"/> reads it (it threw before); and the public
 /// <see cref="PropagationSolution.Window"/>, [first segment base, end] in TDB labels, the span the reads accept (the
 /// check of <c>Covers</c>, unchanged), a read outside it throwing <see cref="ArgumentOutOfRangeException"/> naming it.
@@ -39,7 +39,7 @@ public class SolutionWindowTests
 
     private static CelestialBody Earth => PlanetsAndMoons.EARTH_BODY;
 
-    private static TLE Iss() => new("ISS",
+    private static Tle Iss() => new("ISS",
         "1 25544U 98067A   21020.53488036  .00016717  00000-0  10270-3 0  9054",
         "2 25544  51.6423 353.0312 0000493 320.8755  39.2360 15.49309423 25703");
 
@@ -72,7 +72,7 @@ public class SolutionWindowTests
         // Arrange
         var tle = Iss();
         var window = new Window(tle.Epoch, tle.Epoch.AddHours(1.0));
-        var solution = new TLEPropagator(window, NewSpacecraft(tle), Step).Propagate();
+        var solution = new TlePropagator(window, NewSpacecraft(tle), Step).Propagate();
 
         // Assert: the TLE's Earth and TEME, those of every sample
         Assert.Same(solution.StateVectors[0].Observer, solution.Observer);
@@ -103,7 +103,7 @@ public class SolutionWindowTests
         var window = new Window(start, start.AddHours(1.0));
 
         // Act
-        var solution = new TLEPropagator(window, NewSpacecraft(tle), Step).Propagate();
+        var solution = new TlePropagator(window, NewSpacecraft(tle), Step).Propagate();
 
         // Assert: the TDB labels of the window, exactly
         LabelAssert.Equal(window.StartDate.ToTDB(), solution.Window.StartDate);
@@ -198,7 +198,7 @@ public class SolutionWindowTests
         if (path == "TLE")
         {
             var tle = Iss();
-            solution = new TLEPropagator(new Window(tle.Epoch, tle.Epoch.AddHours(1.0)), NewSpacecraft(tle), Step)
+            solution = new TlePropagator(new Window(tle.Epoch, tle.Epoch.AddHours(1.0)), NewSpacecraft(tle), Step)
                 .Propagate();
         }
         else

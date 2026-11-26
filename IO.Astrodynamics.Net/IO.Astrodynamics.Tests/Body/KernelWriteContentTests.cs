@@ -21,7 +21,7 @@ namespace IO.Astrodynamics.Tests.Body;
 /// stores no state and <see cref="Star.WriteEphemeris"/> of a star that stores fewer than three throw
 /// <see cref="InvalidOperationException"/> (the object has nothing to write, the file is not at fault), before any file is
 /// written; an arc of one state keeps its <see cref="ArgumentException"/>; and <see cref="Spacecraft.WriteOrientation"/> of
-/// a spacecraft without attitude record says how to give it one (#546: a <see cref="TLEPropagator"/> run records none).
+/// a spacecraft without attitude record says how to give it one (#546: a <see cref="TlePropagator"/> run records none).
 /// The reference is the decided rule.
 /// </summary>
 public class KernelWriteContentTests
@@ -131,24 +131,24 @@ public class KernelWriteContentTests
         var exception = Assert.Throws<InvalidOperationException>(() => spacecraft.WriteOrientation(NewFile("never.bc")));
 
         Assert.Contains(spacecraft.Name, exception.Message);
-        Assert.Contains("TLEPropagator", exception.Message);
+        Assert.Contains("TlePropagator", exception.Message);
         Assert.Contains("AddStateOrientationToICRF", exception.Message);
     }
 
     [Fact]
     public void WriteOrientation_AfterATlePropagatorRun_NamesTheWaysToAnAttitudeRecord()
     {
-        // #546: a TLEPropagator run stores SGP4's states and no attitude, so the CK writer has nothing to write
-        var tle = new TLE("ISS",
+        // #546: a TlePropagator run stores SGP4's states and no attitude, so the CK writer has nothing to write
+        var tle = new Tle("ISS",
             "1 25544U 98067A   21020.53488036  .00016717  00000-0  10270-3 0  9054",
             "2 25544  51.6423 353.0312 0000493 320.8755  39.2360 15.49309423 25703");
         var spacecraft = new Spacecraft(-8814, "WC8814", 420000.0, tle);
         var window = new Window(tle.Epoch.ToTDB(), tle.Epoch.ToTDB().AddMinutes(10.0));
-        new TLEPropagator(window, spacecraft, TimeSpan.FromSeconds(60.0)).Propagate();
+        new TlePropagator(window, spacecraft, TimeSpan.FromSeconds(60.0)).Propagate();
 
         var exception = Assert.Throws<InvalidOperationException>(() => spacecraft.WriteOrientation(NewFile("tle.bc")));
 
-        Assert.Contains("TLEPropagator", exception.Message);
+        Assert.Contains("TlePropagator", exception.Message);
         Assert.Contains("AddStateOrientationToICRF", exception.Message);
     }
 }

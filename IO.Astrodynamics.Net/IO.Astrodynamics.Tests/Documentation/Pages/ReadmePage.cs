@@ -53,7 +53,7 @@ using IO.Astrodynamics.SSA;
 using IO.Astrodynamics.SolarSystemObjects;
 using IO.Astrodynamics.Surface;
 using IO.Astrodynamics.TimeSystem;
-using TLE = IO.Astrodynamics.OrbitalParameters.TLE.TLE;
+using Tle = IO.Astrodynamics.OrbitalParameters.TLE.Tle;
 
 namespace DocumentationPageSamples;
 
@@ -65,7 +65,7 @@ internal static class ReadmePage
     {
         #region README.md:1
         // Load required kernels (recursively) from your data directory
-        SpiceAPI.Instance.LoadKernels(new DirectoryInfo("Data/SolarSystem"));
+        SpiceApi.Instance.LoadKernels(new DirectoryInfo("Data/SolarSystem"));
 
         // Moon state relative to Earth at 2000-01-01T12:00Z, expressed in ICRF
         var earth = new CelestialBody(PlanetsAndMoons.EARTH);
@@ -83,7 +83,7 @@ internal static class ReadmePage
     internal static void Block02()
     {
         #region README.md:2
-        SpiceAPI.Instance.LoadKernels(new DirectoryInfo("Data/SolarSystem"));
+        SpiceApi.Instance.LoadKernels(new DirectoryInfo("Data/SolarSystem"));
         #endregion
     }
 
@@ -91,7 +91,7 @@ internal static class ReadmePage
     internal static void Block03()
     {
         #region README.md:3
-        SpiceAPI.Instance.LoadKernels(new FileInfo("de440.bsp"));
+        SpiceApi.Instance.LoadKernels(new FileInfo("de440.bsp"));
         #endregion
     }
 }

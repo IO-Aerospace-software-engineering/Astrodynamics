@@ -162,7 +162,7 @@ public class PropagatedArcsEdgeTests
         var arcs = sc.PropagatedArcs;
         var spk = NewSpk(sc.Name.ToLowerInvariant());
         sc.WriteEphemeris(spk);
-        SpiceAPI.Instance.LoadKernels(spk);
+        SpiceApi.Instance.LoadKernels(spk);
         try
         {
             var kernel = new Spacecraft(sc.NaifId, sc.Name, Start, 1000.0, 3000.0, new Clock(sc.Name + "K_CLK", 65536));
@@ -206,7 +206,7 @@ public class PropagatedArcsEdgeTests
         }
         finally
         {
-            SpiceAPI.Instance.UnloadKernels(spk);
+            SpiceApi.Instance.UnloadKernels(spk);
             spk.Delete();
         }
     }
@@ -246,7 +246,7 @@ public class PropagatedArcsEdgeTests
 
         var spk = NewSpk(sc.Name.ToLowerInvariant() + "added");
         sc.WriteEphemeris(spk);
-        SpiceAPI.Instance.LoadKernels(spk);
+        SpiceApi.Instance.LoadKernels(spk);
         try
         {
             var kernel = new Spacecraft(sc.NaifId, sc.Name, Start, 1000.0, 3000.0, new Clock(sc.Name + "K_CLK", 65536));
@@ -278,7 +278,7 @@ public class PropagatedArcsEdgeTests
         }
         finally
         {
-            SpiceAPI.Instance.UnloadKernels(spk);
+            SpiceApi.Instance.UnloadKernels(spk);
             spk.Delete();
         }
     }
@@ -318,7 +318,7 @@ public class PropagatedArcsEdgeTests
 
         var spk = NewSpk(spacecraft.Name.ToLowerInvariant());
         spacecraft.WriteEphemeris(spk);
-        SpiceAPI.Instance.LoadKernels(spk);
+        SpiceApi.Instance.LoadKernels(spk);
         try
         {
             double managed = 0.0, managedVelocity = 0.0, spkPosition = 0.0, spkVelocity = 0.0;
@@ -329,7 +329,7 @@ public class PropagatedArcsEdgeTests
                 managed = System.Math.Max(managed, (read.Position - position).Magnitude());
                 managedVelocity = System.Math.Max(managedVelocity, (read.Velocity - velocity).Magnitude());
                 // The windowed read, which throws on a SPICE error (the single-epoch read does not, spk-O1 of the review)
-                var fromSpk = SpiceAPI.Instance.ReadEphemeris(new Window(t, t), 399, spacecraft.NaifId, Frame.ICRF, Aberration.None, TimeSpan.FromSeconds(1.0)).First().ToStateVector();
+                var fromSpk = SpiceApi.Instance.ReadEphemeris(new Window(t, t), 399, spacecraft.NaifId, Frame.ICRF, Aberration.None, TimeSpan.FromSeconds(1.0)).First().ToStateVector();
                 spkPosition = System.Math.Max(spkPosition, (fromSpk.Position - position).Magnitude());
                 spkVelocity = System.Math.Max(spkVelocity, (fromSpk.Velocity - velocity).Magnitude());
             }
@@ -343,7 +343,7 @@ public class PropagatedArcsEdgeTests
         }
         finally
         {
-            SpiceAPI.Instance.UnloadKernels(spk);
+            SpiceApi.Instance.UnloadKernels(spk);
             spk.Delete();
         }
     }
@@ -388,7 +388,7 @@ public class PropagatedArcsEdgeTests
 
         var spk = NewSpk("pe5594");
         spacecraft.WriteEphemeris(spk);
-        SpiceAPI.Instance.LoadKernels(spk);
+        SpiceApi.Instance.LoadKernels(spk);
         try
         {
             var segments = OperatingSystem.IsLinux() ? CspiceDirect.ReadSegments(spk.FullName).Count : 2;
@@ -416,7 +416,7 @@ public class PropagatedArcsEdgeTests
         }
         finally
         {
-            SpiceAPI.Instance.UnloadKernels(spk);
+            SpiceApi.Instance.UnloadKernels(spk);
             spk.Delete();
         }
     }
@@ -471,7 +471,7 @@ public class PropagatedArcsEdgeTests
         var epochs = new[] { t1, t1.AddSeconds(0.5 * separation), t2 };
         var spk = NewSpk(spacecraft.Name.ToLowerInvariant());
         spacecraft.WriteEphemeris(spk);
-        SpiceAPI.Instance.LoadKernels(spk);
+        SpiceApi.Instance.LoadKernels(spk);
         try
         {
             double managedR = 0.0, managedV = 0.0, spkR = 0.0, spkV = 0.0;
@@ -483,7 +483,7 @@ public class PropagatedArcsEdgeTests
                 managedV = System.Math.Max(managedV, (read.Velocity - v).Magnitude());
                 // The windowed read, which throws on a SPICE error, against the managed read (the SPK's epochs are doubles of
                 // 1.2e-7 s resolution in 2024: SpkAgainstManaged)
-                var fromSpk = SpiceAPI.Instance.ReadEphemeris(new Window(t, t), 399, spacecraft.NaifId, Frame.ICRF, Aberration.None, TimeSpan.FromSeconds(1.0)).First().ToStateVector();
+                var fromSpk = SpiceApi.Instance.ReadEphemeris(new Window(t, t), 399, spacecraft.NaifId, Frame.ICRF, Aberration.None, TimeSpan.FromSeconds(1.0)).First().ToStateVector();
                 spkR = System.Math.Max(spkR, (fromSpk.Position - read.Position).Magnitude());
                 spkV = System.Math.Max(spkV, (fromSpk.Velocity - read.Velocity).Magnitude());
             }
@@ -508,7 +508,7 @@ public class PropagatedArcsEdgeTests
         }
         finally
         {
-            SpiceAPI.Instance.UnloadKernels(spk);
+            SpiceApi.Instance.UnloadKernels(spk);
             spk.Delete();
         }
     }
@@ -572,7 +572,7 @@ public class PropagatedArcsEdgeTests
         var after = arcs[1][0];
 
         // R, the matrix of pxform(frame, J2000), by the images of the axes; the covariance of the solution in ICRF, R6 P R6ᵀ
-        var q = SpiceAPI.Instance.TransformFrame(Start, frame, Frame.ICRF).Rotation;
+        var q = SpiceApi.Instance.TransformFrame(Start, frame, Frame.ICRF).Rotation;
         Vector3[] columns = [Vector3.VectorX.Rotate(q), Vector3.VectorY.Rotate(q), Vector3.VectorZ.Rotate(q)];
         double R(int i, int j) => i switch { 0 => columns[j].X, 1 => columns[j].Y, _ => columns[j].Z };
         Matrix InIcrf(Matrix p)
@@ -856,7 +856,7 @@ public class PropagatedArcsEdgeTests
         var directory = new DirectoryInfo("CosmographiaExport540");
         await new CosmographiaExporter().ExportAsync(scenario, directory);
         var spk = directory.GetFiles($"{sc.Name}.spk", SearchOption.AllDirectories).Single();
-        SpiceAPI.Instance.LoadKernels(spk);
+        SpiceApi.Instance.LoadKernels(spk);
         try
         {
             var kernel = new Spacecraft(sc.NaifId, sc.Name, Start, 1000.0, 3000.0, new Clock(sc.Name + "K_CLK", 65536));
@@ -875,7 +875,7 @@ public class PropagatedArcsEdgeTests
         }
         finally
         {
-            SpiceAPI.Instance.UnloadKernels(spk);
+            SpiceApi.Instance.UnloadKernels(spk);
         }
     }
 
@@ -902,7 +902,7 @@ public class PropagatedArcsEdgeTests
         var atTca = new StateVector(r + axis * 200.0, turned, earth, tca, Frame.ICRF);
         double back = -PropagationTimeArgument.Tt.SecondsBetween(Start, tca);
         long ticks = (long)System.Math.Round(back * TimeSpan.TicksPerSecond);
-        var initial = SpiceAPI.Instance.Propagate2Bodies(atTca, earth.GM, TimeSpan.FromTicks(ticks));
+        var initial = SpiceApi.Instance.Propagate2Bodies(atTca, earth.GM, TimeSpan.FromTicks(ticks));
         initial = new StateVector(initial.Position, initial.Velocity, earth, Start, Frame.ICRF);
         var protectedCraft = new Spacecraft(-5562, "PE5562", 1000.0, initial, 3000.0, new Clock("PE5562_CLK", 65536));
         var protectedSolution = protectedCraft.Propagate(window, new PropagationOptions { Integrator = new RK78IntegratorOptions { AbsoluteTolerance = 1e-12, RelativeTolerance = 1e-12 }, OutputStep = step, ThirdBodies = [earth], CovariancePropagation = CovariancePropagationOptions.None });
@@ -1007,7 +1007,7 @@ public class PropagatedArcsEdgeTests
         foreach (var instrument in run.Spacecraft.Instruments.Where(x => x.Name is "BEFORE" or "AFTER"))
         {
             var managed = instrument.FindFieldOfViewWindows(search, run.Earth, new FieldOfViewSearchOptions { Step = step, TargetShape = ShapeType.Point, TargetFrame = run.Earth.Frame }).ToArray();
-            var spice = SpiceAPI.Instance.FindWindowsInFieldOfViewConstraint(search, run.Spacecraft.NaifId, instrument.NaifId, run.Earth.NaifId, run.Earth.Frame, ShapeType.Point,
+            var spice = SpiceApi.Instance.FindWindowsInFieldOfViewConstraint(search, run.Spacecraft.NaifId, instrument.NaifId, run.Earth.NaifId, run.Earth.Frame, ShapeType.Point,
                 Aberration.None, step).ToArray();
             Assert.Single(managed);
             Assert.Equal(spice.Length, managed.Length);

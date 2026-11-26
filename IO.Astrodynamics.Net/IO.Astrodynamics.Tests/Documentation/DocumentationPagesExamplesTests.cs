@@ -24,7 +24,7 @@ using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Xunit;
 using Xunit.Abstractions;
-using TLE = IO.Astrodynamics.OrbitalParameters.TLE.TLE;
+using Tle = IO.Astrodynamics.OrbitalParameters.TLE.Tle;
 
 namespace IO.Astrodynamics.Tests.Documentation;
 
@@ -444,7 +444,7 @@ public class DocumentationPagesExamplesTests
         var lines = block.SelectMany(l => Regex.Matches(l, "\"([12] [^\"]+)\"").Select(m => m.Groups[1].Value)).ToList();
         Assert.Equal(2, lines.Count);
 
-        var printed = RunAsReader(page, 1, st => st == "SpiceAPI.Instance.LoadKernels(new DirectoryInfo(\"Data/SolarSystem\"));")
+        var printed = RunAsReader(page, 1, st => st == "SpiceApi.Instance.LoadKernels(new DirectoryInfo(\"Data/SolarSystem\"));")
             .Split('\n').Select(l => l.TrimEnd('\r')).Where(l => l.Contains(':')).ToDictionary(l => l[..l.IndexOf(':')], l => l[(l.IndexOf(':') + 1)..].Trim());
         _output.WriteLine($"MEASURE #705 TLE tutorial, first block: {string.Join("; ", printed.Select(p => $"{p.Key}: {p.Value}"))}");
         Assert.Equal("ISS (ZARYA)", printed["Name"]);
@@ -597,8 +597,8 @@ public class DocumentationPagesExamplesTests
         // The separation of the discs minus the sum of their angular radii, for the Earth's radius given
         double Margin(TimeSystem.Time at, double earthRadius)
         {
-            var toEarth = SpiceAPI.Instance.ReadEphemeris(at, 10, 399, Frames.Frame.ICRF, Aberration.None).Position;
-            var toMoon = SpiceAPI.Instance.ReadEphemeris(at, 10, 301, Frames.Frame.ICRF, Aberration.None).Position;
+            var toEarth = SpiceApi.Instance.ReadEphemeris(at, 10, 399, Frames.Frame.ICRF, Aberration.None).Position;
+            var toMoon = SpiceApi.Instance.ReadEphemeris(at, 10, 301, Frames.Frame.ICRF, Aberration.None).Position;
             return Angle(toEarth, toMoon) - System.Math.Asin(earthRadius / toEarth.Magnitude()) - System.Math.Asin(moon.EquatorialRadius / toMoon.Magnitude());
         }
 

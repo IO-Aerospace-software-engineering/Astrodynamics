@@ -506,7 +506,7 @@ public class EquinoctialElementsSingularityTests
         // rest of the conversion dominates, and the former error of E offset part of it. Its threshold went from
         // 2.7e-15 to 2.8e-15; the test passed with 2.7e-15: a re-measurement after an intended change of results, not
         // a relaxation
-        var spice = SpiceAPI.Instance.ConvertStateVectorToConicOrbitalElement(state);
+        var spice = SpiceApi.Instance.ConvertStateVectorToConicOrbitalElement(state);
         bool droppedTilt = spice.AscendingNode() == 0.0 && (spice.Inclination() == 0.0 || spice.Inclination() == System.Math.PI) &&
                            state.SpecificAngularMomentum().X != 0.0;
         var (position, velocity) = RelativeError(back, state);
@@ -689,10 +689,10 @@ public class EquinoctialElementsSingularityTests
                 elements.ToStateVector(Epoch + TimeSpan.FromSeconds(60.0)));
             Assert.Equal("Cannot convert mean elements directly to a state vector. Mean elements require a specific " +
                          "propagator (e.g., SGP4/SDP4) for accurate position calculations. For TLE data, use " +
-                         "TLE.ToOsculating() instead.", atEpoch.Message);
+                         "Tle.ToOsculating() instead.", atEpoch.Message);
             Assert.Equal("Cannot convert mean elements directly to a state vector. Mean elements require a specific " +
                          "propagator (e.g., SGP4/SDP4) for accurate position calculations. For TLE data, use " +
-                         "TLE.ToOsculating(epoch) instead.", atTime.Message);
+                         "Tle.ToOsculating(epoch) instead.", atTime.Message);
         }
     }
 
@@ -827,7 +827,7 @@ public class EquinoctialElementsSingularityTests
                 elementsType: OrbitalElementsType.Mean);
 
             // Act
-            var tle = TLE.Create(elements, "TEST", 25666, "98067A", 0);
+            var tle = Tle.Create(elements, "TEST", 25666, "98067A", 0);
 
             // Assert: the fields of line 2 at the 4 decimals of the TLE, from the closed form with Ω = 0 for an
             // equatorial orbit and ω = 0 for a circular one (before #452: M 115.0000° for the circular orbit, ω 0.0000°

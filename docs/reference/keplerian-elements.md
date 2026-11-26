@@ -83,7 +83,7 @@ geometry is that of the conic (#459, option 1, decided by S. Guillet, 2026-11-17
   1). Any other a, the a of another conic, throws `ArgumentException` (`semiMajorAxis`), as before 11.0.0: the semi-major
   axis, the mean motion, the period and the apoapsis come from a, the state and P from q. Migration from 10.x, where the
   band required +Infinity: give q / (1 − e).
-- The internal `SpiceAPI.ConvertStateVectorToConicOrbitalElement` (public before 11.0.0) gives in the band the conic's a of `oscltx` (−μ/(2ξ)), +Infinity
+- The internal `SpiceApi.ConvertStateVectorToConicOrbitalElement` (public before 11.0.0) gives in the band the conic's a of `oscltx` (−μ/(2ξ)), +Infinity
   where `oscltx` gives none (e = 1 or a zero energy), and the perigee radius.
 
 The motion of the band counts from the periapsis in universal variables, the universal anomaly χ with z = (1 − e) χ²/q

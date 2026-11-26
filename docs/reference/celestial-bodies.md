@@ -38,7 +38,7 @@
 | `CelestialBody(NaifObject, geopotentialModelParameters = null, atmosphericModel = null, albedo = 0, thermalEffectiveTemperature = 0, thermalEmissivity = 0)` | Create with a geopotential, an atmosphere and radiation properties (named arguments for the last three, e.g. `albedo: 0.3`) |
 
 A body built from its identifier (`new CelestialBody(id)`, `CelestialItem.Create(id)`) reads its constants from the
-loaded kernels through the data provider (`SpiceAPI.GetCelestialBodyInfo` for the default `SpiceDataProvider`):
+loaded kernels through the data provider (`SpiceApi.GetCelestialBodyInfo` for the default `SpiceDataProvider`):
 
 - its name, which SPICE gives (`bodc2n_c`, built-in names or a kernel's `NAIF_BODY_NAME`); an identifier SPICE does not
   name throws `ArgumentException` (#672), as one that is not a celestial body does (#560);

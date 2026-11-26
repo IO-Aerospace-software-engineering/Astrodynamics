@@ -6,7 +6,7 @@ namespace IO.Astrodynamics.OrbitalParameters.TLE;
 
 /// <summary>
 /// The settings of the fit of <see cref="OrbitalParameters.ToTle"/> and the fields it writes besides the elements, in the
-/// order and with the meaning of <see cref="TLE.Create"/>'s (decision 113 of #668, decided by S. Guillet, 2026-11-26: the
+/// order and with the meaning of <see cref="Tle.Create"/>'s (decision 113 of #668, decided by S. Guillet, 2026-11-26: the
 /// record <c>TLE.Configuration</c> before 11.0.0, whose name, NORAD id and COSPAR id are now parameters of
 /// <c>ToTle</c> and whose <c>Tolerance</c>, never read, is removed, #833). Every default is the former one.
 /// </summary>
@@ -15,11 +15,11 @@ public sealed record TleFitOptions
     /// <summary>The options of every default, as <c>new()</c>.</summary>
     public static TleFitOptions Default { get; } = new();
 
-    /// <summary>The revolution number at epoch, 0 to 99999 (default 0), checked by <see cref="TLE.Create"/>.</summary>
+    /// <summary>The revolution number at epoch, 0 to 99999 (default 0), checked by <see cref="Tle.Create"/>.</summary>
     public int RevolutionNumberAtEpoch { get; init; }
 
     /// <summary>The security classification of the object (default <c>Unclassified</c>).</summary>
-    public Classification Classification { get; init; } = Classification.Unclassified;
+    public TleClassification Classification { get; init; } = TleClassification.Unclassified;
 
     /// <summary>The B* drag term, in 1/earth radii (default 0.0001), the initial value of the fit and the field written.</summary>
     public double BStar { get; init; } = 0.0001;
@@ -32,9 +32,9 @@ public sealed record TleFitOptions
     /// (#605).</summary>
     public double MeanMotionDDot { get; init; }
 
-    /// <summary>The element set number, 0 to 9999 (default <see cref="TLE.DefaultElementSetNumber"/>, 999, #606), checked by
-    /// <see cref="TLE.Create"/>.</summary>
-    public int ElementSetNumber { get; init; } = TLE.DefaultElementSetNumber;
+    /// <summary>The element set number, 0 to 9999 (default <see cref="Tle.DefaultElementSetNumber"/>, 999, #606), checked by
+    /// <see cref="Tle.Create"/>.</summary>
+    public int ElementSetNumber { get; init; } = Tle.DefaultElementSetNumber;
 
     private readonly int _maxIterations = 15;
 

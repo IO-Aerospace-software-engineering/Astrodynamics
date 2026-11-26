@@ -9,7 +9,7 @@ Integrators advance spacecraft state through time under configured force models.
 | `Initialize(StateVector)` | Set the observer, the frame and the epoch of the evaluations, and reset every state a run depends on (step, step-control history, event bookkeeping); called by every `CentralBodyPropagator` constructor, at the start of every run and after each event |
 | `IntegrateSegment(pos, vel, baseEpoch, duration, eventDetectors)` | Advance state, returning `IntegrationResult` |
 
-`IntegrationResult` contains the completed `PropagationSegment` and optional event information (`EventInfo`) if a detector triggered during the segment; both are read-only record structs (11.0.0: their properties had public setters before).
+`IntegrationResult` contains the completed `PropagationSegment` and optional event information (`IntegrationEvent`) if a detector triggered during the segment; both are read-only record structs (11.0.0: their properties had public setters before).
 
 A custom integrator collects the `AcceptedStep` values of its segment and builds the segment once, with
 `new PropagationSegment(baseEpoch, steps)`, which copies them, or `new PropagationSegment(baseEpoch)` for a segment of no

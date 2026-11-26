@@ -70,7 +70,7 @@ geopotential parameters as a value, a null covariance option of the conjunction 
 batch with a constructor of options, the outputs of a propagation that end at its window end whatever its step, a
 reversed window, a negative hold and a step of zero refused, the token of the methods that run, which stops a running
 batch too, the propagators no longer `IDisposable`, a reused propagator that refuses a spacecraft whose initial orbit
-changed, a `TLEPropagator` run that re-arms the spacecraft and replaces its stored states, `AddPropagatedStates` one
+changed, a `TlePropagator` run that re-arms the spacecraft and replaces its stored states, `AddPropagatedStates` one
 window per call, the maneuver plan of `SetManeuvers` with a closed `Maneuver` hierarchy and pure previews, and the
 results of a run, read through `GetStateVector` and the records of `PropagationSolution.Maneuvers`, immutable from
 outside, and a first spacecraft in a few arguments: the orbit fourth with the maximum operating mass and the clock
@@ -87,7 +87,7 @@ labelled in the scale of the search window, the occultation of a site observer s
 threshold checked against its range, and the window reads on the grid of `Window.Sample`, and the conjunction analysis
 on the protected `Spacecraft` with one `ConjunctionAnalysisOptions` for the screening and the avoidance, an
 `AvoidanceStudy` whose grid is the constraint, a window past the stored states `InvalidOperationException` and the
-constructors of its results internal, a `TLE` checked field by field and read without kernels, its mean motion the
+constructors of its results internal, a `Tle` checked field by field and read without kernels, its mean motion the
 field's, one verb set for the CCSDS messages with the CDM checked when it is read and written, `Opm.ToSpacecraft` of one
 sectional area and `Spacecraft.ToOpm` of `OpmExportOptions`, the fit `ToTle` of `TleFitOptions`, the time
 quantities in double seconds named so, one constructor of `CentralBodyPropagator` with an integrator and the `Time`
@@ -97,7 +97,7 @@ parameters named `epoch`.
 (`FindWindowsOn…Constraint` of `CelestialItem`, `ILocalizable` and `Site`, `Instrument.FindWindowsInFieldOfViewConstraint`
 and the instance `GeometryFinder`, now the searches on the observer),
 `ExceptionBase`, `Matrix.Set`, `Vector3 * Vector3`, six exports of the native library that .NET never called, the
-public interop structs of `IO.Astrodynamics.DTO`, the ten raw conversions of `SpiceAPI`, the public helpers of the
+public interop structs of `IO.Astrodynamics.DTO`, the ten raw conversions of `SpiceApi`, the public helpers of the
 implementation, the `Equatorial` constructors of two angles and the coordinate conversions taking a flattening and a
 radius, `GeopotentialModelParameters.GeopotentialModelPath`, the public constructors of `GeopotentialGravitationalField`
 and `VVIntegrator.DeltaTs`, and the members that propagate without `PropagationOptions` or an integrator that holds its
@@ -108,7 +108,7 @@ and `MonteCarloPropagator` `PropagateAsync`), the token and progress of `BatchOp
 `InitialManeuver` and `Maneuver.SetNextManeuver`, `Attitude.StateOrientation`, `Spacecraft.GetTotalFuel`, the value
 equality of `FuelTank`, `Engine` and `Payload`, the `ILocalizable` constructors of `TriadAttitude` and
 `InstrumentPointingToAttitude.Aberration`, `ProtectedSpacecraftProfile` and `ManeuverConstraints`, the covariance
-ages of `EncounterState`, `TLE.MeanMotion()`, the CCSDS verbs of 10.x (`LoadFrom…`, `SaveTo…`, `ToXmlString`, the
+ages of `EncounterState`, `Tle.MeanMotion()`, the CCSDS verbs of 10.x (`LoadFrom…`, `SaveTo…`, `ToXmlString`, the
 CDM's `ReadFrom…` and `WriteTo…`), `KeplerianElements.FromOMM` and the `useMeanMotion` constructor of `MeanElements`, `TLE.Configuration`, `KeplerianElements.A` to `M` and
 the five methods of `EquinoctialElements` that repeated its symbols. Several results change: see **Fixed** and **Changed**. The open defects a caller can meet at this
 release are listed under **Known limitations**.
@@ -169,7 +169,7 @@ release are listed under **Known limitations**.
   - **The XML documentation is packed with the library** (`IO.Astrodynamics.Net.xml`), so an IDE shows the comments of
     the package. Its 89 warnings of #556 and later are fixed: 13 references the compiler could not resolve, which the
     file held as broken links, 17 that named several overloads, 4 tags of no parameter (the three of the orphaned
-    comment above `Matrix.Cholesky` and a stale `output` tag in `NRLMSISE00`) and 55 parameters without a tag, among them the albedo and thermal parameters of the
+    comment above `Matrix.Cholesky` and a stale `output` tag in `Nrlmsise00`) and 55 parameters without a tag, among them the albedo and thermal parameters of the
     `CelestialBody` constructors ([#556](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/556)).
   - **Checks of the naming rules (D2, N1 to N3, namespaces included, each overload on its own), of the options rule
     (D1: the options types and parameters, the members with two bools or more, the doubles named `Step`, `Duration` or
@@ -179,7 +179,7 @@ release are listed under **Known limitations**.
   - The later lots of #668 rename or remove a member outright, with no `[Obsolete]` forwarder (decided by S. Guillet,
     2026-11-19): each change is listed in these notes, under **Changed** as **Breaking** with its migration, or under
     **Removed**, and documented in the reference pages.
-- **Kernel loading: `SpiceAPI.ReloadKernels` and the string overloads** (lot L1 of the ergonomics review, R01 of
+- **Kernel loading: `SpiceApi.ReloadKernels` and the string overloads** (lot L1 of the ergonomics review, R01 of
   [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668), structuring choice 9, decided
   by S. Guillet, 2026-11-19). `ReloadKernels(FileSystemInfo)` and `ReloadKernels(string)` read a path again, on top of
   the kernels loaded after it: its loaded files are unloaded, then all its files loaded (a kernel rewritten on disk;
@@ -210,7 +210,7 @@ release are listed under **Known limitations**.
   SPICE's code (`SPICE(SPKINSUFFDATA)`, `SPICE(KERNELVARNOTFOUND)`, `SPICE(FRAMEDATANOTFOUND)`) and `LongMessage` SPICE's
   long message, its `Message` the call that failed followed by SPICE's message as before. The native layer reports the
   short and long messages beside its message (`GetLastErrorShortProxy`, `GetLastErrorLongProxy`, the P/Invoke
-  declarations of `SpiceAPI` in step), equal to those CSPICE gives for the same call (`SpiceExceptionTests`, the C++
+  declarations of `SpiceApi` in step), equal to those CSPICE gives for the same call (`SpiceExceptionTests`, the C++
   tests `AFailed*`). Under **Changed**, the calls that throw it.
 - **`CcsdsFormatException`**, a `FormatException` in `IO.Astrodynamics.CCSDS`, the common base of the five exceptions of
   the CCSDS readers (R03 of #668, section A): one `catch (CcsdsFormatException)` covers a document an OMM, OPM or CDM
@@ -264,10 +264,10 @@ release are listed under **Known limitations**.
   Guillet, 2026-11-19), `IO.Astrodynamics.DataProvider`: the information a data provider gives on a celestial body, a
   public sealed record of SI values, `CelestialBodyInfo(NaifId, Name, CenterOfMotionId, BarycenterOfMotionId, Radii,
   GM, FrameName, FrameId = 0, J2 = NaN, J3 = NaN, J4 = NaN)`, `Radii` a `Vector3` in m, equal to another when every
-  value is (NaN equal to NaN). `SpiceAPI.GetCelestialBodyInfo` gives the native record field for field, bit for bit
+  value is (NaN equal to NaN). `SpiceApi.GetCelestialBodyInfo` gives the native record field for field, bit for bit
   (`CelestialBodyInfoTests`, against the native record and the kernel texts of `gm_de440.tpc` and `pck00011.tpc`). It
   replaces the public interop struct `IO.Astrodynamics.DTO.CelestialBody` on the provider seam (under **Changed**). See
-  [SpiceAPI & Data Providers](../reference/spice-api.md#the-provider-seam).
+  [SpiceApi & Data Providers](../reference/spice-api.md#the-provider-seam).
 - **The default ephemeris reads and the coordinates in one call** (lot L3 of the ergonomics review, R20 of
   [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668), choices 1 and 3 and section A of the
   re-baseline, decided by S. Guillet, 2026-11-19). `CelestialItem.GetEphemeris(epoch, observer)` and
@@ -352,7 +352,7 @@ release are listed under **Known limitations**.
   in TDB labels, the span the reads accept (the check of before, unchanged: an epoch of any scale, read in the seconds
   of the time argument, one tick allowed at each end), and a read outside it throws `ArgumentOutOfRangeException` naming
   it (its message said "The epoch is outside the propagation." before); `Observer` and `Frame`, the observer and frame
-  of the states, internal before, are public and get-only, and a `TLEPropagator` solution sets them to those of its
+  of the states, internal before, are public and get-only, and a `TlePropagator` solution sets them to those of its
   samples, the TLE's Earth and `Frame.TEME`, so `GetStateVector` reads it, SGP4 at the samples bit for bit
   (`SolutionWindowTests`; before, it threw `InvalidOperationException`, the observer and frame unknown, [#803](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/803)
   (c)). No value moves.
@@ -386,7 +386,7 @@ release are listed under **Known limitations**.
   `Epoch` (the TDB label of the event of an impulse, or the activation of an attitude), the unclipped `ThrustWindow`,
   `ManeuverWindow`, `DeltaV` in the frame of the solution (zero for an attitude), `FuelBurned`, `MassBefore` and
   `MassAfter` (`GetTotalMass`, the child included), built by the propagation only. They keep the values of their run,
-  where the definitions hold those of their last run only, reset by the next run's re-arm; empty for a `TLEPropagator`
+  where the definitions hold those of their last run only, reset by the next run's re-arm; empty for a `TlePropagator`
   solution (`ExecutedManeuverRecordTests`: the definitions as the run left them, the segment an impulse opens at its
   epoch with its delta-V, the rocket equation of the mass before, on `Spacecraft.Propagate`, a reused
   `CentralBodyPropagator`, a batch and a scenario, both integrators, ICRF, ECLIPJ2000 and SSB mode, values unchanged by
@@ -407,7 +407,7 @@ release are listed under **Known limitations**.
   the spacecraft, a maneuver given no centre the observer of its initial orbit when it is a celestial body other than a
   star, and a spacecraft without a tank or an engine runs a plan of attitudes (under **Changed**;
   [The engine and the centre](../reference/impulse-maneuvers.md#the-engine-and-the-centre)).
-- **`SpiceAPI.TryGetNaifId(string, out int)`: the NAIF identifier of a body name** (lot L8 of the ergonomics review,
+- **`SpiceApi.TryGetNaifId(string, out int)`: the NAIF identifier of a body name** (lot L8 of the ergonomics review,
   choice 12 of [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668), decided by
   S. Guillet, 2026-11-19), SPICE's `bodn2c_c` through the new native `GetNaifIdProxy`: SPICE's built-in names and those
   of the loaded kernels, in any case, false for a name SPICE does not know (`docs/reference/spice-api.md`, "Body names").
@@ -422,7 +422,7 @@ release are listed under **Known limitations**.
   finalizer, unloads exactly what the call loaded and leaves the files on disk. Every check runs before anything is
   written, created or loaded, with `InvalidOperationException`: a kernel-backed spacecraft; by content (decision 81),
   no stored state, no arc an SPK can write (an arc of one state, which `WriteEphemeris` refuses with
-  `ArgumentException`, decision 87), states without attitude record (a `TLEPropagator` run records none: given
+  `ArgumentException`, decision 87), states without attitude record (a `TlePropagator` run records none: given
   attitudes by `AddStateOrientationToICRF` after the run, such a spacecraft is written, #546); the names (the kernel
   variables of #676 and the portable file-name rule of #799(a)); the load scope (decision 80): a directory that is, or
   lies inside, a loaded directory, and a file it would write that SPICE holds, from a load of the library, a live handle
@@ -502,25 +502,25 @@ release are listed under **Known limitations**.
 - **The command-line tool: names, kernels from the environment, csv and json, the scale of its epochs** (lot L8 of the
   ergonomics review, R29 of #668, choice 12, decided by S. Guillet, 2026-11-19; `docs/reference/cli.md`, its help
   generated from the tool and compared by `CliPageTests`). An object is a NAIF identifier or a name SPICE knows (`MOON`,
-  `DSS-13`, a name the loaded kernels give), read through `SpiceAPI.TryGetNaifId`; `-K` is repeatable and follows the
+  `DSS-13`, a name the loaded kernels give), read through `SpiceApi.TryGetNaifId`; `-K` is repeatable and follows the
   paths of the environment variable `ASTRO_KERNELS`; `--format csv` writes the rows of `ephemeris`, `orientation` and the
   window searches, `--format json` the record of `celestial-body-info`, `sub-point`, `angular-separation`,
   `frame-converter` and `orbital-parameters-converter`, field names with their unit and every real in its shortest
   round-trip form; `--time-scale tdb|tt|tai|utc|gps` writes the epochs in another scale than the input's; a value takes
   a unit (`400000km`, `7.5km/s`, `51.6deg`); `propagate --integrator rk78|vv` and `--atmosphere nrlmsise00|standard`
   choose the integrator and the atmosphere of the Earth; `--verbose` writes the trace of an error.
-- **`TLE.MeanMeanMotion`** (lot L7, R21 of [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668),
+- **`Tle.MeanMeanMotion`** (lot L7, R21 of [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668),
   decision 111, decided by S. Guillet, 2026-11-26): the mean motion of the field of line 2 in rad/s, the field (rev/day)
   × 2π / 86400, read without kernels; mean, like `MeanInclination` (`TleMeanMotionTests`). See [TLE](../reference/tle.md).
 - **`TleFormatException`, the fields of a TLE as properties, and a TLE without a name** (lot L7, R21 of
   [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668)): `TleFormatException`, a
-  `FormatException` with the `Line` and `Column` (1-based) of the field at fault; `TLE.CosparId` (columns 10-17 trimmed,
+  `FormatException` with the `Line` and `Column` (1-based) of the field at fault; `Tle.CosparId` (columns 10-17 trimmed,
   null when blank), `Classification`, `ElementSetNumber` and `RevolutionNumberAtEpoch` (0 when blank), so that
-  `TLE.Create(tle.ToMeanKeplerianElements(), tle.Name, tle.NoradCatalogId, tle.CosparId, tle.RevolutionNumberAtEpoch,
+  `Tle.Create(tle.ToMeanKeplerianElements(), tle.Name, tle.NoradCatalogId, tle.CosparId, tle.RevolutionNumberAtEpoch,
   tle.Classification, …, tle.ElementSetNumber)` rebuilds the lines without slicing them (`TleFieldsTests`); a null or blank
   name is the catalog field of line 1 as written (`25544`, `T5544`), where it threw `ArgumentException`. `ToOmm` writes the
   same OMM. See [TLE](../reference/tle.md#constructor).
-- **`TLE.Parse`, `ParseAll`, `Load`, `LoadAll`, `TryParse`, `TryLoad` and `IParsable<TLE>`** (lot L7, R21 of
+- **`Tle.Parse`, `ParseAll`, `Load`, `LoadAll`, `TryParse`, `TryLoad` and `IParsable<Tle>`** (lot L7, R21 of
   [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668), the verb set shared with the CCSDS
   messages): one set or every set of a text (`string` or `TextReader`) or a file, two- and three-line sets mixed, CR/LF,
   trailing blanks and blank lines ignored, a name trimmed and Space-Track's `0 ` before it removed; a bad set throws
@@ -744,7 +744,7 @@ release are listed under **Known limitations**.
   620 m off in ITRF93 and 1.48 km in MOON_ME, the Moon from a spacecraft 675 m in ITRF93, the Sun from it 228 km, a site
   given by its coordinates 38 km in its own topocentric frame seen from the Moon. The library now does as `spkezr_c`:
   the centre of a SPICE frame is SPICE's (`frinfo_c`, through the new native `GetFrameInfoProxy`, `namfrm_c` and
-  `frinfo_c`, a native change for a technical reason, decided by S. Guillet, 2026-11-18, and the internal `SpiceAPI.NonInertialFrameCenter`), that of the library's frames the site of a site frame,
+  `frinfo_c`, a native change for a technical reason, decided by S. Guillet, 2026-11-18, and the internal `SpiceApi.NonInertialFrameCenter`), that of the library's frames the site of a site frame,
   the spacecraft of a spacecraft frame, the Earth for TEME, CIRS and TIRS; the rotation is read at the 100 ns of a `Time`
   and carried to the exact epoch by the frame's angular velocity. The centre may be a third object, neither the observer
   nor the target, read as the reference-body path reads it: the site of a site frame (a site given by its coordinates
@@ -771,7 +771,7 @@ release are listed under **Known limitations**.
   reference-body path since #593 take a non-inertial frame at t ∓ lt_c of its centre (measured on f70ee32: the Earth
   from the Moon with `LT` 3.93e4 m off in TIRS, in the frame of a site given by its coordinates and in that of a
   spacecraft; the Moon from the Earth 618 m off in the site's frame and 671 m in the spacecraft's; TEME 4.3 mm, CIRS
-  0.93 mm). `SpiceAPI.ReadEphemeris` (by identifiers, both overloads, and the reads of `SpiceDataProvider`, so
+  0.93 mm). `SpiceApi.ReadEphemeris` (by identifiers, both overloads, and the reads of `SpiceDataProvider`, so
   `GetEphemeris` of a pair CSPICE reads) now rotates such a read by the rule of the reference-body path (the internal
   `CelestialItem.ToManagedFrameAtTheCenterEpoch`): lt_c the light time of `spkltc` from the observer to the frame's
   centre by the light-time method of the correction, both read from the solar system barycenter (the observer and, for
@@ -782,7 +782,7 @@ release are listed under **Known limitations**.
   given by its coordinates and in the frame of a spacecraft held as an attitude record of ITRF93, against `spkezr_c` in
   the TK frames of `tools/light_time_reference` (new rows), 3.3e-7 m and 7.6e-9 m/s, and 1.6e-3 m and 1.2e-7 m/s, the
   resolution of the record's epoch as for #593; the Earth from the Moon in TIRS, CIRS, TEME and a frame named "tirs",
-  through `GetEphemeris`, `SpiceAPI.ReadEphemeris` and its window read, 0 from the ICRF read rotated at t ∓ lt of the
+  through `GetEphemeris`, `SpiceApi.ReadEphemeris` and its window read, 0 from the ICRF read rotated at t ∓ lt of the
   Earth with the rate of its light time, a closed form that reproduces `spkezr_c` in ITRF93 to 2.4e-7 m and 7.7e-9 m/s;
   the Moon from the Earth in TIRS and every geometric read bit for bit (thresholds twice the worst over Linux x64,
   Windows x64 and macOS arm64, CI run 44395076184).
@@ -847,7 +847,7 @@ release are listed under **Known limitations**.
   `base.Equals` was reference equality, so every two instances reached the states): they threw
   `InvalidOperationException` for mean elements (`FromOMM`, `ToMeanKeplerianElements()`, a mean `EquinoctialElements`),
   against any operand and even against null, and for e = NaN, found two different sets with M = NaN or a = NaN equal
-  (NaN states), ran SGP4 twice for a TLE (`TLE.Equals(TLE)` called the base, and threw for a TLE whose SGP4 fails), and
+  (NaN states), ran SGP4 twice for a TLE (`Tle.Equals(TLE)` called the base, and threw for a TLE whose SGP4 fails), and
   every `GetHashCode` combined the identity of the instance, so equal copies hashed differently and a
   `HashSet<OrbitalParameters>` of identical mean copies threw at the first identity-hash collision. Equality is now
   value equality within one concrete type, computing no state, with a hash code of the same values (Changed below);
@@ -861,7 +861,7 @@ release are listed under **Known limitations**.
   it), and `Iau2006Model.FrameBias()` returned its cached static, which any caller could corrupt for the next. They now
   copy in and out (internal `Matrix.Copy`, which `CdmCovarianceMatrix` takes since #717), `Matrix` kept mutable (decided
   by S. Guillet, 2026-11-17: `Set` is how callers build a covariance); `MatrixHoldersTests` (red on a85098d: 6 of its 7 tests, the default matrix held as it is passing).
-- **`TLEPropagator` counted its samples in whole seconds** ([#598](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/598)). Its
+- **`TlePropagator` counted its samples in whole seconds** ([#598](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/598)). Its
   sample count was `(uint)L / (uint)ΔT + 1` for a window of L seconds: a step below 1 s divided by zero
   (`DivideByZeroException`), a fractional step was counted as its whole seconds, so its samples i·ΔT ran past the window
   end (1.5 s over 10 s: 11 samples to +15 s), and a window that the step does not divide lost its end (90 s at 60 s:
@@ -873,7 +873,7 @@ release are listed under **Known limitations**.
   ticks longer or shorter in TDB, one UTC hour from the ISS TLE's epoch 3600 s and 11 ticks, and with ceil(L/ΔT) + 1
   samples its 62nd, 1.1 µs after the 61st, puts the stored-state read of the sampled spacecraft 4.336e3 m off SGP4 at
   +3570 s (`TlePropagationTests`, Linux x64), the defect of two stored states a few ticks apart listed under **Known
-  limitations**, which the rule keeps `TLEPropagator` from meeting without fixing it; a step of zero or less throws `ArgumentOutOfRangeException` (`deltaT`) as the integrators do since #674. A window given in TDB that a
+  limitations**, which the rule keeps `TlePropagator` from meeting without fixing it; a step of zero or less throws `ArgumentOutOfRangeException` (`deltaT`) as the integrators do since #674. A window given in TDB that a
   whole-second step divides keeps its samples and its solution, bit for bit (`TLEPropagatorTests`: 121 samples at 0.5 s
   over 1 min, 3 at 60 s over 90 s, 8 at 1.5 s over 10 s, 61 at 60 s over 3600.5 s and over one UTC hour, the last at the
   window end, red on a85098d; 61 at 60 s over 3600 s unchanged; between +60 s and +90 s the Hermite of the 30 s step is
@@ -1002,9 +1002,9 @@ release are listed under **Known limitations**.
   `TransformFrameProxy` returned the zero quaternion: `Analyze` of two kernel-backed spacecraft past their SPKs gave a
   TCA with a miss of 0 m and 2888 SPICE messages on stdout. The native read now writes NaN and keeps the SPICE message
   for `GetLastErrorProxy` (4 lines, the second change of the frozen C++ layer in 11.0.0, decision of S. Guillet,
-  2026-11-09), and `SpiceAPI.ReadEphemeris` (at an epoch and over a window), every `GetEphemeris` of a kernel-backed
+  2026-11-09), and `SpiceApi.ReadEphemeris` (at an epoch and over a window), every `GetEphemeris` of a kernel-backed
   object and the kernel-backed `Spacecraft` constructor throw `InvalidOperationException` with that message
-  ("Insufficient ephemeris data has been loaded ..."). `SpiceAPI.TransformFrame` throws when SPICE gives no rotation
+  ("Insufficient ephemeris data has been loaded ..."). `SpiceApi.TransformFrame` throws when SPICE gives no rotation
   (a quaternion whose norm is not 1 to 1e-9), naming the frames and the epoch, for every frame (only the TEME path did
   before). Reads inside the coverage do not move. A read at the very first instant of an SPK can fall a fraction of a
   tick before it (the 100 ns of a `Time` in TDB) and now throws: the LRO tracking test starts 5 minutes after its SPK,
@@ -1085,24 +1085,24 @@ release are listed under **Known limitations**.
   the other tests of the provider do, with the same two assertions; no other test changes the global provider.
   The library is unchanged.
 - **A TLE converted on one thread while another first used `PlanetsAndMoons` hung the process** ([#623](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/623)).
-  `SpiceAPI.ConvertTleToStateVector`, so `TLE.ToStateVector`, `TLE.ToOsculating` and every SGP4 propagation, built the
-  Earth of its state, `new CelestialBody(PlanetsAndMoons.EARTH, ...)`, while it held the SpiceAPI lock. Reading
+  `SpiceApi.ConvertTleToStateVector`, so `Tle.ToStateVector`, `Tle.ToOsculating` and every SGP4 propagation, built the
+  Earth of its state, `new CelestialBody(PlanetsAndMoons.EARTH, ...)`, while it held the SpiceApi lock. Reading
   `PlanetsAndMoons` runs its type initializer, which builds `EARTH_BODY` and `MOON_BODY` and so takes the same lock. When
   another thread was running that initializer, the first thread waited for it while holding the lock, and the other
   thread waited for the lock: neither ended, and the runtime, which detects only cycles between type initializers, raised
-  nothing. The audit of the other locked sections found the same pattern in both `SpiceAPI.ReadEphemeris` overloads by
+  nothing. The audit of the other locked sections found the same pattern in both `SpiceApi.ReadEphemeris` overloads by
   NAIF ids: their observer, `CelestialItem.Create(observerId)`, was built under the lock, and for a Lagrange point (391 to
   395) the constructor of `LagrangePoint` reads `Barycenters.EARTH_BARYCENTER`, whose initializer takes the lock. Now
   only the native call runs under the lock in `ConvertTleToStateVector`, the zero-state check and the Earth after it,
   and `ReadEphemeris` builds its observer before it; the states are the same bit for bit (same native calls, same
   inputs). No other code of the library under the lock reaches `PlanetsAndMoons`, `Stars` or `Barycenters`, the only type
   initializers of the library that read SPICE. Code a caller supplies could still run under it: a custom `IDataProvider`,
-  through the bodies the element conversions of `SpiceAPI` built (no longer since #664 and #725) and the frames of an
+  through the bodies the element conversions of `SpiceApi` built (no longer since #664 and #725) and the frames of an
   ephemeris read in TEME, CIRS or TIRS, and the enumeration of the states given to `WriteEphemeris` or `WriteOrientation`
   (before the lock since #661); it must not read the three classes.
   - **Measured** (Linux x64, 4 cores, Release, 2026-11-11), each run a fresh process, two threads started behind a
     barrier, a run hung when it had not ended 3 s after its start: before the fix, `ConvertTleToStateVector` against the
-    first read of `PlanetsAndMoons.EARTH_BODY` hung 120 of 120 runs, `TLE.ToStateVector` 35 of 200, `ReadEphemeris` from
+    first read of `PlanetsAndMoons.EARTH_BODY` hung 120 of 120 runs, `Tle.ToStateVector` 35 of 200, `ReadEphemeris` from
     L1 against the first read of `Barycenters.EARTH_BARYCENTER` 120 of 120; with the first thread started once the second
     is inside the initializer (a data provider holds it there 200 ms), every run of the three hung (40, 40 and 30 runs).
     The window overload of `ReadEphemeris` from L1, with only its fix reverted, hung 3 of 3 runs of each kind, while the
@@ -1110,7 +1110,7 @@ release are listed under **Known limitations**.
     run takes 0.11 to 0.40 s, 0.12 to 0.53 s with the 4 cores kept busy.
   - **Test:** `ColdStartTests` starts the console project `IO.Astrodynamics.Tests.ColdStart`, which the test project
     builds and copies to `ColdStart/` next to its output, with the dotnet host that runs the tests: four cases
-    (`ConvertTleToStateVector`, `TLE.ToStateVector` and both `ReadEphemeris` overloads from L1), 3 children of each
+    (`ConvertTleToStateVector`, `Tle.ToStateVector` and both `ReadEphemeris` overloads from L1), 3 children of each
     with the initializer held and 3 behind the barrier, each required to exit 0 within 60 s, a child that does not
     killed with its process tree. A test inside the test process cannot see the defect, since another test has already
     run the initializers. With the fix reverted the cases fail at their first child.
@@ -1136,9 +1136,9 @@ release are listed under **Known limitations**.
   `TerrestrialSeconds` count from tick-exact labels and the series in double, so they do not depend on it.
   What a double holds limits the cure. From 2017 to 2028 (and 1971 to 1983) an ET comes back exactly, but a tick made
   seconds and back is the neighbouring tick for about 16 % of ticks (its double up to 0.6 tick from it), so
-  `SpiceAPI.ReadEphemeris(Time …)` and the initial state of a kernel-backed spacecraft, which labelled the state with
+  `SpiceApi.ReadEphemeris(Time …)` and the initial state of a kernel-backed spacecraft, which labelled the state with
   the epoch SPICE returned, now carry the epoch asked, as `SpiceDataProvider.GetEphemeris` does, and a window end of the
-  CSPICE searches of `SpiceAPI` at an end of the search window is that end (for example:
+  CSPICE searches of `SpiceApi` at an end of the search window is that end (for example:
   2024-01-11T00:35:02.8486908 TDB was labelled .8486907, and a search ending 2024-02-29T03:34:37.2052700 gave a window
   ending .2052701, outside it; a start could come back a tick inside). The other epochs SPICE gives as seconds (the grid
   of `ReadEphemeris(Window …)` and `ReadOrientation`, a transition inside a window, the element conversions) are the
@@ -1199,17 +1199,17 @@ release are listed under **Known limitations**.
   (`Time.SecondsToTicks`, with the ticks per day, hour and minute for the four methods of `Time`, and the internal
   `Time.SecondsToSpan` for a span, which keeps the exception types of `TimeSpan.FromSeconds`, `OverflowException` from
   922 337 203 685 s, the bound of `SecondsToTicks`, where `TimeSpan.FromSeconds` accepted up to 922 337 203 685.477 s):
-  `OrbitalParameters.Period()` (so the period of the element conversions of `SpiceAPI` and `ProfilesConfiguration`),
+  `OrbitalParameters.Period()` (so the period of the element conversions of `SpiceApi` and `ProfilesConfiguration`),
   `CelestialBody.SideralRotationPeriod` and `TrueSolarDay`, the offsets of the launch windows after the first
   (`Launch.FindLaunchWindows`: half the sidereal period in seconds plus ±2 δL/ω, rounded once, where half the truncated
-  period by integer division was added to the truncated arc), the thrust window of an impulse (`Tsiolkovski.DeltaT`), the hold of `PhasingManeuver`, and the step of the sampled close-approach search,
+  period by integer division was added to the truncated arc), the thrust window of an impulse (`Tsiolkovsky.DeltaT`), the hold of `PhasingManeuver`, and the step of the sampled close-approach search,
   its candidate, seed, secant and subdivision epochs (decided by S. Guillet, 2026-11-17, with the four methods of `Time`).
   The days of `CreateFromJD` from J2000, `julianDate − 2451545.0`, are exact from JD 1225772.5 to 4903090 (Sterbenz's
   lemma). `TimeSpan.FromSeconds` of a constant a tick holds (60 s, 32.184 s, 19 s, whole leap seconds) is not concerned.
   - **Measured** (Linux x64, 2026-11-18, `NearestTickSpanTests`, red on fe72f8e): against the exact integer nearest tick
     of the double (`ExactTicks`) or the closed form evaluated in `decimal` from the double inputs (a value within 0.01
     tick of a half tick not counted), the former truncation was a tick off for 8 733 of 20 000 random spans of magnitude
-    up to 5e9 s, 16 of 23 orbital periods, 10 of 24 periods of the element conversions of `SpiceAPI`, 43 of 80 sidereal periods
+    up to 5e9 s, 16 of 23 orbital periods, 10 of 24 periods of the element conversions of `SpiceApi`, 43 of 80 sidereal periods
     of the Earth and the Moon from SPICE's angular velocity, 24 of 40 angle spans of the true solar day, 16 of 29 burn
     durations of the rocket equation, 15 of 36 phasing holds, 40 of 65 launch window offsets (against π/|ω₀| ± δL P/π
     in `decimal`), 278 of 5 000 steps of the close-approach search, 9 of 27 spans of `AddDays`, `AddHours` and `AddMinutes` and 2 of 6 Julian dates; each now
@@ -1333,12 +1333,12 @@ release are listed under **Known limitations**.
     an impulse) throw with the previous states kept, the builder throw at `Build` or, for a cycle made after it, at
     `Propagate`, the batch report the error; a chain of 200 000 attitudes resets without overflow. With the maneuver
     code of 3eb1edc0 the test host crashes ("Stack overflow").
-- **A CSPICE window search with `NotEqual`, `GreaterOrEqual` or `LowerOrEqual` ended the process** ([#482](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/482)).
+- **A CSPICE window search with `NotEqual`, `GreaterThanOrEqual` or `LessThanOrEqual` ended the process** ([#482](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/482)).
   The native layer parses the relation before it calls `gfdist`, `gfposc` or `gfilum`, and threw a C++ exception that
   nothing caught for `!`, `>=` and `<=` (exit code 134, measured on every CSPICE path: `CelestialItem` and `Site`
   distance and coordinate searches with kernel objects, `Site.FindWindowsOnIlluminationConstraint` of a kernel site, the
-  three `SpiceAPI` searches and the three command-line searches). `SpiceAPI` now hands CSPICE only the relations it
-  knows: `GreaterOrEqual` and `LowerOrEqual` are searched as `>` and `<`, whose windows are closed, so for a quantity that
+  three `SpiceApi` searches and the three command-line searches). `SpiceApi` now hands CSPICE only the relations it
+  knows: `GreaterThanOrEqual` and `LessThanOrEqual` are searched as `>` and `<`, whose windows are closed, so for a quantity that
   crosses the value they are the windows the managed search gives (it bisects the relation itself; the two differ only
   where the quantity stays equal to the value over an interval, which `>` leaves out); `NotEqual`, which CSPICE has
   not, is the search window less the instants of `=`, a window from each crossing to the next, the managed search's
@@ -1347,29 +1347,29 @@ release are listed under **Known limitations**.
   once the spacecraft comes from a kernel. A value outside the enumeration throws `ArgumentOutOfRangeException`. The
   command-line help lists `<=`, `>=` and `!`.
   - **Test:** `SpiceOperatorTests` (18 cases) against `gfdist`, `gfposc` and `gfilum` in spiceypy
-    (`tools/geometry_reference/operators_reference.py`), equal to the tick: the three `SpiceAPI` searches, the coordinate
+    (`tools/geometry_reference/operators_reference.py`), equal to the tick: the three `SpiceApi` searches, the coordinate
     search of a kernel spacecraft (LRO from the Moon) and of a kernel site (DSS-13 from LRO), with the three operators;
     the distance search of a kernel spacecraft both ways and the illumination search of a kernel site against their own
     `>`, `<` and `=` searches (their thresholds carry #466's factor and the native surface point's altitude defect); the
     command line with `>=`, `<=` and `!` (`GeometryFinderTests.DistanceConstraint_OperatorsCspiceHasNot`). With the
-    `SpiceAPI` of 3eb1edc0 the test host crashes ("Invalid relational operator : <=").
+    `SpiceApi` of 3eb1edc0 the test host crashes ("Invalid relational operator : <=").
 - **`new CelestialBody(-82)`, and orientations in several frames written to a CK, ended the process** ([#560](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/560), the comment on [#454](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/454) of 2026-11-02).
   The native body information reads the centre of motion of any identifier SPICE names, and threw a C++ exception that
   nothing caught for one that is not a celestial body, a spacecraft such as CASSINI (-82, a name built into SPICE) or an
   instrument; the native CK writer threw one for records in more than one frame. Both ended the process (exit code 134)
-  with no exception to catch. `SpiceAPI.GetCelestialBodyInfo` now throws `ArgumentException` for an identifier that is
+  with no exception to catch. `SpiceApi.GetCelestialBodyInfo` now throws `ArgumentException` for an identifier that is
   not a celestial body (a barycenter 0 to 9, the Sun 10, a planet, a moon or a Lagrange point 101 to 999, or above 1000:
   the classes of the native layer), named or not, before the native call; so do `new CelestialBody(id)`, the command
-  `celestial-body-info`, the observer of `SpiceAPI.ReadEphemeris` by identifiers (built as a celestial body, a spacecraft
-  observer ended the process there too) and the ellipsoid of `SpiceAPI.FindWindowsOnOccultationConstraint` whose frame is
+  `celestial-body-info`, the observer of `SpiceApi.ReadEphemeris` by identifiers (built as a celestial body, a spacecraft
+  observer ended the process there too) and the ellipsoid of `SpiceApi.FindWindowsOnOccultationConstraint` whose frame is
   read from the body. An identifier without a name, which returned an empty record (and a celestial item then threw
   `InvalidOperationException`), throws the same `ArgumentException` when it is not a celestial body (Changed below).
-  `SpiceAPI.WriteOrientation` throws `ArgumentException` when a record is not in the frame of the first, and writes
+  `SpiceApi.WriteOrientation` throws `ArgumentException` when a record is not in the frame of the first, and writes
   nothing. `Spacecraft.WriteOrientation` writes one frame, J2000, and is unchanged.
   - **Test:** `NativeAbortGuardTests` (19 cases): -82, -999, -1, 11, 50, 100 and 1000 throw from `GetCelestialBodyInfo`
     and `new CelestialBody`, the barycenters, the Sun, the Moon, the Earth and Mars are read; `ReadEphemeris` from -82,
     an occultation with -82 as an ellipsoid front or target, and ten records with one in ECLIPJ2000 (first, middle,
-    last) throw; `BodyInformationsTests.SpacecraftIdentifier_IsAnArgumentError` on the command. With the `SpiceAPI` of
+    last) throw; `BodyInformationsTests.SpacecraftIdentifier_IsAnArgumentError` on the command. With the `SpiceApi` of
     3eb1edc0 the test host crashes on the first of them ("Invalid Naif Id : -82", "different frames : J2000 -
     ECLIPJ2000").
 - **A site occultation of a `Star` with `LT` or `CN` read the star one light time back, and threw beyond about 54 pc** ([#533](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/533)).
@@ -1412,31 +1412,31 @@ release are listed under **Known limitations**.
     from Vallado's code (`sgp4` 2.27, WGS-72 old, AFSPC mode) through GMAT: 1.0 cm to 0.37 m (TDRS 6, GEO).
 - **A frame named TEME took the native frame** (the routing of [#562](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/562)). `SpiceDataProvider` and `MemoryDataProvider`
   route a frame named TEME, in any case (`new Frame("TEME")` from a CCSDS file, the CLI or user code), to `Frame.TEME`,
-  and `SpiceAPI.TransformFrame` composes a TEME end through ICRF; the TLE and `SpiceAPI.ConvertTleToStateVector` label
+  and `SpiceApi.TransformFrame` composes a TEME end through ICRF; the TLE and `SpiceApi.ConvertTleToStateVector` label
   their states with `Frame.TEME`. The equality of a frame built by name with `Frame.TEME` is #562's (Changed below).
 - **An ephemeris read in a managed frame handed its name to `spkezr_c`** ([#558](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/558), the ephemeris reads). A read in
   `Frame.TEME` (or a frame named TEME), `Frame.CIRS` or `Frame.TIRS`, through `GetEphemeris` or the three
-  `SpiceAPI.ReadEphemeris`, is read in J2000 and rotated by the frame at the epoch of the read: the numbers of
+  `SpiceApi.ReadEphemeris`, is read in J2000 and rotated by the frame at the epoch of the read: the numbers of
   `ToFrame` on the ICRF read, to 1e-6 m. CIRS and TIRS returned SPICE(UNKNOWNFRAME) and a state of |r| = 0; TEME the
   native frame, up to 23″ from `ToFrame`. A coordinate search in a managed frame with a kernel spacecraft taking part
   is the library's since the third review of #690.
 - **A failed SGP4 returned a zero state; TEME outside the PCK a zero rotation** ([#454](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/454), the TLE and TEME paths).
-  `SpiceAPI.ConvertTleToStateVector`, under `TLE.ToOsculating` and `ToStateVector`, throws `InvalidOperationException`
+  `SpiceApi.ConvertTleToStateVector`, under `Tle.ToOsculating` and `ToStateVector`, throws `InvalidOperationException`
   naming the TLE and the epoch when the native layer returns r = 0 (a decayed or suborbital orbit, an eccentricity out
   of range); no valid state has r = 0. The native `TLE::ToStateVector` left its state unwritten when `evsgp4_c`
   signalled, so the state returned was what the stack held: on Linux zero by chance (28872 of Vallado's set gave
   r = (0, 0, 0), v = (0, 6.95e-307, 6.95e-307)), on Windows x64 and macOS arm64 a non-zero state, possibly that of an
   earlier call. It now returns a zero state then, a change of the C++ layer (decision of S. Guillet, 2026-11-08; the
   other change of 11.0.0 is the ephemeris read of #454, above). TEME ↔ ICRF reads no kernel;
-  `SpiceAPI.TransformFrame` between TEME and a SPICE frame throws when SPICE gives no rotation for that frame (ITRF93
+  `SpiceApi.TransformFrame` between TEME and a SPICE frame throws when SPICE gives no rotation for that frame (ITRF93
   before 2000); every frame since (#454's ephemeris read and frame guard, above).
-- **A TLE built its Earth in ITRF93 at its epoch** ([#597](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/597)). `new TLE(...)` (twice) and `Omm.ToTle` built
+- **A TLE built its Earth in ITRF93 at its epoch** ([#597](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/597)). `new Tle(...)` (twice) and `Omm.ToTle` built
   `new CelestialBody(399, new Frame("ITRF93"), epoch)`: outside the Earth's binary PCK (every TLE before 2000 or after
   the PCK's end) printed two SPICE(FRAMEDATANOTFOUND) messages, without an exception, and left the observer's state
   read in a frame without data. The Earth is built in `Frame.ECLIPTIC_J2000` at the epoch, as `ConvertTleToStateVector`
   builds it; SGP4 does not read it, so no state moves.
-- **SGP4 counted tsince in TDB seconds from an epoch the library converted itself** ([#599](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/599)). `TLE.ToOsculating(t)` (and
-  `ToStateVector(t)`, `AtEpoch`, `TLEPropagator`, the TLE participants of scenarios and conjunctions) called
+- **SGP4 counted tsince in TDB seconds from an epoch the library converted itself** ([#599](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/599)). `Tle.ToOsculating(t)` (and
+  `ToStateVector(t)`, `AtEpoch`, `TlePropagator`, the TLE participants of scenarios and conjunctions) called
   `evsgp4_c` at the TDB of t, so that tsince was the TDB seconds between the library's TDB of t and CSPICE's TDB of
   the epoch: the drift of TDB − TT over the interval and the difference of the two TDB models (up to 1.07 µs at the
   epoch). tsince is now the TT seconds from the TLE epoch (UTC, as the line gives it) to t, the UTC days of Vallado's
@@ -1449,13 +1449,13 @@ release are listed under **Known limitations**.
   - **Measured** against `tools/sgp4_reference` (Vallado's code, `sgp4` 2.27, WGS-72 old, AFSPC mode): the 29 element
     sets of Vallado's verification set that SGP4 evaluates, at the 577 tsince of `tcppver.out`, within 7.6e-5 m and
     1.3e-8 m/s per component, CSPICE's own difference from the reference; 06251 and the ISS hourly over a day at UTC
-    instants within 0.36 mm, the double of the epoch passed to `evsgp4_c`. `SpiceAPI.ConvertTleToStateVector` counts
+    instants within 0.36 mm, the double of the epoch passed to `evsgp4_c`. `SpiceApi.ConvertTleToStateVector` counts
     tsince the same way.
 - **The TLE epoch was read through a `double`, truncated to the tick** ([#603](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/603)). The day and its fraction are read
   in decimal and the fraction rounded to the 100 ns tick: the 8 decimals of a day are whole multiples of 864 µs, so the
   epoch is exact. 43 % of TLE epochs were read 100 ns early (CALSPHERE 1, `26311.28305435`: 06:47:35.8958399 instead
   of 06:47:35.8958400), and their OMM `EPOCH` text 1 µs early.
-- **`TLE.Create` wrote fields its columns could not hold, or not the nearest value** ([#600](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/600), [#601](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/601),
+- **`Tle.Create` wrote fields its columns could not hold, or not the nearest value** ([#600](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/600), [#601](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/601),
   [#602](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/602), [#480](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/480)). Each field is now the nearest value of its columns, as the format and
   `tools/sgp4_reference` (exact decimal) give it. What moves, text only:
   - the epoch is rounded to the nearest 1e-8 day and carried into the next day and year: an epoch in the last 432 µs
@@ -1468,7 +1468,7 @@ release are listed under **Known limitations**.
   - e was clamped to at least 1e-7, so e = 0 was written `0000001`: it is clamped to [0, 0.9999999] (#602);
   - an angle of −0.0 was written `-0.0000`, and ṅ/2 in (−5e-9, 0] `- .00000000`, a 70-character line that threw: a
     value that rounds to zero is written without a sign (#480).
-- **A non-UTC epoch was written as UTC** ([#479](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/479)). `TLE.Create` (and `ToTLE`, `Omm.ToTle`),
+- **A non-UTC epoch was written as UTC** ([#479](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/479)). `Tle.Create` (and `ToTLE`, `Omm.ToTle`),
   `OpmStateVector.FromStateVector` (under `Spacecraft.ToOpm` and `Opm.CreateFromStateVector`) and
   `ImpulseManeuver.ToOpmManeuverParameters` wrote the calendar of the epoch's own time scale under a UTC epoch field
   or `TIME_SYSTEM = UTC`: a TDB epoch 69.19 s late (530 km in LEO), TT 69.184 s, TAI 37 s, and `MAN_EPOCH_IGNITION`
@@ -1480,13 +1480,13 @@ release are listed under **Known limitations**.
   MET, ...) throws `InvalidOperationException` naming it; loading and validation are unchanged.
   `OpmStateVector.ToStateVector`, which carries no time system, still reads UTC. UTC files are read as before, bit for
   bit.
-- **`ToTLE` threw `InvalidCastException` for elements already in TEME** ([#464](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/464)). A `TLE`, or Keplerian or
+- **`ToTLE` threw `InvalidCastException` for elements already in TEME** ([#464](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/464)). A `Tle`, or Keplerian or
   equinoctial elements in `Frame.TEME`, are fitted as their state in TEME; mean elements throw the
   `InvalidOperationException` of `ToStateVector` that sends to SGP4. A `StateVector` fits as before, bit for bit.
 - **The TLE documentation named ṅ and n̈ and no SGP4 model** ([#605](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/605)). `FirstDerivationMeanMotion` and
-  `SecondDerivativeMeanMotion`, and the `nDot` and `nDDot` of `TLE.Create`, hold ṅ/2 and n̈/6, the TLE fields and OMM's
-  `MEAN_MOTION_DOT` and `MEAN_MOTION_DDOT`. The XML documentation of `TLE`, `ToOsculating` and
-  `SpiceAPI.ConvertTleToStateVector`, [TLE](../reference/tle.md) and the [TLE & OMM tutorial](../tutorials/tle-and-omm.md)
+  `SecondDerivativeMeanMotion`, and the `nDot` and `nDDot` of `Tle.Create`, hold ṅ/2 and n̈/6, the TLE fields and OMM's
+  `MEAN_MOTION_DOT` and `MEAN_MOTION_DDOT`. The XML documentation of `Tle`, `ToOsculating` and
+  `SpiceApi.ConvertTleToStateVector`, [TLE](../reference/tle.md) and the [TLE & OMM tutorial](../tutorials/tle-and-omm.md)
   state the model: CSPICE `evsgp4_c`, Vallado's 2006 code, AFSPC mode, WGS-72 old (KE = 7.43669161e-2), no other mode
   or constants, tsince in TT seconds, errors thrown.
 
@@ -1499,8 +1499,8 @@ release are listed under **Known limitations**.
     and its failing end returned: every interior edge came 0 to 0.94 s early, every window start and end alike (on a
     LEO pass from a station, the rise and the set 0.4 to 587 ms early; on a LEO day, all 89 apsides, nodes and altitude
     crossings early, by up to 0.898 s). Each transition is now located to 1 µs, CSPICE's convergence tolerance, by
-    Brent's root finder on the quantity minus the value (`Greater`, `Lower`, `Equal`), by a bisection of the relation
-    (`GreaterOrEqual`, `LowerOrEqual`, a boolean quantity), and the root is returned.
+    Brent's root finder on the quantity minus the value (`GreaterThan`, `LessThan`, `Equal`), by a bisection of the relation
+    (`GreaterThanOrEqual`, `LessThanOrEqual`, a boolean quantity), and the root is returned.
   - **The bounds ([#461](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/461)).** The first transition was searched over [start − step, start], so a window that held
     at the start began before it, one step early at most, and the quantity was evaluated before the search window (on a
     propagated spacecraft, outside its stored states, #527); the last edge stopped up to 1 s short of the end. Nothing
@@ -1537,8 +1537,8 @@ release are listed under **Known limitations**.
   internal `HiddenExtremes`, moved out of `OccultationFinder` and shared: Brent's `localmin` between the two neighbors
   of each three-sample extreme that does not reach zero, and over the first and last intervals), and adds each extreme
   on the other side of zero as a sample before the transitions are located to 1 µs; each sample is evaluated once. A
-  zero margin fails for `Greater`, `Lower` and the `adjustValue` windows of `AbsoluteMin` and `AbsoluteMax`, and holds
-  for `GreaterOrEqual`, `LowerOrEqual`, `Equal` and `NotEqual`; a bracket with an undefined (NaN) sample is not
+  zero margin fails for `GreaterThan`, `LessThan` and the `adjustValue` windows of `AbsoluteMin` and `AbsoluteMax`, and holds
+  for `GreaterThanOrEqual`, `LessThanOrEqual`, `Equal` and `NotEqual`; a bracket with an undefined (NaN) sample is not
   searched. Every window, gap and crossing of a `double` quantity is therefore found when the step is at most half the
   time between two extremes of the quantity, a jump of a branch cut counting as one, down to the resolution of
   `localmin`, about 2 √ε h + 2τ/3 for a step h and τ = 1 µs (2.5 µs at a 1 min step, 19 µs at 10 min, 41 µs at 22.5 min;
@@ -1548,9 +1548,9 @@ release are listed under **Known limitations**.
   than the shortest interval where the quantity is monotone
   ([`gfdist_c`](https://naif.jpl.nasa.gov/pub/naif/toolkit_docs/C/cspice/gfdist_c.html), Particulars, "The Search
   Process" and "Step Size"; the same in `gfposc_c` and `gfilum_c`), whatever the length of the windows.
-  - Measured** (Linux x64, 2026-11-14): the 16 closed-form windows at 3, 10 and 22 min for `Greater`, `GreaterOrEqual`,
-    `Lower` and `LowerOrEqual`, the 32 crossings of `Equal` and the 33 windows of `NotEqual` at 10 min, the 16 gaps of
-    `Greater` and of `AbsoluteMin` with an adjustment, and the 16 windows of a sawtooth, each ending at its jump, at 7
+  - Measured** (Linux x64, 2026-11-14): the 16 closed-form windows at 3, 10 and 22 min for `GreaterThan`, `GreaterThanOrEqual`,
+    `LessThan` and `LessThanOrEqual`, the 32 crossings of `Equal` and the 33 windows of `NotEqual` at 10 min, the 16 gaps of
+    `GreaterThan` and of `AbsoluteMin` with an adjustment, and the 16 windows of a sawtooth, each ending at its jump, at 7
     to 20 min, within 8.0e-7 s of the closed forms; the LEO's passes and range windows at 5, 10 and 20 min within 2.4e-7
     s of `gfposc` and `gfdist` converged to 1e-9 s (`tools/geometry_reference`), 3.6e-7 s on the same orbit propagated
     with RK7(8), and the count with Velocity-Verlet; the same passes and range windows of a site built from DSS-13's
@@ -1627,7 +1627,7 @@ release are listed under **Known limitations**.
 - **Conformance runner: the TLE categories and TEME of lot 5** (design of lot 5 of
   [#457](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/457), approved by S. Guillet,
   2026-11-08). New solvers for `sgp4` (TEME states at tsince or at UTC instants, and their ICRF states, through
-  `TLE.ToOsculating` and `Frame.TEME`) and `tle_conversion` (`TLE.ToOmm`, and `Omm.ToTle` from an OMM item in its
+  `Tle.ToOsculating` and `Frame.TEME`) and `tle_conversion` (`Tle.ToOmm`, and `Omm.ToTle` from an OMM item in its
   `TIME_SYSTEM`), and TEME in the frames of `frame_transformation`. A case whose `gravity_model` or `opsmode` is not
   `wgs72old` and `afspc`, the only model of the library's SGP4, is an ERROR that names it. New kinds of `spec.md` §6.1:
   the scalar per component, the relative delta, the TLE epoch on the UTC calendar, and the TLE line, whose fields the
@@ -1865,7 +1865,7 @@ release are listed under **Known limitations**.
   - `ToTLE` of a state within 1e-10 rad of the TEME equator, which threw after 15 iterations and now fits as at
     1e-9 rad, with the same two lines (1.6 m in the case of the tests);
   - `ToTLE` of such elements given in a frame other than TEME, which fitted the wrong state without an error;
-  - `TLE.Create` with mean equinoctial elements;
+  - `Tle.Create` with mean equinoctial elements;
   - the state of a spacecraft whose initial orbit is such elements before it is propagated (`GetEphemeris`, which the
     conjunction analysis reads), and its OPM export;
   - `TrueLongitude()`, `TrueLongitude(Time)`, `MeanLongitude()` and `ToStateVector(ν)`, which maneuvers take from
@@ -1882,7 +1882,7 @@ release are listed under **Known limitations**.
 
   For all other equinoctial elements, the state moves by rounding only: the largest error against the 60-digit
   reference goes from 3.5e-15 to 2.6e-15 of |r| on 20 000 elements. Their angles, Keplerian elements, `AtEpoch`, the
-  TLE fit of a state vector and `TLE.Create` are unchanged, bit for bit.
+  TLE fit of a state vector and `Tle.Create` are unchanged, bit for bit.
 
   A parabolic `EquinoctialElements` with no perigee radius overflowed the stack. With a finite `P` it now returns its
   state; without one, it throws `InvalidOperationException`.
@@ -2013,7 +2013,7 @@ release are listed under **Known limitations**.
   light-time-corrected Moon of `spkpos` from a LEO), a defect outside this change with its own issue,
   [#549](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/549), fixed in this release (above) ([#537](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/pull/537)).
 - **A state in GCRF propagates.** `PropagatorBase` rejected `Frame.GCRF` as an initial frame ("must be defined in
-  inertial frame"), although GCRF is inertial with the axes of ICRF. It is accepted, and `SpiceAPI` hands a frame named
+  inertial frame"), although GCRF is inertial with the axes of ICRF. It is accepted, and `SpiceApi` hands a frame named
   GCRF (`Frame.GCRF` or `new Frame("GCRF")`, in any case) to SPICE as `J2000` in `ReadEphemeris`, `ReadOrientation`,
   `TransformFrame` and `FindWindowsOnCoordinateConstraint`, and labels the result with the frame given (SPICE has no
   GCRF frame: the forces read uninitialised states, NaN, once the frame was accepted, and these methods and the CLI's
@@ -2036,7 +2036,7 @@ release are listed under **Known limitations**.
 - **The command line reads the kernels of a spacecraft given by its NAIF identifier.** `orientation` built a managed
   spacecraft with an empty attitude record and printed the identity whatever the CK held (0.7 rad off in the issue's
   case); `ephemeris`, `sub-point` and `angular-separation` threw `NullReferenceException`. `orientation` now reads the CK
-  by the identifier (`SpiceAPI.ReadOrientation`, `ckgpav_c` through the clock kernel), relative to the requested frame,
+  by the identifier (`SpiceApi.ReadOrientation`, `ckgpav_c` through the clock kernel), relative to the requested frame,
   and the other commands take the kernel-backed spacecraft at the start of the window or at the epoch. On the kernels the
   library writes for 600 s of a nadir LEO, against CSPICE: the orientation 0 rad and 2.2e-18 rad/s from `sxform` in
   J2000, ECLIPJ2000, ITRF93 and over a UTC window (4.5e-16 rad from spiceypy's `pxform`, CSPICE N0067), the ephemeris
@@ -2095,9 +2095,9 @@ release are listed under **Known limitations**.
 - **The distance search of a kernel spacecraft ran with a threshold 1000 times too small** ([#466](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/466)).
   When both objects come from the kernels and one is a spacecraft, `CelestialItem.FindWindowsOnDistanceConstraint`
   and `Site.FindWindowsOnDistanceConstraint` (a site from the kernels, a kernel spacecraft as observer) hand the search to
-  CSPICE's `gfdist_c` through `SpiceAPI.FindWindowsOnDistanceConstraint`, which takes metres (the native layer converts
+  CSPICE's `gfdist_c` through `SpiceApi.FindWindowsOnDistanceConstraint`, which takes metres (the native layer converts
   them to km); both divided the metres by 1000 first, so "farther than 1815.148 km" ran as "farther than 1.815148 km":
-  `Greater` returned the whole search window, `Lower` and `Equal` nothing, with no error, and the same geometry gave
+  `GreaterThan` returned the whole search window, `LessThan` and `Equal` nothing, with no error, and the same geometry gave
   another answer through the managed search (a `Site` observer). They now pass the metres. Only these two calls change,
   on that branch; the coordinate search, which converts its distances to km for `gfposc_c`, was right and is unchanged.
   - **Measured** (Linux x64, 2026-11-11) against `gfdist_c` and `gfposc_c` converged to 1e-9 s
@@ -2110,10 +2110,10 @@ release are listed under **Known limitations**.
     searches (Z > 500 km, range > 1815.148 km and > 372 000 km) within 4.8e-7 s, before and after.
 - **The illumination windows of a site from the kernels were seconds off** ([#488](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/488)).
   `Site.FindWindowsOnIlluminationConstraint` and `Site.FindDayWindows` of a site from the kernels (`new Site(id, name,
-  body)`) search with CSPICE's `gfilum_c` through `SpiceAPI.FindWindowsOnIlluminationConstraint`, whose native layer
+  body)`) search with CSPICE's `gfilum_c` through `SpiceApi.FindWindowsOnIlluminationConstraint`, whose native layer
   read the altitude of the `Planetodetic` in km beside a radius in km: DSS-13, 1070.85 m up, became a point 1070.85 km
   up, whose normal is tilted by 94″, and its sunrise and sunset were 4.4 s off (3.1 s to 29.6 s in the other geometries
-  measured). `SpiceAPI` now converts the altitude to km before the call. So are fixed the launch windows by day of a
+  measured). `SpiceApi` now converts the altitude to km before the call. So are fixed the launch windows by day of a
   recovery site from the kernels (`Launch.FindLaunchWindows` through `FindDayWindows`) and the CLI command
   `find-windows-from-illumination-constraint` (under Changed). The sites built from their coordinates, which the library
   searches, are unchanged.
@@ -2121,7 +2121,7 @@ release are listed under **Known limitations**.
     (`tools/geometry_reference/kernel_search_reference.py`, `KernelWindowSearchTests`) over 24 h from 2023-12-15 00:05
     TDB: DSS-13 from the kernels, at its position at J2000 TDB, incidence above 90° without correction, below 90.8° and
     96° with LT+S (`FindDayWindows` at 0.8° and 6°), above 60° with CN+S, within 3.6e-7 s (4.4, 4.3, 3.6 and 29.6 s
-    before); `SpiceAPI` at the longitude of DSS-13 at 0, 1071 and 5000 m, at latitudes 0 and 60° at 1071 m, and on the
+    before); `SpiceApi` at the longitude of DSS-13 at 0, 1071 and 5000 m, at latitudes 0 and 60° at 1071 m, and on the
     Moon at 1071 m over 30 days, within 4.8e-7 s (0.11 s to 15.2 s before; 0 m unchanged). The site from the kernels and
     the site built from its coordinates now agree within 4.96e-3 s (4.1 s and 5.2 s before): `gfilum_c` takes the
     normal of a point above the ellipsoid from `surfnm_c`, 0.11″ from the geodetic normal of the library at DSS-13
@@ -2173,15 +2173,15 @@ release are listed under **Known limitations**.
     `Period()` for e ≥ 1 (item 3) is fixed by [#663](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/663), under **Changed**; the ephemeris time given to CSPICE is still the managed TDB,
     not the LSK formula (item 4, [#665](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/665)). Both are under **Known limitations**.
 
-- **The documentation named `RelationnalOperator.Less`, `AbsMin` and `AbsMax`, which do not exist** ([#483](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/483)). The
+- **The documentation named `RelationalOperator.Less`, `AbsMin` and `AbsMax`, which do not exist** ([#483](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/483)). The
   `Site` and TLE tracking examples of `DEVELOPER_GUIDE.md` did not compile (CS0117), and the operator tables of
-  `DEVELOPER_GUIDE.md` and [Enumerations](../reference/enumerations.md#relationnaloperator) left out `NotEqual`,
-  `GreaterOrEqual` and `LowerOrEqual`. The examples pass `Lower`; the `Site` example names the members of `Planetodetic`
+  `DEVELOPER_GUIDE.md` and [Enumerations](../reference/enumerations.md#relationaloperator) left out `NotEqual`,
+  `GreaterThanOrEqual` and `LessThanOrEqual`. The examples pass `LessThan`; the `Site` example names the members of `Planetodetic`
   (`Longitude:`, `Latitude:`, `Altitude:`, CS1739 before), and the TLE example gives its 420 t spacecraft a maximum
   operating mass of 450 t (1 t threw `ArgumentOutOfRangeException`). Both compile and run: the Moon at 399 039 km from
   the site at 2024-01-01T12:00 TDB, as SPICE `spkcpo` gives it (399 039.486 km), and 7 windows of the ISS within
   2000 km of DSS-13 on 2024-06-03. The tables list the ten members as declared, each with its symbol, and the geometry
-  tutorial names `Lower` and the negations. `DeveloperGuideExamplesSmokeTests` runs both examples on the packed package:
+  tutorial names `LessThan` and the negations. `DeveloperGuideExamplesSmokeTests` runs both examples on the packed package:
   the Moon's range within 1e-3 m of `spkcpo` (3.1e-5 m on Linux), and the TLE example's windows found. The other C#
   blocks of the guide and of `docs/` that do not compile (100 lines in 62 blocks: the `Frames.Frame` qualifier, members
   that do not exist) were [#662](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/662), fixed by #668 for the guide and by #705 for `docs/` (below).
@@ -2222,13 +2222,13 @@ release are listed under **Known limitations**.
   to 1e-9 relative.
 - **A field-of-view search on a managed spacecraft without attitude searched the identity of ICRF**
   ([#682](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/682)). A spacecraft never propagated, with no orientation added, built from a TLE or propagated
-  by `TLEPropagator` has an empty attitude record, which `WriteOrientation` refuses to write; its frame reads the
+  by `TlePropagator` has an empty attitude record, which `WriteOrientation` refuses to write; its frame reads the
   identity there, and `Instrument.FindWindowsInFieldOfViewConstraint` and `Instrument.IsInFOV` searched with it (a camera
   of 30° along +Y in LEO: 5 windows of the Earth over 6 h, its boresight ICRF +Y). Both now throw
   `InvalidOperationException` naming the spacecraft, after the argument and field checks, whose errors keep their
   precedence (internal `FieldOfViewSearch.CheckAttitude`). `FieldOfViewSearchTests.ManagedSpacecraftWithoutAttitude_Throws`
   checks the search (the Earth as a point and as its ellipsoid, the Moon) and `IsInFOV` on a spacecraft from a state,
-  from a TLE and propagated by `TLEPropagator`, and that an attitude added lifts the refusal;
+  from a TLE and propagated by `TlePropagator`, and that an attitude added lifts the refusal;
   `AttitudeAddedByHand_IsTheOneSearched` holds `IsInFOV` to the closed form of a circular field for an
   attitude given by hand, at the edges of the search within 9.7e-11 rad of the half-angle. The getters
   (`GetBoresightInICRFFrame`, …) keep the identity before any attitude.
@@ -2244,8 +2244,8 @@ release are listed under **Known limitations**.
   supports ELLIPSOID only (Detailed_Input `method`); for `"Dsk"`, `"Elipsoid"`, `"ELLIP SOID"`, `""` or the DSK forms
   it signalled SPICE(INVALIDMETHOD) or SPICE(EMPTYSTRING), which the native proxy dropped: no window on the CSPICE path,
   while the managed path never read the method (3 windows of the ellipsoid for each string). One check
-  (internal `SpiceAPI.CheckIlluminationMethod`), used by `Site.FindWindowsOnIlluminationConstraint` and
-  `SpiceAPI.FindWindowsOnIlluminationConstraint`, accepts ELLIPSOID whatever its case and its leading or trailing
+  (internal `SpiceApi.CheckIlluminationMethod`), used by `Site.FindWindowsOnIlluminationConstraint` and
+  `SpiceApi.FindWindowsOnIlluminationConstraint`, accepts ELLIPSOID whatever its case and its leading or trailing
   whitespace and throws `ArgumentException` for anything else (a null method `ArgumentNullException`, on the managed path
   too); `"ellipsoid"` and `" Ellipsoid "` keep their windows to the tick.
 - **The managed planetographic longitude was the planetocentric one** ([#682](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/682)). The managed
@@ -2272,13 +2272,13 @@ release are listed under **Known limitations**.
   ([#682](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/682)). A read in a frame that only the library holds, the `SiteFrame` of a site built from coordinates
   seen from an observer other than its body (the Moon, the Sun, a kernel spacecraft) or the `SpacecraftFrame` of a
   managed spacecraft, reached `spkezr_c` by name: `site.GetEphemeris(t, moon, site.Frame, …)`,
-  `moon.GetEphemeris(t, earth, site.Frame, …)`, `SpiceAPI.ReadEphemeris` and the managed searches on them threw.
-  `SpiceAPI.ManagedReadFrame` now routes these frames as [#558](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/558) routes TEME, CIRS and TIRS: read in J2000 and
+  `moon.GetEphemeris(t, earth, site.Frame, …)`, `SpiceApi.ReadEphemeris` and the managed searches on them threw.
+  `SpiceApi.ManagedReadFrame` now routes these frames as [#558](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/558) routes TEME, CIRS and TIRS: read in J2000 and
   rotated by the managed frame at the epoch of the read. Against `spkezr_c` and `pxform_c` · `georec_c` on the frame
   kernel the library writes for the site, 4.0e-7 m and 6.4e-11 m/s over 5 epochs from the Moon; against `spkezr_c` in
   the frame of a managed spacecraft on the frame kernel and the CK the library writes from its record, 6.8e-8 m and
   1.6e-13 m/s. A managed spacecraft whose attitude record is empty (never propagated, no orientation added, from a TLE
-  or `TLEPropagator`) has no attitude in the library: its frame is still read by name, as before, so the frame kernel
+  or `TlePropagator`) has no attitude in the library: its frame is still read by name, as before, so the frame kernel
   and the CK of its id, if loaded, give its attitude (within 1.7e-16 rad of the attitude written), and SPICE rejects the
   frame otherwise; it is not read with the identity of the empty record.
 - **`CelestialItem.GetEphemeris(window, …)` read past its window across a leap second** ([#682](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/682)). It
@@ -2325,7 +2325,7 @@ release are listed under **Known limitations**.
   files throws for such a failure unless a later unload of the same call, of the same entry or of another one, read the
   same kernels again: a text kernel's or a meta-kernel's for a text kernel, one of the same kind for an SPK, a CK, a PCK,
   a DSK or an EK, none for a meta-kernel, whose files the library does not read, nor for an old DAF, whose kind it does
-  not tell (internal `SpiceAPI.UnloadRereads`, from the ID word of the file and, for a text kernel, the variables its
+  not tell (internal `SpiceApi.UnloadRereads`, from the ID word of the file and, for a text kernel, the variables its
   data assigns, outside its comments and quoted strings, read at its load; the type KEEPER gives each text kernel of the
   tests is checked by `KernelRegistryTests` through `kdata`). Every entry the call matched is unloaded and removed
   before it throws. A binary kernel SPICE failed to open again stayed open in SPICE for the life of the process (fixed by
@@ -2348,7 +2348,7 @@ release are listed under **Known limitations**.
   unload not taken for a repair (neither throws since the second round of #668, below); a folder of two loaded folders whose second's kernel is deleted, whose unload no longer
   stops at the first folder's failure; and a folder of a text kernel whose comment names `KERNELS_TO_LOAD`, listed
   before a deleted one, whose unload no longer throws. A folder is loaded in the order of its listing, alphabetical on
-  NTFS: the tests name the file to list first from a to z in turn and check the order through `SpiceAPI.KernelFiles`.
+  NTFS: the tests name the file to list first from a to z in turn and check the order through `SpiceApi.KernelFiles`.
 - **The command line ignored a kernel file or a meta-kernel given as its kernels path** ([#673](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/673)). The 13 commands that
   load kernels wrapped the argument in a `DirectoryInfo`, from which a file loaded nothing without an error:
   `astro ephemeris mk.tm …` failed with "Celestial celestialItem frame can't be defined". A file, a kernel or a
@@ -2359,8 +2359,8 @@ release are listed under **Known limitations**.
   name** ([#673](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/673)). SPICE takes a kernel path of at most 255 characters (NAIF, SPICE Kernel Required Reading,
   "Recommendations on Kernel File Naming"), and `LoadKernels` and the command line hand it the full path. The export,
   and `astro propagate` through it, deleted the previous export and wrote kernels at longer paths (`MySat.ck` at 302
-  characters for a 120-character directory), which then failed with `SPICE(FILENAMETOOLONG)`. `SpiceAPI.WriteEphemeris`
-  (under `Star` and `Site`) and `SpiceAPI.WriteOrientation` (under `Spacecraft.WriteOrientation`) handed such a path to
+  characters for a 120-character directory), which then failed with `SPICE(FILENAMETOOLONG)`. `SpiceApi.WriteEphemeris`
+  (under `Star` and `Site`) and `SpiceApi.WriteOrientation` (under `Spacecraft.WriteOrientation`) handed such a path to
   CSPICE, which wrote a file under the name truncated to 255 and then failed. The export now checks every kernel path
   of its layout, under the output directory and under the new directory of the system temporary directory where it
   writes the kernels and loads the clock and frame kernels first, before it touches the output directory, and the
@@ -2396,10 +2396,10 @@ release are listed under **Known limitations**.
     read 0, Pallas throws, Kerberos is built with a garbage frame.
 - **An unnamed identifier returned a stale or garbage name, a barycentre a garbage frame name** ([#672](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/672)). The
   native record's name and frame name had no initialiser and were filled only when SPICE named the identifier and found
-  a frame; `SpiceAPI.GetCelestialBodyInfo` returned the record without checking that SPICE named the identifier. After
+  a frame; `SpiceApi.GetCelestialBodyInfo` returned the record without checking that SPICE named the identifier. After
   Pallas, 2000003 (a GM in `gm_de440.tpc`, no name) read the name `PALLAS` or stack bytes with identifier -1, the
   barycentres a garbage frame name, and `new CelestialBody(12345678)` was built from a fragment of earlier console
-  output, or threw, in turn. The record is now zero-initialised, and `SpiceAPI.GetCelestialBodyInfo` and the two
+  output, or threw, in turn. The record is now zero-initialised, and `SpiceApi.GetCelestialBodyInfo` and the two
   ellipsoid frames of `FindWindowsOnOccultationConstraint` throw `ArgumentException` naming the identifier when SPICE
   does not name it (the record's identifier stays -1; Changed below).
   - **Test:** C++ `API.GetBodyInformationInvalidId` (398 and 12345678 after the Earth: identifier -1, empty names, GM
@@ -2465,13 +2465,13 @@ release are listed under **Known limitations**.
   so for such a kernel whose file was deleted, or after a change of working directory, the reopening fails with
   `SPICE(FILENOTFOUND)`. The object was a local destroyed after `return`, after the proxy's last `failed_c()` check, and
   `ActivateErrorManagement` does not reset: the proxy returned true, the error stayed pending, and the next proxy, an
-  unrelated read, failed with it (`ReadEphemerisAtGivenEpochProxy` of the Moon a NaN state, `SpiceAPI.ReadEphemeris`
+  unrelated read, failed with it (`ReadEphemerisAtGivenEpochProxy` of the Moon a NaN state, `SpiceApi.ReadEphemeris`
   "Celestial celestialItem name can't be defined", a wrong message that consumed the error); the failure path reset
   before the destructor, whose own error then leaked the same way, and neither proxy copied a message into
   `GetLastErrorProxy`. The kernel object now lives in an inner scope: the writing's error is taken and SPICE reset
   before it is destroyed, so that it unloads on a clean state as before, then the destruction's error is taken, and the
   proxy returns false with both messages in `GetLastErrorProxy` (a native change for a technical reason, CLAUDE.md: an
-  error a proxy leaks; the P/Invoke declarations are unchanged). `SpiceAPI.WriteEphemeris` and `WriteOrientation` throw
+  error a proxy leaks; the P/Invoke declarations are unchanged). `SpiceApi.WriteEphemeris` and `WriteOrientation` throw
   `InvalidOperationException` with that message, where they named the standard output. The success path is unchanged.
   - **Test:** C++ `API.WriteEphemerisProxyWhenAnSpkHeldUnderARelativeNameIsDeleted` and
     `API.WriteOrientationProxyWhenACkHeldUnderARelativeNameIsDeleted` (non-Windows: a meta-kernel naming `x.bsp` or
@@ -2494,9 +2494,9 @@ release are listed under **Known limitations**.
     it, the Moon bit for bit the state SPICE gave before; on the round's first fix the file no longer existed. The child
     scenarios `WriteEphemeris_ReplacingAFile_WhenAnSpkHeldUnderARelativeNameWasDeleted_ThrowsAndKeepsTheFile` and
     `WriteOrientation_ReplacingAFile_WhenACkHeldUnderARelativeNameWasDeleted_ThrowsAndKeepsTheFile` check the same
-    through `SpiceAPI`.
+    through `SpiceApi`.
 - **`GetLoadedKernels` and the kernels the native layer drops** ([#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668), fourth round and its review). The registry
-  of `SpiceAPI` kept a deleted SPK, CK, binary PCK or EK listed after the native layer had dropped it, until it was
+  of `SpiceApi` kept a deleted SPK, CK, binary PCK or EK listed after the native layer had dropped it, until it was
   unloaded. It now follows the native rule after each native load, unload or write (internal `ForgetDroppedKernels`),
   and only then: a `LoadKernels` or `UnloadKernels` that makes no native call (a path that does not exist, a directory
   without kernel files) leaves the registry as it is, since SPICE still holds the file (the first version forgot it after
@@ -2516,7 +2516,7 @@ release are listed under **Known limitations**.
   NAIF frames and names they expect asserted as literals on every platform. The shipped library is unchanged (on Linux
   the `.so` is byte for byte the one of the former link, sha256 `2b987ecb…`); the test executable holds no CSPICE
   routine (`nm`: no `T *_c`, one, `rpd_c`, before), and the C++ tests pass (368 at the end of the second round).
-- **A ground station could not be the observer of `SpiceAPI.ReadEphemeris`** ([#672](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/672)). Both overloads built their
+- **A ground station could not be the observer of `SpiceApi.ReadEphemeris`** ([#672](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/672)). Both overloads built their
   observer with `CelestialItem.Create`, which has no site branch: DSS-13 (399013) became a celestial body whose record
   has no radii, so the read threw `InvalidOperationException` ("frame can't be defined"), or labelled its state with a
   body built from undefined bytes. A site identifier (its body's identifier times 1000 plus its own, the body a planet
@@ -2620,14 +2620,14 @@ release are listed under **Known limitations**.
   `targetOrbit.ToFrame(Frame.ICRF)` ([The frame of a target orbit](../reference/impulse-maneuvers.md#the-frame-of-a-target-orbit)).
   A set of mean elements in TEME (`tle.ToMeanKeplerianElements()`) is still rejected, as are CIRS and TIRS.
 - **A propagated TLE spacecraft read SGP4** ([#675](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/675)). `Spacecraft.GetGeometricStateRelativeTo` and the window of the
-  stored states tested `InitialOrbitalParameters is TLE` before the stored states. A TLE spacecraft now reads the states
+  stored states tested `InitialOrbitalParameters is Tle` before the stored states. A TLE spacecraft now reads the states
   of a numerical propagation by any path, the builder and a propagator built directly included, which leave
   `IsPropagated` false: `GetEphemeris`, `WriteEphemeris` (read back by `spkezr` within 2.8e-9 m), the window searches
   (the managed field of view against `gftfov` on the kernels it writes within 5e-7 s), the conjunction analysis with
   the check of #527 and the avoidance options on its force model, bit for bit those of its ICRF twin. Unpropagated, or
-  sampled by `TLEPropagator`, it reads as before: its geometric state, and every read through it (from another body,
+  sampled by `TlePropagator`, it reads as before: its geometric state, and every read through it (from another body,
   the window searches), is SGP4 exactly; `GetEphemeris` from its Earth without aberration interpolates the samples of
-  `TLEPropagator` (SGP4 at the samples, 7.6e-4 m from it between them for the ISS at 60 s). `Spacecraft.ToOpm` still writes SGP4
+  `TlePropagator` (SGP4 at the samples, 7.6e-4 m from it between them for the ISS at 60 s). `Spacecraft.ToOpm` still writes SGP4
   ([#658](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/658)).
 - **`astro propagate -t` ended in an unhandled exception** ([#675](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/675)). The command built the spacecraft on the TLE, about
   the TLE's point-mass Earth, and the propagation rejected it ("must be defined in inertial frame"); once accepted, it
@@ -2636,7 +2636,7 @@ release are listed under **Known limitations**.
   10, the degree of `-n` since [#681](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/681), the U.S. Standard Atmosphere 1976 with `-a`, `Helpers.CreateCenterOfMotion`), rotated once to ICRF by the
   library: its SPK is the library run from that state within 6.2e-4 m (`PropagateTests.PropagateFromTle_RunsOnTheCliEarth`).
   `-t` with a centre of motion other than the Earth throws `ArgumentException` naming 399, before anything is written.
-- **A TLE read the kernels before it checked its text** ([#675](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/675)). `new TLE(...)` built its Earth (radii, GM, frame), the
+- **A TLE read the kernels before it checked its text** ([#675](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/675)). `new Tle(...)` built its Earth (radii, GM, frame), the
   first argument of its base constructor, before the null checks and the format checks of its lines. Without kernels a
   malformed TLE threw the kernel error ("Celestial celestialItem frame can't be defined") and CSPICE printed the banners
   of its failed reads on the standard output: its checksum error was never reached. The text is now checked first
@@ -2644,7 +2644,7 @@ release are listed under **Known limitations**.
   (`MeanSemiMajorAxis` takes its GM; the second Earth is gone, bit for bit). `ColdStartTests.TleText_IsCheckedBeforeAnyKernelRead`
   checks four malformed TLEs in a process without kernels, with nothing on the standard output. A valid TLE still
   needs the kernels that define the Earth.
-- **The velocity of a `TLEPropagator` solution between its samples was up to 49.9 m/s off SGP4** ([#675](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/675)). Each step of
+- **The velocity of a `TlePropagator` solution between its samples was up to 49.9 m/s off SGP4** ([#675](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/675)). Each step of
   the solution carried zero accelerations, which the cubic Hermite of `PropagationSegment` interpolates the velocity
   with: 4.39 m/s off at mid-step, 48.7 m/s at a quarter step, 49.93 m/s at worst (ISS, 1 h at 60 s). The accelerations
   at the samples are now the central difference of SGP4's velocity at ±1 s: the velocity of `InterpolateAt` and
@@ -2728,11 +2728,11 @@ release are listed under **Known limitations**.
   now throws `ArgumentException` naming `secondaryObject`, before any read of the states.
 - **`Analyze` and `AnalyzeAll` accepted a trajectory propagated for another spacecraft** ([#683](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/683)): another spacecraft's
   RK7(8) trajectory gave a miss of 0 m and a Pc of 0.676 for 176.70 m and 6.7e-78, a swapped pair the right miss with
-  the covariances of the other objects; Velocity-Verlet and `TLEPropagator` solutions alike. A solution now records the
-  spacecraft it propagated (every integrator and activation path of `PropagatorBase`, and `TLEPropagator`), and the two
+  the covariances of the other objects; Velocity-Verlet and `TlePropagator` solutions alike. A solution now records the
+  spacecraft it propagated (every integrator and activation path of `PropagatorBase`, and `TlePropagator`), and the two
   `PropagationSolution` overloads throw `ArgumentException` naming `protectedTrajectory` or `secondaryTrajectory` for
   one of another instance (checked for `Spacecraft.Propagate` in RK7(8) and Velocity-Verlet, `CentralBodyPropagator`,
-  its builder, `BatchPropagator` and `TLEPropagator`); a solution built by hand is accepted, bit for bit.
+  its builder, `BatchPropagator` and `TlePropagator`); a solution built by hand is accepted, bit for bit.
 - **The label of a TCA depended on the search path** ([#683](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/683)). On a UTC window the sampled search labelled its TCA in UTC
   and the search on two propagations in the TDB of the step epoch that opened its bracket (455 of 540 UTC windows around
   27 minima, the other 85 in UTC): the same instant, a tick apart at most, yet unequal by `==`. A dense TCA is now
@@ -3008,10 +3008,10 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   its perigee off the plane (|p̂ · ĥ| up to 1.0), and the x̂ of e = 0 was out of the plane of an inclined orbit.
   Under the same signatures, the apsides are a(1 − e) P̂ and −a(1 + e) P̂ with P̂ the perifocal axis of the elements,
   (cos Ω cos ω − sin Ω sin ω cos i, sin Ω cos ω + cos Ω sin ω cos i, sin ω sin i), for `KeplerianElements`,
-  `EquinoctialElements` and `TLE`, and for a `StateVector` the part of its eccentricity vector in its orbit plane,
+  `EquinoctialElements` and `Tle`, and for a `StateVector` the part of its eccentricity vector in its orbit plane,
   normalized, or its unit node vector when that part is zero (x̂ for an equatorial orbit); the apsis velocities stay
   vis-viva at the vector's radius, never 0 now. Mean `KeplerianElements` and `EquinoctialElements` keep throwing, as
-  `ToStateVector()` and `EccentricityVector()` do, now at e = 0 too; a `TLE` takes the axis of its osculating elements
+  `ToStateVector()` and `EccentricityVector()` do, now at e = 0 too; a `Tle` takes the axis of its osculating elements
   at its epoch, the elements its other members return. `KeplerianElementsTests` and `EquinoctialElementsTests` check 13
   eccentricities from 0 to 0.95, 2000 sets of angles each, against CSPICE `conics` at M = 0 and π (perigee within 3.6e-16 rad and 4.4e-16 of its radius, apogee its opposite at a(1 + e); the equinoctial elements within 1.4e-15 rad and 4.1e-15 with the rounding of their conversion);
   `StateVectorTests` 10 000 near-circular states (|p̂ · ĥ| 2.8e-16, against 1.0 before), states with a zero eccentricity vector (the node, exactly), and
@@ -3070,18 +3070,18 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
 - **The CLI took identifiers for sites that the library does not** (cli-site-rule of
   [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668)'s second round). The commands built a site of every
   identifier from 100001 to 999998 (`Helpers.IsSiteIdentifier`), named `site<id>`, where the library's rule
-  (`SpiceAPI.IsSiteId`, the rule of `Site.NaifId`) excludes x000, a body of at most 100 and the Lagrange points 391 to
+  (`SpiceApi.IsSiteId`, the rule of `Site.NaifId`) excludes x000, a body of at most 100 and the Lagrange points 391 to
   395, and names the site by its SPICE name: from the observer 399000 `ephemeris` threw `ArgumentOutOfRangeException`
-  from `Site(0, ...)` where `SpiceAPI.ReadEphemeris` throws `ArgumentException` ("399000 has no name"), 391013 failed on
+  from `Site(0, ...)` where `SpiceApi.ReadEphemeris` throws `ArgumentException` ("399000 has no name"), 391013 failed on
   the body 391, 100500 as "100 is not a celestial body", and `sub-point` rejected 391013, 399000 and 100500 as sites. The
   library gives its internals to the CLI (`InternalsVisibleTo`, as to the conformance runner; the CLI is packed with the
   library of its build), and `Helpers.CreateLocalizable` and `sub-point` take the library's rule and its site factory
-  (internal `SpiceAPI.CreateKernelSite`, which `SpiceAPI.CreateObserver` uses too); `Helpers.IsSiteIdentifier` is gone.
-  `EphemerisTests` compares the command from 391013, 399000, 100500, 301001 and 395013 with `SpiceAPI.ReadEphemeris`
-  (same exception and message), the site of 399013 with the observer of `SpiceAPI.ReadEphemeris` (DSS-13), and
+  (internal `SpiceApi.CreateKernelSite`, which `SpiceApi.CreateObserver` uses too); `Helpers.IsSiteIdentifier` is gone.
+  `EphemerisTests` compares the command from 391013, 399000, 100500, 301001 and 395013 with `SpiceApi.ReadEphemeris`
+  (same exception and message), the site of 399013 with the observer of `SpiceApi.ReadEphemeris` (DSS-13), and
   `sub-point` of 391013, 399000 and 100500 with `CelestialItem.Create`, and the command from a site whose SPK is
-  loaded without a kernel that names it with `SpiceAPI.ReadEphemeris` (the same "has no name in SPICE"), then, its
-  frame kernel loaded, with the states of `SpiceAPI.ReadEphemeris` under its name.
+  loaded without a kernel that names it with `SpiceApi.ReadEphemeris` (the same "has no name in SPICE"), then, its
+  frame kernel loaded, with the states of `SpiceApi.ReadEphemeris` under its name.
 - **The frame of a site from the kernels had two orientations** ([#690](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/690)). SPICE read the
   frame of a kernel site by its name (`DSS-13_TOPO` of `earth_topo_201023.tf`, built on the coordinates of the station
   at 2020-10-23 on the WGS84 spheroid) in `spkezr_c` and `gfposc_c`, while the library rotated by a frame it built from
@@ -3090,10 +3090,10 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   2024-03-01, 7.72e-8 rad of it the 0.41 m of plate motion between J2000 and 2020-10-23 and 2.1e-9 rad the spheroid;
   the Moon by name and rotated 7.4e-8 to 7.8e-8 rad apart, the elevations 6.1e-8 rad. A kernel site named otherwise
   than its kernel frame (`new Site(13, "GOLDSTONE", earth)`) threw SPICE(UNKNOWNFRAME) (`'GOLDSTONE_TOPO'` not
-  recognized) on a read by name. `SpiceAPI.SpiceFrameName` now hands the frame of a kernel site by the name the loaded
+  recognized) on a read by name. `SpiceApi.SpiceFrameName` now hands the frame of a kernel site by the name the loaded
   kernels give its id, 1000000 + NaifId (`frmnam_c`, as for a kernel spacecraft since #676), and its own name when
   none does; `SiteFrame.GetStateOrientationToICRF` of a kernel site whose frame id the loaded kernels define is
-  SPICE's transformation of that frame, read at each call and not stored (internal `SpiceAPI.KernelDefinesFrame`); the
+  SPICE's transformation of that frame, read at each call and not stored (internal `SpiceApi.KernelDefinesFrame`); the
   illumination angles (`IlluminationIncidence`, `IlluminationEmission`) take the normal of the ellipsoid at
   `Planetodetic`, the normal `gfilum_c` takes for the site, so they keep agreeing with
   `FindWindowsOnIlluminationConstraint`. No C++ change. `FrameTests` checks the frame of DSS-13 against SPICE's
@@ -3109,17 +3109,17 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   GOLDSTONE renamed that id `GOLDSTONE_TOPO` (second review): it now writes the kernel frame, its kernel name and id and
   its rotation to the frame of the body read from SPICE as `TKFRAME_<id>_MATRIX`, one column per line (CSPICE reads 132
   characters of a line: the nine components on one line gave 6), and rejects a kernel frame not fixed in the frame of
-  the body (`InvalidOperationException`, internal `SpiceAPI.KernelFrameNameOf`). `SiteTests` loads the file written for
+  the body (`InvalidOperationException`, internal `SpiceApi.KernelFrameNameOf`). `SiteTests` loads the file written for
   DSS-13 and GOLDSTONE, renamed so that it redefines nothing of `Data/SolarSystem`, and reads its rotation to
   `DSS-13_TOPO` by `pxform` (2.1e-16 rad, threshold 4.3e-16 rad; 7.76e-8 rad before), and rejects a site
   frame defined relative to J2000. A kernel site whose frame id no loaded kernel defines kept the frame of its
   `Planetodetic` for `ToFrame(site.Frame)`, `GetHorizontalCoordinates` and the managed searches, while an ephemeris read
   in it reached `spkezr_c` by its own name, `Name + "_TOPO"`, which SPICE does not know: the site, the Moon and
-  `SpiceAPI.ReadEphemeris` (at an epoch and over a window) in its frame threw SPICE(UNKNOWNFRAME) (third review). Such a
+  `SpiceApi.ReadEphemeris` (at an epoch and over a window) in its frame threw SPICE(UNKNOWNFRAME) (third review). Such a
   read is now read in J2000 and rotated by that frame, as for a site built from coordinates (#682,
-  `SpiceAPI.ManagedReadFrame`), decided at each read, so that a frame kernel of its id loaded later is read by its
+  `SpiceApi.ManagedReadFrame`), decided at each read, so that a frame kernel of its id loaded later is read by its
   kernel name. `SiteTests` compares the reads of the Moon and of the site from the Earth, by `CelestialItem.GetEphemeris`
-  and `SpiceAPI.ReadEphemeris` at an epoch and over a window, with `spkezr_c` in a frame kernel the test writes in
+  and `SpiceApi.ReadEphemeris` at an epoch and over a window, with `spkezr_c` in a frame kernel the test writes in
   NAIF's topocentric convention (the angles of `earth_topo_201023.tf`) on `Planetodetic`, under another id: the position
   within 7.3e-16 (angle and relative magnitude), the velocity within 4.9e-11 m/s and the frame within 5.8e-16 rad
   (thresholds 1.5e-15, 9.9e-11 m/s and 1.2e-15 rad); then loads a frame kernel of the site's id, under
@@ -3134,10 +3134,10 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   name: the frame of a kernel site whose frame id no loaded kernel defines (`Name + "_TOPO"`), of a site built from
   coordinates, of a managed spacecraft with an attitude record, `Frame.TEME`, `Frame.CIRS` and `Frame.TIRS`, names SPICE
   does not know, so that its proxy dropped the error and the search returned no window, while a read in those frames is
-  the library's (#558, #682). These searches now take the managed search in every frame `SpiceAPI.ManagedReadFrame`
-  handles, decided at each search (internal `SpiceAPI.IsManagedFrame`), so that the search agrees with the reads; and
-  `SpiceAPI.FindWindowsOnCoordinateConstraint`, which can only hand the frame to CSPICE, throws `ArgumentException`
-  (`frame`) for a frame of the library that SPICE does not know by the name handed (internal `SpiceAPI.SpiceKnowsFrame`:
+  the library's (#558, #682). These searches now take the managed search in every frame `SpiceApi.ManagedReadFrame`
+  handles, decided at each search (internal `SpiceApi.IsManagedFrame`), so that the search agrees with the reads; and
+  `SpiceApi.FindWindowsOnCoordinateConstraint`, which can only hand the frame to CSPICE, throws `ArgumentException`
+  (`frame`) for a frame of the library that SPICE does not know by the name handed (internal `SpiceApi.SpiceKnowsFrame`:
   TEME, CIRS, TIRS, the frame of a site or a spacecraft whose id no loaded kernel defines under that name).
   `KernelWindowSearchTests` searches, at a 5 min step, the declination of a kernel site at DSS-13's coordinates without
   a frame kernel seen from the kernel LEO (`kernel_search_leo.bsp`) in the site's frame (2 and 12 windows, 0 before),
@@ -3176,7 +3176,7 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668)). It read `PropagationOutput`, the
   output directory of an older design, which no code sets, while `Propagate` keeps its states in memory. It now reads
   the stored states, as `Spacecraft.IsPropagated` does: true after `Propagate`, `PropagateAsync` or
-  `Scenario.SimulateAsync`. `PropagationOutput`, always null, is removed (see **Removed**). `StarTests` and `ScenarioTests` check each path; the SPK of the star propagated by `SimulateAsync`, read back by SPICE (`spkezr` through `SpiceAPI`), is the
+  `Scenario.SimulateAsync`. `PropagationOutput`, always null, is removed (see **Removed**). `StarTests` and `ScenarioTests` check each path; the SPK of the star propagated by `SimulateAsync`, read back by SPICE (`spkezr` through `SpiceApi`), is the
   catalog position moved by the proper motion, written in the test (right ascension and declination plus the proper
   motion times the Julian years from the catalog epoch, at the star's distance, by CSPICE's `latrec_c`), to 1.98e-16
   relative over four years (threshold 4.0e-16, twice the worst; Validation category, Linux only, CI run 43773937161).
@@ -3191,7 +3191,7 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   the SPK started on 1 January (ET 31579200 s), and SPICE read the star there. Each propagation now computes all its states, then replaces those the
   star held (one array published at once); `Scenario.SimulateAsync` goes through it. `StarTests` and `ScenarioTests`
   propagate twice over different windows and steps (`Propagate` then `Propagate`, `Propagate` then `PropagateAsync`, two
-  scenarios over different windows): SPICE (`spkezr` through `SpiceAPI`) reads the SPK at each epoch of the second grid
+  scenarios over different windows): SPICE (`spkezr` through `SpiceApi`) reads the SPK at each epoch of the second grid
   at the catalog position moved by the proper motion, written in the tests (the epochs whole half days from the catalog
   epoch), to 1.39e-16 relative on Linux, closer than the star moves in 1 µs (3.6e-15 relative, the bound of the tests
   that run on every platform), and throws at the epochs of the first window and between the two; the Validation test,
@@ -3266,7 +3266,7 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   `SUN_BODY`, the frame and orbit of `EARTH_BODY`, the orbit of the Earth barycentre and its ephemeris about the solar
   system barycentre are SPICE's, exactly, and stay SPICE's once another memory provider is set (before this, the retry
   went back to the provider of the type initializer: the objects threw the memory provider's `ArgumentException` for the
-  process while `SpiceAPI.GetCelestialBodyInfo(0)` answered). On SPICE, reading those data before `LoadKernels` kept
+  process while `SpiceApi.GetCelestialBodyInfo(0)` answered). On SPICE, reading those data before `LoadKernels` kept
   the zeros SPICE answers, fixed by the third round (the next entry).
 - **A static solar system object read on SPICE before `LoadKernels` kept the zeros SPICE answered for the life of the
   process** (third round of [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668)). SPICE
@@ -3275,7 +3275,7 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   succeeded with those zeros and the deferred object kept them. Measured in a fresh process: `EARTH_BODY` had a GM of 0,
   radii of 0, a J2 of NaN, the built-in frame `IAU_EARTH`, no orbit and an infinite sphere of influence, the GM of the
   Earth barycentre, the solar system barycentre, `SUN_BODY` and `MOON_BODY` 0, all unchanged after `LoadKernels`
-  (`SpiceAPI.GetCelestialBodyInfo(399)` then gave 3.986e14 m³/s²). A static object now keeps its data only when the
+  (`SpiceApi.GetCelestialBodyInfo(399)` then gave 3.986e14 m³/s²). A static object now keeps its data only when the
   provider gives the data the kernels give each of them: a GM (on SPICE `BODYnnn_GM`, for the solar system barycentre the
   sum of `BODY1_GM` to `BODY10_GM`) and, for `EARTH_BODY`, `MOON_BODY` and `SUN_BODY`, radii (`BODYnnn_RADII`), checked
   before its orbit is read; otherwise the read throws `InvalidOperationException` naming the missing variable, keeps
@@ -3286,7 +3286,7 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   and the GM of `MOON_BODY` throw; with `gm_de440.tpc` alone, the GM of `EARTH_BODY` throws naming `BODY399_RADII`
   (twice) and the frame of `MOON_BODY` throws; after `LoadKernels` the GM, radii, J2 (finite) and frame (`ITRF93`) of
   `EARTH_BODY`, its orbit (`spkezr`'s state of 399 about 3 in ECLIPJ2000 at J2000 TDB), the GM of the two barycentres
-  and of `MOON_BODY` and the radius and GM of `SUN_BODY` are SPICE's (`SpiceAPI.GetCelestialBodyInfo`), exactly.
+  and of `MOON_BODY` and the radius and GM of `SUN_BODY` are SPICE's (`SpiceApi.GetCelestialBodyInfo`), exactly.
   A first read after a partial load kept its data for the process too: with `latest_leapseconds.tls`, `gm_de440.tpc` and
   `pck00011.tpc` loaded (GM and radii defined), `EARTH_BODY` had a J2 of NaN (`BODY399_J2` is in `geophysical.ker`), the
   frame `IAU_EARTH` (`OBJECT_EARTH_FRAME` is in `earth_assoc_itrf93.tf`; `IAU_EARTH` is 8.49e-4 rad from `ITRF93` on
@@ -3294,7 +3294,7 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   read), no orbit and an infinite sphere of influence, `MOON_BODY` the frame `IAU_MOON`, all unchanged after
   `LoadKernels` of the whole set. On the `SpiceDataProvider` the data of a static object now hold for the generation of
   the kernel pool they were read at: each `LoadKernels`, `UnloadKernels` and `ClearKernels` raises it (internal
-  `SpiceAPI.KernelPoolGeneration`), and the first read after reads the data again; data equal to those held keep the
+  `SpiceApi.KernelPoolGeneration`), and the first read after reads the data again; data equal to those held keep the
   objects held (the frame and orbit instances, which the orientation cache of a propagation is keyed by), other data
   replace them, and a read that throws keeps nothing new. Another provider is read once, as before. The same child: after
   the partial load the J2 (NaN), the frames (`IAU_EARTH`, `IAU_MOON`) and the absent orbit are SPICE's, the reload of the
@@ -3557,7 +3557,7 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   PCK (2160), a kernel spacecraft searched past its SPK, an instrument whose kernel is not loaded (`INS-999123_FOV_FRAME`
   not found), a step of 0, a result cell that overflows: an empty result a caller could not tell from a condition that
   never holds. The proxies now return `bool` and keep SPICE's message for `GetLastErrorProxy()`, as `ReadEphemerisProxy`
-  does (a native change for a technical reason: an error a proxy drops), and the five `SpiceAPI.FindWindows*` throw
+  does (a native change for a technical reason: an error a proxy drops), and the five `SpiceApi.FindWindows*` throw
   `InvalidOperationException` with it, under every public route that reaches them: the CSPICE paths of
   `CelestialItem.FindWindowsOnDistanceConstraint`, `FindWindowsOnOccultationConstraint` and
   `FindWindowsOnCoordinateConstraint`, of `Site.FindWindowsOnDistanceConstraint`, `FindWindowsOnOccultationConstraint`,
@@ -3569,17 +3569,17 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   is unchanged, bit for bit: the same native call, copy and labelling (the CSPICE goldens of `SpiceApiTest`,
   `KernelWindowSearchTests`, `OccultationSearchValidationTests` and `FieldOfViewSearchTests`). The 1000-window cap of
   the copy stayed in that round ([#653](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/653), Fixed below).
-- **`SpiceAPI.TransformFrame` threw for the frame of a site only the library holds** ([#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668), fourth round). The frame of
+- **`SpiceApi.TransformFrame` threw for the frame of a site only the library holds** ([#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668), fourth round). The frame of
   a site built from coordinates, and of a site from the kernels whose frame id (1000000 + NaifId) no loaded kernel
   defines, is the library's: the reads in it are rotated (#682, third review of #690), and `ToFrame` and
-  `GetHorizontalCoordinates` use its orientation, but `SpiceAPI.TransformFrame` handed its name, `Name + "_TOPO"`, to
+  `GetHorizontalCoordinates` use its orientation, but `SpiceApi.TransformFrame` handed its name, `Name + "_TOPO"`, to
   SPICE, which does not know it, and threw `InvalidOperationException`. It now composes the transform through ICRF, as
   for TEME, decided at each call (a frame kernel of its id loaded later is read by name): the orientation of
   `SiteFrame.GetStateOrientationToICRF`, bit for bit `ToFrame`'s, within 9.3e-16 rad and 5.7e-20 rad/s of SPICE's
   `sxform_c` in the frame kernel `WriteFrameAsync` writes for the site, to and from ICRF and ITRF93 (the same on Linux
   x64, Windows x64 and macOS arm64, CI run 43773937161). The frame of a site whose frame the kernels define, the frames of spacecraft (SPICE's by name, which reads the
   frame kernel and the CK written for them) keep their path; CIRS and TIRS are composed the same way since [#656](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/656) (below); TEME's composition is the same code, bit for bit.
-- **The documentation of a site observer of `SpiceAPI.ReadEphemeris` by identifiers stated no condition** ([#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668), fourth
+- **The documentation of a site observer of `SpiceApi.ReadEphemeris` by identifiers stated no condition** ([#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668), fourth
   round). The observer of a site identifier is a `Site` built from its SPICE name and read at J2000 TDB (#672), so a
   site no loaded kernel names throws `ArgumentException` (`naifId`, "has no name in SPICE") and one whose SPK does not
   cover J2000 TDB `InvalidOperationException` (SPICE's message at 2000 JAN 01 12:00:00), which the XML documentation of
@@ -3588,13 +3588,13 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   (`SpiceApiTest.ReadEphemeris_FromAnUnnamedWrittenSite_ThrowsAndTheTargetReadWorks` pins it).
 - **A kernel writer or loader given a bad argument or an odd path ended the process** ([#706](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/706)). The native
   writers and loaders let a C++ exception cross P/Invoke (`std::terminate`, exit code 134, measured on c533a6e):
-  `SpiceAPI.WriteEphemeris` with one or two states (the native rule is three or more, its message said "2 items or
+  `SpiceApi.WriteEphemeris` with one or two states (the native rule is three or more, its message said "2 items or
   more"), or states in two frames, `Site.WriteEphemeris` over a window its 1-minute step samples twice,
   `WriteEphemeris`, `WriteOrientation` and `LoadKernels` of a loop of symbolic links (`filesystem_error`, `ELOOP`), and,
   on Windows, from the code (not measured), a native writer replacing a file SPICE still held open; a CK of no record read an empty array (a
   segmentation fault, at the native level only, the .NET layer rejecting it since #560). The four proxies now catch
   every C++ exception and return false with its message (a native change for a technical reason, no signature changed),
-  and `SpiceAPI.WriteEphemeris` rejects the states the native writer cannot write before the call (Changed, Breaking,
+  and `SpiceApi.WriteEphemeris` rejects the states the native writer cannot write before the call (Changed, Breaking,
   below). The C++ tests `API.WriteEphemerisProxyOf*`, `API.WriteOrientationProxyOf*` and
   `API.KernelProxiesOfASymbolicLinkLoopReturnFalse`, and the child scenarios of `KernelUnloadChildTests`, exit 134 or
   fail on c533a6e. Writes of three states or more in one frame about a celestial body are unchanged, bit for bit.
@@ -3729,7 +3729,7 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
 
 - **An element conversion about a centre the native layer cannot read ended the process or returned a zero state** ([#711](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/711),
   [#655](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/655)). The native conversions build the centre of the elements as a celestial body, which threw a C++
-  exception across P/Invoke for a centre SPICE does not name: `SpiceAPI.ConvertConicElementsToStateVector` (an ellipse)
+  exception across P/Invoke for a centre SPICE does not name: `SpiceApi.ConvertConicElementsToStateVector` (an ellipse)
   and `ConvertEquinoctialElementsToStateVector` about a spacecraft whose GM a kernel gives ended the process (exit code
   134, measured on 46e6975). For a centre the kernel pool gives no GM, the failed GM read left SPICE failed, so that the
   name read after it wrote nothing and the native code read an indeterminate flag and name: about Elara (507, named,
@@ -3737,7 +3737,7 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   undefined. The three native conversions (`ConvertStateVectorToEquatorialCoordinatesProxy` included, which .NET does
   not call) now catch the exception and return a NaN result with the exception's message then SPICE's in
   `GetLastErrorProxy`, SPICE reset, and `CelestialBody(int)` initialises the flag, the name and the GM it reads, a
-  missing GM reading 0 (a native change for a technical reason, no signature changed); `SpiceAPI` rejects the centres
+  missing GM reading 0 (a native change for a technical reason, no signature changed); `SpiceApi` rejects the centres
   the native layer cannot read before the call and throws on a NaN state (Changed, Breaking, below). C++ tests
   `API.Convert*ProxyOfAnUnnamedCentreWithAGmReturnsNaN` and `API.Convert*ProxyOfACentreWithoutGmReturnsNaN`, child
   scenarios `ConvertConicElementsToStateVector_AboutASpacecraftWithAGm_ThrowsArgumentException` (and its equinoctial
@@ -3759,11 +3759,11 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   from `eqncpv.c` and `conics.c` of CSPICE N0067). Conversions inside those domains about a celestial body SPICE names
   with a GM are unchanged, bit for bit.
 - **A TLE read before its kernels threw a misleading message and stayed unusable** ([#711](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/711)). Without the
-  kernels, the native Earth's GM read fails (`BODY399_GM`); `TLE.ToStateVector` threw "the native layer returned a zero
+  kernels, the native Earth's GM read fails (`BODY399_GM`); `Tle.ToStateVector` threw "the native layer returned a zero
   state" while the cause was the missing kernels, and the epoch read returned the epoch `getelm_c` never wrote, which the
   TLE cached for its life: once the kernels were loaded, the same instance threw again or returned a state 1.6e9 m off
   (measured on 46e6975). The two TLE proxies now return NaN (every element, the epoch included) with SPICE's message on
-  any failure, an SGP4 error included, and catch their C++ exceptions; `SpiceAPI.ConvertTleToStateVector` and the epoch
+  any failure, an SGP4 error included, and catch their C++ exceptions; `SpiceApi.ConvertTleToStateVector` and the epoch
   read throw `InvalidOperationException` with SPICE's message ("The variable BODY399_GM could not be found in the kernel
   pool.", or SGP4's), and the TLE caches its epoch only once read, so that the same instance gives the SGP4 state once
   the kernels are loaded (child mode `tle-before-kernels` of `ColdStartTests`: 3.25e-4 m from `tools/sgp4_reference`,
@@ -3775,7 +3775,7 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   (GALILEO ORBITER, -77); the .NET layer rejects such identifiers first (#560), so only a native caller met it. The proxy
   now returns the record of an identifier SPICE does not name (`Id` -1) with the message in `GetLastErrorProxy`
   (C++ `API.GetCelestialBodyInfoProxyOfANamedSpacecraftReturnsNoRecord`).
-- **A failed `SpiceAPI.ReadOrientation` hid SPICE's error and left it pending for the next call** ([#712](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/712)).
+- **A failed `SpiceApi.ReadOrientation` hid SPICE's error and left it pending for the next call** ([#712](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/712)).
   With no CK loaded, a frame SPICE does not know or no clock for the spacecraft, the read threw "No orientation found"
   and left SPICE failed, so that the next native call, an unrelated `LoadKernels` for instance, threw the stale message
   ("At least one CK file must be loaded by CKLPF before beginning a search.", measured on 46e6975); a missing clock's
@@ -3791,12 +3791,12 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
 - **The two-body proxies aborted the process or returned the stack's contents** ([#714](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/714)).
   `Propagate2BodiesProxy` and `ConvertStateVectorToConicOrbitalElementProxy` activated no error management, reset SPICE
   without its message and returned the arrays `prop2b_c` and `oscltx_c` never wrote: as the first native call of a
-  process, `SpiceAPI.Propagate2Bodies` and `ConvertStateVectorToConicOrbitalElement` with a GM of 0 or below ended it
+  process, `SpiceApi.Propagate2Bodies` and `ConvertStateVectorToConicOrbitalElement` with a GM of 0 or below ended it
   through SPICE's default action, ABORT (exit code 1, no managed exception); after any other call they returned about
   7e-310 for a GM below 0, a zero position or velocity, or a position parallel to the velocity, with no error, and so did
   the overloads that take the GM of an observer without one (Elara, 507), all measured on a80f6a5. Both proxies now
   return a NaN result (the epoch plus dt, the centre and the frame as given; NaN in every element) with SPICE's message,
-  SPICE reset (a native change for a technical reason, no signature changed), and `SpiceAPI` throws (Changed, Breaking,
+  SPICE reset (a native change for a technical reason, no signature changed), and `SpiceApi` throws (Changed, Breaking,
   below). C++ `API.Propagate2BodiesProxyOfAStateOutsideTheDomainOfProp2bReturnsNaN`,
   `API.ConvertStateVectorToConicOrbitalElementProxyOfAStateOutsideTheDomainOfOscltxReturnsNaN` and the death tests
   `API.*AsTheFirstCallReturnsNaN` (exit code 1 on the base), child modes `two-body-first-propagate` and
@@ -3810,7 +3810,7 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   its NaN result. Only a native caller met it before the two-body proxies reported through it.
 - **The message of a failed frame transformation named a wrong cause** ([#714](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/714)). `TransformFrameProxy` checked SPICE only
   after `xf2rav_c`, the unwritten matrix of a failed `sxform_c` passed to the quaternion, then reset SPICE without its
-  message and returned the zero quaternion, so that `SpiceAPI.TransformFrame` (and `Frame.ToFrame` through the
+  message and returned the zero quaternion, so that `SpiceApi.TransformFrame` (and `Frame.ToFrame` through the
   `SpiceDataProvider`) threw "the frame data (a PCK, CK or frame kernel) does not cover this epoch or is not loaded" for an
   unknown frame too. The proxy reports right after `sxform_c` and catches C++ exceptions, returning a NaN rotation and
   angular velocity with SPICE's message; `TransformFrame` keeps the frames and the epoch and appends it
@@ -3837,16 +3837,16 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   Elara, Elara's message about the Earth's elements (measured on a80f6a5). Every proxy that reports through `lastError`
   now clears it when it starts (C++ `API.EveryReportingProxyThatSucceedsClearsTheLastError`, the 25 proxies).
   `ReadEphemerisProxy` clears it once, before its epochs, and keeps the message of the first epoch that fails, where
-  `SpiceAPI.ReadEphemeris` stops (decided by S. Guillet, 2026-11-17; before, each failed epoch replaced the message, so
+  `SpiceApi.ReadEphemeris` stops (decided by S. Guillet, 2026-11-17; before, each failed epoch replaced the message, so
   the last one was named: C++ `API.ReadEphemerisProxyPastTheCoverageNamesTheFirstFailedEpoch`, red on 507f963).
-  `SpiceAPI.ReadEphemeris` over a window checks every state before it rotates any into a managed frame, whose rotation
+  `SpiceApi.ReadEphemeris` over a window checks every state before it rotates any into a managed frame, whose rotation
   calls `TransformFrameProxy` and so clears the message
   (`SpiceApiTest.ReadEphemeris_OverAWindowPastTheCoverageInAManagedFrame_ThrowsSpicesMessage`: the frame of a site on
   Mars past the end of de440s gives SPICE's message of the first failed epoch, 2150 JAN 22 12:00 TDB, as J2000 does; it
   named 2150 JAN 25 on 507f963).
 - **A CK without angular velocity could not be read** ([#714](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/714)). `ckgpav_c` skips a segment without rates and returns
   found = false with no error ("Segments containing only pointing data will be skipped over", its Restrictions 1), and
-  `ReadOrientationProxy` fell back to `ckgp_c` only on an error, so that `SpiceAPI.ReadOrientation` of a type-1 CK, or of
+  `ReadOrientationProxy` fell back to `ckgp_c` only on an error, so that `SpiceApi.ReadOrientation` of a type-1 CK, or of
   a type-2 or type-3 CK written without rates, threw "No orientation found" (a type-3 CK written by `ckw03_c` without
   rates, measured on a80f6a5). The proxy falls back to `ckgp_c` when `ckgpav_c` finds nothing too; such a record has the
   pointing of `ckgp_c` and a zero angular velocity (decided by S. Guillet, 2026-11-17; C++
@@ -3859,7 +3859,7 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   Since #714, `ReadOrientationProxy` read `ckgpav_c` and fell back to `ckgp_c` only when it found nothing; `ckgpav_c`
   skips a segment without angular velocity (`ckbsr.c`: with angular velocity needed, a segment whose ICD(4) is 0 is no
   candidate), so that where a higher-priority segment without rates (a CK loaded last) and a lower-priority one with
-  rates covered an epoch, `SpiceAPI.ReadOrientation` returned the lower-priority segment's pointing and rate where
+  rates covered an epoch, `SpiceApi.ReadOrientation` returned the lower-priority segment's pointing and rate where
   `ckgp_c` returns the higher-priority one: on two type-3 CKs, about z at 1e-3 rad/s with rates over [0, 1000] s and
   about x at 2e-3 rad/s without rates over [300, 700] s loaded last, 1.539 rad from `ckgp_c`, and, at 299.5 s and 700.5
   s within the 1 s tolerance of the CK without rates, a record 0.5 s from `ckgp_c`'s (C++, measured on f70ee32). The
@@ -4195,7 +4195,7 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   searches over the whole span of a target's states return as many windows with each correction as the geometric
   search (`PropagatedStatesSpanTests.ApparentPositionReader_AtTheEnds_IsAllowedWithinTheLightTime`,
   `ManagedSearches_OverTheWholeSpan_ReadTheTargetWithinTheLightTime`; before, they threw at the first corrected read). A TLE spacecraft sampled by
-  `TLEPropagator` read from the Earth outside its samples extrapolated them (20.7 m 6 min before the first, 6.3 m 6 min
+  `TlePropagator` read from the Earth outside its samples extrapolated them (20.7 m 6 min before the first, 6.3 m 6 min
   after the last on the ISS): it reads SGP4 there, as from any other body (0 m against SGP4, red on a85098d).
 - **`Spacecraft.ToOpm` wrote the motion of the initial orbit with the mass and the maneuvers after the propagation**
   ([#658](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/658)). Its state was
@@ -4208,7 +4208,7 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   on and none before (`SpacecraftToOpmTests`, both integrators, from ICRF and ECLIPJ2000, the default epoch, before the
   burn, a tick before its ignition, at it, 1 s after it, at the impulse and after; red on b4f5dbb, and at the ignition
   and 1 s after it while the branch counted the burn from its impulse); a TLE spacecraft propagated numerically writes its propagated state in TEME, 53.7 km from SGP4
-  after 1 h, one only sampled by `TLEPropagator` SGP4 as before.
+  after 1 h, one only sampled by `TlePropagator` SGP4 as before.
 
 - **`EvaluateAvoidance` did not check the steps of its re-analysis** ([#640](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/640)).
   `Analyze`, `AnalyzeAll` and `Screen` refuse a `SampleStep` or a `MaximumEventSearchStep` of zero or less;
@@ -4258,12 +4258,12 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   The native search passed `"ELLIPSOID"` as the shape of every front body to `gfoclt_c`, whatever the shape given (the
   shape it computed from it was unused), so a point front body, whose frame is blank, failed in SPICE ("The front
   target shape is represented by an ellipsoid or by DSK data, but the associated body-fixed frame name is blank."):
-  `SpiceAPI.FindWindowsOnOccultationConstraint` and the CSPICE path of `FindWindowsOnOccultationConstraint` (a
+  `SpiceApi.FindWindowsOnOccultationConstraint` and the CSPICE path of `FindWindowsOnOccultationConstraint` (a
   spacecraft of the kernels with a point front body) threw `InvalidOperationException` since the fourth round of #668,
   and returned no window before (measured on a85098d). `gfoclt_c` now receives the shape given (a one-token change of
   the C++ layer, for a technical reason: the proxy could not run the search it was asked). The Moon's centre across the
   Sun's disc from DSS-65 on 2005-10-03 against `gfoclt` with a POINT front body converged to 1e-9 s
-  (`tools/occultation_reference`): 1.0e-7 s, a tick, through `SpiceAPI` and the CSPICE path (`Annular`, which is `Any`
+  (`tools/occultation_reference`): 1.0e-7 s, a tick, through `SpiceApi` and the CSPICE path (`Annular`, which is `Any`
   for a point front body) (`OccultationSearchTests.SpicePath_PointFrontBody_MatchesGfocltAny`, red on a85098d); the
   proxy itself is `gfoclt_c` bit for bit, 6.3e-7 s from that reference on the other Earth orientation kernel of the C++
   tests (`API.FindWindowsOnOccultationConstraintProxyOfAPointFrontBody`, red on a85098d).
@@ -4271,7 +4271,7 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
 - **SPICE printed every error on the standard output** ([#727](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/727)).
   `ActivateErrorManagement`, which every proxy calls, set `erract_c` to RETURN but not `errprt_c`, so SPICE printed the
   banner of each error it signalled on the standard output ("Toolkit version: N0067 ... SPICE(SPKINSUFFDATA) -- ... A
-  traceback follows"), the errors the proxies report through `GetLastErrorProxy()` and `SpiceAPI` throws included: a
+  traceback follows"), the errors the proxies report through `GetLastErrorProxy()` and `SpiceApi` throws included: a
   read past a kernel's coverage, a search SPICE cannot run, an unknown frame (three banners from three failed calls,
   measured on a85098d; 2888 in one conjunction analysis past its SPKs, #454), which corrupted the output of a host
   application, a CLI's or a service's. Its error output is now NONE (`errprt_c`; a native change for a technical
@@ -4282,16 +4282,16 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
 
 - **A CSPICE window search returned at most 1000 windows** ([#653](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/653)).
   Each native proxy of the window searches (`gfdist_c`, `gfposc_c`, `gfilum_c`, `gfoclt_c`, `gftfov_c`) copied the first
-  1000 windows of its result, whose cell holds 10000, and dropped the rest without an error; `SpiceAPI` could not tell a
+  1000 windows of its result, whose cell holds 10000, and dropped the rest without an error; `SpiceApi` could not tell a
   full buffer from a search of exactly 1000 windows; `NotEqual`, built from the `=` crossings, ended with one window
   across every dropped crossing; and the cell of `gfilum_c` held 1000 windows, so an illumination search of more threw
   `SPICE(WINDOWEXCESS)`. Measured on a85098d: the Moon's X in `IAU_EARTH` from the Earth crosses 0 2126 times in 1100
-  days from J2000, of which `Equal` returned 1000, `NotEqual` 1001 for 2127, `Greater`, `LocalMax` and `AbsoluteMax`
+  days from J2000, of which `Equal` returned 1000, `NotEqual` 1001 for 2127, `GreaterThan`, `LocalMax` and `AbsoluteMax`
   (with an adjustment of 1e5 km) 1000 for 1064 and 1062; LRO's distance from the Moon crosses 1815.148 km 1904 times in
   its 91-day SPK, of which `Equal` returned 1000, and passes 1121 times behind the Moon, of which the occultation search
   returned 1000; the night at (0°, 0°) of the Earth, 1100 windows, threw. The proxies now take the capacity of the
   caller's buffer and return the number of windows written (a native change for a technical reason, the P/Invoke
-  declarations in step), `SpiceAPI` passes a buffer of the native cell's 10000 windows, rented from the shared pool, and
+  declarations in step), `SpiceApi` passes a buffer of the native cell's 10000 windows, rented from the shared pool, and
   `gfilum_c`'s cell holds 10000 windows like the others: every window CSPICE finds is returned, and a search of more
   than 10000 throws `InvalidOperationException` with the long message of CSPICE's `SPICE(WINDOWEXCESS)`, "Window has
   size, 20000, cardinality 20000. Cannot insert an additional interval into the window." (the size counts the endpoints;
@@ -4311,10 +4311,10 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   (Validation) and to the four joined parts exactly (`FieldOfView_PastAThousandWindows_*`; not run on a85098d). The
   searches under 1000 windows are unchanged, bit for bit. The managed searches had no cap.
 
-- **The window reads of `SpiceAPI` drifted, dropped their last epoch, and cost 1.4 ms for one epoch** ([#563](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/563)).
+- **The window reads of `SpiceApi` drifted, dropped their last epoch, and cost 1.4 ms for one epoch** ([#563](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/563)).
   `ReadOrientationProxy` and `ReadEphemerisProxy` stepped their epoch by epoch += step in double TDB seconds, so that
   sample i drifted from start + i·step and the last epoch of the window, pushed past its end, was dropped; and
-  `SpiceAPI.ReadOrientation` passed a buffer of 10000 records, each with a 32-character frame name, whatever the window.
+  `SpiceApi.ReadOrientation` passed a buffer of 10000 records, each with a 32-character frame name, whatever the window.
   Measured on a85098d: `ReadEphemeris` of the Moon from the Earth over 600 s at 0.1 s from 2026-04-01 TDB gave 6000
   states for 6001, the last at 00:09:59.9001430 for 00:10:00, over 10798.8 s at 1.2 s 8999 for 9000 (the last 4.29e-4 s
   off), over 1200.05 s at 0.1 s 12000 for 12001; `ReadOrientation` of PHSRM's CK gave 6000 records for 6001, its rates
@@ -4322,7 +4322,7 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   be lower than 10000"); a read of one epoch allocated 720 408 bytes and took 1.83 ms; a step of 0 in `ReadEphemeris` ran
   until the process was out of memory (1 min 40 s) and a negative one read 10000 epochs backwards. The proxies now read
   at the epochs the caller gives (a native change for a technical reason, the P/Invoke declarations in step), and
-  `SpiceAPI` gives start + i·step in the time frame of the window start, i from 0 while within the window, in exact tick
+  `SpiceApi` gives start + i·step in the time frame of the window start, i from 0 while within the window, in exact tick
   arithmetic, each epoch read at its TDB seconds, in calls of 10000 epochs at most into buffers of their size (no cap on
   the epochs of a window, decided by S. Guillet, 2026-11-18), each state
   labelled with its epoch in that frame: each state and record is the read of its epoch alone, bit for bit, the end of
@@ -4344,17 +4344,17 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   bit, the rotation within 1.6e-16 rad. A read of one epoch allocates 488 bytes and takes 1.28e-2 ms (Linux
   x64; `ReadOrientation_OneEpoch_AllocatesForOneRecord`, red on a85098d), so the CLI's orientation reads, one epoch at a
   time, no longer cost 1.4 ms each. A step of zero or less throws `ArgumentOutOfRangeException` (Changed below).
-- **A frame named CIRS or TIRS went to SPICE, and `SpiceAPI.TransformFrame` threw for CIRS and TIRS** ([#656](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/656)).
+- **A frame named CIRS or TIRS went to SPICE, and `SpiceApi.TransformFrame` threw for CIRS and TIRS** ([#656](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/656)).
   Since #562 a frame is its name, so `new Frame("CIRS")` equals `Frame.CIRS` and `new Frame("tirs")` equals
   `Frame.TIRS`, but the routing went by type: a frame built by those names (user code, a CCSDS file, the CLI) was handed
-  to SPICE, which does not know them, and `SpiceAPI.TransformFrame` handed even the instances to SPICE. Measured on
+  to SPICE, which does not know them, and `SpiceApi.TransformFrame` handed even the instances to SPICE. Measured on
   a85098d: `new Frame("CIRS").ToFrame(Frame.ICRF, t)`, an ICRF state `ToFrame(new Frame("CIRS"))`, `GetEphemeris` in
-  `new Frame("TIRS")` and `SpiceAPI.Instance.TransformFrame(t, Frame.CIRS, Frame.ICRF)` threw
+  `new Frame("TIRS")` and `SpiceApi.Instance.TransformFrame(t, Frame.CIRS, Frame.ICRF)` threw
   `InvalidOperationException` (SPICE(UNKNOWNFRAME)), `MemoryDataProvider.FrameTransformationToICRF` `ArgumentException`
-  ("Frame not found"). One internal rule, `SpiceAPI.ManagedFrame`, now resolves a `TemeFrame`, `CirsFrame` or
+  ("Frame not found"). One internal rule, `SpiceApi.ManagedFrame`, now resolves a `TemeFrame`, `CirsFrame` or
   `TirsFrame` instance as it is and a frame named TEME, CIRS or TIRS, in any case, to `Frame.TEME`, `Frame.CIRS` or
   `Frame.TIRS`; both data providers, the ephemeris reads and the CSPICE coordinate search's frame check use it, and
-  `SpiceAPI.TransformFrame` composes a CIRS or TIRS end through ICRF, as TEME's (decided by S. Guillet, 2026-11-17). A
+  `SpiceApi.TransformFrame` composes a CIRS or TIRS end through ICRF, as TEME's (decided by S. Guillet, 2026-11-17). A
   frame built by name is now the static frame bit for bit (its orientation, its reads with or without light time and
   stellar aberration), labelled with the frame given; against SOFA (`Data/SofaReference/iau2006_sweep.json`, IAU
   2006/2000A: `iauC2ixys` from its X, Y and s for CIRS, its GCRS → TIRS for TIRS) at 2000, 2012, 2020 and 2024 the axes
@@ -4363,7 +4363,7 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   same formula on the same orientations (measured 0 rad and 0 rad/s), and a frame to itself by name the identity, 0 rad
   (`ManagedFrameByNameTests`, 31 cases, all red on a85098d). A coordinate search of `CelestialItem` or
   `Site` in a frame built by those names is the library's, as in the instances, and
-  `SpiceAPI.FindWindowsOnCoordinateConstraint` throws `ArgumentException` for it, as for the instances.
+  `SpiceApi.FindWindowsOnCoordinateConstraint` throws `ArgumentException` for it, as for the instances.
 
 - **`MemoryDataProvider.GetEphemeris` ignored the frame and the aberration** ([#559](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/559)).
   It subtracted the stored states and labelled the ICRF difference with the frame asked, and returned the geometric
@@ -4412,7 +4412,7 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   is `new Frame(name)`, which the library routes by its name (TEME, GCRF, CIRS, TIRS, #656). The numbers are unchanged
   (`EphemerisTests.IcrfIsLabelledJ2000_OnTheSpiceAndTheSitePaths`, ICRF, icrf and j2000 red on a85098d; the expected
   labels of `EphemerisTests` and `SpacecraftKernelsTests` updated). The output: Changed below.
-- **The element conversions of `SpiceAPI` read the data provider under the SPICE lock** ([#664](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/664)).
+- **The element conversions of `SpiceApi` read the data provider under the SPICE lock** ([#664](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/664)).
   `ConvertStateVectorToConicOrbitalElement`, `ConvertEquinoctialElementsToStateVector`, `ConvertConicElementsToStateVector`
   and `Propagate2Bodies` (every overload) built the observer of their result, `new CelestialBody(id)`, inside
   `lock (lockObject)`: 9 calls of the data provider under the lock about the Earth (the information of 399, 3, 0, 10 and 0,
@@ -4421,7 +4421,7 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   result carries the caller's observer (#725, under Changed), so no call reads the provider at all
   (`ColdStartTests.ElementConversions_ReadNoProviderUnderTheSpiceLock`, a child process on a probe provider that counts
   the calls made while the thread holds the lock: 9 of 9 for each of the ten overloads on a85098d, 0 of 0 now).
-- **`SpiceAPI.ConvertEquinoctialElementsToStateVector` gave the state of another point of the orbit** ([#450](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/450)).
+- **`SpiceApi.ConvertEquinoctialElementsToStateVector` gave the state of another point of the orbit** ([#450](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/450)).
   `ProfilesConfiguration.Convert` passed the true longitude L0 to `eqncpv_c`, whose fourth element is the mean longitude
   (NAIF's documentation of `eqncpv_c`: "the mean longitude (mean0+argp+node) at the epoch of the elements"): every orbit
   whose mean and true longitudes differ came back off, 0.18 |r| for a LEO of e = 0.1 and 7.6 |r| at e = 0.89 (measured on
@@ -4432,7 +4432,7 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   within the domain of EQNCPV and a turn of its true longitude, 79 cases) the worst relative error is 1.0e-15 in position
   and velocity (`SpiceApiElementConversionTests.EquinoctialToState_MatchesTheReference`; 7.6 and 0.94 on a85098d).
   The domain checks of #711 are unchanged.
-- **`SpiceAPI.WriteEphemeris` and `WriteOrientation` enumerated the caller's states under the SPICE lock** ([#661](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/661)).
+- **`SpiceApi.WriteEphemeris` and `WriteOrientation` enumerated the caller's states under the SPICE lock** ([#661](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/661)).
   Both materialized the caller's `IEnumerable` inside `lock (lockObject)` (`WriteEphemeris` twice on 016237bd, when the
   issue was filed, once on a85098d), so a lazy sequence ran under the lock, and one that read `PlanetsAndMoons`, `Stars` or
   `Barycenters` for the first time could wait for a thread waiting for the lock (#623); the release note only warned the
@@ -4444,13 +4444,13 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   enumeration, all 10 items under the lock and the other thread blocked for its 60 s, both writers; now one enumeration,
   none under the lock, the lock taken). An array writes the same file, byte for byte.
 - **The body information of a site identifier gave the Sun as centre** ([#651](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/651)).
-  Both layers classed every identifier above 1000 as an asteroid, so `SpiceAPI.GetCelestialBodyInfo` of DSS-13 (399013),
+  Both layers classed every identifier above 1000 as an asteroid, so `SpiceApi.GetCelestialBodyInfo` of DSS-13 (399013),
   DSS-14 and DSS-65 gave the centre 10 and the barycentre 0 (measured on a85098d), where SPICE's SPK of the stations
   (`earthstns_itrf93_201023.bsp`) has their segments about the Earth (399, spiceypy `spksfs`), and
   `CelestialItem.IsAsteroid` was true for them. A site identifier (body × 1000 + site, the body a planet or a moon, the
-  rule of `Site.NaifId`, internal `SpiceAPI.IsSiteId`) of a body SPICE names (internal `SpiceAPI.IsSiteOfNamedBody`, the
+  rule of `Site.NaifId`, internal `SpiceApi.IsSiteId`) of a body SPICE names (internal `SpiceApi.IsSiteOfNamedBody`, the
   body's name read under the SPICE lock) now has its body as centre and its body's barycentre as barycentre, in the
-  record (`SpiceAPI` corrects the native record, the C++ layer unchanged) and in
+  record (`SpiceApi` corrects the native record, the C++ layer unchanged) and in
   `CelestialItem.FindCenterOfMotionId`/`FindBarycenterOfMotionId`, and is no asteroid. SPICE's built-in NOTO (398989)
   and NEW NORCIA (398990), ESA stations whose identifiers have the form of a site of 398, a body SPICE does not name
   (spiceypy 8.4.0 `bodc2n`), keep 10 and 0 and stay asteroids, as before (`SiteIdentifierCentreTests`: the three
@@ -4459,7 +4459,7 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
 - **NOTO and NEW NORCIA as observers threw for a body 398** ([#750](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/750)).
   SPICE's built-in NOTO (398989) and NEW NORCIA (398990) have the form of a site of 398, a body SPICE does not name,
   which #651 kept out of `IsSiteOfNamedBody`, but four call sites still tested `IsSiteId` and built them as a site of the
-  body 398 (`new CelestialBody(398)`): the observer of `SpiceAPI.ReadEphemeris` by identifiers (both overloads), the
+  body 398 (`new CelestialBody(398)`): the observer of `SpiceApi.ReadEphemeris` by identifiers (both overloads), the
   centre of a frame on the reference-body path, and the objects of the CLI's `ephemeris` and `sub-point`. Each threw
   `ArgumentException` "The NAIF identifier 398 has no name in SPICE" (`naifId`), an identifier the caller never gave
   (measured on f70ee32). They now test `IsSiteOfNamedBody`; an identifier of the form of a site whose body SPICE does not
@@ -4484,7 +4484,7 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   and the Mars barycentres and the solar system barycentre, the static Earth, a spacecraft about a spacecraft, LRO from
   its kernels about the Earth and the Moon, a spacecraft moved from the Earth to the Moon, Mars, the Earth-Moon
   barycentre and back, from the Moon to the Sun, and one built without an orbit and given one, the barycentre against
-  the record of `SpiceAPI.GetCelestialBodyInfo`; red on f70ee32). No library code reads the two values of such an item.
+  the record of `SpiceApi.GetCelestialBodyInfo`; red on f70ee32). No library code reads the two values of such an item.
 - **No CDM the library wrote validated against the SANA schema** ([#615](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/615)). `CdmWriter` put the root,
   `cdm` or the `ndm` that wraps it, in the namespace `urn:ccsds:schema:ndmxml` with every other element, so the SANA
   NDM/XML 4.0.0 qualified master, which declares `ndm` and `cdm` in no namespace (no `targetNamespace`), rejected every
@@ -4543,16 +4543,16 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   and `ToOpm_ExportsTheCovarianceOfTheInitialStateInKm2`, `SpacecraftToOpmTests.Propagated_WritesTheStateMassAndManeuversOfTheEpoch`:
   7 cases red on f70ee32, each `Expected: "ICRF"`, `Actual: "J2000"`). No number moves.
 - **A TLE without an international designator could not be re-created or carried through an OMM** ([#604](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/604); decided by
-  S. Guillet, 2026-11-18). Columns 10-17 of line 1 may be blank, and `new TLE(...)` reads such a TLE, but `TLE.Create`
-  threw `ArgumentException` (`cosparId`) for a null or blank designator and `TLE.ToOmm` "Object ID is required."
+  S. Guillet, 2026-11-18). Columns 10-17 of line 1 may be blank, and `new Tle(...)` reads such a TLE, but `Tle.Create`
+  threw `ArgumentException` (`cosparId`) for a null or blank designator and `Tle.ToOmm` "Object ID is required."
   (`objectId`), its blank columns giving an empty `OBJECT_ID` that `OmmMetadata` refuses: of the 15 919 TLEs of the
-  study of lot 5 of #457, 11801 and 88888 of Vallado's `SGP4-VER.TLE`. `TLE.Create` now writes eight blanks for a null
-  or blank `cosparId`, `TLE.ToOmm` writes `OBJECT_ID = UNKNOWN` (the element is mandatory in the ODM; CCSDS's value for an
+  study of lot 5 of #457, 11801 and 88888 of Vallado's `SGP4-VER.TLE`. `Tle.Create` now writes eight blanks for a null
+  or blank `cosparId`, `Tle.ToOmm` writes `OBJECT_ID = UNKNOWN` (the element is mandatory in the ODM; CCSDS's value for an
   unknown designator, confirmed by S. Guillet, 2026-11-18), and `Omm.ToTle` reads `UNKNOWN`, trimmed and in any letter case,
   back as the blank columns (internal `OmmMetadata.UnknownObjectId`). Both TLEs go through `Create`, and through
   `ToOmm`, the XML written and read and `ToTle`, to their own text, each field at its columns, but for the ephemeris type
   of 11801, blank in the set and written 0 (SGP4's) by `Create` as for every TLE (`TleBlankDesignatorTests`, 15 cases
-  red on f70ee32). The fit of `OrbitalParameters.ToTLE(Configuration)` goes through `TLE.Create` too: a null or blank
+  red on f70ee32). The fit of `OrbitalParameters.ToTLE(Configuration)` goes through `Tle.Create` too: a null or blank
   `Configuration.CosparId` threw "TLE conversion using Equinoctial elements failed after 15 iterations"
   (`InvalidOperationException`; the `ArgumentException` of the designator was caught inside the fit) and now writes the
   blank columns, the lines otherwise those of the same fit with a designator, the checksum of line 1 recomputed
@@ -4587,7 +4587,7 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   `OmmParseException` naming the keyword and its text. `KeplerianElements.FromOMM` computed (n × 2π) / 86400, whose
   product overflowed above about 2.86e307 rev/day where the quotient is finite: it now takes the same two roundings on
   n × 2⁻¹⁰ and 86400 × 2⁻¹⁰ there, the value an unbounded exponent gives, and is bit for bit unchanged below.
-  `Omm.ToTle`, its one caller in the library, converted that value back with `TLE.Create`, whose product overflowed over
+  `Omm.ToTle`, its one caller in the library, converted that value back with `Tle.Create`, whose product overflowed over
   the same range: an OMM with `MEAN_MOTION` 3e307 gave, without an exception, a TLE whose mean motion field was the text
   `Infinity` (measured with the `FromOMM` change above). `ToTle` now refuses a `MEAN_MOTION` above the 99.99999999 rev/day of its
   11-character field (columns 53 to 63 of line 2), naming the keyword (Changed below;
@@ -4733,7 +4733,7 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   member name (`RaDec`, `RightAscension`), in any case, before the kernels are loaded; an unknown value throws
   `ArgumentException` naming its argument and listing the values the command reads; a coordinate the system has not is
   SPICE's error, as before (`GeometryFinderTests.CoordinateConstraint_HelpListsTheValuesOfTheEnumerations`,
-  `_ReadsDescriptionsAndMemberNames` against the search of `SpiceAPI` with the members, `_UnknownValue_ThrowsListingTheValues`,
+  `_ReadsDescriptionsAndMemberNames` against the search of `SpiceApi` with the members, `_UnknownValue_ThrowsListingTheValues`,
   `_EveryListedValueIsRead`, red on f70ee32; `_CoordinateOfAnotherSystem_ThrowsSpiceError`). The latitudinal, spherical
   and cylindrical systems and the colatitude are not added. The entry under Known limitations is removed.
 
@@ -4805,8 +4805,8 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   4 entries against 2 for a fresh spacecraft, a quarter turn off it from mid-window to the end and outside the window,
   while a second run gave the fresh record. It now drops them whatever `IsPropagated` says, on every path
   (`Spacecraft.Propagate`, a `CentralBodyPropagator`, a batch, a scenario, both integrators, a TLE spacecraft sampled by
-  `TLEPropagator` before; `RunIndependenceTests`). Runs on a spacecraft without such entries are unchanged, bit for bit.
-- **The solutions of the runs of one `TLEPropagator` share no state** ([#785](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/785), decision 39 of #668): each run samples
+  `TlePropagator` before; `RunIndependenceTests`). Runs on a spacecraft without such entries are unchanged, bit for bit.
+- **The solutions of the runs of one `TlePropagator` share no state** ([#785](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/785), decision 39 of #668): each run samples
   into arrays of its own, its first sample included; before, every solution of an instance held the propagator's one
   array, whose first state was built once at construction, so a later run rewrote the states of an earlier solution
   (`RunIndependenceTests.TheSolutionsOfTwoRunsOfOneTLEPropagator_ShareNoState`). The samples are those of before, bit
@@ -4913,12 +4913,12 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   holds "ı" (U+0131) keeps it. `Site.Frame.Name` changes under tr and az only. Migration: none, but a kernel or a
   catalog written before 11.0.0 under tr or az names its objects with "İ" (`KernelWriterCultureTests`, under tr-TR, red
   before the change).
-- **`Spacecraft.WriteOrientation` said "it has not been propagated" of a spacecraft a `TLEPropagator` had run**
+- **`Spacecraft.WriteOrientation` said "it has not been propagated" of a spacecraft a `TlePropagator` had run**
   ([#546](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/546), lot L5c, decision 81 of
   [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668), decided by S. Guillet,
-  2026-11-23): a `TLEPropagator` run stores SGP4's states and records no attitude, so the CK writer refused the
+  2026-11-23): a `TlePropagator` run stores SGP4's states and records no attitude, so the CK writer refused the
   spacecraft it had just propagated, with a message that pointed nowhere. The `InvalidOperationException` of an empty
-  attitude record now says that a `TLEPropagator` run records none and names `SpacecraftFrame.AddStateOrientationToICRF`,
+  attitude record now says that a `TlePropagator` run records none and names `SpacecraftFrame.AddStateOrientationToICRF`,
   which gives the spacecraft attitudes to write (after the run, whose re-arm drops those added before it). Migration:
   none (`KernelWriteContentTests`, red before the change).
 - **`CosmographiaExporter.ExportAsync` deleted the previous export before it wrote the new one**
@@ -4939,14 +4939,14 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   in it before it wrote. The mission and scenario names are checked as the name of the export directory they form, by the
   portable file-name rule of #799(a) (under **Changed**), before anything is deleted. Migration: none
   (`ExportCheckTests`, red before the change: the output directory and the file beside the export were deleted).
-- **`SpiceAPI.TransformFrame` over a window dropped the end of the window even on the grid**
+- **`SpiceApi.TransformFrame` over a window dropped the end of the window even on the grid**
   ([#781](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/781), lot L6, decision 9 of
   [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668), decided by S. Guillet,
   2026-11-22): its loop stopped strictly before the end, while the other window reads read it, so one hour at 20 min
   gave 3 orientations for 4. Its epochs are the points of `Window.Sample(stepSize)`, the grid of every window read,
   the end read when it lies on the grid (Breaking, under **Changed**; `EphemerisWindowStepTests`, `SpiceApiTest`, red
   before the change).
-- **`SpiceAPI.ReadEphemeris` and `ReadOrientation` over a UTC window across a leap second read one epoch past its end**
+- **`SpiceApi.ReadEphemeris` and `ReadOrientation` over a UTC window across a leap second read one epoch past its end**
   ([#829](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/829), lot L6, decision 107 of
   [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668), decided by S. Guillet,
   2026-11-25): the number of epochs counted the leap second while the epochs followed the UTC calendar, so the two UTC
@@ -5049,7 +5049,7 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
 - **Breaking: the data provider seam speaks domain types** (lot L3, R04 with R20 of
   [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668), decided by S. Guillet, 2026-11-19, so that a
   custom provider changes once). `IDataProvider.GetEphemeris` returns a `StateVector` (`OrbitalParameters` before,
-  always built as a `StateVector`); `IDataProvider.GetCelestialBodyInfo`, `SpiceAPI.GetCelestialBodyInfo` and
+  always built as a `StateVector`); `IDataProvider.GetCelestialBodyInfo`, `SpiceApi.GetCelestialBodyInfo` and
   `MemoryDataProvider.GetCelestialBodyInfo` return a `CelestialBodyInfo`, and `MemoryDataProvider.AddCelestialBodyInfo`
   takes `params CelestialBodyInfo[]` (the interop struct `IO.Astrodynamics.DTO.CelestialBody` before, now internal,
   whose name clashed with `IO.Astrodynamics.Body.CelestialBody`), throwing `ArgumentNullException`
@@ -5066,7 +5066,7 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   interop struct, protected, so that a subclass outside the library read the body information through it. Migration:
   read the members of the body (`Name`, `GM`, `Radii`, `Frame`, `J2`, `CenterOfMotionId`, ...), or
   `Configuration.Instance.DataProvider.GetCelestialBodyInfo(naifId)`.
-- **Breaking: every public struct is read only** (R04 of #668: `IntegrationResult`, `EventInfo` and `EventResult`, the
+- **Breaking: every public struct is read only** (R04 of #668: `IntegrationResult`, `IntegrationEvent` and `EventResult`, the
   positional record structs of the integrators and the event detectors, had public setters, and `Plane` was not read
   only), so that a copy taken from a property or a collection cannot be changed in the belief that the original is
   (`PublicSurfaceScopeTests`). Migration: `result = result with { Action = EventAction.Continue }` in place of
@@ -5075,7 +5075,7 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668), choice 1, decided by S. Guillet,
   2026-11-19). `ILocalizable.GetEphemeris` returns a `StateVector` at an epoch and an `IEnumerable<StateVector>` over a
   window, and so do the implementations of `CelestialItem` (its virtual and the overrides of `Spacecraft` and `Star`),
-  `Site`, and `SpiceAPI.ReadEphemeris` (both): `OrbitalParameters` before, every implementation building a
+  `Site`, and `SpiceApi.ReadEphemeris` (both): `OrbitalParameters` before, every implementation building a
   `StateVector`. The states are the same objects, bit for bit. Migration: an `ILocalizable` implementation or a
   `GetEphemeris` override changes its return types; `List<OrbitalParameters> l = x.GetEphemeris(window, ...).ToList()`
   → `List<StateVector>`, or `IEnumerable<OrbitalParameters> l = x.GetEphemeris(...)` where a sequence of the base type
@@ -5084,7 +5084,7 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   covariant overrides `StateVector.ToFrame(Frame)` and `StateVector.RelativeTo(ILocalizable, Aberration)`, so that
   `sv.ToFrame(Frame.ECLIPTIC_J2000).Position` reads without `.ToStateVector()`. The conversions are those of
   `OrbitalParameters`, bit for bit; on any other orbital parameters they keep their type, the parameters themselves in
-  their own frame or about their own observer (a `TLE` in TEME stays the TLE). Migration: none for a caller; a `var`
+  their own frame or about their own observer (a `Tle` in TEME stays the TLE). Migration: none for a caller; a `var`
   that held `OrbitalParameters` holds a `StateVector`, and a subclass of `OrbitalParameters` that declared a member
   `ToFrame` or `RelativeTo` of these signatures overrides it.
 - **Breaking: a geodetic coordinate search from an observer that is not a body throws `InvalidOperationException`**
@@ -5132,7 +5132,7 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   6, decided by S. Guillet, 2026-11-19): when round(L/ΔT) rounds the window of length L up, the outputs are start + i·ΔT
   inside the window, then the window end, which replaces the last grid point (at least ΔT/2 past the end) and is merged
   with a point within ΔT/10 of it, on every path: `Spacecraft.Propagate`, `CentralBodyPropagator` (both forms),
-  `Scenario.Simulate`, `BatchPropagator`, `MonteCarloPropagator` and `TLEPropagator`, whose rule of #598 this is. Before,
+  `Scenario.Simulate`, `BatchPropagator`, `MonteCarloPropagator` and `TlePropagator`, whose rule of #598 this is. Before,
   the grid ran to round(L/ΔT)·ΔT, up to ΔT/2 past the window, and the propagation with it (#626): 3 590 s at 60 s
   outputs ended at 3 600 s. What moves (decision 8 of lot L4, decided by S. Guillet, 2026-11-22): in RK7(8) only the last
   output, now the state at the window end, every other output bit for bit; in Velocity-Verlet, or an integrator without
@@ -5149,7 +5149,7 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   S. Guillet, 2026-11-19): the 21 public searches (`FindWindowsOnDistanceConstraint`,
   `FindWindowsOnOccultationConstraint`, `FindWindowsOnCoordinateConstraint` of `CelestialItem`, `ILocalizable` and
   `Site`, `Site.FindWindowsOnIlluminationConstraint` and `FindDayWindows`, `Instrument.FindWindowsInFieldOfViewConstraint`,
-  `GeometryFinder.FindWindowsWithCondition` and the six searches of `SpiceAPI`) returned the arrays and lists they build
+  `GeometryFinder.FindWindowsWithCondition` and the six searches of `SpiceApi`) returned the arrays and lists they build
   as an `IEnumerable<Window>`; they return them as an `IReadOnlyList<Window>`, the same windows bit for bit, with `Count`
   and the indexer. A dependent compiled against 10.x must be rebuilt, an implementer of `ILocalizable` changes the return
   type of its three searches, and a `var` result later assigned a LINQ query no longer compiles (CS0266). Migration:
@@ -5175,7 +5175,7 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   of stars alone throws too, its stars not propagated and `IsSimulated` unchanged, decision 18 of lot L4, decided by
   S. Guillet, 2026-11-22, where it propagated its stars and reported itself simulated; `Star.Propagate` itself since
   lot L6, the entry below); a batch task reports it as its error. Before, the propagation re-armed the spacecraft and threw `InvalidOperationException` "Solution
-  contains no segments". The `TLEPropagator` constructor throws it too, for a window in TDB or in UTC, one rule on every
+  contains no segments". The `TlePropagator` constructor throws it too, for a window in TDB or in UTC, one rule on every
   propagation path (decision 15 of lot L4, decided by S. Guillet, 2026-11-22), where it returned one sample at the start,
   and so does `MonteCarloPropagator.Propagate` for a `MonteCarloConfiguration.Window` of zero length, before anything is
   sampled, where each run failed inside the batch and the campaign returned no statistics and no reason
@@ -5185,7 +5185,7 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668), decisions 4 to 6, C1 and C2 of
   lot L4, decided by S. Guillet, 2026-11-22): `Spacecraft.Propagate(window, options, cancellationToken)`,
   `Scenario.Simulate(options, cancellationToken)`, `IPropagator.Propagate(cancellationToken)` (`PropagatorBase`,
-  `CentralBodyPropagator`, `TLEPropagator`), `BatchPropagator.Propagate(tasks, options, cancellationToken)` with
+  `CentralBodyPropagator`, `TlePropagator`), `BatchPropagator.Propagate(tasks, options, cancellationToken)` with
   `Propagate(tasks, progress, options, cancellationToken)`, and `MonteCarloPropagator.Propagate(config,
   cancellationToken)` with `Propagate(config, progress, cancellationToken)`, each token optional; no constructor, record
   or property takes one. A token already cancelled throws before anything changes (before the re-arm of the
@@ -5199,7 +5199,7 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   not `IsPropagated`, nothing kept for the conjunction analysis (a TLE spacecraft reads SGP4 again, any other its initial
   orbit), its fuel, `ExecutedManeuvers` and standby chain advanced up to the stop; in `Scenario.Simulate` and a batch the
   earlier spacecraft are complete, `IsSimulated` stays false and no summary or result is returned. One exception: a
-  stopped `TLEPropagator` run changes nothing and leaves the spacecraft as it was (decision 19 of lot L4, decided by
+  stopped `TlePropagator` run changes nothing and leaves the spacecraft as it was (decision 19 of lot L4, decided by
   S. Guillet, 2026-11-22; since lot L5 the rule of its runs, which re-arm and store their samples in one block, under
   **Changed**). A
   run with a live token is the run without one, bit for bit, every golden unchanged (`CancellationTests`: both integrators, an outer
@@ -5219,7 +5219,7 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   `BatchOptions` of a Monte Carlo campaign likewise → `MonteCarloPropagator.Propagate(config, p, t)`;
   `Propagate(tasks, null)` → `Propagate(tasks, options: null)`.
 - **Breaking: the propagators are not `IDisposable`** (R28 of #668, choice 3 of the first annex): `IPropagator`,
-  `PropagatorBase` and `TLEPropagator` no longer implement it; their `Dispose` was empty or cleared two fields, and held
+  `PropagatorBase` and `TlePropagator` no longer implement it; their `Dispose` was empty or cleared two fields, and held
   no resource. A `using` of a propagator does not compile (CS1674; the 53 of the repository removed, 4 in the library
   and 49 in the tests). Binary break. Migration: `using var propagator = new CentralBodyPropagator(…)` →
   `var propagator = …`; `using (var p = …) { … }` → the block with `var p = …`.
@@ -5258,11 +5258,11 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   observer, …, stepSize)` (spacecraft, bodies, stars, barycentres) and `Site.GetEphemeris(window, observer, …, stepSize)`
   throw `ArgumentOutOfRangeException` (`stepSize`) for a step of zero or less, where a zero step looped without end on a
   site and asked a list of `int.MaxValue` states on a body, and a negative one threw the list's `capacity` exception or
-  returned the start alone, and so does `SpiceAPI.TransformFrame(window, fromFrame, toFrame, stepSize)` at the call, not
+  returned the start alone, and so does `SpiceApi.TransformFrame(window, fromFrame, toFrame, stepSize)` at the call, not
   at the enumeration, where a zero step enumerated without end (decision 10 of lot L4, decided by S. Guillet, 2026-11-22;
   its end, dropped even on the grid, is read since lot L6, #781, the entry below) (`EphemerisWindowStepTests`).
   Migration: a positive step.
-- **Breaking: `SpiceAPI.TransformFrame(window, fromFrame, toFrame, stepSize)` reads the end of the window when it lies on
+- **Breaking: `SpiceApi.TransformFrame(window, fromFrame, toFrame, stepSize)` reads the end of the window when it lies on
   the grid** ([#781](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/781), lot L6, decision 9
   of #668, decided by S. Guillet, 2026-11-22): its epochs are the points of `Window.Sample(stepSize)`, start + i·step up
   to the end, as the other window reads. Before, the loop stopped strictly before the end, so a step that divides the
@@ -5277,7 +5277,7 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   star's states, which `WriteEphemeris` then refused (fewer than three). The parameter `timeWindow` is renamed `window`,
   the name of every propagation's window (`StarTests`). Migration: a window with a length; a named argument
   `timeWindow:` becomes `window:`.
-- **Breaking: `SpiceAPI.ReadEphemeris(window, …, stepSize)` and `ReadOrientation(window, …, stepSize)` stop at the end of
+- **Breaking: `SpiceApi.ReadEphemeris(window, …, stepSize)` and `ReadOrientation(window, …, stepSize)` stop at the end of
   a UTC window that spans a leap second** ([#829](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/829),
   lot L6, decision 107 of #668, decided by S. Guillet, 2026-11-25): their epochs are the points of
   `Window.Sample(stepSize)`, start + i·step in the UTC calendar up to the end, as their documentation said ("while within
@@ -5289,10 +5289,10 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
 - **Breaking: an angular threshold outside the range of its angle throws `ArgumentOutOfRangeException`** (lot L6, R11 of
   [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668), section A of the re-baseline,
   decided by S. Guillet, 2026-11-19: range guards on the comparison operators only): the threshold (`value`) of
-  `FindWindowsOnCoordinateConstraint` (`CelestialItem`, `Site`, `SpiceAPI`) for a right ascension or a planetographic
+  `FindWindowsOnCoordinateConstraint` (`CelestialItem`, `Site`, `SpiceApi`) for a right ascension or a planetographic
   longitude outside [0, 2π], a geodetic longitude outside [−π, π], a declination or a latitude outside [−π/2, π/2], and
-  of `Site.FindWindowsOnIlluminationConstraint` and `SpiceAPI.FindWindowsOnIlluminationConstraint` outside [0, π], or
-  NaN, with `Greater`, `Lower`, `Equal`, `NotEqual`, `GreaterOrEqual` or `LowerOrEqual`, before any search, on the managed
+  of `Site.FindWindowsOnIlluminationConstraint` and `SpiceApi.FindWindowsOnIlluminationConstraint` outside [0, π], or
+  NaN, with `GreaterThan`, `LessThan`, `Equal`, `NotEqual`, `GreaterThanOrEqual` or `LessThanOrEqual`, before any search, on the managed
   and the CSPICE paths; the twilight (`twilight`) of `Site.FindDayWindows` and of the `Launch` constructor outside
   [−π/2, π/2]. Each range is closed; the four extremes and the lengths are not checked. The message says the angles are
   in radians; the command line maps it to an error of `--value`, exit code 2. Before, the search ran on the value given:
@@ -5337,7 +5337,7 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   which of the two light-time models is right is [#828](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/828)),
   and the windows are labelled in the scale of the search window's start. A site built from coordinates, the case of the
   conformance runner, searched with the library before as now. Migration: none; for `gfoclt_c`'s windows from a site of the
-  kernels, call `SpiceAPI.FindWindowsOnOccultationConstraint` with the site's NAIF id as observer.
+  kernels, call `SpiceApi.FindWindowsOnOccultationConstraint` with the site's NAIF id as observer.
 - **Breaking: the searches on the observer label their windows in the scale of the search window's start** (lot L6, R15
   of [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668), IC-7 and IC-8, decided by
   S. Guillet, 2026-11-19), where the removed searches on the target labelled TDB on the paths of CSPICE and of the
@@ -5405,12 +5405,12 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
 - **Breaking: a frame name the loaded kernels do not define throws `ArgumentException`** (R25 of
   [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668), section A, decided by
   S. Guillet, 2026-11-19), as `MemoryDataProvider` does: on every path that hands the name to SPICE,
-  `SpiceAPI.TransformFrame` (`ParamName` `fromFrame` or `toFrame`, also when the other end is TEME, CIRS, TIRS or a site
+  `SpiceApi.TransformFrame` (`ParamName` `fromFrame` or `toFrame`, also when the other end is TEME, CIRS, TIRS or a site
   frame only the library holds), `ToFrame` of a frame or a state either way (`targetFrame` or `frame` for the target, no
   `ParamName` for the frame of the instance or the state, which is no argument of the call, nor for
   `GetStateOrientationToICRF` and `ToEquatorial`; `source` for `SpiceDataProvider.FrameTransformationToICRF`), the
-  ephemeris reads (`GetEphemeris`, `SpiceAPI.ReadEphemeris` at an epoch or over a window, `frame`),
-  `SpiceAPI.ReadOrientation` (`referenceFrame`) and the window searches of CSPICE: `FindWindowsOnCoordinateConstraint`
+  ephemeris reads (`GetEphemeris`, `SpiceApi.ReadEphemeris` at an epoch or over a window, `frame`),
+  `SpiceApi.ReadOrientation` (`referenceFrame`) and the window searches of CSPICE: `FindWindowsOnCoordinateConstraint`
   (`frame`), `FindWindowsOnIlluminationConstraint` (`fixedFrame`), `FindWindowsOnOccultationConstraint` (`frontFrame`,
   `targetFrame`) and `FindWindowsInFieldOfViewConstraint` (`targetFrame`), the last two for an ellipsoid (a point target
   reads no frame), each a `SpiceException` before. The library asks SPICE (`namfrm_c`, through `GetFrameInfoProxy`) after
@@ -5443,7 +5443,7 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
 - **Breaking: a repeated `LoadKernels` hands SPICE only the files it does not hold** (lot L1, R01 of
   [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668), structuring choice 9, decided
   by S. Guillet, 2026-11-19). A path already loaded, a path inside a loaded directory, or a directory that holds loaded
-  entries, furnishes only the kernel files that no load of `SpiceAPI` handed SPICE (those written since), and the
+  entries, furnishes only the kernel files that no load of `SpiceApi` handed SPICE (those written since), and the
   others keep their precedence; a directory that holds loaded entries replaces them by its own entry, listed last.
   Before, such a load unloaded the entry and loaded it again, on top of every kernel loaded after it, at 4 to 7 times
   the cost (211 to 250 ms a repeat on `Data/SolarSystem`, against 34 to 49 ms for the first load; first annex of #671):
@@ -5625,7 +5625,7 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   the observer of its initial orbital parameters and that observer's barycentre (399 and 3 about the Earth), where they
   were 0 and 0 whatever the orbit; without an initial orbit they stay 0, and `Spacecraft.SetInitialOrbitalParameters`
   sets them from the new orbit. Migration: none; a caller that read them for such an item gets the centre of its orbit.
-- **NOTO and NEW NORCIA are read by their identifier** ([#750](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/750), Fixed above). `SpiceAPI.ReadEphemeris`
+- **NOTO and NEW NORCIA are read by their identifier** ([#750](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/750), Fixed above). `SpiceApi.ReadEphemeris`
   by identifiers from 398989 or 398990, a frame centred on them on the reference-body path, and the CLI's `ephemeris` and
   `sub-point` of them read them from SPICE (`InvalidOperationException` without their SPK) where they threw
   `ArgumentException` for the body 398; the observer of the state is an object of the kernels named NOTO or NEW NORCIA.
@@ -5663,7 +5663,7 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   `SortedSet`, `Window` of it). The library's comparisons follow: `AddPropagatedStates` replaces a stored state at the
   same instant in another frame, and `StateVector.ToStateVector(epoch)` still relabels a state read at its instant in
   another frame (a label comparison, internal `Time.HasSameLabel`); the library's caches whose values carry their key as
-  a label (the orientations of a `Frame` and of `TLEPropagator`, the range rates read once by the conjunction search)
+  a label (the orientations of a `Frame` and of `TlePropagator`, the range rates read once by the conjunction search)
   stay keyed by label (internal `Time.LabelComparer`), so an orientation carries the epoch asked and the bisection of a
   TCA in ticks (#624) reads both of two consecutive TDB ticks, bit for bit as before; the other comparisons of the
   library (the ends of the dense search, the `Distinct()` of the knots, the epoch checks of the propagators) are on
@@ -5691,14 +5691,14 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   the matrix it wants.
 - **Breaking: one default element set number, 999** ([#606](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/606)).
   The element set number written when none is given depended on the path: `Omm.ToTle` wrote 999 for an OMM without
-  `ELEMENT_SET_NO`, `TLE.Create` and the TLE `Configuration` (so `ToTLE`) 9999. The three now write the new
-  `TLE.DefaultElementSetNumber`, 999, the value CelesTrak and Space-Track publish (decided by S. Guillet, 2026-11-17);
+  `ELEMENT_SET_NO`, `Tle.Create` and the TLE `Configuration` (so `ToTLE`) 9999. The three now write the new
+  `Tle.DefaultElementSetNumber`, 999, the value CelesTrak and Space-Track publish (decided by S. Guillet, 2026-11-17);
   9999 stays the bound of the field. A TLE created without an element set number changes in columns 65 to 68
   (` 999`) and in its checksum (column 69); `Omm.ToTle` is unchanged (`TleCreateRulesTests`, red on a85098d for
-  `TLE.Create`, `Configuration` and `ToTLE`: `9999`). Migration: pass `elementSetNumber: 9999` (or
+  `Tle.Create`, `Configuration` and `ToTLE`: `9999`). Migration: pass `elementSetNumber: 9999` (or
   `ElementSetNumber = 9999` in the `Configuration`) to keep the former text.
-- **Breaking: `TLE.Create` accepts only SGP4 mean elements of an Earth orbit in TEME, and `ToTLE` only an Earth orbit** ([#607](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/607)).
-  `TLE.Create` checked only that its elements were mean: mean elements in ICRF were written as a TLE, their angles
+- **Breaking: `Tle.Create` accepts only SGP4 mean elements of an Earth orbit in TEME, and `ToTLE` only an Earth orbit** ([#607](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/607)).
+  `Tle.Create` checked only that its elements were mean: mean elements in ICRF were written as a TLE, their angles
   taken as TEME's, and mean elements about the Moon with their mean motion from the Moon's GM, a valid text that
   describes another orbit. It now throws `ArgumentException` (`meanElements`) for elements whose frame is not
   `Frame.TEME` (frames compared by name) or whose observer is not the Earth (NAIF id 399), naming the frame or the
@@ -5818,7 +5818,7 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   3.0856775814913673e16 m, 1.592e-10 relative above the 3.085677581e16 m of 10.x, and so every `Star.Distance` and star
   position from the barycenter. A public `const`: an assembly compiled against an earlier version keeps the old value
   inlined until it is recompiled. Migration: none; a caller that needs the former value writes 3.085677581e16.
-- **Breaking: the element conversions of `SpiceAPI` reject a centre the native layer cannot read** ([#711](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/711),
+- **Breaking: the element conversions of `SpiceApi` reject a centre the native layer cannot read** ([#711](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/711),
   Fixed above). `ConvertConicElementsToStateVector(KeplerianElements)` (an ellipse) and
   `ConvertEquinoctialElementsToStateVector` throw `ArgumentException` (parameter `keplerianElements`, `equinoctialElements`)
   before the native call for elements about an observer that is not a celestial body (not a `CelestialItem` of
@@ -5835,7 +5835,7 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   SPICE reset when `conics_c` fails, instead of the unwritten state with SPICE left failed. Migration: convert elements
   about a celestial body SPICE names, with its GM kernel loaded (`gm_de440.tpc`); catch `InvalidOperationException`.
   Ordinary inputs are unchanged, bit for bit.
-- **Breaking: the element conversions of `SpiceAPI` throw for elements outside the domain of their SPICE routine** ([#711](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/711),
+- **Breaking: the element conversions of `SpiceApi` throw for elements outside the domain of their SPICE routine** ([#711](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/711),
   Fixed above). `ConvertEquinoctialElementsToStateVector` throws `ArgumentException` (`equinoctialElements`) for a
   semi-major axis that is not finite and above 0 or an eccentricity sqrt(F² + G²) above 0.9 (`EQNCPV`'s
   `SPICE(BADSEMIAXIS)` and `SPICE(ECCOUTOFRANGE)`); the three `ConvertConicElementsToStateVector` overloads throw
@@ -5850,7 +5850,7 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   finite. A null argument throws `ArgumentNullException`. Migration: convert elliptic equinoctial elements of
   eccentricity above 0.9 with `EquinoctialElements.ToStateVector()`, pass a positive finite GM, and catch
   `ArgumentException` where elements may be inconsistent.
-- **Breaking: the two-body calls of `SpiceAPI` check their arguments and throw SPICE's errors** ([#714](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/714), Fixed above).
+- **Breaking: the two-body calls of `SpiceApi` check their arguments and throw SPICE's errors** ([#714](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/714), Fixed above).
   `Propagate2Bodies(StateVector, double, TimeSpan)` and `ConvertStateVectorToConicOrbitalElement(StateVector, double)`
   throw `ArgumentOutOfRangeException` (`gm`) for a GM that is not finite and above 0 (`SPICE(NONPOSITIVEMASS)` of
   `prop2b.c` and `oscelt.c`); the overloads that take the GM of the observer (`Propagate2Bodies(StateVector, TimeSpan)`,
@@ -5865,7 +5865,7 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   contents (about 7e-310) were returned. Native callers: both proxies return a NaN result with `GetLastErrorProxy()`.
   Migration: pass a finite state and a finite GM above 0, load the GM of the observer, and catch
   `InvalidOperationException` for a degenerate state. Results on ordinary inputs are unchanged, bit for bit.
-- **Breaking: the element conversions of `SpiceAPI` reject elements that are not finite** ([#714](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/714)). The three
+- **Breaking: the element conversions of `SpiceApi` reject elements that are not finite** ([#714](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/714)). The three
   `ConvertConicElementsToStateVector` overloads throw `ArgumentException` (`keplerianElements`) for an eccentricity,
   inclination, ascending node, argument of periapsis or mean anomaly that is not finite, and
   `ConvertEquinoctialElementsToStateVector` (`equinoctialElements`) for a p, f, g, h, k or L that is not, before the native
@@ -5874,7 +5874,7 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   and a NaN inclination a NaN state that threw `InvalidOperationException` "Native proxy call failed" or the message of
   an earlier call. The semi-major axis of a parabola stays infinite: its periapsis radius is checked. Migration: pass
   finite elements.
-- **Breaking: `SpiceAPI.WriteEphemeris` rejects a centre SPICE does not name** ([#714](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/714), the last row of
+- **Breaking: `SpiceApi.WriteEphemeris` rejects a centre SPICE does not name** ([#714](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/714), the last row of
   [#655](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/655)). It throws `ArgumentException`
   (`stateVectors`, "The NAIF identifier 2999991 has no name in SPICE: ...") before anything is unloaded or written, an
   existing file kept byte for byte, for a centre no loaded kernel names (a body built from custom parameters), with or
@@ -5888,10 +5888,10 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   ([#714](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/714), Fixed above). A native caller
   gets a NaN rotation and angular velocity (decided by S. Guillet, 2026-11-17) with SPICE's message in
   `GetLastErrorProxy()`, where it got the zero quaternion with no message (#454); `GetLastErrorProxy()` is empty after a
-  reporting proxy that succeeds. `SpiceAPI.TransformFrame` throws the same `InvalidOperationException` on both, its
+  reporting proxy that succeeds. `SpiceApi.TransformFrame` throws the same `InvalidOperationException` on both, its
   message now SPICE's. Migration (native callers): test the rotation for NaN, or read `GetLastErrorProxy()`, where the
   zero quaternion was tested.
-- **Breaking: `SpiceAPI.ReadOrientation` reads the CK segment of highest priority** ([#724](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/724), Fixed above; decided by S. Guillet, 2026-11-18).
+- **Breaking: `SpiceApi.ReadOrientation` reads the CK segment of highest priority** ([#724](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/724), Fixed above; decided by S. Guillet, 2026-11-18).
   Where a segment without angular velocity has the higher priority at an epoch (a CK without rates loaded after one with
   rates), the record is its pointing with a zero angular velocity, where it was the pointing and the rate of the
   lower-priority segment with rates; the record of an epoch within the tolerance of that segment is its record (its
@@ -5952,7 +5952,7 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   (`AddInstrument_OrientationFinite_IsAccepted`); SPICE's frame agrees with `RotationToSpacecraft` to a few ulps of
   each angle, 1.8e-15 rad within [−2π, 2π] and more for large angles (0.268 rad at 1e300), as documented on
   `Instrument.Orientation`. Migration: give finite Euler angles, preferably within a few turns.
-- **Breaking: `SpiceAPI.WriteEphemeris` throws `ArgumentException` for states the native writer cannot write** ([#706](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/706),
+- **Breaking: `SpiceApi.WriteEphemeris` throws `ArgumentException` for states the native writer cannot write** ([#706](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/706),
   Fixed above). Fewer than three states, states not all in the frame of the first one (compared by name, ordinal), or a
   centre of motion that is not a celestial body (not a `CelestialItem` of `IsCelestialBodyId`: a spacecraft, a site)
   throw `ArgumentException` (parameter `stateVectors`) before anything is written, where the process ended, or, for a
@@ -5974,14 +5974,14 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   above). `CosmographiaExporter.ExportAsync` and `astro propagate` throw for an output directory (parameter
   `outputDirectory`), or a system temporary directory (no parameter), whose kernels would have a full path longer than
   255 characters (UTF-8 bytes), and delete nothing; they succeeded with kernels `LoadKernels`
-  could not load, after deleting the previous export. `SpiceAPI.WriteEphemeris` (so `Star.WriteEphemeris` and
-  `Site.WriteEphemeris`) and `SpiceAPI.WriteOrientation` (so `Spacecraft.WriteOrientation`) throw `ArgumentException`
+  could not load, after deleting the previous export. `SpiceApi.WriteEphemeris` (so `Star.WriteEphemeris` and
+  `Site.WriteEphemeris`) and `SpiceApi.WriteOrientation` (so `Spacecraft.WriteOrientation`) throw `ArgumentException`
   (parameter `filePath`) where they threw `InvalidOperationException` after leaving a file under the truncated name.
   Migration: choose a shorter output directory (the CK of a spacecraft,
   `<output>/<Mission>_<Scenario>/Spacecrafts/<name>/Orientation/<name>.ck`, is usually the longest kernel) or a shorter
   temporary directory (`TMPDIR`, `TEMP`), and catch `ArgumentException`. `Spacecraft.WriteEphemeris` and the text kernel writers are unchanged.
 - **Breaking: `LoadKernels` of a path that does not exist throws `ArgumentException`** ([#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668), second round).
-  `SpiceAPI.LoadKernels` threw nothing and loaded nothing for a path that is neither a file nor a directory on disk, and
+  `SpiceApi.LoadKernels` threw nothing and loaded nothing for a path that is neither a file nor a directory on disk, and
   for a `FileInfo` that names a directory or a `DirectoryInfo` that names a file (it tested the path by its .NET type):
   the first read that needed the kernels failed later, with a SPICE error that did not name the path. It now throws
   `ArgumentException` (parameter `path`, the full path in the message) before anything is unloaded or reloaded, so a
@@ -6013,7 +6013,7 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   covered; a deleted SPK, CK, binary PCK or EK leaves `GetLoadedKernels` at the next native load, unload or write, so do
   not expect it there. No numerical result moves for kernels that exist, whose listing is unchanged.
 - **Breaking: `WriteEphemeris` and `WriteOrientation` throw when the last unload of their native writer fails** ([#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668),
-  fourth round, Fixed above). `SpiceAPI.WriteEphemeris` and `WriteOrientation`, and so `Star.WriteEphemeris`,
+  fourth round, Fixed above). `SpiceApi.WriteEphemeris` and `WriteOrientation`, and so `Star.WriteEphemeris`,
   `Site.WriteEphemeris`, `Spacecraft.WriteOrientation` and the Cosmographia export, throw `InvalidOperationException`
   with SPICE's message when the unload of the written file, which opens the other loaded SPKs or CKs again, fails: on a
   kernel SPICE holds under a relative name whose file was deleted, or after a change of working directory. Before, they
@@ -6028,7 +6028,7 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   loaded folder, the listing names the folder's remaining kernel files, in its place, instead of the folder; after
   `UnloadKernels` of a deleted or moved path, its data is no longer readable. Migration: look for the folder's files,
   or unload the whole folder.
-- **Breaking: `SpiceAPI.FindWindowsOnIlluminationConstraint` and the CLI take the altitude in metres** ([#488](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/488), Fixed above):
+- **Breaking: `SpiceApi.FindWindowsOnIlluminationConstraint` and the CLI take the altitude in metres** ([#488](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/488), Fixed above):
   the altitude of the `Planetodetic`, which `Planetodetic` documents in m, reached `gfilum_c` as km, so a caller
   passing metres got edges seconds off. A caller who passed km gets a point 1000 times lower: at DSS-13 the sunrise moves
   by 5 ms between 0 and 1071 m. The CLI help of `find-windows-from-illumination-constraint` now names the units of its
@@ -6058,10 +6058,10 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   considered; without an interior minimum it returns the end where the distance grows into the window.
 - **Every TEME ↔ ICRF result moves** with the managed TEME ([#451](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/451), Fixed above), by 0.3″ to 23.3″ over 2000–2026
   (the angle between the former TEME and the definition; 2.0″ to 23.2″ at the 13 epochs of `tools/teme_reference`):
-  the ICRF states of a TLE (`TLE.ToOsculating(...).ToFrame(Frame.ICRF)`, 326 to 428 m on the three TLEs of the TEME
-  study, 82 to 851 m on the verification TLEs), a TLE fitted from ICRF (`TLE.Create`, `ToTLE`, about 168 m), OPM and
+  the ICRF states of a TLE (`Tle.ToOsculating(...).ToFrame(Frame.ICRF)`, 326 to 428 m on the three TLEs of the TEME
+  study, 82 to 851 m on the verification TLEs), a TLE fitted from ICRF (`Tle.Create`, `ToTLE`, about 168 m), OPM and
   OMM in TEME, the CLI given the frame `TEME` (the frame arguments of `ephemeris`, `orientation`, `frame-converter`
-  and `orbital-parameters-converter`), `TLEPropagator` once converted, and the TLE participants of scenarios and
+  and `orbital-parameters-converter`), `TlePropagator` once converted, and the TLE participants of scenarios and
   conjunctions. TEME ↔ ICRF before 2000 and after the end of the PCK, a zero rotation before, is now defined. The SGP4
   states in TEME do not move with it; tsince in TT moves them (#599, Fixed above).
 
@@ -6208,12 +6208,12 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
 - **Breaking: the kernels of a propagated spacecraft.** With the Fixed entry above, `Spacecraft.WriteOrientation`
   writes the C-matrix in J2000 with the angular velocity of the CK: every CK of an attitude other than the identity of
   ICRF changes. CKs written before hold the inverse attitude, in the initial frame, interpolated across the discrete
-  changes; every reader (SPICE, Cosmographia, `SpiceAPI.ReadOrientation`, a kernel-backed spacecraft) reads them as
+  changes; every reader (SPICE, Cosmographia, `SpiceApi.ReadOrientation`, a kernel-backed spacecraft) reads them as
   before, and they cannot be repaired from their content: regenerate them by propagating again. A discrete change is
   held up to 1 µs before it, then the CK turns to the new attitude over that microsecond (up to 0.79 rad in the tests).
   The SPK is written in J2000, no longer in the initial frame (both read the same through SPICE). `WriteOrientation` of
   a spacecraft never propagated throws `InvalidOperationException`, where it wrote what its reads had stored or threw
-  `ArgumentException`. `TLEPropagator` records no attitude: its SPK can now be written, its CK still cannot.
+  `ArgumentException`. `TlePropagator` records no attitude: its SPK can now be written, its CK still cannot.
 - **Breaking: the SPK of a propagated spacecraft is written per arc.** With the Fixed entry of #540 above,
   `Spacecraft.WriteEphemeris` writes one segment of type 9 (Lagrange, unequal steps) per arc between impulses, in time
   order, of degree min(7, N − 1) for an arc of N states, through a managed DAF writer: at an impulse an SPK reader gets
@@ -6228,7 +6228,7 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   regenerate those that cross an impulse.
 - **Breaking: `Spacecraft.AddPropagatedStates`.** A propagation by `Spacecraft.Propagate` or `Scenario.SimulateAsync`
   replaces every stored state, those added before a first propagation included: they were merged with the propagated
-  ones (only a propagated spacecraft was cleared). `TLEPropagator.Propagate` still adds its states, as before. A state
+  ones (only a propagated spacecraft was cleared). `TlePropagator.Propagate` still adds its states, as before. A state
   goes to the arc of its epoch (the later one at an impulse), replacing a stored state of that arc at the same epoch;
   without stored states the states make one arc, read and written as before. Migration: add states after the
   propagation, not before it.
@@ -6280,7 +6280,7 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
 - **Breaking: `InstrumentPointingToAttitude`** returns the rotation that takes the boresight to the target (Fixed
   above): every attitude it computes changes, at zero orientation too. Migration: remove any inversion that made up
   for the former result.
-- **Unchanged: `SpiceAPI.ReadOrientation` and `SpiceAPI.WriteOrientation`.** They stay the C-matrix pair of `ckgpav_c`
+- **Unchanged: `SpiceApi.ReadOrientation` and `SpiceApi.WriteOrientation`.** They stay the C-matrix pair of `ckgpav_c`
   and `ckw03_c`, the rotation from the reference frame to the spacecraft frame with the angular velocity of the
   spacecraft relative to the reference frame, in it; their documentation now says so. (The segment read where several cover an epoch is
   that of highest priority since #724, the Changed entry above.) On a CK written by 11.0.0,
@@ -6308,14 +6308,14 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   J2000 and earlier before it; a span that is not finite, or whose ticks do not fit in a `long`, throws
   `ArgumentOutOfRangeException` (`AddSeconds(double.NaN)` returned the time unchanged). A coverage bound from 1983 to 2017 given
   as seconds can now be a tick outside the coverage, where the truncation kept a start from 1983 to J2000 or an end from 2000
-  to 2017 inside, and a read there throws: read from the first tick inside. `SpiceAPI.ReadEphemeris(Time …)` and a
+  to 2017 inside, and a read there throws: read from the first tick inside. `SpiceApi.ReadEphemeris(Time …)` and a
   kernel-backed spacecraft label their state with the epoch asked, and an end of a CSPICE search at an end of its search
   window is that end. `AddDays`, `AddHours`, `AddMinutes`, `CreateFromJD` and the spans the library computes outside
   `Time` follow the same rule since #637 (next entry). Migration: pass a finite span, and expect an epoch built from
   seconds to differ from its former value by a tick.
 - **Breaking: the spans computed outside `Time`, and `AddDays`, `AddHours`, `AddMinutes` and `CreateFromJD`, are the nearest tick** ([#637](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/637), Fixed above;
   decided by S. Guillet, 2026-11-17): `OrbitalParameters.Period()`, `CelestialBody.SideralRotationPeriod` and
-  `TrueSolarDay`, `Tsiolkovski.DeltaT` (the thrust window of an impulse), the hold of `PhasingManeuver`, the launch
+  `TrueSolarDay`, `Tsiolkovsky.DeltaT` (the thrust window of an impulse), the hold of `PhasingManeuver`, the launch
   windows after the first, the period of the element conversions and the epochs of the conjunction search give the
   nearest tick, ties to even, where they truncated, so each can be a tick longer (or a time a tick later); the four
   methods of `Time` keep their exceptions (#680). The thrust window and the phasing hold are a change of the dynamics at
@@ -6362,26 +6362,26 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   loaded kernel uses for another frame. A state converted to a frame equal to its own keeps its frame
   (the identity of `ToFrame`), so the CLI's `ephemeris` from a site observer, computed in ICRF, prints `Frame : J2000`
   for the default `ICRF` (handed to the library as `j2000`) where it printed `Frame : j2000`, the numbers unchanged.
-- **Breaking: `SpiceAPI.GetCelestialBodyInfo` throws for an identifier that is not a celestial body** ([#560](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/560), Fixed above):
+- **Breaking: `SpiceApi.GetCelestialBodyInfo` throws for an identifier that is not a celestial body** ([#560](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/560), Fixed above):
   an identifier without a name, such as -999, returned an empty record (identifier -1) and now throws
   `ArgumentException`, as `new CelestialBody(id)` and the command `celestial-body-info` do for it.
-  `SpiceAPI.WriteOrientation` throws `ArgumentException` for records in more than one frame. Migration: pass the
+  `SpiceApi.WriteOrientation` throws `ArgumentException` for records in more than one frame. Migration: pass the
   identifier of a celestial body (a barycenter 0 to 9, the Sun 10, a planet, a moon or a Lagrange point 101 to 999, or
-  above 1000), or catch `ArgumentException`; write one frame per call to `SpiceAPI.WriteOrientation`.
+  above 1000), or catch `ArgumentException`; write one frame per call to `SpiceApi.WriteOrientation`.
 - **Breaking: an identifier SPICE does not name throws `ArgumentException`** ([#672](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/672), Fixed above), extending #560's
   entry above to the identifiers of the celestial classes (398, 12345678, 2000003):
-  `SpiceAPI.GetCelestialBodyInfo` (`ParamName` `naifId`) returned a record with identifier -1 and a stale or garbage
+  `SpiceApi.GetCelestialBodyInfo` (`ParamName` `naifId`) returned a record with identifier -1 and a stale or garbage
   name; `new CelestialBody(id)`, `CelestialItem.Create(id)`, the command `celestial-body-info` and the observer of
-  `SpiceAPI.ReadEphemeris` by identifiers threw `InvalidOperationException` or built a body from undefined bytes;
+  `SpiceApi.ReadEphemeris` by identifiers threw `InvalidOperationException` or built a body from undefined bytes;
   a Lagrange point 391 to 395 the kernels do not name (`Data/SolarSystem` names none) throws from
-  `SpiceAPI.GetCelestialBodyInfo` and `new CelestialBody(id)` only: `CelestialItem.Create(id)`, and so the observer of
-  `SpiceAPI.ReadEphemeris`, still builds a `LagrangePoint` without reading the body information, named or not (its
+  `SpiceApi.GetCelestialBodyInfo` and `new CelestialBody(id)` only: `CelestialItem.Create(id)`, and so the observer of
+  `SpiceApi.ReadEphemeris`, still builds a `LagrangePoint` without reading the body information, named or not (its
   constructor reads its SPK at J2000 TDB, which `Data/SolarSystem` does not hold for L3);
-  `SpiceAPI.FindWindowsOnOccultationConstraint` with such an identifier as an ellipsoid front or target without a frame
+  `SpiceApi.FindWindowsOnOccultationConstraint` with such an identifier as an ellipsoid front or target without a frame
   (`ParamName` `frontBodyId` or `targetId`) returned no window. Migration: load the kernel that names the body
   (`NAIF_BODY_NAME`, `NAIF_BODY_CODE`), or catch `ArgumentException`.
 - **Breaking: the GM and the frame of a body without radii or GM, and the observer of a read from a site** ([#672](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/672),
-  Fixed above). Under the same signatures: `SpiceAPI.GetCelestialBodyInfo(id).GM`, `CelestialBody.GM` and `Mass` move
+  Fixed above). Under the same signatures: `SpiceApi.GetCelestialBodyInfo(id).GM`, `CelestialBody.GM` and `Mass` move
   from 0 to the kernel's value for 7 bodies (Nix 3048175.64816976, Hydra 3211039.206155255, Kerberos
   1110040.850536676, Pallas 13665878145.96742, the Didymos barycentre 37.0362727488241, Dimorphos 0.339845587494,
   Didymos 36.696427161329 m³/s², as SPICE parses `gm_de440.tpc`; Styx's is 0), so a propagation with one of them as a
@@ -6390,7 +6390,7 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   barycentre, which have none, throw `InvalidOperationException` every time; a barycentre's `FrameName` is empty. The
   record of a site identifier reads frame DSS-13_TOPO and GM 0, so `new CelestialBody(399013)` builds a body classed
   as an asteroid ([#651](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/651)) where it
-  threw or was built with a garbage frame name. The observer of a state `SpiceAPI.ReadEphemeris` reads from a site
+  threw or was built with a garbage frame name. The observer of a state `SpiceApi.ReadEphemeris` reads from a site
   identifier is a `Site` (NaifId 399013, Name DSS-13), not a `CelestialBody`, and a site whose SPK does not cover J2000
   TDB throws `InvalidOperationException` from the `Site` constructor. Every body with radii and a GM, and every
   barycentre's GM, is read bit for bit as before. Migration: none for a body the kernels describe; a caller that cast
@@ -6413,19 +6413,19 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   `CoordinateSystem.RaDec` (`Declination`, `Range`) in the body-fixed frame.
 - **Breaking: `Site.FindWindowsOnIlluminationConstraint` throws for the emission and phase angles** ([#682](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/682),
   Fixed above): `ArgumentException` (`illuminationType`), the search having no observer. Migration: with the
-  observer's NAIF id, `SpiceAPI.FindWindowsOnIlluminationConstraint(window, observerId, site.CelestialBody.NaifId,
+  observer's NAIF id, `SpiceApi.FindWindowsOnIlluminationConstraint(window, observerId, site.CelestialBody.NaifId,
   site.CelestialBody.Frame, site.Planetodetic, angle, …)` for objects of the kernels; otherwise
   `new GeometryFinder().FindWindowsWithCondition(window, t => site.IlluminationEmission(t, observer, aberration), relation,
   value, step)`, or `IlluminationPhase(t, source, observer, aberration)`.
 - **Breaking: a field-of-view search or `IsInFOV` on a managed spacecraft without attitude throws** ([#682](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/682),
   Fixed above): `InvalidOperationException` for a spacecraft never propagated and with no orientation added, a spacecraft
   built from a TLE (and not propagated by `Spacecraft.Propagate`, which records its attitude since
-  [#675](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/675)), and one propagated by `TLEPropagator`, which records no attitude
+  [#675](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/675)), and one propagated by `TlePropagator`, which records no attitude
   ([#546](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/546)). Migration: propagate the spacecraft, or give it its attitude,
   `spacecraft.Frame.AddStateOrientationToICRF(new StateOrientation(q, Vector3.Zero, epoch, spacecraft.Frame))`;
   `Quaternion.Identity` reproduces the former result.
 - **Breaking: an illumination method other than ELLIPSOID throws** ([#682](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/682), Fixed above):
-  `Site.FindWindowsOnIlluminationConstraint` and `SpiceAPI.FindWindowsOnIlluminationConstraint` throw
+  `Site.FindWindowsOnIlluminationConstraint` and `SpiceApi.FindWindowsOnIlluminationConstraint` throw
   `ArgumentException` (`method`) for anything but ELLIPSOID, case and leading or trailing whitespace aside, the DSK forms
   included, which `gfilum_c` never supported (they returned no window). Migration: pass `"ELLIPSOID"`, the default.
 - **Breaking: a site built from coordinates under the name of a station of a loaded frame kernel is read in its own
@@ -6487,11 +6487,11 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   `GetLastErrorProxy` pattern; its P/Invoke and the
   native library of this release are in step.
 
-- **Breaking: the velocity of a `TLEPropagator` solution between its samples moves** ([#675](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/675), Fixed above): from up to
+- **Breaking: the velocity of a `TlePropagator` solution between its samples moves** ([#675](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/675), Fixed above): from up to
   49.9 m/s off SGP4 to 4.3e-4 m/s (ISS, 60 s); the positions and the states at the samples are bit for bit. The
-  `PropagationSolution` overloads of the conjunction analysis fed with two `TLEPropagator` solutions move with it (the
+  `PropagationSolution` overloads of the conjunction analysis fed with two `TlePropagator` solutions move with it (the
   ISS and its elements at 61.64°, 6 h, 7 encounters: the TCA from up to 4.44 ms to 5.2 µs from SGP4's, the relative
-  speed from 0.75 m/s to 7.3e-5 m/s off, the miss by at most 0.27 mm). `TLEPropagator` reads SGP4 twice more per
+  speed from 0.75 m/s to 7.3e-5 m/s off, the miss by at most 0.27 mm). `TlePropagator` reads SGP4 twice more per
   sample (1 day at 60 s from 87-133 ms to 262-305 ms), 1 s before the start and 1 s after the last sample included, so a
   TLE whose SGP4 fails within 1 s of an end of the window throws `InvalidOperationException`, before the spacecraft
   receives any sample (its stored states left as they were). Migration: none for the
@@ -6685,7 +6685,7 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   `InvalidOperationException` naming each keyword at fault and its value (`CENTER_NAME 'MOON' is not EARTH; REF_FRAME
   'ICRF' is not TEME; ...`) where it returned a TLE of another orbit; `IsTleCompatible` is false and `ToString` has no
   ` (TLE)` for those OMMs. An OMM without TLE parameters throws its former message. The keywords are read trimmed and
-  in any letter case (` TEME `, `sgp4`), as before. EARTH/TEME/SGP4 OMMs (`iss.omm`, `Omm.CreateForTle`, `TLE.ToOmm`,
+  in any letter case (` TEME `, `sgp4`), as before. EARTH/TEME/SGP4 OMMs (`iss.omm`, `Omm.CreateForTle`, `Tle.ToOmm`,
   the conformance runner's) give the same TLE, bit for bit. Migration: correct the
   metadata if the elements really are SGP4 elements of an Earth orbit in TEME; otherwise keep the object in OMM form.
 - **Breaking: a document holding several messages of a type throws** ([#679](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/679), Fixed above): `Omm`/`Opm.LoadFromFile`,
@@ -6770,7 +6770,7 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   Migration: pass non-zero quaternions, normals and vectors; interpolate with `Lerp` between quaternions of the same
   hemisphere (flip `q2` when q · q2 < 0), or use `SLERP`, which takes the shorter path.
 - **Breaking: the direction of `PerigeeVector()` and `ApogeeVector()` at and near e = 0** ([#686](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/686), Fixed above). For
-  `KeplerianElements`, `EquinoctialElements` and `TLE` of eccentricity exactly 0, they move from ±x̂ a to the perifocal
+  `KeplerianElements`, `EquinoctialElements` and `Tle` of eccentricity exactly 0, they move from ±x̂ a to the perifocal
   axis in the plane of the orbit, at ω from the node (Ω, ω and i of the elements; an `EquinoctialElements` has ω = 0);
   for a `StateVector` whose eccentricity vector is exactly zero, from x̂ a to its unit node vector times a (x̂ for an
   equatorial orbit, unchanged). Near-circular elements and states no longer give a zero vector, an infinite apsis
@@ -6781,10 +6781,10 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   `KeplerianElements` and `EquinoctialElements` throw `InvalidOperationException` from `PerigeeVector`, `ApogeeVector`,
   `PerigeeVelocity` and `ApogeeVelocity` at every eccentricity, as they did at e ≠ 0 through `ToStateVector()` and as
   `EccentricityVector()` does, and now also at e = 0, where they returned ±x̂ a; so `PerigeeHeightManeuver`,
-  `ApogeeHeightManeuver` and `Launch` keep rejecting a mean target orbit. A `TLE`, whose semi-major axis, eccentricity
+  `ApogeeHeightManeuver` and `Launch` keep rejecting a mean target orbit. A `Tle`, whose semi-major axis, eccentricity
   and angles are those of its osculating elements at its epoch (SGP4/SDP4), takes the perifocal axis of those elements.
   Migration: read `PerigeeRadius()` for the magnitude alone; the direction is now the periapsis of the elements;
-  convert mean elements with their propagator first (`TLE.ToOsculating()`).
+  convert mean elements with their propagator first (`Tle.ToOsculating()`).
 - **Breaking: a rectilinear state throws where it has no RTN frame or orbit plane** ([#687](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/687), Fixed above): on a
   state with r × v = 0 exactly (a radial motion, a zero velocity, the centre) or a non-finite state, every member that
   reads the orbit plane or the RTN frame throws `InvalidOperationException`: `CreateRtnRotation`, `ToRtn`, `FromRtn`,
@@ -6818,9 +6818,9 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
 - **Breaking: the CLI follows the library's rule of a site identifier** (cli-site-rule of
   [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668)'s second round, Fixed above). CLI only. An identifier from
   100001 to 999998 that is not a site by the library's rule (x000, a body of at most 100, a Lagrange point) is read as a
-  celestial item: the error of `SpiceAPI.ReadEphemeris` instead of `ArgumentOutOfRangeException` or another message,
+  celestial item: the error of `SpiceApi.ReadEphemeris` instead of `ArgumentOutOfRangeException` or another message,
   and `sub-point` no longer calls it a site. A site is named by its SPICE name (DSS-13), not `site<id>`, and a site
-  that no loaded kernel names fails as `SpiceAPI.ReadEphemeris` fails, `ArgumentException` "has no name in SPICE", where
+  that no loaded kernel names fails as `SpiceApi.ReadEphemeris` fails, `ArgumentException` "has no name in SPICE", where
   it was read as `site<id>`: the SPK of a site the library writes (`Site.WriteEphemeris`) names nothing, its name being
   in the frame kernel of `Site.WriteFrameAsync`. The printed states of a named site do not move. Migration: load a
   kernel that names the site (`NAIF_BODY_NAME`/`NAIF_BODY_CODE`, as the frame kernel of `Site.WriteFrameAsync` does)
@@ -6852,7 +6852,7 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   the windows of the reads in that frame, and the frame of a site built from coordinates under a name a loaded kernel
   defines (`new Site(13, "DSS-13", earth, coordinates)` and `DSS-13_TOPO`), which `gfposc_c` searched in that kernel
   frame, is now searched in the frame of the coordinates, as it is read since #682 (7.8e-8 rad apart for DSS-13).
-  `SpiceAPI.FindWindowsOnCoordinateConstraint` throws `ArgumentException` (`frame`) for a frame of the library SPICE does
+  `SpiceApi.FindWindowsOnCoordinateConstraint` throws `ArgumentException` (`frame`) for a frame of the library SPICE does
   not know by name, where it returned no window. Migration: to search in a kernel frame, pass that frame
   (`new Frame("DSS-13_TOPO")`, or the frame of the kernel site, `new Site(13, "DSS-13", earth).Frame`); to search in a
   library frame with CSPICE, there is no way: use the `CelestialItem` or `Site` searches.
@@ -6963,20 +6963,20 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   `OpmParseException`, `CdmParseException`) instead of `ArgumentException` or `FormatException` around a load.
 
 - **Breaking: a CSPICE window search that SPICE cannot run throws `InvalidOperationException`** ([#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668), fourth round,
-  Fixed above). The five `SpiceAPI.FindWindows*`, and the CSPICE paths of the distance, occultation, coordinate,
+  Fixed above). The five `SpiceApi.FindWindows*`, and the CSPICE paths of the distance, occultation, coordinate,
   illumination and field-of-view searches of `CelestialItem`, `Site` and `Instrument` (`Site.FindDayWindows` and
   `Launch.FindLaunchWindows` of a kernel site included), throw `InvalidOperationException` with SPICE's message where
   they returned no window: an unknown frame, a body or an epoch without ephemeris data, an epoch outside the coverage of
   the frame data or the C-kernel, a missing instrument kernel, a step SPICE rejects, a result cell that overflows. The
   CLI commands `find-windows-from-coordinate-constraint`, `find-windows-from-distance-constraint`,
   `find-windows-from-occultation-constraint`, `find-windows-from-fov-constraint` and
-  `find-windows-from-illumination-constraint`, which call `SpiceAPI` directly, then end with that exception (its
+  `find-windows-from-illumination-constraint`, which call `SpiceApi` directly, then end with that exception (its
   message and stack on the error output, exit code 1, as for the CLI's other errors) where they printed nothing and
   exited with 0. The `ArgumentException` checks made before the native call (the frames of the library SPICE does not
   know, the occultation bodies, the illumination method) are unchanged. Migration: load the kernel SPICE's message
   names, or catch `InvalidOperationException` (test the exit code of a CLI command) where an empty result was taken to
   mean "never". A search SPICE runs is unchanged, bit for bit.
-- **`SpiceAPI.TransformFrame` composes the frame of a site only the library holds through ICRF** ([#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668), fourth round,
+- **`SpiceApi.TransformFrame` composes the frame of a site only the library holds through ICRF** ([#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668), fourth round,
   Fixed above), where it threw `InvalidOperationException`. Not breaking for a valid use: every other pair of frames is
   unchanged, bit for bit. Migration: none; code that caught the exception gets the transform.
 - **Breaking: a non-finite numeric value throws the reader's parse exception** ([#708](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/708), Fixed above).
@@ -7000,7 +7000,7 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   `MeanElements` (both constructors and both factories), `SpacecraftParameters`, `OpmData`,
   `OpmKeplerianElements.CreateWith*` and `OpmManeuverParameters` throw `ArgumentOutOfRangeException` naming the
   parameter for NaN, and for +Infinity or −Infinity, in a range-checked parameter, where they accepted it; so do
-  `TLE.ToOmm` and `Spacecraft.ToOpm`, which build them, for such a value, where they wrote `NaN`. Migration: pass finite values; a
+  `Tle.ToOmm` and `Spacecraft.ToOpm`, which build them, for such a value, where they wrote `NaN`. Migration: pass finite values; a
   non-finite element or spacecraft parameter carried no orbit. Finite values build bit for bit as before.
 - **The CCSDS content validators report a NaN variance or miss distance** ([#708](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/708), Fixed above): `OmmValidator`,
   `OpmValidator` and `CdmValidator.Validate` (and `Cdm.Validate`) report an error for a NaN or infinite covariance
@@ -7038,7 +7038,7 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   an encounter built by hand: each for NaN or ±Infinity, where they built it and wrote `NaN`, `Infinity` or `-Infinity`,
   which the readers refuse. A negative variance still builds and is reported by the validators. Migration: pass finite
   values, or leave an optional CDM value null; a non-finite state carried no orbit. Finite values build bit for bit as
-  before, `TLE.ToOmm` is unchanged, and the documents written are byte for byte unchanged. `CdmCovarianceMatrix`
+  before, `Tle.ToOmm` is unchanged, and the documents written are byte for byte unchanged. `CdmCovarianceMatrix`
   copies the matrix it is given and the one its `StateCovarianceRtn` returns: a term set afterwards on the caller's matrix
   or on the matrix returned no longer changes the record. Migration: build the record again, or use
   `with { StateCovarianceRtn = matrix }` with the changed matrix.
@@ -7048,7 +7048,7 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   period. Documents written to the standard are read bit for bit as before.
 - **Breaking: `KeplerianElements` and `EquinoctialElements` refuse elements that are not finite** ([#726](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/726), [#476](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/476)).
   The constructors stored a NaN or infinite element, which then reached the period, the anomalies and the conversions
-  done in .NET (only the conversions of `SpiceAPI` refused them, #714). They now throw when the elements are built
+  done in .NET (only the conversions of `SpiceApi` refused them, #714). They now throw when the elements are built
   (decided by S. Guillet, 2026-11-17, the recommendation of the triage: in the constructors, `ArgumentException` naming
   the parameter, `ArgumentOutOfRangeException` for the eccentricity and the ranges):
   - `KeplerianElements` (public constructor): `ArgumentOutOfRangeException` (`eccentricity`) for an eccentricity that is
@@ -7067,7 +7067,7 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
     `f` when √(F² + G²) overflows; P and the perigee radius below (#481).
   Results of finite elements are unchanged, bit for bit: the checks compute nothing they use. `NonFiniteInput_Throws` of
   `KeplerEquationTests` keeps the solver's guard and asserts the refusal of the elements, and the `SpiceApiTest`
-  rows of #714 that built non-finite elements now assert the constructor's exception (`SpiceAPI` keeps its own check).
+  rows of #714 that built non-finite elements now assert the constructor's exception (`SpiceApi` keeps its own check).
   Tests: `ElementsValidationTests.Issue726_*` and `Issue476_*` (red on a85098d). Migration: build elements from finite
   values; catch `ArgumentException` (which `ArgumentOutOfRangeException` derives from) where elements come from
   unchecked input.
@@ -7110,7 +7110,7 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   review of #459 measured `new KeplerianElements(7e6, 1 − 5e-7, ..., perigeeRadius: 7e6)` built with the semi-major axis,
   mean motion, period and apoapsis of a 7000 km circle and the state of the near-parabola, and a = −7e6 or +Infinity at
   e ≠ 1 built too (+Infinity giving the pre-#459 values). A missing perigee radius throws `ArgumentException`
-  (`perigeeRadius`). `SpiceAPI.ConvertStateVectorToConicOrbitalElement` forced a = +Infinity in the band, so Barker's
+  (`perigeeRadius`). `SpiceApi.ConvertStateVectorToConicOrbitalElement` forced a = +Infinity in the band, so Barker's
   mean motion, 2e9 times the conic's at ±5e-7 (measured by the review): it keeps `oscltx`'s −μ/(2ξ), +Infinity where
   `oscltx` gives 0 (e = 1 or a zero energy) (`NearParabolicBandTests.Issue459_InTheBand_*`,
   `Issue459_SpiceConversionInTheBand_*`, red on the branch before the review; the measurement of the tolerance is
@@ -7146,7 +7146,7 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   issue). It now throws `InvalidOperationException` naming e and a when the semi-major axis is not finite and above 0
   (decided by S. Guillet, 2026-11-17, the fix of the issue: the test is on a, not on e, so the conic's finite a of the
   near-parabolic band keeps its period, #459), before the cached period, so that a period given to `KeplerianElements`
-  for an open orbit, or the 0 of SPICE's `oscltx` for one (`SpiceAPI.ConvertStateVectorToConicOrbitalElement`), is not
+  for an open orbit, or the 0 of SPICE's `oscltx` for one (`SpiceApi.ConvertStateVectorToConicOrbitalElement`), is not
   returned either (the review of #663 measured 01:00:00 and 00:00:00; `Issue663_AnOpenOrbitGivenAPeriod_HasNoPeriod`).
   `ConvertStateVectorToConicOrbitalElement` passes SPICE's period only when it is above 0 and fits a `TimeSpan`: an
   ellipse at e = 1 − 2e-6, whose period is 2.1e12 s, threw `OverflowException` from the conversion and is now built
@@ -7164,22 +7164,22 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   constructors with `Mean`) was propagated from the two-body state of the mean numbers, with no error, by every path
   (11.75 km and 7.7 m/s from SGP4 at the epoch for the ISS, 468 km after a day; measured on a85098d, as in the issue);
   only a mean TEME set was refused, by the inertial-frame check. The recommendations of the issue (decided by
-  S. Guillet, 2026-11-17): both methods keep `ElementsType`; `ToKeplerianElements(Time)` is virtual and a `TLE`
+  S. Guillet, 2026-11-17): both methods keep `ElementsType`; `ToKeplerianElements(Time)` is virtual and a `Tle`
   overrides it as `ToKeplerianElements().ToKeplerianElements(epoch)`, its osculating SGP4 set moved in time, which stays
   `Osculating` (as before); and every `CentralBodyPropagator` constructor (so `Spacecraft.Propagate` and
   `PropagateAsync`, `CentralBodyPropagatorBuilder`, `Scenario.SimulateAsync`) throws `ArgumentException` (`spacecraft`)
-  naming the spacecraft and pointing to `TLEPropagator` and `TLE.ToOsculating()` for a mean initial orbit other than a
+  naming the spacecraft and pointing to `TlePropagator` and `Tle.ToOsculating()` for a mean initial orbit other than a
   TLE, checked with the inertial-frame check before the initial state is computed (a mean TEME set still meets the frame
   check first, `TlePropagationTests.MeanTemeSet_StaysRejected`). `AtEpoch` of mean elements advances the mean anomaly at
   the two-body mean motion only, without the secular rates of the theory, as before, now documented; a mean set moved to
-  its own epoch writes the same TLE through `TLE.Create`, which refused it before. Osculating elements and states are
+  its own epoch writes the same TLE through `Tle.Create`, which refused it before. Osculating elements and states are
   unchanged, bit for bit (only labels change), so no golden moves. Tests: `MeanElementsTypeTests` (mean Keplerian and
-  equinoctial sets from `FromOMM`, `TLE.ToMeanKeplerianElements()`, `ToEquinoctial()` and the constructors, in ICRF and
+  equinoctial sets from `FromOMM`, `Tle.ToMeanKeplerianElements()`, `ToEquinoctial()` and the constructors, in ICRF and
   `ECLIPTIC_J2000`, at their epoch and an hour later; the seven propagation paths, Velocity-Verlet and RK7(8), windows at
   and after the epoch; the TLE's osculating set within 8.9e-16 of CSPICE `prop2b` over the TT seconds of the hour on
   Linux x64 and macOS arm64, 3.8e-15 on Windows x64, whose native library MSVC builds, threshold twice the worst), red
-  on a85098d. Migration: propagate a TLE with `TLEPropagator` or
-  start from `TLE.ToOsculating()` (or the TLE itself, whose SGP4 state starts the propagation); build osculating
+  on a85098d. Migration: propagate a TLE with `TlePropagator` or
+  start from `Tle.ToOsculating()` (or the TLE itself, whose SGP4 state starts the propagation); build osculating
   elements for a numerical propagation.
 - **Breaking: `Spacecraft.SetStandbyManeuver` sets the head of the maneuver chain**
   ([#584](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/584), decided by S. Guillet,
@@ -7264,7 +7264,7 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   rounded to 3 digits or fewer may be refused).
 
 - **Breaking: a CSPICE window search returns every window, up to 10000** ([#653](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/653), Fixed above).
-  `SpiceAPI.FindWindowsOnDistanceConstraint`, `FindWindowsOnCoordinateConstraint`, `FindWindowsOnIlluminationConstraint`,
+  `SpiceApi.FindWindowsOnDistanceConstraint`, `FindWindowsOnCoordinateConstraint`, `FindWindowsOnIlluminationConstraint`,
   `FindWindowsOnOccultationConstraint` and `FindWindowsInFieldOfViewConstraint`, and the CSPICE paths of the searches of
   `CelestialItem`, `Site` and `Instrument`, return every window CSPICE finds where they returned the first 1000, and an
   illumination search of 1001 to 10000 windows returns them where it threw; beyond 10000 each throws
@@ -7275,8 +7275,8 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   splits it under 10000. The native proxies take two more arguments, the capacity of the buffer and the count written:
   the native library and the .NET library of 11.0.0 go together.
 
-- **Breaking: the window reads of `SpiceAPI` are on the grid start + i·step** ([#563](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/563), Fixed above).
-  `SpiceAPI.ReadEphemeris(Window, ...)` and `ReadOrientation` read at start + i·step in the time frame of the window
+- **Breaking: the window reads of `SpiceApi` are on the grid start + i·step** ([#563](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/563), Fixed above).
+  `SpiceApi.ReadEphemeris(Window, ...)` and `ReadOrientation` read at start + i·step in the time frame of the window
   start (UTC steps for a UTC window, which the native layer stepped in TDB), i from 0 while within the window, the end
   included when it falls on the grid: one more state or record where the drift of the former stepping dropped the last
   epoch (6001 for 6000 over 600 s at 0.1 s), and the epochs and labels of `ReadEphemeris` exactly on the grid where they
@@ -7304,7 +7304,7 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   `ArgumentException` ("Frame not found"), where it returned the ICRF difference labelled with that frame. Migration:
   read with `Aberration.None`, or with a `SpiceDataProvider`; for another frame, store its orientations with
   `AddStateOrientationToICRF(frame, date, orientation)` over the epochs read (from SPICE, for example
-  `SpiceAPI.Instance.TransformFrame(date, frame, Frame.ICRF)`), or read in ICRF, the numbers returned before.
+  `SpiceApi.Instance.TransformFrame(date, frame, Frame.ICRF)`), or read in ICRF, the numbers returned before.
 
 - **Breaking: `Frame` keeps no orientations; the attitude record API is `SpacecraftFrame`'s** ([#541](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/541), Fixed above).
   The protected `_stateOrientationsToICRF` and `StateOrientationsToICRF` of `Frame` are removed, and
@@ -7327,7 +7327,7 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   the default frame ICRF or a frame named `icrf` or `j2000`, printed `Frame : j2000`; they print `Frame : J2000`, as a
   site observer did. Numbers unchanged. Migration: a script that parses the label reads `J2000`, or compares it ignoring
   case.
-- **Breaking: the two-body calls of `SpiceAPI` return the caller's observer and frame** ([#725](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/725)).
+- **Breaking: the two-body calls of `SpiceApi` return the caller's observer and frame** ([#725](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/725)).
   The results of `Propagate2Bodies`, `ConvertStateVectorToConicOrbitalElement`, `ConvertConicElementsToStateVector` and
   `ConvertEquinoctialElementsToStateVector` (every overload) carried a new `CelestialBody` built from the identifier of
   the centre (`ProfilesConfiguration.Convert` of the native result) and a frame rebuilt from its name: the caller's
@@ -7340,13 +7340,13 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   ECLIPJ2000, red on a85098d for all three). The positions, velocities, elements and epochs are unchanged, bit for bit.
   Migration: none for a caller that read the observer's identifier or name; a caller that relied on a body read from the
   kernels gets its own instance back (build the observer from the kernels to have one).
-- **Breaking: `SpiceAPI.ConvertEquinoctialElementsToStateVector` returns the state of its elements** ([#450](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/450), Fixed above).
+- **Breaking: `SpiceApi.ConvertEquinoctialElementsToStateVector` returns the state of its elements** ([#450](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/450), Fixed above).
   Its state was that of the elements with L0 read as a mean longitude; it is now the state at the true longitude L0, as
   `EquinoctialElements.ToStateVector()` gives it (within 1.0e-15 relative of the 60-digit closed form). Circular orbits,
   whose two longitudes coincide, give the same state. Migration: a caller that passed the mean longitude as L0 to work
   around the defect passes the true longitude.
 - **Breaking: a site identifier is about its body, not an asteroid** ([#651](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/651), Fixed above).
-  `SpiceAPI.GetCelestialBodyInfo` (so `SpiceDataProvider.GetCelestialBodyInfo` and the command `celestial-body-info`) of a
+  `SpiceApi.GetCelestialBodyInfo` (so `SpiceDataProvider.GetCelestialBodyInfo` and the command `celestial-body-info`) of a
   site identifier, 100001 to 999999 with a planet or a moon SPICE names as body (399013 for DSS-13), gives its body as
   `CenterOfMotionId` and its body's barycentre as `BarycenterOfMotionId` (399 and 3), where it gave 10 and 0;
   `CelestialItem.IsAsteroid` is false for it, and a `CelestialBody` of that identifier is about its body, its
@@ -7401,7 +7401,7 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   state; such a value carries no orbit.
 - **Breaking: `Omm.ToTle` refuses a `MEAN_MOTION` its TLE field cannot hold** ([#729](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/729), Fixed above). A mean
   motion above the 99.99999999 rev/day of the 11-character field throws `InvalidOperationException` naming `MEAN_MOTION`
-  and its value, as a `NORAD_CAT_ID` or a `REV_AT_EPOCH` the TLE cannot represent, where `TLE`'s constructor threw its
+  and its value, as a `NORAD_CAT_ID` or a `REV_AT_EPOCH` the TLE cannot represent, where `Tle`'s constructor threw its
   line-length `ArgumentException` and, above about 2.86e307 rev/day, a TLE was returned with the text `Infinity`.
   Migration: catch `InvalidOperationException` instead of `ArgumentException`; such an object has no TLE form.
 - **Breaking: `CdmCovarianceMatrix.StateCovarianceRtn` refuses a matrix that is not 6×6** ([#730](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/730), Fixed above).
@@ -7414,12 +7414,12 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   `revolutionNumberAtEpoch` (`nameof` of the parameter).
 - **Breaking: `Omm.ToTle` reads `OBJECT_ID = UNKNOWN` as no designator** ([#604](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/604), Fixed above; decided by
   S. Guillet, 2026-11-18). An OMM whose `OBJECT_ID` is `UNKNOWN` (trimmed, in any letter case) gives a TLE with blank
-  columns 10-17, where `UNKNOWN ` (or `unknown `, as given) was written there (measured on f70ee32); `TLE.ToOmm` writes
-  `UNKNOWN` for a TLE without a designator, where it threw, and `TLE.Create` writes blank columns for a null or blank
+  columns 10-17, where `UNKNOWN ` (or `unknown `, as given) was written there (measured on f70ee32); `Tle.ToOmm` writes
+  `UNKNOWN` for a TLE without a designator, where it threw, and `Tle.Create` writes blank columns for a null or blank
   `cosparId`, where it threw `ArgumentException`, and `OrbitalParameters.ToTLE` for a null or blank
   `Configuration.CosparId`, where it threw `InvalidOperationException` ("TLE conversion using Equinoctial elements
   failed"). Migration: a consumer that read `UNKNOWN` in the designator columns reads blanks; a caller that passed a
-  placeholder designator to `TLE.Create` or `Configuration` (`00000A`) can pass null.
+  placeholder designator to `Tle.Create` or `Configuration` (`00000A`) can pass null.
 - **Breaking: the OPM writers write the CCSDS name of `Frame.ICRF`** ([#339](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/339), Fixed above; decided by S. Guillet,
   2026-11-18). `Opm.CreateFromStateVector` and `Spacecraft.ToOpm` write `REF_FRAME = ICRF` for a state in `Frame.ICRF`,
   and `ToOpm` `MAN_REF_FRAME = ICRF` for its impulses, where they wrote `J2000`; every other frame keeps its name, and
@@ -7464,7 +7464,7 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   (from states, equinoctial elements, SPICE's `oscltx`, the maneuvers, the TLE fit) have the sign of their conic.
   Migration: give a hyperbola its negative semi-major axis, a = −μ/(2ξ) (`KeplerianElementsTests.IsHyperbolic` gave
   a = 20 000 m with e = 1.1). Such elements used to reach the `CONICS` check of the three
-  `SpiceAPI.ConvertConicElementsToStateVector` overloads (#711, `ArgumentException` naming `keplerianElements`); they now
+  `SpiceApi.ConvertConicElementsToStateVector` overloads (#711, `ArgumentException` naming `keplerianElements`); they now
   throw at their construction (`semiMajorAxis`), and that check is left with the elements it still sees, mean elements of
   e ≥ 1 from `FromOMM` and an a (1 − e) that overflows (`SpiceApiTest.ConvertConicElementsToStateVector_OfAPeriapsisNotFiniteAndAboveZero_ThrowsArgumentException`).
 
@@ -7502,18 +7502,18 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   Migration: a caller that wrote the array to change the matrix calls `Set`, or builds the matrix again.
 - **Breaking: a propagator refuses a spacecraft whose initial orbit changed** ([#783](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/783), lot L5a, R08 of [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668),
   decision 37, decided by S. Guillet, 2026-11-23): `PropagatorBase.Propagate` (`CentralBodyPropagator`, both
-  constructors, and a subclass) and `TLEPropagator.Propagate` throw `InvalidOperationException`, with the other checks of
+  constructors, and a subclass) and `TlePropagator.Propagate` throw `InvalidOperationException`, with the other checks of
   the run and before the token, so before anything changes, once the spacecraft holds other `InitialOrbitalParameters`
   than those the propagator was built from, compared by reference: an orbit replaced by an equal but distinct object
   throws too, the same object set again does not. Before, a reused `CentralBodyPropagator` ran from the orbit of its
   construction while the spacecraft reported another (6 930 000 m against a semi-major axis of 7 500 000 m in the
-  probes of R08), and a `TLEPropagator` took its first sample from the TLE of its construction and the others from the
+  probes of R08), and a `TlePropagator` took its first sample from the TLE of its construction and the others from the
   spacecraft's orbit (a 668 860 m jump between samples 0 and 1). The guard covers the orbit only: the maneuver chain,
   the tanks and the coefficients are read at each run. `Spacecraft.Propagate`, `Scenario.Simulate`, `BatchPropagator`
   and `MonteCarloPropagator` build a propagator per call and are not concerned (`RunIndependenceTests`: both integrators,
   both constructors, ICRF, ECLIPJ2000, SSB mode, a TLE). Migration: build a new propagator after
   `SetInitialOrbitalParameters`.
-- **Breaking: a `TLEPropagator` run re-arms the spacecraft and replaces its stored states** ([#803](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/803) (a), lot L5a,
+- **Breaking: a `TlePropagator` run re-arms the spacecraft and replaces its stored states** ([#803](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/803) (a), lot L5a,
   R08 of #668, decision 38, decided by S. Guillet, 2026-11-23): a run computes every sample and acceleration, then, in one block,
   re-arms the spacecraft as a numerical propagation does (stored states, attitude record and last solution dropped,
   `ExecutedManeuvers` cleared, tanks refuelled) and stores its samples alone, in one arc; a stop or an SGP4 failure
@@ -7523,7 +7523,7 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   `IsPropagated` and reads SGP4 outside the samples, as a spacecraft only sampled did before. The unused orientations
   the propagator kept (an internal dictionary keyed by label) are gone. Migration: none for a single run; to keep the
   states of several windows, sample one window that holds them.
-- **Breaking: `TLEPropagator` refuses a spacecraft with a maneuver plan** (lot L5a, R08 of #668, decision 40, decided by
+- **Breaking: `TlePropagator` refuses a spacecraft with a maneuver plan** (lot L5a, R08 of #668, decision 40, decided by
   S. Guillet, 2026-11-23): its constructor throws `ArgumentException` (`spacecraft`), and `Propagate`
   `InvalidOperationException` for a plan set after construction, before anything changes; before, the plan was ignored
   silently (measured in the gap analysis: an apogee raise over 3 h executed nothing, the fuel unchanged), and a plan on
@@ -7557,8 +7557,8 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   windows of one hour at 60 s (`AddedStatesGapTests`, with the reads of each window, to the bit those of a spacecraft
   holding it alone, and within 3.412e-4 m of the two-body orbit on Linux x64, Windows and macOS arm64 alike, the CI of
   #808), and a TLE spacecraft sampled by
-  `TLEPropagator` and given later states interpolated across the gap where it now reads SGP4. A call within or touching
-  the stored states, a propagation and a `TLEPropagator` run are unchanged, bit for bit, as is every read inside the
+  `TlePropagator` and given later states interpolated across the gap where it now reads SGP4. A call within or touching
+  the stored states, a propagation and a `TlePropagator` run are unchanged, bit for bit, as is every read inside the
   stored states, and a corrected read past the end of a propagation that ends with an impulse, within the light time
   after the end, still reads the last arc of one state that impulse opens (#575), touching the arc before it at the
   impulse: the state after the impulse, as before (decision 90; decisions 85 and 87 apply to arcs separated by a
@@ -7601,7 +7601,7 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   lot L5b, with R13 and `BodyAxis` (decision 69), both below.
   Migration: a preview of
   an impulse is `ComputeDeltaV(state)`, of an attitude `ComputeStateOrientation(state)`, the fuel of a delta-V
-  `Tsiolkovski.DeltaM(isp, mass, deltaV)`; a user maneuver keeps its `Execute` override on an `ImpulseManeuver`.
+  `Tsiolkovsky.DeltaM(isp, mass, deltaV)`; a user maneuver keeps its `Execute` override on an `ImpulseManeuver`.
 - **Breaking: `ImpulseManeuver.ComputeEventValue` is pure** (lot L5a, decision 50 of #668, [#802](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/802)): it locks no node and
   writes no intersection; the node of a `PlaneAlignmentManeuver` is locked by the detector of a run, at its first
   evaluation, by the rule of before (the detector internal since decision 88). A run is bit for bit that of
@@ -7688,7 +7688,7 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   integrators; a subclass builds new states.
 - **Breaking: `PropagationSolution.CovariancePropagation` is `CovariancePropagationOptions.None` when the propagation
   propagated neither Φ nor the covariance** (lot L5a, R09 of #668, decision 56, decided by S. Guillet, 2026-11-23), on
-  every path, a `TLEPropagator` solution included; it was null, while `Options.CovariancePropagation` was `None`. A
+  every path, a `TlePropagator` solution included; it was null, while `Options.CovariancePropagation` was `None`. A
   caller's `solution.CovariancePropagation == null` still compiles but is now always false, which the compiler does not
   catch. Migration: test `solution.CovariancePropagation.Mode == CovariancePropagationMode.None`.
 - **Breaking: `Spacecraft.ExecutedManeuvers` is an `IReadOnlyList<Maneuver>`, a new list at each run** (lot L5a, R09 of
@@ -8064,7 +8064,7 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
 - **Breaking: `Star.WriteEphemeris` of a star that stores fewer than three states throws `InvalidOperationException`**
   ([#799](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/799)(e), lot L5c, decision 81 of
   #668, decided by S. Guillet, 2026-11-23): it threw the `ArgumentException` (`stateVectors`) of
-  `SpiceAPI.WriteEphemeris`, whose native writer writes three states or more; nothing is written. `SpiceAPI.WriteEphemeris`
+  `SpiceApi.WriteEphemeris`, whose native writer writes three states or more; nothing is written. `SpiceApi.WriteEphemeris`
   and `Site.WriteEphemeris`, whose arguments are at fault, keep theirs. Migration: catch `InvalidOperationException`, or
   propagate the star over three steps or more.
 - **Breaking: `CosmographiaExporter.ExportAsync` refuses to replace a previous export SPICE holds**
@@ -8101,7 +8101,7 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   #668, decided by S. Guillet, 2026-11-23): the rule of the export, checked before the propagation, exit code 2
   (`Error: name: …`), where the name propagated and was written into nested directories or failed after the propagation.
   Migration: another name.
-- **A `TLE` reads no kernel when it is built** (lot L7, R21 of
+- **A `Tle` reads no kernel when it is built** (lot L7, R21 of
   [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668)): its Earth reads its GM, radii,
   frame and orbit from the data provider at the first member that needs them (`MeanSemiMajorAxis`,
   `ToMeanKeplerianElements`, SGP4), from the provider set at that time, a failed read keeping nothing; so a valid set gives
@@ -8112,13 +8112,13 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   NaN `MeanMotion()` for its life. `ToString` prints the semi-major axis only when the provider gives the GM, and the mean
   motion. With the kernels loaded nothing moves (`TLETests`, `Sgp4ReferenceTests`, the propagation of a TLE spacecraft).
   Migration: none.
-- **`TLE.ToOmm` writes the mean motion of the field** (lot L7, decision 111 of #668, decided by S. Guillet, 2026-11-26):
+- **`Tle.ToOmm` writes the mean motion of the field** (lot L7, decision 111 of #668, decided by S. Guillet, 2026-11-26):
   `MEAN_MOTION` is the field of line 2 as written, in rev/day; before, √(GM/a³)·86400/2π with a = ∛(GM/n²), which moved it
   on 22 of the 31 sets of `Data/Sgp4Reference` by up to 3 ulp (3.4e-16 relative, e.g. 15.957445309999999 for 15.95744531;
   `TleMeanMotionTests`), so the conformance runner's `tle_to_omm` deltas fall to 0. The occultation step a TLE spacecraft
   infers (decision 106) takes `MeanMeanMotion`, within 2 ulp of the former `MeanMotion()`, under a tick of its period.
   Migration: none.
-- **Breaking: the `TLE` constructor checks every field and throws `ArgumentException` for any bad line** (lot L7, R21 of
+- **Breaking: the `Tle` constructor checks every field and throws `ArgumentException` for any bad line** (lot L7, R21 of
   [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668)): `ArgumentException` naming
   `line1` or `line2`, with a `TleFormatException` (line, column) as inner exception, for the length, the line number, the
   catalog number, two catalog numbers (line 2, column 3) and the checksum, as before but with the parameter named, and now
@@ -8127,7 +8127,7 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   element set and revolution numbers, the four angles, e (seven digits) and n (`TleFieldsTests`); no physical range. Before,
   a wrong checksum and two catalog numbers threw `InvalidOperationException`, a malformed field a `FormatException` without
   its column (or nothing: a day 000 or 400 rolled into the neighbouring year), and the length and line-number errors named no parameter. Every TLE of the repository and of the conformance
-  suite passes, so no result moves; `TLE.Create`, whose `cosparId` was any text of 6 to 8 characters, now throws
+  suite passes, so no result moves; `Tle.Create`, whose `cosparId` was any text of 6 to 8 characters, now throws
   `ArgumentException` naming `cosparId` for a designator that is not of that form (`ABCDEF`, `98067a`), before it
   builds its lines (`ToTLE` still `InvalidOperationException`, its fit failing). Migration: catch `ArgumentException` (its
   `InnerException` is the `TleFormatException`) where `InvalidOperationException` or `FormatException` was caught.
@@ -8259,7 +8259,7 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
 
 - **Breaking: `ToTle(name, noradId, cosparId, TleFitOptions options = null)` in place of
   `ToTLE(TLE.Configuration)`** (lot L9, decision 113 of [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668), decided by S. Guillet, 2026-11-26; no
-  forwarder). The fit takes the name, the NORAD id and the COSPAR id in the order of `TLE.Create`, and its other fields
+  forwarder). The fit takes the name, the NORAD id and the COSPAR id in the order of `Tle.Create`, and its other fields
   and settings in the sealed record `TleFitOptions` (D1: `Default` equal to `new()`): `RevolutionNumberAtEpoch`,
   `Classification`, `BStar`, `MeanMotionDot` (ṅ/2), `MeanMotionDDot` (n̈/6), `ElementSetNumber` and `MaxIterations`,
   an `int` (a `ushort` before; a negative value throws `ArgumentOutOfRangeException` at init), each default that of
@@ -8291,7 +8291,7 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   parameters `Time date` (`IDataProvider.GetEphemeris` and `FrameTransformationToICRF`, their implementations,
   `MemoryDataProvider.AddStateVector` and `AddStateOrientationToICRF`, `Frame.GetStateOrientationToICRF` and its
   overrides, `Site.GetEphemeris` and the three illumination angles, `Instrument.IsInFOV`, `GetBoresightInICRFFrame` and
-  `GetRefVectorInICRFFrame`, `TLE.ToStateVector`, `StateOrientation.Interpolate`, `Lagrange.Interpolate`,
+  `GetRefVectorInICRFFrame`, `Tle.ToStateVector`, `StateOrientation.Interpolate`, `Lagrange.Interpolate`,
   `Window.Contains`) are named `epoch`, `StateOrientation.AtDate` is `AtEpoch`, the `epochAtDescendingNode` of
   `CelestialBody.HelioSynchronousOrbit` is `descendingNodeEpoch`, and the `P` of
   `LegendreFunctions.ComputeGeodesyNormalizedLegendreTable` is `p`. Migration: a named argument `date:` → `epoch:`;
@@ -8334,7 +8334,7 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   re-baseline, decided by S. Guillet, 2026-11-19, no forwarder): the searches are on the observer, their settings one
   options record per kind (`WindowSearchOptions`, `OccultationSearchOptions`, `FieldOfViewSearchOptions`), each on the
   path of the former search of the target with the observer as argument, the same windows but for the two Breaking
-  entries above (a site observer's occultation, the labels). The raw searches of `SpiceAPI`, by NAIF identifiers, stay;
+  entries above (a site observer's occultation, the labels). The raw searches of `SpiceApi`, by NAIF identifiers, stay;
   an implementer of `ILocalizable` drops its three searches, which the extensions replace for any `ILocalizable` (the
   library's search, through `GetEphemeris`). Migration:
   - `target.FindWindowsOnDistanceConstraint(window, observer, relation, value, aberration, step)` →
@@ -8355,7 +8355,7 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   - `site.FindWindowsOnIlluminationConstraint(window, angle, relation, value, adjust, aberration, step, source[, method])`
     → `site.FindIlluminationWindows(window, angle, relation, value, source, new WindowSearchOptions { Step = step,
     Aberration = aberration, AdjustValue = adjust })`, `AdjustValue` left null but for `AbsoluteMin` and `AbsoluteMax`, as
-    for the coordinates, the method ELLIPSOID, the only one (`SpiceAPI.FindWindowsOnIlluminationConstraint` keeps
+    for the coordinates, the method ELLIPSOID, the only one (`SpiceApi.FindWindowsOnIlluminationConstraint` keeps
     its `method`, and the emission and phase angles with an observer);
   - `instrument.FindWindowsInFieldOfViewConstraint(window, spacecraft, target, targetFrame, targetShape, aberration, step)`
     → `instrument.FindFieldOfViewWindows(window, target, new FieldOfViewSearchOptions { Step = step, Aberration =
@@ -8405,7 +8405,7 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   a caller's own exception from the standard type that fits it.
 - **Six exports of the native library that .NET never called** (R03 of #668, section A): `LaunchProxy`,
   `TDBToStringProxy`, `UTCToStringProxy`, `ConvertTDBToUTCProxy`, `ConvertUTCToTDBProxy` and
-  `ConvertStateVectorToEquatorialCoordinatesProxy`. No P/Invoke declaration of `SpiceAPI` named them, and two returned
+  `ConvertStateVectorToEquatorialCoordinatesProxy`. No P/Invoke declaration of `SpiceApi` named them, and two returned
   SPICE's message as their date string; the C++ classes they called stay, with their tests. Only a C++ or other native
   consumer of `IO.Astrodynamics.so`, `.dll` or `.dylib` meets it. Migration: `Launch.FindLaunchWindows`, `Time.ToString`,
   `Time.ToUTC`, `Time.ToTDB` and `StateVector.ToEquatorial` in .NET; the C++ classes `Launch`, `TDB`, `UTC` and
@@ -8439,14 +8439,14 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   `GetCelestialBodyInfo` reached one. Migration: `CelestialBodyInfo` for the body information (Changed above); the
   domain types (`IO.Astrodynamics.Math.Vector3`, `Quaternion`, `OrbitalParameters.StateVector`, `TimeSystem.Window`,
   `Coordinates.Planetodetic`, ...) for the others.
-- **The ten raw conversions of `SpiceAPI`** (lot L3, R04 of #668, choice 1 as amended by section 7 of the re-baseline,
+- **The ten raw conversions of `SpiceApi`** (lot L3, R04 of #668, choice 1 as amended by section 7 of the re-baseline,
   decided by S. Guillet, 2026-11-19: removed from the public API outright, no forwarder): `ConvertTleToStateVector(line1,
   line2, line3, epoch)`, `ConvertStateVectorToConicOrbitalElement(stateVector)` and `(stateVector, gm)`,
   `ConvertEquinoctialElementsToStateVector(elements)`, `ConvertConicElementsToStateVector(elements)`, `(elements, epoch)`
   and `(elements, epoch, gm)`, `Propagate2Bodies(stateVector, dt)`, `(stateVector, gm, dt)` and `(stateVector,
   targetEpoch)`. They twinned the object API through CSPICE; the library keeps them internal, the SPICE references of its
   tests. Migration, the object API, the library's own computation, which agrees with CSPICE to the tolerances of the
-  tests, not bit for bit: `new TLE(name, line1, line2).ToStateVector(epoch)` (the same `evsgp4_c`);
+  tests, not bit for bit: `new Tle(name, line1, line2).ToStateVector(epoch)` (the same `evsgp4_c`);
   `stateVector.ToKeplerianElements()`; `elements.ToStateVector()` and `elements.ToStateVector(epoch)`;
   `stateVector.AtEpoch(stateVector.Epoch + dt).ToStateVector()` and `stateVector.AtEpoch(targetEpoch).ToStateVector()`,
   which count the TT seconds between the instants about the Earth (#508) where `Propagate2Bodies` counted the difference
@@ -8556,7 +8556,7 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   `Task.Run(() => BatchPropagator.Propagate(tasks, options, token), token)`.
 - **`BatchOptions.CancellationToken` and `BatchOptions.Progress`** (R28 of #668, D1, decision 4 of lot L4): the token
   and the progress are parameters of `BatchPropagator.Propagate` and `MonteCarloPropagator.Propagate` (under Changed).
-- **`Dispose` of `PropagatorBase` and `TLEPropagator`, and `IDisposable` on `IPropagator`** (R28 of #668): under Changed.
+- **`Dispose` of `PropagatorBase` and `TlePropagator`, and `IDisposable` on `IPropagator`** (R28 of #668): under Changed.
 - **`OrbitalParameters.ToPlanetocentric(Aberration)`** (R20 of #668), whose correction was not used. Migration:
   `ToPlanetocentric()`, the same values, bit for bit; `ToPlanetodetic()` for the geodetic coordinates.
 - **`AtmosphericContext.FromPlanetodetic(altitude, geodeticLatitude, geodeticLongitude, epoch)`** (R20 of #668), whose
@@ -8578,7 +8578,7 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
 - **`Spacecraft.GetTotalFuel()`** (lot L5a, R09 of #668, decision 60, decided by S. Guillet, 2026-11-23): it returned
   the initial fuel whatever a run burnt. Migration: `GetInitialFuel()`, the same value, or `GetRemainingFuel()` for the
   fuel left.
-- **`TLE.MeanMotion()`** (lot L7, R21 of #668, decision 111, decided by S. Guillet, 2026-11-26, no forwarder): √(GM/a³)
+- **`Tle.MeanMotion()`** (lot L7, R21 of #668, decision 111, decided by S. Guillet, 2026-11-26, no forwarder): √(GM/a³)
   of the mean semi-major axis, which needed the kernels. **Breaking**: `tle.MeanMotion()` still compiles and now binds to
   `OrbitalParameters.MeanMotion(double)`, the mean motion of the osculating SGP4 set at the epoch, 0.14 % off the mean one
   for the ISS (15.4709 against 15.4931 rev/day). Migration: `tle.MeanMotion()` → `tle.MeanMeanMotion`, within 2 ulp of
@@ -8643,7 +8643,7 @@ not listed.
   6.2e-4 s with `XLT`; 5.0e-7 s geometric), though the states agree: the two light-time models differ, and which one is
   right is not established. Since lot L6 the occultation search of a site observer is the library's whatever the site
   (under **Changed**), so its edges move by those amounts from the former `gfoclt` path. Workaround: for `gfoclt`'s
-  windows from a site of the kernels, `SpiceAPI.FindWindowsOnOccultationConstraint` with the site's NAIF id
+  windows from a site of the kernels, `SpiceApi.FindWindowsOnOccultationConstraint` with the site's NAIF id
   ([Occultations](../reference/occultations.md#accuracy)).
 - **A crossing during a UTC leap second in the library's threshold search**
   ([#830](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/830)). `GeometryFinder`, the
@@ -8657,7 +8657,7 @@ not listed.
   [#655](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/655),
   [#661](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/661),
   [#706](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/706)). `Spacecraft.WriteOrientation`,
-  `SpiceAPI.WriteOrientation` and `SpiceAPI.WriteEphemeris` (under `Star.WriteEphemeris` and `Site.WriteEphemeris`),
+  `SpiceApi.WriteOrientation` and `SpiceApi.WriteEphemeris` (under `Star.WriteEphemeris` and `Site.WriteEphemeris`),
   and the text kernel writers since decision 103 of #668, leave the kernel they write unloaded: load it after writing. A file they replace is unloaded first under its path and
   the absolute names whose symbolic links resolve through it (#706), but not under a relative name other than its path
   (a meta-kernel's) nor through a hard link, through which SPICE goes on reading the replaced data: unload such a load
@@ -8665,7 +8665,7 @@ not listed.
   directory inside a loaded one and a file SPICE holds, a meta-kernel's included; a load of the directory made while
   its handle lives furnishes nothing for the handle's files and does not take them over, `Dispose` unloading them all
   (load them again after it to keep them), and `IsLoaded` does not follow a user's `UnloadKernels` of them. A
-  spacecraft propagated by `TLEPropagator` has no attitude record, so its CK cannot be written (`WriteKernels` refuses
+  spacecraft propagated by `TlePropagator` has no attitude record, so its CK cannot be written (`WriteKernels` refuses
   it too) and its field-of-view searches throw
   ([#682](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/682)); give it its attitude with
   `AddStateOrientationToICRF`, after the run.
@@ -8696,7 +8696,7 @@ not listed.
   it under a shorter directory. Paths are compared ordinally, so on Windows and macOS two spellings that differ in case
   are two entries.
 - **Orientations read in CIRS or TIRS, and frames of the library built by name**
-  ([#558](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/558)). `SpiceAPI.ReadOrientation` in
+  ([#558](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/558)). `SpiceApi.ReadOrientation` in
   CIRS or TIRS throws: SPICE does not know them (a frame built by those names is routed to `Frame.CIRS` and `Frame.TIRS`
   everywhere else since #656, Fixed above). The frame of a site built from coordinates and that of a managed spacecraft with an attitude
   record are read in J2000 and rotated ([#682](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/682)), and searched in by the library (third review of #690), but a frame built by
@@ -8704,7 +8704,7 @@ not listed.
   whose CSPICE search throws SPICE's error (no window before the fourth round of #668).
 - **Identifiers that are not celestial bodies**
   ([#650](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/650),
-  [#651](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/651)). `SpiceAPI.ReadEphemeris` by
+  [#651](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/651)). `SpiceApi.ReadEphemeris` by
   identifiers throws `ArgumentException` for a spacecraft observer: with `Aberration.None`, read with the spacecraft as
   target and negate the state (with LT, CN or +S the negation is not the state `spkezr` gives); so does a site observer
   that no loaded kernel names, and one whose SPK does not cover J2000 TDB, which its `Site` constructor reads, throws
@@ -8713,7 +8713,7 @@ not listed.
   (they threw or were built with a garbage frame name before
   [#672](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/672), and about the Sun before #651,
   under Changed): build a `Site`.
-  `SpiceAPI.ReadEphemeris` from a site identifier labels its state with a `Site` (#672). The commands of the CLI follow
+  `SpiceApi.ReadEphemeris` from a site identifier labels its state with a `Site` (#672). The commands of the CLI follow
   the same rule and build the same site (its SPICE name), under Changed.
   `MemoryDataProvider` throws `ArgumentException` naming `naifId` for a body it holds no information on, as
   `SpiceDataProvider` for an identifier SPICE does not name
@@ -8743,7 +8743,7 @@ not listed.
   over the last 90 s (every 15 s; 4.336e3 m at +3570 s), 9.8 m with the extra state 100 µs after the last, 4.6e-4 m
   with it 1 s after, 7.6e-4 m without it (Linux x64, 2026-11-17): each SGP4 state carries the tick rounding of its epoch, about 0.77 mm per tick
   at 7.7 km/s, which the near-coincident pair amplifies. The propagations do not meet it: the stored states drop an
-  output closer to an impulse than a tenth of the output step, and `TLEPropagator` a grid point that close to the window
+  output closer to an impulse than a tenth of the output step, and `TlePropagator` a grid point that close to the window
   end (#598, Fixed above). Workaround: give `AddPropagatedStates` states at least a tenth of their spacing apart.
 - **TLEs**. A spacecraft propagated numerically from a TLE ([#675](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/675)) integrates about the TLE's Earth, a point mass whose drag, without an atmospheric model,
   is NRLMSISE-00 at nominal space weather ([#674](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/674)), and an Earth with a geopotential or an atmosphere in the bodies throws
@@ -8753,7 +8753,7 @@ not listed.
   as TEME, are still rejected as initial frames. A TLE cannot be built without the kernels that define the Earth.
 - **Runs on one spacecraft** ([#793](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/793), [#794](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/794)). A spacecraft takes one run at a
   time (decision 43 of #668), and nothing checks it yet: two runs on one spacecraft at the same time, through two
-  propagators, `Spacecraft.Propagate`, a `TLEPropagator`, a scenario or a batch beside a direct run, interleave with no
+  propagators, `Spacecraft.Propagate`, a `TlePropagator`, a scenario or a batch beside a direct run, interleave with no
   exception, and can charge a burn twice (a tank left at 841.263915 kg against 917.541305 kg in 1 trial of 12 in the gap
   analysis of lot L5); a guard that refuses the second run comes after lot L5 (#793;
   [Thread Safety](../guides/thread-safety.md#one-run-at-a-time-per-spacecraft)). Nor is the plan of a spacecraft

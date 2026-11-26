@@ -18,7 +18,7 @@ using Xunit;
 namespace IO.Astrodynamics.SmokeTests;
 
 /// <summary>
-/// Comprehensive smoke tests exercising every public SpiceAPI method.
+/// Comprehensive smoke tests exercising every public SpiceApi method.
 /// These tests verify that the native P/Invoke layer is correctly loaded
 /// and all entry points are reachable.
 /// </summary>
@@ -29,7 +29,7 @@ public class SpiceAPISmokeTests
 
     public SpiceAPISmokeTests()
     {
-        SpiceAPI.Instance.LoadKernels(SolarSystemKernelPath);
+        SpiceApi.Instance.LoadKernels(SolarSystemKernelPath);
     }
 
     private static CelestialBody EarthAtJ2000 =>
@@ -45,14 +45,14 @@ public class SpiceAPISmokeTests
     [Fact]
     public void GetSpiceVersion_ReturnsNonEmpty()
     {
-        var version = SpiceAPI.Instance.GetSpiceVersion();
+        var version = SpiceApi.Instance.GetSpiceVersion();
         Assert.False(string.IsNullOrEmpty(version));
     }
 
     [Fact]
     public void LoadKernels_ReturnsLoadedKernels()
     {
-        var kernels = SpiceAPI.Instance.GetLoadedKernels();
+        var kernels = SpiceApi.Instance.GetLoadedKernels();
         Assert.NotEmpty(kernels);
     }
 
@@ -61,19 +61,19 @@ public class SpiceAPISmokeTests
     {
         var tempDir = new DirectoryInfo(SolarSystemKernelPath.FullName);
         // Kernels are already loaded in constructor; just verify unload/reload cycle works
-        SpiceAPI.Instance.UnloadKernels(tempDir);
-        SpiceAPI.Instance.LoadKernels(tempDir);
-        var kernels = SpiceAPI.Instance.GetLoadedKernels();
+        SpiceApi.Instance.UnloadKernels(tempDir);
+        SpiceApi.Instance.LoadKernels(tempDir);
+        var kernels = SpiceApi.Instance.GetLoadedKernels();
         Assert.NotEmpty(kernels);
     }
 
     [Fact]
     public void ClearKernels_ThenReload()
     {
-        SpiceAPI.Instance.ClearKernels();
+        SpiceApi.Instance.ClearKernels();
         // Reload for subsequent tests
-        SpiceAPI.Instance.LoadKernels(SolarSystemKernelPath);
-        var kernels = SpiceAPI.Instance.GetLoadedKernels();
+        SpiceApi.Instance.LoadKernels(SolarSystemKernelPath);
+        var kernels = SpiceApi.Instance.GetLoadedKernels();
         Assert.NotEmpty(kernels);
     }
 
@@ -82,7 +82,7 @@ public class SpiceAPISmokeTests
     [Fact]
     public void GetCelestialBodyInfo_Earth()
     {
-        var info = SpiceAPI.Instance.GetCelestialBodyInfo(PlanetsAndMoons.EARTH.NaifId);
+        var info = SpiceApi.Instance.GetCelestialBodyInfo(PlanetsAndMoons.EARTH.NaifId);
         Assert.Equal(399, info.NaifId);
         Assert.Equal("EARTH", info.Name);
         Assert.True(info.GM > 0);
@@ -92,7 +92,7 @@ public class SpiceAPISmokeTests
     [Fact]
     public void GetCelestialBodyInfo_Moon()
     {
-        var info = SpiceAPI.Instance.GetCelestialBodyInfo(PlanetsAndMoons.MOON.NaifId);
+        var info = SpiceApi.Instance.GetCelestialBodyInfo(PlanetsAndMoons.MOON.NaifId);
         Assert.Equal(301, info.NaifId);
         Assert.Equal("MOON", info.Name);
         Assert.True(info.GM > 0);
@@ -104,7 +104,7 @@ public class SpiceAPISmokeTests
     public void ReadEphemeris_Windowed()
     {
         var searchWindow = new Window(Time.CreateTDB(0.0), Time.CreateTDB(100.0));
-        var results = SpiceAPI.Instance.ReadEphemeris(searchWindow, PlanetsAndMoons.EARTH.NaifId,
+        var results = SpiceApi.Instance.ReadEphemeris(searchWindow, PlanetsAndMoons.EARTH.NaifId,
                 PlanetsAndMoons.MOON.NaifId, Frame.ICRF, Aberration.LT, TimeSpan.FromSeconds(10.0))
             .ToArray();
 
@@ -119,7 +119,7 @@ public class SpiceAPISmokeTests
     public void ReadEphemeris_SingleEpoch()
     {
         var epoch = Time.CreateTDB(0.0);
-        var sv = SpiceAPI.Instance.ReadEphemeris(epoch, PlanetsAndMoons.EARTH.NaifId,
+        var sv = SpiceApi.Instance.ReadEphemeris(epoch, PlanetsAndMoons.EARTH.NaifId,
             PlanetsAndMoons.MOON.NaifId, Frame.ICRF, Aberration.LT);
 
         Assert.NotEqual(0.0, sv.Position.Magnitude());
@@ -130,7 +130,7 @@ public class SpiceAPISmokeTests
     public void ReadEphemeris_SsbObserver()
     {
         var epoch = Time.CreateTDB(0.0);
-        var sv = SpiceAPI.Instance.ReadEphemeris(epoch, 0, PlanetsAndMoons.EARTH.NaifId,
+        var sv = SpiceApi.Instance.ReadEphemeris(epoch, 0, PlanetsAndMoons.EARTH.NaifId,
             Frame.ICRF, Aberration.None);
         Assert.Equal(0, sv.Observer.NaifId);
         Assert.NotEqual(0.0, sv.Position.Magnitude());
@@ -153,11 +153,11 @@ public class SpiceAPISmokeTests
         var file = new FileInfo("SmokeTest_Ephemeris.spk");
         try
         {
-            SpiceAPI.Instance.WriteEphemeris(file, -900, sv);
-            SpiceAPI.Instance.LoadKernels(file);
+            SpiceApi.Instance.WriteEphemeris(file, -900, sv);
+            SpiceApi.Instance.LoadKernels(file);
 
             var window = new Window(Time.J2000TDB, Time.J2000TDB.AddSeconds(9.0));
-            var results = SpiceAPI.Instance.ReadEphemeris(window, PlanetsAndMoons.EARTH.NaifId, -900,
+            var results = SpiceApi.Instance.ReadEphemeris(window, PlanetsAndMoons.EARTH.NaifId, -900,
                     Frame.ICRF, Aberration.None, TimeSpan.FromSeconds(1.0))
                 .ToArray();
             Assert.Equal(size, results.Length);
@@ -165,7 +165,7 @@ public class SpiceAPISmokeTests
         }
         finally
         {
-            SpiceAPI.Instance.UnloadKernels(file);
+            SpiceApi.Instance.UnloadKernels(file);
             if (file.Exists) file.Delete();
         }
     }
@@ -194,13 +194,13 @@ public class SpiceAPISmokeTests
         try
         {
             clock.Write(clockFile);
-            SpiceAPI.Instance.LoadKernels(clockFile);
+            SpiceApi.Instance.LoadKernels(clockFile);
 
-            SpiceAPI.Instance.WriteOrientation(ckFile, spacecraft.NaifId, so);
-            SpiceAPI.Instance.LoadKernels(ckFile);
+            SpiceApi.Instance.WriteOrientation(ckFile, spacecraft.NaifId, so);
+            SpiceApi.Instance.LoadKernels(ckFile);
 
             var window = new Window(Time.J2000TDB, Time.J2000TDB.AddSeconds(9.0));
-            var results = SpiceAPI.Instance.ReadOrientation(window, spacecraft.NaifId,
+            var results = SpiceApi.Instance.ReadOrientation(window, spacecraft.NaifId,
                 TimeSpan.Zero, Frame.ICRF, TimeSpan.FromSeconds(1.0)).ToArray();
 
             Assert.NotEmpty(results);
@@ -208,8 +208,8 @@ public class SpiceAPISmokeTests
         }
         finally
         {
-            SpiceAPI.Instance.UnloadKernels(ckFile);
-            SpiceAPI.Instance.UnloadKernels(clockFile);
+            SpiceApi.Instance.UnloadKernels(ckFile);
+            SpiceApi.Instance.UnloadKernels(clockFile);
             if (ckFile.Exists) ckFile.Delete();
             if (clockFile.Exists) clockFile.Delete();
         }
@@ -220,7 +220,7 @@ public class SpiceAPISmokeTests
     [Fact]
     public void TransformFrame_SingleEpoch()
     {
-        var result = SpiceAPI.Instance.TransformFrame(Time.J2000TDB, Frame.ICRF,
+        var result = SpiceApi.Instance.TransformFrame(Time.J2000TDB, Frame.ICRF,
             new Frame("ITRF93"));
 
         Assert.NotEqual(0.0, result.Rotation.W);
@@ -231,7 +231,7 @@ public class SpiceAPISmokeTests
     public void TransformFrame_Windowed()
     {
         var window = new Window(Time.J2000TDB, Time.J2000TDB.AddDays(1.0));
-        var results = SpiceAPI.Instance.TransformFrame(window, Frame.ICRF,
+        var results = SpiceApi.Instance.TransformFrame(window, Frame.ICRF,
             new Frame("ITRF93"), TimeSpan.FromDays(0.5)).ToArray();
 
         Assert.True(results.Length >= 2);
@@ -245,9 +245,9 @@ public class SpiceAPISmokeTests
     {
         var searchWindow = new Window(Time.CreateTDB(220881665.18391809),
             Time.CreateTDB(228657665.18565452));
-        var results = SpiceAPI.Instance.FindWindowsOnDistanceConstraint(
+        var results = SpiceApi.Instance.FindWindowsOnDistanceConstraint(
             searchWindow, PlanetsAndMoons.EARTH.NaifId, PlanetsAndMoons.MOON.NaifId,
-            RelationnalOperator.Greater, 400000000, Aberration.None,
+            RelationalOperator.GreaterThan, 400000000, Aberration.None,
             TimeSpan.FromSeconds(86400.0)).ToArray();
         Assert.NotEmpty(results);
     }
@@ -259,7 +259,7 @@ public class SpiceAPISmokeTests
     {
         var searchWindow = new Window(Time.CreateTDB(61473664.183390938),
             Time.CreateTDB(61646464.183445148));
-        var results = SpiceAPI.Instance.FindWindowsOnOccultationConstraint(
+        var results = SpiceApi.Instance.FindWindowsOnOccultationConstraint(
             searchWindow, PlanetsAndMoons.EARTH.NaifId, Stars.Sun.NaifId,
             ShapeType.Ellipsoid, PlanetsAndMoons.MOON.NaifId, ShapeType.Ellipsoid,
             OccultationType.Any, Aberration.LT,
@@ -278,10 +278,10 @@ public class SpiceAPISmokeTests
 
         var searchWindow = new Window(Time.CreateTDB(730036800.0),
             Time.CreateTDB(730123200));
-        var results = SpiceAPI.Instance.FindWindowsOnCoordinateConstraint(
+        var results = SpiceApi.Instance.FindWindowsOnCoordinateConstraint(
             searchWindow, site.NaifId, PlanetsAndMoons.MOON.NaifId,
             site.Frame, CoordinateSystem.Rectangular, Coordinate.Z,
-            RelationnalOperator.Greater, 0.0, 0.0, Aberration.None,
+            RelationalOperator.GreaterThan, 0.0, 0.0, Aberration.None,
             TimeSpan.FromSeconds(60.0)).ToArray();
         Assert.NotEmpty(results);
     }
@@ -293,12 +293,12 @@ public class SpiceAPISmokeTests
     {
         var searchWindow = new Window(Time.CreateTDB(674524800),
             Time.CreateTDB(674611200));
-        var results = SpiceAPI.Instance.FindWindowsOnIlluminationConstraint(
+        var results = SpiceApi.Instance.FindWindowsOnIlluminationConstraint(
             searchWindow, Stars.Sun.NaifId, PlanetsAndMoons.EARTH.NaifId,
             new Frame("ITRF93"),
             new Planetodetic(2.2 * IO.Astrodynamics.Constants.Deg2Rad,
                 48.0 * IO.Astrodynamics.Constants.Deg2Rad, 0.0),
-            IlluminationAngle.Incidence, RelationnalOperator.Lower,
+            IlluminationAngle.Incidence, RelationalOperator.LessThan,
             System.Math.PI * 0.5 - (-0.8 * IO.Astrodynamics.Constants.Deg2Rad),
             0.0, Aberration.CNS, TimeSpan.FromHours(4.5),
             Stars.Sun.NaifId).ToArray();
@@ -325,7 +325,7 @@ public class SpiceAPISmokeTests
             Time.Create(676555200.0, TimeScale.TDB),
             Time.Create(676561646.0, TimeScale.TDB));
 
-        var results = SpiceAPI.Instance.FindWindowsInFieldOfViewConstraint(
+        var results = SpiceApi.Instance.FindWindowsInFieldOfViewConstraint(
             searchWindow, spacecraft.NaifId, spacecraft.Instruments.First().NaifId,
             PlanetsAndMoons.EARTH.NaifId, EarthAtJ2000.Frame,
             ShapeType.Ellipsoid, Aberration.LT,

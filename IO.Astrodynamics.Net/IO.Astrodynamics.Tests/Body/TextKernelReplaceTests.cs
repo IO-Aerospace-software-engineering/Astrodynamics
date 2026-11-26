@@ -23,7 +23,7 @@ namespace IO.Astrodynamics.Tests.Body;
 /// <see cref="Instrument.WriteKernel"/>, <see cref="Site.WriteFrame"/> and <see cref="SiteFrame.Write"/> unload the file
 /// they replace, under its path and every name SPICE holds that resolves through it (a meta-kernel's included), write it
 /// and leave it unloaded, as the SPK and CK writers since #706. Before, the file was rewritten under SPICE's load, which
-/// a later <see cref="SpiceAPI.LoadKernels(FileSystemInfo)"/> skipped (the file was held): SPICE read the old content
+/// a later <see cref="SpiceApi.LoadKernels(FileSystemInfo)"/> skipped (the file was held): SPICE read the old content
 /// (measured: a frame kernel rewritten for another spacecraft still named the first). The reference is the decided rule
 /// and SPICE's reads of the files.
 /// </summary>
@@ -48,25 +48,25 @@ public sealed class TextKernelReplaceTests : IDisposable
 
     private FileInfo File(string name) => new(Path.Combine(_root.FullName, name));
 
-    private static bool Listed(FileInfo file) => SpiceAPI.Instance.GetLoadedKernels().Any(x => x.FullName == file.FullName);
+    private static bool Listed(FileInfo file) => SpiceApi.Instance.GetLoadedKernels().Any(x => x.FullName == file.FullName);
 
     // Writes the file, loads it, writes it again: the second write leaves it unloaded, neither listed nor held by SPICE
     private static void AssertRewriteUnloads(FileInfo file, Action<FileInfo> write)
     {
         write(file);
-        SpiceAPI.Instance.LoadKernels(file);
+        SpiceApi.Instance.LoadKernels(file);
         try
         {
-            Assert.True(SpiceAPI.Instance.HoldsKernelFile(file));
+            Assert.True(SpiceApi.Instance.HoldsKernelFile(file));
 
             write(file);
 
             Assert.False(Listed(file));
-            Assert.False(SpiceAPI.Instance.HoldsKernelFile(file));
+            Assert.False(SpiceApi.Instance.HoldsKernelFile(file));
         }
         finally
         {
-            SpiceAPI.Instance.UnloadKernels(file);
+            SpiceApi.Instance.UnloadKernels(file);
         }
     }
 
@@ -92,24 +92,24 @@ public sealed class TextKernelReplaceTests : IDisposable
         // The sonde of the gap analysis: the frame kernel of one spacecraft rewritten for another, then loaded again
         var file = File("sonde.tf");
         NewSpacecraft(-9332, "TKA9332").Frame.Write(file);
-        SpiceAPI.Instance.LoadKernels(file);
+        SpiceApi.Instance.LoadKernels(file);
         try
         {
-            Assert.True(SpiceAPI.Instance.TryGetNaifId("TKA9332", out _));
+            Assert.True(SpiceApi.Instance.TryGetNaifId("TKA9332", out _));
 
             NewSpacecraft(-9333, "TKB9333").Frame.Write(file);
-            SpiceAPI.Instance.LoadKernels(file);
+            SpiceApi.Instance.LoadKernels(file);
 
-            Assert.False(SpiceAPI.Instance.TryGetNaifId("TKA9332", out _));
-            Assert.True(SpiceAPI.Instance.TryGetNaifId("TKB9333", out int id));
+            Assert.False(SpiceApi.Instance.TryGetNaifId("TKA9332", out _));
+            Assert.True(SpiceApi.Instance.TryGetNaifId("TKB9333", out int id));
             Assert.Equal(-9333, id);
         }
         finally
         {
-            SpiceAPI.Instance.UnloadKernels(file);
+            SpiceApi.Instance.UnloadKernels(file);
         }
 
-        Assert.False(SpiceAPI.Instance.TryGetNaifId("TKB9333", out _));
+        Assert.False(SpiceApi.Instance.TryGetNaifId("TKB9333", out _));
     }
 
     [Fact]
@@ -121,19 +121,19 @@ public sealed class TextKernelReplaceTests : IDisposable
         spacecraft.Frame.Write(file);
         var metaKernel = File("mission.tm");
         System.IO.File.WriteAllText(metaKernel.FullName, $"KPL/MK\n\\begindata\nKERNELS_TO_LOAD = ( {MetaKernelString(file.FullName)} )\n\\begintext\n");
-        SpiceAPI.Instance.LoadKernels(metaKernel);
+        SpiceApi.Instance.LoadKernels(metaKernel);
         try
         {
-            Assert.True(SpiceAPI.Instance.HoldsKernelFile(file));
+            Assert.True(SpiceApi.Instance.HoldsKernelFile(file));
 
             spacecraft.Frame.Write(file);
 
-            Assert.False(SpiceAPI.Instance.HoldsKernelFile(file));
-            Assert.False(SpiceAPI.Instance.TryGetNaifId("TK9334", out _));
+            Assert.False(SpiceApi.Instance.HoldsKernelFile(file));
+            Assert.False(SpiceApi.Instance.TryGetNaifId("TK9334", out _));
         }
         finally
         {
-            SpiceAPI.Instance.UnloadKernels(metaKernel);
+            SpiceApi.Instance.UnloadKernels(metaKernel);
         }
     }
 

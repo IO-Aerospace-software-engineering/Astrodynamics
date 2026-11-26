@@ -565,7 +565,7 @@ namespace IO.Astrodynamics.Tests.OrbitalParameters
         internal static Vector3 SpiceConicPosition(double a, double e, double i, double raan, double aop, double meanAnomaly)
         {
             var ke = new KeplerianElements(a, e, i, raan, aop, meanAnomaly, TestHelpers.EarthAtJ2000, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF);
-            return SpiceAPI.Instance.ConvertConicElementsToStateVector(ke).Position;
+            return SpiceApi.Instance.ConvertConicElementsToStateVector(ke).Position;
         }
 
         internal static double AngleBetween(in Vector3 a, in Vector3 b) => System.Math.Atan2(a.Cross(b).Magnitude(), a.Dot(b));
@@ -680,9 +680,9 @@ namespace IO.Astrodynamics.Tests.OrbitalParameters
             "2 39348  20.0230 212.2863 7218258 312.9449   5.6833  2.25781763 89468")]
         public void ApsisVectors_OfATle_AreAlongThePeriapsisOfItsSgp4State(string name, string line1, string line2)
         {
-            var tle = new IO.Astrodynamics.OrbitalParameters.TLE.TLE(name, line1, line2);
+            var tle = new IO.Astrodynamics.OrbitalParameters.TLE.Tle(name, line1, line2);
             var state = tle.ToStateVector();
-            var osculating = SpiceAPI.Instance.ConvertStateVectorToConicOrbitalElement(state);
+            var osculating = SpiceApi.Instance.ConvertStateVectorToConicOrbitalElement(state);
             var spicePerigee = SpiceConicPosition(osculating.SemiMajorAxis(), osculating.Eccentricity(), osculating.Inclination(), osculating.AscendingNode(), osculating.ArgumentOfPeriapsis(), 0.0);
 
             double perigeeAngle = AngleBetween(tle.PerigeeVector(), spicePerigee);

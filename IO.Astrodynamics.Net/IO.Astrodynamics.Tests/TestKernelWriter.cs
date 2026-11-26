@@ -74,7 +74,7 @@ internal static class TestKernelWriter
 
     /// <summary>
     /// Writes files until the folder lists the one <paramref name="write"/> wrote before <paramref name="listedLast"/>, its
-    /// only other file: a folder is loaded in the order of its listing (<see cref="SpiceAPI.KernelFiles"/>,
+    /// only other file: a folder is loaded in the order of its listing (<see cref="SpiceApi.KernelFiles"/>,
     /// <see cref="Directory.EnumerateFileSystemEntries(string)"/>), which is the file system's, alphabetical on NTFS, by
     /// hash or by creation on others. <paramref name="write"/> is given the stem of the name to write: a letter, from a to
     /// z in turn, then the attempt, so that one of the first stems sorts before any name and others fall anywhere in a hash
@@ -85,7 +85,7 @@ internal static class TestKernelWriter
         for (int i = 0; i < 64; i++)
         {
             var candidate = write($"{(char)('a' + i % 26)}{i}");
-            var listing = SpiceAPI.KernelFiles(folder).ToArray();
+            var listing = SpiceApi.KernelFiles(folder).ToArray();
             if (listing.Length == 2 && listing[0] == candidate.FullName && listing[1] == listedLast.FullName)
             {
                 return candidate;

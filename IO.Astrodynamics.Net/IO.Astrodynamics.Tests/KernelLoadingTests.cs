@@ -11,9 +11,9 @@ namespace IO.Astrodynamics.Tests;
 
 /// <summary>
 /// The kernel loading rules of 11.0.0 (R01 of #668, structuring choice 9, decided by S. Guillet, 2026-11-19): a repeated
-/// <see cref="SpiceAPI.LoadKernels(FileSystemInfo)"/> furnishes only the files of its path that SPICE does not hold from a
+/// <see cref="SpiceApi.LoadKernels(FileSystemInfo)"/> furnishes only the files of its path that SPICE does not hold from a
 /// load of this class and raises the generation of the kernel pool only when it hands SPICE a file;
-/// <see cref="SpiceAPI.ReloadKernels(FileSystemInfo)"/> reads a path again, on top; the files of a folder load in ordinal
+/// <see cref="SpiceApi.ReloadKernels(FileSystemInfo)"/> reads a path again, on top; the files of a folder load in ordinal
 /// order, component by component, so that the later file wins on every platform.
 /// </summary>
 /// <remarks>
@@ -37,7 +37,7 @@ public class KernelLoadingTests : IDisposable
     {
         foreach (var kernel in Under(_root))
         {
-            SpiceAPI.Instance.UnloadKernels(kernel);
+            SpiceApi.Instance.UnloadKernels(kernel);
         }
 
         if (_root.Exists)
@@ -46,8 +46,8 @@ public class KernelLoadingTests : IDisposable
         }
     }
 
-    private static FileSystemInfo[] Under(DirectoryInfo folder) => SpiceAPI.Instance.GetLoadedKernels()
-        .Where(k => SpiceAPI.IsSameOrInside(k.FullName, folder.FullName))
+    private static FileSystemInfo[] Under(DirectoryInfo folder) => SpiceApi.Instance.GetLoadedKernels()
+        .Where(k => SpiceApi.IsSameOrInside(k.FullName, folder.FullName))
         .ToArray();
 
     private static double AngleDeg(string frameName) => KernelRegistryTests.RotationAngleDeg(frameName);
@@ -58,19 +58,19 @@ public class KernelLoadingTests : IDisposable
         // Arrange: f gives the frame 10°, z gives it 20°
         var f = WriteFrameKernel(_root, "f.tf", 1999989, "IOA_L1_PREC", 10.0);
         var z = WriteFrameKernel(_root, "z.tf", 1999989, "IOA_L1_PREC", 20.0);
-        lock (SpiceAPI.SyncRoot)
+        lock (SpiceApi.SyncRoot)
         {
-            SpiceAPI.Instance.LoadKernels(f);
-            SpiceAPI.Instance.LoadKernels(z);
+            SpiceApi.Instance.LoadKernels(f);
+            SpiceApi.Instance.LoadKernels(z);
             Assert.Equal(20.0, AngleDeg("IOA_L1_PREC"), 12);
-            long generation = SpiceAPI.KernelPoolGeneration;
+            long generation = SpiceApi.KernelPoolGeneration;
 
             // Act: f again
-            SpiceAPI.Instance.LoadKernels(new FileInfo(f.FullName));
+            SpiceApi.Instance.LoadKernels(new FileInfo(f.FullName));
 
             // Assert: before 11.0.0 the load unloaded f and read it again, on top, so f's 10° won; and it raised the generation
             Assert.Equal(20.0, AngleDeg("IOA_L1_PREC"), 12);
-            Assert.Equal(generation, SpiceAPI.KernelPoolGeneration);
+            Assert.Equal(generation, SpiceApi.KernelPoolGeneration);
         }
 
         Assert.Equal([f.FullName, z.FullName], Under(_root).Select(k => k.FullName));
@@ -83,13 +83,13 @@ public class KernelLoadingTests : IDisposable
         // is written into D
         var folder = new DirectoryInfo(Path.Combine(_root.FullName, "D"));
         WriteFrameKernel(folder, "a.tf", 1999990, "IOA_L1_NEW_A", 10.0);
-        SpiceAPI.Instance.LoadKernels(folder);
+        SpiceApi.Instance.LoadKernels(folder);
         var z = WriteFrameKernel(_root, "z.tf", 1999990, "IOA_L1_NEW_A", 30.0);
-        SpiceAPI.Instance.LoadKernels(z);
+        SpiceApi.Instance.LoadKernels(z);
         WriteFrameKernel(folder, "b.tf", 1999991, "IOA_L1_NEW_B", 40.0);
 
         // Act
-        SpiceAPI.Instance.LoadKernels(folder);
+        SpiceApi.Instance.LoadKernels(folder);
 
         // Assert: b.tf is read, a.tf is not read again (before 11.0.0 the folder was unloaded and read again, so A was 10°),
         // and the folder is listed once, at its place
@@ -104,19 +104,19 @@ public class KernelLoadingTests : IDisposable
         // Arrange
         var folder = new DirectoryInfo(Path.Combine(_root.FullName, "In"));
         var a = WriteFrameKernel(folder, "a.tf", 1999992, "IOA_L1_IN", 10.0);
-        SpiceAPI.Instance.LoadKernels(folder);
+        SpiceApi.Instance.LoadKernels(folder);
         var z = WriteFrameKernel(_root, "z.tf", 1999992, "IOA_L1_IN", 20.0);
-        SpiceAPI.Instance.LoadKernels(z);
-        lock (SpiceAPI.SyncRoot)
+        SpiceApi.Instance.LoadKernels(z);
+        lock (SpiceApi.SyncRoot)
         {
-            long generation = SpiceAPI.KernelPoolGeneration;
+            long generation = SpiceApi.KernelPoolGeneration;
 
             // Act
-            SpiceAPI.Instance.LoadKernels(a);
+            SpiceApi.Instance.LoadKernels(a);
 
             // Assert: before 11.0.0 the folder was read again, on top (10°), and moved after z.tf
             Assert.Equal(20.0, AngleDeg("IOA_L1_IN"), 12);
-            Assert.Equal(generation, SpiceAPI.KernelPoolGeneration);
+            Assert.Equal(generation, SpiceApi.KernelPoolGeneration);
         }
 
         Assert.Equal([folder.FullName, z.FullName], Under(_root).Select(k => k.FullName));
@@ -129,12 +129,12 @@ public class KernelLoadingTests : IDisposable
         var folder = new DirectoryInfo(Path.Combine(_root.FullName, "Holder"));
         var a = WriteFrameKernel(folder, "a.tf", 1999993, "IOA_L1_HOLD_A", 10.0);
         WriteFrameKernel(folder, "b.tf", 1999994, "IOA_L1_HOLD_B", 45.0);
-        SpiceAPI.Instance.LoadKernels(a);
+        SpiceApi.Instance.LoadKernels(a);
         var z = WriteFrameKernel(_root, "z.tf", 1999993, "IOA_L1_HOLD_A", 20.0);
-        SpiceAPI.Instance.LoadKernels(z);
+        SpiceApi.Instance.LoadKernels(z);
 
         // Act
-        SpiceAPI.Instance.LoadKernels(folder);
+        SpiceApi.Instance.LoadKernels(folder);
 
         // Assert: a.tf is not read again (before 11.0.0 it was unloaded and the folder loaded, so A was 10°); the folder
         // replaces the entry of its file, listed last
@@ -143,7 +143,7 @@ public class KernelLoadingTests : IDisposable
         Assert.Equal([z.FullName, folder.FullName], Under(_root).Select(k => k.FullName));
 
         // Act: the folder unloads both of its files
-        SpiceAPI.Instance.UnloadKernels(folder);
+        SpiceApi.Instance.UnloadKernels(folder);
 
         // Assert
         Assert.Equal(20.0, AngleDeg("IOA_L1_HOLD_A"), 12);
@@ -155,15 +155,15 @@ public class KernelLoadingTests : IDisposable
     {
         // Arrange
         var missing = new FileInfo(Path.Combine(_root.FullName, "missing.tf"));
-        lock (SpiceAPI.SyncRoot)
+        lock (SpiceApi.SyncRoot)
         {
-            long generation = SpiceAPI.KernelPoolGeneration;
+            long generation = SpiceApi.KernelPoolGeneration;
 
             // Act
-            Assert.Throws<ArgumentException>(() => SpiceAPI.Instance.LoadKernels(missing));
+            Assert.Throws<ArgumentException>(() => SpiceApi.Instance.LoadKernels(missing));
 
             // Assert: before 11.0.0 every call raised it, failed or not, so the predefined bodies read their data again
-            Assert.Equal(generation, SpiceAPI.KernelPoolGeneration);
+            Assert.Equal(generation, SpiceApi.KernelPoolGeneration);
         }
     }
 
@@ -172,15 +172,15 @@ public class KernelLoadingTests : IDisposable
     {
         // Arrange
         var f = WriteFrameKernel(_root, "g.tf", 1999995, "IOA_L1_GEN", 10.0);
-        lock (SpiceAPI.SyncRoot)
+        lock (SpiceApi.SyncRoot)
         {
-            long generation = SpiceAPI.KernelPoolGeneration;
+            long generation = SpiceApi.KernelPoolGeneration;
 
             // Act
-            SpiceAPI.Instance.LoadKernels(f);
+            SpiceApi.Instance.LoadKernels(f);
 
             // Assert
-            Assert.Equal(generation + 1, SpiceAPI.KernelPoolGeneration);
+            Assert.Equal(generation + 1, SpiceApi.KernelPoolGeneration);
         }
     }
 
@@ -204,8 +204,8 @@ public class KernelLoadingTests : IDisposable
         WriteFrameKernel(folder, "B.tf", 1999998, "IOA_L1_ORDER_CASE", 32.0);
 
         // Act
-        var files = SpiceAPI.KernelFiles(folder).Select(x => Path.GetRelativePath(folder.FullName, x)).ToArray();
-        SpiceAPI.Instance.LoadKernels(folder);
+        var files = SpiceApi.KernelFiles(folder).Select(x => Path.GetRelativePath(folder.FullName, x)).ToArray();
+        SpiceApi.Instance.LoadKernels(folder);
 
         // Assert: the later file wins (before 11.0.0 the files loaded in the order of the directory listing)
         string[] expected = ["B.tf", "a.tf", .. Enumerable.Range(0, 20).Select(i => $"k{i:00}.tf"), Path.Combine("x", "y.tf"), "x0.tf"];
@@ -226,7 +226,7 @@ public class KernelLoadingTests : IDisposable
         File.WriteAllText(b.FullName, "KPL/FK\n\\begindata\nIOA_L1_FAIL_A_NAME_LONGER_THAN_32_CHARACTERS = 1\n\\begintext\n");
 
         // Act
-        Assert.Throws<SpiceException>(() => SpiceAPI.Instance.LoadKernels(folder));
+        Assert.Throws<SpiceException>(() => SpiceApi.Instance.LoadKernels(folder));
 
         // Assert: SPICE holds a.tf, so the folder is listed, to be unloaded (before 11.0.0 a failed load listed nothing, and
         // a later load furnished a.tf a second time)
@@ -235,8 +235,8 @@ public class KernelLoadingTests : IDisposable
 
         // Act: b.tf repaired, the folder loaded again
         File.WriteAllText(b.FullName, "KPL/FK\n\\begindata\nIOA_L1_FAIL_SHORT = 1\n\\begintext\n");
-        SpiceAPI.Instance.LoadKernels(folder);
-        SpiceAPI.Instance.UnloadKernels(folder);
+        SpiceApi.Instance.LoadKernels(folder);
+        SpiceApi.Instance.UnloadKernels(folder);
 
         // Assert: one unload removes a.tf (a second load of it would have needed a second unload)
         Assert.Throws<ArgumentException>(() => AngleDeg("IOA_L1_FAIL"));
@@ -247,7 +247,7 @@ public class KernelLoadingTests : IDisposable
     public void UnloadKernels_OfNull_Throws()
     {
         // Before 11.0.0 it returned, while LoadKernels(null) threw
-        var e = Assert.Throws<ArgumentNullException>(() => SpiceAPI.Instance.UnloadKernels((FileSystemInfo)null));
+        var e = Assert.Throws<ArgumentNullException>(() => SpiceApi.Instance.UnloadKernels((FileSystemInfo)null));
         Assert.Equal("path", e.ParamName);
     }
 
@@ -260,14 +260,14 @@ public class KernelLoadingTests : IDisposable
         if (!OperatingSystem.IsLinux()) return;
         var f = WriteFrameKernel(_root, "kf.tf", 1999989, "IOA_L1_PREC", 10.0);
         var z = WriteFrameKernel(_root, "kz.tf", 1999989, "IOA_L1_PREC", 20.0);
-        lock (SpiceAPI.SyncRoot)
+        lock (SpiceApi.SyncRoot)
         {
-            SpiceAPI.Instance.LoadKernels(f);
-            SpiceAPI.Instance.LoadKernels(z);
+            SpiceApi.Instance.LoadKernels(f);
+            SpiceApi.Instance.LoadKernels(z);
             var before = Body.CspiceDirect.LoadedKernelFiles();
 
             // Act
-            SpiceAPI.Instance.LoadKernels(f);
+            SpiceApi.Instance.LoadKernels(f);
 
             // Assert: before 11.0.0 KEEPER listed z, then f
             var after = Body.CspiceDirect.LoadedKernelFiles();
@@ -282,18 +282,18 @@ public class KernelLoadingTests : IDisposable
         // Arrange
         var f = WriteFrameKernel(_root, "f.tf", 1999989, "IOA_L1_PREC", 10.0);
         var z = WriteFrameKernel(_root, "z.tf", 1999989, "IOA_L1_PREC", 20.0);
-        SpiceAPI.Instance.LoadKernels(f);
-        SpiceAPI.Instance.LoadKernels(z);
-        lock (SpiceAPI.SyncRoot)
+        SpiceApi.Instance.LoadKernels(f);
+        SpiceApi.Instance.LoadKernels(z);
+        lock (SpiceApi.SyncRoot)
         {
-            long generation = SpiceAPI.KernelPoolGeneration;
+            long generation = SpiceApi.KernelPoolGeneration;
 
             // Act
-            SpiceAPI.Instance.ReloadKernels(f);
+            SpiceApi.Instance.ReloadKernels(f);
 
             // Assert: what a repeated LoadKernels did before 11.0.0
             Assert.Equal(10.0, AngleDeg("IOA_L1_PREC"), 12);
-            Assert.True(SpiceAPI.KernelPoolGeneration > generation);
+            Assert.True(SpiceApi.KernelPoolGeneration > generation);
         }
 
         Assert.Equal([z.FullName, f.FullName], Under(_root).Select(k => k.FullName));
@@ -304,13 +304,13 @@ public class KernelLoadingTests : IDisposable
     {
         // Arrange: f gives the frame 10°, then is rewritten at 50°
         var f = WriteFrameKernel(_root, "f.tf", 1999990, "IOA_L1_REWRITE", 10.0);
-        SpiceAPI.Instance.LoadKernels(f);
+        SpiceApi.Instance.LoadKernels(f);
         WriteFrameKernel(_root, "f.tf", 1999990, "IOA_L1_REWRITE", 50.0);
 
         // Act and assert: a load reads nothing, a reload the new content
-        SpiceAPI.Instance.LoadKernels(f);
+        SpiceApi.Instance.LoadKernels(f);
         Assert.Equal(10.0, AngleDeg("IOA_L1_REWRITE"), 12);
-        SpiceAPI.Instance.ReloadKernels(f);
+        SpiceApi.Instance.ReloadKernels(f);
         Assert.Equal(50.0, AngleDeg("IOA_L1_REWRITE"), 12);
         Assert.Equal([f.FullName], Under(_root).Select(k => k.FullName));
     }
@@ -322,13 +322,13 @@ public class KernelLoadingTests : IDisposable
         var folder = new DirectoryInfo(Path.Combine(_root.FullName, "D"));
         var a = WriteFrameKernel(folder, "a.tf", 1999991, "IOA_L1_RIN_A", 10.0);
         WriteFrameKernel(folder, "b.tf", 1999992, "IOA_L1_RIN_B", 20.0);
-        SpiceAPI.Instance.LoadKernels(folder);
+        SpiceApi.Instance.LoadKernels(folder);
         var z = WriteFrameKernel(_root, "z.tf", 1999992, "IOA_L1_RIN_B", 30.0);
-        SpiceAPI.Instance.LoadKernels(z);
+        SpiceApi.Instance.LoadKernels(z);
         WriteFrameKernel(folder, "a.tf", 1999991, "IOA_L1_RIN_A", 60.0);
 
         // Act
-        SpiceAPI.Instance.ReloadKernels(a);
+        SpiceApi.Instance.ReloadKernels(a);
 
         // Assert: a.tf alone is read again, b.tf keeps its place under z.tf, and the folder stays listed at its place
         Assert.Equal(60.0, AngleDeg("IOA_L1_RIN_A"), 12);
@@ -336,7 +336,7 @@ public class KernelLoadingTests : IDisposable
         Assert.Equal([folder.FullName, z.FullName], Under(_root).Select(k => k.FullName));
 
         // Act: the folder unloads both of its files
-        SpiceAPI.Instance.UnloadKernels(folder);
+        SpiceApi.Instance.UnloadKernels(folder);
 
         // Assert
         Assert.Throws<ArgumentException>(() => AngleDeg("IOA_L1_RIN_A"));
@@ -348,7 +348,7 @@ public class KernelLoadingTests : IDisposable
     {
         var f = WriteFrameKernel(_root, "n.tf", 1999993, "IOA_L1_NEVER", 15.0);
 
-        SpiceAPI.Instance.ReloadKernels(f);
+        SpiceApi.Instance.ReloadKernels(f);
 
         Assert.Equal(15.0, AngleDeg("IOA_L1_NEVER"), 12);
         Assert.Equal([f.FullName], Under(_root).Select(k => k.FullName));
@@ -360,11 +360,11 @@ public class KernelLoadingTests : IDisposable
         // Arrange
         var folder = new DirectoryInfo(Path.Combine(_root.FullName, "Kept"));
         WriteFrameKernel(folder, "a.tf", 1999994, "IOA_L1_MISSING", 15.0);
-        SpiceAPI.Instance.LoadKernels(folder);
+        SpiceApi.Instance.LoadKernels(folder);
         var missing = new FileInfo(Path.Combine(folder.FullName, "missing.tf"));
 
         // Act
-        var e = Assert.Throws<ArgumentException>(() => SpiceAPI.Instance.ReloadKernels(missing));
+        var e = Assert.Throws<ArgumentException>(() => SpiceApi.Instance.ReloadKernels(missing));
 
         // Assert
         Assert.Equal("path", e.ParamName);
@@ -381,8 +381,8 @@ public class KernelLoadingTests : IDisposable
         var file = WriteFrameKernel(_root, "b.tf", 1999996, "IOA_L1_STR_B", 20.0);
 
         // Act
-        SpiceAPI.Instance.LoadKernels(folder.FullName);
-        SpiceAPI.Instance.LoadKernels(file.FullName);
+        SpiceApi.Instance.LoadKernels(folder.FullName);
+        SpiceApi.Instance.LoadKernels(file.FullName);
 
         // Assert: a directory is listed as a DirectoryInfo, a file as a FileInfo
         var listed = Under(_root);
@@ -393,10 +393,10 @@ public class KernelLoadingTests : IDisposable
 
         // Act: rewritten and reloaded by string, then unloaded by string
         WriteFrameKernel(_root, "b.tf", 1999996, "IOA_L1_STR_B", 25.0);
-        SpiceAPI.Instance.ReloadKernels(file.FullName);
+        SpiceApi.Instance.ReloadKernels(file.FullName);
         Assert.Equal(25.0, AngleDeg("IOA_L1_STR_B"), 12);
-        SpiceAPI.Instance.UnloadKernels(folder.FullName);
-        SpiceAPI.Instance.UnloadKernels(file.FullName);
+        SpiceApi.Instance.UnloadKernels(folder.FullName);
+        SpiceApi.Instance.UnloadKernels(file.FullName);
 
         // Assert
         Assert.Empty(Under(_root));
@@ -408,12 +408,12 @@ public class KernelLoadingTests : IDisposable
     public void KernelCalls_ByString_RefuseNullEmptyAndMissing()
     {
         var missing = Path.Combine(_root.FullName, "missing");
-        Assert.Equal("path", Assert.Throws<ArgumentNullException>(() => SpiceAPI.Instance.LoadKernels((string)null)).ParamName);
-        Assert.Equal("path", Assert.Throws<ArgumentNullException>(() => SpiceAPI.Instance.ReloadKernels((string)null)).ParamName);
-        Assert.Equal("path", Assert.Throws<ArgumentNullException>(() => SpiceAPI.Instance.UnloadKernels((string)null)).ParamName);
-        Assert.Equal("path", Assert.Throws<ArgumentNullException>(() => SpiceAPI.Instance.ReloadKernels((FileSystemInfo)null)).ParamName);
-        Assert.Equal("path", Assert.Throws<ArgumentException>(() => SpiceAPI.Instance.LoadKernels(string.Empty)).ParamName);
-        Assert.Equal("path", Assert.Throws<ArgumentException>(() => SpiceAPI.Instance.LoadKernels(missing)).ParamName);
-        Assert.Equal("path", Assert.Throws<ArgumentException>(() => SpiceAPI.Instance.ReloadKernels(missing)).ParamName);
+        Assert.Equal("path", Assert.Throws<ArgumentNullException>(() => SpiceApi.Instance.LoadKernels((string)null)).ParamName);
+        Assert.Equal("path", Assert.Throws<ArgumentNullException>(() => SpiceApi.Instance.ReloadKernels((string)null)).ParamName);
+        Assert.Equal("path", Assert.Throws<ArgumentNullException>(() => SpiceApi.Instance.UnloadKernels((string)null)).ParamName);
+        Assert.Equal("path", Assert.Throws<ArgumentNullException>(() => SpiceApi.Instance.ReloadKernels((FileSystemInfo)null)).ParamName);
+        Assert.Equal("path", Assert.Throws<ArgumentException>(() => SpiceApi.Instance.LoadKernels(string.Empty)).ParamName);
+        Assert.Equal("path", Assert.Throws<ArgumentException>(() => SpiceApi.Instance.LoadKernels(missing)).ParamName);
+        Assert.Equal("path", Assert.Throws<ArgumentException>(() => SpiceApi.Instance.ReloadKernels(missing)).ParamName);
     }
 }

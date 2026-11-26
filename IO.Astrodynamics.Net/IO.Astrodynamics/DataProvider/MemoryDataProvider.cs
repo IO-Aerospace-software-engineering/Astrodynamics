@@ -55,14 +55,14 @@ public class MemoryDataProvider : IDataProvider
     /// </remarks>
     public StateOrientation FrameTransformationToICRF(in Time epoch, Frame source)
     {
-        if (SpiceAPI.ManagedOrientationToIcrf(epoch, source) is { } managed)
+        if (SpiceApi.ManagedOrientationToIcrf(epoch, source) is { } managed)
         {
             return managed;
         }
 
         if (!_stateOrientationsToICRF.TryGetValue(source.Name, out var stateOrientations))
         {
-            return DefinedOrientationToIcrf(epoch, source) ?? throw new ArgumentException(SpiceAPI.WithIcrfHint(source.Name,
+            return DefinedOrientationToIcrf(epoch, source) ?? throw new ArgumentException(SpiceApi.WithIcrfHint(source.Name,
                 $"Frame not found ({source}): no orientation was added to this MemoryDataProvider under the name '{source.Name}', and it does not define it."));
         }
 
@@ -249,7 +249,7 @@ public class MemoryDataProvider : IDataProvider
     public void AddStateOrientationToICRF(Frame frame, Time epoch, StateOrientation stateOrientation)
     {
         ArgumentNullException.ThrowIfNull(frame);
-        if (HasIcrfAxes(frame) || SpiceAPI.ManagedFrame(frame) != null)
+        if (HasIcrfAxes(frame) || SpiceApi.ManagedFrame(frame) != null)
         {
             throw new ArgumentException(
                 $"The provider defines the frame {frame.Name} and never reads its stored orientations: ICRF and GCRF are the identity, TEME, CIRS and TIRS the managed frames.",

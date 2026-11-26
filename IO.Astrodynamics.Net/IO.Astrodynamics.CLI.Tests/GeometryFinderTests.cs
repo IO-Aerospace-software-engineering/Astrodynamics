@@ -65,8 +65,8 @@ public class GeometryFinderTests
         {
             var utc = CliRun.Ok(Distance("<", "2024-03-01T00:00:00Z", "2024-03-21T00:00:00Z"));
             var tdb = CliRun.Ok(Distance("<", "2024-03-01T00:00:00Z", "2024-03-21T00:00:00Z", options: ["--time-scale", "tdb"]));
-            var found = SpiceAPI.Instance.FindWindowsOnDistanceConstraint(new TimeSystem.Window(TimeSystem.Time.Parse("2024-03-01T00:00:00Z"),
-                TimeSystem.Time.Parse("2024-03-21T00:00:00Z")), 399, 301, RelationnalOperator.Lower, 400000000.0, Aberration.None, TimeSpan.FromDays(10)).Single();
+            var found = SpiceApi.Instance.FindWindowsOnDistanceConstraint(new TimeSystem.Window(TimeSystem.Time.Parse("2024-03-01T00:00:00Z"),
+                TimeSystem.Time.Parse("2024-03-21T00:00:00Z")), 399, 301, RelationalOperator.LessThan, 400000000.0, Aberration.None, TimeSpan.FromDays(10)).Single();
             Assert.Equal($"{new TimeSystem.Window(found.StartDate.ToTDB(), found.EndDate.ToTDB())}{Environment.NewLine}", tdb);
             Assert.Equal($"{new TimeSystem.Window(found.StartDate.ToUTC(), found.EndDate.ToUTC())}{Environment.NewLine}", utc);
             Assert.StartsWith("From 2024-03-01T00:00:00.0000000Z to 2024-03-19T", utc);
@@ -100,7 +100,7 @@ public class GeometryFinderTests
     {
         using (Configuration.Lock())
         {
-            Assert.Equal(CliRun.Ok(Distance("<=")), CliRun.Ok(Distance("lowerorequal")));
+            Assert.Equal(CliRun.Ok(Distance("<=")), CliRun.Ok(Distance("lessthanorequal")));
             Assert.Equal(CliRun.Ok(Distance("=")), CliRun.Ok(Distance("Equal")));
             Assert.StartsWith("Error: Unknown --relation 'lt': the command reads >, <, =, !, >=, <=, ABSMIN, ABSMAX, LOCMIN, LOCMAX",
                 CliRun.Fails(2, Distance("lt")));
@@ -185,10 +185,10 @@ public class GeometryFinderTests
         {
             var value = System.Math.PI * 0.5 - (-0.8 * IO.Astrodynamics.Constants.Deg2Rad);
             var res = CliRun.Ok(Illumination("-0.0349 0.8378 1000", R(value)));
-            var expected = SpiceAPI.Instance.FindWindowsOnIlluminationConstraint(
+            var expected = SpiceApi.Instance.FindWindowsOnIlluminationConstraint(
                     new TimeSystem.Window(TimeSystem.Time.Create(674524800.0, TimeSystem.TimeScale.TDB), TimeSystem.Time.Create(674611200.0, TimeSystem.TimeScale.TDB)),
                     10, 399, new Frames.Frame("ITRF93"), new Coordinates.Planetodetic(-0.0349, 0.8378, 1000.0), IlluminationAngle.Incidence,
-                    RelationnalOperator.Lower, value, 0.0, Aberration.CNS, TimeSpan.FromHours(4.5), 10)
+                    RelationalOperator.LessThan, value, 0.0, Aberration.CNS, TimeSpan.FromHours(4.5), 10)
                 .Select(x => x + Environment.NewLine);
             Assert.Equal(string.Join("", expected), res);
             Assert.Equal(2, res.Split(Environment.NewLine, StringSplitOptions.RemoveEmptyEntries).Length);
@@ -277,7 +277,7 @@ public class GeometryFinderTests
 
     /// <summary>
     /// Every coordinate system and coordinate the help lists, by its description or its member name in any case, reads as
-    /// its member (#652). The reference is the search SpiceAPI runs with the members themselves: the Earth's right
+    /// its member (#652). The reference is the search SpiceApi runs with the members themselves: the Earth's right
     /// ascension and declination seen from the Sun in ICRF, which cross π and 0 at the March equinox of 2024.
     /// </summary>
     [Theory]
@@ -293,9 +293,9 @@ public class GeometryFinderTests
             var res = CliRun.Ok(Coordinate(coordinateSystem, coordinate, "=", R(value)));
 
             var member = coordinate.Contains("asc", StringComparison.OrdinalIgnoreCase) ? IO.Astrodynamics.Coordinate.RightAscension : IO.Astrodynamics.Coordinate.Declination;
-            var expected = SpiceAPI.Instance.FindWindowsOnCoordinateConstraint(
+            var expected = SpiceApi.Instance.FindWindowsOnCoordinateConstraint(
                     new TimeSystem.Window(new TimeSystem.Time(new DateTime(2024, 3, 1), TimeSystem.TimeScale.TDB), new TimeSystem.Time(new DateTime(2024, 5, 1), TimeSystem.TimeScale.TDB)), 10, 399,
-                    Frames.Frame.ICRF, CoordinateSystem.RaDec, member, RelationnalOperator.Equal, value, 0.0, Aberration.None, TimeSpan.FromDays(20))
+                    Frames.Frame.ICRF, CoordinateSystem.RaDec, member, RelationalOperator.Equal, value, 0.0, Aberration.None, TimeSpan.FromDays(20))
                 .ToArray();
             Assert.Single(expected);
             Assert.Equal(2024, expected[0].StartDate.DateTime.Year);

@@ -100,8 +100,8 @@ public class FrameTests
         // Arrange
         var epoch = TimeSystem.Time.Parse(date + " TDB");
         var site = new Site(13, "DSS-13", PlanetsAndMoons.EARTH_BODY);
-        var spice = SpiceAPI.Instance.TransformFrame(epoch, new Frames.Frame("DSS-13_TOPO"), Frames.Frame.ICRF);
-        var itrf93 = SpiceAPI.Instance.TransformFrame(epoch, new Frames.Frame("ITRF93"), Frames.Frame.ICRF);
+        var spice = SpiceApi.Instance.TransformFrame(epoch, new Frames.Frame("DSS-13_TOPO"), Frames.Frame.ICRF);
+        var itrf93 = SpiceApi.Instance.TransformFrame(epoch, new Frames.Frame("ITRF93"), Frames.Frame.ICRF);
         var topoToItrf93 = Multiply(Multiply(FrameRotation(-243.2055372852376 * IO.Astrodynamics.Constants.Deg2Rad, 3),
             FrameRotation(-54.7528364565405 * IO.Astrodynamics.Constants.Deg2Rad, 2)), FrameRotation(System.Math.PI, 3));
         var closedForm = new Vector3[3];
@@ -136,7 +136,7 @@ public class FrameTests
         // Arrange
         var epoch = TimeSystem.Time.Parse("2024-03-01T00:00:00 TDB");
         var site = new Site(13, "GOLDSTONE", PlanetsAndMoons.EARTH_BODY);
-        var expected = SpiceAPI.Instance.ReadEphemeris(epoch, 399013, 301, new Frames.Frame("DSS-13_TOPO"), Aberration.None);
+        var expected = SpiceApi.Instance.ReadEphemeris(epoch, 399013, 301, new Frames.Frame("DSS-13_TOPO"), Aberration.None);
 
         // Act
         var byName = PlanetsAndMoons.MOON_BODY.GetEphemeris(epoch, site, site.Frame, Aberration.None);

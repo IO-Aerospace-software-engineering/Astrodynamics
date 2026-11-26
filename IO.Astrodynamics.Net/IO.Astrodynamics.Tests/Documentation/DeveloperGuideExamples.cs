@@ -38,7 +38,7 @@ using IO.Astrodynamics.Propagator.Integrators;
 using IO.Astrodynamics.SolarSystemObjects;
 using IO.Astrodynamics.Surface;
 using IO.Astrodynamics.TimeSystem;
-using TLE = IO.Astrodynamics.OrbitalParameters.TLE.TLE;
+using Tle = IO.Astrodynamics.OrbitalParameters.TLE.Tle;
 
 namespace DeveloperGuideSamples;
 
@@ -51,10 +51,10 @@ internal static class DeveloperGuideExamples
     {
         #region guide:1
         // Load kernels from a directory
-        SpiceAPI.Instance.LoadKernels(new DirectoryInfo("path/to/kernels"));
+        SpiceApi.Instance.LoadKernels(new DirectoryInfo("path/to/kernels"));
 
         // Or load a specific kernel file
-        SpiceAPI.Instance.LoadKernels(new FileInfo("de440.bsp"));
+        SpiceApi.Instance.LoadKernels(new FileInfo("de440.bsp"));
         #endregion
     }
 
@@ -63,7 +63,7 @@ internal static class DeveloperGuideExamples
     {
         #region guide:2
         // Load kernels
-        SpiceAPI.Instance.LoadKernels(new DirectoryInfo("Data/SolarSystem"));
+        SpiceApi.Instance.LoadKernels(new DirectoryInfo("Data/SolarSystem"));
 
         // Create celestial bodies
         var earth = PlanetsAndMoons.EARTH_BODY;
@@ -110,7 +110,7 @@ internal static class DeveloperGuideExamples
     internal static void Block04()
     {
         #region guide:4
-        var tle = new TLE("ISS (ZARYA)",
+        var tle = new Tle("ISS (ZARYA)",
             "1 25544U 98067A   21020.53488036  .00016717  00000-0  10270-3 0  9054",
             "2 25544  51.6423 353.0312 0000493 320.8755  39.2360 15.49309423 25703");
 
@@ -122,15 +122,15 @@ internal static class DeveloperGuideExamples
         #endregion
     }
 
-    // DEVELOPER_GUIDE.md, "SpiceAPI"
+    // DEVELOPER_GUIDE.md, "SpiceApi"
     internal static void Block05()
     {
         #region guide:5
         // Load all kernels from a directory
-        SpiceAPI.Instance.LoadKernels(new DirectoryInfo("kernels/"));
+        SpiceApi.Instance.LoadKernels(new DirectoryInfo("kernels/"));
 
         // Check loaded kernels
-        foreach (var kernel in SpiceAPI.Instance.GetLoadedKernels())
+        foreach (var kernel in SpiceApi.Instance.GetLoadedKernels())
             Console.WriteLine(kernel);
         #endregion
     }
@@ -267,7 +267,7 @@ internal static class DeveloperGuideExamples
 
         Console.WriteLine($"Elements type: {meanKep.ElementsType}"); // Mean
         // Note: Mean elements cannot be directly converted to StateVector
-        // Use TLE.ToOsculating() or TLE.ToStateVector() for SGP4-based conversion
+        // Use Tle.ToOsculating() or Tle.ToStateVector() for SGP4-based conversion
         #endregion
     }
 
@@ -292,7 +292,7 @@ internal static class DeveloperGuideExamples
     {
         #region guide:13
         // Parse TLE
-        var tle = new TLE("ISS (ZARYA)",
+        var tle = new Tle("ISS (ZARYA)",
             "1 25544U 98067A   21020.53488036  .00016717  00000-0  10270-3 0  9054",
             "2 25544  51.6423 353.0312 0000493 320.8755  39.2360 15.49309423 25703");
 
@@ -370,12 +370,12 @@ internal static class DeveloperGuideExamples
         #endregion
     }
 
-    // DEVELOPER_GUIDE.md, "TLE.ToOmm() - Convert TLE to OMM"
+    // DEVELOPER_GUIDE.md, "Tle.ToOmm() - Convert TLE to OMM"
     internal static void Block15()
     {
         #region guide:15
         // Parse TLE
-        var tle = new TLE("ISS (ZARYA)",
+        var tle = new Tle("ISS (ZARYA)",
             "1 25544U 98067A   21020.53488036  .00016717  00000-0  10270-3 0  9054",
             "2 25544  51.6423 353.0312 0000493 320.8755  39.2360 15.49309423 25703");
 
@@ -434,7 +434,7 @@ internal static class DeveloperGuideExamples
     // DEVELOPER_GUIDE.md, "Validation"
     internal static void Block18()
     {
-        var omm = new TLE("ISS (ZARYA)",
+        var omm = new Tle("ISS (ZARYA)",
             "1 25544U 98067A   21020.53488036  .00016717  00000-0  10270-3 0  9054",
             "2 25544  51.6423 353.0312 0000493 320.8755  39.2360 15.49309423 25703").ToOmm();
         #region guide:18
@@ -469,7 +469,7 @@ internal static class DeveloperGuideExamples
         var omm = Omm.Load("iss.omm");  // ObjectId: "1998-067A"
         var tle = omm.ToTle();                   // Uses "98067A" internally
 
-        // TLE.ToOmm() converts back to full format
+        // Tle.ToOmm() converts back to full format
         var newOmm = tle.ToOmm();                // ObjectId: "1998-067A"
         #endregion
     }
@@ -684,7 +684,7 @@ internal static class DeveloperGuideExamples
         // Find visibility windows: the distance of the site from the Moon (the observer)
         var windows = moon.FindDistanceWindows(
             new Window(new Time(2024, 1, 1, TimeScale.TDB), new Time(2024, 1, 2, TimeScale.TDB)),
-            mySite, RelationnalOperator.Lower, 400000000,
+            mySite, RelationalOperator.LessThan, 400000000,
             new WindowSearchOptions { Step = TimeSpan.FromMinutes(10), Aberration = Aberration.LT });
         // One window, 2024-01-01 09:42:24.997 to 14:20:43.029 TDB, as CSPICE's spkcpt_c corrects the site (#489)
         #endregion
@@ -995,7 +995,7 @@ internal static class DeveloperGuideExamples
         #endregion
     }
 
-    // DEVELOPER_GUIDE.md, "Tsiolkovski"
+    // DEVELOPER_GUIDE.md, "Tsiolkovsky"
     internal static void Block40()
     {
         #region guide:40
@@ -1003,10 +1003,10 @@ internal static class DeveloperGuideExamples
         double m0 = 1000;          // kg initial
         double mf = 800;           // kg final
 
-        double deltaV = Tsiolkovski.DeltaV(isp, m0, mf);
+        double deltaV = Tsiolkovsky.DeltaV(isp, m0, mf);
         Console.WriteLine($"Delta-V: {deltaV:F1} m/s");
 
-        double fuelNeeded = Tsiolkovski.DeltaM(isp, m0, 500);  // 500 m/s delta-V
+        double fuelNeeded = Tsiolkovsky.DeltaM(isp, m0, 500);  // 500 m/s delta-V
         Console.WriteLine($"Fuel needed: {fuelNeeded:F1} kg");
         #endregion
     }
@@ -1032,7 +1032,7 @@ internal static class DeveloperGuideExamples
     {
         #region guide:42
         // Load all required kernels at startup
-        SpiceAPI.Instance.LoadKernels(new DirectoryInfo("kernels"));
+        SpiceApi.Instance.LoadKernels(new DirectoryInfo("kernels"));
 
         // Required kernel types:
         // - LSK (leap seconds): naif0012.tls
@@ -1041,7 +1041,7 @@ internal static class DeveloperGuideExamples
         // - FK (frames): earth_assoc_itrf93.tf
 
         // Clean up when done
-        SpiceAPI.Instance.ClearKernels();
+        SpiceApi.Instance.ClearKernels();
         #endregion
     }
 
@@ -1077,7 +1077,7 @@ internal static class DeveloperGuideExamples
         var bodyFixed = sv.ToFrame(earthFrame);
 
         // TEME for TLE propagation (handled automatically)
-        var tle = new TLE("ISS (ZARYA)",
+        var tle = new Tle("ISS (ZARYA)",
             "1 25544U 98067A   21020.53488036  .00016717  00000-0  10270-3 0  9054",
             "2 25544  51.6423 353.0312 0000493 320.8755  39.2360 15.49309423 25703");
         var tleSv = tle.ToStateVector();  // Returns in TEME
@@ -1366,7 +1366,7 @@ internal static class DeveloperGuideExamples
         var farMoonWindows = earth.FindDistanceWindows(
             searchWindow,
             moon,
-            RelationnalOperator.Greater,
+            RelationalOperator.GreaterThan,
             400000000,  // 400,000 km in meters
             new WindowSearchOptions { Step = TimeSpan.FromHours(24) }
         ).ToArray();
@@ -1483,7 +1483,7 @@ internal static class DeveloperGuideExamples
         var earth = PlanetsAndMoons.EARTH_BODY;
 
         // Parse ISS TLE
-        var issTLE = new TLE(
+        var issTLE = new Tle(
             "ISS (ZARYA)",
             "1 25544U 98067A   24153.17509025  .00020162  00000+0  35104-3 0  9990",
             "2 25544  51.6393  34.6631 0005642 260.2910 238.1766 15.50732314456064"
@@ -1518,7 +1518,7 @@ internal static class DeveloperGuideExamples
         var visibilityWindows = iss.FindDistanceWindows(
             new Window(trackStart, trackEnd),
             goldstone,
-            RelationnalOperator.Lower,
+            RelationalOperator.LessThan,
             2000000,  // Within 2000 km
             new WindowSearchOptions { Step = TimeSpan.FromMinutes(1), Aberration = Aberration.LT }
         );

@@ -74,7 +74,7 @@ internal static class OccultationSearch
             return Array.Empty<Window>();
         }
 
-        return SpiceAPI.Instance.FindWindowsOnOccultationConstraint(searchWindow, observerId, targetId, targetShape, frontBodyId, frontShape,
+        return SpiceApi.Instance.FindWindowsOnOccultationConstraint(searchWindow, observerId, targetId, targetShape, frontBodyId, frontShape,
             hasPoint ? OccultationType.Any : occultationType, aberration, stepSize, options.FrontFrame, options.TargetFrame).ToArray();
     }
 

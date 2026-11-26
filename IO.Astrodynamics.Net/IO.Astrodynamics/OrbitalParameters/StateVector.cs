@@ -21,7 +21,7 @@ namespace IO.Astrodynamics.OrbitalParameters
         /// and ω is measured from the x axis.
         /// </summary>
         /// <remarks>
-        /// The rule of SPICE OSCELT, measured on <see cref="SpiceAPI.ConvertStateVectorToConicOrbitalElement(StateVector)"/>:
+        /// The rule of SPICE OSCELT, measured on <see cref="SpiceApi.ConvertStateVectorToConicOrbitalElement(StateVector)"/>:
         /// the switch is at sin i = 1e-10 for orbits from 6 800 to 100 000 km, any speed and eccentricity (#368).
         /// Confirmed by S. Guillet on the OSCELT source, 2026-10-31.
         /// </remarks>

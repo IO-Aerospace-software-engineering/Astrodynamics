@@ -53,7 +53,7 @@ using IO.Astrodynamics.SSA;
 using IO.Astrodynamics.SolarSystemObjects;
 using IO.Astrodynamics.Surface;
 using IO.Astrodynamics.TimeSystem;
-using TLE = IO.Astrodynamics.OrbitalParameters.TLE.TLE;
+using Tle = IO.Astrodynamics.OrbitalParameters.TLE.Tle;
 
 namespace DocumentationPageSamples.Reference;
 
@@ -84,13 +84,13 @@ internal static class MathPage
         #endregion
     }
 
-    // docs/reference/math.md, "Tsiolkovski"
+    // docs/reference/math.md, "Tsiolkovsky"
     internal static void Block03()
     {
         #region docs/reference/math.md:3
-        double dv = Tsiolkovski.DeltaV(isp: 300, initialMass: 1000, finalMass: 800);
-        TimeSpan burnTime = Tsiolkovski.DeltaT(isp: 300, initialMass: 1000, fuelFlow: 0.5, deltaV: dv);
-        double fuelUsed = Tsiolkovski.DeltaM(isp: 300, initialMass: 1000, deltaV: dv);
+        double dv = Tsiolkovsky.DeltaV(isp: 300, initialMass: 1000, finalMass: 800);
+        TimeSpan burnTime = Tsiolkovsky.DeltaT(isp: 300, initialMass: 1000, fuelFlow: 0.5, deltaV: dv);
+        double fuelUsed = Tsiolkovsky.DeltaM(isp: 300, initialMass: 1000, deltaV: dv);
         #endregion
     }
 }

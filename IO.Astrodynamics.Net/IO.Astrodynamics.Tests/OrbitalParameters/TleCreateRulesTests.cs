@@ -10,7 +10,7 @@ using CelestialBody = IO.Astrodynamics.Body.CelestialBody;
 namespace IO.Astrodynamics.Tests.OrbitalParameters;
 
 /// <summary>
-/// What <see cref="TLE.Create"/>, <see cref="Astrodynamics.OrbitalParameters.OrbitalParameters.ToTle"/> and
+/// What <see cref="Tle.Create"/>, <see cref="Astrodynamics.OrbitalParameters.OrbitalParameters.ToTle"/> and
 /// <see cref="Omm.ToTle"/> accept and write by default: SGP4 mean elements of an Earth orbit in TEME only (#607), and one
 /// default element set number, 999 (#606).
 /// </summary>
@@ -59,11 +59,11 @@ public class TleCreateRulesTests
     [Fact]
     public void Create_WithoutElementSetNumber_Writes999()
     {
-        // #606: TLE.Create defaulted to 9999, Omm.ToTle to 999; 999 is the value CelesTrak and Space-Track publish
+        // #606: Tle.Create defaulted to 9999, Omm.ToTle to 999; 999 is the value CelesTrak and Space-Track publish
         // (decided by S. Guillet, 2026-11-17)
-        var tle = TLE.Create(MeanElements(EarthAtEpoch, Frames.Frame.TEME), "ISS", 25544, "98067A", 2570);
+        var tle = Tle.Create(MeanElements(EarthAtEpoch, Frames.Frame.TEME), "ISS", 25544, "98067A", 2570);
         AssertElementSetNumber999(tle.Line1);
-        Assert.Equal(999, TLE.DefaultElementSetNumber);
+        Assert.Equal(999, Tle.DefaultElementSetNumber);
     }
 
     [Fact]
@@ -84,8 +84,8 @@ public class TleCreateRulesTests
     [Fact]
     public void ToTle_WithTheDefaultConfiguration_Writes999()
     {
-        // An Earth orbit in ICRF: the fit rotates it to TEME, and the TLE is written as by TLE.Create
-        var iss = new TLE("ISS",
+        // An Earth orbit in ICRF: the fit rotates it to TEME, and the TLE is written as by Tle.Create
+        var iss = new Tle("ISS",
             "1 25544U 98067A   21020.53488036  .00016717  00000-0  10270-3 0  9054",
             "2 25544  51.6423 353.0312 0000493 320.8755  39.2360 15.49309423 25703");
         var state = iss.ToStateVector().ToFrame(Frames.Frame.ICRF).ToStateVector();
@@ -102,7 +102,7 @@ public class TleCreateRulesTests
     {
         // #607: mean elements in ICRF were written as a TLE, their angles taken as TEME's
         var ex = Assert.Throws<ArgumentException>(() =>
-            TLE.Create(MeanElements(EarthAtEpoch, Frames.Frame.ICRF), "ISS", 25544, "98067A", 2570));
+            Tle.Create(MeanElements(EarthAtEpoch, Frames.Frame.ICRF), "ISS", 25544, "98067A", 2570));
         Assert.Equal("meanElements", ex.ParamName);
         Assert.Contains("TEME", ex.Message);
         Assert.Contains(Frames.Frame.ICRF.Name, ex.Message);
@@ -114,7 +114,7 @@ public class TleCreateRulesTests
         // #607: mean elements about the Moon were written as a TLE, their mean motion from the Moon's GM
         var moon = new CelestialBody(301, Frames.Frame.ECLIPTIC_J2000, Epoch);
         var ex = Assert.Throws<ArgumentException>(() =>
-            TLE.Create(MeanElements(moon, Frames.Frame.TEME), "LUNAR", 25544, "98067A", 2570));
+            Tle.Create(MeanElements(moon, Frames.Frame.TEME), "LUNAR", 25544, "98067A", 2570));
         Assert.Equal("meanElements", ex.ParamName);
         Assert.Contains("MOON", ex.Message);
     }
@@ -124,7 +124,7 @@ public class TleCreateRulesTests
     {
         var barycenter = new Barycenter(3, Epoch);
         var ex = Assert.Throws<ArgumentException>(() =>
-            TLE.Create(MeanElements(barycenter, Frames.Frame.TEME), "EMB", 25544, "98067A", 2570));
+            Tle.Create(MeanElements(barycenter, Frames.Frame.TEME), "EMB", 25544, "98067A", 2570));
         Assert.Equal("meanElements", ex.ParamName);
     }
 
@@ -135,7 +135,7 @@ public class TleCreateRulesTests
         var equinoctial = new EquinoctialElements(keplerian.SemiMajorAxis() * (1.0 - keplerian.Eccentricity() * keplerian.Eccentricity()), keplerian.Eccentricity() * System.Math.Cos(keplerian.ArgumentOfPeriapsis() + keplerian.AscendingNode()),
             keplerian.Eccentricity() * System.Math.Sin(keplerian.ArgumentOfPeriapsis() + keplerian.AscendingNode()), 0.1, 0.2, 1.0, keplerian.Observer, Epoch,
             Frames.Frame.ICRF, elementsType: OrbitalElementsType.Mean);
-        var ex = Assert.Throws<ArgumentException>(() => TLE.Create(equinoctial, "ISS", 25544, "98067A", 2570));
+        var ex = Assert.Throws<ArgumentException>(() => Tle.Create(equinoctial, "ISS", 25544, "98067A", 2570));
         Assert.Equal("meanElements", ex.ParamName);
     }
 
@@ -143,7 +143,7 @@ public class TleCreateRulesTests
     public void Create_MeanElementsOfTheEarthInTeme_AreWritten()
     {
         // The frame compared by name (Frame equality), the centre by NAIF identifier: an Earth built in any frame
-        var tle = TLE.Create(MeanElements(new CelestialBody(399), Frames.Frame.TEME), "ISS", 25544, "98067A", 2570);
+        var tle = Tle.Create(MeanElements(new CelestialBody(399), Frames.Frame.TEME), "ISS", 25544, "98067A", 2570);
         Assert.Equal(51.6423, double.Parse(tle.Line2.Substring(8, 8), System.Globalization.CultureInfo.InvariantCulture));
     }
 

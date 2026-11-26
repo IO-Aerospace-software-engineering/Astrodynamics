@@ -19,8 +19,8 @@ namespace IO.Astrodynamics.Tests.Propagators;
 /// <summary>
 /// A propagation over a window of zero length throws <see cref="ArgumentException"/> naming <c>window</c> at the start of
 /// the call, before anything changes, on every path (decision 7 of lot L4 of #668, decided by S. Guillet, 2026-11-22;
-/// <see cref="TLEPropagator"/> by decision 15, the same day). Before, a numerical propagation ran, re-armed the spacecraft
-/// and threw <see cref="InvalidOperationException"/> "Solution contains no segments", and <see cref="TLEPropagator"/>
+/// <see cref="TlePropagator"/> by decision 15, the same day). Before, a numerical propagation ran, re-armed the spacecraft
+/// and threw <see cref="InvalidOperationException"/> "Solution contains no segments", and <see cref="TlePropagator"/>
 /// returned one sample at the start.
 /// </summary>
 public class ZeroLengthWindowTests
@@ -72,7 +72,7 @@ public class ZeroLengthWindowTests
     }
 
     /// <summary>
-    /// <see cref="TLEPropagator"/> throws in its constructor, in TDB and in UTC alike, and adds no state to the spacecraft
+    /// <see cref="TlePropagator"/> throws in its constructor, in TDB and in UTC alike, and adds no state to the spacecraft
     /// (decision 15).
     /// </summary>
     [Theory]
@@ -81,7 +81,7 @@ public class ZeroLengthWindowTests
     public void TLEPropagator_AZeroLengthWindow_Throws_NamingTheWindow(TimeScale scale)
     {
         // Arrange
-        var tle = new IO.Astrodynamics.OrbitalParameters.TLE.TLE("ISS",
+        var tle = new IO.Astrodynamics.OrbitalParameters.TLE.Tle("ISS",
             "1 25544U 98067A   21020.53488036  .00016717  00000-0  10270-3 0  9054",
             "2 25544  51.6423 353.0312 0000493 320.8755  39.2360 15.49309423 25703");
         int id = System.Threading.Interlocked.Decrement(ref _nextId);
@@ -90,7 +90,7 @@ public class ZeroLengthWindowTests
         var empty = new Window(epoch, epoch);
 
         // Act
-        var exception = Assert.Throws<ArgumentException>(() => new TLEPropagator(empty, spacecraft, TimeSpan.FromSeconds(60.0)));
+        var exception = Assert.Throws<ArgumentException>(() => new TlePropagator(empty, spacecraft, TimeSpan.FromSeconds(60.0)));
 
         // Assert
         Assert.Equal("window", exception.ParamName);

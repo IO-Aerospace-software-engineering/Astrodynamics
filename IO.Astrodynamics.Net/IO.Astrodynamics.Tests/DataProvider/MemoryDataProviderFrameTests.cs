@@ -22,7 +22,7 @@ namespace IO.Astrodynamics.Tests.DataProvider;
 /// </summary>
 /// <remarks>
 /// The references are SPICE's <c>spkezr_c</c> on the states the test stores, read from SPICE in J2000 at the same epochs
-/// (<see cref="SpiceAPI.ReadEphemeris(TimeSystem.Time, int, int, Frames.Frame, Aberration)"/>), and the closed form of
+/// (<see cref="SpiceApi.ReadEphemeris(TimeSystem.Time, int, int, Frames.Frame, Aberration)"/>), and the closed form of
 /// ECLIPJ2000, SPICE's rotation of the J2000 obliquity, 84381.448″ about x (CSPICE <c>chgirf.c</c>). The providers are
 /// called directly: the global provider is never swapped (#631).
 /// </remarks>
@@ -60,7 +60,7 @@ public class MemoryDataProviderFrameTests
         {
             foreach (var id in new[] { 301, 399 })
             {
-                var state = SpiceAPI.Instance.ReadEphemeris(epoch, 0, id, storedIn, Aberration.None);
+                var state = SpiceApi.Instance.ReadEphemeris(epoch, 0, id, storedIn, Aberration.None);
                 provider.AddStateVector(id, epoch, new StateVector(state.Position, state.Velocity, TestHelpers.SsbAtJ2000, epoch, storedIn));
             }
         }
@@ -69,7 +69,7 @@ public class MemoryDataProviderFrameTests
     }
 
     private static StateVector Spkezr(TimeSystem.Time epoch, Frames.Frame frame) =>
-        SpiceAPI.Instance.ReadEphemeris(epoch, 399, 301, frame, Aberration.None);
+        SpiceApi.Instance.ReadEphemeris(epoch, 399, 301, frame, Aberration.None);
 
     private void Measure(string label, MemoryDataProvider provider, Frames.Frame frame, double velocityTolerance = VelocityTolerance)
     {
@@ -106,7 +106,7 @@ public class MemoryDataProviderFrameTests
         var itrf93 = new Frames.Frame("ITRF93");
         foreach (var epoch in Epochs)
         {
-            provider.AddStateOrientationToICRF(itrf93, epoch, SpiceAPI.Instance.TransformFrame(epoch, itrf93, Frames.Frame.ICRF));
+            provider.AddStateOrientationToICRF(itrf93, epoch, SpiceApi.Instance.TransformFrame(epoch, itrf93, Frames.Frame.ICRF));
         }
 
         Measure("ICRF states read in ITRF93", provider, itrf93, RotatingVelocityTolerance);
@@ -148,8 +148,8 @@ public class MemoryDataProviderFrameTests
             foreach (var epoch in Epochs)
             {
                 var read = provider.GetEphemeris(epoch, PlanetsAndMoons.MOON_BODY, PlanetsAndMoons.EARTH_BODY, frame, Aberration.None);
-                var moon = SpiceAPI.Instance.ReadEphemeris(epoch, 0, 301, Frames.Frame.ICRF, Aberration.None);
-                var earth = SpiceAPI.Instance.ReadEphemeris(epoch, 0, 399, Frames.Frame.ICRF, Aberration.None);
+                var moon = SpiceApi.Instance.ReadEphemeris(epoch, 0, 301, Frames.Frame.ICRF, Aberration.None);
+                var earth = SpiceApi.Instance.ReadEphemeris(epoch, 0, 399, Frames.Frame.ICRF, Aberration.None);
                 Assert.Equal(moon.Position - earth.Position, read.Position);
                 Assert.Equal(moon.Velocity - earth.Velocity, read.Velocity);
                 Assert.Same(frame, read.Frame);
@@ -190,7 +190,7 @@ public class MemoryDataProviderFrameTests
     {
         var provider = new MemoryDataProvider();
         var orientation = provider.FrameTransformationToICRF(Start, Frames.Frame.ECLIPTIC_J2000);
-        var spice = SpiceAPI.Instance.TransformFrame(Start, Frames.Frame.ECLIPTIC_J2000, Frames.Frame.ICRF);
+        var spice = SpiceApi.Instance.TransformFrame(Start, Frames.Frame.ECLIPTIC_J2000, Frames.Frame.ICRF);
         var delta = orientation.Rotation * spice.Rotation.Conjugate();
         double angle = 2.0 * System.Math.Atan2(delta.VectorPart.Magnitude(), System.Math.Abs(delta.W));
         _output.WriteLine($"MEASURE #559 ECLIPJ2000 against sxform: {angle.ToString("E3", CultureInfo.InvariantCulture)} rad");

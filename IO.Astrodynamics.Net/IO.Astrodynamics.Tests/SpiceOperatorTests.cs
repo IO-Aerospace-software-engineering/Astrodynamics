@@ -16,24 +16,24 @@ using Window = IO.Astrodynamics.TimeSystem.Window;
 namespace IO.Astrodynamics.Tests;
 
 /// <summary>
-/// The operators CSPICE has not, <see cref="RelationnalOperator.GreaterOrEqual"/>, <see cref="RelationnalOperator.LowerOrEqual"/>
-/// and <see cref="RelationnalOperator.NotEqual"/>, on the CSPICE path of the window searches (#482): before, the native
+/// The operators CSPICE has not, <see cref="RelationalOperator.GreaterThanOrEqual"/>, <see cref="RelationalOperator.LessThanOrEqual"/>
+/// and <see cref="RelationalOperator.NotEqual"/>, on the CSPICE path of the window searches (#482): before, the native
 /// parser of the relation threw a C++ exception across P/Invoke and the process ended (exit code 134).
 /// </summary>
 /// <remarks>
 /// <para>
 /// The expected windows are those of CSPICE N0067 through spiceypy, <c>tools/geometry_reference/operators_reference.py</c>:
-/// <c>gfdist</c>, <c>gfposc</c> and <c>gfilum</c> with <c>&gt;</c> for <see cref="RelationnalOperator.GreaterOrEqual"/>,
-/// <c>&lt;</c> for <see cref="RelationnalOperator.LowerOrEqual"/>, and for <see cref="RelationnalOperator.NotEqual"/> the
+/// <c>gfdist</c>, <c>gfposc</c> and <c>gfilum</c> with <c>&gt;</c> for <see cref="RelationalOperator.GreaterThanOrEqual"/>,
+/// <c>&lt;</c> for <see cref="RelationalOperator.LessThanOrEqual"/>, and for <see cref="RelationalOperator.NotEqual"/> the
 /// search window less the instants of <c>=</c>, a window from each crossing to the next (the managed search's
 /// definition), each end the nearest tick of its ET (#625). Compared as the strings of their epochs, as
 /// <see cref="SpiceApiTest"/> compares the windows of the same searches.
 /// </para>
 /// <para>
-/// The paths: the three <see cref="SpiceAPI"/> searches; <see cref="WindowSearches.FindCoordinateWindows"/> of the Moon
+/// The paths: the three <see cref="SpiceApi"/> searches; <see cref="WindowSearches.FindCoordinateWindows"/> of the Moon
 /// observing a kernel spacecraft (LRO) and of LRO observing a kernel site (DSS-13), on the LRO SPK of the tests.
 /// <see cref="WindowSearches.FindDistanceWindows"/> and <see cref="Site.FindIlluminationWindows"/> on their CSPICE path are checked against their own
-/// <see cref="RelationnalOperator.Greater"/>, <see cref="RelationnalOperator.Lower"/> and <see cref="RelationnalOperator.Equal"/>
+/// <see cref="RelationalOperator.GreaterThan"/>, <see cref="RelationalOperator.LessThan"/> and <see cref="RelationalOperator.Equal"/>
 /// searches, CSPICE's: the threshold of the first is in m, as the library reads it since #466, and the surface point
 /// of the second in m, its altitude converted to km since #488.
 /// </para>
@@ -59,26 +59,26 @@ public class SpiceOperatorTests
     }
 
     // ---------------------------------------------------------------------------------------------------------------------
-    // SpiceAPI
+    // SpiceApi
     // ---------------------------------------------------------------------------------------------------------------------
 
-    private static readonly Dictionary<RelationnalOperator, string[]> Distance = new()
+    private static readonly Dictionary<RelationalOperator, string[]> Distance = new()
     {
-        [RelationnalOperator.GreaterOrEqual] =
+        [RelationalOperator.GreaterThanOrEqual] =
         [
             "[2007-01-08T00:11:07.6285911 TDB, 2007-01-13T06:37:47.9481441 TDB]",
             "[2007-02-04T07:02:35.2843759 TDB, 2007-02-10T09:31:01.8379413 TDB]",
             "[2007-03-03T00:20:25.1894418 TDB, 2007-03-10T14:04:38.4915548 TDB]",
             "[2007-03-29T22:53:58.1518964 TDB, 2007-04-01T00:01:05.1856545 TDB]"
         ],
-        [RelationnalOperator.LowerOrEqual] =
+        [RelationalOperator.LessThanOrEqual] =
         [
             "[2007-01-01T00:01:05.1839181 TDB, 2007-01-08T00:11:07.6285911 TDB]",
             "[2007-01-13T06:37:47.9481441 TDB, 2007-02-04T07:02:35.2843759 TDB]",
             "[2007-02-10T09:31:01.8379413 TDB, 2007-03-03T00:20:25.1894418 TDB]",
             "[2007-03-10T14:04:38.4915548 TDB, 2007-03-29T22:53:58.1518964 TDB]"
         ],
-        [RelationnalOperator.NotEqual] =
+        [RelationalOperator.NotEqual] =
         [
             "[2007-01-01T00:01:05.1839181 TDB, 2007-01-08T00:11:07.6285907 TDB]",
             "[2007-01-08T00:11:07.6285907 TDB, 2007-01-13T06:37:47.9481439 TDB]",
@@ -92,23 +92,23 @@ public class SpiceOperatorTests
     };
 
     [Theory]
-    [InlineData(RelationnalOperator.GreaterOrEqual)]
-    [InlineData(RelationnalOperator.LowerOrEqual)]
-    [InlineData(RelationnalOperator.NotEqual)]
-    public void SpiceApi_Distance(RelationnalOperator relation)
+    [InlineData(RelationalOperator.GreaterThanOrEqual)]
+    [InlineData(RelationalOperator.LessThanOrEqual)]
+    [InlineData(RelationalOperator.NotEqual)]
+    public void SpiceApi_Distance(RelationalOperator relation)
     {
         // The Earth-Moon distance against 400 000 km, as SpiceApiTest.FindWindowsOnDistanceConstraintProxy
-        var res = SpiceAPI.Instance.FindWindowsOnDistanceConstraint(
+        var res = SpiceApi.Instance.FindWindowsOnDistanceConstraint(
             new Window(TimeSystem.Time.CreateTDB(220881665.18391809), TimeSystem.Time.CreateTDB(228657665.18565452)),
             399, 301, relation, 400000000, Aberration.None, TimeSpan.FromSeconds(86400.0));
         AssertWindows(Distance[relation], res);
     }
 
-    private static readonly Dictionary<RelationnalOperator, string[]> Coordinate = new()
+    private static readonly Dictionary<RelationalOperator, string[]> Coordinate = new()
     {
-        [RelationnalOperator.GreaterOrEqual] = ["[2023-02-19T14:33:08.9179869 TDB, 2023-02-20T00:00:00.0000000 TDB]"],
-        [RelationnalOperator.LowerOrEqual] = ["[2023-02-19T00:00:00.0000000 TDB, 2023-02-19T14:33:08.9179869 TDB]"],
-        [RelationnalOperator.NotEqual] =
+        [RelationalOperator.GreaterThanOrEqual] = ["[2023-02-19T14:33:08.9179869 TDB, 2023-02-20T00:00:00.0000000 TDB]"],
+        [RelationalOperator.LessThanOrEqual] = ["[2023-02-19T00:00:00.0000000 TDB, 2023-02-19T14:33:08.9179869 TDB]"],
+        [RelationalOperator.NotEqual] =
         [
             "[2023-02-19T00:00:00.0000000 TDB, 2023-02-19T14:33:08.9179871 TDB]",
             "[2023-02-19T14:33:08.9179871 TDB, 2023-02-20T00:00:00.0000000 TDB]"
@@ -116,29 +116,29 @@ public class SpiceOperatorTests
     };
 
     [Theory]
-    [InlineData(RelationnalOperator.GreaterOrEqual)]
-    [InlineData(RelationnalOperator.LowerOrEqual)]
-    [InlineData(RelationnalOperator.NotEqual)]
-    public void SpiceApi_Coordinate(RelationnalOperator relation)
+    [InlineData(RelationalOperator.GreaterThanOrEqual)]
+    [InlineData(RelationalOperator.LessThanOrEqual)]
+    [InlineData(RelationalOperator.NotEqual)]
+    public void SpiceApi_Coordinate(RelationalOperator relation)
     {
         // The Moon's Z in DSS-13's topocentric frame against 0, as SpiceApiTest.FindWindowsOnCoordinateConstraint
         var site = new Site(13, "DSS-13", TestHelpers.EarthAtJ2000,
             new Planetodetic(-116.7944627147624 * IO.Astrodynamics.Constants.Deg2Rad, 35.2471635434595 * IO.Astrodynamics.Constants.Deg2Rad, 0.107));
-        var res = SpiceAPI.Instance.FindWindowsOnCoordinateConstraint(
+        var res = SpiceApi.Instance.FindWindowsOnCoordinateConstraint(
             new Window(TimeSystem.Time.CreateTDB(730036800.0), TimeSystem.Time.CreateTDB(730123200)), site.NaifId, 301, site.Frame,
             CoordinateSystem.Rectangular, Astrodynamics.Coordinate.Z, relation, 0.0, 0.0, Aberration.None, TimeSpan.FromSeconds(60.0));
         AssertWindows(Coordinate[relation], res);
     }
 
-    private static readonly Dictionary<RelationnalOperator, string[]> Illumination = new()
+    private static readonly Dictionary<RelationalOperator, string[]> Illumination = new()
     {
-        [RelationnalOperator.GreaterOrEqual] = ["[2021-05-17T19:35:24.9088323 TDB, 2021-05-18T04:18:32.4437503 TDB]"],
-        [RelationnalOperator.LowerOrEqual] =
+        [RelationalOperator.GreaterThanOrEqual] = ["[2021-05-17T19:35:24.9088323 TDB, 2021-05-18T04:18:32.4437503 TDB]"],
+        [RelationalOperator.LessThanOrEqual] =
         [
             "[2021-05-17T12:00:00.0000000 TDB, 2021-05-17T19:35:24.9088323 TDB]",
             "[2021-05-18T04:18:32.4437503 TDB, 2021-05-18T12:00:00.0000000 TDB]"
         ],
-        [RelationnalOperator.NotEqual] =
+        [RelationalOperator.NotEqual] =
         [
             "[2021-05-17T12:00:00.0000000 TDB, 2021-05-17T19:35:24.9088323 TDB]",
             "[2021-05-17T19:35:24.9088323 TDB, 2021-05-18T04:18:32.4437503 TDB]",
@@ -147,13 +147,13 @@ public class SpiceOperatorTests
     };
 
     [Theory]
-    [InlineData(RelationnalOperator.GreaterOrEqual)]
-    [InlineData(RelationnalOperator.LowerOrEqual)]
-    [InlineData(RelationnalOperator.NotEqual)]
-    public void SpiceApi_Illumination(RelationnalOperator relation)
+    [InlineData(RelationalOperator.GreaterThanOrEqual)]
+    [InlineData(RelationalOperator.LessThanOrEqual)]
+    [InlineData(RelationalOperator.NotEqual)]
+    public void SpiceApi_Illumination(RelationalOperator relation)
     {
         // The Sun's incidence at a point against 90.8 deg, as SpiceApiTest.FindWindowsOnIlluminationConstraint
-        var res = SpiceAPI.Instance.FindWindowsOnIlluminationConstraint(
+        var res = SpiceApi.Instance.FindWindowsOnIlluminationConstraint(
             new Window(TimeSystem.Time.CreateTDB(674524800), TimeSystem.Time.CreateTDB(674611200)), 10, 399, new Frames.Frame("ITRF93"),
             new Planetodetic(2.2 * IO.Astrodynamics.Constants.Deg2Rad, 48.0 * IO.Astrodynamics.Constants.Deg2Rad, 0.0),
             IlluminationAngle.Incidence, relation, System.Math.PI * 0.5 - (-0.8 * IO.Astrodynamics.Constants.Deg2Rad), 0.0,
@@ -164,8 +164,8 @@ public class SpiceOperatorTests
     [Fact]
     public void SpiceApi_AValueOutsideTheEnumeration_Throws()
     {
-        Assert.Throws<ArgumentOutOfRangeException>(() => SpiceAPI.Instance.FindWindowsOnDistanceConstraint(
-            new Window(TimeSystem.Time.CreateTDB(220881665.0), TimeSystem.Time.CreateTDB(220981665.0)), 399, 301, (RelationnalOperator)42,
+        Assert.Throws<ArgumentOutOfRangeException>(() => SpiceApi.Instance.FindWindowsOnDistanceConstraint(
+            new Window(TimeSystem.Time.CreateTDB(220881665.0), TimeSystem.Time.CreateTDB(220981665.0)), 399, 301, (RelationalOperator)42,
             400000000, Aberration.None, TimeSpan.FromSeconds(86400.0)));
     }
 
@@ -173,9 +173,9 @@ public class SpiceOperatorTests
     // CelestialItem and Site, kernel objects
     // ---------------------------------------------------------------------------------------------------------------------
 
-    private static readonly Dictionary<RelationnalOperator, string[]> LroDeclination = new()
+    private static readonly Dictionary<RelationalOperator, string[]> LroDeclination = new()
     {
-        [RelationnalOperator.GreaterOrEqual] =
+        [RelationalOperator.GreaterThanOrEqual] =
         [
             "[2023-12-15T00:54:42.2206856 TDB, 2023-12-15T01:52:49.4762495 TDB]",
             "[2023-12-15T02:51:40.2377942 TDB, 2023-12-15T03:49:46.0359914 TDB]",
@@ -184,7 +184,7 @@ public class SpiceOperatorTests
             "[2023-12-15T08:42:33.2981179 TDB, 2023-12-15T09:40:35.6565859 TDB]",
             "[2023-12-15T10:39:30.5217185 TDB, 2023-12-15T11:37:32.1141390 TDB]"
         ],
-        [RelationnalOperator.LowerOrEqual] =
+        [RelationalOperator.LessThanOrEqual] =
         [
             "[2023-12-15T00:02:00.0000000 TDB, 2023-12-15T00:54:42.2206856 TDB]",
             "[2023-12-15T01:52:49.4762495 TDB, 2023-12-15T02:51:40.2377942 TDB]",
@@ -194,7 +194,7 @@ public class SpiceOperatorTests
             "[2023-12-15T09:40:35.6565859 TDB, 2023-12-15T10:39:30.5217185 TDB]",
             "[2023-12-15T11:37:32.1141390 TDB, 2023-12-15T12:02:00.0000000 TDB]"
         ],
-        [RelationnalOperator.NotEqual] =
+        [RelationalOperator.NotEqual] =
         [
             "[2023-12-15T00:02:00.0000000 TDB, 2023-12-15T00:54:42.2206858 TDB]",
             "[2023-12-15T00:54:42.2206858 TDB, 2023-12-15T01:52:49.4762497 TDB]",
@@ -213,10 +213,10 @@ public class SpiceOperatorTests
     };
 
     [Theory]
-    [InlineData(RelationnalOperator.GreaterOrEqual)]
-    [InlineData(RelationnalOperator.LowerOrEqual)]
-    [InlineData(RelationnalOperator.NotEqual)]
-    public void KernelSpacecraft_Coordinate(RelationnalOperator relation)
+    [InlineData(RelationalOperator.GreaterThanOrEqual)]
+    [InlineData(RelationalOperator.LessThanOrEqual)]
+    [InlineData(RelationalOperator.NotEqual)]
+    public void KernelSpacecraft_Coordinate(RelationalOperator relation)
     {
         // The declination of LRO seen from the Moon in J2000 against 0 rad: gfposc
         var moon = new CelestialBody(PlanetsAndMoons.MOON);
@@ -225,19 +225,19 @@ public class SpiceOperatorTests
         AssertWindows(LroDeclination[relation], res);
     }
 
-    private static readonly Dictionary<RelationnalOperator, string[]> Dss13Range = new()
+    private static readonly Dictionary<RelationalOperator, string[]> Dss13Range = new()
     {
-        [RelationnalOperator.GreaterOrEqual] =
+        [RelationalOperator.GreaterThanOrEqual] =
         [
             "[2023-12-15T03:43:21.9833910 TDB, 2023-12-15T04:19:46.2154557 TDB]",
             "[2023-12-15T05:19:30.3108535 TDB, 2023-12-15T12:02:00.0000000 TDB]"
         ],
-        [RelationnalOperator.LowerOrEqual] =
+        [RelationalOperator.LessThanOrEqual] =
         [
             "[2023-12-15T00:02:00.0000000 TDB, 2023-12-15T03:43:21.9833910 TDB]",
             "[2023-12-15T04:19:46.2154557 TDB, 2023-12-15T05:19:30.3108535 TDB]"
         ],
-        [RelationnalOperator.NotEqual] =
+        [RelationalOperator.NotEqual] =
         [
             "[2023-12-15T00:02:00.0000000 TDB, 2023-12-15T03:43:21.9833908 TDB]",
             "[2023-12-15T03:43:21.9833908 TDB, 2023-12-15T04:19:46.2154561 TDB]",
@@ -247,10 +247,10 @@ public class SpiceOperatorTests
     };
 
     [Theory]
-    [InlineData(RelationnalOperator.GreaterOrEqual)]
-    [InlineData(RelationnalOperator.LowerOrEqual)]
-    [InlineData(RelationnalOperator.NotEqual)]
-    public void KernelSite_Coordinate(RelationnalOperator relation)
+    [InlineData(RelationalOperator.GreaterThanOrEqual)]
+    [InlineData(RelationalOperator.LessThanOrEqual)]
+    [InlineData(RelationalOperator.NotEqual)]
+    public void KernelSite_Coordinate(RelationalOperator relation)
     {
         // The range of DSS-13 seen from LRO against 372 000 km: gfposc
         var earth = new CelestialBody(PlanetsAndMoons.EARTH);
@@ -275,15 +275,15 @@ public class SpiceOperatorTests
         return Text(windows);
     }
 
-    private static void AssertAgainstOwnSearches(Window search, Func<RelationnalOperator, IEnumerable<Window>> find)
+    private static void AssertAgainstOwnSearches(Window search, Func<RelationalOperator, IEnumerable<Window>> find)
     {
-        var greater = find(RelationnalOperator.Greater).ToArray();
-        var lower = find(RelationnalOperator.Lower).ToArray();
-        var equal = find(RelationnalOperator.Equal).ToArray();
+        var greater = find(RelationalOperator.GreaterThan).ToArray();
+        var lower = find(RelationalOperator.LessThan).ToArray();
+        var equal = find(RelationalOperator.Equal).ToArray();
         Assert.NotEmpty(equal);
-        Assert.Equal(Text(greater), Text(find(RelationnalOperator.GreaterOrEqual)));
-        Assert.Equal(Text(lower), Text(find(RelationnalOperator.LowerOrEqual)));
-        Assert.Equal(Complement(search, equal), Text(find(RelationnalOperator.NotEqual)));
+        Assert.Equal(Text(greater), Text(find(RelationalOperator.GreaterThanOrEqual)));
+        Assert.Equal(Text(lower), Text(find(RelationalOperator.LessThanOrEqual)));
+        Assert.Equal(Complement(search, equal), Text(find(RelationalOperator.NotEqual)));
     }
 
     [Fact]

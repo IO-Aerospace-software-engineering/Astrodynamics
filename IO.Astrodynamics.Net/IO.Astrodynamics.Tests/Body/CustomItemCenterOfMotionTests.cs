@@ -19,7 +19,7 @@ namespace IO.Astrodynamics.Tests.Body;
 /// </summary>
 /// <remarks>
 /// The reference is SPICE's: the barycentre of a natural observer is the <c>BarycenterOfMotionId</c> of the record that
-/// <see cref="SpiceAPI.GetCelestialBodyInfo"/> reads from the kernels (<c>GetCelestialBodyInfoProxy</c>: the Earth and the
+/// <see cref="SpiceApi.GetCelestialBodyInfo"/> reads from the kernels (<c>GetCelestialBodyInfoProxy</c>: the Earth and the
 /// Moon 3, the Sun 0), a barycentre its own identifier (NAIF Integer ID codes, the barycentres 0 to 9).
 /// </remarks>
 public class CustomItemCenterOfMotionTests
@@ -40,7 +40,7 @@ public class CustomItemCenterOfMotionTests
 
     /// <summary>The barycentre of a natural observer as SPICE gives it, a barycentre itself.</summary>
     private static int SpiceBarycentre(int observerId) =>
-        observerId < 10 ? observerId : SpiceAPI.Instance.GetCelestialBodyInfo(observerId).BarycenterOfMotionId;
+        observerId < 10 ? observerId : SpiceApi.Instance.GetCelestialBodyInfo(observerId).BarycenterOfMotionId;
 
     public static TheoryData<int> Observers => [399, 301, 10, 3, 0, 4];
 

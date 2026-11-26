@@ -25,24 +25,24 @@ public sealed record InstrumentKernelFiles(Instrument Instrument, FileInfo Frame
 /// <remarks>
 /// <para>
 /// The handle unloads the records of its own load, by reference: a file a user's load of the directory, or of a directory
-/// above it, took into its entry of <see cref="SpiceAPI.GetLoadedKernels"/> while the handle lived is unloaded at
-/// <see cref="Dispose"/> and that entry replaced by its other files, as <see cref="SpiceAPI.UnloadKernels(FileSystemInfo)"/>
+/// above it, took into its entry of <see cref="SpiceApi.GetLoadedKernels"/> while the handle lived is unloaded at
+/// <see cref="Dispose"/> and that entry replaced by its other files, as <see cref="SpiceApi.UnloadKernels(FileSystemInfo)"/>
 /// of a file inside it does: a load made while the handle lives furnishes nothing for its files and does not take them
 /// over; load them again after <see cref="Dispose"/> to keep them. A file loaded again under the same name after the
 /// handle's record left SPICE (a user's unload, a writer that replaced it) is not the handle's and stays.
 /// </para>
 /// <para>
 /// No finalizer: an undisposed handle leaves its kernels loaded for the life of the process, as
-/// <see cref="SpiceAPI.LoadKernels(FileSystemInfo)"/> does, and never takes the SPICE lock from the finalizer thread.
+/// <see cref="SpiceApi.LoadKernels(FileSystemInfo)"/> does, and never takes the SPICE lock from the finalizer thread.
 /// </para>
 /// </remarks>
 public sealed class SpacecraftKernels : IDisposable
 {
-    private readonly IReadOnlyList<SpiceAPI.KernelFile> _loaded;
+    private readonly IReadOnlyList<SpiceApi.KernelFile> _loaded;
     private int _disposed;
 
     internal SpacecraftKernels(FileInfo clock, FileInfo frame, FileInfo ephemeris, FileInfo orientation,
-        IReadOnlyList<InstrumentKernelFiles> instruments, IReadOnlyList<SpiceAPI.KernelFile> loaded)
+        IReadOnlyList<InstrumentKernelFiles> instruments, IReadOnlyList<SpiceApi.KernelFile> loaded)
     {
         Clock = clock;
         Frame = frame;
@@ -75,8 +75,8 @@ public sealed class SpacecraftKernels : IDisposable
         .Concat(new[] { Ephemeris, Orientation });
 
     /// <summary>
-    /// True until <see cref="Dispose"/>: the handle has not unloaded its files. A user's <see cref="SpiceAPI.UnloadKernels(FileSystemInfo)"/>
-    /// or <see cref="SpiceAPI.ClearKernels"/> of them is not tracked.
+    /// True until <see cref="Dispose"/>: the handle has not unloaded its files. A user's <see cref="SpiceApi.UnloadKernels(FileSystemInfo)"/>
+    /// or <see cref="SpiceApi.ClearKernels"/> of them is not tracked.
     /// </summary>
     public bool IsLoaded => Volatile.Read(ref _disposed) == 0;
 
@@ -94,6 +94,6 @@ public sealed class SpacecraftKernels : IDisposable
             return;
         }
 
-        SpiceAPI.Instance.UnloadKernelFilesScoped(_loaded);
+        SpiceApi.Instance.UnloadKernelFilesScoped(_loaded);
     }
 }

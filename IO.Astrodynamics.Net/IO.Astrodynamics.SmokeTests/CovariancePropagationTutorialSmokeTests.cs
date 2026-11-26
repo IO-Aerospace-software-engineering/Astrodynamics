@@ -33,7 +33,7 @@ public class CovariancePropagationTutorialSmokeTests
     public CovariancePropagationTutorialSmokeTests(ITestOutputHelper output)
     {
         _output = output;
-        SpiceAPI.Instance.LoadKernels(SolarSystemKernelPath);
+        SpiceApi.Instance.LoadKernels(SolarSystemKernelPath);
     }
 
     // Section "The case": a LEO 400 km with EGM2008 10×10, NRLMSISE-00 drag, SRP, the Moon and the Sun

@@ -1,14 +1,14 @@
 # TLE
 
-`TLE` stores mean Earth-orbit elements that must be propagated with SGP4 or SDP4 to obtain physical states.
+`Tle` stores mean Earth-orbit elements that must be propagated with SGP4 or SDP4 to obtain physical states.
 
 !!! warning
-    TLE stores **mean** elements. Calling `ToStateVector()` on mean `KeplerianElements` throws `InvalidOperationException`. Use `TLE.ToStateVector()` or `TLE.ToOsculating()` instead.
+    TLE stores **mean** elements. Calling `ToStateVector()` on mean `KeplerianElements` throws `InvalidOperationException`. Use `Tle.ToStateVector()` or `Tle.ToOsculating()` instead.
 
 ## Constructor
 
 ```csharp
-var tle = new TLE("ISS (ZARYA)",
+var tle = new Tle("ISS (ZARYA)",
     "1 25544U 98067A   21020.53488036  .00016717  00000-0  10270-3 0  9054",
     "2 25544  51.6423 353.0312 0000493 320.8755  39.2360 15.49309423 25703");
 ```
@@ -45,7 +45,7 @@ The constructor reads no kernel at all (R21 of
 `Observer`) reads its GM, radii and frame from the data provider at the first member that needs them, retried on
 failure. A valid TLE gives its fields, `NoradCatalogId`, `MeanMeanMotion` and `ToOmm` without kernels;
 `MeanSemiMajorAxis`, `ToMeanKeplerianElements` and SGP4 need the kernels that define the Earth and throw
-`InvalidOperationException` without them (`BODY399_GM`), keeping nothing, so that the same `TLE` works once they are
+`InvalidOperationException` without them (`BODY399_GM`), keeping nothing, so that the same `Tle` works once they are
 loaded. Before 11.0.0 a TLE built before the kernels kept a GM of 0 for its life.
 
 ## Properties
@@ -104,7 +104,7 @@ The epoch is the UTC instant of the field, exact: the day fraction is read in de
 nearest value its columns hold: the epoch to the 1e-8 day with the carry into the next day and year (#600), B* and n̈/6
 as a five-digit mantissa and a one-digit exponent, zero below 5e-11 (#601), e in [0, 0.9999999] (#602), a zero without
 a sign (#480). Without an element set number, `Create`, the `TleFitOptions` of `ToTle` and `Omm.ToTle` (an OMM
-without `ELEMENT_SET_NO`) write `TLE.DefaultElementSetNumber`, 999, as CelesTrak and Space-Track publish (#606, decided
+without `ELEMENT_SET_NO`) write `Tle.DefaultElementSetNumber`, 999, as CelesTrak and Space-Track publish (#606, decided
 by S. Guillet, 2026-11-17; before 11.0.0, `Create` and `ToTle` wrote 9999).
 
 A TLE holds SGP4 mean elements of an Earth orbit in TEME, so `Create` throws `ArgumentException` (`meanElements`) for
@@ -115,7 +115,7 @@ centre as if they were, their angles taken as TEME's and their mean motion from 
 orbit about another centre for an Earth orbit and failed in its fit). Rotate mean elements to TEME with
 `ToFrame(Frame.TEME)` before `Create`, or give `ToTle` the osculating state, which it rotates to TEME itself.
 
-A TLE without an international designator (blank columns 10-17 of line 1, as 11801 and 88888 of Vallado's `SGP4-VER.TLE`) is carried through: `TLE.Create` takes a null or blank `cosparId` and writes eight blanks there, `TLE.ToOmm` writes `OBJECT_ID = UNKNOWN` (the element is mandatory in the ODM; CCSDS's value for an unknown designator, confirmed by S. Guillet, 2026-11-18), and `Omm.ToTle` reads `UNKNOWN`, trimmed and in any letter case, back as the blank columns ([#604](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/604), decided by S. Guillet, 2026-11-18). The fit of `OrbitalParameters.ToTle` writes a null or blank `cosparId` as the same blank columns. Before 11.0.0 `Create` threw `ArgumentException` (`cosparId`), `ToTle` "TLE conversion using Equinoctial elements failed" (`InvalidOperationException`), `ToOmm` "Object ID is required." (`objectId`), and `ToTle` wrote `UNKNOWN ` in the designator columns. An empty `OBJECT_ID` is still refused by the reader and `OmmMetadata`, as #708 decided (2026-11-16): the decision of #604 also reads an empty value as the blank columns, but no OMM holds one, and whether the reader should accept it is open, for S. Guillet to settle.
+A TLE without an international designator (blank columns 10-17 of line 1, as 11801 and 88888 of Vallado's `SGP4-VER.TLE`) is carried through: `Tle.Create` takes a null or blank `cosparId` and writes eight blanks there, `Tle.ToOmm` writes `OBJECT_ID = UNKNOWN` (the element is mandatory in the ODM; CCSDS's value for an unknown designator, confirmed by S. Guillet, 2026-11-18), and `Omm.ToTle` reads `UNKNOWN`, trimmed and in any letter case, back as the blank columns ([#604](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/604), decided by S. Guillet, 2026-11-18). The fit of `OrbitalParameters.ToTle` writes a null or blank `cosparId` as the same blank columns. Before 11.0.0 `Create` threw `ArgumentException` (`cosparId`), `ToTle` "TLE conversion using Equinoctial elements failed" (`InvalidOperationException`), `ToOmm` "Object ID is required." (`objectId`), and `ToTle` wrote `UNKNOWN ` in the designator columns. An empty `OBJECT_ID` is still refused by the reader and `OmmMetadata`, as #708 decided (2026-11-16): the decision of #604 also reads an empty value as the blank columns, but no OMM holds one, and whether the reader should accept it is open, for S. Guillet to settle.
 
 The states of SGP4/SDP4 are in `Frame.TEME`, the managed TEME frame ([Frames](frames.md#teme)); `ToFrame(Frame.ICRF)`
 needs no Earth orientation kernel, at any epoch. The Earth a TLE refers to is built in an inertial frame, so that a TLE
@@ -123,7 +123,7 @@ outside the coverage of the Earth's binary PCK reads nothing it does not need (#
 decayed or suborbital orbit, an eccentricity out of range) throws `InvalidOperationException` instead of returning a
 zero state (#454), with SPICE's message (#711). So does a TLE read before the kernels are loaded (SPICE's
 "The variable BODY399_GM could not be found in the kernel pool."): nothing is cached by the failed read, and the same
-`TLE` gives its states once the kernels are loaded (#711).
+`Tle` gives its states once the kernels are loaded (#711).
 
 NORAD catalog numbers run from 0 to 339999. Above 99999 they are written with the Alpha-5
 convention of the 18th Space Defense Squadron, which replaces the first digit with a letter
@@ -180,20 +180,20 @@ by default, with `--drag` NRLMSISE-00 at nominal space weather, or the U.S. Stan
 
 A TLE spacecraft reads its stored states after a numerical propagation by any path (`GetEphemeris`, `WriteEphemeris`,
 the window searches, the conjunction analysis with the check of #527, the avoidance options on its force model), and
-SGP4 otherwise: unpropagated, or sampled by `TLEPropagator`, whose samples replace the stored states without changing the rule. One read
+SGP4 otherwise: unpropagated, or sampled by `TlePropagator`, whose samples replace the stored states without changing the rule. One read
 of a sampled spacecraft is not SGP4 at the instant: `GetEphemeris` from its Earth without aberration interpolates the
-samples of `TLEPropagator`, as before (SGP4 at the samples, 9.1e-4 m from it between them for the ISS at 60 s over one UTC hour, 7.6e-4 m before #598 moved the last sample to the window end), and
+samples of `TlePropagator`, as before (SGP4 at the samples, 9.1e-4 m from it between them for the ISS at 60 s over one UTC hour, 7.6e-4 m before #598 moved the last sample to the window end), and
 reads SGP4 outside them (#527; it extrapolated them before, 20.7 m 6 min before the first sample); its geometric state,
 and the reads from any other body, are SGP4.
 `Spacecraft.ToOpm` writes the propagated state, in TEME, after a numerical propagation, and the SGP4 state otherwise,
-also when `TLEPropagator` sampled it (#658, decided by S. Guillet, 2026-11-17; the SGP4 state on every path before 11.0.0). For SGP4 itself, use `TLEPropagator` or `tle.ToStateVector(t)`.
+also when `TlePropagator` sampled it (#658, decided by S. Guillet, 2026-11-17; the SGP4 state on every path before 11.0.0). For SGP4 itself, use `TlePropagator` or `tle.ToStateVector(t)`.
 
 ## Reading TLE text
 
 One verb set reads a TLE text, shared with the CCSDS messages (R21 of
-[#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668)): `TLE.Parse` (a `string` or a
-`TextReader`) and `TLE.Load` (a file) read one set, `ParseAll` and `LoadAll` every set in its order, `TryParse` and
-`TryLoad` return false where the others throw, and `TLE` is an `IParsable<TLE>`. A text holds two-line sets (named by
+[#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668)): `Tle.Parse` (a `string` or a
+`TextReader`) and `Tle.Load` (a file) read one set, `ParseAll` and `LoadAll` every set in its order, `TryParse` and
+`TryLoad` return false where the others throw, and `Tle` is an `IParsable<Tle>`. A text holds two-line sets (named by
 their catalog field), three-line sets, or both: CR/LF or LF, trailing blanks and blank lines are ignored, and a name line
 is trimmed, the `0 ` Space-Track writes before it removed. A bad set throws `TleFormatException` at its line of the text
 and the column of its field, the first one in the text, with no partial list; `Parse` and `Load` throw it too for a text
@@ -201,12 +201,12 @@ of no set or of several. The constructor stays strict: two lines of 69 character
 
 ```csharp
 // Inputs: catalogPath (string)
-var catalog = TLE.LoadAll(catalogPath);
-var iss = TLE.Parse("ISS (ZARYA)\n" +
+var catalog = Tle.LoadAll(catalogPath);
+var iss = Tle.Parse("ISS (ZARYA)\n" +
     "1 25544U 98067A   21020.53488036  .00016717  00000-0  10270-3 0  9054\n" +
     "2 25544  51.6423 353.0312 0000493 320.8755  39.2360 15.49309423 25703");
 // The lines again, from the properties, without slicing them
-var again = TLE.Create(iss.ToMeanKeplerianElements(), iss.Name, iss.NoradCatalogId, iss.CosparId, iss.RevolutionNumberAtEpoch,
+var again = Tle.Create(iss.ToMeanKeplerianElements(), iss.Name, iss.NoradCatalogId, iss.CosparId, iss.RevolutionNumberAtEpoch,
     iss.Classification, iss.BallisticCoefficient, iss.FirstDerivationMeanMotion, iss.SecondDerivativeMeanMotion,
     iss.ElementSetNumber);
 ```

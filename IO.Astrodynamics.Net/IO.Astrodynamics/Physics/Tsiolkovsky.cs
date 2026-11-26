@@ -2,7 +2,7 @@
 
 namespace IO.Astrodynamics.Physics;
 
-public class Tsiolkovski
+public class Tsiolkovsky
 {
     /// <summary>
     /// Compute DeltaV

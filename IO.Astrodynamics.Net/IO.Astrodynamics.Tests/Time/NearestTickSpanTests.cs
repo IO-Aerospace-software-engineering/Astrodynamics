@@ -340,7 +340,7 @@ public class NearestTickSpanTests
         for (int k = 0; k < 24; k++)
         {
             var orbit = new KeplerianElements(6900000.0 + 23456.0 * k, 0.02, 0.5, 0.1, 0.3, 0.4 + 0.1 * k, earth, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF);
-            var elements = SpiceAPI.Instance.ConvertStateVectorToConicOrbitalElement(orbit.ToStateVector());
+            var elements = SpiceApi.Instance.ConvertStateVectorToConicOrbitalElement(orbit.ToStateVector());
             decimal a = D(elements.SemiMajorAxis());
             long? expected = NearestTick(2m * Pi * Sqrt(a * a * a / mu));
             if (expected is null)
@@ -385,7 +385,7 @@ public class NearestTickSpanTests
             }
 
             counted++;
-            var duration = Tsiolkovski.DeltaT(isp, initialMass, fuelFlow, deltaV);
+            var duration = Tsiolkovsky.DeltaT(isp, initialMass, fuelFlow, deltaV);
             Assert.True(expected == duration.Ticks, $"Δv = {deltaV:R} m/s: {duration.Ticks} ticks, the nearest {expected}");
             if (Truncated(initialMass / fuelFlow * (1 - System.Math.Exp(-deltaV / (isp * IO.Astrodynamics.Constants.g0)))) != expected)
             {
@@ -393,7 +393,7 @@ public class NearestTickSpanTests
             }
         }
 
-        _output.WriteLine($"MEASURE Tsiolkovski.DeltaT: {moved} of {counted} durations one tick off by truncation");
+        _output.WriteLine($"MEASURE Tsiolkovsky.DeltaT: {moved} of {counted} durations one tick off by truncation");
         Assert.True(counted >= 28);
         Assert.True(moved > 0);
     }

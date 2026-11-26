@@ -5,7 +5,7 @@ This tutorial covers Two-Line Element sets (TLE), Orbit Mean-Elements Message (O
 ## Parsing a TLE
 
 Parse a standard two-line element set from its three-line string form (a text or a file of one or many sets is read by
-`TLE.Parse`, `TLE.ParseAll`, `TLE.Load` and `TLE.LoadAll`; see [Reading TLE text](../reference/tle.md#reading-tle-text)):
+`Tle.Parse`, `Tle.ParseAll`, `Tle.Load` and `Tle.LoadAll`; see [Reading TLE text](../reference/tle.md#reading-tle-text)):
 
 ```csharp
 using IO.Astrodynamics;
@@ -14,9 +14,9 @@ using IO.Astrodynamics.OrbitalParameters.TLE;
 using IO.Astrodynamics.TimeSystem;
 using IO.Astrodynamics.SolarSystemObjects;
 
-SpiceAPI.Instance.LoadKernels(new DirectoryInfo("Data/SolarSystem"));
+SpiceApi.Instance.LoadKernels(new DirectoryInfo("Data/SolarSystem"));
 
-var tle = new TLE("ISS (ZARYA)",
+var tle = new Tle("ISS (ZARYA)",
     "1 25544U 98067A   21020.53488036  .00016717  00000-0  10270-3 0  9054",
     "2 25544  51.6423 353.0312 0000493 320.8755  39.2360 15.49309423 25703");
 
@@ -52,7 +52,7 @@ var svAtTime = tle.ToStateVector(new Time(2021, 1, 21, 12, 0, 0, TimeScale.TDB))
 Mean elements stay mean through `AtEpoch(t)` and `ToKeplerianElements(t)` (#463), so their `ToStateVector()` throws
 there too, and a numerical propagation (`CentralBodyPropagator`, `Spacecraft.Propagate`, `Scenario.Simulate`)
 refuses a spacecraft whose initial orbit is a set of mean elements other than a TLE, with an `ArgumentException` that
-points to `TLEPropagator` and `TLE.ToOsculating()`. `AtEpoch` of mean elements advances the mean anomaly at the two-body
+points to `TlePropagator` and `Tle.ToOsculating()`. `AtEpoch` of mean elements advances the mean anomaly at the two-body
 mean motion only, without the secular rates of the node and of the periapsis of SGP4: a TLE's own `AtEpoch` is SGP4.
 
 ## SGP4 Propagation
@@ -82,7 +82,7 @@ eccentricity out of range) throws `InvalidOperationException`.
 A spacecraft built on a TLE is propagated numerically like any spacecraft: the propagation starts from the SGP4 state
 at the start of the window, rotated once to ICRF, and integrates in ICRF. About the TLE's own Earth that is a point mass
 (53.7 km from SGP4 after an hour for this ISS TLE). To give it a geopotential and drag, start from the SGP4 state in
-TEME on an Earth that carries them; `TLEPropagator` gives SGP4 itself, for comparison:
+TEME on an Earth that carries them; `TlePropagator` gives SGP4 itself, for comparison:
 
 ```csharp
 using IO.Astrodynamics.Atmosphere.NRLMSISE_00;
@@ -104,7 +104,7 @@ var numerical = new Spacecraft(-1001, "ISS-NUM", 420000.0, new StateVector(sgp4A
 var solution = numerical.Propagate(window, new PropagationOptions { AtmosphericDrag = true });
 
 var sampled = new Spacecraft(-1002, "ISS-SGP4", 420000.0, tle, 450000.0, new Clock("issgp4", 65536));
-new TLEPropagator(window, sampled, TimeSpan.FromSeconds(60.0)).Propagate();
+new TlePropagator(window, sampled, TimeSpan.FromSeconds(60.0)).Propagate();
 
 var end = solution.StateVectors[^1];
 var sgp4AtEnd = tle.ToStateVector(end.Epoch).ToFrame(Frame.ICRF);
@@ -112,7 +112,7 @@ Console.WriteLine($"Numerical - SGP4 after 6 h: {(end.Position - sgp4AtEnd.Posit
 ```
 
 The solution and the stored states are in ICRF. Once propagated numerically, the spacecraft reads its stored states;
-unpropagated, it reads SGP4; sampled by `TLEPropagator`, it reads SGP4 too, except `GetEphemeris` from its Earth
+unpropagated, it reads SGP4; sampled by `TlePropagator`, it reads SGP4 too, except `GetEphemeris` from its Earth
 without aberration, which interpolates the samples (under a millimetre for the ISS at 60 s). See
 [Numerical propagation of a TLE](../reference/tle.md#numerical-propagation-of-a-tle).
 
@@ -203,7 +203,7 @@ Unlike TLE/OMM, OPM elements are osculating — they can be used directly for nu
 
 ## Summary
 
-- Parse TLEs from standard two-line format, with the constructor or `TLE.Parse`/`TLE.LoadAll` (a malformed set throws at its line and column); use `ToOsculating()` or `ToStateVector(epoch)` for physical states.
+- Parse TLEs from standard two-line format, with the constructor or `Tle.Parse`/`Tle.LoadAll` (a malformed set throws at its line and column); use `ToOsculating()` or `ToStateVector(epoch)` for physical states.
 - Never call `ToStateVector()` on mean Keplerian elements — always go through the SGP4 propagator.
 - OMM and TLE are interchangeable when the OMM has TLE-compatible fields (`IsTleCompatible`): TLE parameters, the SGP4 theory, TEME and the Earth.
 - OPM provides osculating state vectors in CCSDS format, ready for direct use.

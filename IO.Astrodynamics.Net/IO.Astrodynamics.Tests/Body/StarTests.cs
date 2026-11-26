@@ -311,7 +311,7 @@ public class StarTests
     internal static Vector3 CatalogPosition(Star star, TimeSystem.Time epoch) => StraightLinePosition(star, JulianYearsFromCatalogEpoch(star, epoch));
 
     /// <summary>
-    /// Writes the SPK of <paramref name="star"/>, loads it and checks through SPICE (<c>spkezr</c>, <see cref="SpiceAPI"/>)
+    /// Writes the SPK of <paramref name="star"/>, loads it and checks through SPICE (<c>spkezr</c>, <see cref="SpiceApi"/>)
     /// that it holds the states of <paramref name="kept"/> alone: each at the catalog position written here, and no state
     /// at the epochs of <paramref name="replaced"/> nor between the two windows, where SPICE has no data (the read throws).
     /// Returns the worst relative position.
@@ -322,13 +322,13 @@ public class StarTests
         var directory = Directory.CreateTempSubdirectory("star668");
         var spk = new FileInfo(Path.Combine(directory.FullName, $"star{star.CatalogNumber}.bsp"));
         star.WriteEphemeris(spk);
-        SpiceAPI.Instance.LoadKernels(spk);
+        SpiceApi.Instance.LoadKernels(spk);
         try
         {
             double worst = 0.0;
             foreach (var epoch in kept)
             {
-                var read = SpiceAPI.Instance.ReadEphemeris(epoch, 0, star.NaifId, Frames.Frame.ICRF, Aberration.None);
+                var read = SpiceApi.Instance.ReadEphemeris(epoch, 0, star.NaifId, Frames.Frame.ICRF, Aberration.None);
                 var catalog = CatalogPosition(star, epoch);
                 double relative = (read.Position - catalog).Magnitude() / catalog.Magnitude();
                 worst = System.Math.Max(worst, relative);
@@ -338,14 +338,14 @@ public class StarTests
             foreach (var epoch in replaced)
             {
                 Assert.Throws<SpiceException>(() =>
-                    SpiceAPI.Instance.ReadEphemeris(epoch, 0, star.NaifId, Frames.Frame.ICRF, Aberration.None));
+                    SpiceApi.Instance.ReadEphemeris(epoch, 0, star.NaifId, Frames.Frame.ICRF, Aberration.None));
             }
 
             return worst;
         }
         finally
         {
-            SpiceAPI.Instance.UnloadKernels(spk);
+            SpiceApi.Instance.UnloadKernels(spk);
             directory.Delete(true);
         }
     }

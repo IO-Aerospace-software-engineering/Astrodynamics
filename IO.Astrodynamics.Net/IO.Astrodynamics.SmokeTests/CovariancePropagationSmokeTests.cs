@@ -26,7 +26,7 @@ public class CovariancePropagationSmokeTests
 
     public CovariancePropagationSmokeTests()
     {
-        SpiceAPI.Instance.LoadKernels(SolarSystemKernelPath);
+        SpiceApi.Instance.LoadKernels(SolarSystemKernelPath);
     }
 
     [Fact]

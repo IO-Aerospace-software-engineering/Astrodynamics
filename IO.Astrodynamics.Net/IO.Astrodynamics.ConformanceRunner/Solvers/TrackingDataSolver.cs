@@ -47,7 +47,7 @@ public class TrackingDataSolver : ICategorySolver
         // Load the BSP kernel (path is relative to conformance-tests root)
         var bspPath = Path.Combine(_conformanceTestsPath, bspOrbit.Filename);
         SuiteDataFile.EnsureContent(bspPath);
-        SpiceAPI.Instance.LoadKernels(new FileInfo(bspPath));
+        SpiceApi.Instance.LoadKernels(new FileInfo(bspPath));
 
         var earth = new CelestialBody(PlanetsAndMoons.EARTH);
         var moon = new CelestialBody(PlanetsAndMoons.MOON);
@@ -129,7 +129,7 @@ public class TrackingDataSolver : ICategorySolver
         var aboveHorizonWindows = site.FindCoordinateWindows(
             searchWindow, spacecraft, site.Frame,
             CoordinateSystem.Rectangular, Coordinate.Z,
-            RelationnalOperator.Greater, 0.0,
+            RelationalOperator.GreaterThan, 0.0,
             new WindowSearchOptions { Step = step, Aberration = Aberration.None }).ToList();
 
         // Find windows when target is occulted by the occulting body from site

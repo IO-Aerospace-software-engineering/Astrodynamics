@@ -10,7 +10,7 @@ namespace IO.Astrodynamics.Tests.OrbitalParameters;
 
 /// <summary>
 /// The shape of the TLE fit (decision 113 of #668, decided by S. Guillet, 2026-11-26): <c>ToTle(name, noradId, cosparId,
-/// options = null)</c> in the order of <see cref="TLE.Create"/>, its other fields and its settings in the D1 record
+/// options = null)</c> in the order of <see cref="Tle.Create"/>, its other fields and its settings in the D1 record
 /// <see cref="TleFitOptions"/>, whose defaults are those of the record <c>TLE.Configuration</c> it replaces (revolution
 /// number 0, unclassified, B* 0.0001, ṅ/2 and n̈/6 0, element set 999, 15 iterations), and whose unread <c>Tolerance</c> is
 /// removed (#833).
@@ -49,7 +49,7 @@ public class TleFitOptionsTests
         Assert.NotNull(type.GetMethod("<Clone>$"));
         Assert.Null(type.GetProperty("Tolerance"));
         Assert.Equal(typeof(int), type.GetProperty(nameof(TleFitOptions.MaxIterations))!.PropertyType);
-        Assert.Null(typeof(TLE).Assembly.GetType("IO.Astrodynamics.OrbitalParameters.TLE.Configuration"));
+        Assert.Null(typeof(Tle).Assembly.GetType("IO.Astrodynamics.OrbitalParameters.TLE.Configuration"));
     }
 
     [Fact]
@@ -58,21 +58,21 @@ public class TleFitOptionsTests
         var options = TleFitOptions.Default;
         Assert.Equal(new TleFitOptions(), options);
         Assert.Equal(0, options.RevolutionNumberAtEpoch);
-        Assert.Equal(Classification.Unclassified, options.Classification);
+        Assert.Equal(TleClassification.Unclassified, options.Classification);
         Assert.Equal(0.0001, options.BStar);
         Assert.Equal(0.0, options.MeanMotionDot);
         Assert.Equal(0.0, options.MeanMotionDDot);
-        Assert.Equal(TLE.DefaultElementSetNumber, options.ElementSetNumber);
+        Assert.Equal(Tle.DefaultElementSetNumber, options.ElementSetNumber);
         Assert.Equal(15, options.MaxIterations);
     }
 
     [Fact]
     public void ToTle_WithoutOptions_IsTheFitOfTheFormerDefaults_BitForBit()
     {
-        var state = new TLE("ISS", IssLines[0], IssLines[1]).ToOsculating();
+        var state = new Tle("ISS", IssLines[0], IssLines[1]).ToOsculating();
         var former = new TleFitOptions
         {
-            RevolutionNumberAtEpoch = 0, Classification = Classification.Unclassified, BStar = 0.0001, MeanMotionDot = 0.0,
+            RevolutionNumberAtEpoch = 0, Classification = TleClassification.Unclassified, BStar = 0.0001, MeanMotionDot = 0.0,
             MeanMotionDDot = 0.0, ElementSetNumber = 999, MaxIterations = 15
         };
 
@@ -89,10 +89,10 @@ public class TleFitOptionsTests
     [Fact]
     public void ToTle_WritesTheFieldsOfItsOptions()
     {
-        var state = new TLE("ISS", IssLines[0], IssLines[1]).ToOsculating();
+        var state = new Tle("ISS", IssLines[0], IssLines[1]).ToOsculating();
         var options = new TleFitOptions
         {
-            RevolutionNumberAtEpoch = 25703, Classification = Classification.Secret, BStar = 0.0001027,
+            RevolutionNumberAtEpoch = 25703, Classification = TleClassification.Secret, BStar = 0.0001027,
             MeanMotionDot = 0.00016717, ElementSetNumber = 905
         };
 

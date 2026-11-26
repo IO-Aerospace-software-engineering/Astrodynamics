@@ -35,7 +35,7 @@ using OrbitalParams = IO.Astrodynamics.OrbitalParameters.OrbitalParameters;
 /// <remarks>
 /// The references are the decided rules and independent ones: the definitions of the last run (the values the run writes on
 /// them, decision 52), the segments of the solution (an impulse opens the next one, at its epoch, with its delta-V), the
-/// rocket equation (<see cref="Tsiolkovski.DeltaM"/> of the mass before the burn), and the hull of the maneuver windows
+/// rocket equation (<see cref="Tsiolkovsky.DeltaM"/> of the mass before the burn), and the hull of the maneuver windows
 /// by <see cref="Window.Hull"/>, the rule of the summary before 11.0.0. The case: a 7 000 km orbit, e = 0.01, i = 0.5
 /// rad, about a point-mass Earth from 2024-03-01 12:00 TDB; 1 000 kg dry, 1 000 kg of fuel, Isp 300 s, 10 kg/s; a nadir
 /// attitude held 600 s, an apogee raise to 8 000 km, a prograde attitude, a perigee raise to 7 100 km, over 3 h.
@@ -148,7 +148,7 @@ public class ExecutedManeuverRecordTests
             {
                 impulses++;
                 Assert.Equal(impulse.DeltaV, record.DeltaV);
-                Assert.Equal(Tsiolkovski.DeltaM(c.Engine.ISP, record.MassBefore, record.DeltaV.Magnitude()), record.FuelBurned);
+                Assert.Equal(Tsiolkovsky.DeltaM(c.Engine.ISP, record.MassBefore, record.DeltaV.Magnitude()), record.FuelBurned);
                 Assert.True(record.FuelBurned > 0.0);
                 Assert.Equal(record.MassBefore - record.FuelBurned, record.MassAfter, 9);
 
@@ -315,13 +315,13 @@ public class ExecutedManeuverRecordTests
     [Fact]
     public void ATLEPropagatorSolutionAndOneBuiltByTheLibrary_HaveNoRecords()
     {
-        var tle = new TLE("ISS",
+        var tle = new Tle("ISS",
             "1 25544U 98067A   21020.53488036  .00016717  00000-0  10270-3 0  9054",
             "2 25544  51.6423 353.0312 0000493 320.8755  39.2360 15.49309423 25703");
         int id = NextId();
         var spacecraft = new Spacecraft(id, "EM" + -id, 100.0, tle, 10000.0, new Clock("EM" + -id, 65536));
 
-        var solution = new TLEPropagator(new Window(tle.Epoch, tle.Epoch.AddHours(1.0)), spacecraft, Output).Propagate();
+        var solution = new TlePropagator(new Window(tle.Epoch, tle.Epoch.AddHours(1.0)), spacecraft, Output).Propagate();
 
         Assert.Empty(solution.Maneuvers);
         Assert.Empty(new PropagationSolution().Maneuvers);

@@ -46,17 +46,17 @@ public partial class SpiceApiTest
     [Fact]
     public void CheckVersion()
     {
-        Assert.Equal("CSPICE_N0067", SpiceAPI.Instance.GetSpiceVersion());
+        Assert.Equal("CSPICE_N0067", SpiceApi.Instance.GetSpiceVersion());
     }
 
     [Fact]
     public void FindWindowsOnDistanceConstraintProxy()
     {
         //Find time windows when the moon will be 400000 km away from the Earth
-        var res = SpiceAPI.Instance.FindWindowsOnDistanceConstraint(
+        var res = SpiceApi.Instance.FindWindowsOnDistanceConstraint(
             new Window(TimeSystem.Time.CreateTDB(220881665.18391809),
                 TimeSystem.Time.CreateTDB(228657665.18565452)),
-            TestHelpers.EarthAtJ2000.NaifId, TestHelpers.MoonAtJ2000.NaifId, RelationnalOperator.Greater, 400000000, Aberration.None,
+            TestHelpers.EarthAtJ2000.NaifId, TestHelpers.MoonAtJ2000.NaifId, RelationalOperator.GreaterThan, 400000000, Aberration.None,
             TimeSpan.FromSeconds(86400.0));
         var windows = res as Window[] ?? res.ToArray();
         Assert.Equal(4, windows.Count());
@@ -70,10 +70,10 @@ public partial class SpiceApiTest
     public void FindWindowsOnDistanceConstraintFromIdsProxy()
     {
         //Find time windows when the moon will be 400000 km away from the Earth
-        var res = SpiceAPI.Instance.FindWindowsOnDistanceConstraint(
+        var res = SpiceApi.Instance.FindWindowsOnDistanceConstraint(
             new Window(TimeSystem.Time.CreateTDB(220881665.18391809),
                 TimeSystem.Time.CreateTDB(228657665.18565452)),
-            TestHelpers.EarthAtJ2000.NaifId, TestHelpers.MoonAtJ2000.NaifId, RelationnalOperator.Greater, 400000000, Aberration.None,
+            TestHelpers.EarthAtJ2000.NaifId, TestHelpers.MoonAtJ2000.NaifId, RelationalOperator.GreaterThan, 400000000, Aberration.None,
             TimeSpan.FromSeconds(86400.0));
         var windows = res as Window[] ?? res.ToArray();
         Assert.Equal(4, windows.Count());
@@ -87,7 +87,7 @@ public partial class SpiceApiTest
     public void FindWindowsOnOccultationConstraint()
     {
         //Find time windows when the Sun will be occulted by the moon
-        var res = SpiceAPI.Instance.FindWindowsOnOccultationConstraint(
+        var res = SpiceApi.Instance.FindWindowsOnOccultationConstraint(
             new Window(TimeSystem.Time.CreateTDB(61473664.183390938),
                 TimeSystem.Time.CreateTDB(61646464.183445148)), TestHelpers.EarthAtJ2000.NaifId, TestHelpers.Sun.NaifId,
             ShapeType.Ellipsoid, TestHelpers.MoonAtJ2000.NaifId, ShapeType.Ellipsoid, OccultationType.Any, Aberration.LT,
@@ -102,11 +102,11 @@ public partial class SpiceApiTest
     public void FindWindowsOnIlluminationConstraint()
     {
         //Find time windows when the planetodetic point is illuminated by the sun (Official twilight 0.8° bellow horizon)
-        var res = SpiceAPI.Instance.FindWindowsOnIlluminationConstraint(
+        var res = SpiceApi.Instance.FindWindowsOnIlluminationConstraint(
             new Window(TimeSystem.Time.CreateTDB(674524800), TimeSystem.Time.CreateTDB(674611200)),
             TestHelpers.Sun.NaifId, TestHelpers.EarthAtJ2000.NaifId, new Frames.Frame("ITRF93"),
             new Planetodetic(2.2 * IO.Astrodynamics.Constants.Deg2Rad, 48.0 * IO.Astrodynamics.Constants.Deg2Rad, 0.0),
-            IlluminationAngle.Incidence, RelationnalOperator.Lower,
+            IlluminationAngle.Incidence, RelationalOperator.LessThan,
             System.Math.PI * 0.5 - (-0.8 * IO.Astrodynamics.Constants.Deg2Rad), 0.0, Aberration.CNS,
             TimeSpan.FromHours(4.5), TestHelpers.Sun.NaifId);
         var windows = res as Window[] ?? res.ToArray();
@@ -124,10 +124,10 @@ public partial class SpiceApiTest
             new Planetodetic(-116.7944627147624 * IO.Astrodynamics.Constants.Deg2Rad,
                 35.2471635434595 * IO.Astrodynamics.Constants.Deg2Rad, 0.107));
         //Find time windows when the moon will be above the horizon relative to Deep Space Station 13
-        var res = SpiceAPI.Instance.FindWindowsOnCoordinateConstraint(
+        var res = SpiceApi.Instance.FindWindowsOnCoordinateConstraint(
             new Window(TimeSystem.Time.CreateTDB(730036800.0), TimeSystem.Time.CreateTDB(730123200)), site.NaifId,
             TestHelpers.MoonAtJ2000.NaifId, site.Frame, CoordinateSystem.Rectangular, Coordinate.Z,
-            RelationnalOperator.Greater,
+            RelationalOperator.GreaterThan,
             0.0, 0.0, Aberration.None, TimeSpan.FromSeconds(60.0));
 
         var windows = res as Window[] ?? res.ToArray();
@@ -140,11 +140,11 @@ public partial class SpiceApiTest
     public void FromIDs()
     {
         //Find time windows when the planetodetic point is illuminated by the sun (Official twilight 0.8° bellow horizon)
-        var res = SpiceAPI.Instance.FindWindowsOnIlluminationConstraint(
+        var res = SpiceApi.Instance.FindWindowsOnIlluminationConstraint(
             new Window(TimeSystem.Time.CreateTDB(674524800), TimeSystem.Time.CreateTDB(674611200)),
             TestHelpers.Sun.NaifId, TestHelpers.EarthAtJ2000.NaifId, new Frames.Frame("ITRF93"),
             new Planetodetic(2.2 * IO.Astrodynamics.Constants.Deg2Rad, 48.0 * IO.Astrodynamics.Constants.Deg2Rad, 0.0),
-            IlluminationAngle.Incidence, RelationnalOperator.Lower,
+            IlluminationAngle.Incidence, RelationalOperator.LessThan,
             System.Math.PI * 0.5 - (-0.8 * IO.Astrodynamics.Constants.Deg2Rad), 0.0, Aberration.CNS,
             TimeSpan.FromHours(4.5), TestHelpers.Sun.NaifId);
         var windows = res as Window[] ?? res.ToArray();
@@ -159,7 +159,7 @@ public partial class SpiceApiTest
     public void ReadEphemeris()
     {
         var searchWindow = new Window(TimeSystem.Time.CreateTDB(0.0), TimeSystem.Time.CreateTDB(100.0));
-        var res = SpiceAPI.Instance.ReadEphemeris(searchWindow, TestHelpers.EarthAtJ2000.NaifId, TestHelpers.MoonAtJ2000.NaifId,
+        var res = SpiceApi.Instance.ReadEphemeris(searchWindow, TestHelpers.EarthAtJ2000.NaifId, TestHelpers.MoonAtJ2000.NaifId,
             Frames.Frame.ICRF, Aberration.LT, TimeSpan.FromSeconds(10.0)).Select(x => x.ToStateVector());
 
         var stateVectors = res as StateVector[] ?? res.ToArray();
@@ -178,7 +178,7 @@ public partial class SpiceApiTest
     public void ReadEphemerisUTC()
     {
         var searchWindow = new Window(TimeSystem.Time.CreateUTC(0.0), TimeSystem.Time.CreateUTC(100.0));
-        var res = SpiceAPI.Instance.ReadEphemeris(searchWindow, TestHelpers.EarthAtJ2000.NaifId, TestHelpers.MoonAtJ2000.NaifId,
+        var res = SpiceApi.Instance.ReadEphemeris(searchWindow, TestHelpers.EarthAtJ2000.NaifId, TestHelpers.MoonAtJ2000.NaifId,
             Frames.Frame.ICRF, Aberration.LT, TimeSpan.FromSeconds(10.0)).Select(x => x.ToStateVector());
 
         var stateVectors = res as StateVector[] ?? res.ToArray();
@@ -193,7 +193,7 @@ public partial class SpiceApiTest
     public void ReadLongEphemeris()
     {
         var searchWindow = new Window(TimeSystem.Time.CreateTDB(0.0), TimeSystem.Time.CreateTDB(15000.0));
-        var res = SpiceAPI.Instance.ReadEphemeris(searchWindow, TestHelpers.EarthAtJ2000.NaifId, TestHelpers.MoonAtJ2000.NaifId,
+        var res = SpiceApi.Instance.ReadEphemeris(searchWindow, TestHelpers.EarthAtJ2000.NaifId, TestHelpers.MoonAtJ2000.NaifId,
             Frames.Frame.ICRF, Aberration.LT, TimeSpan.FromSeconds(1.0)).Select(x => x.ToStateVector());
 
         Assert.Equal(15001, res.Count());
@@ -249,17 +249,17 @@ public partial class SpiceApiTest
         var ckFile = new FileInfo(root + "/OrientationTestFile.ck");
         var clckFile = new FileInfo(root + "/ClckTestFile.tsc");
         spacecraft.Clock.Write(clckFile);
-        SpiceAPI.Instance.LoadKernels(clckFile);
+        SpiceApi.Instance.LoadKernels(clckFile);
 
         spacecraft.WriteOrientation(ckFile);
-        SpiceAPI.Instance.LoadKernels(ckFile);
+        SpiceApi.Instance.LoadKernels(ckFile);
         // The SPK of the same propagation: the reference of the attitude is the nadir of its positions (spkezr)
         var spkFile = new FileInfo(root + "/EphemerisTestFile.bsp");
         spacecraft.WriteEphemeris(spkFile);
-        SpiceAPI.Instance.LoadKernels(spkFile);
+        SpiceApi.Instance.LoadKernels(spkFile);
         //Read spacecraft orientation
 
-        var res = SpiceAPI.Instance.ReadOrientation(window, spacecraft.NaifId, TimeSpan.FromSeconds(10.0), Frames.Frame.ICRF,
+        var res = SpiceApi.Instance.ReadOrientation(window, spacecraft.NaifId, TimeSpan.FromSeconds(10.0), Frames.Frame.ICRF,
             TimeSpan.FromSeconds(10.0)).ToArray();
 
         // The CK holds the C-matrix, J2000 to the spacecraft frame (#529): the inverse of the nadir attitude, the minimal
@@ -268,7 +268,7 @@ public partial class SpiceApiTest
         // J2000 in J2000: the rotation of the positions, from spkezr 1 s before and after (the output step), about their
         // normal. Not the closed form pi/2 + n t of the circular orbit: Velocity-Verlet turns its positions at
         // n (1 + (n h)^2 / 6), 2.4e-10 rad/s faster than v / r (the review of the design)
-        Vector3 Position(TimeSystem.Time t) => SpiceAPI.Instance.ReadEphemeris(t, 399, spacecraft.NaifId, Frames.Frame.ICRF, Aberration.None).Position;
+        Vector3 Position(TimeSystem.Time t) => SpiceApi.Instance.ReadEphemeris(t, 399, spacecraft.NaifId, Frames.Frame.ICRF, Aberration.None).Position;
         double worstRotation = 0.0, worstRate = 0.0;
         for (int i = 1; i < res.Length - 1; i++)
         {
@@ -282,9 +282,9 @@ public partial class SpiceApiTest
             worstRate = System.Math.Max(worstRate, (res[i].AngularVelocity - rate).Magnitude());
         }
 
-        SpiceAPI.Instance.UnloadKernels(spkFile);
-        SpiceAPI.Instance.UnloadKernels(ckFile);
-        SpiceAPI.Instance.UnloadKernels(clckFile);
+        SpiceApi.Instance.UnloadKernels(spkFile);
+        SpiceApi.Instance.UnloadKernels(ckFile);
+        SpiceApi.Instance.UnloadKernels(clckFile);
 
         _output?.WriteLine($"MEASURE #529 ReadOrientation: the C-matrix read - the inverse of the nadir of spkezr {worstRotation:E2} rad, the rate - the rotation of spkezr's positions {worstRate:E2} rad/s");
         Assert.True(worstRotation <= ReadOrientationRotation, $"{worstRotation:E3} rad");
@@ -292,7 +292,7 @@ public partial class SpiceApiTest
         Assert.Equal(window.StartDate, res.ElementAt(0).Epoch, TestHelpers.TimeComparer);
         Assert.Equal(Frames.Frame.ICRF, res.ElementAt(0).ReferenceFrame);
 
-        Assert.Throws<ArgumentNullException>(() => SpiceAPI.Instance.ReadOrientation(window, spacecraft.NaifId,
+        Assert.Throws<ArgumentNullException>(() => SpiceApi.Instance.ReadOrientation(window, spacecraft.NaifId,
             TimeSpan.FromSeconds(10.0), null,
             TimeSpan.FromSeconds(10.0)).ToArray());
     }
@@ -313,15 +313,15 @@ public partial class SpiceApiTest
         var ckFile = new FileInfo(Path.Combine(Constants.PhsrmDataPath.FullName,
             "phsrm_sc_test2_111108_130214_v00.bc"));
 
-        SpiceAPI.Instance.LoadKernels(sclkFile);
-        SpiceAPI.Instance.LoadKernels(ckFile);
+        SpiceApi.Instance.LoadKernels(sclkFile);
+        SpiceApi.Instance.LoadKernels(ckFile);
         try
         {
             // Window safely within the CK coverage (~1.6 days past SCLK epoch)
             var start = TimeSystem.Time.CreateTDB(374100000.0);
             var window = new Window(start, start.AddSeconds(300.0));
 
-            var results = SpiceAPI.Instance.ReadOrientation(
+            var results = SpiceApi.Instance.ReadOrientation(
                 window, -555, TimeSpan.FromSeconds(60.0),
                 Frames.Frame.ICRF, TimeSpan.FromSeconds(60.0)).ToArray();
 
@@ -340,8 +340,8 @@ public partial class SpiceApiTest
         }
         finally
         {
-            SpiceAPI.Instance.UnloadKernels(ckFile);
-            SpiceAPI.Instance.UnloadKernels(sclkFile);
+            SpiceApi.Instance.UnloadKernels(ckFile);
+            SpiceApi.Instance.UnloadKernels(sclkFile);
         }
     }
 
@@ -397,21 +397,21 @@ public partial class SpiceApiTest
     {
         var frame = SiteObserverFrame(frameName);
         var epoch = new TimeSystem.Time(2023, 1, 1, 1, 0, 0, TimeScale.TDB);
-        var reversed = SpiceAPI.Instance.ReadEphemeris(epoch, 301, 399013, frame, Aberration.None);
+        var reversed = SpiceApi.Instance.ReadEphemeris(epoch, 301, 399013, frame, Aberration.None);
         Assert.True(reversed.Position.Magnitude() > 3.0e8);
 
-        var read = SpiceAPI.Instance.ReadEphemeris(epoch, 399013, 301, frame, Aberration.None);
+        var read = SpiceApi.Instance.ReadEphemeris(epoch, 399013, 301, frame, Aberration.None);
         AssertSiteObserver(read, frame.Name);
         AssertNegatedState(reversed, read, $"{frameName} at an epoch");
 
         var window = new Window(epoch, epoch.AddSeconds(60.0));
-        var reads = SpiceAPI.Instance.ReadEphemeris(window, 399013, 301, frame, Aberration.None, TimeSpan.FromSeconds(60.0))
+        var reads = SpiceApi.Instance.ReadEphemeris(window, 399013, 301, frame, Aberration.None, TimeSpan.FromSeconds(60.0))
             .Select(x => x.ToStateVector()).ToArray();
         Assert.Equal(2, reads.Length);
         for (int i = 0; i < reads.Length; i++)
         {
             AssertSiteObserver(reads[i], frame.Name);
-            var reversedAt = SpiceAPI.Instance.ReadEphemeris(reads[i].Epoch, 301, 399013, frame, Aberration.None);
+            var reversedAt = SpiceApi.Instance.ReadEphemeris(reads[i].Epoch, 301, 399013, frame, Aberration.None);
             AssertNegatedState(reversedAt, reads[i], $"{frameName} over a window, state {i}");
         }
     }
@@ -432,7 +432,7 @@ public partial class SpiceApiTest
     public void IsSiteId_IsTheRuleOfSiteNaifId(int naifId, bool expected)
     {
         // Site.NaifId is its body's identifier times 1000 plus its own, the body a planet or a moon
-        Assert.Equal(expected, SpiceAPI.IsSiteId(naifId));
+        Assert.Equal(expected, SpiceApi.IsSiteId(naifId));
     }
 
     [Fact]
@@ -440,9 +440,9 @@ public partial class SpiceApiTest
     {
         // A site identifier SPICE does not name has no site to build (#672)
         var epoch = new TimeSystem.Time(2023, 1, 1, 1, 0, 0, TimeScale.TDB);
-        var e = Assert.Throws<ArgumentException>(() => SpiceAPI.Instance.ReadEphemeris(epoch, 399998, 301, Frames.Frame.ICRF, Aberration.None));
+        var e = Assert.Throws<ArgumentException>(() => SpiceApi.Instance.ReadEphemeris(epoch, 399998, 301, Frames.Frame.ICRF, Aberration.None));
         Assert.Equal("naifId", e.ParamName);
-        e = Assert.Throws<ArgumentException>(() => SpiceAPI.Instance.ReadEphemeris(new Window(epoch, epoch.AddSeconds(60.0)), 399998, 301,
+        e = Assert.Throws<ArgumentException>(() => SpiceApi.Instance.ReadEphemeris(new Window(epoch, epoch.AddSeconds(60.0)), 399998, 301,
             Frames.Frame.ICRF, Aberration.None, TimeSpan.FromSeconds(60.0)));
         Assert.Equal("naifId", e.ParamName);
     }
@@ -453,7 +453,7 @@ public partial class SpiceApiTest
     /// into the frame of a site on Mars (IAU_MARS of the text PCK, no time limit), a rotation that calls
     /// <c>TransformFrameProxy</c>, which clears the last native error when it starts: the message of the failed epochs must
     /// be read before it. The reference is SPICE's message of the same read in J2000, where no rotation runs, which
-    /// names the first failed epoch, 2150 JAN 22 12:00 TDB, where <c>SpiceAPI</c> stops (de440s covers the Sun up to
+    /// names the first failed epoch, 2150 JAN 22 12:00 TDB, where <c>SpiceApi</c> stops (de440s covers the Sun up to
     /// 2150 JAN 22 00:00 TDB, <c>spkcov_c</c>; #714, decision 1 of #719, decided by S. Guillet, 2026-11-17: it named
     /// the last, 2150 JAN 25).
     /// </summary>
@@ -466,13 +466,13 @@ public partial class SpiceApiTest
         var step = TimeSpan.FromHours(12.0);
 
         var reference = Assert.Throws<SpiceException>(() =>
-            SpiceAPI.Instance.ReadEphemeris(window, 399, 10, Frames.Frame.ICRF, Aberration.None, step));
+            SpiceApi.Instance.ReadEphemeris(window, 399, 10, Frames.Frame.ICRF, Aberration.None, step));
         Assert.Contains("Insufficient ephemeris data", reference.Message);
         Assert.Contains("2150 JAN 22 12:00:00.000", reference.Message);
         Assert.DoesNotContain("2150 JAN 25", reference.Message);
 
         var e = Assert.Throws<SpiceException>(() =>
-            SpiceAPI.Instance.ReadEphemeris(window, 399, 10, site.Frame, Aberration.None, step));
+            SpiceApi.Instance.ReadEphemeris(window, 399, 10, site.Frame, Aberration.None, step));
         Assert.Equal(reference.Message, e.Message);
     }
 
@@ -494,34 +494,34 @@ public partial class SpiceApiTest
         site.WriteEphemeris(new Window(epoch.AddDays(-1.0), epoch.AddDays(1.0)), spk);
         site.WriteFrame(fk);
         Assert.Empty(KernelShadowing.Find([spk, fk], KernelShadowing.SolarSystem));
-        SpiceAPI.Instance.LoadKernels(spk);
+        SpiceApi.Instance.LoadKernels(spk);
         try
         {
-            var e = Assert.Throws<ArgumentException>(() => SpiceAPI.Instance.ReadEphemeris(epoch, site.NaifId, 301, Frames.Frame.ICRF, Aberration.None));
+            var e = Assert.Throws<ArgumentException>(() => SpiceApi.Instance.ReadEphemeris(epoch, site.NaifId, 301, Frames.Frame.ICRF, Aberration.None));
             Assert.Equal("naifId", e.ParamName);
             Assert.Contains("has no name in SPICE", e.Message);
-            e = Assert.Throws<ArgumentException>(() => SpiceAPI.Instance.ReadEphemeris(new Window(epoch, epoch.AddHours(2.0)), site.NaifId, 301,
+            e = Assert.Throws<ArgumentException>(() => SpiceApi.Instance.ReadEphemeris(new Window(epoch, epoch.AddHours(2.0)), site.NaifId, 301,
                 Frames.Frame.ICRF, Aberration.None, TimeSpan.FromHours(1.0)));
             Assert.Equal("naifId", e.ParamName);
 
-            var asTarget = SpiceAPI.Instance.ReadEphemeris(epoch, 399, site.NaifId, Frames.Frame.ICRF, Aberration.None);
+            var asTarget = SpiceApi.Instance.ReadEphemeris(epoch, 399, site.NaifId, Frames.Frame.ICRF, Aberration.None);
             var managed = site.GetEphemeris(epoch, PlanetsAndMoons.EARTH_BODY, Frames.Frame.ICRF, Aberration.None);
             Assert.Equal(managed.Position, asTarget.Position, TestHelpers.VectorComparer);
 
-            SpiceAPI.Instance.LoadKernels(fk);
+            SpiceApi.Instance.LoadKernels(fk);
             try
             {
-                var past = Assert.Throws<SpiceException>(() => SpiceAPI.Instance.ReadEphemeris(epoch, site.NaifId, 301, Frames.Frame.ICRF, Aberration.None));
+                var past = Assert.Throws<SpiceException>(() => SpiceApi.Instance.ReadEphemeris(epoch, site.NaifId, 301, Frames.Frame.ICRF, Aberration.None));
                 Assert.Contains("2000 JAN 01 12:00:00", past.Message);
             }
             finally
             {
-                SpiceAPI.Instance.UnloadKernels(fk);
+                SpiceApi.Instance.UnloadKernels(fk);
             }
         }
         finally
         {
-            SpiceAPI.Instance.UnloadKernels(spk);
+            SpiceApi.Instance.UnloadKernels(spk);
             IO.Astrodynamics.Tests.Body.FrameKernelFiles.Delete(spk);
             IO.Astrodynamics.Tests.Body.FrameKernelFiles.Delete(fk);
         }
@@ -534,7 +534,7 @@ public partial class SpiceApiTest
         var epoch = new TimeSystem.Time(2023, 1, 1, 1, 0, 0, TimeScale.TDB);
         var site = new Site(13, "DSS-13", TestHelpers.EarthAtJ2000);
         var expected = TestHelpers.MoonAtJ2000.GetEphemeris(epoch, site, Frames.Frame.ICRF, Aberration.None);
-        var read = SpiceAPI.Instance.ReadEphemeris(epoch, 399013, 301, Frames.Frame.ICRF, Aberration.None);
+        var read = SpiceApi.Instance.ReadEphemeris(epoch, 399013, 301, Frames.Frame.ICRF, Aberration.None);
         AssertSiteObserver(read, Frames.Frame.ICRF.Name);
         double dr = (read.Position - expected.Position).Magnitude();
         _output.WriteLine($"MEASURE site observer against the Site object |dr| m: {dr:E3}");
@@ -551,8 +551,8 @@ public partial class SpiceApiTest
         // epoch and over a window; a read in GCRF is the same numbers, labelled with the frame the caller gave
         var epoch = new TimeSystem.Time(2024, 3, 1, 12, 0, 0, TimeScale.TDB);
         var window = new Window(epoch, epoch.AddSeconds(120.0));
-        var j2000 = SpiceAPI.Instance.ReadEphemeris(epoch, 399, 301, Frames.Frame.ICRF, aberration);
-        var j2000Window = SpiceAPI.Instance.ReadEphemeris(window, 399, 301, Frames.Frame.ICRF, aberration, TimeSpan.FromSeconds(60.0))
+        var j2000 = SpiceApi.Instance.ReadEphemeris(epoch, 399, 301, Frames.Frame.ICRF, aberration);
+        var j2000Window = SpiceApi.Instance.ReadEphemeris(window, 399, 301, Frames.Frame.ICRF, aberration, TimeSpan.FromSeconds(60.0))
             .Select(x => x.ToStateVector()).ToArray();
         // The reference is a state, not the zeros of a read SPICE refused
         Assert.True(j2000.Position.Magnitude() > 3.0e8);
@@ -561,13 +561,13 @@ public partial class SpiceApiTest
 
         foreach (var gcrf in GcrfFrames())
         {
-            var read = SpiceAPI.Instance.ReadEphemeris(epoch, 399, 301, gcrf, aberration);
+            var read = SpiceApi.Instance.ReadEphemeris(epoch, 399, 301, gcrf, aberration);
             Assert.Equal(gcrf.Name, read.Frame.Name);
             LabelAssert.Equal(j2000.Epoch, read.Epoch);
             Assert.Equal(j2000.Position, read.Position);
             Assert.Equal(j2000.Velocity, read.Velocity);
 
-            var readWindow = SpiceAPI.Instance.ReadEphemeris(window, 399, 301, gcrf, aberration, TimeSpan.FromSeconds(60.0))
+            var readWindow = SpiceApi.Instance.ReadEphemeris(window, 399, 301, gcrf, aberration, TimeSpan.FromSeconds(60.0))
                 .Select(x => x.ToStateVector()).ToArray();
             Assert.Equal(j2000Window.Length, readWindow.Length);
             for (int i = 0; i < j2000Window.Length; i++)
@@ -584,20 +584,20 @@ public partial class SpiceApiTest
     public void TransformFrame_FromOrToGcrf_IsTheJ2000Transform()
     {
         // The reference is SPICE's transformation from and to J2000 (sxform); from or to GCRF it is the same, through
-        // SpiceAPI and through Frame.ToFrame of a frame built from the name, which the data provider hands to SPICE
+        // SpiceApi and through Frame.ToFrame of a frame built from the name, which the data provider hands to SPICE
         var epoch = new TimeSystem.Time(2024, 3, 1, 12, 0, 0, TimeScale.TDB);
         foreach (var other in new[] { Frames.Frame.ECLIPTIC_J2000, new Frames.Frame("IAU_EARTH"), Frames.Frame.ICRF })
         {
-            var fromJ2000 = SpiceAPI.Instance.TransformFrame(epoch, Frames.Frame.ICRF, other);
-            var toJ2000 = SpiceAPI.Instance.TransformFrame(epoch, other, Frames.Frame.ICRF);
+            var fromJ2000 = SpiceApi.Instance.TransformFrame(epoch, Frames.Frame.ICRF, other);
+            var toJ2000 = SpiceApi.Instance.TransformFrame(epoch, other, Frames.Frame.ICRF);
             // The reference is a rotation, not the zero quaternion of a transformation SPICE refused
             Assert.Equal(1.0, fromJ2000.Rotation.Magnitude(), 12);
             Assert.Equal(1.0, toJ2000.Rotation.Magnitude(), 12);
 
             foreach (var gcrf in GcrfFrames())
             {
-                var from = SpiceAPI.Instance.TransformFrame(epoch, gcrf, other);
-                var to = SpiceAPI.Instance.TransformFrame(epoch, other, gcrf);
+                var from = SpiceApi.Instance.TransformFrame(epoch, gcrf, other);
+                var to = SpiceApi.Instance.TransformFrame(epoch, other, gcrf);
                 Assert.Equal(fromJ2000.Rotation, from.Rotation);
                 Assert.Equal(fromJ2000.AngularVelocity, from.AngularVelocity);
                 Assert.Equal(gcrf.Name, from.ReferenceFrame.Name);
@@ -618,8 +618,8 @@ public partial class SpiceApiTest
         // The windows where the Moon is north of the equator of J2000 seen from the Earth, over 40 days (gfposc): in GCRF the
         // same windows
         var searchWindow = new Window(TimeSystem.Time.CreateTDB(730036800.0), TimeSystem.Time.CreateTDB(730036800.0 + 40.0 * 86400.0));
-        Window[] Search(Frames.Frame frame) => SpiceAPI.Instance.FindWindowsOnCoordinateConstraint(searchWindow, 399, 301, frame,
-            CoordinateSystem.Rectangular, Coordinate.Z, RelationnalOperator.Greater, 0.0, 0.0, Aberration.None, TimeSpan.FromHours(1.0)).ToArray();
+        Window[] Search(Frames.Frame frame) => SpiceApi.Instance.FindWindowsOnCoordinateConstraint(searchWindow, 399, 301, frame,
+            CoordinateSystem.Rectangular, Coordinate.Z, RelationalOperator.GreaterThan, 0.0, 0.0, Aberration.None, TimeSpan.FromHours(1.0)).ToArray();
 
         var j2000 = Search(Frames.Frame.ICRF);
         // The Moon crosses the equator about every 13.7 days: the reference holds windows, not the empty result of a
@@ -639,20 +639,20 @@ public partial class SpiceApiTest
         var sclkFile = new FileInfo(Path.Combine(Constants.PhsrmDataPath.FullName, "phsrm_201008031645.tsc"));
         var ckFile = new FileInfo(Path.Combine(Constants.PhsrmDataPath.FullName, "phsrm_sc_test2_111108_130214_v00.bc"));
 
-        SpiceAPI.Instance.LoadKernels(sclkFile);
-        SpiceAPI.Instance.LoadKernels(ckFile);
+        SpiceApi.Instance.LoadKernels(sclkFile);
+        SpiceApi.Instance.LoadKernels(ckFile);
         try
         {
             // A day before the CK starts (2011-11-08), within the clock (from 2011-11-07)
             var start = TimeSystem.Time.CreateTDB(373970000.0);
-            var exception = Assert.Throws<InvalidOperationException>(() => SpiceAPI.Instance.ReadOrientation(
+            var exception = Assert.Throws<InvalidOperationException>(() => SpiceApi.Instance.ReadOrientation(
                 new Window(start, start), -555, TimeSpan.Zero, Frames.Frame.ICRF, TimeSpan.FromSeconds(1.0)).ToArray());
             Assert.Contains("No orientation found", exception.Message);
         }
         finally
         {
-            SpiceAPI.Instance.UnloadKernels(ckFile);
-            SpiceAPI.Instance.UnloadKernels(sclkFile);
+            SpiceApi.Instance.UnloadKernels(ckFile);
+            SpiceApi.Instance.UnloadKernels(sclkFile);
         }
     }
 
@@ -667,8 +667,8 @@ public partial class SpiceApiTest
         var ckFile = new FileInfo(Path.Combine(Constants.PhsrmDataPath.FullName,
             "phsrm_sc_test2_111108_130214_v00.bc"));
 
-        SpiceAPI.Instance.LoadKernels(sclkFile);
-        SpiceAPI.Instance.LoadKernels(ckFile);
+        SpiceApi.Instance.LoadKernels(sclkFile);
+        SpiceApi.Instance.LoadKernels(ckFile);
         try
         {
             var start = TimeSystem.Time.CreateTDB(374100000.0);
@@ -677,7 +677,7 @@ public partial class SpiceApiTest
             var window = new Window(start, start.AddSeconds(120.0));
 
             // Must NOT throw: tolerance of 30 s must successfully find the nearest sample
-            var results = SpiceAPI.Instance.ReadOrientation(
+            var results = SpiceApi.Instance.ReadOrientation(
                 window, -555, TimeSpan.FromSeconds(30.0),
                 Frames.Frame.ICRF, TimeSpan.FromSeconds(7.5)).ToArray();
 
@@ -685,8 +685,8 @@ public partial class SpiceApiTest
         }
         finally
         {
-            SpiceAPI.Instance.UnloadKernels(ckFile);
-            SpiceAPI.Instance.UnloadKernels(sclkFile);
+            SpiceApi.Instance.UnloadKernels(ckFile);
+            SpiceApi.Instance.UnloadKernels(sclkFile);
         }
     }
 
@@ -708,16 +708,16 @@ public partial class SpiceApiTest
     {
         // A frame name SPICE does not know, which the frames of the library (SpiceKnowsFrame) do not cover: a bad argument
         // since R25 of #668 (review of L1), gfposc_c's error its inner exception
-        var e = Assert.Throws<ArgumentException>(() => SpiceAPI.Instance.FindWindowsOnCoordinateConstraint(ErrorSearchWindow, 399, 301,
-            new Frames.Frame("NOT_A_FRAME_668"), CoordinateSystem.Rectangular, Coordinate.Z, RelationnalOperator.Greater, 0.0, 0.0,
+        var e = Assert.Throws<ArgumentException>(() => SpiceApi.Instance.FindWindowsOnCoordinateConstraint(ErrorSearchWindow, 399, 301,
+            new Frames.Frame("NOT_A_FRAME_668"), CoordinateSystem.Rectangular, Coordinate.Z, RelationalOperator.GreaterThan, 0.0, 0.0,
             Aberration.None, TimeSpan.FromHours(1.0)));
         Assert.Equal("frame", e.ParamName);
         var inner = Assert.IsType<SpiceException>(e.InnerException);
         Assert.Contains("NOT_A_FRAME_668", inner.Message);
         Assert.Contains("not recognized", inner.Message);
         // and NotEqual, formed from the search of "="
-        e = Assert.Throws<ArgumentException>(() => SpiceAPI.Instance.FindWindowsOnCoordinateConstraint(ErrorSearchWindow, 399, 301,
-            new Frames.Frame("NOT_A_FRAME_668"), CoordinateSystem.Rectangular, Coordinate.Z, RelationnalOperator.NotEqual, 0.0, 0.0,
+        e = Assert.Throws<ArgumentException>(() => SpiceApi.Instance.FindWindowsOnCoordinateConstraint(ErrorSearchWindow, 399, 301,
+            new Frames.Frame("NOT_A_FRAME_668"), CoordinateSystem.Rectangular, Coordinate.Z, RelationalOperator.NotEqual, 0.0, 0.0,
             Aberration.None, TimeSpan.FromHours(1.0)));
         Assert.Equal("frame", e.ParamName);
         Assert.Contains("NOT_A_FRAME_668", Assert.IsType<SpiceException>(e.InnerException).Message);
@@ -726,18 +726,18 @@ public partial class SpiceApiTest
     [Fact]
     public void FindWindowsOnCoordinateConstraint_WithoutData_ThrowsSpiceError()
     {
-        var e = Assert.Throws<SpiceException>(() => SpiceAPI.Instance.FindWindowsOnCoordinateConstraint(ErrorSearchWindow, 399, 399999,
-            Frames.Frame.ICRF, CoordinateSystem.Rectangular, Coordinate.Z, RelationnalOperator.Greater, 0.0, 0.0, Aberration.None,
+        var e = Assert.Throws<SpiceException>(() => SpiceApi.Instance.FindWindowsOnCoordinateConstraint(ErrorSearchWindow, 399, 399999,
+            Frames.Frame.ICRF, CoordinateSystem.Rectangular, Coordinate.Z, RelationalOperator.GreaterThan, 0.0, 0.0, Aberration.None,
             TimeSpan.FromHours(1.0)));
         Assert.Contains("399999", e.Message);
-        e = Assert.Throws<SpiceException>(() => SpiceAPI.Instance.FindWindowsOnCoordinateConstraint(PastTheEphemerisWindow, 399, 301,
-            Frames.Frame.ICRF, CoordinateSystem.Rectangular, Coordinate.Z, RelationnalOperator.Greater, 0.0, 0.0, Aberration.None,
+        e = Assert.Throws<SpiceException>(() => SpiceApi.Instance.FindWindowsOnCoordinateConstraint(PastTheEphemerisWindow, 399, 301,
+            Frames.Frame.ICRF, CoordinateSystem.Rectangular, Coordinate.Z, RelationalOperator.GreaterThan, 0.0, 0.0, Aberration.None,
             TimeSpan.FromHours(1.0)));
         Assert.Contains("Insufficient ephemeris data", e.Message);
         Assert.Contains("2160", e.Message);
         // A step SPICE rejects
-        e = Assert.Throws<SpiceException>(() => SpiceAPI.Instance.FindWindowsOnCoordinateConstraint(ErrorSearchWindow, 399, 301,
-            Frames.Frame.ICRF, CoordinateSystem.Rectangular, Coordinate.Z, RelationnalOperator.Greater, 0.0, 0.0, Aberration.None,
+        e = Assert.Throws<SpiceException>(() => SpiceApi.Instance.FindWindowsOnCoordinateConstraint(ErrorSearchWindow, 399, 301,
+            Frames.Frame.ICRF, CoordinateSystem.Rectangular, Coordinate.Z, RelationalOperator.GreaterThan, 0.0, 0.0, Aberration.None,
             TimeSpan.Zero));
         Assert.Contains("step size must be positive", e.Message);
     }
@@ -745,11 +745,11 @@ public partial class SpiceApiTest
     [Fact]
     public void FindWindowsOnDistanceConstraint_WithoutData_ThrowsSpiceError()
     {
-        var e = Assert.Throws<SpiceException>(() => SpiceAPI.Instance.FindWindowsOnDistanceConstraint(ErrorSearchWindow, 399, 399999,
-            RelationnalOperator.Greater, 400000000.0, Aberration.None, TimeSpan.FromHours(1.0)).ToArray());
+        var e = Assert.Throws<SpiceException>(() => SpiceApi.Instance.FindWindowsOnDistanceConstraint(ErrorSearchWindow, 399, 399999,
+            RelationalOperator.GreaterThan, 400000000.0, Aberration.None, TimeSpan.FromHours(1.0)).ToArray());
         Assert.Contains("399999", e.Message);
-        e = Assert.Throws<SpiceException>(() => SpiceAPI.Instance.FindWindowsOnDistanceConstraint(PastTheEphemerisWindow, 399, 301,
-            RelationnalOperator.Greater, 400000000.0, Aberration.None, TimeSpan.FromHours(1.0)).ToArray());
+        e = Assert.Throws<SpiceException>(() => SpiceApi.Instance.FindWindowsOnDistanceConstraint(PastTheEphemerisWindow, 399, 301,
+            RelationalOperator.GreaterThan, 400000000.0, Aberration.None, TimeSpan.FromHours(1.0)).ToArray());
         Assert.Contains("Insufficient ephemeris data", e.Message);
         Assert.Contains("2160", e.Message);
     }
@@ -757,10 +757,10 @@ public partial class SpiceApiTest
     [Fact]
     public void FindWindowsOnOccultationConstraint_WithoutData_ThrowsSpiceError()
     {
-        var e = Assert.Throws<SpiceException>(() => SpiceAPI.Instance.FindWindowsOnOccultationConstraint(PastTheEphemerisWindow, 399, 10,
+        var e = Assert.Throws<SpiceException>(() => SpiceApi.Instance.FindWindowsOnOccultationConstraint(PastTheEphemerisWindow, 399, 10,
             ShapeType.Ellipsoid, 301, ShapeType.Ellipsoid, OccultationType.Any, Aberration.LT, TimeSpan.FromMinutes(1.0)).ToArray());
         Assert.Contains("2160", e.Message);
-        e = Assert.Throws<SpiceException>(() => SpiceAPI.Instance.FindWindowsOnOccultationConstraint(ErrorSearchWindow, 399, 399999,
+        e = Assert.Throws<SpiceException>(() => SpiceApi.Instance.FindWindowsOnOccultationConstraint(ErrorSearchWindow, 399, 399999,
             ShapeType.Point, 301, ShapeType.Ellipsoid, OccultationType.Any, Aberration.LT, TimeSpan.FromMinutes(1.0)).ToArray());
         Assert.Contains("399999", e.Message);
     }
@@ -769,13 +769,13 @@ public partial class SpiceApiTest
     public void FindWindowsOnIlluminationConstraint_UnknownFrameOrWithoutData_ThrowsArgumentExceptionOrSpiceError()
     {
         // An unknown fixed frame is a bad argument since R25 of #668 (review of L1), gfilum_c's error its inner exception
-        var unknown = Assert.Throws<ArgumentException>(() => SpiceAPI.Instance.FindWindowsOnIlluminationConstraint(ErrorSearchWindow, 301, 399,
-            new Frames.Frame("NOT_A_FRAME_668"), ErrorSearchPoint, IlluminationAngle.Incidence, RelationnalOperator.Lower, System.Math.PI / 3.0, 0.0,
+        var unknown = Assert.Throws<ArgumentException>(() => SpiceApi.Instance.FindWindowsOnIlluminationConstraint(ErrorSearchWindow, 301, 399,
+            new Frames.Frame("NOT_A_FRAME_668"), ErrorSearchPoint, IlluminationAngle.Incidence, RelationalOperator.LessThan, System.Math.PI / 3.0, 0.0,
             Aberration.None, TimeSpan.FromHours(1.0), 10));
         Assert.Equal("fixedFrame", unknown.ParamName);
         Assert.Contains("NOT_A_FRAME_668", Assert.IsType<SpiceException>(unknown.InnerException).Message);
-        var e = Assert.Throws<SpiceException>(() => SpiceAPI.Instance.FindWindowsOnIlluminationConstraint(PastTheEphemerisWindow, 301, 399,
-            PlanetsAndMoons.EARTH_BODY.Frame, ErrorSearchPoint, IlluminationAngle.Incidence, RelationnalOperator.Lower, System.Math.PI / 3.0, 0.0,
+        var e = Assert.Throws<SpiceException>(() => SpiceApi.Instance.FindWindowsOnIlluminationConstraint(PastTheEphemerisWindow, 301, 399,
+            PlanetsAndMoons.EARTH_BODY.Frame, ErrorSearchPoint, IlluminationAngle.Incidence, RelationalOperator.LessThan, System.Math.PI / 3.0, 0.0,
             Aberration.None, TimeSpan.FromHours(1.0), 10));
         Assert.Contains("2160", e.Message);
     }
@@ -784,7 +784,7 @@ public partial class SpiceApiTest
     public void FindWindowsInFieldOfViewConstraint_InstrumentWithoutKernel_ThrowsSpiceError()
     {
         // gftfov reads the instrument's field of view in the kernel pool: no instrument kernel defines -999123
-        var e = Assert.Throws<SpiceException>(() => SpiceAPI.Instance.FindWindowsInFieldOfViewConstraint(ErrorSearchWindow, -999, -999123,
+        var e = Assert.Throws<SpiceException>(() => SpiceApi.Instance.FindWindowsInFieldOfViewConstraint(ErrorSearchWindow, -999, -999123,
             301, PlanetsAndMoons.MOON_BODY.Frame, ShapeType.Ellipsoid, Aberration.None, TimeSpan.FromHours(1.0)).ToArray());
         Assert.Contains("INS-999123_FOV_FRAME", e.Message);
     }
@@ -794,13 +794,13 @@ public partial class SpiceApiTest
     {
         // The controls of the tests above, on the same window: the Moon south of the equator of J2000 over the 9 days,
         // farther than 380000 km, and the incidence at the point below 60°
-        var south = SpiceAPI.Instance.FindWindowsOnCoordinateConstraint(ErrorSearchWindow, 399, 301, Frames.Frame.ICRF, CoordinateSystem.Rectangular,
-            Coordinate.Z, RelationnalOperator.Lower, 0.0, 0.0, Aberration.None, TimeSpan.FromHours(1.0)).ToArray();
+        var south = SpiceApi.Instance.FindWindowsOnCoordinateConstraint(ErrorSearchWindow, 399, 301, Frames.Frame.ICRF, CoordinateSystem.Rectangular,
+            Coordinate.Z, RelationalOperator.LessThan, 0.0, 0.0, Aberration.None, TimeSpan.FromHours(1.0)).ToArray();
         Assert.Single(south);
-        Assert.NotEmpty(SpiceAPI.Instance.FindWindowsOnDistanceConstraint(ErrorSearchWindow, 399, 301, RelationnalOperator.Greater, 380000000.0,
+        Assert.NotEmpty(SpiceApi.Instance.FindWindowsOnDistanceConstraint(ErrorSearchWindow, 399, 301, RelationalOperator.GreaterThan, 380000000.0,
             Aberration.None, TimeSpan.FromHours(1.0)));
-        Assert.NotEmpty(SpiceAPI.Instance.FindWindowsOnIlluminationConstraint(ErrorSearchWindow, 301, 399, PlanetsAndMoons.EARTH_BODY.Frame,
-            ErrorSearchPoint, IlluminationAngle.Incidence, RelationnalOperator.Lower, System.Math.PI / 3.0, 0.0, Aberration.None,
+        Assert.NotEmpty(SpiceApi.Instance.FindWindowsOnIlluminationConstraint(ErrorSearchWindow, 301, 399, PlanetsAndMoons.EARTH_BODY.Frame,
+            ErrorSearchPoint, IlluminationAngle.Incidence, RelationalOperator.LessThan, System.Math.PI / 3.0, 0.0, Aberration.None,
             TimeSpan.FromHours(1.0), 10));
     }
 
@@ -811,18 +811,18 @@ public partial class SpiceApiTest
         // with the frame the caller gave (#543)
         var sclkFile = new FileInfo(Path.Combine(Constants.PhsrmDataPath.FullName, "phsrm_201008031645.tsc"));
         var ckFile = new FileInfo(Path.Combine(Constants.PhsrmDataPath.FullName, "phsrm_sc_test2_111108_130214_v00.bc"));
-        SpiceAPI.Instance.LoadKernels(sclkFile);
-        SpiceAPI.Instance.LoadKernels(ckFile);
+        SpiceApi.Instance.LoadKernels(sclkFile);
+        SpiceApi.Instance.LoadKernels(ckFile);
         try
         {
             var start = TimeSystem.Time.CreateTDB(374100000.0);
             var window = new Window(start, start.AddSeconds(300.0));
-            var j2000 = SpiceAPI.Instance.ReadOrientation(window, -555, TimeSpan.FromSeconds(60.0), Frames.Frame.ICRF, TimeSpan.FromSeconds(60.0)).ToArray();
+            var j2000 = SpiceApi.Instance.ReadOrientation(window, -555, TimeSpan.FromSeconds(60.0), Frames.Frame.ICRF, TimeSpan.FromSeconds(60.0)).ToArray();
             Assert.NotEmpty(j2000);
             Assert.All(j2000, x => Assert.Equal(1.0, x.Rotation.Magnitude(), 12));
             foreach (var gcrf in GcrfFrames())
             {
-                var read = SpiceAPI.Instance.ReadOrientation(window, -555, TimeSpan.FromSeconds(60.0), gcrf, TimeSpan.FromSeconds(60.0)).ToArray();
+                var read = SpiceApi.Instance.ReadOrientation(window, -555, TimeSpan.FromSeconds(60.0), gcrf, TimeSpan.FromSeconds(60.0)).ToArray();
                 Assert.Equal(j2000.Length, read.Length);
                 for (int i = 0; i < j2000.Length; i++)
                 {
@@ -835,8 +835,8 @@ public partial class SpiceApiTest
         }
         finally
         {
-            SpiceAPI.Instance.UnloadKernels(ckFile);
-            SpiceAPI.Instance.UnloadKernels(sclkFile);
+            SpiceApi.Instance.UnloadKernels(ckFile);
+            SpiceApi.Instance.UnloadKernels(sclkFile);
         }
     }
 
@@ -862,16 +862,16 @@ public partial class SpiceApiTest
         //Write ephemeris file
         FileInfo file = new FileInfo("EphemerisTestFile.spk");
 
-        Assert.Throws<ArgumentNullException>(() => SpiceAPI.Instance.WriteEphemeris(null, spacecraft.NaifId, sv));
-        Assert.Throws<ArgumentNullException>(() => SpiceAPI.Instance.WriteEphemeris(file, spacecraft.NaifId, null));
-        SpiceAPI.Instance.WriteEphemeris(file, spacecraft.NaifId, sv);
+        Assert.Throws<ArgumentNullException>(() => SpiceApi.Instance.WriteEphemeris(null, spacecraft.NaifId, sv));
+        Assert.Throws<ArgumentNullException>(() => SpiceApi.Instance.WriteEphemeris(file, spacecraft.NaifId, null));
+        SpiceApi.Instance.WriteEphemeris(file, spacecraft.NaifId, sv);
 
         //Load ephemeris file
-        SpiceAPI.Instance.LoadKernels(file);
+        SpiceApi.Instance.LoadKernels(file);
         try
         {
             var window = new Window(TimeSystem.Time.J2000TDB, TimeSystem.Time.J2000TDB.AddSeconds(9.0));
-            var stateVectors = SpiceAPI.Instance.ReadEphemeris(window, TestHelpers.EarthAtJ2000.NaifId, spacecraft.NaifId, Frames.Frame.ICRF,
+            var stateVectors = SpiceApi.Instance.ReadEphemeris(window, TestHelpers.EarthAtJ2000.NaifId, spacecraft.NaifId, Frames.Frame.ICRF,
                     Aberration.None, TimeSpan.FromSeconds(1.0))
                 .Select(x => x.ToStateVector()).ToArray();
             for (int i = 0; i < size; ++i)
@@ -889,7 +889,7 @@ public partial class SpiceApiTest
         }
         finally
         {
-            SpiceAPI.Instance.UnloadKernels(file);
+            SpiceApi.Instance.UnloadKernels(file);
         }
     }
 
@@ -916,18 +916,18 @@ public partial class SpiceApiTest
         FileInfo file = new FileInfo("OrientationTestFile.ck");
         var frameFile = new FileInfo("OrientationTestFrame.tf");
         double worst = 0.0;
-        SpiceAPI.Instance.LoadKernels(clockFile);
+        SpiceApi.Instance.LoadKernels(clockFile);
         try
         {
-            Assert.Throws<ArgumentNullException>(() => SpiceAPI.Instance.WriteOrientation(null, spacecraft.NaifId, so));
-            Assert.Throws<ArgumentNullException>(() => SpiceAPI.Instance.WriteOrientation(file, spacecraft.NaifId, null));
-            SpiceAPI.Instance.WriteOrientation(file, spacecraft.NaifId, so);
+            Assert.Throws<ArgumentNullException>(() => SpiceApi.Instance.WriteOrientation(null, spacecraft.NaifId, so));
+            Assert.Throws<ArgumentNullException>(() => SpiceApi.Instance.WriteOrientation(file, spacecraft.NaifId, null));
+            SpiceApi.Instance.WriteOrientation(file, spacecraft.NaifId, so);
 
             //Load ephemeris file
-            SpiceAPI.Instance.LoadKernels(file);
+            SpiceApi.Instance.LoadKernels(file);
 
             var window = new Window(TimeSystem.Time.J2000TDB, TimeSystem.Time.J2000TDB.AddSeconds(9.0));
-            var stateOrientation = SpiceAPI.Instance.ReadOrientation(window, spacecraft.NaifId, TimeSpan.Zero, Frames.Frame.ICRF, TimeSpan.FromSeconds(1.0))
+            var stateOrientation = SpiceApi.Instance.ReadOrientation(window, spacecraft.NaifId, TimeSpan.Zero, Frames.Frame.ICRF, TimeSpan.FromSeconds(1.0))
                 .Select(x => x).ToArray();
 
             Assert.Equal(0.0, stateOrientation[0].Rotation.W, 9);
@@ -951,18 +951,18 @@ public partial class SpiceApiTest
             // pxform(J2000, SC) on the written CK, with the frame kernel of the spacecraft: the C-matrix written, J2000 to the
             // spacecraft frame (choice 7 of the design of #537), at its records
             spacecraft.Frame.Write(frameFile);
-            SpiceAPI.Instance.LoadKernels(frameFile);
+            SpiceApi.Instance.LoadKernels(frameFile);
             foreach (var written in so)
             {
-                var pxform = SpiceAPI.Instance.TransformFrame(written.Epoch, Frames.Frame.ICRF, spacecraft.Frame).Rotation;
+                var pxform = SpiceApi.Instance.TransformFrame(written.Epoch, Frames.Frame.ICRF, spacecraft.Frame).Rotation;
                 worst = System.Math.Max(worst, Body.AttitudeRecordTests.RotationAngle(written.Rotation.Normalize(), pxform));
             }
         }
         finally
         {
-            SpiceAPI.Instance.UnloadKernels(frameFile);
-            SpiceAPI.Instance.UnloadKernels(file);
-            SpiceAPI.Instance.UnloadKernels(clockFile);
+            SpiceApi.Instance.UnloadKernels(frameFile);
+            SpiceApi.Instance.UnloadKernels(file);
+            SpiceApi.Instance.UnloadKernels(clockFile);
         }
 
         _output?.WriteLine($"MEASURE #537 WriteOrientation: pxform(J2000, SC) - the C-matrix written {worst:E2} rad");
@@ -977,7 +977,7 @@ public partial class SpiceApiTest
     void GetCelestialBodyInformation()
     {
         //Read celestial celestialItem information from spice kernels
-        var res = SpiceAPI.Instance.GetCelestialBodyInfo(TestHelpers.EarthAtJ2000.NaifId);
+        var res = SpiceApi.Instance.GetCelestialBodyInfo(TestHelpers.EarthAtJ2000.NaifId);
         Assert.Equal(PlanetsAndMoons.EARTH.NaifId, res.NaifId);
         Assert.Equal(Stars.Sun.NaifId, res.CenterOfMotionId);
         Assert.Equal(Barycenters.EARTH_BARYCENTER.NaifId, res.BarycenterOfMotionId);
@@ -997,7 +997,7 @@ public partial class SpiceApiTest
     void GetCelestialBodyInformationWithoutJ()
     {
         //Read celestial celestialItem information from spice kernels
-        var res = SpiceAPI.Instance.GetCelestialBodyInfo(TestHelpers.MoonAtJ2000.NaifId);
+        var res = SpiceApi.Instance.GetCelestialBodyInfo(TestHelpers.MoonAtJ2000.NaifId);
         Assert.Equal(PlanetsAndMoons.MOON.NaifId, res.NaifId);
         Assert.Equal(PlanetsAndMoons.EARTH.NaifId, res.CenterOfMotionId);
         Assert.Equal(Barycenters.EARTH_BARYCENTER.NaifId, res.BarycenterOfMotionId);
@@ -1017,7 +1017,7 @@ public partial class SpiceApiTest
     void TransformFrame()
     {
         //Get the quaternion to transform
-        var res = SpiceAPI.Instance.TransformFrame(TimeSystem.Time.J2000TDB, Frames.Frame.ICRF, new Frames.Frame("ITRF93"));
+        var res = SpiceApi.Instance.TransformFrame(TimeSystem.Time.J2000TDB, Frames.Frame.ICRF, new Frames.Frame("ITRF93"));
         Assert.Equal(0.76713121207787449, res.Rotation.W, 6);
         Assert.Equal(-1.8618836714990174E-05, res.Rotation.VectorPart.X, 6);
         Assert.Equal(8.4688405480964646E-07, res.Rotation.VectorPart.Y, 6);
@@ -1031,7 +1031,7 @@ public partial class SpiceApiTest
     void TransformFrameWindows()
     {
         //Get the quaternion to transform
-        var res = SpiceAPI.Instance.TransformFrame(new TimeSystem.Window(TimeSystem.Time.J2000TDB, TimeSystem.Time.J2000TDB.AddDays(1.0)), Frames.Frame.ICRF,
+        var res = SpiceApi.Instance.TransformFrame(new TimeSystem.Window(TimeSystem.Time.J2000TDB, TimeSystem.Time.J2000TDB.AddDays(1.0)), Frames.Frame.ICRF,
             new Frames.Frame("ITRF93"), TimeSpan.FromDays(1.0));
         // The start and the end, which lies on the grid (#781: before 11.0.0 the end was dropped)
         Assert.Equal(2, res.Count());
@@ -1049,9 +1049,9 @@ public partial class SpiceApiTest
     {
         //Get the quaternion to transform
         Assert.Throws<ArgumentNullException>(() =>
-            SpiceAPI.Instance.TransformFrame(TimeSystem.Time.J2000TDB, Frames.Frame.ICRF, null));
+            SpiceApi.Instance.TransformFrame(TimeSystem.Time.J2000TDB, Frames.Frame.ICRF, null));
         Assert.Throws<ArgumentNullException>(() =>
-            SpiceAPI.Instance.TransformFrame(TimeSystem.Time.J2000TDB, null, new Frames.Frame("ITRF93")));
+            SpiceApi.Instance.TransformFrame(TimeSystem.Time.J2000TDB, null, new Frames.Frame("ITRF93")));
     }
 
     [Fact]
@@ -1086,15 +1086,15 @@ public partial class SpiceApiTest
     [Fact]
     void LoadKernelException()
     {
-        Assert.Throws<ArgumentNullException>(() => SpiceAPI.Instance.LoadKernels((FileSystemInfo)null));
-        Assert.Throws<ArgumentNullException>(() => SpiceAPI.Instance.LoadKernels((string)null));
+        Assert.Throws<ArgumentNullException>(() => SpiceApi.Instance.LoadKernels((FileSystemInfo)null));
+        Assert.Throws<ArgumentNullException>(() => SpiceApi.Instance.LoadKernels((string)null));
     }
 
     // The rotation angle of a frame from ICRF, in degrees, read by SPICE (pxform through TransformFrame; the sign of a
     // quaternion is free)
     private static double RotationAngleFromIcrfDeg(string frameName)
     {
-        var q = SpiceAPI.Instance.TransformFrame(new TimeSystem.Time(2024, 1, 1, TimeScale.TDB), new Frames.Frame(frameName), Frames.Frame.ICRF).Rotation;
+        var q = SpiceApi.Instance.TransformFrame(new TimeSystem.Time(2024, 1, 1, TimeScale.TDB), new Frames.Frame(frameName), Frames.Frame.ICRF).Rotation;
         return 2.0 * System.Math.Acos(System.Math.Min(1.0, System.Math.Abs(q.W))) * Astrodynamics.Constants.Rad2Deg;
     }
 
@@ -1113,16 +1113,16 @@ public partial class SpiceApiTest
         {
             var missing = Path.Combine(root.FullName, asDirectory ? "Kernels" : "missing.bsp");
             FileSystemInfo path = asDirectory ? new DirectoryInfo(missing) : new FileInfo(missing);
-            lock (SpiceAPI.SyncRoot)
+            lock (SpiceApi.SyncRoot)
             {
-                var listed = SpiceAPI.Instance.GetLoadedKernels().Select(x => x.FullName).ToArray();
+                var listed = SpiceApi.Instance.GetLoadedKernels().Select(x => x.FullName).ToArray();
                 int keeper = KeeperCount();
 
-                var e = Assert.Throws<ArgumentException>(() => SpiceAPI.Instance.LoadKernels(path));
+                var e = Assert.Throws<ArgumentException>(() => SpiceApi.Instance.LoadKernels(path));
 
                 Assert.Equal("path", e.ParamName);
                 Assert.Contains(missing, e.Message);
-                Assert.Equal(listed, SpiceAPI.Instance.GetLoadedKernels().Select(x => x.FullName));
+                Assert.Equal(listed, SpiceApi.Instance.GetLoadedKernels().Select(x => x.FullName));
                 Assert.Equal(keeper, KeeperCount());
             }
         }
@@ -1143,14 +1143,14 @@ public partial class SpiceApiTest
         var path = new FileInfo(folder.FullName);
         try
         {
-            SpiceAPI.Instance.LoadKernels(path);
+            SpiceApi.Instance.LoadKernels(path);
 
             Assert.Equal(90.0, RotationAngleFromIcrfDeg("IOA_G4_FI_DIR"), 1e-12);
-            Assert.Contains(SpiceAPI.Instance.GetLoadedKernels(), x => x.FullName == folder.FullName);
+            Assert.Contains(SpiceApi.Instance.GetLoadedKernels(), x => x.FullName == folder.FullName);
         }
         finally
         {
-            SpiceAPI.Instance.UnloadKernels(path);
+            SpiceApi.Instance.UnloadKernels(path);
             root.Delete(true);
         }
 
@@ -1166,14 +1166,14 @@ public partial class SpiceApiTest
         var path = new DirectoryInfo(file.FullName);
         try
         {
-            SpiceAPI.Instance.LoadKernels(path);
+            SpiceApi.Instance.LoadKernels(path);
 
             Assert.Equal(90.0, RotationAngleFromIcrfDeg("IOA_G4_DI_FILE"), 1e-12);
-            Assert.Contains(SpiceAPI.Instance.GetLoadedKernels(), x => x.FullName == file.FullName);
+            Assert.Contains(SpiceApi.Instance.GetLoadedKernels(), x => x.FullName == file.FullName);
         }
         finally
         {
-            SpiceAPI.Instance.UnloadKernels(path);
+            SpiceApi.Instance.UnloadKernels(path);
             root.Delete(true);
         }
 
@@ -1190,18 +1190,18 @@ public partial class SpiceApiTest
         TestKernelWriter.WriteFrameKernel(folder, "a.tf", 1999972, "IOA_G4_IN_DIR", 90.0);
         try
         {
-            SpiceAPI.Instance.LoadKernels(folder);
+            SpiceApi.Instance.LoadKernels(folder);
             var missing = new FileInfo(Path.Combine(folder.FullName, "missing.tf"));
-            lock (SpiceAPI.SyncRoot)
+            lock (SpiceApi.SyncRoot)
             {
-                var listed = SpiceAPI.Instance.GetLoadedKernels().Select(x => x.FullName).ToArray();
+                var listed = SpiceApi.Instance.GetLoadedKernels().Select(x => x.FullName).ToArray();
                 Assert.Contains(folder.FullName, listed);
                 int keeper = KeeperCount();
 
-                var e = Assert.Throws<ArgumentException>(() => SpiceAPI.Instance.LoadKernels(missing));
+                var e = Assert.Throws<ArgumentException>(() => SpiceApi.Instance.LoadKernels(missing));
 
                 Assert.Equal("path", e.ParamName);
-                Assert.Equal(listed, SpiceAPI.Instance.GetLoadedKernels().Select(x => x.FullName));
+                Assert.Equal(listed, SpiceApi.Instance.GetLoadedKernels().Select(x => x.FullName));
                 Assert.Equal(keeper, KeeperCount());
             }
 
@@ -1209,7 +1209,7 @@ public partial class SpiceApiTest
         }
         finally
         {
-            SpiceAPI.Instance.UnloadKernels(folder);
+            SpiceApi.Instance.UnloadKernels(folder);
             root.Delete(true);
         }
     }
@@ -1219,18 +1219,18 @@ public partial class SpiceApiTest
     [Fact]
     void UnloadKernels()
     {
-        SpiceAPI.Instance.LoadKernels(new FileInfo(@"Data/UserDataTest/scn100/Sites/MySite/Ephemeris/MySite.spk"));
-        SpiceAPI.Instance.LoadKernels(new FileInfo(@"Data/UserDataTest/scn100/Spacecrafts/DRAGONFLY32/Ephemeris/DRAGONFLY32.spk"));
-        SpiceAPI.Instance.LoadKernels(new DirectoryInfo(@"Data/UserDataTest/scn100"));
+        SpiceApi.Instance.LoadKernels(new FileInfo(@"Data/UserDataTest/scn100/Sites/MySite/Ephemeris/MySite.spk"));
+        SpiceApi.Instance.LoadKernels(new FileInfo(@"Data/UserDataTest/scn100/Spacecrafts/DRAGONFLY32/Ephemeris/DRAGONFLY32.spk"));
+        SpiceApi.Instance.LoadKernels(new DirectoryInfo(@"Data/UserDataTest/scn100"));
         var spk = new FileInfo(@"Data/UserDataTest/scn100/Spacecrafts/DRAGONFLY32/Ephemeris/DRAGONFLY32.spk");
         var epoch = TimeSystem.Time.CreateTDB(668100000.0);
-        Assert.True(SpiceAPI.Instance.ReadEphemeris(epoch, 399, -1785, Frames.Frame.ICRF, Aberration.None).Position.Magnitude() > 6.0e6);
-        SpiceAPI.Instance.UnloadKernels(spk);
+        Assert.True(SpiceApi.Instance.ReadEphemeris(epoch, 399, -1785, Frames.Frame.ICRF, Aberration.None).Position.Magnitude() > 6.0e6);
+        SpiceApi.Instance.UnloadKernels(spk);
 
         // The folder is no longer listed, but its other kernel files, which SPICE still holds (#673): before, the folder
         // stayed listed while SPICE no longer held the SPK of DRAGONFLY32
         var folder = new DirectoryInfo(@"Data/UserDataTest/scn100");
-        var listed = SpiceAPI.Instance.GetLoadedKernels().Select(x => x.FullName)
+        var listed = SpiceApi.Instance.GetLoadedKernels().Select(x => x.FullName)
             .Where(x => x == folder.FullName || x.StartsWith(folder.FullName + Path.DirectorySeparatorChar, StringComparison.Ordinal)).ToArray();
         Assert.DoesNotContain(folder.FullName, listed);
         Assert.DoesNotContain(spk.FullName, listed);
@@ -1243,39 +1243,39 @@ public partial class SpiceApiTest
         Assert.Equal(expected.Order(StringComparer.Ordinal), listed.Order(StringComparer.Ordinal));
         // SPICE's reads: the SPK of DRAGONFLY32 (-1785) is gone, that of MySite (399132) is still there (both cover 668085625 to
         // 668174469 s TDB)
-        Assert.Throws<SpiceException>(() => SpiceAPI.Instance.ReadEphemeris(epoch, 399, -1785, Frames.Frame.ICRF, Aberration.None));
-        Assert.True(SpiceAPI.Instance.ReadEphemeris(epoch, 399, 399132, Frames.Frame.ICRF, Aberration.None).Position.Magnitude() > 6.0e6);
+        Assert.Throws<SpiceException>(() => SpiceApi.Instance.ReadEphemeris(epoch, 399, -1785, Frames.Frame.ICRF, Aberration.None));
+        Assert.True(SpiceApi.Instance.ReadEphemeris(epoch, 399, 399132, Frames.Frame.ICRF, Aberration.None).Position.Magnitude() > 6.0e6);
     }
 
     [Fact]
     void UnloadKernels2()
     {
-        SpiceAPI.Instance.LoadKernels(new FileInfo(@"Data/UserDataTest/scn100/Spacecrafts/DRAGONFLY32/Clocks/DRAGONFLY32.tsc"));
+        SpiceApi.Instance.LoadKernels(new FileInfo(@"Data/UserDataTest/scn100/Spacecrafts/DRAGONFLY32/Clocks/DRAGONFLY32.tsc"));
 
-        SpiceAPI.Instance.UnloadKernels(new FileInfo(@"Data/UserDataTest/scn100/Spacecrafts/DRAGONFLY32/Clocks/DRAGONFLY32.tsc"));
-        var kernels = SpiceAPI.Instance.GetLoadedKernels().ToArray();
+        SpiceApi.Instance.UnloadKernels(new FileInfo(@"Data/UserDataTest/scn100/Spacecrafts/DRAGONFLY32/Clocks/DRAGONFLY32.tsc"));
+        var kernels = SpiceApi.Instance.GetLoadedKernels().ToArray();
         Assert.Equal(0, kernels.Count(x => x.FullName.Contains("DRAGONFLY32.tsc")));
     }
 
     [Fact]
     void LoadKernels()
     {
-        SpiceAPI.Instance.LoadKernels(new FileInfo(@"Data/UserDataTest/scn100/Sites/MySite/Ephemeris/MySite.spk"));
-        SpiceAPI.Instance.LoadKernels(new FileInfo(@"Data/UserDataTest/scn100/Spacecrafts/DRAGONFLY32/Ephemeris/DRAGONFLY32.spk"));
-        SpiceAPI.Instance.LoadKernels(new DirectoryInfo(@"Data/UserDataTest/scn100"));
+        SpiceApi.Instance.LoadKernels(new FileInfo(@"Data/UserDataTest/scn100/Sites/MySite/Ephemeris/MySite.spk"));
+        SpiceApi.Instance.LoadKernels(new FileInfo(@"Data/UserDataTest/scn100/Spacecrafts/DRAGONFLY32/Ephemeris/DRAGONFLY32.spk"));
+        SpiceApi.Instance.LoadKernels(new DirectoryInfo(@"Data/UserDataTest/scn100"));
 
-        var kernels = SpiceAPI.Instance.GetLoadedKernels().ToArray();
+        var kernels = SpiceApi.Instance.GetLoadedKernels().ToArray();
         Assert.Equal(1, @kernels.Count(x => x.FullName.Contains("scn100")));
     }
 
     [Fact]
     void LoadKernels2()
     {
-        SpiceAPI.Instance.LoadKernels(new DirectoryInfo(@"Data/UserDataTest/scn100"));
-        SpiceAPI.Instance.LoadKernels(new FileInfo(@"Data/UserDataTest/scn100/Spacecrafts/DRAGONFLY32/Ephemeris/DRAGONFLY32.spk"));
-        SpiceAPI.Instance.LoadKernels(new FileInfo(@"Data/UserDataTest/scn100/Sites/MySite/Ephemeris/MySite.spk"));
+        SpiceApi.Instance.LoadKernels(new DirectoryInfo(@"Data/UserDataTest/scn100"));
+        SpiceApi.Instance.LoadKernels(new FileInfo(@"Data/UserDataTest/scn100/Spacecrafts/DRAGONFLY32/Ephemeris/DRAGONFLY32.spk"));
+        SpiceApi.Instance.LoadKernels(new FileInfo(@"Data/UserDataTest/scn100/Sites/MySite/Ephemeris/MySite.spk"));
 
-        var kernels = SpiceAPI.Instance.GetLoadedKernels().ToArray();
+        var kernels = SpiceApi.Instance.GetLoadedKernels().ToArray();
         Assert.Equal(1, @kernels.Count(x => x.FullName.Contains("scn100")));
     }
 
@@ -1315,7 +1315,7 @@ public partial class SpiceApiTest
     [Fact]
     void ConvertTLE()
     {
-        var res = SpiceAPI.Instance.ConvertTleToStateVector("ISS",
+        var res = SpiceApi.Instance.ConvertTleToStateVector("ISS",
             "1 25544U 98067A   24001.00000000  .00016717  00000-0  10270-3 0  9054",
             "2 25544  51.6423 353.0312 0000493 320.8755  39.2360 15.49309423 25703", new TimeSystem.Time(2024, 1, 1, TimeScale.UTC));
         
@@ -1325,8 +1325,8 @@ public partial class SpiceApiTest
     void ConvertConicToState()
     {
         var ke = new KeplerianElements(6800000.0, 0.1, 0.2, 0.3, 0.4, 0.5, TestHelpers.EarthAtJ2000, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF);
-        var state = SpiceAPI.Instance.ConvertConicElementsToStateVector(ke, TimeSystem.Time.J2000TDB);
-        var ke2 = SpiceAPI.Instance.ConvertStateVectorToConicOrbitalElement(state);
+        var state = SpiceApi.Instance.ConvertConicElementsToStateVector(ke, TimeSystem.Time.J2000TDB);
+        var ke2 = SpiceApi.Instance.ConvertStateVectorToConicOrbitalElement(state);
         Assert.Equal(ke.SemiMajorAxis(), ke2.SemiMajorAxis(), 6);
         Assert.Equal(ke.Eccentricity(), ke2.Eccentricity(), 6);
         Assert.Equal(ke.Inclination(), ke2.Inclination(), 6);
@@ -1340,13 +1340,13 @@ public partial class SpiceApiTest
 
     // ELARA (507): named by SPICE, no BODY507_GM in gm_de440.tpc (the kernel text, KernelTextValues). Before #711 the native
     // conversions returned the zero state silently (the found flag of their centre read undefined after the failed GM read);
-    // they now return a NaN state with SPICE's message, which SpiceAPI throws
+    // they now return a NaN state with SPICE's message, which SpiceApi throws
     [Fact]
     void ConvertConicElementsToStateVector_AboutABodyWithoutGm_ThrowsSpiceException()
     {
         Assert.False(KernelTextValues.HasGravitationalParameter(507));
         var ke = new KeplerianElements(7.0e6, 0.1, 0.2, 0.3, 0.4, 0.5, new IO.Astrodynamics.Body.CelestialBody(507), TimeSystem.Time.J2000TDB, Frames.Frame.ICRF);
-        var error = Assert.Throws<SpiceException>(() => SpiceAPI.Instance.ConvertConicElementsToStateVector(ke));
+        var error = Assert.Throws<SpiceException>(() => SpiceApi.Instance.ConvertConicElementsToStateVector(ke));
         // The same message on every run (#714: before, "can't be found" on some runs only, the name read after the failed GM
         // read indeterminate)
         Assert.Equal(ElaraWithoutGmMessage, error.Message);
@@ -1361,7 +1361,7 @@ public partial class SpiceApiTest
         Assert.False(KernelTextValues.HasGravitationalParameter(507));
         var eq = new IO.Astrodynamics.OrbitalParameters.EquinoctialElements(7.0e6, 0.01, 0.0, 0.1, 0.0, 0.5, new IO.Astrodynamics.Body.CelestialBody(507),
             TimeSystem.Time.J2000TDB, Frames.Frame.ICRF);
-        var error = Assert.Throws<SpiceException>(() => SpiceAPI.Instance.ConvertEquinoctialElementsToStateVector(eq));
+        var error = Assert.Throws<SpiceException>(() => SpiceApi.Instance.ConvertEquinoctialElementsToStateVector(eq));
         Assert.Equal(ElaraWithoutGmMessage, error.Message);
     }
 
@@ -1374,9 +1374,9 @@ public partial class SpiceApiTest
         Assert.False(KernelTextValues.HasGravitationalParameter(507));
         var elara = new IO.Astrodynamics.Body.CelestialBody(507);
         var ke = new KeplerianElements(-7.0e6, 1.5, 0.2, 0.3, 0.4, 0.5, elara, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF);
-        var error = Assert.Throws<InvalidOperationException>(() => SpiceAPI.Instance.ConvertConicElementsToStateVector(ke));
+        var error = Assert.Throws<InvalidOperationException>(() => SpiceApi.Instance.ConvertConicElementsToStateVector(ke));
         Assert.Contains("BODY507_GM", error.Message);
-        error = Assert.Throws<InvalidOperationException>(() => SpiceAPI.Instance.ConvertConicElementsToStateVector(ke, TimeSystem.Time.J2000TDB));
+        error = Assert.Throws<InvalidOperationException>(() => SpiceApi.Instance.ConvertConicElementsToStateVector(ke, TimeSystem.Time.J2000TDB));
         Assert.Contains("BODY507_GM", error.Message);
         AssertNothingPending();
     }
@@ -1393,7 +1393,7 @@ public partial class SpiceApiTest
     void ConvertConicElementsToStateVector_WithAGmNotFiniteAndAboveZero_ThrowsArgumentOutOfRangeException(double gm)
     {
         var ke = new KeplerianElements(6800000.0, 0.1, 0.2, 0.3, 0.4, 0.5, TestHelpers.EarthAtJ2000, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF);
-        var error = Assert.Throws<ArgumentOutOfRangeException>(() => SpiceAPI.Instance.ConvertConicElementsToStateVector(ke, TimeSystem.Time.J2000TDB, gm));
+        var error = Assert.Throws<ArgumentOutOfRangeException>(() => SpiceApi.Instance.ConvertConicElementsToStateVector(ke, TimeSystem.Time.J2000TDB, gm));
         Assert.Equal("gm", error.ParamName);
         AssertNothingPending();
     }
@@ -1422,9 +1422,9 @@ public partial class SpiceApiTest
         var gm = TestHelpers.EarthAtJ2000.GM;
         foreach (var conversion in new Func<IO.Astrodynamics.OrbitalParameters.StateVector>[]
                  {
-                     () => SpiceAPI.Instance.ConvertConicElementsToStateVector(ke),
-                     () => SpiceAPI.Instance.ConvertConicElementsToStateVector(ke, TimeSystem.Time.J2000TDB),
-                     () => SpiceAPI.Instance.ConvertConicElementsToStateVector(ke, TimeSystem.Time.J2000TDB, gm)
+                     () => SpiceApi.Instance.ConvertConicElementsToStateVector(ke),
+                     () => SpiceApi.Instance.ConvertConicElementsToStateVector(ke, TimeSystem.Time.J2000TDB),
+                     () => SpiceApi.Instance.ConvertConicElementsToStateVector(ke, TimeSystem.Time.J2000TDB, gm)
                  })
         {
             var error = Assert.Throws<ArgumentException>(conversion);
@@ -1468,7 +1468,7 @@ public partial class SpiceApiTest
         var eq = new IO.Astrodynamics.OrbitalParameters.EquinoctialElements(p, f, 0.0, 0.1, 0.0, 0.5, TestHelpers.EarthAtJ2000,
             TimeSystem.Time.J2000TDB, Frames.Frame.ICRF);
         Assert.True(eq.SemiMajorAxis() < 0.0 || f > 0.9);
-        var error = Assert.Throws<ArgumentException>(() => SpiceAPI.Instance.ConvertEquinoctialElementsToStateVector(eq));
+        var error = Assert.Throws<ArgumentException>(() => SpiceApi.Instance.ConvertEquinoctialElementsToStateVector(eq));
         Assert.Equal("equinoctialElements", error.ParamName);
         AssertNothingPending();
     }
@@ -1477,7 +1477,7 @@ public partial class SpiceApiTest
     // Id -1, which GetCelestialBodyInfo throws for
     private static void AssertNothingPending()
     {
-        var earth = SpiceAPI.Instance.GetCelestialBodyInfo(399);
+        var earth = SpiceApi.Instance.GetCelestialBodyInfo(399);
         Assert.Equal(399, earth.NaifId);
         Assert.Equal("EARTH", earth.Name);
     }
@@ -1486,8 +1486,8 @@ public partial class SpiceApiTest
     void ConvertConicHyperbolicToState()
     {
         var ke = new KeplerianElements(-6800000.0, 1.2, 0.2, 0.3, 0.4, 0.5, TestHelpers.EarthAtJ2000, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF);
-        var state = SpiceAPI.Instance.ConvertConicElementsToStateVector(ke, TimeSystem.Time.J2000TDB);
-        var ke2 = SpiceAPI.Instance.ConvertStateVectorToConicOrbitalElement(state);
+        var state = SpiceApi.Instance.ConvertConicElementsToStateVector(ke, TimeSystem.Time.J2000TDB);
+        var ke2 = SpiceApi.Instance.ConvertStateVectorToConicOrbitalElement(state);
         Assert.Equal(ke.SemiMajorAxis(), ke2.SemiMajorAxis(), 6);
         Assert.Equal(ke.Eccentricity(), ke2.Eccentricity(), 6);
         Assert.Equal(ke.Inclination(), ke2.Inclination(), 6);
@@ -1503,7 +1503,7 @@ public partial class SpiceApiTest
     public void ReadEphemerisFromIds()
     {
         var searchWindow = new Window(TimeSystem.Time.CreateTDB(0.0), TimeSystem.Time.CreateTDB(100.0));
-        var res = SpiceAPI.Instance.ReadEphemeris(searchWindow, PlanetsAndMoons.EARTH.NaifId, PlanetsAndMoons.MOON.NaifId,
+        var res = SpiceApi.Instance.ReadEphemeris(searchWindow, PlanetsAndMoons.EARTH.NaifId, PlanetsAndMoons.MOON.NaifId,
             Frames.Frame.ICRF, Aberration.LT, TimeSpan.FromSeconds(10.0)).Select(x => x.ToStateVector());
 
         var stateVectors = res as StateVector[] ?? res.ToArray();
@@ -1522,7 +1522,7 @@ public partial class SpiceApiTest
     public void ReadEphemerisAtEpochFromIds()
     {
         var epoch = TimeSystem.Time.CreateTDB(0.0);
-        var res = SpiceAPI.Instance.ReadEphemeris(epoch, PlanetsAndMoons.EARTH.NaifId, PlanetsAndMoons.MOON.NaifId,
+        var res = SpiceApi.Instance.ReadEphemeris(epoch, PlanetsAndMoons.EARTH.NaifId, PlanetsAndMoons.MOON.NaifId,
             Frames.Frame.ICRF, Aberration.LT);
 
         var sv = res.ToStateVector();
@@ -1537,7 +1537,7 @@ public partial class SpiceApiTest
     {
         // Test with SSB observer (naifId = 0) — CelestialItem.Create(0) returns a Barycenter
         var epoch = TimeSystem.Time.CreateTDB(0.0);
-        var res = SpiceAPI.Instance.ReadEphemeris(epoch, 0, PlanetsAndMoons.EARTH.NaifId,
+        var res = SpiceApi.Instance.ReadEphemeris(epoch, 0, PlanetsAndMoons.EARTH.NaifId,
             Frames.Frame.ICRF, Aberration.None);
 
         var sv = res.ToStateVector();
@@ -1558,12 +1558,12 @@ public partial class SpiceApiTest
         }
 
         FileInfo file = new FileInfo("EphemerisTestFileFromId.spk");
-        SpiceAPI.Instance.WriteEphemeris(file, -136, sv);
-        SpiceAPI.Instance.LoadKernels(file);
+        SpiceApi.Instance.WriteEphemeris(file, -136, sv);
+        SpiceApi.Instance.LoadKernels(file);
         try
         {
             var window = new Window(TimeSystem.Time.J2000TDB, TimeSystem.Time.J2000TDB.AddSeconds(9.0));
-            var stateVectors = SpiceAPI.Instance.ReadEphemeris(window, PlanetsAndMoons.EARTH.NaifId, -136,
+            var stateVectors = SpiceApi.Instance.ReadEphemeris(window, PlanetsAndMoons.EARTH.NaifId, -136,
                     Frames.Frame.ICRF, Aberration.None, TimeSpan.FromSeconds(1.0))
                 .Select(x => x.ToStateVector()).ToArray();
             for (int i = 0; i < size; ++i)
@@ -1575,7 +1575,7 @@ public partial class SpiceApiTest
         }
         finally
         {
-            SpiceAPI.Instance.UnloadKernels(file);
+            SpiceApi.Instance.UnloadKernels(file);
         }
     }
 
@@ -1597,15 +1597,15 @@ public partial class SpiceApiTest
 
         var clockFile = new FileInfo("OrientationClockTestFromId.tsc");
         clock.Write(clockFile);
-        SpiceAPI.Instance.LoadKernels(clockFile);
+        SpiceApi.Instance.LoadKernels(clockFile);
         FileInfo file = new FileInfo("OrientationTestFileFromId.ck");
         try
         {
-            SpiceAPI.Instance.WriteOrientation(file, spacecraft.NaifId, so);
-            SpiceAPI.Instance.LoadKernels(file);
+            SpiceApi.Instance.WriteOrientation(file, spacecraft.NaifId, so);
+            SpiceApi.Instance.LoadKernels(file);
 
             var window = new Window(TimeSystem.Time.J2000TDB, TimeSystem.Time.J2000TDB.AddSeconds(9.0));
-            var stateOrientation = SpiceAPI.Instance.ReadOrientation(window, spacecraft.NaifId, TimeSpan.Zero, Frames.Frame.ICRF, TimeSpan.FromSeconds(1.0))
+            var stateOrientation = SpiceApi.Instance.ReadOrientation(window, spacecraft.NaifId, TimeSpan.Zero, Frames.Frame.ICRF, TimeSpan.FromSeconds(1.0))
                 .ToArray();
 
             Assert.Equal(0.0, stateOrientation[0].Rotation.W, 9);
@@ -1613,8 +1613,8 @@ public partial class SpiceApiTest
         }
         finally
         {
-            SpiceAPI.Instance.UnloadKernels(file);
-            SpiceAPI.Instance.UnloadKernels(clockFile);
+            SpiceApi.Instance.UnloadKernels(file);
+            SpiceApi.Instance.UnloadKernels(clockFile);
         }
     }
 
@@ -1623,8 +1623,8 @@ public partial class SpiceApiTest
     {
         var ke = new KeplerianElements(6800000.0, 0.1, 0.2, 0.3, 0.4, 0.5, TestHelpers.EarthAtJ2000, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF);
         var gm = TestHelpers.EarthAtJ2000.GM;
-        var state = SpiceAPI.Instance.ConvertConicElementsToStateVector(ke, TimeSystem.Time.J2000TDB, gm);
-        var ke2 = SpiceAPI.Instance.ConvertStateVectorToConicOrbitalElement(state, gm);
+        var state = SpiceApi.Instance.ConvertConicElementsToStateVector(ke, TimeSystem.Time.J2000TDB, gm);
+        var ke2 = SpiceApi.Instance.ConvertStateVectorToConicOrbitalElement(state, gm);
         Assert.Equal(ke.SemiMajorAxis(), ke2.SemiMajorAxis(), 6);
         Assert.Equal(ke.Eccentricity(), ke2.Eccentricity(), 6);
         Assert.Equal(ke.Inclination(), ke2.Inclination(), 6);
@@ -1639,7 +1639,7 @@ public partial class SpiceApiTest
         var sv = new StateVector(new Vector3(6800000.0, 0.0, 0.0), new Vector3(0.0, 7656.2204182967143, 0.0),
             TestHelpers.EarthAtJ2000, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF);
         var gm = TestHelpers.EarthAtJ2000.GM;
-        var result = SpiceAPI.Instance.Propagate2Bodies(sv, gm, TimeSpan.FromSeconds(60.0));
+        var result = SpiceApi.Instance.Propagate2Bodies(sv, gm, TimeSpan.FromSeconds(60.0));
         Assert.NotEqual(0.0, result.Position.Magnitude());
         Assert.NotEqual(sv.Position.X, result.Position.X);
     }
@@ -1659,15 +1659,15 @@ public partial class SpiceApiTest
         var ckFile = new FileInfo(Path.Combine(Constants.ClpsDataPath.FullName,
             "clps_to2ab_apm1_cru_rec_240108_240118_v02.bc"));
 
-        SpiceAPI.Instance.LoadKernels(sclkFile);
-        SpiceAPI.Instance.LoadKernels(ckFile);
+        SpiceApi.Instance.LoadKernels(sclkFile);
+        SpiceApi.Instance.LoadKernels(ckFile);
         try
         {
             // Create the window in UTC — the customer's natural time frame
             var start = new TimeSystem.Time(2024, 1, 8, 8, 16, 19, TimeSystem.TimeScale.UTC);
             var window = new Window(start, start.AddSeconds(60.0));
 
-            var results = SpiceAPI.Instance.ReadOrientation(
+            var results = SpiceApi.Instance.ReadOrientation(
                 window, -244, TimeSpan.FromSeconds(10.0),
                 Frames.Frame.ICRF, TimeSpan.FromSeconds(10.0)).ToArray();
 
@@ -1699,8 +1699,8 @@ public partial class SpiceApiTest
         }
         finally
         {
-            SpiceAPI.Instance.UnloadKernels(ckFile);
-            SpiceAPI.Instance.UnloadKernels(sclkFile);
+            SpiceApi.Instance.UnloadKernels(ckFile);
+            SpiceApi.Instance.UnloadKernels(sclkFile);
         }
     }
 
@@ -1714,15 +1714,15 @@ public partial class SpiceApiTest
         var ckFile = new FileInfo(Path.Combine(Constants.ClpsDataPath.FullName,
             "clps_to2ab_apm1_cru_rec_240108_240118_v02.bc"));
 
-        SpiceAPI.Instance.LoadKernels(sclkFile);
-        SpiceAPI.Instance.LoadKernels(ckFile);
+        SpiceApi.Instance.LoadKernels(sclkFile);
+        SpiceApi.Instance.LoadKernels(ckFile);
         try
         {
             // Use a TDB time safely within CK coverage (a few minutes after start)
             var start = new TimeSystem.Time(2024, 1, 8, 8, 20, 0, TimeScale.TDB);
             var window = new Window(start, start.AddSeconds(60.0));
 
-            var results = SpiceAPI.Instance.ReadOrientation(
+            var results = SpiceApi.Instance.ReadOrientation(
                 window, -244, TimeSpan.FromSeconds(10.0),
                 Frames.Frame.ICRF, TimeSpan.FromSeconds(10.0)).ToArray();
 
@@ -1741,8 +1741,8 @@ public partial class SpiceApiTest
         }
         finally
         {
-            SpiceAPI.Instance.UnloadKernels(ckFile);
-            SpiceAPI.Instance.UnloadKernels(sclkFile);
+            SpiceApi.Instance.UnloadKernels(ckFile);
+            SpiceApi.Instance.UnloadKernels(sclkFile);
         }
     }
 
@@ -1750,8 +1750,8 @@ public partial class SpiceApiTest
     void WriteOrientationAndEphemeris_OfNoRecord_AreRejected()
     {
         var file = new FileInfo(Path.Combine(Constants.OutputPath.FullName, "empty_records.bsp"));
-        Assert.Throws<ArgumentException>(() => SpiceAPI.Instance.WriteOrientation(file, -1106, Array.Empty<StateOrientation>()));
-        Assert.Throws<ArgumentException>(() => SpiceAPI.Instance.WriteEphemeris(file, -1106, Array.Empty<StateVector>()));
+        Assert.Throws<ArgumentException>(() => SpiceApi.Instance.WriteOrientation(file, -1106, Array.Empty<StateOrientation>()));
+        Assert.Throws<ArgumentException>(() => SpiceApi.Instance.WriteEphemeris(file, -1106, Array.Empty<StateVector>()));
     }
 
     /// <summary>
@@ -1766,9 +1766,9 @@ public partial class SpiceApiTest
         var sv = new StateVector(new Vector3(6800000.0, 0.0, 0.0), new Vector3(0.0, 7656.2204182967143, 0.0),
             TestHelpers.EarthAtJ2000, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF);
         var gm = TestHelpers.EarthAtJ2000.GM;
-        var explicitGm = SpiceAPI.Instance.Propagate2Bodies(sv, gm, TimeSpan.FromSeconds(60.0));
-        var byDuration = SpiceAPI.Instance.Propagate2Bodies(sv, TimeSpan.FromSeconds(60.0));
-        var byEpoch = SpiceAPI.Instance.Propagate2Bodies(sv, TimeSystem.Time.J2000TDB.AddSeconds(60.0));
+        var explicitGm = SpiceApi.Instance.Propagate2Bodies(sv, gm, TimeSpan.FromSeconds(60.0));
+        var byDuration = SpiceApi.Instance.Propagate2Bodies(sv, TimeSpan.FromSeconds(60.0));
+        var byEpoch = SpiceApi.Instance.Propagate2Bodies(sv, TimeSystem.Time.J2000TDB.AddSeconds(60.0));
         Assert.Equal(explicitGm.Position, byDuration.Position);
         Assert.Equal(explicitGm.Velocity, byDuration.Velocity);
         Assert.Equal(explicitGm.Position, byEpoch.Position);
@@ -1776,7 +1776,7 @@ public partial class SpiceApiTest
 
         const double a = 6800000.0;
         var ke = new KeplerianElements(a, 0.0, 0.0, 0.0, 0.0, 0.0, TestHelpers.EarthAtJ2000, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF);
-        var state = SpiceAPI.Instance.ConvertConicElementsToStateVector(ke);
+        var state = SpiceApi.Instance.ConvertConicElementsToStateVector(ke);
         double positionError = (state.Position - new Vector3(a, 0.0, 0.0)).Magnitude();
         double velocityError = (state.Velocity - new Vector3(0.0, System.Math.Sqrt(gm / a), 0.0)).Magnitude();
         _output?.WriteLine($"MEASURE conic e = 0 against its closed form: {positionError:E3} m, {velocityError:E3} m/s");
@@ -1786,7 +1786,7 @@ public partial class SpiceApiTest
 
         // The same circular equatorial orbit as equinoctial elements (p = a, f = g = h = k = 0, the longitude 0), through eqncpv
         var equinoctial = new IO.Astrodynamics.OrbitalParameters.EquinoctialElements(a, 0.0, 0.0, 0.0, 0.0, 0.0, TestHelpers.EarthAtJ2000, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF);
-        var fromEquinoctial = SpiceAPI.Instance.ConvertEquinoctialElementsToStateVector(equinoctial);
+        var fromEquinoctial = SpiceApi.Instance.ConvertEquinoctialElementsToStateVector(equinoctial);
         double equinoctialPositionError = (fromEquinoctial.Position - new Vector3(a, 0.0, 0.0)).Magnitude();
         double equinoctialVelocityError = (fromEquinoctial.Velocity - new Vector3(0.0, System.Math.Sqrt(gm / a), 0.0)).Magnitude();
         _output?.WriteLine($"MEASURE equinoctial e = 0 against its closed form: {equinoctialPositionError:E3} m, {equinoctialVelocityError:E3} m/s");
@@ -1815,9 +1815,9 @@ public partial class SpiceApiTest
     void TwoBodyCalls_WithAGmNotFiniteAndAboveZero_ThrowArgumentOutOfRangeException(double gm)
     {
         var sv = LeoState(new Vector3(0.0, 7656.2204182967143, 0.0));
-        var error = Assert.Throws<ArgumentOutOfRangeException>(() => SpiceAPI.Instance.Propagate2Bodies(sv, gm, TimeSpan.FromSeconds(60.0)));
+        var error = Assert.Throws<ArgumentOutOfRangeException>(() => SpiceApi.Instance.Propagate2Bodies(sv, gm, TimeSpan.FromSeconds(60.0)));
         Assert.Equal("gm", error.ParamName);
-        error = Assert.Throws<ArgumentOutOfRangeException>(() => SpiceAPI.Instance.ConvertStateVectorToConicOrbitalElement(sv, gm));
+        error = Assert.Throws<ArgumentOutOfRangeException>(() => SpiceApi.Instance.ConvertStateVectorToConicOrbitalElement(sv, gm));
         Assert.Equal("gm", error.ParamName);
         AssertNothingPending();
     }
@@ -1833,17 +1833,17 @@ public partial class SpiceApiTest
                      LeoState(new Vector3(0.0, double.PositiveInfinity, 0.0))
                  })
         {
-            Assert.Equal("stateVector", Assert.Throws<ArgumentException>(() => SpiceAPI.Instance.Propagate2Bodies(sv, gm, TimeSpan.FromSeconds(60.0))).ParamName);
-            Assert.Equal("stateVector", Assert.Throws<ArgumentException>(() => SpiceAPI.Instance.Propagate2Bodies(sv, TimeSpan.FromSeconds(60.0))).ParamName);
-            Assert.Equal("stateVector", Assert.Throws<ArgumentException>(() => SpiceAPI.Instance.ConvertStateVectorToConicOrbitalElement(sv, gm)).ParamName);
-            Assert.Equal("stateVector", Assert.Throws<ArgumentException>(() => SpiceAPI.Instance.ConvertStateVectorToConicOrbitalElement(sv)).ParamName);
+            Assert.Equal("stateVector", Assert.Throws<ArgumentException>(() => SpiceApi.Instance.Propagate2Bodies(sv, gm, TimeSpan.FromSeconds(60.0))).ParamName);
+            Assert.Equal("stateVector", Assert.Throws<ArgumentException>(() => SpiceApi.Instance.Propagate2Bodies(sv, TimeSpan.FromSeconds(60.0))).ParamName);
+            Assert.Equal("stateVector", Assert.Throws<ArgumentException>(() => SpiceApi.Instance.ConvertStateVectorToConicOrbitalElement(sv, gm)).ParamName);
+            Assert.Equal("stateVector", Assert.Throws<ArgumentException>(() => SpiceApi.Instance.ConvertStateVectorToConicOrbitalElement(sv)).ParamName);
         }
 
-        Assert.Throws<ArgumentNullException>(() => SpiceAPI.Instance.Propagate2Bodies(null, gm, TimeSpan.FromSeconds(60.0)));
-        Assert.Throws<ArgumentNullException>(() => SpiceAPI.Instance.Propagate2Bodies(null, TimeSpan.FromSeconds(60.0)));
-        Assert.Throws<ArgumentNullException>(() => SpiceAPI.Instance.Propagate2Bodies(null, TimeSystem.Time.J2000TDB));
-        Assert.Throws<ArgumentNullException>(() => SpiceAPI.Instance.ConvertStateVectorToConicOrbitalElement(null, gm));
-        Assert.Throws<ArgumentNullException>(() => SpiceAPI.Instance.ConvertStateVectorToConicOrbitalElement(null));
+        Assert.Throws<ArgumentNullException>(() => SpiceApi.Instance.Propagate2Bodies(null, gm, TimeSpan.FromSeconds(60.0)));
+        Assert.Throws<ArgumentNullException>(() => SpiceApi.Instance.Propagate2Bodies(null, TimeSpan.FromSeconds(60.0)));
+        Assert.Throws<ArgumentNullException>(() => SpiceApi.Instance.Propagate2Bodies(null, TimeSystem.Time.J2000TDB));
+        Assert.Throws<ArgumentNullException>(() => SpiceApi.Instance.ConvertStateVectorToConicOrbitalElement(null, gm));
+        Assert.Throws<ArgumentNullException>(() => SpiceApi.Instance.ConvertStateVectorToConicOrbitalElement(null));
         AssertNothingPending();
     }
 
@@ -1854,10 +1854,10 @@ public partial class SpiceApiTest
     {
         Assert.False(KernelTextValues.HasGravitationalParameter(507));
         var sv = LeoState(new Vector3(0.0, 7.5e3, 0.0), new IO.Astrodynamics.Body.CelestialBody(507));
-        Assert.Contains("BODY507_GM", Assert.Throws<InvalidOperationException>(() => SpiceAPI.Instance.Propagate2Bodies(sv, TimeSpan.FromSeconds(60.0))).Message);
+        Assert.Contains("BODY507_GM", Assert.Throws<InvalidOperationException>(() => SpiceApi.Instance.Propagate2Bodies(sv, TimeSpan.FromSeconds(60.0))).Message);
         Assert.Contains("BODY507_GM",
-            Assert.Throws<InvalidOperationException>(() => SpiceAPI.Instance.Propagate2Bodies(sv, TimeSystem.Time.J2000TDB.AddSeconds(60.0))).Message);
-        Assert.Contains("BODY507_GM", Assert.Throws<InvalidOperationException>(() => SpiceAPI.Instance.ConvertStateVectorToConicOrbitalElement(sv)).Message);
+            Assert.Throws<InvalidOperationException>(() => SpiceApi.Instance.Propagate2Bodies(sv, TimeSystem.Time.J2000TDB.AddSeconds(60.0))).Message);
+        Assert.Contains("BODY507_GM", Assert.Throws<InvalidOperationException>(() => SpiceApi.Instance.ConvertStateVectorToConicOrbitalElement(sv)).Message);
         AssertNothingPending();
     }
 
@@ -1867,14 +1867,14 @@ public partial class SpiceApiTest
     {
         var sv = LeoState(Vector3.Zero);
         var gm = TestHelpers.EarthAtJ2000.GM;
-        var before = SpiceAPI.Instance.ReadEphemeris(TimeSystem.Time.J2000TDB, 399, 301, Frames.Frame.ICRF, Aberration.None);
-        var error = Assert.Throws<SpiceException>(() => SpiceAPI.Instance.Propagate2Bodies(sv, gm, TimeSpan.FromSeconds(60.0)));
+        var before = SpiceApi.Instance.ReadEphemeris(TimeSystem.Time.J2000TDB, 399, 301, Frames.Frame.ICRF, Aberration.None);
+        var error = Assert.Throws<SpiceException>(() => SpiceApi.Instance.Propagate2Bodies(sv, gm, TimeSpan.FromSeconds(60.0)));
         _output.WriteLine($"MESSAGE #714 Propagate2Bodies of a zero velocity: {error.Message}");
         Assert.EndsWith(": SPICE(ZEROVELOCITY)", error.Message);
-        error = Assert.Throws<SpiceException>(() => SpiceAPI.Instance.ConvertStateVectorToConicOrbitalElement(sv, gm));
+        error = Assert.Throws<SpiceException>(() => SpiceApi.Instance.ConvertStateVectorToConicOrbitalElement(sv, gm));
         _output.WriteLine($"MESSAGE #714 ConvertStateVectorToConicOrbitalElement of a zero velocity: {error.Message}");
         Assert.EndsWith(": Zero vector for input velocity vector.", error.Message);
-        var moon = SpiceAPI.Instance.ReadEphemeris(TimeSystem.Time.J2000TDB, 399, 301, Frames.Frame.ICRF, Aberration.None);
+        var moon = SpiceApi.Instance.ReadEphemeris(TimeSystem.Time.J2000TDB, 399, 301, Frames.Frame.ICRF, Aberration.None);
         Assert.Equal(before.Position, moon.Position);
         Assert.Equal(before.Velocity, moon.Velocity);
         AssertNothingPending();
@@ -1899,10 +1899,10 @@ public partial class SpiceApiTest
             var sv = new StateVector(position, velocity, TestHelpers.EarthAtJ2000, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF);
             double[] state = [position.X, position.Y, position.Z, velocity.X, velocity.Y, velocity.Z];
             var prop2b = Body.CspiceDirect.Prop2b(mu, state, 60.0);
-            var error = Assert.Throws<SpiceException>(() => SpiceAPI.Instance.Propagate2Bodies(sv, mu, TimeSpan.FromSeconds(60.0)));
+            var error = Assert.Throws<SpiceException>(() => SpiceApi.Instance.Propagate2Bodies(sv, mu, TimeSpan.FromSeconds(60.0)));
             Assert.EndsWith(": " + (string.IsNullOrEmpty(prop2b.Long) ? prop2b.Short : prop2b.Long), error.Message);
             var oscltx = Body.CspiceDirect.Oscltx(state, 0.0, mu);
-            error = Assert.Throws<SpiceException>(() => SpiceAPI.Instance.ConvertStateVectorToConicOrbitalElement(sv, mu));
+            error = Assert.Throws<SpiceException>(() => SpiceApi.Instance.ConvertStateVectorToConicOrbitalElement(sv, mu));
             Assert.EndsWith(": " + oscltx.Long, error.Message);
             _output.WriteLine($"MESSAGE #714 {prop2b.Short} / {oscltx.Short} {oscltx.Long}");
         }
@@ -1910,11 +1910,11 @@ public partial class SpiceApiTest
         var leo = LeoState(new Vector3(0.0, 7656.2204182967143, 1000.0));
         double[] leoState = [leo.Position.X, leo.Position.Y, leo.Position.Z, leo.Velocity.X, leo.Velocity.Y, leo.Velocity.Z];
         var reference = Body.CspiceDirect.Prop2b(gm, leoState, 3600.0).State;
-        var propagated = SpiceAPI.Instance.Propagate2Bodies(leo, gm, TimeSpan.FromSeconds(3600.0));
+        var propagated = SpiceApi.Instance.Propagate2Bodies(leo, gm, TimeSpan.FromSeconds(3600.0));
         Assert.Equal(new Vector3(reference[0], reference[1], reference[2]), propagated.Position);
         Assert.Equal(new Vector3(reference[3], reference[4], reference[5]), propagated.Velocity);
         var elements = Body.CspiceDirect.Oscltx(leoState, 0.0, gm).Elements;
-        var converted = SpiceAPI.Instance.ConvertStateVectorToConicOrbitalElement(leo, gm);
+        var converted = SpiceApi.Instance.ConvertStateVectorToConicOrbitalElement(leo, gm);
         Assert.Equal(elements[1], converted.Eccentricity());
         Assert.Equal(elements[2], converted.Inclination());
         Assert.Equal(elements[3], converted.AscendingNode());
@@ -1937,7 +1937,7 @@ public partial class SpiceApiTest
     {
         // An unknown name is a bad argument since R25 of #668: the error of #714 is the inner exception
         var argument = Assert.Throws<ArgumentException>(() =>
-            SpiceAPI.Instance.TransformFrame(TimeSystem.Time.J2000TDB, Frames.Frame.ICRF, new Frames.Frame("NOT_A_FRAME")));
+            SpiceApi.Instance.TransformFrame(TimeSystem.Time.J2000TDB, Frames.Frame.ICRF, new Frames.Frame("NOT_A_FRAME")));
         Assert.Equal("toFrame", argument.ParamName);
         var unknown = Assert.IsType<SpiceException>(argument.InnerException);
         _output.WriteLine($"MESSAGE #714 {unknown.Message}");
@@ -1946,7 +1946,7 @@ public partial class SpiceApiTest
 
         var epoch = TimeSystem.Time.CreateTDB(6.3e9);
         var itrf93 = new Frames.Frame("ITRF93");
-        var uncovered = Assert.Throws<SpiceException>(() => SpiceAPI.Instance.TransformFrame(epoch, Frames.Frame.ICRF, itrf93));
+        var uncovered = Assert.Throws<SpiceException>(() => SpiceApi.Instance.TransformFrame(epoch, Frames.Frame.ICRF, itrf93));
         _output.WriteLine($"MESSAGE #714 {uncovered.Message}");
         Assert.StartsWith($"SPICE gives no transformation from {Frames.Frame.ICRF.Name} to ITRF93 at {epoch}: ", uncovered.Message);
         Assert.Contains(Itrf93NotCoveredMessage, uncovered.Message);
@@ -1957,7 +1957,7 @@ public partial class SpiceApiTest
         AssertNothingPending();
     }
 
-    // The message SpiceAPI gives is that of a direct sxform_c call
+    // The message SpiceApi gives is that of a direct sxform_c call
     [Fact]
     [Trait("Category", "Validation")]
     void TransformFrame_ThatSpiceCannotGive_ThrowsTheMessageOfSxform()
@@ -1967,7 +1967,7 @@ public partial class SpiceApiTest
             var expected = Body.CspiceDirect.SxformError("J2000", to, et);
             Assert.False(string.IsNullOrEmpty(expected));
             var thrown = Record.Exception(() =>
-                SpiceAPI.Instance.TransformFrame(TimeSystem.Time.CreateTDB(et), Frames.Frame.ICRF, new Frames.Frame(to)));
+                SpiceApi.Instance.TransformFrame(TimeSystem.Time.CreateTDB(et), Frames.Frame.ICRF, new Frames.Frame(to)));
             // The unknown name an ArgumentException since R25 of #668, SPICE's message on its inner exception
             var error = Assert.IsType<SpiceException>(to == "NOT_A_FRAME" ? Assert.IsType<ArgumentException>(thrown).InnerException : thrown);
             Assert.EndsWith(": " + expected, error.Message);
@@ -1980,7 +1980,7 @@ public partial class SpiceApiTest
     // ellipse let through (conics.c checks its domain with comparisons NaN passes): a NaN mean anomaly gave a finite state,
     // silently, and a NaN inclination a NaN state that threw "Native proxy call failed", or the message of an earlier call
     // about another body (measured on a80f6a5). They are a bad argument: since #726 the constructors refuse them, naming the
-    // element, so the check of SpiceAPI before the native call is no longer reached through these types
+    // element, so the check of SpiceApi before the native call is no longer reached through these types
     [Theory]
     [InlineData(double.NaN, 0.5, 0.3, 0.4)]
     [InlineData(0.2, double.NaN, 0.3, 0.4)]
@@ -2050,7 +2050,7 @@ public partial class SpiceApiTest
             TimeSystem.Time.J2000TDB, Frames.Frame.ICRF);
         var spacecraft = new Spacecraft(id, $"IOA714CK{-id}", 1000.0, orbit, 10000.0, new Clock($"IOA714CLOCK{-id}", 65536));
         spacecraft.Clock.Write(clockFile);
-        SpiceAPI.Instance.LoadKernels(clockFile);
+        SpiceApi.Instance.LoadKernels(clockFile);
         try
         {
             var sclk = new double[11];
@@ -2066,10 +2066,10 @@ public partial class SpiceApiTest
             }
 
             Body.CspiceDirect.WriteType3Ck(ckFile.FullName, id * 1000, "J2000", withRates, sclk, quaternions, angularVelocities);
-            SpiceAPI.Instance.LoadKernels(ckFile);
+            SpiceApi.Instance.LoadKernels(ckFile);
             try
             {
-                var records = SpiceAPI.Instance.ReadOrientation(new Window(TimeSystem.Time.CreateTDB(0.0), TimeSystem.Time.CreateTDB(1000.0)), id,
+                var records = SpiceApi.Instance.ReadOrientation(new Window(TimeSystem.Time.CreateTDB(0.0), TimeSystem.Time.CreateTDB(1000.0)), id,
                     TimeSpan.FromSeconds(10.0), Frames.Frame.ICRF, TimeSpan.FromSeconds(100.0)).ToArray();
                 Assert.Equal(11, records.Length);
                 double worstSpice = 0.0, worstClosedForm = 0.0;
@@ -2093,12 +2093,12 @@ public partial class SpiceApiTest
             }
             finally
             {
-                SpiceAPI.Instance.UnloadKernels(ckFile);
+                SpiceApi.Instance.UnloadKernels(ckFile);
             }
         }
         finally
         {
-            SpiceAPI.Instance.UnloadKernels(clockFile);
+            SpiceApi.Instance.UnloadKernels(clockFile);
             dir.Delete(true);
         }
     }
@@ -2134,15 +2134,15 @@ public partial class SpiceApiTest
         var noRates = new FileInfo(Path.Combine(dir.FullName, "ckprio_norates.bc"));
         var first = withoutRatesLoadedLast ? rates : noRates;
         var last = withoutRatesLoadedLast ? noRates : rates;
-        SpiceAPI.Instance.LoadKernels(clock);
-        SpiceAPI.Instance.LoadKernels(first);
-        SpiceAPI.Instance.LoadKernels(last);
+        SpiceApi.Instance.LoadKernels(clock);
+        SpiceApi.Instance.LoadKernels(first);
+        SpiceApi.Instance.LoadKernels(last);
         try
         {
             // The grid 0, 50, ..., 1000 s, then 299.5 s and 700.5 s
-            var records = SpiceAPI.Instance.ReadOrientation(new Window(TimeSystem.Time.CreateTDB(0.0), TimeSystem.Time.CreateTDB(1000.0)),
+            var records = SpiceApi.Instance.ReadOrientation(new Window(TimeSystem.Time.CreateTDB(0.0), TimeSystem.Time.CreateTDB(1000.0)),
                     CkPrioritySpacecraft, TimeSpan.FromSeconds(1.0), Frames.Frame.ICRF, TimeSpan.FromSeconds(50.0))
-                .Concat(SpiceAPI.Instance.ReadOrientation(new Window(TimeSystem.Time.CreateTDB(299.5), TimeSystem.Time.CreateTDB(700.5)),
+                .Concat(SpiceApi.Instance.ReadOrientation(new Window(TimeSystem.Time.CreateTDB(299.5), TimeSystem.Time.CreateTDB(700.5)),
                     CkPrioritySpacecraft, TimeSpan.FromSeconds(1.0), Frames.Frame.ICRF, TimeSpan.FromSeconds(401.0))).ToArray();
             Assert.Equal(expected.Length, records.Length);
             var (worstSpice, worstClosedForm, recordsWithoutRates) =
@@ -2155,9 +2155,9 @@ public partial class SpiceApiTest
         }
         finally
         {
-            SpiceAPI.Instance.UnloadKernels(last);
-            SpiceAPI.Instance.UnloadKernels(first);
-            SpiceAPI.Instance.UnloadKernels(clock);
+            SpiceApi.Instance.UnloadKernels(last);
+            SpiceApi.Instance.UnloadKernels(first);
+            SpiceApi.Instance.UnloadKernels(clock);
         }
     }
 
@@ -2199,7 +2199,7 @@ public partial class SpiceApiTest
 
     // The record of one epoch, read alone (a window of one epoch)
     private static StateOrientation ReadCkPriorityRecord(double epoch) =>
-        SpiceAPI.Instance.ReadOrientation(new Window(TimeSystem.Time.CreateTDB(epoch), TimeSystem.Time.CreateTDB(epoch)),
+        SpiceApi.Instance.ReadOrientation(new Window(TimeSystem.Time.CreateTDB(epoch), TimeSystem.Time.CreateTDB(epoch)),
             CkPrioritySpacecraft, TimeSpan.FromSeconds(1.0), Frames.Frame.ICRF, TimeSpan.FromSeconds(1.0)).Single();
 
     private static System.Text.Json.JsonElement CkPriorityEntry(System.Text.Json.JsonElement[] entries, double epoch) =>
@@ -2225,13 +2225,13 @@ public partial class SpiceApiTest
         var clock = new FileInfo(Path.Combine(dir.FullName, "ckprio.tsc"));
         var rates = new FileInfo(Path.Combine(dir.FullName, "ckprio_rates.bc"));
         var gap = new FileInfo(Path.Combine(dir.FullName, "ckprio_gap.bc"));
-        SpiceAPI.Instance.LoadKernels(clock);
-        SpiceAPI.Instance.LoadKernels(rates);
-        SpiceAPI.Instance.LoadKernels(gap);
+        SpiceApi.Instance.LoadKernels(clock);
+        SpiceApi.Instance.LoadKernels(rates);
+        SpiceApi.Instance.LoadKernels(gap);
         try
         {
             static bool ReadsGap(double et) => et is >= 300.0 and <= 400.0 or >= 600.0 and <= 700.0;
-            var grid = SpiceAPI.Instance.ReadOrientation(new Window(TimeSystem.Time.CreateTDB(0.0), TimeSystem.Time.CreateTDB(1000.0)),
+            var grid = SpiceApi.Instance.ReadOrientation(new Window(TimeSystem.Time.CreateTDB(0.0), TimeSystem.Time.CreateTDB(1000.0)),
                 CkPrioritySpacecraft, TimeSpan.FromSeconds(1.0), Frames.Frame.ICRF, TimeSpan.FromSeconds(50.0)).ToArray();
             Assert.Equal(21, grid.Length);
             var (gridSpice, gridClosedForm, gridWithoutRates) = CompareCkPriorityRecords(grid, expected.Take(21).ToArray(), ReadsGap);
@@ -2251,9 +2251,9 @@ public partial class SpiceApiTest
         }
         finally
         {
-            SpiceAPI.Instance.UnloadKernels(gap);
-            SpiceAPI.Instance.UnloadKernels(rates);
-            SpiceAPI.Instance.UnloadKernels(clock);
+            SpiceApi.Instance.UnloadKernels(gap);
+            SpiceApi.Instance.UnloadKernels(rates);
+            SpiceApi.Instance.UnloadKernels(clock);
         }
     }
 
@@ -2273,13 +2273,13 @@ public partial class SpiceApiTest
         var frame = new FileInfo(Path.Combine(dir.FullName, "ckprio.tf"));
         var rates = new FileInfo(Path.Combine(dir.FullName, "ckprio_rates.bc"));
         var noRates = new FileInfo(Path.Combine(dir.FullName, "ckprio_norates.bc"));
-        SpiceAPI.Instance.LoadKernels(clock);
-        SpiceAPI.Instance.LoadKernels(frame);
-        SpiceAPI.Instance.LoadKernels(rates);
-        SpiceAPI.Instance.LoadKernels(noRates);
+        SpiceApi.Instance.LoadKernels(clock);
+        SpiceApi.Instance.LoadKernels(frame);
+        SpiceApi.Instance.LoadKernels(rates);
+        SpiceApi.Instance.LoadKernels(noRates);
         try
         {
-            var transformation = SpiceAPI.Instance.TransformFrame(TimeSystem.Time.CreateTDB(500.0), Frames.Frame.ICRF, new Frames.Frame("CKPRIO_SC"));
+            var transformation = SpiceApi.Instance.TransformFrame(TimeSystem.Time.CreateTDB(500.0), Frames.Frame.ICRF, new Frames.Frame("CKPRIO_SC"));
             // sxform_c reads the CK with rates: its angular velocity, (0, 0, 1e-3) rad/s
             Assert.Equal(1.0e-3, transformation.AngularVelocity.Magnitude(), 15);
 
@@ -2295,10 +2295,10 @@ public partial class SpiceApiTest
         }
         finally
         {
-            SpiceAPI.Instance.UnloadKernels(noRates);
-            SpiceAPI.Instance.UnloadKernels(rates);
-            SpiceAPI.Instance.UnloadKernels(frame);
-            SpiceAPI.Instance.UnloadKernels(clock);
+            SpiceApi.Instance.UnloadKernels(noRates);
+            SpiceApi.Instance.UnloadKernels(rates);
+            SpiceApi.Instance.UnloadKernels(frame);
+            SpiceApi.Instance.UnloadKernels(clock);
         }
     }
 
@@ -2316,9 +2316,9 @@ public partial class SpiceApiTest
         var clock = new FileInfo(Path.Combine(dir.FullName, "ckprio.tsc"));
         var rates = new FileInfo(Path.Combine(dir.FullName, "ckprio_rates.bc"));
         var noRates = new FileInfo(Path.Combine(dir.FullName, "ckprio_norates.bc"));
-        SpiceAPI.Instance.LoadKernels(clock);
-        SpiceAPI.Instance.LoadKernels(rates);
-        SpiceAPI.Instance.LoadKernels(noRates);
+        SpiceApi.Instance.LoadKernels(clock);
+        SpiceApi.Instance.LoadKernels(rates);
+        SpiceApi.Instance.LoadKernels(noRates);
         try
         {
             var lowerPriority = Body.CspiceDirect.Ckgpav(CkPrioritySpacecraft, Body.CspiceDirect.Sce2c(CkPrioritySpacecraft, 500.0), 65536.0, "J2000");
@@ -2336,9 +2336,9 @@ public partial class SpiceApiTest
         }
         finally
         {
-            SpiceAPI.Instance.UnloadKernels(noRates);
-            SpiceAPI.Instance.UnloadKernels(rates);
-            SpiceAPI.Instance.UnloadKernels(clock);
+            SpiceApi.Instance.UnloadKernels(noRates);
+            SpiceApi.Instance.UnloadKernels(rates);
+            SpiceApi.Instance.UnloadKernels(clock);
         }
     }
 
@@ -2362,12 +2362,12 @@ public partial class SpiceApiTest
         var noRates = new FileInfo(Path.Combine(dir.FullName, "ckprio_norates.bc"));
         var first = withoutRatesLoadedLast ? rates : noRates;
         var last = withoutRatesLoadedLast ? noRates : rates;
-        SpiceAPI.Instance.LoadKernels(clock);
-        SpiceAPI.Instance.LoadKernels(first);
-        SpiceAPI.Instance.LoadKernels(last);
+        SpiceApi.Instance.LoadKernels(clock);
+        SpiceApi.Instance.LoadKernels(first);
+        SpiceApi.Instance.LoadKernels(last);
         try
         {
-            var records = SpiceAPI.Instance.ReadOrientation(new Window(TimeSystem.Time.CreateTDB(0.0), TimeSystem.Time.CreateTDB(1000.0)),
+            var records = SpiceApi.Instance.ReadOrientation(new Window(TimeSystem.Time.CreateTDB(0.0), TimeSystem.Time.CreateTDB(1000.0)),
                 CkPrioritySpacecraft, TimeSpan.FromSeconds(1.0), Frames.Frame.ECLIPTIC_J2000, TimeSpan.FromSeconds(50.0)).ToArray();
             Assert.Equal(21, records.Length);
             double worstAngle = 0.0, worstRate = 0.0;
@@ -2402,9 +2402,9 @@ public partial class SpiceApiTest
         }
         finally
         {
-            SpiceAPI.Instance.UnloadKernels(last);
-            SpiceAPI.Instance.UnloadKernels(first);
-            SpiceAPI.Instance.UnloadKernels(clock);
+            SpiceApi.Instance.UnloadKernels(last);
+            SpiceApi.Instance.UnloadKernels(first);
+            SpiceApi.Instance.UnloadKernels(clock);
         }
     }
 
@@ -2438,7 +2438,7 @@ public partial class SpiceApiTest
     [InlineData(true)]
     void WriteEphemeris_AboutACentreSpiceDoesNotName_ThrowsArgumentExceptionAndKeepsTheFile(bool withGm)
     {
-        Assert.Throws<ArgumentException>(() => SpiceAPI.Instance.GetCelestialBodyInfo(UnnamedBodyId));
+        Assert.Throws<ArgumentException>(() => SpiceApi.Instance.GetCelestialBodyInfo(UnnamedBodyId));
         var dir = Directory.CreateTempSubdirectory("ioa714we");
         var gmKernel = new FileInfo(Path.Combine(dir.FullName, "gm.tpc"));
         File.WriteAllText(gmKernel.FullName, $"KPL/PCK\n\\begindata\nBODY{UnnamedBodyId}_GM = ( 1.0E+03 )\n\\begintext\n");
@@ -2447,12 +2447,12 @@ public partial class SpiceApiTest
         var before = System.Security.Cryptography.SHA256.HashData(File.ReadAllBytes(target.FullName));
         if (withGm)
         {
-            SpiceAPI.Instance.LoadKernels(gmKernel);
+            SpiceApi.Instance.LoadKernels(gmKernel);
         }
 
         try
         {
-            var error = Assert.Throws<ArgumentException>(() => SpiceAPI.Instance.WriteEphemeris(target, -1999718, StatesAbout(new UnnamedBody())));
+            var error = Assert.Throws<ArgumentException>(() => SpiceApi.Instance.WriteEphemeris(target, -1999718, StatesAbout(new UnnamedBody())));
             Assert.Equal("stateVectors", error.ParamName);
             Assert.StartsWith($"The NAIF identifier {UnnamedBodyId} has no name in SPICE", error.Message);
             Assert.Equal(before, System.Security.Cryptography.SHA256.HashData(File.ReadAllBytes(target.FullName)));
@@ -2462,7 +2462,7 @@ public partial class SpiceApiTest
         {
             if (withGm)
             {
-                SpiceAPI.Instance.UnloadKernels(gmKernel);
+                SpiceApi.Instance.UnloadKernels(gmKernel);
             }
 
             dir.Delete(true);
@@ -2480,7 +2480,7 @@ public partial class SpiceApiTest
         try
         {
             var error = Assert.Throws<SpiceException>(() =>
-                SpiceAPI.Instance.WriteEphemeris(target, -1999719, StatesAbout(new IO.Astrodynamics.Body.CelestialBody(507))));
+                SpiceApi.Instance.WriteEphemeris(target, -1999719, StatesAbout(new IO.Astrodynamics.Body.CelestialBody(507))));
             Assert.Equal(
                 "An error occurred while writing ephemeris: CelestialItem id507 can't be read: The variable BODY507_GM could not be found in the kernel pool.",
                 error.Message);

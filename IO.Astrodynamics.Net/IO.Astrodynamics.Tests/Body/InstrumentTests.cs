@@ -163,18 +163,18 @@ namespace IO.Astrodynamics.Tests.Body
             instrument.WriteKernel(files[3]);
             foreach (var file in files.Take(4))
             {
-                SpiceAPI.Instance.LoadKernels(file);
+                SpiceApi.Instance.LoadKernels(file);
             }
 
             spacecraft.WriteEphemeris(files[4]);
-            SpiceAPI.Instance.LoadKernels(files[4]);
+            SpiceApi.Instance.LoadKernels(files[4]);
 
             spacecraft.WriteOrientation(files[5]);
-            SpiceAPI.Instance.LoadKernels(files[5]);
+            SpiceApi.Instance.LoadKernels(files[5]);
 
             try
             {
-                return SpiceAPI.Instance.FindWindowsInFieldOfViewConstraint(searchWindow, spacecraft.NaifId,
+                return SpiceApi.Instance.FindWindowsInFieldOfViewConstraint(searchWindow, spacecraft.NaifId,
                     instrument.NaifId, TestHelpers.EarthAtJ2000.NaifId, TestHelpers.EarthAtJ2000.Frame,
                     shape, Aberration.LT, step).ToArray();
             }
@@ -182,7 +182,7 @@ namespace IO.Astrodynamics.Tests.Body
             {
                 foreach (var file in files.Reverse())
                 {
-                    SpiceAPI.Instance.UnloadKernels(file);
+                    SpiceApi.Instance.UnloadKernels(file);
                 }
             }
         }
@@ -395,7 +395,7 @@ namespace IO.Astrodynamics.Tests.Body
                 files.Add(file);
             }
 
-            files.ForEach(x => SpiceAPI.Instance.LoadKernels(x));
+            files.ForEach(x => SpiceApi.Instance.LoadKernels(x));
             try
             {
                 double worst = 0.0;
@@ -403,7 +403,7 @@ namespace IO.Astrodynamics.Tests.Body
                 {
                     var o = instrument.Orientation;
                     double definition = AttitudeRecordTests.RotationAngle(v => AttitudeRecordTests.EulerToSpacecraft(o, v), v => v.Rotate(instrument.RotationToSpacecraft));
-                    var pxform = SpiceAPI.Instance.TransformFrame(start, new Frames.Frame("EUL8601_" + instrument.Name), spacecraft.Frame).Rotation;
+                    var pxform = SpiceApi.Instance.TransformFrame(start, new Frames.Frame("EUL8601_" + instrument.Name), spacecraft.Frame).Rotation;
                     double kernel = AttitudeRecordTests.RotationAngle(pxform, instrument.RotationToSpacecraft);
                     double vectors = System.Math.Max(AttitudeRecordTests.Angle(instrument.GetBoresightInSpacecraftFrame(), instrument.Boresight.Rotate(pxform)),
                         AttitudeRecordTests.Angle(instrument.GetRefVectorInSpacecraftFrame(), instrument.RefVector.Rotate(pxform)));
@@ -415,7 +415,7 @@ namespace IO.Astrodynamics.Tests.Body
             }
             finally
             {
-                files.ForEach(x => SpiceAPI.Instance.UnloadKernels(x));
+                files.ForEach(x => SpiceApi.Instance.UnloadKernels(x));
             }
         }
 
@@ -1029,7 +1029,7 @@ namespace IO.Astrodynamics.Tests.Body
             // Act
             Exception exception = null;
             System.Collections.Generic.List<Window> windows = null;
-            FrameKernelFiles.Load(ik, () => exception = Record.Exception(() => windows = SpiceAPI.Instance.FindWindowsInFieldOfViewConstraint(window, 399, id, 301,
+            FrameKernelFiles.Load(ik, () => exception = Record.Exception(() => windows = SpiceApi.Instance.FindWindowsInFieldOfViewConstraint(window, 399, id, 301,
                 new Frames.Frame("IAU_MOON"), targetShape, Aberration.None, TimeSpan.FromSeconds(60.0)).ToList()));
 
             // Assert
@@ -1072,9 +1072,9 @@ namespace IO.Astrodynamics.Tests.Body
             System.Collections.Generic.List<Window> pointWindows = null;
             FrameKernelFiles.Load(ik, () =>
             {
-                ellipsoid = Record.Exception(() => SpiceAPI.Instance.FindWindowsInFieldOfViewConstraint(window, 399, id, 301, unknown,
+                ellipsoid = Record.Exception(() => SpiceApi.Instance.FindWindowsInFieldOfViewConstraint(window, 399, id, 301, unknown,
                     ShapeType.Ellipsoid, Aberration.None, TimeSpan.FromSeconds(60.0)).ToList());
-                point = Record.Exception(() => pointWindows = SpiceAPI.Instance.FindWindowsInFieldOfViewConstraint(window, 399, id, 301, unknown,
+                point = Record.Exception(() => pointWindows = SpiceApi.Instance.FindWindowsInFieldOfViewConstraint(window, 399, id, 301, unknown,
                     ShapeType.Point, Aberration.None, TimeSpan.FromSeconds(60.0)).ToList());
             });
 
@@ -1285,7 +1285,7 @@ namespace IO.Astrodynamics.Tests.Body
                 foreach (var file in files)
                 {
                     file.Refresh();
-                    SpiceAPI.Instance.LoadKernels(file);
+                    SpiceApi.Instance.LoadKernels(file);
                     loaded.Add(file);
                 }
 
@@ -1309,7 +1309,7 @@ namespace IO.Astrodynamics.Tests.Body
             {
                 foreach (var file in loaded)
                 {
-                    SpiceAPI.Instance.UnloadKernels(file);
+                    SpiceApi.Instance.UnloadKernels(file);
                 }
 
                 foreach (var file in files)

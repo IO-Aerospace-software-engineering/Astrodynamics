@@ -47,7 +47,7 @@ using IO.Astrodynamics.SolarSystemObjects;
 using IO.Astrodynamics.TimeSystem;
 
 // Load required kernels (recursively) from your data directory
-SpiceAPI.Instance.LoadKernels(new DirectoryInfo("Data/SolarSystem"));
+SpiceApi.Instance.LoadKernels(new DirectoryInfo("Data/SolarSystem"));
 
 // Moon state relative to Earth at 2000-01-01T12:00Z, expressed in ICRF
 var earth = new CelestialBody(PlanetsAndMoons.EARTH);
@@ -107,13 +107,13 @@ You provide the kernels relevant to your scenario. A common set:
 Organize them in a directory and load them recursively:
 
 ```csharp
-SpiceAPI.Instance.LoadKernels(new DirectoryInfo("Data/SolarSystem"));
+SpiceApi.Instance.LoadKernels(new DirectoryInfo("Data/SolarSystem"));
 ```
 
 A single file works too:
 
 ```csharp
-SpiceAPI.Instance.LoadKernels(new FileInfo("de440.bsp"));
+SpiceApi.Instance.LoadKernels(new FileInfo("de440.bsp"));
 ```
 
 See the [kernel management guide](https://docs.io-aerospace.org/guides/kernel-management/) for layout and precedence rules.

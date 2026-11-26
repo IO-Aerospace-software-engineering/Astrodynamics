@@ -51,7 +51,7 @@ public sealed class PropagationSolution
     /// <summary>
     /// The maneuvers the run executed, one record each in execution order, attitudes included (decision 57 of #668,
     /// decided by S. Guillet, 2026-11-23): the values of this run, which a later run does not change, unlike those of the
-    /// definitions (decision 52). Empty for a run that executed none, a <see cref="TLEPropagator"/> solution and a
+    /// definitions (decision 52). Empty for a run that executed none, a <see cref="TlePropagator"/> solution and a
     /// solution built otherwise.
     /// </summary>
     public IReadOnlyList<ExecutedManeuver> Maneuvers { get; internal set; } = Array.AsReadOnly(Array.Empty<ExecutedManeuver>());
@@ -64,7 +64,7 @@ public sealed class PropagationSolution
 
     /// <summary>
     /// The spacecraft the propagation propagated (the instance the propagator was given), set by
-    /// <see cref="PropagatorBase"/> and <see cref="TLEPropagator"/>; null for a solution built by hand. The conjunction
+    /// <see cref="PropagatorBase"/> and <see cref="TlePropagator"/>; null for a solution built by hand. The conjunction
     /// analysis refuses a solution passed for another spacecraft (#683).
     /// </summary>
     internal Body.Spacecraft.Spacecraft Owner { get; init; }
@@ -186,7 +186,7 @@ public sealed class PropagationSolution
 
     /// <summary>
     /// The observer of the states of the solution, its central body (the Sun when the initial orbital parameters are
-    /// relative to a star or a barycenter), set by the propagator: the TLE's Earth for a <see cref="TLEPropagator"/>
+    /// relative to a star or a barycenter), set by the propagator: the TLE's Earth for a <see cref="TlePropagator"/>
     /// solution; null for a solution built by hand (decision 53 of #668, decided by S. Guillet, 2026-11-23; internal
     /// before 11.0.0).
     /// </summary>
@@ -194,7 +194,7 @@ public sealed class PropagationSolution
 
     /// <summary>
     /// The frame of the states of the solution, the inertial frame of the propagation, set by the propagator:
-    /// <see cref="Frames.Frame.TEME"/> for a <see cref="TLEPropagator"/> solution; null for a solution built by hand
+    /// <see cref="Frames.Frame.TEME"/> for a <see cref="TlePropagator"/> solution; null for a solution built by hand
     /// (decision 53 of #668, decided by S. Guillet, 2026-11-23; internal before 11.0.0).
     /// </summary>
     public Frame Frame { get; internal set; }
@@ -202,7 +202,7 @@ public sealed class PropagationSolution
     /// <summary>
     /// The options of the propagation of the state transition matrix and of the covariance;
     /// <see cref="CovariancePropagationOptions.None"/> when the propagation did not integrate them, a
-    /// <see cref="TLEPropagator"/> solution and a solution built otherwise included (decision 56 of #668, decided by S.
+    /// <see cref="TlePropagator"/> solution and a solution built otherwise included (decision 56 of #668, decided by S.
     /// Guillet, 2026-11-23: null before 11.0.0, so a test <c>== null</c> is now always false).
     /// </summary>
     public CovariancePropagationOptions CovariancePropagation { get; internal set; } = CovariancePropagationOptions.None;
@@ -215,7 +215,7 @@ public sealed class PropagationSolution
     /// <see cref="Body.CelestialBody.Atmosphere"/>), and the covariance options it ran with
     /// (<see cref="CovariancePropagationOptions.None"/> when it propagated none). Passed back to the same entry point,
     /// they repeat the run. Null for a propagation built otherwise (the constructors that take an integrator, the
-    /// builder, <see cref="TLEPropagator"/>).
+    /// builder, <see cref="TlePropagator"/>).
     /// </summary>
     public PropagationOptions Options { get; internal set; }
 
@@ -447,7 +447,7 @@ public sealed class PropagationSolution
     /// end, which reads the values at the end.</param>
     /// <exception cref="ArgumentOutOfRangeException"><paramref name="epoch"/> is outside the propagation (<see cref="Window"/>).</exception>
     /// <exception cref="InvalidOperationException">The solution was not built by a propagator: it has no observer and
-    /// frame (a <see cref="TLEPropagator"/> solution has them since 11.0.0, decision 53 of #668).</exception>
+    /// frame (a <see cref="TlePropagator"/> solution has them since 11.0.0, decision 53 of #668).</exception>
     public StateVector GetStateVector(Time epoch)
     {
         CheckWithin(epoch);

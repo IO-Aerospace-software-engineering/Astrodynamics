@@ -63,35 +63,35 @@ internal static class FieldOfViewKernels
 
         foreach (var file in texts)
         {
-            SpiceAPI.Instance.LoadKernels(file);
+            SpiceApi.Instance.LoadKernels(file);
         }
 
         var spk = File(stem + ".bsp");
         (writeEphemeris ?? spacecraft.WriteEphemeris)(spk);
-        SpiceAPI.Instance.LoadKernels(spk);
+        SpiceApi.Instance.LoadKernels(spk);
         var ck = File(stem + ".bc");
         if (orientations != null)
         {
-            SpiceAPI.Instance.WriteOrientation(ck, spacecraft.NaifId, orientations.ToArray());
+            SpiceApi.Instance.WriteOrientation(ck, spacecraft.NaifId, orientations.ToArray());
         }
         else
         {
             spacecraft.WriteOrientation(ck);
         }
 
-        SpiceAPI.Instance.LoadKernels(ck);
+        SpiceApi.Instance.LoadKernels(ck);
         foreach (var target in spacecraftTargets)
         {
             var targetSpk = File(target.Name.ToLowerInvariant() + ".bsp");
             target.WriteEphemeris(targetSpk);
-            SpiceAPI.Instance.LoadKernels(targetSpk);
+            SpiceApi.Instance.LoadKernels(targetSpk);
         }
 
         foreach (var site in siteTargets)
         {
             var siteSpk = File(site.Name.ToLowerInvariant() + ".bsp");
             site.WriteEphemeris(siteWindow, siteSpk);
-            SpiceAPI.Instance.LoadKernels(siteSpk);
+            SpiceApi.Instance.LoadKernels(siteSpk);
         }
     }
 
@@ -168,7 +168,7 @@ public sealed class PropagatedFieldOfViewCase
         var starSpk = new FileInfo(Path.Combine(KernelDirectory, "fovstar515.bsp"));
         File.Delete(starSpk.FullName);
         Star.WriteEphemeris(new FileInfo(starSpk.FullName));
-        SpiceAPI.Instance.LoadKernels(new FileInfo(starSpk.FullName));
+        SpiceApi.Instance.LoadKernels(new FileInfo(starSpk.FullName));
         Kernel = new Spacecraft(ObserverId, "FOV5151", Start, 1000.0, 3000.0, new Clock("FOV5151_CLK", 65536));
         AddInstruments(Kernel);
         KernelTarget = new Spacecraft(TargetId, "FOV5152", Start, 1000.0, 3000.0, new Clock("FOV5152_CLK", 65536));
@@ -285,7 +285,7 @@ public sealed class PropagatedFieldOfViewCase
     {
         var frame = shape == ShapeType.Point ? Frames.Frame.ICRF : TargetFrame(target);
         int targetId = Target(target, true).NaifId;
-        return SpiceAPI.Instance.FindWindowsInFieldOfViewConstraint(window ?? SearchWindow, ObserverId, ObserverId * 1000 - number, targetId, frame, shape, aberration, step)
+        return SpiceApi.Instance.FindWindowsInFieldOfViewConstraint(window ?? SearchWindow, ObserverId, ObserverId * 1000 - number, targetId, frame, shape, aberration, step)
             .ToArray();
     }
 }
@@ -607,7 +607,7 @@ public class FieldOfViewSearchTests : IClassFixture<PropagatedFieldOfViewCase>
 
     /// <summary>
     /// <see cref="Instrument.FindFieldOfViewWindows"/> (R15 of #668, lot L6) equals the former search on both paths, bit for
-    /// bit (the library's internal search and the raw <c>gftfov_c</c> of <see cref="SpiceAPI"/>, which keep its TDB labels): the target's shape an ellipsoid when it has radii, its own frame when none is given; a convergence tolerance
+    /// bit (the library's internal search and the raw <c>gftfov_c</c> of <see cref="SpiceApi"/>, which keep its TDB labels): the target's shape an ellipsoid when it has radii, its own frame when none is given; a convergence tolerance
     /// applies to the library's search and throws on <c>gftfov</c>'s, and so does a frame SPICE does not know, with the
     /// options as parameter.
     /// </summary>
@@ -617,13 +617,13 @@ public class FieldOfViewSearchTests : IClassFixture<PropagatedFieldOfViewCase>
         var earth = _case.Earth;
         var itrf = PropagatedFieldOfViewCase.TargetFrame("399");
         var options = FieldOfViewSearchOptions.Default with { Step = Step, Aberration = Aberration.LT, TargetFrame = itrf };
-        // The former windows from the paths that keep them: the library's search (internal) and the raw gftfov_c of SpiceAPI
+        // The former windows from the paths that keep them: the library's search (internal) and the raw gftfov_c of SpiceApi
         var propagated = _case.PropagatedInstrument(789);
         var kernel = _case.KernelInstrument(789);
         foreach (var (instrument, spice) in new[] { (propagated, false), (kernel, true) })
         {
             IReadOnlyList<Window> Former(Frames.Frame frame, ShapeType shape, Aberration aberration) => spice
-                ? SpiceAPI.Instance.FindWindowsInFieldOfViewConstraint(_case.SearchWindow, _case.Kernel.NaifId, kernel.NaifId, earth.NaifId, frame, shape, aberration,
+                ? SpiceApi.Instance.FindWindowsInFieldOfViewConstraint(_case.SearchWindow, _case.Kernel.NaifId, kernel.NaifId, earth.NaifId, frame, shape, aberration,
                     Step)
                 : FieldOfViewSearch.Managed(propagated, _case.SearchWindow, earth, shape, frame, aberration, Step);
             var expected = Former(itrf, ShapeType.Ellipsoid, Aberration.LT);
@@ -837,7 +837,7 @@ public class FieldOfViewSearchTests : IClassFixture<PropagatedFieldOfViewCase>
 
     /// <summary>
     /// #682: a managed spacecraft with an empty attitude record, never propagated (from a state, or from a TLE that reads
-    /// SGP4 at each epoch) or propagated by <see cref="IO.Astrodynamics.Propagator.TLEPropagator"/>, has no attitude to
+    /// SGP4 at each epoch) or propagated by <see cref="IO.Astrodynamics.Propagator.TlePropagator"/>, has no attitude to
     /// search with: the search and <see cref="Instrument.IsInFOV"/> throw, as <c>WriteOrientation</c> refuses to write its
     /// CK; before, the identity of ICRF was searched (5 windows of the Earth over 6 h for this camera). A field CSPICE
     /// rejects still throws its own error first. An attitude added to its frame lifts the refusal.
@@ -848,15 +848,15 @@ public class FieldOfViewSearchTests : IClassFixture<PropagatedFieldOfViewCase>
         var earth = _case.Earth;
         var moon = _case.Moon;
         var epoch = new TimeSystem.Time(2024, 3, 1, TimeScale.TDB);
-        var tle = new TLE("ISS", "1 25544U 98067A   21020.53488036  .00016717  00000-0  10270-3 0  9054",
+        var tle = new Tle("ISS", "1 25544U 98067A   21020.53488036  .00016717  00000-0  10270-3 0  9054",
             "2 25544  51.6423 353.0312 0000493 320.8755  39.2360 15.49309423 25703");
         var fromTle = new Spacecraft(-6822, "FOV6822", 1000.0, tle, 3000.0, new Clock("FOV6822_CLK", 65536));
         fromTle.AddCircularInstrument("CAMERA", 30.0 * IO.Astrodynamics.Constants.Deg2Rad, Vector3.VectorY, Vector3.VectorX, Vector3.Zero, naifId: -6822001, model: "fov682");
-        // Propagated by TLEPropagator, which records no attitude (#546)
+        // Propagated by TlePropagator, which records no attitude (#546)
         var byTlePropagator = new Spacecraft(-6823, "FOV6823", 1000.0, tle, 3000.0, new Clock("FOV6823_CLK", 65536));
         byTlePropagator.AddCircularInstrument("CAMERA", 30.0 * IO.Astrodynamics.Constants.Deg2Rad, Vector3.VectorY, Vector3.VectorX, Vector3.Zero, naifId: -6823001, model: "fov682");
         var tleStart = tle.Epoch.ToTDB();
-        var tleSolution = new IO.Astrodynamics.Propagator.TLEPropagator(new Window(tleStart, tleStart.AddSeconds(6.0 * 3600.0)), byTlePropagator,
+        var tleSolution = new IO.Astrodynamics.Propagator.TlePropagator(new Window(tleStart, tleStart.AddSeconds(6.0 * 3600.0)), byTlePropagator,
             TimeSpan.FromMinutes(10.0)).Propagate();
         Assert.Equal(37, tleSolution.StateVectors.Count());
         foreach (var (spacecraft, start) in new[] { (Unpropagated(-6821, epoch), epoch), (fromTle, tleStart), (byTlePropagator, tleStart) })
@@ -1063,7 +1063,7 @@ public class FieldOfViewSearchTests : IClassFixture<PropagatedFieldOfViewCase>
         var clock = new FileInfo("Data/User/FieldOfViewSearch515/concurrent.tsc");
         File.Delete(clock.FullName);
         fresh[0].spacecraft.Clock.Write(new FileInfo(clock.FullName));
-        SpiceAPI.Instance.LoadKernels(new FileInfo(clock.FullName));
+        SpiceApi.Instance.LoadKernels(new FileInfo(clock.FullName));
         try
         {
             var ck = new FileInfo("Data/User/FieldOfViewSearch515/concurrent.bc");
@@ -1073,7 +1073,7 @@ public class FieldOfViewSearchTests : IClassFixture<PropagatedFieldOfViewCase>
         }
         finally
         {
-            SpiceAPI.Instance.UnloadKernels(new FileInfo(clock.FullName));
+            SpiceApi.Instance.UnloadKernels(new FileInfo(clock.FullName));
         }
     }
 

@@ -531,13 +531,13 @@ public class AttitudeTimelineEdgeTests
         sc.Clock.Write(clock);
         sc.Frame.Write(frame);
         sc.WriteEphemeris(spk);
-        SpiceAPI.Instance.LoadKernels(clock);
-        SpiceAPI.Instance.LoadKernels(frame);
-        SpiceAPI.Instance.LoadKernels(spk);
+        SpiceApi.Instance.LoadKernels(clock);
+        SpiceApi.Instance.LoadKernels(frame);
+        SpiceApi.Instance.LoadKernels(spk);
         try
         {
             sc.WriteOrientation(ck);
-            SpiceAPI.Instance.LoadKernels(ck);
+            SpiceApi.Instance.LoadKernels(ck);
             try
             {
                 var kernel = new Spacecraft(sc.NaifId, sc.Name, S, 1000.0, 3000.0, new Clock(sc.Name + "_CLK", 65536));
@@ -563,14 +563,14 @@ public class AttitudeTimelineEdgeTests
             }
             finally
             {
-                SpiceAPI.Instance.UnloadKernels(ck);
+                SpiceApi.Instance.UnloadKernels(ck);
             }
         }
         finally
         {
-            SpiceAPI.Instance.UnloadKernels(spk);
-            SpiceAPI.Instance.UnloadKernels(frame);
-            SpiceAPI.Instance.UnloadKernels(clock);
+            SpiceApi.Instance.UnloadKernels(spk);
+            SpiceApi.Instance.UnloadKernels(frame);
+            SpiceApi.Instance.UnloadKernels(clock);
         }
     }
 }

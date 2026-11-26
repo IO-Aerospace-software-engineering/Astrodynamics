@@ -106,14 +106,14 @@ public class PropagateTests
                 .Single());
             try
             {
-                SpiceAPI.Instance.LoadKernels(ephemeris);
-                start = SpiceAPI.Instance.ReadEphemeris(TimeSystem.Time.J2000TDB, 399, -1000, Frames.Frame.ICRF,
+                SpiceApi.Instance.LoadKernels(ephemeris);
+                start = SpiceApi.Instance.ReadEphemeris(TimeSystem.Time.J2000TDB, 399, -1000, Frames.Frame.ICRF,
                     Aberration.None);
                 gm = new Body.CelestialBody(399).GM;
             }
             finally
             {
-                SpiceAPI.Instance.UnloadKernels(ephemeris);
+                SpiceApi.Instance.UnloadKernels(ephemeris);
             }
         }
 
@@ -352,12 +352,12 @@ public class PropagateTests
     {
         try
         {
-            SpiceAPI.Instance.LoadKernels(ephemeris);
-            return SpiceAPI.Instance.ReadEphemeris(end, 399, -1000, Frames.Frame.ICRF, Aberration.None).Position;
+            SpiceApi.Instance.LoadKernels(ephemeris);
+            return SpiceApi.Instance.ReadEphemeris(end, 399, -1000, Frames.Frame.ICRF, Aberration.None).Position;
         }
         finally
         {
-            SpiceAPI.Instance.UnloadKernels(ephemeris);
+            SpiceApi.Instance.UnloadKernels(ephemeris);
         }
     }
 
@@ -377,7 +377,7 @@ public class PropagateTests
         if (activation == "t")
         {
             var lines = values.Split(',');
-            var sgp4 = new IO.Astrodynamics.OrbitalParameters.TLE.TLE("Reference", lines[0], lines[1]).ToStateVector(start);
+            var sgp4 = new IO.Astrodynamics.OrbitalParameters.TLE.Tle("Reference", lines[0], lines[1]).ToStateVector(start);
             return LibraryRunEnd(new IO.Astrodynamics.OrbitalParameters.StateVector(sgp4.Position, sgp4.Velocity, earth, start, Frames.Frame.TEME),
                 earth, start, end);
         }
@@ -434,7 +434,7 @@ public class PropagateTests
             res = CliRun.Ok(["propagate", "P675", "-K", "Data", "--output", outputDirectory, "--from", "tle", "--orbit", IssLine1, "--orbit", IssLine2,
                 "--begin", "2021-01-20T13:00:00Z", "--end", "2021-01-20T13:30:00Z", "--srp", .. LegacyDrag]);
 
-            var tle = new OrbitalParameters.TLE.TLE("ISS", IssLine1, IssLine2);
+            var tle = new OrbitalParameters.TLE.Tle("ISS", IssLine1, IssLine2);
             var t0 = window.StartDate.ToTDB();
             var cliEarth = new Body.CelestialBody(399, new Body.GeopotentialModelParameters(
                 typeof(PropagateCommand).Assembly.GetManifestResourceStream("IO.Astrodynamics.CLI.Data.EGM2008_to100_TideFree.txt"), 10),
@@ -448,21 +448,21 @@ public class PropagateTests
             var ephemeris = new FileInfo(Directory.GetFiles(outputDirectory, "P675.spk", SearchOption.AllDirectories).Single());
             try
             {
-                SpiceAPI.Instance.LoadKernels(ephemeris);
+                SpiceApi.Instance.LoadKernels(ephemeris);
                 foreach (var epoch in epochs)
                 {
-                    var fromSpk = SpiceAPI.Instance.ReadEphemeris(epoch, 399, -1000, Frames.Frame.ICRF, Aberration.None);
+                    var fromSpk = SpiceApi.Instance.ReadEphemeris(epoch, 399, -1000, Frames.Frame.ICRF, Aberration.None);
                     var expected = twin.GetEphemeris(epoch, cliEarth, Frames.Frame.ICRF, Aberration.None);
                     worst = System.Math.Max(worst, (fromSpk.Position - expected.Position).Magnitude());
                 }
 
-                var end = SpiceAPI.Instance.ReadEphemeris(epochs[^1], 399, -1000, Frames.Frame.ICRF, Aberration.None);
+                var end = SpiceApi.Instance.ReadEphemeris(epochs[^1], 399, -1000, Frames.Frame.ICRF, Aberration.None);
                 fromPointMass = (end.Position - pointMass.GetEphemeris(epochs[^1], cliEarth, Frames.Frame.ICRF, Aberration.None).Position)
                     .Magnitude();
             }
             finally
             {
-                SpiceAPI.Instance.UnloadKernels(ephemeris);
+                SpiceApi.Instance.UnloadKernels(ephemeris);
             }
         }
 
@@ -532,18 +532,18 @@ public class PropagateTests
             Vector3 end;
             try
             {
-                SpiceAPI.Instance.LoadKernels(spk);
+                SpiceApi.Instance.LoadKernels(spk);
                 foreach (var epoch in outputs)
                 {
-                    var fromSpk = SpiceAPI.Instance.ReadEphemeris(epoch, 399, -1000, Frames.Frame.ICRF, Aberration.None).Position;
+                    var fromSpk = SpiceApi.Instance.ReadEphemeris(epoch, 399, -1000, Frames.Frame.ICRF, Aberration.None).Position;
                     worst = System.Math.Max(worst, (fromSpk - spacecraft.GetEphemeris(epoch, earth, Frames.Frame.ICRF, Aberration.None).Position).Magnitude());
                 }
 
-                end = SpiceAPI.Instance.ReadEphemeris(outputs[^1], 399, -1000, Frames.Frame.ICRF, Aberration.None).Position;
+                end = SpiceApi.Instance.ReadEphemeris(outputs[^1], 399, -1000, Frames.Frame.ICRF, Aberration.None).Position;
             }
             finally
             {
-                SpiceAPI.Instance.UnloadKernels(spk);
+                SpiceApi.Instance.UnloadKernels(spk);
             }
 
             var legacy = await RunAndReadEnd("s", StateValues, "ICRF", "PLEG", outputs[^1], 10);

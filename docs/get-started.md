@@ -55,18 +55,18 @@ Then load the folder (a path given as a `string`, a `DirectoryInfo` or a `FileIn
 ```csharp
 using IO.Astrodynamics;
 
-SpiceAPI.Instance.LoadKernels(new DirectoryInfo("Data/SolarSystem"));
+SpiceApi.Instance.LoadKernels(new DirectoryInfo("Data/SolarSystem"));
 ```
 
 You can also load an individual file:
 
 ```csharp
-SpiceAPI.Instance.LoadKernels(new FileInfo("de440.bsp"));
+SpiceApi.Instance.LoadKernels(new FileInfo("de440.bsp"));
 ```
 
 A folder's files load in ordinal order of their names, component by component: where two of them define the same
 variable or cover the same object, the later file wins, on every platform. Loading a path again furnishes only its new
-files and keeps the precedence of the others; `SpiceAPI.Instance.ReloadKernels(path)` reads a path again, on top, for a
+files and keeps the precedence of the others; `SpiceApi.Instance.ReloadKernels(path)` reads a path again, on top, for a
 kernel rewritten on disk. See [Kernel Management](guides/kernel-management.md).
 
 ## Compute A Basic Ephemeris
@@ -78,7 +78,7 @@ using IO.Astrodynamics.Frames;
 using IO.Astrodynamics.TimeSystem;
 using IO.Astrodynamics.SolarSystemObjects;
 
-SpiceAPI.Instance.LoadKernels(new DirectoryInfo("Data/SolarSystem"));
+SpiceApi.Instance.LoadKernels(new DirectoryInfo("Data/SolarSystem"));
 
 var earth = PlanetsAndMoons.EARTH_BODY;
 var sun = new CelestialBody(Stars.Sun);
@@ -118,7 +118,7 @@ Console.WriteLine($"Period: {orbit.Period().TotalHours:F2} hours");
 ```csharp
 using IO.Astrodynamics.OrbitalParameters.TLE;
 
-var tle = new TLE("ISS (ZARYA)",
+var tle = new Tle("ISS (ZARYA)",
     "1 25544U 98067A   21020.53488036  .00016717  00000-0  10270-3 0  9054",
     "2 25544  51.6423 353.0312 0000493 320.8755  39.2360 15.49309423 25703");
 

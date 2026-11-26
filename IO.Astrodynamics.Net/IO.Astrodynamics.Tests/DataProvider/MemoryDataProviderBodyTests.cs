@@ -120,7 +120,7 @@ public class MemoryDataProviderBodyTests
     }
 
     /// <summary>
-    /// The static objects on SPICE, the kernels loaded before any read, against SPICE through <c>SpiceAPI</c> (the body
+    /// The static objects on SPICE, the kernels loaded before any read, against SPICE through <c>SpiceApi</c> (the body
     /// information of <c>bodvrd</c>, the state of <c>spkezr</c>), exactly.
     /// </summary>
     [Fact]
@@ -139,7 +139,7 @@ public class MemoryDataProviderBodyTests
     /// <summary>
     /// The static objects first read on an empty memory provider, then on a SPICE provider set afterwards with the kernels
     /// loaded: each read retries on the provider set at that time, and the members are SPICE's (<c>bodvrd</c>, <c>spkezr</c>
-    /// through <c>SpiceAPI</c>), exactly; once read, an object keeps the provider it read its data from, for its data and its
+    /// through <c>SpiceApi</c>), exactly; once read, an object keeps the provider it read its data from, for its data and its
     /// ephemeris. Before, the retry went back to the provider current when the class was initialized: the objects threw
     /// the memory provider's <see cref="ArgumentException"/> for the life of the process.
     /// </summary>
@@ -162,7 +162,7 @@ public class MemoryDataProviderBodyTests
     /// The static objects read on SPICE before any kernel is loaded, then after <c>LoadKernels</c>, in a fresh process: SPICE
     /// names the bodies without kernels but gives no <c>BODYnnn_GM</c> nor <c>BODYnnn_RADII</c>, and a read of a static
     /// object whose data need them throws <see cref="InvalidOperationException"/> naming the missing variable, at each read;
-    /// once the kernels are loaded, the members are SPICE's (<c>bodvrd</c>, <c>spkezr</c> through <c>SpiceAPI</c>), exactly.
+    /// once the kernels are loaded, the members are SPICE's (<c>bodvrd</c>, <c>spkezr</c> through <c>SpiceApi</c>), exactly.
     /// Before, the first read cached the zeros SPICE answered (GM 0, radii 0, J2 NaN, no orbit, the frame IAU_EARTH) for the
     /// life of the process. A first read after a partial load (the leap seconds, the GMs and the PCK) gives what SPICE gives
     /// then (J2 NaN, IAU_EARTH, IAU_MOON, no orbit), and the members follow each later change of the kernel pool: SPICE's

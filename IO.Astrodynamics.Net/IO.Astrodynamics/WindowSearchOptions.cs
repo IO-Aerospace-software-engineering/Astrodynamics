@@ -17,8 +17,8 @@ namespace IO.Astrodynamics;
 /// <see cref="ArgumentException"/> naming it. <see cref="Aberration"/> null is <see cref="IO.Astrodynamics.Aberration.None"/>.
 /// <see cref="ConvergenceTolerance"/> null is 1 µs, the tolerance of the library's search and of CSPICE's
 /// (<c>SPICE_GF_CNVTOL</c>); set on a search that CSPICE runs, which cannot take it, it throws <see cref="ArgumentException"/>.
-/// <see cref="AdjustValue"/> applies to <see cref="RelationnalOperator.AbsoluteMin"/> and
-/// <see cref="RelationnalOperator.AbsoluteMax"/> only, and throws with any other relation and on CSPICE's distance search.
+/// <see cref="AdjustValue"/> applies to <see cref="RelationalOperator.AbsoluteMin"/> and
+/// <see cref="RelationalOperator.AbsoluteMax"/> only, and throws with any other relation and on CSPICE's distance search.
 /// </para>
 /// </remarks>
 public sealed record WindowSearchOptions
@@ -58,7 +58,7 @@ public sealed record WindowSearchOptions
     }
 
     /// <summary>
-    /// For <see cref="RelationnalOperator.AbsoluteMin"/> and <see cref="RelationnalOperator.AbsoluteMax"/>, the windows
+    /// For <see cref="RelationalOperator.AbsoluteMin"/> and <see cref="RelationalOperator.AbsoluteMax"/>, the windows
     /// where the quantity is within this value of the extreme (CSPICE's <c>adjust</c>); 0 or null for the extreme
     /// itself. Set with another relation, or on CSPICE's distance search, it throws <see cref="ArgumentException"/>.
     /// </summary>
@@ -161,9 +161,9 @@ internal static class WindowSearchSettings
     /// S. Guillet, 2026-11-19).
     /// </summary>
     /// <exception cref="ArgumentException">An adjustment value is given with another relation (<c>options</c>).</exception>
-    internal static void CheckAdjustValue(WindowSearchOptions options, RelationnalOperator relationalOperator)
+    internal static void CheckAdjustValue(WindowSearchOptions options, RelationalOperator relationalOperator)
     {
-        if (options.AdjustValue.HasValue && relationalOperator is not (RelationnalOperator.AbsoluteMin or RelationnalOperator.AbsoluteMax))
+        if (options.AdjustValue.HasValue && relationalOperator is not (RelationalOperator.AbsoluteMin or RelationalOperator.AbsoluteMax))
         {
             throw new ArgumentException(
                 $"WindowSearchOptions.AdjustValue applies to AbsoluteMin and AbsoluteMax only, not to {relationalOperator}: leave it null.", "options");

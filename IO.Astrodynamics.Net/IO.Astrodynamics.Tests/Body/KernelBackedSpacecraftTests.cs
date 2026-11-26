@@ -85,7 +85,7 @@ public class KernelBackedSpacecraftTests
 
         try
         {
-            SpiceAPI.Instance.LoadKernels(spkFile);
+            SpiceApi.Instance.LoadKernels(spkFile);
 
             var sc = new Spacecraft(-9901, "KernelSC_Construct",
                 epoch: TimeSystem.Time.J2000TDB);
@@ -100,7 +100,7 @@ public class KernelBackedSpacecraftTests
         }
         finally
         {
-            SpiceAPI.Instance.UnloadKernels(spkFile);
+            SpiceApi.Instance.UnloadKernels(spkFile);
         }
     }
 
@@ -111,7 +111,7 @@ public class KernelBackedSpacecraftTests
 
         try
         {
-            SpiceAPI.Instance.LoadKernels(spkFile);
+            SpiceApi.Instance.LoadKernels(spkFile);
 
             var sc = new Spacecraft(-9902, "KernelSC_SpiceBacked",
                 epoch: TimeSystem.Time.J2000TDB);
@@ -120,7 +120,7 @@ public class KernelBackedSpacecraftTests
         }
         finally
         {
-            SpiceAPI.Instance.UnloadKernels(spkFile);
+            SpiceApi.Instance.UnloadKernels(spkFile);
         }
     }
 
@@ -131,7 +131,7 @@ public class KernelBackedSpacecraftTests
 
         try
         {
-            SpiceAPI.Instance.LoadKernels(spkFile);
+            SpiceApi.Instance.LoadKernels(spkFile);
 
             var sc = new Spacecraft(-9903, "KernelSC_Eph",
                 epoch: TimeSystem.Time.J2000TDB);
@@ -143,7 +143,7 @@ public class KernelBackedSpacecraftTests
             var scEphemeris = sc.GetEphemeris(epoch, earth, Frames.Frame.ICRF, Aberration.None);
 
             // Get ephemeris directly from SPICE
-            var spiceEphemeris = SpiceAPI.Instance.ReadEphemeris(epoch, earth.NaifId, sc.NaifId, Frames.Frame.ICRF, Aberration.None);
+            var spiceEphemeris = SpiceApi.Instance.ReadEphemeris(epoch, earth.NaifId, sc.NaifId, Frames.Frame.ICRF, Aberration.None);
 
             // Should match to machine precision
             Assert.Equal(spiceEphemeris.Position.X, scEphemeris.Position.X, 6);
@@ -155,7 +155,7 @@ public class KernelBackedSpacecraftTests
         }
         finally
         {
-            SpiceAPI.Instance.UnloadKernels(spkFile);
+            SpiceApi.Instance.UnloadKernels(spkFile);
         }
     }
 
@@ -166,7 +166,7 @@ public class KernelBackedSpacecraftTests
 
         try
         {
-            SpiceAPI.Instance.LoadKernels(spkFile);
+            SpiceApi.Instance.LoadKernels(spkFile);
 
             var sc = new Spacecraft(-9904, "KernelSC_GeoState",
                 epoch: TimeSystem.Time.J2000TDB);
@@ -178,7 +178,7 @@ public class KernelBackedSpacecraftTests
             var scState = sc.GetGeometricStateRelativeTo(epoch, earth);
 
             // Get state directly from SPICE
-            var spiceState = SpiceAPI.Instance.ReadEphemeris(epoch, earth.NaifId, sc.NaifId, Frames.Frame.ICRF, Aberration.None);
+            var spiceState = SpiceApi.Instance.ReadEphemeris(epoch, earth.NaifId, sc.NaifId, Frames.Frame.ICRF, Aberration.None);
 
             Assert.Equal(spiceState.Position.X, scState.Position.X, 6);
             Assert.Equal(spiceState.Position.Y, scState.Position.Y, 6);
@@ -189,7 +189,7 @@ public class KernelBackedSpacecraftTests
         }
         finally
         {
-            SpiceAPI.Instance.UnloadKernels(spkFile);
+            SpiceApi.Instance.UnloadKernels(spkFile);
         }
     }
 
@@ -204,7 +204,7 @@ public class KernelBackedSpacecraftTests
 
         try
         {
-            SpiceAPI.Instance.LoadKernels(spkFile);
+            SpiceApi.Instance.LoadKernels(spkFile);
 
             var sc = new Spacecraft(-9905, "KernelSC_PropThrow",
                 epoch: TimeSystem.Time.J2000TDB);
@@ -215,7 +215,7 @@ public class KernelBackedSpacecraftTests
         }
         finally
         {
-            SpiceAPI.Instance.UnloadKernels(spkFile);
+            SpiceApi.Instance.UnloadKernels(spkFile);
         }
     }
 
@@ -226,7 +226,7 @@ public class KernelBackedSpacecraftTests
 
         try
         {
-            SpiceAPI.Instance.LoadKernels(spkFile);
+            SpiceApi.Instance.LoadKernels(spkFile);
 
             var sc = new Spacecraft(-9907, "KernelSC_WriteThrow",
                 epoch: TimeSystem.Time.J2000TDB);
@@ -236,7 +236,7 @@ public class KernelBackedSpacecraftTests
         }
         finally
         {
-            SpiceAPI.Instance.UnloadKernels(spkFile);
+            SpiceApi.Instance.UnloadKernels(spkFile);
         }
     }
 
@@ -247,7 +247,7 @@ public class KernelBackedSpacecraftTests
 
         try
         {
-            SpiceAPI.Instance.LoadKernels(spkFile);
+            SpiceApi.Instance.LoadKernels(spkFile);
 
             var sc = new Spacecraft(-9908, "KernelSC_AddStatesThrow",
                 epoch: TimeSystem.Time.J2000TDB);
@@ -258,7 +258,7 @@ public class KernelBackedSpacecraftTests
         }
         finally
         {
-            SpiceAPI.Instance.UnloadKernels(spkFile);
+            SpiceApi.Instance.UnloadKernels(spkFile);
         }
     }
 
@@ -280,7 +280,7 @@ public class KernelBackedSpacecraftTests
 
         try
         {
-            SpiceAPI.Instance.LoadKernels(spkFile);
+            SpiceApi.Instance.LoadKernels(spkFile);
 
             var sc = new Spacecraft(-9909, "KernelSC_Observer",
                 epoch: TimeSystem.Time.J2000TDB);
@@ -295,7 +295,7 @@ public class KernelBackedSpacecraftTests
         }
         finally
         {
-            SpiceAPI.Instance.UnloadKernels(spkFile);
+            SpiceApi.Instance.UnloadKernels(spkFile);
         }
     }
 
@@ -306,7 +306,7 @@ public class KernelBackedSpacecraftTests
 
         try
         {
-            SpiceAPI.Instance.LoadKernels(spkFile);
+            SpiceApi.Instance.LoadKernels(spkFile);
 
             var kernelSc = new Spacecraft(-9910, "KernelSC_NonSpiceObs",
                 epoch: TimeSystem.Time.J2000TDB);
@@ -321,7 +321,7 @@ public class KernelBackedSpacecraftTests
         }
         finally
         {
-            SpiceAPI.Instance.UnloadKernels(spkFile);
+            SpiceApi.Instance.UnloadKernels(spkFile);
         }
     }
 
@@ -338,7 +338,7 @@ public class KernelBackedSpacecraftTests
         var spkFile = CreateTestSpk(-9911, "KernelSC_HardBodyRadius" + BitConverter.DoubleToInt64Bits(hardBodyRadius).ToString("X"));
         try
         {
-            SpiceAPI.Instance.LoadKernels(spkFile);
+            SpiceApi.Instance.LoadKernels(spkFile);
             Spacecraft Create() => new(-9911, "KernelSC_HardBodyRadius", epoch: TimeSystem.Time.J2000TDB,
                 hardBodyRadius: hardBodyRadius);
 
@@ -354,7 +354,7 @@ public class KernelBackedSpacecraftTests
         }
         finally
         {
-            SpiceAPI.Instance.UnloadKernels(spkFile);
+            SpiceApi.Instance.UnloadKernels(spkFile);
         }
     }
 
@@ -427,7 +427,7 @@ public class KernelBackedSpacecraftTests
             // FileInfo caches Exists, and LoadKernels loads nothing for a path it believes absent
             kernel.Refresh();
             Assert.True(kernel.Exists, kernel.FullName);
-            SpiceAPI.Instance.LoadKernels(kernel);
+            SpiceApi.Instance.LoadKernels(kernel);
             _loaded.Add(kernel);
         }
 
@@ -435,7 +435,7 @@ public class KernelBackedSpacecraftTests
         {
             for (int i = _loaded.Count - 1; i >= 0; i--)
             {
-                SpiceAPI.Instance.UnloadKernels(_loaded[i]);
+                SpiceApi.Instance.UnloadKernels(_loaded[i]);
             }
         }
     }
@@ -456,7 +456,7 @@ public class KernelBackedSpacecraftTests
 
         // Act
         var instrument = kernels.Spacecraft.Instruments.Single();
-        var spice = SpiceAPI.Instance.TransformFrame(KSatRead, new Frames.Frame("KSAT_CAMERA"), Frames.Frame.ICRF).Rotation;
+        var spice = SpiceApi.Instance.TransformFrame(KSatRead, new Frames.Frame("KSAT_CAMERA"), Frames.Frame.ICRF).Rotation;
         var managed = kernels.Spacecraft.Frame.GetStateOrientationToICRF(KSatRead).Rotation * instrument.RotationToSpacecraft;
 
         // Assert
@@ -484,7 +484,7 @@ public class KernelBackedSpacecraftTests
 
         // Assert: the twin's frame keeps its name
         Assert.Equal("SatK_FRAME", twin.Frame.Name);
-        var spice = SpiceAPI.Instance.TransformFrame(KSatRead, new Frames.Frame("KSAT_FRAME"), Frames.Frame.ICRF).Rotation;
+        var spice = SpiceApi.Instance.TransformFrame(KSatRead, new Frames.Frame("KSAT_FRAME"), Frames.Frame.ICRF).Rotation;
         Assert.Equal(0.0, AttitudeRecordTests.RotationAngle(spice, read));
         var orientation = twin.GetOrientation(Frames.Frame.ICRF, KSatRead);
         var managed = kernels.Spacecraft.GetOrientation(Frames.Frame.ICRF, KSatRead);
@@ -509,7 +509,7 @@ public class KernelBackedSpacecraftTests
         var read = twin.Frame.GetStateOrientationToICRF(KSatRead).Rotation;
 
         // Assert
-        var spice = SpiceAPI.Instance.TransformFrame(KSatRead, new Frames.Frame("KSAT_BUS"), Frames.Frame.ICRF).Rotation;
+        var spice = SpiceApi.Instance.TransformFrame(KSatRead, new Frames.Frame("KSAT_BUS"), Frames.Frame.ICRF).Rotation;
         Assert.Equal(0.0, AttitudeRecordTests.RotationAngle(spice, read));
         Assert.Equal("KSat_FRAME", twin.Frame.Name);
         double angle = AttitudeRecordTests.RotationAngle(kernels.Spacecraft.Frame.GetStateOrientationToICRF(KSatRead).Rotation, read);
@@ -570,7 +570,7 @@ public class KernelBackedSpacecraftTests
                 TestHelpers.EarthAtJ2000, epoch, Frames.Frame.ICRF);
         }
 
-        SpiceAPI.Instance.WriteEphemeris(spkFile, naifId, states);
+        SpiceApi.Instance.WriteEphemeris(spkFile, naifId, states);
         return spkFile;
     }
 

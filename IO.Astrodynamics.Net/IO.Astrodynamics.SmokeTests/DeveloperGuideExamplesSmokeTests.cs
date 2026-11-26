@@ -26,7 +26,7 @@ public class DeveloperGuideExamplesSmokeTests
     public DeveloperGuideExamplesSmokeTests(ITestOutputHelper output)
     {
         _output = output;
-        SpiceAPI.Instance.LoadKernels(SolarSystemKernelPath);
+        SpiceApi.Instance.LoadKernels(SolarSystemKernelPath);
     }
 
     /// <summary>
@@ -58,7 +58,7 @@ public class DeveloperGuideExamplesSmokeTests
         // Find visibility windows
         var windows = moon.FindDistanceWindows(
             new Window(new Time(2024, 1, 1, TimeScale.TDB), new Time(2024, 1, 2, TimeScale.TDB)),
-            mySite, RelationnalOperator.Lower, 400000000,
+            mySite, RelationalOperator.LessThan, 400000000,
             new WindowSearchOptions { Step = TimeSpan.FromMinutes(10), Aberration = Aberration.LT });
 
         _output.WriteLine($"Range {horizontal.Range:R} m, {horizontal.Range - 399039486.050:E3} m from spkcpo; {string.Join(", ", windows)}");
@@ -79,7 +79,7 @@ public class DeveloperGuideExamplesSmokeTests
     public void TheTleTrackingExampleRuns()
     {
         var earth = PlanetsAndMoons.EARTH_BODY;
-        var issTLE = new TLE(
+        var issTLE = new Tle(
             "ISS (ZARYA)",
             "1 25544U 98067A   24153.17509025  .00020162  00000+0  35104-3 0  9990",
             "2 25544  51.6393  34.6631 0005642 260.2910 238.1766 15.50732314456064"
@@ -98,7 +98,7 @@ public class DeveloperGuideExamplesSmokeTests
         var visibilityWindows = iss.FindDistanceWindows(
             new Window(trackStart, trackEnd),
             goldstone,
-            RelationnalOperator.Lower,
+            RelationalOperator.LessThan,
             2000000,  // Within 2000 km
             new WindowSearchOptions { Step = TimeSpan.FromMinutes(1), Aberration = Aberration.LT }
         );

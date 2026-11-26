@@ -278,7 +278,7 @@ namespace IO.Astrodynamics.Maneuver
             //maneuver window sets the earliest epoch of the next maneuver in the chain.
             //They count TDB seconds from the epoch of the state; a propagation about the Earth counts them again in TT
             //seconds from the time argument of its event, and replaces the gate of the next maneuver with that end (#547).
-            var thrustDuration = Tsiolkovski.DeltaT(Engine.ISP, Engine.FuelTank.Spacecraft.GetTotalMass() + FuelBurned, Engine.FuelFlow, DeltaV.Magnitude());
+            var thrustDuration = Tsiolkovsky.DeltaT(Engine.ISP, Engine.FuelTank.Spacecraft.GetTotalMass() + FuelBurned, Engine.FuelFlow, DeltaV.Magnitude());
             ThrustLead = ThrustLeadFraction(DeltaV.Magnitude(), Engine.ISP);
             ThrustWindow = new Window(stateVector.Epoch - thrustDuration * ThrustLead, thrustDuration);
             ManeuverWindow = new Window(ThrustWindow.Value.StartDate, HoldDuration).Hull(ThrustWindow.Value);

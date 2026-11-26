@@ -380,7 +380,7 @@ public class StarVelocityTests
     /// Barnard's star from its Gaia DR3 record (the example of <c>docs/reference/stars.md</c>) seen from the Earth on
     /// 2026-11-17 and over a year: the velocity of <see cref="Star.GetEphemeris"/> without aberration is the star's space
     /// velocity written here minus the Earth's velocity from the solar system barycenter read from SPICE
-    /// (<see cref="SpiceAPI.ReadEphemeris(TimeSystem.Time, int, int, Frames.Frame, Aberration)"/>), and so is the range rate
+    /// (<see cref="SpiceApi.ReadEphemeris(TimeSystem.Time, int, int, Frames.Frame, Aberration)"/>), and so is the range rate
     /// along the direction. Before, the velocity was the opposite of the Earth's alone, 89 km/s (the star's speed) away.
     /// </summary>
     [Fact]
@@ -405,7 +405,7 @@ public class StarVelocityTests
             var state = barnard.GetEphemeris(epoch, earth, Frames.Frame.ICRF, Aberration.None);
 
             // Assert
-            var earthVelocity = SpiceAPI.Instance.ReadEphemeris(epoch, 0, 399, Frames.Frame.ICRF, Aberration.None).Velocity;
+            var earthVelocity = SpiceApi.Instance.ReadEphemeris(epoch, 0, 399, Frames.Frame.ICRF, Aberration.None).Velocity;
             var expected = starVelocity - earthVelocity;
             double velocity = (state.Velocity - expected).Magnitude() / expected.Magnitude();
             var direction = state.Position / state.Position.Magnitude();
@@ -450,7 +450,7 @@ public class StarVelocityTests
     /// A state whose observer is a star (Barnard's star from Gaia DR3), converted to the Sun by
     /// <see cref="IO.Astrodynamics.OrbitalParameters.OrbitalParameters.RelativeTo"/> on 2026-11-17 and over a year: its velocity is the
     /// state's velocity plus the star's space velocity written here minus the Sun's velocity from the solar system
-    /// barycenter read from SPICE (<see cref="SpiceAPI.ReadEphemeris(TimeSystem.Time, int, int, Frames.Frame, Aberration)"/>);
+    /// barycenter read from SPICE (<see cref="SpiceApi.ReadEphemeris(TimeSystem.Time, int, int, Frames.Frame, Aberration)"/>);
     /// its position the state's plus the star's position from the barycenter (<see cref="Star.GetEquatorialCoordinates"/>,
     /// which #731 does not change) minus the Sun's from SPICE. A behaviour change of #731 on every path where a star is an
     /// observer (Changed entry of 11.0.0): before, the star's velocity was zero, so the converted velocity lacked the star's
@@ -475,7 +475,7 @@ public class StarVelocityTests
             var aboutSun = aboutStar.RelativeTo(sun, Aberration.None).ToStateVector();
 
             // Assert
-            var sunSsb = SpiceAPI.Instance.ReadEphemeris(epoch, 0, 10, Frames.Frame.ICRF, Aberration.None);
+            var sunSsb = SpiceApi.Instance.ReadEphemeris(epoch, 0, 10, Frames.Frame.ICRF, Aberration.None);
             var starSsb = barnard.GetEquatorialCoordinates(epoch).ToCartesian();
             var expectedVelocity = AboutStarVelocity + starVelocity - sunSsb.Velocity;
             var expectedPosition = AboutStarPosition + starSsb - sunSsb.Position;
@@ -516,7 +516,7 @@ public class StarVelocityTests
             var state = earth.GetEphemeris(epoch, barnard, Frames.Frame.ICRF, Aberration.None);
 
             // Assert
-            var earthSsb = SpiceAPI.Instance.ReadEphemeris(epoch, 0, 399, Frames.Frame.ICRF, Aberration.None);
+            var earthSsb = SpiceApi.Instance.ReadEphemeris(epoch, 0, 399, Frames.Frame.ICRF, Aberration.None);
             var expectedVelocity = earthSsb.Velocity - starVelocity;
             var expectedPosition = earthSsb.Position - barnard.GetEquatorialCoordinates(epoch).ToCartesian();
             double velocity = (state.Velocity - expectedVelocity).Magnitude() / expectedVelocity.Magnitude();
@@ -554,7 +554,7 @@ public class StarVelocityTests
         var start = spacecraft.GetEphemeris(epoch, sun, Frames.Frame.ICRF, Aberration.None);
 
         // Assert
-        var sunSsb = SpiceAPI.Instance.ReadEphemeris(epoch, 0, 10, Frames.Frame.ICRF, Aberration.None);
+        var sunSsb = SpiceApi.Instance.ReadEphemeris(epoch, 0, 10, Frames.Frame.ICRF, Aberration.None);
         var expectedVelocity = AboutStarVelocity + SpaceVelocity(barnard) - sunSsb.Velocity;
         var expectedPosition = AboutStarPosition + barnard.GetEquatorialCoordinates(epoch).ToCartesian() - sunSsb.Position;
         double velocity = (start.Velocity - expectedVelocity).Magnitude() / expectedVelocity.Magnitude();
@@ -577,7 +577,7 @@ public class StarVelocityTests
 
     /// <summary>
     /// The SPK of a propagated star holds its space velocity: <see cref="Star.WriteEphemeris"/> after
-    /// <see cref="Star.Propagate"/>, loaded and read by SPICE (<c>spkezr</c> through <see cref="SpiceAPI.ReadEphemeris(TimeSystem.Time, int, int, Frames.Frame, Aberration)"/>)
+    /// <see cref="Star.Propagate"/>, loaded and read by SPICE (<c>spkezr</c> through <see cref="SpiceApi.ReadEphemeris(TimeSystem.Time, int, int, Frames.Frame, Aberration)"/>)
     /// at the epochs of the grid, the synthetic star of the suite and Barnard's star from Gaia DR3, against the space
     /// velocity written here. Before, a zero velocity in the SPK.
     /// </summary>
@@ -606,14 +606,14 @@ public class StarVelocityTests
 
             // Act
             star.WriteEphemeris(spk);
-            SpiceAPI.Instance.LoadKernels(spk);
+            SpiceApi.Instance.LoadKernels(spk);
             try
             {
                 // Assert
                 var expected = SpaceVelocity(star);
                 foreach (var epoch in StarTests.Grid(window, step))
                 {
-                    var read = SpiceAPI.Instance.ReadEphemeris(epoch, 0, star.NaifId, Frames.Frame.ICRF, Aberration.None);
+                    var read = SpiceApi.Instance.ReadEphemeris(epoch, 0, star.NaifId, Frames.Frame.ICRF, Aberration.None);
                     double relative = (read.Velocity - expected).Magnitude() / expected.Magnitude();
                     _output.WriteLine($"MEASURE StarVelocityTests.TheSpkHoldsTheSpaceVelocity ({star.Name}, {epoch}): relative velocity {relative:E3}");
                     worst = System.Math.Max(worst, relative);
@@ -621,7 +621,7 @@ public class StarVelocityTests
             }
             finally
             {
-                SpiceAPI.Instance.UnloadKernels(spk);
+                SpiceApi.Instance.UnloadKernels(spk);
                 directory.Delete(true);
             }
         }

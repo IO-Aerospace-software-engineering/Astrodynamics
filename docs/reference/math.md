@@ -170,7 +170,7 @@ double sigmaX = System.Math.Sqrt(cov[0, 0]);                            // 10 m
 
 Lagrange interpolation for polynomial fitting of ephemeris data. Used internally by the ephemeris cache of a propagation (internal since 11.0.0) for 8-point interpolation of celestial body positions.
 
-## Tsiolkovski
+## Tsiolkovsky
 
 Rocket equation utilities for propulsion calculations. All methods are static.
 
@@ -181,9 +181,9 @@ Rocket equation utilities for propulsion calculations. All methods are static.
 | `DeltaM(double isp, double initialMass, double deltaV)` | Compute fuel mass consumed |
 
 ```csharp
-double dv = Tsiolkovski.DeltaV(isp: 300, initialMass: 1000, finalMass: 800);
-TimeSpan burnTime = Tsiolkovski.DeltaT(isp: 300, initialMass: 1000, fuelFlow: 0.5, deltaV: dv);
-double fuelUsed = Tsiolkovski.DeltaM(isp: 300, initialMass: 1000, deltaV: dv);
+double dv = Tsiolkovsky.DeltaV(isp: 300, initialMass: 1000, finalMass: 800);
+TimeSpan burnTime = Tsiolkovsky.DeltaT(isp: 300, initialMass: 1000, fuelFlow: 0.5, deltaV: dv);
+double fuelUsed = Tsiolkovsky.DeltaM(isp: 300, initialMass: 1000, deltaV: dv);
 ```
 
 ## Legendre Functions

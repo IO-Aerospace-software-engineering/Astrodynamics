@@ -60,7 +60,7 @@ internal static class Program
             Console.OutputEncoding = Encoding.UTF8;
             Console.WriteLine($"CULTURE {culture.Name} MINUS {CodePoints((-1).ToString())} UPPER-I {CodePoints("i".ToUpper())}");
 
-            SpiceAPI.Instance.LoadKernels(new DirectoryInfo(args[0]));
+            SpiceApi.Instance.LoadKernels(new DirectoryInfo(args[0]));
             var output = Directory.CreateDirectory(args[3]);
             switch (args[1])
             {
@@ -100,7 +100,7 @@ internal static class Program
                 var file = new FileInfo(Path.Combine(output.FullName, name));
                 try
                 {
-                    SpiceAPI.Instance.LoadKernels(file);
+                    SpiceApi.Instance.LoadKernels(file);
                     loaded.Add(file);
                     Console.WriteLine($"LOAD {name} OK");
                 }
@@ -114,7 +114,7 @@ internal static class Program
                 .Append(site.Frame.Id!.Value);
             foreach (var id in frameIds)
             {
-                Console.WriteLine($"FRAME {id.ToString(CultureInfo.InvariantCulture)} {SpiceAPI.KernelFrameNameOf(id) ?? "-"}");
+                Console.WriteLine($"FRAME {id.ToString(CultureInfo.InvariantCulture)} {SpiceApi.KernelFrameNameOf(id) ?? "-"}");
             }
 
             Console.WriteLine($"SITE-FRAME-NAME {site.Frame.Name}");
@@ -128,7 +128,7 @@ internal static class Program
         {
             foreach (var file in loaded)
             {
-                SpiceAPI.Instance.UnloadKernels(file);
+                SpiceApi.Instance.UnloadKernels(file);
             }
         }
     }

@@ -12,7 +12,7 @@ using IO.Astrodynamics.ConformanceRunner.Models;
 using IO.Astrodynamics.ConformanceRunner.Utilities;
 using IO.Astrodynamics.SolarSystemObjects;
 using IO.Astrodynamics.TimeSystem;
-using TLE = IO.Astrodynamics.OrbitalParameters.TLE.TLE;
+using Tle = IO.Astrodynamics.OrbitalParameters.TLE.Tle;
 
 namespace IO.Astrodynamics.ConformanceRunner.Solvers;
 
@@ -226,7 +226,7 @@ public sealed record PropagationCase(Window Window, Spacecraft Spacecraft, IRead
 
         if (orbit is TleOrbit tleOrbit)
         {
-            var tle = new TLE(tleOrbit.Name, tleOrbit.Line1, tleOrbit.Line2);
+            var tle = new Tle(tleOrbit.Name, tleOrbit.Line1, tleOrbit.Line2);
             var osculatingIcrf = tle.ToStateVector().ToFrame(frame).ToStateVector();
             return new StateVector(osculatingIcrf.Position, osculatingIcrf.Velocity,
                 observer, osculatingIcrf.Epoch, frame);

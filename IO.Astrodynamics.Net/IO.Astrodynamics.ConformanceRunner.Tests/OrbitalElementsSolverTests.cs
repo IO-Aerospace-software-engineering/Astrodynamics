@@ -37,7 +37,7 @@ public class OrbitalElementsSolverTests
     public OrbitalElementsSolverTests(ITestOutputHelper output)
     {
         _output = output;
-        SpiceAPI.Instance.LoadKernels(new DirectoryInfo(Lot1Fixture.KernelsPath));
+        SpiceApi.Instance.LoadKernels(new DirectoryInfo(Lot1Fixture.KernelsPath));
     }
 
     private static CaseInput Case(string orbit, string gm = Gm, string centralBody = "Earth")

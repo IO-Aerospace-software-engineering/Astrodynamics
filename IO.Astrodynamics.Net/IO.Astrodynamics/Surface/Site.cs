@@ -331,13 +331,13 @@ namespace IO.Astrodynamics.Surface
 
         // The illumination search, its arguments checked: gfilum_c for a site of the kernels, the library's search otherwise,
         // to the convergence tolerance given (1 µs when null), which gfilum_c cannot take
-        private IReadOnlyList<Window> IlluminationWindows(in Window searchWindow, IlluminationAngle illuminationType, RelationnalOperator relationalOperator,
+        private IReadOnlyList<Window> IlluminationWindows(in Window searchWindow, IlluminationAngle illuminationType, RelationalOperator relationalOperator,
             double value, double adjustValue, Aberration aberration, in TimeSpan stepSize, ILocalizable illuminationSource, TimeSpan? tolerance)
         {
             if (_isFromKernel && illuminationSource is INaifObject src)
             {
                 WindowSearchSettings.RejectToleranceOnCspice(tolerance, nameof(WindowSearchOptions), "gfilum_c");
-                return SpiceAPI.Instance.FindWindowsOnIlluminationConstraint(
+                return SpiceApi.Instance.FindWindowsOnIlluminationConstraint(
                     searchWindow, NaifId, CelestialBody.NaifId, CelestialBody.Frame,
                     Planetodetic, illuminationType, relationalOperator, value, adjustValue,
                     aberration, stepSize, src.NaifId, "ELLIPSOID");
@@ -360,8 +360,8 @@ namespace IO.Astrodynamics.Surface
         /// </summary>
         /// <remarks>
         /// The emission and phase angles are angles at the point towards an observer, which this search does not take: they
-        /// throw (#682). With an observer, search them with <see cref="SpiceAPI.FindWindowsOnIlluminationConstraint"/>
-        /// (objects of the kernels) or with <see cref="GeometryFinder.FindWindows(Window, Func{Time, double}, RelationnalOperator, double, WindowSearchOptions)"/>
+        /// throw (#682). With an observer, search them with <see cref="SpiceApi.FindWindowsOnIlluminationConstraint"/>
+        /// (objects of the kernels) or with <see cref="GeometryFinder.FindWindows(Window, Func{Time, double}, RelationalOperator, double, WindowSearchOptions)"/>
         /// on <see cref="IlluminationEmission"/> or <see cref="IlluminationPhase"/>.
         /// </remarks>
         /// <param name="window">The search window.</param>
@@ -379,14 +379,14 @@ namespace IO.Astrodynamics.Surface
         /// [0, π], or NaN: the angles are in radians (R11 of #668).</exception>
         /// <exception cref="InvalidOperationException">On the path of CSPICE, SPICE cannot run the search, with its
         /// message.</exception>
-        public IReadOnlyList<Window> FindIlluminationWindows(in Window window, IlluminationAngle angle, RelationnalOperator relationalOperator, double value,
+        public IReadOnlyList<Window> FindIlluminationWindows(in Window window, IlluminationAngle angle, RelationalOperator relationalOperator, double value,
             ILocalizable source, WindowSearchOptions options = null)
         {
             ArgumentNullException.ThrowIfNull(source);
             if (angle is IlluminationAngle.Emission or IlluminationAngle.Phase)
             {
                 throw new ArgumentException(
-                    $"The {angle} angle of {Name} is measured towards an observer, which this search does not take (it would be the site itself, where the angle is undefined). Search it with SpiceAPI.FindWindowsOnIlluminationConstraint and the observer's NAIF id, or with GeometryFinder.FindWindows on IlluminationEmission or IlluminationPhase with an observer.",
+                    $"The {angle} angle of {Name} is measured towards an observer, which this search does not take (it would be the site itself, where the angle is undefined). Search it with SpiceApi.FindWindowsOnIlluminationConstraint and the observer's NAIF id, or with GeometryFinder.FindWindows on IlluminationEmission or IlluminationPhase with an observer.",
                     nameof(angle));
             }
 
@@ -420,7 +420,7 @@ namespace IO.Astrodynamics.Surface
         /// <exception cref="ArgumentException">The step is not given, or an adjustment value is given with a relation other
         /// than an absolute extreme (<c>options</c>).</exception>
         public IReadOnlyList<Window> FindHorizontalWindows(in Window window, ILocalizable target, HorizontalCoordinate coordinate,
-            RelationnalOperator relationalOperator, double value, WindowSearchOptions options = null)
+            RelationalOperator relationalOperator, double value, WindowSearchOptions options = null)
         {
             bool extreme = GeometryFinder.IsExtremeOperator(relationalOperator);
             switch (coordinate)
@@ -442,16 +442,16 @@ namespace IO.Astrodynamics.Surface
         }
 
         // The relation of the right ascension to 2π minus a value, of the azimuth to the value
-        private static RelationnalOperator Mirrored(RelationnalOperator relationalOperator) => relationalOperator switch
+        private static RelationalOperator Mirrored(RelationalOperator relationalOperator) => relationalOperator switch
         {
-            RelationnalOperator.Greater => RelationnalOperator.Lower,
-            RelationnalOperator.Lower => RelationnalOperator.Greater,
-            RelationnalOperator.GreaterOrEqual => RelationnalOperator.LowerOrEqual,
-            RelationnalOperator.LowerOrEqual => RelationnalOperator.GreaterOrEqual,
-            RelationnalOperator.AbsoluteMin => RelationnalOperator.AbsoluteMax,
-            RelationnalOperator.AbsoluteMax => RelationnalOperator.AbsoluteMin,
-            RelationnalOperator.LocalMin => RelationnalOperator.LocalMax,
-            RelationnalOperator.LocalMax => RelationnalOperator.LocalMin,
+            RelationalOperator.GreaterThan => RelationalOperator.LessThan,
+            RelationalOperator.LessThan => RelationalOperator.GreaterThan,
+            RelationalOperator.GreaterThanOrEqual => RelationalOperator.LessThanOrEqual,
+            RelationalOperator.LessThanOrEqual => RelationalOperator.GreaterThanOrEqual,
+            RelationalOperator.AbsoluteMin => RelationalOperator.AbsoluteMax,
+            RelationalOperator.AbsoluteMax => RelationalOperator.AbsoluteMin,
+            RelationalOperator.LocalMin => RelationalOperator.LocalMax,
+            RelationalOperator.LocalMax => RelationalOperator.LocalMin,
             _ => relationalOperator
         };
 
@@ -551,19 +551,19 @@ namespace IO.Astrodynamics.Surface
 
         /// <summary>
         /// Writes the states of the site relative to its body, in the body's frame, every minute of the window, as an SPK
-        /// through the native writer (<see cref="SpiceAPI.WriteEphemeris"/>).
+        /// through the native writer (<see cref="SpiceApi.WriteEphemeris"/>).
         /// </summary>
         /// <param name="window">The window, sampled every minute from its start.</param>
-        /// <param name="outputFile">The SPK to write; a file it replaces that <see cref="SpiceAPI.LoadKernels(FileSystemInfo)"/> loaded is
+        /// <param name="outputFile">The SPK to write; a file it replaces that <see cref="SpiceApi.LoadKernels(FileSystemInfo)"/> loaded is
         /// unloaded first, and the new one is left unloaded (#706).</param>
         /// <exception cref="ArgumentException">The window gives fewer than three states (shorter than two minutes): the
         /// native writer writes three or more. The exception names <c>stateVectors</c>, the parameter of
-        /// <see cref="SpiceAPI.WriteEphemeris"/> (#706: before, a C++ exception crossed P/Invoke and ended the process). See
-        /// <see cref="SpiceAPI.WriteEphemeris"/> for the others.</exception>
+        /// <see cref="SpiceApi.WriteEphemeris"/> (#706: before, a C++ exception crossed P/Invoke and ended the process). See
+        /// <see cref="SpiceApi.WriteEphemeris"/> for the others.</exception>
         public void WriteEphemeris(Window window, FileInfo outputFile)
         {
             var ephemeris = GetEphemeris(window, CelestialBody, CelestialBody.Frame, Aberration.None, TimeSpan.FromMinutes(1.0));
-            SpiceAPI.Instance.WriteEphemeris(outputFile, NaifId, ephemeris.Select(x => x.ToStateVector()).ToArray());
+            SpiceApi.Instance.WriteEphemeris(outputFile, NaifId, ephemeris.Select(x => x.ToStateVector()).ToArray());
         }
 
         /// <summary>
@@ -582,7 +582,7 @@ namespace IO.Astrodynamics.Surface
         public IReadOnlyList<Window> FindDayWindows(in Window searchWindow, double twilight)
         {
             GeometryFinder.CheckAngle(twilight, -Constants.HalfPi, Constants.HalfPi, "[−π/2, π/2]", "twilight", nameof(twilight));
-            return FindIlluminationWindows(searchWindow, IlluminationAngle.Incidence, RelationnalOperator.Lower, Constants.HalfPi + twilight, Stars.SUN_BODY,
+            return FindIlluminationWindows(searchWindow, IlluminationAngle.Incidence, RelationalOperator.LessThan, Constants.HalfPi + twilight, Stars.SUN_BODY,
                 new WindowSearchOptions { Step = TimeSpan.FromMinutes(1.0), Aberration = Aberration.LTS });
         }
 

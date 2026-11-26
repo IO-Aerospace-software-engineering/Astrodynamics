@@ -72,7 +72,7 @@ public class CovariancePropagationBenchmarks
     [GlobalSetup]
     public void GlobalSetup()
     {
-        SpiceAPI.Instance.LoadKernels(new DirectoryInfo("Data"));
+        SpiceApi.Instance.LoadKernels(new DirectoryInfo("Data"));
         var sun = new CelestialBody(Stars.Sun);
         var moon = new CelestialBody(PlanetsAndMoons.MOON, Frame.ICRF, Epoch);
         if (Case == "R2")
@@ -174,7 +174,7 @@ public class ConjunctionCovarianceBenchmarks
     [GlobalSetup]
     public void GlobalSetup()
     {
-        SpiceAPI.Instance.LoadKernels(new DirectoryInfo("Data"));
+        SpiceApi.Instance.LoadKernels(new DirectoryInfo("Data"));
         var epoch = CovariancePropagationBenchmarks.Epoch;
         var earth = new CelestialBody(PlanetsAndMoons.EARTH, Frame.ICRF, epoch,
             new GeopotentialModelParameters(CovariancePropagationBenchmarks.GeopotentialModel, 10),

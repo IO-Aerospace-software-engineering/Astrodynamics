@@ -298,7 +298,7 @@ namespace IO.Astrodynamics.Body.Spacecraft
                 WindowSearchSettings.RejectToleranceOnCspice(options.ConvergenceTolerance, nameof(FieldOfViewSearchOptions), "gftfov_c");
                 FieldOfViewSearch.Check(this, window, target, shape, step);
                 return WindowSearchSettings.InScaleOf(
-                    SpiceAPI.Instance.FindWindowsInFieldOfViewConstraint(window, Spacecraft.NaifId, NaifId, target.NaifId, frame, shape, aberration, step), window);
+                    SpiceApi.Instance.FindWindowsInFieldOfViewConstraint(window, Spacecraft.NaifId, NaifId, target.NaifId, frame, shape, aberration, step), window);
             }
             catch (ArgumentException e) when (e.ParamName == "targetFrame")
             {
@@ -394,7 +394,7 @@ namespace IO.Astrodynamics.Body.Spacecraft
                 .Replace("{x}", Orientation.X.ToString(CultureInfo.InvariantCulture))
                 .Replace("{y}", Orientation.Y.ToString(CultureInfo.InvariantCulture))
                 .Replace("{z}", Orientation.Z.ToString(CultureInfo.InvariantCulture));
-            SpiceAPI.Instance.WriteTextKernel(outputFile, data);
+            SpiceApi.Instance.WriteTextKernel(outputFile, data);
         }
 
         /// <summary>

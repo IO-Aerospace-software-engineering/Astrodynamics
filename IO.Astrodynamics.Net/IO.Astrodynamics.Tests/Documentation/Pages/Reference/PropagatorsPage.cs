@@ -53,7 +53,7 @@ using IO.Astrodynamics.SSA;
 using IO.Astrodynamics.SolarSystemObjects;
 using IO.Astrodynamics.Surface;
 using IO.Astrodynamics.TimeSystem;
-using TLE = IO.Astrodynamics.OrbitalParameters.TLE.TLE;
+using Tle = IO.Astrodynamics.OrbitalParameters.TLE.Tle;
 
 namespace DocumentationPageSamples.Reference;
 
@@ -79,12 +79,12 @@ internal static class PropagatorsPage
         #endregion
     }
 
-    // docs/reference/propagators.md, "TLEPropagator"
+    // docs/reference/propagators.md, "TlePropagator"
     internal static void Block02(Window window, Spacecraft spacecraft, TimeSpan deltaT)
     {
         #region docs/reference/propagators.md:2
         // Inputs: window (Window), spacecraft (Spacecraft), deltaT (TimeSpan)
-        var propagator = new TLEPropagator(window, spacecraft, deltaT);
+        var propagator = new TlePropagator(window, spacecraft, deltaT);
         var solution = propagator.Propagate();
         #endregion
     }

@@ -45,7 +45,7 @@ public void MethodUnderTest_Scenario_ExpectedResult()
 ### Project-Specific Requirements
 
 For this astrodynamics project:
-1. Load the solar system kernels in test constructors through the helper, which loads them once per test process (never `SpiceAPI.Instance.LoadKernels(Constants.SolarSystemKernelPath)` there, and never unload them), when testing components that depend on ephemeris data:
+1. Load the solar system kernels in test constructors through the helper, which loads them once per test process (never `SpiceApi.Instance.LoadKernels(Constants.SolarSystemKernelPath)` there, and never unload them), when testing components that depend on ephemeris data:
    ```csharp
    public class MyTests
    {

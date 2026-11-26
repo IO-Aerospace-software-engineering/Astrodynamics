@@ -53,7 +53,7 @@ using IO.Astrodynamics.SSA;
 using IO.Astrodynamics.SolarSystemObjects;
 using IO.Astrodynamics.Surface;
 using IO.Astrodynamics.TimeSystem;
-using TLE = IO.Astrodynamics.OrbitalParameters.TLE.TLE;
+using Tle = IO.Astrodynamics.OrbitalParameters.TLE.Tle;
 
 namespace DocumentationPageSamples.Reference;
 
@@ -64,14 +64,14 @@ internal static class TlePage
     internal static void Block01()
     {
         #region docs/reference/tle.md:1
-        var tle = new TLE("ISS (ZARYA)",
+        var tle = new Tle("ISS (ZARYA)",
             "1 25544U 98067A   21020.53488036  .00016717  00000-0  10270-3 0  9054",
             "2 25544  51.6423 353.0312 0000493 320.8755  39.2360 15.49309423 25703");
         #endregion
     }
 
     // docs/reference/tle.md, "Numerical propagation of a TLE"
-    internal static void Block02(Window window, TLE tle)
+    internal static void Block02(Window window, Tle tle)
     {
         #region docs/reference/tle.md:2
         // Inputs: window (Window), tle (TLE)
@@ -86,7 +86,7 @@ internal static class TlePage
     }
 
     // docs/reference/tle.md, "Numerical propagation of a TLE", the options
-    internal static void Block03(Window window, TLE tle)
+    internal static void Block03(Window window, Tle tle)
     {
         #region docs/reference/tle.md:3
         // Inputs: window (Window), tle (TLE)
@@ -106,12 +106,12 @@ internal static class TlePage
     {
         #region docs/reference/tle.md:4
         // Inputs: catalogPath (string)
-        var catalog = TLE.LoadAll(catalogPath);
-        var iss = TLE.Parse("ISS (ZARYA)\n" +
+        var catalog = Tle.LoadAll(catalogPath);
+        var iss = Tle.Parse("ISS (ZARYA)\n" +
             "1 25544U 98067A   21020.53488036  .00016717  00000-0  10270-3 0  9054\n" +
             "2 25544  51.6423 353.0312 0000493 320.8755  39.2360 15.49309423 25703");
         // The lines again, from the properties, without slicing them
-        var again = TLE.Create(iss.ToMeanKeplerianElements(), iss.Name, iss.NoradCatalogId, iss.CosparId, iss.RevolutionNumberAtEpoch,
+        var again = Tle.Create(iss.ToMeanKeplerianElements(), iss.Name, iss.NoradCatalogId, iss.CosparId, iss.RevolutionNumberAtEpoch,
             iss.Classification, iss.BallisticCoefficient, iss.FirstDerivationMeanMotion, iss.SecondDerivativeMeanMotion,
             iss.ElementSetNumber);
         #endregion

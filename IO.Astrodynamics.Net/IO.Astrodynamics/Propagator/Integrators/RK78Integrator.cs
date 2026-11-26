@@ -564,7 +564,7 @@ public sealed class RK78Integrator : Integrator
     /// The earliest of the events detected in the last accepted step of <paramref name="segment"/> (#578): each located
     /// as <see cref="EventTime"/> does, the earliest event time kept, ties in list order; and the state at it.
     /// </summary>
-    private EventInfo LocateEarliestEvent(PropagationSegment segment, IReadOnlyList<IEventDetector> detectors,
+    private IntegrationEvent LocateEarliestEvent(PropagationSegment segment, IReadOnlyList<IEventDetector> detectors,
         int[] crossed, int count, double[] prevG, double[] currG, EventGates gates)
     {
         int index = crossed[0];
@@ -582,7 +582,7 @@ public sealed class RK78Integrator : Integrator
 
         RecordEvent(detectors[index], currG[index]);
         var (eventPos, eventVel) = StateInsideStep(segment.Steps[^1], segment.BaseEpoch, eventT);
-        return new EventInfo(index, eventT, eventPos, eventVel);
+        return new IntegrationEvent(index, eventT, eventPos, eventVel);
     }
 
     // The root of g between tStart and tEnd inside the accepted step, by bisection on the states of shortened steps

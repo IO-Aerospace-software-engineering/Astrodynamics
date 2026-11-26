@@ -141,7 +141,7 @@ public abstract class PropagatorBase : IPropagator
     /// before the window gained its end in #741 (decided by S. Guillet, 2026-11-18); a grid that rounds the window up,
     /// round(L/ΔT)·ΔT past it, ends at the window end since 11.0.0 too (R11 of #668, structuring choice 6, decided by
     /// S. Guillet, 2026-11-19: before, the propagation ran to that last output, up to ΔT/2 past the window, #626), the
-    /// rule of <see cref="TLEPropagator"/>. In both cases the outputs number round(L/ΔT) + 1, the window end replacing a
+    /// rule of <see cref="TlePropagator"/>. In both cases the outputs number round(L/ΔT) + 1, the window end replacing a
     /// grid point within ΔT/10 of it. Against a grid that rounds the window up, the last output moves in RK7(8), every other
     /// output bit for bit; in Velocity-Verlet, or an integrator without dynamics, the outputs inside the last integration
     /// step move too when the step does not divide ΔT (67 m at one output, step 100 s, about the Earth; decision 8 of lot
@@ -1502,19 +1502,19 @@ public abstract class PropagatorBase : IPropagator
 
     /// <summary>
     /// A numerical propagation starts from a state: mean elements have none without the theory they belong to (#463). A
-    /// <see cref="OrbitalParameters.TLE.TLE"/> is mean and starts from its SGP4 state (#675).
+    /// <see cref="OrbitalParameters.TLE.Tle"/> is mean and starts from its SGP4 state (#675).
     /// </summary>
     /// <exception cref="ArgumentException">The initial orbit of the spacecraft is a set of mean elements other than a
     /// TLE.</exception>
     internal static void ValidateOsculatingInitialOrbit(Spacecraft spacecraft)
     {
         var initial = spacecraft.InitialOrbitalParameters;
-        if (initial is not OrbitalParameters.TLE.TLE && initial.ElementsType == OrbitalElementsType.Mean)
+        if (initial is not OrbitalParameters.TLE.Tle && initial.ElementsType == OrbitalElementsType.Mean)
         {
             throw new ArgumentException(
                 $"The initial orbit of spacecraft {spacecraft.Name} ({spacecraft.NaifId}) is a set of mean elements, which have no " +
                 "state without the theory they belong to: a numerical propagation cannot start from them. Propagate a TLE with " +
-                "TLEPropagator, or start from its osculating state, TLE.ToOsculating().", nameof(spacecraft));
+                "TlePropagator, or start from its osculating state, Tle.ToOsculating().", nameof(spacecraft));
         }
     }
 
@@ -1546,7 +1546,7 @@ public abstract class PropagatorBase : IPropagator
     internal static OrbitalParameters.OrbitalParameters InertialInitialOrbit(OrbitalParameters.OrbitalParameters initial,
         in Time windowStart)
     {
-        if (initial is OrbitalParameters.TLE.TLE tle)
+        if (initial is OrbitalParameters.TLE.Tle tle)
         {
             var start = windowStart.ToTDB();
             var icrf = tle.ToStateVector(start).ToFrame(Frame.ICRF).ToStateVector();
@@ -1562,7 +1562,7 @@ public abstract class PropagatorBase : IPropagator
     /// osculating TEME orbit, rotated by <see cref="InertialInitialOrbit"/>, the frame of the orbit otherwise (#675).
     /// </summary>
     internal static Frame PropagationFrame(OrbitalParameters.OrbitalParameters initial) =>
-        initial is OrbitalParameters.TLE.TLE || IsOsculatingTeme(initial) ? Frame.ICRF : initial.Frame;
+        initial is OrbitalParameters.TLE.Tle || IsOsculatingTeme(initial) ? Frame.ICRF : initial.Frame;
 
     /// <summary>
     /// Whether the components of a state in <paramref name="a"/> are those of the state in <paramref name="b"/>: the same
@@ -1575,8 +1575,8 @@ public abstract class PropagatorBase : IPropagator
     private static bool IsIcrfAxes(Frame frame) => frame == Frame.ICRF || frame == Frame.GCRF;
 
     private static bool IsOsculatingTeme(OrbitalParameters.OrbitalParameters initial) =>
-        initial is not OrbitalParameters.TLE.TLE && initial.ElementsType == OrbitalElementsType.Osculating &&
-        SpiceAPI.IsTeme(initial.Frame);
+        initial is not OrbitalParameters.TLE.Tle && initial.ElementsType == OrbitalElementsType.Osculating &&
+        SpiceApi.IsTeme(initial.Frame);
 
     /// <summary>
     /// The target orbits of the impulses of a spacecraft are compared with the integrated state, in the frame the

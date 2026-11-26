@@ -354,7 +354,7 @@ public class ElementsValidationTests
             Frames.Frame.ICRF);
         var orbits = new (string Name, IO.Astrodynamics.OrbitalParameters.OrbitalParameters Orbit)[]
         {
-            ("SPICE's elements of a hyperbola", SpiceAPI.Instance.ConvertStateVectorToConicOrbitalElement(hyperbola)),
+            ("SPICE's elements of a hyperbola", SpiceApi.Instance.ConvertStateVectorToConicOrbitalElement(hyperbola)),
         };
 
         foreach (var (name, orbit) in orbits)
@@ -376,7 +376,7 @@ public class ElementsValidationTests
         var sv = new StateVector(new Vector3(r, 0.0, 0.0), new Vector3(0.0, vy, 0.0), _earth, Epoch, Frames.Frame.ICRF);
 
         // Act
-        var ke = SpiceAPI.Instance.ConvertStateVectorToConicOrbitalElement(sv);
+        var ke = SpiceApi.Instance.ConvertStateVectorToConicOrbitalElement(sv);
 
         // Assert: the elements of the state, and the period's documented OverflowException, as from the state
         Assert.True(ke.IsElliptical());

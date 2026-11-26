@@ -58,7 +58,7 @@ public class NativeAbortGuardTests
     public void GetCelestialBodyInfo_GmWithoutRadii_ReadsTheKernelGm(int id, string frameName, int frameId)
     {
         Assert.Empty(KernelTextValues.Radii(id));
-        var first = SpiceAPI.Instance.GetCelestialBodyInfo(id);
+        var first = SpiceApi.Instance.GetCelestialBodyInfo(id);
         Assert.Equal(id, first.NaifId);
         AssertKernelGm(id, first.GM);
         Assert.Equal(0.0, first.Radii.X);
@@ -68,7 +68,7 @@ public class NativeAbortGuardTests
         Assert.Equal(frameId, first.FrameId);
         for (int i = 0; i < 2; i++)
         {
-            var again = SpiceAPI.Instance.GetCelestialBodyInfo(id);
+            var again = SpiceApi.Instance.GetCelestialBodyInfo(id);
             Assert.Equal(first.GM, again.GM);
             Assert.Equal(first.FrameName, again.FrameName);
             Assert.Equal(first.FrameId, again.FrameId);
@@ -89,7 +89,7 @@ public class NativeAbortGuardTests
         var radii = KernelTextValues.Radii(id);
         for (int i = 0; i < 3; i++)
         {
-            var info = SpiceAPI.Instance.GetCelestialBodyInfo(id);
+            var info = SpiceApi.Instance.GetCelestialBodyInfo(id);
             Assert.Equal(id, info.NaifId);
             Assert.Equal(0.0, info.GM);
             Assert.Equal(radii[0], info.Radii.X);
@@ -114,8 +114,8 @@ public class NativeAbortGuardTests
     {
         for (int i = 0; i < 3; i++)
         {
-            Assert.Equal("PALLAS", SpiceAPI.Instance.GetCelestialBodyInfo(2000002).Name);
-            var e = Assert.Throws<ArgumentException>(() => SpiceAPI.Instance.GetCelestialBodyInfo(id));
+            Assert.Equal("PALLAS", SpiceApi.Instance.GetCelestialBodyInfo(2000002).Name);
+            var e = Assert.Throws<ArgumentException>(() => SpiceApi.Instance.GetCelestialBodyInfo(id));
             Assert.Equal("naifId", e.ParamName);
             Assert.Contains(id.ToString(), e.Message);
             Assert.Throws<ArgumentException>(() => new CelestialBody(id));
@@ -136,7 +136,7 @@ public class NativeAbortGuardTests
     [InlineData(395)]
     public void LagrangePoint_TheKernelsDoNotName_IsBuiltByCreateOnly(int id)
     {
-        var e = Assert.Throws<ArgumentException>(() => SpiceAPI.Instance.GetCelestialBodyInfo(id));
+        var e = Assert.Throws<ArgumentException>(() => SpiceApi.Instance.GetCelestialBodyInfo(id));
         Assert.Equal("naifId", e.ParamName);
         Assert.Throws<ArgumentException>(() => new CelestialBody(id));
         var point = Assert.IsType<LagrangePoint>(CelestialItem.Create(id));
@@ -155,8 +155,8 @@ public class NativeAbortGuardTests
     public void ReadEphemeris_FromAnUnnamedLagrangePoint_IsALagrangePoint()
     {
         var epoch = new TimeSystem.Time(2023, 1, 1, 1, 0, 0, TimeScale.TDB);
-        var reads = new[] { SpiceAPI.Instance.ReadEphemeris(epoch, 391, 399, Frames.Frame.ICRF, Aberration.None) }
-            .Concat(SpiceAPI.Instance.ReadEphemeris(new Window(epoch, epoch.AddSeconds(60.0)), 391, 399, Frames.Frame.ICRF,
+        var reads = new[] { SpiceApi.Instance.ReadEphemeris(epoch, 391, 399, Frames.Frame.ICRF, Aberration.None) }
+            .Concat(SpiceApi.Instance.ReadEphemeris(new Window(epoch, epoch.AddSeconds(60.0)), 391, 399, Frames.Frame.ICRF,
                 Aberration.None, TimeSpan.FromSeconds(60.0)).Select(x => x.ToStateVector()))
             .ToArray();
         Assert.Equal(3, reads.Length);
@@ -165,7 +165,7 @@ public class NativeAbortGuardTests
             var observer = Assert.IsType<LagrangePoint>(read.Observer);
             Assert.Equal(391, observer.NaifId);
             Assert.Equal("L1", observer.Name);
-            var reversed = SpiceAPI.Instance.ReadEphemeris(read.Epoch, 399, 391, Frames.Frame.ICRF, Aberration.None);
+            var reversed = SpiceApi.Instance.ReadEphemeris(read.Epoch, 399, 391, Frames.Frame.ICRF, Aberration.None);
             // L1 is about 1.5e9 m from the Earth: the reference is a state, not the zeros of a read SPICE refused
             Assert.True(reversed.Position.Magnitude() > 1.0e9);
             double dr = (read.Position + reversed.Position).Magnitude();
@@ -195,8 +195,8 @@ public class NativeAbortGuardTests
     public void GetCelestialBodyInfo_Barycenter_HasNoFrame(int id, string name)
     {
         // A body with a frame first, so that the stack holds its frame name
-        Assert.Equal("ITRF93", SpiceAPI.Instance.GetCelestialBodyInfo(399).FrameName);
-        var info = SpiceAPI.Instance.GetCelestialBodyInfo(id);
+        Assert.Equal("ITRF93", SpiceApi.Instance.GetCelestialBodyInfo(399).FrameName);
+        var info = SpiceApi.Instance.GetCelestialBodyInfo(id);
         Assert.Equal(id, info.NaifId);
         Assert.Equal(name, info.Name);
         Assert.Equal(string.Empty, info.FrameName);
@@ -212,9 +212,9 @@ public class NativeAbortGuardTests
         // The frame of an ellipsoid read from the record of an unnamed identifier was the stack's (#672)
         var window = new Window(TimeSystem.Time.J2000TDB, TimeSystem.Time.J2000TDB.AddSeconds(3600.0));
         var e = Assert.Throws<ArgumentException>(() => front
-            ? SpiceAPI.Instance.FindWindowsOnOccultationConstraint(window, 399, 10, ShapeType.Ellipsoid, 12345678, ShapeType.Ellipsoid,
+            ? SpiceApi.Instance.FindWindowsOnOccultationConstraint(window, 399, 10, ShapeType.Ellipsoid, 12345678, ShapeType.Ellipsoid,
                 OccultationType.Any, Aberration.None, TimeSpan.FromSeconds(60.0))
-            : SpiceAPI.Instance.FindWindowsOnOccultationConstraint(window, 399, 12345678, ShapeType.Ellipsoid, 301, ShapeType.Ellipsoid,
+            : SpiceApi.Instance.FindWindowsOnOccultationConstraint(window, 399, 12345678, ShapeType.Ellipsoid, 301, ShapeType.Ellipsoid,
                 OccultationType.Any, Aberration.None, TimeSpan.FromSeconds(60.0)));
         Assert.Equal(front ? "frontBodyId" : "targetId", e.ParamName);
         Assert.Contains("12345678", e.Message);
@@ -234,7 +234,7 @@ public class NativeAbortGuardTests
     [InlineData(1000)]
     public void GetCelestialBodyInfo_NotACelestialBody_Throws(int id)
     {
-        var e = Assert.Throws<ArgumentException>(() => SpiceAPI.Instance.GetCelestialBodyInfo(id));
+        var e = Assert.Throws<ArgumentException>(() => SpiceApi.Instance.GetCelestialBodyInfo(id));
         Assert.Equal("naifId", e.ParamName);
         Assert.Contains(id.ToString(), e.Message);
         Assert.Throws<ArgumentException>(() => new CelestialBody(id));
@@ -249,7 +249,7 @@ public class NativeAbortGuardTests
     [InlineData(499, "MARS")]
     public void GetCelestialBodyInfo_ACelestialBody_IsRead(int id, string name)
     {
-        var info = SpiceAPI.Instance.GetCelestialBodyInfo(id);
+        var info = SpiceApi.Instance.GetCelestialBodyInfo(id);
         Assert.Equal(id, info.NaifId);
         Assert.Equal(name, info.Name);
     }
@@ -260,7 +260,7 @@ public class NativeAbortGuardTests
         // The observer of the reads by identifiers is built as a celestial body: a spacecraft identifier ended the process
         var window = new Window(TimeSystem.Time.J2000TDB, TimeSystem.Time.J2000TDB.AddSeconds(60.0));
         Assert.Throws<ArgumentException>(() =>
-            SpiceAPI.Instance.ReadEphemeris(window, -82, 301, Frames.Frame.ICRF, Aberration.None, TimeSpan.FromSeconds(10.0)));
+            SpiceApi.Instance.ReadEphemeris(window, -82, 301, Frames.Frame.ICRF, Aberration.None, TimeSpan.FromSeconds(10.0)));
     }
 
     [Theory]
@@ -271,9 +271,9 @@ public class NativeAbortGuardTests
         // The frame of an ellipsoid read from the body information of a spacecraft identifier ended the process
         var window = new Window(TimeSystem.Time.J2000TDB, TimeSystem.Time.J2000TDB.AddSeconds(3600.0));
         var e = Assert.Throws<ArgumentException>(() => front
-            ? SpiceAPI.Instance.FindWindowsOnOccultationConstraint(window, 399, 10, ShapeType.Ellipsoid, -82, ShapeType.Ellipsoid,
+            ? SpiceApi.Instance.FindWindowsOnOccultationConstraint(window, 399, 10, ShapeType.Ellipsoid, -82, ShapeType.Ellipsoid,
                 OccultationType.Any, Aberration.None, TimeSpan.FromSeconds(60.0))
-            : SpiceAPI.Instance.FindWindowsOnOccultationConstraint(window, 399, -82, ShapeType.Ellipsoid, 301, ShapeType.Ellipsoid,
+            : SpiceApi.Instance.FindWindowsOnOccultationConstraint(window, 399, -82, ShapeType.Ellipsoid, 301, ShapeType.Ellipsoid,
                 OccultationType.Any, Aberration.None, TimeSpan.FromSeconds(60.0)));
         Assert.Equal(front ? "frontBodyId" : "targetId", e.ParamName);
     }
@@ -297,7 +297,7 @@ public class NativeAbortGuardTests
                 Vector3.Zero, TimeSystem.Time.J2000TDB.AddSeconds(i), i == eclipticIndex ? Frames.Frame.ECLIPTIC_J2000 : Frames.Frame.ICRF);
         }
 
-        var e = Assert.Throws<ArgumentException>(() => SpiceAPI.Instance.WriteOrientation(file, -1560, records));
+        var e = Assert.Throws<ArgumentException>(() => SpiceApi.Instance.WriteOrientation(file, -1560, records));
         Assert.Equal("stateOrientations", e.ParamName);
         file.Refresh();
         Assert.False(file.Exists);
@@ -323,14 +323,14 @@ public class NativeAbortGuardTests
         {
             var fresh = new FileInfo(Path.Combine(folder.FullName, "fresh.bsp"));
             var existing = new FileInfo(Path.Combine(folder.FullName, "existing.bsp"));
-            SpiceAPI.Instance.WriteEphemeris(existing, -1999720, EarthStates(3));
+            SpiceApi.Instance.WriteEphemeris(existing, -1999720, EarthStates(3));
             var bytes = File.ReadAllBytes(existing.FullName);
 
-            var e = Assert.Throws<ArgumentException>(() => SpiceAPI.Instance.WriteEphemeris(fresh, -1999720, states));
+            var e = Assert.Throws<ArgumentException>(() => SpiceApi.Instance.WriteEphemeris(fresh, -1999720, states));
             Assert.Equal("stateVectors", e.ParamName);
             Assert.Contains(contains, e.Message);
             Assert.False(File.Exists(fresh.FullName));
-            e = Assert.Throws<ArgumentException>(() => SpiceAPI.Instance.WriteEphemeris(existing, -1999720, states));
+            e = Assert.Throws<ArgumentException>(() => SpiceApi.Instance.WriteEphemeris(existing, -1999720, states));
             Assert.Equal("stateVectors", e.ParamName);
             Assert.Equal(bytes, File.ReadAllBytes(existing.FullName));
         }
@@ -368,7 +368,7 @@ public class NativeAbortGuardTests
 
     /// <summary>
     /// A site over 90 s: its 1-minute step gives two states, which the native writer rejected with a C++ exception (#706,
-    /// exit code 134 on c533a6e). The <see cref="ArgumentException"/> of <see cref="SpiceAPI.WriteEphemeris"/> reaches the
+    /// exit code 134 on c533a6e). The <see cref="ArgumentException"/> of <see cref="SpiceApi.WriteEphemeris"/> reaches the
     /// caller; over two minutes, three states, the site is written.
     /// </summary>
     [Fact]

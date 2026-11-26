@@ -10,7 +10,7 @@ public class EnumerationTest
     [Fact]
     public void GetValueFromDescription()
     {
-        var res = Enumeration.GetValueFromDescription<RelationnalOperator>("<");
-        Assert.Equal(RelationnalOperator.Lower, res);
+        var res = Enumeration.GetValueFromDescription<RelationalOperator>("<");
+        Assert.Equal(RelationalOperator.LessThan, res);
     }
 }

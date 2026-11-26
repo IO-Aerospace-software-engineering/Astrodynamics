@@ -15,7 +15,7 @@ using IO.Astrodynamics.SolarSystemObjects;
 using Xunit;
 using YamlDotNet.Serialization;
 using YamlDotNet.Serialization.NamingConventions;
-using TLE = IO.Astrodynamics.OrbitalParameters.TLE.TLE;
+using Tle = IO.Astrodynamics.OrbitalParameters.TLE.Tle;
 
 namespace IO.Astrodynamics.ConformanceRunner.Tests;
 
@@ -32,7 +32,7 @@ public class PropagationCaseTests
 
     public PropagationCaseTests()
     {
-        SpiceAPI.Instance.LoadKernels(new DirectoryInfo(KernelsPath));
+        SpiceApi.Instance.LoadKernels(new DirectoryInfo(KernelsPath));
     }
 
     // A case as the runner reads it from its inputs.yaml
@@ -535,7 +535,7 @@ public class PropagationCaseTests
 
         // Assert: the SGP4/SDP4 state at the epoch of the TLE, turned to the frame of the case, relative to the central
         // body of the case, which has no geopotential and no atmosphere; the defaults of the spacecraft
-        var expected = new TLE("ISS", line1, line2).ToStateVector().ToFrame(Frames.Frame.ICRF).ToStateVector();
+        var expected = new Tle("ISS", line1, line2).ToStateVector().ToFrame(Frames.Frame.ICRF).ToStateVector();
         var state = propagationCase.Spacecraft.InitialOrbitalParameters.ToStateVector();
         Assert.Equal(expected.Epoch, state.Epoch);
         Assert.Equal(expected.Position, state.Position);

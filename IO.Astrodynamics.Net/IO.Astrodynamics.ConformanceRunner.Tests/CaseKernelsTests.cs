@@ -26,7 +26,7 @@ public sealed class CaseKernelsTests : IDisposable
 
     public CaseKernelsTests()
     {
-        SpiceAPI.Instance.LoadKernels(new DirectoryInfo(Lot1Fixture.KernelsPath));
+        SpiceApi.Instance.LoadKernels(new DirectoryInfo(Lot1Fixture.KernelsPath));
         _directory = Directory.CreateTempSubdirectory("case-kernels-").FullName;
         Directory.CreateDirectory(Path.Combine(_directory, "data"));
         Assert.True(File.Exists(Path.Combine(Lot1Fixture.Root, "data", Kernel)),
@@ -46,7 +46,7 @@ public sealed class CaseKernelsTests : IDisposable
     {
         // Arrange
         var before = Itrf93();
-        var loadedBefore = SpiceAPI.Instance.GetLoadedKernels().Count();
+        var loadedBefore = SpiceApi.Instance.GetLoadedKernels().Count();
 
         // Act
         StateOrientation inside;
@@ -62,7 +62,7 @@ public sealed class CaseKernelsTests : IDisposable
         Assert.NotEqual(before.Rotation, inside.Rotation);
         Assert.Equal(before.Rotation, after.Rotation);
         Assert.Equal(before.AngularVelocity, after.AngularVelocity);
-        Assert.Equal(loadedBefore, SpiceAPI.Instance.GetLoadedKernels().Count());
+        Assert.Equal(loadedBefore, SpiceApi.Instance.GetLoadedKernels().Count());
     }
 
     [Fact]
@@ -78,24 +78,24 @@ public sealed class CaseKernelsTests : IDisposable
     [Fact]
     public void AMissingFile_IsAnError_AndNothingIsLoaded()
     {
-        var loadedBefore = SpiceAPI.Instance.GetLoadedKernels().ToArray();
+        var loadedBefore = SpiceApi.Instance.GetLoadedKernels().ToArray();
 
         var exception = Assert.Throws<InvalidOperationException>(() => new CaseKernels(_directory, new[] { Kernel, "missing.bpc" }));
 
         Assert.Contains("missing.bpc", exception.Message);
-        Assert.Equal(loadedBefore.Select(k => k.FullName), SpiceAPI.Instance.GetLoadedKernels().Select(k => k.FullName));
+        Assert.Equal(loadedBefore.Select(k => k.FullName), SpiceApi.Instance.GetLoadedKernels().Select(k => k.FullName));
     }
 
     [Fact]
     public void AGitLfsPointer_IsAnError_AndNothingIsLoaded()
     {
         File.WriteAllText(Path.Combine(_directory, "data", "pointer.bpc"), Pointer);
-        var loadedBefore = SpiceAPI.Instance.GetLoadedKernels().ToArray();
+        var loadedBefore = SpiceApi.Instance.GetLoadedKernels().ToArray();
 
         var exception = Assert.Throws<InvalidOperationException>(() => new CaseKernels(_directory, new[] { Kernel, "pointer.bpc" }));
 
         Assert.Contains("git lfs pull", exception.Message);
-        Assert.Equal(loadedBefore.Select(k => k.FullName), SpiceAPI.Instance.GetLoadedKernels().Select(k => k.FullName));
+        Assert.Equal(loadedBefore.Select(k => k.FullName), SpiceApi.Instance.GetLoadedKernels().Select(k => k.FullName));
     }
 
     [Theory]
@@ -112,26 +112,26 @@ public sealed class CaseKernelsTests : IDisposable
     [Fact]
     public void AKernelInsideASetAlreadyLoaded_IsAnError_AndTheSetStaysLoaded()
     {
-        // Arrange: data/ loaded as a whole, as the runner loads its set. SpiceAPI reloads the set for a path inside it (paths
+        // Arrange: data/ loaded as a whole, as the runner loads its set. SpiceApi reloads the set for a path inside it (paths
         // compared by components, #673), so the suite's bpc is never loaded for the case alone
         var data = new DirectoryInfo(Path.Combine(_directory, "data"));
-        SpiceAPI.Instance.LoadKernels(data);
+        SpiceApi.Instance.LoadKernels(data);
         try
         {
-            var loadedBefore = SpiceAPI.Instance.GetLoadedKernels().Select(k => k.FullName).ToArray();
+            var loadedBefore = SpiceApi.Instance.GetLoadedKernels().Select(k => k.FullName).ToArray();
 
             // Act
             var exception = Assert.IsType<InvalidOperationException>(Construct(new[] { Kernel }));
 
             // Assert: the set is listed as before, the kernel not on its own
             Assert.Contains(Kernel, exception.Message);
-            Assert.Equal(loadedBefore, SpiceAPI.Instance.GetLoadedKernels().Select(k => k.FullName));
+            Assert.Equal(loadedBefore, SpiceApi.Instance.GetLoadedKernels().Select(k => k.FullName));
             Assert.Contains(data.FullName, loadedBefore);
             Assert.DoesNotContain(Path.Combine(data.FullName, Kernel), loadedBefore);
         }
         finally
         {
-            SpiceAPI.Instance.UnloadKernels(data);
+            SpiceApi.Instance.UnloadKernels(data);
         }
     }
 
@@ -141,14 +141,14 @@ public sealed class CaseKernelsTests : IDisposable
         // Arrange: a binary PCK cut after its ID word, which SPICE fails to read and does not hold (measured with CSPICE N0067)
         File.WriteAllBytes(Path.Combine(_directory, "data", "cut.bpc"), "DAF/PCK "u8.ToArray().Concat(new byte[100]).ToArray());
         var before = Itrf93();
-        var loadedBefore = SpiceAPI.Instance.GetLoadedKernels().Select(k => k.FullName).ToArray();
+        var loadedBefore = SpiceApi.Instance.GetLoadedKernels().Select(k => k.FullName).ToArray();
 
         // Act
         var exception = Assert.IsType<SpiceException>(Construct(new[] { Kernel, "cut.bpc" }));
 
         // Assert: the suite's bpc, loaded first, is unloaded, and the runner's orientation restored bit for bit
         Assert.Contains("cut.bpc", exception.Message);
-        Assert.Equal(loadedBefore, SpiceAPI.Instance.GetLoadedKernels().Select(k => k.FullName));
+        Assert.Equal(loadedBefore, SpiceApi.Instance.GetLoadedKernels().Select(k => k.FullName));
         Assert.Equal(before.Rotation, Itrf93().Rotation);
     }
 

@@ -198,7 +198,7 @@ public class SecondsToTicksTests
     [Fact]
     public void AStateReadAtATick_IsLabelledWithThatTick()
     {
-        // SpiceAPI.ReadEphemeris(Time ...) labelled its state with the epoch CSPICE returned, made a Time again: the
+        // SpiceApi.ReadEphemeris(Time ...) labelled its state with the epoch CSPICE returned, made a Time again: the
         // neighbouring tick for about 16 % of the ticks of 2024 (the review of #625; Fraction: 2024-12-18T09:36:47.8294540
         // came back .8294539). It is labelled with the epoch asked, the instant SPICE read at, as the data provider does
         var epochs = new System.Collections.Generic.List<TimeSystem.Time>
@@ -211,7 +211,7 @@ public class SecondsToTicksTests
 
         foreach (var epoch in epochs)
         {
-            var state = SpiceAPI.Instance.ReadEphemeris(epoch, 399, 301, Frames.Frame.ICRF, Aberration.None);
+            var state = SpiceApi.Instance.ReadEphemeris(epoch, 399, 301, Frames.Frame.ICRF, Aberration.None);
             Assert.Equal(epoch.DateTime.Ticks, state.Epoch.DateTime.Ticks);
             Assert.Equal(TimeScale.TDB, state.Epoch.Scale);
         }
@@ -219,7 +219,7 @@ public class SecondsToTicksTests
         // An epoch tagged UTC is labelled with its TDB instant, as before
         var utc = new TimeSystem.Time(new DateTime(2024, 6, 1, 12, 0, 0), TimeScale.UTC);
         Assert.Equal(utc.ToTDB().DateTime.Ticks,
-            SpiceAPI.Instance.ReadEphemeris(utc, 399, 301, Frames.Frame.ICRF, Aberration.None).Epoch.DateTime.Ticks);
+            SpiceApi.Instance.ReadEphemeris(utc, 399, 301, Frames.Frame.ICRF, Aberration.None).Epoch.DateTime.Ticks);
     }
 
     [Fact]
@@ -268,7 +268,7 @@ public class SecondsToTicksTests
 
         foreach (var search in searches)
         {
-            var windows = SpiceAPI.Instance.FindWindowsOnDistanceConstraint(search, 399, 301, RelationnalOperator.Greater, 1000.0,
+            var windows = SpiceApi.Instance.FindWindowsOnDistanceConstraint(search, 399, 301, RelationalOperator.GreaterThan, 1000.0,
                 Aberration.None, TimeSpan.FromHours(6.0)).ToArray();
             Assert.Single(windows);
             Assert.Equal(search.StartDate.DateTime.Ticks, windows[0].StartDate.DateTime.Ticks);
@@ -278,7 +278,7 @@ public class SecondsToTicksTests
         // A search window tagged UTC: the window is its TDB instants
         var utc = new Window(new TimeSystem.Time(new DateTime(2024, 6, 1), TimeScale.UTC),
             new TimeSystem.Time(new DateTime(2024, 6, 2), TimeScale.UTC));
-        var inTdb = SpiceAPI.Instance.FindWindowsOnDistanceConstraint(utc, 399, 301, RelationnalOperator.Greater, 1000.0,
+        var inTdb = SpiceApi.Instance.FindWindowsOnDistanceConstraint(utc, 399, 301, RelationalOperator.GreaterThan, 1000.0,
             Aberration.None, TimeSpan.FromHours(6.0)).Single();
         Assert.Equal(utc.StartDate.ToTDB().DateTime.Ticks, inTdb.StartDate.DateTime.Ticks);
         Assert.Equal(utc.EndDate.ToTDB().DateTime.Ticks, inTdb.EndDate.DateTime.Ticks);

@@ -18,7 +18,7 @@ namespace IO.Astrodynamics.Tests.ColdStart;
 
 /// <summary>
 /// The child process of <c>ColdStartTests</c> (#623): in a fresh process, thread A calls a method of the library that
-/// takes the SpiceAPI lock while thread B reads, for the first time in the process, a static object of
+/// takes the SpiceApi lock while thread B reads, for the first time in the process, a static object of
 /// <see cref="PlanetsAndMoons"/> or <see cref="Barycenters"/> and its GM. Before #623, thread A held the lock while it
 /// waited for the type initializer of that class, which read SPICE and waited for the lock: the process hung, with no
 /// exception. Since the second round of #668 the initializers read nothing, and the GM is read from the provider at its
@@ -30,13 +30,13 @@ namespace IO.Astrodynamics.Tests.ColdStart;
 /// Arguments: the kernel directory, the mode and the schedule, then, for the schedule <c>held</c>, the hold in
 /// milliseconds. The modes, thread A then thread B:
 /// <list type="bullet">
-/// <item><c>direct</c>: <see cref="SpiceAPI.ConvertTleToStateVector(string, string, string, Time)"/>; the first read of
+/// <item><c>direct</c>: <see cref="SpiceApi.ConvertTleToStateVector(string, string, string, Time)"/>; the first read of
 /// <see cref="PlanetsAndMoons.EARTH_BODY"/> and its GM.</item>
-/// <item><c>tle</c>: <see cref="TLE.ToStateVector(Time)"/>, the TLE built before the threads start; the same read.</item>
-/// <item><c>lagrange</c>: <see cref="SpiceAPI.ReadEphemeris(Time, int, int, Frame, Aberration)"/> from L1 (391), whose
+/// <item><c>tle</c>: <see cref="Tle.ToStateVector(Time)"/>, the TLE built before the threads start; the same read.</item>
+/// <item><c>lagrange</c>: <see cref="SpiceApi.ReadEphemeris(Time, int, int, Frame, Aberration)"/> from L1 (391), whose
 /// observer is a <see cref="LagrangePoint"/>, which reads <see cref="Barycenters.EARTH_BARYCENTER"/>; the first read of
 /// <see cref="Barycenters.EARTH_BARYCENTER"/> and its GM.</item>
-/// <item><c>lagrange-window</c>: <see cref="SpiceAPI.ReadEphemeris(Window, int, int, Frame, Aberration, TimeSpan)"/> from
+/// <item><c>lagrange-window</c>: <see cref="SpiceApi.ReadEphemeris(Window, int, int, Frame, Aberration, TimeSpan)"/> from
 /// L1 over 60 s every 30 s; the same read.</item>
 /// </list>
 /// The mode <c>memory-provider</c> (#680) takes the kernel directory alone and has no thread nor schedule: the library on a
@@ -53,7 +53,7 @@ namespace IO.Astrodynamics.Tests.ColdStart;
 /// The mode <c>frame-memory</c> takes the kernel directory alone: the memory a frame retains after its reads, see
 /// <see cref="FrameMemoryChild"/> (#541).
 /// The mode <c>conversions-lock</c> (#664) takes the kernel directory alone: the element conversions and the two-body
-/// propagation of <see cref="SpiceAPI"/> on a probe provider, see <see cref="ConversionsLockChild"/>.
+/// propagation of <see cref="SpiceApi"/> on a probe provider, see <see cref="ConversionsLockChild"/>.
 /// The mode <c>ccsds-local-time</c> takes the path of a CDM and loads no kernel: the CCSDS writers in the time zone the
 /// parent gives through <c>TZ</c>, see <see cref="CcsdsLocalTimeChild"/> (#617).
 /// The mode <c>tle-text</c> takes no schedule and loads no kernel: each malformed TLE must throw the error of its text,
@@ -92,7 +92,7 @@ internal static class Program
             return MemoryProviderChild.Run(args[0]);
         }
 
-        // #664: the element conversions and the two-body propagation read nothing from the provider under the SpiceAPI lock
+        // #664: the element conversions and the two-body propagation read nothing from the provider under the SpiceApi lock
         if (args.Length == 2 && args[1] == "conversions-lock")
         {
             return ConversionsLockChild.Run(args[0]);
@@ -180,7 +180,7 @@ internal static class Program
             Configuration.Instance.SetDataProvider(provider);
         }
 
-        SpiceAPI.Instance.LoadKernels(new DirectoryInfo(args[0]));
+        SpiceApi.Instance.LoadKernels(new DirectoryInfo(args[0]));
         var epoch = new Time(2021, 1, 20, 18, 0, 0, TimeScale.UTC);
 
         Action threadA;
@@ -188,21 +188,21 @@ internal static class Program
         switch (args[1])
         {
             case "direct":
-                threadA = () => SpiceAPI.Instance.ConvertTleToStateVector(Name, Line1, Line2, epoch);
+                threadA = () => SpiceApi.Instance.ConvertTleToStateVector(Name, Line1, Line2, epoch);
                 threadB = ReadEarthBody;
                 break;
             case "tle":
-                var tle = new TLE(Name, Line1, Line2);
+                var tle = new Tle(Name, Line1, Line2);
                 threadA = () => tle.ToStateVector(epoch);
                 threadB = ReadEarthBody;
                 break;
             case "lagrange":
-                threadA = () => SpiceAPI.Instance.ReadEphemeris(epoch, 391, 399, Frame.ICRF, Aberration.None);
+                threadA = () => SpiceApi.Instance.ReadEphemeris(epoch, 391, 399, Frame.ICRF, Aberration.None);
                 threadB = ReadEarthBarycenter;
                 break;
             case "lagrange-window":
                 var window = new Window(epoch, epoch.AddSeconds(60.0));
-                threadA = () => SpiceAPI.Instance.ReadEphemeris(window, 391, 399, Frame.ICRF, Aberration.None, TimeSpan.FromSeconds(30.0));
+                threadA = () => SpiceApi.Instance.ReadEphemeris(window, 391, 399, Frame.ICRF, Aberration.None, TimeSpan.FromSeconds(30.0));
                 threadB = ReadEarthBarycenter;
                 break;
             default:
@@ -304,7 +304,7 @@ internal static class Program
         var epoch = new Time(DateTime.ParseExact(sample.GetProperty("utc").GetString(), "yyyy-MM-ddTHH:mm:ss.fffffff",
             System.Globalization.CultureInfo.InvariantCulture,
             System.Globalization.DateTimeStyles.AssumeUniversal | System.Globalization.DateTimeStyles.AdjustToUniversal), TimeScale.UTC);
-        var tle = new TLE(Name, line1, line2);
+        var tle = new Tle(Name, line1, line2);
 
         // R21 of #668: the TLE reads no kernel when it is built, its fields, MeanMeanMotion (the field in rad/s, decision 111)
         // and ToOmm (MEAN_MOTION the field) read none, and MeanSemiMajorAxis throws naming BODY399_GM, keeping nothing
@@ -319,9 +319,9 @@ internal static class Program
             },
             e => e.Message.Contains("BODY399_GM", StringComparison.Ordinal));
 
-        SpiceAPI.Instance.LoadKernels(new DirectoryInfo(kernels));
+        SpiceApi.Instance.LoadKernels(new DirectoryInfo(kernels));
         var reused = tle.ToStateVector(epoch).ToStateVector();
-        var fresh = new TLE(Name, line1, line2).ToStateVector(epoch).ToStateVector();
+        var fresh = new Tle(Name, line1, line2).ToStateVector(epoch).ToStateVector();
         var r = sample.GetProperty("r_km");
         var expected = new IO.Astrodynamics.Math.Vector3(r[0].GetDouble(), r[1].GetDouble(), r[2].GetDouble()) * 1e3;
         var delta = reused.Position - expected;
@@ -343,7 +343,7 @@ internal static class Program
         double n = tle.MeanMeanMotion;
         double expectedAxis = System.Math.Cbrt(new CelestialBody(399).GM / (n * n));
         if (BitConverter.DoubleToInt64Bits(tle.MeanSemiMajorAxis) != BitConverter.DoubleToInt64Bits(expectedAxis)
-            || BitConverter.DoubleToInt64Bits(new TLE(Name, line1, line2).MeanSemiMajorAxis) != BitConverter.DoubleToInt64Bits(expectedAxis))
+            || BitConverter.DoubleToInt64Bits(new Tle(Name, line1, line2).MeanSemiMajorAxis) != BitConverter.DoubleToInt64Bits(expectedAxis))
         {
             Console.Error.WriteLine($"the mean semi-major axis after the kernels is {tle.MeanSemiMajorAxis:R}, expected {expectedAxis:R}");
             failures++;
@@ -360,7 +360,7 @@ internal static class Program
 
     // The members of a TLE that read no kernel, checked before any is loaded: the catalog number, the mean motion of the
     // field in rad/s, ToOmm with the field's MEAN_MOTION, and ToString without the semi-major axis
-    private static int CheckTleFieldsWithoutKernels(TLE tle, string line1, string line2)
+    private static int CheckTleFieldsWithoutKernels(Tle tle, string line1, string line2)
     {
         int failures = 0;
         var field = double.Parse(line2.Substring(52, 11), System.Globalization.CultureInfo.InvariantCulture);
@@ -410,26 +410,26 @@ internal static class Program
 
         // ArgumentException naming the line, with the TleFormatException of the text (R21 of #668)
         int failures = 0;
-        failures += Expect<ArgumentException>("checksum", () => new TLE(Name, badChecksum, Line2),
+        failures += Expect<ArgumentException>("checksum", () => new Tle(Name, badChecksum, Line2),
             e => e.Message.StartsWith("Checksum validation failed for TLE line 1", StringComparison.Ordinal)
                  && e.ParamName == "line1" && e.InnerException is TleFormatException { Line: 1, Column: 69 });
-        failures += Expect<ArgumentException>("length", () => new TLE(Name, shortLine1, Line2),
+        failures += Expect<ArgumentException>("length", () => new Tle(Name, shortLine1, Line2),
             e => e.Message.StartsWith("TLE line 1 must be exactly 69 characters", StringComparison.Ordinal)
                  && e.ParamName == "line1" && e.InnerException is TleFormatException { Line: 1, Column: 69 });
-        failures += Expect<ArgumentException>("catalog number", () => new TLE(Name, Line1, otherNorad),
+        failures += Expect<ArgumentException>("catalog number", () => new Tle(Name, Line1, otherNorad),
             e => e.Message.StartsWith("NORAD catalog numbers differ", StringComparison.Ordinal)
                  && e.ParamName == "line2" && e.InnerException is TleFormatException { Line: 2, Column: 3 });
-        failures += Expect<ArgumentException>("epoch", () => new TLE(Name, "1 25544U 98067A   21400.53488036  .00016717  00000-0  10270-3 0  9056", Line2),
+        failures += Expect<ArgumentException>("epoch", () => new Tle(Name, "1 25544U 98067A   21400.53488036  .00016717  00000-0  10270-3 0  9056", Line2),
             e => e.ParamName == "line1" && e.InnerException is TleFormatException { Line: 1, Column: 19 });
-        failures += Expect<ArgumentException>("null line 1", () => new TLE(Name, null, Line2),
+        failures += Expect<ArgumentException>("null line 1", () => new Tle(Name, null, Line2),
             e => e.ParamName == "line1");
         return failures == 0 ? 0 : 1;
     }
 
     /// <summary>
     /// The modes <c>two-body-first-propagate</c> and <c>two-body-first-conic</c> (#714): with no kernel loaded, about a body
-    /// built from custom parameters (no SPICE read), <see cref="SpiceAPI.Propagate2Bodies(StateVector, double, TimeSpan)"/> or
-    /// <see cref="SpiceAPI.ConvertStateVectorToConicOrbitalElement(StateVector, double)"/> of a zero velocity is the first
+    /// built from custom parameters (no SPICE read), <see cref="SpiceApi.Propagate2Bodies(StateVector, double, TimeSpan)"/> or
+    /// <see cref="SpiceApi.ConvertStateVectorToConicOrbitalElement(StateVector, double)"/> of a zero velocity is the first
     /// native call of the process. It throws SPICE's error (prop2b.c: SPICE(ZEROVELOCITY), with no long message; oscelt.c:
     /// "Zero vector for input velocity vector."). Before, the proxy activated no error management: SPICE's default action,
     /// ABORT, printed the error and ended the process with exit code 1.
@@ -440,10 +440,10 @@ internal static class Program
             Time.J2000TDB, Frame.ICRF);
         const double gm = 3.986004418e14;
         return propagate
-            ? Expect<SpiceException>("Propagate2Bodies", () => SpiceAPI.Instance.Propagate2Bodies(sv, gm, TimeSpan.FromSeconds(60.0)),
+            ? Expect<SpiceException>("Propagate2Bodies", () => SpiceApi.Instance.Propagate2Bodies(sv, gm, TimeSpan.FromSeconds(60.0)),
                 e => e.Message.EndsWith(": SPICE(ZEROVELOCITY)", StringComparison.Ordinal))
             : Expect<SpiceException>("ConvertStateVectorToConicOrbitalElement",
-                () => SpiceAPI.Instance.ConvertStateVectorToConicOrbitalElement(sv, gm),
+                () => SpiceApi.Instance.ConvertStateVectorToConicOrbitalElement(sv, gm),
                 e => e.Message.EndsWith(": Zero vector for input velocity vector.", StringComparison.Ordinal));
     }
 
@@ -459,15 +459,15 @@ internal static class Program
     /// </summary>
     private static int CheckSpiceErrorsSilent(string kernels)
     {
-        SpiceAPI.Instance.LoadKernels(new DirectoryInfo(kernels));
+        SpiceApi.Instance.LoadKernels(new DirectoryInfo(kernels));
         var past = new Time(2160, 3, 1, 0, 0, 0, TimeScale.TDB);
         int failures = 0;
-        failures += Expect<SpiceException>("ReadEphemeris", () => SpiceAPI.Instance.ReadEphemeris(past, 399, 301, Frame.ICRF, Aberration.None),
+        failures += Expect<SpiceException>("ReadEphemeris", () => SpiceApi.Instance.ReadEphemeris(past, 399, 301, Frame.ICRF, Aberration.None),
             e => e.Message.Contains("Insufficient ephemeris data", StringComparison.Ordinal));
-        failures += Expect<SpiceException>("FindWindowsOnDistanceConstraint", () => SpiceAPI.Instance.FindWindowsOnDistanceConstraint(
-                new Window(past, past.AddDays(9.0)), 399, 301, RelationnalOperator.Greater, 4.0e8, Aberration.None, TimeSpan.FromDays(1.0)),
+        failures += Expect<SpiceException>("FindWindowsOnDistanceConstraint", () => SpiceApi.Instance.FindWindowsOnDistanceConstraint(
+                new Window(past, past.AddDays(9.0)), 399, 301, RelationalOperator.GreaterThan, 4.0e8, Aberration.None, TimeSpan.FromDays(1.0)),
             e => e.Message.Contains("Insufficient ephemeris data", StringComparison.Ordinal));
-        failures += Expect<SpiceException>("ReadOrientation", () => SpiceAPI.Instance.ReadOrientation(
+        failures += Expect<SpiceException>("ReadOrientation", () => SpiceApi.Instance.ReadOrientation(
                 new Window(Time.J2000TDB, Time.J2000TDB.AddSeconds(10.0)), -727, TimeSpan.Zero, Frame.ICRF, TimeSpan.FromSeconds(1.0)),
             e => e.Message.Length > 0);
         return failures == 0 ? 0 : 1;

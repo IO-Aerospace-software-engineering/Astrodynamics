@@ -56,13 +56,13 @@ public class CosmographiaExporter
     /// decisions 74 and 105 of #668, decided by S. Guillet, 2026-11-23 and 2026-11-25: before, a name holding a '/' was
     /// written into nested directories, and a scenario named <c>/..</c> made the export delete the whole output directory).
     /// Or the export directory <c>&lt;Mission&gt;_&lt;Scenario&gt;</c> exists and is a loaded kernel path, lies inside one or holds
-    /// one, or SPICE holds a file of it, from <see cref="SpiceAPI.LoadKernels(FileSystemInfo)"/> or a meta-kernel (#799(c),
+    /// one, or SPICE holds a file of it, from <see cref="SpiceApi.LoadKernels(FileSystemInfo)"/> or a meta-kernel (#799(c),
     /// decisions 102 and 103 of #668, decided by S. Guillet, 2026-11-25: before, the export deleted it under SPICE's load,
     /// whose text kernels stayed in the pool with the old content); unload it first.
     /// Or a kernel writer or the catalog throws (a kernel variable SPICE cannot read, a spacecraft without stored states or
     /// attitude record, a star of fewer than three stored states, the period of an open orbit). Nothing is deleted.</exception>
     /// <exception cref="ArgumentException">A kernel of the export would have a full path longer than the 255 characters
-    /// (UTF-8 bytes) of a kernel name SPICE takes, which <see cref="SpiceAPI.LoadKernels(FileSystemInfo)"/> could not load: under the output
+    /// (UTF-8 bytes) of a kernel name SPICE takes, which <see cref="SpiceApi.LoadKernels(FileSystemInfo)"/> could not load: under the output
     /// directory (parameter <c>outputDirectory</c>), or under the new directory of the system temporary directory
     /// (<see cref="Path.GetTempPath"/>) where the export writes its kernels and loads the clock kernel of each
     /// spacecraft before it copies them (no parameter). The longest is usually the CK of a spacecraft,
@@ -88,7 +88,7 @@ public class CosmographiaExporter
 
         // The previous export is replaced only when SPICE holds none of it (#799(c), decision 103): its deletion under a load
         // would leave SPICE reading the deleted files, and the pool of SPICE is the caller's
-        SpiceAPI.Instance.ThrowIfDirectoryHeld(new DirectoryInfo(missionOutputPath), "The Cosmographia export");
+        SpiceApi.Instance.ThrowIfDirectoryHeld(new DirectoryInfo(missionOutputPath), "The Cosmographia export");
 
         // The kernels and the catalog are written under a new scratch directory first, their kernel paths there checked too;
         // the previous export is replaced only once everything is written (#799(b))

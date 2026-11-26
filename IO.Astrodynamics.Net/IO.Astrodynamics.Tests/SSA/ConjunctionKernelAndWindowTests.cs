@@ -58,8 +58,8 @@ public class CrossingEncounterCase : IDisposable
         Spk2 = new FileInfo(Path.Combine(_directory.FullName, name.ToLowerInvariant() + "2.bsp"));
         Sat1.WriteEphemeris(Spk1);
         Sat2.WriteEphemeris(Spk2);
-        SpiceAPI.Instance.LoadKernels(Spk1);
-        SpiceAPI.Instance.LoadKernels(Spk2);
+        SpiceApi.Instance.LoadKernels(Spk1);
+        SpiceApi.Instance.LoadKernels(Spk2);
     }
 
     // The encounter designed at t0 + 1800 s: equal circular orbits of 500 km inclined at 51.6° and 111.6°, the second
@@ -118,8 +118,8 @@ public class CrossingEncounterCase : IDisposable
 
     public void Dispose()
     {
-        SpiceAPI.Instance.UnloadKernels(Spk1);
-        SpiceAPI.Instance.UnloadKernels(Spk2);
+        SpiceApi.Instance.UnloadKernels(Spk1);
+        SpiceApi.Instance.UnloadKernels(Spk2);
         _directory.Delete(true);
         GC.SuppressFinalize(this);
     }
@@ -472,8 +472,8 @@ public class ConjunctionKernelAndWindowTests : ConjunctionDensePassTestBase, ICl
         // Starts 0.1 s after the 250 m minimum: the start, about 800 m away and receding, is closer than the interior
         // minimum of 939 m at t0 + 4638.5 s, which CSPICE's ABSMIN shows
         var window = _case.Seconds(1800.1, 4700.0);
-        var absmin = SpiceAPI.Instance.FindWindowsOnDistanceConstraint(window, CrossingEncounterCase.Id1, CrossingEncounterCase.Id2,
-            RelationnalOperator.AbsoluteMin, 0.0, Aberration.None, TimeSpan.FromSeconds(60.0)).Single();
+        var absmin = SpiceApi.Instance.FindWindowsOnDistanceConstraint(window, CrossingEncounterCase.Id1, CrossingEncounterCase.Id2,
+            RelationalOperator.AbsoluteMin, 0.0, Aberration.None, TimeSpan.FromSeconds(60.0)).Single();
         Assert.Equal(0.0, (absmin.StartDate - window.StartDate).TotalSeconds, 3);
 
         var encounter = ConjunctionAssessment.Analyze(_case.Sat1, _case.Solution1, _case.Sat2,
@@ -506,8 +506,8 @@ public class ConjunctionKernelAndWindowTests : ConjunctionDensePassTestBase, ICl
         // midpoint, 79.9 km on [1780, 1799] s, where Screen dropped the object 7.6 km away at the end)
         var window = _case.Seconds(start, end);
         Assert.Empty(CspiceLocalMinima(window));
-        var absolute = SpiceAPI.Instance.FindWindowsOnDistanceConstraint(window, _case.ProtectedId, _case.SecondaryId,
-            RelationnalOperator.AbsoluteMin, 0.0, Aberration.None, TimeSpan.FromSeconds(60.0)).Single();
+        var absolute = SpiceApi.Instance.FindWindowsOnDistanceConstraint(window, _case.ProtectedId, _case.SecondaryId,
+            RelationalOperator.AbsoluteMin, 0.0, Aberration.None, TimeSpan.FromSeconds(60.0)).Single();
         var (position, _) = CspiceRelative(absolute.StartDate, _case);
 
         // Act
@@ -850,9 +850,9 @@ public class ConjunctionKernelAndWindowTests : ConjunctionDensePassTestBase, ICl
 
         // spkezr_c past the SPK: a NaN state from the native layer, SPICE's message in the exception
         var single = Assert.Throws<SpiceException>(() =>
-            SpiceAPI.Instance.ReadEphemeris(past, PlanetsAndMoons.EARTH.NaifId, CrossingEncounterCase.Id1, Frames.Frame.ICRF, Aberration.None));
+            SpiceApi.Instance.ReadEphemeris(past, PlanetsAndMoons.EARTH.NaifId, CrossingEncounterCase.Id1, Frames.Frame.ICRF, Aberration.None));
         Assert.Contains("Insufficient ephemeris data", single.Message);
-        Assert.Throws<SpiceException>(() => SpiceAPI.Instance.ReadEphemeris(new Window(_case.T0.AddSeconds(10000.0), past),
+        Assert.Throws<SpiceException>(() => SpiceApi.Instance.ReadEphemeris(new Window(_case.T0.AddSeconds(10000.0), past),
             PlanetsAndMoons.EARTH.NaifId, CrossingEncounterCase.Id1, Frames.Frame.ICRF, Aberration.None, TimeSpan.FromSeconds(600.0)).ToArray());
         Assert.Throws<SpiceException>(() => new Spacecraft(CrossingEncounterCase.Id1, "K1", past));
 
@@ -864,7 +864,7 @@ public class ConjunctionKernelAndWindowTests : ConjunctionDensePassTestBase, ICl
 
         // A frame past its PCK (earth_latest_high_prec.bpc ends in 2026): before, the zero quaternion
         var frame = Assert.Throws<SpiceException>(() =>
-            SpiceAPI.Instance.TransformFrame(new TimeSystem.Time(2040, 1, 1, TimeScale.TDB), new Frames.Frame("ITRF93"), Frames.Frame.ICRF));
+            SpiceApi.Instance.TransformFrame(new TimeSystem.Time(2040, 1, 1, TimeScale.TDB), new Frames.Frame("ITRF93"), Frames.Frame.ICRF));
         Assert.Contains("ITRF93", frame.Message);
 
         // A propagation reads the orientation of its central body only where a force needs it: a point mass about the
@@ -888,7 +888,7 @@ public class ConjunctionKernelAndWindowTests : ConjunctionDensePassTestBase, ICl
         Assert.Throws<SpiceException>(() => mars.GetEphemeris(_case.T0, new Barycenter(0), Frames.Frame.ICRF, Aberration.None));
 
         // Inside the coverage nothing moves: a unit quaternion
-        var inside = SpiceAPI.Instance.TransformFrame(_case.T0, new Frames.Frame("ITRF93"), Frames.Frame.ICRF);
+        var inside = SpiceApi.Instance.TransformFrame(_case.T0, new Frames.Frame("ITRF93"), Frames.Frame.ICRF);
         Assert.Equal(1.0, inside.Rotation.Magnitude(), 12);
     }
 }

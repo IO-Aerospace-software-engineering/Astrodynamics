@@ -228,7 +228,7 @@ public class LightTimeCorrectionTests
     public void CoordinateSiteGuideWindow()
     {
         var expected = _reference.GetProperty("guide_window_lt").EnumerateArray().Select(e => TimeSystem.Time.CreateTDB(e.GetDouble())).ToArray();
-        var windows = _moon.FindDistanceWindows(new TimeSystem.Window(new TimeSystem.Time(2024, 1, 1, TimeScale.TDB), new TimeSystem.Time(2024, 1, 2, TimeScale.TDB)), _site, RelationnalOperator.Lower, 400000000, new WindowSearchOptions { Step = System.TimeSpan.FromMinutes(10), Aberration = Aberration.LT }).ToArray();
+        var windows = _moon.FindDistanceWindows(new TimeSystem.Window(new TimeSystem.Time(2024, 1, 1, TimeScale.TDB), new TimeSystem.Time(2024, 1, 2, TimeScale.TDB)), _site, RelationalOperator.LessThan, 400000000, new WindowSearchOptions { Step = System.TimeSpan.FromMinutes(10), Aberration = Aberration.LT }).ToArray();
         Assert.Single(windows);
         double start = (windows[0].StartDate - expected[0]).TotalSeconds;
         double end = (windows[0].EndDate - expected[1]).TotalSeconds;
@@ -306,22 +306,22 @@ public class LightTimeCorrectionTests
     [Fact]
     public void NonInertialFrameCenter()
     {
-        Assert.Null(SpiceAPI.NonInertialFrameCenter(Frames.Frame.ICRF));
-        Assert.Null(SpiceAPI.NonInertialFrameCenter(Frames.Frame.GCRF));
-        Assert.Null(SpiceAPI.NonInertialFrameCenter(Frames.Frame.ECLIPTIC_J2000));
-        Assert.Null(SpiceAPI.NonInertialFrameCenter(new Frames.Frame("NO_SUCH_FRAME_593")));
-        Assert.Equal(399, SpiceAPI.NonInertialFrameCenter(Itrf93));
-        Assert.Equal(399, SpiceAPI.NonInertialFrameCenter(new Frames.Frame("iau_earth")));
-        Assert.Equal(301, SpiceAPI.NonInertialFrameCenter(MoonMe));
-        Assert.Equal(399013, SpiceAPI.NonInertialFrameCenter(_dss13.Frame));
-        Assert.Equal(_site.NaifId, SpiceAPI.NonInertialFrameCenter(_site.Frame));
-        Assert.Equal(399, SpiceAPI.NonInertialFrameCenter(Frames.Frame.TEME));
-        Assert.Equal(399, SpiceAPI.NonInertialFrameCenter(Frames.Frame.TIRS));
+        Assert.Null(SpiceApi.NonInertialFrameCenter(Frames.Frame.ICRF));
+        Assert.Null(SpiceApi.NonInertialFrameCenter(Frames.Frame.GCRF));
+        Assert.Null(SpiceApi.NonInertialFrameCenter(Frames.Frame.ECLIPTIC_J2000));
+        Assert.Null(SpiceApi.NonInertialFrameCenter(new Frames.Frame("NO_SUCH_FRAME_593")));
+        Assert.Equal(399, SpiceApi.NonInertialFrameCenter(Itrf93));
+        Assert.Equal(399, SpiceApi.NonInertialFrameCenter(new Frames.Frame("iau_earth")));
+        Assert.Equal(301, SpiceApi.NonInertialFrameCenter(MoonMe));
+        Assert.Equal(399013, SpiceApi.NonInertialFrameCenter(_dss13.Frame));
+        Assert.Equal(_site.NaifId, SpiceApi.NonInertialFrameCenter(_site.Frame));
+        Assert.Equal(399, SpiceApi.NonInertialFrameCenter(Frames.Frame.TEME));
+        Assert.Equal(399, SpiceApi.NonInertialFrameCenter(Frames.Frame.TIRS));
         var oriented = new Spacecraft(-1593, "S593", 100.0, _spacecraft.InitialOrbitalParameters, 1000.0, new Clock("S593", 65536));
-        Assert.Null(SpiceAPI.NonInertialFrameCenter(oriented.Frame));
+        Assert.Null(SpiceApi.NonInertialFrameCenter(oriented.Frame));
         oriented.Frame.AddStateOrientationToICRF(new StateOrientation(Quaternion.Identity, Vector3.Zero, _epochs[0], oriented.Frame));
-        Assert.Equal(-1593, SpiceAPI.NonInertialFrameCenter(oriented.Frame));
-        Assert.Throws<System.ArgumentNullException>(() => SpiceAPI.NonInertialFrameCenter(null));
+        Assert.Equal(-1593, SpiceApi.NonInertialFrameCenter(oriented.Frame));
+        Assert.Throws<System.ArgumentNullException>(() => SpiceApi.NonInertialFrameCenter(null));
     }
 
     // Review of #593: a non-inertial frame centred on a third object, neither the observer nor the target (the frame of a
@@ -427,11 +427,11 @@ public class LightTimeCorrectionTests
                                                "TKFRAME_1593085_SPEC = 'MATRIX'\nTKFRAME_1593085_RELATIVE = 'ITRF93'\n" +
                                                "TKFRAME_1593085_MATRIX = (1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0)\n\\begintext\n");
         Assert.Empty(KernelShadowing.Find([frameKernel], KernelShadowing.SolarSystem));
-        SpiceAPI.Instance.LoadKernels(frameKernel);
+        SpiceApi.Instance.LoadKernels(frameKernel);
         try
         {
             var frame = new Frames.Frame("LRO593_TK");
-            Assert.Equal(-85, SpiceAPI.NonInertialFrameCenter(frame));
+            Assert.Equal(-85, SpiceApi.NonInertialFrameCenter(frame));
             double worstPosition = 0.0, worstVelocity = 0.0;
             foreach (var flag in new[] { Aberration.LT, Aberration.CN, Aberration.XLT, Aberration.XCNS })
             {
@@ -454,13 +454,13 @@ public class LightTimeCorrectionTests
         }
         finally
         {
-            SpiceAPI.Instance.UnloadKernels(frameKernel);
+            SpiceApi.Instance.UnloadKernels(frameKernel);
             directory.Delete(true);
         }
     }
 
     // #739: the frames that only the library holds between two objects of the kernels, which CSPICE reads in J2000 and the
-    // library rotates (SpiceAPI.ToManagedFrame): the frame of a site built from coordinates and the frame of S as a record
+    // library rotates (SpiceApi.ToManagedFrame): the frame of a site built from coordinates and the frame of S as a record
     // of ITRF93, against spkezr_c in the same frames (tools/light_time_reference); TEME, CIRS and TIRS against the ICRF read
     // rotated at t ∓ lt of their centre, the Earth (RotatedAtTheCentreEpoch), the closed form that ITRF93 checks against
     // spkezr_c. Before the fix every correction was rotated at t (measured on f70ee32: the Earth from the Moon in TIRS
@@ -556,7 +556,7 @@ public class LightTimeCorrectionTests
     /// <summary>
     /// #739: the Earth from the Moon in TIRS, CIRS and TEME, and in a frame built by the name "tirs" (#656), centred on the
     /// target, is the ICRF read rotated at t ∓ lt of the Earth, on every read: <see cref="CelestialItem.GetEphemeris(in TimeSystem.Time, ILocalizable, Frames.Frame, Aberration)"/>,
-    /// <see cref="SpiceAPI.ReadEphemeris(TimeSystem.Time, int, int, Frames.Frame, Aberration)"/> by identifiers and its window read.
+    /// <see cref="SpiceApi.ReadEphemeris(TimeSystem.Time, int, int, Frames.Frame, Aberration)"/> by identifiers and its window read.
     /// </summary>
     [Theory]
     [MemberData(nameof(LibraryFrames))]
@@ -564,9 +564,9 @@ public class LightTimeCorrectionTests
     {
         var frame = LibraryFrame(name);
         var byItem = EarthFromMoonAgainstTheCentreRule(frame, (t, a) => _earth.GetEphemeris(t, _moon, frame, a));
-        var byIdentifiers = EarthFromMoonAgainstTheCentreRule(frame, (t, a) => SpiceAPI.Instance.ReadEphemeris(t, 301, 399, frame, a));
+        var byIdentifiers = EarthFromMoonAgainstTheCentreRule(frame, (t, a) => SpiceApi.Instance.ReadEphemeris(t, 301, 399, frame, a));
         var byWindow = EarthFromMoonAgainstTheCentreRule(frame, (t, a) =>
-            SpiceAPI.Instance.ReadEphemeris(new Window(t, t.AddSeconds(60.0)), 301, 399, frame, a, System.TimeSpan.FromSeconds(60.0)).First().ToStateVector());
+            SpiceApi.Instance.ReadEphemeris(new Window(t, t.AddSeconds(60.0)), 301, 399, frame, a, System.TimeSpan.FromSeconds(60.0)).First().ToStateVector());
         _output.WriteLine($"MEASURE #739 the Earth from the Moon in {name} against the closed form: item {byItem.Position:E3} m {byItem.Velocity:E3} m/s, " +
                           $"identifiers {byIdentifiers.Position:E3} m {byIdentifiers.Velocity:E3} m/s, window {byWindow.Position:E3} m {byWindow.Velocity:E3} m/s");
         foreach (var worst in new[] { byItem, byIdentifiers, byWindow })
@@ -668,7 +668,7 @@ public class LightTimeCorrectionTests
         value = coordinate == Coordinate.Range ? value * 1000.0 : value * global::IO.Astrodynamics.Constants.Deg2Rad;
         var expected = row.GetProperty("windows").EnumerateArray().Select(e => TimeSystem.Time.CreateTDB(e.GetDouble())).ToArray();
         var frame = inOtherSiteFrame ? OtherSite().Frame : Frames.Frame.ICRF;
-        var windows = _moon.FindCoordinateWindows(new TimeSystem.Window(TimeSystem.Time.CreateTDB(757339200.0), TimeSystem.Time.CreateTDB(757425600.0)), _site, frame, CoordinateSystem.RaDec, coordinate, RelationnalOperator.Greater, value, new WindowSearchOptions { Step = System.TimeSpan.FromMinutes(10), Aberration = Aberration.LT }).ToArray();
+        var windows = _moon.FindCoordinateWindows(new TimeSystem.Window(TimeSystem.Time.CreateTDB(757339200.0), TimeSystem.Time.CreateTDB(757425600.0)), _site, frame, CoordinateSystem.RaDec, coordinate, RelationalOperator.GreaterThan, value, new WindowSearchOptions { Step = System.TimeSpan.FromMinutes(10), Aberration = Aberration.LT }).ToArray();
         Assert.Equal(expected.Length / 2, windows.Length);
         double worst = 0.0;
         for (int k = 0; k < windows.Length; k++)

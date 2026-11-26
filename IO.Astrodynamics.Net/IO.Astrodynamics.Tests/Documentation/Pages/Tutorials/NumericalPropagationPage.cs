@@ -53,7 +53,7 @@ using IO.Astrodynamics.SSA;
 using IO.Astrodynamics.SolarSystemObjects;
 using IO.Astrodynamics.Surface;
 using IO.Astrodynamics.TimeSystem;
-using TLE = IO.Astrodynamics.OrbitalParameters.TLE.TLE;
+using Tle = IO.Astrodynamics.OrbitalParameters.TLE.Tle;
 
 namespace DocumentationPageSamples.Tutorials;
 
@@ -64,7 +64,7 @@ internal static class NumericalPropagationPage
     internal static void Block01()
     {
         #region docs/tutorials/numerical-propagation.md:1
-        SpiceAPI.Instance.LoadKernels(new DirectoryInfo("Data/SolarSystem"));
+        SpiceApi.Instance.LoadKernels(new DirectoryInfo("Data/SolarSystem"));
 
         var earth = PlanetsAndMoons.EARTH_BODY;
         var epoch = new Time(2024, 6, 21, 12, 0, 0, TimeScale.TDB);

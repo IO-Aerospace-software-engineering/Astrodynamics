@@ -348,7 +348,7 @@ namespace IO.Astrodynamics.Tests.OrbitalParameters
             var ke = sv.ToKeplerianElements();
 
             // Against SPICE OSCELT: the node, 1.3e-5 rad, is where the former acos lost 5.8e-12 rad (#368)
-            var expected = SpiceAPI.Instance.ConvertStateVectorToConicOrbitalElement(sv);
+            var expected = SpiceApi.Instance.ConvertStateVectorToConicOrbitalElement(sv);
             Assert.Equal(expected.SemiMajorAxis(), ke.SemiMajorAxis(), 1e-14 * expected.SemiMajorAxis());
             Assert.Equal(expected.Eccentricity(), ke.Eccentricity(), 1e-14);
             Assert.Equal(expected.Inclination(), ke.Inclination(), 1e-14);
@@ -378,7 +378,7 @@ namespace IO.Astrodynamics.Tests.OrbitalParameters
                 30.0 * IO.Astrodynamics.Constants.Deg2Rad, 0.0 * IO.Astrodynamics.Constants.Deg2Rad, TestHelpers.EarthAtJ2000, TimeSystem.Time.J2000TDB,
                 Frames.Frame.ICRF);
             var sv = ke.ToStateVector();
-            var svref = SpiceAPI.Instance.ConvertConicElementsToStateVector(ke);
+            var svref = SpiceApi.Instance.ConvertConicElementsToStateVector(ke);
             var res = sv.ToKeplerianElements();
             Assert.Equal(ke, res, TestHelpers.KeplerComparer);
         }
@@ -831,7 +831,7 @@ namespace IO.Astrodynamics.Tests.OrbitalParameters
             foreach (var ke in KeplerianElementsTests.RandomApsisElements(e, 6880 + (int)(-System.Math.Log10(e) * 10.0), 2000))
             {
                 var sv = ke.ToStateVector();
-                var osculating = SpiceAPI.Instance.ConvertStateVectorToConicOrbitalElement(sv);
+                var osculating = SpiceApi.Instance.ConvertStateVectorToConicOrbitalElement(sv);
                 var spicePerigee = KeplerianElementsTests.SpiceConicPosition(osculating.SemiMajorAxis(), osculating.Eccentricity(), osculating.Inclination(), osculating.AscendingNode(), osculating.ArgumentOfPeriapsis(), 0.0);
                 worst = System.Math.Max(worst, KeplerianElementsTests.ApsisErrors(sv, spicePerigee, osculating.SemiMajorAxis(), osculating.Eccentricity()).Angle);
             }

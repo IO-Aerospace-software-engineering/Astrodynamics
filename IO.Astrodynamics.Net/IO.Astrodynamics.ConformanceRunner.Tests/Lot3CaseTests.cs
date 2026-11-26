@@ -155,7 +155,7 @@ public sealed class Lot3CaseTests : IDisposable
         SuiteFixture.Lot3.WriteSuite(_directory, HohmannCase);
         EditInputs(HohmannCase, text => text.Replace("earliest_after_previous_s: 0.0\n      target_periapsis_radius_km",
             "earliest_after_previous_s: 90000.0\n      target_periapsis_radius_km"));
-        SpiceAPI.Instance.LoadKernels(new DirectoryInfo(KernelsPath));
+        SpiceApi.Instance.LoadKernels(new DirectoryInfo(KernelsPath));
 
         // Act
         var outputs = solver.Solve(SuiteFixture.ReadCase(_directory, HohmannCase));
@@ -174,7 +174,7 @@ public sealed class Lot3CaseTests : IDisposable
     public void EachStepType_IsTheFrameworksManeuver_WithTheHoldOfTheNextStep()
     {
         // Arrange
-        SpiceAPI.Instance.LoadKernels(new DirectoryInfo(KernelsPath));
+        SpiceApi.Instance.LoadKernels(new DirectoryInfo(KernelsPath));
         var epoch = new Time(2026, 1, 20, 6, 0, 0, TimeScale.UTC);
         var earth = new CelestialBody(PlanetsAndMoons.EARTH, Frames.Frame.ICRF, epoch);
         var state = new StateVector(new Vector3(6428778.39, 2100929.85, -1661580.75), new Vector3(-1460.44, 6743.21, 3149.61), earth, epoch,

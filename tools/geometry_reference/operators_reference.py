@@ -1,7 +1,7 @@
-"""CSPICE references of the operators CSPICE has not, for #482: GreaterOrEqual, LowerOrEqual and NotEqual on the CSPICE
+"""CSPICE references of the operators CSPICE has not, for #482: GreaterThanOrEqual, LessThanOrEqual and NotEqual on the CSPICE
 path of the window searches.
 
-The library sends GreaterOrEqual and LowerOrEqual to CSPICE as '>' and '<' (closed windows), and forms NotEqual as the
+The library sends GreaterThanOrEqual and LessThanOrEqual to CSPICE as '>' and '<' (closed windows), and forms NotEqual as the
 search window less the instants of '=', a window from each crossing to the next (the managed search's definition). This
 script runs gfdist, gfposc and gfilum in spiceypy (CSPICE N0067) with '>', '<' and '=' as the native layer runs them
 (IO.Astrodynamics/Constraints/GeometryFinder.cpp, API/Proxy.cpp: the ends of the search window are Time ticks, handed to

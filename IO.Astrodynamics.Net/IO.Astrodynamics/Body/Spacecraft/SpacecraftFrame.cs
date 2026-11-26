@@ -61,7 +61,7 @@ public class SpacecraftFrame : Frame
     private readonly List<AttitudeEntry> _record = new();
 
     // No region of this lock calls SPICE: an ephemeris read in this frame rotates by the record under the lock of the SPICE
-    // calls (SpiceAPI.ManagedReadFrame, #682), which this order keeps free of a lock inversion
+    // calls (SpiceApi.ManagedReadFrame, #682), which this order keeps free of a lock inversion
     private readonly object _recordLock = new();
 
     public Spacecraft Spacecraft { get; }
@@ -395,7 +395,7 @@ public class SpacecraftFrame : Frame
     /// Whether the attitude record of a managed spacecraft holds an entry: false for a spacecraft never propagated, with no
     /// orientation added (<see cref="AddStateOrientationToICRF"/>), built from a TLE or propagated by the TLE propagator,
     /// whose orientation reads give the identity of ICRF, whose field-of-view searches throw, and whose frame an ephemeris
-    /// read reaches SPICE by name (<see cref="SpiceAPI.ManagedReadFrame"/>); always true for a kernel-backed spacecraft,
+    /// read reaches SPICE by name (<see cref="SpiceApi.ManagedReadFrame"/>); always true for a kernel-backed spacecraft,
     /// which reads its CK (#682).
     /// </summary>
     internal bool HasAttitude
@@ -471,7 +471,7 @@ public class SpacecraftFrame : Frame
         var templateData = sr.ReadToEnd();
         var data = templateData.Replace("{framename}", Name.ToUpperInvariant()).Replace("{frameid}", Id!.Value.ToString(CultureInfo.InvariantCulture)).Replace("{spacecraftid}", Spacecraft.NaifId.ToString(CultureInfo.InvariantCulture))
             .Replace("{spacecraftname}", Spacecraft.Name.ToUpperInvariant());
-        SpiceAPI.Instance.WriteTextKernel(outputFile, data);
+        SpiceApi.Instance.WriteTextKernel(outputFile, data);
     }
 
     /// <summary>
@@ -496,7 +496,7 @@ public class SpacecraftFrame : Frame
                 throw new InvalidOperationException("Cannot write the orientation of a kernel-backed spacecraft.");
             if (_record.Count == 0)
                 throw new InvalidOperationException(
-                    $"Spacecraft {Spacecraft.Name} has no attitude record to write: it has not been propagated numerically, and a TLEPropagator run records no attitude; propagate it, or give it attitudes with SpacecraftFrame.AddStateOrientationToICRF.");
+                    $"Spacecraft {Spacecraft.Name} has no attitude record to write: it has not been propagated numerically, and a TlePropagator run records no attitude; propagate it, or give it attitudes with SpacecraftFrame.AddStateOrientationToICRF.");
 
             var records = new List<StateOrientation>(_record.Count + 8);
             for (int i = 0; i < _record.Count; i++)
@@ -533,6 +533,6 @@ public class SpacecraftFrame : Frame
     /// </summary>
     internal void WriteOrientation(FileInfo outputFile, Spacecraft spacecraft)
     {
-        SpiceAPI.Instance.WriteOrientation(outputFile, spacecraft.NaifId, CkRecords());
+        SpiceApi.Instance.WriteOrientation(outputFile, spacecraft.NaifId, CkRecords());
     }
 }

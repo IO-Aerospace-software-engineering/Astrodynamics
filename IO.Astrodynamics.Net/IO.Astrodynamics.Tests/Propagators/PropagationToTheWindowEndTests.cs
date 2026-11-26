@@ -224,7 +224,7 @@ public class PropagationToTheWindowEndTests
 
         // Act
         spacecraft.WriteEphemeris(spk);
-        SpiceAPI.Instance.LoadKernels(spk);
+        SpiceApi.Instance.LoadKernels(spk);
         try
         {
             double worst = 0.0;
@@ -232,7 +232,7 @@ public class PropagationToTheWindowEndTests
             {
                 var managed = spacecraft.GetEphemeris(epoch, (CelestialItem)initial.Observer, Frame.ICRF, Aberration.None);
                 // The windowed read, which throws on a SPICE error
-                var fromSpk = SpiceAPI.Instance.ReadEphemeris(new Window(epoch, epoch), 399, spacecraft.NaifId, Frame.ICRF,
+                var fromSpk = SpiceApi.Instance.ReadEphemeris(new Window(epoch, epoch), 399, spacecraft.NaifId, Frame.ICRF,
                     Aberration.None, TimeSpan.FromSeconds(1.0)).First().ToStateVector();
                 worst = System.Math.Max(worst, (fromSpk.Position - managed.Position).Magnitude());
             }
@@ -243,7 +243,7 @@ public class PropagationToTheWindowEndTests
         }
         finally
         {
-            SpiceAPI.Instance.UnloadKernels(spk);
+            SpiceApi.Instance.UnloadKernels(spk);
             spk.Delete();
         }
     }

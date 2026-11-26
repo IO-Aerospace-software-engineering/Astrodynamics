@@ -31,7 +31,7 @@ public class MeanElementsTypeTests
     private readonly CelestialBody _earth;
 
     // Case A of the issue: the ISS TLE of TLETests
-    private static TLE IssTle() => new("ISS",
+    private static Tle IssTle() => new("ISS",
         "1 25544U 98067A   21020.53488036  .00016717  00000-0  10270-3 0  9054",
         "2 25544  51.6423 353.0312 0000493 320.8755  39.2360 15.49309423 25703");
 
@@ -111,7 +111,7 @@ public class MeanElementsTypeTests
         Assert.Equal(OrbitalElementsType.Osculating, elements.ElementsType);
         var start = tle.ToOsculating();
         double dt = PropagationTimeArgument.Tt.SecondsBetween(start.Epoch, t);
-        var reference = SpiceAPI.Instance.Propagate2Bodies(start, start.Observer.GM, TimeSpan.FromTicks((long)System.Math.Round(dt * 1e7)));
+        var reference = SpiceApi.Instance.Propagate2Bodies(start, start.Observer.GM, TimeSpan.FromTicks((long)System.Math.Round(dt * 1e7)));
         double error = (state.Position - reference.Position).Magnitude() / reference.Position.Magnitude();
         _output.WriteLine($"MEASURE #463 tle.ToKeplerianElements(t0 + 1 h) against prop2b, |Δr| / |r|: {error:E3}");
         // The rounding of the element conversions over an hour, against prop2b from evsgp4_c's state (both of the native
@@ -127,14 +127,14 @@ public class MeanElementsTypeTests
     [Fact]
     public void AMeanSetMovedToItsOwnEpoch_WritesTheSameTle()
     {
-        // Arrange: case A's mean elements, moved to their own epoch (before: Osculating, refused by TLE.Create)
+        // Arrange: case A's mean elements, moved to their own epoch (before: Osculating, refused by Tle.Create)
         var tle = IssTle();
         var mean = tle.ToMeanKeplerianElements();
 
         // Act
-        var direct = TLE.Create(mean, "ISS", 25544, "98067A", 2570, bstar: 0.10270e-3, nDot: 0.00016717);
-        var moved = TLE.Create(mean.AtEpoch(tle.Epoch), "ISS", 25544, "98067A", 2570, bstar: 0.10270e-3, nDot: 0.00016717);
-        var throughKeplerian = TLE.Create(mean.ToKeplerianElements(tle.Epoch), "ISS", 25544, "98067A", 2570, bstar: 0.10270e-3,
+        var direct = Tle.Create(mean, "ISS", 25544, "98067A", 2570, bstar: 0.10270e-3, nDot: 0.00016717);
+        var moved = Tle.Create(mean.AtEpoch(tle.Epoch), "ISS", 25544, "98067A", 2570, bstar: 0.10270e-3, nDot: 0.00016717);
+        var throughKeplerian = Tle.Create(mean.ToKeplerianElements(tle.Epoch), "ISS", 25544, "98067A", 2570, bstar: 0.10270e-3,
             nDot: 0.00016717);
 
         // Assert: the same two lines
@@ -183,7 +183,7 @@ public class MeanElementsTypeTests
                     Assert.Equal("spacecraft", exception.ParamName);
                     Assert.Contains("mean elements", exception.Message);
                     Assert.Contains(spacecraft.Name, exception.Message);
-                    Assert.Contains("TLEPropagator", exception.Message);
+                    Assert.Contains("TlePropagator", exception.Message);
                     _output.WriteLine($"{name}: refused");
                 }
 

@@ -6,7 +6,7 @@ namespace IO.Astrodynamics.DataProvider;
 
 /// <summary>
 /// The information a data provider gives on a celestial body: its identifiers, name, radii, GM, body-fixed frame and
-/// zonal harmonics, in SI units. <see cref="IDataProvider.GetCelestialBodyInfo"/> returns it, <see cref="SpiceAPI.GetCelestialBodyInfo"/>
+/// zonal harmonics, in SI units. <see cref="IDataProvider.GetCelestialBodyInfo"/> returns it, <see cref="SpiceApi.GetCelestialBodyInfo"/>
 /// reads it from the kernels, and <see cref="MemoryDataProvider.AddCelestialBodyInfo"/> stores it; a natural body
 /// (<c>new CelestialBody(id)</c>, the static objects of <c>PlanetsAndMoons</c>, <c>Stars</c> and <c>Barycenters</c>) is
 /// built from it.

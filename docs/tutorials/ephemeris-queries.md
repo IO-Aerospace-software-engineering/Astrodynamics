@@ -13,7 +13,7 @@ using IO.Astrodynamics.Frames;
 using IO.Astrodynamics.TimeSystem;
 using IO.Astrodynamics.SolarSystemObjects;
 
-SpiceAPI.Instance.LoadKernels(new DirectoryInfo("Data/SolarSystem"));
+SpiceApi.Instance.LoadKernels(new DirectoryInfo("Data/SolarSystem"));
 ```
 
 ## Setting Up Bodies and Epochs
@@ -42,7 +42,7 @@ Console.WriteLine($"Velocity: {stateVector.Velocity} m/s");
 ```
 
 The returned `StateVector` contains position and velocity in SI units (meters and meters per second). Every read of
-`GetEphemeris` and `SpiceAPI.ReadEphemeris` is typed as the `StateVector` it builds, so no `.ToStateVector()` follows it
+`GetEphemeris` and `SpiceApi.ReadEphemeris` is typed as the `StateVector` it builds, so no `.ToStateVector()` follows it
 (11.0.0, R20 of #668). Without a frame and an aberration, `earth.GetEphemeris(epoch, sun)` reads in ICRF without
 correction, bit for bit the read above; the window form is `GetEphemeris(window, observer, step)`.
 

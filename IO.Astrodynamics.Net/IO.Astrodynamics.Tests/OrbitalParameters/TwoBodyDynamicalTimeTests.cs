@@ -239,7 +239,7 @@ public class TwoBodyDynamicalTimeTests
     {
         long ticks = (long)System.Math.Round(elapsed * TimeSpan.TicksPerSecond);
         double remainder = elapsed - ticks / (double)TimeSpan.TicksPerSecond;
-        var state = SpiceAPI.Instance.Propagate2Bodies(initial, initial.Observer.GM, TimeSpan.FromTicks(ticks));
+        var state = SpiceApi.Instance.Propagate2Bodies(initial, initial.Observer.GM, TimeSpan.FromTicks(ticks));
         return new StateVector(state.Position + state.Velocity * remainder, state.Velocity, state.Observer,
             state.Epoch, state.Frame);
     }

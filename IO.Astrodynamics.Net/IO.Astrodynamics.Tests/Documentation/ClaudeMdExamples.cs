@@ -31,7 +31,7 @@ using IO.Astrodynamics.Propagator.Forces;
 using IO.Astrodynamics.SolarSystemObjects;
 using IO.Astrodynamics.TimeSystem;
 using Xunit;
-using TLE = IO.Astrodynamics.OrbitalParameters.TLE.TLE;
+using Tle = IO.Astrodynamics.OrbitalParameters.TLE.Tle;
 
 namespace ClaudeMdSamples
 {
@@ -57,11 +57,11 @@ namespace ClaudeMdSamples
         }
 
         // IO.Astrodynamics.Net/CLAUDE.md, "Working with TLE"
-        internal static TLE Net02(Time epoch)
+        internal static Tle Net02(Time epoch)
         {
             #region net:2
             // Parse TLE - elements are mean by definition
-            var tle = new TLE("ISS",
+            var tle = new Tle("ISS",
                 "1 25544U 98067A   21020.53488036  .00016717  00000-0  10270-3 0  9054",
                 "2 25544  51.6423 353.0312 0000493 320.8755  39.2360 15.49309423 25703");
 
@@ -112,7 +112,7 @@ namespace ClaudeMdSamples
             }
 
             // TLE to OMM (for archiving/sharing)
-            var issTle = new TLE("ISS", line1, line2);
+            var issTle = new Tle("ISS", line1, line2);
             var issOmm = issTle.ToOmm(originator: "My Organization");
             issOmm.Save("iss.omm");
             #endregion

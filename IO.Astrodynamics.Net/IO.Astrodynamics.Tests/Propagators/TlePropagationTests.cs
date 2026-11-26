@@ -56,7 +56,7 @@ public class TlePropagationTests
     private const double KeplerVelocity = 2.4e-9;
 
     // Twice the worst of UnpropagatedOrSampledTleSpacecraft_ReadsSgp4 over Linux x64, Windows x64 and macOS arm64 alike (CI
-    // run 44225490669), rounded up at the second significant digit: the Lagrange interpolation of the TLEPropagator
+    // run 44225490669), rounded up at the second significant digit: the Lagrange interpolation of the TlePropagator
     // samples at mid-step, ISS at 60 s, 9.062e-4 m in the last step. #598 moved the last sample from +3600 s
     // to the TDB end of the UTC hour, 11 ticks later, whose SGP4 state carries the tick rounding of an instant off the
     // grid of the other samples (0.77 mm per tick at 7.7 km/s); before, 7.593e-4 m on the three (CI run 43591654097,
@@ -71,12 +71,12 @@ public class TlePropagationTests
         TestKernels.EnsureSolarSystem();
     }
 
-    private static TLE NewTle() => new("ISS", Line1, Line2);
+    private static Tle NewTle() => new("ISS", Line1, Line2);
 
-    private static Window OneHour(TLE tle) => new(tle.Epoch, tle.Epoch.AddHours(1.0));
+    private static Window OneHour(Tle tle) => new(tle.Epoch, tle.Epoch.AddHours(1.0));
 
     /// <summary>The twin of a TLE start: SGP4 at the TDB start of the window, rotated to ICRF, on the Earth of the TLE.</summary>
-    private static StateVector Twin(TLE tle, in Window window)
+    private static StateVector Twin(Tle tle, in Window window)
     {
         var t0 = window.StartDate.ToTDB();
         var s = tle.ToOsculating(t0).ToFrame(Frames.Frame.ICRF).ToStateVector();
@@ -419,18 +419,18 @@ public class TlePropagationTests
 
         spacecraft.WriteEphemeris(file);
         double worst = 0.0;
-        SpiceAPI.Instance.LoadKernels(file);
+        SpiceApi.Instance.LoadKernels(file);
         try
         {
             foreach (var state in stored)
             {
-                var fromSpk = SpiceAPI.Instance.ReadEphemeris(state.Epoch, 399, spacecraft.NaifId, Frames.Frame.ICRF, Aberration.None);
+                var fromSpk = SpiceApi.Instance.ReadEphemeris(state.Epoch, 399, spacecraft.NaifId, Frames.Frame.ICRF, Aberration.None);
                 worst = System.Math.Max(worst, (fromSpk.Position - state.Position).Magnitude());
             }
         }
         finally
         {
-            SpiceAPI.Instance.UnloadKernels(file);
+            SpiceApi.Instance.UnloadKernels(file);
         }
 
         _output.WriteLine($"MEASURE TlePropagationTests.PropagatedTleSpacecraft_ReadsItsStates {path}: SPK against the stored states {worst:E3} m");
@@ -485,12 +485,12 @@ public class TlePropagationTests
     [Fact]
     public void UnpropagatedOrSampledTleSpacecraft_ReadsSgp4()
     {
-        // Arrange: one TLE spacecraft unpropagated, one sampled by TLEPropagator
+        // Arrange: one TLE spacecraft unpropagated, one sampled by TlePropagator
         var tle = NewTle();
         var window = OneHour(tle);
         var unpropagated = NewSpacecraft(-7041, tle);
         var sampled = NewSpacecraft(-7042, tle);
-        new TLEPropagator(window, sampled, OutputStep).Propagate();
+        new TlePropagator(window, sampled, OutputStep).Propagate();
 
         // Act, assert: the geometric state is SGP4 in ICRF at any epoch, between the samples too, and the window of
         // interpolated states is none (#527's check skipped); the ephemeris of the unpropagated one from its Earth too

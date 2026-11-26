@@ -191,12 +191,12 @@ public class SpacecraftToOpmTests
 
     /// <summary>
     /// A TLE spacecraft propagated numerically writes its propagated state in TEME, the frame of its TLE, not SGP4 (53.7 km
-    /// from it after 1 h for the ISS); one only sampled by <see cref="TLEPropagator"/> writes SGP4, as before (the control).
+    /// from it after 1 h for the ISS); one only sampled by <see cref="TlePropagator"/> writes SGP4, as before (the control).
     /// </summary>
     [Fact]
     public void TleSpacecraft_PropagatedWritesItsStates_SampledWritesSgp4()
     {
-        var tle = new TLE("ISS", "1 25544U 98067A   21020.53488036  .00016717  00000-0  10270-3 0  9054",
+        var tle = new Tle("ISS", "1 25544U 98067A   21020.53488036  .00016717  00000-0  10270-3 0  9054",
             "2 25544  51.6423 353.0312 0000493 320.8755  39.2360 15.49309423 25703");
         var window = new Window(tle.Epoch, tle.Epoch.AddHours(1.0));
         var earth = (CelestialItem)tle.Observer;
@@ -216,7 +216,7 @@ public class SpacecraftToOpmTests
         Assert.True(fromSgp4 > 1000.0, $"{fromSgp4:E3} m");
 
         var sampled = new Spacecraft(-6586, "OPM6586", 1000.0, tle, 3000.0, new Clock("OPM6586_CLK", 65536), cosparId: "1998-067A");
-        new TLEPropagator(window, sampled, TimeSpan.FromSeconds(60.0)).Propagate();
+        new TlePropagator(window, sampled, TimeSpan.FromSeconds(60.0)).Propagate();
         var sampledOpm = sampled.ToOpm(epoch: end);
         Assert.Equal(sgp4.Position.X / 1000.0, sampledOpm.Data.StateVector.X);
         Assert.Equal(sgp4.Velocity.Z / 1000.0, sampledOpm.Data.StateVector.ZDot);

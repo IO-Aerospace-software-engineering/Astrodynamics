@@ -54,7 +54,7 @@ using IO.Astrodynamics.SSA;
 using IO.Astrodynamics.SolarSystemObjects;
 using IO.Astrodynamics.Surface;
 using IO.Astrodynamics.TimeSystem;
-using TLE = IO.Astrodynamics.OrbitalParameters.TLE.TLE;
+using Tle = IO.Astrodynamics.OrbitalParameters.TLE.Tle;
 
 namespace DocumentationPageSamples;
 
@@ -65,7 +65,7 @@ internal static class GetStartedPage
     internal static void Block01()
     {
         #region docs/get-started.md:1
-        SpiceAPI.Instance.LoadKernels(new DirectoryInfo("Data/SolarSystem"));
+        SpiceApi.Instance.LoadKernels(new DirectoryInfo("Data/SolarSystem"));
         #endregion
     }
 
@@ -73,7 +73,7 @@ internal static class GetStartedPage
     internal static void Block02()
     {
         #region docs/get-started.md:2
-        SpiceAPI.Instance.LoadKernels(new FileInfo("de440.bsp"));
+        SpiceApi.Instance.LoadKernels(new FileInfo("de440.bsp"));
         #endregion
     }
 
@@ -81,7 +81,7 @@ internal static class GetStartedPage
     internal static void Block03()
     {
         #region docs/get-started.md:3
-        SpiceAPI.Instance.LoadKernels(new DirectoryInfo("Data/SolarSystem"));
+        SpiceApi.Instance.LoadKernels(new DirectoryInfo("Data/SolarSystem"));
 
         var earth = PlanetsAndMoons.EARTH_BODY;
         var sun = new CelestialBody(Stars.Sun);
@@ -121,7 +121,7 @@ internal static class GetStartedPage
     internal static void Block05()
     {
         #region docs/get-started.md:5
-        var tle = new TLE("ISS (ZARYA)",
+        var tle = new Tle("ISS (ZARYA)",
             "1 25544U 98067A   21020.53488036  .00016717  00000-0  10270-3 0  9054",
             "2 25544  51.6423 353.0312 0000493 320.8755  39.2360 15.49309423 25703");
 

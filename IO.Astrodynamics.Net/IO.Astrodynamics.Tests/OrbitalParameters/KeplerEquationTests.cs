@@ -246,7 +246,7 @@ public class KeplerEquationTests
         {
             var elements = FromMeanAnomaly(c, earth);
             var state = elements.ToStateVector();
-            var conics = SpiceAPI.Instance.ConvertConicElementsToStateVector(elements, Epoch, earth.GM);
+            var conics = SpiceApi.Instance.ConvertConicElementsToStateVector(elements, Epoch, earth.GM);
             double position = (state.Position - conics.Position).Magnitude() / conics.Position.Magnitude() /
                               c.PositionFloor;
             double velocity = (state.Velocity - conics.Velocity).Magnitude() / conics.Velocity.Magnitude() /

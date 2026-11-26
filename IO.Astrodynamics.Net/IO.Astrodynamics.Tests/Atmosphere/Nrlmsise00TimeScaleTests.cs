@@ -58,7 +58,7 @@ public class Nrlmsise00TimeScaleTests
             F107A = SpaceWeather.Nominal.F107A, F107 = SpaceWeather.Nominal.F107, Ap = SpaceWeather.Nominal.Ap
         };
         // Total mass density, in kg/m³ with the standard flags of the adapter
-        double expected = new NRLMSISE00().Calculate(input, NrlmsiseFlags.CreateStandard()).D[5];
+        double expected = new Nrlmsise00().Calculate(input, NrlmsiseFlags.CreateStandard()).D[5];
 
         // Act
         double density = new Nrlmsise00Model(SpaceWeather.Nominal)

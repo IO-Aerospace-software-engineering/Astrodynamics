@@ -15,11 +15,11 @@ using Quaternion = IO.Astrodynamics.Math.Quaternion;
 namespace IO.Astrodynamics.Tests;
 
 /// <summary>
-/// #661: <see cref="SpiceAPI.WriteEphemeris"/> and <see cref="SpiceAPI.WriteOrientation"/> enumerate the caller's
+/// #661: <see cref="SpiceApi.WriteEphemeris"/> and <see cref="SpiceApi.WriteOrientation"/> enumerate the caller's
 /// sequence once, before they take the SPICE lock, so that nothing the caller supplies runs under it.
 /// </summary>
 /// <remarks>
-/// Before the fix both enumerated it inside <c>lock (lockObject)</c>, and <see cref="SpiceAPI.WriteEphemeris"/> twice
+/// Before the fix both enumerated it inside <c>lock (lockObject)</c>, and <see cref="SpiceApi.WriteEphemeris"/> twice
 /// (measured on 016237bd, the issue: 2 and 1 enumerations), so that a sequence that read <c>PlanetsAndMoons</c>,
 /// <c>Stars</c> or <c>Barycenters</c> for the first time could wait for a thread waiting for the lock (#623), and a lazy
 /// sequence ran its work twice. The expected values are the definition of the fix: one enumeration, the lock not held by
@@ -49,7 +49,7 @@ public class SpiceApiWriterEnumerationTests
             Enumerations++;
             for (int i = 0; i < items.Count; i++)
             {
-                if (Monitor.IsEntered(SpiceAPI.SyncRoot))
+                if (Monitor.IsEntered(SpiceApi.SyncRoot))
                 {
                     ItemsUnderTheLock++;
                 }
@@ -59,10 +59,10 @@ public class SpiceApiWriterEnumerationTests
                     bool taken = false;
                     var other = new Thread(() =>
                     {
-                        if (Monitor.TryEnter(SpiceAPI.SyncRoot, OtherThreadTimeout))
+                        if (Monitor.TryEnter(SpiceApi.SyncRoot, OtherThreadTimeout))
                         {
                             taken = true;
-                            Monitor.Exit(SpiceAPI.SyncRoot);
+                            Monitor.Exit(SpiceApi.SyncRoot);
                         }
                     });
                     other.Start();
@@ -92,7 +92,7 @@ public class SpiceApiWriterEnumerationTests
         try
         {
             // Act
-            Assert.True(SpiceAPI.Instance.WriteEphemeris(file, -661001, sequence));
+            Assert.True(SpiceApi.Instance.WriteEphemeris(file, -661001, sequence));
 
             // Assert
             Assert.Equal(1, sequence.Enumerations);
@@ -121,11 +121,11 @@ public class SpiceApiWriterEnumerationTests
             Frames.Frame.ICRF)).ToList();
         var sequence = new ProbedSequence<StateOrientation>(orientations);
 
-        SpiceAPI.Instance.LoadKernels(clock);
+        SpiceApi.Instance.LoadKernels(clock);
         try
         {
             // Act
-            Assert.True(SpiceAPI.Instance.WriteOrientation(ck, spacecraft.NaifId, sequence));
+            Assert.True(SpiceApi.Instance.WriteOrientation(ck, spacecraft.NaifId, sequence));
 
             // Assert
             Assert.Equal(1, sequence.Enumerations);
@@ -134,7 +134,7 @@ public class SpiceApiWriterEnumerationTests
         }
         finally
         {
-            SpiceAPI.Instance.UnloadKernels(clock);
+            SpiceApi.Instance.UnloadKernels(clock);
             ck.Delete();
             clock.Delete();
         }

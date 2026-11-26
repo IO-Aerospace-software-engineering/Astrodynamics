@@ -18,7 +18,7 @@ namespace IO.Astrodynamics.Surface;
 /// the loaded kernels define for its id (DSS-13_TOPO for DSS-13, #690), or the frame of its J2000 coordinates when none
 /// does (<see cref="GetStateOrientationToICRF"/>). An ephemeris read in the frame of a site from coordinates, or of a site
 /// from the kernels whose frame id no loaded kernel defines, is read in J2000 and rotated by that orientation (#682, third
-/// review of #690); in a kernel frame, SPICE reads it by the kernel's name. <see cref="SpiceAPI.TransformFrame(Time, Frame, Frame)"/>
+/// review of #690); in a kernel frame, SPICE reads it by the kernel's name. <see cref="SpiceApi.TransformFrame(Time, Frame, Frame)"/>
 /// with such a frame composes that orientation through ICRF, as for TEME (fourth round of #668; before, it threw).
 /// </summary>
 public class SiteFrame : Frame
@@ -59,7 +59,7 @@ public class SiteFrame : Frame
     /// file is kept as it was and nothing is written (#799(c), decision 103 of #668).</exception>
     public void Write(FileInfo outputFile)
     {
-        var kernelFrameName = Site.IsSpiceBacked ? SpiceAPI.KernelFrameNameOf(Id!.Value) : null;
+        var kernelFrameName = Site.IsSpiceBacked ? SpiceApi.KernelFrameNameOf(Id!.Value) : null;
         var frameName = kernelFrameName ?? Name;
         Kernels.TextKernelNames.Check("FRAME_" + frameName.ToUpperInvariant(), $"the site '{Site.Name}'");
         string matrix = kernelFrameName != null ? KernelFrameMatrix(kernelFrameName) : null;
@@ -76,7 +76,7 @@ public class SiteFrame : Frame
             .Replace("{matrix}", matrix)
             .Replace("{long}", (-Site.Planetodetic.Longitude).ToString(CultureInfo.InvariantCulture))
             .Replace("{colat}", (-(Constants.HalfPi - Site.Planetodetic.Latitude)).ToString(CultureInfo.InvariantCulture));
-        SpiceAPI.Instance.WriteTextKernel(outputFile, data);
+        SpiceApi.Instance.WriteTextKernel(outputFile, data);
     }
 
     // The rotation from the kernel frame of the site to the frame of its body, as SPICE reads it, in column order: column i
@@ -85,8 +85,8 @@ public class SiteFrame : Frame
     private string KernelFrameMatrix(string kernelFrameName)
     {
         var bodyFrame = Site.CelestialBody.Frame;
-        var atJ2000 = SpiceAPI.Instance.TransformFrame(Time.J2000TDB, this, bodyFrame).Rotation;
-        var later = SpiceAPI.Instance.TransformFrame(Time.J2000TDB.AddSeconds(6.0 * 3600.0), this, bodyFrame).Rotation;
+        var atJ2000 = SpiceApi.Instance.TransformFrame(Time.J2000TDB, this, bodyFrame).Rotation;
+        var later = SpiceApi.Instance.TransformFrame(Time.J2000TDB.AddSeconds(6.0 * 3600.0), this, bodyFrame).Rotation;
         var difference = atJ2000.Conjugate() * later;
         double angle = 2.0 * System.Math.Atan2(difference.VectorPart.Magnitude(), System.Math.Abs(difference.W));
         if (angle > KernelFrameFixedTolerance)
@@ -128,8 +128,8 @@ public class SiteFrame : Frame
     {
         if (Site.IsSpiceBacked)
         {
-            return SpiceAPI.KernelDefinesFrame(Id!.Value)
-                ? SpiceAPI.Instance.TransformFrame(epoch, this, ICRF, null, null)
+            return SpiceApi.KernelDefinesFrame(Id!.Value)
+                ? SpiceApi.Instance.TransformFrame(epoch, this, ICRF, null, null)
                 : FromPlanetodetic(epoch);
         }
 

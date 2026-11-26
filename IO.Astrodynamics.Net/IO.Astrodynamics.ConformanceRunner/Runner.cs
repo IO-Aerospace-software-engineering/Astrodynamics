@@ -55,7 +55,7 @@ public class Runner
     {
         // Load SPICE kernels
         Console.WriteLine($"Loading SPICE kernels from: {_spiceKernelsPath}");
-        SpiceAPI.Instance.LoadKernels(new DirectoryInfo(_spiceKernelsPath));
+        SpiceApi.Instance.LoadKernels(new DirectoryInfo(_spiceKernelsPath));
 
         // Load tolerances
         var toleranceConfig = LoadTolerances();
@@ -67,7 +67,7 @@ public class Runner
         var caseDirs = DiscoverCases();
         Console.WriteLine($"Discovered {caseDirs.Count} test case(s)");
 
-        var frameworkAssembly = typeof(SpiceAPI).Assembly;
+        var frameworkAssembly = typeof(SpiceApi).Assembly;
         var informationalVersion = frameworkAssembly
             .GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion ?? "unknown";
         var report = new RunnerReport

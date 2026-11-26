@@ -53,7 +53,7 @@ using IO.Astrodynamics.SSA;
 using IO.Astrodynamics.SolarSystemObjects;
 using IO.Astrodynamics.Surface;
 using IO.Astrodynamics.TimeSystem;
-using TLE = IO.Astrodynamics.OrbitalParameters.TLE.TLE;
+using Tle = IO.Astrodynamics.OrbitalParameters.TLE.Tle;
 
 namespace DocumentationPageSamples.Reference;
 
@@ -66,7 +66,7 @@ internal static class SitesPage
         #region docs/reference/sites.md:1
         // Inputs: window (Window), step (TimeSpan), site (Site), moon (CelestialBody)
         var windows = GeometryFinder.FindWindows(window,
-            t => site.IlluminationEmission(t, moon, Aberration.None), RelationnalOperator.Lower, Constants.HalfPi, new WindowSearchOptions { Step = step });
+            t => site.IlluminationEmission(t, moon, Aberration.None), RelationalOperator.LessThan, Constants.HalfPi, new WindowSearchOptions { Step = step });
         #endregion
     }
 

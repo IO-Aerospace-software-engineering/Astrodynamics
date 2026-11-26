@@ -250,15 +250,15 @@ public class TemeFrameTests
         // TEME -> ITRF93: the managed TEME, then SPICE's ITRF93 with its angular velocity
         var epoch = Utc("2004-04-06T07:51:28.386");
         var itrf93 = new Frames.Frame("ITRF93");
-        var direct = SpiceAPI.Instance.TransformFrame(epoch, Frames.Frame.TEME, itrf93);
+        var direct = SpiceApi.Instance.TransformFrame(epoch, Frames.Frame.TEME, itrf93);
         var composed = Frames.Frame.TEME.ToFrame(itrf93, epoch);
         Assert.InRange(Angle(direct.Rotation, composed.Rotation), 0.0, 1e-15);
         Assert.InRange((direct.AngularVelocity - composed.AngularVelocity).Magnitude(), 0.0, 1e-20);
 
-        var inverse = SpiceAPI.Instance.TransformFrame(epoch, itrf93, new Frames.Frame("TEME"));
+        var inverse = SpiceApi.Instance.TransformFrame(epoch, itrf93, new Frames.Frame("TEME"));
         Assert.InRange(Angle(inverse.Rotation * direct.Rotation, Quaternion.Identity), 0.0, 1e-15);
 
-        var temeToTeme = SpiceAPI.Instance.TransformFrame(epoch, Frames.Frame.TEME, new Frames.Frame("TEME"));
+        var temeToTeme = SpiceApi.Instance.TransformFrame(epoch, Frames.Frame.TEME, new Frames.Frame("TEME"));
         Assert.InRange(Angle(temeToTeme.Rotation, Quaternion.Identity), 0.0, 1e-15);
         Assert.Equal(Vector3.Zero, temeToTeme.AngularVelocity);
     }
@@ -269,10 +269,10 @@ public class TemeFrameTests
         // #454 on the TEME path: ITRF93 before the Earth's binary PCK (2000-01-01) gives no rotation
         var epoch = Utc("1990-01-01T00:00:00.000");
         var ex = Assert.Throws<SpiceException>(() =>
-            SpiceAPI.Instance.TransformFrame(epoch, Frames.Frame.TEME, new Frames.Frame("ITRF93")));
+            SpiceApi.Instance.TransformFrame(epoch, Frames.Frame.TEME, new Frames.Frame("ITRF93")));
         Assert.Contains("ITRF93", ex.Message);
         // TEME itself reads no kernel: TEME <-> ICRF works there
-        Assert.InRange(SpiceAPI.Instance.TransformFrame(epoch, Frames.Frame.TEME, Frames.Frame.ICRF).Rotation.Magnitude(), 1.0 - 1e-15, 1.0 + 1e-15);
+        Assert.InRange(SpiceApi.Instance.TransformFrame(epoch, Frames.Frame.TEME, Frames.Frame.ICRF).Rotation.Magnitude(), 1.0 - 1e-15, 1.0 + 1e-15);
     }
 
     [Fact]
@@ -284,7 +284,7 @@ public class TemeFrameTests
         double position = 0.0, velocity = 0.0;
         foreach (var p in Points.Value.Where(x => x.Kind == "tle"))
         {
-            var tle = new TLE(p.Name, p.Line1, p.Line2);
+            var tle = new Tle(p.Name, p.Line1, p.Line2);
             var teme = p.Instant == null ? tle.ToOsculating() : tle.ToOsculating(Instant(p.Instant));
             Assert.Same(Frames.Frame.TEME, teme.Frame);
             var icrf = teme.ToFrame(Frames.Frame.ICRF).ToStateVector();
@@ -320,19 +320,19 @@ public class TemeFrameTests
             Assert.InRange((read.Velocity - converted.Velocity).Magnitude(), 0.0, 1e-9);
         }
 
-        // The SpiceAPI reads by NAIF identifiers, at an epoch and over a window
-        var atEpoch = SpiceAPI.Instance.ReadEphemeris(epoch, 399, 301, Frames.Frame.TEME, Aberration.None);
-        var expected = SpiceAPI.Instance.ReadEphemeris(epoch, 399, 301, Frames.Frame.ICRF, Aberration.None).ToFrame(Frames.Frame.TEME).ToStateVector();
+        // The SpiceApi reads by NAIF identifiers, at an epoch and over a window
+        var atEpoch = SpiceApi.Instance.ReadEphemeris(epoch, 399, 301, Frames.Frame.TEME, Aberration.None);
+        var expected = SpiceApi.Instance.ReadEphemeris(epoch, 399, 301, Frames.Frame.ICRF, Aberration.None).ToFrame(Frames.Frame.TEME).ToStateVector();
         Assert.InRange((atEpoch.Position - expected.Position).Magnitude(), 0.0, 1e-6);
         Assert.Same(Frames.Frame.TEME, atEpoch.Frame);
 
         var window = new Window(epoch, epoch + TimeSpan.FromHours(2.0));
-        var windowed = SpiceAPI.Instance.ReadEphemeris(window, 399, 301, Frames.Frame.CIRS, Aberration.None, TimeSpan.FromHours(1.0))
+        var windowed = SpiceApi.Instance.ReadEphemeris(window, 399, 301, Frames.Frame.CIRS, Aberration.None, TimeSpan.FromHours(1.0))
             .Select(x => x.ToStateVector()).ToArray();
         Assert.Equal(3, windowed.Length);
         foreach (var state in windowed)
         {
-            var reference = SpiceAPI.Instance.ReadEphemeris(state.Epoch, 399, 301, Frames.Frame.ICRF, Aberration.None).ToFrame(Frames.Frame.CIRS).ToStateVector();
+            var reference = SpiceApi.Instance.ReadEphemeris(state.Epoch, 399, 301, Frames.Frame.ICRF, Aberration.None).ToFrame(Frames.Frame.CIRS).ToStateVector();
             Assert.InRange((state.Position - reference.Position).Magnitude(), 0.0, 1e-6);
             Assert.Same(Frames.Frame.CIRS, state.Frame);
         }
@@ -354,7 +354,7 @@ public class TemeFrameTests
         // Its record empty, the frame is read by name, as before 11.0.0: no kernel defines F07SC_FRAME, so SPICE rejects it,
         // a bad argument since R25 of #668 (InvalidOperationException before)
         Assert.Contains("F07SC_FRAME", Assert.Throws<ArgumentException>(() => moon.GetEphemeris(epoch, earth, frame, Aberration.LT)).Message);
-        Assert.Throws<ArgumentException>(() => SpiceAPI.Instance.ReadEphemeris(epoch, 399, 301, frame, Aberration.None));
+        Assert.Throws<ArgumentException>(() => SpiceApi.Instance.ReadEphemeris(epoch, 399, 301, frame, Aberration.None));
 
         // An attitude other than the identity, given by hand
         frame.AddStateOrientationToICRF(new StateOrientation(new Quaternion(new Vector3(1.0, 2.0, 3.0).Normalize(), 0.7), Vector3.Zero, epoch, frame));
@@ -365,18 +365,18 @@ public class TemeFrameTests
         Assert.InRange((read.Position - converted.Position).Magnitude(), 0.0, 1e-6);
         Assert.InRange((read.Velocity - converted.Velocity).Magnitude(), 0.0, 1e-9);
 
-        var atEpoch = SpiceAPI.Instance.ReadEphemeris(epoch, 399, 301, frame, Aberration.None);
-        var expected = SpiceAPI.Instance.ReadEphemeris(epoch, 399, 301, Frames.Frame.ICRF, Aberration.None).ToFrame(frame).ToStateVector();
+        var atEpoch = SpiceApi.Instance.ReadEphemeris(epoch, 399, 301, frame, Aberration.None);
+        var expected = SpiceApi.Instance.ReadEphemeris(epoch, 399, 301, Frames.Frame.ICRF, Aberration.None).ToFrame(frame).ToStateVector();
         Assert.Same(frame, atEpoch.Frame);
         Assert.InRange((atEpoch.Position - expected.Position).Magnitude(), 0.0, 1e-6);
         Assert.InRange((atEpoch.Velocity - expected.Velocity).Magnitude(), 0.0, 1e-9);
 
-        var windowed = SpiceAPI.Instance.ReadEphemeris(new Window(epoch, epoch + TimeSpan.FromHours(2.0)), 399, 301, frame, Aberration.None,
+        var windowed = SpiceApi.Instance.ReadEphemeris(new Window(epoch, epoch + TimeSpan.FromHours(2.0)), 399, 301, frame, Aberration.None,
             TimeSpan.FromHours(1.0)).Select(x => x.ToStateVector()).ToArray();
         Assert.Equal(3, windowed.Length);
         foreach (var state in windowed)
         {
-            var reference = SpiceAPI.Instance.ReadEphemeris(state.Epoch, 399, 301, Frames.Frame.ICRF, Aberration.None).ToFrame(frame).ToStateVector();
+            var reference = SpiceApi.Instance.ReadEphemeris(state.Epoch, 399, 301, Frames.Frame.ICRF, Aberration.None).ToFrame(frame).ToStateVector();
             Assert.InRange((state.Position - reference.Position).Magnitude(), 0.0, 1e-6);
             Assert.Same(frame, state.Frame);
         }
@@ -423,12 +423,12 @@ public class TemeFrameTests
             clock.Refresh();
             fk.Refresh();
             Assert.Empty(KernelShadowing.Find([clock, fk], KernelShadowing.SolarSystem));
-            SpiceAPI.Instance.LoadKernels(clock);
-            SpiceAPI.Instance.LoadKernels(fk);
+            SpiceApi.Instance.LoadKernels(clock);
+            SpiceApi.Instance.LoadKernels(fk);
             _kernels = [ck, fk, clock];
             Writer.WriteOrientation(ck);
             ck.Refresh();
-            SpiceAPI.Instance.LoadKernels(ck);
+            SpiceApi.Instance.LoadKernels(ck);
         }
 
         public IO.Astrodynamics.Body.Spacecraft.Spacecraft Writer { get; }
@@ -440,7 +440,7 @@ public class TemeFrameTests
                 kernel.Refresh();
                 if (kernel.Exists)
                 {
-                    SpiceAPI.Instance.UnloadKernels(kernel);
+                    SpiceApi.Instance.UnloadKernels(kernel);
                 }
             }
 
@@ -475,7 +475,7 @@ public class TemeFrameTests
             foreach (var read in new[]
                      {
                          moon.GetEphemeris(t, earth, fresh.Frame, Aberration.None),
-                         SpiceAPI.Instance.ReadEphemeris(t, 399, 301, fresh.Frame, Aberration.None),
+                         SpiceApi.Instance.ReadEphemeris(t, 399, 301, fresh.Frame, Aberration.None),
                          moon.GetEphemeris(t, earth, kernels.Writer.Frame, Aberration.None)
                      })
             {

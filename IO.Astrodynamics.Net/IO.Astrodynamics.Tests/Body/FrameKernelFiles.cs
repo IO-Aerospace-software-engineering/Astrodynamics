@@ -45,14 +45,14 @@ internal static class FrameKernelFiles
         // FileInfo caches Exists, and LoadKernels loads nothing for a path it believes absent
         kernel.Refresh();
         Assert.True(kernel.Exists, kernel.FullName);
-        SpiceAPI.Instance.LoadKernels(kernel);
+        SpiceApi.Instance.LoadKernels(kernel);
         try
         {
             whileLoaded?.Invoke();
         }
         finally
         {
-            SpiceAPI.Instance.UnloadKernels(kernel);
+            SpiceApi.Instance.UnloadKernels(kernel);
             Delete(kernel);
         }
     }

@@ -445,8 +445,8 @@ second reference of the first two, ERFA's CIP route of the third.
 
 | Category | The runner (solver) | The library |
 |----------|---------------------|-------------|
-| `sgp4` | `Sgp4Solver` | `new TLE(name, line1, line2)`; a tsince sample is the TT instant `tle.Epoch` + 60·tsince, a UTC instant is read as it is, both through `TLE.ToOsculating`, whose tsince is the TT seconds from the TLE epoch (#599); ICRF by `ToFrame(Frame.ICRF)`, the managed TEME (#451); the epoch the UTC calendar date of `tle.Epoch` (#603). `gravity_model` and `opsmode` other than `wgs72old` and `afspc` are an ERROR: the library's SGP4 is CSPICE `evsgp4_c`, WGS-72 old in the AFSPC mode only |
-| `tle_conversion` | `TleConversionSolver` | `tle_to_omm`: `TLE.ToOmm()`, its mean elements and TLE parameters; `omm_to_tle`: an `Omm` of the item (Earth, TEME, SGP4, its `TIME_SYSTEM`), then `Omm.ToTle()`, which reads the epoch in that time system and writes its UTC (#485, #479), each field the nearest value of its columns (#600 to #602, #480) |
+| `sgp4` | `Sgp4Solver` | `new Tle(name, line1, line2)`; a tsince sample is the TT instant `tle.Epoch` + 60·tsince, a UTC instant is read as it is, both through `Tle.ToOsculating`, whose tsince is the TT seconds from the TLE epoch (#599); ICRF by `ToFrame(Frame.ICRF)`, the managed TEME (#451); the epoch the UTC calendar date of `tle.Epoch` (#603). `gravity_model` and `opsmode` other than `wgs72old` and `afspc` are an ERROR: the library's SGP4 is CSPICE `evsgp4_c`, WGS-72 old in the AFSPC mode only |
+| `tle_conversion` | `TleConversionSolver` | `tle_to_omm`: `Tle.ToOmm()`, its mean elements and TLE parameters; `omm_to_tle`: an `Omm` of the item (Earth, TEME, SGP4, its `TIME_SYSTEM`), then `Omm.ToTle()`, which reads the epoch in that time system and writes its UTC (#485, #479), each field the nearest value of its columns (#600 to #602, #480) |
 | `frame_transformation` | `FrameTransformationSolver` | `TEME` resolved to `Frame.TEME` (`FrameCatalog`), quasi-inertial, v′ = R v; TEME → ITRF93 composed through ICRF |
 
 - **New kinds** (`spec.md` §6.1): the SGP4 states are compared per component (`MetricKind.ScalarPerComponent`, the
@@ -464,7 +464,7 @@ cases take the overrides of the suite, set by GMAT's kinematic terms of the 1994
 and the 2000A/2000B spread: a runner exact to Vallado's definition sits at about half of them. Release, Linux,
 2026-11-08, the runner on the suite at b10b925: the worst ratio of each key over the cases, and of each case over its keys.
 With decision 111 of [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668) (lot L7,
-Release, Linux, 2026-11-26, the suite's 33286d2, 201 of 201) `TLE.ToOmm` writes the mean motion of the field, so the
+Release, Linux, 2026-11-26, the suite's 33286d2, 201 of 201) `Tle.ToOmm` writes the mean motion of the field, so the
 `MEAN_MOTION` deltas fell to 0; the rows it moved give the new figure, the figure before it in brackets.
 
 | Key | Worst delta | Ratio | Case and output |

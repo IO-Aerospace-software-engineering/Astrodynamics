@@ -163,7 +163,7 @@ public class GeopotentialOptionsTests
     {
         // R12: the TLE's Earth is a point mass, which counts as not given; the reference is the twin of the TLE start (SGP4
         // at the window start rotated to ICRF, TlePropagationTests) on an Earth built with the model
-        var tle = new TLE("ISS", "1 25544U 98067A   21020.53488036  .00016717  00000-0  10270-3 0  9054",
+        var tle = new Tle("ISS", "1 25544U 98067A   21020.53488036  .00016717  00000-0  10270-3 0  9054",
             "2 25544  51.6423 353.0312 0000493 320.8755  39.2360 15.49309423 25703");
         var window = new Window(tle.Epoch, tle.Epoch.AddHours(1.0));
         var t0 = window.StartDate.ToTDB();

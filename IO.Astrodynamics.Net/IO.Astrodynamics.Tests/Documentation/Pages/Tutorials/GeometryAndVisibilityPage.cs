@@ -53,7 +53,7 @@ using IO.Astrodynamics.SSA;
 using IO.Astrodynamics.SolarSystemObjects;
 using IO.Astrodynamics.Surface;
 using IO.Astrodynamics.TimeSystem;
-using TLE = IO.Astrodynamics.OrbitalParameters.TLE.TLE;
+using Tle = IO.Astrodynamics.OrbitalParameters.TLE.Tle;
 
 namespace DocumentationPageSamples.Tutorials;
 
@@ -104,7 +104,7 @@ internal static class GeometryAndVisibilityPage
         var farMoonWindows = earth.FindDistanceWindows(
             searchWindow,
             moon,
-            RelationnalOperator.Greater,
+            RelationalOperator.GreaterThan,
             400000000,          // meters
             new WindowSearchOptions { Step = TimeSpan.FromHours(24) });
         #endregion
@@ -190,7 +190,7 @@ internal static class GeometryAndVisibilityPage
             searchWindow,
             spacecraft,
             HorizontalCoordinate.Elevation,
-            RelationnalOperator.Greater,
+            RelationalOperator.GreaterThan,
             10.0 * Constants.Deg2Rad,
             new WindowSearchOptions { Step = TimeSpan.FromMinutes(1), Aberration = Aberration.LT });
         #endregion
@@ -202,7 +202,7 @@ internal static class GeometryAndVisibilityPage
         #region docs/tutorials/geometry-and-visibility.md:10
         // Inputs: mySite (Site), epoch (Time)
         // Parse TLE
-        var tle = new TLE(
+        var tle = new Tle(
             "ISS (ZARYA)",
             "1 25544U 98067A   24100.50000000  .00016717  00000-0  10270-3 0  9005",
             "2 25544  51.6416 247.4627 0006703 130.5360 325.0288 15.49750667  1007");

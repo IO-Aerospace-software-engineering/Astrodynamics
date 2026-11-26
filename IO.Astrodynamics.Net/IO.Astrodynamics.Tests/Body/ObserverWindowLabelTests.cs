@@ -73,24 +73,24 @@ public class ObserverWindowLabelTests
         var dss13 = new Site(13, "DSS-13", earth);
         var options = WindowSearchOptions.Default with { Step = Step };
 
-        // The former instants from the paths that keep their TDB labels: the raw searches of SpiceAPI (gfposc_c in km) and
+        // The former instants from the paths that keep their TDB labels: the raw searches of SpiceApi (gfposc_c in km) and
         // the internal occultation searches
         // gfdist_c and gfposc_c, which labelled TDB
-        AssertInTheWindowScale(SpiceAPI.Instance.FindWindowsOnDistanceConstraint(UtcDistanceWindow, moon.NaifId, lro.NaifId, RelationnalOperator.Greater, 1815148.0,
+        AssertInTheWindowScale(SpiceApi.Instance.FindWindowsOnDistanceConstraint(UtcDistanceWindow, moon.NaifId, lro.NaifId, RelationalOperator.GreaterThan, 1815148.0,
                 Aberration.None, Step),
-            moon.FindDistanceWindows(UtcDistanceWindow, lro, RelationnalOperator.Greater, 1815148.0, options), UtcDistanceWindow, "gfdist_c");
-        AssertInTheWindowScale(SpiceAPI.Instance.FindWindowsOnCoordinateConstraint(UtcDistanceWindow, moon.NaifId, lro.NaifId, Frames.Frame.ICRF,
-                CoordinateSystem.Rectangular, Coordinate.Z, RelationnalOperator.Greater, 500.0, 0.0, Aberration.None, Step),
-            moon.FindCoordinateWindows(UtcDistanceWindow, lro, Frames.Frame.ICRF, CoordinateSystem.Rectangular, Coordinate.Z, RelationnalOperator.Greater,
+            moon.FindDistanceWindows(UtcDistanceWindow, lro, RelationalOperator.GreaterThan, 1815148.0, options), UtcDistanceWindow, "gfdist_c");
+        AssertInTheWindowScale(SpiceApi.Instance.FindWindowsOnCoordinateConstraint(UtcDistanceWindow, moon.NaifId, lro.NaifId, Frames.Frame.ICRF,
+                CoordinateSystem.Rectangular, Coordinate.Z, RelationalOperator.GreaterThan, 500.0, 0.0, Aberration.None, Step),
+            moon.FindCoordinateWindows(UtcDistanceWindow, lro, Frames.Frame.ICRF, CoordinateSystem.Rectangular, Coordinate.Z, RelationalOperator.GreaterThan,
                 500000.0, options), UtcDistanceWindow, "gfposc_c");
 
         // gfilum_c and the day windows, which forward to it
-        AssertInTheWindowScale(SpiceAPI.Instance.FindWindowsOnIlluminationConstraint(UtcDistanceWindow, dss13.NaifId, earth.NaifId, earth.Frame, dss13.Planetodetic,
-                IlluminationAngle.Incidence, RelationnalOperator.Lower, 1.5, 0.0, Aberration.None, Step, sun.NaifId, "ELLIPSOID"),
-            dss13.FindIlluminationWindows(UtcDistanceWindow, IlluminationAngle.Incidence, RelationnalOperator.Lower, 1.5, sun, options), UtcDistanceWindow,
+        AssertInTheWindowScale(SpiceApi.Instance.FindWindowsOnIlluminationConstraint(UtcDistanceWindow, dss13.NaifId, earth.NaifId, earth.Frame, dss13.Planetodetic,
+                IlluminationAngle.Incidence, RelationalOperator.LessThan, 1.5, 0.0, Aberration.None, Step, sun.NaifId, "ELLIPSOID"),
+            dss13.FindIlluminationWindows(UtcDistanceWindow, IlluminationAngle.Incidence, RelationalOperator.LessThan, 1.5, sun, options), UtcDistanceWindow,
             "gfilum_c");
-        AssertInTheWindowScale(SpiceAPI.Instance.FindWindowsOnIlluminationConstraint(UtcDistanceWindow, dss13.NaifId, earth.NaifId, earth.Frame, dss13.Planetodetic,
-                IlluminationAngle.Incidence, RelationnalOperator.Lower, IO.Astrodynamics.Constants.HalfPi + 0.1, 0.0, Aberration.LTS, TimeSpan.FromMinutes(1.0),
+        AssertInTheWindowScale(SpiceApi.Instance.FindWindowsOnIlluminationConstraint(UtcDistanceWindow, dss13.NaifId, earth.NaifId, earth.Frame, dss13.Planetodetic,
+                IlluminationAngle.Incidence, RelationalOperator.LessThan, IO.Astrodynamics.Constants.HalfPi + 0.1, 0.0, Aberration.LTS, TimeSpan.FromMinutes(1.0),
                 sun.NaifId, "ELLIPSOID"),
             dss13.FindDayWindows(UtcDistanceWindow, 0.1), UtcDistanceWindow, "FindDayWindows");
 

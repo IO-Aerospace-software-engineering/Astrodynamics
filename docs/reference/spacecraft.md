@@ -165,7 +165,7 @@ attitude record (whatever `IsPropagated` says, those added by hand included, dec
 maneuvers and the gates of the previous propagation (#573), and the spacecraft is then `IsPropagated`.
 `MonteCarloPropagator` runs no plan: it propagates spacecraft built from the template's orbit, dry mass, area and
 coefficients, and throws `ArgumentException` (`config`) for a template with a maneuver plan (decision 41 of #668,
-decided by S. Guillet, 2026-11-23; before 11.0.0 the plan was dropped silently), and so does `TLEPropagator`, which
+decided by S. Guillet, 2026-11-23; before 11.0.0 the plan was dropped silently), and so does `TlePropagator`, which
 SGP4 samples, for a spacecraft with one (decision 40). The reset belongs to `PropagatorBase.Propagate`, once its checks pass (#583, decided by S. Guillet,
 2026-11-17: before 11.0.0 only `Spacecraft.Propagate` reset the spacecraft, so a second run through the builder of 10.x or a
 propagator built directly fired no burn and started with the fuel left by the first). The inputs of a propagation are
@@ -199,11 +199,11 @@ of [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/iss
 |------|-----------|-------|
 | A body read at an epoch where it has no data | `InvalidOperationException` | `GetEphemeris` and `GetGeometricStateRelativeTo` of a propagated spacecraft before its first stored state or after its last, its light-time margin aside ([#527](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/527)), or in a gap between the windows given to `AddPropagatedStates`; a body read outside the coverage of the kernels (`SpiceException`, an `InvalidOperationException`) |
 | A solution read outside its window | `ArgumentOutOfRangeException` | `PropagationSolution.GetStateVector` and the getters of the covariance propagation outside `PropagationSolution.Window` ([Propagators](propagators.md)) |
-| A write with nothing to write | `InvalidOperationException` | `WriteEphemeris` of a spacecraft that stores no state, `WriteOrientation` of an empty attitude record (a `TLEPropagator` run records none, [#546](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/546)), `WriteKernels` of either, `Star.WriteEphemeris` of a star that stores fewer than three states; nothing is written. An arc of one state keeps its `ArgumentException` in `WriteEphemeris` (decisions 87 and 89 of #668), which `WriteKernels` refuses with `InvalidOperationException`; `SpiceAPI.WriteEphemeris` and `Site.WriteEphemeris`, whose arguments are at fault, keep theirs |
+| A write with nothing to write | `InvalidOperationException` | `WriteEphemeris` of a spacecraft that stores no state, `WriteOrientation` of an empty attitude record (a `TlePropagator` run records none, [#546](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/546)), `WriteKernels` of either, `Star.WriteEphemeris` of a star that stores fewer than three states; nothing is written. An arc of one state keeps its `ArgumentException` in `WriteEphemeris` (decisions 87 and 89 of #668), which `WriteKernels` refuses with `InvalidOperationException`; `SpiceApi.WriteEphemeris` and `Site.WriteEphemeris`, whose arguments are at fault, keep theirs |
 | A window argument that leaves a body's stored states | `InvalidOperationException` | `GetEphemeris` over a window and the managed distance search (`FindDistanceWindows`) past a propagated spacecraft's states; the managed field-of-view search (`Instrument.FindFieldOfViewWindows`) for a search window that leaves the stored states of the instrument's spacecraft or of a spacecraft target, or meets a gap between them (decision 86; `ArgumentException` before lot L6); the `ILocalizable` overloads of `ConjunctionAssessment.Analyze`, `AnalyzeAll` and `Screen` for a window that leaves the stored states of the protected or a secondary spacecraft, or meets a gap between them (decisions 81 and 86; `ArgumentException` naming `screeningWindow` before lot L7). A `PropagationSolution` given to the conjunction analysis that does not cover the window is an argument, and keeps `ArgumentException` naming it |
 
 Before 11.0.0 a write with nothing to write threw the `ArgumentException` of the SPK writer (`arcs`) or of
-`SpiceAPI.WriteEphemeris` (`stateVectors`), which blamed the file for what the spacecraft or the star lacked
+`SpiceApi.WriteEphemeris` (`stateVectors`), which blamed the file for what the spacecraft or the star lacked
 ([#799](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/799)).
 
 ## Attitude and kernels
@@ -262,7 +262,7 @@ across the jump:
   [#527](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/527), decided by S. Guillet,
   2026-11-17). The epoch a light-time correction reads, the observation epoch shifted by the light time, may lie up to
   that light time outside them, the observation epoch itself within them; so the managed geometry searches over a window
-  that leaves the states throw too. A TLE spacecraft sampled by `TLEPropagator` reads SGP4 outside its samples, from the
+  that leaves the states throw too. A TLE spacecraft sampled by `TlePropagator` reads SGP4 outside its samples, from the
   Earth as from any other body (its short-circuit extrapolated them before). The arcs
   are immutable arrays read by a binary search: a read takes no lock and sorts nothing, 0.001 to 0.003 ms at 7 000 to
   9 000 states, where the sort of every state at each call took 1.6 to 2.2 ms
@@ -294,14 +294,14 @@ across the jump:
   made one arc read across the gap between them without an error (9.28e9 m off the two-body orbit 1 h 56 min into a gap
   of 4 h between two windows of one hour at 60 s). A propagation, by every path,
   replaces every stored state, those added before it included: before 11.0.0 they were merged with the propagated ones.
-  `TLEPropagator.Propagate` re-arms the spacecraft and stores its samples alone, in one arc (decision 38 of #668,
+  `TlePropagator.Propagate` re-arms the spacecraft and stores its samples alone, in one arc (decision 38 of #668,
   decided by S. Guillet, 2026-11-23: before 11.0.0 it added them to the stored states).
 - **A TLE spacecraft** reads its stored states once a numerical propagation stored them, by any path, a
   `CentralBodyPropagator` built directly included (which make it `IsPropagated` since #583, false before), and SGP4 otherwise: unpropagated,
-  or sampled by `TLEPropagator`, whose samples do not change the rule (#675; before 11.0.0 it read SGP4
+  or sampled by `TlePropagator`, whose samples do not change the rule (#675; before 11.0.0 it read SGP4
   whatever its stored states, and no numerical propagation of a TLE ran). The rule is that of
   `GetGeometricStateRelativeTo` and of every read through it; `GetEphemeris` from the centre of the stored states
-  without aberration reads them directly, whatever the initial orbit, so after `TLEPropagator` it interpolates its
+  without aberration reads them directly, whatever the initial orbit, so after `TlePropagator` it interpolates its
   samples (SGP4 at the samples, 9.1e-4 m from it between them for the ISS at 60 s over one UTC hour, 7.6e-4 m before #598 moved the last sample to the window end), as before 11.0.0.
 
 **Accuracy across an impulse** (`PropagatedArcsTests`, the worst over Linux x64, Windows and macOS arm64, CI run
@@ -387,7 +387,7 @@ A kernel-backed spacecraft reads its frame kernel and its CK through SPICE at ev
   `Instruments` (`InstrumentKernelFiles`) give the files and whose `Dispose` unloads exactly what the call loaded, once,
   leaving the files on disk; `IsLoaded` is true until then (a user's `UnloadKernels` of the files is not tracked). It
   checks everything before it writes, creates or loads anything, with `InvalidOperationException`: a kernel-backed
-  spacecraft; no stored state, no arc an SPK can write (an arc of one state), or no attitude record (a `TLEPropagator`
+  spacecraft; no stored state, no arc an SPK can write (an arc of one state), or no attitude record (a `TlePropagator`
   run records none: give the spacecraft attitudes with `SpacecraftFrame.AddStateOrientationToICRF` after the run, and it
   is written); a name SPICE cannot read in a kernel variable or that is not a portable file name; a directory that is,
   or lies inside, a loaded directory (whose later load or unload would take the files), or a file it would write that
@@ -439,7 +439,7 @@ A kernel-backed spacecraft reads its frame kernel and its CK through SPICE at ev
   microsecond, where it turns to the new attitude (up to 0.79 rad in the tests); a field-of-view edge moves by at most
   that microsecond and the rounding of its encoded SCLK. The spacecraft clock kernel must be loaded.
   `InvalidOperationException` for a kernel-backed spacecraft or one whose attitude record is empty: never propagated
-  numerically, or sampled by a `TLEPropagator`, which records no attitude; its message names
+  numerically, or sampled by a `TlePropagator`, which records no attitude; its message names
   `SpacecraftFrame.AddStateOrientationToICRF`, which gives it one (#546).
 - **The frame kernels** (`SpacecraftFrame.Write`, `Instrument.WriteFrame`) put the upper-cased names in kernel
   variable names, `FRAME_<SPACECRAFT>_FRAME` and `FRAME_<SPACECRAFT>_<INSTRUMENT>`, which SPICE reads with the rules of
@@ -492,8 +492,8 @@ A kernel-backed spacecraft reads its frame kernel and its CK through SPICE at ev
   2.9e-3 rad; on a circular equatorial orbit, where the attitude turns at a constant rate about a fixed axis, 1.1e-10 rad
   (the same reader). A shorter output step lowers it.
 
-`SpiceAPI.ReadOrientation` and `SpiceAPI.WriteOrientation` are the raw C-matrix pair of `ckgpav_c` and `ckw03_c`
-([SpiceAPI](spice-api.md#orientation-kernels)); a CK segment without angular velocity is read by `ckgp_c`, with a zero
+`SpiceApi.ReadOrientation` and `SpiceApi.WriteOrientation` are the raw C-matrix pair of `ckgpav_c` and `ckw03_c`
+([SpiceApi](spice-api.md#orientation-kernels)); a CK segment without angular velocity is read by `ckgp_c`, with a zero
 angular velocity (#714), and where several segments cover an epoch the record is that of the segment of highest priority,
 `ckgp_c`'s in a fresh process whatever the calls before, with `ckgpav_c`'s rate when it holds one (#724). `ReadOrientation` of a CK written by 11.0.0 returns the C-matrix of the
 attitude.
@@ -505,7 +505,7 @@ content: regenerate them by propagating again. SPKs written before are right (in
 converts) away from the impulses; across an impulse they interpolate through the jump of the velocity, by up to 150 km
 near a 635 m/s burn (#540): regenerate them. A CK of the identity attitude from ICRF is unaffected.
 
-**Not covered.** `TLEPropagator`, which `Spacecraft.Propagate` does not use, records no attitude: its SPK is written (in
+**Not covered.** `TlePropagator`, which `Spacecraft.Propagate` does not use, records no attitude: its SPK is written (in
 J2000), its CK is not (`InvalidOperationException`), nor its set of kernels by `WriteKernels`, until the spacecraft is
 given attitudes by `SpacecraftFrame.AddStateOrientationToICRF` after the run.
 
@@ -753,7 +753,7 @@ has no attitude, when the observer is inside the ellipsoid of the target, or whe
 ellipse are too small for its cone at the target's distance ([Tiny half-angles](#field-of-view-search)). A managed spacecraft has no attitude while
 its attitude record is empty: never propagated and with no orientation added, built from a TLE and not propagated by
 `Spacecraft.Propagate` ([#675](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/675)), or propagated by
-`TLEPropagator` ([#546](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/546)); its CK cannot be written either. Propagate it, or give it its attitude,
+`TlePropagator` ([#546](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/546)); its CK cannot be written either. Propagate it, or give it its attitude,
 `spacecraft.Frame.AddStateOrientationToICRF(new StateOrientation(q, Vector3.Zero, epoch, spacecraft.Frame))`, held from
 then on ([#682](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/682); before 11.0.0 the identity of ICRF was searched). This check comes after those of the
 arguments and of the field, whose errors come first. On the CSPICE path an error of `gftfov` (a missing kernel, an

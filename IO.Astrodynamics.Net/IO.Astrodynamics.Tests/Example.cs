@@ -13,7 +13,7 @@ public class Example
     public void ReadEphemeris()
     {
         //In this example we want the ephemeris of the moon at epoch (2000-01-01T12:00Z) in ICRF frame with earth at center
-        //An application loads its kernels once, at start-up: SpiceAPI.Instance.LoadKernels(new DirectoryInfo("Data/SolarSystem")),
+        //An application loads its kernels once, at start-up: SpiceApi.Instance.LoadKernels(new DirectoryInfo("Data/SolarSystem")),
         //Data/SolarSystem replaced by your kernel path. The tests share them, loaded once per test process
         TestKernels.EnsureSolarSystem();
         var earth = PlanetsAndMoons.EARTH_BODY;

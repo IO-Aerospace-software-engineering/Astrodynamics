@@ -15,16 +15,16 @@ namespace IO.Astrodynamics.PDS;
 /// You can use the specific classes implemented in this framework or implement your own by extending this class
 /// </summary>
 /// <typeparam name="T"></typeparam>
-public abstract class PDSBase<T> where T : class
+public abstract class PdsBase<T> where T : class
 {
-    public PDSConfiguration Configuration { get; }
+    public PdsConfiguration Configuration { get; }
 
     /// <summary>
     /// Instantiate PDS from given configuation
     /// </summary>
     /// <param name="configuration">The configuration hold a set of xml schema and associated namespace</param>
     /// <exception cref="ArgumentNullException"></exception>
-    public PDSBase(PDSConfiguration configuration)
+    public PdsBase(PdsConfiguration configuration)
     {
         Configuration = configuration ?? throw new ArgumentNullException(nameof(configuration));
     }

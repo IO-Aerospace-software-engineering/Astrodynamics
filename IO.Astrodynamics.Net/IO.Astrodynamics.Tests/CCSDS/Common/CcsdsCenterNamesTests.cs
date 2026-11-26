@@ -23,7 +23,7 @@ namespace IO.Astrodynamics.Tests.CCSDS.Common
             // The name SPICE gives each id (bodc2n through GetCelestialBodyInfo), independent of the managed table
             foreach (var (name, naifId) in CcsdsCenterNames.CanonicalNames)
             {
-                Assert.Equal(name, SpiceAPI.Instance.GetCelestialBodyInfo(naifId).Name, ignoreCase: true);
+                Assert.Equal(name, SpiceApi.Instance.GetCelestialBodyInfo(naifId).Name, ignoreCase: true);
                 Assert.True(CcsdsCenterNames.TryGetNaifId(name, out var id));
                 Assert.Equal(naifId, id);
             }

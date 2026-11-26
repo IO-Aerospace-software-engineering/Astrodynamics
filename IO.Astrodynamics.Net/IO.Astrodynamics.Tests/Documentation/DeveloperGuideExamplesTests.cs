@@ -263,7 +263,7 @@ public class DeveloperGuideExamplesTests
     // Earth's, or the Earth's and the Moon's when moonMass is true (the Earth-Moon two-body problem of the Moon's SPK).
     private static (Vector3 Position, Vector3 Velocity) DeepSpaceReference(StateVector initial, TimeSystem.Time start, TimeSystem.Time end, bool moonMass)
     {
-        var spice = SpiceAPI.Instance;
+        var spice = SpiceApi.Instance;
         double central = spice.GetCelestialBodyInfo(399).GM + (moonMass ? spice.GetCelestialBodyInfo(301).GM : 0.0);
         var gm = DeepSpaceThirdBodies.Select(id => spice.GetCelestialBodyInfo(id).GM).ToArray();
         var tt0 = start.ToTT();
@@ -335,7 +335,7 @@ public class DeveloperGuideExamplesTests
     {
         var (spacecraft, moonState, start, end) = await DeveloperGuideExamples.Block54();
         var earth = moonState.Observer;
-        var moon = SpiceAPI.Instance.ReadEphemeris(end, 399, 301, Frames.Frame.ICRF, Aberration.None);
+        var moon = SpiceApi.Instance.ReadEphemeris(end, 399, 301, Frames.Frame.ICRF, Aberration.None);
 
         var final = spacecraft.GetEphemeris(end, earth, Frames.Frame.ICRF, Aberration.None);
         var reference = DeepSpaceReference(moonState, start, end, moonMass: true);

@@ -29,7 +29,7 @@ The managed API stores values in SI units internally. The OPM reader and writer 
 | `Opm.TryLoad(path, out opm, options?)` | `Load` without an exception: false for a missing file or a document the checks or the reader refuse |
 | `Opm.TryParse(xml, out opm, options?)` | `Parse` without an exception |
 
-One verb set reads and writes the three CCSDS messages, `Opm`, `Omm` and `Cdm`, as the `TLE` reads its text (R22 of
+One verb set reads and writes the three CCSDS messages, `Opm`, `Omm` and `Cdm`, as the `Tle` reads its text (R22 of
 [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668), lot L7): `CcsdsReadOptions`
 (`ValidateSchema`, `ValidateContent`, both true, and the switches of the content check `ValidatePhysicalConstraints`,
 `ValidateTleRequirements` and `WarnOnMissingOptionalFields`, null to run it, false to turn it off) and `CcsdsWriteOptions`
@@ -231,7 +231,7 @@ lot L7).
   the state after it. An epoch outside the propagated states throws `InvalidOperationException`, as every read there
   ([#527](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/527)); so does the default epoch
   when the propagation started later.
-- A spacecraft without propagated states (never propagated, or a TLE spacecraft only sampled by `TLEPropagator`) writes
+- A spacecraft without propagated states (never propagated, or a TLE spacecraft only sampled by `TlePropagator`) writes
   `InitialOrbitalParameters.ToStateVector(epoch)`, the two-body motion of osculating elements (SGP4 for a TLE), with its
   mass now and the maneuvers its chain executed, none when it never ran, as before 11.0.0.
 

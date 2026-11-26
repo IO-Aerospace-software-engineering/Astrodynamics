@@ -34,7 +34,7 @@ namespace IO.Astrodynamics.Tests.ColdStart;
 /// </para>
 /// <para>
 /// <c>static-bodies-spice</c>: the kernels loaded before any read, the members of the static objects against SPICE
-/// through <see cref="SpiceAPI"/> (the body information of <c>bodvrd</c> and the state of <c>spkezr</c>), exactly.
+/// through <see cref="SpiceApi"/> (the body information of <c>bodvrd</c> and the state of <c>spkezr</c>), exactly.
 /// </para>
 /// <para>
 /// <c>static-bodies-switch</c>: the static objects first read on an empty <see cref="MemoryDataProvider"/>, then on a
@@ -138,18 +138,18 @@ internal static class StaticBodiesChild
     {
         try
         {
-            SpiceAPI.Instance.LoadKernels(new DirectoryInfo(kernels));
+            SpiceApi.Instance.LoadKernels(new DirectoryInfo(kernels));
 
-            var barycenterInfo = SpiceAPI.Instance.GetCelestialBodyInfo(3);
-            var earthInfo = SpiceAPI.Instance.GetCelestialBodyInfo(399);
-            var sunInfo = SpiceAPI.Instance.GetCelestialBodyInfo(10);
+            var barycenterInfo = SpiceApi.Instance.GetCelestialBodyInfo(3);
+            var earthInfo = SpiceApi.Instance.GetCelestialBodyInfo(399);
+            var sunInfo = SpiceApi.Instance.GetCelestialBodyInfo(10);
             Check($"EARTH_BARYCENTER.GM {Barycenters.EARTH_BARYCENTER.GM:R}, SPICE {barycenterInfo.GM:R}",
                 Barycenters.EARTH_BARYCENTER.GM == barycenterInfo.GM);
             Check($"EARTH_BARYCENTER.Name {Barycenters.EARTH_BARYCENTER.Name}, SPICE {barycenterInfo.Name}",
                 Barycenters.EARTH_BARYCENTER.Name == barycenterInfo.Name);
             for (int id = 0; id <= 9; id++)
             {
-                var info = SpiceAPI.Instance.GetCelestialBodyInfo(id);
+                var info = SpiceApi.Instance.GetCelestialBodyInfo(id);
                 var barycenter = BarycenterOf(id);
                 Check($"barycentre {id}: name {barycenter.Name}, SPICE {info.Name}; GM {barycenter.GM:R}, SPICE {info.GM:R}",
                     barycenter.Name == info.Name && barycenter.GM == info.GM);
@@ -163,10 +163,10 @@ internal static class StaticBodiesChild
             Check($"EARTH_BODY.Name {earth.Name}, SPICE {earthInfo.Name}", earth.Name == earthInfo.Name);
             Check($"EARTH_BODY.Frame {earth.Frame.Name}, SPICE {earthInfo.FrameName}", earth.Frame.Name == earthInfo.FrameName);
             Check($"SUN_BODY.GM {Stars.SUN_BODY.GM:R}, SPICE {sunInfo.GM:R}", Stars.SUN_BODY.GM == sunInfo.GM);
-            Check($"MOON_BODY.GM {PlanetsAndMoons.MOON_BODY.GM:R}, SPICE {SpiceAPI.Instance.GetCelestialBodyInfo(301).GM:R}",
-                PlanetsAndMoons.MOON_BODY.GM == SpiceAPI.Instance.GetCelestialBodyInfo(301).GM);
+            Check($"MOON_BODY.GM {PlanetsAndMoons.MOON_BODY.GM:R}, SPICE {SpiceApi.Instance.GetCelestialBodyInfo(301).GM:R}",
+                PlanetsAndMoons.MOON_BODY.GM == SpiceApi.Instance.GetCelestialBodyInfo(301).GM);
 
-            var spkezr = SpiceAPI.Instance.ReadEphemeris(J2000, 3, 399, Frame.ECLIPTIC_J2000, Aberration.None);
+            var spkezr = SpiceApi.Instance.ReadEphemeris(J2000, 3, 399, Frame.ECLIPTIC_J2000, Aberration.None);
             var orbit = earth.InitialOrbitalParameters.ToStateVector();
             Check("EARTH_BODY's orbit is spkezr's state of 399 about 3 in ECLIPJ2000 at J2000 TDB",
                 orbit.Position == spkezr.Position && orbit.Velocity == spkezr.Velocity && orbit.Frame == Frame.ECLIPTIC_J2000);
@@ -201,12 +201,12 @@ internal static class StaticBodiesChild
 
             // The usual recovery: the SPICE provider, then the kernels
             Configuration.Instance.SetDataProvider(new SpiceDataProvider());
-            SpiceAPI.Instance.LoadKernels(new DirectoryInfo(kernels));
+            SpiceApi.Instance.LoadKernels(new DirectoryInfo(kernels));
 
-            var ssbInfo = SpiceAPI.Instance.GetCelestialBodyInfo(0);
-            var barycenterInfo = SpiceAPI.Instance.GetCelestialBodyInfo(3);
-            var earthInfo = SpiceAPI.Instance.GetCelestialBodyInfo(399);
-            var sunInfo = SpiceAPI.Instance.GetCelestialBodyInfo(10);
+            var ssbInfo = SpiceApi.Instance.GetCelestialBodyInfo(0);
+            var barycenterInfo = SpiceApi.Instance.GetCelestialBodyInfo(3);
+            var earthInfo = SpiceApi.Instance.GetCelestialBodyInfo(399);
+            var sunInfo = SpiceApi.Instance.GetCelestialBodyInfo(10);
             Check($"SOLAR_SYSTEM_BARYCENTER.GM after the switch {Barycenters.SOLAR_SYSTEM_BARYCENTER.GM:R}, SPICE {ssbInfo.GM:R}",
                 Barycenters.SOLAR_SYSTEM_BARYCENTER.GM == ssbInfo.GM);
             Check($"EARTH_BARYCENTER.GM after the switch {Barycenters.EARTH_BARYCENTER.GM:R}, SPICE {barycenterInfo.GM:R}",
@@ -217,11 +217,11 @@ internal static class StaticBodiesChild
             Check($"EARTH_BODY.Frame after the switch {PlanetsAndMoons.EARTH_BODY.Frame.Name}, SPICE {earthInfo.FrameName}",
                 PlanetsAndMoons.EARTH_BODY.Frame.Name == earthInfo.FrameName);
 
-            var barycenterOrbit = SpiceAPI.Instance.ReadEphemeris(J2000, 0, 3, Frame.ECLIPTIC_J2000, Aberration.None);
+            var barycenterOrbit = SpiceApi.Instance.ReadEphemeris(J2000, 0, 3, Frame.ECLIPTIC_J2000, Aberration.None);
             var barycenterState = Barycenters.EARTH_BARYCENTER.InitialOrbitalParameters.ToStateVector();
             Check("EARTH_BARYCENTER's orbit after the switch is spkezr's state of 3 about 0 in ECLIPJ2000 at J2000 TDB",
                 barycenterState.Position == barycenterOrbit.Position && barycenterState.Velocity == barycenterOrbit.Velocity);
-            var earthOrbit = SpiceAPI.Instance.ReadEphemeris(J2000, 3, 399, Frame.ECLIPTIC_J2000, Aberration.None);
+            var earthOrbit = SpiceApi.Instance.ReadEphemeris(J2000, 3, 399, Frame.ECLIPTIC_J2000, Aberration.None);
             var earthState = PlanetsAndMoons.EARTH_BODY.InitialOrbitalParameters.ToStateVector();
             Check("EARTH_BODY's orbit after the switch is spkezr's state of 399 about 3 in ECLIPJ2000 at J2000 TDB",
                 earthState.Position == earthOrbit.Position && earthState.Velocity == earthOrbit.Velocity);
@@ -229,7 +229,7 @@ internal static class StaticBodiesChild
                 double.IsFinite(PlanetsAndMoons.EARTH_BODY.SphereOfInfluence) && PlanetsAndMoons.EARTH_BODY.SphereOfInfluence > 0.0);
 
             var epoch = new Time(2021, 1, 20, 18, 0, 0, TimeScale.UTC);
-            var spkezr = SpiceAPI.Instance.ReadEphemeris(epoch, 0, 3, Frame.ICRF, Aberration.None);
+            var spkezr = SpiceApi.Instance.ReadEphemeris(epoch, 0, 3, Frame.ICRF, Aberration.None);
             var ephemeris = Barycenters.EARTH_BARYCENTER.GetEphemeris(epoch, Barycenters.SOLAR_SYSTEM_BARYCENTER, Frame.ICRF,
                 Aberration.None);
             Check("EARTH_BARYCENTER's ephemeris after the switch is spkezr's state of 3 about 0 in ICRF",
@@ -253,10 +253,10 @@ internal static class StaticBodiesChild
 
     /// <summary>
     /// The mode <c>static-bodies-before-kernels</c>: the static objects read on the SPICE provider before any kernel is
-    /// loaded, then after <see cref="SpiceAPI.LoadKernels"/>. Without kernels SPICE names the bodies (its built-in names)
+    /// loaded, then after <see cref="SpiceApi.LoadKernels"/>. Without kernels SPICE names the bodies (its built-in names)
     /// but gives no <c>BODYnnn_GM</c> nor <c>BODYnnn_RADII</c>: a read of a member of an object whose data need them throws
     /// <see cref="InvalidOperationException"/> naming the missing variable, at each read, and caches nothing, so that once
-    /// the kernels are loaded the members are SPICE's (<c>bodvrd</c>, <c>spkezr</c> through <see cref="SpiceAPI"/>),
+    /// the kernels are loaded the members are SPICE's (<c>bodvrd</c>, <c>spkezr</c> through <see cref="SpiceApi"/>),
     /// exactly; with a GM kernel alone, the read of a body throws naming its missing <c>BODYnnn_RADII</c>. Before, the
     /// first read cached the zeros SPICE answered (GM 0, radii 0, no orbit, the built-in frame <c>IAU_EARTH</c>) for the
     /// life of the process; the solar system barycentre, whose GM is the sum of <c>BODY1_GM</c> to <c>BODY10_GM</c>, kept
@@ -295,7 +295,7 @@ internal static class StaticBodiesChild
 
             // A GM kernel alone: the bodies still lack their radii, which the message names, and nothing is kept
             var gmKernel = new FileInfo(Path.Combine(kernels, "gm_de440.tpc"));
-            SpiceAPI.Instance.LoadKernels(gmKernel);
+            SpiceApi.Instance.LoadKernels(gmKernel);
             for (int i = 1; i <= 2; i++)
             {
                 var radii = Expect<InvalidOperationException>($"EARTH_BODY.GM with the GM kernel alone, read {i}",
@@ -304,7 +304,7 @@ internal static class StaticBodiesChild
             }
 
             Expect<InvalidOperationException>("MOON_BODY.Frame with the GM kernel alone", () => PlanetsAndMoons.MOON_BODY.Frame);
-            SpiceAPI.Instance.UnloadKernels(gmKernel);
+            SpiceApi.Instance.UnloadKernels(gmKernel);
 
             // A partial load: the leap seconds, the GMs and the PCK, without geophysical.ker (BODY399_J2), the frame
             // associations (OBJECT_EARTH_FRAME, OBJECT_MOON_FRAME) nor an SPK. The data are complete for the check (GM and
@@ -313,11 +313,11 @@ internal static class StaticBodiesChild
                 .Select(x => new FileInfo(Path.Combine(kernels, x))).ToArray();
             foreach (var kernel in partial)
             {
-                SpiceAPI.Instance.LoadKernels(kernel);
+                SpiceApi.Instance.LoadKernels(kernel);
             }
 
-            var partialEarth = SpiceAPI.Instance.GetCelestialBodyInfo(399);
-            var partialMoon = SpiceAPI.Instance.GetCelestialBodyInfo(301);
+            var partialEarth = SpiceApi.Instance.GetCelestialBodyInfo(399);
+            var partialMoon = SpiceApi.Instance.GetCelestialBodyInfo(301);
             var early = PlanetsAndMoons.EARTH_BODY;
             Check($"EARTH_BODY.J2 after a partial load {early.J2:R}, SPICE {partialEarth.J2:R}", early.J2.Equals(partialEarth.J2));
             Check($"EARTH_BODY.Frame after a partial load {early.Frame.Name}, SPICE {partialEarth.FrameName}",
@@ -330,18 +330,18 @@ internal static class StaticBodiesChild
             // A load that changes none of its data keeps the objects an item gave (its frame), as the orientation cache of
             // a propagation is keyed by its frame instance
             var partialFrame = early.Frame;
-            SpiceAPI.Instance.LoadKernels(partial[2]);
+            SpiceApi.Instance.LoadKernels(partial[2]);
             Check("EARTH_BODY.Frame after the reload of the PCK is the same instance", ReferenceEquals(early.Frame, partialFrame));
 
             // The kernels: the directory unloads the files loaded inside it first. Before, the data of the partial load were
             // kept for the life of the process (J2 NaN, IAU_EARTH, no orbit)
-            SpiceAPI.Instance.LoadKernels(new DirectoryInfo(kernels));
+            SpiceApi.Instance.LoadKernels(new DirectoryInfo(kernels));
 
-            var ssbInfo = SpiceAPI.Instance.GetCelestialBodyInfo(0);
-            var barycenterInfo = SpiceAPI.Instance.GetCelestialBodyInfo(3);
-            var earthInfo = SpiceAPI.Instance.GetCelestialBodyInfo(399);
-            var moonInfo = SpiceAPI.Instance.GetCelestialBodyInfo(301);
-            var sunInfo = SpiceAPI.Instance.GetCelestialBodyInfo(10);
+            var ssbInfo = SpiceApi.Instance.GetCelestialBodyInfo(0);
+            var barycenterInfo = SpiceApi.Instance.GetCelestialBodyInfo(3);
+            var earthInfo = SpiceApi.Instance.GetCelestialBodyInfo(399);
+            var moonInfo = SpiceApi.Instance.GetCelestialBodyInfo(301);
+            var sunInfo = SpiceApi.Instance.GetCelestialBodyInfo(10);
             var earth = PlanetsAndMoons.EARTH_BODY;
             Check($"EARTH_BODY.GM after the kernels {earth.GM:R}, SPICE {earthInfo.GM:R}", earth.GM == earthInfo.GM && earth.GM > 0.0);
             Check($"EARTH_BODY's radii after the kernels {earth.EquatorialRadius:R} {earth.PolarRadius:R}, SPICE {earthInfo.Radii.X:R} {earthInfo.Radii.Z:R}",
@@ -349,7 +349,7 @@ internal static class StaticBodiesChild
             Check($"EARTH_BODY.J2 after the kernels {earth.J2:R}, SPICE {earthInfo.J2:R}", earth.J2.Equals(earthInfo.J2) && double.IsFinite(earth.J2));
             Check($"EARTH_BODY.Frame after the kernels {earth.Frame.Name}, SPICE {earthInfo.FrameName}",
                 earth.Frame.Name == earthInfo.FrameName && earth.Frame.Name == "ITRF93");
-            var earthOrbit = SpiceAPI.Instance.ReadEphemeris(J2000, 3, 399, Frame.ECLIPTIC_J2000, Aberration.None);
+            var earthOrbit = SpiceApi.Instance.ReadEphemeris(J2000, 3, 399, Frame.ECLIPTIC_J2000, Aberration.None);
             var earthState = earth.InitialOrbitalParameters.ToStateVector();
             Check("EARTH_BODY's orbit after the kernels is spkezr's state of 399 about 3 in ECLIPJ2000 at J2000 TDB",
                 earthState.Position == earthOrbit.Position && earthState.Velocity == earthOrbit.Velocity);
@@ -370,19 +370,19 @@ internal static class StaticBodiesChild
             // The reload of a kernel of the directory changes none of the data: the same instances
             var frame = earth.Frame;
             var orbit = earth.InitialOrbitalParameters;
-            SpiceAPI.Instance.LoadKernels(new FileInfo(Path.Combine(kernels, "pck00011.tpc")));
+            SpiceApi.Instance.LoadKernels(new FileInfo(Path.Combine(kernels, "pck00011.tpc")));
             Check("EARTH_BODY's frame and orbit after the reload of a kernel are the same instances",
                 ReferenceEquals(earth.Frame, frame) && ReferenceEquals(earth.InitialOrbitalParameters, orbit));
 
             // ClearKernels: the data follow the kernel pool, the next read throws naming the missing variable, at each read
-            SpiceAPI.Instance.ClearKernels();
+            SpiceApi.Instance.ClearKernels();
             for (int i = 1; i <= 2; i++)
             {
                 var cleared = Expect<InvalidOperationException>($"EARTH_BODY.GM after ClearKernels, read {i}", () => earth.GM);
                 Check($"read {i}: the message names BODY399_GM ({cleared.Message})", cleared.Message.Contains("BODY399_GM"));
             }
 
-            SpiceAPI.Instance.LoadKernels(new DirectoryInfo(kernels));
+            SpiceApi.Instance.LoadKernels(new DirectoryInfo(kernels));
             Check($"EARTH_BODY.GM after the kernels are loaded again {earth.GM:R}, SPICE {earthInfo.GM:R}", earth.GM == earthInfo.GM);
             Check("EARTH_BODY.J2 and Frame after the kernels are loaded again", earth.J2.Equals(earthInfo.J2) && earth.Frame.Name == "ITRF93");
             return 0;

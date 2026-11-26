@@ -402,7 +402,7 @@ public class AttitudeTimelineTests
             var state = new StateVector(position, velocity, Solution.Observer, t, Solution.Frame);
             if (Solution.Frame != Frame.ICRF)
             {
-                var q = SpiceAPI.Instance.TransformFrame(t, Solution.Frame, Frame.ICRF).Rotation;
+                var q = SpiceApi.Instance.TransformFrame(t, Solution.Frame, Frame.ICRF).Rotation;
                 state = new StateVector(position.Rotate(q), velocity.Rotate(q), Solution.Observer, t, Frame.ICRF);
             }
 
@@ -412,7 +412,7 @@ public class AttitudeTimelineTests
 
         /// <summary>The delta-V of an impulse in ICRF, rotated from the frame of the propagation by <c>pxform</c>.</summary>
         public Vector3 DeltaVInIcrf(ImpulseManeuver impulse, Time tc) =>
-            Frame == Frame.ICRF ? impulse.DeltaV : impulse.DeltaV.Rotate(SpiceAPI.Instance.TransformFrame(tc, Frame, Frame.ICRF).Rotation);
+            Frame == Frame.ICRF ? impulse.DeltaV : impulse.DeltaV.Rotate(SpiceApi.Instance.TransformFrame(tc, Frame, Frame.ICRF).Rotation);
     }
 
     /// <summary>The orbit of a case about the Earth: #569's from its apogee at S; for the edges, from 2 s before its perigee

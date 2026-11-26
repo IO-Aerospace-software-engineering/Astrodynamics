@@ -298,7 +298,7 @@ namespace IO.Astrodynamics.Tests.Mission
             scenario.AddCelestialItem(TestHelpers.EarthAtJ2000);
 
             //Define parking orbit
-            TLE parkingOrbit = new TLE("ISS", "1 25544U 98067A   24153.17509025  .00020162  00000+0  35104-3 0  9990",
+            Tle parkingOrbit = new Tle("ISS", "1 25544U 98067A   24153.17509025  .00020162  00000+0  35104-3 0  9990",
                 "2 25544  51.6393  34.6631 0005642 260.2910 238.1766 15.50732314456064");
 
             //Create and configure spacecraft
@@ -653,14 +653,14 @@ namespace IO.Astrodynamics.Tests.Mission
             var directory = Directory.CreateTempSubdirectory("star668");
             var spk = new FileInfo(Path.Combine(directory.FullName, "star668005.bsp"));
             star.WriteEphemeris(spk);
-            SpiceAPI.Instance.LoadKernels(spk);
+            SpiceApi.Instance.LoadKernels(spk);
             try
             {
                 double worst = 0.0;
                 int k = 0;
                 for (var epoch = start; epoch <= end; epoch += step, k++)
                 {
-                    var read = SpiceAPI.Instance.ReadEphemeris(epoch, 0, star.NaifId, Frames.Frame.ICRF, Aberration.None);
+                    var read = SpiceApi.Instance.ReadEphemeris(epoch, 0, star.NaifId, Frames.Frame.ICRF, Aberration.None);
                     var catalog = IO.Astrodynamics.Tests.Body.StarTests.SpiceStraightLinePosition(star, 365m * k / 365.25m);
                     double relative = (read.Position - catalog).Magnitude() / catalog.Magnitude();
                     _output.WriteLine($"MEASURE ScenarioTests.Simulate_PropagatesTheStar: step {k}, relative position {relative:E3}");
@@ -678,7 +678,7 @@ namespace IO.Astrodynamics.Tests.Mission
             }
             finally
             {
-                SpiceAPI.Instance.UnloadKernels(spk);
+                SpiceApi.Instance.UnloadKernels(spk);
                 directory.Delete(true);
             }
         }

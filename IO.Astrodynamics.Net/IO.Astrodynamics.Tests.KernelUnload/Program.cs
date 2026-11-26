@@ -15,8 +15,8 @@ using IO.Astrodynamics.TimeSystem;
 namespace IO.Astrodynamics.Tests.KernelUnload;
 
 /// <summary>
-/// The child process of <c>KernelRegistryTests</c> (#673): one scenario of <see cref="SpiceAPI.LoadKernels"/> or
-/// <see cref="SpiceAPI.UnloadKernels"/> while a loaded binary kernel was deleted, run in a process of its own.
+/// The child process of <c>KernelRegistryTests</c> (#673): one scenario of <see cref="SpiceApi.LoadKernels"/> or
+/// <see cref="SpiceApi.UnloadKernels"/> while a loaded binary kernel was deleted, run in a process of its own.
 /// </summary>
 /// <remarks>
 /// <para>
@@ -105,7 +105,7 @@ internal static class Program
         }
 
         var kernels = new DirectoryInfo(args[0]);
-        SpiceAPI.Instance.LoadKernels(kernels);
+        SpiceApi.Instance.LoadKernels(kernels);
         var root = Directory.CreateTempSubdirectory("kernel-unload-");
         try
         {
@@ -238,7 +238,7 @@ internal static class Program
         var (folder, _, d, _, withQ) = LoadPcksAroundAFolder(root, moonPck, 1999955, "IOA_F02_PCK_A");
         File.Delete(d.FullName);
 
-        SpiceAPI.Instance.UnloadKernels(folder);
+        SpiceApi.Instance.UnloadKernels(folder);
 
         Check(!Listed(root).Contains(folder.FullName), "the folder is no longer listed");
         CheckSameRotation(withQ, "IOA_F02_PCK_A", "Q takes precedence over P again");
@@ -255,7 +255,7 @@ internal static class Program
         var handle = KeeperHandle(d);
         File.Delete(d.FullName);
 
-        SpiceAPI.Instance.UnloadKernels(x);
+        SpiceApi.Instance.UnloadKernels(x);
 
         CheckSameRotation(withQ, "IOA_F02_PCK_B", "Q keeps its precedence over P");
         // The native unload dropped D: the registry no longer lists it (fourth round of #668; before, until it was unloaded)
@@ -264,7 +264,7 @@ internal static class Program
         CheckClosed(d, handle);
         CheckSearchesAfterManyDafs(root, kernels, before);
         var listed = Listed(root);
-        SpiceAPI.Instance.UnloadKernels(d);
+        SpiceApi.Instance.UnloadKernels(d);
         Check(Listed(root).SequenceEqual(listed), "the unload of the dropped D changes nothing");
         CheckSameRotation(withQ, "IOA_F02_PCK_B", "Q keeps its precedence over P once D is unloaded");
     }
@@ -281,7 +281,7 @@ internal static class Program
         File.Delete(x.FullName);
         File.Delete(d.FullName);
 
-        SpiceAPI.Instance.UnloadKernels(folder);
+        SpiceApi.Instance.UnloadKernels(folder);
 
         Check(!Listed(root).Contains(folder.FullName), "the folder is no longer listed");
         CheckRegistryFollowsKeeper(root, x, d);
@@ -299,18 +299,18 @@ internal static class Program
         var folder = Directory.CreateDirectory(Path.Combine(root.FullName, "Spks"));
         var a = Copy(Path.Combine(kernels.FullName, "L2_de431.bsp"), folder, "a.bsp");
         var b = Copy(Path.Combine(kernels.FullName, "L2_de431.bsp"), folder, "b.bsp");
-        SpiceAPI.Instance.LoadKernels(a);
-        SpiceAPI.Instance.LoadKernels(b);
+        SpiceApi.Instance.LoadKernels(a);
+        SpiceApi.Instance.LoadKernels(b);
         var handle = KeeperHandle(b);
         File.Delete(b.FullName);
 
-        SpiceAPI.Instance.UnloadKernels(a);
+        SpiceApi.Instance.UnloadKernels(a);
 
         Check(Listed(root).Length == 0, "nothing is listed once the unload of A dropped B");
         CheckRegistryFollowsKeeper(root, a, b);
         CheckClosed(b, handle);
         CheckSearchesAfterManyDafs(root, kernels, before);
-        SpiceAPI.Instance.UnloadKernels(b);
+        SpiceApi.Instance.UnloadKernels(b);
         Check(Listed(root).Length == 0, "nothing is listed");
     }
 
@@ -321,20 +321,20 @@ internal static class Program
     {
         var before = SearchesBefore();
         var p = TestKernelWriter.WritePck(moonPck, new DirectoryInfo(Path.Combine(root.FullName, "Pck")), "p.bpc", 1999967);
-        SpiceAPI.Instance.LoadKernels(p);
+        SpiceApi.Instance.LoadKernels(p);
         var handle = KeeperHandle(p);
         File.Delete(p.FullName);
 
         var text = TestKernelWriter.WriteFrameKernel(new DirectoryInfo(Path.Combine(root.FullName, "Text")), "t.tf", 1999968, "IOA_G4_TEXT", 90.0);
-        SpiceAPI.Instance.LoadKernels(text);
+        SpiceApi.Instance.LoadKernels(text);
 
         Check(Listed(root).SequenceEqual([text.FullName]), "only the text kernel is listed once the load dropped P");
         CheckRegistryFollowsKeeper(root, p, text);
         Check(System.Math.Abs(RotationAngleDeg("IOA_G4_TEXT") - 90.0) < 1e-12, "the text kernel's frame is rotated by 90°");
         CheckClosed(p, handle);
         CheckSearchesAfterManyDafs(root, kernels, before);
-        SpiceAPI.Instance.UnloadKernels(text);
-        SpiceAPI.Instance.UnloadKernels(p);
+        SpiceApi.Instance.UnloadKernels(text);
+        SpiceApi.Instance.UnloadKernels(p);
         Check(Listed(root).Length == 0, "nothing is listed");
     }
 
@@ -347,18 +347,18 @@ internal static class Program
         var folder = Directory.CreateDirectory(Path.Combine(root.FullName, "Cks"));
         var a = Copy(ck, folder, "a.bc");
         var b = Copy(ck, folder, "b.bc");
-        SpiceAPI.Instance.LoadKernels(a);
-        SpiceAPI.Instance.LoadKernels(b);
+        SpiceApi.Instance.LoadKernels(a);
+        SpiceApi.Instance.LoadKernels(b);
         var handle = KeeperHandle(b);
         File.Delete(b.FullName);
 
-        SpiceAPI.Instance.UnloadKernels(a);
+        SpiceApi.Instance.UnloadKernels(a);
 
         Check(Listed(root).Length == 0, "nothing is listed once the unload of A dropped B");
         CheckRegistryFollowsKeeper(root, a, b);
         CheckClosed(b, handle);
         CheckSearchesAfterManyDafs(root, kernels, before);
-        SpiceAPI.Instance.UnloadKernels(b);
+        SpiceApi.Instance.UnloadKernels(b);
         Check(Listed(root).Length == 0, "nothing is listed");
     }
 
@@ -373,21 +373,21 @@ internal static class Program
         var folder = Directory.CreateDirectory(Path.Combine(root.FullName, "Spks"));
         var a = Copy(Path.Combine(kernels.FullName, "L2_de431.bsp"), folder, "a.bsp");
         var b = Copy(Path.Combine(kernels.FullName, "L2_de431.bsp"), folder, "b.bsp");
-        SpiceAPI.Instance.LoadKernels(a);
-        SpiceAPI.Instance.LoadKernels(b);
+        SpiceApi.Instance.LoadKernels(a);
+        SpiceApi.Instance.LoadKernels(b);
         var handle = KeeperHandle(b);
         File.Delete(b.FullName);
 
         var c = new FileInfo(Path.Combine(folder.FullName, "c.bsp"));
-        SpiceAPI.Instance.WriteEphemeris(c, -1999971, EarthStates());
+        SpiceApi.Instance.WriteEphemeris(c, -1999971, EarthStates());
 
         Check(Listed(root).SequenceEqual([a.FullName]), "only A is listed once the writer dropped B");
         CheckRegistryFollowsKeeper(root, a, b);
         CheckClosed(b, handle);
-        SpiceAPI.Instance.WriteEphemeris(c, -1999971, EarthStates());
-        SpiceAPI.Instance.UnloadKernels(a);
+        SpiceApi.Instance.WriteEphemeris(c, -1999971, EarthStates());
+        SpiceApi.Instance.UnloadKernels(a);
         CheckSearchesAfterManyDafs(root, kernels, before);
-        SpiceAPI.Instance.UnloadKernels(b);
+        SpiceApi.Instance.UnloadKernels(b);
         Check(Listed(root).Length == 0, "nothing is listed");
     }
 
@@ -403,27 +403,27 @@ internal static class Program
         var spacecraft = new Spacecraft(-1979, "IOA_G4_SPC", 3000.0, EarthStates()[0], 10000.0, clock);
         var clockFile = new FileInfo(Path.Combine(folder.FullName, "clock.tsc"));
         clock.Write(clockFile);
-        SpiceAPI.Instance.LoadKernels(clockFile);
+        SpiceApi.Instance.LoadKernels(clockFile);
         var records = Enumerable.Range(0, 3)
             .Select(i => new StateOrientation(Quaternion.Identity, Vector3.Zero, Epoch.AddSeconds(i), Frame.ICRF)).ToArray();
         var a = new FileInfo(Path.Combine(folder.FullName, "a.bc"));
         var b = new FileInfo(Path.Combine(folder.FullName, "b.bc"));
-        SpiceAPI.Instance.WriteOrientation(a, spacecraft.NaifId, records);
-        SpiceAPI.Instance.WriteOrientation(b, spacecraft.NaifId, records);
-        SpiceAPI.Instance.LoadKernels(a);
-        SpiceAPI.Instance.LoadKernels(b);
+        SpiceApi.Instance.WriteOrientation(a, spacecraft.NaifId, records);
+        SpiceApi.Instance.WriteOrientation(b, spacecraft.NaifId, records);
+        SpiceApi.Instance.LoadKernels(a);
+        SpiceApi.Instance.LoadKernels(b);
         var handle = KeeperHandle(b);
         File.Delete(b.FullName);
 
-        SpiceAPI.Instance.WriteOrientation(new FileInfo(Path.Combine(folder.FullName, "c.bc")), spacecraft.NaifId, records);
+        SpiceApi.Instance.WriteOrientation(new FileInfo(Path.Combine(folder.FullName, "c.bc")), spacecraft.NaifId, records);
 
         Check(Listed(root).SequenceEqual([clockFile.FullName, a.FullName]), "only the clock and A are listed once the writer dropped B");
         CheckRegistryFollowsKeeper(root, clockFile, a, b);
         CheckClosed(b, handle);
-        SpiceAPI.Instance.UnloadKernels(a);
+        SpiceApi.Instance.UnloadKernels(a);
         CheckSearchesAfterManyDafs(root, kernels, before);
-        SpiceAPI.Instance.UnloadKernels(b);
-        SpiceAPI.Instance.UnloadKernels(clockFile);
+        SpiceApi.Instance.UnloadKernels(b);
+        SpiceApi.Instance.UnloadKernels(clockFile);
         Check(Listed(root).Length == 0, "nothing is listed");
     }
 
@@ -436,14 +436,14 @@ internal static class Program
     {
         var folder = Directory.CreateDirectory(Path.Combine(root.FullName, "Relative"));
         var spk = new FileInfo(Path.Combine(folder.FullName, "x.bsp"));
-        SpiceAPI.Instance.WriteEphemeris(spk, -1999972, EarthStates());
+        SpiceApi.Instance.WriteEphemeris(spk, -1999972, EarthStates());
         var metaKernel = new FileInfo(Path.Combine(folder.FullName, "mk.tm"));
         File.WriteAllText(metaKernel.FullName, "KPL/MK\n\\begindata\nKERNELS_TO_LOAD = ( 'x.bsp' )\n\\begintext\n");
         var workingDirectory = Directory.GetCurrentDirectory();
         try
         {
             Directory.SetCurrentDirectory(folder.FullName);
-            SpiceAPI.Instance.LoadKernels(metaKernel);
+            SpiceApi.Instance.LoadKernels(metaKernel);
         }
         finally
         {
@@ -455,7 +455,7 @@ internal static class Program
         var read = ReadRelativeObject();
 
         var text = TestKernelWriter.WriteFrameKernel(new DirectoryInfo(Path.Combine(root.FullName, "Text")), "t.tf", 1999973, "IOA_G4_REL", 90.0);
-        SpiceAPI.Instance.LoadKernels(text);
+        SpiceApi.Instance.LoadKernels(text);
 
         var after = ReadRelativeObject();
         Check(after.Position == read.Position && after.Velocity == read.Velocity,
@@ -466,8 +466,8 @@ internal static class Program
             Check(CspiceDirect.OpenDafFile(handle!.Value) != null, $"the handle {handle} of the SPK is still open");
         }
 
-        SpiceAPI.Instance.UnloadKernels(text);
-        SpiceAPI.Instance.UnloadKernels(metaKernel);
+        SpiceApi.Instance.UnloadKernels(text);
+        SpiceApi.Instance.UnloadKernels(metaKernel);
         Check(Throws(() => ReadRelativeObject()) != null, "the SPK's object is no longer known once the meta-kernel is unloaded");
         Check(Listed(root).Length == 0, "nothing is listed");
     }
@@ -482,29 +482,29 @@ internal static class Program
         var folder = Directory.CreateDirectory(Path.Combine(root.FullName, "Folder"));
         var x = Copy(Path.Combine(kernels.FullName, "L2_de431.bsp"), folder, "x.bsp");
         var d = Copy(Path.Combine(kernels.FullName, "L2_de431.bsp"), folder, "d.bsp");
-        SpiceAPI.Instance.LoadKernels(folder);
+        SpiceApi.Instance.LoadKernels(folder);
         var handle = KeeperHandle(d);
         File.Delete(d.FullName);
 
         var text = TestKernelWriter.WriteFrameKernel(new DirectoryInfo(Path.Combine(root.FullName, "Text")), "t.tf", 1999975, "IOA_J1_TEXT", 90.0);
-        SpiceAPI.Instance.LoadKernels(text);
+        SpiceApi.Instance.LoadKernels(text);
 
         Check(Listed(root).SequenceEqual([folder.FullName, text.FullName]), "the folder is still listed while X is loaded");
         CheckRegistryFollowsKeeper(root, x, d, text);
         CheckClosed(d, handle);
-        SpiceAPI.Instance.UnloadKernels(d);
+        SpiceApi.Instance.UnloadKernels(d);
         Check(Listed(root).SequenceEqual([folder.FullName, text.FullName]), "the unload of the dropped D changes nothing");
-        SpiceAPI.Instance.UnloadKernels(folder);
+        SpiceApi.Instance.UnloadKernels(folder);
         Check(Listed(root).SequenceEqual([text.FullName]), "the folder's unload unloads X");
         Check(CspiceDirectHolds(x) != true, "KEEPER no longer holds X");
 
         var both = Directory.CreateDirectory(Path.Combine(root.FullName, "Both"));
         var y = Copy(Path.Combine(kernels.FullName, "L2_de431.bsp"), both, "y.bsp");
         var z = Copy(Path.Combine(kernels.FullName, "L2_de431.bsp"), both, "z.bsp");
-        SpiceAPI.Instance.LoadKernels(both);
+        SpiceApi.Instance.LoadKernels(both);
         File.Delete(y.FullName);
         File.Delete(z.FullName);
-        SpiceAPI.Instance.UnloadKernels(text);
+        SpiceApi.Instance.UnloadKernels(text);
         Check(Listed(root).Length == 0, "the folder whose two files were dropped is no longer listed");
         CheckRegistryFollowsKeeper(root, y, z);
     }
@@ -521,8 +521,8 @@ internal static class Program
         spacecraft.AddPropagatedStates(EarthStates());
         var c = new FileInfo(Path.Combine(folder.FullName, "c.bsp"));
         spacecraft.WriteEphemeris(c);
-        SpiceAPI.Instance.LoadKernels(a);
-        SpiceAPI.Instance.LoadKernels(b);
+        SpiceApi.Instance.LoadKernels(a);
+        SpiceApi.Instance.LoadKernels(b);
         var handle = KeeperHandle(b);
         File.Delete(b.FullName);
 
@@ -531,7 +531,7 @@ internal static class Program
         Check(Listed(root).SequenceEqual([a.FullName]), "only A is listed once the managed writer dropped B");
         CheckRegistryFollowsKeeper(root, a, b);
         CheckClosed(b, handle);
-        SpiceAPI.Instance.UnloadKernels(a);
+        SpiceApi.Instance.UnloadKernels(a);
         Check(Listed(root).Length == 0, "nothing is listed");
     }
 
@@ -549,7 +549,7 @@ internal static class Program
         var before = ReadMoon();
         File.Delete(x.FullName);
 
-        var error = Throws(() => SpiceAPI.Instance.WriteEphemeris(new FileInfo(Path.Combine(folder.FullName, "c.bsp")), -1999976, EarthStates()));
+        var error = Throws(() => SpiceApi.Instance.WriteEphemeris(new FileInfo(Path.Combine(folder.FullName, "c.bsp")), -1999976, EarthStates()));
 
         Check(error.Message.Contains("x.bsp"), $"the exception names x.bsp ({error.Message})");
         CheckSameMoon(before, "the first read after the writer");
@@ -565,17 +565,17 @@ internal static class Program
         var spacecraft = new Spacecraft(-1977, "IOA_J1_SPC", 3000.0, EarthStates()[0], 10000.0, clock);
         var clockFile = new FileInfo(Path.Combine(folder.FullName, "clock.tsc"));
         clock.Write(clockFile);
-        SpiceAPI.Instance.LoadKernels(clockFile);
+        SpiceApi.Instance.LoadKernels(clockFile);
         var records = Enumerable.Range(0, 3)
             .Select(i => new StateOrientation(Quaternion.Identity, Vector3.Zero, Epoch.AddSeconds(i), Frame.ICRF)).ToArray();
         var x = new FileInfo(Path.Combine(folder.FullName, "x.bc"));
-        SpiceAPI.Instance.WriteOrientation(x, spacecraft.NaifId, records);
+        SpiceApi.Instance.WriteOrientation(x, spacecraft.NaifId, records);
         LoadRelativeMetaKernel(folder, "x.bc");
         var before = ReadMoon();
         File.Delete(x.FullName);
 
         var error = Throws(() =>
-            SpiceAPI.Instance.WriteOrientation(new FileInfo(Path.Combine(folder.FullName, "c.bc")), spacecraft.NaifId, records));
+            SpiceApi.Instance.WriteOrientation(new FileInfo(Path.Combine(folder.FullName, "c.bc")), spacecraft.NaifId, records));
 
         Check(error.Message.Contains("x.bc"), $"the exception names x.bc ({error.Message})");
         CheckSameMoon(before, "the first read after the writer");
@@ -592,14 +592,14 @@ internal static class Program
     {
         var folder = Directory.CreateDirectory(Path.Combine(root.FullName, "ReplaceRelativeSpk"));
         var c = new FileInfo(Path.Combine(folder.FullName, "c.bsp"));
-        SpiceAPI.Instance.WriteEphemeris(c, -1999985, EarthStates());
+        SpiceApi.Instance.WriteEphemeris(c, -1999985, EarthStates());
         var bytes = File.ReadAllBytes(c.FullName);
         var x = Copy(Path.Combine(kernels.FullName, "L2_de431.bsp"), folder, "x.bsp");
         LoadRelativeMetaKernel(folder, "x.bsp");
         var before = ReadMoon();
         File.Delete(x.FullName);
 
-        var error = Throws(() => SpiceAPI.Instance.WriteEphemeris(c, -1999986, EarthStates()));
+        var error = Throws(() => SpiceApi.Instance.WriteEphemeris(c, -1999986, EarthStates()));
 
         Check(error.Message.Contains("x.bsp"), $"the exception names x.bsp ({error.Message})");
         Check(File.Exists(c.FullName) && File.ReadAllBytes(c.FullName).SequenceEqual(bytes), "the SPK it would replace is on disk as it was");
@@ -617,21 +617,21 @@ internal static class Program
         var spacecraft = new Spacecraft(-1978, "IOA_J1_SPC", 3000.0, EarthStates()[0], 10000.0, clock);
         var clockFile = new FileInfo(Path.Combine(folder.FullName, "clock.tsc"));
         clock.Write(clockFile);
-        SpiceAPI.Instance.LoadKernels(clockFile);
+        SpiceApi.Instance.LoadKernels(clockFile);
         var records = Enumerable.Range(0, 3)
             .Select(i => new StateOrientation(Quaternion.Identity, Vector3.Zero, Epoch.AddSeconds(i), Frame.ICRF)).ToArray();
         var c = new FileInfo(Path.Combine(folder.FullName, "c.bc"));
-        SpiceAPI.Instance.WriteOrientation(c, spacecraft.NaifId, records);
+        SpiceApi.Instance.WriteOrientation(c, spacecraft.NaifId, records);
         var bytes = File.ReadAllBytes(c.FullName);
         var x = new FileInfo(Path.Combine(folder.FullName, "x.bc"));
-        SpiceAPI.Instance.WriteOrientation(x, spacecraft.NaifId, records);
+        SpiceApi.Instance.WriteOrientation(x, spacecraft.NaifId, records);
         LoadRelativeMetaKernel(folder, "x.bc");
         var before = ReadMoon();
         File.Delete(x.FullName);
 
         var turned = Enumerable.Range(0, 3)
             .Select(i => new StateOrientation(new Quaternion(0.0, 1.0, 0.0, 0.0), Vector3.Zero, Epoch.AddSeconds(i), Frame.ICRF)).ToArray();
-        var error = Throws(() => SpiceAPI.Instance.WriteOrientation(c, spacecraft.NaifId, turned));
+        var error = Throws(() => SpiceApi.Instance.WriteOrientation(c, spacecraft.NaifId, turned));
 
         Check(error.Message.Contains("x.bc"), $"the exception names x.bc ({error.Message})");
         Check(File.Exists(c.FullName) && File.ReadAllBytes(c.FullName).SequenceEqual(bytes), "the CK it would replace is on disk as it was");
@@ -642,14 +642,14 @@ internal static class Program
 
     // #706. The native writer rejected fewer than three states, states in several frames and a centre it cannot read as a
     // celestial body with a C++ exception across P/Invoke: the process ended (std::terminate, exit code 134, measured on
-    // c533a6e). SpiceAPI.WriteEphemeris now rejects them with an ArgumentException naming stateVectors before the native
+    // c533a6e). SpiceApi.WriteEphemeris now rejects them with an ArgumentException naming stateVectors before the native
     // call: nothing is written, and the process goes on (the Moon read after it, bit for bit as before)
     private static void WriteEphemerisRejected(DirectoryInfo root, StateVector[] states)
     {
         var before = ReadMoon();
         var file = new FileInfo(Path.Combine(root.FullName, "rejected.bsp"));
 
-        var error = ThrowsArgument(() => SpiceAPI.Instance.WriteEphemeris(file, -1999705, states));
+        var error = ThrowsArgument(() => SpiceApi.Instance.WriteEphemeris(file, -1999705, states));
 
         Check(error.ParamName == "stateVectors", $"the exception names stateVectors ({error.ParamName}: {error.Message})");
         Check(!File.Exists(file.FullName), "nothing is written");
@@ -673,7 +673,7 @@ internal static class Program
     }
 
     // A site over 90 s: its 1-minute step gives two states, which the native writer rejected (exit code 134, measured on
-    // c533a6e). The ArgumentException of SpiceAPI.WriteEphemeris reaches the caller of the site
+    // c533a6e). The ArgumentException of SpiceApi.WriteEphemeris reaches the caller of the site
     private static void WriteSiteEphemerisOfTwoStates(DirectoryInfo root)
     {
         var before = ReadMoon();
@@ -703,9 +703,9 @@ internal static class Program
         var records = Enumerable.Range(0, 3)
             .Select(i => new StateOrientation(Quaternion.Identity, Vector3.Zero, Epoch.AddSeconds(i), Frame.ICRF)).ToArray();
 
-        var spk = Throws(() => SpiceAPI.Instance.WriteEphemeris(a, -1999706, EarthStates()));
-        var ck = Throws(() => SpiceAPI.Instance.WriteOrientation(a, -1999706, records));
-        var load = Throws(() => SpiceAPI.Instance.LoadKernels(a));
+        var spk = Throws(() => SpiceApi.Instance.WriteEphemeris(a, -1999706, EarthStates()));
+        var ck = Throws(() => SpiceApi.Instance.WriteOrientation(a, -1999706, records));
+        var load = Throws(() => SpiceApi.Instance.LoadKernels(a));
 
         foreach (var (error, what) in new[] { (spk, "WriteEphemeris"), (ck, "WriteOrientation"), (load, "LoadKernels") })
         {
@@ -738,24 +738,24 @@ internal static class Program
         var folder = Directory.CreateDirectory(Path.Combine(root.FullName, "Folder"));
         var u = new FileInfo(Path.Combine(folder.FullName, "u.bsp"));
         var v = new FileInfo(Path.Combine(folder.FullName, "v.bsp"));
-        SpiceAPI.Instance.WriteEphemeris(u, -1999707, EarthStates());
-        SpiceAPI.Instance.WriteEphemeris(v, -1999708, EarthStates());
-        SpiceAPI.Instance.LoadKernels(folder);
+        SpiceApi.Instance.WriteEphemeris(u, -1999707, EarthStates());
+        SpiceApi.Instance.WriteEphemeris(v, -1999708, EarthStates());
+        SpiceApi.Instance.LoadKernels(folder);
         var handle = KeeperHandle(u);
         var written = OtherEarthStates();
 
-        SpiceAPI.Instance.WriteEphemeris(u, -1999707, written);
+        SpiceApi.Instance.WriteEphemeris(u, -1999707, written);
 
         Check(Listed(root).SequenceEqual([v.FullName]), $"the folder is replaced by V ({string.Join(", ", Listed(root))})");
         CheckRegistryFollowsKeeper(root, u, v);
         CheckClosed(u, handle);
         Throws(() => ReadObject(-1999707));
-        SpiceAPI.Instance.LoadKernels(u);
+        SpiceApi.Instance.LoadKernels(u);
         var read = ReadObject(-1999707);
         Check(read.Position == written[1].Position && read.Velocity == written[1].Velocity,
             $"the new file gives the state written ({read.Position} against {written[1].Position})");
-        SpiceAPI.Instance.UnloadKernels(u);
-        SpiceAPI.Instance.UnloadKernels(v);
+        SpiceApi.Instance.UnloadKernels(u);
+        SpiceApi.Instance.UnloadKernels(v);
         Check(Listed(root).Length == 0, "nothing is listed");
     }
 
@@ -770,18 +770,18 @@ internal static class Program
         var spacecraft = new Spacecraft(-1999709, "IOA_K1_SPC", 3000.0, EarthStates()[0], 10000.0, clock);
         var clockFile = new FileInfo(Path.Combine(folder.FullName, "clock.tsc"));
         clock.Write(clockFile);
-        SpiceAPI.Instance.LoadKernels(clockFile);
+        SpiceApi.Instance.LoadKernels(clockFile);
         var identity = Enumerable.Range(0, 3)
             .Select(i => new StateOrientation(Quaternion.Identity, Vector3.Zero, Epoch.AddSeconds(i), Frame.ICRF)).ToArray();
         var turned = new Quaternion(Vector3.VectorZ, System.Math.PI / 2.0);
         var written = Enumerable.Range(0, 5)
             .Select(i => new StateOrientation(turned, Vector3.Zero, Epoch.AddSeconds(i), Frame.ICRF)).ToArray();
         var c = new FileInfo(Path.Combine(folder.FullName, "c.bc"));
-        SpiceAPI.Instance.WriteOrientation(c, spacecraft.NaifId, identity);
-        SpiceAPI.Instance.LoadKernels(c);
+        SpiceApi.Instance.WriteOrientation(c, spacecraft.NaifId, identity);
+        SpiceApi.Instance.LoadKernels(c);
         var handle = KeeperHandle(c);
 
-        SpiceAPI.Instance.WriteOrientation(c, spacecraft.NaifId, written);
+        SpiceApi.Instance.WriteOrientation(c, spacecraft.NaifId, written);
 
         Check(Listed(root).SequenceEqual([clockFile.FullName]), $"the clock is listed ({string.Join(", ", Listed(root))})");
         CheckRegistryFollowsKeeper(root, clockFile, c);
@@ -790,58 +790,58 @@ internal static class Program
         // (#712; before, a second CK stayed loaded for that load not to throw the stale message)
         var noCk = Throws(() => ReadOrientationAt(spacecraft.NaifId, 1.0));
         Check(noCk.Message.Contains("At least one CK file must be loaded by CKLPF"), $"the read gives SPICE's message ({noCk.Message})");
-        SpiceAPI.Instance.LoadKernels(c);
+        SpiceApi.Instance.LoadKernels(c);
         var q = ReadOrientationAt(spacecraft.NaifId, 4.0).Rotation.Conjugate() * turned;
         double angle = 2.0 * System.Math.Atan2(q.VectorPart.Magnitude(), System.Math.Abs(q.W));
         Console.WriteLine($"MEASURE #706 CK replaced while loaded (child): angle between the record written and the one read {angle:E3} rad");
         Check(angle <= CkRecordAngleBound, $"the new file gives the record written ({angle:E3} rad)");
-        SpiceAPI.Instance.UnloadKernels(c);
-        SpiceAPI.Instance.UnloadKernels(clockFile);
+        SpiceApi.Instance.UnloadKernels(c);
+        SpiceApi.Instance.UnloadKernels(clockFile);
         Check(Listed(root).Length == 0, "nothing is listed");
     }
 
     // #711. Elements about a spacecraft whose GM a text kernel gives: the native conversions built the centre as a celestial
     // body (CelestialBody(int)), whose name SPICE does not know, and threw SDKException across P/Invoke: the process ended
-    // (exit code 134, measured on 46e6975). SpiceAPI now rejects a centre that is not a celestial body with an
+    // (exit code 134, measured on 46e6975). SpiceApi now rejects a centre that is not a celestial body with an
     // ArgumentException naming the elements, before the native call, and the process goes on
     private static void ConvertAboutASpacecraftWithAGm(DirectoryInfo root, bool equinoctial)
     {
         var before = ReadMoon();
         var gm = WriteTextKernel(root, "gm.tpc", "BODY-1999820_GM = ( 1.0E-10 )");
-        SpiceAPI.Instance.LoadKernels(gm);
+        SpiceApi.Instance.LoadKernels(gm);
         var spacecraft = new Spacecraft(-1999820, "IOA_711_SPC", 3000.0, EarthStates()[0], 10000.0, new Clock("IOA_711_CLOCK", 65536));
         var elements = new KeplerianElements(7.0e6, 0.01, 0.2, 0.3, 0.4, 0.5, spacecraft, Epoch, Frame.ICRF);
 
         var error = equinoctial
-            ? ThrowsArgument(() => SpiceAPI.Instance.ConvertEquinoctialElementsToStateVector(elements.ToEquinoctial()))
-            : ThrowsArgument(() => SpiceAPI.Instance.ConvertConicElementsToStateVector(elements));
+            ? ThrowsArgument(() => SpiceApi.Instance.ConvertEquinoctialElementsToStateVector(elements.ToEquinoctial()))
+            : ThrowsArgument(() => SpiceApi.Instance.ConvertConicElementsToStateVector(elements));
 
         string parameter = equinoctial ? "equinoctialElements" : "keplerianElements";
         Check(error.ParamName == parameter, $"the exception names {parameter} ({error.ParamName}: {error.Message})");
-        SpiceAPI.Instance.UnloadKernels(gm);
+        SpiceApi.Instance.UnloadKernels(gm);
         CheckSameMoon(before, "the read after the rejected conversion");
         CheckMoonAsSpice("the read after the rejected conversion");
     }
 
     // A body SPICE named when it was built (its frame J2000, OBJECT_1999821_FRAME, Frames Required Reading), then no longer:
     // the kernel of its name and frame unloaded, the kernel of its GM kept. The
-    // native conversion read its GM and threw SDKException for its name (exit code 134 on 46e6975); SpiceAPI now rejects an
+    // native conversion read its GM and threw SDKException for its name (exit code 134 on 46e6975); SpiceApi now rejects an
     // identifier SPICE does not name with the ArgumentException of #680, naming the elements, before the native call
     private static void ConvertAboutABodyNoLongerNamed(DirectoryInfo root)
     {
         var before = ReadMoon();
         var name = WriteTextKernel(root, "name.tpc", "NAIF_BODY_NAME += ( 'IOA_711_BODY' )\nNAIF_BODY_CODE += ( 1999821 )\nOBJECT_1999821_FRAME = 'J2000'");
         var gm = WriteTextKernel(root, "gm.tpc", "BODY1999821_GM = ( 1.0 )");
-        SpiceAPI.Instance.LoadKernels(name);
-        SpiceAPI.Instance.LoadKernels(gm);
+        SpiceApi.Instance.LoadKernels(name);
+        SpiceApi.Instance.LoadKernels(gm);
         var body = new global::IO.Astrodynamics.Body.CelestialBody(1999821);
         var elements = new KeplerianElements(7.0e6, 0.01, 0.2, 0.3, 0.4, 0.5, body, Epoch, Frame.ICRF);
-        SpiceAPI.Instance.UnloadKernels(name);
+        SpiceApi.Instance.UnloadKernels(name);
 
-        var error = ThrowsArgument(() => SpiceAPI.Instance.ConvertConicElementsToStateVector(elements));
+        var error = ThrowsArgument(() => SpiceApi.Instance.ConvertConicElementsToStateVector(elements));
 
         Check(error.ParamName == "keplerianElements", $"the exception names keplerianElements ({error.ParamName}: {error.Message})");
-        SpiceAPI.Instance.UnloadKernels(gm);
+        SpiceApi.Instance.UnloadKernels(gm);
         CheckSameMoon(before, "the read after the rejected conversion");
         CheckMoonAsSpice("the read after the rejected conversion");
     }
@@ -856,15 +856,15 @@ internal static class Program
         var spacecraft = new Spacecraft(-1999801, "IOA_712_SPC", 3000.0, EarthStates()[0], 10000.0, clock);
         var clockFile = new FileInfo(Path.Combine(root.FullName, "clock.tsc"));
         clock.Write(clockFile);
-        SpiceAPI.Instance.LoadKernels(clockFile);
-        Check(SpiceAPI.Instance.GetLoadedKernels().All(k => !k.Extension.Equals(".bc", StringComparison.OrdinalIgnoreCase)), "no CK is loaded");
+        SpiceApi.Instance.LoadKernels(clockFile);
+        Check(SpiceApi.Instance.GetLoadedKernels().All(k => !k.Extension.Equals(".bc", StringComparison.OrdinalIgnoreCase)), "no CK is loaded");
 
         var error = Throws(() => ReadOrientationAt(spacecraft.NaifId, 0.0));
 
         Check(error.Message.Contains("At least one CK file must be loaded by CKLPF before beginning a search."),
             $"the exception gives SPICE's message ({error.Message})");
         CheckNothingPendingThenNextCallsSucceed(root);
-        SpiceAPI.Instance.UnloadKernels(clockFile);
+        SpiceApi.Instance.UnloadKernels(clockFile);
     }
 
     // No clock for the spacecraft: sce2c_c fails with SCTY01's KERNELVARNOTFOUND, which the fallback reset and lost
@@ -882,8 +882,8 @@ internal static class Program
     {
         if (OperatingSystem.IsLinux()) Check(!CspiceDirect.ErrorPending(), "no SPICE error is pending");
         var text = WriteTextKernel(root, "after.tpc", "IOA_712_VALUE = ( 1.0 )");
-        SpiceAPI.Instance.LoadKernels(text);
-        SpiceAPI.Instance.UnloadKernels(text);
+        SpiceApi.Instance.LoadKernels(text);
+        SpiceApi.Instance.UnloadKernels(text);
         CheckMoonAsSpice("the read after the failed read");
     }
 
@@ -912,7 +912,7 @@ internal static class Program
     // from other tests)
     private const double CkRecordAngleBound = 4.5e-16;
 
-    private static StateOrientation ReadOrientationAt(int naifId, double seconds) => SpiceAPI.Instance
+    private static StateOrientation ReadOrientationAt(int naifId, double seconds) => SpiceApi.Instance
         .ReadOrientation(new Window(Epoch.AddSeconds(seconds), Epoch.AddSeconds(seconds)), naifId, TimeSpan.Zero, Frame.ICRF, TimeSpan.FromSeconds(1.0))
         .Single();
 
@@ -926,7 +926,7 @@ internal static class Program
         spacecraft.AddPropagatedStates(EarthStates());
         var c = new FileInfo(Path.Combine(folder.FullName, "c.bsp"));
         spacecraft.WriteEphemeris(c);
-        SpiceAPI.Instance.LoadKernels(c);
+        SpiceApi.Instance.LoadKernels(c);
         var handle = KeeperHandle(c);
 
         spacecraft.WriteEphemeris(c);
@@ -935,10 +935,10 @@ internal static class Program
         CheckRegistryFollowsKeeper(root, c);
         CheckClosed(c, handle);
         Throws(() => ReadObject(-1999710));
-        SpiceAPI.Instance.LoadKernels(c);
+        SpiceApi.Instance.LoadKernels(c);
         var read = ReadObject(-1999710);
         Check(read.Position == EarthStates()[1].Position, $"the new file gives the state written ({read.Position})");
-        SpiceAPI.Instance.UnloadKernels(c);
+        SpiceApi.Instance.UnloadKernels(c);
     }
 
     // A spacecraft's SPK C, loaded, a meta-kernel that names an SPK X relatively, X deleted, then C written again by the
@@ -954,7 +954,7 @@ internal static class Program
         var c = new FileInfo(Path.Combine(folder.FullName, "c.bsp"));
         spacecraft.WriteEphemeris(c);
         var bytes = File.ReadAllBytes(c.FullName);
-        SpiceAPI.Instance.LoadKernels(c);
+        SpiceApi.Instance.LoadKernels(c);
         var x = Copy(Path.Combine(kernels.FullName, "L2_de431.bsp"), folder, "x.bsp");
         LoadRelativeMetaKernel(folder, "x.bsp");
         var before = ReadMoon();
@@ -1010,7 +1010,7 @@ internal static class Program
         try
         {
             Directory.SetCurrentDirectory(folder.FullName);
-            SpiceAPI.Instance.LoadKernels(metaKernel);
+            SpiceApi.Instance.LoadKernels(metaKernel);
         }
         finally
         {
@@ -1027,15 +1027,15 @@ internal static class Program
     {
         var folder = Directory.CreateDirectory(Path.Combine(root.FullName, "NoNativeCall"));
         var s = new FileInfo(Path.Combine(folder.FullName, "s.bsp"));
-        SpiceAPI.Instance.WriteEphemeris(s, -1999987, EarthStates());
-        SpiceAPI.Instance.LoadKernels(s);
+        SpiceApi.Instance.WriteEphemeris(s, -1999987, EarthStates());
+        SpiceApi.Instance.LoadKernels(s);
         var read = ReadObject(-1999987);
         File.Delete(s.FullName);
 
         bool rejected = false;
         try
         {
-            SpiceAPI.Instance.LoadKernels(new FileInfo(Path.Combine(folder.FullName, "nope.bsp")));
+            SpiceApi.Instance.LoadKernels(new FileInfo(Path.Combine(folder.FullName, "nope.bsp")));
         }
         catch (ArgumentException)
         {
@@ -1048,20 +1048,20 @@ internal static class Program
         CheckSameObject(read, -1999987, "S's object after the rejected load");
 
         var empty = Directory.CreateDirectory(Path.Combine(folder.FullName, "Empty"));
-        SpiceAPI.Instance.LoadKernels(empty);
+        SpiceApi.Instance.LoadKernels(empty);
         Check(Listed(root).SequenceEqual([s.FullName, empty.FullName]), "S is listed after the load of an empty directory");
         CheckRegistryFollowsKeeper(root, s);
-        SpiceAPI.Instance.UnloadKernels(empty);
+        SpiceApi.Instance.UnloadKernels(empty);
         Check(Listed(root).SequenceEqual([s.FullName]), "S is listed after the unload of the empty directory");
         CheckRegistryFollowsKeeper(root, s);
         CheckSameObject(read, -1999987, "S's object after the empty directory");
 
         var text = TestKernelWriter.WriteFrameKernel(new DirectoryInfo(Path.Combine(root.FullName, "Text")), "t.tf", 1999983, "IOA_J1_NONATIVE", 90.0);
-        SpiceAPI.Instance.LoadKernels(text);
+        SpiceApi.Instance.LoadKernels(text);
         Check(Listed(root).SequenceEqual([text.FullName]), "S is no longer listed once the native load dropped it");
         CheckRegistryFollowsKeeper(root, s, text);
         Check(Throws(() => ReadObject(-1999987)) != null, "S's object is no longer known once the native load dropped S");
-        SpiceAPI.Instance.UnloadKernels(text);
+        SpiceApi.Instance.UnloadKernels(text);
         Check(Listed(root).Length == 0, "nothing is listed");
     }
 
@@ -1075,31 +1075,31 @@ internal static class Program
         var folder = Directory.CreateDirectory(Path.Combine(root.FullName, "Links"));
         var r = new FileInfo(Path.Combine(folder.FullName, "r.bsp"));
         var q = new FileInfo(Path.Combine(folder.FullName, "q.bsp"));
-        SpiceAPI.Instance.WriteEphemeris(r, -1999988, EarthStates());
-        SpiceAPI.Instance.WriteEphemeris(q, -1999984, EarthStates());
+        SpiceApi.Instance.WriteEphemeris(r, -1999988, EarthStates());
+        SpiceApi.Instance.WriteEphemeris(q, -1999984, EarthStates());
         var l = new FileInfo(Path.Combine(folder.FullName, "l.bsp"));
         var k = new FileInfo(Path.Combine(folder.FullName, "k.bsp"));
         File.CreateSymbolicLink(l.FullName, r.FullName);
         File.CreateSymbolicLink(k.FullName, q.FullName);
-        SpiceAPI.Instance.LoadKernels(l);
-        SpiceAPI.Instance.LoadKernels(k);
+        SpiceApi.Instance.LoadKernels(l);
+        SpiceApi.Instance.LoadKernels(k);
         var kept = ReadObject(-1999984);
         File.Delete(r.FullName);
 
         var text = TestKernelWriter.WriteFrameKernel(new DirectoryInfo(Path.Combine(root.FullName, "Text")), "t.tf", 1999984, "IOA_J1_LINK", 90.0);
-        SpiceAPI.Instance.LoadKernels(text);
+        SpiceApi.Instance.LoadKernels(text);
 
         Check(Listed(root).SequenceEqual([k.FullName, text.FullName]), "the dangling link L is no longer listed, K is");
         CheckRegistryFollowsKeeper(root, l, k, text);
         Check(Throws(() => ReadObject(-1999988)) != null, "L's object is no longer known once the native load dropped L");
         CheckSameObject(kept, -1999984, "K's object after the load");
-        SpiceAPI.Instance.UnloadKernels(k);
-        SpiceAPI.Instance.UnloadKernels(text);
+        SpiceApi.Instance.UnloadKernels(k);
+        SpiceApi.Instance.UnloadKernels(text);
         Check(Listed(root).Length == 0, "nothing is listed");
     }
 
     private static StateVector ReadObject(int naifId) =>
-        SpiceAPI.Instance.ReadEphemeris(Epoch.AddSeconds(60.0), 399, naifId, Frame.ICRF, Aberration.None);
+        SpiceApi.Instance.ReadEphemeris(Epoch.AddSeconds(60.0), 399, naifId, Frame.ICRF, Aberration.None);
 
     private static void CheckSameObject(StateVector before, int naifId, string what)
     {
@@ -1117,7 +1117,7 @@ internal static class Program
         try
         {
             Directory.SetCurrentDirectory(folder.FullName);
-            SpiceAPI.Instance.LoadKernels(metaKernel);
+            SpiceApi.Instance.LoadKernels(metaKernel);
         }
         finally
         {
@@ -1125,7 +1125,7 @@ internal static class Program
         }
     }
 
-    private static StateVector ReadMoon() => SpiceAPI.Instance.ReadEphemeris(Epoch, 399, 301, Frame.ICRF, Aberration.None);
+    private static StateVector ReadMoon() => SpiceApi.Instance.ReadEphemeris(Epoch, 399, 301, Frame.ICRF, Aberration.None);
 
     private static void CheckSameMoon(StateVector before, string what)
     {
@@ -1150,7 +1150,7 @@ internal static class Program
     }
 
     private static StateVector ReadRelativeObject() =>
-        SpiceAPI.Instance.ReadEphemeris(Epoch.AddSeconds(60.0), 399, -1999972, Frame.ICRF, Aberration.None);
+        SpiceApi.Instance.ReadEphemeris(Epoch.AddSeconds(60.0), 399, -1999972, Frame.ICRF, Aberration.None);
 
     // Three states of a circular orbit about the Earth in ICRF, 60 s apart from the epoch
     private static StateVector[] EarthStates()
@@ -1187,8 +1187,8 @@ internal static class Program
     // The IAU_EARTH rotation (its PCK search goes through every binary PCK) and the state of the Moon from the Earth (de440s,
     // loaded before every kernel of the scenarios, so that its search passes every SPK loaded after it)
     private static (Quaternion IauEarth, StateVector Moon) SearchesBefore() =>
-        (SpiceAPI.Instance.TransformFrame(Epoch, Frame.ICRF, new Frame("IAU_EARTH")).Rotation,
-            SpiceAPI.Instance.ReadEphemeris(Epoch, 399, 301, Frame.ICRF, Aberration.None));
+        (SpiceApi.Instance.TransformFrame(Epoch, Frame.ICRF, new Frame("IAU_EARTH")).Rotation,
+            SpiceApi.Instance.ReadEphemeris(Epoch, 399, 301, Frame.ICRF, Aberration.None));
 
     // Loads 25 copies of the L1 SPK, then reads IAU_EARTH and the Moon: bit for bit what they were before the scenario
     private static void CheckSearchesAfterManyDafs(DirectoryInfo root, DirectoryInfo kernels, (Quaternion IauEarth, StateVector Moon) before)
@@ -1199,19 +1199,19 @@ internal static class Program
             Copy(Path.Combine(kernels.FullName, "L1_de431.bsp"), many, $"x{i:D2}.bsp");
         }
 
-        SpiceAPI.Instance.LoadKernels(many);
+        SpiceApi.Instance.LoadKernels(many);
         try
         {
-            var q = SpiceAPI.Instance.TransformFrame(Epoch, Frame.ICRF, new Frame("IAU_EARTH")).Rotation;
+            var q = SpiceApi.Instance.TransformFrame(Epoch, Frame.ICRF, new Frame("IAU_EARTH")).Rotation;
             Check(q.W == before.IauEarth.W && q.VectorPart == before.IauEarth.VectorPart,
                 $"IAU_EARTH after {ManyDafs} more DAFs is the rotation read before ({q} against {before.IauEarth})");
-            var moon = SpiceAPI.Instance.ReadEphemeris(Epoch, 399, 301, Frame.ICRF, Aberration.None);
+            var moon = SpiceApi.Instance.ReadEphemeris(Epoch, 399, 301, Frame.ICRF, Aberration.None);
             Check(moon.Position == before.Moon.Position && moon.Velocity == before.Moon.Velocity,
                 $"the Moon after {ManyDafs} more DAFs is the state read before ({moon.Position} against {before.Moon.Position})");
         }
         finally
         {
-            SpiceAPI.Instance.UnloadKernels(many);
+            SpiceApi.Instance.UnloadKernels(many);
         }
     }
 
@@ -1227,14 +1227,14 @@ internal static class Program
         var text = TestKernelWriter.WriteFrameKernel(folder, "x.tf", 1999954, "IOA_F02_MKP_X", 90.0);
         var metaKernel = TestKernelWriter.ListedBefore(folder, text,
             stem => TestKernelWriter.WriteMetaKernel(new FileInfo(Path.Combine(folder.FullName, $"{stem}.tm")), pck.FullName));
-        SpiceAPI.Instance.LoadKernels(gone);
-        SpiceAPI.Instance.LoadKernels(folder);
+        SpiceApi.Instance.LoadKernels(gone);
+        SpiceApi.Instance.LoadKernels(folder);
         Check(System.Math.Abs(RotationAngleDeg("IOA_F02_MKP_X") - 90.0) < 1e-12, "the text kernel's frame is rotated by 90°");
 
         var handle = KeeperHandle(gone);
         File.Delete(gone.FullName);
 
-        SpiceAPI.Instance.UnloadKernels(folder);
+        SpiceApi.Instance.UnloadKernels(folder);
 
         // The native unload dropped the deleted PCK: nothing is listed (fourth round of #668; before, it was until unloaded)
         Check(Listed(root).Length == 0, "nothing is listed");
@@ -1243,7 +1243,7 @@ internal static class Program
         Check(CspiceDirectHolds(metaKernel) != true, "KEEPER no longer holds the meta-kernel");
 
         // The unload of the deleted PCK, which SPICE no longer holds, does nothing
-        SpiceAPI.Instance.UnloadKernels(gone);
+        SpiceApi.Instance.UnloadKernels(gone);
         Check(Listed(root).Length == 0, "nothing is listed");
         // An unknown frame name is a bad argument since R25 of #668 (InvalidOperationException before 11.0.0)
         Check(ThrowsArgument(() => RotationAngleDeg("IOA_F02_MKP_X")) != null, "the text kernel's frame is unknown");
@@ -1266,11 +1266,11 @@ internal static class Program
         var d = TestKernelWriter.WritePck(moonPck, folder, "d.bpc", classId + 2);
         var x = TestKernelWriter.ListedBefore(folder, d, stem => TestKernelWriter.WritePck(moonPck, folder, $"{stem}.bpc", classId + 1));
         var q = TestKernelWriter.WritePck(moonPck, new DirectoryInfo(Path.Combine(root.FullName, "After")), "q.bpc", classId, 17);
-        SpiceAPI.Instance.LoadKernels(frame);
-        SpiceAPI.Instance.LoadKernels(p);
-        SpiceAPI.Instance.LoadKernels(folder);
+        SpiceApi.Instance.LoadKernels(frame);
+        SpiceApi.Instance.LoadKernels(p);
+        SpiceApi.Instance.LoadKernels(folder);
         var withP = Rotation(frameName);
-        SpiceAPI.Instance.LoadKernels(q);
+        SpiceApi.Instance.LoadKernels(q);
         var withQ = Rotation(frameName);
 
         // The two rotations differ by the obliquity of the ecliptic, about 23.4°
@@ -1282,7 +1282,7 @@ internal static class Program
     private static bool? CspiceDirectHolds(FileInfo file) =>
         OperatingSystem.IsLinux() ? CspiceDirect.LoadedKernelHandle(file.FullName) != null : null;
 
-    private static Quaternion Rotation(string frameName) => SpiceAPI.Instance.TransformFrame(Epoch, new Frame(frameName), Frame.ICRF).Rotation;
+    private static Quaternion Rotation(string frameName) => SpiceApi.Instance.TransformFrame(Epoch, new Frame(frameName), Frame.ICRF).Rotation;
 
     // The rotation angle of the frame from ICRF, in degrees (the sign of a quaternion is free)
     private static double RotationAngleDeg(string frameName)
@@ -1306,7 +1306,7 @@ internal static class Program
     }
 
     // The paths listed under the root
-    private static string[] Listed(DirectoryInfo root) => SpiceAPI.Instance.GetLoadedKernels().Select(k => k.FullName)
+    private static string[] Listed(DirectoryInfo root) => SpiceApi.Instance.GetLoadedKernels().Select(k => k.FullName)
         .Where(k => k == root.FullName || k.StartsWith(root.FullName + Path.DirectorySeparatorChar, StringComparison.Ordinal)).ToArray();
 
     private static InvalidOperationException Throws(Action action)

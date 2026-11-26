@@ -74,7 +74,7 @@ public class NearCircularRoundTripTests
                 Frames.Frame.ICRF).ToStateVector();
 
             // Act
-            var expected = SpiceAPI.Instance.ConvertStateVectorToConicOrbitalElement(state);
+            var expected = SpiceApi.Instance.ConvertStateVectorToConicOrbitalElement(state);
             var back = state.AtEpoch(state.Epoch).ToStateVector();
 
             // Assert: Ω, ω and M are each ill-conditioned near e = 0 and i = 0; their sum, the mean longitude, is not

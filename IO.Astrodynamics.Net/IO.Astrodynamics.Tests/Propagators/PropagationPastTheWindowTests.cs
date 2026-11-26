@@ -123,7 +123,7 @@ public class PropagationPastTheWindowTests
         var cached = cache.GetOrientation(epoch);
 
         // Assert: the frame read at the epoch, CSPICE's own value
-        var spice = SpiceAPI.Instance.TransformFrame(epoch, earth.Frame, Frames.Frame.ICRF);
+        var spice = SpiceApi.Instance.TransformFrame(epoch, earth.Frame, Frames.Frame.ICRF);
         double angle = RotationAngle(spice.Rotation, cached.Rotation);
         _output.WriteLine($"MEASURE #626 orientation {pastTheGrid} s past the grid: {angle:E3} rad from sxform");
         Assert.True(angle <= 2.3e-16, $"{angle:E3} rad");
@@ -153,7 +153,7 @@ public class PropagationPastTheWindowTests
         var (statePosition, stateVelocity) = cache.GetState(PlanetsAndMoons.MOON.NaifId, Aberration.None, epoch);
 
         // Assert
-        var spice = SpiceAPI.Instance.ReadEphemeris(epoch, PlanetsAndMoons.EARTH.NaifId, PlanetsAndMoons.MOON.NaifId,
+        var spice = SpiceApi.Instance.ReadEphemeris(epoch, PlanetsAndMoons.EARTH.NaifId, PlanetsAndMoons.MOON.NaifId,
             Frames.Frame.ICRF, Aberration.None);
         double apart = (position - spice.Position).Magnitude();
         _output.WriteLine($"MEASURE #626 Moon {fromTheGrid} s from the grid: {apart:E3} m from spkezr");

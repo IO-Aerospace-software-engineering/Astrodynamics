@@ -55,8 +55,8 @@ public class OpenOrbitTests
 
         // Act
         var state = elements.ToStateVector();
-        var spice = SpiceAPI.Instance.ConvertStateVectorToConicOrbitalElement(state);
-        var later = SpiceAPI.Instance.ConvertStateVectorToConicOrbitalElement(elements.ToStateVector(laterEpoch));
+        var spice = SpiceApi.Instance.ConvertStateVectorToConicOrbitalElement(state);
+        var later = SpiceApi.Instance.ConvertStateVectorToConicOrbitalElement(elements.ToStateVector(laterEpoch));
         double back = state.ToKeplerianElements().MeanAnomaly();
 
         // Assert: the state has the given elements for SPICE, M included, and M grows by n Δt
@@ -112,7 +112,7 @@ public class OpenOrbitTests
         var state = elements.ToStateVector();
 
         // Act: before #373, the conversion threw, SPICE giving no semi-major axis to a parabola
-        var spice = SpiceAPI.Instance.ConvertStateVectorToConicOrbitalElement(state);
+        var spice = SpiceApi.Instance.ConvertStateVectorToConicOrbitalElement(state);
 
         // Assert
         double q = System.Math.Abs(spice.PerigeeRadius() - PeriapsisRadius) / PeriapsisRadius;
@@ -162,10 +162,10 @@ public class OpenOrbitTests
         // Act: before #372, the native conversion never returned on a hyperbola before its periapsis (M = -2 and
         // -10 at e = 1.5). A regression fails this case after 10 s instead of hanging it, but the conversion that does
         // not return keeps the SPICE lock, so every later SPICE call of the run waits
-        var conversion = Task.Run(() => SpiceAPI.Instance.ConvertConicElementsToStateVector(elements));
+        var conversion = Task.Run(() => SpiceApi.Instance.ConvertConicElementsToStateVector(elements));
         Assert.True(conversion.Wait(TimeSpan.FromSeconds(10.0)), "the conversion did not return");
         var state = conversion.Result;
-        var spice = SpiceAPI.Instance.ConvertStateVectorToConicOrbitalElement(state);
+        var spice = SpiceApi.Instance.ConvertStateVectorToConicOrbitalElement(state);
 
         // Assert: SPICE OSCELT finds the elements in the state, which is at their epoch
         double q = System.Math.Abs(spice.PerigeeRadius() - PeriapsisRadius) / PeriapsisRadius;

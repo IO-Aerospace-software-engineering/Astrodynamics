@@ -35,7 +35,7 @@ namespace IO.Astrodynamics.OrbitalParameters.TLE;
 /// orbit, an eccentricity out of range) throws <see cref="InvalidOperationException"/> (#454).
 /// </para>
 /// </remarks>
-public class TLE : OrbitalParameters, IEquatable<TLE>, IParsable<TLE>
+public class Tle : OrbitalParameters, IEquatable<Tle>, IParsable<Tle>
 {
     private const double MAX_ECCENTRICITY = 0.9999999;
     private const int MAX_ELEMENT_SET_NUMBER = 9999;
@@ -223,7 +223,7 @@ public class TLE : OrbitalParameters, IEquatable<TLE>, IParsable<TLE>
     /// valid TLE gives its fields, <see cref="MeanMeanMotion"/> and <see cref="ToOmm"/> without kernels. Before 11.0.0 it
     /// built the Earth from the kernels, and a TLE built before them kept a GM of 0.
     /// </remarks>
-    public TLE(string name, string line1, string line2) : base(EarthAt(ValidatedEpoch(line1, line2)), ExtractEpochFromTLE(line1),
+    public Tle(string name, string line1, string line2) : base(EarthAt(ValidatedEpoch(line1, line2)), ExtractEpochFromTLE(line1),
         Frame.TEME, OrbitalElementsType.Mean)
     {
         Line1 = line1;
@@ -231,7 +231,7 @@ public class TLE : OrbitalParameters, IEquatable<TLE>, IParsable<TLE>
         // Without a name, the catalog field as written (R21 of #668)
         Name = string.IsNullOrWhiteSpace(name) ? line1.Substring(2, NoradCatalogNumber.FieldLength).Trim() : name;
         NoradCatalogId = NoradCatalogNumber.Parse(line1.Substring(2, NoradCatalogNumber.FieldLength));
-        Classification = (Classification)line1[7];
+        Classification = (TleClassification)line1[7];
         var designator = line1.Substring(9, 8).Trim();
         CosparId = designator.Length == 0 ? null : designator;
         ElementSetNumber = ParseCount(line1.Substring(64, 4));
@@ -257,15 +257,15 @@ public class TLE : OrbitalParameters, IEquatable<TLE>, IParsable<TLE>
         BallisticCoefficient = ParseTleExponent(line1.Substring(53, 8));
 
         // PublicationOnly: a failed read (no kernel loaded yet) is not cached, so that the TLE reads its epoch once the kernels
-        // are loaded (#711: before, the epoch of a failed read was kept for the life of the TLE). The read takes the SpiceAPI
+        // are loaded (#711: before, the epoch of a failed read was kept for the life of the TLE). The read takes the SpiceApi
         // lock, so a read repeated by a race gives the same value
-        _sgp4Epoch = new Lazy<double>(() => SpiceAPI.Instance.ReadTleEpoch(Name, Line1, Line2), LazyThreadSafetyMode.PublicationOnly);
+        _sgp4Epoch = new Lazy<double>(() => SpiceApi.Instance.ReadTleEpoch(Name, Line1, Line2), LazyThreadSafetyMode.PublicationOnly);
     }
 
     /// <summary>
     /// Gets the security classification of line 1 (column 8).
     /// </summary>
-    public Classification Classification { get; }
+    public TleClassification Classification { get; }
 
     /// <summary>
     /// Gets the international designator of line 1 (columns 10-17) as written, trimmed (<c>98067A</c>), or null when the
@@ -432,12 +432,12 @@ public class TLE : OrbitalParameters, IEquatable<TLE>, IParsable<TLE>
     /// <exception cref="ArgumentOutOfRangeException">
     /// Thrown when noradId, revolutionsAtEpoch or elementSetNumber falls outside the range its TLE field can represent.
     /// </exception>
-    public static TLE Create(OrbitalParameters meanElements, string name, int noradId, string cosparId, int revolutionsAtEpoch,
-        Classification classification = Classification.Unclassified, double bstar = 0.0001, double nDot = 0.0, double nDDot = 0.0, int elementSetNumber = DefaultElementSetNumber)
+    public static Tle Create(OrbitalParameters meanElements, string name, int noradId, string cosparId, int revolutionsAtEpoch,
+        TleClassification classification = TleClassification.Unclassified, double bstar = 0.0001, double nDot = 0.0, double nDDot = 0.0, int elementSetNumber = DefaultElementSetNumber)
     {
         if (meanElements == null) throw new ArgumentNullException(nameof(meanElements));
         if (meanElements.ElementsType != OrbitalElementsType.Mean)
-            throw new ArgumentException("Orbital parameters must be mean elements. Use Omm.ToMeanElements(), TLE.ToMeanKeplerianElements() or elements whose ElementsType is Mean.", nameof(meanElements));
+            throw new ArgumentException("Orbital parameters must be mean elements. Use Omm.ToMeanElements(), Tle.ToMeanKeplerianElements() or elements whose ElementsType is Mean.", nameof(meanElements));
 
         // A TLE holds SGP4 mean elements of an Earth orbit in TEME (#607)
         if (meanElements.Frame != Frame.TEME)
@@ -456,8 +456,8 @@ public class TLE : OrbitalParameters, IEquatable<TLE>, IParsable<TLE>
     /// Internal method for creating TLE from orbital parameters during the fitting process.
     /// This method does not validate ElementsType, allowing iterative convergence from osculating to mean elements.
     /// </summary>
-    internal static TLE CreateInternal(OrbitalParameters orbitalParams, string name, int noradId, string cosparId, int revolutionsAtEpoch,
-        Classification classification = Classification.Unclassified, double bstar = 0.0001, double nDot = 0.0, double nDDot = 0.0, int elementSetNumber = DefaultElementSetNumber)
+    internal static Tle CreateInternal(OrbitalParameters orbitalParams, string name, int noradId, string cosparId, int revolutionsAtEpoch,
+        TleClassification classification = TleClassification.Unclassified, double bstar = 0.0001, double nDot = 0.0, double nDDot = 0.0, int elementSetNumber = DefaultElementSetNumber)
     {
         if (orbitalParams == null) throw new ArgumentNullException(nameof(orbitalParams));
         if (name == null) throw new ArgumentNullException(nameof(name));
@@ -492,7 +492,7 @@ public class TLE : OrbitalParameters, IEquatable<TLE>, IParsable<TLE>
         }
 
         // Convert elements to TLE units
-        var kep = orbitalParams is TLE tle ? tle.ToMeanKeplerianElements() : orbitalParams.ToKeplerianElements();
+        var kep = orbitalParams is Tle tle ? tle.ToMeanKeplerianElements() : orbitalParams.ToKeplerianElements();
 
         // Convert and normalize angles - single pass, no redundant calculations
         double iDeg = System.Math.Clamp(kep.Inclination() * Constants.Rad2Deg, 0.0, 180.0);
@@ -561,7 +561,7 @@ public class TLE : OrbitalParameters, IEquatable<TLE>, IParsable<TLE>
         int checksum2 = ComputeTleChecksumFromBuilder(line2Builder);
         line2Builder.Append(checksum2);
 
-        return new TLE(name, line1Builder.ToString(), line2Builder.ToString());
+        return new Tle(name, line1Builder.ToString(), line2Builder.ToString());
     }
 
     // The four angles of line 2: a value that rounds to zero, −0.0 included, is written 0.0000 without a sign (#480)
@@ -848,7 +848,7 @@ public class TLE : OrbitalParameters, IEquatable<TLE>, IParsable<TLE>
     /// </para>
     /// <para>
     /// SGP4 is CSPICE's <c>evsgp4_c</c> (Vallado's 2006 code, AFSPC mode, WGS-72 old, KE = 7.43669161e-2; see
-    /// <see cref="TLE"/>), at tsince = the TT seconds from <see cref="OrbitalParameters.Epoch"/> to
+    /// <see cref="Tle"/>), at tsince = the TT seconds from <see cref="OrbitalParameters.Epoch"/> to
     /// <paramref name="epoch"/> over 60, whatever the time scale of <paramref name="epoch"/> (#599): the epoch is taken
     /// as CSPICE's <c>getelm_c</c> reads it, so that tsince is exact. Before 11.0.0 tsince counted the TDB seconds
     /// between the TDB of <paramref name="epoch"/> and that epoch, up to 0.36 m off a day after the epoch. The state is
@@ -858,7 +858,7 @@ public class TLE : OrbitalParameters, IEquatable<TLE>, IParsable<TLE>
     /// <exception cref="InvalidOperationException">SGP4 failed at this epoch (#454).</exception>
     public StateVector ToOsculating(Time epoch)
     {
-        return SpiceAPI.Instance.ConvertTleToStateVector(Name, Line1, Line2, _sgp4Epoch.Value, Epoch, epoch).ToStateVector();
+        return SpiceApi.Instance.ConvertTleToStateVector(Name, Line1, Line2, _sgp4Epoch.Value, Epoch, epoch).ToStateVector();
     }
 
     /// <summary>
@@ -1067,7 +1067,7 @@ public class TLE : OrbitalParameters, IEquatable<TLE>, IParsable<TLE>
     /// </summary>
     /// <param name="other">The TLE to compare with the current TLE.</param>
     /// <returns>true if the specified TLE is equal to the current TLE; otherwise, false.</returns>
-    public bool Equals(TLE other)
+    public bool Equals(Tle other)
     {
         if (ReferenceEquals(null, other)) return false;
         if (ReferenceEquals(this, other)) return true;
@@ -1086,7 +1086,7 @@ public class TLE : OrbitalParameters, IEquatable<TLE>, IParsable<TLE>
         if (ReferenceEquals(null, obj)) return false;
         if (ReferenceEquals(this, obj)) return true;
         if (obj.GetType() != this.GetType()) return false;
-        return Equals((TLE)obj);
+        return Equals((Tle)obj);
     }
 
     /// <summary>
@@ -1104,7 +1104,7 @@ public class TLE : OrbitalParameters, IEquatable<TLE>, IParsable<TLE>
     /// <param name="left">The first TLE to compare.</param>
     /// <param name="right">The second TLE to compare.</param>
     /// <returns>true if the two TLE instances are equal; otherwise, false.</returns>
-    public static bool operator ==(TLE left, TLE right)
+    public static bool operator ==(Tle left, Tle right)
     {
         return Equals(left, right);
     }
@@ -1115,7 +1115,7 @@ public class TLE : OrbitalParameters, IEquatable<TLE>, IParsable<TLE>
     /// <param name="left">The first TLE to compare.</param>
     /// <param name="right">The second TLE to compare.</param>
     /// <returns>true if the two TLE instances are not equal; otherwise, false.</returns>
-    public static bool operator !=(TLE left, TLE right)
+    public static bool operator !=(Tle left, Tle right)
     {
         return !Equals(left, right);
     }
@@ -1131,7 +1131,7 @@ public class TLE : OrbitalParameters, IEquatable<TLE>, IParsable<TLE>
     /// <exception cref="ArgumentNullException"><paramref name="text"/> is null.</exception>
     /// <exception cref="TleFormatException">The text holds no set, more than one (<see cref="ParseAll(string)"/> reads
     /// them), or a set that does not follow the format, at its line of the text and its column.</exception>
-    public static TLE Parse(string text)
+    public static Tle Parse(string text)
     {
         ArgumentNullException.ThrowIfNull(text);
         return Single(ReadSets(new StringReader(text)));
@@ -1145,7 +1145,7 @@ public class TLE : OrbitalParameters, IEquatable<TLE>, IParsable<TLE>
     /// <exception cref="ArgumentNullException"><paramref name="reader"/> is null.</exception>
     /// <exception cref="TleFormatException">The text holds no set, more than one, or a set that does not follow the
     /// format.</exception>
-    public static TLE Parse(TextReader reader)
+    public static Tle Parse(TextReader reader)
     {
         ArgumentNullException.ThrowIfNull(reader);
         return Single(ReadSets(reader));
@@ -1159,7 +1159,7 @@ public class TLE : OrbitalParameters, IEquatable<TLE>, IParsable<TLE>
     /// <returns>The TLE.</returns>
     /// <exception cref="ArgumentNullException"><paramref name="s"/> is null.</exception>
     /// <exception cref="TleFormatException">The text is not one TLE.</exception>
-    public static TLE Parse(string s, IFormatProvider provider) => Parse(s);
+    public static Tle Parse(string s, IFormatProvider provider) => Parse(s);
 
     /// <summary>
     /// Reads every TLE of a text, in its order: two- and three-line sets, mixed, as <see cref="Parse(string)"/> reads one.
@@ -1169,7 +1169,7 @@ public class TLE : OrbitalParameters, IEquatable<TLE>, IParsable<TLE>
     /// <exception cref="ArgumentNullException"><paramref name="text"/> is null.</exception>
     /// <exception cref="TleFormatException">The first set that does not follow the format, at its line of the text and its
     /// column; no partial list.</exception>
-    public static IReadOnlyList<TLE> ParseAll(string text)
+    public static IReadOnlyList<Tle> ParseAll(string text)
     {
         ArgumentNullException.ThrowIfNull(text);
         return ParseAll(new StringReader(text));
@@ -1182,7 +1182,7 @@ public class TLE : OrbitalParameters, IEquatable<TLE>, IParsable<TLE>
     /// <returns>The sets, in their order.</returns>
     /// <exception cref="ArgumentNullException"><paramref name="reader"/> is null.</exception>
     /// <exception cref="TleFormatException">The first set that does not follow the format.</exception>
-    public static IReadOnlyList<TLE> ParseAll(TextReader reader)
+    public static IReadOnlyList<Tle> ParseAll(TextReader reader)
     {
         ArgumentNullException.ThrowIfNull(reader);
         return ReadSets(reader).Select(set => set.Tle).ToArray();
@@ -1196,7 +1196,7 @@ public class TLE : OrbitalParameters, IEquatable<TLE>, IParsable<TLE>
     /// <exception cref="TleFormatException">The file holds no set, more than one (<see cref="LoadAll"/> reads them), or a
     /// set that does not follow the format, at its line of the file.</exception>
     /// <exception cref="IOException">The file cannot be read, as <see cref="File.OpenText"/> throws.</exception>
-    public static TLE Load(string path)
+    public static Tle Load(string path)
     {
         using var reader = File.OpenText(path);
         return Parse(reader);
@@ -1211,7 +1211,7 @@ public class TLE : OrbitalParameters, IEquatable<TLE>, IParsable<TLE>
     /// <exception cref="TleFormatException">The first set that does not follow the format, at its line of the file and its
     /// column; no partial list (R21 of #668).</exception>
     /// <exception cref="IOException">The file cannot be read, as <see cref="File.OpenText"/> throws.</exception>
-    public static IReadOnlyList<TLE> LoadAll(string path)
+    public static IReadOnlyList<Tle> LoadAll(string path)
     {
         using var reader = File.OpenText(path);
         return ParseAll(reader);
@@ -1223,7 +1223,7 @@ public class TLE : OrbitalParameters, IEquatable<TLE>, IParsable<TLE>
     /// <param name="text">The text, or null.</param>
     /// <param name="result">The TLE, or null.</param>
     /// <returns>Whether the text is one TLE.</returns>
-    public static bool TryParse([NotNullWhen(true)] string text, out TLE result)
+    public static bool TryParse([NotNullWhen(true)] string text, out Tle result)
     {
         result = null;
         if (text == null) return false;
@@ -1239,13 +1239,13 @@ public class TLE : OrbitalParameters, IEquatable<TLE>, IParsable<TLE>
     }
 
     /// <summary>
-    /// <see cref="TryParse(string, out TLE)"/>, <paramref name="provider"/> unused (<see cref="IParsable{TSelf}"/>).
+    /// <see cref="TryParse(string, out Tle)"/>, <paramref name="provider"/> unused (<see cref="IParsable{TSelf}"/>).
     /// </summary>
     /// <param name="s">The text, or null.</param>
     /// <param name="provider">Unused: the format is culture invariant.</param>
     /// <param name="result">The TLE, or null.</param>
     /// <returns>Whether the text is one TLE.</returns>
-    public static bool TryParse([NotNullWhen(true)] string s, IFormatProvider provider, out TLE result) => TryParse(s, out result);
+    public static bool TryParse([NotNullWhen(true)] string s, IFormatProvider provider, out Tle result) => TryParse(s, out result);
 
     /// <summary>
     /// <see cref="Load"/> without an exception for a file that does not exist or is not one TLE.
@@ -1254,14 +1254,14 @@ public class TLE : OrbitalParameters, IEquatable<TLE>, IParsable<TLE>
     /// <param name="result">The TLE, or null.</param>
     /// <returns>Whether the file exists and holds one TLE; an error reading an existing file throws, as
     /// <see cref="File.ReadAllText(string)"/> does.</returns>
-    public static bool TryLoad(string path, out TLE result)
+    public static bool TryLoad(string path, out Tle result)
     {
         result = null;
         return File.Exists(path) && TryParse(File.ReadAllText(path), out result);
     }
 
     // The one set of a text: none or several throw at the line of the text where the second starts
-    private static TLE Single(List<(TLE Tle, int Line)> sets)
+    private static Tle Single(List<(Tle Tle, int Line)> sets)
     {
         if (sets.Count == 0)
             throw new TleFormatException("The text holds no TLE.", 1, 1);
@@ -1278,7 +1278,7 @@ public class TLE : OrbitalParameters, IEquatable<TLE>, IParsable<TLE>
     // and the blank ones skipped; a line that starts with '1' followed by one that starts with '2' opens a set without a
     // name, any other line is the name of the set of the next two (Space-Track's leading "0 " removed, trimmed); a set the
     // constructor refuses throws its TleFormatException at the line of the text
-    private static List<(TLE Tle, int Line)> ReadSets(TextReader reader)
+    private static List<(Tle Tle, int Line)> ReadSets(TextReader reader)
     {
         var lines = new List<(string Text, int Number)>();
         int number = 0;
@@ -1289,7 +1289,7 @@ public class TLE : OrbitalParameters, IEquatable<TLE>, IParsable<TLE>
             if (text.Length > 0) lines.Add((text, number));
         }
 
-        var sets = new List<(TLE Tle, int Line)>();
+        var sets = new List<(Tle Tle, int Line)>();
         int i = 0;
         while (i < lines.Count)
         {
@@ -1311,7 +1311,7 @@ public class TLE : OrbitalParameters, IEquatable<TLE>, IParsable<TLE>
             var (line2, number2) = lines[i + 1];
             try
             {
-                sets.Add((new TLE(name, line1, line2), start));
+                sets.Add((new Tle(name, line1, line2), start));
             }
             catch (ArgumentException e) when (e.InnerException is TleFormatException format)
             {

@@ -21,10 +21,10 @@ namespace IO.Astrodynamics.Tests.Body;
 public class TrackedObjectTests
 {
     // The ISS set of the TLE tests, and the same set with the largest Alpha-5 number (TLENoradIdTests)
-    private static readonly TLE Iss = new("ISS", "1 25544U 98067A   21020.53488036  .00016717  00000-0  10270-3 0  9054",
+    private static readonly Tle Iss = new("ISS", "1 25544U 98067A   21020.53488036  .00016717  00000-0  10270-3 0  9054",
         "2 25544  51.6423 353.0312 0000493 320.8755  39.2360 15.49309423 25703");
 
-    private static readonly TLE Z9999 = new("Z9999", "1 Z9999U 98067A   21020.53488036  .00016717  00000-0  10270-3 0  9050",
+    private static readonly Tle Z9999 = new("Z9999", "1 Z9999U 98067A   21020.53488036  .00016717  00000-0  10270-3 0  9050",
         "2 Z9999  51.6423 353.0312 0000493 320.8755  39.2360 15.49309423 25709");
 
     public TrackedObjectTests()

@@ -85,11 +85,11 @@ What a double can hold limits both directions:
 - **From 2017 to 2028, and from 1971 to 1983** (|ET| from 2^29 s to 2^53 ticks) an ulp of the ET is coarser than a tick: an ET of SPICE comes back from
   `TimeSpanFromJ2000()` exactly, but a tick made seconds and back is not always that tick. The double nearest a tick can
   be up to 0.6 tick from it, and for about 16 % of ticks its nearest tick is the neighbour. So the epochs of SPICE are not
-  passed through seconds again where the tick asked is known: `SpiceAPI.ReadEphemeris(Time …)` and the initial state of
+  passed through seconds again where the tick asked is known: `SpiceApi.ReadEphemeris(Time …)` and the initial state of
   a kernel-backed spacecraft carry the epoch asked, as `SpiceDataProvider.GetEphemeris` does, and an end of a
-  CSPICE search (`FindWindowsOn…Constraint` of `SpiceAPI`) at an end of its search window is that end. Where SPICE
+  CSPICE search (`FindWindowsOn…Constraint` of `SpiceApi`) at an end of its search window is that end. Where SPICE
   gives the epoch itself (the grid of `ReadEphemeris(Window …)` and `ReadOrientation`, a transition inside a window, the
-  element conversions of `SpiceAPI`), the label is the nearest tick of its double, within a tick of any tick it came from.
+  element conversions of `SpiceApi`), the label is the nearest tick of its double, within a tick of any tick it came from.
 - **From 1983 to 2017** (|ET| below 2^29 s) a tick is coarser than an ulp, so no tick holds every ET: an ET comes back
   within half a tick, and a tick made seconds and back is that tick. The nearest tick of a coverage bound (`spkcov`, `pckcov`) lies outside the
   coverage for about a third of the bounds, at either end (on the double SPICE receives, 50 000 bounds per range: starts
@@ -107,9 +107,9 @@ of `TimeSpan.FromSeconds`, `ArgumentException` for NaN and `OverflowException` f
 the bound of `SecondsToTicks`, 0.48 s below the 922 337 203 685.477 s `TimeSpan.FromSeconds` accepted):
 `OrbitalParameters.Period()`, `CelestialBody.SideralRotationPeriod` and `TrueSolarDay`, the
 offsets of the launch windows after the first (`Launch`: half the sidereal period in seconds plus ±2 δL/ω, rounded
-once), the thrust window of an impulse (`Tsiolkovski.DeltaT`), the
+once), the thrust window of an impulse (`Tsiolkovsky.DeltaT`), the
 hold of `PhasingManeuver`, the step, candidate, seed, secant and subdivision epochs of the conjunction search and the
-period of the element conversions of `SpiceAPI`
+period of the element conversions of `SpiceApi`
 ([#637](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/637), decided by S. Guillet,
 2026-11-17). Before 11.0.0 they truncated toward zero, a tick early for about half of the values (8 733 of 20 000
 random spans, 16 of 23 orbital periods, 43 of 80 sidereal periods of the Earth and the Moon, 40 of 65 launch window
@@ -242,7 +242,7 @@ var fromJD = Time.CreateFromJD(2451545.0, TimeScale.TDB);
 | `Intersects(Window)` | Whether the two windows share an instant: the ends are closed, so touching windows intersect |
 | `Hull(Window)` | The earlier start and the later end; on a tie of instants the argument's end, in its scale (`Merge` before 11.0.0, bit for bit) |
 | `TryMerge(Window, out Window)` | The hull of two windows that share an instant, touching ones included (as CSPICE's `wninsd`); false otherwise |
-| `Sample(TimeSpan step, bool includeEnd = false)` | The instants start + i·step, i from 0, at or before the end, computed lazily: each the start plus i steps in the calendar of the start's scale (exact to the tick), compared with the end as an instant, so the end is a point when it lies on the grid; with `includeEnd` the end, in its scale, is also appended when the last point precedes it, however close; a step of zero or less throws `ArgumentOutOfRangeException` (`step`) at the call (11.0.0, R11 of #668). Across a leap second the points follow the UTC calendar: the window from 2016-12-31T23:59:00Z to 2017-01-01T00:01:00Z (121 s) gives 121 points at 1 s, the last its end. The grid of the window reads: `GetEphemeris` over a window, `Star.Propagate`, `SpiceAPI.TransformFrame`, `ReadEphemeris` and `ReadOrientation` over a window, and the command `orientation` |
+| `Sample(TimeSpan step, bool includeEnd = false)` | The instants start + i·step, i from 0, at or before the end, computed lazily: each the start plus i steps in the calendar of the start's scale (exact to the tick), compared with the end as an instant, so the end is a point when it lies on the grid; with `includeEnd` the end, in its scale, is also appended when the last point precedes it, however close; a step of zero or less throws `ArgumentOutOfRangeException` (`step`) at the call (11.0.0, R11 of #668). Across a leap second the points follow the UTC calendar: the window from 2016-12-31T23:59:00Z to 2017-01-01T00:01:00Z (121 s) gives 121 points at 1 s, the last its end. The grid of the window reads: `GetEphemeris` over a window, `Star.Propagate`, `SpiceApi.TransformFrame`, `ReadEphemeris` and `ReadOrientation` over a window, and the command `orientation` |
 | `GetIntersection(Window)` / `TryGetIntersection(Window, out Window)` | The instants both windows hold, one instant for touching windows (as CSPICE's `wnintd`); `GetIntersection` throws `ArgumentException` and `TryGetIntersection` returns false when they share none |
 
 ### Example
@@ -261,7 +261,7 @@ bound, every other end the same instant in that scale. A `Time` holds no leap se
 second, which no UTC label holds, keeps its TDB label. On a UTC or TT search window, `Length` of a result counts TT
 seconds ([The Length of a Window](#the-length-of-a-window)); before 11.0.0 the CSPICE, occultation and field-of-view
 searches labelled TDB, and their lengths counted TDB seconds, up to 3.3e-10 of the length apart. The six raw searches
-of `SpiceAPI` keep their TDB labels. The library's distance, coordinate and illumination search (`GeometryFinder`)
+of `SpiceApi` keep their TDB labels. The library's distance, coordinate and illumination search (`GeometryFinder`)
 samples and solves in the calendar of the start's scale: on a UTC window, a crossing during a leap second is labelled
 up to 1 s from its instant
 ([#830](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/830), under **Known limitations** of

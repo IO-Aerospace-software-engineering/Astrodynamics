@@ -46,12 +46,12 @@ public class TLEPropagatorTests
         // near the third points of a step. The reference is SGP4 at the exact instant through CSPICE evsgp4_c, not the
         // interpolation under test; the leading-order Hermite error with exact end accelerations, h⁴/384·v·n⁴ = 4.17e-4
         // m/s, is a plausibility check only (measured above it), so the bounds come from the measurement
-        TLE tle = new TLE("ISS",
+        Tle tle = new Tle("ISS",
             "1 25544U 98067A   21020.53488036  .00016717  00000-0  10270-3 0  9054",
             "2 25544  51.6423 353.0312 0000493 320.8755  39.2360 15.49309423 25703");
         var window = new Window(tle.Epoch, tle.Epoch.AddHours(1.0));
         var spacecraft = new Spacecraft(-1001, "MySpacecraft", 100.0, tle, 10000.0, new Clock("My clock", 256));
-        var solution = new TLEPropagator(window, spacecraft, TimeSpan.FromSeconds(60.0)).Propagate();
+        var solution = new TlePropagator(window, spacecraft, TimeSpan.FromSeconds(60.0)).Propagate();
         var start = window.StartDate.ToTDB();
 
         // At each sample, the SGP4 state bit for bit: every 60 s from the TDB start, the last at the TDB end of the window,
@@ -88,7 +88,7 @@ public class TLEPropagatorTests
         // 28350 after its decay (Sgp4ReferenceTests.FailedSgp4_Throws: Vallado's error 1, CSPICE's BADMECCENTRICITY at
         // 1500 min): SGP4 runs up to an instant and fails after it. A window that ends half a second before that instant
         // has its samples, and the acceleration at its end reads SGP4 1 s later, which fails (#675)
-        var tle = new TLE("ERR", "1 28350U 04020A   06167.21788666  .16154492  76267-5  18678-3 0  8894",
+        var tle = new Tle("ERR", "1 28350U 04020A   06167.21788666  .16154492  76267-5  18678-3 0  8894",
             "2 28350  64.9977 345.6130 0024870 260.7578  99.9590 16.47856722116490");
         bool Fails(in IO.Astrodynamics.TimeSystem.Time epoch)
         {
@@ -126,13 +126,13 @@ public class TLEPropagatorTests
         Assert.True(Fails(end.AddSeconds(1.0)));
         var spacecraft = new Spacecraft(-1003, "Decayed", 100.0, tle, 10000.0, new Clock("Decayed clock", 256));
         var step = TimeSpan.FromSeconds(60.0);
-        new TLEPropagator(new Window(end.AddSeconds(-3600.0), end.AddSeconds(-1800.0)), spacecraft, step).Propagate();
+        new TlePropagator(new Window(end.AddSeconds(-3600.0), end.AddSeconds(-1800.0)), spacecraft, step).Propagate();
 
         var before = spacecraft.PropagatedStates;
         Assert.Equal(31, before.Length);
 
         // Act: a window whose samples SGP4 gives, the acceleration at its end not
-        var propagator = new TLEPropagator(new Window(end.AddSeconds(-600.0), end), spacecraft, step);
+        var propagator = new TlePropagator(new Window(end.AddSeconds(-600.0), end), spacecraft, step);
         Assert.Throws<SpiceException>(() => propagator.Propagate());
 
         // Assert: the rejected run adds no state; the spacecraft holds the states of the first run as they were
@@ -150,20 +150,20 @@ public class TLEPropagatorTests
     public void CheckPropagation()
     {
         Clock clk = new Clock("My clock", 256);
-        TLE tle = new TLE("ISS",
+        Tle tle = new Tle("ISS",
             "1 25544U 98067A   21020.53488036  .00016717  00000-0  10270-3 0  9054",
             "2 25544  51.6423 353.0312 0000493 320.8755  39.2360 15.49309423 25703");
         
         Spacecraft spc = new Spacecraft(-1001, "MySpacecraft", 100.0, tle, 10000.0, clk);
         var start = spc.InitialOrbitalParameters.Epoch.ToTDB();
         var end = start.AddDays(1.0);
-        TLEPropagator propagator = new TLEPropagator(new Window(start, end), spc, TimeSpan.FromHours(1.0));
+        TlePropagator propagator = new TlePropagator(new Window(start, end), spc, TimeSpan.FromHours(1.0));
         var solution = propagator.Propagate();
         LabelAssert.Equal(tle.ToStateVector(start), solution.StateVectors.First(x => x.Epoch == start));
         LabelAssert.Equal(tle.ToStateVector(end), solution.StateVectors.First(x => x.Epoch == end));
     }
 
-    private static readonly TLE Iss = new("ISS",
+    private static readonly Tle Iss = new("ISS",
         "1 25544U 98067A   21020.53488036  .00016717  00000-0  10270-3 0  9054",
         "2 25544  51.6423 353.0312 0000493 320.8755  39.2360 15.49309423 25703");
 
@@ -179,7 +179,7 @@ public class TLEPropagatorTests
     }
 
     /// <summary>
-    /// The samples of a <see cref="TLEPropagator"/> run and its solution, checked against the closed form of the grid
+    /// The samples of a <see cref="TlePropagator"/> run and its solution, checked against the closed form of the grid
     /// (#598): sample i at start + i·ΔT for every sample but the last, the last at the window end, each the SGP4 state of
     /// its epoch (CSPICE evsgp4_c), the steps of the solution the intervals between them, the last ending at the window end.
     /// </summary>
@@ -189,7 +189,7 @@ public class TLEPropagatorTests
         var end = start.AddSeconds(windowSeconds);
         var spacecraft = new Spacecraft(naifId, $"S{-naifId}", 100.0, Iss, 10000.0, new Clock($"c{-naifId}", 256));
         var step = TimeSpan.FromSeconds(stepSeconds);
-        var solution = new TLEPropagator(new IO.Astrodynamics.TimeSystem.Window(start, end), spacecraft, step).Propagate();
+        var solution = new TlePropagator(new IO.Astrodynamics.TimeSystem.Window(start, end), spacecraft, step).Propagate();
 
         Assert.Equal(expectedCount, GridCount(windowSeconds, stepSeconds));
         Assert.Equal(expectedCount, solution.StateVectors.Count);
@@ -265,7 +265,7 @@ public class TLEPropagatorTests
         var start = window.StartDate.ToTDB();
         var end = window.EndDate.ToTDB();
         var spacecraft = new Spacecraft(-1009, "S1009", 100.0, Iss, 10000.0, new Clock("c1009", 256));
-        var solution = new TLEPropagator(window, spacecraft, TimeSpan.FromSeconds(60.0)).Propagate();
+        var solution = new TlePropagator(window, spacecraft, TimeSpan.FromSeconds(60.0)).Propagate();
         _output.WriteLine($"MEASURE TLEPropagatorTests.WindowGivenInUtc_EndsAtItsTdbEnd: TDB length − 3600 s = {(end - start).Ticks - 36000000000L} ticks");
         Assert.Equal(61, solution.StateVectors.Count);
         for (int i = 0; i < 60; i++)
@@ -285,7 +285,7 @@ public class TLEPropagatorTests
         // The reference is SGP4 at the exact instant (CSPICE evsgp4_c); before #598 the solution ended at +60 s
         var start = Iss.Epoch.ToTDB();
         var spacecraft = new Spacecraft(-1006, "S1006", 100.0, Iss, 10000.0, new Clock("c1006", 256));
-        var solution = new TLEPropagator(new IO.Astrodynamics.TimeSystem.Window(start, start.AddSeconds(90.0)), spacecraft,
+        var solution = new TlePropagator(new IO.Astrodynamics.TimeSystem.Window(start, start.AddSeconds(90.0)), spacecraft,
             TimeSpan.FromSeconds(60.0)).Propagate();
         double worstVelocity = 0.0, worstPosition = 0.0;
         for (double s = 61.0; s < 90.0; s += 1.0)
@@ -312,7 +312,7 @@ public class TLEPropagatorTests
         var start = Iss.Epoch.ToTDB();
         var spacecraft = new Spacecraft(-1007, "S1007", 100.0, Iss, 10000.0, new Clock("c1007", 256));
         var ex = Assert.Throws<ArgumentOutOfRangeException>(() =>
-            new TLEPropagator(new IO.Astrodynamics.TimeSystem.Window(start, start.AddSeconds(60.0)), spacecraft, TimeSpan.FromTicks(ticks)));
+            new TlePropagator(new IO.Astrodynamics.TimeSystem.Window(start, start.AddSeconds(60.0)), spacecraft, TimeSpan.FromTicks(ticks)));
         Assert.Equal("deltaT", ex.ParamName);
     }
 }

@@ -35,29 +35,29 @@ namespace IO.Astrodynamics;
 /// </para>
 /// <para>
 /// <b>Transitions.</b> Each change of the relation between two samples is located to 1 µs (CSPICE's
-/// <c>SPICE_GF_CNVTOL</c>): by Brent's root finder on the quantity minus the value for <see cref="RelationnalOperator.Greater"/>,
-/// <see cref="RelationnalOperator.Lower"/> and <see cref="RelationnalOperator.Equal"/>, by a bisection of the relation
-/// for <see cref="RelationnalOperator.GreaterOrEqual"/>, <see cref="RelationnalOperator.LowerOrEqual"/> and a
+/// <c>SPICE_GF_CNVTOL</c>): by Brent's root finder on the quantity minus the value for <see cref="RelationalOperator.GreaterThan"/>,
+/// <see cref="RelationalOperator.LessThan"/> and <see cref="RelationalOperator.Equal"/>, by a bisection of the relation
+/// for <see cref="RelationalOperator.GreaterThanOrEqual"/>, <see cref="RelationalOperator.LessThanOrEqual"/> and a
 /// <see cref="bool"/> quantity; the epoch of the transition is then rounded to the 100 ns of a <see cref="Time"/>. A
 /// window that holds at the start of the search window starts there, one that holds at its end ends there, and a
 /// transition located within 1 µs of them is moved onto them. The windows are closed, as CSPICE's: two windows that one
 /// edge would close and open are one window.
 /// </para>
 /// <para>
-/// <b>Equality.</b> <see cref="RelationnalOperator.Equal"/> gives the instants where the quantity crosses the value, as
+/// <b>Equality.</b> <see cref="RelationalOperator.Equal"/> gives the instants where the quantity crosses the value, as
 /// windows of zero length, and the intervals where the samples equal it exactly; a jump of the quantity (the branch cut
-/// of a right ascension, a longitude or an azimuth) is no crossing. <see cref="RelationnalOperator.NotEqual"/> gives the
+/// of a right ascension, a longitude or an azimuth) is no crossing. <see cref="RelationalOperator.NotEqual"/> gives the
 /// rest of the search window, a window from each crossing to the next. A <see cref="bool"/> quantity is compared
 /// exactly.
 /// </para>
 /// <para>
-/// <b>Extremes.</b> <see cref="RelationnalOperator.LocalMin"/> and <see cref="RelationnalOperator.LocalMax"/> give the
+/// <b>Extremes.</b> <see cref="RelationalOperator.LocalMin"/> and <see cref="RelationalOperator.LocalMax"/> give the
 /// sign changes of the rate of the quantity inside the search window, each located to 1 µs, as windows of zero length;
 /// the rate is the Richardson extrapolation of the derivatives of the quartics through five values, a sixteenth and a
 /// thirty-second of the step apart, taken at the samples about each extreme the values show and at the first and last
 /// two samples. As CSPICE's, the
 /// bounds of the search window are no local extremes, while they are candidates of
-/// <see cref="RelationnalOperator.AbsoluteMin"/> and <see cref="RelationnalOperator.AbsoluteMax"/>: the lowest (or
+/// <see cref="RelationalOperator.AbsoluteMin"/> and <see cref="RelationalOperator.AbsoluteMax"/>: the lowest (or
 /// highest) of the local extremes and of the bounds, the earliest on a tie, as a window of zero length; with a positive
 /// adjustment value, the windows where the quantity is within it of that extreme.
 /// </para>
@@ -82,7 +82,7 @@ public static class GeometryFinder
     /// not checked.
     /// </summary>
     /// <exception cref="ArgumentOutOfRangeException">The threshold is outside its range, or NaN (<c>value</c>).</exception>
-    internal static void CheckCoordinateThreshold(CoordinateSystem coordinateSystem, Coordinate coordinate, RelationnalOperator relationalOperator, double value)
+    internal static void CheckCoordinateThreshold(CoordinateSystem coordinateSystem, Coordinate coordinate, RelationalOperator relationalOperator, double value)
     {
         if (IsExtremeOperator(relationalOperator)) return;
         switch (coordinateSystem, coordinate)
@@ -103,7 +103,7 @@ public static class GeometryFinder
     /// The range guard of an illumination angle threshold of a comparison operator, [0, π] (R11 of #668, lot L6).
     /// </summary>
     /// <exception cref="ArgumentOutOfRangeException">The threshold is outside [0, π], or NaN (<c>value</c>).</exception>
-    internal static void CheckIlluminationThreshold(RelationnalOperator relationalOperator, double value)
+    internal static void CheckIlluminationThreshold(RelationalOperator relationalOperator, double value)
     {
         if (!IsExtremeOperator(relationalOperator))
             CheckAngle(value, 0.0, System.Math.PI, "[0, π]", "illumination angle threshold", nameof(value));
@@ -120,9 +120,9 @@ public static class GeometryFinder
             $"The {quantity} {value} is outside {range} rad: the angles are in radians, not degrees.");
     }
 
-    internal static bool IsExtremeOperator(RelationnalOperator relationalOperator) =>
-        relationalOperator is RelationnalOperator.AbsoluteMin or RelationnalOperator.AbsoluteMax or RelationnalOperator.LocalMin
-            or RelationnalOperator.LocalMax;
+    internal static bool IsExtremeOperator(RelationalOperator relationalOperator) =>
+        relationalOperator is RelationalOperator.AbsoluteMin or RelationalOperator.AbsoluteMax or RelationalOperator.LocalMin
+            or RelationalOperator.LocalMax;
 
     /// <summary>
     /// The windows of the search window where a <see cref="double"/> quantity satisfies the relation; see the remarks of
@@ -133,12 +133,12 @@ public static class GeometryFinder
     /// <param name="relationalOperator">The relation.</param>
     /// <param name="value">The value; ignored by the extremes.</param>
     /// <param name="options">The step (required), the convergence tolerance (1 µs when null) and, for
-    /// <see cref="RelationnalOperator.AbsoluteMin"/> and <see cref="RelationnalOperator.AbsoluteMax"/>, the adjustment
+    /// <see cref="RelationalOperator.AbsoluteMin"/> and <see cref="RelationalOperator.AbsoluteMax"/>, the adjustment
     /// value; the aberration, which a quantity carries itself, unset.</param>
     /// <returns>The windows, in time order.</returns>
     /// <exception cref="ArgumentException">The step is not given, an aberration or an adjustment value of another
     /// relation than an absolute extreme is given (<c>options</c>).</exception>
-    public static IReadOnlyList<Window> FindWindows(Window window, Func<Time, double> quantity, RelationnalOperator relationalOperator, double value,
+    public static IReadOnlyList<Window> FindWindows(Window window, Func<Time, double> quantity, RelationalOperator relationalOperator, double value,
         WindowSearchOptions options = null)
     {
         options ??= WindowSearchOptions.Default;
@@ -152,14 +152,14 @@ public static class GeometryFinder
     /// </summary>
     /// <param name="window">The search window; the windows are in the time scale of its start.</param>
     /// <param name="predicate">The quantity at an epoch.</param>
-    /// <param name="relationalOperator"><see cref="RelationnalOperator.Equal"/> or <see cref="RelationnalOperator.NotEqual"/>.</param>
+    /// <param name="relationalOperator"><see cref="RelationalOperator.Equal"/> or <see cref="RelationalOperator.NotEqual"/>.</param>
     /// <param name="value">The value.</param>
     /// <param name="options">The step (required), shorter than every window and gap to find, and the convergence
     /// tolerance (1 µs when null); the aberration and the adjustment value unset.</param>
     /// <returns>The windows, in time order.</returns>
     /// <exception cref="ArgumentException">The step is not given, an aberration or an adjustment value is given
     /// (<c>options</c>), or the relation is not one of a boolean.</exception>
-    public static IReadOnlyList<Window> FindWindows(Window window, Func<Time, bool> predicate, RelationnalOperator relationalOperator, bool value,
+    public static IReadOnlyList<Window> FindWindows(Window window, Func<Time, bool> predicate, RelationalOperator relationalOperator, bool value,
         WindowSearchOptions options = null)
     {
         options ??= WindowSearchOptions.Default;
@@ -168,7 +168,7 @@ public static class GeometryFinder
     }
 
     // The settings of a static search: its step, and no aberration
-    private static TimeSpan Check(WindowSearchOptions options, RelationnalOperator relationalOperator)
+    private static TimeSpan Check(WindowSearchOptions options, RelationalOperator relationalOperator)
     {
         if (options.Aberration.HasValue)
         {
@@ -189,7 +189,7 @@ public static class GeometryFinder
     /// <exception cref="ArgumentOutOfRangeException">The step is not positive, or the adjustment value of an absolute
     /// extreme is negative.</exception>
     internal static IReadOnlyList<Window> Find<T>(Window searchWindow, Func<Time, T> calculateValue,
-        RelationnalOperator relationalOperator, T targetValue, double adjustValue, TimeSpan stepSize, double tolerance)
+        RelationalOperator relationalOperator, T targetValue, double adjustValue, TimeSpan stepSize, double tolerance)
     {
         ArgumentNullException.ThrowIfNull(calculateValue);
         if (stepSize <= TimeSpan.Zero)
@@ -199,7 +199,7 @@ public static class GeometryFinder
 
         if (calculateValue is Func<Time, double> quantity && targetValue is double value)
         {
-            if (relationalOperator is RelationnalOperator.AbsoluteMin or RelationnalOperator.AbsoluteMax && !(adjustValue >= 0.0))
+            if (relationalOperator is RelationalOperator.AbsoluteMin or RelationalOperator.AbsoluteMax && !(adjustValue >= 0.0))
             {
                 throw new ArgumentOutOfRangeException(nameof(adjustValue), "The adjustment value must be positive or zero.");
             }
@@ -210,12 +210,12 @@ public static class GeometryFinder
 
         if (calculateValue is Func<Time, bool> predicate && targetValue is bool target)
         {
-            if (relationalOperator is not (RelationnalOperator.Equal or RelationnalOperator.NotEqual))
+            if (relationalOperator is not (RelationalOperator.Equal or RelationalOperator.NotEqual))
             {
                 throw new ArgumentException("Invalid operator");
             }
 
-            bool equal = relationalOperator == RelationnalOperator.Equal;
+            bool equal = relationalOperator == RelationalOperator.Equal;
             var search = new Search(searchWindow, stepSize, null, tolerance);
             Func<double, bool> holds = x => predicate(search.At(x)) == target == equal;
             var offsets = search.Offsets;
@@ -226,29 +226,29 @@ public static class GeometryFinder
     }
 
     /// <summary>The windows of a double quantity, as offsets from the start of the search window.</summary>
-    private static List<(double Start, double End)> Find(Search search, RelationnalOperator relation, double value, double adjust)
+    private static List<(double Start, double End)> Find(Search search, RelationalOperator relation, double value, double adjust)
     {
         switch (relation)
         {
-            case RelationnalOperator.Greater:
+            case RelationalOperator.GreaterThan:
                 return Merge(Strict(search, x => search.F(x) - value));
-            case RelationnalOperator.Lower:
+            case RelationalOperator.LessThan:
                 return Merge(Strict(search, x => value - search.F(x)));
-            case RelationnalOperator.GreaterOrEqual:
+            case RelationalOperator.GreaterThanOrEqual:
                 return Merge(OrEqual(search, x => search.F(x) - value, x => search.F(x) >= value));
-            case RelationnalOperator.LowerOrEqual:
+            case RelationalOperator.LessThanOrEqual:
                 return Merge(OrEqual(search, x => value - search.F(x), x => search.F(x) <= value));
-            case RelationnalOperator.Equal:
+            case RelationalOperator.Equal:
                 return Crossings(search, value);
-            case RelationnalOperator.NotEqual:
+            case RelationalOperator.NotEqual:
                 return Complement(search, Crossings(search, value));
-            case RelationnalOperator.LocalMin:
+            case RelationalOperator.LocalMin:
                 return Extremes(search, true).Select(x => (x, x)).ToList();
-            case RelationnalOperator.LocalMax:
+            case RelationalOperator.LocalMax:
                 return Extremes(search, false).Select(x => (x, x)).ToList();
-            case RelationnalOperator.AbsoluteMin:
+            case RelationalOperator.AbsoluteMin:
                 return Absolute(search, true, adjust);
-            case RelationnalOperator.AbsoluteMax:
+            case RelationalOperator.AbsoluteMax:
                 return Absolute(search, false, adjust);
             default:
                 throw new ArgumentException("Invalid operator");

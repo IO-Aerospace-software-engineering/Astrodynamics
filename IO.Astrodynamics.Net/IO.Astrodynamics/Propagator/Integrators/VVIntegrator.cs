@@ -173,7 +173,7 @@ public sealed class VVIntegrator : Integrator
     /// last step is integrated again to that time, so that the state the next segment starts from is the state of its
     /// label, as RK7(8) does. A step end on the grid of the ticks keeps its step, bit for bit.
     /// </summary>
-    private EventInfo EventAtLabel(PropagationSegment segment, in AcceptedStep step, in Time baseEpoch, int detectorIndex)
+    private IntegrationEvent EventAtLabel(PropagationSegment segment, in AcceptedStep step, in Time baseEpoch, int detectorIndex)
     {
         double t0 = step.CumulativeTime;
         double t1 = t0 + step.StepSizeSeconds;
@@ -181,7 +181,7 @@ public sealed class VVIntegrator : Integrator
         double tL = TimeArgument.OnEpochGrid(baseEpoch, label, t0, t1 + PropagationSolution.EpochTick);
         if (tL == t1 || !(tL > t0))
         {
-            return new EventInfo(detectorIndex, t1, step.EndPosition, step.EndVelocity);
+            return new IntegrationEvent(detectorIndex, t1, step.EndPosition, step.EndVelocity);
         }
 
         double h = tL - t0;
@@ -189,7 +189,7 @@ public sealed class VVIntegrator : Integrator
             baseEpoch, t0, h);
         segment.ReplaceLastStep(new AcceptedStep(t0, h, step.StartPosition, step.StartVelocity, position, velocity,
             step.StartAcceleration, acceleration));
-        return new EventInfo(detectorIndex, tL, position, velocity);
+        return new IntegrationEvent(detectorIndex, tL, position, velocity);
     }
 
     /// <summary>

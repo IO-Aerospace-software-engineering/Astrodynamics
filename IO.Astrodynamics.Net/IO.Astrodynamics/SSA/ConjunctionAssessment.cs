@@ -3189,9 +3189,9 @@ public static class ConjunctionAssessment
     {
         Spacecraft { IsSpiceBacked: true } => TrajectorySource.Kernel,
         Spacecraft spacecraft when spacecraft.InterpolatedStatesWindow is not null => TrajectorySource.Propagated,
-        Spacecraft { InitialOrbitalParameters: OrbitalParameters.TLE.TLE } => TrajectorySource.Sgp4,
+        Spacecraft { InitialOrbitalParameters: OrbitalParameters.TLE.Tle } => TrajectorySource.Sgp4,
         Spacecraft => TrajectorySource.TwoBody,
-        TrackedObject { InitialOrbitalParameters: OrbitalParameters.TLE.TLE } => TrajectorySource.Sgp4,
+        TrackedObject { InitialOrbitalParameters: OrbitalParameters.TLE.Tle } => TrajectorySource.Sgp4,
         TrackedObject => TrajectorySource.TwoBody,
         _ => TrajectorySource.Kernel
     };
@@ -3376,7 +3376,7 @@ public static class ConjunctionAssessment
             return 0.0;
         }
 
-        return Tsiolkovski.DeltaM(isp, massAtBurn, deltaVMetersPerSecond);
+        return Tsiolkovsky.DeltaM(isp, massAtBurn, deltaVMetersPerSecond);
     }
 
     private static double SafeSqrt(double value)

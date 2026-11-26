@@ -41,7 +41,7 @@ public class StateVectorAngleTests
 
         // Act
         var elements = state.ToKeplerianElements();
-        var expected = SpiceAPI.Instance.ConvertStateVectorToConicOrbitalElement(state);
+        var expected = SpiceApi.Instance.ConvertStateVectorToConicOrbitalElement(state);
         var back = elements.ToStateVector();
 
         // Assert
@@ -89,7 +89,7 @@ public class StateVectorAngleTests
             var state = elements.ToStateVector();
 
             double error = TestHelpers.AngleDifference(state.ArgumentOfPeriapsis(), periapsis);
-            double spice = TestHelpers.AngleDifference(SpiceAPI.Instance.ConvertStateVectorToConicOrbitalElement(state).ArgumentOfPeriapsis(),
+            double spice = TestHelpers.AngleDifference(SpiceApi.Instance.ConvertStateVectorToConicOrbitalElement(state).ArgumentOfPeriapsis(),
                 periapsis);
             Assert.True(error < 1e-13, $"ω = {periapsis}: {error:E2}");
             Assert.True(spice < 1e-13, $"SPICE, ω = {periapsis}: {spice:E2}");

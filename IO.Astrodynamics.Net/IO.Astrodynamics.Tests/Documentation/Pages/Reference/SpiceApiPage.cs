@@ -53,7 +53,7 @@ using IO.Astrodynamics.SSA;
 using IO.Astrodynamics.SolarSystemObjects;
 using IO.Astrodynamics.Surface;
 using IO.Astrodynamics.TimeSystem;
-using TLE = IO.Astrodynamics.OrbitalParameters.TLE.TLE;
+using Tle = IO.Astrodynamics.OrbitalParameters.TLE.Tle;
 
 namespace DocumentationPageSamples.Reference;
 
@@ -66,7 +66,7 @@ internal static class SpiceApiPage
         #region docs/reference/spice-api.md:1
         try
         {
-            var moon = SpiceAPI.Instance.ReadEphemeris(new Time(3000, 1, 1, TimeScale.TDB), 399, 301, Frame.ICRF, Aberration.None);
+            var moon = SpiceApi.Instance.ReadEphemeris(new Time(3000, 1, 1, TimeScale.TDB), 399, 301, Frame.ICRF, Aberration.None);
         }
         catch (SpiceException e) when (e.ShortMessage == "SPICE(SPKINSUFFDATA)")
         {
@@ -79,9 +79,9 @@ internal static class SpiceApiPage
     internal static void Block02()
     {
         #region docs/reference/spice-api.md:2
-        SpiceAPI.Instance.LoadKernels(new DirectoryInfo("kernels/"));
+        SpiceApi.Instance.LoadKernels(new DirectoryInfo("kernels/"));
 
-        foreach (var kernel in SpiceAPI.Instance.GetLoadedKernels())
+        foreach (var kernel in SpiceApi.Instance.GetLoadedKernels())
             Console.WriteLine(kernel);
         #endregion
     }

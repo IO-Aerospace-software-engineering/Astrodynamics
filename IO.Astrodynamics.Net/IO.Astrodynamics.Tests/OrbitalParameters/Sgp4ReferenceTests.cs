@@ -65,7 +65,7 @@ public class Sgp4ReferenceTests
         int count = 0;
         foreach (var set in Reference.Value.GetProperty("verification").EnumerateArray())
         {
-            var tle = new TLE("VER", set.GetProperty("line1").GetString(), set.GetProperty("line2").GetString());
+            var tle = new Tle("VER", set.GetProperty("line1").GetString(), set.GetProperty("line2").GetString());
             double setR = 0.0, setV = 0.0;
             foreach (var sample in set.GetProperty("samples").EnumerateArray())
             {
@@ -100,7 +100,7 @@ public class Sgp4ReferenceTests
         double worstR = 0.0, worstV = 0.0;
         foreach (var item in Reference.Value.GetProperty("instants").EnumerateArray())
         {
-            var tle = new TLE(item.GetProperty("name").GetString(), item.GetProperty("line1").GetString(), item.GetProperty("line2").GetString());
+            var tle = new Tle(item.GetProperty("name").GetString(), item.GetProperty("line1").GetString(), item.GetProperty("line2").GetString());
             double r = 0.0, v = 0.0;
             foreach (var sample in item.GetProperty("samples").EnumerateArray())
             {
@@ -130,12 +130,12 @@ public class Sgp4ReferenceTests
         foreach (var set in Reference.Value.GetProperty("verification").EnumerateArray())
         {
             string line1 = set.GetProperty("line1").GetString(), line2 = set.GetProperty("line2").GetString();
-            var tle = new TLE("VER", line1, line2);
+            var tle = new Tle("VER", line1, line2);
             var expected = Utc(set.GetProperty("epoch_utc").GetString());
             Assert.Equal(TimeScale.UTC, tle.Epoch.Scale);
             Assert.Equal(expected.DateTime.Ticks, tle.Epoch.DateTime.Ticks);
 
-            Assert.Equal(set.GetProperty("epoch_et").GetDouble(), SpiceAPI.Instance.ReadTleEpoch("VER", line1, line2));
+            Assert.Equal(set.GetProperty("epoch_et").GetDouble(), SpiceApi.Instance.ReadTleEpoch("VER", line1, line2));
         }
     }
 
@@ -149,7 +149,7 @@ public class Sgp4ReferenceTests
         {
             Assert.NotEqual(0, item.GetProperty("sgp4_error").GetInt32());
             Assert.StartsWith("SPICE(", item.GetProperty("cspice_error").GetString());
-            var tle = new TLE("ERR", item.GetProperty("line1").GetString(), item.GetProperty("line2").GetString());
+            var tle = new Tle("ERR", item.GetProperty("line1").GetString(), item.GetProperty("line2").GetString());
             var epoch = tle.Epoch.ToTT() + Minutes(item.GetProperty("tsince_min").GetDouble());
             Assert.Throws<SpiceException>(() => tle.ToOsculating(epoch));
         }
@@ -158,13 +158,13 @@ public class Sgp4ReferenceTests
     [Fact]
     public void SpiceApi_CountsTsinceInTerrestrialTime()
     {
-        // The public SpiceAPI call takes the epoch of the line itself: the same state as the TLE's
+        // The public SpiceApi call takes the epoch of the line itself: the same state as the TLE's
         var item = Reference.Value.GetProperty("instants")[1];
         string line1 = item.GetProperty("line1").GetString(), line2 = item.GetProperty("line2").GetString();
         var sample = item.GetProperty("samples")[24];
         var epoch = Utc(sample.GetProperty("utc").GetString());
-        var sv = SpiceAPI.Instance.ConvertTleToStateVector("ISS", line1, line2, epoch).ToStateVector();
-        var tle = new TLE("ISS", line1, line2).ToOsculating(epoch);
+        var sv = SpiceApi.Instance.ConvertTleToStateVector("ISS", line1, line2, epoch).ToStateVector();
+        var tle = new Tle("ISS", line1, line2).ToOsculating(epoch);
         Assert.Equal(tle.Position, sv.Position);
         Assert.Equal(tle.Velocity, sv.Velocity);
         Assert.InRange(MaxComponent(sv.Position - Km(sample.GetProperty("r_km"))), 0.0, InstantPosition);

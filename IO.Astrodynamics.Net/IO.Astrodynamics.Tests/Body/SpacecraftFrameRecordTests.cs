@@ -254,7 +254,7 @@ public class SpacecraftFrameRecordTests
         Assert.True(frame.Record(new StateOrientation(q, w, Start, Frame.ECLIPTIC_J2000), null, true));
         var entry = frame.GetStateOrientationsToICRF().Single();
         // pxform(ECLIPJ2000, J2000) after the rotation to ECLIPJ2000
-        var toIcrf = SpiceAPI.Instance.TransformFrame(Start, Frame.ECLIPTIC_J2000, Frame.ICRF).Rotation;
+        var toIcrf = SpiceApi.Instance.TransformFrame(Start, Frame.ECLIPTIC_J2000, Frame.ICRF).Rotation;
         Rotation(AttitudeRecordTests.RotationAngle(v => v.Rotate(q).Rotate(toIcrf), v => v.Rotate(entry.Rotation)), "ECLIPJ2000 entry");
         // The angular velocity it carried is not kept: a lone discrete entry has the CK's, zero by construction (NodeRate),
         // as the read at its epoch

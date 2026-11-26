@@ -29,7 +29,7 @@ public sealed class FieldOfViewReferenceKernels : IDisposable
     public FieldOfViewReferenceKernels()
     {
         TestKernels.EnsureSolarSystem();
-        SpiceAPI.Instance.LoadKernels(Path);
+        SpiceApi.Instance.LoadKernels(Path);
         Root = JsonDocument.Parse(File.ReadAllText(System.IO.Path.Combine(Path.FullName, "fov_reference.json"))).RootElement;
     }
 
@@ -37,7 +37,7 @@ public sealed class FieldOfViewReferenceKernels : IDisposable
 
     public void Dispose()
     {
-        SpiceAPI.Instance.UnloadKernels(Path);
+        SpiceApi.Instance.UnloadKernels(Path);
     }
 }
 

@@ -844,7 +844,7 @@ public class NearParabolicBandTests
                 ("ToKeplerianElements()", sv.ToKeplerianElements()),
                 ("ToEquinoctial().ToKeplerianElements()", sv.ToEquinoctial().ToKeplerianElements()),
                 ("AtEpoch(+600 s)", (KeplerianElements)sv.AtEpoch(Epoch.AddSeconds(600.0))),
-                ("SpiceAPI.ConvertStateVectorToConicOrbitalElement", SpiceAPI.Instance.ConvertStateVectorToConicOrbitalElement(sv)),
+                ("SpiceApi.ConvertStateVectorToConicOrbitalElement", SpiceApi.Instance.ConvertStateVectorToConicOrbitalElement(sv)),
             };
 
             // Assert: a (1 − e) = q to rounding, the rule of the constructor (|q/a − (1 − e)| ≤ 6 ε (1 + e))
@@ -888,7 +888,7 @@ public class NearParabolicBandTests
                 // Act: the elements of the state and SPICE's (oscltx: −μ/(2ξ) and its perifocal distance)
                 count++;
                 var fromState = sv.ToKeplerianElements();
-                var fromSpice = SpiceAPI.Instance.ConvertStateVectorToConicOrbitalElement(sv);
+                var fromSpice = SpiceApi.Instance.ConvertStateVectorToConicOrbitalElement(sv);
                 worstState = System.Math.Max(worstState, ConicMismatch(fromState.SemiMajorAxis(), fromState.Eccentricity(), fromState.PerigeeRadius()));
                 worstSpice = System.Math.Max(worstSpice, ConicMismatch(fromSpice.SemiMajorAxis(), fromSpice.Eccentricity(), fromSpice.PerigeeRadius()));
             }
@@ -907,11 +907,11 @@ public class NearParabolicBandTests
     [MemberData(nameof(PeriapsisConicIndices))]
     public void Issue459_SpiceConversionInTheBand_HasTheConicsSemiMajorAxisAndMeanMotion(int index)
     {
-        // The public SpiceAPI.ConvertStateVectorToConicOrbitalElement forced a = +Infinity in the band, so Barker's n,
+        // The public SpiceApi.ConvertStateVectorToConicOrbitalElement forced a = +Infinity in the band, so Barker's n,
         // 2e9 times the conic's at ±5e-7 (the review of #459); SPICE's oscltx gives −μ/(2ξ)
         var c = PeriapsisConics[index];
         var sv = State([7000000.0, 0.0, 0.0], [0.0, c.Vy, 0.0]);
-        var ke = SpiceAPI.Instance.ConvertStateVectorToConicOrbitalElement(sv);
+        var ke = SpiceApi.Instance.ConvertStateVectorToConicOrbitalElement(sv);
         double aError = (ke.SemiMajorAxis() - c.AHi - c.ALo) / c.AHi;
         double nError = (ke.MeanMotion() - c.NHi - c.NLo) / c.NHi;
         double distanceToOne = System.Math.Abs(c.EccentricityMinusOne);

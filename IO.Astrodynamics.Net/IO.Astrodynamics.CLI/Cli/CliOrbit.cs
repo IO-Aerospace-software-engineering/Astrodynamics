@@ -60,7 +60,7 @@ internal static class CliOrbit
             if (kind == "tle")
             {
                 // A malformed TLE throws ArgumentException (R21 of #668)
-                return new TLE("body", options.Orbit[0], options.Orbit[1]);
+                return new Tle("body", options.Orbit[0], options.Orbit[1]);
             }
 
             var epoch = CliValues.Epoch(options.Epoch, "--epoch");

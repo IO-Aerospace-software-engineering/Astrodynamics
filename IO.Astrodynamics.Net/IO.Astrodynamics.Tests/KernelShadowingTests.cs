@@ -43,7 +43,7 @@ public sealed class KernelShadowingTests : IDisposable
 
         // Assert: the kernels were read, and none shadows
         Assert.Contains(folders, f => f.Name == "FieldOfViewReference");
-        Assert.True(folders.SelectMany(SpiceAPI.KernelFiles).Count() > 20);
+        Assert.True(folders.SelectMany(SpiceApi.KernelFiles).Count() > 20);
         Assert.True(conflicts.Count == 0, string.Join(Environment.NewLine, conflicts));
     }
 

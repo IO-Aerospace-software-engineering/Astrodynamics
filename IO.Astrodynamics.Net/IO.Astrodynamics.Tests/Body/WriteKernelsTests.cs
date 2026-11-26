@@ -95,21 +95,21 @@ public sealed class WriteKernelsTests : IDisposable
         }
 
         spacecraft.WriteEphemeris(File(spacecraft.Name + ".bsp"));
-        SpiceAPI.Instance.LoadKernels(clock);
+        SpiceApi.Instance.LoadKernels(clock);
         try
         {
             spacecraft.WriteOrientation(File(spacecraft.Name + ".bc"));
         }
         finally
         {
-            SpiceAPI.Instance.UnloadKernels(clock);
+            SpiceApi.Instance.UnloadKernels(clock);
         }
 
         return directory.GetFiles().ToDictionary(x => x.Name, x => System.IO.File.ReadAllBytes(x.FullName));
     }
 
     // The bytes of a file SPICE may hold: CSPICE opens a binary kernel it loads read-write on Windows, so a read must share
-    // writing (FileShare.ReadWrite, as SpiceAPI.IsKernelFile and KernelShadowing), or it fails with a sharing violation
+    // writing (FileShare.ReadWrite, as SpiceApi.IsKernelFile and KernelShadowing), or it fails with a sharing violation
     private static byte[] ReadShared(string path)
     {
         using var stream = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
@@ -118,7 +118,7 @@ public sealed class WriteKernelsTests : IDisposable
         return memory.ToArray();
     }
 
-    private static string[] Loaded() => SpiceAPI.Instance.GetLoadedKernels().Select(x => x.FullName).ToArray();
+    private static string[] Loaded() => SpiceApi.Instance.GetLoadedKernels().Select(x => x.FullName).ToArray();
 
     [Theory]
     [InlineData("VV")]
@@ -155,7 +155,7 @@ public sealed class WriteKernelsTests : IDisposable
             Assert.True(kernels.IsLoaded);
             var loaded = Loaded();
             Assert.All(target.GetFiles(), x => Assert.Contains(x.FullName, loaded));
-            Assert.All(target.GetFiles(), x => Assert.True(SpiceAPI.Instance.HoldsKernelFile(x)));
+            Assert.All(target.GetFiles(), x => Assert.True(SpiceApi.Instance.HoldsKernelFile(x)));
 
             // SPICE reads them: a kernel-backed twin against the managed reads, within spacecraft.md's accuracy table
             // (3.9e-3 m between the stored states and spkezr in 2024; 6.1e-10 rad between the attitude and pxform)
@@ -181,7 +181,7 @@ public sealed class WriteKernelsTests : IDisposable
         Assert.False(kernels.IsLoaded);
         var after = Loaded();
         Assert.All(target.GetFiles(), x => Assert.DoesNotContain(x.FullName, after));
-        Assert.All(target.GetFiles(), x => Assert.False(SpiceAPI.Instance.HoldsKernelFile(x)));
+        Assert.All(target.GetFiles(), x => Assert.False(SpiceApi.Instance.HoldsKernelFile(x)));
         Assert.Equal(4 + 2 * 2, target.GetFiles().Length);
         kernels.Dispose();
     }
@@ -189,17 +189,17 @@ public sealed class WriteKernelsTests : IDisposable
     [Fact]
     public void WriteKernels_ATleSampledSpacecraft_IsRefused_ThenWrittenOnceGivenAttitudes()
     {
-        // Decision 81 of #668 ([46]): by content; a TLEPropagator run stores states and no attitude (#546)
-        var tle = new TLE("ISS",
+        // Decision 81 of #668 ([46]): by content; a TlePropagator run stores states and no attitude (#546)
+        var tle = new Tle("ISS",
             "1 25544U 98067A   21020.53488036  .00016717  00000-0  10270-3 0  9054",
             "2 25544  51.6423 353.0312 0000493 320.8755  39.2360 15.49309423 25703");
         var spacecraft = new Spacecraft(-9303, "WK9303", 420000.0, tle);
         var start = tle.Epoch.ToTDB();
-        new TLEPropagator(new Window(start, start.AddMinutes(10.0)), spacecraft, TimeSpan.FromSeconds(60.0)).Propagate();
+        new TlePropagator(new Window(start, start.AddMinutes(10.0)), spacecraft, TimeSpan.FromSeconds(60.0)).Propagate();
         var target = new DirectoryInfo(Path.Combine(_root.FullName, "tle"));
 
         var exception = Assert.Throws<InvalidOperationException>(() => spacecraft.WriteKernels(target));
-        Assert.Contains("TLEPropagator", exception.Message);
+        Assert.Contains("TlePropagator", exception.Message);
         Assert.Contains("AddStateOrientationToICRF", exception.Message);
         Assert.False(target.Exists);
 
@@ -286,7 +286,7 @@ public sealed class WriteKernelsTests : IDisposable
         var spacecraft = Propagated(-9310, "VV");
         var loaded = Directory.CreateDirectory(Path.Combine(_root.FullName, "loaded"));
         File.WriteAllText(Path.Combine(loaded.FullName, "user.tk"), "KPL/PCK\n\\begindata\nIOA_WK_USER = 1\n\\begintext\n");
-        SpiceAPI.Instance.LoadKernels(loaded);
+        SpiceApi.Instance.LoadKernels(loaded);
         try
         {
             AssertRefusedUnchanged(spacecraft, loaded, "loaded kernel path");
@@ -294,7 +294,7 @@ public sealed class WriteKernelsTests : IDisposable
         }
         finally
         {
-            SpiceAPI.Instance.UnloadKernels(loaded);
+            SpiceApi.Instance.UnloadKernels(loaded);
         }
 
         // A sibling whose name extends it is another directory
@@ -312,27 +312,27 @@ public sealed class WriteKernelsTests : IDisposable
         var bytes = File.ReadAllBytes(frame.FullName);
 
         // A load of the library
-        SpiceAPI.Instance.LoadKernels(frame);
+        SpiceApi.Instance.LoadKernels(frame);
         try
         {
             AssertRefusedUnchanged(spacecraft, target, frame.FullName);
         }
         finally
         {
-            SpiceAPI.Instance.UnloadKernels(frame);
+            SpiceApi.Instance.UnloadKernels(frame);
         }
 
         // A meta-kernel's (decision 102: the registry lists the meta-kernel only)
         var metaKernel = new FileInfo(Path.Combine(_root.FullName, "mission.tm"));
         File.WriteAllText(metaKernel.FullName, $"KPL/MK\n\\begindata\nKERNELS_TO_LOAD = ( {MetaKernelString(frame.FullName)} )\n\\begintext\n");
-        SpiceAPI.Instance.LoadKernels(metaKernel);
+        SpiceApi.Instance.LoadKernels(metaKernel);
         try
         {
             AssertRefusedUnchanged(spacecraft, target, frame.FullName);
         }
         finally
         {
-            SpiceAPI.Instance.UnloadKernels(metaKernel);
+            SpiceApi.Instance.UnloadKernels(metaKernel);
         }
 
         Assert.Equal(bytes, File.ReadAllBytes(frame.FullName));
@@ -351,14 +351,14 @@ public sealed class WriteKernelsTests : IDisposable
         spacecraft.Clock.Write(clock);
         var link = new FileInfo(Path.Combine(_root.FullName, "clock-link.tsc"));
         link.CreateAsSymbolicLink(clock.FullName);
-        SpiceAPI.Instance.LoadKernels(link);
+        SpiceApi.Instance.LoadKernels(link);
         try
         {
             AssertRefusedUnchanged(spacecraft, target, clock.FullName);
         }
         finally
         {
-            SpiceAPI.Instance.UnloadKernels(link);
+            SpiceApi.Instance.UnloadKernels(link);
         }
     }
 
@@ -442,7 +442,7 @@ public sealed class WriteKernelsTests : IDisposable
         var kernels = spacecraft.WriteKernels(new DirectoryInfo(Path.Combine(parent.FullName, "set")));
         try
         {
-            SpiceAPI.Instance.LoadKernels(parent);
+            SpiceApi.Instance.LoadKernels(parent);
             Assert.Contains(parent.FullName, Loaded());
             Assert.DoesNotContain(kernels.Clock.FullName, Loaded());
 
@@ -451,17 +451,17 @@ public sealed class WriteKernelsTests : IDisposable
             var loaded = Loaded();
             Assert.DoesNotContain(parent.FullName, loaded);
             Assert.Contains(user.FullName, loaded);
-            Assert.False(SpiceAPI.Instance.HoldsKernelFile(kernels.Clock));
-            Assert.False(SpiceAPI.Instance.HoldsKernelFile(kernels.Orientation));
-            Assert.True(SpiceAPI.Instance.HoldsKernelFile(user));
+            Assert.False(SpiceApi.Instance.HoldsKernelFile(kernels.Clock));
+            Assert.False(SpiceApi.Instance.HoldsKernelFile(kernels.Orientation));
+            Assert.True(SpiceApi.Instance.HoldsKernelFile(user));
         }
         finally
         {
             kernels.Dispose();
-            SpiceAPI.Instance.UnloadKernels(parent);
+            SpiceApi.Instance.UnloadKernels(parent);
         }
 
-        Assert.False(SpiceAPI.Instance.HoldsKernelFile(user));
+        Assert.False(SpiceApi.Instance.HoldsKernelFile(user));
     }
 
     [Fact]
@@ -487,7 +487,7 @@ public sealed class WriteKernelsTests : IDisposable
         Assert.False(kernels.IsLoaded);
         var loaded = Loaded();
         Assert.All(files, x => Assert.DoesNotContain(x.FullName, loaded));
-        Assert.All(files, x => Assert.False(SpiceAPI.Instance.HoldsKernelFile(x)));
+        Assert.All(files, x => Assert.False(SpiceApi.Instance.HoldsKernelFile(x)));
     }
 
     [Fact]

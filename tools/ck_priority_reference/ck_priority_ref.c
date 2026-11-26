@@ -1,5 +1,5 @@
 /*
- * Reference kernels and CSPICE reads of the CK segment priority of SpiceAPI.ReadOrientation (#724).
+ * Reference kernels and CSPICE reads of the CK segment priority of SpiceApi.ReadOrientation (#724).
  *
  *   ./ck_priority_ref <output directory>
  *

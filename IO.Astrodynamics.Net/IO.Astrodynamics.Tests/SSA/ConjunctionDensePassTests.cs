@@ -77,8 +77,8 @@ public abstract class ConjunctionDensePassTestBase
         var step = TimeSpan.FromSeconds(crossing is CwPassEncounterCase cw ? cw.GfStepSeconds : 60.0);
         var first = crossing.Window.StartDate;
         var last = crossing.Window.EndDate.AddSeconds(-1.0e-3);
-        return SpiceAPI.Instance.FindWindowsOnDistanceConstraint(window, crossing.ProtectedId, crossing.SecondaryId,
-                RelationnalOperator.LocalMin, 0.0, Aberration.None, step)
+        return SpiceApi.Instance.FindWindowsOnDistanceConstraint(window, crossing.ProtectedId, crossing.SecondaryId,
+                RelationalOperator.LocalMin, 0.0, Aberration.None, step)
             .Select(w =>
             {
                 var epoch = w.StartDate;
@@ -128,7 +128,7 @@ public abstract class ConjunctionDensePassTestBase
 
     protected static StateVector CspiceState(TimeSystem.Time epoch, int id, int observer = 399)
     {
-        return SpiceAPI.Instance.ReadEphemeris(epoch, observer, id, Frames.Frame.ICRF, Aberration.None);
+        return SpiceApi.Instance.ReadEphemeris(epoch, observer, id, Frames.Frame.ICRF, Aberration.None);
     }
 
     // ---- Round 4 of the lot-6 review: a maximum of the distance is no close approach ----

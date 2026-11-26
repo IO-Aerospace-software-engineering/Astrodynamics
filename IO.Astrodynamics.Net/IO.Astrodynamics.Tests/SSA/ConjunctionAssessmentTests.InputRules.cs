@@ -458,13 +458,13 @@ public partial class ConjunctionAssessmentTests
             }
             default:
             {
-                var propagator = new TLEPropagator(window, spacecraft, TimeSpan.FromSeconds(60.0));
+                var propagator = new TlePropagator(window, spacecraft, TimeSpan.FromSeconds(60.0));
                 return propagator.Propagate();
             }
         }
     }
 
-    private static readonly TLE InputRuleTle = new("ISS",
+    private static readonly Tle InputRuleTle = new("ISS",
         "1 25544U 98067A   21020.53488036  .00016717  00000-0  10270-3 0  9054",
         "2 25544  51.6423 353.0312 0000493 320.8755  39.2360 15.49309423 25703");
 

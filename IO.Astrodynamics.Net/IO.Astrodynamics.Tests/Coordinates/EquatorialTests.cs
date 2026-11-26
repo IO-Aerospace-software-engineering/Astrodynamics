@@ -122,7 +122,7 @@ namespace IO.Astrodynamics.Tests.Coordinates
             foreach (var day in MoonDays)
             {
                 var epoch = TimeSystem.Time.J2000TDB.AddSeconds(day * 86400.0);
-                var reference = SpiceAPI.Instance.ReadEphemeris(epoch, PlanetsAndMoons.EARTH.NaifId, PlanetsAndMoons.MOON.NaifId,
+                var reference = SpiceApi.Instance.ReadEphemeris(epoch, PlanetsAndMoons.EARTH.NaifId, PlanetsAndMoons.MOON.NaifId,
                     Frames.Frame.ICRF, Aberration.None).Position;
                 var (ra, dec) = RaDec(reference);
                 foreach (var frame in MoonFrames())
@@ -204,7 +204,7 @@ namespace IO.Astrodynamics.Tests.Coordinates
 
             // A TLE (TEME) at its epoch, against the closed form on the ICRF state of tools/teme_reference
             var reference = Frame.TemeFrameTests.Reference("ISS 2021");
-            var tle = new TLE(reference.Name, reference.Line1, reference.Line2);
+            var tle = new Tle(reference.Name, reference.Line1, reference.Line2);
             var (tleRa, tleDec) = RaDec(Frame.TemeFrameTests.Position(reference.CipB));
             var fromTle = tle.ToEquatorial();
             double tleRaError = RaDifference(fromTle.RightAscension, tleRa);

@@ -73,11 +73,11 @@ internal sealed class KernelContent
 
     internal static string NormalizeName(string name) => Regex.Replace(name.Trim(), @"\s+", " ").ToUpperInvariant();
 
-    /// <summary>The content of the kernel files <see cref="SpiceAPI.LoadKernels"/> hands to SPICE for each path.</summary>
+    /// <summary>The content of the kernel files <see cref="SpiceApi.LoadKernels"/> hands to SPICE for each path.</summary>
     internal static KernelContent Read(IEnumerable<FileSystemInfo> paths)
     {
         var content = new KernelContent();
-        foreach (var file in paths.SelectMany(SpiceAPI.KernelFiles))
+        foreach (var file in paths.SelectMany(SpiceApi.KernelFiles))
         {
             content.ReadFile(file);
         }
@@ -163,7 +163,7 @@ internal sealed class KernelContent
             MetaKernels.Add(file);
         }
 
-        // FileShare.ReadWrite, as the binary reads above and SpiceAPI.IsKernelFile: CSPICE opens a text kernel it loads
+        // FileShare.ReadWrite, as the binary reads above and SpiceApi.IsKernelFile: CSPICE opens a text kernel it loads
         // (and every text kernel still loaded, again, when one is unloaded) for reading and writing, as the f2c I/O library
         // opens a file of status OLD ("r+", libI77 open.c), and on Windows an open shared for reading only (that of
         // File.ReadLines) fails with a sharing violation while that handle is open, in this process or in a child process
@@ -327,7 +327,7 @@ internal static class KernelShadowing
         var frameIds = reference.FrameIds.ToHashSet();
         var associations = reference.FrameAssociations.ToHashSet();
         var conflicts = new List<string>();
-        foreach (var file in paths.SelectMany(SpiceAPI.KernelFiles).Distinct())
+        foreach (var file in paths.SelectMany(SpiceApi.KernelFiles).Distinct())
         {
             var content = KernelContent.ReadKernel(file);
             void Add(string what) => conflicts.Add($"{file}: {what}");

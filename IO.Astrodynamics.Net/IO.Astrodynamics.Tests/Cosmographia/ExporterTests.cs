@@ -242,7 +242,7 @@ public class ExporterTests
 
     /// <summary>
     /// The export checks the length of its kernel paths before it touches the output directory (#673): FURNSH stores a file
-    /// name of at most 255 characters, and <see cref="SpiceAPI.LoadKernels"/> hands it the full path. Before, the export
+    /// name of at most 255 characters, and <see cref="SpiceApi.LoadKernels"/> hands it the full path. Before, the export
     /// deleted the previous export and wrote kernels that could not be loaded.
     /// </summary>
     // The spacecraft of the path-length scenario, whose CK is its longest kernel
@@ -309,14 +309,14 @@ public class ExporterTests
             {
                 foreach (var kernel in kernels)
                 {
-                    SpiceAPI.Instance.LoadKernels(kernel);
+                    SpiceApi.Instance.LoadKernels(kernel);
                 }
             }
             finally
             {
                 foreach (var kernel in kernels)
                 {
-                    SpiceAPI.Instance.UnloadKernels(kernel);
+                    SpiceApi.Instance.UnloadKernels(kernel);
                 }
             }
         }

@@ -70,7 +70,7 @@ internal static class MemoryProviderChild
     {
         try
         {
-            SpiceAPI.Instance.LoadKernels(new DirectoryInfo(kernels));
+            SpiceApi.Instance.LoadKernels(new DirectoryInfo(kernels));
             // The static frames capture the provider when they are built: built here, under SPICE
             GC.KeepAlive(Frame.ICRF);
             GC.KeepAlive(Frame.ECLIPTIC_J2000);

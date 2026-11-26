@@ -31,7 +31,7 @@ namespace IO.Astrodynamics.Tests.Occultation;
 /// Two references. The windows of <c>gfoclt</c> converged to 1e-9 s (<c>gfstol_c</c>), written by the harness of
 /// <c>tools/occultation_reference</c> (<c>occultation_reference.json</c>), finer than what they measure: the managed
 /// search converged to 100 ns, the resolution of a <see cref="TimeSystem.Time"/>. And <c>gfoclt</c> run in the test
-/// process on the same kernels through <see cref="SpiceAPI"/>, at its default tolerance of 1e-6 s, against the managed
+/// process on the same kernels through <see cref="SpiceApi"/>, at its default tolerance of 1e-6 s, against the managed
 /// search at its own default, 1e-6 s: whether the two paths of the library agree.
 /// </para>
 /// <para>
@@ -151,7 +151,7 @@ public class OccultationSearchValidationTests
         }
 
         double worstReference = WorstEdge(Search(FineTolerance), reference);
-        var gfoclt = SpiceAPI.Instance.FindWindowsOnOccultationConstraint(window, observer.NaifId, target.NaifId, ShapeType.Ellipsoid, front.NaifId, ShapeType.Ellipsoid,
+        var gfoclt = SpiceApi.Instance.FindWindowsOnOccultationConstraint(window, observer.NaifId, target.NaifId, ShapeType.Ellipsoid, front.NaifId, ShapeType.Ellipsoid,
             type, aberration, gfocltStep, frontFrame, null).ToArray();
         double worstGfoclt = WorstEdge(Search(OccultationSearchOptions.DefaultConvergenceTolerance), gfoclt);
         _output.WriteLine($"MEASURE #277 {scenario}, {type}, {aberration}, {referenceFrame}, step {step.TotalSeconds} s, {count} windows: " +
@@ -303,9 +303,9 @@ public class OccultationSearchValidationTests
         var any = spacecraft.FindOccultationWindows(Eclipse001Window, sun, earth, options with { Step = TimeSpan.FromSeconds(60.0), TargetShape = ShapeType.Ellipsoid, FrontShape = ShapeType.Ellipsoid }).ToArray();
         var elapsed = DateTime.UtcNow - started;
         var full = spacecraft.FindOccultationWindows(Eclipse001Window, sun, earth, options with { Step = TimeSpan.FromSeconds(60.0), TargetShape = ShapeType.Ellipsoid, FrontShape = ShapeType.Ellipsoid, OccultationType = OccultationType.Full }).ToArray();
-        var gfocltAny = SpiceAPI.Instance.FindWindowsOnOccultationConstraint(Eclipse001Window, kernelSpacecraft.NaifId, sun.NaifId, ShapeType.Ellipsoid, earth.NaifId,
+        var gfocltAny = SpiceApi.Instance.FindWindowsOnOccultationConstraint(Eclipse001Window, kernelSpacecraft.NaifId, sun.NaifId, ShapeType.Ellipsoid, earth.NaifId,
             ShapeType.Ellipsoid, OccultationType.Any, Aberration.None, TimeSpan.FromSeconds(1.0), IauEarth, null).ToArray();
-        var gfocltFull = SpiceAPI.Instance.FindWindowsOnOccultationConstraint(Eclipse001Window, kernelSpacecraft.NaifId, sun.NaifId, ShapeType.Ellipsoid, earth.NaifId,
+        var gfocltFull = SpiceApi.Instance.FindWindowsOnOccultationConstraint(Eclipse001Window, kernelSpacecraft.NaifId, sun.NaifId, ShapeType.Ellipsoid, earth.NaifId,
             ShapeType.Ellipsoid, OccultationType.Full, Aberration.None, TimeSpan.FromSeconds(1.0), IauEarth, null).ToArray();
 
         double worstAny = WorstEdge(any, gfocltAny);

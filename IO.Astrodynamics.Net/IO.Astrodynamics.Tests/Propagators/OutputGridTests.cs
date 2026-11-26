@@ -182,7 +182,7 @@ public class OutputGridTests
 
     /// <summary>
     /// The same grid on the other paths: a <see cref="CentralBodyPropagator"/> of options, one of an integrator that holds
-    /// its forces, <see cref="Scenario.Simulate"/>, a batch task; and <see cref="TLEPropagator"/>, whose grid of #598 is
+    /// its forces, <see cref="Scenario.Simulate"/>, a batch task; and <see cref="TlePropagator"/>, whose grid of #598 is
     /// this rule (one rule on every path).
     /// </summary>
     [Theory]
@@ -190,14 +190,14 @@ public class OutputGridTests
     [InlineData("IIntegrator")]
     [InlineData("Scenario")]
     [InlineData("Batch")]
-    [InlineData("TLEPropagator")]
+    [InlineData("TlePropagator")]
     public void EveryPath_EndsAtTheWindowEnd(string path)
     {
         // Arrange
-        var tle = new TLE("ISS",
+        var tle = new Tle("ISS",
             "1 25544U 98067A   21020.53488036  .00016717  00000-0  10270-3 0  9054",
             "2 25544  51.6423 353.0312 0000493 320.8755  39.2360 15.49309423 25703");
-        var start = path == "TLEPropagator" ? tle.Epoch.ToTDB() : Start;
+        var start = path == "TlePropagator" ? tle.Epoch.ToTDB() : Start;
         var window = new Window(start, start.AddSeconds(3590.0));
         var step = TimeSpan.FromSeconds(60.0);
         var initial = Orbit("Earth");
@@ -233,7 +233,7 @@ public class OutputGridTests
             default:
             {
                 spacecraft = NewSpacecraft(tle);
-                new TLEPropagator(window, spacecraft, step).Propagate();
+                new TlePropagator(window, spacecraft, step).Propagate();
                 break;
             }
         }
@@ -242,8 +242,8 @@ public class OutputGridTests
         var states = spacecraft.PropagatedStates;
         Assert.Equal(61, states.Length);
         LabelAssert.Equal(window.EndDate, states[^1].Epoch);
-        // TT seconds about the Earth for a numerical propagation (#501), TDB ticks for TLEPropagator (#598)
-        var argument = path == "TLEPropagator" ? PropagationTimeArgument.Tdb : PropagationTimeArgument.Tt;
+        // TT seconds about the Earth for a numerical propagation (#501), TDB ticks for TlePropagator (#598)
+        var argument = path == "TlePropagator" ? PropagationTimeArgument.Tdb : PropagationTimeArgument.Tt;
         for (int i = 0; i < 60; i++)
         {
             Assert.Equal(60.0 * i, argument.SecondsBetween(window.StartDate, states[i].Epoch), 6);

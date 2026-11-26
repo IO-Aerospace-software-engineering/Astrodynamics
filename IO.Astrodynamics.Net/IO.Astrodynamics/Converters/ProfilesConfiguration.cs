@@ -48,9 +48,9 @@ internal static class ProfilesConfiguration
     }
 
     /// <summary>
-    /// The state a two-body call of <see cref="SpiceAPI"/> returns, about the <paramref name="observer"/> and in the
+    /// The state a two-body call of <see cref="SpiceApi"/> returns, about the <paramref name="observer"/> and in the
     /// <paramref name="frame"/> of its input (#725): before, a new <see cref="CelestialBody"/> built from the centre's
-    /// identifier, read again from the data provider under the SpiceAPI lock (#664), and a frame rebuilt from its name, so
+    /// identifier, read again from the data provider under the SpiceApi lock (#664), and a frame rebuilt from its name, so
     /// that the caller's models, a barycentre or a body from custom parameters were lost.
     /// </summary>
     internal static StateVector Convert(this DTO.StateVector stateVector, ILocalizable observer, Frame frame)
@@ -99,7 +99,7 @@ internal static class ProfilesConfiguration
     }
 
     /// <summary>
-    /// The elements <see cref="SpiceAPI.ConvertStateVectorToConicOrbitalElement(OrbitalParameters.StateVector, double)"/>
+    /// The elements <see cref="SpiceApi.ConvertStateVectorToConicOrbitalElement(OrbitalParameters.StateVector, double)"/>
     /// returns, about the <paramref name="observer"/> and in the <paramref name="frame"/> of its state (#725, see
     /// <see cref="Convert(DTO.StateVector, ILocalizable, Frame)"/>).
     /// </summary>

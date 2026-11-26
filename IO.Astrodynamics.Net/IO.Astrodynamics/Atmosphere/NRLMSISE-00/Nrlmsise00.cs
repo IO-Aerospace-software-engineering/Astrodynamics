@@ -11,7 +11,7 @@ namespace IO.Astrodynamics.Atmosphere.NRLMSISE_00
     /// the model is primarily based on the MAP Handbook tabulation. Above 72.5 km
     /// NRLMSISE-00 is essentially a revised MSIS-86 model.
     /// </remarks>
-    public class NRLMSISE00
+    public class Nrlmsise00
     {
         private double _gsurf;
         private double _re;

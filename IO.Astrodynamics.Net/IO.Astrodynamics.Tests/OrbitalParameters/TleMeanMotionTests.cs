@@ -16,8 +16,8 @@ using Xunit.Abstractions;
 namespace IO.Astrodynamics.Tests.OrbitalParameters;
 
 /// <summary>
-/// The mean motion of a TLE (decision 111 of #668, decided by S. Guillet, 2026-11-26): <see cref="TLE.MeanMeanMotion"/> is
-/// the field of line 2 (columns 53-63, rev/day) in rad/s, read without kernels, and <see cref="TLE.ToOmm"/> writes the
+/// The mean motion of a TLE (decision 111 of #668, decided by S. Guillet, 2026-11-26): <see cref="Tle.MeanMeanMotion"/> is
+/// the field of line 2 (columns 53-63, rev/day) in rad/s, read without kernels, and <see cref="Tle.ToOmm"/> writes the
 /// field's own value. The expected values are the field itself and the TLE format's closed form, n = field · 2π / 86400.
 /// The sets are those of <c>Data/Sgp4Reference</c> (Vallado's verification set and the instants of
 /// <c>tools/sgp4_reference</c>).
@@ -47,7 +47,7 @@ public class TleMeanMotionTests
         Assert.True(Sets.Value.Length >= 30);
         foreach (var (line1, line2) in Sets.Value)
         {
-            var tle = new TLE("SET", line1, line2);
+            var tle = new Tle("SET", line1, line2);
             double expected = double.Parse(Field(line2), CultureInfo.InvariantCulture) * IO.Astrodynamics.Constants.TwoPi / 86400.0;
             Assert.Equal(BitConverter.DoubleToInt64Bits(expected), BitConverter.DoubleToInt64Bits(tle.MeanMeanMotion));
         }
@@ -62,7 +62,7 @@ public class TleMeanMotionTests
         long worstUlps = 0, worstRadUlps = 0;
         foreach (var (line1, line2) in Sets.Value)
         {
-            var tle = new TLE("SET", line1, line2);
+            var tle = new Tle("SET", line1, line2);
             var omm = tle.ToOmm();
             double field = double.Parse(Field(line2), CultureInfo.InvariantCulture);
             Assert.Equal(BitConverter.DoubleToInt64Bits(field), BitConverter.DoubleToInt64Bits(omm.Data.MeanElements.MeanMotion!.Value));
@@ -90,7 +90,7 @@ public class TleMeanMotionTests
         var earth = new CelestialBody(399);
         foreach (var (line1, line2) in Sets.Value)
         {
-            var tle = new TLE("SET", line1, line2);
+            var tle = new Tle("SET", line1, line2);
             double n = double.Parse(Field(line2), CultureInfo.InvariantCulture) * IO.Astrodynamics.Constants.TwoPi / 86400.0;
             Assert.Equal(BitConverter.DoubleToInt64Bits(System.Math.Cbrt(earth.GM / (n * n))), BitConverter.DoubleToInt64Bits(tle.MeanSemiMajorAxis));
         }
@@ -101,7 +101,7 @@ public class TleMeanMotionTests
     {
         // Decision 111 of #668 and the amendment of 2026-11-19 (no forwarders): tle.MeanMotion() now binds to the osculating
         // OrbitalParameters.MeanMotion(double), as for any orbit
-        var declared = typeof(TLE).GetMethods(BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly)
+        var declared = typeof(Tle).GetMethods(BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly)
             .Where(m => m.Name == "MeanMotion");
         Assert.Empty(declared);
     }

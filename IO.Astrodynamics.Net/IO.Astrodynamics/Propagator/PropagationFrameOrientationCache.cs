@@ -20,7 +20,7 @@ namespace IO.Astrodynamics.Propagator;
 /// </para>
 /// <para>
 /// A grid point SPICE cannot give (outside the coverage of the frame's orientation data, where
-/// <see cref="SpiceAPI.TransformFrame(Time, Frame, Frame)"/> throws since #454) is kept as unavailable: a propagation
+/// <see cref="SpiceApi.TransformFrame(Time, Frame, Frame)"/> throws since #454) is kept as unavailable: a propagation
 /// whose forces need no orientation of the central body (a point mass, no drag) still runs there, as it did when the
 /// native layer returned the zero rotation.
 /// </para>

@@ -560,7 +560,7 @@ public class TimeArgumentTests
     {
         // Arrange: the TLE propagator is not a PropagatorBase; SGP4 counts minutes from the epoch of the TLE (§3.2 of
         // the design of #501), and its solution keeps the TDB time argument of a solution built by hand
-        var tle = new IO.Astrodynamics.OrbitalParameters.TLE.TLE("ISS",
+        var tle = new IO.Astrodynamics.OrbitalParameters.TLE.Tle("ISS",
             "1 25544U 98067A   21020.53488036  .00016717  00000-0  10270-3 0  9054",
             "2 25544  51.6423 353.0312 0000493 320.8755  39.2360 15.49309423 25703");
         var spacecraft = new Spacecraft(-5101, "TIME5101", 100.0, tle, 10000.0, new Clock("time5101", 256));
@@ -568,7 +568,7 @@ public class TimeArgumentTests
         var end = start.AddHours(2.0);
 
         // Act
-        var solution = new TLEPropagator(new TimeSystem.Window(start, end), spacecraft, TimeSpan.FromHours(1.0)).Propagate();
+        var solution = new TlePropagator(new TimeSystem.Window(start, end), spacecraft, TimeSpan.FromHours(1.0)).Propagate();
 
         // Assert: the states of SGP4 at the TDB grid of the window, the first and the last bit for bit
         Assert.Same(PropagationTimeArgument.Tdb, solution.TimeArgument);

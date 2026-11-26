@@ -15,7 +15,7 @@ namespace IO.Astrodynamics.Tests;
 /// <c>Data/SolarSystem</c> have the centre 399 (spiceypy 8.4.0, CSPICE N0067, <c>spksfs</c> and <c>dafus</c>,
 /// 2026-11-17), whose barycentre is 3, and the NAIF rule of site identifiers that <see cref="Surface.Site.NaifId"/>
 /// follows (body × 1000 + site). Before the fix both layers classed every identifier above 1000 as an asteroid:
-/// <see cref="SpiceAPI.GetCelestialBodyInfo"/> gave 10 and 0 for 399013 and 399014, and <see cref="CelestialItem.IsAsteroid"/>
+/// <see cref="SpiceApi.GetCelestialBodyInfo"/> gave 10 and 0 for 399013 and 399014, and <see cref="CelestialItem.IsAsteroid"/>
 /// was true for them (measured on a85098d). An identifier of the form of a site whose body SPICE does not name keeps that
 /// classification: SPICE's built-in names include NOTO (398989) and NEW NORCIA (398990), ESA stations, but no body 398
 /// (spiceypy 8.4.0, CSPICE N0067, <c>bodc2n</c> without kernels, 2026-11-17); before the review of #651 they were
@@ -42,7 +42,7 @@ public class SiteIdentifierCentreTests
     public void GetCelestialBodyInfo_GivesTheCentreAndTheBarycentreOfSPICE(int naifId, int centre, int barycentre)
     {
         // Act
-        var info = SpiceAPI.Instance.GetCelestialBodyInfo(naifId);
+        var info = SpiceApi.Instance.GetCelestialBodyInfo(naifId);
 
         // Assert
         Assert.Equal(naifId, info.NaifId);

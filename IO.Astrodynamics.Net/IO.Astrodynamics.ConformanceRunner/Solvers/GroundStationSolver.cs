@@ -92,7 +92,7 @@ public class GroundStationSolver : ICategorySolver
         for (int k = 0; k < passes.Count; k++)
         {
             var pass = passes[k];
-            var culmination = site.FindHorizontalWindows(pass, target, HorizontalCoordinate.Elevation, RelationnalOperator.AbsoluteMax, 0.0,
+            var culmination = site.FindHorizontalWindows(pass, target, HorizontalCoordinate.Elevation, RelationalOperator.AbsoluteMax, 0.0,
                 new WindowSearchOptions { Step = step, Aberration = aberration }).First().StartDate;
             outputs[OutputComparer.IndexedOutput(Passes, k, "rise")] = pass.StartDate;
             outputs[OutputComparer.IndexedOutput(Passes, k, "set")] = pass.EndDate;
@@ -126,7 +126,7 @@ public class GroundStationSolver : ICategorySolver
     internal static List<Window> FindPasses(Spacecraft target, Site site, IReadOnlyList<CelestialBody> occulters, Window window,
         double mask, Aberration aberration, TimeSpan step)
     {
-        var passes = site.FindHorizontalWindows(window, target, HorizontalCoordinate.Elevation, RelationnalOperator.Greater, mask,
+        var passes = site.FindHorizontalWindows(window, target, HorizontalCoordinate.Elevation, RelationalOperator.GreaterThan, mask,
             new WindowSearchOptions { Step = step, Aberration = aberration }).ToList();
         foreach (var occulter in occulters)
         {

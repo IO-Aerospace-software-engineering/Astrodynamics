@@ -73,11 +73,11 @@ the process). The rules of every object are one table: [SPICE API](spice-api.md#
 
 A frame is checked by name at each transform, not at `new Frame(name)`, since a frame kernel loaded afterwards defines
 it. A name the loaded kernels do not define throws `ArgumentException` on every path that hands it to SPICE:
-`SpiceAPI.TransformFrame` (naming `fromFrame` or `toFrame`, also when the other end is TEME, CIRS, TIRS or a site frame
+`SpiceApi.TransformFrame` (naming `fromFrame` or `toFrame`, also when the other end is TEME, CIRS, TIRS or a site frame
 only the library holds), `ToFrame` of a frame or of a state, either way (naming `targetFrame` or `frame` for the target,
 no parameter for the frame of the instance or of the state, which is no argument of the call, nor for
 `GetStateOrientationToICRF` and `ToEquatorial`; `SpiceDataProvider.FrameTransformationToICRF` names `source`), the ephemeris
-reads (`GetEphemeris`, `SpiceAPI.ReadEphemeris`, at an epoch or over a window, naming `frame`), `SpiceAPI.ReadOrientation`
+reads (`GetEphemeris`, `SpiceApi.ReadEphemeris`, at an epoch or over a window, naming `frame`), `SpiceApi.ReadOrientation`
 (`referenceFrame`) and the window searches of CSPICE: `FindWindowsOnCoordinateConstraint` (`frame`),
 `FindWindowsOnIlluminationConstraint` (`fixedFrame`), `FindWindowsOnOccultationConstraint` (`frontFrame`, `targetFrame`,
 for an ellipsoid) and `FindWindowsInFieldOfViewConstraint` (`targetFrame`, for an ellipsoid; a point target reads no
@@ -139,7 +139,7 @@ ephemeris is read in J2000 and rotated, as in the frame of a site from coordinat
 The routing follows the name too: a frame named TEME, GCRF, CIRS or TIRS, in any case, is routed to the managed
 rotation of `Frame.TEME`, `Frame.GCRF`, `Frame.CIRS` or `Frame.TIRS` (see [TEME](#teme) and
 [ICRF, GCRF And EME2000](#icrf-gcrf-and-eme2000)) by both data providers, the ephemeris reads and
-`SpiceAPI.TransformFrame`, so `new Frame("CIRS").ToFrame(Frame.ICRF, t)` is `Frame.CIRS.ToFrame(Frame.ICRF, t)` bit for
+`SpiceApi.TransformFrame`, so `new Frame("CIRS").ToFrame(Frame.ICRF, t)` is `Frame.CIRS.ToFrame(Frame.ICRF, t)` bit for
 bit ([#656](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/656), decided by S. Guillet,
 2026-11-17; before, a frame built by the names CIRS and TIRS was handed to SPICE, which does not know them, and threw).
 An instance of `TirsFrame` or `TemeFrame` built with a provider keeps its own Earth orientation parameters; a frame built
@@ -196,7 +196,7 @@ OPM with `REF_FRAME = EME2000`, is read in `Frame.ICRF`, and the bias is ignored
 
 Use `Frame.ICRF` for everything that comes from SPICE: ephemerides, propagation, geometry. Use
 `Frame.GCRF` when you want to name the celestial end of the `GCRF -> CIRS -> TIRS` chain
-explicitly; coordinates are the same in both. SPICE has no GCRF frame: `SpiceAPI` hands a frame
+explicitly; coordinates are the same in both. SPICE has no GCRF frame: `SpiceApi` hands a frame
 named GCRF (`Frame.GCRF`, or `new Frame("GCRF")` as the CLI builds it, in any case) to SPICE as
 `J2000` and labels the result with the frame given. An ephemeris, an orientation (CK), a frame
 transformation or a coordinate search in GCRF are then the same numbers as in J2000, and a state in
@@ -210,16 +210,16 @@ managed spacecraft whose attitude record holds an entry (#682; before 11.0.0 a r
 SPICE(UNKNOWNFRAME)), whatever a loaded kernel defines under their names, and the `SiteFrame` of a site from the kernels
 whose frame id (1000000 + NaifId) no loaded kernel defines, the frame of its J2000 coordinates (third review of #690;
 before, a read in it threw SPICE(UNKNOWNFRAME)), decided at each read. The frame of a managed spacecraft whose record
-is empty (never propagated, no orientation added, built from a TLE or propagated by `TLEPropagator`) holds no attitude in
+is empty (never propagated, no orientation added, built from a TLE or propagated by `TlePropagator`) holds no attitude in
 the library: a read in it still reaches SPICE by name, which reads the frame kernel and the CK of that id when they are
 loaded (those the library wrote for an earlier object of the id) and throws SPICE(UNKNOWNFRAME) otherwise. A coordinate
 search on an observer (`FindCoordinateWindows`, `Site.FindHorizontalWindows`) in a frame whose reads are the library's is the library's, also when a kernel
-spacecraft takes part, so that it agrees with the reads; `SpiceAPI.FindWindowsOnCoordinateConstraint`, which hands the
+spacecraft takes part, so that it agrees with the reads; `SpiceApi.FindWindowsOnCoordinateConstraint`, which hands the
 frame to CSPICE by name, throws `ArgumentException` for TEME, CIRS, TIRS and the frame of a site or a spacecraft that no
 loaded kernel defines under its name (third review of #690; before, no window), and for any other name SPICE does not
 know, with SPICE's error as inner exception (R25 of #668; in the fourth round of #668, before 11.0.0, the
 `InvalidOperationException` of that error; before, no window).
-`SpiceAPI.TransformFrame` composes through ICRF a TEME end and the `SiteFrame` of a site only the library holds (from
+`SpiceApi.TransformFrame` composes through ICRF a TEME end and the `SiteFrame` of a site only the library holds (from
 coordinates, or from the kernels with no frame kernel of its id loaded), decided at each call (fourth round of #668;
 before, a site's frame threw), and so a CIRS or TIRS end, by instance or by name (#656; before, it threw); the frame of a spacecraft is SPICE's by name,
 which reads the frame kernel and the CK written for it.
@@ -248,7 +248,7 @@ rotation about z.
   0.08 mm/s, a geostationary one by 0.39 mm/s. Toward a rotating frame such as ITRF93, the angular velocity of that
   frame applies: TEME → ITRF93 is TEME → ICRF, then ICRF → ITRF93 from SPICE.
 - **By name.** A frame built by name, `new Frame("TEME")` in any case (a CCSDS file, the CLI, user code), is routed to
-  `Frame.TEME` by `SpiceDataProvider` and `MemoryDataProvider`, and `SpiceAPI.TransformFrame` composes a TEME end
+  `Frame.TEME` by `SpiceDataProvider` and `MemoryDataProvider`, and `SpiceApi.TransformFrame` composes a TEME end
   through ICRF (as it composes the frame of a site only the library holds, #668); the native TEME of the C++ layer is no longer used. An ephemeris read in TEME is read in J2000
   and rotated (#558). A frame built by name equals `Frame.TEME` ([Equality](#equality), #562).
 - **Measured** (`tools/teme_reference`, 2026-11-08; a LEO and a GEO state at 13 epochs from 1980 to 2026): within

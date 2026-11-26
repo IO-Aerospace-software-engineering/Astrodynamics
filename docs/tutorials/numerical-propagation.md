@@ -18,7 +18,7 @@ using IO.Astrodynamics.Propagator.Integrators;
 using IO.Astrodynamics.SolarSystemObjects;
 using IO.Astrodynamics.TimeSystem;
 
-SpiceAPI.Instance.LoadKernels(new DirectoryInfo("Data/SolarSystem"));
+SpiceApi.Instance.LoadKernels(new DirectoryInfo("Data/SolarSystem"));
 
 var earth = PlanetsAndMoons.EARTH_BODY;
 var epoch = new Time(2024, 6, 21, 12, 0, 0, TimeScale.TDB);
