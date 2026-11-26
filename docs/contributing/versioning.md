@@ -571,7 +571,7 @@ release are listed under **Known limitations**.
   2026-11-26): `Cdm.ToStateVector(CdmObjectRole)`, the state of an object at TCA about the centre `ORBIT_CENTER` names
   (the Earth without one), `EME2000` and `GCRF` in ICRF and `ITRF` in ITRF93, its covariance turned from RTN;
   `Cdm.ToEncounter(combinedHardBodyRadiusMeters)`, the `EncounterCase` at the TCA of the CDM from its two states as
-  given, no search (`CloseApproachSearch.None`), its screening window the CDM's screening period, its objects transient
+  given, no search (`CloseApproachSearch.None`), its screening window the CDM's screening period (the TCA alone without one, where `EvaluateAvoidance` skips every lead time as before the window), its objects transient
   spacecraft whose avoidance follows their two-body orbits; the static `CollisionProbability.Foster2D` and `FrisbeeMax`
   of two states at TCA, by the cores of the analysis, so `ToEncounter`'s Pc is `Foster2D`'s bit for bit; and a `Time`
   accessor in UTC beside each `DateTime` of the CDM records (`CdmHeader.CreationDate`, `CdmRelativeMetadataData.Tca`,

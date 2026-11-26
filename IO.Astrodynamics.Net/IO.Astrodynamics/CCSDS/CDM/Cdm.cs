@@ -292,8 +292,10 @@ public sealed class Cdm
     /// <see cref="Body.Spacecraft.Spacecraft"/> of 100 kg on their states, named by <c>OBJECT_NAME</c> (or the role), with
     /// transient NAIF ids, object 1 bearing the combined radius; their trajectories are the two-body orbits of those
     /// states (<see cref="TrajectorySource.TwoBody"/>), which <see cref="ConjunctionAssessment.EvaluateAvoidance"/>
-    /// follows. The screening window is <c>START_SCREEN_PERIOD</c> to <c>STOP_SCREEN_PERIOD</c>, TCA alone without them,
-    /// so an avoidance has its burns within it. <see cref="EncounterCase.ToCdm"/> of the encounter is not a re-export of
+    /// follows. The screening window is <c>START_SCREEN_PERIOD</c> to <c>STOP_SCREEN_PERIOD</c>, within which an avoidance
+    /// places its burns; without them (both optional) it is the TCA alone, so
+    /// <see cref="ConjunctionAssessment.EvaluateAvoidance"/> gives no option and lists every lead time in
+    /// <see cref="AvoidanceStudy.Skipped"/> as before the window. <see cref="EncounterCase.ToCdm"/> of the encounter is not a re-export of
     /// this CDM: the masses, areas and designators it writes are those of the transient spacecraft.
     /// </returns>
     /// <exception cref="ArgumentOutOfRangeException">The radius is not finite or not above 0.</exception>

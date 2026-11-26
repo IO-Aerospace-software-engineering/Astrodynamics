@@ -8,6 +8,7 @@ using IO.Astrodynamics.Frames;
 using IO.Astrodynamics.Math;
 using IO.Astrodynamics.OrbitalParameters;
 using IO.Astrodynamics.SolarSystemObjects;
+using IO.Astrodynamics.SSA;
 using IO.Astrodynamics.TimeSystem;
 using Xunit;
 
@@ -34,7 +35,7 @@ public class CdmIngestTests
     private static Matrix CovarianceRtn(double scale) => Matrix.Create(6, 6, (i, j) =>
         i == j ? scale * (i < 3 ? 100.0 * (i + 1) : 1.0e-4 * (i - 2)) : i < 3 && j < 3 ? scale * 20.0 : 0.0);
 
-    private static Cdm Message(CdmReferenceFrame? frame, string? orbitCenter = null, bool covariance = true)
+    private static Cdm Message(CdmReferenceFrame? frame, string? orbitCenter = null, bool covariance = true, bool screeningPeriod = true)
     {
         CdmSegment Segment(CdmObjectRole role, Vector3 position, Vector3 velocity, double scale) => new()
         {
@@ -51,8 +52,8 @@ public class CdmIngestTests
             new CdmRelativeMetadataData
             {
                 TcaUtc = TcaUtc,
-                StartScreenPeriodUtc = TcaUtc.AddDays(-1.0),
-                StopScreenPeriodUtc = TcaUtc.AddDays(1.0),
+                StartScreenPeriodUtc = screeningPeriod ? TcaUtc.AddDays(-1.0) : null,
+                StopScreenPeriodUtc = screeningPeriod ? TcaUtc.AddDays(1.0) : null,
                 ScreenEntryTimeUtc = TcaUtc.AddSeconds(-30.0),
                 ScreenExitTimeUtc = TcaUtc.AddSeconds(30.0)
             },
@@ -148,6 +149,25 @@ public class CdmIngestTests
 
         Assert.Throws<InvalidOperationException>(() => bare.ToStateVector(CdmObjectRole.Object1));
         Assert.Throws<InvalidOperationException>(() => bare.ToEncounter(10.0));
+    }
+
+    /// <summary>
+    /// A CDM without <c>START_SCREEN_PERIOD</c> and <c>STOP_SCREEN_PERIOD</c> (both optional in CCSDS 508.0-B-1) gives an
+    /// encounter whose screening window is the TCA alone, so <see cref="ConjunctionAssessment.EvaluateAvoidance"/> gives
+    /// no option and lists every lead time in <see cref="AvoidanceStudy.Skipped"/> as before the window (the review of
+    /// lot L7 of #668: the docs claimed an avoidance had its burns within the window in every case).
+    /// </summary>
+    [Fact]
+    public void ToEncounter_WithoutScreeningPeriod_TheWindowIsTheTca_AnAvoidanceSkipsEveryLeadTime()
+    {
+        var encounter = Message(CdmReferenceFrame.Eme2000, screeningPeriod: false).ToEncounter(10.0);
+
+        Assert.Equal(TimeSpan.Zero, encounter.ScreeningWindow.Length);
+        Assert.Equal(encounter.Tca, encounter.ScreeningWindow.StartDate);
+        var study = ConjunctionAssessment.EvaluateAvoidance(encounter);
+        Assert.Empty(study.Options);
+        Assert.Equal(AvoidanceSearchOptions.Default.LeadTimes.Count, study.Skipped.Count);
+        Assert.All(study.Skipped, x => Assert.Equal(AvoidanceSkipReason.BeforeWindow, x.Reason));
     }
 
     [Fact]
