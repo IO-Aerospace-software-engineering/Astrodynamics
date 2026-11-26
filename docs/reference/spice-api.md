@@ -371,7 +371,7 @@ read it by three rules (structuring choice 1 of #668, decided by S. Guillet, 202
 | Object | Provider it reads |
 |--------|-------------------|
 | An object the caller builds: `new CelestialBody(...)`, `new Site(...)`, `new Frame(name)`, a spacecraft | The provider set when it is built, for its life |
-| A static body: `PlanetsAndMoons.EarthBody`, `MOON_BODY`, `Stars.SunBody`, the `Barycenters` | The provider of its first read that succeeds, for its life (see below) |
+| A static body: `PlanetsAndMoons.EarthBody`, `MoonBody`, `Stars.SunBody`, the `Barycenters` | The provider of its first read that succeeds, for its life (see below) |
 | A static frame: `Frame.ICRF`, `Frame.ECLIPJ2000`, `Frame.ITRF93` and the other SPICE frames of `Frame` | The provider of the process at each transform (11.0.0; before, the provider set when the type `Frame` was first used, for the life of the process) |
 
 ### MemoryDataProvider
@@ -414,7 +414,7 @@ only: an aberration other than `Aberration.None` throws `NotSupportedException` 
 2026-11-17). Before 11.0.0 the ICRF difference came back labelled with the frame asked, and an aberrated read was
 geometric.
 
-The static objects of `Barycenters`, `PlanetsAndMoons` (`EARTH_BODY`, `MOON_BODY`) and `Stars` (`SUN_BODY`) read the
+The static objects of `Barycenters`, `PlanetsAndMoons` (`EarthBody`, `MoonBody`) and `Stars` (`SunBody`) read the
 provider at the first read of a member that needs its data (see [Predefined Objects](predefined-objects.md)), so a
 provider set before they are first read, and lacking their data, does not leave them unusable: each read throws the
 provider's exception (`ArgumentException` naming `naifId` for missing information) until the data are there, and each

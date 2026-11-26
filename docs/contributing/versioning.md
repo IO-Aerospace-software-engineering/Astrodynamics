@@ -603,6 +603,16 @@ release are listed under **Known limitations**.
   `MANEUVERABLE = N/A` (`TrackedObjectTests`). Before, such an object was wrapped in a `Spacecraft`, exported as a
   payload under its NAIF identifier. No result moves. See
   [Conjunction Assessment](../reference/conjunction-assessment.md#catalogue-objects).
+- **The implicit usings of the package** (lot L9, D2 N7 of
+  [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668)): a project that references the
+  package and turns `ImplicitUsings` on (the default of `dotnet new console`) imports eleven namespaces beside the SDK's,
+  `IO.Astrodynamics`, `IO.Astrodynamics.Body`, `IO.Astrodynamics.Body.Spacecraft`, `IO.Astrodynamics.TimeSystem`,
+  `IO.Astrodynamics.Frames`, `IO.Astrodynamics.OrbitalParameters`, `IO.Astrodynamics.SolarSystemObjects`,
+  `IO.Astrodynamics.Propagator`, `IO.Astrodynamics.Propagator.Integrators`, `IO.Astrodynamics.Maneuver` and
+  `IO.Astrodynamics.Math` (the package's `build/IO.Astrodynamics.props`);
+  `<IOAstrodynamicsImplicitUsings>false</IOAstrodynamicsImplicitUsings>` turns them off. No two public types of these
+  namespaces share a simple name, nor one with a type of the SDK's implicit namespaces (`PackageImplicitUsingsTests`). A
+  project that already compiles can meet an ambiguous name (under Changed). See [Get Started](../get-started.md).
 
 **Fixed**
 
@@ -6030,6 +6040,9 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
         s/(^|[^.[:alnum:]_])CCSDS\.(CDM|OMM|OPM|Common\.Enums|Common)\./\1Ccsds./g
         s/\bIO\.Astrodynamics\.SSA\b/IO.Astrodynamics.Ssa/g
         s/\bIO\.Astrodynamics\.PDS\b/IO.Astrodynamics.Pds/g
+        # The generated PDS types, in the namespace Schemas before 11.0.0
+        s/^([[:space:]]*(global[[:space:]]+)?using[[:space:]]+)Schemas;/\1IO.Astrodynamics.Pds.V4.Schemas;/
+        s/(^|[^.[:alnum:]_])Schemas\.([A-Z])/\1IO.Astrodynamics.Pds.V4.Schemas.\2/g
         SED
         find "${1:-.}" -type f \( -name '*.cs' -o -name '*.csx' -o -name '*.md' \) -not -path '*/bin/*' -not -path '*/obj/*' -print0 |
           while IFS= read -r -d '' f; do
@@ -6044,6 +6057,12 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
           done
         ```
 
+- **Breaking: a project with `ImplicitUsings` imports eleven namespaces of the package** (lot L9, D2 N7 of
+  [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668); under Added). A name of the
+  project or of another library that one of these namespaces also holds, such as `System.Numerics.Quaternion`, `Vector3`
+  or `Plane`, or a type of the project named `Window`, `Site` or `Matrix`, becomes ambiguous (CS0104) in a file that
+  imports both. Migration: set `<IOAstrodynamicsImplicitUsings>false</IOAstrodynamicsImplicitUsings>` in the project, or
+  qualify the name or give it a using alias (`using Quaternion = System.Numerics.Quaternion;`) where CS0104 appears.
 - **`DEVELOPER_GUIDE.md` is a pointer to the documentation site** (lot L9, R05 of
   [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668)): one paragraph and a table from
   each of its former sections to its page. Its content a page did not hold moved to the pages, its code compiled there:
@@ -9884,9 +9903,6 @@ not listed.
   after lot L5 (the mass limited by the fuel on board, the shortfall reported).
 - **CDM dates** ([#616](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/616)). A date in a
   leap second throws `CdmParseException`.
-- **The tolerance of a TLE fit** ([#833](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/833)).
-  `TLE.Configuration.Tolerance` is never read: the fit of `OrbitalParameters.ToTLE` converges on its own constants, so
-  setting it changes nothing (the fitted TLE is not wrong). Leave it at its default.
 - **Angles brought into [0, 2π)**
   ([#471](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/471)). Angle normalization takes
   fl(2π) as 2π: each turn added to Ω, ω, ν or M leaves it 2.45e-16 rad low, each turn removed that much high, and

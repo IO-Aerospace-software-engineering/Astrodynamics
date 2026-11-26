@@ -95,6 +95,23 @@ The 5-character catalog field holds plain numbers up to 99999 and Alpha-5 number
 is 275544). `NoradCatalogNumber.Format` and `Parse` encode and decode the field, and `Tle.NoradCatalogId` gives the
 decoded value. A larger number cannot be written in a TLE: use a CCSDS OMM, whose `NORAD_CAT_ID` takes 9 digits.
 
+### The options of a fit
+
+`OrbitalParameters.ToTle(name, noradId, cosparId, options)` fits a TLE to osculating orbital parameters; its
+`TleFitOptions` (a sealed record, `TleFitOptions.Default` the options of `new()`, null for the defaults) hold the
+settings of the fit and the fields it writes besides the elements, each default that of the record `TLE.Configuration`
+of 10.x (decision 113 of #668, decided by S. Guillet, 2026-11-26):
+
+| Option | Default | Meaning |
+|--------|---------|---------|
+| `TleFitOptions.RevolutionNumberAtEpoch` | 0 | The revolution number at epoch, 0 to 99999, checked by `Tle.Create` |
+| `TleFitOptions.Classification` | `TleClassification.Unclassified` | The security classification of the object |
+| `TleFitOptions.BStar` | 0.0001 | The B* drag term, in 1/earth radii, the initial value of the fit and the field written |
+| `TleFitOptions.MeanMotionDot` | 0 | ṅ/2, in revolutions/day², as OMM's `MEAN_MOTION_DOT` |
+| `TleFitOptions.MeanMotionDDot` | 0 | n̈/6, in revolutions/day³, as OMM's `MEAN_MOTION_DDOT` |
+| `TleFitOptions.ElementSetNumber` | `Tle.DefaultElementSetNumber` (999) | The element set number, 0 to 9999, checked by `Tle.Create` |
+| `TleFitOptions.MaxIterations` | 15 | The maximum number of iterations of the fit; a negative value throws `ArgumentOutOfRangeException` at init |
+
 ## SGP4/SDP4
 
 The model is CSPICE's `evsgp4_c`, Vallado's 2006 code (Vallado, Crawford, Hujsak and Kelso, AIAA 2006-6753), in the

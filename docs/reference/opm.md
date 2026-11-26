@@ -209,6 +209,7 @@ Before 11.0.0 the observer was the Earth whatever `CENTER_NAME` said.
 | `HasKeplerianElements` | Whether optional Keplerian elements are present |
 | `HasSpacecraftParameters` | Whether optional spacecraft parameters are present |
 | `HasManeuvers` | Whether maneuver parameters are present |
+| `HasCovariance` | Whether the optional covariance matrix is present |
 
 ## Spacecraft Export
 
