@@ -26,7 +26,9 @@ by `Cdm.ReadFromFile`, `ReadFromString` and `ReadFromStream`, which ran no check
 `Cdm.ValidateSchema` and `ValidateSchemaFromXml`: `Load` and `Parse` now check the schema and the content by default,
 a failure throwing `CdmValidationException` (a `CcsdsFormatException`) with its `CdmValidationResult`;
 `new CcsdsReadOptions { ValidateSchema = false, ValidateContent = false }` reads as the former readers did. `CdmReader`,
-`CdmWriter` and `CdmValidator` are internal.
+`CdmWriter` and `CdmValidator` are internal. The content check of a CDM has none of the validator switches of
+`CcsdsReadOptions`: `ValidatePhysicalConstraints`, `ValidateTleRequirements` or `WarnOnMissingOptionalFields` set to
+false throws `ArgumentException` naming `options`.
 
 The exceptions of the CDM reader, `CdmParseException` and `CdmValidationException`, derive from `CcsdsFormatException`, a `FormatException` of
 `IO.Astrodynamics.CCSDS` shared by the OMM, OPM and CDM readers, so that one `catch (CcsdsFormatException)` covers a

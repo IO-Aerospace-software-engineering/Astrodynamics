@@ -530,8 +530,11 @@ release are listed under **Known limitations**.
   `Load(path, options)`, `Parse(xml | reader, options)` and `TryLoad`/`TryParse(…, out result, options)` read one message,
   `LoadAll` and `ParseAll` every message of a document in document order (an NDM catalog; the schema checked once, the
   content of each message), `Save(path | stream, options)` and `ToXml(options)` write; `CcsdsReadOptions`
-  (`ValidateSchema`, `ValidateContent`) and `CcsdsWriteOptions` (`ValidateContent`, `WrapInNdmContainer`, `Indent`) are
-  sealed records, every setting true, `null` their `Default`; `Opm.IsValid()` and `Cdm.IsValid()` are new;
+  (`ValidateSchema`, `ValidateContent`, and the validator switches of the content check `ValidatePhysicalConstraints`,
+  `ValidateTleRequirements` and `WarnOnMissingOptionalFields`, `bool?`, null running the check, false on a message type
+  without that check throwing `ArgumentException` naming `options`: the TLE switch on an OPM, any of the three on a CDM)
+  and `CcsdsWriteOptions` (`ValidateContent`, `WrapInNdmContainer`, `Indent`) are sealed records, every setting true or
+  null, `null` their `Default`; `Opm.IsValid()` and `Cdm.IsValid()` are new;
   `CdmValidationException : CcsdsFormatException` carries the `CdmValidationResult` of a CDM its checks refuse;
   `CdmExportOptions.Default` (`CcsdsVerbsTests`, `NamingRuleTests.TextFormats_ShareOneVerbSet`). The texts written and
   the messages read are those of the former verbs (the internal writers and readers), bit for bit. See
@@ -8121,8 +8124,9 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   element set and revolution numbers, the four angles, e (seven digits) and n (`TleFieldsTests`); no physical range. Before,
   a wrong checksum and two catalog numbers threw `InvalidOperationException`, a malformed field a `FormatException` without
   its column (or nothing: a day 000 or 400 rolled into the neighbouring year), and the length and line-number errors named no parameter. Every TLE of the repository and of the conformance
-  suite passes, so no result moves; `TLE.Create`, whose `cosparId` is any text of 6 to 8 characters, now throws this
-  `ArgumentException` (`line1`) for a designator that is not of that form. Migration: catch `ArgumentException` (its
+  suite passes, so no result moves; `TLE.Create`, whose `cosparId` was any text of 6 to 8 characters, now throws
+  `ArgumentException` naming `cosparId` for a designator that is not of that form (`ABCDEF`, `98067a`), before it
+  builds its lines (`ToTLE` still `InvalidOperationException`, its fit failing). Migration: catch `ArgumentException` (its
   `InnerException` is the `TleFormatException`) where `InvalidOperationException` or `FormatException` was caught.
 
 - **The CDM is checked when it is read and when it is written, and `ToXml` validates** (lot L7, R22 of
@@ -8144,9 +8148,12 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   ParseAll reads them all."), where it asked to split the NDM. Migration: none, or `LoadAll`.
 - **`OmmReader`, `OmmWriter`, `OmmValidator`, `OpmReader`, `OpmWriter`, `OpmValidator`, `CdmReader`, `CdmWriter` and
   `CdmValidator` are internal** (lot L7, R22 of #668, no forwarder). **Breaking**: the verbs of `Omm`, `Opm` and `Cdm`
-  replace them; the validators' `ValidatePhysicalConstraints`, `ValidateTleRequirements` and
-  `WarnOnMissingOptionalFields` have no option, the first gating checks the data model makes too, the last warnings no
-  read reports. Migration: `new OmmReader().ReadFromFile(path)` → `Omm.Load(path)`, `ReadFromString(xml)` →
+  replace them; the validators' switches `ValidatePhysicalConstraints`, `ValidateTleRequirements` and
+  `WarnOnMissingOptionalFields` are those of `CcsdsReadOptions` (a read only: `Validate()`, `IsValid()` and the check
+  before a write run every check, `CcsdsWriteOptions.ValidateContent = false` turning the whole check off). Migration:
+  `new OmmValidator { ValidateTleRequirements = false }` → `Omm.Load(path, new CcsdsReadOptions {
+  ValidateTleRequirements = false })`, likewise `ValidatePhysicalConstraints` and `WarnOnMissingOptionalFields` (OMM and
+  OPM); `new OmmReader().ReadFromFile(path)` → `Omm.Load(path)`, `ReadFromString(xml)` →
   `Omm.Parse(xml)`, `new OmmWriter { WrapInNdmContainer = w, IndentOutput = i }.WriteToString(omm)` →
   `omm.ToXml(new CcsdsWriteOptions { WrapInNdmContainer = w, Indent = i })`, `new OmmValidator().Validate(omm)` →
   `omm.Validate()`, `ValidateSchema(path)` → `Omm.Load(path)` and its `OmmValidationException`'s `ValidationResult`;

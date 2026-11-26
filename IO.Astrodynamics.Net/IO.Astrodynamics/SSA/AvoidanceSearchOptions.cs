@@ -94,10 +94,12 @@ public sealed record AvoidanceSearchOptions
     /// A record given replaces the encounter's whole: start from the encounter's settings to change one value. Its
     /// <see cref="ConjunctionAnalysisOptions.SecondaryHardBodyRadiusMeters"/> follows the rule of <c>Analyze</c>: a value
     /// that differs from the radius a secondary spacecraft gives throws <see cref="ArgumentException"/> naming
-    /// <c>options</c>. The reads of the range rate over the window and the non-linearity index are not computed for the
-    /// options (<see cref="ConjunctionAnalysisOptions.ReadRangeRateOverWindow"/> and
-    /// <see cref="ConjunctionAnalysisOptions.ComputeNonlinearityIndex"/> cleared), and the propagation of the covariance
-    /// is set by the path of the options. An encounter of <see cref="ConjunctionAssessment.Screen"/> was analyzed with
+    /// <c>options</c>. The options are analyzed by the sampled search: a record given with
+    /// <see cref="ConjunctionAnalysisOptions.ReadRangeRateOverWindow"/> true throws <see cref="ArgumentException"/> naming
+    /// <c>options</c> (R18 of #668; give <c>encounter.AnalysisOptions with { ReadRangeRateOverWindow = false }</c>), and
+    /// only a null <see cref="Analysis"/>, the encounter's settings, has it cleared. The non-linearity index is not
+    /// computed for the options (<see cref="ConjunctionAnalysisOptions.ComputeNonlinearityIndex"/> cleared, given or
+    /// inherited), and the propagation of the covariance is set by the path of the options. An encounter of <see cref="ConjunctionAssessment.Screen"/> was analyzed with
     /// the settings of the screening (a sample step of 5 min by default). Before 11.0.0 the avoidance took
     /// <c>AnalysisSampleStep</c>, <c>MaximumEventSearchStep</c>, <c>SecondaryHardBodyRadiusMeters</c> and
     /// <c>LowRelativeSpeedThresholdMetersPerSecond</c> of its own.

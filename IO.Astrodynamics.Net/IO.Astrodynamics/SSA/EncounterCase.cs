@@ -148,7 +148,7 @@ public sealed class EncounterCase
 
     /// <summary>
     /// The TCA, the miss, the probability ("Pc n/a" without one), the combined hard-body radius and the quality flags, in
-    /// invariant culture, for instance "TCA 2024-01-01T12:00:00.0000000 TDB, miss 250.000 m, Pc 2.715E-04, HBR 13 m, None"
+    /// invariant culture, for instance "TCA 2024-01-01T12:00:00.0000000 TDB, miss 250.000 m, Pc 0.0002715, HBR 13 m, None"
     /// (R17 of #668).
     /// </summary>
     public override string ToString() => string.Create(CultureInfo.InvariantCulture,

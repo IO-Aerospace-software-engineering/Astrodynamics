@@ -403,8 +403,9 @@ public class TLE : OrbitalParameters, IEquatable<TLE>, IParsable<TLE>
     /// The NORAD catalog number, between 0 and <see cref="NoradCatalogNumber.MaxValue"/> (339999).
     /// Values above 99999 are encoded with the Alpha-5 convention.
     /// </param>
-    /// <param name="cosparId">The COSPAR international designator (6-8 characters), or null or blank for none: columns 10-17
-    /// of line 1 are then blank, as a TLE without a designator holds them (#604; before 11.0.0 it threw).</param>
+    /// <param name="cosparId">The COSPAR international designator in TLE form, YYNNN and one to three capital letters
+    /// (<c>98067A</c>), or null or blank for none: columns 10-17 of line 1 are then blank, as a TLE without a designator
+    /// holds them (#604; before 11.0.0 it threw).</param>
     /// <param name="revolutionsAtEpoch">The revolution number at epoch (0 to 99999).</param>
     /// <param name="classification">The security classification of the object (default: Unclassified).</param>
     /// <param name="bstar">The ballistic coefficient (drag term) in units of 1/earth radii (default: 0.0001).</param>
@@ -425,8 +426,9 @@ public class TLE : OrbitalParameters, IEquatable<TLE>, IParsable<TLE>
     /// <exception cref="ArgumentException">Thrown when meanElements are not mean elements, are not in <see cref="Frame.TEME"/>
     /// or are not about the Earth (NAIF id 399): a TLE holds SGP4 mean elements of an Earth orbit in TEME (#607; before
     /// 11.0.0, elements in another frame or about another centre were written as if they were, their angles taken as
-    /// TEME's and their mean motion from their centre's GM); or when cosparId is neither null nor blank and not between 6-8
-    /// characters.</exception>
+    /// TEME's and their mean motion from their centre's GM); or when cosparId is neither null nor blank nor YYNNN and one to
+    /// three capital letters, the exception naming <c>cosparId</c> (R21 of #668: 6 to 8 characters of any kind before
+    /// 11.0.0).</exception>
     /// <exception cref="ArgumentOutOfRangeException">
     /// Thrown when noradId, revolutionsAtEpoch or elementSetNumber falls outside the range its TLE field can represent.
     /// </exception>
@@ -464,10 +466,11 @@ public class TLE : OrbitalParameters, IEquatable<TLE>, IParsable<TLE>
         {
             cosparId = string.Empty;
         }
-        else if (cosparId.Length is < 6 or > 8)
+        else if (!DesignatorField.IsMatch(cosparId.PadRight(8)))
         {
-            throw new ArgumentException("COSPAR Identifier must be between 6 and 8 characters long, or null or blank for no designator.",
-                nameof(cosparId));
+            throw new ArgumentException(
+                $"COSPAR Identifier '{cosparId}' must be YYNNN and one to three capital letters (98067A), the syntax of columns 10-17 " +
+                "of a TLE, or null or blank for no designator.", nameof(cosparId));
         }
 
         if (!NoradCatalogNumber.IsValid(noradId))

@@ -67,7 +67,7 @@ public sealed class CollisionRisk
 
     /// <summary>
     /// The probability (4 significant digits, "Pc n/a" without one), the combined radius and the RTN sigmas, in invariant
-    /// culture, for instance "Pc 2.715E-04, HBR 13 m, sigma R/T/N 94.3/360.6/67.1 m" (R17 of #668).
+    /// culture, for instance "Pc 0.0002715, HBR 13 m, sigma R/T/N 94.3/360.6/67.1 m" (R17 of #668).
     /// </summary>
     public override string ToString() => string.Create(CultureInfo.InvariantCulture,
         $"Pc {FormatProbability(ProbabilityOfCollision)}, HBR {CombinedHardBodyRadiusMeters} m, sigma R/T/N {RadialSigmaMeters:F1}/{InTrackSigmaMeters:F1}/{CrossTrackSigmaMeters:F1} m");

@@ -104,7 +104,7 @@ crossing 23 h after the start, each propagated over one day in RK7(8) at 1e-11 i
 0.67 s; `Analyze` over a 2 h window 23 h after the start: 0.55 s with the covariance held in RTN, 1.5 s with the replay
 of both participants, 10.1 s with the non-linearity index (24 STM propagations of 23 h). `EvaluateAvoidance` with the
 default magnitudes and directions, on the TCA found in a 12 h screening window, 12.3 h after the start (lead times up to
-0.32 h, the shortest below the minimum lead time skipped): 36 options in 21.7 s, about 0.6 s per option propagated with
+0.32 h, the shortest, below 10 min, left out by the test, the minimum lead time of the `ManeuverConstraints` of 10.x): 36 options in 21.7 s, about 0.6 s per option propagated with
 the covariance from its burn to the end of the window (about 12 h). The index is off by default for that cost. These
 figures were measured before the changes of the force models of #420, #437 and #410; measured again on 2026-10-24 with
 BenchmarkDotNet (`ConjunctionCovarianceBenchmarks`, the same pair and window, library at `deb26b9`), `Analyze` takes
@@ -274,12 +274,12 @@ built by `ConjunctionAssessment` and `Cdm.ToEncounter`; their constructors are i
 | `RelativeSpeedMetersPerSecond` | `double` | Norm of `EncounterState.RelativeState.RelativeVelocityInertial` (m/s), the CDM's `RELATIVE_SPEED` |
 | `ProbabilityOfCollision` | `double?` | `CollisionRisk.ProbabilityOfCollision`; null when it could not be computed |
 | `AnalysisOptions` | `ConjunctionAnalysisOptions` | The options the analysis used, the radius of the secondary resolved; the avoidance re-analyzes with them unless `AvoidanceSearchOptions.Analysis` gives others (internal before 11.0.0) |
-| `Search` | `CloseApproachSearch` | `Polynomial` on two propagations that share their observer and frame, `Sampled` otherwise |
+| `Search` | `CloseApproachSearch` | `Polynomial` on two propagations that share their observer and frame, `None` for the encounter of `Cdm.ToEncounter` (no search), `Sampled` otherwise |
 | `ToCdm(CdmExportOptions)` | `Cdm` | Export to CCSDS CDM |
 
 The four shortcuts, `AnalysisOptions`, `Search` and `ToString` are R17 and R18 of #668 (decided by S. Guillet,
 2026-11-19). `ToString` gives the TCA, the miss, the probability, the combined radius and the flags, for instance
-`TCA 2024-01-01T12:00:00.0000000 TDB, miss 250.000 m, Pc 2.715E-04, HBR 13 m, None` (`Pc n/a` without a probability);
+`TCA 2024-01-01T12:00:00.0000000 TDB, miss 250.000 m, Pc 0.0002715, HBR 13 m, None` (the probability in four significant digits, `G4`: `1.102E-08` below 1e-5) (`Pc n/a` without a probability);
 `EncounterState` and `CollisionRisk` have their own.
 
 ## EncounterState

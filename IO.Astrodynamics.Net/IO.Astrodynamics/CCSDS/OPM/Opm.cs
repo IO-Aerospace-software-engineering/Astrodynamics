@@ -362,9 +362,25 @@ public class Opm
 
     // The one verb set of the CCSDS messages over the internal reader and validator
     private static readonly CcsdsMessageIO<Opm, OpmValidationResult> Format = new("OPM",
-        DefaultValidator.ValidateSchema, DefaultValidator.ValidateSchemaFromXml, DefaultReader.Read,
-        DefaultValidator.Validate, result => result.IsValid, (message, result) => new OpmValidationException(message, result),
+        DefaultValidator.ValidateSchema, DefaultValidator.ValidateSchemaFromXml, DefaultReader.Read, ContentValidator,
+        result => result.IsValid, (message, result) => new OpmValidationException(message, result),
         (message, inner) => new OpmParseException(message, inner));
+
+    // The content check with the validator switches of the read options, the default validator when none is set; an OPM
+    // has no TLE parameters to check
+    private static Func<Opm, OpmValidationResult> ContentValidator(CcsdsReadOptions options)
+    {
+        if (options.ValidateTleRequirements == false)
+            throw new ArgumentException("An OPM holds no TLE parameters: ValidateTleRequirements cannot be turned off for it.", nameof(options));
+
+        return options.ValidatePhysicalConstraints is null && options.WarnOnMissingOptionalFields is null
+            ? DefaultValidator.Validate
+            : new OpmValidator
+            {
+                ValidatePhysicalConstraints = options.ValidatePhysicalConstraints ?? true,
+                WarnOnMissingOptionalFields = options.WarnOnMissingOptionalFields ?? true
+            }.Validate;
+    }
 
     /// <summary>
     /// Reads the one OPM of a file: a standalone <c>opm</c> or an <c>ndm</c> that holds one (R22 of #668).
@@ -469,6 +485,8 @@ public class Opm
     public void Save(string path, CcsdsWriteOptions options = null)
     {
         ArgumentNullException.ThrowIfNull(path);
+        if (string.IsNullOrWhiteSpace(path))
+            throw new ArgumentException("The path is empty or blank.", nameof(path));
         options ??= CcsdsWriteOptions.Default;
         Format.CheckBeforeWrite(this, options);
         new OpmWriter { WrapInNdmContainer = options.WrapInNdmContainer, IndentOutput = options.Indent }.WriteToFile(this, path);

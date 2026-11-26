@@ -472,9 +472,20 @@ public class Omm
 
     // The one verb set of the CCSDS messages over the internal reader and validator
     private static readonly CcsdsMessageIO<Omm, OmmValidationResult> Format = new("OMM",
-        DefaultValidator.ValidateSchema, DefaultValidator.ValidateSchemaFromXml, DefaultReader.Read,
-        DefaultValidator.Validate, result => result.IsValid, (message, result) => new OmmValidationException(message, result),
+        DefaultValidator.ValidateSchema, DefaultValidator.ValidateSchemaFromXml, DefaultReader.Read, ContentValidator,
+        result => result.IsValid, (message, result) => new OmmValidationException(message, result),
         (message, inner) => new OmmParseException(message, inner));
+
+    // The content check with the validator switches of the read options, the default validator when none is set
+    private static Func<Omm, OmmValidationResult> ContentValidator(CcsdsReadOptions options) =>
+        options.ValidatePhysicalConstraints is null && options.ValidateTleRequirements is null && options.WarnOnMissingOptionalFields is null
+            ? DefaultValidator.Validate
+            : new OmmValidator
+            {
+                ValidatePhysicalConstraints = options.ValidatePhysicalConstraints ?? true,
+                ValidateTleRequirements = options.ValidateTleRequirements ?? true,
+                WarnOnMissingOptionalFields = options.WarnOnMissingOptionalFields ?? true
+            }.Validate;
 
     /// <summary>
     /// Reads the one OMM of a file: a standalone <c>omm</c> or an <c>ndm</c> that holds one (R22 of #668).
@@ -579,6 +590,8 @@ public class Omm
     public void Save(string path, CcsdsWriteOptions options = null)
     {
         ArgumentNullException.ThrowIfNull(path);
+        if (string.IsNullOrWhiteSpace(path))
+            throw new ArgumentException("The path is empty or blank.", nameof(path));
         options ??= CcsdsWriteOptions.Default;
         Format.CheckBeforeWrite(this, options);
         new OmmWriter { WrapInNdmContainer = options.WrapInNdmContainer, IndentOutput = options.Indent }.WriteToFile(this, path);

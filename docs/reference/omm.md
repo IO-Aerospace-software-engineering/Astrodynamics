@@ -19,10 +19,14 @@ The `IO.Astrodynamics.CCSDS.OMM` module supports loading, validating, serializin
 
 One verb set reads and writes the three CCSDS messages, `Omm`, `Opm` and `Cdm`, as the `TLE` reads its text (R22 of
 [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668), lot L7): `CcsdsReadOptions`
-(`ValidateSchema`, `ValidateContent`, both true) and `CcsdsWriteOptions` (`ValidateContent`, `WrapInNdmContainer`,
-`Indent`, all true) are the options of every read and every write, `null` for `Default`. Before 11.0.0 the loads were
+(`ValidateSchema`, `ValidateContent`, both true, and the switches of the content check `ValidatePhysicalConstraints`,
+`ValidateTleRequirements` and `WarnOnMissingOptionalFields`, null to run it, false to turn it off) and `CcsdsWriteOptions`
+(`ValidateContent`, `WrapInNdmContainer`, `Indent`, all true) are the options of every read and every write, `null` for
+`Default`. Before 11.0.0 the loads were
 `LoadFromFile`, `LoadFromString`, `LoadFromStream` and `TryLoadFromFile` with two bools; the reader, the writer and the
-validator (`OmmReader`, `OmmWriter`, `OmmValidator`) are internal since 11.0.0.
+validator (`OmmReader`, `OmmWriter`, `OmmValidator`) are internal since 11.0.0, their switches those of
+`CcsdsReadOptions`: `new CcsdsReadOptions { ValidateTleRequirements = false }` reads an OMM whose TLE parameters lack
+`NORAD_CAT_ID`, the other checks kept.
 
 The exceptions of the OMM reader, `OmmParseException` and `OmmValidationException`, derive from `CcsdsFormatException`, a `FormatException` of
 `IO.Astrodynamics.CCSDS` shared by the OMM, OPM and CDM readers, so that one `catch (CcsdsFormatException)` covers a
@@ -181,7 +185,7 @@ written as its clock reading under every time system. The library's own conversi
 
 | Type | Description |
 |------|-------------|
-| `CcsdsReadOptions` | The checks of a read (`ValidateSchema`, `ValidateContent`) |
+| `CcsdsReadOptions` | The checks of a read (`ValidateSchema`, `ValidateContent`, `ValidatePhysicalConstraints`, `ValidateTleRequirements`, `WarnOnMissingOptionalFields`) |
 | `CcsdsWriteOptions` | The output of a write (`ValidateContent`, `WrapInNdmContainer`, `Indent`) |
 
 ## COSPAR ID Format

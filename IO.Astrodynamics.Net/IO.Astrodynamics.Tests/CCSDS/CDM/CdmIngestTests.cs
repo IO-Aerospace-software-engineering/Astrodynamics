@@ -86,21 +86,34 @@ public class CdmIngestTests
     }
 
     [Fact]
+    [Trait("Category", "Validation")]
     public void ToStateVector_Itrf_IsTheStateInItrf93_ItsCovarianceTurnedFromRtnOnTheInertialState()
     {
         // Act
         var s1 = Message(CdmReferenceFrame.Itrf).ToStateVector(CdmObjectRole.Object1);
 
-        // Assert: the state of the CDM in ITRF93; its covariance, in ICRF, the RTN covariance turned on the inertial state
-        // (the frames of SPICE, ToFrame)
+        // Assert: the state of the CDM in ITRF93; its covariance M P Mᵀ, P the RTN covariance turned on the inertial state
+        // and M the state transformation of SPICE from J2000 to ITRF93 at TCA (sxform_c), the inertial state from it too
         var epoch = new TimeSystem.Time(TcaUtc, TimeScale.UTC);
         Assert.Equal(Frames.Frame.ITRF93, s1.Frame);
         Assert.Equal(Position1, s1.Position);
         Assert.Equal(Velocity1, s1.Velocity);
-        var inertial = s1.ToFrame(Frames.Frame.ICRF);
-        var expected = new StateVector(inertial.Position, inertial.Velocity, s1.Observer, epoch, Frames.Frame.ICRF)
-            .RotateCovarianceFromRtn(CovarianceRtn(1.0));
-        var actual = inertial.Covariance!.Value;
+        double et = epoch.ToTDB().TimeSpanFromJ2000().TotalSeconds;
+        var toItrf = Body.CspiceDirect.Sxform("J2000", "ITRF93", et);
+        var fromItrf = Body.CspiceDirect.Sxform("ITRF93", "J2000", et);
+        var m = Matrix.Create(6, 6, (i, j) => toItrf[6 * i + j]);
+        double[] itrf = [Position1.X, Position1.Y, Position1.Z, Velocity1.X, Velocity1.Y, Velocity1.Z];
+        var j2000 = new double[6];
+        for (int i = 0; i < 6; i++)
+        {
+            for (int j = 0; j < 6; j++)
+                j2000[i] += fromItrf[6 * i + j] * itrf[j];
+        }
+
+        var inertialCovariance = new StateVector(new Vector3(j2000[0], j2000[1], j2000[2]), new Vector3(j2000[3], j2000[4], j2000[5]),
+            s1.Observer, epoch, Frames.Frame.ICRF).RotateCovarianceFromRtn(CovarianceRtn(1.0));
+        var expected = m * inertialCovariance * m.Transpose();
+        var actual = s1.Covariance!.Value;
         for (int i = 0; i < 6; i++)
         {
             for (int j = 0; j < 6; j++)

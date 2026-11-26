@@ -21,7 +21,7 @@ internal sealed class CcsdsMessageIO<TMessage, TResult>
     private readonly Func<string, TResult> _schemaOfFile;
     private readonly Func<string, TResult> _schemaOfText;
     private readonly Func<XDocument, bool, IReadOnlyList<TMessage>> _read;
-    private readonly Func<TMessage, TResult> _validate;
+    private readonly Func<CcsdsReadOptions, Func<TMessage, TResult>> _validator;
     private readonly Func<TResult, bool> _isValid;
     private readonly Func<string, TResult, CcsdsFormatException> _invalid;
     private readonly Func<string, Exception, CcsdsFormatException> _parseError;
@@ -30,19 +30,21 @@ internal sealed class CcsdsMessageIO<TMessage, TResult>
     /// <param name="schemaOfFile">The schema validation of a file.</param>
     /// <param name="schemaOfText">The schema validation of a text.</param>
     /// <param name="read">The reader: the one message of a document (false) or every message (true).</param>
-    /// <param name="validate">The content validation of a message.</param>
+    /// <param name="validator">The content validation of a message with the switches of the options, which throws
+    /// <see cref="ArgumentException"/> (<c>options</c>) for a switch turned off that the type has not.</param>
     /// <param name="isValid">Whether a validation result holds no error.</param>
     /// <param name="invalid">The validation exception of the type.</param>
     /// <param name="parseError">The parse exception of the type.</param>
     internal CcsdsMessageIO(string type, Func<string, TResult> schemaOfFile, Func<string, TResult> schemaOfText,
-        Func<XDocument, bool, IReadOnlyList<TMessage>> read, Func<TMessage, TResult> validate, Func<TResult, bool> isValid,
+        Func<XDocument, bool, IReadOnlyList<TMessage>> read, Func<CcsdsReadOptions, Func<TMessage, TResult>> validator,
+        Func<TResult, bool> isValid,
         Func<string, TResult, CcsdsFormatException> invalid, Func<string, Exception, CcsdsFormatException> parseError)
     {
         _type = type;
         _schemaOfFile = schemaOfFile;
         _schemaOfText = schemaOfText;
         _read = read;
-        _validate = validate;
+        _validator = validator;
         _isValid = isValid;
         _invalid = invalid;
         _parseError = parseError;
@@ -52,20 +54,24 @@ internal sealed class CcsdsMessageIO<TMessage, TResult>
     internal IReadOnlyList<TMessage> Load(string path, CcsdsReadOptions options, bool all)
     {
         ArgumentNullException.ThrowIfNull(path);
+        options ??= CcsdsReadOptions.Default;
+        var validate = _validator(options);
         if (!File.Exists(path))
             throw new FileNotFoundException($"{_type} file not found: {path}", path);
 
-        return Read(() => XDocument.Load(path), () => _schemaOfFile(path), options, all);
+        return Read(() => XDocument.Load(path), () => _schemaOfFile(path), options, validate, all);
     }
 
     /// <summary>The messages of a text: the one message (<paramref name="all"/> false) or every message.</summary>
     internal IReadOnlyList<TMessage> Parse(string xml, CcsdsReadOptions options, bool all)
     {
         ArgumentNullException.ThrowIfNull(xml);
+        options ??= CcsdsReadOptions.Default;
+        var validate = _validator(options);
         if (string.IsNullOrWhiteSpace(xml))
             throw _parseError($"The text holds no {_type} XML.", null);
 
-        return Read(() => XDocument.Parse(xml), () => _schemaOfText(xml), options, all);
+        return Read(() => XDocument.Parse(xml), () => _schemaOfText(xml), options, validate, all);
     }
 
     /// <summary>The messages of a reader, read to its end, as <see cref="Parse(string, CcsdsReadOptions, bool)"/>.</summary>
@@ -118,15 +124,15 @@ internal sealed class CcsdsMessageIO<TMessage, TResult>
         if (!options.ValidateContent)
             return;
 
-        var result = _validate(message);
+        var result = _validator(CcsdsReadOptions.Default)(message);
         if (!_isValid(result))
             throw _invalid($"Content validation failed before writing the {_type}.", result);
     }
 
     // The schema once per document, then the reader, then the content of each message
-    private IReadOnlyList<TMessage> Read(Func<XDocument> load, Func<TResult> schema, CcsdsReadOptions options, bool all)
+    private IReadOnlyList<TMessage> Read(Func<XDocument> load, Func<TResult> schema, CcsdsReadOptions options,
+        Func<TMessage, TResult> validate, bool all)
     {
-        options ??= CcsdsReadOptions.Default;
         if (options.ValidateSchema)
         {
             var schemaResult = schema();
@@ -149,7 +155,7 @@ internal sealed class CcsdsMessageIO<TMessage, TResult>
         {
             for (int i = 0; i < messages.Count; i++)
             {
-                var contentResult = _validate(messages[i]);
+                var contentResult = validate(messages[i]);
                 if (!_isValid(contentResult))
                 {
                     throw _invalid(messages.Count == 1

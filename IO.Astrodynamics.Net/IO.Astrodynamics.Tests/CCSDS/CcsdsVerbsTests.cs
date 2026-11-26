@@ -229,6 +229,74 @@ public class CcsdsVerbsTests
         Assert.False(read.IsValid());
     }
 
+    // The validator switches of the read (annex R22 and IC-18 of #668): null runs the check, false turns it off
+    [Fact]
+    public void Omm_Read_ValidatorSwitches()
+    {
+        Assert.Null(CcsdsReadOptions.Default.ValidatePhysicalConstraints);
+        Assert.Null(CcsdsReadOptions.Default.ValidateTleRequirements);
+        Assert.Null(CcsdsReadOptions.Default.WarnOnMissingOptionalFields);
+
+        // TLE parameters without NORAD_CAT_ID: refused by the TLE requirements alone
+        var omm = Omm.CreateForTle("ISS", "1998-067A", new DateTime(2024, 1, 15, 12, 0, 0, DateTimeKind.Utc), 15.5, 0.0001,
+            51.6, 120.0, 90.0, 45.0, 1.0e-4, 0.0, 0.0);
+        var xml = new OmmWriter().WriteToString(omm);
+        var refused = Assert.Throws<OmmValidationException>(() => Omm.Parse(xml));
+        Assert.Contains(refused.ValidationResult.Errors, e => e.Path == "Data.TleParameters.NoradCatalogId");
+        var read = Omm.Parse(xml, new CcsdsReadOptions { ValidateTleRequirements = false });
+        Assert.Equal(xml, new OmmWriter().WriteToString(read));
+
+        // The result an exception carries is that of the validator with the same switches (the former public path)
+        var invalidXml = new OmmWriter().WriteToString(InvalidOmm());
+        var options = new CcsdsReadOptions
+        {
+            ValidateSchema = false, ValidatePhysicalConstraints = false, ValidateTleRequirements = false,
+            WarnOnMissingOptionalFields = false
+        };
+        var expected = new OmmValidator
+        {
+            ValidatePhysicalConstraints = false, ValidateTleRequirements = false, WarnOnMissingOptionalFields = false
+        }.Validate(Omm.Parse(invalidXml, options with { ValidateContent = false }));
+        var actual = Assert.Throws<OmmValidationException>(() => Omm.Parse(invalidXml, options)).ValidationResult;
+        Assert.Equal(expected.Issues.Select(i => (i.Code, i.Path, i.Severity)), actual.Issues.Select(i => (i.Code, i.Path, i.Severity)));
+        var byDefault = Assert.Throws<OmmValidationException>(() => Omm.Parse(invalidXml, CcsdsReadOptions.Default with { ValidateSchema = false }))
+            .ValidationResult;
+        var expectedByDefault = new OmmValidator().Validate(Omm.Parse(invalidXml, options with { ValidateContent = false }));
+        Assert.Equal(expectedByDefault.Issues.Select(i => (i.Code, i.Path, i.Severity)), byDefault.Issues.Select(i => (i.Code, i.Path, i.Severity)));
+    }
+
+    // A switch turned off on a message that has no such check throws (D1.2 of #668)
+    [Fact]
+    public void Read_SwitchOfACheckTheTypeHasNot_Throws()
+    {
+        var opmXml = new OpmWriter().WriteToString(MinimalOpm());
+        var noTle = new CcsdsReadOptions { ValidateTleRequirements = false };
+        Assert.Equal("options", Assert.Throws<ArgumentException>(() => Opm.Parse(opmXml, noTle)).ParamName);
+        Assert.NotNull(Opm.Parse(opmXml, new CcsdsReadOptions { ValidatePhysicalConstraints = false, WarnOnMissingOptionalFields = false }));
+        Assert.NotNull(Opm.Parse(opmXml, new CcsdsReadOptions { ValidateTleRequirements = true }));
+
+        var cdmXml = ManualCdm().ToXml();
+        foreach (var options in new[]
+                 {
+                     new CcsdsReadOptions { ValidatePhysicalConstraints = false }, new CcsdsReadOptions { ValidateTleRequirements = false },
+                     new CcsdsReadOptions { WarnOnMissingOptionalFields = false }
+                 })
+        {
+            Assert.Equal("options", Assert.Throws<ArgumentException>(() => Cdm.Parse(cdmXml, options)).ParamName);
+        }
+
+        Assert.NotNull(Cdm.Parse(cdmXml, new CcsdsReadOptions { ValidatePhysicalConstraints = true }));
+    }
+
+    // Save names its own parameter for a blank path
+    [Fact]
+    public void Save_BlankPath_NamesPath()
+    {
+        Assert.Equal("path", Assert.Throws<ArgumentException>(() => Omm.Load(NdmDocuments.IssOmmPath).Save(" ")).ParamName);
+        Assert.Equal("path", Assert.Throws<ArgumentException>(() => MinimalOpm().Save("")).ParamName);
+        Assert.Equal("path", Assert.Throws<ArgumentException>(() => ManualCdm().Save(" ")).ParamName);
+    }
+
     #endregion
 
     #region OPM

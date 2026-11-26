@@ -168,12 +168,15 @@ public class TleBlankDesignatorTests
         Assert.Null(Omm.ConvertObjectIdToCosparId(objectId));
     }
 
-    /// <summary>A designator that is neither blank nor of 6 to 8 characters is still refused.</summary>
+    /// <summary>A designator that is neither blank nor YYNNN and one to three capital letters is refused, naming
+    /// <c>cosparId</c> (the syntax of columns 10-17, R21 of #668).</summary>
     [Theory]
     [InlineData("A")]
     [InlineData("98067")]
     [InlineData("98067ABCD")]
-    public void Create_DesignatorOfAWrongLength_Throws(string cosparId)
+    [InlineData("ABCDEF")]
+    [InlineData("98067a")]
+    public void Create_DesignatorOutsideItsSyntax_Throws(string cosparId)
     {
         var tle = new TLE("88888", "1 88888U          80275.98708465  .00073094  13844-3  66816-4 0    87",
             "2 88888  72.8435 115.9689 0086731  52.6988 110.5714 16.05824518  1058");

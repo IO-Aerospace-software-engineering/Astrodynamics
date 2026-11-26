@@ -31,10 +31,13 @@ The managed API stores values in SI units internally. The OPM reader and writer 
 
 One verb set reads and writes the three CCSDS messages, `Opm`, `Omm` and `Cdm`, as the `TLE` reads its text (R22 of
 [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668), lot L7): `CcsdsReadOptions`
-(`ValidateSchema`, `ValidateContent`, both true) and `CcsdsWriteOptions` (`ValidateContent`, `WrapInNdmContainer`,
-`Indent`, all true) are the options of every read and every write, `null` for `Default`. Before 11.0.0 the loads were
+(`ValidateSchema`, `ValidateContent`, both true, and the switches of the content check `ValidatePhysicalConstraints`,
+`ValidateTleRequirements` and `WarnOnMissingOptionalFields`, null to run it, false to turn it off) and `CcsdsWriteOptions`
+(`ValidateContent`, `WrapInNdmContainer`, `Indent`, all true) are the options of every read and every write, `null` for
+`Default`. Before 11.0.0 the loads were
 `LoadFromFile`, `LoadFromString`, `LoadFromStream` and `TryLoadFromFile` with two bools; the reader, the writer and the
-validator (`OpmReader`, `OpmWriter`, `OpmValidator`) are internal since 11.0.0.
+validator (`OpmReader`, `OpmWriter`, `OpmValidator`) are internal since 11.0.0. An OPM has no TLE parameters:
+`ValidateTleRequirements = false` throws `ArgumentException` naming `options`.
 
 The exceptions of the OPM reader, `OpmParseException` and `OpmValidationException`, derive from `CcsdsFormatException`, a `FormatException` of
 `IO.Astrodynamics.CCSDS` shared by the OMM, OPM and CDM readers, so that one `catch (CcsdsFormatException)` covers a

@@ -44,9 +44,18 @@ public sealed class Cdm
 
     // The one verb set of the CCSDS messages over the internal reader and validator
     private static readonly CcsdsMessageIO<Cdm, CdmValidationResult> Format = new("CDM",
-        DefaultValidator.ValidateSchema, DefaultValidator.ValidateSchemaFromXml, DefaultReader.Read,
-        DefaultValidator.Validate, result => result.IsValid, (message, result) => new CdmValidationException(message, result),
+        DefaultValidator.ValidateSchema, DefaultValidator.ValidateSchemaFromXml, DefaultReader.Read, ContentValidator,
+        result => result.IsValid, (message, result) => new CdmValidationException(message, result),
         (message, inner) => new CdmParseException(message, inner));
+
+    // The content check of a CDM, which has none of the validator switches of the read options
+    private static Func<Cdm, CdmValidationResult> ContentValidator(CcsdsReadOptions options)
+    {
+        if (options.ValidatePhysicalConstraints == false || options.ValidateTleRequirements == false || options.WarnOnMissingOptionalFields == false)
+            throw new ArgumentException("A CDM's content check has no physical-constraint, TLE or optional-field switch: none can be turned off for it.", nameof(options));
+
+        return DefaultValidator.Validate;
+    }
 
     /// <summary>
     /// Reads the one CDM of a file: a standalone <c>cdm</c> or an <c>ndm</c> that holds one (R22 of #668).
@@ -151,6 +160,8 @@ public sealed class Cdm
     public void Save(string path, CcsdsWriteOptions? options = null)
     {
         ArgumentNullException.ThrowIfNull(path);
+        if (string.IsNullOrWhiteSpace(path))
+            throw new ArgumentException("The path is empty or blank.", nameof(path));
         options ??= CcsdsWriteOptions.Default;
         Format.CheckBeforeWrite(this, options);
         new CdmWriter { IndentOutput = options.Indent }.WriteToFile(this, path, options.WrapInNdmContainer);

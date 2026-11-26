@@ -826,6 +826,9 @@ The options of every read and write of the OMM, OPM and CDM (the reader, writer 
 // The checks of a read: the schema and the content by default
 var omm = Omm.Load("input.omm", new CcsdsReadOptions { ValidateSchema = false });
 
+// A switch of the content check: TLE parameters without NORAD_CAT_ID accepted, the other checks kept
+var lenient = Omm.Load("input.omm", new CcsdsReadOptions { ValidateTleRequirements = false });
+
 // The output of a write: validated, wrapped in <ndm> and indented by default
 var options = new CcsdsWriteOptions { WrapInNdmContainer = false, Indent = true };
 var xml = omm.ToXml(options);

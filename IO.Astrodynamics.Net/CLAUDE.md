@@ -216,7 +216,7 @@ The `IO.Astrodynamics.CCSDS.OMM` namespace provides full support for CCSDS Orbit
 
 **Key Classes**
 - `Omm`: Main class representing a complete OMM document
-- `Omm.Load`, `LoadAll`, `Parse`, `ParseAll`, `TryLoad`, `TryParse`, `Save`, `ToXml`, `Validate`, `IsValid`: the one verb set of the OMM, OPM and CDM, with `CcsdsReadOptions` (`ValidateSchema`, `ValidateContent`) and `CcsdsWriteOptions` (`ValidateContent`, `WrapInNdmContainer`, `Indent`), every check on by default (R22 of #668; the reader, writer and validator classes internal, the `LoadFrom*`, `SaveTo*`, `TryLoadFromFile` and `ToXmlString` of 10.x removed)
+- `Omm.Load`, `LoadAll`, `Parse`, `ParseAll`, `TryLoad`, `TryParse`, `Save`, `ToXml`, `Validate`, `IsValid`: the one verb set of the OMM, OPM and CDM, with `CcsdsReadOptions` (`ValidateSchema`, `ValidateContent`, and the validator switches `ValidatePhysicalConstraints`, `ValidateTleRequirements`, `WarnOnMissingOptionalFields`, `bool?`, false on a type without the check throwing) and `CcsdsWriteOptions` (`ValidateContent`, `WrapInNdmContainer`, `Indent`), every check on by default (R22 of #668; the reader, writer and validator classes internal, the `LoadFrom*`, `SaveTo*`, `TryLoadFromFile` and `ToXmlString` of 10.x removed)
 - `MeanElements`, `TleParameters`, `OmmMetadata`: Data structures
 
 **Loading and Saving OMM**
