@@ -306,7 +306,13 @@ internal static class Program
             System.Globalization.DateTimeStyles.AssumeUniversal | System.Globalization.DateTimeStyles.AdjustToUniversal), TimeScale.UTC);
         var tle = new TLE(Name, line1, line2);
 
-        int failures = Expect<SpiceException>("state before the kernels", () =>
+        // R21 of #668: the TLE reads no kernel when it is built, its fields, MeanMeanMotion (the field in rad/s, decision 111)
+        // and ToOmm (MEAN_MOTION the field) read none, and MeanSemiMajorAxis throws naming BODY399_GM, keeping nothing
+        int failures = CheckTleFieldsWithoutKernels(tle, line1, line2);
+        failures += Expect<InvalidOperationException>("mean semi-major axis before the kernels", () => tle.MeanSemiMajorAxis,
+            e => e.Message.Contains("BODY399_GM", StringComparison.Ordinal));
+
+        failures += Expect<SpiceException>("state before the kernels", () =>
             {
                 tle.ToStateVector(epoch);
                 return tle;
@@ -333,7 +339,65 @@ internal static class Program
             failures++;
         }
 
+        // The same instance once the kernels are loaded: a = ∛(GM/n²) of the kernel GM, bit for bit a fresh TLE's
+        double n = tle.MeanMeanMotion;
+        double expectedAxis = System.Math.Cbrt(new CelestialBody(399).GM / (n * n));
+        if (BitConverter.DoubleToInt64Bits(tle.MeanSemiMajorAxis) != BitConverter.DoubleToInt64Bits(expectedAxis)
+            || BitConverter.DoubleToInt64Bits(new TLE(Name, line1, line2).MeanSemiMajorAxis) != BitConverter.DoubleToInt64Bits(expectedAxis))
+        {
+            Console.Error.WriteLine($"the mean semi-major axis after the kernels is {tle.MeanSemiMajorAxis:R}, expected {expectedAxis:R}");
+            failures++;
+        }
+
+        if (!tle.ToString().Contains("Mean Semi-Major Axis", StringComparison.Ordinal))
+        {
+            Console.Error.WriteLine("ToString after the kernels does not print the mean semi-major axis");
+            failures++;
+        }
+
         return failures == 0 ? 0 : 1;
+    }
+
+    // The members of a TLE that read no kernel, checked before any is loaded: the catalog number, the mean motion of the
+    // field in rad/s, ToOmm with the field's MEAN_MOTION, and ToString without the semi-major axis
+    private static int CheckTleFieldsWithoutKernels(TLE tle, string line1, string line2)
+    {
+        int failures = 0;
+        var field = double.Parse(line2.Substring(52, 11), System.Globalization.CultureInfo.InvariantCulture);
+        if (tle.NoradCatalogId != NoradCatalogNumber.Parse(line1.Substring(2, 5)))
+        {
+            Console.Error.WriteLine($"NoradCatalogId {tle.NoradCatalogId} before the kernels");
+            failures++;
+        }
+
+        if (BitConverter.DoubleToInt64Bits(tle.MeanMeanMotion) != BitConverter.DoubleToInt64Bits(field * Constants.TwoPi / 86400.0))
+        {
+            Console.Error.WriteLine($"MeanMeanMotion {tle.MeanMeanMotion:R} before the kernels");
+            failures++;
+        }
+
+        try
+        {
+            var meanMotion = tle.ToOmm().Data.MeanElements.MeanMotion;
+            if (meanMotion != field)
+            {
+                Console.Error.WriteLine($"ToOmm MEAN_MOTION {meanMotion:R} before the kernels, expected {field:R}");
+                failures++;
+            }
+
+            if (tle.ToString().Contains("Semi-Major", StringComparison.Ordinal))
+            {
+                Console.Error.WriteLine("ToString before the kernels prints a semi-major axis");
+                failures++;
+            }
+        }
+        catch (Exception e)
+        {
+            Console.Error.WriteLine($"ToOmm or ToString before the kernels: {e.GetType().Name}: {e.Message}");
+            failures++;
+        }
+
+        return failures;
     }
 
     private static int CheckTleTextWithoutKernels()

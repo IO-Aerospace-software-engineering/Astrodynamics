@@ -497,6 +497,9 @@ release are listed under **Known limitations**.
   round-trip form; `--time-scale tdb|tt|tai|utc|gps` writes the epochs in another scale than the input's; a value takes
   a unit (`400000km`, `7.5km/s`, `51.6deg`); `propagate --integrator rk78|vv` and `--atmosphere nrlmsise00|standard`
   choose the integrator and the atmosphere of the Earth; `--verbose` writes the trace of an error.
+- **`TLE.MeanMeanMotion`** (lot L7, R21 of [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668),
+  decision 111, decided by S. Guillet, 2026-11-26): the mean motion of the field of line 2 in rad/s, the field (rev/day)
+  × 2π / 86400, read without kernels; mean, like `MeanInclination` (`TleMeanMotionTests`). See [TLE](../reference/tle.md).
 
 **Fixed**
 
@@ -7982,6 +7985,23 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   #668, decided by S. Guillet, 2026-11-23): the rule of the export, checked before the propagation, exit code 2
   (`Error: name: …`), where the name propagated and was written into nested directories or failed after the propagation.
   Migration: another name.
+- **A `TLE` reads no kernel when it is built** (lot L7, R21 of
+  [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668)): its Earth reads its GM, radii,
+  frame and orbit from the data provider at the first member that needs them (`MeanSemiMajorAxis`,
+  `ToMeanKeplerianElements`, SGP4), from the provider set at that time, a failed read keeping nothing; so a valid set gives
+  its fields, `NoradCatalogId`, `MeanMeanMotion` and `ToOmm` without kernels, and `MeanSemiMajorAxis` throws
+  `InvalidOperationException` naming `BODY399_GM` before them, then gives ∛(GM/n²) of the kernel GM once they are loaded,
+  bit for bit the value of a TLE built after them (`ColdStartTests.Tle_ReadBeforeItsKernels_ThrowsSpicesError_AndWorksOnceTheyAreLoaded`).
+  Before, the constructor read the Earth, and a TLE built before the kernels kept a GM of 0, a semi-major axis of 0 and a
+  NaN `MeanMotion()` for its life. `ToString` prints the semi-major axis only when the provider gives the GM, and the mean
+  motion. With the kernels loaded nothing moves (`TLETests`, `Sgp4ReferenceTests`, the propagation of a TLE spacecraft).
+  Migration: none.
+- **`TLE.ToOmm` writes the mean motion of the field** (lot L7, decision 111 of #668, decided by S. Guillet, 2026-11-26):
+  `MEAN_MOTION` is the field of line 2 as written, in rev/day; before, √(GM/a³)·86400/2π with a = ∛(GM/n²), which moved it
+  on 22 of the 31 sets of `Data/Sgp4Reference` by up to 3 ulp (3.4e-16 relative, e.g. 15.957445309999999 for 15.95744531;
+  `TleMeanMotionTests`), so the conformance runner's `tle_to_omm` deltas fall to 0. The occultation step a TLE spacecraft
+  infers (decision 106) takes `MeanMeanMotion`, within 2 ulp of the former `MeanMotion()`, under a tick of its period.
+  Migration: none.
 
 **Removed**
 
@@ -8237,6 +8257,11 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
 - **`Spacecraft.GetTotalFuel()`** (lot L5a, R09 of #668, decision 60, decided by S. Guillet, 2026-11-23): it returned
   the initial fuel whatever a run burnt. Migration: `GetInitialFuel()`, the same value, or `GetRemainingFuel()` for the
   fuel left.
+- **`TLE.MeanMotion()`** (lot L7, R21 of #668, decision 111, decided by S. Guillet, 2026-11-26, no forwarder): √(GM/a³)
+  of the mean semi-major axis, which needed the kernels. **Breaking**: `tle.MeanMotion()` still compiles and now binds to
+  `OrbitalParameters.MeanMotion(double)`, the mean motion of the osculating SGP4 set at the epoch, 0.14 % off the mean one
+  for the ISS (15.4709 against 15.4931 rev/day). Migration: `tle.MeanMotion()` → `tle.MeanMeanMotion`, within 2 ulp of
+  the former value.
 **Known limitations**
 
 The open defects a caller can meet at this release, grouped by cause; each line gives the workaround when there is

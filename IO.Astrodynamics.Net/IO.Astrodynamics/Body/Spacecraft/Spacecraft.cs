@@ -1585,7 +1585,7 @@ namespace IO.Astrodynamics.Body.Spacecraft
 
             if (!_isFromKernel && InitialOrbitalParameters is TLE tle && tle.Observer.NaifId == center.NaifId)
             {
-                return Time.SecondsToSpan(Constants.TwoPi / tle.MeanMotion());
+                return Time.SecondsToSpan(Constants.TwoPi / tle.MeanMeanMotion);
             }
 
             return null;

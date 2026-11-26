@@ -129,7 +129,7 @@ public class OccultationStepInferenceTests
         var spacecraft = new Spacecraft(-106004, "STEP106004", 1000.0, tle, 3000.0, new Clock("STEP106004_CLK", 65536));
         var start = tle.Epoch.ToTDB();
         var window = new Window(start, start.AddHours(6.0));
-        var period = TimeSystem.Time.SecondsToSpan(IO.Astrodynamics.Constants.TwoPi / tle.MeanMotion());
+        var period = TimeSystem.Time.SecondsToSpan(IO.Astrodynamics.Constants.TwoPi / tle.MeanMeanMotion);
         var options = OccultationSearchOptions.Default;
         var inferred = spacecraft.FindOccultationWindows(window, Sun, Earth, options);
         Assert.NotEmpty(inferred);

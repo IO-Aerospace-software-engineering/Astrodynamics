@@ -9,6 +9,7 @@ using System.Threading;
 using IO.Astrodynamics.Body;
 using IO.Astrodynamics.Frames;
 using IO.Astrodynamics.Math;
+using IO.Astrodynamics.SolarSystemObjects;
 using IO.Astrodynamics.TimeSystem;
 
 namespace IO.Astrodynamics.OrbitalParameters.TLE;
@@ -105,16 +106,35 @@ public class TLE : OrbitalParameters, IEquatable<TLE>
     public double SecondDerivativeMeanMotion { get; }
 
     /// <summary>
-    /// Gets the mean semi-major axis of the orbit in meters.
-    /// This value represents the average distance from the center of the Earth to the satellite's orbit.
-    /// It is a key parameter in determining the size of the orbit and is calculated based on
-    /// the mean motion and gravitational parameters of the Earth.
-    /// For example, a value of 7000 kilometers means that the average distance from the
-    /// center of the Earth to the satellite's orbit is 7000 kilometers.
-    /// This parameter is crucial for understanding the satellite's orbital characteristics,
-    /// including its altitude and orbital period.
+    /// Gets the mean semi-major axis of the orbit in meters: a = ∛(GM/n²), n the <see cref="MeanMeanMotion"/> and GM the
+    /// kernel GM of the Earth (<c>BODY399_GM</c>).
     /// </summary>
-    public double MeanSemiMajorAxis { get; }
+    /// <remarks>
+    /// Read at the first use, from the data provider set at that time, and kept once read: a TLE built before the kernels
+    /// are loaded throws <see cref="InvalidOperationException"/> naming <c>BODY399_GM</c> here, keeps nothing, and gives the
+    /// value once they are loaded (R21 of #668: before 11.0.0 the constructor read the Earth and kept a = ∛(0) without
+    /// kernels).
+    /// </remarks>
+    /// <exception cref="InvalidOperationException">The data provider gives no GM of the Earth.</exception>
+    public double MeanSemiMajorAxis => _meanSemiMajorAxis.Value;
+
+    // PublicationOnly: a failed read (no kernel loaded yet) is not cached, as the epoch of SGP4
+    private readonly Lazy<double> _meanSemiMajorAxis;
+
+    // The mean motion field of line 2 (columns 53-63), in revolutions per day, as written
+    private readonly double _meanMotionRevolutionsPerDay;
+
+    /// <summary>
+    /// Gets the mean motion of the TLE in radians per second: the field of line 2 (columns 53-63, revolutions per day) times
+    /// 2π / 86400, read without kernels; mean, like <see cref="MeanInclination"/>.
+    /// </summary>
+    /// <remarks>
+    /// Decision 111 of #668, decided by S. Guillet, 2026-11-26: it replaces the method <c>MeanMotion()</c> of 10.x,
+    /// √(GM/a³) with a = ∛(GM/n²), which needed the kernels and was 1 ulp off the field on about half the sets. The
+    /// inherited <see cref="OrbitalParameters.MeanMotion(double)"/> is the mean motion of the osculating SGP4 set at the
+    /// epoch, 0.14 % off this one for the ISS.
+    /// </remarks>
+    public double MeanMeanMotion { get; }
 
     /// <summary>
     /// Gets the mean eccentricity of the orbit.
@@ -188,8 +208,10 @@ public class TLE : OrbitalParameters, IEquatable<TLE>
     /// <exception cref="InvalidOperationException">Thrown when checksum validation fails, when the catalog numbers of the
     /// two lines differ, or when the loaded kernels do not define the Earth (its GM, radii and frame).</exception>
     /// <remarks>
-    /// The text is checked before the Earth of the TLE is built, which reads the kernels (#675): without kernels, a
-    /// malformed TLE throws the error of its text. A valid TLE needs the kernels that define the Earth.
+    /// The constructor reads no kernel (R21 of #668): the text is checked first (#675), and the Earth of the TLE reads its
+    /// data from the data provider at the first member that needs them (<see cref="MeanSemiMajorAxis"/>, SGP4), so that a
+    /// valid TLE gives its fields, <see cref="MeanMeanMotion"/> and <see cref="ToOmm"/> without kernels. Before 11.0.0 it
+    /// built the Earth from the kernels, and a TLE built before them kept a GM of 0.
     /// </remarks>
     public TLE(string name, string line1, string line2) : base(EarthAt(ValidatedEpoch(name, line1, line2)), ExtractEpochFromTLE(line1),
         Frame.TEME, OrbitalElementsType.Mean)
@@ -200,10 +222,11 @@ public class TLE : OrbitalParameters, IEquatable<TLE>
         NoradCatalogId = NoradCatalogNumber.Parse(line1.Substring(2, NoradCatalogNumber.FieldLength));
 
         // Parse line 2 for orbital elements - FIXED: Use InvariantCulture
-        var meanMotionRevPerDay = double.Parse(line2.Substring(52, 11), CultureInfo.InvariantCulture);
-        double n = meanMotionRevPerDay * Constants.TwoPi / 86400.0; // Convert rev/day to rad/s
-        // The GM of the Earth of the TLE, built once from the kernels at the epoch
-        MeanSemiMajorAxis = System.Math.Cbrt(((CelestialBody)Observer).GM / (n * n));
+        _meanMotionRevolutionsPerDay = double.Parse(line2.Substring(52, 11), CultureInfo.InvariantCulture);
+        double n = _meanMotionRevolutionsPerDay * Constants.TwoPi / 86400.0; // Convert rev/day to rad/s
+        MeanMeanMotion = n;
+        // The GM of the Earth of the TLE, read at the first use (R21 of #668)
+        _meanSemiMajorAxis = new Lazy<double>(() => System.Math.Cbrt(((CelestialBody)Observer).GM / (n * n)), LazyThreadSafetyMode.PublicationOnly);
 
         // Cache mean motion to preserve precision for TLE recreation
         MeanEccentricity = double.Parse("0." + line2.Substring(26, 7), CultureInfo.InvariantCulture);
@@ -241,10 +264,10 @@ public class TLE : OrbitalParameters, IEquatable<TLE>
 
     /// <summary>
     /// The Earth of a TLE, in an inertial frame: nothing on the TLE path needs its orientation, which ITRF93 would read
-    /// from the Earth's binary PCK at the epoch (#597). It reads the kernels, after <see cref="ValidatedEpoch"/>, and the
-    /// static frames only once the text is checked.
+    /// from the Earth's binary PCK at the epoch (#597). Its data (GM, radii, frame, orbit) are read from the data provider
+    /// at the first member that needs them, retried on failure (R21 of #668: before 11.0.0 the constructor read them).
     /// </summary>
-    private static CelestialBody EarthAt(Time epoch) => new(399, Frame.ECLIPTIC_J2000, epoch);
+    private static CelestialBody EarthAt(Time epoch) => CelestialBody.CreateDeferred(PlanetsAndMoons.EARTH, Frame.ECLIPTIC_J2000, epoch);
 
     /// <summary>
     /// Extracts the epoch time from TLE line 1.
@@ -927,13 +950,33 @@ public class TLE : OrbitalParameters, IEquatable<TLE>
         sb.AppendLine($"Line 1: {Line1}");
         sb.AppendLine($"Line 2: {Line2}");
         sb.AppendLine($"Epoch: {Epoch}");
-        sb.AppendLine($"Mean Semi-Major Axis: {MeanSemiMajorAxis} m");
+        // The semi-major axis needs the GM of the Earth: printed only when the data provider gives it
+        if (TryGetMeanSemiMajorAxis(out double meanSemiMajorAxis))
+        {
+            sb.AppendLine($"Mean Semi-Major Axis: {meanSemiMajorAxis} m");
+        }
+
+        sb.AppendLine($"Mean Mean Motion: {MeanMeanMotion} rad/s");
         sb.AppendLine($"Mean Eccentricity: {MeanEccentricity}");
         sb.AppendLine($"Mean Inclination: {MeanInclination} rad");
         sb.AppendLine($"Mean Ascending Node: {MeanAscendingNode} rad");
         sb.AppendLine($"Mean Argument of Periapsis: {MeanArgumentOfPeriapsis} rad");
         sb.AppendLine($"Mean Mean Anomaly: {MeanMeanAnomaly} rad");
         return sb.ToString();
+    }
+
+    private bool TryGetMeanSemiMajorAxis(out double value)
+    {
+        try
+        {
+            value = MeanSemiMajorAxis;
+            return true;
+        }
+        catch (InvalidOperationException)
+        {
+            value = double.NaN;
+            return false;
+        }
     }
 
     /// <summary>
@@ -1010,6 +1053,11 @@ public class TLE : OrbitalParameters, IEquatable<TLE>
     /// designator) give <c>OBJECT_ID = UNKNOWN</c>, which <see cref="CCSDS.OMM.Omm.ToTle"/> reads back as blank columns
     /// (#604, decided by S. Guillet, 2026-11-18; before 11.0.0 it threw <see cref="ArgumentException"/>).
     /// </para>
+    /// <para>
+    /// <c>MEAN_MOTION</c> is the field of line 2 as written, in revolutions per day, and the conversion reads no kernel
+    /// (decision 111 of #668, decided by S. Guillet, 2026-11-26; before 11.0.0 it was √(GM/a³)·86400/2π, 1 ulp off the field
+    /// on about half the sets, e.g. 15.957445309999999 for 15.95744531).
+    /// </para>
     /// </remarks>
     public CCSDS.OMM.Omm ToOmm(string originator = null)
     {
@@ -1027,13 +1075,11 @@ public class TLE : OrbitalParameters, IEquatable<TLE>
         // Create metadata for SGP4/TEME configuration
         var metadata = CCSDS.OMM.OmmMetadata.CreateForSgp4(Name, objectId);
 
-        // Create mean elements
-        // Convert angles from radians to degrees, mean motion from rad/s to rev/day
-        var meanMotionRevPerDay = MeanMotion() * 86400.0 / Constants.TwoPi;
-
+        // Create mean elements: angles from radians to degrees, the mean motion the field's own value in rev/day (decision
+        // 111 of #668, decided by S. Guillet, 2026-11-26)
         var meanElements = CCSDS.OMM.MeanElements.CreateWithMeanMotion(
             Epoch.DateTime,
-            meanMotionRevPerDay,
+            _meanMotionRevolutionsPerDay,
             MeanEccentricity,
             MeanInclination * Constants.Rad2Deg,
             MeanAscendingNode * Constants.Rad2Deg,
@@ -1069,19 +1115,6 @@ public class TLE : OrbitalParameters, IEquatable<TLE>
         var data = CCSDS.OMM.OmmData.CreateForTle(meanElements, tleParams);
 
         return new CCSDS.OMM.Omm(header, metadata, data);
-    }
-
-    /// <summary>
-    /// Gets the mean motion in radians per second.
-    /// </summary>
-    /// <returns>Mean motion in rad/s.</returns>
-    /// <remarks>
-    /// This is computed from the mean semi-major axis using Kepler's third law:
-    /// n = sqrt(GM/a³)
-    /// </remarks>
-    public double MeanMotion()
-    {
-        return System.Math.Sqrt(Observer.GM / (MeanSemiMajorAxis * MeanSemiMajorAxis * MeanSemiMajorAxis));
     }
 
     /// <summary>

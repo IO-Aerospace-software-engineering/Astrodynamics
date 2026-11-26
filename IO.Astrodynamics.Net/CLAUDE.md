@@ -195,6 +195,11 @@ OMM: meanMotion = 15.49309423 rev/day
 **SGP4 model and TLE text**
 - SGP4 is CSPICE `evsgp4_c`: Vallado's 2006 code, AFSPC mode, WGS-72 old (KE 7.43669161e-2), no other mode or constants;
   tsince is the TT seconds from the TLE epoch (UTC, exact to the tick) to the instant, whatever its time frame (#599)
+- The constructor reads no kernel (R21 of #668): the TLE's Earth reads its data at the first member that needs them, so
+  a valid TLE gives its fields, `MeanMeanMotion` (the field of line 2 in rad/s) and `ToOmm` (`MEAN_MOTION` the field as
+  written) without kernels, `MeanSemiMajorAxis` and SGP4 throwing `InvalidOperationException` (`BODY399_GM`) before them
+  and working once they are loaded; `MeanMotion()` is removed, `tle.MeanMotion()` the osculating one of the base class
+  (decision 111 of #668, decided by S. Guillet, 2026-11-26)
 - `FirstDerivationMeanMotion` and `SecondDerivativeMeanMotion` hold the TLE fields ṅ/2 and n̈/6 (OMM's
   `MEAN_MOTION_DOT`, `MEAN_MOTION_DDOT`); `TLE.Create` writes the UTC of the epoch and the nearest value of each field
   (#479, #480, #600 to #602)
@@ -203,7 +208,7 @@ OMM: meanMotion = 15.49309423 rev/day
 **Osculating vs Mean Accessors in TLE**
 | Accessor | Returns | Use Case |
 |----------|---------|----------|
-| `MeanSemiMajorAxis`, `MeanEccentricity`, etc. | Mean elements | Creating TLEs, orbit comparison |
+| `MeanSemiMajorAxis`, `MeanEccentricity`, `MeanMeanMotion` (rad/s, the field of line 2), etc. | Mean elements | Creating TLEs, orbit comparison |
 | `SemiMajorAxis()`, `Eccentricity()`, etc. | Osculating (via SGP4) | Physical calculations |
 | `ToOsculating()` | Osculating StateVector | Position/velocity calculations |
 | `ToMeanKeplerianElements()` | Mean KeplerianElements | TLE creation |

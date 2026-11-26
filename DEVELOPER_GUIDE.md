@@ -622,7 +622,8 @@ Two-Line Element set for Earth-orbiting objects. TLE stores **mean** orbital ele
 | `NoradCatalogId` | NORAD catalog number, Alpha-5 decoded (`T5544` → 275544) |
 | `Epoch` | Epoch of elements |
 | `ElementsType` | Always returns `OrbitalElementsType.Mean` |
-| `MeanSemiMajorAxis` | Mean semi-major axis (m) |
+| `MeanSemiMajorAxis` | Mean semi-major axis (m), from the kernel GM of the Earth, read at the first use |
+| `MeanMeanMotion` | Mean motion of line 2 (rad/s), read without kernels (decision 111 of #668) |
 | `MeanEccentricity` | Mean eccentricity |
 | `MeanInclination` | Mean inclination (rad) |
 | `MeanAscendingNode` | Mean RAAN (rad) |

@@ -17,8 +17,15 @@ The constructor checks the text before it reads any kernel (#675): a null or emp
 length than 69 characters or that does not start with its line number (`ArgumentException`), catalog numbers that
 differ or a wrong checksum (`InvalidOperationException`). Before 11.0.0 it built the Earth of the TLE first, so that
 without kernels a malformed TLE threw the kernel error, and CSPICE printed the banners of its failed reads on the
-standard output. A valid TLE still needs the kernels that define the Earth (its GM, radii and frame, which its
-`Observer` carries and `MeanSemiMajorAxis` uses): it throws `InvalidOperationException` without them.
+standard output.
+
+The constructor reads no kernel at all (R21 of
+[#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668), 11.0.0): the Earth of the TLE (its
+`Observer`) reads its GM, radii and frame from the data provider at the first member that needs them, retried on
+failure. A valid TLE gives its fields, `NoradCatalogId`, `MeanMeanMotion` and `ToOmm` without kernels;
+`MeanSemiMajorAxis`, `ToMeanKeplerianElements` and SGP4 need the kernels that define the Earth and throw
+`InvalidOperationException` without them (`BODY399_GM`), keeping nothing, so that the same `TLE` works once they are
+loaded. Before 11.0.0 a TLE built before the kernels kept a GM of 0 for its life.
 
 ## Properties
 
@@ -27,7 +34,8 @@ standard output. A valid TLE still needs the kernels that define the Earth (its 
 | `Name` | Object name |
 | `Epoch` | Epoch of elements |
 | `ElementsType` | Always `Mean` |
-| `MeanSemiMajorAxis` | Mean semi-major axis (m) |
+| `MeanSemiMajorAxis` | Mean semi-major axis (m), ∛(GM/n²) with the kernel GM of the Earth, read at the first use |
+| `MeanMeanMotion` | Mean motion n of line 2 (rad/s): the field (rev/day) × 2π / 86400, read without kernels (decision 111 of #668) |
 | `MeanEccentricity` | Mean eccentricity |
 | `MeanInclination` | Mean inclination (rad) |
 | `MeanAscendingNode` | Mean RAAN (rad) |
@@ -45,8 +53,13 @@ standard output. A valid TLE still needs the kernels that define the Earth (its 
 | `ToOsculating()` | Convert to osculating StateVector at TLE epoch |
 | `ToOsculating(Time)` | Convert to osculating StateVector at epoch |
 | `ToMeanKeplerianElements()` | Get mean Keplerian elements directly |
-| `ToOmm(string originator)` | Convert to CCSDS OMM |
+| `ToOmm(string originator)` | Convert to CCSDS OMM, `MEAN_MOTION` the field of line 2 as written, without kernels |
 | `Create(OrbitalParameters, string, int, string, ...)` | Create TLE from mean orbital parameters about the Earth in `Frame.TEME` |
+
+The inherited members of `OrbitalParameters` (`MeanMotion()`, `SemiMajorAxis()`, `Eccentricity()`, ...) are those of
+the osculating SGP4 set at the epoch; the mean values are the `Mean…` properties. `MeanMeanMotion` replaces the method
+`MeanMotion()` of 10.x, √(GM/a³) with a = ∛(GM/n²), within 2 ulp of the field (decision 111 of #668, decided by
+S. Guillet, 2026-11-26): `tle.MeanMotion()` now binds to the osculating one, 0.14 % off for the ISS.
 
 ## SGP4/SDP4
 
