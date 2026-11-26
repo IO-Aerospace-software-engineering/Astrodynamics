@@ -110,7 +110,7 @@ public class CelestialBodyInfoTests
     {
         IDataProvider provider = new SpiceDataProvider();
         var epoch = new TimeSystem.Time(2024, 6, 21, 12, 0, 0, TimeSystem.TimeScale.TDB);
-        StateVector state = provider.GetEphemeris(epoch, PlanetsAndMoons.MOON_BODY, PlanetsAndMoons.EARTH_BODY, Frames.Frame.ICRF, Aberration.None);
+        StateVector state = provider.GetEphemeris(epoch, PlanetsAndMoons.MoonBody, PlanetsAndMoons.EarthBody, Frames.Frame.ICRF, Aberration.None);
         var spice = SpiceApi.Instance.ReadEphemeris(epoch, 399, 301, Frames.Frame.ICRF, Aberration.None);
         Assert.Equal(spice.Position, state.Position);
         Assert.Equal(spice.Velocity, state.Velocity);

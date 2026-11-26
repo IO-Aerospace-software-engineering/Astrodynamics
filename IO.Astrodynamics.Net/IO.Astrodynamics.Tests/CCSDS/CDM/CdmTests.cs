@@ -1584,7 +1584,7 @@ public class CdmTests
 
     private static CelestialBody CreateEarth()
     {
-        return new CelestialBody(PlanetsAndMoons.EARTH, Frames.Frame.ICRF, TimeSystem.Time.J2000Tdb);
+        return new CelestialBody(PlanetsAndMoons.Earth, Frames.Frame.ICRF, TimeSystem.Time.J2000Tdb);
     }
 
     private static Spacecraft CreateSpacecraft(

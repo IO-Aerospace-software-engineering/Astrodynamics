@@ -39,11 +39,11 @@ public class GcrfPropagationTests
         TestKernels.EnsureSolarSystem();
     }
 
-    private static CelestialBody Earth() => new(PlanetsAndMoons.EARTH, Frames.Frame.ICRF, Start,
+    private static CelestialBody Earth() => new(PlanetsAndMoons.Earth, Frames.Frame.ICRF, Start,
         new GeopotentialModelParameters("Data/SolarSystem/EGM2008_to70_TideFree", 10));
 
     private static CelestialItem[] Bodies(CelestialBody earth) =>
-        new CelestialItem[] { earth, new CelestialBody(PlanetsAndMoons.MOON, Frames.Frame.ICRF, Start), new CelestialBody(Stars.Sun) };
+        new CelestialItem[] { earth, new CelestialBody(PlanetsAndMoons.Moon, Frames.Frame.ICRF, Start), new CelestialBody(Stars.Sun) };
 
     private static StateVector State(ILocalizable observer, Frames.Frame frame, Matrix? covariance = null) =>
         new(new Vector3(6778137.0, 0.0, 0.0), new Vector3(0.0, 7668.6, 0.0), observer, Start, frame, covariance);
@@ -78,8 +78,8 @@ public class GcrfPropagationTests
     {
         // The SPICE path of an ephemeris read: the Moon and the Sun from the Earth, labelled GCRF, in Frame.GCRF and in a
         // frame built from the name (the CLI), which is not a GcrfFrame
-        var earth = new CelestialBody(PlanetsAndMoons.EARTH);
-        foreach (var target in new CelestialItem[] { new CelestialBody(PlanetsAndMoons.MOON), new CelestialBody(Stars.Sun) })
+        var earth = new CelestialBody(PlanetsAndMoons.Earth);
+        foreach (var target in new CelestialItem[] { new CelestialBody(PlanetsAndMoons.Moon), new CelestialBody(Stars.Sun) })
         {
             var icrf = target.GetEphemeris(Start, earth, Frames.Frame.ICRF, aberration);
             Assert.True(icrf.Position.Magnitude() > 3.0e8);
@@ -106,9 +106,9 @@ public class GcrfPropagationTests
             if (variant.EndsWith("SSB"))
             {
                 // SSB mode: the same orbit relative to the solar-system barycentre
-                var earthFromSsb = earth.GetGeometricStateRelativeTo(Start, Barycenters.SOLAR_SYSTEM_BARYCENTER);
+                var earthFromSsb = earth.GetGeometricStateRelativeTo(Start, Barycenters.SolarSystemBarycenter);
                 initial = new StateVector(earthFromSsb.Position + initial.Position, earthFromSsb.Velocity + initial.Velocity,
-                    Barycenters.SOLAR_SYSTEM_BARYCENTER, Start, frame);
+                    Barycenters.SolarSystemBarycenter, Start, frame);
             }
 
             if (variant.Contains("Impulse"))

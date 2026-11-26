@@ -43,11 +43,11 @@ public sealed class AvoidanceFallbackCase
     public AvoidanceFallbackCase()
     {
         TestKernels.EnsureSolarSystem();
-        Earth = new CelestialBody(PlanetsAndMoons.EARTH, Frames.Frame.ICRF, Start,
+        Earth = new CelestialBody(PlanetsAndMoons.Earth, Frames.Frame.ICRF, Start,
             new GeopotentialModelParameters("Data/SolarSystem/EGM2008_to70_TideFree", 10),
             new Nrlmsise00Model(SpaceWeather.Nominal));
-        Bodies = new CelestialItem[] { Earth, new CelestialBody(PlanetsAndMoons.MOON, Frames.Frame.ICRF, Start), new CelestialBody(Stars.Sun) };
-        PointMassEarth = new CelestialBody(PlanetsAndMoons.EARTH, Frames.Frame.ICRF, Start);
+        Bodies = new CelestialItem[] { Earth, new CelestialBody(PlanetsAndMoons.Moon, Frames.Frame.ICRF, Start), new CelestialBody(Stars.Sun) };
+        PointMassEarth = new CelestialBody(PlanetsAndMoons.Earth, Frames.Frame.ICRF, Start);
         var orbit = new KeplerianElements(6778137.0, 0.001, 51.6 * IO.Astrodynamics.Constants.Deg2Rad, 0.4, 1.1, 0.3, Earth,
             Start, Frames.Frame.ICRF).ToStateVector();
         ProtectedStart = ConjunctionCovarianceCase.WithRtnCovariance(orbit, new[] { 50.0, 200.0, 30.0, 0.2, 0.05, 0.03 });

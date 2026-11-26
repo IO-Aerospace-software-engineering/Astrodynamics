@@ -41,11 +41,11 @@ public class DensityGradientNoiseTests
     {
         return model switch
         {
-            "US 1976" => new CelestialBody(SolarSystemObjects.PlanetsAndMoons.EARTH, Frames.Frame.ICRF, Epoch, null,
+            "US 1976" => new CelestialBody(SolarSystemObjects.PlanetsAndMoons.Earth, Frames.Frame.ICRF, Epoch, null,
                 new EarthStandardAtmosphere()),
-            "NRLMSISE-00" => new CelestialBody(SolarSystemObjects.PlanetsAndMoons.EARTH, Frames.Frame.ICRF, Epoch, null,
+            "NRLMSISE-00" => new CelestialBody(SolarSystemObjects.PlanetsAndMoons.Earth, Frames.Frame.ICRF, Epoch, null,
                 new Nrlmsise00Model(SpaceWeather.Nominal)),
-            _ => new CelestialBody(SolarSystemObjects.PlanetsAndMoons.MARS, Frames.Frame.ICRF, Epoch, null,
+            _ => new CelestialBody(SolarSystemObjects.PlanetsAndMoons.Mars, Frames.Frame.ICRF, Epoch, null,
                 new MarsStandardAtmosphere())
         };
     }

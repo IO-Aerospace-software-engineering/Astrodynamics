@@ -32,7 +32,7 @@ public sealed class GeopotentialPartialsBodies
         TestKernels.EnsureSolarSystem();
         foreach (int degree in new[] { 2, 10, 70 })
         {
-            Earths[degree] = new CelestialBody(PlanetsAndMoons.EARTH, Frames.Frame.ICRF, PartialsTestCases.Epoch,
+            Earths[degree] = new CelestialBody(PlanetsAndMoons.Earth, Frames.Frame.ICRF, PartialsTestCases.Epoch,
                 new GeopotentialModelParameters(Model, (ushort)degree));
         }
 
@@ -40,13 +40,13 @@ public sealed class GeopotentialPartialsBodies
         foreach (int degree in new[] { GeopotentialGravitationalField.MaxPartialsDegree,
                      GeopotentialGravitationalField.MaxPartialsDegree + 10 })
         {
-            Earths[degree] = new CelestialBody(PlanetsAndMoons.EARTH, Frames.Frame.ICRF, PartialsTestCases.Epoch,
+            Earths[degree] = new CelestialBody(PlanetsAndMoons.Earth, Frames.Frame.ICRF, PartialsTestCases.Epoch,
                 new GeopotentialModelParameters(IO.Astrodynamics.Tests.Body.GeopotentialTestModels.PaddedTo(degree), (ushort)degree));
         }
 
         foreach (int degree in new[] { 2, 10, 70 })
         {
-            ModelCentralTermEarths[degree] = new CelestialBody(PlanetsAndMoons.EARTH, Frames.Frame.ICRF,
+            ModelCentralTermEarths[degree] = new CelestialBody(PlanetsAndMoons.Earth, Frames.Frame.ICRF,
                 PartialsTestCases.Epoch, new GeopotentialModelParameters(Model, (ushort)degree)
                     { CentralTerm = GeopotentialCentralTerm.ModelGravitationalParameter });
         }

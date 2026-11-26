@@ -68,7 +68,7 @@ public class OmmMeanElementsAndEpochTests
         var m = iss.Data.MeanElements;
         var expected = KeplerianElements.FromOMM(m.MeanMotion!.Value, m.Eccentricity, m.Inclination,
             m.RightAscensionOfAscendingNode, m.ArgumentOfPericenter, m.MeanAnomaly,
-            new CelestialBody(PlanetsAndMoons.EARTH, Frames.Frame.ICRF, epoch), epoch, Frames.Frame.TEME);
+            new CelestialBody(PlanetsAndMoons.Earth, Frames.Frame.ICRF, epoch), epoch, Frames.Frame.TEME);
 
         var actual = iss.ToMeanElements();
 
@@ -91,7 +91,7 @@ public class OmmMeanElementsAndEpochTests
 
         var d = IO.Astrodynamics.Constants.Deg2Rad;
         var expected = new KeplerianElements(6778137.0, 0.0007, 51.64 * d, 120.0 * d, 80.0 * d, 30.0 * d,
-            new CelestialBody(PlanetsAndMoons.EARTH, Frames.Frame.ICRF, epoch), epoch, Frames.Frame.ICRF, OrbitalElementsType.Mean);
+            new CelestialBody(PlanetsAndMoons.Earth, Frames.Frame.ICRF, epoch), epoch, Frames.Frame.ICRF, OrbitalElementsType.Mean);
         Assert.Equal(expected, actual);
         Assert.Equal(6778137.0, actual.SemiMajorAxis());
     }
@@ -106,7 +106,7 @@ public class OmmMeanElementsAndEpochTests
         var ssb = OmmWith("SOLAR SYSTEM BARYCENTER", "ICRF", "UTC", WithMeanMotion());
         Assert.Equal(0, ssb.ToMeanElements().Observer.NaifId);
 
-        var earth = new CelestialBody(PlanetsAndMoons.EARTH);
+        var earth = new CelestialBody(PlanetsAndMoons.Earth);
         Assert.Equal("observer", Assert.Throws<ArgumentException>(() => moon.ToMeanElements(earth)).ParamName);
         var unknown = OmmWith("NOT A BODY", "ICRF", "UTC", WithMeanMotion());
         Assert.Equal("observer", Assert.Throws<ArgumentException>(() => unknown.ToMeanElements()).ParamName);

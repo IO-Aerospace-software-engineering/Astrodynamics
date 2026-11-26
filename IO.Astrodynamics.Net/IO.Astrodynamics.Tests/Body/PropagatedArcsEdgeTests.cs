@@ -154,7 +154,7 @@ public class PropagatedArcsEdgeTests
     [InlineData("RK78", 10.0, 2970.0, -5503)]
     public void ImpulseAtTheEnd_NoArcOfZeroLength(string integrator, double step, double length, int naifId)
     {
-        var earth = new CelestialBody(PlanetsAndMoons.EARTH, Frame.ICRF, Start);
+        var earth = new CelestialBody(PlanetsAndMoons.Earth, Frame.ICRF, Start);
         var (sc, apogee) = Apogee(naifId, Leo(earth), earth);
         var window = new Window(Start, Start.AddSeconds(length));
         var outputStep = TimeSpan.FromSeconds(step);
@@ -225,7 +225,7 @@ public class PropagatedArcsEdgeTests
     [InlineData(10.0, -5516)]
     public void ImpulseAtTheEnd_ThenALaterWindow_TheSpkLeavesOutTheArcOfOneState(double step, int naifId)
     {
-        var earth = new CelestialBody(PlanetsAndMoons.EARTH, Frame.ICRF, Start);
+        var earth = new CelestialBody(PlanetsAndMoons.Earth, Frame.ICRF, Start);
         var (sc, apogee) = Apogee(naifId, Leo(earth), earth);
         var window = new Window(Start, Start.AddSeconds(2964.0));
         var outputStep = TimeSpan.FromSeconds(step);
@@ -296,7 +296,7 @@ public class PropagatedArcsEdgeTests
     [InlineData(7200.0 - 1.0e-7, -5593)]
     public void ImpulseWithin2MicrosecondsOfTheStartOrTheEnd_TheWindowStaysCovered(double target, int naifId)
     {
-        var earth = new CelestialBody(PlanetsAndMoons.EARTH, Frame.ICRF, Start);
+        var earth = new CelestialBody(PlanetsAndMoons.Earth, Frame.ICRF, Start);
         var spacecraft = new Spacecraft(naifId, $"PE{-naifId}", 1000.0, Leo(earth), 3000.0, new Clock($"PE{-naifId}_CLK", 65536));
         var tank = new FuelTank("ft", 1000.0, 1000.0, "model", "sn");
         spacecraft.AddFuelTank(tank);
@@ -359,7 +359,7 @@ public class PropagatedArcsEdgeTests
     [Fact]
     public void TwoImpulsesAtOneEvent_OneBoundary()
     {
-        var earth = new CelestialBody(PlanetsAndMoons.EARTH, Frame.ICRF, Start);
+        var earth = new CelestialBody(PlanetsAndMoons.Earth, Frame.ICRF, Start);
         var spacecraft = new Spacecraft(-5594, "PE5594", 1000.0, Leo(earth), 3000.0, new Clock("PE5594_CLK", 65536));
         var tank = new FuelTank("ft", 1000.0, 1000.0, "model", "sn");
         spacecraft.AddFuelTank(tank);
@@ -437,7 +437,7 @@ public class PropagatedArcsEdgeTests
     [InlineData(3.0e-6, -5797)]
     public void TwoImpulsesWithin2Microseconds_ReadsAndSpkGiveTheStateAfterBoth(double d, int naifId)
     {
-        var earth = new CelestialBody(PlanetsAndMoons.EARTH, Frame.ICRF, Start);
+        var earth = new CelestialBody(PlanetsAndMoons.Earth, Frame.ICRF, Start);
         var spacecraft = new Spacecraft(naifId, $"PE{-naifId}", 1000.0, Leo(earth), 3000.0, new Clock($"PE{-naifId}_CLK", 65536));
         var tank = new FuelTank("ft", 1000.0, 1000.0, "model", "sn");
         spacecraft.AddFuelTank(tank);
@@ -531,7 +531,7 @@ public class PropagatedArcsEdgeTests
     [InlineData("Apogee", 10.0, "ICRF", "Scenario", -5514)]
     public void Covariance_EveryStoredStateCarriesIt(string maneuver, double step, string frameName, string path, int naifId)
     {
-        var earth = new CelestialBody(PlanetsAndMoons.EARTH, Frame.ICRF, Start);
+        var earth = new CelestialBody(PlanetsAndMoons.Earth, Frame.ICRF, Start);
         var frame = PropagatedArcsTests.FrameOf(frameName);
         var p0Terms = new double[6, 6];
         for (int i = 0; i < 6; i++) p0Terms[i, i] = i < 3 ? 1.0e4 : 1.0e-2;
@@ -681,7 +681,7 @@ public class PropagatedArcsEdgeTests
     [InlineData("VVd", -5522)]
     public void ShortArc_IsFilledFromTheSolution(string integrator, int naifId)
     {
-        var earth = new CelestialBody(PlanetsAndMoons.EARTH, Frame.ICRF, Start);
+        var earth = new CelestialBody(PlanetsAndMoons.Earth, Frame.ICRF, Start);
         var spacecraft = new Spacecraft(naifId, $"PE{-naifId}", 1000.0, PropagatedArcsTests.LeoBeforeApogee(earth, Start), 3000.0, new Clock($"PE{-naifId}_CLK", 65536));
         var tank = new FuelTank("ft", 1000.0, 1000.0, "model", "sn");
         spacecraft.AddFuelTank(tank);
@@ -765,7 +765,7 @@ public class PropagatedArcsEdgeTests
     [Fact]
     public void AddPropagatedStates_ToTheArcOfTheirEpoch_AndReplacedByAPropagation()
     {
-        var earth = new CelestialBody(PlanetsAndMoons.EARTH, Frame.ICRF, Start);
+        var earth = new CelestialBody(PlanetsAndMoons.Earth, Frame.ICRF, Start);
         var (source, _) = Apogee(-5541, Leo(earth), earth);
         var window = new Window(Start, Start.AddHours(2.0));
         var step = TimeSpan.FromSeconds(10.0);
@@ -845,7 +845,7 @@ public class PropagatedArcsEdgeTests
     [Fact]
     public async Task CosmographiaExport_SpkAcrossTheImpulse()
     {
-        var earth = new CelestialBody(PlanetsAndMoons.EARTH, Frame.ICRF, Start);
+        var earth = new CelestialBody(PlanetsAndMoons.Earth, Frame.ICRF, Start);
         var (sc, _) = Apogee(-5551, Leo(earth), earth);
         var scenario = new Scenario("PA540Cosmo", new IO.Astrodynamics.Mission.Mission("PA540CosmoMission"), new Window(Start, Start.AddHours(2.0)));
         scenario.AddCelestialItem(earth);
@@ -888,7 +888,7 @@ public class PropagatedArcsEdgeTests
     [Fact]
     public void Conjunction_WithAManeuveringSecondary_ReadThroughItsStoredStates()
     {
-        var earth = new CelestialBody(PlanetsAndMoons.EARTH, Frame.ICRF, Start);
+        var earth = new CelestialBody(PlanetsAndMoons.Earth, Frame.ICRF, Start);
         var window = new Window(Start, Start.AddHours(2.0));
         var step = TimeSpan.FromSeconds(10.0);
         var (secondary, _) = Apogee(-5561, Leo(earth), earth);

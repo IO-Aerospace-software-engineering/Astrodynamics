@@ -77,7 +77,7 @@ public class PropagatorReuseTests
     // The cases
     // ---------------------------------------------------------------------------------------------------------------------
 
-    private static CelestialBody Earth => PlanetsAndMoons.EARTH_BODY;
+    private static CelestialBody Earth => PlanetsAndMoons.EarthBody;
 
     private static Spacecraft Leo(bool covariance = false, bool forManeuver = false)
     {
@@ -106,10 +106,10 @@ public class PropagatorReuseTests
 
     private static Spacecraft Heliocentric()
     {
-        var sun = Stars.SUN_BODY;
+        var sun = Stars.SunBody;
         var heliocentric = new StateVector(new Vector3(1.5e11, 0.0, 0.0), new Vector3(0.0, 29780.0, 1000.0), sun, Epoch,
             Frames.Frame.ICRF);
-        var ssbState = heliocentric.RelativeTo(Barycenters.SOLAR_SYSTEM_BARYCENTER, Aberration.None).ToStateVector();
+        var ssbState = heliocentric.RelativeTo(Barycenters.SolarSystemBarycenter, Aberration.None).ToStateVector();
         int id = NextId();
         return new Spacecraft(id, $"RU{-id}", 100.0, ssbState, 10000.0, new Clock($"ruclk{-id}", 65536), 10.0, 2.2);
     }
@@ -133,7 +133,7 @@ public class PropagatorReuseTests
     /// <summary>A propagator and its spacecraft, built anew at each call.</summary>
     private static Case Make(string name)
     {
-        var bodies = new CelestialItem[] { Earth, PlanetsAndMoons.MOON_BODY, Stars.SUN_BODY };
+        var bodies = new CelestialItem[] { Earth, PlanetsAndMoons.MoonBody, Stars.SunBody };
         switch (name)
         {
             case "PointMass":
@@ -198,7 +198,7 @@ public class PropagatorReuseTests
                 return new Case(new CentralBodyPropagator(window, s, new PropagationOptions
                 {
                     Integrator = new RK78IntegratorOptions { AbsoluteTolerance = 1e-12, RelativeTolerance = 1e-12 },
-                    OutputStep = TimeSpan.FromMinutes(30.0), ThirdBodies = [Stars.SUN_BODY, Earth],
+                    OutputStep = TimeSpan.FromMinutes(30.0), ThirdBodies = [Stars.SunBody, Earth],
                     CovariancePropagation = CovariancePropagationOptions.None
                 }), s, window, false, false);
             }
@@ -643,7 +643,7 @@ public class PropagatorReuseTests
     {
         int id = NextId();
         var state = new StateVector(new Vector3(2000000.0, 0.0, 0.0), new Vector3(0.0, 1600.0, 0.0),
-            PlanetsAndMoons.MOON_BODY, Epoch, Frames.Frame.ICRF);
+            PlanetsAndMoons.MoonBody, Epoch, Frames.Frame.ICRF);
         return new Spacecraft(id, $"RU{-id}", 100.0, state, 10000.0, new Clock($"ruclk{-id}", 65536), 10.0, 2.2);
     }
 

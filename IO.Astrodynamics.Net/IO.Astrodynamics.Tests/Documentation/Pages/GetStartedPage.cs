@@ -83,7 +83,7 @@ internal static class GetStartedPage
         #region docs/get-started.md:3
         SpiceApi.Instance.LoadKernels(new DirectoryInfo("Data/SolarSystem"));
 
-        var earth = PlanetsAndMoons.EARTH_BODY;
+        var earth = PlanetsAndMoons.EarthBody;
         var sun = new CelestialBody(Stars.Sun);
         var epoch = new Time(2024, 6, 21, 12, 0, 0, TimeScale.TDB);
 
@@ -98,7 +98,7 @@ internal static class GetStartedPage
     internal static void Block04()
     {
         #region docs/get-started.md:4
-        var earth = PlanetsAndMoons.EARTH_BODY;
+        var earth = PlanetsAndMoons.EarthBody;
         var epoch = new Time(2024, 1, 1, 0, 0, 0, TimeScale.TDB);
 
         var orbit = new KeplerianElements(
@@ -144,7 +144,7 @@ internal static class GetStartedPage
         var solution = spacecraft.Propagate(window, new PropagationOptions
         {
             Integrator = new RK78IntegratorOptions { AbsoluteTolerance = 1e-10, RelativeTolerance = 1e-10 },
-            ThirdBodies = new CelestialItem[] { Stars.SUN_BODY, PlanetsAndMoons.MOON_BODY },
+            ThirdBodies = new CelestialItem[] { Stars.SunBody, PlanetsAndMoons.MoonBody },
             AtmosphericDrag = true,
             SolarRadiationPressure = true
         });
@@ -164,7 +164,7 @@ internal static class GetStartedPage
         {
             Integrator = new VVIntegratorOptions { Step = TimeSpan.FromSeconds(10.0) },
             OutputStep = TimeSpan.FromSeconds(60.0),
-            ThirdBodies = new CelestialItem[] { Stars.SUN_BODY, PlanetsAndMoons.MOON_BODY }
+            ThirdBodies = new CelestialItem[] { Stars.SunBody, PlanetsAndMoons.MoonBody }
         });
 
         var final = solution.GetStateVector(window.EndDate);

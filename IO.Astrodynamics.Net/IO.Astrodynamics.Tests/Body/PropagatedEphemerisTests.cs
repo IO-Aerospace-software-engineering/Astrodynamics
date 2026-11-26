@@ -35,7 +35,7 @@ public class PropagatedEphemerisTests
     }
 
     private static readonly Time T0 = new(2024, 3, 1, 12, 0, 0, TimeScale.TDB);
-    private static readonly CelestialBody Earth = new(PlanetsAndMoons.EARTH, Frame.ICRF, T0);
+    private static readonly CelestialBody Earth = new(PlanetsAndMoons.Earth, Frame.ICRF, T0);
 
     // A motion whose Y velocity is vy
     private static StateVector State(double t, double vy = 0.0) =>

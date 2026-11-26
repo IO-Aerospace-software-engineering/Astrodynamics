@@ -34,7 +34,7 @@ public class TrackedObjectTests
 
     private static TimeSystem.Time Tca => AvoidanceFallbackCase.Tca;
 
-    private static CelestialBody Earth => PlanetsAndMoons.EARTH_BODY;
+    private static CelestialBody Earth => PlanetsAndMoons.EarthBody;
 
     // A protected state at TCA with its RTN covariance, and the state of a secondary crossing it 200 m away (the avoidance
     // tests' geometry)
@@ -87,8 +87,8 @@ public class TrackedObjectTests
             // Act
             var fromTracked = tracked.GetEphemeris(epoch, Earth, Frames.Frame.ICRF, aberration);
             var fromWrapper = wrapper.GetEphemeris(epoch, Earth, Frames.Frame.ICRF, aberration);
-            var moonFromTracked = PlanetsAndMoons.MOON_BODY.GetEphemeris(epoch, tracked, Frames.Frame.ICRF, aberration);
-            var moonFromWrapper = PlanetsAndMoons.MOON_BODY.GetEphemeris(epoch, wrapper, Frames.Frame.ICRF, aberration);
+            var moonFromTracked = PlanetsAndMoons.MoonBody.GetEphemeris(epoch, tracked, Frames.Frame.ICRF, aberration);
+            var moonFromWrapper = PlanetsAndMoons.MoonBody.GetEphemeris(epoch, wrapper, Frames.Frame.ICRF, aberration);
 
             // Assert: the object as target and as observer (its reference body the Earth of the TLE)
             Assert.Equal(fromWrapper.Position, fromTracked.Position);

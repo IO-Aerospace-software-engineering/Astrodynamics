@@ -41,10 +41,10 @@ A LEO at 400 km, with the EGM2008 geopotential to degree 10, NRLMSISE-00 drag, S
 SpiceApi.Instance.LoadKernels(new DirectoryInfo("Data/SolarSystem"));
 
 var epoch = new Time(2021, 3, 20, 12, 0, 0, TimeScale.TDB);
-var earth = new CelestialBody(PlanetsAndMoons.EARTH, Frame.ICRF, epoch,
+var earth = new CelestialBody(PlanetsAndMoons.Earth, Frame.ICRF, epoch,
     new GeopotentialModelParameters("Data/SolarSystem/EGM2008_to70_TideFree", 10),
     new Nrlmsise00Model(SpaceWeather.Nominal));
-var moon = new CelestialBody(PlanetsAndMoons.MOON, Frame.ICRF, epoch);
+var moon = new CelestialBody(PlanetsAndMoons.Moon, Frame.ICRF, epoch);
 var sun = new CelestialBody(Stars.Sun);
 var bodies = new CelestialItem[] { earth, moon, sun };
 ```
@@ -243,7 +243,7 @@ secondary passing 200 m from the protected one 24 h after the start (the case of
 // Inputs: protectedOrbit and secondaryOrbit (StateVector)
 var start = new Time(2024, 3, 1, 0, 0, 0, TimeScale.TDB);
 var tca = start.AddHours(24.0);
-var earth = new CelestialBody(PlanetsAndMoons.EARTH, Frame.ICRF, start);
+var earth = new CelestialBody(PlanetsAndMoons.Earth, Frame.ICRF, start);
 // protectedOrbit, a LEO at 700 km about earth; secondaryOrbit, 120 m radial and 160 m normal from it at tca, its
 // velocity turned by 70° about the radial direction (see the smoke test for the geometry); each given its covariance in
 // RTN, as above, by this helper

@@ -169,7 +169,7 @@ public class TlePropagationTests
         var tle = NewTle();
         var window = OneHour(tle);
         var bodies = thirdBodiesAndSrp
-            ? new CelestialItem[] { new CelestialBody(PlanetsAndMoons.MOON), new CelestialBody(Stars.Sun) }
+            ? new CelestialItem[] { new CelestialBody(PlanetsAndMoons.Moon), new CelestialBody(Stars.Sun) }
             : Array.Empty<CelestialItem>();
         int id = -6750 - 2 * Array.IndexOf(Paths, path) - (thirdBodiesAndSrp ? 100 : 0);
         var fromTle = NewSpacecraft(id, tle);
@@ -239,12 +239,12 @@ public class TlePropagationTests
         var tle = NewTle();
         var window = OneHour(tle);
         var t0 = window.StartDate.ToTdb();
-        var moon = new CelestialBody(PlanetsAndMoons.MOON);
+        var moon = new CelestialBody(PlanetsAndMoons.Moon);
         var sun = new CelestialBody(Stars.Sun);
         CelestialBody earth = variant.StartsWith("Drag")
-            ? new CelestialBody(PlanetsAndMoons.EARTH, Frames.Frame.ICRF, t0,
+            ? new CelestialBody(PlanetsAndMoons.Earth, Frames.Frame.ICRF, t0,
                 new GeopotentialModelParameters("Data/SolarSystem/EGM2008_to70_TideFree", 10), new Nrlmsise00Model(SpaceWeather.Nominal))
-            : new CelestialBody(PlanetsAndMoons.EARTH, Frames.Frame.ICRF, t0);
+            : new CelestialBody(PlanetsAndMoons.Earth, Frames.Frame.ICRF, t0);
         var sgp4 = tle.ToOsculating(variant == "LaterEpoch" ? t0.AddMinutes(10.0) : t0);
         StateVector teme = new StateVector(sgp4.Position, sgp4.Velocity, earth, sgp4.Epoch, Frames.Frame.TEME);
         CelestialItem[] bodies = { earth, moon, sun };
@@ -252,9 +252,9 @@ public class TlePropagationTests
         {
             // The same orbit relative to the solar-system barycentre, in TEME
             var icrf = teme.ToFrame(Frames.Frame.ICRF).ToStateVector();
-            var earthFromSsb = earth.GetGeometricStateRelativeTo(t0, Barycenters.SOLAR_SYSTEM_BARYCENTER);
+            var earthFromSsb = earth.GetGeometricStateRelativeTo(t0, Barycenters.SolarSystemBarycenter);
             teme = new StateVector(earthFromSsb.Position + icrf.Position, earthFromSsb.Velocity + icrf.Velocity,
-                Barycenters.SOLAR_SYSTEM_BARYCENTER, t0, Frames.Frame.ICRF).ToFrame(Frames.Frame.TEME).ToStateVector();
+                Barycenters.SolarSystemBarycenter, t0, Frames.Frame.ICRF).ToFrame(Frames.Frame.TEME).ToStateVector();
         }
 
         if (variant == "Covariance")

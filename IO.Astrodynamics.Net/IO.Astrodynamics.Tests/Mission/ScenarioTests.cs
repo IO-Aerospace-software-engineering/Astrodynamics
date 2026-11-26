@@ -62,7 +62,7 @@ namespace IO.Astrodynamics.Tests.Mission
             Scenario scenario = new Scenario("Scenario", mission, new Window(new TimeSystem.Time(2021, 1, 1, TimeScale.TDB), new TimeSystem.Time(2021, 1, 2, TimeScale.TDB)));
             Assert.Equal("Scenario", scenario.Name);
             Assert.Equal(mission, scenario.Mission);
-            var site = new Site(13, "DSS-13", PlanetsAndMoons.EARTH_BODY);
+            var site = new Site(13, "DSS-13", PlanetsAndMoons.EarthBody);
             scenario.AddSite(site);
             Assert.Single(scenario.Sites);
             Assert.Equal(site, scenario.Sites.First());
@@ -556,7 +556,7 @@ namespace IO.Astrodynamics.Tests.Mission
         {
             var start = new TimeSystem.Time(2001, 1, 1, TimeScale.TDB);
             var end = start.AddDays(365 * 4);
-            var observer = Barycenters.SOLAR_SYSTEM_BARYCENTER;
+            var observer = Barycenters.SolarSystemBarycenter;
             var star = new Star(2, "star2", 1E+30, "spec", 2, 0.3792, Equatorial.FromRightAscensionDeclination(1, 1, start), 0.1, 0.1, 0, 0, 0, 0, start);
 
             Astrodynamics.Mission.Mission mission = new Astrodynamics.Mission.Mission("mission102");
@@ -817,13 +817,13 @@ namespace IO.Astrodynamics.Tests.Mission
             var frame = Frames.Frame.ICRF;
             var start = TimeSystem.Time.J2000Tdb;
             var end = start.AddDays(3);
-            var earth = new CelestialBody(PlanetsAndMoons.EARTH, frame, start);
-            var moon = new CelestialBody(PlanetsAndMoons.MOON, frame, start);
+            var earth = new CelestialBody(PlanetsAndMoons.Earth, frame, start);
+            var moon = new CelestialBody(PlanetsAndMoons.Moon, frame, start);
             Astrodynamics.Mission.Mission mission = new Astrodynamics.Mission.Mission("mission01");
             Scenario scenario = new Scenario("scn01", mission, new Window(start, end));
 
             // Use SSB-relative orbit to test deep-space propagation (Sun as central body)
-            var ssb = Barycenters.SOLAR_SYSTEM_BARYCENTER;
+            var ssb = Barycenters.SolarSystemBarycenter;
             StateVector testOrbit = moon.GetEphemeris(start, new CelestialBody(399), frame, Aberration.None).RelativeTo(ssb, Aberration.None).ToStateVector();
             Clock clk = new Clock("My clock", 256);
             Spacecraft spc = new Spacecraft(-1001, "MySpacecraft", 100.0, testOrbit, 10000.0, clk, 0.5);
@@ -868,13 +868,13 @@ namespace IO.Astrodynamics.Tests.Mission
                 var frame = Frames.Frame.ICRF;
                 var start = TimeSystem.Time.J2000Tdb;
                 var end = start.AddDays(25);
-                var earth = new CelestialBody(PlanetsAndMoons.EARTH, frame, start);
-                var moon = new CelestialBody(PlanetsAndMoons.MOON, frame, start);
+                var earth = new CelestialBody(PlanetsAndMoons.Earth, frame, start);
+                var moon = new CelestialBody(PlanetsAndMoons.Moon, frame, start);
                 Astrodynamics.Mission.Mission mission = new Astrodynamics.Mission.Mission("missionsdeepspace");
                 Scenario scenario = new Scenario("scn" + stepSize, mission, new Window(start, end));
 
                 // Use SSB-relative orbit to test deep-space propagation (Sun as central body)
-                var ssb = Barycenters.SOLAR_SYSTEM_BARYCENTER;
+                var ssb = Barycenters.SolarSystemBarycenter;
                 StateVector testOrbit = moon.GetEphemeris(start, new CelestialBody(399), frame, Aberration.None).RelativeTo(ssb, Aberration.None).ToStateVector();
                 Clock clk = new Clock("My clock", 256);
                 Spacecraft spc = new Spacecraft(-1001, "MySpacecraft", 100.0, testOrbit, 10000.0, clk, 0.5);
@@ -949,13 +949,13 @@ namespace IO.Astrodynamics.Tests.Mission
                 var frame = Frames.Frame.ICRF;
                 var start = TimeSystem.Time.J2000Tdb;
                 var end = start.AddDays(3);
-                var earth = new CelestialBody(PlanetsAndMoons.EARTH, frame, start);
-                var moon = new CelestialBody(PlanetsAndMoons.MOON, frame, start);
+                var earth = new CelestialBody(PlanetsAndMoons.Earth, frame, start);
+                var moon = new CelestialBody(PlanetsAndMoons.Moon, frame, start);
                 Astrodynamics.Mission.Mission mission = new Astrodynamics.Mission.Mission("missionsdeepspace");
                 Scenario scenario = new Scenario("scn" + stepSize, mission, new Window(start, end));
 
                 // Use SSB-relative orbit to test deep-space propagation (Sun as central body)
-                var ssb = Barycenters.SOLAR_SYSTEM_BARYCENTER;
+                var ssb = Barycenters.SolarSystemBarycenter;
                 StateVector testOrbit = moon.GetEphemeris(start, new CelestialBody(399), frame, Aberration.None).RelativeTo(ssb, Aberration.None).ToStateVector();
                 Clock clk = new Clock("My clock", 256);
                 Spacecraft spc = new Spacecraft(-1001, "MySpacecraft", 100.0, testOrbit, 10000.0, clk, 0.5);
@@ -1027,7 +1027,7 @@ namespace IO.Astrodynamics.Tests.Mission
                 var frame = Frames.Frame.ICRF;
                 var start = TimeSystem.Time.J2000Tdb;
                 var end = start.AddHours(1.8);
-                var earth = new CelestialBody(PlanetsAndMoons.EARTH, frame, start);
+                var earth = new CelestialBody(PlanetsAndMoons.Earth, frame, start);
                 Astrodynamics.Mission.Mission mission = new Astrodynamics.Mission.Mission("missAccuracyLEO");
 
                 StateVector testOrbit = new StateVector(new Vector3(6800000.0, 0, 0), new Vector3(0, 8000.0, 0), earth, start, frame);

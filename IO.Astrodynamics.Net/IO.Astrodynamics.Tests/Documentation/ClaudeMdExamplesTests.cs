@@ -97,9 +97,9 @@ public class ClaudeMdExamplesTests
 
     private static readonly TimeSystem.Time Epoch = new(2024, 1, 1, 12, 0, 0, TimeScale.TDB);
 
-    private static CelestialBody Earth => PlanetsAndMoons.EARTH_BODY;
+    private static CelestialBody Earth => PlanetsAndMoons.EarthBody;
 
-    private static CelestialBody Sun => Stars.SUN_BODY;
+    private static CelestialBody Sun => Stars.SunBody;
 
     // A LEO about the Earth, 6800 km in radius, inclined 51.6 degrees
     private static KeplerianElements Orbit() =>
@@ -163,7 +163,7 @@ public class ClaudeMdExamplesTests
                 break;
             case "net:19":
                 SpacecraftWithEngine(-6719, out engine);
-                Assert.NotNull(ClaudeMdExamples.Net19(Epoch, TimeSpan.FromMinutes(30), PlanetsAndMoons.MOON_BODY, Sun, engine));
+                Assert.NotNull(ClaudeMdExamples.Net19(Epoch, TimeSpan.FromMinutes(30), PlanetsAndMoons.MoonBody, Sun, engine));
                 break;
             case "net:20":
                 SpacecraftWithEngine(-6720, out engine);
@@ -317,17 +317,17 @@ public class ClaudeMdExamplesTests
     }
 
     /// <summary>
-    /// The geopotential block of 66bc7bc, read naturally with an orbit about <c>EARTH_BODY</c>, throws: a listed body of the
+    /// The geopotential block of 66bc7bc, read naturally with an orbit about <c>EarthBody</c>, throws: a listed body of the
     /// observer's identifier with another gravitational field is rejected (#674). The corrected block builds its orbit on
     /// the degree-10 Earth, and its propagator builds.
     /// </summary>
     [Fact]
     public void GeopotentialBlock_ListedEarthOfOtherModels_Throws()
     {
-        var earth = new CelestialBody(PlanetsAndMoons.EARTH, Frames.Frame.ICRF, Epoch,
+        var earth = new CelestialBody(PlanetsAndMoons.Earth, Frames.Frame.ICRF, Epoch,
             new GeopotentialModelParameters("Data/SolarSystem/EGM2008_to70_TideFree", 10));
         var spacecraft = new Spacecraft(-6730, "CLAUDEMD6730", 100.0, Orbit(), 10000.0, NewClock("CLAUDEMD6730_CLK"));
-        var exception = Assert.Throws<ArgumentException>(() => new CentralBodyPropagator(new Window(Epoch, Epoch.AddHours(1)), spacecraft, new PropagationOptions { Integrator = new VVIntegratorOptions { Step = TimeSpan.FromSeconds(1.0) }, OutputStep = TimeSpan.FromSeconds(1.0), ThirdBodies = [earth, PlanetsAndMoons.MOON_BODY, Stars.SUN_BODY] }));
+        var exception = Assert.Throws<ArgumentException>(() => new CentralBodyPropagator(new Window(Epoch, Epoch.AddHours(1)), spacecraft, new PropagationOptions { Integrator = new VVIntegratorOptions { Step = TimeSpan.FromSeconds(1.0) }, OutputStep = TimeSpan.FromSeconds(1.0), ThirdBodies = [earth, PlanetsAndMoons.MoonBody, Stars.SunBody] }));
         Assert.Equal("celestialBodies", exception.ParamName);
 
         Assert.NotNull(ClaudeMdExamples.Net12(Epoch, new Window(Epoch, Epoch.AddHours(1)), NewClock("CLAUDEMD12B_CLK")));
@@ -363,7 +363,7 @@ public class ClaudeMdExamplesTests
             var state = orbit.AtEpoch(Epoch.AddSeconds(240.0 * k)).ToStateVector();
             var q = attitude.ComputeOrientation(state);
             var nadir = state.Position.Inverse() / state.Position.Magnitude();
-            var sunFromEarth = SpiceApi.Instance.ReadEphemeris(state.Epoch, PlanetsAndMoons.EARTH.NaifId, Stars.Sun.NaifId, Frames.Frame.ICRF,
+            var sunFromEarth = SpiceApi.Instance.ReadEphemeris(state.Epoch, PlanetsAndMoons.Earth.NaifId, Stars.Sun.NaifId, Frames.Frame.ICRF,
                 Aberration.None).Position;
             var sunDirection = sunFromEarth - state.Position;
             var perpendicular = sunDirection - nadir * sunDirection.Dot(nadir);

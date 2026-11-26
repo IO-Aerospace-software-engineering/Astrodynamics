@@ -120,7 +120,7 @@ using IO.Astrodynamics.SolarSystemObjects;
 SpiceApi.Instance.LoadKernels(new DirectoryInfo("Data/SolarSystem"));
 
 // Create celestial bodies
-var earth = PlanetsAndMoons.EARTH_BODY;
+var earth = PlanetsAndMoons.EarthBody;
 var sun = new CelestialBody(Stars.Sun);
 
 // Define epoch
@@ -142,7 +142,7 @@ using IO.Astrodynamics.OrbitalParameters;
 using IO.Astrodynamics.SolarSystemObjects;
 using IO.Astrodynamics.TimeSystem;
 
-var earth = PlanetsAndMoons.EARTH_BODY;
+var earth = PlanetsAndMoons.EarthBody;
 var epoch = new Time(2024, 1, 1, 0, 0, 0, TimeScale.TDB);
 
 // Create from Keplerian elements
@@ -349,8 +349,8 @@ Represents a natural celestial body (planet, moon, star).
 
 ```csharp
 // Use predefined bodies
-var earth = PlanetsAndMoons.EARTH_BODY;
-var moon = new CelestialBody(PlanetsAndMoons.MOON);
+var earth = PlanetsAndMoons.EarthBody;
+var moon = new CelestialBody(PlanetsAndMoons.Moon);
 var sun = new CelestialBody(Stars.Sun);
 
 // Get ephemeris
@@ -451,7 +451,7 @@ elements, the two-body motion to another epoch, the RTN rotations, and at the ce
 `InvalidOperationException` (#687); see `docs/reference/state-vector.md`.
 
 ```csharp
-var earth = PlanetsAndMoons.EARTH_BODY;
+var earth = PlanetsAndMoons.EarthBody;
 var epoch = new Time(2024, 1, 1, TimeScale.TDB);
 
 // Create state vector
@@ -516,7 +516,7 @@ Classical Keplerian orbital elements (osculating or mean).
 | `TimeToSphereOfInfluence()` | Epoch at the sphere of influence of the center of motion (`TimeToRadius`); throws when it is infinite |
 
 ```csharp
-var earth = PlanetsAndMoons.EARTH_BODY;
+var earth = PlanetsAndMoons.EarthBody;
 var epoch = new Time(2024, 1, 1, TimeScale.TDB);
 
 // Create osculating Keplerian elements (ISS-like orbit)
@@ -579,7 +579,7 @@ The classical equinoctial set (GMAT's EquinoctialH, K, P and Q) is h = G, k = F,
 ```csharp
 var sv = new StateVector(
     new Vector3(6800000.0, 0.0, 0.0), new Vector3(0.0, 7656.2, 1000.0),
-    PlanetsAndMoons.EARTH_BODY, new Time(2024, 1, 1, TimeScale.TDB), Frame.ICRF);
+    PlanetsAndMoons.EarthBody, new Time(2024, 1, 1, TimeScale.TDB), Frame.ICRF);
 var equinoctial = sv.ToEquinoctial();
 
 // Access equinoctial components
@@ -665,7 +665,7 @@ Console.WriteLine($"Mean motion: {meanKep.MeanMotion()} rad/s");
 var epoch = new Time(2024, 1, 1, TimeScale.TDB);
 var state = new StateVector(
     new Vector3(6800000.0, 0.0, 0.0), new Vector3(0.0, 5413.8, 5413.8),
-    PlanetsAndMoons.EARTH_BODY, epoch, Frame.ICRF);
+    PlanetsAndMoons.EarthBody, epoch, Frame.ICRF);
 var newTle = state.ToTle("MY_SAT", 99999, "24001A");
 
 // NORAD catalog numbers above 99999 use the Alpha-5 convention (up to 339999)
@@ -923,7 +923,7 @@ Console.WriteLine($"Epoch: {opm.Data.StateVector.Epoch}");
 Console.WriteLine($"Position: {opm.Data.StateVector.X}, {opm.Data.StateVector.Y}, {opm.Data.StateVector.Z} km");
 
 // Convert to framework StateVector
-var earth = new CelestialBody(PlanetsAndMoons.EARTH);
+var earth = new CelestialBody(PlanetsAndMoons.Earth);
 var stateVector = opm.ToStateVector(earth);  // Units: m, m/s
 
 // Convert to Spacecraft for mission operations
@@ -1136,7 +1136,7 @@ var earthFrame = new Frame("IAU_EARTH");
 
 // Transform state vector
 var svICRF = new StateVector(new Vector3(6800000.0, 0.0, 0.0), new Vector3(0.0, 7656.2, 0.0),
-    PlanetsAndMoons.EARTH_BODY, Time.J2000Tdb, icrf);
+    PlanetsAndMoons.EarthBody, Time.J2000Tdb, icrf);
 var svEcliptic = svICRF.ToFrame(ecliptic);
 
 // Get frame transformation
@@ -1180,7 +1180,7 @@ Ground-based observation site.
 | `WriteFrame(FileInfo outputFile)` | Write site frame kernel: the frame of its coordinates, or for a site from the kernels whose frame id the loaded kernels define, that kernel frame under its kernel name (#690) |
 
 ```csharp
-var earth = PlanetsAndMoons.EARTH_BODY;
+var earth = PlanetsAndMoons.EarthBody;
 
 // Create site from SPICE data (DSS-13 Goldstone)
 var goldstone = new Site(13, "DSS-13", earth);
@@ -1195,7 +1195,7 @@ var mySite = new Site(100, "MySite", earth,
 
 // Get horizontal coordinates to Moon
 var epoch = new Time(2024, 1, 1, 12, 0, 0, TimeScale.TDB);
-var moon = new CelestialBody(PlanetsAndMoons.MOON);
+var moon = new CelestialBody(PlanetsAndMoons.Moon);
 var horizontal = mySite.GetHorizontalCoordinates(epoch, moon, Aberration.LT);
 
 Console.WriteLine($"Azimuth: {horizontal.Azimuth * Constants.Rad2Deg:F2}°");
@@ -1223,7 +1223,7 @@ Specialized site for launch operations.
 | `IsAzimuthAllowed(double azimuth)` | Check if launch azimuth is allowed |
 
 ```csharp
-var earth = PlanetsAndMoons.EARTH_BODY;
+var earth = PlanetsAndMoons.EarthBody;
 var launchSite = new LaunchSite(100, "MyLaunchSite", earth,
     new Planetodetic(-81.0 * Constants.Deg2Rad, 28.5 * Constants.Deg2Rad, 0.0),
     new AzimuthRange(45 * Constants.Deg2Rad, 135 * Constants.Deg2Rad));
@@ -1305,9 +1305,9 @@ states in ICRF. The coordinate searches of `CoordinateSystem.RaDec` keep the ang
 
 ```csharp
 // Get equatorial coordinates
-var earth = PlanetsAndMoons.EARTH_BODY;
+var earth = PlanetsAndMoons.EarthBody;
 var epoch = new Time(2024, 1, 1, 12, 0, 0, TimeScale.TDB);
-var moon = new CelestialBody(PlanetsAndMoons.MOON);
+var moon = new CelestialBody(PlanetsAndMoons.Moon);
 var sv = moon.GetEphemeris(epoch, earth, Frame.ICRF, Aberration.None);
 var eq = sv.ToEquatorial();
 
@@ -1383,7 +1383,7 @@ Represents a spacecraft with components.
 | `WriteKernels(DirectoryInfo directory)` | Write the clock, frame, instrument, SPK and CK kernels into one directory, each byte for byte its writer's, and load them; the `SpacecraftKernels` it returns unloads exactly what the call loaded at `Dispose`; every check before anything is written, `InvalidOperationException` (R14 and decisions 78 to 81 of #668; `docs/reference/spacecraft.md#the-kernels`) |
 
 ```csharp
-var earth = PlanetsAndMoons.EARTH_BODY;
+var earth = PlanetsAndMoons.EarthBody;
 var epoch = new Time(2024, 1, 1, TimeScale.TDB);
 
 // Define initial orbit
@@ -1605,7 +1605,7 @@ Solve Lambert's problem for transfer orbits.
 | `Solve(bool isRetrograde, OrbitalParameters initialOrbitalParameters, OrbitalParameters targetObjectOrbitalParameters, CelestialItem centerOfMotion, ushort maxRevolution)` | Solve Lambert problem; the `LambertResult` holds the solutions (`GetZeroRevolutionSolution()`, `GetMultiRevolutionSolutions(n)`), each with `V1`, `V2`, `DeltaV1`, `DeltaV2` and `DeltaV` |
 
 ```csharp
-var earth = PlanetsAndMoons.EARTH_BODY;
+var earth = PlanetsAndMoons.EarthBody;
 var epoch = new Time(2024, 1, 1, TimeScale.TDB);
 
 // Define departure and arrival states: a LEO, and a point of a higher circular orbit 45 minutes later
@@ -1703,7 +1703,7 @@ var epoch = new Time(2024, 1, 1, TimeScale.TDB);
 var clock = new Clock("Clock", 256);
 
 // Create Earth with degree-10 EGM2008 geopotential
-var earth = new CelestialBody(PlanetsAndMoons.EARTH, Frame.ICRF, epoch,
+var earth = new CelestialBody(PlanetsAndMoons.Earth, Frame.ICRF, epoch,
     new GeopotentialModelParameters("Data/SolarSystem/EGM2008_to70_TideFree", 10));
 
 // Initial state in ICRF
@@ -1722,7 +1722,7 @@ var propagator = new CentralBodyPropagator(
     {
         Integrator = new VVIntegratorOptions { Step = TimeSpan.FromSeconds(1.0) },
         OutputStep = TimeSpan.FromSeconds(1.0),
-        ThirdBodies = [PlanetsAndMoons.MOON_BODY, Stars.SUN_BODY]
+        ThirdBodies = [PlanetsAndMoons.MoonBody, Stars.SunBody]
     });
 var solution = propagator.Propagate();
 
@@ -1812,15 +1812,15 @@ The orientation cache of a propagation is active only on the thread that propaga
 var epoch = new Time(2024, 1, 1, TimeScale.TDB);
 
 // Degree-10 geopotential (good balance of accuracy and speed)
-var earth = new CelestialBody(PlanetsAndMoons.EARTH, Frame.ICRF, epoch,
+var earth = new CelestialBody(PlanetsAndMoons.Earth, Frame.ICRF, epoch,
     new GeopotentialModelParameters("Data/SolarSystem/EGM2008_to70_TideFree", 10));
 
 // Degree-2 (J2-only) for quick analysis
-var earthJ2 = new CelestialBody(PlanetsAndMoons.EARTH, Frame.ICRF, epoch,
+var earthJ2 = new CelestialBody(PlanetsAndMoons.Earth, Frame.ICRF, epoch,
     new GeopotentialModelParameters("Data/SolarSystem/EGM2008_to70_TideFree", 2));
 
 // Point-mass only (no geopotential)
-var earthPointMass = new CelestialBody(PlanetsAndMoons.EARTH);
+var earthPointMass = new CelestialBody(PlanetsAndMoons.Earth);
 ```
 
 ---
@@ -2001,9 +2001,9 @@ full context with NRLMSISE-00 at nominal space weather, the atmosphere of its dr
 and the epoch, a body without a model gives a NaN temperature and a zero pressure and density.
 
 ```csharp
-var earth = PlanetsAndMoons.EARTH_BODY;
+var earth = PlanetsAndMoons.EarthBody;
 
-// Simple: altitude-only; EARTH_BODY has no model, so NaN, 0 and 0 (give the body an EarthStandardAtmosphere for US 1976)
+// Simple: altitude-only; EarthBody has no model, so NaN, 0 and 0 (give the body an EarthStandardAtmosphere for US 1976)
 var atm1 = earth.GetAtmosphere(10000);  // 10 km altitude
 
 // Full context: NRLMSISE-00 at nominal space weather for an Earth without a model
@@ -2205,13 +2205,13 @@ of it; ICRF and GCRF are not rotated, and ICRF, GCRF, ECLIPJ2000 (SPICE's rotati
 frame of the bodies), TEME, CIRS and TIRS need no stored orientation. The provider holds geometric states only: an
 aberration other than `Aberration.None` throws `NotSupportedException` (#559, decided by S. Guillet, 2026-11-17).
 
-The static objects of `Barycenters`, `PlanetsAndMoons` (`EARTH_BODY`, `MOON_BODY`) and `Stars` (`SUN_BODY`) read the
+The static objects of `Barycenters`, `PlanetsAndMoons` (`EarthBody`, `MoonBody`) and `Stars` (`SunBody`) read the
 provider at the first read of a member that needs its data, not in their type initializer: a provider set before their
 first read and lacking their data makes each such read throw the provider's exception until the data are there, where
 the type initializer threw before 11.0.0 a `TypeInitializationException` kept for the life of the process. Each read
 goes to the provider set at its time: the data may be added to that provider, or another provider set in its place. Once
 read, an object keeps the provider it read its data from, for its data and its ephemeris. Their identifiers, names and
-predicates need no data. A provider that gives one of them a GM or, for `EARTH_BODY`, `MOON_BODY` and `SUN_BODY`, radii
+predicates need no data. A provider that gives one of them a GM or, for `EarthBody`, `MoonBody` and `SunBody`, radii
 of 0 (SPICE before `LoadKernels`, which answers 0 for `BODYnnn_GM` or `BODYnnn_RADII` no loaded kernel defines) makes
 the read throw `InvalidOperationException` naming the variable, and nothing is kept. On SPICE their data follow the
 kernel pool: the first read after each `LoadKernels` or `ReloadKernels` that hands SPICE a file, and after each `UnloadKernels` or `ClearKernels`, reads them again, so that a
@@ -2282,19 +2282,19 @@ Body shape models.
 
 | Object | Description |
 |--------|-------------|
-| `EARTH` | Earth NAIF object (399) |
-| `EARTH_BODY` | Earth CelestialBody |
-| `MOON` | Moon NAIF object (301) |
-| `MOON_BODY` | Moon CelestialBody |
-| `MERCURY`, `VENUS`, `MARS`, `JUPITER`, `SATURN`, `URANUS`, `NEPTUNE` | Planets |
+| `Earth` | Earth NAIF object (399) |
+| `EarthBody` | Earth CelestialBody |
+| `Moon` | Moon NAIF object (301) |
+| `MoonBody` | Moon CelestialBody |
+| `Mercury`, `Venus`, `Mars`, `Jupiter`, `Saturn`, `Uranus`, `Neptune` | Planets |
 
 ### SolarSystemObjects.Barycenters
 
 | Object | Description |
 |--------|-------------|
-| `SOLAR_SYSTEM_BARYCENTER` | Solar system barycenter (0) |
+| `SolarSystemBarycenter` | Solar system barycenter (0) |
 | `EARTH_MOON_BARYCENTER` | Earth-Moon barycenter (3) |
-| `MARS_BARYCENTER` | Mars system barycenter (4) |
+| `MarsBarycenter` | Mars system barycenter (4) |
 
 ### SolarSystemObjects.Stars
 
@@ -2334,7 +2334,7 @@ var tdb = utc.ToTdb();
 var tai = utc.ToTai();
 
 // Use TDB for dynamical calculations
-var earth = PlanetsAndMoons.EARTH_BODY;
+var earth = PlanetsAndMoons.EarthBody;
 var sun = new CelestialBody(Stars.Sun);
 var state = earth.GetEphemeris(utc.ToTdb(), sun, Frame.ICRF, Aberration.None);
 ```
@@ -2344,7 +2344,7 @@ var state = earth.GetEphemeris(utc.ToTdb(), sun, Frame.ICRF, Aberration.None);
 ```csharp
 // ICRF/J2000: Inertial frame for most calculations
 var sv = new StateVector(new Vector3(6800000.0, 0.0, 0.0), new Vector3(0.0, 7656.2, 0.0),
-    PlanetsAndMoons.EARTH_BODY, new Time(2024, 1, 1, TimeScale.TDB), Frame.ICRF);
+    PlanetsAndMoons.EarthBody, new Time(2024, 1, 1, TimeScale.TDB), Frame.ICRF);
 
 // Body-fixed frames for surface operations
 var earthFrame = new Frame("IAU_EARTH");
@@ -2409,8 +2409,8 @@ var end = start.AddDays(7);
 var scenario = new Scenario("Phase1", mission, new Window(start, end));
 
 // Add celestial bodies to the scenario
-var earth = PlanetsAndMoons.EARTH_BODY;
-var moon = new CelestialBody(PlanetsAndMoons.MOON);
+var earth = PlanetsAndMoons.EarthBody;
+var moon = new CelestialBody(PlanetsAndMoons.Moon);
 var sun = new CelestialBody(Stars.Sun);
 
 scenario.AddCelestialItem(earth);
@@ -2433,7 +2433,7 @@ using IO.Astrodynamics.Body.Spacecraft;
 using IO.Astrodynamics.Maneuver;
 using IO.Astrodynamics.OrbitalParameters;
 
-var earth = PlanetsAndMoons.EARTH_BODY;
+var earth = PlanetsAndMoons.EarthBody;
 var start = new Time(2024, 3, 1, TimeScale.TDB);
 var end = start.AddHours(12);
 
@@ -2521,8 +2521,8 @@ Compute transfer trajectories using Lambert's problem solver:
 ```csharp
 using IO.Astrodynamics.Maneuver.Lambert;
 
-var earth = PlanetsAndMoons.EARTH_BODY;
-var moon = new CelestialBody(PlanetsAndMoons.MOON);
+var earth = PlanetsAndMoons.EarthBody;
+var moon = new CelestialBody(PlanetsAndMoons.Moon);
 
 // Define departure state (LEO)
 var departureEpoch = Time.J2000Tdb;
@@ -2575,7 +2575,7 @@ using IO.Astrodynamics.Maneuver;
 using IO.Astrodynamics.Surface;
 using IO.Astrodynamics.Coordinates;
 
-var earth = PlanetsAndMoons.EARTH_BODY;
+var earth = PlanetsAndMoons.EarthBody;
 var searchStart = new Time(2024, 6, 2, TimeScale.TDB);
 
 // Create launch site (Kennedy Space Center)
@@ -2629,8 +2629,8 @@ foreach (var lw in windows)
 Search for eclipse and occultation events:
 
 ```csharp
-var earth = PlanetsAndMoons.EARTH_BODY;
-var moon = new CelestialBody(PlanetsAndMoons.MOON);
+var earth = PlanetsAndMoons.EarthBody;
+var moon = new CelestialBody(PlanetsAndMoons.Moon);
 var sun = new CelestialBody(Stars.Sun);
 
 // Search window: year 2024
@@ -2677,7 +2677,7 @@ Find windows when a target is visible in an instrument's field of view:
 ```csharp
 using IO.Astrodynamics.Body.Spacecraft;
 
-var earth = PlanetsAndMoons.EARTH_BODY;
+var earth = PlanetsAndMoons.EarthBody;
 var start = new Time(2024, 6, 10, TimeScale.TDB);
 var end = start.AddHours(2);
 
@@ -2778,7 +2778,7 @@ Track satellites using Two-Line Element sets:
 ```csharp
 using IO.Astrodynamics.OrbitalParameters.TLE;
 
-var earth = PlanetsAndMoons.EARTH_BODY;
+var earth = PlanetsAndMoons.EarthBody;
 
 // Parse ISS TLE
 var issTLE = new Tle(
@@ -2827,18 +2827,18 @@ var visibilityWindows = iss.FindDistanceWindows(
 High-fidelity propagation including gravitational effects from multiple bodies:
 
 ```csharp
-var moon = new CelestialBody(PlanetsAndMoons.MOON, Frame.ICRF, Time.J2000Tdb);
+var moon = new CelestialBody(PlanetsAndMoons.Moon, Frame.ICRF, Time.J2000Tdb);
 var sun = new CelestialBody(Stars.Sun);
 
 // The Moon moves about the Earth under the attraction of both masses, so the Earth's central term is GM_Earth + GM_Moon:
 // a field of degree 0 with the GM of the model is a point mass of that GM. With the Earth's GM alone, a massless probe
 // started at the Moon's state would end about 54 310 km from the Moon after 25 days
-double gmEarthMoon = PlanetsAndMoons.EARTH_BODY.GM + moon.GM;
+double gmEarthMoon = PlanetsAndMoons.EarthBody.GM + moon.GM;
 var earthMoonField = new GeopotentialModelParameters("Data/SolarSystem/EGM2008_to70_TideFree", 0, gmEarthMoon, 6378136.3)
 {
     CentralTerm = GeopotentialCentralTerm.ModelGravitationalParameter
 };
-var earth = new CelestialBody(PlanetsAndMoons.EARTH, Frame.ICRF, Time.J2000Tdb, earthMoonField);
+var earth = new CelestialBody(PlanetsAndMoons.Earth, Frame.ICRF, Time.J2000Tdb, earthMoonField);
 
 var start = Time.J2000Tdb;
 var end = start.AddDays(25);
@@ -2893,7 +2893,7 @@ Propagate a LEO satellite with EGM2008 spherical harmonics, Moon, and Sun pertur
 var epoch = new Time(2025, 8, 25, 11, 55, 44, TimeScale.UTC);
 
 // Earth with degree-10 EGM2008 geopotential
-var earth = new CelestialBody(PlanetsAndMoons.EARTH, Frame.ICRF, epoch,
+var earth = new CelestialBody(PlanetsAndMoons.Earth, Frame.ICRF, epoch,
     new GeopotentialModelParameters("Data/SolarSystem/EGM2008_to70_TideFree", 10));
 
 // LEO orbit (~400 km altitude)
@@ -2912,7 +2912,7 @@ var propagator = new CentralBodyPropagator(
     {
         Integrator = new VVIntegratorOptions { Step = TimeSpan.FromSeconds(1.0) },
         OutputStep = TimeSpan.FromSeconds(1.0),
-        ThirdBodies = [PlanetsAndMoons.MOON_BODY, Stars.SUN_BODY]
+        ThirdBodies = [PlanetsAndMoons.MoonBody, Stars.SunBody]
     });
 
 var solution = propagator.Propagate();
@@ -2931,7 +2931,7 @@ Point instruments at ground targets during observation passes:
 ```csharp
 using IO.Astrodynamics.Maneuver;
 
-var earth = PlanetsAndMoons.EARTH_BODY;
+var earth = PlanetsAndMoons.EarthBody;
 var start = new Time(2024, 1, 1, TimeScale.TDB);
 var end = start.AddDays(1);
 
@@ -2992,7 +2992,7 @@ Use TRIAD attitude when you need fully-constrained orientation (e.g., pointing a
 ```csharp
 using IO.Astrodynamics.Maneuver;
 
-var earth = PlanetsAndMoons.EARTH_BODY;
+var earth = PlanetsAndMoons.EarthBody;
 var sun = new CelestialBody(Stars.Sun);
 var start = new Time(2024, 6, 21, 12, 0, 0, TimeScale.TDB);
 var end = start.AddHours(2);

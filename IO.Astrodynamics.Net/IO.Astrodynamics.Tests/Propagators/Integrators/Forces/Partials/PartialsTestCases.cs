@@ -43,12 +43,12 @@ public sealed class PartialsTestCases
     public PartialsTestCases()
     {
         TestKernels.EnsureSolarSystem();
-        Earth = new CelestialBody(PlanetsAndMoons.EARTH, Frames.Frame.ICRF, Epoch, null,
+        Earth = new CelestialBody(PlanetsAndMoons.Earth, Frames.Frame.ICRF, Epoch, null,
             new Nrlmsise00Model(SpaceWeather.Nominal), albedo: 0.3, thermalEffectiveTemperature: 254.0,
             thermalEmissivity: 0.95);
-        EarthWithGeopotential = new CelestialBody(PlanetsAndMoons.EARTH, Frames.Frame.ICRF, Epoch,
+        EarthWithGeopotential = new CelestialBody(PlanetsAndMoons.Earth, Frames.Frame.ICRF, Epoch,
             new GeopotentialModelParameters("Data/SolarSystem/EGM2008_to70_TideFree", 10));
-        Moon = new CelestialBody(PlanetsAndMoons.MOON, Frames.Frame.ICRF, Epoch);
+        Moon = new CelestialBody(PlanetsAndMoons.Moon, Frames.Frame.ICRF, Epoch);
         Sun = new CelestialBody(Stars.Sun);
     }
 

@@ -65,7 +65,7 @@ internal static class OccultationsPage
     {
         #region docs/reference/occultations.md:1
         // Inputs: window (Window), spacecraft (Spacecraft)
-        var earth = new CelestialBody(PlanetsAndMoons.EARTH);
+        var earth = new CelestialBody(PlanetsAndMoons.Earth);
         var sun = new CelestialBody(Stars.Sun);
         // spacecraft: propagated, from a TLE, or from the kernels
         var options = new OccultationSearchOptions { Step = TimeSpan.FromSeconds(60.0), FrontFrame = new Frame("IAU_EARTH") };

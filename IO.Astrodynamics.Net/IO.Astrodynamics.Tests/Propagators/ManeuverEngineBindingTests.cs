@@ -205,7 +205,7 @@ public class ManeuverEngineBindingTests
         }
         else
         {
-            earth = new CelestialBody(PlanetsAndMoons.EARTH);
+            earth = new CelestialBody(PlanetsAndMoons.Earth);
             var teme = tle.ToStateVector(epoch);
             Assert.Equal(Frame.TEME, teme.Frame);
             orbit = new StateVector(teme.Position, teme.Velocity, earth, epoch, Frame.TEME);
@@ -261,7 +261,7 @@ public class ManeuverEngineBindingTests
     {
         // Arrange: a valid run on the spacecraft's own engine, whose state the rejected call must leave as it was
         var integrator = IntegratorOf(integratorName);
-        var earth = new CelestialBody(PlanetsAndMoons.EARTH);
+        var earth = new CelestialBody(PlanetsAndMoons.Earth);
         var spacecraft = NewSpacecraft(earth, out var ownEngine);
         spacecraft.SetManeuvers(new ApogeeHeightManeuver(7300e3, ownEngine, Epoch, TimeSpan.Zero, earth));
         spacecraft.Propagate(Window, new PropagationOptions { Integrator = integrator(), OutputStep = Output, ThirdBodies = [earth], CovariancePropagation = CovariancePropagationOptions.None });
@@ -345,7 +345,7 @@ public class ManeuverEngineBindingTests
     [InlineData("Twin")]
     public void AnEngineNotAddedWithAddEngine_IsRefusedBySetManeuvers(string engineKind)
     {
-        var earth = new CelestialBody(PlanetsAndMoons.EARTH);
+        var earth = new CelestialBody(PlanetsAndMoons.Earth);
         var spacecraft = NewSpacecraft(earth, out var ownEngine);
         var engine = ForeignEngine(engineKind, spacecraft, ownEngine, null);
         Assert.True(engineKind == "Twin" ? engine.Name == ownEngine.Name && !ReferenceEquals(engine, ownEngine) : !spacecraft.Engines.Contains(engine));
@@ -392,7 +392,7 @@ public class ManeuverEngineBindingTests
     public void SharedTank_Rejected()
     {
         // Arrange: #586's second setup, B given A's tank
-        var earth = new CelestialBody(PlanetsAndMoons.EARTH);
+        var earth = new CelestialBody(PlanetsAndMoons.Earth);
         var a = NewSpacecraft(earth, out var engineOfA);
         var b = NewSpacecraft(earth, out _);
         var tankOfB = b.FuelTanks.Single();
@@ -412,7 +412,7 @@ public class ManeuverEngineBindingTests
     public void SharedTank_SameSpacecraftAgain_StillRejectedAsDuplicate()
     {
         // Arrange
-        var earth = new CelestialBody(PlanetsAndMoons.EARTH);
+        var earth = new CelestialBody(PlanetsAndMoons.Earth);
         var a = NewSpacecraft(earth, out var engine);
 
         // Act and assert: the existing duplicate rule
@@ -426,7 +426,7 @@ public class ManeuverEngineBindingTests
     public void OwnEngine_FiresAsTsiolkovsky(string integratorName)
     {
         // Arrange: the impulse of the rejected chains, on the spacecraft's own engine
-        var earth = new CelestialBody(PlanetsAndMoons.EARTH);
+        var earth = new CelestialBody(PlanetsAndMoons.Earth);
         var spacecraft = NewSpacecraft(earth, out var engine);
         var maneuver = new ApogeeHeightManeuver(7300e3, engine, Epoch, TimeSpan.Zero, earth);
         spacecraft.SetManeuvers(maneuver);
@@ -451,7 +451,7 @@ public class ManeuverEngineBindingTests
     public void Attitude_OwnEngine_CustomAxes_FrontAlongVelocity(string integratorName)
     {
         // Arrange: BodyFront +X, which the static axes would leave 90° off
-        var earth = new CelestialBody(PlanetsAndMoons.EARTH);
+        var earth = new CelestialBody(PlanetsAndMoons.Earth);
         var spacecraft = NewSpacecraft(earth, out var engine, Vector3.VectorX, Vector3.VectorY.Inverse());
         spacecraft.SetManeuvers(new ProgradeAttitude(Epoch, TimeSpan.FromMinutes(30.0), earth));
 

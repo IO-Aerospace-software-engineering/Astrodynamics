@@ -48,7 +48,7 @@ public class InputRangeTests
     }
 
     private static StateVector Leo() => new(new Vector3(6800000.0, 0.0, 0.0), new Vector3(0.0, 7656.0, 0.0),
-        new CelestialBody(PlanetsAndMoons.EARTH), TimeSystem.Time.J2000Tdb, Frames.Frame.ICRF);
+        new CelestialBody(PlanetsAndMoons.Earth), TimeSystem.Time.J2000Tdb, Frames.Frame.ICRF);
 
     // mass 100 and a maximum of 1000 unless the value under test replaces one of them
     private static (double mass, double max, double area, double cd, double cr) Arguments(string parameter, double value) =>

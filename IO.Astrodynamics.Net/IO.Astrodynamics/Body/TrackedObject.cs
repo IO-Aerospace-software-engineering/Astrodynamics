@@ -167,10 +167,10 @@ public sealed class TrackedObject : CelestialItem
 
     internal override OrbitalParameters.OrbitalParameters GetGeometricStateFromICRF(in Time date)
     {
-        return GetGeometricStateRelativeTo(date, Barycenters.SOLAR_SYSTEM_BARYCENTER);
+        return GetGeometricStateRelativeTo(date, Barycenters.SolarSystemBarycenter);
     }
 
     // The observer of the initial orbit, the reference body of the reads of the object and of an observer at it
     internal CelestialItem ReferenceBody =>
-        InitialOrbitalParameters.Observer as CelestialItem ?? Barycenters.SOLAR_SYSTEM_BARYCENTER;
+        InitialOrbitalParameters.Observer as CelestialItem ?? Barycenters.SolarSystemBarycenter;
 }

@@ -50,7 +50,7 @@ public class ManeuverPlanTests
     private static int _nextId = -845000;
     private static int NextId() => Interlocked.Decrement(ref _nextId);
 
-    private static CelestialBody Earth() => new(PlanetsAndMoons.EARTH, Frames.Frame.ICRF, S);
+    private static CelestialBody Earth() => new(PlanetsAndMoons.Earth, Frames.Frame.ICRF, S);
 
     private static Spacecraft NewSpacecraft(CelestialBody earth, out Engine engine, OrbitalParams orbit = null)
     {

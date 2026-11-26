@@ -185,7 +185,7 @@ public class PropagationSolutionTimeFrameTests
         // ArgumentOutOfRangeException there, as on main (#507)
         var start = LabelLaterInTai;
         Assert.True(start.ToTdb().ToTai() > start.ToTai());
-        var centralBody = new CelestialBody(body == "Earth" ? PlanetsAndMoons.EARTH : PlanetsAndMoons.MOON,
+        var centralBody = new CelestialBody(body == "Earth" ? PlanetsAndMoons.Earth : PlanetsAndMoons.Moon,
             Frames.Frame.ICRF, start);
         var orbit = new KeplerianElements(body == "Earth" ? 6778137.0 : 1837400.0, 0.001, 0.9, 0.2, 0.3, 0.0,
             centralBody, start.ToTdb(), Frames.Frame.ICRF).ToStateVector();
@@ -230,7 +230,7 @@ public class PropagationSolutionTimeFrameTests
         // message printing two equal epochs, and the start state went through the Keplerian round trip (#510)
         var start = LabelOffInTai;
         Assert.NotEqual(start.ToTai(), start.ToTdb().ToTai());
-        var centralBody = new CelestialBody(body == "Earth" ? PlanetsAndMoons.EARTH : PlanetsAndMoons.MOON,
+        var centralBody = new CelestialBody(body == "Earth" ? PlanetsAndMoons.Earth : PlanetsAndMoons.Moon,
             Frames.Frame.ICRF, start);
         var orbit = new KeplerianElements(body == "Earth" ? 6778137.0 : 1837400.0, 0.001, 0.9, 0.2, 0.3, 0.0,
             centralBody, start, Frames.Frame.ICRF);
@@ -263,7 +263,7 @@ public class PropagationSolutionTimeFrameTests
     private static PropagationSolution Propagate(string body, bool rk78, out StateVector initial,
         bool withCovariance = false)
     {
-        var centralBody = new CelestialBody(body == "Earth" ? PlanetsAndMoons.EARTH : PlanetsAndMoons.MOON,
+        var centralBody = new CelestialBody(body == "Earth" ? PlanetsAndMoons.Earth : PlanetsAndMoons.Moon,
             Frames.Frame.ICRF, Start);
         initial = body == "Earth"
             ? new StateVector(new Vector3(6800000.0, 0.0, 0.0), new Vector3(0.0, 5400.0, 5400.0), centralBody, Start,

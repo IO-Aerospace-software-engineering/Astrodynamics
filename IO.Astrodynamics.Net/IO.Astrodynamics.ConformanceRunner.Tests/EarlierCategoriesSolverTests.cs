@@ -170,7 +170,7 @@ public sealed class EarlierCategoriesSolverTests : IDisposable
     [Fact]
     public void Tracking_TheStationIsOnTheDeclaredEllipsoid_OnlyWhenItIsTheEllipsoidOfTheKernels()
     {
-        var earth = new CelestialBody(PlanetsAndMoons.EARTH);
+        var earth = new CelestialBody(PlanetsAndMoons.Earth);
 
         // The pck00011 Earth, as tracking_data 001 declares it: its polar radius from the flattening, 1e-12 m from the kernel's
         TrackingDataSolver.CheckEllipsoid(new EllipsoidInputs { EquatorialRadiusKm = 6378.1366, Flattening = 0.0033528131084554157 }, earth);

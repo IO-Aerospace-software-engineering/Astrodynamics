@@ -34,7 +34,7 @@ public class NearCircularRoundTripTests
     {
         _output = output;
         TestKernels.EnsureSolarSystem();
-        _earth = new CelestialBody(PlanetsAndMoons.EARTH, Frames.Frame.ICRF, Epoch);
+        _earth = new CelestialBody(PlanetsAndMoons.Earth, Frames.Frame.ICRF, Epoch);
     }
 
     // Eccentricities and inclinations on both sides of the thresholds of the circular orbit (1e-3) and of the former

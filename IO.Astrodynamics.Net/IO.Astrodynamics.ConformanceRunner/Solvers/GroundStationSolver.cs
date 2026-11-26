@@ -72,7 +72,7 @@ public class GroundStationSolver : ICategorySolver
         // The SPK of the target, unloaded with the case, so that the suite holds no file SPICE still reads
         using var spk = inputs.Orbit is BspSourceOrbit bsp ? new CaseKernels(_conformanceTestsPath, [SpkName(bsp)]) : null;
 
-        var earth = new CelestialBody(PlanetsAndMoons.EARTH);
+        var earth = new CelestialBody(PlanetsAndMoons.Earth);
         TrackingDataSolver.CheckEllipsoid(inputs.Location.Ellipsoid, earth);
         var site = new Site(888, "ConformanceSite", earth,
             new Planetodetic(
@@ -195,7 +195,7 @@ public class GroundStationSolver : ICategorySolver
     private static CelestialBody Occulter(string name)
     {
         return string.Equals(name, "Moon", StringComparison.OrdinalIgnoreCase)
-            ? new CelestialBody(PlanetsAndMoons.MOON)
+            ? new CelestialBody(PlanetsAndMoons.Moon)
             : throw new ArgumentException($"The occulting body '{name}' of a ground_station case is not the Moon (spec.md section 14.1).");
     }
 

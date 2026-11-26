@@ -41,16 +41,16 @@ public sealed class CdmPropagatedCovarianceCase
     public CdmPropagatedCovarianceCase()
     {
         TestKernels.EnsureSolarSystem();
-        var earth = new CelestialBody(PlanetsAndMoons.EARTH, Frames.Frame.ICRF, Start,
+        var earth = new CelestialBody(PlanetsAndMoons.Earth, Frames.Frame.ICRF, Start,
             new GeopotentialModelParameters("Data/SolarSystem/EGM2008_to70_TideFree", 10),
             new Nrlmsise00Model(SpaceWeather.Nominal));
-        var moon = new CelestialBody(PlanetsAndMoons.MOON, Frames.Frame.ICRF, Start);
+        var moon = new CelestialBody(PlanetsAndMoons.Moon, Frames.Frame.ICRF, Start);
         var sun = new CelestialBody(Stars.Sun);
         Bodies = new CelestialItem[] { earth, moon, sun };
 
         // The same without the geopotential, whose harmonics move the two-body geometry of the encounter by about 100 km
         // in 2 h: the case of the avoidance options, which need the encounter
-        var pointMassEarth = new CelestialBody(PlanetsAndMoons.EARTH, Frames.Frame.ICRF, Start, null,
+        var pointMassEarth = new CelestialBody(PlanetsAndMoons.Earth, Frames.Frame.ICRF, Start, null,
             new Nrlmsise00Model(SpaceWeather.Nominal));
         PointMassBodies = new CelestialItem[] { pointMassEarth, moon, sun };
         var (protectedPointMass, secondaryPointMass) = ConjunctionCovarianceCase.Pair(pointMassEarth, Start, Tca);

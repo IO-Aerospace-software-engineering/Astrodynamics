@@ -38,7 +38,7 @@ public class ImpulseConstructionTests
 
     private static readonly Time S = new(2024, 3, 1, 12, 0, 0, TimeScale.TDB);
 
-    private static CelestialBody Earth() => new(PlanetsAndMoons.EARTH, Frames.Frame.ICRF, S);
+    private static CelestialBody Earth() => new(PlanetsAndMoons.Earth, Frames.Frame.ICRF, S);
 
     private static KeplerianElements Orbit(CelestialBody earth, double a = 7000e3, double e = 0.01) =>
         new(a, e, 0.5, 0.0, 0.0, 0.0, earth, S, Frames.Frame.ICRF);
@@ -63,8 +63,8 @@ public class ImpulseConstructionTests
         // The radius forms infer their centre, the target-orbit forms take the observer of the target
         Assert.Null(maneuvers[0].ManeuverCenter);
         Assert.Null(maneuvers[3].ManeuverCenter);
-        Assert.Equal(PlanetsAndMoons.EARTH.NaifId, maneuvers[4].ManeuverCenter.NaifId);
-        Assert.Equal(PlanetsAndMoons.EARTH.NaifId, maneuvers[6].ManeuverCenter.NaifId);
+        Assert.Equal(PlanetsAndMoons.Earth.NaifId, maneuvers[4].ManeuverCenter.NaifId);
+        Assert.Equal(PlanetsAndMoons.Earth.NaifId, maneuvers[6].ManeuverCenter.NaifId);
     }
 
     [Fact]
@@ -165,7 +165,7 @@ public class ImpulseConstructionTests
         Assert.Equal(earth.EquatorialRadius, new ApogeeHeightManeuver(earth.EquatorialRadius, maneuverCenter: earth).TargetApogeeRadius);
         Assert.Equal(1000e3, new PerigeeHeightManeuver(1000e3, maneuverCenter: earth).TargetPerigeeRadius);
         // A deferred body: its radius is read at the constructor (IC-7)
-        Assert.Throws<ArgumentException>(() => new ApogeeHeightManeuver(1000e3, maneuverCenter: PlanetsAndMoons.EARTH_BODY));
+        Assert.Throws<ArgumentException>(() => new ApogeeHeightManeuver(1000e3, maneuverCenter: PlanetsAndMoons.EarthBody));
     }
 
     [Theory]

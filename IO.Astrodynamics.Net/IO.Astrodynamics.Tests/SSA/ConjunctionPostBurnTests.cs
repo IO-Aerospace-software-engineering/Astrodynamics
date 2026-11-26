@@ -49,7 +49,7 @@ public class ConjunctionPostBurnTests
         _output = output;
         TestKernels.EnsureSolarSystem();
         _start = new TimeSystem.Time(2026, 1, 20, 6, 0, 0, TimeScale.UTC).ToTdb();
-        _earth = new CelestialBody(PlanetsAndMoons.EARTH, Frames.Frame.ICRF, _start);
+        _earth = new CelestialBody(PlanetsAndMoons.Earth, Frames.Frame.ICRF, _start);
     }
 
     private static int NextId() => Interlocked.Decrement(ref _ids);

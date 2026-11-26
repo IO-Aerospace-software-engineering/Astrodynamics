@@ -27,7 +27,7 @@ public class MonteCarloPropagatorTests
 
     private static Spacecraft CreateTemplateSpacecraft()
     {
-        var earth = new CelestialBody(PlanetsAndMoons.EARTH);
+        var earth = new CelestialBody(PlanetsAndMoons.Earth);
         double r0 = 6800000.0; // ~430 km altitude
         double v0 = System.Math.Sqrt(earth.GM / r0);
 
@@ -57,7 +57,7 @@ public class MonteCarloPropagatorTests
             Seed = seed,
             TemplateSpacecraft = template,
             Window = new Window(TimeSystem.Time.J2000Tdb, TimeSystem.Time.J2000Tdb.AddHours(1)),
-            Propagation = new PropagationOptions { Integrator = new VVIntegratorOptions { Step = TimeSpan.FromSeconds(60) }, OutputStep = TimeSpan.FromSeconds(60), ThirdBodies = [new CelestialBody(PlanetsAndMoons.EARTH), Stars.SUN_BODY, PlanetsAndMoons.MOON_BODY] },
+            Propagation = new PropagationOptions { Integrator = new VVIntegratorOptions { Step = TimeSpan.FromSeconds(60) }, OutputStep = TimeSpan.FromSeconds(60), ThirdBodies = [new CelestialBody(PlanetsAndMoons.Earth), Stars.SunBody, PlanetsAndMoons.MoonBody] },
         };
     }
 
@@ -208,7 +208,7 @@ public class MonteCarloPropagatorTests
     [Fact]
     public void InvalidConfig_NoCovarianceOnState_Throws()
     {
-        var earth = new CelestialBody(PlanetsAndMoons.EARTH);
+        var earth = new CelestialBody(PlanetsAndMoons.Earth);
         double r0 = 6800000.0;
         double v0 = System.Math.Sqrt(earth.GM / r0);
         var orbit = new StateVector(
@@ -245,10 +245,10 @@ public class MonteCarloPropagatorTests
                 Integrator = new VVIntegratorOptions { Step = TimeSpan.FromSeconds(60) }, OutputStep = TimeSpan.FromSeconds(60),
                 ThirdBodies =
                 [
-                    new CelestialBody(PlanetsAndMoons.EARTH, Frames.Frame.ICRF, TimeSystem.Time.J2000Tdb,
+                    new CelestialBody(PlanetsAndMoons.Earth, Frames.Frame.ICRF, TimeSystem.Time.J2000Tdb,
                         new GeopotentialModelParameters("Data/SolarSystem/EGM2008_to70_TideFree", 10)),
-                    Stars.SUN_BODY,
-                    PlanetsAndMoons.MOON_BODY
+                    Stars.SunBody,
+                    PlanetsAndMoons.MoonBody
                 ]
             },
         };
@@ -265,7 +265,7 @@ public class MonteCarloPropagatorTests
     {
         // Arrange: a template on an osculating TEME state with its covariance (#675: every run threw "must be defined in
         // inertial frame"); the samples are TEME states, each rotated once to ICRF by the propagation
-        var earth = new CelestialBody(PlanetsAndMoons.EARTH);
+        var earth = new CelestialBody(PlanetsAndMoons.Earth);
         double r0 = 6800000.0;
         double v0 = System.Math.Sqrt(earth.GM / r0);
         var covTerms = new double[6, 6];
@@ -284,7 +284,7 @@ public class MonteCarloPropagatorTests
             Seed = 675,
             TemplateSpacecraft = new Spacecraft(-1675, "TemeTemplate", 100.0, nominal, 10000.0, new Clock("clk675", 256)),
             Window = new Window(TimeSystem.Time.J2000Tdb, TimeSystem.Time.J2000Tdb.AddMinutes(10)),
-            Propagation = new PropagationOptions { Integrator = new VVIntegratorOptions { Step = TimeSpan.FromSeconds(60) }, OutputStep = TimeSpan.FromSeconds(60), ThirdBodies = [new CelestialBody(PlanetsAndMoons.EARTH)] },
+            Propagation = new PropagationOptions { Integrator = new VVIntegratorOptions { Step = TimeSpan.FromSeconds(60) }, OutputStep = TimeSpan.FromSeconds(60), ThirdBodies = [new CelestialBody(PlanetsAndMoons.Earth)] },
             BaseNaifId = -1680
         };
         var samples = StateSampler.Sample(nominal, 3, 675);
@@ -312,7 +312,7 @@ public class MonteCarloPropagatorTests
 
     private static Spacecraft CreateTemplateSpacecraftWithGeopotential()
     {
-        var earth = new CelestialBody(PlanetsAndMoons.EARTH, Frames.Frame.ICRF, TimeSystem.Time.J2000Tdb,
+        var earth = new CelestialBody(PlanetsAndMoons.Earth, Frames.Frame.ICRF, TimeSystem.Time.J2000Tdb,
             new GeopotentialModelParameters("Data/SolarSystem/EGM2008_to70_TideFree", 10));
         double r0 = 6800000.0;
         double v0 = System.Math.Sqrt(earth.GM / r0);

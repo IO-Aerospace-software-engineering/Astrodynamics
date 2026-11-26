@@ -74,7 +74,7 @@ public class DefaultIntegratorFiguresTests
     public void PointMassLeoDay_AgainstKepler()
     {
         // Arrange
-        var earth = PlanetsAndMoons.EARTH_BODY;
+        var earth = PlanetsAndMoons.EarthBody;
         var window = new Window(Start, Start.AddDays(1.0));
         var kepler = TutorialLeo(earth).AtEpoch(window.EndDate).ToStateVector();
         var cases = new (string Name, IntegratorOptions Integrator)[]
@@ -114,7 +114,7 @@ public class DefaultIntegratorFiguresTests
     public void HohmannToGeo_AgainstTheClosedForm()
     {
         // Arrange
-        var earth = PlanetsAndMoons.EARTH_BODY;
+        var earth = PlanetsAndMoons.EarthBody;
         double r1 = 6678137.0, r2 = 42164000.0, mu = earth.GM;
         double transfer = r1 + r2;
         double dv1 = System.Math.Sqrt(mu * (2.0 / r1 - 2.0 / transfer)) - System.Math.Sqrt(mu / r1);
@@ -167,11 +167,11 @@ public class DefaultIntegratorFiguresTests
     public void SsbMode_CostPerPropagatedHour()
     {
         // Arrange
-        var earth = PlanetsAndMoons.EARTH_BODY;
+        var earth = PlanetsAndMoons.EarthBody;
         var geocentric = TutorialLeo(earth);
-        var ssb = geocentric.RelativeTo(Barycenters.SOLAR_SYSTEM_BARYCENTER, Aberration.None).ToStateVector();
+        var ssb = geocentric.RelativeTo(Barycenters.SolarSystemBarycenter, Aberration.None).ToStateVector();
         var window = new Window(Start, Start.AddHours(6.0));
-        var bodies = new CelestialItem[] { earth, PlanetsAndMoons.MOON_BODY, Stars.SUN_BODY };
+        var bodies = new CelestialItem[] { earth, PlanetsAndMoons.MoonBody, Stars.SunBody };
 
         foreach (var (name, integrator) in new (string, IntegratorOptions)[]
                  {
@@ -210,10 +210,10 @@ public class DefaultIntegratorFiguresTests
     {
         var covariance = Matrix.Diagonal(100.0, 100.0, 100.0, 1e-4, 1e-4, 1e-4);
         var window = new Window(Start, Start.AddDays(1.0));
-        var earth = PlanetsAndMoons.EARTH_BODY;
-        var geopotentialEarth = new CelestialBody(PlanetsAndMoons.EARTH, Frames.Frame.ICRF, Start,
+        var earth = PlanetsAndMoons.EarthBody;
+        var geopotentialEarth = new CelestialBody(PlanetsAndMoons.Earth, Frames.Frame.ICRF, Start,
             GeopotentialModelParameters.Egm2008(10));
-        var barycentric = TutorialLeo(earth).RelativeTo(Barycenters.SOLAR_SYSTEM_BARYCENTER, Aberration.None)
+        var barycentric = TutorialLeo(earth).RelativeTo(Barycenters.SolarSystemBarycenter, Aberration.None)
             .ToStateVector();
         var ssb = new StateVector(barycentric.Position, barycentric.Velocity, barycentric.Observer, barycentric.Epoch,
             barycentric.Frame, covariance);
@@ -224,7 +224,7 @@ public class DefaultIntegratorFiguresTests
                          Options(RK78IntegratorOptions.Default) with { AtmosphericDrag = true }),
                      ("SSB mode, Earth, Moon and Sun", ssb, Options(RK78IntegratorOptions.Default) with
                      {
-                         ThirdBodies = new CelestialItem[] { earth, PlanetsAndMoons.MOON_BODY, Stars.SUN_BODY }
+                         ThirdBodies = new CelestialItem[] { earth, PlanetsAndMoons.MoonBody, Stars.SunBody }
                      })
                  })
         {
@@ -271,7 +271,7 @@ public class DefaultIntegratorFiguresTests
     [Fact]
     public void LastPropagation_Memory()
     {
-        var earth = new CelestialBody(PlanetsAndMoons.EARTH, Frames.Frame.ICRF, Start,
+        var earth = new CelestialBody(PlanetsAndMoons.Earth, Frames.Frame.ICRF, Start,
             GeopotentialModelParameters.Egm2008(10));
         var window = new Window(Start, Start.AddDays(1.0));
         // A first propagation of the process leaves part of its solution held elsewhere (lazy shared data), so a warm-up run
@@ -288,7 +288,7 @@ public class DefaultIntegratorFiguresTests
             var options = Options(new RK78IntegratorOptions { AbsoluteTolerance = tolerance, RelativeTolerance = tolerance })
                 with
                 {
-                    ThirdBodies = new CelestialItem[] { PlanetsAndMoons.MOON_BODY, Stars.SUN_BODY }, AtmosphericDrag = true
+                    ThirdBodies = new CelestialItem[] { PlanetsAndMoons.MoonBody, Stars.SunBody }, AtmosphericDrag = true
                 };
             spacecraft.Propagate(window, options);
             int steps = StepsOfLastPropagation(spacecraft);

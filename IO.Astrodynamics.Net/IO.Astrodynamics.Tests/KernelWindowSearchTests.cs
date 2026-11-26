@@ -70,8 +70,8 @@ public class KernelWindowSearchTests : IClassFixture<KernelWindowSearchKernels>
 
     private static Spacecraft Lro => new(-85, "LRO", epoch: DistanceWindow.StartDate);
     private static Spacecraft Orbiter => new(-85901, "ORBITER", epoch: DistanceWindow.StartDate);
-    private static CelestialBody Moon => new(PlanetsAndMoons.MOON);
-    private static CelestialBody Earth => new(PlanetsAndMoons.EARTH);
+    private static CelestialBody Moon => new(PlanetsAndMoons.Moon);
+    private static CelestialBody Earth => new(PlanetsAndMoons.Earth);
     private static Site Dss13 => new(13, "DSS-13", Earth);
 
     private void AssertWindows(string label, IEnumerable<Window> actual, double threshold, string path)

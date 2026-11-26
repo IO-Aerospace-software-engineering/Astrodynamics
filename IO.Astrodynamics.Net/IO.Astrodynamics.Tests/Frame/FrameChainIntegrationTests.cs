@@ -238,7 +238,7 @@ public class FrameChainIntegrationTests
     {
         var epoch = new TimeSystem_Time(2021, 1, 1, 12, 0, 0, TimeScale.TDB);
         var state = new StateVector(new Vector3(4211623.0, -3218447.0, 4402165.0), new Vector3(4523.1, 5601.7, 1188.4),
-            PlanetsAndMoons.EARTH_BODY, epoch, Frames.Frame.ICRF);
+            PlanetsAndMoons.EarthBody, epoch, Frames.Frame.ICRF);
 
         var roundTrip = state.ToFrame(Frames.Frame.TIRS).ToFrame(Frames.Frame.ICRF).ToStateVector();
 
@@ -248,7 +248,7 @@ public class FrameChainIntegrationTests
 
     private static StateVector FixedPointInIcrf(Frames.Frame frame, Vector3 position, TimeSystem_Time epoch)
     {
-        return new StateVector(position, Vector3.Zero, PlanetsAndMoons.EARTH_BODY, epoch, frame)
+        return new StateVector(position, Vector3.Zero, PlanetsAndMoons.EarthBody, epoch, frame)
             .ToFrame(Frames.Frame.ICRF).ToStateVector();
     }
 

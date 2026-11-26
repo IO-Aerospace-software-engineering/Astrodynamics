@@ -51,9 +51,9 @@ public class StandardAtmosphereBoundaryTests
     }
 
     internal static CelestialBody Body(string model) => model == "Earth"
-        ? new CelestialBody(SolarSystemObjects.PlanetsAndMoons.EARTH, Frames.Frame.ICRF, Epoch, null,
+        ? new CelestialBody(SolarSystemObjects.PlanetsAndMoons.Earth, Frames.Frame.ICRF, Epoch, null,
             new EarthStandardAtmosphere())
-        : new CelestialBody(SolarSystemObjects.PlanetsAndMoons.MARS, Frames.Frame.ICRF, Epoch, null,
+        : new CelestialBody(SolarSystemObjects.PlanetsAndMoons.Mars, Frames.Frame.ICRF, Epoch, null,
             new MarsStandardAtmosphere());
 
     internal static Spacecraft NewSpacecraft(CelestialBody body, double perigeeAltitude, double area, int naifId)

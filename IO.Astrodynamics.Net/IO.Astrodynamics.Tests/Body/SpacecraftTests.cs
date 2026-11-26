@@ -794,7 +794,7 @@ namespace IO.Astrodynamics.Tests.Body
         public void ToOpm_ExportsTheCovarianceOfTheInitialStateInKm2(string frameName, string epochTag)
         {
             var epoch = new TimeSystem.Time(new DateTime(2024, 1, 15, 12, 0, 0), TimeScale.UTC);
-            var earth = new CelestialBody(PlanetsAndMoons.EARTH, Frames.Frame.ICRF, epoch);
+            var earth = new CelestialBody(PlanetsAndMoons.Earth, Frames.Frame.ICRF, epoch);
             var frame = frameName == "ICRF" ? Frames.Frame.ICRF : Frames.Frame.ECLIPJ2000;
             var sv = new StateVector(new Vector3(6778137.0, 0.0, 0.0), new Vector3(0.0, 7500.0, 0.0), earth, epoch, frame,
                 OrbitalParameters.StateVectorTests.DistinctCovariance());
@@ -850,7 +850,7 @@ namespace IO.Astrodynamics.Tests.Body
         public void ToOpm_CarriesNoCovarianceAtAnotherEpochOrWithoutOne()
         {
             var epoch = new TimeSystem.Time(new DateTime(2024, 1, 15, 12, 0, 0), TimeScale.UTC);
-            var earth = new CelestialBody(PlanetsAndMoons.EARTH, Frames.Frame.ICRF, epoch);
+            var earth = new CelestialBody(PlanetsAndMoons.Earth, Frames.Frame.ICRF, epoch);
             var withCovariance = new StateVector(new Vector3(6778137.0, 0.0, 0.0), new Vector3(0.0, 7500.0, 0.0), earth, epoch, Frames.Frame.ICRF,
                 OrbitalParameters.StateVectorTests.DistinctCovariance());
             var spc = new Spacecraft(-1107, "Opm1107", 420000.0, withCovariance, 500000.0, new Clock("Clk1107", 256), cosparId: "1998-067A");
@@ -875,7 +875,7 @@ namespace IO.Astrodynamics.Tests.Body
         public void AddEngine_ValueEqualTankNotAdded_Throws()
         {
             // Arrange
-            var spc = new Spacecraft(-1002, "Sat1002", 1000.0, LeoAbout(new CelestialBody(PlanetsAndMoons.EARTH)), 10000.0, new Clock("Clk1002", 65536));
+            var spc = new Spacecraft(-1002, "Sat1002", 1000.0, LeoAbout(new CelestialBody(PlanetsAndMoons.Earth)), 10000.0, new Clock("Clk1002", 65536));
             var t1 = new FuelTank("Tank", 3000.0, 3000.0, "Model", "SN-T");
             spc.AddFuelTank(t1);
             var t2 = new FuelTank("Tank", 3000.0, 3000.0, "Model", "SN-T");
@@ -903,7 +903,7 @@ namespace IO.Astrodynamics.Tests.Body
         public void ConcurrentAddFuelTank_OneSpacecraftTakesTheTank()
         {
             // Arrange
-            var earth = new CelestialBody(PlanetsAndMoons.EARTH);
+            var earth = new CelestialBody(PlanetsAndMoons.Earth);
             int threads = System.Math.Max(8, 2 * Environment.ProcessorCount);
             var spacecraft = Enumerable.Range(0, threads)
                 .Select(k => new Spacecraft(-1460 - k, "TANKRACE" + k, 1000.0, LeoAbout(earth), 10000.0, new Clock("TANKRACE" + k, 65536))).ToArray();
@@ -945,7 +945,7 @@ namespace IO.Astrodynamics.Tests.Body
         public void AddEngine_AddedTankInstance_Accepted()
         {
             // Arrange
-            var earth = new CelestialBody(PlanetsAndMoons.EARTH);
+            var earth = new CelestialBody(PlanetsAndMoons.Earth);
             var epoch = new TimeSystem.Time(2024, 1, 1, 0, 0, 0, TimeScale.TDB);
             var orbit = new KeplerianElements(7000e3, 0.01, 0.9, 0.0, 0.0, System.Math.PI, earth, epoch, Frames.Frame.ICRF);
             var spc = new Spacecraft(-1012, "Sat1012", 1000.0, orbit, 10000.0, new Clock("Clk1012", 65536));
@@ -974,7 +974,7 @@ namespace IO.Astrodynamics.Tests.Body
         public async Task NaifIdAtFrameIdBound_Accepted()
         {
             // Act
-            var spc = new Spacecraft(-2147483, "BOUND", 100.0, LeoAbout(new CelestialBody(PlanetsAndMoons.EARTH)), 1000.0, new Clock("BOUND", 65536));
+            var spc = new Spacecraft(-2147483, "BOUND", 100.0, LeoAbout(new CelestialBody(PlanetsAndMoons.Earth)), 1000.0, new Clock("BOUND", 65536));
             var fk = FrameKernelFiles.NewFile("bound");
             try
             {
@@ -1002,7 +1002,7 @@ namespace IO.Astrodynamics.Tests.Body
         public void NaifIdBelowFrameIdRange_Throws(int naifId, bool kernelBacked)
         {
             // Arrange
-            var earth = new CelestialBody(PlanetsAndMoons.EARTH);
+            var earth = new CelestialBody(PlanetsAndMoons.Earth);
 
             // Act
             var exception = Record.Exception(() => kernelBacked
@@ -1034,7 +1034,7 @@ namespace IO.Astrodynamics.Tests.Body
         public void WriteFrame_NameSpiceCannotRead_Throws(string name)
         {
             // Arrange
-            var spc = new Spacecraft(-1221, name, 100.0, LeoAbout(new CelestialBody(PlanetsAndMoons.EARTH)), 1000.0, new Clock("NAMES", 65536));
+            var spc = new Spacecraft(-1221, name, 100.0, LeoAbout(new CelestialBody(PlanetsAndMoons.Earth)), 1000.0, new Clock("NAMES", 65536));
             var fk = FrameKernelFiles.NewFile("refused");
 
             // Act
@@ -1060,7 +1060,7 @@ namespace IO.Astrodynamics.Tests.Body
         public void WriteFrame_BoundaryNames_LoadInSpice(string name)
         {
             // Arrange
-            var spc = new Spacecraft(-1222, name, 100.0, LeoAbout(new CelestialBody(PlanetsAndMoons.EARTH)), 1000.0, new Clock("NAMES", 65536));
+            var spc = new Spacecraft(-1222, name, 100.0, LeoAbout(new CelestialBody(PlanetsAndMoons.Earth)), 1000.0, new Clock("NAMES", 65536));
             var fk = FrameKernelFiles.NewFile("boundary");
             Assert.True(System.Text.Encoding.UTF8.GetByteCount("FRAME_" + name.ToUpper() + "_FRAME") <= 32);
 

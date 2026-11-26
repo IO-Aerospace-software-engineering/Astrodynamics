@@ -519,7 +519,7 @@ public class ConjunctionCovarianceEdgeTests : IClassFixture<ConjunctionCovarianc
         var spacecraft = ConjunctionCovarianceCase.NewSpacecraft(-6941, _case.ProtectedStart);
         string NameOf(IAtmosphericModel model)
         {
-            var earth = new CelestialBody(PlanetsAndMoons.EARTH, Frames.Frame.ICRF, epoch, null, model);
+            var earth = new CelestialBody(PlanetsAndMoons.Earth, Frames.Frame.ICRF, epoch, null, model);
             var forces = new ForceBase[]
             {
                 new GravitationalAcceleration(earth), new GravitationalAcceleration(sun), new AtmosphericDrag(spacecraft, earth)
@@ -553,11 +553,11 @@ public class ConjunctionCovarianceEdgeTests : IClassFixture<ConjunctionCovarianc
         }
 
         // Act, assert
-        Assert.Equal("EGM2008: 8D 8O", GravityOf(new CelestialBody(PlanetsAndMoons.EARTH, Frames.Frame.ICRF, epoch,
+        Assert.Equal("EGM2008: 8D 8O", GravityOf(new CelestialBody(PlanetsAndMoons.Earth, Frames.Frame.ICRF, epoch,
             new GeopotentialModelParameters(model, 8))));
-        Assert.Equal("GEOPOTENTIAL: 8D 8O", GravityOf(new CelestialBody(PlanetsAndMoons.EARTH, Frames.Frame.ICRF, epoch,
+        Assert.Equal("GEOPOTENTIAL: 8D 8O", GravityOf(new CelestialBody(PlanetsAndMoons.Earth, Frames.Frame.ICRF, epoch,
             new GeopotentialModelParameters(model, 8, 3.986004418e14, 6378137.0))));
-        Assert.Equal("GEOPOTENTIAL: 4D 4O", GravityOf(new CelestialBody(PlanetsAndMoons.MOON, Frames.Frame.ICRF, epoch,
+        Assert.Equal("GEOPOTENTIAL: 4D 4O", GravityOf(new CelestialBody(PlanetsAndMoons.Moon, Frames.Frame.ICRF, epoch,
             new GeopotentialModelParameters(model, 4))));
     }
 

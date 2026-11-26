@@ -134,8 +134,8 @@ public class RepropagationTests
         {
             var parts = setup.Split('|');
             bool moon = parts[0] == "Moon";
-            var earth = new CelestialBody(PlanetsAndMoons.EARTH, Frame.ICRF, S);
-            var center = moon ? new CelestialBody(PlanetsAndMoons.MOON, Frame.ICRF, S) : earth;
+            var earth = new CelestialBody(PlanetsAndMoons.Earth, Frame.ICRF, S);
+            var center = moon ? new CelestialBody(PlanetsAndMoons.Moon, Frame.ICRF, S) : earth;
             CelestialItem[] bodies = parts[1] == "SSB" ? [center, new CelestialBody(Stars.Sun, Frame.ICRF, S)] : [center];
             return new Env { Center = center, Bodies = bodies, FrameName = parts[1], Moon = moon };
         }
@@ -153,8 +153,8 @@ public class RepropagationTests
             else if (Ssb)
             {
                 var sv = orbit.ToStateVector();
-                var fromSsb = Center.GetGeometricStateRelativeTo(epoch, Barycenters.SOLAR_SYSTEM_BARYCENTER);
-                orbit = new StateVector(fromSsb.Position + sv.Position, fromSsb.Velocity + sv.Velocity, Barycenters.SOLAR_SYSTEM_BARYCENTER, epoch,
+                var fromSsb = Center.GetGeometricStateRelativeTo(epoch, Barycenters.SolarSystemBarycenter);
+                orbit = new StateVector(fromSsb.Position + sv.Position, fromSsb.Velocity + sv.Velocity, Barycenters.SolarSystemBarycenter, epoch,
                     Frame.ICRF);
             }
 

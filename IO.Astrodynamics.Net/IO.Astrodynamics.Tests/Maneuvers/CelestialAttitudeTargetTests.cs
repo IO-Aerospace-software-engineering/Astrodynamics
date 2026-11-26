@@ -77,7 +77,7 @@ public class CelestialAttitudeTargetTests
     [InlineData("earth", 399, EarthTolerance)]
     public void GetDirection_IsTheTargetAsSpkcvoSeesItFromTheSpacecraft(string label, int targetId, double tolerance)
     {
-        var earth = new CelestialBody(PlanetsAndMoons.EARTH);
+        var earth = new CelestialBody(PlanetsAndMoons.Earth);
         var target = new CelestialBody(targetId);
         var worst = Flags.ToDictionary(f => f, _ => 0.0);
         foreach (var flag in Flags)
@@ -107,8 +107,8 @@ public class CelestialAttitudeTargetTests
     [Fact]
     public void TriadAttitude_OnCelestialTargets_TakesTheirDirectionsFromTheSpacecraft()
     {
-        var earth = new CelestialBody(PlanetsAndMoons.EARTH);
-        var moon = new CelestialBody(PlanetsAndMoons.MOON);
+        var earth = new CelestialBody(PlanetsAndMoons.Earth);
+        var moon = new CelestialBody(PlanetsAndMoons.Moon);
         var sun = new CelestialBody(Stars.Sun);
         var suns = Pointing("sun", earth);
         double worstPrimary = 0.0, worstPlane = 0.0;

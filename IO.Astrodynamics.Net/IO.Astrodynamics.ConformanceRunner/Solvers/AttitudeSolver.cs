@@ -67,7 +67,7 @@ public class AttitudeSolver : ICategorySolver
         var inputs = InputParser.ParseAttitudeInputs(caseInput.Inputs);
         using var kernels = new CaseKernels(_conformanceTestsPath, InputParser.ParseKernels(caseInput.Inputs));
 
-        var earth = new CelestialBody(PlanetsAndMoons.EARTH);
+        var earth = new CelestialBody(PlanetsAndMoons.Earth);
         var epoch = EpochParser.Parse(inputs.Epoch);
         var window = new Window(EpochParser.Parse(inputs.PropagationWindow.Start), EpochParser.Parse(inputs.PropagationWindow.End));
         int samples = SampleCount(window, inputs.SampleStepS);

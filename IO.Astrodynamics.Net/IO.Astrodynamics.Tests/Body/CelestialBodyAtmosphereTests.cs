@@ -37,7 +37,7 @@ public class CelestialBodyAtmosphereTests
     {
         // Arrange: U.S. Standard Atmosphere 1976 (NASA-TM-X-74335), table I, ρ/ρ0 with ρ0 = 1.225 kg/m³
         var model = new EarthStandardAtmosphere();
-        var earth = new CelestialBody(PlanetsAndMoons.EARTH, atmosphericModel: model);
+        var earth = new CelestialBody(PlanetsAndMoons.Earth, atmosphericModel: model);
         var context = Full(km * 1000.0);
 
         // Act
@@ -64,7 +64,7 @@ public class CelestialBodyAtmosphereTests
     {
         // Arrange: a storm (F10.7 250, Ap 100)
         var storm = new Nrlmsise00Model(new SpaceWeather { F107 = 250.0, F107A = 250.0, Ap = 100.0 });
-        var earth = new CelestialBody(PlanetsAndMoons.EARTH, atmosphericModel: storm);
+        var earth = new CelestialBody(PlanetsAndMoons.Earth, atmosphericModel: storm);
         var context = Full(altitude, latitude, longitude);
 
         // Act
@@ -83,7 +83,7 @@ public class CelestialBodyAtmosphereTests
     public void ModellessEarth_OneAtmosphere(double altitude, double latitude, double longitude)
     {
         // Arrange
-        var earth = PlanetsAndMoons.EARTH_BODY;
+        var earth = PlanetsAndMoons.EarthBody;
         var nominal = new Nrlmsise00Model(SpaceWeather.Nominal);
         var context = Full(altitude, latitude, longitude);
 
@@ -125,7 +125,7 @@ public class CelestialBodyAtmosphereTests
     {
         // Decision of S. Guillet, 2026-11-14 (#674): an Earth always has at least the base atmosphere, so an Earth
         // without a model answers an altitude-only read with the U.S. Standard Atmosphere 1976
-        foreach (var earth in new[] { PlanetsAndMoons.EARTH_BODY, new CelestialBody(399) })
+        foreach (var earth in new[] { PlanetsAndMoons.EarthBody, new CelestialBody(399) })
         {
             var context = AtmosphericContext.FromAltitude(altitude);
             AssertIsStandard1976(earth, context, tableDensity);
@@ -147,7 +147,7 @@ public class CelestialBodyAtmosphereTests
         double temperature, double pressure)
     {
         // Act
-        var earth = PlanetsAndMoons.EARTH_BODY;
+        var earth = PlanetsAndMoons.EarthBody;
         double t = earth.GetAirTemperature(altitude) + IO.Astrodynamics.Constants.ZeroCelsiusInKelvin;
         double p = earth.GetAirPressure(altitude);
 
@@ -170,7 +170,7 @@ public class CelestialBodyAtmosphereTests
     public void ModellessEarth_WithAPartialContext_IsTheStandardAtmosphere1976(AtmosphericContext context)
     {
         // A context without the geodetic position or the epoch NRLMSISE-00 needs: the base atmosphere
-        foreach (var earth in new[] { PlanetsAndMoons.EARTH_BODY, new CelestialBody(399) })
+        foreach (var earth in new[] { PlanetsAndMoons.EarthBody, new CelestialBody(399) })
         {
             AssertIsStandard1976(earth, context, 2.288e-12 * 1.225);
         }
@@ -182,7 +182,7 @@ public class CelestialBodyAtmosphereTests
         // The full context keeps NRLMSISE-00 at nominal space weather, that of the drag, and not the 1976 standard
         var context = Full(400e3);
         var nominal = new Nrlmsise00Model(SpaceWeather.Nominal);
-        foreach (var earth in new[] { PlanetsAndMoons.EARTH_BODY, new CelestialBody(399) })
+        foreach (var earth in new[] { PlanetsAndMoons.EarthBody, new CelestialBody(399) })
         {
             Assert.Equal(nominal.GetAtmosphere(context), earth.GetAtmosphere(context));
             Assert.Equal(nominal.GetDensity(context), earth.GetAirDensity(400e3, 0.5, 0.3, Epoch));
@@ -206,7 +206,7 @@ public class CelestialBodyAtmosphereTests
 
         var densities = new double[altitudes.Length];
         System.Threading.Tasks.Parallel.For(0, altitudes.Length * 100,
-            k => densities[k % altitudes.Length] = PlanetsAndMoons.EARTH_BODY.GetAirDensity(altitudes[k % altitudes.Length]));
+            k => densities[k % altitudes.Length] = PlanetsAndMoons.EarthBody.GetAirDensity(altitudes[k % altitudes.Length]));
 
         var standard = new EarthStandardAtmosphere();
         for (int i = 0; i < altitudes.Length; i++)
@@ -221,7 +221,7 @@ public class CelestialBodyAtmosphereTests
         // Another body without a model, with an altitude only or a full context: no atmosphere, no exception
         foreach (var context in new[] { AtmosphericContext.FromAltitude(100e3), Full(100e3) })
         {
-            var moon = PlanetsAndMoons.MOON_BODY;
+            var moon = PlanetsAndMoons.MoonBody;
             var atmosphere = moon.GetAtmosphere(context);
             Assert.True(double.IsNaN(atmosphere.Temperature));
             Assert.Equal(0.0, atmosphere.Pressure);
@@ -231,11 +231,11 @@ public class CelestialBodyAtmosphereTests
             Assert.Equal(0.0, moon.GetAirDensity(context));
         }
 
-        Assert.True(double.IsNaN(PlanetsAndMoons.MOON_BODY.GetAirTemperature(100e3)));
-        Assert.Equal(0.0, PlanetsAndMoons.MOON_BODY.GetAirPressure(100e3));
-        Assert.Equal(0.0, PlanetsAndMoons.MOON_BODY.GetAirDensity(100e3));
-        Assert.Equal(0.0, PlanetsAndMoons.MOON_BODY.GetAtmosphere(100e3).Density);
-        Assert.Equal(0.0, PlanetsAndMoons.MOON_BODY.GetAirDensity(100e3, 0.1, 0.2, Epoch));
+        Assert.True(double.IsNaN(PlanetsAndMoons.MoonBody.GetAirTemperature(100e3)));
+        Assert.Equal(0.0, PlanetsAndMoons.MoonBody.GetAirPressure(100e3));
+        Assert.Equal(0.0, PlanetsAndMoons.MoonBody.GetAirDensity(100e3));
+        Assert.Equal(0.0, PlanetsAndMoons.MoonBody.GetAtmosphere(100e3).Density);
+        Assert.Equal(0.0, PlanetsAndMoons.MoonBody.GetAirDensity(100e3, 0.1, 0.2, Epoch));
     }
 
     [Fact]
@@ -244,13 +244,13 @@ public class CelestialBodyAtmosphereTests
         // A configured model answers every context, as before: the Mars model given to an Earth, and NRLMSISE-00,
         // which needs the full context and throws without it
         var mars = new MarsStandardAtmosphere();
-        var earth = new CelestialBody(PlanetsAndMoons.EARTH, atmosphericModel: mars);
+        var earth = new CelestialBody(PlanetsAndMoons.Earth, atmosphericModel: mars);
         var context = AtmosphericContext.FromAltitude(10e3);
         Assert.Equal(mars.GetAtmosphere(context), earth.GetAtmosphere(10e3));
         Assert.Equal(mars.GetDensity(context), earth.GetAirDensity(10e3));
         Assert.NotEqual(new EarthStandardAtmosphere().GetDensity(context), earth.GetAirDensity(10e3));
 
-        var msis = new CelestialBody(PlanetsAndMoons.EARTH, atmosphericModel: new Nrlmsise00Model());
+        var msis = new CelestialBody(PlanetsAndMoons.Earth, atmosphericModel: new Nrlmsise00Model());
         Assert.Throws<ArgumentException>(() => msis.GetAirDensity(400e3));
     }
 
@@ -258,7 +258,7 @@ public class CelestialBodyAtmosphereTests
     public void ModellessBodies_WithANullContext_HaveNoAtmosphere()
     {
         // A null context holds no altitude: NaN, 0 and 0, as the getters of a model-less body returned before #674
-        foreach (var body in new[] { PlanetsAndMoons.EARTH_BODY, PlanetsAndMoons.MOON_BODY })
+        foreach (var body in new[] { PlanetsAndMoons.EarthBody, PlanetsAndMoons.MoonBody })
         {
             Assert.True(double.IsNaN(body.GetAirTemperature((IAtmosphericContext)null)));
             Assert.Equal(0.0, body.GetAirPressure((IAtmosphericContext)null));

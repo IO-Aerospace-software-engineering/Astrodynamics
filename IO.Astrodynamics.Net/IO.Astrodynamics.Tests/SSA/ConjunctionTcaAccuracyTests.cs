@@ -36,7 +36,7 @@ public class ConjunctionTcaAccuracyTests
     {
         TestKernels.EnsureSolarSystem();
         _output = output;
-        _earth = new CelestialBody(PlanetsAndMoons.EARTH, Frames.Frame.ICRF, Start);
+        _earth = new CelestialBody(PlanetsAndMoons.Earth, Frames.Frame.ICRF, Start);
     }
 
     /// <summary>

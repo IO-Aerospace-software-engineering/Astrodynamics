@@ -386,7 +386,7 @@ namespace IO.Astrodynamics.Tests.CCSDS.OPM
             // exactly (1e-17 is below half the ulp of 2π, 4.4e-16), that is 360° (2π × 180/π rounds to 360): an angle
             // outside angleRange, which the elements' range check (#708) refuses. FromKeplerianElements writes each angle as
             // its value in [0, 360): 0 for 2π. Before #708 it wrote 360, which the schema rejects
-            var earth = new IO.Astrodynamics.Body.CelestialBody(IO.Astrodynamics.SolarSystemObjects.PlanetsAndMoons.EARTH);
+            var earth = new IO.Astrodynamics.Body.CelestialBody(IO.Astrodynamics.SolarSystemObjects.PlanetsAndMoons.Earth);
             var epoch = IO.Astrodynamics.TimeSystem.Time.J2000Tdb;
             var kep = new IO.Astrodynamics.OrbitalParameters.KeplerianElements(6778137.0, 0.001, 0.9, -1e-17, -1e-17, -1e-17,
                 earth, epoch, IO.Astrodynamics.Frames.Frame.ICRF);

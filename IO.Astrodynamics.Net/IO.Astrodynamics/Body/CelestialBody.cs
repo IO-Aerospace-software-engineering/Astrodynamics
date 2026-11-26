@@ -505,7 +505,7 @@ public class CelestialBody : CelestialItem, IOrientable<Frame>
     /// the orbit perigee is lower than the equatorial radius.</exception>
     public KeplerianElements SunSynchronousOrbit(double semiMajorAxis, double eccentricity, Time descendingNodeEpoch)
     {
-        CelestialBody sun = Stars.SUN_BODY;
+        CelestialBody sun = Stars.SunBody;
         double p = semiMajorAxis * (1 - eccentricity);
         if (p < EquatorialRadius)
         {
@@ -563,7 +563,7 @@ public class CelestialBody : CelestialItem, IOrientable<Frame>
             throw new InvalidOperationException("At this time, the computation of true solar day works only with planets");
         }
 
-        CelestialBody sun = Stars.SUN_BODY;
+        CelestialBody sun = Stars.SunBody;
         var sideralRotation = SiderealRotationPeriod(epoch);
         var eph0 = this.GetEphemeris(epoch, sun, Frame.ECLIPJ2000, Aberration.LT).Position;
         var eph1 = this.GetEphemeris(epoch + sideralRotation, sun, Frame.ECLIPJ2000, Aberration.LT).Position;

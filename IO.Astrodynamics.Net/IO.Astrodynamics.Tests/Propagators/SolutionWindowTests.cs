@@ -37,7 +37,7 @@ public class SolutionWindowTests
     private static int _nextId = -785000;
     private static int NextId() => Interlocked.Decrement(ref _nextId);
 
-    private static CelestialBody Earth => PlanetsAndMoons.EARTH_BODY;
+    private static CelestialBody Earth => PlanetsAndMoons.EarthBody;
 
     private static Tle Iss() => new("ISS",
         "1 25544U 98067A   21020.53488036  .00016717  00000-0  10270-3 0  9054",
@@ -76,7 +76,7 @@ public class SolutionWindowTests
 
         // Assert: the TLE's Earth and TEME, those of every sample
         Assert.Same(solution.StateVectors[0].Observer, solution.Observer);
-        Assert.Equal(PlanetsAndMoons.EARTH.NaifId, ((CelestialItem)solution.Observer).NaifId);
+        Assert.Equal(PlanetsAndMoons.Earth.NaifId, ((CelestialItem)solution.Observer).NaifId);
         Assert.Equal(Frames.Frame.TEME, solution.Frame);
 
         // At each sample, SGP4 itself, bit for bit, in TEME about the Earth
@@ -120,7 +120,7 @@ public class SolutionWindowTests
                 ? new VVIntegratorOptions { Step = TimeSpan.FromSeconds(10.0) }
                 : new RK78IntegratorOptions { AbsoluteTolerance = 1e-10, RelativeTolerance = 1e-10 },
             OutputStep = Step,
-            ThirdBodies = orbit == "SSB" ? [Stars.SUN_BODY, Earth] : [Earth],
+            ThirdBodies = orbit == "SSB" ? [Stars.SunBody, Earth] : [Earth],
             CovariancePropagation = CovariancePropagationOptions.None
         };
         var epoch = window.StartDate.ToTdb();
@@ -129,8 +129,8 @@ public class SolutionWindowTests
         {
             case "SSB":
                 var heliocentric = new StateVector(new Vector3(1.5e11, 0.0, 0.0), new Vector3(0.0, 29780.0, 1000.0),
-                    Stars.SUN_BODY, epoch, Frames.Frame.ICRF);
-                spacecraft = NewSpacecraft(heliocentric.RelativeTo(Barycenters.SOLAR_SYSTEM_BARYCENTER, Aberration.None)
+                    Stars.SunBody, epoch, Frames.Frame.ICRF);
+                spacecraft = NewSpacecraft(heliocentric.RelativeTo(Barycenters.SolarSystemBarycenter, Aberration.None)
                     .ToStateVector());
                 break;
             case "ECLIPJ2000":

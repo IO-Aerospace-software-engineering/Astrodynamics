@@ -30,7 +30,7 @@ public class EquinoctialElementsTests
     [Fact]
     public void TheStateOfTheTutorialGivesTheClosedForm()
     {
-        var earth = PlanetsAndMoons.EARTH_BODY;
+        var earth = PlanetsAndMoons.EarthBody;
         Assert.Equal(398600435507022.6, earth.GM);
         var sv = new StateVector(new Vector3(6800000.0, 0.0, 0.0), new Vector3(0.0, 8000.0, 0.0), earth, new TimeSystem.Time(2024, 6, 21, 12, 0, 0, TimeScale.TDB),
             Frames.Frame.ICRF);
@@ -57,7 +57,7 @@ public class EquinoctialElementsTests
     [Fact]
     public void TheModifiedSetIsTheClassicalSetOfGmatUnderItsNames()
     {
-        var earth = PlanetsAndMoons.EARTH_BODY;
+        var earth = PlanetsAndMoons.EarthBody;
         var sv = new StateVector(new Vector3(-4000000.0, 5500000.0, 2500000.0), new Vector3(-5500.0, -3000.0, 4000.0), earth,
             new TimeSystem.Time(2024, 6, 21, 12, 0, 0, TimeScale.TDB), Frames.Frame.ICRF);
 
@@ -90,7 +90,7 @@ public class EquinoctialElementsTests
     [InlineData(1e-9, 1080604389.990800568946039, 1682941624.26767132032076)]
     public void NearTheRetrogradeEquatorialOrbitHAndKGrowAsTheTangentOfHalfTheInclination(double delta, double expectedH, double expectedK)
     {
-        var earth = PlanetsAndMoons.EARTH_BODY;
+        var earth = PlanetsAndMoons.EarthBody;
         var ke = new KeplerianElements(7500000.0, 0.05, System.Math.PI - delta, 1.0, 0.5, 2.0, earth, new TimeSystem.Time(2024, 6, 21, 12, 0, 0, TimeScale.TDB),
             Frames.Frame.ICRF);
 
@@ -111,7 +111,7 @@ public class EquinoctialElementsTests
     [Fact]
     public void Create()
     {
-        CelestialBody earth = PlanetsAndMoons.EARTH_BODY;
+        CelestialBody earth = PlanetsAndMoons.EarthBody;
         var epoch = new TimeSystem.Time(DateTime.UtcNow, TimeScale.UTC);
         EquinoctialElements equ = new EquinoctialElements(1.0, 2.0, 3.0, 4.0, 5.0, 6.0, earth, epoch, Frames.Frame.ICRF);
         Assert.Equal(1.0, equ.P);
@@ -128,7 +128,7 @@ public class EquinoctialElementsTests
     [Fact]
     public void ToEquinoctial()
     {
-        CelestialBody earth = PlanetsAndMoons.EARTH_BODY;
+        CelestialBody earth = PlanetsAndMoons.EarthBody;
         KeplerianElements ke = new KeplerianElements(6800.81178582, 0.00134, 51.71 * IO.Astrodynamics.Constants.Deg2Rad, 32.57 * IO.Astrodynamics.Constants.Deg2Rad,
             105.64 * IO.Astrodynamics.Constants.Deg2Rad, 46.029 * IO.Astrodynamics.Constants.Deg2Rad, earth, new TimeSystem.Time(DateTime.UtcNow, TimeScale.UTC),
             Frames.Frame.ICRF);
@@ -144,7 +144,7 @@ public class EquinoctialElementsTests
     [Fact]
     public void Equality()
     {
-        CelestialBody earth = PlanetsAndMoons.EARTH_BODY;
+        CelestialBody earth = PlanetsAndMoons.EarthBody;
         KeplerianElements ke = new KeplerianElements(6800.81178582, 0.00134, 51.71 * IO.Astrodynamics.Constants.Deg2Rad, 32.57 * IO.Astrodynamics.Constants.Deg2Rad,
             105.64 * IO.Astrodynamics.Constants.Deg2Rad, 46.029 * IO.Astrodynamics.Constants.Deg2Rad, earth, new TimeSystem.Time(DateTime.UtcNow, TimeScale.UTC),
             Frames.Frame.ICRF);

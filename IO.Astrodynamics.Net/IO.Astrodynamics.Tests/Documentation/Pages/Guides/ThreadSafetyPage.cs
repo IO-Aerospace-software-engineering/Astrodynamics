@@ -66,7 +66,7 @@ internal static class ThreadSafetyPage
         #region docs/guides/thread-safety.md:1
         // Inputs: taskCount (int), orbit (StateVector), window (Window)
         // One Earth with geopotential, shared by every task
-        var earth = new CelestialBody(PlanetsAndMoons.EARTH,
+        var earth = new CelestialBody(PlanetsAndMoons.Earth,
             new GeopotentialModelParameters("Data/SolarSystem/EGM2008_to70_TideFree", 10));
         var options = new PropagationOptions
         {
@@ -74,7 +74,7 @@ internal static class ThreadSafetyPage
             {
                 AbsoluteTolerance = 1e-10, RelativeTolerance = 1e-10, InitialStep = TimeSpan.FromSeconds(30.0)
             },
-            ThirdBodies = new CelestialItem[] { Stars.SUN_BODY, PlanetsAndMoons.MOON_BODY }
+            ThirdBodies = new CelestialItem[] { Stars.SunBody, PlanetsAndMoons.MoonBody }
         };
 
         var tasks = new List<PropagationTask>();
@@ -108,7 +108,7 @@ internal static class ThreadSafetyPage
                 {
                     AbsoluteTolerance = 1e-10, RelativeTolerance = 1e-10, InitialStep = TimeSpan.FromSeconds(30.0)
                 },
-                ThirdBodies = new CelestialItem[] { Stars.SUN_BODY, PlanetsAndMoons.MOON_BODY }
+                ThirdBodies = new CelestialItem[] { Stars.SunBody, PlanetsAndMoons.MoonBody }
             }
         };
         #endregion

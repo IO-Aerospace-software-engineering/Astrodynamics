@@ -66,7 +66,7 @@ internal static class DeveloperGuideExamples
         SpiceApi.Instance.LoadKernels(new DirectoryInfo("Data/SolarSystem"));
 
         // Create celestial bodies
-        var earth = PlanetsAndMoons.EARTH_BODY;
+        var earth = PlanetsAndMoons.EarthBody;
         var sun = new CelestialBody(Stars.Sun);
 
         // Define epoch
@@ -84,7 +84,7 @@ internal static class DeveloperGuideExamples
     internal static void Block03()
     {
         #region guide:3
-        var earth = PlanetsAndMoons.EARTH_BODY;
+        var earth = PlanetsAndMoons.EarthBody;
         var epoch = new Time(2024, 1, 1, 0, 0, 0, TimeScale.TDB);
 
         // Create from Keplerian elements
@@ -186,8 +186,8 @@ internal static class DeveloperGuideExamples
     {
         #region guide:9
         // Use predefined bodies
-        var earth = PlanetsAndMoons.EARTH_BODY;
-        var moon = new CelestialBody(PlanetsAndMoons.MOON);
+        var earth = PlanetsAndMoons.EarthBody;
+        var moon = new CelestialBody(PlanetsAndMoons.Moon);
         var sun = new CelestialBody(Stars.Sun);
 
         // Get ephemeris
@@ -208,7 +208,7 @@ internal static class DeveloperGuideExamples
     internal static void Block10()
     {
         #region guide:10
-        var earth = PlanetsAndMoons.EARTH_BODY;
+        var earth = PlanetsAndMoons.EarthBody;
         var epoch = new Time(2024, 1, 1, TimeScale.TDB);
 
         // Create state vector
@@ -236,7 +236,7 @@ internal static class DeveloperGuideExamples
     internal static void Block11()
     {
         #region guide:11
-        var earth = PlanetsAndMoons.EARTH_BODY;
+        var earth = PlanetsAndMoons.EarthBody;
         var epoch = new Time(2024, 1, 1, TimeScale.TDB);
 
         // Create osculating Keplerian elements (ISS-like orbit)
@@ -277,7 +277,7 @@ internal static class DeveloperGuideExamples
         #region guide:12
         var sv = new StateVector(
             new Vector3(6800000.0, 0.0, 0.0), new Vector3(0.0, 7656.2, 1000.0),
-            PlanetsAndMoons.EARTH_BODY, new Time(2024, 1, 1, TimeScale.TDB), Frame.ICRF);
+            PlanetsAndMoons.EarthBody, new Time(2024, 1, 1, TimeScale.TDB), Frame.ICRF);
         var equinoctial = sv.ToEquinoctial();
 
         // Access equinoctial components
@@ -319,7 +319,7 @@ internal static class DeveloperGuideExamples
         var epoch = new Time(2024, 1, 1, TimeScale.TDB);
         var state = new StateVector(
             new Vector3(6800000.0, 0.0, 0.0), new Vector3(0.0, 5413.8, 5413.8),
-            PlanetsAndMoons.EARTH_BODY, epoch, Frame.ICRF);
+            PlanetsAndMoons.EarthBody, epoch, Frame.ICRF);
         var newTle = state.ToTle("MY_SAT", 99999, "24001A");
 
         // NORAD catalog numbers above 99999 use the Alpha-5 convention (up to 339999)
@@ -487,7 +487,7 @@ internal static class DeveloperGuideExamples
         Console.WriteLine($"Position: {opm.Data.StateVector.X}, {opm.Data.StateVector.Y}, {opm.Data.StateVector.Z} km");
 
         // Convert to framework StateVector
-        var earth = new CelestialBody(PlanetsAndMoons.EARTH);
+        var earth = new CelestialBody(PlanetsAndMoons.Earth);
         var stateVector = opm.ToStateVector(earth);  // Units: m, m/s
 
         // Convert to Spacecraft for mission operations
@@ -647,7 +647,7 @@ internal static class DeveloperGuideExamples
 
         // Transform state vector
         var svICRF = new StateVector(new Vector3(6800000.0, 0.0, 0.0), new Vector3(0.0, 7656.2, 0.0),
-            PlanetsAndMoons.EARTH_BODY, Time.J2000Tdb, icrf);
+            PlanetsAndMoons.EarthBody, Time.J2000Tdb, icrf);
         var svEcliptic = svICRF.ToFrame(ecliptic);
 
         // Get frame transformation
@@ -659,7 +659,7 @@ internal static class DeveloperGuideExamples
     internal static void Block26()
     {
         #region guide:26
-        var earth = PlanetsAndMoons.EARTH_BODY;
+        var earth = PlanetsAndMoons.EarthBody;
 
         // Create site from SPICE data (DSS-13 Goldstone)
         var goldstone = new Site(13, "DSS-13", earth);
@@ -674,7 +674,7 @@ internal static class DeveloperGuideExamples
 
         // Get horizontal coordinates to Moon
         var epoch = new Time(2024, 1, 1, 12, 0, 0, TimeScale.TDB);
-        var moon = new CelestialBody(PlanetsAndMoons.MOON);
+        var moon = new CelestialBody(PlanetsAndMoons.Moon);
         var horizontal = mySite.GetHorizontalCoordinates(epoch, moon, Aberration.LT);
 
         Console.WriteLine($"Azimuth: {horizontal.Azimuth * Constants.Rad2Deg:F2}°");
@@ -694,7 +694,7 @@ internal static class DeveloperGuideExamples
     internal static void Block27()
     {
         #region guide:27
-        var earth = PlanetsAndMoons.EARTH_BODY;
+        var earth = PlanetsAndMoons.EarthBody;
         var launchSite = new LaunchSite(100, "MyLaunchSite", earth,
             new Planetodetic(-81.0 * Constants.Deg2Rad, 28.5 * Constants.Deg2Rad, 0.0),
             new AzimuthRange(45 * Constants.Deg2Rad, 135 * Constants.Deg2Rad));
@@ -722,9 +722,9 @@ internal static class DeveloperGuideExamples
     {
         #region guide:29
         // Get equatorial coordinates
-        var earth = PlanetsAndMoons.EARTH_BODY;
+        var earth = PlanetsAndMoons.EarthBody;
         var epoch = new Time(2024, 1, 1, 12, 0, 0, TimeScale.TDB);
-        var moon = new CelestialBody(PlanetsAndMoons.MOON);
+        var moon = new CelestialBody(PlanetsAndMoons.Moon);
         var sv = moon.GetEphemeris(epoch, earth, Frame.ICRF, Aberration.None);
         var eq = sv.ToEquatorial();
 
@@ -737,7 +737,7 @@ internal static class DeveloperGuideExamples
     internal static (Spacecraft Spacecraft, PropagationSolution Solution, KeplerianElements Orbit, Time Epoch) Block30()
     {
         #region guide:30
-        var earth = PlanetsAndMoons.EARTH_BODY;
+        var earth = PlanetsAndMoons.EarthBody;
         var epoch = new Time(2024, 1, 1, TimeScale.TDB);
 
         // Define initial orbit
@@ -820,7 +820,7 @@ internal static class DeveloperGuideExamples
     internal static void Block32()
     {
         #region guide:32
-        var earth = PlanetsAndMoons.EARTH_BODY;
+        var earth = PlanetsAndMoons.EarthBody;
         var epoch = new Time(2024, 1, 1, TimeScale.TDB);
 
         // Define departure and arrival states: a LEO, and a point of a higher circular orbit 45 minutes later
@@ -848,7 +848,7 @@ internal static class DeveloperGuideExamples
         var clock = new Clock("Clock", 256);
 
         // Create Earth with degree-10 EGM2008 geopotential
-        var earth = new CelestialBody(PlanetsAndMoons.EARTH, Frame.ICRF, epoch,
+        var earth = new CelestialBody(PlanetsAndMoons.Earth, Frame.ICRF, epoch,
             new GeopotentialModelParameters("Data/SolarSystem/EGM2008_to70_TideFree", 10));
 
         // Initial state in ICRF
@@ -867,7 +867,7 @@ internal static class DeveloperGuideExamples
             {
                 Integrator = new VVIntegratorOptions { Step = TimeSpan.FromSeconds(1.0) },
                 OutputStep = TimeSpan.FromSeconds(1.0),
-                ThirdBodies = [PlanetsAndMoons.MOON_BODY, Stars.SUN_BODY]
+                ThirdBodies = [PlanetsAndMoons.MoonBody, Stars.SunBody]
             });
         var solution = propagator.Propagate();
 
@@ -883,15 +883,15 @@ internal static class DeveloperGuideExamples
         var epoch = new Time(2024, 1, 1, TimeScale.TDB);
 
         // Degree-10 geopotential (good balance of accuracy and speed)
-        var earth = new CelestialBody(PlanetsAndMoons.EARTH, Frame.ICRF, epoch,
+        var earth = new CelestialBody(PlanetsAndMoons.Earth, Frame.ICRF, epoch,
             new GeopotentialModelParameters("Data/SolarSystem/EGM2008_to70_TideFree", 10));
 
         // Degree-2 (J2-only) for quick analysis
-        var earthJ2 = new CelestialBody(PlanetsAndMoons.EARTH, Frame.ICRF, epoch,
+        var earthJ2 = new CelestialBody(PlanetsAndMoons.Earth, Frame.ICRF, epoch,
             new GeopotentialModelParameters("Data/SolarSystem/EGM2008_to70_TideFree", 2));
 
         // Point-mass only (no geopotential)
-        var earthPointMass = new CelestialBody(PlanetsAndMoons.EARTH);
+        var earthPointMass = new CelestialBody(PlanetsAndMoons.Earth);
         #endregion
     }
 
@@ -961,9 +961,9 @@ internal static class DeveloperGuideExamples
     internal static void Block38()
     {
         #region guide:38
-        var earth = PlanetsAndMoons.EARTH_BODY;
+        var earth = PlanetsAndMoons.EarthBody;
 
-        // Simple: altitude-only; EARTH_BODY has no model, so NaN, 0 and 0 (give the body an EarthStandardAtmosphere for US 1976)
+        // Simple: altitude-only; EarthBody has no model, so NaN, 0 and 0 (give the body an EarthStandardAtmosphere for US 1976)
         var atm1 = earth.GetAtmosphere(10000);  // 10 km altitude
 
         // Full context: NRLMSISE-00 at nominal space weather for an Earth without a model
@@ -1058,7 +1058,7 @@ internal static class DeveloperGuideExamples
         var tai = utc.ToTai();
 
         // Use TDB for dynamical calculations
-        var earth = PlanetsAndMoons.EARTH_BODY;
+        var earth = PlanetsAndMoons.EarthBody;
         var sun = new CelestialBody(Stars.Sun);
         var state = earth.GetEphemeris(utc.ToTdb(), sun, Frame.ICRF, Aberration.None);
         #endregion
@@ -1070,7 +1070,7 @@ internal static class DeveloperGuideExamples
         #region guide:44
         // ICRF/J2000: Inertial frame for most calculations
         var sv = new StateVector(new Vector3(6800000.0, 0.0, 0.0), new Vector3(0.0, 7656.2, 0.0),
-            PlanetsAndMoons.EARTH_BODY, new Time(2024, 1, 1, TimeScale.TDB), Frame.ICRF);
+            PlanetsAndMoons.EarthBody, new Time(2024, 1, 1, TimeScale.TDB), Frame.ICRF);
 
         // Body-fixed frames for surface operations
         var earthFrame = new Frame("IAU_EARTH");
@@ -1127,8 +1127,8 @@ internal static class DeveloperGuideExamples
         var scenario = new Scenario("Phase1", mission, new Window(start, end));
 
         // Add celestial bodies to the scenario
-        var earth = PlanetsAndMoons.EARTH_BODY;
-        var moon = new CelestialBody(PlanetsAndMoons.MOON);
+        var earth = PlanetsAndMoons.EarthBody;
+        var moon = new CelestialBody(PlanetsAndMoons.Moon);
         var sun = new CelestialBody(Stars.Sun);
 
         scenario.AddCelestialItem(earth);
@@ -1147,7 +1147,7 @@ internal static class DeveloperGuideExamples
     internal static async Task Block47()
     {
         #region guide:47
-        var earth = PlanetsAndMoons.EARTH_BODY;
+        var earth = PlanetsAndMoons.EarthBody;
         var start = new Time(2024, 3, 1, TimeScale.TDB);
         var end = start.AddHours(12);
 
@@ -1233,8 +1233,8 @@ internal static class DeveloperGuideExamples
     internal static void Block48()
     {
         #region guide:48
-        var earth = PlanetsAndMoons.EARTH_BODY;
-        var moon = new CelestialBody(PlanetsAndMoons.MOON);
+        var earth = PlanetsAndMoons.EarthBody;
+        var moon = new CelestialBody(PlanetsAndMoons.Moon);
 
         // Define departure state (LEO)
         var departureEpoch = Time.J2000Tdb;
@@ -1283,7 +1283,7 @@ internal static class DeveloperGuideExamples
     internal static void Block49()
     {
         #region guide:49
-        var earth = PlanetsAndMoons.EARTH_BODY;
+        var earth = PlanetsAndMoons.EarthBody;
         var searchStart = new Time(2024, 6, 2, TimeScale.TDB);
 
         // Create launch site (Kennedy Space Center)
@@ -1337,8 +1337,8 @@ internal static class DeveloperGuideExamples
     internal static void Block50()
     {
         #region guide:50
-        var earth = PlanetsAndMoons.EARTH_BODY;
-        var moon = new CelestialBody(PlanetsAndMoons.MOON);
+        var earth = PlanetsAndMoons.EarthBody;
+        var moon = new CelestialBody(PlanetsAndMoons.Moon);
         var sun = new CelestialBody(Stars.Sun);
 
         // Search window: year 2024
@@ -1383,7 +1383,7 @@ internal static class DeveloperGuideExamples
     internal static async Task Block51()
     {
         #region guide:51
-        var earth = PlanetsAndMoons.EARTH_BODY;
+        var earth = PlanetsAndMoons.EarthBody;
         var start = new Time(2024, 6, 10, TimeScale.TDB);
         var end = start.AddHours(2);
 
@@ -1480,7 +1480,7 @@ internal static class DeveloperGuideExamples
     internal static void Block53()
     {
         #region guide:53
-        var earth = PlanetsAndMoons.EARTH_BODY;
+        var earth = PlanetsAndMoons.EarthBody;
 
         // Parse ISS TLE
         var issTLE = new Tle(
@@ -1529,18 +1529,18 @@ internal static class DeveloperGuideExamples
     internal static async Task<(Spacecraft Spacecraft, StateVector MoonState, Time Start, Time End)> Block54()
     {
         #region guide:54
-        var moon = new CelestialBody(PlanetsAndMoons.MOON, Frame.ICRF, Time.J2000Tdb);
+        var moon = new CelestialBody(PlanetsAndMoons.Moon, Frame.ICRF, Time.J2000Tdb);
         var sun = new CelestialBody(Stars.Sun);
 
         // The Moon moves about the Earth under the attraction of both masses, so the Earth's central term is GM_Earth + GM_Moon:
         // a field of degree 0 with the GM of the model is a point mass of that GM. With the Earth's GM alone, a massless probe
         // started at the Moon's state would end about 54 310 km from the Moon after 25 days
-        double gmEarthMoon = PlanetsAndMoons.EARTH_BODY.GM + moon.GM;
+        double gmEarthMoon = PlanetsAndMoons.EarthBody.GM + moon.GM;
         var earthMoonField = new GeopotentialModelParameters("Data/SolarSystem/EGM2008_to70_TideFree", 0, gmEarthMoon, 6378136.3)
         {
             CentralTerm = GeopotentialCentralTerm.ModelGravitationalParameter
         };
-        var earth = new CelestialBody(PlanetsAndMoons.EARTH, Frame.ICRF, Time.J2000Tdb, earthMoonField);
+        var earth = new CelestialBody(PlanetsAndMoons.Earth, Frame.ICRF, Time.J2000Tdb, earthMoonField);
 
         var start = Time.J2000Tdb;
         var end = start.AddDays(25);
@@ -1591,7 +1591,7 @@ internal static class DeveloperGuideExamples
         var epoch = new Time(2025, 8, 25, 11, 55, 44, TimeScale.UTC);
 
         // Earth with degree-10 EGM2008 geopotential
-        var earth = new CelestialBody(PlanetsAndMoons.EARTH, Frame.ICRF, epoch,
+        var earth = new CelestialBody(PlanetsAndMoons.Earth, Frame.ICRF, epoch,
             new GeopotentialModelParameters("Data/SolarSystem/EGM2008_to70_TideFree", 10));
 
         // LEO orbit (~400 km altitude)
@@ -1610,7 +1610,7 @@ internal static class DeveloperGuideExamples
             {
                 Integrator = new VVIntegratorOptions { Step = TimeSpan.FromSeconds(1.0) },
                 OutputStep = TimeSpan.FromSeconds(1.0),
-                ThirdBodies = [PlanetsAndMoons.MOON_BODY, Stars.SUN_BODY]
+                ThirdBodies = [PlanetsAndMoons.MoonBody, Stars.SunBody]
             });
 
         var solution = propagator.Propagate();
@@ -1627,7 +1627,7 @@ internal static class DeveloperGuideExamples
     internal static async Task Block56()
     {
         #region guide:56
-        var earth = PlanetsAndMoons.EARTH_BODY;
+        var earth = PlanetsAndMoons.EarthBody;
         var start = new Time(2024, 1, 1, TimeScale.TDB);
         var end = start.AddDays(1);
 
@@ -1686,7 +1686,7 @@ internal static class DeveloperGuideExamples
     internal static async Task Block57()
     {
         #region guide:57
-        var earth = PlanetsAndMoons.EARTH_BODY;
+        var earth = PlanetsAndMoons.EarthBody;
         var sun = new CelestialBody(Stars.Sun);
         var start = new Time(2024, 6, 21, 12, 0, 0, TimeScale.TDB);
         var end = start.AddHours(2);

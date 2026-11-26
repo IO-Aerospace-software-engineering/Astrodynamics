@@ -9,7 +9,7 @@ Ground-based observation or tracking site.
 | Constructor | Description |
 |-------------|-------------|
 | `Site(int id, string name, CelestialBody body)` | Create from SPICE data |
-| `Site(NaifObject station, CelestialBody body)` | Create from SPICE data, the identifier and name of a catalogue entry (`new Site(GroundStations.DSS_13, earth)`, the site 13); a station that is not a site of the body throws `ArgumentException` (11.0.0) |
+| `Site(NaifObject station, CelestialBody body)` | Create from SPICE data, the identifier and name of a catalogue entry (`new Site(GroundStations.Dss13, earth)`, the site 13); a station that is not a site of the body throws `ArgumentException` (11.0.0) |
 | `Site(int id, string name, CelestialBody body, Planetodetic coordinates)` | Create with explicit coordinates |
 
 ### Properties

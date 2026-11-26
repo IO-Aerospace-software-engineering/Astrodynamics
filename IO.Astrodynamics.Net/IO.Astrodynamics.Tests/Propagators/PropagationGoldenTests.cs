@@ -173,10 +173,10 @@ public class PropagationGoldenTests
     private static PropagationSolution PropagateLeoWithDragAndSrp(VariationalOptions options)
     {
         // 400 km, 51.6 deg, EGM2008 10x10, NRLMSISE-00 (nominal space weather), Moon, drag and SRP, 3 h.
-        var earth = new CelestialBody(PlanetsAndMoons.EARTH, Frames.Frame.ICRF, Start,
+        var earth = new CelestialBody(PlanetsAndMoons.Earth, Frames.Frame.ICRF, Start,
             new GeopotentialModelParameters("Data/SolarSystem/EGM2008_to70_TideFree", 10),
             new Nrlmsise00Model(SpaceWeather.Nominal));
-        var moon = new CelestialBody(PlanetsAndMoons.MOON, Frames.Frame.ICRF, Start);
+        var moon = new CelestialBody(PlanetsAndMoons.Moon, Frames.Frame.ICRF, Start);
         var orbit = new StateVector(new Vector3(6778137.0, 0.0, 0.0), new Vector3(0.0, 4751.0, 5993.0), earth, Start,
             Frames.Frame.ICRF);
         var spacecraft = new Spacecraft(-1951, "GOLDEN1", 100.0, orbit, 1000.0, new Clock("golden1", 65536), 10.0, 2.2,
@@ -190,9 +190,9 @@ public class PropagationGoldenTests
     private static PropagationSolution PropagateGeo(VariationalOptions options)
     {
         // GEO, EGM2008 10x10, Moon and Sun, 1 day.
-        var earth = new CelestialBody(PlanetsAndMoons.EARTH, Frames.Frame.ICRF, Start,
+        var earth = new CelestialBody(PlanetsAndMoons.Earth, Frames.Frame.ICRF, Start,
             new GeopotentialModelParameters("Data/SolarSystem/EGM2008_to70_TideFree", 10));
-        var moon = new CelestialBody(PlanetsAndMoons.MOON, Frames.Frame.ICRF, Start);
+        var moon = new CelestialBody(PlanetsAndMoons.Moon, Frames.Frame.ICRF, Start);
         var sun = new CelestialBody(Stars.Sun);
         var orbit = new StateVector(new Vector3(42164137.0, 0.0, 0.0), new Vector3(0.0, 3074.66, 10.0), earth, Start,
             Frames.Frame.ICRF);
@@ -207,9 +207,9 @@ public class PropagationGoldenTests
     {
         // 400 x 1000 km LEO starting at apogee, EGM2008 10x10, Moon and Sun, apogee raised to 2000 km at the first
         // perigee (about 50 min later), 4 h.
-        var earth = new CelestialBody(PlanetsAndMoons.EARTH, Frames.Frame.ICRF, Start,
+        var earth = new CelestialBody(PlanetsAndMoons.Earth, Frames.Frame.ICRF, Start,
             new GeopotentialModelParameters("Data/SolarSystem/EGM2008_to70_TideFree", 10));
-        var moon = new CelestialBody(PlanetsAndMoons.MOON, Frames.Frame.ICRF, Start);
+        var moon = new CelestialBody(PlanetsAndMoons.Moon, Frames.Frame.ICRF, Start);
         var sun = new CelestialBody(Stars.Sun);
         var orbit = new StateVector(new Vector3(-7378137.0, 0.0, 0.0), new Vector3(0.0, -5509.9, -4623.4), earth, Start,
             Frames.Frame.ICRF);

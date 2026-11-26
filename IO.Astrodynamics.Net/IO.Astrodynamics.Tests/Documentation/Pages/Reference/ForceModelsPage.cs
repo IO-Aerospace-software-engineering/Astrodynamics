@@ -66,7 +66,7 @@ internal static class ForceModelsPage
         #region docs/reference/force-models.md:1
         // Inputs: epoch (Time)
         // A model other than EGM2008, in the same file format, with its own constants
-        var mars = new CelestialBody(PlanetsAndMoons.MARS, Frame.ICRF, epoch,
+        var mars = new CelestialBody(PlanetsAndMoons.Mars, Frame.ICRF, epoch,
             new GeopotentialModelParameters("mars_model", 20, 4.282837362069909e13, 3396000.0));
         #endregion
     }
@@ -77,7 +77,7 @@ internal static class ForceModelsPage
         #region docs/reference/force-models.md:2
         // Inputs: epoch (Time)
         // EGM2008 with its own GM in the central term too, as GMAT evaluates EGM2008 from a .cof header
-        var earth = new CelestialBody(PlanetsAndMoons.EARTH, Frame.ICRF, epoch,
+        var earth = new CelestialBody(PlanetsAndMoons.Earth, Frame.ICRF, epoch,
             new GeopotentialModelParameters("Data/SolarSystem/EGM2008_to70_TideFree", 10)
             {
                 CentralTerm = GeopotentialCentralTerm.ModelGravitationalParameter
@@ -89,7 +89,7 @@ internal static class ForceModelsPage
     internal static void Block03()
     {
         #region docs/reference/force-models.md:3
-        var earth = new CelestialBody(PlanetsAndMoons.EARTH,
+        var earth = new CelestialBody(PlanetsAndMoons.Earth,
             new GeopotentialModelParameters("Data/SolarSystem/EGM2008_to70_TideFree", 10),
             albedo: 0.306, thermalEffectiveTemperature: 254.0, thermalEmissivity: 0.95);
         #endregion

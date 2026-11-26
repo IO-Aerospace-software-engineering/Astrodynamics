@@ -135,7 +135,7 @@ public partial class ConjunctionAssessmentTests
         var tle = InputRuleTle;
         var protectedCraft = new Spacecraft(NextInputRuleId(), "SGP4", 120.0, tle, 150.0,
             new Clock("sgp4" + -_inputRuleIds, 256), hardBodyRadius: ProtectedHardBodyRadius);
-        var moon = new CelestialBody(PlanetsAndMoons.MOON);
+        var moon = new CelestialBody(PlanetsAndMoons.Moon);
         var window = new Window(tle.Epoch, tle.Epoch.AddMinutes(10.0));
 
         // Act

@@ -31,8 +31,8 @@ public class WindowSearchAngleGuardTests
         TestKernels.EnsureSolarSystem();
     }
 
-    private static CelestialBody Earth => new(PlanetsAndMoons.EARTH);
-    private static CelestialBody Moon => new(PlanetsAndMoons.MOON);
+    private static CelestialBody Earth => new(PlanetsAndMoons.Earth);
+    private static CelestialBody Moon => new(PlanetsAndMoons.Moon);
     private static Site SiteFromCoordinates => new(99, "GUARDSITE", Earth, new Planetodetic(-116.79 * IO.Astrodynamics.Constants.Deg2Rad, 35.25 * IO.Astrodynamics.Constants.Deg2Rad, 1000.0));
 
     public static TheoryData<CoordinateSystem, Coordinate, double> OutOfRange => new()

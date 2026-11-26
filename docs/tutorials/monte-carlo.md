@@ -54,7 +54,7 @@ var config = new MonteCarloConfiguration
             AbsoluteTolerance = 1e-10, RelativeTolerance = 1e-10, InitialStep = TimeSpan.FromSeconds(30.0)
         },
         OutputStep = TimeSpan.FromSeconds(60),
-        ThirdBodies = new CelestialItem[] { Stars.SUN_BODY, PlanetsAndMoons.MOON_BODY }
+        ThirdBodies = new CelestialItem[] { Stars.SunBody, PlanetsAndMoons.MoonBody }
     }
 };
 ```

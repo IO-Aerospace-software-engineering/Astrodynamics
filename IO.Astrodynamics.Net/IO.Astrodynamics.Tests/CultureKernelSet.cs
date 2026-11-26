@@ -42,7 +42,7 @@ internal static class CultureKernelSet
     internal static (Spacecraft Spacecraft, Site Site) Build(int spacecraftId, string spacecraftName, string[] instrumentNames,
         int siteId, string siteName)
     {
-        var earth = new CelestialBody(PlanetsAndMoons.EARTH, Frames.Frame.ICRF, TimeSystem.Time.J2000Tdb);
+        var earth = new CelestialBody(PlanetsAndMoons.Earth, Frames.Frame.ICRF, TimeSystem.Time.J2000Tdb);
         var spacecraft = new Spacecraft(spacecraftId, spacecraftName, 1000.0,
             new KeplerianElements(6800000.0, 0.0, 0.5, 0.0, 0.0, 0.0, earth, TimeSystem.Time.J2000Tdb, Frames.Frame.ICRF), 2000.0,
             new Clock(spacecraftName + "_clock", 256));
@@ -69,7 +69,7 @@ internal static class CultureKernelSet
         scenario.AddCelestialItem((CelestialBody)spacecraft.InitialOrbitalParameters.Observer);
         scenario.AddSpacecraft(spacecraft);
         scenario.AddSite(site);
-        var jupiter = new CelestialBody(PlanetsAndMoons.JUPITER, Frames.Frame.ICRF, TimeSystem.Time.J2000Tdb);
+        var jupiter = new CelestialBody(PlanetsAndMoons.Jupiter, Frames.Frame.ICRF, TimeSystem.Time.J2000Tdb);
         scenario.AddSite(new Site(site.Id, site.Name + "_J", jupiter, new Planetodetic(1.0, 0.2, 0.0)));
         scenario.Simulate(new PropagationOptions
         {

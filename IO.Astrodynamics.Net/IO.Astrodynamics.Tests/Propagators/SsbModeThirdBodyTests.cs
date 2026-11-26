@@ -44,7 +44,7 @@ public class SsbModeThirdBodyTests
         var earth = new CelestialBody(399);
         var geocentric = new KeplerianElements(6778137.0, 0.001, 51.6 * IO.Astrodynamics.Constants.Deg2Rad, 0.3, 0.7,
             1.1, earth, Start, Frames.Frame.ICRF).ToStateVector();
-        var ssb = geocentric.RelativeTo(Barycenters.SOLAR_SYSTEM_BARYCENTER, Aberration.None).ToStateVector();
+        var ssb = geocentric.RelativeTo(Barycenters.SolarSystemBarycenter, Aberration.None).ToStateVector();
         return frame == Frames.Frame.ICRF ? ssb : ssb.ToFrame(frame).ToStateVector();
     }
 
@@ -55,7 +55,7 @@ public class SsbModeThirdBodyTests
     private static IO.Astrodynamics.Math.Vector3 FinalPosition(PropagationSolution solution, Frames.Frame frame)
     {
         var (position, velocity) = solution.InterpolateAt(Window.EndDate);
-        var state = new StateVector(position, velocity, Stars.SUN_BODY, Window.EndDate, frame);
+        var state = new StateVector(position, velocity, Stars.SunBody, Window.EndDate, frame);
         return frame == Frames.Frame.ICRF ? position : state.ToFrame(Frames.Frame.ICRF).ToStateVector().Position;
     }
 

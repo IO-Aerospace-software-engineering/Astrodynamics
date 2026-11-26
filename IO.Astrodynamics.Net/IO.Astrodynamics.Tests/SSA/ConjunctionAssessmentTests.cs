@@ -35,7 +35,7 @@ public partial class ConjunctionAssessmentTests
     {
         // Verify each detected TCA has range-rate ≈ 0 and is a local distance minimum
         var earth = CreateEarth();
-        var moon = new CelestialBody(PlanetsAndMoons.MOON, Frames.Frame.ICRF, TimeSystem.Time.J2000Tdb);
+        var moon = new CelestialBody(PlanetsAndMoons.Moon, Frames.Frame.ICRF, TimeSystem.Time.J2000Tdb);
         var sun = new CelestialBody(Stars.Sun, Frames.Frame.ICRF, TimeSystem.Time.J2000Tdb);
 
         var window = new Window(TimeSystem.Time.J2000Tdb, TimeSystem.Time.J2000Tdb.AddDays(60));
@@ -299,7 +299,7 @@ public partial class ConjunctionAssessmentTests
     public void AnalyzeAll_MoonSun_ReturnsMultipleEncountersWithDistinctEpochs()
     {
         var earth = CreateEarth();
-        var moon = new CelestialBody(PlanetsAndMoons.MOON, Frames.Frame.ICRF, TimeSystem.Time.J2000Tdb);
+        var moon = new CelestialBody(PlanetsAndMoons.Moon, Frames.Frame.ICRF, TimeSystem.Time.J2000Tdb);
         var sun = new CelestialBody(Stars.Sun, Frames.Frame.ICRF, TimeSystem.Time.J2000Tdb);
         var protectedCraft = CreateSpacecraftFromBody(moon, -5501, "MOON_SC", 1737400.0);
         var window = new Window(TimeSystem.Time.J2000Tdb, TimeSystem.Time.J2000Tdb.AddDays(60));
@@ -754,7 +754,7 @@ public partial class ConjunctionAssessmentTests
         // using the same objects at the reported TCA epoch
         var earth = CreateEarth();
         var sun = new CelestialBody(Stars.Sun, Frames.Frame.ICRF, TimeSystem.Time.J2000Tdb);
-        var moon = new CelestialBody(PlanetsAndMoons.MOON, Frames.Frame.ICRF, TimeSystem.Time.J2000Tdb);
+        var moon = new CelestialBody(PlanetsAndMoons.Moon, Frames.Frame.ICRF, TimeSystem.Time.J2000Tdb);
 
         var moonSc = CreateSpacecraftFromBody(moon, -5601, "MOON_SC", 1737400.0);
         var window = new Window(TimeSystem.Time.J2000Tdb, TimeSystem.Time.J2000Tdb.AddDays(30));
@@ -2263,7 +2263,7 @@ public partial class ConjunctionAssessmentTests
 
     private static CelestialBody CreateEarth()
     {
-        return new CelestialBody(PlanetsAndMoons.EARTH, Frames.Frame.ICRF, TimeSystem.Time.J2000Tdb);
+        return new CelestialBody(PlanetsAndMoons.Earth, Frames.Frame.ICRF, TimeSystem.Time.J2000Tdb);
     }
 
     private static Spacecraft CreateSpacecraft(int naifId, string name, CelestialBody earth, Vector3 position, Vector3 velocity, double hardBodyRadius = 8.0)

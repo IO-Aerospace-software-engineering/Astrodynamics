@@ -178,7 +178,7 @@ public class StandardAtmosphereAllocationTests
         name == "Earth" ? new EarthStandardAtmosphere() : new MarsStandardAtmosphere();
 
     private static CelestialBody Body(string name) =>
-        new(name == "Earth" ? PlanetsAndMoons.EARTH : PlanetsAndMoons.MARS, Frames.Frame.ICRF, Epoch, null,
+        new(name == "Earth" ? PlanetsAndMoons.Earth : PlanetsAndMoons.Mars, Frames.Frame.ICRF, Epoch, null,
             Model(name));
 
     // LEO 350 km for the Earth, 200 km for Mars, both in ICRF

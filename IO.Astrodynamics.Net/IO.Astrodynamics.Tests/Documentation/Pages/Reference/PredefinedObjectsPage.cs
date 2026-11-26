@@ -64,7 +64,7 @@ internal static class PredefinedObjectsPage
     internal static void Block01()
     {
         #region docs/reference/predefined-objects.md:1
-        var titan = new CelestialBody(PlanetsAndMoons.TITAN);
+        var titan = new CelestialBody(PlanetsAndMoons.Titan);
         #endregion
     }
 
@@ -73,8 +73,8 @@ internal static class PredefinedObjectsPage
     {
         #region docs/reference/predefined-objects.md:2
         // Inputs: epoch (Time)
-        var earth = PlanetsAndMoons.EARTH_BODY;
-        var moon = new CelestialBody(PlanetsAndMoons.MOON);
+        var earth = PlanetsAndMoons.EarthBody;
+        var moon = new CelestialBody(PlanetsAndMoons.Moon);
 
         var state = moon.GetEphemeris(epoch, earth, Frame.ICRF, Aberration.None);
         #endregion

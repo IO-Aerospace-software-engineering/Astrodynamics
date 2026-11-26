@@ -81,7 +81,7 @@ public class ConvertToOwnFrameTests
     {
         // Arrange: a LEO with its covariance at 2024-05-09T12:00 TDB, the start of the window
         var epoch = new TimeSystem.Time(new DateTime(2024, 5, 9, 12, 0, 0), TimeScale.TDB);
-        var earth = new CelestialBody(PlanetsAndMoons.EARTH);
+        var earth = new CelestialBody(PlanetsAndMoons.Earth);
         var state = new KeplerianElements(6778137.0, 0.0005, 51.6 * IO.Astrodynamics.Constants.Deg2Rad, 0.3, 0.2, 1.0,
             earth, epoch, Frames.Frame.ICRF).ToStateVector();
         var covarianceTerms = new double[6, 6];

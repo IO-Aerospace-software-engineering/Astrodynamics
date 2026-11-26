@@ -107,8 +107,8 @@ public class FieldOfViewDynamicsTests
         int offset = parts.Length > 1 ? 100 * (Array.IndexOf(InitialFrames, parts[1]) + 1) : 0;
         StateVector In(StateVector state) => initialFrame == Frames.Frame.ICRF ? state : state.ToFrame(initialFrame).ToStateVector();
         (Spacecraft, Engine) Create(int naifId, StateVector orbit) => FieldOfViewDynamicsTests.Create(naifId - offset, In(orbit));
-        var earth = new CelestialBody(PlanetsAndMoons.EARTH, Frames.Frame.ICRF, Start);
-        var moon = new CelestialBody(PlanetsAndMoons.MOON, Frames.Frame.ICRF, Start);
+        var earth = new CelestialBody(PlanetsAndMoons.Earth, Frames.Frame.ICRF, Start);
+        var moon = new CelestialBody(PlanetsAndMoons.Moon, Frames.Frame.ICRF, Start);
         var sun = new CelestialBody(Stars.Sun, Frames.Frame.ICRF, Start);
         var bodies = new CelestialItem[] { earth, moon, sun };
         var propagation = new Window(Start, Start.AddSeconds(3000.0));
@@ -146,7 +146,7 @@ public class FieldOfViewDynamicsTests
             case "SSB":
             {
                 var earthFromSsb = earth.GetGeometricStateFromICRF(Start).ToStateVector();
-                var orbit = new StateVector(earthFromSsb.Position + leo.Position, earthFromSsb.Velocity + leo.Velocity, Barycenters.SOLAR_SYSTEM_BARYCENTER, Start,
+                var orbit = new StateVector(earthFromSsb.Position + leo.Position, earthFromSsb.Velocity + leo.Velocity, Barycenters.SolarSystemBarycenter, Start,
                     Frames.Frame.ICRF);
                 var (spacecraft, _) = Create(-5174, orbit);
                 spacecraft.Propagate(propagation, new PropagationOptions { Integrator = new VVIntegratorOptions { Step = oneSecond }, OutputStep = oneSecond, ThirdBodies = bodies });
@@ -279,10 +279,10 @@ public class FieldOfViewDynamicsTests
     private void Check(string variant)
     {
         var (spacecraft, window) = Build(variant);
-        var earth = new CelestialBody(PlanetsAndMoons.EARTH);
+        var earth = new CelestialBody(PlanetsAndMoons.Earth);
         var targets = new Dictionary<string, ILocalizable>
         {
-            ["EARTH"] = earth, ["SUN"] = new CelestialBody(Stars.Sun), ["MOON"] = new CelestialBody(PlanetsAndMoons.MOON), ["DSS-13"] = new Site(13, "DSS-13", earth)
+            ["EARTH"] = earth, ["SUN"] = new CelestialBody(Stars.Sun), ["MOON"] = new CelestialBody(PlanetsAndMoons.Moon), ["DSS-13"] = new Site(13, "DSS-13", earth)
         };
         string directory = $"Data/User/FieldOfViewDynamics515/{variant.Replace('@', '_')}";
         // The kernels the library writes: a read of the spacecraft no longer changes its attitude (#523), so they may be
@@ -290,7 +290,7 @@ public class FieldOfViewDynamicsTests
         // 10 s, its CK the identity of ICRF, the attitude Build gave it
         if (variant == "TLE")
         {
-            var earthBody = new CelestialBody(PlanetsAndMoons.EARTH);
+            var earthBody = new CelestialBody(PlanetsAndMoons.Earth);
             var states = new List<StateVector>();
             var orientations = new List<StateOrientation>();
             for (var epoch = window.StartDate.AddSeconds(-60.0); epoch <= window.EndDate.AddSeconds(60.0); epoch = epoch.AddSeconds(10.0))

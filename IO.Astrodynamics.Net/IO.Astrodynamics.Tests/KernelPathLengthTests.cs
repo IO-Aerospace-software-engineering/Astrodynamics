@@ -80,7 +80,7 @@ public class KernelPathLengthTests : IDisposable
 
     private static Spacecraft CreateSpacecraft()
     {
-        var earth = new CelestialBody(PlanetsAndMoons.EARTH, Frames.Frame.ICRF, Start);
+        var earth = new CelestialBody(PlanetsAndMoons.Earth, Frames.Frame.ICRF, Start);
         var orbit = new StateVector(new Vector3(6800000.0, 0.0, 0.0), new Vector3(0.0, 7656.2204182967143, 0.0), earth, Start, Frames.Frame.ICRF);
         return new Spacecraft(-8673, "KPL8673", 1000.0, orbit, 3000.0, new Clock("KPL8673_CLK", 65536));
     }

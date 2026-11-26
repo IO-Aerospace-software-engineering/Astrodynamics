@@ -164,7 +164,7 @@ public sealed class Lot2CaseTests : IDisposable
             inside = ((CelestialBody)PropagationCase.Build(caseInput, Path.Combine(_directory, "data")).Bodies[0]).Frame.Name;
         }
 
-        string after = new CelestialBody(PlanetsAndMoons.MOON).Frame.Name;
+        string after = new CelestialBody(PlanetsAndMoons.Moon).Frame.Name;
 
         // Assert
         Assert.Equal("MOON_PA", inside);

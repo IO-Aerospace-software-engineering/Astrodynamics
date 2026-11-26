@@ -76,7 +76,7 @@ public class MemoryDataProviderFrameTests
         double worstPosition = 0.0, worstVelocity = 0.0;
         foreach (var epoch in Epochs)
         {
-            var read = provider.GetEphemeris(epoch, PlanetsAndMoons.MOON_BODY, PlanetsAndMoons.EARTH_BODY, frame, Aberration.None);
+            var read = provider.GetEphemeris(epoch, PlanetsAndMoons.MoonBody, PlanetsAndMoons.EarthBody, frame, Aberration.None);
             var reference = Spkezr(epoch, frame);
             Assert.Equal(frame, read.Frame);
             Assert.Same(frame, read.Frame);
@@ -128,7 +128,7 @@ public class MemoryDataProviderFrameTests
         double worst = 0.0;
         foreach (var epoch in Epochs)
         {
-            var read = provider.GetEphemeris(epoch, PlanetsAndMoons.MOON_BODY, PlanetsAndMoons.EARTH_BODY, teme, Aberration.None);
+            var read = provider.GetEphemeris(epoch, PlanetsAndMoons.MoonBody, PlanetsAndMoons.EarthBody, teme, Aberration.None);
             var reference = Spkezr(epoch, Frames.Frame.TEME);
             worst = System.Math.Max(worst, (read.Position - reference.Position).Magnitude());
             Assert.InRange((read.Velocity - reference.Velocity).Magnitude(), 0.0, VelocityTolerance);
@@ -147,7 +147,7 @@ public class MemoryDataProviderFrameTests
         {
             foreach (var epoch in Epochs)
             {
-                var read = provider.GetEphemeris(epoch, PlanetsAndMoons.MOON_BODY, PlanetsAndMoons.EARTH_BODY, frame, Aberration.None);
+                var read = provider.GetEphemeris(epoch, PlanetsAndMoons.MoonBody, PlanetsAndMoons.EarthBody, frame, Aberration.None);
                 var moon = SpiceApi.Instance.ReadEphemeris(epoch, 0, 301, Frames.Frame.ICRF, Aberration.None);
                 var earth = SpiceApi.Instance.ReadEphemeris(epoch, 0, 399, Frames.Frame.ICRF, Aberration.None);
                 Assert.Equal(moon.Position - earth.Position, read.Position);
@@ -222,7 +222,7 @@ public class MemoryDataProviderFrameTests
         // store the frame's orientations (AddStateOrientationToIcrf)
         var provider = StatesProvider(Frames.Frame.ICRF);
         var ex = Assert.Throws<ArgumentException>(() =>
-            provider.GetEphemeris(Start, PlanetsAndMoons.MOON_BODY, PlanetsAndMoons.EARTH_BODY, new Frames.Frame(name), Aberration.None));
+            provider.GetEphemeris(Start, PlanetsAndMoons.MoonBody, PlanetsAndMoons.EarthBody, new Frames.Frame(name), Aberration.None));
         Assert.Contains(name, ex.Message);
     }
 
@@ -242,11 +242,11 @@ public class MemoryDataProviderFrameTests
         var provider = StatesProvider(Frames.Frame.ICRF);
         foreach (var (target, frame) in new (ILocalizable, Frames.Frame)[]
                  {
-                     (PlanetsAndMoons.MOON_BODY, Frames.Frame.ICRF), (PlanetsAndMoons.MOON_BODY, Frames.Frame.ECLIPJ2000),
-                     (PlanetsAndMoons.EARTH_BODY, Frames.Frame.ICRF)
+                     (PlanetsAndMoons.MoonBody, Frames.Frame.ICRF), (PlanetsAndMoons.MoonBody, Frames.Frame.ECLIPJ2000),
+                     (PlanetsAndMoons.EarthBody, Frames.Frame.ICRF)
                  })
         {
-            var ex = Assert.Throws<NotSupportedException>(() => provider.GetEphemeris(Start, target, PlanetsAndMoons.EARTH_BODY, frame, aberration));
+            var ex = Assert.Throws<NotSupportedException>(() => provider.GetEphemeris(Start, target, PlanetsAndMoons.EarthBody, frame, aberration));
             Assert.Contains(aberration.ToString(), ex.Message);
         }
     }
@@ -305,7 +305,7 @@ public class MemoryDataProviderFrameTests
         // The provider's two answers for ICRF agree: the identity, and the stored state unrotated
         Assert.Equal(Quaternion.Identity, provider.FrameTransformationToIcrf(Start, Frames.Frame.ICRF).Rotation);
         provider.AddStateVector(399, Start, new StateVector(new Vector3(1e11, 0.0, 0.0), Vector3.Zero, TestHelpers.SsbAtJ2000, Start, Frames.Frame.ICRF));
-        var state = provider.GetEphemeris(Start, PlanetsAndMoons.EARTH_BODY, new Barycenter(0), Frames.Frame.ICRF, Aberration.None);
+        var state = provider.GetEphemeris(Start, PlanetsAndMoons.EarthBody, new Barycenter(0), Frames.Frame.ICRF, Aberration.None);
         Assert.Equal(new Vector3(1e11, 0.0, 0.0), state.ToStateVector().Position);
     }
 }

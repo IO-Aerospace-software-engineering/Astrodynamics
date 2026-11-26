@@ -52,7 +52,7 @@ public class LambertDynamicalTimeTests
         string toTag)
     {
         // Arrange: a point of an orbit and the point SPICE prop2b reaches after the dynamical time between the tags
-        var centre = new CelestialBody(body == "Earth" ? PlanetsAndMoons.EARTH : PlanetsAndMoons.MOON);
+        var centre = new CelestialBody(body == "Earth" ? PlanetsAndMoons.Earth : PlanetsAndMoons.Moon);
         var departure = Tagged(DepartureUtc, fromTag);
         var arrival = Tagged(ArrivalUtc, toTag);
         var start = new KeplerianElements(body == "Earth" ? 6778137.0 : 1837400.0, 0.001, 51.6 * Deg, 30.0 * Deg,

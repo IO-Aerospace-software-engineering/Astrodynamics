@@ -44,7 +44,7 @@ public class ComponentConstructionTests
     private static Spacecraft NewSpacecraft(CelestialBody earth) => new(NextId(), "Sat", 1000.0,
         new KeplerianElements(7000e3, 0.01, 0.5, 0.0, 0.0, 0.0, earth, S, Frames.Frame.ICRF));
 
-    private static Spacecraft NewSpacecraft() => NewSpacecraft(new CelestialBody(PlanetsAndMoons.EARTH));
+    private static Spacecraft NewSpacecraft() => NewSpacecraft(new CelestialBody(PlanetsAndMoons.Earth));
 
     // ---------------------------------------------------------------------------------------------------------------------
     // The constructors (R10, decision 76)
@@ -95,7 +95,7 @@ public class ComponentConstructionTests
         Assert.Equal(0.0, tank.Quantity);
         Assert.Equal("initialQuantity", Assert.Throws<ArgumentOutOfRangeException>(() => new FuelTank("T", 1000.0, -1e-300)).ParamName);
 
-        var earth = new CelestialBody(PlanetsAndMoons.EARTH);
+        var earth = new CelestialBody(PlanetsAndMoons.Earth);
         var spacecraft = NewSpacecraft(earth);
         spacecraft.AddFuelTank(tank);
         var engine = spacecraft.AddEngine(new Engine("Main", 300.0, 10.0, tank));
@@ -232,7 +232,7 @@ public class ComponentConstructionTests
     [InlineData("VV")]
     public void ComponentsWithoutModelOrSerial_PropagateAsDescribedOnes(string integrator)
     {
-        var earth = new CelestialBody(PlanetsAndMoons.EARTH);
+        var earth = new CelestialBody(PlanetsAndMoons.Earth);
 
         (Spacecraft, ImpulseManeuver) Build(bool described)
         {

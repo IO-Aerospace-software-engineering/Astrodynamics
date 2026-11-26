@@ -132,8 +132,8 @@ public class StarOccultationTests
     [InlineData(100.0, 0.1, Aberration.XCN)]
     public void LunarOccultationFromASite(double distancePc, double properMotion, Aberration aberration)
     {
-        var earth = new CelestialBody(PlanetsAndMoons.EARTH);
-        var moon = new CelestialBody(PlanetsAndMoons.MOON);
+        var earth = new CelestialBody(PlanetsAndMoons.Earth);
+        var moon = new CelestialBody(PlanetsAndMoons.Moon);
         var dss13 = new Site(13, "DSS-13", earth);
         var star = NewStar(distancePc, properMotion);
 
@@ -183,7 +183,7 @@ public class StarOccultationTests
     [InlineData(100.0, 0.0, Aberration.XltS)]
     public void GetEphemeris_IsTheDirectionAtTheEpoch(double distancePc, double properMotion, Aberration aberration)
     {
-        var earth = new CelestialBody(PlanetsAndMoons.EARTH);
+        var earth = new CelestialBody(PlanetsAndMoons.Earth);
         var dss13 = new Site(13, "DSS-13", earth);
         var star = NewStar(distancePc, properMotion);
         TimeSystem.Time epoch = S.AddSeconds(3600.0);
@@ -211,7 +211,7 @@ public class StarOccultationTests
         Assert.True(angle <= DirectionLimit, $"{angle:E3} rad");
         // The distance is that of the star from DSS-13 at the epoch, the stellar aberration a rotation
         double distance = (star.GetEquatorialCoordinates(epoch).ToCartesian()
-                           - dss13.GetGeometricStateRelativeTo(epoch, Barycenters.SOLAR_SYSTEM_BARYCENTER).Position).Magnitude();
+                           - dss13.GetGeometricStateRelativeTo(epoch, Barycenters.SolarSystemBarycenter).Position).Magnitude();
         Assert.True(System.Math.Abs(position.Magnitude() / distance - 1.0) <= 1e-14);
     }
 }

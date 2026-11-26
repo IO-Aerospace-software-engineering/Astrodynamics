@@ -44,8 +44,8 @@ public class FrameRotationTests
     public void RotationTo_IsTheRotationOfToFrame_BitForBit()
     {
         // Arrange: SPICE frames, the IAU chain and the same frame
-        var earth = new CelestialBody(PlanetsAndMoons.EARTH);
-        var moon = new CelestialBody(PlanetsAndMoons.MOON);
+        var earth = new CelestialBody(PlanetsAndMoons.Earth);
+        var moon = new CelestialBody(PlanetsAndMoons.Moon);
         var pairs = new (Frames.Frame Source, Frames.Frame Target)[]
         {
             (Frames.Frame.ICRF, earth.Frame), (earth.Frame, Frames.Frame.ICRF), (Frames.Frame.ICRF, moon.Frame),
@@ -68,7 +68,7 @@ public class FrameRotationTests
     public void RotationTo_WithTheOrientationCacheOfAPropagation_IsTheRotationOfToFrame_AndAllocatesNothing()
     {
         // Arrange: the cache of a propagation over one hour, active on this thread for the Earth-fixed frame
-        var earth = new CelestialBody(PlanetsAndMoons.EARTH);
+        var earth = new CelestialBody(PlanetsAndMoons.Earth);
         var cache = new PropagationFrameOrientationCache(new Window(Start, Start.AddSeconds(3600.0)), earth.Frame,
             TimeSpan.FromSeconds(60.0));
 
@@ -108,8 +108,8 @@ public class FrameRotationTests
     public void AngularVelocityTo_IsTheAngularVelocityOfToFrame_BitForBit()
     {
         // Arrange: SPICE frames, the IAU chain and the same frame
-        var earth = new CelestialBody(PlanetsAndMoons.EARTH);
-        var moon = new CelestialBody(PlanetsAndMoons.MOON);
+        var earth = new CelestialBody(PlanetsAndMoons.Earth);
+        var moon = new CelestialBody(PlanetsAndMoons.Moon);
         var pairs = new (Frames.Frame Source, Frames.Frame Target)[]
         {
             (Frames.Frame.ICRF, earth.Frame), (earth.Frame, Frames.Frame.ICRF), (Frames.Frame.ICRF, moon.Frame),
@@ -132,7 +132,7 @@ public class FrameRotationTests
     public void AngularVelocityTo_WithTheOrientationCacheOfAPropagation_IsTheAngularVelocityOfToFrame_AndAllocatesNothing()
     {
         // Arrange: the cache of a propagation over one hour, active on this thread for the Earth-fixed frame
-        var earth = new CelestialBody(PlanetsAndMoons.EARTH);
+        var earth = new CelestialBody(PlanetsAndMoons.Earth);
         var cache = new PropagationFrameOrientationCache(new Window(Start, Start.AddSeconds(3600.0)), earth.Frame,
             TimeSpan.FromSeconds(60.0));
 
@@ -201,7 +201,7 @@ public class FrameRotationTests
         // Arrange: GCRF reads the cache like the base frame; a cache made active for it replaces its identity
         var gcrf = new Frames.GcrfFrame();
         var cache = new PropagationFrameOrientationCache(new Window(Start, Start.AddSeconds(3600.0)),
-            new CelestialBody(PlanetsAndMoons.EARTH).Frame, TimeSpan.FromSeconds(60.0));
+            new CelestialBody(PlanetsAndMoons.Earth).Frame, TimeSpan.FromSeconds(60.0));
 
         using (Frames.Frame.UseOrientationCache(gcrf, cache))
         {

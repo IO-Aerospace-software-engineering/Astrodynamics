@@ -124,12 +124,12 @@ public class PropagationCaseTests
 
         // The field of spec.md section 12.1: EGM2008's GM and radius for the whole field, central term included, bit
         // for bit; the GM of the kernels in the central term (the library's default) is 1.5e-8 of it away
-        var model = new CelestialBody(PlanetsAndMoons.EARTH, Frames.Frame.ICRF, state.Epoch,
+        var model = new CelestialBody(PlanetsAndMoons.Earth, Frames.Frame.ICRF, state.Epoch,
             new GeopotentialModelParameters(Path.Combine(KernelsPath, "EGM2008_to70_TideFree"), 10, 3.986004415e14, 6378136.3)
             {
                 CentralTerm = GeopotentialCentralTerm.ModelGravitationalParameter
             });
-        var kernelCentralTerm = new CelestialBody(PlanetsAndMoons.EARTH, Frames.Frame.ICRF, state.Epoch,
+        var kernelCentralTerm = new CelestialBody(PlanetsAndMoons.Earth, Frames.Frame.ICRF, state.Epoch,
             new GeopotentialModelParameters(Path.Combine(KernelsPath, "EGM2008_to70_TideFree"), 10));
         Assert.Equal(model.EvaluateGravitationalAcceleration(state), acceleration);
         Assert.InRange((kernelCentralTerm.EvaluateGravitationalAcceleration(state) - acceleration).Magnitude() / acceleration.Magnitude(),
@@ -296,7 +296,7 @@ public class PropagationCaseTests
         // Arrange: barycentres are no celestial bodies
         var bodies = new CelestialItem[]
         {
-            new CelestialBody(PlanetsAndMoons.EARTH), PlanetsAndMoons.MOON_BODY, Stars.SUN_BODY, Barycenters.JUPITER_BARYCENTER
+            new CelestialBody(PlanetsAndMoons.Earth), PlanetsAndMoons.MoonBody, Stars.SunBody, Barycenters.JupiterBarycenter
         };
 
         // Act and assert

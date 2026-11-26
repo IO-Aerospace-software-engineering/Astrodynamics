@@ -43,7 +43,7 @@ public class OccultationStepInferenceTests
         TestKernels.EnsureOccultationReference();
     }
 
-    private static CelestialBody Earth => new(PlanetsAndMoons.EARTH);
+    private static CelestialBody Earth => new(PlanetsAndMoons.Earth);
     private static CelestialBody Sun => new(Stars.Sun);
 
     // An equatorial LEO at the equinox, in the Earth's shadow once per orbit, propagated about a point-mass Earth
@@ -165,7 +165,7 @@ public class OccultationStepInferenceTests
         var kernelSpacecraft = new Spacecraft(-470001, "eclipse_001", epoch: Start);
         AssertRequired(() => kernelSpacecraft.FindOccultationWindows(new Window(Start, Start.AddHours(12.0)), Sun, Earth, options));
         var leo = Leo(-106006);
-        var moon = new CelestialBody(PlanetsAndMoons.MOON);
+        var moon = new CelestialBody(PlanetsAndMoons.Moon);
         AssertRequired(() => leo.FindOccultationWindows(Day, Sun, moon, options));
         var site = new Site(65, "DSS-65", Earth);
         AssertRequired(() => site.FindOccultationWindows(Day, Sun, moon, options));

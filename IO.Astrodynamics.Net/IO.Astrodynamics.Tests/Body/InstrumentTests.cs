@@ -419,7 +419,7 @@ namespace IO.Astrodynamics.Tests.Body
             }
         }
 
-        private static Spacecraft Host(int naifId, string name) => new(naifId, name, 100.0, new StateVector(new Vector3(6800e3, 0.0, 0.0), new Vector3(0.0, 7656.0, 0.0), new CelestialBody(SolarSystemObjects.PlanetsAndMoons.EARTH),
+        private static Spacecraft Host(int naifId, string name) => new(naifId, name, 100.0, new StateVector(new Vector3(6800e3, 0.0, 0.0), new Vector3(0.0, 7656.0, 0.0), new CelestialBody(SolarSystemObjects.PlanetsAndMoons.Earth),
                 new TimeSystem.Time(2024, 1, 1, TimeScale.TDB), Frames.Frame.ICRF), 1000.0,
             new Clock(name + "_CLK", 65536));
 

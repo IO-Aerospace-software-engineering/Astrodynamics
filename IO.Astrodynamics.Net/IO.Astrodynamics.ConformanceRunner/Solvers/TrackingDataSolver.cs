@@ -49,8 +49,8 @@ public class TrackingDataSolver : ICategorySolver
         SuiteDataFile.EnsureContent(bspPath);
         SpiceApi.Instance.LoadKernels(new FileInfo(bspPath));
 
-        var earth = new CelestialBody(PlanetsAndMoons.EARTH);
-        var moon = new CelestialBody(PlanetsAndMoons.MOON);
+        var earth = new CelestialBody(PlanetsAndMoons.Earth);
+        var moon = new CelestialBody(PlanetsAndMoons.Moon);
         CheckEllipsoid(inputs.Location.Ellipsoid, earth);
 
         // Create site from location inputs

@@ -66,7 +66,7 @@ internal static class NumericalPropagationPage
         #region docs/tutorials/numerical-propagation.md:1
         SpiceApi.Instance.LoadKernels(new DirectoryInfo("Data/SolarSystem"));
 
-        var earth = PlanetsAndMoons.EARTH_BODY;
+        var earth = PlanetsAndMoons.EarthBody;
         var epoch = new Time(2024, 6, 21, 12, 0, 0, TimeScale.TDB);
 
         var orbit = new StateVector(
@@ -79,7 +79,7 @@ internal static class NumericalPropagationPage
 
         var solution = spacecraft.Propagate(
             new Window(epoch, epoch.AddDays(1)),
-            new PropagationOptions { ThirdBodies = new CelestialItem[] { Stars.SUN_BODY, PlanetsAndMoons.MOON_BODY } });
+            new PropagationOptions { ThirdBodies = new CelestialItem[] { Stars.SunBody, PlanetsAndMoons.MoonBody } });
         #endregion
     }
 
@@ -107,7 +107,7 @@ internal static class NumericalPropagationPage
         {
             Integrator = integrator,
             OutputStep = TimeSpan.FromSeconds(10.0),
-            ThirdBodies = new CelestialItem[] { Stars.SUN_BODY, PlanetsAndMoons.MOON_BODY }
+            ThirdBodies = new CelestialItem[] { Stars.SunBody, PlanetsAndMoons.MoonBody }
         };
 
         var propagator = new CentralBodyPropagator(new Window(epoch, epoch.AddHours(2)), spacecraft, options);
@@ -120,8 +120,8 @@ internal static class NumericalPropagationPage
     {
         #region docs/tutorials/numerical-propagation.md:4
         // Inputs: earth (CelestialBody)
-        var bodies = new CelestialItem[] { earth, Stars.SUN_BODY, PlanetsAndMoons.MOON_BODY,
-            Barycenters.JUPITER_BARYCENTER };
+        var bodies = new CelestialItem[] { earth, Stars.SunBody, PlanetsAndMoons.MoonBody,
+            Barycenters.JupiterBarycenter };
         #endregion
     }
 
@@ -130,7 +130,7 @@ internal static class NumericalPropagationPage
     {
         #region docs/tutorials/numerical-propagation.md:5
         // Inputs: epoch (Time)
-        var earthWithGeo = new CelestialBody(PlanetsAndMoons.EARTH, Frame.ICRF, epoch,
+        var earthWithGeo = new CelestialBody(PlanetsAndMoons.Earth, Frame.ICRF, epoch,
             new GeopotentialModelParameters("Data/SolarSystem/EGM2008_to70_TideFree", 10));
         #endregion
     }
@@ -144,7 +144,7 @@ internal static class NumericalPropagationPage
         {
             Integrator = integrator,
             OutputStep = TimeSpan.FromSeconds(10.0),
-            ThirdBodies = new CelestialItem[] { Stars.SUN_BODY, PlanetsAndMoons.MOON_BODY },
+            ThirdBodies = new CelestialItem[] { Stars.SunBody, PlanetsAndMoons.MoonBody },
             AtmosphericDrag = true,
             SolarRadiationPressure = true
         });
@@ -156,7 +156,7 @@ internal static class NumericalPropagationPage
     {
         #region docs/tutorials/numerical-propagation.md:7
         // Inputs: epoch (Time), integrator (RK78IntegratorOptions)
-        var earth = new CelestialBody(PlanetsAndMoons.EARTH,
+        var earth = new CelestialBody(PlanetsAndMoons.Earth,
             albedo: 0.306,
             thermalEffectiveTemperature: 254.0,
             thermalEmissivity: 0.95);
@@ -167,7 +167,7 @@ internal static class NumericalPropagationPage
         {
             Integrator = integrator,
             OutputStep = TimeSpan.FromSeconds(10),
-            ThirdBodies = new CelestialItem[] { Stars.SUN_BODY, PlanetsAndMoons.MOON_BODY },
+            ThirdBodies = new CelestialItem[] { Stars.SunBody, PlanetsAndMoons.MoonBody },
             AlbedoRadiationPressure = true,
             ThermalRadiationPressure = true
         });

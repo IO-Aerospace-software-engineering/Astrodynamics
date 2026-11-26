@@ -62,7 +62,7 @@ namespace IO.Astrodynamics.Surface
 
         /// <summary>
         /// Initializes a site from the kernels from its entry of a catalogue, <see cref="GroundStations"/> for instance:
-        /// <c>new Site(GroundStations.DSS_13, earth)</c>, the site 13 of the Earth, named <c>DSS-13</c> (R02 of #668).
+        /// <c>new Site(GroundStations.Dss13, earth)</c>, the site 13 of the Earth, named <c>DSS-13</c> (R02 of #668).
         /// </summary>
         /// <param name="station">The NAIF identifier of the site, its body's times 1000 plus its own (399013 for DSS-13), and its
         /// SPICE name.</param>
@@ -582,7 +582,7 @@ namespace IO.Astrodynamics.Surface
         public IReadOnlyList<Window> FindDayWindows(in Window searchWindow, double twilight)
         {
             GeometryFinder.CheckAngle(twilight, -Constants.HalfPi, Constants.HalfPi, "[−π/2, π/2]", "twilight", nameof(twilight));
-            return FindIlluminationWindows(searchWindow, IlluminationAngle.Incidence, RelationalOperator.LessThan, Constants.HalfPi + twilight, Stars.SUN_BODY,
+            return FindIlluminationWindows(searchWindow, IlluminationAngle.Incidence, RelationalOperator.LessThan, Constants.HalfPi + twilight, Stars.SunBody,
                 new WindowSearchOptions { Step = TimeSpan.FromMinutes(1.0), Aberration = Aberration.LtS });
         }
 

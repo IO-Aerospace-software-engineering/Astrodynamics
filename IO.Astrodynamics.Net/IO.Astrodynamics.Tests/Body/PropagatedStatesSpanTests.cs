@@ -59,7 +59,7 @@ public class PropagatedStatesSpanTests
 
     private static Spacecraft Propagated(int naifId, string integrator, string frame, out CelestialBody earth)
     {
-        earth = new CelestialBody(PlanetsAndMoons.EARTH, Frame.ICRF, S);
+        earth = new CelestialBody(PlanetsAndMoons.Earth, Frame.ICRF, S);
         var icrf = new StateVector(new Vector3(6800000.0, 0.0, 0.0), new Vector3(0.0, 5400.0, 5400.0), earth, S, Frame.ICRF);
         var initial = frame == "ICRF" ? icrf : icrf.ToFrame(Frame.ECLIPJ2000).ToStateVector();
         var spacecraft = new Spacecraft(naifId, $"SPAN{-naifId}", 1000.0, initial, 3000.0, new Clock($"SPAN{-naifId}_CLK", 65536));
@@ -83,7 +83,7 @@ public class PropagatedStatesSpanTests
     {
         // Arrange
         var spacecraft = Propagated(naifId, integrator, frame, out var earth);
-        var moon = new CelestialBody(PlanetsAndMoons.MOON, Frame.ICRF, S);
+        var moon = new CelestialBody(PlanetsAndMoons.Moon, Frame.ICRF, S);
         var states = spacecraft.PropagatedStates;
         var (first, last) = (states[0], states[^1]);
 
@@ -128,8 +128,8 @@ public class PropagatedStatesSpanTests
     public void LightTimeReadsAtTheEnds_AreAllowedWithinTheLightTime(string integrator, int naifId)
     {
         var spacecraft = Propagated(naifId, integrator, "ICRF", out var earth);
-        var moon = new CelestialBody(PlanetsAndMoons.MOON, Frame.ICRF, S);
-        var ssb = Barycenters.SOLAR_SYSTEM_BARYCENTER;
+        var moon = new CelestialBody(PlanetsAndMoons.Moon, Frame.ICRF, S);
+        var ssb = Barycenters.SolarSystemBarycenter;
         var states = spacecraft.PropagatedStates;
         double worst = 0.0;
         foreach (var (end, aberration, sign) in new[] { (states[0], Aberration.LT, -1.0), (states[0], Aberration.CN, -1.0), (states[^1], Aberration.XLT, 1.0), (states[^1], Aberration.XCN, 1.0) })
@@ -176,14 +176,14 @@ public class PropagatedStatesSpanTests
     {
         // Arrange
         var (observer, target, earth) = Pair(naifId, integrator);
-        var ssb = Barycenters.SOLAR_SYSTEM_BARYCENTER;
+        var ssb = Barycenters.SolarSystemBarycenter;
         var states = target.PropagatedStates;
         double worst = 0.0;
         foreach (var (end, aberration, sign) in new[] { (states[0], Aberration.LT, -1.0), (states[0], Aberration.CN, -1.0), (states[^1], Aberration.XLT, 1.0), (states[^1], Aberration.XCN, 1.0) })
         {
             var t = end.Epoch;
             var reader = new IO.Astrodynamics.Occultation.ApparentPositionReader(observer, aberration, false, true);
-            Assert.Equal(PlanetsAndMoons.EARTH.NaifId, reader.Reference.NaifId);
+            Assert.Equal(PlanetsAndMoons.Earth.NaifId, reader.Reference.NaifId);
             var observerState = reader.Observer(t);
             var observerFromSsb = earth.GetGeometricStateRelativeTo(t, ssb).Position + observerState.Position;
             Vector3 Target(double dt)
@@ -263,7 +263,7 @@ public class PropagatedStatesSpanTests
     // same orbit, both propagated over [S, S + 1 h]; the attitude of the observer is the identity
     private static (Spacecraft Observer, Spacecraft Target, CelestialBody Earth) Pair(int naifId, string integrator)
     {
-        var earth = new CelestialBody(PlanetsAndMoons.EARTH, Frame.ICRF, S);
+        var earth = new CelestialBody(PlanetsAndMoons.Earth, Frame.ICRF, S);
         var initial = new StateVector(new Vector3(6800000.0, 0.0, 0.0), new Vector3(0.0, 5400.0, 5400.0), earth, S, Frame.ICRF);
         var ahead = initial.AtEpoch(S.AddSeconds(200000.0 / initial.Velocity.Magnitude())).ToStateVector();
         var observer = new Spacecraft(naifId, $"SPAN{-naifId}", 1000.0, initial, 3000.0, new Clock($"SPAN{-naifId}_CLK", 65536));
@@ -311,7 +311,7 @@ public class PropagatedStatesSpanTests
     [Fact]
     public void Unpropagated_ReadsAnywhere()
     {
-        var earth = new CelestialBody(PlanetsAndMoons.EARTH, Frame.ICRF, S);
+        var earth = new CelestialBody(PlanetsAndMoons.Earth, Frame.ICRF, S);
         var initial = new StateVector(new Vector3(6800000.0, 0.0, 0.0), new Vector3(0.0, 5400.0, 5400.0), earth, S, Frame.ICRF);
         var spacecraft = new Spacecraft(-5278, "SPAN5278", 1000.0, initial, 3000.0, new Clock("SPAN5278_CLK", 65536));
         var t = S.AddHours(-5.0);

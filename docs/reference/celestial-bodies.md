@@ -81,8 +81,8 @@ identifiers they are objects of the kernels read by their identifier
 
 ```csharp
 // Inputs: epoch (Time)
-var earth = PlanetsAndMoons.EARTH_BODY;
-var moon = new CelestialBody(PlanetsAndMoons.MOON);
+var earth = PlanetsAndMoons.EarthBody;
+var moon = new CelestialBody(PlanetsAndMoons.Moon);
 var state = moon.GetEphemeris(epoch, earth, Frame.ICRF, Aberration.None);
 ```
 
@@ -101,7 +101,7 @@ var state = moon.GetEphemeris(epoch, earth, Frame.ICRF, Aberration.None);
 
 ```csharp
 // Inputs: epoch (Time)
-var earth = PlanetsAndMoons.EARTH_BODY;
+var earth = PlanetsAndMoons.EarthBody;
 var context = AtmosphericContext.FromPlanetodetic(
     new Planetodetic(longitude: 2.35 * Constants.Deg2Rad, latitude: 48.85 * Constants.Deg2Rad, altitude: 400e3), epoch);
 double density = earth.GetAirDensity(context); // kg/m³, NRLMSISE-00 at nominal space weather

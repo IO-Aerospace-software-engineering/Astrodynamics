@@ -671,7 +671,7 @@ namespace IO.Astrodynamics.Tests.CCSDS.OPM
             // A spacecraft of mass 0, which CelestialItem allows; its one sectional area from equal DRAG_AREA and
             // SOLAR_RAD_AREA (#805: the base OPM holds 22 and 25.5 m², which ToSpacecraft refuses)
             var spacecraft = Opm.Parse(NdmDocuments.WithElementValue(xml, "SOLAR_RAD_AREA", "22")).ToSpacecraft(-1000, 1000.0, new IO.Astrodynamics.Body.Spacecraft.Clock("OnboardClock", 256),
-                new IO.Astrodynamics.Body.CelestialBody(IO.Astrodynamics.SolarSystemObjects.PlanetsAndMoons.EARTH));
+                new IO.Astrodynamics.Body.CelestialBody(IO.Astrodynamics.SolarSystemObjects.PlanetsAndMoons.Earth));
             Assert.Equal(0.0, spacecraft.Mass);
         }
 

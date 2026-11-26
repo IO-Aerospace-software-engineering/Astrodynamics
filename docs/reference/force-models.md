@@ -123,7 +123,7 @@ the kernels (6378136.6 m), 7.9e-8 of the harmonics away from EGM2008
 ```csharp
 // Inputs: epoch (Time)
 // A model other than EGM2008, in the same file format, with its own constants
-var mars = new CelestialBody(PlanetsAndMoons.MARS, Frame.ICRF, epoch,
+var mars = new CelestialBody(PlanetsAndMoons.Mars, Frame.ICRF, epoch,
     new GeopotentialModelParameters("mars_model", 20, 4.282837362069909e13, 3396000.0));
 ```
 
@@ -182,7 +182,7 @@ other than the Earth without constants of the model), both choices give the same
 ```csharp
 // Inputs: epoch (Time)
 // EGM2008 with its own GM in the central term too, as GMAT evaluates EGM2008 from a .cof header
-var earth = new CelestialBody(PlanetsAndMoons.EARTH, Frame.ICRF, epoch,
+var earth = new CelestialBody(PlanetsAndMoons.Earth, Frame.ICRF, epoch,
     new GeopotentialModelParameters("Data/SolarSystem/EGM2008_to70_TideFree", 10)
     {
         CentralTerm = GeopotentialCentralTerm.ModelGravitationalParameter
@@ -253,7 +253,7 @@ new ThermalRadiationPressure(spacecraft, emittingBody)
 ## Example
 
 ```csharp
-var earth = new CelestialBody(PlanetsAndMoons.EARTH,
+var earth = new CelestialBody(PlanetsAndMoons.Earth,
     new GeopotentialModelParameters("Data/SolarSystem/EGM2008_to70_TideFree", 10),
     albedo: 0.306, thermalEffectiveTemperature: 254.0, thermalEmissivity: 0.95);
 ```

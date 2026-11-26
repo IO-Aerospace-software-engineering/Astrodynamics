@@ -281,8 +281,8 @@ public class AttitudeTimelineTests
             string letter = parts[0], integrator = parts[1], path = parts[2], frameName = parts[3];
             double output = double.Parse(parts[4], Invariant);
             bool moon = frameName == "Moon", ssb = frameName == "SSB";
-            var earth = new CelestialBody(PlanetsAndMoons.EARTH, Frame.ICRF, S);
-            var center = moon ? new CelestialBody(PlanetsAndMoons.MOON, Frame.ICRF, S) : earth;
+            var earth = new CelestialBody(PlanetsAndMoons.Earth, Frame.ICRF, S);
+            var center = moon ? new CelestialBody(PlanetsAndMoons.Moon, Frame.ICRF, S) : earth;
             OrbitalParams orbitIcrf = moon ? MoonOrbit(center) : OrbitOf(letter, center);
             OrbitalParams orbit = orbitIcrf;
             CelestialItem[] bodies = [center];
@@ -290,8 +290,8 @@ public class AttitudeTimelineTests
             if (ssb)
             {
                 var sv = orbitIcrf.ToStateVector();
-                var fromSsb = center.GetGeometricStateRelativeTo(S, Barycenters.SOLAR_SYSTEM_BARYCENTER);
-                orbit = new StateVector(fromSsb.Position + sv.Position, fromSsb.Velocity + sv.Velocity, Barycenters.SOLAR_SYSTEM_BARYCENTER, S, Frame.ICRF);
+                var fromSsb = center.GetGeometricStateRelativeTo(S, Barycenters.SolarSystemBarycenter);
+                orbit = new StateVector(fromSsb.Position + sv.Position, fromSsb.Velocity + sv.Velocity, Barycenters.SolarSystemBarycenter, S, Frame.ICRF);
                 bodies = [center, new CelestialBody(Stars.Sun, Frame.ICRF, S)];
             }
             else if (!moon && frameName != "ICRF")
@@ -448,7 +448,7 @@ public class AttitudeTimelineTests
         spacecraft.AddFuelTank(tank);
         var engine = new Engine("eng", 300.0, 10.0, tank, "model", "sn");
         spacecraft.AddEngine(engine);
-        bool moon = center.NaifId == PlanetsAndMoons.MOON.NaifId;
+        bool moon = center.NaifId == PlanetsAndMoons.Moon.NaifId;
         var kinds = new Dictionary<Maneuver.Maneuver, string>();
 
         Maneuver.Maneuver Nadir(double hold, double? minimum = null) => Kind(new NadirAttitude(minimum.HasValue ? S.AddSeconds(minimum.Value) : Min, TimeSpan.FromSeconds(hold), center), "nadir");

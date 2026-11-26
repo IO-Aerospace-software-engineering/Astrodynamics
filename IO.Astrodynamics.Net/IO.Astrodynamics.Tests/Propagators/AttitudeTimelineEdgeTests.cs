@@ -174,7 +174,7 @@ public class AttitudeTimelineEdgeTests
     [Fact]
     public void HandleEvent_ExecutesTheImpulseOnly()
     {
-        var earth = new CelestialBody(PlanetsAndMoons.EARTH, Frame.ICRF, S);
+        var earth = new CelestialBody(PlanetsAndMoons.Earth, Frame.ICRF, S);
         var (spacecraft, chain, _, _) = AttitudeTimelineTests.Build(NextId(), "M0", MinimumEpochGateTests.Orbit(earth, 0.0), earth);
         var impulse = (ImpulseManeuver)chain[0];
         var detector = new ManeuverEventDetector(impulse);
@@ -205,7 +205,7 @@ public class AttitudeTimelineEdgeTests
     [Fact]
     public void HandleEvent_PreconditionsFail_Continues()
     {
-        var earth = new CelestialBody(PlanetsAndMoons.EARTH, Frame.ICRF, S);
+        var earth = new CelestialBody(PlanetsAndMoons.Earth, Frame.ICRF, S);
         var spacecraft = new Spacecraft(NextId(), "TLEDGEPRE", 1000.0, MinimumEpochGateTests.Orbit(earth, 0.0), 3000.0, new Clock("TLEDGEPRE_CLK", 65536));
         var tank = new FuelTank("ft", 1000.0, 1000.0, "model", "sn");
         spacecraft.AddFuelTank(tank);
@@ -437,7 +437,7 @@ public class AttitudeTimelineEdgeTests
     [InlineData("VV1")]
     public void AttitudeAtItsMinimumEpoch_HoldZero_EndsAtItsActivation(string integrator)
     {
-        var earth = new CelestialBody(PlanetsAndMoons.EARTH, Frame.ICRF, S);
+        var earth = new CelestialBody(PlanetsAndMoons.Earth, Frame.ICRF, S);
         int off = 0;
         for (int k = 0; k < 40; k++)
         {
@@ -477,7 +477,7 @@ public class AttitudeTimelineEdgeTests
     {
         var minimum = new Time(new DateTime(2016, 12, 31, 23, 59, 30), TimeScale.UTC);
         var start = minimum.ToTdb().AddSeconds(-30.0);
-        var body = new CelestialBody(centre == "Moon" ? PlanetsAndMoons.MOON : PlanetsAndMoons.EARTH, Frame.ICRF, start);
+        var body = new CelestialBody(centre == "Moon" ? PlanetsAndMoons.Moon : PlanetsAndMoons.Earth, Frame.ICRF, start);
         double ra = centre == "Moon" ? MoonRadius + 300000.0 : MinimumEpochGateTests.Apogee0;
         double rp = centre == "Moon" ? MoonRadius + 100000.0 : 6778137.0;
         var orbit = new KeplerianElements((ra + rp) / 2.0, (ra - rp) / (ra + rp), 0.9, 0.3, 1.1, System.Math.PI, body, start, Frame.ICRF);

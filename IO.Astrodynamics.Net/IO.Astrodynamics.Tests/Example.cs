@@ -16,8 +16,8 @@ public class Example
         //An application loads its kernels once, at start-up: SpiceApi.Instance.LoadKernels(new DirectoryInfo("Data/SolarSystem")),
         //Data/SolarSystem replaced by your kernel path. The tests share them, loaded once per test process
         TestKernels.EnsureSolarSystem();
-        var earth = PlanetsAndMoons.EARTH_BODY;
-        var moon = new CelestialBody(PlanetsAndMoons.MOON);
+        var earth = PlanetsAndMoons.EarthBody;
+        var moon = new CelestialBody(PlanetsAndMoons.Moon);
         var ephemeris = moon.GetEphemeris(new TimeSystem.Time(new DateTime(2000, 1, 1, 12, 0, 0), TimeScale.UTC), earth, Frames.Frame.ICRF, Aberration.None);
     }
 }

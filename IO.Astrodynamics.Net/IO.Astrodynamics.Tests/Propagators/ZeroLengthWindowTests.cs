@@ -39,7 +39,7 @@ public class ZeroLengthWindowTests
     {
         int id = System.Threading.Interlocked.Decrement(ref _nextId);
         var orbit = new StateVector(new Vector3(6878137.0, 0.0, 0.0), new Vector3(0.0, 6200.0, 4500.0),
-            PlanetsAndMoons.EARTH_BODY, Start, Frames.Frame.ICRF);
+            PlanetsAndMoons.EarthBody, Start, Frames.Frame.ICRF);
         return new Spacecraft(id, "ZERO" + -id, 1000.0, orbit, 3000.0, new Clock("zero" + -id, 65536));
     }
 
@@ -58,7 +58,7 @@ public class ZeroLengthWindowTests
             _ => () =>
             {
                 var integrator = new RK78Integrator();
-                integrator.AddForce(new GravitationalAcceleration(PlanetsAndMoons.EARTH_BODY));
+                integrator.AddForce(new GravitationalAcceleration(PlanetsAndMoons.EarthBody));
                 _ = new CentralBodyPropagator(Empty, spacecraft, integrator, TimeSpan.FromSeconds(60.0));
             }
         };
@@ -160,7 +160,7 @@ public class ZeroLengthWindowTests
         // Arrange
         int id = System.Threading.Interlocked.Decrement(ref _nextId);
         var orbit = new StateVector(new Vector3(6878137.0, 0.0, 0.0), new Vector3(0.0, 6200.0, 4500.0),
-            PlanetsAndMoons.EARTH_BODY, Start, Frames.Frame.ICRF,
+            PlanetsAndMoons.EarthBody, Start, Frames.Frame.ICRF,
             IO.Astrodynamics.Math.Matrix.Diagonal(100.0, 100.0, 100.0, 1e-4, 1e-4, 1e-4));
         var template = new Spacecraft(id, "ZERO" + -id, 1000.0, orbit, 3000.0, new Clock("zero" + -id, 65536));
         var config = new MonteCarloConfiguration

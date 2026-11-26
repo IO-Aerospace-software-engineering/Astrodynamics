@@ -32,7 +32,7 @@ public sealed class ConjunctionCovarianceCase
     public ConjunctionCovarianceCase()
     {
         TestKernels.EnsureSolarSystem();
-        Earth = new CelestialBody(PlanetsAndMoons.EARTH, Frames.Frame.ICRF, Start);
+        Earth = new CelestialBody(PlanetsAndMoons.Earth, Frames.Frame.ICRF, Start);
         var (protectedOrbit, secondaryOrbit) = Pair(Earth, Start, Tca);
 
         ProtectedStart = WithRtnCovariance(protectedOrbit, new[] { 50.0, 200.0, 30.0, 0.2, 0.05, 0.03 });

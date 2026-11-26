@@ -61,8 +61,8 @@ public class TimeArgumentTests
     {
         TestKernels.EnsureSolarSystem();
         _output = output;
-        _earth = new CelestialBody(PlanetsAndMoons.EARTH, Frames.Frame.ICRF, Start);
-        _moon = new CelestialBody(PlanetsAndMoons.MOON, Frames.Frame.ICRF, Start);
+        _earth = new CelestialBody(PlanetsAndMoons.Earth, Frames.Frame.ICRF, Start);
+        _moon = new CelestialBody(PlanetsAndMoons.Moon, Frames.Frame.ICRF, Start);
     }
 
     // The windows of an hour from 2021-03-20 12:00 TDB, by their tags, and the UTC hour across the leap second of
@@ -281,7 +281,7 @@ public class TimeArgumentTests
             Propagation = new PropagationOptions
             {
                 Integrator = new RK78IntegratorOptions { AbsoluteTolerance = 1e-11, RelativeTolerance = 1e-11 }, OutputStep = Step,
-                ThirdBodies = new CelestialItem[] { new CelestialBody(PlanetsAndMoons.EARTH, Frames.Frame.ICRF, Start) },
+                ThirdBodies = new CelestialItem[] { new CelestialBody(PlanetsAndMoons.Earth, Frames.Frame.ICRF, Start) },
                 CovariancePropagation = CovariancePropagationOptions.None
             }
         };

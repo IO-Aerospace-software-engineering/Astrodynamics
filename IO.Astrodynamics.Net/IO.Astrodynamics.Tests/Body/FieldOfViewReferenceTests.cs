@@ -201,10 +201,10 @@ public class FieldOfViewReferenceTests : IClassFixture<FieldOfViewReferenceKerne
     {
         return name switch
         {
-            "EARTH" => new CelestialBody(PlanetsAndMoons.EARTH),
-            "MOON" => new CelestialBody(PlanetsAndMoons.MOON),
+            "EARTH" => new CelestialBody(PlanetsAndMoons.Earth),
+            "MOON" => new CelestialBody(PlanetsAndMoons.Moon),
             "SUN" => new CelestialBody(Stars.Sun),
-            "399013" => new Site(13, "DSS-13", new CelestialBody(PlanetsAndMoons.EARTH)),
+            "399013" => new Site(13, "DSS-13", new CelestialBody(PlanetsAndMoons.Earth)),
             "-470102" => new Spacecraft(-470102, "FOVTARGET", Epoch, 1000.0, 3000.0, new Clock("FOVTARGET_CLK", 65536)),
             "3" => new Barycenter(3),
             "391" => new LagrangePoint(LagrangePoints.L1),
@@ -479,7 +479,7 @@ public class FieldOfViewReferenceTests : IClassFixture<FieldOfViewReferenceKerne
     public void SpicePath_OutsideKernelCoverage_ThrowsSpiceError()
     {
         var instrument = InstrumentOf(-470101001);
-        var earth = new CelestialBody(PlanetsAndMoons.EARTH);
+        var earth = new CelestialBody(PlanetsAndMoons.Earth);
         var outside = new Window(SearchWindow.EndDate.AddSeconds(3600.0), SearchWindow.EndDate.AddSeconds(7200.0));
         var exception = Assert.Throws<SpiceException>(() => instrument.FindFieldOfViewWindows(outside, earth, new FieldOfViewSearchOptions { Step = TimeSpan.FromSeconds(60.0), Aberration = Aberration.LT, TargetShape = ShapeType.Point, TargetFrame = Frames.Frame.ICRF }).ToArray());
         Assert.Contains("Insufficient ephemeris data", exception.Message);

@@ -36,7 +36,7 @@ public class PropagationOptionsForceTests
     private static CelestialBody CreateEarth(double albedo = 0.0,
         double thermalEffectiveTemperature = 0.0, double thermalEmissivity = 0.0)
     {
-        return new CelestialBody(PlanetsAndMoons.EARTH, Frames.Frame.ICRF, TimeSystem.Time.J2000Tdb, albedo: albedo,
+        return new CelestialBody(PlanetsAndMoons.Earth, Frames.Frame.ICRF, TimeSystem.Time.J2000Tdb, albedo: albedo,
             thermalEffectiveTemperature: thermalEffectiveTemperature, thermalEmissivity: thermalEmissivity);
     }
 
@@ -67,7 +67,7 @@ public class PropagationOptionsForceTests
         var spc = CreateSpacecraft(earth);
         var window = new Window(TimeSystem.Time.J2000Tdb, TimeSystem.Time.J2000Tdb + TimeSpan.FromHours(1));
 
-        var propagator = new CentralBodyPropagator(window, spc, Options(1e-10, Stars.SUN_BODY));
+        var propagator = new CentralBodyPropagator(window, spc, Options(1e-10, Stars.SunBody));
 
         Assert.NotNull(propagator);
     }
@@ -79,7 +79,7 @@ public class PropagationOptionsForceTests
         var spc = CreateSpacecraft(earth);
         var window = new Window(TimeSystem.Time.J2000Tdb, TimeSystem.Time.J2000Tdb + TimeSpan.FromHours(1));
 
-        var propagator = new CentralBodyPropagator(window, spc, Options(1e-10, Stars.SUN_BODY) with { AlbedoRadiationPressure = true });
+        var propagator = new CentralBodyPropagator(window, spc, Options(1e-10, Stars.SunBody) with { AlbedoRadiationPressure = true });
 
         Assert.NotNull(propagator);
     }
@@ -88,13 +88,13 @@ public class PropagationOptionsForceTests
     public void TheCentralBody_TakesPart_SoThatDragApplies()
     {
         // Arrange: an Earth with an atmosphere, the observer of the spacecraft, not listed in the first run
-        var earth = new CelestialBody(PlanetsAndMoons.EARTH, Frames.Frame.ICRF, TimeSystem.Time.J2000Tdb, null,
+        var earth = new CelestialBody(PlanetsAndMoons.Earth, Frames.Frame.ICRF, TimeSystem.Time.J2000Tdb, null,
             new Nrlmsise00Model(SpaceWeather.Nominal));
         var window = new Window(TimeSystem.Time.J2000Tdb, TimeSystem.Time.J2000Tdb + TimeSpan.FromMinutes(90));
 
         CentralBodyPropagator Build(bool listEarth, bool drag)
         {
-            var bodies = listEarth ? new CelestialItem[] { earth, Stars.SUN_BODY } : new CelestialItem[] { Stars.SUN_BODY };
+            var bodies = listEarth ? new CelestialItem[] { earth, Stars.SunBody } : new CelestialItem[] { Stars.SunBody };
             return new CentralBodyPropagator(window, CreateSpacecraft(earth), Options(1e-12, bodies) with { AtmosphericDrag = drag });
         }
 
@@ -122,7 +122,7 @@ public class PropagationOptionsForceTests
 
         StateVector Final(bool listEarth)
         {
-            var bodies = listEarth ? new CelestialItem[] { earth, Stars.SUN_BODY } : new CelestialItem[] { Stars.SUN_BODY };
+            var bodies = listEarth ? new CelestialItem[] { earth, Stars.SunBody } : new CelestialItem[] { Stars.SunBody };
             return new CentralBodyPropagator(window, CreateSpacecraft(earth),
                 Options(1e-12, bodies) with { SolarRadiationPressure = true }).Propagate().StateVectors[^1];
         }
@@ -145,12 +145,12 @@ public class PropagationOptionsForceTests
 
         // Without albedo
         var spc1 = CreateSpacecraft(earthNoAlbedo);
-        new CentralBodyPropagator(window, spc1, Options(1e-12, Stars.SUN_BODY)).Propagate();
+        new CentralBodyPropagator(window, spc1, Options(1e-12, Stars.SunBody)).Propagate();
         var finalNoAlbedo = spc1.GetEphemeris(window.EndDate, earthNoAlbedo, Frames.Frame.ICRF, Aberration.None);
 
         // With albedo
         var spc2 = CreateSpacecraft(earth);
-        new CentralBodyPropagator(window, spc2, Options(1e-12, Stars.SUN_BODY) with { AlbedoRadiationPressure = true }).Propagate();
+        new CentralBodyPropagator(window, spc2, Options(1e-12, Stars.SunBody) with { AlbedoRadiationPressure = true }).Propagate();
         var finalWithAlbedo = spc2.GetEphemeris(window.EndDate, earth, Frames.Frame.ICRF, Aberration.None);
 
         // There should be a measurable position difference (mm to cm scale for 1 orbit)
@@ -167,7 +167,7 @@ public class PropagationOptionsForceTests
         var window = new Window(TimeSystem.Time.J2000Tdb, TimeSystem.Time.J2000Tdb + TimeSpan.FromHours(1));
 
         var propagator = new CentralBodyPropagator(window, spc,
-            Options(1e-10, Stars.SUN_BODY, new CelestialBody(PlanetsAndMoons.MOON, Frames.Frame.ICRF, TimeSystem.Time.J2000Tdb))
+            Options(1e-10, Stars.SunBody, new CelestialBody(PlanetsAndMoons.Moon, Frames.Frame.ICRF, TimeSystem.Time.J2000Tdb))
                 with { SolarRadiationPressure = true });
 
         Assert.NotNull(propagator);
@@ -181,7 +181,7 @@ public class PropagationOptionsForceTests
         var spc = CreateSpacecraft(earth);
         var window = new Window(TimeSystem.Time.J2000Tdb, TimeSystem.Time.J2000Tdb + TimeSpan.FromHours(1));
 
-        var propagator = new CentralBodyPropagator(window, spc, Options(1e-10, Stars.SUN_BODY) with { ThermalRadiationPressure = true });
+        var propagator = new CentralBodyPropagator(window, spc, Options(1e-10, Stars.SunBody) with { ThermalRadiationPressure = true });
 
         Assert.NotNull(propagator);
     }
@@ -195,12 +195,12 @@ public class PropagationOptionsForceTests
 
         // Without thermal
         var spc1 = CreateSpacecraft(earthNoThermal);
-        new CentralBodyPropagator(window, spc1, Options(1e-12, Stars.SUN_BODY)).Propagate();
+        new CentralBodyPropagator(window, spc1, Options(1e-12, Stars.SunBody)).Propagate();
         var finalNoThermal = spc1.GetEphemeris(window.EndDate, earthNoThermal, Frames.Frame.ICRF, Aberration.None);
 
         // With thermal
         var spc2 = CreateSpacecraft(earth);
-        new CentralBodyPropagator(window, spc2, Options(1e-12, Stars.SUN_BODY) with { ThermalRadiationPressure = true }).Propagate();
+        new CentralBodyPropagator(window, spc2, Options(1e-12, Stars.SunBody) with { ThermalRadiationPressure = true }).Propagate();
         var finalWithThermal = spc2.GetEphemeris(window.EndDate, earth, Frames.Frame.ICRF, Aberration.None);
 
         // There should be a measurable position difference
@@ -218,7 +218,7 @@ public class PropagationOptionsForceTests
     {
         // Arrange: the orbit on a model-less Earth, an Earth with a geopotential given as a third body
         var earth = CreateEarth();
-        var twin = new CelestialBody(PlanetsAndMoons.EARTH, Frames.Frame.ICRF, TimeSystem.Time.J2000Tdb,
+        var twin = new CelestialBody(PlanetsAndMoons.Earth, Frames.Frame.ICRF, TimeSystem.Time.J2000Tdb,
             new GeopotentialModelParameters("Data/SolarSystem/EGM2008_to70_TideFree", 10));
         var window = new Window(TimeSystem.Time.J2000Tdb, TimeSystem.Time.J2000Tdb + TimeSpan.FromHours(1));
 
@@ -245,8 +245,8 @@ public class PropagationOptionsForceTests
         }
 
         // Act
-        var withoutIt = Run(Stars.SUN_BODY);
-        var withIt = Run(CreateEarth(), Stars.SUN_BODY);
+        var withoutIt = Run(Stars.SunBody);
+        var withIt = Run(CreateEarth(), Stars.SunBody);
 
         // Assert
         Assert.Equal(withoutIt.Position, withIt.Position);

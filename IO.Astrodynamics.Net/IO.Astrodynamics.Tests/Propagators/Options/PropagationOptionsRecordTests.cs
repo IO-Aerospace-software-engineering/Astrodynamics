@@ -132,22 +132,22 @@ public class PropagationOptionsRecordTests
     [Fact]
     public void ThirdBodies_AreACopyComparedByValue()
     {
-        var bodies = new List<CelestialItem> { Stars.SUN_BODY, PlanetsAndMoons.MOON_BODY };
+        var bodies = new List<CelestialItem> { Stars.SunBody, PlanetsAndMoons.MoonBody };
         var options = PropagationOptions.Default with { ThirdBodies = bodies };
         bodies.Clear();
 
         Assert.Equal(2, options.ThirdBodies.Count);
-        var same = PropagationOptions.Default with { ThirdBodies = new CelestialItem[] { Stars.SUN_BODY, PlanetsAndMoons.MOON_BODY } };
+        var same = PropagationOptions.Default with { ThirdBodies = new CelestialItem[] { Stars.SunBody, PlanetsAndMoons.MoonBody } };
         Assert.Equal(same, options);
         Assert.Equal(same.GetHashCode(), options.GetHashCode());
-        Assert.NotEqual(PropagationOptions.Default with { ThirdBodies = new CelestialItem[] { Stars.SUN_BODY } }, options);
+        Assert.NotEqual(PropagationOptions.Default with { ThirdBodies = new CelestialItem[] { Stars.SunBody } }, options);
     }
 
     [Fact]
     public void ThirdBodies_WithANullBody_Throw()
     {
         var exception = Assert.Throws<ArgumentException>(() =>
-            PropagationOptions.Default with { ThirdBodies = new CelestialItem[] { Stars.SUN_BODY, null } });
+            PropagationOptions.Default with { ThirdBodies = new CelestialItem[] { Stars.SunBody, null } });
         Assert.Equal("ThirdBodies", exception.ParamName);
     }
 

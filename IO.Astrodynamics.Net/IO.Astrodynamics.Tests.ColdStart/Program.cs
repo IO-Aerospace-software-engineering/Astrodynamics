@@ -31,11 +31,11 @@ namespace IO.Astrodynamics.Tests.ColdStart;
 /// milliseconds. The modes, thread A then thread B:
 /// <list type="bullet">
 /// <item><c>direct</c>: <see cref="SpiceApi.ConvertTleToStateVector(string, string, string, Time)"/>; the first read of
-/// <see cref="PlanetsAndMoons.EARTH_BODY"/> and its GM.</item>
+/// <see cref="PlanetsAndMoons.EarthBody"/> and its GM.</item>
 /// <item><c>tle</c>: <see cref="Tle.ToStateVector(Time)"/>, the TLE built before the threads start; the same read.</item>
 /// <item><c>lagrange</c>: <see cref="SpiceApi.ReadEphemeris(Time, int, int, Frame, Aberration)"/> from L1 (391), whose
-/// observer is a <see cref="LagrangePoint"/>, which reads <see cref="Barycenters.EARTH_BARYCENTER"/>; the first read of
-/// <see cref="Barycenters.EARTH_BARYCENTER"/> and its GM.</item>
+/// observer is a <see cref="LagrangePoint"/>, which reads <see cref="Barycenters.EarthBarycenter"/>; the first read of
+/// <see cref="Barycenters.EarthBarycenter"/> and its GM.</item>
 /// <item><c>lagrange-window</c>: <see cref="SpiceApi.ReadEphemeris(Window, int, int, Frame, Aberration, TimeSpan)"/> from
 /// L1 over 60 s every 30 s; the same read.</item>
 /// </list>
@@ -497,10 +497,10 @@ internal static class Program
     // read the provider at the first read of a provider-backed member (second round of #668), so thread B reads one: the
     // GM, through the provider, as the type initializer read it before
     [MethodImpl(MethodImplOptions.NoInlining)]
-    private static void ReadEarthBody() => GC.KeepAlive(PlanetsAndMoons.EARTH_BODY.GM);
+    private static void ReadEarthBody() => GC.KeepAlive(PlanetsAndMoons.EarthBody.GM);
 
     [MethodImpl(MethodImplOptions.NoInlining)]
-    private static void ReadEarthBarycenter() => GC.KeepAlive(Barycenters.EARTH_BARYCENTER.GM);
+    private static void ReadEarthBarycenter() => GC.KeepAlive(Barycenters.EarthBarycenter.GM);
 
     /// <summary>
     /// <see cref="SpiceDataProvider"/>, which holds the thread that set <see cref="HoldsThisThread"/> at its first read of

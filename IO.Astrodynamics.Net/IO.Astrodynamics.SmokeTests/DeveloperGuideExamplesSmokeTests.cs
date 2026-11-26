@@ -40,7 +40,7 @@ public class DeveloperGuideExamplesSmokeTests
     [Fact]
     public void TheSiteExampleRuns()
     {
-        var earth = PlanetsAndMoons.EARTH_BODY;
+        var earth = PlanetsAndMoons.EarthBody;
 
         // Create site with explicit coordinates
         var mySite = new Site(100, "MySite", earth,
@@ -52,7 +52,7 @@ public class DeveloperGuideExamplesSmokeTests
 
         // Get horizontal coordinates to Moon
         var epoch = new Time(2024, 1, 1, 12, 0, 0, TimeScale.TDB);
-        var moon = new CelestialBody(PlanetsAndMoons.MOON);
+        var moon = new CelestialBody(PlanetsAndMoons.Moon);
         var horizontal = mySite.GetHorizontalCoordinates(epoch, moon, Aberration.LT);
 
         // Find visibility windows
@@ -78,7 +78,7 @@ public class DeveloperGuideExamplesSmokeTests
     [Fact]
     public void TheTleTrackingExampleRuns()
     {
-        var earth = PlanetsAndMoons.EARTH_BODY;
+        var earth = PlanetsAndMoons.EarthBody;
         var issTLE = new Tle(
             "ISS (ZARYA)",
             "1 25544U 98067A   24153.17509025  .00020162  00000+0  35104-3 0  9990",

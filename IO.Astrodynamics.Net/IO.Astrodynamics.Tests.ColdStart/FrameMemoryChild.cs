@@ -41,7 +41,7 @@ internal static class FrameMemoryChild
     {
         SpiceApi.Instance.LoadKernels(new DirectoryInfo(kernels));
         var start = new Time(2024, 3, 1, 12, 0, 0, TimeScale.TDB);
-        var earth = new CelestialBody(PlanetsAndMoons.EARTH);
+        var earth = new CelestialBody(PlanetsAndMoons.Earth);
         var site = new Site(13, "FRAMEMEMORY", earth, new Planetodetic(-116.79 * Constants.Deg2Rad, 35.25 * Constants.Deg2Rad, 1070.0));
 
         var frames = new (string Label, Frame Frame, int Reads)[]

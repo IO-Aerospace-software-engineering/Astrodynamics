@@ -223,7 +223,7 @@ public class DeveloperGuideExamplesTests
         var at = epoch.AddHours(12);
         double seconds = PropagationTimeArgument.Tt.SecondsBetween(epoch, at);
         var (position, velocity) = solution.InterpolateAt(at);
-        var reference = TwoBody(orbit, PlanetsAndMoons.EARTH_BODY.GM, seconds);
+        var reference = TwoBody(orbit, PlanetsAndMoons.EarthBody.GM, seconds);
         double dr = (position - reference.Position).Magnitude();
         double dv = (velocity - reference.Velocity).Magnitude();
         _output.WriteLine($"MEASURE #668 guide spacecraft example at 12 h: |dr| {dr:E3} m, |dv| {dv:E3} m/s");
@@ -238,7 +238,7 @@ public class DeveloperGuideExamplesTests
     [Fact]
     public void SpacecraftComponents_EngineBeforeTank_Throws()
     {
-        var earth = PlanetsAndMoons.EARTH_BODY;
+        var earth = PlanetsAndMoons.EarthBody;
         var epoch = new TimeSystem.Time(2024, 1, 1, TimeScale.TDB);
         var orbit = new KeplerianElements(7000000, 0.001, 51.6 * IO.Astrodynamics.Constants.Deg2Rad, 0, 0, 0, earth, epoch, Frames.Frame.ICRF);
         var spacecraft = new Spacecraft(-1001, "MySat", 500.0, orbit, 1000.0, new Clock("MainClock", 256));
@@ -385,7 +385,7 @@ public class DeveloperGuideExamplesTests
     // The inputs of the blocks that continue an earlier one, as their opening comments name them
     private static Spacecraft SpacecraftWithEngine(int naifId, out Engine engine)
     {
-        var earth = PlanetsAndMoons.EARTH_BODY;
+        var earth = PlanetsAndMoons.EarthBody;
         var epoch = new TimeSystem.Time(2024, 1, 1, TimeScale.TDB);
         var orbit = new KeplerianElements(6800000.0, 0.001, 51.6 * IO.Astrodynamics.Constants.Deg2Rad, 0.0, 0.0, 0.0, earth, epoch, Frames.Frame.ICRF);
         var spacecraft = new Spacecraft(naifId, $"GUIDE{-naifId}", 500.0, orbit, 1000.0, new Clock($"GUIDE{-naifId}_CLK", 256));
@@ -400,7 +400,7 @@ public class DeveloperGuideExamplesTests
     [Fact]
     public void Block24_ValidatesAnOpm()
     {
-        var state = new StateVector(new Vector3(6800000.0, 0.0, 0.0), new Vector3(0.0, 7656.2, 0.0), PlanetsAndMoons.EARTH_BODY,
+        var state = new StateVector(new Vector3(6800000.0, 0.0, 0.0), new Vector3(0.0, 7656.2, 0.0), PlanetsAndMoons.EarthBody,
             new TimeSystem.Time(2024, 1, 1, TimeScale.TDB), Frames.Frame.ICRF);
         DeveloperGuideExamples.Block24(Opm.CreateFromStateVector("SAT-1", "2024-001A", state));
     }
@@ -410,28 +410,28 @@ public class DeveloperGuideExamplesTests
     {
         var spacecraft = SpacecraftWithEngine(-6681, out var engine);
         var epoch = new TimeSystem.Time(2024, 1, 1, 12, 0, 0, TimeScale.TDB);
-        DeveloperGuideExamples.Block31(PlanetsAndMoons.EARTH_BODY, new CelestialBody(PlanetsAndMoons.MOON), new CelestialBody(Stars.Sun),
+        DeveloperGuideExamples.Block31(PlanetsAndMoons.EarthBody, new CelestialBody(PlanetsAndMoons.Moon), new CelestialBody(Stars.Sun),
             spacecraft.Instruments.First(), engine, epoch, epoch, TimeSpan.FromMinutes(30), TimeSpan.FromMinutes(30));
     }
 
     [Fact]
     public void Block45_ReadsAnEphemeris()
     {
-        DeveloperGuideExamples.Block45(new CelestialBody(PlanetsAndMoons.MOON), new TimeSystem.Time(2024, 1, 1, TimeScale.TDB), PlanetsAndMoons.EARTH_BODY, Frames.Frame.ICRF);
+        DeveloperGuideExamples.Block45(new CelestialBody(PlanetsAndMoons.Moon), new TimeSystem.Time(2024, 1, 1, TimeScale.TDB), PlanetsAndMoons.EarthBody, Frames.Frame.ICRF);
     }
 
     [Fact]
     public void Block58_BuildsTheFactoryAttitudes()
     {
         SpacecraftWithEngine(-6682, out var engine);
-        DeveloperGuideExamples.Block58(PlanetsAndMoons.EARTH_BODY, new CelestialBody(Stars.Sun), engine, new TimeSystem.Time(2024, 1, 1, TimeScale.TDB),
+        DeveloperGuideExamples.Block58(PlanetsAndMoons.EarthBody, new CelestialBody(Stars.Sun), engine, new TimeSystem.Time(2024, 1, 1, TimeScale.TDB),
             TimeSpan.FromMinutes(30));
     }
 
     [Fact]
     public void Block59_ReadsTheMoon()
     {
-        DeveloperGuideExamples.Block59(new CelestialBody(PlanetsAndMoons.MOON), PlanetsAndMoons.EARTH_BODY, new TimeSystem.Time(2024, 1, 1, TimeScale.TDB));
+        DeveloperGuideExamples.Block59(new CelestialBody(PlanetsAndMoons.Moon), PlanetsAndMoons.EarthBody, new TimeSystem.Time(2024, 1, 1, TimeScale.TDB));
     }
 
     #endregion

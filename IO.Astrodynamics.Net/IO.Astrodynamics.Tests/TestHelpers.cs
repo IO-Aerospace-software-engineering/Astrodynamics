@@ -13,20 +13,20 @@ namespace IO.Astrodynamics.Tests
     {
         internal static CelestialBody Sun => new(Stars.Sun);
 
-        internal static CelestialBody Earth => new(PlanetsAndMoons.EARTH, Frames.Frame.ICRF, new TimeSystem.Time(2021, 1, 1, TimeScale.TDB), atmosphericModel: new EarthStandardAtmosphere());
+        internal static CelestialBody Earth => new(PlanetsAndMoons.Earth, Frames.Frame.ICRF, new TimeSystem.Time(2021, 1, 1, TimeScale.TDB), atmosphericModel: new EarthStandardAtmosphere());
 
-        internal static CelestialBody Moon => new(PlanetsAndMoons.MOON, Frames.Frame.ICRF, new TimeSystem.Time(2021, 1, 1, TimeScale.TDB));
+        internal static CelestialBody Moon => new(PlanetsAndMoons.Moon, Frames.Frame.ICRF, new TimeSystem.Time(2021, 1, 1, TimeScale.TDB));
 
-        internal static CelestialBody EarthAtJ2000 => new(PlanetsAndMoons.EARTH, Frames.Frame.ICRF, new TimeSystem.Time(2000, 1, 1, 12, 0, 0, TimeScale.TDB));
+        internal static CelestialBody EarthAtJ2000 => new(PlanetsAndMoons.Earth, Frames.Frame.ICRF, new TimeSystem.Time(2000, 1, 1, 12, 0, 0, TimeScale.TDB));
 
         internal static Barycenter SsbAtJ2000 => new(0, new TimeSystem.Time(2000, 1, 1, 12, 0, 0, TimeScale.TDB));
 
-        internal static CelestialBody EarthWithAtmAndGeoAtJ2000 => new(PlanetsAndMoons.EARTH, Frames.Frame.ICRF, new TimeSystem.Time(2000, 1, 1, 12, 0, 0, TimeScale.TDB),
+        internal static CelestialBody EarthWithAtmAndGeoAtJ2000 => new(PlanetsAndMoons.Earth, Frames.Frame.ICRF, new TimeSystem.Time(2000, 1, 1, 12, 0, 0, TimeScale.TDB),
             new GeopotentialModelParameters("Data/SolarSystem/EGM2008_to70_TideFree", 10), new EarthStandardAtmosphere());
 
-        internal static CelestialBody MoonAtJ2000 => new(PlanetsAndMoons.MOON, Frames.Frame.ICRF, new TimeSystem.Time(2000, 1, 1, 12, 0, 0, TimeScale.TDB));
+        internal static CelestialBody MoonAtJ2000 => new(PlanetsAndMoons.Moon, Frames.Frame.ICRF, new TimeSystem.Time(2000, 1, 1, 12, 0, 0, TimeScale.TDB));
 
-        internal static CelestialBody MoonAt20011214 => new(PlanetsAndMoons.MOON, Frames.Frame.ICRF, new TimeSystem.Time(2001, 12, 14, 0, 0, 0, TimeScale.TDB));
+        internal static CelestialBody MoonAt20011214 => new(PlanetsAndMoons.Moon, Frames.Frame.ICRF, new TimeSystem.Time(2001, 12, 14, 0, 0, 0, TimeScale.TDB));
 
         internal static Spacecraft Spacecraft => new Spacecraft(-666, "GenericSpacecraft", 100.0, new StateVector(new Vector3(6800000.0, 0.0, 0.0), new Vector3(0.0, 8000.0, 0.0), Earth, TimeSystem.Time.J2000Tdb, Frames.Frame.ICRF), 1000.0,
             new Clock("GenericClk", 65536));

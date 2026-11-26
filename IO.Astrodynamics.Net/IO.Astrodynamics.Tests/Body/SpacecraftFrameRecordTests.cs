@@ -66,7 +66,7 @@ public class SpacecraftFrameRecordTests
 
     private static Spacecraft Create(int naifId)
     {
-        var earth = new CelestialBody(PlanetsAndMoons.EARTH, Frame.ICRF, Start);
+        var earth = new CelestialBody(PlanetsAndMoons.Earth, Frame.ICRF, Start);
         var orbit = new StateVector(new Vector3(6800000.0, 0.0, 0.0), new Vector3(0.0, 7656.2204182967143, 0.0), earth, Start, Frame.ICRF);
         return new Spacecraft(naifId, $"REC{-naifId}", 1000.0, orbit, 3000.0, new Clock($"REC{-naifId}_CLK", 65536));
     }

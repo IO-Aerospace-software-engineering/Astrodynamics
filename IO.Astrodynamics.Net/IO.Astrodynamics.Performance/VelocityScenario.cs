@@ -38,11 +38,11 @@ public class VelocityScenario
     public VelocityScenario()
     {
         SpiceApi.Instance.LoadKernels(new DirectoryInfo("Data"));
-        _earth = new CelestialBody(PlanetsAndMoons.EARTH, Frame.ICRF, TimeSystem.Time.J2000Tdb,
+        _earth = new CelestialBody(PlanetsAndMoons.Earth, Frame.ICRF, TimeSystem.Time.J2000Tdb,
             new GeopotentialModelParameters("Data/SolarSystem/EGM2008_to70_TideFree", 30), new EarthStandardAtmosphere());
-        _moon = new CelestialBody(PlanetsAndMoons.MOON);
+        _moon = new CelestialBody(PlanetsAndMoons.Moon);
         _sun = new CelestialBody(Stars.Sun);
-        _geopotential = new CelestialBody(PlanetsAndMoons.EARTH, Frame.ICRF, TimeSystem.Time.J2000Tdb,
+        _geopotential = new CelestialBody(PlanetsAndMoons.Earth, Frame.ICRF, TimeSystem.Time.J2000Tdb,
             new GeopotentialModelParameters("Data/SolarSystem/EGM2008_to70_TideFree", 70));
         Clock clk = new Clock("My clock", 256);
         Spacecraft spc = new Spacecraft(-1001, "MySpacecraft", 100.0, new StateVector(new Vector3(6800000.0, 0.0, 0.0), new Vector3(0.0, 7656.2204182967143, 0.0), _earth, TimeSystem.Time.J2000Tdb, Frames.Frame.ICRF), 10000.0,

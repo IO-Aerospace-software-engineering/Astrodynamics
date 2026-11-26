@@ -155,7 +155,7 @@ public sealed record PropagationCase(Window Window, Spacecraft Spacecraft, IRead
     // Drag and SRP are modelled about the Earth only (spec.md section 12.1)
     private static void AboutTheEarthOnly(string force, NaifObject centralBody)
     {
-        if (centralBody.NaifId != PlanetsAndMoons.EARTH.NaifId)
+        if (centralBody.NaifId != PlanetsAndMoons.Earth.NaifId)
         {
             throw new InvalidOperationException(
                 $"The case has {force} about {centralBody.Name}: spec.md section 12.1 models {force} about the Earth only.");

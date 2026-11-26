@@ -50,8 +50,8 @@ using IO.Astrodynamics.TimeSystem;
 SpiceApi.Instance.LoadKernels(new DirectoryInfo("Data/SolarSystem"));
 
 // Moon state relative to Earth at 2000-01-01T12:00Z, expressed in ICRF
-var earth = new CelestialBody(PlanetsAndMoons.EARTH);
-var moon = new CelestialBody(PlanetsAndMoons.MOON);
+var earth = new CelestialBody(PlanetsAndMoons.Earth);
+var moon = new CelestialBody(PlanetsAndMoons.Moon);
 var epoch = new Time(new DateTime(2000, 1, 1, 12, 0, 0), TimeScale.UTC);
 
 var state = moon.GetEphemeris(epoch, earth, Frame.ICRF, Aberration.None);

@@ -92,7 +92,7 @@ public class SpiceExceptionTests : IDisposable
     public void ATwoBodyPropagationSpiceRejects_ThrowsSpiceException_WithAnEmptyLongMessage()
     {
         var state = new IO.Astrodynamics.OrbitalParameters.StateVector(IO.Astrodynamics.Math.Vector3.Zero, new IO.Astrodynamics.Math.Vector3(0.0, 7500.0, 0.0),
-            IO.Astrodynamics.SolarSystemObjects.PlanetsAndMoons.EARTH_BODY, new TimeSystem.Time(2021, 1, 1, TimeScale.TDB), IO.Astrodynamics.Frames.Frame.ICRF);
+            IO.Astrodynamics.SolarSystemObjects.PlanetsAndMoons.EarthBody, new TimeSystem.Time(2021, 1, 1, TimeScale.TDB), IO.Astrodynamics.Frames.Frame.ICRF);
         var error = Assert.Throws<SpiceException>(() => SpiceApi.Instance.Propagate2Bodies(state, 3.986004418e14, TimeSpan.FromSeconds(60.0)));
         Assert.Equal("SPICE(ZEROPOSITION)", error.ShortMessage);
         Assert.Equal("", error.LongMessage);

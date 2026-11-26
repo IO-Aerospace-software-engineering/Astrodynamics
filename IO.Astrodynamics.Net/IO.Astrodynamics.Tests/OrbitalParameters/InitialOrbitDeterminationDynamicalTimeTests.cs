@@ -53,6 +53,6 @@ public class InitialOrbitDeterminationDynamicalTimeTests
         var tagged = Array.ConvertAll(observations,
             o => Equatorial.FromRightAscensionDeclination(o.RightAscension, o.Declination, o.Distance, tag(o.Epoch)));
         return InitialOrbitDetermination.CreateFromGaussMethod(tagged[0], tagged[1], tagged[2], site,
-            PlanetsAndMoons.EARTH_BODY, 42000000.0).OrbitalParameters.ToStateVector();
+            PlanetsAndMoons.EarthBody, 42000000.0).OrbitalParameters.ToStateVector();
     }
 }

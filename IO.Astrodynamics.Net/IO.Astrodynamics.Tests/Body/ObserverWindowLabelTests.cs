@@ -67,8 +67,8 @@ public class ObserverWindowLabelTests
     public void UtcSearchWindow_UtcLabels_TheSameInstants()
     {
         var lro = new Spacecraft(-85, "LRO", epoch: UtcDistanceWindow.StartDate);
-        var moon = new CelestialBody(PlanetsAndMoons.MOON);
-        var earth = new CelestialBody(PlanetsAndMoons.EARTH);
+        var moon = new CelestialBody(PlanetsAndMoons.Moon);
+        var earth = new CelestialBody(PlanetsAndMoons.Earth);
         var sun = new CelestialBody(Stars.Sun);
         var dss13 = new Site(13, "DSS-13", earth);
         var options = WindowSearchOptions.Default with { Step = Step };

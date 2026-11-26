@@ -76,7 +76,7 @@ internal static class TlePage
         #region docs/reference/tle.md:2
         // Inputs: window (Window), tle (TLE)
         var start = window.StartDate.ToTdb();
-        var earth = new CelestialBody(PlanetsAndMoons.EARTH, Frame.ICRF, start,
+        var earth = new CelestialBody(PlanetsAndMoons.Earth, Frame.ICRF, start,
             new GeopotentialModelParameters("Data/SolarSystem/EGM2008_to70_TideFree", 10), new Nrlmsise00Model(SpaceWeather.Nominal));
         var sgp4 = tle.ToStateVector(start);
         var spacecraft = new Spacecraft(-1001, "ISS", 420000.0, new StateVector(sgp4.Position, sgp4.Velocity, earth, start, Frame.TEME), 450000.0,

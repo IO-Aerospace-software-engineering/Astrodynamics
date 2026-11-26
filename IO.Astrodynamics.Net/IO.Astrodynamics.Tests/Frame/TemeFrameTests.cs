@@ -101,7 +101,7 @@ public class TemeFrameTests
 
     private static StateVector ToIcrf(Point p, Frames.Frame teme)
     {
-        var earth = new CelestialBody(PlanetsAndMoons.EARTH);
+        var earth = new CelestialBody(PlanetsAndMoons.Earth);
         return new StateVector(Position(p.Teme), Velocity(p.Teme), earth, Utc(p.Utc), teme).ToFrame(Frames.Frame.ICRF).ToStateVector();
     }
 
@@ -154,7 +154,7 @@ public class TemeFrameTests
     [Fact]
     public void IcrfToTeme_InvertsGmat()
     {
-        var earth = new CelestialBody(PlanetsAndMoons.EARTH);
+        var earth = new CelestialBody(PlanetsAndMoons.Earth);
         double leo = 0.0, geo = 0.0, velocity = 0.0;
         foreach (var p in FramePoints)
         {
@@ -308,8 +308,8 @@ public class TemeFrameTests
     {
         // #558: a read in TEME (managed or by name), CIRS or TIRS is read in J2000 and rotated, as ToFrame
         var epoch = Utc("2021-03-20T11:58:50.814");
-        var moon = new CelestialBody(PlanetsAndMoons.MOON);
-        var earth = new CelestialBody(PlanetsAndMoons.EARTH);
+        var moon = new CelestialBody(PlanetsAndMoons.Moon);
+        var earth = new CelestialBody(PlanetsAndMoons.Earth);
         var icrf = moon.GetEphemeris(epoch, earth, Frames.Frame.ICRF, Aberration.LT);
         foreach (var frame in new[] { Frames.Frame.TEME, new Frames.Frame("TEME"), Frames.Frame.CIRS, Frames.Frame.TIRS })
         {
@@ -344,8 +344,8 @@ public class TemeFrameTests
         // #682: the frame of a managed spacecraft, which only the library holds, reached spkezr_c by name
         // (SPICE(UNKNOWNFRAME)); with an attitude record it is read in J2000 and rotated by the record, as the frames of #558
         var epoch = new TimeSystem_Time(2024, 3, 1, TimeScale.TDB);
-        var moon = new CelestialBody(PlanetsAndMoons.MOON);
-        var earth = new CelestialBody(PlanetsAndMoons.EARTH);
+        var moon = new CelestialBody(PlanetsAndMoons.Moon);
+        var earth = new CelestialBody(PlanetsAndMoons.Earth);
         var orbit = new KeplerianElements(6800000.0, 0.0001, 51.6 * IO.Astrodynamics.Constants.Deg2Rad, 0.0, 0.0, 0.0, earth, epoch, Frames.Frame.ICRF);
         var spacecraft = new IO.Astrodynamics.Body.Spacecraft.Spacecraft(-6825, "F07SC", 100.0, orbit,
             10000.0, new IO.Astrodynamics.Body.Spacecraft.Clock("F07SC_CLK", 65536));
@@ -406,7 +406,7 @@ public class TemeFrameTests
 
         public ManagedSpacecraftFrameKernels(int id, string name, TimeSystem_Time start)
         {
-            var earth = new CelestialBody(PlanetsAndMoons.EARTH);
+            var earth = new CelestialBody(PlanetsAndMoons.Earth);
             var orbit = new StateVector(new Vector3(6800000.0, 0.0, 0.0), new Vector3(0.0, 7656.22, 0.0), earth, start, Frames.Frame.ICRF);
             Writer = new IO.Astrodynamics.Body.Spacecraft.Spacecraft(id, name, 1000.0, orbit, 3000.0, new IO.Astrodynamics.Body.Spacecraft.Clock(name + "_CLK", 65536));
             for (int k = 0; k <= 120; k++)
@@ -458,8 +458,8 @@ public class TemeFrameTests
     public void EphemerisReadInManagedSpacecraftFrame_EmptyRecord_ReadsTheKernelsByName()
     {
         var start = new TimeSystem_Time(2024, 3, 1, TimeScale.TDB);
-        var moon = new CelestialBody(PlanetsAndMoons.MOON);
-        var earth = new CelestialBody(PlanetsAndMoons.EARTH);
+        var moon = new CelestialBody(PlanetsAndMoons.Moon);
+        var earth = new CelestialBody(PlanetsAndMoons.Earth);
         using var kernels = new ManagedSpacecraftFrameKernels(-6826, "F07CK", start);
         var fresh = new IO.Astrodynamics.Body.Spacecraft.Spacecraft(-6826, "F07CK", 1000.0, kernels.Writer.InitialOrbitalParameters, 3000.0,
             new IO.Astrodynamics.Body.Spacecraft.Clock("F07CK_CLK", 65536));
@@ -504,8 +504,8 @@ public class TemeFrameTests
     public void EphemerisReadInManagedSpacecraftFrame_MatchesSpkezrOnTheKernelsWritten()
     {
         var start = new TimeSystem_Time(2024, 3, 1, TimeScale.TDB);
-        var moon = new CelestialBody(PlanetsAndMoons.MOON);
-        var earth = new CelestialBody(PlanetsAndMoons.EARTH);
+        var moon = new CelestialBody(PlanetsAndMoons.Moon);
+        var earth = new CelestialBody(PlanetsAndMoons.Earth);
         using var kernels = new ManagedSpacecraftFrameKernels(-6827, "F07CKV", start);
         double worstPosition = 0.0, worstVelocity = 0.0;
         foreach (int k in new[] { 0, 7, 30, 59, 61, 90, 119 })

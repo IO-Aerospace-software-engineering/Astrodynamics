@@ -371,7 +371,7 @@ public class Star : CelestialBody
     internal override OrbitalParameters.OrbitalParameters GetGeometricStateFromICRF(in Time date)
     {
         var position = GetEquatorialCoordinates(date).ToCartesian();
-        return new StateVector(position, _spaceVelocity, Barycenters.SOLAR_SYSTEM_BARYCENTER, date, Frame.ICRF);
+        return new StateVector(position, _spaceVelocity, Barycenters.SolarSystemBarycenter, date, Frame.ICRF);
     }
 
     /// <summary>
@@ -390,7 +390,7 @@ public class Star : CelestialBody
     /// </remarks>
     public override StateVector GetEphemeris(in Time epoch, ILocalizable observer, Frame frame, Aberration aberration)
     {
-        var ssb = Barycenters.SOLAR_SYSTEM_BARYCENTER;
+        var ssb = Barycenters.SolarSystemBarycenter;
         var starSsb = GetGeometricStateRelativeTo(epoch, ssb);
         var observerSsb = observer.GetGeometricStateRelativeTo(epoch, ssb);
         var relative = new StateVector(
@@ -458,7 +458,7 @@ public class Star : CelestialBody
         foreach (var epoch in window.Sample(stepSize))
         {
             var position = GetEquatorialCoordinates(epoch).ToCartesian();
-            states.Add(new StateVector(position, _spaceVelocity, Barycenters.SOLAR_SYSTEM_BARYCENTER, epoch, Frame.ICRF));
+            states.Add(new StateVector(position, _spaceVelocity, Barycenters.SolarSystemBarycenter, epoch, Frame.ICRF));
         }
 
         Volatile.Write(ref _propagatedStates, states.ToArray());

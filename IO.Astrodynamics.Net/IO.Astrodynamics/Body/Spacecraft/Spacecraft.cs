@@ -1457,7 +1457,7 @@ namespace IO.Astrodynamics.Body.Spacecraft
             // Determine reference body
             CelestialItem cb = (_propagatedStates.Count > 0)
                 ? (CelestialItem)_propagatedStates.First.Observer
-                : InitialOrbitalParameters?.Observer as CelestialItem ?? Barycenters.SOLAR_SYSTEM_BARYCENTER;
+                : InitialOrbitalParameters?.Observer as CelestialItem ?? Barycenters.SolarSystemBarycenter;
 
             // Short-circuit: observer IS the CB, no aberration, have cached states, the epoch within them (#527: outside,
             // or in a gap between added windows (#792), the reference-body path throws for propagated states, and a TLE
@@ -1634,7 +1634,7 @@ namespace IO.Astrodynamics.Body.Spacecraft
             if (naifId >= 0) throw new ArgumentOutOfRangeException(nameof(naifId), "Kernel-backed spacecraft NAIF ID must be negative.");
             CheckFrameIdRange(naifId);
             clock?.CheckAttachableTo(naifId, name);
-            return SpiceApi.Instance.ReadEphemerisRaw(epoch, centerOfMotion ?? new CelestialBody(PlanetsAndMoons.EARTH), naifId,
+            return SpiceApi.Instance.ReadEphemerisRaw(epoch, centerOfMotion ?? new CelestialBody(PlanetsAndMoons.Earth), naifId,
                 Frames.Frame.ICRF, Aberration.None);
         }
 
@@ -1714,7 +1714,7 @@ namespace IO.Astrodynamics.Body.Spacecraft
 
         internal override OrbitalParameters.OrbitalParameters GetGeometricStateFromICRF(in Time date)
         {
-            return GetGeometricStateRelativeTo(date, Barycenters.SOLAR_SYSTEM_BARYCENTER);
+            return GetGeometricStateRelativeTo(date, Barycenters.SolarSystemBarycenter);
         }
 
         /// <summary>

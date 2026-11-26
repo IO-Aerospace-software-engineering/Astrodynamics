@@ -256,8 +256,8 @@ namespace ClaudeMdSamples
             // Via CelestialBody: its configured model; an Earth without one takes NRLMSISE-00 at nominal space weather with a
             // full context, the atmosphere of its drag (#674), and the U.S. Standard Atmosphere 1976, its base atmosphere, with an
             // altitude only or a partial context (decided by S. Guillet, 2026-11-14)
-            var earth = PlanetsAndMoons.EARTH_BODY;
-            var atm = earth.GetAtmosphere(fullContext);  // NRLMSISE-00 nominal: EARTH_BODY has no model
+            var earth = PlanetsAndMoons.EarthBody;
+            var atm = earth.GetAtmosphere(fullContext);  // NRLMSISE-00 nominal: EarthBody has no model
             var low = earth.GetAtmosphere(10000.0);  // U.S. Standard Atmosphere 1976: an altitude only
             #endregion
             return (atmosphere, thermosphere, atm, low, fullContext);
@@ -268,7 +268,7 @@ namespace ClaudeMdSamples
         {
             #region net:12
             // Create Earth with degree-10 geopotential
-            var earth = new CelestialBody(PlanetsAndMoons.EARTH, Frame.ICRF, epoch,
+            var earth = new CelestialBody(PlanetsAndMoons.Earth, Frame.ICRF, epoch,
                 new GeopotentialModelParameters("Data/SolarSystem/EGM2008_to70_TideFree", 10));
 
             // A propagation takes the models of the orbit's centre, and a listed body of its id with other models throws
@@ -281,7 +281,7 @@ namespace ClaudeMdSamples
             {
                 Integrator = new VVIntegratorOptions { Step = TimeSpan.FromSeconds(1.0) },
                 OutputStep = TimeSpan.FromSeconds(1.0),
-                ThirdBodies = [PlanetsAndMoons.MOON_BODY, Stars.SUN_BODY]
+                ThirdBodies = [PlanetsAndMoons.MoonBody, Stars.SunBody]
             });
             #endregion
             return propagator;
@@ -293,7 +293,7 @@ namespace ClaudeMdSamples
             #region net:13
             // Atmospheric drag reads the body's atmosphere: its model, or NRLMSISE-00 at nominal space weather for an Earth without
             // one; another body without a model throws (#674)
-            var earth = new CelestialBody(PlanetsAndMoons.EARTH, Frame.ICRF, epoch,
+            var earth = new CelestialBody(PlanetsAndMoons.Earth, Frame.ICRF, epoch,
                 geopotentialParams, new EarthStandardAtmosphere());
             var drag = new AtmosphericDrag(spacecraft, earth);
             #endregion

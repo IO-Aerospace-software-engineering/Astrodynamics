@@ -371,7 +371,7 @@ read it by three rules (structuring choice 1 of #668, decided by S. Guillet, 202
 | Object | Provider it reads |
 |--------|-------------------|
 | An object the caller builds: `new CelestialBody(...)`, `new Site(...)`, `new Frame(name)`, a spacecraft | The provider set when it is built, for its life |
-| A static body: `PlanetsAndMoons.EARTH_BODY`, `MOON_BODY`, `Stars.SUN_BODY`, the `Barycenters` | The provider of its first read that succeeds, for its life (see below) |
+| A static body: `PlanetsAndMoons.EarthBody`, `MOON_BODY`, `Stars.SunBody`, the `Barycenters` | The provider of its first read that succeeds, for its life (see below) |
 | A static frame: `Frame.ICRF`, `Frame.ECLIPJ2000`, `Frame.ITRF93` and the other SPICE frames of `Frame` | The provider of the process at each transform (11.0.0; before, the provider set when the type `Frame` was first used, for the life of the process) |
 
 ### MemoryDataProvider

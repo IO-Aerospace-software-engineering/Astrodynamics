@@ -69,8 +69,8 @@ public class PropagationFrameTests
     {
         // Arrange
         var frame = FrameNamed(frameName);
-        var earth = new CelestialBody(PlanetsAndMoons.EARTH, Frames.Frame.ICRF, Epoch);
-        var moon = new CelestialBody(PlanetsAndMoons.MOON, Frames.Frame.ICRF, Epoch);
+        var earth = new CelestialBody(PlanetsAndMoons.Earth, Frames.Frame.ICRF, Epoch);
+        var moon = new CelestialBody(PlanetsAndMoons.Moon, Frames.Frame.ICRF, Epoch);
         var icrfState = LeoState(earth);
         var state = icrfState.ToFrame(frame).ToStateVector();
         var window = new Window(Epoch.ToTdb().AddHours(-1.0), Epoch.ToTdb().AddHours(1.0));
@@ -104,7 +104,7 @@ public class PropagationFrameTests
     {
         // Arrange
         var frame = FrameNamed(frameName);
-        var earth = new CelestialBody(PlanetsAndMoons.EARTH, Frames.Frame.ICRF, Epoch, null,
+        var earth = new CelestialBody(PlanetsAndMoons.Earth, Frames.Frame.ICRF, Epoch, null,
             new Nrlmsise00Model(SpaceWeather.Nominal));
         var icrfState = LeoState(earth);
         var state = icrfState.ToFrame(frame).ToStateVector();
@@ -133,10 +133,10 @@ public class PropagationFrameTests
 
         StateVector FinalStateInIcrf(Frames.Frame initialFrame)
         {
-            var earth = new CelestialBody(PlanetsAndMoons.EARTH, Frames.Frame.ICRF, Epoch,
+            var earth = new CelestialBody(PlanetsAndMoons.Earth, Frames.Frame.ICRF, Epoch,
                 new GeopotentialModelParameters("Data/SolarSystem/EGM2008_to70_TideFree", 10),
                 new Nrlmsise00Model(SpaceWeather.Nominal));
-            var moon = new CelestialBody(PlanetsAndMoons.MOON, Frames.Frame.ICRF, Epoch);
+            var moon = new CelestialBody(PlanetsAndMoons.Moon, Frames.Frame.ICRF, Epoch);
             var sun = new CelestialBody(Stars.Sun);
             var initial = LeoState(earth).ToFrame(initialFrame).ToStateVector();
             var spacecraft = new Spacecraft(-1972, "FRAMES2", 100.0, initial, 1000.0, new Clock("frames2", 65536),

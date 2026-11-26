@@ -75,7 +75,7 @@ public class StateVectorFrameVelocityTests
     {
         // Arrange: DSS-13 from earthstns_itrf93_201023.bsp, nearly fixed in ITRF93, about 380 m/s in ICRF.
         var epoch = new TimeSystem.Time(year, 1, 1, 12, 0, 0, TimeScale.TDB);
-        var earth = PlanetsAndMoons.EARTH_BODY;
+        var earth = PlanetsAndMoons.EarthBody;
         var itrf93 = new Frames.Frame("ITRF93");
         var station = new Site(13, "DSS-13", earth);
         var inItrf93 = station.GetEphemeris(epoch, earth, itrf93, Aberration.None);
@@ -107,7 +107,7 @@ public class StateVectorFrameVelocityTests
 
     private static StateVector GeocentricMoon(TimeSystem.Time epoch, Frames.Frame frame)
     {
-        return PlanetsAndMoons.MOON_BODY.GetEphemeris(epoch, PlanetsAndMoons.EARTH_BODY, frame, Aberration.None);
+        return PlanetsAndMoons.MoonBody.GetEphemeris(epoch, PlanetsAndMoons.EarthBody, frame, Aberration.None);
     }
 
     private static void AssertClose(Vector3 expected, Vector3 actual)

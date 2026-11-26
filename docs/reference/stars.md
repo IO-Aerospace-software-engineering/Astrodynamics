@@ -129,7 +129,7 @@ A star as observer moves at the same velocity: a state whose observer is a star,
 propagated about the Sun (the central body of a star observer), starts with the star's velocity and moves with it.
 Barnard's star moves such a spacecraft by 1.93e9 m in 6 hours where it stood still before 11.0.0: a state that was
 written relative to the barycenter's motion subtracts the star's space velocity
-(`GetGeometricStateRelativeTo(epoch, Barycenters.SOLAR_SYSTEM_BARYCENTER).Velocity`) to keep its former trajectory.
+(`GetGeometricStateRelativeTo(epoch, Barycenters.SolarSystemBarycenter).Velocity`) to keep its former trajectory.
 
 Its accuracy, the same on Linux x64, Windows x64 and macOS arm64 (CI run 44225490669):
 

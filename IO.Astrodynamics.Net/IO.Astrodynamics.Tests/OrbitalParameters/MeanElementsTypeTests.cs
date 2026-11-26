@@ -41,7 +41,7 @@ public class MeanElementsTypeTests
     {
         _output = output;
         TestKernels.EnsureSolarSystem();
-        _earth = new CelestialBody(PlanetsAndMoons.EARTH, Frames.Frame.ICRF, EpochB);
+        _earth = new CelestialBody(PlanetsAndMoons.Earth, Frames.Frame.ICRF, EpochB);
     }
 
     // Case B: FromOMM, 15.5 rev/day, e 0.0007, i 51.64°, Ω 120°, ω 80°, M 30°, in a frame

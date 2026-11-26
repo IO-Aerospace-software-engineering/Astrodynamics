@@ -165,7 +165,7 @@ public class OccultationSearchValidationTests
         string frontFrame, int count)
     {
         var spacecraft = new Spacecraft(naifId, scenario, epoch: window.StartDate);
-        Compare(scenario, frontFrame, window, spacecraft, new CelestialBody(Stars.Sun), new CelestialBody(PlanetsAndMoons.EARTH), type, aberration, step, gfocltStep,
+        Compare(scenario, frontFrame, window, spacecraft, new CelestialBody(Stars.Sun), new CelestialBody(PlanetsAndMoons.Earth), type, aberration, step, gfocltStep,
             new Frames.Frame(frontFrame), count);
     }
 
@@ -228,7 +228,7 @@ public class OccultationSearchValidationTests
     {
         // The Moon hides the Sun from LRO once per orbit (about 2 h); the Moon of pck00011 is a sphere
         var lro = new Spacecraft(-85, "LRO", epoch: LroWindow.StartDate);
-        Compare("lro", "IAU_MOON", LroWindow, lro, new CelestialBody(Stars.Sun), new CelestialBody(PlanetsAndMoons.MOON), type, Aberration.None,
+        Compare("lro", "IAU_MOON", LroWindow, lro, new CelestialBody(Stars.Sun), new CelestialBody(PlanetsAndMoons.Moon), type, Aberration.None,
             TimeSpan.FromSeconds(600.0), TimeSpan.FromSeconds(1.0), null, count);
     }
 
@@ -280,7 +280,7 @@ public class OccultationSearchValidationTests
 
     private static Spacecraft PropagatedEclipse001(int naifId, TimeSpan outputStep)
     {
-        var earth = new CelestialBody(PlanetsAndMoons.EARTH, Frames.Frame.ICRF, Eclipse001Window.StartDate);
+        var earth = new CelestialBody(PlanetsAndMoons.Earth, Frames.Frame.ICRF, Eclipse001Window.StartDate);
         var orbit = new KeplerianElements(7000000.0, 0.001, 28.5 * IO.Astrodynamics.Constants.Deg2Rad, 45.0 * IO.Astrodynamics.Constants.Deg2Rad, 0.0, 0.0, earth,
             Eclipse001Window.StartDate, Frames.Frame.ICRF);
         var spacecraft = new Spacecraft(naifId, "Eclipse001", 100.0, orbit, 1000.0, new Clock("Eclipse001Clk", 65536));
@@ -296,7 +296,7 @@ public class OccultationSearchValidationTests
         // from the epoch of the elements, 3.2e-4 s after 12 h; GMAT's epochs are rounded to the millisecond
         var spacecraft = PropagatedEclipse001(-470101, TimeSpan.FromSeconds(10.0));
         var kernelSpacecraft = new Spacecraft(-470001, "eclipse_001", epoch: Eclipse001Window.StartDate);
-        var earth = new CelestialBody(PlanetsAndMoons.EARTH);
+        var earth = new CelestialBody(PlanetsAndMoons.Earth);
         var sun = new CelestialBody(Stars.Sun);
         var options = new OccultationSearchOptions { FrontFrame = IauEarth };
         var started = DateTime.UtcNow;
@@ -338,7 +338,7 @@ public class OccultationSearchValidationTests
     {
         // Searches on separate propagations, and on kernel trajectories, in parallel: the managed search keeps no state,
         // so each gives, to the tick, what it gives alone
-        var earth = new CelestialBody(PlanetsAndMoons.EARTH);
+        var earth = new CelestialBody(PlanetsAndMoons.Earth);
         var sun = new CelestialBody(Stars.Sun);
         var spacecraft = Enumerable.Range(0, 4).Select(i => (ILocalizable)PropagatedEclipse001(-470110 - i, TimeSpan.FromSeconds(10.0)))
             .Concat([new Spacecraft(-470001, "eclipse_001", epoch: Eclipse001Window.StartDate), new Spacecraft(-470003, "leo_grazing", epoch: LeoGrazingWindow.StartDate)])

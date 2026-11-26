@@ -139,13 +139,13 @@ public class Nrlmsise00AllocationTests
     public void CelestialBody_GeodeticAirDensity_IsTheDensityOfTheContext()
     {
         // Arrange: NRLMSISE-00 through the position, a model without it through a context, and no model
-        var nrlmsise = new CelestialBody(PlanetsAndMoons.EARTH, Frames.Frame.ICRF, Epoch, null,
+        var nrlmsise = new CelestialBody(PlanetsAndMoons.Earth, Frames.Frame.ICRF, Epoch, null,
             new Nrlmsise00Model(SpaceWeather.Nominal));
-        var contextOnly = new CelestialBody(PlanetsAndMoons.EARTH, Frames.Frame.ICRF, Epoch, null,
+        var contextOnly = new CelestialBody(PlanetsAndMoons.Earth, Frames.Frame.ICRF, Epoch, null,
             new ContextOnlyModel());
         // An Earth without a model takes NRLMSISE-00 at nominal space weather (#674); another body has no atmosphere
-        var none = new CelestialBody(PlanetsAndMoons.EARTH, Frames.Frame.ICRF, Epoch);
-        var moon = new CelestialBody(PlanetsAndMoons.MOON, Frames.Frame.ICRF, Epoch);
+        var none = new CelestialBody(PlanetsAndMoons.Earth, Frames.Frame.ICRF, Epoch);
+        var moon = new CelestialBody(PlanetsAndMoons.Moon, Frames.Frame.ICRF, Epoch);
 
         foreach (var context in Grid())
         {

@@ -82,7 +82,7 @@ public partial class ConjunctionAssessmentTests
         // Two epochs, two frames, two observers
         var later = new StateVector(s2.Position, s2.Velocity, earth, tca.AddSeconds(1.0), Frames.Frame.ICRF, covariance);
         var ecliptic = s2.ToFrame(Frames.Frame.ECLIPJ2000);
-        var moon = new StateVector(s2.Position, s2.Velocity, new CelestialBody(SolarSystemObjects.PlanetsAndMoons.MOON), tca, Frames.Frame.ICRF, covariance);
+        var moon = new StateVector(s2.Position, s2.Velocity, new CelestialBody(SolarSystemObjects.PlanetsAndMoons.Moon), tca, Frames.Frame.ICRF, covariance);
         foreach (var other in new[] { later, ecliptic, moon })
         {
             Assert.Equal("object2", Assert.Throws<ArgumentException>(() => CollisionProbability.Foster2D(s1, other, 10.0)).ParamName);

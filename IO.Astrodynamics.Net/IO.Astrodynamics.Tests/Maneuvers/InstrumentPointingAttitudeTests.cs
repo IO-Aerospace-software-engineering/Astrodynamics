@@ -129,8 +129,8 @@ public class InstrumentPointingAttitudeTests
     [Fact]
     public void PointsAtTheMoonAsSpkcvo()
     {
-        var earth = new CelestialBody(PlanetsAndMoons.EARTH);
-        var moon = new CelestialBody(PlanetsAndMoons.MOON);
+        var earth = new CelestialBody(PlanetsAndMoons.Earth);
+        var moon = new CelestialBody(PlanetsAndMoons.Moon);
         foreach (var flag in Flags)
         {
             double worst = 0.0;
@@ -160,7 +160,7 @@ public class InstrumentPointingAttitudeTests
     public void PointsAtACoordinateSiteAsSpkcpt()
     {
         var reference = Reference();
-        var earth = new CelestialBody(PlanetsAndMoons.EARTH);
+        var earth = new CelestialBody(PlanetsAndMoons.Earth);
         var siteCoordinates = reference.GetProperty("site");
         var site = new Site(549, "G549", earth, new Planetodetic(siteCoordinates.GetProperty("longitude_deg").GetDouble() * IO.Astrodynamics.Constants.Deg2Rad,
             siteCoordinates.GetProperty("latitude_deg").GetDouble() * IO.Astrodynamics.Constants.Deg2Rad, siteCoordinates.GetProperty("altitude_m").GetDouble()));
@@ -201,7 +201,7 @@ public class InstrumentPointingAttitudeTests
     [InlineData(2000.0)]
     public void PointsAtAStarWithoutLightTime(double distancePc)
     {
-        var earth = new CelestialBody(PlanetsAndMoons.EARTH);
+        var earth = new CelestialBody(PlanetsAndMoons.Earth);
         var (epoch, s, _) = Pointing()[3];
         var state = new StateVector(new Vector3(s[0], s[1], s[2]), new Vector3(s[3], s[4], s[5]), earth, epoch, Frames.Frame.ICRF);
         const double arcsec = System.Math.PI / 180.0 / 3600.0;

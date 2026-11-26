@@ -35,7 +35,7 @@ public class Rk78OutputAccuracyTests
     {
         TestKernels.EnsureSolarSystem();
         _output = output;
-        _pointMassEarth = new CelestialBody(PlanetsAndMoons.EARTH, Frames.Frame.ICRF, Start);
+        _pointMassEarth = new CelestialBody(PlanetsAndMoons.Earth, Frames.Frame.ICRF, Start);
     }
 
     public static TheoryData<double, double> Tolerances => new()
@@ -101,10 +101,10 @@ public class Rk78OutputAccuracyTests
     public void InsideAStep_TheStateIsThatOfAPropagationStoppingThere()
     {
         // Arrange: EGM2008 10×10, Moon and Sun, tolerance 1e-11
-        var earth = new CelestialBody(PlanetsAndMoons.EARTH, Frames.Frame.ICRF, Start,
+        var earth = new CelestialBody(PlanetsAndMoons.Earth, Frames.Frame.ICRF, Start,
             new GeopotentialModelParameters("Data/SolarSystem/EGM2008_to70_TideFree", 10));
         var bodies = new CelestialItem[]
-            { earth, new CelestialBody(PlanetsAndMoons.MOON, Frames.Frame.ICRF, Start), new CelestialBody(Stars.Sun) };
+            { earth, new CelestialBody(PlanetsAndMoons.Moon, Frames.Frame.ICRF, Start), new CelestialBody(Stars.Sun) };
         var initial = PartialsTestCases.State(PartialsTestCases.Leo400, earth);
         var full = PartialsTestCases.Spacecraft(initial).Propagate(new TimeSystem.Window(Start, Start.AddHours(2.0)), new PropagationOptions { Integrator = new RK78IntegratorOptions { AbsoluteTolerance = 1e-11, RelativeTolerance = 1e-11 }, OutputStep = TimeSpan.FromSeconds(60.0), ThirdBodies = bodies, CovariancePropagation = CovariancePropagationOptions.None });
         var segment = full.Segments.Single();

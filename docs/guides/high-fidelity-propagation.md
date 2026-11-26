@@ -9,7 +9,7 @@ of 10.x was removed in 11.0.0.)
 ```csharp
 // Inputs: window (Window), orbit (StateVector), outputStep (TimeSpan)
 // Central body with geopotential, atmosphere, albedo, and thermal properties
-var earth = new CelestialBody(PlanetsAndMoons.EARTH,
+var earth = new CelestialBody(PlanetsAndMoons.Earth,
     new GeopotentialModelParameters("Data/SolarSystem/EGM2008_to70_TideFree", 10),
     new Nrlmsise00Model(SpaceWeather.Nominal),
     albedo: 0.306, thermalEffectiveTemperature: 254.0, thermalEmissivity: 0.95);
@@ -28,7 +28,7 @@ var options = new PropagationOptions
         InitialStep = TimeSpan.FromSeconds(30.0)
     },
     OutputStep = outputStep,
-    ThirdBodies = new CelestialItem[] { Stars.SUN_BODY, PlanetsAndMoons.MOON_BODY },
+    ThirdBodies = new CelestialItem[] { Stars.SunBody, PlanetsAndMoons.MoonBody },
     AtmosphericDrag = true,
     SolarRadiationPressure = true,
     AlbedoRadiationPressure = true,

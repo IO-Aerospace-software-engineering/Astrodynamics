@@ -219,7 +219,7 @@ public class SpiceOperatorTests
     public void KernelSpacecraft_Coordinate(RelationalOperator relation)
     {
         // The declination of LRO seen from the Moon in J2000 against 0 rad: gfposc
-        var moon = new CelestialBody(PlanetsAndMoons.MOON);
+        var moon = new CelestialBody(PlanetsAndMoons.Moon);
         var lro = new Spacecraft(-85, "LRO", epoch: LroWindow.StartDate);
         var res = moon.FindCoordinateWindows(LroWindow, lro, Frames.Frame.ICRF, CoordinateSystem.RaDec, Astrodynamics.Coordinate.Declination, relation, 0.0, new WindowSearchOptions { Step = LroStep });
         AssertWindows(LroDeclination[relation], res);
@@ -253,7 +253,7 @@ public class SpiceOperatorTests
     public void KernelSite_Coordinate(RelationalOperator relation)
     {
         // The range of DSS-13 seen from LRO against 372 000 km: gfposc
-        var earth = new CelestialBody(PlanetsAndMoons.EARTH);
+        var earth = new CelestialBody(PlanetsAndMoons.Earth);
         var dss13 = new Site(13, "DSS-13", earth);
         var lro = new Spacecraft(-85, "LRO", epoch: LroWindow.StartDate);
         var res = lro.FindCoordinateWindows(LroWindow, dss13, Frames.Frame.ICRF, CoordinateSystem.RaDec, Astrodynamics.Coordinate.Range, relation, 3.72e8, new WindowSearchOptions { Step = LroStep });
@@ -291,7 +291,7 @@ public class SpiceOperatorTests
     {
         // LRO and the Moon, both ways, at 1 815.148 km (the threshold in m since #466; before it the library divided it by
         // 1000 twice, and this test passed 1 815 148 000 m to reach gfdist with 1 815.148 km)
-        var moon = new CelestialBody(PlanetsAndMoons.MOON);
+        var moon = new CelestialBody(PlanetsAndMoons.Moon);
         var lro = new Spacecraft(-85, "LRO", epoch: LroWindow.StartDate);
         AssertAgainstOwnSearches(LroWindow, r => moon.FindDistanceWindows(LroWindow, lro, r, 1815148.0, new WindowSearchOptions { Step = LroStep }));
         AssertAgainstOwnSearches(LroWindow, r => lro.FindDistanceWindows(LroWindow, moon, r, 1815148.0, new WindowSearchOptions { Step = LroStep }));
@@ -301,7 +301,7 @@ public class SpiceOperatorTests
     public void KernelSite_Illumination()
     {
         // The Sun's incidence at DSS-13 against 90 deg over a day: gfilum at the surface point the native layer builds
-        var earth = new CelestialBody(PlanetsAndMoons.EARTH);
+        var earth = new CelestialBody(PlanetsAndMoons.Earth);
         var dss13 = new Site(13, "DSS-13", earth);
         var search = new Window(TimeSystem.Time.CreateTdb(755870520.0), TimeSystem.Time.CreateTdb(755956920.0));
         AssertAgainstOwnSearches(search, r => dss13.FindIlluminationWindows(search, IlluminationAngle.Incidence, r, System.Math.PI * 0.5, new CelestialBody(Stars.Sun), new WindowSearchOptions { Step = LroStep }));

@@ -36,7 +36,7 @@ public class StatisticsAggregatorTests
         return solution;
     }
 
-    private static CelestialBody Earth => new CelestialBody(PlanetsAndMoons.EARTH);
+    private static CelestialBody Earth => new CelestialBody(PlanetsAndMoons.Earth);
 
     [Fact]
     public void MeanPosition_ComputedCorrectly()

@@ -94,7 +94,7 @@ var rk = new RK78IntegratorOptions { AbsoluteTolerance = 1e-12, RelativeToleranc
 var options = PropagationOptions.Default with
 {
     Integrator = rk,
-    ThirdBodies = new CelestialItem[] { Stars.SUN_BODY, PlanetsAndMoons.MOON_BODY },
+    ThirdBodies = new CelestialItem[] { Stars.SunBody, PlanetsAndMoons.MoonBody },
     AtmosphericDrag = true,
     SolarRadiationPressure = true,
     Geopotential = GeopotentialModelParameters.Egm2008(10)
@@ -347,7 +347,7 @@ var options = new PropagationOptions
     {
         AbsoluteTolerance = 1e-10, RelativeTolerance = 1e-10, InitialStep = TimeSpan.FromSeconds(30.0)
     },
-    ThirdBodies = new CelestialItem[] { Stars.SUN_BODY, PlanetsAndMoons.MOON_BODY }
+    ThirdBodies = new CelestialItem[] { Stars.SunBody, PlanetsAndMoons.MoonBody }
 };
 var tasks = new List<PropagationTask>
 {
@@ -445,7 +445,7 @@ var config = new MonteCarloConfiguration
         {
             AbsoluteTolerance = 1e-10, RelativeTolerance = 1e-10, InitialStep = TimeSpan.FromSeconds(30.0)
         },
-        ThirdBodies = new CelestialItem[] { Stars.SUN_BODY, PlanetsAndMoons.MOON_BODY }
+        ThirdBodies = new CelestialItem[] { Stars.SunBody, PlanetsAndMoons.MoonBody }
     }
 };
 

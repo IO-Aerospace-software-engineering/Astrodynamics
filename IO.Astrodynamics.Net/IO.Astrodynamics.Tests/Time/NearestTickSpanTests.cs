@@ -275,7 +275,7 @@ public class NearestTickSpanTests
     public void SiderealPeriodAndTrueSolarDay_AreTheNearestTick()
     {
         var earth = TestHelpers.Earth;
-        var moon = new CelestialBody(PlanetsAndMoons.MOON);
+        var moon = new CelestialBody(PlanetsAndMoons.Moon);
         int counted = 0, moved = 0, solarCounted = 0, solarMoved = 0;
         for (int day = 0; day < 40; day++)
         {
@@ -302,8 +302,8 @@ public class NearestTickSpanTests
                 }
 
                 // The true solar day: the sidereal period plus the angle the Sun moves over it, at the rate |ω|
-                var eph0 = body.GetEphemeris(epoch, Stars.SUN_BODY, Frames.Frame.ECLIPJ2000, Aberration.LT).Position;
-                var eph1 = body.GetEphemeris(epoch + sidereal, Stars.SUN_BODY, Frames.Frame.ECLIPJ2000, Aberration.LT).Position;
+                var eph0 = body.GetEphemeris(epoch, Stars.SunBody, Frames.Frame.ECLIPJ2000, Aberration.LT).Position;
+                var eph1 = body.GetEphemeris(epoch + sidereal, Stars.SunBody, Frames.Frame.ECLIPJ2000, Aberration.LT).Position;
                 double angle = eph0.Angle(eph1);
                 long? extra = NearestTick(D(angle) / w);
                 if (extra is null)

@@ -74,10 +74,10 @@ public class CovariancePropagationBenchmarks
     {
         SpiceApi.Instance.LoadKernels(new DirectoryInfo("Data"));
         var sun = new CelestialBody(Stars.Sun);
-        var moon = new CelestialBody(PlanetsAndMoons.MOON, Frame.ICRF, Epoch);
+        var moon = new CelestialBody(PlanetsAndMoons.Moon, Frame.ICRF, Epoch);
         if (Case == "R2")
         {
-            _earth = new CelestialBody(PlanetsAndMoons.EARTH, Frame.ICRF, Epoch,
+            _earth = new CelestialBody(PlanetsAndMoons.Earth, Frame.ICRF, Epoch,
                 new GeopotentialModelParameters(GeopotentialModel, 10), new Nrlmsise00Model(SpaceWeather.Nominal));
             _bodies = new CelestialItem[] { _earth, sun, moon };
             _initialState = State(EarthEquatorialRadius + 400.0e3, 0.0005, 51.6, 20.0, 15.0, 0.0, _earth);
@@ -85,13 +85,13 @@ public class CovariancePropagationBenchmarks
         }
         else
         {
-            _earth = new CelestialBody(PlanetsAndMoons.EARTH, Frame.ICRF, Epoch,
+            _earth = new CelestialBody(PlanetsAndMoons.Earth, Frame.ICRF, Epoch,
                 new GeopotentialModelParameters(GeopotentialModel, 70));
             _bodies = new CelestialItem[]
             {
-                _earth, sun, moon, Barycenters.MERCURY_BARYCENTER, Barycenters.VENUS_BARYCENTER,
-                Barycenters.MARS_BARYCENTER, Barycenters.JUPITER_BARYCENTER, Barycenters.SATURN_BARYCENTER,
-                Barycenters.URANUS_BARYCENTER, Barycenters.NEPTUNE_BARYCENTER
+                _earth, sun, moon, Barycenters.MercuryBarycenter, Barycenters.VenusBarycenter,
+                Barycenters.MarsBarycenter, Barycenters.JupiterBarycenter, Barycenters.SaturnBarycenter,
+                Barycenters.UranusBarycenter, Barycenters.NeptuneBarycenter
             };
             _initialState = State(42164137.0, 0.0002, 0.05, 0.0, 30.0, 0.0, _earth);
             _srp = true;
@@ -176,11 +176,11 @@ public class ConjunctionCovarianceBenchmarks
     {
         SpiceApi.Instance.LoadKernels(new DirectoryInfo("Data"));
         var epoch = CovariancePropagationBenchmarks.Epoch;
-        var earth = new CelestialBody(PlanetsAndMoons.EARTH, Frame.ICRF, epoch,
+        var earth = new CelestialBody(PlanetsAndMoons.Earth, Frame.ICRF, epoch,
             new GeopotentialModelParameters(CovariancePropagationBenchmarks.GeopotentialModel, 10),
             new Nrlmsise00Model(SpaceWeather.Nominal));
         var bodies = new CelestialItem[]
-            { earth, new CelestialBody(Stars.Sun), new CelestialBody(PlanetsAndMoons.MOON, Frame.ICRF, epoch) };
+            { earth, new CelestialBody(Stars.Sun), new CelestialBody(PlanetsAndMoons.Moon, Frame.ICRF, epoch) };
         var tca = epoch.AddHours(23.0);
         var (protectedOrbit, secondaryOrbit) = Pair(earth, epoch, tca);
         var sigma = new[] { 100.0, 100.0, 100.0, 0.1, 0.1, 0.1 };

@@ -389,7 +389,7 @@ public class KernelBackedSpacecraftTests
 
         public KSatKernels(string frameName = null)
         {
-            var earth = new CelestialBody(PlanetsAndMoons.EARTH);
+            var earth = new CelestialBody(PlanetsAndMoons.Earth);
             Spacecraft = new Spacecraft(-1401, "KSat", 100.0, new KeplerianElements(7000e3, 0.001, 0.9, 0.0, 0.0, 0.0, earth, KSatEpoch, Frames.Frame.ICRF), 1000.0,
                 new Clock("KSatClk", 256));
             Spacecraft.AddCircularInstrument("Camera", 0.1, Vector3.VectorZ, Vector3.VectorX, new Vector3(0.1, 0.2, 0.3), naifId: -1401001, model: "Imager");

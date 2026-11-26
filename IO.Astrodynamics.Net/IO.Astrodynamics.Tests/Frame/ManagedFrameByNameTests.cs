@@ -207,8 +207,8 @@ public class ManagedFrameByNameTests
     public void EphemerisRead_ByName_IsTheReadInTheManagedFrame(string name, string aberrationName)
     {
         var aberration = Enum.Parse<Aberration>(aberrationName);
-        var earth = new CelestialBody(PlanetsAndMoons.EARTH);
-        var moon = new CelestialBody(PlanetsAndMoons.MOON);
+        var earth = new CelestialBody(PlanetsAndMoons.Earth);
+        var moon = new CelestialBody(PlanetsAndMoons.Moon);
         double worst = 0.0;
         foreach (var epoch in Epochs)
         {

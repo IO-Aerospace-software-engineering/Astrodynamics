@@ -247,8 +247,8 @@ internal static class GmatCases
     // The four states of the force partials (B7), at the epoch of PartialsTestCases, relative to a point-mass Earth
     private static JsonObject PartialsNode(ReferenceCases cases)
     {
-        var earth = new CelestialBody(PlanetsAndMoons.EARTH, Frames.Frame.ICRF, PartialsTestCases.Epoch);
-        var moon = new CelestialBody(PlanetsAndMoons.MOON, Frames.Frame.ICRF, PartialsTestCases.Epoch);
+        var earth = new CelestialBody(PlanetsAndMoons.Earth, Frames.Frame.ICRF, PartialsTestCases.Epoch);
+        var moon = new CelestialBody(PlanetsAndMoons.Moon, Frames.Frame.ICRF, PartialsTestCases.Epoch);
         var sun = new CelestialBody(Stars.Sun);
         return new JsonObject
         {

@@ -40,7 +40,7 @@ public class OrientationCacheConcurrencyTests
 
     /// <summary>Point-mass Earth with NRLMSISE-00: no geopotential, so it may be shared between threads.</summary>
     private static CelestialBody PointMassEarth() =>
-        new(PlanetsAndMoons.EARTH, Frames.Frame.ICRF, EpochA, null, new Nrlmsise00Model(SpaceWeather.Nominal));
+        new(PlanetsAndMoons.Earth, Frames.Frame.ICRF, EpochA, null, new Nrlmsise00Model(SpaceWeather.Nominal));
 
     private static Spacecraft LeoSpacecraft(CelestialBody earth, TimeSystem.Time epoch, int naifId)
     {
@@ -249,7 +249,7 @@ public class OrientationCacheConcurrencyTests
     {
         // Arrange: the case found in #369, with EGM2008 10×10; the propagator that never runs ends 10 days earlier,
         // so a cache left by it would freeze the Earth rotation at the edge of its window
-        var earth = new CelestialBody(PlanetsAndMoons.EARTH, Frames.Frame.ICRF, EpochA,
+        var earth = new CelestialBody(PlanetsAndMoons.Earth, Frames.Frame.ICRF, EpochA,
             new GeopotentialModelParameters("Data/SolarSystem/EGM2008_to70_TideFree", 10));
         var bodies = new CelestialItem[] { earth };
         var window = new TimeSystem.Window(EpochB, EpochB.AddHours(3.0));

@@ -77,7 +77,7 @@ namespace IO.Astrodynamics.Tests.Body
         public async Task ClockOfAnotherSpacecraft_Throws(string construction)
         {
             // Arrange
-            var earth = new CelestialBody(SolarSystemObjects.PlanetsAndMoons.EARTH);
+            var earth = new CelestialBody(SolarSystemObjects.PlanetsAndMoons.Earth);
             var epoch = new TimeSystem.Time(2024, 1, 1, TimeScale.TDB);
             var clock = new Clock("SHARED", 65536);
             var first = new Spacecraft(-1431, "FIRST", 100.0, LeoAbout(earth, epoch), 1000.0, clock);
@@ -108,7 +108,7 @@ namespace IO.Astrodynamics.Tests.Body
         public void ClockKeptAfterFailedConstructor()
         {
             // Arrange
-            var earth = new CelestialBody(SolarSystemObjects.PlanetsAndMoons.EARTH);
+            var earth = new CelestialBody(SolarSystemObjects.PlanetsAndMoons.Earth);
             var clock = new Clock("RETRY", 65536);
 
             // Act: non-orthogonal body axes
@@ -134,7 +134,7 @@ namespace IO.Astrodynamics.Tests.Body
             for (int round = 0; round < 50; round++)
             {
                 // Arrange
-                var earth = new CelestialBody(SolarSystemObjects.PlanetsAndMoons.EARTH);
+                var earth = new CelestialBody(SolarSystemObjects.PlanetsAndMoons.Earth);
                 var clock = new Clock("RACE" + round, 65536);
                 var built = new Spacecraft[threads];
                 var errors = new Exception[threads];
@@ -172,7 +172,7 @@ namespace IO.Astrodynamics.Tests.Body
         [Fact]
         public void ClockOfSameId_Accepted()
         {
-            var earth = new CelestialBody(SolarSystemObjects.PlanetsAndMoons.EARTH);
+            var earth = new CelestialBody(SolarSystemObjects.PlanetsAndMoons.Earth);
             var clock = new Clock("SAME", 65536);
             var first = new Spacecraft(-1434, "FIRST", 100.0, LeoAbout(earth, new TimeSystem.Time(2024, 1, 1, TimeScale.TDB)), 1000.0, clock);
             var second = new Spacecraft(-1434, "SECOND", 100.0, LeoAbout(earth, new TimeSystem.Time(2024, 1, 1, TimeScale.TDB)), 1000.0, clock);
@@ -189,7 +189,7 @@ namespace IO.Astrodynamics.Tests.Body
         public async Task OwnClock_SclkReadsTheCk()
         {
             // Arrange
-            var earth = new CelestialBody(SolarSystemObjects.PlanetsAndMoons.EARTH);
+            var earth = new CelestialBody(SolarSystemObjects.PlanetsAndMoons.Earth);
             var epoch = new TimeSystem.Time(2024, 1, 1, 0, 0, 0, TimeScale.TDB);
             var spacecraft = new Spacecraft(-1435, "OWNCLK", 100.0, new KeplerianElements(7000e3, 0.001, 0.9, 0.0, 0.0, 0.0, earth, epoch, Frames.Frame.ICRF), 1000.0,
                 new Clock("OWNCLK", 256));

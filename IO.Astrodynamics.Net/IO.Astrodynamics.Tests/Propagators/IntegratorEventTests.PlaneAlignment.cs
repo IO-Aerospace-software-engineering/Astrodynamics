@@ -46,7 +46,7 @@ public partial class IntegratorEventTests
     [MemberData(nameof(PlaneCases))]
     public void PlaneAlignment_StartingJustPastANode_FiresAtTheNodeAhead(string integratorName, bool ascending, double delta, double gateBefore)
     {
-        var earth = new CelestialBody(PlanetsAndMoons.EARTH, Frame.ICRF, S);
+        var earth = new CelestialBody(PlanetsAndMoons.Earth, Frame.ICRF, S);
         var reference = new KeplerianElements(MinimumEpochGateTests.A0, MinimumEpochGateTests.E0, 0.5, 0.3, System.Math.PI, System.Math.PI, earth, S, Frame.ICRF).ToStateVector();
         var k0 = new KeplerClosedForm(earth.GM, reference.Position, reference.Velocity, 0.0);
         // The node passed, then the start δ after it

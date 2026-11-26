@@ -32,8 +32,8 @@ public class LroTrackingDataTests
         // Data/LRO, loaded once per process (#668, second round)
         TestKernels.EnsureLro();
 
-        _earth = new CelestialBody(PlanetsAndMoons.EARTH);
-        _moon = new CelestialBody(PlanetsAndMoons.MOON);
+        _earth = new CelestialBody(PlanetsAndMoons.Earth);
+        _moon = new CelestialBody(PlanetsAndMoons.Moon);
         _site = new Site(888, "AUWA01", _earth,
             new Planetodetic(
                 115.348678 * IO.Astrodynamics.Constants.Deg2Rad,

@@ -190,7 +190,7 @@ release are listed under **Known limitations**.
   of a first set (`de440s.bsp`, `latest_leapseconds.tls`, `pck00011.tpc`, `gm_de440.tpc`) with their NAIF paths, the
   two that make `ITRF93` the Earth's frame, and a download command for bash and PowerShell. See
   [Kernel Management](../guides/kernel-management.md).
-- **`new Site(GroundStations.DSS_13, earth)`: a site of the kernels from its catalogue entry** (R02 of #668). The
+- **`new Site(GroundStations.Dss13, earth)`: a site of the kernels from its catalogue entry** (R02 of #668). The
   constructor `Site(NaifObject station, CelestialBody celestialItem)` takes the site's own identifier from the
   station's (399013 − 1000 × 399 = 13) and its SPICE name, and reads its position from the kernels as
   `Site(int, string, CelestialBody)` does, bit for bit; an identifier that is not a site of the body (from 1000 × its
@@ -1086,13 +1086,13 @@ release are listed under **Known limitations**.
   The library is unchanged.
 - **A TLE converted on one thread while another first used `PlanetsAndMoons` hung the process** ([#623](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/623)).
   `SpiceApi.ConvertTleToStateVector`, so `Tle.ToStateVector`, `Tle.ToOsculating` and every SGP4 propagation, built the
-  Earth of its state, `new CelestialBody(PlanetsAndMoons.EARTH, ...)`, while it held the SpiceApi lock. Reading
-  `PlanetsAndMoons` runs its type initializer, which builds `EARTH_BODY` and `MOON_BODY` and so takes the same lock. When
+  Earth of its state, `new CelestialBody(PlanetsAndMoons.Earth, ...)`, while it held the SpiceApi lock. Reading
+  `PlanetsAndMoons` runs its type initializer, which builds `EarthBody` and `MoonBody` and so takes the same lock. When
   another thread was running that initializer, the first thread waited for it while holding the lock, and the other
   thread waited for the lock: neither ended, and the runtime, which detects only cycles between type initializers, raised
   nothing. The audit of the other locked sections found the same pattern in both `SpiceApi.ReadEphemeris` overloads by
   NAIF ids: their observer, `CelestialItem.Create(observerId)`, was built under the lock, and for a Lagrange point (391 to
-  395) the constructor of `LagrangePoint` reads `Barycenters.EARTH_BARYCENTER`, whose initializer takes the lock. Now
+  395) the constructor of `LagrangePoint` reads `Barycenters.EarthBarycenter`, whose initializer takes the lock. Now
   only the native call runs under the lock in `ConvertTleToStateVector`, the zero-state check and the Earth after it,
   and `ReadEphemeris` builds its observer before it; the states are the same bit for bit (same native calls, same
   inputs). No other code of the library under the lock reaches `PlanetsAndMoons`, `Stars` or `Barycenters`, the only type
@@ -1102,8 +1102,8 @@ release are listed under **Known limitations**.
   (before the lock since #661); it must not read the three classes.
   - **Measured** (Linux x64, 4 cores, Release, 2026-11-11), each run a fresh process, two threads started behind a
     barrier, a run hung when it had not ended 3 s after its start: before the fix, `ConvertTleToStateVector` against the
-    first read of `PlanetsAndMoons.EARTH_BODY` hung 120 of 120 runs, `Tle.ToStateVector` 35 of 200, `ReadEphemeris` from
-    L1 against the first read of `Barycenters.EARTH_BARYCENTER` 120 of 120; with the first thread started once the second
+    first read of `PlanetsAndMoons.EarthBody` hung 120 of 120 runs, `Tle.ToStateVector` 35 of 200, `ReadEphemeris` from
+    L1 against the first read of `Barycenters.EarthBarycenter` 120 of 120; with the first thread started once the second
     is inside the initializer (a data provider holds it there 200 ms), every run of the three hung (40, 40 and 30 runs).
     The window overload of `ReadEphemeris` from L1, with only its fix reverted, hung 3 of 3 runs of each kind, while the
     single-epoch overload ended. After it, none of 1200 runs (200 per case) hung, nor 40 runs of the window overload; a
@@ -2531,7 +2531,7 @@ release are listed under **Known limitations**.
 
 - **`CelestialItem.Satellites` kept every spacecraft alive, lost entries across threads, matched by NAIF id and listed
   items whose constructor threw** ([#676](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/676)). It was a `HashSet` compared by NAIF id, without a lock, on process-wide
-  instances such as `PlanetsAndMoons.EARTH_BODY`, filled by the base constructor before the checks of the derived one:
+  instances such as `PlanetsAndMoons.EarthBody`, filled by the base constructor before the checks of the derived one:
   2000 spacecraft built about the Earth and dropped stayed alive after a collection (20 of 20 sampled), a second
   spacecraft of an id was not listed and moving it about the Moon removed the first, a constructor that threw on its
   masses left its spacecraft listed, and 4000 constructions on 4 threads gave a wrong count in 20 runs of 20, 11 of them
@@ -2864,16 +2864,16 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   1.01e-15 relative on Linux, Windows and macOS arm64). No code changes.
 - **Atmospheric drag asked about an Earth without an atmospheric model was dropped** ([#674](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/674)). A propagation built
   drag only for listed bodies with `HasAtmosphericModel`, which no predefined Earth has, so `includeAtmosphericDrag: true`
-  about `PlanetsAndMoons.EARTH_BODY` changed nothing (0.000 m against the same run without drag, on every path and both
+  about `PlanetsAndMoons.EarthBody` changed nothing (0.000 m against the same run without drag, on every path and both
   integrators), a Moon-centred run with drag and no atmosphere ran without an error, and the CDM of such a run wrote
   `ATMOSPHERIC_MODEL = NONE`. The drag of a central body is now that of its atmosphere: its model, or for an Earth
   without one NRLMSISE-00 at nominal space weather, the model `GetAtmosphere` already gave it; another central body
   without a model throws. An Earth always has at least that atmosphere (decided by S. Guillet, 2026-11-14): a listed
   Earth without a model, in SSB mode or beside another central body, adds its drag, where it was dropped too (Changed
   below). `ForceModelDefectTests` checks on every entry point (the constructors, the builder, `Spacecraft.Propagate` and
-  `PropagateAsync`, the three `Scenario.SimulateAsync`, the batch) that the run about `EARTH_BODY` equals bit for bit the
+  `PropagateAsync`, the three `Scenario.SimulateAsync`, the batch) that the run about `EarthBody` equals bit for bit the
   run about an Earth built with `new Nrlmsise00Model(SpaceWeather.Nominal)`, the force and its partials too, and that a
-  parallel batch equals its serial runs; and on nine paths, both integrators, that a listed `EARTH_BODY` in SSB mode
+  parallel batch equals its serial runs; and on nine paths, both integrators, that a listed `EarthBody` in SSB mode
   and beside a Moon central body with a model equals bit for bit the run listing that explicit Earth.
 - **A `GeopotentialModelParameters` built one body** ([#674](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/674)). The parameters kept the caller's `StreamReader`, which
   the first body read to its end and closed, so a second `new CelestialBody(..., parameters)` threw
@@ -2885,7 +2885,7 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
 - **The central body left out by the constructors, and a listed twin ignored** ([#674](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/674)). The constructors of
   `CentralBodyPropagator` built the forces from the listed bodies only: an unlisted observer gave no drag and no shadow
   (4.76 km of drag over a day with US 1976 in LEO, 1.87 m of SRP shadow), and a listed body of the observer's NAIF
-  identifier was dropped as a third body whatever its models, so a listed EGM2008 Earth moved an orbit on `EARTH_BODY`
+  identifier was dropped as a third body whatever its models, so a listed EGM2008 Earth moved an orbit on `EarthBody`
   by 0.000 m instead of 4.9e5 m in 6 h, and a listed atmospheric twin gave its drag under the other Earth's gravity.
   `Scenario.AddCelestialItem` dropped a second body of one identifier silently. The central body now takes part on every
   path with the models of the observer, inserted first when it is not listed (the builder's rule), and bodies of one
@@ -3241,7 +3241,7 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
 
 - **A static solar system object read on a `MemoryDataProvider` without its data left its class unusable for the life
   of the process** (second round of [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668)).
-  The type initializers of `Barycenters`, `PlanetsAndMoons` (`EARTH_BODY`, `MOON_BODY`) and `Stars` (`SUN_BODY`) built
+  The type initializers of `Barycenters`, `PlanetsAndMoons` (`EarthBody`, `MoonBody`) and `Stars` (`SunBody`) built
   their objects with the natural-body constructors, which read the provider: with a provider holding only the Earth's
   information, `CelestialItem.Create(391)` threw a `TypeInitializationException` for `Barycenters` (the information of
   the barycentre 0), and still did once the data were added, the runtime keeping the exception; the library's own paths
@@ -3256,14 +3256,14 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   processes (`MemoryDataProviderBodyTests`, modes `static-bodies-memory`, `static-bodies-spice` and
   `static-bodies-switch` of the cold-start child): on a memory provider holding the Earth's information only,
   `CelestialItem.Create(391)` throws the provider's `InvalidOperationException` naming 391 and
-  `SOLAR_SYSTEM_BARYCENTER.GM` its `ArgumentException` naming `naifId`, twice; once the information and the states are
-  added, the GM are those given and the orbits of L1, the Earth barycentre, `EARTH_BODY` and `SUN_BODY` the exact
+  `SolarSystemBarycenter.GM` its `ArgumentException` naming `naifId`, twice; once the information and the states are
+  added, the GM are those given and the orbits of L1, the Earth barycentre, `EarthBody` and `SunBody` the exact
   differences of the stored states; on SPICE, the kernels loaded first, the names and GM of the ten barycentres, the GM,
-  equatorial radius, J2, name and frame of `EARTH_BODY` and the GM of `SUN_BODY` and `MOON_BODY` equal SPICE's body
-  information, and the orbit of `EARTH_BODY` `spkezr`'s state of 399 about 3 in ECLIPJ2000 at J2000 TDB, exactly; read
+  equatorial radius, J2, name and frame of `EarthBody` and the GM of `SunBody` and `MoonBody` equal SPICE's body
+  information, and the orbit of `EarthBody` `spkezr`'s state of 399 about 3 in ECLIPJ2000 at J2000 TDB, exactly; read
   first on an empty memory provider (the `ArgumentException` of each), then after `SetDataProvider(new
-  SpiceDataProvider())` and `LoadKernels`, the GM of the solar system barycentre, the Earth barycentre, `EARTH_BODY` and
-  `SUN_BODY`, the frame and orbit of `EARTH_BODY`, the orbit of the Earth barycentre and its ephemeris about the solar
+  SpiceDataProvider())` and `LoadKernels`, the GM of the solar system barycentre, the Earth barycentre, `EarthBody` and
+  `SunBody`, the frame and orbit of `EarthBody`, the orbit of the Earth barycentre and its ephemeris about the solar
   system barycentre are SPICE's, exactly, and stay SPICE's once another memory provider is set (before this, the retry
   went back to the provider of the type initializer: the objects threw the memory provider's `ArgumentException` for the
   process while `SpiceApi.GetCelestialBodyInfo(0)` answered). On SPICE, reading those data before `LoadKernels` kept
@@ -3272,26 +3272,26 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   process** (third round of [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668)). SPICE
   names the bodies without kernels (its built-in names), and since #672 a body information without `BODYnnn_GM` or
   `BODYnnn_RADII` has a GM or radii of 0: the first read of a static object of `Barycenters`, `PlanetsAndMoons` or `Stars`
-  succeeded with those zeros and the deferred object kept them. Measured in a fresh process: `EARTH_BODY` had a GM of 0,
+  succeeded with those zeros and the deferred object kept them. Measured in a fresh process: `EarthBody` had a GM of 0,
   radii of 0, a J2 of NaN, the built-in frame `IAU_EARTH`, no orbit and an infinite sphere of influence, the GM of the
-  Earth barycentre, the solar system barycentre, `SUN_BODY` and `MOON_BODY` 0, all unchanged after `LoadKernels`
+  Earth barycentre, the solar system barycentre, `SunBody` and `MoonBody` 0, all unchanged after `LoadKernels`
   (`SpiceApi.GetCelestialBodyInfo(399)` then gave 3.986e14 m³/s²). A static object now keeps its data only when the
   provider gives the data the kernels give each of them: a GM (on SPICE `BODYnnn_GM`, for the solar system barycentre the
-  sum of `BODY1_GM` to `BODY10_GM`) and, for `EARTH_BODY`, `MOON_BODY` and `SUN_BODY`, radii (`BODYnnn_RADII`), checked
+  sum of `BODY1_GM` to `BODY10_GM`) and, for `EarthBody`, `MoonBody` and `SunBody`, radii (`BODYnnn_RADII`), checked
   before its orbit is read; otherwise the read throws `InvalidOperationException` naming the missing variable, keeps
   nothing, and the next read tries again. The objects users build are unchanged, bit for bit. In a fresh process
   (`MemoryDataProviderBodyTests`, mode `static-bodies-before-kernels` of the cold-start child): before any kernel, the GM
-  of `EARTH_BODY` (twice, naming `BODY399_GM`), its frame, radius and orbit, the GM of the Earth barycentre (naming
-  `BODY3_GM`) and of the solar system barycentre (naming `BODY1_GM` to `BODY10_GM`), the radius and frame of `SUN_BODY`
-  and the GM of `MOON_BODY` throw; with `gm_de440.tpc` alone, the GM of `EARTH_BODY` throws naming `BODY399_RADII`
-  (twice) and the frame of `MOON_BODY` throws; after `LoadKernels` the GM, radii, J2 (finite) and frame (`ITRF93`) of
-  `EARTH_BODY`, its orbit (`spkezr`'s state of 399 about 3 in ECLIPJ2000 at J2000 TDB), the GM of the two barycentres
-  and of `MOON_BODY` and the radius and GM of `SUN_BODY` are SPICE's (`SpiceApi.GetCelestialBodyInfo`), exactly.
+  of `EarthBody` (twice, naming `BODY399_GM`), its frame, radius and orbit, the GM of the Earth barycentre (naming
+  `BODY3_GM`) and of the solar system barycentre (naming `BODY1_GM` to `BODY10_GM`), the radius and frame of `SunBody`
+  and the GM of `MoonBody` throw; with `gm_de440.tpc` alone, the GM of `EarthBody` throws naming `BODY399_RADII`
+  (twice) and the frame of `MoonBody` throws; after `LoadKernels` the GM, radii, J2 (finite) and frame (`ITRF93`) of
+  `EarthBody`, its orbit (`spkezr`'s state of 399 about 3 in ECLIPJ2000 at J2000 TDB), the GM of the two barycentres
+  and of `MoonBody` and the radius and GM of `SunBody` are SPICE's (`SpiceApi.GetCelestialBodyInfo`), exactly.
   A first read after a partial load kept its data for the process too: with `latest_leapseconds.tls`, `gm_de440.tpc` and
-  `pck00011.tpc` loaded (GM and radii defined), `EARTH_BODY` had a J2 of NaN (`BODY399_J2` is in `geophysical.ker`), the
+  `pck00011.tpc` loaded (GM and radii defined), `EarthBody` had a J2 of NaN (`BODY399_J2` is in `geophysical.ker`), the
   frame `IAU_EARTH` (`OBJECT_EARTH_FRAME` is in `earth_assoc_itrf93.tf`; `IAU_EARTH` is 8.49e-4 rad from `ITRF93` on
   2001-06-01 and 1.46e-3 rad on 2025-06-01, 5.4 to 9.3 km at the equator, which geodetic coordinates, sites and drag
-  read), no orbit and an infinite sphere of influence, `MOON_BODY` the frame `IAU_MOON`, all unchanged after
+  read), no orbit and an infinite sphere of influence, `MoonBody` the frame `IAU_MOON`, all unchanged after
   `LoadKernels` of the whole set. On the `SpiceDataProvider` the data of a static object now hold for the generation of
   the kernel pool they were read at: each `LoadKernels`, `UnloadKernels` and `ClearKernels` raises it (internal
   `SpiceApi.KernelPoolGeneration`), and the first read after reads the data again; data equal to those held keep the
@@ -3464,7 +3464,7 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   and `Spacecraft.Up`, opposite to it, at the Sun, which `TriadAttitude` rejects (its body vectors at least 5 degrees
   apart), now `Spacecraft.Right` (+X), which sets the roll about nadir (the solar panels stay on `Up`, as in the
   prograde examples and `CreateProgradeWithSunTracking`); and the geopotential example, read with an orbit about
-  `EARTH_BODY`, listed an Earth of another gravitational field, which a propagation rejects (#674), now with its orbit
+  `EarthBody`, listed an Earth of another gravitational field, which a propagation rejects (#674), now with its orbit
   built on the degree-10 Earth. The root `CLAUDE.md`'s in-memory provider example now says it runs in a child process
   in `IO.Astrodynamics.Tests`. Every block now compiles: each is the region of a method of
   `IO.Astrodynamics.Tests/Documentation/ClaudeMdExamples.cs` (the root `CLAUDE.md`'s blocks too), and
@@ -3967,7 +3967,7 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   with `ArgumentException`, #674) and elided the required members of `MonteCarloConfiguration`; the Monte Carlo tutorial
   read `MeanRssPosition` and `StdRssPosition`, which `EpochStatistics` does not have; the numerical propagation tutorial
   gave `Clock` its period instead of its ticks per second, read `Position` on the tuple of `InterpolateAt` and listed
-  `PlanetsAndMoons.JUPITER_BODY` (now `Barycenters.JUPITER_BARYCENTER`); the Lambert reference named the third argument
+  `PlanetsAndMoons.JUPITER_BODY` (now `Barycenters.JupiterBarycenter`); the Lambert reference named the third argument
   of `Solve` `targetObjectOrbitalParameters`, which the library then spelled `targetOjectOrbitalParameters` (the example
   passes its arguments by position, the listing shows the library's name, `targetObjectOrbitalParameters` since the
   parameter's rename, #662, under Changed); the SPICE API reference listed
@@ -5438,7 +5438,7 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   frame kernels) and for NEW NORCIA (`NEW NORCIA_TOPO`), empty for the comets and asteroids and null for the Lagrange
   points. A catalogue entry is now accepted where an `INaifObject` is asked. Results do not move: the bodies built
   from an entry read their frame from the kernels, as before. Migration: `new NaifObject(id, name, frame)` becomes
-  `new NaifObject(id, name)`; `PlanetsAndMoons.EARTH.Frame` becomes the frame of the body, `new CelestialBody(PlanetsAndMoons.EARTH).Frame`
+  `new NaifObject(id, name)`; `PlanetsAndMoons.Earth.Frame` becomes the frame of the body, `new CelestialBody(PlanetsAndMoons.Earth).Frame`
   (`ITRF93` with `earth_assoc_itrf93.tf`, `IAU_EARTH` without), or the literal name (`new Frame("ITRF93")`).
 - **Breaking: a repeated `LoadKernels` hands SPICE only the files it does not hold** (lot L1, R01 of
   [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668), structuring choice 9, decided
@@ -5806,7 +5806,7 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   `GetEphemeris_FromAStar_IsTheTargetsVelocityMinusTheStars`, `Propagate_ASpacecraftAboutAStar_StartsWithTheStarsSpaceVelocity`;
   0.999, 0.84 to 1.12 and 0.999 relative on a85098d). Migration:
   a state about a star whose velocity was given relative to the barycenter's motion (as the zero velocity of the star
-  made it) subtracts the star's space velocity (`GetGeometricStateRelativeTo(epoch, Barycenters.SOLAR_SYSTEM_BARYCENTER).Velocity`)
+  made it) subtracts the star's space velocity (`GetGeometricStateRelativeTo(epoch, Barycenters.SolarSystemBarycenter).Velocity`)
   to keep its former heliocentric velocity and trajectory; a state given relative to the star itself needs no change and
   now moves with it.
 - **Breaking: the `Star` constructor refuses a parallax that is not finite and positive** ([#732](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/732), Fixed above).
@@ -6612,10 +6612,10 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   OrbitalDirectionTarget.Prograde, epoch, hold, center)` (in the order of lot L5b, below), or `Spacecraft.Front`, `OrbitalDirectionTarget.Prograde`,
   `Spacecraft.Up`, `new CelestialAttitudeTarget(sun)` for prograde with Sun tracking.
 - **Breaking: drag about an Earth without an atmospheric model is NRLMSISE-00 at nominal space weather** ([#674](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/674),
-  Fixed above). A propagation about `PlanetsAndMoons.EARTH_BODY`, or any Earth built without a model, with
+  Fixed above). A propagation about `PlanetsAndMoons.EarthBody`, or any Earth built without a model, with
   `includeAtmosphericDrag: true` now has drag: over one day on a 6800 km orbit with A = 1 m², m = 100 kg and Cd 2.2,
   4.627 km in RK7(8) at 1e-11 and 4.265 km in Velocity-Verlet at 60 s; Ψ gains its Cd column, which moves the
-  covariance, and the CDM names `NRLMSISE-00`. The get-started RK7(8) example, about `EARTH_BODY` with drag, now has
+  covariance, and the CDM names `NRLMSISE-00`. The get-started RK7(8) example, about `EarthBody` with drag, now has
   drag. So does a listed Earth without a model where the central body is not that Earth (decided by S. Guillet,
   2026-11-14): in SSB mode (a star or barycentre observer), where the run ran without drag, and beside another central
   body with a model, whose drag it ran alone. On a 6700 km orbit with A = 10 m², m = 100 kg and Cd 2.2, 51.4 m over
@@ -6640,7 +6640,7 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   observer's identifier with another GM, radii, gravitational field or atmospheric model, or two listed bodies of one
   identifier that differ, throw `ArgumentException` naming them, on every path, the builder included; so does
   `Scenario.AddCelestialItem` of a body whose identifier the scenario holds with other models (it was dropped). Examples:
-  an EGM2008 or atmospheric Earth listed while the orbit is on `EARTH_BODY`; `astro propagate` given its centre again in
+  an EGM2008 or atmospheric Earth listed while the orbit is on `EarthBody`; `astro propagate` given its centre again in
   its celestial bodies. Models are compared by value (NRLMSISE-00 by its switches and space weather, a custom
   `IAtmosphericModel` by `Equals`); a value-equal twin of the observer runs with the observer's instance, which moves a
   run that listed one with a configured NRLMSISE-00 by 6e-5 m over an hour in RK7(8). Migration: list the observer's
@@ -6915,7 +6915,7 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668), Fixed above). The first read of a
   member that needs the data of a static object of `Barycenters`, `PlanetsAndMoons` or `Stars` throws
   `InvalidOperationException`, naming the missing variable (`BODYnnn_GM`, `BODY1_GM` to `BODY10_GM` for the solar system
-  barycentre, `BODYnnn_RADII` for `EARTH_BODY`, `MOON_BODY` and `SUN_BODY`), when its provider gives a GM or radii of 0
+  barycentre, `BODYnnn_RADII` for `EarthBody`, `MoonBody` and `SunBody`), when its provider gives a GM or radii of 0
   (SPICE without the kernels that define them, a `MemoryDataProvider` record holding zeros), and keeps nothing, where it
   returned the zeros, J2 NaN and no orbit and kept them for the process. On SPICE with the kernels loaded nothing moves.
   Migration: load the kernels before the first read of a static object's data, or give a `MemoryDataProvider` record its
@@ -7909,7 +7909,7 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   `CombinedManeuver` that is not finite or not above 0 throws `ArgumentOutOfRangeException` naming it (`apogeeRadius`,
   `perigeeRadius`), "a radius from the centre …; for a height h pass R + h"; an apogee radius below the equatorial radius
   of a celestial body centre throws `ArgumentException` in the constructor for a given centre (`apogeeRadius`, or
-  `targetOrbit` for the target-orbit form; the radius of a deferred body, `PlanetsAndMoons.EARTH_BODY`, is read there) and
+  `targetOrbit` for the target-orbit form; the radius of a deferred body, `PlanetsAndMoons.EarthBody`, is read there) and
   `InvalidOperationException` from the propagator constructor and `Propagate` for an inferred one; the inclination of
   `CombinedManeuver` not finite or outside [0, π] throws `ArgumentOutOfRangeException` (`inclination`). Before, all were
   accepted: 1000e3 m, an altitude given for an apogee radius, put the apogee 5378 km under the surface and ended in

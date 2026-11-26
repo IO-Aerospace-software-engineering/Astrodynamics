@@ -60,7 +60,7 @@ public class FrameByNameTests
     public void ToFrame_OfAnUnknownName_ThrowsArgumentException_BothWays()
     {
         // Arrange: a LEO state about the Earth in ICRF, and the same numbers labelled with an unknown frame
-        var earth = new CelestialBody(PlanetsAndMoons.EARTH);
+        var earth = new CelestialBody(PlanetsAndMoons.Earth);
         var state = new StateVector(new Vector3(6800000.0, 0.0, 0.0), new Vector3(0.0, 7600.0, 0.0), earth, Epoch, Frames.Frame.ICRF);
         var unknown = new StateVector(state.Position, state.Velocity, earth, Epoch, new Frames.Frame("ITRF"));
 
@@ -94,7 +94,7 @@ public class FrameByNameTests
     [Fact]
     public void TransformFrame_BetweenASiteFrameFromCoordinatesAndAnUnknownName_NamesTheParameterOfTheUnknownEnd()
     {
-        var site = new IO.Astrodynamics.Surface.Site(77, "FRAME_BY_NAME_SITE", new CelestialBody(PlanetsAndMoons.EARTH),
+        var site = new IO.Astrodynamics.Surface.Site(77, "FRAME_BY_NAME_SITE", new CelestialBody(PlanetsAndMoons.Earth),
             new Planetodetic(0.5, 0.7, 100.0));
         AssertUnknownFrame(Assert.Throws<ArgumentException>(() =>
             SpiceApi.Instance.TransformFrame(Epoch, site.Frame, new Frames.Frame("NOT_A_FRAME"))), "toFrame", "NOT_A_FRAME");
@@ -106,7 +106,7 @@ public class FrameByNameTests
     public void ToFrame_OfAnUnknownName_NamesTheParameterOfThePublicCall_OrNone()
     {
         // Arrange: a LEO about the Earth in ICRF and in TEME, and the same numbers labelled with an unknown frame
-        var earth = new CelestialBody(PlanetsAndMoons.EARTH);
+        var earth = new CelestialBody(PlanetsAndMoons.Earth);
         var state = new StateVector(new Vector3(6800000.0, 0.0, 0.0), new Vector3(0.0, 7600.0, 0.0), earth, Epoch, Frames.Frame.ICRF);
         var teme = new StateVector(state.Position, state.Velocity, earth, Epoch, Frames.Frame.TEME);
         var unknownFrame = new Frames.Frame("NOT_A_FRAME");
@@ -156,8 +156,8 @@ public class FrameByNameTests
     public void Ephemeris_InAnUnknownFrame_ThrowsArgumentException(Aberration aberration)
     {
         // Arrange
-        var earth = new CelestialBody(PlanetsAndMoons.EARTH);
-        var moon = new CelestialBody(PlanetsAndMoons.MOON);
+        var earth = new CelestialBody(PlanetsAndMoons.Earth);
+        var moon = new CelestialBody(PlanetsAndMoons.Moon);
         var unknown = new Frames.Frame("ITRF");
 
         // Act and assert: the reads by object and by identifier, at an epoch and over a window
@@ -193,7 +193,7 @@ public class FrameByNameTests
     public void Itrf93_IsTheFrameOfTheEarth()
     {
         // Arrange
-        var earth = new CelestialBody(PlanetsAndMoons.EARTH);
+        var earth = new CelestialBody(PlanetsAndMoons.Earth);
         var byName = new Frames.Frame("ITRF93");
 
         // Act

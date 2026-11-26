@@ -60,12 +60,12 @@ public class GmatPartialsTests : IClassFixture<PartialsTestCases>
         // Arrange
         var earth = forceName switch
         {
-            "earth_geopotential" => new CelestialBody(PlanetsAndMoons.EARTH, Frames.Frame.ICRF, PartialsTestCases.Epoch,
+            "earth_geopotential" => new CelestialBody(PlanetsAndMoons.Earth, Frames.Frame.ICRF, PartialsTestCases.Epoch,
                 new GeopotentialModelParameters("Data/SolarSystem/EGM2008_to70_TideFree",
                     GmatCases.PartialsGeopotentialDegree)),
-            "drag" => new CelestialBody(PlanetsAndMoons.EARTH, Frames.Frame.ICRF, PartialsTestCases.Epoch, null,
+            "drag" => new CelestialBody(PlanetsAndMoons.Earth, Frames.Frame.ICRF, PartialsTestCases.Epoch, null,
                 new Nrlmsise00Model(SpaceWeather.Nominal)),
-            _ => new CelestialBody(PlanetsAndMoons.EARTH, Frames.Frame.ICRF, PartialsTestCases.Epoch)
+            _ => new CelestialBody(PlanetsAndMoons.Earth, Frames.Frame.ICRF, PartialsTestCases.Epoch)
         };
         var state = PartialsTestCases.State(stateName, earth);
         var spacecraft = PartialsTestCases.Spacecraft(state);

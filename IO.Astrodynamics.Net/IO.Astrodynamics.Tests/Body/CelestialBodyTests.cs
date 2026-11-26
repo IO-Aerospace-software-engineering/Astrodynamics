@@ -26,7 +26,7 @@ public class CelestialBodyTests
     [Fact]
     public void Create()
     {
-        CelestialBody earth = PlanetsAndMoons.EARTH_BODY;
+        CelestialBody earth = PlanetsAndMoons.EarthBody;
 
         Assert.Equal(399, earth.NaifId);
         Assert.Equal("EARTH", earth.Name);
@@ -42,7 +42,7 @@ public class CelestialBodyTests
     [Fact]
     public void Create2()
     {
-        CelestialBody earth = new CelestialBody(PlanetsAndMoons.EARTH, Frames.Frame.ECLIPJ2000, TimeSystem.Time.J2000Tdb);
+        CelestialBody earth = new CelestialBody(PlanetsAndMoons.Earth, Frames.Frame.ECLIPJ2000, TimeSystem.Time.J2000Tdb);
 
         Assert.Equal(399, earth.NaifId);
         Assert.Equal("EARTH", earth.Name);
@@ -58,7 +58,7 @@ public class CelestialBodyTests
     [Fact]
     public void CreateFromNaifObject()
     {
-        CelestialBody moon = new CelestialBody(PlanetsAndMoons.MOON);
+        CelestialBody moon = new CelestialBody(PlanetsAndMoons.Moon);
         Assert.Equal("MOON", moon.Name);
         Assert.Equal(301, moon.NaifId);
         Assert.Equal(0.0, moon.Flattening);
@@ -181,9 +181,9 @@ public class CelestialBodyTests
     [Fact]
     public void Equality()
     {
-        var earth1 = PlanetsAndMoons.EARTH_BODY;
-        var earth2 = PlanetsAndMoons.EARTH_BODY;
-        var moon = new CelestialBody(PlanetsAndMoons.MOON);
+        var earth1 = PlanetsAndMoons.EarthBody;
+        var earth2 = PlanetsAndMoons.EarthBody;
+        var moon = new CelestialBody(PlanetsAndMoons.Moon);
         Assert.Equal(earth1, earth2);
         Assert.NotEqual(earth1, moon);
         Assert.False(earth1 == null);
@@ -199,7 +199,7 @@ public class CelestialBodyTests
     [Fact]
     public void GetEphemeris()
     {
-        var earth = PlanetsAndMoons.EARTH_BODY;
+        var earth = PlanetsAndMoons.EarthBody;
         var res = earth.GetEphemeris(new Window(TimeSystem.Time.J2000Tdb, TimeSpan.FromDays(1.0)), TestHelpers.Sun, Frames.Frame.ICRF, Aberration.None,
             TimeSpan.FromDays(1.0)).ToArray();
         Assert.Equal(2, res.Length);
@@ -211,7 +211,7 @@ public class CelestialBodyTests
     [Fact]
     public void GetEphemerisUTC()
     {
-        var earth = PlanetsAndMoons.EARTH_BODY;
+        var earth = PlanetsAndMoons.EarthBody;
         var res = earth.GetEphemeris(new Window(TimeSystem.Time.J2000Utc, TimeSpan.FromDays(1.0)), TestHelpers.Sun, Frames.Frame.ICRF, Aberration.None,
             TimeSpan.FromDays(1.0)).ToArray();
         Assert.Equal(2, res.Length);
@@ -223,7 +223,7 @@ public class CelestialBodyTests
     [Fact]
     public void GetEphemerisLT()
     {
-        var earth = PlanetsAndMoons.MOON_BODY;
+        var earth = PlanetsAndMoons.MoonBody;
         var res = earth.GetEphemeris(new Window(TimeSystem.Time.J2000Tdb, TimeSpan.FromDays(1.0)), TestHelpers.EarthAtJ2000, Frames.Frame.ICRF, Aberration.LT,
             TimeSpan.FromDays(1.0)).ToArray();
         Assert.Equal(2, res.Length);
@@ -740,7 +740,7 @@ public class CelestialBodyTests
         var end = new TimeSystem.Time(new DateTime(2017, 1, 1, 0, 1, 0), TimeScale.UTC);
         var window = new Window(start, end);
         Assert.Equal(TimeSpan.FromSeconds(121.0), window.Length);
-        var earth = new CelestialBody(PlanetsAndMoons.EARTH);
+        var earth = new CelestialBody(PlanetsAndMoons.Earth);
         var spacecraft = new Astrodynamics.Body.Spacecraft.Spacecraft(-682, "SC682", 1000.0, new StateVector(new Vector3(6800000.0, 0.0, 0.0), new Vector3(0.0, 7656.2204182967143, 0.0), earth, start, Frames.Frame.ICRF), 3000.0,
             new Astrodynamics.Body.Spacecraft.Clock("SC682_CLK", 65536));
         foreach (var (item, observer) in new (Astrodynamics.Body.CelestialItem, ILocalizable)[] { (earth, TestHelpers.Sun), (spacecraft, earth) })
@@ -766,7 +766,7 @@ public class CelestialBodyTests
     [Fact]
     public void GetEphemerisOverWindow_WithoutLeapSecond_Unchanged()
     {
-        var earth = new CelestialBody(PlanetsAndMoons.EARTH);
+        var earth = new CelestialBody(PlanetsAndMoons.Earth);
         var sun = TestHelpers.Sun;
         var windows = new[]
         {

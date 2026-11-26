@@ -30,7 +30,7 @@ public class GeopotentialModelDegreeTests
     private const double Radius = 6678137.0;
 
     private static CelestialBody Observer() =>
-        new(PlanetsAndMoons.EARTH, Frames.Frame.ICRF, Epoch);
+        new(PlanetsAndMoons.Earth, Frames.Frame.ICRF, Epoch);
 
     private static StateVector State(CelestialBody observer, Vector3 position) =>
         new(position, new Vector3(0.0, 7.7e3, 0.0), observer, Epoch, Frames.Frame.ICRF);
@@ -46,9 +46,9 @@ public class GeopotentialModelDegreeTests
         // Act
         var byField = Assert.Throws<ArgumentOutOfRangeException>(() =>
             new GeopotentialGravitationalField(new StreamReader(GeopotentialTestModels.To70Path), (ushort)degree));
-        var byPath = Assert.Throws<ArgumentOutOfRangeException>(() => new CelestialBody(PlanetsAndMoons.EARTH,
+        var byPath = Assert.Throws<ArgumentOutOfRangeException>(() => new CelestialBody(PlanetsAndMoons.Earth,
             Frames.Frame.ICRF, Epoch, new GeopotentialModelParameters(GeopotentialTestModels.To70Path, (ushort)degree)));
-        var byStream = Assert.Throws<ArgumentOutOfRangeException>(() => new CelestialBody(PlanetsAndMoons.EARTH,
+        var byStream = Assert.Throws<ArgumentOutOfRangeException>(() => new CelestialBody(PlanetsAndMoons.Earth,
             Frames.Frame.ICRF, Epoch,
             new GeopotentialModelParameters(File.OpenRead(GeopotentialTestModels.To70Path), (ushort)degree)));
 
@@ -105,7 +105,7 @@ public class GeopotentialModelDegreeTests
         // Act
         var exception = Assert.Throws<ArgumentException>(() =>
             new GeopotentialGravitationalField(new StreamReader(GeopotentialTestModels.Without((2, 0))), 10));
-        var byBody = Assert.Throws<ArgumentException>(() => new CelestialBody(PlanetsAndMoons.EARTH,
+        var byBody = Assert.Throws<ArgumentException>(() => new CelestialBody(PlanetsAndMoons.Earth,
             Frames.Frame.ICRF, Epoch, new GeopotentialModelParameters(GeopotentialTestModels.Without((2, 0)), 10)));
 
         // Assert: a bad argument, not the degree check

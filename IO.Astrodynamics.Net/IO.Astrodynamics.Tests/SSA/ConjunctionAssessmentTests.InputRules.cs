@@ -124,7 +124,7 @@ public partial class ConjunctionAssessmentTests
         }
         else
         {
-            secondary = new CelestialBody(PlanetsAndMoons.MOON);
+            secondary = new CelestialBody(PlanetsAndMoons.Moon);
         }
 
         double? given = option < 0.0 ? null : option;
@@ -210,7 +210,7 @@ public partial class ConjunctionAssessmentTests
         var small = InputRuleSpacecraft(NextInputRuleId(), secondaryStart, 2.0);
         var large = InputRuleSpacecraft(NextInputRuleId(), secondaryStart, 6.0);
         var none = InputRuleSpacecraft(NextInputRuleId(), secondaryStart, 0.0);
-        var moon = new CelestialBody(PlanetsAndMoons.MOON);
+        var moon = new CelestialBody(PlanetsAndMoons.Moon);
         if (propagated)
         {
             foreach (var craft in new[] { protectedCraft, small, large, none })

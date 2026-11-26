@@ -49,7 +49,7 @@ public class RunResultsSurfaceTests
 
     private const BindingFlags Everything = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static;
 
-    private static CelestialBody Earth() => new(PlanetsAndMoons.EARTH, Frames.Frame.ICRF, S);
+    private static CelestialBody Earth() => new(PlanetsAndMoons.Earth, Frames.Frame.ICRF, S);
 
     private static Spacecraft NewSpacecraft(CelestialBody earth, out Engine engine)
     {

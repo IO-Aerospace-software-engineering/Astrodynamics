@@ -234,7 +234,7 @@ public class StarVelocityTests
     public void GetGeometricStateRelativeTo_Velocity_IsTheDerivativeOfTheStraightLine()
     {
         double worst = 0.0;
-        var ssb = Barycenters.SOLAR_SYSTEM_BARYCENTER;
+        var ssb = Barycenters.SolarSystemBarycenter;
         for (int i = 0; i < VelocityCases.Length; i++)
         {
             // Arrange
@@ -286,7 +286,7 @@ public class StarVelocityTests
     public void GetGeometricStateRelativeTo_Velocity_IsTheDerivativeOfIauStarpm()
     {
         double worst = 0.0;
-        var ssb = Barycenters.SOLAR_SYSTEM_BARYCENTER;
+        var ssb = Barycenters.SolarSystemBarycenter;
         int compared = 0;
         for (int i = 0; i < VelocityCases.Length; i++)
         {
@@ -345,7 +345,7 @@ public class StarVelocityTests
     public void GetGeometricStateRelativeTo_Velocity_IsTheRateOfThePosition()
     {
         double worst = 0.0;
-        var ssb = Barycenters.SOLAR_SYSTEM_BARYCENTER;
+        var ssb = Barycenters.SolarSystemBarycenter;
         var year = TimeSpan.FromTicks((long)(365.25 * TimeSpan.TicksPerDay));
         for (int i = 0; i < VelocityCases.Length; i++)
         {
@@ -393,7 +393,7 @@ public class StarVelocityTests
         var barnard = new Star(4472832, "Barnard", 2.9e29, "M4V", 9.5, 546.9759 / 1000.0,
             Equatorial.FromRightAscensionDeclination(269.44850252544 * deg, 4.73942005111 * deg, j2016),
             10362.394 * mas, -801.551 * mas, 0.0, 0.0, 0.0, 0.0, j2016);
-        var earth = PlanetsAndMoons.EARTH_BODY;
+        var earth = PlanetsAndMoons.EarthBody;
         var starVelocity = SpaceVelocity(barnard);
         double worstVelocity = 0.0;
         double worstRangeRate = 0.0;
@@ -462,7 +462,7 @@ public class StarVelocityTests
     {
         // Arrange
         var barnard = BarnardDr3(731003);
-        var sun = Stars.SUN_BODY;
+        var sun = Stars.SunBody;
         var starVelocity = SpaceVelocity(barnard);
         double worstVelocity = 0.0;
         double worstPosition = 0.0;
@@ -504,7 +504,7 @@ public class StarVelocityTests
     {
         // Arrange
         var barnard = BarnardDr3(731004);
-        var earth = PlanetsAndMoons.EARTH_BODY;
+        var earth = PlanetsAndMoons.EarthBody;
         var starVelocity = SpaceVelocity(barnard);
         double worstVelocity = 0.0;
         double worstPosition = 0.0;
@@ -544,7 +544,7 @@ public class StarVelocityTests
     {
         // Arrange
         var barnard = BarnardDr3(731005);
-        var sun = Stars.SUN_BODY;
+        var sun = Stars.SunBody;
         var epoch = new TimeSystem.Time(2026, 11, 17, TimeScale.TDB);
         var aboutStar = new IO.Astrodynamics.OrbitalParameters.StateVector(AboutStarPosition, AboutStarVelocity, barnard, epoch, Frames.Frame.ICRF);
         var spacecraft = new IO.Astrodynamics.Body.Spacecraft.Spacecraft(-731005, "AboutBarnard", 1000.0, aboutStar, 10000.0, new IO.Astrodynamics.Body.Spacecraft.Clock("clk731", 256));

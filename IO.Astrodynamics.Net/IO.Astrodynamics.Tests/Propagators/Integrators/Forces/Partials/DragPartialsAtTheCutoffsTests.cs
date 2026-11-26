@@ -241,7 +241,7 @@ public class DragPartialsAtTheCutoffsTests : IClassFixture<PartialsTestCases>
         // Arrange: flag 15 off, the density continuous at the altitudes of the cutoffs
         var flags = NrlmsiseFlags.CreateStandard();
         flags.Switches[15] = 0;
-        var earth = new CelestialBody(SolarSystemObjects.PlanetsAndMoons.EARTH, Frames.Frame.ICRF,
+        var earth = new CelestialBody(SolarSystemObjects.PlanetsAndMoons.Earth, Frames.Frame.ICRF,
             PartialsTestCases.Epoch, null, new Nrlmsise00Model(flags, SpaceWeather.Nominal));
         var (drag, model, direction, rotation, epoch) = Geometry(PartialsTestCases.Leo400);
         double radius = CutoffRadius(drag, model, direction, rotation, epoch, model.DensityDiscontinuities.Length - 1);
@@ -496,7 +496,7 @@ public class DragPartialsAtTheCutoffsTests : IClassFixture<PartialsTestCases>
     public void AltitudeDerivative_OfAModelOfTheAltitudeAlone_IsItsClosedForm()
     {
         // Arrange: the US 1976 atmosphere gives dρ/dh in closed form
-        var earth = new CelestialBody(SolarSystemObjects.PlanetsAndMoons.EARTH, Frames.Frame.ICRF,
+        var earth = new CelestialBody(SolarSystemObjects.PlanetsAndMoons.Earth, Frames.Frame.ICRF,
             PartialsTestCases.Epoch, null, new EarthStandardAtmosphere());
         var state = PartialsTestCases.State(PartialsTestCases.Leo400, earth);
         var drag = new AtmosphericDrag(PartialsTestCases.Spacecraft(state), earth);
@@ -556,7 +556,7 @@ public class DragPartialsAtTheCutoffsTests : IClassFixture<PartialsTestCases>
         params double[] discontinuities)
     {
         var model = new SteppedAtmosphere(discontinuities);
-        var earth = new CelestialBody(SolarSystemObjects.PlanetsAndMoons.EARTH, Frames.Frame.ICRF,
+        var earth = new CelestialBody(SolarSystemObjects.PlanetsAndMoons.Earth, Frames.Frame.ICRF,
             PartialsTestCases.Epoch, null, model);
         var state = PartialsTestCases.State(PartialsTestCases.Leo400, earth);
         return (earth, new AtmosphericDrag(PartialsTestCases.Spacecraft(state), earth), model);

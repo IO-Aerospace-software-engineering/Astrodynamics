@@ -23,7 +23,7 @@ namespace IO.Astrodynamics.Tests.OrbitalParameters
         [Fact]
         public void Create()
         {
-            CelestialBody earth = PlanetsAndMoons.EARTH_BODY;
+            CelestialBody earth = PlanetsAndMoons.EarthBody;
 
             Vector3 pos = new Vector3(1.0, 2.0, 3.0);
             Vector3 vel = new Vector3(4.0, 5.0, 6.0);
@@ -39,7 +39,7 @@ namespace IO.Astrodynamics.Tests.OrbitalParameters
         [Fact]
         public void Inverse()
         {
-            CelestialBody earth = PlanetsAndMoons.EARTH_BODY;
+            CelestialBody earth = PlanetsAndMoons.EarthBody;
 
             Vector3 pos = new Vector3(1.0, 2.0, 3.0);
             Vector3 vel = new Vector3(4.0, 5.0, 6.0);
@@ -52,7 +52,7 @@ namespace IO.Astrodynamics.Tests.OrbitalParameters
         [Fact]
         public void Add()
         {
-            CelestialBody earth = PlanetsAndMoons.EARTH_BODY;
+            CelestialBody earth = PlanetsAndMoons.EarthBody;
 
             Vector3 pos = new Vector3(1.0, 2.0, 3.0);
             Vector3 vel = new Vector3(4.0, 5.0, 6.0);
@@ -69,7 +69,7 @@ namespace IO.Astrodynamics.Tests.OrbitalParameters
         [Fact]
         public void AddExcept()
         {
-            CelestialBody earth = PlanetsAndMoons.EARTH_BODY;
+            CelestialBody earth = PlanetsAndMoons.EarthBody;
 
             Vector3 pos = new Vector3(1.0, 2.0, 3.0);
             Vector3 vel = new Vector3(4.0, 5.0, 6.0);
@@ -85,7 +85,7 @@ namespace IO.Astrodynamics.Tests.OrbitalParameters
         [Fact]
         public void Eccentricity()
         {
-            CelestialBody earth = PlanetsAndMoons.EARTH_BODY;
+            CelestialBody earth = PlanetsAndMoons.EarthBody;
 
             StateVector sv = new StateVector(new Vector3(-6.116559469556896E+06, -1.546174698676721E+06, 2.521950157430313E+06),
                 new Vector3(-8.078523150700097E+02, -5.477647950892673E+03, -5.297615757935174E+03), earth, new TimeSystem.Time(DateTime.UtcNow, TimeScale.UTC),
@@ -96,7 +96,7 @@ namespace IO.Astrodynamics.Tests.OrbitalParameters
         [Fact]
         public void EccentricityVector()
         {
-            CelestialBody earth = PlanetsAndMoons.EARTH_BODY;
+            CelestialBody earth = PlanetsAndMoons.EarthBody;
 
             StateVector sv = new StateVector(new Vector3(6800000.0, 0.0, 0.0), new Vector3(0.0, 8000.0, 0.0), earth, new TimeSystem.Time(DateTime.UtcNow, TimeScale.UTC),
                 Frames.Frame.ICRF);
@@ -124,7 +124,7 @@ namespace IO.Astrodynamics.Tests.OrbitalParameters
         [Fact]
         public void SpecificOrbitalEnergyMomentum()
         {
-            CelestialBody earth = PlanetsAndMoons.EARTH_BODY;
+            CelestialBody earth = PlanetsAndMoons.EarthBody;
 
             StateVector sv = new StateVector(new Vector3(-6.116559469556896E+06, -1.546174698676721E+06, 2.521950157430313E+06),
                 new Vector3(-8.078523150700097E+02, -5.477647950892673E+03, -5.297615757935174E+03), earth, new TimeSystem.Time(DateTime.UtcNow, TimeScale.UTC),
@@ -136,7 +136,7 @@ namespace IO.Astrodynamics.Tests.OrbitalParameters
         [Fact]
         public void Inclination()
         {
-            CelestialBody earth = PlanetsAndMoons.EARTH_BODY;
+            CelestialBody earth = PlanetsAndMoons.EarthBody;
 
             StateVector sv = new StateVector(new Vector3(6800000.0, 0.0, 0.0), new Vector3(0.0, 5000.0, 5000.0), earth, new TimeSystem.Time(DateTime.UtcNow, TimeScale.UTC),
                 Frames.Frame.ICRF);
@@ -146,7 +146,7 @@ namespace IO.Astrodynamics.Tests.OrbitalParameters
         [Fact]
         public void SemiMajorAxis()
         {
-            CelestialBody earth = PlanetsAndMoons.EARTH_BODY;
+            CelestialBody earth = PlanetsAndMoons.EarthBody;
 
             StateVector sv = new StateVector(new Vector3(8000000.0, 0.0, 0.0), new Vector3(0.0, 6000.0, 6000.0), earth, new TimeSystem.Time(DateTime.UtcNow, TimeScale.UTC),
                 Frames.Frame.ICRF);
@@ -156,7 +156,7 @@ namespace IO.Astrodynamics.Tests.OrbitalParameters
         [Fact]
         public void AscendingNodeVector()
         {
-            CelestialBody earth = PlanetsAndMoons.EARTH_BODY;
+            CelestialBody earth = PlanetsAndMoons.EarthBody;
 
             StateVector sv = new StateVector(new Vector3(8000000.0, 0.0, 0.0), new Vector3(0.0, 6000.0, 0.0), earth, new TimeSystem.Time(DateTime.UtcNow, TimeScale.UTC),
                 Frames.Frame.ICRF);
@@ -169,7 +169,7 @@ namespace IO.Astrodynamics.Tests.OrbitalParameters
         [Fact]
         public void AscendingNode()
         {
-            CelestialBody earth = PlanetsAndMoons.EARTH_BODY;
+            CelestialBody earth = PlanetsAndMoons.EarthBody;
 
             StateVector sv = new StateVector(new Vector3(9208000.0, 3352000, 0.0), new Vector3(-1750, 4830, 5140), earth, new TimeSystem.Time(DateTime.UtcNow, TimeScale.UTC),
                 Frames.Frame.ICRF);
@@ -183,7 +183,7 @@ namespace IO.Astrodynamics.Tests.OrbitalParameters
         [Fact]
         public void ArgumentOfPeriapis()
         {
-            CelestialBody earth = PlanetsAndMoons.EARTH_BODY;
+            CelestialBody earth = PlanetsAndMoons.EarthBody;
 
             StateVector sv = new StateVector(new Vector3(8237000.0, 17000.0, 5308000.0), new Vector3(-2000.0, 6000.0, 3000.0), earth,
                 new TimeSystem.Time(DateTime.UtcNow, TimeScale.UTC), Frames.Frame.ICRF);
@@ -199,7 +199,7 @@ namespace IO.Astrodynamics.Tests.OrbitalParameters
         [Fact]
         public void TrueAnomaly()
         {
-            CelestialBody earth = PlanetsAndMoons.EARTH_BODY;
+            CelestialBody earth = PlanetsAndMoons.EarthBody;
 
             StateVector sv = new StateVector(new Vector3(5070000.0, -2387000.0, 1430000.0), new Vector3(2450.0, 6350.0, 6440.0), earth,
                 new TimeSystem.Time(DateTime.UtcNow, TimeScale.UTC), Frames.Frame.ICRF);
@@ -215,7 +215,7 @@ namespace IO.Astrodynamics.Tests.OrbitalParameters
         [Fact]
         public void EccentricAnomaly()
         {
-            CelestialBody earth = PlanetsAndMoons.EARTH_BODY;
+            CelestialBody earth = PlanetsAndMoons.EarthBody;
 
             StateVector sv = new StateVector(new Vector3(6700000.0, 2494000.0, 0.0), new Vector3(-2150.0, 8850.0, 0.0), earth,
                 new TimeSystem.Time(DateTime.UtcNow, TimeScale.UTC), Frames.Frame.ICRF);
@@ -226,7 +226,7 @@ namespace IO.Astrodynamics.Tests.OrbitalParameters
         [Fact]
         public void MeanAnomaly()
         {
-            CelestialBody earth = PlanetsAndMoons.EARTH_BODY;
+            CelestialBody earth = PlanetsAndMoons.EarthBody;
 
             StateVector sv = new StateVector(new Vector3(-5775.068936894231E+03, -3372.353197848874E+03, 651.695854037289E+03),
                 new Vector3(-0.661469579672604E+03, -7.147573777688288E+03, -2.915719736461653E+03), earth, new TimeSystem.Time(DateTime.UtcNow, TimeScale.UTC),
@@ -238,7 +238,7 @@ namespace IO.Astrodynamics.Tests.OrbitalParameters
         [Fact]
         public void Period()
         {
-            CelestialBody earth = PlanetsAndMoons.EARTH_BODY;
+            CelestialBody earth = PlanetsAndMoons.EarthBody;
 
             StateVector sv = new StateVector(new Vector3(-5775.068936894231E+03, -3372.353197848874E+03, 651.695854037289E+03),
                 new Vector3(-0.661469579672604E+03, -7.147573777688288E+03, -2.915719736461653E+03), earth, new TimeSystem.Time(DateTime.UtcNow, TimeScale.UTC),
@@ -250,7 +250,7 @@ namespace IO.Astrodynamics.Tests.OrbitalParameters
         [Fact]
         public void MeanMotion()
         {
-            CelestialBody earth = PlanetsAndMoons.EARTH_BODY;
+            CelestialBody earth = PlanetsAndMoons.EarthBody;
 
             StateVector sv = new StateVector(new Vector3(-5775.068936894231E+03, -3372.353197848874E+03, 651.695854037289E+03),
                 new Vector3(-0.661469579672604E+03, -7.147573777688288E+03, -2.915719736461653E+03), earth, new TimeSystem.Time(DateTime.UtcNow, TimeScale.UTC),
@@ -281,7 +281,7 @@ namespace IO.Astrodynamics.Tests.OrbitalParameters
         [Fact]
         public void ToNonInertialFrame()
         {
-            CelestialBody earth = PlanetsAndMoons.EARTH_BODY;
+            CelestialBody earth = PlanetsAndMoons.EarthBody;
 
             var epoch = new TimeSystem.Time(2000, 1, 1, 12, 0, 0, TimeScale.TDB);
             var earthFrame = new Frames.Frame("ITRF93");
@@ -408,7 +408,7 @@ namespace IO.Astrodynamics.Tests.OrbitalParameters
         {
             var originalSV = new StateVector(new Vector3(6800000.0, 0.0, 0.0), new Vector3(0.0, 8000.0, 0.0), TestHelpers.EarthAtJ2000, TimeSystem.Time.J2000Tdb,
                 Frames.Frame.ICRF);
-            var svSSB = originalSV.RelativeTo(Barycenters.SOLAR_SYSTEM_BARYCENTER, Aberration.None).ToStateVector();
+            var svSSB = originalSV.RelativeTo(Barycenters.SolarSystemBarycenter, Aberration.None).ToStateVector();
             var svEarth = svSSB.RelativeTo(TestHelpers.EarthAtJ2000, Aberration.None).ToStateVector();
             var deltaP = svEarth.Position - originalSV.Position;
             var deltaV = svEarth.Velocity - originalSV.Velocity;

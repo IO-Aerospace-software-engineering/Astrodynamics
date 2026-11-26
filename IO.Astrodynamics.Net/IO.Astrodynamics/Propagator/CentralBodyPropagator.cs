@@ -453,7 +453,7 @@ public class CentralBodyPropagator : PropagatorBase
 
         if (observer is Star or Barycenter)
         {
-            return RequireGravitationalParameter(Stars.SUN_BODY, nameof(spacecraft));
+            return RequireGravitationalParameter(Stars.SunBody, nameof(spacecraft));
         }
 
         return RequireGravitationalParameter(observer as CelestialItem

@@ -69,7 +69,7 @@ One grammar for every command (R29 of #668, lot L8; `docs/reference/cli.md`, its
   - `SpiceDataProvider`: Default, uses SPICE kernel files
   - `MemoryDataProvider`: In-memory for testing; a read is the difference of its stored states in ICRF rotated into the frame asked (ICRF, GCRF, ECLIPJ2000, TEME, CIRS and TIRS known without stored orientations; `AddStateOrientationToIcrf` throws `ArgumentException` for ICRF, GCRF, TEME, CIRS and TIRS, #744), and an aberration other than `None` throws `NotSupportedException` (#559)
 - Configured via `Configuration.Instance.SetDataProvider()`, read by `Configuration.Instance.DataProvider` (public, read only, 11.0.0); an object the caller builds reads the provider set when it is built, a static body the provider of its first read, a static SPICE `Frame` (`Frame.ICRF`, `Frame.ITRF93`, ...) the provider of the process at each transform (structuring choice 1 of #668; the table of `docs/reference/spice-api.md`); a frame name SPICE does not know throws `ArgumentException` with SPICE's error as inner exception on `TransformFrame`, `ToFrame`, the ephemeris reads, `ReadOrientation` and CSPICE's coordinate, illumination, occultation and field-of-view searches, naming the frame's parameter in the public call (none for the frame of the instance or of the state), a coverage gap of a known frame `InvalidOperationException` (R25 of #668)
-- The static objects of `Barycenters`, `PlanetsAndMoons` (`EARTH_BODY`, `MOON_BODY`) and `Stars` (`SUN_BODY`) read the provider at the first read of a member that needs its data, not in their type initializer; a read the provider cannot answer throws its exception and is retried at the next read, on the provider set at that time, and so does a read whose provider gives a GM or, for a body, radii of 0 (SPICE before `LoadKernels`), with `InvalidOperationException` naming the missing variable (third round of #668); once read, an object keeps the provider it read its data from, for its data and its ephemeris; on SPICE its data are read again at the first read after each `LoadKernels` or `ReloadKernels` that hands SPICE a file (a repeated load hands it nothing, R01 of #668) and each `UnloadKernels` or `ClearKernels`, data equal to those held keeping the instances held (third round of #668)
+- The static objects of `Barycenters`, `PlanetsAndMoons` (`EarthBody`, `MoonBody`) and `Stars` (`SunBody`) read the provider at the first read of a member that needs its data, not in their type initializer; a read the provider cannot answer throws its exception and is retried at the next read, on the provider set at that time, and so does a read whose provider gives a GM or, for a body, radii of 0 (SPICE before `LoadKernels`), with `InvalidOperationException` naming the missing variable (third round of #668); once read, an object keeps the provider it read its data from, for its data and its ephemeris; on SPICE its data are read again at the first read after each `LoadKernels` or `ReloadKernels` that hands SPICE a file (a repeated load hands it nothing, R01 of #668) and each `UnloadKernels` or `ClearKernels`, data equal to those held keeping the instances held (third round of #668)
 
 **Key Namespaces**
 - `IO.Astrodynamics.Body`: Celestial bodies, spacecraft, instruments; `Spacecraft.WriteKernels(directory)` writes the clock, frame, instrument, SPK and CK kernels of a propagated spacecraft into one directory, each byte for byte its writer's, and loads them each by its own path, the sealed `SpacecraftKernels` it returns (`Clock`, `Frame`, `Ephemeris`, `Orientation`, `Instruments` of `InstrumentKernelFiles`, `IsLoaded`) unloading exactly those at `Dispose`; every check before anything is written, created or loaded, `InvalidOperationException` (kernel-backed, no stored state or writable arc, no attitude record, a name SPICE or a file system cannot take, a directory inside a loaded one, a file SPICE holds), a path longer than SPICE takes `ArgumentException` (R14 and decisions 78 to 81 of #668; `docs/reference/spacecraft.md#the-kernels`); the exceptions of the reads and the writes follow one table (decision 81, `docs/reference/spacecraft.md#the-exceptions-of-the-reads-and-the-writes`); where CSPICE cannot read a pair, the reference-body path (internal `CelestialItem.ApparentStateFromReferenceBody`) corrects as `spkaps` (#491) and rotates to a non-inertial frame at t ∓ lt of the frame's centre, as `spkezr_c` (#593, `SpiceApi.NonInertialFrameCenter`, the native `GetFrameInfoProxy`; a centre that is a third object, a site from coordinates or a managed spacecraft included, read as that path reads it); a site built from coordinates as a target takes it for every observer with a correction, as `spkcpt_c` (#489); where CSPICE reads the pair in a frame only the library holds (TEME, CIRS, TIRS, a site or spacecraft frame of the library), the J2000 read is rotated by the same frame-centre rule (#739)
@@ -450,8 +450,8 @@ if (thermosphere.Details is NrlmsiseDetails details)
 // Via CelestialBody: its configured model; an Earth without one takes NRLMSISE-00 at nominal space weather with a
 // full context, the atmosphere of its drag (#674), and the U.S. Standard Atmosphere 1976, its base atmosphere, with an
 // altitude only or a partial context (decided by S. Guillet, 2026-11-14)
-var earth = PlanetsAndMoons.EARTH_BODY;
-var atm = earth.GetAtmosphere(fullContext);  // NRLMSISE-00 nominal: EARTH_BODY has no model
+var earth = PlanetsAndMoons.EarthBody;
+var atm = earth.GetAtmosphere(fullContext);  // NRLMSISE-00 nominal: EarthBody has no model
 var low = earth.GetAtmosphere(10000.0);  // U.S. Standard Atmosphere 1976: an altitude only
 ```
 
@@ -482,7 +482,7 @@ The framework supports spherical harmonic gravity modeling using EGM2008 coeffic
 **Usage**
 ```csharp
 // Create Earth with degree-10 geopotential
-var earth = new CelestialBody(PlanetsAndMoons.EARTH, Frame.ICRF, epoch,
+var earth = new CelestialBody(PlanetsAndMoons.Earth, Frame.ICRF, epoch,
     new GeopotentialModelParameters("Data/SolarSystem/EGM2008_to70_TideFree", 10));
 
 // A propagation takes the models of the orbit's centre, and a listed body of its id with other models throws
@@ -495,7 +495,7 @@ var propagator = new CentralBodyPropagator(window, spacecraft, new PropagationOp
 {
     Integrator = new VVIntegratorOptions { Step = TimeSpan.FromSeconds(1.0) },
     OutputStep = TimeSpan.FromSeconds(1.0),
-    ThirdBodies = [PlanetsAndMoons.MOON_BODY, Stars.SUN_BODY]
+    ThirdBodies = [PlanetsAndMoons.MoonBody, Stars.SunBody]
 });
 ```
 
@@ -514,7 +514,7 @@ The `IO.Astrodynamics.Propagator.Forces` namespace provides configurable perturb
 ```csharp
 // Atmospheric drag reads the body's atmosphere: its model, or NRLMSISE-00 at nominal space weather for an Earth without
 // one; another body without a model throws (#674)
-var earth = new CelestialBody(PlanetsAndMoons.EARTH, Frame.ICRF, epoch,
+var earth = new CelestialBody(PlanetsAndMoons.Earth, Frame.ICRF, epoch,
     geopotentialParams, new EarthStandardAtmosphere());
 var drag = new AtmosphericDrag(spacecraft, earth);
 ```

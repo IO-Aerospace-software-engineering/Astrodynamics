@@ -38,7 +38,7 @@ public class PropagationPastTheWindowTests
         TestKernels.EnsureSolarSystem();
     }
 
-    private static CelestialBody Earth() => new(PlanetsAndMoons.EARTH, Frames.Frame.ICRF, Start,
+    private static CelestialBody Earth() => new(PlanetsAndMoons.Earth, Frames.Frame.ICRF, Start,
         new GeopotentialModelParameters("Data/SolarSystem/EGM2008_to70_TideFree", 10));
 
     private static Spacecraft NewSpacecraft(CelestialBody earth, int naifId) =>
@@ -70,7 +70,7 @@ public class PropagationPastTheWindowTests
         PropagationSolution Propagate(double outputStep, int naifId)
         {
             var earth = Earth();
-            var bodies = new CelestialItem[] { earth, PlanetsAndMoons.MOON_BODY, Stars.SUN_BODY };
+            var bodies = new CelestialItem[] { earth, PlanetsAndMoons.MoonBody, Stars.SunBody };
             var spacecraft = NewSpacecraft(earth, naifId);
             var window = new Window(Start, Start.AddSeconds(length));
             return integrator == "RK"
@@ -113,7 +113,7 @@ public class PropagationPastTheWindowTests
     public void OrientationCache_PastItsLastGridPoint_ReadsTheFrame(double pastTheGrid)
     {
         // Arrange: a window of 3 900 s, whose grid of 60 s from 120 s before its start ends at 4 020 s
-        var earth = new CelestialBody(PlanetsAndMoons.EARTH);
+        var earth = new CelestialBody(PlanetsAndMoons.Earth);
         var tdbStart = Start.ToTdb();
         var cache = new PropagationFrameOrientationCache(new Window(tdbStart, tdbStart.AddSeconds(3900.0)), earth.Frame,
             TimeSpan.FromSeconds(60.0));
@@ -141,19 +141,19 @@ public class PropagationPastTheWindowTests
     public void EphemerisCache_OutsideItsGrid_ReadsTheEphemeris(double fromTheGrid)
     {
         // Arrange: a window of 3 900 s, whose grid of 60 s from 240 s before its start ends 240 s after its end
-        var earth = new CelestialBody(PlanetsAndMoons.EARTH);
+        var earth = new CelestialBody(PlanetsAndMoons.Earth);
         var tdbStart = Start.ToTdb();
         using var cache = new PropagationEphemerisCache(new Window(tdbStart, tdbStart.AddSeconds(3900.0)),
-            new (CelestialItem, Aberration)[] { (PlanetsAndMoons.MOON_BODY, Aberration.None) }, earth,
+            new (CelestialItem, Aberration)[] { (PlanetsAndMoons.MoonBody, Aberration.None) }, earth,
             TimeSpan.FromSeconds(60.0));
         var epoch = fromTheGrid > 0.0 ? tdbStart.AddSeconds(4140.0 + fromTheGrid) : tdbStart.AddSeconds(-240.0 + fromTheGrid);
 
         // Act
-        var position = cache.GetPosition(PlanetsAndMoons.MOON.NaifId, Aberration.None, epoch);
-        var (statePosition, stateVelocity) = cache.GetState(PlanetsAndMoons.MOON.NaifId, Aberration.None, epoch);
+        var position = cache.GetPosition(PlanetsAndMoons.Moon.NaifId, Aberration.None, epoch);
+        var (statePosition, stateVelocity) = cache.GetState(PlanetsAndMoons.Moon.NaifId, Aberration.None, epoch);
 
         // Assert
-        var spice = SpiceApi.Instance.ReadEphemeris(epoch, PlanetsAndMoons.EARTH.NaifId, PlanetsAndMoons.MOON.NaifId,
+        var spice = SpiceApi.Instance.ReadEphemeris(epoch, PlanetsAndMoons.Earth.NaifId, PlanetsAndMoons.Moon.NaifId,
             Frames.Frame.ICRF, Aberration.None);
         double apart = (position - spice.Position).Magnitude();
         _output.WriteLine($"MEASURE #626 Moon {fromTheGrid} s from the grid: {apart:E3} m from spkezr");

@@ -421,7 +421,7 @@ public class DocumentationPagesExamplesTests
 
     private static StateVector Leo(double radius, double inclination, TimeSystem.Time epoch)
     {
-        var earth = PlanetsAndMoons.EARTH_BODY;
+        var earth = PlanetsAndMoons.EarthBody;
         double v = System.Math.Sqrt(earth.GM / radius);
         return new StateVector(new Vector3(radius, 0.0, 0.0), new Vector3(0.0, v * System.Math.Cos(inclination), v * System.Math.Sin(inclination)),
             earth, epoch, Frames.Frame.ICRF);
@@ -511,7 +511,7 @@ public class DocumentationPagesExamplesTests
     [Fact]
     public void MissionDesignTutorial_LambertBlocks_ReachTheArrival()
     {
-        var earth = PlanetsAndMoons.EARTH_BODY;
+        var earth = PlanetsAndMoons.EarthBody;
         var departure = Leo(7000000.0, 0.5, Epoch);
         var arrivalEpoch = Epoch.AddHours(5.0);
         double angle = 160.0 * IO.Astrodynamics.Constants.Deg2Rad;
@@ -585,8 +585,8 @@ public class DocumentationPagesExamplesTests
     [Fact]
     public void GeometryTutorial_LunarEclipse_IsBracketedByTheDiscs()
     {
-        var earth = PlanetsAndMoons.EARTH_BODY;
-        var moon = new CelestialBody(PlanetsAndMoons.MOON);
+        var earth = PlanetsAndMoons.EarthBody;
+        var moon = new CelestialBody(PlanetsAndMoons.Moon);
         var sun = new CelestialBody(Stars.Sun);
         var searchWindow = new Window(new TimeSystem.Time(2024, 3, 24, 0, 0, 0, TimeScale.TDB), new TimeSystem.Time(2024, 3, 27, 0, 0, 0, TimeScale.TDB));
         var windows = ((IEnumerable<Window>)Block("docs/tutorials/geometry-and-visibility.md", 1)
@@ -656,9 +656,9 @@ public class DocumentationPagesExamplesTests
         var tasks = new List<PropagationTask>();
         for (int i = 0; i < 2; i++)
         {
-            var earth = new CelestialBody(PlanetsAndMoons.EARTH, new GeopotentialModelParameters("Data/SolarSystem/EGM2008_to70_TideFree", 10));
+            var earth = new CelestialBody(PlanetsAndMoons.Earth, new GeopotentialModelParameters("Data/SolarSystem/EGM2008_to70_TideFree", 10));
             var spacecraft = new Spacecraft(-(7061 + i), $"SHARED{i}", 100.0, orbit, 10000.0, new Clock($"SHARED{i}_CLK", 256));
-            tasks.Add(new PropagationTask(spacecraft, window, new PropagationOptions { Integrator = new RK78IntegratorOptions { AbsoluteTolerance = 1e-10, RelativeTolerance = 1e-10, InitialStep = TimeSpan.FromSeconds(30.0) }, OutputStep = TimeSpan.FromSeconds(60), ThirdBodies = new CelestialItem[] { earth, Stars.SUN_BODY, PlanetsAndMoons.MOON_BODY }, CovariancePropagation = CovariancePropagationOptions.None }));
+            tasks.Add(new PropagationTask(spacecraft, window, new PropagationOptions { Integrator = new RK78IntegratorOptions { AbsoluteTolerance = 1e-10, RelativeTolerance = 1e-10, InitialStep = TimeSpan.FromSeconds(30.0) }, OutputStep = TimeSpan.FromSeconds(60), ThirdBodies = new CelestialItem[] { earth, Stars.SunBody, PlanetsAndMoons.MoonBody }, CovariancePropagation = CovariancePropagationOptions.None }));
         }
 
         var result = BatchPropagator.Propagate(tasks);

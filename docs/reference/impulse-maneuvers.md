@@ -186,7 +186,7 @@ Radii are checked (decision 68 of #668, decided by S. Guillet, 2026-11-23): a ra
 `ArgumentOutOfRangeException` naming it (`apogeeRadius`, `perigeeRadius`), its message "a radius from the centre ...;
 for a height h pass R + h"; an apogee radius below the equatorial radius of a celestial body centre throws
 `ArgumentException` in the constructor for a given centre (the target-orbit form included, naming `targetOrbit`; the
-radius of a deferred body such as `PlanetsAndMoons.EARTH_BODY` is read there) and `InvalidOperationException` from the
+radius of a deferred body such as `PlanetsAndMoons.EarthBody` is read there) and `InvalidOperationException` from the
 propagator constructor and `Propagate` for a centre the run infers. A perigee inside the body stays legal (a deorbit).
 `CombinedManeuver` checks its inclination in [0, π] (`ArgumentOutOfRangeException`, `inclination`). Before 11.0.0 the
 radii were accepted, and 1000e3 m, an altitude given for a radius, put the apogee 5378 km under the surface.

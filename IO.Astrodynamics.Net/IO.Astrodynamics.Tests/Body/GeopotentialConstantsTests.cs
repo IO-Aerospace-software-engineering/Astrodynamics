@@ -48,10 +48,10 @@ public class GeopotentialConstantsTests
         // Act
         var earths = new[]
         {
-            new CelestialBody(PlanetsAndMoons.EARTH, Frames.Frame.ICRF, Epoch, byPath),
-            new CelestialBody(PlanetsAndMoons.EARTH.NaifId, Frames.Frame.ICRF, Epoch, byStream),
-            new CelestialBody(PlanetsAndMoons.EARTH, new GeopotentialModelParameters(Model, 2)),
-            new CelestialBody(PlanetsAndMoons.EARTH.NaifId, new GeopotentialModelParameters(ModelStream(), 2))
+            new CelestialBody(PlanetsAndMoons.Earth, Frames.Frame.ICRF, Epoch, byPath),
+            new CelestialBody(PlanetsAndMoons.Earth.NaifId, Frames.Frame.ICRF, Epoch, byStream),
+            new CelestialBody(PlanetsAndMoons.Earth, new GeopotentialModelParameters(Model, 2)),
+            new CelestialBody(PlanetsAndMoons.Earth.NaifId, new GeopotentialModelParameters(ModelStream(), 2))
         };
 
         // Assert
@@ -77,8 +77,8 @@ public class GeopotentialConstantsTests
         var byStream = new GeopotentialModelParameters(ModelStream(), 10, 4.9e12, 1.738e6);
 
         // Act
-        var earth = new CelestialBody(PlanetsAndMoons.EARTH, Frames.Frame.ICRF, Epoch, byPath);
-        var moon = new CelestialBody(PlanetsAndMoons.MOON, Frames.Frame.ICRF, Epoch, byStream);
+        var earth = new CelestialBody(PlanetsAndMoons.Earth, Frames.Frame.ICRF, Epoch, byPath);
+        var moon = new CelestialBody(PlanetsAndMoons.Moon, Frames.Frame.ICRF, Epoch, byStream);
 
         // Assert
         Assert.Equal(3.9e14, byPath.GravitationalParameter);
@@ -121,11 +121,11 @@ public class GeopotentialConstantsTests
     {
         // Arrange: the Moon, which a field without constants evaluates with its kernel GM and equatorial radius, as
         // before #410; the same constants given explicitly make k exactly 1
-        var reference = new CelestialBody(PlanetsAndMoons.MOON, Frames.Frame.ICRF, Epoch);
+        var reference = new CelestialBody(PlanetsAndMoons.Moon, Frames.Frame.ICRF, Epoch);
         var parameters = ownConstants
             ? new GeopotentialModelParameters(Model, 10, reference.GM, reference.EquatorialRadius)
             : new GeopotentialModelParameters(Model, 10);
-        var moon = new CelestialBody(PlanetsAndMoons.MOON, Frames.Frame.ICRF, Epoch, parameters);
+        var moon = new CelestialBody(PlanetsAndMoons.Moon, Frames.Frame.ICRF, Epoch, parameters);
         var before = new GeopotentialGravitationalField(new StreamReader(ModelStream()), 10);
         var state = new KeplerianElements(1.938e6, 0.01, 1.0, 0.3, 0.2, 0.1, moon, Epoch, Frames.Frame.ICRF)
             .ToStateVector();
@@ -163,7 +163,7 @@ public class GeopotentialConstantsTests
         double longitude)
     {
         // Arrange: a body-fixed position, so that no rotation enters
-        var earth = new CelestialBody(PlanetsAndMoons.EARTH, Frames.Frame.ICRF, Epoch,
+        var earth = new CelestialBody(PlanetsAndMoons.Earth, Frames.Frame.ICRF, Epoch,
             new GeopotentialModelParameters(Model, 2));
         double phi = latitude * IO.Astrodynamics.Constants.Deg2Rad, lambda = longitude * IO.Astrodynamics.Constants.Deg2Rad;
         var position = new Vector3(radius * System.Math.Cos(phi) * System.Math.Cos(lambda),

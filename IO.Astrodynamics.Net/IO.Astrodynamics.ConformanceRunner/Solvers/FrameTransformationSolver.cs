@@ -82,8 +82,8 @@ public class FrameTransformationSolver : ICategorySolver
     {
         return name switch
         {
-            "Earth" => new CelestialBody(PlanetsAndMoons.EARTH, Frame.ICRF, epoch),
-            "Moon" => new CelestialBody(PlanetsAndMoons.MOON, Frame.ICRF, epoch),
+            "Earth" => new CelestialBody(PlanetsAndMoons.Earth, Frame.ICRF, epoch),
+            "Moon" => new CelestialBody(PlanetsAndMoons.Moon, Frame.ICRF, epoch),
             _ => throw new ArgumentException($"The centre '{name}' is not one of the frame_transformation category (Earth, Moon).")
         };
     }

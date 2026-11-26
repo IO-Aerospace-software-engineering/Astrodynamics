@@ -22,7 +22,7 @@ public class AtmosphericDragTests
     [Fact]
     public void ComputeAcceleration()
     {
-        var earth = new CelestialBody(PlanetsAndMoons.EARTH, Frames.Frame.ICRF, TimeSystem.Time.J2000Tdb,
+        var earth = new CelestialBody(PlanetsAndMoons.Earth, Frames.Frame.ICRF, TimeSystem.Time.J2000Tdb,
             new GeopotentialModelParameters(Path.Combine(Constants.SolarSystemKernelPath.ToString(), "EGM2008_to70_TideFree")),
             new EarthStandardAtmosphere());
         Clock clk = new Clock("My clock", 256);

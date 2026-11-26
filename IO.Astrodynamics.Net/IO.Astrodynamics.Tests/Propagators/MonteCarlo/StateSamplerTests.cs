@@ -20,7 +20,7 @@ public class StateSamplerTests
 
     private static StateVector CreateNominalWithCovariance(Matrix covariance)
     {
-        var earth = new CelestialBody(PlanetsAndMoons.EARTH);
+        var earth = new CelestialBody(PlanetsAndMoons.Earth);
         double r0 = 6800000.0;
         double v0 = System.Math.Sqrt(earth.GM / r0);
         return new StateVector(

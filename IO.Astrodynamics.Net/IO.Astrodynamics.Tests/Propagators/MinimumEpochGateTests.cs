@@ -544,8 +544,8 @@ public class MinimumEpochGateTests
             var parts = key.Split('|');
             string integrator = parts[1], path = parts[2], frameName = parts[3];
             var @case = Cases(parts[0]);
-            var earth = new CelestialBody(PlanetsAndMoons.EARTH, Frame.ICRF, S);
-            var center = @case.Moon ? new CelestialBody(PlanetsAndMoons.MOON, Frame.ICRF, S) : earth;
+            var earth = new CelestialBody(PlanetsAndMoons.Earth, Frame.ICRF, S);
+            var center = @case.Moon ? new CelestialBody(PlanetsAndMoons.Moon, Frame.ICRF, S) : earth;
             var orbitIcrf = @case.Orbit(center);
             OrbitalParams orbit = orbitIcrf;
             CelestialItem[] bodies = [center];
@@ -556,8 +556,8 @@ public class MinimumEpochGateTests
             else if (frameName == "SSB")
             {
                 var sv = orbitIcrf.ToStateVector();
-                var fromSsb = center.GetGeometricStateRelativeTo(S, Barycenters.SOLAR_SYSTEM_BARYCENTER);
-                orbit = new StateVector(fromSsb.Position + sv.Position, fromSsb.Velocity + sv.Velocity, Barycenters.SOLAR_SYSTEM_BARYCENTER, S, Frame.ICRF);
+                var fromSsb = center.GetGeometricStateRelativeTo(S, Barycenters.SolarSystemBarycenter);
+                orbit = new StateVector(fromSsb.Position + sv.Position, fromSsb.Velocity + sv.Velocity, Barycenters.SolarSystemBarycenter, S, Frame.ICRF);
                 bodies = [center, new CelestialBody(Stars.Sun, Frame.ICRF, S)];
             }
 
@@ -665,7 +665,7 @@ public class MinimumEpochGateTests
     {
         var group = name[..name.IndexOf('/')];
         var item = name[(name.IndexOf('/') + 1)..];
-        var earthTemplate = new CelestialBody(PlanetsAndMoons.EARTH, Frame.ICRF, S);
+        var earthTemplate = new CelestialBody(PlanetsAndMoons.Earth, Frame.ICRF, S);
         double T = Period(earthTemplate, Orbit(earthTemplate, System.Math.PI));
         double T2 = T / 2.0;
 

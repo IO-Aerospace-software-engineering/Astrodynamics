@@ -22,8 +22,8 @@ public class PropagationEphemerisCacheTests
 
     private static (CelestialBody Earth, CelestialBody Moon, Window Window, (CelestialItem, Aberration)[] Entries) Setup()
     {
-        var earth = new CelestialBody(PlanetsAndMoons.EARTH, Frames.Frame.ICRF, Epoch);
-        var moon = new CelestialBody(PlanetsAndMoons.MOON, Frames.Frame.ICRF, Epoch);
+        var earth = new CelestialBody(PlanetsAndMoons.Earth, Frames.Frame.ICRF, Epoch);
+        var moon = new CelestialBody(PlanetsAndMoons.Moon, Frames.Frame.ICRF, Epoch);
         var window = new Window(Epoch.ToTdb().AddHours(-1.0), Epoch.ToTdb().AddHours(1.0));
         return (earth, moon, window, new (CelestialItem, Aberration)[] { (moon, Aberration.None) });
     }
@@ -54,10 +54,10 @@ public class PropagationEphemerisCacheTests
             TimeSpan.FromSeconds(60));
 
         // Assert: the ecliptic position is the ICRF position rotated, off the grid of the cache
-        var icrfPosition = icrf.GetPosition(PlanetsAndMoons.MOON.NaifId, Aberration.None, epoch);
+        var icrfPosition = icrf.GetPosition(PlanetsAndMoons.Moon.NaifId, Aberration.None, epoch);
         var expected = new StateVector(icrfPosition, Vector3.Zero, earth, epoch, Frames.Frame.ICRF)
             .ToFrame(Frames.Frame.ECLIPJ2000).ToStateVector().Position;
-        var actual = ecliptic.GetPosition(PlanetsAndMoons.MOON.NaifId, Aberration.None, epoch);
+        var actual = ecliptic.GetPosition(PlanetsAndMoons.Moon.NaifId, Aberration.None, epoch);
         Assert.Equal(Frames.Frame.ECLIPJ2000, ecliptic.Frame);
         Assert.True((actual - expected).Magnitude() < 1e-12 * expected.Magnitude(), $"{actual} instead of {expected}");
     }

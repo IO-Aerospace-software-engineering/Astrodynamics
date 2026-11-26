@@ -109,7 +109,7 @@ public class SolarRadiationPressureTests
     private static (CelestialBody Earth, Spacecraft Spacecraft, StateVector State) SunlitLeo()
     {
         // Near the March equinox the Sun is close to +X of ICRF: a LEO state on +X is in sunlight.
-        var earth = new CelestialBody(PlanetsAndMoons.EARTH, Frames.Frame.ICRF, SunlitEpoch);
+        var earth = new CelestialBody(PlanetsAndMoons.Earth, Frames.Frame.ICRF, SunlitEpoch);
         var state = new StateVector(new Vector3(6800000.0, 0.0, 0.0), new Vector3(0.0, 7656.2204182967143, 0.0), earth,
             SunlitEpoch, Frames.Frame.ICRF);
         var spacecraft = new Spacecraft(-1001, "MySpacecraft", 100.0, state, 10000.0, new Clock("My clock", 256), 10.0,
@@ -152,7 +152,7 @@ public class SolarRadiationPressureTests
     {
         // Arrange: the force the propagator builds from Earth, Moon and Sun, and the same force built without the Sun
         var (earth, spacecraft, state) = SunlitLeo();
-        var moon = new CelestialBody(PlanetsAndMoons.MOON, Frames.Frame.ICRF, SunlitEpoch);
+        var moon = new CelestialBody(PlanetsAndMoons.Moon, Frames.Frame.ICRF, SunlitEpoch);
         var sun = new CelestialBody(Stars.Sun);
         var propagator = new CentralBodyPropagator(new Window(SunlitEpoch, SunlitEpoch.AddHours(1.0)), spacecraft, new PropagationOptions { Integrator = new RK78IntegratorOptions { AbsoluteTolerance = 1e-10, RelativeTolerance = 1e-10 }, OutputStep = TimeSpan.FromSeconds(60.0), ThirdBodies = new CelestialItem[] { earth, moon, sun }, SolarRadiationPressure = true, CovariancePropagation = CovariancePropagationOptions.None });
         var built = ((Integrator)propagator.Integrator).Forces.OfType<SolarRadiationPressure>().Single();
@@ -176,7 +176,7 @@ public class SolarRadiationPressureTests
         static Vector3 FinalPosition(bool includeSolarRadiationPressure)
         {
             var (earth, spacecraft, _) = SunlitLeo();
-            var moon = new CelestialBody(PlanetsAndMoons.MOON, Frames.Frame.ICRF, SunlitEpoch);
+            var moon = new CelestialBody(PlanetsAndMoons.Moon, Frames.Frame.ICRF, SunlitEpoch);
             var sun = new CelestialBody(Stars.Sun);
             var solution = spacecraft.Propagate(new Window(SunlitEpoch, SunlitEpoch.AddHours(3.0)), new PropagationOptions { Integrator = new RK78IntegratorOptions { AbsoluteTolerance = 1e-11, RelativeTolerance = 1e-11 }, OutputStep = TimeSpan.FromSeconds(60.0), ThirdBodies = new CelestialItem[] { earth, moon, sun }, SolarRadiationPressure = includeSolarRadiationPressure, CovariancePropagation = CovariancePropagationOptions.None });
             return solution.StateVectors.Last().Position;

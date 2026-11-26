@@ -41,7 +41,7 @@ public sealed class NotoKernel : IDisposable
         TestKernels.EnsureSolarSystem();
         _directory = Directory.CreateTempSubdirectory("noto750-");
         Spk = new FileInfo(Path.Combine(_directory.FullName, "noto750.bsp"));
-        var earth = new CelestialBody(PlanetsAndMoons.EARTH);
+        var earth = new CelestialBody(PlanetsAndMoons.Earth);
         var site = new Site(989, "N750", earth, Coordinates);
         var states = site.GetEphemeris(new Window(Epoch.AddHours(-12.0), Epoch.AddHours(12.0)), earth, Frames.Frame.ICRF, Aberration.None,
             TimeSpan.FromSeconds(60.0)).Select(s => s.ToStateVector()).ToArray();
@@ -118,7 +118,7 @@ public class KernelObjectObserverTests : IClassFixture<NotoKernel>
     [Fact]
     public void ReadEphemeris_OfNoto_IsTheSiteItWasWrittenFrom()
     {
-        var earth = new CelestialBody(PlanetsAndMoons.EARTH);
+        var earth = new CelestialBody(PlanetsAndMoons.Earth);
         var site = new Site(989, "N750", earth, NotoKernel.Coordinates);
         double worstPosition = 0.0, worstVelocity = 0.0;
         for (int k = 0; k <= 48; k++)
@@ -207,8 +207,8 @@ public class KernelObjectObserverTests : IClassFixture<NotoKernel>
     [Fact]
     public void FrameCentredOnNoto_RotatesAtTheEpochOfNoto()
     {
-        var earth = new CelestialBody(PlanetsAndMoons.EARTH);
-        var moon = new CelestialBody(PlanetsAndMoons.MOON);
+        var earth = new CelestialBody(PlanetsAndMoons.Earth);
+        var moon = new CelestialBody(PlanetsAndMoons.Moon);
         var site = new Site(750, "G750", earth, new Planetodetic(-117.0 * IO.Astrodynamics.Constants.Deg2Rad, 34.0 * IO.Astrodynamics.Constants.Deg2Rad, 1000.0));
         var noto = SpiceApi.CreateKernelObject(NotoKernel.NotoId);
         var itrf93 = new Frames.Frame("ITRF93");

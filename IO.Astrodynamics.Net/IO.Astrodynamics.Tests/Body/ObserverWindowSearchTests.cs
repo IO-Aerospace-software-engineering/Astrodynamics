@@ -41,8 +41,8 @@ public class ObserverWindowSearchTests
     }
 
     private static Spacecraft Lro => new(-85, "LRO", epoch: DistanceWindow.StartDate);
-    private static CelestialBody Moon => new(PlanetsAndMoons.MOON);
-    private static CelestialBody Earth => new(PlanetsAndMoons.EARTH);
+    private static CelestialBody Moon => new(PlanetsAndMoons.Moon);
+    private static CelestialBody Earth => new(PlanetsAndMoons.Earth);
     private static CelestialBody Sun => new(Stars.Sun);
     private static Site Dss13 => new(13, "DSS-13", Earth);
     private static Site Dss13FromCoordinates => new(98, "DSS13COORDINATES", Earth, Dss13.Planetodetic);

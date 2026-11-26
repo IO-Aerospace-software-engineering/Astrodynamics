@@ -659,7 +659,7 @@ public class KeplerEquationTests
         return exact.ErrorOf(angle);
     }
 
-    private static CelestialBody Earth() => new(PlanetsAndMoons.EARTH, Frames.Frame.ICRF, Epoch);
+    private static CelestialBody Earth() => new(PlanetsAndMoons.Earth, Frames.Frame.ICRF, Epoch);
 
     // The elements of a periapsis at 7000 km given by M (an ellipse at e = 0 of radius 7000 km), or by ν when it is given
     // (FromTrueAnomaly, #668, R23: before, M = 0 beside the ν the state read)

@@ -62,13 +62,13 @@ public class PropagationToTheWindowEndTests
     {
         if (central == "Moon")
         {
-            var moon = new CelestialBody(PlanetsAndMoons.MOON, Frame.ICRF, start);
+            var moon = new CelestialBody(PlanetsAndMoons.Moon, Frame.ICRF, start);
             double r = 1.9e6;
             double v = System.Math.Sqrt(moon.GM / r) * 1.05;
             return new StateVector(new Vector3(r, 0.0, 0.0), new Vector3(0.0, v * 0.8, v * 0.6), moon, start, Frame.ICRF);
         }
 
-        var earth = new CelestialBody(PlanetsAndMoons.EARTH, Frame.ICRF, start);
+        var earth = new CelestialBody(PlanetsAndMoons.Earth, Frame.ICRF, start);
         return new StateVector(new Vector3(6878137.0, 0.0, 0.0), new Vector3(0.0, 6200.0, 4500.0), earth, start, Frame.ICRF);
     }
 

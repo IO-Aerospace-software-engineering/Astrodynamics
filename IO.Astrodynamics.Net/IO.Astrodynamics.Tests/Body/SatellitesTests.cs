@@ -53,7 +53,7 @@ public class SatellitesTests
     public void DroppedSpacecraft_LeaveSatellites()
     {
         // Arrange: 1000 spacecraft about the process-wide Earth, no longer referenced once built
-        var earth = PlanetsAndMoons.EARTH_BODY;
+        var earth = PlanetsAndMoons.EarthBody;
         var references = BuildAndDrop(earth, 1000);
 
         // Act
@@ -74,7 +74,7 @@ public class SatellitesTests
         for (int run = 0; run < 20; run++)
         {
             // Arrange
-            var earth = new CelestialBody(PlanetsAndMoons.EARTH);
+            var earth = new CelestialBody(PlanetsAndMoons.Earth);
             var built = new Spacecraft[4000];
 
             // Act
@@ -102,7 +102,7 @@ public class SatellitesTests
     {
         // Arrange: 500 spacecraft per thread, built about a body of their own
         int threads = System.Math.Max(16, 2 * Environment.ProcessorCount);
-        var source = new CelestialBody(PlanetsAndMoons.EARTH);
+        var source = new CelestialBody(PlanetsAndMoons.Earth);
         var items = Enumerable.Range(0, threads * 500)
             .Select(i => new Spacecraft(-50000 - i, "R" + i, 100.0, Orbit(source), 1000.0, new Clock("R" + i, 65536))).ToArray();
         var expected = new HashSet<CelestialItem>(items, ReferenceEqualityComparer.Instance);
@@ -110,7 +110,7 @@ public class SatellitesTests
         for (int run = 0; run < 5; run++)
         {
             // Act: each thread adds the items t, t + threads, t + 2 threads, ... about a fresh body
-            var target = new CelestialBody(PlanetsAndMoons.MOON);
+            var target = new CelestialBody(PlanetsAndMoons.Moon);
             var errors = new ConcurrentQueue<Exception>();
             using var barrier = new Barrier(threads);
             var workers = Enumerable.Range(0, threads).Select(t => new Thread(() =>
@@ -143,8 +143,8 @@ public class SatellitesTests
     public void SameNaifId_BothListed_RemoveByInstance()
     {
         // Arrange: two spacecraft of one NAIF id
-        var earth = new CelestialBody(PlanetsAndMoons.EARTH);
-        var moon = new CelestialBody(PlanetsAndMoons.MOON);
+        var earth = new CelestialBody(PlanetsAndMoons.Earth);
+        var moon = new CelestialBody(PlanetsAndMoons.Moon);
         var a = new Spacecraft(-1001, "A", 100.0, Orbit(earth), 1000.0, new Clock("CA", 65536));
         var b = new Spacecraft(-1001, "B", 100.0, Orbit(earth), 1000.0, new Clock("CB", 65536));
         Assert.True(Lists(earth, a));
@@ -177,7 +177,7 @@ public class SatellitesTests
     public void ThrowingConstructor_RegistersNothing(Func<CelestialBody, Clock, Spacecraft> construct, Type exceptionType)
     {
         // Arrange
-        var earth = new CelestialBody(PlanetsAndMoons.EARTH);
+        var earth = new CelestialBody(PlanetsAndMoons.Earth);
         var clock = new Clock("GHOST_CLK", 65536);
 
         // Act
@@ -196,7 +196,7 @@ public class SatellitesTests
     public void ThrowingConstructor_ClockOfAnotherId_RegistersNothing()
     {
         // Arrange: a clock attached to a spacecraft of another NAIF id
-        var earth = new CelestialBody(PlanetsAndMoons.EARTH);
+        var earth = new CelestialBody(PlanetsAndMoons.Earth);
         var clock = new Clock("SHARED_CLK", 65536);
         var holder = new Spacecraft(-1004, "HOLDER", 100.0, Orbit(earth), 1000.0, clock);
 
@@ -212,7 +212,7 @@ public class SatellitesTests
     public void NaturalBodiesStayListed()
     {
         // Act
-        var earth = new CelestialBody(PlanetsAndMoons.EARTH);
+        var earth = new CelestialBody(PlanetsAndMoons.Earth);
         var barycenter = new Barycenter(3);
 
         // Assert: listed by their observers, as on main (control)
@@ -228,7 +228,7 @@ public class SatellitesTests
     public void NonGenericEnumeration_ListsTheSameInstances()
     {
         // Arrange
-        var earth = new CelestialBody(PlanetsAndMoons.EARTH);
+        var earth = new CelestialBody(PlanetsAndMoons.Earth);
         var a = new Spacecraft(-1007, "A", 100.0, Orbit(earth), 1000.0, new Clock("A", 65536));
 
         // Act

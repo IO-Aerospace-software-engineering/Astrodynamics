@@ -29,7 +29,7 @@ public class PropagationFrameOrientationCacheTests
     [Fact]
     public void InterpolatedOrientationMatchesSpiceAtGridPoint()
     {
-        var earth = new CelestialBody(PlanetsAndMoons.EARTH);
+        var earth = new CelestialBody(PlanetsAndMoons.Earth);
         var start = TimeSystem.Time.J2000Tdb;
         var end = start.AddSeconds(3600);
         var window = new Window(start, end);
@@ -49,7 +49,7 @@ public class PropagationFrameOrientationCacheTests
     [Fact]
     public void InterpolatedOrientationMatchesSpiceMidGrid()
     {
-        var earth = new CelestialBody(PlanetsAndMoons.EARTH);
+        var earth = new CelestialBody(PlanetsAndMoons.Earth);
         var start = TimeSystem.Time.J2000Tdb;
         var end = start.AddSeconds(3600);
         var window = new Window(start, end);
@@ -70,7 +70,7 @@ public class PropagationFrameOrientationCacheTests
     [Fact]
     public void InterpolatedOrientationMatchesSpiceAtWindowBoundaries()
     {
-        var earth = new CelestialBody(PlanetsAndMoons.EARTH);
+        var earth = new CelestialBody(PlanetsAndMoons.Earth);
         var start = TimeSystem.Time.J2000Tdb;
         var end = start.AddSeconds(3600);
         var window = new Window(start, end);
@@ -91,7 +91,7 @@ public class PropagationFrameOrientationCacheTests
     [Fact]
     public void CacheWorksWithArbitraryQueryTimes()
     {
-        var earth = new CelestialBody(PlanetsAndMoons.EARTH);
+        var earth = new CelestialBody(PlanetsAndMoons.Earth);
         var start = TimeSystem.Time.J2000Tdb;
         var end = start.AddSeconds(86400);
         var window = new Window(start, end);
@@ -124,7 +124,7 @@ public class PropagationFrameOrientationCacheTests
     [Fact]
     public void ConstructorThrowsOnNonPositiveGridStep()
     {
-        var earth = new CelestialBody(PlanetsAndMoons.EARTH);
+        var earth = new CelestialBody(PlanetsAndMoons.Earth);
         var start = TimeSystem.Time.J2000Tdb;
         var window = new Window(start, start.AddSeconds(3600));
 
@@ -137,7 +137,7 @@ public class PropagationFrameOrientationCacheTests
     [Fact]
     public void FrameOrientationCacheBypassWorks()
     {
-        var earth = new CelestialBody(PlanetsAndMoons.EARTH);
+        var earth = new CelestialBody(PlanetsAndMoons.Earth);
         var start = TimeSystem.Time.J2000Tdb;
         var end = start.AddSeconds(3600);
         var window = new Window(start, end);
@@ -162,8 +162,8 @@ public class PropagationFrameOrientationCacheTests
     [Fact]
     public void FrameOrientationCache_IsActiveOnTheCurrentThreadOnly_AndForThatFrameInstanceOnly()
     {
-        var earth = new CelestialBody(PlanetsAndMoons.EARTH);
-        var otherEarth = new CelestialBody(PlanetsAndMoons.EARTH);
+        var earth = new CelestialBody(PlanetsAndMoons.Earth);
+        var otherEarth = new CelestialBody(PlanetsAndMoons.Earth);
         var start = TimeSystem.Time.J2000Tdb;
         var cache = new PropagationFrameOrientationCache(new Window(start, start.AddSeconds(3600)), earth.Frame,
             TimeSpan.FromSeconds(60));
@@ -184,8 +184,8 @@ public class PropagationFrameOrientationCacheTests
     [Fact]
     public void FrameOrientationCache_NestedScopes_RestoreTheEnclosingCache()
     {
-        var earth = new CelestialBody(PlanetsAndMoons.EARTH);
-        var moon = new CelestialBody(PlanetsAndMoons.MOON);
+        var earth = new CelestialBody(PlanetsAndMoons.Earth);
+        var moon = new CelestialBody(PlanetsAndMoons.Moon);
         var start = TimeSystem.Time.J2000Tdb;
         var window = new Window(start, start.AddSeconds(3600));
         var earthCache = new PropagationFrameOrientationCache(window, earth.Frame, TimeSpan.FromSeconds(60));
@@ -226,7 +226,7 @@ public class PropagationFrameOrientationCacheTests
     public void Interpolation_IsTheExactSlerp_AgainstSxform()
     {
         // Arrange
-        var earth = new CelestialBody(PlanetsAndMoons.EARTH);
+        var earth = new CelestialBody(PlanetsAndMoons.Earth);
         var start = new TimeSystem.Time(new DateTime(2024, 3, 1, 0, 0, 0), TimeScale.TDB);
         var cache = new PropagationFrameOrientationCache(new Window(start, start.AddHours(6.0)), earth.Frame,
             TimeSpan.FromSeconds(60));
@@ -283,7 +283,7 @@ public class PropagationFrameOrientationCacheTests
     [InlineData(-30.0, 3600.0)]
     public void WindowEndingInsideTheCoverage_ReadsEveryEpochOfTheWindow(double endFromCoverageEnd, double length)
     {
-        var earth = new CelestialBody(PlanetsAndMoons.EARTH);
+        var earth = new CelestialBody(PlanetsAndMoons.Earth);
         var end = TimeSystem.Time.CreateTdb(CoverageEnd + endFromCoverageEnd);
         var start = end.AddSeconds(-length);
         var cache = new PropagationFrameOrientationCache(new Window(start, end), earth.Frame, TimeSpan.FromSeconds(60));
@@ -318,7 +318,7 @@ public class PropagationFrameOrientationCacheTests
     [Fact]
     public void ReadPastTheCoverage_ThrowsWithSpicesMessage()
     {
-        var earth = new CelestialBody(PlanetsAndMoons.EARTH);
+        var earth = new CelestialBody(PlanetsAndMoons.Earth);
         var end = TimeSystem.Time.CreateTdb(CoverageEnd + 1.0);
         var cache = new PropagationFrameOrientationCache(new Window(end.AddSeconds(-UnalignedLength), end), earth.Frame,
             TimeSpan.FromSeconds(60));
@@ -339,7 +339,7 @@ public class PropagationFrameOrientationCacheTests
     [Fact]
     public void WindowStartingInsideTheCoverage_ReadsEveryEpochOfTheWindow()
     {
-        var earth = new CelestialBody(PlanetsAndMoons.EARTH);
+        var earth = new CelestialBody(PlanetsAndMoons.Earth);
         double worst = 0.0, worstAngularVelocity = 0.0;
         foreach (double fromCoverageStart in new[] { 0.0, 1.0e-3, 0.5, 30.0, 59.0, 59.999, 61.0 })
         {
@@ -388,7 +388,7 @@ public class PropagationFrameOrientationCacheTests
         // A geopotential reads the orientation of the Earth at every stage, up to the window end
         var end = TimeSystem.Time.CreateTdb(CoverageEnd + endFromCoverageEnd);
         var start = end.AddSeconds(-length);
-        var earth = new CelestialBody(PlanetsAndMoons.EARTH, Frames.Frame.ICRF, start,
+        var earth = new CelestialBody(PlanetsAndMoons.Earth, Frames.Frame.ICRF, start,
             new GeopotentialModelParameters("Data/SolarSystem/EGM2008_to70_TideFree", 10));
         var leo = new StateVector(new Vector3(6878137.0, 0.0, 0.0), new Vector3(0.0, 7612.6, 0.0), earth, start, Frames.Frame.ICRF);
         int id = -622100 - (int)(endFromCoverageEnd + 31.0) * 10 - (int)(length - 3600.0);

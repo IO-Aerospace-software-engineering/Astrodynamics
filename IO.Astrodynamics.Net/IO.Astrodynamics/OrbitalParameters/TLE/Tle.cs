@@ -317,7 +317,7 @@ public class Tle : OrbitalParameters, IEquatable<Tle>, IParsable<Tle>
     /// from the Earth's binary PCK at the epoch (#597). Its data (GM, radii, frame, orbit) are read from the data provider
     /// at the first member that needs them, retried on failure (R21 of #668: before 11.0.0 the constructor read them).
     /// </summary>
-    private static CelestialBody EarthAt(Time epoch) => CelestialBody.CreateDeferred(PlanetsAndMoons.EARTH, Frame.ECLIPJ2000, epoch);
+    private static CelestialBody EarthAt(Time epoch) => CelestialBody.CreateDeferred(PlanetsAndMoons.Earth, Frame.ECLIPJ2000, epoch);
 
     /// <summary>
     /// Extracts the epoch time from TLE line 1.

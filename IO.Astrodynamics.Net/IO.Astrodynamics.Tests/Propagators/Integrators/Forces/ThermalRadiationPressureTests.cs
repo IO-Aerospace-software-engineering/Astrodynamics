@@ -23,7 +23,7 @@ public class ThermalRadiationPressureTests
 
     private static CelestialBody CreateEarth(double thermalEffectiveTemperature = 254.0, double thermalEmissivity = 0.95)
     {
-        return new CelestialBody(PlanetsAndMoons.EARTH, Frames.Frame.ICRF, TimeSystem.Time.J2000Tdb,
+        return new CelestialBody(PlanetsAndMoons.Earth, Frames.Frame.ICRF, TimeSystem.Time.J2000Tdb,
             thermalEffectiveTemperature: thermalEffectiveTemperature, thermalEmissivity: thermalEmissivity);
     }
 
@@ -70,7 +70,7 @@ public class ThermalRadiationPressureTests
     [Fact]
     public void ConstructorThrowsOnZeroEffectiveTemperature()
     {
-        var earth = new CelestialBody(PlanetsAndMoons.EARTH, Frames.Frame.ICRF, TimeSystem.Time.J2000Tdb,
+        var earth = new CelestialBody(PlanetsAndMoons.Earth, Frames.Frame.ICRF, TimeSystem.Time.J2000Tdb,
             thermalEffectiveTemperature: 0.0, thermalEmissivity: 0.95);
         var spc = CreateSpacecraft(earth);
         Assert.Throws<ArgumentException>(() => new ThermalRadiationPressure(spc, earth));
@@ -79,7 +79,7 @@ public class ThermalRadiationPressureTests
     [Fact]
     public void ConstructorThrowsOnZeroEmissivity()
     {
-        var earth = new CelestialBody(PlanetsAndMoons.EARTH, Frames.Frame.ICRF, TimeSystem.Time.J2000Tdb,
+        var earth = new CelestialBody(PlanetsAndMoons.Earth, Frames.Frame.ICRF, TimeSystem.Time.J2000Tdb,
             thermalEffectiveTemperature: 254.0, thermalEmissivity: 0.0);
         var spc = CreateSpacecraft(earth);
         Assert.Throws<ArgumentException>(() => new ThermalRadiationPressure(spc, earth));
@@ -285,7 +285,7 @@ public class ThermalRadiationPressureTests
 
         // Place SC toward the Sun so SRP is at full strength
         var epoch = TimeSystem.Time.J2000Tdb;
-        var sunPos = Stars.SUN_BODY.GetEphemeris(epoch, earth, Frames.Frame.ICRF, Aberration.None).Position;
+        var sunPos = Stars.SunBody.GetEphemeris(epoch, earth, Frames.Frame.ICRF, Aberration.None).Position;
         var sunDir = sunPos.Normalize();
         var scPos = sunDir * rSc;
         var scVel = sunDir.Cross(Vector3.VectorZ).Normalize() * 7656.0;

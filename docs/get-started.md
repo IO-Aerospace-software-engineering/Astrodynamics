@@ -80,7 +80,7 @@ using IO.Astrodynamics.SolarSystemObjects;
 
 SpiceApi.Instance.LoadKernels(new DirectoryInfo("Data/SolarSystem"));
 
-var earth = PlanetsAndMoons.EARTH_BODY;
+var earth = PlanetsAndMoons.EarthBody;
 var sun = new CelestialBody(Stars.Sun);
 var epoch = new Time(2024, 6, 21, 12, 0, 0, TimeScale.TDB);
 
@@ -95,7 +95,7 @@ Console.WriteLine($"Velocity: {stateVector.Velocity}");
 ```csharp
 using IO.Astrodynamics.OrbitalParameters;
 
-var earth = PlanetsAndMoons.EARTH_BODY;
+var earth = PlanetsAndMoons.EarthBody;
 var epoch = new Time(2024, 1, 1, 0, 0, 0, TimeScale.TDB);
 
 var orbit = new KeplerianElements(
@@ -151,7 +151,7 @@ state, which is the form every other API expects. See [TLE & OMM](tutorials/tle-
     var solution = spacecraft.Propagate(window, new PropagationOptions
     {
         Integrator = new RK78IntegratorOptions { AbsoluteTolerance = 1e-10, RelativeTolerance = 1e-10 },
-        ThirdBodies = new CelestialItem[] { Stars.SUN_BODY, PlanetsAndMoons.MOON_BODY },
+        ThirdBodies = new CelestialItem[] { Stars.SunBody, PlanetsAndMoons.MoonBody },
         AtmosphericDrag = true,
         SolarRadiationPressure = true
     });
@@ -159,7 +159,7 @@ state, which is the form every other API expects. See [TLE & OMM](tutorials/tle-
     var final = solution.GetStateVector(window.EndDate);
     ```
 
-    The orbit is on `PlanetsAndMoons.EARTH_BODY`, which has no atmospheric model: its drag is NRLMSISE-00 at nominal
+    The orbit is on `PlanetsAndMoons.EarthBody`, which has no atmospheric model: its drag is NRLMSISE-00 at nominal
     space weather. Give the Earth an `IAtmosphericModel` for another one.
 
 === "Velocity-Verlet"
@@ -177,7 +177,7 @@ state, which is the form every other API expects. See [TLE & OMM](tutorials/tle-
     {
         Integrator = new VVIntegratorOptions { Step = TimeSpan.FromSeconds(10.0) },
         OutputStep = TimeSpan.FromSeconds(60.0),
-        ThirdBodies = new CelestialItem[] { Stars.SUN_BODY, PlanetsAndMoons.MOON_BODY }
+        ThirdBodies = new CelestialItem[] { Stars.SunBody, PlanetsAndMoons.MoonBody }
     });
 
     var final = solution.GetStateVector(window.EndDate);

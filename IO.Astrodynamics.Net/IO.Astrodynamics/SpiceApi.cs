@@ -3119,7 +3119,7 @@ public class SpiceApi
         }
 
         return new OrbitalParameters.StateVector(position, res.Velocity.Convert(),
-            new Body.CelestialBody(PlanetsAndMoons.EARTH, Frame.ECLIPJ2000, epoch), epoch,
+            new Body.CelestialBody(PlanetsAndMoons.Earth, Frame.ECLIPJ2000, epoch), epoch,
             Frame.TEME);
     }
 

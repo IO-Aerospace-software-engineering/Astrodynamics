@@ -85,7 +85,7 @@ public partial class IntegratorEventTests
     // A force-free straight line, x = t m, in the TDB time argument: a g-function of the epoch can be placed anywhere in t
     private static (Integrator Integrator, StateVector Start) Line(string integratorName)
     {
-        var earth = new CelestialBody(PlanetsAndMoons.EARTH, Frame.ICRF, S);
+        var earth = new CelestialBody(PlanetsAndMoons.Earth, Frame.ICRF, S);
         var start = new StateVector(new Vector3(0.0, 7e6, 0.0), new Vector3(1.0, 0.0, 0.0), earth, S, Frame.ICRF);
         var integrator = NewIntegrator(integratorName).CreateIntegrator();
         integrator.Initialize(start);
@@ -195,7 +195,7 @@ public partial class IntegratorEventTests
     [InlineData("RK", -1.0)]
     public void TimeLikeImpulse_OnAStepEnd_FiresAtItsRoot(string integratorName, double sign)
     {
-        var earth = new CelestialBody(PlanetsAndMoons.EARTH, Frame.ICRF, S);
+        var earth = new CelestialBody(PlanetsAndMoons.Earth, Frame.ICRF, S);
         var (spacecraft, engine) = NewSpacecraft(sign > 0.0 ? -7901 : -7902, MinimumEpochGateTests.Orbit(earth, System.Math.PI));
         var root = MinimumEpochGateTests.GateAtTt(1100.0);
         var impulse = new TimeLikeImpulse(earth, S, engine, root, sign);
@@ -226,7 +226,7 @@ public partial class IntegratorEventTests
     [InlineData("RK", 0.0)]
     public void ApsisExactlyAtTheBase_GatedBeforeIt_FiresAtTheBase(string integratorName, double gateBefore)
     {
-        var earth = new CelestialBody(PlanetsAndMoons.EARTH, Frame.ICRF, S);
+        var earth = new CelestialBody(PlanetsAndMoons.Earth, Frame.ICRF, S);
         var orbit = MinimumEpochGateTests.Orbit(earth, System.Math.PI);
         var sv = orbit.ToStateVector();
         Assert.Equal(0.0, sv.Position.Dot(sv.Velocity));

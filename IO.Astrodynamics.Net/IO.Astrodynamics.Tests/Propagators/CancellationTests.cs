@@ -59,7 +59,7 @@ public class CancellationTests
     private static int NextId() => Interlocked.Decrement(ref _nextId);
 
     // An Earth of its own per test, without an atmospheric model, so that the option fills it
-    private static CelestialBody NewEarth() => new(PlanetsAndMoons.EARTH);
+    private static CelestialBody NewEarth() => new(PlanetsAndMoons.Earth);
 
     private static IntegratorOptions Integrator(string kind) => kind == "RK"
         ? RK78IntegratorOptions.Default
@@ -500,8 +500,8 @@ public class CancellationTests
         // Arrange: about the Sun, near the Earth, whose atmosphere gives the drag as a listed body
         using var cts = new CancellationTokenSource();
         var atmosphere = new CancellingAtmosphere(cts, Epoch.AddMinutes(30.0));
-        var earth = new CelestialBody(PlanetsAndMoons.EARTH, atmosphericModel: atmosphere);
-        var sun = Stars.SUN_BODY;
+        var earth = new CelestialBody(PlanetsAndMoons.Earth, atmosphericModel: atmosphere);
+        var sun = Stars.SunBody;
         var earthState = earth.GetGeometricStateRelativeTo(Epoch, sun);
         int id = NextId();
         var state = new StateVector(earthState.Position + new Vector3(4.0e8, 0.0, 0.0), earthState.Velocity, sun, Epoch,
@@ -570,9 +570,9 @@ public class CancellationTests
         var window = new Window(start, start.AddHours(1.0));
         spacecraft.Propagate(window, Options("RK"));
         var at = start.AddMinutes(20.0);
-        var sgp4 = tle.ToStateVector(at).ToFrame(Frames.Frame.ICRF).RelativeTo(PlanetsAndMoons.EARTH_BODY, Aberration.None)
+        var sgp4 = tle.ToStateVector(at).ToFrame(Frames.Frame.ICRF).RelativeTo(PlanetsAndMoons.EarthBody, Aberration.None)
             .ToStateVector();
-        Assert.NotEqual(sgp4.Position, spacecraft.GetGeometricStateRelativeTo(at, PlanetsAndMoons.EARTH_BODY).Position);
+        Assert.NotEqual(sgp4.Position, spacecraft.GetGeometricStateRelativeTo(at, PlanetsAndMoons.EarthBody).Position);
         using var cts = new CancellationTokenSource();
         var atmosphere = new CancellingAtmosphere(cts, start.AddMinutes(30.0));
 
@@ -581,7 +581,7 @@ public class CancellationTests
 
         // Assert
         AssertLeftAsAStoppedRun(spacecraft);
-        var read = spacecraft.GetGeometricStateRelativeTo(at, PlanetsAndMoons.EARTH_BODY);
+        var read = spacecraft.GetGeometricStateRelativeTo(at, PlanetsAndMoons.EarthBody);
         Assert.Equal(sgp4.Position, read.Position);
         Assert.Equal(sgp4.Velocity, read.Velocity);
     }

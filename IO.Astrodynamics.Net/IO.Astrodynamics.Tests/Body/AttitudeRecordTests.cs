@@ -693,7 +693,7 @@ public class AttitudeRecordTests
 
     private void Reads(string frame, int naifId)
     {
-        var earth = new CelestialBody(PlanetsAndMoons.EARTH);
+        var earth = new CelestialBody(PlanetsAndMoons.Earth);
         var sun = new CelestialBody(Stars.Sun);
         int during = 0;
         var hooks = new PropagatedCase.Hooks
@@ -912,8 +912,8 @@ public class AttitudeRecordTests
     private void TryExecute(string frame)
     {
         var start = new Time(2024, 3, 1, 12, 0, 0, TimeScale.TDB);
-        var earth = new CelestialBody(PlanetsAndMoons.EARTH, Frame.ICRF, start);
-        var moon = new CelestialBody(PlanetsAndMoons.MOON, Frame.ICRF, start);
+        var earth = new CelestialBody(PlanetsAndMoons.Earth, Frame.ICRF, start);
+        var moon = new CelestialBody(PlanetsAndMoons.Moon, Frame.ICRF, start);
         var sun = new CelestialBody(Stars.Sun, Frame.ICRF, start);
         var leo = new KeplerianElements(6778137.0, 0.001, 51.6 * IO.Astrodynamics.Constants.Deg2Rad, 0.4, 1.1, 0.3, earth, start, Frame.ICRF).ToStateVector();
         var f = FrameOf(frame);
@@ -1019,7 +1019,7 @@ public class AttitudeRecordTests
     public void StoredStates_FromAnotherFrame_AreInIcrfWithTheirCovariance()
     {
         var start = new Time(2024, 3, 1, 12, 0, 0, TimeScale.TDB);
-        var earth = new CelestialBody(PlanetsAndMoons.EARTH, Frame.ICRF, start);
+        var earth = new CelestialBody(PlanetsAndMoons.Earth, Frame.ICRF, start);
         var f = Frame.ECLIPJ2000;
         var leo = new KeplerianElements(6778137.0, 0.001, 51.6 * IO.Astrodynamics.Constants.Deg2Rad, 0.4, 1.1, 0.3, earth, start, Frame.ICRF).ToStateVector();
         var inF = leo.ToFrame(f).ToStateVector();
@@ -1079,7 +1079,7 @@ public class AttitudeRecordTests
     public void StatesFromAnotherFrame_NotPropagatedOrAdded_AreReadInIcrf()
     {
         var start = new Time(2024, 3, 1, 12, 0, 0, TimeScale.TDB);
-        var earth = new CelestialBody(PlanetsAndMoons.EARTH, Frame.ICRF, start);
+        var earth = new CelestialBody(PlanetsAndMoons.Earth, Frame.ICRF, start);
         var f = Frame.ECLIPJ2000;
         var leo = new KeplerianElements(6778137.0, 0.001, 51.6 * IO.Astrodynamics.Constants.Deg2Rad, 0.4, 1.1, 0.3, earth, start, Frame.ICRF).ToStateVector();
         var inF = leo.ToFrame(f).ToStateVector();
@@ -1327,8 +1327,8 @@ public class AttitudeRecordTests
             var step = hooks.Step ?? Step;
             var start = new Time(year, 3, 1, 12, 0, 0, TimeScale.TDB);
             var window = new Window(start, start.AddSeconds(Length));
-            var earth = new CelestialBody(PlanetsAndMoons.EARTH, Frame.ICRF, start);
-            var moon = new CelestialBody(PlanetsAndMoons.MOON, Frame.ICRF, start);
+            var earth = new CelestialBody(PlanetsAndMoons.Earth, Frame.ICRF, start);
+            var moon = new CelestialBody(PlanetsAndMoons.Moon, Frame.ICRF, start);
             var sun = new CelestialBody(Stars.Sun, Frame.ICRF, start);
             var bodies = new CelestialItem[] { earth, moon, sun };
             bool ssb = path == "SSB";
@@ -1339,8 +1339,8 @@ public class AttitudeRecordTests
             var orbit = law.Contains("Impulse") || law == "Custom" ? new StateVector(leo.Position, leo.Velocity * 0.993, earth, start, Frame.ICRF) : leo;
             if (ssb)
             {
-                var earthFromSsb = earth.GetGeometricStateRelativeTo(start, Barycenters.SOLAR_SYSTEM_BARYCENTER);
-                orbit = new StateVector(earthFromSsb.Position + orbit.Position, earthFromSsb.Velocity + orbit.Velocity, Barycenters.SOLAR_SYSTEM_BARYCENTER, start,
+                var earthFromSsb = earth.GetGeometricStateRelativeTo(start, Barycenters.SolarSystemBarycenter);
+                orbit = new StateVector(earthFromSsb.Position + orbit.Position, earthFromSsb.Velocity + orbit.Velocity, Barycenters.SolarSystemBarycenter, start,
                     Frame.ICRF);
             }
 

@@ -80,7 +80,7 @@ public class CustomItemCenterOfMotionTests
     public void Spacecraft_OfTheStaticEarth_IsAboutTheEarth()
     {
         // Act: the deferred static object of PlanetsAndMoons as observer
-        var spacecraft = new Spacecraft(-747, "S747", 100.0, OrbitAbout(PlanetsAndMoons.EARTH_BODY), 1000.0, new Clock("S747", 65536));
+        var spacecraft = new Spacecraft(-747, "S747", 100.0, OrbitAbout(PlanetsAndMoons.EarthBody), 1000.0, new Clock("S747", 65536));
 
         // Assert
         Assert.Equal(399, spacecraft.CenterOfMotionId);

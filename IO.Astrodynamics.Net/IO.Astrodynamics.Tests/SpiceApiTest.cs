@@ -169,7 +169,7 @@ public partial class SpiceApiTest
         Assert.Equal(643.53061483971885, stateVectors[0].Velocity.X);
         Assert.Equal(-666.08181440799092, stateVectors[0].Velocity.Y);
         Assert.Equal(-301.32283209101018, stateVectors[0].Velocity.Z);
-        Assert.Equal(PlanetsAndMoons.EARTH.NaifId, stateVectors[0].Observer.NaifId);
+        Assert.Equal(PlanetsAndMoons.Earth.NaifId, stateVectors[0].Observer.NaifId);
         Assert.Equal(Frames.Frame.ICRF, stateVectors[0].Frame);
         Assert.Equal(0.0, stateVectors[0].Epoch.TimeSpanFromJ2000().TotalSeconds);
     }
@@ -184,7 +184,7 @@ public partial class SpiceApiTest
         var stateVectors = res as StateVector[] ?? res.ToArray();
         Assert.Equal(new Vector3(-291527956.4143643, -266751935.53610146, -76118494.37190592), stateVectors[0].Position, TestHelpers.VectorComparer);
         Assert.Equal(new Vector3(643.6475664431179, -665.9766990302671, -301.2930723673155), stateVectors[0].Velocity, TestHelpers.VectorComparer);
-        Assert.Equal(PlanetsAndMoons.EARTH.NaifId, stateVectors[0].Observer.NaifId);
+        Assert.Equal(PlanetsAndMoons.Earth.NaifId, stateVectors[0].Observer.NaifId);
         Assert.Equal(Frames.Frame.ICRF, stateVectors[0].Frame);
         Assert.Equal(0, stateVectors[0].Epoch.TimeSpanFromJ2000().TotalSeconds, 6);
     }
@@ -205,7 +205,7 @@ public partial class SpiceApiTest
         Assert.Equal(643.53061483971885, stateVectors[0].Velocity.X);
         Assert.Equal(-666.08181440799092, stateVectors[0].Velocity.Y);
         Assert.Equal(-301.32283209101018, stateVectors[0].Velocity.Z);
-        Assert.Equal(PlanetsAndMoons.EARTH.NaifId, stateVectors[0].Observer.NaifId);
+        Assert.Equal(PlanetsAndMoons.Earth.NaifId, stateVectors[0].Observer.NaifId);
         Assert.Equal(Frames.Frame.ICRF, stateVectors[0].Frame);
         Assert.Equal(0.0, stateVectors[0].Epoch.TimeSpanFromJ2000().TotalSeconds);
     }
@@ -460,7 +460,7 @@ public partial class SpiceApiTest
     [Fact]
     public void ReadEphemeris_OverAWindowPastTheCoverageInAManagedFrame_ThrowsSpicesMessage()
     {
-        var site = new Site(714, "PROBE714", new IO.Astrodynamics.Body.CelestialBody(PlanetsAndMoons.MARS), new Planetodetic(0.1, 0.2, 0.0));
+        var site = new Site(714, "PROBE714", new IO.Astrodynamics.Body.CelestialBody(PlanetsAndMoons.Mars), new Planetodetic(0.1, 0.2, 0.0));
         var start = new TimeSystem.Time(2150, 1, 20, TimeScale.TDB);
         var window = new Window(start, start.AddDays(5.0));
         var step = TimeSpan.FromHours(12.0);
@@ -488,7 +488,7 @@ public partial class SpiceApiTest
     public void ReadEphemeris_FromAnUnnamedWrittenSite_ThrowsAndTheTargetReadWorks()
     {
         var epoch = new TimeSystem.Time(2024, 3, 1, 12, 0, 0, TimeScale.TDB);
-        var site = new Site(786, "RE786", PlanetsAndMoons.EARTH_BODY, new Planetodetic(0.5, 0.2, 1000.0));
+        var site = new Site(786, "RE786", PlanetsAndMoons.EarthBody, new Planetodetic(0.5, 0.2, 1000.0));
         var spk = IO.Astrodynamics.Tests.Body.FrameKernelFiles.NewFile("site786", ".bsp");
         var fk = IO.Astrodynamics.Tests.Body.FrameKernelFiles.NewFile("site786_names");
         site.WriteEphemeris(new Window(epoch.AddDays(-1.0), epoch.AddDays(1.0)), spk);
@@ -505,7 +505,7 @@ public partial class SpiceApiTest
             Assert.Equal("naifId", e.ParamName);
 
             var asTarget = SpiceApi.Instance.ReadEphemeris(epoch, 399, site.NaifId, Frames.Frame.ICRF, Aberration.None);
-            var managed = site.GetEphemeris(epoch, PlanetsAndMoons.EARTH_BODY, Frames.Frame.ICRF, Aberration.None);
+            var managed = site.GetEphemeris(epoch, PlanetsAndMoons.EarthBody, Frames.Frame.ICRF, Aberration.None);
             Assert.Equal(managed.Position, asTarget.Position, TestHelpers.VectorComparer);
 
             SpiceApi.Instance.LoadKernels(fk);
@@ -775,7 +775,7 @@ public partial class SpiceApiTest
         Assert.Equal("fixedFrame", unknown.ParamName);
         Assert.Contains("NOT_A_FRAME_668", Assert.IsType<SpiceException>(unknown.InnerException).Message);
         var e = Assert.Throws<SpiceException>(() => SpiceApi.Instance.FindWindowsOnIlluminationConstraint(PastTheEphemerisWindow, 301, 399,
-            PlanetsAndMoons.EARTH_BODY.Frame, ErrorSearchPoint, IlluminationAngle.Incidence, RelationalOperator.LessThan, System.Math.PI / 3.0, 0.0,
+            PlanetsAndMoons.EarthBody.Frame, ErrorSearchPoint, IlluminationAngle.Incidence, RelationalOperator.LessThan, System.Math.PI / 3.0, 0.0,
             Aberration.None, TimeSpan.FromHours(1.0), 10));
         Assert.Contains("2160", e.Message);
     }
@@ -785,7 +785,7 @@ public partial class SpiceApiTest
     {
         // gftfov reads the instrument's field of view in the kernel pool: no instrument kernel defines -999123
         var e = Assert.Throws<SpiceException>(() => SpiceApi.Instance.FindWindowsInFieldOfViewConstraint(ErrorSearchWindow, -999, -999123,
-            301, PlanetsAndMoons.MOON_BODY.Frame, ShapeType.Ellipsoid, Aberration.None, TimeSpan.FromHours(1.0)).ToArray());
+            301, PlanetsAndMoons.MoonBody.Frame, ShapeType.Ellipsoid, Aberration.None, TimeSpan.FromHours(1.0)).ToArray());
         Assert.Contains("INS-999123_FOV_FRAME", e.Message);
     }
 
@@ -799,7 +799,7 @@ public partial class SpiceApiTest
         Assert.Single(south);
         Assert.NotEmpty(SpiceApi.Instance.FindWindowsOnDistanceConstraint(ErrorSearchWindow, 399, 301, RelationalOperator.GreaterThan, 380000000.0,
             Aberration.None, TimeSpan.FromHours(1.0)));
-        Assert.NotEmpty(SpiceApi.Instance.FindWindowsOnIlluminationConstraint(ErrorSearchWindow, 301, 399, PlanetsAndMoons.EARTH_BODY.Frame,
+        Assert.NotEmpty(SpiceApi.Instance.FindWindowsOnIlluminationConstraint(ErrorSearchWindow, 301, 399, PlanetsAndMoons.EarthBody.Frame,
             ErrorSearchPoint, IlluminationAngle.Incidence, RelationalOperator.LessThan, System.Math.PI / 3.0, 0.0, Aberration.None,
             TimeSpan.FromHours(1.0), 10));
     }
@@ -883,7 +883,7 @@ public partial class SpiceApiTest
                 Assert.Equal(8 + i * 0.001, stateVectors[i].Velocity.Y, 12);
                 Assert.Equal(i, stateVectors[i].Velocity.Z, 12);
                 Assert.Equal(i, stateVectors[i].Epoch.TimeSpanFromJ2000().TotalSeconds);
-                Assert.Equal(PlanetsAndMoons.EARTH.NaifId, stateVectors[i].Observer.NaifId);
+                Assert.Equal(PlanetsAndMoons.Earth.NaifId, stateVectors[i].Observer.NaifId);
                 Assert.Equal(Frames.Frame.ICRF, stateVectors[i].Frame);
             }
         }
@@ -978,10 +978,10 @@ public partial class SpiceApiTest
     {
         //Read celestial celestialItem information from spice kernels
         var res = SpiceApi.Instance.GetCelestialBodyInfo(TestHelpers.EarthAtJ2000.NaifId);
-        Assert.Equal(PlanetsAndMoons.EARTH.NaifId, res.NaifId);
+        Assert.Equal(PlanetsAndMoons.Earth.NaifId, res.NaifId);
         Assert.Equal(Stars.Sun.NaifId, res.CenterOfMotionId);
-        Assert.Equal(Barycenters.EARTH_BARYCENTER.NaifId, res.BarycenterOfMotionId);
-        Assert.Equal(PlanetsAndMoons.EARTH.Name, res.Name);
+        Assert.Equal(Barycenters.EarthBarycenter.NaifId, res.BarycenterOfMotionId);
+        Assert.Equal(PlanetsAndMoons.Earth.Name, res.Name);
         Assert.Equal(13000, res.FrameId);
         Assert.Equal("ITRF93", res.FrameName);
         Assert.Equal(398600435507022.62, res.GM);
@@ -998,10 +998,10 @@ public partial class SpiceApiTest
     {
         //Read celestial celestialItem information from spice kernels
         var res = SpiceApi.Instance.GetCelestialBodyInfo(TestHelpers.MoonAtJ2000.NaifId);
-        Assert.Equal(PlanetsAndMoons.MOON.NaifId, res.NaifId);
-        Assert.Equal(PlanetsAndMoons.EARTH.NaifId, res.CenterOfMotionId);
-        Assert.Equal(Barycenters.EARTH_BARYCENTER.NaifId, res.BarycenterOfMotionId);
-        Assert.Equal(PlanetsAndMoons.MOON.Name, res.Name);
+        Assert.Equal(PlanetsAndMoons.Moon.NaifId, res.NaifId);
+        Assert.Equal(PlanetsAndMoons.Earth.NaifId, res.CenterOfMotionId);
+        Assert.Equal(Barycenters.EarthBarycenter.NaifId, res.BarycenterOfMotionId);
+        Assert.Equal(PlanetsAndMoons.Moon.Name, res.Name);
         Assert.Equal(31001, res.FrameId);
         Assert.Equal("MOON_ME", res.FrameName);
         Assert.Equal(4902800118457.5488, res.GM);
@@ -1503,7 +1503,7 @@ public partial class SpiceApiTest
     public void ReadEphemerisFromIds()
     {
         var searchWindow = new Window(TimeSystem.Time.CreateTdb(0.0), TimeSystem.Time.CreateTdb(100.0));
-        var res = SpiceApi.Instance.ReadEphemeris(searchWindow, PlanetsAndMoons.EARTH.NaifId, PlanetsAndMoons.MOON.NaifId,
+        var res = SpiceApi.Instance.ReadEphemeris(searchWindow, PlanetsAndMoons.Earth.NaifId, PlanetsAndMoons.Moon.NaifId,
             Frames.Frame.ICRF, Aberration.LT, TimeSpan.FromSeconds(10.0)).Select(x => x.ToStateVector());
 
         var stateVectors = res as StateVector[] ?? res.ToArray();
@@ -1513,7 +1513,7 @@ public partial class SpiceApiTest
         Assert.Equal(643.53061483971885, stateVectors[0].Velocity.X);
         Assert.Equal(-666.08181440799092, stateVectors[0].Velocity.Y);
         Assert.Equal(-301.32283209101018, stateVectors[0].Velocity.Z);
-        Assert.Equal(PlanetsAndMoons.EARTH.NaifId, stateVectors[0].Observer.NaifId);
+        Assert.Equal(PlanetsAndMoons.Earth.NaifId, stateVectors[0].Observer.NaifId);
         Assert.Equal(Frames.Frame.ICRF, stateVectors[0].Frame);
         Assert.Equal(0.0, stateVectors[0].Epoch.TimeSpanFromJ2000().TotalSeconds);
     }
@@ -1522,14 +1522,14 @@ public partial class SpiceApiTest
     public void ReadEphemerisAtEpochFromIds()
     {
         var epoch = TimeSystem.Time.CreateTdb(0.0);
-        var res = SpiceApi.Instance.ReadEphemeris(epoch, PlanetsAndMoons.EARTH.NaifId, PlanetsAndMoons.MOON.NaifId,
+        var res = SpiceApi.Instance.ReadEphemeris(epoch, PlanetsAndMoons.Earth.NaifId, PlanetsAndMoons.Moon.NaifId,
             Frames.Frame.ICRF, Aberration.LT);
 
         var sv = res.ToStateVector();
         Assert.Equal(-291569264.48965073, sv.Position.X);
         Assert.Equal(-266709187.1624887, sv.Position.Y);
         Assert.Equal(-76099155.244104564, sv.Position.Z);
-        Assert.Equal(PlanetsAndMoons.EARTH.NaifId, sv.Observer.NaifId);
+        Assert.Equal(PlanetsAndMoons.Earth.NaifId, sv.Observer.NaifId);
     }
 
     [Fact]
@@ -1537,7 +1537,7 @@ public partial class SpiceApiTest
     {
         // Test with SSB observer (naifId = 0) — CelestialItem.Create(0) returns a Barycenter
         var epoch = TimeSystem.Time.CreateTdb(0.0);
-        var res = SpiceApi.Instance.ReadEphemeris(epoch, 0, PlanetsAndMoons.EARTH.NaifId,
+        var res = SpiceApi.Instance.ReadEphemeris(epoch, 0, PlanetsAndMoons.Earth.NaifId,
             Frames.Frame.ICRF, Aberration.None);
 
         var sv = res.ToStateVector();
@@ -1563,7 +1563,7 @@ public partial class SpiceApiTest
         try
         {
             var window = new Window(TimeSystem.Time.J2000Tdb, TimeSystem.Time.J2000Tdb.AddSeconds(9.0));
-            var stateVectors = SpiceApi.Instance.ReadEphemeris(window, PlanetsAndMoons.EARTH.NaifId, -136,
+            var stateVectors = SpiceApi.Instance.ReadEphemeris(window, PlanetsAndMoons.Earth.NaifId, -136,
                     Frames.Frame.ICRF, Aberration.None, TimeSpan.FromSeconds(1.0))
                 .Select(x => x.ToStateVector()).ToArray();
             for (int i = 0; i < size; ++i)

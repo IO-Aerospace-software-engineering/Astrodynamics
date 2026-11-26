@@ -56,15 +56,15 @@ public class ManeuverInferenceTests
     private static int _nextId = -899000;
     private static int NextId() => Interlocked.Decrement(ref _nextId);
 
-    private static CelestialBody Earth() => new(PlanetsAndMoons.EARTH, Frame.ICRF, S);
+    private static CelestialBody Earth() => new(PlanetsAndMoons.Earth, Frame.ICRF, S);
 
     private static IO.Astrodynamics.OrbitalParameters.OrbitalParameters Orbit(CelestialBody earth, bool ssb)
     {
         var icrf = new KeplerianElements(7000e3, 0.01, 0.5, 0.0, 0.0, 0.0, earth, S, Frame.ICRF);
         if (!ssb) return icrf;
         var sv = icrf.ToStateVector();
-        var fromSsb = earth.GetGeometricStateRelativeTo(S, Barycenters.SOLAR_SYSTEM_BARYCENTER);
-        return new StateVector(fromSsb.Position + sv.Position, fromSsb.Velocity + sv.Velocity, Barycenters.SOLAR_SYSTEM_BARYCENTER, S,
+        var fromSsb = earth.GetGeometricStateRelativeTo(S, Barycenters.SolarSystemBarycenter);
+        return new StateVector(fromSsb.Position + sv.Position, fromSsb.Velocity + sv.Velocity, Barycenters.SolarSystemBarycenter, S,
             Frame.ICRF);
     }
 
@@ -121,7 +121,7 @@ public class ManeuverInferenceTests
     private sealed class UserTriad : TriadAttitude
     {
         public UserTriad(CelestialItem maneuverCenter) : base(BodyAxis.Front,
-            new CelestialAttitudeTarget(new CelestialBody(PlanetsAndMoons.MOON)),
+            new CelestialAttitudeTarget(new CelestialBody(PlanetsAndMoons.Moon)),
             BodyAxis.Up,
             new CelestialAttitudeTarget(new CelestialBody(Stars.Sun, Frame.ICRF, S)),
             S,
@@ -138,7 +138,7 @@ public class ManeuverInferenceTests
     private sealed class UserPointing : InstrumentPointingToAttitude
     {
         public UserPointing(Instrument instrument, CelestialItem maneuverCenter) : base(instrument,
-            new CelestialAttitudeTarget(new CelestialBody(PlanetsAndMoons.MOON)), S, TimeSpan.Zero, maneuverCenter)
+            new CelestialAttitudeTarget(new CelestialBody(PlanetsAndMoons.Moon)), S, TimeSpan.Zero, maneuverCenter)
         {
         }
 
@@ -420,7 +420,7 @@ public class ManeuverInferenceTests
             TimeSpan.Zero,
             center),
         "DerivedCelestialTarget" => new TriadAttitude(Spacecraft.Front,
-            new DerivedCelestialTarget(new CelestialBody(PlanetsAndMoons.MOON)),
+            new DerivedCelestialTarget(new CelestialBody(PlanetsAndMoons.Moon)),
             Spacecraft.Up,
             new CelestialAttitudeTarget(new CelestialBody(Stars.Sun, Frame.ICRF, S)),
             S,
@@ -508,7 +508,7 @@ public class ManeuverInferenceTests
     public void SsbMode_ATriadOfCelestialTargetsOnly_GivenNoCentre_TakesTheCentralBodyOfTheRun(string integrator)
     {
         var earth = Earth();
-        var moon = new CelestialBody(PlanetsAndMoons.MOON);
+        var moon = new CelestialBody(PlanetsAndMoons.Moon);
         var sun = new CelestialBody(Stars.Sun, Frame.ICRF, S);
         var spacecraft = NewSpacecraft(earth, ssb: true);
         var triad = new TriadAttitude(Spacecraft.Front,
@@ -538,7 +538,7 @@ public class ManeuverInferenceTests
     public void SsbMode_APointingAtACelestialTarget_GivenNoCentre_TakesTheCentralBodyOfTheRun(string integrator)
     {
         var earth = Earth();
-        var moon = new CelestialBody(PlanetsAndMoons.MOON);
+        var moon = new CelestialBody(PlanetsAndMoons.Moon);
         var spacecraft = NewSpacecraft(earth, ssb: true);
         var pointing = new InstrumentPointingToAttitude(Camera(spacecraft), new CelestialAttitudeTarget(moon), S);
         spacecraft.SetManeuvers(pointing);

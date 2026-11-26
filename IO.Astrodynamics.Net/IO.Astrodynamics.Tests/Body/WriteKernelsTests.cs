@@ -57,7 +57,7 @@ public sealed class WriteKernelsTests : IDisposable
     // A spacecraft with two instruments and a nadir attitude, an apogee raise and a TRIAD after it, propagated 1 h, the burn about 45 min in
     private static Spacecraft Propagated(int naifId, string integrator, string name = null)
     {
-        var earth = new CelestialBody(PlanetsAndMoons.EARTH, Frames.Frame.ICRF, Start);
+        var earth = new CelestialBody(PlanetsAndMoons.Earth, Frames.Frame.ICRF, Start);
         var sun = new CelestialBody(Stars.Sun);
         var leo = new KeplerianElements(6778137.0, 0.001, 51.6 * IO.Astrodynamics.Constants.Deg2Rad, 0.4, 1.1, 0.3, earth, Start, Frames.Frame.ICRF).ToStateVector();
         var orbit = new StateVector(leo.Position, leo.Velocity * 0.993, earth, Start, Frames.Frame.ICRF);
@@ -160,7 +160,7 @@ public sealed class WriteKernelsTests : IDisposable
             // SPICE reads them: a kernel-backed twin against the managed reads, within spacecraft.md's accuracy table
             // (3.9e-3 m between the stored states and spkezr in 2024; 6.1e-10 rad between the attitude and pxform)
             var twin = new Spacecraft(spacecraft.NaifId, spacecraft.Name, Start, 1000.0, 3000.0, new Clock(spacecraft.Name + "_CLK", 65536));
-            var earth = new CelestialBody(PlanetsAndMoons.EARTH);
+            var earth = new CelestialBody(PlanetsAndMoons.Earth);
             foreach (var epoch in new[] { Start.AddSeconds(35.0), Start.AddSeconds(1805.0), Start.AddSeconds(3575.0) })
             {
                 var managed = spacecraft.GetEphemeris(epoch, earth, Frames.Frame.ICRF, Aberration.None).ToStateVector();
@@ -238,7 +238,7 @@ public sealed class WriteKernelsTests : IDisposable
     [Fact]
     public void WriteKernels_ByContent_RefusesBeforeAnything()
     {
-        var earth = new CelestialBody(PlanetsAndMoons.EARTH, Frames.Frame.ICRF, Start);
+        var earth = new CelestialBody(PlanetsAndMoons.Earth, Frames.Frame.ICRF, Start);
         var orbit = new StateVector(new Vector3(6800000.0, 0.0, 0.0), new Vector3(0.0, 7656.2204182967143, 0.0), earth, Start, Frames.Frame.ICRF);
         var target = new DirectoryInfo(Path.Combine(_root.FullName, "content"));
 
@@ -414,7 +414,7 @@ public sealed class WriteKernelsTests : IDisposable
         var before = File.ReadAllBytes(Path.Combine(target.FullName, spacecraft.Name + ".bsp"));
 
         // Another propagation, over 5 min: SPICE reads its states, not the first file's
-        var earth = new CelestialBody(PlanetsAndMoons.EARTH);
+        var earth = new CelestialBody(PlanetsAndMoons.Earth);
         spacecraft.Propagate(new Window(Start, Start.AddMinutes(5.0)), new PropagationOptions
         {
             Integrator = new VVIntegratorOptions { Step = TimeSpan.FromSeconds(10.0) }, OutputStep = TimeSpan.FromSeconds(10.0),

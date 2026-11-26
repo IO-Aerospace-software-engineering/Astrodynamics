@@ -69,7 +69,7 @@ internal static class PropagatorsPage
         var options = PropagationOptions.Default with
         {
             Integrator = rk,
-            ThirdBodies = new CelestialItem[] { Stars.SUN_BODY, PlanetsAndMoons.MOON_BODY },
+            ThirdBodies = new CelestialItem[] { Stars.SunBody, PlanetsAndMoons.MoonBody },
             AtmosphericDrag = true,
             SolarRadiationPressure = true,
             Geopotential = GeopotentialModelParameters.Egm2008(10)
@@ -100,7 +100,7 @@ internal static class PropagatorsPage
             {
                 AbsoluteTolerance = 1e-10, RelativeTolerance = 1e-10, InitialStep = TimeSpan.FromSeconds(30.0)
             },
-            ThirdBodies = new CelestialItem[] { Stars.SUN_BODY, PlanetsAndMoons.MOON_BODY }
+            ThirdBodies = new CelestialItem[] { Stars.SunBody, PlanetsAndMoons.MoonBody }
         };
         var tasks = new List<PropagationTask>
         {
@@ -140,7 +140,7 @@ internal static class PropagatorsPage
                 {
                     AbsoluteTolerance = 1e-10, RelativeTolerance = 1e-10, InitialStep = TimeSpan.FromSeconds(30.0)
                 },
-                ThirdBodies = new CelestialItem[] { Stars.SUN_BODY, PlanetsAndMoons.MOON_BODY }
+                ThirdBodies = new CelestialItem[] { Stars.SunBody, PlanetsAndMoons.MoonBody }
             }
         };
 

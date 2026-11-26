@@ -52,7 +52,7 @@ public class InitialOrbitDeterminationTests
             var obs3 = referenceOrbit.AtEpoch(e3).RelativeTo(site, Aberration.None);
             var orbitalParams =
                 InitialOrbitDetermination.CreateFromGaussMethod(obs1.ToEquatorial(), obs2.ToEquatorial(), obs3.ToEquatorial(), site,
-                    PlanetsAndMoons.EARTH_BODY, 42000000.0);
+                    PlanetsAndMoons.EarthBody, 42000000.0);
             var deltaRange = 100.0 * (orbitalParams.OrbitalParameters.ToStateVector().Position - referenceOrbit.ToStateVector().Position).Magnitude() /
                              referenceOrbit.ToStateVector().Position.Magnitude();
             var deltaVelocity = 100.0 * (orbitalParams.OrbitalParameters.ToStateVector().Velocity - referenceOrbit.ToStateVector().Velocity).Magnitude() /
@@ -86,7 +86,7 @@ public class InitialOrbitDeterminationTests
 
             // Act
             var determined = InitialOrbitDetermination.CreateFromGaussMethod(obs1.ToEquatorial(),
-                obs2.ToEquatorial(), obs3.ToEquatorial(), site, Stars.SUN_BODY, 350000000000.58063)
+                obs2.ToEquatorial(), obs3.ToEquatorial(), site, Stars.SunBody, 350000000000.58063)
                 .OrbitalParameters.ToStateVector();
             double deltaRange = 100.0 * (determined.Position - reference.Position).Magnitude() /
                                 reference.Position.Magnitude();
@@ -131,7 +131,7 @@ public class InitialOrbitDeterminationTests
     private static (double Position, double Velocity) Departure(Equatorial first, Equatorial last)
     {
         var determined = InitialOrbitDetermination.CreateFromGaussMethod(first, MiddleObservation, last,
-            MarylandSite(), PlanetsAndMoons.EARTH_BODY, 7_250_000.0).OrbitalParameters.ToStateVector();
+            MarylandSite(), PlanetsAndMoons.EarthBody, 7_250_000.0).OrbitalParameters.ToStateVector();
         var reference = ReferenceOrbit();
         return ((determined.Position - reference.Position).Magnitude(),
             (determined.Velocity - reference.Velocity).Magnitude());

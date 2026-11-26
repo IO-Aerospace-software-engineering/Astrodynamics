@@ -206,7 +206,7 @@ public class StarTests
     public void Propagate()
     {
         var epoch = new TimeSystem.Time(new DateTime(2001, 1, 1), TimeScale.TDB);
-        var observer = Barycenters.SOLAR_SYSTEM_BARYCENTER;
+        var observer = Barycenters.SolarSystemBarycenter;
         var star = new Star(1, "star1", 1E+30, "spec", 2, 0.3792, Equatorial.FromRightAscensionDeclination(1, 1, epoch), 0.1, 0.1, 0, 0, 0, 0, epoch);
         star.Propagate(new Window(epoch, epoch + TimeSpan.FromDays(365 * 4)), TimeSpan.FromDays(365));
         // The straight line (#718) at 0, 365 and 730 days: before, the angles 1, 1.1 and 1.2 rad (to 3 decimals) at the

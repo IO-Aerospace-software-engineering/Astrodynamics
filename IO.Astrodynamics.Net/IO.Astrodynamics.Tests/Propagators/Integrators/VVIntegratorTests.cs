@@ -32,7 +32,7 @@ public class VVIntegratorTests
     [Fact]
     public void GlobalErrorIsSecondOrderInTheStep()
     {
-        var earth = new CelestialBody(PlanetsAndMoons.EARTH);
+        var earth = new CelestialBody(PlanetsAndMoons.Earth);
         var epoch = TimeSystem.Time.J2000Tdb;
         var initialState = new StateVector(
             new Vector3(5442162.5926801835, -4068949.8468206248, -13456.851447751518),
@@ -79,7 +79,7 @@ public class VVIntegratorTests
     public void GlobalErrorIsSecondOrderWithDrag(double perigeeHeight, double area)
     {
         var epoch = new TimeSystem.Time(2024, 3, 1, 12, 0, 0, TimeScale.TDB);
-        var earth = new CelestialBody(SolarSystemObjects.PlanetsAndMoons.EARTH, Frames.Frame.ICRF, epoch, atmosphericModel: new EarthStandardAtmosphere());
+        var earth = new CelestialBody(SolarSystemObjects.PlanetsAndMoons.Earth, Frames.Frame.ICRF, epoch, atmosphericModel: new EarthStandardAtmosphere());
         double rp = earth.EquatorialRadius + perigeeHeight, ra = earth.EquatorialRadius + 400000.0;
         double a = (rp + ra) / 2.0, e = (ra - rp) / (ra + rp);
         double n = System.Math.Sqrt(earth.GM / (a * a * a));

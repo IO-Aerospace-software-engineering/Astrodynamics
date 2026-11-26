@@ -26,7 +26,7 @@ public class ElementsValidationTests
     public ElementsValidationTests()
     {
         TestKernels.EnsureSolarSystem();
-        _earth = new CelestialBody(PlanetsAndMoons.EARTH, Frames.Frame.ICRF, Epoch);
+        _earth = new CelestialBody(PlanetsAndMoons.Earth, Frames.Frame.ICRF, Epoch);
     }
 
     private KeplerianElements Keplerian(double a = 7000000.0, double e = 0.1, double i = 0.5, double raan = 1.0,

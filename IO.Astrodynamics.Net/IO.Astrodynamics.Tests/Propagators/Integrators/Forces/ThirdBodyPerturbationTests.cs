@@ -52,8 +52,8 @@ public class ThirdBodyPerturbationTests
     {
         // Sun's tidal acceleration on a LEO satellite at ~400 km altitude
         // Analytical estimate: ~5.6e-7 m/s^2 (Montenbruck & Gill, Table 3.1)
-        var earth = new CelestialBody(PlanetsAndMoons.EARTH);
-        var sun = Stars.SUN_BODY;
+        var earth = new CelestialBody(PlanetsAndMoons.Earth);
+        var sun = Stars.SunBody;
 
         var thirdBody = new ThirdBodyPerturbation(sun, earth);
 
@@ -81,8 +81,8 @@ public class ThirdBodyPerturbationTests
     public void MoonThirdBodyAccelerationOnLeoSatellite()
     {
         // Moon's tidal acceleration on LEO is ~1.1e-6 m/s^2 (larger than Sun's despite lower mass)
-        var earth = new CelestialBody(PlanetsAndMoons.EARTH);
-        var moon = PlanetsAndMoons.MOON_BODY;
+        var earth = new CelestialBody(PlanetsAndMoons.Earth);
+        var moon = PlanetsAndMoons.MoonBody;
 
         var thirdBody = new ThirdBodyPerturbation(moon, earth);
 
@@ -107,8 +107,8 @@ public class ThirdBodyPerturbationTests
     public void ThirdBodyAccelerationMatchesDirectFormula()
     {
         // Verify Battin's formula matches the direct (but less numerically stable) formula
-        var earth = new CelestialBody(PlanetsAndMoons.EARTH);
-        var sun = Stars.SUN_BODY;
+        var earth = new CelestialBody(PlanetsAndMoons.Earth);
+        var sun = Stars.SunBody;
 
         var thirdBody = new ThirdBodyPerturbation(sun, earth);
 

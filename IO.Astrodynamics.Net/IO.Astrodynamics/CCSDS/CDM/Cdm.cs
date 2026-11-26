@@ -254,7 +254,7 @@ public sealed class Cdm
             }
             case CdmReferenceFrame.Itrf:
             {
-                if (observer.NaifId != PlanetsAndMoons.EARTH.NaifId)
+                if (observer.NaifId != PlanetsAndMoons.Earth.NaifId)
                 {
                     throw new InvalidOperationException(
                         $"The segment of {role} gives an ITRF state about ORBIT_CENTER {segment.Metadata.OrbitCenter}: ITRF is the frame of the Earth.");
@@ -332,7 +332,7 @@ public sealed class Cdm
     {
         if (orbitCenter == null)
         {
-            return new CelestialBody(PlanetsAndMoons.EARTH, Frame.ICRF, epoch);
+            return new CelestialBody(PlanetsAndMoons.Earth, Frame.ICRF, epoch);
         }
 
         if (!CcsdsCenterNames.TryGetNaifId(orbitCenter, out _))

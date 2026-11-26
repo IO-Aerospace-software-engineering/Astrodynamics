@@ -31,13 +31,13 @@ public class EphemerisWindowStepTests
     [InlineData(-600000000L)]
     public void CelestialItem_StepNotPositive_Throws(long ticks)
     {
-        var moon = PlanetsAndMoons.MOON_BODY;
+        var moon = PlanetsAndMoons.MoonBody;
         var ex = Assert.Throws<ArgumentOutOfRangeException>(() =>
-            moon.GetEphemeris(OneHour, PlanetsAndMoons.EARTH_BODY, Frames.Frame.ICRF, Aberration.None,
+            moon.GetEphemeris(OneHour, PlanetsAndMoons.EarthBody, Frames.Frame.ICRF, Aberration.None,
                 TimeSpan.FromTicks(ticks)));
         Assert.Equal("stepSize", ex.ParamName);
         Assert.Throws<ArgumentOutOfRangeException>(() =>
-            moon.GetEphemeris(OneHour, PlanetsAndMoons.EARTH_BODY, TimeSpan.FromTicks(ticks)));
+            moon.GetEphemeris(OneHour, PlanetsAndMoons.EarthBody, TimeSpan.FromTicks(ticks)));
     }
 
     [Theory]
@@ -45,7 +45,7 @@ public class EphemerisWindowStepTests
     [InlineData(-600000000L)]
     public void Site_StepNotPositive_Throws(long ticks)
     {
-        var earth = PlanetsAndMoons.EARTH_BODY;
+        var earth = PlanetsAndMoons.EarthBody;
         var site = new Site(100, "STEPSITE", earth,
             new Planetodetic(longitude: -117.0 * IO.Astrodynamics.Constants.Deg2Rad,
                 latitude: 34.0 * IO.Astrodynamics.Constants.Deg2Rad, altitude: 1000.0));

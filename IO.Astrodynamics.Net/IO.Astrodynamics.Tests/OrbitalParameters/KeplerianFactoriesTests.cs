@@ -27,7 +27,7 @@ public class KeplerianFactoriesTests
     public KeplerianFactoriesTests()
     {
         TestKernels.EnsureSolarSystem();
-        _earth = new CelestialBody(PlanetsAndMoons.EARTH, Frames.Frame.ICRF, Epoch);
+        _earth = new CelestialBody(PlanetsAndMoons.Earth, Frames.Frame.ICRF, Epoch);
     }
 
     [Theory]

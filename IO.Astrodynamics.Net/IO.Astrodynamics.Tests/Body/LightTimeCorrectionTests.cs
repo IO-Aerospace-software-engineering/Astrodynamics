@@ -62,8 +62,8 @@ public class LightTimeCorrectionTests
         TestKernels.EnsureSolarSystem();
         _reference = JsonDocument.Parse(File.ReadAllText("Data/LightTimeReference/light_time_reference.json")).RootElement;
         _epochs = _reference.GetProperty("epochs_tdb").EnumerateArray().Select(e => TimeSystem.Time.CreateTdb(e.GetDouble())).ToArray();
-        _earth = new CelestialBody(PlanetsAndMoons.EARTH);
-        _moon = new CelestialBody(PlanetsAndMoons.MOON);
+        _earth = new CelestialBody(PlanetsAndMoons.Earth);
+        _moon = new CelestialBody(PlanetsAndMoons.Moon);
         _sun = new CelestialBody(Stars.Sun);
         var site = _reference.GetProperty("site");
         _site = new Site(491, "G491", _earth, new Planetodetic(site.GetProperty("longitude_deg").GetDouble() * global::IO.Astrodynamics.Constants.Deg2Rad,

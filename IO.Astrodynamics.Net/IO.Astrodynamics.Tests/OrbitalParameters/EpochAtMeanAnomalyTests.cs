@@ -135,7 +135,7 @@ public class EpochAtMeanAnomalyTests
         Assert.Equal(20.0, earthOrbit.MeanAnomaly());
         AssertSeconds(5290.8147701649110473, TtSeconds(Epoch, earthOrbit.TimeToRadius(7e6)), EarthTolerance, "time to radius e 0.999999");
 
-        var moon = new CelestialBody(PlanetsAndMoons.MOON, Frames.Frame.ICRF, Epoch);
+        var moon = new CelestialBody(PlanetsAndMoons.Moon, Frames.Frame.ICRF, Epoch);
         Assert.InRange(moon.SphereOfInfluence - 66482232.21562789, -3e-8, 3e-8);
         var moonOrbit = new KeplerianElements(5e7, 1.0 - 1e-6, 0.5, 0.1, 0.2, 20.0, moon, Epoch, Frames.Frame.ICRF);
         AssertSeconds(973267.78183257802201, (moonOrbit.TimeToSphereOfInfluence() - Epoch).TotalSeconds, MoonSoiTolerance, "time to SOI e 0.999999");

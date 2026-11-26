@@ -37,7 +37,7 @@ namespace IO.Astrodynamics.Tests.Coordinates
             Astrodynamics.Mission.Mission mission = new Astrodynamics.Mission.Mission("mission1");
             new Scenario("scn1", mission, new Window(new TimeSystem.Time(new DateTime(2001, 1, 1), TimeScale.TDB), new TimeSystem.Time(new DateTime(2001, 2, 1), TimeScale.TDB)));
             var epoch = new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB);
-            CelestialBody earth = PlanetsAndMoons.EARTH_BODY;
+            CelestialBody earth = PlanetsAndMoons.EarthBody;
             Equatorial eq = new Equatorial(new StateVector(
                 new Vector3(-291608.38463344, -266716.83339423, -76102.48709990), new Vector3(), earth, epoch,
                 Frames.Frame.ICRF));
@@ -115,14 +115,14 @@ namespace IO.Astrodynamics.Tests.Coordinates
         [Fact]
         public void ToEquatorial_OfAStateInAnyFrame_IsTheIcrfRaDecOfSpice()
         {
-            var earth = new CelestialBody(PlanetsAndMoons.EARTH);
-            var moon = new CelestialBody(PlanetsAndMoons.MOON);
+            var earth = new CelestialBody(PlanetsAndMoons.Earth);
+            var moon = new CelestialBody(PlanetsAndMoons.Moon);
             double worstRa = 0.0;
             double worstDec = 0.0;
             foreach (var day in MoonDays)
             {
                 var epoch = TimeSystem.Time.J2000Tdb.AddSeconds(day * 86400.0);
-                var reference = SpiceApi.Instance.ReadEphemeris(epoch, PlanetsAndMoons.EARTH.NaifId, PlanetsAndMoons.MOON.NaifId,
+                var reference = SpiceApi.Instance.ReadEphemeris(epoch, PlanetsAndMoons.Earth.NaifId, PlanetsAndMoons.Moon.NaifId,
                     Frames.Frame.ICRF, Aberration.None).Position;
                 var (ra, dec) = RaDec(reference);
                 foreach (var frame in MoonFrames())
@@ -169,7 +169,7 @@ namespace IO.Astrodynamics.Tests.Coordinates
         public void ToEquatorial_IsInvariantUnderAChangeOfFrame()
         {
             var epoch = new TimeSystem.Time(2024, 6, 21, 12, 0, 0, TimeScale.TDB);
-            var earth = new CelestialBody(PlanetsAndMoons.EARTH, Frames.Frame.ICRF, epoch);
+            var earth = new CelestialBody(PlanetsAndMoons.Earth, Frames.Frame.ICRF, epoch);
             var icrf = new StateVector(new Vector3(6678137.0, 987654.0, 489312.0), new Vector3(-1032.0, 7154.0, 2531.0), earth, epoch,
                 Frames.Frame.ICRF);
 
@@ -219,7 +219,7 @@ namespace IO.Astrodynamics.Tests.Coordinates
         public void ToEquatorial_OnThePolarAxisAndTheEquator()
         {
             var epoch = new TimeSystem.Time(2024, 6, 21, 12, 0, 0, TimeScale.TDB);
-            var earth = new CelestialBody(PlanetsAndMoons.EARTH, Frames.Frame.ICRF, epoch);
+            var earth = new CelestialBody(PlanetsAndMoons.Earth, Frames.Frame.ICRF, epoch);
 
             // The ICRF pole, expressed in ECLIPJ2000: Dec π/2 exactly (RA is undefined there and not asserted). asin(z / |r|) cannot
             // resolve a direction within 1.49e-8 rad of the pole (one double below 1), and no quantity derived from the angles can;

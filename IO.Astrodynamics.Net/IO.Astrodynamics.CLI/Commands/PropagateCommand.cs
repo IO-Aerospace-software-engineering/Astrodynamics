@@ -83,7 +83,7 @@ public class PropagateCommand
             // choice 16 of decision 100), and a TLE starts from its SGP4 state at the window start on its own Earth (#675),
             // which the options fill
             var initialOrbit = CliOrbit.Read(orbit, id => new CelestialBody(id));
-            var centerId = initialOrbit is Tle ? PlanetsAndMoons.EARTH.NaifId : initialOrbit.Observer.NaifId;
+            var centerId = initialOrbit is Tle ? PlanetsAndMoons.Earth.NaifId : initialOrbit.Observer.NaifId;
             settings.CheckCenter(centerId);
 
             var bodyIds = (body ?? []).Select(x => CliValues.Object(x, "--body")).ToArray();
@@ -110,11 +110,11 @@ public class PropagateCommand
             scenario.Simulate(new PropagationOptions
             {
                 Integrator = settings.Integrator,
-                Geopotential = centerId == PlanetsAndMoons.EARTH.NaifId ? Helpers.EarthGeopotential(settings.Degree) : null,
+                Geopotential = centerId == PlanetsAndMoons.Earth.NaifId ? Helpers.EarthGeopotential(settings.Degree) : null,
                 Atmosphere = centerId switch
                 {
-                    _ when centerId == PlanetsAndMoons.EARTH.NaifId => settings.Atmosphere,
-                    _ when centerId == PlanetsAndMoons.MARS.NaifId => new MarsStandardAtmosphere(),
+                    _ when centerId == PlanetsAndMoons.Earth.NaifId => settings.Atmosphere,
+                    _ when centerId == PlanetsAndMoons.Mars.NaifId => new MarsStandardAtmosphere(),
                     _ => null
                 },
                 OutputStep = step,
@@ -213,12 +213,12 @@ public class PropagateCommand
         /// </summary>
         internal void CheckCenter(int centerId)
         {
-            if (Drag && centerId != PlanetsAndMoons.EARTH.NaifId && centerId != PlanetsAndMoons.MARS.NaifId)
+            if (Drag && centerId != PlanetsAndMoons.Earth.NaifId && centerId != PlanetsAndMoons.Mars.NaifId)
             {
                 throw new CliInputException($"--drag: the command has an atmosphere for the Earth and Mars only, the centre is {centerId}.");
             }
 
-            if (AtmosphereExplicit && centerId != PlanetsAndMoons.EARTH.NaifId)
+            if (AtmosphereExplicit && centerId != PlanetsAndMoons.Earth.NaifId)
             {
                 throw new CliInputException($"--atmosphere: the atmosphere chosen is the Earth's, the centre is {centerId}.");
             }

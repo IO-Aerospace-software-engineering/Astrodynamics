@@ -53,7 +53,7 @@ public class ExecutedManeuverRecordTests
     private static int _nextId = -869000;
     private static int NextId() => Interlocked.Decrement(ref _nextId);
 
-    private static CelestialBody Earth() => new(PlanetsAndMoons.EARTH, Frames.Frame.ICRF, S);
+    private static CelestialBody Earth() => new(PlanetsAndMoons.Earth, Frames.Frame.ICRF, S);
 
     private static OrbitalParams Orbit(CelestialBody earth, string frame)
     {
@@ -64,9 +64,9 @@ public class ExecutedManeuverRecordTests
                 return icrf.ToStateVector().ToFrame(Frames.Frame.ECLIPJ2000);
             case "SSB":
                 var sv = icrf.ToStateVector();
-                var fromSsb = earth.GetGeometricStateRelativeTo(S, Barycenters.SOLAR_SYSTEM_BARYCENTER);
+                var fromSsb = earth.GetGeometricStateRelativeTo(S, Barycenters.SolarSystemBarycenter);
                 return new StateVector(fromSsb.Position + sv.Position, fromSsb.Velocity + sv.Velocity,
-                    Barycenters.SOLAR_SYSTEM_BARYCENTER, S, Frames.Frame.ICRF);
+                    Barycenters.SolarSystemBarycenter, S, Frames.Frame.ICRF);
             default:
                 return icrf;
         }

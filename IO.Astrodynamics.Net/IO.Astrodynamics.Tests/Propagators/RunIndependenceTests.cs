@@ -51,7 +51,7 @@ public class RunIndependenceTests
     private static int _nextId = -783000;
     private static int NextId() => Interlocked.Decrement(ref _nextId);
 
-    private static CelestialBody Earth => PlanetsAndMoons.EARTH_BODY;
+    private static CelestialBody Earth => PlanetsAndMoons.EarthBody;
 
     private static Tle Iss() => new("ISS",
         "1 25544U 98067A   21020.53488036  .00016717  00000-0  10270-3 0  9054",
@@ -209,8 +209,8 @@ public class RunIndependenceTests
                 break;
             case "SSB":
                 var heliocentric = new StateVector(new Vector3(1.5e11, 0.0, 0.0), new Vector3(0.0, 29780.0, 1000.0),
-                    Stars.SUN_BODY, Epoch, Frames.Frame.ICRF);
-                again = () => heliocentric.RelativeTo(Barycenters.SOLAR_SYSTEM_BARYCENTER, Aberration.None).ToStateVector();
+                    Stars.SunBody, Epoch, Frames.Frame.ICRF);
+                again = () => heliocentric.RelativeTo(Barycenters.SolarSystemBarycenter, Aberration.None).ToStateVector();
                 spacecraft = NewSpacecraft(again());
                 break;
             case "TLE":
@@ -226,7 +226,7 @@ public class RunIndependenceTests
 
         var propagator = new CentralBodyPropagator(window, spacecraft, new PropagationOptions
         {
-            OutputStep = Step, ThirdBodies = orbit == "SSB" ? [Stars.SUN_BODY, Earth] : [Earth],
+            OutputStep = Step, ThirdBodies = orbit == "SSB" ? [Stars.SunBody, Earth] : [Earth],
             CovariancePropagation = CovariancePropagationOptions.None
         });
         spacecraft.SetInitialOrbitalParameters(again());

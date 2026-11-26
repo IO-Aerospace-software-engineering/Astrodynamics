@@ -673,8 +673,8 @@ public class PropagatedArcsTests
                 var initialEpoch = Time.CreateUtc(667915269.18539762).ToTdb();
                 start = Time.CreateUtc(668085555.829810).ToTdb();
                 window = new Window(start, Time.CreateUtc(668174400.000000).ToTdb());
-                center = new CelestialBody(PlanetsAndMoons.EARTH, Frame.ICRF, initialEpoch);
-                bodies = [new CelestialBody(PlanetsAndMoons.MOON, Frame.ICRF, initialEpoch), center, new CelestialBody(Stars.Sun, Frame.ICRF, initialEpoch)];
+                center = new CelestialBody(PlanetsAndMoons.Earth, Frame.ICRF, initialEpoch);
+                bodies = [new CelestialBody(PlanetsAndMoons.Moon, Frame.ICRF, initialEpoch), center, new CelestialBody(Stars.Sun, Frame.ICRF, initialEpoch)];
                 orbit = new StateVector(new Vector3(5056554.1874925727, 4395595.4942363985, 0.0), new Vector3(-3708.6305608890916, 4266.2914313011433, 6736.8538488755494),
                     center, initialEpoch, Frame.ICRF);
             }
@@ -685,14 +685,14 @@ public class PropagatedArcsTests
                 if (moonCentred)
                 {
                     // A lunar orbit from its apolune, 100 to 150 km high: the apolune-raising impulse at perilune, S + 3 540 s
-                    center = new CelestialBody(PlanetsAndMoons.MOON, Frame.ICRF, start);
+                    center = new CelestialBody(PlanetsAndMoons.Moon, Frame.ICRF, start);
                     orbit = new KeplerianElements(1862400.0, 0.0134, 1.0, 0.3, 0.7, System.Math.PI, center, start, Frame.ICRF).ToStateVector();
                     bodies = [center];
                 }
                 else
                 {
                     // #540's LEO from apogee, 400 x 1 000 km: the apogee-raising impulse at perigee, about S + 2 964 s
-                    center = new CelestialBody(PlanetsAndMoons.EARTH, Frame.ICRF, start);
+                    center = new CelestialBody(PlanetsAndMoons.Earth, Frame.ICRF, start);
                     orbit = maneuver == "CombinedLate"
                         ? LeoBeforeApogee(center, start)
                         : new StateVector(new Vector3(-7378137.0, 0.0, 0.0), new Vector3(0.0, -5509.9, -4623.4), center, start, Frame.ICRF);
@@ -705,8 +705,8 @@ public class PropagatedArcsTests
                     bodies = ssb ? [center, new CelestialBody(Stars.Sun, Frame.ICRF, start)] : [center];
                     if (ssb)
                     {
-                        var earthFromSsb = center.GetGeometricStateRelativeTo(start, Barycenters.SOLAR_SYSTEM_BARYCENTER);
-                        orbit = new StateVector(earthFromSsb.Position + orbit.Position, earthFromSsb.Velocity + orbit.Velocity, Barycenters.SOLAR_SYSTEM_BARYCENTER,
+                        var earthFromSsb = center.GetGeometricStateRelativeTo(start, Barycenters.SolarSystemBarycenter);
+                        orbit = new StateVector(earthFromSsb.Position + orbit.Position, earthFromSsb.Velocity + orbit.Velocity, Barycenters.SolarSystemBarycenter,
                             start, Frame.ICRF);
                     }
                 }

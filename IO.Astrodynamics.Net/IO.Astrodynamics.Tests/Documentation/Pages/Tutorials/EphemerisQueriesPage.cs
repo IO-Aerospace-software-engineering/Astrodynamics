@@ -72,8 +72,8 @@ internal static class EphemerisQueriesPage
     internal static void Block02()
     {
         #region docs/tutorials/ephemeris-queries.md:2
-        var earth = PlanetsAndMoons.EARTH_BODY;
-        var moon = new CelestialBody(PlanetsAndMoons.MOON);
+        var earth = PlanetsAndMoons.EarthBody;
+        var moon = new CelestialBody(PlanetsAndMoons.Moon);
         var sun = new CelestialBody(Stars.Sun);
         var epoch = new Time(2024, 6, 21, 12, 0, 0, TimeScale.TDB);
         #endregion

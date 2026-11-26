@@ -40,7 +40,7 @@ public class GeopotentialCentralTermTests
     private static GeopotentialGravitationalField FieldOf(CelestialItem body) => (GeopotentialGravitationalField)body.Field;
 
     private static CelestialBody Earth(ushort degree, GeopotentialCentralTerm centralTerm) =>
-        new(PlanetsAndMoons.EARTH, Frames.Frame.ICRF, Epoch,
+        new(PlanetsAndMoons.Earth, Frames.Frame.ICRF, Epoch,
             new GeopotentialModelParameters(Model, degree) { CentralTerm = centralTerm });
 
     [Fact]
@@ -56,7 +56,7 @@ public class GeopotentialCentralTermTests
 
         // Act
         var fields = Array.ConvertAll(parameters,
-            p => FieldOf(new CelestialBody(PlanetsAndMoons.EARTH, Frames.Frame.ICRF, Epoch, p)));
+            p => FieldOf(new CelestialBody(PlanetsAndMoons.Earth, Frames.Frame.ICRF, Epoch, p)));
         var withoutBody = new GeopotentialGravitationalField(new StreamReader(ModelStream()), 10);
 
         // Assert
@@ -74,11 +74,11 @@ public class GeopotentialCentralTermTests
             { CentralTerm = GeopotentialCentralTerm.ModelGravitationalParameter };
         var byStream = new GeopotentialModelParameters(ModelStream(), 10, 3.9e14, 6.4e6)
             { CentralTerm = GeopotentialCentralTerm.ModelGravitationalParameter };
-        var reference = new CelestialBody(PlanetsAndMoons.EARTH, Frames.Frame.ICRF, Epoch);
+        var reference = new CelestialBody(PlanetsAndMoons.Earth, Frames.Frame.ICRF, Epoch);
 
         // Act
-        var earth = new CelestialBody(PlanetsAndMoons.EARTH, Frames.Frame.ICRF, Epoch, byPath);
-        var other = new CelestialBody(PlanetsAndMoons.EARTH.NaifId, Frames.Frame.ICRF, Epoch, byStream);
+        var earth = new CelestialBody(PlanetsAndMoons.Earth, Frames.Frame.ICRF, Epoch, byPath);
+        var other = new CelestialBody(PlanetsAndMoons.Earth.NaifId, Frames.Frame.ICRF, Epoch, byStream);
 
         // Assert: the field takes the option and the constants of the model; the GM of the body, which every other
         // point-mass computation reads, and the name of the model in the CDM do not change
@@ -196,7 +196,7 @@ public class GeopotentialCentralTermTests
     {
         // Arrange
         var epoch = new TimeSystem.Time(2030, 1, 1, 0, 0, 0, TimeScale.TDB);
-        var earth = new CelestialBody(PlanetsAndMoons.EARTH, Frames.Frame.ICRF, epoch,
+        var earth = new CelestialBody(PlanetsAndMoons.Earth, Frames.Frame.ICRF, epoch,
             new GeopotentialModelParameters(Model, 0) { CentralTerm = centralTerm });
         var state = new KeplerianElements(6778137.0, 0.0005, 51.6 * Deg, 20.0 * Deg, 15.0 * Deg, 0.0, earth, epoch,
             Frames.Frame.ICRF).ToStateVector();
@@ -284,7 +284,7 @@ public class GeopotentialCentralTermTests
         // Arrange
         var earth = Earth(10, GeopotentialCentralTerm.ModelGravitationalParameter);
         var state = State(stateName, earth);
-        var relativeToSsb = state.RelativeTo(Barycenters.SOLAR_SYSTEM_BARYCENTER, Aberration.None).ToStateVector();
+        var relativeToSsb = state.RelativeTo(Barycenters.SolarSystemBarycenter, Aberration.None).ToStateVector();
 
         // Act
         var expected = earth.EvaluateGravitationalAcceleration(state);
@@ -312,14 +312,14 @@ public class GeopotentialCentralTermTests
     {
         // Arrange: the Moon, whose field takes its kernel GM without constants, or the same given explicitly: its model
         // GM is then the GM of the body, and the option changes nothing
-        var reference = new CelestialBody(PlanetsAndMoons.MOON, Frames.Frame.ICRF, Epoch);
+        var reference = new CelestialBody(PlanetsAndMoons.Moon, Frames.Frame.ICRF, Epoch);
         GeopotentialModelParameters Parameters(GeopotentialCentralTerm centralTerm) => ownConstants
             ? new GeopotentialModelParameters(Model, 10, reference.GM, reference.EquatorialRadius)
                 { CentralTerm = centralTerm }
             : new GeopotentialModelParameters(Model, 10) { CentralTerm = centralTerm };
-        var withBody = new CelestialBody(PlanetsAndMoons.MOON, Frames.Frame.ICRF, Epoch,
+        var withBody = new CelestialBody(PlanetsAndMoons.Moon, Frames.Frame.ICRF, Epoch,
             Parameters(GeopotentialCentralTerm.BodyGravitationalParameter));
-        var withModel = new CelestialBody(PlanetsAndMoons.MOON, Frames.Frame.ICRF, Epoch,
+        var withModel = new CelestialBody(PlanetsAndMoons.Moon, Frames.Frame.ICRF, Epoch,
             Parameters(GeopotentialCentralTerm.ModelGravitationalParameter));
         var state = new KeplerianElements(1.938e6, 0.01, 1.0, 0.3, 0.2, 0.1, withModel, Epoch, Frames.Frame.ICRF)
             .ToStateVector();
@@ -332,7 +332,7 @@ public class GeopotentialCentralTermTests
     public void Earth_WithTheGmOfTheBodyGivenExplicitly_IsBitIdenticalToTheDefault()
     {
         // Arrange
-        var byDefault = new CelestialBody(PlanetsAndMoons.EARTH, Frames.Frame.ICRF, Epoch,
+        var byDefault = new CelestialBody(PlanetsAndMoons.Earth, Frames.Frame.ICRF, Epoch,
             new GeopotentialModelParameters(Model, 10));
         var explicitly = Earth(10, GeopotentialCentralTerm.BodyGravitationalParameter);
         var state = State("LEO", explicitly);

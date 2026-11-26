@@ -58,7 +58,7 @@ public class SpacecraftToOpmTests
 
     private static (Spacecraft Spacecraft, ApogeeHeightManeuver Burn, PropagationSolution Solution) Propagated(int naifId, string integrator, string frame)
     {
-        var earth = new CelestialBody(PlanetsAndMoons.EARTH, Frame.ICRF, S);
+        var earth = new CelestialBody(PlanetsAndMoons.Earth, Frame.ICRF, S);
         double ra = 6378137.0 + 1000000.0, rp = 6378137.0 + 400000.0, a = (ra + rp) / 2.0;
         var orbit = new KeplerianElements(a, (ra - rp) / (ra + rp), 0.9, 0.3, 1.1, System.Math.PI, earth, S, Frame.ICRF).ToStateVector();
         var initial = frame == "ICRF" ? orbit : orbit.ToFrame(Frame.ECLIPJ2000).ToStateVector();

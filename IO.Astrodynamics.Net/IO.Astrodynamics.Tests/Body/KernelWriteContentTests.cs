@@ -44,7 +44,7 @@ public class KernelWriteContentTests
 
     private static Spacecraft NewSpacecraft(int naifId)
     {
-        var earth = new CelestialBody(PlanetsAndMoons.EARTH, Frames.Frame.ICRF, Start);
+        var earth = new CelestialBody(PlanetsAndMoons.Earth, Frames.Frame.ICRF, Start);
         var orbit = new StateVector(new Vector3(6800000.0, 0.0, 0.0), new Vector3(0.0, 7656.2204182967143, 0.0), earth, Start, Frames.Frame.ICRF);
         return new Spacecraft(naifId, $"WC{-naifId}", 1000.0, orbit);
     }

@@ -76,14 +76,14 @@ public class ForceModelDefectTests
     {
         var geocentric = new StateVector(new Vector3(6700000.0, 0.0, 0.0), new Vector3(0.0, 7713.0, 1000.0), earth,
             Epoch, Frames.Frame.ICRF);
-        var ssbState = geocentric.RelativeTo(Barycenters.SOLAR_SYSTEM_BARYCENTER, Aberration.None).ToStateVector();
+        var ssbState = geocentric.RelativeTo(Barycenters.SolarSystemBarycenter, Aberration.None).ToStateVector();
         int id = NextId();
         return new Spacecraft(id, $"FM{-id}", 100.0, ssbState, 10000.0, new Clock($"fmclk{-id}", 65536), 10.0, 2.2);
     }
 
     private static Spacecraft NewMoonSpacecraft()
     {
-        var moon = PlanetsAndMoons.MOON_BODY;
+        var moon = PlanetsAndMoons.MoonBody;
         double r = 1838000.0;
         int id = NextId();
         return new Spacecraft(id, $"FM{-id}", 100.0, new StateVector(new Vector3(r, 0.0, 0.0), new Vector3(0.0, System.Math.Sqrt(moon.GM / r), 0.0), moon, Epoch,
@@ -93,7 +93,7 @@ public class ForceModelDefectTests
 
     private static CelestialBody EarthWith(IAtmosphericModel atmosphere = null,
         GeopotentialModelParameters geopotential = null) =>
-        new(PlanetsAndMoons.EARTH, geopotentialModelParameters: geopotential, atmosphericModel: atmosphere);
+        new(PlanetsAndMoons.Earth, geopotentialModelParameters: geopotential, atmosphericModel: atmosphere);
 
     private static GeopotentialModelParameters Egm2008(ushort degree) =>
         new(System.IO.Path.Combine(Constants.SolarSystemKernelPath.ToString(), "EGM2008_to70_TideFree"), degree);
@@ -101,8 +101,8 @@ public class ForceModelDefectTests
     /// <summary>An Earth whose GM differs from that of the kernels by 1e-3.</summary>
     private sealed class HeavierEarth : CelestialBody
     {
-        internal HeavierEarth() : base(399, "EARTH", PlanetsAndMoons.EARTH_BODY.Mass * 1.001,
-            PlanetsAndMoons.EARTH_BODY.PolarRadius, PlanetsAndMoons.EARTH_BODY.EquatorialRadius)
+        internal HeavierEarth() : base(399, "EARTH", PlanetsAndMoons.EarthBody.Mass * 1.001,
+            PlanetsAndMoons.EarthBody.PolarRadius, PlanetsAndMoons.EarthBody.EquatorialRadius)
         {
         }
     }
@@ -233,20 +233,20 @@ public class ForceModelDefectTests
     [MemberData(nameof(EveryPath))]
     public void DragOnAModellessCentralEarth_IsNrlmsise00Nominal_OnEveryPath(string path)
     {
-        // Arrange: the same orbit about EARTH_BODY, about an Earth with NRLMSISE-00 at nominal space weather, and
+        // Arrange: the same orbit about EarthBody, about an Earth with NRLMSISE-00 at nominal space weather, and
         // without drag
         var explicitEarth = EarthWith(new Nrlmsise00Model(SpaceWeather.Nominal));
-        var modelless = NewSpacecraft(PlanetsAndMoons.EARTH_BODY);
+        var modelless = NewSpacecraft(PlanetsAndMoons.EarthBody);
         var configured = NewSpacecraft(explicitEarth);
-        var withoutDrag = NewSpacecraft(PlanetsAndMoons.EARTH_BODY);
+        var withoutDrag = NewSpacecraft(PlanetsAndMoons.EarthBody);
 
         // Act
         var defaulted = Run(path, modelless,
-            new CelestialItem[] { PlanetsAndMoons.EARTH_BODY, Stars.SUN_BODY, PlanetsAndMoons.MOON_BODY }, true, false);
+            new CelestialItem[] { PlanetsAndMoons.EarthBody, Stars.SunBody, PlanetsAndMoons.MoonBody }, true, false);
         var expected = Run(path, configured,
-            new CelestialItem[] { explicitEarth, Stars.SUN_BODY, PlanetsAndMoons.MOON_BODY }, true, false);
+            new CelestialItem[] { explicitEarth, Stars.SunBody, PlanetsAndMoons.MoonBody }, true, false);
         var noDrag = Run(path, withoutDrag,
-            new CelestialItem[] { PlanetsAndMoons.EARTH_BODY, Stars.SUN_BODY, PlanetsAndMoons.MOON_BODY }, false, false);
+            new CelestialItem[] { PlanetsAndMoons.EarthBody, Stars.SunBody, PlanetsAndMoons.MoonBody }, false, false);
 
         // Assert: the default is its explicit setting, bit for bit, and it is drag
         double dragEffect = (defaulted.Position - noDrag.Position).Magnitude();
@@ -258,10 +258,10 @@ public class ForceModelDefectTests
     [Fact]
     public void DragOnAModellessEarth_InParallel_EqualsTheSerialRun()
     {
-        // Arrange: four spacecraft about EARTH_BODY, and four about Earths each with its own NRLMSISE-00
-        var bodies = new CelestialItem[] { PlanetsAndMoons.EARTH_BODY, Stars.SUN_BODY, PlanetsAndMoons.MOON_BODY };
-        var serial = Enumerable.Range(0, 4).Select(_ => NewSpacecraft(PlanetsAndMoons.EARTH_BODY)).ToArray();
-        var parallel = Enumerable.Range(0, 4).Select(_ => NewSpacecraft(PlanetsAndMoons.EARTH_BODY)).ToArray();
+        // Arrange: four spacecraft about EarthBody, and four about Earths each with its own NRLMSISE-00
+        var bodies = new CelestialItem[] { PlanetsAndMoons.EarthBody, Stars.SunBody, PlanetsAndMoons.MoonBody };
+        var serial = Enumerable.Range(0, 4).Select(_ => NewSpacecraft(PlanetsAndMoons.EarthBody)).ToArray();
+        var parallel = Enumerable.Range(0, 4).Select(_ => NewSpacecraft(PlanetsAndMoons.EarthBody)).ToArray();
         var ownModels = Enumerable.Range(0, 4).Select(_ => EarthWith(new Nrlmsise00Model())).ToArray();
         var configured = ownModels.Select(e => NewSpacecraft(e)).ToArray();
         var options = new BatchOptions { MaxDegreeOfParallelism = 4 };
@@ -273,7 +273,7 @@ public class ForceModelDefectTests
             .Select(sc => new PropagationTask(sc, OneHour, new PropagationOptions { Integrator = NewRk78(), OutputStep = Step, ThirdBodies = bodies, AtmosphericDrag = true, CovariancePropagation = CovariancePropagationOptions.None })).ToArray(), options);
         double defaultMs = watch.Elapsed.TotalMilliseconds;
         watch.Restart();
-        var reference = BatchPropagator.Propagate(configured.Select((sc, i) => new PropagationTask(sc, OneHour, new PropagationOptions { Integrator = NewRk78(), OutputStep = Step, ThirdBodies = new CelestialItem[] { ownModels[i], Stars.SUN_BODY, PlanetsAndMoons.MOON_BODY }, AtmosphericDrag = true, CovariancePropagation = CovariancePropagationOptions.None })).ToArray(), options);
+        var reference = BatchPropagator.Propagate(configured.Select((sc, i) => new PropagationTask(sc, OneHour, new PropagationOptions { Integrator = NewRk78(), OutputStep = Step, ThirdBodies = new CelestialItem[] { ownModels[i], Stars.SunBody, PlanetsAndMoons.MoonBody }, AtmosphericDrag = true, CovariancePropagation = CovariancePropagationOptions.None })).ToArray(), options);
         double ownMs = watch.Elapsed.TotalMilliseconds;
 
         // Assert
@@ -299,15 +299,15 @@ public class ForceModelDefectTests
     {
         // Arrange: a Moon-centred spacecraft propagated once, without drag
         var spacecraft = NewMoonSpacecraft();
-        spacecraft.Propagate(OneHour, new PropagationOptions { Integrator = new VVIntegratorOptions { Step = Step }, OutputStep = Step, ThirdBodies = new CelestialItem[] { PlanetsAndMoons.MOON_BODY } });
+        spacecraft.Propagate(OneHour, new PropagationOptions { Integrator = new VVIntegratorOptions { Step = Step }, OutputStep = Step, ThirdBodies = new CelestialItem[] { PlanetsAndMoons.MoonBody } });
         var before = spacecraft.PropagatedStates;
         int maneuvers = spacecraft.ExecutedManeuvers.Count;
         var atmosphericEarth = EarthWith(new EarthStandardAtmosphere());
 
         foreach (var bodies in new[]
                  {
-                     new CelestialItem[] { PlanetsAndMoons.MOON_BODY },
-                     new CelestialItem[] { PlanetsAndMoons.MOON_BODY, atmosphericEarth }
+                     new CelestialItem[] { PlanetsAndMoons.MoonBody },
+                     new CelestialItem[] { PlanetsAndMoons.MoonBody, atmosphericEarth }
                  })
         {
             // Act
@@ -331,27 +331,27 @@ public class ForceModelDefectTests
     [MemberData(nameof(ListedEarthPaths))]
     public void DragInSsbMode_FromAListedModellessEarth_IsNrlmsise00Nominal(string path)
     {
-        // Arrange: the orbit relative to the barycenter, its central body the Sun, EARTH_BODY listed; the same orbit with
+        // Arrange: the orbit relative to the barycenter, its central body the Sun, EarthBody listed; the same orbit with
         // an Earth given NRLMSISE-00 at nominal space weather listed; and without drag (amendment of 2026-11-14: an Earth
         // always has at least the base atmosphere)
         var explicitEarth = EarthWith(new Nrlmsise00Model(SpaceWeather.Nominal));
         var window = new Window(Epoch, Epoch.AddMinutes(20.0));
         var step = TimeSpan.FromSeconds(10.0);
-        var modelless = NewSsbSpacecraft(PlanetsAndMoons.EARTH_BODY);
+        var modelless = NewSsbSpacecraft(PlanetsAndMoons.EarthBody);
         var configured = NewSsbSpacecraft(explicitEarth);
-        var withoutDrag = NewSsbSpacecraft(PlanetsAndMoons.EARTH_BODY);
+        var withoutDrag = NewSsbSpacecraft(PlanetsAndMoons.EarthBody);
 
         // Act
-        var defaulted = Run(path, modelless, new CelestialItem[] { PlanetsAndMoons.EARTH_BODY, Stars.SUN_BODY }, true,
+        var defaulted = Run(path, modelless, new CelestialItem[] { PlanetsAndMoons.EarthBody, Stars.SunBody }, true,
             false, window, step);
-        var expected = Run(path, configured, new CelestialItem[] { explicitEarth, Stars.SUN_BODY }, true, false, window,
+        var expected = Run(path, configured, new CelestialItem[] { explicitEarth, Stars.SunBody }, true, false, window,
             step);
-        var noDrag = Run(path, withoutDrag, new CelestialItem[] { PlanetsAndMoons.EARTH_BODY, Stars.SUN_BODY }, false,
+        var noDrag = Run(path, withoutDrag, new CelestialItem[] { PlanetsAndMoons.EarthBody, Stars.SunBody }, false,
             false, window, step);
 
         // Assert: the listed Earth's default is its explicit setting, bit for bit, and it is drag
         double effect = (defaulted.Position - noDrag.Position).Magnitude();
-        _output.WriteLine($"{path}: SSB mode, drag of EARTH_BODY over 20 min {effect:E3} m");
+        _output.WriteLine($"{path}: SSB mode, drag of EarthBody over 20 min {effect:E3} m");
         Assert.True(effect > 1.0, $"{path}: the drag of a listed model-less Earth moved the orbit by {effect:E3} m");
         AssertSameState(expected, defaulted, path);
     }
@@ -361,15 +361,15 @@ public class ForceModelDefectTests
     public void DragFromAListedModellessNonCentralEarth_IsNrlmsise00Nominal(string path)
     {
         // Arrange: a low Earth orbit propagated about the Moon, given an atmospheric model (US 1976, zero at the Earth's
-        // distance), EARTH_BODY listed as a third body; the same with an Earth given NRLMSISE-00 at nominal space weather
+        // distance), EarthBody listed as a third body; the same with an Earth given NRLMSISE-00 at nominal space weather
         // listed; and without drag
-        var moon = new CelestialBody(PlanetsAndMoons.MOON, atmosphericModel: new EarthStandardAtmosphere());
+        var moon = new CelestialBody(PlanetsAndMoons.Moon, atmosphericModel: new EarthStandardAtmosphere());
         var explicitEarth = EarthWith(new Nrlmsise00Model(SpaceWeather.Nominal));
 
         Spacecraft AboutMoon()
         {
             var geocentric = new StateVector(new Vector3(6700000.0, 0.0, 0.0), new Vector3(0.0, 7713.0, 1000.0),
-                PlanetsAndMoons.EARTH_BODY, Epoch, Frames.Frame.ICRF);
+                PlanetsAndMoons.EarthBody, Epoch, Frames.Frame.ICRF);
             int id = NextId();
             return new Spacecraft(id, $"FM{-id}", 100.0, geocentric.RelativeTo(moon, Aberration.None).ToStateVector(), 10000.0,
                 new Clock($"fmclk{-id}", 65536), 10.0, 2.2);
@@ -380,15 +380,15 @@ public class ForceModelDefectTests
 
         // Act
         var defaulted = Run(path, AboutMoon(),
-            new CelestialItem[] { moon, PlanetsAndMoons.EARTH_BODY, Stars.SUN_BODY }, true, false, window, step);
-        var expected = Run(path, AboutMoon(), new CelestialItem[] { moon, explicitEarth, Stars.SUN_BODY }, true, false,
+            new CelestialItem[] { moon, PlanetsAndMoons.EarthBody, Stars.SunBody }, true, false, window, step);
+        var expected = Run(path, AboutMoon(), new CelestialItem[] { moon, explicitEarth, Stars.SunBody }, true, false,
             window, step);
-        var noDrag = Run(path, AboutMoon(), new CelestialItem[] { moon, PlanetsAndMoons.EARTH_BODY, Stars.SUN_BODY },
+        var noDrag = Run(path, AboutMoon(), new CelestialItem[] { moon, PlanetsAndMoons.EarthBody, Stars.SunBody },
             false, false, window, step);
 
         // Assert: the listed Earth adds its default drag, bit for bit its explicit setting
         double effect = (defaulted.Position - noDrag.Position).Magnitude();
-        _output.WriteLine($"{path}: about the Moon, drag of EARTH_BODY over 20 min {effect:E3} m");
+        _output.WriteLine($"{path}: about the Moon, drag of EarthBody over 20 min {effect:E3} m");
         Assert.True(effect > 1.0, $"{path}: the drag of a listed model-less Earth moved the orbit by {effect:E3} m");
         AssertSameState(expected, defaulted, path);
     }
@@ -406,10 +406,10 @@ public class ForceModelDefectTests
         var moonOnly = NewSsbSpacecraft(earth);
 
         // Act
-        var dragged = Run("Propagate", withDrag, new CelestialItem[] { earth, Stars.SUN_BODY }, true, false, window, step);
-        var free = Run("Propagate", withoutDrag, new CelestialItem[] { earth, Stars.SUN_BODY }, false, false, window, step);
+        var dragged = Run("Propagate", withDrag, new CelestialItem[] { earth, Stars.SunBody }, true, false, window, step);
+        var free = Run("Propagate", withoutDrag, new CelestialItem[] { earth, Stars.SunBody }, false, false, window, step);
         var exception = Assert.Throws<InvalidOperationException>(() => Run("Propagate", moonOnly,
-            new CelestialItem[] { PlanetsAndMoons.MOON_BODY, Stars.SUN_BODY }, true, false, window, step));
+            new CelestialItem[] { PlanetsAndMoons.MoonBody, Stars.SunBody }, true, false, window, step));
 
         // Assert: the drag of the listed atmosphere applies; with no listed body that has an atmosphere, the request throws
         double effect = (dragged.Position - free.Position).Magnitude();
@@ -422,10 +422,10 @@ public class ForceModelDefectTests
     public void CdmExport_DragAboutAModellessEarth_NamesNrlmsise00()
     {
         // Arrange
-        var spacecraft = NewSpacecraft(PlanetsAndMoons.EARTH_BODY);
+        var spacecraft = NewSpacecraft(PlanetsAndMoons.EarthBody);
 
         // Act
-        var solution = spacecraft.Propagate(OneHour, new PropagationOptions { Integrator = NewRk78(), OutputStep = Step, ThirdBodies = new CelestialItem[] { PlanetsAndMoons.EARTH_BODY }, AtmosphericDrag = true, CovariancePropagation = Stm });
+        var solution = spacecraft.Propagate(OneHour, new PropagationOptions { Integrator = NewRk78(), OutputStep = Step, ThirdBodies = new CelestialItem[] { PlanetsAndMoons.EarthBody }, AtmosphericDrag = true, CovariancePropagation = Stm });
 
         // Assert: the keyword names the model the force used (CCSDS 508.0-B-1, ATMOSPHERIC_MODEL)
         Assert.Equal("NRLMSISE-00", CdmForceModel.From(solution.Dynamics).AtmosphericModel);
@@ -436,11 +436,11 @@ public class ForceModelDefectTests
     {
         // Arrange
         var explicitEarth = EarthWith(new Nrlmsise00Model(SpaceWeather.Nominal));
-        var spacecraft = NewSpacecraft(PlanetsAndMoons.EARTH_BODY);
+        var spacecraft = NewSpacecraft(PlanetsAndMoons.EarthBody);
         var context = new ForceEvaluationContext(100.0, 2.2, 1.0);
 
         // Act
-        var defaulted = new AtmosphericDrag(spacecraft, PlanetsAndMoons.EARTH_BODY);
+        var defaulted = new AtmosphericDrag(spacecraft, PlanetsAndMoons.EarthBody);
         var configured = new AtmosphericDrag(spacecraft, explicitEarth);
 
         // Assert: at 200 to 800 km, the acceleration and its state partials bit for bit
@@ -449,7 +449,7 @@ public class ForceModelDefectTests
             double r = 6378137.0 + altitude;
             var position = new Vector3(r * 0.6, r * 0.64, r * 0.48);
             var velocity = new Vector3(-5000.0, 5500.0, 1000.0);
-            var a = defaulted.Apply(new StateVector(position, velocity, PlanetsAndMoons.EARTH_BODY, Epoch, Frames.Frame.ICRF));
+            var a = defaulted.Apply(new StateVector(position, velocity, PlanetsAndMoons.EarthBody, Epoch, Frames.Frame.ICRF));
             var b = configured.Apply(new StateVector(position, velocity, explicitEarth, Epoch, Frames.Frame.ICRF));
             Assert.True(a == b, $"{altitude / 1000.0} km: {a} != {b}");
             Assert.True(a.Magnitude() > 0.0);
@@ -459,7 +459,7 @@ public class ForceModelDefectTests
             var dadrB = new double[9];
             var dadvB = new double[9];
             defaulted.AccumulateStatePartials(
-                new StateVector(position, velocity, PlanetsAndMoons.EARTH_BODY, Epoch, Frames.Frame.ICRF), context, dadrA, dadvA);
+                new StateVector(position, velocity, PlanetsAndMoons.EarthBody, Epoch, Frames.Frame.ICRF), context, dadrA, dadvA);
             configured.AccumulateStatePartials(new StateVector(position, velocity, explicitEarth, Epoch, Frames.Frame.ICRF),
                 context, dadrB, dadvB);
             Assert.Equal(dadrB, dadrA);
@@ -467,7 +467,7 @@ public class ForceModelDefectTests
         }
 
         // A body without an atmosphere still has no drag
-        Assert.Throws<ArgumentException>(() => new AtmosphericDrag(spacecraft, PlanetsAndMoons.MOON_BODY));
+        Assert.Throws<ArgumentException>(() => new AtmosphericDrag(spacecraft, PlanetsAndMoons.MoonBody));
     }
 
     #endregion
@@ -503,18 +503,18 @@ public class ForceModelDefectTests
         string list)
     {
         // Arrange: an Earth with US 1976, the observer, listed first or not listed
-        var earth = new CelestialBody(PlanetsAndMoons.EARTH, Frames.Frame.ICRF, Epoch, atmosphericModel: new EarthStandardAtmosphere());
+        var earth = new CelestialBody(PlanetsAndMoons.Earth, Frames.Frame.ICRF, Epoch, atmosphericModel: new EarthStandardAtmosphere());
         bool drag = forces.StartsWith("drag");
         bool srp = forces.Contains("SRP");
         bool ssb = frame == "SSB";
         Spacecraft NewOne() => ssb ? NewSsbSpacecraft(earth) : NewSpacecraft(earth, frame == "ECLIPJ2000" ? Frames.Frame.ECLIPJ2000 : null);
-        CelestialItem central = ssb ? Stars.SUN_BODY : earth;
+        CelestialItem central = ssb ? Stars.SunBody : earth;
         CelestialItem[] unlisted = list switch
         {
             "empty" => Array.Empty<CelestialItem>(),
             "null" => null,
-            "Earth, Moon" => new CelestialItem[] { earth, PlanetsAndMoons.MOON_BODY },
-            _ => new CelestialItem[] { Stars.SUN_BODY, PlanetsAndMoons.MOON_BODY }
+            "Earth, Moon" => new CelestialItem[] { earth, PlanetsAndMoons.MoonBody },
+            _ => new CelestialItem[] { Stars.SunBody, PlanetsAndMoons.MoonBody }
         };
         var listed = new[] { central }.Concat(unlisted ?? Array.Empty<CelestialItem>()).ToArray();
         Window? window = ssb ? new Window(Epoch, Epoch.AddMinutes(20.0)) : null;
@@ -546,23 +546,23 @@ public class ForceModelDefectTests
     [MemberData(nameof(TwinCases))]
     public void ListedTwinWithAnotherModel_Throws_OnEveryPath(string path, string twin)
     {
-        // Arrange: the orbit on EARTH_BODY, propagated once; a listed Earth with another model
-        var spacecraft = NewSpacecraft(PlanetsAndMoons.EARTH_BODY);
-        spacecraft.Propagate(OneHour, new PropagationOptions { Integrator = new VVIntegratorOptions { Step = Step }, OutputStep = Step, ThirdBodies = new CelestialItem[] { PlanetsAndMoons.EARTH_BODY } });
+        // Arrange: the orbit on EarthBody, propagated once; a listed Earth with another model
+        var spacecraft = NewSpacecraft(PlanetsAndMoons.EarthBody);
+        spacecraft.Propagate(OneHour, new PropagationOptions { Integrator = new VVIntegratorOptions { Step = Step }, OutputStep = Step, ThirdBodies = new CelestialItem[] { PlanetsAndMoons.EarthBody } });
         var before = spacecraft.PropagatedStates;
         var flags = NrlmsiseFlags.CreateStandard();
         flags.Switches[9] = 0;
         CelestialItem[] bodies = twin switch
         {
-            "geopotential" => new CelestialItem[] { EarthWith(geopotential: Egm2008(10)), Stars.SUN_BODY },
-            "NRLMSISE-00" => new CelestialItem[] { EarthWith(new Nrlmsise00Model()), Stars.SUN_BODY },
+            "geopotential" => new CelestialItem[] { EarthWith(geopotential: Egm2008(10)), Stars.SunBody },
+            "NRLMSISE-00" => new CelestialItem[] { EarthWith(new Nrlmsise00Model()), Stars.SunBody },
             "space weather" => new CelestialItem[]
             {
-                EarthWith(new Nrlmsise00Model(new SpaceWeather { F107 = 250.0, F107A = 250.0, Ap = 100.0 })), Stars.SUN_BODY
+                EarthWith(new Nrlmsise00Model(new SpaceWeather { F107 = 250.0, F107A = 250.0, Ap = 100.0 })), Stars.SunBody
             },
-            "switch" => new CelestialItem[] { EarthWith(new Nrlmsise00Model(flags, SpaceWeather.Nominal)), Stars.SUN_BODY },
-            "GM" => new CelestialItem[] { new HeavierEarth(), Stars.SUN_BODY },
-            _ => new CelestialItem[] { new CelestialBody(PlanetsAndMoons.EARTH), EarthWith(geopotential: Egm2008(4)) }
+            "switch" => new CelestialItem[] { EarthWith(new Nrlmsise00Model(flags, SpaceWeather.Nominal)), Stars.SunBody },
+            "GM" => new CelestialItem[] { new HeavierEarth(), Stars.SunBody },
+            _ => new CelestialItem[] { new CelestialBody(PlanetsAndMoons.Earth), EarthWith(geopotential: Egm2008(4)) }
         };
 
         // Act
@@ -585,7 +585,7 @@ public class ForceModelDefectTests
     {
         // Arrange
         var scenario = new Scenario("FM", new MissionOf("FM"), OneHour);
-        scenario.AddCelestialItem(PlanetsAndMoons.EARTH_BODY);
+        scenario.AddCelestialItem(PlanetsAndMoons.EarthBody);
         var twin = EarthWith(new EarthStandardAtmosphere(), Egm2008(10));
 
         // Act
@@ -595,9 +595,9 @@ public class ForceModelDefectTests
         _output.WriteLine(exception.Message);
         Assert.Equal("celestialItem", exception.ParamName);
         Assert.Contains("EARTH", exception.Message);
-        Assert.Same(PlanetsAndMoons.EARTH_BODY, Assert.Single(scenario.CelestialBodies));
-        scenario.AddCelestialItem(new CelestialBody(PlanetsAndMoons.EARTH));
-        Assert.Same(PlanetsAndMoons.EARTH_BODY, Assert.Single(scenario.CelestialBodies));
+        Assert.Same(PlanetsAndMoons.EarthBody, Assert.Single(scenario.CelestialBodies));
+        scenario.AddCelestialItem(new CelestialBody(PlanetsAndMoons.Earth));
+        Assert.Same(PlanetsAndMoons.EarthBody, Assert.Single(scenario.CelestialBodies));
     }
 
     public static TheoryData<string, string> EqualTwinCases()
@@ -626,14 +626,14 @@ public class ForceModelDefectTests
             "NRLMSISE-00 nominal" => (EarthWith(new Nrlmsise00Model(SpaceWeather.Nominal)),
                 EarthWith(new Nrlmsise00Model(SpaceWeather.Nominal))),
             "model-free" => (TestHelpers.EarthAtJ2000, TestHelpers.EarthAtJ2000),
-            _ => (Stars.SUN_BODY, new CelestialBody(Stars.Sun))
+            _ => (Stars.SunBody, new CelestialBody(Stars.Sun))
         };
         bool ssb = twin == "SSB Sun";
         var atmosphericEarth = EarthWith(new EarthStandardAtmosphere());
         Spacecraft NewOne() => ssb ? NewSsbSpacecraft(atmosphericEarth) : NewSpacecraft(pair.Observer);
         CelestialItem[] Bodies(CelestialItem central) => ssb
             ? new[] { central, atmosphericEarth }
-            : new[] { central, Stars.SUN_BODY };
+            : new[] { central, Stars.SunBody };
         Window? window = ssb ? new Window(Epoch, Epoch.AddMinutes(20.0)) : null;
         TimeSpan? step = ssb ? TimeSpan.FromSeconds(10.0) : null;
         string runPath = ssb ? "Propagate" : path;
@@ -658,7 +658,7 @@ public class ForceModelDefectTests
     public void UserBuiltForceList_IIntegratorConstructor_Unaffected()
     {
         // Arrange: an integrator given its forces by the caller, and the force-building constructor
-        var earth = PlanetsAndMoons.EARTH_BODY;
+        var earth = PlanetsAndMoons.EarthBody;
         var user = new RK78Integrator(1e-10, 1e-10);
         user.AddForce(new GravitationalAcceleration(earth));
         var userSpacecraft = NewSpacecraft(earth);
@@ -706,9 +706,9 @@ public class ForceModelDefectTests
     {
         // Arrange: a spacecraft propagated once
         var step = TimeSpan.FromTicks(ticks);
-        var bodies = new CelestialItem[] { PlanetsAndMoons.EARTH_BODY };
+        var bodies = new CelestialItem[] { PlanetsAndMoons.EarthBody };
         var window = new Window(Epoch, Epoch.AddMinutes(30.0));
-        var spacecraft = NewSpacecraft(PlanetsAndMoons.EARTH_BODY);
+        var spacecraft = NewSpacecraft(PlanetsAndMoons.EarthBody);
         spacecraft.Propagate(window, new PropagationOptions { Integrator = new VVIntegratorOptions { Step = Step }, OutputStep = Step, ThirdBodies = bodies });
         var before = spacecraft.PropagatedStates;
         var integratorOptions = NewRk78();
@@ -727,7 +727,7 @@ public class ForceModelDefectTests
         {
             var scenario = new Scenario("FM", new MissionOf("FM"), window);
             scenario.AddSpacecraft(spacecraft);
-            scenario.AddCelestialItem(PlanetsAndMoons.EARTH_BODY);
+            scenario.AddCelestialItem(PlanetsAndMoons.EarthBody);
             scenario.AddStar(star);
             return scenario;
         }
@@ -757,7 +757,7 @@ public class ForceModelDefectTests
                     var covTerms = new double[6, 6];
                     for (int i = 0; i < 6; i++) covTerms[i, i] = i < 3 ? 100.0 : 0.01;
                     var cov = new Matrix(covTerms);
-                    var template = NewSpacecraft(PlanetsAndMoons.EARTH_BODY);
+                    var template = NewSpacecraft(PlanetsAndMoons.EarthBody);
                     var state = (StateVector)template.InitialOrbitalParameters;
                     int id = NextId();
                     var withCovariance = new Spacecraft(id, $"FM{-id}", 100.0, new StateVector(state.Position, state.Velocity, state.Observer, state.Epoch, state.Frame, cov), 10000.0,
@@ -788,11 +788,11 @@ public class ForceModelDefectTests
     [Fact]
     public void VVIntegrator_NonPositiveStep_Throws()
     {
-        var state = new StateVector(new Vector3(6700000.0, 0, 0), new Vector3(0, 7713.0, 0), PlanetsAndMoons.EARTH_BODY,
+        var state = new StateVector(new Vector3(6700000.0, 0, 0), new Vector3(0, 7713.0, 0), PlanetsAndMoons.EarthBody,
             Epoch, Frames.Frame.ICRF);
         Assert.Equal("deltaT", Assert.Throws<ArgumentOutOfRangeException>(() => new VVIntegrator(TimeSpan.Zero)).ParamName);
         Assert.Equal("deltaT", Assert.Throws<ArgumentOutOfRangeException>(() => new VVIntegrator(
-            new ForceBase[] { new GravitationalAcceleration(PlanetsAndMoons.EARTH_BODY) }, TimeSpan.FromSeconds(-1.0),
+            new ForceBase[] { new GravitationalAcceleration(PlanetsAndMoons.EarthBody) }, TimeSpan.FromSeconds(-1.0),
             state)).ParamName);
     }
 

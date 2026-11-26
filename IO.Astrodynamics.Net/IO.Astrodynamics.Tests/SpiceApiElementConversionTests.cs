@@ -50,7 +50,7 @@ public class SpiceApiElementConversionTests
 
     private static CelestialItem Observer(string name) => name switch
     {
-        "earth with models" => new CelestialBody(PlanetsAndMoons.EARTH, SpiceFrame.ICRF, Epoch,
+        "earth with models" => new CelestialBody(PlanetsAndMoons.Earth, SpiceFrame.ICRF, Epoch,
             new IO.Astrodynamics.Body.GeopotentialModelParameters("Data/SolarSystem/EGM2008_to70_TideFree", 10), new EarthStandardAtmosphere()),
         "barycentre" => new Barycenter(3, Epoch),
         "custom body" => new CustomBody(),
@@ -131,7 +131,7 @@ public class SpiceApiElementConversionTests
     {
         // Arrange
         var reference = EquinoctialReference.Load();
-        var earth = new CelestialBody(PlanetsAndMoons.EARTH, SpiceFrame.ICRF, Epoch);
+        var earth = new CelestialBody(PlanetsAndMoons.Earth, SpiceFrame.ICRF, Epoch);
         Assert.Equal(reference.Gm["gm_de440"], earth.GM);
         var cases = reference.Eqncpv.Concat(reference.Equinoctial)
             .Where(c => c.Group is not "large L" && System.Math.Sqrt(c.F * c.F + c.G * c.G) < 0.9 && c.P > 0.0 &&

@@ -195,9 +195,9 @@ public class TwoBodyDynamicalTimeTests
         // A LEO about the Earth, a low lunar orbit about the Moon, both inclined
         return body == "Earth"
             ? new KeplerianElements(6778137.0, 0.001, 51.6 * Deg, 30.0 * Deg, 40.0 * Deg, 10.0 * Deg,
-                new CelestialBody(PlanetsAndMoons.EARTH), epoch, Frames.Frame.ICRF)
+                new CelestialBody(PlanetsAndMoons.Earth), epoch, Frames.Frame.ICRF)
             : new KeplerianElements(1837400.0, 0.001, 60.0 * Deg, 30.0 * Deg, 40.0 * Deg, 10.0 * Deg,
-                new CelestialBody(PlanetsAndMoons.MOON), epoch, Frames.Frame.ICRF);
+                new CelestialBody(PlanetsAndMoons.Moon), epoch, Frames.Frame.ICRF);
     }
 
     private static TimeSystem.Time Tagged(TimeSystem.Time utc, string tag) => tag switch

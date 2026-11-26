@@ -41,7 +41,7 @@ public sealed class TextKernelReplaceTests : IDisposable
 
     private static Spacecraft NewSpacecraft(int naifId, string name)
     {
-        var earth = new CelestialBody(PlanetsAndMoons.EARTH, Frames.Frame.ICRF, Start);
+        var earth = new CelestialBody(PlanetsAndMoons.Earth, Frames.Frame.ICRF, Start);
         var orbit = new StateVector(new Vector3(6800000.0, 0.0, 0.0), new Vector3(0.0, 7656.2204182967143, 0.0), earth, Start, Frames.Frame.ICRF);
         return new Spacecraft(naifId, name, 1000.0, orbit);
     }
@@ -75,7 +75,7 @@ public sealed class TextKernelReplaceTests : IDisposable
     {
         var spacecraft = NewSpacecraft(-9331, "TK9331");
         var camera = spacecraft.AddCircularInstrument("CAM", 0.5, Vector3.VectorZ, Vector3.VectorY);
-        var earth = new CelestialBody(PlanetsAndMoons.EARTH);
+        var earth = new CelestialBody(PlanetsAndMoons.Earth);
         var site = new Site(933, "TK933", earth, new Planetodetic(0.4, -0.6, 120.0));
 
         AssertRewriteUnloads(File("clock.tsc"), spacecraft.Clock.Write);

@@ -131,7 +131,7 @@ public class EclipseSolver : ICategorySolver
 
         var lightSource = BodyResolver.Resolve(inputs.LightSource);
         var occultingBodies = inputs.OccultingBodies.Select(BodyResolver.Resolve).ToList();
-        var spacecraft = PropagatedSpacecraft(inputs, new CelestialBody(PlanetsAndMoons.EARTH), epoch, searchWindow);
+        var spacecraft = PropagatedSpacecraft(inputs, new CelestialBody(PlanetsAndMoons.Earth), epoch, searchWindow);
 
         var events = new List<(CelestialBody Body, OccultationType Type, Window Window)>();
         foreach (var body in occultingBodies)
@@ -167,7 +167,7 @@ public class EclipseSolver : ICategorySolver
     // The name of an occulting body in a golden: Earth, Moon
     private static string BodyName(CelestialBody body)
     {
-        return body.NaifId == PlanetsAndMoons.MOON.NaifId ? "Moon" : body.NaifId == PlanetsAndMoons.EARTH.NaifId ? "Earth" : body.Name;
+        return body.NaifId == PlanetsAndMoons.Moon.NaifId ? "Moon" : body.NaifId == PlanetsAndMoons.Earth.NaifId ? "Earth" : body.Name;
     }
 
     // The orientation of the shape of an occulting body, its IAU frame (spec.md section 12.2)

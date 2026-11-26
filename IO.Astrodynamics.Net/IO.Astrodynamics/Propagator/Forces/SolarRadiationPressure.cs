@@ -11,7 +11,7 @@ namespace IO.Astrodynamics.Propagator.Forces;
 
 public class SolarRadiationPressure : ForceBase
 {
-    private readonly CelestialBody _sun = Stars.SUN_BODY;
+    private readonly CelestialBody _sun = Stars.SunBody;
     private readonly Spacecraft _spacecraft;
     private readonly double _term1;
     private readonly CelestialBody[] _occultingBodies;

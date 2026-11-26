@@ -822,7 +822,7 @@ public abstract class CelestialItem : ILocalizable, IEquatable<CelestialItem>
         }
 
         var epoch = corrected.Epoch;
-        var ssb = Barycenters.SOLAR_SYSTEM_BARYCENTER;
+        var ssb = Barycenters.SolarSystemBarycenter;
         var observerSsb = SpiceApi.Instance.ReadEphemerisRaw(epoch, ssb, observer.NaifId, Frame.ICRF, Aberration.None);
         ILocalizable centerObject = frame switch
         {
@@ -928,8 +928,8 @@ public abstract class CelestialItem : ILocalizable, IEquatable<CelestialItem>
 
         return (t, _) =>
         {
-            var fromSsb = SpiceApi.Instance.ReadEphemeris(t, Barycenters.SOLAR_SYSTEM_BARYCENTER.NaifId, centerId, Frame.ICRF, Aberration.None);
-            if (referenceBody.NaifId == Barycenters.SOLAR_SYSTEM_BARYCENTER.NaifId)
+            var fromSsb = SpiceApi.Instance.ReadEphemeris(t, Barycenters.SolarSystemBarycenter.NaifId, centerId, Frame.ICRF, Aberration.None);
+            if (referenceBody.NaifId == Barycenters.SolarSystemBarycenter.NaifId)
             {
                 return new StateVector(fromSsb.Position, fromSsb.Velocity, referenceBody, t, Frame.ICRF);
             }
@@ -981,13 +981,13 @@ public abstract class CelestialItem : ILocalizable, IEquatable<CelestialItem>
         {
             // A kernel-backed spacecraft is read from the SSB, as CSPICE reads it, whatever the centre of its initial
             // orbital parameters (the Earth by default since #620)
-            Spacecraft.Spacecraft { IsSpiceBacked: true } => Barycenters.SOLAR_SYSTEM_BARYCENTER,
+            Spacecraft.Spacecraft { IsSpiceBacked: true } => Barycenters.SolarSystemBarycenter,
             Spacecraft.Spacecraft sc => sc.InitialOrbitalParameters?.Observer as CelestialItem
-                                        ?? Barycenters.SOLAR_SYSTEM_BARYCENTER,
+                                        ?? Barycenters.SolarSystemBarycenter,
             Surface.Site site => site.CelestialBody,
             // A catalogue object, the observer of its initial orbit, as a spacecraft without stored states (R19 of #668)
             TrackedObject tracked => tracked.ReferenceBody,
-            _ => Barycenters.SOLAR_SYSTEM_BARYCENTER
+            _ => Barycenters.SolarSystemBarycenter
         };
     }
 
@@ -1193,7 +1193,7 @@ public abstract class CelestialItem : ILocalizable, IEquatable<CelestialItem>
     /// <returns></returns>
     internal virtual OrbitalParameters.OrbitalParameters GetGeometricStateFromICRF(in Time date)
     {
-        return ItemProvider.GetEphemeris(date, this, Barycenters.SOLAR_SYSTEM_BARYCENTER, Frame.ICRF, Aberration.None);
+        return ItemProvider.GetEphemeris(date, this, Barycenters.SolarSystemBarycenter, Frame.ICRF, Aberration.None);
     }
 
     /// <summary>

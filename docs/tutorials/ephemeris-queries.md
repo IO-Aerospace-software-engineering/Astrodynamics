@@ -21,13 +21,13 @@ SpiceApi.Instance.LoadKernels(new DirectoryInfo("Data/SolarSystem"));
 Create the celestial bodies you want to query and define a reference epoch:
 
 ```csharp
-var earth = PlanetsAndMoons.EARTH_BODY;
-var moon = new CelestialBody(PlanetsAndMoons.MOON);
+var earth = PlanetsAndMoons.EarthBody;
+var moon = new CelestialBody(PlanetsAndMoons.Moon);
 var sun = new CelestialBody(Stars.Sun);
 var epoch = new Time(2024, 6, 21, 12, 0, 0, TimeScale.TDB);
 ```
 
-`PlanetsAndMoons.EARTH_BODY` is a pre-built convenience instance. For other bodies, construct a `CelestialBody` from a NAIF ID constant.
+`PlanetsAndMoons.EarthBody` is a pre-built convenience instance. For other bodies, construct a `CelestialBody` from a NAIF ID constant.
 
 ## Single-Epoch Query
 

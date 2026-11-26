@@ -23,7 +23,7 @@ public class AlbedoRadiationPressureTests
 
     private static CelestialBody CreateEarth(double albedo = 0.306)
     {
-        return new CelestialBody(PlanetsAndMoons.EARTH, Frames.Frame.ICRF, TimeSystem.Time.J2000Tdb, albedo: albedo);
+        return new CelestialBody(PlanetsAndMoons.Earth, Frames.Frame.ICRF, TimeSystem.Time.J2000Tdb, albedo: albedo);
     }
 
     private static Spacecraft CreateSpacecraft(CelestialBody observer, double mass = 100.0,
@@ -63,7 +63,7 @@ public class AlbedoRadiationPressureTests
     private static (StateVector state, double dSunBody, Vector3 sunDir) CreateSubSolarState(
         CelestialBody body, double rSc, TimeSystem.Time epoch)
     {
-        var sunPos = Stars.SUN_BODY.GetEphemeris(epoch, body, Frames.Frame.ICRF, Aberration.None).Position;
+        var sunPos = Stars.SunBody.GetEphemeris(epoch, body, Frames.Frame.ICRF, Aberration.None).Position;
         var sunDir = sunPos.Normalize();
         double dSunBody = sunPos.Magnitude();
 
@@ -94,7 +94,7 @@ public class AlbedoRadiationPressureTests
     [Fact]
     public void ConstructorThrowsOnZeroAlbedo()
     {
-        var earth = new CelestialBody(PlanetsAndMoons.EARTH, Frames.Frame.ICRF, TimeSystem.Time.J2000Tdb, albedo: 0.0);
+        var earth = new CelestialBody(PlanetsAndMoons.Earth, Frames.Frame.ICRF, TimeSystem.Time.J2000Tdb, albedo: 0.0);
         var spc = CreateSpacecraft(earth);
         Assert.Throws<ArgumentException>(() => new AlbedoRadiationPressure(spc, earth));
     }
@@ -102,7 +102,7 @@ public class AlbedoRadiationPressureTests
     [Fact]
     public void ConstructorThrowsOnNegativeAlbedo()
     {
-        var earth = new CelestialBody(PlanetsAndMoons.EARTH, Frames.Frame.ICRF, TimeSystem.Time.J2000Tdb, albedo: -0.1);
+        var earth = new CelestialBody(PlanetsAndMoons.Earth, Frames.Frame.ICRF, TimeSystem.Time.J2000Tdb, albedo: -0.1);
         var spc = CreateSpacecraft(earth);
         Assert.Throws<ArgumentException>(() => new AlbedoRadiationPressure(spc, earth));
     }
@@ -141,7 +141,7 @@ public class AlbedoRadiationPressureTests
         var earth = CreateEarth();
         var epoch = TimeSystem.Time.J2000Tdb;
 
-        var sunPos = Stars.SUN_BODY.GetEphemeris(epoch, earth, Frames.Frame.ICRF, Aberration.None).Position;
+        var sunPos = Stars.SunBody.GetEphemeris(epoch, earth, Frames.Frame.ICRF, Aberration.None).Position;
         var sunDir = sunPos.Normalize();
 
         // Place spacecraft on opposite side of Earth from Sun
@@ -330,7 +330,7 @@ public class AlbedoRadiationPressureTests
     public void MoonAlbedoMatchesAnalyticalFormula()
     {
         // Verify full formula for Moon (albedo 0.12) at sub-solar point
-        var moon = new CelestialBody(PlanetsAndMoons.MOON, Frames.Frame.ICRF, TimeSystem.Time.J2000Tdb, albedo: 0.12);
+        var moon = new CelestialBody(PlanetsAndMoons.Moon, Frames.Frame.ICRF, TimeSystem.Time.J2000Tdb, albedo: 0.12);
         var epoch = TimeSystem.Time.J2000Tdb;
         double rSc = 1837400.0; // ~100 km above Moon surface
 

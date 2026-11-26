@@ -48,7 +48,7 @@ public class ManeuverPreviewTests
     private static readonly Time S = new(2024, 3, 1, 12, 0, 0, TimeScale.TDB);
     private static int _nextId = -850000;
 
-    private static CelestialBody Earth() => new(PlanetsAndMoons.EARTH, Frames.Frame.ICRF, S);
+    private static CelestialBody Earth() => new(PlanetsAndMoons.Earth, Frames.Frame.ICRF, S);
 
     private static Spacecraft NewSpacecraft(CelestialBody earth, out Engine engine)
     {
@@ -187,8 +187,8 @@ public class ManeuverPreviewTests
         var aboutTheEarth = spacecraft.InitialOrbitalParameters.ToStateVector().ToFrame(targetFrame);
         CelestialItem other = observer switch
         {
-            "Sun" => Stars.SUN_BODY,
-            "Moon" => new CelestialBody(PlanetsAndMoons.MOON, Frames.Frame.ICRF, S),
+            "Sun" => Stars.SunBody,
+            "Moon" => new CelestialBody(PlanetsAndMoons.Moon, Frames.Frame.ICRF, S),
             _ => earth
         };
         var state = aboutTheEarth.RelativeTo(other, Aberration.None);
@@ -451,7 +451,7 @@ public class ManeuverPreviewTests
         spacecraft.SetManeuvers(nadir);
         var targetFrame = frame == "ICRF" ? Frames.Frame.ICRF : Frames.Frame.ECLIPJ2000;
         var aboutTheEarth = spacecraft.InitialOrbitalParameters.ToStateVector().ToFrame(targetFrame);
-        CelestialItem other = observer == "Sun" ? Stars.SUN_BODY : new CelestialBody(PlanetsAndMoons.MOON, Frames.Frame.ICRF, S);
+        CelestialItem other = observer == "Sun" ? Stars.SunBody : new CelestialBody(PlanetsAndMoons.Moon, Frames.Frame.ICRF, S);
         var state = aboutTheEarth.RelativeTo(other, Aberration.None);
 
         var orientation = nadir.ComputeStateOrientation(state);

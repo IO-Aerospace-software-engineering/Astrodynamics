@@ -52,7 +52,7 @@ public class AddedStatesGapTests
     // of this class); the reads one-sided at the ends of an arc set it. Twice the worst, rounded up.
     private const double TwoBodyTolerance = 7.0e-4;
 
-    private static CelestialBody Earth() => new(PlanetsAndMoons.EARTH, Frame.ICRF, Start);
+    private static CelestialBody Earth() => new(PlanetsAndMoons.Earth, Frame.ICRF, Start);
 
     private static StateVector Orbit(CelestialItem earth) =>
         new(new Vector3(-7378137.0, 0.0, 0.0), new Vector3(0.0, -5509.9, -4623.4), earth, Start, Frame.ICRF);
@@ -364,7 +364,7 @@ public class AddedStatesGapTests
     public void ALightTimeReadWithinTheMarginOfAnArc_ReadsThatArc(Aberration aberration)
     {
         var earth = Earth();
-        var moon = new CelestialBody(PlanetsAndMoons.MOON, Frame.ICRF, Start);
+        var moon = new CelestialBody(PlanetsAndMoons.Moon, Frame.ICRF, Start);
         var orbit = Orbit(earth);
         var first = States(orbit, 0.0, 3600.0);
         var second = States(orbit, 18000.0, 21600.0);
@@ -471,7 +471,7 @@ public class AddedStatesGapTests
         }
 
         // A light-time read from the Moon at its epoch reads it 1.3 s before: throws
-        var moon = new CelestialBody(PlanetsAndMoons.MOON, Frame.ICRF, Start);
+        var moon = new CelestialBody(PlanetsAndMoons.Moon, Frame.ICRF, Start);
         Assert.Throws<InvalidOperationException>(() => spacecraft.GetEphemeris(lone.Epoch, moon, Frame.ICRF, Aberration.LT));
 
         // The window of its epoch alone is covered; any wider is not
@@ -506,7 +506,7 @@ public class AddedStatesGapTests
     public void AStoreOfOneState_ReadsAtItsEpochOnly_TheTwoBodyOrbitWithoutAState()
     {
         var earth = Earth();
-        var moon = new CelestialBody(PlanetsAndMoons.MOON, Frame.ICRF, Start);
+        var moon = new CelestialBody(PlanetsAndMoons.Moon, Frame.ICRF, Start);
         var orbit = Orbit(earth);
         var spacecraft = new Spacecraft(-7985, "GA7985", 1000.0, orbit, 3000.0, new Clock("GA7985_CLK", 65536), cosparId: "2026-001A");
         spacecraft.AddPropagatedStates(new StateVector(new Vector3(8000000.0, 0.0, 0.0), new Vector3(0.0, 7000.0, 0.0), earth,
