@@ -51,9 +51,9 @@ public class StandardAtmosphereBoundaryTests
     }
 
     internal static CelestialBody Body(string model) => model == "Earth"
-        ? new CelestialBody(SolarSystemObjects.PlanetsAndMoons.EARTH, Frames.Frame.ICRF, Epoch, null,
+        ? new CelestialBody(SolarSystemObjects.PlanetsAndMoons.Earth, Frames.Frame.ICRF, Epoch, null,
             new EarthStandardAtmosphere())
-        : new CelestialBody(SolarSystemObjects.PlanetsAndMoons.MARS, Frames.Frame.ICRF, Epoch, null,
+        : new CelestialBody(SolarSystemObjects.PlanetsAndMoons.Mars, Frames.Frame.ICRF, Epoch, null,
             new MarsStandardAtmosphere());
 
     internal static Spacecraft NewSpacecraft(CelestialBody body, double perigeeAltitude, double area, int naifId)
@@ -223,7 +223,7 @@ public class StandardAtmosphereBoundaryTests
     internal static StateVector StateInTheEclipticThatStoppedAtTheMinimumStep(CelestialBody body) => new(
         new Vector3(5951776.8035060065, -2185955.22927316, -863747.3447828984),
         new Vector3(2859.6050956627564, 6950.0886261075375, 2746.223031659379), body, Epoch,
-        Frames.Frame.ECLIPTIC_J2000);
+        Frames.Frame.ECLIPJ2000);
 
     [Fact]
     public void RK78_IncludeInStepControl_InitialStepsAroundTheDefault_AllComplete()
@@ -363,7 +363,7 @@ public class StandardAtmosphereBoundaryTests
                           $"lowest {lowest / 1000.0:F3} km, end {end.Position}");
         Assert.True(lowest < 11000.0, $"lowest {lowest} m");
         Assert.True(double.IsFinite(end.Position.Magnitude()));
-        Assert.Equal(ecliptic ? Frames.Frame.ECLIPTIC_J2000 : Frames.Frame.ICRF, end.Frame);
+        Assert.Equal(ecliptic ? Frames.Frame.ECLIPJ2000 : Frames.Frame.ICRF, end.Frame);
         if (solution != null)
         {
             WindowEndAssert.ReachesTheEndOf(Window, solution);
@@ -399,7 +399,7 @@ public class StandardAtmosphereBoundaryTests
         for (int i = 0; i < expected.Length; i++)
         {
             Assert.Equal(expected[i].CumulativeTime, actual[i].CumulativeTime);
-            Assert.Equal(expected[i].StepSize, actual[i].StepSize);
+            Assert.Equal(expected[i].StepSizeSeconds, actual[i].StepSizeSeconds);
             Assert.Equal(expected[i].EndPosition, actual[i].EndPosition);
             Assert.Equal(expected[i].EndVelocity, actual[i].EndVelocity);
         }

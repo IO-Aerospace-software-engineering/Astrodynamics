@@ -49,18 +49,18 @@ public class FrameByNameTests
     {
         // Before 11.0.0 an InvalidOperationException, the type of a coverage gap
         AssertUnknownFrame(Assert.Throws<ArgumentException>(() =>
-            SpiceAPI.Instance.TransformFrame(Epoch, new Frames.Frame(name), Frames.Frame.ICRF)), "fromFrame", name);
+            SpiceApi.Instance.TransformFrame(Epoch, new Frames.Frame(name), Frames.Frame.ICRF)), "fromFrame", name);
         AssertUnknownFrame(Assert.Throws<ArgumentException>(() =>
-            SpiceAPI.Instance.TransformFrame(Epoch, Frames.Frame.ICRF, new Frames.Frame(name))), "toFrame", name);
+            SpiceApi.Instance.TransformFrame(Epoch, Frames.Frame.ICRF, new Frames.Frame(name))), "toFrame", name);
         AssertUnknownFrame(Assert.Throws<ArgumentException>(() =>
-            SpiceAPI.Instance.TransformFrame(Epoch, Frames.Frame.ITRF93, new Frames.Frame(name))), "toFrame", name);
+            SpiceApi.Instance.TransformFrame(Epoch, Frames.Frame.ITRF93, new Frames.Frame(name))), "toFrame", name);
     }
 
     [Fact]
     public void ToFrame_OfAnUnknownName_ThrowsArgumentException_BothWays()
     {
         // Arrange: a LEO state about the Earth in ICRF, and the same numbers labelled with an unknown frame
-        var earth = new CelestialBody(PlanetsAndMoons.EARTH);
+        var earth = new CelestialBody(PlanetsAndMoons.Earth);
         var state = new StateVector(new Vector3(6800000.0, 0.0, 0.0), new Vector3(0.0, 7600.0, 0.0), earth, Epoch, Frames.Frame.ICRF);
         var unknown = new StateVector(state.Position, state.Velocity, earth, Epoch, new Frames.Frame("ITRF"));
 
@@ -86,27 +86,27 @@ public class FrameByNameTests
         // named is that of the public call (review of L1: both were named fromFrame)
         var managed = Managed(managedName);
         AssertUnknownFrame(Assert.Throws<ArgumentException>(() =>
-            SpiceAPI.Instance.TransformFrame(Epoch, managed, new Frames.Frame("NOT_A_FRAME"))), "toFrame", "NOT_A_FRAME");
+            SpiceApi.Instance.TransformFrame(Epoch, managed, new Frames.Frame("NOT_A_FRAME"))), "toFrame", "NOT_A_FRAME");
         AssertUnknownFrame(Assert.Throws<ArgumentException>(() =>
-            SpiceAPI.Instance.TransformFrame(Epoch, new Frames.Frame("NOT_A_FRAME"), managed)), "fromFrame", "NOT_A_FRAME");
+            SpiceApi.Instance.TransformFrame(Epoch, new Frames.Frame("NOT_A_FRAME"), managed)), "fromFrame", "NOT_A_FRAME");
     }
 
     [Fact]
     public void TransformFrame_BetweenASiteFrameFromCoordinatesAndAnUnknownName_NamesTheParameterOfTheUnknownEnd()
     {
-        var site = new IO.Astrodynamics.Surface.Site(77, "FRAME_BY_NAME_SITE", new CelestialBody(PlanetsAndMoons.EARTH),
+        var site = new IO.Astrodynamics.Surface.Site(77, "FRAME_BY_NAME_SITE", new CelestialBody(PlanetsAndMoons.Earth),
             new Planetodetic(0.5, 0.7, 100.0));
         AssertUnknownFrame(Assert.Throws<ArgumentException>(() =>
-            SpiceAPI.Instance.TransformFrame(Epoch, site.Frame, new Frames.Frame("NOT_A_FRAME"))), "toFrame", "NOT_A_FRAME");
+            SpiceApi.Instance.TransformFrame(Epoch, site.Frame, new Frames.Frame("NOT_A_FRAME"))), "toFrame", "NOT_A_FRAME");
         AssertUnknownFrame(Assert.Throws<ArgumentException>(() =>
-            SpiceAPI.Instance.TransformFrame(Epoch, new Frames.Frame("NOT_A_FRAME"), site.Frame)), "fromFrame", "NOT_A_FRAME");
+            SpiceApi.Instance.TransformFrame(Epoch, new Frames.Frame("NOT_A_FRAME"), site.Frame)), "fromFrame", "NOT_A_FRAME");
     }
 
     [Fact]
     public void ToFrame_OfAnUnknownName_NamesTheParameterOfThePublicCall_OrNone()
     {
         // Arrange: a LEO about the Earth in ICRF and in TEME, and the same numbers labelled with an unknown frame
-        var earth = new CelestialBody(PlanetsAndMoons.EARTH);
+        var earth = new CelestialBody(PlanetsAndMoons.Earth);
         var state = new StateVector(new Vector3(6800000.0, 0.0, 0.0), new Vector3(0.0, 7600.0, 0.0), earth, Epoch, Frames.Frame.ICRF);
         var teme = new StateVector(state.Position, state.Velocity, earth, Epoch, Frames.Frame.TEME);
         var unknownFrame = new Frames.Frame("NOT_A_FRAME");
@@ -121,9 +121,9 @@ public class FrameByNameTests
         AssertUnknownFrame(Assert.Throws<ArgumentException>(() => Frames.Frame.ICRF.ToFrame(unknownFrame, Epoch)), "targetFrame", "NOT_A_FRAME");
         AssertUnknownFrame(Assert.Throws<ArgumentException>(() => Frames.Frame.TEME.ToFrame(unknownFrame, Epoch)), "targetFrame", "NOT_A_FRAME");
         AssertUnknownFrame(Assert.Throws<ArgumentException>(() => unknownFrame.ToFrame(Frames.Frame.ICRF, Epoch)), null, "NOT_A_FRAME");
-        AssertUnknownFrame(Assert.Throws<ArgumentException>(() => new Frames.Frame("NOT_A_FRAME").GetStateOrientationToICRF(Epoch)), null,
+        AssertUnknownFrame(Assert.Throws<ArgumentException>(() => new Frames.Frame("NOT_A_FRAME").GetStateOrientationToIcrf(Epoch)), null,
             "NOT_A_FRAME");
-        AssertUnknownFrame(Assert.Throws<ArgumentException>(() => new SpiceDataProvider().FrameTransformationToICRF(Epoch, unknownFrame)),
+        AssertUnknownFrame(Assert.Throws<ArgumentException>(() => new SpiceDataProvider().FrameTransformationToIcrf(Epoch, unknownFrame)),
             "source", "NOT_A_FRAME");
     }
 
@@ -136,17 +136,17 @@ public class FrameByNameTests
         var unknown = new Frames.Frame("NOT_A_FRAME");
         var point = new Planetodetic(2.2 * IO.Astrodynamics.Constants.Deg2Rad, 48.0 * IO.Astrodynamics.Constants.Deg2Rad, 0.0);
 
-        AssertUnknownFrame(Assert.Throws<ArgumentException>(() => SpiceAPI.Instance.FindWindowsOnIlluminationConstraint(window, 10, 399,
-            unknown, point, IlluminationAngle.Incidence, RelationnalOperator.Lower, System.Math.PI * 0.5, 0.0, Aberration.None,
+        AssertUnknownFrame(Assert.Throws<ArgumentException>(() => SpiceApi.Instance.FindWindowsOnIlluminationConstraint(window, 10, 399,
+            unknown, point, IlluminationAngle.Incidence, RelationalOperator.LessThan, System.Math.PI * 0.5, 0.0, Aberration.None,
             TimeSpan.FromHours(4.5), 10)), "fixedFrame", "NOT_A_FRAME");
-        AssertUnknownFrame(Assert.Throws<ArgumentException>(() => SpiceAPI.Instance.FindWindowsOnOccultationConstraint(window, 399, 10,
+        AssertUnknownFrame(Assert.Throws<ArgumentException>(() => SpiceApi.Instance.FindWindowsOnOccultationConstraint(window, 399, 10,
             ShapeType.Ellipsoid, 301, ShapeType.Ellipsoid, OccultationType.Any, Aberration.LT, TimeSpan.FromHours(1.0), unknown, null)),
             "frontFrame", "NOT_A_FRAME");
-        AssertUnknownFrame(Assert.Throws<ArgumentException>(() => SpiceAPI.Instance.FindWindowsOnOccultationConstraint(window, 399, 10,
+        AssertUnknownFrame(Assert.Throws<ArgumentException>(() => SpiceApi.Instance.FindWindowsOnOccultationConstraint(window, 399, 10,
             ShapeType.Ellipsoid, 301, ShapeType.Ellipsoid, OccultationType.Any, Aberration.LT, TimeSpan.FromHours(1.0), null, unknown)),
             "targetFrame", "NOT_A_FRAME");
-        AssertUnknownFrame(Assert.Throws<ArgumentException>(() => SpiceAPI.Instance.FindWindowsOnCoordinateConstraint(window, 399, 301,
-            unknown, CoordinateSystem.Rectangular, Coordinate.Z, RelationnalOperator.Greater, 0.0, 0.0, Aberration.None,
+        AssertUnknownFrame(Assert.Throws<ArgumentException>(() => SpiceApi.Instance.FindWindowsOnCoordinateConstraint(window, 399, 301,
+            unknown, CoordinateSystem.Rectangular, Coordinate.Z, RelationalOperator.GreaterThan, 0.0, 0.0, Aberration.None,
             TimeSpan.FromHours(1.0))), "frame", "NOT_A_FRAME");
     }
 
@@ -156,15 +156,15 @@ public class FrameByNameTests
     public void Ephemeris_InAnUnknownFrame_ThrowsArgumentException(Aberration aberration)
     {
         // Arrange
-        var earth = new CelestialBody(PlanetsAndMoons.EARTH);
-        var moon = new CelestialBody(PlanetsAndMoons.MOON);
+        var earth = new CelestialBody(PlanetsAndMoons.Earth);
+        var moon = new CelestialBody(PlanetsAndMoons.Moon);
         var unknown = new Frames.Frame("ITRF");
 
         // Act and assert: the reads by object and by identifier, at an epoch and over a window
         Assert.IsType<SpiceException>(Assert.Throws<ArgumentException>(() => moon.GetEphemeris(Epoch, earth, unknown, aberration)).InnerException);
-        AssertUnknownFrame(Assert.Throws<ArgumentException>(() => SpiceAPI.Instance.ReadEphemeris(Epoch, 399, 301, unknown, aberration)), "frame", "ITRF");
+        AssertUnknownFrame(Assert.Throws<ArgumentException>(() => SpiceApi.Instance.ReadEphemeris(Epoch, 399, 301, unknown, aberration)), "frame", "ITRF");
         AssertUnknownFrame(Assert.Throws<ArgumentException>(() =>
-            SpiceAPI.Instance.ReadEphemeris(new TimeSystem.Window(Epoch, TimeSpan.FromHours(1.0)), 399, 301, unknown, aberration, TimeSpan.FromMinutes(10.0)).ToArray()),
+            SpiceApi.Instance.ReadEphemeris(new TimeSystem.Window(Epoch, TimeSpan.FromHours(1.0)), 399, 301, unknown, aberration, TimeSpan.FromMinutes(10.0)).ToArray()),
             "frame", "ITRF");
     }
 
@@ -174,7 +174,7 @@ public class FrameByNameTests
     [InlineData("icrf")]
     public void TheNamesIcrfAndEme2000_AreOtherNames_WhoseErrorPointsToFrameIcrf(string name)
     {
-        var e = Assert.Throws<ArgumentException>(() => SpiceAPI.Instance.TransformFrame(Epoch, new Frames.Frame(name), Frames.Frame.ICRF));
+        var e = Assert.Throws<ArgumentException>(() => SpiceApi.Instance.TransformFrame(Epoch, new Frames.Frame(name), Frames.Frame.ICRF));
         AssertUnknownFrame(e, "fromFrame", name);
         Assert.Contains("Use Frame.ICRF", e.Message);
         Assert.NotEqual(Frames.Frame.ICRF, new Frames.Frame(name));
@@ -185,7 +185,7 @@ public class FrameByNameTests
     {
         // ITRF93 before the Earth's binary PCK (earth_latest_high_prec.bpc starts in 2000): SPICE(FRAMEDATANOTFOUND)
         var before = new TimeSystem.Time(1950, 1, 1, 0, 0, 0, TimeSystem.TimeScale.TDB);
-        var e = Assert.Throws<SpiceException>(() => SpiceAPI.Instance.TransformFrame(before, Frames.Frame.ITRF93, Frames.Frame.ICRF));
+        var e = Assert.Throws<SpiceException>(() => SpiceApi.Instance.TransformFrame(before, Frames.Frame.ITRF93, Frames.Frame.ICRF));
         Assert.Contains("ITRF93", e.Message);
     }
 
@@ -193,13 +193,13 @@ public class FrameByNameTests
     public void Itrf93_IsTheFrameOfTheEarth()
     {
         // Arrange
-        var earth = new CelestialBody(PlanetsAndMoons.EARTH);
+        var earth = new CelestialBody(PlanetsAndMoons.Earth);
         var byName = new Frames.Frame("ITRF93");
 
         // Act
-        var fromStatic = Frames.Frame.ITRF93.GetStateOrientationToICRF(Epoch);
-        var fromName = byName.GetStateOrientationToICRF(Epoch);
-        var spice = SpiceAPI.Instance.TransformFrame(Epoch, new Frames.Frame("ITRF93"), Frames.Frame.ICRF);
+        var fromStatic = Frames.Frame.ITRF93.GetStateOrientationToIcrf(Epoch);
+        var fromName = byName.GetStateOrientationToIcrf(Epoch);
+        var spice = SpiceApi.Instance.TransformFrame(Epoch, new Frames.Frame("ITRF93"), Frames.Frame.ICRF);
 
         // Assert: one frame (equality by name), the orientation of SPICE's ITRF93 bit for bit
         Assert.Equal("ITRF93", Frames.Frame.ITRF93.Name);

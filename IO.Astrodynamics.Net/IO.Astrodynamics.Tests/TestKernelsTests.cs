@@ -8,7 +8,7 @@ using Xunit;
 namespace IO.Astrodynamics.Tests;
 
 /// <summary>
-/// <see cref="SharedKernels"/> on empty temporary directories, which <see cref="SpiceAPI.LoadKernels"/> records without a
+/// <see cref="SharedKernels"/> on empty temporary directories, which <see cref="SpiceApi.LoadKernels"/> records without a
 /// native call: loaded once, loaded again after a removal, which is observed, a reload by another caller observed, a first
 /// load by another caller left at no load; then the solar system kernels of <see cref="TestKernels"/>, loaded once.
 /// </summary>
@@ -32,20 +32,20 @@ public sealed class TestKernelsTests : IDisposable
     {
         foreach (var directory in new[] { _set, _anchor, _marker })
         {
-            SpiceAPI.Instance.UnloadKernels(new DirectoryInfo(directory.FullName));
+            SpiceApi.Instance.UnloadKernels(new DirectoryInfo(directory.FullName));
         }
 
         _root.Delete(true);
     }
 
-    private static string[] Loaded() => SpiceAPI.Instance.GetLoadedKernels().Select(k => k.FullName).ToArray();
+    private static string[] Loaded() => SpiceApi.Instance.GetLoadedKernels().Select(k => k.FullName).ToArray();
 
     [Fact]
     public void Ensure_Twice_LoadsOnce()
     {
         // Act: another kernel loaded between the two calls
         _kernels.Ensure();
-        SpiceAPI.Instance.LoadKernels(_marker);
+        SpiceApi.Instance.LoadKernels(_marker);
         _kernels.Ensure();
 
         // Assert: one entry, before its anchor and the marker, never reloaded
@@ -89,8 +89,8 @@ public sealed class TestKernelsTests : IDisposable
         }
         finally
         {
-            SpiceAPI.Instance.UnloadKernels(new DirectoryInfo(otherSet.FullName));
-            SpiceAPI.Instance.UnloadKernels(new DirectoryInfo(other.Anchor.FullName));
+            SpiceApi.Instance.UnloadKernels(new DirectoryInfo(otherSet.FullName));
+            SpiceApi.Instance.UnloadKernels(new DirectoryInfo(other.Anchor.FullName));
         }
     }
 
@@ -99,7 +99,7 @@ public sealed class TestKernelsTests : IDisposable
     {
         // Arrange
         _kernels.Ensure();
-        SpiceAPI.Instance.UnloadKernels(_set);
+        SpiceApi.Instance.UnloadKernels(_set);
         Assert.DoesNotContain(_set.FullName, Loaded());
 
         // Act
@@ -120,9 +120,9 @@ public sealed class TestKernelsTests : IDisposable
     {
         // Arrange: what a ClearKernels followed by the former pattern leaves, the folder loaded by another caller and no anchor
         _kernels.Ensure();
-        SpiceAPI.Instance.UnloadKernels(_set);
-        SpiceAPI.Instance.UnloadKernels(_anchor);
-        SpiceAPI.Instance.LoadKernels(_set);
+        SpiceApi.Instance.UnloadKernels(_set);
+        SpiceApi.Instance.UnloadKernels(_anchor);
+        SpiceApi.Instance.LoadKernels(_set);
 
         // Act
         _kernels.Ensure();
@@ -139,7 +139,7 @@ public sealed class TestKernelsTests : IDisposable
     public void Ensure_AfterAFirstLoadByAnotherCaller_LoadsNothing()
     {
         // Arrange: the folder loaded before the first call
-        SpiceAPI.Instance.LoadKernels(_set);
+        SpiceApi.Instance.LoadKernels(_set);
 
         // Act
         _kernels.Ensure();
@@ -158,10 +158,10 @@ public sealed class TestKernelsTests : IDisposable
     {
         // Arrange: a repeated load hands SPICE nothing and moves nothing (11.0.0), a reload moves the folder after the anchor
         _kernels.Ensure();
-        SpiceAPI.Instance.LoadKernels(_set);
+        SpiceApi.Instance.LoadKernels(_set);
         _kernels.Ensure();
         Assert.False(_kernels.ReloadObserved);
-        SpiceAPI.Instance.ReloadKernels(_set);
+        SpiceApi.Instance.ReloadKernels(_set);
 
         // Act
         _kernels.Ensure();
@@ -172,7 +172,7 @@ public sealed class TestKernelsTests : IDisposable
         Assert.Equal(1, _kernels.Loads);
 
         // A removal and a restore afterwards keep the observation, and observe the removal
-        SpiceAPI.Instance.UnloadKernels(_set);
+        SpiceApi.Instance.UnloadKernels(_set);
         _kernels.Ensure();
         Assert.True(_kernels.ReloadObserved);
         Assert.True(_kernels.RemovalObserved);

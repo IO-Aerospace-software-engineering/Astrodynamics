@@ -170,7 +170,7 @@ internal static class TimeGrammar
             return false;
         }
 
-        decimal ticks = decimal.Round((julianDate - (decimal)Time.JULIAN_J2000) * TimeSpan.TicksPerDay,
+        decimal ticks = decimal.Round((julianDate - (decimal)Time.JulianDateJ2000) * TimeSpan.TicksPerDay,
             MidpointRounding.ToEven);
         decimal j2000 = Time.J2000Calendar.Ticks;
         if (ticks < -j2000 || ticks > DateTime.MaxValue.Ticks - j2000)

@@ -79,15 +79,15 @@ public class VariationalSupportTests : IClassFixture<PartialsTestCases>
         // block, Φ_vr ≈ n² t ≈ 4e-8 /s, turns 100 km into 4e-3 m/s, and Φ_rv ≈ t turns 0.1 m/s into 9e4 m, both about
         // 3e-9 relative. The truncation is of order (δ/r)² ≈ 4e-13 and (δv/v)² ≈ 1e-11.
         var end = Start.AddDays(Days);
-        var phi = Phi(Propagate(Heliocentric(Stars.SUN_BODY), new VariationalOptions()), end);
+        var phi = Phi(Propagate(Heliocentric(Stars.SunBody), new VariationalOptions()), end);
 
         // Act
         var expected = new double[36];
         for (int column = 0; column < 6; column++)
         {
             double delta = column < 3 ? 1e5 : 1e-1;
-            var plus = FinalState(Propagate(Perturbed(Heliocentric(Stars.SUN_BODY), column, delta), null));
-            var minus = FinalState(Propagate(Perturbed(Heliocentric(Stars.SUN_BODY), column, -delta), null));
+            var plus = FinalState(Propagate(Perturbed(Heliocentric(Stars.SunBody), column, delta), null));
+            var minus = FinalState(Propagate(Perturbed(Heliocentric(Stars.SunBody), column, -delta), null));
             for (int row = 0; row < 6; row++)
             {
                 expected[row * 6 + column] = (plus[row] - minus[row]) / (2.0 * delta);
@@ -108,8 +108,8 @@ public class VariationalSupportTests : IClassFixture<PartialsTestCases>
         // Arrange: the same physical state relative to the solar system barycentre; the Sun becomes the central body and
         // a change of origin is a translation, so ∂x_Sun/∂x_SSB = I. The observer change rounds the state to about
         // ε |r_SSB| ≈ 1e-5 m, far below what moves Φ at 1e-10.
-        var relativeToSun = Heliocentric(Stars.SUN_BODY);
-        var relativeToBarycentre = relativeToSun.RelativeTo(Barycenters.SOLAR_SYSTEM_BARYCENTER, Aberration.None)
+        var relativeToSun = Heliocentric(Stars.SunBody);
+        var relativeToBarycentre = relativeToSun.RelativeTo(Barycenters.SolarSystemBarycenter, Aberration.None)
             .ToStateVector();
         var end = Start.AddDays(Days);
 
@@ -118,7 +118,7 @@ public class VariationalSupportTests : IClassFixture<PartialsTestCases>
         var fromBarycentre = Propagate(relativeToBarycentre, new VariationalOptions());
 
         // Assert
-        Assert.Equal(Stars.SUN_BODY.NaifId, ((CelestialItem)fromBarycentre.Dynamics.Observer).NaifId);
+        Assert.Equal(Stars.SunBody.NaifId, ((CelestialItem)fromBarycentre.Dynamics.Observer).NaifId);
         double error = StmMeasures.WorstBlockError(Phi(fromBarycentre, end), Phi(fromSun, end));
         _output.WriteLine($"Φ from the barycentre against Φ from the Sun: {error:E2} (worst 3×3 block)");
         Assert.True(error < 1e-10, $"Φ: {error:E2}");
@@ -128,7 +128,7 @@ public class VariationalSupportTests : IClassFixture<PartialsTestCases>
     {
         var spacecraft = PartialsTestCases.Spacecraft(start);
         return spacecraft.PropagateWithVariational(new TimeSystem.Window(Start, Start.AddDays(Days)),
-            new PropagationOptions { Integrator = new RK78IntegratorOptions { FixedStep = TimeSpan.FromSeconds(StepSize) }, OutputStep = TimeSpan.FromSeconds(StepSize), ThirdBodies = new CelestialItem[] { Stars.SUN_BODY, _cases.Earth } },
+            new PropagationOptions { Integrator = new RK78IntegratorOptions { FixedStep = TimeSpan.FromSeconds(StepSize) }, OutputStep = TimeSpan.FromSeconds(StepSize), ThirdBodies = new CelestialItem[] { Stars.SunBody, _cases.Earth } },
             options);
     }
 

@@ -40,7 +40,7 @@ public sealed class FrameTransformationSolverTests : IDisposable
     public FrameTransformationSolverTests(ITestOutputHelper output)
     {
         _output = output;
-        SpiceAPI.Instance.LoadKernels(new DirectoryInfo(Lot1Fixture.KernelsPath));
+        SpiceApi.Instance.LoadKernels(new DirectoryInfo(Lot1Fixture.KernelsPath));
         _directory = Directory.CreateTempSubdirectory("frame-solver-").FullName;
         Directory.CreateDirectory(Path.Combine(_directory, "data"));
         File.Copy(Path.Combine(Lot1Fixture.Root, "data", Kernel), Path.Combine(_directory, "data", Kernel));
@@ -180,7 +180,7 @@ public sealed class FrameTransformationSolverTests : IDisposable
         double difference = Distance((double[])withCaseKernel["position_km"], (double[])withRunnerKernel["position_km"]);
         _output.WriteLine($"suite bpc - runner bpc: {difference:E2} km");
         Assert.InRange(difference, 1e-7, 1e-5);
-        Assert.DoesNotContain(SpiceAPI.Instance.GetLoadedKernels(),
+        Assert.DoesNotContain(SpiceApi.Instance.GetLoadedKernels(),
             k => k.FullName == new FileInfo(Path.Combine(_directory, "data", Kernel)).FullName);
     }
 

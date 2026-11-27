@@ -34,7 +34,7 @@ public class CircularInstrument : Instrument
             .Replace("{ry}", RefVector.Y.ToString(CultureInfo.InvariantCulture))
             .Replace("{rz}", RefVector.Z.ToString(CultureInfo.InvariantCulture))
             .Replace("{angle}", FieldOfView.ToString(CultureInfo.InvariantCulture));
-        SpiceAPI.Instance.WriteTextKernel(outputFile, data);
+        SpiceApi.Instance.WriteTextKernel(outputFile, data);
     }
     
     

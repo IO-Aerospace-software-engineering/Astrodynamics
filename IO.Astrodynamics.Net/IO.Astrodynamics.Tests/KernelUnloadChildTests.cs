@@ -67,9 +67,9 @@ public class KernelUnloadChildTests
     /// c533a6e): fewer than three states, states in several frames, a centre that is not a celestial body, a site whose
     /// window gives two states. Each now throws an <see cref="ArgumentException"/> before the native call and the child goes
     /// on. Run in a child process so that a library without the check ends the child, not the test host. Then the writers
-    /// that replace a file loaded through <see cref="SpiceAPI.LoadKernels"/>, which left it loaded, its replaced data read
+    /// that replace a file loaded through <see cref="SpiceApi.LoadKernels"/>, which left it loaded, its replaced data read
     /// (the native writers) or its path listed (the managed one), and now unload it first, as
-    /// <see cref="SpiceAPI.UnloadKernels"/> does (#706).
+    /// <see cref="SpiceApi.UnloadKernels"/> does (#706).
     /// </summary>
     [Theory]
     [InlineData("WriteEphemeris_OfOneState_ThrowsArgumentException")]
@@ -99,7 +99,7 @@ public class KernelUnloadChildTests
     public void NativeProxy_InAChildProcess(string scenario) => RunKernelUnloadChild(scenario);
 
     /// <summary>
-    /// A loop of symbolic links given to the writers and to <see cref="SpiceAPI.LoadKernels"/>: the native layer's
+    /// A loop of symbolic links given to the writers and to <see cref="SpiceApi.LoadKernels"/>: the native layer's
     /// <c>std::filesystem</c> calls threw <c>filesystem_error</c> (ELOOP) across P/Invoke, which ended the process (#706, exit
     /// code 134 on c533a6e). Each now throws an <see cref="InvalidOperationException"/> with that message.
     /// </summary>

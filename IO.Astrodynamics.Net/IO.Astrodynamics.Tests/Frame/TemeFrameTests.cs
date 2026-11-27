@@ -9,7 +9,6 @@ using IO.Astrodynamics.DataProvider;
 using IO.Astrodynamics.Frames;
 using IO.Astrodynamics.Math;
 using IO.Astrodynamics.OrbitalParameters;
-using IO.Astrodynamics.OrbitalParameters.TLE;
 using IO.Astrodynamics.SolarSystemObjects;
 using IO.Astrodynamics.TimeSystem;
 using IO.Astrodynamics.Exceptions;
@@ -101,7 +100,7 @@ public class TemeFrameTests
 
     private static StateVector ToIcrf(Point p, Frames.Frame teme)
     {
-        var earth = new CelestialBody(PlanetsAndMoons.EARTH);
+        var earth = new CelestialBody(PlanetsAndMoons.Earth);
         return new StateVector(Position(p.Teme), Velocity(p.Teme), earth, Utc(p.Utc), teme).ToFrame(Frames.Frame.ICRF).ToStateVector();
     }
 
@@ -154,7 +153,7 @@ public class TemeFrameTests
     [Fact]
     public void IcrfToTeme_InvertsGmat()
     {
-        var earth = new CelestialBody(PlanetsAndMoons.EARTH);
+        var earth = new CelestialBody(PlanetsAndMoons.Earth);
         double leo = 0.0, geo = 0.0, velocity = 0.0;
         foreach (var p in FramePoints)
         {
@@ -180,7 +179,7 @@ public class TemeFrameTests
         foreach (var p in FramePoints)
         {
             var utc = Utc(p.Utc);
-            double gmst = TemeFrame.Gmst82(TimeSystem_Time.JULIAN_J2000, utc.DaysFromJ2000());
+            double gmst = TemeFrame.Gmst82(TimeSystem_Time.JulianDateJ2000, utc.DaysFromJ2000());
             double difference = System.Math.Abs(System.Math.IEEERemainder(gmst - p.Gmst82Rad, IO.Astrodynamics.Constants.TwoPi));
             worst = System.Math.Max(worst, difference);
             Assert.InRange(gmst, 0.0, IO.Astrodynamics.Constants.TwoPi);
@@ -196,7 +195,7 @@ public class TemeFrameTests
     {
         // v' = R v: no angular velocity (Vallado's teme2eci, GMAT)
         var epoch = Utc("2021-03-20T11:58:50.814");
-        Assert.Equal(Vector3.Zero, Frames.Frame.TEME.GetStateOrientationToICRF(epoch).AngularVelocity);
+        Assert.Equal(Vector3.Zero, Frames.Frame.TEME.GetStateOrientationToIcrf(epoch).AngularVelocity);
         Assert.Equal(Vector3.Zero, Frames.Frame.TEME.ToFrame(Frames.Frame.ICRF, epoch).AngularVelocity);
         Assert.IsType<TemeFrame>(Frames.Frame.TEME);
     }
@@ -239,8 +238,8 @@ public class TemeFrameTests
         // since an object another test class builds during a swap would keep the empty provider
         var provider = new MemoryDataProvider();
         var epoch = Utc("2012-02-17T00:00:00.000");
-        var orientation = provider.FrameTransformationToICRF(epoch, new Frames.Frame("TEME"));
-        Assert.InRange(Angle(orientation.Rotation, Frames.Frame.TEME.GetStateOrientationToICRF(epoch).Rotation), 0.0, 1e-15);
+        var orientation = provider.FrameTransformationToIcrf(epoch, new Frames.Frame("TEME"));
+        Assert.InRange(Angle(orientation.Rotation, Frames.Frame.TEME.GetStateOrientationToIcrf(epoch).Rotation), 0.0, 1e-15);
         Assert.Equal("TEME", orientation.ReferenceFrame.Name);
     }
 
@@ -250,15 +249,15 @@ public class TemeFrameTests
         // TEME -> ITRF93: the managed TEME, then SPICE's ITRF93 with its angular velocity
         var epoch = Utc("2004-04-06T07:51:28.386");
         var itrf93 = new Frames.Frame("ITRF93");
-        var direct = SpiceAPI.Instance.TransformFrame(epoch, Frames.Frame.TEME, itrf93);
+        var direct = SpiceApi.Instance.TransformFrame(epoch, Frames.Frame.TEME, itrf93);
         var composed = Frames.Frame.TEME.ToFrame(itrf93, epoch);
         Assert.InRange(Angle(direct.Rotation, composed.Rotation), 0.0, 1e-15);
         Assert.InRange((direct.AngularVelocity - composed.AngularVelocity).Magnitude(), 0.0, 1e-20);
 
-        var inverse = SpiceAPI.Instance.TransformFrame(epoch, itrf93, new Frames.Frame("TEME"));
+        var inverse = SpiceApi.Instance.TransformFrame(epoch, itrf93, new Frames.Frame("TEME"));
         Assert.InRange(Angle(inverse.Rotation * direct.Rotation, Quaternion.Identity), 0.0, 1e-15);
 
-        var temeToTeme = SpiceAPI.Instance.TransformFrame(epoch, Frames.Frame.TEME, new Frames.Frame("TEME"));
+        var temeToTeme = SpiceApi.Instance.TransformFrame(epoch, Frames.Frame.TEME, new Frames.Frame("TEME"));
         Assert.InRange(Angle(temeToTeme.Rotation, Quaternion.Identity), 0.0, 1e-15);
         Assert.Equal(Vector3.Zero, temeToTeme.AngularVelocity);
     }
@@ -269,10 +268,10 @@ public class TemeFrameTests
         // #454 on the TEME path: ITRF93 before the Earth's binary PCK (2000-01-01) gives no rotation
         var epoch = Utc("1990-01-01T00:00:00.000");
         var ex = Assert.Throws<SpiceException>(() =>
-            SpiceAPI.Instance.TransformFrame(epoch, Frames.Frame.TEME, new Frames.Frame("ITRF93")));
+            SpiceApi.Instance.TransformFrame(epoch, Frames.Frame.TEME, new Frames.Frame("ITRF93")));
         Assert.Contains("ITRF93", ex.Message);
         // TEME itself reads no kernel: TEME <-> ICRF works there
-        Assert.InRange(SpiceAPI.Instance.TransformFrame(epoch, Frames.Frame.TEME, Frames.Frame.ICRF).Rotation.Magnitude(), 1.0 - 1e-15, 1.0 + 1e-15);
+        Assert.InRange(SpiceApi.Instance.TransformFrame(epoch, Frames.Frame.TEME, Frames.Frame.ICRF).Rotation.Magnitude(), 1.0 - 1e-15, 1.0 + 1e-15);
     }
 
     [Fact]
@@ -284,7 +283,7 @@ public class TemeFrameTests
         double position = 0.0, velocity = 0.0;
         foreach (var p in Points.Value.Where(x => x.Kind == "tle"))
         {
-            var tle = new TLE(p.Name, p.Line1, p.Line2);
+            var tle = new Tle(p.Name, p.Line1, p.Line2);
             var teme = p.Instant == null ? tle.ToOsculating() : tle.ToOsculating(Instant(p.Instant));
             Assert.Same(Frames.Frame.TEME, teme.Frame);
             var icrf = teme.ToFrame(Frames.Frame.ICRF).ToStateVector();
@@ -308,8 +307,8 @@ public class TemeFrameTests
     {
         // #558: a read in TEME (managed or by name), CIRS or TIRS is read in J2000 and rotated, as ToFrame
         var epoch = Utc("2021-03-20T11:58:50.814");
-        var moon = new CelestialBody(PlanetsAndMoons.MOON);
-        var earth = new CelestialBody(PlanetsAndMoons.EARTH);
+        var moon = new CelestialBody(PlanetsAndMoons.Moon);
+        var earth = new CelestialBody(PlanetsAndMoons.Earth);
         var icrf = moon.GetEphemeris(epoch, earth, Frames.Frame.ICRF, Aberration.LT);
         foreach (var frame in new[] { Frames.Frame.TEME, new Frames.Frame("TEME"), Frames.Frame.CIRS, Frames.Frame.TIRS })
         {
@@ -320,19 +319,19 @@ public class TemeFrameTests
             Assert.InRange((read.Velocity - converted.Velocity).Magnitude(), 0.0, 1e-9);
         }
 
-        // The SpiceAPI reads by NAIF identifiers, at an epoch and over a window
-        var atEpoch = SpiceAPI.Instance.ReadEphemeris(epoch, 399, 301, Frames.Frame.TEME, Aberration.None);
-        var expected = SpiceAPI.Instance.ReadEphemeris(epoch, 399, 301, Frames.Frame.ICRF, Aberration.None).ToFrame(Frames.Frame.TEME).ToStateVector();
+        // The SpiceApi reads by NAIF identifiers, at an epoch and over a window
+        var atEpoch = SpiceApi.Instance.ReadEphemeris(epoch, 399, 301, Frames.Frame.TEME, Aberration.None);
+        var expected = SpiceApi.Instance.ReadEphemeris(epoch, 399, 301, Frames.Frame.ICRF, Aberration.None).ToFrame(Frames.Frame.TEME).ToStateVector();
         Assert.InRange((atEpoch.Position - expected.Position).Magnitude(), 0.0, 1e-6);
         Assert.Same(Frames.Frame.TEME, atEpoch.Frame);
 
         var window = new Window(epoch, epoch + TimeSpan.FromHours(2.0));
-        var windowed = SpiceAPI.Instance.ReadEphemeris(window, 399, 301, Frames.Frame.CIRS, Aberration.None, TimeSpan.FromHours(1.0))
+        var windowed = SpiceApi.Instance.ReadEphemeris(window, 399, 301, Frames.Frame.CIRS, Aberration.None, TimeSpan.FromHours(1.0))
             .Select(x => x.ToStateVector()).ToArray();
         Assert.Equal(3, windowed.Length);
         foreach (var state in windowed)
         {
-            var reference = SpiceAPI.Instance.ReadEphemeris(state.Epoch, 399, 301, Frames.Frame.ICRF, Aberration.None).ToFrame(Frames.Frame.CIRS).ToStateVector();
+            var reference = SpiceApi.Instance.ReadEphemeris(state.Epoch, 399, 301, Frames.Frame.ICRF, Aberration.None).ToFrame(Frames.Frame.CIRS).ToStateVector();
             Assert.InRange((state.Position - reference.Position).Magnitude(), 0.0, 1e-6);
             Assert.Same(Frames.Frame.CIRS, state.Frame);
         }
@@ -344,8 +343,8 @@ public class TemeFrameTests
         // #682: the frame of a managed spacecraft, which only the library holds, reached spkezr_c by name
         // (SPICE(UNKNOWNFRAME)); with an attitude record it is read in J2000 and rotated by the record, as the frames of #558
         var epoch = new TimeSystem_Time(2024, 3, 1, TimeScale.TDB);
-        var moon = new CelestialBody(PlanetsAndMoons.MOON);
-        var earth = new CelestialBody(PlanetsAndMoons.EARTH);
+        var moon = new CelestialBody(PlanetsAndMoons.Moon);
+        var earth = new CelestialBody(PlanetsAndMoons.Earth);
         var orbit = new KeplerianElements(6800000.0, 0.0001, 51.6 * IO.Astrodynamics.Constants.Deg2Rad, 0.0, 0.0, 0.0, earth, epoch, Frames.Frame.ICRF);
         var spacecraft = new IO.Astrodynamics.Body.Spacecraft.Spacecraft(-6825, "F07SC", 100.0, orbit,
             10000.0, new IO.Astrodynamics.Body.Spacecraft.Clock("F07SC_CLK", 65536));
@@ -354,10 +353,10 @@ public class TemeFrameTests
         // Its record empty, the frame is read by name, as before 11.0.0: no kernel defines F07SC_FRAME, so SPICE rejects it,
         // a bad argument since R25 of #668 (InvalidOperationException before)
         Assert.Contains("F07SC_FRAME", Assert.Throws<ArgumentException>(() => moon.GetEphemeris(epoch, earth, frame, Aberration.LT)).Message);
-        Assert.Throws<ArgumentException>(() => SpiceAPI.Instance.ReadEphemeris(epoch, 399, 301, frame, Aberration.None));
+        Assert.Throws<ArgumentException>(() => SpiceApi.Instance.ReadEphemeris(epoch, 399, 301, frame, Aberration.None));
 
         // An attitude other than the identity, given by hand
-        frame.AddStateOrientationToICRF(new StateOrientation(new Quaternion(new Vector3(1.0, 2.0, 3.0).Normalize(), 0.7), Vector3.Zero, epoch, frame));
+        frame.AddStateOrientationToIcrf(new StateOrientation(new Quaternion(new Vector3(1.0, 2.0, 3.0).Normalize(), 0.7), Vector3.Zero, epoch, frame));
         var icrf = moon.GetEphemeris(epoch, earth, Frames.Frame.ICRF, Aberration.LT);
         var read = moon.GetEphemeris(epoch, earth, frame, Aberration.LT);
         var converted = icrf.ToFrame(frame).ToStateVector();
@@ -365,18 +364,18 @@ public class TemeFrameTests
         Assert.InRange((read.Position - converted.Position).Magnitude(), 0.0, 1e-6);
         Assert.InRange((read.Velocity - converted.Velocity).Magnitude(), 0.0, 1e-9);
 
-        var atEpoch = SpiceAPI.Instance.ReadEphemeris(epoch, 399, 301, frame, Aberration.None);
-        var expected = SpiceAPI.Instance.ReadEphemeris(epoch, 399, 301, Frames.Frame.ICRF, Aberration.None).ToFrame(frame).ToStateVector();
+        var atEpoch = SpiceApi.Instance.ReadEphemeris(epoch, 399, 301, frame, Aberration.None);
+        var expected = SpiceApi.Instance.ReadEphemeris(epoch, 399, 301, Frames.Frame.ICRF, Aberration.None).ToFrame(frame).ToStateVector();
         Assert.Same(frame, atEpoch.Frame);
         Assert.InRange((atEpoch.Position - expected.Position).Magnitude(), 0.0, 1e-6);
         Assert.InRange((atEpoch.Velocity - expected.Velocity).Magnitude(), 0.0, 1e-9);
 
-        var windowed = SpiceAPI.Instance.ReadEphemeris(new Window(epoch, epoch + TimeSpan.FromHours(2.0)), 399, 301, frame, Aberration.None,
+        var windowed = SpiceApi.Instance.ReadEphemeris(new Window(epoch, epoch + TimeSpan.FromHours(2.0)), 399, 301, frame, Aberration.None,
             TimeSpan.FromHours(1.0)).Select(x => x.ToStateVector()).ToArray();
         Assert.Equal(3, windowed.Length);
         foreach (var state in windowed)
         {
-            var reference = SpiceAPI.Instance.ReadEphemeris(state.Epoch, 399, 301, Frames.Frame.ICRF, Aberration.None).ToFrame(frame).ToStateVector();
+            var reference = SpiceApi.Instance.ReadEphemeris(state.Epoch, 399, 301, Frames.Frame.ICRF, Aberration.None).ToFrame(frame).ToStateVector();
             Assert.InRange((state.Position - reference.Position).Magnitude(), 0.0, 1e-6);
             Assert.Same(frame, state.Frame);
         }
@@ -406,12 +405,12 @@ public class TemeFrameTests
 
         public ManagedSpacecraftFrameKernels(int id, string name, TimeSystem_Time start)
         {
-            var earth = new CelestialBody(PlanetsAndMoons.EARTH);
+            var earth = new CelestialBody(PlanetsAndMoons.Earth);
             var orbit = new StateVector(new Vector3(6800000.0, 0.0, 0.0), new Vector3(0.0, 7656.22, 0.0), earth, start, Frames.Frame.ICRF);
             Writer = new IO.Astrodynamics.Body.Spacecraft.Spacecraft(id, name, 1000.0, orbit, 3000.0, new IO.Astrodynamics.Body.Spacecraft.Clock(name + "_CLK", 65536));
             for (int k = 0; k <= 120; k++)
             {
-                Writer.Frame.AddStateOrientationToICRF(new StateOrientation(CkAttitude(k), Vector3.Zero, start.AddSeconds(60.0 * k), Writer.Frame));
+                Writer.Frame.AddStateOrientationToIcrf(new StateOrientation(CkAttitude(k), Vector3.Zero, start.AddSeconds(60.0 * k), Writer.Frame));
             }
 
             _directory = Directory.CreateTempSubdirectory("f07ck-");
@@ -423,12 +422,12 @@ public class TemeFrameTests
             clock.Refresh();
             fk.Refresh();
             Assert.Empty(KernelShadowing.Find([clock, fk], KernelShadowing.SolarSystem));
-            SpiceAPI.Instance.LoadKernels(clock);
-            SpiceAPI.Instance.LoadKernels(fk);
+            SpiceApi.Instance.LoadKernels(clock);
+            SpiceApi.Instance.LoadKernels(fk);
             _kernels = [ck, fk, clock];
             Writer.WriteOrientation(ck);
             ck.Refresh();
-            SpiceAPI.Instance.LoadKernels(ck);
+            SpiceApi.Instance.LoadKernels(ck);
         }
 
         public IO.Astrodynamics.Body.Spacecraft.Spacecraft Writer { get; }
@@ -440,7 +439,7 @@ public class TemeFrameTests
                 kernel.Refresh();
                 if (kernel.Exists)
                 {
-                    SpiceAPI.Instance.UnloadKernels(kernel);
+                    SpiceApi.Instance.UnloadKernels(kernel);
                 }
             }
 
@@ -458,12 +457,12 @@ public class TemeFrameTests
     public void EphemerisReadInManagedSpacecraftFrame_EmptyRecord_ReadsTheKernelsByName()
     {
         var start = new TimeSystem_Time(2024, 3, 1, TimeScale.TDB);
-        var moon = new CelestialBody(PlanetsAndMoons.MOON);
-        var earth = new CelestialBody(PlanetsAndMoons.EARTH);
+        var moon = new CelestialBody(PlanetsAndMoons.Moon);
+        var earth = new CelestialBody(PlanetsAndMoons.Earth);
         using var kernels = new ManagedSpacecraftFrameKernels(-6826, "F07CK", start);
         var fresh = new IO.Astrodynamics.Body.Spacecraft.Spacecraft(-6826, "F07CK", 1000.0, kernels.Writer.InitialOrbitalParameters, 3000.0,
             new IO.Astrodynamics.Body.Spacecraft.Clock("F07CK_CLK", 65536));
-        Assert.Null(fresh.Frame.GetLatestStateOrientationToICRF());
+        Assert.Null(fresh.Frame.GetLatestStateOrientationToIcrf());
 
         double worst = 0.0;
         foreach (int k in new[] { 7, 30, 59, 61, 90, 119 })
@@ -475,7 +474,7 @@ public class TemeFrameTests
             foreach (var read in new[]
                      {
                          moon.GetEphemeris(t, earth, fresh.Frame, Aberration.None),
-                         SpiceAPI.Instance.ReadEphemeris(t, 399, 301, fresh.Frame, Aberration.None),
+                         SpiceApi.Instance.ReadEphemeris(t, 399, 301, fresh.Frame, Aberration.None),
                          moon.GetEphemeris(t, earth, kernels.Writer.Frame, Aberration.None)
                      })
             {
@@ -487,7 +486,7 @@ public class TemeFrameTests
         Assert.True(worst < CkFrameReadAngle, $"{worst:E3} rad");
 
         // An attitude recorded, the identity: the record is read, not the kernels
-        fresh.Frame.AddStateOrientationToICRF(new StateOrientation(Quaternion.Identity, Vector3.Zero, start, fresh.Frame));
+        fresh.Frame.AddStateOrientationToIcrf(new StateOrientation(Quaternion.Identity, Vector3.Zero, start, fresh.Frame));
         var epoch = start.AddSeconds(600.0);
         var fromRecord = moon.GetEphemeris(epoch, earth, fresh.Frame, Aberration.None);
         Assert.Same(fresh.Frame, fromRecord.Frame);
@@ -504,15 +503,15 @@ public class TemeFrameTests
     public void EphemerisReadInManagedSpacecraftFrame_MatchesSpkezrOnTheKernelsWritten()
     {
         var start = new TimeSystem_Time(2024, 3, 1, TimeScale.TDB);
-        var moon = new CelestialBody(PlanetsAndMoons.MOON);
-        var earth = new CelestialBody(PlanetsAndMoons.EARTH);
+        var moon = new CelestialBody(PlanetsAndMoons.Moon);
+        var earth = new CelestialBody(PlanetsAndMoons.Earth);
         using var kernels = new ManagedSpacecraftFrameKernels(-6827, "F07CKV", start);
         double worstPosition = 0.0, worstVelocity = 0.0;
         foreach (int k in new[] { 0, 7, 30, 59, 61, 90, 119 })
         {
             var t = start.AddSeconds(60.0 * k + 17.0);
             var library = moon.GetEphemeris(t, earth, kernels.Writer.Frame, Aberration.None);
-            double et = t.ToTDB().TimeSpanFromJ2000().TotalSeconds;
+            double et = t.ToTdb().TimeSpanFromJ2000().TotalSeconds;
             var st = IO.Astrodynamics.Tests.Body.CspiceDirect.Spkezr("MOON", et, "F07CKV_FRAME", "NONE", "EARTH");
             worstPosition = System.Math.Max(worstPosition, (library.Position - new Vector3(st[0], st[1], st[2]) * 1000.0).Magnitude());
             worstVelocity = System.Math.Max(worstVelocity, (library.Velocity - new Vector3(st[3], st[4], st[5]) * 1000.0).Magnitude());

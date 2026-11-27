@@ -10,7 +10,7 @@ namespace IO.Astrodynamics.Tests.Propagators.Integrators;
 
 public class BisectionEventFinderTests
 {
-    private static readonly TimeSystem.Time Epoch = TimeSystem.Time.J2000TDB;
+    private static readonly TimeSystem.Time Epoch = TimeSystem.Time.J2000Tdb;
 
     // Uniform motion along x at 2 m/s from x = -10 m over a step of 10 s starting 100 s after the segment base epoch:
     // the cubic Hermite interpolation of a straight line is exact, so x crosses zero at 105 s

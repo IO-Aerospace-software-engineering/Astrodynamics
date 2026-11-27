@@ -2,9 +2,9 @@
 
 using System;
 using System.Collections.Generic;
-using IO.Astrodynamics.CCSDS.Common.Enums;
+using IO.Astrodynamics.Ccsds;
 
-namespace IO.Astrodynamics.CCSDS.OPM;
+namespace IO.Astrodynamics.Ccsds;
 
 /// <summary>
 /// Represents the metadata section of an OPM (Orbit Parameter Message).

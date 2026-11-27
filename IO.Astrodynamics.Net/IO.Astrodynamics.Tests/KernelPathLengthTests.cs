@@ -80,7 +80,7 @@ public class KernelPathLengthTests : IDisposable
 
     private static Spacecraft CreateSpacecraft()
     {
-        var earth = new CelestialBody(PlanetsAndMoons.EARTH, Frames.Frame.ICRF, Start);
+        var earth = new CelestialBody(PlanetsAndMoons.Earth, Frames.Frame.ICRF, Start);
         var orbit = new StateVector(new Vector3(6800000.0, 0.0, 0.0), new Vector3(0.0, 7656.2204182967143, 0.0), earth, Start, Frames.Frame.ICRF);
         return new Spacecraft(-8673, "KPL8673", 1000.0, orbit, 3000.0, new Clock("KPL8673_CLK", 65536));
     }
@@ -104,20 +104,20 @@ public class KernelPathLengthTests : IDisposable
                 var spacecraft = CreateSpacecraft();
                 for (int i = 0; i < 3; i++)
                 {
-                    spacecraft.Frame.AddStateOrientationToICRF(new StateOrientation(new Quaternion(Vector3.VectorZ, 0.1 * i), Vector3.Zero,
+                    spacecraft.Frame.AddStateOrientationToIcrf(new StateOrientation(new Quaternion(Vector3.VectorZ, 0.1 * i), Vector3.Zero,
                         Start.AddSeconds(60.0 * i), spacecraft.Frame));
                 }
 
                 var clock = new FileInfo(Path.Combine(_root.FullName, "kpl8673.tsc"));
                 spacecraft.Clock.Write(clock);
-                SpiceAPI.Instance.LoadKernels(clock);
+                SpiceApi.Instance.LoadKernels(clock);
                 try
                 {
                     spacecraft.WriteOrientation(file);
                 }
                 finally
                 {
-                    SpiceAPI.Instance.UnloadKernels(clock);
+                    SpiceApi.Instance.UnloadKernels(clock);
                 }
 
                 break;
@@ -137,17 +137,17 @@ public class KernelPathLengthTests : IDisposable
         // Act: at 255 the kernel is written and SPICE loads it
         Write(writer, atLimit);
         Assert.True(File.Exists(atLimit.FullName));
-        SpiceAPI.Instance.LoadKernels(new FileInfo(atLimit.FullName));
+        SpiceApi.Instance.LoadKernels(new FileInfo(atLimit.FullName));
         try
         {
             // SPICE's own bound: the same kernel at 256 characters cannot be loaded
             var copy = Target(256, "c.bsp");
             File.Copy(atLimit.FullName, copy.FullName);
-            Assert.Throws<SpiceException>(() => SpiceAPI.Instance.LoadKernels(new FileInfo(copy.FullName)));
+            Assert.Throws<SpiceException>(() => SpiceApi.Instance.LoadKernels(new FileInfo(copy.FullName)));
         }
         finally
         {
-            SpiceAPI.Instance.UnloadKernels(new FileInfo(atLimit.FullName));
+            SpiceApi.Instance.UnloadKernels(new FileInfo(atLimit.FullName));
         }
 
         // Assert: at 256 the writer throws before it writes; before #673 CSPICE left a file under the name truncated to 255
@@ -202,6 +202,6 @@ public class KernelPathLengthTests : IDisposable
         var kernel = new FileInfo(Path.Combine(_root.FullName, "s673.bsp"));
         site.WriteEphemeris(window, kernel);
         File.Copy(kernel.FullName, target.FullName);
-        Assert.Throws<SpiceException>(() => SpiceAPI.Instance.LoadKernels(new FileInfo(target.FullName)));
+        Assert.Throws<SpiceException>(() => SpiceApi.Instance.LoadKernels(new FileInfo(target.FullName)));
     }
 }

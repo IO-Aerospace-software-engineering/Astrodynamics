@@ -18,15 +18,9 @@ using System.Threading;
 using System.Threading.Tasks;
 using IO.Astrodynamics;
 using IO.Astrodynamics.Atmosphere;
-using IO.Astrodynamics.Atmosphere.NRLMSISE_00;
 using IO.Astrodynamics.Body;
 using IO.Astrodynamics.Body.Spacecraft;
-using IO.Astrodynamics.CCSDS;
-using IO.Astrodynamics.CCSDS.CDM;
-using IO.Astrodynamics.CCSDS.Common;
-using IO.Astrodynamics.CCSDS.Common.Enums;
-using IO.Astrodynamics.CCSDS.OMM;
-using IO.Astrodynamics.CCSDS.OPM;
+using IO.Astrodynamics.Ccsds;
 using IO.Astrodynamics.Converters;
 using IO.Astrodynamics.Coordinates;
 using IO.Astrodynamics.Cosmographia;
@@ -49,11 +43,11 @@ using IO.Astrodynamics.Propagator.Forces;
 using IO.Astrodynamics.Propagator.Integrators;
 using IO.Astrodynamics.Propagator.MonteCarlo;
 using IO.Astrodynamics.Propagator.Variational;
-using IO.Astrodynamics.SSA;
+using IO.Astrodynamics.Ssa;
 using IO.Astrodynamics.SolarSystemObjects;
 using IO.Astrodynamics.Surface;
 using IO.Astrodynamics.TimeSystem;
-using TLE = IO.Astrodynamics.OrbitalParameters.TLE.TLE;
+using Tle = IO.Astrodynamics.OrbitalParameters.Tle;
 
 namespace DocumentationPageSamples.Reference;
 
@@ -66,7 +60,7 @@ internal static class SitesPage
         #region docs/reference/sites.md:1
         // Inputs: window (Window), step (TimeSpan), site (Site), moon (CelestialBody)
         var windows = GeometryFinder.FindWindows(window,
-            t => site.IlluminationEmission(t, moon, Aberration.None), RelationnalOperator.Lower, Constants.HalfPi, new WindowSearchOptions { Step = step });
+            t => site.IlluminationEmission(t, moon, Aberration.None), RelationalOperator.LessThan, Constants.HalfPi, new WindowSearchOptions { Step = step });
         #endregion
     }
 
@@ -79,6 +73,13 @@ internal static class SitesPage
         var mySite = new Site(100, "MySite", earth,
             new Planetodetic(-117.0 * Constants.Deg2Rad, 34.0 * Constants.Deg2Rad, 1000.0));
         var horizontal = mySite.GetHorizontalCoordinates(epoch, moon, Aberration.LT);
+
+        // The windows of the site within 400000 km of the Moon, the observer, with LT: one window, 2024-01-01 09:42:24.997 to
+        // 14:20:43.029 TDB, as CSPICE's spkcpt_c corrects the site (#489)
+        var windows = moon.FindDistanceWindows(
+            new Window(new Time(2024, 1, 1, TimeScale.TDB), new Time(2024, 1, 2, TimeScale.TDB)),
+            mySite, RelationalOperator.LessThan, 400000000,
+            new WindowSearchOptions { Step = TimeSpan.FromMinutes(10), Aberration = Aberration.LT });
         #endregion
     }
 }

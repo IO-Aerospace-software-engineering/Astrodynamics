@@ -50,7 +50,7 @@ too fast in right ascension, 77.9 times for Polaris (#718).
 | Method | Description |
 |--------|-------------|
 | `GetEquatorialCoordinates(Time)` | The right ascension in [0, 2π), the declination in [−π/2, π/2] and the distance at the epoch (see [The model](#the-model)) |
-| `GetRightAscensionSigma(Time)`, `GetDeclinationSigma(Time)` | √(σ² + (dt σμ)²), radians, not reduced (#709); the right ascension's a true angle |
+| `RightAscensionSigmaAt(Time)`, `DeclinationSigmaAt(Time)` | √(σ² + (dt σμ)²), radians, not reduced (#709); the right ascension's a true angle |
 | `GetGeometricStateRelativeTo(Time, CelestialItem)` | The position and the space velocity ([The velocity](#the-velocity)) minus the reference body's state, in ICRF |
 | `GetEphemeris(Time, ILocalizable, Frame, Aberration)` | The star from an observer at the epoch: a direction, no light time on the star whatever the correction, the stellar aberration of the `+S` corrections ([Occultations](occultations.md)); the velocity the space velocity minus the observer's |
 | `Propagate(Window, TimeSpan)` | The states every step from the start of the window (the points of `Window.Sample`), with the space velocity, replacing those held; a window of zero length throws `ArgumentException` (`window`) and keeps them (11.0.0, decisions 7 and 18 of #668); synchronous (`PropagateAsync`, a bare `Task.Run` of it, is removed in 11.0.0, R28 of #668) |
@@ -61,8 +61,8 @@ too fast in right ascension, 77.9 times for Polaris (#718).
 dt is the Julian years of TDB (365.25 days of 86 400 s) from the catalog epoch to the epoch, both converted to TDB, from
 the exact difference of their ticks, as SOFA's `iauStarpm` takes TDB dates (Note 1): the same instant gives the same
 position in every time frame, and a leap second between two UTC times counts (#709). A catalog epoch is given as a TDB
-time: J2016.0 is `Time.CreateTDB(5844.0 * 86400.0)` (Gaia DR3), J1991.25 `Time.CreateTDB(-3195.9375 * 86400.0)`
-(Hipparcos), J2000.0 `Time.J2000TDB`.
+time: J2016.0 is `Time.CreateTdb(5844.0 * 86400.0)` (Gaia DR3), J1991.25 `Time.CreateTdb(-3195.9375 * 86400.0)`
+(Hipparcos), J2000.0 `Time.J2000Tdb`.
 
 ## The model
 
@@ -129,7 +129,7 @@ A star as observer moves at the same velocity: a state whose observer is a star,
 propagated about the Sun (the central body of a star observer), starts with the star's velocity and moves with it.
 Barnard's star moves such a spacecraft by 1.93e9 m in 6 hours where it stood still before 11.0.0: a state that was
 written relative to the barycenter's motion subtracts the star's space velocity
-(`GetGeometricStateRelativeTo(epoch, Barycenters.SOLAR_SYSTEM_BARYCENTER).Velocity`) to keep its former trajectory.
+(`GetGeometricStateRelativeTo(epoch, Barycenters.SolarSystemBarycenter).Velocity`) to keep its former trajectory.
 
 Its accuracy, the same on Linux x64, Windows x64 and macOS arm64 (CI run 44225490669):
 
@@ -169,7 +169,7 @@ TDB. Barnard's star, Gaia DR3 4472832130942575872 (VizieR I/355, read on 2026-11
 ```csharp
 const double deg = Math.PI / 180.0;
 const double mas = Math.PI / 180.0 / 3600.0 / 1000.0;
-var j2016 = Time.CreateTDB(5844.0 * 86400.0);
+var j2016 = Time.CreateTdb(5844.0 * 86400.0);
 var barnard = new Star(4472832, "Barnard", 2.9e29, "M4V", 9.5, 546.9759 / 1000.0,
     Equatorial.FromRightAscensionDeclination(269.44850252544 * deg, 4.73942005111 * deg, j2016),
     10362.394 * mas, -801.551 * mas, 0.0, 0.0, 0.0, 0.0, j2016);

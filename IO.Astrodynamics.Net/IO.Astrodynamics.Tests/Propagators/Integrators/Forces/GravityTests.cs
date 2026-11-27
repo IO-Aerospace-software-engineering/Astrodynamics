@@ -23,7 +23,7 @@ public class GravityTests
         GravitationalAcceleration gravitationalAcceleration =
             new GravitationalAcceleration(earth);
 
-        StateVector parkingOrbit = new StateVector(new Vector3(6800000.0, 0.0, 0.0), new Vector3(0.0, 7656.2204182967143, 0.0), earth, TimeSystem.Time.J2000TDB,
+        StateVector parkingOrbit = new StateVector(new Vector3(6800000.0, 0.0, 0.0), new Vector3(0.0, 7656.2204182967143, 0.0), earth, TimeSystem.Time.J2000Tdb,
             Frames.Frame.ICRF);
         var res = gravitationalAcceleration.Apply(parkingOrbit);
         Assert.Equal(new Vector3(-8.632087240087564, 5.628817166769551E-05, -6.689811397694593E-05), res, TestHelpers.VectorComparer);

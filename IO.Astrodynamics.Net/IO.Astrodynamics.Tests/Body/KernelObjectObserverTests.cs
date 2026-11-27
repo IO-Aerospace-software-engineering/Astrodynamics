@@ -21,7 +21,7 @@ namespace IO.Astrodynamics.Tests.Body;
 /// not name) that the tests of <see cref="KernelObjectObserverTests"/> read: a station fixed on the Earth at 14.989° E,
 /// 36.876° N, 100 m (about NOTO's place in Sicily; any fixed point would do), its states relative to the Earth in J2000
 /// those of a <see cref="Site"/> built from the same coordinates, every 60 s over a day about 2024-01-01 12:00 TDB, written
-/// by <see cref="SpiceAPI.WriteEphemeris"/> and loaded for the class, unloaded in <see cref="Dispose"/>. No kernel of
+/// by <see cref="SpiceApi.WriteEphemeris"/> and loaded for the class, unloaded in <see cref="Dispose"/>. No kernel of
 /// <c>Data/SolarSystem</c> holds 398989 (its SPKs hold 1 to 10, 199, 299, 301, 399, 391 to 395 and the 17 DSN stations of
 /// <c>earthstns_itrf93_201023.bsp</c>, spiceypy 8.4.0 <c>spkobj</c>, 2026-11-18), which <see cref="KernelShadowing"/>
 /// checks.
@@ -29,7 +29,7 @@ namespace IO.Astrodynamics.Tests.Body;
 public sealed class NotoKernel : IDisposable
 {
     internal const int NotoId = 398989;
-    internal static readonly TimeSystem.Time Epoch = TimeSystem.Time.CreateTDB(757425600.0); // 2024-01-01 12:00:00 TDB
+    internal static readonly TimeSystem.Time Epoch = TimeSystem.Time.CreateTdb(757425600.0); // 2024-01-01 12:00:00 TDB
 
     internal static Planetodetic Coordinates => new(14.989 * IO.Astrodynamics.Constants.Deg2Rad, 36.876 * IO.Astrodynamics.Constants.Deg2Rad, 100.0);
 
@@ -41,25 +41,25 @@ public sealed class NotoKernel : IDisposable
         TestKernels.EnsureSolarSystem();
         _directory = Directory.CreateTempSubdirectory("noto750-");
         Spk = new FileInfo(Path.Combine(_directory.FullName, "noto750.bsp"));
-        var earth = new CelestialBody(PlanetsAndMoons.EARTH);
+        var earth = new CelestialBody(PlanetsAndMoons.Earth);
         var site = new Site(989, "N750", earth, Coordinates);
         var states = site.GetEphemeris(new Window(Epoch.AddHours(-12.0), Epoch.AddHours(12.0)), earth, Frames.Frame.ICRF, Aberration.None,
             TimeSpan.FromSeconds(60.0)).Select(s => s.ToStateVector()).ToArray();
-        SpiceAPI.Instance.WriteEphemeris(Spk, NotoId, states);
+        SpiceApi.Instance.WriteEphemeris(Spk, NotoId, states);
         Assert.Empty(KernelShadowing.Find([Spk], KernelShadowing.SolarSystem));
-        SpiceAPI.Instance.LoadKernels(Spk);
+        SpiceApi.Instance.LoadKernels(Spk);
     }
 
     public void Dispose()
     {
-        SpiceAPI.Instance.UnloadKernels(Spk);
+        SpiceApi.Instance.UnloadKernels(Spk);
         _directory.Delete(true);
     }
 }
 
 /// <summary>
 /// #750: SPICE's built-in NOTO (398989) and NEW NORCIA (398990) as observers. Their identifiers have the form of a site of
-/// 398 (<see cref="SpiceAPI.IsSiteId"/>), a body SPICE does not name (<see cref="SpiceAPI.IsSiteOfNamedBody"/>), so they
+/// 398 (<see cref="SpiceApi.IsSiteId"/>), a body SPICE does not name (<see cref="SpiceApi.IsSiteOfNamedBody"/>), so they
 /// are objects of the kernels read by their identifier (internal <see cref="KernelObject"/>): the read is
 /// <c>spkezr_c</c>'s, the state with their SPK loaded and SPICE's missing-data error otherwise. Before the fix the reads by
 /// identifiers built them as a site of the body 398 and threw <see cref="ArgumentException"/> "The NAIF identifier 398 has
@@ -72,8 +72,8 @@ public class KernelObjectObserverTests : IClassFixture<NotoKernel>
 
     private static readonly Aberration[] Flags =
     [
-        Aberration.None, Aberration.LT, Aberration.LTS, Aberration.CN, Aberration.CNS, Aberration.XLT, Aberration.XLTS,
-        Aberration.XCN, Aberration.XCNS
+        Aberration.None, Aberration.LT, Aberration.LtS, Aberration.CN, Aberration.CnS, Aberration.XLT, Aberration.XltS,
+        Aberration.XCN, Aberration.XcnS
     ];
 
     // The NOTO SPK against the site it was written from, the interpolation of the native writer's segment between its 60 s
@@ -101,8 +101,8 @@ public class KernelObjectObserverTests : IClassFixture<NotoKernel>
         foreach (var epoch in Epochs)
         {
             // Act
-            var fromNoto = SpiceAPI.Instance.ReadEphemeris(epoch, NotoKernel.NotoId, 399, Frames.Frame.ICRF, Aberration.None);
-            var toNoto = SpiceAPI.Instance.ReadEphemeris(epoch, 399, NotoKernel.NotoId, Frames.Frame.ICRF, Aberration.None);
+            var fromNoto = SpiceApi.Instance.ReadEphemeris(epoch, NotoKernel.NotoId, 399, Frames.Frame.ICRF, Aberration.None);
+            var toNoto = SpiceApi.Instance.ReadEphemeris(epoch, 399, NotoKernel.NotoId, Frames.Frame.ICRF, Aberration.None);
 
             // Assert: the observer is NOTO, read by its identifier; the geometric state is the negation of NOTO from the Earth
             Assert.IsType<KernelObject>(fromNoto.Observer);
@@ -118,13 +118,13 @@ public class KernelObjectObserverTests : IClassFixture<NotoKernel>
     [Fact]
     public void ReadEphemeris_OfNoto_IsTheSiteItWasWrittenFrom()
     {
-        var earth = new CelestialBody(PlanetsAndMoons.EARTH);
+        var earth = new CelestialBody(PlanetsAndMoons.Earth);
         var site = new Site(989, "N750", earth, NotoKernel.Coordinates);
         double worstPosition = 0.0, worstVelocity = 0.0;
         for (int k = 0; k <= 48; k++)
         {
             var epoch = NotoKernel.Epoch.AddSeconds(-11.0 * 3600.0 + 1650.5 * k);
-            var read = SpiceAPI.Instance.ReadEphemeris(epoch, 399, NotoKernel.NotoId, Frames.Frame.ICRF, Aberration.None);
+            var read = SpiceApi.Instance.ReadEphemeris(epoch, 399, NotoKernel.NotoId, Frames.Frame.ICRF, Aberration.None);
             var expected = site.GetGeometricStateRelativeTo(epoch, earth);
             worstPosition = System.Math.Max(worstPosition, (read.Position - expected.Position).Magnitude());
             worstVelocity = System.Math.Max(worstVelocity, (read.Velocity - expected.Velocity).Magnitude());
@@ -140,14 +140,14 @@ public class KernelObjectObserverTests : IClassFixture<NotoKernel>
     {
         // Act
         var window = new Window(NotoKernel.Epoch, NotoKernel.Epoch.AddSeconds(600.0));
-        var states = SpiceAPI.Instance.ReadEphemeris(window, NotoKernel.NotoId, 301, Frames.Frame.ICRF, Aberration.LT, TimeSpan.FromSeconds(120.0))
+        var states = SpiceApi.Instance.ReadEphemeris(window, NotoKernel.NotoId, 301, Frames.Frame.ICRF, Aberration.LT, TimeSpan.FromSeconds(120.0))
             .Select(s => s.ToStateVector()).ToArray();
 
         // Assert
         Assert.Equal(6, states.Length);
         foreach (var state in states)
         {
-            var single = SpiceAPI.Instance.ReadEphemeris(state.Epoch, NotoKernel.NotoId, 301, Frames.Frame.ICRF, Aberration.LT);
+            var single = SpiceApi.Instance.ReadEphemeris(state.Epoch, NotoKernel.NotoId, 301, Frames.Frame.ICRF, Aberration.LT);
             Assert.Equal(NotoKernel.NotoId, state.Observer.NaifId);
             Assert.Equal(single.Position, state.Position);
             Assert.Equal(single.Velocity, state.Velocity);
@@ -160,12 +160,12 @@ public class KernelObjectObserverTests : IClassFixture<NotoKernel>
     public void ReadEphemeris_FromNewNorciaWithoutItsSpk_IsSpicesMissingData()
     {
         var exception = Assert.Throws<SpiceException>(() =>
-            SpiceAPI.Instance.ReadEphemeris(NotoKernel.Epoch, NewNorciaId, 399, Frames.Frame.ICRF, Aberration.None));
+            SpiceApi.Instance.ReadEphemeris(NotoKernel.Epoch, NewNorciaId, 399, Frames.Frame.ICRF, Aberration.None));
         Assert.Contains("398990", exception.Message);
         Assert.DoesNotContain("398 has no name", exception.Message);
         var window = new Window(NotoKernel.Epoch, NotoKernel.Epoch.AddSeconds(60.0));
         Assert.Throws<SpiceException>(() =>
-            SpiceAPI.Instance.ReadEphemeris(window, NewNorciaId, 399, Frames.Frame.ICRF, Aberration.None, TimeSpan.FromSeconds(60.0)));
+            SpiceApi.Instance.ReadEphemeris(window, NewNorciaId, 399, Frames.Frame.ICRF, Aberration.None, TimeSpan.FromSeconds(60.0)));
     }
 
     /// <summary>
@@ -183,7 +183,7 @@ public class KernelObjectObserverTests : IClassFixture<NotoKernel>
             {
                 foreach (var epoch in Epochs)
                 {
-                    var read = SpiceAPI.Instance.ReadEphemeris(epoch, NotoKernel.NotoId, 301, frame, flag);
+                    var read = SpiceApi.Instance.ReadEphemeris(epoch, NotoKernel.NotoId, 301, frame, flag);
                     var expected = CspiceDirect.Spkezr("MOON", epoch.TimeSpanFromJ2000().TotalSeconds, frame == Frames.Frame.ICRF ? "J2000" : "ITRF93",
                         flag.GetDescription(), "NOTO");
                     worstPosition = System.Math.Max(worstPosition, (read.Position - new Vector3(expected[0], expected[1], expected[2]) * 1000.0).Magnitude());
@@ -207,10 +207,10 @@ public class KernelObjectObserverTests : IClassFixture<NotoKernel>
     [Fact]
     public void FrameCentredOnNoto_RotatesAtTheEpochOfNoto()
     {
-        var earth = new CelestialBody(PlanetsAndMoons.EARTH);
-        var moon = new CelestialBody(PlanetsAndMoons.MOON);
+        var earth = new CelestialBody(PlanetsAndMoons.Earth);
+        var moon = new CelestialBody(PlanetsAndMoons.Moon);
         var site = new Site(750, "G750", earth, new Planetodetic(-117.0 * IO.Astrodynamics.Constants.Deg2Rad, 34.0 * IO.Astrodynamics.Constants.Deg2Rad, 1000.0));
-        var noto = SpiceAPI.CreateKernelObject(NotoKernel.NotoId);
+        var noto = SpiceApi.CreateKernelObject(NotoKernel.NotoId);
         var itrf93 = new Frames.Frame("ITRF93");
         var directory = Directory.CreateTempSubdirectory("noto750tk-");
         var frameKernel = new FileInfo(Path.Combine(directory.FullName, "noto750.tf"));
@@ -219,19 +219,19 @@ public class KernelObjectObserverTests : IClassFixture<NotoKernel>
                                                "TKFRAME_1750989_SPEC = 'MATRIX'\nTKFRAME_1750989_RELATIVE = 'ITRF93'\n" +
                                                "TKFRAME_1750989_MATRIX = (1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0)\n\\begintext\n");
         Assert.Empty(KernelShadowing.Find([frameKernel], KernelShadowing.SolarSystem));
-        SpiceAPI.Instance.LoadKernels(frameKernel);
+        SpiceApi.Instance.LoadKernels(frameKernel);
         try
         {
             var frame = new Frames.Frame("NOTO750_TK");
-            Assert.Equal(NotoKernel.NotoId, SpiceAPI.NonInertialFrameCenter(frame));
+            Assert.Equal(NotoKernel.NotoId, SpiceApi.NonInertialFrameCenter(frame));
             double worstPosition = 0.0, worstVelocity = 0.0;
-            foreach (var flag in new[] { Aberration.LT, Aberration.CN, Aberration.XLT, Aberration.XCNS })
+            foreach (var flag in new[] { Aberration.LT, Aberration.CN, Aberration.XLT, Aberration.XcnS })
             {
                 foreach (var t in Epochs)
                 {
                     var read = moon.GetEphemeris(t, site, frame, flag);
                     var icrf = moon.GetEphemeris(t, site, Frames.Frame.ICRF, flag);
-                    var lightTimeOnly = flag == Aberration.XCNS ? Aberration.XCN : flag;
+                    var lightTimeOnly = flag == Aberration.XcnS ? Aberration.XCN : flag;
                     var center = noto.GetEphemeris(t, site, Frames.Frame.ICRF, lightTimeOnly);
                     double sign = flag is Aberration.LT or Aberration.CN ? -1.0 : 1.0;
                     var expected = LightTimeCorrectionTests.RotatedAtTheCentreEpoch(icrf, center, itrf93, sign);
@@ -246,7 +246,7 @@ public class KernelObjectObserverTests : IClassFixture<NotoKernel>
         }
         finally
         {
-            SpiceAPI.Instance.UnloadKernels(frameKernel);
+            SpiceApi.Instance.UnloadKernels(frameKernel);
             directory.Delete(true);
         }
     }

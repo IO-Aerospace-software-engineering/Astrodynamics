@@ -46,7 +46,7 @@ public class ConvertToOwnFrameTests
         var tdb = new TimeSystem.Time(new DateTime(ticks), TimeScale.TDB);
 
         // Act
-        var converted = tdb.ToTDB();
+        var converted = tdb.ToTdb();
 
         // Assert
         Assert.Equal(ticks, converted.DateTime.Ticks);
@@ -73,7 +73,7 @@ public class ConvertToOwnFrameTests
         // The TDB time of the instant of the rounding, to TT and back to TDB: the series at two arguments rounded on
         // either side of a half tick, a tick away
         var tdb = new TimeSystem.Time(new DateTime(2032, 12, 20, 20, 24, 0), TimeScale.TDB);
-        Assert.Equal(1, tdb.ToTT().ToTDB().DateTime.Ticks - tdb.DateTime.Ticks);
+        Assert.Equal(1, tdb.ToTT().ToTdb().DateTime.Ticks - tdb.DateTime.Ticks);
     }
 
     [Fact]
@@ -81,7 +81,7 @@ public class ConvertToOwnFrameTests
     {
         // Arrange: a LEO with its covariance at 2024-05-09T12:00 TDB, the start of the window
         var epoch = new TimeSystem.Time(new DateTime(2024, 5, 9, 12, 0, 0), TimeScale.TDB);
-        var earth = new CelestialBody(PlanetsAndMoons.EARTH);
+        var earth = new CelestialBody(PlanetsAndMoons.Earth);
         var state = new KeplerianElements(6778137.0, 0.0005, 51.6 * IO.Astrodynamics.Constants.Deg2Rad, 0.3, 0.2, 1.0,
             earth, epoch, Frames.Frame.ICRF).ToStateVector();
         var covarianceTerms = new double[6, 6];

@@ -74,7 +74,7 @@ public class GeopotentialVariationalTests : IClassFixture<GeopotentialPartialsBo
     public void EnableVariationalEquations_GivesTheDegreeToTheGravityForce_AndIgnoresItWithoutGeopotential()
     {
         // Arrange
-        var pointMassEarth = new CelestialBody(PlanetsAndMoons.EARTH, Frames.Frame.ICRF, Start);
+        var pointMassEarth = new CelestialBody(PlanetsAndMoons.Earth, Frames.Frame.ICRF, Start);
         var first = Propagator(_bodies.Earths[10]);
         var second = Propagator(pointMassEarth);
         var withGeopotential = (RK78Integrator)first.Integrator;
@@ -109,8 +109,8 @@ public class GeopotentialVariationalTests : IClassFixture<GeopotentialPartialsBo
             Assert.Equal(reference.Count, steps.Count);
             for (int k = 0; k < steps.Count; k++)
             {
-                Assert.Equal(BitConverter.DoubleToInt64Bits(reference[k].StepSize),
-                    BitConverter.DoubleToInt64Bits(steps[k].StepSize));
+                Assert.Equal(BitConverter.DoubleToInt64Bits(reference[k].StepSizeSeconds),
+                    BitConverter.DoubleToInt64Bits(steps[k].StepSizeSeconds));
                 Assert.Equal(reference[k].EndPosition, steps[k].EndPosition);
                 Assert.Equal(reference[k].EndVelocity, steps[k].EndVelocity);
             }
@@ -154,11 +154,11 @@ public class GeopotentialVariationalTests : IClassFixture<GeopotentialPartialsBo
     public void Leo_WithTheModelCentralTerm_PhiMatchesCentralDifferencesOfWholePropagations()
     {
         // Arrange
-        var earth = new CelestialBody(PlanetsAndMoons.EARTH, Frames.Frame.ICRF, Start,
+        var earth = new CelestialBody(PlanetsAndMoons.Earth, Frames.Frame.ICRF, Start,
             new GeopotentialModelParameters(GeopotentialPartialsBodies.Model, 10)
                 { CentralTerm = GeopotentialCentralTerm.ModelGravitationalParameter });
         var bodies = new CelestialItem[]
-            { earth, new CelestialBody(PlanetsAndMoons.MOON, Frames.Frame.ICRF, Start), new CelestialBody(Stars.Sun) };
+            { earth, new CelestialBody(PlanetsAndMoons.Moon, Frames.Frame.ICRF, Start), new CelestialBody(Stars.Sun) };
         var start = Leo(earth);
         var window = new TimeSystem.Window(Start, Start.AddHours(6.0));
         var solution = PartialsTestCases.Spacecraft(start).PropagateWithVariational(window,
@@ -198,7 +198,7 @@ public class GeopotentialVariationalTests : IClassFixture<GeopotentialPartialsBo
     private static PropagationSolution Propagate(CelestialBody earth, StateVector start, TimeSystem.Time end,
         VariationalOptions options, double tolerance)
     {
-        var moon = new CelestialBody(PlanetsAndMoons.MOON, Frames.Frame.ICRF, Start);
+        var moon = new CelestialBody(PlanetsAndMoons.Moon, Frames.Frame.ICRF, Start);
         var sun = new CelestialBody(Stars.Sun);
         return PartialsTestCases.Spacecraft(start).PropagateWithVariational(new TimeSystem.Window(Start, end),
             new PropagationOptions { Integrator = new RK78IntegratorOptions { AbsoluteTolerance = tolerance, RelativeTolerance = tolerance }, OutputStep = TimeSpan.FromSeconds(600.0), ThirdBodies = new CelestialItem[] { earth, moon, sun } },

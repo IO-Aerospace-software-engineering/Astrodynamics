@@ -232,7 +232,7 @@ namespace IO.Astrodynamics.Tests.Math
         {
             Quaternion q1 = new Quaternion(Vector3.VectorX, 0.0);
             Quaternion q2 = new Quaternion(Vector3.VectorX, IO.Astrodynamics.Constants.HalfPi);
-            Quaternion q3 = q1.SLERP(q2, 0.5);
+            Quaternion q3 = q1.Slerp(q2, 0.5);
             Assert.Equal(0.92387953251128674, q3.W, 12);
             Assert.Equal(0.38268343236508978, q3.VectorPart.X, 12);
             Assert.Equal(0.0, q3.VectorPart.Y);
@@ -256,7 +256,7 @@ namespace IO.Astrodynamics.Tests.Math
         {
             Quaternion q1 = new Quaternion(Vector3.VectorX, 0.0);
             Quaternion q2 = new Quaternion(Vector3.VectorX, IO.Astrodynamics.Constants.TwoPi - IO.Astrodynamics.Constants.HalfPi);
-            Quaternion q3 = q1.SLERP(q2, 0.5); //Expected -45° on X
+            Quaternion q3 = q1.Slerp(q2, 0.5); //Expected -45° on X
             Assert.Equal(0.92387953251128674, q3.W, 12);
             Assert.Equal(-0.38268343236508984, q3.VectorPart.X, 12);
             Assert.Equal(0.0, q3.VectorPart.Y);
@@ -473,7 +473,7 @@ namespace IO.Astrodynamics.Tests.Math
         {
             var from = Quaternion.Identity * 2.0;
             var to = new Quaternion(Vector3.VectorX, IO.Astrodynamics.Constants.HalfPi) * 3.0;
-            var s = from.SLERP(to, 0.5);
+            var s = from.Slerp(to, 0.5);
             double w = System.Math.Cos(System.Math.PI / 8.0), x = System.Math.Sin(System.Math.PI / 8.0);
             double worst = System.Math.Max(System.Math.Max(System.Math.Abs(s.W - w), System.Math.Abs(s.VectorPart.X - x)),
                 System.Math.Max(System.Math.Abs(s.VectorPart.Y), System.Math.Abs(s.VectorPart.Z)));
@@ -482,11 +482,11 @@ namespace IO.Astrodynamics.Tests.Math
             Assert.True(System.Math.Abs(s.Magnitude() - 1.0) <= SlerpTolerance, $"{s.Magnitude()}");
 
             var zero = new Quaternion(0.0, 0.0, 0.0, 0.0);
-            Assert.Equal("q", Assert.Throws<ArgumentException>(() => Quaternion.Identity.SLERP(zero, 0.5)).ParamName);
-            Assert.Equal("q", Assert.Throws<ArgumentException>(() => Quaternion.Identity.SLERP(new Quaternion(1.0, double.NaN, 0.0, 0.0), 0.5)).ParamName);
-            Assert.Equal("q", Assert.Throws<ArgumentException>(() => Quaternion.Identity.SLERP(new Quaternion(double.PositiveInfinity, 0.0, 0.0, 0.0), 0.5)).ParamName);
-            Assert.Throws<InvalidOperationException>(() => zero.SLERP(Quaternion.Identity, 0.5));
-            Assert.Throws<InvalidOperationException>(() => new Quaternion(double.NaN, 0.0, 0.0, 0.0).SLERP(Quaternion.Identity, 0.5));
+            Assert.Equal("q", Assert.Throws<ArgumentException>(() => Quaternion.Identity.Slerp(zero, 0.5)).ParamName);
+            Assert.Equal("q", Assert.Throws<ArgumentException>(() => Quaternion.Identity.Slerp(new Quaternion(1.0, double.NaN, 0.0, 0.0), 0.5)).ParamName);
+            Assert.Equal("q", Assert.Throws<ArgumentException>(() => Quaternion.Identity.Slerp(new Quaternion(double.PositiveInfinity, 0.0, 0.0, 0.0), 0.5)).ParamName);
+            Assert.Throws<InvalidOperationException>(() => zero.Slerp(Quaternion.Identity, 0.5));
+            Assert.Throws<InvalidOperationException>(() => new Quaternion(double.NaN, 0.0, 0.0, 0.0).Slerp(Quaternion.Identity, 0.5));
         }
 
         // Third round of #668: the magnitude was not scaled, so a quaternion with a component above about 1.34e154
@@ -573,7 +573,7 @@ namespace IO.Astrodynamics.Tests.Math
 
             var from = Quaternion.Identity * System.Math.ScaleB(1.0, 1000);
             var to = new Quaternion(Vector3.VectorX, IO.Astrodynamics.Constants.HalfPi) * System.Math.ScaleB(1.0, -1000);
-            var s = from.SLERP(to, 0.5);
+            var s = from.Slerp(to, 0.5);
             double cw = System.Math.Cos(System.Math.PI / 8.0), cx = System.Math.Sin(System.Math.PI / 8.0);
             double worstSlerp = System.Math.Max(System.Math.Max(System.Math.Abs(s.W - cw), System.Math.Abs(s.VectorPart.X - cx)),
                 System.Math.Max(System.Math.Abs(s.VectorPart.Y), System.Math.Abs(s.VectorPart.Z)));

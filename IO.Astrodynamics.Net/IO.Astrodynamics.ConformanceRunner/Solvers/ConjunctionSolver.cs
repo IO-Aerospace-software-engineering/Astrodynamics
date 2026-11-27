@@ -7,7 +7,7 @@ using IO.Astrodynamics.ConformanceRunner.Comparison;
 using IO.Astrodynamics.ConformanceRunner.Models;
 using IO.Astrodynamics.ConformanceRunner.Utilities;
 using IO.Astrodynamics.Propagator;
-using IO.Astrodynamics.SSA;
+using IO.Astrodynamics.Ssa;
 using IO.Astrodynamics.TimeSystem;
 
 namespace IO.Astrodynamics.ConformanceRunner.Solvers;
@@ -78,7 +78,7 @@ public class ConjunctionSolver : ICategorySolver
             encounters = closest
                 ? [ConjunctionAssessment.Analyze(objects[0], objects[1], window, options)]
                 : ConjunctionAssessment.AnalyzeAll(objects[0], objects[1], window, options);
-            seconds = t => (t.ToTDB() - epoch.ToTDB()).TotalSeconds;
+            seconds = t => (t.ToTdb() - epoch.ToTdb()).TotalSeconds;
         }
         else
         {

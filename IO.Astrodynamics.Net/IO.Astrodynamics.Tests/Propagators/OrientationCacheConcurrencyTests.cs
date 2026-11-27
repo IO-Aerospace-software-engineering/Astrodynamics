@@ -4,7 +4,7 @@ using IO.Astrodynamics.Tests.Propagators.Variational;
 using IO.Astrodynamics.TimeSystem;
 using System;
 using System.Threading;
-using IO.Astrodynamics.Atmosphere.NRLMSISE_00;
+using IO.Astrodynamics.Atmosphere;
 using IO.Astrodynamics.Body;
 using IO.Astrodynamics.Body.Spacecraft;
 using IO.Astrodynamics.OrbitalParameters;
@@ -40,7 +40,7 @@ public class OrientationCacheConcurrencyTests
 
     /// <summary>Point-mass Earth with NRLMSISE-00: no geopotential, so it may be shared between threads.</summary>
     private static CelestialBody PointMassEarth() =>
-        new(PlanetsAndMoons.EARTH, Frames.Frame.ICRF, EpochA, null, new Nrlmsise00Model(SpaceWeather.Nominal));
+        new(PlanetsAndMoons.Earth, Frames.Frame.ICRF, EpochA, null, new Nrlmsise00Model(SpaceWeather.Nominal));
 
     private static Spacecraft LeoSpacecraft(CelestialBody earth, TimeSystem.Time epoch, int naifId)
     {
@@ -148,9 +148,9 @@ public class OrientationCacheConcurrencyTests
     {
         Assert.Null(earth.Frame.OrientationCache);
         var later = EpochA.AddDays(30.0);
-        var expected = PointMassEarth().Frame.GetStateOrientationToICRF(later);
-        var actual = RunConcurrently(() => earth.Frame.GetStateOrientationToICRF(later),
-            () => earth.Frame.GetStateOrientationToICRF(later));
+        var expected = PointMassEarth().Frame.GetStateOrientationToIcrf(later);
+        var actual = RunConcurrently(() => earth.Frame.GetStateOrientationToIcrf(later),
+            () => earth.Frame.GetStateOrientationToIcrf(later));
         foreach (var orientation in new[] { actual.A, actual.B })
         {
             Assert.Equal(expected.Rotation, orientation.Rotation);
@@ -249,7 +249,7 @@ public class OrientationCacheConcurrencyTests
     {
         // Arrange: the case found in #369, with EGM2008 10×10; the propagator that never runs ends 10 days earlier,
         // so a cache left by it would freeze the Earth rotation at the edge of its window
-        var earth = new CelestialBody(PlanetsAndMoons.EARTH, Frames.Frame.ICRF, EpochA,
+        var earth = new CelestialBody(PlanetsAndMoons.Earth, Frames.Frame.ICRF, EpochA,
             new GeopotentialModelParameters("Data/SolarSystem/EGM2008_to70_TideFree", 10));
         var bodies = new CelestialItem[] { earth };
         var window = new TimeSystem.Window(EpochB, EpochB.AddHours(3.0));

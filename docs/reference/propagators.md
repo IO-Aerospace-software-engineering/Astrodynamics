@@ -50,7 +50,7 @@ propagation is built (`ArgumentException`) and, for a maneuver attached after it
    record from the timeline on the solution ([Attitudes](attitudes.md#the-attitude-timeline)). The outputs are the
    window start plus i·ΔT inside the window, then the window end, in place of the last grid point when that lies within
    ΔT/10 of the end: round(L/ΔT) + 1 of them over a window of length L, and the propagation runs to the window end, on
-   every path (`TLEPropagator` included, one rule), so that the stored states, the reads of the spacecraft and its SPK
+   every path (`TlePropagator` included, one rule), so that the stored states, the reads of the spacecraft and its SPK
    cover the whole window and nothing is read past it: a window of 3 610 s at 60 s holds 62 outputs, to 3 600 s then
    3 610 s, one of 3 603 s 61, the last at 3 603 s, one of 3 590 s 61, to 3 540 s then 3 590 s. A grid that ended
    before the window gained its end in 11.0.0
@@ -64,9 +64,9 @@ propagation is built (`ArgumentException`) and, for a maneuver attached after it
    A window of zero length throws `ArgumentException` (`window`) at the start of the call, on every path that builds a
    numerical propagation, in `Scenario.Simulate` before its stars, whatever the scenario holds (a scenario of stars alone
    included, its stars not propagated and `IsSimulated` unchanged), in `MonteCarloPropagator.Propagate` before anything
-   is sampled and in the `TLEPropagator` constructor, one rule on every propagation path (decisions 7, 15 and 18 of lot
+   is sampled and in the `TlePropagator` constructor, one rule on every propagation path (decisions 7, 15 and 18 of lot
    L4, decided by S. Guillet, 2026-11-22; before, a numerical propagation re-armed the spacecraft and threw
-   `InvalidOperationException` "Solution contains no segments", `TLEPropagator` returned one sample at the start, and a
+   `InvalidOperationException` "Solution contains no segments", `TlePropagator` returned one sample at the start, and a
    scenario of stars alone propagated them and reported itself simulated), and in `Star.Propagate` before its step,
    the states the star held kept (before, the one state of the start replaced them).
 
@@ -94,7 +94,7 @@ var rk = new RK78IntegratorOptions { AbsoluteTolerance = 1e-12, RelativeToleranc
 var options = PropagationOptions.Default with
 {
     Integrator = rk,
-    ThirdBodies = new CelestialItem[] { Stars.SUN_BODY, PlanetsAndMoons.MOON_BODY },
+    ThirdBodies = new CelestialItem[] { Stars.SunBody, PlanetsAndMoons.MoonBody },
     AtmosphericDrag = true,
     SolarRadiationPressure = true,
     Geopotential = GeopotentialModelParameters.Egm2008(10)
@@ -159,8 +159,7 @@ before 11.0.0 a propagation evaluated the field of the body, whose buffers are n
 | Constructor | Description |
 |-------------|-------------|
 | `CentralBodyPropagator(window, spacecraft, options)` | The settings of a `PropagationOptions` value, null for `PropagationOptions.Default` (above): the propagator builds its integrator and forces |
-| `CentralBodyPropagator(window, spacecraft, integrator, deltaT)` | Use a pre-configured integrator (forces already added), which the propagator initializes with its initial state: the path of a force list of your own (albedo or thermal radiation of a body other than the central body, a force of your own) |
-| `CentralBodyPropagator(window, spacecraft, integrator, deltaT, covariancePropagation)` | As the second (the integrator initialized by the propagator), with the covariance propagation; the columns of Ψ follow the forces of the integrator |
+| `CentralBodyPropagator(window, spacecraft, integrator, deltaT, options = null)` | Use a pre-configured integrator (forces already added), which the propagator initializes with its initial state: the path of a force list of your own (albedo or thermal radiation of a body other than the central body, a force of your own); with `CovariancePropagationOptions`, the covariance propagation, the columns of Ψ following the forces of the integrator (one constructor since 11.0.0, the overload of a `covariancePropagation` parameter before) |
 
 When the propagator builds the forces (the options constructor) the central body takes part with the models of the
 observer: it is inserted first when no listed body has its NAIF identifier (a run that lists it is unchanged), and a
@@ -223,7 +222,7 @@ to propagate from another initial orbit. `Spacecraft.Propagate`, `Scenario.Simul
 maneuver chain, the tanks and the coefficients of the spacecraft are read at each run.
 
 The re-arm of a run drops the stored states and the attitude record of the spacecraft whatever `IsPropagated` says,
-those added by hand (`AddPropagatedStates`, `AddStateOrientationToICRF`) included, on every path (decision 38 of #668,
+those added by hand (`AddPropagatedStates`, `AddStateOrientationToIcrf`) included, on every path (decision 38 of #668,
 decided by S. Guillet, 2026-11-23): before 11.0.0 they were dropped only after a numerical propagation, so a first run
 kept the attitudes added by hand, a quarter turn off a fresh run over half of its window and outside it in the gap
 analysis of L5, while a second run dropped them (`RunIndependenceTests`).
@@ -249,11 +248,11 @@ replace one of its output states.
 | `Segments` | Read-only list of `PropagationSegment` objects |
 | `StateVectors` | Output state vectors at the requested cadence, a read-only list |
 | `GetStateVector(Time epoch)` | The state at any epoch of `Window` as a `StateVector` about `Observer` in `Frame`, with its covariance when the propagation propagated it; throws `ArgumentOutOfRangeException` outside `Window`, naming it. RK7(8): a shortened RK7(8) step from the start of the accepted step (13 force evaluations inside a step, none at a boundary); Velocity-Verlet: cubic Hermite interpolation. At a maneuver, the state after it. The one public reader: the former `InterpolateAt`, an unnamed tuple that clamped outside the window, is internal since 11.0.0 (decision 54 of #668), the same state bit for bit |
-| `Maneuvers` | The record of each maneuver the run executed, in execution order (`ExecutedManeuver`, below); empty for a `TLEPropagator` solution |
-| `Observer`, `Frame` | The observer and frame of its states, get-only: the central body and the inertial frame of the propagation, the TLE's Earth and `Frame.TEME` for a `TLEPropagator` solution; null for a solution built by hand (public since 11.0.0, decision 53 of #668) |
+| `Maneuvers` | The record of each maneuver the run executed, in execution order (`ExecutedManeuver`, below); empty for a `TlePropagator` solution |
+| `Observer`, `Frame` | The observer and frame of its states, get-only: the central body and the inertial frame of the propagation, the TLE's Earth and `Frame.TEME` for a `TlePropagator` solution; null for a solution built by hand (public since 11.0.0, decision 53 of #668) |
 | `Window` | The propagated window, to one tick: [first segment base, end of the propagation] in TDB labels; the reads accept an epoch of any scale within it, as the seconds of the time argument read it, one tick allowed at each end (decision 53 of #668) |
 | `Options` | The resolved settings of a run of `PropagationOptions` (above); null for the constructors that take an integrator |
-| `CovariancePropagation`, `SensitivityParameters`, `ExtendedCovarianceParameters` | The options of the covariance propagation (`CovariancePropagationOptions.None` when off, a `TLEPropagator` solution included; null before 11.0.0, decision 56 of #668), the columns of Ψ, the consider parameters of the extended covariance |
+| `CovariancePropagation`, `SensitivityParameters`, `ExtendedCovarianceParameters` | The options of the covariance propagation (`CovariancePropagationOptions.None` when off, a `TlePropagator` solution included; null before 11.0.0, decision 56 of #668), the columns of Ψ, the consider parameters of the extended covariance |
 | `GetStateTransitionMatrix`, `GetParameterSensitivity`, `GetCovariance`, `GetExtendedCovariance` | Φ, Ψ, P and the extended covariance at any epoch; see [Covariance Propagation](covariance-propagation.md#results) |
 
 In covariance mode, the output states (`StateVectors`) carry their covariance. The SPK written from the propagated states
@@ -281,13 +280,13 @@ record; `Spacecraft.ExecutedManeuvers` then lists what the run executed up to th
 
 When conjunction assessment follows propagation, pass `PropagationSolution` directly to the SSA overloads to reuse the dense output.
 
-## TLEPropagator
+## TlePropagator
 
-`TLEPropagator` provides SGP4/SDP4 propagation for TLE-driven workflows. Use it for catalog screening or when working with mean-element data sources.
+`TlePropagator` provides SGP4/SDP4 propagation for TLE-driven workflows. Use it for catalog screening or when working with mean-element data sources.
 
 ```csharp
 // Inputs: window (Window), spacecraft (Spacecraft), deltaT (TimeSpan)
-var propagator = new TLEPropagator(window, spacecraft, deltaT);
+var propagator = new TlePropagator(window, spacecraft, deltaT);
 var solution = propagator.Propagate();
 ```
 
@@ -348,7 +347,7 @@ var options = new PropagationOptions
     {
         AbsoluteTolerance = 1e-10, RelativeTolerance = 1e-10, InitialStep = TimeSpan.FromSeconds(30.0)
     },
-    ThirdBodies = new CelestialItem[] { Stars.SUN_BODY, PlanetsAndMoons.MOON_BODY }
+    ThirdBodies = new CelestialItem[] { Stars.SunBody, PlanetsAndMoons.MoonBody }
 };
 var tasks = new List<PropagationTask>
 {
@@ -439,14 +438,14 @@ var config = new MonteCarloConfiguration
     RunCount = 100,
     Seed = 42,
     TemplateSpacecraft = spacecraft,
-    Window = new Window(Time.J2000TDB, Time.J2000TDB.AddHours(2)),
+    Window = new Window(Time.J2000Tdb, Time.J2000Tdb.AddHours(2)),
     Propagation = new PropagationOptions
     {
         Integrator = new RK78IntegratorOptions
         {
             AbsoluteTolerance = 1e-10, RelativeTolerance = 1e-10, InitialStep = TimeSpan.FromSeconds(30.0)
         },
-        ThirdBodies = new CelestialItem[] { Stars.SUN_BODY, PlanetsAndMoons.MOON_BODY }
+        ThirdBodies = new CelestialItem[] { Stars.SunBody, PlanetsAndMoons.MoonBody }
     }
 };
 
@@ -462,7 +461,7 @@ Console.WriteLine($"Position 95th percentile RSS: {last.RssPositionPercentiles.P
 The methods that run take a `CancellationToken` as their last parameter (R28 of #668, decision 4 of lot L4, decided by
 S. Guillet, 2026-11-22): `Spacecraft.Propagate(window, options, cancellationToken)`,
 `Scenario.Simulate(options, cancellationToken)`, `IPropagator.Propagate(cancellationToken)` (`CentralBodyPropagator`
-and `TLEPropagator`), `BatchPropagator.Propagate(…, cancellationToken)` and
+and `TlePropagator`), `BatchPropagator.Propagate(…, cancellationToken)` and
 `MonteCarloPropagator.Propagate(config, [progress,] cancellationToken)`. No constructor, record or property holds a
 token. The work is synchronous: the asynchronous members over it (`Spacecraft.PropagateAsync`, `Star.PropagateAsync`,
 `Scenario.SimulateAsync`, `BatchPropagator.PropagateAsync`, `MonteCarloPropagator.PropagateAsync`) are removed in
@@ -490,7 +489,7 @@ Where the token is read:
 |------|------|
 | `Spacecraft.Propagate`, `CentralBodyPropagator.Propagate` | Once the checks pass, before the spacecraft is re-armed; before each segment; by `VVIntegrator` and `RK78Integrator` at each accepted step, never between the rejections of a step (at most 101). Not after the last segment, so the outputs, the attitude record and the stored states are written as one block |
 | An `IIntegrator` implemented outside the library | Between its segments only (the interface does not change) |
-| `TLEPropagator.Propagate` | Before the first sample and at each sample; a stopped run changes nothing on the spacecraft |
+| `TlePropagator.Propagate` | Before the first sample and at each sample; a stopped run changes nothing on the spacecraft |
 | `Scenario.Simulate` | Once the settings are checked, before anything changes; before each star and each spacecraft; inside each propagation |
 | `BatchPropagator.Propagate`, `MonteCarloPropagator.Propagate` | Before anything runs; before each task; inside each running propagation (before 11.0.0 the token of `BatchOptions` was read before each task only, and a running task ran to its end) |
 
@@ -505,7 +504,7 @@ Linux x64, Windows x64 and macOS arm64 in the CI of #789, run 45145382114; `Canc
 What a stopped run leaves (C2 of lot L4):
 
 - the spacecraft it stopped in holds no stored state and no attitude record (those added by hand to a spacecraft never
-  propagated, `AddPropagatedStates` and `AddStateOrientationToICRF`, included), is not `IsPropagated`, and keeps nothing
+  propagated, `AddPropagatedStates` and `AddStateOrientationToIcrf`, included), is not `IsPropagated`, and keeps nothing
   for the conjunction analysis; a TLE spacecraft reads SGP4 again, any other its initial orbit;
 - its fuel, `ExecutedManeuvers` and standby chain are advanced up to the stop: an impulse executed before it has burnt
   its fuel, and `ExecutedManeuvers` lists the maneuvers executed up to the stop (decision 58 of #668); until the fix of
@@ -519,13 +518,13 @@ What a stopped run leaves (C2 of lot L4):
 - in `Scenario.Simulate` and a batch, the stars and spacecraft completed before the stop are complete, the later ones
   untouched; `IsSimulated` stays false, and no summary or result is returned.
 
-A stopped `TLEPropagator` run changes nothing and leaves the spacecraft as it was, its stored states, attitude record
+A stopped `TlePropagator` run changes nothing and leaves the spacecraft as it was, its stored states, attitude record
 and `IsPropagated` those it had before the run: it computes every sample before it re-arms the spacecraft and stores
 them in one block (decision 19 of lot L4, decided by S. Guillet, 2026-11-22, the exception to C2 then, the rule since
 decision 38 of #668, decided by S. Guillet, 2026-11-23; `CancellationTests` and `RunIndependenceTests`, a stop in the
 middle of a run).
 
-The propagators hold no resource: `IPropagator`, `PropagatorBase` and `TLEPropagator` no longer implement
+The propagators hold no resource: `IPropagator`, `PropagatorBase` and `TlePropagator` no longer implement
 `IDisposable` (their `Dispose` was empty, or cleared two fields), so `using var propagator = new CentralBodyPropagator(…)`
 does not compile (CS1674) and becomes `var propagator = …` (a binary break: a compiled caller is rebuilt).
 

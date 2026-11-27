@@ -2,7 +2,6 @@ using IO.Astrodynamics.Coordinates;
 using IO.Astrodynamics.TimeSystem;
 using System.Linq;
 using IO.Astrodynamics.Atmosphere;
-using IO.Astrodynamics.Atmosphere.NRLMSISE_00;
 using Xunit;
 using Xunit.Abstractions;
 

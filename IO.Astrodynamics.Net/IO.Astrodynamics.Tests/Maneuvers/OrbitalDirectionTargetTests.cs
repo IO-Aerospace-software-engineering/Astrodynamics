@@ -21,7 +21,7 @@ public class OrbitalDirectionTargetTests
             new Vector3(6678000.0, 0.0, 0.0),
             new Vector3(0.0, 7727.0, 0.0),
             TestHelpers.EarthAtJ2000,
-            TimeSystem.Time.J2000TDB,
+            TimeSystem.Time.J2000Tdb,
             Frames.Frame.ICRF);
     }
 
@@ -120,7 +120,7 @@ public class OrbitalDirectionTargetTests
     public void Constructor_CustomDirection()
     {
         var target = new OrbitalDirectionTarget(OrbitalDirection.Normal);
-        Assert.Equal(OrbitalDirection.Normal, target.Direction);
+        Assert.Equal(OrbitalDirection.Normal, target.OrbitalDirection);
         Assert.Equal("Normal", target.Name);
     }
 
@@ -143,7 +143,7 @@ public class OrbitalDirectionTargetTests
             new Vector3(3.0e6, 4.0e6, 0.0),
             new Vector3(-4.0 * 7500.0, 3.0 * 7500.0, 0.0),
             TestHelpers.EarthAtJ2000,
-            TimeSystem.Time.J2000TDB,
+            TimeSystem.Time.J2000Tdb,
             Frames.Frame.ICRF);
 
         // Prograde: in direction of velocity
@@ -190,7 +190,7 @@ public class OrbitalDirectionTargetTests
             new Vector3(6678000.0, 0.0, 0.0),
             new Vector3(1000.0, 0.0, 0.0), // parallel to r
             TestHelpers.EarthAtJ2000,
-            TimeSystem.Time.J2000TDB,
+            TimeSystem.Time.J2000Tdb,
             Frames.Frame.ICRF);
 
         // Act & Assert

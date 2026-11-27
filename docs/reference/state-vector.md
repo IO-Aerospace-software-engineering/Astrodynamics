@@ -117,7 +117,7 @@ small angular momentum.
 | `ToPlanetodetic()` | Geodetic longitude, latitude and altitude of the position on the ellipsoid of the observer, a `CelestialBody`, in its body-fixed frame at the epoch (`recgeo_c`): `ToPlanetocentric()` then `ToPlanetodetic(body)` in one call, bit for bit; `InvalidOperationException` for another observer (11.0.0) |
 | `RelativeTo(ILocalizable, Aberration)` | Typed as a `StateVector` on a `StateVector` (11.0.0); transform to a different center: the state minus the new center as the current center sees it, corrected by the aberration; the state itself is not moved in time, so the result is not the object seen from the new center with light time (for a site, `Site.GetEphemeris`, [#489](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/489)) |
 | `Inverse()` | Invert position and velocity |
-| `ToTLE(TLE.Configuration)` | Convert to TLE format (a fit of SGP4 mean elements in TEME); an orbit about the Earth only, `InvalidOperationException` naming the centre otherwise (#607) |
+| `ToTle(string, int, string, TleFitOptions)` | Convert to TLE format (a fit of SGP4 mean elements in TEME), the name, NORAD id and COSPAR id in the order of `Tle.Create`, the other fields and the fit in `TleFitOptions` (decision 113 of #668); an orbit about the Earth only, `InvalidOperationException` naming the centre otherwise (#607) |
 
 ## See Also
 

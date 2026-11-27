@@ -26,16 +26,16 @@ public class RetrogradeAttitudeTests
     [Fact]
     public void Execute()
     {
-        var orbitalParams = new KeplerianElements(42164000.0, 0.0, 0.0, 0.0, 0.0, 0.0, TestHelpers.EarthAtJ2000, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF);
+        var orbitalParams = new KeplerianElements(42164000.0, 0.0, 0.0, 0.0, 0.0, 0.0, TestHelpers.EarthAtJ2000, TimeSystem.Time.J2000Tdb, Frames.Frame.ICRF);
         var spc = new Spacecraft(-666, "GenericSpacecraft", 1000.0, orbitalParams, 3000.0, new Clock("GenericClk", 65536));
         spc.AddFuelTank(new FuelTank("ft", 1000.0, 900.0, "ftA", "123456"));
         spc.AddEngine(new Engine("eng", 450, 50, spc.FuelTanks.First(), "engmk1", "12345"));
         RetrogradeAttitude maneuver = new RetrogradeAttitude(new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB), TimeSpan.Zero, TestHelpers.EarthAtJ2000);
         var (_, maneuverOrientation) = maneuver.TryExecute(orbitalParams.ToStateVector());
 
-        LabelAssert.Equal(new StateOrientation(new Quaternion(0.0, -1.0, 0.0, 0.0), Vector3.Zero, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF), maneuverOrientation);
+        LabelAssert.Equal(new StateOrientation(new Quaternion(0.0, -1.0, 0.0, 0.0), Vector3.Zero, TimeSystem.Time.J2000Tdb, Frames.Frame.ICRF), maneuverOrientation);
         Assert.Equal(0.0, maneuver.FuelBurned);
-        LabelAssert.Equal(new Window(TimeSystem.Time.J2000TDB, TimeSpan.Zero), maneuver.ManeuverWindow);
-        LabelAssert.Equal(new Window(TimeSystem.Time.J2000TDB, TimeSpan.Zero), maneuver.ThrustWindow);
+        LabelAssert.Equal(new Window(TimeSystem.Time.J2000Tdb, TimeSpan.Zero), maneuver.ManeuverWindow);
+        LabelAssert.Equal(new Window(TimeSystem.Time.J2000Tdb, TimeSpan.Zero), maneuver.ThrustWindow);
     }
 }

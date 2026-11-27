@@ -288,13 +288,6 @@
       <Content Include="Data\CkPriorityReference\*">
         <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       </Content>
-      <!-- The developer guide and its compiled examples, compared by DeveloperGuideExamplesTests (#668). -->
-      <None Include="..\..\DEVELOPER_GUIDE.md" Link="Docs\DEVELOPER_GUIDE.md">
-        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      </None>
-      <None Include="Documentation\DeveloperGuideExamples.cs" Link="Docs\DeveloperGuideExamples.cs">
-        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      </None>
       <!-- The two CLAUDE.md files and their compiled examples, compared by ClaudeMdExamplesTests (#668, third round). -->
       <None Include="..\..\CLAUDE.md" Link="Docs\CLAUDE.root.md">
         <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
@@ -314,6 +307,14 @@
         <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       </None>
       <None Include="..\..\README.md" Link="Docs\README.md">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </None>
+      <!-- The implicit usings the package adds (N7 of #668), which DocumentationPagesExamplesTests gives a reader's application,
+           and the library's project, which packs them (PackageImplicitUsingsTests). -->
+      <None Include="..\IO.Astrodynamics\build\IO.Astrodynamics.props" Link="Docs\IO.Astrodynamics.props">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </None>
+      <None Include="..\IO.Astrodynamics\IO.Astrodynamics.csproj" Link="Docs\IO.Astrodynamics.csproj">
         <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       </None>
       <!-- The baselines of the API convention tests (#668, lot L0), which may only shrink. -->

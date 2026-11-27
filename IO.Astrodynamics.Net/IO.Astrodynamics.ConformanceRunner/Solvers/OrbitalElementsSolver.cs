@@ -93,7 +93,7 @@ public class OrbitalElementsSolver : ICategorySolver
         }
 
         var epoch = EpochParser.Parse(inputs.Epoch);
-        var earth = new CelestialBody(PlanetsAndMoons.EARTH, Frame.ICRF, epoch);
+        var earth = new CelestialBody(PlanetsAndMoons.Earth, Frame.ICRF, epoch);
         double gm = inputs.GmKm3S2 * CubicMetresPerCubicKilometre;
         if (gm != earth.GM)
         {

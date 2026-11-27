@@ -64,7 +64,7 @@ public class OrbitalEventsSolver : ICategorySolver
                 case OrbitalEventRequest.Periapsis:
                 case OrbitalEventRequest.Apoapsis:
                     var extremes = center.FindDistanceWindows(window, spacecraft,
-                        request.Type == OrbitalEventRequest.Periapsis ? RelationnalOperator.LocalMin : RelationnalOperator.LocalMax,
+                        request.Type == OrbitalEventRequest.Periapsis ? RelationalOperator.LocalMin : RelationalOperator.LocalMax,
                         0.0, new WindowSearchOptions { Step = step, Aberration = Aberration.None }).Select(w => w.StartDate).ToList();
                     Add(outputs, request.Type, extremes, window.StartDate,
                         t => UnitConversion.MToKm(spacecraft.GetEphemeris(t, center, Frame.ICRF, Aberration.None).Position.Magnitude()));
@@ -72,12 +72,12 @@ public class OrbitalEventsSolver : ICategorySolver
                 case OrbitalEventRequest.AscendingNode:
                 case OrbitalEventRequest.DescendingNode:
                     var north = center.FindCoordinateWindows(window, spacecraft, Frame.ICRF, CoordinateSystem.Rectangular, Coordinate.Z,
-                        RelationnalOperator.Greater, 0.0, new WindowSearchOptions { Step = step, Aberration = Aberration.None });
+                        RelationalOperator.GreaterThan, 0.0, new WindowSearchOptions { Step = step, Aberration = Aberration.None });
                     Add(outputs, request.Type, Crossings(north, window, request.Type == OrbitalEventRequest.AscendingNode), window.StartDate);
                     break;
                 case OrbitalEventRequest.Altitude:
                     var above = center.FindCoordinateWindows(window, spacecraft, center.Frame, CoordinateSystem.Geodetic, Coordinate.Altitude,
-                        RelationnalOperator.Greater, UnitConversion.KmToM(request.ValueKm!.Value),
+                        RelationalOperator.GreaterThan, UnitConversion.KmToM(request.ValueKm!.Value),
                         new WindowSearchOptions { Step = step, Aberration = Aberration.None }).ToList();
                     if (request.Direction != OrbitalEventRequest.Down)
                     {

@@ -8,10 +8,9 @@ using System.Linq;
 using System.Text;
 using System.Xml;
 using System.Xml.Linq;
-using IO.Astrodynamics.CCSDS.Common;
-using IO.Astrodynamics.CCSDS.Common.Enums;
+using IO.Astrodynamics.Ccsds;
 
-namespace IO.Astrodynamics.CCSDS.CDM;
+namespace IO.Astrodynamics.Ccsds;
 
 /// <summary>
 /// Writes a <see cref="Cdm"/> as NDM/XML 4.0.0 (CCSDS 508.0-B-1 Cor. 2), in the qualified form of its 4.3.3: the root,

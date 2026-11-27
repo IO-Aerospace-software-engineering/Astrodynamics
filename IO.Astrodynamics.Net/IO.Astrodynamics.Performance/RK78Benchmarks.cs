@@ -15,7 +15,7 @@ using IO.Astrodynamics.Propagator.Variational;
 using IO.Astrodynamics.Propagator.Integrators;
 using IO.Astrodynamics.SolarSystemObjects;
 using IO.Astrodynamics.TimeSystem;
-using TLE = IO.Astrodynamics.OrbitalParameters.TLE.TLE;
+using Tle = IO.Astrodynamics.OrbitalParameters.Tle;
 
 namespace IO.Astrodynamics.Performance;
 
@@ -55,23 +55,23 @@ public class RK78Benchmarks
     [GlobalSetup]
     public void GlobalSetup()
     {
-        SpiceAPI.Instance.LoadKernels(new DirectoryInfo("Data"));
+        SpiceApi.Instance.LoadKernels(new DirectoryInfo("Data"));
 
-        _earthLeo = new CelestialBody(PlanetsAndMoons.EARTH, Frame.ICRF, LeoEpoch,
+        _earthLeo = new CelestialBody(PlanetsAndMoons.Earth, Frame.ICRF, LeoEpoch,
             new GeopotentialModelParameters("Data/SolarSystem/EGM2008_to70_TideFree", 10));
 
-        _earthSso = new CelestialBody(PlanetsAndMoons.EARTH, Frame.ICRF, SsoEpoch,
+        _earthSso = new CelestialBody(PlanetsAndMoons.Earth, Frame.ICRF, SsoEpoch,
             new GeopotentialModelParameters("Data/SolarSystem/EGM2008_to70_TideFree", 10));
 
-        var geoTle = new TLE("INTELSAT 901",
+        var geoTle = new Tle("INTELSAT 901",
             "1 26824U 01024A   26040.43262683 -.00000207  00000-0  00000+0 0  9994",
             "2 26824   0.9230  86.6125 0002726 324.4840  12.2632  0.98820941 21659");
         _geoTleEpoch = geoTle.Epoch;
 
-        _earthGeo = new CelestialBody(PlanetsAndMoons.EARTH, Frame.ICRF, _geoTleEpoch,
+        _earthGeo = new CelestialBody(PlanetsAndMoons.Earth, Frame.ICRF, _geoTleEpoch,
             new GeopotentialModelParameters("Data/SolarSystem/EGM2008_to70_TideFree", 10));
 
-        _earthLeoAtm = new CelestialBody(PlanetsAndMoons.EARTH, Frame.ICRF, LeoEpoch,
+        _earthLeoAtm = new CelestialBody(PlanetsAndMoons.Earth, Frame.ICRF, LeoEpoch,
             new GeopotentialModelParameters("Data/SolarSystem/EGM2008_to70_TideFree", 10),
             new EarthStandardAtmosphere());
     }
@@ -137,7 +137,7 @@ public class RK78Benchmarks
         var spc = new Spacecraft(-1001, "LEO_Bench", 100.0, orbit, 10000.0, clk);
         var window = new Window(LeoEpoch, orbit.Period());
         return new CentralBodyPropagator(window, spc, Options(
-            new CelestialItem[] { PlanetsAndMoons.MOON_BODY, Stars.SUN_BODY },
+            new CelestialItem[] { PlanetsAndMoons.MoonBody, Stars.SunBody },
             false, false));
     }
 
@@ -171,14 +171,14 @@ public class RK78Benchmarks
         var spc = new Spacecraft(-1002, "SSO_Bench", 100.0, orbit, 1000.0, clk);
         var window = new Window(SsoEpoch, keplerianOrbit.Period());
         return new CentralBodyPropagator(window, spc, Options(
-            new CelestialItem[] { PlanetsAndMoons.MOON_BODY, Stars.SUN_BODY },
+            new CelestialItem[] { PlanetsAndMoons.MoonBody, Stars.SunBody },
             false, false));
     }
 
     private CentralBodyPropagator BuildGeoPropagator()
     {
         var clk = new Clock("BenchClock", 256);
-        var tle = new TLE("INTELSAT 901",
+        var tle = new Tle("INTELSAT 901",
             "1 26824U 01024A   26040.43262683 -.00000207  00000-0  00000+0 0  9994",
             "2 26824   0.9230  86.6125 0002726 324.4840  12.2632  0.98820941 21659");
         var osculatingIcrf = tle.ToStateVector().ToFrame(Frame.ICRF).ToStateVector();
@@ -190,16 +190,16 @@ public class RK78Benchmarks
         return new CentralBodyPropagator(window, spc, Options(
             new CelestialItem[]
             {
-                PlanetsAndMoons.MOON_BODY,
-                Stars.SUN_BODY,
-                Barycenters.MERCURY_BARYCENTER,
-                Barycenters.VENUS_BARYCENTER,
-                Barycenters.MARS_BARYCENTER,
-                Barycenters.JUPITER_BARYCENTER,
-                Barycenters.SATURN_BARYCENTER,
-                Barycenters.URANUS_BARYCENTER,
-                Barycenters.NEPTUNE_BARYCENTER,
-                Barycenters.PLUTO_BARYCENTER
+                PlanetsAndMoons.MoonBody,
+                Stars.SunBody,
+                Barycenters.MercuryBarycenter,
+                Barycenters.VenusBarycenter,
+                Barycenters.MarsBarycenter,
+                Barycenters.JupiterBarycenter,
+                Barycenters.SaturnBarycenter,
+                Barycenters.UranusBarycenter,
+                Barycenters.NeptuneBarycenter,
+                Barycenters.PlutoBarycenter
             },
             false, false));
     }
@@ -216,7 +216,7 @@ public class RK78Benchmarks
             sectionalArea: 10.0, dragCoefficient: 2.2, solarRadiationCoefficient: 1.5);
         var window = new Window(LeoEpoch, orbit.Period());
         return new CentralBodyPropagator(window, spc, Options(
-            new CelestialItem[] { _earthLeoAtm, PlanetsAndMoons.MOON_BODY, Stars.SUN_BODY },
+            new CelestialItem[] { _earthLeoAtm, PlanetsAndMoons.MoonBody, Stars.SunBody },
             atmosphericDrag: true, solarRadiationPressure: true));
     }
 }

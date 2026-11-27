@@ -23,7 +23,7 @@ namespace IO.Astrodynamics.Tests.OrbitalParameters
         [Fact]
         public void Create()
         {
-            CelestialBody earth = PlanetsAndMoons.EARTH_BODY;
+            CelestialBody earth = PlanetsAndMoons.EarthBody;
 
             Vector3 pos = new Vector3(1.0, 2.0, 3.0);
             Vector3 vel = new Vector3(4.0, 5.0, 6.0);
@@ -39,7 +39,7 @@ namespace IO.Astrodynamics.Tests.OrbitalParameters
         [Fact]
         public void Inverse()
         {
-            CelestialBody earth = PlanetsAndMoons.EARTH_BODY;
+            CelestialBody earth = PlanetsAndMoons.EarthBody;
 
             Vector3 pos = new Vector3(1.0, 2.0, 3.0);
             Vector3 vel = new Vector3(4.0, 5.0, 6.0);
@@ -52,7 +52,7 @@ namespace IO.Astrodynamics.Tests.OrbitalParameters
         [Fact]
         public void Add()
         {
-            CelestialBody earth = PlanetsAndMoons.EARTH_BODY;
+            CelestialBody earth = PlanetsAndMoons.EarthBody;
 
             Vector3 pos = new Vector3(1.0, 2.0, 3.0);
             Vector3 vel = new Vector3(4.0, 5.0, 6.0);
@@ -69,7 +69,7 @@ namespace IO.Astrodynamics.Tests.OrbitalParameters
         [Fact]
         public void AddExcept()
         {
-            CelestialBody earth = PlanetsAndMoons.EARTH_BODY;
+            CelestialBody earth = PlanetsAndMoons.EarthBody;
 
             Vector3 pos = new Vector3(1.0, 2.0, 3.0);
             Vector3 vel = new Vector3(4.0, 5.0, 6.0);
@@ -85,7 +85,7 @@ namespace IO.Astrodynamics.Tests.OrbitalParameters
         [Fact]
         public void Eccentricity()
         {
-            CelestialBody earth = PlanetsAndMoons.EARTH_BODY;
+            CelestialBody earth = PlanetsAndMoons.EarthBody;
 
             StateVector sv = new StateVector(new Vector3(-6.116559469556896E+06, -1.546174698676721E+06, 2.521950157430313E+06),
                 new Vector3(-8.078523150700097E+02, -5.477647950892673E+03, -5.297615757935174E+03), earth, new TimeSystem.Time(DateTime.UtcNow, TimeScale.UTC),
@@ -96,7 +96,7 @@ namespace IO.Astrodynamics.Tests.OrbitalParameters
         [Fact]
         public void EccentricityVector()
         {
-            CelestialBody earth = PlanetsAndMoons.EARTH_BODY;
+            CelestialBody earth = PlanetsAndMoons.EarthBody;
 
             StateVector sv = new StateVector(new Vector3(6800000.0, 0.0, 0.0), new Vector3(0.0, 8000.0, 0.0), earth, new TimeSystem.Time(DateTime.UtcNow, TimeScale.UTC),
                 Frames.Frame.ICRF);
@@ -124,7 +124,7 @@ namespace IO.Astrodynamics.Tests.OrbitalParameters
         [Fact]
         public void SpecificOrbitalEnergyMomentum()
         {
-            CelestialBody earth = PlanetsAndMoons.EARTH_BODY;
+            CelestialBody earth = PlanetsAndMoons.EarthBody;
 
             StateVector sv = new StateVector(new Vector3(-6.116559469556896E+06, -1.546174698676721E+06, 2.521950157430313E+06),
                 new Vector3(-8.078523150700097E+02, -5.477647950892673E+03, -5.297615757935174E+03), earth, new TimeSystem.Time(DateTime.UtcNow, TimeScale.UTC),
@@ -136,7 +136,7 @@ namespace IO.Astrodynamics.Tests.OrbitalParameters
         [Fact]
         public void Inclination()
         {
-            CelestialBody earth = PlanetsAndMoons.EARTH_BODY;
+            CelestialBody earth = PlanetsAndMoons.EarthBody;
 
             StateVector sv = new StateVector(new Vector3(6800000.0, 0.0, 0.0), new Vector3(0.0, 5000.0, 5000.0), earth, new TimeSystem.Time(DateTime.UtcNow, TimeScale.UTC),
                 Frames.Frame.ICRF);
@@ -146,7 +146,7 @@ namespace IO.Astrodynamics.Tests.OrbitalParameters
         [Fact]
         public void SemiMajorAxis()
         {
-            CelestialBody earth = PlanetsAndMoons.EARTH_BODY;
+            CelestialBody earth = PlanetsAndMoons.EarthBody;
 
             StateVector sv = new StateVector(new Vector3(8000000.0, 0.0, 0.0), new Vector3(0.0, 6000.0, 6000.0), earth, new TimeSystem.Time(DateTime.UtcNow, TimeScale.UTC),
                 Frames.Frame.ICRF);
@@ -156,7 +156,7 @@ namespace IO.Astrodynamics.Tests.OrbitalParameters
         [Fact]
         public void AscendingNodeVector()
         {
-            CelestialBody earth = PlanetsAndMoons.EARTH_BODY;
+            CelestialBody earth = PlanetsAndMoons.EarthBody;
 
             StateVector sv = new StateVector(new Vector3(8000000.0, 0.0, 0.0), new Vector3(0.0, 6000.0, 0.0), earth, new TimeSystem.Time(DateTime.UtcNow, TimeScale.UTC),
                 Frames.Frame.ICRF);
@@ -169,7 +169,7 @@ namespace IO.Astrodynamics.Tests.OrbitalParameters
         [Fact]
         public void AscendingNode()
         {
-            CelestialBody earth = PlanetsAndMoons.EARTH_BODY;
+            CelestialBody earth = PlanetsAndMoons.EarthBody;
 
             StateVector sv = new StateVector(new Vector3(9208000.0, 3352000, 0.0), new Vector3(-1750, 4830, 5140), earth, new TimeSystem.Time(DateTime.UtcNow, TimeScale.UTC),
                 Frames.Frame.ICRF);
@@ -183,7 +183,7 @@ namespace IO.Astrodynamics.Tests.OrbitalParameters
         [Fact]
         public void ArgumentOfPeriapis()
         {
-            CelestialBody earth = PlanetsAndMoons.EARTH_BODY;
+            CelestialBody earth = PlanetsAndMoons.EarthBody;
 
             StateVector sv = new StateVector(new Vector3(8237000.0, 17000.0, 5308000.0), new Vector3(-2000.0, 6000.0, 3000.0), earth,
                 new TimeSystem.Time(DateTime.UtcNow, TimeScale.UTC), Frames.Frame.ICRF);
@@ -199,7 +199,7 @@ namespace IO.Astrodynamics.Tests.OrbitalParameters
         [Fact]
         public void TrueAnomaly()
         {
-            CelestialBody earth = PlanetsAndMoons.EARTH_BODY;
+            CelestialBody earth = PlanetsAndMoons.EarthBody;
 
             StateVector sv = new StateVector(new Vector3(5070000.0, -2387000.0, 1430000.0), new Vector3(2450.0, 6350.0, 6440.0), earth,
                 new TimeSystem.Time(DateTime.UtcNow, TimeScale.UTC), Frames.Frame.ICRF);
@@ -215,7 +215,7 @@ namespace IO.Astrodynamics.Tests.OrbitalParameters
         [Fact]
         public void EccentricAnomaly()
         {
-            CelestialBody earth = PlanetsAndMoons.EARTH_BODY;
+            CelestialBody earth = PlanetsAndMoons.EarthBody;
 
             StateVector sv = new StateVector(new Vector3(6700000.0, 2494000.0, 0.0), new Vector3(-2150.0, 8850.0, 0.0), earth,
                 new TimeSystem.Time(DateTime.UtcNow, TimeScale.UTC), Frames.Frame.ICRF);
@@ -226,7 +226,7 @@ namespace IO.Astrodynamics.Tests.OrbitalParameters
         [Fact]
         public void MeanAnomaly()
         {
-            CelestialBody earth = PlanetsAndMoons.EARTH_BODY;
+            CelestialBody earth = PlanetsAndMoons.EarthBody;
 
             StateVector sv = new StateVector(new Vector3(-5775.068936894231E+03, -3372.353197848874E+03, 651.695854037289E+03),
                 new Vector3(-0.661469579672604E+03, -7.147573777688288E+03, -2.915719736461653E+03), earth, new TimeSystem.Time(DateTime.UtcNow, TimeScale.UTC),
@@ -238,7 +238,7 @@ namespace IO.Astrodynamics.Tests.OrbitalParameters
         [Fact]
         public void Period()
         {
-            CelestialBody earth = PlanetsAndMoons.EARTH_BODY;
+            CelestialBody earth = PlanetsAndMoons.EarthBody;
 
             StateVector sv = new StateVector(new Vector3(-5775.068936894231E+03, -3372.353197848874E+03, 651.695854037289E+03),
                 new Vector3(-0.661469579672604E+03, -7.147573777688288E+03, -2.915719736461653E+03), earth, new TimeSystem.Time(DateTime.UtcNow, TimeScale.UTC),
@@ -250,7 +250,7 @@ namespace IO.Astrodynamics.Tests.OrbitalParameters
         [Fact]
         public void MeanMotion()
         {
-            CelestialBody earth = PlanetsAndMoons.EARTH_BODY;
+            CelestialBody earth = PlanetsAndMoons.EarthBody;
 
             StateVector sv = new StateVector(new Vector3(-5775.068936894231E+03, -3372.353197848874E+03, 651.695854037289E+03),
                 new Vector3(-0.661469579672604E+03, -7.147573777688288E+03, -2.915719736461653E+03), earth, new TimeSystem.Time(DateTime.UtcNow, TimeScale.UTC),
@@ -269,7 +269,7 @@ namespace IO.Astrodynamics.Tests.OrbitalParameters
             var sv = new StateVector(new Vector3(-26499033.67742509, 132757417.33833946, 57556718.47053819), new Vector3(-29.79426007, -5.01805231, -2.17539380), sun,
                 new TimeSystem.Time(2000, 1, 1, 12, 0, 0, TimeScale.TDB), Frames.Frame.ICRF);
 
-            double[] res = sv.ToFrame(Frames.Frame.ECLIPTIC_J2000).ToStateVector().ToArray();
+            double[] res = sv.ToFrame(Frames.Frame.ECLIPJ2000).ToStateVector().ToArray();
             Assert.Equal(-26499033.67742509, res[0]);
             Assert.Equal(144697296.7925432, res[1]);
             Assert.Equal(-611.1494260467589, res[2]);
@@ -281,7 +281,7 @@ namespace IO.Astrodynamics.Tests.OrbitalParameters
         [Fact]
         public void ToNonInertialFrame()
         {
-            CelestialBody earth = PlanetsAndMoons.EARTH_BODY;
+            CelestialBody earth = PlanetsAndMoons.EarthBody;
 
             var epoch = new TimeSystem.Time(2000, 1, 1, 12, 0, 0, TimeScale.TDB);
             var earthFrame = new Frames.Frame("ITRF93");
@@ -289,7 +289,7 @@ namespace IO.Astrodynamics.Tests.OrbitalParameters
             //J2000->IAU_EARTH
             //Earth from sun at 0 TDB
             var sv = new StateVector(new Vector3(-26499033.67742509, 132757417.33833946, 57556718.47053819), new Vector3(-29.79426007, -5.01805231, -2.17539380), earth,
-                epoch.ToTDB(), Frames.Frame.ICRF);
+                epoch.ToTdb(), Frames.Frame.ICRF);
 
             double[] res = sv.ToFrame(earthFrame).ToStateVector().ToArray();
             // SPICE state transformation matrix (sxform_c, tools/spice_reference/spice_ref.c).
@@ -341,31 +341,31 @@ namespace IO.Astrodynamics.Tests.OrbitalParameters
         public void ToKeplerian()
         {
             var earth = TestHelpers.EarthAtJ2000;
-            var sv = earth.GetEphemeris(TimeSystem.Time.J2000TDB, TestHelpers.Sun, Frames.Frame.ICRF, Aberration.None);
+            var sv = earth.GetEphemeris(TimeSystem.Time.J2000Tdb, TestHelpers.Sun, Frames.Frame.ICRF, Aberration.None);
             LabelAssert.Equal(
                 new StateVector(new Vector3(-26499033677.425095, 132757417338.33946, 57556718470.53819),
-                    new Vector3(-29794.26007042197, -5018.052308786111, -2175.3938028266693), TestHelpers.Sun, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF), sv);
+                    new Vector3(-29794.26007042197, -5018.052308786111, -2175.3938028266693), TestHelpers.Sun, TimeSystem.Time.J2000Tdb, Frames.Frame.ICRF), sv);
             var ke = sv.ToKeplerianElements();
 
             // Against SPICE OSCELT: the node, 1.3e-5 rad, is where the former acos lost 5.8e-12 rad (#368)
-            var expected = SpiceAPI.Instance.ConvertStateVectorToConicOrbitalElement(sv);
-            Assert.Equal(expected.A, ke.A, 1e-14 * expected.A);
-            Assert.Equal(expected.E, ke.E, 1e-14);
-            Assert.Equal(expected.I, ke.I, 1e-14);
-            Assert.Equal(expected.RAAN, ke.RAAN, 1e-14 * expected.RAAN);
-            Assert.Equal(expected.AOP, ke.AOP, 1e-14);
-            Assert.Equal(expected.M, ke.M, 1e-14);
+            var expected = SpiceApi.Instance.ConvertStateVectorToConicOrbitalElement(sv);
+            Assert.Equal(expected.SemiMajorAxis(), ke.SemiMajorAxis(), 1e-14 * expected.SemiMajorAxis());
+            Assert.Equal(expected.Eccentricity(), ke.Eccentricity(), 1e-14);
+            Assert.Equal(expected.Inclination(), ke.Inclination(), 1e-14);
+            Assert.Equal(expected.AscendingNode(), ke.AscendingNode(), 1e-14 * expected.AscendingNode());
+            Assert.Equal(expected.ArgumentOfPeriapsis(), ke.ArgumentOfPeriapsis(), 1e-14);
+            Assert.Equal(expected.MeanAnomaly(), ke.MeanAnomaly(), 1e-14);
         }
 
         [Fact]
         public void ToKeplerianSingularity()
         {
             var svOrigin =
-                new StateVector(new Vector3(0, 6700000, 0), new Vector3(7900, 0, 0), TestHelpers.EarthAtJ2000, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF);
+                new StateVector(new Vector3(0, 6700000, 0), new Vector3(7900, 0, 0), TestHelpers.EarthAtJ2000, TimeSystem.Time.J2000Tdb, Frames.Frame.ICRF);
 
             var keOrigin = svOrigin.ToKeplerianElements();
             LabelAssert.Equal(new KeplerianElements(7045497.0180164594, 0.0490379908093026, 3.141592653589793, 0.0,
-                4.71238898038469, 0.0, TestHelpers.EarthAtJ2000, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF), keOrigin);
+                4.71238898038469, 0.0, TestHelpers.EarthAtJ2000, TimeSystem.Time.J2000Tdb, Frames.Frame.ICRF), keOrigin);
             var svFinal = keOrigin.ToStateVector();
             Assert.Equal(svFinal, svOrigin, TestHelpers.StateVectorComparer);
         }
@@ -375,10 +375,10 @@ namespace IO.Astrodynamics.Tests.OrbitalParameters
         {
             KeplerianElements ke = KeplerianElements.Parabolic(6800000.0, 10.0 * IO.Astrodynamics.Constants.Deg2Rad,
                 20.0 * IO.Astrodynamics.Constants.Deg2Rad,
-                30.0 * IO.Astrodynamics.Constants.Deg2Rad, 0.0 * IO.Astrodynamics.Constants.Deg2Rad, TestHelpers.EarthAtJ2000, TimeSystem.Time.J2000TDB,
+                30.0 * IO.Astrodynamics.Constants.Deg2Rad, 0.0 * IO.Astrodynamics.Constants.Deg2Rad, TestHelpers.EarthAtJ2000, TimeSystem.Time.J2000Tdb,
                 Frames.Frame.ICRF);
             var sv = ke.ToStateVector();
-            var svref = SpiceAPI.Instance.ConvertConicElementsToStateVector(ke);
+            var svref = SpiceApi.Instance.ConvertConicElementsToStateVector(ke);
             var res = sv.ToKeplerianElements();
             Assert.Equal(ke, res, TestHelpers.KeplerComparer);
         }
@@ -387,42 +387,42 @@ namespace IO.Astrodynamics.Tests.OrbitalParameters
         public void ToEquatorial()
         {
             var moon = TestHelpers.MoonAtJ2000;
-            var ra = moon.GetEphemeris(TimeSystem.Time.J2000TDB, TestHelpers.EarthAtJ2000, Frames.Frame.ICRF, Aberration.None).ToEquatorial();
-            LabelAssert.Equal(Equatorial.FromRightAscensionDeclination(3.8824377884372114, -0.19024413568211912, 402448639.8873273, TimeSystem.Time.J2000TDB), ra);
+            var ra = moon.GetEphemeris(TimeSystem.Time.J2000Tdb, TestHelpers.EarthAtJ2000, Frames.Frame.ICRF, Aberration.None).ToEquatorial();
+            LabelAssert.Equal(Equatorial.FromRightAscensionDeclination(3.8824377884372114, -0.19024413568211912, 402448639.8873273, TimeSystem.Time.J2000Tdb), ra);
         }
 
         [Fact]
         public void RelativeTo()
         {
-            var originalSV = new StateVector(new Vector3(6800000.0, 0.0, 0.0), new Vector3(0.0, 8000.0, 0.0), TestHelpers.EarthAtJ2000, TimeSystem.Time.J2000TDB,
+            var originalSV = new StateVector(new Vector3(6800000.0, 0.0, 0.0), new Vector3(0.0, 8000.0, 0.0), TestHelpers.EarthAtJ2000, TimeSystem.Time.J2000Tdb,
                 Frames.Frame.ICRF);
             var moonSv = originalSV.RelativeTo(TestHelpers.MoonAtJ2000, Aberration.None).ToStateVector();
             Assert.Equal(
                 new StateVector(new Vector3(298408384.63343549, 266716833.39423338, 76102487.099902019), new Vector3(-643.53138771903275, 8666.0876840916299, 301.32570498227307),
-                    TestHelpers.MoonAtJ2000, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF),
+                    TestHelpers.MoonAtJ2000, TimeSystem.Time.J2000Tdb, Frames.Frame.ICRF),
                 moonSv,TestHelpers.StateVectorComparer);
         }
 
         [Fact]
         public void RelativeToAndRevert()
         {
-            var originalSV = new StateVector(new Vector3(6800000.0, 0.0, 0.0), new Vector3(0.0, 8000.0, 0.0), TestHelpers.EarthAtJ2000, TimeSystem.Time.J2000TDB,
+            var originalSV = new StateVector(new Vector3(6800000.0, 0.0, 0.0), new Vector3(0.0, 8000.0, 0.0), TestHelpers.EarthAtJ2000, TimeSystem.Time.J2000Tdb,
                 Frames.Frame.ICRF);
-            var svSSB = originalSV.RelativeTo(Barycenters.SOLAR_SYSTEM_BARYCENTER, Aberration.None).ToStateVector();
+            var svSSB = originalSV.RelativeTo(Barycenters.SolarSystemBarycenter, Aberration.None).ToStateVector();
             var svEarth = svSSB.RelativeTo(TestHelpers.EarthAtJ2000, Aberration.None).ToStateVector();
             var deltaP = svEarth.Position - originalSV.Position;
             var deltaV = svEarth.Velocity - originalSV.Velocity;
             Assert.Equal(Vector3.Zero, deltaP);
             Assert.Equal(Vector3.Zero, deltaV);
             Assert.Equal(TestHelpers.EarthAtJ2000, svEarth.Observer);
-            LabelAssert.Equal(TimeSystem.Time.J2000TDB, svEarth.Epoch);
+            LabelAssert.Equal(TimeSystem.Time.J2000Tdb, svEarth.Epoch);
             Assert.Equal(Frames.Frame.ICRF, svEarth.Frame);
         }
 
         [Fact]
         public void EllipticToKeplerian()
         {
-            var originalSV = new StateVector(new Vector3(6800000.0, 1000.0, -500.0), new Vector3(200.0, 8000.0, -300.0), TestHelpers.EarthAtJ2000, TimeSystem.Time.J2000TDB,
+            var originalSV = new StateVector(new Vector3(6800000.0, 1000.0, -500.0), new Vector3(200.0, 8000.0, -300.0), TestHelpers.EarthAtJ2000, TimeSystem.Time.J2000Tdb,
                 Frames.Frame.ICRF);
             var ke = originalSV.ToKeplerianElements();
             var sv = ke.ToStateVector();
@@ -432,7 +432,7 @@ namespace IO.Astrodynamics.Tests.OrbitalParameters
         [Fact]
         public void ParabolicToKeplerian()
         {
-            var ke = KeplerianElements.Parabolic(6800000.0, 0.2, 0.3, 0.4, 0.0, TestHelpers.EarthAtJ2000, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF);
+            var ke = KeplerianElements.Parabolic(6800000.0, 0.2, 0.3, 0.4, 0.0, TestHelpers.EarthAtJ2000, TimeSystem.Time.J2000Tdb, Frames.Frame.ICRF);
             var sv = ke.ToStateVector();
             var ke2 = sv.ToKeplerianElements();
 
@@ -443,7 +443,7 @@ namespace IO.Astrodynamics.Tests.OrbitalParameters
         [Fact]
         public void HyperbolicToKeplerian()
         {
-            var originalSV = new StateVector(new Vector3(6800000.0, 1000.0, -500.0), new Vector3(4000.0, 10000.0, -300.0), TestHelpers.EarthAtJ2000, TimeSystem.Time.J2000TDB,
+            var originalSV = new StateVector(new Vector3(6800000.0, 1000.0, -500.0), new Vector3(4000.0, 10000.0, -300.0), TestHelpers.EarthAtJ2000, TimeSystem.Time.J2000Tdb,
                 Frames.Frame.ICRF);
             var ke = originalSV.ToKeplerianElements();
             var sv = ke.ToStateVector();
@@ -453,7 +453,7 @@ namespace IO.Astrodynamics.Tests.OrbitalParameters
         [Fact]
         public void EllipticToEquinoctial()
         {
-            var originalSV = new StateVector(new Vector3(6800000.0, 1000.0, -500.0), new Vector3(200.0, 8000.0, -300.0), TestHelpers.EarthAtJ2000, TimeSystem.Time.J2000TDB,
+            var originalSV = new StateVector(new Vector3(6800000.0, 1000.0, -500.0), new Vector3(200.0, 8000.0, -300.0), TestHelpers.EarthAtJ2000, TimeSystem.Time.J2000Tdb,
                 Frames.Frame.ICRF);
             var eq = originalSV.ToEquinoctial();
             var sv = eq.ToStateVector();
@@ -463,7 +463,7 @@ namespace IO.Astrodynamics.Tests.OrbitalParameters
         [Fact]
         public void ParabolicToEquinoctial()
         {
-            var ke = KeplerianElements.Parabolic(6800000.0, 0.2, 0.3, 0.4, 0.0, TestHelpers.EarthAtJ2000, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF);
+            var ke = KeplerianElements.Parabolic(6800000.0, 0.2, 0.3, 0.4, 0.0, TestHelpers.EarthAtJ2000, TimeSystem.Time.J2000Tdb, Frames.Frame.ICRF);
             var sv = ke.ToStateVector();
             var eq = sv.ToEquinoctial();
 
@@ -474,7 +474,7 @@ namespace IO.Astrodynamics.Tests.OrbitalParameters
         [Fact]
         public void HyperbolicToEquinoctial()
         {
-            var originalSV = new StateVector(new Vector3(6800000.0, 1000.0, -500.0), new Vector3(4000.0, 10000.0, -300.0), TestHelpers.EarthAtJ2000, TimeSystem.Time.J2000TDB,
+            var originalSV = new StateVector(new Vector3(6800000.0, 1000.0, -500.0), new Vector3(4000.0, 10000.0, -300.0), TestHelpers.EarthAtJ2000, TimeSystem.Time.J2000Tdb,
                 Frames.Frame.ICRF);
             var eq = originalSV.ToEquinoctial();
             var sv = eq.ToStateVector();
@@ -484,7 +484,7 @@ namespace IO.Astrodynamics.Tests.OrbitalParameters
         [Fact]
         public void EllipticToKeplerianUpdatePV()
         {
-            var originalSV = new StateVector(new Vector3(6800000.0, 1000.0, -500.0), new Vector3(200.0, 8000.0, -300.0), TestHelpers.EarthAtJ2000, TimeSystem.Time.J2000TDB,
+            var originalSV = new StateVector(new Vector3(6800000.0, 1000.0, -500.0), new Vector3(200.0, 8000.0, -300.0), TestHelpers.EarthAtJ2000, TimeSystem.Time.J2000Tdb,
                 Frames.Frame.ICRF);
             var ke = originalSV.ToKeplerianElements();
             var sv = ke.ToStateVector();
@@ -494,7 +494,7 @@ namespace IO.Astrodynamics.Tests.OrbitalParameters
         [Fact]
         public void ParabolicToKeplerianUpdatePV()
         {
-            var ke = KeplerianElements.Parabolic(6800000.0, 0.2, 0.3, 0.4, 0.0, TestHelpers.EarthAtJ2000, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF);
+            var ke = KeplerianElements.Parabolic(6800000.0, 0.2, 0.3, 0.4, 0.0, TestHelpers.EarthAtJ2000, TimeSystem.Time.J2000Tdb, Frames.Frame.ICRF);
             var sv = ke.ToStateVector();
             var ke2 = sv.ToKeplerianElements();
 
@@ -505,7 +505,7 @@ namespace IO.Astrodynamics.Tests.OrbitalParameters
         [Fact]
         public void HyperbolicToKeplerianUpdatePV()
         {
-            var originalSV = new StateVector(new Vector3(6800000.0, 1000.0, -500.0), new Vector3(4000.0, 10000.0, -300.0), TestHelpers.EarthAtJ2000, TimeSystem.Time.J2000TDB,
+            var originalSV = new StateVector(new Vector3(6800000.0, 1000.0, -500.0), new Vector3(4000.0, 10000.0, -300.0), TestHelpers.EarthAtJ2000, TimeSystem.Time.J2000Tdb,
                 Frames.Frame.ICRF);
             var ke = originalSV.ToKeplerianElements();
             var sv = ke.ToStateVector();
@@ -515,11 +515,11 @@ namespace IO.Astrodynamics.Tests.OrbitalParameters
         [Fact]
         public void RelativeTo2()
         {
-            var earthSv = TestHelpers.EarthAtJ2000.GetEphemeris(Astrodynamics.TimeSystem.Time.J2000TDB, TestHelpers.MoonAtJ2000, Frames.Frame.ICRF, Aberration.None);
+            var earthSv = TestHelpers.EarthAtJ2000.GetEphemeris(Astrodynamics.TimeSystem.Time.J2000Tdb, TestHelpers.MoonAtJ2000, Frames.Frame.ICRF, Aberration.None);
             var earthSvFromSun = earthSv.RelativeTo(TestHelpers.Sun, Aberration.None).ToStateVector();
             LabelAssert.Equal(
                 new StateVector(new Vector3(-26499033677.42509, 132757417338.33946, 57556718470.53819),
-                    new Vector3(-29794.26007042197, -5018.052308786111, -2175.3938028266693), TestHelpers.Sun, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF), earthSvFromSun);
+                    new Vector3(-29794.26007042197, -5018.052308786111, -2175.3938028266693), TestHelpers.Sun, TimeSystem.Time.J2000Tdb, Frames.Frame.ICRF), earthSvFromSun);
         }
         [Fact]
         public void CreateRtnRotation_CircularEquatorialOrbit()
@@ -528,7 +528,7 @@ namespace IO.Astrodynamics.Tests.OrbitalParameters
             var sv = new StateVector(
                 new Vector3(7000000.0, 0.0, 0.0),
                 new Vector3(0.0, 7546.0, 0.0),
-                TestHelpers.EarthAtJ2000, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF);
+                TestHelpers.EarthAtJ2000, TimeSystem.Time.J2000Tdb, Frames.Frame.ICRF);
 
             var rtn = sv.CreateRtnRotation();
 
@@ -552,7 +552,7 @@ namespace IO.Astrodynamics.Tests.OrbitalParameters
             var sv = new StateVector(
                 new Vector3(6800000.0, 1000000.0, -500000.0),
                 new Vector3(-1000.0, 7000.0, 500.0),
-                TestHelpers.EarthAtJ2000, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF);
+                TestHelpers.EarthAtJ2000, TimeSystem.Time.J2000Tdb, Frames.Frame.ICRF);
 
             var rtn = sv.CreateRtnRotation();
             // R * R^T should be identity
@@ -568,7 +568,7 @@ namespace IO.Astrodynamics.Tests.OrbitalParameters
             var sv = new StateVector(
                 new Vector3(7000000.0, 0.0, 0.0),
                 new Vector3(0.0, 7546.0, 0.0),
-                TestHelpers.EarthAtJ2000, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF);
+                TestHelpers.EarthAtJ2000, TimeSystem.Time.J2000Tdb, Frames.Frame.ICRF);
 
             var rtn = sv.ToRtn(sv.Position);
             Assert.Equal(7000000.0, rtn.X, 1); // R component
@@ -582,7 +582,7 @@ namespace IO.Astrodynamics.Tests.OrbitalParameters
             var sv = new StateVector(
                 new Vector3(6800000.0, 1000000.0, -500000.0),
                 new Vector3(-1000.0, 7000.0, 500.0),
-                TestHelpers.EarthAtJ2000, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF);
+                TestHelpers.EarthAtJ2000, TimeSystem.Time.J2000Tdb, Frames.Frame.ICRF);
 
             var original = new Vector3(100.0, 200.0, 300.0);
             var rtn = sv.ToRtn(original);
@@ -599,7 +599,7 @@ namespace IO.Astrodynamics.Tests.OrbitalParameters
             var sv = new StateVector(
                 new Vector3(7000000.0, 0.0, 0.0),
                 new Vector3(0.0, 7546.0, 0.0),
-                TestHelpers.EarthAtJ2000, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF);
+                TestHelpers.EarthAtJ2000, TimeSystem.Time.J2000Tdb, Frames.Frame.ICRF);
 
             var covTerms = new double[6, 6];
             covTerms[0, 0] = 100.0; // X variance → maps to R
@@ -666,11 +666,11 @@ namespace IO.Astrodynamics.Tests.OrbitalParameters
             var epoch = new TimeSystem.Time(new DateTime(2024, 1, 15, 12, 0, 0), TimeScale.UTC);
             var covariance = DistinctCovariance();
             var sv = new StateVector(new Vector3(6778137.0, 1000.0, -2000.0), new Vector3(10.0, 7500.0, 300.0), TestHelpers.EarthAtJ2000, epoch,
-                Frames.Frame.ECLIPTIC_J2000, covariance);
+                Frames.Frame.ECLIPJ2000, covariance);
             var tag = frame switch
             {
-                "TDB" => epoch.ToTDB(),
-                "TAI" => epoch.ToTAI(),
+                "TDB" => epoch.ToTdb(),
+                "TAI" => epoch.ToTai(),
                 "TT" => epoch.ToTT(),
                 _ => epoch.ConvertTo(TimeScale.GPS)
             };
@@ -748,7 +748,7 @@ namespace IO.Astrodynamics.Tests.OrbitalParameters
                 double i = random.NextDouble() * System.Math.PI;
                 var ke = new KeplerianElements(KeplerianElementsTests.ApsisSemiMajorAxes[k % KeplerianElementsTests.ApsisSemiMajorAxes.Length], 0.0, i,
                     random.NextDouble() * IO.Astrodynamics.Constants.TwoPi, random.NextDouble() * IO.Astrodynamics.Constants.TwoPi,
-                    random.NextDouble() * IO.Astrodynamics.Constants.TwoPi, TestHelpers.EarthAtJ2000, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF);
+                    random.NextDouble() * IO.Astrodynamics.Constants.TwoPi, TestHelpers.EarthAtJ2000, TimeSystem.Time.J2000Tdb, Frames.Frame.ICRF);
                 var state = ke.ToStateVector();
                 var sv = new StateVector(state.Position, state.Velocity, state.Observer, state.Epoch, state.Frame);
                 var hHat = sv.SpecificAngularMomentum() / sv.SpecificAngularMomentum().Magnitude();
@@ -785,7 +785,7 @@ namespace IO.Astrodynamics.Tests.OrbitalParameters
             {
                 double v = System.Math.Sqrt(earth.GM / r);
                 var candidate = new StateVector(new Vector3(0.0, r, 0.0), new Vector3(-v * System.Math.Cos(i), 0.0, v * System.Math.Sin(i)), earth,
-                    TimeSystem.Time.J2000TDB, Frames.Frame.ICRF);
+                    TimeSystem.Time.J2000Tdb, Frames.Frame.ICRF);
                 if (candidate.EccentricityVector() == Vector3.Zero)
                 {
                     sv = candidate;
@@ -805,7 +805,7 @@ namespace IO.Astrodynamics.Tests.OrbitalParameters
             for (double r = 7178e3; r < 7179e3; r += 1.0)
             {
                 ve = System.Math.Sqrt(earth.GM / r);
-                var equatorial = new StateVector(new Vector3(0.0, r, 0.0), new Vector3(-ve, 0.0, 0.0), earth, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF);
+                var equatorial = new StateVector(new Vector3(0.0, r, 0.0), new Vector3(-ve, 0.0, 0.0), earth, TimeSystem.Time.J2000Tdb, Frames.Frame.ICRF);
                 if (equatorial.EccentricityVector() != Vector3.Zero) continue;
                 Assert.Equal(new Vector3(equatorial.SemiMajorAxis(), 0.0, 0.0), equatorial.PerigeeVector());
                 return;
@@ -831,9 +831,9 @@ namespace IO.Astrodynamics.Tests.OrbitalParameters
             foreach (var ke in KeplerianElementsTests.RandomApsisElements(e, 6880 + (int)(-System.Math.Log10(e) * 10.0), 2000))
             {
                 var sv = ke.ToStateVector();
-                var osculating = SpiceAPI.Instance.ConvertStateVectorToConicOrbitalElement(sv);
-                var spicePerigee = KeplerianElementsTests.SpiceConicPosition(osculating.A, osculating.E, osculating.I, osculating.RAAN, osculating.AOP, 0.0);
-                worst = System.Math.Max(worst, KeplerianElementsTests.ApsisErrors(sv, spicePerigee, osculating.A, osculating.E).Angle);
+                var osculating = SpiceApi.Instance.ConvertStateVectorToConicOrbitalElement(sv);
+                var spicePerigee = KeplerianElementsTests.SpiceConicPosition(osculating.SemiMajorAxis(), osculating.Eccentricity(), osculating.Inclination(), osculating.AscendingNode(), osculating.ArgumentOfPeriapsis(), 0.0);
+                worst = System.Math.Max(worst, KeplerianElementsTests.ApsisErrors(sv, spicePerigee, osculating.SemiMajorAxis(), osculating.Eccentricity()).Angle);
             }
 
             _output.WriteLine($"MEASURE #686 elliptic states e = {e:E1}: worst apsis angle against SPICE oscelt + conics {worst:E3} rad");
@@ -862,7 +862,7 @@ namespace IO.Astrodynamics.Tests.OrbitalParameters
         [MemberData(nameof(RectilinearStates))]
         public void RectilinearState_HasNoRtnFrameNorOrbitPlane_Throws(double x, double y, double z, double vx, double vy, double vz)
         {
-            var epoch = TimeSystem.Time.J2000TDB;
+            var epoch = TimeSystem.Time.J2000Tdb;
             var later = epoch.AddSeconds(10.0);
             StateVector New() => new(new Vector3(x, y, z), new Vector3(vx, vy, vz), TestHelpers.EarthAtJ2000, epoch, Frames.Frame.ICRF);
             var covariance = Matrix.Identity6x6();
@@ -948,7 +948,7 @@ namespace IO.Astrodynamics.Tests.OrbitalParameters
         {
             var r = new Vector3(7000e3, 0.0, 0.0);
             var v = new Vector3(7.5e3, 1e-3 / 7000e3, 0.0);
-            var sv = new StateVector(r, v, TestHelpers.EarthAtJ2000, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF);
+            var sv = new StateVector(r, v, TestHelpers.EarthAtJ2000, TimeSystem.Time.J2000Tdb, Frames.Frame.ICRF);
             var rotation = sv.CreateRtnRotation();
 
             var h = r.Cross(v);

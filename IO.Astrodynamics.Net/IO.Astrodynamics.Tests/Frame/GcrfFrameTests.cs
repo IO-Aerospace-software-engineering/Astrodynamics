@@ -13,13 +13,13 @@ public class GcrfFrameTests
     public void GcrfRotationIsConstantAcrossEpochs()
     {
         var gcrf = new GcrfFrame();
-        var epoch1 = TimeSystem_Time.J2000TDB;
-        var epoch2 = TimeSystem_Time.J2000TDB.AddDays(365.25);
-        var epoch3 = TimeSystem_Time.J2000TDB.AddDays(3652.5);
+        var epoch1 = TimeSystem_Time.J2000Tdb;
+        var epoch2 = TimeSystem_Time.J2000Tdb.AddDays(365.25);
+        var epoch3 = TimeSystem_Time.J2000Tdb.AddDays(3652.5);
 
-        var q1 = gcrf.GetStateOrientationToICRF(epoch1).Rotation;
-        var q2 = gcrf.GetStateOrientationToICRF(epoch2).Rotation;
-        var q3 = gcrf.GetStateOrientationToICRF(epoch3).Rotation;
+        var q1 = gcrf.GetStateOrientationToIcrf(epoch1).Rotation;
+        var q2 = gcrf.GetStateOrientationToIcrf(epoch2).Rotation;
+        var q3 = gcrf.GetStateOrientationToIcrf(epoch3).Rotation;
 
         Assert.Equal(q1.W, q2.W, 1e-15);
         Assert.Equal(q1.VectorPart.X, q2.VectorPart.X, 1e-15);
@@ -34,7 +34,7 @@ public class GcrfFrameTests
     public void GcrfAngularVelocityIsZero()
     {
         var gcrf = new GcrfFrame();
-        var orientation = gcrf.GetStateOrientationToICRF(TimeSystem_Time.J2000TDB);
+        var orientation = gcrf.GetStateOrientationToIcrf(TimeSystem_Time.J2000Tdb);
 
         Assert.Equal(0.0, orientation.AngularVelocity.X, 1e-20);
         Assert.Equal(0.0, orientation.AngularVelocity.Y, 1e-20);
@@ -47,7 +47,7 @@ public class GcrfFrameTests
         // The SPICE J2000 pivot is treated as ICRS-aligned, so GCRF -> ICRF is the identity.
         // The IAU 2006 frame bias lives in the precession-nutation matrix of CIRS, not here.
         var gcrf = new GcrfFrame();
-        var orientation = gcrf.GetStateOrientationToICRF(TimeSystem_Time.J2000TDB);
+        var orientation = gcrf.GetStateOrientationToIcrf(TimeSystem_Time.J2000Tdb);
 
         var q = orientation.Rotation;
         Assert.Equal(1.0, q.W, 1e-15);
@@ -56,7 +56,7 @@ public class GcrfFrameTests
         Assert.Equal(0.0, q.VectorPart.Z, 1e-15);
 
         var position = new Vector3(6778136.3, -1234567.8, 345678.9);
-        var inIcrf = gcrf.ToFrame(Frames.Frame.ICRF, TimeSystem_Time.J2000TDB);
+        var inIcrf = gcrf.ToFrame(Frames.Frame.ICRF, TimeSystem_Time.J2000Tdb);
         var rotated = position.Rotate(inIcrf.Rotation);
         Assert.Equal(position.X, rotated.X, 1e-9);
         Assert.Equal(position.Y, rotated.Y, 1e-9);
@@ -74,7 +74,7 @@ public class GcrfFrameTests
     public void GcrfReferenceFrameIsSelf()
     {
         var gcrf = new GcrfFrame();
-        var orientation = gcrf.GetStateOrientationToICRF(TimeSystem_Time.J2000TDB);
+        var orientation = gcrf.GetStateOrientationToIcrf(TimeSystem_Time.J2000Tdb);
 
         Assert.Same(gcrf, orientation.ReferenceFrame);
     }
@@ -83,11 +83,11 @@ public class GcrfFrameTests
     public void GcrfToIcrfRoundTrip()
     {
         var gcrf = new GcrfFrame();
-        var epoch = TimeSystem_Time.J2000TDB;
+        var epoch = TimeSystem_Time.J2000Tdb;
 
         // Transform a vector from GCRF to ICRF and back
         var vGcrf = new Vector3(6778136.3, 0.0, 0.0);
-        var orientation = gcrf.GetStateOrientationToICRF(epoch);
+        var orientation = gcrf.GetStateOrientationToIcrf(epoch);
         var vIcrf = vGcrf.Rotate(orientation.Rotation);
         var vBack = vIcrf.Rotate(orientation.Rotation.Conjugate());
 

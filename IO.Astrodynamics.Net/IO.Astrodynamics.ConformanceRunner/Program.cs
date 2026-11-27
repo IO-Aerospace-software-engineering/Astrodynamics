@@ -119,7 +119,7 @@ public static class Program
         Console.WriteLine("=====================================================");
         Console.WriteLine();
 
-        SpiceAPI.Instance.LoadKernels(new DirectoryInfo(kernelsPath));
+        SpiceApi.Instance.LoadKernels(new DirectoryInfo(kernelsPath));
 
         try
         {

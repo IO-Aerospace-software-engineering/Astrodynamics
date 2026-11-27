@@ -18,15 +18,9 @@ using System.Threading;
 using System.Threading.Tasks;
 using IO.Astrodynamics;
 using IO.Astrodynamics.Atmosphere;
-using IO.Astrodynamics.Atmosphere.NRLMSISE_00;
 using IO.Astrodynamics.Body;
 using IO.Astrodynamics.Body.Spacecraft;
-using IO.Astrodynamics.CCSDS;
-using IO.Astrodynamics.CCSDS.CDM;
-using IO.Astrodynamics.CCSDS.Common;
-using IO.Astrodynamics.CCSDS.Common.Enums;
-using IO.Astrodynamics.CCSDS.OMM;
-using IO.Astrodynamics.CCSDS.OPM;
+using IO.Astrodynamics.Ccsds;
 using IO.Astrodynamics.Converters;
 using IO.Astrodynamics.Coordinates;
 using IO.Astrodynamics.Cosmographia;
@@ -49,11 +43,11 @@ using IO.Astrodynamics.Propagator.Forces;
 using IO.Astrodynamics.Propagator.Integrators;
 using IO.Astrodynamics.Propagator.MonteCarlo;
 using IO.Astrodynamics.Propagator.Variational;
-using IO.Astrodynamics.SSA;
+using IO.Astrodynamics.Ssa;
 using IO.Astrodynamics.SolarSystemObjects;
 using IO.Astrodynamics.Surface;
 using IO.Astrodynamics.TimeSystem;
-using TLE = IO.Astrodynamics.OrbitalParameters.TLE.TLE;
+using Tle = IO.Astrodynamics.OrbitalParameters.Tle;
 
 namespace DocumentationPageSamples.Reference;
 
@@ -72,7 +66,7 @@ internal static class IntegratorsPage
     internal static void Block02()
     {
         #region docs/reference/integrators.md:2
-        var fixedStep = new RK78Integrator(fixedStepSize: 30.0);
+        var fixedStep = new RK78Integrator(fixedStepSizeSeconds: 30.0);
         #endregion
     }
 
@@ -84,10 +78,10 @@ internal static class IntegratorsPage
         var integrator = new RK78Integrator(
             absoluteTolerance: 1e-10,
             relativeTolerance: 1e-10,
-            initialStepSize: 30.0);
+            initialStepSizeSeconds: 30.0);
 
         // Fixed-step
-        var fixedIntegrator = new RK78Integrator(fixedStepSize: 10.0);
+        var fixedIntegrator = new RK78Integrator(fixedStepSizeSeconds: 10.0);
         #endregion
     }
 

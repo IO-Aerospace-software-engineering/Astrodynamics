@@ -77,7 +77,7 @@ namespace IO.Astrodynamics.Tests.Body
         public async Task ClockOfAnotherSpacecraft_Throws(string construction)
         {
             // Arrange
-            var earth = new CelestialBody(SolarSystemObjects.PlanetsAndMoons.EARTH);
+            var earth = new CelestialBody(SolarSystemObjects.PlanetsAndMoons.Earth);
             var epoch = new TimeSystem.Time(2024, 1, 1, TimeScale.TDB);
             var clock = new Clock("SHARED", 65536);
             var first = new Spacecraft(-1431, "FIRST", 100.0, LeoAbout(earth, epoch), 1000.0, clock);
@@ -87,7 +87,7 @@ namespace IO.Astrodynamics.Tests.Body
             {
                 "Propagated" => new Spacecraft(-1432, "SECOND", 100.0, LeoAbout(earth, epoch), 1000.0, clock),
                 "KernelBacked" => new Spacecraft(-1432, "SECOND", epoch, clock: clock),
-                _ => IO.Astrodynamics.CCSDS.OPM.Opm.CreateFromStateVector("SECOND", "2024-001A", LeoAbout(earth, epoch)).ToSpacecraft(-1432, 1000.0, clock, earth)
+                _ => IO.Astrodynamics.Ccsds.Opm.CreateFromStateVector("SECOND", "2024-001A", LeoAbout(earth, epoch)).ToSpacecraft(-1432, 1000.0, clock, earth)
             });
 
             // Assert
@@ -108,7 +108,7 @@ namespace IO.Astrodynamics.Tests.Body
         public void ClockKeptAfterFailedConstructor()
         {
             // Arrange
-            var earth = new CelestialBody(SolarSystemObjects.PlanetsAndMoons.EARTH);
+            var earth = new CelestialBody(SolarSystemObjects.PlanetsAndMoons.Earth);
             var clock = new Clock("RETRY", 65536);
 
             // Act: non-orthogonal body axes
@@ -134,7 +134,7 @@ namespace IO.Astrodynamics.Tests.Body
             for (int round = 0; round < 50; round++)
             {
                 // Arrange
-                var earth = new CelestialBody(SolarSystemObjects.PlanetsAndMoons.EARTH);
+                var earth = new CelestialBody(SolarSystemObjects.PlanetsAndMoons.Earth);
                 var clock = new Clock("RACE" + round, 65536);
                 var built = new Spacecraft[threads];
                 var errors = new Exception[threads];
@@ -172,7 +172,7 @@ namespace IO.Astrodynamics.Tests.Body
         [Fact]
         public void ClockOfSameId_Accepted()
         {
-            var earth = new CelestialBody(SolarSystemObjects.PlanetsAndMoons.EARTH);
+            var earth = new CelestialBody(SolarSystemObjects.PlanetsAndMoons.Earth);
             var clock = new Clock("SAME", 65536);
             var first = new Spacecraft(-1434, "FIRST", 100.0, LeoAbout(earth, new TimeSystem.Time(2024, 1, 1, TimeScale.TDB)), 1000.0, clock);
             var second = new Spacecraft(-1434, "SECOND", 100.0, LeoAbout(earth, new TimeSystem.Time(2024, 1, 1, TimeScale.TDB)), 1000.0, clock);
@@ -189,7 +189,7 @@ namespace IO.Astrodynamics.Tests.Body
         public async Task OwnClock_SclkReadsTheCk()
         {
             // Arrange
-            var earth = new CelestialBody(SolarSystemObjects.PlanetsAndMoons.EARTH);
+            var earth = new CelestialBody(SolarSystemObjects.PlanetsAndMoons.Earth);
             var epoch = new TimeSystem.Time(2024, 1, 1, 0, 0, 0, TimeScale.TDB);
             var spacecraft = new Spacecraft(-1435, "OWNCLK", 100.0, new KeplerianElements(7000e3, 0.001, 0.9, 0.0, 0.0, 0.0, earth, epoch, Frames.Frame.ICRF), 1000.0,
                 new Clock("OWNCLK", 256));
@@ -207,7 +207,7 @@ namespace IO.Astrodynamics.Tests.Body
             spacecraft.Frame.Write(fk);
             Assert.Contains("SCLK_DATA_TYPE_1435 ", await File.ReadAllTextAsync(sclk.FullName));
 
-            SpiceAPI.Instance.LoadKernels(sclk);
+            SpiceApi.Instance.LoadKernels(sclk);
             try
             {
                 // Act
@@ -215,26 +215,26 @@ namespace IO.Astrodynamics.Tests.Body
                 fk.Refresh();
                 ck.Refresh();
                 Assert.True(fk.Exists && ck.Exists);
-                SpiceAPI.Instance.LoadKernels(fk);
-                SpiceAPI.Instance.LoadKernels(ck);
+                SpiceApi.Instance.LoadKernels(fk);
+                SpiceApi.Instance.LoadKernels(ck);
                 try
                 {
                     var t = epoch.AddSeconds(1800.0);
-                    var spice = SpiceAPI.Instance.TransformFrame(t, new Frames.Frame("OWNCLK_FRAME"), Frames.Frame.ICRF).Rotation;
+                    var spice = SpiceApi.Instance.TransformFrame(t, new Frames.Frame("OWNCLK_FRAME"), Frames.Frame.ICRF).Rotation;
 
                     // Assert
-                    double angle = AttitudeRecordTests.RotationAngle(spacecraft.Frame.GetStateOrientationToICRF(t).Rotation, spice);
+                    double angle = AttitudeRecordTests.RotationAngle(spacecraft.Frame.GetStateOrientationToIcrf(t).Rotation, spice);
                     Assert.True(angle <= 6.1e-10, $"{angle:E3} rad");
                 }
                 finally
                 {
-                    SpiceAPI.Instance.UnloadKernels(ck);
-                    SpiceAPI.Instance.UnloadKernels(fk);
+                    SpiceApi.Instance.UnloadKernels(ck);
+                    SpiceApi.Instance.UnloadKernels(fk);
                 }
             }
             finally
             {
-                SpiceAPI.Instance.UnloadKernels(sclk);
+                SpiceApi.Instance.UnloadKernels(sclk);
             }
         }
     }

@@ -31,7 +31,7 @@ public record Atmosphere
     /// Optional model-specific atmospheric details.
     /// </summary>
     /// <remarks>
-    /// For NRLMSISE-00 model, this will be <see cref="NRLMSISE_00.NrlmsiseDetails"/>.
+    /// For NRLMSISE-00 model, this will be <see cref="NrlmsiseDetails"/>.
     /// For standard models, this will be null.
     /// Use pattern matching to access model-specific data:
     /// <code>

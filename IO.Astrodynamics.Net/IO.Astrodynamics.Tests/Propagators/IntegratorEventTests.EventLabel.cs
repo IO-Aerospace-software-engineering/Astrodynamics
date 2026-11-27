@@ -66,7 +66,7 @@ public partial class IntegratorEventTests
     public void VelocityVerletEvent_TheNextSegmentStartsAtTheInstantOfItsState(string centerName, double step)
     {
         bool moon = centerName == "Moon";
-        var center = new CelestialBody(moon ? PlanetsAndMoons.MOON : PlanetsAndMoons.EARTH, Frame.ICRF, S);
+        var center = new CelestialBody(moon ? PlanetsAndMoons.Moon : PlanetsAndMoons.Earth, Frame.ICRF, S);
         KeplerianElements Orbit() => moon
             ? new KeplerianElements(MinimumEpochGateTests.MoonRadius + 600000.0, 0.1, 0.9, 0.3, 1.1, 0.5, center, S, Frame.ICRF)
             : new KeplerianElements(MinimumEpochGateTests.A0, MinimumEpochGateTests.E0, 0.9, 0.3, 1.1, 0.5, center, S, Frame.ICRF);
@@ -88,7 +88,7 @@ public partial class IntegratorEventTests
         {
             var previous = solution.Segments[i - 1];
             // The base of the next segment is the instant at which the previous one's state was taken
-            double offset = argument.SecondsBetween(previous.BaseEpoch, solution.Segments[i].BaseEpoch) - previous.Duration;
+            double offset = argument.SecondsBetween(previous.BaseEpoch, solution.Segments[i].BaseEpoch) - previous.DurationSeconds;
             worstLabel = System.Math.Max(worstLabel, System.Math.Abs(offset));
         }
 

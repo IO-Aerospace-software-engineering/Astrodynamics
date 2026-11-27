@@ -12,13 +12,10 @@ using System;
 using System.Collections.Generic;
 using IO.Astrodynamics;
 using IO.Astrodynamics.Atmosphere;
-using IO.Astrodynamics.Atmosphere.NRLMSISE_00;
 using IO.Astrodynamics.Body;
 using IO.Astrodynamics.Body.Spacecraft;
-using IO.Astrodynamics.CCSDS.Common;
+using IO.Astrodynamics.Ccsds;
 using IO.Astrodynamics.Coordinates;
-using IO.Astrodynamics.CCSDS.OMM;
-using IO.Astrodynamics.CCSDS.OPM;
 using IO.Astrodynamics.DataProvider;
 using IO.Astrodynamics.Frames;
 using IO.Astrodynamics.Maneuver;
@@ -31,7 +28,7 @@ using IO.Astrodynamics.Propagator.Forces;
 using IO.Astrodynamics.SolarSystemObjects;
 using IO.Astrodynamics.TimeSystem;
 using Xunit;
-using TLE = IO.Astrodynamics.OrbitalParameters.TLE.TLE;
+using Tle = IO.Astrodynamics.OrbitalParameters.Tle;
 
 namespace ClaudeMdSamples
 {
@@ -57,11 +54,11 @@ namespace ClaudeMdSamples
         }
 
         // IO.Astrodynamics.Net/CLAUDE.md, "Working with TLE"
-        internal static TLE Net02(Time epoch)
+        internal static Tle Net02(Time epoch)
         {
             #region net:2
             // Parse TLE - elements are mean by definition
-            var tle = new TLE("ISS",
+            var tle = new Tle("ISS",
                 "1 25544U 98067A   21020.53488036  .00016717  00000-0  10270-3 0  9054",
                 "2 25544  51.6423 353.0312 0000493 320.8755  39.2360 15.49309423 25703");
 
@@ -112,7 +109,7 @@ namespace ClaudeMdSamples
             }
 
             // TLE to OMM (for archiving/sharing)
-            var issTle = new TLE("ISS", line1, line2);
+            var issTle = new Tle("ISS", line1, line2);
             var issOmm = issTle.ToOmm(originator: "My Organization");
             issOmm.Save("iss.omm");
             #endregion
@@ -256,8 +253,8 @@ namespace ClaudeMdSamples
             // Via CelestialBody: its configured model; an Earth without one takes NRLMSISE-00 at nominal space weather with a
             // full context, the atmosphere of its drag (#674), and the U.S. Standard Atmosphere 1976, its base atmosphere, with an
             // altitude only or a partial context (decided by S. Guillet, 2026-11-14)
-            var earth = PlanetsAndMoons.EARTH_BODY;
-            var atm = earth.GetAtmosphere(fullContext);  // NRLMSISE-00 nominal: EARTH_BODY has no model
+            var earth = PlanetsAndMoons.EarthBody;
+            var atm = earth.GetAtmosphere(fullContext);  // NRLMSISE-00 nominal: EarthBody has no model
             var low = earth.GetAtmosphere(10000.0);  // U.S. Standard Atmosphere 1976: an altitude only
             #endregion
             return (atmosphere, thermosphere, atm, low, fullContext);
@@ -268,7 +265,7 @@ namespace ClaudeMdSamples
         {
             #region net:12
             // Create Earth with degree-10 geopotential
-            var earth = new CelestialBody(PlanetsAndMoons.EARTH, Frame.ICRF, epoch,
+            var earth = new CelestialBody(PlanetsAndMoons.Earth, Frame.ICRF, epoch,
                 new GeopotentialModelParameters("Data/SolarSystem/EGM2008_to70_TideFree", 10));
 
             // A propagation takes the models of the orbit's centre, and a listed body of its id with other models throws
@@ -281,7 +278,7 @@ namespace ClaudeMdSamples
             {
                 Integrator = new VVIntegratorOptions { Step = TimeSpan.FromSeconds(1.0) },
                 OutputStep = TimeSpan.FromSeconds(1.0),
-                ThirdBodies = [PlanetsAndMoons.MOON_BODY, Stars.SUN_BODY]
+                ThirdBodies = [PlanetsAndMoons.MoonBody, Stars.SunBody]
             });
             #endregion
             return propagator;
@@ -293,7 +290,7 @@ namespace ClaudeMdSamples
             #region net:13
             // Atmospheric drag reads the body's atmosphere: its model, or NRLMSISE-00 at nominal space weather for an Earth without
             // one; another body without a model throws (#674)
-            var earth = new CelestialBody(PlanetsAndMoons.EARTH, Frame.ICRF, epoch,
+            var earth = new CelestialBody(PlanetsAndMoons.Earth, Frame.ICRF, epoch,
                 geopotentialParams, new EarthStandardAtmosphere());
             var drag = new AtmosphericDrag(spacecraft, earth);
             #endregion
@@ -493,7 +490,7 @@ namespace ClaudeMdSamples.Declarations
         void Initialize(StateVector initialState);
         IntegrationResult IntegrateSegment(
             Vector3 startPosition, Vector3 startVelocity,
-            Time baseEpoch, double duration,
+            Time baseEpoch, double durationSeconds,
             IReadOnlyList<IEventDetector> eventDetectors = null);
     }
     #endregion
@@ -517,7 +514,7 @@ namespace IO.Astrodynamics.Tests.Documentation
         {
             #region net:27
             var icrf = Frames.Frame.ICRF;                     // not Frame.ICRF
-            var j2000 = TimeSystem.Time.J2000TDB;             // not Time.J2000TDB
+            var j2000 = TimeSystem.Time.J2000Tdb;             // not Time.J2000Tdb
             var deg2Rad = IO.Astrodynamics.Constants.Deg2Rad; // not Constants.Deg2Rad (that is the test helper)
             #endregion
             return (icrf, j2000, deg2Rad);

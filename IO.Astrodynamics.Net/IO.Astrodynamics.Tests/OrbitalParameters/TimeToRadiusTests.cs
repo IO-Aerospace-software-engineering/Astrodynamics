@@ -28,7 +28,7 @@ public class TimeToRadiusTests
     // A body built from custom parameters: no heliocentric orbit, so an infinite sphere of influence
     private sealed class CustomBody : CelestialBody
     {
-        internal CustomBody() : base(1000627, "CUSTOM627", 4.28e13 / IO.Astrodynamics.Constants.G, 3.0e6, 3.0e6)
+        internal CustomBody() : base(1000627, "CUSTOM627", 4.28e13 / IO.Astrodynamics.Constants.GravitationalConstant, 3.0e6, 3.0e6)
         {
         }
     }
@@ -69,7 +69,7 @@ public class TimeToRadiusTests
     [Fact]
     public void HyperbolaAboutTheMoon_ReachesItsSphereOfInfluence()
     {
-        var moon = new CelestialBody(PlanetsAndMoons.MOON, Frames.Frame.ICRF, Epoch);
+        var moon = new CelestialBody(PlanetsAndMoons.Moon, Frames.Frame.ICRF, Epoch);
         Assert.Equal(4902800118457.549, moon.GM);
         double soi = moon.SphereOfInfluence - 67393946.13153864;
         var orbit = Orbit(-5e6, 2.0, moon);
@@ -87,7 +87,7 @@ public class TimeToRadiusTests
     {
         var sun = new CelestialBody(Stars.Sun);
         var custom = new CustomBody();
-        var mars = new CelestialBody(PlanetsAndMoons.MARS, Frames.Frame.ICRF, Epoch);
+        var mars = new CelestialBody(PlanetsAndMoons.Mars, Frames.Frame.ICRF, Epoch);
 
         // de440s does not chain Mars to its barycenter: no initial orbital parameters (#454)
         Assert.Null(mars.InitialOrbitalParameters);
@@ -113,7 +113,7 @@ public class TimeToRadiusTests
     [Fact]
     public void AnEllipseInsideAFiniteSphereOfInfluence_Throws()
     {
-        var moon = new CelestialBody(PlanetsAndMoons.MOON, Frames.Frame.ICRF, Epoch);
+        var moon = new CelestialBody(PlanetsAndMoons.Moon, Frames.Frame.ICRF, Epoch);
         var orbit = Orbit(5e6, 0.5, moon);
         var ex = Assert.Throws<ArgumentOutOfRangeException>(() => orbit.TimeToSphereOfInfluence());
         Assert.Equal("radius", ex.ParamName);
@@ -204,7 +204,7 @@ public class TimeToRadiusTests
         // The one outbound crossing of an open orbit, already past at M0 > M(r): (M(r) - M0) / n, the closed form
         var sun = new CelestialBody(Stars.Sun);
         double past = SecondsTo(Orbit(-1.5e11, 2.0, sun, 10.0), 1e12) - -23289240.982338788371;
-        var moon = new CelestialBody(PlanetsAndMoons.MOON, Frames.Frame.ICRF, Epoch);
+        var moon = new CelestialBody(PlanetsAndMoons.Moon, Frames.Frame.ICRF, Epoch);
         double pastSoi = (Orbit(-5e6, 2.0, moon, 1e3).TimeToSphereOfInfluence() - Epoch).TotalSeconds -
                          -4990383.9801409249097;
         _output.WriteLine($"past 1e12 m: {past:E3} s, past the SOI: {pastSoi:E3} s off the closed form");
@@ -222,7 +222,7 @@ public class TimeToRadiusTests
     {
         // e = 0: the orbit is at its radius at every instant; (p / r - 1) / e is 0 / 0 at r = p and ±1 / 0 at r = a, an
         // ulp or two from p
-        var earth = new CelestialBody(PlanetsAndMoons.EARTH, Frames.Frame.ICRF, Epoch);
+        var earth = new CelestialBody(PlanetsAndMoons.Earth, Frames.Frame.ICRF, Epoch);
         var orbit = Orbit(a, 0.0, earth);
         double p = orbit.SemiLatusRectum();
         foreach (var radius in new[] { p, a, System.Math.BitIncrement(p), System.Math.BitDecrement(p) })

@@ -2,7 +2,7 @@
 
 using System;
 
-namespace IO.Astrodynamics.SSA;
+namespace IO.Astrodynamics.Ssa;
 
 /// <summary>
 /// The covariance of one participant at the encounter epoch: where it comes from, and how far it can be trusted.

@@ -4,14 +4,14 @@ using System;
 using System.Linq;
 using IO.Astrodynamics.Atmosphere;
 using IO.Astrodynamics.Body;
-using IO.Astrodynamics.CCSDS.CDM;
+using IO.Astrodynamics.Ccsds;
 using IO.Astrodynamics.OrbitalParameters;
 using IO.Astrodynamics.Propagator;
 using IO.Astrodynamics.Propagator.Forces;
 using IO.Astrodynamics.Propagator.Integrators;
 using IO.Astrodynamics.Propagator.Variational;
 using IO.Astrodynamics.SolarSystemObjects;
-using IO.Astrodynamics.SSA;
+using IO.Astrodynamics.Ssa;
 using IO.Astrodynamics.Tests.Propagators.Variational;
 using Xunit;
 using Xunit.Abstractions;
@@ -342,7 +342,7 @@ public class ConjunctionCovarianceEdgeTests : IClassFixture<ConjunctionCovarianc
     public void Resolver_PropagationInAnotherInertialFrame_RotatesTheCovarianceToTheFrameOfTheEncounter()
     {
         // Arrange: the protected participant in ECLIPJ2000, and its encounter state in ICRF
-        var ecliptic = _case.ProtectedStart.ToFrame(Frames.Frame.ECLIPTIC_J2000).ToStateVector();
+        var ecliptic = _case.ProtectedStart.ToFrame(Frames.Frame.ECLIPJ2000).ToStateVector();
         var spacecraft = ConjunctionCovarianceCase.NewSpacecraft(-6911, ecliptic);
         var solution = _case.Propagate(spacecraft, Covariance);
         var epoch = ConjunctionCovarianceCase.Tca;
@@ -354,7 +354,7 @@ public class ConjunctionCovarianceEdgeTests : IClassFixture<ConjunctionCovarianc
 
         // Assert: the covariance of the solution, rotated to ICRF, as ToFrame rotates it
         Assert.Equal(CovarianceSource.Propagated, covariance.Source);
-        Assert.Equal(Frames.Frame.ECLIPTIC_J2000, solution.Frame);
+        Assert.Equal(Frames.Frame.ECLIPJ2000, solution.Frame);
         Assert.Equal(encounterState.Covariance.Value.ToArray(), covariance.CovarianceInertial.Value.ToArray());
     }
 
@@ -519,7 +519,7 @@ public class ConjunctionCovarianceEdgeTests : IClassFixture<ConjunctionCovarianc
         var spacecraft = ConjunctionCovarianceCase.NewSpacecraft(-6941, _case.ProtectedStart);
         string NameOf(IAtmosphericModel model)
         {
-            var earth = new CelestialBody(PlanetsAndMoons.EARTH, Frames.Frame.ICRF, epoch, null, model);
+            var earth = new CelestialBody(PlanetsAndMoons.Earth, Frames.Frame.ICRF, epoch, null, model);
             var forces = new ForceBase[]
             {
                 new GravitationalAcceleration(earth), new GravitationalAcceleration(sun), new AtmosphericDrag(spacecraft, earth)
@@ -553,11 +553,11 @@ public class ConjunctionCovarianceEdgeTests : IClassFixture<ConjunctionCovarianc
         }
 
         // Act, assert
-        Assert.Equal("EGM2008: 8D 8O", GravityOf(new CelestialBody(PlanetsAndMoons.EARTH, Frames.Frame.ICRF, epoch,
+        Assert.Equal("EGM2008: 8D 8O", GravityOf(new CelestialBody(PlanetsAndMoons.Earth, Frames.Frame.ICRF, epoch,
             new GeopotentialModelParameters(model, 8))));
-        Assert.Equal("GEOPOTENTIAL: 8D 8O", GravityOf(new CelestialBody(PlanetsAndMoons.EARTH, Frames.Frame.ICRF, epoch,
+        Assert.Equal("GEOPOTENTIAL: 8D 8O", GravityOf(new CelestialBody(PlanetsAndMoons.Earth, Frames.Frame.ICRF, epoch,
             new GeopotentialModelParameters(model, 8, 3.986004418e14, 6378137.0))));
-        Assert.Equal("GEOPOTENTIAL: 4D 4O", GravityOf(new CelestialBody(PlanetsAndMoons.MOON, Frames.Frame.ICRF, epoch,
+        Assert.Equal("GEOPOTENTIAL: 4D 4O", GravityOf(new CelestialBody(PlanetsAndMoons.Moon, Frames.Frame.ICRF, epoch,
             new GeopotentialModelParameters(model, 4))));
     }
 

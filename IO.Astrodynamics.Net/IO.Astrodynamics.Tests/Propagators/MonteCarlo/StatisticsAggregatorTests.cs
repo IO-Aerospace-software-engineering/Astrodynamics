@@ -29,14 +29,14 @@ public class StatisticsAggregatorTests
             svList[i] = new StateVector(
                 new Vector3(s[0], s[1], s[2]),
                 new Vector3(s[3], s[4], s[5]),
-                observer, TimeSystem.Time.J2000TDB.AddSeconds(i * 60), Frames.Frame.ICRF);
+                observer, TimeSystem.Time.J2000Tdb.AddSeconds(i * 60), Frames.Frame.ICRF);
         }
 
         solution.SetOutputStates(svList);
         return solution;
     }
 
-    private static CelestialBody Earth => new CelestialBody(PlanetsAndMoons.EARTH);
+    private static CelestialBody Earth => new CelestialBody(PlanetsAndMoons.Earth);
 
     [Fact]
     public void MeanPosition_ComputedCorrectly()

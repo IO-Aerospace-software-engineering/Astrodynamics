@@ -67,11 +67,11 @@ public class KernelsPathTests : IDisposable
                 var output = Convert(file.FullName);
 
                 AssertRotationAboutZBy90Degrees(output);
-                Assert.Contains(SpiceAPI.Instance.GetLoadedKernels(), k => k.FullName == file.FullName);
+                Assert.Contains(SpiceApi.Instance.GetLoadedKernels(), k => k.FullName == file.FullName);
             }
             finally
             {
-                SpiceAPI.Instance.UnloadKernels(file);
+                SpiceApi.Instance.UnloadKernels(file);
             }
         }
     }
@@ -134,7 +134,7 @@ public class KernelsPathTests : IDisposable
             finally
             {
                 Environment.SetEnvironmentVariable(CliKernels.EnvironmentVariable, previous);
-                SpiceAPI.Instance.UnloadKernels(file);
+                SpiceApi.Instance.UnloadKernels(file);
             }
         }
     }
@@ -154,11 +154,11 @@ public class KernelsPathTests : IDisposable
                 var output = Convert(metaKernel.FullName);
 
                 AssertRotationAboutZBy90Degrees(output);
-                Assert.Contains(SpiceAPI.Instance.GetLoadedKernels(), k => k.FullName == metaKernel.FullName);
+                Assert.Contains(SpiceApi.Instance.GetLoadedKernels(), k => k.FullName == metaKernel.FullName);
             }
             finally
             {
-                SpiceAPI.Instance.UnloadKernels(metaKernel);
+                SpiceApi.Instance.UnloadKernels(metaKernel);
             }
         }
     }

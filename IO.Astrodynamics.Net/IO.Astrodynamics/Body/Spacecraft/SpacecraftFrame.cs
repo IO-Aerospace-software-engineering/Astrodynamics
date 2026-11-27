@@ -16,7 +16,7 @@ namespace IO.Astrodynamics.Body.Spacecraft;
 /// <summary>
 /// The frame of a spacecraft. A kernel-backed spacecraft reads its orientation from SPICE (its frame kernel and CK), at
 /// each call, without storing it. A managed spacecraft reads it from its attitude record, which only its propagation
-/// fills (and <see cref="AddStateOrientationToICRF"/>): a read never adds an entry (#523).
+/// fills (and <see cref="AddStateOrientationToIcrf"/>): a read never adds an entry (#523).
 /// </summary>
 /// <remarks>
 /// <para>
@@ -61,7 +61,7 @@ public class SpacecraftFrame : Frame
     private readonly List<AttitudeEntry> _record = new();
 
     // No region of this lock calls SPICE: an ephemeris read in this frame rotates by the record under the lock of the SPICE
-    // calls (SpiceAPI.ManagedReadFrame, #682), which this order keeps free of a lock inversion
+    // calls (SpiceApi.ManagedReadFrame, #682), which this order keeps free of a lock inversion
     private readonly object _recordLock = new();
 
     public Spacecraft Spacecraft { get; }
@@ -91,58 +91,58 @@ public class SpacecraftFrame : Frame
     private protected override bool ReadsOrientationCache => false;
 
     /// <summary>
-    /// The rotation from the spacecraft frame to ICRF at <paramref name="date"/>. For a managed spacecraft: the identity of
+    /// The rotation from the spacecraft frame to ICRF at <paramref name="epoch"/>. For a managed spacecraft: the identity of
     /// ICRF before any propagation; the first entry before the record and the last after it; the interpolation of
-    /// <see cref="SpacecraftFrame"/>'s remarks inside. The angular velocity follows <see cref="Frame.GetStateOrientationToICRF"/>:
+    /// <see cref="SpacecraftFrame"/>'s remarks inside. The angular velocity follows <see cref="Frame.GetStateOrientationToIcrf"/>:
     /// that of ICRF relative to the spacecraft, in the spacecraft frame.
     /// </summary>
-    public override StateOrientation GetStateOrientationToICRF(Time date)
+    public override StateOrientation GetStateOrientationToIcrf(Time epoch)
     {
         // Kernel-backed spacecraft: SPICE at each call (requires FK+CK kernels loaded), nothing stored
         if (Spacecraft.IsSpiceBacked)
-            return ReadFromProvider(_dataProvider, date);
+            return ReadFromProvider(_dataProvider, epoch);
 
         lock (_recordLock)
         {
             if (_record.Count == 0)
             {
-                return new StateOrientation(Quaternion.Identity, Vector3.Zero, date, this);
+                return new StateOrientation(Quaternion.Identity, Vector3.Zero, epoch, this);
             }
 
-            int index = Find(date);
+            int index = Find(epoch);
             if (index >= 0)
             {
                 return EntryAt(index);
             }
 
-            // The entry before the date, ~index - 1, and the one after, ~index; outside the record, the first or the last held
+            // The entry before the epoch, ~index - 1, and the one after, ~index; outside the record, the first or the last held
             int next = ~index;
             if (next == 0)
             {
-                return At(_record[0].Orientation, date);
+                return At(_record[0].Orientation, epoch);
             }
 
             if (next == _record.Count)
             {
-                return At(_record[^1].Orientation, date);
+                return At(_record[^1].Orientation, epoch);
             }
 
             var before = _record[next - 1];
             var after = _record[next];
-            double fromBefore = (date - before.Orientation.Epoch).TotalSeconds;
+            double fromBefore = (epoch - before.Orientation.Epoch).TotalSeconds;
             double span = (after.Orientation.Epoch - before.Orientation.Epoch).TotalSeconds;
             if (Interpolates(before, after) || before.Orientation.Rotation == after.Orientation.Rotation)
             {
                 double fraction = fromBefore / span;
                 var (rotation, _) = Slerp(before.Orientation.Rotation, after.Orientation.Rotation, fraction, span);
-                return WithRate(rotation, NodeRate(next - 1) * (1.0 - fraction) + NodeRate(next) * fraction, date);
+                return WithRate(rotation, NodeRate(next - 1) * (1.0 - fraction) + NodeRate(next) * fraction, epoch);
             }
 
             // A discrete change: the earlier entry held; the rate of the CK, from the rate of the earlier record to zero at
             // the record DiscreteChangeLead before the change
             double hold = span - DiscreteChangeLead;
             var rate = fromBefore < hold ? NodeRate(next - 1) * (1.0 - fromBefore / hold) : Vector3.Zero;
-            return WithRate(before.Orientation.Rotation, rate, date);
+            return WithRate(before.Orientation.Rotation, rate, epoch);
         }
     }
 
@@ -378,10 +378,10 @@ public class SpacecraftFrame : Frame
     /// entry. It replaces the entries at the same epoch, within 2 µs.
     /// </summary>
     /// <param name="stateOrientation">The rotation from the spacecraft frame to ICRF, labelled with the spacecraft frame,
-    /// its source, as <see cref="Frame.GetStateOrientationToICRF"/> returns it. Its angular velocity is not kept: the reads
-    /// give the record's (<see cref="GetStateOrientationToICRF"/>), zero at a discrete entry.</param>
+    /// its source, as <see cref="Frame.GetStateOrientationToIcrf"/> returns it. Its angular velocity is not kept: the reads
+    /// give the record's (<see cref="GetStateOrientationToIcrf"/>), zero at a discrete entry.</param>
     /// <exception cref="ArgumentException">The orientation is labelled with another frame.</exception>
-    public bool AddStateOrientationToICRF(StateOrientation stateOrientation)
+    public bool AddStateOrientationToIcrf(StateOrientation stateOrientation)
     {
         if (stateOrientation == null) throw new ArgumentNullException(nameof(stateOrientation));
         if (stateOrientation.ReferenceFrame != this)
@@ -393,9 +393,9 @@ public class SpacecraftFrame : Frame
 
     /// <summary>
     /// Whether the attitude record of a managed spacecraft holds an entry: false for a spacecraft never propagated, with no
-    /// orientation added (<see cref="AddStateOrientationToICRF"/>), built from a TLE or propagated by the TLE propagator,
+    /// orientation added (<see cref="AddStateOrientationToIcrf"/>), built from a TLE or propagated by the TLE propagator,
     /// whose orientation reads give the identity of ICRF, whose field-of-view searches throw, and whose frame an ephemeris
-    /// read reaches SPICE by name (<see cref="SpiceAPI.ManagedReadFrame"/>); always true for a kernel-backed spacecraft,
+    /// read reaches SPICE by name (<see cref="SpiceApi.ManagedReadFrame"/>); always true for a kernel-backed spacecraft,
     /// which reads its CK (#682).
     /// </summary>
     internal bool HasAttitude
@@ -412,8 +412,8 @@ public class SpacecraftFrame : Frame
     }
 
     /// <summary>The last entry of the attitude record of a managed spacecraft, null before any propagation: as
-    /// <see cref="GetStateOrientationToICRF"/> returns it at its epoch, the angular velocity included.</summary>
-    public StateOrientation GetLatestStateOrientationToICRF()
+    /// <see cref="GetStateOrientationToIcrf"/> returns it at its epoch, the angular velocity included.</summary>
+    public StateOrientation GetLatestStateOrientationToIcrf()
     {
         lock (_recordLock)
         {
@@ -422,9 +422,9 @@ public class SpacecraftFrame : Frame
     }
 
     /// <summary>The attitude record of a managed spacecraft, in epoch order: rotations to ICRF labelled with the spacecraft
-    /// frame, their source, each as <see cref="GetStateOrientationToICRF"/> returns it at its epoch, with the angular
+    /// frame, their source, each as <see cref="GetStateOrientationToIcrf"/> returns it at its epoch, with the angular
     /// velocity of the CK at its record in the convention of the frames (zero at a discrete entry).</summary>
-    public IEnumerable<StateOrientation> GetStateOrientationsToICRF()
+    public IEnumerable<StateOrientation> GetStateOrientationsToIcrf()
     {
         lock (_recordLock)
         {
@@ -471,7 +471,7 @@ public class SpacecraftFrame : Frame
         var templateData = sr.ReadToEnd();
         var data = templateData.Replace("{framename}", Name.ToUpperInvariant()).Replace("{frameid}", Id!.Value.ToString(CultureInfo.InvariantCulture)).Replace("{spacecraftid}", Spacecraft.NaifId.ToString(CultureInfo.InvariantCulture))
             .Replace("{spacecraftname}", Spacecraft.Name.ToUpperInvariant());
-        SpiceAPI.Instance.WriteTextKernel(outputFile, data);
+        SpiceApi.Instance.WriteTextKernel(outputFile, data);
     }
 
     /// <summary>
@@ -496,7 +496,7 @@ public class SpacecraftFrame : Frame
                 throw new InvalidOperationException("Cannot write the orientation of a kernel-backed spacecraft.");
             if (_record.Count == 0)
                 throw new InvalidOperationException(
-                    $"Spacecraft {Spacecraft.Name} has no attitude record to write: it has not been propagated numerically, and a TLEPropagator run records no attitude; propagate it, or give it attitudes with SpacecraftFrame.AddStateOrientationToICRF.");
+                    $"Spacecraft {Spacecraft.Name} has no attitude record to write: it has not been propagated numerically, and a TlePropagator run records no attitude; propagate it, or give it attitudes with SpacecraftFrame.AddStateOrientationToIcrf.");
 
             var records = new List<StateOrientation>(_record.Count + 8);
             for (int i = 0; i < _record.Count; i++)
@@ -533,6 +533,6 @@ public class SpacecraftFrame : Frame
     /// </summary>
     internal void WriteOrientation(FileInfo outputFile, Spacecraft spacecraft)
     {
-        SpiceAPI.Instance.WriteOrientation(outputFile, spacecraft.NaifId, CkRecords());
+        SpiceApi.Instance.WriteOrientation(outputFile, spacecraft.NaifId, CkRecords());
     }
 }

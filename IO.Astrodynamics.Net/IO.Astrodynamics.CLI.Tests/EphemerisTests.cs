@@ -195,7 +195,7 @@ public class EphemerisTests
             Assert.StartsWith("Epoch : 2023-01-01T01:01:00.0000000Z ", utc[1]);
 
             var tdb = CliRun.Ok(Utc("--time-scale", "TDB")).Split(Environment.NewLine, StringSplitOptions.RemoveEmptyEntries);
-            var start = Time.Parse("2023-01-01T01:00:00Z").ToTDB();
+            var start = Time.Parse("2023-01-01T01:00:00Z").ToTdb();
             Assert.StartsWith($"Epoch : {start} ", tdb[0]);
             Assert.Equal(utc[0][utc[0].IndexOf(" Position", StringComparison.Ordinal)..], tdb[0][tdb[0].IndexOf(" Position", StringComparison.Ordinal)..]);
 
@@ -234,7 +234,7 @@ public class EphemerisTests
     }
 
     /// <summary>
-    /// An observer identifier from 100001 to 999998 is read as <see cref="SpiceAPI.ReadEphemeris(Time, int, int, Frames.Frame, Aberration)"/>
+    /// An observer identifier from 100001 to 999998 is read as <see cref="SpiceApi.ReadEphemeris(Time, int, int, Frames.Frame, Aberration)"/>
     /// reads it (cli-site-rule of #668's second round): a site by the library's rule built from the kernels under its SPICE
     /// name, anything else a celestial item, its error the library's, exit code 1.
     /// </summary>
@@ -249,20 +249,20 @@ public class EphemerisTests
         using (Configuration.Lock())
         {
             var begin = new Time(new DateTime(2023, 01, 01, 1, 0, 0), TimeScale.TDB);
-            SpiceAPI.Instance.LoadKernels(new DirectoryInfo("Data"));
-            var fromLibrary = Record.Exception(() => SpiceAPI.Instance.ReadEphemeris(begin, observerId, 301, Frames.Frame.ICRF, Aberration.None));
+            SpiceApi.Instance.LoadKernels(new DirectoryInfo("Data"));
+            var fromLibrary = Record.Exception(() => SpiceApi.Instance.ReadEphemeris(begin, observerId, 301, Frames.Frame.ICRF, Aberration.None));
             Assert.NotNull(fromLibrary);
             var fromCli = CliRun.Fails(CliRun.ExitCodeOf(fromLibrary), "ephemeris", "301", observerId.ToString(CultureInfo.InvariantCulture), "-K", "Data",
                 "--begin", begin.ToString(), "--end", begin.AddSeconds(60.0).ToString(), "--step", "1min");
 
-            Assert.Equal(observerId == 301001, SpiceAPI.IsSiteId(observerId));
+            Assert.Equal(observerId == 301001, SpiceApi.IsSiteId(observerId));
             Assert.NotNull(fromLibrary);
             Assert.Equal(CliRun.ErrorLine(fromLibrary), fromCli);
         }
     }
 
     /// <summary>
-    /// A site observer is named by its SPICE name, as <see cref="SpiceAPI.ReadEphemeris(Time, int, int, Frames.Frame, Aberration)"/>
+    /// A site observer is named by its SPICE name, as <see cref="SpiceApi.ReadEphemeris(Time, int, int, Frames.Frame, Aberration)"/>
     /// names it (DSS-13 for 399013), and its states do not move: <see cref="CallFromASite"/>.
     /// </summary>
     [Fact]
@@ -270,11 +270,11 @@ public class EphemerisTests
     {
         using (Configuration.Lock())
         {
-            SpiceAPI.Instance.LoadKernels(new DirectoryInfo("Data"));
+            SpiceApi.Instance.LoadKernels(new DirectoryInfo("Data"));
             var begin = new Time(new DateTime(2023, 01, 01, 1, 0, 0), TimeScale.TDB);
 
             var site = Assert.IsType<Surface.Site>(Helpers.CreateLocalizable(399013, begin));
-            var fromLibrary = SpiceAPI.Instance.ReadEphemeris(begin, 399013, 301, Frames.Frame.ICRF, Aberration.None);
+            var fromLibrary = SpiceApi.Instance.ReadEphemeris(begin, 399013, 301, Frames.Frame.ICRF, Aberration.None);
 
             Assert.Equal("DSS-13", site.Name);
             Assert.Equal(399013, site.NaifId);
@@ -286,7 +286,7 @@ public class EphemerisTests
 
     /// <summary>
     /// A site whose SPK is loaded without a kernel that names it fails as
-    /// <see cref="SpiceAPI.ReadEphemeris(Time, int, int, Frames.Frame, Aberration)"/> fails, "has no name in SPICE"; with
+    /// <see cref="SpiceApi.ReadEphemeris(Time, int, int, Frames.Frame, Aberration)"/> fails, "has no name in SPICE"; with
     /// the kernel that names it loaded, its frame kernel, the CLI reads it under that name, by its identifier or its name.
     /// </summary>
     [Fact]
@@ -294,8 +294,8 @@ public class EphemerisTests
     {
         using (Configuration.Lock())
         {
-            SpiceAPI.Instance.LoadKernels(new DirectoryInfo("Data"));
-            var begin = Time.J2000TDB;
+            SpiceApi.Instance.LoadKernels(new DirectoryInfo("Data"));
+            var begin = Time.J2000Tdb;
             var directory = Directory.CreateTempSubdirectory("clisite-");
             var spk = new FileInfo(Path.Combine(directory.FullName, "site777.bsp"));
             var frameKernel = new FileInfo(Path.Combine(directory.FullName, "site777.tf"));
@@ -304,11 +304,11 @@ public class EphemerisTests
             site.WriteFrame(frameKernel);
             string[] Args(string observer) =>
                 ["ephemeris", "301", observer, "-K", "Data", "--begin", begin.ToString(), "--end", begin.AddSeconds(60.0).ToString(), "--step", "1min"];
-            SpiceAPI.Instance.LoadKernels(spk);
+            SpiceApi.Instance.LoadKernels(spk);
             try
             {
                 // Without the kernel that names it
-                var fromLibrary = Record.Exception(() => SpiceAPI.Instance.ReadEphemeris(begin, 399777, 301, Frames.Frame.ICRF, Aberration.None));
+                var fromLibrary = Record.Exception(() => SpiceApi.Instance.ReadEphemeris(begin, 399777, 301, Frames.Frame.ICRF, Aberration.None));
                 Assert.NotNull(fromLibrary);
                 var fromCli = CliRun.Fails(CliRun.ExitCodeOf(fromLibrary), Args("399777"));
                 Assert.Equal(CliRun.ErrorLine(fromLibrary), fromCli);
@@ -316,12 +316,12 @@ public class EphemerisTests
                 Assert.Contains("'CLISITE' is neither a NAIF identifier nor a name SPICE knows", CliRun.Fails(2, Args("CLISITE")));
 
                 // With it, by its identifier and by its name
-                SpiceAPI.Instance.LoadKernels(frameKernel);
+                SpiceApi.Instance.LoadKernels(frameKernel);
                 try
                 {
                     var res = CliRun.Ok(Args("399777"));
                     Assert.Equal(res, CliRun.Ok(Args("clisite")));
-                    var expected = SpiceAPI.Instance.ReadEphemeris(begin, 399777, 301, Frames.Frame.ICRF, Aberration.None);
+                    var expected = SpiceApi.Instance.ReadEphemeris(begin, 399777, 301, Frames.Frame.ICRF, Aberration.None);
                     Assert.Equal("CLISITE", expected.Observer.Name);
                     // The command reads through GetEphemeris: the position of the library's read to its last digit (5.960e-8 m
                     // in X, 1.487e-16 relative, the same on Linux x64, Windows x64 and macOS arm64, CI run 43773937161,
@@ -329,19 +329,19 @@ public class EphemerisTests
                     var line = res.Split(Environment.NewLine)[0];
                     Assert.StartsWith($"Epoch : {begin} Position : ", line);
                     var printed = Position(line);
-                    _output.WriteLine($"MEASURE CLI site ephemeris against SpiceAPI.ReadEphemeris: X {System.Math.Abs(printed.X - expected.Position.X):E3} m, " +
+                    _output.WriteLine($"MEASURE CLI site ephemeris against SpiceApi.ReadEphemeris: X {System.Math.Abs(printed.X - expected.Position.X):E3} m, " +
                                       $"relative {(printed - expected.Position).Magnitude() / expected.Position.Magnitude():E3}");
                     Assert.True((printed - expected.Position).Magnitude() < 3.0e-16 * expected.Position.Magnitude(),
                         $"{printed} against {expected.Position}");
                 }
                 finally
                 {
-                    SpiceAPI.Instance.UnloadKernels(frameKernel);
+                    SpiceApi.Instance.UnloadKernels(frameKernel);
                 }
             }
             finally
             {
-                SpiceAPI.Instance.UnloadKernels(spk);
+                SpiceApi.Instance.UnloadKernels(spk);
                 directory.Delete(true);
             }
         }
@@ -357,7 +357,7 @@ public class EphemerisTests
     /// <summary>
     /// #750: NOTO (398989), SPICE's built-in ESA station whose identifier has the form of a site of 398, a body SPICE does
     /// not name, as observer of <c>ephemeris</c> and as object of <c>sub-point</c>, by its identifier and by its name: the
-    /// states of <see cref="SpiceAPI.ReadEphemeris(Time, int, int, Frames.Frame, Aberration)"/> from NOTO, and the
+    /// states of <see cref="SpiceApi.ReadEphemeris(Time, int, int, Frames.Frame, Aberration)"/> from NOTO, and the
     /// sub-point of the library's read of NOTO from the Earth in its body-fixed frame.
     /// </summary>
     [Fact]
@@ -365,7 +365,7 @@ public class EphemerisTests
     {
         using (Configuration.Lock())
         {
-            SpiceAPI.Instance.LoadKernels(new DirectoryInfo("Data"));
+            SpiceApi.Instance.LoadKernels(new DirectoryInfo("Data"));
             var begin = new Time(new DateTime(2023, 01, 01, 1, 0, 0), TimeScale.TDB);
             var directory = Directory.CreateTempSubdirectory("clinoto-");
             var spk = new FileInfo(Path.Combine(directory.FullName, "noto750.bsp"));
@@ -373,32 +373,32 @@ public class EphemerisTests
             var site = new Surface.Site(989, "N750", earth, new Coordinates.Planetodetic(0.2616, 0.6436, 100.0));
             var states = site.GetEphemeris(new Window(begin.AddHours(-1.0), begin.AddHours(1.0)), earth, Frames.Frame.ICRF, Aberration.None,
                 TimeSpan.FromSeconds(60.0)).Select(x => x.ToStateVector()).ToArray();
-            SpiceAPI.Instance.WriteEphemeris(spk, 398989, states);
-            SpiceAPI.Instance.LoadKernels(spk);
+            SpiceApi.Instance.WriteEphemeris(spk, 398989, states);
+            SpiceApi.Instance.LoadKernels(spk);
             try
             {
                 var res = CliRun.Ok("ephemeris", "301", "398989", "-K", "Data", "--begin", begin.ToString(), "--end", begin.AddSeconds(60.0).ToString(),
                     "--step", "1min");
                 Assert.Equal(res, CliRun.Ok("ephemeris", "301", "NOTO", "-K", "Data", "--begin", begin.ToString(), "--end", begin.AddSeconds(60.0).ToString(),
                     "--step", "1min"));
-                var expected = SpiceAPI.Instance.ReadEphemeris(begin, 398989, 301, Frames.Frame.ICRF, Aberration.None);
+                var expected = SpiceApi.Instance.ReadEphemeris(begin, 398989, 301, Frames.Frame.ICRF, Aberration.None);
                 Assert.Equal("NOTO", expected.Observer.Name);
                 var line = res.Split(Environment.NewLine)[0];
                 Assert.StartsWith($"Epoch : {begin} Position : ", line);
                 var printed = Position(line);
-                _output.WriteLine($"MEASURE #750 CLI NOTO ephemeris against SpiceAPI.ReadEphemeris: {(printed - expected.Position).Magnitude():E3} m");
+                _output.WriteLine($"MEASURE #750 CLI NOTO ephemeris against SpiceApi.ReadEphemeris: {(printed - expected.Position).Magnitude():E3} m");
                 // The printed digits of the state, its shortest round trip (the same read)
                 Assert.Equal(expected.Position, printed);
 
                 var subPoint = CliRun.Ok("sub-point", "398989", "399", "-K", "Data", "--epoch", begin.ToString());
-                var fixedPosition = SpiceAPI.Instance.ReadEphemeris(begin, 399, 398989, earth.Frame, Aberration.None).Position;
+                var fixedPosition = SpiceApi.Instance.ReadEphemeris(begin, 399, 398989, earth.Frame, Aberration.None).Position;
                 var planetocentric = new Coordinates.Planetocentric(System.Math.Atan2(fixedPosition.Y, fixedPosition.X),
                     System.Math.Asin(fixedPosition.Z / fixedPosition.Magnitude()), fixedPosition.Magnitude());
                 Assert.Equal($"{planetocentric}{Environment.NewLine}", subPoint);
             }
             finally
             {
-                SpiceAPI.Instance.UnloadKernels(spk);
+                SpiceApi.Instance.UnloadKernels(spk);
                 directory.Delete(true);
             }
         }
@@ -416,7 +416,7 @@ public class EphemerisTests
     {
         using (Configuration.Lock())
         {
-            SpiceAPI.Instance.LoadKernels(new DirectoryInfo("Data"));
+            SpiceApi.Instance.LoadKernels(new DirectoryInfo("Data"));
             var fromLibrary = Record.Exception(() => Body.CelestialItem.Create(objectId));
             Assert.NotNull(fromLibrary);
             var fromCli = CliRun.Fails(CliRun.ExitCodeOf(fromLibrary), "sub-point", objectId.ToString(CultureInfo.InvariantCulture), "399", "-K", "Data", "--epoch", "0.0");

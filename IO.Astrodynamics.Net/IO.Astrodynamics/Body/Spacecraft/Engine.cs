@@ -13,7 +13,7 @@ namespace IO.Astrodynamics.Body.Spacecraft
     {
         public string Name { get; }
         public string Model { get; }
-        public double ISP { get; }
+        public double Isp { get; }
         public double FuelFlow { get; }
         public double Thrust { get; }
         public FuelTank FuelTank { get; }
@@ -56,22 +56,22 @@ namespace IO.Astrodynamics.Body.Spacecraft
 
             Name = name;
             Model = model;
-            ISP = isp;
+            Isp = isp;
             FuelFlow = fuelFlow;
             FuelTank = fuelTank ?? throw new ArgumentNullException(nameof(fuelTank));
             SerialNumber = serialNumber;
-            Thrust = isp * fuelFlow * Constants.g0;
+            Thrust = isp * fuelFlow * Constants.StandardGravity;
         }
 
         /// <summary>
         /// Burns the fuel of <paramref name="deltaV"/> from the tank, at the total mass of its spacecraft (Tsiolkovsky), and
         /// returns it. Internal since 11.0.0 (decision 49 of #668, decided by S. Guillet, 2026-11-23): public, it took the
         /// fuel of a finished run outside any run, and threw <see cref="NullReferenceException"/> on a tank of no spacecraft
-        /// (#802). The fuel of a delta-V is <see cref="Tsiolkovski.DeltaM"/>.
+        /// (#802). The fuel of a delta-V is <see cref="Tsiolkovsky.DeltaM"/>.
         /// </summary>
         internal double Ignite(in Vector3 deltaV)
         {
-            var fuelBurned = Tsiolkovski.DeltaM(ISP, FuelTank.Spacecraft.GetTotalMass(), deltaV.Magnitude());
+            var fuelBurned = Tsiolkovsky.DeltaM(Isp, FuelTank.Spacecraft.GetTotalMass(), deltaV.Magnitude());
             FuelTank.Burn(fuelBurned);
             return fuelBurned;
         }

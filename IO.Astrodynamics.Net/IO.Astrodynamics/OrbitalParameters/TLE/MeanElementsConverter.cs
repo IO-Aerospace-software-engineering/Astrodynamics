@@ -3,13 +3,13 @@ using System;
 using IO.Astrodynamics.Frames;
 using IO.Astrodynamics.Body;
 
-namespace IO.Astrodynamics.OrbitalParameters.TLE
+namespace IO.Astrodynamics.OrbitalParameters
 {
     /// <summary>
     /// Converts between osculating and mean orbital elements using fixed-point iteration
     /// following the FixedPointConverter approach with equinoctial elements
     /// </summary>
-    public class MeanElementsConverter
+    internal class MeanElementsConverter
     {
         const double SAFETY_ALTITUDE = 120000.0; // 120 km minimum altitude for LEO
         const double EQUATORIAL_RADIUS_EARTH = 6378136.6; // meters
@@ -101,7 +101,7 @@ namespace IO.Astrodynamics.OrbitalParameters.TLE
                 {
                     // Convert current equinoctial back to Keplerian for TLE creation
                     // Use internal method since we're iteratively fitting from osculating elements
-                    var testTle = TLE.CreateInternal(currentEquinoctial, name, noradId, cosparId, revAtEpoch, Classification.Unclassified, bstar);
+                    var testTle = Tle.CreateInternal(currentEquinoctial, name, noradId, cosparId, revAtEpoch, TleClassification.Unclassified, bstar);
 
                     // Propagate TLE and convert back to equinoctial for comparison
                     var propagatedState = testTle.ToStateVector(epoch);

@@ -188,7 +188,7 @@ public class AttitudeConstructionTests
         var spc = CustomAxes(-899980);
         var camera = spc.AddCircularInstrument("CAM", 0.1, Vector3.VectorZ, Vector3.VectorY);
         var state = spc.InitialOrbitalParameters.ToStateVector();
-        var moon = new CelestialBody(SolarSystemObjects.PlanetsAndMoons.MOON);
+        var moon = new CelestialBody(SolarSystemObjects.PlanetsAndMoons.Moon);
         foreach (var target in new IAttitudeTarget[] { new CelestialAttitudeTarget(moon), new CelestialAttitudeTarget(moon, Aberration.LT), OrbitalDirectionTarget.Prograde })
         {
             var pointing = new InstrumentPointingToAttitude(camera, target, maneuverCenter: TestHelpers.EarthAtJ2000);

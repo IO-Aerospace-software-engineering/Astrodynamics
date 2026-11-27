@@ -267,7 +267,7 @@ public sealed class Lot1CaseTests : IDisposable
         // Assert
         Assert.Equal("ERROR", result.Status);
         Assert.Contains("git lfs pull", result.Message);
-        Assert.DoesNotContain(SpiceAPI.Instance.GetLoadedKernels(), k => k.FullName == new FileInfo(kernel).FullName);
+        Assert.DoesNotContain(SpiceApi.Instance.GetLoadedKernels(), k => k.FullName == new FileInfo(kernel).FullName);
     }
 
     [Fact]

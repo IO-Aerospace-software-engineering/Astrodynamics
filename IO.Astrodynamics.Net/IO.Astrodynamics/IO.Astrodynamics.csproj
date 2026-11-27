@@ -24,16 +24,19 @@
         <PackageReadmeFile>README.md</PackageReadmeFile>
     </PropertyGroup>
 
-    <!-- The CA naming rules (#668, lot L0; docs/contributing/public-api.md) run as warnings until the renaming lot (L9)
-         makes them errors (design PR #671, D2 N8). -->
+    <!-- The CA naming rules (#668, lot L0; docs/contributing/public-api.md), every rule of the category, are errors since the renaming lot L9 (design
+         PR #671, D2 N8), CA1050 (a type outside a namespace) with them. Their exceptions are in GlobalSuppressions.cs,
+         each with the decision that keeps the name: the six CA1724 pairs of N8 and the 11 diagnostics of decision 114 of
+         #668 (decided by S. Guillet, 2026-11-26). -->
     <PropertyGroup>
         <AnalysisModeNaming>All</AnalysisModeNaming>
+        <WarningsAsErrors>$(WarningsAsErrors);CA1050;CA1700;CA1707;CA1708;CA1710;CA1711;CA1712;CA1713;CA1714;CA1715;CA1716;CA1717;CA1720;CA1721;CA1724;CA1725;CA1727</WarningsAsErrors>
     </PropertyGroup>
 
     <!-- The XML documentation file, packed with the library (R05 of #668, #556). A comment the compiler cannot read is an
          error: a malformed comment (CS1570), a cref it cannot resolve (CS1574) or that names several overloads (CS0419), a
          param tag of no parameter (CS1572) or a parameter without a tag beside others with one (CS1573). A public member
-         without a comment (CS1591, 1670 today) stays a warning. -->
+         without a comment (CS1591) stays a warning (R05). -->
     <PropertyGroup>
         <GenerateDocumentationFile>true</GenerateDocumentationFile>
         <WarningsAsErrors>$(WarningsAsErrors);CS1570;CS1572;CS1573;CS1574;CS0419</WarningsAsErrors>
@@ -122,6 +125,8 @@
     <!-- NuGet package content: icon, readme -->
     <ItemGroup>
       <None Include="..\..\README.md" Pack="true" PackagePath="/" />
+      <!-- The implicit usings of the package, imported by NuGet into the projects that reference it (N7 of D2, #668) -->
+      <None Update="build\IO.Astrodynamics.props" Pack="true" PackagePath="build\IO.Astrodynamics.props" />
     </ItemGroup>
 
     <ItemGroup>

@@ -16,12 +16,12 @@ namespace IO.Astrodynamics.Tests.DataProvider;
 /// <summary>
 /// The reads of <see cref="MemoryDataProvider"/> between its entries (#548): a read depends on the entries only, never on
 /// the reads before it, which it no longer stores; an orientation is the exact SLERP of the two entries around it, no
-/// longer the normalised Lerp of <c>Quaternion.SLERP</c> below 0.028 rad. The references are closed forms: the rotation at
+/// longer the normalised Lerp of <c>Quaternion.Slerp</c> below 0.028 rad. The references are closed forms: the rotation at
 /// the interpolated angle about the axis of a constant rotation, and a circular orbit.
 /// </summary>
 public class MemoryDataProviderTests
 {
-    private static readonly TimeSystem.Time Start = TimeSystem.Time.J2000TDB;
+    private static readonly TimeSystem.Time Start = TimeSystem.Time.J2000Tdb;
 
     private readonly ITestOutputHelper _output;
 
@@ -50,8 +50,8 @@ public class MemoryDataProviderTests
     {
         var provider = new MemoryDataProvider();
         var frame = new Frames.Frame("MEMORY_TEST_FRAME");
-        provider.AddStateOrientationToICRF(frame, Start, new StateOrientation(Q0, Vector3.Zero, Start, frame));
-        provider.AddStateOrientationToICRF(frame, Start.AddSeconds(10.0),
+        provider.AddStateOrientationToIcrf(frame, Start, new StateOrientation(Q0, Vector3.Zero, Start, frame));
+        provider.AddStateOrientationToIcrf(frame, Start.AddSeconds(10.0),
             new StateOrientation(Exact(angle, 1.0), Vector3.Zero, Start.AddSeconds(10.0), frame));
         return (provider, frame);
     }
@@ -81,9 +81,9 @@ public class MemoryDataProviderTests
             double fraction = (date - Start).TotalSeconds / 10.0;
 
             // Act
-            var inSequence = sequence.FrameTransformationToICRF(date, frame);
+            var inSequence = sequence.FrameTransformationToIcrf(date, frame);
             var (fresh, freshFrame) = OrientationProvider(angle);
-            var alone = fresh.FrameTransformationToICRF(date, freshFrame);
+            var alone = fresh.FrameTransformationToIcrf(date, freshFrame);
 
             // Assert: the closed form, and the same read whatever the reads before it
             worst = System.Math.Max(worst, AngleBetween(inSequence.Rotation, Exact(angle, fraction)));
@@ -96,18 +96,18 @@ public class MemoryDataProviderTests
         // The issue's pair: the read at 7.5 s, fresh and after a read at 5 s
         var (first, firstFrame) = OrientationProvider(angle);
         var (second, secondFrame) = OrientationProvider(angle);
-        second.FrameTransformationToICRF(Start.AddSeconds(5.0), secondFrame);
-        Assert.Equal(first.FrameTransformationToICRF(Start.AddSeconds(7.5), firstFrame).Rotation,
-            second.FrameTransformationToICRF(Start.AddSeconds(7.5), secondFrame).Rotation);
+        second.FrameTransformationToIcrf(Start.AddSeconds(5.0), secondFrame);
+        Assert.Equal(first.FrameTransformationToIcrf(Start.AddSeconds(7.5), firstFrame).Rotation,
+            second.FrameTransformationToIcrf(Start.AddSeconds(7.5), secondFrame).Rotation);
     }
 
     [Fact]
     public void Orientation_AtAnEntry_IsThatEntry()
     {
         var (provider, frame) = OrientationProvider(0.025);
-        provider.FrameTransformationToICRF(Start.AddSeconds(3.0), frame);
-        Assert.Equal(Q0, provider.FrameTransformationToICRF(Start, frame).Rotation);
-        Assert.Equal(Exact(0.025, 1.0), provider.FrameTransformationToICRF(Start.AddSeconds(10.0), frame).Rotation);
+        provider.FrameTransformationToIcrf(Start.AddSeconds(3.0), frame);
+        Assert.Equal(Q0, provider.FrameTransformationToIcrf(Start, frame).Rotation);
+        Assert.Equal(Exact(0.025, 1.0), provider.FrameTransformationToIcrf(Start.AddSeconds(10.0), frame).Rotation);
     }
 
     // A circular orbit of radius 6 778 km about the Earth's GM, the issue's: 21 nodes 60 s apart
@@ -186,7 +186,7 @@ public class MemoryDataProviderTests
         // InvalidOperationException, whose base type the memory provider throws (R03 of #668)
         var spice = new SpiceDataProvider();
         Assert.Throws<SpiceException>(() => spice.GetEphemeris(early, earth, ssb, Frames.Frame.ICRF, Aberration.None));
-        Assert.Throws<SpiceException>(() => spice.FrameTransformationToICRF(early, new Frames.Frame("ITRF93")));
+        Assert.Throws<SpiceException>(() => spice.FrameTransformationToIcrf(early, new Frames.Frame("ITRF93")));
 
         // A target without states, and one read before its first or after its last state
         var provider = new MemoryDataProvider();
@@ -201,10 +201,10 @@ public class MemoryDataProviderTests
 
         // A frame read outside its stored orientations; a frame neither added nor known keeps ArgumentException
         var (orientations, frame) = OrientationProvider(0.025);
-        var frameException = Assert.Throws<InvalidOperationException>(() => orientations.FrameTransformationToICRF(Start.AddSeconds(-1.0), frame));
+        var frameException = Assert.Throws<InvalidOperationException>(() => orientations.FrameTransformationToIcrf(Start.AddSeconds(-1.0), frame));
         Assert.Contains(frame.Name, frameException.Message);
-        Assert.Throws<InvalidOperationException>(() => orientations.FrameTransformationToICRF(Start.AddSeconds(11.0), frame));
-        Assert.Throws<ArgumentException>(() => orientations.FrameTransformationToICRF(Start, new Frames.Frame("IAU_MARS")));
+        Assert.Throws<InvalidOperationException>(() => orientations.FrameTransformationToIcrf(Start.AddSeconds(11.0), frame));
+        Assert.Throws<ArgumentException>(() => orientations.FrameTransformationToIcrf(Start, new Frames.Frame("IAU_MARS")));
 
         // An id without body info: ArgumentException naming naifId, the type and the parameter of SpiceDataProvider for an id
         // SPICE does not name (#672; UnknownId_ThrowsAsTheSpiceProvider below). 999 is Pluto on SPICE, an id this provider

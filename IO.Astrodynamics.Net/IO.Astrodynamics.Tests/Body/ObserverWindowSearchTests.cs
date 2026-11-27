@@ -18,7 +18,7 @@ namespace IO.Astrodynamics.Tests.Body;
 /// The window searches on the observer (R15 of #668, lot L6, choice 1, decided by S. Guillet, 2026-11-19): each runs on
 /// the path of the former search of the target with the observer as argument, removed since (lot L6, §7 of the
 /// re-baseline), and equals that path's search bit for bit on every participant (kernel spacecraft, kernel site, site from
-/// coordinates, natural bodies): the raw CSPICE search of <see cref="SpiceAPI"/> (<c>gfdist_c</c>, <c>gfposc_c</c>,
+/// coordinates, natural bodies): the raw CSPICE search of <see cref="SpiceApi"/> (<c>gfdist_c</c>, <c>gfposc_c</c>,
 /// <c>gfoclt_c</c>, <c>gfilum_c</c>) or the library's (<see cref="GeometryFinder"/> on the quantity, the managed
 /// occultation search), but the occultation of a site observer, which the library searches (choice 4, IC-10); the
 /// horizontal coordinates against <see cref="Site.GetHorizontalCoordinates"/>; and every setting that cannot apply throws
@@ -26,8 +26,8 @@ namespace IO.Astrodynamics.Tests.Body;
 /// </summary>
 public class ObserverWindowSearchTests
 {
-    private static readonly Window DistanceWindow = new(TimeSystem.Time.CreateTDB(755870700.0), TimeSystem.Time.CreateTDB(755913900.0));
-    private static readonly Window DayWindow = new(TimeSystem.Time.CreateTDB(755870700.0), TimeSystem.Time.CreateTDB(755957100.0));
+    private static readonly Window DistanceWindow = new(TimeSystem.Time.CreateTdb(755870700.0), TimeSystem.Time.CreateTdb(755913900.0));
+    private static readonly Window DayWindow = new(TimeSystem.Time.CreateTdb(755870700.0), TimeSystem.Time.CreateTdb(755957100.0));
     private static readonly Window Eclipse001Window = new(TimeSystem.Time.Parse("2026-03-20T00:00:00 TDB"), TimeSystem.Time.Parse("2026-03-20T12:00:00 TDB"));
     private static readonly Window Eclipse2005Window = new(TimeSystem.Time.Parse("2005-10-03 00:00:00", TimeScale.TDB), TimeSystem.Time.Parse("2005-10-04 00:00:00", TimeScale.TDB));
     private static readonly TimeSpan Step = TimeSpan.FromSeconds(60.0);
@@ -41,8 +41,8 @@ public class ObserverWindowSearchTests
     }
 
     private static Spacecraft Lro => new(-85, "LRO", epoch: DistanceWindow.StartDate);
-    private static CelestialBody Moon => new(PlanetsAndMoons.MOON);
-    private static CelestialBody Earth => new(PlanetsAndMoons.EARTH);
+    private static CelestialBody Moon => new(PlanetsAndMoons.Moon);
+    private static CelestialBody Earth => new(PlanetsAndMoons.Earth);
     private static CelestialBody Sun => new(Stars.Sun);
     private static Site Dss13 => new(13, "DSS-13", Earth);
     private static Site Dss13FromCoordinates => new(98, "DSS13COORDINATES", Earth, Dss13.Planetodetic);
@@ -70,19 +70,19 @@ public class ObserverWindowSearchTests
         var dss13 = Dss13;
         var lt = Options with { Aberration = Aberration.LT };
         // gfdist_c: a body and a kernel spacecraft, both ways; a kernel spacecraft observing a kernel site
-        Same(SpiceAPI.Instance.FindWindowsOnDistanceConstraint(DistanceWindow, moon.NaifId, lro.NaifId, RelationnalOperator.Greater, 1815148.0, Aberration.LT, Step),
-            moon.FindDistanceWindows(DistanceWindow, lro, RelationnalOperator.Greater, 1815148.0, lt));
-        Same(SpiceAPI.Instance.FindWindowsOnDistanceConstraint(DistanceWindow, lro.NaifId, moon.NaifId, RelationnalOperator.Lower, 1815148.0, Aberration.None, Step),
-            lro.FindDistanceWindows(DistanceWindow, moon, RelationnalOperator.Lower, 1815148.0, Options));
-        Same(SpiceAPI.Instance.FindWindowsOnDistanceConstraint(DistanceWindow, lro.NaifId, dss13.NaifId, RelationnalOperator.Greater, 3.72e8, Aberration.None, Step),
-            lro.FindDistanceWindows(DistanceWindow, dss13, RelationnalOperator.Greater, 3.72e8, Options));
+        Same(SpiceApi.Instance.FindWindowsOnDistanceConstraint(DistanceWindow, moon.NaifId, lro.NaifId, RelationalOperator.GreaterThan, 1815148.0, Aberration.LT, Step),
+            moon.FindDistanceWindows(DistanceWindow, lro, RelationalOperator.GreaterThan, 1815148.0, lt));
+        Same(SpiceApi.Instance.FindWindowsOnDistanceConstraint(DistanceWindow, lro.NaifId, moon.NaifId, RelationalOperator.LessThan, 1815148.0, Aberration.None, Step),
+            lro.FindDistanceWindows(DistanceWindow, moon, RelationalOperator.LessThan, 1815148.0, Options));
+        Same(SpiceApi.Instance.FindWindowsOnDistanceConstraint(DistanceWindow, lro.NaifId, dss13.NaifId, RelationalOperator.GreaterThan, 3.72e8, Aberration.None, Step),
+            lro.FindDistanceWindows(DistanceWindow, dss13, RelationalOperator.GreaterThan, 3.72e8, Options));
         // The library's search: a site observing a kernel spacecraft, two natural bodies
-        Same(GeometryFinder.FindWindows(DistanceWindow, Distance(lro, dss13, Aberration.LT), RelationnalOperator.Greater, 3.72e8, Options),
-            dss13.FindDistanceWindows(DistanceWindow, lro, RelationnalOperator.Greater, 3.72e8, lt));
+        Same(GeometryFinder.FindWindows(DistanceWindow, Distance(lro, dss13, Aberration.LT), RelationalOperator.GreaterThan, 3.72e8, Options),
+            dss13.FindDistanceWindows(DistanceWindow, lro, RelationalOperator.GreaterThan, 3.72e8, lt));
         double middle = MoonDistanceAtMidday(moon);
-        Same(GeometryFinder.FindWindows(DayWindow, Distance(moon, Earth, Aberration.None), RelationnalOperator.Greater, middle, Options),
-            Earth.FindDistanceWindows(DayWindow, moon, RelationnalOperator.Greater, middle, Options));
-        Assert.NotEmpty(dss13.FindDistanceWindows(DistanceWindow, lro, RelationnalOperator.Greater, 3.72e8, lt));
+        Same(GeometryFinder.FindWindows(DayWindow, Distance(moon, Earth, Aberration.None), RelationalOperator.GreaterThan, middle, Options),
+            Earth.FindDistanceWindows(DayWindow, moon, RelationalOperator.GreaterThan, middle, Options));
+        Assert.NotEmpty(dss13.FindDistanceWindows(DistanceWindow, lro, RelationalOperator.GreaterThan, 3.72e8, lt));
     }
 
     [Fact]
@@ -91,28 +91,28 @@ public class ObserverWindowSearchTests
         var lro = Lro;
         var moon = Moon;
         var dss13 = Dss13;
-        // gfposc_c, the distances in km for SpiceAPI, in m for the search
-        Same(SpiceAPI.Instance.FindWindowsOnCoordinateConstraint(DistanceWindow, moon.NaifId, lro.NaifId, Frames.Frame.ICRF, CoordinateSystem.Rectangular, Coordinate.Z,
-                RelationnalOperator.Greater, 500.0, 0.0, Aberration.None, Step),
-            moon.FindCoordinateWindows(DistanceWindow, lro, Frames.Frame.ICRF, CoordinateSystem.Rectangular, Coordinate.Z, RelationnalOperator.Greater, 500000.0,
+        // gfposc_c, the distances in km for SpiceApi, in m for the search
+        Same(SpiceApi.Instance.FindWindowsOnCoordinateConstraint(DistanceWindow, moon.NaifId, lro.NaifId, Frames.Frame.ICRF, CoordinateSystem.Rectangular, Coordinate.Z,
+                RelationalOperator.GreaterThan, 500.0, 0.0, Aberration.None, Step),
+            moon.FindCoordinateWindows(DistanceWindow, lro, Frames.Frame.ICRF, CoordinateSystem.Rectangular, Coordinate.Z, RelationalOperator.GreaterThan, 500000.0,
                 Options));
-        Same(SpiceAPI.Instance.FindWindowsOnCoordinateConstraint(DistanceWindow, lro.NaifId, dss13.NaifId, Frames.Frame.ICRF, CoordinateSystem.RaDec, Coordinate.Range,
-                RelationnalOperator.AbsoluteMax, 0.0, 1.0e3, Aberration.None, Step),
-            lro.FindCoordinateWindows(DistanceWindow, dss13, Frames.Frame.ICRF, CoordinateSystem.RaDec, Coordinate.Range, RelationnalOperator.AbsoluteMax, 0.0,
+        Same(SpiceApi.Instance.FindWindowsOnCoordinateConstraint(DistanceWindow, lro.NaifId, dss13.NaifId, Frames.Frame.ICRF, CoordinateSystem.RaDec, Coordinate.Range,
+                RelationalOperator.AbsoluteMax, 0.0, 1.0e3, Aberration.None, Step),
+            lro.FindCoordinateWindows(DistanceWindow, dss13, Frames.Frame.ICRF, CoordinateSystem.RaDec, Coordinate.Range, RelationalOperator.AbsoluteMax, 0.0,
                 Options with { AdjustValue = 1.0e6 }));
         // The library's: a kernel site and a site from coordinates observing LRO, in their frames
         foreach (var site in new[] { dss13, Dss13FromCoordinates })
         {
             Same(GeometryFinder.FindWindows(DistanceWindow, CelestialItem.CoordinateQuantity(lro, site, site.Frame, CoordinateSystem.RaDec, Coordinate.Declination,
-                    Aberration.LT, DistanceWindow.StartDate), RelationnalOperator.Greater, 0.3, Options),
-                site.FindCoordinateWindows(DistanceWindow, lro, site.Frame, CoordinateSystem.RaDec, Coordinate.Declination, RelationnalOperator.Greater, 0.3,
+                    Aberration.LT, DistanceWindow.StartDate), RelationalOperator.GreaterThan, 0.3, Options),
+                site.FindCoordinateWindows(DistanceWindow, lro, site.Frame, CoordinateSystem.RaDec, Coordinate.Declination, RelationalOperator.GreaterThan, 0.3,
                     Options with { Aberration = Aberration.LT }));
         }
 
         // Two natural bodies, an absolute extreme with its adjustment value
         Same(GeometryFinder.FindWindows(DayWindow, CelestialItem.CoordinateQuantity(moon, Earth, Frames.Frame.ICRF, CoordinateSystem.RaDec, Coordinate.Declination,
-                Aberration.None, DayWindow.StartDate), RelationnalOperator.AbsoluteMin, 0.0, Options with { AdjustValue = 1e-4 }),
-            Earth.FindCoordinateWindows(DayWindow, moon, Frames.Frame.ICRF, CoordinateSystem.RaDec, Coordinate.Declination, RelationnalOperator.AbsoluteMin, 0.0,
+                Aberration.None, DayWindow.StartDate), RelationalOperator.AbsoluteMin, 0.0, Options with { AdjustValue = 1e-4 }),
+            Earth.FindCoordinateWindows(DayWindow, moon, Frames.Frame.ICRF, CoordinateSystem.RaDec, Coordinate.Declination, RelationalOperator.AbsoluteMin, 0.0,
                 Options with { AdjustValue = 1e-4 }));
     }
 
@@ -156,7 +156,7 @@ public class ObserverWindowSearchTests
     /// <summary>
     /// The move of the occultation of a kernel site observer (choice 4 and IC-10 of lot L6 of #668): the library's search,
     /// where the former <c>Site.FindWindowsOnOccultationConstraint</c> ran <c>gfoclt_c</c> (the raw search of
-    /// <see cref="SpiceAPI"/> with the site as observer), LRO behind the Moon from DSS-13: the same windows, each edge within
+    /// <see cref="SpiceApi"/> with the site as observer), LRO behind the Moon from DSS-13: the same windows, each edge within
     /// 5.0e-7 s geometric and up to 6.2e-4 s with light time (measured by the CI of #832 at 222ed4be, 2026-11-26, identical on
     /// Linux x64, Windows x64 and macOS arm64: None 5.00e-7 s, LT 3.74e-4 s, CN 1.24e-4 s, XLT 6.22e-4 s; the light-time
     /// difference is #828). The bounds are twice those, rounded up at the second digit.
@@ -171,7 +171,7 @@ public class ObserverWindowSearchTests
         var lro = Lro;
         var dss13 = Dss13;
         var moon = Moon;
-        var gfoclt = SpiceAPI.Instance.FindWindowsOnOccultationConstraint(DistanceWindow, dss13.NaifId, lro.NaifId, ShapeType.Point, moon.NaifId,
+        var gfoclt = SpiceApi.Instance.FindWindowsOnOccultationConstraint(DistanceWindow, dss13.NaifId, lro.NaifId, ShapeType.Point, moon.NaifId,
             ShapeType.Ellipsoid, OccultationType.Any, aberration, Step);
         var managed = dss13.FindOccultationWindows(DistanceWindow, lro, moon,
             new OccultationSearchOptions { Step = Step, Aberration = aberration, TargetShape = ShapeType.Point, FrontShape = ShapeType.Ellipsoid });
@@ -188,18 +188,18 @@ public class ObserverWindowSearchTests
     {
         // gfilum_c for a site of the kernels, the library's search for a site from coordinates
         var dss13 = Dss13;
-        var lts = Options with { Aberration = Aberration.LTS };
-        Same(SpiceAPI.Instance.FindWindowsOnIlluminationConstraint(DayWindow, dss13.NaifId, Earth.NaifId, Earth.Frame, dss13.Planetodetic,
-                IlluminationAngle.Incidence, RelationnalOperator.Lower, 1.5, 0.0, Aberration.LTS, Step, Sun.NaifId, "ELLIPSOID"),
-            dss13.FindIlluminationWindows(DayWindow, IlluminationAngle.Incidence, RelationnalOperator.Lower, 1.5, Sun, lts));
+        var lts = Options with { Aberration = Aberration.LtS };
+        Same(SpiceApi.Instance.FindWindowsOnIlluminationConstraint(DayWindow, dss13.NaifId, Earth.NaifId, Earth.Frame, dss13.Planetodetic,
+                IlluminationAngle.Incidence, RelationalOperator.LessThan, 1.5, 0.0, Aberration.LtS, Step, Sun.NaifId, "ELLIPSOID"),
+            dss13.FindIlluminationWindows(DayWindow, IlluminationAngle.Incidence, RelationalOperator.LessThan, 1.5, Sun, lts));
         var fromCoordinates = Dss13FromCoordinates;
-        Same(GeometryFinder.FindWindows(DayWindow, t => fromCoordinates.IlluminationIncidence(t, Sun, Aberration.LTS), RelationnalOperator.Lower, 1.5, Options),
-            fromCoordinates.FindIlluminationWindows(DayWindow, IlluminationAngle.Incidence, RelationnalOperator.Lower, 1.5, Sun, lts));
+        Same(GeometryFinder.FindWindows(DayWindow, t => fromCoordinates.IlluminationIncidence(t, Sun, Aberration.LtS), RelationalOperator.LessThan, 1.5, Options),
+            fromCoordinates.FindIlluminationWindows(DayWindow, IlluminationAngle.Incidence, RelationalOperator.LessThan, 1.5, Sun, lts));
 
-        Assert.Throws<ArgumentException>(() => Dss13FromCoordinates.FindIlluminationWindows(DayWindow, IlluminationAngle.Emission, RelationnalOperator.Lower,
+        Assert.Throws<ArgumentException>(() => Dss13FromCoordinates.FindIlluminationWindows(DayWindow, IlluminationAngle.Emission, RelationalOperator.LessThan,
             1.5, Sun, Options));
         Assert.Throws<ArgumentOutOfRangeException>(() => Dss13FromCoordinates.FindIlluminationWindows(DayWindow, IlluminationAngle.Incidence,
-            RelationnalOperator.Lower, 85.0, Sun, Options));
+            RelationalOperator.LessThan, 85.0, Sun, Options));
     }
 
     [Fact]
@@ -208,21 +208,21 @@ public class ObserverWindowSearchTests
         var lro = Lro;
         var dss13 = Dss13;
         var o = Options with { Aberration = Aberration.LT };
-        Same(dss13.FindCoordinateWindows(DistanceWindow, lro, dss13.Frame, CoordinateSystem.RaDec, Coordinate.Declination, RelationnalOperator.Greater, 0.2, o),
-            dss13.FindHorizontalWindows(DistanceWindow, lro, HorizontalCoordinate.Elevation, RelationnalOperator.Greater, 0.2, o));
-        Same(dss13.FindCoordinateWindows(DistanceWindow, lro, dss13.Frame, CoordinateSystem.RaDec, Coordinate.Range, RelationnalOperator.Lower, 3.7e8, o),
-            dss13.FindHorizontalWindows(DistanceWindow, lro, HorizontalCoordinate.Range, RelationnalOperator.Lower, 3.7e8, o));
+        Same(dss13.FindCoordinateWindows(DistanceWindow, lro, dss13.Frame, CoordinateSystem.RaDec, Coordinate.Declination, RelationalOperator.GreaterThan, 0.2, o),
+            dss13.FindHorizontalWindows(DistanceWindow, lro, HorizontalCoordinate.Elevation, RelationalOperator.GreaterThan, 0.2, o));
+        Same(dss13.FindCoordinateWindows(DistanceWindow, lro, dss13.Frame, CoordinateSystem.RaDec, Coordinate.Range, RelationalOperator.LessThan, 3.7e8, o),
+            dss13.FindHorizontalWindows(DistanceWindow, lro, HorizontalCoordinate.Range, RelationalOperator.LessThan, 3.7e8, o));
         Assert.Throws<ArgumentOutOfRangeException>(() => dss13.FindHorizontalWindows(DistanceWindow, lro, HorizontalCoordinate.Elevation,
-            RelationnalOperator.Greater, 10.0, o));
+            RelationalOperator.GreaterThan, 10.0, o));
         Assert.Throws<ArgumentOutOfRangeException>(() => dss13.FindHorizontalWindows(DistanceWindow, lro, HorizontalCoordinate.Azimuth,
-            RelationnalOperator.Greater, -0.1, o));
+            RelationalOperator.GreaterThan, -0.1, o));
     }
 
     [Theory]
-    [InlineData(RelationnalOperator.Lower, 1.0)]
-    [InlineData(RelationnalOperator.Greater, 5.0)]
-    [InlineData(RelationnalOperator.Greater, 1.0)]
-    public void Horizontal_Azimuth_AgainstGetHorizontalCoordinates_AcrossTheNorth(RelationnalOperator relation, double azimuth)
+    [InlineData(RelationalOperator.LessThan, 1.0)]
+    [InlineData(RelationalOperator.GreaterThan, 5.0)]
+    [InlineData(RelationalOperator.GreaterThan, 1.0)]
+    public void Horizontal_Azimuth_AgainstGetHorizontalCoordinates_AcrossTheNorth(RelationalOperator relation, double azimuth)
     {
         // The Moon from a site over a day: its azimuth turns once, through the north, where it jumps from 2π to 0
         var site = Dss13FromCoordinates;
@@ -230,7 +230,7 @@ public class ObserverWindowSearchTests
         var windows = site.FindHorizontalWindows(DayWindow, moon, HorizontalCoordinate.Azimuth, relation, azimuth, Options);
         Assert.NotEmpty(windows);
         double Azimuth(TimeSystem.Time t) => site.GetHorizontalCoordinates(t, moon, Aberration.None).Azimuth;
-        bool Holds(TimeSystem.Time t) => relation == RelationnalOperator.Lower ? Azimuth(t) < azimuth : Azimuth(t) > azimuth;
+        bool Holds(TimeSystem.Time t) => relation == RelationalOperator.LessThan ? Azimuth(t) < azimuth : Azimuth(t) > azimuth;
         bool north = false;
         foreach (var w in windows)
         {
@@ -267,8 +267,8 @@ public class ObserverWindowSearchTests
         // A crossing of a closed form, sin(2π t / 1 h) > 0.3 over a day: located to the tolerance given
         Func<TimeSystem.Time, double> f = t => System.Math.Sin(IO.Astrodynamics.Constants.TwoPi * (t - DayWindow.StartDate).TotalSeconds / 3600.0);
         double exact = System.Math.Asin(0.3) / IO.Astrodynamics.Constants.TwoPi * 3600.0;
-        var fine = GeometryFinder.FindWindows(DayWindow, f, RelationnalOperator.Greater, 0.3, Options);
-        var coarse = GeometryFinder.FindWindows(DayWindow, f, RelationnalOperator.Greater, 0.3, Options with { ConvergenceTolerance = TimeSpan.FromSeconds(1.0) });
+        var fine = GeometryFinder.FindWindows(DayWindow, f, RelationalOperator.GreaterThan, 0.3, Options);
+        var coarse = GeometryFinder.FindWindows(DayWindow, f, RelationalOperator.GreaterThan, 0.3, Options with { ConvergenceTolerance = TimeSpan.FromSeconds(1.0) });
         Assert.Equal(fine.Count, coarse.Count);
         double fineError = System.Math.Abs((fine[0].StartDate - DayWindow.StartDate).TotalSeconds - exact);
         double coarseError = System.Math.Abs((coarse[0].StartDate - DayWindow.StartDate).TotalSeconds - exact);
@@ -297,15 +297,15 @@ public class ObserverWindowSearchTests
             Assert.Contains($"{record}.Step", e.Message);
         }
 
-        AssertStep(() => moon.FindDistanceWindows(DistanceWindow, lro, RelationnalOperator.Greater, 1.0), "WindowSearchOptions");
+        AssertStep(() => moon.FindDistanceWindows(DistanceWindow, lro, RelationalOperator.GreaterThan, 1.0), "WindowSearchOptions");
         AssertStep(() => moon.FindCoordinateWindows(DistanceWindow, lro, Frames.Frame.ICRF, CoordinateSystem.Rectangular, Coordinate.Z,
-            RelationnalOperator.Greater, 1.0), "WindowSearchOptions");
-        AssertStep(() => Dss13.FindHorizontalWindows(DistanceWindow, lro, HorizontalCoordinate.Elevation, RelationnalOperator.Greater, 0.1),
+            RelationalOperator.GreaterThan, 1.0), "WindowSearchOptions");
+        AssertStep(() => Dss13.FindHorizontalWindows(DistanceWindow, lro, HorizontalCoordinate.Elevation, RelationalOperator.GreaterThan, 0.1),
             "WindowSearchOptions");
-        AssertStep(() => Dss13.FindIlluminationWindows(DistanceWindow, IlluminationAngle.Incidence, RelationnalOperator.Greater, 0.1, Sun),
+        AssertStep(() => Dss13.FindIlluminationWindows(DistanceWindow, IlluminationAngle.Incidence, RelationalOperator.GreaterThan, 0.1, Sun),
             "WindowSearchOptions");
-        AssertStep(() => GeometryFinder.FindWindows(DistanceWindow, _ => 1.0, RelationnalOperator.Greater, 0.0), "WindowSearchOptions");
-        AssertStep(() => GeometryFinder.FindWindows(DistanceWindow, _ => true, RelationnalOperator.Equal, true), "WindowSearchOptions");
+        AssertStep(() => GeometryFinder.FindWindows(DistanceWindow, _ => 1.0, RelationalOperator.GreaterThan, 0.0), "WindowSearchOptions");
+        AssertStep(() => GeometryFinder.FindWindows(DistanceWindow, _ => true, RelationalOperator.Equal, true), "WindowSearchOptions");
         AssertStep(() => Earth.FindOccultationWindows(DistanceWindow, Sun, moon), "OccultationSearchOptions");
     }
 
@@ -323,22 +323,22 @@ public class ObserverWindowSearchTests
         }
 
         // A tolerance on a search CSPICE runs
-        AssertOptions(() => moon.FindDistanceWindows(DistanceWindow, lro, RelationnalOperator.Greater, 1.0, tolerance), "ConvergenceTolerance");
+        AssertOptions(() => moon.FindDistanceWindows(DistanceWindow, lro, RelationalOperator.GreaterThan, 1.0, tolerance), "ConvergenceTolerance");
         AssertOptions(() => moon.FindCoordinateWindows(DistanceWindow, lro, Frames.Frame.ICRF, CoordinateSystem.Rectangular, Coordinate.Z,
-            RelationnalOperator.Greater, 1.0, tolerance), "ConvergenceTolerance");
-        AssertOptions(() => Dss13.FindIlluminationWindows(DistanceWindow, IlluminationAngle.Incidence, RelationnalOperator.Greater, 0.1, Sun, tolerance),
+            RelationalOperator.GreaterThan, 1.0, tolerance), "ConvergenceTolerance");
+        AssertOptions(() => Dss13.FindIlluminationWindows(DistanceWindow, IlluminationAngle.Incidence, RelationalOperator.GreaterThan, 0.1, Sun, tolerance),
             "ConvergenceTolerance");
         var kernelSpacecraft = new Spacecraft(-470001, "eclipse_001", epoch: Eclipse001Window.StartDate);
         AssertOptions(() => kernelSpacecraft.FindOccultationWindows(Eclipse001Window, Sun, Earth,
             new OccultationSearchOptions { Step = Step, ConvergenceTolerance = TimeSpan.FromTicks(5) }), "ConvergenceTolerance");
 
         // An adjustment value off an absolute extreme, on gfdist_c, and on a static search an aberration
-        AssertOptions(() => Earth.FindDistanceWindows(DayWindow, moon, RelationnalOperator.Greater, 1.0, Options with { AdjustValue = 0.0 }), "AdjustValue");
-        AssertOptions(() => moon.FindDistanceWindows(DistanceWindow, lro, RelationnalOperator.AbsoluteMin, 0.0, Options with { AdjustValue = 0.0 }),
+        AssertOptions(() => Earth.FindDistanceWindows(DayWindow, moon, RelationalOperator.GreaterThan, 1.0, Options with { AdjustValue = 0.0 }), "AdjustValue");
+        AssertOptions(() => moon.FindDistanceWindows(DistanceWindow, lro, RelationalOperator.AbsoluteMin, 0.0, Options with { AdjustValue = 0.0 }),
             "AdjustValue");
-        AssertOptions(() => GeometryFinder.FindWindows(DayWindow, _ => true, RelationnalOperator.Equal, true, Options with { AdjustValue = 1.0 }),
+        AssertOptions(() => GeometryFinder.FindWindows(DayWindow, _ => true, RelationalOperator.Equal, true, Options with { AdjustValue = 1.0 }),
             "AdjustValue");
-        AssertOptions(() => GeometryFinder.FindWindows(DayWindow, _ => 1.0, RelationnalOperator.Greater, 0.0, Options with { Aberration = Aberration.LT }),
+        AssertOptions(() => GeometryFinder.FindWindows(DayWindow, _ => 1.0, RelationalOperator.GreaterThan, 0.0, Options with { Aberration = Aberration.LT }),
             "Aberration");
 
         // A frame SPICE does not know: the options, SPICE's error inside
@@ -349,6 +349,6 @@ public class ObserverWindowSearchTests
         Assert.IsType<SpiceException>(unknown.InnerException);
 
         // The managed distance accepts an adjustment value of an absolute extreme
-        Assert.Single(Earth.FindDistanceWindows(DayWindow, moon, RelationnalOperator.AbsoluteMin, 0.0, Options with { AdjustValue = 0.0 }));
+        Assert.Single(Earth.FindDistanceWindows(DayWindow, moon, RelationalOperator.AbsoluteMin, 0.0, Options with { AdjustValue = 0.0 }));
     }
 }

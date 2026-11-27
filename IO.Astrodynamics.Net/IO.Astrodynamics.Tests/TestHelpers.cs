@@ -13,27 +13,27 @@ namespace IO.Astrodynamics.Tests
     {
         internal static CelestialBody Sun => new(Stars.Sun);
 
-        internal static CelestialBody Earth => new(PlanetsAndMoons.EARTH, Frames.Frame.ICRF, new TimeSystem.Time(2021, 1, 1, TimeScale.TDB), atmosphericModel: new EarthStandardAtmosphere());
+        internal static CelestialBody Earth => new(PlanetsAndMoons.Earth, Frames.Frame.ICRF, new TimeSystem.Time(2021, 1, 1, TimeScale.TDB), atmosphericModel: new EarthStandardAtmosphere());
 
-        internal static CelestialBody Moon => new(PlanetsAndMoons.MOON, Frames.Frame.ICRF, new TimeSystem.Time(2021, 1, 1, TimeScale.TDB));
+        internal static CelestialBody Moon => new(PlanetsAndMoons.Moon, Frames.Frame.ICRF, new TimeSystem.Time(2021, 1, 1, TimeScale.TDB));
 
-        internal static CelestialBody EarthAtJ2000 => new(PlanetsAndMoons.EARTH, Frames.Frame.ICRF, new TimeSystem.Time(2000, 1, 1, 12, 0, 0, TimeScale.TDB));
+        internal static CelestialBody EarthAtJ2000 => new(PlanetsAndMoons.Earth, Frames.Frame.ICRF, new TimeSystem.Time(2000, 1, 1, 12, 0, 0, TimeScale.TDB));
 
         internal static Barycenter SsbAtJ2000 => new(0, new TimeSystem.Time(2000, 1, 1, 12, 0, 0, TimeScale.TDB));
 
-        internal static CelestialBody EarthWithAtmAndGeoAtJ2000 => new(PlanetsAndMoons.EARTH, Frames.Frame.ICRF, new TimeSystem.Time(2000, 1, 1, 12, 0, 0, TimeScale.TDB),
+        internal static CelestialBody EarthWithAtmAndGeoAtJ2000 => new(PlanetsAndMoons.Earth, Frames.Frame.ICRF, new TimeSystem.Time(2000, 1, 1, 12, 0, 0, TimeScale.TDB),
             new GeopotentialModelParameters("Data/SolarSystem/EGM2008_to70_TideFree", 10), new EarthStandardAtmosphere());
 
-        internal static CelestialBody MoonAtJ2000 => new(PlanetsAndMoons.MOON, Frames.Frame.ICRF, new TimeSystem.Time(2000, 1, 1, 12, 0, 0, TimeScale.TDB));
+        internal static CelestialBody MoonAtJ2000 => new(PlanetsAndMoons.Moon, Frames.Frame.ICRF, new TimeSystem.Time(2000, 1, 1, 12, 0, 0, TimeScale.TDB));
 
-        internal static CelestialBody MoonAt20011214 => new(PlanetsAndMoons.MOON, Frames.Frame.ICRF, new TimeSystem.Time(2001, 12, 14, 0, 0, 0, TimeScale.TDB));
+        internal static CelestialBody MoonAt20011214 => new(PlanetsAndMoons.Moon, Frames.Frame.ICRF, new TimeSystem.Time(2001, 12, 14, 0, 0, 0, TimeScale.TDB));
 
-        internal static Spacecraft Spacecraft => new Spacecraft(-666, "GenericSpacecraft", 100.0, new StateVector(new Vector3(6800000.0, 0.0, 0.0), new Vector3(0.0, 8000.0, 0.0), Earth, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF), 1000.0,
+        internal static Spacecraft Spacecraft => new Spacecraft(-666, "GenericSpacecraft", 100.0, new StateVector(new Vector3(6800000.0, 0.0, 0.0), new Vector3(0.0, 8000.0, 0.0), Earth, TimeSystem.Time.J2000Tdb, Frames.Frame.ICRF), 1000.0,
             new Clock("GenericClk", 65536));
 
         /// <summary>
         /// Rotation of a frame transform <paramref name="dt"/> seconds later, from its angular velocity under the SPICE
-        /// convention of <see cref="Frames.Frame.GetStateOrientationToICRF"/>: R(t + dt) = R(t) exp(-[w×] dt), where w
+        /// convention of <see cref="Frames.Frame.GetStateOrientationToIcrf"/>: R(t + dt) = R(t) exp(-[w×] dt), where w
         /// is the angular velocity of ICRF relative to the frame, in the frame axes.
         /// </summary>
         internal static Quaternion RotateWithFrameAngularVelocity(StateOrientation orientation, double dt)
@@ -92,9 +92,9 @@ namespace IO.Astrodynamics.Tests
         internal static bool KeplerComparer(KeplerianElements k1, KeplerianElements k2)
         {
             var tolerance = 1E-06;
-            return SameShape(k1, k2, k1.A, k2.A, tolerance) &&
-                   System.Math.Abs(k1.E - k2.E) < tolerance && System.Math.Abs(k1.I - k2.I) < tolerance &&
-                   AngleDifference(k1.RAAN, k2.RAAN) < tolerance && AngleDifference(k1.AOP, k2.AOP) < tolerance && AngleDifference(k1.M, k2.M) < tolerance &&
+            return SameShape(k1, k2, k1.SemiMajorAxis(), k2.SemiMajorAxis(), tolerance) &&
+                   System.Math.Abs(k1.Eccentricity() - k2.Eccentricity()) < tolerance && System.Math.Abs(k1.Inclination() - k2.Inclination()) < tolerance &&
+                   AngleDifference(k1.AscendingNode(), k2.AscendingNode()) < tolerance && AngleDifference(k1.ArgumentOfPeriapsis(), k2.ArgumentOfPeriapsis()) < tolerance && AngleDifference(k1.MeanAnomaly(), k2.MeanAnomaly()) < tolerance &&
                    k1.Epoch == k2.Epoch && k1.Frame == k2.Frame && Equals(k1.Observer, k2.Observer);
         }
 

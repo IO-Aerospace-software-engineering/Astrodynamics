@@ -4,11 +4,10 @@ using System;
 using System.Linq;
 using IO.Astrodynamics.Body;
 using IO.Astrodynamics.Body.Spacecraft;
-using IO.Astrodynamics.CCSDS.OPM;
+using IO.Astrodynamics.Ccsds;
 using IO.Astrodynamics.Maneuver;
 using IO.Astrodynamics.Math;
 using IO.Astrodynamics.OrbitalParameters;
-using IO.Astrodynamics.OrbitalParameters.TLE;
 using IO.Astrodynamics.Propagator;
 using IO.Astrodynamics.Propagator.Variational;
 using IO.Astrodynamics.Propagator.Integrators;
@@ -58,10 +57,10 @@ public class SpacecraftToOpmTests
 
     private static (Spacecraft Spacecraft, ApogeeHeightManeuver Burn, PropagationSolution Solution) Propagated(int naifId, string integrator, string frame)
     {
-        var earth = new CelestialBody(PlanetsAndMoons.EARTH, Frame.ICRF, S);
+        var earth = new CelestialBody(PlanetsAndMoons.Earth, Frame.ICRF, S);
         double ra = 6378137.0 + 1000000.0, rp = 6378137.0 + 400000.0, a = (ra + rp) / 2.0;
         var orbit = new KeplerianElements(a, (ra - rp) / (ra + rp), 0.9, 0.3, 1.1, System.Math.PI, earth, S, Frame.ICRF).ToStateVector();
-        var initial = frame == "ICRF" ? orbit : orbit.ToFrame(Frame.ECLIPTIC_J2000).ToStateVector();
+        var initial = frame == "ICRF" ? orbit : orbit.ToFrame(Frame.ECLIPJ2000).ToStateVector();
         var spacecraft = new Spacecraft(naifId, $"OPM{-naifId}", Dry, initial, 5000.0, new Clock($"OPM{-naifId}_CLK", 65536), cosparId: "2024-001A");
         var tank = new FuelTank("ft", Fuel, Fuel, "model", "sn");
         spacecraft.AddFuelTank(tank);
@@ -98,7 +97,7 @@ public class SpacecraftToOpmTests
         Assert.InRange((tc - S).TotalSeconds, 1000.0, 5000.0);
         var initialFrame = spacecraft.InitialOrbitalParameters.Frame;
         var earth = (CelestialItem)spacecraft.InitialOrbitalParameters.Observer;
-        double massAfter = (Dry + Fuel) * System.Math.Exp(-burn.DeltaV.Magnitude() / (Isp * IO.Astrodynamics.Constants.g0));
+        double massAfter = (Dry + Fuel) * System.Math.Exp(-burn.DeltaV.Magnitude() / (Isp * IO.Astrodynamics.Constants.StandardGravity));
         var ignition = burn.ThrustWindow!.Value.StartDate;
         Assert.True(ignition.AddSeconds(1.0) < tc);
 
@@ -148,7 +147,7 @@ public class SpacecraftToOpmTests
             Assert.Equal(executed ? 1 : 0, maneuvers);
             if (executed)
             {
-                Assert.Equal(burn.ThrustWindow!.Value.StartDate.ToUTC().DateTime, opm.Data.Maneuvers.Single().ManEpochIgnition);
+                Assert.Equal(burn.ThrustWindow!.Value.StartDate.ToUtc().DateTime, opm.Data.Maneuvers.Single().ManEpochIgnition);
             }
         }
 
@@ -191,12 +190,12 @@ public class SpacecraftToOpmTests
 
     /// <summary>
     /// A TLE spacecraft propagated numerically writes its propagated state in TEME, the frame of its TLE, not SGP4 (53.7 km
-    /// from it after 1 h for the ISS); one only sampled by <see cref="TLEPropagator"/> writes SGP4, as before (the control).
+    /// from it after 1 h for the ISS); one only sampled by <see cref="TlePropagator"/> writes SGP4, as before (the control).
     /// </summary>
     [Fact]
     public void TleSpacecraft_PropagatedWritesItsStates_SampledWritesSgp4()
     {
-        var tle = new TLE("ISS", "1 25544U 98067A   21020.53488036  .00016717  00000-0  10270-3 0  9054",
+        var tle = new Tle("ISS", "1 25544U 98067A   21020.53488036  .00016717  00000-0  10270-3 0  9054",
             "2 25544  51.6423 353.0312 0000493 320.8755  39.2360 15.49309423 25703");
         var window = new Window(tle.Epoch, tle.Epoch.AddHours(1.0));
         var earth = (CelestialItem)tle.Observer;
@@ -216,7 +215,7 @@ public class SpacecraftToOpmTests
         Assert.True(fromSgp4 > 1000.0, $"{fromSgp4:E3} m");
 
         var sampled = new Spacecraft(-6586, "OPM6586", 1000.0, tle, 3000.0, new Clock("OPM6586_CLK", 65536), cosparId: "1998-067A");
-        new TLEPropagator(window, sampled, TimeSpan.FromSeconds(60.0)).Propagate();
+        new TlePropagator(window, sampled, TimeSpan.FromSeconds(60.0)).Propagate();
         var sampledOpm = sampled.ToOpm(epoch: end);
         Assert.Equal(sgp4.Position.X / 1000.0, sampledOpm.Data.StateVector.X);
         Assert.Equal(sgp4.Velocity.Z / 1000.0, sampledOpm.Data.StateVector.ZDot);

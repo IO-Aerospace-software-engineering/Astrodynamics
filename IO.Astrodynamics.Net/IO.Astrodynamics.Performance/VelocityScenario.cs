@@ -37,15 +37,15 @@ public class VelocityScenario
 
     public VelocityScenario()
     {
-        SpiceAPI.Instance.LoadKernels(new DirectoryInfo("Data"));
-        _earth = new CelestialBody(PlanetsAndMoons.EARTH, Frame.ICRF, TimeSystem.Time.J2000TDB,
+        SpiceApi.Instance.LoadKernels(new DirectoryInfo("Data"));
+        _earth = new CelestialBody(PlanetsAndMoons.Earth, Frame.ICRF, TimeSystem.Time.J2000Tdb,
             new GeopotentialModelParameters("Data/SolarSystem/EGM2008_to70_TideFree", 30), new EarthStandardAtmosphere());
-        _moon = new CelestialBody(PlanetsAndMoons.MOON);
+        _moon = new CelestialBody(PlanetsAndMoons.Moon);
         _sun = new CelestialBody(Stars.Sun);
-        _geopotential = new CelestialBody(PlanetsAndMoons.EARTH, Frame.ICRF, TimeSystem.Time.J2000TDB,
+        _geopotential = new CelestialBody(PlanetsAndMoons.Earth, Frame.ICRF, TimeSystem.Time.J2000Tdb,
             new GeopotentialModelParameters("Data/SolarSystem/EGM2008_to70_TideFree", 70));
         Clock clk = new Clock("My clock", 256);
-        Spacecraft spc = new Spacecraft(-1001, "MySpacecraft", 100.0, new StateVector(new Vector3(6800000.0, 0.0, 0.0), new Vector3(0.0, 7656.2204182967143, 0.0), _earth, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF), 10000.0,
+        Spacecraft spc = new Spacecraft(-1001, "MySpacecraft", 100.0, new StateVector(new Vector3(6800000.0, 0.0, 0.0), new Vector3(0.0, 7656.2204182967143, 0.0), _earth, TimeSystem.Time.J2000Tdb, Frames.Frame.ICRF), 10000.0,
             clk);
         // _srp = new SolarRadiationPressure(spc, [_earth]);
         // _atm = new AtmosphericDrag(spc, _earth);
@@ -57,8 +57,8 @@ public class VelocityScenario
         // forces.Add(_srp);
         // _integrator = new VVIntegrator(forces, TimeSpan.FromSeconds(1.0), new StateVector(new Vector3(6800000.0 - Random.Shared.NextDouble(), 0.0, 0.0),
         //     new Vector3(0.0, 8000.0 - Random.Shared.NextDouble(), 0.0), _earth,
-        //     TimeSystem.Time.J2000TDB, Frame.ICRF));
-        _spacecraftPropagator = new Propagator.CentralBodyPropagator(new Window(TimeSystem.Time.J2000TDB, TimeSystem.Time.J2000TDB + spc.InitialOrbitalParameters.Period()), spc,
+        //     TimeSystem.Time.J2000Tdb, Frame.ICRF));
+        _spacecraftPropagator = new Propagator.CentralBodyPropagator(new Window(TimeSystem.Time.J2000Tdb, TimeSystem.Time.J2000Tdb + spc.InitialOrbitalParameters.Period()), spc,
             new Propagator.PropagationOptions
             {
                 Integrator = new VVIntegratorOptions { Step = TimeSpan.FromSeconds(1.0) },
@@ -79,7 +79,7 @@ public class VelocityScenario
     public void Gravity()
     {
         var sv = new StateVector(new Vector3(6800000.0 - Random.Shared.NextDouble(), 0.0, 0.0), new Vector3(0.0, 8000.0 - Random.Shared.NextDouble(), 0.0), _earth,
-            TimeSystem.Time.J2000TDB, Frame.ICRF);
+            TimeSystem.Time.J2000Tdb, Frame.ICRF);
         var res = _geopotential.EvaluateGravitationalAcceleration(sv);
     }
 
@@ -87,7 +87,7 @@ public class VelocityScenario
     // public void SRP()
     // {
     //     var sv = new StateVector(new Vector3(6800000.0 - Random.Shared.NextDouble(), 0.0, 0.0), new Vector3(0.0, 8000.0 - Random.Shared.NextDouble(), 0.0), _earth,
-    //         TimeSystem.Time.J2000TDB, Frame.ICRF);
+    //         TimeSystem.Time.J2000Tdb, Frame.ICRF);
     //     var res = _srp.Apply(sv);
     // }
 
@@ -95,7 +95,7 @@ public class VelocityScenario
     // public void AtmosphericDrag()
     // {
     //     var sv = new StateVector(new Vector3(6800000.0 - Random.Shared.NextDouble(), 0.0, 0.0), new Vector3(0.0, 8000.0 - Random.Shared.NextDouble(), 0.0), _earth,
-    //         TimeSystem.Time.J2000TDB, Frame.ICRF);
+    //         TimeSystem.Time.J2000Tdb, Frame.ICRF);
     //     var res = _atm.Apply(sv);
     // }
 
@@ -104,7 +104,7 @@ public class VelocityScenario
     public void VVIntegration()
     {
         var sv = new StateVector(new Vector3(6800000.0 - Random.Shared.NextDouble(), 0.0, 0.0), new Vector3(0.0, 8000.0 - Random.Shared.NextDouble(), 0.0), _earth,
-            TimeSystem.Time.J2000TDB, Frame.ICRF);
+            TimeSystem.Time.J2000Tdb, Frame.ICRF);
         // var res = _integrator.Integrate(sv);
     }
 

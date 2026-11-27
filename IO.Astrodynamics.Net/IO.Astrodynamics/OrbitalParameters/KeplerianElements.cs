@@ -12,35 +12,15 @@ namespace IO.Astrodynamics.OrbitalParameters
     /// </summary>
     public class KeplerianElements : OrbitalParameters, IEquatable<KeplerianElements>
     {
-        /// <summary>
-        /// Semi major Axis
-        /// </summary>
-        public double A { get; }
-
-        /// <summary>
-        /// Eccentricity
-        /// </summary>
-        public double E { get; }
-
-        /// <summary>
-        /// Inclination
-        /// </summary>
-        public double I { get; }
-
-        /// <summary>
-        /// Right Ascending Node
-        /// </summary>
-        public double RAAN { get; }
-
-        /// <summary>
-        /// Argument of Periapsis
-        /// </summary>
-        public double AOP { get; }
-
-        /// <summary>
-        /// Mean Anomaly
-        /// </summary>
-        public double M { get; }
+        // The elements as given, the values SemiMajorAxis(), Eccentricity(), Inclination(), AscendingNode(),
+        // ArgumentOfPeriapsis() and MeanAnomaly() return (the public properties A, E, I, RAAN, AOP and M before 11.0.0, which
+        // repeated them, D2 of #668, lot L9)
+        private readonly double _a;
+        private readonly double _e;
+        private readonly double _i;
+        private readonly double _raan;
+        private readonly double _aop;
+        private readonly double _m;
 
         // Within 1e-6 of e = 1 the perigee radius given or derived at construction: the state of the band comes from it
         // (#459), and a = +Infinity does not fix it, so it is a value of the set for its equality and hash code (#475)
@@ -184,14 +164,14 @@ namespace IO.Astrodynamics.OrbitalParameters
                     nameof(semiMajorAxis));
             }
 
-            A = semiMajorAxis;
-            E = eccentricity;
-            I = inclination;
-            RAAN = SpecialFunctions.NormalizeAngle(ascendingNode);
-            AOP = SpecialFunctions.NormalizeAngle(argumentOfPeriapsis);
+            _a = semiMajorAxis;
+            _e = eccentricity;
+            _i = inclination;
+            _raan = SpecialFunctions.NormalizeAngle(ascendingNode);
+            _aop = SpecialFunctions.NormalizeAngle(argumentOfPeriapsis);
 
             // An angle on an ellipse; on an open orbit it grows without bound, negative before the periapsis (#368)
-            M = eccentricity < 1.0 - 1E-06 ? SpecialFunctions.NormalizeAngle(meanAnomaly) : meanAnomaly;
+            _m = eccentricity < 1.0 - 1E-06 ? SpecialFunctions.NormalizeAngle(meanAnomaly) : meanAnomaly;
             _period = period;
             _trueAnomaly = trueAnomaly;
             _perigeeRadius = perigeeRadius;
@@ -235,12 +215,12 @@ namespace IO.Astrodynamics.OrbitalParameters
             RequireFinite(meanAnomaly, meanAnomalyName);
 
             // Compute semi-major axis from mean motion using Kepler's third law: n = sqrt(GM/a^3)
-            A = System.Math.Cbrt(Constants.G * observer.Mass / (meanMotion * meanMotion));
-            E = eccentricity;
-            I = inclination;
-            RAAN = SpecialFunctions.NormalizeAngle(rightAscendingNode);
-            AOP = SpecialFunctions.NormalizeAngle(argumentOfPeriapsis);
-            M = SpecialFunctions.NormalizeAngle(meanAnomaly);
+            _a = System.Math.Cbrt(Constants.GravitationalConstant * observer.Mass / (meanMotion * meanMotion));
+            _e = eccentricity;
+            _i = inclination;
+            _raan = SpecialFunctions.NormalizeAngle(rightAscendingNode);
+            _aop = SpecialFunctions.NormalizeAngle(argumentOfPeriapsis);
+            _m = SpecialFunctions.NormalizeAngle(meanAnomaly);
 
             // Cache the original mean motion to preserve precision
             _meanMotion = meanMotion;
@@ -248,7 +228,7 @@ namespace IO.Astrodynamics.OrbitalParameters
 
         /// <summary>
         /// Creates mean Keplerian elements from OMM (Orbit Mean-elements Message) data, the path of
-        /// <see cref="CCSDS.OMM.Omm.ToMeanElements"/> and <see cref="CCSDS.OMM.Omm.ToTle"/> (internal since 11.0.0, R22 of
+        /// <see cref="Ccsds.Omm.ToMeanElements"/> and <see cref="Ccsds.Omm.ToTle"/> (internal since 11.0.0, R22 of
         /// #668: the one SI-side member that took degrees and rev/day).
         /// This factory method accepts values in OMM native units and handles all conversions internally.
         /// The resulting elements will have <see cref="OrbitalParameters.ElementsType"/> set to <see cref="OrbitalElementsType.Mean"/>.
@@ -453,7 +433,7 @@ namespace IO.Astrodynamics.OrbitalParameters
         /// <returns>The semi-major axis.</returns>
         public override double SemiMajorAxis()
         {
-            return A;
+            return _a;
         }
 
         /// <summary>
@@ -462,7 +442,7 @@ namespace IO.Astrodynamics.OrbitalParameters
         /// <returns>The eccentricity.</returns>
         public override double Eccentricity()
         {
-            return E;
+            return _e;
         }
 
         /// <summary>
@@ -471,7 +451,7 @@ namespace IO.Astrodynamics.OrbitalParameters
         /// <returns>The inclination.</returns>
         public override double Inclination()
         {
-            return I;
+            return _i;
         }
 
         /// <summary>
@@ -480,7 +460,7 @@ namespace IO.Astrodynamics.OrbitalParameters
         /// <returns>The right ascension of the ascending node.</returns>
         public override double AscendingNode()
         {
-            return RAAN;
+            return _raan;
         }
 
         /// <summary>
@@ -489,7 +469,7 @@ namespace IO.Astrodynamics.OrbitalParameters
         /// <returns>The argument of periapsis.</returns>
         public override double ArgumentOfPeriapsis()
         {
-            return AOP;
+            return _aop;
         }
 
         /// <summary>
@@ -498,7 +478,7 @@ namespace IO.Astrodynamics.OrbitalParameters
         /// <returns>The mean anomaly.</returns>
         public override double MeanAnomaly()
         {
-            return M;
+            return _m;
         }
         
         
@@ -509,8 +489,8 @@ namespace IO.Astrodynamics.OrbitalParameters
         {
             if (ReferenceEquals(null, other)) return false;
             if (ReferenceEquals(this, other)) return true;
-            return GetType() == other.GetType() && A.Equals(other.A) && E.Equals(other.E) && I.Equals(other.I) && RAAN.Equals(other.RAAN) &&
-                   AOP.Equals(other.AOP) && M.Equals(other.M) && Nullable.Equals(_bandPerigeeRadius, other._bandPerigeeRadius) &&
+            return GetType() == other.GetType() && _a.Equals(other._a) && _e.Equals(other._e) && _i.Equals(other._i) && _raan.Equals(other._raan) &&
+                   _aop.Equals(other._aop) && _m.Equals(other._m) && Nullable.Equals(_bandPerigeeRadius, other._bandPerigeeRadius) &&
                    HasSameReference(other);
         }
 
@@ -524,7 +504,7 @@ namespace IO.Astrodynamics.OrbitalParameters
 
         public override int GetHashCode()
         {
-            return HashCode.Combine(base.GetHashCode(), A, E, I, RAAN, AOP, M, _bandPerigeeRadius);
+            return HashCode.Combine(base.GetHashCode(), _a, _e, _i, _raan, _aop, _m, _bandPerigeeRadius);
         }
 
         public static bool operator ==(KeplerianElements left, KeplerianElements right)
@@ -539,7 +519,7 @@ namespace IO.Astrodynamics.OrbitalParameters
 
         public override string ToString()
         {
-            return $"Epoch : {Epoch.ToString()} A : {A}, Ecc. : {E}, Inc. : {I}, AN : {RAAN}, AOP : {AOP}, M : {M}, Frame : {Frame.Name}";
+            return $"Epoch : {Epoch.ToString()} A : {_a}, Ecc. : {_e}, Inc. : {_i}, AN : {_raan}, AOP : {_aop}, M : {_m}, Frame : {Frame.Name}";
         }
         #endregion
     }

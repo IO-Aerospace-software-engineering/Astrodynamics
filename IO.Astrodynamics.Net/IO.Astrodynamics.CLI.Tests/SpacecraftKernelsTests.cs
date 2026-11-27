@@ -60,7 +60,7 @@ public class SpacecraftKernelsTests
         }
 
         // The kernels the other tests load
-        SpiceAPI.Instance.LoadKernels(new DirectoryInfo("Data"));
+        SpiceApi.Instance.LoadKernels(new DirectoryInfo("Data"));
         var earth = new CelestialBody(399);
         var sun = new CelestialBody(10);
         var moon = new CelestialBody(301);
@@ -89,12 +89,12 @@ public class SpacecraftKernelsTests
         string stem = Path.Combine(directory, SpacecraftName.ToLowerInvariant());
         spacecraft.Clock.Write(new FileInfo(stem + ".tsc"));
         // The CK writer encodes its epochs with the clock kernel
-        SpiceAPI.Instance.LoadKernels(new FileInfo(stem + ".tsc"));
+        SpiceApi.Instance.LoadKernels(new FileInfo(stem + ".tsc"));
         spacecraft.Frame.Write(new FileInfo(stem + ".tf"));
         spacecraft.WriteEphemeris(new FileInfo(stem + ".bsp"));
         spacecraft.WriteOrientation(new FileInfo(stem + ".bc"));
         // Loaded for the references read before a command (the commands load the directory again)
-        SpiceAPI.Instance.LoadKernels(new DirectoryInfo(directory));
+        SpiceApi.Instance.LoadKernels(new DirectoryInfo(directory));
         _kernels = directory;
         return _kernels;
     }
@@ -139,7 +139,7 @@ public class SpacecraftKernelsTests
             var begin = Start.AddSeconds(3.25);
             var end = Start.AddSeconds(590.0);
             var output = CliRun.Ok("orientation", SpacecraftId.ToString(CultureInfo.InvariantCulture), "-K", kernels,
-                "--begin", utcWindow ? begin.ToUTC().ToString() : begin.ToString(), "--end", utcWindow ? end.ToUTC().ToString() : end.ToString(),
+                "--begin", utcWindow ? begin.ToUtc().ToString() : begin.ToString(), "--end", utcWindow ? end.ToUtc().ToString() : end.ToString(),
                 "--step", "6.5s", "--frame", frameArgument);
 
             var lines = output.Split(Environment.NewLine, StringSplitOptions.RemoveEmptyEntries);
@@ -158,7 +158,7 @@ public class SpacecraftKernelsTests
                 var rate = new Vector3(n[4], n[5], n[6]);
 
                 // pxform / xf2rav(sxform) from the frame to the spacecraft frame, through its frame kernel
-                var reference = SpiceAPI.Instance.TransformFrame(epoch, new Frame(referenceFrame), new Frame(SpacecraftFrame));
+                var reference = SpiceApi.Instance.TransformFrame(epoch, new Frame(referenceFrame), new Frame(SpacecraftFrame));
                 Assert.Equal(1.0, reference.Rotation.Magnitude(), 12);
                 worstAngle = System.Math.Max(worstAngle, RotationAngle(rotation, reference.Rotation));
                 worstRate = System.Math.Max(worstRate, (rate - reference.AngularVelocity).Magnitude());
@@ -189,7 +189,7 @@ public class SpacecraftKernelsTests
     /// <summary>The state of the spacecraft relative to the Earth from <c>spkezr</c>.</summary>
     private static StateVector Spkezr(Time epoch, string frame, Aberration aberration)
     {
-        var state = SpiceAPI.Instance.ReadEphemeris(epoch, 399, SpacecraftId, new Frame(frame), aberration);
+        var state = SpiceApi.Instance.ReadEphemeris(epoch, 399, SpacecraftId, new Frame(frame), aberration);
         // The native read returns zeros on a SPICE error: the reference is the orbit, about 6 778 km from the Earth
         Assert.InRange(state.Position.Magnitude(), 6.7e6, 6.9e6);
         return state;
@@ -276,7 +276,7 @@ public class SpacecraftKernelsTests
         {
             var kernels = Kernels();
             var epoch = Start.AddSeconds(301.5);
-            var moonFromEarth = SpiceAPI.Instance.ReadEphemeris(epoch, 399, 301, Frame.ICRF, Aberration.None).Position;
+            var moonFromEarth = SpiceApi.Instance.ReadEphemeris(epoch, 399, 301, Frame.ICRF, Aberration.None).Position;
             var spacecraftFromEarth = Spkezr(epoch, "J2000", Aberration.None).Position;
 
             // From the spacecraft, between the Earth and the Moon; from the Earth, between the spacecraft and the Moon

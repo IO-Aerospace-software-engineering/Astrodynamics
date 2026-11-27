@@ -31,7 +31,7 @@ h and k (the 16 sign patterns of f = g = h = k = 0), inputs within 1e-12 of the 
 argument of periapsis that underflow, the true longitude far outside [0, 2π), the retrograde equatorial orbit (h =
 ±tan(π/2) in doubles) and h or k beyond 1e150, where their squares overflow, the conformance cases 151 to 154, Keplerian
 elements whose ToEquinoctial gives every sign pattern of the zeros, parabolic and near-parabolic elements (|e − 1| <
-1e-6), and the mean elements of TLE.Create with the fields of line 2 (degrees, 4 decimals) under the conventions of the
+1e-6), and the mean elements of Tle.Create with the fields of line 2 (degrees, 4 decimals) under the conventions of the
 library: Ω = 0 for an equatorial orbit, ω = 0 for a circular one.
 
 Every input is a double, written with repr so that −0.0 survives; the references are exact for these doubles, so they
@@ -298,7 +298,7 @@ def tle_field(x):
 
 
 def tle_create(name, p, f, g, h, k, l):
-    """Mean elements for TLE.Create, and the fields of line 2 under the conventions of the library (#452)."""
+    """Mean elements for Tle.Create, and the fields of line 2 under the conventions of the library (#452)."""
     case = {'name': name, 'p': text(p), 'f': text(f), 'g': text(g), 'h': text(h), 'k': text(k), 'l': text(l)}
     fm, gm, hm, km, lm = (mpf(case[n]) for n in ('f', 'g', 'h', 'k', 'l'))
     e = mp.sqrt(fm * fm + gm * gm)
@@ -471,7 +471,7 @@ def main():
     ]
 
     # #450: elements within the domain of EQNCPV (e below 0.9) whose mean and true longitudes differ, which
-    # SpiceAPI.ConvertEquinoctialElementsToStateVector gave the state of another point of the orbit (1029 km off for a LEO,
+    # SpiceApi.ConvertEquinoctialElementsToStateVector gave the state of another point of the orbit (1029 km off for a LEO,
     # 27 900 km at e = 0.89): a LEO, an ellipse of e 0.89 and the equatorial ellipse of the issue (H = K = 0)
     t10 = math.tan(10.0 * D)
     eqncpv = [

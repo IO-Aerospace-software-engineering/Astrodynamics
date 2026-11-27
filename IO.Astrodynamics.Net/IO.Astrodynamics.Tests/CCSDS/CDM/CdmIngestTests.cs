@@ -3,12 +3,12 @@
 using System;
 using System.Collections.Generic;
 using IO.Astrodynamics.Body;
-using IO.Astrodynamics.CCSDS.CDM;
+using IO.Astrodynamics.Ccsds;
 using IO.Astrodynamics.Frames;
 using IO.Astrodynamics.Math;
 using IO.Astrodynamics.OrbitalParameters;
 using IO.Astrodynamics.SolarSystemObjects;
-using IO.Astrodynamics.SSA;
+using IO.Astrodynamics.Ssa;
 using IO.Astrodynamics.TimeSystem;
 using Xunit;
 
@@ -73,7 +73,7 @@ public class CdmIngestTests
         // Assert: the state as given in ICRF about the Earth at TCA (UTC), the covariance the RTN covariance turned on that
         // state, as the conformance runner's to_inertial turned it before 11.0.0 (bit for bit)
         var epoch = new TimeSystem.Time(TcaUtc, TimeScale.UTC);
-        var earth = new CelestialBody(PlanetsAndMoons.EARTH, Frames.Frame.ICRF, epoch);
+        var earth = new CelestialBody(PlanetsAndMoons.Earth, Frames.Frame.ICRF, epoch);
         Assert.Equal(Frames.Frame.ICRF, s1.Frame);
         Assert.Equal(399, s1.Observer.NaifId);
         LabelAssert.Equal(epoch, s1.Epoch);
@@ -99,7 +99,7 @@ public class CdmIngestTests
         Assert.Equal(Frames.Frame.ITRF93, s1.Frame);
         Assert.Equal(Position1, s1.Position);
         Assert.Equal(Velocity1, s1.Velocity);
-        double et = epoch.ToTDB().TimeSpanFromJ2000().TotalSeconds;
+        double et = epoch.ToTdb().TimeSpanFromJ2000().TotalSeconds;
         var toItrf = Body.CspiceDirect.Sxform("J2000", "ITRF93", et);
         var fromItrf = Body.CspiceDirect.Sxform("ITRF93", "J2000", et);
         var m = Matrix.Create(6, 6, (i, j) => toItrf[6 * i + j]);

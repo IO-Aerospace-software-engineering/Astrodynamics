@@ -51,7 +51,7 @@ public class GeopotentialModelParametersReuseTests
     }
 
     private static CelestialBody Earth(GeopotentialModelParameters parameters) =>
-        new(PlanetsAndMoons.EARTH, Frames.Frame.ICRF, Epoch, parameters);
+        new(PlanetsAndMoons.Earth, Frames.Frame.ICRF, Epoch, parameters);
 
     public static TheoryData<string, ushort, bool, GeopotentialCentralTerm> Configurations() => new()
     {

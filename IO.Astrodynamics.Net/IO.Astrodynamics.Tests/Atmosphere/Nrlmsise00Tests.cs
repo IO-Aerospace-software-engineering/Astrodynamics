@@ -1,6 +1,6 @@
 using System;
 using Xunit;
-using IO.Astrodynamics.Atmosphere.NRLMSISE_00;
+using IO.Astrodynamics.Atmosphere;
 
 namespace IO.Astrodynamics.Tests.Atmosphere
 {
@@ -8,7 +8,7 @@ namespace IO.Astrodynamics.Tests.Atmosphere
     /// Unit tests for the NRLMSISE-00 atmospheric model.
     /// All inputs and expected outputs use SI units (meters, radians, m^-3, kg/m^3, Kelvin).
     /// </summary>
-    public class NRLMSISE00Tests
+    public class Nrlmsise00Tests
     {
         private const double Tolerance = 1e-6; // Relative tolerance for comparing scientific notation values (0.000001%)
 
@@ -38,7 +38,7 @@ namespace IO.Astrodynamics.Tests.Atmosphere
         [Fact]
         public void TestCase01_Standard400km()
         {
-            var model = new NRLMSISE00();
+            var model = new Nrlmsise00();
             var input = new NrlmsiseInput
             {
                 Year = 0,
@@ -94,7 +94,7 @@ Temperatures:
         [Fact]
         public void TestCase02_DifferentDay()
         {
-            var model = new NRLMSISE00();
+            var model = new Nrlmsise00();
             var input = new NrlmsiseInput
             {
                 Year = 0,
@@ -132,7 +132,7 @@ Temperatures:
         [Fact]
         public void TestCase03_HighAltitude1000km()
         {
-            var model = new NRLMSISE00();
+            var model = new Nrlmsise00();
             var input = new NrlmsiseInput
             {
                 Year = 0,
@@ -170,7 +170,7 @@ Temperatures:
         [Fact]
         public void TestCase04_LowAltitude100km()
         {
-            var model = new NRLMSISE00();
+            var model = new Nrlmsise00();
             var input = new NrlmsiseInput
             {
                 Year = 0,
@@ -208,7 +208,7 @@ Temperatures:
         [Fact]
         public void TestCase05_EquatorialLatitude()
         {
-            var model = new NRLMSISE00();
+            var model = new Nrlmsise00();
             var input = new NrlmsiseInput
             {
                 Year = 0,
@@ -246,7 +246,7 @@ Temperatures:
         [Fact]
         public void TestCase06_DifferentLongitude()
         {
-            var model = new NRLMSISE00();
+            var model = new Nrlmsise00();
             var input = new NrlmsiseInput
             {
                 Year = 0,
@@ -284,7 +284,7 @@ Temperatures:
         [Fact]
         public void TestCase07_DifferentLocalTime()
         {
-            var model = new NRLMSISE00();
+            var model = new Nrlmsise00();
             var input = new NrlmsiseInput
             {
                 Year = 0,
@@ -322,7 +322,7 @@ Temperatures:
         [Fact]
         public void TestCase08_LowSolarActivity()
         {
-            var model = new NRLMSISE00();
+            var model = new Nrlmsise00();
             var input = new NrlmsiseInput
             {
                 Year = 0,
@@ -360,7 +360,7 @@ Temperatures:
         [Fact]
         public void TestCase09_HighSolarFlux()
         {
-            var model = new NRLMSISE00();
+            var model = new Nrlmsise00();
             var input = new NrlmsiseInput
             {
                 Year = 0,
@@ -398,7 +398,7 @@ Temperatures:
         [Fact]
         public void TestCase10_HighGeomagneticActivity()
         {
-            var model = new NRLMSISE00();
+            var model = new Nrlmsise00();
             var input = new NrlmsiseInput
             {
                 Year = 0,
@@ -449,7 +449,7 @@ Temperatures:
             double ar, double rho, double h, double n, double anmO,
             double tinf, double tg)
         {
-            var model = new NRLMSISE00();
+            var model = new Nrlmsise00();
             var input = new NrlmsiseInput
             {
                 Year = 0,
@@ -486,7 +486,7 @@ Temperatures:
         [Fact]
         public void TestCase16_WithApArray()
         {
-            var model = new NRLMSISE00();
+            var model = new Nrlmsise00();
             var apArray = new ApArray();
             for (int i = 0; i < 7; i++)
                 apArray.A[i] = 100;
@@ -530,7 +530,7 @@ Temperatures:
         [Fact]
         public void TestCase17_LowAltitudeWithApArray()
         {
-            var model = new NRLMSISE00();
+            var model = new Nrlmsise00();
             var apArray = new ApArray();
             for (int i = 0; i < 7; i++)
                 apArray.A[i] = 100;
@@ -578,7 +578,7 @@ Temperatures:
         public void Gts7_Standard400km_ReturnsValidDensities()
         {
             // Arrange
-            var model = new NRLMSISE00();
+            var model = new Nrlmsise00();
             var input = new NrlmsiseInput
             {
                 Year = 0,
@@ -617,7 +617,7 @@ Temperatures:
         public void Gts7_VeryHighAltitude2000km_ReturnsValidDensities()
         {
             // Arrange
-            var model = new NRLMSISE00();
+            var model = new Nrlmsise00();
             var input = new NrlmsiseInput
             {
                 Year = 0,
@@ -658,7 +658,7 @@ Temperatures:
         public void Gts7_BoundaryAltitude72Point5km_ReturnsValidDensities()
         {
             // Arrange
-            var model = new NRLMSISE00();
+            var model = new Nrlmsise00();
             var input = new NrlmsiseInput
             {
                 Year = 0,
@@ -693,7 +693,7 @@ Temperatures:
         public void Gtd7_AlwaysReturnsSIUnits()
         {
             // Arrange - same conditions as TestCase01
-            var model = new NRLMSISE00();
+            var model = new Nrlmsise00();
             var input = new NrlmsiseInput
             {
                 Year = 0,
@@ -733,7 +733,7 @@ Temperatures:
         public void Gtd7d_Standard400km_IncludesAnomalousOxygenInDensity()
         {
             // Arrange
-            var model = new NRLMSISE00();
+            var model = new Nrlmsise00();
             var input = new NrlmsiseInput
             {
                 Year = 0,
@@ -775,7 +775,7 @@ Temperatures:
         public void Gtd7d_LowAltitude100km_AnomalousOxygenNegligible()
         {
             // Arrange
-            var model = new NRLMSISE00();
+            var model = new Nrlmsise00();
             var input = new NrlmsiseInput
             {
                 Year = 0,
@@ -812,7 +812,7 @@ Temperatures:
         public void Gtd7d_WithMetersKilogramOutput_ReturnsConvertedUnits()
         {
             // Arrange
-            var model = new NRLMSISE00();
+            var model = new Nrlmsise00();
             var input = new NrlmsiseInput
             {
                 Year = 0,
@@ -849,7 +849,7 @@ Temperatures:
         public void Ghp7_PressureLevel1000mb_ConvergesToSeaLevel()
         {
             // Arrange
-            var model = new NRLMSISE00();
+            var model = new Nrlmsise00();
             var input = new NrlmsiseInput
             {
                 Year = 0,
@@ -883,7 +883,7 @@ Temperatures:
         public void Ghp7_PressureLevel1mb_ConvergesToHighAltitude()
         {
             // Arrange
-            var model = new NRLMSISE00();
+            var model = new Nrlmsise00();
             var input = new NrlmsiseInput
             {
                 Year = 0,
@@ -918,7 +918,7 @@ Temperatures:
         public void Ghp7_PressureLevel0Point001mb_ConvergesToVeryHighAltitude()
         {
             // Arrange
-            var model = new NRLMSISE00();
+            var model = new Nrlmsise00();
             var input = new NrlmsiseInput
             {
                 Year = 0,
@@ -952,7 +952,7 @@ Temperatures:
         public void Ghp7_WithMetersKilogramOutput_ConvergesCorrectly()
         {
             // Arrange
-            var model = new NRLMSISE00();
+            var model = new Nrlmsise00();
             var input = new NrlmsiseInput
             {
                 Year = 0,
@@ -990,7 +990,7 @@ Temperatures:
         public void Gtd7_NorthPoleLatitude_ReturnsValidDensities()
         {
             // Arrange
-            var model = new NRLMSISE00();
+            var model = new Nrlmsise00();
             var input = new NrlmsiseInput
             {
                 Year = 0,
@@ -1020,7 +1020,7 @@ Temperatures:
         public void Gtd7_SouthPoleLatitude_ReturnsValidDensities()
         {
             // Arrange
-            var model = new NRLMSISE00();
+            var model = new Nrlmsise00();
             var input = new NrlmsiseInput
             {
                 Year = 0,
@@ -1054,7 +1054,7 @@ Temperatures:
         public void Gtd7_ExtremeLongitudes_ReturnsValidDensities(double longitudeDeg)
         {
             // Arrange
-            var model = new NRLMSISE00();
+            var model = new Nrlmsise00();
             var input = new NrlmsiseInput
             {
                 Year = 0,
@@ -1083,7 +1083,7 @@ Temperatures:
         public void Gtd7_FirstDayOfYear_ReturnsValidDensities()
         {
             // Arrange
-            var model = new NRLMSISE00();
+            var model = new Nrlmsise00();
             var input = new NrlmsiseInput
             {
                 Year = 0,
@@ -1115,7 +1115,7 @@ Temperatures:
         public void Gtd7_LastDayOfYear_ReturnsValidDensities()
         {
             // Arrange
-            var model = new NRLMSISE00();
+            var model = new Nrlmsise00();
             var input = new NrlmsiseInput
             {
                 Year = 0,
@@ -1146,7 +1146,7 @@ Temperatures:
         public void Gtd7_MidnightLocalTime_ReturnsValidDensities()
         {
             // Arrange
-            var model = new NRLMSISE00();
+            var model = new Nrlmsise00();
             var input = new NrlmsiseInput
             {
                 Year = 0,
@@ -1177,7 +1177,7 @@ Temperatures:
         public void Gtd7_NoonLocalTime_ReturnsValidDensities()
         {
             // Arrange
-            var model = new NRLMSISE00();
+            var model = new Nrlmsise00();
             var input = new NrlmsiseInput
             {
                 Year = 0,
@@ -1209,7 +1209,7 @@ Temperatures:
         public void Gtd7_VeryLowSolarActivity_ReturnsLowerTemperatureAndDensity()
         {
             // Arrange
-            var model = new NRLMSISE00();
+            var model = new Nrlmsise00();
             var baseInput = new NrlmsiseInput
             {
                 Year = 0,
@@ -1246,7 +1246,7 @@ Temperatures:
         public void Gtd7_VeryHighSolarActivity_ReturnsHigherTemperatureAndDensity()
         {
             // Arrange
-            var model = new NRLMSISE00();
+            var model = new Nrlmsise00();
             var baseInput = new NrlmsiseInput
             {
                 Year = 0,
@@ -1282,7 +1282,7 @@ Temperatures:
         public void Gtd7_ZeroGeomagneticActivity_ReturnsValidDensities()
         {
             // Arrange
-            var model = new NRLMSISE00();
+            var model = new Nrlmsise00();
             var input = new NrlmsiseInput
             {
                 Year = 0,
@@ -1313,7 +1313,7 @@ Temperatures:
         public void Gtd7_ExtremeGeomagneticActivity_ReturnsValidDensities()
         {
             // Arrange
-            var model = new NRLMSISE00();
+            var model = new Nrlmsise00();
             var input = new NrlmsiseInput
             {
                 Year = 0,
@@ -1349,7 +1349,7 @@ Temperatures:
         public void Gtd7_AllSwitchesOff_ReturnsBaselineModel()
         {
             // Arrange
-            var model = new NRLMSISE00();
+            var model = new Nrlmsise00();
             var input = new NrlmsiseInput
             {
                 Year = 0,
@@ -1383,7 +1383,7 @@ Temperatures:
         public void Gtd7_F107EffectDisabled_ReturnsValidDensities()
         {
             // Arrange
-            var model = new NRLMSISE00();
+            var model = new Nrlmsise00();
             var input = new NrlmsiseInput
             {
                 Year = 0,
@@ -1415,7 +1415,7 @@ Temperatures:
         public void Gtd7_DiurnalVariationDisabled_ReturnsValidDensities()
         {
             // Arrange
-            var model = new NRLMSISE00();
+            var model = new Nrlmsise00();
             var input = new NrlmsiseInput
             {
                 Year = 0,
@@ -1447,7 +1447,7 @@ Temperatures:
         public void Gtd7_SemidiurnalVariationDisabled_ReturnsValidDensities()
         {
             // Arrange
-            var model = new NRLMSISE00();
+            var model = new Nrlmsise00();
             var input = new NrlmsiseInput
             {
                 Year = 0,
@@ -1479,7 +1479,7 @@ Temperatures:
         public void Gtd7_TerdiurnalVariationDisabled_ReturnsValidDensities()
         {
             // Arrange
-            var model = new NRLMSISE00();
+            var model = new Nrlmsise00();
             var input = new NrlmsiseInput
             {
                 Year = 0,
@@ -1511,7 +1511,7 @@ Temperatures:
         public void Gtd7_DiffusiveEquilibriumDeparturesDisabled_ReturnsValidDensities()
         {
             // Arrange
-            var model = new NRLMSISE00();
+            var model = new Nrlmsise00();
             var input = new NrlmsiseInput
             {
                 Year = 0,
@@ -1547,7 +1547,7 @@ Temperatures:
         public void Gtd7_ApArrayAllZeros_ReturnsValidDensities()
         {
             // Arrange
-            var model = new NRLMSISE00();
+            var model = new Nrlmsise00();
             var apArray = new ApArray();
             for (int i = 0; i < 7; i++)
                 apArray.A[i] = 0;
@@ -1584,7 +1584,7 @@ Temperatures:
         public void Gtd7_ApArrayVaryingValues_ReturnsValidDensities()
         {
             // Arrange
-            var model = new NRLMSISE00();
+            var model = new Nrlmsise00();
             var apArray = new ApArray();
             apArray.A[0] = 4; // Daily Ap
             apArray.A[1] = 10; // 3 hr ap index for current time
@@ -1626,7 +1626,7 @@ Temperatures:
         public void Gtd7_ApArrayExtremeHighValues_ReturnsValidDensities()
         {
             // Arrange
-            var model = new NRLMSISE00();
+            var model = new Nrlmsise00();
             var apArray = new ApArray();
             for (int i = 0; i < 7; i++)
                 apArray.A[i] = 400; // Extreme geomagnetic storm
@@ -1668,7 +1668,7 @@ Temperatures:
         public void Gts7_Altitude350km_ExercisesLowerThermosphereVariations()
         {
             // Arrange
-            var model = new NRLMSISE00();
+            var model = new Nrlmsise00();
             var input = new NrlmsiseInput
             {
                 Year = 0,
@@ -1700,7 +1700,7 @@ Temperatures:
         public void Gtd7_Altitude70km_UsesLowerAtmosphereModel()
         {
             // Arrange
-            var model = new NRLMSISE00();
+            var model = new Nrlmsise00();
             var input = new NrlmsiseInput
             {
                 Year = 0,
@@ -1733,7 +1733,7 @@ Temperatures:
         public void Gtd7_Altitude62Point5km_InMixingZone()
         {
             // Arrange
-            var model = new NRLMSISE00();
+            var model = new Nrlmsise00();
             var input = new NrlmsiseInput
             {
                 Year = 0,
@@ -1765,7 +1765,7 @@ Temperatures:
         public void Gtd7_LongitudeNegative1000_SkipsLongitudinalEffects()
         {
             // Arrange
-            var model = new NRLMSISE00();
+            var model = new Nrlmsise00();
             var input = new NrlmsiseInput
             {
                 Year = 0,
@@ -1797,7 +1797,7 @@ Temperatures:
         public void Gtd7_TimeIndependentMode_UsesConstantLatitude()
         {
             // Arrange
-            var model = new NRLMSISE00();
+            var model = new Nrlmsise00();
             var baseInput = new NrlmsiseInput
             {
                 Year = 0,
@@ -1838,7 +1838,7 @@ Temperatures:
         public void Gtd7_Altitude5km_LowerTroposphere()
         {
             // Arrange
-            var model = new NRLMSISE00();
+            var model = new Nrlmsise00();
             var input = new NrlmsiseInput
             {
                 Year = 0,

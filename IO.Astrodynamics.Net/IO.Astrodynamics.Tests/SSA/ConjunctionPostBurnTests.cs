@@ -11,7 +11,7 @@ using IO.Astrodynamics.OrbitalParameters;
 using IO.Astrodynamics.Propagator;
 using IO.Astrodynamics.Propagator.Integrators;
 using IO.Astrodynamics.SolarSystemObjects;
-using IO.Astrodynamics.SSA;
+using IO.Astrodynamics.Ssa;
 using IO.Astrodynamics.TimeSystem;
 using Xunit;
 using Xunit.Abstractions;
@@ -48,8 +48,8 @@ public class ConjunctionPostBurnTests
     {
         _output = output;
         TestKernels.EnsureSolarSystem();
-        _start = new TimeSystem.Time(2026, 1, 20, 6, 0, 0, TimeScale.UTC).ToTDB();
-        _earth = new CelestialBody(PlanetsAndMoons.EARTH, Frames.Frame.ICRF, _start);
+        _start = new TimeSystem.Time(2026, 1, 20, 6, 0, 0, TimeScale.UTC).ToTdb();
+        _earth = new CelestialBody(PlanetsAndMoons.Earth, Frames.Frame.ICRF, _start);
     }
 
     private static int NextId() => Interlocked.Decrement(ref _ids);
@@ -82,7 +82,7 @@ public class ConjunctionPostBurnTests
     {
         var segment = solution.Segments[0];
         var step = segment.Steps[^1];
-        return solution.TimeArgument.StepEpochs(segment.BaseEpoch, step.CumulativeTime, step.StepSize).End;
+        return solution.TimeArgument.StepEpochs(segment.BaseEpoch, step.CumulativeTime, step.StepSizeSeconds).End;
     }
 
     // A secondary 30 m from the protected trajectory at tc, at the relative velocity given, over [tc − 150 s, tc + 150 s]

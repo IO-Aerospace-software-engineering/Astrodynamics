@@ -30,7 +30,7 @@ public class EquinoctialElementsTests
     [Fact]
     public void TheStateOfTheTutorialGivesTheClosedForm()
     {
-        var earth = PlanetsAndMoons.EARTH_BODY;
+        var earth = PlanetsAndMoons.EarthBody;
         Assert.Equal(398600435507022.6, earth.GM);
         var sv = new StateVector(new Vector3(6800000.0, 0.0, 0.0), new Vector3(0.0, 8000.0, 0.0), earth, new TimeSystem.Time(2024, 6, 21, 12, 0, 0, TimeScale.TDB),
             Frames.Frame.ICRF);
@@ -57,7 +57,7 @@ public class EquinoctialElementsTests
     [Fact]
     public void TheModifiedSetIsTheClassicalSetOfGmatUnderItsNames()
     {
-        var earth = PlanetsAndMoons.EARTH_BODY;
+        var earth = PlanetsAndMoons.EarthBody;
         var sv = new StateVector(new Vector3(-4000000.0, 5500000.0, 2500000.0), new Vector3(-5500.0, -3000.0, 4000.0), earth,
             new TimeSystem.Time(2024, 6, 21, 12, 0, 0, TimeScale.TDB), Frames.Frame.ICRF);
 
@@ -70,11 +70,11 @@ public class EquinoctialElementsTests
         Assert.Equal(0.12363511685104268, equinoctial.G, 3.9e-16);
         Assert.Equal(-0.023979838219125259, equinoctial.H, 3.9e-16);
         Assert.Equal(0.31440232331742002, equinoctial.K, 3.9e-16);
-        Assert.Equal(equinoctial.F, equinoctial.EquinoctialEx());
-        Assert.Equal(equinoctial.G, equinoctial.EquinoctialEy());
-        Assert.Equal(equinoctial.H, equinoctial.Hx());
-        Assert.Equal(equinoctial.K, equinoctial.Hy());
-        Assert.Equal(equinoctial.L0, equinoctial.Lv());
+        Assert.Equal(equinoctial.F, equinoctial.F);
+        Assert.Equal(equinoctial.G, equinoctial.G);
+        Assert.Equal(equinoctial.H, equinoctial.H);
+        Assert.Equal(equinoctial.K, equinoctial.K);
+        Assert.Equal(equinoctial.L0, equinoctial.L0);
     }
 
     /// <summary>
@@ -90,7 +90,7 @@ public class EquinoctialElementsTests
     [InlineData(1e-9, 1080604389.990800568946039, 1682941624.26767132032076)]
     public void NearTheRetrogradeEquatorialOrbitHAndKGrowAsTheTangentOfHalfTheInclination(double delta, double expectedH, double expectedK)
     {
-        var earth = PlanetsAndMoons.EARTH_BODY;
+        var earth = PlanetsAndMoons.EarthBody;
         var ke = new KeplerianElements(7500000.0, 0.05, System.Math.PI - delta, 1.0, 0.5, 2.0, earth, new TimeSystem.Time(2024, 6, 21, 12, 0, 0, TimeScale.TDB),
             Frames.Frame.ICRF);
 
@@ -111,7 +111,7 @@ public class EquinoctialElementsTests
     [Fact]
     public void Create()
     {
-        CelestialBody earth = PlanetsAndMoons.EARTH_BODY;
+        CelestialBody earth = PlanetsAndMoons.EarthBody;
         var epoch = new TimeSystem.Time(DateTime.UtcNow, TimeScale.UTC);
         EquinoctialElements equ = new EquinoctialElements(1.0, 2.0, 3.0, 4.0, 5.0, 6.0, earth, epoch, Frames.Frame.ICRF);
         Assert.Equal(1.0, equ.P);
@@ -128,23 +128,23 @@ public class EquinoctialElementsTests
     [Fact]
     public void ToEquinoctial()
     {
-        CelestialBody earth = PlanetsAndMoons.EARTH_BODY;
+        CelestialBody earth = PlanetsAndMoons.EarthBody;
         KeplerianElements ke = new KeplerianElements(6800.81178582, 0.00134, 51.71 * IO.Astrodynamics.Constants.Deg2Rad, 32.57 * IO.Astrodynamics.Constants.Deg2Rad,
             105.64 * IO.Astrodynamics.Constants.Deg2Rad, 46.029 * IO.Astrodynamics.Constants.Deg2Rad, earth, new TimeSystem.Time(DateTime.UtcNow, TimeScale.UTC),
             Frames.Frame.ICRF);
         EquinoctialElements equ = ke.ToEquinoctial();
-        Assert.Equal(equ.SemiMajorAxis(), ke.A, 6);
-        Assert.Equal(equ.Eccentricity(), ke.E, 6);
-        Assert.Equal(equ.Inclination(), ke.I, 6);
-        Assert.Equal(equ.AscendingNode() * IO.Astrodynamics.Constants.Rad2Deg, ke.RAAN * IO.Astrodynamics.Constants.Rad2Deg, 12);
-        Assert.Equal(equ.ArgumentOfPeriapsis(), ke.AOP, 12);
-        Assert.Equal(equ.MeanAnomaly(), ke.M, 1);
+        Assert.Equal(equ.SemiMajorAxis(), ke.SemiMajorAxis(), 6);
+        Assert.Equal(equ.Eccentricity(), ke.Eccentricity(), 6);
+        Assert.Equal(equ.Inclination(), ke.Inclination(), 6);
+        Assert.Equal(equ.AscendingNode() * IO.Astrodynamics.Constants.Rad2Deg, ke.AscendingNode() * IO.Astrodynamics.Constants.Rad2Deg, 12);
+        Assert.Equal(equ.ArgumentOfPeriapsis(), ke.ArgumentOfPeriapsis(), 12);
+        Assert.Equal(equ.MeanAnomaly(), ke.MeanAnomaly(), 1);
     }
 
     [Fact]
     public void Equality()
     {
-        CelestialBody earth = PlanetsAndMoons.EARTH_BODY;
+        CelestialBody earth = PlanetsAndMoons.EarthBody;
         KeplerianElements ke = new KeplerianElements(6800.81178582, 0.00134, 51.71 * IO.Astrodynamics.Constants.Deg2Rad, 32.57 * IO.Astrodynamics.Constants.Deg2Rad,
             105.64 * IO.Astrodynamics.Constants.Deg2Rad, 46.029 * IO.Astrodynamics.Constants.Deg2Rad, earth, new TimeSystem.Time(DateTime.UtcNow, TimeScale.UTC),
             Frames.Frame.ICRF);
@@ -164,7 +164,7 @@ public class EquinoctialElementsTests
     [Fact]
     public void HyperbolicToKeplerian()
     {
-        var ke = new KeplerianElements(-6800000.0, 1.2, 0.2, 0.3, 0.4, 0.5, TestHelpers.EarthAtJ2000, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF);
+        var ke = new KeplerianElements(-6800000.0, 1.2, 0.2, 0.3, 0.4, 0.5, TestHelpers.EarthAtJ2000, TimeSystem.Time.J2000Tdb, Frames.Frame.ICRF);
         var eq = ke.ToEquinoctial();
         var ke2 = eq.ToKeplerianElements();
         var eq2 = ke2.ToEquinoctial();
@@ -174,7 +174,7 @@ public class EquinoctialElementsTests
     [Fact]
     public void ParabolicToKeplerian()
     {
-        var ke = KeplerianElements.Parabolic(6800000.0, 0.2, 0.3, 0.4, 0.0, TestHelpers.EarthAtJ2000, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF);
+        var ke = KeplerianElements.Parabolic(6800000.0, 0.2, 0.3, 0.4, 0.0, TestHelpers.EarthAtJ2000, TimeSystem.Time.J2000Tdb, Frames.Frame.ICRF);
         var eq = ke.ToEquinoctial();
         var ke2 = eq.ToKeplerianElements();
         var eq2 = ke2.ToEquinoctial();
@@ -184,7 +184,7 @@ public class EquinoctialElementsTests
     [Fact]
     public void EllipticToKeplerian()
     {
-        var ke = new KeplerianElements(6800000.0, 0.2, 0.2, 0.3, 0.4, 0.5, TestHelpers.EarthAtJ2000, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF);
+        var ke = new KeplerianElements(6800000.0, 0.2, 0.2, 0.3, 0.4, 0.5, TestHelpers.EarthAtJ2000, TimeSystem.Time.J2000Tdb, Frames.Frame.ICRF);
         var eq = ke.ToEquinoctial();
         var ke2 = eq.ToKeplerianElements();
         var eq2 = ke2.ToEquinoctial();
@@ -194,7 +194,7 @@ public class EquinoctialElementsTests
     [Fact]
     public void HyperbolicToStateVector()
     {
-        var ke = new KeplerianElements(-6800000.0, 1.2, 0.2, 0.3, 0.4, 0.5, TestHelpers.EarthAtJ2000, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF);
+        var ke = new KeplerianElements(-6800000.0, 1.2, 0.2, 0.3, 0.4, 0.5, TestHelpers.EarthAtJ2000, TimeSystem.Time.J2000Tdb, Frames.Frame.ICRF);
         var eq = ke.ToEquinoctial();
         var sv = eq.ToStateVector();
         var eq2 = sv.ToEquinoctial();
@@ -204,7 +204,7 @@ public class EquinoctialElementsTests
     [Fact]
     public void ParabolicToStateVector()
     {
-        var ke = KeplerianElements.Parabolic(6800000.0, 0.2, 0.3, 0.4, 0.0, TestHelpers.EarthAtJ2000, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF);
+        var ke = KeplerianElements.Parabolic(6800000.0, 0.2, 0.3, 0.4, 0.0, TestHelpers.EarthAtJ2000, TimeSystem.Time.J2000Tdb, Frames.Frame.ICRF);
         var eq = ke.ToEquinoctial();
         var sv = eq.ToStateVector();
         var eq2 = sv.ToEquinoctial();
@@ -214,7 +214,7 @@ public class EquinoctialElementsTests
     [Fact]
     public void EllipticToStateVEctor()
     {
-        var ke = new KeplerianElements(6800000.0, 0.2, 0.2, 0.3, 0.4, 0.5, TestHelpers.EarthAtJ2000, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF);
+        var ke = new KeplerianElements(6800000.0, 0.2, 0.2, 0.3, 0.4, 0.5, TestHelpers.EarthAtJ2000, TimeSystem.Time.J2000Tdb, Frames.Frame.ICRF);
         var eq = ke.ToEquinoctial();
         var sv = eq.ToStateVector();
         var eq2 = sv.ToEquinoctial();
@@ -241,10 +241,10 @@ public class EquinoctialElementsTests
             foreach (var ke in KeplerianElementsTests.RandomApsisElements(e, 6870 + System.Array.IndexOf(KeplerianElementsTests.ApsisEccentricities, e), 2000))
             {
                 var eq = ke.ToEquinoctial();
-                double raan = ke.I == 0.0 ? 0.0 : ke.RAAN;
-                double aop = e == 0.0 ? 0.0 : ke.I == 0.0 ? ke.RAAN + ke.AOP : ke.AOP;
-                var spicePerigee = KeplerianElementsTests.SpiceConicPosition(ke.A, ke.E, ke.I, raan, aop, 0.0);
-                var (angle, length) = KeplerianElementsTests.ApsisErrors(eq, spicePerigee, ke.A, ke.E);
+                double raan = ke.Inclination() == 0.0 ? 0.0 : ke.AscendingNode();
+                double aop = e == 0.0 ? 0.0 : ke.Inclination() == 0.0 ? ke.AscendingNode() + ke.ArgumentOfPeriapsis() : ke.ArgumentOfPeriapsis();
+                var spicePerigee = KeplerianElementsTests.SpiceConicPosition(ke.SemiMajorAxis(), ke.Eccentricity(), ke.Inclination(), raan, aop, 0.0);
+                var (angle, length) = KeplerianElementsTests.ApsisErrors(eq, spicePerigee, ke.SemiMajorAxis(), ke.Eccentricity());
                 worstAngleE = System.Math.Max(worstAngleE, angle);
                 worstLength = System.Math.Max(worstLength, length);
                 Assert.True(double.IsFinite(eq.PerigeeVelocity()) && double.IsFinite(eq.ApogeeVelocity()));

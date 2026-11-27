@@ -48,7 +48,7 @@ public partial class IntegratorEventTests
     [InlineData("VV10", 2970.0, 10.0)]
     public void ImpulseInTheLastStep_TheSolutionEndsWithTheStateAfterIt(string integratorName, double length, double outputStep)
     {
-        var earth = new CelestialBody(PlanetsAndMoons.EARTH, Frame.ICRF, S);
+        var earth = new CelestialBody(PlanetsAndMoons.Earth, Frame.ICRF, S);
         var (spacecraft, engine) = NewSpacecraft(-7931, MinimumEpochGateTests.Orbit(earth, System.Math.PI));
         var maneuver = new ApogeeHeightManeuver(8378137.0, engine, S, TimeSpan.Zero, earth);
         spacecraft.SetManeuvers(maneuver);
@@ -69,7 +69,7 @@ public partial class IntegratorEventTests
     [InlineData("VV10")]
     public void ImpulseAtTheWindowEnd_TheSolutionEndsWithTheStateAfterIt(string integratorName)
     {
-        var earth = new CelestialBody(PlanetsAndMoons.EARTH, Frame.ICRF, S);
+        var earth = new CelestialBody(PlanetsAndMoons.Earth, Frame.ICRF, S);
         var (spacecraft, engine) = NewSpacecraft(-7932, MinimumEpochGateTests.Orbit(earth, System.Math.PI));
         var end = MinimumEpochGateTests.GateAtTt(3000.0);
         var impulse = new TimeLikeImpulse(earth, S, engine, end, 1.0);
@@ -92,7 +92,7 @@ public partial class IntegratorEventTests
     [Fact]
     public void ImpulseInTheLastStep_ACustomIntegratorWithoutAStepAtZeroDuration_TheSolutionEndsWithTheStateAfterIt()
     {
-        var earth = new CelestialBody(PlanetsAndMoons.EARTH, Frame.ICRF, S);
+        var earth = new CelestialBody(PlanetsAndMoons.Earth, Frame.ICRF, S);
         var (spacecraft, engine) = NewSpacecraft(-7933, MinimumEpochGateTests.Orbit(earth, System.Math.PI));
         var maneuver = new ApogeeHeightManeuver(8378137.0, engine, S, TimeSpan.Zero, earth);
         spacecraft.SetManeuvers(maneuver);
@@ -123,7 +123,7 @@ public partial class IntegratorEventTests
     [InlineData("RK", 0.0)]
     public void ALightTimeReadPastAnImpulseAtTheEnd_ReadsTheStateAfterIt(string integratorName, double length)
     {
-        var earth = new CelestialBody(PlanetsAndMoons.EARTH, Frame.ICRF, S);
+        var earth = new CelestialBody(PlanetsAndMoons.Earth, Frame.ICRF, S);
         Window window;
         if (length > 0.0)
         {

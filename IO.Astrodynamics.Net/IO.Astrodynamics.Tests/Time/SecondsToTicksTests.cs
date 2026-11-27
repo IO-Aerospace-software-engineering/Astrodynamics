@@ -53,12 +53,12 @@ public class SecondsToTicksTests
             string label = $"{row.GetProperty("kind").GetString()} {seconds:R} s";
             Assert.True(ticks == TimeSystem.Time.SecondsToTicks(seconds), label);
             Assert.True(ticks == ExactTicks.Nearest(seconds), label);
-            Assert.True(ticks == FromJ2000(TimeSystem.Time.CreateTDB(seconds)), label);
-            Assert.True(ticks == FromJ2000(TimeSystem.Time.CreateUTC(seconds)), label);
+            Assert.True(ticks == FromJ2000(TimeSystem.Time.CreateTdb(seconds)), label);
+            Assert.True(ticks == FromJ2000(TimeSystem.Time.CreateUtc(seconds)), label);
             Assert.True(ticks == FromJ2000(TimeSystem.Time.Create(seconds, TimeScale.TAI)), label);
-            Assert.True(ticks == FromJ2000(TimeSystem.Time.J2000TDB.AddSeconds(seconds)), label);
-            Assert.True(row.GetProperty("ms_ticks").GetInt64() == FromJ2000(TimeSystem.Time.J2000TDB.AddMilliseconds(seconds)), label);
-            Assert.True(row.GetProperty("us_ticks").GetInt64() == FromJ2000(TimeSystem.Time.J2000TDB.AddMicroseconds(seconds)), label);
+            Assert.True(ticks == FromJ2000(TimeSystem.Time.J2000Tdb.AddSeconds(seconds)), label);
+            Assert.True(row.GetProperty("ms_ticks").GetInt64() == FromJ2000(TimeSystem.Time.J2000Tdb.AddMilliseconds(seconds)), label);
+            Assert.True(row.GetProperty("us_ticks").GetInt64() == FromJ2000(TimeSystem.Time.J2000Tdb.AddMicroseconds(seconds)), label);
             if (ticks != row.GetProperty("truncated").GetInt64())
                 moved++;
             count++;
@@ -79,12 +79,12 @@ public class SecondsToTicksTests
         Assert.Equal(-2L, TimeSystem.Time.SecondsToTicks(-2.5e-7));
         Assert.Equal(2L, TimeSystem.Time.SecondsToTicks(2.5e-7));
         Assert.Equal(0L, TimeSystem.Time.SecondsToTicks(-5e-8));
-        Assert.Equal(-1L, FromJ2000(TimeSystem.Time.J2000TDB.AddMicroseconds(-0.15)));
-        Assert.Equal(-3L, FromJ2000(TimeSystem.Time.J2000TDB.AddMilliseconds(-0.00025)));
+        Assert.Equal(-1L, FromJ2000(TimeSystem.Time.J2000Tdb.AddMicroseconds(-0.15)));
+        Assert.Equal(-3L, FromJ2000(TimeSystem.Time.J2000Tdb.AddMilliseconds(-0.00025)));
 
         // So adding a span and its opposite gives the time back: -(k + 1/2) 1e-7 s, k < 5000, missed it for 2499 of them before
         var random = new Random(6251);
-        var start = TimeSystem.Time.CreateTDB(7.6e8 + 0.1234567);
+        var start = TimeSystem.Time.CreateTdb(7.6e8 + 0.1234567);
         for (int k = 0; k < 5000; k++)
         {
             double seconds = double.Parse($"{k}.5e-7", CultureInfo.InvariantCulture);
@@ -124,10 +124,10 @@ public class SecondsToTicksTests
     public void ASpanTicksCannotHold_Throws(double seconds)
     {
         Assert.Throws<ArgumentOutOfRangeException>(() => TimeSystem.Time.SecondsToTicks(seconds));
-        Assert.Throws<ArgumentOutOfRangeException>(() => TimeSystem.Time.CreateTDB(seconds));
-        Assert.Throws<ArgumentOutOfRangeException>(() => TimeSystem.Time.J2000TDB.AddSeconds(seconds));
-        Assert.Throws<ArgumentOutOfRangeException>(() => TimeSystem.Time.J2000TDB.AddMilliseconds(seconds * 1e4));
-        Assert.Throws<ArgumentOutOfRangeException>(() => TimeSystem.Time.J2000TDB.AddMicroseconds(seconds * 1e7));
+        Assert.Throws<ArgumentOutOfRangeException>(() => TimeSystem.Time.CreateTdb(seconds));
+        Assert.Throws<ArgumentOutOfRangeException>(() => TimeSystem.Time.J2000Tdb.AddSeconds(seconds));
+        Assert.Throws<ArgumentOutOfRangeException>(() => TimeSystem.Time.J2000Tdb.AddMilliseconds(seconds * 1e4));
+        Assert.Throws<ArgumentOutOfRangeException>(() => TimeSystem.Time.J2000Tdb.AddMicroseconds(seconds * 1e7));
         Assert.Throws<ArgumentOutOfRangeException>(() => TimeSystem.Time.FromDayOfYear(2000, 1, seconds, TimeScale.UTC));
     }
 
@@ -135,8 +135,8 @@ public class SecondsToTicksTests
     public void AnEpochPastTheRangeOfDateTime_Throws()
     {
         // 3e11 s from J2000 is past 9999-12-31: DateTime refuses it, as AddSeconds did
-        Assert.Throws<ArgumentOutOfRangeException>(() => TimeSystem.Time.CreateTDB(3e11));
-        Assert.Throws<ArgumentOutOfRangeException>(() => TimeSystem.Time.CreateTDB(-1e11));
+        Assert.Throws<ArgumentOutOfRangeException>(() => TimeSystem.Time.CreateTdb(3e11));
+        Assert.Throws<ArgumentOutOfRangeException>(() => TimeSystem.Time.CreateTdb(-1e11));
     }
 
     [Fact]
@@ -150,7 +150,7 @@ public class SecondsToTicksTests
         for (int i = 0; i < 200_000; i++)
         {
             double et = from + random.NextDouble() * (to - from);
-            double back = TimeSystem.Time.CreateTDB(et).TimeSpanFromJ2000().TotalSeconds;
+            double back = TimeSystem.Time.CreateTdb(et).TimeSpanFromJ2000().TotalSeconds;
             if (back != et)
                 Assert.Fail($"{et:R} s came back as {back:R} s");
         }
@@ -164,7 +164,7 @@ public class SecondsToTicksTests
         // tick can be up to 0.596 tick from it, and its nearest tick is then the neighbour (the review of #625). Fraction:
         // 5652918976297924 ticks -> 565291897.6297925 s -> ...925
         Assert.Equal(565291897.6297925, TimeSpan.FromTicks(5652918976297924).TotalSeconds);
-        Assert.Equal(5652918976297925L, FromJ2000(TimeSystem.Time.CreateTDB(565291897.6297925)));
+        Assert.Equal(5652918976297925L, FromJ2000(TimeSystem.Time.CreateTdb(565291897.6297925)));
 
         // Every tick comes back within one tick of itself, through the double nearest it (ExactTicks, exact); within
         // 2^29 s of J2000 (1982-12-27 to 2017-01-05) an ulp is finer than a tick, so the double is within half a tick and
@@ -181,7 +181,7 @@ public class SecondsToTicksTests
             {
                 long ticks = from + (long)(random.NextDouble() * (to - from));
                 double seconds = TimeSpan.FromTicks(ticks).TotalSeconds;
-                long back = FromJ2000(TimeSystem.Time.CreateTDB(seconds));
+                long back = FromJ2000(TimeSystem.Time.CreateTdb(seconds));
                 Assert.Equal(ExactTicks.Nearest(seconds), back);
                 Assert.InRange(back - ticks, exact ? 0L : -1L, exact ? 0L : 1L);
                 if (back != ticks)
@@ -198,7 +198,7 @@ public class SecondsToTicksTests
     [Fact]
     public void AStateReadAtATick_IsLabelledWithThatTick()
     {
-        // SpiceAPI.ReadEphemeris(Time ...) labelled its state with the epoch CSPICE returned, made a Time again: the
+        // SpiceApi.ReadEphemeris(Time ...) labelled its state with the epoch CSPICE returned, made a Time again: the
         // neighbouring tick for about 16 % of the ticks of 2024 (the review of #625; Fraction: 2024-12-18T09:36:47.8294540
         // came back .8294539). It is labelled with the epoch asked, the instant SPICE read at, as the data provider does
         var epochs = new System.Collections.Generic.List<TimeSystem.Time>
@@ -211,15 +211,15 @@ public class SecondsToTicksTests
 
         foreach (var epoch in epochs)
         {
-            var state = SpiceAPI.Instance.ReadEphemeris(epoch, 399, 301, Frames.Frame.ICRF, Aberration.None);
+            var state = SpiceApi.Instance.ReadEphemeris(epoch, 399, 301, Frames.Frame.ICRF, Aberration.None);
             Assert.Equal(epoch.DateTime.Ticks, state.Epoch.DateTime.Ticks);
             Assert.Equal(TimeScale.TDB, state.Epoch.Scale);
         }
 
         // An epoch tagged UTC is labelled with its TDB instant, as before
         var utc = new TimeSystem.Time(new DateTime(2024, 6, 1, 12, 0, 0), TimeScale.UTC);
-        Assert.Equal(utc.ToTDB().DateTime.Ticks,
-            SpiceAPI.Instance.ReadEphemeris(utc, 399, 301, Frames.Frame.ICRF, Aberration.None).Epoch.DateTime.Ticks);
+        Assert.Equal(utc.ToTdb().DateTime.Ticks,
+            SpiceApi.Instance.ReadEphemeris(utc, 399, 301, Frames.Frame.ICRF, Aberration.None).Epoch.DateTime.Ticks);
     }
 
     [Fact]
@@ -268,7 +268,7 @@ public class SecondsToTicksTests
 
         foreach (var search in searches)
         {
-            var windows = SpiceAPI.Instance.FindWindowsOnDistanceConstraint(search, 399, 301, RelationnalOperator.Greater, 1000.0,
+            var windows = SpiceApi.Instance.FindWindowsOnDistanceConstraint(search, 399, 301, RelationalOperator.GreaterThan, 1000.0,
                 Aberration.None, TimeSpan.FromHours(6.0)).ToArray();
             Assert.Single(windows);
             Assert.Equal(search.StartDate.DateTime.Ticks, windows[0].StartDate.DateTime.Ticks);
@@ -278,10 +278,10 @@ public class SecondsToTicksTests
         // A search window tagged UTC: the window is its TDB instants
         var utc = new Window(new TimeSystem.Time(new DateTime(2024, 6, 1), TimeScale.UTC),
             new TimeSystem.Time(new DateTime(2024, 6, 2), TimeScale.UTC));
-        var inTdb = SpiceAPI.Instance.FindWindowsOnDistanceConstraint(utc, 399, 301, RelationnalOperator.Greater, 1000.0,
+        var inTdb = SpiceApi.Instance.FindWindowsOnDistanceConstraint(utc, 399, 301, RelationalOperator.GreaterThan, 1000.0,
             Aberration.None, TimeSpan.FromHours(6.0)).Single();
-        Assert.Equal(utc.StartDate.ToTDB().DateTime.Ticks, inTdb.StartDate.DateTime.Ticks);
-        Assert.Equal(utc.EndDate.ToTDB().DateTime.Ticks, inTdb.EndDate.DateTime.Ticks);
+        Assert.Equal(utc.StartDate.ToTdb().DateTime.Ticks, inTdb.StartDate.DateTime.Ticks);
+        Assert.Equal(utc.EndDate.ToTdb().DateTime.Ticks, inTdb.EndDate.DateTime.Ticks);
     }
 
     [Fact]
@@ -301,22 +301,22 @@ public class SecondsToTicksTests
             long toTai = ticks - 321840000L - ExactTicks.Nearest(TimeScaleConversions.TdbMinusTt(tdb.Centuries()));
             var tt = tai.ToTT();
             long fromTai = tt.DateTime.Ticks + ExactTicks.Nearest(TimeScaleConversions.TdbMinusTt(tt.Centuries()));
-            Assert.Equal(toTai, tdb.ToTAI().DateTime.Ticks);
-            Assert.Equal(fromTai, tai.ToTDB().DateTime.Ticks);
+            Assert.Equal(toTai, tdb.ToTai().DateTime.Ticks);
+            Assert.Equal(fromTai, tai.ToTdb().DateTime.Ticks);
         }
     }
 
     [Fact]
     public void ALroBuiltAtTheStartOfItsSpk_IsSpiceState()
     {
-        // The start of the SPK by spkcov: a = 755870469.18342578 s exactly, 7558704691834257.84 ticks. CreateTDB(a)
+        // The start of the SPK by spkcov: a = 755870469.18342578 s exactly, 7558704691834257.84 ticks. CreateTdb(a)
         // truncated it to ...257, 84 ns before the coverage, and the read threw SPKINSUFFDATA (#625)
         var reference = Reference();
         foreach (var end in new[] { "start", "end" })
         {
             var expected = reference.GetProperty("lro_states").GetProperty(end);
             double et = Parse(expected.GetProperty("et"));
-            var epoch = TimeSystem.Time.CreateTDB(et);
+            var epoch = TimeSystem.Time.CreateTdb(et);
             Assert.Equal(et, epoch.TimeSpanFromJ2000().TotalSeconds);
 
             var lro = new Spacecraft(-85, "LRO", epoch);

@@ -12,11 +12,11 @@ namespace IO.Astrodynamics.Tests;
 /// </summary>
 /// <remarks>
 /// <para>
-/// xUnit builds one instance of a test class per test. Before 11.0.0, <see cref="SpiceAPI.LoadKernels(FileSystemInfo)"/> of
+/// xUnit builds one instance of a test class per test. Before 11.0.0, <see cref="SpiceApi.LoadKernels(FileSystemInfo)"/> of
 /// a path already loaded unloaded it and loaded it again, under the SPICE lock, and the unload of a text kernel makes CSPICE
 /// re-read every text kernel still loaded, so the load of <c>Data/SolarSystem</c> in each constructor cost 0.3 to 0.9 s per
 /// test, holding the lock that every other test class waits for: about 2,050 s of the Linux CI run, 63 % of its wall time
-/// (run 43191227552). A repeated load now hands SPICE nothing (R01 of #668), and <see cref="SpiceAPI.ReloadKernels(FileSystemInfo)"/>
+/// (run 43191227552). A repeated load now hands SPICE nothing (R01 of #668), and <see cref="SpiceApi.ReloadKernels(FileSystemInfo)"/>
 /// does what it did.
 /// The per-test reload restored nothing: no kernel the tests load covers an object, assigns a variable, or names a body or
 /// a frame that <c>Data/SolarSystem</c> defines (spacecraft NAIF ids are negative; a site SPK or frame of a DSN station id
@@ -25,14 +25,14 @@ namespace IO.Astrodynamics.Tests;
 /// <para>
 /// Rules for the tests of this project, which share one SPICE pool:
 /// a test that needs a fresh pool, fresh type initializers or a pool without <c>Data/SolarSystem</c> runs in a child
-/// process, as <see cref="ColdStartTests"/>: no test of this process calls <see cref="SpiceAPI.ClearKernels"/>, nor
+/// process, as <see cref="ColdStartTests"/>: no test of this process calls <see cref="SpiceApi.ClearKernels"/>, nor
 /// unloads <c>Data/SolarSystem</c>, a file inside it, a parent of it or its anchor, which other classes read in parallel
 /// (a sanctioned exception would have to be declared to the guard, not the guard weakened), nor deletes a loaded binary
 /// kernel: a native library before the second round of #668 kept it open for good once it failed to open it again, so
 /// that the PCK searches of every IAU frame of the process could fail later (#673), and the native load and unload now
 /// unload such a kernel at the next kernel call of any test class (<c>KernelRegistryTests</c> runs those scenarios in the
 /// child process <c>IO.Astrodynamics.Tests.KernelUnload</c>); a test of the branches of
-/// <see cref="SpiceAPI.LoadKernels(FileSystemInfo)"/> and <see cref="SpiceAPI.ReloadKernels(FileSystemInfo)"/> uses its own folder (as <see cref="SpiceApiTest"/> with <c>scn100</c>),
+/// <see cref="SpiceApi.LoadKernels(FileSystemInfo)"/> and <see cref="SpiceApi.ReloadKernels(FileSystemInfo)"/> uses its own folder (as <see cref="SpiceApiTest"/> with <c>scn100</c>),
 /// never <c>Data/SolarSystem</c>, a file inside it or a parent of it.
 /// <see cref="KernelReloadGuardTests"/> fails when a test reloaded the folder, removed it or its anchor, or loaded it
 /// before the first call of <see cref="EnsureSolarSystem"/>, and when a kernel still loaded at its end shadows the folder
@@ -86,18 +86,18 @@ internal static class TestKernels
 
 /// <summary>
 /// A folder of kernels the tests share, loaded once per process by <see cref="Ensure"/>, and again only if it is no longer
-/// in <see cref="SpiceAPI.GetLoadedKernels"/>.
+/// in <see cref="SpiceApi.GetLoadedKernels"/>.
 /// </summary>
 /// <remarks>
-/// The check and the load are one critical section under <see cref="SpiceAPI.SyncRoot"/>: no SPICE call of another thread
+/// The check and the load are one critical section under <see cref="SpiceApi.SyncRoot"/>: no SPICE call of another thread
 /// comes between them. A failed load records nothing, so the next call tries again (a <see cref="Lazy{T}"/> would cache the
 /// exception, or load twice, and would never load again after a removal). Each load of the folder is followed by the reload
-/// of the anchor, an empty directory, which <see cref="SpiceAPI.ReloadKernels(FileSystemInfo)"/> records last without a
+/// of the anchor, an empty directory, which <see cref="SpiceApi.ReloadKernels(FileSystemInfo)"/> records last without a
 /// native call: a reload of the folder by any other caller moves its entry after the anchor's, which
-/// <see cref="ReloadObserved"/> keeps (a repeated <see cref="SpiceAPI.LoadKernels(FileSystemInfo)"/> of the folder hands
+/// <see cref="ReloadObserved"/> keeps (a repeated <see cref="SpiceApi.LoadKernels(FileSystemInfo)"/> of the folder hands
 /// SPICE nothing and moves nothing). A call that
 /// finds the folder or its anchor gone after a call found both in place (an unload of the folder, of a parent of it or of
-/// its anchor, a <see cref="SpiceAPI.ClearKernels"/>, whether another caller loaded the folder again or not) sets
+/// its anchor, a <see cref="SpiceApi.ClearKernels"/>, whether another caller loaded the folder again or not) sets
 /// <see cref="RemovalObserved"/>; a first load of the folder by another caller leaves <see cref="Loads"/> at 0. Nothing
 /// under the lock reads a static class whose type initializer takes it (#623).
 /// </remarks>
@@ -125,7 +125,7 @@ internal sealed class SharedKernels
     {
         get
         {
-            lock (SpiceAPI.SyncRoot)
+            lock (SpiceApi.SyncRoot)
             {
                 return _loads;
             }
@@ -137,7 +137,7 @@ internal sealed class SharedKernels
     {
         get
         {
-            lock (SpiceAPI.SyncRoot)
+            lock (SpiceApi.SyncRoot)
             {
                 return _reloadObserved;
             }
@@ -149,7 +149,7 @@ internal sealed class SharedKernels
     {
         get
         {
-            lock (SpiceAPI.SyncRoot)
+            lock (SpiceApi.SyncRoot)
             {
                 return _removalObserved;
             }
@@ -163,9 +163,9 @@ internal sealed class SharedKernels
     internal void Ensure()
     {
         Anchor.Create();
-        lock (SpiceAPI.SyncRoot)
+        lock (SpiceApi.SyncRoot)
         {
-            var kernels = SpiceAPI.Instance.GetLoadedKernels().ToArray();
+            var kernels = SpiceApi.Instance.GetLoadedKernels().ToArray();
             int path = Array.FindIndex(kernels, k => k.FullName == Path.FullName);
             int anchor = Array.FindIndex(kernels, k => k.FullName == Anchor.FullName);
             if (path >= 0 && anchor >= 0)
@@ -184,12 +184,12 @@ internal sealed class SharedKernels
                     throw new DirectoryNotFoundException($"The kernels {Path.FullName} do not exist.");
                 }
 
-                SpiceAPI.Instance.LoadKernels(Path);
+                SpiceApi.Instance.LoadKernels(Path);
                 _loads++;
             }
 
             // Added, or moved after the folder (a repeated LoadKernels would keep its place)
-            SpiceAPI.Instance.ReloadKernels(Anchor);
+            SpiceApi.Instance.ReloadKernels(Anchor);
             _inPlace = true;
         }
     }

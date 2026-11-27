@@ -48,7 +48,7 @@ public class ManeuverPreviewTests
     private static readonly Time S = new(2024, 3, 1, 12, 0, 0, TimeScale.TDB);
     private static int _nextId = -850000;
 
-    private static CelestialBody Earth() => new(PlanetsAndMoons.EARTH, Frames.Frame.ICRF, S);
+    private static CelestialBody Earth() => new(PlanetsAndMoons.Earth, Frames.Frame.ICRF, S);
 
     private static Spacecraft NewSpacecraft(CelestialBody earth, out Engine engine)
     {
@@ -183,12 +183,12 @@ public class ManeuverPreviewTests
         var earth = Earth();
         var spacecraft = NewSpacecraft(earth, out var engine);
         var apogee = new ApogeeHeightManeuver(8000e3, engine, S, TimeSpan.Zero, earth);
-        var targetFrame = frame == "ICRF" ? Frames.Frame.ICRF : Frames.Frame.ECLIPTIC_J2000;
+        var targetFrame = frame == "ICRF" ? Frames.Frame.ICRF : Frames.Frame.ECLIPJ2000;
         var aboutTheEarth = spacecraft.InitialOrbitalParameters.ToStateVector().ToFrame(targetFrame);
         CelestialItem other = observer switch
         {
-            "Sun" => Stars.SUN_BODY,
-            "Moon" => new CelestialBody(PlanetsAndMoons.MOON, Frames.Frame.ICRF, S),
+            "Sun" => Stars.SunBody,
+            "Moon" => new CelestialBody(PlanetsAndMoons.Moon, Frames.Frame.ICRF, S),
             _ => earth
         };
         var state = aboutTheEarth.RelativeTo(other, Aberration.None);
@@ -231,8 +231,8 @@ public class ManeuverPreviewTests
         double i1 = 60.0 * IO.Astrodynamics.Constants.Deg2Rad, o1 = 10.0 * IO.Astrodynamics.Constants.Deg2Rad;
         double i2 = 45.0 * IO.Astrodynamics.Constants.Deg2Rad, o2 = 55.0 * IO.Astrodynamics.Constants.Deg2Rad;
         var earth = TestHelpers.EarthAtJ2000;
-        var orbit = new KeplerianElements(a, 0.0, i1, o1, 0.0, 0.0, earth, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF);
-        var target = new KeplerianElements(a, 0.0, i2, o2, 0.0, 0.0, earth, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF);
+        var orbit = new KeplerianElements(a, 0.0, i1, o1, 0.0, 0.0, earth, TimeSystem.Time.J2000Tdb, Frames.Frame.ICRF);
+        var target = new KeplerianElements(a, 0.0, i2, o2, 0.0, 0.0, earth, TimeSystem.Time.J2000Tdb, Frames.Frame.ICRF);
         var spc = new Spacecraft(Interlocked.Decrement(ref _nextId), "PLANEPREV", 1000.0, orbit, 3000.0, new Clock("PLANEPREV", 65536));
         spc.AddFuelTank(new FuelTank("ft", 2000.0, 1900.0, "ftA", "123456"));
         spc.AddEngine(new Engine("eng", 450, 50, spc.FuelTanks.First(), "engmk1", "12345"));
@@ -426,7 +426,7 @@ public class ManeuverPreviewTests
         LabelAssert.Equal(state.Epoch, orientation.Epoch);
         Assert.Equal(Frames.Frame.ICRF, orientation.ReferenceFrame);
 
-        var ecliptic = nadir.ComputeStateOrientation(state.ToFrame(Frames.Frame.ECLIPTIC_J2000));
+        var ecliptic = nadir.ComputeStateOrientation(state.ToFrame(Frames.Frame.ECLIPJ2000));
         double angle = Body.AttitudeRecordTests.RotationAngle(orientation.Rotation, ecliptic.Rotation);
         _output.WriteLine($"MEASURE ComputeStateOrientation ECLIPJ2000 against ICRF: {angle:E3} rad");
         Assert.True(angle < 1e-12, $"{angle:E3} rad");
@@ -449,9 +449,9 @@ public class ManeuverPreviewTests
         var spacecraft = NewSpacecraft(earth, out var engine);
         var nadir = new NadirAttitude(S, TimeSpan.Zero, earth);
         spacecraft.SetManeuvers(nadir);
-        var targetFrame = frame == "ICRF" ? Frames.Frame.ICRF : Frames.Frame.ECLIPTIC_J2000;
+        var targetFrame = frame == "ICRF" ? Frames.Frame.ICRF : Frames.Frame.ECLIPJ2000;
         var aboutTheEarth = spacecraft.InitialOrbitalParameters.ToStateVector().ToFrame(targetFrame);
-        CelestialItem other = observer == "Sun" ? Stars.SUN_BODY : new CelestialBody(PlanetsAndMoons.MOON, Frames.Frame.ICRF, S);
+        CelestialItem other = observer == "Sun" ? Stars.SunBody : new CelestialBody(PlanetsAndMoons.Moon, Frames.Frame.ICRF, S);
         var state = aboutTheEarth.RelativeTo(other, Aberration.None);
 
         var orientation = nadir.ComputeStateOrientation(state);
@@ -484,7 +484,7 @@ public class ManeuverPreviewTests
 
         var preview = nadir.ComputeStateOrientation(new StateVector(position, velocity, earth, activation, Frames.Frame.ICRF));
 
-        double angle = Body.AttitudeRecordTests.RotationAngle(preview.Rotation, spacecraft.Frame.GetStateOrientationToICRF(activation).Rotation);
+        double angle = Body.AttitudeRecordTests.RotationAngle(preview.Rotation, spacecraft.Frame.GetStateOrientationToIcrf(activation).Rotation);
         _output.WriteLine($"MEASURE ComputeStateOrientation {integrator} against the record at the activation: {angle:E3} rad");
         Assert.Equal(0.0, angle);
     }

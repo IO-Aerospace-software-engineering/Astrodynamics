@@ -1,4 +1,4 @@
-namespace IO.Astrodynamics.Atmosphere.NRLMSISE_00
+namespace IO.Astrodynamics.Atmosphere
 {
     /// <summary>
     /// Record containing magnetic activity values.

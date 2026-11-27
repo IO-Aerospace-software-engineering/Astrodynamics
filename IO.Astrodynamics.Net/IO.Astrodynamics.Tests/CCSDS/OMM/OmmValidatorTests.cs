@@ -2,9 +2,7 @@
 
 using System;
 using System.Linq;
-using IO.Astrodynamics.CCSDS;
-using IO.Astrodynamics.CCSDS.Common;
-using IO.Astrodynamics.CCSDS.OMM;
+using IO.Astrodynamics.Ccsds;
 using Xunit;
 
 namespace IO.Astrodynamics.Tests.CCSDS.OMM;
@@ -180,7 +178,7 @@ public class OmmValidatorTests
         {
             var xml = NdmDocuments.Mutated(issOmm, "omm", mutation);
 
-            var ex = Assert.Throws<OmmValidationException>(() => IO.Astrodynamics.CCSDS.OMM.Omm.Parse(xml));
+            var ex = Assert.Throws<OmmValidationException>(() => IO.Astrodynamics.Ccsds.Omm.Parse(xml));
             Assert.False(ex.ValidationResult.IsValid);
         }
     }
@@ -345,7 +343,7 @@ public class OmmValidatorTests
     [Fact]
     public void Validate_UnusualBStar_ReturnsInfo()
     {
-        var omm = CreateOmmWithTleParameters(bstar: 5.0);
+        var omm = CreateOmmWithTleParameters(bStar: 5.0);
 
         var result = _validator.Validate(omm);
 
@@ -356,7 +354,7 @@ public class OmmValidatorTests
     [Fact]
     public void Validate_NormalBStar_NoInfo()
     {
-        var omm = CreateOmmWithTleParameters(bstar: 0.0001);
+        var omm = CreateOmmWithTleParameters(bStar: 0.0001);
 
         var result = _validator.Validate(omm);
 
@@ -368,7 +366,7 @@ public class OmmValidatorTests
     public void Validate_TleRequirementsDisabled_SkipsTleValidation()
     {
         var validator = new OmmValidator { ValidateTleRequirements = false };
-        var omm = CreateOmmWithTleParameters(bstar: 10.0); // unusual value
+        var omm = CreateOmmWithTleParameters(bStar: 10.0); // unusual value
 
         var result = validator.Validate(omm);
 
@@ -852,7 +850,7 @@ public class OmmValidatorTests
             meanAnomaly: 50.0);
 
         var tleParams = TleParameters.CreateWithBStarAndDDot(
-            bstar: 0.0001,
+            bStar: 0.0001,
             meanMotionDot: 0.00001,
             meanMotionDDot: 0.0,
             ephemerisType: 0,
@@ -927,7 +925,7 @@ public class OmmValidatorTests
         return new Omm(header, metadata, new OmmData(meanElements, covarianceMatrix: covariance));
     }
 
-    private static Omm CreateOmmWithTleParameters(double bstar = 0.0001)
+    private static Omm CreateOmmWithTleParameters(double bStar = 0.0001)
     {
         var header = new CcsdsHeader(DateTime.UtcNow, "TEST");
         var metadata = OmmMetadata.CreateForSgp4("TEST SAT", "2020-001A");
@@ -941,7 +939,7 @@ public class OmmValidatorTests
             meanAnomaly: 50.0);
 
         var tleParams = TleParameters.CreateWithBStarAndDDot(
-            bstar: bstar,
+            bStar: bStar,
             meanMotionDot: 0.00001,
             meanMotionDDot: 0.0,
             ephemerisType: 0,

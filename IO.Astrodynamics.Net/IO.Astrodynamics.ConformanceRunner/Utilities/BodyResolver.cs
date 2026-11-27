@@ -11,13 +11,13 @@ public static class BodyResolver
         return name?.ToUpperInvariant() switch
         {
             "SUN" => new CelestialBody(Stars.Sun),
-            "MERCURY" => new CelestialBody(PlanetsAndMoons.MERCURY),
-            "VENUS" => new CelestialBody(PlanetsAndMoons.VENUS),
-            "EARTH" => new CelestialBody(PlanetsAndMoons.EARTH),
-            "MOON" => new CelestialBody(PlanetsAndMoons.MOON),
-            "MARS" => new CelestialBody(PlanetsAndMoons.MARS),
-            "JUPITER" => new CelestialBody(PlanetsAndMoons.JUPITER),
-            "SATURN" => new CelestialBody(PlanetsAndMoons.SATURN),
+            "MERCURY" => new CelestialBody(PlanetsAndMoons.Mercury),
+            "VENUS" => new CelestialBody(PlanetsAndMoons.Venus),
+            "EARTH" => new CelestialBody(PlanetsAndMoons.Earth),
+            "MOON" => new CelestialBody(PlanetsAndMoons.Moon),
+            "MARS" => new CelestialBody(PlanetsAndMoons.Mars),
+            "JUPITER" => new CelestialBody(PlanetsAndMoons.Jupiter),
+            "SATURN" => new CelestialBody(PlanetsAndMoons.Saturn),
             _ => throw new ArgumentException($"Unknown body: {name}")
         };
     }
@@ -26,24 +26,24 @@ public static class BodyResolver
     {
         return name?.ToUpperInvariant() switch
         {
-            "SUN" => Stars.SUN_BODY,
-            "MOON" => PlanetsAndMoons.MOON_BODY,
-            "MERCURY" => new CelestialBody(PlanetsAndMoons.MERCURY),
-            "VENUS" => new CelestialBody(PlanetsAndMoons.VENUS),
-            "EARTH" => new CelestialBody(PlanetsAndMoons.EARTH),
-            "MARS" => new CelestialBody(PlanetsAndMoons.MARS),
-            "JUPITER" => new CelestialBody(PlanetsAndMoons.JUPITER),
-            "SATURN" => new CelestialBody(PlanetsAndMoons.SATURN),
-            "MERCURY BARYCENTER" => Barycenters.MERCURY_BARYCENTER,
-            "VENUS BARYCENTER" => Barycenters.VENUS_BARYCENTER,
-            "EARTH BARYCENTER" => Barycenters.EARTH_BARYCENTER,
-            "MARS BARYCENTER" => Barycenters.MARS_BARYCENTER,
-            "JUPITER BARYCENTER" => Barycenters.JUPITER_BARYCENTER,
-            "SATURN BARYCENTER" => Barycenters.SATURN_BARYCENTER,
-            "URANUS BARYCENTER" => Barycenters.URANUS_BARYCENTER,
-            "NEPTUNE BARYCENTER" => Barycenters.NEPTUNE_BARYCENTER,
-            "PLUTO BARYCENTER" => Barycenters.PLUTO_BARYCENTER,
-            "SOLAR SYSTEM BARYCENTER" => Barycenters.SOLAR_SYSTEM_BARYCENTER,
+            "SUN" => Stars.SunBody,
+            "MOON" => PlanetsAndMoons.MoonBody,
+            "MERCURY" => new CelestialBody(PlanetsAndMoons.Mercury),
+            "VENUS" => new CelestialBody(PlanetsAndMoons.Venus),
+            "EARTH" => new CelestialBody(PlanetsAndMoons.Earth),
+            "MARS" => new CelestialBody(PlanetsAndMoons.Mars),
+            "JUPITER" => new CelestialBody(PlanetsAndMoons.Jupiter),
+            "SATURN" => new CelestialBody(PlanetsAndMoons.Saturn),
+            "MERCURY BARYCENTER" => Barycenters.MercuryBarycenter,
+            "VENUS BARYCENTER" => Barycenters.VenusBarycenter,
+            "EARTH BARYCENTER" => Barycenters.EarthBarycenter,
+            "MARS BARYCENTER" => Barycenters.MarsBarycenter,
+            "JUPITER BARYCENTER" => Barycenters.JupiterBarycenter,
+            "SATURN BARYCENTER" => Barycenters.SaturnBarycenter,
+            "URANUS BARYCENTER" => Barycenters.UranusBarycenter,
+            "NEPTUNE BARYCENTER" => Barycenters.NeptuneBarycenter,
+            "PLUTO BARYCENTER" => Barycenters.PlutoBarycenter,
+            "SOLAR SYSTEM BARYCENTER" => Barycenters.SolarSystemBarycenter,
             _ => throw new ArgumentException($"Unknown body: {name}")
         };
     }
@@ -53,13 +53,13 @@ public static class BodyResolver
         return name?.ToUpperInvariant() switch
         {
             "SUN" => Stars.Sun,
-            "MERCURY" => PlanetsAndMoons.MERCURY,
-            "VENUS" => PlanetsAndMoons.VENUS,
-            "EARTH" => PlanetsAndMoons.EARTH,
-            "MOON" => PlanetsAndMoons.MOON,
-            "MARS" => PlanetsAndMoons.MARS,
-            "JUPITER" => PlanetsAndMoons.JUPITER,
-            "SATURN" => PlanetsAndMoons.SATURN,
+            "MERCURY" => PlanetsAndMoons.Mercury,
+            "VENUS" => PlanetsAndMoons.Venus,
+            "EARTH" => PlanetsAndMoons.Earth,
+            "MOON" => PlanetsAndMoons.Moon,
+            "MARS" => PlanetsAndMoons.Mars,
+            "JUPITER" => PlanetsAndMoons.Jupiter,
+            "SATURN" => PlanetsAndMoons.Saturn,
             _ => throw new ArgumentException($"Unknown body: {name}")
         };
     }

@@ -6,12 +6,12 @@ using System.IO;
 using System.Xml;
 using System.Xml.Linq;
 
-namespace IO.Astrodynamics.CCSDS.Common;
+namespace IO.Astrodynamics.Ccsds;
 
 /// <summary>
 /// The one verb set of the CCSDS messages (R22 of #668): the read of a file or a text, one message or every message, with
 /// the checks of <see cref="CcsdsReadOptions"/>, and the check before a write of <see cref="CcsdsWriteOptions"/>, shared
-/// by <see cref="OMM.Omm"/>, <see cref="OPM.Opm"/> and <see cref="CDM.Cdm"/> through their internal reader and validator.
+/// by <see cref="Omm"/>, <see cref="Opm"/> and <see cref="Cdm"/> through their internal reader and validator.
 /// </summary>
 /// <typeparam name="TMessage">The message type.</typeparam>
 /// <typeparam name="TResult">The validation result of the message type.</typeparam>

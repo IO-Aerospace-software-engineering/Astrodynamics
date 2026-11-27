@@ -97,17 +97,17 @@ public class Frame : IEquatable<Frame>
     /// <summary>
     /// Ecliptic coordinate system at epoch B1950.
     /// </summary>
-    public static readonly Frame ECLIPTIC_B1950 = ProcessProviderFrame("ECLIPB1950");
+    public static readonly Frame ECLIPB1950 = ProcessProviderFrame("ECLIPB1950");
 
     /// <summary>
     /// Ecliptic coordinate system at epoch J2000.
     /// </summary>
-    public static readonly Frame ECLIPTIC_J2000 = ProcessProviderFrame("ECLIPJ2000");
+    public static readonly Frame ECLIPJ2000 = ProcessProviderFrame("ECLIPJ2000");
 
     /// <summary>
     /// Galactic coordinate system.
     /// </summary>
-    public static readonly Frame GALACTIC_SYSTEM2 = ProcessProviderFrame("GALACTIC");
+    public static readonly Frame GALACTIC = ProcessProviderFrame("GALACTIC");
 
     /// <summary>
     /// Equatorial coordinate system at epoch B1950.
@@ -195,11 +195,11 @@ public class Frame : IEquatable<Frame>
     {
         try
         {
-            return provider.FrameTransformationToICRF(date, this);
+            return provider.FrameTransformationToIcrf(date, this);
         }
-        catch (ArgumentException e) when (SpiceAPI.IsUnknownFrameErrorOfAnotherParameter(e, this, null))
+        catch (ArgumentException e) when (SpiceApi.IsUnknownFrameErrorOfAnotherParameter(e, this, null))
         {
-            throw SpiceAPI.UnknownFrameError(e, this, null);
+            throw SpiceApi.UnknownFrameError(e, this, null);
         }
     }
 
@@ -207,7 +207,7 @@ public class Frame : IEquatable<Frame>
     /// Returns the orientation that maps vectors expressed in <c>this</c> frame into ICRF at the given epoch.
     /// </summary>
     /// <remarks>
-    /// If <c>so = frame.GetStateOrientationToICRF(epoch)</c>, then
+    /// If <c>so = frame.GetStateOrientationToIcrf(epoch)</c>, then
     /// <c>vectorIcrf = vectorInFrame.Rotate(so.Rotation)</c>.
     /// The returned <see cref="StateOrientation.ReferenceFrame"/> is the source frame (<c>this</c>),
     /// not the destination frame.
@@ -215,11 +215,11 @@ public class Frame : IEquatable<Frame>
     /// angular velocity of ICRF relative to <c>this</c> frame, expressed in <c>this</c> frame, in rad/s. For an
     /// Earth-fixed frame it is close to (0, 0, -7.292e-5).
     /// </remarks>
-    /// <param name="date">Epoch of the transform.</param>
+    /// <param name="epoch">Epoch of the transform.</param>
     /// <returns>A state orientation whose rotation is <c>this → ICRF</c>.</returns>
     /// <remarks>
     /// Outside the orientation cache of a propagation, a frame keeps the orientation of the last epoch it read only, while
-    /// the kernel pool is unchanged (<c>SpiceAPI.LoadKernels</c>, <c>UnloadKernels</c> and
+    /// the kernel pool is unchanged (<c>SpiceApi.LoadKernels</c>, <c>UnloadKernels</c> and
     /// <c>ClearKernels</c> make the next read read again), and so do the frames the library computes
     /// (<see cref="CirsFrame"/>, <see cref="TirsFrame"/>, <see cref="TemeFrame"/>, the frame of a site from coordinates):
     /// at most one orientation per frame, whatever the number of epochs read (#541, decided by S. Guillet, 2026-11-17).
@@ -231,16 +231,16 @@ public class Frame : IEquatable<Frame>
     /// SPICE's error its inner exception, and no parameter is named (R25 of #668, decided by S. Guillet, 2026-11-19; before
     /// 11.0.0 an <see cref="InvalidOperationException"/>).</exception>
     /// <exception cref="InvalidOperationException">The data do not give the orientation of the frame at the epoch.</exception>
-    public virtual StateOrientation GetStateOrientationToICRF(Time date)
+    public virtual StateOrientation GetStateOrientationToIcrf(Time epoch)
     {
         if (OrientationCache != null)
-            return OrientationCache.GetOrientation(date);
-        return LastOrientation(date, _readFromProvider);
+            return OrientationCache.GetOrientation(epoch);
+        return LastOrientation(epoch, _readFromProvider);
     }
 
     /// <summary>
     /// The orientation of this frame to ICRF read from the data provider, not through the orientation cache active on the
-    /// current thread: what <see cref="GetStateOrientationToICRF(Time)"/> of a <see cref="Frame"/> reads when the cache does
+    /// current thread: what <see cref="GetStateOrientationToIcrf(Time)"/> of a <see cref="Frame"/> reads when the cache does
     /// not hold the epoch. Used by <see cref="PropagationFrameOrientationCache"/> where its grid cannot give an orientation.
     /// </summary>
     internal StateOrientation ReadStateOrientationToICRF(in Time date)
@@ -250,14 +250,14 @@ public class Frame : IEquatable<Frame>
 
     /// <summary>
     /// The orientation of this frame at <paramref name="date"/>, kept from its last read when that was at the same epoch and
-    /// the same generation of the kernel pool (<see cref="SpiceAPI.KernelPoolGeneration"/>), else read by
+    /// the same generation of the kernel pool (<see cref="SpiceApi.KernelPoolGeneration"/>), else read by
     /// <paramref name="read"/> and kept in place of the previous one: at most one orientation per frame, whatever the
     /// number of epochs read (#541). The entry is replaced as a whole, so a read on another thread sees either entry, each
     /// consistent.
     /// </summary>
     private protected StateOrientation LastOrientation(in Time date, Func<Time, StateOrientation> read)
     {
-        long generation = SpiceAPI.KernelPoolGeneration;
+        long generation = SpiceApi.KernelPoolGeneration;
         // The provider read: a static frame's follows the process, so an orientation of another provider is read again
         var provider = Provider;
         var last = Volatile.Read(ref _lastOrientation);
@@ -275,7 +275,7 @@ public class Frame : IEquatable<Frame>
     /// Builds the transform that maps vectors from <c>this</c> frame into <paramref name="targetFrame"/>.
     /// </summary>
     /// <remarks>
-    /// The returned rotation follows the same convention as <see cref="GetStateOrientationToICRF(Time)"/>:
+    /// The returned rotation follows the same convention as <see cref="GetStateOrientationToIcrf(Time)"/>:
     /// <c>vectorInTarget = vectorInThis.Rotate(result.Rotation)</c>.
     /// The returned angular velocity is that of <paramref name="targetFrame"/> relative to <c>this</c> frame,
     /// expressed in <c>this</c> frame (SPICE <c>xf2rav_c</c> convention), in rad/s. A state transforms as
@@ -312,11 +312,11 @@ public class Frame : IEquatable<Frame>
     {
         try
         {
-            return frame.GetStateOrientationToICRF(epoch);
+            return frame.GetStateOrientationToIcrf(epoch);
         }
-        catch (ArgumentException e) when (SpiceAPI.IsUnknownFrameErrorOfAnotherParameter(e, frame, paramName))
+        catch (ArgumentException e) when (SpiceApi.IsUnknownFrameErrorOfAnotherParameter(e, frame, paramName))
         {
-            throw SpiceAPI.UnknownFrameError(e, frame, paramName);
+            throw SpiceApi.UnknownFrameError(e, frame, paramName);
         }
     }
 
@@ -327,7 +327,7 @@ public class Frame : IEquatable<Frame>
     /// The same composition as <see cref="ToFrame"/>, <c>targetToICRF.Rotation.Conjugate() * sourceToICRF.Rotation</c>,
     /// with each rotation to ICRF from <see cref="GetRotationToICRF"/>: the orientation cache active on the current thread
     /// or the identity of ICRF allocate nothing, and the other frames go through
-    /// <see cref="GetStateOrientationToICRF(Time)"/>. Used by the forces that work in a body-fixed frame at every stage.
+    /// <see cref="GetStateOrientationToIcrf(Time)"/>. Used by the forces that work in a body-fixed frame at every stage.
     /// </remarks>
     /// <param name="targetFrame">The frame the vectors are rotated to.</param>
     /// <param name="epoch">Epoch of the transform.</param>
@@ -370,7 +370,7 @@ public class Frame : IEquatable<Frame>
     }
 
     /// <summary>
-    /// The rotation and the angular velocity of <see cref="GetStateOrientationToICRF(Time)"/>, the same doubles,
+    /// The rotation and the angular velocity of <see cref="GetStateOrientationToIcrf(Time)"/>, the same doubles,
     /// without allocating when they come from the orientation cache active on the current thread or when this frame is
     /// ICRF (the identity and a zero angular velocity, which SPICE returns exactly), in the order of
     /// <see cref="GetRotationToICRF"/>.
@@ -391,25 +391,25 @@ public class Frame : IEquatable<Frame>
             return;
         }
 
-        var orientation = GetStateOrientationToICRF(date);
+        var orientation = GetStateOrientationToIcrf(date);
         rotation = orientation.Rotation;
         angularVelocity = orientation.AngularVelocity;
     }
 
     /// <summary>
-    /// The rotation of <see cref="GetStateOrientationToICRF(Time)"/>, the same doubles, without allocating when it
+    /// The rotation of <see cref="GetStateOrientationToIcrf(Time)"/>, the same doubles, without allocating when it
     /// comes from the orientation cache active on the current thread or when this frame is ICRF.
     /// </summary>
     /// <remarks>
     /// ICRF to ICRF is the identity: SPICE returns exactly (1, 0, 0, 0), bit for bit
     /// (<c>FrameRotationTests.IcrfToIcrf_IsTheIdentityBitForBit</c>), which is <see cref="Quaternion.Identity"/>; reading it
     /// would otherwise store an orientation per epoch. The cache is used only by a frame whose
-    /// <see cref="GetStateOrientationToICRF(Time)"/> reads it (<see cref="ReadsOrientationCache"/>), so that the two
+    /// <see cref="GetStateOrientationToIcrf(Time)"/> reads it (<see cref="ReadsOrientationCache"/>), so that the two
     /// methods agree for every frame.
     /// </remarks>
     internal Quaternion GetRotationToICRF(in Time date)
     {
-        // In the order of GetStateOrientationToICRF: the cache first, then the orientation of the frame
+        // In the order of GetStateOrientationToIcrf: the cache first, then the orientation of the frame
         var cache = OrientationCache;
         if (cache != null && ReadsOrientationCache)
         {
@@ -421,11 +421,11 @@ public class Frame : IEquatable<Frame>
             return Quaternion.Identity;
         }
 
-        return GetStateOrientationToICRF(date).Rotation;
+        return GetStateOrientationToIcrf(date).Rotation;
     }
 
     /// <summary>
-    /// Whether <see cref="GetStateOrientationToICRF(Time)"/> reads the orientation cache active on the current thread:
+    /// Whether <see cref="GetStateOrientationToIcrf(Time)"/> reads the orientation cache active on the current thread:
     /// the base frame does; a subclass that overrides it says so.
     /// </summary>
     private protected virtual bool ReadsOrientationCache => GetType() == typeof(Frame);

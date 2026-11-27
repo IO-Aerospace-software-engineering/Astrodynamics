@@ -99,9 +99,9 @@ public class EphemerisCommand
             CliKernels.Load(kernels.Kernels);
             var objectId = CliValues.Object(@object, "object");
 
-            // A site has no sub-observer point (#681). A site by the library's rule (SpiceAPI.IsSiteOfNamedBody); NOTO and
+            // A site has no sub-observer point (#681). A site by the library's rule (SpiceApi.IsSiteOfNamedBody); NOTO and
             // NEW NORCIA, of no body SPICE names, are objects of the kernels and projected (#750)
-            if (SpiceAPI.IsSiteOfNamedBody(objectId))
+            if (SpiceApi.IsSiteOfNamedBody(objectId))
             {
                 throw new CliInputException(
                     $"object: sub-point projects a celestial body or a spacecraft; {@object} is a site.");

@@ -4,7 +4,7 @@
 `ckgp_c` reads on them, each read with the CKs loaded again, so that it does not depend on the segment an earlier search
 left in CSPICE's re-use interval (`ckbsr.c`), as in a fresh process. Its output is the reference of
 `SpiceApiTest.ReadOrientation_FollowsTheCkSegmentPriority` (`IO.Astrodynamics.Tests/SpiceApiTest.cs`), which reads the
-kernels through `SpiceAPI.ReadOrientation` on every platform, and they are read by
+kernels through `SpiceApi.ReadOrientation` on every platform, and they are read by
 `SpiceApiTest.ReadOrientation_InAnotherFrame_FollowsTheCkSegmentPriority` (Validation) against `ckgp_c` and `ckgpav_c`
 in ECLIPJ2000. `SpiceApiTest.ReadOrientation_FollowsTheCkSegmentPriority_AfterAReadOfALowerPrioritySegment`,
 `..._AfterATransformFrame` and `..._AfterACkgpav` (Validation) read them after a search with angular velocity (review of

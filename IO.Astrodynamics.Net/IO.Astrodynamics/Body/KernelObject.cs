@@ -6,10 +6,10 @@ namespace IO.Astrodynamics.Body;
 
 /// <summary>
 /// An object of the kernels read by its NAIF identifier alone, which is neither a celestial body nor a site of one: an
-/// identifier of the form of a site (<see cref="SpiceAPI.IsSiteId"/>, body × 1000 + site) whose body SPICE does not name
-/// (<see cref="SpiceAPI.IsSiteOfNamedBody"/>), as SPICE's built-in NOTO (398989) and NEW NORCIA (398990), ESA stations of
+/// identifier of the form of a site (<see cref="SpiceApi.IsSiteId"/>, body × 1000 + site) whose body SPICE does not name
+/// (<see cref="SpiceApi.IsSiteOfNamedBody"/>), as SPICE's built-in NOTO (398989) and NEW NORCIA (398990), ESA stations of
 /// no body 398 (#750). Its ephemeris is SPICE's (<see cref="CelestialItem.IsSpiceBacked"/>): as observer of
-/// <see cref="SpiceAPI.ReadEphemeris(TimeSystem.Time, int, int, Frame, Aberration)"/> the read is <c>spkezr_c</c>'s from its
+/// <see cref="SpiceApi.ReadEphemeris(TimeSystem.Time, int, int, Frame, Aberration)"/> the read is <c>spkezr_c</c>'s from its
 /// identifier, which gives the state when its SPK is loaded and SPICE's missing-data error otherwise
 /// (<see cref="System.InvalidOperationException"/>).
 /// </summary>
@@ -24,7 +24,7 @@ internal sealed class KernelObject : CelestialItem
 {
     /// <summary>The object of <paramref name="naifId"/>, read from the data provider.</summary>
     /// <exception cref="System.ArgumentException">SPICE does not name <paramref name="naifId"/>.</exception>
-    internal KernelObject(int naifId) : base(naifId, Frame.ICRF, TimeSystem.Time.J2000TDB)
+    internal KernelObject(int naifId) : base(naifId, Frame.ICRF, TimeSystem.Time.J2000Tdb)
     {
         RegisterWithObserver();
     }

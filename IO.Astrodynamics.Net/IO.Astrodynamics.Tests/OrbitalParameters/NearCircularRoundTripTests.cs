@@ -34,7 +34,7 @@ public class NearCircularRoundTripTests
     {
         _output = output;
         TestKernels.EnsureSolarSystem();
-        _earth = new CelestialBody(PlanetsAndMoons.EARTH, Frames.Frame.ICRF, Epoch);
+        _earth = new CelestialBody(PlanetsAndMoons.Earth, Frames.Frame.ICRF, Epoch);
     }
 
     // Eccentricities and inclinations on both sides of the thresholds of the circular orbit (1e-3) and of the former
@@ -74,13 +74,13 @@ public class NearCircularRoundTripTests
                 Frames.Frame.ICRF).ToStateVector();
 
             // Act
-            var expected = SpiceAPI.Instance.ConvertStateVectorToConicOrbitalElement(state);
+            var expected = SpiceApi.Instance.ConvertStateVectorToConicOrbitalElement(state);
             var back = state.AtEpoch(state.Epoch).ToStateVector();
 
             // Assert: Ω, ω and M are each ill-conditioned near e = 0 and i = 0; their sum, the mean longitude, is not
             worstLongitude = System.Math.Max(worstLongitude, TestHelpers.AngleDifference(
                 state.AscendingNode() + state.ArgumentOfPeriapsis() + state.MeanAnomaly(),
-                expected.RAAN + expected.AOP + expected.M));
+                expected.AscendingNode() + expected.ArgumentOfPeriapsis() + expected.MeanAnomaly()));
             worstPosition = System.Math.Max(worstPosition, Relative(back.Position, state.Position));
             worstVelocity = System.Math.Max(worstVelocity, Relative(back.Velocity, state.Velocity));
         }

@@ -2,7 +2,7 @@
 
 namespace IO.Astrodynamics.Physics;
 
-public class Tsiolkovski
+public class Tsiolkovsky
 {
     /// <summary>
     /// Compute DeltaV
@@ -13,7 +13,7 @@ public class Tsiolkovski
     /// <returns></returns>
     public static double DeltaV(double isp, double initialMass, double finalMass)
     {
-        return isp * Constants.g0 * System.Math.Log(initialMass / finalMass);
+        return isp * Constants.StandardGravity * System.Math.Log(initialMass / finalMass);
     }
 
     /// <summary>
@@ -27,7 +27,7 @@ public class Tsiolkovski
     /// decided by S. Guillet, 2026-11-17; truncated to the tick below before 11.0.0).</returns>
     public static TimeSpan DeltaT(double isp, double initialMass, double fuelFlow, double deltaV)
     {
-        return TimeSystem.Time.SecondsToSpan(initialMass / fuelFlow * (1 - System.Math.Exp(-deltaV / (isp * Constants.g0))));
+        return TimeSystem.Time.SecondsToSpan(initialMass / fuelFlow * (1 - System.Math.Exp(-deltaV / (isp * Constants.StandardGravity))));
     }
 
     /// <summary>
@@ -39,6 +39,6 @@ public class Tsiolkovski
     /// <returns></returns>
     public static double DeltaM(double isp, double initialMass, double deltaV)
     {
-        return initialMass * (1 - System.Math.Exp(-deltaV / (isp * Constants.g0)));
+        return initialMass * (1 - System.Math.Exp(-deltaV / (isp * Constants.StandardGravity)));
     }
 }

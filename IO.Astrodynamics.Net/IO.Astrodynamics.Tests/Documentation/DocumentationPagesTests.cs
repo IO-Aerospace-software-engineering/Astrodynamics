@@ -10,11 +10,11 @@ using Xunit;
 namespace IO.Astrodynamics.Tests.Documentation;
 
 /// <summary>
-/// Rules that the csharp blocks of the pages an application's developer reads (docs/, README.md and DEVELOPER_GUIDE.md)
-/// keep, checked on their text (#668, third round), a quick check beside the compiled ones: the blocks of docs/ and
-/// README.md are compiled regions too since #705 (<see cref="DocumentationPagesExamplesTests"/>), as those of
-/// DEVELOPER_GUIDE.md and the two CLAUDE.md files (<see cref="DeveloperGuideExamplesTests"/>,
-/// <see cref="ClaudeMdExamplesTests"/>).
+/// Rules that the csharp blocks of the pages an application's developer reads (docs/ and README.md) keep, checked on
+/// their text (#668, third round), a quick check beside the compiled ones: the blocks of docs/ and README.md are
+/// compiled regions too since #705 (<see cref="DocumentationPagesExamplesTests"/>), as those of the two CLAUDE.md files
+/// (<see cref="ClaudeMdExamplesTests"/>). DEVELOPER_GUIDE.md is a pointer to the site since lot L9 of #668, its content
+/// moved to the pages.
 /// </summary>
 public class DocumentationPagesTests
 {
@@ -30,7 +30,6 @@ public class DocumentationPagesTests
             .Select(p => Path.GetRelativePath(Docs, p))
             .Where(p => p != Changelog)
             .Append("README.md")
-            .Append("DEVELOPER_GUIDE.md")
             .OrderBy(p => p, StringComparer.Ordinal)
             .Select(p => new object[] { p });
 

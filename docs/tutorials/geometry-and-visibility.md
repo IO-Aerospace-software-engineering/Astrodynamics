@@ -67,15 +67,15 @@ relational constraint:
 var farMoonWindows = earth.FindDistanceWindows(
     searchWindow,
     moon,
-    RelationnalOperator.Greater,
+    RelationalOperator.GreaterThan,
     400000000,          // meters
     new WindowSearchOptions { Step = TimeSpan.FromHours(24) });
 ```
 
-Available operators: `Greater`, `Lower`, `Equal` (with tolerance), their
-negations `LowerOrEqual`, `GreaterOrEqual` and `NotEqual`, and the extremes
+Available operators: `GreaterThan`, `LessThan`, `Equal` (with tolerance), their
+negations `LessThanOrEqual`, `GreaterThanOrEqual` and `NotEqual`, and the extremes
 `AbsoluteMin`, `AbsoluteMax`, `LocalMin` and `LocalMax` (see
-[Enumerations](../reference/enumerations.md#relationnaloperator)).
+[Enumerations](../reference/enumerations.md#relationaloperator)).
 
 - **Step.** The step samples the quantity; a window, a gap or a crossing
   shorter than the step is found when the step is at most half the time
@@ -212,13 +212,13 @@ var visibleWindows = mySite.FindHorizontalWindows(
     searchWindow,
     spacecraft,
     HorizontalCoordinate.Elevation,
-    RelationnalOperator.Greater,
+    RelationalOperator.GreaterThan,
     10.0 * Constants.Deg2Rad,
     new WindowSearchOptions { Step = TimeSpan.FromMinutes(1), Aberration = Aberration.LT });
 ```
 
 Each rise and set is located to 1 µs. The culmination of a pass is the same
-search over the pass with `RelationnalOperator.LocalMax` (the value is then
+search over the pass with `RelationalOperator.LocalMax` (the value is then
 ignored): a window of zero length at the maximum elevation.
 
 ## TLE-based satellite tracking
@@ -229,7 +229,7 @@ ephemeris. Propagate the TLE and query geometry from a ground site:
 ```csharp
 // Inputs: mySite (Site), epoch (Time)
 // Parse TLE
-var tle = new TLE(
+var tle = new Tle(
     "ISS (ZARYA)",
     "1 25544U 98067A   24100.50000000  .00016717  00000-0  10270-3 0  9005",
     "2 25544  51.6416 247.4627 0006703 130.5360 325.0288 15.49750667  1007");
@@ -244,7 +244,7 @@ var coords = mySite.GetHorizontalCoordinates(epoch, iss, Aberration.None);
 !!! note
     TLE-propagated spacecraft use the SGP4/SDP4 propagator automatically.
     Mean orbital elements from a TLE cannot be converted to state vectors
-    directly --- use `TLE.ToOsculating()` if you need a `StateVector`.
+    directly --- use `Tle.ToOsculating()` if you need a `StateVector`.
 
 ## Summary
 

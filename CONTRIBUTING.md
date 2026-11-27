@@ -11,8 +11,7 @@
 * The code coverage level must always be greater than 95%
 
 ## Documentation
-* Once your development is done, update the [wiki](https://github.com/IO-Aerospace-software-engineering/SDK.Net/wiki)
-* Update DEVELOPER_GUIDE.md when adding new features or significant API changes
+* Update the pages of `docs/` (the [documentation site](https://docs.io-aerospace.org/)) and the release notes of `docs/contributing/versioning.md` when adding new features or significant API changes
 * Include XML documentation comments on all public APIs
 
 ## Code Standards

@@ -1,7 +1,7 @@
 // Copyright 2026. Sylvain Guillet (sylvain.guillet@tutamail.com)
 
 using System;
-using IO.Astrodynamics.Atmosphere.NRLMSISE_00;
+using IO.Astrodynamics.Atmosphere;
 
 namespace IO.Astrodynamics.Atmosphere;
 

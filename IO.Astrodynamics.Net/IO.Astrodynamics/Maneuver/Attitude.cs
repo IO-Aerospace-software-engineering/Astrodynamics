@@ -61,7 +61,7 @@ public abstract class Attitude : Maneuver
     /// centre, at a state about the centre the run resolves, as the states of its solution are (IC-6 of lot L5b of #668). Before 11.0.0 the preview was the public
     /// <c>TryExecute</c>, which set the windows of the attitude, could move the standby chain of a finished run, and kept
     /// its result in <c>StateOrientation</c>, which no re-arm cleared (#802); in a run, the attitude at its activation is
-    /// in the attitude record (<see cref="SpacecraftFrame.GetStateOrientationToICRF"/>).
+    /// in the attitude record (<see cref="SpacecraftFrame.GetStateOrientationToIcrf"/>).
     /// </remarks>
     /// <exception cref="ArgumentNullException"><paramref name="stateVector"/> is null.</exception>
     public StateOrientation ComputeStateOrientation(StateVector stateVector)

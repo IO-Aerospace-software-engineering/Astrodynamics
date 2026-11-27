@@ -16,7 +16,7 @@ namespace IO.Astrodynamics.Tests.DataProvider;
 /// <summary>
 /// The body information of the data providers in a domain type (R04 of #668, lot L3): <see cref="CelestialBodyInfo"/>,
 /// a public sealed record, replaces the interop struct <c>IO.Astrodynamics.DTO.CelestialBody</c>, now internal, on
-/// <see cref="IDataProvider.GetCelestialBodyInfo"/>, <see cref="SpiceAPI.GetCelestialBodyInfo"/> and
+/// <see cref="IDataProvider.GetCelestialBodyInfo"/>, <see cref="SpiceApi.GetCelestialBodyInfo"/> and
 /// <see cref="MemoryDataProvider"/>; the state of <see cref="IDataProvider.GetEphemeris"/> is a
 /// <see cref="StateVector"/> (R20). The references: the native record of <c>GetCelestialBodyInfoProxy</c>, field for field
 /// and bit for bit (the record holds the values SPICE gives, already SI), and the kernel texts of <c>gm_de440.tpc</c> and
@@ -39,8 +39,8 @@ public class CelestialBodyInfoTests
     [MemberData(nameof(Bodies))]
     public void SpiceRecord_IsTheNativeRecord_BitForBit(int naifId)
     {
-        var record = SpiceAPI.Instance.ReadNativeCelestialBodyInfo(naifId);
-        var info = SpiceAPI.Instance.GetCelestialBodyInfo(naifId);
+        var record = SpiceApi.Instance.ReadNativeCelestialBodyInfo(naifId);
+        var info = SpiceApi.Instance.GetCelestialBodyInfo(naifId);
         Assert.Equal(record.Id, info.NaifId);
         Assert.Equal(record.Name, info.Name);
         Assert.Equal(record.CenterOfMotionId, info.CenterOfMotionId);
@@ -64,7 +64,7 @@ public class CelestialBodyInfoTests
     [InlineData(499)]
     public void SpiceRecord_HoldsTheKernelTexts(int naifId)
     {
-        var info = SpiceAPI.Instance.GetCelestialBodyInfo(naifId);
+        var info = SpiceApi.Instance.GetCelestialBodyInfo(naifId);
         double gm = KernelTextValues.GravitationalParameter(naifId);
         double[] radii = KernelTextValues.Radii(naifId);
         _output.WriteLine($"MEASURE {naifId}: GM {info.GM:R} (text {gm:R}), radii {info.Radii}");
@@ -102,7 +102,7 @@ public class CelestialBodyInfoTests
     }
 
     /// <summary>
-    /// The state of the provider seam is a <see cref="StateVector"/>, the state <see cref="SpiceAPI.ReadEphemeris(TimeSystem.Time, int, int, Frames.Frame, Aberration)"/>
+    /// The state of the provider seam is a <see cref="StateVector"/>, the state <see cref="SpiceApi.ReadEphemeris(TimeSystem.Time, int, int, Frames.Frame, Aberration)"/>
     /// reads, bit for bit.
     /// </summary>
     [Fact]
@@ -110,8 +110,8 @@ public class CelestialBodyInfoTests
     {
         IDataProvider provider = new SpiceDataProvider();
         var epoch = new TimeSystem.Time(2024, 6, 21, 12, 0, 0, TimeSystem.TimeScale.TDB);
-        StateVector state = provider.GetEphemeris(epoch, PlanetsAndMoons.MOON_BODY, PlanetsAndMoons.EARTH_BODY, Frames.Frame.ICRF, Aberration.None);
-        var spice = SpiceAPI.Instance.ReadEphemeris(epoch, 399, 301, Frames.Frame.ICRF, Aberration.None);
+        StateVector state = provider.GetEphemeris(epoch, PlanetsAndMoons.MoonBody, PlanetsAndMoons.EarthBody, Frames.Frame.ICRF, Aberration.None);
+        var spice = SpiceApi.Instance.ReadEphemeris(epoch, 399, 301, Frames.Frame.ICRF, Aberration.None);
         Assert.Equal(spice.Position, state.Position);
         Assert.Equal(spice.Velocity, state.Velocity);
     }
@@ -130,7 +130,7 @@ public class CelestialBodyInfoTests
     [Fact]
     public void CelestialBody_TakesTheValuesOfItsRecord()
     {
-        var info = SpiceAPI.Instance.GetCelestialBodyInfo(399);
+        var info = SpiceApi.Instance.GetCelestialBodyInfo(399);
         var earth = new CelestialBody(399);
         Assert.Equal(info.GM, earth.GM);
         Assert.Equal(info.Radii, earth.Radii);

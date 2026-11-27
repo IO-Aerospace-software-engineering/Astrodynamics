@@ -6,7 +6,6 @@ using IO.Astrodynamics.Mission;
 using IO.Astrodynamics.OrbitalParameters;
 using IO.Astrodynamics.SolarSystemObjects;
 using IO.Astrodynamics.TimeSystem;
-using IO.Astrodynamics.OrbitalParameters.TLE;
 using Xunit;
 using Xunit.Abstractions;
 
@@ -25,7 +24,7 @@ namespace IO.Astrodynamics.Tests.Coordinates
         [Fact]
         public void Create()
         {
-            Equatorial eq = Equatorial.FromRightAscensionDeclination(2.0, 1.0, 3.0, TimeSystem.Time.J2000TDB);
+            Equatorial eq = Equatorial.FromRightAscensionDeclination(2.0, 1.0, 3.0, TimeSystem.Time.J2000Tdb);
             Assert.Equal(1.0, eq.Declination);
             Assert.Equal(2.0, eq.RightAscension);
             Assert.Equal(3.0, eq.Distance);
@@ -37,7 +36,7 @@ namespace IO.Astrodynamics.Tests.Coordinates
             Astrodynamics.Mission.Mission mission = new Astrodynamics.Mission.Mission("mission1");
             new Scenario("scn1", mission, new Window(new TimeSystem.Time(new DateTime(2001, 1, 1), TimeScale.TDB), new TimeSystem.Time(new DateTime(2001, 2, 1), TimeScale.TDB)));
             var epoch = new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB);
-            CelestialBody earth = PlanetsAndMoons.EARTH_BODY;
+            CelestialBody earth = PlanetsAndMoons.EarthBody;
             Equatorial eq = new Equatorial(new StateVector(
                 new Vector3(-291608.38463344, -266716.83339423, -76102.48709990), new Vector3(), earth, epoch,
                 Frames.Frame.ICRF));
@@ -63,9 +62,9 @@ namespace IO.Astrodynamics.Tests.Coordinates
         {
             var moon = TestHelpers.MoonAtJ2000;
             var earth = TestHelpers.EarthAtJ2000;
-            var eq = moon.GetEphemeris(TimeSystem.Time.J2000TDB, earth, Frames.Frame.ICRF, Aberration.None).ToEquatorial();
+            var eq = moon.GetEphemeris(TimeSystem.Time.J2000Tdb, earth, Frames.Frame.ICRF, Aberration.None).ToEquatorial();
 
-            LabelAssert.Equal(Equatorial.FromRightAscensionDeclination(3.8824377884372114, -0.19024413568211912, 402448639.8873273, TimeSystem.Time.J2000TDB), eq);
+            LabelAssert.Equal(Equatorial.FromRightAscensionDeclination(3.8824377884372114, -0.19024413568211912, 402448639.8873273, TimeSystem.Time.J2000Tdb), eq);
             if (OperatingSystem.IsWindows())
             {
                 Assert.Equal(new Vector3(-291608384.63343555, -266716833.3942334, -76102487.09990202), eq.ToCartesian(),TestHelpers.VectorComparer);
@@ -108,21 +107,21 @@ namespace IO.Astrodynamics.Tests.Coordinates
 
         private static Frames.Frame[] MoonFrames() => new[]
         {
-            Frames.Frame.ICRF, Frames.Frame.ECLIPTIC_J2000, new Frames.Frame("ITRF93"), new Frames.Frame("IAU_MOON"),
+            Frames.Frame.ICRF, Frames.Frame.ECLIPJ2000, new Frames.Frame("ITRF93"), new Frames.Frame("IAU_MOON"),
             new Frames.Frame("MOON_ME"), Frames.Frame.TEME
         };
 
         [Fact]
         public void ToEquatorial_OfAStateInAnyFrame_IsTheIcrfRaDecOfSpice()
         {
-            var earth = new CelestialBody(PlanetsAndMoons.EARTH);
-            var moon = new CelestialBody(PlanetsAndMoons.MOON);
+            var earth = new CelestialBody(PlanetsAndMoons.Earth);
+            var moon = new CelestialBody(PlanetsAndMoons.Moon);
             double worstRa = 0.0;
             double worstDec = 0.0;
             foreach (var day in MoonDays)
             {
-                var epoch = TimeSystem.Time.J2000TDB.AddSeconds(day * 86400.0);
-                var reference = SpiceAPI.Instance.ReadEphemeris(epoch, PlanetsAndMoons.EARTH.NaifId, PlanetsAndMoons.MOON.NaifId,
+                var epoch = TimeSystem.Time.J2000Tdb.AddSeconds(day * 86400.0);
+                var reference = SpiceApi.Instance.ReadEphemeris(epoch, PlanetsAndMoons.Earth.NaifId, PlanetsAndMoons.Moon.NaifId,
                     Frames.Frame.ICRF, Aberration.None).Position;
                 var (ra, dec) = RaDec(reference);
                 foreach (var frame in MoonFrames())
@@ -169,7 +168,7 @@ namespace IO.Astrodynamics.Tests.Coordinates
         public void ToEquatorial_IsInvariantUnderAChangeOfFrame()
         {
             var epoch = new TimeSystem.Time(2024, 6, 21, 12, 0, 0, TimeScale.TDB);
-            var earth = new CelestialBody(PlanetsAndMoons.EARTH, Frames.Frame.ICRF, epoch);
+            var earth = new CelestialBody(PlanetsAndMoons.Earth, Frames.Frame.ICRF, epoch);
             var icrf = new StateVector(new Vector3(6678137.0, 987654.0, 489312.0), new Vector3(-1032.0, 7154.0, 2531.0), earth, epoch,
                 Frames.Frame.ICRF);
 
@@ -182,7 +181,7 @@ namespace IO.Astrodynamics.Tests.Coordinates
             // rotation ToFrame applied), the rotations themselves checked against SPICE, ERFA and GMAT by their own tests
             double worstRa = 0.0;
             double worstDec = 0.0;
-            foreach (var frame in new[] { Frames.Frame.ECLIPTIC_J2000, new Frames.Frame("ITRF93"), Frames.Frame.TEME, Frames.Frame.GCRF })
+            foreach (var frame in new[] { Frames.Frame.ECLIPJ2000, new Frames.Frame("ITRF93"), Frames.Frame.TEME, Frames.Frame.GCRF })
             {
                 var equatorial = icrf.ToFrame(frame).ToEquatorial();
                 worstRa = System.Math.Max(worstRa, Ulps(RaDifference(equatorial.RightAscension, ra), ra));
@@ -191,7 +190,7 @@ namespace IO.Astrodynamics.Tests.Coordinates
 
             // Keplerian elements defined in ECLIPJ2000, against the closed form of the obliquity rotation applied to their
             // ECLIPJ2000 state: independent of the library's frame rotation
-            var keplerian = new KeplerianElements(7.0e6, 0.01, 0.9, 1.1, 0.4, 2.3, earth, epoch, Frames.Frame.ECLIPTIC_J2000);
+            var keplerian = new KeplerianElements(7.0e6, 0.01, 0.9, 1.1, 0.4, 2.3, earth, epoch, Frames.Frame.ECLIPJ2000);
             var (keplerianRa, keplerianDec) = RaDec(EclipticToIcrf(keplerian.ToStateVector().Position));
             var fromKeplerian = keplerian.ToEquatorial();
             worstRa = System.Math.Max(worstRa, Ulps(RaDifference(fromKeplerian.RightAscension, keplerianRa), keplerianRa));
@@ -204,7 +203,7 @@ namespace IO.Astrodynamics.Tests.Coordinates
 
             // A TLE (TEME) at its epoch, against the closed form on the ICRF state of tools/teme_reference
             var reference = Frame.TemeFrameTests.Reference("ISS 2021");
-            var tle = new TLE(reference.Name, reference.Line1, reference.Line2);
+            var tle = new Tle(reference.Name, reference.Line1, reference.Line2);
             var (tleRa, tleDec) = RaDec(Frame.TemeFrameTests.Position(reference.CipB));
             var fromTle = tle.ToEquatorial();
             double tleRaError = RaDifference(fromTle.RightAscension, tleRa);
@@ -219,7 +218,7 @@ namespace IO.Astrodynamics.Tests.Coordinates
         public void ToEquatorial_OnThePolarAxisAndTheEquator()
         {
             var epoch = new TimeSystem.Time(2024, 6, 21, 12, 0, 0, TimeScale.TDB);
-            var earth = new CelestialBody(PlanetsAndMoons.EARTH, Frames.Frame.ICRF, epoch);
+            var earth = new CelestialBody(PlanetsAndMoons.Earth, Frames.Frame.ICRF, epoch);
 
             // The ICRF pole, expressed in ECLIPJ2000: Dec π/2 exactly (RA is undefined there and not asserted). asin(z / |r|) cannot
             // resolve a direction within 1.49e-8 rad of the pole (one double below 1), and no quantity derived from the angles can;
@@ -227,7 +226,7 @@ namespace IO.Astrodynamics.Tests.Coordinates
             // rotation's accuracy being resolved by the equator below: a rotation error about the polar axis shifts its right
             // ascensions, one about an equatorial axis its declinations
             var pole = new StateVector(new Vector3(0.0, 0.0, 7.0e6), Vector3.Zero, earth, epoch, Frames.Frame.ICRF)
-                .ToFrame(Frames.Frame.ECLIPTIC_J2000).ToEquatorial();
+                .ToFrame(Frames.Frame.ECLIPJ2000).ToEquatorial();
             _output.WriteLine($"MEASURE #680 ToEquatorial ICRF pole from ECLIPJ2000, Dec: {System.Math.Abs(pole.Declination - System.Math.PI / 2.0):E3} rad");
             Assert.Equal(System.Math.PI / 2.0, pole.Declination);
 
@@ -238,7 +237,7 @@ namespace IO.Astrodynamics.Tests.Coordinates
             {
                 double ra = i * IO.Astrodynamics.Constants.TwoPi / 12.0;
                 var equatorial = new StateVector(new Vector3(7.0e6 * System.Math.Cos(ra), 7.0e6 * System.Math.Sin(ra), 0.0), Vector3.Zero, earth,
-                    epoch, Frames.Frame.ICRF).ToFrame(Frames.Frame.ECLIPTIC_J2000).ToEquatorial();
+                    epoch, Frames.Frame.ICRF).ToFrame(Frames.Frame.ECLIPJ2000).ToEquatorial();
                 worstRa = System.Math.Max(worstRa, Ulps(RaDifference(equatorial.RightAscension, ra), ra));
                 worstDec = System.Math.Max(worstDec, Ulps(System.Math.Abs(equatorial.Declination), 0.0));
             }

@@ -38,7 +38,7 @@ internal static class OccultationSearch
 
         var front = frontBody as ILocalizable ?? CelestialItem.Create(frontBody.NaifId);
         var evaluator = new OccultationEvaluator(observer, target, targetShape, options.TargetFrame, front, frontShape, options.FrontFrame, aberration,
-            searchWindow.StartDate.ToTDB());
+            searchWindow.StartDate.ToTdb());
         return OccultationFinder.FindWindows(evaluator, searchWindow, occultationType, stepSize,
             options.ConvergenceTolerance ?? OccultationSearchOptions.DefaultConvergenceTolerance);
     }
@@ -74,7 +74,7 @@ internal static class OccultationSearch
             return Array.Empty<Window>();
         }
 
-        return SpiceAPI.Instance.FindWindowsOnOccultationConstraint(searchWindow, observerId, targetId, targetShape, frontBodyId, frontShape,
+        return SpiceApi.Instance.FindWindowsOnOccultationConstraint(searchWindow, observerId, targetId, targetShape, frontBodyId, frontShape,
             hasPoint ? OccultationType.Any : occultationType, aberration, stepSize, options.FrontFrame, options.TargetFrame).ToArray();
     }
 
@@ -82,17 +82,17 @@ internal static class OccultationSearch
     internal static IReadOnlyList<Window> Complement(IReadOnlyList<Window> windows, in Window searchWindow)
     {
         var result = new List<Window>();
-        var cursor = searchWindow.StartDate.ToTDB();
-        var end = searchWindow.EndDate.ToTDB();
+        var cursor = searchWindow.StartDate.ToTdb();
+        var end = searchWindow.EndDate.ToTdb();
         foreach (var window in windows.OrderBy(w => w.StartDate))
         {
-            var start = window.StartDate.ToTDB();
+            var start = window.StartDate.ToTdb();
             if (start > cursor)
             {
                 result.Add(new Window(cursor, start));
             }
 
-            var windowEnd = window.EndDate.ToTDB();
+            var windowEnd = window.EndDate.ToTdb();
             if (windowEnd > cursor)
             {
                 cursor = windowEnd;

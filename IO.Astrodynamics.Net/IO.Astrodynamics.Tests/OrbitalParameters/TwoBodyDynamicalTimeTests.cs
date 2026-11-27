@@ -101,7 +101,7 @@ public class TwoBodyDynamicalTimeTests
         var elements = Orbit(body, StartUtc);
         var state = elements.ToStateVector();
 
-        foreach (var epoch in new[] { StartUtc.ToTAI(), StartUtc.ToTT(), StartUtc.ToGPS(), StartUtc.ToTDB() })
+        foreach (var epoch in new[] { StartUtc.ToTai(), StartUtc.ToTT(), StartUtc.ToGps(), StartUtc.ToTdb() })
         {
             // Act
             var at = elements.AtEpoch(epoch);
@@ -195,17 +195,17 @@ public class TwoBodyDynamicalTimeTests
         // A LEO about the Earth, a low lunar orbit about the Moon, both inclined
         return body == "Earth"
             ? new KeplerianElements(6778137.0, 0.001, 51.6 * Deg, 30.0 * Deg, 40.0 * Deg, 10.0 * Deg,
-                new CelestialBody(PlanetsAndMoons.EARTH), epoch, Frames.Frame.ICRF)
+                new CelestialBody(PlanetsAndMoons.Earth), epoch, Frames.Frame.ICRF)
             : new KeplerianElements(1837400.0, 0.001, 60.0 * Deg, 30.0 * Deg, 40.0 * Deg, 10.0 * Deg,
-                new CelestialBody(PlanetsAndMoons.MOON), epoch, Frames.Frame.ICRF);
+                new CelestialBody(PlanetsAndMoons.Moon), epoch, Frames.Frame.ICRF);
     }
 
     private static TimeSystem.Time Tagged(TimeSystem.Time utc, string tag) => tag switch
     {
         "UTC" => utc,
-        "TAI" => utc.ToTAI(),
+        "TAI" => utc.ToTai(),
         "TT" => utc.ToTT(),
-        "TDB" => utc.ToTDB(),
+        "TDB" => utc.ToTdb(),
         _ => throw new ArgumentOutOfRangeException(nameof(tag), tag, null)
     };
 
@@ -239,7 +239,7 @@ public class TwoBodyDynamicalTimeTests
     {
         long ticks = (long)System.Math.Round(elapsed * TimeSpan.TicksPerSecond);
         double remainder = elapsed - ticks / (double)TimeSpan.TicksPerSecond;
-        var state = SpiceAPI.Instance.Propagate2Bodies(initial, initial.Observer.GM, TimeSpan.FromTicks(ticks));
+        var state = SpiceApi.Instance.Propagate2Bodies(initial, initial.Observer.GM, TimeSpan.FromTicks(ticks));
         return new StateVector(state.Position + state.Velocity * remainder, state.Velocity, state.Observer,
             state.Epoch, state.Frame);
     }

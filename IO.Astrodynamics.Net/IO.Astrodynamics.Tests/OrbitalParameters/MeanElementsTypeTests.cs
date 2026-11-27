@@ -6,7 +6,6 @@ using IO.Astrodynamics.Body;
 using IO.Astrodynamics.Body.Spacecraft;
 using IO.Astrodynamics.Mission;
 using IO.Astrodynamics.OrbitalParameters;
-using IO.Astrodynamics.OrbitalParameters.TLE;
 using IO.Astrodynamics.Propagator;
 using IO.Astrodynamics.Propagator.Variational;
 using IO.Astrodynamics.Propagator.Integrators;
@@ -30,8 +29,8 @@ public class MeanElementsTypeTests
     private readonly ITestOutputHelper _output;
     private readonly CelestialBody _earth;
 
-    // Case A of the issue: the ISS TLE of TLETests
-    private static TLE IssTle() => new("ISS",
+    // Case A of the issue: the ISS TLE of TleTests
+    private static Tle IssTle() => new("ISS",
         "1 25544U 98067A   21020.53488036  .00016717  00000-0  10270-3 0  9054",
         "2 25544  51.6423 353.0312 0000493 320.8755  39.2360 15.49309423 25703");
 
@@ -41,7 +40,7 @@ public class MeanElementsTypeTests
     {
         _output = output;
         TestKernels.EnsureSolarSystem();
-        _earth = new CelestialBody(PlanetsAndMoons.EARTH, Frames.Frame.ICRF, EpochB);
+        _earth = new CelestialBody(PlanetsAndMoons.Earth, Frames.Frame.ICRF, EpochB);
     }
 
     // Case B: FromOMM, 15.5 rev/day, e 0.0007, i 51.64°, Ω 120°, ω 80°, M 30°, in a frame
@@ -51,7 +50,7 @@ public class MeanElementsTypeTests
     private IO.Astrodynamics.OrbitalParameters.OrbitalParameters[] MeanSets()
     {
         var fromConstructor = new KeplerianElements(6800000.0, 0.001, 0.9, 1.0, 2.0, 0.5, _earth, EpochB,
-            Frames.Frame.ECLIPTIC_J2000, elementsType: OrbitalElementsType.Mean);
+            Frames.Frame.ECLIPJ2000, elementsType: OrbitalElementsType.Mean);
         return
         [
             IssTle().ToMeanKeplerianElements(), CaseB(Frames.Frame.ICRF), fromConstructor, CaseB(Frames.Frame.ICRF).ToEquinoctial(),
@@ -111,7 +110,7 @@ public class MeanElementsTypeTests
         Assert.Equal(OrbitalElementsType.Osculating, elements.ElementsType);
         var start = tle.ToOsculating();
         double dt = PropagationTimeArgument.Tt.SecondsBetween(start.Epoch, t);
-        var reference = SpiceAPI.Instance.Propagate2Bodies(start, start.Observer.GM, TimeSpan.FromTicks((long)System.Math.Round(dt * 1e7)));
+        var reference = SpiceApi.Instance.Propagate2Bodies(start, start.Observer.GM, TimeSpan.FromTicks((long)System.Math.Round(dt * 1e7)));
         double error = (state.Position - reference.Position).Magnitude() / reference.Position.Magnitude();
         _output.WriteLine($"MEASURE #463 tle.ToKeplerianElements(t0 + 1 h) against prop2b, |Δr| / |r|: {error:E3}");
         // The rounding of the element conversions over an hour, against prop2b from evsgp4_c's state (both of the native
@@ -127,15 +126,15 @@ public class MeanElementsTypeTests
     [Fact]
     public void AMeanSetMovedToItsOwnEpoch_WritesTheSameTle()
     {
-        // Arrange: case A's mean elements, moved to their own epoch (before: Osculating, refused by TLE.Create)
+        // Arrange: case A's mean elements, moved to their own epoch (before: Osculating, refused by Tle.Create)
         var tle = IssTle();
         var mean = tle.ToMeanKeplerianElements();
 
         // Act
-        var direct = TLE.Create(mean, "ISS", 25544, "98067A", 2570, bstar: 0.10270e-3, nDot: 0.00016717);
-        var moved = TLE.Create(mean.AtEpoch(tle.Epoch), "ISS", 25544, "98067A", 2570, bstar: 0.10270e-3, nDot: 0.00016717);
-        var throughKeplerian = TLE.Create(mean.ToKeplerianElements(tle.Epoch), "ISS", 25544, "98067A", 2570, bstar: 0.10270e-3,
-            nDot: 0.00016717);
+        var direct = Tle.Create(mean, "ISS", 25544, "98067A", 2570, bStar: 0.10270e-3, meanMotionDot: 0.00016717);
+        var moved = Tle.Create(mean.AtEpoch(tle.Epoch), "ISS", 25544, "98067A", 2570, bStar: 0.10270e-3, meanMotionDot: 0.00016717);
+        var throughKeplerian = Tle.Create(mean.ToKeplerianElements(tle.Epoch), "ISS", 25544, "98067A", 2570, bStar: 0.10270e-3,
+            meanMotionDot: 0.00016717);
 
         // Assert: the same two lines
         Assert.Equal(direct.Line1, moved.Line1);
@@ -154,7 +153,7 @@ public class MeanElementsTypeTests
         var sets = new IO.Astrodynamics.OrbitalParameters.OrbitalParameters[]
         {
             CaseB(Frames.Frame.ICRF), CaseB(Frames.Frame.ICRF).ToEquinoctial(),
-            new KeplerianElements(6800000.0, 0.001, 0.9, 1.0, 2.0, 0.5, _earth, EpochB, Frames.Frame.ECLIPTIC_J2000,
+            new KeplerianElements(6800000.0, 0.001, 0.9, 1.0, 2.0, 0.5, _earth, EpochB, Frames.Frame.ECLIPJ2000,
                 elementsType: OrbitalElementsType.Mean),
         };
         int naifId = -4630;
@@ -183,7 +182,7 @@ public class MeanElementsTypeTests
                     Assert.Equal("spacecraft", exception.ParamName);
                     Assert.Contains("mean elements", exception.Message);
                     Assert.Contains(spacecraft.Name, exception.Message);
-                    Assert.Contains("TLEPropagator", exception.Message);
+                    Assert.Contains("TlePropagator", exception.Message);
                     _output.WriteLine($"{name}: refused");
                 }
 

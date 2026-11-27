@@ -23,12 +23,12 @@ public sealed class GcrfFrame : Frame
 
     private protected override bool ReadsOrientationCache => true;
 
-    public override StateOrientation GetStateOrientationToICRF(Time date)
+    public override StateOrientation GetStateOrientationToIcrf(Time epoch)
     {
         if (OrientationCache != null)
-            return OrientationCache.GetOrientation(date);
+            return OrientationCache.GetOrientation(epoch);
 
         // The identity, computed at each call: nothing is kept (#541)
-        return new StateOrientation(Quaternion.Identity, Vector3.Zero, date, this);
+        return new StateOrientation(Quaternion.Identity, Vector3.Zero, epoch, this);
     }
 }

@@ -19,7 +19,7 @@ namespace IO.Astrodynamics.Tests.Occultation;
 /// </summary>
 public class OccultationFinderResolutionTests
 {
-    private static readonly TimeSystem.Time Start = TimeSystem.Time.CreateTDB(762480000.0);
+    private static readonly TimeSystem.Time Start = TimeSystem.Time.CreateTdb(762480000.0);
 
     // The steps: 1 min, 10 min, and a quarter of the period, the limit of the step rule (the extremes are P/2 apart)
     public static IEnumerable<object[]> Steps() => new[] { new object[] { 60.0 }, new object[] { 600.0 }, new object[] { 1350.0 } };

@@ -53,7 +53,7 @@ public class NearParabolicBandTests
     {
         _output = output;
         TestKernels.EnsureSolarSystem();
-        _earth = new CelestialBody(PlanetsAndMoons.EARTH, Frames.Frame.ICRF, Epoch);
+        _earth = new CelestialBody(PlanetsAndMoons.Earth, Frames.Frame.ICRF, Epoch);
         Assert.Equal(Mu, _earth.GM);
     }
 
@@ -420,7 +420,7 @@ public class NearParabolicBandTests
         var atEpoch = eq.ToStateVector(Epoch);
 
         // Assert: M back, and Barker's state at 60 digits (before: 5.1e7 m off at M = −0.3, 4.1e6 m at +0.3)
-        double mError = back.M - m;
+        double mError = back.MeanAnomaly() - m;
         double rError = Distance(state.Position, new Vector3(r[0], r[1], r[2]));
         double rErrorAtEpoch = Distance(atEpoch.Position, new Vector3(r[0], r[1], r[2]));
         Measure($"#478 exact parabola M = {m:R}: e − 1 of the equinoctial elements", eq.Eccentricity() - 1.0);
@@ -459,7 +459,7 @@ public class NearParabolicBandTests
             var expected = ke.ToStateVector();
             worstKeplerian = System.Math.Max(worstKeplerian,
                 Distance(keBack.ToStateVector().Position, expected.Position) / expected.Position.Magnitude());
-            worstM = System.Math.Max(worstM, System.Math.Abs(keBack.M - m));
+            worstM = System.Math.Max(worstM, System.Math.Abs(keBack.MeanAnomaly() - m));
         }
 
         Measure("#478 sweep, ToStateVector(own ν), worst |Δr| / |r|", worstOwnNu);
@@ -503,7 +503,7 @@ public class NearParabolicBandTests
         Assert.False(ke.IsParabolic());
         foreach (double nu in new[] { -1.0, 0.5, 1.0, 1.5 })
         {
-            Assert.Equal(IO.Astrodynamics.OrbitalParameters.OrbitalParameters.TrueAnomalyToMeanAnomaly(nu, ke.E, ke.EccentricAnomaly(nu)),
+            Assert.Equal(IO.Astrodynamics.OrbitalParameters.OrbitalParameters.TrueAnomalyToMeanAnomaly(nu, ke.Eccentricity(), ke.EccentricAnomaly(nu)),
                 ke.MeanAnomaly(nu));
         }
     }
@@ -689,7 +689,7 @@ public class NearParabolicBandTests
         Assert.False(ke.IsParabolic());
         var later = (KeplerianElements)ke.AtEpoch(Epoch.AddSeconds(600.0));
         double expected = 0.2 + 600.0 * ke.MeanMotion();
-        Assert.Equal(e < 1.0 - 1e-6 ? IO.Astrodynamics.Math.SpecialFunctions.NormalizeAngle(expected) : expected, later.M);
+        Assert.Equal(e < 1.0 - 1e-6 ? IO.Astrodynamics.Math.SpecialFunctions.NormalizeAngle(expected) : expected, later.MeanAnomaly());
     }
 
     [Fact]
@@ -711,8 +711,8 @@ public class NearParabolicBandTests
         var later = (KeplerianElements)ke.AtEpoch(Epoch.AddSeconds(600.0));
 
         // Assert: Barker's law, bit for bit: M + √(μ/(2q³)) Δt, the motion of an exact parabola
-        Assert.Equal(0.3 + System.Math.Sqrt(IO.Astrodynamics.Constants.G * _earth.Mass / (2.0 * System.Math.Pow(7.0e6, 3))) * 600.0,
-            later.M);
+        Assert.Equal(0.3 + System.Math.Sqrt(IO.Astrodynamics.Constants.GravitationalConstant * _earth.Mass / (2.0 * System.Math.Pow(7.0e6, 3))) * 600.0,
+            later.MeanAnomaly());
     }
 
     [Fact]
@@ -781,7 +781,7 @@ public class NearParabolicBandTests
         // e = 1 exactly: a = +Infinity, n = √(μ/(2q³)), as before, bit for bit
         var ke = KeplerianElements.Parabolic(6800000.0, 0.2, 0.3, 0.4, 0.5, _earth, Epoch, Frames.Frame.ICRF);
         Assert.True(double.IsPositiveInfinity(ke.SemiMajorAxis()));
-        Assert.Equal(System.Math.Sqrt(IO.Astrodynamics.Constants.G * _earth.Mass / (2.0 * System.Math.Pow(6800000.0, 3))), ke.MeanMotion());
+        Assert.Equal(System.Math.Sqrt(IO.Astrodynamics.Constants.GravitationalConstant * _earth.Mass / (2.0 * System.Math.Pow(6800000.0, 3))), ke.MeanMotion());
 
         // A finite a at e = 1 exactly has no meaning: refused by the elements the library builds (internal since #668, R23;
         // Parabolic computes a)
@@ -844,14 +844,14 @@ public class NearParabolicBandTests
                 ("ToKeplerianElements()", sv.ToKeplerianElements()),
                 ("ToEquinoctial().ToKeplerianElements()", sv.ToEquinoctial().ToKeplerianElements()),
                 ("AtEpoch(+600 s)", (KeplerianElements)sv.AtEpoch(Epoch.AddSeconds(600.0))),
-                ("SpiceAPI.ConvertStateVectorToConicOrbitalElement", SpiceAPI.Instance.ConvertStateVectorToConicOrbitalElement(sv)),
+                ("SpiceApi.ConvertStateVectorToConicOrbitalElement", SpiceApi.Instance.ConvertStateVectorToConicOrbitalElement(sv)),
             };
 
             // Assert: a (1 − e) = q to rounding, the rule of the constructor (|q/a − (1 − e)| ≤ 6 ε (1 + e))
             foreach (var (path, ke) in paths)
             {
                 Assert.True(ke.IsParabolic(), $"{name} {path}");
-                double mismatch = ConicMismatch(ke.SemiMajorAxis(), ke.E, ke.PerigeeRadius());
+                double mismatch = ConicMismatch(ke.SemiMajorAxis(), ke.Eccentricity(), ke.PerigeeRadius());
                 Measure($"#459 {name} {path}: |q/a − (1 − e)| / (ε (1 + e))", mismatch);
                 Assert.InRange(mismatch, 0.0, 6.0);
             }
@@ -888,9 +888,9 @@ public class NearParabolicBandTests
                 // Act: the elements of the state and SPICE's (oscltx: −μ/(2ξ) and its perifocal distance)
                 count++;
                 var fromState = sv.ToKeplerianElements();
-                var fromSpice = SpiceAPI.Instance.ConvertStateVectorToConicOrbitalElement(sv);
-                worstState = System.Math.Max(worstState, ConicMismatch(fromState.SemiMajorAxis(), fromState.E, fromState.PerigeeRadius()));
-                worstSpice = System.Math.Max(worstSpice, ConicMismatch(fromSpice.SemiMajorAxis(), fromSpice.E, fromSpice.PerigeeRadius()));
+                var fromSpice = SpiceApi.Instance.ConvertStateVectorToConicOrbitalElement(sv);
+                worstState = System.Math.Max(worstState, ConicMismatch(fromState.SemiMajorAxis(), fromState.Eccentricity(), fromState.PerigeeRadius()));
+                worstSpice = System.Math.Max(worstSpice, ConicMismatch(fromSpice.SemiMajorAxis(), fromSpice.Eccentricity(), fromSpice.PerigeeRadius()));
             }
         }
 
@@ -907,11 +907,11 @@ public class NearParabolicBandTests
     [MemberData(nameof(PeriapsisConicIndices))]
     public void Issue459_SpiceConversionInTheBand_HasTheConicsSemiMajorAxisAndMeanMotion(int index)
     {
-        // The public SpiceAPI.ConvertStateVectorToConicOrbitalElement forced a = +Infinity in the band, so Barker's n,
+        // The public SpiceApi.ConvertStateVectorToConicOrbitalElement forced a = +Infinity in the band, so Barker's n,
         // 2e9 times the conic's at ±5e-7 (the review of #459); SPICE's oscltx gives −μ/(2ξ)
         var c = PeriapsisConics[index];
         var sv = State([7000000.0, 0.0, 0.0], [0.0, c.Vy, 0.0]);
-        var ke = SpiceAPI.Instance.ConvertStateVectorToConicOrbitalElement(sv);
+        var ke = SpiceApi.Instance.ConvertStateVectorToConicOrbitalElement(sv);
         double aError = (ke.SemiMajorAxis() - c.AHi - c.ALo) / c.AHi;
         double nError = (ke.MeanMotion() - c.NHi - c.NLo) / c.NHi;
         double distanceToOne = System.Math.Abs(c.EccentricityMinusOne);
@@ -1007,9 +1007,9 @@ public class NearParabolicBandTests
             Measure($"#477 {name} MeanMotion relative error", (meanMotion - nHi - nLo) / nHi);
             // Worst 4.1e-17 on Linux x64, Windows x64 and macOS arm64 (CI run 44225490669); twice the worst
             Assert.InRange((meanMotion - nHi - nLo) / nHi, -8.3e-17, 8.3e-17);
-            Assert.True(double.IsPositiveInfinity(ke.A));
+            Assert.True(double.IsPositiveInfinity(ke.SemiMajorAxis()));
             Assert.Equal(q, ke.PerigeeRadius());
-            double[] actual = [ke.I, ke.RAAN, ke.AOP, ke.M];
+            double[] actual = [ke.Inclination(), ke.AscendingNode(), ke.ArgumentOfPeriapsis(), ke.MeanAnomaly()];
             for (int k = 0; k < 4; k++)
             {
                 Measure($"#477 {name} angle {k} error (rad)", actual[k] - angles[k]);
@@ -1192,7 +1192,7 @@ public class NearParabolicBandTests
         var direct = sv.ToEquinoctial().P;
         var throughKeplerian = sv.ToKeplerianElements().ToEquinoctial().P;
         var later = sv.AtEpoch(Epoch.AddSeconds(3600.0)).ToEquinoctial().P;
-        var ecliptic = sv.ToFrame(Frames.Frame.ECLIPTIC_J2000).ToEquinoctial().P;
+        var ecliptic = sv.ToFrame(Frames.Frame.ECLIPJ2000).ToEquinoctial().P;
 
         // Assert: h²/μ (before: +∞ below e = 1, −∞ above)
         foreach (var (path, p) in new[] { ("direct", direct), ("Keplerian", throughKeplerian), ("+1 h", later), ("ecliptic", ecliptic) })
@@ -1212,7 +1212,7 @@ public class NearParabolicBandTests
         // Arrange: the input of StateVectorTests.ParabolicToEquinoctial, whose e is off 1 by its rounding
         var ke = KeplerianElements.Parabolic(6800000.0, 0.2, 0.3, 0.4, 0.0, _earth, Epoch, Frames.Frame.ICRF);
         var sv = ke.ToStateVector();
-        var ecliptic = sv.ToFrame(Frames.Frame.ECLIPTIC_J2000).ToStateVector();
+        var ecliptic = sv.ToFrame(Frames.Frame.ECLIPJ2000).ToStateVector();
 
         foreach (var (name, state) in new[] { ("ICRF", sv), ("ECLIPTIC_J2000", ecliptic) })
         {

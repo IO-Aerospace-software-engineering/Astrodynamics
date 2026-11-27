@@ -9,7 +9,7 @@ using IO.Astrodynamics.Propagator;
 using IO.Astrodynamics.Propagator.Integrators;
 using IO.Astrodynamics.Propagator.Variational;
 using IO.Astrodynamics.SolarSystemObjects;
-using IO.Astrodynamics.SSA;
+using IO.Astrodynamics.Ssa;
 using IO.Astrodynamics.Tests.Propagators.Variational;
 using IO.Astrodynamics.TimeSystem;
 using Xunit;
@@ -32,7 +32,7 @@ public sealed class ConjunctionCovarianceCase
     public ConjunctionCovarianceCase()
     {
         TestKernels.EnsureSolarSystem();
-        Earth = new CelestialBody(PlanetsAndMoons.EARTH, Frames.Frame.ICRF, Start);
+        Earth = new CelestialBody(PlanetsAndMoons.Earth, Frames.Frame.ICRF, Start);
         var (protectedOrbit, secondaryOrbit) = Pair(Earth, Start, Tca);
 
         ProtectedStart = WithRtnCovariance(protectedOrbit, new[] { 50.0, 200.0, 30.0, 0.2, 0.05, 0.03 });
@@ -308,7 +308,7 @@ public class ConjunctionCovariancePropagationTests : IClassFixture<ConjunctionCo
         var replayed = encounters[0].ProtectedCovariance.Solution;
         var last = replayed.Segments[^1];
         var lastTca = encounters.Max(e => e.EncounterState.Epoch);
-        Assert.True(last.BaseEpoch.AddSeconds(last.Duration) >= lastTca);
+        Assert.True(last.BaseEpoch.AddSeconds(last.DurationSeconds) >= lastTca);
         Assert.True(last.BaseEpoch.AddSeconds(last.Steps[^1].CumulativeTime) <= lastTca);
     }
 

@@ -58,7 +58,7 @@ nav:
   - API Reference:
     - reference/index.md
     - Core:
-      - SpiceAPI & Data Providers: reference/spice-api.md
+      - SpiceApi & Data Providers: reference/spice-api.md
       - Time & Windows: reference/time-and-windows.md
       - Frames & Orientation: reference/frames.md
       - Celestial Bodies: reference/celestial-bodies.md
@@ -126,3 +126,7 @@ markdown_extensions:
   - pymdownx.superfences
   - pymdownx.tabbed:
       alternate_style: true
+
+# A link to a heading that does not exist fails the strict build (R05 of #668, lot L9)
+validation:
+  anchors: warn

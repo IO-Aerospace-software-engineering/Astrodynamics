@@ -51,8 +51,8 @@ public class InitialOrbitDeterminationTests
             var obs2 = referenceOrbit.AtEpoch(e2).RelativeTo(site, Aberration.None);
             var obs3 = referenceOrbit.AtEpoch(e3).RelativeTo(site, Aberration.None);
             var orbitalParams =
-                InitialOrbitDetermination.CreateFromObservation_Gauss(obs1.ToEquatorial(), obs2.ToEquatorial(), obs3.ToEquatorial(), site,
-                    PlanetsAndMoons.EARTH_BODY, 42000000.0);
+                InitialOrbitDetermination.CreateFromGaussMethod(obs1.ToEquatorial(), obs2.ToEquatorial(), obs3.ToEquatorial(), site,
+                    PlanetsAndMoons.EarthBody, 42000000.0);
             var deltaRange = 100.0 * (orbitalParams.OrbitalParameters.ToStateVector().Position - referenceOrbit.ToStateVector().Position).Magnitude() /
                              referenceOrbit.ToStateVector().Position.Magnitude();
             var deltaVelocity = 100.0 * (orbitalParams.OrbitalParameters.ToStateVector().Velocity - referenceOrbit.ToStateVector().Velocity).Magnitude() /
@@ -80,13 +80,13 @@ public class InitialOrbitDeterminationTests
             var obs1 = target.GetEphemeris(e1, site, Frames.Frame.ICRF, Aberration.LT);
             var obs2 = target.GetEphemeris(e2, site, Frames.Frame.ICRF, Aberration.LT);
             var obs3 = target.GetEphemeris(e3, site, Frames.Frame.ICRF, Aberration.LT);
-            double lightTime = obs2.ToStateVector().Position.Magnitude() / IO.Astrodynamics.Constants.C;
+            double lightTime = obs2.ToStateVector().Position.Magnitude() / IO.Astrodynamics.Constants.SpeedOfLight;
             var reference = target.GetEphemeris(e2 - TimeSpan.FromSeconds(lightTime), TestHelpers.Sun, Frames.Frame.ICRF,
                 Aberration.None);
 
             // Act
-            var determined = InitialOrbitDetermination.CreateFromObservation_Gauss(obs1.ToEquatorial(),
-                obs2.ToEquatorial(), obs3.ToEquatorial(), site, Stars.SUN_BODY, 350000000000.58063)
+            var determined = InitialOrbitDetermination.CreateFromGaussMethod(obs1.ToEquatorial(),
+                obs2.ToEquatorial(), obs3.ToEquatorial(), site, Stars.SunBody, 350000000000.58063)
                 .OrbitalParameters.ToStateVector();
             double deltaRange = 100.0 * (determined.Position - reference.Position).Magnitude() /
                                 reference.Position.Magnitude();
@@ -130,8 +130,8 @@ public class InitialOrbitDeterminationTests
     // The departures of the determined state from the reference orbit, m and m/s
     private static (double Position, double Velocity) Departure(Equatorial first, Equatorial last)
     {
-        var determined = InitialOrbitDetermination.CreateFromObservation_Gauss(first, MiddleObservation, last,
-            MarylandSite(), PlanetsAndMoons.EARTH_BODY, 7_250_000.0).OrbitalParameters.ToStateVector();
+        var determined = InitialOrbitDetermination.CreateFromGaussMethod(first, MiddleObservation, last,
+            MarylandSite(), PlanetsAndMoons.EarthBody, 7_250_000.0).OrbitalParameters.ToStateVector();
         var reference = ReferenceOrbit();
         return ((determined.Position - reference.Position).Magnitude(),
             (determined.Velocity - reference.Velocity).Magnitude());

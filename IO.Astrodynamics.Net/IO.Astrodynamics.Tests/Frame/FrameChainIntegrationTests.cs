@@ -83,7 +83,7 @@ public class FrameChainIntegrationTests
         var epoch = new TimeSystem_Time(2010, 6, 15, 12, 0, 0, TimeScale.TDB);
 
         // Direct TIRS→ICRF
-        var tirsToIcrf = Frames.Frame.TIRS.GetStateOrientationToICRF(epoch);
+        var tirsToIcrf = Frames.Frame.TIRS.GetStateOrientationToIcrf(epoch);
 
         // The rotation matrix should be orthogonal
         var rotMatrix = Matrix.FromQuaternion(tirsToIcrf.Rotation);
@@ -137,8 +137,8 @@ public class FrameChainIntegrationTests
         var tirs = Frames.Frame.TIRS;
         var itrf93 = new Frames.Frame("ITRF93");
 
-        var tirsOrientation = tirs.GetStateOrientationToICRF(epoch);
-        var itrfOrientation = itrf93.GetStateOrientationToICRF(epoch);
+        var tirsOrientation = tirs.GetStateOrientationToIcrf(epoch);
+        var itrfOrientation = itrf93.GetStateOrientationToIcrf(epoch);
 
         // Compare the rotation matrices
         var tirsMat = Matrix.FromQuaternion(tirsOrientation.Rotation);
@@ -164,13 +164,13 @@ public class FrameChainIntegrationTests
     public void SpiceFrameRotationFollowsItsAngularVelocity(string frameName)
     {
         // The convention every frame follows (xf2rav_c): the angular velocity of ICRF relative to the frame, in the
-        // frame axes. Over one second the measured residual is below 2e-13 rad. StateOrientation.AtDate, built for
+        // frame axes. Over one second the measured residual is below 2e-13 rad. StateOrientation.AtEpoch, built for
         // attitudes, would turn the other way.
         var frame = new Frames.Frame(frameName);
         var epoch = new TimeSystem_Time(2021, 1, 1, 12, 0, 0, TimeScale.TDB);
 
-        var propagated = TestHelpers.RotateWithFrameAngularVelocity(frame.GetStateOrientationToICRF(epoch), 1.0);
-        var recomputed = frame.GetStateOrientationToICRF(epoch.AddSeconds(1)).Rotation;
+        var propagated = TestHelpers.RotateWithFrameAngularVelocity(frame.GetStateOrientationToIcrf(epoch), 1.0);
+        var recomputed = frame.GetStateOrientationToIcrf(epoch.AddSeconds(1)).Rotation;
 
         var relative = propagated.Conjugate() * recomputed;
         double angle = 2.0 * System.Math.Atan2(relative.VectorPart.Magnitude(), System.Math.Abs(relative.W));
@@ -238,7 +238,7 @@ public class FrameChainIntegrationTests
     {
         var epoch = new TimeSystem_Time(2021, 1, 1, 12, 0, 0, TimeScale.TDB);
         var state = new StateVector(new Vector3(4211623.0, -3218447.0, 4402165.0), new Vector3(4523.1, 5601.7, 1188.4),
-            PlanetsAndMoons.EARTH_BODY, epoch, Frames.Frame.ICRF);
+            PlanetsAndMoons.EarthBody, epoch, Frames.Frame.ICRF);
 
         var roundTrip = state.ToFrame(Frames.Frame.TIRS).ToFrame(Frames.Frame.ICRF).ToStateVector();
 
@@ -248,7 +248,7 @@ public class FrameChainIntegrationTests
 
     private static StateVector FixedPointInIcrf(Frames.Frame frame, Vector3 position, TimeSystem_Time epoch)
     {
-        return new StateVector(position, Vector3.Zero, PlanetsAndMoons.EARTH_BODY, epoch, frame)
+        return new StateVector(position, Vector3.Zero, PlanetsAndMoons.EarthBody, epoch, frame)
             .ToFrame(Frames.Frame.ICRF).ToStateVector();
     }
 
@@ -301,7 +301,7 @@ public class FrameChainIntegrationTests
         var epoch = TimeSystem_Time.CreateFromJD(2400000.5 + 55362.0, TimeScale.UTC);
 
         var tirs = new TirsFrame();
-        var orientation = tirs.GetStateOrientationToICRF(epoch);
+        var orientation = tirs.GetStateOrientationToIcrf(epoch);
         var m = Matrix.FromQuaternion(orientation.Rotation);
 
         // The TIRS→ICRF matrix is the TRANSPOSE of SOFA's rc2t (GCRS→ITRS)

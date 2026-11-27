@@ -13,7 +13,7 @@ using IO.Astrodynamics.Frames;
 using IO.Astrodynamics.TimeSystem;
 using IO.Astrodynamics.SolarSystemObjects;
 
-SpiceAPI.Instance.LoadKernels(new DirectoryInfo("Data/SolarSystem"));
+SpiceApi.Instance.LoadKernels(new DirectoryInfo("Data/SolarSystem"));
 ```
 
 ## Setting Up Bodies and Epochs
@@ -21,13 +21,13 @@ SpiceAPI.Instance.LoadKernels(new DirectoryInfo("Data/SolarSystem"));
 Create the celestial bodies you want to query and define a reference epoch:
 
 ```csharp
-var earth = PlanetsAndMoons.EARTH_BODY;
-var moon = new CelestialBody(PlanetsAndMoons.MOON);
+var earth = PlanetsAndMoons.EarthBody;
+var moon = new CelestialBody(PlanetsAndMoons.Moon);
 var sun = new CelestialBody(Stars.Sun);
 var epoch = new Time(2024, 6, 21, 12, 0, 0, TimeScale.TDB);
 ```
 
-`PlanetsAndMoons.EARTH_BODY` is a pre-built convenience instance. For other bodies, construct a `CelestialBody` from a NAIF ID constant.
+`PlanetsAndMoons.EarthBody` is a pre-built convenience instance. For other bodies, construct a `CelestialBody` from a NAIF ID constant.
 
 ## Single-Epoch Query
 
@@ -42,7 +42,7 @@ Console.WriteLine($"Velocity: {stateVector.Velocity} m/s");
 ```
 
 The returned `StateVector` contains position and velocity in SI units (meters and meters per second). Every read of
-`GetEphemeris` and `SpiceAPI.ReadEphemeris` is typed as the `StateVector` it builds, so no `.ToStateVector()` follows it
+`GetEphemeris` and `SpiceApi.ReadEphemeris` is typed as the `StateVector` it builds, so no `.ToStateVector()` follows it
 (11.0.0, R20 of #668). Without a frame and an aberration, `earth.GetEphemeris(epoch, sun)` reads in ICRF without
 correction, bit for bit the read above; the window form is `GetEphemeris(window, observer, step)`.
 
@@ -72,14 +72,14 @@ The `Aberration` parameter controls light-time and stellar aberration correction
 |-------|---------|
 | `Aberration.None` | Geometric position — no corrections |
 | `Aberration.LT` | One-way light-time correction |
-| `Aberration.LTS` | Light-time plus stellar aberration |
+| `Aberration.LtS` | Light-time plus stellar aberration |
 
-Use `None` for propagation and force-model queries. Use `LT` or `LTS` for observational geometry (e.g., where does the Moon appear from Earth?).
+Use `None` for propagation and force-model queries. Use `LT` or `LtS` for observational geometry (e.g., where does the Moon appear from Earth?).
 
 ```csharp
 // Inputs: earth and moon (CelestialBody), epoch (Time)
 var geometric = earth.GetEphemeris(epoch, moon, Frame.ICRF, Aberration.None);
-var apparent = earth.GetEphemeris(epoch, moon, Frame.ICRF, Aberration.LTS);
+var apparent = earth.GetEphemeris(epoch, moon, Frame.ICRF, Aberration.LtS);
 ```
 
 ## Angular Separation
@@ -97,5 +97,5 @@ The result is in radians. Near-zero values indicate the Moon is close to the Sun
 ## Summary
 
 - Use `GetEphemeris` with a single epoch for point queries and with a `Window` for time series.
-- Choose the aberration correction that matches your use case: `None` for dynamics, `LT`/`LTS` for observation.
+- Choose the aberration correction that matches your use case: `None` for dynamics, `LT`/`LtS` for observation.
 - `AngularSeparation` measures the apparent angle between two targets from an observer.

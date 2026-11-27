@@ -107,7 +107,7 @@ internal static partial class CspiceDirect
         {
             var confinement = Cell(confinementHandle, 2);
             var result = Cell(resultHandle, 2 * WindowCapacity);
-            lock (SpiceAPI.SyncRoot)
+            lock (SpiceApi.SyncRoot)
             {
                 wninsd_c(start, end, ref confinement);
                 Check("wninsd");

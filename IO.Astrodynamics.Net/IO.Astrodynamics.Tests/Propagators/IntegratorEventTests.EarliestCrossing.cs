@@ -44,7 +44,7 @@ public partial class IntegratorEventTests
     [InlineData("VV10")]
     public void TwoDetectors_TheEarliestCrossingIsReported(string integratorName)
     {
-        var earth = new CelestialBody(PlanetsAndMoons.EARTH, Frame.ICRF, S);
+        var earth = new CelestialBody(PlanetsAndMoons.Earth, Frame.ICRF, S);
         var sv = MinimumEpochGateTests.Orbit(earth, System.Math.PI).ToStateVector();
         var k = new KeplerClosedForm(earth.GM, sv.Position, sv.Velocity, 0.0);
         double perigee = k.T / 2.0;
@@ -105,7 +105,7 @@ public partial class IntegratorEventTests
 
     private static (Integrator Integrator, StateVector Start) LineWith(Integrator integrator)
     {
-        var earth = new CelestialBody(PlanetsAndMoons.EARTH, Frame.ICRF, S);
+        var earth = new CelestialBody(PlanetsAndMoons.Earth, Frame.ICRF, S);
         var start = new StateVector(new Vector3(0.0, 7e6, 0.0), new Vector3(1.0, 0.0, 0.0), earth, S, Frame.ICRF);
         integrator.Initialize(start);
         return (integrator, start);

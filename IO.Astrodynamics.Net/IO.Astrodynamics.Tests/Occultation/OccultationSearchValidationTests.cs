@@ -31,7 +31,7 @@ namespace IO.Astrodynamics.Tests.Occultation;
 /// Two references. The windows of <c>gfoclt</c> converged to 1e-9 s (<c>gfstol_c</c>), written by the harness of
 /// <c>tools/occultation_reference</c> (<c>occultation_reference.json</c>), finer than what they measure: the managed
 /// search converged to 100 ns, the resolution of a <see cref="TimeSystem.Time"/>. And <c>gfoclt</c> run in the test
-/// process on the same kernels through <see cref="SpiceAPI"/>, at its default tolerance of 1e-6 s, against the managed
+/// process on the same kernels through <see cref="SpiceApi"/>, at its default tolerance of 1e-6 s, against the managed
 /// search at its own default, 1e-6 s: whether the two paths of the library agree.
 /// </para>
 /// <para>
@@ -86,7 +86,7 @@ public class OccultationSearchValidationTests
 
     private static Window Eclipse2005Window => new(TimeSystem.Time.Parse("2005-10-03 00:00:00", TimeScale.TDB), TimeSystem.Time.Parse("2005-10-04 00:00:00", TimeScale.TDB));
 
-    private static Window Eclipse2001Window => new(TimeSystem.Time.CreateTDB(61473664.183390938), TimeSystem.Time.CreateTDB(61646464.183445148));
+    private static Window Eclipse2001Window => new(TimeSystem.Time.CreateTdb(61473664.183390938), TimeSystem.Time.CreateTdb(61646464.183445148));
 
     /// <summary>The largest difference between the edges of two lists of windows, in seconds; they must pair.</summary>
     private static double WorstEdge(IReadOnlyList<Window> actual, IReadOnlyList<Window> expected)
@@ -109,8 +109,8 @@ public class OccultationSearchValidationTests
         double worst = 0.0;
         for (int i = 0; i < reference.Length; i++)
         {
-            worst = System.Math.Max(worst, System.Math.Abs(actual[i].StartDate.ToTDB().TimeSpanFromJ2000().TotalSeconds - reference[i][0]));
-            worst = System.Math.Max(worst, System.Math.Abs(actual[i].EndDate.ToTDB().TimeSpanFromJ2000().TotalSeconds - reference[i][1]));
+            worst = System.Math.Max(worst, System.Math.Abs(actual[i].StartDate.ToTdb().TimeSpanFromJ2000().TotalSeconds - reference[i][0]));
+            worst = System.Math.Max(worst, System.Math.Abs(actual[i].EndDate.ToTdb().TimeSpanFromJ2000().TotalSeconds - reference[i][1]));
         }
 
         return worst;
@@ -121,9 +121,9 @@ public class OccultationSearchValidationTests
     private static string CspiceName(Aberration aberration) => aberration switch
     {
         Aberration.None => "NONE",
-        Aberration.LT or Aberration.LTS => "LT",
-        Aberration.CN or Aberration.CNS => "CN",
-        Aberration.XLT or Aberration.XLTS => "XLT",
+        Aberration.LT or Aberration.LtS => "LT",
+        Aberration.CN or Aberration.CnS => "CN",
+        Aberration.XLT or Aberration.XltS => "XLT",
         _ => "XCN"
     };
 
@@ -151,7 +151,7 @@ public class OccultationSearchValidationTests
         }
 
         double worstReference = WorstEdge(Search(FineTolerance), reference);
-        var gfoclt = SpiceAPI.Instance.FindWindowsOnOccultationConstraint(window, observer.NaifId, target.NaifId, ShapeType.Ellipsoid, front.NaifId, ShapeType.Ellipsoid,
+        var gfoclt = SpiceApi.Instance.FindWindowsOnOccultationConstraint(window, observer.NaifId, target.NaifId, ShapeType.Ellipsoid, front.NaifId, ShapeType.Ellipsoid,
             type, aberration, gfocltStep, frontFrame, null).ToArray();
         double worstGfoclt = WorstEdge(Search(OccultationSearchOptions.DefaultConvergenceTolerance), gfoclt);
         _output.WriteLine($"MEASURE #277 {scenario}, {type}, {aberration}, {referenceFrame}, step {step.TotalSeconds} s, {count} windows: " +
@@ -165,7 +165,7 @@ public class OccultationSearchValidationTests
         string frontFrame, int count)
     {
         var spacecraft = new Spacecraft(naifId, scenario, epoch: window.StartDate);
-        Compare(scenario, frontFrame, window, spacecraft, new CelestialBody(Stars.Sun), new CelestialBody(PlanetsAndMoons.EARTH), type, aberration, step, gfocltStep,
+        Compare(scenario, frontFrame, window, spacecraft, new CelestialBody(Stars.Sun), new CelestialBody(PlanetsAndMoons.Earth), type, aberration, step, gfocltStep,
             new Frames.Frame(frontFrame), count);
     }
 
@@ -184,7 +184,7 @@ public class OccultationSearchValidationTests
     [InlineData(Aberration.CN)]
     [InlineData(Aberration.XLT)]
     [InlineData(Aberration.XCN)]
-    [InlineData(Aberration.LTS)]
+    [InlineData(Aberration.LtS)]
     public void Eclipse001_LightTime_MatchesCspice(Aberration aberration)
     {
         // LT+S is LT: gfoclt ignores the stellar aberration, and so does the managed search
@@ -228,7 +228,7 @@ public class OccultationSearchValidationTests
     {
         // The Moon hides the Sun from LRO once per orbit (about 2 h); the Moon of pck00011 is a sphere
         var lro = new Spacecraft(-85, "LRO", epoch: LroWindow.StartDate);
-        Compare("lro", "IAU_MOON", LroWindow, lro, new CelestialBody(Stars.Sun), new CelestialBody(PlanetsAndMoons.MOON), type, Aberration.None,
+        Compare("lro", "IAU_MOON", LroWindow, lro, new CelestialBody(Stars.Sun), new CelestialBody(PlanetsAndMoons.Moon), type, Aberration.None,
             TimeSpan.FromSeconds(600.0), TimeSpan.FromSeconds(1.0), null, count);
     }
 
@@ -280,7 +280,7 @@ public class OccultationSearchValidationTests
 
     private static Spacecraft PropagatedEclipse001(int naifId, TimeSpan outputStep)
     {
-        var earth = new CelestialBody(PlanetsAndMoons.EARTH, Frames.Frame.ICRF, Eclipse001Window.StartDate);
+        var earth = new CelestialBody(PlanetsAndMoons.Earth, Frames.Frame.ICRF, Eclipse001Window.StartDate);
         var orbit = new KeplerianElements(7000000.0, 0.001, 28.5 * IO.Astrodynamics.Constants.Deg2Rad, 45.0 * IO.Astrodynamics.Constants.Deg2Rad, 0.0, 0.0, earth,
             Eclipse001Window.StartDate, Frames.Frame.ICRF);
         var spacecraft = new Spacecraft(naifId, "Eclipse001", 100.0, orbit, 1000.0, new Clock("Eclipse001Clk", 65536));
@@ -296,16 +296,16 @@ public class OccultationSearchValidationTests
         // from the epoch of the elements, 3.2e-4 s after 12 h; GMAT's epochs are rounded to the millisecond
         var spacecraft = PropagatedEclipse001(-470101, TimeSpan.FromSeconds(10.0));
         var kernelSpacecraft = new Spacecraft(-470001, "eclipse_001", epoch: Eclipse001Window.StartDate);
-        var earth = new CelestialBody(PlanetsAndMoons.EARTH);
+        var earth = new CelestialBody(PlanetsAndMoons.Earth);
         var sun = new CelestialBody(Stars.Sun);
         var options = new OccultationSearchOptions { FrontFrame = IauEarth };
         var started = DateTime.UtcNow;
         var any = spacecraft.FindOccultationWindows(Eclipse001Window, sun, earth, options with { Step = TimeSpan.FromSeconds(60.0), TargetShape = ShapeType.Ellipsoid, FrontShape = ShapeType.Ellipsoid }).ToArray();
         var elapsed = DateTime.UtcNow - started;
         var full = spacecraft.FindOccultationWindows(Eclipse001Window, sun, earth, options with { Step = TimeSpan.FromSeconds(60.0), TargetShape = ShapeType.Ellipsoid, FrontShape = ShapeType.Ellipsoid, OccultationType = OccultationType.Full }).ToArray();
-        var gfocltAny = SpiceAPI.Instance.FindWindowsOnOccultationConstraint(Eclipse001Window, kernelSpacecraft.NaifId, sun.NaifId, ShapeType.Ellipsoid, earth.NaifId,
+        var gfocltAny = SpiceApi.Instance.FindWindowsOnOccultationConstraint(Eclipse001Window, kernelSpacecraft.NaifId, sun.NaifId, ShapeType.Ellipsoid, earth.NaifId,
             ShapeType.Ellipsoid, OccultationType.Any, Aberration.None, TimeSpan.FromSeconds(1.0), IauEarth, null).ToArray();
-        var gfocltFull = SpiceAPI.Instance.FindWindowsOnOccultationConstraint(Eclipse001Window, kernelSpacecraft.NaifId, sun.NaifId, ShapeType.Ellipsoid, earth.NaifId,
+        var gfocltFull = SpiceApi.Instance.FindWindowsOnOccultationConstraint(Eclipse001Window, kernelSpacecraft.NaifId, sun.NaifId, ShapeType.Ellipsoid, earth.NaifId,
             ShapeType.Ellipsoid, OccultationType.Full, Aberration.None, TimeSpan.FromSeconds(1.0), IauEarth, null).ToArray();
 
         double worstAny = WorstEdge(any, gfocltAny);
@@ -338,7 +338,7 @@ public class OccultationSearchValidationTests
     {
         // Searches on separate propagations, and on kernel trajectories, in parallel: the managed search keeps no state,
         // so each gives, to the tick, what it gives alone
-        var earth = new CelestialBody(PlanetsAndMoons.EARTH);
+        var earth = new CelestialBody(PlanetsAndMoons.Earth);
         var sun = new CelestialBody(Stars.Sun);
         var spacecraft = Enumerable.Range(0, 4).Select(i => (ILocalizable)PropagatedEclipse001(-470110 - i, TimeSpan.FromSeconds(10.0)))
             .Concat([new Spacecraft(-470001, "eclipse_001", epoch: Eclipse001Window.StartDate), new Spacecraft(-470003, "leo_grazing", epoch: LeoGrazingWindow.StartDate)])

@@ -271,7 +271,7 @@ namespace IO.Astrodynamics.Body.Spacecraft
         /// the cone of the field underflow at the target's distance, or a point target at the observer, for any shape
         /// (distance 0: it has no direction) (#715; before 11.0.0 an unrelated <see cref="ArgumentException"/> for both for a
         /// circle or an ellipse, and for a rectangle the target in view, #721), or the instrument's spacecraft is managed and has no attitude (its attitude record is empty:
-        /// never propagated and no orientation added with <see cref="SpacecraftFrame.AddStateOrientationToICRF"/>, built from
+        /// never propagated and no orientation added with <see cref="SpacecraftFrame.AddStateOrientationToIcrf"/>, built from
         /// a TLE, or propagated by the TLE propagator; before 11.0.0 the identity of ICRF was searched, #682), or the observer
         /// is inside the ellipsoid of the target (at its center included, an unrelated <see cref="ArgumentException"/> before
         /// 11.0.0 for a circle or an ellipse); or, on the path of CSPICE's <c>gftfov_c</c>, SPICE cannot run the search (no
@@ -298,7 +298,7 @@ namespace IO.Astrodynamics.Body.Spacecraft
                 WindowSearchSettings.RejectToleranceOnCspice(options.ConvergenceTolerance, nameof(FieldOfViewSearchOptions), "gftfov_c");
                 FieldOfViewSearch.Check(this, window, target, shape, step);
                 return WindowSearchSettings.InScaleOf(
-                    SpiceAPI.Instance.FindWindowsInFieldOfViewConstraint(window, Spacecraft.NaifId, NaifId, target.NaifId, frame, shape, aberration, step), window);
+                    SpiceApi.Instance.FindWindowsInFieldOfViewConstraint(window, Spacecraft.NaifId, NaifId, target.NaifId, frame, shape, aberration, step), window);
             }
             catch (ArgumentException e) when (e.ParamName == "targetFrame")
             {
@@ -337,14 +337,14 @@ namespace IO.Astrodynamics.Body.Spacecraft
             return (Quaternion.FromAxisAngle(Vector3.VectorX, -orientation.X) * Quaternion.FromAxisAngle(Vector3.VectorY, -orientation.Y) * Quaternion.FromAxisAngle(Vector3.VectorZ, -orientation.Z)).NormalizeOrZero();
         }
 
-        public Vector3 GetBoresightInICRFFrame(in Time date)
+        public Vector3 GetBoresightInIcrfFrame(in Time epoch)
         {
-            return Boresight.Rotate(RotationToICRF(date));
+            return Boresight.Rotate(RotationToICRF(epoch));
         }
 
-        public Vector3 GetRefVectorInICRFFrame(in Time date)
+        public Vector3 GetRefVectorInIcrfFrame(in Time epoch)
         {
-            return RefVector.Rotate(RotationToICRF(date));
+            return RefVector.Rotate(RotationToICRF(epoch));
         }
 
         /// <summary>
@@ -359,7 +359,7 @@ namespace IO.Astrodynamics.Body.Spacecraft
 
         private Quaternion RotationToICRF(in Time date)
         {
-            return Spacecraft.Frame.GetStateOrientationToICRF(date).Rotation * RotationToSpacecraft;
+            return Spacecraft.Frame.GetStateOrientationToIcrf(date).Rotation * RotationToSpacecraft;
         }
 
         /// <summary>
@@ -394,7 +394,7 @@ namespace IO.Astrodynamics.Body.Spacecraft
                 .Replace("{x}", Orientation.X.ToString(CultureInfo.InvariantCulture))
                 .Replace("{y}", Orientation.Y.ToString(CultureInfo.InvariantCulture))
                 .Replace("{z}", Orientation.Z.ToString(CultureInfo.InvariantCulture));
-            SpiceAPI.Instance.WriteTextKernel(outputFile, data);
+            SpiceApi.Instance.WriteTextKernel(outputFile, data);
         }
 
         /// <summary>
@@ -403,7 +403,7 @@ namespace IO.Astrodynamics.Body.Spacecraft
         /// same field, the same corrections ("+S" included) and a <see cref="Star"/> read as a direction. The search does not
         /// call this method.
         /// </summary>
-        /// <param name="date">The epoch.</param>
+        /// <param name="epoch">The epoch.</param>
         /// <param name="target">The target.</param>
         /// <param name="aberration">The aberration correction.</param>
         /// <exception cref="ArgumentException">The target is the instrument's spacecraft.</exception>
@@ -412,9 +412,9 @@ namespace IO.Astrodynamics.Body.Spacecraft
         /// (distance 0: it has no direction; #715 and #721, before 11.0.0 an unrelated <see cref="ArgumentException"/> for a
         /// circle or an ellipse and <c>true</c> for a rectangle), or the spacecraft is managed and has no attitude (#682;
         /// before 11.0.0 the identity of ICRF was used).</exception>
-        public virtual bool IsInFOV(Time date, ILocalizable target, Aberration aberration)
+        public virtual bool IsInFov(Time epoch, ILocalizable target, Aberration aberration)
         {
-            return new FieldOfViewEvaluator(this, target, ShapeType.Point, null, aberration).Margin(date) >= 0.0;
+            return new FieldOfViewEvaluator(this, target, ShapeType.Point, null, aberration).Margin(epoch) >= 0.0;
         }
 
         /// <summary>

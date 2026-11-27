@@ -135,6 +135,6 @@ public sealed class SuiteDataFileTests : IDisposable
         Assert.Contains("git lfs pull", result.Message);
         Assert.Equal(1, report.Summary.Errors);
         Assert.Equal(0, report.Summary.Failed);
-        Assert.DoesNotContain(SpiceAPI.Instance.GetLoadedKernels(), k => k.FullName == new FileInfo(kernel).FullName);
+        Assert.DoesNotContain(SpiceApi.Instance.GetLoadedKernels(), k => k.FullName == new FileInfo(kernel).FullName);
     }
 }

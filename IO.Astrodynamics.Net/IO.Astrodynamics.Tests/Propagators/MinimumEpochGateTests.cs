@@ -363,7 +363,7 @@ public class MinimumEpochGateTests
             bool zero = gGate == 0.0 && !(gate < segment.BaseEpoch);
             foreach (var step in segment.Steps)
             {
-                double end = step.CumulativeTime + step.StepSize;
+                double end = step.CumulativeTime + step.StepSizeSeconds;
                 if (end <= tGate) continue;
                 var epoch = run.Solution.TimeArgument.EpochAt(segment.BaseEpoch, end);
                 double g = G(epoch, step.EndPosition, step.EndVelocity);
@@ -418,7 +418,7 @@ public class MinimumEpochGateTests
         bool nearTc = false;
         foreach (var step in segment.Steps)
         {
-            double t0 = step.CumulativeTime, t1 = t0 + step.StepSize;
+            double t0 = step.CumulativeTime, t1 = t0 + step.StepSizeSeconds;
             double G(double t)
             {
                 var (p, v) = PropagationSegment.HermiteInterpolate(step, t);
@@ -428,7 +428,7 @@ public class MinimumEpochGateTests
             foreach (double center in double.IsNaN(period) ? [tc] : new[] { tc - period, tc, tc + period })
             {
                 double c = center - origin;
-                if (t1 < c - step.StepSize - 1.0 || t0 > c + step.StepSize + 1.0) continue;
+                if (t1 < c - step.StepSizeSeconds - 1.0 || t0 > c + step.StepSizeSeconds + 1.0) continue;
                 double lo = t0, hi = t1, gLo = G(lo), gHi = G(hi);
                 bool crossing = gLo * gHi < 0.0 && direction switch
                 {
@@ -502,7 +502,7 @@ public class MinimumEpochGateTests
         public OrbitalParams InitialIcrf { get; private init; }
 
         /// <summary>The seconds of the reference from S: TT about the Earth, TDB about the Moon.</summary>
-        public double Seconds(Time t) => Case.Moon ? (t.ToTDB() - S).TotalSeconds : Tt(t);
+        public double Seconds(Time t) => Case.Moon ? (t.ToTdb() - S).TotalSeconds : Tt(t);
 
         /// <summary>The minimum epoch of the k-th executed impulse, as the library set it.</summary>
         public Time Gate(int k) => Executed[k].MinEpoch;
@@ -544,20 +544,20 @@ public class MinimumEpochGateTests
             var parts = key.Split('|');
             string integrator = parts[1], path = parts[2], frameName = parts[3];
             var @case = Cases(parts[0]);
-            var earth = new CelestialBody(PlanetsAndMoons.EARTH, Frame.ICRF, S);
-            var center = @case.Moon ? new CelestialBody(PlanetsAndMoons.MOON, Frame.ICRF, S) : earth;
+            var earth = new CelestialBody(PlanetsAndMoons.Earth, Frame.ICRF, S);
+            var center = @case.Moon ? new CelestialBody(PlanetsAndMoons.Moon, Frame.ICRF, S) : earth;
             var orbitIcrf = @case.Orbit(center);
             OrbitalParams orbit = orbitIcrf;
             CelestialItem[] bodies = [center];
             if (frameName == "ECLIPJ2000")
             {
-                orbit = orbitIcrf.ToStateVector().ToFrame(Frame.ECLIPTIC_J2000).ToStateVector();
+                orbit = orbitIcrf.ToStateVector().ToFrame(Frame.ECLIPJ2000).ToStateVector();
             }
             else if (frameName == "SSB")
             {
                 var sv = orbitIcrf.ToStateVector();
-                var fromSsb = center.GetGeometricStateRelativeTo(S, Barycenters.SOLAR_SYSTEM_BARYCENTER);
-                orbit = new StateVector(fromSsb.Position + sv.Position, fromSsb.Velocity + sv.Velocity, Barycenters.SOLAR_SYSTEM_BARYCENTER, S, Frame.ICRF);
+                var fromSsb = center.GetGeometricStateRelativeTo(S, Barycenters.SolarSystemBarycenter);
+                orbit = new StateVector(fromSsb.Position + sv.Position, fromSsb.Velocity + sv.Velocity, Barycenters.SolarSystemBarycenter, S, Frame.ICRF);
                 bodies = [center, new CelestialBody(Stars.Sun, Frame.ICRF, S)];
             }
 
@@ -665,7 +665,7 @@ public class MinimumEpochGateTests
     {
         var group = name[..name.IndexOf('/')];
         var item = name[(name.IndexOf('/') + 1)..];
-        var earthTemplate = new CelestialBody(PlanetsAndMoons.EARTH, Frame.ICRF, S);
+        var earthTemplate = new CelestialBody(PlanetsAndMoons.Earth, Frame.ICRF, S);
         double T = Period(earthTemplate, Orbit(earthTemplate, System.Math.PI));
         double T2 = T / 2.0;
 
@@ -994,14 +994,14 @@ public class MinimumEpochGateTests
         };
         var solution = spacecraft.Propagate(new Window(S, S.AddSeconds(4.0 * 3600.0)), new PropagationOptions { Integrator = propagator, OutputStep = TimeSpan.FromSeconds(10.0), ThirdBodies = [center], CovariancePropagation = CovariancePropagationOptions.None });
         double perigee = ClosedFormOf(center, orbit).T / 2.0;
-        var step = solution.Segments[0].Steps.First(x => x.CumulativeTime + x.StepSize >= perigee);
+        var step = solution.Segments[0].Steps.First(x => x.CumulativeTime + x.StepSizeSeconds >= perigee);
         var start = PropagationTimeArgument.Tt.EpochAt(S, step.CumulativeTime);
         return edge switch
         {
             "step-start" => start,
             "step-start+1tick" => start.Add(TimeSpan.FromTicks(1)),
             "prev-step-end-1tick" => start.Add(TimeSpan.FromTicks(-1)),
-            "step-end" => PropagationTimeArgument.Tt.EpochAt(S, step.CumulativeTime + step.StepSize),
+            "step-end" => PropagationTimeArgument.Tt.EpochAt(S, step.CumulativeTime + step.StepSizeSeconds),
             _ => throw new ArgumentException(edge)
         };
     }

@@ -186,8 +186,8 @@ public class CelestialBody : CelestialItem, IOrientable<Frame>
     /// <param name="thermalEffectiveTemperature">The effective radiative temperature in K (<see cref="ThermalEffectiveTemperature"/>), 0 when not configured.</param>
     /// <param name="thermalEmissivity">The thermal emissivity, 0 to 1 (<see cref="ThermalEmissivity"/>), 0 when not configured.</param>
     public CelestialBody(int naifId, GeopotentialModelParameters geopotentialModelParameters = null, IAtmosphericModel atmosphericModel = null, double albedo = 0.0,
-        double thermalEffectiveTemperature = 0.0, double thermalEmissivity = 0.0) : this(naifId, Frame.ECLIPTIC_J2000,
-        TimeSystem.Time.J2000TDB, geopotentialModelParameters, atmosphericModel, albedo, thermalEffectiveTemperature, thermalEmissivity)
+        double thermalEffectiveTemperature = 0.0, double thermalEmissivity = 0.0) : this(naifId, Frame.ECLIPJ2000,
+        TimeSystem.Time.J2000Tdb, geopotentialModelParameters, atmosphericModel, albedo, thermalEffectiveTemperature, thermalEmissivity)
     {
     }
 
@@ -279,7 +279,7 @@ public class CelestialBody : CelestialItem, IOrientable<Frame>
     /// (information, GM, radii, J2 to J4, frame, orbit and sphere of influence) are read at the first read of a member
     /// that needs them, retried on failure (see <see cref="CelestialItem.Mass"/>).
     /// </summary>
-    internal static CelestialBody CreateDeferred(NaifObject naifObject) => CreateDeferred(naifObject, Frame.ECLIPTIC_J2000, TimeSystem.Time.J2000TDB);
+    internal static CelestialBody CreateDeferred(NaifObject naifObject) => CreateDeferred(naifObject, Frame.ECLIPJ2000, TimeSystem.Time.J2000Tdb);
 
     /// <summary>
     /// A body whose provider data are read at the first read of a member that needs them, as a static object's, its orbit
@@ -364,8 +364,8 @@ public class CelestialBody : CelestialItem, IOrientable<Frame>
             return double.PositiveInfinity;
         }
 
-        var mainBody = new CelestialBody(information.CenterOfMotionId, Frame.ECLIPTIC_J2000, orbit.Epoch);
-        var a = this.GetEphemeris(orbit.Epoch, mainBody, Frame.ECLIPTIC_J2000, Aberration.None).SemiMajorAxis();
+        var mainBody = new CelestialBody(information.CenterOfMotionId, Frame.ECLIPJ2000, orbit.Epoch);
+        var a = this.GetEphemeris(orbit.Epoch, mainBody, Frame.ECLIPJ2000, Aberration.None).SemiMajorAxis();
         return SphereOfInluence(a, mass, mainBody.Mass);
     }
 
@@ -404,14 +404,14 @@ public class CelestialBody : CelestialItem, IOrientable<Frame>
     /// relative to ICRF, to the nearest tick (100 ns), ties to even (#637, decided by S. Guillet, 2026-11-17; truncated to
     /// the tick below before 11.0.0).
     /// </summary>
-    public TimeSpan SideralRotationPeriod(Time epoch)
+    public TimeSpan SiderealRotationPeriod(Time epoch)
     {
         return Time.SecondsToSpan(SideralRotationSeconds(epoch));
     }
 
     /// <summary>
     /// The sidereal rotation period of the body at <paramref name="epoch"/> in seconds, 2π / |ω|, before its rounding to a
-    /// tick: the value <see cref="SideralRotationPeriod"/> rounds, and whose half (exact in binary) the launch windows add
+    /// tick: the value <see cref="SiderealRotationPeriod"/> rounds, and whose half (exact in binary) the launch windows add
     /// before they round their offset (#637).
     /// </summary>
     internal double SideralRotationSeconds(Time epoch)
@@ -421,7 +421,7 @@ public class CelestialBody : CelestialItem, IOrientable<Frame>
 
     public double AngularVelocity(Time epoch)
     {
-        var siderealRotationPeriod = SideralRotationPeriod(epoch);
+        var siderealRotationPeriod = SiderealRotationPeriod(epoch);
         return (2.0 * Constants.PI) / siderealRotationPeriod.TotalSeconds;
     }
 
@@ -431,7 +431,7 @@ public class CelestialBody : CelestialItem, IOrientable<Frame>
     /// an inclined geosynchronous orbit tracing a figure-eight ground track. The specified (longitude, latitude)
     /// is the sub-satellite point only at the given epoch.
     /// The period of the orbit is the sidereal rotation period of the body frame at the epoch,
-    /// <see cref="SideralRotationPeriod"/>, which depends on the orientation data loaded (for the Earth, the binary PCK
+    /// <see cref="SiderealRotationPeriod"/>, which depends on the orientation data loaded (for the Earth, the binary PCK
     /// of ITRF93); <see cref="GeosynchronousOrbit(double, double, Time, TimeSpan)"/> takes a declared period instead.
     /// </summary>
     /// <param name="longitude">Planetocentric longitude in radians, in range [-π, π].</param>
@@ -442,7 +442,7 @@ public class CelestialBody : CelestialItem, IOrientable<Frame>
     public KeplerianElements GeosynchronousOrbit(double longitude, double latitude, Time epoch)
     {
         CheckGeosynchronousPoint(longitude, latitude);
-        return GeosynchronousOrbitOfPeriod(longitude, latitude, epoch, SideralRotationPeriod(epoch));
+        return GeosynchronousOrbitOfPeriod(longitude, latitude, epoch, SiderealRotationPeriod(epoch));
     }
 
     /// <summary>
@@ -499,13 +499,13 @@ public class CelestialBody : CelestialItem, IOrientable<Frame>
     /// </summary>
     /// <param name="semiMajorAxis">The semi-major axis of the orbit.</param>
     /// <param name="eccentricity">The eccentricity of the orbit.</param>
-    /// <param name="epochAtDescendingNode">The epoch at the descending node.</param>
+    /// <param name="descendingNodeEpoch">The epoch at the descending node.</param>
     /// <returns>The Keplerian elements for the heliosynchronous orbit.</returns>
     /// <exception cref="System.ArgumentException">Thrown when
     /// the orbit perigee is lower than the equatorial radius.</exception>
-    public KeplerianElements HelioSynchronousOrbit(double semiMajorAxis, double eccentricity, Time epochAtDescendingNode)
+    public KeplerianElements SunSynchronousOrbit(double semiMajorAxis, double eccentricity, Time descendingNodeEpoch)
     {
-        CelestialBody sun = Stars.SUN_BODY;
+        CelestialBody sun = Stars.SunBody;
         double p = semiMajorAxis * (1 - eccentricity);
         if (p < EquatorialRadius)
         {
@@ -517,11 +517,11 @@ public class CelestialBody : CelestialItem, IOrientable<Frame>
         double e22 = (1 - e2) * (1 - e2);
         double sqrtGM = System.Math.Sqrt(GM);
         double re2 = EquatorialRadius * EquatorialRadius;
-        var ephemeris = GetEphemeris(epochAtDescendingNode, sun, Frame.ICRF, Aberration.LT);
+        var ephemeris = GetEphemeris(descendingNodeEpoch, sun, Frame.ICRF, Aberration.LT);
         double i = System.Math.Acos((2.0 * a72 * e22 * ephemeris.MeanMotion()) / (3.0 * sqrtGM * -J2 * re2));
 
         var sunVector = ephemeris.ToStateVector().Position.Inverse();
-        Math.Plane sunPlane = new Math.Plane(Vector3.VectorZ.Rotate(Frame.ToFrame(Frame.ICRF, epochAtDescendingNode).Rotation).Cross(sunVector), 0.0);
+        Math.Plane sunPlane = new Math.Plane(Vector3.VectorZ.Rotate(Frame.ToFrame(Frame.ICRF, descendingNodeEpoch).Rotation).Cross(sunVector), 0.0);
         double raanLongitude = sunPlane.GetAngle(Vector3.VectorY);
 
         if (sunVector.Y > 0.0)
@@ -540,7 +540,7 @@ public class CelestialBody : CelestialItem, IOrientable<Frame>
         double m = OrbitalParameters.OrbitalParameters.TrueAnomalyToMeanAnomaly(trueAnomaly, eccentricity,
             OrbitalParameters.OrbitalParameters.EllipticAnomaly(trueAnomaly, eccentricity));
 
-        return new KeplerianElements(semiMajorAxis, eccentricity, i, raanLongitude, Constants.PI + Constants.HalfPi, m, this, epochAtDescendingNode, Frame.ICRF);
+        return new KeplerianElements(semiMajorAxis, eccentricity, i, raanLongitude, Constants.PI + Constants.HalfPi, m, this, descendingNodeEpoch, Frame.ICRF);
     }
 
     /// <summary>
@@ -563,10 +563,10 @@ public class CelestialBody : CelestialItem, IOrientable<Frame>
             throw new InvalidOperationException("At this time, the computation of true solar day works only with planets");
         }
 
-        CelestialBody sun = Stars.SUN_BODY;
-        var sideralRotation = SideralRotationPeriod(epoch);
-        var eph0 = this.GetEphemeris(epoch, sun, Frame.ECLIPTIC_J2000, Aberration.LT).Position;
-        var eph1 = this.GetEphemeris(epoch + sideralRotation, sun, Frame.ECLIPTIC_J2000, Aberration.LT).Position;
+        CelestialBody sun = Stars.SunBody;
+        var sideralRotation = SiderealRotationPeriod(epoch);
+        var eph0 = this.GetEphemeris(epoch, sun, Frame.ECLIPJ2000, Aberration.LT).Position;
+        var eph1 = this.GetEphemeris(epoch + sideralRotation, sun, Frame.ECLIPJ2000, Aberration.LT).Position;
         var angle = eph0.Angle(eph1);
         return sideralRotation + Time.SecondsToSpan(angle / GetOrientation(Frame.ICRF, epoch).AngularVelocity.Magnitude());
     }
@@ -576,15 +576,15 @@ public class CelestialBody : CelestialItem, IOrientable<Frame>
     /// orbit
     /// </summary>
     /// <param name="eccentricity">The eccentricity of the orbit</param>
-    /// <param name="epochAtDescendingNode">The epoch at the descending node</param>
+    /// <param name="descendingNodeEpoch">The epoch at the descending node</param>
     /// <param name="nbOrbitPerDay">The number of orbits per day</param>
     /// <returns>The calculated Keplerian elements</returns>
-    public KeplerianElements HelioSynchronousOrbit(double eccentricity, Time epochAtDescendingNode, int nbOrbitPerDay)
+    public KeplerianElements SunSynchronousOrbit(double eccentricity, Time descendingNodeEpoch, int nbOrbitPerDay)
     {
-        var trueSolarDay = TrueSolarDay(epochAtDescendingNode);
+        var trueSolarDay = TrueSolarDay(descendingNodeEpoch);
         double t = trueSolarDay.TotalSeconds / nbOrbitPerDay;
         double a = System.Math.Cbrt(((t * t) * GM) / (4 * Constants.PI * Constants.PI));
-        return HelioSynchronousOrbit(a, eccentricity, epochAtDescendingNode);
+        return SunSynchronousOrbit(a, eccentricity, descendingNodeEpoch);
     }
 
 

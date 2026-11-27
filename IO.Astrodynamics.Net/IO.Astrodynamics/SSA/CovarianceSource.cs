@@ -1,6 +1,6 @@
 // Copyright 2026. Sylvain Guillet (sylvain.guillet@tutamail.com)
 
-namespace IO.Astrodynamics.SSA;
+namespace IO.Astrodynamics.Ssa;
 
 /// <summary>
 /// Where the covariance of one participant at the encounter epoch comes from, in the order the conjunction analysis

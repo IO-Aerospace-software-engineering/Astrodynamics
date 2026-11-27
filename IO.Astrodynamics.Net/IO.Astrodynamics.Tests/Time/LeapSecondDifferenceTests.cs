@@ -55,10 +55,10 @@ public class LeapSecondDifferenceTests
     public void TheDifference_IsTheSameInEveryFrameThatCountsTheElapsedSeconds()
     {
         // TAI, TT and GPS are uniform, and the instants differ by whole ticks in them: the same 121 s, exactly
-        Assert.Equal(AfterLeap.ToTAI() - BeforeLeap.ToTAI(), AfterLeap - BeforeLeap);
+        Assert.Equal(AfterLeap.ToTai() - BeforeLeap.ToTai(), AfterLeap - BeforeLeap);
         Assert.Equal(AfterLeap.ToTT() - BeforeLeap.ToTT(), AfterLeap - BeforeLeap);
-        Assert.Equal(AfterLeap.ToGPS() - BeforeLeap.ToGPS(), AfterLeap - BeforeLeap);
-        Assert.Equal(AfterLeap.ToTAI() - BeforeLeap, AfterLeap - BeforeLeap);
+        Assert.Equal(AfterLeap.ToGps() - BeforeLeap.ToGps(), AfterLeap - BeforeLeap);
+        Assert.Equal(AfterLeap.ToTai() - BeforeLeap, AfterLeap - BeforeLeap);
     }
 
     [Fact]
@@ -76,7 +76,7 @@ public class LeapSecondDifferenceTests
     {
         // The leap seconds of the reference of the elapsed-time tests, against the kernel's through the framework
         Assert.Equal(DynamicalTimeReference.TaiMinusUtc(AfterLeap.DateTime) - DynamicalTimeReference.TaiMinusUtc(BeforeLeap.DateTime),
-            (AfterLeap.ToTAI().DateTime - AfterLeap.DateTime - (BeforeLeap.ToTAI().DateTime - BeforeLeap.DateTime)).TotalSeconds);
+            (AfterLeap.ToTai().DateTime - AfterLeap.DateTime - (BeforeLeap.ToTai().DateTime - BeforeLeap.DateTime)).TotalSeconds);
         Assert.Equal(121.0, DynamicalTimeReference.TtSecondsBetween(BeforeLeap, AfterLeap));
     }
 }

@@ -39,9 +39,9 @@ internal static class FrameMemoryChild
 
     internal static int Run(string kernels)
     {
-        SpiceAPI.Instance.LoadKernels(new DirectoryInfo(kernels));
+        SpiceApi.Instance.LoadKernels(new DirectoryInfo(kernels));
         var start = new Time(2024, 3, 1, 12, 0, 0, TimeScale.TDB);
-        var earth = new CelestialBody(PlanetsAndMoons.EARTH);
+        var earth = new CelestialBody(PlanetsAndMoons.Earth);
         var site = new Site(13, "FRAMEMEMORY", earth, new Planetodetic(-116.79 * Constants.Deg2Rad, 35.25 * Constants.Deg2Rad, 1070.0));
 
         var frames = new (string Label, Frame Frame, int Reads)[]
@@ -57,7 +57,7 @@ internal static class FrameMemoryChild
         // Warm-up: each path once, at an epoch the measured reads do not use
         foreach (var (_, frame, _) in frames)
         {
-            frame.GetStateOrientationToICRF(start.AddSeconds(-1.0));
+            frame.GetStateOrientationToIcrf(start.AddSeconds(-1.0));
         }
 
         int exitCode = 0;
@@ -67,7 +67,7 @@ internal static class FrameMemoryChild
             var sum = Vector3.Zero;
             for (int i = 0; i < reads; i++)
             {
-                sum += frame.GetStateOrientationToICRF(start.AddSeconds(0.5 * i)).AngularVelocity;
+                sum += frame.GetStateOrientationToIcrf(start.AddSeconds(0.5 * i)).AngularVelocity;
             }
 
             long retained = GC.GetTotalMemory(true) - before;

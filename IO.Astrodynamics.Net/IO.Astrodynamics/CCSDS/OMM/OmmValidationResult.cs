@@ -3,7 +3,7 @@
 using System.Collections.Generic;
 using System.Linq;
 
-namespace IO.Astrodynamics.CCSDS.OMM;
+namespace IO.Astrodynamics.Ccsds;
 
 /// <summary>
 /// Represents the result of validating an OMM document.

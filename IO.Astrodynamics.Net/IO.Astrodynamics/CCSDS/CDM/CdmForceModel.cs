@@ -4,12 +4,11 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using IO.Astrodynamics.Atmosphere;
-using IO.Astrodynamics.Atmosphere.NRLMSISE_00;
 using IO.Astrodynamics.Body;
 using IO.Astrodynamics.Propagator.Forces;
 using IO.Astrodynamics.Propagator.Variational;
 
-namespace IO.Astrodynamics.CCSDS.CDM;
+namespace IO.Astrodynamics.Ccsds;
 
 /// <summary>
 /// The force model of an RK7(8) propagation in the words of the CDM metadata (CCSDS 508.0-B-1, §3.3:

@@ -100,7 +100,7 @@ public class RK78IntegratorTests
         // the ~0.2 mm floating-point error floor.
         // Duration is chosen to be exactly divisible by all three step sizes
         // to avoid partial-step artifacts.
-        var earth = new CelestialBody(PlanetsAndMoons.EARTH);
+        var earth = new CelestialBody(PlanetsAndMoons.Earth);
         double mu = earth.GM;
         double r0 = 7000000.0; // 7000 km
         double v0 = System.Math.Sqrt(mu / r0); // circular velocity
@@ -109,7 +109,7 @@ public class RK78IntegratorTests
         // 1600s is exactly divisible by 800, 400, 200
         double totalTime = 1600.0;
 
-        var epoch = TimeSystem.Time.J2000TDB;
+        var epoch = TimeSystem.Time.J2000Tdb;
         var initialState = new StateVector(
             new Vector3(r0, 0, 0), new Vector3(0, v0, 0),
             earth, epoch, Frames.Frame.ICRF);
@@ -125,7 +125,7 @@ public class RK78IntegratorTests
 
         for (int k = 0; k < 3; k++)
         {
-            var integrator = new RK78Integrator(fixedStepSize: stepSizes[k]);
+            var integrator = new RK78Integrator(fixedStepSizeSeconds: stepSizes[k]);
             integrator.AddForce(new GravitationalAcceleration(earth));
             integrator.Initialize(initialState);
 
@@ -158,20 +158,20 @@ public class RK78IntegratorTests
     public void AdaptiveTwoBodyCircularOrbitConservesEnergy()
     {
         // Circular orbit: propagate 10 orbits, check energy drift
-        var earth = new CelestialBody(PlanetsAndMoons.EARTH);
+        var earth = new CelestialBody(PlanetsAndMoons.Earth);
         double mu = earth.GM;
         double r0 = 7000000.0;
         double v0 = System.Math.Sqrt(mu / r0);
         double period = 2.0 * System.Math.PI * System.Math.Sqrt(r0 * r0 * r0 / mu);
         double totalTime = 10.0 * period;
-        var epoch = TimeSystem.Time.J2000TDB;
+        var epoch = TimeSystem.Time.J2000Tdb;
         var initialState = new StateVector(
             new Vector3(r0, 0, 0), new Vector3(0, v0, 0),
             earth, epoch, Frames.Frame.ICRF);
 
         var integrator = new RK78Integrator(
             absoluteTolerance: 1e-12, relativeTolerance: 1e-12,
-            initialStepSize: 30.0);
+            initialStepSizeSeconds: 30.0);
         integrator.AddForce(new GravitationalAcceleration(earth));
         integrator.Initialize(initialState);
 
@@ -207,7 +207,7 @@ public class RK78IntegratorTests
     public void AdaptiveEllipticalOrbitReturnsToStartAfterOnePeriod()
     {
         // Elliptical orbit (e=0.5): propagate 1 full period, final state should match initial
-        var earth = new CelestialBody(PlanetsAndMoons.EARTH);
+        var earth = new CelestialBody(PlanetsAndMoons.Earth);
         double mu = earth.GM;
         double a = 10000000.0; // 10,000 km semi-major axis
         double e = 0.5;
@@ -215,14 +215,14 @@ public class RK78IntegratorTests
         double vPeri = System.Math.Sqrt(mu * (2.0 / rPeri - 1.0 / a));
         double period = 2.0 * System.Math.PI * System.Math.Sqrt(a * a * a / mu);
 
-        var epoch = TimeSystem.Time.J2000TDB;
+        var epoch = TimeSystem.Time.J2000Tdb;
         var initialState = new StateVector(
             new Vector3(rPeri, 0, 0), new Vector3(0, vPeri, 0),
             earth, epoch, Frames.Frame.ICRF);
 
         var integrator = new RK78Integrator(
             absoluteTolerance: 1e-12, relativeTolerance: 1e-12,
-            initialStepSize: 30.0);
+            initialStepSizeSeconds: 30.0);
         integrator.AddForce(new GravitationalAcceleration(earth));
         integrator.Initialize(initialState);
 
@@ -249,20 +249,20 @@ public class RK78IntegratorTests
     public void FixedModeProducesReproducibleResults()
     {
         // Run the same problem twice in fixed mode, verify identical results
-        var earth = new CelestialBody(PlanetsAndMoons.EARTH);
+        var earth = new CelestialBody(PlanetsAndMoons.Earth);
         double mu = earth.GM;
         double r0 = 7000000.0;
         double v0 = System.Math.Sqrt(mu / r0);
         double totalTime = 1000.0; // 100 steps * 10s
 
-        var epoch = TimeSystem.Time.J2000TDB;
+        var epoch = TimeSystem.Time.J2000Tdb;
         var initialState = new StateVector(
             new Vector3(r0, 0, 0), new Vector3(0, v0, 0),
             earth, epoch, Frames.Frame.ICRF);
 
         IntegrationResult RunOnce()
         {
-            var integrator = new RK78Integrator(fixedStepSize: 10.0);
+            var integrator = new RK78Integrator(fixedStepSizeSeconds: 10.0);
             integrator.AddForce(new GravitationalAcceleration(earth));
             integrator.Initialize(initialState);
 
@@ -297,20 +297,20 @@ public class RK78IntegratorTests
     public void HandlesSmallOutputStep()
     {
         // Output step smaller than default adaptive step: integrator should handle gracefully
-        var earth = new CelestialBody(PlanetsAndMoons.EARTH);
+        var earth = new CelestialBody(PlanetsAndMoons.Earth);
         double mu = earth.GM;
         double r0 = 7000000.0;
         double v0 = System.Math.Sqrt(mu / r0);
         double totalTime = 1.0; // 10 * 0.1s
 
-        var epoch = TimeSystem.Time.J2000TDB;
+        var epoch = TimeSystem.Time.J2000Tdb;
         var initialState = new StateVector(
             new Vector3(r0, 0, 0), new Vector3(0, v0, 0),
             earth, epoch, Frames.Frame.ICRF);
 
         var integrator = new RK78Integrator(
             absoluteTolerance: 1e-10, relativeTolerance: 1e-10,
-            initialStepSize: 100.0); // initial step much larger than output
+            initialStepSizeSeconds: 100.0); // initial step much larger than output
         integrator.AddForce(new GravitationalAcceleration(earth));
         integrator.Initialize(initialState);
 
@@ -328,20 +328,20 @@ public class RK78IntegratorTests
     public void HandlesLargeOutputStep()
     {
         // Output step much larger than adaptive step: many sub-steps
-        var earth = new CelestialBody(PlanetsAndMoons.EARTH);
+        var earth = new CelestialBody(PlanetsAndMoons.Earth);
         double mu = earth.GM;
         double r0 = 7000000.0;
         double v0 = System.Math.Sqrt(mu / r0);
         double totalTime = 3600.0; // 1 hour
 
-        var epoch = TimeSystem.Time.J2000TDB;
+        var epoch = TimeSystem.Time.J2000Tdb;
         var initialState = new StateVector(
             new Vector3(r0, 0, 0), new Vector3(0, v0, 0),
             earth, epoch, Frames.Frame.ICRF);
 
         var integrator = new RK78Integrator(
             absoluteTolerance: 1e-10, relativeTolerance: 1e-10,
-            initialStepSize: 10.0);
+            initialStepSizeSeconds: 10.0);
         integrator.AddForce(new GravitationalAcceleration(earth));
         integrator.Initialize(initialState);
 
@@ -359,7 +359,7 @@ public class RK78IntegratorTests
     public void HighEccentricityOrbitHandlesStepRejection()
     {
         // Highly eccentric orbit where step rejection is likely near periapsis
-        var earth = new CelestialBody(PlanetsAndMoons.EARTH);
+        var earth = new CelestialBody(PlanetsAndMoons.Earth);
         double mu = earth.GM;
         double a = 30000000.0; // 30,000 km semi-major axis
         double e = 0.9; // very eccentric
@@ -367,14 +367,14 @@ public class RK78IntegratorTests
         double vPeri = System.Math.Sqrt(mu * (2.0 / rPeri - 1.0 / a));
         double period = 2.0 * System.Math.PI * System.Math.Sqrt(a * a * a / mu);
 
-        var epoch = TimeSystem.Time.J2000TDB;
+        var epoch = TimeSystem.Time.J2000Tdb;
         var initialState = new StateVector(
             new Vector3(rPeri, 0, 0), new Vector3(0, vPeri, 0),
             earth, epoch, Frames.Frame.ICRF);
 
         var integrator = new RK78Integrator(
             absoluteTolerance: 1e-10, relativeTolerance: 1e-10,
-            initialStepSize: 30.0, minStepSize: 1e-3);
+            initialStepSizeSeconds: 30.0, minStepSizeSeconds: 1e-3);
         integrator.AddForce(new GravitationalAcceleration(earth));
         integrator.Initialize(initialState);
 
@@ -401,17 +401,17 @@ public class RK78IntegratorTests
     public void SingleStepMatchesForceModel()
     {
         // Verify that a single RK78 step produces physically reasonable results
-        var earth = new CelestialBody(PlanetsAndMoons.EARTH);
+        var earth = new CelestialBody(PlanetsAndMoons.Earth);
         double mu = earth.GM;
         double r0 = 6800000.0;
         double v0 = System.Math.Sqrt(mu / r0);
 
-        var epoch = TimeSystem.Time.J2000TDB;
+        var epoch = TimeSystem.Time.J2000Tdb;
         var initialState = new StateVector(
             new Vector3(r0, 0, 0), new Vector3(0, v0, 0),
             earth, epoch, Frames.Frame.ICRF);
 
-        var integrator = new RK78Integrator(fixedStepSize: 1.0);
+        var integrator = new RK78Integrator(fixedStepSizeSeconds: 1.0);
         integrator.AddForce(new GravitationalAcceleration(earth));
         integrator.Initialize(initialState);
 
@@ -442,16 +442,16 @@ public class RK78IntegratorTests
         Assert.Throws<ArgumentOutOfRangeException>(() =>
             new RK78Integrator(relativeTolerance: 0.0));
         Assert.Throws<ArgumentOutOfRangeException>(() =>
-            new RK78Integrator(initialStepSize: -10.0));
+            new RK78Integrator(initialStepSizeSeconds: -10.0));
     }
 
     [Fact]
     public void FixedConstructorRejectsInvalidStepSize()
     {
         Assert.Throws<ArgumentOutOfRangeException>(() =>
-            new RK78Integrator(fixedStepSize: 0.0));
+            new RK78Integrator(fixedStepSizeSeconds: 0.0));
         Assert.Throws<ArgumentOutOfRangeException>(() =>
-            new RK78Integrator(fixedStepSize: -5.0));
+            new RK78Integrator(fixedStepSizeSeconds: -5.0));
     }
 
     #endregion
@@ -464,19 +464,19 @@ public class RK78IntegratorTests
         // Verify RK78 works correctly when injected into CentralBodyPropagator
         // with Star/Barycenter observer (replaces former SsbPropagator).
         // 2h circular orbit sanity check — radius should stay near 6800 km.
-        var earth = new CelestialBody(PlanetsAndMoons.EARTH);
+        var earth = new CelestialBody(PlanetsAndMoons.Earth);
 
         Clock clk = new Clock("My clock", 256);
         var orbit = new StateVector(
             new Vector3(6800000.0, 0, 0), new Vector3(0, 7656.2204182967143, 0),
-            earth, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF);
+            earth, TimeSystem.Time.J2000Tdb, Frames.Frame.ICRF);
         Spacecraft spc = new Spacecraft(-1001, "TestSat", 100.0, orbit, 10000.0, clk);
 
-        var propWindow = new Window(TimeSystem.Time.J2000TDB, TimeSystem.Time.J2000TDB.AddHours(2));
+        var propWindow = new Window(TimeSystem.Time.J2000Tdb, TimeSystem.Time.J2000Tdb.AddHours(2));
 
         IntegratorOptions integrator = new RK78IntegratorOptions { AbsoluteTolerance = 1e-10, RelativeTolerance = 1e-10, InitialStep = TimeSpan.FromSeconds(30.0) };
 
-        var propagator = new CentralBodyPropagator(propWindow, spc, new PropagationOptions { Integrator = integrator, OutputStep = TimeSpan.FromSeconds(10.0), ThirdBodies = new CelestialItem[] { earth, Stars.SUN_BODY, PlanetsAndMoons.MOON_BODY }, CovariancePropagation = CovariancePropagationOptions.None });
+        var propagator = new CentralBodyPropagator(propWindow, spc, new PropagationOptions { Integrator = integrator, OutputStep = TimeSpan.FromSeconds(10.0), ThirdBodies = new CelestialItem[] { earth, Stars.SunBody, PlanetsAndMoons.MoonBody }, CovariancePropagation = CovariancePropagationOptions.None });
         var res=propagator.Propagate();
 
         Assert.True(res.StateVectors.Count > 0);
@@ -498,19 +498,19 @@ public class RK78IntegratorTests
     public void IntegratesWithCentralBodyPropagator()
     {
         // Central-body-centered propagation (Battin's formula), 2 h circular orbit sanity check.
-        var earth = new CelestialBody(PlanetsAndMoons.EARTH);
+        var earth = new CelestialBody(PlanetsAndMoons.Earth);
 
         Clock clk = new Clock("My clock", 256);
         var orbit = new StateVector(
             new Vector3(6800000.0, 0, 0), new Vector3(0, 7656.2204182967143, 0),
-            earth, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF);
+            earth, TimeSystem.Time.J2000Tdb, Frames.Frame.ICRF);
         Spacecraft spc = new Spacecraft(-1001, "TestSat_CB", 100.0, orbit, 10000.0, clk);
 
-        var propWindow = new Window(TimeSystem.Time.J2000TDB, TimeSystem.Time.J2000TDB.AddHours(2));
+        var propWindow = new Window(TimeSystem.Time.J2000Tdb, TimeSystem.Time.J2000Tdb.AddHours(2));
 
         IntegratorOptions integrator = new RK78IntegratorOptions { AbsoluteTolerance = 1e-10, RelativeTolerance = 1e-10, InitialStep = TimeSpan.FromSeconds(30.0) };
 
-        var propagator = new CentralBodyPropagator(propWindow, spc, new PropagationOptions { Integrator = integrator, OutputStep = TimeSpan.FromSeconds(10.0), ThirdBodies = new CelestialItem[] { Stars.SUN_BODY, PlanetsAndMoons.MOON_BODY }, CovariancePropagation = CovariancePropagationOptions.None });
+        var propagator = new CentralBodyPropagator(propWindow, spc, new PropagationOptions { Integrator = integrator, OutputStep = TimeSpan.FromSeconds(10.0), ThirdBodies = new CelestialItem[] { Stars.SunBody, PlanetsAndMoons.MoonBody }, CovariancePropagation = CovariancePropagationOptions.None });
         var res=propagator.Propagate();
 
         Assert.True(res.StateVectors.Count > 0);
@@ -529,7 +529,7 @@ public class RK78IntegratorTests
     {
         // Verify RK78 works with drag and SRP via CentralBodyPropagator API
         var epoch = new TimeSystem.Time(2025, 6, 1, 12, 0, 0, TimeScale.UTC);
-        var earth = new CelestialBody(PlanetsAndMoons.EARTH, Frames.Frame.ICRF, epoch,
+        var earth = new CelestialBody(PlanetsAndMoons.Earth, Frames.Frame.ICRF, epoch,
             new GeopotentialModelParameters("Data/SolarSystem/EGM2008_to70_TideFree", 10),
             new EarthStandardAtmosphere());
 
@@ -551,7 +551,7 @@ public class RK78IntegratorTests
                 AbsoluteTolerance = 1e-10, RelativeTolerance = 1e-10, InitialStep = TimeSpan.FromSeconds(30.0)
             },
             OutputStep = TimeSpan.FromSeconds(30.0),
-            ThirdBodies = new CelestialItem[] { earth, Stars.SUN_BODY, PlanetsAndMoons.MOON_BODY },
+            ThirdBodies = new CelestialItem[] { earth, Stars.SunBody, PlanetsAndMoons.MoonBody },
             AtmosphericDrag = true, SolarRadiationPressure = true, CovariancePropagation = CovariancePropagationOptions.None
         };
 
@@ -585,7 +585,7 @@ public class RK78IntegratorTests
 
         var utcEpoch = new TimeSystem.Time(2025, 8, 25, 11, 55, 44, TimeScale.UTC);
 
-        var earth = new CelestialBody(PlanetsAndMoons.EARTH, Frames.Frame.ICRF, utcEpoch,
+        var earth = new CelestialBody(PlanetsAndMoons.Earth, Frames.Frame.ICRF, utcEpoch,
             new GeopotentialModelParameters("Data/SolarSystem/EGM2008_to70_TideFree", 10)
             {
                 CentralTerm = GeopotentialCentralTerm.ModelGravitationalParameter
@@ -602,7 +602,7 @@ public class RK78IntegratorTests
 
         IntegratorOptions integrator = new RK78IntegratorOptions { AbsoluteTolerance = 1e-11, RelativeTolerance = 1e-11, InitialStep = TimeSpan.FromSeconds(60.0), MinStep = TimeSpan.FromSeconds(1e-3), MaxStep = TimeSpan.FromSeconds(300.0) };
 
-        var propagator = new CentralBodyPropagator(propWindow, spc, new PropagationOptions { Integrator = integrator, OutputStep = TimeSpan.FromSeconds(10.0), ThirdBodies = new CelestialItem[] { PlanetsAndMoons.MOON_BODY, Stars.SUN_BODY }, CovariancePropagation = CovariancePropagationOptions.None });
+        var propagator = new CentralBodyPropagator(propWindow, spc, new PropagationOptions { Integrator = integrator, OutputStep = TimeSpan.FromSeconds(10.0), ThirdBodies = new CelestialItem[] { PlanetsAndMoons.MoonBody, Stars.SunBody }, CovariancePropagation = CovariancePropagationOptions.None });
 
         var res = propagator.Propagate();
 
@@ -634,7 +634,7 @@ public class RK78IntegratorTests
         // Initial state of the conformance case (inputs.yaml), from which the golden was produced.
         var utcEpoch = new TimeSystem.Time(2026, 2, 9, 10, 22, 58, 958, TimeScale.UTC);
 
-        var earth = new CelestialBody(PlanetsAndMoons.EARTH, Frames.Frame.ICRF, utcEpoch,
+        var earth = new CelestialBody(PlanetsAndMoons.Earth, Frames.Frame.ICRF, utcEpoch,
             new GeopotentialModelParameters("Data/SolarSystem/EGM2008_to70_TideFree", 70)
             {
                 CentralTerm = GeopotentialCentralTerm.ModelGravitationalParameter
@@ -652,7 +652,7 @@ public class RK78IntegratorTests
 
         IntegratorOptions integrator = new RK78IntegratorOptions { AbsoluteTolerance = 1e-11, RelativeTolerance = 1e-11, InitialStep = TimeSpan.FromSeconds(60.0), MinStep = TimeSpan.FromSeconds(1e-3), MaxStep = TimeSpan.FromSeconds(300.0) };
 
-        var propagator = new CentralBodyPropagator(propWindow, spc, new PropagationOptions { Integrator = integrator, OutputStep = TimeSpan.FromSeconds(10.0), ThirdBodies = new CelestialItem[] { PlanetsAndMoons.MOON_BODY, Stars.SUN_BODY, Barycenters.MERCURY_BARYCENTER, Barycenters.VENUS_BARYCENTER, Barycenters.MARS_BARYCENTER, Barycenters.JUPITER_BARYCENTER, Barycenters.SATURN_BARYCENTER, Barycenters.URANUS_BARYCENTER, Barycenters.NEPTUNE_BARYCENTER, Barycenters.PLUTO_BARYCENTER }, CovariancePropagation = CovariancePropagationOptions.None });
+        var propagator = new CentralBodyPropagator(propWindow, spc, new PropagationOptions { Integrator = integrator, OutputStep = TimeSpan.FromSeconds(10.0), ThirdBodies = new CelestialItem[] { PlanetsAndMoons.MoonBody, Stars.SunBody, Barycenters.MercuryBarycenter, Barycenters.VenusBarycenter, Barycenters.MarsBarycenter, Barycenters.JupiterBarycenter, Barycenters.SaturnBarycenter, Barycenters.UranusBarycenter, Barycenters.NeptuneBarycenter, Barycenters.PlutoBarycenter }, CovariancePropagation = CovariancePropagationOptions.None });
 
         var res= propagator.Propagate();
 
@@ -683,7 +683,7 @@ public class RK78IntegratorTests
 
         var utcEpoch = new TimeSystem.Time(2025, 6, 1, 10, 30, 0, TimeScale.UTC);
 
-        var earth = new CelestialBody(PlanetsAndMoons.EARTH, Frames.Frame.ICRF, utcEpoch,
+        var earth = new CelestialBody(PlanetsAndMoons.Earth, Frames.Frame.ICRF, utcEpoch,
             new GeopotentialModelParameters("Data/SolarSystem/EGM2008_to70_TideFree", 10)
             {
                 CentralTerm = GeopotentialCentralTerm.ModelGravitationalParameter
@@ -700,7 +700,7 @@ public class RK78IntegratorTests
 
         IntegratorOptions integrator = new RK78IntegratorOptions { AbsoluteTolerance = 1e-11, RelativeTolerance = 1e-11, InitialStep = TimeSpan.FromSeconds(60.0), MinStep = TimeSpan.FromSeconds(1e-3), MaxStep = TimeSpan.FromSeconds(300.0) };
 
-        var propagator = new CentralBodyPropagator(propWindow, spc, new PropagationOptions { Integrator = integrator, OutputStep = TimeSpan.FromSeconds(10.0), ThirdBodies = new CelestialItem[] { PlanetsAndMoons.MOON_BODY, Stars.SUN_BODY }, CovariancePropagation = CovariancePropagationOptions.None });
+        var propagator = new CentralBodyPropagator(propWindow, spc, new PropagationOptions { Integrator = integrator, OutputStep = TimeSpan.FromSeconds(10.0), ThirdBodies = new CelestialItem[] { PlanetsAndMoons.MoonBody, Stars.SunBody }, CovariancePropagation = CovariancePropagationOptions.None });
 
         var res=propagator.Propagate();
 

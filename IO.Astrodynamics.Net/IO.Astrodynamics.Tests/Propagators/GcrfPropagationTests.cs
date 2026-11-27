@@ -39,11 +39,11 @@ public class GcrfPropagationTests
         TestKernels.EnsureSolarSystem();
     }
 
-    private static CelestialBody Earth() => new(PlanetsAndMoons.EARTH, Frames.Frame.ICRF, Start,
+    private static CelestialBody Earth() => new(PlanetsAndMoons.Earth, Frames.Frame.ICRF, Start,
         new GeopotentialModelParameters("Data/SolarSystem/EGM2008_to70_TideFree", 10));
 
     private static CelestialItem[] Bodies(CelestialBody earth) =>
-        new CelestialItem[] { earth, new CelestialBody(PlanetsAndMoons.MOON, Frames.Frame.ICRF, Start), new CelestialBody(Stars.Sun) };
+        new CelestialItem[] { earth, new CelestialBody(PlanetsAndMoons.Moon, Frames.Frame.ICRF, Start), new CelestialBody(Stars.Sun) };
 
     private static StateVector State(ILocalizable observer, Frames.Frame frame, Matrix? covariance = null) =>
         new(new Vector3(6778137.0, 0.0, 0.0), new Vector3(0.0, 7668.6, 0.0), observer, Start, frame, covariance);
@@ -59,7 +59,7 @@ public class GcrfPropagationTests
     public void GcrfToIcrf_IsTheIdentity()
     {
         // The rotation the library uses between GCRF and ICRF, both ways: the identity, no angular velocity
-        foreach (var epoch in new[] { TimeSystem.Time.J2000TDB, Start, new TimeSystem.Time(2050, 1, 1, 0, 0, 0, TimeScale.TDB) })
+        foreach (var epoch in new[] { TimeSystem.Time.J2000Tdb, Start, new TimeSystem.Time(2050, 1, 1, 0, 0, 0, TimeScale.TDB) })
         {
             var toIcrf = Frames.Frame.GCRF.ToFrame(Frames.Frame.ICRF, epoch);
             var fromIcrf = Frames.Frame.ICRF.ToFrame(Frames.Frame.GCRF, epoch);
@@ -73,13 +73,13 @@ public class GcrfPropagationTests
     [Theory]
     [InlineData(Aberration.None)]
     [InlineData(Aberration.LT)]
-    [InlineData(Aberration.CNS)]
+    [InlineData(Aberration.CnS)]
     public void SpiceEphemeris_InGcrf_IsTheIcrfState(Aberration aberration)
     {
         // The SPICE path of an ephemeris read: the Moon and the Sun from the Earth, labelled GCRF, in Frame.GCRF and in a
         // frame built from the name (the CLI), which is not a GcrfFrame
-        var earth = new CelestialBody(PlanetsAndMoons.EARTH);
-        foreach (var target in new CelestialItem[] { new CelestialBody(PlanetsAndMoons.MOON), new CelestialBody(Stars.Sun) })
+        var earth = new CelestialBody(PlanetsAndMoons.Earth);
+        foreach (var target in new CelestialItem[] { new CelestialBody(PlanetsAndMoons.Moon), new CelestialBody(Stars.Sun) })
         {
             var icrf = target.GetEphemeris(Start, earth, Frames.Frame.ICRF, aberration);
             Assert.True(icrf.Position.Magnitude() > 3.0e8);
@@ -106,9 +106,9 @@ public class GcrfPropagationTests
             if (variant.EndsWith("SSB"))
             {
                 // SSB mode: the same orbit relative to the solar-system barycentre
-                var earthFromSsb = earth.GetGeometricStateRelativeTo(Start, Barycenters.SOLAR_SYSTEM_BARYCENTER);
+                var earthFromSsb = earth.GetGeometricStateRelativeTo(Start, Barycenters.SolarSystemBarycenter);
                 initial = new StateVector(earthFromSsb.Position + initial.Position, earthFromSsb.Velocity + initial.Velocity,
-                    Barycenters.SOLAR_SYSTEM_BARYCENTER, Start, frame);
+                    Barycenters.SolarSystemBarycenter, Start, frame);
             }
 
             if (variant.Contains("Impulse"))
@@ -165,15 +165,15 @@ public class GcrfPropagationTests
             var expected = icrfSpacecraft.GetEphemeris(epoch, observer, Frames.Frame.ICRF, Aberration.None);
             AssertSameState(expected, gcrfSpacecraft.GetEphemeris(epoch, observer, Frames.Frame.ICRF, Aberration.None));
             AssertSameState(expected, byNameSpacecraft.GetEphemeris(epoch, observer, Frames.Frame.ICRF, Aberration.None));
-            Assert.Equal(icrfSpacecraft.Frame.GetStateOrientationToICRF(epoch).Rotation, gcrfSpacecraft.Frame.GetStateOrientationToICRF(epoch).Rotation);
-            Assert.Equal(icrfSpacecraft.Frame.GetStateOrientationToICRF(epoch).Rotation, byNameSpacecraft.Frame.GetStateOrientationToICRF(epoch).Rotation);
+            Assert.Equal(icrfSpacecraft.Frame.GetStateOrientationToIcrf(epoch).Rotation, gcrfSpacecraft.Frame.GetStateOrientationToIcrf(epoch).Rotation);
+            Assert.Equal(icrfSpacecraft.Frame.GetStateOrientationToIcrf(epoch).Rotation, byNameSpacecraft.Frame.GetStateOrientationToIcrf(epoch).Rotation);
         }
 
         if (variant.Contains("Impulse"))
         {
             // The impulse fired and the nadir attitude followed it
             Assert.Single(gcrfSpacecraft.ExecutedManeuvers.OfType<ApogeeHeightManeuver>());
-            Assert.NotEqual(Quaternion.Identity, gcrfSpacecraft.Frame.GetStateOrientationToICRF(Window.EndDate).Rotation);
+            Assert.NotEqual(Quaternion.Identity, gcrfSpacecraft.Frame.GetStateOrientationToIcrf(Window.EndDate).Rotation);
         }
     }
 

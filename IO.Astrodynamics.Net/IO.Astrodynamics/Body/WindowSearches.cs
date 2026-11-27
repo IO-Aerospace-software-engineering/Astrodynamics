@@ -58,7 +58,7 @@ public static class WindowSearches
     /// <exception cref="InvalidOperationException">On the path of CSPICE, SPICE cannot run the search, with its message; on
     /// the library's, a state cannot be read.</exception>
     public static IReadOnlyList<Window> FindDistanceWindows(this ILocalizable observer, in Window window, ILocalizable target,
-        RelationnalOperator relationalOperator, double value, WindowSearchOptions options = null)
+        RelationalOperator relationalOperator, double value, WindowSearchOptions options = null)
     {
         ArgumentNullException.ThrowIfNull(observer);
         ArgumentNullException.ThrowIfNull(target);
@@ -76,9 +76,9 @@ public static class WindowSearches
                     nameof(options));
             }
 
-            // SpiceAPI takes metres: the native layer converts them to km for gfdist_c (#466)
+            // SpiceApi takes metres: the native layer converts them to km for gfdist_c (#466)
             return WindowSearchSettings.InScaleOf(
-                SpiceAPI.Instance.FindWindowsOnDistanceConstraint(window, observer.NaifId, target.NaifId, relationalOperator, value, aberration, step), window);
+                SpiceApi.Instance.FindWindowsOnDistanceConstraint(window, observer.NaifId, target.NaifId, relationalOperator, value, aberration, step), window);
         }
 
         return GeometryFinder.Find(window, date => target.GetEphemeris(date, observer, Frame.ICRF, aberration).Position.Magnitude(), relationalOperator,
@@ -110,7 +110,7 @@ public static class WindowSearches
     /// <exception cref="InvalidOperationException">On the path of CSPICE, SPICE cannot run the search, with its message; on
     /// the library's, a state cannot be read.</exception>
     public static IReadOnlyList<Window> FindCoordinateWindows(this ILocalizable observer, in Window window, ILocalizable target, Frame frame,
-        CoordinateSystem coordinateSystem, Coordinate coordinate, RelationnalOperator relationalOperator, double value, WindowSearchOptions options = null)
+        CoordinateSystem coordinateSystem, Coordinate coordinate, RelationalOperator relationalOperator, double value, WindowSearchOptions options = null)
     {
         ArgumentNullException.ThrowIfNull(observer);
         ArgumentNullException.ThrowIfNull(target);
@@ -121,13 +121,13 @@ public static class WindowSearches
         var aberration = options.Aberration ?? Aberration.None;
         double adjust = options.AdjustValue ?? 0.0;
         // CSPICE searches only in a frame SPICE reads as the library does (third review of #690)
-        if (SearchesOnSpice(observer, target) && !SpiceAPI.IsManagedFrame(frame))
+        if (SearchesOnSpice(observer, target) && !SpiceApi.IsManagedFrame(frame))
         {
             WindowSearchSettings.RejectToleranceOnCspice(options.ConvergenceTolerance, nameof(WindowSearchOptions), "gfposc_c");
             // SPICE uses km for the distance coordinates, the library m; angles are radians in both
             bool isDistance = coordinate is Coordinate.X or Coordinate.Y or Coordinate.Z or Coordinate.Range or Coordinate.Radius or Coordinate.Altitude;
             double scale = isDistance ? 1000.0 : 1.0;
-            return WindowSearchSettings.InScaleOf(SpiceAPI.Instance.FindWindowsOnCoordinateConstraint(window, observer.NaifId, target.NaifId, frame,
+            return WindowSearchSettings.InScaleOf(SpiceApi.Instance.FindWindowsOnCoordinateConstraint(window, observer.NaifId, target.NaifId, frame,
                 coordinateSystem, coordinate, relationalOperator, value / scale, adjust / scale, aberration, step), window);
         }
 
@@ -216,7 +216,7 @@ public static class WindowSearches
             return given;
         }
 
-        var halfWindow = (window.EndDate.ToTDB() - window.StartDate.ToTDB()) / 2;
+        var halfWindow = (window.EndDate.ToTdb() - window.StartDate.ToTdb()) / 2;
         var cap = halfWindow > TimeSpan.Zero ? halfWindow : TimeSpan.FromTicks(1);
         var inferred = period.Value / 16;
         return inferred < cap ? inferred : cap;

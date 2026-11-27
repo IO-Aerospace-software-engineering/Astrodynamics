@@ -41,7 +41,7 @@ public class InstrumentAdditionTests
     private static int NextId() => Interlocked.Decrement(ref _nextId);
 
     private static Spacecraft NewSpacecraft(int naifId) => new(naifId, "Sat" + -naifId, 1000.0,
-        new KeplerianElements(7000e3, 0.01, 0.5, 0.0, 0.0, 0.0, new CelestialBody(PlanetsAndMoons.EARTH), S, Frames.Frame.ICRF));
+        new KeplerianElements(7000e3, 0.01, 0.5, 0.0, 0.0, 0.0, new CelestialBody(PlanetsAndMoons.Earth), S, Frames.Frame.ICRF));
 
     private static Spacecraft NewSpacecraft() => NewSpacecraft(NextId());
 

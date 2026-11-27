@@ -22,7 +22,7 @@ namespace IO.Astrodynamics.Tests.DataProvider;
 /// </summary>
 /// <remarks>
 /// The references are SPICE's <c>spkezr_c</c> on the states the test stores, read from SPICE in J2000 at the same epochs
-/// (<see cref="SpiceAPI.ReadEphemeris(TimeSystem.Time, int, int, Frames.Frame, Aberration)"/>), and the closed form of
+/// (<see cref="SpiceApi.ReadEphemeris(TimeSystem.Time, int, int, Frames.Frame, Aberration)"/>), and the closed form of
 /// ECLIPJ2000, SPICE's rotation of the J2000 obliquity, 84381.448″ about x (CSPICE <c>chgirf.c</c>). The providers are
 /// called directly: the global provider is never swapped (#631).
 /// </remarks>
@@ -60,7 +60,7 @@ public class MemoryDataProviderFrameTests
         {
             foreach (var id in new[] { 301, 399 })
             {
-                var state = SpiceAPI.Instance.ReadEphemeris(epoch, 0, id, storedIn, Aberration.None);
+                var state = SpiceApi.Instance.ReadEphemeris(epoch, 0, id, storedIn, Aberration.None);
                 provider.AddStateVector(id, epoch, new StateVector(state.Position, state.Velocity, TestHelpers.SsbAtJ2000, epoch, storedIn));
             }
         }
@@ -69,14 +69,14 @@ public class MemoryDataProviderFrameTests
     }
 
     private static StateVector Spkezr(TimeSystem.Time epoch, Frames.Frame frame) =>
-        SpiceAPI.Instance.ReadEphemeris(epoch, 399, 301, frame, Aberration.None);
+        SpiceApi.Instance.ReadEphemeris(epoch, 399, 301, frame, Aberration.None);
 
     private void Measure(string label, MemoryDataProvider provider, Frames.Frame frame, double velocityTolerance = VelocityTolerance)
     {
         double worstPosition = 0.0, worstVelocity = 0.0;
         foreach (var epoch in Epochs)
         {
-            var read = provider.GetEphemeris(epoch, PlanetsAndMoons.MOON_BODY, PlanetsAndMoons.EARTH_BODY, frame, Aberration.None);
+            var read = provider.GetEphemeris(epoch, PlanetsAndMoons.MoonBody, PlanetsAndMoons.EarthBody, frame, Aberration.None);
             var reference = Spkezr(epoch, frame);
             Assert.Equal(frame, read.Frame);
             Assert.Same(frame, read.Frame);
@@ -95,7 +95,7 @@ public class MemoryDataProviderFrameTests
     public void Read_InEclipJ2000_WithoutStoredOrientation_IsSpkezr()
     {
         // ECLIPJ2000, the default frame of the bodies, is known by its definition: no orientation stored
-        Measure("ICRF states read in ECLIPJ2000", StatesProvider(Frames.Frame.ICRF), Frames.Frame.ECLIPTIC_J2000);
+        Measure("ICRF states read in ECLIPJ2000", StatesProvider(Frames.Frame.ICRF), Frames.Frame.ECLIPJ2000);
     }
 
     [Fact]
@@ -106,7 +106,7 @@ public class MemoryDataProviderFrameTests
         var itrf93 = new Frames.Frame("ITRF93");
         foreach (var epoch in Epochs)
         {
-            provider.AddStateOrientationToICRF(itrf93, epoch, SpiceAPI.Instance.TransformFrame(epoch, itrf93, Frames.Frame.ICRF));
+            provider.AddStateOrientationToIcrf(itrf93, epoch, SpiceApi.Instance.TransformFrame(epoch, itrf93, Frames.Frame.ICRF));
         }
 
         Measure("ICRF states read in ITRF93", provider, itrf93, RotatingVelocityTolerance);
@@ -116,7 +116,7 @@ public class MemoryDataProviderFrameTests
     public void Read_InIcrf_OfStatesStoredInEclipJ2000_IsSpkezr()
     {
         // Stored states in another frame are taken in ICRF first
-        Measure("ECLIPJ2000 states read in ICRF", StatesProvider(Frames.Frame.ECLIPTIC_J2000), Frames.Frame.ICRF);
+        Measure("ECLIPJ2000 states read in ICRF", StatesProvider(Frames.Frame.ECLIPJ2000), Frames.Frame.ICRF);
     }
 
     [Fact]
@@ -128,7 +128,7 @@ public class MemoryDataProviderFrameTests
         double worst = 0.0;
         foreach (var epoch in Epochs)
         {
-            var read = provider.GetEphemeris(epoch, PlanetsAndMoons.MOON_BODY, PlanetsAndMoons.EARTH_BODY, teme, Aberration.None);
+            var read = provider.GetEphemeris(epoch, PlanetsAndMoons.MoonBody, PlanetsAndMoons.EarthBody, teme, Aberration.None);
             var reference = Spkezr(epoch, Frames.Frame.TEME);
             worst = System.Math.Max(worst, (read.Position - reference.Position).Magnitude());
             Assert.InRange((read.Velocity - reference.Velocity).Magnitude(), 0.0, VelocityTolerance);
@@ -147,9 +147,9 @@ public class MemoryDataProviderFrameTests
         {
             foreach (var epoch in Epochs)
             {
-                var read = provider.GetEphemeris(epoch, PlanetsAndMoons.MOON_BODY, PlanetsAndMoons.EARTH_BODY, frame, Aberration.None);
-                var moon = SpiceAPI.Instance.ReadEphemeris(epoch, 0, 301, Frames.Frame.ICRF, Aberration.None);
-                var earth = SpiceAPI.Instance.ReadEphemeris(epoch, 0, 399, Frames.Frame.ICRF, Aberration.None);
+                var read = provider.GetEphemeris(epoch, PlanetsAndMoons.MoonBody, PlanetsAndMoons.EarthBody, frame, Aberration.None);
+                var moon = SpiceApi.Instance.ReadEphemeris(epoch, 0, 301, Frames.Frame.ICRF, Aberration.None);
+                var earth = SpiceApi.Instance.ReadEphemeris(epoch, 0, 399, Frames.Frame.ICRF, Aberration.None);
                 Assert.Equal(moon.Position - earth.Position, read.Position);
                 Assert.Equal(moon.Velocity - earth.Velocity, read.Velocity);
                 Assert.Same(frame, read.Frame);
@@ -163,13 +163,13 @@ public class MemoryDataProviderFrameTests
         // The probe of #559: one state of the Earth-Moon barycentre at J2000 TDB in ICRF, read in ECLIPJ2000. The closed form:
         // J2000 -> ECLIPJ2000 is SPICE's ROTATE(84381.448", 1), y' = c y + s z, z' = -s y + c z
         var provider = new MemoryDataProvider();
-        var epoch = TimeSystem.Time.J2000TDB;
+        var epoch = TimeSystem.Time.J2000Tdb;
         var r = new Vector3(-2.6e10, 1.33e11, 5.76e10);
         var v = new Vector3(-29800.0, -5000.0, -2200.0);
         provider.AddStateVector(3, epoch, new StateVector(r, v, TestHelpers.SsbAtJ2000, epoch, Frames.Frame.ICRF));
         var barycentre = new Barycenter(3);
 
-        var read = provider.GetEphemeris(epoch, barycentre, TestHelpers.SsbAtJ2000, Frames.Frame.ECLIPTIC_J2000, Aberration.None);
+        var read = provider.GetEphemeris(epoch, barycentre, TestHelpers.SsbAtJ2000, Frames.Frame.ECLIPJ2000, Aberration.None);
 
         double eps = 84381.448 / 3600.0 * System.Math.PI / 180.0;
         double c = System.Math.Cos(eps), s = System.Math.Sin(eps);
@@ -189,14 +189,14 @@ public class MemoryDataProviderFrameTests
     public void FrameTransformation_EclipJ2000_IsSpicesWithoutStoredOrientation()
     {
         var provider = new MemoryDataProvider();
-        var orientation = provider.FrameTransformationToICRF(Start, Frames.Frame.ECLIPTIC_J2000);
-        var spice = SpiceAPI.Instance.TransformFrame(Start, Frames.Frame.ECLIPTIC_J2000, Frames.Frame.ICRF);
+        var orientation = provider.FrameTransformationToIcrf(Start, Frames.Frame.ECLIPJ2000);
+        var spice = SpiceApi.Instance.TransformFrame(Start, Frames.Frame.ECLIPJ2000, Frames.Frame.ICRF);
         var delta = orientation.Rotation * spice.Rotation.Conjugate();
         double angle = 2.0 * System.Math.Atan2(delta.VectorPart.Magnitude(), System.Math.Abs(delta.W));
         _output.WriteLine($"MEASURE #559 ECLIPJ2000 against sxform: {angle.ToString("E3", CultureInfo.InvariantCulture)} rad");
         Assert.InRange(angle, 0.0, SxformTolerance);
         Assert.Equal(Vector3.Zero, orientation.AngularVelocity);
-        Assert.Same(Frames.Frame.ECLIPTIC_J2000, orientation.ReferenceFrame);
+        Assert.Same(Frames.Frame.ECLIPJ2000, orientation.ReferenceFrame);
     }
 
     [Fact]
@@ -205,10 +205,10 @@ public class MemoryDataProviderFrameTests
         // A frame whose orientations were added is read from them, as before (ConfigurationTest); ICRF and GCRF take none (#744)
         var provider = new MemoryDataProvider();
         var rotation = new Quaternion(Vector3.VectorZ, 0.3);
-        provider.AddStateOrientationToICRF(Frames.Frame.ECLIPTIC_J2000, Start,
-            new StateOrientation(rotation, Vector3.Zero, Start, Frames.Frame.ECLIPTIC_J2000));
-        Assert.Equal(rotation, provider.FrameTransformationToICRF(Start, Frames.Frame.ECLIPTIC_J2000).Rotation);
-        Assert.Throws<InvalidOperationException>(() => provider.FrameTransformationToICRF(Start.AddSeconds(10.0), Frames.Frame.ECLIPTIC_J2000));
+        provider.AddStateOrientationToIcrf(Frames.Frame.ECLIPJ2000, Start,
+            new StateOrientation(rotation, Vector3.Zero, Start, Frames.Frame.ECLIPJ2000));
+        Assert.Equal(rotation, provider.FrameTransformationToIcrf(Start, Frames.Frame.ECLIPJ2000).Rotation);
+        Assert.Throws<InvalidOperationException>(() => provider.FrameTransformationToIcrf(Start.AddSeconds(10.0), Frames.Frame.ECLIPJ2000));
     }
 
     [Theory]
@@ -219,22 +219,22 @@ public class MemoryDataProviderFrameTests
     {
         // A frame the provider neither stores nor defines, a body-fixed frame such as the Earth's included: no rotation into
         // it exists, so the read throws (#559; before, the ICRF difference came back labelled with the frame). Migration:
-        // store the frame's orientations (AddStateOrientationToICRF)
+        // store the frame's orientations (AddStateOrientationToIcrf)
         var provider = StatesProvider(Frames.Frame.ICRF);
         var ex = Assert.Throws<ArgumentException>(() =>
-            provider.GetEphemeris(Start, PlanetsAndMoons.MOON_BODY, PlanetsAndMoons.EARTH_BODY, new Frames.Frame(name), Aberration.None));
+            provider.GetEphemeris(Start, PlanetsAndMoons.MoonBody, PlanetsAndMoons.EarthBody, new Frames.Frame(name), Aberration.None));
         Assert.Contains(name, ex.Message);
     }
 
     [Theory]
     [InlineData(Aberration.LT)]
-    [InlineData(Aberration.LTS)]
+    [InlineData(Aberration.LtS)]
     [InlineData(Aberration.CN)]
-    [InlineData(Aberration.CNS)]
+    [InlineData(Aberration.CnS)]
     [InlineData(Aberration.XLT)]
-    [InlineData(Aberration.XLTS)]
+    [InlineData(Aberration.XltS)]
     [InlineData(Aberration.XCN)]
-    [InlineData(Aberration.XCNS)]
+    [InlineData(Aberration.XcnS)]
     public void Read_WithAnAberration_ThrowsNotSupported(Aberration aberration)
     {
         // The provider holds geometric states only (#559, decided by S. Guillet, 2026-11-17): it refuses an aberrated read,
@@ -242,11 +242,11 @@ public class MemoryDataProviderFrameTests
         var provider = StatesProvider(Frames.Frame.ICRF);
         foreach (var (target, frame) in new (ILocalizable, Frames.Frame)[]
                  {
-                     (PlanetsAndMoons.MOON_BODY, Frames.Frame.ICRF), (PlanetsAndMoons.MOON_BODY, Frames.Frame.ECLIPTIC_J2000),
-                     (PlanetsAndMoons.EARTH_BODY, Frames.Frame.ICRF)
+                     (PlanetsAndMoons.MoonBody, Frames.Frame.ICRF), (PlanetsAndMoons.MoonBody, Frames.Frame.ECLIPJ2000),
+                     (PlanetsAndMoons.EarthBody, Frames.Frame.ICRF)
                  })
         {
-            var ex = Assert.Throws<NotSupportedException>(() => provider.GetEphemeris(Start, target, PlanetsAndMoons.EARTH_BODY, frame, aberration));
+            var ex = Assert.Throws<NotSupportedException>(() => provider.GetEphemeris(Start, target, PlanetsAndMoons.EarthBody, frame, aberration));
             Assert.Contains(aberration.ToString(), ex.Message);
         }
     }
@@ -256,7 +256,7 @@ public class MemoryDataProviderFrameTests
     /// ICRF, #559, and GCRF shares its axes, #543) and the managed TEME, CIRS and TIRS (#656), by name in any case: storing
     /// an orientation under one of them throws <see cref="ArgumentException"/> naming <c>frame</c> and stores nothing
     /// (#744, decided by S. Guillet, 2026-11-18). Before, an orientation stored under ICRF or GCRF was returned by
-    /// <see cref="MemoryDataProvider.FrameTransformationToICRF"/> while <see cref="MemoryDataProvider.GetEphemeris"/> took
+    /// <see cref="MemoryDataProvider.FrameTransformationToIcrf"/> while <see cref="MemoryDataProvider.GetEphemeris"/> took
     /// the identity: the probe of the issue, 90° about z under ICRF, gave 1.5708 rad from the identity and the stored state
     /// (1e11, 0, 0) m unrotated. The references are the definitions: the identity, and the managed frame's own orientation.
     /// </summary>
@@ -277,16 +277,16 @@ public class MemoryDataProviderFrameTests
         var frame = new Frames.Frame(name);
         var rotation = new Quaternion(Vector3.VectorZ, Astrodynamics.Constants.HalfPi);
 
-        var ex = Assert.Throws<ArgumentException>(() => provider.AddStateOrientationToICRF(frame, Start, new StateOrientation(rotation, Vector3.Zero, Start, frame)));
+        var ex = Assert.Throws<ArgumentException>(() => provider.AddStateOrientationToIcrf(frame, Start, new StateOrientation(rotation, Vector3.Zero, Start, frame)));
         Assert.Equal("frame", ex.ParamName);
         Assert.Contains(name, ex.Message);
 
         // Nothing stored: the read is the definition
-        var read = provider.FrameTransformationToICRF(Start, frame);
+        var read = provider.FrameTransformationToIcrf(Start, frame);
         var expected = name.Equals("J2000", StringComparison.OrdinalIgnoreCase) || name.Equals("GCRF", StringComparison.OrdinalIgnoreCase)
             ? Quaternion.Identity
             : (name.ToUpperInvariant() switch { "TEME" => Frames.Frame.TEME, "CIRS" => Frames.Frame.CIRS, _ => Frames.Frame.TIRS })
-                .GetStateOrientationToICRF(Start).Rotation;
+                .GetStateOrientationToIcrf(Start).Rotation;
         var delta = read.Rotation * expected.Conjugate();
         Assert.Equal(0.0, 2.0 * System.Math.Atan2(delta.VectorPart.Magnitude(), System.Math.Abs(delta.W)));
     }
@@ -299,13 +299,13 @@ public class MemoryDataProviderFrameTests
         foreach (var frame in new[] { Frames.Frame.ICRF, Frames.Frame.GCRF, Frames.Frame.TEME, Frames.Frame.CIRS, Frames.Frame.TIRS })
         {
             var orientation = new StateOrientation(new Quaternion(Vector3.VectorZ, Astrodynamics.Constants.HalfPi), Vector3.Zero, Start, frame);
-            Assert.Equal("frame", Assert.Throws<ArgumentException>(() => provider.AddStateOrientationToICRF(frame, Start, orientation)).ParamName);
+            Assert.Equal("frame", Assert.Throws<ArgumentException>(() => provider.AddStateOrientationToIcrf(frame, Start, orientation)).ParamName);
         }
 
         // The provider's two answers for ICRF agree: the identity, and the stored state unrotated
-        Assert.Equal(Quaternion.Identity, provider.FrameTransformationToICRF(Start, Frames.Frame.ICRF).Rotation);
+        Assert.Equal(Quaternion.Identity, provider.FrameTransformationToIcrf(Start, Frames.Frame.ICRF).Rotation);
         provider.AddStateVector(399, Start, new StateVector(new Vector3(1e11, 0.0, 0.0), Vector3.Zero, TestHelpers.SsbAtJ2000, Start, Frames.Frame.ICRF));
-        var state = provider.GetEphemeris(Start, PlanetsAndMoons.EARTH_BODY, new Barycenter(0), Frames.Frame.ICRF, Aberration.None);
+        var state = provider.GetEphemeris(Start, PlanetsAndMoons.EarthBody, new Barycenter(0), Frames.Frame.ICRF, Aberration.None);
         Assert.Equal(new Vector3(1e11, 0.0, 0.0), state.ToStateVector().Position);
     }
 }

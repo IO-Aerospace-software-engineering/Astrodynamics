@@ -7,7 +7,6 @@ using System.IO;
 using System.Linq;
 using System.Text.Json;
 using IO.Astrodynamics.Atmosphere;
-using IO.Astrodynamics.Atmosphere.NRLMSISE_00;
 using IO.Astrodynamics.Body;
 using IO.Astrodynamics.Body.Spacecraft;
 using IO.Astrodynamics.Maneuver;
@@ -79,7 +78,7 @@ namespace IO.Astrodynamics.Tests.Propagators;
 /// 0.31 mm and 2.2e-8 m/s (GEO), 0.82 mm and 9.0e-7 m/s (maneuver) at most, at the scale of |v| times a tick (0.77 mm in
 /// LEO, 0.31 mm at GEO) and of the integration error at 1e-11 of other steps (see #410 above).
 /// Recaptured with #561: the orientation cache of the Earth interpolates its 60 s points by the exact SLERP instead of the
-/// normalised-Lerp fallback of <c>Quaternion.SLERP</c>, which was up to 3.4e-10 rad off (the exact SLERP 2.4e-12 rad from
+/// normalised-Lerp fallback of <c>Quaternion.Slerp</c>, which was up to 3.4e-10 rad off (the exact SLERP 2.4e-12 rad from
 /// <c>sxform</c>); every case has a geopotential and moved from its first step. The GEO case by 2.1e-6 m and 1.4e-10 m/s at
 /// most, the same 46 steps; the maneuver case by 1.1e-6 m and 1.0e-9 m/s, the same 22 and 72 steps, the maneuver epoch
 /// unchanged; the SRP case by 1.66 mm and 1.9e-6 m/s, 100 steps instead of 103, the integration error at 1e-11 of other
@@ -173,10 +172,10 @@ public class PropagationGoldenTests
     private static PropagationSolution PropagateLeoWithDragAndSrp(VariationalOptions options)
     {
         // 400 km, 51.6 deg, EGM2008 10x10, NRLMSISE-00 (nominal space weather), Moon, drag and SRP, 3 h.
-        var earth = new CelestialBody(PlanetsAndMoons.EARTH, Frames.Frame.ICRF, Start,
+        var earth = new CelestialBody(PlanetsAndMoons.Earth, Frames.Frame.ICRF, Start,
             new GeopotentialModelParameters("Data/SolarSystem/EGM2008_to70_TideFree", 10),
             new Nrlmsise00Model(SpaceWeather.Nominal));
-        var moon = new CelestialBody(PlanetsAndMoons.MOON, Frames.Frame.ICRF, Start);
+        var moon = new CelestialBody(PlanetsAndMoons.Moon, Frames.Frame.ICRF, Start);
         var orbit = new StateVector(new Vector3(6778137.0, 0.0, 0.0), new Vector3(0.0, 4751.0, 5993.0), earth, Start,
             Frames.Frame.ICRF);
         var spacecraft = new Spacecraft(-1951, "GOLDEN1", 100.0, orbit, 1000.0, new Clock("golden1", 65536), 10.0, 2.2,
@@ -190,9 +189,9 @@ public class PropagationGoldenTests
     private static PropagationSolution PropagateGeo(VariationalOptions options)
     {
         // GEO, EGM2008 10x10, Moon and Sun, 1 day.
-        var earth = new CelestialBody(PlanetsAndMoons.EARTH, Frames.Frame.ICRF, Start,
+        var earth = new CelestialBody(PlanetsAndMoons.Earth, Frames.Frame.ICRF, Start,
             new GeopotentialModelParameters("Data/SolarSystem/EGM2008_to70_TideFree", 10));
-        var moon = new CelestialBody(PlanetsAndMoons.MOON, Frames.Frame.ICRF, Start);
+        var moon = new CelestialBody(PlanetsAndMoons.Moon, Frames.Frame.ICRF, Start);
         var sun = new CelestialBody(Stars.Sun);
         var orbit = new StateVector(new Vector3(42164137.0, 0.0, 0.0), new Vector3(0.0, 3074.66, 10.0), earth, Start,
             Frames.Frame.ICRF);
@@ -207,9 +206,9 @@ public class PropagationGoldenTests
     {
         // 400 x 1000 km LEO starting at apogee, EGM2008 10x10, Moon and Sun, apogee raised to 2000 km at the first
         // perigee (about 50 min later), 4 h.
-        var earth = new CelestialBody(PlanetsAndMoons.EARTH, Frames.Frame.ICRF, Start,
+        var earth = new CelestialBody(PlanetsAndMoons.Earth, Frames.Frame.ICRF, Start,
             new GeopotentialModelParameters("Data/SolarSystem/EGM2008_to70_TideFree", 10));
-        var moon = new CelestialBody(PlanetsAndMoons.MOON, Frames.Frame.ICRF, Start);
+        var moon = new CelestialBody(PlanetsAndMoons.Moon, Frames.Frame.ICRF, Start);
         var sun = new CelestialBody(Stars.Sun);
         var orbit = new StateVector(new Vector3(-7378137.0, 0.0, 0.0), new Vector3(0.0, -5509.9, -4623.4), earth, Start,
             Frames.Frame.ICRF);
@@ -273,7 +272,7 @@ public class PropagationGoldenTests
                 segment.BaseEpoch.TimeSpanFromJ2000().TotalSeconds,
                 segment.Steps.Select(step => new[]
                 {
-                    step.CumulativeTime, step.StepSize,
+                    step.CumulativeTime, step.StepSizeSeconds,
                     step.StartPosition.X, step.StartPosition.Y, step.StartPosition.Z,
                     step.StartVelocity.X, step.StartVelocity.Y, step.StartVelocity.Z,
                     step.EndPosition.X, step.EndPosition.Y, step.EndPosition.Z,
@@ -283,7 +282,7 @@ public class PropagationGoldenTests
                 }).ToList())).ToList();
             var states = solution.StateVectors.Select(state => new[]
             {
-                state.Epoch.ToTDB().TimeSpanFromJ2000().TotalSeconds,
+                state.Epoch.ToTdb().TimeSpanFromJ2000().TotalSeconds,
                 state.Position.X, state.Position.Y, state.Position.Z,
                 state.Velocity.X, state.Velocity.Y, state.Velocity.Z
             }).ToList();

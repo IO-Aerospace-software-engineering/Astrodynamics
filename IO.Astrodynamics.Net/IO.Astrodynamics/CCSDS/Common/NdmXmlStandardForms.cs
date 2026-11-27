@@ -9,7 +9,7 @@ using System.Xml;
 using System.Xml.Linq;
 using System.Xml.Schema;
 
-namespace IO.Astrodynamics.CCSDS.Common;
+namespace IO.Astrodynamics.Ccsds;
 
 /// <summary>
 /// The schema sets of the two standard forms of an NDM/XML 4.0.0 document (CCSDS 505.0-B-3), whose root has no namespace:

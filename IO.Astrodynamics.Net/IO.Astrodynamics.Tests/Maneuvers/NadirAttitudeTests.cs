@@ -27,18 +27,18 @@ public class NadirAttitudeTests
     [Fact]
     public void Execute()
     {
-        var orbitalParams = new KeplerianElements(42164000.0, 0.0, 0.0, 0.0, 0.0, 0.0, TestHelpers.EarthAtJ2000, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF);
+        var orbitalParams = new KeplerianElements(42164000.0, 0.0, 0.0, 0.0, 0.0, 0.0, TestHelpers.EarthAtJ2000, TimeSystem.Time.J2000Tdb, Frames.Frame.ICRF);
         var spc = new Spacecraft(-666, "GenericSpacecraft", 1000.0, orbitalParams, 3000.0, new Clock("GenericClk", 65536));
         spc.AddFuelTank(new FuelTank("ft", 1000.0, 900.0, "ftA", "123456"));
         spc.AddEngine(new Engine("eng", 450, 50, spc.FuelTanks.First(), "engmk1", "12345"));
         NadirAttitude maneuver = new NadirAttitude(new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB), TimeSpan.Zero, TestHelpers.EarthAtJ2000);
         var (_, maneuverOrientation) = maneuver.TryExecute(orbitalParams.ToStateVector());
 
-        LabelAssert.Equal(new StateOrientation(new Quaternion(0.7071067811865476, 0.0, 0.0, 0.7071067811865476), Vector3.Zero, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF),
+        LabelAssert.Equal(new StateOrientation(new Quaternion(0.7071067811865476, 0.0, 0.0, 0.7071067811865476), Vector3.Zero, TimeSystem.Time.J2000Tdb, Frames.Frame.ICRF),
             maneuverOrientation);
         Assert.Equal(0.0, maneuver.FuelBurned);
-        LabelAssert.Equal(new Window(TimeSystem.Time.J2000TDB, TimeSpan.Zero), maneuver.ManeuverWindow);
-        LabelAssert.Equal(new Window(TimeSystem.Time.J2000TDB, TimeSpan.Zero), maneuver.ThrustWindow);
+        LabelAssert.Equal(new Window(TimeSystem.Time.J2000Tdb, TimeSpan.Zero), maneuver.ManeuverWindow);
+        LabelAssert.Equal(new Window(TimeSystem.Time.J2000Tdb, TimeSpan.Zero), maneuver.ThrustWindow);
     }
 
     /// <summary>
@@ -49,19 +49,19 @@ public class NadirAttitudeTests
     [Fact]
     public void TheExecution_ReturnsTheStateItWasGiven_AndMovesNoChain()
     {
-        var orbitalParams = new KeplerianElements(42164000.0, 0.0, 0.0, 0.0, 0.0, 0.0, TestHelpers.EarthAtJ2000, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF);
+        var orbitalParams = new KeplerianElements(42164000.0, 0.0, 0.0, 0.0, 0.0, 0.0, TestHelpers.EarthAtJ2000, TimeSystem.Time.J2000Tdb, Frames.Frame.ICRF);
         var spc = new Spacecraft(-1107, "GenericSpacecraft1107", 1000.0, orbitalParams, 3000.0, new Clock("GenericClk1107", 65536));
-        var nadir = new NadirAttitude(TimeSystem.Time.J2000TDB, TimeSpan.FromSeconds(10.0), TestHelpers.EarthAtJ2000);
-        var prograde = new ProgradeAttitude(TimeSystem.Time.J2000TDB, TimeSpan.Zero, TestHelpers.EarthAtJ2000);
+        var nadir = new NadirAttitude(TimeSystem.Time.J2000Tdb, TimeSpan.FromSeconds(10.0), TestHelpers.EarthAtJ2000);
+        var prograde = new ProgradeAttitude(TimeSystem.Time.J2000Tdb, TimeSpan.Zero, TestHelpers.EarthAtJ2000);
         spc.SetManeuvers(nadir, prograde);
         var start = orbitalParams.ToStateVector();
 
         nadir.TryExecute(start);
-        var afterTheHold = start.ToStateVector(TimeSystem.Time.J2000TDB.AddSeconds(20.0));
+        var afterTheHold = start.ToStateVector(TimeSystem.Time.J2000Tdb.AddSeconds(20.0));
 
         Assert.Same(afterTheHold, nadir.TryExecute(afterTheHold).sv);
         Assert.Equal(nadir, spc.StandbyManeuver);
         Assert.Empty(spc.ExecutedManeuvers);
-        LabelAssert.Equal(TimeSystem.Time.J2000TDB, prograde.MinEpoch);
+        LabelAssert.Equal(TimeSystem.Time.J2000Tdb, prograde.MinEpoch);
     }
 }

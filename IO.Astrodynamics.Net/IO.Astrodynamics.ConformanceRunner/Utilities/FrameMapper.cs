@@ -11,7 +11,7 @@ public static class FrameMapper
         {
             "EME2000" or "J2000" or "ICRF" => Frame.ICRF,
             "TEME" => Frame.TEME,
-            "ECLIPJ2000" or "ECLIPTIC_J2000" => Frame.ECLIPTIC_J2000,
+            "ECLIPJ2000" or "ECLIPTIC_J2000" => Frame.ECLIPJ2000,
             _ => throw new ArgumentException($"Unknown reference frame: {frameName}")
         };
     }

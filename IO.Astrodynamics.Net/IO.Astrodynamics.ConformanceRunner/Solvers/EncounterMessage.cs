@@ -1,5 +1,5 @@
 using System.Collections.Generic;
-using IO.Astrodynamics.CCSDS.CDM;
+using IO.Astrodynamics.Ccsds;
 using IO.Astrodynamics.ConformanceRunner.Models;
 using IO.Astrodynamics.ConformanceRunner.Utilities;
 using IO.Astrodynamics.Math;
@@ -23,7 +23,7 @@ internal static class EncounterMessage
     /// one alone, without Frisbee's maximum.</param>
     public static Cdm Of(Time tca, IReadOnlyList<EncounterObject> objects, bool absentAsZero = false)
     {
-        var tcaUtc = tca.ToUTC().DateTime;
+        var tcaUtc = tca.ToUtc().DateTime;
         var segments = new List<CdmSegment>();
         for (int k = 0; k < 2; k++)
         {

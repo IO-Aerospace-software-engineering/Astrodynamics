@@ -7,10 +7,9 @@ using System.Linq;
 using System.Reflection;
 using ClaudeMdSamples;
 using IO.Astrodynamics.Atmosphere;
-using IO.Astrodynamics.Atmosphere.NRLMSISE_00;
 using IO.Astrodynamics.Body;
 using IO.Astrodynamics.Body.Spacecraft;
-using IO.Astrodynamics.CCSDS.OMM;
+using IO.Astrodynamics.Ccsds;
 using IO.Astrodynamics.Maneuver;
 using IO.Astrodynamics.Math;
 using IO.Astrodynamics.OrbitalParameters;
@@ -97,9 +96,9 @@ public class ClaudeMdExamplesTests
 
     private static readonly TimeSystem.Time Epoch = new(2024, 1, 1, 12, 0, 0, TimeScale.TDB);
 
-    private static CelestialBody Earth => PlanetsAndMoons.EARTH_BODY;
+    private static CelestialBody Earth => PlanetsAndMoons.EarthBody;
 
-    private static CelestialBody Sun => Stars.SUN_BODY;
+    private static CelestialBody Sun => Stars.SunBody;
 
     // A LEO about the Earth, 6800 km in radius, inclined 51.6 degrees
     private static KeplerianElements Orbit() =>
@@ -163,7 +162,7 @@ public class ClaudeMdExamplesTests
                 break;
             case "net:19":
                 SpacecraftWithEngine(-6719, out engine);
-                Assert.NotNull(ClaudeMdExamples.Net19(Epoch, TimeSpan.FromMinutes(30), PlanetsAndMoons.MOON_BODY, Sun, engine));
+                Assert.NotNull(ClaudeMdExamples.Net19(Epoch, TimeSpan.FromMinutes(30), PlanetsAndMoons.MoonBody, Sun, engine));
                 break;
             case "net:20":
                 SpacecraftWithEngine(-6720, out engine);
@@ -186,7 +185,7 @@ public class ClaudeMdExamplesTests
             case "net:27":
                 var (frame, epoch, deg2Rad) = ClaudeMdTestProcessExamples.Net27();
                 Assert.Same(IO.Astrodynamics.Frames.Frame.ICRF, frame);
-                LabelAssert.Equal(TimeSystem.Time.J2000TDB, epoch);
+                LabelAssert.Equal(TimeSystem.Time.J2000Tdb, epoch);
                 Assert.Equal(System.Math.PI / 180.0, deg2Rad);
                 break;
             case "root:2": ClaudeMdTestProcessExamples.Root02(); break;
@@ -267,8 +266,8 @@ public class ClaudeMdExamplesTests
         Assert.Equal(impulse.DeltaV.Z / 1000.0, exported.ManDv3);
         Assert.True(impulse.FuelBurned > 0.0);
         Assert.Equal(-impulse.FuelBurned, exported.ManDeltaMass);
-        Assert.Equal(impulse.ThrustWindow!.Value.Length.TotalSeconds, exported.ManDuration);
-        Assert.Equal(impulse.ThrustWindow.Value.StartDate.ToUTC().DateTime, exported.ManEpochIgnition);
+        Assert.Equal(impulse.ThrustWindow!.Value.Length.TotalSeconds, exported.ManDurationSeconds);
+        Assert.Equal(impulse.ThrustWindow.Value.StartDate.ToUtc().DateTime, exported.ManEpochIgnition);
 
         // The input of 608bcf6: unpropagated, no executed maneuver, nothing exported
         var unpropagated = SpacecraftWithEngine(-6734, out _, "2024-001A");
@@ -317,17 +316,17 @@ public class ClaudeMdExamplesTests
     }
 
     /// <summary>
-    /// The geopotential block of 66bc7bc, read naturally with an orbit about <c>EARTH_BODY</c>, throws: a listed body of the
+    /// The geopotential block of 66bc7bc, read naturally with an orbit about <c>EarthBody</c>, throws: a listed body of the
     /// observer's identifier with another gravitational field is rejected (#674). The corrected block builds its orbit on
     /// the degree-10 Earth, and its propagator builds.
     /// </summary>
     [Fact]
     public void GeopotentialBlock_ListedEarthOfOtherModels_Throws()
     {
-        var earth = new CelestialBody(PlanetsAndMoons.EARTH, Frames.Frame.ICRF, Epoch,
+        var earth = new CelestialBody(PlanetsAndMoons.Earth, Frames.Frame.ICRF, Epoch,
             new GeopotentialModelParameters("Data/SolarSystem/EGM2008_to70_TideFree", 10));
         var spacecraft = new Spacecraft(-6730, "CLAUDEMD6730", 100.0, Orbit(), 10000.0, NewClock("CLAUDEMD6730_CLK"));
-        var exception = Assert.Throws<ArgumentException>(() => new CentralBodyPropagator(new Window(Epoch, Epoch.AddHours(1)), spacecraft, new PropagationOptions { Integrator = new VVIntegratorOptions { Step = TimeSpan.FromSeconds(1.0) }, OutputStep = TimeSpan.FromSeconds(1.0), ThirdBodies = [earth, PlanetsAndMoons.MOON_BODY, Stars.SUN_BODY] }));
+        var exception = Assert.Throws<ArgumentException>(() => new CentralBodyPropagator(new Window(Epoch, Epoch.AddHours(1)), spacecraft, new PropagationOptions { Integrator = new VVIntegratorOptions { Step = TimeSpan.FromSeconds(1.0) }, OutputStep = TimeSpan.FromSeconds(1.0), ThirdBodies = [earth, PlanetsAndMoons.MoonBody, Stars.SunBody] }));
         Assert.Equal("celestialBodies", exception.ParamName);
 
         Assert.NotNull(ClaudeMdExamples.Net12(Epoch, new Window(Epoch, Epoch.AddHours(1)), NewClock("CLAUDEMD12B_CLK")));
@@ -348,7 +347,7 @@ public class ClaudeMdExamplesTests
     /// <summary>
     /// The corrected Earth observation block points <c>Spacecraft.Down</c> at nadir, −r/|r| (the closed form), and
     /// <c>Spacecraft.Right</c> (+X) at the component of the Sun direction perpendicular to nadir (TRIAD's
-    /// secondary), the Sun's geometric state from the Earth read from SPICE (<c>SpiceAPI.ReadEphemeris</c>), over 24 epochs
+    /// secondary), the Sun's geometric state from the Earth read from SPICE (<c>SpiceApi.ReadEphemeris</c>), over 24 epochs
     /// 4 min apart of a LEO.
     /// </summary>
     [Fact]
@@ -363,7 +362,7 @@ public class ClaudeMdExamplesTests
             var state = orbit.AtEpoch(Epoch.AddSeconds(240.0 * k)).ToStateVector();
             var q = attitude.ComputeOrientation(state);
             var nadir = state.Position.Inverse() / state.Position.Magnitude();
-            var sunFromEarth = SpiceAPI.Instance.ReadEphemeris(state.Epoch, PlanetsAndMoons.EARTH.NaifId, Stars.Sun.NaifId, Frames.Frame.ICRF,
+            var sunFromEarth = SpiceApi.Instance.ReadEphemeris(state.Epoch, PlanetsAndMoons.Earth.NaifId, Stars.Sun.NaifId, Frames.Frame.ICRF,
                 Aberration.None).Position;
             var sunDirection = sunFromEarth - state.Position;
             var perpendicular = sunDirection - nadir * sunDirection.Dot(nadir);

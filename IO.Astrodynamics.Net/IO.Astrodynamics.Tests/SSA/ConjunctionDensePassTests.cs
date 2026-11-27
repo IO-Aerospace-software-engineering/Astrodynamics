@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using IO.Astrodynamics.Math;
 using IO.Astrodynamics.OrbitalParameters;
-using IO.Astrodynamics.SSA;
+using IO.Astrodynamics.Ssa;
 using IO.Astrodynamics.TimeSystem;
 using Xunit;
 using Xunit.Abstractions;
@@ -77,8 +77,8 @@ public abstract class ConjunctionDensePassTestBase
         var step = TimeSpan.FromSeconds(crossing is CwPassEncounterCase cw ? cw.GfStepSeconds : 60.0);
         var first = crossing.Window.StartDate;
         var last = crossing.Window.EndDate.AddSeconds(-1.0e-3);
-        return SpiceAPI.Instance.FindWindowsOnDistanceConstraint(window, crossing.ProtectedId, crossing.SecondaryId,
-                RelationnalOperator.LocalMin, 0.0, Aberration.None, step)
+        return SpiceApi.Instance.FindWindowsOnDistanceConstraint(window, crossing.ProtectedId, crossing.SecondaryId,
+                RelationalOperator.LocalMin, 0.0, Aberration.None, step)
             .Select(w =>
             {
                 var epoch = w.StartDate;
@@ -128,7 +128,7 @@ public abstract class ConjunctionDensePassTestBase
 
     protected static StateVector CspiceState(TimeSystem.Time epoch, int id, int observer = 399)
     {
-        return SpiceAPI.Instance.ReadEphemeris(epoch, observer, id, Frames.Frame.ICRF, Aberration.None);
+        return SpiceApi.Instance.ReadEphemeris(epoch, observer, id, Frames.Frame.ICRF, Aberration.None);
     }
 
     // ---- Round 4 of the lot-6 review: a maximum of the distance is no close approach ----
@@ -306,7 +306,7 @@ public abstract class ConjunctionDensePassTestBase
     protected void ByDefault_TheRangeRateIsNotReadOverTheWindow(string fixture, double start, double end)
     {
         // Decision 54 of #457, through the public Analyze and AnalyzeAll: by default the dense search reads the range rate
-        // the seeds need only, so MaximumEventSearchStep changes neither its reads nor its results, and at a spacing of 1 s
+        // the seeds need only, so MaxEventSearchStep changes neither its reads nor its results, and at a spacing of 1 s
         // it reads fewer states than the reads over the window alone need (one per second of the window); with
         // ReadRangeRateOverWindow it reads at least those (the review of decision 54: a search that always read over the
         // window passed every other test)
@@ -332,7 +332,7 @@ public abstract class ConjunctionDensePassTestBase
                 $"{encounter.EncounterState.Epoch.TimeSpanFromJ2000().Ticks} {encounter.EncounterState.MissDistanceMeters:R}");
         }
 
-        var fine = Options with { MaximumEventSearchStep = TimeSpan.FromSeconds(1.0) };
+        var fine = Options with { MaxEventSearchStep = TimeSpan.FromSeconds(1.0) };
         foreach (var search in new Func<ConjunctionAnalysisOptions, (long Reads, string Result)>[] { All, One })
         {
             var byDefault = search(Options);
@@ -906,10 +906,10 @@ public class ConjunctionDensePassCTests : ConjunctionDensePassTestBase, IClassFi
     public void Dense_TheReadsOfTheRangeRate_AreMaximumEventSearchStepApart(double start, double end, int count)
     {
         // The fold of CWFM, positive over [7065.14, 7067.49] s with no minimum of the Hermite before it: at a
-        // MaximumEventSearchStep of 1 s the reads over the window land in it, and AnalyzeAll lists every minimum of CSPICE
+        // MaxEventSearchStep of 1 s the reads over the window land in it, and AnalyzeAll lists every minimum of CSPICE
         // (the round-1 review of #628: the option reaches the dense search; the 60 s reads step over this fold, the
         // documented limit, which this test does not assert)
-        var options = ReadOverWindowOptions with { MaximumEventSearchStep = TimeSpan.FromSeconds(1.0) };
+        var options = ReadOverWindowOptions with { MaxEventSearchStep = TimeSpan.FromSeconds(1.0) };
         AssertSlowPassMatchesCspice(_cwFoldMixedCase, _cwFoldMixedCase.Seconds(start, end), count, options: options);
     }
 

@@ -7,9 +7,9 @@ using System.IO;
 using System.Linq;
 using System.Xml;
 using System.Xml.Linq;
-using IO.Astrodynamics.CCSDS.Common;
+using IO.Astrodynamics.Ccsds;
 
-namespace IO.Astrodynamics.CCSDS.OPM;
+namespace IO.Astrodynamics.Ccsds;
 
 /// <summary>
 /// Reads OPM (Orbit Parameter Message) files in CCSDS NDM/XML format.
@@ -391,7 +391,7 @@ internal class OpmReader
 
         return Construct(() => new OpmManeuverParameters(epoch, duration, deltaMass, refFrame, dv1, dv2, dv3, comments),
             "maneuverParameters",
-            new CcsdsKeyword("manDuration", "MAN_DURATION", durationStr),
+            new CcsdsKeyword("manDurationSeconds", "MAN_DURATION", durationStr),
             new CcsdsKeyword("manDeltaMass", "MAN_DELTA_MASS", deltaMassStr),
             new CcsdsKeyword("manRefFrame", "MAN_REF_FRAME", refFrame));
     }

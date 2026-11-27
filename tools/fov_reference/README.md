@@ -1,7 +1,7 @@
 # Field-of-view reference (#515, choice 9 (a))
 
 `fov_ref.c` writes the kernels of three spacecraft and prints, as JSON, what CSPICE N0067 computes on them for the
-field-of-view search of the library (`Instrument.FindFieldOfViewWindows`, `Instrument.IsInFOV`). Its output
+field-of-view search of the library (`Instrument.FindFieldOfViewWindows`, `Instrument.IsInFov`). Its output
 is the reference of `IO.Astrodynamics.Tests/Body/FieldOfViewReferenceTests.cs`.
 
 ## What it writes

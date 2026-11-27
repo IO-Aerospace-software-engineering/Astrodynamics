@@ -2,7 +2,7 @@
 #nullable enable
 using System;
 
-namespace IO.Astrodynamics.CCSDS.CDM;
+namespace IO.Astrodynamics.Ccsds;
 
 public enum CdmObjectRole
 {

@@ -114,13 +114,13 @@ public class MemoryDataProviderBodyTests
         }
 
         Assert.Contains("OK CelestialItem.Create(391) without its state: InvalidOperationException", output);
-        Assert.Contains("OK SOLAR_SYSTEM_BARYCENTER.GM without its information, read 2: ArgumentException", output);
+        Assert.Contains("OK SolarSystemBarycenter.GM without its information, read 2: ArgumentException", output);
         Assert.Contains("OK L1's state is the stored state of 391 minus that of the Earth barycentre", output);
-        Assert.Contains("OK SUN_BODY's orbit is its state about the solar system barycentre", output);
+        Assert.Contains("OK SunBody's orbit is its state about the solar system barycentre", output);
     }
 
     /// <summary>
-    /// The static objects on SPICE, the kernels loaded before any read, against SPICE through <c>SpiceAPI</c> (the body
+    /// The static objects on SPICE, the kernels loaded before any read, against SPICE through <c>SpiceApi</c> (the body
     /// information of <c>bodvrd</c>, the state of <c>spkezr</c>), exactly.
     /// </summary>
     [Fact]
@@ -132,14 +132,14 @@ public class MemoryDataProviderBodyTests
             _output.WriteLine(line);
         }
 
-        Assert.Contains("OK EARTH_BODY's orbit is spkezr's state of 399 about 3 in ECLIPJ2000 at J2000 TDB", output);
-        Assert.Contains("OK SOLAR_SYSTEM_BARYCENTER has no orbit", output);
+        Assert.Contains("OK EarthBody's orbit is spkezr's state of 399 about 3 in ECLIPJ2000 at J2000 TDB", output);
+        Assert.Contains("OK SolarSystemBarycenter has no orbit", output);
     }
 
     /// <summary>
     /// The static objects first read on an empty memory provider, then on a SPICE provider set afterwards with the kernels
     /// loaded: each read retries on the provider set at that time, and the members are SPICE's (<c>bodvrd</c>, <c>spkezr</c>
-    /// through <c>SpiceAPI</c>), exactly; once read, an object keeps the provider it read its data from, for its data and its
+    /// through <c>SpiceApi</c>), exactly; once read, an object keeps the provider it read its data from, for its data and its
     /// ephemeris. Before, the retry went back to the provider current when the class was initialized: the objects threw
     /// the memory provider's <see cref="ArgumentException"/> for the life of the process.
     /// </summary>
@@ -152,8 +152,8 @@ public class MemoryDataProviderBodyTests
             _output.WriteLine(line);
         }
 
-        Assert.Contains("OK SUN_BODY.GM on the empty memory provider: ArgumentException", output);
-        Assert.Contains("OK EARTH_BODY's orbit after the switch is spkezr's state of 399 about 3 in ECLIPJ2000 at J2000 TDB", output);
+        Assert.Contains("OK SunBody.GM on the empty memory provider: ArgumentException", output);
+        Assert.Contains("OK EarthBody's orbit after the switch is spkezr's state of 399 about 3 in ECLIPJ2000 at J2000 TDB", output);
         Assert.Contains("OK EARTH_BARYCENTER's ephemeris after the switch is spkezr's state of 3 about 0 in ICRF", output);
         Assert.Contains("OK EARTH_BARYCENTER's ephemeris, once its data are read, stays SPICE's under a later provider", output);
     }
@@ -162,7 +162,7 @@ public class MemoryDataProviderBodyTests
     /// The static objects read on SPICE before any kernel is loaded, then after <c>LoadKernels</c>, in a fresh process: SPICE
     /// names the bodies without kernels but gives no <c>BODYnnn_GM</c> nor <c>BODYnnn_RADII</c>, and a read of a static
     /// object whose data need them throws <see cref="InvalidOperationException"/> naming the missing variable, at each read;
-    /// once the kernels are loaded, the members are SPICE's (<c>bodvrd</c>, <c>spkezr</c> through <c>SpiceAPI</c>), exactly.
+    /// once the kernels are loaded, the members are SPICE's (<c>bodvrd</c>, <c>spkezr</c> through <c>SpiceApi</c>), exactly.
     /// Before, the first read cached the zeros SPICE answered (GM 0, radii 0, J2 NaN, no orbit, the frame IAU_EARTH) for the
     /// life of the process. A first read after a partial load (the leap seconds, the GMs and the PCK) gives what SPICE gives
     /// then (J2 NaN, IAU_EARTH, IAU_MOON, no orbit), and the members follow each later change of the kernel pool: SPICE's
@@ -178,13 +178,13 @@ public class MemoryDataProviderBodyTests
             _output.WriteLine(line);
         }
 
-        Assert.Contains("OK EARTH_BODY.GM before the kernels, read 2: InvalidOperationException", output);
-        Assert.Contains("OK EARTH_BODY's orbit after the kernels is spkezr's state of 399 about 3 in ECLIPJ2000 at J2000 TDB", output);
-        Assert.Contains("OK EARTH_BODY.Frame after the kernels ITRF93, SPICE ITRF93", output);
-        Assert.Contains("OK EARTH_BODY.Frame after a partial load IAU_EARTH, SPICE IAU_EARTH", output);
-        Assert.Contains("OK EARTH_BODY's frame and orbit after the reload of a kernel are the same instances", output);
-        Assert.Contains("OK EARTH_BODY.GM after ClearKernels, read 2: InvalidOperationException", output);
-        Assert.Contains("OK EARTH_BODY.J2 and Frame after the kernels are loaded again", output);
+        Assert.Contains("OK EarthBody.GM before the kernels, read 2: InvalidOperationException", output);
+        Assert.Contains("OK EarthBody's orbit after the kernels is spkezr's state of 399 about 3 in ECLIPJ2000 at J2000 TDB", output);
+        Assert.Contains("OK EarthBody.Frame after the kernels ITRF93, SPICE ITRF93", output);
+        Assert.Contains("OK EarthBody.Frame after a partial load IAU_EARTH, SPICE IAU_EARTH", output);
+        Assert.Contains("OK EarthBody's frame and orbit after the reload of a kernel are the same instances", output);
+        Assert.Contains("OK EarthBody.GM after ClearKernels, read 2: InvalidOperationException", output);
+        Assert.Contains("OK EarthBody.J2 and Frame after the kernels are loaded again", output);
     }
 
     /// <summary>
@@ -203,7 +203,7 @@ public class MemoryDataProviderBodyTests
             _output.WriteLine(line);
         }
 
-        Assert.Contains("OK Frame.GALACTIC_SYSTEM2 follows the provider set since, at the same epoch: 30°", output);
+        Assert.Contains("OK Frame.GALACTIC follows the provider set since, at the same epoch: 30°", output);
         Assert.Contains("OK Frame.ITRF93 follows it too: 30°", output);
         Assert.Contains("OK a frame built by name keeps the provider of its construction: 90°", output);
         Assert.Contains("OK the memory provider's EME2000: ArgumentException", output);

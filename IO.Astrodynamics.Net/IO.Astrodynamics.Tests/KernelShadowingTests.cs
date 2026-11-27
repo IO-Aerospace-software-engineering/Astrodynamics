@@ -43,7 +43,7 @@ public sealed class KernelShadowingTests : IDisposable
 
         // Assert: the kernels were read, and none shadows
         Assert.Contains(folders, f => f.Name == "FieldOfViewReference");
-        Assert.True(folders.SelectMany(SpiceAPI.KernelFiles).Count() > 20);
+        Assert.True(folders.SelectMany(SpiceApi.KernelFiles).Count() > 20);
         Assert.True(conflicts.Count == 0, string.Join(Environment.NewLine, conflicts));
     }
 
@@ -167,7 +167,7 @@ public sealed class KernelShadowingTests : IDisposable
     private static byte[] Spk(int target)
     {
         var states = Enumerable.Range(0, 2).Select(i => new StateVector(new Vector3(7.0e6, 0.0, 0.0), new Vector3(0.0, 7.5e3, 0.0),
-            TestHelpers.EarthAtJ2000, TimeSystem.Time.CreateTDB(i), Frames.Frame.ICRF)).ToArray();
+            TestHelpers.EarthAtJ2000, TimeSystem.Time.CreateTdb(i), Frames.Frame.ICRF)).ToArray();
         return SpkWriter.BuildType9(target, 1, [states]);
     }
 }

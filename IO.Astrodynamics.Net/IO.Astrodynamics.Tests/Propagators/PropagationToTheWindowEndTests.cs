@@ -62,13 +62,13 @@ public class PropagationToTheWindowEndTests
     {
         if (central == "Moon")
         {
-            var moon = new CelestialBody(PlanetsAndMoons.MOON, Frame.ICRF, start);
+            var moon = new CelestialBody(PlanetsAndMoons.Moon, Frame.ICRF, start);
             double r = 1.9e6;
             double v = System.Math.Sqrt(moon.GM / r) * 1.05;
             return new StateVector(new Vector3(r, 0.0, 0.0), new Vector3(0.0, v * 0.8, v * 0.6), moon, start, Frame.ICRF);
         }
 
-        var earth = new CelestialBody(PlanetsAndMoons.EARTH, Frame.ICRF, start);
+        var earth = new CelestialBody(PlanetsAndMoons.Earth, Frame.ICRF, start);
         return new StateVector(new Vector3(6878137.0, 0.0, 0.0), new Vector3(0.0, 6200.0, 4500.0), earth, start, Frame.ICRF);
     }
 
@@ -202,9 +202,9 @@ public class PropagationToTheWindowEndTests
         // Assert
         var states = spacecraft.PropagatedStates;
         Assert.Equal(62, states.Length);
-        LabelAssert.Equal(window.EndDate.ToTDB(), states[^1].Epoch);
+        LabelAssert.Equal(window.EndDate.ToTdb(), states[^1].Epoch);
         var read = spacecraft.GetEphemeris(window.EndDate, (CelestialItem)initial.Observer, Frame.ICRF, Aberration.None);
-        Assert.Equal(0.0, (read.Position - solution.InterpolateAt(window.EndDate.ToTDB()).position).Magnitude());
+        Assert.Equal(0.0, (read.Position - solution.InterpolateAt(window.EndDate.ToTdb()).position).Magnitude());
     }
 
     /// <summary>
@@ -224,7 +224,7 @@ public class PropagationToTheWindowEndTests
 
         // Act
         spacecraft.WriteEphemeris(spk);
-        SpiceAPI.Instance.LoadKernels(spk);
+        SpiceApi.Instance.LoadKernels(spk);
         try
         {
             double worst = 0.0;
@@ -232,7 +232,7 @@ public class PropagationToTheWindowEndTests
             {
                 var managed = spacecraft.GetEphemeris(epoch, (CelestialItem)initial.Observer, Frame.ICRF, Aberration.None);
                 // The windowed read, which throws on a SPICE error
-                var fromSpk = SpiceAPI.Instance.ReadEphemeris(new Window(epoch, epoch), 399, spacecraft.NaifId, Frame.ICRF,
+                var fromSpk = SpiceApi.Instance.ReadEphemeris(new Window(epoch, epoch), 399, spacecraft.NaifId, Frame.ICRF,
                     Aberration.None, TimeSpan.FromSeconds(1.0)).First().ToStateVector();
                 worst = System.Math.Max(worst, (fromSpk.Position - managed.Position).Magnitude());
             }
@@ -243,7 +243,7 @@ public class PropagationToTheWindowEndTests
         }
         finally
         {
-            SpiceAPI.Instance.UnloadKernels(spk);
+            SpiceApi.Instance.UnloadKernels(spk);
             spk.Delete();
         }
     }

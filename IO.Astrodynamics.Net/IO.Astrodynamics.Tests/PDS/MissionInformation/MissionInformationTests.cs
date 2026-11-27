@@ -1,7 +1,7 @@
 // Copyright 2023. Sylvain Guillet (sylvain.guillet@tutamail.com)
 
 using System.IO;
-using IO.Astrodynamics.PDS.V4.MissionInformation;
+using IO.Astrodynamics.Pds.V4.MissionInformation;
 using Xunit;
 
 namespace IO.Astrodynamics.Tests.PDS.MissionInformation;
@@ -11,7 +11,7 @@ public class MissionInformationTests
     [Fact]
     public void Create()
     {
-        PDSMissionInformation pds = new PDSMissionInformation();
+        PdsMissionInformation pds = new PdsMissionInformation();
         Mission_Information_1K00_1300 ms = new Mission_Information_1K00_1300();
     }
 
@@ -19,7 +19,7 @@ public class MissionInformationTests
     public void ValidateGoodFile()
     {
         FileInfo validFile = new FileInfo("PDS/MissionInformation/test1_VALID.xml");
-        PDSMissionInformation pds = new PDSMissionInformation();
+        PdsMissionInformation pds = new PdsMissionInformation();
         var res = pds.ValidateArchive(validFile);
         Assert.Empty(res);
     }
@@ -28,7 +28,7 @@ public class MissionInformationTests
     public void ValidateBadFile()
     {
         FileInfo validFile = new FileInfo("PDS/MissionInformation/test1_FAIL.xml");
-        PDSMissionInformation pds = new PDSMissionInformation();
+        PdsMissionInformation pds = new PdsMissionInformation();
         var res = pds.ValidateArchive(validFile);
         Assert.Single(res);
         Assert.Equal(
@@ -41,7 +41,7 @@ public class MissionInformationTests
     public void GenerateArchive()
     {
         FileInfo validFile = new FileInfo("PDS/MissionInformation/test1_VALID.xml");
-        PDSMissionInformation pds = new PDSMissionInformation();
+        PdsMissionInformation pds = new PdsMissionInformation();
         var archive = pds.LoadArchive(validFile);
         var xml = pds.GenerateArchive(archive);
         byte[] byteArray = System.Text.Encoding.UTF8.GetBytes(xml);

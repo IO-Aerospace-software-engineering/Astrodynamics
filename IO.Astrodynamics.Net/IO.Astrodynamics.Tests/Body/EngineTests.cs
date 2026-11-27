@@ -13,7 +13,7 @@ namespace IO.Astrodynamics.Tests.Body
             Engine engine = new Engine("eng", 350.0, 50.0, ft, "model", "sn1");
             Assert.Equal("eng", engine.Name);
             Assert.Equal("model", engine.Model);
-            Assert.Equal(350.0, engine.ISP);
+            Assert.Equal(350.0, engine.Isp);
             Assert.Equal(50.0, engine.FuelFlow);
             Assert.Equal(ft, engine.FuelTank);
             Assert.Equal("model", engine.Model);

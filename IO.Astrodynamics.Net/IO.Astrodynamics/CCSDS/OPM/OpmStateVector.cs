@@ -3,14 +3,13 @@
 using System;
 using System.Collections.Generic;
 using IO.Astrodynamics.Body;
-using IO.Astrodynamics.CCSDS.Common;
-using IO.Astrodynamics.CCSDS.Common.Enums;
+using IO.Astrodynamics.Ccsds;
 using IO.Astrodynamics.Frames;
 using IO.Astrodynamics.Math;
 using IO.Astrodynamics.OrbitalParameters;
 using IO.Astrodynamics.TimeSystem;
 
-namespace IO.Astrodynamics.CCSDS.OPM;
+namespace IO.Astrodynamics.Ccsds;
 
 /// <summary>
 /// Represents the state vector section of an OPM message in CCSDS native units.
@@ -147,7 +146,7 @@ public class OpmStateVector
 
         // Convert m to km, m/s to km/s
         return new OpmStateVector(
-            stateVector.Epoch.ToUTC().DateTime,
+            stateVector.Epoch.ToUtc().DateTime,
             stateVector.Position.X / 1000.0,
             stateVector.Position.Y / 1000.0,
             stateVector.Position.Z / 1000.0,

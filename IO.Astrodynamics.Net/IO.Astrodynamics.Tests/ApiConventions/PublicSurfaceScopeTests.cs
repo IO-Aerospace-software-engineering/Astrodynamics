@@ -16,7 +16,7 @@ namespace IO.Astrodynamics.Tests.ApiConventions;
 /// <summary>
 /// The scope of the public surface (R04 of #668, lot L3, with the provider part of R20): the interop structs of the native
 /// layer (<c>IO.Astrodynamics.DTO</c>), the library's implementation helpers, the JSON model of the Cosmographia exporter
-/// and the ten raw conversions of <see cref="SpiceAPI"/> are not public; no visible member exposes a type a caller cannot
+/// and the ten raw conversions of <see cref="SpiceApi"/> are not public; no visible member exposes a type a caller cannot
 /// name; every public value type is read only; the data provider seam speaks domain types. Read by reflection over the
 /// public surface (<see cref="PublicSurface"/>), by name, so that each rule reads the library as it is.
 /// </summary>
@@ -61,7 +61,7 @@ public class PublicSurfaceScopeTests
     }
 
     /// <summary>
-    /// The ten raw conversions of <see cref="SpiceAPI"/> that twin the object API (<c>TLE.ToStateVector</c>,
+    /// The ten raw conversions of <see cref="SpiceApi"/> that twin the object API (<c>Tle.ToStateVector</c>,
     /// <c>ToKeplerianElements</c>, <c>ToStateVector</c>, <c>AtEpoch</c>): removed from the public API in 11.0.0, outright
     /// (section 7 of the re-baseline of #671, decided by S. Guillet, 2026-11-19), kept internal as the SPICE references of
     /// the tests.
@@ -74,8 +74,8 @@ public class PublicSurfaceScopeTests
     [InlineData("Propagate2Bodies")]
     public void SpiceApiConversion_IsNotPublic(string name)
     {
-        Assert.NotEmpty(typeof(SpiceAPI).GetMethods(PublicSurface.Declared).Where(m => m.Name == name));
-        var visible = typeof(SpiceAPI).GetMethods(BindingFlags.Public | BindingFlags.Instance | BindingFlags.Static)
+        Assert.NotEmpty(typeof(SpiceApi).GetMethods(PublicSurface.Declared).Where(m => m.Name == name));
+        var visible = typeof(SpiceApi).GetMethods(BindingFlags.Public | BindingFlags.Instance | BindingFlags.Static)
             .Where(m => m.Name == name).Select(PublicSurface.Signature).ToList();
         Assert.True(visible.Count == 0, "public: " + string.Join(", ", visible));
     }
@@ -177,7 +177,7 @@ public class PublicSurfaceScopeTests
     /// <summary>
     /// The window searches return an <see cref="IReadOnlyList{T}"/> of windows, their count and indexing visible, never an
     /// <see cref="IEnumerable{T}"/> of windows (R16 of #668, choice 2, decided by S. Guillet, 2026-11-19): the six raw
-    /// searches of <c>SpiceAPI</c> and <c>Site.FindDayWindows</c>, which returned the arrays and lists they build as an
+    /// searches of <c>SpiceApi</c> and <c>Site.FindDayWindows</c>, which returned the arrays and lists they build as an
     /// <c>IEnumerable&lt;Window&gt;</c> before 11.0.0, and the 8 searches on the observer of R15 (<c>WindowSearches</c>,
     /// <c>Site</c>, <c>Instrument</c>, the static <c>GeometryFinder.FindWindows</c>), which replace the others.
     /// </summary>
@@ -198,7 +198,7 @@ public class PublicSurfaceScopeTests
     /// The former searches, on the target with the observer as argument, are removed outright (R15 of #668, §7 of the
     /// re-baseline, decided by S. Guillet, 2026-11-19, no forwarder): <c>FindWindowsOnDistanceConstraint</c>,
     /// <c>FindWindowsOnOccultationConstraint</c>, <c>FindWindowsOnCoordinateConstraint</c> and
-    /// <c>FindWindowsOnIlluminationConstraint</c> of every type but <c>SpiceAPI</c>, whose raw searches stay,
+    /// <c>FindWindowsOnIlluminationConstraint</c> of every type but <c>SpiceApi</c>, whose raw searches stay,
     /// <c>Instrument.FindWindowsInFieldOfViewConstraint</c>, and the instance <c>GeometryFinder</c>, a static class.
     /// </summary>
     [Fact]
@@ -209,7 +209,7 @@ public class PublicSurfaceScopeTests
             "FindWindowsOnDistanceConstraint", "FindWindowsOnOccultationConstraint", "FindWindowsOnCoordinateConstraint",
             "FindWindowsOnIlluminationConstraint", "FindWindowsInFieldOfViewConstraint", "FindWindowsWithCondition", "EvaluateCondition"
         ];
-        var remaining = PublicSurface.Types.Where(t => t != typeof(SpiceAPI))
+        var remaining = PublicSurface.Types.Where(t => t != typeof(SpiceApi))
             .SelectMany(t => t.GetMethods(BindingFlags.Public | BindingFlags.Instance | BindingFlags.Static | BindingFlags.DeclaredOnly))
             .Where(m => former.Contains(m.Name)).Select(m => $"{m.DeclaringType}.{m.Name}").ToList();
         Assert.True(remaining.Count == 0, "former searches: " + string.Join(", ", remaining));

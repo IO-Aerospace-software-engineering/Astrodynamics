@@ -11,7 +11,7 @@ namespace IO.Astrodynamics.Propagator.Forces;
 
 public class SolarRadiationPressure : ForceBase
 {
-    private readonly CelestialBody _sun = Stars.SUN_BODY;
+    private readonly CelestialBody _sun = Stars.SunBody;
     private readonly Spacecraft _spacecraft;
     private readonly double _term1;
     private readonly CelestialBody[] _occultingBodies;
@@ -33,7 +33,7 @@ public class SolarRadiationPressure : ForceBase
         _occultingBodies = (occultingBodies ?? throw new ArgumentNullException(nameof(occultingBodies)))
             .Where(body => body.NaifId != _sun.NaifId)
             .ToArray();
-        _term1 = Constants.SolarMeanRadiativeLuminosity / (4.0 * System.Math.PI * Constants.C);
+        _term1 = Constants.SolarMeanRadiativeLuminosity / (4.0 * System.Math.PI * Constants.SpeedOfLight);
     }
 
     public override Vector3 Apply(StateVector stateVector)

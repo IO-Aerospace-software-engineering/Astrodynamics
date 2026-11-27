@@ -2,13 +2,13 @@
 
 using System;
 
-namespace IO.Astrodynamics.CCSDS;
+namespace IO.Astrodynamics.Ccsds;
 
 /// <summary>
 /// The common base of the exceptions of the CCSDS readers (R03 of #668): a document an OMM, OPM or CDM reader cannot read,
-/// whether it fails at parsing (<see cref="OMM.OmmParseException"/>, <see cref="OPM.OpmParseException"/>,
-/// <see cref="CDM.CdmParseException"/>) or at validation (<see cref="OMM.OmmValidationException"/>,
-/// <see cref="OPM.OpmValidationException"/>, <see cref="CDM.CdmValidationException"/>, lot L7), so that one <c>catch (CcsdsFormatException)</c> covers them all.
+/// whether it fails at parsing (<see cref="OmmParseException"/>, <see cref="OpmParseException"/>,
+/// <see cref="CdmParseException"/>) or at validation (<see cref="OmmValidationException"/>,
+/// <see cref="OpmValidationException"/>, <see cref="CdmValidationException"/>, lot L7), so that one <c>catch (CcsdsFormatException)</c> covers them all.
 /// </summary>
 /// <remarks>
 /// It derives from <see cref="FormatException"/>, the type of an input whose format is wrong. Before 11.0.0 the five types

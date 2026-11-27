@@ -163,7 +163,7 @@ public class EarthStandardAtmosphereReferenceTests
     {
         // Act
         var context = AtmosphericContext.FromAltitude(altitude);
-        double t = Model.GetTemperature(context) + IO.Astrodynamics.Constants.Kelvin;
+        double t = Model.GetTemperature(context) + IO.Astrodynamics.Constants.ZeroCelsiusInKelvin;
         double p = Model.GetPressure(context);
 
         // Assert: to the last digit of the table

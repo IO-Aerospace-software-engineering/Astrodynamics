@@ -4,9 +4,7 @@ using System;
 using System.IO;
 using IO.Astrodynamics.Body;
 using IO.Astrodynamics.Body.Spacecraft;
-using IO.Astrodynamics.CCSDS;
-using IO.Astrodynamics.CCSDS.Common;
-using IO.Astrodynamics.CCSDS.OPM;
+using IO.Astrodynamics.Ccsds;
 using IO.Astrodynamics.Frames;
 using IO.Astrodynamics.Math;
 using IO.Astrodynamics.OrbitalParameters;
@@ -518,8 +516,8 @@ namespace IO.Astrodynamics.Tests.CCSDS.OPM
 
             Assert.True(loaded.HasManeuvers);
             Assert.Single(loaded.Data.Maneuvers);
-            Assert.Equal(original.Data.Maneuvers[0].ManDuration,
-                loaded.Data.Maneuvers[0].ManDuration, 3);
+            Assert.Equal(original.Data.Maneuvers[0].ManDurationSeconds,
+                loaded.Data.Maneuvers[0].ManDurationSeconds, 3);
         }
 
         #endregion
@@ -582,7 +580,7 @@ namespace IO.Astrodynamics.Tests.CCSDS.OPM
             // Verify maneuvers
             Assert.True(opm.HasManeuvers);
             Assert.Equal(2, opm.Data.Maneuvers.Count);
-            Assert.Equal(180.0, opm.Data.Maneuvers[0].ManDuration, 1);
+            Assert.Equal(180.0, opm.Data.Maneuvers[0].ManDurationSeconds, 1);
             Assert.Equal(-25.0, opm.Data.Maneuvers[0].ManDeltaMass, 1);
             Assert.Equal(0.05, opm.Data.Maneuvers[0].ManDv1, 2);
         }
@@ -778,7 +776,7 @@ namespace IO.Astrodynamics.Tests.CCSDS.OPM
         {
             var opm = CreateMinimalOpm("ISS", "1998-067A");
             var clock = new Clock("OnboardClock", 256);
-            var earth = new CelestialBody(PlanetsAndMoons.EARTH);
+            var earth = new CelestialBody(PlanetsAndMoons.Earth);
 
             var spacecraft = opm.ToSpacecraft(-1000, 500000.0, clock, earth);
 
@@ -789,7 +787,7 @@ namespace IO.Astrodynamics.Tests.CCSDS.OPM
             Assert.Equal(500000.0, spacecraft.MaxOperatingMass);
             Assert.Equal(1.0, spacecraft.SectionalArea); // Default
             Assert.Equal(2.2, spacecraft.DragCoefficient); // Default
-            Assert.Equal(1.0, spacecraft.SolarRadiationCoeff); // Default
+            Assert.Equal(1.0, spacecraft.SolarRadiationCoefficient); // Default
             Assert.Same(clock, spacecraft.Clock);
         }
 
@@ -807,14 +805,14 @@ namespace IO.Astrodynamics.Tests.CCSDS.OPM
             var opm = new Opm(header, metadata, data);
 
             var clock = new Clock("OnboardClock", 256);
-            var earth = new CelestialBody(PlanetsAndMoons.EARTH);
+            var earth = new CelestialBody(PlanetsAndMoons.Earth);
 
             var spacecraft = opm.ToSpacecraft(-1000, 500000.0, clock, earth);
 
             Assert.Equal(420000.0, spacecraft.Mass);
             Assert.Equal(1600.0, spacecraft.SectionalArea);
             Assert.Equal(2.2, spacecraft.DragCoefficient);
-            Assert.Equal(1.5, spacecraft.SolarRadiationCoeff);
+            Assert.Equal(1.5, spacecraft.SolarRadiationCoefficient);
         }
 
         /// <summary>
@@ -833,7 +831,7 @@ namespace IO.Astrodynamics.Tests.CCSDS.OPM
             var data = new OpmData(stateVector, mass: 100.0, solarRadiationPressureArea: solarRadArea, dragArea: dragArea);
             var opm = new Opm(CcsdsHeader.CreateDefault(), new OpmMetadata("SAT", "2024-001A", "EARTH", "ICRF", "UTC"), data);
 
-            var spacecraft = opm.ToSpacecraft(-1000, observer: new CelestialBody(PlanetsAndMoons.EARTH));
+            var spacecraft = opm.ToSpacecraft(-1000, observer: new CelestialBody(PlanetsAndMoons.Earth));
 
             Assert.Equal(expected, spacecraft.SectionalArea);
         }
@@ -852,7 +850,7 @@ namespace IO.Astrodynamics.Tests.CCSDS.OPM
             var clock = new Clock("SAT_CLK", 256);
 
             var ex = Assert.Throws<InvalidOperationException>(() =>
-                opm.ToSpacecraft(-1000, clock: clock, observer: new CelestialBody(PlanetsAndMoons.EARTH)));
+                opm.ToSpacecraft(-1000, clock: clock, observer: new CelestialBody(PlanetsAndMoons.Earth)));
 
             Assert.Contains("DRAG_AREA", ex.Message);
             Assert.Contains("SOLAR_RAD_AREA", ex.Message);
@@ -877,7 +875,7 @@ namespace IO.Astrodynamics.Tests.CCSDS.OPM
             var opm = new Opm(header, metadata, data);
 
             var clock = new Clock("OnboardClock", 256);
-            var earth = new CelestialBody(PlanetsAndMoons.EARTH);
+            var earth = new CelestialBody(PlanetsAndMoons.Earth);
 
             var exception = Assert.Throws<ArgumentOutOfRangeException>(() => opm.ToSpacecraft(-1000, 100000.0, clock, earth));
 
@@ -894,7 +892,7 @@ namespace IO.Astrodynamics.Tests.CCSDS.OPM
         public void ToSpacecraft_TakesTheDefaultsOfThePropagatedConstructor()
         {
             var opm = CreateMinimalOpm("ISS", "1998-067A");
-            var earth = new CelestialBody(PlanetsAndMoons.EARTH);
+            var earth = new CelestialBody(PlanetsAndMoons.Earth);
 
             var spacecraft = opm.ToSpacecraft(-1000, observer: earth);
 
@@ -913,7 +911,7 @@ namespace IO.Astrodynamics.Tests.CCSDS.OPM
         {
             var opm = CreateMinimalOpm("ISS", "1998-067A");
             var clock = new Clock("OnboardClock", 256);
-            var earth = new CelestialBody(PlanetsAndMoons.EARTH);
+            var earth = new CelestialBody(PlanetsAndMoons.Earth);
 
             var spacecraft = opm.ToSpacecraft(-1000, 500000.0, clock, earth);
             var sv = spacecraft.InitialOrbitalParameters.ToStateVector();
@@ -943,7 +941,7 @@ namespace IO.Astrodynamics.Tests.CCSDS.OPM
         public void ToOpm_RetrogradeEquatorialOrbit_WritesAnglesInSchemaRange(double x, double y, double vx, double vy, double expectedAop)
         {
             var epoch = new TimeSystem.Time(_testEpoch, TimeSystem.TimeScale.UTC);
-            var earth = new CelestialBody(PlanetsAndMoons.EARTH, Frames.Frame.ICRF, epoch);
+            var earth = new CelestialBody(PlanetsAndMoons.Earth, Frames.Frame.ICRF, epoch);
             var sv = new StateVector(new Vector3(x, y, 0.0), new Vector3(vx, vy, 0.0), earth, epoch, Frames.Frame.ICRF);
             Assert.Equal(System.Math.PI, sv.Inclination(), 12);
             var spacecraft = new Spacecraft(-1000, "RETRO", 1000.0, sv, 5000.0, new Clock("OnboardClock", 256), 1.0, 2.2, "2024-001A", 1.0);
@@ -971,7 +969,7 @@ namespace IO.Astrodynamics.Tests.CCSDS.OPM
         {
             // Create spacecraft
             var epoch = new TimeSystem.Time(_testEpoch, TimeSystem.TimeScale.UTC);
-            var earth = new CelestialBody(PlanetsAndMoons.EARTH, Frames.Frame.ICRF, epoch);
+            var earth = new CelestialBody(PlanetsAndMoons.Earth, Frames.Frame.ICRF, epoch);
             var clock = new Clock("OnboardClock", 256);
             var position = new Vector3(6778137.0, 0.0, 0.0);
             var velocity = new Vector3(0.0, 7500.0, 0.0);
@@ -993,7 +991,7 @@ namespace IO.Astrodynamics.Tests.CCSDS.OPM
             Assert.Equal(originalSpacecraft.Mass, newSpacecraft.Mass, 0);
             Assert.Equal(originalSpacecraft.SectionalArea, newSpacecraft.SectionalArea, 0);
             Assert.Equal(originalSpacecraft.DragCoefficient, newSpacecraft.DragCoefficient, 1);
-            Assert.Equal(originalSpacecraft.SolarRadiationCoeff, newSpacecraft.SolarRadiationCoeff, 1);
+            Assert.Equal(originalSpacecraft.SolarRadiationCoefficient, newSpacecraft.SolarRadiationCoefficient, 1);
         }
 
         [Fact]
@@ -1276,7 +1274,7 @@ namespace IO.Astrodynamics.Tests.CCSDS.OPM
 
         private static StateVector LunarState()
         {
-            var moon = new CelestialBody(PlanetsAndMoons.MOON, Frames.Frame.ICRF, CentreEpoch);
+            var moon = new CelestialBody(PlanetsAndMoons.Moon, Frames.Frame.ICRF, CentreEpoch);
             return new StateVector(new Vector3(1900e3, 0.0, 0.0), new Vector3(0.0, 1600.0, 0.0), moon, CentreEpoch, Frames.Frame.ICRF);
         }
 
@@ -1309,7 +1307,7 @@ namespace IO.Astrodynamics.Tests.CCSDS.OPM
         public void ToStateVector_SsbOpmWithoutObserver_IsAboutTheSsb()
         {
             var written = new StateVector(new Vector3(1.5e11, 0.0, 0.0), new Vector3(0.0, 30000.0, 0.0),
-                Barycenters.SOLAR_SYSTEM_BARYCENTER, CentreEpoch, Frames.Frame.ICRF);
+                Barycenters.SolarSystemBarycenter, CentreEpoch, Frames.Frame.ICRF);
             var opm = WriteAndLoad("HELIO", written);
 
             var read = opm.ToStateVector();
@@ -1595,9 +1593,9 @@ namespace IO.Astrodynamics.Tests.CCSDS.OPM
                 "ICRF" => Frames.Frame.ICRF,
                 "GCRF" => Frames.Frame.GCRF,
                 "TEME" => Frames.Frame.TEME,
-                _ => Frames.Frame.ECLIPTIC_J2000
+                _ => Frames.Frame.ECLIPJ2000
             };
-            var earth = new CelestialBody(PlanetsAndMoons.EARTH, Frames.Frame.ICRF, CentreEpoch);
+            var earth = new CelestialBody(PlanetsAndMoons.Earth, Frames.Frame.ICRF, CentreEpoch);
             var written = new StateVector(new Vector3(6778137.0, 1000.0, -2000.0), new Vector3(10.0, 7500.0, 1.0), earth, CentreEpoch, frame);
 
             var opm = Opm.CreateFromStateVector("SAT", "2024-002A", written);

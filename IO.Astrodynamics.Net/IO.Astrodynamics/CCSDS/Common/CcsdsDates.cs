@@ -1,10 +1,10 @@
 // Copyright 2026. Sylvain Guillet (sylvain.guillet@tutamail.com)
 #nullable enable
 using System;
-using IO.Astrodynamics.CCSDS.Common.Enums;
+using IO.Astrodynamics.Ccsds;
 using IO.Astrodynamics.TimeSystem;
 
-namespace IO.Astrodynamics.CCSDS.Common;
+namespace IO.Astrodynamics.Ccsds;
 
 /// <summary>
 /// The date a CCSDS writer writes for a <see cref="DateTime"/>, by its <see cref="DateTime.Kind"/> (#617, decided by

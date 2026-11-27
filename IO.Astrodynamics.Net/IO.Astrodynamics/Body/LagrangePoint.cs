@@ -11,10 +11,10 @@ namespace IO.Astrodynamics.Body;
 public class LagrangePoint : CelestialItem
 {
     /// <summary>
-    /// Initializes a new instance of the <see cref="LagrangePoint"/> class with the specified system object and a default epoch of J2000TDB.
+    /// Initializes a new instance of the <see cref="LagrangePoint"/> class with the specified system object and a default epoch of J2000Tdb.
     /// </summary>
     /// <param name="systemObject">The NAIF object representing the celestial system.</param>
-    public LagrangePoint(NaifObject systemObject) : this(systemObject, TimeSystem.Time.J2000TDB)
+    public LagrangePoint(NaifObject systemObject) : this(systemObject, TimeSystem.Time.J2000Tdb)
     {
        
     }
@@ -26,7 +26,7 @@ public class LagrangePoint : CelestialItem
     /// <param name="epoch">The epoch time for the Lagrange point.</param>
     public LagrangePoint(NaifObject systemObject, Time epoch) : base(systemObject.NaifId, systemObject.Name, 0.0, null)
     {
-        this.InitialOrbitalParameters = GetEphemeris(epoch, Barycenters.EARTH_BARYCENTER, Frame.ECLIPTIC_J2000, Aberration.None);
+        this.InitialOrbitalParameters = GetEphemeris(epoch, Barycenters.EarthBarycenter, Frame.ECLIPJ2000, Aberration.None);
         BarycenterOfMotionId = 3;
         CenterOfMotionId = 10;
     }

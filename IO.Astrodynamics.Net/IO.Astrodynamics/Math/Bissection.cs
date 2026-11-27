@@ -1,8 +1,13 @@
 using System;
 
-public class BisectionMethod
+namespace IO.Astrodynamics.Math;
+
+/// <summary>
+/// A bisection root finder, internal since 11.0.0 (D2 N4 of #668: the helpers and solvers no public member exposes).
+/// </summary>
+internal static class BisectionMethod
 {
-    public static double Solve(
+    internal static double Solve(
         Func<double, double> f,     // Your polynomial function
         double a,                   // Left endpoint
         double b,                   // Right endpoint
@@ -22,7 +27,7 @@ public class BisectionMethod
             c = (a + b) / 2;
             double fc = f(c);
 
-            if (Math.Abs(fc) < tolerance)
+            if (System.Math.Abs(fc) < tolerance)
                 break;
 
             if (f(a) * fc < 0)

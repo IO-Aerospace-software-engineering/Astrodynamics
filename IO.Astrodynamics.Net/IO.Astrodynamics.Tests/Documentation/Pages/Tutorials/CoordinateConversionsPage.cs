@@ -18,15 +18,9 @@ using System.Threading;
 using System.Threading.Tasks;
 using IO.Astrodynamics;
 using IO.Astrodynamics.Atmosphere;
-using IO.Astrodynamics.Atmosphere.NRLMSISE_00;
 using IO.Astrodynamics.Body;
 using IO.Astrodynamics.Body.Spacecraft;
-using IO.Astrodynamics.CCSDS;
-using IO.Astrodynamics.CCSDS.CDM;
-using IO.Astrodynamics.CCSDS.Common;
-using IO.Astrodynamics.CCSDS.Common.Enums;
-using IO.Astrodynamics.CCSDS.OMM;
-using IO.Astrodynamics.CCSDS.OPM;
+using IO.Astrodynamics.Ccsds;
 using IO.Astrodynamics.Converters;
 using IO.Astrodynamics.Coordinates;
 using IO.Astrodynamics.Cosmographia;
@@ -49,11 +43,11 @@ using IO.Astrodynamics.Propagator.Forces;
 using IO.Astrodynamics.Propagator.Integrators;
 using IO.Astrodynamics.Propagator.MonteCarlo;
 using IO.Astrodynamics.Propagator.Variational;
-using IO.Astrodynamics.SSA;
+using IO.Astrodynamics.Ssa;
 using IO.Astrodynamics.SolarSystemObjects;
 using IO.Astrodynamics.Surface;
 using IO.Astrodynamics.TimeSystem;
-using TLE = IO.Astrodynamics.OrbitalParameters.TLE.TLE;
+using Tle = IO.Astrodynamics.OrbitalParameters.Tle;
 
 namespace DocumentationPageSamples.Tutorials;
 
@@ -65,14 +59,14 @@ internal static class CoordinateConversionsPage
     {
         #region docs/tutorials/coordinate-conversions.md:1
         var epoch = new Time(2024, 6, 21, 12, 0, 0, TimeScale.TDB);
-        var earth = PlanetsAndMoons.EARTH_BODY;
+        var earth = PlanetsAndMoons.EarthBody;
 
         var svICRF = new StateVector(
             new Vector3(6800000.0, 0.0, 0.0),
             new Vector3(0.0, 7700.0, 0.0),
             earth, epoch, Frame.ICRF);
 
-        var svEcliptic = svICRF.ToFrame(Frame.ECLIPTIC_J2000);
+        var svEcliptic = svICRF.ToFrame(Frame.ECLIPJ2000);
 
         Console.WriteLine($"ICRF position:     {svICRF.Position}");
         Console.WriteLine($"Ecliptic position: {svEcliptic.Position}");
@@ -98,7 +92,7 @@ internal static class CoordinateConversionsPage
         #region docs/tutorials/coordinate-conversions.md:3
         // Inputs: svICRF (StateVector), epoch (Time)
         // Get the CIRS-to-ICRF orientation at a given epoch
-        var cirsToIcrf = Frame.CIRS.GetStateOrientationToICRF(epoch);
+        var cirsToIcrf = Frame.CIRS.GetStateOrientationToIcrf(epoch);
 
         // Rotate a position from ICRF to CIRS (use the conjugate)
         var positionIcrf = svICRF.Position;
@@ -148,7 +142,7 @@ internal static class CoordinateConversionsPage
     {
         #region docs/tutorials/coordinate-conversions.md:6
         // Inputs: coords (Planetodetic)
-        var earth = PlanetsAndMoons.EARTH_BODY;
+        var earth = PlanetsAndMoons.EarthBody;
         var planetocentric = coords.ToPlanetocentric(earth);
         var back = planetocentric.ToPlanetodetic(earth); // coords, to about 1e-15
         #endregion
@@ -159,7 +153,7 @@ internal static class CoordinateConversionsPage
     {
         #region docs/tutorials/coordinate-conversions.md:7
         // Inputs: svICRF (StateVector), coords (Planetodetic)
-        var earth = PlanetsAndMoons.EARTH_BODY;
+        var earth = PlanetsAndMoons.EarthBody;
         Planetodetic below = svICRF.ToPlanetodetic();            // in ITRF93, the Earth's body frame, at the state's epoch
         Vector3 position = coords.ToCartesianCoordinates(earth); // body-fixed position, m, as CSPICE georec_c
         #endregion

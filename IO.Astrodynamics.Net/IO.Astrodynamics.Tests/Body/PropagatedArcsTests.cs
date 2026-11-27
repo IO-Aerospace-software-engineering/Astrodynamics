@@ -35,7 +35,7 @@ using Time = IO.Astrodynamics.TimeSystem.Time;
 /// <c>prop2b</c> in the two-body cases (<see cref="Rk78Solution_MatchesProp2b"/>); in Velocity-Verlet, its cubic Hermite,
 /// which does not resolve the Lagrange interpolation of the outputs (0.16 m at 10 s outputs, the integrator's own): the
 /// Velocity-Verlet rows measure that no trace of the impulse is left, the error near a burn against the error far from
-/// it. Rotated to ICRF by <c>pxform</c> (<see cref="SpiceAPI.TransformFrame(Time, Frame, Frame)"/>); in SSB mode, where
+/// it. Rotated to ICRF by <c>pxform</c> (<see cref="SpiceApi.TransformFrame(Time, Frame, Frame)"/>); in SSB mode, where
 /// the solution is relative to the Sun, less the Earth's state of <c>spkezr</c> on the planetary ephemeris. Until 11.0.0
 /// the solution carried there the noise of <c>ThirdBodyPerturbation</c> near the Earth (#576), whose step sequence differed
 /// per platform, and its figures were MEASURE lines with no assertion; with the direct difference near the Earth they are
@@ -227,7 +227,7 @@ public class PropagatedArcsTests
     internal static StateVector LeoBeforeApogee(CelestialItem earth, Time start)
     {
         var apogee = new StateVector(new Vector3(-7378137.0, 0.0, 0.0), new Vector3(0.0, -5509.9, -4623.4), earth, start, Frame.ICRF);
-        var before = SpiceAPI.Instance.Propagate2Bodies(apogee, earth.GM, TimeSpan.FromSeconds(-90.0));
+        var before = SpiceApi.Instance.Propagate2Bodies(apogee, earth.GM, TimeSpan.FromSeconds(-90.0));
         return new StateVector(before.Position, before.Velocity, earth, start, Frame.ICRF);
     }
 
@@ -450,7 +450,7 @@ public class PropagatedArcsTests
     {
         long ticks = (long)System.Math.Round(elapsed * TimeSpan.TicksPerSecond);
         double remainder = elapsed - ticks / (double)TimeSpan.TicksPerSecond;
-        var state = SpiceAPI.Instance.Propagate2Bodies(initial, gm, TimeSpan.FromTicks(ticks));
+        var state = SpiceApi.Instance.Propagate2Bodies(initial, gm, TimeSpan.FromTicks(ticks));
         return new StateVector(state.Position + state.Velocity * remainder, state.Velocity, state.Observer, state.Epoch, state.Frame);
     }
 
@@ -479,7 +479,7 @@ public class PropagatedArcsTests
         {
             var arc = arcs[k];
             int n = arc.Length;
-            var epochs = arc.Select(x => x.Epoch.ToTDB().TimeSpanFromJ2000().TotalSeconds).ToArray();
+            var epochs = arc.Select(x => x.Epoch.ToTdb().TimeSpanFromJ2000().TotalSeconds).ToArray();
             var states = arc.SelectMany(x => new[] { x.Position.X * 1e-3, x.Position.Y * 1e-3, x.Position.Z * 1e-3, x.Velocity.X * 1e-3, x.Velocity.Y * 1e-3, x.Velocity.Z * 1e-3 })
                 .ToArray();
             int degree = System.Math.Min(7, n - 1);
@@ -670,11 +670,11 @@ public class PropagatedArcsTests
             if (chain4)
             {
                 // The chain of ScenarioTests.PropagateSpacecraft, its orbit, its bodies and its window
-                var initialEpoch = Time.CreateUTC(667915269.18539762).ToTDB();
-                start = Time.CreateUTC(668085555.829810).ToTDB();
-                window = new Window(start, Time.CreateUTC(668174400.000000).ToTDB());
-                center = new CelestialBody(PlanetsAndMoons.EARTH, Frame.ICRF, initialEpoch);
-                bodies = [new CelestialBody(PlanetsAndMoons.MOON, Frame.ICRF, initialEpoch), center, new CelestialBody(Stars.Sun, Frame.ICRF, initialEpoch)];
+                var initialEpoch = Time.CreateUtc(667915269.18539762).ToTdb();
+                start = Time.CreateUtc(668085555.829810).ToTdb();
+                window = new Window(start, Time.CreateUtc(668174400.000000).ToTdb());
+                center = new CelestialBody(PlanetsAndMoons.Earth, Frame.ICRF, initialEpoch);
+                bodies = [new CelestialBody(PlanetsAndMoons.Moon, Frame.ICRF, initialEpoch), center, new CelestialBody(Stars.Sun, Frame.ICRF, initialEpoch)];
                 orbit = new StateVector(new Vector3(5056554.1874925727, 4395595.4942363985, 0.0), new Vector3(-3708.6305608890916, 4266.2914313011433, 6736.8538488755494),
                     center, initialEpoch, Frame.ICRF);
             }
@@ -685,14 +685,14 @@ public class PropagatedArcsTests
                 if (moonCentred)
                 {
                     // A lunar orbit from its apolune, 100 to 150 km high: the apolune-raising impulse at perilune, S + 3 540 s
-                    center = new CelestialBody(PlanetsAndMoons.MOON, Frame.ICRF, start);
+                    center = new CelestialBody(PlanetsAndMoons.Moon, Frame.ICRF, start);
                     orbit = new KeplerianElements(1862400.0, 0.0134, 1.0, 0.3, 0.7, System.Math.PI, center, start, Frame.ICRF).ToStateVector();
                     bodies = [center];
                 }
                 else
                 {
                     // #540's LEO from apogee, 400 x 1 000 km: the apogee-raising impulse at perigee, about S + 2 964 s
-                    center = new CelestialBody(PlanetsAndMoons.EARTH, Frame.ICRF, start);
+                    center = new CelestialBody(PlanetsAndMoons.Earth, Frame.ICRF, start);
                     orbit = maneuver == "CombinedLate"
                         ? LeoBeforeApogee(center, start)
                         : new StateVector(new Vector3(-7378137.0, 0.0, 0.0), new Vector3(0.0, -5509.9, -4623.4), center, start, Frame.ICRF);
@@ -705,8 +705,8 @@ public class PropagatedArcsTests
                     bodies = ssb ? [center, new CelestialBody(Stars.Sun, Frame.ICRF, start)] : [center];
                     if (ssb)
                     {
-                        var earthFromSsb = center.GetGeometricStateRelativeTo(start, Barycenters.SOLAR_SYSTEM_BARYCENTER);
-                        orbit = new StateVector(earthFromSsb.Position + orbit.Position, earthFromSsb.Velocity + orbit.Velocity, Barycenters.SOLAR_SYSTEM_BARYCENTER,
+                        var earthFromSsb = center.GetGeometricStateRelativeTo(start, Barycenters.SolarSystemBarycenter);
+                        orbit = new StateVector(earthFromSsb.Position + orbit.Position, earthFromSsb.Velocity + orbit.Velocity, Barycenters.SolarSystemBarycenter,
                             start, Frame.ICRF);
                     }
                 }
@@ -848,7 +848,7 @@ public class PropagatedArcsTests
             Directory.CreateDirectory(directory);
             SpkFile = new FileInfo(Path.Combine(directory, Spacecraft.Name.ToLowerInvariant() + ".bsp"));
             Spacecraft.WriteEphemeris(SpkFile);
-            SpiceAPI.Instance.LoadKernels(SpkFile);
+            SpiceApi.Instance.LoadKernels(SpkFile);
             Kernel = new Spacecraft(Spacecraft.NaifId, Spacecraft.Name, Window.StartDate, 1000.0, 3000.0, new Clock(Spacecraft.Name + "K_CLK", 65536));
         }
 
@@ -860,14 +860,14 @@ public class PropagatedArcsTests
             var (position, velocity) = Solution.InterpolateAt(t);
             if (InitialFrame != Frame.ICRF)
             {
-                var q = SpiceAPI.Instance.TransformFrame(t, InitialFrame, Frame.ICRF).Rotation;
+                var q = SpiceApi.Instance.TransformFrame(t, InitialFrame, Frame.ICRF).Rotation;
                 position = position.Rotate(q);
                 velocity = velocity.Rotate(q);
             }
 
             if (Ssb)
             {
-                var earth = SpiceAPI.Instance.ReadEphemeris(t, 10, 399, Frame.ICRF, Aberration.None);
+                var earth = SpiceApi.Instance.ReadEphemeris(t, 10, 399, Frame.ICRF, Aberration.None);
                 position -= earth.Position;
                 velocity -= earth.Velocity;
             }
@@ -904,13 +904,13 @@ public class PropagatedArcsTests
             double dt = Solution.TimeArgument.SecondsBetween(baseEpoch, t) - Solution.TimeArgument.SecondsBetween(baseEpoch, tc);
             double gmSun = new CelestialBody(Stars.Sun, Frame.ICRF, tc).GM;
             double gmEarth = ReadCenter.GM;
-            var d = SpiceAPI.Instance.ReadEphemeris(tc, Stars.Sun.NaifId, ReadCenter.NaifId, before.Frame, Aberration.None).Position;
+            var d = SpiceApi.Instance.ReadEphemeris(tc, Stars.Sun.NaifId, ReadCenter.NaifId, before.Frame, Aberration.None).Position;
             var r = before.Position;
             var rho = r - d;
             double rm = r.Magnitude(), pm = rho.Magnitude(), dm = d.Magnitude();
             var a = r * (-gmSun / (rm * rm * rm)) - (rho * (1.0 / (pm * pm * pm)) + d * (1.0 / (dm * dm * dm))) * gmEarth;
             var velocity = before.Velocity + a * dt;
-            var earth = SpiceAPI.Instance.ReadEphemeris(t, Stars.Sun.NaifId, ReadCenter.NaifId, before.Frame, Aberration.None);
+            var earth = SpiceApi.Instance.ReadEphemeris(t, Stars.Sun.NaifId, ReadCenter.NaifId, before.Frame, Aberration.None);
             return velocity - earth.Velocity;
         }
 
@@ -918,14 +918,14 @@ public class PropagatedArcsTests
         internal Vector3 DeltaVInIcrf(int k)
         {
             var dv = Executed[k].DeltaV;
-            return InitialFrame == Frame.ICRF ? dv : dv.Rotate(SpiceAPI.Instance.TransformFrame(ImpulseEpochs[k], InitialFrame, Frame.ICRF).Rotation);
+            return InitialFrame == Frame.ICRF ? dv : dv.Rotate(SpiceApi.Instance.TransformFrame(ImpulseEpochs[k], InitialFrame, Frame.ICRF).Rotation);
         }
 
         public void Dispose()
         {
             if (SpkFile != null)
             {
-                SpiceAPI.Instance.UnloadKernels(SpkFile);
+                SpiceApi.Instance.UnloadKernels(SpkFile);
                 SpkFile.Delete();
             }
         }

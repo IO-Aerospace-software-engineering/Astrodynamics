@@ -16,14 +16,14 @@ SPICE kernels supply the ephemeris, orientation, leap-second, and body-constant 
 
 | Method | Description |
 |--------|-------------|
-| `SpiceAPI.Instance.LoadKernels(FileSystemInfo)` | Load a single kernel file (a meta-kernel included), or the kernel files of a directory and of its subdirectories in ordinal order, the later file winning (other files, such as a geopotential model, are left out); the path is taken as what it is on disk, and one that does not exist throws `ArgumentException`; a file already loaded is not loaded again |
-| `SpiceAPI.Instance.LoadKernels(string)` | The same, the path given as text |
-| `SpiceAPI.Instance.ReloadKernels(FileSystemInfo)` | Read a path again, on top of the kernels loaded after it: its loaded files unloaded, then all its files loaded (a kernel rewritten on disk); a path never loaded is loaded |
-| `SpiceAPI.Instance.ReloadKernels(string)` | The same, the path given as text |
-| `SpiceAPI.Instance.UnloadKernels(FileSystemInfo)` | Unload the files a load handed SPICE, whether the path still exists or not; a file or subdirectory of a loaded directory leaves its other files loaded; null throws `ArgumentNullException` |
-| `SpiceAPI.Instance.UnloadKernels(string)` | The same, the path given as text |
-| `SpiceAPI.Instance.ClearKernels()` | Unload all kernels (`kclear_c`) |
-| `SpiceAPI.Instance.GetLoadedKernels()` | List the loaded paths |
+| `SpiceApi.Instance.LoadKernels(FileSystemInfo)` | Load a single kernel file (a meta-kernel included), or the kernel files of a directory and of its subdirectories in ordinal order, the later file winning (other files, such as a geopotential model, are left out); the path is taken as what it is on disk, and one that does not exist throws `ArgumentException`; a file already loaded is not loaded again |
+| `SpiceApi.Instance.LoadKernels(string)` | The same, the path given as text |
+| `SpiceApi.Instance.ReloadKernels(FileSystemInfo)` | Read a path again, on top of the kernels loaded after it: its loaded files unloaded, then all its files loaded (a kernel rewritten on disk); a path never loaded is loaded |
+| `SpiceApi.Instance.ReloadKernels(string)` | The same, the path given as text |
+| `SpiceApi.Instance.UnloadKernels(FileSystemInfo)` | Unload the files a load handed SPICE, whether the path still exists or not; a file or subdirectory of a loaded directory leaves its other files loaded; null throws `ArgumentNullException` |
+| `SpiceApi.Instance.UnloadKernels(string)` | The same, the path given as text |
+| `SpiceApi.Instance.ClearKernels()` | Unload all kernels (`kclear_c`) |
+| `SpiceApi.Instance.GetLoadedKernels()` | List the loaded paths |
 
 ## Paths
 
@@ -32,7 +32,7 @@ SPICE kernels supply the ephemeris, orientation, leap-second, and body-constant 
   throws `ArgumentException` (parameter `path`) before anything is unloaded or reloaded; before 11.0.0 it loaded nothing
   and the call returned, and the first read that needed the kernel failed.
 - Paths are compared by their components, ordinally ([#673](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/673)).
-  A file SPICE holds from a load of `SpiceAPI` is not handed to it again (11.0.0): loading a path already loaded, or a
+  A file SPICE holds from a load of `SpiceApi` is not handed to it again (11.0.0): loading a path already loaded, or a
   path inside a loaded directory, furnishes only its files written since, which join that entry, and keeps the
   precedence of the others; loading a directory that holds loaded entries furnishes its other files and replaces those
   entries by its own, listed last. Before 11.0.0 such a load unloaded the entry and loaded it again, on top of every
@@ -138,15 +138,15 @@ SPICE kernels supply the ephemeris, orientation, leap-second, and body-constant 
 
 ```csharp
 // Load all kernels from a directory at startup
-SpiceAPI.Instance.LoadKernels(new DirectoryInfo("kernels/"));
+SpiceApi.Instance.LoadKernels(new DirectoryInfo("kernels/"));
 
-foreach (var kernel in SpiceAPI.Instance.GetLoadedKernels())
+foreach (var kernel in SpiceApi.Instance.GetLoadedKernels())
     Console.WriteLine(kernel);
 
 // ... perform analysis ...
 
 // Clean up on shutdown
-SpiceAPI.Instance.ClearKernels();
+SpiceApi.Instance.ClearKernels();
 ```
 
 ## Mission-Specific Kernels
@@ -154,7 +154,7 @@ SpiceAPI.Instance.ClearKernels();
 When using the [kernel-backed Spacecraft constructor](../reference/spacecraft.md), load the mission SPK and CK files so that SPICE can resolve the spacecraft NAIF ID.
 
 ```csharp
-SpiceAPI.Instance.LoadKernels(new DirectoryInfo("kernels/lro"));
+SpiceApi.Instance.LoadKernels(new DirectoryInfo("kernels/lro"));
 
 var lro = new Spacecraft(naifId: -85, name: "LRO",
     epoch: new Time(2024, 6, 1, 12, 0, 0, TimeScale.TDB));
@@ -170,5 +170,5 @@ var lro = new Spacecraft(naifId: -85, name: "LRO",
 
 ## See Also
 
-- [SpiceAPI & Data Providers](../reference/spice-api.md)
+- [SpiceApi & Data Providers](../reference/spice-api.md)
 - [Spacecraft](../reference/spacecraft.md)

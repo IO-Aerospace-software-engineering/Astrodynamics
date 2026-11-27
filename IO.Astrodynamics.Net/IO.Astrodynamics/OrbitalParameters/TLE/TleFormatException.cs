@@ -2,14 +2,14 @@
 
 using System;
 
-namespace IO.Astrodynamics.OrbitalParameters.TLE;
+namespace IO.Astrodynamics.OrbitalParameters;
 
 /// <summary>
 /// The text of a Two-Line Element set does not follow the format: a line of another length or line number, a catalog number
 /// that is not one or differs between the lines, a wrong checksum, or a field whose text its columns cannot hold.
 /// </summary>
 /// <remarks>
-/// R21 of #668: the <see cref="TLE"/> constructor throws <see cref="ArgumentException"/> naming <c>line1</c> or
+/// R21 of #668: the <see cref="Tle"/> constructor throws <see cref="ArgumentException"/> naming <c>line1</c> or
 /// <c>line2</c> with this exception as its <see cref="Exception.InnerException"/>.
 /// </remarks>
 public class TleFormatException : FormatException

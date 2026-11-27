@@ -1,8 +1,8 @@
-# SpiceAPI & Data Providers
+# SpiceApi & Data Providers
 
-## SpiceAPI
+## SpiceApi
 
-`SpiceAPI` is the singleton entry point for SPICE-backed operations.
+`SpiceApi` is the singleton entry point for SPICE-backed operations.
 
 SPICE reports its errors to the library only: the native layer sets SPICE to return from an error (`erract` RETURN) and
 to print nothing (`errprt` NONE), and each method throws with SPICE's message. Before 11.0.0 SPICE also printed the
@@ -29,7 +29,7 @@ structuring choice 10, decided by S. Guillet, 2026-11-19); a `catch (InvalidOper
 ```csharp
 try
 {
-    var moon = SpiceAPI.Instance.ReadEphemeris(new Time(3000, 1, 1, TimeScale.TDB), 399, 301, Frame.ICRF, Aberration.None);
+    var moon = SpiceApi.Instance.ReadEphemeris(new Time(3000, 1, 1, TimeScale.TDB), 399, 301, Frame.ICRF, Aberration.None);
 }
 catch (SpiceException e) when (e.ShortMessage == "SPICE(SPKINSUFFDATA)")
 {
@@ -39,7 +39,7 @@ catch (SpiceException e) when (e.ShortMessage == "SPICE(SPKINSUFFDATA)")
 
 | Method | Description |
 |--------|-------------|
-| `LoadKernels(FileSystemInfo path)` | Load a kernel file or a directory of kernels, the path taken as what it is on disk, `ArgumentException` for one that does not exist; paths compared by components (#673); the files of a directory in ordinal order, component by component, the later file winning; only the files SPICE does not hold from a load of `SpiceAPI` (11.0.0: before, a repeated load reloaded) |
+| `LoadKernels(FileSystemInfo path)` | Load a kernel file or a directory of kernels, the path taken as what it is on disk, `ArgumentException` for one that does not exist; paths compared by components (#673); the files of a directory in ordinal order, component by component, the later file winning; only the files SPICE does not hold from a load of `SpiceApi` (11.0.0: before, a repeated load reloaded) |
 | `LoadKernels(string path)` | The same, the path given as text |
 | `ReloadKernels(FileSystemInfo path)` | Unload the loaded files of the path and load all its files again, on top (11.0.0: what a repeated `LoadKernels` did) |
 | `ReloadKernels(string path)` | The same, the path given as text |
@@ -167,13 +167,13 @@ The text kernel writers (`Clock.Write`, `SpacecraftFrame.Write`, `Instrument.Wri
 loaded, so SPICE read the replaced content (a frame kernel rewritten for another spacecraft still named the first).
 `Spacecraft.WriteKernels` and `CosmographiaExporter.ExportAsync` replace nothing SPICE holds: they refuse, with
 `InvalidOperationException` before anything is written or deleted, a file or a directory SPICE holds, from
-`LoadKernels`, a live `SpacecraftKernels` handle or a loaded meta-kernel, whose files the registry of `SpiceAPI` does not
+`LoadKernels`, a live `SpacecraftKernels` handle or a loaded meta-kernel, whose files the registry of `SpiceApi` does not
 list: a native query reads SPICE's own list by the rule above, unloading nothing (decisions 80, 102 and 103 of #668), so
 a meta-kernel's relative name other than the path is not found there either.
 
 `TransformFrame` composes a TEME end through ICRF (#451), and so the frame of a site built from coordinates or of a site
 from the kernels whose frame id no loaded kernel defines, the frame only the library holds, whose orientation is
-`SiteFrame.GetStateOrientationToICRF`, bit for bit `ToFrame`'s (fourth round of
+`SiteFrame.GetStateOrientationToIcrf`, bit for bit `ToFrame`'s (fourth round of
 [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668); before, its name went to SPICE,
 which threw): within 9.3e-16 rad and 5.7e-20 rad/s of `sxform_c` in the frame kernel `Site.WriteFrame` writes for
 the site (the same on Linux x64, Windows x64 and macOS arm64, CI run 43773937161). The frame of a site whose frame the kernels define and the frame of a spacecraft are
@@ -278,7 +278,7 @@ attitude record in this convention, in J2000 ([Attitude and kernels](spacecraft.
 
 ### Two-body calls and element conversions
 
-The ten raw conversions of `SpiceAPI` that twinned the object API left the public API in 11.0.0, outright, with no
+The ten raw conversions of `SpiceApi` that twinned the object API left the public API in 11.0.0, outright, with no
 forwarder (R04 of [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668), section 7 of the
 re-baseline of #671, decided by S. Guillet, 2026-11-19); the library keeps them internal, the SPICE references of its
 tests. Use the object API, whose results are the library's own computation, not CSPICE's: they agree with `prop2b_c`,
@@ -288,7 +288,7 @@ the labels.
 
 | Removed | Object API |
 |---------|------------|
-| internal `ConvertTleToStateVector(name, line1, line2, epoch)` | `new TLE(name, line1, line2).ToStateVector(epoch)` (SGP4 in `Frame.TEME`, the same `evsgp4_c`) |
+| internal `ConvertTleToStateVector(name, line1, line2, epoch)` | `new Tle(name, line1, line2).ToStateVector(epoch)` (SGP4 in `Frame.TEME`, the same `evsgp4_c`) |
 | internal `ConvertStateVectorToConicOrbitalElement(stateVector)` | `stateVector.ToKeplerianElements()` |
 | internal `ConvertStateVectorToConicOrbitalElement(stateVector, gm)` | `stateVector.ToKeplerianElements()` about an observer of that GM, a `CelestialBody` built from custom parameters |
 | internal `ConvertEquinoctialElementsToStateVector(elements)` | `elements.ToStateVector()` |
@@ -301,14 +301,14 @@ the labels.
 
 Each proxy that reports through `GetLastErrorProxy()` clears it when it starts (#714), so the message read after a call is
 that call's: before, it held the message of the last failure, about another call, until another failure replaced it.
-`SpiceAPI` reads it before any other native call: `ReadEphemeris` over a window checks every state before it rotates any
+`SpiceApi` reads it before any other native call: `ReadEphemeris` over a window checks every state before it rotates any
 into a managed frame (TEME, CIRS, TIRS, the frame of a site from coordinates), since the rotation calls the native layer. A
 SPICE error with no long message is reported by its short one (`SPICE(ZEROVELOCITY)`), where the proxies that report through
 the shared routine reported such an error as a success.
 
 ### Body names
 
-`SpiceAPI.Instance.TryGetNaifId(name, out naifId)` gives the NAIF identifier SPICE gives to a body name (`bodn2c_c`):
+`SpiceApi.Instance.TryGetNaifId(name, out naifId)` gives the NAIF identifier SPICE gives to a body name (`bodn2c_c`):
 its built-in names (the planets, their moons and barycentres, the Sun, the solar system barycentre, the stations of the
 DSN, many spacecraft) and those the loaded kernels assign (`NAIF_BODY_NAME`, `NAIF_BODY_CODE`), in any case, the
 blanks compressed (choice 12 of [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668),
@@ -320,9 +320,9 @@ own kernel-free table of centre names.
 ### Example
 
 ```csharp
-SpiceAPI.Instance.LoadKernels(new DirectoryInfo("kernels/"));
+SpiceApi.Instance.LoadKernels(new DirectoryInfo("kernels/"));
 
-foreach (var kernel in SpiceAPI.Instance.GetLoadedKernels())
+foreach (var kernel in SpiceApi.Instance.GetLoadedKernels())
     Console.WriteLine(kernel);
 ```
 
@@ -344,14 +344,14 @@ A provider implements `IDataProvider`, three members in domain types:
 
 | Member | Returns |
 |--------|---------|
-| `FrameTransformationToICRF(in Time date, Frame source)` | The orientation of the frame relative to ICRF, a `StateOrientation` labelled with the frame |
-| `GetEphemeris(in Time date, ILocalizable target, ILocalizable observer, Frame frame, Aberration aberration)` | The state of the target from the observer, a `StateVector` (11.0.0: `OrbitalParameters` before) |
+| `FrameTransformationToIcrf(in Time epoch, Frame source)` | The orientation of the frame relative to ICRF, a `StateOrientation` labelled with the frame |
+| `GetEphemeris(in Time epoch, ILocalizable target, ILocalizable observer, Frame frame, Aberration aberration)` | The state of the target from the observer, a `StateVector` (11.0.0: `OrbitalParameters` before) |
 | `GetCelestialBodyInfo(int naifId)` | The information of a celestial body, a `CelestialBodyInfo` (11.0.0: the interop struct IO.Astrodynamics.DTO.CelestialBody, now internal, before), never null |
 
 `CelestialBodyInfo` is a sealed record of SI values: `NaifId`, `Name`, `CenterOfMotionId`, `BarycenterOfMotionId`,
 `Radii` (a `Vector3`, m), `GM` (m³/s²), `FrameName`, and the optional `FrameId` (0 when not given) and `J2`, `J3`, `J4`
 (NaN when not given, as SPICE gives them for a body without them); two records are equal when every value is. The record
-`SpiceAPI.GetCelestialBodyInfo` reads is the native one field for field, bit for bit. The interop structs of the native
+`SpiceApi.GetCelestialBodyInfo` reads is the native one field for field, bit for bit. The interop structs of the native
 layer, `IO.Astrodynamics.DTO`, are internal since 11.0.0 (R04 of
 [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668)): eleven of them bore the names of
 domain types (`CelestialBody`, `StateVector`, `Quaternion`, ...), so that a `using IO.Astrodynamics.DTO` made them
@@ -371,16 +371,16 @@ read it by three rules (structuring choice 1 of #668, decided by S. Guillet, 202
 | Object | Provider it reads |
 |--------|-------------------|
 | An object the caller builds: `new CelestialBody(...)`, `new Site(...)`, `new Frame(name)`, a spacecraft | The provider set when it is built, for its life |
-| A static body: `PlanetsAndMoons.EARTH_BODY`, `MOON_BODY`, `Stars.SUN_BODY`, the `Barycenters` | The provider of its first read that succeeds, for its life (see below) |
-| A static frame: `Frame.ICRF`, `Frame.ECLIPTIC_J2000`, `Frame.ITRF93` and the other SPICE frames of `Frame` | The provider of the process at each transform (11.0.0; before, the provider set when the type `Frame` was first used, for the life of the process) |
+| A static body: `PlanetsAndMoons.EarthBody`, `MoonBody`, `Stars.SunBody`, the `Barycenters` | The provider of its first read that succeeds, for its life (see below) |
+| A static frame: `Frame.ICRF`, `Frame.ECLIPJ2000`, `Frame.ITRF93` and the other SPICE frames of `Frame` | The provider of the process at each transform (11.0.0; before, the provider set when the type `Frame` was first used, for the life of the process) |
 
 ### MemoryDataProvider
 
 | Method | Description |
 |--------|-------------|
 | `AddCelestialBodyInfo(params CelestialBodyInfo[] celestialBodyInfos)` | Add the information of bodies, each under its `NaifId` (`ArgumentNullException` for a null array or record); a `CelestialBodyInfo` since 11.0.0, the interop struct IO.Astrodynamics.DTO.CelestialBody, now internal, before |
-| `AddStateVector(int naifId, Time date, StateVector sv)` | Add state vector |
-| `AddStateOrientationToICRF(Frame frame, Time date, StateOrientation orientation)` | Add orientation; `ArgumentException` (`frame`) for ICRF, GCRF, TEME, CIRS and TIRS, which the provider defines (#744) |
+| `AddStateVector(int naifId, Time epoch, StateVector sv)` | Add state vector |
+| `AddStateOrientationToIcrf(Frame frame, Time epoch, StateOrientation orientation)` | Add orientation; `ArgumentException` (`frame`) for ICRF, GCRF, TEME, CIRS and TIRS, which the provider defines (#744) |
 
 A read at an added epoch returns that entry. A read between entries is interpolated and never stored, so it depends on
 the entries only, not on the reads before it (#548): an orientation is the exact spherical linear interpolation of the two
@@ -406,15 +406,15 @@ provider's orientation of that frame, r' = R r and v' = R v + ω × r' as `ToFra
 stored difference, unrotated. Besides the frames whose orientations were added, the provider knows ICRF and GCRF (the
 identity), ECLIPJ2000 (SPICE's rotation of the J2000 obliquity, 84381.448″ about x; the default frame of the bodies)
 and the managed TEME, CIRS and TIRS, in any case; another frame throws `ArgumentException`. No orientation can be added
-under ICRF, GCRF, TEME, CIRS or TIRS, the frames it defines and never reads from stored entries: `AddStateOrientationToICRF`
+under ICRF, GCRF, TEME, CIRS or TIRS, the frames it defines and never reads from stored entries: `AddStateOrientationToIcrf`
 throws `ArgumentException` naming `frame` for them, by name in any case, and stores nothing (#744, decided by S. Guillet,
-2026-11-18; before, an orientation stored under ICRF or GCRF was returned by `FrameTransformationToICRF` while
+2026-11-18; before, an orientation stored under ICRF or GCRF was returned by `FrameTransformationToIcrf` while
 `GetEphemeris` took the identity, and one stored under TEME, CIRS or TIRS was never read). It holds geometric states
 only: an aberration other than `Aberration.None` throws `NotSupportedException` (#559, decided by S. Guillet,
 2026-11-17). Before 11.0.0 the ICRF difference came back labelled with the frame asked, and an aberrated read was
 geometric.
 
-The static objects of `Barycenters`, `PlanetsAndMoons` (`EARTH_BODY`, `MOON_BODY`) and `Stars` (`SUN_BODY`) read the
+The static objects of `Barycenters`, `PlanetsAndMoons` (`EarthBody`, `MoonBody`) and `Stars` (`SunBody`) read the
 provider at the first read of a member that needs its data (see [Predefined Objects](predefined-objects.md)), so a
 provider set before they are first read, and lacking their data, does not leave them unusable: each read throws the
 provider's exception (`ArgumentException` naming `naifId` for missing information) until the data are there, and each

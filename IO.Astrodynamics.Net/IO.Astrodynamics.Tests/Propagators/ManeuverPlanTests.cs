@@ -9,7 +9,6 @@ using IO.Astrodynamics.Body.Spacecraft;
 using IO.Astrodynamics.Maneuver;
 using IO.Astrodynamics.Mission;
 using IO.Astrodynamics.OrbitalParameters;
-using IO.Astrodynamics.OrbitalParameters.TLE;
 using IO.Astrodynamics.Propagator;
 using IO.Astrodynamics.Propagator.Integrators;
 using IO.Astrodynamics.Propagator.Variational;
@@ -50,7 +49,7 @@ public class ManeuverPlanTests
     private static int _nextId = -845000;
     private static int NextId() => Interlocked.Decrement(ref _nextId);
 
-    private static CelestialBody Earth() => new(PlanetsAndMoons.EARTH, Frames.Frame.ICRF, S);
+    private static CelestialBody Earth() => new(PlanetsAndMoons.Earth, Frames.Frame.ICRF, S);
 
     private static Spacecraft NewSpacecraft(CelestialBody earth, out Engine engine, OrbitalParams orbit = null)
     {
@@ -268,7 +267,7 @@ public class ManeuverPlanTests
         ImpulseManeuver maneuver;
         if (kind == "TemeTargetOnATle")
         {
-            var tle = new TLE("ISS", "1 25544U 98067A   21020.53488036  .00016717  00000-0  10270-3 0  9054",
+            var tle = new Tle("ISS", "1 25544U 98067A   21020.53488036  .00016717  00000-0  10270-3 0  9054",
                 "2 25544  51.6423 353.0312 0000493 320.8755  39.2360 15.49309423 25703");
             var tleEarth = (CelestialBody)tle.Observer;
             spacecraft = NewSpacecraft(tleEarth, out var engine, tle);
@@ -284,7 +283,7 @@ public class ManeuverPlanTests
                 new Clock("PLAN" + -id, 65536));
             var tank = new FuelTank("ft", 1000.0, 1000.0, "m", "sn");
             var engine = new Engine("eng", 300.0, 10.0, tank, "m", "sn");
-            var target = new KeplerianElements(7100e3, 0.01, 0.5, 0.0, 0.0, 0.0, earth, S, Frames.Frame.ECLIPTIC_J2000);
+            var target = new KeplerianElements(7100e3, 0.01, 0.5, 0.0, 0.0, 0.0, earth, S, Frames.Frame.ECLIPJ2000);
             maneuver = new ApsidalAlignmentManeuver(target, engine, S, TimeSpan.Zero);
             spacecraft.AddFuelTank(tank);
             spacecraft.AddEngine(engine);

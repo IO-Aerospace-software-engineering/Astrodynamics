@@ -13,20 +13,33 @@ says what each check asks of a pull request, and how a change of the surface is 
 | Check | Where | Fails |
 |---|---|---|
 | XML documentation | `GenerateDocumentationFile` | The build, on a cref it cannot resolve or that names several overloads, a param tag of no parameter, a parameter without a tag beside others with one, or a malformed comment (CS0419, CS1570, CS1572, CS1573, CS1574); a member without a comment (CS1591) is a warning |
-| Naming (D2, N1 to N3) | `NamingRuleTests`, `NamingRuleBaseline.txt` | The tests, on a new name that breaks the rules (a namespace, a type, a member, each overload of a method, a parameter), or a baseline entry no longer broken |
-| Options (D1) | `OptionsConventionTests`, `OptionsConventionBaseline.txt` | The tests, on a new options type or parameter that breaks the rule, a new method or constructor with two bool parameters or more, a new double named `Step`, `Duration` or `Tolerance` without the `Seconds` suffix, two options types whose property of one name differs in type or default, or a baseline entry no longer broken |
+| Naming (D2, N1 to N3) | `NamingRuleTests` | The tests, on any name that breaks the rules (a namespace, a type, a member, each overload of a method, a parameter) |
+| Options (D1) | `OptionsConventionTests` | The tests, on an options type or parameter that breaks the rule, a method or constructor with two bool parameters or more, a double named `Step`, `Duration` or `Tolerance` without the `Seconds` suffix (the six tolerances that are no time, an angle, a matrix test and the residuals of `NewtonRaphson`, exempt by their key), two options types whose property of one name differs in type or default |
 | Members in the docs' tables | `DocumentationTableMembersTests`, `DocumentationTableMembersBaseline.txt` | The tests, on a backticked member of a table that is not on the public surface: an internal member only after the word "internal" in its cell, and any member in a column headed Implementation (the provenance page's pointers to the code) |
-| CA naming rules | `AnalysisModeNaming` | Nothing yet: warnings until the renaming lot of 11.0.0 makes them errors |
+| Implicit namespaces (D2, N7 and N8) | `PackageImplicitUsingsTests` | The tests, on two public types of the eleven namespaces the package imports with `ImplicitUsings` that share a simple name, or one that shares a simple name with a type of the SDK's implicit namespaces |
+| Spelling (D2, N8) | cspell, `cspell.json` | The CI (job `build-dotnet`, Linux), on a word of a public name that is neither English nor in the project dictionary `cspell.json`: `NamingRuleTests` writes the names to `ApiConventions/public-names.txt` beside the tests, and the step spells that file |
+| CA naming rules (D2, N8) | `AnalysisModeNaming`, `WarningsAsErrors`, `GlobalSuppressions.cs` | The build, on a name that breaks CA1050 or a rule of the naming category (CA1700, CA1707, CA1708, CA1710 to CA1717, CA1720, CA1721, CA1724, CA1725, CA1727), errors since lot L9 of #668; the exceptions, each with the decision that keeps the name, are the suppressions of `GlobalSuppressions.cs` (below) |
 
-The tests live in `IO.Astrodynamics.Tests/ApiConventions/`. Each baseline lists the violations of the day the check
-landed, one per line in ordinal order, and may only shrink: a test fails on a violation that is not in its baseline, and
-on a baseline line that is no longer a violation, and its message gives the lines to fix or to remove. A method or a
-constructor is keyed by its signature (`Spacecraft.GetTotalISP()`), a parameter by its method's signature and its name
-(`LegendreFunctions.ComputeGeodesyNormalizedLegendreTable(int, double, double, double[][], double[][]):P`), so a new
-overload of a name in the baseline is a new violation.
+The tests live in `IO.Astrodynamics.Tests/ApiConventions/`. The naming and options tests find no violation since lot L9
+of #668, which emptied the baselines of the day they landed (676 and 26 entries) and removed them: a test fails on any
+violation, and its message lists them. The table test keeps its baseline, which may only shrink: it fails on a violation
+that is not in it, and on a line that is no longer one. A method or a constructor is keyed by its signature
+(`Spacecraft.GetTotalIsp()`), a parameter by its method's signature and its name
+(`LegendreFunctions.ComputeGeodesyNormalizedLegendreTable(int, double, double, double[][], double[][]):p`), so each
+overload is reported on its own.
 
-The library builds with the warnings of the lots to come: CS1591 (a public member without a comment) and the CA naming
-rules (`AnalysisModeNaming` All).
+The CA naming rules (`AnalysisModeNaming` All, with CA1050) are errors since lot L9 of #668 (D2, N8). Their exceptions
+are in one file, `IO.Astrodynamics/GlobalSuppressions.cs`, each a `SuppressMessage` of one type or member with the
+decision that keeps its name: the six types named after the namespace of their feature (CA1724: `Atmosphere`,
+`Spacecraft`, `Maneuver`, `Mission`, `OrbitalParameters`, and `Configuration` against .NET Framework's
+`System.Configuration`), which N8 suppresses with a justification, and the 11 diagnostics of names decided or released
+(decision 114 of #668, decided by S. Guillet, 2026-11-26): CA1721 on `CelestialBody.Atmosphere` beside `GetAtmosphere`
+(the amendment of D4), `Omm.Epoch` and `Opm.Epoch` beside `GetEpoch` (R22) and `BodyAxis` beside the protected
+`GetBodyAxis` on the six single-vector attitudes (decisions 48, 69 and 93), CA1711 on `EncounterQualityFlags` and CA1720
+on `CdmParticipantMetadata.Object` (the CCSDS keyword `OBJECT`), both released in 10.1.0. A new exception takes its own
+decision; any other name that breaks a rule fails the build.
+
+A public member without a comment (CS1591) stays a warning (R05).
 
 The surface itself is not tracked in files: no list of the public signatures is kept in the repository (decided by S.
 Guillet, 2026-11-19). The reference pages of `docs/` and the release notes ([Versioning](versioning.md)) are the record
@@ -59,5 +72,4 @@ The pull request instead:
 1. lists the change in the release notes ([Versioning](versioning.md)): under **Changed**, an entry marked
    **Breaking** with its **Migration** line (the old name, the new one, what a caller writes instead), or under
    **Removed** with what replaces the member;
-2. updates the reference pages of `docs/` that cite the member, and the examples (the C# blocks are compiled);
-3. removes the baseline lines of the old name, which the tests then report as stale.
+2. updates the reference pages of `docs/` that cite the member, and the examples (the C# blocks are compiled).

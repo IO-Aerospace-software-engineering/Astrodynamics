@@ -18,15 +18,9 @@ using System.Threading;
 using System.Threading.Tasks;
 using IO.Astrodynamics;
 using IO.Astrodynamics.Atmosphere;
-using IO.Astrodynamics.Atmosphere.NRLMSISE_00;
 using IO.Astrodynamics.Body;
 using IO.Astrodynamics.Body.Spacecraft;
-using IO.Astrodynamics.CCSDS;
-using IO.Astrodynamics.CCSDS.CDM;
-using IO.Astrodynamics.CCSDS.Common;
-using IO.Astrodynamics.CCSDS.Common.Enums;
-using IO.Astrodynamics.CCSDS.OMM;
-using IO.Astrodynamics.CCSDS.OPM;
+using IO.Astrodynamics.Ccsds;
 using IO.Astrodynamics.Converters;
 using IO.Astrodynamics.Coordinates;
 using IO.Astrodynamics.Cosmographia;
@@ -42,7 +36,6 @@ using IO.Astrodynamics.Math;
 using IO.Astrodynamics.Mission;
 using IO.Astrodynamics.Occultation;
 using IO.Astrodynamics.OrbitalParameters;
-using IO.Astrodynamics.OrbitalParameters.TLE;
 using IO.Astrodynamics.Physics;
 using IO.Astrodynamics.Propagator;
 using IO.Astrodynamics.Propagator.Events;
@@ -50,11 +43,11 @@ using IO.Astrodynamics.Propagator.Forces;
 using IO.Astrodynamics.Propagator.Integrators;
 using IO.Astrodynamics.Propagator.MonteCarlo;
 using IO.Astrodynamics.Propagator.Variational;
-using IO.Astrodynamics.SSA;
+using IO.Astrodynamics.Ssa;
 using IO.Astrodynamics.SolarSystemObjects;
 using IO.Astrodynamics.Surface;
 using IO.Astrodynamics.TimeSystem;
-using TLE = IO.Astrodynamics.OrbitalParameters.TLE.TLE;
+using Tle = IO.Astrodynamics.OrbitalParameters.Tle;
 
 namespace DocumentationPageSamples;
 
@@ -65,7 +58,7 @@ internal static class GetStartedPage
     internal static void Block01()
     {
         #region docs/get-started.md:1
-        SpiceAPI.Instance.LoadKernels(new DirectoryInfo("Data/SolarSystem"));
+        SpiceApi.Instance.LoadKernels(new DirectoryInfo("Data/SolarSystem"));
         #endregion
     }
 
@@ -73,7 +66,7 @@ internal static class GetStartedPage
     internal static void Block02()
     {
         #region docs/get-started.md:2
-        SpiceAPI.Instance.LoadKernels(new FileInfo("de440.bsp"));
+        SpiceApi.Instance.LoadKernels(new FileInfo("de440.bsp"));
         #endregion
     }
 
@@ -81,9 +74,9 @@ internal static class GetStartedPage
     internal static void Block03()
     {
         #region docs/get-started.md:3
-        SpiceAPI.Instance.LoadKernels(new DirectoryInfo("Data/SolarSystem"));
+        SpiceApi.Instance.LoadKernels(new DirectoryInfo("Data/SolarSystem"));
 
-        var earth = PlanetsAndMoons.EARTH_BODY;
+        var earth = PlanetsAndMoons.EarthBody;
         var sun = new CelestialBody(Stars.Sun);
         var epoch = new Time(2024, 6, 21, 12, 0, 0, TimeScale.TDB);
 
@@ -98,7 +91,7 @@ internal static class GetStartedPage
     internal static void Block04()
     {
         #region docs/get-started.md:4
-        var earth = PlanetsAndMoons.EARTH_BODY;
+        var earth = PlanetsAndMoons.EarthBody;
         var epoch = new Time(2024, 1, 1, 0, 0, 0, TimeScale.TDB);
 
         var orbit = new KeplerianElements(
@@ -121,7 +114,7 @@ internal static class GetStartedPage
     internal static void Block05()
     {
         #region docs/get-started.md:5
-        var tle = new TLE("ISS (ZARYA)",
+        var tle = new Tle("ISS (ZARYA)",
             "1 25544U 98067A   21020.53488036  .00016717  00000-0  10270-3 0  9054",
             "2 25544  51.6423 353.0312 0000493 320.8755  39.2360 15.49309423 25703");
 
@@ -144,7 +137,7 @@ internal static class GetStartedPage
         var solution = spacecraft.Propagate(window, new PropagationOptions
         {
             Integrator = new RK78IntegratorOptions { AbsoluteTolerance = 1e-10, RelativeTolerance = 1e-10 },
-            ThirdBodies = new CelestialItem[] { Stars.SUN_BODY, PlanetsAndMoons.MOON_BODY },
+            ThirdBodies = new CelestialItem[] { Stars.SunBody, PlanetsAndMoons.MoonBody },
             AtmosphericDrag = true,
             SolarRadiationPressure = true
         });
@@ -164,7 +157,7 @@ internal static class GetStartedPage
         {
             Integrator = new VVIntegratorOptions { Step = TimeSpan.FromSeconds(10.0) },
             OutputStep = TimeSpan.FromSeconds(60.0),
-            ThirdBodies = new CelestialItem[] { Stars.SUN_BODY, PlanetsAndMoons.MOON_BODY }
+            ThirdBodies = new CelestialItem[] { Stars.SunBody, PlanetsAndMoons.MoonBody }
         });
 
         var final = solution.GetStateVector(window.EndDate);

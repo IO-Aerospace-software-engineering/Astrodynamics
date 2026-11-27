@@ -4,7 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
-using IO.Astrodynamics.CCSDS.OPM;
+using IO.Astrodynamics.Ccsds;
 using IO.Astrodynamics.Body;
 using IO.Astrodynamics.Body.Spacecraft;
 using IO.Astrodynamics.Maneuver;
@@ -134,8 +134,8 @@ public class RepropagationTests
         {
             var parts = setup.Split('|');
             bool moon = parts[0] == "Moon";
-            var earth = new CelestialBody(PlanetsAndMoons.EARTH, Frame.ICRF, S);
-            var center = moon ? new CelestialBody(PlanetsAndMoons.MOON, Frame.ICRF, S) : earth;
+            var earth = new CelestialBody(PlanetsAndMoons.Earth, Frame.ICRF, S);
+            var center = moon ? new CelestialBody(PlanetsAndMoons.Moon, Frame.ICRF, S) : earth;
             CelestialItem[] bodies = parts[1] == "SSB" ? [center, new CelestialBody(Stars.Sun, Frame.ICRF, S)] : [center];
             return new Env { Center = center, Bodies = bodies, FrameName = parts[1], Moon = moon };
         }
@@ -148,13 +148,13 @@ public class RepropagationTests
             OrbitalParams orbit = new KeplerianElements(a, e, 0.9, 0.3, 1.1, m, Center, epoch, Frame.ICRF);
             if (FrameName == "ECLIPJ2000")
             {
-                orbit = orbit.ToStateVector().ToFrame(Frame.ECLIPTIC_J2000).ToStateVector();
+                orbit = orbit.ToStateVector().ToFrame(Frame.ECLIPJ2000).ToStateVector();
             }
             else if (Ssb)
             {
                 var sv = orbit.ToStateVector();
-                var fromSsb = Center.GetGeometricStateRelativeTo(epoch, Barycenters.SOLAR_SYSTEM_BARYCENTER);
-                orbit = new StateVector(fromSsb.Position + sv.Position, fromSsb.Velocity + sv.Velocity, Barycenters.SOLAR_SYSTEM_BARYCENTER, epoch,
+                var fromSsb = Center.GetGeometricStateRelativeTo(epoch, Barycenters.SolarSystemBarycenter);
+                orbit = new StateVector(fromSsb.Position + sv.Position, fromSsb.Velocity + sv.Velocity, Barycenters.SolarSystemBarycenter, epoch,
                     Frame.ICRF);
             }
 
@@ -407,7 +407,7 @@ public class RepropagationTests
             V = v,
             Gates = sc.Chain.Select(m => m.MinEpoch).ToArray(),
             Executed = spacecraft.ExecutedManeuvers.Select(m => (Array.IndexOf(sc.Chain, m), m.ManeuverWindow, m.ThrustWindow)).ToArray(),
-            Opm = (opm.Data.Maneuvers ?? []).Select(m => (m.ManEpochIgnition, m.ManDuration, m.ManDeltaMass, m.ManDv1, m.ManDv2, m.ManDv3)).ToArray(),
+            Opm = (opm.Data.Maneuvers ?? []).Select(m => (m.ManEpochIgnition, m.ManDurationSeconds, m.ManDeltaMass, m.ManDv1, m.ManDv2, m.ManDv3)).ToArray(),
             Summary = (summary.ManeuverWindow, summary.FuelConsumption, summary.Maneuvers.Count()),
             P = covariance ? solution!.GetCovariance(window.EndDate) : null
         };

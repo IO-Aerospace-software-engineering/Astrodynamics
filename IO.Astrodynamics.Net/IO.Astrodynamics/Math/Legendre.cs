@@ -115,13 +115,13 @@ public class LegendreFunctions
     /// <param name="maxDegree">Maximum degree (n) to compute</param>
     /// <param name="sinPhi">sin(φ) where φ is geocentric latitude</param>
     /// <param name="cosPhi">cos(φ) where φ is geocentric latitude</param>
-    /// <param name="P">Output: P[n][m] = P̄_nm(sinφ)</param>
+    /// <param name="p">Output: p[n][m] = P̄_nm(sinφ)</param>
     /// <param name="dP">Output: dP[n][m] = dP̄_nm/dφ</param>
     public static void ComputeGeodesyNormalizedLegendreTable(int maxDegree, double sinPhi, double cosPhi,
-        double[][] P, double[][] dP)
+        double[][] p, double[][] dP)
     {
         // Seed: P̄₀₀ = 1
-        P[0][0] = 1.0;
+        p[0][0] = 1.0;
         dP[0][0] = 0.0;
 
         if (maxDegree == 0) return;
@@ -136,13 +136,13 @@ public class LegendreFunctions
                 // For m=1: δ₀ₘ=0, δ₀,ₘ₋₁=1 → extra factor √2
                 // For m≥2: δ₀ₘ=0, δ₀,ₘ₋₁=0 → factor = 1
                 double deltaRatio = m == 1 ? 2.0 : 1.0;
-                P[m][m] = System.Math.Sqrt(deltaRatio * (2.0 * m + 1.0) / (2.0 * m)) * cosPhi * P[m - 1][m - 1];
+                p[m][m] = System.Math.Sqrt(deltaRatio * (2.0 * m + 1.0) / (2.0 * m)) * cosPhi * p[m - 1][m - 1];
             }
 
             // Sub-diagonal term P̄_{m+1,m}
             if (m + 1 <= maxDegree)
             {
-                P[m + 1][m] = System.Math.Sqrt(2.0 * m + 3.0) * sinPhi * P[m][m];
+                p[m + 1][m] = System.Math.Sqrt(2.0 * m + 3.0) * sinPhi * p[m][m];
             }
 
             // General recursion for n >= m+2
@@ -153,7 +153,7 @@ public class LegendreFunctions
                 double a_nm = System.Math.Sqrt((4.0 * n2 - 1.0) / (n2 - m2));
                 double b_nm = System.Math.Sqrt((2.0 * n + 1.0) * ((n - 1.0) * (n - 1.0) - m2) /
                                                ((2.0 * n - 3.0) * (n2 - m2)));
-                P[n][m] = a_nm * sinPhi * P[n - 1][m] - b_nm * P[n - 2][m];
+                p[n][m] = a_nm * sinPhi * p[n - 1][m] - b_nm * p[n - 2][m];
             }
         }
 
@@ -213,14 +213,14 @@ public class LegendreFunctions
                         // dP̄_nn/dφ = factor · (-sinPhi · P̄_{n-1,n-1} + cosPhi · dP̄_{n-1,n-1}/dφ)
                         double deltaRatio = n == 1 ? 2.0 : 1.0;
                         double factor = System.Math.Sqrt(deltaRatio * (2.0 * n + 1.0) / (2.0 * n));
-                        dP[n][n] = factor * (-sinPhi * P[n - 1][n - 1] + cosPhi * dP[n - 1][n - 1]);
+                        dP[n][n] = factor * (-sinPhi * p[n - 1][n - 1] + cosPhi * dP[n - 1][n - 1]);
                     }
                     else
                     {
                         // General formula (works for all n >= 1, m < n):
                         // dP̄_nm/dφ = (-n·sinφ·P̄_nm + c_nm·P̄_{n-1,m}) / cosφ
                         double c_nm = System.Math.Sqrt((2.0 * n + 1.0) * (n + m) * (n - m) / (2.0 * n - 1.0));
-                        dP[n][m] = (-n * sinPhi * P[n][m] + c_nm * P[n - 1][m]) / cosPhi;
+                        dP[n][m] = (-n * sinPhi * p[n][m] + c_nm * p[n - 1][m]) / cosPhi;
                     }
                 }
             }

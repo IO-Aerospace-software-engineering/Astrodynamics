@@ -195,6 +195,12 @@ jobs:
     - name: Test
       run: dotnet test --verbosity ${{ inputs.logLevel || 'minimal' }} --logger "console;verbosity=detailed" -c Release ${{ matrix.os != 'ubuntu-latest' && '--filter "Category!=Validation&Category!=LongValidation"' || '--filter "Category!=LongValidation"' }}
 
+    # cspell over the simple names of the public surface (N8 of D2, #668): the word file NamingRuleTests wrote during the
+    # tests, against the project dictionary cspell.json at the root. The names are the same on every platform.
+    - name: Spell the public names
+      if: matrix.os == 'ubuntu-latest'
+      run: npx --yes cspell@8.19.4 --no-progress --config ../cspell.json IO.Astrodynamics.Tests/bin/Release/net10.0/ApiConventions/public-names.txt
+
   # Job 3: the conformance suite (conformance-tests, private) run by the conformance runner on its latest version, on
   # the three platforms, with freshly built native libraries. The suite is checked out with a read-only token, the
   # secret CONFORMANCE_TESTS_TOKEN (contents: read on conformance-tests); without it (forks), the job only says so.

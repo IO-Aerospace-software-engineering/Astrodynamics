@@ -2,7 +2,6 @@ using System;
 using IO.Astrodynamics.Body;
 using IO.Astrodynamics.CLI.Commands.Parameters;
 using IO.Astrodynamics.OrbitalParameters;
-using IO.Astrodynamics.OrbitalParameters.TLE;
 
 namespace IO.Astrodynamics.CLI.Cli;
 
@@ -60,7 +59,7 @@ internal static class CliOrbit
             if (kind == "tle")
             {
                 // A malformed TLE throws ArgumentException (R21 of #668)
-                return new TLE("body", options.Orbit[0], options.Orbit[1]);
+                return new Tle("body", options.Orbit[0], options.Orbit[1]);
             }
 
             var epoch = CliValues.Epoch(options.Epoch, "--epoch");

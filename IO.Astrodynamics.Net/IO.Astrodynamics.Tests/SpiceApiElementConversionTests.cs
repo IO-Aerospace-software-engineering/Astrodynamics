@@ -17,13 +17,13 @@ using Vector3 = IO.Astrodynamics.Math.Vector3;
 namespace IO.Astrodynamics.Tests;
 
 /// <summary>
-/// The element conversions and the two-body propagation of <see cref="SpiceAPI"/>: the observer and the frame of their
-/// results are those of their input (#725), and <see cref="SpiceAPI.ConvertEquinoctialElementsToStateVector"/> gives
+/// The element conversions and the two-body propagation of <see cref="SpiceApi"/>: the observer and the frame of their
+/// results are those of their input (#725), and <see cref="SpiceApi.ConvertEquinoctialElementsToStateVector"/> gives
 /// EQNCPV the mean longitude of the elements (#450).
 /// </summary>
 /// <remarks>
 /// The child process of <see cref="ColdStartTests"/> checks, on a probe data provider, that none of these calls reads the
-/// provider under the SpiceAPI lock (#664, mode <c>conversions-lock</c>).
+/// provider under the SpiceApi lock (#664, mode <c>conversions-lock</c>).
 /// </remarks>
 public class SpiceApiElementConversionTests
 {
@@ -50,7 +50,7 @@ public class SpiceApiElementConversionTests
 
     private static CelestialItem Observer(string name) => name switch
     {
-        "earth with models" => new CelestialBody(PlanetsAndMoons.EARTH, SpiceFrame.ICRF, Epoch,
+        "earth with models" => new CelestialBody(PlanetsAndMoons.Earth, SpiceFrame.ICRF, Epoch,
             new IO.Astrodynamics.Body.GeopotentialModelParameters("Data/SolarSystem/EGM2008_to70_TideFree", 10), new EarthStandardAtmosphere()),
         "barycentre" => new Barycenter(3, Epoch),
         "custom body" => new CustomBody(),
@@ -69,29 +69,29 @@ public class SpiceApiElementConversionTests
     {
         // Arrange
         var observer = Observer(observerName);
-        var frame = SpiceFrame.ECLIPTIC_J2000;
+        var frame = SpiceFrame.ECLIPJ2000;
         double gm = observer.GM;
         var state = new StateVector(new Vector3(6800000.0, 1000.0, 2000.0), new Vector3(10.0, 7500.0, 1000.0), observer, Epoch, frame);
         var ellipse = new KeplerianElements(7.0e6, 0.1, 0.5, 1.0, 2.0, 0.3, observer, Epoch, frame);
         var hyperbola = new KeplerianElements(-7.0e6, 1.5, 0.5, 1.0, 2.0, 0.3, observer, Epoch, frame);
         var results = new List<(string Call, IO.Astrodynamics.OrbitalParameters.OrbitalParameters Result)>
         {
-            ("ConvertStateVectorToConicOrbitalElement(sv, gm)", SpiceAPI.Instance.ConvertStateVectorToConicOrbitalElement(state, gm)),
-            ("ConvertStateVectorToConicOrbitalElement(sv)", SpiceAPI.Instance.ConvertStateVectorToConicOrbitalElement(state)),
-            ("ConvertConicElementsToStateVector(ke, epoch, gm)", SpiceAPI.Instance.ConvertConicElementsToStateVector(ellipse, Epoch.AddSeconds(60.0), gm)),
-            ("ConvertConicElementsToStateVector(ke, epoch)", SpiceAPI.Instance.ConvertConicElementsToStateVector(ellipse, Epoch.AddSeconds(60.0))),
-            ("ConvertConicElementsToStateVector(hyperbola)", SpiceAPI.Instance.ConvertConicElementsToStateVector(hyperbola)),
-            ("Propagate2Bodies(sv, gm, dt)", SpiceAPI.Instance.Propagate2Bodies(state, gm, TimeSpan.FromSeconds(60.0))),
-            ("Propagate2Bodies(sv, dt)", SpiceAPI.Instance.Propagate2Bodies(state, TimeSpan.FromSeconds(60.0))),
-            ("Propagate2Bodies(sv, epoch)", SpiceAPI.Instance.Propagate2Bodies(state, Epoch.AddSeconds(60.0)))
+            ("ConvertStateVectorToConicOrbitalElement(sv, gm)", SpiceApi.Instance.ConvertStateVectorToConicOrbitalElement(state, gm)),
+            ("ConvertStateVectorToConicOrbitalElement(sv)", SpiceApi.Instance.ConvertStateVectorToConicOrbitalElement(state)),
+            ("ConvertConicElementsToStateVector(ke, epoch, gm)", SpiceApi.Instance.ConvertConicElementsToStateVector(ellipse, Epoch.AddSeconds(60.0), gm)),
+            ("ConvertConicElementsToStateVector(ke, epoch)", SpiceApi.Instance.ConvertConicElementsToStateVector(ellipse, Epoch.AddSeconds(60.0))),
+            ("ConvertConicElementsToStateVector(hyperbola)", SpiceApi.Instance.ConvertConicElementsToStateVector(hyperbola)),
+            ("Propagate2Bodies(sv, gm, dt)", SpiceApi.Instance.Propagate2Bodies(state, gm, TimeSpan.FromSeconds(60.0))),
+            ("Propagate2Bodies(sv, dt)", SpiceApi.Instance.Propagate2Bodies(state, TimeSpan.FromSeconds(60.0))),
+            ("Propagate2Bodies(sv, epoch)", SpiceApi.Instance.Propagate2Bodies(state, Epoch.AddSeconds(60.0)))
         };
 
         // The native ellipse and EQNCPV read the centre from the kernels: a celestial body SPICE names only (#711)
         if (observer is not CustomBody)
         {
             var equinoctial = new EquinoctialElements(7.0e6, 0.01, 0.02, 0.1, 0.2, 0.5, observer, Epoch, frame);
-            results.Add(("ConvertConicElementsToStateVector(ellipse)", SpiceAPI.Instance.ConvertConicElementsToStateVector(ellipse)));
-            results.Add(("ConvertEquinoctialElementsToStateVector", SpiceAPI.Instance.ConvertEquinoctialElementsToStateVector(equinoctial)));
+            results.Add(("ConvertConicElementsToStateVector(ellipse)", SpiceApi.Instance.ConvertConicElementsToStateVector(ellipse)));
+            results.Add(("ConvertEquinoctialElementsToStateVector", SpiceApi.Instance.ConvertEquinoctialElementsToStateVector(equinoctial)));
         }
 
         // Assert
@@ -131,7 +131,7 @@ public class SpiceApiElementConversionTests
     {
         // Arrange
         var reference = EquinoctialReference.Load();
-        var earth = new CelestialBody(PlanetsAndMoons.EARTH, SpiceFrame.ICRF, Epoch);
+        var earth = new CelestialBody(PlanetsAndMoons.Earth, SpiceFrame.ICRF, Epoch);
         Assert.Equal(reference.Gm["gm_de440"], earth.GM);
         var cases = reference.Eqncpv.Concat(reference.Equinoctial)
             .Where(c => c.Group is not "large L" && System.Math.Sqrt(c.F * c.F + c.G * c.G) < 0.9 && c.P > 0.0 &&
@@ -142,7 +142,7 @@ public class SpiceApiElementConversionTests
             .ToList();
 
         // Act
-        var errors = cases.Select(c => (c.Name, Error: c.State.RelativeError(SpiceAPI.Instance.ConvertEquinoctialElementsToStateVector(c.Elements))))
+        var errors = cases.Select(c => (c.Name, Error: c.State.RelativeError(SpiceApi.Instance.ConvertEquinoctialElementsToStateVector(c.Elements))))
             .ToList();
 
         // Assert

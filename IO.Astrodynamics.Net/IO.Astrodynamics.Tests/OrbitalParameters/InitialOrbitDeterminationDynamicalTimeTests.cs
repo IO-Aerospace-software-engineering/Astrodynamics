@@ -38,7 +38,7 @@ public class InitialOrbitDeterminationDynamicalTimeTests
 
         // Act
         var utc = Determine(observations, site, e => e);
-        var tai = Determine(observations, site, e => e.ToTAI());
+        var tai = Determine(observations, site, e => e.ToTai());
         var tt = Determine(observations, site, e => e.ToTT());
 
         // Assert: the intervals are the same TT seconds in the three frames, 120 s and 121 s
@@ -52,7 +52,7 @@ public class InitialOrbitDeterminationDynamicalTimeTests
     {
         var tagged = Array.ConvertAll(observations,
             o => Equatorial.FromRightAscensionDeclination(o.RightAscension, o.Declination, o.Distance, tag(o.Epoch)));
-        return InitialOrbitDetermination.CreateFromObservation_Gauss(tagged[0], tagged[1], tagged[2], site,
-            PlanetsAndMoons.EARTH_BODY, 42000000.0).OrbitalParameters.ToStateVector();
+        return InitialOrbitDetermination.CreateFromGaussMethod(tagged[0], tagged[1], tagged[2], site,
+            PlanetsAndMoons.EarthBody, 42000000.0).OrbitalParameters.ToStateVector();
     }
 }

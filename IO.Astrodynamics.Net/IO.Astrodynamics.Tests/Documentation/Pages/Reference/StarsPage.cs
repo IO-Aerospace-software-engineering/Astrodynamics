@@ -18,15 +18,9 @@ using System.Threading;
 using System.Threading.Tasks;
 using IO.Astrodynamics;
 using IO.Astrodynamics.Atmosphere;
-using IO.Astrodynamics.Atmosphere.NRLMSISE_00;
 using IO.Astrodynamics.Body;
 using IO.Astrodynamics.Body.Spacecraft;
-using IO.Astrodynamics.CCSDS;
-using IO.Astrodynamics.CCSDS.CDM;
-using IO.Astrodynamics.CCSDS.Common;
-using IO.Astrodynamics.CCSDS.Common.Enums;
-using IO.Astrodynamics.CCSDS.OMM;
-using IO.Astrodynamics.CCSDS.OPM;
+using IO.Astrodynamics.Ccsds;
 using IO.Astrodynamics.Converters;
 using IO.Astrodynamics.Coordinates;
 using IO.Astrodynamics.Cosmographia;
@@ -49,11 +43,11 @@ using IO.Astrodynamics.Propagator.Forces;
 using IO.Astrodynamics.Propagator.Integrators;
 using IO.Astrodynamics.Propagator.MonteCarlo;
 using IO.Astrodynamics.Propagator.Variational;
-using IO.Astrodynamics.SSA;
+using IO.Astrodynamics.Ssa;
 using IO.Astrodynamics.SolarSystemObjects;
 using IO.Astrodynamics.Surface;
 using IO.Astrodynamics.TimeSystem;
-using TLE = IO.Astrodynamics.OrbitalParameters.TLE.TLE;
+using Tle = IO.Astrodynamics.OrbitalParameters.Tle;
 
 namespace DocumentationPageSamples.Reference;
 /// <summary>The C# examples of docs/reference/stars.md, one method per block (#705).</summary>
@@ -65,7 +59,7 @@ internal static class StarsPage
         #region docs/reference/stars.md:1
         const double deg = Math.PI / 180.0;
         const double mas = Math.PI / 180.0 / 3600.0 / 1000.0;
-        var j2016 = Time.CreateTDB(5844.0 * 86400.0);
+        var j2016 = Time.CreateTdb(5844.0 * 86400.0);
         var barnard = new Star(4472832, "Barnard", 2.9e29, "M4V", 9.5, 546.9759 / 1000.0,
             Equatorial.FromRightAscensionDeclination(269.44850252544 * deg, 4.73942005111 * deg, j2016),
             10362.394 * mas, -801.551 * mas, 0.0, 0.0, 0.0, 0.0, j2016);

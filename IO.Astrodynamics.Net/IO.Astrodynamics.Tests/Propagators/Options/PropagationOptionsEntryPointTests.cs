@@ -37,7 +37,7 @@ public class PropagationOptionsEntryPointTests
     }
 
     private static Spacecraft NewSpacecraft() =>
-        PropagationOptionsPathTests.NewSpacecraft(PropagationOptionsPathTests.Leo(PlanetsAndMoons.EARTH_BODY));
+        PropagationOptionsPathTests.NewSpacecraft(PropagationOptionsPathTests.Leo(PlanetsAndMoons.EarthBody));
 
     private static Scenario NewScenario(Spacecraft spacecraft, params CelestialItem[] bodies)
     {
@@ -56,9 +56,9 @@ public class PropagationOptionsEntryPointTests
     {
         var viaList = NewSpacecraft();
         var viaScenario = NewSpacecraft();
-        NewScenario(viaList, PlanetsAndMoons.EARTH_BODY, Stars.SUN_BODY).Simulate(PropagationOptions.Default with
-            { ThirdBodies = new CelestialItem[] { Stars.SUN_BODY } });
-        NewScenario(viaScenario, PlanetsAndMoons.EARTH_BODY, Stars.SUN_BODY).Simulate();
+        NewScenario(viaList, PlanetsAndMoons.EarthBody, Stars.SunBody).Simulate(PropagationOptions.Default with
+            { ThirdBodies = new CelestialItem[] { Stars.SunBody } });
+        NewScenario(viaScenario, PlanetsAndMoons.EarthBody, Stars.SunBody).Simulate();
         PropagationOptionsPathTests.AssertSameStates(viaScenario.PropagatedStates, viaList.PropagatedStates);
     }
 
@@ -66,9 +66,9 @@ public class PropagationOptionsEntryPointTests
     public void Simulate_ThirdBodiesThatDifferFromTheScenarios_Throw_BeforeAnyPropagation()
     {
         var spacecraft = NewSpacecraft();
-        var scenario = NewScenario(spacecraft, Stars.SUN_BODY);
+        var scenario = NewScenario(spacecraft, Stars.SunBody);
         var exception = Assert.Throws<ArgumentException>(() => scenario.Simulate(PropagationOptions.Default with
-            { ThirdBodies = new CelestialItem[] { PlanetsAndMoons.MOON_BODY } }));
+            { ThirdBodies = new CelestialItem[] { PlanetsAndMoons.MoonBody } }));
         Assert.Equal("options", exception.ParamName);
         Assert.False(spacecraft.IsPropagated);
         Assert.False(scenario.IsSimulated);
@@ -79,7 +79,7 @@ public class PropagationOptionsEntryPointTests
     {
         var viaScenario = NewSpacecraft();
         var viaSpacecraft = NewSpacecraft();
-        var options = PropagationOptions.Default with { ThirdBodies = new CelestialItem[] { Stars.SUN_BODY } };
+        var options = PropagationOptions.Default with { ThirdBodies = new CelestialItem[] { Stars.SunBody } };
         NewScenario(viaScenario).Simulate(options);
         viaSpacecraft.Propagate(OneHour, options);
         PropagationOptionsPathTests.AssertSameStates(viaSpacecraft.PropagatedStates, viaScenario.PropagatedStates);
@@ -88,7 +88,7 @@ public class PropagationOptionsEntryPointTests
     [Fact]
     public void BatchTasksOfOptions_EqualSpacecraftPropagate()
     {
-        var options = PropagationOptions.Default with { ThirdBodies = new CelestialItem[] { Stars.SUN_BODY } };
+        var options = PropagationOptions.Default with { ThirdBodies = new CelestialItem[] { Stars.SunBody } };
         var tasks = Enumerable.Range(0, 3).Select(_ => new PropagationTask(NewSpacecraft(), OneHour, options)).ToArray();
         var reference = NewSpacecraft();
         reference.Propagate(OneHour, options);

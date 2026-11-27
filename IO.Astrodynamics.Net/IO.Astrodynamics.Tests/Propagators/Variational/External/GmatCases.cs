@@ -247,8 +247,8 @@ internal static class GmatCases
     // The four states of the force partials (B7), at the epoch of PartialsTestCases, relative to a point-mass Earth
     private static JsonObject PartialsNode(ReferenceCases cases)
     {
-        var earth = new CelestialBody(PlanetsAndMoons.EARTH, Frames.Frame.ICRF, PartialsTestCases.Epoch);
-        var moon = new CelestialBody(PlanetsAndMoons.MOON, Frames.Frame.ICRF, PartialsTestCases.Epoch);
+        var earth = new CelestialBody(PlanetsAndMoons.Earth, Frames.Frame.ICRF, PartialsTestCases.Epoch);
+        var moon = new CelestialBody(PlanetsAndMoons.Moon, Frames.Frame.ICRF, PartialsTestCases.Epoch);
         var sun = new CelestialBody(Stars.Sun);
         return new JsonObject
         {
@@ -275,7 +275,7 @@ internal static class GmatCases
     // short without notice, so it is refused (H3 review of #408, nit 5)
     internal static string TdbEpoch(TimeSystem.Time epoch)
     {
-        var dateTime = epoch.ToTDB().DateTime;
+        var dateTime = epoch.ToTdb().DateTime;
         if (dateTime.Ticks % TimeSpan.TicksPerMillisecond != 0)
         {
             throw new ArgumentException($"{dateTime:O} TDB is not on the millisecond grid of GMAT's epochs", nameof(epoch));

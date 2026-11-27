@@ -10,14 +10,14 @@ namespace IO.Astrodynamics.Propagator;
 /// </summary>
 public readonly record struct IntegrationResult(
     PropagationSegment Segment,
-    EventInfo? Event);
+    IntegrationEvent? Event);
 
 /// <summary>
 /// Information about an event detected during integration; <see cref="EventTime"/> is in seconds of the time argument
 /// of the propagation from the base epoch of the segment: TT seconds about the Earth, TDB seconds about any other central
 /// body (#501).
 /// </summary>
-public readonly record struct EventInfo(
+public readonly record struct IntegrationEvent(
     int DetectorIndex,
     double EventTime,
     Vector3 EventPosition,

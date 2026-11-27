@@ -42,9 +42,9 @@ internal static class CultureKernelSet
     internal static (Spacecraft Spacecraft, Site Site) Build(int spacecraftId, string spacecraftName, string[] instrumentNames,
         int siteId, string siteName)
     {
-        var earth = new CelestialBody(PlanetsAndMoons.EARTH, Frames.Frame.ICRF, TimeSystem.Time.J2000TDB);
+        var earth = new CelestialBody(PlanetsAndMoons.Earth, Frames.Frame.ICRF, TimeSystem.Time.J2000Tdb);
         var spacecraft = new Spacecraft(spacecraftId, spacecraftName, 1000.0,
-            new KeplerianElements(6800000.0, 0.0, 0.5, 0.0, 0.0, 0.0, earth, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF), 2000.0,
+            new KeplerianElements(6800000.0, 0.0, 0.5, 0.0, 0.0, 0.0, earth, TimeSystem.Time.J2000Tdb, Frames.Frame.ICRF), 2000.0,
             new Clock(spacecraftName + "_clock", 256));
         spacecraft.AddCircularInstrument(instrumentNames[0], 0.25, Vector3.VectorZ, Vector3.VectorX, new Vector3(0.1, -0.2, 0.3));
         spacecraft.AddRectangularInstrument(instrumentNames[1], 0.3, 0.15, Vector3.VectorZ, Vector3.VectorY, new Vector3(-0.1, 0.2, -0.3));
@@ -64,12 +64,12 @@ internal static class CultureKernelSet
     /// </summary>
     internal static async Task ExportAsync(Spacecraft spacecraft, Site site, DirectoryInfo directory)
     {
-        var start = TimeSystem.Time.J2000TDB.AddYears(21);
+        var start = TimeSystem.Time.J2000Tdb.AddYears(21);
         var scenario = new Scenario("Export", new IO.Astrodynamics.Mission.Mission("Culture"), new TimeSystem.Window(start, start.AddHours(1.0)));
         scenario.AddCelestialItem((CelestialBody)spacecraft.InitialOrbitalParameters.Observer);
         scenario.AddSpacecraft(spacecraft);
         scenario.AddSite(site);
-        var jupiter = new CelestialBody(PlanetsAndMoons.JUPITER, Frames.Frame.ICRF, TimeSystem.Time.J2000TDB);
+        var jupiter = new CelestialBody(PlanetsAndMoons.Jupiter, Frames.Frame.ICRF, TimeSystem.Time.J2000Tdb);
         scenario.AddSite(new Site(site.Id, site.Name + "_J", jupiter, new Planetodetic(1.0, 0.2, 0.0)));
         scenario.Simulate(new PropagationOptions
         {

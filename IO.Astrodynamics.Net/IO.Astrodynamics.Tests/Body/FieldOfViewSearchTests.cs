@@ -10,7 +10,6 @@ using IO.Astrodynamics.Maneuver;
 using IO.Astrodynamics.Math;
 using IO.Astrodynamics.Mission;
 using IO.Astrodynamics.OrbitalParameters;
-using IO.Astrodynamics.OrbitalParameters.TLE;
 using IO.Astrodynamics.SolarSystemObjects;
 using IO.Astrodynamics.Surface;
 using IO.Astrodynamics.TimeSystem;
@@ -63,35 +62,35 @@ internal static class FieldOfViewKernels
 
         foreach (var file in texts)
         {
-            SpiceAPI.Instance.LoadKernels(file);
+            SpiceApi.Instance.LoadKernels(file);
         }
 
         var spk = File(stem + ".bsp");
         (writeEphemeris ?? spacecraft.WriteEphemeris)(spk);
-        SpiceAPI.Instance.LoadKernels(spk);
+        SpiceApi.Instance.LoadKernels(spk);
         var ck = File(stem + ".bc");
         if (orientations != null)
         {
-            SpiceAPI.Instance.WriteOrientation(ck, spacecraft.NaifId, orientations.ToArray());
+            SpiceApi.Instance.WriteOrientation(ck, spacecraft.NaifId, orientations.ToArray());
         }
         else
         {
             spacecraft.WriteOrientation(ck);
         }
 
-        SpiceAPI.Instance.LoadKernels(ck);
+        SpiceApi.Instance.LoadKernels(ck);
         foreach (var target in spacecraftTargets)
         {
             var targetSpk = File(target.Name.ToLowerInvariant() + ".bsp");
             target.WriteEphemeris(targetSpk);
-            SpiceAPI.Instance.LoadKernels(targetSpk);
+            SpiceApi.Instance.LoadKernels(targetSpk);
         }
 
         foreach (var site in siteTargets)
         {
             var siteSpk = File(site.Name.ToLowerInvariant() + ".bsp");
             site.WriteEphemeris(siteWindow, siteSpk);
-            SpiceAPI.Instance.LoadKernels(siteSpk);
+            SpiceApi.Instance.LoadKernels(siteSpk);
         }
     }
 
@@ -134,7 +133,7 @@ public sealed class PropagatedFieldOfViewCase
     public PropagatedFieldOfViewCase()
     {
         TestKernels.EnsureSolarSystem();
-        Start = TimeSystem.Time.CreateUTC(676555130.80).ToTDB();
+        Start = TimeSystem.Time.CreateUtc(676555130.80).ToTdb();
         End = Start.AddSeconds(6448.0);
         // The light time of a spacecraft target reads it before the search window: one second inside the propagation
         SearchWindow = new Window(Start.AddSeconds(1.0), End.AddSeconds(-1.0));
@@ -168,7 +167,7 @@ public sealed class PropagatedFieldOfViewCase
         var starSpk = new FileInfo(Path.Combine(KernelDirectory, "fovstar515.bsp"));
         File.Delete(starSpk.FullName);
         Star.WriteEphemeris(new FileInfo(starSpk.FullName));
-        SpiceAPI.Instance.LoadKernels(new FileInfo(starSpk.FullName));
+        SpiceApi.Instance.LoadKernels(new FileInfo(starSpk.FullName));
         Kernel = new Spacecraft(ObserverId, "FOV5151", Start, 1000.0, 3000.0, new Clock("FOV5151_CLK", 65536));
         AddInstruments(Kernel);
         KernelTarget = new Spacecraft(TargetId, "FOV5152", Start, 1000.0, 3000.0, new Clock("FOV5152_CLK", 65536));
@@ -285,7 +284,7 @@ public sealed class PropagatedFieldOfViewCase
     {
         var frame = shape == ShapeType.Point ? Frames.Frame.ICRF : TargetFrame(target);
         int targetId = Target(target, true).NaifId;
-        return SpiceAPI.Instance.FindWindowsInFieldOfViewConstraint(window ?? SearchWindow, ObserverId, ObserverId * 1000 - number, targetId, frame, shape, aberration, step)
+        return SpiceApi.Instance.FindWindowsInFieldOfViewConstraint(window ?? SearchWindow, ObserverId, ObserverId * 1000 - number, targetId, frame, shape, aberration, step)
             .ToArray();
     }
 }
@@ -567,7 +566,7 @@ public class FieldOfViewSearchTests : IClassFixture<PropagatedFieldOfViewCase>
     [InlineData(797)]
     public void KernelObserver_PropagatedTarget_MatchesGftfov(int number)
     {
-        foreach (var aberration in new[] { Aberration.None, Aberration.LT, Aberration.LTS })
+        foreach (var aberration in new[] { Aberration.None, Aberration.LT, Aberration.LtS })
         {
             var actual = _case.KernelInstrument(number).FindFieldOfViewWindows(_case.SearchWindow, _case.PropagatedTarget, new FieldOfViewSearchOptions { Step = Step, Aberration = aberration, TargetShape = ShapeType.Point, TargetFrame = Frames.Frame.ICRF }).ToArray();
             var expected = _case.Gftfov(number, "-5152", ShapeType.Point, aberration, Step);
@@ -607,7 +606,7 @@ public class FieldOfViewSearchTests : IClassFixture<PropagatedFieldOfViewCase>
 
     /// <summary>
     /// <see cref="Instrument.FindFieldOfViewWindows"/> (R15 of #668, lot L6) equals the former search on both paths, bit for
-    /// bit (the library's internal search and the raw <c>gftfov_c</c> of <see cref="SpiceAPI"/>, which keep its TDB labels): the target's shape an ellipsoid when it has radii, its own frame when none is given; a convergence tolerance
+    /// bit (the library's internal search and the raw <c>gftfov_c</c> of <see cref="SpiceApi"/>, which keep its TDB labels): the target's shape an ellipsoid when it has radii, its own frame when none is given; a convergence tolerance
     /// applies to the library's search and throws on <c>gftfov</c>'s, and so does a frame SPICE does not know, with the
     /// options as parameter.
     /// </summary>
@@ -617,13 +616,13 @@ public class FieldOfViewSearchTests : IClassFixture<PropagatedFieldOfViewCase>
         var earth = _case.Earth;
         var itrf = PropagatedFieldOfViewCase.TargetFrame("399");
         var options = FieldOfViewSearchOptions.Default with { Step = Step, Aberration = Aberration.LT, TargetFrame = itrf };
-        // The former windows from the paths that keep them: the library's search (internal) and the raw gftfov_c of SpiceAPI
+        // The former windows from the paths that keep them: the library's search (internal) and the raw gftfov_c of SpiceApi
         var propagated = _case.PropagatedInstrument(789);
         var kernel = _case.KernelInstrument(789);
         foreach (var (instrument, spice) in new[] { (propagated, false), (kernel, true) })
         {
             IReadOnlyList<Window> Former(Frames.Frame frame, ShapeType shape, Aberration aberration) => spice
-                ? SpiceAPI.Instance.FindWindowsInFieldOfViewConstraint(_case.SearchWindow, _case.Kernel.NaifId, kernel.NaifId, earth.NaifId, frame, shape, aberration,
+                ? SpiceApi.Instance.FindWindowsInFieldOfViewConstraint(_case.SearchWindow, _case.Kernel.NaifId, kernel.NaifId, earth.NaifId, frame, shape, aberration,
                     Step)
                 : FieldOfViewSearch.Managed(propagated, _case.SearchWindow, earth, shape, frame, aberration, Step);
             var expected = Former(itrf, ShapeType.Ellipsoid, Aberration.LT);
@@ -659,7 +658,7 @@ public class FieldOfViewSearchTests : IClassFixture<PropagatedFieldOfViewCase>
     [Fact]
     public void UtcSearchWindow_ReturnsTheSameInstantsLabelledUtc_OnBothPaths()
     {
-        var utc = new Window(_case.SearchWindow.StartDate.ToUTC(), _case.SearchWindow.EndDate.ToUTC());
+        var utc = new Window(_case.SearchWindow.StartDate.ToUtc(), _case.SearchWindow.EndDate.ToUtc());
         var earth = _case.Earth;
         var itrf = PropagatedFieldOfViewCase.TargetFrame("399");
         var managedUtc = _case.PropagatedInstrument(790).FindFieldOfViewWindows(utc, earth, new FieldOfViewSearchOptions { Step = Step, Aberration = Aberration.LT, TargetShape = ShapeType.Ellipsoid, TargetFrame = itrf })
@@ -667,7 +666,7 @@ public class FieldOfViewSearchTests : IClassFixture<PropagatedFieldOfViewCase>
         var managedTdb = _case.PropagatedInstrument(790).FindFieldOfViewWindows(_case.SearchWindow, earth, new FieldOfViewSearchOptions { Step = Step, Aberration = Aberration.LT, TargetShape = ShapeType.Ellipsoid, TargetFrame = itrf }).ToArray();
         var spiceUtc = _case.KernelInstrument(790).FindFieldOfViewWindows(utc, earth, new FieldOfViewSearchOptions { Step = Step, Aberration = Aberration.LT, TargetShape = ShapeType.Ellipsoid, TargetFrame = itrf }).ToArray();
         Assert.All(managedUtc.Concat(spiceUtc), w => Assert.True(w.StartDate.Scale == TimeScale.UTC && w.EndDate.Scale == TimeScale.UTC));
-        Window[] InTdb(Window[] windows) => windows.Select(w => new Window(w.StartDate.ToTDB(), w.EndDate.ToTDB())).ToArray();
+        Window[] InTdb(Window[] windows) => windows.Select(w => new Window(w.StartDate.ToTdb(), w.EndDate.ToTdb())).ToArray();
         Assert.Equal(0.0, FieldOfViewKernels.WorstEdge(InTdb(managedUtc), managedTdb));
         Assert.True(FieldOfViewKernels.WorstEdge(InTdb(managedUtc), InTdb(spiceUtc)) < PublicPathsLimit);
     }
@@ -772,7 +771,7 @@ public class FieldOfViewSearchTests : IClassFixture<PropagatedFieldOfViewCase>
         var unpropagated = new Spacecraft(-5153, "FOV5153", 1000.0, new StateVector(new Vector3(6800000.0, 0.0, 0.0), new Vector3(0.0, 7656.2204182967143, 0.0), earth, _case.Start, Frames.Frame.ICRF), 3000.0,
             new Clock("FOV5153_CLK", 65536));
         // The attitude it is searched with, given by hand: without one the search throws (#682)
-        unpropagated.Frame.AddStateOrientationToICRF(new StateOrientation(Quaternion.Identity, Vector3.Zero, _case.Start, unpropagated.Frame));
+        unpropagated.Frame.AddStateOrientationToIcrf(new StateOrientation(Quaternion.Identity, Vector3.Zero, _case.Start, unpropagated.Frame));
         var kernel = new Spacecraft(PropagatedFieldOfViewCase.ObserverId, "FOV5151", _case.Start, 1000.0, 3000.0, new Clock("FOV5151_CLK", 65536));
         foreach (var spacecraft in new[] { unpropagated, kernel })
         {
@@ -795,7 +794,7 @@ public class FieldOfViewSearchTests : IClassFixture<PropagatedFieldOfViewCase>
             {
                 Assert.Throws<InvalidOperationException>(() =>
                     instrument.FindFieldOfViewWindows(window, earth, new FieldOfViewSearchOptions { Step = Step, Aberration = Aberration.LT, TargetShape = ShapeType.Point, TargetFrame = Frames.Frame.ICRF }));
-                Assert.Throws<InvalidOperationException>(() => instrument.IsInFOV(window.StartDate, earth, Aberration.LT));
+                Assert.Throws<InvalidOperationException>(() => instrument.IsInFov(window.StartDate, earth, Aberration.LT));
             }
         }
 
@@ -816,7 +815,7 @@ public class FieldOfViewSearchTests : IClassFixture<PropagatedFieldOfViewCase>
         // An observer inside the target's ellipsoid, on the managed path only (zzocced's rule)
         var inside = new Spacecraft(-5155, "FOV5155", 1000.0, new StateVector(new Vector3(1000000.0, 0.0, 0.0), new Vector3(0.0, 100.0, 0.0), earth, _case.Start, Frames.Frame.ICRF), 3000.0,
             new Clock("FOV5155_CLK", 65536));
-        inside.Frame.AddStateOrientationToICRF(new StateOrientation(Quaternion.Identity, Vector3.Zero, _case.Start, inside.Frame));
+        inside.Frame.AddStateOrientationToIcrf(new StateOrientation(Quaternion.Identity, Vector3.Zero, _case.Start, inside.Frame));
         inside.AddCircularInstrument("INSIDE", 0.3, Vector3.VectorZ, Vector3.VectorY, Vector3.Zero, naifId: -5155001, model: "fov515");
         inside.AddRectangularInstrument("INSIDER", 0.3, 0.2, Vector3.VectorZ, Vector3.VectorY, Vector3.Zero, naifId: -5155002, model: "fov515");
         foreach (var instrument in inside.Instruments)
@@ -837,8 +836,8 @@ public class FieldOfViewSearchTests : IClassFixture<PropagatedFieldOfViewCase>
 
     /// <summary>
     /// #682: a managed spacecraft with an empty attitude record, never propagated (from a state, or from a TLE that reads
-    /// SGP4 at each epoch) or propagated by <see cref="IO.Astrodynamics.Propagator.TLEPropagator"/>, has no attitude to
-    /// search with: the search and <see cref="Instrument.IsInFOV"/> throw, as <c>WriteOrientation</c> refuses to write its
+    /// SGP4 at each epoch) or propagated by <see cref="IO.Astrodynamics.Propagator.TlePropagator"/>, has no attitude to
+    /// search with: the search and <see cref="Instrument.IsInFov"/> throw, as <c>WriteOrientation</c> refuses to write its
     /// CK; before, the identity of ICRF was searched (5 windows of the Earth over 6 h for this camera). A field CSPICE
     /// rejects still throws its own error first. An attitude added to its frame lifts the refusal.
     /// </summary>
@@ -848,22 +847,22 @@ public class FieldOfViewSearchTests : IClassFixture<PropagatedFieldOfViewCase>
         var earth = _case.Earth;
         var moon = _case.Moon;
         var epoch = new TimeSystem.Time(2024, 3, 1, TimeScale.TDB);
-        var tle = new TLE("ISS", "1 25544U 98067A   21020.53488036  .00016717  00000-0  10270-3 0  9054",
+        var tle = new Tle("ISS", "1 25544U 98067A   21020.53488036  .00016717  00000-0  10270-3 0  9054",
             "2 25544  51.6423 353.0312 0000493 320.8755  39.2360 15.49309423 25703");
         var fromTle = new Spacecraft(-6822, "FOV6822", 1000.0, tle, 3000.0, new Clock("FOV6822_CLK", 65536));
         fromTle.AddCircularInstrument("CAMERA", 30.0 * IO.Astrodynamics.Constants.Deg2Rad, Vector3.VectorY, Vector3.VectorX, Vector3.Zero, naifId: -6822001, model: "fov682");
-        // Propagated by TLEPropagator, which records no attitude (#546)
+        // Propagated by TlePropagator, which records no attitude (#546)
         var byTlePropagator = new Spacecraft(-6823, "FOV6823", 1000.0, tle, 3000.0, new Clock("FOV6823_CLK", 65536));
         byTlePropagator.AddCircularInstrument("CAMERA", 30.0 * IO.Astrodynamics.Constants.Deg2Rad, Vector3.VectorY, Vector3.VectorX, Vector3.Zero, naifId: -6823001, model: "fov682");
-        var tleStart = tle.Epoch.ToTDB();
-        var tleSolution = new IO.Astrodynamics.Propagator.TLEPropagator(new Window(tleStart, tleStart.AddSeconds(6.0 * 3600.0)), byTlePropagator,
+        var tleStart = tle.Epoch.ToTdb();
+        var tleSolution = new IO.Astrodynamics.Propagator.TlePropagator(new Window(tleStart, tleStart.AddSeconds(6.0 * 3600.0)), byTlePropagator,
             TimeSpan.FromMinutes(10.0)).Propagate();
         Assert.Equal(37, tleSolution.StateVectors.Count());
         foreach (var (spacecraft, start) in new[] { (Unpropagated(-6821, epoch), epoch), (fromTle, tleStart), (byTlePropagator, tleStart) })
         {
             var window = new Window(start, start.AddSeconds(6.0 * 3600.0));
             var camera = spacecraft.Instruments.First();
-            Assert.Null(spacecraft.Frame.GetLatestStateOrientationToICRF());
+            Assert.Null(spacecraft.Frame.GetLatestStateOrientationToIcrf());
             void AssertNoAttitude(Action search)
             {
                 var exception = Assert.Throws<InvalidOperationException>(search);
@@ -874,9 +873,9 @@ public class FieldOfViewSearchTests : IClassFixture<PropagatedFieldOfViewCase>
             AssertNoAttitude(() => camera.FindFieldOfViewWindows(window, earth, new FieldOfViewSearchOptions { Step = TimeSpan.FromMinutes(1.0), Aberration = Aberration.LT, TargetShape = ShapeType.Ellipsoid, TargetFrame = earth.Frame }));
             AssertNoAttitude(() => camera.FindFieldOfViewWindows(window, earth, new FieldOfViewSearchOptions { Step = TimeSpan.FromMinutes(1.0), Aberration = Aberration.LT, TargetShape = ShapeType.Point, TargetFrame = earth.Frame }));
             AssertNoAttitude(() => camera.FindFieldOfViewWindows(window, moon, new FieldOfViewSearchOptions { Step = TimeSpan.FromMinutes(1.0), Aberration = Aberration.LT, TargetShape = ShapeType.Point, TargetFrame = moon.Frame }));
-            AssertNoAttitude(() => camera.IsInFOV(start.AddSeconds(3000.0), earth, Aberration.LT));
+            AssertNoAttitude(() => camera.IsInFov(start.AddSeconds(3000.0), earth, Aberration.LT));
             // The getters keep the documented identity before any attitude
-            Assert.Equal(Vector3.VectorY, camera.GetBoresightInICRFFrame(start));
+            Assert.Equal(Vector3.VectorY, camera.GetBoresightInIcrfFrame(start));
 
             // A field error first: a field wider than gftfov's bound (a zero boresight and a cross angle of 0 are rejected when
             // the instrument is added, #707, #715)
@@ -886,21 +885,21 @@ public class FieldOfViewSearchTests : IClassFixture<PropagatedFieldOfViewCase>
             var fieldError = Assert.Throws<InvalidOperationException>(() =>
                 wide.FindFieldOfViewWindows(window, earth, new FieldOfViewSearchOptions { Step = TimeSpan.FromMinutes(1.0), Aberration = Aberration.LT, TargetShape = ShapeType.Point, TargetFrame = earth.Frame }));
             Assert.Contains("angular radius", fieldError.Message);
-            Assert.Contains("angular radius", Assert.Throws<InvalidOperationException>(() => wide.IsInFOV(start, earth, Aberration.LT)).Message);
+            Assert.Contains("angular radius", Assert.Throws<InvalidOperationException>(() => wide.IsInFov(start, earth, Aberration.LT)).Message);
             // and an argument error before it: the instrument's spacecraft as the target
             Assert.Throws<ArgumentException>(() =>
                 camera.FindFieldOfViewWindows(window, spacecraft, new FieldOfViewSearchOptions { Step = TimeSpan.FromMinutes(1.0), Aberration = Aberration.LT, TargetShape = ShapeType.Point, TargetFrame = earth.Frame }));
 
             // An attitude added to its frame lifts the refusal: the identity searched as before 11.0.0
-            spacecraft.Frame.AddStateOrientationToICRF(new StateOrientation(Quaternion.Identity, Vector3.Zero, start, spacecraft.Frame));
+            spacecraft.Frame.AddStateOrientationToIcrf(new StateOrientation(Quaternion.Identity, Vector3.Zero, start, spacecraft.Frame));
             Assert.NotEmpty(camera.FindFieldOfViewWindows(window, earth, new FieldOfViewSearchOptions { Step = TimeSpan.FromMinutes(1.0), Aberration = Aberration.LT, TargetShape = ShapeType.Ellipsoid, TargetFrame = earth.Frame }));
-            camera.IsInFOV(start.AddSeconds(3000.0), earth, Aberration.LT);
+            camera.IsInFov(start.AddSeconds(3000.0), earth, Aberration.LT);
         }
     }
 
     /// <summary>
-    /// #682: an attitude given by hand (<see cref="SpacecraftFrame.AddStateOrientationToICRF"/>), the identity and
-    /// rotations of ±90° about Z, is the one searched: <see cref="Instrument.IsInFOV"/> equals the closed form of a circular
+    /// #682: an attitude given by hand (<see cref="SpacecraftFrame.AddStateOrientationToIcrf"/>), the identity and
+    /// rotations of ±90° about Z, is the one searched: <see cref="Instrument.IsInFov"/> equals the closed form of a circular
     /// field, the angle between the rotated boresight and the direction of the Earth's centre at most the half-angle, at 60
     /// epochs over 6 h; at the edges of the windows of the search that angle is the half-angle.
     /// </summary>
@@ -918,7 +917,7 @@ public class FieldOfViewSearchTests : IClassFixture<PropagatedFieldOfViewCase>
         foreach (var q in new[] { Quaternion.Identity, new Quaternion(Vector3.VectorZ, IO.Astrodynamics.Constants.HalfPi), new Quaternion(Vector3.VectorZ, -IO.Astrodynamics.Constants.HalfPi) })
         {
             var spacecraft = Unpropagated(id--, epoch);
-            spacecraft.Frame.AddStateOrientationToICRF(new StateOrientation(q, Vector3.Zero, epoch, spacecraft.Frame));
+            spacecraft.Frame.AddStateOrientationToIcrf(new StateOrientation(q, Vector3.Zero, epoch, spacecraft.Frame));
             var camera = spacecraft.Instruments.First();
             var boresight = Vector3.VectorY.Rotate(q);
             double Angle(TimeSystem.Time t) => boresight.Angle(earth.GetEphemeris(t, spacecraft, Frames.Frame.ICRF, Aberration.None).Position);
@@ -928,7 +927,7 @@ public class FieldOfViewSearchTests : IClassFixture<PropagatedFieldOfViewCase>
                 var t = epoch.AddSeconds(360.0 * k);
                 bool expected = Angle(t) <= halfAngle;
                 inView += expected ? 1 : 0;
-                Assert.Equal(expected, camera.IsInFOV(t, earth, Aberration.None));
+                Assert.Equal(expected, camera.IsInFov(t, earth, Aberration.None));
             }
 
             var windows = camera.FindFieldOfViewWindows(window, earth, new FieldOfViewSearchOptions { Step = TimeSpan.FromMinutes(1.0), TargetShape = ShapeType.Point, TargetFrame = Frames.Frame.ICRF }).ToArray();
@@ -961,7 +960,7 @@ public class FieldOfViewSearchTests : IClassFixture<PropagatedFieldOfViewCase>
     /// kernel-backed; circles, ellipses and rectangles), equal the same searches run one after the other on other fresh
     /// spacecraft, to the tick; the CK of a propagated one is still written after its search (the search reads nothing
     /// before the search window, #523). The spacecraft searched one after the other are then read from 12 threads
-    /// (orientations and <c>IsInFOV</c> at epochs off the output grid) and searched again in parallel: the windows equal
+    /// (orientations and <c>IsInFov</c> at epochs off the output grid) and searched again in parallel: the windows equal
     /// their first ones to the tick and the attitude records are unchanged, since a read stores nothing (#523; the rule
     /// docs/guides/thread-safety.md states, corrected by #668: it said a spacecraft's frame stored every orientation read).
     /// </summary>
@@ -1008,7 +1007,7 @@ public class FieldOfViewSearchTests : IClassFixture<PropagatedFieldOfViewCase>
 
             spacecraft.Propagate(propagation, new PropagationOptions { Integrator = new VVIntegratorOptions { Step = TimeSpan.FromSeconds(1.0) }, OutputStep = TimeSpan.FromSeconds(1.0), ThirdBodies = bodies });
             var inst = spacecraft.Instruments.First(x => x.NaifId == id * 1000 - number);
-            return (spacecraft, () => inst.FindFieldOfViewWindows(window, target, new FieldOfViewSearchOptions { Step = Step, Aberration = Aberration.LTS, TargetShape = targetShape, TargetFrame = itrf }).ToArray());
+            return (spacecraft, () => inst.FindFieldOfViewWindows(window, target, new FieldOfViewSearchOptions { Step = Step, Aberration = Aberration.LtS, TargetShape = targetShape, TargetFrame = itrf }).ToArray());
         }
 
         var first = Enumerable.Range(0, 12).Select(i => Fresh(i, 0)).ToArray();
@@ -1030,7 +1029,7 @@ public class FieldOfViewSearchTests : IClassFixture<PropagatedFieldOfViewCase>
 
         // The same instances, read from 12 threads at epochs off the output grid, then searched again in parallel: a read
         // stores nothing (#523), so the windows and the records of the propagated ones do not move
-        var records = first.Select(x => x.spacecraft.Frame.GetStateOrientationsToICRF().ToArray()).ToArray();
+        var records = first.Select(x => x.spacecraft.Frame.GetStateOrientationsToIcrf().ToArray()).ToArray();
         Assert.All(records.Take(6), r => Assert.NotEmpty(r));
         Parallel.For(0, 12, new ParallelOptions { MaxDegreeOfParallelism = 12 }, i =>
         {
@@ -1041,7 +1040,7 @@ public class FieldOfViewSearchTests : IClassFixture<PropagatedFieldOfViewCase>
                 spacecraft.GetOrientation(Frames.Frame.ICRF, epoch);
                 foreach (var instrument in spacecraft.Instruments)
                 {
-                    instrument.IsInFOV(epoch, earth, Aberration.LT);
+                    instrument.IsInFov(epoch, earth, Aberration.LT);
                 }
             }
         });
@@ -1056,14 +1055,14 @@ public class FieldOfViewSearchTests : IClassFixture<PropagatedFieldOfViewCase>
                 Assert.Equal(sequential[i][k].EndDate.TimeSpanFromJ2000().Ticks, again[i][k].EndDate.TimeSpanFromJ2000().Ticks);
             }
 
-            Assert.Equal(records[i], first[i].spacecraft.Frame.GetStateOrientationsToICRF().ToArray());
+            Assert.Equal(records[i], first[i].spacecraft.Frame.GetStateOrientationsToIcrf().ToArray());
         }
 
         // The CK is written in the ticks of the spacecraft's clock, whose kernel is loaded first
         var clock = new FileInfo("Data/User/FieldOfViewSearch515/concurrent.tsc");
         File.Delete(clock.FullName);
         fresh[0].spacecraft.Clock.Write(new FileInfo(clock.FullName));
-        SpiceAPI.Instance.LoadKernels(new FileInfo(clock.FullName));
+        SpiceApi.Instance.LoadKernels(new FileInfo(clock.FullName));
         try
         {
             var ck = new FileInfo("Data/User/FieldOfViewSearch515/concurrent.bc");
@@ -1073,7 +1072,7 @@ public class FieldOfViewSearchTests : IClassFixture<PropagatedFieldOfViewCase>
         }
         finally
         {
-            SpiceAPI.Instance.UnloadKernels(new FileInfo(clock.FullName));
+            SpiceApi.Instance.UnloadKernels(new FileInfo(clock.FullName));
         }
     }
 

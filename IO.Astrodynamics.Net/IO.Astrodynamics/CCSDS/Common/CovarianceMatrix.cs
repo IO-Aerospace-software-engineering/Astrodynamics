@@ -5,7 +5,7 @@ using System.Collections.Generic;
 using System.Text;
 using IO.Astrodynamics.Math;
 
-namespace IO.Astrodynamics.CCSDS.Common;
+namespace IO.Astrodynamics.Ccsds;
 
 /// <summary>
 /// Represents a 6x6 position-velocity covariance matrix used in CCSDS Navigation Data Messages.

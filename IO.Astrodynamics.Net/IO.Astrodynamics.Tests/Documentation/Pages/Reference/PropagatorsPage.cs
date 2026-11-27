@@ -18,15 +18,9 @@ using System.Threading;
 using System.Threading.Tasks;
 using IO.Astrodynamics;
 using IO.Astrodynamics.Atmosphere;
-using IO.Astrodynamics.Atmosphere.NRLMSISE_00;
 using IO.Astrodynamics.Body;
 using IO.Astrodynamics.Body.Spacecraft;
-using IO.Astrodynamics.CCSDS;
-using IO.Astrodynamics.CCSDS.CDM;
-using IO.Astrodynamics.CCSDS.Common;
-using IO.Astrodynamics.CCSDS.Common.Enums;
-using IO.Astrodynamics.CCSDS.OMM;
-using IO.Astrodynamics.CCSDS.OPM;
+using IO.Astrodynamics.Ccsds;
 using IO.Astrodynamics.Converters;
 using IO.Astrodynamics.Coordinates;
 using IO.Astrodynamics.Cosmographia;
@@ -49,11 +43,11 @@ using IO.Astrodynamics.Propagator.Forces;
 using IO.Astrodynamics.Propagator.Integrators;
 using IO.Astrodynamics.Propagator.MonteCarlo;
 using IO.Astrodynamics.Propagator.Variational;
-using IO.Astrodynamics.SSA;
+using IO.Astrodynamics.Ssa;
 using IO.Astrodynamics.SolarSystemObjects;
 using IO.Astrodynamics.Surface;
 using IO.Astrodynamics.TimeSystem;
-using TLE = IO.Astrodynamics.OrbitalParameters.TLE.TLE;
+using Tle = IO.Astrodynamics.OrbitalParameters.Tle;
 
 namespace DocumentationPageSamples.Reference;
 
@@ -69,7 +63,7 @@ internal static class PropagatorsPage
         var options = PropagationOptions.Default with
         {
             Integrator = rk,
-            ThirdBodies = new CelestialItem[] { Stars.SUN_BODY, PlanetsAndMoons.MOON_BODY },
+            ThirdBodies = new CelestialItem[] { Stars.SunBody, PlanetsAndMoons.MoonBody },
             AtmosphericDrag = true,
             SolarRadiationPressure = true,
             Geopotential = GeopotentialModelParameters.Egm2008(10)
@@ -79,12 +73,12 @@ internal static class PropagatorsPage
         #endregion
     }
 
-    // docs/reference/propagators.md, "TLEPropagator"
+    // docs/reference/propagators.md, "TlePropagator"
     internal static void Block02(Window window, Spacecraft spacecraft, TimeSpan deltaT)
     {
         #region docs/reference/propagators.md:2
         // Inputs: window (Window), spacecraft (Spacecraft), deltaT (TimeSpan)
-        var propagator = new TLEPropagator(window, spacecraft, deltaT);
+        var propagator = new TlePropagator(window, spacecraft, deltaT);
         var solution = propagator.Propagate();
         #endregion
     }
@@ -100,7 +94,7 @@ internal static class PropagatorsPage
             {
                 AbsoluteTolerance = 1e-10, RelativeTolerance = 1e-10, InitialStep = TimeSpan.FromSeconds(30.0)
             },
-            ThirdBodies = new CelestialItem[] { Stars.SUN_BODY, PlanetsAndMoons.MOON_BODY }
+            ThirdBodies = new CelestialItem[] { Stars.SunBody, PlanetsAndMoons.MoonBody }
         };
         var tasks = new List<PropagationTask>
         {
@@ -133,14 +127,14 @@ internal static class PropagatorsPage
             RunCount = 100,
             Seed = 42,
             TemplateSpacecraft = spacecraft,
-            Window = new Window(Time.J2000TDB, Time.J2000TDB.AddHours(2)),
+            Window = new Window(Time.J2000Tdb, Time.J2000Tdb.AddHours(2)),
             Propagation = new PropagationOptions
             {
                 Integrator = new RK78IntegratorOptions
                 {
                     AbsoluteTolerance = 1e-10, RelativeTolerance = 1e-10, InitialStep = TimeSpan.FromSeconds(30.0)
                 },
-                ThirdBodies = new CelestialItem[] { Stars.SUN_BODY, PlanetsAndMoons.MOON_BODY }
+                ThirdBodies = new CelestialItem[] { Stars.SunBody, PlanetsAndMoons.MoonBody }
             }
         };
 

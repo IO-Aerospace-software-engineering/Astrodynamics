@@ -34,7 +34,7 @@ namespace IO.Astrodynamics;
 /// <summary>
 ///     API to communicate with IO.Astrodynamics
 /// </summary>
-public class SpiceAPI
+public class SpiceApi
 {
     private static IntPtr _libHandle = IntPtr.Zero;
     private readonly List<KernelEntry> _kernels = [];
@@ -52,12 +52,12 @@ public class SpiceAPI
     /// <summary>
     ///     Instantiate API
     /// </summary>
-    private SpiceAPI()
+    private SpiceApi()
     {
-        NativeLibrary.SetDllImportResolver(typeof(SpiceAPI).Assembly, Resolver);
+        NativeLibrary.SetDllImportResolver(typeof(SpiceApi).Assembly, Resolver);
     }
 
-    public static SpiceAPI Instance { get; } = new();
+    public static SpiceApi Instance { get; } = new();
 
     [DllImport(@"IO.Astrodynamics", CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi)]
     private static extern IntPtr GetSpiceVersionProxy();
@@ -212,7 +212,7 @@ public class SpiceAPI
         else if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX)) sharedLibName = "resources/libIO.Astrodynamics.dylib";
 
         if (!string.IsNullOrEmpty(sharedLibName))
-            NativeLibrary.TryLoad(sharedLibName, typeof(SpiceAPI).Assembly, DllImportSearchPath.AssemblyDirectory, out _libHandle);
+            NativeLibrary.TryLoad(sharedLibName, typeof(SpiceApi).Assembly, DllImportSearchPath.AssemblyDirectory, out _libHandle);
         else
             throw new PlatformNotSupportedException();
 
@@ -388,7 +388,7 @@ public class SpiceAPI
             return null;
         }
 
-        var orientation = managed.GetStateOrientationToICRF(date);
+        var orientation = managed.GetStateOrientationToIcrf(date);
         return new OrbitalParameters.StateOrientation(orientation.Rotation, orientation.AngularVelocity, date, source);
     }
 
@@ -400,7 +400,7 @@ public class SpiceAPI
     /// and the <see cref="Body.Spacecraft.SpacecraftFrame"/> of a managed spacecraft whose attitude record holds an entry
     /// (#682), which only the library holds; the <see cref="Surface.SiteFrame"/> of a site of the kernels whose frame id,
     /// 1000000 + NaifId, no loaded kernel defines, the frame of its J2000 coordinates that
-    /// <see cref="Surface.SiteFrame.GetStateOrientationToICRF"/> gives it (third review of #690; before, its own name,
+    /// <see cref="Surface.SiteFrame.GetStateOrientationToIcrf"/> gives it (third review of #690; before, its own name,
     /// <c>Name + "_TOPO"</c>, reached <c>spkezr_c</c>, which threw SPICE(UNKNOWNFRAME), while the frame converted to ICRF
     /// and the horizontal coordinates used that orientation), decided at each read, under the lock the caller holds, so
     /// that a frame kernel loaded later is read by name. SPICE knows none of these, or, for TEME, the native construction
@@ -1696,8 +1696,8 @@ public class SpiceAPI
     /// </summary>
     private static IReadOnlyList<TimeSystem.Window> WithinSearchWindow(Window[] windows, int count, TimeSystem.Window searchWindow)
     {
-        var start = searchWindow.StartDate.ToTDB();
-        var end = searchWindow.EndDate.ToTDB();
+        var start = searchWindow.StartDate.ToTdb();
+        var end = searchWindow.EndDate.ToTdb();
         double startSeconds = start.TimeSpanFromJ2000().TotalSeconds;
         double endSeconds = end.TimeSpanFromJ2000().TotalSeconds;
         var result = new TimeSystem.Window[count];
@@ -1761,40 +1761,40 @@ public class SpiceAPI
     /// The relation CSPICE's geometry finder takes for <paramref name="relationalOperator"/> (#482). CSPICE knows only
     /// <c>&gt;</c>, <c>&lt;</c>, <c>=</c>, <c>ABSMIN</c>, <c>ABSMAX</c>, <c>LOCMIN</c> and <c>LOCMAX</c>, and the native
     /// parser of the relation ends the process on any other string (a C++ exception across P/Invoke).
-    /// <see cref="RelationnalOperator.GreaterOrEqual"/> and <see cref="RelationnalOperator.LowerOrEqual"/> are sent as
+    /// <see cref="RelationalOperator.GreaterThanOrEqual"/> and <see cref="RelationalOperator.LessThanOrEqual"/> are sent as
     /// <c>&gt;</c> and <c>&lt;</c>: CSPICE's windows are closed, so for a quantity that crosses the value they already hold
     /// the instants where it equals the value, as the managed search's windows do; the two differ only where the quantity
-    /// stays equal to the value over an interval, which <c>&gt;</c> leaves out. <see cref="RelationnalOperator.NotEqual"/>
+    /// stays equal to the value over an interval, which <c>&gt;</c> leaves out. <see cref="RelationalOperator.NotEqual"/>
     /// is never sent: <see cref="SearchWindows"/> forms it from <c>=</c>.
     /// </summary>
     /// <exception cref="ArgumentOutOfRangeException">The value is not one of the enumeration.</exception>
-    private static string SpiceRelation(RelationnalOperator relationalOperator) => relationalOperator switch
+    private static string SpiceRelation(RelationalOperator relationalOperator) => relationalOperator switch
     {
-        RelationnalOperator.Greater or RelationnalOperator.GreaterOrEqual => ">",
-        RelationnalOperator.Lower or RelationnalOperator.LowerOrEqual => "<",
-        RelationnalOperator.Equal => "=",
-        RelationnalOperator.AbsoluteMin or RelationnalOperator.AbsoluteMax or RelationnalOperator.LocalMin
-            or RelationnalOperator.LocalMax => relationalOperator.GetDescription(),
+        RelationalOperator.GreaterThan or RelationalOperator.GreaterThanOrEqual => ">",
+        RelationalOperator.LessThan or RelationalOperator.LessThanOrEqual => "<",
+        RelationalOperator.Equal => "=",
+        RelationalOperator.AbsoluteMin or RelationalOperator.AbsoluteMax or RelationalOperator.LocalMin
+            or RelationalOperator.LocalMax => relationalOperator.GetDescription(),
         _ => throw new ArgumentOutOfRangeException(nameof(relationalOperator), relationalOperator,
-            "CSPICE's window searches accept Greater, GreaterOrEqual, Lower, LowerOrEqual, Equal, NotEqual, AbsoluteMin, " +
+            "CSPICE's window searches accept GreaterThan, GreaterThanOrEqual, LessThan, LessThanOrEqual, Equal, NotEqual, AbsoluteMin, " +
             "AbsoluteMax, LocalMin and LocalMax.")
     };
 
     /// <summary>
     /// The windows of a CSPICE search for <paramref name="relationalOperator"/>: the search itself, or for
-    /// <see cref="RelationnalOperator.NotEqual"/>, which CSPICE has not, the rest of the search window once the instants
+    /// <see cref="RelationalOperator.NotEqual"/>, which CSPICE has not, the rest of the search window once the instants
     /// of <c>=</c> are taken out, a window from each crossing to the next, as the managed search defines it (#482).
     /// </summary>
-    private static IReadOnlyList<TimeSystem.Window> SearchWindows(TimeSystem.Window searchWindow, RelationnalOperator relationalOperator,
+    private static IReadOnlyList<TimeSystem.Window> SearchWindows(TimeSystem.Window searchWindow, RelationalOperator relationalOperator,
         Func<string, IReadOnlyList<TimeSystem.Window>> search)
     {
-        if (relationalOperator != RelationnalOperator.NotEqual)
+        if (relationalOperator != RelationalOperator.NotEqual)
         {
             return search(SpiceRelation(relationalOperator));
         }
 
-        var end = searchWindow.EndDate.ToTDB();
-        var cursor = searchWindow.StartDate.ToTDB();
+        var end = searchWindow.EndDate.ToTdb();
+        var cursor = searchWindow.StartDate.ToTdb();
         var windows = new List<TimeSystem.Window>();
         foreach (var crossing in search("=").OrderBy(x => x.StartDate))
         {
@@ -1829,10 +1829,10 @@ public class SpiceAPI
     /// <param name="stepSize">The step of the search.</param>
     /// <returns>The windows, in TDB.</returns>
     /// <remarks>
-    /// CSPICE has no <c>&gt;=</c>, <c>&lt;=</c> or <c>!=</c> (#482): <see cref="RelationnalOperator.GreaterOrEqual"/>
-    /// and <see cref="RelationnalOperator.LowerOrEqual"/> are searched as <c>&gt;</c> and <c>&lt;</c>, whose windows are
+    /// CSPICE has no <c>&gt;=</c>, <c>&lt;=</c> or <c>!=</c> (#482): <see cref="RelationalOperator.GreaterThanOrEqual"/>
+    /// and <see cref="RelationalOperator.LessThanOrEqual"/> are searched as <c>&gt;</c> and <c>&lt;</c>, whose windows are
     /// closed (they differ only where the distance stays equal to the value over an interval);
-    /// <see cref="RelationnalOperator.NotEqual"/> is the search window less the instants of <c>=</c>, a window from each
+    /// <see cref="RelationalOperator.NotEqual"/> is the search window less the instants of <c>=</c>, a window from each
     /// crossing to the next, as the managed search gives it.
     /// </remarks>
     /// <exception cref="SpiceException">SPICE cannot run the search: a body or an epoch without ephemeris data,
@@ -1840,7 +1840,7 @@ public class SpiceAPI
     /// SPICE's message (fourth round of #668; before 11.0.0 the native layer dropped the error and the search returned no
     /// window).</exception>
     public IReadOnlyList<TimeSystem.Window> FindWindowsOnDistanceConstraint(TimeSystem.Window searchWindow, int observerId,
-        int targetId, RelationnalOperator relationalOperator, double value, Aberration aberration,
+        int targetId, RelationalOperator relationalOperator, double value, Aberration aberration,
         TimeSpan stepSize)
     {
         return SearchWindows(searchWindow, relationalOperator, relation => DistanceWindows(searchWindow, observerId, targetId, relation,
@@ -1958,10 +1958,10 @@ public class SpiceAPI
     /// <param name="stepSize"></param>
     /// <returns></returns>
     /// <remarks>
-    /// CSPICE has no <c>&gt;=</c>, <c>&lt;=</c> or <c>!=</c> (#482): <see cref="RelationnalOperator.GreaterOrEqual"/>
-    /// and <see cref="RelationnalOperator.LowerOrEqual"/> are searched as <c>&gt;</c> and <c>&lt;</c>, whose windows are
+    /// CSPICE has no <c>&gt;=</c>, <c>&lt;=</c> or <c>!=</c> (#482): <see cref="RelationalOperator.GreaterThanOrEqual"/>
+    /// and <see cref="RelationalOperator.LessThanOrEqual"/> are searched as <c>&gt;</c> and <c>&lt;</c>, whose windows are
     /// closed (they differ only where the quantity stays equal to the value over an interval);
-    /// <see cref="RelationnalOperator.NotEqual"/> is the search window less the instants of <c>=</c>, a window from each
+    /// <see cref="RelationalOperator.NotEqual"/> is the search window less the instants of <c>=</c>, a window from each
     /// crossing to the next, as the managed search gives it.
     /// The frame is handed to <c>gfposc_c</c> by name (<see cref="SpiceFrameName"/>). A frame of the library that SPICE
     /// does not know by that name throws (<see cref="SpiceKnowsFrame"/>: TEME, CIRS, TIRS, the frame of a site or a
@@ -1983,7 +1983,7 @@ public class SpiceAPI
     /// no window).</exception>
     public IReadOnlyList<TimeSystem.Window> FindWindowsOnCoordinateConstraint(TimeSystem.Window searchWindow, int observerId,
         int targetId, Frame frame, CoordinateSystem coordinateSystem, Coordinate coordinate,
-        RelationnalOperator relationalOperator, double value, double adjustValue, Aberration aberration,
+        RelationalOperator relationalOperator, double value, double adjustValue, Aberration aberration,
         TimeSpan stepSize)
     {
         if (frame == null) throw new ArgumentNullException(nameof(frame));
@@ -2035,10 +2035,10 @@ public class SpiceAPI
     /// names the frame, the <see cref="SpiceException"/> of the search, with SPICE's message, its inner exception (R25 of
     /// #668, decided by S. Guillet, 2026-11-19; before 11.0.0 that exception).</exception>
     /// <remarks>
-    /// CSPICE has no <c>&gt;=</c>, <c>&lt;=</c> or <c>!=</c> (#482): <see cref="RelationnalOperator.GreaterOrEqual"/>
-    /// and <see cref="RelationnalOperator.LowerOrEqual"/> are searched as <c>&gt;</c> and <c>&lt;</c>, whose windows are
+    /// CSPICE has no <c>&gt;=</c>, <c>&lt;=</c> or <c>!=</c> (#482): <see cref="RelationalOperator.GreaterThanOrEqual"/>
+    /// and <see cref="RelationalOperator.LessThanOrEqual"/> are searched as <c>&gt;</c> and <c>&lt;</c>, whose windows are
     /// closed (they differ only where the quantity stays equal to the value over an interval);
-    /// <see cref="RelationnalOperator.NotEqual"/> is the search window less the instants of <c>=</c>, a window from each
+    /// <see cref="RelationalOperator.NotEqual"/> is the search window less the instants of <c>=</c>, a window from each
     /// crossing to the next, as the managed search gives it.
     /// Before 11.0.0 the altitude was read in km (#488).
     /// </remarks>
@@ -2047,7 +2047,7 @@ public class SpiceAPI
     /// with SPICE's message (fourth round of #668; before 11.0.0 the native layer dropped the error and the search returned
     /// no window).</exception>
     public IReadOnlyList<TimeSystem.Window> FindWindowsOnIlluminationConstraint(TimeSystem.Window searchWindow, int observerId,
-        int targetBodyId, Frame fixedFrame, Coordinates.Planetodetic planetodetic, IlluminationAngle illuminationType, RelationnalOperator relationalOperator,
+        int targetBodyId, Frame fixedFrame, Coordinates.Planetodetic planetodetic, IlluminationAngle illuminationType, RelationalOperator relationalOperator,
         double value, double adjustValue, Aberration aberration, TimeSpan stepSize, int illuminationSourceId,
         string method = "Ellipsoid")
     {
@@ -2206,7 +2206,7 @@ public class SpiceAPI
 
     // The TDB seconds past J2000 of the epochs, as the read of one epoch takes them
     private static double[] TdbSeconds(Time[] epochs) =>
-        epochs.Select(epoch => epoch.ToTDB().TimeSpanFromJ2000().TotalSeconds).ToArray();
+        epochs.Select(epoch => epoch.ToTdb().TimeSpanFromJ2000().TotalSeconds).ToArray();
 
     /// <summary>
     /// Return state vector at given epoch using NAIF IDs directly.
@@ -2353,13 +2353,13 @@ public class SpiceAPI
     {
         var managed = ManagedReadFrame(frame);
         string frameName = managed == null ? SpiceFrameName(frame) : Frame.ICRF.Name;
-        var stateVector = ReadEphemerisAtGivenEpochProxy(epoch.ToTDB().TimeSpanFromJ2000().TotalSeconds,
+        var stateVector = ReadEphemerisAtGivenEpochProxy(epoch.ToTdb().TimeSpanFromJ2000().TotalSeconds,
             observer.NaifId, targetId, frameName, aberration.GetDescription());
         ThrowOnFailedRead(stateVector, frameName, frame);
         // Labelled with the epoch asked, the instant SPICE read at, as SpiceDataProvider.GetEphemeris does: where an ulp
         // of the seconds is coarser than a tick (2017 to 2028, 1971 to 1983), the epoch SPICE returns, made a Time again,
         // is the neighbouring tick for about 16 % of ticks (#625)
-        var tdb = epoch.ToTDB();
+        var tdb = epoch.ToTdb();
         return managed == null
             ? new OrbitalParameters.StateVector(stateVector.Position.Convert(), stateVector.Velocity.Convert(), observer, tdb, frame)
             : ToManagedFrame(stateVector.Position.Convert(), stateVector.Velocity.Convert(), observer, tdb, managed, frame, aberration);
@@ -2421,7 +2421,7 @@ public class SpiceAPI
     /// </returns>
     /// <remarks>
     ///     The rotation of a spacecraft's attitude in the frames' convention, spacecraft to reference, is its conjugate,
-    ///     which <c>GetStateOrientationToICRF</c> of the frame of a kernel-backed spacecraft returns. On a CK written by
+    ///     which <c>GetStateOrientationToIcrf</c> of the frame of a kernel-backed spacecraft returns. On a CK written by
     ///     <see cref="Body.Spacecraft.Spacecraft.WriteOrientation"/> before 11.0.0, which holds the inverse of the
     ///     attitude (#529), this method returns that inverse.
     ///     Each record is the read of its epoch alone, in a buffer of the epochs read, whatever their number (#563: before
@@ -2920,7 +2920,7 @@ public class SpiceAPI
     /// A TEME frame, <see cref="Frame.TEME"/> or a frame named TEME, is the managed <see cref="TemeFrame"/> (#451): the
     /// transform is composed through ICRF, the other frame from SPICE. So is the <see cref="Surface.SiteFrame"/> of a site
     /// built from coordinates, or of a site from the kernels whose frame id (1000000 + NaifId) no loaded kernel defines,
-    /// decided at each call: its orientation is <see cref="Surface.SiteFrame.GetStateOrientationToICRF"/>, the frame the
+    /// decided at each call: its orientation is <see cref="Surface.SiteFrame.GetStateOrientationToIcrf"/>, the frame the
     /// reads in it, <see cref="Frame.ToFrame"/> and the horizontal coordinates use (fourth round of #668; before, the call
     /// handed its name, <c>Name + "_TOPO"</c>, to SPICE, which does not know it, and threw). The frame of a site whose frame
     /// the kernels define is that kernel frame, read by SPICE, and the frame of a spacecraft is SPICE's by name, which reads
@@ -2978,7 +2978,7 @@ public class SpiceAPI
         {
             string fromName = SpiceFrameName(fromFrame);
             string toName = SpiceFrameName(toFrame);
-            var res = TransformFrameProxy(fromName, toName, epoch.ToTDB().TimeSpanFromJ2000().TotalSeconds);
+            var res = TransformFrameProxy(fromName, toName, epoch.ToTdb().TimeSpanFromJ2000().TotalSeconds);
 
             // A failed transformation returns a NaN rotation with SPICE's message (#714; the zero quaternion with no message
             // before, #454): a rotation is a unit quaternion. Read before any other native call; then a name SPICE does not
@@ -2986,7 +2986,7 @@ public class SpiceAPI
             var rotation = new Quaternion(res.Rotation.W, res.Rotation.X, res.Rotation.Y, res.Rotation.Z);
             if (!(System.Math.Abs(rotation.Magnitude() - 1.0) <= UnitQuaternionTolerance))
             {
-                var error = NativeException($"SPICE gives no transformation from {fromFrame.Name} to {toFrame.Name} at {epoch.ToTDB()}");
+                var error = NativeException($"SPICE gives no transformation from {fromFrame.Name} to {toFrame.Name} at {epoch.ToTdb()}");
                 var unknownFrom = FrameErrorOrInner(error, fromName, fromFrame, fromParamName);
                 throw unknownFrom != error ? unknownFrom : FrameErrorOrInner(error, toName, toFrame, toParamName);
             }
@@ -3023,7 +3023,7 @@ public class SpiceAPI
     private OrbitalParameters.StateOrientation OrientationToIcrf(Time epoch, Frame frame, Frame managed, string paramName)
     {
         // TransformFrame throws when SPICE gives no rotation (#454)
-        return managed != null ? managed.GetStateOrientationToICRF(epoch) : TransformFrame(epoch, frame, Frame.ICRF, paramName, null);
+        return managed != null ? managed.GetStateOrientationToIcrf(epoch) : TransformFrame(epoch, frame, Frame.ICRF, paramName, null);
     }
 
     /// <summary>
@@ -3079,7 +3079,7 @@ public class SpiceAPI
         Time epoch)
     {
         return ConvertTleToStateVector(line1, line2, line3, ReadTleEpoch(line1, line2, line3),
-            OrbitalParameters.TLE.TLE.ExtractEpochFromTLE(line2), epoch);
+            OrbitalParameters.Tle.ExtractEpochFromTLE(line2), epoch);
     }
 
     /// <summary>
@@ -3109,17 +3109,17 @@ public class SpiceAPI
         var position = res.Position.Convert();
         if (!IsFinite(res))
         {
-            throw NativeException($"SGP4 failed for the TLE {name} ({line1}) at {epoch.ToTDB()}");
+            throw NativeException($"SGP4 failed for the TLE {name} ({line1}) at {epoch.ToTdb()}");
         }
 
         if (position.Magnitude() == 0.0)
         {
             throw new InvalidOperationException(
-                $"SGP4 failed for the TLE {name} ({line1}) at {epoch.ToTDB()}: the native layer returned a zero state.");
+                $"SGP4 failed for the TLE {name} ({line1}) at {epoch.ToTdb()}: the native layer returned a zero state.");
         }
 
         return new OrbitalParameters.StateVector(position, res.Velocity.Convert(),
-            new Body.CelestialBody(PlanetsAndMoons.EARTH, Frame.ECLIPTIC_J2000, epoch), epoch,
+            new Body.CelestialBody(PlanetsAndMoons.Earth, Frame.ECLIPJ2000, epoch), epoch,
             Frame.TEME);
     }
 
@@ -3176,8 +3176,8 @@ public class SpiceAPI
     // semi-major axis of a parabola is infinite: its periapsis radius is checked by ThrowIfOutsideConicsDomain
     private static void ThrowIfNotFinite(OrbitalParameters.KeplerianElements keplerianElements, string paramName)
     {
-        ThrowIfNotFinite(paramName, ("e", keplerianElements.E), ("i", keplerianElements.I), ("RAAN", keplerianElements.RAAN),
-            ("AOP", keplerianElements.AOP), ("M", keplerianElements.M));
+        ThrowIfNotFinite(paramName, ("e", keplerianElements.Eccentricity()), ("i", keplerianElements.Inclination()), ("RAAN", keplerianElements.AscendingNode()),
+            ("AOP", keplerianElements.ArgumentOfPeriapsis()), ("M", keplerianElements.MeanAnomaly()));
     }
 
     private static void ThrowIfNotFinite(OrbitalParameters.EquinoctialElements equinoctialElements, string paramName)
@@ -3227,7 +3227,7 @@ public class SpiceAPI
         if (!(rp > 0.0) || double.IsInfinity(rp))
         {
             throw new ArgumentException(
-                $"The periapsis radius of the elements, {rp} m (a = {keplerianElements.A} m, e = {keplerianElements.E}), is not finite and above 0, as CONICS requires.",
+                $"The periapsis radius of the elements, {rp} m (a = {keplerianElements.SemiMajorAxis()} m, e = {keplerianElements.Eccentricity()}), is not finite and above 0, as CONICS requires.",
                 paramName);
         }
     }
@@ -3385,7 +3385,7 @@ public class SpiceAPI
     /// centre with a GM, and the conversion of the result threw for the others).</exception>
     /// <exception cref="ArgumentException">The periapsis radius of the elements is not finite and above 0, outside the domain
     /// of <c>CONICS</c> (#711: before, a zero state was returned): mean elements of e ≥ 1 (<see
-    /// cref="CCSDS.OMM.Omm.ToMeanElements"/>), or an a (1 − e) that overflows. Osculating elements of a
+    /// cref="Ccsds.Omm.ToMeanElements"/>), or an a (1 − e) that overflows. Osculating elements of a
     /// semi-major axis of the wrong sign are refused by their constructor since 11.0.0 (#738).</exception>
     /// <exception cref="ArgumentException">An element (e, i, RAAN, AOP, M) is not finite (#714: before, a NaN mean anomaly gave
     /// a finite state, silently, and a NaN inclination a NaN state, which threw an unrelated message).</exception>
@@ -3399,7 +3399,7 @@ public class SpiceAPI
         // The native conic elements solve the elliptic Kepler equation when they are built, an iteration that may never
         // end on an open orbit (#372): an open orbit goes to SPICE CONICS at the epoch of its elements, as the other
         // overloads
-        if (keplerianElements.E >= 1.0)
+        if (keplerianElements.Eccentricity() >= 1.0)
         {
             return ConvertConicElementsToStateVector(keplerianElements, keplerianElements.Epoch);
         }
@@ -3422,7 +3422,7 @@ public class SpiceAPI
     /// </summary>
     /// <exception cref="ArgumentException">The periapsis radius of the elements is not finite and above 0, outside the domain
     /// of <c>CONICS</c> (#711: before, a zero state was returned): mean elements of e ≥ 1 (<see
-    /// cref="CCSDS.OMM.Omm.ToMeanElements"/>), or an a (1 − e) that overflows. Osculating elements of a
+    /// cref="Ccsds.Omm.ToMeanElements"/>), or an a (1 − e) that overflows. Osculating elements of a
     /// semi-major axis of the wrong sign are refused by their constructor since 11.0.0 (#738).</exception>
     /// <exception cref="ArgumentException">An element (e, i, RAAN, AOP, M) is not finite (#714: before, a NaN mean anomaly gave
     /// a finite state, silently, and a NaN inclination a NaN state, which threw an unrelated message).</exception>
@@ -3447,7 +3447,7 @@ public class SpiceAPI
     /// <returns></returns>
     /// <exception cref="ArgumentException">The periapsis radius of the elements is not finite and above 0, outside the domain
     /// of <c>CONICS</c> (#711: before, a zero state was returned): mean elements of e ≥ 1 (<see
-    /// cref="CCSDS.OMM.Omm.ToMeanElements"/>), or an a (1 − e) that overflows. Osculating elements of a
+    /// cref="Ccsds.Omm.ToMeanElements"/>), or an a (1 − e) that overflows. Osculating elements of a
     /// semi-major axis of the wrong sign are refused by their constructor since 11.0.0 (#738).</exception>
     /// <exception cref="ArgumentException">An element (e, i, RAAN, AOP, M) is not finite (#714: before, a NaN mean anomaly gave
     /// a finite state, silently, and a NaN inclination a NaN state, which threw an unrelated message).</exception>
@@ -3465,7 +3465,7 @@ public class SpiceAPI
         }
 
         var input = keplerianElements.Convert();
-        double et = epoch.ToTDB().TimeSpanFromJ2000().TotalSeconds;
+        double et = epoch.ToTdb().TimeSpanFromJ2000().TotalSeconds;
         StateVector state;
         lock (lockObject)
         {

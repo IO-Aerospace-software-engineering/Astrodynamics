@@ -1,10 +1,10 @@
 using System;
 using System.Collections.Generic;
-using IO.Astrodynamics.CCSDS.CDM;
+using IO.Astrodynamics.Ccsds;
 using IO.Astrodynamics.ConformanceRunner.Models;
 using IO.Astrodynamics.ConformanceRunner.Utilities;
 using IO.Astrodynamics.Math;
-using IO.Astrodynamics.SSA;
+using IO.Astrodynamics.Ssa;
 
 namespace IO.Astrodynamics.ConformanceRunner.Solvers;
 
@@ -12,7 +12,7 @@ namespace IO.Astrodynamics.ConformanceRunner.Solvers;
 /// The <c>collision_probability</c> category (spec.md section 16.2): the 2D Pc of an encounter given at TCA, or
 /// Frisbee's maximum Pc when one covariance is absent, the sigmas of the encounter plane and whether the covariance was
 /// raised to CARA's clip, by the public <see cref="CollisionProbability"/> and the encounter of the CDM that holds the
-/// two states (<see cref="EncounterMessage"/>, <see cref="IO.Astrodynamics.CCSDS.CDM.Cdm.ToEncounter"/>; R19 and
+/// two states (<see cref="EncounterMessage"/>, <see cref="IO.Astrodynamics.Ccsds.Cdm.ToEncounter"/>; R19 and
 /// decision 110 of #668).
 /// </summary>
 /// <remarks>

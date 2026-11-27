@@ -22,6 +22,8 @@ cmake-build-debug/
 cmake-build-debug-linux/
 .vscode/
 build/
+# the MSBuild props the NuGet package carries (N7 of #668)
+!/IO.Astrodynamics.Net/IO.Astrodynamics/build/
 /.idea/
 build_release/
 /.vs

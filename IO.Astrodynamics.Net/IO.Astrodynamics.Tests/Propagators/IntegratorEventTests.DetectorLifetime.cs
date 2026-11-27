@@ -105,7 +105,7 @@ public partial class IntegratorEventTests
     // A plan of two time-like impulses, at TT 1 100 s and 2 000 s from the start, on a 3 000 s window
     private (Spacecraft Spacecraft, ImpulseManeuver[] Plan, CelestialBody Earth) TwoImpulses(int naifId)
     {
-        var earth = new CelestialBody(PlanetsAndMoons.EARTH, Frame.ICRF, S);
+        var earth = new CelestialBody(PlanetsAndMoons.Earth, Frame.ICRF, S);
         var (spacecraft, engine) = NewSpacecraft(naifId, MinimumEpochGateTests.Orbit(earth, System.Math.PI));
         var m1 = new TimeLikeImpulse(earth, S, engine, MinimumEpochGateTests.GateAtTt(1100.0), 1.0);
         var m2 = new TimeLikeImpulse(earth, S, engine, MinimumEpochGateTests.GateAtTt(2000.0), 1.0);
@@ -202,7 +202,7 @@ public partial class IntegratorEventTests
     [MemberData(nameof(CapturingIntegrators))]
     public void APlaneAlignmentDetectorKeptPastItsRun_LocksNoNode(string wrapper, string inner)
     {
-        var earth = new CelestialBody(PlanetsAndMoons.EARTH, Frame.ICRF, S);
+        var earth = new CelestialBody(PlanetsAndMoons.Earth, Frame.ICRF, S);
         var (spacecraft, engine) = NewSpacecraft(-7964, MinimumEpochGateTests.Orbit(earth, System.Math.PI));
         var target = new KeplerianElements(MinimumEpochGateTests.A0, MinimumEpochGateTests.E0, 0.95, 0.3, 1.1, 0.0, earth, S, Frame.ICRF);
         var maneuver = new PlaneAlignmentManeuver(target, engine, MinimumEpochGateTests.GateAtTt(5000.0), TimeSpan.Zero);

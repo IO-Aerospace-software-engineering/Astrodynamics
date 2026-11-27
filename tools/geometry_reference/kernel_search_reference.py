@@ -12,7 +12,7 @@ objects of the kernels, converged to 1e-9 s (gfstol), finer than the 1e-6 s of t
   Search window 2023-12-15 00:05 to 12:05 TDB (the SPK of LRO starts at 00:00 UTC, 00:01:09.18 TDB), step 60 s, no
   aberration correction.
 
-#488, the illumination searches of a kernel site and of SpiceAPI.FindWindowsOnIlluminationConstraint (gfilum, method
+#488, the illumination searches of a kernel site and of SpiceApi.FindWindowsOnIlluminationConstraint (gfilum, method
 ELLIPSOID, the Sun as source, the incidence angle):
   - DSS-13 as a kernel site: the surface point is its position at J2000 TDB (spkpos 399013 in ITRF93), the position
     from which the library computes its planetodetic coordinates; incidence > 90 deg without correction, < 90.8 deg

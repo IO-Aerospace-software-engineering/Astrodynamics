@@ -4,17 +4,16 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using IO.Astrodynamics.Atmosphere.NRLMSISE_00;
+using IO.Astrodynamics.Atmosphere;
 using IO.Astrodynamics.Body;
 using IO.Astrodynamics.Body.Spacecraft;
 using IO.Astrodynamics.Maneuver;
 using IO.Astrodynamics.OrbitalParameters;
-using IO.Astrodynamics.OrbitalParameters.TLE;
 using IO.Astrodynamics.Propagator;
 using IO.Astrodynamics.Propagator.Integrators;
 using IO.Astrodynamics.Propagator.Variational;
 using IO.Astrodynamics.SolarSystemObjects;
-using IO.Astrodynamics.SSA;
+using IO.Astrodynamics.Ssa;
 using IO.Astrodynamics.Tests.Body;
 using IO.Astrodynamics.Tests.SSA;
 using IO.Astrodynamics.TimeSystem;
@@ -56,7 +55,7 @@ public class TlePropagationTests
     private const double KeplerVelocity = 2.4e-9;
 
     // Twice the worst of UnpropagatedOrSampledTleSpacecraft_ReadsSgp4 over Linux x64, Windows x64 and macOS arm64 alike (CI
-    // run 44225490669), rounded up at the second significant digit: the Lagrange interpolation of the TLEPropagator
+    // run 44225490669), rounded up at the second significant digit: the Lagrange interpolation of the TlePropagator
     // samples at mid-step, ISS at 60 s, 9.062e-4 m in the last step. #598 moved the last sample from +3600 s
     // to the TDB end of the UTC hour, 11 ticks later, whose SGP4 state carries the tick rounding of an instant off the
     // grid of the other samples (0.77 mm per tick at 7.7 km/s); before, 7.593e-4 m on the three (CI run 43591654097,
@@ -71,14 +70,14 @@ public class TlePropagationTests
         TestKernels.EnsureSolarSystem();
     }
 
-    private static TLE NewTle() => new("ISS", Line1, Line2);
+    private static Tle NewTle() => new("ISS", Line1, Line2);
 
-    private static Window OneHour(TLE tle) => new(tle.Epoch, tle.Epoch.AddHours(1.0));
+    private static Window OneHour(Tle tle) => new(tle.Epoch, tle.Epoch.AddHours(1.0));
 
     /// <summary>The twin of a TLE start: SGP4 at the TDB start of the window, rotated to ICRF, on the Earth of the TLE.</summary>
-    private static StateVector Twin(TLE tle, in Window window)
+    private static StateVector Twin(Tle tle, in Window window)
     {
-        var t0 = window.StartDate.ToTDB();
+        var t0 = window.StartDate.ToTdb();
         var s = tle.ToOsculating(t0).ToFrame(Frames.Frame.ICRF).ToStateVector();
         return new StateVector(s.Position, s.Velocity, tle.Observer, t0, Frames.Frame.ICRF);
     }
@@ -169,7 +168,7 @@ public class TlePropagationTests
         var tle = NewTle();
         var window = OneHour(tle);
         var bodies = thirdBodiesAndSrp
-            ? new CelestialItem[] { new CelestialBody(PlanetsAndMoons.MOON), new CelestialBody(Stars.Sun) }
+            ? new CelestialItem[] { new CelestialBody(PlanetsAndMoons.Moon), new CelestialBody(Stars.Sun) }
             : Array.Empty<CelestialItem>();
         int id = -6750 - 2 * Array.IndexOf(Paths, path) - (thirdBodiesAndSrp ? 100 : 0);
         var fromTle = NewSpacecraft(id, tle);
@@ -202,7 +201,7 @@ public class TlePropagationTests
         // TLE epoch carried to the window start by another motion
         var tle = NewTle();
         var window = new Window(tle.Epoch.AddHours(6.0), tle.Epoch.AddHours(7.0));
-        var t0 = window.StartDate.ToTDB();
+        var t0 = window.StartDate.ToTdb();
         var sgp4 = tle.ToStateVector(t0).ToFrame(Frames.Frame.ICRF).ToStateVector();
         int id = -7060 - 2 * Array.IndexOf(Paths, path);
         var fromTle = NewSpacecraft(id, tle);
@@ -238,13 +237,13 @@ public class TlePropagationTests
         // Arrange: a TEME state, the SGP4 state of the ISS, and its twin rotated to ICRF by ToFrame
         var tle = NewTle();
         var window = OneHour(tle);
-        var t0 = window.StartDate.ToTDB();
-        var moon = new CelestialBody(PlanetsAndMoons.MOON);
+        var t0 = window.StartDate.ToTdb();
+        var moon = new CelestialBody(PlanetsAndMoons.Moon);
         var sun = new CelestialBody(Stars.Sun);
         CelestialBody earth = variant.StartsWith("Drag")
-            ? new CelestialBody(PlanetsAndMoons.EARTH, Frames.Frame.ICRF, t0,
+            ? new CelestialBody(PlanetsAndMoons.Earth, Frames.Frame.ICRF, t0,
                 new GeopotentialModelParameters("Data/SolarSystem/EGM2008_to70_TideFree", 10), new Nrlmsise00Model(SpaceWeather.Nominal))
-            : new CelestialBody(PlanetsAndMoons.EARTH, Frames.Frame.ICRF, t0);
+            : new CelestialBody(PlanetsAndMoons.Earth, Frames.Frame.ICRF, t0);
         var sgp4 = tle.ToOsculating(variant == "LaterEpoch" ? t0.AddMinutes(10.0) : t0);
         StateVector teme = new StateVector(sgp4.Position, sgp4.Velocity, earth, sgp4.Epoch, Frames.Frame.TEME);
         CelestialItem[] bodies = { earth, moon, sun };
@@ -252,9 +251,9 @@ public class TlePropagationTests
         {
             // The same orbit relative to the solar-system barycentre, in TEME
             var icrf = teme.ToFrame(Frames.Frame.ICRF).ToStateVector();
-            var earthFromSsb = earth.GetGeometricStateRelativeTo(t0, Barycenters.SOLAR_SYSTEM_BARYCENTER);
+            var earthFromSsb = earth.GetGeometricStateRelativeTo(t0, Barycenters.SolarSystemBarycenter);
             teme = new StateVector(earthFromSsb.Position + icrf.Position, earthFromSsb.Velocity + icrf.Velocity,
-                Barycenters.SOLAR_SYSTEM_BARYCENTER, t0, Frames.Frame.ICRF).ToFrame(Frames.Frame.TEME).ToStateVector();
+                Barycenters.SolarSystemBarycenter, t0, Frames.Frame.ICRF).ToFrame(Frames.Frame.TEME).ToStateVector();
         }
 
         if (variant == "Covariance")
@@ -297,7 +296,7 @@ public class TlePropagationTests
         Assert.Equal(Frames.Frame.ICRF, solution.Frame);
         Assert.All(solution.StateVectors, s => Assert.Equal(Frames.Frame.ICRF, s.Frame));
         AssertSameStates(twin.StateVectors, solution.StateVectors);
-        var end = window.EndDate.ToTDB();
+        var end = window.EndDate.ToTdb();
         if (variant == "Covariance")
         {
             Assert.Equal(twin.GetStateTransitionMatrix(end).ToArray(), solution.GetStateTransitionMatrix(end).ToArray());
@@ -335,7 +334,7 @@ public class TlePropagationTests
         spacecraft.Propagate(window, new PropagationOptions { Integrator = RK78IntegratorOptions.Default, OutputStep = OutputStep, ThirdBodies = Array.Empty<CelestialItem>(), CovariancePropagation = CovariancePropagationOptions.None });
         var before = spacecraft.PropagatedStates;
         var temeTarget = new KeplerianElements(6800000.0, 0.0, 55.0 * IO.Astrodynamics.Constants.Deg2Rad, 6.0, 0.0, 0.0,
-            tle.Observer, window.StartDate.ToTDB(), Frames.Frame.TEME);
+            tle.Observer, window.StartDate.ToTdb(), Frames.Frame.TEME);
         var icrfTarget = temeTarget.ToFrame(Frames.Frame.ICRF);
         var first = new PlaneAlignmentManeuver(icrfTarget, engine, window.StartDate, TimeSpan.Zero);
         var chained = Assert.Throws<ArgumentException>(() =>
@@ -419,18 +418,18 @@ public class TlePropagationTests
 
         spacecraft.WriteEphemeris(file);
         double worst = 0.0;
-        SpiceAPI.Instance.LoadKernels(file);
+        SpiceApi.Instance.LoadKernels(file);
         try
         {
             foreach (var state in stored)
             {
-                var fromSpk = SpiceAPI.Instance.ReadEphemeris(state.Epoch, 399, spacecraft.NaifId, Frames.Frame.ICRF, Aberration.None);
+                var fromSpk = SpiceApi.Instance.ReadEphemeris(state.Epoch, 399, spacecraft.NaifId, Frames.Frame.ICRF, Aberration.None);
                 worst = System.Math.Max(worst, (fromSpk.Position - state.Position).Magnitude());
             }
         }
         finally
         {
-            SpiceAPI.Instance.UnloadKernels(file);
+            SpiceApi.Instance.UnloadKernels(file);
         }
 
         _output.WriteLine($"MEASURE TlePropagationTests.PropagatedTleSpacecraft_ReadsItsStates {path}: SPK against the stored states {worst:E3} m");
@@ -485,19 +484,19 @@ public class TlePropagationTests
     [Fact]
     public void UnpropagatedOrSampledTleSpacecraft_ReadsSgp4()
     {
-        // Arrange: one TLE spacecraft unpropagated, one sampled by TLEPropagator
+        // Arrange: one TLE spacecraft unpropagated, one sampled by TlePropagator
         var tle = NewTle();
         var window = OneHour(tle);
         var unpropagated = NewSpacecraft(-7041, tle);
         var sampled = NewSpacecraft(-7042, tle);
-        new TLEPropagator(window, sampled, OutputStep).Propagate();
+        new TlePropagator(window, sampled, OutputStep).Propagate();
 
         // Act, assert: the geometric state is SGP4 in ICRF at any epoch, between the samples too, and the window of
         // interpolated states is none (#527's check skipped); the ephemeris of the unpropagated one from its Earth too
         var earth = (CelestialItem)tle.Observer;
         foreach (double s in new[] { 0.0, 30.0, 1234.5, 3600.0 })
         {
-            var epoch = window.StartDate.ToTDB().AddSeconds(s);
+            var epoch = window.StartDate.ToTdb().AddSeconds(s);
             var sgp4 = tle.ToStateVector(epoch).ToFrame(Frames.Frame.ICRF).ToStateVector();
             foreach (var spacecraft in new[] { unpropagated, sampled })
             {
@@ -518,7 +517,7 @@ public class TlePropagationTests
         double worst = 0.0;
         for (int i = 0; i < 60; i++)
         {
-            var sample = window.StartDate.ToTDB().AddSeconds(60.0 * i);
+            var sample = window.StartDate.ToTdb().AddSeconds(60.0 * i);
             var atSample = sampled.GetEphemeris(sample, earth, Frames.Frame.ICRF, Aberration.None);
             var sgp4AtSample = tle.ToStateVector(sample).ToFrame(Frames.Frame.ICRF).ToStateVector();
             Assert.Equal(sgp4AtSample.Position, atSample.Position);
@@ -539,7 +538,7 @@ public class TlePropagationTests
         // Arrange: a plane alignment to a plane at 55° of inclination, its target in ICRF, on the TLE spacecraft and its twin
         var tle = NewTle();
         var window = OneHour(tle);
-        var t0 = window.StartDate.ToTDB();
+        var t0 = window.StartDate.ToTdb();
         IO.Astrodynamics.OrbitalParameters.OrbitalParameters Target(Frames.Frame frame) => new KeplerianElements(6800000.0, 0.0,
             55.0 * IO.Astrodynamics.Constants.Deg2Rad, 6.0, 0.0, 0.0, tle.Observer, t0, frame);
 
@@ -579,14 +578,14 @@ public class TlePropagationTests
         // Built before the engine is attached (no check at construction): rejected by SetManeuvers as well
         var tank = new FuelTank("ft675b", 1000.0, 1000.0, "model", "sn675b");
         var detached = new Engine("eng675b", 300.0, 10.0, tank, "model", "sn675b");
-        var early = new PlaneAlignmentManeuver(Target(Frames.Frame.ECLIPTIC_J2000), detached, window.StartDate, TimeSpan.Zero);
+        var early = new PlaneAlignmentManeuver(Target(Frames.Frame.ECLIPJ2000), detached, window.StartDate, TimeSpan.Zero);
         var late = NewSpacecraft(-7054, tle);
         late.AddFuelTank(tank);
         late.AddEngine(detached);
         Assert.Throws<ArgumentException>(() => late.SetManeuvers(early));
 
         // A plan set on an ECLIPJ2000 orbit, the spacecraft then given the TLE: rejected when the propagator is built
-        late.SetInitialOrbitalParameters(Target(Frames.Frame.ECLIPTIC_J2000));
+        late.SetInitialOrbitalParameters(Target(Frames.Frame.ECLIPJ2000));
         late.SetManeuvers(early);
         late.SetInitialOrbitalParameters(tle);
         Assert.Throws<ArgumentException>(() => new CentralBodyPropagator(window, late, new PropagationOptions { Integrator = RK78IntegratorOptions.Default, OutputStep = OutputStep, ThirdBodies = Array.Empty<CelestialItem>(), CovariancePropagation = CovariancePropagationOptions.None }));

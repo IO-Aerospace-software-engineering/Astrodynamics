@@ -31,13 +31,13 @@ public class EphemerisWindowStepTests
     [InlineData(-600000000L)]
     public void CelestialItem_StepNotPositive_Throws(long ticks)
     {
-        var moon = PlanetsAndMoons.MOON_BODY;
+        var moon = PlanetsAndMoons.MoonBody;
         var ex = Assert.Throws<ArgumentOutOfRangeException>(() =>
-            moon.GetEphemeris(OneHour, PlanetsAndMoons.EARTH_BODY, Frames.Frame.ICRF, Aberration.None,
+            moon.GetEphemeris(OneHour, PlanetsAndMoons.EarthBody, Frames.Frame.ICRF, Aberration.None,
                 TimeSpan.FromTicks(ticks)));
         Assert.Equal("stepSize", ex.ParamName);
         Assert.Throws<ArgumentOutOfRangeException>(() =>
-            moon.GetEphemeris(OneHour, PlanetsAndMoons.EARTH_BODY, TimeSpan.FromTicks(ticks)));
+            moon.GetEphemeris(OneHour, PlanetsAndMoons.EarthBody, TimeSpan.FromTicks(ticks)));
     }
 
     [Theory]
@@ -45,7 +45,7 @@ public class EphemerisWindowStepTests
     [InlineData(-600000000L)]
     public void Site_StepNotPositive_Throws(long ticks)
     {
-        var earth = PlanetsAndMoons.EARTH_BODY;
+        var earth = PlanetsAndMoons.EarthBody;
         var site = new Site(100, "STEPSITE", earth,
             new Planetodetic(longitude: -117.0 * IO.Astrodynamics.Constants.Deg2Rad,
                 latitude: 34.0 * IO.Astrodynamics.Constants.Deg2Rad, altitude: 1000.0));
@@ -56,7 +56,7 @@ public class EphemerisWindowStepTests
     }
 
     /// <summary>
-    /// <see cref="SpiceAPI.TransformFrame(Window, Frames.Frame, Frames.Frame, TimeSpan)"/> checks its step at the call, not
+    /// <see cref="SpiceApi.TransformFrame(Window, Frames.Frame, Frames.Frame, TimeSpan)"/> checks its step at the call, not
     /// at the enumeration (decision 10 of lot L4 of #668): before 11.0.0 a zero step enumerated without end.
     /// </summary>
     [Theory]
@@ -65,7 +65,7 @@ public class EphemerisWindowStepTests
     public void TransformFrame_StepNotPositive_ThrowsAtTheCall(long ticks)
     {
         var ex = Assert.Throws<ArgumentOutOfRangeException>(() =>
-            SpiceAPI.Instance.TransformFrame(OneHour, Frames.Frame.ICRF, Frames.Frame.ITRF93, TimeSpan.FromTicks(ticks)));
+            SpiceApi.Instance.TransformFrame(OneHour, Frames.Frame.ICRF, Frames.Frame.ITRF93, TimeSpan.FromTicks(ticks)));
         Assert.Equal("stepSize", ex.ParamName);
     }
 
@@ -77,12 +77,12 @@ public class EphemerisWindowStepTests
     [Fact]
     public void TransformFrame_PositiveStep_ReadsTheGridToTheEnd()
     {
-        var orientations = SpiceAPI.Instance.TransformFrame(OneHour, Frames.Frame.ICRF, Frames.Frame.ITRF93,
+        var orientations = SpiceApi.Instance.TransformFrame(OneHour, Frames.Frame.ICRF, Frames.Frame.ITRF93,
             TimeSpan.FromMinutes(20.0)).ToArray();
         Assert.Equal(4, orientations.Length);
         LabelAssert.Equal(Start.AddMinutes(40.0), orientations[^2].Epoch);
         LabelAssert.Equal(OneHour.EndDate, orientations[^1].Epoch);
-        var atTheEnd = SpiceAPI.Instance.TransformFrame(OneHour.EndDate, Frames.Frame.ICRF, Frames.Frame.ITRF93);
+        var atTheEnd = SpiceApi.Instance.TransformFrame(OneHour.EndDate, Frames.Frame.ICRF, Frames.Frame.ITRF93);
         // The rotation angle between the two reads, 2 asin |v| of q1* q2
         Assert.Equal(0.0, (atTheEnd.Rotation.Conjugate() * orientations[^1].Rotation).VectorPart.Magnitude(), 15);
     }
@@ -93,7 +93,7 @@ public class EphemerisWindowStepTests
     [Fact]
     public void TransformFrame_EndOffTheGrid_NotRead()
     {
-        var orientations = SpiceAPI.Instance.TransformFrame(OneHour, Frames.Frame.ICRF, Frames.Frame.ITRF93,
+        var orientations = SpiceApi.Instance.TransformFrame(OneHour, Frames.Frame.ICRF, Frames.Frame.ITRF93,
             TimeSpan.FromMinutes(25.0)).ToArray();
         Assert.Equal(3, orientations.Length);
         LabelAssert.Equal(Start.AddMinutes(50.0), orientations[^1].Epoch);

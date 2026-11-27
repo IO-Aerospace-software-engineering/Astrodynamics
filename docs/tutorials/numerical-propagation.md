@@ -18,9 +18,9 @@ using IO.Astrodynamics.Propagator.Integrators;
 using IO.Astrodynamics.SolarSystemObjects;
 using IO.Astrodynamics.TimeSystem;
 
-SpiceAPI.Instance.LoadKernels(new DirectoryInfo("Data/SolarSystem"));
+SpiceApi.Instance.LoadKernels(new DirectoryInfo("Data/SolarSystem"));
 
-var earth = PlanetsAndMoons.EARTH_BODY;
+var earth = PlanetsAndMoons.EarthBody;
 var epoch = new Time(2024, 6, 21, 12, 0, 0, TimeScale.TDB);
 
 var orbit = new StateVector(
@@ -33,7 +33,7 @@ var spacecraft = new Spacecraft(-1001, "DemoSat", 100.0, orbit, 10000.0, clock);
 
 var solution = spacecraft.Propagate(
     new Window(epoch, epoch.AddDays(1)),
-    new PropagationOptions { ThirdBodies = new CelestialItem[] { Stars.SUN_BODY, PlanetsAndMoons.MOON_BODY } });
+    new PropagationOptions { ThirdBodies = new CelestialItem[] { Stars.SunBody, PlanetsAndMoons.MoonBody } });
 ```
 
 This uses the adaptive RK7(8) integrator at its defaults (tolerances of 1e-9) with central body gravity, solar and lunar third-body perturbations. The output is sampled at 60-second intervals, the default `OutputStep`; `spacecraft.Propagate(window)` alone propagates about the central body only.
@@ -82,7 +82,7 @@ var options = new PropagationOptions
 {
     Integrator = integrator,
     OutputStep = TimeSpan.FromSeconds(10.0),
-    ThirdBodies = new CelestialItem[] { Stars.SUN_BODY, PlanetsAndMoons.MOON_BODY }
+    ThirdBodies = new CelestialItem[] { Stars.SunBody, PlanetsAndMoons.MoonBody }
 };
 
 var propagator = new CentralBodyPropagator(new Window(epoch, epoch.AddHours(2)), spacecraft, options);
@@ -103,8 +103,8 @@ Pass perturbing bodies in `ThirdBodies`. The framework uses Battin's numerically
 
 ```csharp
 // Inputs: earth (CelestialBody)
-var bodies = new CelestialItem[] { earth, Stars.SUN_BODY, PlanetsAndMoons.MOON_BODY,
-    Barycenters.JUPITER_BARYCENTER };
+var bodies = new CelestialItem[] { earth, Stars.SunBody, PlanetsAndMoons.MoonBody,
+    Barycenters.JupiterBarycenter };
 ```
 
 ### Geopotential Gravity (EGM2008)
@@ -113,7 +113,7 @@ For higher-fidelity Earth gravity, attach a geopotential model to the central bo
 
 ```csharp
 // Inputs: epoch (Time)
-var earthWithGeo = new CelestialBody(PlanetsAndMoons.EARTH, Frame.ICRF, epoch,
+var earthWithGeo = new CelestialBody(PlanetsAndMoons.Earth, Frame.ICRF, epoch,
     new GeopotentialModelParameters("Data/SolarSystem/EGM2008_to70_TideFree", 10));
 ```
 
@@ -129,7 +129,7 @@ var solution = spacecraft.Propagate(window, new PropagationOptions
 {
     Integrator = integrator,
     OutputStep = TimeSpan.FromSeconds(10.0),
-    ThirdBodies = new CelestialItem[] { Stars.SUN_BODY, PlanetsAndMoons.MOON_BODY },
+    ThirdBodies = new CelestialItem[] { Stars.SunBody, PlanetsAndMoons.MoonBody },
     AtmosphericDrag = true,
     SolarRadiationPressure = true
 });
@@ -150,7 +150,7 @@ continuous shadow fraction computation, the central body among the occulting bod
 
 ```csharp
 // Inputs: epoch (Time), integrator (RK78IntegratorOptions)
-var earth = new CelestialBody(PlanetsAndMoons.EARTH,
+var earth = new CelestialBody(PlanetsAndMoons.Earth,
     albedo: 0.306,
     thermalEffectiveTemperature: 254.0,
     thermalEmissivity: 0.95);
@@ -161,7 +161,7 @@ var solution = spacecraft.Propagate(new Window(epoch, epoch.AddHours(2)), new Pr
 {
     Integrator = integrator,
     OutputStep = TimeSpan.FromSeconds(10),
-    ThirdBodies = new CelestialItem[] { Stars.SUN_BODY, PlanetsAndMoons.MOON_BODY },
+    ThirdBodies = new CelestialItem[] { Stars.SunBody, PlanetsAndMoons.MoonBody },
     AlbedoRadiationPressure = true,
     ThermalRadiationPressure = true
 });

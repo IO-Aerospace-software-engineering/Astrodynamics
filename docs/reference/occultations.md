@@ -6,7 +6,7 @@ them. It is a method of the observer (`WindowSearches`, an extension of every `I
 
 ```csharp
 // Inputs: window (Window), spacecraft (Spacecraft)
-var earth = new CelestialBody(PlanetsAndMoons.EARTH);
+var earth = new CelestialBody(PlanetsAndMoons.Earth);
 var sun = new CelestialBody(Stars.Sun);
 // spacecraft: propagated, from a TLE, or from the kernels
 var options = new OccultationSearchOptions { Step = TimeSpan.FromSeconds(60.0), FrontFrame = new Frame("IAU_EARTH") };
@@ -47,7 +47,7 @@ point otherwise, and `OccultationType` to `Any`. A body modeled as `ShapeType.El
   natural bodies. A site observer is the library's whatever the site (lot L6 of #668, choice 4): before 11.0.0
   `Site.FindWindowsOnOccultationConstraint` gave a site, a spacecraft target and a front body of the kernels to
   `gfoclt`, whose edges differ from the library's by up to 5.0e-7 s geometric and 6.2e-4 s with the light time (LRO
-  behind the Moon from DSS-13; see Accuracy). It reads the states and the orientations (the kernels through the shared lock of `SpiceAPI`), never writes a
+  behind the Moon from DSS-13; see Accuracy). It reads the states and the orientations (the kernels through the shared lock of `SpiceApi`), never writes a
   kernel, and keeps no state, so searches on separate propagations may run concurrently.
 
 The managed search follows the method of CSPICE's `zzocced`: a linear map turns one ellipsoid into the unit sphere,

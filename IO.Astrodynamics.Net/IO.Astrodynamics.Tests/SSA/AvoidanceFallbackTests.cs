@@ -3,17 +3,16 @@
 using System;
 using System.Linq;
 using System.Threading.Tasks;
-using IO.Astrodynamics.Atmosphere.NRLMSISE_00;
+using IO.Astrodynamics.Atmosphere;
 using IO.Astrodynamics.Body;
 using IO.Astrodynamics.Body.Spacecraft;
 using IO.Astrodynamics.Maneuver;
 using IO.Astrodynamics.OrbitalParameters;
-using IO.Astrodynamics.OrbitalParameters.TLE;
 using IO.Astrodynamics.Propagator;
 using IO.Astrodynamics.Propagator.Integrators;
 using IO.Astrodynamics.Propagator.Variational;
 using IO.Astrodynamics.SolarSystemObjects;
-using IO.Astrodynamics.SSA;
+using IO.Astrodynamics.Ssa;
 using IO.Astrodynamics.Tests.Propagators.Variational;
 using IO.Astrodynamics.TimeSystem;
 using Xunit;
@@ -43,11 +42,11 @@ public sealed class AvoidanceFallbackCase
     public AvoidanceFallbackCase()
     {
         TestKernels.EnsureSolarSystem();
-        Earth = new CelestialBody(PlanetsAndMoons.EARTH, Frames.Frame.ICRF, Start,
+        Earth = new CelestialBody(PlanetsAndMoons.Earth, Frames.Frame.ICRF, Start,
             new GeopotentialModelParameters("Data/SolarSystem/EGM2008_to70_TideFree", 10),
             new Nrlmsise00Model(SpaceWeather.Nominal));
-        Bodies = new CelestialItem[] { Earth, new CelestialBody(PlanetsAndMoons.MOON, Frames.Frame.ICRF, Start), new CelestialBody(Stars.Sun) };
-        PointMassEarth = new CelestialBody(PlanetsAndMoons.EARTH, Frames.Frame.ICRF, Start);
+        Bodies = new CelestialItem[] { Earth, new CelestialBody(PlanetsAndMoons.Moon, Frames.Frame.ICRF, Start), new CelestialBody(Stars.Sun) };
+        PointMassEarth = new CelestialBody(PlanetsAndMoons.Earth, Frames.Frame.ICRF, Start);
         var orbit = new KeplerianElements(6778137.0, 0.001, 51.6 * IO.Astrodynamics.Constants.Deg2Rad, 0.4, 1.1, 0.3, Earth,
             Start, Frames.Frame.ICRF).ToStateVector();
         ProtectedStart = ConjunctionCovarianceCase.WithRtnCovariance(orbit, new[] { 50.0, 200.0, 30.0, 0.2, 0.05, 0.03 });
@@ -285,7 +284,7 @@ public class AvoidanceFallbackTests : IClassFixture<AvoidanceFallbackCase>
     public void EvaluateAvoidance_Tle_TheTwoBodyOrbitStated()
     {
         // Arrange: a spacecraft given by a TLE, not propagated (SGP4), without covariance
-        var tle = new TLE("ISS", "1 25544U 98067A   21020.53488036  .00016717  00000-0  10270-3 0  9054",
+        var tle = new Tle("ISS", "1 25544U 98067A   21020.53488036  .00016717  00000-0  10270-3 0  9054",
             "2 25544  51.6423 353.0312 0000493 320.8755  39.2360 15.49309423 25703");
         var protectedCraft = new Spacecraft(-6790, "TLE6790", 100.0, tle, 1000.0, new Clock("tle6790", 65536), 10.0, 2.2, null, 1.5);
         var tca = tle.Epoch.AddHours(2.0);
@@ -456,7 +455,7 @@ public class AvoidanceFallbackTests : IClassFixture<AvoidanceFallbackCase>
         var settings = InheritedSettings with
         {
             SampleStep = TimeSpan.FromMinutes(2.0),
-            MaximumEventSearchStep = TimeSpan.FromSeconds(30.0),
+            MaxEventSearchStep = TimeSpan.FromSeconds(30.0),
             LowRelativeSpeedThresholdMetersPerSecond = 0.5
         };
         Spacecraft protectedCraft;
@@ -516,7 +515,7 @@ public class AvoidanceFallbackTests : IClassFixture<AvoidanceFallbackCase>
         var settings = InheritedSettings with
         {
             SampleStep = TimeSpan.FromMinutes(sampleStepMinutes),
-            MaximumEventSearchStep = TimeSpan.FromSeconds(maximumEventSearchStepSeconds),
+            MaxEventSearchStep = TimeSpan.FromSeconds(maximumEventSearchStepSeconds),
             BisectionToleranceSeconds = 10.0
         };
         var protectedCraft = ReferenceCase.NewSpacecraft(id, _case.ProtectedStart);

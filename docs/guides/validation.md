@@ -354,10 +354,10 @@ The runner reads them through the library's window searches, whose edges are the
 
 | Category | The runner (solver) | The library |
 |----------|---------------------|-------------|
-| `ground_station` | `GroundStationSolver` | the windows of the elevation above the mask, `Site.FindHorizontalWindows` (the declination in the station's frame, `Site.Frame`), minus the windows of the site's `FindOccultationWindows` over the window in TDB (the target a point, the Moon's sphere); the culmination the `AbsoluteMax` of the elevation over the pass, an edge where the elevation is monotonic (006); the samples `Site.GetHorizontalCoordinates` and r·v/\|r\| of `GetEphemeris(t, site, ICRF, …)`; the flags `none`, `lt`, `lt+s`, `xlt` as `Aberration.None`, `LT`, `LTS`, `XLT` |
+| `ground_station` | `GroundStationSolver` | the windows of the elevation above the mask, `Site.FindHorizontalWindows` (the declination in the station's frame, `Site.Frame`), minus the windows of the site's `FindOccultationWindows` over the window in TDB (the target a point, the Moon's sphere); the culmination the `AbsoluteMax` of the elevation over the pass, an edge where the elevation is monotonic (006); the samples `Site.GetHorizontalCoordinates` and r·v/\|r\| of `GetEphemeris(t, site, ICRF, …)`; the flags `none`, `lt`, `lt+s`, `xlt` as `Aberration.None`, `LT`, `LtS`, `XLT` |
 | `eclipse` (002 to 006) | `EclipseSolver` | the `Full`, `Annular` and `Partial` windows of the spacecraft's `FindOccultationWindows` of each body over the window in TDB, the Sun as target, the Earth's ellipsoid in IAU_EARTH, in time order; the trajectory about the Earth built apart from the occulting bodies; `cn` as `Aberration.CN` |
 | `orbital_events` | `OrbitalEventsSolver` | the propagation of the `propagator` category (`PropagationCase`) with 10 s stored states; the apsides the `LocalMin` and `LocalMax` of the Earth's `FindDistanceWindows`, the nodes the edges of the windows of Z > 0 in ICRF, the altitude crossings the edges of the windows of the geodetic altitude above the value in the Earth's frame, the edges at the bounds of the window left out; the epochs TT seconds from the start |
-| `attitude` | `AttitudeSolver` | `TriadAttitude` toward `OrbitalDirectionTarget.Nadir`, `Prograde` or `Normal`, or `NadirAttitude` with the case's axis as `BodyFront`, set at the start with no hold; the output step the sampling step, so that every sample is a recorded attitude, read at t0 + k·step TT seconds by `SpacecraftFrame.GetStateOrientationToICRF` |
+| `attitude` | `AttitudeSolver` | `TriadAttitude` toward `OrbitalDirectionTarget.Nadir`, `Prograde` or `Normal`, or `NadirAttitude` with the case's axis as `BodyFront`, set at the start with no hold; the output step the sampling step, so that every sample is a recorded attitude, read at t0 + k·step TT seconds by `SpacecraftFrame.GetStateOrientationToIcrf` |
 
 - **Two-body trajectories** (`TwoBodyTrajectory`, shared by the station, eclipse and attitude solvers): RK7(8) about the
   Earth over the TT seconds of the window, the case's GM as the GM of a geopotential of degree 0 with the model's central
@@ -445,8 +445,8 @@ second reference of the first two, ERFA's CIP route of the third.
 
 | Category | The runner (solver) | The library |
 |----------|---------------------|-------------|
-| `sgp4` | `Sgp4Solver` | `new TLE(name, line1, line2)`; a tsince sample is the TT instant `tle.Epoch` + 60·tsince, a UTC instant is read as it is, both through `TLE.ToOsculating`, whose tsince is the TT seconds from the TLE epoch (#599); ICRF by `ToFrame(Frame.ICRF)`, the managed TEME (#451); the epoch the UTC calendar date of `tle.Epoch` (#603). `gravity_model` and `opsmode` other than `wgs72old` and `afspc` are an ERROR: the library's SGP4 is CSPICE `evsgp4_c`, WGS-72 old in the AFSPC mode only |
-| `tle_conversion` | `TleConversionSolver` | `tle_to_omm`: `TLE.ToOmm()`, its mean elements and TLE parameters; `omm_to_tle`: an `Omm` of the item (Earth, TEME, SGP4, its `TIME_SYSTEM`), then `Omm.ToTle()`, which reads the epoch in that time system and writes its UTC (#485, #479), each field the nearest value of its columns (#600 to #602, #480) |
+| `sgp4` | `Sgp4Solver` | `new Tle(name, line1, line2)`; a tsince sample is the TT instant `tle.Epoch` + 60·tsince, a UTC instant is read as it is, both through `Tle.ToOsculating`, whose tsince is the TT seconds from the TLE epoch (#599); ICRF by `ToFrame(Frame.ICRF)`, the managed TEME (#451); the epoch the UTC calendar date of `tle.Epoch` (#603). `gravity_model` and `opsmode` other than `wgs72old` and `afspc` are an ERROR: the library's SGP4 is CSPICE `evsgp4_c`, WGS-72 old in the AFSPC mode only |
+| `tle_conversion` | `TleConversionSolver` | `tle_to_omm`: `Tle.ToOmm()`, its mean elements and TLE parameters; `omm_to_tle`: an `Omm` of the item (Earth, TEME, SGP4, its `TIME_SYSTEM`), then `Omm.ToTle()`, which reads the epoch in that time system and writes its UTC (#485, #479), each field the nearest value of its columns (#600 to #602, #480) |
 | `frame_transformation` | `FrameTransformationSolver` | `TEME` resolved to `Frame.TEME` (`FrameCatalog`), quasi-inertial, v′ = R v; TEME → ITRF93 composed through ICRF |
 
 - **New kinds** (`spec.md` §6.1): the SGP4 states are compared per component (`MetricKind.ScalarPerComponent`, the
@@ -464,7 +464,7 @@ cases take the overrides of the suite, set by GMAT's kinematic terms of the 1994
 and the 2000A/2000B spread: a runner exact to Vallado's definition sits at about half of them. Release, Linux,
 2026-11-08, the runner on the suite at b10b925: the worst ratio of each key over the cases, and of each case over its keys.
 With decision 111 of [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668) (lot L7,
-Release, Linux, 2026-11-26, the suite's 33286d2, 201 of 201) `TLE.ToOmm` writes the mean motion of the field, so the
+Release, Linux, 2026-11-26, the suite's 33286d2, 201 of 201) `Tle.ToOmm` writes the mean motion of the field, so the
 `MEAN_MOTION` deltas fell to 0; the rows it moved give the new figure, the figure before it in brackets.
 
 | Key | Worst delta | Ratio | Case and output |

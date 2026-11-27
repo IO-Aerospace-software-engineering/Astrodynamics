@@ -21,7 +21,7 @@ namespace IO.Astrodynamics.Tests.Frame;
 /// A frame named CIRS or TIRS, in any case, is <see cref="Frames.Frame.CIRS"/> or <see cref="Frames.Frame.TIRS"/> on every
 /// path, as a frame named TEME is <see cref="Frames.Frame.TEME"/> (#656): <see cref="Frames.Frame.ToFrame"/> both ways, both
 /// data providers, the ephemeris reads with and without light time, a state converted to it and
-/// <see cref="SpiceAPI.TransformFrame(TimeSystem_Time, Frames.Frame, Frames.Frame)"/>, which composes CIRS and TIRS through
+/// <see cref="SpiceApi.TransformFrame(TimeSystem_Time, Frames.Frame, Frames.Frame)"/>, which composes CIRS and TIRS through
 /// ICRF. Before, a frame built by name reached SPICE, which does not know these names, and threw.
 /// </summary>
 /// <remarks>
@@ -172,8 +172,8 @@ public class ManagedFrameByNameTests
         var byName = new Frames.Frame(name);
         foreach (var epoch in Epochs)
         {
-            var orientation = provider.FrameTransformationToICRF(epoch.Utc, byName);
-            var managed = StaticFrameOf(name).GetStateOrientationToICRF(epoch.Utc);
+            var orientation = provider.FrameTransformationToIcrf(epoch.Utc, byName);
+            var managed = StaticFrameOf(name).GetStateOrientationToIcrf(epoch.Utc);
             Assert.Equal(managed.Rotation, orientation.Rotation);
             Assert.Equal(managed.AngularVelocity, orientation.AngularVelocity);
             Assert.Same(byName, orientation.ReferenceFrame);
@@ -189,8 +189,8 @@ public class ManagedFrameByNameTests
         var byName = new Frames.Frame(name);
         foreach (var epoch in Epochs)
         {
-            var orientation = provider.FrameTransformationToICRF(epoch.Utc, byName);
-            var managed = StaticFrameOf(name).GetStateOrientationToICRF(epoch.Utc);
+            var orientation = provider.FrameTransformationToIcrf(epoch.Utc, byName);
+            var managed = StaticFrameOf(name).GetStateOrientationToIcrf(epoch.Utc);
             Assert.Equal(managed.Rotation, orientation.Rotation);
             Assert.Equal(managed.AngularVelocity, orientation.AngularVelocity);
             Assert.Same(byName, orientation.ReferenceFrame);
@@ -207,8 +207,8 @@ public class ManagedFrameByNameTests
     public void EphemerisRead_ByName_IsTheReadInTheManagedFrame(string name, string aberrationName)
     {
         var aberration = Enum.Parse<Aberration>(aberrationName);
-        var earth = new CelestialBody(PlanetsAndMoons.EARTH);
-        var moon = new CelestialBody(PlanetsAndMoons.MOON);
+        var earth = new CelestialBody(PlanetsAndMoons.Earth);
+        var moon = new CelestialBody(PlanetsAndMoons.Moon);
         double worst = 0.0;
         foreach (var epoch in Epochs)
         {
@@ -239,7 +239,7 @@ public class ManagedFrameByNameTests
 
     private const string AberrationNone = nameof(Aberration.None);
     private const string AberrationLt = nameof(Aberration.LT);
-    private const string AberrationCnS = nameof(Aberration.CNS);
+    private const string AberrationCnS = nameof(Aberration.CnS);
 
     [Theory]
     [MemberData(nameof(Names))]
@@ -252,17 +252,17 @@ public class ManagedFrameByNameTests
             // Instance and name alike, to ICRF against SOFA
             foreach (var frame in new[] { new Frames.Frame(name), StaticFrameOf(name) })
             {
-                var toIcrf = SpiceAPI.Instance.TransformFrame(epoch.Utc, frame, Frames.Frame.ICRF);
+                var toIcrf = SpiceApi.Instance.TransformFrame(epoch.Utc, frame, Frames.Frame.ICRF);
                 worst = System.Math.Max(worst, WorstAxisAngle(toIcrf.Rotation, SofaGcrsTo(name, epoch)));
                 Assert.Same(frame, toIcrf.ReferenceFrame);
 
-                var fromIcrf = SpiceAPI.Instance.TransformFrame(epoch.Utc, Frames.Frame.ICRF, frame);
+                var fromIcrf = SpiceApi.Instance.TransformFrame(epoch.Utc, Frames.Frame.ICRF, frame);
                 worst = System.Math.Max(worst, WorstAxisAngle(fromIcrf.Rotation.Conjugate(), SofaGcrsTo(name, epoch)));
 
                 // Toward a SPICE frame: the composition through ICRF of Frame.ToFrame, the angular velocity included. The same
                 // formula on the same orientations (the managed frame's, and SPICE's ITRF93 -> ICRF, which the SPICE provider
                 // reads through TransformFrame), so the same doubles on every platform: equality, not a bound
-                var direct = SpiceAPI.Instance.TransformFrame(epoch.Utc, frame, itrf93);
+                var direct = SpiceApi.Instance.TransformFrame(epoch.Utc, frame, itrf93);
                 var composed = StaticFrameOf(name).ToFrame(itrf93, epoch.Utc);
                 worstComposedAngle = System.Math.Max(worstComposedAngle, Angle(direct.Rotation, composed.Rotation));
                 worstComposedRate = System.Math.Max(worstComposedRate, (direct.AngularVelocity - composed.AngularVelocity).Magnitude());
@@ -270,7 +270,7 @@ public class ManagedFrameByNameTests
                 Assert.Equal(composed.AngularVelocity, direct.AngularVelocity);
 
                 // A frame to itself by name: q* q, whose vector part cancels exactly (each product appears twice, opposite)
-                var identity = SpiceAPI.Instance.TransformFrame(epoch.Utc, frame, new Frames.Frame(name.ToUpperInvariant()));
+                var identity = SpiceApi.Instance.TransformFrame(epoch.Utc, frame, new Frames.Frame(name.ToUpperInvariant()));
                 worstIdentity = System.Math.Max(worstIdentity, Angle(identity.Rotation, Quaternion.Identity));
                 Assert.Equal(0.0, Angle(identity.Rotation, Quaternion.Identity));
             }
@@ -288,7 +288,7 @@ public class ManagedFrameByNameTests
         // CIRS -> TIRS is Rz(ERA) about the CIP: the angle between the two frames' x-axes is SOFA's ERA, by name and instance
         foreach (var epoch in Epochs)
         {
-            var transform = SpiceAPI.Instance.TransformFrame(epoch.Utc, new Frames.Frame("cirs"), new Frames.Frame("tirs"));
+            var transform = SpiceApi.Instance.TransformFrame(epoch.Utc, new Frames.Frame("cirs"), new Frames.Frame("tirs"));
             var sofaCirs = SofaGcrsTo("CIRS", epoch);
             var sofaTirs = SofaGcrsTo("TIRS", epoch);
             // CIRS -> TIRS = (GCRS -> TIRS) (GCRS -> CIRS)^T

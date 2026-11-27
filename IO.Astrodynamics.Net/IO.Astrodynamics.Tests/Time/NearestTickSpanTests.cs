@@ -218,7 +218,7 @@ public class NearestTickSpanTests
         {
             long sampleTicks = 16 * (37_500_000 + 7919 * k);
             var sampleStep = TimeSpan.FromTicks(sampleTicks);
-            var step = IO.Astrodynamics.SSA.ConjunctionAssessment.ComputeCloseApproachSearchStep(sampleStep, TimeSpan.FromDays(1.0), 1e-6);
+            var step = IO.Astrodynamics.Ssa.ConjunctionAssessment.ComputeCloseApproachSearchStep(sampleStep, TimeSpan.FromDays(1.0), 1e-6);
             Assert.Equal(sampleTicks / 16, step.Ticks);
             if (TimeSpan.FromSeconds(sampleStep.TotalSeconds / 16.0).Ticks != sampleTicks / 16)
             {
@@ -245,7 +245,7 @@ public class NearestTickSpanTests
         for (int k = 0; k < 24; k++)
         {
             double a = 6800000.0 + 12345.0 * k;
-            var orbit = new KeplerianElements(a, 0.01, 0.2, 0.1, 0.3, 0.4, earth, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF);
+            var orbit = new KeplerianElements(a, 0.01, 0.2, 0.1, 0.3, 0.4, earth, TimeSystem.Time.J2000Tdb, Frames.Frame.ICRF);
             decimal am = D(a);
             long? expected = NearestTick(2m * Pi * Sqrt(am * am * am / mu));
             if (expected is null)
@@ -275,7 +275,7 @@ public class NearestTickSpanTests
     public void SiderealPeriodAndTrueSolarDay_AreTheNearestTick()
     {
         var earth = TestHelpers.Earth;
-        var moon = new CelestialBody(PlanetsAndMoons.MOON);
+        var moon = new CelestialBody(PlanetsAndMoons.Moon);
         int counted = 0, moved = 0, solarCounted = 0, solarMoved = 0;
         for (int day = 0; day < 40; day++)
         {
@@ -285,7 +285,7 @@ public class NearestTickSpanTests
                 var omega = body.GetOrientation(Frames.Frame.ICRF, epoch).AngularVelocity;
                 decimal w = Sqrt(D(omega.X) * D(omega.X) + D(omega.Y) * D(omega.Y) + D(omega.Z) * D(omega.Z));
                 long? expected = NearestTick(2m * Pi / w);
-                var sidereal = body.SideralRotationPeriod(epoch);
+                var sidereal = body.SiderealRotationPeriod(epoch);
                 if (expected is not null)
                 {
                     counted++;
@@ -302,8 +302,8 @@ public class NearestTickSpanTests
                 }
 
                 // The true solar day: the sidereal period plus the angle the Sun moves over it, at the rate |ω|
-                var eph0 = body.GetEphemeris(epoch, Stars.SUN_BODY, Frames.Frame.ECLIPTIC_J2000, Aberration.LT).Position;
-                var eph1 = body.GetEphemeris(epoch + sidereal, Stars.SUN_BODY, Frames.Frame.ECLIPTIC_J2000, Aberration.LT).Position;
+                var eph0 = body.GetEphemeris(epoch, Stars.SunBody, Frames.Frame.ECLIPJ2000, Aberration.LT).Position;
+                var eph1 = body.GetEphemeris(epoch + sidereal, Stars.SunBody, Frames.Frame.ECLIPJ2000, Aberration.LT).Position;
                 double angle = eph0.Angle(eph1);
                 long? extra = NearestTick(D(angle) / w);
                 if (extra is null)
@@ -321,7 +321,7 @@ public class NearestTickSpanTests
             }
         }
 
-        _output.WriteLine($"MEASURE SideralRotationPeriod: {moved} of {counted} periods one tick off by truncation");
+        _output.WriteLine($"MEASURE SiderealRotationPeriod: {moved} of {counted} periods one tick off by truncation");
         _output.WriteLine($"MEASURE TrueSolarDay: {solarMoved} of {solarCounted} angle spans one tick off by truncation");
         Assert.True(counted >= 70 && solarCounted >= 35);
         Assert.True(moved > 0 && solarMoved > 0);
@@ -339,8 +339,8 @@ public class NearestTickSpanTests
         int counted = 0, moved = 0;
         for (int k = 0; k < 24; k++)
         {
-            var orbit = new KeplerianElements(6900000.0 + 23456.0 * k, 0.02, 0.5, 0.1, 0.3, 0.4 + 0.1 * k, earth, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF);
-            var elements = SpiceAPI.Instance.ConvertStateVectorToConicOrbitalElement(orbit.ToStateVector());
+            var orbit = new KeplerianElements(6900000.0 + 23456.0 * k, 0.02, 0.5, 0.1, 0.3, 0.4 + 0.1 * k, earth, TimeSystem.Time.J2000Tdb, Frames.Frame.ICRF);
+            var elements = SpiceApi.Instance.ConvertStateVectorToConicOrbitalElement(orbit.ToStateVector());
             decimal a = D(elements.SemiMajorAxis());
             long? expected = NearestTick(2m * Pi * Sqrt(a * a * a / mu));
             if (expected is null)
@@ -377,7 +377,7 @@ public class NearestTickSpanTests
         for (int k = 1; k <= 30; k++)
         {
             double deltaV = 7.3 * k * k;
-            decimal exact = D(initialMass) / D(fuelFlow) * (1m - Exp(-D(deltaV) / (D(isp) * D(IO.Astrodynamics.Constants.g0))));
+            decimal exact = D(initialMass) / D(fuelFlow) * (1m - Exp(-D(deltaV) / (D(isp) * D(IO.Astrodynamics.Constants.StandardGravity))));
             long? expected = NearestTick(exact);
             if (expected is null)
             {
@@ -385,15 +385,15 @@ public class NearestTickSpanTests
             }
 
             counted++;
-            var duration = Tsiolkovski.DeltaT(isp, initialMass, fuelFlow, deltaV);
+            var duration = Tsiolkovsky.DeltaT(isp, initialMass, fuelFlow, deltaV);
             Assert.True(expected == duration.Ticks, $"Δv = {deltaV:R} m/s: {duration.Ticks} ticks, the nearest {expected}");
-            if (Truncated(initialMass / fuelFlow * (1 - System.Math.Exp(-deltaV / (isp * IO.Astrodynamics.Constants.g0)))) != expected)
+            if (Truncated(initialMass / fuelFlow * (1 - System.Math.Exp(-deltaV / (isp * IO.Astrodynamics.Constants.StandardGravity)))) != expected)
             {
                 moved++;
             }
         }
 
-        _output.WriteLine($"MEASURE Tsiolkovski.DeltaT: {moved} of {counted} durations one tick off by truncation");
+        _output.WriteLine($"MEASURE Tsiolkovsky.DeltaT: {moved} of {counted} durations one tick off by truncation");
         Assert.True(counted >= 28);
         Assert.True(moved > 0);
     }
@@ -412,11 +412,11 @@ public class NearestTickSpanTests
         {
             for (uint revolutions = 1; revolutions <= 3; revolutions++)
             {
-                var orbit = new KeplerianElements(7000000.0 + 1111.0 * k, 0.01, 0.1, 0.0, 0.0, 0.0, earth, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF);
+                var orbit = new KeplerianElements(7000000.0 + 1111.0 * k, 0.01, 0.1, 0.0, 0.0, 0.0, earth, TimeSystem.Time.J2000Tdb, Frames.Frame.ICRF);
                 var spacecraft = new Spacecraft(-1637, "Phasing1637", 1000.0, orbit, 3000.0, new Clock("Clk1637", 65536));
                 spacecraft.AddFuelTank(new FuelTank("ft", 1000.0, 900.0, "ftA", "123456"));
                 spacecraft.AddEngine(new Engine("eng", 450, 50, spacecraft.FuelTanks.First(), "engmk1", "12345"));
-                var target = new KeplerianElements(7000000.0 + 1111.0 * k, 0.01, 0.1, 0.0, 0.0, 0.3 + 0.05 * k, earth, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF);
+                var target = new KeplerianElements(7000000.0 + 1111.0 * k, 0.01, 0.1, 0.0, 0.0, 0.3 + 0.05 * k, earth, TimeSystem.Time.J2000Tdb, Frames.Frame.ICRF);
                 var maneuver = new PhasingManeuver(target,
                     revolutions,
                     spacecraft.Engines.First(),

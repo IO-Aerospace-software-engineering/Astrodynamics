@@ -19,7 +19,7 @@ namespace IO.Astrodynamics.Tests.Body;
 /// </summary>
 /// <remarks>
 /// The reference is SPICE's: the barycentre of a natural observer is the <c>BarycenterOfMotionId</c> of the record that
-/// <see cref="SpiceAPI.GetCelestialBodyInfo"/> reads from the kernels (<c>GetCelestialBodyInfoProxy</c>: the Earth and the
+/// <see cref="SpiceApi.GetCelestialBodyInfo"/> reads from the kernels (<c>GetCelestialBodyInfoProxy</c>: the Earth and the
 /// Moon 3, the Sun 0), a barycentre its own identifier (NAIF Integer ID codes, the barycentres 0 to 9).
 /// </remarks>
 public class CustomItemCenterOfMotionTests
@@ -40,7 +40,7 @@ public class CustomItemCenterOfMotionTests
 
     /// <summary>The barycentre of a natural observer as SPICE gives it, a barycentre itself.</summary>
     private static int SpiceBarycentre(int observerId) =>
-        observerId < 10 ? observerId : SpiceAPI.Instance.GetCelestialBodyInfo(observerId).BarycenterOfMotionId;
+        observerId < 10 ? observerId : SpiceApi.Instance.GetCelestialBodyInfo(observerId).BarycenterOfMotionId;
 
     public static TheoryData<int> Observers => [399, 301, 10, 3, 0, 4];
 
@@ -80,7 +80,7 @@ public class CustomItemCenterOfMotionTests
     public void Spacecraft_OfTheStaticEarth_IsAboutTheEarth()
     {
         // Act: the deferred static object of PlanetsAndMoons as observer
-        var spacecraft = new Spacecraft(-747, "S747", 100.0, OrbitAbout(PlanetsAndMoons.EARTH_BODY), 1000.0, new Clock("S747", 65536));
+        var spacecraft = new Spacecraft(-747, "S747", 100.0, OrbitAbout(PlanetsAndMoons.EarthBody), 1000.0, new Clock("S747", 65536));
 
         // Assert
         Assert.Equal(399, spacecraft.CenterOfMotionId);
@@ -106,7 +106,7 @@ public class CustomItemCenterOfMotionTests
     {
         // Arrange: LRO (-85, Data/LRO), read about the Earth by default and about the Moon when given
         TestKernels.EnsureLro();
-        var epoch = TimeSystem.Time.CreateTDB(757339200.0);
+        var epoch = TimeSystem.Time.CreateTdb(757339200.0);
 
         // Act
         var aboutEarth = new Spacecraft(-85, "LRO", epoch: epoch);

@@ -26,8 +26,8 @@ public class CelestialAttitudeTargetTests
 
     private static readonly Aberration[] Flags =
     [
-        Aberration.None, Aberration.LT, Aberration.LTS, Aberration.CN, Aberration.CNS, Aberration.XLT, Aberration.XLTS,
-        Aberration.XCN, Aberration.XCNS
+        Aberration.None, Aberration.LT, Aberration.LtS, Aberration.CN, Aberration.CnS, Aberration.XLT, Aberration.XltS,
+        Aberration.XCN, Aberration.XcnS
     ];
 
     // #740: twice the worst angle from spkcvo_c over the eight states of the "pointing" rows and the nine corrections
@@ -50,7 +50,7 @@ public class CelestialAttitudeTargetTests
         var reference = JsonDocument.Parse(File.ReadAllText("Data/LightTimeReference/light_time_reference.json")).RootElement;
         return reference.GetProperty("pointing").EnumerateArray().Select(p =>
         {
-            var epoch = TimeSystem.Time.CreateTDB(p.GetProperty("epoch_tdb").GetDouble());
+            var epoch = TimeSystem.Time.CreateTdb(p.GetProperty("epoch_tdb").GetDouble());
             var s = p.GetProperty("state").EnumerateArray().Select(x => x.GetDouble()).ToArray();
             var state = new StateVector(new Vector3(s[0], s[1], s[2]), new Vector3(s[3], s[4], s[5]), earth, epoch, Frames.Frame.ICRF);
             var expected = Flags.ToDictionary(f => f, f =>
@@ -77,7 +77,7 @@ public class CelestialAttitudeTargetTests
     [InlineData("earth", 399, EarthTolerance)]
     public void GetDirection_IsTheTargetAsSpkcvoSeesItFromTheSpacecraft(string label, int targetId, double tolerance)
     {
-        var earth = new CelestialBody(PlanetsAndMoons.EARTH);
+        var earth = new CelestialBody(PlanetsAndMoons.Earth);
         var target = new CelestialBody(targetId);
         var worst = Flags.ToDictionary(f => f, _ => 0.0);
         foreach (var flag in Flags)
@@ -107,8 +107,8 @@ public class CelestialAttitudeTargetTests
     [Fact]
     public void TriadAttitude_OnCelestialTargets_TakesTheirDirectionsFromTheSpacecraft()
     {
-        var earth = new CelestialBody(PlanetsAndMoons.EARTH);
-        var moon = new CelestialBody(PlanetsAndMoons.MOON);
+        var earth = new CelestialBody(PlanetsAndMoons.Earth);
+        var moon = new CelestialBody(PlanetsAndMoons.Moon);
         var sun = new CelestialBody(Stars.Sun);
         var suns = Pointing("sun", earth);
         double worstPrimary = 0.0, worstPlane = 0.0;
@@ -120,13 +120,13 @@ public class CelestialAttitudeTargetTests
             var attitude = new TriadAttitude(Spacecraft.Front,
                 new CelestialAttitudeTarget(moon, Aberration.LT),
                 Spacecraft.Up,
-                new CelestialAttitudeTarget(sun, Aberration.LTS),
+                new CelestialAttitudeTarget(sun, Aberration.LtS),
                 epoch,
                 TimeSpan.Zero,
                 earth);
             var q = attitude.ComputeOrientation(state);
             var m = moonExpected[Aberration.LT].Normalize();
-            var s = suns[k].Expected[Aberration.LTS].Normalize();
+            var s = suns[k].Expected[Aberration.LtS].Normalize();
             worstPrimary = System.Math.Max(worstPrimary, Angle(Spacecraft.Front.Rotate(q), m));
             // The secondary body vector in the half-plane of the Moon and the Sun: the normals of the two planes agree
             worstPlane = System.Math.Max(worstPlane, Angle(m.Cross(Spacecraft.Up.Rotate(q)), m.Cross(s)));

@@ -92,8 +92,8 @@ public class InstrumentPointingAttitudeTests
 
     private static readonly Aberration[] Flags =
     [
-        Aberration.None, Aberration.LT, Aberration.LTS, Aberration.CN, Aberration.CNS, Aberration.XLT, Aberration.XLTS,
-        Aberration.XCN, Aberration.XCNS
+        Aberration.None, Aberration.LT, Aberration.LtS, Aberration.CN, Aberration.CnS, Aberration.XLT, Aberration.XltS,
+        Aberration.XCN, Aberration.XcnS
     ];
 
     private static JsonElement Reference() =>
@@ -108,7 +108,7 @@ public class InstrumentPointingAttitudeTests
     /// <summary>The states of the "pointing" rows of <c>tools/light_time_reference</c> and the Moon that <c>spkcvo_c</c>
     /// gives from each, per correction.</summary>
     private static (TimeSystem.Time Epoch, double[] State, System.Collections.Generic.Dictionary<Aberration, Vector3> Moon)[] Pointing() =>
-        Reference().GetProperty("pointing").EnumerateArray().Select(p => (TimeSystem.Time.CreateTDB(p.GetProperty("epoch_tdb").GetDouble()),
+        Reference().GetProperty("pointing").EnumerateArray().Select(p => (TimeSystem.Time.CreateTdb(p.GetProperty("epoch_tdb").GetDouble()),
             p.GetProperty("state").EnumerateArray().Select(x => x.GetDouble()).ToArray(),
             Flags.ToDictionary(f => f, f => ToVector(p.GetProperty("moon").GetProperty(f.GetDescription()))))).ToArray();
 
@@ -129,8 +129,8 @@ public class InstrumentPointingAttitudeTests
     [Fact]
     public void PointsAtTheMoonAsSpkcvo()
     {
-        var earth = new CelestialBody(PlanetsAndMoons.EARTH);
-        var moon = new CelestialBody(PlanetsAndMoons.MOON);
+        var earth = new CelestialBody(PlanetsAndMoons.Earth);
+        var moon = new CelestialBody(PlanetsAndMoons.Moon);
         foreach (var flag in Flags)
         {
             double worst = 0.0;
@@ -160,11 +160,11 @@ public class InstrumentPointingAttitudeTests
     public void PointsAtACoordinateSiteAsSpkcpt()
     {
         var reference = Reference();
-        var earth = new CelestialBody(PlanetsAndMoons.EARTH);
+        var earth = new CelestialBody(PlanetsAndMoons.Earth);
         var siteCoordinates = reference.GetProperty("site");
         var site = new Site(549, "G549", earth, new Planetodetic(siteCoordinates.GetProperty("longitude_deg").GetDouble() * IO.Astrodynamics.Constants.Deg2Rad,
             siteCoordinates.GetProperty("latitude_deg").GetDouble() * IO.Astrodynamics.Constants.Deg2Rad, siteCoordinates.GetProperty("altitude_m").GetDouble()));
-        var epochs = reference.GetProperty("epochs_tdb").EnumerateArray().Select(e => TimeSystem.Time.CreateTDB(e.GetDouble())).ToArray();
+        var epochs = reference.GetProperty("epochs_tdb").EnumerateArray().Select(e => TimeSystem.Time.CreateTdb(e.GetDouble())).ToArray();
         var states = reference.GetProperty("states");
         foreach (var flag in Flags)
         {
@@ -201,7 +201,7 @@ public class InstrumentPointingAttitudeTests
     [InlineData(2000.0)]
     public void PointsAtAStarWithoutLightTime(double distancePc)
     {
-        var earth = new CelestialBody(PlanetsAndMoons.EARTH);
+        var earth = new CelestialBody(PlanetsAndMoons.Earth);
         var (epoch, s, _) = Pointing()[3];
         var state = new StateVector(new Vector3(s[0], s[1], s[2]), new Vector3(s[3], s[4], s[5]), earth, epoch, Frames.Frame.ICRF);
         const double arcsec = System.Math.PI / 180.0 / 3600.0;
@@ -214,7 +214,7 @@ public class InstrumentPointingAttitudeTests
             var orientation = attitude.ComputeStateOrientation(state);
             var boresight = instrument.GetBoresightInSpacecraftFrame().Rotate(orientation.Rotation);
             var geometric = star.GetEquatorialCoordinates(epoch).ToCartesian() - (state.Position + earth.GetGeometricStateFromICRF(epoch).ToStateVector().Position);
-            var expected = flag is Aberration.LTS or Aberration.CNS or Aberration.XLTS or Aberration.XCNS
+            var expected = flag is Aberration.LtS or Aberration.CnS or Aberration.XltS or Aberration.XcnS
                 ? star.GetEphemeris(epoch, spc, Frames.Frame.ICRF, flag).Position
                 : geometric;
             double angle = Body.AttitudeRecordTests.Angle(boresight, expected);

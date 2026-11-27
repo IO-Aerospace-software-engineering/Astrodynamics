@@ -65,7 +65,7 @@ internal static class SpkWriter
     }
 
     /// <summary>The TDB seconds from J2000 of an epoch, as the file holds it: a double.</summary>
-    internal static double Seconds(StateVector state) => state.Epoch.ToTDB().TimeSpanFromJ2000().TotalSeconds;
+    internal static double Seconds(StateVector state) => state.Epoch.ToTdb().TimeSpanFromJ2000().TotalSeconds;
 
     /// <summary>
     /// The bytes of the SPK of <paramref name="arcs"/>, each one segment of type 9, checked before anything is written: the

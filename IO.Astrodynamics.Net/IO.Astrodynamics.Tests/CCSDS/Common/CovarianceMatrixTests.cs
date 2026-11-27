@@ -2,7 +2,7 @@
 
 using System;
 using System.Collections.Generic;
-using IO.Astrodynamics.CCSDS.Common;
+using IO.Astrodynamics.Ccsds;
 using Xunit;
 
 namespace IO.Astrodynamics.Tests.CCSDS.Common

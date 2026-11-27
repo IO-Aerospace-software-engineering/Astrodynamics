@@ -18,15 +18,9 @@ using System.Threading;
 using System.Threading.Tasks;
 using IO.Astrodynamics;
 using IO.Astrodynamics.Atmosphere;
-using IO.Astrodynamics.Atmosphere.NRLMSISE_00;
 using IO.Astrodynamics.Body;
 using IO.Astrodynamics.Body.Spacecraft;
-using IO.Astrodynamics.CCSDS;
-using IO.Astrodynamics.CCSDS.CDM;
-using IO.Astrodynamics.CCSDS.Common;
-using IO.Astrodynamics.CCSDS.Common.Enums;
-using IO.Astrodynamics.CCSDS.OMM;
-using IO.Astrodynamics.CCSDS.OPM;
+using IO.Astrodynamics.Ccsds;
 using IO.Astrodynamics.Converters;
 using IO.Astrodynamics.Coordinates;
 using IO.Astrodynamics.Cosmographia;
@@ -49,11 +43,11 @@ using IO.Astrodynamics.Propagator.Forces;
 using IO.Astrodynamics.Propagator.Integrators;
 using IO.Astrodynamics.Propagator.MonteCarlo;
 using IO.Astrodynamics.Propagator.Variational;
-using IO.Astrodynamics.SSA;
+using IO.Astrodynamics.Ssa;
 using IO.Astrodynamics.SolarSystemObjects;
 using IO.Astrodynamics.Surface;
 using IO.Astrodynamics.TimeSystem;
-using TLE = IO.Astrodynamics.OrbitalParameters.TLE.TLE;
+using Tle = IO.Astrodynamics.OrbitalParameters.Tle;
 
 namespace DocumentationPageSamples.Reference;
 
@@ -64,19 +58,19 @@ internal static class TlePage
     internal static void Block01()
     {
         #region docs/reference/tle.md:1
-        var tle = new TLE("ISS (ZARYA)",
+        var tle = new Tle("ISS (ZARYA)",
             "1 25544U 98067A   21020.53488036  .00016717  00000-0  10270-3 0  9054",
             "2 25544  51.6423 353.0312 0000493 320.8755  39.2360 15.49309423 25703");
         #endregion
     }
 
     // docs/reference/tle.md, "Numerical propagation of a TLE"
-    internal static void Block02(Window window, TLE tle)
+    internal static void Block02(Window window, Tle tle)
     {
         #region docs/reference/tle.md:2
         // Inputs: window (Window), tle (TLE)
-        var start = window.StartDate.ToTDB();
-        var earth = new CelestialBody(PlanetsAndMoons.EARTH, Frame.ICRF, start,
+        var start = window.StartDate.ToTdb();
+        var earth = new CelestialBody(PlanetsAndMoons.Earth, Frame.ICRF, start,
             new GeopotentialModelParameters("Data/SolarSystem/EGM2008_to70_TideFree", 10), new Nrlmsise00Model(SpaceWeather.Nominal));
         var sgp4 = tle.ToStateVector(start);
         var spacecraft = new Spacecraft(-1001, "ISS", 420000.0, new StateVector(sgp4.Position, sgp4.Velocity, earth, start, Frame.TEME), 450000.0,
@@ -86,7 +80,7 @@ internal static class TlePage
     }
 
     // docs/reference/tle.md, "Numerical propagation of a TLE", the options
-    internal static void Block03(Window window, TLE tle)
+    internal static void Block03(Window window, Tle tle)
     {
         #region docs/reference/tle.md:3
         // Inputs: window (Window), tle (TLE)
@@ -106,13 +100,13 @@ internal static class TlePage
     {
         #region docs/reference/tle.md:4
         // Inputs: catalogPath (string)
-        var catalog = TLE.LoadAll(catalogPath);
-        var iss = TLE.Parse("ISS (ZARYA)\n" +
+        var catalog = Tle.LoadAll(catalogPath);
+        var iss = Tle.Parse("ISS (ZARYA)\n" +
             "1 25544U 98067A   21020.53488036  .00016717  00000-0  10270-3 0  9054\n" +
             "2 25544  51.6423 353.0312 0000493 320.8755  39.2360 15.49309423 25703");
         // The lines again, from the properties, without slicing them
-        var again = TLE.Create(iss.ToMeanKeplerianElements(), iss.Name, iss.NoradCatalogId, iss.CosparId, iss.RevolutionNumberAtEpoch,
-            iss.Classification, iss.BallisticCoefficient, iss.FirstDerivationMeanMotion, iss.SecondDerivativeMeanMotion,
+        var again = Tle.Create(iss.ToMeanKeplerianElements(), iss.Name, iss.NoradCatalogId, iss.CosparId, iss.RevolutionNumberAtEpoch,
+            iss.Classification, iss.BStar, iss.MeanMotionDot, iss.MeanMotionDDot,
             iss.ElementSetNumber);
         #endregion
     }

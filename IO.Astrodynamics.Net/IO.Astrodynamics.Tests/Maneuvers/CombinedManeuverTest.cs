@@ -35,7 +35,7 @@ namespace IO.Astrodynamics.Tests.Maneuvers
         private static (StateVector state, CombinedManeuver maneuver) AtApogee(double targetRadius, bool equalToApogee = false)
         {
             var orbitalParams = new KeplerianElements(24420999.959422689, 0.726546824, 28.5 * Astrodynamics.Constants.Deg2Rad, 0.0, 0.0, 0.0, TestHelpers.EarthAtJ2000,
-                TimeSystem.Time.J2000TDB, Frames.Frame.ICRF);
+                TimeSystem.Time.J2000Tdb, Frames.Frame.ICRF);
             var spc = new Spacecraft(-666, "GenericSpacecraft", 1000.0, orbitalParams, 10000.0, new Clock("GenericClk", 65536));
             spc.AddFuelTank(new FuelTank("ft", 9000.0, 9000.0, "ftA", "123456"));
             spc.AddEngine(new Engine("eng", 450, 50, spc.FuelTanks.First(), "engmk1", "12345"));
@@ -124,7 +124,7 @@ namespace IO.Astrodynamics.Tests.Maneuvers
             // AOP = 0: apogee is at true anomaly 180°, ascending node at true anomaly 0° → they are
             // anti-parallel, so |dot| of normalized vectors ≈ 1.0 → passes
             var alignedOrbit = new KeplerianElements(11480000.0, 0.5, 28.5 * Astrodynamics.Constants.Deg2Rad,
-                0.0, 0.0, 0.0, TestHelpers.EarthAtJ2000, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF);
+                0.0, 0.0, 0.0, TestHelpers.EarthAtJ2000, TimeSystem.Time.J2000Tdb, Frames.Frame.ICRF);
 
             // The inclination plays no part in the preconditions: 0.5 rad (10.0 rad before lot L5b, outside [0, π], which the
             // constructor refuses since decision 68 of #668)
@@ -140,14 +140,14 @@ namespace IO.Astrodynamics.Tests.Maneuvers
 
             // AOP = 90°: apogee is 90° away from ascending node → dot product ≈ 0 → fails
             var perpendicularOrbit = new KeplerianElements(11480000.0, 0.5, 28.5 * Astrodynamics.Constants.Deg2Rad,
-                0.0, Astrodynamics.Constants.PI * 0.5, 0.0, TestHelpers.EarthAtJ2000, TimeSystem.Time.J2000TDB,
+                0.0, Astrodynamics.Constants.PI * 0.5, 0.0, TestHelpers.EarthAtJ2000, TimeSystem.Time.J2000Tdb,
                 Frames.Frame.ICRF);
 
             Assert.False(maneuver.CheckPreconditions(perpendicularOrbit.ToStateVector()));
 
             // AOP = 45°: apogee is 45° from ascending node → |dot| ≈ cos(45°) ≈ 0.707 → fails (< 0.9)
             var intermediateOrbit = new KeplerianElements(11480000.0, 0.5, 28.5 * Astrodynamics.Constants.Deg2Rad,
-                0.0, Astrodynamics.Constants.PI * 0.25, 0.0, TestHelpers.EarthAtJ2000, TimeSystem.Time.J2000TDB,
+                0.0, Astrodynamics.Constants.PI * 0.25, 0.0, TestHelpers.EarthAtJ2000, TimeSystem.Time.J2000Tdb,
                 Frames.Frame.ICRF);
 
             Assert.False(maneuver.CheckPreconditions(intermediateOrbit.ToStateVector()));
@@ -157,7 +157,7 @@ namespace IO.Astrodynamics.Tests.Maneuvers
         public void TryExecuteIncreasePerigee()
         {
             var orbitalParams = new KeplerianElements(24420999.959422689, 0.726546824, 28.5 * Astrodynamics.Constants.Deg2Rad, 0.0, 0.0, 0.0, TestHelpers.EarthAtJ2000,
-                TimeSystem.Time.J2000TDB, Frames.Frame.ICRF);
+                TimeSystem.Time.J2000Tdb, Frames.Frame.ICRF);
             var spc = new Spacecraft(-666, "GenericSpacecraft", 1000.0, orbitalParams, 10000.0, new Clock("GenericClk", 65536));
             spc.AddFuelTank(new FuelTank("ft", 9000.0, 9000.0, "ftA", "123456"));
             spc.AddEngine(new Engine("eng", 450, 50, spc.FuelTanks.First(), "engmk1", "12345"));
@@ -188,7 +188,7 @@ namespace IO.Astrodynamics.Tests.Maneuvers
         public void TryExecuteDecreasePerigee()
         {
             var orbitalParams = new KeplerianElements(24420999.959422689, 0.726546824, 28.5 * Astrodynamics.Constants.Deg2Rad, 0.0, 0.0, 0.0, TestHelpers.EarthAtJ2000,
-                TimeSystem.Time.J2000TDB, Frames.Frame.ICRF);
+                TimeSystem.Time.J2000Tdb, Frames.Frame.ICRF);
             var spc = new Spacecraft(-666, "GenericSpacecraft", 1000.0, orbitalParams, 10000.0, new Clock("GenericClk", 65536));
             spc.AddFuelTank(new FuelTank("ft", 9000.0, 9000.0, "ftA", "123456"));
             spc.AddEngine(new Engine("eng", 450, 50, spc.FuelTanks.First(), "engmk1", "12345"));

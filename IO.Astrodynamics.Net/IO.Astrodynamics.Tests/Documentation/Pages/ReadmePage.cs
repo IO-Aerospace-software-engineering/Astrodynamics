@@ -18,15 +18,9 @@ using System.Threading;
 using System.Threading.Tasks;
 using IO.Astrodynamics;
 using IO.Astrodynamics.Atmosphere;
-using IO.Astrodynamics.Atmosphere.NRLMSISE_00;
 using IO.Astrodynamics.Body;
 using IO.Astrodynamics.Body.Spacecraft;
-using IO.Astrodynamics.CCSDS;
-using IO.Astrodynamics.CCSDS.CDM;
-using IO.Astrodynamics.CCSDS.Common;
-using IO.Astrodynamics.CCSDS.Common.Enums;
-using IO.Astrodynamics.CCSDS.OMM;
-using IO.Astrodynamics.CCSDS.OPM;
+using IO.Astrodynamics.Ccsds;
 using IO.Astrodynamics.Converters;
 using IO.Astrodynamics.Coordinates;
 using IO.Astrodynamics.Cosmographia;
@@ -49,11 +43,11 @@ using IO.Astrodynamics.Propagator.Forces;
 using IO.Astrodynamics.Propagator.Integrators;
 using IO.Astrodynamics.Propagator.MonteCarlo;
 using IO.Astrodynamics.Propagator.Variational;
-using IO.Astrodynamics.SSA;
+using IO.Astrodynamics.Ssa;
 using IO.Astrodynamics.SolarSystemObjects;
 using IO.Astrodynamics.Surface;
 using IO.Astrodynamics.TimeSystem;
-using TLE = IO.Astrodynamics.OrbitalParameters.TLE.TLE;
+using Tle = IO.Astrodynamics.OrbitalParameters.Tle;
 
 namespace DocumentationPageSamples;
 
@@ -65,11 +59,11 @@ internal static class ReadmePage
     {
         #region README.md:1
         // Load required kernels (recursively) from your data directory
-        SpiceAPI.Instance.LoadKernels(new DirectoryInfo("Data/SolarSystem"));
+        SpiceApi.Instance.LoadKernels(new DirectoryInfo("Data/SolarSystem"));
 
         // Moon state relative to Earth at 2000-01-01T12:00Z, expressed in ICRF
-        var earth = new CelestialBody(PlanetsAndMoons.EARTH);
-        var moon = new CelestialBody(PlanetsAndMoons.MOON);
+        var earth = new CelestialBody(PlanetsAndMoons.Earth);
+        var moon = new CelestialBody(PlanetsAndMoons.Moon);
         var epoch = new Time(new DateTime(2000, 1, 1, 12, 0, 0), TimeScale.UTC);
 
         var state = moon.GetEphemeris(epoch, earth, Frame.ICRF, Aberration.None);
@@ -83,7 +77,7 @@ internal static class ReadmePage
     internal static void Block02()
     {
         #region README.md:2
-        SpiceAPI.Instance.LoadKernels(new DirectoryInfo("Data/SolarSystem"));
+        SpiceApi.Instance.LoadKernels(new DirectoryInfo("Data/SolarSystem"));
         #endregion
     }
 
@@ -91,7 +85,7 @@ internal static class ReadmePage
     internal static void Block03()
     {
         #region README.md:3
-        SpiceAPI.Instance.LoadKernels(new FileInfo("de440.bsp"));
+        SpiceApi.Instance.LoadKernels(new FileInfo("de440.bsp"));
         #endregion
     }
 }

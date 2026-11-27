@@ -1,10 +1,10 @@
 using System;
 using System.IO;
 using System.Linq;
-using IO.Astrodynamics.Atmosphere.NRLMSISE_00;
+using IO.Astrodynamics.Atmosphere;
 using IO.Astrodynamics.Body;
 using IO.Astrodynamics.Body.Spacecraft;
-using IO.Astrodynamics.CCSDS.CDM;
+using IO.Astrodynamics.Ccsds;
 using IO.Astrodynamics.Frames;
 using IO.Astrodynamics.Maneuver;
 using IO.Astrodynamics.Math;
@@ -13,7 +13,7 @@ using IO.Astrodynamics.Propagator;
 using IO.Astrodynamics.Propagator.Integrators;
 using IO.Astrodynamics.Propagator.Variational;
 using IO.Astrodynamics.SolarSystemObjects;
-using IO.Astrodynamics.SSA;
+using IO.Astrodynamics.Ssa;
 using IO.Astrodynamics.TimeSystem;
 using Xunit;
 using Xunit.Abstractions;
@@ -33,17 +33,17 @@ public class CovariancePropagationTutorialSmokeTests
     public CovariancePropagationTutorialSmokeTests(ITestOutputHelper output)
     {
         _output = output;
-        SpiceAPI.Instance.LoadKernels(SolarSystemKernelPath);
+        SpiceApi.Instance.LoadKernels(SolarSystemKernelPath);
     }
 
     // Section "The case": a LEO 400 km with EGM2008 10×10, NRLMSISE-00 drag, SRP, the Moon and the Sun
     private static (CelestialItem[] Bodies, CelestialBody Earth, Time Epoch) Environment()
     {
         var epoch = new Time(2021, 3, 20, 12, 0, 0, TimeScale.TDB);
-        var earth = new CelestialBody(PlanetsAndMoons.EARTH, Frame.ICRF, epoch,
+        var earth = new CelestialBody(PlanetsAndMoons.Earth, Frame.ICRF, epoch,
             new GeopotentialModelParameters("Data/SolarSystem/EGM2008_to70_TideFree", 10),
             new Nrlmsise00Model(SpaceWeather.Nominal));
-        var moon = new CelestialBody(PlanetsAndMoons.MOON, Frame.ICRF, epoch);
+        var moon = new CelestialBody(PlanetsAndMoons.Moon, Frame.ICRF, epoch);
         var sun = new CelestialBody(Stars.Sun);
         return (new CelestialItem[] { earth, moon, sun }, earth, epoch);
     }
@@ -214,7 +214,7 @@ public class CovariancePropagationTutorialSmokeTests
         // 200 m from it 24 h after the start (120 m radial, 160 m normal), its velocity turned by 70° about the radial
         var start = new Time(2024, 3, 1, 0, 0, 0, TimeScale.TDB);
         var tca = start.AddHours(24.0);
-        var earth = new CelestialBody(PlanetsAndMoons.EARTH, Frame.ICRF, start);
+        var earth = new CelestialBody(PlanetsAndMoons.Earth, Frame.ICRF, start);
 
         var protectedOrbit = new KeplerianElements(7078137.0, 0.001, 98.2 * Constants.Deg2Rad, 0.4, 1.1, 0.3, earth, start,
             Frame.ICRF).ToStateVector();

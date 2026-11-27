@@ -1557,8 +1557,8 @@ public class MatirxTests
     /// <summary>
     /// The library's results built in an array of their own share it with nothing (#745): the product, the inverse and
     /// the copy of a matrix, both overloads of <see cref="Jacobian.Evaluate(Func{double[], double}[], double[])"/>, and
-    /// <see cref="IO.Astrodynamics.CCSDS.Common.CovarianceMatrix.ToMatrix"/> and
-    /// <see cref="IO.Astrodynamics.CCSDS.Common.CovarianceMatrix.ToMatrixWithUnitConversion"/>, which wrap their array
+    /// <see cref="IO.Astrodynamics.Ccsds.CovarianceMatrix.ToMatrix"/> and
+    /// <see cref="IO.Astrodynamics.Ccsds.CovarianceMatrix.ToMatrixWithUnitConversion"/>, which wrap their array
     /// (internal <c>Matrix.Wrap</c>), are not changed by a later write to the matrices or arrays they came from, and a
     /// write to one result reaches neither its source nor the next result of the same call. The rotation of
     /// <c>SiteFrame.FromPlanetodetic</c>, the last array wrapped, is local to that method and leaves it as a quaternion,
@@ -1608,7 +1608,7 @@ public class MatirxTests
 
         // A covariance's matrices: a write to one leaves the covariance and the next matrix as they were (the terms in km²,
         // km²/s, km²/s², times 1e6 in SI)
-        var covariance = new IO.Astrodynamics.CCSDS.Common.CovarianceMatrix(
+        var covariance = new IO.Astrodynamics.Ccsds.CovarianceMatrix(
             1.0, 0.1, 2.0,
             0.2, 0.3, 3.0,
             0.01, 0.02, 0.03, 4.0e-4,

@@ -26,7 +26,7 @@ public class TimeConversionSolverTests
 
     public TimeConversionSolverTests()
     {
-        SpiceAPI.Instance.LoadKernels(new DirectoryInfo(Lot1Fixture.KernelsPath));
+        SpiceApi.Instance.LoadKernels(new DirectoryInfo(Lot1Fixture.KernelsPath));
     }
 
     private Dictionary<string, object> Solve(string epoch)

@@ -13,7 +13,6 @@ using IO.Astrodynamics.Maneuver;
 using IO.Astrodynamics.Math;
 using IO.Astrodynamics.Mission;
 using IO.Astrodynamics.OrbitalParameters;
-using IO.Astrodynamics.OrbitalParameters.TLE;
 using IO.Astrodynamics.Propagator;
 using IO.Astrodynamics.Propagator.Variational;
 using IO.Astrodynamics.Propagator.Integrators;
@@ -62,7 +61,7 @@ namespace IO.Astrodynamics.Tests.Mission
             Scenario scenario = new Scenario("Scenario", mission, new Window(new TimeSystem.Time(2021, 1, 1, TimeScale.TDB), new TimeSystem.Time(2021, 1, 2, TimeScale.TDB)));
             Assert.Equal("Scenario", scenario.Name);
             Assert.Equal(mission, scenario.Mission);
-            var site = new Site(13, "DSS-13", PlanetsAndMoons.EARTH_BODY);
+            var site = new Site(13, "DSS-13", PlanetsAndMoons.EarthBody);
             scenario.AddSite(site);
             Assert.Single(scenario.Sites);
             Assert.Equal(site, scenario.Sites.First());
@@ -99,7 +98,7 @@ namespace IO.Astrodynamics.Tests.Mission
             // before #411 the site was 1.15 m away
             Assert.Equal(new Vector3(349.96683087822703, 295.68160057531139, 0.01769212216143207), orbitalParametersEnumerable.ElementAt(0).ToStateVector().Velocity,
                 TestHelpers.VectorComparer);
-            LabelAssert.Equal(TimeSystem.Time.J2000TDB, orbitalParametersEnumerable.ElementAt(0).Epoch);
+            LabelAssert.Equal(TimeSystem.Time.J2000Tdb, orbitalParametersEnumerable.ElementAt(0).Epoch);
             Assert.Equal(Frames.Frame.ICRF, orbitalParametersEnumerable.ElementAt(0).Frame);
             Assert.Equal(TestHelpers.EarthAtJ2000, orbitalParametersEnumerable.ElementAt(0).Observer);
 
@@ -118,9 +117,9 @@ namespace IO.Astrodynamics.Tests.Mission
         [Benchmark]
         public async Task PropagateSpacecraft()
         {
-            TimeSystem.Time start = TimeSystem.Time.CreateUTC(667915269.18539762).ToTDB();
-            TimeSystem.Time startPropagator = TimeSystem.Time.CreateUTC(668085555.829810).ToTDB();
-            TimeSystem.Time end = TimeSystem.Time.CreateUTC(668174400.000000).ToTDB();
+            TimeSystem.Time start = TimeSystem.Time.CreateUtc(667915269.18539762).ToTdb();
+            TimeSystem.Time startPropagator = TimeSystem.Time.CreateUtc(668085555.829810).ToTdb();
+            TimeSystem.Time end = TimeSystem.Time.CreateUtc(668174400.000000).ToTdb();
 
             Astrodynamics.Mission.Mission mission = new Astrodynamics.Mission.Mission("mission02");
             Scenario scenario = new Scenario("scn1", mission, new Window(startPropagator, end));
@@ -298,7 +297,7 @@ namespace IO.Astrodynamics.Tests.Mission
             scenario.AddCelestialItem(TestHelpers.EarthAtJ2000);
 
             //Define parking orbit
-            TLE parkingOrbit = new TLE("ISS", "1 25544U 98067A   24153.17509025  .00020162  00000+0  35104-3 0  9990",
+            Tle parkingOrbit = new Tle("ISS", "1 25544U 98067A   24153.17509025  .00020162  00000+0  35104-3 0  9990",
                 "2 25544  51.6393  34.6631 0005642 260.2910 238.1766 15.50732314456064");
 
             //Create and configure spacecraft
@@ -339,9 +338,9 @@ namespace IO.Astrodynamics.Tests.Mission
         [Benchmark]
         public async Task MultipleSpacecraftPropagation()
         {
-            TimeSystem.Time start = TimeSystem.Time.CreateUTC(667915269.18539762).ToTDB();
-            TimeSystem.Time startPropagator = TimeSystem.Time.CreateUTC(668085555.829810).ToTDB();
-            TimeSystem.Time end = TimeSystem.Time.CreateUTC(668174400.000000).ToTDB();
+            TimeSystem.Time start = TimeSystem.Time.CreateUtc(667915269.18539762).ToTdb();
+            TimeSystem.Time startPropagator = TimeSystem.Time.CreateUtc(668085555.829810).ToTdb();
+            TimeSystem.Time end = TimeSystem.Time.CreateUtc(668174400.000000).ToTdb();
 
             Astrodynamics.Mission.Mission mission = new Astrodynamics.Mission.Mission("mission02");
             Scenario scenario = new Scenario("scn1", mission, new Window(startPropagator, end));
@@ -510,9 +509,9 @@ namespace IO.Astrodynamics.Tests.Mission
         [Benchmark]
         public async Task PropagateWithoutManeuver()
         {
-            TimeSystem.Time start = TimeSystem.Time.CreateUTC(667915269.18539762).ToTDB();
-            TimeSystem.Time startPropagator = TimeSystem.Time.CreateUTC(668085555.829810).ToTDB();
-            TimeSystem.Time end = TimeSystem.Time.CreateUTC(668174400.000000).ToTDB();
+            TimeSystem.Time start = TimeSystem.Time.CreateUtc(667915269.18539762).ToTdb();
+            TimeSystem.Time startPropagator = TimeSystem.Time.CreateUtc(668085555.829810).ToTdb();
+            TimeSystem.Time end = TimeSystem.Time.CreateUtc(668174400.000000).ToTdb();
 
             Astrodynamics.Mission.Mission mission = new Astrodynamics.Mission.Mission("mission102");
             Scenario scenario = new Scenario("scn100", mission, new Window(startPropagator, end));
@@ -556,7 +555,7 @@ namespace IO.Astrodynamics.Tests.Mission
         {
             var start = new TimeSystem.Time(2001, 1, 1, TimeScale.TDB);
             var end = start.AddDays(365 * 4);
-            var observer = Barycenters.SOLAR_SYSTEM_BARYCENTER;
+            var observer = Barycenters.SolarSystemBarycenter;
             var star = new Star(2, "star2", 1E+30, "spec", 2, 0.3792, Equatorial.FromRightAscensionDeclination(1, 1, start), 0.1, 0.1, 0, 0, 0, 0, start);
 
             Astrodynamics.Mission.Mission mission = new Astrodynamics.Mission.Mission("mission102");
@@ -653,14 +652,14 @@ namespace IO.Astrodynamics.Tests.Mission
             var directory = Directory.CreateTempSubdirectory("star668");
             var spk = new FileInfo(Path.Combine(directory.FullName, "star668005.bsp"));
             star.WriteEphemeris(spk);
-            SpiceAPI.Instance.LoadKernels(spk);
+            SpiceApi.Instance.LoadKernels(spk);
             try
             {
                 double worst = 0.0;
                 int k = 0;
                 for (var epoch = start; epoch <= end; epoch += step, k++)
                 {
-                    var read = SpiceAPI.Instance.ReadEphemeris(epoch, 0, star.NaifId, Frames.Frame.ICRF, Aberration.None);
+                    var read = SpiceApi.Instance.ReadEphemeris(epoch, 0, star.NaifId, Frames.Frame.ICRF, Aberration.None);
                     var catalog = IO.Astrodynamics.Tests.Body.StarTests.SpiceStraightLinePosition(star, 365m * k / 365.25m);
                     double relative = (read.Position - catalog).Magnitude() / catalog.Magnitude();
                     _output.WriteLine($"MEASURE ScenarioTests.Simulate_PropagatesTheStar: step {k}, relative position {relative:E3}");
@@ -678,7 +677,7 @@ namespace IO.Astrodynamics.Tests.Mission
             }
             finally
             {
-                SpiceAPI.Instance.UnloadKernels(spk);
+                SpiceApi.Instance.UnloadKernels(spk);
                 directory.Delete(true);
             }
         }
@@ -765,12 +764,12 @@ namespace IO.Astrodynamics.Tests.Mission
         public async Task Simulate_TargetOrbitInAnotherFrame_IsRejected()
         {
             // Arrange
-            var window = new Window(TimeSystem.Time.J2000TDB, TimeSystem.Time.J2000TDB.AddHours(2.0));
+            var window = new Window(TimeSystem.Time.J2000Tdb, TimeSystem.Time.J2000Tdb.AddHours(2.0));
             var earth = TestHelpers.EarthAtJ2000;
             var orbit = new KeplerianElements(7000000.0, 0.0, 30.0 * Astrodynamics.Constants.Deg2Rad, 0.0, 0.0, 1.0, earth, window.StartDate,
                 Frames.Frame.ICRF);
             var target = new KeplerianElements(7000000.0, 0.0, 32.0 * Astrodynamics.Constants.Deg2Rad, 0.0, 0.0, 1.0, earth, window.StartDate,
-                Frames.Frame.ICRF).ToFrame(Frames.Frame.ECLIPTIC_J2000);
+                Frames.Frame.ICRF).ToFrame(Frames.Frame.ECLIPJ2000);
             var tank = new FuelTank("ft685", 1000.0, 900.0, "ftA", "sn685");
             var engine = new Engine("eng685", 450, 50, tank, "engmk1", "sn685");
             var maneuver = new PlaneAlignmentManeuver(target, engine, window.StartDate, TimeSpan.Zero);
@@ -783,7 +782,7 @@ namespace IO.Astrodynamics.Tests.Mission
             Assert.Contains("ToFrame(Frame.ICRF)", refused.Message);
 
             // The plan set on an ECLIPJ2000 orbit, the spacecraft then given its ICRF orbit: the simulation rejects it
-            spacecraft.SetInitialOrbitalParameters(orbit.ToFrame(Frames.Frame.ECLIPTIC_J2000));
+            spacecraft.SetInitialOrbitalParameters(orbit.ToFrame(Frames.Frame.ECLIPJ2000));
             spacecraft.SetManeuvers(maneuver);
             spacecraft.SetInitialOrbitalParameters(orbit);
             var scenario = new Scenario("scn685", new Astrodynamics.Mission.Mission("mission685"), window);
@@ -802,8 +801,8 @@ namespace IO.Astrodynamics.Tests.Mission
         [Fact]
         public async Task PropagateException()
         {
-            TimeSystem.Time startPropagator = TimeSystem.Time.CreateUTC(668085555.829810).ToTDB();
-            TimeSystem.Time end = TimeSystem.Time.CreateUTC(668174400.000000).ToTDB();
+            TimeSystem.Time startPropagator = TimeSystem.Time.CreateUtc(668085555.829810).ToTdb();
+            TimeSystem.Time end = TimeSystem.Time.CreateUtc(668174400.000000).ToTdb();
 
             Astrodynamics.Mission.Mission mission = new Astrodynamics.Mission.Mission("mission04");
             Scenario scenario = new Scenario("scn1", mission, new Window(startPropagator, end));
@@ -815,15 +814,15 @@ namespace IO.Astrodynamics.Tests.Mission
         public async Task DeepSpaceMoon3Days()
         {
             var frame = Frames.Frame.ICRF;
-            var start = TimeSystem.Time.J2000TDB;
+            var start = TimeSystem.Time.J2000Tdb;
             var end = start.AddDays(3);
-            var earth = new CelestialBody(PlanetsAndMoons.EARTH, frame, start);
-            var moon = new CelestialBody(PlanetsAndMoons.MOON, frame, start);
+            var earth = new CelestialBody(PlanetsAndMoons.Earth, frame, start);
+            var moon = new CelestialBody(PlanetsAndMoons.Moon, frame, start);
             Astrodynamics.Mission.Mission mission = new Astrodynamics.Mission.Mission("mission01");
             Scenario scenario = new Scenario("scn01", mission, new Window(start, end));
 
             // Use SSB-relative orbit to test deep-space propagation (Sun as central body)
-            var ssb = Barycenters.SOLAR_SYSTEM_BARYCENTER;
+            var ssb = Barycenters.SolarSystemBarycenter;
             StateVector testOrbit = moon.GetEphemeris(start, new CelestialBody(399), frame, Aberration.None).RelativeTo(ssb, Aberration.None).ToStateVector();
             Clock clk = new Clock("My clock", 256);
             Spacecraft spc = new Spacecraft(-1001, "MySpacecraft", 100.0, testOrbit, 10000.0, clk, 0.5);
@@ -866,15 +865,15 @@ namespace IO.Astrodynamics.Tests.Mission
             {
                 var step = TimeSpan.FromMinutes(stepSize);
                 var frame = Frames.Frame.ICRF;
-                var start = TimeSystem.Time.J2000TDB;
+                var start = TimeSystem.Time.J2000Tdb;
                 var end = start.AddDays(25);
-                var earth = new CelestialBody(PlanetsAndMoons.EARTH, frame, start);
-                var moon = new CelestialBody(PlanetsAndMoons.MOON, frame, start);
+                var earth = new CelestialBody(PlanetsAndMoons.Earth, frame, start);
+                var moon = new CelestialBody(PlanetsAndMoons.Moon, frame, start);
                 Astrodynamics.Mission.Mission mission = new Astrodynamics.Mission.Mission("missionsdeepspace");
                 Scenario scenario = new Scenario("scn" + stepSize, mission, new Window(start, end));
 
                 // Use SSB-relative orbit to test deep-space propagation (Sun as central body)
-                var ssb = Barycenters.SOLAR_SYSTEM_BARYCENTER;
+                var ssb = Barycenters.SolarSystemBarycenter;
                 StateVector testOrbit = moon.GetEphemeris(start, new CelestialBody(399), frame, Aberration.None).RelativeTo(ssb, Aberration.None).ToStateVector();
                 Clock clk = new Clock("My clock", 256);
                 Spacecraft spc = new Spacecraft(-1001, "MySpacecraft", 100.0, testOrbit, 10000.0, clk, 0.5);
@@ -947,15 +946,15 @@ namespace IO.Astrodynamics.Tests.Mission
             {
                 var step = TimeSpan.FromMinutes(stepSize);
                 var frame = Frames.Frame.ICRF;
-                var start = TimeSystem.Time.J2000TDB;
+                var start = TimeSystem.Time.J2000Tdb;
                 var end = start.AddDays(3);
-                var earth = new CelestialBody(PlanetsAndMoons.EARTH, frame, start);
-                var moon = new CelestialBody(PlanetsAndMoons.MOON, frame, start);
+                var earth = new CelestialBody(PlanetsAndMoons.Earth, frame, start);
+                var moon = new CelestialBody(PlanetsAndMoons.Moon, frame, start);
                 Astrodynamics.Mission.Mission mission = new Astrodynamics.Mission.Mission("missionsdeepspace");
                 Scenario scenario = new Scenario("scn" + stepSize, mission, new Window(start, end));
 
                 // Use SSB-relative orbit to test deep-space propagation (Sun as central body)
-                var ssb = Barycenters.SOLAR_SYSTEM_BARYCENTER;
+                var ssb = Barycenters.SolarSystemBarycenter;
                 StateVector testOrbit = moon.GetEphemeris(start, new CelestialBody(399), frame, Aberration.None).RelativeTo(ssb, Aberration.None).ToStateVector();
                 Clock clk = new Clock("My clock", 256);
                 Spacecraft spc = new Spacecraft(-1001, "MySpacecraft", 100.0, testOrbit, 10000.0, clk, 0.5);
@@ -1025,9 +1024,9 @@ namespace IO.Astrodynamics.Tests.Mission
                 await semaphore.WaitAsync();
 
                 var frame = Frames.Frame.ICRF;
-                var start = TimeSystem.Time.J2000TDB;
+                var start = TimeSystem.Time.J2000Tdb;
                 var end = start.AddHours(1.8);
-                var earth = new CelestialBody(PlanetsAndMoons.EARTH, frame, start);
+                var earth = new CelestialBody(PlanetsAndMoons.Earth, frame, start);
                 Astrodynamics.Mission.Mission mission = new Astrodynamics.Mission.Mission("missAccuracyLEO");
 
                 StateVector testOrbit = new StateVector(new Vector3(6800000.0, 0, 0), new Vector3(0, 8000.0, 0), earth, start, frame);

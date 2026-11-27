@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using IO.Astrodynamics.CCSDS.CDM;
+using IO.Astrodynamics.Ccsds;
 using IO.Astrodynamics.ConformanceRunner.Comparison;
 using IO.Astrodynamics.ConformanceRunner.Models;
 using IO.Astrodynamics.ConformanceRunner.Utilities;
@@ -23,7 +23,7 @@ namespace IO.Astrodynamics.ConformanceRunner.Solvers;
 /// the suite's (km: a value in m^p times 10^(−3p)). <c>to_inertial</c> turns each RTN covariance by
 /// <see cref="Cdm.ToStateVector"/>, on the object's state. <c>export</c> builds the encounter at the given TCA from the
 /// CDM of its states (<see cref="EncounterMessage"/>, <see cref="Cdm.ToEncounter"/>), writes its CDM by <c>EncounterCase.ToCdm</c> and
-/// <see cref="Cdm.ToXml"/>, reads it back with <see cref="Cdm.Parse(string, IO.Astrodynamics.CCSDS.CcsdsReadOptions)"/> and gives the fields read.
+/// <see cref="Cdm.ToXml"/>, reads it back with <see cref="Cdm.Parse(string, IO.Astrodynamics.Ccsds.CcsdsReadOptions)"/> and gives the fields read.
 /// </para>
 /// </remarks>
 public class CdmSolver : ICategorySolver

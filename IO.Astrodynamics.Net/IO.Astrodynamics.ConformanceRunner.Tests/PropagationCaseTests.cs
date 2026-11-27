@@ -4,7 +4,6 @@ using System;
 using System.IO;
 using System.Linq;
 using IO.Astrodynamics.Atmosphere;
-using IO.Astrodynamics.Atmosphere.NRLMSISE_00;
 using IO.Astrodynamics.Body;
 using IO.Astrodynamics.ConformanceRunner.Models;
 using IO.Astrodynamics.ConformanceRunner.Solvers;
@@ -15,7 +14,7 @@ using IO.Astrodynamics.SolarSystemObjects;
 using Xunit;
 using YamlDotNet.Serialization;
 using YamlDotNet.Serialization.NamingConventions;
-using TLE = IO.Astrodynamics.OrbitalParameters.TLE.TLE;
+using Tle = IO.Astrodynamics.OrbitalParameters.Tle;
 
 namespace IO.Astrodynamics.ConformanceRunner.Tests;
 
@@ -32,7 +31,7 @@ public class PropagationCaseTests
 
     public PropagationCaseTests()
     {
-        SpiceAPI.Instance.LoadKernels(new DirectoryInfo(KernelsPath));
+        SpiceApi.Instance.LoadKernels(new DirectoryInfo(KernelsPath));
     }
 
     // A case as the runner reads it from its inputs.yaml
@@ -94,12 +93,12 @@ public class PropagationCaseTests
         // Assert: the initial state holds the given elements
         var state = propagationCase.Spacecraft.InitialOrbitalParameters.ToStateVector();
         var elements = state.ToKeplerianElements();
-        Assert.Equal(6778137.0, elements.A, 6);
-        Assert.Equal(0.001, elements.E, 12);
-        Assert.Equal(51.6 * IO.Astrodynamics.Constants.Deg2Rad, elements.I, 12);
-        Assert.Equal(30.0 * IO.Astrodynamics.Constants.Deg2Rad, elements.RAAN, 12);
-        Assert.Equal(40.0 * IO.Astrodynamics.Constants.Deg2Rad, elements.AOP, 10);
-        Assert.Equal(50.0 * IO.Astrodynamics.Constants.Deg2Rad, elements.M, 10);
+        Assert.Equal(6778137.0, elements.SemiMajorAxis(), 6);
+        Assert.Equal(0.001, elements.Eccentricity(), 12);
+        Assert.Equal(51.6 * IO.Astrodynamics.Constants.Deg2Rad, elements.Inclination(), 12);
+        Assert.Equal(30.0 * IO.Astrodynamics.Constants.Deg2Rad, elements.AscendingNode(), 12);
+        Assert.Equal(40.0 * IO.Astrodynamics.Constants.Deg2Rad, elements.ArgumentOfPeriapsis(), 10);
+        Assert.Equal(50.0 * IO.Astrodynamics.Constants.Deg2Rad, elements.MeanAnomaly(), 10);
         Assert.Equal(Frames.Frame.ICRF, state.Frame);
 
         // The central body first, with the geopotential (J2 moves the acceleration by about 1e-3 from the point mass)
@@ -124,12 +123,12 @@ public class PropagationCaseTests
 
         // The field of spec.md section 12.1: EGM2008's GM and radius for the whole field, central term included, bit
         // for bit; the GM of the kernels in the central term (the library's default) is 1.5e-8 of it away
-        var model = new CelestialBody(PlanetsAndMoons.EARTH, Frames.Frame.ICRF, state.Epoch,
+        var model = new CelestialBody(PlanetsAndMoons.Earth, Frames.Frame.ICRF, state.Epoch,
             new GeopotentialModelParameters(Path.Combine(KernelsPath, "EGM2008_to70_TideFree"), 10, 3.986004415e14, 6378136.3)
             {
                 CentralTerm = GeopotentialCentralTerm.ModelGravitationalParameter
             });
-        var kernelCentralTerm = new CelestialBody(PlanetsAndMoons.EARTH, Frames.Frame.ICRF, state.Epoch,
+        var kernelCentralTerm = new CelestialBody(PlanetsAndMoons.Earth, Frames.Frame.ICRF, state.Epoch,
             new GeopotentialModelParameters(Path.Combine(KernelsPath, "EGM2008_to70_TideFree"), 10));
         Assert.Equal(model.EvaluateGravitationalAcceleration(state), acceleration);
         Assert.InRange((kernelCentralTerm.EvaluateGravitationalAcceleration(state) - acceleration).Magnitude() / acceleration.Magnitude(),
@@ -140,7 +139,7 @@ public class PropagationCaseTests
         Assert.Equal(800.0, propagationCase.Spacecraft.MaxOperatingMass);
         Assert.Equal(4.0, propagationCase.Spacecraft.SectionalArea);
         Assert.Equal(2.1, propagationCase.Spacecraft.DragCoefficient);
-        Assert.Equal(1.3, propagationCase.Spacecraft.SolarRadiationCoeff);
+        Assert.Equal(1.3, propagationCase.Spacecraft.SolarRadiationCoefficient);
         Assert.True(propagationCase.Drag);
         Assert.True(propagationCase.SolarRadiationPressure);
         Assert.Equal(TimeSpan.FromSeconds(30.0), propagationCase.StepSize);
@@ -296,7 +295,7 @@ public class PropagationCaseTests
         // Arrange: barycentres are no celestial bodies
         var bodies = new CelestialItem[]
         {
-            new CelestialBody(PlanetsAndMoons.EARTH), PlanetsAndMoons.MOON_BODY, Stars.SUN_BODY, Barycenters.JUPITER_BARYCENTER
+            new CelestialBody(PlanetsAndMoons.Earth), PlanetsAndMoons.MoonBody, Stars.SunBody, Barycenters.JupiterBarycenter
         };
 
         // Act and assert
@@ -535,7 +534,7 @@ public class PropagationCaseTests
 
         // Assert: the SGP4/SDP4 state at the epoch of the TLE, turned to the frame of the case, relative to the central
         // body of the case, which has no geopotential and no atmosphere; the defaults of the spacecraft
-        var expected = new TLE("ISS", line1, line2).ToStateVector().ToFrame(Frames.Frame.ICRF).ToStateVector();
+        var expected = new Tle("ISS", line1, line2).ToStateVector().ToFrame(Frames.Frame.ICRF).ToStateVector();
         var state = propagationCase.Spacecraft.InitialOrbitalParameters.ToStateVector();
         Assert.Equal(expected.Epoch, state.Epoch);
         Assert.Equal(expected.Position, state.Position);
@@ -551,7 +550,7 @@ public class PropagationCaseTests
         Assert.Equal(1000.0, propagationCase.Spacecraft.MaxOperatingMass);
         Assert.Equal(1.0, propagationCase.Spacecraft.SectionalArea);
         Assert.Equal(2.2, propagationCase.Spacecraft.DragCoefficient);
-        Assert.Equal(1.0, propagationCase.Spacecraft.SolarRadiationCoeff);
+        Assert.Equal(1.0, propagationCase.Spacecraft.SolarRadiationCoefficient);
         Assert.False(propagationCase.Drag);
         Assert.False(propagationCase.SolarRadiationPressure);
     }

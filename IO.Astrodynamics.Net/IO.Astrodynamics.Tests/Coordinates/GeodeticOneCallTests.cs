@@ -80,7 +80,7 @@ public class GeodeticOneCallTests
     [Fact]
     public void ReferenceEllipsoid_IsTheEarthOfTheKernels()
     {
-        var earth = new CelestialBody(PlanetsAndMoons.EARTH);
+        var earth = new CelestialBody(PlanetsAndMoons.Earth);
         var point = EarthPoints()[0];
         Assert.Equal(point.A, earth.EquatorialRadius);
         Assert.Equal(point.F, earth.Flattening, 15);
@@ -89,7 +89,7 @@ public class GeodeticOneCallTests
     [Fact]
     public void ToPlanetodetic_OfABodyFixedState_IsTheTwoCallsBitForBit_AndRecgeo()
     {
-        var earth = new CelestialBody(PlanetsAndMoons.EARTH);
+        var earth = new CelestialBody(PlanetsAndMoons.Earth);
         double longitude = 0.0, latitude = 0.0, latitudeOffPoles = 0.0, altitude = 0.0;
         foreach (var p in EarthPoints())
         {
@@ -136,7 +136,7 @@ public class GeodeticOneCallTests
     [Fact]
     public void ToPlanetodetic_OnTheExactPolarAxisAndTheEquator_IsTheClosedForm()
     {
-        var earth = new CelestialBody(PlanetsAndMoons.EARTH);
+        var earth = new CelestialBody(PlanetsAndMoons.Earth);
         double a = earth.EquatorialRadius, b = a * (1.0 - earth.Flattening);
         double worst = 0.0;
         foreach (double h in new[] { -5e3, 0.0, 400e3, 35786e3 })
@@ -178,7 +178,7 @@ public class GeodeticOneCallTests
     [Fact]
     public void ToPlanetodetic_OfAnIcrfState_RotatesToTheBodyFrameAtItsEpoch()
     {
-        var earth = new CelestialBody(PlanetsAndMoons.EARTH);
+        var earth = new CelestialBody(PlanetsAndMoons.Earth);
         var state = new StateVector(new Vector3(4000e3, -3000e3, 5000e3), new Vector3(1000.0, 6000.0, 2000.0), earth, Epoch, Frames.Frame.ICRF);
         StateVector bodyFixed = state.ToFrame(earth.Frame);
         AssertSameBits(bodyFixed.ToPlanetodetic(), state.ToPlanetodetic());
@@ -188,7 +188,7 @@ public class GeodeticOneCallTests
     [Fact]
     public void ToPlanetodetic_OnTheMoon_TakesTheEllipsoidOfTheMoon()
     {
-        var moon = new CelestialBody(PlanetsAndMoons.MOON);
+        var moon = new CelestialBody(PlanetsAndMoons.Moon);
         var state = new StateVector(new Vector3(1000e3, 1200e3, -900e3), Vector3.Zero, moon, Epoch, moon.Frame);
         var geodetic = state.ToPlanetodetic();
         AssertSameBits(state.ToPlanetocentric().ToPlanetodetic(moon.Flattening, moon.EquatorialRadius), geodetic);
@@ -200,7 +200,7 @@ public class GeodeticOneCallTests
     [Fact]
     public void ObserverThatIsNoBody_Throws()
     {
-        var earth = new CelestialBody(PlanetsAndMoons.EARTH);
+        var earth = new CelestialBody(PlanetsAndMoons.Earth);
         var spacecraft = new Spacecraft(-2002, "R20Observer", 100.0, new StateVector(new Vector3(6800e3, 0.0, 0.0), new Vector3(0.0, 7600.0, 0.0), earth, Epoch, Frames.Frame.ICRF), 1000.0,
             new Clock("R20ObserverClk", 65536));
         var aboutSpacecraft = new StateVector(new Vector3(100.0, 0.0, 0.0), Vector3.Zero, spacecraft, Epoch, Frames.Frame.ICRF);
@@ -215,17 +215,17 @@ public class GeodeticOneCallTests
     {
         // The managed coordinate search reads ToPlanetodetic(): an observer without an ellipsoid throws its
         // InvalidOperationException (before 11.0.0 an InvalidCastException, the observer cast to CelestialBody)
-        var earth = new CelestialBody(PlanetsAndMoons.EARTH);
+        var earth = new CelestialBody(PlanetsAndMoons.Earth);
         var spacecraft = new Spacecraft(-2003, "R20Search", 100.0, new StateVector(new Vector3(6800e3, 0.0, 0.0), new Vector3(0.0, 7600.0, 0.0), earth, Epoch, Frames.Frame.ICRF), 1000.0,
             new Clock("R20SearchClk", 65536));
-        var moon = new CelestialBody(PlanetsAndMoons.MOON);
-        Assert.Throws<InvalidOperationException>(() => spacecraft.FindCoordinateWindows(new Window(Epoch, Epoch.AddSeconds(600.0)), moon, Frames.Frame.ICRF, CoordinateSystem.Geodetic, Coordinate.Latitude, RelationnalOperator.Greater, 0.0, new WindowSearchOptions { Step = TimeSpan.FromSeconds(60.0) }).ToArray());
+        var moon = new CelestialBody(PlanetsAndMoons.Moon);
+        Assert.Throws<InvalidOperationException>(() => spacecraft.FindCoordinateWindows(new Window(Epoch, Epoch.AddSeconds(600.0)), moon, Frames.Frame.ICRF, CoordinateSystem.Geodetic, Coordinate.Latitude, RelationalOperator.GreaterThan, 0.0, new WindowSearchOptions { Step = TimeSpan.FromSeconds(60.0) }).ToArray());
     }
 
     [Fact]
     public void ToCartesianCoordinates_OfTheBody_IsGeorec()
     {
-        var earth = new CelestialBody(PlanetsAndMoons.EARTH);
+        var earth = new CelestialBody(PlanetsAndMoons.Earth);
         double worst = 0.0;
         foreach (var p in EarthPoints())
         {
@@ -253,7 +253,7 @@ public class GeodeticOneCallTests
     [InlineData(System.Math.PI / 2.0)]
     public void RadiusFromPlanetocentricLatitude_OfTheBody_IsTheClosedForm(double latitude)
     {
-        var earth = new CelestialBody(PlanetsAndMoons.EARTH);
+        var earth = new CelestialBody(PlanetsAndMoons.Earth);
         var planetocentric = new Planetocentric(0.3, latitude, 7000e3);
         double radius = planetocentric.RadiusFromPlanetocentricLatitude(earth);
         AssertSameBits(earth.RadiusFromPlanetocentricLatitude(latitude), radius);
@@ -322,10 +322,10 @@ public class GeodeticOneCallTests
     [Fact]
     public void ToFrame_OfAStateVector_IsAStateVector()
     {
-        var earth = new CelestialBody(PlanetsAndMoons.EARTH);
+        var earth = new CelestialBody(PlanetsAndMoons.Earth);
         var state = new StateVector(new Vector3(6800e3, 0.0, 0.0), new Vector3(0.0, 7600.0, 1000.0), earth, Epoch, Frames.Frame.ICRF);
-        StateVector ecliptic = state.ToFrame(Frames.Frame.ECLIPTIC_J2000);
-        var throughBase = (StateVector)((Astrodynamics.OrbitalParameters.OrbitalParameters)state).ToFrame(Frames.Frame.ECLIPTIC_J2000);
+        StateVector ecliptic = state.ToFrame(Frames.Frame.ECLIPJ2000);
+        var throughBase = (StateVector)((Astrodynamics.OrbitalParameters.OrbitalParameters)state).ToFrame(Frames.Frame.ECLIPJ2000);
         AssertSameBits(throughBase.Position.X, ecliptic.Position.X);
         AssertSameBits(throughBase.Position.Y, ecliptic.Position.Y);
         AssertSameBits(throughBase.Velocity.Z, ecliptic.Velocity.Z);
@@ -339,8 +339,8 @@ public class GeodeticOneCallTests
     [Fact]
     public void RelativeTo_OfAStateVector_IsAStateVector()
     {
-        var earth = new CelestialBody(PlanetsAndMoons.EARTH);
-        var moon = new CelestialBody(PlanetsAndMoons.MOON);
+        var earth = new CelestialBody(PlanetsAndMoons.Earth);
+        var moon = new CelestialBody(PlanetsAndMoons.Moon);
         var state = new StateVector(new Vector3(6800e3, 0.0, 0.0), new Vector3(0.0, 7600.0, 1000.0), earth, Epoch, Frames.Frame.ICRF);
         StateVector fromMoon = state.RelativeTo(moon, Aberration.None);
         StateVector moonFromEarth = moon.GetEphemeris(Epoch, earth);
@@ -355,7 +355,7 @@ public class GeodeticOneCallTests
     [Fact]
     public void ToFrame_OfATle_InItsFrame_IsTheTle()
     {
-        var tle = new Astrodynamics.OrbitalParameters.TLE.TLE("ISS", "1 25544U 98067A   21020.53488036  .00016717  00000-0  10270-3 0  9054",
+        var tle = new Astrodynamics.OrbitalParameters.Tle("ISS", "1 25544U 98067A   21020.53488036  .00016717  00000-0  10270-3 0  9054",
             "2 25544  51.6423 353.0312 0000493 320.8755  39.2360 15.49309423 25703");
         Assert.Same(tle, tle.ToFrame(Frames.Frame.TEME));
         Assert.IsType<StateVector>(tle.ToFrame(Frames.Frame.ICRF));

@@ -5,7 +5,6 @@ using IO.Astrodynamics.TimeSystem;
 using System;
 using System.Collections.Generic;
 using IO.Astrodynamics.Atmosphere;
-using IO.Astrodynamics.Atmosphere.NRLMSISE_00;
 using IO.Astrodynamics.Body;
 using IO.Astrodynamics.SolarSystemObjects;
 using Xunit;
@@ -67,7 +66,7 @@ public class Nrlmsise00AllocationTests
     public void Calculate_ReusedInstance_GivesTheValuesOfAFreshInstance_BitForBit()
     {
         // Arrange
-        var model = new NRLMSISE00();
+        var model = new Nrlmsise00();
         var flags = NrlmsiseFlags.CreateStandard();
         foreach (var context in Grid())
         {
@@ -79,7 +78,7 @@ public class Nrlmsise00AllocationTests
 
             // Act
             var reused = model.Calculate(input, flags);
-            var fresh = new NRLMSISE00().Calculate(input, flags);
+            var fresh = new Nrlmsise00().Calculate(input, flags);
 
             // Assert
             for (int i = 0; i < 9; i++)
@@ -139,13 +138,13 @@ public class Nrlmsise00AllocationTests
     public void CelestialBody_GeodeticAirDensity_IsTheDensityOfTheContext()
     {
         // Arrange: NRLMSISE-00 through the position, a model without it through a context, and no model
-        var nrlmsise = new CelestialBody(PlanetsAndMoons.EARTH, Frames.Frame.ICRF, Epoch, null,
+        var nrlmsise = new CelestialBody(PlanetsAndMoons.Earth, Frames.Frame.ICRF, Epoch, null,
             new Nrlmsise00Model(SpaceWeather.Nominal));
-        var contextOnly = new CelestialBody(PlanetsAndMoons.EARTH, Frames.Frame.ICRF, Epoch, null,
+        var contextOnly = new CelestialBody(PlanetsAndMoons.Earth, Frames.Frame.ICRF, Epoch, null,
             new ContextOnlyModel());
         // An Earth without a model takes NRLMSISE-00 at nominal space weather (#674); another body has no atmosphere
-        var none = new CelestialBody(PlanetsAndMoons.EARTH, Frames.Frame.ICRF, Epoch);
-        var moon = new CelestialBody(PlanetsAndMoons.MOON, Frames.Frame.ICRF, Epoch);
+        var none = new CelestialBody(PlanetsAndMoons.Earth, Frames.Frame.ICRF, Epoch);
+        var moon = new CelestialBody(PlanetsAndMoons.Moon, Frames.Frame.ICRF, Epoch);
 
         foreach (var context in Grid())
         {

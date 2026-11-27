@@ -52,13 +52,13 @@ public class ThirdBodyPerturbationTests
     {
         // Sun's tidal acceleration on a LEO satellite at ~400 km altitude
         // Analytical estimate: ~5.6e-7 m/s^2 (Montenbruck & Gill, Table 3.1)
-        var earth = new CelestialBody(PlanetsAndMoons.EARTH);
-        var sun = Stars.SUN_BODY;
+        var earth = new CelestialBody(PlanetsAndMoons.Earth);
+        var sun = Stars.SunBody;
 
         var thirdBody = new ThirdBodyPerturbation(sun, earth);
 
         // LEO satellite at 400 km altitude, on the Earth-Sun line (worst case for tidal acceleration)
-        var epoch = TimeSystem.Time.J2000TDB;
+        var epoch = TimeSystem.Time.J2000Tdb;
         // Get Sun direction from Earth to place satellite on Earth-Sun line
         var sunFromEarth = sun.GetEphemeris(epoch, earth, Frames.Frame.ICRF, Aberration.None).Position;
         var sunDir = sunFromEarth * (1.0 / sunFromEarth.Magnitude());
@@ -81,12 +81,12 @@ public class ThirdBodyPerturbationTests
     public void MoonThirdBodyAccelerationOnLeoSatellite()
     {
         // Moon's tidal acceleration on LEO is ~1.1e-6 m/s^2 (larger than Sun's despite lower mass)
-        var earth = new CelestialBody(PlanetsAndMoons.EARTH);
-        var moon = PlanetsAndMoons.MOON_BODY;
+        var earth = new CelestialBody(PlanetsAndMoons.Earth);
+        var moon = PlanetsAndMoons.MoonBody;
 
         var thirdBody = new ThirdBodyPerturbation(moon, earth);
 
-        var epoch = TimeSystem.Time.J2000TDB;
+        var epoch = TimeSystem.Time.J2000Tdb;
         var moonFromEarth = moon.GetEphemeris(epoch, earth, Frames.Frame.ICRF, Aberration.None).Position;
         var moonDir = moonFromEarth * (1.0 / moonFromEarth.Magnitude());
 
@@ -107,12 +107,12 @@ public class ThirdBodyPerturbationTests
     public void ThirdBodyAccelerationMatchesDirectFormula()
     {
         // Verify Battin's formula matches the direct (but less numerically stable) formula
-        var earth = new CelestialBody(PlanetsAndMoons.EARTH);
-        var sun = Stars.SUN_BODY;
+        var earth = new CelestialBody(PlanetsAndMoons.Earth);
+        var sun = Stars.SunBody;
 
         var thirdBody = new ThirdBodyPerturbation(sun, earth);
 
-        var epoch = TimeSystem.Time.J2000TDB;
+        var epoch = TimeSystem.Time.J2000Tdb;
 
         // Use a position not on the Earth-Sun line for a more general test
         double r = 6778000.0;

@@ -43,7 +43,7 @@ public class Star : CelestialBody
     private readonly Vector3 _spaceVelocity;
 
     // The seconds of a Julian year of TDB, the unit of time of the proper motions
-    private const double JulianYearSeconds = Time.JULIAN_YEAR * 86400.0;
+    private const double JulianYearSeconds = Time.JulianYear * 86400.0;
     /// <summary>
     /// Initializes a new instance of the <see cref="Star"/> class.
     /// </summary>
@@ -95,7 +95,7 @@ public class Star : CelestialBody
         SpectralType = spectralType ?? throw new ArgumentNullException(nameof(spectralType));
         VisualMagnitude = visualMagnitude;
         Epoch = epoch;
-        _epochTdb = epoch.ToTDB();
+        _epochTdb = epoch.ToTdb();
         Parallax = parallax;
         EquatorialCoordinatesAtEpoch = equatorialCoordinatesAtEpoch;
         RightAscensionProperMotion = rightAscensionProperMotion;
@@ -219,7 +219,7 @@ public class Star : CelestialBody
     /// </remarks>
     private double JulianYearsFromCatalogEpoch(Time epoch)
     {
-        return (epoch.ToTDB().DateTime.Ticks - _epochTdb.DateTime.Ticks) / (double)TimeSpan.TicksPerDay / Time.JULIAN_YEAR;
+        return (epoch.ToTdb().DateTime.Ticks - _epochTdb.DateTime.Ticks) / (double)TimeSpan.TicksPerDay / Time.JulianYear;
     }
 
     /// <summary>
@@ -322,7 +322,7 @@ public class Star : CelestialBody
     /// </remarks>
     /// <param name="epoch">The epoch time for the sigma value.</param>
     /// <returns>The sigma value for right ascension at the specified epoch.</returns>
-    public double GetRightAscensionSigma(Time epoch)
+    public double RightAscensionSigmaAt(Time epoch)
     {
         var dt = JulianYearsFromCatalogEpoch(epoch);
         return System.Math.Sqrt(System.Math.Pow(RightAscensionSigma, 2) + System.Math.Pow(dt * RightAscensionSigmaProperMotion, 2));
@@ -337,7 +337,7 @@ public class Star : CelestialBody
     /// </remarks>
     /// <param name="epoch">The epoch time for the sigma value.</param>
     /// <returns>The sigma value for declination at the specified epoch.</returns>
-    public double GetDeclinationSigma(Time epoch)
+    public double DeclinationSigmaAt(Time epoch)
     {
         var dt = JulianYearsFromCatalogEpoch(epoch);
         return System.Math.Sqrt(System.Math.Pow(DeclinationSigma, 2) + System.Math.Pow(dt * DeclinationSigmaProperMotion, 2));
@@ -371,7 +371,7 @@ public class Star : CelestialBody
     internal override OrbitalParameters.OrbitalParameters GetGeometricStateFromICRF(in Time date)
     {
         var position = GetEquatorialCoordinates(date).ToCartesian();
-        return new StateVector(position, _spaceVelocity, Barycenters.SOLAR_SYSTEM_BARYCENTER, date, Frame.ICRF);
+        return new StateVector(position, _spaceVelocity, Barycenters.SolarSystemBarycenter, date, Frame.ICRF);
     }
 
     /// <summary>
@@ -390,7 +390,7 @@ public class Star : CelestialBody
     /// </remarks>
     public override StateVector GetEphemeris(in Time epoch, ILocalizable observer, Frame frame, Aberration aberration)
     {
-        var ssb = Barycenters.SOLAR_SYSTEM_BARYCENTER;
+        var ssb = Barycenters.SolarSystemBarycenter;
         var starSsb = GetGeometricStateRelativeTo(epoch, ssb);
         var observerSsb = observer.GetGeometricStateRelativeTo(epoch, ssb);
         var relative = new StateVector(
@@ -398,10 +398,10 @@ public class Star : CelestialBody
             starSsb.Velocity - observerSsb.Velocity,
             observer, epoch, Frame.ICRF);
 
-        if (aberration is Aberration.LTS or Aberration.CNS or Aberration.XLTS or Aberration.XCNS)
+        if (aberration is Aberration.LtS or Aberration.CnS or Aberration.XltS or Aberration.XcnS)
         {
             var (position, velocity) = ApplyStellarAberration(relative.Position, relative.Velocity, observerSsb.Velocity, observer, epoch, ssb,
-                aberration is Aberration.XLTS or Aberration.XCNS);
+                aberration is Aberration.XltS or Aberration.XcnS);
             relative = new StateVector(position, velocity, observer, epoch, Frame.ICRF);
         }
 
@@ -410,14 +410,14 @@ public class Star : CelestialBody
 
     /// <summary>
     /// Write star ephemeris from propagated states: those of its last propagation, their positions and the star's space
-    /// velocity (before 11.0.0 a zero velocity, #731), through the native writer (<see cref="SpiceAPI.WriteEphemeris"/>): a file it replaces that <see cref="SpiceAPI.LoadKernels(FileSystemInfo)"/> loaded is unloaded
+    /// velocity (before 11.0.0 a zero velocity, #731), through the native writer (<see cref="SpiceApi.WriteEphemeris"/>): a file it replaces that <see cref="SpiceApi.LoadKernels(FileSystemInfo)"/> loaded is unloaded
     /// first, and the new one is left unloaded (#706).
     /// </summary>
     /// <exception cref="ArgumentNullException"><paramref name="outputFile"/> is null.</exception>
     /// <exception cref="InvalidOperationException">The star stores fewer than three states (never propagated, or a
     /// propagation of fewer than three steps): the native writer writes three or more, and nothing is written (decision 81
     /// of #668, decided by S. Guillet, 2026-11-23; #799(e): before 11.0.0, <see cref="ArgumentException"/>, and before #706
-    /// a C++ exception that crossed P/Invoke and ended the process). See <see cref="SpiceAPI.WriteEphemeris"/> for the
+    /// a C++ exception that crossed P/Invoke and ended the process). See <see cref="SpiceApi.WriteEphemeris"/> for the
     /// others.</exception>
     public override void WriteEphemeris(FileInfo outputFile)
     {
@@ -426,7 +426,7 @@ public class Star : CelestialBody
         if (states.Length < 3)
             throw new InvalidOperationException(
                 $"Star {Name} stores {states.Length} states: an SPK of the native writer needs three or more; propagate it over three steps or more.");
-        SpiceAPI.Instance.WriteEphemeris(outputFile, NaifId, states);
+        SpiceApi.Instance.WriteEphemeris(outputFile, NaifId, states);
     }
 
     /// <summary>
@@ -458,7 +458,7 @@ public class Star : CelestialBody
         foreach (var epoch in window.Sample(stepSize))
         {
             var position = GetEquatorialCoordinates(epoch).ToCartesian();
-            states.Add(new StateVector(position, _spaceVelocity, Barycenters.SOLAR_SYSTEM_BARYCENTER, epoch, Frame.ICRF));
+            states.Add(new StateVector(position, _spaceVelocity, Barycenters.SolarSystemBarycenter, epoch, Frame.ICRF));
         }
 
         Volatile.Write(ref _propagatedStates, states.ToArray());

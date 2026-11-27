@@ -25,7 +25,7 @@ namespace IO.Astrodynamics.Propagator;
 /// </para>
 /// <para>
 /// <b>CelestialBody without geopotential:</b> Safe to share across tasks. Two-body gravity is
-/// stateless, and the <c>Frame.GetStateOrientationToICRF</c> fallback uses a
+/// stateless, and the <c>Frame.GetStateOrientationToIcrf</c> fallback uses a
 /// <c>ConcurrentDictionary</c> cache that is inherently thread-safe.
 /// </para>
 /// <para>

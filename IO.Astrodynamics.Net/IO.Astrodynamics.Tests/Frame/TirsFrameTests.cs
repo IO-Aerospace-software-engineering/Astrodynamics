@@ -25,8 +25,8 @@ public class TirsFrameTests
         var first = new TimeSystem_Time(new DateTime(2024, 1, 1, 6, 30, 15).AddTicks(1234567), TimeScale.UTC);
         var second = first.Add(TimeSpan.FromTicks(4000));
 
-        double angle = QuaternionAngleDifference(tirs.GetStateOrientationToICRF(first).Rotation,
-            tirs.GetStateOrientationToICRF(second).Rotation);
+        double angle = QuaternionAngleDifference(tirs.GetStateOrientationToIcrf(first).Rotation,
+            tirs.GetStateOrientationToIcrf(second).Rotation);
 
         // Tolerance: ~2e-12 day of double resolution on the date, times the Earth rotation rate, is 1.3e-11 rad.
         const double earthRotationRate = 2.0 * System.Math.PI * 1.00273781191135448 / 86400.0;
@@ -39,7 +39,7 @@ public class TirsFrameTests
         var tirs = new TirsFrame();
         var epoch = new TimeSystem_Time(2024, 1, 1, 12, 0, 0, TimeScale.TDB);
 
-        var orientation = tirs.GetStateOrientationToICRF(epoch);
+        var orientation = tirs.GetStateOrientationToIcrf(epoch);
         double omegaMag = orientation.AngularVelocity.Magnitude();
 
         // Earth rotation rate: ~7.2921150e-5 rad/s
@@ -52,7 +52,7 @@ public class TirsFrameTests
         var tirs = new TirsFrame();
         var epoch = new TimeSystem_Time(2024, 1, 1, 12, 0, 0, TimeScale.TDB);
 
-        var orientation = tirs.GetStateOrientationToICRF(epoch);
+        var orientation = tirs.GetStateOrientationToIcrf(epoch);
         var omega = orientation.AngularVelocity;
 
         // Angular velocity of ICRF relative to TIRS, in TIRS axes (SPICE convention): minus the Earth rotation rate
@@ -69,7 +69,7 @@ public class TirsFrameTests
         var tirs = new TirsFrame();
         var epoch = new TimeSystem_Time(2010, 6, 15, 12, 0, 0, TimeScale.TDB);
 
-        var orientation = tirs.GetStateOrientationToICRF(epoch);
+        var orientation = tirs.GetStateOrientationToIcrf(epoch);
         var rotMatrix = Matrix.FromQuaternion(orientation.Rotation);
         var product = rotMatrix.Transpose().Multiply(rotMatrix);
 
@@ -90,8 +90,8 @@ public class TirsFrameTests
         var epoch1 = new TimeSystem_Time(2024, 1, 1, 12, 0, 0, TimeScale.TDB);
         var epoch2 = epoch1.AddHours(1);
 
-        var q1 = tirs.GetStateOrientationToICRF(epoch1).Rotation;
-        var q2 = tirs.GetStateOrientationToICRF(epoch2).Rotation;
+        var q1 = tirs.GetStateOrientationToIcrf(epoch1).Rotation;
+        var q2 = tirs.GetStateOrientationToIcrf(epoch2).Rotation;
 
         var relQ = q1.Conjugate() * q2;
         double angle = 2.0 * System.Math.Acos(System.Math.Abs(relQ.W));
@@ -112,10 +112,10 @@ public class TirsFrameTests
     {
         var tirs1 = new TirsFrame();
         var tirs2 = new TirsFrame(NullEop.Instance);
-        var epoch = TimeSystem_Time.J2000TDB;
+        var epoch = TimeSystem_Time.J2000Tdb;
 
-        var q1 = tirs1.GetStateOrientationToICRF(epoch).Rotation;
-        var q2 = tirs2.GetStateOrientationToICRF(epoch).Rotation;
+        var q1 = tirs1.GetStateOrientationToIcrf(epoch).Rotation;
+        var q2 = tirs2.GetStateOrientationToIcrf(epoch).Rotation;
 
         Assert.Equal(q1.W, q2.W, 1e-15);
         Assert.Equal(q1.VectorPart.X, q2.VectorPart.X, 1e-15);
@@ -127,7 +127,7 @@ public class TirsFrameTests
     public void TirsReferenceFrameIsSelf()
     {
         var tirs = new TirsFrame();
-        var orientation = tirs.GetStateOrientationToICRF(TimeSystem_Time.J2000TDB);
+        var orientation = tirs.GetStateOrientationToIcrf(TimeSystem_Time.J2000Tdb);
 
         Assert.Same(tirs, orientation.ReferenceFrame);
     }
@@ -135,12 +135,12 @@ public class TirsFrameTests
     [Fact]
     public void TirsAngularVelocityMatchesFreshRecomputationOverOneSecond()
     {
-        // The angular velocity follows the SPICE convention of the frames, not the one of StateOrientation.AtDate.
+        // The angular velocity follows the SPICE convention of the frames, not the one of StateOrientation.AtEpoch.
         // The residual, about 6e-12 rad, is the precession-nutation rate of the CIP, which TIRS leaves out.
         var tirs = new TirsFrame();
         var epoch = new TimeSystem_Time(2024, 1, 1, 12, 0, 0, TimeScale.TDB);
-        var propagated = TestHelpers.RotateWithFrameAngularVelocity(tirs.GetStateOrientationToICRF(epoch), 1.0);
-        var recomputed = tirs.GetStateOrientationToICRF(epoch.AddSeconds(1));
+        var propagated = TestHelpers.RotateWithFrameAngularVelocity(tirs.GetStateOrientationToIcrf(epoch), 1.0);
+        var recomputed = tirs.GetStateOrientationToIcrf(epoch.AddSeconds(1));
 
         double angle = QuaternionAngleDifference(propagated, recomputed.Rotation);
 

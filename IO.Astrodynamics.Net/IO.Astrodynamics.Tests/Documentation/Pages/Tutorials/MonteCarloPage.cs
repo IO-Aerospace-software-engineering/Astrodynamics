@@ -18,15 +18,9 @@ using System.Threading;
 using System.Threading.Tasks;
 using IO.Astrodynamics;
 using IO.Astrodynamics.Atmosphere;
-using IO.Astrodynamics.Atmosphere.NRLMSISE_00;
 using IO.Astrodynamics.Body;
 using IO.Astrodynamics.Body.Spacecraft;
-using IO.Astrodynamics.CCSDS;
-using IO.Astrodynamics.CCSDS.CDM;
-using IO.Astrodynamics.CCSDS.Common;
-using IO.Astrodynamics.CCSDS.Common.Enums;
-using IO.Astrodynamics.CCSDS.OMM;
-using IO.Astrodynamics.CCSDS.OPM;
+using IO.Astrodynamics.Ccsds;
 using IO.Astrodynamics.Converters;
 using IO.Astrodynamics.Coordinates;
 using IO.Astrodynamics.Cosmographia;
@@ -49,11 +43,11 @@ using IO.Astrodynamics.Propagator.Forces;
 using IO.Astrodynamics.Propagator.Integrators;
 using IO.Astrodynamics.Propagator.MonteCarlo;
 using IO.Astrodynamics.Propagator.Variational;
-using IO.Astrodynamics.SSA;
+using IO.Astrodynamics.Ssa;
 using IO.Astrodynamics.SolarSystemObjects;
 using IO.Astrodynamics.Surface;
 using IO.Astrodynamics.TimeSystem;
-using TLE = IO.Astrodynamics.OrbitalParameters.TLE.TLE;
+using Tle = IO.Astrodynamics.OrbitalParameters.Tle;
 
 namespace DocumentationPageSamples.Tutorials;
 
@@ -72,7 +66,7 @@ internal static class MonteCarloPage
         var orbit = new StateVector(
             new Vector3(r0, 0, 0),
             new Vector3(0, v0, 0),
-            earth, Time.J2000TDB, Frame.ICRF, cov);
+            earth, Time.J2000Tdb, Frame.ICRF, cov);
         #endregion
     }
 
@@ -86,7 +80,7 @@ internal static class MonteCarloPage
             RunCount = 100,
             Seed = 42,
             TemplateSpacecraft = spacecraft,
-            Window = new Window(Time.J2000TDB, Time.J2000TDB.AddHours(2)),
+            Window = new Window(Time.J2000Tdb, Time.J2000Tdb.AddHours(2)),
             Propagation = new PropagationOptions
             {
                 Integrator = new RK78IntegratorOptions
@@ -94,7 +88,7 @@ internal static class MonteCarloPage
                     AbsoluteTolerance = 1e-10, RelativeTolerance = 1e-10, InitialStep = TimeSpan.FromSeconds(30.0)
                 },
                 OutputStep = TimeSpan.FromSeconds(60),
-                ThirdBodies = new CelestialItem[] { Stars.SUN_BODY, PlanetsAndMoons.MOON_BODY }
+                ThirdBodies = new CelestialItem[] { Stars.SunBody, PlanetsAndMoons.MoonBody }
             }
         };
         #endregion

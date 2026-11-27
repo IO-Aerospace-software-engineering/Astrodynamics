@@ -157,12 +157,12 @@ internal static class VariationalReplay
                     {
                         copy.AddStep(step);
                         stepper.Step(step.StartPosition, step.StartVelocity, segment.BaseEpoch, step.CumulativeTime,
-                            step.StepSize, out _, out _, out _, out _);
-                        equations.Step(stepper.StageStates, forces, context, step.StepSize, y0, q0, y1, q1);
+                            step.StepSizeSeconds, out _, out _, out _, out _);
+                        equations.Step(stepper.StageStates, forces, context, step.StepSizeSeconds, y0, q0, y1, q1);
                         data.Append(y1, q1);
                         (y0, y1) = (y1, y0);
                         (q0, q1) = (q1, q0);
-                        if (step.CumulativeTime + step.StepSize >= endOffset)
+                        if (step.CumulativeTime + step.StepSizeSeconds >= endOffset)
                             break;
                     }
 

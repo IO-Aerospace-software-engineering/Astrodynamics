@@ -62,7 +62,7 @@ namespace IO.Astrodynamics.Surface
 
         /// <summary>
         /// Initializes a site from the kernels from its entry of a catalogue, <see cref="GroundStations"/> for instance:
-        /// <c>new Site(GroundStations.DSS_13, earth)</c>, the site 13 of the Earth, named <c>DSS-13</c> (R02 of #668).
+        /// <c>new Site(GroundStations.Dss13, earth)</c>, the site 13 of the Earth, named <c>DSS-13</c> (R02 of #668).
         /// </summary>
         /// <param name="station">The NAIF identifier of the site, its body's times 1000 plus its own (399013 for DSS-13), and its
         /// SPICE name.</param>
@@ -120,13 +120,13 @@ namespace IO.Astrodynamics.Surface
             if (double.IsNaN(planetodetic.Latitude))
             {
                 _isFromKernel = true;
-                InitialOrbitalParameters = GetEphemeris(Time.J2000TDB, celestialItem, celestialItem.Frame, Aberration.None);
+                InitialOrbitalParameters = GetEphemeris(Time.J2000Tdb, celestialItem, celestialItem.Frame, Aberration.None);
                 Planetodetic = GetPlanetocentricCoordinates().ToPlanetodetic(CelestialBody);
             }
             else
             {
                 Planetodetic = planetodetic;
-                InitialOrbitalParameters = GetEphemeris(Time.J2000TDB, CelestialBody, CelestialBody.Frame, Aberration.None);
+                InitialOrbitalParameters = GetEphemeris(Time.J2000Tdb, CelestialBody, CelestialBody.Frame, Aberration.None);
             }
 
             Frame = new SiteFrame(name.ToUpperInvariant() + "_TOPO", this);
@@ -280,14 +280,14 @@ namespace IO.Astrodynamics.Surface
         /// from <c>spkcpt_c</c> seen from the Moon with LT, about 15000 km from the Sun, and the geometric state seen from
         /// its own body (640 m with LT). Without correction, the geometric state is unchanged, bit for bit.
         /// </remarks>
-        public StateVector GetEphemeris(in Time date, ILocalizable observer, Frame frame, Aberration aberration)
+        public StateVector GetEphemeris(in Time epoch, ILocalizable observer, Frame frame, Aberration aberration)
         {
             // For SPICE-backed CelestialItem observers (planets, moons, barycenters, kernel-backed spacecraft)
             if (observer is CelestialItem && observer.IsSpiceBacked)
             {
                 if (_isFromKernel)
                 {
-                    return _dataProvider.GetEphemeris(date, this, observer, frame, aberration);
+                    return _dataProvider.GetEphemeris(epoch, this, observer, frame, aberration);
                 }
 
                 if (aberration == Aberration.None)
@@ -295,14 +295,14 @@ namespace IO.Astrodynamics.Surface
                     // Custom site, geometric: body-fixed computation with RelativeTo for observer change
                     var siteInFrame = new StateVector(
                         Planetodetic.ToCartesianCoordinates(CelestialBody),
-                        Vector3.Zero, CelestialBody, date, CelestialBody.Frame).ToFrame(frame).ToStateVector();
+                        Vector3.Zero, CelestialBody, epoch, CelestialBody.Frame).ToFrame(frame).ToStateVector();
                     return siteInFrame.RelativeTo(observer, Aberration.None);
                 }
             }
 
             // Reference-body approach: non-SPICE observers (Spacecraft, other Sites), and a custom site corrected for any
             // observer (#489)
-            return CelestialItem.ApparentStateFromReferenceBody(this, date, observer, frame, aberration, CelestialBody);
+            return CelestialItem.ApparentStateFromReferenceBody(this, epoch, observer, frame, aberration, CelestialBody);
         }
 
         /// <summary>
@@ -331,13 +331,13 @@ namespace IO.Astrodynamics.Surface
 
         // The illumination search, its arguments checked: gfilum_c for a site of the kernels, the library's search otherwise,
         // to the convergence tolerance given (1 µs when null), which gfilum_c cannot take
-        private IReadOnlyList<Window> IlluminationWindows(in Window searchWindow, IlluminationAngle illuminationType, RelationnalOperator relationalOperator,
+        private IReadOnlyList<Window> IlluminationWindows(in Window searchWindow, IlluminationAngle illuminationType, RelationalOperator relationalOperator,
             double value, double adjustValue, Aberration aberration, in TimeSpan stepSize, ILocalizable illuminationSource, TimeSpan? tolerance)
         {
             if (_isFromKernel && illuminationSource is INaifObject src)
             {
                 WindowSearchSettings.RejectToleranceOnCspice(tolerance, nameof(WindowSearchOptions), "gfilum_c");
-                return SpiceAPI.Instance.FindWindowsOnIlluminationConstraint(
+                return SpiceApi.Instance.FindWindowsOnIlluminationConstraint(
                     searchWindow, NaifId, CelestialBody.NaifId, CelestialBody.Frame,
                     Planetodetic, illuminationType, relationalOperator, value, adjustValue,
                     aberration, stepSize, src.NaifId, "ELLIPSOID");
@@ -360,8 +360,8 @@ namespace IO.Astrodynamics.Surface
         /// </summary>
         /// <remarks>
         /// The emission and phase angles are angles at the point towards an observer, which this search does not take: they
-        /// throw (#682). With an observer, search them with <see cref="SpiceAPI.FindWindowsOnIlluminationConstraint"/>
-        /// (objects of the kernels) or with <see cref="GeometryFinder.FindWindows(Window, Func{Time, double}, RelationnalOperator, double, WindowSearchOptions)"/>
+        /// throw (#682). With an observer, search them with <see cref="SpiceApi.FindWindowsOnIlluminationConstraint"/>
+        /// (objects of the kernels) or with <see cref="GeometryFinder.FindWindows(Window, Func{Time, double}, RelationalOperator, double, WindowSearchOptions)"/>
         /// on <see cref="IlluminationEmission"/> or <see cref="IlluminationPhase"/>.
         /// </remarks>
         /// <param name="window">The search window.</param>
@@ -379,14 +379,14 @@ namespace IO.Astrodynamics.Surface
         /// [0, π], or NaN: the angles are in radians (R11 of #668).</exception>
         /// <exception cref="InvalidOperationException">On the path of CSPICE, SPICE cannot run the search, with its
         /// message.</exception>
-        public IReadOnlyList<Window> FindIlluminationWindows(in Window window, IlluminationAngle angle, RelationnalOperator relationalOperator, double value,
+        public IReadOnlyList<Window> FindIlluminationWindows(in Window window, IlluminationAngle angle, RelationalOperator relationalOperator, double value,
             ILocalizable source, WindowSearchOptions options = null)
         {
             ArgumentNullException.ThrowIfNull(source);
             if (angle is IlluminationAngle.Emission or IlluminationAngle.Phase)
             {
                 throw new ArgumentException(
-                    $"The {angle} angle of {Name} is measured towards an observer, which this search does not take (it would be the site itself, where the angle is undefined). Search it with SpiceAPI.FindWindowsOnIlluminationConstraint and the observer's NAIF id, or with GeometryFinder.FindWindows on IlluminationEmission or IlluminationPhase with an observer.",
+                    $"The {angle} angle of {Name} is measured towards an observer, which this search does not take (it would be the site itself, where the angle is undefined). Search it with SpiceApi.FindWindowsOnIlluminationConstraint and the observer's NAIF id, or with GeometryFinder.FindWindows on IlluminationEmission or IlluminationPhase with an observer.",
                     nameof(angle));
             }
 
@@ -420,7 +420,7 @@ namespace IO.Astrodynamics.Surface
         /// <exception cref="ArgumentException">The step is not given, or an adjustment value is given with a relation other
         /// than an absolute extreme (<c>options</c>).</exception>
         public IReadOnlyList<Window> FindHorizontalWindows(in Window window, ILocalizable target, HorizontalCoordinate coordinate,
-            RelationnalOperator relationalOperator, double value, WindowSearchOptions options = null)
+            RelationalOperator relationalOperator, double value, WindowSearchOptions options = null)
         {
             bool extreme = GeometryFinder.IsExtremeOperator(relationalOperator);
             switch (coordinate)
@@ -442,16 +442,16 @@ namespace IO.Astrodynamics.Surface
         }
 
         // The relation of the right ascension to 2π minus a value, of the azimuth to the value
-        private static RelationnalOperator Mirrored(RelationnalOperator relationalOperator) => relationalOperator switch
+        private static RelationalOperator Mirrored(RelationalOperator relationalOperator) => relationalOperator switch
         {
-            RelationnalOperator.Greater => RelationnalOperator.Lower,
-            RelationnalOperator.Lower => RelationnalOperator.Greater,
-            RelationnalOperator.GreaterOrEqual => RelationnalOperator.LowerOrEqual,
-            RelationnalOperator.LowerOrEqual => RelationnalOperator.GreaterOrEqual,
-            RelationnalOperator.AbsoluteMin => RelationnalOperator.AbsoluteMax,
-            RelationnalOperator.AbsoluteMax => RelationnalOperator.AbsoluteMin,
-            RelationnalOperator.LocalMin => RelationnalOperator.LocalMax,
-            RelationnalOperator.LocalMax => RelationnalOperator.LocalMin,
+            RelationalOperator.GreaterThan => RelationalOperator.LessThan,
+            RelationalOperator.LessThan => RelationalOperator.GreaterThan,
+            RelationalOperator.GreaterThanOrEqual => RelationalOperator.LessThanOrEqual,
+            RelationalOperator.LessThanOrEqual => RelationalOperator.GreaterThanOrEqual,
+            RelationalOperator.AbsoluteMin => RelationalOperator.AbsoluteMax,
+            RelationalOperator.AbsoluteMax => RelationalOperator.AbsoluteMin,
+            RelationalOperator.LocalMin => RelationalOperator.LocalMax,
+            RelationalOperator.LocalMax => RelationalOperator.LocalMin,
             _ => relationalOperator
         };
 
@@ -460,7 +460,7 @@ namespace IO.Astrodynamics.Surface
         /// the ellipsoid of the body at <see cref="Planetodetic"/>, the normal CSPICE's <c>gfilum_c</c> takes for the site
         /// (<see cref="FindIlluminationWindows"/>, #488).
         /// </summary>
-        /// <param name="date">The epoch.</param>
+        /// <param name="epoch">The epoch.</param>
         /// <param name="observer">The observer.</param>
         /// <param name="aberration">The aberration correction of the direction.</param>
         /// <returns>The emission angle, rad.</returns>
@@ -469,9 +469,9 @@ namespace IO.Astrodynamics.Surface
         /// kernel is loaded has the kernel frame (#690), whose zenith departs from that normal (7.8e-8 rad for DSS-13): the
         /// angle keeps the normal at <see cref="Planetodetic"/>, so that it agrees with the illumination searches.
         /// </remarks>
-        public double IlluminationEmission(Time date, ILocalizable observer, Aberration aberration)
+        public double IlluminationEmission(Time epoch, ILocalizable observer, Aberration aberration)
         {
-            return observer.GetEphemeris(date, this, Frames.Frame.ICRF, aberration).Position.Angle(EllipsoidNormalInIcrf(date));
+            return observer.GetEphemeris(epoch, this, Frames.Frame.ICRF, aberration).Position.Angle(EllipsoidNormalInIcrf(epoch));
         }
 
         /// <summary>
@@ -479,16 +479,16 @@ namespace IO.Astrodynamics.Surface
         /// normal to the ellipsoid of the body at <see cref="Planetodetic"/>, the normal CSPICE's <c>gfilum_c</c> takes for
         /// the site (<see cref="FindIlluminationWindows"/>, #488).
         /// </summary>
-        /// <param name="date">The epoch.</param>
+        /// <param name="epoch">The epoch.</param>
         /// <param name="illuminationSource">The source of illumination.</param>
         /// <param name="aberration">The aberration correction of the direction.</param>
         /// <returns>The incidence angle, rad.</returns>
         /// <remarks>As <see cref="IlluminationEmission"/>: the normal at <see cref="Planetodetic"/>, the Z axis of
         /// <see cref="Frame"/> for a site from coordinates (#690).</remarks>
-        public double IlluminationIncidence(Time date, ILocalizable illuminationSource, Aberration aberration)
+        public double IlluminationIncidence(Time epoch, ILocalizable illuminationSource, Aberration aberration)
         {
-            var illuminationPosition = illuminationSource.GetEphemeris(date, this, Frames.Frame.ICRF, aberration).Position;
-            return EllipsoidNormalInIcrf(date).Angle(illuminationPosition);
+            var illuminationPosition = illuminationSource.GetEphemeris(epoch, this, Frames.Frame.ICRF, aberration).Position;
+            return EllipsoidNormalInIcrf(epoch).Angle(illuminationPosition);
         }
 
         // The normal to the ellipsoid of the body at the planetodetic coordinates of the site, fixed in the frame of the body,
@@ -504,15 +504,15 @@ namespace IO.Astrodynamics.Surface
         /// <summary>
         /// Get illumination phase angle
         /// </summary>
-        /// <param name="date"></param>
+        /// <param name="epoch"></param>
         /// <param name="illuminationSource"></param>
         /// <param name="observer"></param>
         /// <param name="aberration"></param>
         /// <returns></returns>
-        public double IlluminationPhase(Time date, ILocalizable illuminationSource, ILocalizable observer, Aberration aberration)
+        public double IlluminationPhase(Time epoch, ILocalizable illuminationSource, ILocalizable observer, Aberration aberration)
         {
-            var illuminationPosition = illuminationSource.GetEphemeris(date, this, Frames.Frame.ICRF, aberration).Position;
-            return observer.GetEphemeris(date, this, Frames.Frame.ICRF, aberration).Position.Angle(illuminationPosition);
+            var illuminationPosition = illuminationSource.GetEphemeris(epoch, this, Frames.Frame.ICRF, aberration).Position;
+            return observer.GetEphemeris(epoch, this, Frames.Frame.ICRF, aberration).Position.Angle(illuminationPosition);
         }
 
         /// <summary>
@@ -551,19 +551,19 @@ namespace IO.Astrodynamics.Surface
 
         /// <summary>
         /// Writes the states of the site relative to its body, in the body's frame, every minute of the window, as an SPK
-        /// through the native writer (<see cref="SpiceAPI.WriteEphemeris"/>).
+        /// through the native writer (<see cref="SpiceApi.WriteEphemeris"/>).
         /// </summary>
         /// <param name="window">The window, sampled every minute from its start.</param>
-        /// <param name="outputFile">The SPK to write; a file it replaces that <see cref="SpiceAPI.LoadKernels(FileSystemInfo)"/> loaded is
+        /// <param name="outputFile">The SPK to write; a file it replaces that <see cref="SpiceApi.LoadKernels(FileSystemInfo)"/> loaded is
         /// unloaded first, and the new one is left unloaded (#706).</param>
         /// <exception cref="ArgumentException">The window gives fewer than three states (shorter than two minutes): the
         /// native writer writes three or more. The exception names <c>stateVectors</c>, the parameter of
-        /// <see cref="SpiceAPI.WriteEphemeris"/> (#706: before, a C++ exception crossed P/Invoke and ended the process). See
-        /// <see cref="SpiceAPI.WriteEphemeris"/> for the others.</exception>
+        /// <see cref="SpiceApi.WriteEphemeris"/> (#706: before, a C++ exception crossed P/Invoke and ended the process). See
+        /// <see cref="SpiceApi.WriteEphemeris"/> for the others.</exception>
         public void WriteEphemeris(Window window, FileInfo outputFile)
         {
             var ephemeris = GetEphemeris(window, CelestialBody, CelestialBody.Frame, Aberration.None, TimeSpan.FromMinutes(1.0));
-            SpiceAPI.Instance.WriteEphemeris(outputFile, NaifId, ephemeris.Select(x => x.ToStateVector()).ToArray());
+            SpiceApi.Instance.WriteEphemeris(outputFile, NaifId, ephemeris.Select(x => x.ToStateVector()).ToArray());
         }
 
         /// <summary>
@@ -582,8 +582,8 @@ namespace IO.Astrodynamics.Surface
         public IReadOnlyList<Window> FindDayWindows(in Window searchWindow, double twilight)
         {
             GeometryFinder.CheckAngle(twilight, -Constants.HalfPi, Constants.HalfPi, "[−π/2, π/2]", "twilight", nameof(twilight));
-            return FindIlluminationWindows(searchWindow, IlluminationAngle.Incidence, RelationnalOperator.Lower, Constants.HalfPi + twilight, Stars.SUN_BODY,
-                new WindowSearchOptions { Step = TimeSpan.FromMinutes(1.0), Aberration = Aberration.LTS });
+            return FindIlluminationWindows(searchWindow, IlluminationAngle.Incidence, RelationalOperator.LessThan, Constants.HalfPi + twilight, Stars.SunBody,
+                new WindowSearchOptions { Step = TimeSpan.FromMinutes(1.0), Aberration = Aberration.LtS });
         }
 
         #region operators

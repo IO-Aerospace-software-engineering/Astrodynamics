@@ -4,7 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace IO.Astrodynamics.CCSDS.CDM;
+namespace IO.Astrodynamics.Ccsds;
 
 public enum CdmValidationSeverity
 {
@@ -70,8 +70,8 @@ public sealed class CdmParseException : CcsdsFormatException
 /// <summary>
 /// A CDM that the checks of <see cref="Cdm.Load"/>, <see cref="Cdm.Parse(string, CcsdsReadOptions)"/> and their siblings,
 /// or of <see cref="Cdm.Save(string, CcsdsWriteOptions)"/> and <see cref="Cdm.ToXml"/>, refuse: the NDM/XML schema or the
-/// content (R22 of #668, IC-24 of lot L7), as <see cref="OMM.OmmValidationException"/> and
-/// <see cref="OPM.OpmValidationException"/> for theirs.
+/// content (R22 of #668, IC-24 of lot L7), as <see cref="OmmValidationException"/> and
+/// <see cref="OpmValidationException"/> for theirs.
 /// </summary>
 public sealed class CdmValidationException : CcsdsFormatException
 {

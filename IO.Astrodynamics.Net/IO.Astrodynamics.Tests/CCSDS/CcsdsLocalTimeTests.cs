@@ -5,7 +5,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
-using IO.Astrodynamics.CCSDS.CDM;
+using IO.Astrodynamics.Ccsds;
 using IO.Astrodynamics.Tests.CCSDS.CDM;
 using Xunit;
 using Xunit.Abstractions;

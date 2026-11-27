@@ -3,12 +3,12 @@ using System;
 using System.Linq;
 using IO.Astrodynamics.Body;
 using IO.Astrodynamics.Body.Spacecraft;
-using IO.Astrodynamics.OrbitalParameters.TLE;
+using IO.Astrodynamics.OrbitalParameters;
 using IO.Astrodynamics.Propagator;
 using IO.Astrodynamics.Propagator.Integrators;
 using IO.Astrodynamics.Propagator.Variational;
 using IO.Astrodynamics.SolarSystemObjects;
-using IO.Astrodynamics.SSA;
+using IO.Astrodynamics.Ssa;
 using IO.Astrodynamics.TimeSystem;
 using Xunit;
 
@@ -135,7 +135,7 @@ public partial class ConjunctionAssessmentTests
         var tle = InputRuleTle;
         var protectedCraft = new Spacecraft(NextInputRuleId(), "SGP4", 120.0, tle, 150.0,
             new Clock("sgp4" + -_inputRuleIds, 256), hardBodyRadius: ProtectedHardBodyRadius);
-        var moon = new CelestialBody(PlanetsAndMoons.MOON);
+        var moon = new CelestialBody(PlanetsAndMoons.Moon);
         var window = new Window(tle.Epoch, tle.Epoch.AddMinutes(10.0));
 
         // Act
@@ -172,7 +172,7 @@ public partial class ConjunctionAssessmentTests
 
         // Two trajectories in different frames, which the polynomial search cannot take
         var eclipticCraft = InputRuleSpacecraft(NextInputRuleId(),
-            secondaryStart.ToFrame(Frames.Frame.ECLIPTIC_J2000).ToStateVector(), 3.0);
+            secondaryStart.ToFrame(Frames.Frame.ECLIPJ2000).ToStateVector(), 3.0);
         var protectedTrajectory = PropagateRk78(protectedCraft, earth);
         var eclipticTrajectory = PropagateRk78(eclipticCraft, earth);
         Assert.Equal("options", Assert.Throws<ArgumentException>(() =>

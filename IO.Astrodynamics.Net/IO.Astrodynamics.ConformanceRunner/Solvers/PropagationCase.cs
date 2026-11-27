@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using IO.Astrodynamics.Atmosphere;
-using IO.Astrodynamics.Atmosphere.NRLMSISE_00;
 using IO.Astrodynamics.Body;
 using IO.Astrodynamics.Body.Spacecraft;
 using IO.Astrodynamics.Frames;
@@ -12,7 +11,7 @@ using IO.Astrodynamics.ConformanceRunner.Models;
 using IO.Astrodynamics.ConformanceRunner.Utilities;
 using IO.Astrodynamics.SolarSystemObjects;
 using IO.Astrodynamics.TimeSystem;
-using TLE = IO.Astrodynamics.OrbitalParameters.TLE.TLE;
+using Tle = IO.Astrodynamics.OrbitalParameters.Tle;
 
 namespace IO.Astrodynamics.ConformanceRunner.Solvers;
 
@@ -155,7 +154,7 @@ public sealed record PropagationCase(Window Window, Spacecraft Spacecraft, IRead
     // Drag and SRP are modelled about the Earth only (spec.md section 12.1)
     private static void AboutTheEarthOnly(string force, NaifObject centralBody)
     {
-        if (centralBody.NaifId != PlanetsAndMoons.EARTH.NaifId)
+        if (centralBody.NaifId != PlanetsAndMoons.Earth.NaifId)
         {
             throw new InvalidOperationException(
                 $"The case has {force} about {centralBody.Name}: spec.md section 12.1 models {force} about the Earth only.");
@@ -226,7 +225,7 @@ public sealed record PropagationCase(Window Window, Spacecraft Spacecraft, IRead
 
         if (orbit is TleOrbit tleOrbit)
         {
-            var tle = new TLE(tleOrbit.Name, tleOrbit.Line1, tleOrbit.Line2);
+            var tle = new Tle(tleOrbit.Name, tleOrbit.Line1, tleOrbit.Line2);
             var osculatingIcrf = tle.ToStateVector().ToFrame(frame).ToStateVector();
             return new StateVector(osculatingIcrf.Position, osculatingIcrf.Velocity,
                 observer, osculatingIcrf.Epoch, frame);

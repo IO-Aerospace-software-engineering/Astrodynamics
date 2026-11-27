@@ -10,7 +10,6 @@ using IO.Astrodynamics.Body.Spacecraft;
 using IO.Astrodynamics.Maneuver;
 using IO.Astrodynamics.Mission;
 using IO.Astrodynamics.OrbitalParameters;
-using IO.Astrodynamics.OrbitalParameters.TLE;
 using IO.Astrodynamics.Propagator;
 using IO.Astrodynamics.Propagator.Integrators;
 using IO.Astrodynamics.Propagator.Variational;
@@ -49,7 +48,7 @@ public class RunResultsSurfaceTests
 
     private const BindingFlags Everything = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static;
 
-    private static CelestialBody Earth() => new(PlanetsAndMoons.EARTH, Frames.Frame.ICRF, S);
+    private static CelestialBody Earth() => new(PlanetsAndMoons.Earth, Frames.Frame.ICRF, S);
 
     private static Spacecraft NewSpacecraft(CelestialBody earth, out Engine engine)
     {
@@ -158,12 +157,12 @@ public class RunResultsSurfaceTests
     [Fact]
     public void TheCollectionsOfATLEPropagatorSolution_AreReadOnly()
     {
-        var tle = new TLE("ISS",
+        var tle = new Tle("ISS",
             "1 25544U 98067A   21020.53488036  .00016717  00000-0  10270-3 0  9054",
             "2 25544  51.6423 353.0312 0000493 320.8755  39.2360 15.49309423 25703");
         int id = NextId();
         var spacecraft = new Spacecraft(id, "RR" + -id, 100.0, tle, 10000.0, new Clock("RR" + -id, 65536));
-        var solution = new TLEPropagator(new Window(tle.Epoch, tle.Epoch.AddHours(1.0)), spacecraft, Output).Propagate();
+        var solution = new TlePropagator(new Window(tle.Epoch, tle.Epoch.AddHours(1.0)), spacecraft, Output).Propagate();
 
         AssertReadOnly(solution.Segments);
         AssertReadOnly(solution.StateVectors);
@@ -201,12 +200,12 @@ public class RunResultsSurfaceTests
     [Fact]
     public void ATLEPropagatorSolutionAndOneBuiltByTheLibrary_HaveCovariancePropagationNone()
     {
-        var tle = new TLE("ISS",
+        var tle = new Tle("ISS",
             "1 25544U 98067A   21020.53488036  .00016717  00000-0  10270-3 0  9054",
             "2 25544  51.6423 353.0312 0000493 320.8755  39.2360 15.49309423 25703");
         int id = NextId();
         var spacecraft = new Spacecraft(id, "RR" + -id, 100.0, tle, 10000.0, new Clock("RR" + -id, 65536));
-        var solution = new TLEPropagator(new Window(tle.Epoch, tle.Epoch.AddHours(1.0)), spacecraft, Output).Propagate();
+        var solution = new TlePropagator(new Window(tle.Epoch, tle.Epoch.AddHours(1.0)), spacecraft, Output).Propagate();
 
         Assert.Equal(CovariancePropagationOptions.None, solution.CovariancePropagation);
         // A solution built by the library outside a propagator (the conformance runner's straight lines)
@@ -300,7 +299,7 @@ public class RunResultsSurfaceTests
     {
         var tt = TimeSpan.FromSeconds(32.184);
         var first = new Window(S.AddSeconds(600.0), S.AddSeconds(900.0));
-        var earlierStart = new Window(S.AddSeconds(100.0).ToTAI(), S.AddSeconds(1200.0).ToTAI());
+        var earlierStart = new Window(S.AddSeconds(100.0).ToTai(), S.AddSeconds(1200.0).ToTai());
         var tiedEnds = new Window(new Time(earlierStart.StartDate.DateTime + tt, TimeScale.TT),
             new Time(earlierStart.EndDate.DateTime + tt, TimeScale.TT));
         Assert.True(tiedEnds.StartDate == earlierStart.StartDate && !tiedEnds.StartDate.EqualsExact(earlierStart.StartDate));
@@ -321,12 +320,12 @@ public class RunResultsSurfaceTests
     }
 
     // ---------------------------------------------------------------------------------------------------------------------
-    // Decision 60: the fuel accessors, and GetTotalISP and GetTotalFuelFlow over every engine (lot L5b, after the tanks
+    // Decision 60: the fuel accessors, and GetTotalIsp and GetTotalFuelFlow over every engine (lot L5b, after the tanks
     // refuse a non-finite quantity, #800: L5-20 as amended, #801 part 1)
     // ---------------------------------------------------------------------------------------------------------------------
 
     /// <summary>
-    /// GetTotalISP and GetTotalFuelFlow count every engine, whatever its tank holds (decision 60 of #668, L5-20 as
+    /// GetTotalIsp and GetTotalFuelFlow count every engine, whatever its tank holds (decision 60 of #668, L5-20 as
     /// amended, #801 part 1): they counted only the engines whose tank held fuel at the start of a run, which made them
     /// 0 / 0 when none did. The empty tank is set by reflection, the constructor refusing an initial quantity of 0 in this
     /// lot: the analog of L5-20, engines of 300 s at 10 kg/s and 200 s at 30 kg/s, 300 s with the filter, 225 s without.
@@ -341,11 +340,11 @@ public class RunResultsSurfaceTests
         typeof(FuelTank).GetField("<InitialQuantity>k__BackingField", Everything)!.SetValue(empty, 0.0);
 
         Assert.Equal(40.0, spacecraft.GetTotalFuelFlow());
-        Assert.Equal(225.0, spacecraft.GetTotalISP(), 1e-12);
+        Assert.Equal(225.0, spacecraft.GetTotalIsp(), 1e-12);
     }
 
     /// <summary>
-    /// Without an engine, GetTotalISP is 0 / 0, NaN, as before (#801 part 1 changes the filter only; IC-12 of the gap
+    /// Without an engine, GetTotalIsp is 0 / 0, NaN, as before (#801 part 1 changes the filter only; IC-12 of the gap
     /// analysis of L5b), and GetTotalFuelFlow 0.
     /// </summary>
     [Fact]
@@ -356,7 +355,7 @@ public class RunResultsSurfaceTests
             new Clock("RR" + -id, 65536));
 
         Assert.Equal(0.0, spacecraft.GetTotalFuelFlow());
-        Assert.True(double.IsNaN(spacecraft.GetTotalISP()));
+        Assert.True(double.IsNaN(spacecraft.GetTotalIsp()));
     }
 
     [Fact]

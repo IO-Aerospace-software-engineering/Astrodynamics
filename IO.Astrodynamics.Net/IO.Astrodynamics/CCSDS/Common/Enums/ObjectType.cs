@@ -2,7 +2,7 @@
 
 using System.ComponentModel;
 
-namespace IO.Astrodynamics.CCSDS.Common.Enums;
+namespace IO.Astrodynamics.Ccsds;
 
 /// <summary>
 /// Object type classification used in CCSDS Navigation Data Messages.

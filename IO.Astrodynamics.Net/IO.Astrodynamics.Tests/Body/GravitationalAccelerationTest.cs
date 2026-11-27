@@ -20,7 +20,7 @@ public class GravitationalAccelerationTest
         GeopotentialGravitationalField gravity =
             new GeopotentialGravitationalField(new StreamReader(new FileStream(Path.Combine(Constants.SolarSystemKernelPath.ToString(), "EGM2008_to70_TideFree"), FileMode.Open, FileAccess.Read, FileShare.Read)));
         StateVector parkingOrbit = new StateVector(new Vector3(6800000.0, 0.0, 0.0), new Vector3(0.0, 7656.2204182967143, 0.0), TestHelpers.EarthWithAtmAndGeoAtJ2000,
-            TimeSystem.Time.J2000TDB,
+            TimeSystem.Time.J2000Tdb,
             Frames.Frame.ICRF);
         var res = gravity.ComputeGravitationalAcceleration(parkingOrbit);
         // After fixing all 4 bugs: full 3D gradient, geodesy normalization, no CS phase, no abs()
@@ -35,7 +35,7 @@ public class GravitationalAccelerationTest
     {
         GravitationalField gravity = new GravitationalField();
         StateVector parkingOrbit = new StateVector(new Vector3(6800000.0, 0.0, 0.0), new Vector3(0.0, 7656.2204182967143, 0.0), TestHelpers.EarthWithAtmAndGeoAtJ2000,
-            TimeSystem.Time.J2000TDB,
+            TimeSystem.Time.J2000Tdb,
             Frames.Frame.ICRF);
         var res = gravity.ComputeGravitationalAcceleration(parkingOrbit);
         Assert.Equal(new Vector3(-8.620251632937341, 0.0, 0.0), res);
@@ -56,7 +56,7 @@ public class GravitationalAccelerationTest
             new Vector3(component, 0.0, component),
             new Vector3(0.0, 7656.2204182967143, 0.0),
             TestHelpers.EarthWithAtmAndGeoAtJ2000,
-            TimeSystem.Time.J2000TDB,
+            TimeSystem.Time.J2000Tdb,
             Frames.Frame.ICRF);
 
         var res = gravity.ComputeGravitationalAcceleration(sv);
@@ -87,7 +87,7 @@ public class GravitationalAccelerationTest
             new Vector3(component, 0.0, component),
             new Vector3(0.0, 7656.2204182967143, 0.0),
             TestHelpers.EarthWithAtmAndGeoAtJ2000,
-            TimeSystem.Time.J2000TDB,
+            TimeSystem.Time.J2000Tdb,
             Frames.Frame.ICRF);
 
         // Southern hemisphere: -Z
@@ -95,7 +95,7 @@ public class GravitationalAccelerationTest
             new Vector3(component, 0.0, -component),
             new Vector3(0.0, 7656.2204182967143, 0.0),
             TestHelpers.EarthWithAtmAndGeoAtJ2000,
-            TimeSystem.Time.J2000TDB,
+            TimeSystem.Time.J2000Tdb,
             Frames.Frame.ICRF);
 
         var resNorth = gravity.ComputeGravitationalAcceleration(svNorth);
@@ -127,7 +127,7 @@ public class GravitationalAccelerationTest
             new Vector3(component, component, 0.0),
             new Vector3(0.0, 0.0, 7656.2204182967143),
             TestHelpers.EarthWithAtmAndGeoAtJ2000,
-            TimeSystem.Time.J2000TDB,
+            TimeSystem.Time.J2000Tdb,
             Frames.Frame.ICRF);
 
         var res = gravity.ComputeGravitationalAcceleration(sv);
@@ -157,7 +157,7 @@ public class GravitationalAccelerationTest
             new Vector3(r, 0.0, 0.0),
             new Vector3(0.0, 7656.2204182967143, 0.0),
             TestHelpers.EarthWithAtmAndGeoAtJ2000,
-            TimeSystem.Time.J2000TDB,
+            TimeSystem.Time.J2000Tdb,
             Frames.Frame.ICRF);
 
         var res = gravity.ComputeGravitationalAcceleration(sv);

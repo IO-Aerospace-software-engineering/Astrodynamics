@@ -153,7 +153,7 @@ public sealed class Lot2CaseTests : IDisposable
     {
         // Arrange: the runner's kernels associate the Moon with MOON_ME; the case's moon_assoc_pa.tf, loaded after them,
         // with MOON_PA, the frame of LP165P (spec.md section 12.1)
-        SpiceAPI.Instance.LoadKernels(new DirectoryInfo(KernelsPath));
+        SpiceApi.Instance.LoadKernels(new DirectoryInfo(KernelsPath));
         SuiteFixture.Lot2.WriteSuite(_directory, MoonCase);
         var caseInput = SuiteFixture.ReadCase(_directory, MoonCase);
 
@@ -164,7 +164,7 @@ public sealed class Lot2CaseTests : IDisposable
             inside = ((CelestialBody)PropagationCase.Build(caseInput, Path.Combine(_directory, "data")).Bodies[0]).Frame.Name;
         }
 
-        string after = new CelestialBody(PlanetsAndMoons.MOON).Frame.Name;
+        string after = new CelestialBody(PlanetsAndMoons.Moon).Frame.Name;
 
         // Assert
         Assert.Equal("MOON_PA", inside);
@@ -175,7 +175,7 @@ public sealed class Lot2CaseTests : IDisposable
     public void TheShadowBodiesOfACase_AreTheOccultersOfTheFrameworksSrp()
     {
         // Arrange: the check of the runner (PropagationCase.Occulters) against the bodies the framework's SRP takes
-        SpiceAPI.Instance.LoadKernels(new DirectoryInfo(KernelsPath));
+        SpiceApi.Instance.LoadKernels(new DirectoryInfo(KernelsPath));
         SuiteFixture.Lot2.WriteSuite(_directory, GeoSrpCase);
         var caseInput = SuiteFixture.ReadCase(_directory, GeoSrpCase);
         PropagationCase propagationCase;

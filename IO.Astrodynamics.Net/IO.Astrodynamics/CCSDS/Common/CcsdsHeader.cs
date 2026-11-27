@@ -3,7 +3,7 @@
 using System;
 using System.Collections.Generic;
 
-namespace IO.Astrodynamics.CCSDS.Common;
+namespace IO.Astrodynamics.Ccsds;
 
 /// <summary>
 /// Represents the header section of a CCSDS Navigation Data Message.

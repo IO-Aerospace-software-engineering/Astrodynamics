@@ -53,7 +53,7 @@ public class MarsStandardAtmosphereDomainTests
             var atmosphere = Model.GetAtmosphere(AtmosphericContext.FromAltitude(altitude));
             Assert.True(double.IsFinite(atmosphere.Density) && atmosphere.Density > 0.0,
                 $"{altitude} m: density {atmosphere.Density}");
-            Assert.True(atmosphere.Temperature + IO.Astrodynamics.Constants.Kelvin > 0.0,
+            Assert.True(atmosphere.Temperature + IO.Astrodynamics.Constants.ZeroCelsiusInKelvin > 0.0,
                 $"{altitude} m: temperature {atmosphere.Temperature} °C");
             Assert.True(atmosphere.Pressure > 0.0, $"{altitude} m: pressure {atmosphere.Pressure}");
             Assert.True(atmosphere.Density < previous, $"{altitude} m: {atmosphere.Density} after {previous}");
@@ -175,7 +175,7 @@ public class MarsStandardAtmosphereDomainTests
         // Assert: the temperature, the pressure and the density of both branches agree to the rounding
         _output.WriteLine($"base {Base} m: T {lower.Temperature} / {upper.Temperature} °C, p {lower.Pressure:E17} / " +
                           $"{upper.Pressure:E17} kPa, ρ {lower.Density:E17} / {upper.Density:E17}");
-        Assert.Equal(139.0, upper.Temperature + IO.Astrodynamics.Constants.Kelvin, 12);
+        Assert.Equal(139.0, upper.Temperature + IO.Astrodynamics.Constants.ZeroCelsiusInKelvin, 12);
         Assert.Equal(lower.Temperature, upper.Temperature, 12);
         Assert.True(System.Math.Abs(lower.Pressure / upper.Pressure - 1.0) < 1e-14);
         Assert.True(System.Math.Abs(lower.Density / upper.Density - 1.0) < 1e-13);

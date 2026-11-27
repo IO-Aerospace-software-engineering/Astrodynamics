@@ -129,7 +129,7 @@ internal sealed class EventGates
         if (_closedCount == 0) return;
 
         double t0 = step.CumulativeTime;
-        double t1 = t0 + step.StepSize;
+        double t1 = t0 + step.StepSizeSeconds;
         for (int i = 0; i < _closed.Length; i++)
         {
             if (!_closed[i] || endEpoch < _gates[i]) continue;
@@ -138,7 +138,7 @@ internal sealed class EventGates
             _closed[i] = false;
             _closedCount--;
             var detector = (IGatedEventDetector)_detectors[i];
-            double tm = integrator.TimeArgument.OnEpochGrid(baseEpoch, _gates[i].ToTDB(), t0, t1);
+            double tm = integrator.TimeArgument.OnEpochGrid(baseEpoch, _gates[i].ToTdb(), t0, t1);
             double g = detector.EvaluateOpen(integrator.StateInsideAcceptedStep(step, baseEpoch, tm));
             bool zero = g == 0.0;
             if (zero && tm >= t1)

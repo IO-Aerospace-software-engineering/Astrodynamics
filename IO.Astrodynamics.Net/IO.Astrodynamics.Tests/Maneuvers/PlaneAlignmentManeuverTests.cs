@@ -23,7 +23,7 @@ namespace IO.Astrodynamics.Tests.Maneuvers
             Engine eng = new Engine("My engine", 350.0, 50.0, fuelTank10, "model 1", "sn1");
 
             var targetOrbit = KeplerianElements.Parabolic(6800000.0, 0.0, 0.0, 0.0, 0.0, TestHelpers.Sun,
-                new TimeSystem.Time(new DateTime(2021, 01, 01), TimeScale.TDB), Frames.Frame.ECLIPTIC_J2000);
+                new TimeSystem.Time(new DateTime(2021, 01, 01), TimeScale.TDB), Frames.Frame.ECLIPJ2000);
 
             PlaneAlignmentManeuver planeAlignmentManeuver =
                 new PlaneAlignmentManeuver(targetOrbit, eng, new TimeSystem.Time(new DateTime(2021, 01, 01), TimeScale.TDB), TimeSpan.FromDays(1.0));
@@ -39,9 +39,9 @@ namespace IO.Astrodynamics.Tests.Maneuvers
         public void ExecuteAtAscendingNode()
         {
             var orbitalParams = new KeplerianElements(11480000.0, 0.0, 60.0 * Astrodynamics.Constants.Deg2Rad, 10.0 * Astrodynamics.Constants.Deg2Rad, 0.0, 0.0,
-                TestHelpers.EarthAtJ2000, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF);
+                TestHelpers.EarthAtJ2000, TimeSystem.Time.J2000Tdb, Frames.Frame.ICRF);
             var targtOrbitalParams = new KeplerianElements(11480000.0, 0.0, 45.0 * Astrodynamics.Constants.Deg2Rad, 55.0 * Astrodynamics.Constants.Deg2Rad,
-                0.0 * Astrodynamics.Constants.Deg2Rad, 0.0, TestHelpers.EarthAtJ2000, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF);
+                0.0 * Astrodynamics.Constants.Deg2Rad, 0.0, TestHelpers.EarthAtJ2000, TimeSystem.Time.J2000Tdb, Frames.Frame.ICRF);
             var spc = new Spacecraft(-666, "GenericSpacecraft", 1000.0, orbitalParams, 3000.0, new Clock("GenericClk", 65536));
             spc.AddFuelTank(new FuelTank("ft", 2000.0, 1900.0, "ftA", "123456"));
             spc.AddEngine(new Engine("eng", 450, 50, spc.FuelTanks.First(), "engmk1", "12345"));
@@ -61,9 +61,9 @@ namespace IO.Astrodynamics.Tests.Maneuvers
         public void ExecuteAtDescendingNode()
         {
             var orbitalParams = new KeplerianElements(11480000.0, 0.0, 60.0 * Astrodynamics.Constants.Deg2Rad, 10.0 * Astrodynamics.Constants.Deg2Rad, 0.0, 0.0,
-                TestHelpers.EarthAtJ2000, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF);
+                TestHelpers.EarthAtJ2000, TimeSystem.Time.J2000Tdb, Frames.Frame.ICRF);
             var targtOrbitalParams = new KeplerianElements(11480000.0, 0.0, 45.0 * Astrodynamics.Constants.Deg2Rad, 55.0 * Astrodynamics.Constants.Deg2Rad,
-                0.0 * Astrodynamics.Constants.Deg2Rad, 0.0, TestHelpers.EarthAtJ2000, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF);
+                0.0 * Astrodynamics.Constants.Deg2Rad, 0.0, TestHelpers.EarthAtJ2000, TimeSystem.Time.J2000Tdb, Frames.Frame.ICRF);
             var spc = new Spacecraft(-666, "GenericSpacecraft", 1000.0, orbitalParams, 3000.0, new Clock("GenericClk", 65536));
             spc.AddFuelTank(new FuelTank("ft", 2000.0, 1900.0, "ftA", "123456"));
             spc.AddEngine(new Engine("eng", 450, 50, spc.FuelTanks.First(), "engmk1", "12345"));

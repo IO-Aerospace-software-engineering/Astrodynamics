@@ -79,7 +79,7 @@ namespace IO.Astrodynamics.Body.Spacecraft
             using StreamReader sr = new StreamReader(stream ?? throw new InvalidOperationException());
             var templateData = sr.ReadToEnd();
             var data = templateData.Replace("{id}", System.Math.Abs(Spacecraft.NaifId).ToString(CultureInfo.InvariantCulture)).Replace("{resolution}",  Resolution.ToString(CultureInfo.InvariantCulture));
-            SpiceAPI.Instance.WriteTextKernel(outputFile, data);
+            SpiceApi.Instance.WriteTextKernel(outputFile, data);
         }
 
         public bool Equals(Clock other)

@@ -40,7 +40,7 @@ public class SpacecraftConstructionTests
     private static int _nextId = -181000;
     private static int NextId() => Interlocked.Decrement(ref _nextId);
 
-    private static CelestialBody Earth() => new(PlanetsAndMoons.EARTH, Frames.Frame.ICRF, S);
+    private static CelestialBody Earth() => new(PlanetsAndMoons.Earth, Frames.Frame.ICRF, S);
 
     private static KeplerianElements Orbit(CelestialBody earth) =>
         new(7000e3, 0.01, 0.5, 0.0, 0.0, 0.0, earth, S, Frames.Frame.ICRF);
@@ -61,7 +61,7 @@ public class SpacecraftConstructionTests
         Assert.Same(spacecraft, spacecraft.Clock.Spacecraft);
         Assert.Equal(1.0, spacecraft.SectionalArea);
         Assert.Equal(2.2, spacecraft.DragCoefficient);
-        Assert.Equal(1.0, spacecraft.SolarRadiationCoeff);
+        Assert.Equal(1.0, spacecraft.SolarRadiationCoefficient);
         Assert.Null(spacecraft.CosparId);
         Assert.Equal(0.0, spacecraft.HardBodyRadius);
     }
@@ -79,7 +79,7 @@ public class SpacecraftConstructionTests
         Assert.Equal(4.0, spacecraft.SectionalArea);
         Assert.Equal(2.0, spacecraft.DragCoefficient);
         Assert.Equal("2024-001A", spacecraft.CosparId);
-        Assert.Equal(1.3, spacecraft.SolarRadiationCoeff);
+        Assert.Equal(1.3, spacecraft.SolarRadiationCoefficient);
         Assert.Equal(2.5, spacecraft.HardBodyRadius);
     }
 

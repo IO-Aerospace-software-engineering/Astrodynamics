@@ -2,9 +2,9 @@
 
 using System;
 using System.Collections.Generic;
-using IO.Astrodynamics.CCSDS.Common;
+using IO.Astrodynamics.Ccsds;
 
-namespace IO.Astrodynamics.CCSDS.OMM;
+namespace IO.Astrodynamics.Ccsds;
 
 /// <summary>
 /// Represents TLE-specific parameters in an OMM message.
@@ -73,7 +73,7 @@ public class TleParameters
     /// <summary>
     /// Initializes a new instance of the <see cref="TleParameters"/> class with BSTAR and MEAN_MOTION_DDOT.
     /// </summary>
-    /// <param name="bstar">The BSTAR drag term in 1/Earth radii.</param>
+    /// <param name="bStar">The BSTAR drag term in 1/Earth radii.</param>
     /// <param name="meanMotionDot">The first derivative of mean motion in rev/day².</param>
     /// <param name="meanMotionDDot">The second derivative of mean motion in rev/day³.</param>
     /// <param name="ephemerisType">Optional ephemeris type.</param>
@@ -86,7 +86,7 @@ public class TleParameters
     /// ±Infinity, which the OMM reader refuses (#708, #717), or the element set or revolution number is out of its range, the
     /// exception naming <paramref name="elementSetNumber"/> or <paramref name="revolutionNumberAtEpoch"/> (#734).</exception>
     public TleParameters(
-        double bstar,
+        double bStar,
         double meanMotionDot,
         double meanMotionDDot,
         int? ephemerisType = null,
@@ -100,7 +100,7 @@ public class TleParameters
         ValidateRevolutionNumber(revolutionNumberAtEpoch);
 
         // Real numbers, as the reader reads them (#717)
-        BStar = CcsdsValues.RequireFinite(bstar, nameof(bstar));
+        BStar = CcsdsValues.RequireFinite(bStar, nameof(bStar));
         BTerm = null;
         MeanMotionDot = CcsdsValues.RequireFinite(meanMotionDot, nameof(meanMotionDot));
         MeanMotionDDot = CcsdsValues.RequireFinite(meanMotionDDot, nameof(meanMotionDDot));
@@ -117,7 +117,7 @@ public class TleParameters
     /// Private constructor for factory methods.
     /// </summary>
     private TleParameters(
-        double? bstar,
+        double? bStar,
         double? bterm,
         double meanMotionDot,
         double? meanMotionDDot,
@@ -131,7 +131,7 @@ public class TleParameters
     {
         // Real numbers, as the reader reads them (#717: NaN and ±Infinity built, Validate() passed them, an infinite BSTAR
         // with an information message only, and the writer wrote NaN, Infinity or -Infinity, which the reader refuses)
-        BStar = CcsdsValues.RequireNullOrFinite(bstar, nameof(bstar));
+        BStar = CcsdsValues.RequireNullOrFinite(bStar, nameof(bStar));
         BTerm = CcsdsValues.RequireNullOrFinite(bterm, nameof(bterm));
         MeanMotionDot = CcsdsValues.RequireFinite(meanMotionDot, nameof(meanMotionDot));
         MeanMotionDDot = CcsdsValues.RequireNullOrFinite(meanMotionDDot, nameof(meanMotionDDot));
@@ -161,7 +161,7 @@ public class TleParameters
     /// revolution number is out of its range, the exception naming <c>elementSetNumber</c> or
     /// <c>revolutionNumberAtEpoch</c> (#734).</exception>
     public static TleParameters CreateWithBStarAndDDot(
-        double bstar,
+        double bStar,
         double meanMotionDot,
         double meanMotionDDot,
         int? ephemerisType = null,
@@ -175,7 +175,7 @@ public class TleParameters
         ValidateRevolutionNumber(revolutionNumberAtEpoch);
 
         return new TleParameters(
-            bstar, null, meanMotionDot, meanMotionDDot, null,
+            bStar, null, meanMotionDot, meanMotionDDot, null,
             ephemerisType, classificationType, noradCatalogId, elementSetNumber, revolutionNumberAtEpoch, comments);
     }
 
@@ -186,7 +186,7 @@ public class TleParameters
     /// revolution number is out of its range, the exception naming <c>elementSetNumber</c> or
     /// <c>revolutionNumberAtEpoch</c> (#734).</exception>
     public static TleParameters CreateWithBStarAndAGom(
-        double bstar,
+        double bStar,
         double meanMotionDot,
         double agom,
         int? ephemerisType = null,
@@ -200,7 +200,7 @@ public class TleParameters
         ValidateRevolutionNumber(revolutionNumberAtEpoch);
 
         return new TleParameters(
-            bstar, null, meanMotionDot, null, agom,
+            bStar, null, meanMotionDot, null, agom,
             ephemerisType, classificationType, noradCatalogId, elementSetNumber, revolutionNumberAtEpoch, comments);
     }
 

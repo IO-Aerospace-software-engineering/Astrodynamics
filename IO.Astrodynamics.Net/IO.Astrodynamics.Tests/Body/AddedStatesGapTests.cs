@@ -5,10 +5,9 @@ using IO.Astrodynamics.Body;
 using IO.Astrodynamics.Body.Spacecraft;
 using IO.Astrodynamics.Math;
 using IO.Astrodynamics.OrbitalParameters;
-using IO.Astrodynamics.OrbitalParameters.TLE;
 using IO.Astrodynamics.Propagator;
 using IO.Astrodynamics.SolarSystemObjects;
-using IO.Astrodynamics.SSA;
+using IO.Astrodynamics.Ssa;
 using IO.Astrodynamics.TimeSystem;
 using Xunit;
 using Xunit.Abstractions;
@@ -52,7 +51,7 @@ public class AddedStatesGapTests
     // of this class); the reads one-sided at the ends of an arc set it. Twice the worst, rounded up.
     private const double TwoBodyTolerance = 7.0e-4;
 
-    private static CelestialBody Earth() => new(PlanetsAndMoons.EARTH, Frame.ICRF, Start);
+    private static CelestialBody Earth() => new(PlanetsAndMoons.Earth, Frame.ICRF, Start);
 
     private static StateVector Orbit(CelestialItem earth) =>
         new(new Vector3(-7378137.0, 0.0, 0.0), new Vector3(0.0, -5509.9, -4623.4), earth, Start, Frame.ICRF);
@@ -94,7 +93,7 @@ public class AddedStatesGapTests
     public void TwoDisjointWindows_MakeTwoArcs_AReadInTheGapThrows_AndEachWindowReadsAsAlone(string frameName, int naifId)
     {
         // Arrange: states over [0, 1 h] and [5 h, 6 h], added in two calls; the same windows each on a spacecraft alone
-        var frame = frameName == "ICRF" ? Frame.ICRF : Frame.ECLIPTIC_J2000;
+        var frame = frameName == "ICRF" ? Frame.ICRF : Frame.ECLIPJ2000;
         var earth = Earth();
         var orbit = Orbit(earth);
         var first = States(orbit, 0.0, 3600.0);
@@ -358,13 +357,13 @@ public class AddedStatesGapTests
     /// </summary>
     [Theory]
     [InlineData(Aberration.LT)]
-    [InlineData(Aberration.CNS)]
+    [InlineData(Aberration.CnS)]
     [InlineData(Aberration.XLT)]
-    [InlineData(Aberration.XCNS)]
+    [InlineData(Aberration.XcnS)]
     public void ALightTimeReadWithinTheMarginOfAnArc_ReadsThatArc(Aberration aberration)
     {
         var earth = Earth();
-        var moon = new CelestialBody(PlanetsAndMoons.MOON, Frame.ICRF, Start);
+        var moon = new CelestialBody(PlanetsAndMoons.Moon, Frame.ICRF, Start);
         var orbit = Orbit(earth);
         var first = States(orbit, 0.0, 3600.0);
         var second = States(orbit, 18000.0, 21600.0);
@@ -379,7 +378,7 @@ public class AddedStatesGapTests
         var twoBody = NewSpacecraft(id * 10 - 3, orbit);
 
         // The ends of each arc: by reception the corrected epoch lies before the observation, by transmission after it
-        bool reception = aberration is Aberration.LT or Aberration.CNS;
+        bool reception = aberration is Aberration.LT or Aberration.CnS;
         double worst = 0.0;
         foreach (var (alone, s) in new[] { (firstAlone, 0.0), (firstAlone, 3600.0), (secondAlone, 18000.0), (secondAlone, 21600.0) })
         {
@@ -471,7 +470,7 @@ public class AddedStatesGapTests
         }
 
         // A light-time read from the Moon at its epoch reads it 1.3 s before: throws
-        var moon = new CelestialBody(PlanetsAndMoons.MOON, Frame.ICRF, Start);
+        var moon = new CelestialBody(PlanetsAndMoons.Moon, Frame.ICRF, Start);
         Assert.Throws<InvalidOperationException>(() => spacecraft.GetEphemeris(lone.Epoch, moon, Frame.ICRF, Aberration.LT));
 
         // The window of its epoch alone is covered; any wider is not
@@ -506,11 +505,11 @@ public class AddedStatesGapTests
     public void AStoreOfOneState_ReadsAtItsEpochOnly_TheTwoBodyOrbitWithoutAState()
     {
         var earth = Earth();
-        var moon = new CelestialBody(PlanetsAndMoons.MOON, Frame.ICRF, Start);
+        var moon = new CelestialBody(PlanetsAndMoons.Moon, Frame.ICRF, Start);
         var orbit = Orbit(earth);
         var spacecraft = new Spacecraft(-7985, "GA7985", 1000.0, orbit, 3000.0, new Clock("GA7985_CLK", 65536), cosparId: "2026-001A");
         spacecraft.AddPropagatedStates(new StateVector(new Vector3(8000000.0, 0.0, 0.0), new Vector3(0.0, 7000.0, 0.0), earth,
-            Start.AddSeconds(3600.0), Frame.ECLIPTIC_J2000));
+            Start.AddSeconds(3600.0), Frame.ECLIPJ2000));
         var lone = Assert.Single(Assert.Single(spacecraft.PropagatedArcs));
         LabelAssert.Equal(new Window(lone.Epoch, lone.Epoch), spacecraft.InterpolatedStatesWindow);
 
@@ -542,7 +541,7 @@ public class AddedStatesGapTests
         Assert.Throws<InvalidOperationException>(() => spacecraft.CheckInterpolatedStatesCover(wider, "search window"));
         var secondary = NewSpacecraft(-7986, new StateVector(new Vector3(-7378137.0, 0.0, 1000.0), new Vector3(0.0, -5509.9, -4623.4), earth, Start, Frame.ICRF));
         Assert.Throws<InvalidOperationException>(() => ConjunctionAssessment.Analyze(spacecraft, secondary, wider));
-        Assert.Throws<InvalidOperationException>(() => moon.FindDistanceWindows(wider, spacecraft, RelationnalOperator.Greater, 1.0, new WindowSearchOptions { Step = TimeSpan.FromSeconds(60.0) }).ToArray());
+        Assert.Throws<InvalidOperationException>(() => moon.FindDistanceWindows(wider, spacecraft, RelationalOperator.GreaterThan, 1.0, new WindowSearchOptions { Step = TimeSpan.FromSeconds(60.0) }).ToArray());
 
         // The SPK refuses it
         var directory = Directory.CreateDirectory(Path.Combine("Data/User/AddedStatesGap", "store-of-one"));
@@ -613,21 +612,21 @@ public class AddedStatesGapTests
 
     #endregion
 
-    #region A TLE spacecraft sampled by TLEPropagator
+    #region A TLE spacecraft sampled by TlePropagator
 
     /// <summary>
-    /// A TLE spacecraft sampled by <see cref="TLEPropagator"/> over [0, 1 h], then given SGP4 states over [3 h, 4 h]: two
+    /// A TLE spacecraft sampled by <see cref="TlePropagator"/> over [0, 1 h], then given SGP4 states over [3 h, 4 h]: two
     /// arcs; a read in the gap from the Earth without aberration reads SGP4, as outside its samples (before, the short-circuit
     /// interpolated across the gap, 1.648e7 m off SGP4 at 2 h in the probes of R08).
     /// </summary>
     [Fact]
     public void ATleSpacecraft_ReadsSgp4InTheGap()
     {
-        var tle = new TLE("ISS",
+        var tle = new Tle("ISS",
             "1 25544U 98067A   21020.53488036  .00016717  00000-0  10270-3 0  9054",
             "2 25544  51.6423 353.0312 0000493 320.8755  39.2360 15.49309423 25703");
         var spacecraft = new Spacecraft(-7991, "GA7991", 100.0, tle, 10000.0, new Clock("GA7991_CLK", 65536));
-        new TLEPropagator(new Window(tle.Epoch, tle.Epoch.AddHours(1.0)), spacecraft, TimeSpan.FromSeconds(60.0)).Propagate();
+        new TlePropagator(new Window(tle.Epoch, tle.Epoch.AddHours(1.0)), spacecraft, TimeSpan.FromSeconds(60.0)).Propagate();
         var later = Enumerable.Range(0, 61)
             .Select(i => tle.ToStateVector(tle.Epoch.AddHours(3.0).AddSeconds(60.0 * i)).ToFrame(Frame.ICRF).ToStateVector()).ToArray();
         spacecraft.AddPropagatedStates(later);

@@ -7,9 +7,9 @@ using System.Reflection;
 using System.Xml;
 using System.Xml.Linq;
 using System.Xml.Schema;
-using IO.Astrodynamics.CCSDS.Common;
+using IO.Astrodynamics.Ccsds;
 
-namespace IO.Astrodynamics.CCSDS.OPM;
+namespace IO.Astrodynamics.Ccsds;
 
 /// <summary>
 /// Validates OPM documents against CCSDS standards and physical constraints.
@@ -564,9 +564,9 @@ internal class OpmValidator
         if (!ValidatePhysicalConstraints)
             return;
 
-        if (!CcsdsValues.IsNullOrFiniteNonNegative(maneuver.ManDuration))
+        if (!CcsdsValues.IsNullOrFiniteNonNegative(maneuver.ManDurationSeconds))
         {
-            result.AddError(InvalidRange, "Maneuver duration must be finite and cannot be negative.", $"{basePath}.ManDuration");
+            result.AddError(InvalidRange, "Maneuver duration must be finite and cannot be negative.", $"{basePath}.ManDurationSeconds");
         }
 
         if (!(double.IsFinite(maneuver.ManDeltaMass) && maneuver.ManDeltaMass <= 0))

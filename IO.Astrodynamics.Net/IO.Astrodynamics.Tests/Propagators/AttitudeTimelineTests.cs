@@ -273,7 +273,7 @@ public class AttitudeTimelineTests
         public bool Tt => !Ssb && !Moon;
 
         /// <summary>The seconds from S of the time argument: TT about the Earth, TDB about the Moon and in SSB mode.</summary>
-        public double Seconds(Time t) => Tt ? MinimumEpochGateTests.Tt(t) : (t.ToTDB() - S).TotalSeconds;
+        public double Seconds(Time t) => Tt ? MinimumEpochGateTests.Tt(t) : (t.ToTdb() - S).TotalSeconds;
 
         public static TimelineRun Run(int naifId, string key, Action<Spacecraft, Maneuver.Maneuver[]> before = null)
         {
@@ -281,8 +281,8 @@ public class AttitudeTimelineTests
             string letter = parts[0], integrator = parts[1], path = parts[2], frameName = parts[3];
             double output = double.Parse(parts[4], Invariant);
             bool moon = frameName == "Moon", ssb = frameName == "SSB";
-            var earth = new CelestialBody(PlanetsAndMoons.EARTH, Frame.ICRF, S);
-            var center = moon ? new CelestialBody(PlanetsAndMoons.MOON, Frame.ICRF, S) : earth;
+            var earth = new CelestialBody(PlanetsAndMoons.Earth, Frame.ICRF, S);
+            var center = moon ? new CelestialBody(PlanetsAndMoons.Moon, Frame.ICRF, S) : earth;
             OrbitalParams orbitIcrf = moon ? MoonOrbit(center) : OrbitOf(letter, center);
             OrbitalParams orbit = orbitIcrf;
             CelestialItem[] bodies = [center];
@@ -290,8 +290,8 @@ public class AttitudeTimelineTests
             if (ssb)
             {
                 var sv = orbitIcrf.ToStateVector();
-                var fromSsb = center.GetGeometricStateRelativeTo(S, Barycenters.SOLAR_SYSTEM_BARYCENTER);
-                orbit = new StateVector(fromSsb.Position + sv.Position, fromSsb.Velocity + sv.Velocity, Barycenters.SOLAR_SYSTEM_BARYCENTER, S, Frame.ICRF);
+                var fromSsb = center.GetGeometricStateRelativeTo(S, Barycenters.SolarSystemBarycenter);
+                orbit = new StateVector(fromSsb.Position + sv.Position, fromSsb.Velocity + sv.Velocity, Barycenters.SolarSystemBarycenter, S, Frame.ICRF);
                 bodies = [center, new CelestialBody(Stars.Sun, Frame.ICRF, S)];
             }
             else if (!moon && frameName != "ICRF")
@@ -402,7 +402,7 @@ public class AttitudeTimelineTests
             var state = new StateVector(position, velocity, Solution.Observer, t, Solution.Frame);
             if (Solution.Frame != Frame.ICRF)
             {
-                var q = SpiceAPI.Instance.TransformFrame(t, Solution.Frame, Frame.ICRF).Rotation;
+                var q = SpiceApi.Instance.TransformFrame(t, Solution.Frame, Frame.ICRF).Rotation;
                 state = new StateVector(position.Rotate(q), velocity.Rotate(q), Solution.Observer, t, Frame.ICRF);
             }
 
@@ -412,7 +412,7 @@ public class AttitudeTimelineTests
 
         /// <summary>The delta-V of an impulse in ICRF, rotated from the frame of the propagation by <c>pxform</c>.</summary>
         public Vector3 DeltaVInIcrf(ImpulseManeuver impulse, Time tc) =>
-            Frame == Frame.ICRF ? impulse.DeltaV : impulse.DeltaV.Rotate(SpiceAPI.Instance.TransformFrame(tc, Frame, Frame.ICRF).Rotation);
+            Frame == Frame.ICRF ? impulse.DeltaV : impulse.DeltaV.Rotate(SpiceApi.Instance.TransformFrame(tc, Frame, Frame.ICRF).Rotation);
     }
 
     /// <summary>The orbit of a case about the Earth: #569's from its apogee at S; for the edges, from 2 s before its perigee
@@ -448,7 +448,7 @@ public class AttitudeTimelineTests
         spacecraft.AddFuelTank(tank);
         var engine = new Engine("eng", 300.0, 10.0, tank, "model", "sn");
         spacecraft.AddEngine(engine);
-        bool moon = center.NaifId == PlanetsAndMoons.MOON.NaifId;
+        bool moon = center.NaifId == PlanetsAndMoons.Moon.NaifId;
         var kinds = new Dictionary<Maneuver.Maneuver, string>();
 
         Maneuver.Maneuver Nadir(double hold, double? minimum = null) => Kind(new NadirAttitude(minimum.HasValue ? S.AddSeconds(minimum.Value) : Min, TimeSpan.FromSeconds(hold), center), "nadir");
@@ -692,7 +692,7 @@ public class AttitudeTimelineTests
         }
 
         // The attitude: every second, at each entry, and about each activation
-        var record = run.Spacecraft.Frame.GetStateOrientationsToICRF().ToArray();
+        var record = run.Spacecraft.Frame.GetStateOrientationsToIcrf().ToArray();
         var entries = new HashSet<Time>(record.Select(x => x.Epoch));
         var epochs = new SortedSet<Time>();
         double length = (run.Window.EndDate - run.Window.StartDate).TotalSeconds;
@@ -706,7 +706,7 @@ public class AttitudeTimelineTests
         {
             var law = ExpectedAt(run, expected, t);
             if (law == null) continue;
-            var managed = run.Spacecraft.Frame.GetStateOrientationToICRF(t).Rotation;
+            var managed = run.Spacecraft.Frame.GetStateOrientationToIcrf(t).Rotation;
             double angle = AttitudeRecordTests.RotationAngle(law.Value.Map, v => v.Rotate(managed));
             m.Checks++;
             if (!law.Value.Law) m.Discrete = System.Math.Max(m.Discrete, angle);

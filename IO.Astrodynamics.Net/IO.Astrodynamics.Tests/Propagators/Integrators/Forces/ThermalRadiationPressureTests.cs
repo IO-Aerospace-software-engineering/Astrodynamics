@@ -23,7 +23,7 @@ public class ThermalRadiationPressureTests
 
     private static CelestialBody CreateEarth(double thermalEffectiveTemperature = 254.0, double thermalEmissivity = 0.95)
     {
-        return new CelestialBody(PlanetsAndMoons.EARTH, Frames.Frame.ICRF, TimeSystem.Time.J2000TDB,
+        return new CelestialBody(PlanetsAndMoons.Earth, Frames.Frame.ICRF, TimeSystem.Time.J2000Tdb,
             thermalEffectiveTemperature: thermalEffectiveTemperature, thermalEmissivity: thermalEmissivity);
     }
 
@@ -32,7 +32,7 @@ public class ThermalRadiationPressureTests
     {
         Clock clk = new Clock("My clock", 256);
         return new Spacecraft(-1001, "MySpacecraft", mass, new StateVector(new Vector3(6778136.3, 0.0, 0.0), new Vector3(0.0, 7656.2204182967143, 0.0),
-                observer, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF), 10000.0,
+                observer, TimeSystem.Time.J2000Tdb, Frames.Frame.ICRF), 10000.0,
             clk,
             sectionalArea: sectionalArea, solarRadiationCoefficient: solarRadiationCoeff);
     }
@@ -47,7 +47,7 @@ public class ThermalRadiationPressureTests
     {
         double t4 = tEff * tEff * tEff * tEff;
         return cr * (area / mass) * epsilon * IO.Astrodynamics.Constants.StefanBoltzmann * t4
-               * rBody * rBody / (IO.Astrodynamics.Constants.C * rSc * rSc);
+               * rBody * rBody / (IO.Astrodynamics.Constants.SpeedOfLight * rSc * rSc);
     }
 
     #region Constructor Validation
@@ -70,7 +70,7 @@ public class ThermalRadiationPressureTests
     [Fact]
     public void ConstructorThrowsOnZeroEffectiveTemperature()
     {
-        var earth = new CelestialBody(PlanetsAndMoons.EARTH, Frames.Frame.ICRF, TimeSystem.Time.J2000TDB,
+        var earth = new CelestialBody(PlanetsAndMoons.Earth, Frames.Frame.ICRF, TimeSystem.Time.J2000Tdb,
             thermalEffectiveTemperature: 0.0, thermalEmissivity: 0.95);
         var spc = CreateSpacecraft(earth);
         Assert.Throws<ArgumentException>(() => new ThermalRadiationPressure(spc, earth));
@@ -79,7 +79,7 @@ public class ThermalRadiationPressureTests
     [Fact]
     public void ConstructorThrowsOnZeroEmissivity()
     {
-        var earth = new CelestialBody(PlanetsAndMoons.EARTH, Frames.Frame.ICRF, TimeSystem.Time.J2000TDB,
+        var earth = new CelestialBody(PlanetsAndMoons.Earth, Frames.Frame.ICRF, TimeSystem.Time.J2000Tdb,
             thermalEffectiveTemperature: 254.0, thermalEmissivity: 0.0);
         var spc = CreateSpacecraft(earth);
         Assert.Throws<ArgumentException>(() => new ThermalRadiationPressure(spc, earth));
@@ -98,7 +98,7 @@ public class ThermalRadiationPressureTests
         var spc = CreateSpacecraft(earth);
 
         var state = new StateVector(new Vector3(rSc, 0.0, 0.0), new Vector3(0.0, 7656.0, 0.0),
-            earth, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF);
+            earth, TimeSystem.Time.J2000Tdb, Frames.Frame.ICRF);
 
         var force = new ThermalRadiationPressure(spc, earth);
         var acc = force.Apply(state);
@@ -119,7 +119,7 @@ public class ThermalRadiationPressureTests
         var spc = CreateSpacecraft(earth);
 
         var state = new StateVector(new Vector3(rSc, 0.0, 0.0), new Vector3(0.0, 3074.0, 0.0),
-            earth, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF);
+            earth, TimeSystem.Time.J2000Tdb, Frames.Frame.ICRF);
 
         var force = new ThermalRadiationPressure(spc, earth);
         var acc = force.Apply(state);
@@ -141,7 +141,7 @@ public class ThermalRadiationPressureTests
 
         var scPos = new Vector3(rSc * 0.5, rSc * 0.5, rSc * 0.5).Normalize() * rSc;
         var state = new StateVector(scPos, new Vector3(0.0, 7656.0, 0.0),
-            earth, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF);
+            earth, TimeSystem.Time.J2000Tdb, Frames.Frame.ICRF);
 
         var force = new ThermalRadiationPressure(spc, earth);
         var acc = force.Apply(state);
@@ -165,9 +165,9 @@ public class ThermalRadiationPressureTests
         var spcGeo = CreateSpacecraft(earth);
 
         var stateLeo = new StateVector(new Vector3(rLeo, 0.0, 0.0), new Vector3(0.0, 7656.0, 0.0),
-            earth, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF);
+            earth, TimeSystem.Time.J2000Tdb, Frames.Frame.ICRF);
         var stateGeo = new StateVector(new Vector3(rGeo, 0.0, 0.0), new Vector3(0.0, 3074.0, 0.0),
-            earth, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF);
+            earth, TimeSystem.Time.J2000Tdb, Frames.Frame.ICRF);
 
         var accLeo = new ThermalRadiationPressure(spcLeo, earth).Apply(stateLeo);
         var accGeo = new ThermalRadiationPressure(spcGeo, earth).Apply(stateGeo);
@@ -190,9 +190,9 @@ public class ThermalRadiationPressureTests
         var spc2 = CreateSpacecraft(earth2);
 
         var state1 = new StateVector(new Vector3(rSc, 0.0, 0.0), new Vector3(0.0, 7656.0, 0.0),
-            earth1, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF);
+            earth1, TimeSystem.Time.J2000Tdb, Frames.Frame.ICRF);
         var state2 = new StateVector(new Vector3(rSc, 0.0, 0.0), new Vector3(0.0, 7656.0, 0.0),
-            earth2, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF);
+            earth2, TimeSystem.Time.J2000Tdb, Frames.Frame.ICRF);
 
         var acc1 = new ThermalRadiationPressure(spc1, earth1).Apply(state1);
         var acc2 = new ThermalRadiationPressure(spc2, earth2).Apply(state2);
@@ -215,9 +215,9 @@ public class ThermalRadiationPressureTests
         var spc2 = CreateSpacecraft(earth2);
 
         var state1 = new StateVector(new Vector3(rSc, 0.0, 0.0), new Vector3(0.0, 7656.0, 0.0),
-            earth1, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF);
+            earth1, TimeSystem.Time.J2000Tdb, Frames.Frame.ICRF);
         var state2 = new StateVector(new Vector3(rSc, 0.0, 0.0), new Vector3(0.0, 7656.0, 0.0),
-            earth2, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF);
+            earth2, TimeSystem.Time.J2000Tdb, Frames.Frame.ICRF);
 
         var acc1 = new ThermalRadiationPressure(spc1, earth1).Apply(state1);
         var acc2 = new ThermalRadiationPressure(spc2, earth2).Apply(state2);
@@ -239,7 +239,7 @@ public class ThermalRadiationPressureTests
         var spc2 = CreateSpacecraft(earth, mass: 200.0);
 
         var state = new StateVector(new Vector3(rSc, 0.0, 0.0), new Vector3(0.0, 7656.0, 0.0),
-            earth, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF);
+            earth, TimeSystem.Time.J2000Tdb, Frames.Frame.ICRF);
 
         var acc1 = new ThermalRadiationPressure(spc1, earth).Apply(state);
         var acc2 = new ThermalRadiationPressure(spc2, earth).Apply(state);
@@ -261,7 +261,7 @@ public class ThermalRadiationPressureTests
         var spc2 = CreateSpacecraft(earth, sectionalArea: 5.0);
 
         var state = new StateVector(new Vector3(rSc, 0.0, 0.0), new Vector3(0.0, 7656.0, 0.0),
-            earth, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF);
+            earth, TimeSystem.Time.J2000Tdb, Frames.Frame.ICRF);
 
         var acc1 = new ThermalRadiationPressure(spc1, earth).Apply(state);
         var acc2 = new ThermalRadiationPressure(spc2, earth).Apply(state);
@@ -284,8 +284,8 @@ public class ThermalRadiationPressureTests
         var spc = CreateSpacecraft(earth);
 
         // Place SC toward the Sun so SRP is at full strength
-        var epoch = TimeSystem.Time.J2000TDB;
-        var sunPos = Stars.SUN_BODY.GetEphemeris(epoch, earth, Frames.Frame.ICRF, Aberration.None).Position;
+        var epoch = TimeSystem.Time.J2000Tdb;
+        var sunPos = Stars.SunBody.GetEphemeris(epoch, earth, Frames.Frame.ICRF, Aberration.None).Position;
         var sunDir = sunPos.Normalize();
         var scPos = sunDir * rSc;
         var scVel = sunDir.Cross(Vector3.VectorZ).Normalize() * 7656.0;

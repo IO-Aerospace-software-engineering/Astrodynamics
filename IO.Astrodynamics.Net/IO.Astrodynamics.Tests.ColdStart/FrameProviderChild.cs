@@ -37,13 +37,13 @@ internal static class FrameProviderChild
             var first = Provider(90.0);
             Configuration.Instance.SetDataProvider(first);
             var builtUnderFirst = new Frame("GALACTIC");
-            Check($"Frame.GALACTIC_SYSTEM2 reads the provider set: 90° ({AngleDeg(Frame.GALACTIC_SYSTEM2)})", Near(AngleDeg(Frame.GALACTIC_SYSTEM2), 90.0));
+            Check($"Frame.GALACTIC reads the provider set: 90° ({AngleDeg(Frame.GALACTIC)})", Near(AngleDeg(Frame.GALACTIC), 90.0));
             Check($"Frame.ITRF93 reads the provider set: 90° ({AngleDeg(Frame.ITRF93)})", Near(AngleDeg(Frame.ITRF93), 90.0));
 
             var second = Provider(30.0);
             Configuration.Instance.SetDataProvider(second);
-            Check($"Frame.GALACTIC_SYSTEM2 follows the provider set since, at the same epoch: 30° ({AngleDeg(Frame.GALACTIC_SYSTEM2)})",
-                Near(AngleDeg(Frame.GALACTIC_SYSTEM2), 30.0));
+            Check($"Frame.GALACTIC follows the provider set since, at the same epoch: 30° ({AngleDeg(Frame.GALACTIC)})",
+                Near(AngleDeg(Frame.GALACTIC), 30.0));
             Check($"Frame.ITRF93 follows it too: 30° ({AngleDeg(Frame.ITRF93)})", Near(AngleDeg(Frame.ITRF93), 30.0));
             Check($"a frame built by name keeps the provider of its construction: 90° ({AngleDeg(builtUnderFirst)})", Near(AngleDeg(builtUnderFirst), 90.0));
             Check("Configuration.Instance.DataProvider is the provider set", ReferenceEquals(Configuration.Instance.DataProvider, second));
@@ -52,7 +52,7 @@ internal static class FrameProviderChild
             // Names the memory provider neither holds nor defines
             foreach (var name in new[] { "ICRF", "EME2000", "NOT_A_FRAME" })
             {
-                var e = Expect<ArgumentException>($"the memory provider's {name}", () => new Frame(name).GetStateOrientationToICRF(Epoch));
+                var e = Expect<ArgumentException>($"the memory provider's {name}", () => new Frame(name).GetStateOrientationToIcrf(Epoch));
                 Check($"its message names the frame ({e.Message})", e.Message.Contains(name));
                 Check($"its message points to Frame.ICRF for ICRF and EME2000 only ({e.Message})",
                     e.Message.Contains("Use Frame.ICRF") == (name != "NOT_A_FRAME"));
@@ -75,7 +75,7 @@ internal static class FrameProviderChild
         foreach (var name in new[] { "GALACTIC", "ITRF93" })
         {
             var frame = new Frame(name);
-            provider.AddStateOrientationToICRF(frame, Epoch, new StateOrientation(q, Vector3.Zero, Epoch, frame));
+            provider.AddStateOrientationToIcrf(frame, Epoch, new StateOrientation(q, Vector3.Zero, Epoch, frame));
         }
 
         return provider;
@@ -84,7 +84,7 @@ internal static class FrameProviderChild
     // The rotation angle of a frame from ICRF, in degrees (the sign of a quaternion is free)
     private static double AngleDeg(Frame frame)
     {
-        var q = frame.GetStateOrientationToICRF(Epoch).Rotation;
+        var q = frame.GetStateOrientationToIcrf(Epoch).Rotation;
         return 2.0 * System.Math.Acos(System.Math.Min(1.0, System.Math.Abs(q.W))) * Constants.Rad2Deg;
     }
 

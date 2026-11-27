@@ -306,9 +306,9 @@ internal sealed class PropagationDynamics
             return (segment.Steps[0].StartPosition, segment.Steps[0].StartVelocity);
 
         // The end of a step as the integrator computes it (t_k + h_k), so that its exact boundary reads the stored state
-        int k = segment.FindStepIndex(System.Math.Min(t, segment.Duration));
+        int k = segment.FindStepIndex(System.Math.Min(t, segment.DurationSeconds));
         var step = segment.Steps[k];
-        if (t >= step.CumulativeTime + step.StepSize)
+        if (t >= step.CumulativeTime + step.StepSizeSeconds)
             return (step.EndPosition, step.EndVelocity);
 
         lock (_lock)
@@ -344,9 +344,9 @@ internal sealed class PropagationDynamics
         }
 
         // The end of a step as the integrator computes it (t_k + h_k), so that its exact boundary reads the stored values
-        int k = segment.FindStepIndex(System.Math.Min(t, segment.Duration));
+        int k = segment.FindStepIndex(System.Math.Min(t, segment.DurationSeconds));
         var step = segment.Steps[k];
-        if (t >= step.CumulativeTime + step.StepSize)
+        if (t >= step.CumulativeTime + step.StepSizeSeconds)
         {
             data.StepEndY(k).CopyTo(y);
             data.StepEndQ(k).CopyTo(q);

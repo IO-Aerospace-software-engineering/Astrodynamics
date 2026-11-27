@@ -34,7 +34,7 @@ public class PublicStaticFieldsTests
         var fields = types.SelectMany(t => t.GetFields(BindingFlags.Public | BindingFlags.Static)).ToArray();
         Assert.True(fields.Length > 300);
         Assert.All(fields, f => Assert.True(f.IsInitOnly, f.DeclaringType!.Name + "." + f.Name));
-        Assert.True(typeof(SolarSystemObjects.PlanetsAndMoons).GetField(nameof(SolarSystemObjects.PlanetsAndMoons.EARTH_BODY))!.IsInitOnly);
-        Assert.True(typeof(SolarSystemObjects.Stars).GetField(nameof(SolarSystemObjects.Stars.SUN_BODY))!.IsInitOnly);
+        Assert.True(typeof(SolarSystemObjects.PlanetsAndMoons).GetField(nameof(SolarSystemObjects.PlanetsAndMoons.EarthBody))!.IsInitOnly);
+        Assert.True(typeof(SolarSystemObjects.Stars).GetField(nameof(SolarSystemObjects.Stars.SunBody))!.IsInitOnly);
     }
 }

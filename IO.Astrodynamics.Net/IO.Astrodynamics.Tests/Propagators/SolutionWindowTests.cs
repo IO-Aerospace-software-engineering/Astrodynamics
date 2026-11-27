@@ -6,7 +6,6 @@ using IO.Astrodynamics.Body;
 using IO.Astrodynamics.Body.Spacecraft;
 using IO.Astrodynamics.Maneuver;
 using IO.Astrodynamics.OrbitalParameters;
-using IO.Astrodynamics.OrbitalParameters.TLE;
 using IO.Astrodynamics.Propagator;
 using IO.Astrodynamics.Propagator.Integrators;
 using IO.Astrodynamics.Propagator.Variational;
@@ -20,7 +19,7 @@ namespace IO.Astrodynamics.Tests.Propagators;
 /// <summary>
 /// The reader of a solution, lot L5a of #668 (R09, decision 53, decided by S. Guillet, 2026-11-23): the public get-only
 /// <see cref="PropagationSolution.Observer"/> and <see cref="PropagationSolution.Frame"/> of its states, those of the
-/// samples on a <see cref="TLEPropagator"/> solution (the TLE's Earth and TEME), so that
+/// samples on a <see cref="TlePropagator"/> solution (the TLE's Earth and TEME), so that
 /// <see cref="PropagationSolution.GetStateVector"/> reads it (it threw before); and the public
 /// <see cref="PropagationSolution.Window"/>, [first segment base, end] in TDB labels, the span the reads accept (the
 /// check of <c>Covers</c>, unchanged), a read outside it throwing <see cref="ArgumentOutOfRangeException"/> naming it.
@@ -37,9 +36,9 @@ public class SolutionWindowTests
     private static int _nextId = -785000;
     private static int NextId() => Interlocked.Decrement(ref _nextId);
 
-    private static CelestialBody Earth => PlanetsAndMoons.EARTH_BODY;
+    private static CelestialBody Earth => PlanetsAndMoons.EarthBody;
 
-    private static TLE Iss() => new("ISS",
+    private static Tle Iss() => new("ISS",
         "1 25544U 98067A   21020.53488036  .00016717  00000-0  10270-3 0  9054",
         "2 25544  51.6423 353.0312 0000493 320.8755  39.2360 15.49309423 25703");
 
@@ -72,11 +71,11 @@ public class SolutionWindowTests
         // Arrange
         var tle = Iss();
         var window = new Window(tle.Epoch, tle.Epoch.AddHours(1.0));
-        var solution = new TLEPropagator(window, NewSpacecraft(tle), Step).Propagate();
+        var solution = new TlePropagator(window, NewSpacecraft(tle), Step).Propagate();
 
         // Assert: the TLE's Earth and TEME, those of every sample
         Assert.Same(solution.StateVectors[0].Observer, solution.Observer);
-        Assert.Equal(PlanetsAndMoons.EARTH.NaifId, ((CelestialItem)solution.Observer).NaifId);
+        Assert.Equal(PlanetsAndMoons.Earth.NaifId, ((CelestialItem)solution.Observer).NaifId);
         Assert.Equal(Frames.Frame.TEME, solution.Frame);
 
         // At each sample, SGP4 itself, bit for bit, in TEME about the Earth
@@ -99,15 +98,15 @@ public class SolutionWindowTests
     {
         // Arrange
         var tle = Iss();
-        var start = scale == TimeScale.UTC ? tle.Epoch.ToUTC() : tle.Epoch.ToTDB();
+        var start = scale == TimeScale.UTC ? tle.Epoch.ToUtc() : tle.Epoch.ToTdb();
         var window = new Window(start, start.AddHours(1.0));
 
         // Act
-        var solution = new TLEPropagator(window, NewSpacecraft(tle), Step).Propagate();
+        var solution = new TlePropagator(window, NewSpacecraft(tle), Step).Propagate();
 
         // Assert: the TDB labels of the window, exactly
-        LabelAssert.Equal(window.StartDate.ToTDB(), solution.Window.StartDate);
-        LabelAssert.Equal(window.EndDate.ToTDB(), solution.Window.EndDate);
+        LabelAssert.Equal(window.StartDate.ToTdb(), solution.Window.StartDate);
+        LabelAssert.Equal(window.EndDate.ToTdb(), solution.Window.EndDate);
         Assert.Equal(TimeScale.TDB, solution.Window.StartDate.Scale);
         Assert.Equal(TimeScale.TDB, solution.Window.EndDate.Scale);
     }
@@ -120,22 +119,22 @@ public class SolutionWindowTests
                 ? new VVIntegratorOptions { Step = TimeSpan.FromSeconds(10.0) }
                 : new RK78IntegratorOptions { AbsoluteTolerance = 1e-10, RelativeTolerance = 1e-10 },
             OutputStep = Step,
-            ThirdBodies = orbit == "SSB" ? [Stars.SUN_BODY, Earth] : [Earth],
+            ThirdBodies = orbit == "SSB" ? [Stars.SunBody, Earth] : [Earth],
             CovariancePropagation = CovariancePropagationOptions.None
         };
-        var epoch = window.StartDate.ToTDB();
+        var epoch = window.StartDate.ToTdb();
         Spacecraft spacecraft;
         switch (orbit)
         {
             case "SSB":
                 var heliocentric = new StateVector(new Vector3(1.5e11, 0.0, 0.0), new Vector3(0.0, 29780.0, 1000.0),
-                    Stars.SUN_BODY, epoch, Frames.Frame.ICRF);
-                spacecraft = NewSpacecraft(heliocentric.RelativeTo(Barycenters.SOLAR_SYSTEM_BARYCENTER, Aberration.None)
+                    Stars.SunBody, epoch, Frames.Frame.ICRF);
+                spacecraft = NewSpacecraft(heliocentric.RelativeTo(Barycenters.SolarSystemBarycenter, Aberration.None)
                     .ToStateVector());
                 break;
             case "ECLIPJ2000":
                 spacecraft = NewSpacecraft(new StateVector(new Vector3(6700000.0, 0.0, 0.0),
-                    new Vector3(0.0, 8000.0, 0.0), Earth, epoch, Frames.Frame.ECLIPTIC_J2000));
+                    new Vector3(0.0, 8000.0, 0.0), Earth, epoch, Frames.Frame.ECLIPJ2000));
                 break;
             default:
                 spacecraft = NewSpacecraft(new StateVector(new Vector3(6700000.0, 0.0, 0.0),
@@ -173,9 +172,9 @@ public class SolutionWindowTests
 
         // Assert: the first segment base and the end, TDB labels, the window to one tick
         LabelAssert.Equal(solution.Segments[0].BaseEpoch, solution.Window.StartDate);
-        LabelAssert.Equal(window.StartDate.ToTDB(), solution.Window.StartDate);
+        LabelAssert.Equal(window.StartDate.ToTdb(), solution.Window.StartDate);
         Assert.Equal(TimeScale.TDB, solution.Window.EndDate.Scale);
-        Assert.InRange(System.Math.Abs((solution.Window.EndDate - window.EndDate.ToTDB()).Ticks), 0L, 1L);
+        Assert.InRange(System.Math.Abs((solution.Window.EndDate - window.EndDate.ToTdb()).Ticks), 0L, 1L);
         if (orbit == "Impulse")
         {
             Assert.True(solution.Segments.Count > 1);
@@ -198,7 +197,7 @@ public class SolutionWindowTests
         if (path == "TLE")
         {
             var tle = Iss();
-            solution = new TLEPropagator(new Window(tle.Epoch, tle.Epoch.AddHours(1.0)), NewSpacecraft(tle), Step)
+            solution = new TlePropagator(new Window(tle.Epoch, tle.Epoch.AddHours(1.0)), NewSpacecraft(tle), Step)
                 .Propagate();
         }
         else

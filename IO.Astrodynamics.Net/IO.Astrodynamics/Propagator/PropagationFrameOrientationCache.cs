@@ -14,13 +14,13 @@ namespace IO.Astrodynamics.Propagator;
 /// <para>
 /// The rotation between two grid points is the exact spherical linear interpolation, by the axis and the angle of their
 /// relative rotation (that of a type-3 CK, as <see cref="StateOrientation"/> and the attitude record of a spacecraft
-/// interpolate), the angular velocity linear. Before 11.0.0 it was <c>Quaternion.SLERP</c>, whose normalised-Lerp fallback
+/// interpolate), the angular velocity linear. Before 11.0.0 it was <c>Quaternion.Slerp</c>, whose normalised-Lerp fallback
 /// below 0.028 rad took every cell of the 60 s grid of the Earth (4.4e-3 rad): up to 3.4e-10 rad from the exact
 /// interpolation of the same points, 140 times its departure from SPICE (#561).
 /// </para>
 /// <para>
 /// A grid point SPICE cannot give (outside the coverage of the frame's orientation data, where
-/// <see cref="SpiceAPI.TransformFrame(Time, Frame, Frame)"/> throws since #454) is kept as unavailable: a propagation
+/// <see cref="SpiceApi.TransformFrame(Time, Frame, Frame)"/> throws since #454) is kept as unavailable: a propagation
 /// whose forces need no orientation of the central body (a point mass, no drag) still runs there, as it did when the
 /// native layer returned the zero rotation.
 /// </para>
@@ -83,11 +83,11 @@ internal sealed class PropagationFrameOrientationCache
         for (int i = 0; i < _gridSize; i++)
         {
             double epochSec = _startEpochSeconds + i * _gridStepSeconds;
-            var epoch = Time.CreateTDB(epochSec);
+            var epoch = Time.CreateTdb(epochSec);
             StateOrientation so;
             try
             {
-                so = bodyFixedFrame.GetStateOrientationToICRF(epoch);
+                so = bodyFixedFrame.GetStateOrientationToIcrf(epoch);
             }
             catch (InvalidOperationException)
             {
@@ -134,7 +134,7 @@ internal sealed class PropagationFrameOrientationCache
         StateOrientation so;
         try
         {
-            so = _frame.ReadStateOrientationToICRF(Time.CreateTDB(epochSeconds));
+            so = _frame.ReadStateOrientationToICRF(Time.CreateTdb(epochSeconds));
         }
         catch (InvalidOperationException)
         {

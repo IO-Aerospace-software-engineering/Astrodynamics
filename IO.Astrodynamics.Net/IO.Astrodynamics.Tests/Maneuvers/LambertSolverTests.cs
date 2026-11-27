@@ -36,7 +36,7 @@ public class LambertSolverTests
     {
         var solver = new LambertSolver();
         var dummyBody = TestHelpers.EarthAtJ2000;
-        var op = CreateStateVector(new Vector3(1, 0, 0), new Vector3(0, 1, 0), TimeSystem.Time.J2000TDB);
+        var op = CreateStateVector(new Vector3(1, 0, 0), new Vector3(0, 1, 0), TimeSystem.Time.J2000Tdb);
 
         Assert.Throws<ArgumentNullException>(() => solver.Solve(false, null, op, dummyBody, 0));
         Assert.Throws<ArgumentNullException>(() => solver.Solve(false, op, null, dummyBody, 0));
@@ -53,7 +53,7 @@ public class LambertSolverTests
     {
         // Arrange
         var solver = new LambertSolver();
-        var op = CreateStateVector(new Vector3(1, 0, 0), new Vector3(0, 1, 0), TimeSystem.Time.J2000TDB);
+        var op = CreateStateVector(new Vector3(1, 0, 0), new Vector3(0, 1, 0), TimeSystem.Time.J2000Tdb);
 
         // Act
         var names = Array.ConvertAll(typeof(LambertSolver).GetMethod(nameof(LambertSolver.Solve))!.GetParameters(), p => p.Name);
@@ -69,7 +69,7 @@ public class LambertSolverTests
     {
         var solver = new LambertSolver();
         var dummyBody = TestHelpers.EarthAtJ2000;
-        var now = TimeSystem.Time.J2000TDB;
+        var now = TimeSystem.Time.J2000Tdb;
         var op1 = CreateStateVector(new Vector3(1, 0, 0), new Vector3(0, 1, 0), now);
         var op2 = CreateStateVector(new Vector3(0, 1, 0), new Vector3(-1, 0, 0), now.AddSeconds(-10));
 
@@ -85,7 +85,7 @@ public class LambertSolverTests
     public void Solve_ThrowsArgumentExceptionOnCollinearPositions(double x2)
     {
         var solver = new LambertSolver();
-        var now = TimeSystem.Time.J2000TDB;
+        var now = TimeSystem.Time.J2000Tdb;
         var op1 = CreateStateVector(new Vector3(7.0e6, 0.0, 0.0), new Vector3(0.0, 7.5e3, 0.0), now);
         var op2 = CreateStateVector(new Vector3(x2, 0.0, 0.0), new Vector3(0.0, -7.0e3, 0.0), now.AddSeconds(3000.0));
 
@@ -98,7 +98,7 @@ public class LambertSolverTests
     {
         var solver = new LambertSolver();
         var dummyBody = new DummyBody(0); // Create a dummy body with zero mass
-        var now = TimeSystem.Time.J2000TDB;
+        var now = TimeSystem.Time.J2000Tdb;
         var op1 = CreateStateVector(new Vector3(1, 0, 0), new Vector3(0, 1, 0), now);
         var op2 = CreateStateVector(new Vector3(0, 1, 0), new Vector3(-1, 0, 0), now.AddSeconds(1000));
 
@@ -110,7 +110,7 @@ public class LambertSolverTests
     {
         var solver = new LambertSolver();
         var dummyBody = TestHelpers.EarthAtJ2000;
-        var now = TimeSystem.Time.J2000TDB;
+        var now = TimeSystem.Time.J2000Tdb;
         var op1 = CreateStateVector(new Vector3(7000, 0, 0), new Vector3(0, 7.5, 0), now);
         var op2 = CreateStateVector(new Vector3(0, 7000, 0), new Vector3(-7.5, 0, 0), now.AddSeconds(3600));
 
@@ -129,7 +129,7 @@ public class LambertSolverTests
     {
         var solver = new LambertSolver();
         var dummyBody = TestHelpers.EarthAtJ2000;
-        var now = TimeSystem.Time.J2000TDB;
+        var now = TimeSystem.Time.J2000Tdb;
         var op1 = CreateStateVector(new Vector3(8000000.0, 0, 0), new Vector3(0, 7000, 0), now);
         var op2 = CreateStateVector(new Vector3(0, 8000000.0, 0), new Vector3(-7000, 0, 0), now.AddSeconds(4000));
 
@@ -146,7 +146,7 @@ public class LambertSolverTests
     {
         var solver = new LambertSolver();
         var dummyBody = TestHelpers.EarthAtJ2000;
-        var now = TimeSystem.Time.J2000TDB;
+        var now = TimeSystem.Time.J2000Tdb;
         var op1 = CreateStateVector(new Vector3(6800000.0, 0, 0), new Vector3(0, 8000.0, 0), now);
         var op2 = CreateStateVector(new Vector3(0, 6800000.0, 0), new Vector3(8000.0, 0, 0), now.AddSeconds(20000));
 
@@ -187,8 +187,8 @@ public class LambertSolverTests
     {
         var solver = new LambertSolver();
         var earth = TestHelpers.EarthAtJ2000;
-        var arrivalTime = TimeSystem.Time.J2000UTC.AddDays(3);
-        var op1 = new StateVector(new Vector3(7000000.0, 0.0, 0.0), new Vector3(0.0, 8000.0, 0.0), earth, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF);
+        var arrivalTime = TimeSystem.Time.J2000Utc.AddDays(3);
+        var op1 = new StateVector(new Vector3(7000000.0, 0.0, 0.0), new Vector3(0.0, 8000.0, 0.0), earth, TimeSystem.Time.J2000Tdb, Frames.Frame.ICRF);
         var op2 = TestHelpers.MoonAtJ2000.GetEphemeris(arrivalTime, earth, Frames.Frame.ICRF, Aberration.None);
         var result = solver.Solve(false, op1, op2, earth, 0);
         Assert.NotNull(result);
@@ -201,7 +201,7 @@ public class LambertSolverTests
         Assert.Equal(10612.452251221264, zeroRev.V1.Magnitude(), 0.1);
         Assert.Equal(836.11866771492487, zeroRev.V2.Magnitude(), 0.1);
 
-        var spcSV1 = new StateVector(new Vector3(7000000.0, 0.0, 0.0), zeroRev.V1, earth, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF);
+        var spcSV1 = new StateVector(new Vector3(7000000.0, 0.0, 0.0), zeroRev.V1, earth, TimeSystem.Time.J2000Tdb, Frames.Frame.ICRF);
         var spcSVAtAfter3Days = spcSV1.AtEpoch(arrivalTime).ToStateVector();
         Assert.Equal(op2.Position, spcSVAtAfter3Days.Position, TestHelpers.VectorComparer);
     }
@@ -212,8 +212,8 @@ public class LambertSolverTests
         var solver = new LambertSolver();
         var earth = TestHelpers.EarthAtJ2000;
         var moon = TestHelpers.MoonAtJ2000;
-        var arrivalTime = TimeSystem.Time.J2000UTC.AddDays(3);
-        var op1 = new StateVector(new Vector3(7000000.0, 0.0, 0.0), new Vector3(0.0, 8000.0, 0.0), earth, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF);
+        var arrivalTime = TimeSystem.Time.J2000Utc.AddDays(3);
+        var op1 = new StateVector(new Vector3(7000000.0, 0.0, 0.0), new Vector3(0.0, 8000.0, 0.0), earth, TimeSystem.Time.J2000Tdb, Frames.Frame.ICRF);
         var op2 = TestHelpers.MoonAtJ2000.GetEphemeris(arrivalTime, earth, Frames.Frame.ICRF, Aberration.None);
         var result = solver.Solve(true, op1, op2, earth, 0);
         Assert.NotNull(result);
@@ -226,7 +226,7 @@ public class LambertSolverTests
         Assert.Equal(10612.331907535654, zeroRev.V1.Magnitude(), 0.1);
         Assert.Equal(834.59136063948517, zeroRev.V2.Magnitude(), 0.1);
 
-        var spcSV1 = new StateVector(new Vector3(7000000.0, 0.0, 0.0), zeroRev.V1, earth, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF);
+        var spcSV1 = new StateVector(new Vector3(7000000.0, 0.0, 0.0), zeroRev.V1, earth, TimeSystem.Time.J2000Tdb, Frames.Frame.ICRF);
         var spcSVAtAfter3Days = spcSV1.AtEpoch(arrivalTime).ToStateVector();
         // Assert that the position at arrival time matches the expected position
         Assert.Equal(op2.Position, spcSVAtAfter3Days.Position, TestHelpers.VectorComparer);

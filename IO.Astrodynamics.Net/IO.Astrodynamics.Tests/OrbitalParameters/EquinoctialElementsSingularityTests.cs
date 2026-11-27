@@ -6,7 +6,6 @@ using System.Linq;
 using IO.Astrodynamics.Body;
 using IO.Astrodynamics.Body.Spacecraft;
 using IO.Astrodynamics.OrbitalParameters;
-using IO.Astrodynamics.OrbitalParameters.TLE;
 using IO.Astrodynamics.Propagator;
 using IO.Astrodynamics.SolarSystemObjects;
 using IO.Astrodynamics.TimeSystem;
@@ -72,7 +71,7 @@ public class EquinoctialElementsSingularityTests
     {
         _output = output;
         TestKernels.EnsureSolarSystem();
-        _earth = new CelestialBody(PlanetsAndMoons.EARTH, Frames.Frame.ICRF, Epoch);
+        _earth = new CelestialBody(PlanetsAndMoons.Earth, Frames.Frame.ICRF, Epoch);
         _reference = EquinoctialReference.Load();
     }
 
@@ -506,8 +505,8 @@ public class EquinoctialElementsSingularityTests
         // rest of the conversion dominates, and the former error of E offset part of it. Its threshold went from
         // 2.7e-15 to 2.8e-15; the test passed with 2.7e-15: a re-measurement after an intended change of results, not
         // a relaxation
-        var spice = SpiceAPI.Instance.ConvertStateVectorToConicOrbitalElement(state);
-        bool droppedTilt = spice.RAAN == 0.0 && (spice.I == 0.0 || spice.I == System.Math.PI) &&
+        var spice = SpiceApi.Instance.ConvertStateVectorToConicOrbitalElement(state);
+        bool droppedTilt = spice.AscendingNode() == 0.0 && (spice.Inclination() == 0.0 || spice.Inclination() == System.Math.PI) &&
                            state.SpecificAngularMomentum().X != 0.0;
         var (position, velocity) = RelativeError(back, state);
         var (positionK, velocityK) = RelativeError(backThroughKeplerian, state);
@@ -573,18 +572,17 @@ public class EquinoctialElementsSingularityTests
     [MemberData(nameof(TemeStates))]
     public void ToTle_OfAnEquatorialTemeState(string name, double a, double e, double i, double periapsis, double m)
     {
-        // Arrange: the state given directly in TEME, as TLETests, so that the fit does not depend on the rotation
+        // Arrange: the state given directly in TEME, as TleTests, so that the fit does not depend on the rotation
         // between ICRF and TEME, which #451 changes. Within 1e-10 rad of the equator, the fit threw after 15 iterations
         // before #452 (best 111 467.53 m and 522 853.27 m at this epoch, 2021-03-20 12:00 TDB)
         var s = new KeplerianElements(a, e, i, 0.0, periapsis, m, _earth, Epoch, Frames.Frame.TEME).ToStateVector();
         var target = new StateVector(s.Position, s.Velocity, _earth, Epoch, Frames.Frame.TEME);
-        var configuration = new IO.Astrodynamics.OrbitalParameters.TLE.Configuration(25666, "TEST", "98067A");
 
         // Act
-        var tle = target.ToTLE(configuration);
+        var tle = target.ToTle("TEST", 25666, "98067A");
         var fitted = tle.ToStateVector(Epoch);
 
-        // Assert, in m and m/s as TLETests, and the two lines of the fit at i = 1e-9 rad, which never took the special
+        // Assert, in m and m/s as TleTests, and the two lines of the fit at i = 1e-9 rad, which never took the special
         // branches. Twice the worst over Linux, Windows and macOS arm64 (CI run 40280932636, 2026-10-26): 1.588 m and
         // 2.30e-3 m/s at i = 0, 5e-11 and 1e-9 rad; 3.161 m and 3.45e-3 m/s at e = 0.001
         double position = (fitted.Position - target.Position).Magnitude();
@@ -592,7 +590,7 @@ public class EquinoctialElementsSingularityTests
         var atOneNanoradian = new KeplerianElements(a, e, 1e-9, 0.0, periapsis, m, _earth, Epoch, Frames.Frame.TEME)
             .ToStateVector();
         var tleAtOneNanoradian = new StateVector(atOneNanoradian.Position, atOneNanoradian.Velocity, _earth, Epoch,
-            Frames.Frame.TEME).ToTLE(configuration);
+            Frames.Frame.TEME).ToTle("TEST", 25666, "98067A");
         bool sameLines = tle.Line1 == tleAtOneNanoradian.Line1 && tle.Line2 == tleAtOneNanoradian.Line2;
         _output.WriteLine($"MEASURE #452 ToTle_OfAnEquatorialTemeState, {name}: position {position:F3} m, velocity " +
                           $"{velocity:E2} m/s; the lines of i = 1e-9 rad: {sameLines}");
@@ -616,10 +614,9 @@ public class EquinoctialElementsSingularityTests
                 reference.PositionHigh[2]), new Vector3(reference.VelocityHigh[0], reference.VelocityHigh[1],
                 reference.VelocityHigh[2]), _earth, Epoch, Frames.Frame.ICRF).ToFrame(Frames.Frame.TEME)
             .ToStateVector();
-        var configuration = new IO.Astrodynamics.OrbitalParameters.TLE.Configuration(25666, "TEST", "98067A");
 
         // Act
-        var tle = c.Elements(_earth, Epoch, Frames.Frame.ICRF).ToTLE(configuration);
+        var tle = c.Elements(_earth, Epoch, Frames.Frame.ICRF).ToTle("TEST", 25666, "98067A");
         var fitted = tle.ToStateVector(Epoch);
 
         // Assert, in m and m/s. The residual is the TLE's text grid (half a unit of the 4th decimal of M is 6.2e-3 m/s
@@ -691,10 +688,10 @@ public class EquinoctialElementsSingularityTests
                 elements.ToStateVector(Epoch + TimeSpan.FromSeconds(60.0)));
             Assert.Equal("Cannot convert mean elements directly to a state vector. Mean elements require a specific " +
                          "propagator (e.g., SGP4/SDP4) for accurate position calculations. For TLE data, use " +
-                         "TLE.ToOsculating() instead.", atEpoch.Message);
+                         "Tle.ToOsculating() instead.", atEpoch.Message);
             Assert.Equal("Cannot convert mean elements directly to a state vector. Mean elements require a specific " +
                          "propagator (e.g., SGP4/SDP4) for accurate position calculations. For TLE data, use " +
-                         "TLE.ToOsculating(epoch) instead.", atTime.Message);
+                         "Tle.ToOsculating(epoch) instead.", atTime.Message);
         }
     }
 
@@ -803,7 +800,7 @@ public class EquinoctialElementsSingularityTests
         {
             var c = _reference.Case(name);
             var icrf = c.Elements(_earth, Epoch, Frames.Frame.ICRF).ToStateVector();
-            foreach (var frame in new[] { Frames.Frame.TEME, Frames.Frame.ECLIPTIC_J2000, new Frames.Frame("ITRF93") })
+            foreach (var frame in new[] { Frames.Frame.TEME, Frames.Frame.ECLIPJ2000, new Frames.Frame("ITRF93") })
             {
                 // Act
                 var state = c.Elements(_earth, Epoch, frame).ToStateVector();
@@ -829,7 +826,7 @@ public class EquinoctialElementsSingularityTests
                 elementsType: OrbitalElementsType.Mean);
 
             // Act
-            var tle = TLE.Create(elements, "TEST", 25666, "98067A", 0);
+            var tle = Tle.Create(elements, "TEST", 25666, "98067A", 0);
 
             // Assert: the fields of line 2 at the 4 decimals of the TLE, from the closed form with Ω = 0 for an
             // equatorial orbit and ω = 0 for a circular one (before #452: M 115.0000° for the circular orbit, ω 0.0000°

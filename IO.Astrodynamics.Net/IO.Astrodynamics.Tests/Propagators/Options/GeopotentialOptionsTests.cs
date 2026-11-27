@@ -7,9 +7,8 @@ using System.Threading.Tasks;
 using IO.Astrodynamics.Atmosphere;
 using IO.Astrodynamics.Body;
 using IO.Astrodynamics.Body.Spacecraft;
-using IO.Astrodynamics.CCSDS.CDM;
+using IO.Astrodynamics.Ccsds;
 using IO.Astrodynamics.OrbitalParameters;
-using IO.Astrodynamics.OrbitalParameters.TLE;
 using IO.Astrodynamics.Propagator;
 using IO.Astrodynamics.Propagator.Variational;
 using IO.Astrodynamics.Propagator.Integrators;
@@ -41,7 +40,7 @@ public class GeopotentialOptionsTests
     }
 
     private static CelestialBody Earth(GeopotentialModelParameters model = null) =>
-        new(PlanetsAndMoons.EARTH, Frames.Frame.ICRF, Start, model);
+        new(PlanetsAndMoons.Earth, Frames.Frame.ICRF, Start, model);
 
     [Fact]
     public void Parameters_AreValues()
@@ -110,7 +109,7 @@ public class GeopotentialOptionsTests
     [Fact]
     public void OptionOnly_FillsAPointMassBody_AsABodyBuiltWithTheModel()
     {
-        var viaOption = NewSpacecraft(PlanetsAndMoons.EARTH_BODY);
+        var viaOption = NewSpacecraft(PlanetsAndMoons.EarthBody);
         var reference = NewSpacecraft(Earth(GeopotentialModelParameters.Egm2008(10)));
 
         var solution = viaOption.Propagate(OneHour, PropagationOptions.Default with
@@ -150,8 +149,8 @@ public class GeopotentialOptionsTests
     [Fact]
     public void Neither_IsThePointMass()
     {
-        var viaOptions = NewSpacecraft(PlanetsAndMoons.EARTH_BODY);
-        var reference = NewSpacecraft(PlanetsAndMoons.EARTH_BODY);
+        var viaOptions = NewSpacecraft(PlanetsAndMoons.EarthBody);
+        var reference = NewSpacecraft(PlanetsAndMoons.EarthBody);
         var solution = viaOptions.Propagate(OneHour);
         reference.Propagate(OneHour, new PropagationOptions { Integrator = RK78IntegratorOptions.Default, OutputStep = Output, ThirdBodies = Array.Empty<CelestialItem>(), CovariancePropagation = CovariancePropagationOptions.None });
         PropagationOptionsPathTests.AssertSameStates(reference.PropagatedStates, viaOptions.PropagatedStates);
@@ -163,10 +162,10 @@ public class GeopotentialOptionsTests
     {
         // R12: the TLE's Earth is a point mass, which counts as not given; the reference is the twin of the TLE start (SGP4
         // at the window start rotated to ICRF, TlePropagationTests) on an Earth built with the model
-        var tle = new TLE("ISS", "1 25544U 98067A   21020.53488036  .00016717  00000-0  10270-3 0  9054",
+        var tle = new Tle("ISS", "1 25544U 98067A   21020.53488036  .00016717  00000-0  10270-3 0  9054",
             "2 25544  51.6423 353.0312 0000493 320.8755  39.2360 15.49309423 25703");
         var window = new Window(tle.Epoch, tle.Epoch.AddHours(1.0));
-        var t0 = window.StartDate.ToTDB();
+        var t0 = window.StartDate.ToTdb();
         var start = tle.ToOsculating(t0).ToFrame(Frames.Frame.ICRF).ToStateVector();
         var earth = Earth(GeopotentialModelParameters.Egm2008(10));
         var twin = PropagationOptionsPathTests.NewSpacecraft(new StateVector(start.Position, start.Velocity, earth, t0,
@@ -185,7 +184,7 @@ public class GeopotentialOptionsTests
         // Section A of the re-baseline: each run builds its own field over the shared coefficients, so a body with a
         // geopotential is shared by concurrent propagations (before, its field's buffers were overwritten across threads)
         var earth = Earth(GeopotentialModelParameters.Egm2008(20));
-        var options = PropagationOptions.Default with { ThirdBodies = new CelestialItem[] { Stars.SUN_BODY } };
+        var options = PropagationOptions.Default with { ThirdBodies = new CelestialItem[] { Stars.SunBody } };
         var sequential = Enumerable.Range(0, 4).Select(_ => NewSpacecraft(earth)).ToArray();
         foreach (var spacecraft in sequential)
         {
@@ -205,7 +204,7 @@ public class GeopotentialOptionsTests
     public void TheCdm_NamesTheFieldAndTheAtmosphereTheRunResolved()
     {
         var spacecraft = PropagationOptionsPathTests.NewSpacecraft(
-            PropagationOptionsPathTests.Leo(PlanetsAndMoons.EARTH_BODY, PropagationOptionsPathTests.Covariance()));
+            PropagationOptionsPathTests.Leo(PlanetsAndMoons.EarthBody, PropagationOptionsPathTests.Covariance()));
         var solution = spacecraft.Propagate(OneHour, PropagationOptions.Default with
         {
             Geopotential = GeopotentialModelParameters.Egm2008(10), AtmosphericDrag = true,

@@ -15,7 +15,7 @@ using IO.Astrodynamics.OrbitalParameters;
 using IO.Astrodynamics.TimeSystem;
 using IO.Astrodynamics.SolarSystemObjects;
 
-var earth = PlanetsAndMoons.EARTH_BODY;
+var earth = PlanetsAndMoons.EarthBody;
 var epoch = new Time(2024, 6, 21, 12, 0, 0, TimeScale.TDB);
 
 var sv = new StateVector(
@@ -98,7 +98,6 @@ Console.WriteLine($"L = Ω + ω + ν: {equinoctial.L0:F6} rad");
 
 These are the modified equinoctial elements p, f, g, h, k and L. The classical set (GMAT's EquinoctialH, EquinoctialK,
 EquinoctialP and EquinoctialQ) is h = G, k = F, p = K and q = H in these names.
-`EquinoctialEx()`, `EquinoctialEy()`, `Hx()`, `Hy()` and `Lv()` return F, G, H, K and L0.
 
 They are preferred for numerical orbit determination and low-eccentricity orbits where Keplerian elements become poorly defined.
 
@@ -134,10 +133,10 @@ Generate an SSO for a given altitude and eccentricity:
 
 ```csharp
 // Inputs: earth (CelestialBody), epoch (Time)
-var ssoOrbit = earth.HelioSynchronousOrbit(
+var ssoOrbit = earth.SunSynchronousOrbit(
     semiMajorAxis: 7000000.0,
     eccentricity: 0.001,
-    epochAtDescendingNode: epoch);
+    descendingNodeEpoch: epoch);
 
 Console.WriteLine($"SSO inclination: {ssoOrbit.Inclination() * Constants.Rad2Deg:F4} deg");
 ```
@@ -149,4 +148,4 @@ The inclination is computed to produce the required nodal precession rate (~0.98
 - Use `StateVector` for Cartesian, `KeplerianElements` for classical, and `ToEquinoctial` for a representation without singularity at e = 0 or i = 0.
 - All representations share the same property methods (`SemiMajorAxis()`, `Eccentricity()`, `Period()`, etc.).
 - `AtEpoch` provides fast two-body analytical propagation from Keplerian elements.
-- `GeosynchronousOrbit` and `HelioSynchronousOrbit` are convenience builders for common orbit types.
+- `GeosynchronousOrbit` and `SunSynchronousOrbit` are convenience builders for common orbit types.

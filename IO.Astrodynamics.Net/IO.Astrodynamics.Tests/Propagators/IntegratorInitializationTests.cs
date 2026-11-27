@@ -123,7 +123,7 @@ public class IntegratorInitializationTests
     public void WithoutAnInitializeByTheCaller_ThePropagationRuns_AndFollowsKepler(string kind, bool stm)
     {
         // Arrange: the integrator holds the point mass of the central body; the caller never initializes it
-        var earth = new CelestialBody(PlanetsAndMoons.EARTH);
+        var earth = new CelestialBody(PlanetsAndMoons.Earth);
         var spacecraft = NewLeo(earth);
         var initial = (StateVector)spacecraft.InitialOrbitalParameters;
         var window = OneHour;
@@ -153,7 +153,7 @@ public class IntegratorInitializationTests
     public void ACallerInitializeWithTheInitialState_ChangesNothing(string kind, bool stm)
     {
         // Arrange
-        var earth = new CelestialBody(PlanetsAndMoons.EARTH);
+        var earth = new CelestialBody(PlanetsAndMoons.Earth);
         var window = OneHour;
         var implicitSpacecraft = NewLeo(earth);
         var explicitSpacecraft = NewLeo(earth);
@@ -181,7 +181,7 @@ public class IntegratorInitializationTests
     public void TheRun_IsBitForBitTheForceBuildingConstructorWithTheSameForce()
     {
         // Arrange: the force-building constructor builds the point mass of the central body alone
-        var earth = new CelestialBody(PlanetsAndMoons.EARTH);
+        var earth = new CelestialBody(PlanetsAndMoons.Earth);
         var window = OneHour;
         var given = NewLeo(earth);
         var built = NewLeo(earth);
@@ -223,11 +223,11 @@ public class IntegratorInitializationTests
     public void TheConstructorAndEveryRun_Initialize_WithTheCentralBodyTheFrameAndTheTdbStart()
     {
         // Arrange
-        var earth = new CelestialBody(PlanetsAndMoons.EARTH);
+        var earth = new CelestialBody(PlanetsAndMoons.Earth);
         var spacecraft = NewLeo(earth);
         var recorder = new RecordingIntegrator((RK78Integrator)NewIntegrator("RK78", earth));
         // A window given in UTC: the initial state is at its TDB start
-        var window = new Window(Epoch.ToUTC(), Epoch.ToUTC().AddHours(1.0));
+        var window = new Window(Epoch.ToUtc(), Epoch.ToUtc().AddHours(1.0));
 
         // Act
         var propagator = new CentralBodyPropagator(window, spacecraft, recorder, Step);
@@ -242,7 +242,7 @@ public class IntegratorInitializationTests
             Assert.Same(earth, state.Observer);
             Assert.Equal(Frames.Frame.ICRF, state.Frame);
             Assert.Equal(TimeScale.TDB, state.Epoch.Scale);
-            LabelAssert.Equal(window.StartDate.ToTDB(), state.Epoch);
+            LabelAssert.Equal(window.StartDate.ToTdb(), state.Epoch);
         }
 
         Assert.NotEmpty(spacecraft.PropagatedStates);
@@ -252,10 +252,10 @@ public class IntegratorInitializationTests
     public void SsbMode_InitializesAboutTheSun_AndFollowsKeplerOverTdbSeconds()
     {
         // Arrange: a heliocentric orbit given about the solar system barycenter, whose central body is the Sun
-        var sun = Stars.SUN_BODY;
+        var sun = Stars.SunBody;
         var heliocentric = new StateVector(new Vector3(1.5e11, 0.0, 0.0), new Vector3(0.0, 29780.0, 1000.0), sun, Epoch,
             Frames.Frame.ICRF);
-        var ssbState = heliocentric.RelativeTo(Barycenters.SOLAR_SYSTEM_BARYCENTER, Aberration.None).ToStateVector();
+        var ssbState = heliocentric.RelativeTo(Barycenters.SolarSystemBarycenter, Aberration.None).ToStateVector();
         int id = NextId();
         var spacecraft = new Spacecraft(id, $"II{-id}", 100.0, ssbState, 10000.0, new Clock($"iiclk{-id}", 65536), 10.0, 2.2);
         var recorder = new RecordingIntegrator(new RK78Integrator(1e-12, 1e-12));
@@ -281,8 +281,8 @@ public class IntegratorInitializationTests
     public void ANonIcrfInertialState_IsIntegratedInItsFrame()
     {
         // Arrange: the initial state in ECLIPJ2000, the frame of the integration (#529)
-        var earth = new CelestialBody(PlanetsAndMoons.EARTH);
-        var spacecraft = NewLeo(earth, Frames.Frame.ECLIPTIC_J2000);
+        var earth = new CelestialBody(PlanetsAndMoons.Earth);
+        var spacecraft = NewLeo(earth, Frames.Frame.ECLIPJ2000);
         var initial = (StateVector)spacecraft.InitialOrbitalParameters;
         var recorder = new RecordingIntegrator((RK78Integrator)NewIntegrator("RK78", earth));
         var window = OneHour;
@@ -293,7 +293,7 @@ public class IntegratorInitializationTests
 
         // Assert
         Assert.Equal(2, recorder.Initializations.Count);
-        Assert.All(recorder.Initializations, state => Assert.Equal(Frames.Frame.ECLIPTIC_J2000, state.Frame));
+        Assert.All(recorder.Initializations, state => Assert.Equal(Frames.Frame.ECLIPJ2000, state.Frame));
         double elapsed = PropagationTimeArgument.Tt.SecondsBetween(window.StartDate, window.EndDate);
         double error = KeplerError(initial, solution, window, elapsed);
         _output.WriteLine($"MEASURE IntegratorInitializationTests ECLIPJ2000: Kepler {error:E3} m");
@@ -307,7 +307,7 @@ public class IntegratorInitializationTests
     {
         // Arrange: an apogee raise at the next perigee, about 1.6 h after the start; the integrator re-initialized after
         // the event as before
-        var earth = new CelestialBody(PlanetsAndMoons.EARTH);
+        var earth = new CelestialBody(PlanetsAndMoons.Earth);
         var window = new Window(Epoch, Epoch.AddHours(2.0));
 
         Spacecraft WithManeuver()
@@ -369,7 +369,7 @@ public class IntegratorInitializationTests
         {
             if (state == "ECLIPJ2000")
             {
-                var leo = NewLeo(new CelestialBody(PlanetsAndMoons.EARTH));
+                var leo = NewLeo(new CelestialBody(PlanetsAndMoons.Earth));
                 return (new CentralBodyPropagator(new Window(Epoch, Epoch.AddHours(2.0)), leo, new PropagationOptions
                 {
                     Integrator = kind == "RK78"
@@ -381,18 +381,18 @@ public class IntegratorInitializationTests
                 }), leo);
             }
 
-            var sun = Stars.SUN_BODY;
+            var sun = Stars.SunBody;
             var heliocentric = new StateVector(new Vector3(1.5e11, 0.0, 0.0), new Vector3(0.0, 29780.0, 1000.0), sun,
                 Epoch, Frames.Frame.ICRF);
             int id = NextId();
-            var ssb = new Spacecraft(id, $"II{-id}", 100.0, heliocentric.RelativeTo(Barycenters.SOLAR_SYSTEM_BARYCENTER, Aberration.None).ToStateVector(), 10000.0,
+            var ssb = new Spacecraft(id, $"II{-id}", 100.0, heliocentric.RelativeTo(Barycenters.SolarSystemBarycenter, Aberration.None).ToStateVector(), 10000.0,
                 new Clock($"iiclk{-id}", 65536), 10.0, 2.2);
             // The gravity of the Sun and of the Earth as point masses about the observer of the state
             Integrator integrator = kind == "RK78"
                 ? new RK78Integrator(1e-12, 1e-12)
                 : new VVIntegrator(TimeSpan.FromMinutes(10.0));
             integrator.AddForce(new GravitationalAcceleration(sun));
-            integrator.AddForce(new GravitationalAcceleration(PlanetsAndMoons.EARTH_BODY));
+            integrator.AddForce(new GravitationalAcceleration(PlanetsAndMoons.EarthBody));
             return (new CentralBodyPropagator(new Window(Epoch, Epoch.AddDays(2.0)), ssb, integrator,
                 TimeSpan.FromMinutes(30.0)), ssb);
         }
@@ -401,7 +401,7 @@ public class IntegratorInitializationTests
         var expected = reference.Propagator.Propagate().StateVectors;
         var (propagator, spacecraft) = New();
         var callerState = state == "ECLIPJ2000"
-            ? ((StateVector)spacecraft.InitialOrbitalParameters).ToFrame(Frames.Frame.ECLIPTIC_J2000)
+            ? ((StateVector)spacecraft.InitialOrbitalParameters).ToFrame(Frames.Frame.ECLIPJ2000)
             : spacecraft.InitialOrbitalParameters.ToStateVector();
 
         // Act

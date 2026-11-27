@@ -28,7 +28,7 @@ public class StarTests
     [Fact]
     public void Create()
     {
-        var star = new Star(1, "star1", 1E+30, "spec", 2, 0.3792, Equatorial.FromRightAscensionDeclination(20, 10, TimeSystem.Time.J2000TDB), 4, 5, 6, 7, 8, 9, TimeSystem.Time.J2000TDB);
+        var star = new Star(1, "star1", 1E+30, "spec", 2, 0.3792, Equatorial.FromRightAscensionDeclination(20, 10, TimeSystem.Time.J2000Tdb), 4, 5, 6, 7, 8, 9, TimeSystem.Time.J2000Tdb);
         Assert.Equal(1, star.CatalogNumber);
         Assert.Equal(1000000001, star.NaifId);
         Assert.Equal("star1", star.Name);
@@ -36,8 +36,8 @@ public class StarTests
         Assert.Equal(6.674299999999999E+19, star.GM);
         Assert.Equal("spec", star.SpectralType);
         Assert.Equal(2, star.VisualMagnitude);
-        LabelAssert.Equal(TimeSystem.Time.J2000TDB, star.Epoch);
-        LabelAssert.Equal(Equatorial.FromRightAscensionDeclination(20, 10, TimeSystem.Time.J2000TDB), star.EquatorialCoordinatesAtEpoch);
+        LabelAssert.Equal(TimeSystem.Time.J2000Tdb, star.Epoch);
+        LabelAssert.Equal(Equatorial.FromRightAscensionDeclination(20, 10, TimeSystem.Time.J2000Tdb), star.EquatorialCoordinatesAtEpoch);
         Assert.Equal(4, star.DeclinationProperMotion);
         Assert.Equal(5, star.RightAscensionProperMotion);
         Assert.Equal(6, star.DeclinationSigma);
@@ -75,7 +75,7 @@ public class StarTests
     {
         // Act
         var exception = Assert.Throws<ArgumentOutOfRangeException>(() => new Star(732, "star732", 1E+30, "spec", 2, parallax,
-            Equatorial.FromRightAscensionDeclination(1.2, 0.3, TimeSystem.Time.J2000TDB), 0, 0, 0, 0, 0, 0, TimeSystem.Time.J2000TDB));
+            Equatorial.FromRightAscensionDeclination(1.2, 0.3, TimeSystem.Time.J2000Tdb), 0, 0, 0, 0, 0, 0, TimeSystem.Time.J2000Tdb));
 
         // Assert
         Assert.Equal("parallax", exception.ParamName);
@@ -94,8 +94,8 @@ public class StarTests
     public void Constructor_APositiveParallax_GivesAFiniteDistance(double parallax)
     {
         // Act
-        var star = new Star(732, "star732", 1E+30, "spec", 2, parallax, Equatorial.FromRightAscensionDeclination(1.2, 0.3, TimeSystem.Time.J2000TDB), 0, 0, 0, 0, 0, 0,
-            TimeSystem.Time.J2000TDB);
+        var star = new Star(732, "star732", 1E+30, "spec", 2, parallax, Equatorial.FromRightAscensionDeclination(1.2, 0.3, TimeSystem.Time.J2000Tdb), 0, 0, 0, 0, 0, 0,
+            TimeSystem.Time.J2000Tdb);
 
         // Assert: the closed form 1/parallax parsecs, to the two roundings of the constructor
         double expected = Astrodynamics.Constants.Parsec2Meters / parallax;
@@ -130,7 +130,7 @@ public class StarTests
     [Fact]
     public void GetEquatorialCoordinates()
     {
-        var star = new Star(1, "star1", 1E+30, "spec", 2, 0.3792, Equatorial.FromRightAscensionDeclination(20, 10, TimeSystem.Time.J2000TDB), 4, 5, 6, 7, 8, 9, TimeSystem.Time.J2000TDB);
+        var star = new Star(1, "star1", 1E+30, "spec", 2, 0.3792, Equatorial.FromRightAscensionDeclination(20, 10, TimeSystem.Time.J2000Tdb), 4, 5, 6, 7, 8, 9, TimeSystem.Time.J2000Tdb);
         var at = new TimeSystem.Time(new DateTime(2001, 1, 1, 12, 0, 0), TimeScale.TDB);
         var res = star.GetEquatorialCoordinates(at);
         // The straight line written here (#718), at dt = 366/365.25 yr: before, the linear angles 1.4418429380022246 and
@@ -164,8 +164,8 @@ public class StarTests
     public void GetEquatorialCoordinates2()
     {
         var star = new Star(1, "star1", 1E+30, "spec", 2, 0.3792,
-            Equatorial.FromRightAscensionDeclination(20 - (Astrodynamics.Constants.TwoPi * 10), 10 - (Astrodynamics.Constants.HalfPi * 10), TimeSystem.Time.J2000TDB), 4, 5, 6, 7, 8,
-            9, TimeSystem.Time.J2000TDB);
+            Equatorial.FromRightAscensionDeclination(20 - (Astrodynamics.Constants.TwoPi * 10), 10 - (Astrodynamics.Constants.HalfPi * 10), TimeSystem.Time.J2000Tdb), 4, 5, 6, 7, 8,
+            9, TimeSystem.Time.J2000Tdb);
         var at = new TimeSystem.Time(new DateTime(2001, 1, 1, 12, 0, 0), TimeScale.TDB);
         var res = star.GetEquatorialCoordinates(at);
         // The straight line (#718) from catalog angles outside [−π/2, π/2] and [0, 2π): u0, e_α and e_δ of their sines and
@@ -176,29 +176,29 @@ public class StarTests
     }
 
     [Fact]
-    public void GetDeclinationSigma()
+    public void DeclinationSigmaAt()
     {
-        var star = new Star(1, "star1", 1E+30, "spec", 2, 0.3792, Equatorial.FromRightAscensionDeclination(20, 10, TimeSystem.Time.J2000TDB), 4, 5, 6, 7, 8, 9, TimeSystem.Time.J2000TDB);
+        var star = new Star(1, "star1", 1E+30, "spec", 2, 0.3792, Equatorial.FromRightAscensionDeclination(20, 10, TimeSystem.Time.J2000Tdb), 4, 5, 6, 7, 8, 9, TimeSystem.Time.J2000Tdb);
         var at = new TimeSystem.Time(new DateTime(2001, 1, 1, 12, 0, 0), TimeScale.TDB);
-        var res = star.GetDeclinationSigma(at);
+        var res = star.DeclinationSigmaAt(at);
         // The closed form √(6² + (8 dt)²), 10.0131 rad, not reduced (#709; before, modulo π/2: 0.58837 rad)
         double expected = ClosedFormSigma(6, 8, star, at);
         double delta = System.Math.Abs(res - expected) / expected;
-        _output.WriteLine($"MEASURE StarTests.GetDeclinationSigma: relative {delta:E3} ({res:R} rad)");
+        _output.WriteLine($"MEASURE StarTests.DeclinationSigmaAt: relative {delta:E3} ({res:R} rad)");
         Assert.True(delta <= LargeSigmaTolerance, $"{res} {expected}");
     }
 
 
     [Fact]
-    public void GetRightAscensionSigma()
+    public void RightAscensionSigmaAt()
     {
-        var star = new Star(1, "star1", 1E+30, "spec", 2, 0.3792, Equatorial.FromRightAscensionDeclination(20, 10, TimeSystem.Time.J2000TDB), 4, 5, 6, 7, 8, 9, TimeSystem.Time.J2000TDB);
+        var star = new Star(1, "star1", 1E+30, "spec", 2, 0.3792, Equatorial.FromRightAscensionDeclination(20, 10, TimeSystem.Time.J2000Tdb), 4, 5, 6, 7, 8, 9, TimeSystem.Time.J2000Tdb);
         var at = new TimeSystem.Time(new DateTime(2001, 1, 1, 12, 0, 0), TimeScale.TDB);
-        var res = star.GetRightAscensionSigma(at);
+        var res = star.RightAscensionSigmaAt(at);
         // The closed form √(7² + (9 dt)²), 11.4163 rad, not reduced (#709; before, modulo 2π: 5.13316 rad)
         double expected = ClosedFormSigma(7, 9, star, at);
         double delta = System.Math.Abs(res - expected) / expected;
-        _output.WriteLine($"MEASURE StarTests.GetRightAscensionSigma: relative {delta:E3} ({res:R} rad)");
+        _output.WriteLine($"MEASURE StarTests.RightAscensionSigmaAt: relative {delta:E3} ({res:R} rad)");
         Assert.True(delta <= LargeSigmaTolerance, $"{res} {expected}");
     }
 
@@ -206,7 +206,7 @@ public class StarTests
     public void Propagate()
     {
         var epoch = new TimeSystem.Time(new DateTime(2001, 1, 1), TimeScale.TDB);
-        var observer = Barycenters.SOLAR_SYSTEM_BARYCENTER;
+        var observer = Barycenters.SolarSystemBarycenter;
         var star = new Star(1, "star1", 1E+30, "spec", 2, 0.3792, Equatorial.FromRightAscensionDeclination(1, 1, epoch), 0.1, 0.1, 0, 0, 0, 0, epoch);
         star.Propagate(new Window(epoch, epoch + TimeSpan.FromDays(365 * 4)), TimeSpan.FromDays(365));
         // The straight line (#718) at 0, 365 and 730 days: before, the angles 1, 1.1 and 1.2 rad (to 3 decimals) at the
@@ -311,7 +311,7 @@ public class StarTests
     internal static Vector3 CatalogPosition(Star star, TimeSystem.Time epoch) => StraightLinePosition(star, JulianYearsFromCatalogEpoch(star, epoch));
 
     /// <summary>
-    /// Writes the SPK of <paramref name="star"/>, loads it and checks through SPICE (<c>spkezr</c>, <see cref="SpiceAPI"/>)
+    /// Writes the SPK of <paramref name="star"/>, loads it and checks through SPICE (<c>spkezr</c>, <see cref="SpiceApi"/>)
     /// that it holds the states of <paramref name="kept"/> alone: each at the catalog position written here, and no state
     /// at the epochs of <paramref name="replaced"/> nor between the two windows, where SPICE has no data (the read throws).
     /// Returns the worst relative position.
@@ -322,13 +322,13 @@ public class StarTests
         var directory = Directory.CreateTempSubdirectory("star668");
         var spk = new FileInfo(Path.Combine(directory.FullName, $"star{star.CatalogNumber}.bsp"));
         star.WriteEphemeris(spk);
-        SpiceAPI.Instance.LoadKernels(spk);
+        SpiceApi.Instance.LoadKernels(spk);
         try
         {
             double worst = 0.0;
             foreach (var epoch in kept)
             {
-                var read = SpiceAPI.Instance.ReadEphemeris(epoch, 0, star.NaifId, Frames.Frame.ICRF, Aberration.None);
+                var read = SpiceApi.Instance.ReadEphemeris(epoch, 0, star.NaifId, Frames.Frame.ICRF, Aberration.None);
                 var catalog = CatalogPosition(star, epoch);
                 double relative = (read.Position - catalog).Magnitude() / catalog.Magnitude();
                 worst = System.Math.Max(worst, relative);
@@ -338,14 +338,14 @@ public class StarTests
             foreach (var epoch in replaced)
             {
                 Assert.Throws<SpiceException>(() =>
-                    SpiceAPI.Instance.ReadEphemeris(epoch, 0, star.NaifId, Frames.Frame.ICRF, Aberration.None));
+                    SpiceApi.Instance.ReadEphemeris(epoch, 0, star.NaifId, Frames.Frame.ICRF, Aberration.None));
             }
 
             return worst;
         }
         finally
         {
-            SpiceAPI.Instance.UnloadKernels(spk);
+            SpiceApi.Instance.UnloadKernels(spk);
             directory.Delete(true);
         }
     }
@@ -464,7 +464,7 @@ public class StarTests
     /// catalog motion, before any rounding to a double. A time in TDB is taken as it is.
     /// </summary>
     private static decimal JulianYearsFromCatalogEpoch(Star star, TimeSystem.Time epoch) =>
-        (decimal)(epoch.ToTDB().DateTime.Ticks - star.Epoch.ToTDB().DateTime.Ticks) / TimeSpan.TicksPerDay / 365.25m;
+        (decimal)(epoch.ToTdb().DateTime.Ticks - star.Epoch.ToTdb().DateTime.Ticks) / TimeSpan.TicksPerDay / 365.25m;
 
     /// <summary>
     /// The closed form of a sigma at an epoch, √(σ² + (dt σ_μ)²): its square in <see cref="decimal"/>, rounded once to a
@@ -567,8 +567,8 @@ public class StarTests
             foreach (var at in epochs)
             {
                 // Act
-                double rightAscension = star.GetRightAscensionSigma(at);
-                double declination = star.GetDeclinationSigma(at);
+                double rightAscension = star.RightAscensionSigmaAt(at);
+                double declination = star.DeclinationSigmaAt(at);
 
                 // Assert
                 double expectedRightAscension = ClosedFormSigma(2e-7, 2e-3, star, at);
@@ -737,13 +737,13 @@ public class StarTests
             foreach (var frame in frames)
             {
                 var at = tdb.ConvertTo(frame);
-                Assert.True(System.Math.Abs(at.ToTDB().DateTime.Ticks - tdb.DateTime.Ticks) <= 1, $"{frame}");
+                Assert.True(System.Math.Abs(at.ToTdb().DateTime.Ticks - tdb.DateTime.Ticks) <= 1, $"{frame}");
 
                 // Act
                 var coordinates = star.GetEquatorialCoordinates(at);
 
                 // Assert: the position of its TDB time, bit for bit, and that of the TDB time given within a tick
-                var ofTdb = star.GetEquatorialCoordinates(at.ToTDB());
+                var ofTdb = star.GetEquatorialCoordinates(at.ToTdb());
                 Assert.Equal(ofTdb.Declination, coordinates.Declination);
                 Assert.Equal(ofTdb.RightAscension, coordinates.RightAscension);
                 double delta = (coordinates.ToCartesian() - reference.ToCartesian()).Magnitude() / reference.Distance;
@@ -1010,8 +1010,8 @@ public class StarTests
         // Act and assert
         foreach (var at in new[] { catalog, later })
         {
-            double declination = star.GetDeclinationSigma(at);
-            double rightAscension = star.GetRightAscensionSigma(at);
+            double declination = star.DeclinationSigmaAt(at);
+            double rightAscension = star.RightAscensionSigmaAt(at);
             double expectedDeclination = ClosedFormSigma(2.0, 1e-3, star, at);
             double expectedRightAscension = ClosedFormSigma(7.0, 1e-3, star, at);
             double declinationDelta = System.Math.Abs(declination - expectedDeclination) / expectedDeclination;
@@ -1022,11 +1022,11 @@ public class StarTests
             Assert.True(rightAscensionDelta <= LargeSigmaTolerance, $"{rightAscension} {expectedRightAscension}");
         }
 
-        Assert.Equal(2.0, star.GetDeclinationSigma(catalog));
-        Assert.Equal(7.0, star.GetRightAscensionSigma(catalog));
+        Assert.Equal(2.0, star.DeclinationSigmaAt(catalog));
+        Assert.Equal(7.0, star.RightAscensionSigmaAt(catalog));
     }
 
-    // The record of the sigmas above π/2 and 2π against their closed form (GetDeclinationSigma, GetRightAscensionSigma,
+    // The record of the sigmas above π/2 and 2π against their closed form (DeclinationSigmaAt, RightAscensionSigmaAt,
     // Sigmas_AboveAnAngleRange_AreNotReduced: 2, 2.828, 7, 7.280, 10.013 and 11.416 rad): twice the worst relative
     // difference over Linux x64, Windows x64 and macOS arm64, rounded up at the second digit (1.269e-16 on all three,
     // CI runs 43906476725 and 43926830045: the right ascension sigma of 7 rad at the catalog epoch, where the library
@@ -1212,7 +1212,7 @@ public class StarTests
     /// <summary>The star of a row, built as a caller builds one from its catalog values, and the epoch of its horizon.</summary>
     private static (Star Star, TimeSystem.Time At) StarOf(StarpmCase row, int index)
     {
-        var epoch = TimeSystem.Time.CreateTDB(row.EpochDays * 86400.0);
+        var epoch = TimeSystem.Time.CreateTdb(row.EpochDays * 86400.0);
         var star = new Star(718000 + index, $"star{718000 + index}", 1E+30, "spec", 2, row.Parallax, Equatorial.FromRightAscensionDeclination(row.RightAscension, row.Declination, epoch),
             row.DeclinationProperMotion, row.RightAscensionProperMotion, 0, 0, 0, 0, epoch);
         var at = epoch + TimeSpan.FromTicks((long)System.Math.Round(row.Years * 365.25 * TimeSpan.TicksPerDay));
@@ -1430,7 +1430,7 @@ public class StarTests
         // Arrange: the record, converted as a caller converts it
         const double deg = System.Math.PI / 180.0;
         const double mas = System.Math.PI / 180.0 / 3600.0 / 1000.0;
-        var epoch = TimeSystem.Time.CreateTDB(5844.0 * 86400.0);
+        var epoch = TimeSystem.Time.CreateTdb(5844.0 * 86400.0);
         var star = new Star(718200, "Barnard", 1E+30, "M4V", 9.5, 546.9759 / 1000.0, Equatorial.FromRightAscensionDeclination(269.44850252544 * deg, 4.73942005111 * deg, epoch),
             10362.394 * mas, -801.551 * mas, 0, 0, 0, 0, epoch);
         var rows = StarpmCases.Where(x => x.Label == "Barnard DR3").ToArray();

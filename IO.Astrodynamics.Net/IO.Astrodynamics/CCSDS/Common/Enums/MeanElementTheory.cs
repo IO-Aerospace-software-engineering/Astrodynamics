@@ -2,7 +2,7 @@
 
 using System.ComponentModel;
 
-namespace IO.Astrodynamics.CCSDS.Common.Enums;
+namespace IO.Astrodynamics.Ccsds;
 
 /// <summary>
 /// Mean element theory used for analytical orbit propagation in OMM.

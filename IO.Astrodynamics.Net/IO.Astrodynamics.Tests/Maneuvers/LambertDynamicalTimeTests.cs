@@ -52,7 +52,7 @@ public class LambertDynamicalTimeTests
         string toTag)
     {
         // Arrange: a point of an orbit and the point SPICE prop2b reaches after the dynamical time between the tags
-        var centre = new CelestialBody(body == "Earth" ? PlanetsAndMoons.EARTH : PlanetsAndMoons.MOON);
+        var centre = new CelestialBody(body == "Earth" ? PlanetsAndMoons.Earth : PlanetsAndMoons.Moon);
         var departure = Tagged(DepartureUtc, fromTag);
         var arrival = Tagged(ArrivalUtc, toTag);
         var start = new KeplerianElements(body == "Earth" ? 6778137.0 : 1837400.0, 0.001, 51.6 * Deg, 30.0 * Deg,
@@ -85,9 +85,9 @@ public class LambertDynamicalTimeTests
     private static TimeSystem.Time Tagged(TimeSystem.Time utc, string tag) => tag switch
     {
         "UTC" => utc,
-        "TAI" => utc.ToTAI(),
+        "TAI" => utc.ToTai(),
         "TT" => utc.ToTT(),
-        "TDB" => utc.ToTDB(),
+        "TDB" => utc.ToTdb(),
         _ => throw new ArgumentOutOfRangeException(nameof(tag), tag, null)
     };
 
@@ -96,7 +96,7 @@ public class LambertDynamicalTimeTests
     {
         long ticks = (long)System.Math.Round(elapsed * TimeSpan.TicksPerSecond);
         double remainder = elapsed - ticks / (double)TimeSpan.TicksPerSecond;
-        var state = SpiceAPI.Instance.Propagate2Bodies(initial, initial.Observer.GM, TimeSpan.FromTicks(ticks));
+        var state = SpiceApi.Instance.Propagate2Bodies(initial, initial.Observer.GM, TimeSpan.FromTicks(ticks));
         return new StateVector(state.Position + state.Velocity * remainder, state.Velocity, state.Observer,
             state.Epoch, state.Frame);
     }

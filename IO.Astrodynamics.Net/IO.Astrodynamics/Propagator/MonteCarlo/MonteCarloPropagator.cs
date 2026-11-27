@@ -149,7 +149,7 @@ public static class MonteCarloPropagator
                 clock,
                 template.SectionalArea,
                 coefficients?[k].DragCoefficient ?? template.DragCoefficient,
-                solarRadiationCoefficient: coefficients?[k].ReflectivityCoefficient ?? template.SolarRadiationCoeff);
+                solarRadiationCoefficient: coefficients?[k].ReflectivityCoefficient ?? template.SolarRadiationCoefficient);
 
             tasks[k] = new PropagationTask(sc, config.Window, config.Propagation);
         }

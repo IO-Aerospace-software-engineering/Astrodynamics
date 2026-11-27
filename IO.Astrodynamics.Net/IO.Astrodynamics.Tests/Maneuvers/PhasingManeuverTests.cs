@@ -46,9 +46,9 @@ namespace IO.Astrodynamics.Tests.Maneuvers
         [Fact]
         public void Execute()
         {
-            var orbitalParams = new KeplerianElements(42164000.0, 0.0, 0.0, 0.0, 0.0, 0.0, TestHelpers.EarthAtJ2000, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF);
+            var orbitalParams = new KeplerianElements(42164000.0, 0.0, 0.0, 0.0, 0.0, 0.0, TestHelpers.EarthAtJ2000, TimeSystem.Time.J2000Tdb, Frames.Frame.ICRF);
             var targtOrbitalParams = new KeplerianElements(42164000.0, 0.0, 0.0, 0.0, 0.0, 345.0 * Astrodynamics.Constants.Deg2Rad, TestHelpers.EarthAtJ2000,
-                TimeSystem.Time.J2000TDB, Frames.Frame.ICRF);
+                TimeSystem.Time.J2000Tdb, Frames.Frame.ICRF);
             var spc = new Spacecraft(-666, "GenericSpacecraft", 1000.0, orbitalParams, 3000.0, new Clock("GenericClk", 65536));
             spc.AddFuelTank(new FuelTank("ft", 1000.0, 900.0, "ftA", "123456"));
             spc.AddEngine(new Engine("eng", 450, 50, spc.FuelTanks.First(), "engmk1", "12345"));
@@ -117,7 +117,7 @@ namespace IO.Astrodynamics.Tests.Maneuvers
         [Fact]
         public void ExecuteFromTargetTrueLongitude()
         {
-            var orbitalParams = Orbit("circular", 0.0, TestHelpers.EarthAtJ2000, TimeSystem.Time.J2000TDB);
+            var orbitalParams = Orbit("circular", 0.0, TestHelpers.EarthAtJ2000, TimeSystem.Time.J2000Tdb);
             var spc = NewSpacecraft(-666, orbitalParams);
             PhasingManeuver maneuver = new PhasingManeuver(345.0 * Deg, 3, spc.Engines.First(), new TimeSystem.Time(DateTime.MinValue, TimeScale.TDB), TestHelpers.EarthAtJ2000);
             Assert.Null(maneuver.TargetOrbit);
@@ -152,14 +152,14 @@ namespace IO.Astrodynamics.Tests.Maneuvers
         public void TryExecute_TheTwoBodyClosedForm(string orbit, double phaseDeg, uint revolutions)
         {
             var center = TestHelpers.EarthAtJ2000;
-            var epoch = TimeSystem.Time.J2000TDB;
+            var epoch = TimeSystem.Time.J2000Tdb;
             var initial = Orbit(orbit, 0.0, center, epoch);
             double deltaTheta = phaseDeg * Deg;
             var k = ClosedForm(initial.ToStateVector(), 0.0);
             var (t2, _, dv) = ClosedFormPhasing(k, deltaTheta, revolutions);
 
             var spc = NewSpacecraft(-5881, initial);
-            var maneuver = new PhasingManeuver(PerigeeLongitude(orbit) + deltaTheta, revolutions, spc.Engines.First(), TimeSystem.Time.J2000TDB, center);
+            var maneuver = new PhasingManeuver(PerigeeLongitude(orbit) + deltaTheta, revolutions, spc.Engines.First(), TimeSystem.Time.J2000Tdb, center);
             var sv = initial.ToStateVector();
             var velocity = sv.Velocity;
             maneuver.TryExecute(sv);
@@ -200,7 +200,7 @@ namespace IO.Astrodynamics.Tests.Maneuvers
         public void Propagation_MeetsTheVirtualTarget(string integrator, double phaseDeg, uint revolutions)
         {
             var center = TestHelpers.EarthAtJ2000;
-            var start = TimeSystem.Time.J2000TDB;
+            var start = TimeSystem.Time.J2000Tdb;
             double deltaTheta = phaseDeg * Deg;
             // The perigee 1 ms before the end of the Velocity-Verlet step of 950 s, which fires at the end of the step that
             // holds the crossing

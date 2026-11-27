@@ -24,7 +24,7 @@ public class LagrangeTests
         Assert.Equal(3, l1.InitialOrbitalParameters.Observer.NaifId);
         Assert.Equal(new Vector3(265316694.670816,  -1448527895.507656, 1706.923545571044), l1.InitialOrbitalParameters.ToStateVector().Position,TestHelpers.VectorComparer);
         Assert.Equal(new Vector3(298.1913805689489, 54.841903612497966, -0.0004202585222601307), l1.InitialOrbitalParameters.ToStateVector().Velocity,TestHelpers.VectorComparer);
-        Assert.Equal(Frames.Frame.ECLIPTIC_J2000, l1.InitialOrbitalParameters.Frame);
-        LabelAssert.Equal(TimeSystem.Time.J2000TDB, l1.InitialOrbitalParameters.Epoch);
+        Assert.Equal(Frames.Frame.ECLIPJ2000, l1.InitialOrbitalParameters.Frame);
+        LabelAssert.Equal(TimeSystem.Time.J2000Tdb, l1.InitialOrbitalParameters.Epoch);
     }
 }

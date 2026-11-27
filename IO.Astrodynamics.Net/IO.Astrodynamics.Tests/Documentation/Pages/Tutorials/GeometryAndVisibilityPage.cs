@@ -18,15 +18,9 @@ using System.Threading;
 using System.Threading.Tasks;
 using IO.Astrodynamics;
 using IO.Astrodynamics.Atmosphere;
-using IO.Astrodynamics.Atmosphere.NRLMSISE_00;
 using IO.Astrodynamics.Body;
 using IO.Astrodynamics.Body.Spacecraft;
-using IO.Astrodynamics.CCSDS;
-using IO.Astrodynamics.CCSDS.CDM;
-using IO.Astrodynamics.CCSDS.Common;
-using IO.Astrodynamics.CCSDS.Common.Enums;
-using IO.Astrodynamics.CCSDS.OMM;
-using IO.Astrodynamics.CCSDS.OPM;
+using IO.Astrodynamics.Ccsds;
 using IO.Astrodynamics.Converters;
 using IO.Astrodynamics.Coordinates;
 using IO.Astrodynamics.Cosmographia;
@@ -49,11 +43,11 @@ using IO.Astrodynamics.Propagator.Forces;
 using IO.Astrodynamics.Propagator.Integrators;
 using IO.Astrodynamics.Propagator.MonteCarlo;
 using IO.Astrodynamics.Propagator.Variational;
-using IO.Astrodynamics.SSA;
+using IO.Astrodynamics.Ssa;
 using IO.Astrodynamics.SolarSystemObjects;
 using IO.Astrodynamics.Surface;
 using IO.Astrodynamics.TimeSystem;
-using TLE = IO.Astrodynamics.OrbitalParameters.TLE.TLE;
+using Tle = IO.Astrodynamics.OrbitalParameters.Tle;
 
 namespace DocumentationPageSamples.Tutorials;
 
@@ -104,7 +98,7 @@ internal static class GeometryAndVisibilityPage
         var farMoonWindows = earth.FindDistanceWindows(
             searchWindow,
             moon,
-            RelationnalOperator.Greater,
+            RelationalOperator.GreaterThan,
             400000000,          // meters
             new WindowSearchOptions { Step = TimeSpan.FromHours(24) });
         #endregion
@@ -190,7 +184,7 @@ internal static class GeometryAndVisibilityPage
             searchWindow,
             spacecraft,
             HorizontalCoordinate.Elevation,
-            RelationnalOperator.Greater,
+            RelationalOperator.GreaterThan,
             10.0 * Constants.Deg2Rad,
             new WindowSearchOptions { Step = TimeSpan.FromMinutes(1), Aberration = Aberration.LT });
         #endregion
@@ -202,7 +196,7 @@ internal static class GeometryAndVisibilityPage
         #region docs/tutorials/geometry-and-visibility.md:10
         // Inputs: mySite (Site), epoch (Time)
         // Parse TLE
-        var tle = new TLE(
+        var tle = new Tle(
             "ISS (ZARYA)",
             "1 25544U 98067A   24100.50000000  .00016717  00000-0  10270-3 0  9005",
             "2 25544  51.6416 247.4627 0006703 130.5360 325.0288 15.49750667  1007");

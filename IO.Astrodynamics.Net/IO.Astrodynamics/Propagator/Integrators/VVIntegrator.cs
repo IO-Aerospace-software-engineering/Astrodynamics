@@ -65,10 +65,10 @@ public sealed class VVIntegrator : Integrator
 
     public override IntegrationResult IntegrateSegment(
         Vector3 startPosition, Vector3 startVelocity,
-        Time baseEpoch, double duration,
+        Time baseEpoch, double durationSeconds,
         IReadOnlyList<IEventDetector> eventDetectors = null)
     {
-        int estimatedSteps = (int)(duration / DeltaTs) + 2;
+        int estimatedSteps = (int)(durationSeconds / DeltaTs) + 2;
         var segment = new PropagationSegment(baseEpoch, estimatedSteps);
 
         var pos = startPosition;
@@ -81,7 +81,7 @@ public sealed class VVIntegrator : Integrator
 
         // A segment of no duration, the state after an impulse at the end of the propagation (#575): one step of zero
         // length, which holds the state
-        if (!(duration > 0.0))
+        if (!(durationSeconds > 0.0))
         {
             SkipRoot = false;
             segment.AddStep(new AcceptedStep(0.0, 0.0, pos, vel, pos, vel, accel, accel));
@@ -108,9 +108,9 @@ public sealed class VVIntegrator : Integrator
         // The gates still closed at the base (#569), but that of the detector of the event just handled, which it decided
         var gates = EventGates.Create(eventDetectors, baseEpoch, prevG, justHandled);
 
-        while (t < duration)
+        while (t < durationSeconds)
         {
-            double remaining = duration - t;
+            double remaining = durationSeconds - t;
             double h = System.Math.Min(DeltaTs, remaining);
             var startAccel = accel;
             var (newPos, newVel, endAccel) = Step(pos, vel, startAccel, baseEpoch, t, h);
@@ -173,15 +173,15 @@ public sealed class VVIntegrator : Integrator
     /// last step is integrated again to that time, so that the state the next segment starts from is the state of its
     /// label, as RK7(8) does. A step end on the grid of the ticks keeps its step, bit for bit.
     /// </summary>
-    private EventInfo EventAtLabel(PropagationSegment segment, in AcceptedStep step, in Time baseEpoch, int detectorIndex)
+    private IntegrationEvent EventAtLabel(PropagationSegment segment, in AcceptedStep step, in Time baseEpoch, int detectorIndex)
     {
         double t0 = step.CumulativeTime;
-        double t1 = t0 + step.StepSize;
+        double t1 = t0 + step.StepSizeSeconds;
         var label = TimeArgument.EpochAt(baseEpoch, t1);
         double tL = TimeArgument.OnEpochGrid(baseEpoch, label, t0, t1 + PropagationSolution.EpochTick);
         if (tL == t1 || !(tL > t0))
         {
-            return new EventInfo(detectorIndex, t1, step.EndPosition, step.EndVelocity);
+            return new IntegrationEvent(detectorIndex, t1, step.EndPosition, step.EndVelocity);
         }
 
         double h = tL - t0;
@@ -189,7 +189,7 @@ public sealed class VVIntegrator : Integrator
             baseEpoch, t0, h);
         segment.ReplaceLastStep(new AcceptedStep(t0, h, step.StartPosition, step.StartVelocity, position, velocity,
             step.StartAcceleration, acceleration));
-        return new EventInfo(detectorIndex, tL, position, velocity);
+        return new IntegrationEvent(detectorIndex, tL, position, velocity);
     }
 
     /// <summary>
@@ -219,7 +219,7 @@ public sealed class VVIntegrator : Integrator
         double[] prevG, double[] currG, EventGates gates)
     {
         double t0 = step.CumulativeTime;
-        double t1 = t0 + step.StepSize;
+        double t1 = t0 + step.StepSizeSeconds;
         var detector = detectors[index];
         Func<StateVector, double> g = detector.Evaluate;
         if (gates != null && gates.OpenedInLastStep(index, out double gateT, out bool zeroAtGate))

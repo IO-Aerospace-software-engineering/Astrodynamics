@@ -24,14 +24,14 @@ using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Xunit;
 using Xunit.Abstractions;
-using TLE = IO.Astrodynamics.OrbitalParameters.TLE.TLE;
+using Tle = IO.Astrodynamics.OrbitalParameters.Tle;
 
 namespace IO.Astrodynamics.Tests.Documentation;
 
 /// <summary>
 /// The C# examples of the pages of docs/ and README.md (#705): each csharp block equals its compiled region of the page's
-/// file under Documentation/Pages (one method per block, in a namespace outside IO.Astrodynamics, as for
-/// DEVELOPER_GUIDE.md), so a page cannot drift from code the compiler checks, and the blocks that need only
+/// file under Documentation/Pages (one method per block, in a namespace outside IO.Astrodynamics, as an application's),
+/// so a page cannot drift from code the compiler checks, and the blocks that need only
 /// Data/SolarSystem run. Before #705 the blocks were read for two text rules only (<see cref="DocumentationPagesTests"/>):
 /// 34 lines in 12 pages did not compile against the library (members that do not exist, as <c>tle.NoradId</c> and
 /// <c>LambertSolution.DepartureVelocity</c>, parameters of other names, as <c>shortWay:</c> and <c>occultingBody:</c>, a
@@ -204,9 +204,17 @@ public class DocumentationPagesExamplesTests
 
     #region The blocks as a reader compiles them
 
-    // The using directives a console application of the .NET SDK holds implicitly (ImplicitUsings of Microsoft.NET.Sdk)
+    // The using directives a console application of the .NET SDK holds implicitly (ImplicitUsings of Microsoft.NET.Sdk),
+    // then the eleven the package adds to it, read from the props file it packs (build/IO.Astrodynamics.props, N7 of D2,
+    // #668, lot L9)
     private static readonly string[] ImplicitUsings =
-        { "System", "System.Collections.Generic", "System.IO", "System.Linq", "System.Net.Http", "System.Threading", "System.Threading.Tasks" };
+        new[] { "System", "System.Collections.Generic", "System.IO", "System.Linq", "System.Net.Http", "System.Threading", "System.Threading.Tasks" }
+            .Concat(PackageImplicitUsings()).ToArray();
+
+    // The namespaces of the Using items of the package's props file
+    internal static IReadOnlyList<string> PackageImplicitUsings() =>
+        System.Xml.Linq.XDocument.Load(Path.Combine(Docs, "IO.Astrodynamics.props")).Descendants("Using")
+            .Select(u => (string)u.Attribute("Include")).ToList();
 
     // The references of a reader's application: the assemblies of the runtime, the library and those it references
     private static readonly Lazy<List<MetadataReference>> ReaderReferences = new(() =>
@@ -301,14 +309,14 @@ public class DocumentationPagesExamplesTests
     /// directives the page gave compiles it. The regions compile in their file under the directives of every namespace of
     /// the library, and <see cref="PageBlocks_EqualTheirCompiledRegions"/> checks only that a block's directives name
     /// namespaces. Red on the first blocks of tle-and-omm.md (<c>TLE</c>, whose namespace
-    /// <c>IO.Astrodynamics.OrbitalParameters.TLE</c> the block did not import, CS0246) and coordinate-conversions.md
+    /// <c>IO.Astrodynamics.OrbitalParameters</c> the block did not import, CS0246) and coordinate-conversions.md
     /// (<c>StateVector</c> and <c>PlanetsAndMoons</c>, CS0246 and CS0103), which the first version of #705 left; and, once
     /// the blocks without directives of their own were compiled too (#716; #705 compiled only those that declare some), on
     /// a80f6a5 on six blocks of three pages whose namespace the page never imported: <c>Planetodetic</c> in block 5 of
     /// coordinate-conversions.md (<c>IO.Astrodynamics.Coordinates</c>, CS0246), <c>CentralBodyPropagator</c> and
     /// <c>CentralBodyPropagatorBuilder</c> in blocks 3, 6 and 7 of numerical-propagation.md
     /// (<c>IO.Astrodynamics.Propagator</c>, CS0246), <c>Omm</c> and <c>Opm</c> in blocks 7 and 10 of tle-and-omm.md
-    /// (<c>IO.Astrodynamics.CCSDS.OMM</c> and <c>.OPM</c>, CS0103). The pages that declare no directive are not read here:
+    /// (<c>IO.Astrodynamics.Ccsds</c>, CS0103). The pages that declare no directive are not read here:
     /// they give the reader none.
     /// </summary>
     [Theory]
@@ -380,6 +388,7 @@ public class DocumentationPagesExamplesTests
         new (string Page, int Block)[]
             {
                 ("docs/get-started.md", 4), ("docs/get-started.md", 5),
+                ("docs/reference/force-models.md", 4), ("docs/reference/force-models.md", 5), ("docs/reference/force-models.md", 6),
                 ("docs/reference/integrators.md", 1), ("docs/reference/integrators.md", 2), ("docs/reference/integrators.md", 3),
                 ("docs/reference/math.md", 1), ("docs/reference/math.md", 2), ("docs/reference/math.md", 3),
                 ("docs/reference/predefined-objects.md", 1),
@@ -388,6 +397,7 @@ public class DocumentationPagesExamplesTests
                 ("docs/tutorials/coordinate-conversions.md", 1), ("docs/tutorials/coordinate-conversions.md", 5),
                 ("docs/tutorials/ephemeris-queries.md", 2),
                 ("docs/tutorials/numerical-propagation.md", 2), ("docs/tutorials/orbit-creation.md", 1),
+                ("docs/tutorials/tle-and-omm.md", 11),
             }
             .Select(b => new object[] { b.Page, b.Block });
 
@@ -421,7 +431,7 @@ public class DocumentationPagesExamplesTests
 
     private static StateVector Leo(double radius, double inclination, TimeSystem.Time epoch)
     {
-        var earth = PlanetsAndMoons.EARTH_BODY;
+        var earth = PlanetsAndMoons.EarthBody;
         double v = System.Math.Sqrt(earth.GM / radius);
         return new StateVector(new Vector3(radius, 0.0, 0.0), new Vector3(0.0, v * System.Math.Cos(inclination), v * System.Math.Sin(inclination)),
             earth, epoch, Frames.Frame.ICRF);
@@ -431,7 +441,7 @@ public class DocumentationPagesExamplesTests
     /// The first block of the TLE tutorial, run as a reader compiles it with the page's directives, prints the TLE's name,
     /// catalog number and mean inclination as its lines write them: the columns 3 to 7 of line 1 and 9 to 16 of line 2
     /// (#705: it read <c>tle.NoradId</c>, which does not exist, and multiplied the method group <c>tle.Inclination</c>, and
-    /// its directives lacked <c>IO.Astrodynamics.OrbitalParameters.TLE</c>). The block's kernel load is not run: the test
+    /// its directives lacked <c>IO.Astrodynamics.OrbitalParameters</c>). The block's kernel load is not run: the test
     /// process holds Data/SolarSystem, which no test reloads. Red on the page of 46e6975 (CS0246 for <c>TLE</c>; with the
     /// directive added, CS1061 for <c>NoradId</c> and CS0019 for <c>Inclination</c>) and on the first version of #705
     /// (CS0246).
@@ -444,7 +454,7 @@ public class DocumentationPagesExamplesTests
         var lines = block.SelectMany(l => Regex.Matches(l, "\"([12] [^\"]+)\"").Select(m => m.Groups[1].Value)).ToList();
         Assert.Equal(2, lines.Count);
 
-        var printed = RunAsReader(page, 1, st => st == "SpiceAPI.Instance.LoadKernels(new DirectoryInfo(\"Data/SolarSystem\"));")
+        var printed = RunAsReader(page, 1, st => st == "SpiceApi.Instance.LoadKernels(new DirectoryInfo(\"Data/SolarSystem\"));")
             .Split('\n').Select(l => l.TrimEnd('\r')).Where(l => l.Contains(':')).ToDictionary(l => l[..l.IndexOf(':')], l => l[(l.IndexOf(':') + 1)..].Trim());
         _output.WriteLine($"MEASURE #705 TLE tutorial, first block: {string.Join("; ", printed.Select(p => $"{p.Key}: {p.Value}"))}");
         Assert.Equal("ISS (ZARYA)", printed["Name"]);
@@ -511,7 +521,7 @@ public class DocumentationPagesExamplesTests
     [Fact]
     public void MissionDesignTutorial_LambertBlocks_ReachTheArrival()
     {
-        var earth = PlanetsAndMoons.EARTH_BODY;
+        var earth = PlanetsAndMoons.EarthBody;
         var departure = Leo(7000000.0, 0.5, Epoch);
         var arrivalEpoch = Epoch.AddHours(5.0);
         double angle = 160.0 * IO.Astrodynamics.Constants.Deg2Rad;
@@ -585,8 +595,8 @@ public class DocumentationPagesExamplesTests
     [Fact]
     public void GeometryTutorial_LunarEclipse_IsBracketedByTheDiscs()
     {
-        var earth = PlanetsAndMoons.EARTH_BODY;
-        var moon = new CelestialBody(PlanetsAndMoons.MOON);
+        var earth = PlanetsAndMoons.EarthBody;
+        var moon = new CelestialBody(PlanetsAndMoons.Moon);
         var sun = new CelestialBody(Stars.Sun);
         var searchWindow = new Window(new TimeSystem.Time(2024, 3, 24, 0, 0, 0, TimeScale.TDB), new TimeSystem.Time(2024, 3, 27, 0, 0, 0, TimeScale.TDB));
         var windows = ((IEnumerable<Window>)Block("docs/tutorials/geometry-and-visibility.md", 1)
@@ -597,8 +607,8 @@ public class DocumentationPagesExamplesTests
         // The separation of the discs minus the sum of their angular radii, for the Earth's radius given
         double Margin(TimeSystem.Time at, double earthRadius)
         {
-            var toEarth = SpiceAPI.Instance.ReadEphemeris(at, 10, 399, Frames.Frame.ICRF, Aberration.None).Position;
-            var toMoon = SpiceAPI.Instance.ReadEphemeris(at, 10, 301, Frames.Frame.ICRF, Aberration.None).Position;
+            var toEarth = SpiceApi.Instance.ReadEphemeris(at, 10, 399, Frames.Frame.ICRF, Aberration.None).Position;
+            var toMoon = SpiceApi.Instance.ReadEphemeris(at, 10, 301, Frames.Frame.ICRF, Aberration.None).Position;
             return Angle(toEarth, toMoon) - System.Math.Asin(earthRadius / toEarth.Magnitude()) - System.Math.Asin(moon.EquatorialRadius / toMoon.Magnitude());
         }
 
@@ -656,14 +666,128 @@ public class DocumentationPagesExamplesTests
         var tasks = new List<PropagationTask>();
         for (int i = 0; i < 2; i++)
         {
-            var earth = new CelestialBody(PlanetsAndMoons.EARTH, new GeopotentialModelParameters("Data/SolarSystem/EGM2008_to70_TideFree", 10));
+            var earth = new CelestialBody(PlanetsAndMoons.Earth, new GeopotentialModelParameters("Data/SolarSystem/EGM2008_to70_TideFree", 10));
             var spacecraft = new Spacecraft(-(7061 + i), $"SHARED{i}", 100.0, orbit, 10000.0, new Clock($"SHARED{i}_CLK", 256));
-            tasks.Add(new PropagationTask(spacecraft, window, new PropagationOptions { Integrator = new RK78IntegratorOptions { AbsoluteTolerance = 1e-10, RelativeTolerance = 1e-10, InitialStep = TimeSpan.FromSeconds(30.0) }, OutputStep = TimeSpan.FromSeconds(60), ThirdBodies = new CelestialItem[] { earth, Stars.SUN_BODY, PlanetsAndMoons.MOON_BODY }, CovariancePropagation = CovariancePropagationOptions.None }));
+            tasks.Add(new PropagationTask(spacecraft, window, new PropagationOptions { Integrator = new RK78IntegratorOptions { AbsoluteTolerance = 1e-10, RelativeTolerance = 1e-10, InitialStep = TimeSpan.FromSeconds(30.0) }, OutputStep = TimeSpan.FromSeconds(60), ThirdBodies = new CelestialItem[] { earth, Stars.SunBody, PlanetsAndMoons.MoonBody }, CovariancePropagation = CovariancePropagationOptions.None }));
         }
 
         var result = BatchPropagator.Propagate(tasks);
         Assert.Equal(2, result.Failed.Count);
         Assert.All(result.Failed, f => Assert.IsType<ArgumentException>(f.Error));
+    }
+
+    // The NAIF identifiers of the example's perturbing bodies: the Sun and the barycentres of Jupiter and Saturn
+    private static readonly int[] DeepSpaceThirdBodies = { 10, 5, 6 };
+
+    // The reference of the deep space example (#704): the same forces integrated independently of the library. A massless
+    // probe in the Earth-centred ICRF, the point masses of the kernels (BODYnnn_GM of gm_de440.tpc through
+    // GetCelestialBodyInfo), the third-body terms direct minus indirect, the bodies' positions read from SPICE (de440s) at
+    // the TDB of TT0 + t over the TT seconds of the window (#501), classical RK4 at about 300 s. The central GM is the
+    // Earth's, or the Earth's and the Moon's when moonMass is true (the Earth-Moon two-body problem of the Moon's SPK).
+    private static (Vector3 Position, Vector3 Velocity) DeepSpaceReference(StateVector initial, TimeSystem.Time start, TimeSystem.Time end, bool moonMass)
+    {
+        var spice = SpiceApi.Instance;
+        double central = spice.GetCelestialBodyInfo(399).GM + (moonMass ? spice.GetCelestialBodyInfo(301).GM : 0.0);
+        var gm = DeepSpaceThirdBodies.Select(id => spice.GetCelestialBodyInfo(id).GM).ToArray();
+        var tt0 = start.ToTT();
+        double length = PropagationTimeArgument.Tt.SecondsBetween(start, end);
+
+        Vector3 Acceleration(Vector3 r, double t)
+        {
+            var at = tt0.AddSeconds(t).ToTdb();
+            var a = r * (-central / System.Math.Pow(r.Magnitude(), 3));
+            for (int k = 0; k < DeepSpaceThirdBodies.Length; k++)
+            {
+                var body = spice.ReadEphemeris(at, 399, DeepSpaceThirdBodies[k], Frames.Frame.ICRF, Aberration.None).Position;
+                var d = body - r;
+                a += d * (gm[k] / System.Math.Pow(d.Magnitude(), 3)) - body * (gm[k] / System.Math.Pow(body.Magnitude(), 3));
+            }
+
+            return a;
+        }
+
+        int steps = (int)System.Math.Ceiling(length / 300.0);
+        double h = length / steps;
+        var position = initial.Position;
+        var velocity = initial.Velocity;
+        double time = 0.0;
+        for (int k = 0; k < steps; k++)
+        {
+            var k1r = velocity;
+            var k1v = Acceleration(position, time);
+            var k2r = velocity + k1v * (h / 2);
+            var k2v = Acceleration(position + k1r * (h / 2), time + h / 2);
+            var k3r = velocity + k2v * (h / 2);
+            var k3v = Acceleration(position + k2r * (h / 2), time + h / 2);
+            var k4r = velocity + k3v * h;
+            var k4v = Acceleration(position + k3r * h, time + h);
+            position += (k1r + k2r * 2 + k3r * 2 + k4r) * (h / 6);
+            velocity += (k1v + k2v * 2 + k3v * 2 + k4v) * (h / 6);
+            time += h;
+        }
+
+        return (position, velocity);
+    }
+
+    // Twice the worst over Linux x64, Windows x64 and macOS arm64 (the same on all three, CI runs 43906476725 and
+    // 43926830045; MEASURE lines below), rounded up at the second significant digit: the example's Velocity-Verlet
+    // propagation at 5 min against the reference with GM_Earth + GM_Moon after 25 days, 4.684e2 m and 1.197e-3 m/s, the
+    // integrator's own error (second order; the reference's own spread over its steps, 600 to 60 s, is about 1e-4 m)
+    private const double DeepSpaceExamplePositionLimit = 9.4e2;
+    private const double DeepSpaceExampleVelocityLimit = 2.4e-3;
+
+    // Twice the worst over the three platforms (the same on all three), as above: the reference with GM_Earth + GM_Moon
+    // against the Moon's SPK (de440s) after 25 days, 1.514e3 m, the perturbations the reference leaves out (the Earth's
+    // and the Moon's figures, the other planets, relativity), and the example's propagated Moon against the SPK,
+    // 1.972e3 m, both errors together
+    private const double DeepSpaceMoonMassLimit = 3.1e3;
+    private const double DeepSpaceExampleMoonLimit = 4.0e3;
+
+    /// <summary>
+    /// The deep space example of high-fidelity-propagation.md, the guide's before lot L9 of #668, propagates the Moon (#704): a massless probe at the Moon's state of J2000 TDB,
+    /// 25 days about an Earth of GM_Earth + GM_Moon (a field of degree 0 with the model's GM), with the Sun and the
+    /// barycentres of Jupiter and Saturn as point masses. It ends where an independent integration of these forces ends,
+    /// the error of Velocity-Verlet at 5 min, and that integration ends within 1.5 km of the Moon's SPK, the physical
+    /// reference the example prints its difference to. With the Earth's GM alone the reference ends about 54 310 km from
+    /// the Moon, the Moon's own mass, which is what the example printed before #704 as its "position difference". Red on
+    /// 46e6975: the block returned nothing to compare; red on the example of the first version of #704, which kept the
+    /// Earth's GM alone: 5.431e7 m from the reference.
+    /// </summary>
+    [Fact]
+    public void HighFidelityGuide_DeepSpaceExample_FollowsTheMoonOfTheEphemeris()
+    {
+        var (spacecraft, moonState, start, end) = DocumentationPageSamples.Guides.HighFidelityPropagationPage.Block02();
+        var earth = moonState.Observer;
+        var moon = SpiceApi.Instance.ReadEphemeris(end, 399, 301, Frames.Frame.ICRF, Aberration.None);
+
+        var final = spacecraft.GetEphemeris(end, earth, Frames.Frame.ICRF, Aberration.None);
+        var reference = DeepSpaceReference(moonState, start, end, moonMass: true);
+        double dr = (final.Position - reference.Position).Magnitude();
+        double dv = (final.Velocity - reference.Velocity).Magnitude();
+        _output.WriteLine($"MEASURE #704 high-fidelity-propagation.md deep space example against the N-body reference with GM_Earth + GM_Moon after 25 days: |dr| {dr:E3} m, |dv| {dv:E3} m/s");
+        Assert.True(dr < DeepSpaceExamplePositionLimit, $"{dr:E3} m");
+        Assert.True(dv < DeepSpaceExampleVelocityLimit, $"{dv:E3} m/s");
+
+        double referenceToMoon = (reference.Position - moon.Position).Magnitude();
+        double exampleToMoon = (final.Position - moon.Position).Magnitude();
+        var earthOnly = DeepSpaceReference(moonState, start, end, moonMass: false);
+        double earthOnlyToMoon = (earthOnly.Position - moon.Position).Magnitude();
+        _output.WriteLine($"MEASURE #704 against the Moon's SPK after 25 days: the reference {referenceToMoon:E3} m, the example {exampleToMoon:E3} m, the reference with GM_Earth alone {earthOnlyToMoon:E3} m");
+        Assert.True(referenceToMoon < DeepSpaceMoonMassLimit, $"{referenceToMoon:E3} m");
+        Assert.True(exampleToMoon < DeepSpaceExampleMoonLimit, $"{exampleToMoon:E3} m");
+        // The Moon's own mass: tens of thousands of km without it
+        Assert.True(earthOnlyToMoon > 1.0e7, $"{earthOnlyToMoon:E3} m");
+    }
+
+    /// <summary>
+    /// The example of sites.md runs with its inputs: the site within 400000 km of the Moon with LT, one window, which
+    /// LightTimeCorrectionTests.CoordinateSiteGuideWindow compares with spkcpt_c (#489).
+    /// </summary>
+    [Fact]
+    public void SitesReference_Example_Runs()
+    {
+        DocumentationPageSamples.Reference.SitesPage.Block02(PlanetsAndMoons.EarthBody, new TimeSystem.Time(2024, 1, 1, 12, 0, 0, TimeScale.TDB),
+            new CelestialBody(PlanetsAndMoons.Moon));
     }
 
     #endregion

@@ -30,9 +30,9 @@ public class ConfigurationTest
     {
         var dataProvider = new MemoryDataProvider();
         var frame = new Frames.Frame("NonExistentFrame");
-        var date = TimeSystem.Time.J2000TDB;
+        var date = TimeSystem.Time.J2000Tdb;
 
-        Assert.Throws<ArgumentException>(() => dataProvider.FrameTransformationToICRF(date, frame));
+        Assert.Throws<ArgumentException>(() => dataProvider.FrameTransformationToIcrf(date, frame));
     }
 
     [Fact]
@@ -41,12 +41,12 @@ public class ConfigurationTest
         var dataProvider = new MemoryDataProvider();
         // A frame the provider does not define: no orientation can be added under ICRF (#744)
         var frame = new Frames.Frame("MEMORY_CONFIGURATION_FRAME");
-        var date = TimeSystem.Time.J2000TDB;
+        var date = TimeSystem.Time.J2000Tdb;
         var stateOrientation = new StateOrientation(Quaternion.Identity, Vector3.Zero, date, frame);
 
-        dataProvider.AddStateOrientationToICRF(frame, date, stateOrientation);
+        dataProvider.AddStateOrientationToIcrf(frame, date, stateOrientation);
 
-        var result = dataProvider.FrameTransformationToICRF(date, frame);
+        var result = dataProvider.FrameTransformationToIcrf(date, frame);
 
         LabelAssert.Equal(stateOrientation, result);
     }
@@ -57,16 +57,16 @@ public class ConfigurationTest
         var dataProvider = new MemoryDataProvider();
         // A frame the provider does not define: no orientation can be added under ICRF (#744)
         var frame = new Frames.Frame("MEMORY_CONFIGURATION_FRAME");
-        var date1 = TimeSystem.Time.J2000TDB;
+        var date1 = TimeSystem.Time.J2000Tdb;
         var date2 = date1.AddHours(1.0);
         var dateToInterpolate = date1.AddHours(0.5);
-        var stateOrientation1 = new StateOrientation(Quaternion.Identity, Vector3.Zero, TimeSystem.Time.J2000TDB, frame);
+        var stateOrientation1 = new StateOrientation(Quaternion.Identity, Vector3.Zero, TimeSystem.Time.J2000Tdb, frame);
         var stateOrientation2 = new StateOrientation(new Quaternion(Vector3.VectorZ, Astrodynamics.Constants.HalfPi), new Vector3(1.0, 1.0, 1.0), date2, frame);
 
-        dataProvider.AddStateOrientationToICRF(frame, date1, stateOrientation1);
-        dataProvider.AddStateOrientationToICRF(frame, date2, stateOrientation2);
+        dataProvider.AddStateOrientationToIcrf(frame, date1, stateOrientation1);
+        dataProvider.AddStateOrientationToIcrf(frame, date2, stateOrientation2);
 
-        var result = dataProvider.FrameTransformationToICRF(dateToInterpolate, frame);
+        var result = dataProvider.FrameTransformationToIcrf(dateToInterpolate, frame);
 
         Assert.NotNull(result);
     }
@@ -77,17 +77,17 @@ public class ConfigurationTest
         var dataProvider = new MemoryDataProvider();
         // A frame the provider does not define: no orientation can be added under ICRF (#744)
         var frame = new Frames.Frame("MEMORY_CONFIGURATION_FRAME");
-        var date1 = TimeSystem.Time.J2000TDB;
+        var date1 = TimeSystem.Time.J2000Tdb;
         var date2 = date1.AddHours(1.0);
         var dateToInterpolate = date1.AddHours(2);
-        var stateOrientation1 = new StateOrientation(Quaternion.Identity, Vector3.Zero, TimeSystem.Time.J2000TDB, frame);
+        var stateOrientation1 = new StateOrientation(Quaternion.Identity, Vector3.Zero, TimeSystem.Time.J2000Tdb, frame);
         var stateOrientation2 = new StateOrientation(new Quaternion(Vector3.VectorZ, Astrodynamics.Constants.HalfPi), new Vector3(1.0, 1.0, 1.0), date2, frame);
 
-        dataProvider.AddStateOrientationToICRF(frame, date1, stateOrientation1);
-        dataProvider.AddStateOrientationToICRF(frame, date2, stateOrientation2);
+        dataProvider.AddStateOrientationToIcrf(frame, date1, stateOrientation1);
+        dataProvider.AddStateOrientationToIcrf(frame, date2, stateOrientation2);
 
         // A known frame read outside its stored orientations: InvalidOperationException, as SPICE (#680)
-        Assert.Throws<InvalidOperationException>(() => dataProvider.FrameTransformationToICRF(dateToInterpolate, frame));
+        Assert.Throws<InvalidOperationException>(() => dataProvider.FrameTransformationToIcrf(dateToInterpolate, frame));
     }
 
     [Fact]
@@ -96,7 +96,7 @@ public class ConfigurationTest
         var dataProvider = new MemoryDataProvider();
         var target = TestHelpers.EarthAtJ2000;
         var ssb = TestHelpers.SsbAtJ2000;
-        var date = TimeSystem.Time.J2000TDB;
+        var date = TimeSystem.Time.J2000Tdb;
         var frame = Frames.Frame.ICRF;
 
         Assert.Throws<InvalidOperationException>(() => dataProvider.GetEphemeris(date, target, ssb, frame, Aberration.None));
@@ -108,7 +108,7 @@ public class ConfigurationTest
         var dataProvider = new MemoryDataProvider();
         var target = TestHelpers.EarthAtJ2000;
         var ssb = TestHelpers.SsbAtJ2000;
-        var date = TimeSystem.Time.J2000TDB;
+        var date = TimeSystem.Time.J2000Tdb;
         var frame = Frames.Frame.ICRF;
         var stateVector = new StateVector(Vector3.Zero, Vector3.Zero, target, date, frame);
 
@@ -130,7 +130,7 @@ public class ConfigurationTest
         var target = TestHelpers.EarthAtJ2000;
         var ssb = TestHelpers.SsbAtJ2000;
         var frame = Frames.Frame.ICRF;
-        var date1 = TimeSystem.Time.J2000TDB;
+        var date1 = TimeSystem.Time.J2000Tdb;
         var date2 = date1.AddHours(1.0);
         var dateToInterpolate = date1.AddHours(0.5);
         var stateVector1 = new StateVector(Vector3.Zero, Vector3.Zero, target, date1, frame);
@@ -151,7 +151,7 @@ public class ConfigurationTest
         var target = TestHelpers.EarthAtJ2000;
         var ssb = TestHelpers.SsbAtJ2000;
         var frame = Frames.Frame.ICRF;
-        var date1 = TimeSystem.Time.J2000TDB;
+        var date1 = TimeSystem.Time.J2000Tdb;
         var date2 = date1.AddHours(1.0);
         var dateToInterpolate = date1.AddHours(2.0);
         var stateVector1 = new StateVector(Vector3.Zero, Vector3.Zero, target, date1, frame);

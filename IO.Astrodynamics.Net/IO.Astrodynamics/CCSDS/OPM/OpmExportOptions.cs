@@ -1,6 +1,6 @@
 // Copyright 2026. Sylvain Guillet (sylvain.guillet@tutamail.com)
 
-namespace IO.Astrodynamics.CCSDS.OPM;
+namespace IO.Astrodynamics.Ccsds;
 
 /// <summary>
 /// The blocks <see cref="Body.Spacecraft.Spacecraft.ToOpm"/> writes besides the state (D1 of #668, lot L7: the three bools

@@ -33,7 +33,7 @@ namespace IO.Astrodynamics.Atmosphere;
 /// <para>
 /// Atmospheric drag reads the density from the altitude without building a context
 /// (<see cref="IGeodeticDensityModel"/>), so a derived class that re-implements <see cref="IAtmosphericModel"/> is not
-/// used by drag, as for <see cref="NRLMSISE_00.Nrlmsise00Model"/>. Its density depends on the altitude alone, so the drag
+/// used by drag, as for <see cref="Nrlmsise00Model"/>. Its density depends on the altitude alone, so the drag
 /// partials take its derivative in closed form (<see cref="IAltitudeDensityDerivative"/>).
 /// </para>
 /// </remarks>
@@ -247,7 +247,7 @@ public class EarthStandardAtmosphere : IAtmosphericModel, IGeodeticDensityModel,
     {
         if (altitude >= Thermosphere1976.Base + JunctionWidth)
         {
-            return Thermosphere1976.KineticTemperature(altitude) - Constants.Kelvin;
+            return Thermosphere1976.KineticTemperature(altitude) - Constants.ZeroCelsiusInKelvin;
         }
 
         double ratio = 1.0;
@@ -261,10 +261,10 @@ public class EarthStandardAtmosphere : IAtmosphericModel, IGeodeticDensityModel,
         double lower = Lower(altitude).T * ratio;
         if (altitude < Thermosphere1976.Base)
         {
-            return lower - Constants.Kelvin;
+            return lower - Constants.ZeroCelsiusInKelvin;
         }
 
         var (w, _) = Smootherstep.At(altitude, Thermosphere1976.Base, JunctionWidth);
-        return (1.0 - w) * lower + w * Thermosphere1976.KineticTemperature(altitude) - Constants.Kelvin;
+        return (1.0 - w) * lower + w * Thermosphere1976.KineticTemperature(altitude) - Constants.ZeroCelsiusInKelvin;
     }
 }

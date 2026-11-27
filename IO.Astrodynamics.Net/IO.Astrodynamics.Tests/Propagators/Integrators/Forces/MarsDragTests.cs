@@ -38,7 +38,7 @@ public class MarsDragTests
         TestKernels.EnsureSolarSystem();
     }
 
-    private static CelestialBody Mars() => new(SolarSystemObjects.PlanetsAndMoons.MARS, Frames.Frame.ICRF, Epoch, null,
+    private static CelestialBody Mars() => new(SolarSystemObjects.PlanetsAndMoons.Mars, Frames.Frame.ICRF, Epoch, null,
         new MarsStandardAtmosphere());
 
     private static StateVector Circular(CelestialBody body, double altitude) =>

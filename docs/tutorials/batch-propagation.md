@@ -28,7 +28,7 @@ var gravity = new PropagationOptions
     {
         AbsoluteTolerance = 1e-10, RelativeTolerance = 1e-10, InitialStep = TimeSpan.FromSeconds(30.0)
     },
-    ThirdBodies = new CelestialItem[] { Stars.SUN_BODY, PlanetsAndMoons.MOON_BODY }
+    ThirdBodies = new CelestialItem[] { Stars.SunBody, PlanetsAndMoons.MoonBody }
 };
 var tasks = new List<PropagationTask>
 {
@@ -153,7 +153,7 @@ var options = new PropagationOptions
     {
         AbsoluteTolerance = 1e-10, RelativeTolerance = 1e-10, InitialStep = TimeSpan.FromSeconds(30.0)
     },
-    ThirdBodies = new CelestialItem[] { Stars.SUN_BODY, PlanetsAndMoons.MOON_BODY }
+    ThirdBodies = new CelestialItem[] { Stars.SunBody, PlanetsAndMoons.MoonBody }
 };
 var tasks = spacecraftList.Select(spacecraft => new PropagationTask(spacecraft, window, options)).ToList();
 ```

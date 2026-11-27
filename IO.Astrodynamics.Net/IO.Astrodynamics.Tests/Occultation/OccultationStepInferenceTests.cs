@@ -6,7 +6,6 @@ using IO.Astrodynamics.Body;
 using IO.Astrodynamics.Body.Spacecraft;
 using IO.Astrodynamics.Maneuver;
 using IO.Astrodynamics.OrbitalParameters;
-using IO.Astrodynamics.OrbitalParameters.TLE;
 using IO.Astrodynamics.Propagator;
 using IO.Astrodynamics.Propagator.Integrators;
 using IO.Astrodynamics.Propagator.Variational;
@@ -43,7 +42,7 @@ public class OccultationStepInferenceTests
         TestKernels.EnsureOccultationReference();
     }
 
-    private static CelestialBody Earth => new(PlanetsAndMoons.EARTH);
+    private static CelestialBody Earth => new(PlanetsAndMoons.Earth);
     private static CelestialBody Sun => new(Stars.Sun);
 
     // An equatorial LEO at the equinox, in the Earth's shadow once per orbit, propagated about a point-mass Earth
@@ -124,10 +123,10 @@ public class OccultationStepInferenceTests
     [Fact]
     public void TleSpacecraft_ThePeriodOfItsMeanMotion()
     {
-        var tle = new TLE("ISS", "1 25544U 98067A   21020.53488036  .00016717  00000-0  10270-3 0  9054",
+        var tle = new Tle("ISS", "1 25544U 98067A   21020.53488036  .00016717  00000-0  10270-3 0  9054",
             "2 25544  51.6423 353.0312 0000493 320.8755  39.2360 15.49309423 25703");
         var spacecraft = new Spacecraft(-106004, "STEP106004", 1000.0, tle, 3000.0, new Clock("STEP106004_CLK", 65536));
-        var start = tle.Epoch.ToTDB();
+        var start = tle.Epoch.ToTdb();
         var window = new Window(start, start.AddHours(6.0));
         var period = TimeSystem.Time.SecondsToSpan(IO.Astrodynamics.Constants.TwoPi / tle.MeanMeanMotion);
         var options = OccultationSearchOptions.Default;
@@ -165,7 +164,7 @@ public class OccultationStepInferenceTests
         var kernelSpacecraft = new Spacecraft(-470001, "eclipse_001", epoch: Start);
         AssertRequired(() => kernelSpacecraft.FindOccultationWindows(new Window(Start, Start.AddHours(12.0)), Sun, Earth, options));
         var leo = Leo(-106006);
-        var moon = new CelestialBody(PlanetsAndMoons.MOON);
+        var moon = new CelestialBody(PlanetsAndMoons.Moon);
         AssertRequired(() => leo.FindOccultationWindows(Day, Sun, moon, options));
         var site = new Site(65, "DSS-65", Earth);
         AssertRequired(() => site.FindOccultationWindows(Day, Sun, moon, options));

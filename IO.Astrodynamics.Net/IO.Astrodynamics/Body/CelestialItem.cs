@@ -24,7 +24,7 @@ public abstract class CelestialItem : ILocalizable, IEquatable<CelestialItem>
     /// <see cref="PlanetsAndMoons"/> or <see cref="Stars"/> reads through <see cref="ItemProvider"/> instead: the provider
     /// it read its data from, or the global provider of the time of the read until its data are read.
     /// </summary>
-    protected readonly IDataProvider _dataProvider;
+    private protected readonly IDataProvider _dataProvider;
 
     /// <summary>
     /// The provider the item reads through: <see cref="_dataProvider"/> for an item built by a constructor; for a static
@@ -35,8 +35,8 @@ public abstract class CelestialItem : ILocalizable, IEquatable<CelestialItem>
     private protected IDataProvider ItemProvider =>
         _deferred == null ? _dataProvider : Volatile.Read(ref _resolved)?.Provider ?? Configuration.Instance.DataProvider;
 
-    protected const int TITLE_WIDTH = 32;
-    protected const int VALUE_WIDTH = 32;
+    private protected const int TITLE_WIDTH = 32;
+    private protected const int VALUE_WIDTH = 32;
 
     /// <summary>
     /// Gets the NAIF ID of the celestial item.
@@ -65,7 +65,7 @@ public abstract class CelestialItem : ILocalizable, IEquatable<CelestialItem>
     /// <c>LoadKernels</c>), with <see cref="InvalidOperationException"/> naming the missing variable (third round of #668:
     /// before, those zeros were kept for the life of the process); once read, the object keeps the provider it read its
     /// data from. On the <see cref="SpiceDataProvider"/> the data are read again at the first read after each
-    /// <see cref="SpiceAPI.LoadKernels(FileSystemInfo)"/>, <see cref="SpiceAPI.UnloadKernels(FileSystemInfo)"/> or <see cref="SpiceAPI.ClearKernels"/>, so
+    /// <see cref="SpiceApi.LoadKernels(FileSystemInfo)"/>, <see cref="SpiceApi.UnloadKernels(FileSystemInfo)"/> or <see cref="SpiceApi.ClearKernels"/>, so
     /// that they follow the kernel pool (a J2, a frame association or an SPK loaded after the first read; before the third
     /// round of #668, the data of the first read were kept for the life of the process); data equal to those held keep the
     /// instances held.
@@ -144,7 +144,7 @@ public abstract class CelestialItem : ILocalizable, IEquatable<CelestialItem>
         internal OrbitalParameters.OrbitalParameters InitialOrbitalParameters { get; set; }
 
         /// <summary>
-        /// The generation of the kernel pool the data were read at (<see cref="SpiceAPI.KernelPoolGeneration"/>) for the
+        /// The generation of the kernel pool the data were read at (<see cref="SpiceApi.KernelPoolGeneration"/>) for the
         /// <see cref="SpiceDataProvider"/>, -1 for any other provider, whose data are read once.
         /// </summary>
         internal long Generation;
@@ -155,7 +155,7 @@ public abstract class CelestialItem : ILocalizable, IEquatable<CelestialItem>
             get
             {
                 long generation = Volatile.Read(ref Generation);
-                return generation < 0 || generation == SpiceAPI.KernelPoolGeneration;
+                return generation < 0 || generation == SpiceApi.KernelPoolGeneration;
             }
         }
 
@@ -179,7 +179,7 @@ public abstract class CelestialItem : ILocalizable, IEquatable<CelestialItem>
     /// as the natural-body constructor builds them, once the provider gives a GM and, for a body, radii
     /// (<see cref="RequireKernelData"/>); a read that throws caches nothing, so that the next call tries again,
     /// on the global provider of its own time. Once read, the item keeps its provider; on the <see cref="SpiceDataProvider"/>
-    /// its data hold for the generation of the kernel pool they were read at (<see cref="SpiceAPI.KernelPoolGeneration"/>),
+    /// its data hold for the generation of the kernel pool they were read at (<see cref="SpiceApi.KernelPoolGeneration"/>),
     /// and the first call after a <c>LoadKernels</c>, <c>UnloadKernels</c> or <c>ClearKernels</c> reads them again: data
     /// equal to those held keep the objects held (the frame, the orbit), other data replace them, and a read that throws
     /// (the kernels unloaded) keeps nothing new, so that the next call tries again (third round of #668: before, the data
@@ -200,7 +200,7 @@ public abstract class CelestialItem : ILocalizable, IEquatable<CelestialItem>
     {
         // The generation before the reads: a change of the pool during them leaves the data to be read again
         var provider = held?.Provider ?? Configuration.Instance.DataProvider;
-        long generation = provider is SpiceDataProvider ? SpiceAPI.KernelPoolGeneration : -1;
+        long generation = provider is SpiceDataProvider ? SpiceApi.KernelPoolGeneration : -1;
         var data = ReadProviderData(provider, _deferred.Frame, _deferred.Epoch);
         data.Generation = generation;
         if (held != null && data.HasSameValues(held))
@@ -243,7 +243,7 @@ public abstract class CelestialItem : ILocalizable, IEquatable<CelestialItem>
 
         RequireKernelData(information);
         data.Information = information;
-        data.Mass = information.GM / Constants.G;
+        data.Mass = information.GM / Constants.GravitationalConstant;
         data.GM = information.GM;
         data.GravitationalField = CreateGravitationalField(NaifId, information.GM, null);
         data.InitialOrbitalParameters = NaifId != 0 && (IsPlanet || IsMoon || IsBarycenter || IsSun)
@@ -340,10 +340,10 @@ public abstract class CelestialItem : ILocalizable, IEquatable<CelestialItem>
     /// not a site's (its body's identifier times 1000 plus its own, a planet or a moon SPICE names, as
     /// <see cref="Surface.Site.NaifId"/> builds it: 399013 is DSS-13 on the Earth). Before 11.0.0 a site identifier was an
     /// asteroid, about the Sun (#651). An identifier of the form of a site whose body SPICE does not name is still one:
-    /// SPICE's NOTO (398989) and NEW NORCIA (398990), 398 being no body (<see cref="SpiceAPI.IsSiteOfNamedBody"/>).
+    /// SPICE's NOTO (398989) and NEW NORCIA (398990), 398 being no body (<see cref="SpiceApi.IsSiteOfNamedBody"/>).
     /// </summary>
     /// <remarks>For an identifier of the form of a site, reads the name of its body in SPICE under the shared lock.</remarks>
-    public bool IsAsteroid => this.NaifId is > 1000 and < 1000000000 && !SpiceAPI.IsSiteOfNamedBody(NaifId);
+    public bool IsAsteroid => this.NaifId is > 1000 and < 1000000000 && !SpiceApi.IsSiteOfNamedBody(NaifId);
 
     /// <summary>
     /// Gets a value indicating whether the celestial item is a star.
@@ -398,7 +398,7 @@ public abstract class CelestialItem : ILocalizable, IEquatable<CelestialItem>
                 "Celestial celestialItem name can't be defined, please check if you have loaded associated kernels")
             : ExtendedInformation.Name;
 
-        _mass = ExtendedInformation.GM / Constants.G;
+        _mass = ExtendedInformation.GM / Constants.GravitationalConstant;
         _gm = ExtendedInformation.GM;
         _gravitationalField = CreateGravitationalField(naifId, _gm, geopotentialModelParameters);
         GeopotentialModel = geopotentialModelParameters;
@@ -488,7 +488,7 @@ public abstract class CelestialItem : ILocalizable, IEquatable<CelestialItem>
         NaifId = naifId;
         Name = name;
         _mass = mass;
-        _gm = mass * Constants.G;
+        _gm = mass * Constants.GravitationalConstant;
         InitialOrbitalParameters = initialOrbitalParameters;
         _gravitationalField = CreateGravitationalField(naifId, _gm, geopotentialModelParameters);
         GeopotentialModel = geopotentialModelParameters;
@@ -727,7 +727,7 @@ public abstract class CelestialItem : ILocalizable, IEquatable<CelestialItem>
     /// <summary>
     /// A light-time corrected state, in ICRF at the epoch of the observation, in <paramref name="frame"/> as
     /// <c>spkezr_c</c> gives it (N0067, its header, "Non-inertial frames"; #593): an inertial frame, or a frame centred on
-    /// the observer, at the epoch; any other at t ∓ lt_c, the epoch of its centre (<see cref="SpiceAPI.NonInertialFrameCenter"/>),
+    /// the observer, at the epoch; any other at t ∓ lt_c, the epoch of its centre (<see cref="SpiceApi.NonInertialFrameCenter"/>),
     /// lt_c the light time from the observer to that centre by the method of <paramref name="aberration"/> (that of the
     /// target when the centre is the target; the stellar aberration does not enter it), − for reception, + for
     /// transmission; and the derivative of the rotation scaled by 1 ∓ dlt_c/dt, as CSPICE's <c>zzcorsxf</c> scales it. The
@@ -741,7 +741,7 @@ public abstract class CelestialItem : ILocalizable, IEquatable<CelestialItem>
             return corrected;
         }
 
-        int? center = SpiceAPI.NonInertialFrameCenter(frame);
+        int? center = SpiceApi.NonInertialFrameCenter(frame);
         if (center == null || center == observer.NaifId)
         {
             return corrected.ToFrame(frame).ToStateVector();
@@ -777,7 +777,7 @@ public abstract class CelestialItem : ILocalizable, IEquatable<CelestialItem>
         var epoch = corrected.Epoch;
         double shift = sign * centerLightTime;
         var centerEpoch = ApparentPositionReader.Shift(epoch, shift);
-        double residual = (epoch.ToTDB().TimeSpanFromJ2000().TotalSeconds + shift) - centerEpoch.ToTDB().TimeSpanFromJ2000().TotalSeconds;
+        double residual = (epoch.ToTdb().TimeSpanFromJ2000().TotalSeconds + shift) - centerEpoch.ToTdb().TimeSpanFromJ2000().TotalSeconds;
         var orientation = Frame.ICRF.ToFrame(orientationFrame, centerEpoch);
         // The angular velocity of the frame relative to ICRF, in the frame, as OrbitalParameters.ToFrame forms it
         var angularVelocity = orientation.AngularVelocity.Rotate(orientation.Rotation);
@@ -790,9 +790,9 @@ public abstract class CelestialItem : ILocalizable, IEquatable<CelestialItem>
     /// <summary>
     /// A state that CSPICE read in J2000 with a light-time correction (<paramref name="corrected"/>, relative to
     /// <paramref name="observer"/>, labelled ICRF at the epoch of the observation), in a frame that only the library holds
-    /// (<see cref="SpiceAPI.ManagedReadFrame"/>: TEME, CIRS, TIRS, the frame of a site built from coordinates or of a
+    /// (<see cref="SpiceApi.ManagedReadFrame"/>: TEME, CIRS, TIRS, the frame of a site built from coordinates or of a
     /// managed spacecraft with an attitude record) as <c>spkezr_c</c> rotates a non-inertial frame (#739): at t ∓ lt_c,
-    /// lt_c the light time from the observer to the frame's centre (<see cref="SpiceAPI.NonInertialFrameCenter"/>) by the
+    /// lt_c the light time from the observer to the frame's centre (<see cref="SpiceApi.NonInertialFrameCenter"/>) by the
     /// light-time method of <paramref name="aberration"/>, the derivative of the rotation scaled by 1 ∓ dlt_c/dt, the rule
     /// of the reference-body path (<see cref="ToApparentFrame"/>, #593). The centre's light time is that of <c>spkltc</c>,
     /// both read from the solar system barycenter as CSPICE reads them: the observer from SPICE by its identifier, the
@@ -803,7 +803,7 @@ public abstract class CelestialItem : ILocalizable, IEquatable<CelestialItem>
     /// <remarks>Called under the lock of the SPICE calls, which is re-entrant; it reads no static class whose type
     /// initializer reads SPICE (the static objects read their data at their first use, #668).</remarks>
     /// <param name="corrected">The state of the target relative to <paramref name="observer"/>, in ICRF.</param>
-    /// <param name="managed">The frame that gives the orientation (<see cref="SpiceAPI.ManagedReadFrame"/>).</param>
+    /// <param name="managed">The frame that gives the orientation (<see cref="SpiceApi.ManagedReadFrame"/>).</param>
     /// <param name="frame">The frame the caller gave, the label of the state.</param>
     /// <param name="observer">The observer, read by SPICE by its identifier.</param>
     /// <param name="aberration">The correction of the read.</param>
@@ -815,15 +815,15 @@ public abstract class CelestialItem : ILocalizable, IEquatable<CelestialItem>
             return null;
         }
 
-        int? center = SpiceAPI.NonInertialFrameCenter(frame);
+        int? center = SpiceApi.NonInertialFrameCenter(frame);
         if (center == null || center == observer.NaifId)
         {
             return null;
         }
 
         var epoch = corrected.Epoch;
-        var ssb = Barycenters.SOLAR_SYSTEM_BARYCENTER;
-        var observerSsb = SpiceAPI.Instance.ReadEphemerisRaw(epoch, ssb, observer.NaifId, Frame.ICRF, Aberration.None);
+        var ssb = Barycenters.SolarSystemBarycenter;
+        var observerSsb = SpiceApi.Instance.ReadEphemerisRaw(epoch, ssb, observer.NaifId, Frame.ICRF, Aberration.None);
         ILocalizable centerObject = frame switch
         {
             SiteFrame { Site: var site } when site.NaifId == center => site,
@@ -833,7 +833,7 @@ public abstract class CelestialItem : ILocalizable, IEquatable<CelestialItem>
         int centerId = center.Value;
         Func<Time, double, StateVector> centerRead = centerObject != null
             ? (t, shift) => ApparentPositionReader.StateAtCorrectedEpoch(centerObject, t, ssb, shift)
-            : (t, _) => SpiceAPI.Instance.ReadEphemerisRaw(t, ssb, centerId, Frame.ICRF, Aberration.None);
+            : (t, _) => SpiceApi.Instance.ReadEphemerisRaw(t, ssb, centerId, Frame.ICRF, Aberration.None);
         var centerSsb = centerRead(epoch, 0.0);
         var centerRelative = new StateVector(centerSsb.Position - observerSsb.Position, centerSsb.Velocity - observerSsb.Velocity, observer, epoch,
             Frame.ICRF);
@@ -882,7 +882,7 @@ public abstract class CelestialItem : ILocalizable, IEquatable<CelestialItem>
         var lightTime = target is Star ? Aberration.None : LightTimeOnly(aberration);
         var position = CorrectFromAberrationCB(target, epoch, observerState.Observer, lightTime, relative, observerCB,
             referenceBody).Position;
-        if (aberration is Aberration.LTS or Aberration.CNS or Aberration.XLTS or Aberration.XCNS)
+        if (aberration is Aberration.LtS or Aberration.CnS or Aberration.XltS or Aberration.XcnS)
         {
             var observerSsbVelocity = referenceBody.NaifId == 0
                 ? observerCB.Velocity
@@ -899,8 +899,8 @@ public abstract class CelestialItem : ILocalizable, IEquatable<CelestialItem>
     /// <paramref name="referenceBody"/> in ICRF at any epoch, as the reference-body path reads it: the reference body
     /// itself; the site of a <see cref="SiteFrame"/> or the spacecraft of a <see cref="Spacecraft.SpacecraftFrame"/> whose
     /// object is that centre, a site built from coordinates and a managed spacecraft included (review of #593: before, their
-    /// identifiers reached <see cref="SpiceAPI.CreateKernelSite"/> and <see cref="Create"/>, which threw); a site of the
-    /// kernels of a body SPICE names (<see cref="SpiceAPI.IsSiteOfNamedBody"/>; an identifier of that form whose body SPICE
+    /// identifiers reached <see cref="SpiceApi.CreateKernelSite"/> and <see cref="Create"/>, which threw); a site of the
+    /// kernels of a body SPICE names (<see cref="SpiceApi.IsSiteOfNamedBody"/>; an identifier of that form whose body SPICE
     /// does not name, NOTO or NEW NORCIA, read from SPICE by its identifier, #750); the barycenter, Lagrange point or body of
     /// <see cref="Create"/> for a
     /// positive identifier; any other object, a spacecraft whose frame is given by name, read from SPICE by its identifier,
@@ -914,10 +914,10 @@ public abstract class CelestialItem : ILocalizable, IEquatable<CelestialItem>
             {
                 SiteFrame { Site: var site } when site.NaifId == centerId => site,
                 Spacecraft.SpacecraftFrame { Spacecraft: var spacecraft } when spacecraft.NaifId == centerId => spacecraft,
-                _ when SpiceAPI.IsSiteOfNamedBody(centerId) => SpiceAPI.Instance.CreateKernelSite(centerId),
+                _ when SpiceApi.IsSiteOfNamedBody(centerId) => SpiceApi.Instance.CreateKernelSite(centerId),
                 // An identifier of the form of a site whose body SPICE does not name, NOTO or NEW NORCIA: read from SPICE
                 // by its identifier below (#750: before, the site of a body 398, which threw)
-                _ when SpiceAPI.IsSiteId(centerId) => null,
+                _ when SpiceApi.IsSiteId(centerId) => null,
                 _ when centerId > 0 => Create(centerId),
                 _ => null
             };
@@ -928,8 +928,8 @@ public abstract class CelestialItem : ILocalizable, IEquatable<CelestialItem>
 
         return (t, _) =>
         {
-            var fromSsb = SpiceAPI.Instance.ReadEphemeris(t, Barycenters.SOLAR_SYSTEM_BARYCENTER.NaifId, centerId, Frame.ICRF, Aberration.None);
-            if (referenceBody.NaifId == Barycenters.SOLAR_SYSTEM_BARYCENTER.NaifId)
+            var fromSsb = SpiceApi.Instance.ReadEphemeris(t, Barycenters.SolarSystemBarycenter.NaifId, centerId, Frame.ICRF, Aberration.None);
+            if (referenceBody.NaifId == Barycenters.SolarSystemBarycenter.NaifId)
             {
                 return new StateVector(fromSsb.Position, fromSsb.Velocity, referenceBody, t, Frame.ICRF);
             }
@@ -942,10 +942,10 @@ public abstract class CelestialItem : ILocalizable, IEquatable<CelestialItem>
     /// <summary>The light-time part of a correction: LT, CN, XLT or XCN for their "+S" forms.</summary>
     private static Aberration LightTimeOnly(Aberration aberration) => aberration switch
     {
-        Aberration.LTS => Aberration.LT,
-        Aberration.CNS => Aberration.CN,
-        Aberration.XLTS => Aberration.XLT,
-        Aberration.XCNS => Aberration.XCN,
+        Aberration.LtS => Aberration.LT,
+        Aberration.CnS => Aberration.CN,
+        Aberration.XltS => Aberration.XLT,
+        Aberration.XcnS => Aberration.XCN,
         _ => aberration
     };
 
@@ -954,10 +954,10 @@ public abstract class CelestialItem : ILocalizable, IEquatable<CelestialItem>
     private static (int Iterations, double Sign) LightTimeIterations(Aberration aberration) => aberration switch
     {
         Aberration.None => (0, 0.0),
-        Aberration.LT or Aberration.LTS => (1, -1.0),
-        Aberration.CN or Aberration.CNS => (ConvergedLightTimeIterations, -1.0),
-        Aberration.XLT or Aberration.XLTS => (1, 1.0),
-        Aberration.XCN or Aberration.XCNS => (ConvergedLightTimeIterations, 1.0),
+        Aberration.LT or Aberration.LtS => (1, -1.0),
+        Aberration.CN or Aberration.CnS => (ConvergedLightTimeIterations, -1.0),
+        Aberration.XLT or Aberration.XltS => (1, 1.0),
+        Aberration.XCN or Aberration.XcnS => (ConvergedLightTimeIterations, 1.0),
         _ => throw new ArgumentOutOfRangeException(nameof(aberration))
     };
 
@@ -981,13 +981,13 @@ public abstract class CelestialItem : ILocalizable, IEquatable<CelestialItem>
         {
             // A kernel-backed spacecraft is read from the SSB, as CSPICE reads it, whatever the centre of its initial
             // orbital parameters (the Earth by default since #620)
-            Spacecraft.Spacecraft { IsSpiceBacked: true } => Barycenters.SOLAR_SYSTEM_BARYCENTER,
+            Spacecraft.Spacecraft { IsSpiceBacked: true } => Barycenters.SolarSystemBarycenter,
             Spacecraft.Spacecraft sc => sc.InitialOrbitalParameters?.Observer as CelestialItem
-                                        ?? Barycenters.SOLAR_SYSTEM_BARYCENTER,
+                                        ?? Barycenters.SolarSystemBarycenter,
             Surface.Site site => site.CelestialBody,
             // A catalogue object, the observer of its initial orbit, as a spacecraft without stored states (R19 of #668)
             TrackedObject tracked => tracked.ReferenceBody,
-            _ => Barycenters.SOLAR_SYSTEM_BARYCENTER
+            _ => Barycenters.SolarSystemBarycenter
         };
     }
 
@@ -1068,17 +1068,17 @@ public abstract class CelestialItem : ILocalizable, IEquatable<CelestialItem>
         // The epochs as CSPICE sees them, TDB seconds in double: the corrected epoch is et ∓ lt in double, as spkltc forms
         // it, and a state read at the 100 ns of a Time is carried there by its velocity (the double of a 2024 epoch
         // resolves 1.2e-7 s, 3.6 mm at the 30 km/s of the Earth)
-        double epochSeconds = epoch.ToTDB().TimeSpanFromJ2000().TotalSeconds;
+        double epochSeconds = epoch.ToTdb().TimeSpanFromJ2000().TotalSeconds;
 
         var position = relativeState.Position;
-        double lightTime = position.Magnitude() / Constants.C;
+        double lightTime = position.Magnitude() / Constants.SpeedOfLight;
         Vector3 targetVelocity = Vector3.Zero; // the target's velocity relative to the reference body at the corrected epoch
         Vector3 referenceVelocityChange = Vector3.Zero; // the reference body's velocity there minus at the epoch
         for (int i = 0; i < iterations; i++)
         {
             double shift = sign * lightTime;
             var corrected = ApparentPositionReader.Shift(epoch, shift);
-            double residual = (epochSeconds + shift) - corrected.ToTDB().TimeSpanFromJ2000().TotalSeconds;
+            double residual = (epochSeconds + shift) - corrected.ToTdb().TimeSpanFromJ2000().TotalSeconds;
             // A propagated spacecraft is read up to the light time outside its stored states (#527)
             var targetState = targetRelativeToReference(corrected, shift);
             targetVelocity = targetState.Velocity;
@@ -1091,7 +1091,7 @@ public abstract class CelestialItem : ILocalizable, IEquatable<CelestialItem>
             }
 
             double previous = lightTime;
-            lightTime = position.Magnitude() / Constants.C;
+            lightTime = position.Magnitude() / Constants.SpeedOfLight;
             if (System.Math.Abs(lightTime - previous) <= LightTimeConvergence * System.Math.Max(1.0, System.Math.Abs(epochSeconds + shift)))
             {
                 break;
@@ -1111,14 +1111,14 @@ public abstract class CelestialItem : ILocalizable, IEquatable<CelestialItem>
         if (distance > 0.0)
         {
             var direction = position / distance;
-            lightTimeRate = direction.Dot(geometricVelocity) / (Constants.C - sign * direction.Dot(targetSsbVelocity));
+            lightTimeRate = direction.Dot(geometricVelocity) / (Constants.SpeedOfLight - sign * direction.Dot(targetSsbVelocity));
         }
 
         var velocity = geometricVelocity + targetSsbVelocity * (sign * lightTimeRate);
         lightTimeOut = lightTime;
         lightTimeRateOut = lightTimeRate;
 
-        if (aberration is Aberration.LTS or Aberration.CNS or Aberration.XLTS or Aberration.XCNS)
+        if (aberration is Aberration.LtS or Aberration.CnS or Aberration.XltS or Aberration.XcnS)
         {
             (position, velocity) = ApplyStellarAberration(position, velocity, observerSsbVelocity, observer, epoch, referenceBody, sign > 0.0);
         }
@@ -1172,8 +1172,8 @@ public abstract class CelestialItem : ILocalizable, IEquatable<CelestialItem>
         }
 
         var u = position / r;
-        var w = observerVelocity / Constants.C;
-        var wDot = observerAcceleration / Constants.C;
+        var w = observerVelocity / Constants.SpeedOfLight;
+        var wDot = observerAcceleration / Constants.SpeedOfLight;
         double rDot = u.Dot(velocity);
         var uDot = (velocity - u * rDot) / r;
         double uw = u.Dot(w);
@@ -1193,7 +1193,7 @@ public abstract class CelestialItem : ILocalizable, IEquatable<CelestialItem>
     /// <returns></returns>
     internal virtual OrbitalParameters.OrbitalParameters GetGeometricStateFromICRF(in Time date)
     {
-        return ItemProvider.GetEphemeris(date, this, Barycenters.SOLAR_SYSTEM_BARYCENTER, Frame.ICRF, Aberration.None);
+        return ItemProvider.GetEphemeris(date, this, Barycenters.SolarSystemBarycenter, Frame.ICRF, Aberration.None);
     }
 
     /// <summary>
@@ -1337,8 +1337,8 @@ public abstract class CelestialItem : ILocalizable, IEquatable<CelestialItem>
         double lightTime = aberration switch
         {
             Aberration.None => 0.0,
-            Aberration.XLT or Aberration.XLTS or Aberration.XCN or Aberration.XCNS => position.Magnitude() / Constants.C,
-            _ => -position.Magnitude() / Constants.C
+            Aberration.XLT or Aberration.XltS or Aberration.XCN or Aberration.XcnS => position.Magnitude() / Constants.SpeedOfLight,
+            _ => -position.Magnitude() / Constants.SpeedOfLight
         };
         return model.ToBody(position, ApparentPositionReader.Shift(from.Epoch, lightTime));
     }
@@ -1515,7 +1515,7 @@ public abstract class CelestialItem : ILocalizable, IEquatable<CelestialItem>
         }
 
         // A site identifier of a body SPICE names: the barycentre of its body (#651)
-        if (SpiceAPI.IsSiteOfNamedBody(celestialItem.NaifId))
+        if (SpiceApi.IsSiteOfNamedBody(celestialItem.NaifId))
         {
             return SiteBarycenterId(celestialItem.NaifId);
         }
@@ -1533,10 +1533,10 @@ public abstract class CelestialItem : ILocalizable, IEquatable<CelestialItem>
         throw new ArgumentException("Invalid Naif Id : " + celestialItem.NaifId);
     }
 
-    /// <summary>The body of a site identifier (<see cref="SpiceAPI.IsSiteOfNamedBody"/>): its identifier divided by 1000 (#651).</summary>
+    /// <summary>The body of a site identifier (<see cref="SpiceApi.IsSiteOfNamedBody"/>): its identifier divided by 1000 (#651).</summary>
     internal static int SiteBodyId(int siteId) => siteId / 1000;
 
-    /// <summary>The barycentre of the body of a site identifier (<see cref="SpiceAPI.IsSiteOfNamedBody"/>), that of a planet or a
+    /// <summary>The barycentre of the body of a site identifier (<see cref="SpiceApi.IsSiteOfNamedBody"/>), that of a planet or a
     /// moon: its identifier divided by 100000 (#651).</summary>
     internal static int SiteBarycenterId(int siteId) => siteId / 100000;
 
@@ -1564,7 +1564,7 @@ public abstract class CelestialItem : ILocalizable, IEquatable<CelestialItem>
         }
 
         // A site identifier of a body SPICE names: its body (#651)
-        if (SpiceAPI.IsSiteOfNamedBody(celestialItem.NaifId))
+        if (SpiceApi.IsSiteOfNamedBody(celestialItem.NaifId))
         {
             return SiteBodyId(celestialItem.NaifId);
         }

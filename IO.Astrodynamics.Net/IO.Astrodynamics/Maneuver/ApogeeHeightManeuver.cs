@@ -67,7 +67,7 @@ namespace IO.Astrodynamics.Maneuver
         /// (decision 68 of #668, decided by S. Guillet, 2026-11-23); or <paramref name="holdDuration"/> is negative.</exception>
         /// <exception cref="ArgumentException"><paramref name="apogeeRadius"/> is below the equatorial radius of
         /// <paramref name="maneuverCenter"/>, a celestial body (decision 68 of #668): an apogee inside the body, an
-        /// altitude given for a radius. Reads the radius of a deferred body (<c>PlanetsAndMoons.EARTH_BODY</c>), which
+        /// altitude given for a radius. Reads the radius of a deferred body (<c>PlanetsAndMoons.EarthBody</c>), which
         /// reads its provider data. For a centre the run infers, the run checks the rule
         /// (<see cref="InvalidOperationException"/>).</exception>
         public ApogeeHeightManeuver(double apogeeRadius, Engine engine = null, Time minEpoch = default, TimeSpan holdDuration = default,

@@ -4,13 +4,12 @@ using IO.Astrodynamics.Body.Spacecraft;
 using IO.Astrodynamics.Frames;
 using IO.Astrodynamics.Math;
 using IO.Astrodynamics.OrbitalParameters;
-using IO.Astrodynamics.OrbitalParameters.TLE;
 using IO.Astrodynamics.TimeSystem;
 
 namespace IO.Astrodynamics.Propagator;
 
 /// <summary>
-/// Samples the SGP4/SDP4 state of a spacecraft whose initial orbital parameters are a <see cref="TLE"/> over a window,
+/// Samples the SGP4/SDP4 state of a spacecraft whose initial orbital parameters are a <see cref="Tle"/> over a window,
 /// stores the samples as the spacecraft's stored states and returns them as a synthetic <see cref="PropagationSolution"/>.
 /// </summary>
 /// <remarks>
@@ -35,12 +34,12 @@ namespace IO.Astrodynamics.Propagator;
 /// state (#785, decision 39 of #668; before 11.0.0 they shared one array, its first sample built once at construction).
 /// </para>
 /// </remarks>
-public class TLEPropagator : IPropagator
+public class TlePropagator : IPropagator
 {
     private readonly Time[] _sampleEpochs;
 
     // The TLE the propagator was built from, sampled by every run (#783, decision 37 of #668)
-    private readonly TLE _tle;
+    private readonly Tle _tle;
     public Window Window { get; }
     public Spacecraft Spacecraft { get; }
     public TimeSpan DeltaT { get; }
@@ -56,12 +55,12 @@ public class TLEPropagator : IPropagator
     /// SGP4 cannot execute (decision 40 of #668, decided by S. Guillet, 2026-11-23; before 11.0.0 it was ignored).</exception>
     /// <exception cref="ArgumentOutOfRangeException"><paramref name="deltaT"/> is zero or less (#598; before 11.0.0, a
     /// step below 1 s threw <see cref="DivideByZeroException"/>), or gives more samples than an array holds.</exception>
-    public TLEPropagator(Window window, Spacecraft spacecraft, TimeSpan deltaT)
+    public TlePropagator(Window window, Spacecraft spacecraft, TimeSpan deltaT)
     {
         PropagatorBase.RequireWindowLength(window);
-        Window = new Window(window.StartDate.ToTDB(), window.EndDate.ToTDB());
+        Window = new Window(window.StartDate.ToTdb(), window.EndDate.ToTdb());
         Spacecraft = spacecraft ?? throw new ArgumentNullException(nameof(spacecraft));
-        if (Spacecraft.InitialOrbitalParameters is not TLE tle)
+        if (Spacecraft.InitialOrbitalParameters is not Tle tle)
         {
             throw new ArgumentException("Spacecraft orbital parameters must be a two lines elements");
         }
@@ -109,7 +108,7 @@ public class TLEPropagator : IPropagator
 
     // Why the spacecraft cannot be sampled: a maneuver plan, which SGP4 cannot execute (decision 40 of #668); null otherwise
     private static string PlanError(Spacecraft spacecraft) => spacecraft.Maneuvers.Count > 0
-        ? $"{spacecraft.Name} has a maneuver plan, which SGP4 cannot execute: a TLEPropagator samples a spacecraft without " +
+        ? $"{spacecraft.Name} has a maneuver plan, which SGP4 cannot execute: a TlePropagator samples a spacecraft without " +
           "maneuvers. Clear the plan (SetManeuvers()), or propagate the spacecraft numerically (Spacecraft.Propagate)."
         : null;
 

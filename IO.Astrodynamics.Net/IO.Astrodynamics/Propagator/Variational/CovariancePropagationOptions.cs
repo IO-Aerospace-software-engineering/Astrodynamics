@@ -25,7 +25,7 @@ public enum CovariancePropagationMode
     /// <summary>
     /// Nothing: no partial derivative and no covariance (<see cref="CovariancePropagationOptions.None"/>). Turns the
     /// propagation off where a null value means another rule: Auto in <see cref="PropagationOptions"/>, and in
-    /// <see cref="SSA.ConjunctionAnalysisOptions"/> the covariance of the initial state held in RTN (R06 of #668,
+    /// <see cref="Ssa.ConjunctionAnalysisOptions"/> the covariance of the initial state held in RTN (R06 of #668,
     /// structuring choice 3, decided by S. Guillet, 2026-11-19).
     /// </summary>
     None
@@ -61,6 +61,12 @@ public sealed record CovariancePropagationOptions
     /// held in RTN (R06 of #668, structuring choice 3, decided by S. Guillet, 2026-11-19).
     /// </summary>
     public static CovariancePropagationOptions None { get; } = new() { Mode = CovariancePropagationMode.None };
+
+    /// <summary>
+    /// The options of every default, as <c>new()</c>: the state transition matrix and the sensitivity, without the
+    /// covariance (<see cref="CovariancePropagationMode.StateTransitionOnly"/>; D1 of #668, lot L9).
+    /// </summary>
+    public static CovariancePropagationOptions Default { get; } = new();
 
     /// <summary>
     /// What is integrated: Φ and Ψ only (the default), also the covariance, or nothing

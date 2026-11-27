@@ -7,7 +7,7 @@ using IO.Astrodynamics.Propagator;
 using IO.Astrodynamics.Propagator.Variational;
 using IO.Astrodynamics.TimeSystem;
 
-namespace IO.Astrodynamics.SSA;
+namespace IO.Astrodynamics.Ssa;
 
 /// <summary>
 /// Covariance of one participant at the encounter epoch, as used by the conjunction analysis and the CDM export.
@@ -159,7 +159,7 @@ internal sealed class EncounterCovarianceResolver
         if (_participant.InitialOrbitalParameters is not StateVector { Covariance: not null } ||
             PropagatorBase.InertialInitialOrbit(_participant.InitialOrbitalParameters, _solution.Segments[0].BaseEpoch)
                 is not StateVector { Covariance: not null } initial ||
-            initial.Epoch.ToTDB() != _solution.Segments[0].BaseEpoch ||
+            initial.Epoch.ToTdb() != _solution.Segments[0].BaseEpoch ||
             !ResolveInitialCovariance(initial))
             return null;
 

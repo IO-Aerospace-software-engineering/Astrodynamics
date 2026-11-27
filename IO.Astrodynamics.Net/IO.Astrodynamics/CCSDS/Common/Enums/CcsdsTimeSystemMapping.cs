@@ -3,7 +3,7 @@
 using System;
 using IO.Astrodynamics.TimeSystem;
 
-namespace IO.Astrodynamics.CCSDS.Common.Enums;
+namespace IO.Astrodynamics.Ccsds;
 
 /// <summary>
 /// The time scale of a CCSDS <c>TIME_SYSTEM</c> (#485): the scale in which the epochs of an OPM or an OMM are read.

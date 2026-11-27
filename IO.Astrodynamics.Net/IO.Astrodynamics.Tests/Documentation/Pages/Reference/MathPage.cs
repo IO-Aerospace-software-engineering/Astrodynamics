@@ -18,15 +18,9 @@ using System.Threading;
 using System.Threading.Tasks;
 using IO.Astrodynamics;
 using IO.Astrodynamics.Atmosphere;
-using IO.Astrodynamics.Atmosphere.NRLMSISE_00;
 using IO.Astrodynamics.Body;
 using IO.Astrodynamics.Body.Spacecraft;
-using IO.Astrodynamics.CCSDS;
-using IO.Astrodynamics.CCSDS.CDM;
-using IO.Astrodynamics.CCSDS.Common;
-using IO.Astrodynamics.CCSDS.Common.Enums;
-using IO.Astrodynamics.CCSDS.OMM;
-using IO.Astrodynamics.CCSDS.OPM;
+using IO.Astrodynamics.Ccsds;
 using IO.Astrodynamics.Converters;
 using IO.Astrodynamics.Coordinates;
 using IO.Astrodynamics.Cosmographia;
@@ -49,11 +43,11 @@ using IO.Astrodynamics.Propagator.Forces;
 using IO.Astrodynamics.Propagator.Integrators;
 using IO.Astrodynamics.Propagator.MonteCarlo;
 using IO.Astrodynamics.Propagator.Variational;
-using IO.Astrodynamics.SSA;
+using IO.Astrodynamics.Ssa;
 using IO.Astrodynamics.SolarSystemObjects;
 using IO.Astrodynamics.Surface;
 using IO.Astrodynamics.TimeSystem;
-using TLE = IO.Astrodynamics.OrbitalParameters.TLE.TLE;
+using Tle = IO.Astrodynamics.OrbitalParameters.Tle;
 
 namespace DocumentationPageSamples.Reference;
 
@@ -84,13 +78,13 @@ internal static class MathPage
         #endregion
     }
 
-    // docs/reference/math.md, "Tsiolkovski"
+    // docs/reference/math.md, "Tsiolkovsky"
     internal static void Block03()
     {
         #region docs/reference/math.md:3
-        double dv = Tsiolkovski.DeltaV(isp: 300, initialMass: 1000, finalMass: 800);
-        TimeSpan burnTime = Tsiolkovski.DeltaT(isp: 300, initialMass: 1000, fuelFlow: 0.5, deltaV: dv);
-        double fuelUsed = Tsiolkovski.DeltaM(isp: 300, initialMass: 1000, deltaV: dv);
+        double dv = Tsiolkovsky.DeltaV(isp: 300, initialMass: 1000, finalMass: 800);
+        TimeSpan burnTime = Tsiolkovsky.DeltaT(isp: 300, initialMass: 1000, fuelFlow: 0.5, deltaV: dv);
+        double fuelUsed = Tsiolkovsky.DeltaM(isp: 300, initialMass: 1000, deltaV: dv);
         #endregion
     }
 }

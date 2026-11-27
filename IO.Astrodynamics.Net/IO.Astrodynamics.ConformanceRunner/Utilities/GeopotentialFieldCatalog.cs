@@ -62,11 +62,11 @@ public static class GeopotentialFieldCatalog
     public static IReadOnlyList<GeopotentialField> Fields { get; } = new[]
     {
         // EGM2008, Pavlis et al. 2012: the constants of the model
-        new GeopotentialField("EGM2008_to70_TideFree", PlanetsAndMoons.EARTH.NaifId, 70, 3.986004415e14, 6378136.3),
+        new GeopotentialField("EGM2008_to70_TideFree", PlanetsAndMoons.Earth.NaifId, 70, 3.986004415e14, 6378136.3),
         // LP165P, Konopliv et al. 2001, oriented by MOON_PA
-        new GeopotentialField("LP165P_to20", PlanetsAndMoons.MOON.NaifId, 20, 4.902801056e12, 1738000.0),
+        new GeopotentialField("LP165P_to20", PlanetsAndMoons.Moon.NaifId, 20, 4.902801056e12, 1738000.0),
         // GMM-2B, Lemoine et al. 2001, oriented by IAU_MARS
-        new GeopotentialField("GMM2B_to20", PlanetsAndMoons.MARS.NaifId, 20, 4.28283719012840e13, 3397000.0)
+        new GeopotentialField("GMM2B_to20", PlanetsAndMoons.Mars.NaifId, 20, 4.28283719012840e13, 3397000.0)
     };
 
     /// <summary>

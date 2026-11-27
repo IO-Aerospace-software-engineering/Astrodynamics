@@ -5,7 +5,6 @@ using IO.Astrodynamics.TimeSystem;
 using System;
 using System.Linq;
 using IO.Astrodynamics.Atmosphere;
-using IO.Astrodynamics.Atmosphere.NRLMSISE_00;
 using IO.Astrodynamics.Body;
 using IO.Astrodynamics.Body.Spacecraft;
 using IO.Astrodynamics.OrbitalParameters;
@@ -45,13 +44,13 @@ public class DenseAirStepControlTests
     {
         return model switch
         {
-            "US 1976" => new CelestialBody(SolarSystemObjects.PlanetsAndMoons.EARTH, Frames.Frame.ICRF, Epoch, null,
+            "US 1976" => new CelestialBody(SolarSystemObjects.PlanetsAndMoons.Earth, Frames.Frame.ICRF, Epoch, null,
                 new EarthStandardAtmosphere()),
-            "NRLMSISE-00" => new CelestialBody(SolarSystemObjects.PlanetsAndMoons.EARTH, Frames.Frame.ICRF, Epoch, null,
+            "NRLMSISE-00" => new CelestialBody(SolarSystemObjects.PlanetsAndMoons.Earth, Frames.Frame.ICRF, Epoch, null,
                 new Nrlmsise00Model(SpaceWeather.Nominal)),
-            "Mars" => new CelestialBody(SolarSystemObjects.PlanetsAndMoons.MARS, Frames.Frame.ICRF, Epoch, null,
+            "Mars" => new CelestialBody(SolarSystemObjects.PlanetsAndMoons.Mars, Frames.Frame.ICRF, Epoch, null,
                 new MarsStandardAtmosphere()),
-            _ => new CelestialBody(SolarSystemObjects.PlanetsAndMoons.EARTH, Frames.Frame.ICRF, Epoch, null,
+            _ => new CelestialBody(SolarSystemObjects.PlanetsAndMoons.Earth, Frames.Frame.ICRF, Epoch, null,
                 new NoisyAtmosphere())
         };
     }
@@ -183,7 +182,7 @@ public class DenseAirStepControlTests
 
         // Act
         var solution = spacecraft.PropagateWithVariational(window,
-            new PropagationOptions { Integrator = new RK78IntegratorOptions { AbsoluteTolerance = 1e-12, RelativeTolerance = 1e-12 }, OutputStep = window.Length, ThirdBodies = new CelestialItem[] { body, SolarSystemObjects.Stars.SUN_BODY }, AtmosphericDrag = true, SolarRadiationPressure = true },
+            new PropagationOptions { Integrator = new RK78IntegratorOptions { AbsoluteTolerance = 1e-12, RelativeTolerance = 1e-12 }, OutputStep = window.Length, ThirdBodies = new CelestialItem[] { body, SolarSystemObjects.Stars.SunBody }, AtmosphericDrag = true, SolarRadiationPressure = true },
             new VariationalOptions(ForceParameters.DragCoefficient | ForceParameters.ReflectivityCoefficient, IncludeInStepControl: true));
         int shadowed = Enumerable.Range(1, 59).Count(minute =>
         {
@@ -215,10 +214,10 @@ public class DenseAirStepControlTests
         var body = Body("US 1976");
         var geocentric = NewSpacecraft(body, 400e3, -1451);
         var ssbState = ((StateVector)geocentric.InitialOrbitalParameters)
-            .RelativeTo(SolarSystemObjects.Barycenters.SOLAR_SYSTEM_BARYCENTER, Aberration.None).ToStateVector();
+            .RelativeTo(SolarSystemObjects.Barycenters.SolarSystemBarycenter, Aberration.None).ToStateVector();
         var ssb = new Spacecraft(-1452, "DENSEAIRSSB", 100.0, ssbState, 1000.0, new Clock("denseairssb", 65536), 10.0,
             2.2, null, 1.0);
-        var bodies = new CelestialItem[] { body, SolarSystemObjects.Stars.SUN_BODY };
+        var bodies = new CelestialItem[] { body, SolarSystemObjects.Stars.SunBody };
 
         // Act
         var exception = Assert.Throws<InvalidOperationException>(() => ssb.PropagateWithVariational(Window,

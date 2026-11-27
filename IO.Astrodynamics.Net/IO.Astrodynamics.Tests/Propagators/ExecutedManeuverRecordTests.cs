@@ -9,7 +9,6 @@ using IO.Astrodynamics.Body.Spacecraft;
 using IO.Astrodynamics.Maneuver;
 using IO.Astrodynamics.Mission;
 using IO.Astrodynamics.OrbitalParameters;
-using IO.Astrodynamics.OrbitalParameters.TLE;
 using IO.Astrodynamics.Physics;
 using IO.Astrodynamics.Propagator;
 using IO.Astrodynamics.Propagator.Integrators;
@@ -35,7 +34,7 @@ using OrbitalParams = IO.Astrodynamics.OrbitalParameters.OrbitalParameters;
 /// <remarks>
 /// The references are the decided rules and independent ones: the definitions of the last run (the values the run writes on
 /// them, decision 52), the segments of the solution (an impulse opens the next one, at its epoch, with its delta-V), the
-/// rocket equation (<see cref="Tsiolkovski.DeltaM"/> of the mass before the burn), and the hull of the maneuver windows
+/// rocket equation (<see cref="Tsiolkovsky.DeltaM"/> of the mass before the burn), and the hull of the maneuver windows
 /// by <see cref="Window.Hull"/>, the rule of the summary before 11.0.0. The case: a 7 000 km orbit, e = 0.01, i = 0.5
 /// rad, about a point-mass Earth from 2024-03-01 12:00 TDB; 1 000 kg dry, 1 000 kg of fuel, Isp 300 s, 10 kg/s; a nadir
 /// attitude held 600 s, an apogee raise to 8 000 km, a prograde attitude, a perigee raise to 7 100 km, over 3 h.
@@ -53,7 +52,7 @@ public class ExecutedManeuverRecordTests
     private static int _nextId = -869000;
     private static int NextId() => Interlocked.Decrement(ref _nextId);
 
-    private static CelestialBody Earth() => new(PlanetsAndMoons.EARTH, Frames.Frame.ICRF, S);
+    private static CelestialBody Earth() => new(PlanetsAndMoons.Earth, Frames.Frame.ICRF, S);
 
     private static OrbitalParams Orbit(CelestialBody earth, string frame)
     {
@@ -61,12 +60,12 @@ public class ExecutedManeuverRecordTests
         switch (frame)
         {
             case "ECLIPJ2000":
-                return icrf.ToStateVector().ToFrame(Frames.Frame.ECLIPTIC_J2000);
+                return icrf.ToStateVector().ToFrame(Frames.Frame.ECLIPJ2000);
             case "SSB":
                 var sv = icrf.ToStateVector();
-                var fromSsb = earth.GetGeometricStateRelativeTo(S, Barycenters.SOLAR_SYSTEM_BARYCENTER);
+                var fromSsb = earth.GetGeometricStateRelativeTo(S, Barycenters.SolarSystemBarycenter);
                 return new StateVector(fromSsb.Position + sv.Position, fromSsb.Velocity + sv.Velocity,
-                    Barycenters.SOLAR_SYSTEM_BARYCENTER, S, Frames.Frame.ICRF);
+                    Barycenters.SolarSystemBarycenter, S, Frames.Frame.ICRF);
             default:
                 return icrf;
         }
@@ -148,7 +147,7 @@ public class ExecutedManeuverRecordTests
             {
                 impulses++;
                 Assert.Equal(impulse.DeltaV, record.DeltaV);
-                Assert.Equal(Tsiolkovski.DeltaM(c.Engine.ISP, record.MassBefore, record.DeltaV.Magnitude()), record.FuelBurned);
+                Assert.Equal(Tsiolkovsky.DeltaM(c.Engine.Isp, record.MassBefore, record.DeltaV.Magnitude()), record.FuelBurned);
                 Assert.True(record.FuelBurned > 0.0);
                 Assert.Equal(record.MassBefore - record.FuelBurned, record.MassAfter, 9);
 
@@ -315,13 +314,13 @@ public class ExecutedManeuverRecordTests
     [Fact]
     public void ATLEPropagatorSolutionAndOneBuiltByTheLibrary_HaveNoRecords()
     {
-        var tle = new TLE("ISS",
+        var tle = new Tle("ISS",
             "1 25544U 98067A   21020.53488036  .00016717  00000-0  10270-3 0  9054",
             "2 25544  51.6423 353.0312 0000493 320.8755  39.2360 15.49309423 25703");
         int id = NextId();
         var spacecraft = new Spacecraft(id, "EM" + -id, 100.0, tle, 10000.0, new Clock("EM" + -id, 65536));
 
-        var solution = new TLEPropagator(new Window(tle.Epoch, tle.Epoch.AddHours(1.0)), spacecraft, Output).Propagate();
+        var solution = new TlePropagator(new Window(tle.Epoch, tle.Epoch.AddHours(1.0)), spacecraft, Output).Propagate();
 
         Assert.Empty(solution.Maneuvers);
         Assert.Empty(new PropagationSolution().Maneuvers);
@@ -360,7 +359,7 @@ public class ExecutedManeuverRecordTests
 
         Assert.Equal(new[] { a, b }, segment.Steps);
         LabelAssert.Equal(S, segment.BaseEpoch);
-        Assert.Equal(20.0, segment.Duration);
+        Assert.Equal(20.0, segment.DurationSeconds);
         Assert.Empty(new PropagationSegment(S).Steps);
         Assert.Throws<ArgumentNullException>(() => new PropagationSegment(S, null));
     }

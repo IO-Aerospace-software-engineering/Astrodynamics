@@ -15,6 +15,14 @@ The package targets `net10.0` and bundles the native CSPICE interop library for 
 `linux-x64`, `osx-arm64` (Apple Silicon) and `osx-x64` (Intel). The right one is resolved
 automatically at build time.
 
+A project that turns `ImplicitUsings` on (`<ImplicitUsings>enable</ImplicitUsings>`, the default of `dotnet new console`)
+also imports eleven namespaces of the package, beside the SDK's: `IO.Astrodynamics`, `IO.Astrodynamics.Body`,
+`IO.Astrodynamics.Body.Spacecraft`, `IO.Astrodynamics.TimeSystem`, `IO.Astrodynamics.Frames`,
+`IO.Astrodynamics.OrbitalParameters`, `IO.Astrodynamics.SolarSystemObjects`, `IO.Astrodynamics.Propagator`,
+`IO.Astrodynamics.Propagator.Integrators`, `IO.Astrodynamics.Maneuver` and `IO.Astrodynamics.Math` (the package's
+`build/IO.Astrodynamics.props`, 11.0.0). `<IOAstrodynamicsImplicitUsings>false</IOAstrodynamicsImplicitUsings>` turns
+them off; the other namespaces (`IO.Astrodynamics.Ccsds`, `IO.Astrodynamics.Ssa`, ...) are imported as usual.
+
 !!! note "Coming from `IO.Astrodynamics.Pro`"
     Replace the package reference with `IO.Astrodynamics` 10.0.0 or later and drop the licence key.
     Namespaces are unchanged. The only code edit concerns the static `Frames` accessor, which is
@@ -55,18 +63,18 @@ Then load the folder (a path given as a `string`, a `DirectoryInfo` or a `FileIn
 ```csharp
 using IO.Astrodynamics;
 
-SpiceAPI.Instance.LoadKernels(new DirectoryInfo("Data/SolarSystem"));
+SpiceApi.Instance.LoadKernels(new DirectoryInfo("Data/SolarSystem"));
 ```
 
 You can also load an individual file:
 
 ```csharp
-SpiceAPI.Instance.LoadKernels(new FileInfo("de440.bsp"));
+SpiceApi.Instance.LoadKernels(new FileInfo("de440.bsp"));
 ```
 
 A folder's files load in ordinal order of their names, component by component: where two of them define the same
 variable or cover the same object, the later file wins, on every platform. Loading a path again furnishes only its new
-files and keeps the precedence of the others; `SpiceAPI.Instance.ReloadKernels(path)` reads a path again, on top, for a
+files and keeps the precedence of the others; `SpiceApi.Instance.ReloadKernels(path)` reads a path again, on top, for a
 kernel rewritten on disk. See [Kernel Management](guides/kernel-management.md).
 
 ## Compute A Basic Ephemeris
@@ -78,9 +86,9 @@ using IO.Astrodynamics.Frames;
 using IO.Astrodynamics.TimeSystem;
 using IO.Astrodynamics.SolarSystemObjects;
 
-SpiceAPI.Instance.LoadKernels(new DirectoryInfo("Data/SolarSystem"));
+SpiceApi.Instance.LoadKernels(new DirectoryInfo("Data/SolarSystem"));
 
-var earth = PlanetsAndMoons.EARTH_BODY;
+var earth = PlanetsAndMoons.EarthBody;
 var sun = new CelestialBody(Stars.Sun);
 var epoch = new Time(2024, 6, 21, 12, 0, 0, TimeScale.TDB);
 
@@ -95,7 +103,7 @@ Console.WriteLine($"Velocity: {stateVector.Velocity}");
 ```csharp
 using IO.Astrodynamics.OrbitalParameters;
 
-var earth = PlanetsAndMoons.EARTH_BODY;
+var earth = PlanetsAndMoons.EarthBody;
 var epoch = new Time(2024, 1, 1, 0, 0, 0, TimeScale.TDB);
 
 var orbit = new KeplerianElements(
@@ -116,9 +124,9 @@ Console.WriteLine($"Period: {orbit.Period().TotalHours:F2} hours");
 ## Parse A TLE
 
 ```csharp
-using IO.Astrodynamics.OrbitalParameters.TLE;
+using IO.Astrodynamics.OrbitalParameters;
 
-var tle = new TLE("ISS (ZARYA)",
+var tle = new Tle("ISS (ZARYA)",
     "1 25544U 98067A   21020.53488036  .00016717  00000-0  10270-3 0  9054",
     "2 25544  51.6423 353.0312 0000493 320.8755  39.2360 15.49309423 25703");
 
@@ -151,7 +159,7 @@ state, which is the form every other API expects. See [TLE & OMM](tutorials/tle-
     var solution = spacecraft.Propagate(window, new PropagationOptions
     {
         Integrator = new RK78IntegratorOptions { AbsoluteTolerance = 1e-10, RelativeTolerance = 1e-10 },
-        ThirdBodies = new CelestialItem[] { Stars.SUN_BODY, PlanetsAndMoons.MOON_BODY },
+        ThirdBodies = new CelestialItem[] { Stars.SunBody, PlanetsAndMoons.MoonBody },
         AtmosphericDrag = true,
         SolarRadiationPressure = true
     });
@@ -159,7 +167,7 @@ state, which is the form every other API expects. See [TLE & OMM](tutorials/tle-
     var final = solution.GetStateVector(window.EndDate);
     ```
 
-    The orbit is on `PlanetsAndMoons.EARTH_BODY`, which has no atmospheric model: its drag is NRLMSISE-00 at nominal
+    The orbit is on `PlanetsAndMoons.EarthBody`, which has no atmospheric model: its drag is NRLMSISE-00 at nominal
     space weather. Give the Earth an `IAtmosphericModel` for another one.
 
 === "Velocity-Verlet"
@@ -177,7 +185,7 @@ state, which is the form every other API expects. See [TLE & OMM](tutorials/tle-
     {
         Integrator = new VVIntegratorOptions { Step = TimeSpan.FromSeconds(10.0) },
         OutputStep = TimeSpan.FromSeconds(60.0),
-        ThirdBodies = new CelestialItem[] { Stars.SUN_BODY, PlanetsAndMoons.MOON_BODY }
+        ThirdBodies = new CelestialItem[] { Stars.SunBody, PlanetsAndMoons.MoonBody }
     });
 
     var final = solution.GetStateVector(window.EndDate);

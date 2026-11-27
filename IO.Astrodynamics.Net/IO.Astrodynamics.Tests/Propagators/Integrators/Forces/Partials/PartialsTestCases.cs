@@ -2,7 +2,7 @@
 
 using IO.Astrodynamics.TimeSystem;
 using System;
-using IO.Astrodynamics.Atmosphere.NRLMSISE_00;
+using IO.Astrodynamics.Atmosphere;
 using IO.Astrodynamics.Body;
 using IO.Astrodynamics.Body.Spacecraft;
 using IO.Astrodynamics.OrbitalParameters;
@@ -43,12 +43,12 @@ public sealed class PartialsTestCases
     public PartialsTestCases()
     {
         TestKernels.EnsureSolarSystem();
-        Earth = new CelestialBody(PlanetsAndMoons.EARTH, Frames.Frame.ICRF, Epoch, null,
+        Earth = new CelestialBody(PlanetsAndMoons.Earth, Frames.Frame.ICRF, Epoch, null,
             new Nrlmsise00Model(SpaceWeather.Nominal), albedo: 0.3, thermalEffectiveTemperature: 254.0,
             thermalEmissivity: 0.95);
-        EarthWithGeopotential = new CelestialBody(PlanetsAndMoons.EARTH, Frames.Frame.ICRF, Epoch,
+        EarthWithGeopotential = new CelestialBody(PlanetsAndMoons.Earth, Frames.Frame.ICRF, Epoch,
             new GeopotentialModelParameters("Data/SolarSystem/EGM2008_to70_TideFree", 10));
-        Moon = new CelestialBody(PlanetsAndMoons.MOON, Frames.Frame.ICRF, Epoch);
+        Moon = new CelestialBody(PlanetsAndMoons.Moon, Frames.Frame.ICRF, Epoch);
         Sun = new CelestialBody(Stars.Sun);
     }
 
@@ -108,7 +108,7 @@ public sealed class PartialsTestCases
     internal static PropagationEphemerisCache Cache(Frames.Frame frame, ILocalizable observer,
         params CelestialItem[] bodies)
     {
-        var window = new TimeSystem.Window(Epoch.ToTDB().AddHours(-1.0), Epoch.ToTDB().AddHours(1.0));
+        var window = new TimeSystem.Window(Epoch.ToTdb().AddHours(-1.0), Epoch.ToTdb().AddHours(1.0));
         var entries = new System.Collections.Generic.List<(CelestialItem, Aberration)>();
         foreach (var body in bodies)
         {

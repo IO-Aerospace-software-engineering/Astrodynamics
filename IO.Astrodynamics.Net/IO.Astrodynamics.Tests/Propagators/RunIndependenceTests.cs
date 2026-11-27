@@ -9,7 +9,6 @@ using IO.Astrodynamics.Body.Spacecraft;
 using IO.Astrodynamics.Maneuver;
 using IO.Astrodynamics.Mission;
 using IO.Astrodynamics.OrbitalParameters;
-using IO.Astrodynamics.OrbitalParameters.TLE;
 using IO.Astrodynamics.Propagator;
 using IO.Astrodynamics.Propagator.Forces;
 using IO.Astrodynamics.Propagator.Integrators;
@@ -28,14 +27,14 @@ namespace IO.Astrodynamics.Tests.Propagators;
 /// Independent runs, lot L5a of #668 (R08, decisions 37 to 41, decided by S. Guillet, 2026-11-23): a propagator keeps
 /// the initial orbit it was built from and refuses to run once the spacecraft holds another (#783); the re-arm drops the
 /// stored states and the attitude record whatever <see cref="Spacecraft.IsPropagated"/> says, so a first run after states
-/// and attitudes added by hand is a fresh run; <see cref="TLEPropagator"/> computes every sample first, then re-arms the
+/// and attitudes added by hand is a fresh run; <see cref="TlePropagator"/> computes every sample first, then re-arms the
 /// spacecraft and stores its samples in one block, replacing the stored states, a stop or an SGP4 failure changing
 /// nothing; its runs share no array (#785); it refuses a spacecraft with a maneuver plan, and so does
 /// <see cref="MonteCarloPropagator"/> for its template.
 /// </summary>
 /// <remarks>
 /// The references are the decided rules: a fresh spacecraft run once by a fresh propagator (decision 22 of lot L4, every
-/// run a fresh run), compared bit for bit; SGP4 itself for the samples of <see cref="TLEPropagator"/>.
+/// run a fresh run), compared bit for bit; SGP4 itself for the samples of <see cref="TlePropagator"/>.
 /// </remarks>
 public class RunIndependenceTests
 {
@@ -51,9 +50,9 @@ public class RunIndependenceTests
     private static int _nextId = -783000;
     private static int NextId() => Interlocked.Decrement(ref _nextId);
 
-    private static CelestialBody Earth => PlanetsAndMoons.EARTH_BODY;
+    private static CelestialBody Earth => PlanetsAndMoons.EarthBody;
 
-    private static TLE Iss() => new("ISS",
+    private static Tle Iss() => new("ISS",
         "1 25544U 98067A   21020.53488036  .00016717  00000-0  10270-3 0  9054",
         "2 25544  51.6423 353.0312 0000493 320.8755  39.2360 15.49309423 25703");
 
@@ -119,7 +118,7 @@ public class RunIndependenceTests
         PropagationSolution LastPropagation, Maneuver.Maneuver[] Executed, double Fuel);
 
     private static Left Take(Spacecraft spacecraft) => new(spacecraft.PropagatedStates.ToArray(),
-        spacecraft.PropagatedArcs.Count, spacecraft.Frame.GetStateOrientationsToICRF().ToArray(), spacecraft.IsPropagated,
+        spacecraft.PropagatedArcs.Count, spacecraft.Frame.GetStateOrientationsToIcrf().ToArray(), spacecraft.IsPropagated,
         spacecraft.LastPropagation, spacecraft.ExecutedManeuvers.ToArray(), spacecraft.FuelTanks.Sum(t => t.Quantity));
 
     private static void AssertSameStates(IReadOnlyList<StateVector> expected, IReadOnlyList<StateVector> actual)
@@ -204,13 +203,13 @@ public class RunIndependenceTests
         switch (orbit)
         {
             case "ECLIPJ2000":
-                spacecraft = Leo(Frames.Frame.ECLIPTIC_J2000);
-                again = () => LeoState(Frames.Frame.ECLIPTIC_J2000);
+                spacecraft = Leo(Frames.Frame.ECLIPJ2000);
+                again = () => LeoState(Frames.Frame.ECLIPJ2000);
                 break;
             case "SSB":
                 var heliocentric = new StateVector(new Vector3(1.5e11, 0.0, 0.0), new Vector3(0.0, 29780.0, 1000.0),
-                    Stars.SUN_BODY, Epoch, Frames.Frame.ICRF);
-                again = () => heliocentric.RelativeTo(Barycenters.SOLAR_SYSTEM_BARYCENTER, Aberration.None).ToStateVector();
+                    Stars.SunBody, Epoch, Frames.Frame.ICRF);
+                again = () => heliocentric.RelativeTo(Barycenters.SolarSystemBarycenter, Aberration.None).ToStateVector();
                 spacecraft = NewSpacecraft(again());
                 break;
             case "TLE":
@@ -226,7 +225,7 @@ public class RunIndependenceTests
 
         var propagator = new CentralBodyPropagator(window, spacecraft, new PropagationOptions
         {
-            OutputStep = Step, ThirdBodies = orbit == "SSB" ? [Stars.SUN_BODY, Earth] : [Earth],
+            OutputStep = Step, ThirdBodies = orbit == "SSB" ? [Stars.SunBody, Earth] : [Earth],
             CovariancePropagation = CovariancePropagationOptions.None
         });
         spacecraft.SetInitialOrbitalParameters(again());
@@ -278,7 +277,7 @@ public class RunIndependenceTests
         // Arrange
         var tle = Iss();
         var spacecraft = NewSpacecraft(tle);
-        var propagator = new TLEPropagator(new Window(tle.Epoch, tle.Epoch.AddHours(1.0)), spacecraft, Step);
+        var propagator = new TlePropagator(new Window(tle.Epoch, tle.Epoch.AddHours(1.0)), spacecraft, Step);
         propagator.Propagate();
         var before = Take(spacecraft);
         spacecraft.SetInitialOrbitalParameters(Iss());
@@ -306,7 +305,7 @@ public class RunIndependenceTests
         spacecraft.AddPropagatedStates(spacecraft.InitialOrbitalParameters.ToStateVector(before));
         foreach (var epoch in new[] { before, window.StartDate.AddSeconds(1830.5), window.EndDate.AddHours(1.0) })
         {
-            spacecraft.Frame.AddStateOrientationToICRF(new StateOrientation(QuarterTurn, Vector3.Zero, epoch,
+            spacecraft.Frame.AddStateOrientationToIcrf(new StateOrientation(QuarterTurn, Vector3.Zero, epoch,
                 spacecraft.Frame));
         }
     }
@@ -359,21 +358,21 @@ public class RunIndependenceTests
 
         // Assert
         AssertSameStates(reference.PropagatedStates, spacecraft.PropagatedStates);
-        AssertSameAttitudes(reference.Frame.GetStateOrientationsToICRF().ToArray(),
-            spacecraft.Frame.GetStateOrientationsToICRF().ToArray());
+        AssertSameAttitudes(reference.Frame.GetStateOrientationsToIcrf().ToArray(),
+            spacecraft.Frame.GetStateOrientationsToIcrf().ToArray());
     }
 
     [Fact]
     public void ANumericalRunOfATLESpacecraftSampledByTLEPropagator_IsAFreshRun()
     {
-        // Arrange: a TLE spacecraft sampled by TLEPropagator, then given an attitude by hand 600 s before the window
+        // Arrange: a TLE spacecraft sampled by TlePropagator, then given an attitude by hand 600 s before the window
         var tle = Iss();
         var window = new Window(tle.Epoch, tle.Epoch.AddHours(1.0));
         var reference = NewSpacecraft(Iss());
         reference.Propagate(window, Options("RK"));
         var spacecraft = NewSpacecraft(tle);
-        new TLEPropagator(window, spacecraft, Step).Propagate();
-        spacecraft.Frame.AddStateOrientationToICRF(new StateOrientation(QuarterTurn, Vector3.Zero,
+        new TlePropagator(window, spacecraft, Step).Propagate();
+        spacecraft.Frame.AddStateOrientationToIcrf(new StateOrientation(QuarterTurn, Vector3.Zero,
             window.StartDate.AddSeconds(-600.0), spacecraft.Frame));
 
         // Act
@@ -381,34 +380,34 @@ public class RunIndependenceTests
 
         // Assert
         AssertSameStates(reference.PropagatedStates, spacecraft.PropagatedStates);
-        AssertSameAttitudes(reference.Frame.GetStateOrientationsToICRF().ToArray(),
-            spacecraft.Frame.GetStateOrientationsToICRF().ToArray());
+        AssertSameAttitudes(reference.Frame.GetStateOrientationsToIcrf().ToArray(),
+            spacecraft.Frame.GetStateOrientationsToIcrf().ToArray());
     }
 
     #endregion
 
-    #region TLEPropagator: compute, then re-arm and store in one block (decisions 38 and 39)
+    #region TlePropagator: compute, then re-arm and store in one block (decisions 38 and 39)
 
-    // The samples of a TLEPropagator run as the spacecraft stores them: SGP4 at each sample, rotated to ICRF
+    // The samples of a TlePropagator run as the spacecraft stores them: SGP4 at each sample, rotated to ICRF
     private static StateVector[] StoredSamples(PropagationSolution solution) => solution.StateVectors
         .Select(sv => sv.ToFrame(Frames.Frame.ICRF).ToStateVector()).ToArray();
 
     [Fact]
     public void ATLEPropagatorRunAfterANumericalRunWithABurn_ReArmsTheSpacecraft()
     {
-        // Arrange: a numerical run with a burn, then the plan cleared (a TLEPropagator refuses a plan, decision 40)
+        // Arrange: a numerical run with a burn, then the plan cleared (a TlePropagator refuses a plan, decision 40)
         var tle = Iss();
         var spacecraft = NewSpacecraft(tle);
-        AddPlan(spacecraft, tle.Epoch.ToTDB());
+        AddPlan(spacecraft, tle.Epoch.ToTdb());
         spacecraft.Propagate(new Window(tle.Epoch, tle.Epoch.AddHours(2.0)), Options("RK"));
         Assert.Single(spacecraft.ExecutedManeuvers);
         Assert.True(spacecraft.FuelTanks.Single().Quantity < 1000.0);
-        Assert.NotEmpty(spacecraft.Frame.GetStateOrientationsToICRF());
+        Assert.NotEmpty(spacecraft.Frame.GetStateOrientationsToIcrf());
         Assert.True(spacecraft.IsPropagated);
         spacecraft.SetManeuvers();
 
         // Act
-        var solution = new TLEPropagator(new Window(tle.Epoch.AddHours(3.0), tle.Epoch.AddHours(4.0)), spacecraft, Step)
+        var solution = new TlePropagator(new Window(tle.Epoch.AddHours(3.0), tle.Epoch.AddHours(4.0)), spacecraft, Step)
             .Propagate();
 
         // Assert: the full re-arm, then the samples alone, in one arc
@@ -417,7 +416,7 @@ public class RunIndependenceTests
         Assert.Null(spacecraft.LastForceModel);
         Assert.Empty(spacecraft.ExecutedManeuvers);
         Assert.Equal(1000.0, spacecraft.FuelTanks.Single().Quantity);
-        Assert.Empty(spacecraft.Frame.GetStateOrientationsToICRF());
+        Assert.Empty(spacecraft.Frame.GetStateOrientationsToIcrf());
         Assert.Equal(1, spacecraft.PropagatedArcs.Count);
         AssertSameStates(StoredSamples(solution), spacecraft.PropagatedStates);
         Assert.Null(spacecraft.InterpolatedStatesWindow);
@@ -429,10 +428,10 @@ public class RunIndependenceTests
         // Arrange: before 11.0.0 the second run added its 61 samples to the 61 of the first, in one arc of 122 states
         var tle = Iss();
         var spacecraft = NewSpacecraft(tle);
-        new TLEPropagator(new Window(tle.Epoch, tle.Epoch.AddHours(1.0)), spacecraft, Step).Propagate();
+        new TlePropagator(new Window(tle.Epoch, tle.Epoch.AddHours(1.0)), spacecraft, Step).Propagate();
 
         // Act
-        var second = new TLEPropagator(new Window(tle.Epoch.AddHours(3.0), tle.Epoch.AddHours(4.0)), spacecraft, Step)
+        var second = new TlePropagator(new Window(tle.Epoch.AddHours(3.0), tle.Epoch.AddHours(4.0)), spacecraft, Step)
             .Propagate();
 
         // Assert
@@ -443,7 +442,7 @@ public class RunIndependenceTests
     [Fact]
     public void AStoppedTLEPropagatorRun_LeavesANumericallyPropagatedSpacecraftAsItWas()
     {
-        // Arrange: a numerical run, then a TLEPropagator run stopped from inside its tenth SGP4 sample
+        // Arrange: a numerical run, then a TlePropagator run stopped from inside its tenth SGP4 sample
         var tle = new CancellingTle("ISS",
             "1 25544U 98067A   21020.53488036  .00016717  00000-0  10270-3 0  9054",
             "2 25544  51.6423 353.0312 0000493 320.8755  39.2360 15.49309423 25703");
@@ -451,7 +450,7 @@ public class RunIndependenceTests
         spacecraft.Propagate(new Window(tle.Epoch, tle.Epoch.AddHours(1.0)), Options("RK"));
         var before = Take(spacecraft);
         Assert.True(before.Propagated);
-        var propagator = new TLEPropagator(new Window(tle.Epoch.AddHours(1.0), tle.Epoch.AddHours(2.0)), spacecraft, Step);
+        var propagator = new TlePropagator(new Window(tle.Epoch.AddHours(1.0), tle.Epoch.AddHours(2.0)), spacecraft, Step);
         using var cts = new CancellationTokenSource();
         tle.CancelAt(cts, 10);
 
@@ -470,7 +469,7 @@ public class RunIndependenceTests
         // Arrange: before 11.0.0 both solutions held the same array of the propagator, its first state built once (#785)
         var tle = Iss();
         var spacecraft = NewSpacecraft(tle);
-        var propagator = new TLEPropagator(new Window(tle.Epoch, tle.Epoch.AddHours(1.0)), spacecraft, Step);
+        var propagator = new TlePropagator(new Window(tle.Epoch, tle.Epoch.AddHours(1.0)), spacecraft, Step);
 
         // Act
         var first = propagator.Propagate();
@@ -494,7 +493,7 @@ public class RunIndependenceTests
     }
 
     // A TLE that cancels a token from inside its SGP4 call of a given rank, once armed
-    private sealed class CancellingTle(string name, string line1, string line2) : TLE(name, line1, line2)
+    private sealed class CancellingTle(string name, string line1, string line2) : Tle(name, line1, line2)
     {
         private CancellationTokenSource _source;
         private int _rank;
@@ -529,11 +528,11 @@ public class RunIndependenceTests
         // Arrange
         var tle = Iss();
         var spacecraft = NewSpacecraft(tle);
-        AddPlan(spacecraft, tle.Epoch.ToTDB());
+        AddPlan(spacecraft, tle.Epoch.ToTdb());
 
         // Act
         var exception = Assert.Throws<ArgumentException>(() =>
-            new TLEPropagator(new Window(tle.Epoch, tle.Epoch.AddHours(1.0)), spacecraft, Step));
+            new TlePropagator(new Window(tle.Epoch, tle.Epoch.AddHours(1.0)), spacecraft, Step));
 
         // Assert
         Assert.Equal("spacecraft", exception.ParamName);
@@ -547,9 +546,9 @@ public class RunIndependenceTests
         // Arrange
         var tle = Iss();
         var spacecraft = NewSpacecraft(tle);
-        var propagator = new TLEPropagator(new Window(tle.Epoch, tle.Epoch.AddHours(1.0)), spacecraft, Step);
+        var propagator = new TlePropagator(new Window(tle.Epoch, tle.Epoch.AddHours(1.0)), spacecraft, Step);
         propagator.Propagate();
-        AddPlan(spacecraft, tle.Epoch.ToTDB());
+        AddPlan(spacecraft, tle.Epoch.ToTdb());
         var before = Take(spacecraft);
 
         // Act

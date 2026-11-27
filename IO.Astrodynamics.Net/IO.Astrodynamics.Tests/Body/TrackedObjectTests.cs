@@ -2,13 +2,11 @@ using System;
 using System.Linq;
 using IO.Astrodynamics.Body;
 using IO.Astrodynamics.Body.Spacecraft;
-using IO.Astrodynamics.CCSDS.CDM;
-using IO.Astrodynamics.CCSDS.Common.Enums;
+using IO.Astrodynamics.Ccsds;
 using IO.Astrodynamics.Math;
 using IO.Astrodynamics.OrbitalParameters;
-using IO.Astrodynamics.OrbitalParameters.TLE;
 using IO.Astrodynamics.SolarSystemObjects;
-using IO.Astrodynamics.SSA;
+using IO.Astrodynamics.Ssa;
 using IO.Astrodynamics.Tests.SSA;
 using IO.Astrodynamics.TimeSystem;
 using Xunit;
@@ -20,11 +18,11 @@ namespace IO.Astrodynamics.Tests.Body;
 /// </summary>
 public class TrackedObjectTests
 {
-    // The ISS set of the TLE tests, and the same set with the largest Alpha-5 number (TLENoradIdTests)
-    private static readonly TLE Iss = new("ISS", "1 25544U 98067A   21020.53488036  .00016717  00000-0  10270-3 0  9054",
+    // The ISS set of the TLE tests, and the same set with the largest Alpha-5 number (TleNoradIdTests)
+    private static readonly Tle Iss = new("ISS", "1 25544U 98067A   21020.53488036  .00016717  00000-0  10270-3 0  9054",
         "2 25544  51.6423 353.0312 0000493 320.8755  39.2360 15.49309423 25703");
 
-    private static readonly TLE Z9999 = new("Z9999", "1 Z9999U 98067A   21020.53488036  .00016717  00000-0  10270-3 0  9050",
+    private static readonly Tle Z9999 = new("Z9999", "1 Z9999U 98067A   21020.53488036  .00016717  00000-0  10270-3 0  9050",
         "2 Z9999  51.6423 353.0312 0000493 320.8755  39.2360 15.49309423 25709");
 
     public TrackedObjectTests()
@@ -34,7 +32,7 @@ public class TrackedObjectTests
 
     private static TimeSystem.Time Tca => AvoidanceFallbackCase.Tca;
 
-    private static CelestialBody Earth => PlanetsAndMoons.EARTH_BODY;
+    private static CelestialBody Earth => PlanetsAndMoons.EarthBody;
 
     // A protected state at TCA with its RTN covariance, and the state of a secondary crossing it 200 m away (the avoidance
     // tests' geometry)
@@ -87,8 +85,8 @@ public class TrackedObjectTests
             // Act
             var fromTracked = tracked.GetEphemeris(epoch, Earth, Frames.Frame.ICRF, aberration);
             var fromWrapper = wrapper.GetEphemeris(epoch, Earth, Frames.Frame.ICRF, aberration);
-            var moonFromTracked = PlanetsAndMoons.MOON_BODY.GetEphemeris(epoch, tracked, Frames.Frame.ICRF, aberration);
-            var moonFromWrapper = PlanetsAndMoons.MOON_BODY.GetEphemeris(epoch, wrapper, Frames.Frame.ICRF, aberration);
+            var moonFromTracked = PlanetsAndMoons.MoonBody.GetEphemeris(epoch, tracked, Frames.Frame.ICRF, aberration);
+            var moonFromWrapper = PlanetsAndMoons.MoonBody.GetEphemeris(epoch, wrapper, Frames.Frame.ICRF, aberration);
 
             // Assert: the object as target and as observer (its reference body the Earth of the TLE)
             Assert.Equal(fromWrapper.Position, fromTracked.Position);

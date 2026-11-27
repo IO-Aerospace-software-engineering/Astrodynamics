@@ -19,7 +19,7 @@ The reference documentation lives at **[docs.io-aerospace.org](https://docs.io-a
 - [Standards & Units](https://docs.io-aerospace.org/standards-and-units/) — SI units, frame and time conventions
 - [Contributing](https://docs.io-aerospace.org/contributing/) — how to contribute, versioning policy, migration notes
 
-A single-file companion reference is also kept in this repository: [DEVELOPER_GUIDE.md](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/blob/main/DEVELOPER_GUIDE.md).
+The single-file `DEVELOPER_GUIDE.md` of 10.x is a pointer to these pages since 11.0.0.
 
 ## Install
 
@@ -47,11 +47,11 @@ using IO.Astrodynamics.SolarSystemObjects;
 using IO.Astrodynamics.TimeSystem;
 
 // Load required kernels (recursively) from your data directory
-SpiceAPI.Instance.LoadKernels(new DirectoryInfo("Data/SolarSystem"));
+SpiceApi.Instance.LoadKernels(new DirectoryInfo("Data/SolarSystem"));
 
 // Moon state relative to Earth at 2000-01-01T12:00Z, expressed in ICRF
-var earth = new CelestialBody(PlanetsAndMoons.EARTH);
-var moon = new CelestialBody(PlanetsAndMoons.MOON);
+var earth = new CelestialBody(PlanetsAndMoons.Earth);
+var moon = new CelestialBody(PlanetsAndMoons.Moon);
 var epoch = new Time(new DateTime(2000, 1, 1, 12, 0, 0), TimeScale.UTC);
 
 var state = moon.GetEphemeris(epoch, earth, Frame.ICRF, Aberration.None);
@@ -107,13 +107,13 @@ You provide the kernels relevant to your scenario. A common set:
 Organize them in a directory and load them recursively:
 
 ```csharp
-SpiceAPI.Instance.LoadKernels(new DirectoryInfo("Data/SolarSystem"));
+SpiceApi.Instance.LoadKernels(new DirectoryInfo("Data/SolarSystem"));
 ```
 
 A single file works too:
 
 ```csharp
-SpiceAPI.Instance.LoadKernels(new FileInfo("de440.bsp"));
+SpiceApi.Instance.LoadKernels(new FileInfo("de440.bsp"));
 ```
 
 See the [kernel management guide](https://docs.io-aerospace.org/guides/kernel-management/) for layout and precedence rules.

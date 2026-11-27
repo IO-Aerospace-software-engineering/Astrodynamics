@@ -70,10 +70,10 @@ internal static class MemoryProviderChild
     {
         try
         {
-            SpiceAPI.Instance.LoadKernels(new DirectoryInfo(kernels));
+            SpiceApi.Instance.LoadKernels(new DirectoryInfo(kernels));
             // The static frames capture the provider when they are built: built here, under SPICE
             GC.KeepAlive(Frame.ICRF);
-            GC.KeepAlive(Frame.ECLIPTIC_J2000);
+            GC.KeepAlive(Frame.ECLIPJ2000);
 
             // The reference: SPICE outside de440s
             var early = new Time(1500, 1, 1, 0, 0, 0, TimeScale.TDB);
@@ -255,8 +255,8 @@ internal static class MemoryProviderChild
         var frame = new Frame("MEMORY_CACHE_FRAME");
         var axis = new Vector3(0.3, -0.2, 0.9) / new Vector3(0.3, -0.2, 0.9).Magnitude();
         var end = T0.AddSeconds(3600.0);
-        provider.AddStateOrientationToICRF(frame, T0, new StateOrientation(new Quaternion(axis, 0.1), Vector3.Zero, T0, frame));
-        provider.AddStateOrientationToICRF(frame, end, new StateOrientation(new Quaternion(axis, 0.7), Vector3.Zero, end, frame));
+        provider.AddStateOrientationToIcrf(frame, T0, new StateOrientation(new Quaternion(axis, 0.1), Vector3.Zero, T0, frame));
+        provider.AddStateOrientationToIcrf(frame, end, new StateOrientation(new Quaternion(axis, 0.7), Vector3.Zero, end, frame));
 
         var cache = new PropagationFrameOrientationCache(new Window(T0, end), frame, TimeSpan.FromSeconds(60.0));
 

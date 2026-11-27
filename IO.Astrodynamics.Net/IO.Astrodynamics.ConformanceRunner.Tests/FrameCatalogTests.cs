@@ -31,7 +31,7 @@ public class FrameCatalogTests
     public void IcrfEclipticAndTeme_AreTheFrameworkFrames()
     {
         Assert.Same(Frame.ICRF, FrameCatalog.Resolve("ICRF"));
-        Assert.Same(Frame.ECLIPTIC_J2000, FrameCatalog.Resolve("ECLIPJ2000"));
+        Assert.Same(Frame.ECLIPJ2000, FrameCatalog.Resolve("ECLIPJ2000"));
         Assert.Same(Frame.TEME, FrameCatalog.Resolve("TEME"));
         Assert.Equal(8, FrameCatalog.Names.Count);
     }

@@ -6,15 +6,14 @@ using System.Globalization;
 using System.Linq;
 using IO.Astrodynamics.Body;
 using IO.Astrodynamics.Body.Spacecraft;
-using IO.Astrodynamics.CCSDS.Common;
-using IO.Astrodynamics.CCSDS.Common.Enums;
+using IO.Astrodynamics.Ccsds;
 using IO.Astrodynamics.Math;
 using IO.Astrodynamics.OrbitalParameters;
 using IO.Astrodynamics.Propagator;
 using IO.Astrodynamics.Propagator.Variational;
-using IO.Astrodynamics.SSA;
+using IO.Astrodynamics.Ssa;
 
-namespace IO.Astrodynamics.CCSDS.CDM;
+namespace IO.Astrodynamics.Ccsds;
 
 internal static class CdmExporter
 {
@@ -135,7 +134,7 @@ internal static class CdmExporter
         return new CdmRelativeMetadataData
         {
             Comments = comments,
-            TcaUtc = CcsdsDates.ToUtc(encounterCase.EncounterState.Epoch.ToUTC().DateTime),
+            TcaUtc = CcsdsDates.ToUtc(encounterCase.EncounterState.Epoch.ToUtc().DateTime),
             MissDistanceMeters = encounterCase.EncounterState.MissDistanceMeters,
             RelativeSpeedMetersPerSecond = encounterCase.EncounterState.RelativeState.RelativeVelocityInertial.Magnitude(),
             RelativeStateVector = options.IncludeRelativeStateVector
@@ -146,10 +145,10 @@ internal static class CdmExporter
                 }
                 : null,
             StartScreenPeriodUtc = options.IncludeScreeningWindow
-                ? CcsdsDates.ToUtc(encounterCase.ScreeningWindow.StartDate.ToUTC().DateTime)
+                ? CcsdsDates.ToUtc(encounterCase.ScreeningWindow.StartDate.ToUtc().DateTime)
                 : null,
             StopScreenPeriodUtc = options.IncludeScreeningWindow
-                ? CcsdsDates.ToUtc(encounterCase.ScreeningWindow.EndDate.ToUTC().DateTime)
+                ? CcsdsDates.ToUtc(encounterCase.ScreeningWindow.EndDate.ToUtc().DateTime)
                 : null,
             CollisionProbability = encounterCase.CollisionRisk.ProbabilityOfCollision,
             CollisionProbabilityMethod = options.CollisionProbabilityMethod ?? FosterCollisionProbabilityMethod
@@ -313,7 +312,7 @@ internal static class CdmExporter
                 AreaDragSquareMeters = spacecraft.SectionalArea,
                 AreaSrpSquareMeters = spacecraft.SectionalArea,
                 CdAreaOverMass = totalMass > 0.0 ? spacecraft.DragCoefficient * spacecraft.SectionalArea / totalMass : null,
-                CrAreaOverMass = totalMass > 0.0 ? spacecraft.SolarRadiationCoeff * spacecraft.SectionalArea / totalMass : null
+                CrAreaOverMass = totalMass > 0.0 ? spacecraft.SolarRadiationCoefficient * spacecraft.SectionalArea / totalMass : null
             };
         }
 
@@ -409,7 +408,7 @@ internal static class CdmExporter
     {
         if (source is TrackedObject tracked)
         {
-            return string.IsNullOrWhiteSpace(tracked.CosparId) ? OMM.OmmMetadata.UnknownObjectId : tracked.CosparId;
+            return string.IsNullOrWhiteSpace(tracked.CosparId) ? OmmMetadata.UnknownObjectId : tracked.CosparId;
         }
 
         if (source is Spacecraft spacecraft && !string.IsNullOrWhiteSpace(spacecraft.CosparId))
@@ -474,7 +473,7 @@ internal static class CdmExporter
     {
         return string.Create(
             CultureInfo.InvariantCulture,
-            $"CDM-{System.Math.Abs(encounterCase.ProtectedSpacecraft.NaifId)}-{System.Math.Abs(encounterCase.SecondaryObject.NaifId)}-{encounterCase.EncounterState.Epoch.ToUTC().DateTime:yyyyMMddHHmmssfff}");
+            $"CDM-{System.Math.Abs(encounterCase.ProtectedSpacecraft.NaifId)}-{System.Math.Abs(encounterCase.SecondaryObject.NaifId)}-{encounterCase.EncounterState.Epoch.ToUtc().DateTime:yyyyMMddHHmmssfff}");
     }
 
     private static string FormatAge(TimeSpan? age)

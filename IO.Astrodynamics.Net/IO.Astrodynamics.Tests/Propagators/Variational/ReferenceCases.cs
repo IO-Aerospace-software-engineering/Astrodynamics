@@ -4,7 +4,7 @@ using IO.Astrodynamics.Tests.Propagators.Variational;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using IO.Astrodynamics.Atmosphere.NRLMSISE_00;
+using IO.Astrodynamics.Atmosphere;
 using IO.Astrodynamics.Body;
 using IO.Astrodynamics.Body.Spacecraft;
 using IO.Astrodynamics.Maneuver;
@@ -247,17 +247,17 @@ public sealed class ReferenceCases
     public ReferenceCases()
     {
         TestKernels.EnsureSolarSystem();
-        var moon = new CelestialBody(PlanetsAndMoons.MOON, Frames.Frame.ICRF, Epoch);
+        var moon = new CelestialBody(PlanetsAndMoons.Moon, Frames.Frame.ICRF, Epoch);
         var sun = new CelestialBody(Stars.Sun);
         var day = TimeSpan.FromDays(1.0);
 
-        _pointMassEarth = new CelestialBody(PlanetsAndMoons.EARTH, Frames.Frame.ICRF, Epoch);
+        _pointMassEarth = new CelestialBody(PlanetsAndMoons.Earth, Frames.Frame.ICRF, Epoch);
         R1 = new ReferenceCase("R1",
             State(EarthEquatorialRadius + 700.0e3, 0.001, 45.0, 30.0, 60.0, 10.0, _pointMassEarth),
             new CelestialItem[] { _pointMassEarth }, day, false, false)
         {
             PositionStep = 10.0, VelocityStep = 1e-2,
-            NewBodies = () => new CelestialItem[] { new CelestialBody(PlanetsAndMoons.EARTH, Frames.Frame.ICRF, Epoch) }
+            NewBodies = () => new CelestialItem[] { new CelestialBody(PlanetsAndMoons.Earth, Frames.Frame.ICRF, Epoch) }
         };
 
         var earthR2 = Earth(10, true);
@@ -267,7 +267,7 @@ public sealed class ReferenceCases
         {
             PositionStep = 10.0, VelocityStep = 1e-2, DragCoefficientStep = 0.01,
             NewBodies = () => new CelestialItem[]
-                { Earth(10, true), new CelestialBody(Stars.Sun), new CelestialBody(PlanetsAndMoons.MOON, Frames.Frame.ICRF, Epoch) }
+                { Earth(10, true), new CelestialBody(Stars.Sun), new CelestialBody(PlanetsAndMoons.Moon, Frames.Frame.ICRF, Epoch) }
         };
 
         // 98.19° is the sun-synchronous inclination at 700 km (a J2 nodal regression of 360° per year); the node at the
@@ -279,7 +279,7 @@ public sealed class ReferenceCases
         {
             PositionStep = 10.0, VelocityStep = 1e-2, ReflectivityCoefficientStep = 0.1,
             NewBodies = () => new CelestialItem[]
-                { Earth(10, false), new CelestialBody(Stars.Sun), new CelestialBody(PlanetsAndMoons.MOON, Frames.Frame.ICRF, Epoch) }
+                { Earth(10, false), new CelestialBody(Stars.Sun), new CelestialBody(PlanetsAndMoons.Moon, Frames.Frame.ICRF, Epoch) }
         };
 
         var earthR4 = Earth(70, false);
@@ -287,9 +287,9 @@ public sealed class ReferenceCases
             State(42164137.0, 0.0002, 0.05, 0.0, 30.0, 0.0, earthR4),
             new CelestialItem[]
             {
-                earthR4, sun, moon, Barycenters.MERCURY_BARYCENTER, Barycenters.VENUS_BARYCENTER,
-                Barycenters.MARS_BARYCENTER, Barycenters.JUPITER_BARYCENTER, Barycenters.SATURN_BARYCENTER,
-                Barycenters.URANUS_BARYCENTER, Barycenters.NEPTUNE_BARYCENTER
+                earthR4, sun, moon, Barycenters.MercuryBarycenter, Barycenters.VenusBarycenter,
+                Barycenters.MarsBarycenter, Barycenters.JupiterBarycenter, Barycenters.SaturnBarycenter,
+                Barycenters.UranusBarycenter, Barycenters.NeptuneBarycenter
             }, day, false, true) { PositionStep = 10.0, VelocityStep = 1e-2, ReflectivityCoefficientStep = 0.1 };
 
         // Perigee 300 km and apogee 36 000 km above the equatorial radius
@@ -306,7 +306,7 @@ public sealed class ReferenceCases
         };
 
         // The Earth of the force partials (PartialsTestCases.Earth), so that the tests that used it keep their figures
-        var earthEclipsing = new CelestialBody(PlanetsAndMoons.EARTH, Frames.Frame.ICRF, Epoch, null,
+        var earthEclipsing = new CelestialBody(PlanetsAndMoons.Earth, Frames.Frame.ICRF, Epoch, null,
             new Nrlmsise00Model(SpaceWeather.Nominal), albedo: 0.3, thermalEffectiveTemperature: 254.0,
             thermalEmissivity: 0.95);
         Eclipsing = new ReferenceCase("Eclipsing",
@@ -445,9 +445,9 @@ public sealed class ReferenceCases
     {
         var geopotential = new GeopotentialModelParameters(GeopotentialModel, degree);
         return atmosphere
-            ? new CelestialBody(PlanetsAndMoons.EARTH, Frames.Frame.ICRF, Epoch, geopotential,
+            ? new CelestialBody(PlanetsAndMoons.Earth, Frames.Frame.ICRF, Epoch, geopotential,
                 new Nrlmsise00Model(SpaceWeather.Nominal))
-            : new CelestialBody(PlanetsAndMoons.EARTH, Frames.Frame.ICRF, Epoch, geopotential);
+            : new CelestialBody(PlanetsAndMoons.Earth, Frames.Frame.ICRF, Epoch, geopotential);
     }
 
     private static StateVector State(double semiMajorAxis, double eccentricity, double inclination, double node,

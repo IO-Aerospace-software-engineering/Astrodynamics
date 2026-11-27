@@ -95,7 +95,7 @@ There is no zero-quaternion constant: (0, 0, 0, 0) is not a rotation; `new Quate
 | `Conjugate()` | Inverse rotation |
 | `Normalize()` | Unit quaternion of any finite non-zero quaternion; `InvalidOperationException` for the zero quaternion (#680) or a component that is not finite (third round of #668); scaled exactly by the power of two of its largest component outside about 1e-154 to 1e154, bit for bit the quaternion over its unscaled magnitude otherwise |
 | `ToEuler()` | Convert to Euler angles (Vector3) |
-| `SLERP(Quaternion, double)` | Spherical linear interpolation of the two rotations, on the shorter path: both quaternions normalized first (any finite non-zero magnitude); `InvalidOperationException` for a zero or non-finite instance, `ArgumentException` (`q`) for a zero or non-finite argument |
+| `Slerp(Quaternion, double)` | Spherical linear interpolation of the two rotations, on the shorter path: both quaternions normalized first (any finite non-zero magnitude); `InvalidOperationException` for a zero or non-finite instance, `ArgumentException` (`q`) for a zero or non-finite argument |
 | `Lerp(Quaternion, double)` | Linear interpolation q + t (q2 − q), normalized, on the chord as given, for quaternions of any finite non-zero magnitude (a chord that overflows, or of quaternions whose largest component is below 1e-150, computed on both scaled by one power of two, third round of #668; every other chord bit for bit); `InvalidOperationException` for a zero or non-finite instance, `ArgumentException` (`q2`) for a zero or non-finite `q2` or a chord through zero (q to −q at t = 0.5) |
 | `operator *(Quaternion, Quaternion)` | Quaternion composition |
 
@@ -170,7 +170,7 @@ double sigmaX = System.Math.Sqrt(cov[0, 0]);                            // 10 m
 
 Lagrange interpolation for polynomial fitting of ephemeris data. Used internally by the ephemeris cache of a propagation (internal since 11.0.0) for 8-point interpolation of celestial body positions.
 
-## Tsiolkovski
+## Tsiolkovsky
 
 Rocket equation utilities for propulsion calculations. All methods are static.
 
@@ -181,9 +181,9 @@ Rocket equation utilities for propulsion calculations. All methods are static.
 | `DeltaM(double isp, double initialMass, double deltaV)` | Compute fuel mass consumed |
 
 ```csharp
-double dv = Tsiolkovski.DeltaV(isp: 300, initialMass: 1000, finalMass: 800);
-TimeSpan burnTime = Tsiolkovski.DeltaT(isp: 300, initialMass: 1000, fuelFlow: 0.5, deltaV: dv);
-double fuelUsed = Tsiolkovski.DeltaM(isp: 300, initialMass: 1000, deltaV: dv);
+double dv = Tsiolkovsky.DeltaV(isp: 300, initialMass: 1000, finalMass: 800);
+TimeSpan burnTime = Tsiolkovsky.DeltaT(isp: 300, initialMass: 1000, fuelFlow: 0.5, deltaV: dv);
+double fuelUsed = Tsiolkovsky.DeltaM(isp: 300, initialMass: 1000, deltaV: dv);
 ```
 
 ## Legendre Functions

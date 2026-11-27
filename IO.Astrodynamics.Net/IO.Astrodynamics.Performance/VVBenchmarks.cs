@@ -37,8 +37,8 @@ public class VVBenchmarks
     [GlobalSetup]
     public void GlobalSetup()
     {
-        SpiceAPI.Instance.LoadKernels(new DirectoryInfo("Data"));
-        _earthLeo = new CelestialBody(PlanetsAndMoons.EARTH, Frame.ICRF, LeoEpoch,
+        SpiceApi.Instance.LoadKernels(new DirectoryInfo("Data"));
+        _earthLeo = new CelestialBody(PlanetsAndMoons.Earth, Frame.ICRF, LeoEpoch,
             new GeopotentialModelParameters("Data/SolarSystem/EGM2008_to70_TideFree", 10));
     }
 
@@ -56,7 +56,7 @@ public class VVBenchmarks
         {
             Integrator = new VVIntegratorOptions { Step = TimeSpan.FromSeconds(StepSeconds) },
             OutputStep = TimeSpan.FromSeconds(StepSeconds),
-            ThirdBodies = new CelestialItem[] { PlanetsAndMoons.MOON_BODY, Stars.SUN_BODY }
+            ThirdBodies = new CelestialItem[] { PlanetsAndMoons.MoonBody, Stars.SunBody }
         });
     }
 

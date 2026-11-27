@@ -10,7 +10,7 @@ Systematic documentation of all types organized by domain.
 
 Foundation services for kernel loading, time, frames, celestial bodies, and spacecraft.
 
-- [SpiceAPI & Data Providers](spice-api.md) — kernel loading, SPICE operations, data provider pattern
+- [SpiceApi & Data Providers](spice-api.md) — kernel loading, SPICE operations, data provider pattern
 - [Time & Windows](time-and-windows.md) — `Time`, `Window`, time scales, parsing and conversions
 - [Frames & Orientation](frames.md) — reference frames, `StateOrientation`, Earth orientation
 - [Celestial Bodies](celestial-bodies.md) — `CelestialBody`, `CelestialItem`, physical properties
@@ -31,7 +31,7 @@ Orbit representations and conversions.
 
 Numerical integration and force models.
 
-- [Propagators](propagators.md) — `CentralBodyPropagator`, `TLEPropagator`, propagation solution
+- [Propagators](propagators.md) — `CentralBodyPropagator`, `TlePropagator`, propagation solution
 - [Integrators](integrators.md) — `VVIntegrator`, `RK78Integrator`
 - [Force Models](force-models.md) — gravity, drag, SRP, albedo, thermal
 - [Event Detection](event-detection.md) — g-function zero-crossing, `BisectionEventFinder`
@@ -65,6 +65,6 @@ Standards-compliant data interchange.
 
 Math, constants, and predefined objects.
 
-- [Math](math.md) — `Vector3`, `Quaternion`, `Matrix`, `Lagrange`, `Tsiolkovski`
+- [Math](math.md) — `Vector3`, `Quaternion`, `Matrix`, `Lagrange`, `Tsiolkovsky`
 - [Enumerations](enumerations.md) — `Aberration`, `OccultationType`, `ShapeType`, etc.
 - [Predefined Objects](predefined-objects.md) — solar system bodies, barycenters, frames

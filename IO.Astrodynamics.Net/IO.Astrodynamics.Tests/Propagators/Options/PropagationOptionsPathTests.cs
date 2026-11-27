@@ -4,7 +4,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using IO.Astrodynamics.Atmosphere;
-using IO.Astrodynamics.Atmosphere.NRLMSISE_00;
 using IO.Astrodynamics.Body;
 using IO.Astrodynamics.Body.Spacecraft;
 using IO.Astrodynamics.Maneuver;
@@ -66,14 +65,14 @@ public class PropagationOptionsPathTests
         }
     }
 
-    private static CelestialItem[] SunAndMoon() => new CelestialItem[] { Stars.SUN_BODY, PlanetsAndMoons.MOON_BODY };
+    private static CelestialItem[] SunAndMoon() => new CelestialItem[] { Stars.SunBody, PlanetsAndMoons.MoonBody };
 
     [Fact]
     public void Default_EqualsItsExplicitSettings_Rk78AtItsDefaults_60s_CentralBodyAlone()
     {
         // D4.7: Propagate(window) is the run of new RK78Integrator(), the central body alone, no force, 60 s outputs
-        var byDefault = NewSpacecraft(Leo(PlanetsAndMoons.EARTH_BODY));
-        var expected = NewSpacecraft(Leo(PlanetsAndMoons.EARTH_BODY));
+        var byDefault = NewSpacecraft(Leo(PlanetsAndMoons.EarthBody));
+        var expected = NewSpacecraft(Leo(PlanetsAndMoons.EarthBody));
 
         var solution = byDefault.Propagate(OneHour);
         var reference = expected.Propagate(OneHour, new PropagationOptions { Integrator = RK78IntegratorOptions.Default, OutputStep = Output, ThirdBodies = Array.Empty<CelestialItem>(), CovariancePropagation = CovariancePropagationOptions.None });
@@ -88,7 +87,7 @@ public class PropagationOptionsPathTests
     public void AlbedoOrThermal_OnACentralBodyWithoutTheCoefficient_Throws(bool albedo)
     {
         // Section A of the re-baseline: a coefficient of 0, the value of every predefined body, throws
-        var spacecraft = NewSpacecraft(Leo(PlanetsAndMoons.EARTH_BODY));
+        var spacecraft = NewSpacecraft(Leo(PlanetsAndMoons.EarthBody));
         var options = albedo
             ? PropagationOptions.Default with { AlbedoRadiationPressure = true }
             : PropagationOptions.Default with { ThermalRadiationPressure = true };
@@ -103,9 +102,9 @@ public class PropagationOptionsPathTests
         // the trajectory is that of the run without covariance, bit for bit. Auto resolves to exactly the options a caller
         // passes to ask for the covariance, so its run and its cost are those of that request (decision 17 of lot L4 of
         // #668, decided by S. Guillet, 2026-11-22)
-        var auto = NewSpacecraft(Leo(PlanetsAndMoons.EARTH_BODY, Covariance()));
-        var explicitMode = NewSpacecraft(Leo(PlanetsAndMoons.EARTH_BODY, Covariance()));
-        var none = NewSpacecraft(Leo(PlanetsAndMoons.EARTH_BODY, Covariance()));
+        var auto = NewSpacecraft(Leo(PlanetsAndMoons.EarthBody, Covariance()));
+        var explicitMode = NewSpacecraft(Leo(PlanetsAndMoons.EarthBody, Covariance()));
+        var none = NewSpacecraft(Leo(PlanetsAndMoons.EarthBody, Covariance()));
 
         var solution = auto.Propagate(OneHour);
         var expected = explicitMode.Propagate(OneHour, PropagationOptions.Default with
@@ -128,7 +127,7 @@ public class PropagationOptionsPathTests
     [Fact]
     public void AutoCovariance_UnderVelocityVerlet_IsNotPropagated_AndGetCovarianceSaysWhy()
     {
-        var spacecraft = NewSpacecraft(Leo(PlanetsAndMoons.EARTH_BODY, Covariance()));
+        var spacecraft = NewSpacecraft(Leo(PlanetsAndMoons.EarthBody, Covariance()));
         var solution = spacecraft.Propagate(OneHour, PropagationOptions.Default with { Integrator = VVIntegratorOptions.Default });
 
         Assert.Same(CovariancePropagationOptions.None, solution.Options.CovariancePropagation);
@@ -140,7 +139,7 @@ public class PropagationOptionsPathTests
     public void AutoCovariance_AtAnotherEpoch_IsNotPropagated_AndGetCovarianceSaysWhy()
     {
         var epoch = Start - TimeSpan.FromMinutes(10);
-        var spacecraft = NewSpacecraft(Leo(PlanetsAndMoons.EARTH_BODY, Covariance(), epoch));
+        var spacecraft = NewSpacecraft(Leo(PlanetsAndMoons.EarthBody, Covariance(), epoch));
         var solution = spacecraft.Propagate(OneHour);
 
         Assert.Same(CovariancePropagationOptions.None, solution.Options.CovariancePropagation);
@@ -152,7 +151,7 @@ public class PropagationOptionsPathTests
     public void AutoCovariance_Indefinite_Throws_NamingTheRemediationAndNone()
     {
         var indefinite = Matrix.Diagonal(100.0, 100.0, -100.0, 1e-2, 1e-2, 1e-2);
-        var spacecraft = NewSpacecraft(Leo(PlanetsAndMoons.EARTH_BODY, indefinite));
+        var spacecraft = NewSpacecraft(Leo(PlanetsAndMoons.EarthBody, indefinite));
 
         var message = Assert.Throws<InvalidOperationException>(() => spacecraft.Propagate(OneHour)).Message;
         Assert.Contains("WithRemediatedCovariance", message);
@@ -167,23 +166,23 @@ public class PropagationOptionsPathTests
     [Fact]
     public void SolutionOptions_AreTheResolvedSettings_AndRepeatTheRun()
     {
-        var spacecraft = NewSpacecraft(Leo(PlanetsAndMoons.EARTH_BODY, Covariance()));
+        var spacecraft = NewSpacecraft(Leo(PlanetsAndMoons.EarthBody, Covariance()));
         var options = PropagationOptions.Default with
-            { ThirdBodies = new CelestialItem[] { PlanetsAndMoons.EARTH_BODY, Stars.SUN_BODY }, AtmosphericDrag = true };
+            { ThirdBodies = new CelestialItem[] { PlanetsAndMoons.EarthBody, Stars.SunBody }, AtmosphericDrag = true };
 
         var solution = spacecraft.Propagate(OneHour, options);
         var resolved = solution.Options;
 
         Assert.Same(options.Integrator, resolved.Integrator);
         Assert.Equal(options.OutputStep, resolved.OutputStep);
-        Assert.Equal(new CelestialItem[] { Stars.SUN_BODY }, resolved.ThirdBodies);
+        Assert.Equal(new CelestialItem[] { Stars.SunBody }, resolved.ThirdBodies);
         Assert.True(resolved.AtmosphericDrag);
         Assert.Null(resolved.Geopotential);
         Assert.IsType<Nrlmsise00Model>(resolved.Atmosphere);
         Assert.Equal(CovariancePropagationMode.Covariance, resolved.CovariancePropagation.Mode);
 
         // Passed back, they repeat the run
-        var again = NewSpacecraft(Leo(PlanetsAndMoons.EARTH_BODY, Covariance()));
+        var again = NewSpacecraft(Leo(PlanetsAndMoons.EarthBody, Covariance()));
         again.Propagate(OneHour, resolved);
         AssertSameStates(spacecraft.PropagatedStates, again.PropagatedStates);
     }
@@ -191,9 +190,9 @@ public class PropagationOptionsPathTests
     [Fact]
     public void SolutionOptions_OfAConstructorThatTakesAnIntegrator_AreNull()
     {
-        var spacecraft = NewSpacecraft(Leo(PlanetsAndMoons.EARTH_BODY));
+        var spacecraft = NewSpacecraft(Leo(PlanetsAndMoons.EarthBody));
         var integrator = new RK78Integrator();
-        integrator.AddForce(new Propagator.Forces.GravitationalAcceleration(PlanetsAndMoons.EARTH_BODY));
+        integrator.AddForce(new Propagator.Forces.GravitationalAcceleration(PlanetsAndMoons.EarthBody));
         var solution = new CentralBodyPropagator(OneHour, spacecraft, integrator, Output).Propagate();
         Assert.Null(solution.Options);
     }
@@ -201,8 +200,8 @@ public class PropagationOptionsPathTests
     [Fact]
     public void CentralBodyPropagatorOptionsConstructor_EqualsSpacecraftPropagate()
     {
-        var viaConstructor = NewSpacecraft(Leo(PlanetsAndMoons.EARTH_BODY));
-        var viaSpacecraft = NewSpacecraft(Leo(PlanetsAndMoons.EARTH_BODY));
+        var viaConstructor = NewSpacecraft(Leo(PlanetsAndMoons.EarthBody));
+        var viaSpacecraft = NewSpacecraft(Leo(PlanetsAndMoons.EarthBody));
         var options = PropagationOptions.Default with { ThirdBodies = SunAndMoon() };
 
         new CentralBodyPropagator(OneHour, viaConstructor, options).Propagate();
@@ -214,7 +213,7 @@ public class PropagationOptionsPathTests
     [Fact]
     public void AnInvalidSetting_LeavesThePreviousPropagation()
     {
-        var spacecraft = NewSpacecraft(Leo(PlanetsAndMoons.EARTH_BODY));
+        var spacecraft = NewSpacecraft(Leo(PlanetsAndMoons.EarthBody));
         spacecraft.Propagate(OneHour);
         var before = spacecraft.PropagatedStates;
 
@@ -228,8 +227,8 @@ public class PropagationOptionsPathTests
     {
         // D1.6: a body without a model counts as not given (R12): the option replaces the NRLMSISE-00 of a model-less Earth
         var standard = new EarthStandardAtmosphere();
-        var earthWithModel = new CelestialBody(PlanetsAndMoons.EARTH, Frames.Frame.ICRF, Start, atmosphericModel: standard);
-        var viaOption = NewSpacecraft(Leo(PlanetsAndMoons.EARTH_BODY));
+        var earthWithModel = new CelestialBody(PlanetsAndMoons.Earth, Frames.Frame.ICRF, Start, atmosphericModel: standard);
+        var viaOption = NewSpacecraft(Leo(PlanetsAndMoons.EarthBody));
         var reference = NewSpacecraft(Leo(earthWithModel));
 
         var solution = viaOption.Propagate(OneHour, PropagationOptions.Default with { AtmosphericDrag = true, Atmosphere = standard });
@@ -242,7 +241,7 @@ public class PropagationOptionsPathTests
     [Fact]
     public void AnAtmosphereOption_EqualToTheBodysModel_Runs_AnotherThrows()
     {
-        var earth = new CelestialBody(PlanetsAndMoons.EARTH, Frames.Frame.ICRF, Start,
+        var earth = new CelestialBody(PlanetsAndMoons.Earth, Frames.Frame.ICRF, Start,
             atmosphericModel: new Nrlmsise00Model(SpaceWeather.Nominal));
         var equal = NewSpacecraft(Leo(earth));
         var reference = NewSpacecraft(Leo(earth));

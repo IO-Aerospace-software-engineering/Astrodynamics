@@ -3,7 +3,7 @@
 // The C# examples of docs/standards-and-units.md, compiled (#705). Each csharp block of the page but the first is the
 // region "docs/standards-and-units.md:<n>" of one method, n its rank among the page's csharp blocks after the first: the
 // first, the excerpt of Constants, declarations and not statements, stays fenced csharp, has no region and is checked by
-// value (StandardsConstants_EqualTheLibrary), as the excerpt of DEVELOPER_GUIDE.md. The parameters of a method give the
+// value (StandardsConstants_EqualTheLibrary). The parameters of a method give the
 // inputs of a block that continues an earlier one, as the comment opening the block names them
 // ("// Inputs: ..."). DocumentationPagesExamplesTests checks that each block equals its region (the block's using
 // directives aside, which are this file's) and runs the blocks that need only Data/SolarSystem. The namespace is
@@ -20,15 +20,9 @@ using System.Threading;
 using System.Threading.Tasks;
 using IO.Astrodynamics;
 using IO.Astrodynamics.Atmosphere;
-using IO.Astrodynamics.Atmosphere.NRLMSISE_00;
 using IO.Astrodynamics.Body;
 using IO.Astrodynamics.Body.Spacecraft;
-using IO.Astrodynamics.CCSDS;
-using IO.Astrodynamics.CCSDS.CDM;
-using IO.Astrodynamics.CCSDS.Common;
-using IO.Astrodynamics.CCSDS.Common.Enums;
-using IO.Astrodynamics.CCSDS.OMM;
-using IO.Astrodynamics.CCSDS.OPM;
+using IO.Astrodynamics.Ccsds;
 using IO.Astrodynamics.Converters;
 using IO.Astrodynamics.Coordinates;
 using IO.Astrodynamics.Cosmographia;
@@ -51,11 +45,11 @@ using IO.Astrodynamics.Propagator.Forces;
 using IO.Astrodynamics.Propagator.Integrators;
 using IO.Astrodynamics.Propagator.MonteCarlo;
 using IO.Astrodynamics.Propagator.Variational;
-using IO.Astrodynamics.SSA;
+using IO.Astrodynamics.Ssa;
 using IO.Astrodynamics.SolarSystemObjects;
 using IO.Astrodynamics.Surface;
 using IO.Astrodynamics.TimeSystem;
-using TLE = IO.Astrodynamics.OrbitalParameters.TLE.TLE;
+using Tle = IO.Astrodynamics.OrbitalParameters.Tle;
 
 namespace DocumentationPageSamples;
 
@@ -67,7 +61,7 @@ internal static class StandardsAndUnitsPage
     {
         #region docs/standards-and-units.md:1
         // Inputs: epoch (Time), positionIcrf (Vector3)
-        var so = Frame.CIRS.GetStateOrientationToICRF(epoch);
+        var so = Frame.CIRS.GetStateOrientationToIcrf(epoch);
         var positionCirs = positionIcrf.Rotate(so.Rotation.Conjugate());  // ICRF -> CIRS
         var positionBack = positionCirs.Rotate(so.Rotation);              // CIRS -> ICRF, positionIcrf again
         #endregion

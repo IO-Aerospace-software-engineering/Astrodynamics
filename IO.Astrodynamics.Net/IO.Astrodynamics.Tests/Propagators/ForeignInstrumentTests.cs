@@ -68,7 +68,7 @@ public class ForeignInstrumentTests
     // The attitude of the form on the instruments of instrumentsOf, on the engine of the spacecraft propagated
     private static Attitude AttitudeOf(string form, Spacecraft own, Spacecraft other, Engine engine)
     {
-        var moon = new CelestialBody(PlanetsAndMoons.MOON);
+        var moon = new CelestialBody(PlanetsAndMoons.Moon);
         var sun = new CelestialBody(Stars.Sun);
         return form switch
         {
@@ -93,7 +93,7 @@ public class ForeignInstrumentTests
     [InlineData("TriadSecondary")]
     public void SetManeuvers_RefusesAnAttitudeOnAnotherSpacecraftsInstrument(string form)
     {
-        var earth = new CelestialBody(PlanetsAndMoons.EARTH);
+        var earth = new CelestialBody(PlanetsAndMoons.Earth);
         var spacecraft = NewSpacecraft(earth, out var engine);
         var other = NewSpacecraft(earth, out _);
         var own = new ProgradeAttitude(Epoch, TimeSpan.Zero, earth);
@@ -134,7 +134,7 @@ public class ForeignInstrumentTests
     [InlineData("TriadSecondary", "VV")]
     public void ThePropagatorConstructor_RefusesAChainWithAnotherSpacecraftsInstrument(string form, string integrator)
     {
-        var earth = new CelestialBody(PlanetsAndMoons.EARTH);
+        var earth = new CelestialBody(PlanetsAndMoons.Earth);
         var spacecraft = NewSpacecraft(earth, out var engine);
         var other = NewSpacecraft(earth, out _);
         PlanPastTheClaim(form, spacecraft, other, engine, earth);
@@ -165,7 +165,7 @@ public class ForeignInstrumentTests
     public void Propagate_RefusesAChainWithAnotherSpacecraftsInstrument(string form, string integrator)
     {
         // Arrange: a propagator built on a valid plan, the foreign attitude linked after it
-        var earth = new CelestialBody(PlanetsAndMoons.EARTH);
+        var earth = new CelestialBody(PlanetsAndMoons.Earth);
         var spacecraft = NewSpacecraft(earth, out var engine);
         var other = NewSpacecraft(earth, out _);
         var own = new ProgradeAttitude(Epoch, TimeSpan.Zero, earth);
@@ -183,7 +183,7 @@ public class ForeignInstrumentTests
         Assert.Contains(spacecraft.Name, rejected.Message);
         Assert.False(spacecraft.IsPropagated);
         Assert.Empty(spacecraft.ExecutedManeuvers);
-        Assert.Empty(spacecraft.Frame.GetStateOrientationsToICRF());
+        Assert.Empty(spacecraft.Frame.GetStateOrientationsToIcrf());
     }
 
     /// <summary>
@@ -196,7 +196,7 @@ public class ForeignInstrumentTests
     [InlineData("TriadSecondary")]
     public void AnAttitudeOnItsOwnInstruments_Runs(string form)
     {
-        var earth = new CelestialBody(PlanetsAndMoons.EARTH);
+        var earth = new CelestialBody(PlanetsAndMoons.Earth);
         var spacecraft = NewSpacecraft(earth, out var engine);
         var attitude = AttitudeOf(form, spacecraft, spacecraft, engine);
 

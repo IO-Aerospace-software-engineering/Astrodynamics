@@ -56,15 +56,15 @@ public class ManeuverInferenceTests
     private static int _nextId = -899000;
     private static int NextId() => Interlocked.Decrement(ref _nextId);
 
-    private static CelestialBody Earth() => new(PlanetsAndMoons.EARTH, Frame.ICRF, S);
+    private static CelestialBody Earth() => new(PlanetsAndMoons.Earth, Frame.ICRF, S);
 
     private static IO.Astrodynamics.OrbitalParameters.OrbitalParameters Orbit(CelestialBody earth, bool ssb)
     {
         var icrf = new KeplerianElements(7000e3, 0.01, 0.5, 0.0, 0.0, 0.0, earth, S, Frame.ICRF);
         if (!ssb) return icrf;
         var sv = icrf.ToStateVector();
-        var fromSsb = earth.GetGeometricStateRelativeTo(S, Barycenters.SOLAR_SYSTEM_BARYCENTER);
-        return new StateVector(fromSsb.Position + sv.Position, fromSsb.Velocity + sv.Velocity, Barycenters.SOLAR_SYSTEM_BARYCENTER, S,
+        var fromSsb = earth.GetGeometricStateRelativeTo(S, Barycenters.SolarSystemBarycenter);
+        return new StateVector(fromSsb.Position + sv.Position, fromSsb.Velocity + sv.Velocity, Barycenters.SolarSystemBarycenter, S,
             Frame.ICRF);
     }
 
@@ -121,7 +121,7 @@ public class ManeuverInferenceTests
     private sealed class UserTriad : TriadAttitude
     {
         public UserTriad(CelestialItem maneuverCenter) : base(BodyAxis.Front,
-            new CelestialAttitudeTarget(new CelestialBody(PlanetsAndMoons.MOON)),
+            new CelestialAttitudeTarget(new CelestialBody(PlanetsAndMoons.Moon)),
             BodyAxis.Up,
             new CelestialAttitudeTarget(new CelestialBody(Stars.Sun, Frame.ICRF, S)),
             S,
@@ -138,7 +138,7 @@ public class ManeuverInferenceTests
     private sealed class UserPointing : InstrumentPointingToAttitude
     {
         public UserPointing(Instrument instrument, CelestialItem maneuverCenter) : base(instrument,
-            new CelestialAttitudeTarget(new CelestialBody(PlanetsAndMoons.MOON)), S, TimeSpan.Zero, maneuverCenter)
+            new CelestialAttitudeTarget(new CelestialBody(PlanetsAndMoons.Moon)), S, TimeSpan.Zero, maneuverCenter)
         {
         }
 
@@ -216,8 +216,8 @@ public class ManeuverInferenceTests
         Assert.Equal(reference.GetStateVector(end).Position, solution.GetStateVector(end).Position);
         Assert.Equal(reference.GetStateVector(end).Velocity, solution.GetStateVector(end).Velocity);
         Assert.Equal(explicitSc.GetRemainingFuel(), inferred.GetRemainingFuel());
-        var q = inferred.Frame.GetStateOrientationToICRF(S.AddSeconds(300.0)).Rotation;
-        var qRef = explicitSc.Frame.GetStateOrientationToICRF(S.AddSeconds(300.0)).Rotation;
+        var q = inferred.Frame.GetStateOrientationToIcrf(S.AddSeconds(300.0)).Rotation;
+        var qRef = explicitSc.Frame.GetStateOrientationToIcrf(S.AddSeconds(300.0)).Rotation;
         Assert.Equal(qRef, q);
     }
 
@@ -348,7 +348,7 @@ public class ManeuverInferenceTests
 
         Assert.Equal([nadir, prograde], spacecraft.ExecutedManeuvers);
         var state = spacecraft.GetEphemeris(S.AddHours(1.0), earth, Frame.ICRF, Aberration.None);
-        var front = spacecraft.BodyFront.Rotate(spacecraft.Frame.GetStateOrientationToICRF(S.AddHours(1.0)).Rotation);
+        var front = spacecraft.BodyFront.Rotate(spacecraft.Frame.GetStateOrientationToIcrf(S.AddHours(1.0)).Rotation);
         double angle = Separation(front, state.Velocity);
         _output.WriteLine($"MEASURE ManeuverInference attitudes only {integrator}: front to velocity {angle:E3} rad");
         Assert.True(angle < AttitudesOnlyThreshold, $"{angle:E3} rad");
@@ -420,7 +420,7 @@ public class ManeuverInferenceTests
             TimeSpan.Zero,
             center),
         "DerivedCelestialTarget" => new TriadAttitude(Spacecraft.Front,
-            new DerivedCelestialTarget(new CelestialBody(PlanetsAndMoons.MOON)),
+            new DerivedCelestialTarget(new CelestialBody(PlanetsAndMoons.Moon)),
             Spacecraft.Up,
             new CelestialAttitudeTarget(new CelestialBody(Stars.Sun, Frame.ICRF, S)),
             S,
@@ -495,7 +495,7 @@ public class ManeuverInferenceTests
             // Its front along the position from the Earth, the centre it was given
             var epoch = S.AddHours(1.0);
             var fromEarth = spacecraft.GetEphemeris(epoch, earth, Frame.ICRF, Aberration.None).Position;
-            var front = spacecraft.BodyFront.Rotate(spacecraft.Frame.GetStateOrientationToICRF(epoch).Rotation);
+            var front = spacecraft.BodyFront.Rotate(spacecraft.Frame.GetStateOrientationToIcrf(epoch).Rotation);
             var angle = Separation(front, fromEarth);
             _output.WriteLine($"MEASURE ManeuverInference SSB user attitude {integrator}: front to position from the Earth {angle:E3} rad");
             Assert.True(angle < SsbUserAttitudeThreshold, $"{angle:E3} rad");
@@ -508,7 +508,7 @@ public class ManeuverInferenceTests
     public void SsbMode_ATriadOfCelestialTargetsOnly_GivenNoCentre_TakesTheCentralBodyOfTheRun(string integrator)
     {
         var earth = Earth();
-        var moon = new CelestialBody(PlanetsAndMoons.MOON);
+        var moon = new CelestialBody(PlanetsAndMoons.Moon);
         var sun = new CelestialBody(Stars.Sun, Frame.ICRF, S);
         var spacecraft = NewSpacecraft(earth, ssb: true);
         var triad = new TriadAttitude(Spacecraft.Front,
@@ -526,7 +526,7 @@ public class ManeuverInferenceTests
         var epoch = S.AddHours(1.0);
         var state = spacecraft.GetEphemeris(epoch, sun, Frame.ICRF, Aberration.None);
         var expected = triad.ComputeOrientation(state);
-        var recorded = spacecraft.Frame.GetStateOrientationToICRF(epoch).Rotation;
+        var recorded = spacecraft.Frame.GetStateOrientationToIcrf(epoch).Rotation;
         var angle = RotationAngle(expected, recorded);
         _output.WriteLine($"MEASURE ManeuverInference SSB TRIAD {integrator}: recorded to law {angle:E3} rad");
         Assert.True(angle < SsbTriadThreshold, $"{angle:E3} rad");
@@ -538,7 +538,7 @@ public class ManeuverInferenceTests
     public void SsbMode_APointingAtACelestialTarget_GivenNoCentre_TakesTheCentralBodyOfTheRun(string integrator)
     {
         var earth = Earth();
-        var moon = new CelestialBody(PlanetsAndMoons.MOON);
+        var moon = new CelestialBody(PlanetsAndMoons.Moon);
         var spacecraft = NewSpacecraft(earth, ssb: true);
         var pointing = new InstrumentPointingToAttitude(Camera(spacecraft), new CelestialAttitudeTarget(moon), S);
         spacecraft.SetManeuvers(pointing);
@@ -548,7 +548,7 @@ public class ManeuverInferenceTests
         Assert.Equal([pointing], spacecraft.ExecutedManeuvers);
         Assert.Equal(Stars.Sun.NaifId, ((CelestialItem)pointing.ManeuverCenter).NaifId);
         var epoch = S.AddHours(1.0);
-        var boresight = Camera(spacecraft).GetBoresightInSpacecraftFrame().Rotate(spacecraft.Frame.GetStateOrientationToICRF(epoch).Rotation);
+        var boresight = Camera(spacecraft).GetBoresightInSpacecraftFrame().Rotate(spacecraft.Frame.GetStateOrientationToIcrf(epoch).Rotation);
         var toMoon = moon.GetEphemeris(epoch, spacecraft, Frame.ICRF, Aberration.None).Position;
         var angle = Separation(boresight, toMoon);
         _output.WriteLine($"MEASURE ManeuverInference SSB pointing {integrator}: boresight to the Moon {angle:E3} rad");

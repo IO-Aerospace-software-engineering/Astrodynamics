@@ -6,7 +6,7 @@ The frame API always returns rotations from the source frame to the destination 
 
 | API | Returned rotation |
 |-----|-------------------|
-| `frame.GetStateOrientationToICRF(epoch)` | `frame -> ICRF` |
+| `frame.GetStateOrientationToIcrf(epoch)` | `frame -> ICRF` |
 | `frame.ToFrame(targetFrame, epoch)` | `frame -> targetFrame` |
 
 Apply the returned quaternion to rotate a vector from the source frame into the destination frame. Use the conjugate for the inverse direction.
@@ -17,13 +17,13 @@ The angular velocity of a frame transform follows the SPICE convention (`xf2rav_
 
 | API | Returned angular velocity |
 |-----|---------------------------|
-| `frame.GetStateOrientationToICRF(epoch)` | ICRF relative to `frame`, expressed in `frame`: about `(0, 0, -7.292e-5)` for an Earth-fixed frame |
+| `frame.GetStateOrientationToIcrf(epoch)` | ICRF relative to `frame`, expressed in `frame`: about `(0, 0, -7.292e-5)` for an Earth-fixed frame |
 | `frame.ToFrame(targetFrame, epoch)` | `targetFrame` relative to `frame`, expressed in `frame` |
 
-With `R` the rotation `frame -> ICRF` and `ω` the angular velocity of `GetStateOrientationToICRF`, the rotation
+With `R` the rotation `frame -> ICRF` and `ω` the angular velocity of `GetStateOrientationToIcrf`, the rotation
 evolves as `R(t + dt) = R(t) exp(-[ω×] dt)`. The SPICE frames, TIRS, CIRS and the site frames all follow this
 convention, which the tests check on ITRF93, IAU_MOON, MOON_ME and a DSN topocentric frame.
-`StateOrientation.AtDate` applies its angular velocity in the destination axes, as the angular velocity of the source
+`StateOrientation.AtEpoch` applies its angular velocity in the destination axes, as the angular velocity of the source
 relative to the destination, `−R ω`: it extrapolates neither a frame transform nor the attitude of a spacecraft, whose
 frame follows the convention above ([Attitude and kernels](spacecraft.md#attitude-and-kernels)).
 
@@ -54,15 +54,15 @@ is reserved for changes between inertial frames.
 | Static Properties | Description |
 |-------------------|-------------|
 | `Frame.ICRF` | International Celestial Reference Frame (SPICE `J2000`), the pivot of every transform |
-| `Frame.ECLIPTIC_J2000` | Ecliptic plane at J2000 |
+| `Frame.ECLIPJ2000` | Ecliptic plane at J2000 |
 | `Frame.TEME` | True Equator, Mean Equinox, the frame of SGP4 states: the managed `TemeFrame`, see [TEME](#teme) |
-| `Frame.ECLIPTIC_B1950` | Ecliptic plane at B1950 |
-| `Frame.GALACTIC_SYSTEM2` | Galactic coordinate system |
+| `Frame.ECLIPB1950` | Ecliptic plane at B1950 |
+| `Frame.GALACTIC` | Galactic coordinate system |
 | `Frame.B1950` | B1950 equatorial frame |
 | `Frame.FK4` | FK4 frame |
 | `Frame.ITRF93` | The Earth's precise body-fixed frame (SPICE `ITRF93`, oriented by `earth_latest_high_prec.bpc`), the frame of the Earth with `earth_assoc_itrf93.tf`; equal to `new Frame("ITRF93")` (11.0.0) |
 
-The static SPICE frames (`Frame.ICRF`, `Frame.ECLIPTIC_J2000`, `Frame.ECLIPTIC_B1950`, `Frame.GALACTIC_SYSTEM2`,
+The static SPICE frames (`Frame.ICRF`, `Frame.ECLIPJ2000`, `Frame.ECLIPB1950`, `Frame.GALACTIC`,
 `Frame.B1950`, `Frame.FK4`, `Frame.ITRF93`) read the data provider of the process, `Configuration.Instance.DataProvider`,
 at each transform, whereas a frame built by name reads the provider set at its construction (structuring choice 1 of
 [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668), decided by S. Guillet,
@@ -73,11 +73,11 @@ the process). The rules of every object are one table: [SPICE API](spice-api.md#
 
 A frame is checked by name at each transform, not at `new Frame(name)`, since a frame kernel loaded afterwards defines
 it. A name the loaded kernels do not define throws `ArgumentException` on every path that hands it to SPICE:
-`SpiceAPI.TransformFrame` (naming `fromFrame` or `toFrame`, also when the other end is TEME, CIRS, TIRS or a site frame
+`SpiceApi.TransformFrame` (naming `fromFrame` or `toFrame`, also when the other end is TEME, CIRS, TIRS or a site frame
 only the library holds), `ToFrame` of a frame or of a state, either way (naming `targetFrame` or `frame` for the target,
 no parameter for the frame of the instance or of the state, which is no argument of the call, nor for
-`GetStateOrientationToICRF` and `ToEquatorial`; `SpiceDataProvider.FrameTransformationToICRF` names `source`), the ephemeris
-reads (`GetEphemeris`, `SpiceAPI.ReadEphemeris`, at an epoch or over a window, naming `frame`), `SpiceAPI.ReadOrientation`
+`GetStateOrientationToIcrf` and `ToEquatorial`; `SpiceDataProvider.FrameTransformationToIcrf` names `source`), the ephemeris
+reads (`GetEphemeris`, `SpiceApi.ReadEphemeris`, at an epoch or over a window, naming `frame`), `SpiceApi.ReadOrientation`
 (`referenceFrame`) and the window searches of CSPICE: `FindWindowsOnCoordinateConstraint` (`frame`),
 `FindWindowsOnIlluminationConstraint` (`fixedFrame`), `FindWindowsOnOccultationConstraint` (`frontFrame`, `targetFrame`,
 for an ellipsoid) and `FindWindowsInFieldOfViewConstraint` (`targetFrame`, for an ellipsoid; a point target reads no
@@ -103,7 +103,7 @@ SPICE's: they stay other names (see [Equality](#equality)), and their message po
 
 | Method | Description |
 |--------|-------------|
-| `GetStateOrientationToICRF(Time epoch)` | Get orientation relative to ICRF |
+| `GetStateOrientationToIcrf(Time epoch)` | Get orientation relative to ICRF |
 | `ToFrame(Frame target, Time epoch)` | Get transformation to another frame |
 
 A frame keeps no orientation per epoch ([#541](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/541),
@@ -112,8 +112,8 @@ SPICE frame, or one of a `MemoryDataProvider`) or computed by the library (`Cirs
 frame of a site from coordinates; `GcrfFrame` keeps none), and reads again after a `LoadKernels`, `UnloadKernels` or
 `ClearKernels`. Before 11.0.0 each
 orientation read was kept for the life of the frame (16.5 MB after 100 000 reads of ITRF93, the static frames living for
-the whole process). The attitude record of a spacecraft, `AddStateOrientationToICRF`, `GetStateOrientationsToICRF`,
-`GetLatestStateOrientationToICRF` and `ClearStateOrientations`, belongs to `SpacecraftFrame`
+the whole process). The attitude record of a spacecraft, `AddStateOrientationToIcrf`, `GetStateOrientationsToIcrf`,
+`GetLatestStateOrientationToIcrf` and `ClearStateOrientations`, belongs to `SpacecraftFrame`
 ([Spacecraft](spacecraft.md#attitude-and-kernels)); before 11.0.0 they were virtual members of `Frame`.
 
 ### Equality
@@ -139,7 +139,7 @@ ephemeris is read in J2000 and rotated, as in the frame of a site from coordinat
 The routing follows the name too: a frame named TEME, GCRF, CIRS or TIRS, in any case, is routed to the managed
 rotation of `Frame.TEME`, `Frame.GCRF`, `Frame.CIRS` or `Frame.TIRS` (see [TEME](#teme) and
 [ICRF, GCRF And EME2000](#icrf-gcrf-and-eme2000)) by both data providers, the ephemeris reads and
-`SpiceAPI.TransformFrame`, so `new Frame("CIRS").ToFrame(Frame.ICRF, t)` is `Frame.CIRS.ToFrame(Frame.ICRF, t)` bit for
+`SpiceApi.TransformFrame`, so `new Frame("CIRS").ToFrame(Frame.ICRF, t)` is `Frame.CIRS.ToFrame(Frame.ICRF, t)` bit for
 bit ([#656](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/656), decided by S. Guillet,
 2026-11-17; before, a frame built by the names CIRS and TIRS was handed to SPICE, which does not know them, and threw).
 An instance of `TirsFrame` or `TemeFrame` built with a provider keeps its own Earth orientation parameters; a frame built
@@ -155,7 +155,7 @@ under those names.
 | `Rotation` | Quaternion from `ReferenceFrame` to destination |
 | `AngularVelocity` | Angular velocity of the transform; for a frame transform, see [Angular Velocity](#angular-velocity) |
 | `ReferenceFrame` | Source frame of the transform |
-| `AtDate(Time)` | Propagate an attitude using constant angular velocity, applied in the destination axes; not for frame transforms |
+| `AtEpoch(Time)` | Propagate an attitude using constant angular velocity, applied in the destination axes; not for frame transforms |
 | `RelativeTo(Frame)` | Re-express in another destination frame |
 
 ## Earth Orientation Frames
@@ -196,7 +196,7 @@ OPM with `REF_FRAME = EME2000`, is read in `Frame.ICRF`, and the bias is ignored
 
 Use `Frame.ICRF` for everything that comes from SPICE: ephemerides, propagation, geometry. Use
 `Frame.GCRF` when you want to name the celestial end of the `GCRF -> CIRS -> TIRS` chain
-explicitly; coordinates are the same in both. SPICE has no GCRF frame: `SpiceAPI` hands a frame
+explicitly; coordinates are the same in both. SPICE has no GCRF frame: `SpiceApi` hands a frame
 named GCRF (`Frame.GCRF`, or `new Frame("GCRF")` as the CLI builds it, in any case) to SPICE as
 `J2000` and labels the result with the frame given. An ephemeris, an orientation (CK), a frame
 transformation or a coordinate search in GCRF are then the same numbers as in J2000, and a state in
@@ -210,16 +210,16 @@ managed spacecraft whose attitude record holds an entry (#682; before 11.0.0 a r
 SPICE(UNKNOWNFRAME)), whatever a loaded kernel defines under their names, and the `SiteFrame` of a site from the kernels
 whose frame id (1000000 + NaifId) no loaded kernel defines, the frame of its J2000 coordinates (third review of #690;
 before, a read in it threw SPICE(UNKNOWNFRAME)), decided at each read. The frame of a managed spacecraft whose record
-is empty (never propagated, no orientation added, built from a TLE or propagated by `TLEPropagator`) holds no attitude in
+is empty (never propagated, no orientation added, built from a TLE or propagated by `TlePropagator`) holds no attitude in
 the library: a read in it still reaches SPICE by name, which reads the frame kernel and the CK of that id when they are
 loaded (those the library wrote for an earlier object of the id) and throws SPICE(UNKNOWNFRAME) otherwise. A coordinate
 search on an observer (`FindCoordinateWindows`, `Site.FindHorizontalWindows`) in a frame whose reads are the library's is the library's, also when a kernel
-spacecraft takes part, so that it agrees with the reads; `SpiceAPI.FindWindowsOnCoordinateConstraint`, which hands the
+spacecraft takes part, so that it agrees with the reads; `SpiceApi.FindWindowsOnCoordinateConstraint`, which hands the
 frame to CSPICE by name, throws `ArgumentException` for TEME, CIRS, TIRS and the frame of a site or a spacecraft that no
 loaded kernel defines under its name (third review of #690; before, no window), and for any other name SPICE does not
 know, with SPICE's error as inner exception (R25 of #668; in the fourth round of #668, before 11.0.0, the
 `InvalidOperationException` of that error; before, no window).
-`SpiceAPI.TransformFrame` composes through ICRF a TEME end and the `SiteFrame` of a site only the library holds (from
+`SpiceApi.TransformFrame` composes through ICRF a TEME end and the `SiteFrame` of a site only the library holds (from
 coordinates, or from the kernels with no frame kernel of its id loaded), decided at each call (fourth round of #668;
 before, a site's frame threw), and so a CIRS or TIRS end, by instance or by name (#656; before, it threw); the frame of a spacecraft is SPICE's by name,
 which reads the frame kernel and the CK written for it.
@@ -248,7 +248,7 @@ rotation about z.
   0.08 mm/s, a geostationary one by 0.39 mm/s. Toward a rotating frame such as ITRF93, the angular velocity of that
   frame applies: TEME → ITRF93 is TEME → ICRF, then ICRF → ITRF93 from SPICE.
 - **By name.** A frame built by name, `new Frame("TEME")` in any case (a CCSDS file, the CLI, user code), is routed to
-  `Frame.TEME` by `SpiceDataProvider` and `MemoryDataProvider`, and `SpiceAPI.TransformFrame` composes a TEME end
+  `Frame.TEME` by `SpiceDataProvider` and `MemoryDataProvider`, and `SpiceApi.TransformFrame` composes a TEME end
   through ICRF (as it composes the frame of a site only the library holds, #668); the native TEME of the C++ layer is no longer used. An ephemeris read in TEME is read in J2000
   and rotated (#558). A frame built by name equals `Frame.TEME` ([Equality](#equality), #562).
 - **Measured** (`tools/teme_reference`, 2026-11-08; a LEO and a GEO state at 13 epochs from 1980 to 2026): within
@@ -265,7 +265,7 @@ rate, and a zero rotation outside the PCK.
 
 ```csharp
 // Inputs: epoch (Time), positionCirs (Vector3)
-var cirsToIcrf = Frame.CIRS.GetStateOrientationToICRF(epoch);
+var cirsToIcrf = Frame.CIRS.GetStateOrientationToIcrf(epoch);
 var positionIcrf = positionCirs.Rotate(cirsToIcrf.Rotation);
 ```
 

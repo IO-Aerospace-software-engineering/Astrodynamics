@@ -18,15 +18,9 @@ using System.Threading;
 using System.Threading.Tasks;
 using IO.Astrodynamics;
 using IO.Astrodynamics.Atmosphere;
-using IO.Astrodynamics.Atmosphere.NRLMSISE_00;
 using IO.Astrodynamics.Body;
 using IO.Astrodynamics.Body.Spacecraft;
-using IO.Astrodynamics.CCSDS;
-using IO.Astrodynamics.CCSDS.CDM;
-using IO.Astrodynamics.CCSDS.Common;
-using IO.Astrodynamics.CCSDS.Common.Enums;
-using IO.Astrodynamics.CCSDS.OMM;
-using IO.Astrodynamics.CCSDS.OPM;
+using IO.Astrodynamics.Ccsds;
 using IO.Astrodynamics.Converters;
 using IO.Astrodynamics.Coordinates;
 using IO.Astrodynamics.Cosmographia;
@@ -49,11 +43,11 @@ using IO.Astrodynamics.Propagator.Forces;
 using IO.Astrodynamics.Propagator.Integrators;
 using IO.Astrodynamics.Propagator.MonteCarlo;
 using IO.Astrodynamics.Propagator.Variational;
-using IO.Astrodynamics.SSA;
+using IO.Astrodynamics.Ssa;
 using IO.Astrodynamics.SolarSystemObjects;
 using IO.Astrodynamics.Surface;
 using IO.Astrodynamics.TimeSystem;
-using TLE = IO.Astrodynamics.OrbitalParameters.TLE.TLE;
+using Tle = IO.Astrodynamics.OrbitalParameters.Tle;
 
 namespace DocumentationPageSamples.Reference;
 
@@ -70,7 +64,7 @@ internal static class TimeAndWindowsPage
         var t4 = Time.Parse("JD 2460483.0 UTC");
         var doy = Time.FromDayOfYear(2024, 173, 43200.0, TimeScale.UTC);
         bool sameLabel = t1.EqualsExact(t2) && t1.EqualsExact(t3) && t1.EqualsExact(t4) && t1.EqualsExact(doy); // true
-        var tdb = t1.ToTDB();
+        var tdb = t1.ToTdb();
         bool sameInstant = tdb == t1; // true: one instant in two scales
         string text = $"{tdb:yyyy-MM-dd HH:mm:ss}"; // 2024-06-21 12:01:09 TDB
         var later = t1.AddDays(1.0);

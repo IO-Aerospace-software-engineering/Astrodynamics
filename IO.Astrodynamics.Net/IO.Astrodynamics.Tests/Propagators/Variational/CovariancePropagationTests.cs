@@ -292,7 +292,7 @@ public class CovariancePropagationTests : IClassFixture<PartialsTestCases>, ICla
             new VariationalOptions(ForceParameters.DragCoefficient, new RtnProcessNoise(1e-12, 1e-11, 1e-12),
                 PropagateCovariance: true, ConsiderParameters: new ConsiderParameters(0.1)), true);
         var step = solution.Segments.Single().Steps[3];
-        var epoch = Start.AddSeconds(step.CumulativeTime + 0.5 * step.StepSize);
+        var epoch = Start.AddSeconds(step.CumulativeTime + 0.5 * step.StepSizeSeconds);
         var p = new double[36];
         var extended = new double[49];
         solution.EvaluateCovariance(epoch, p);
@@ -368,7 +368,7 @@ public class CovariancePropagationTests : IClassFixture<PartialsTestCases>, ICla
         Assert.True(maneuver.DeltaV.Magnitude() > 100.0);
 
         double te = solution.TimeArgument.OnEpochGrid(before.BaseEpoch, after.BaseEpoch, before.Steps[^1].CumulativeTime,
-            before.Duration);
+            before.DurationSeconds);
         var pBefore = new double[36];
         var pAfter = new double[36];
         solution.Dynamics.EvaluateCovariance(before, te, pBefore, false);
@@ -419,8 +419,8 @@ public class CovariancePropagationTests : IClassFixture<PartialsTestCases>, ICla
         // Act
         var p = new double[36];
         var pReference = new double[36];
-        solution.Dynamics.EvaluateCovariance(after, after.Duration, p, false);
-        reference.Dynamics.EvaluateCovariance(reference.Segments[1], reference.Segments[1].Duration, pReference, false);
+        solution.Dynamics.EvaluateCovariance(after, after.DurationSeconds, p, false);
+        reference.Dynamics.EvaluateCovariance(reference.Segments[1], reference.Segments[1].DurationSeconds, pReference, false);
 
         // Assert
         var phiSegment = after.Variational.StepEndY(after.Variational.StepCount - 1).ToArray();
@@ -464,19 +464,19 @@ public class CovariancePropagationTests : IClassFixture<PartialsTestCases>, ICla
         // the start the second, among 2 000 from 12:00 TDB, whose label falls furthest below it, the end the first second
         // from 21 600.3 s later whose label falls less; the evaluations used to throw past the last step (H3 review of
         // lots A to C, where Time.AddSeconds left a TDB window one tick short)
-        double Residual(TimeSystem.Time utc) => PropagationTimeArgument.Tt.SecondsBetween(utc.ToTDB(), utc);
-        var start = Enumerable.Range(0, 2000).Select(k => Start.ToUTC().AddSeconds(k)).MaxBy(Residual);
+        double Residual(TimeSystem.Time utc) => PropagationTimeArgument.Tt.SecondsBetween(utc.ToTdb(), utc);
+        var start = Enumerable.Range(0, 2000).Select(k => Start.ToUtc().AddSeconds(k)).MaxBy(Residual);
         var end = Enumerable.Range(0, 2000).Select(k => start.AddSeconds(21600.3 + k))
             .First(e => Residual(e) < Residual(start));
 
         var window = new TimeSystem.Window(start, end);
         var state = Leo;
         var solution = PartialsTestCases.Spacecraft(WithCovariance(new StateVector(state.Position, state.Velocity,
-                state.Observer, start.ToTDB(), state.Frame)))
+                state.Observer, start.ToTdb(), state.Frame)))
             .PropagateWithVariational(window,
                 new PropagationOptions { Integrator = new RK78IntegratorOptions { AbsoluteTolerance = 1e-9, RelativeTolerance = 1e-9 }, OutputStep = TimeSpan.FromSeconds(600.0), ThirdBodies = Bodies, AtmosphericDrag = true, SolarRadiationPressure = true },
                 new VariationalOptions(ForceParameters.DragCoefficient, new RtnProcessNoise(1e-12, 1e-11, 1e-12), PropagateCovariance: true, ConsiderParameters: new ConsiderParameters(0.1)));
-        var endLabel = window.EndDate.ToTDB();
+        var endLabel = window.EndDate.ToTdb();
 
         // Act and assert: the end label is past the last step, by less than a tick, and reads the values at the end of
         // the window bit for bit, as the end tag does; beyond that tick, the epoch is outside the propagation
@@ -511,7 +511,7 @@ public class CovariancePropagationTests : IClassFixture<PartialsTestCases>, ICla
         // Act and assert: the last step ends at the window end; a tick past it reads its values bit for bit; beyond that
         // tick, the epoch is outside the propagation
         Assert.Same(PropagationTimeArgument.Tdb, solution.TimeArgument);
-        Assert.Equal(last.Duration, (window.EndDate - last.BaseEpoch).TotalSeconds);
+        Assert.Equal(last.DurationSeconds, (window.EndDate - last.BaseEpoch).TotalSeconds);
         AssertTheSameValuesAt(solution, tickPast, window.EndDate, 6);
         Assert.Throws<ArgumentOutOfRangeException>(() =>
             solution.EvaluateCovariance(window.EndDate.AddSeconds(1e-6), new double[36]));
@@ -574,7 +574,7 @@ public class CovariancePropagationTests : IClassFixture<PartialsTestCases>, ICla
         // C): it comes from the shadow crossings of SRP, and depends on where the steps fall, hence the two frames of the
         // same physics
         var parameters = ForceParameters.DragCoefficient | ForceParameters.ReflectivityCoefficient;
-        var frame = frameName == "J2000" ? Frames.Frame.ICRF : Frames.Frame.ECLIPTIC_J2000;
+        var frame = frameName == "J2000" ? Frames.Frame.ICRF : Frames.Frame.ECLIPJ2000;
 
         // Act
         var expected = EclipsingCase(-1963, frame, 1e-12, new VariationalOptions(parameters, IncludeInStepControl: true));

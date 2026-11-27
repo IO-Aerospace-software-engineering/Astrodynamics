@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using IO.Astrodynamics.Body;
 using IO.Astrodynamics.Body.Spacecraft;
-using IO.Astrodynamics.CCSDS.OPM;
+using IO.Astrodynamics.Ccsds;
 using IO.Astrodynamics.Math;
 using IO.Astrodynamics.Propagator;
 using IO.Astrodynamics.OrbitalParameters;
@@ -278,8 +278,8 @@ namespace IO.Astrodynamics.Maneuver
             //maneuver window sets the earliest epoch of the next maneuver in the chain.
             //They count TDB seconds from the epoch of the state; a propagation about the Earth counts them again in TT
             //seconds from the time argument of its event, and replaces the gate of the next maneuver with that end (#547).
-            var thrustDuration = Tsiolkovski.DeltaT(Engine.ISP, Engine.FuelTank.Spacecraft.GetTotalMass() + FuelBurned, Engine.FuelFlow, DeltaV.Magnitude());
-            ThrustLead = ThrustLeadFraction(DeltaV.Magnitude(), Engine.ISP);
+            var thrustDuration = Tsiolkovsky.DeltaT(Engine.Isp, Engine.FuelTank.Spacecraft.GetTotalMass() + FuelBurned, Engine.FuelFlow, DeltaV.Magnitude());
+            ThrustLead = ThrustLeadFraction(DeltaV.Magnitude(), Engine.Isp);
             ThrustWindow = new Window(stateVector.Epoch - thrustDuration * ThrustLead, thrustDuration);
             ManeuverWindow = new Window(ThrustWindow.Value.StartDate, HoldDuration).Hull(ThrustWindow.Value);
 
@@ -319,7 +319,7 @@ namespace IO.Astrodynamics.Maneuver
         /// <returns>The fraction f, in [1/2, 1).</returns>
         internal static double ThrustLeadFraction(double deltaV, double isp)
         {
-            double u = deltaV / (isp * Constants.g0);
+            double u = deltaV / (isp * Constants.StandardGravity);
             if (u < 0.1)
             {
                 double u2 = u * u;
@@ -374,8 +374,8 @@ namespace IO.Astrodynamics.Maneuver
             var deltaVKmPerSec = DeltaV / 1000.0;
 
             return new OpmManeuverParameters(
-                manEpochIgnition: ThrustWindow.Value.StartDate.ToUTC().DateTime,
-                manDuration: ThrustWindow.Value.Length.TotalSeconds,
+                manEpochIgnition: ThrustWindow.Value.StartDate.ToUtc().DateTime,
+                manDurationSeconds: ThrustWindow.Value.Length.TotalSeconds,
                 manDeltaMass: -FuelBurned, // OPM uses negative values for expelled mass
                 manRefFrame: referenceFrame,
                 manDv1: deltaVKmPerSec.X,

@@ -29,22 +29,22 @@ public static class BisectionEventFinder
     /// <param name="gStart">g-function value at step start.</param>
     /// <param name="gEnd">g-function value at step end.</param>
     /// <param name="stepStartEpoch">Absolute epoch at the start of the segment (not the step).</param>
-    /// <param name="tolerance">Convergence tolerance in seconds. Default: 1e-10.</param>
+    /// <param name="toleranceSeconds">Convergence tolerance in seconds. Default: 1e-10.</param>
     /// <returns>Cumulative time (seconds from segment base epoch) at the zero-crossing.</returns>
     public static double FindRoot(
         in AcceptedStep step,
         Func<Vector3, Vector3, Time, double> eventFunc,
         double gStart, double gEnd,
         Time stepStartEpoch,
-        double tolerance = DefaultTolerance)
+        double toleranceSeconds = DefaultTolerance)
     {
         var hermiteStep = step;
-        return FindRoot(step.CumulativeTime, step.CumulativeTime + step.StepSize, t =>
+        return FindRoot(step.CumulativeTime, step.CumulativeTime + step.StepSizeSeconds, t =>
         {
             // Interpolate state at t using Hermite dense output
             var (pos, vel) = PropagationSegment.HermiteInterpolate(hermiteStep, t);
             return eventFunc(pos, vel, stepStartEpoch.AddSeconds(t));
-        }, gStart, gEnd, tolerance);
+        }, gStart, gEnd, toleranceSeconds);
     }
 
     /// <summary>

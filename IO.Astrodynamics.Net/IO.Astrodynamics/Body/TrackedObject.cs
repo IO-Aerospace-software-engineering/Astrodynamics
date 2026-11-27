@@ -1,11 +1,9 @@
 // Copyright 2026. Sylvain Guillet (sylvain.guillet@tutamail.com)
 
 using System;
-using IO.Astrodynamics.CCSDS.Common.Enums;
-using IO.Astrodynamics.CCSDS.OMM;
+using IO.Astrodynamics.Ccsds;
 using IO.Astrodynamics.Frames;
 using IO.Astrodynamics.OrbitalParameters;
-using IO.Astrodynamics.OrbitalParameters.TLE;
 using IO.Astrodynamics.SolarSystemObjects;
 using IO.Astrodynamics.TimeSystem;
 
@@ -79,13 +77,13 @@ public sealed class TrackedObject : CelestialItem
     /// <exception cref="ArgumentNullException"><paramref name="tle"/> is null.</exception>
     /// <exception cref="ArgumentOutOfRangeException"><paramref name="hardBodyRadiusMeters"/> is not finite or is negative, or
     /// <paramref name="naifId"/> is not negative.</exception>
-    public static TrackedObject FromTle(TLE tle, double hardBodyRadiusMeters = 0.0, int? naifId = null,
+    public static TrackedObject FromTle(Tle tle, double hardBodyRadiusMeters = 0.0, int? naifId = null,
         ObjectType objectType = ObjectType.Unknown, string name = null)
     {
         ArgumentNullException.ThrowIfNull(tle);
         return new TrackedObject(naifId ?? CatalogueNaifIdBase - tle.NoradCatalogId,
             string.IsNullOrWhiteSpace(name) ? tle.Name : name, tle, hardBodyRadiusMeters, tle.NoradCatalogId,
-            tle.CosparId == null ? null : TLE.ConvertCosparIdToObjectId(tle.CosparId), objectType);
+            tle.CosparId == null ? null : Tle.ConvertCosparIdToObjectId(tle.CosparId), objectType);
     }
 
     /// <summary>
@@ -167,10 +165,10 @@ public sealed class TrackedObject : CelestialItem
 
     internal override OrbitalParameters.OrbitalParameters GetGeometricStateFromICRF(in Time date)
     {
-        return GetGeometricStateRelativeTo(date, Barycenters.SOLAR_SYSTEM_BARYCENTER);
+        return GetGeometricStateRelativeTo(date, Barycenters.SolarSystemBarycenter);
     }
 
     // The observer of the initial orbit, the reference body of the reads of the object and of an observer at it
     internal CelestialItem ReferenceBody =>
-        InitialOrbitalParameters.Observer as CelestialItem ?? Barycenters.SOLAR_SYSTEM_BARYCENTER;
+        InitialOrbitalParameters.Observer as CelestialItem ?? Barycenters.SolarSystemBarycenter;
 }

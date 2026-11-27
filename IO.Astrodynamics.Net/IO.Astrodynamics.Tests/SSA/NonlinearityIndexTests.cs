@@ -9,7 +9,7 @@ using IO.Astrodynamics.OrbitalParameters;
 using IO.Astrodynamics.Propagator;
 using IO.Astrodynamics.Propagator.Integrators;
 using IO.Astrodynamics.Propagator.Variational;
-using IO.Astrodynamics.SSA;
+using IO.Astrodynamics.Ssa;
 using IO.Astrodynamics.Tests.CCSDS.CDM;
 using IO.Astrodynamics.Tests.Propagators.Variational;
 using MathNet.Numerics.LinearAlgebra;

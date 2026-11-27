@@ -48,7 +48,7 @@ public class IntegratorDefaultsTests
     private static int NextId() => System.Threading.Interlocked.Decrement(ref _nextId);
 
     private static StateVector Leo(Matrix? covariance = null) =>
-        new(new Vector3(6800000.0, 0.0, 0.0), new Vector3(0.0, 7700.0, 0.0), PlanetsAndMoons.EARTH_BODY, Start,
+        new(new Vector3(6800000.0, 0.0, 0.0), new Vector3(0.0, 7700.0, 0.0), PlanetsAndMoons.EarthBody, Start,
             Frames.Frame.ICRF, covariance);
 
     private static Spacecraft NewSpacecraft(IO.Astrodynamics.OrbitalParameters.OrbitalParameters orbit)
@@ -61,7 +61,7 @@ public class IntegratorDefaultsTests
     private static StateVector[] Explicit(Integrator integrator)
     {
         var spacecraft = NewSpacecraft(Leo());
-        integrator.AddForce(new GravitationalAcceleration(PlanetsAndMoons.EARTH_BODY));
+        integrator.AddForce(new GravitationalAcceleration(PlanetsAndMoons.EarthBody));
         new CentralBodyPropagator(ThreeHours, spacecraft, integrator, Output).Propagate();
         return spacecraft.PropagatedStates;
     }

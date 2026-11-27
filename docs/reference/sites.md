@@ -9,7 +9,7 @@ Ground-based observation or tracking site.
 | Constructor | Description |
 |-------------|-------------|
 | `Site(int id, string name, CelestialBody body)` | Create from SPICE data |
-| `Site(NaifObject station, CelestialBody body)` | Create from SPICE data, the identifier and name of a catalogue entry (`new Site(GroundStations.DSS_13, earth)`, the site 13); a station that is not a site of the body throws `ArgumentException` (11.0.0) |
+| `Site(NaifObject station, CelestialBody body)` | Create from SPICE data, the identifier and name of a catalogue entry (`new Site(GroundStations.Dss13, earth)`, the site 13); a station that is not a site of the body throws `ArgumentException` (11.0.0) |
 | `Site(int id, string name, CelestialBody body, Planetodetic coordinates)` | Create with explicit coordinates |
 
 ### Properties
@@ -31,9 +31,9 @@ Ground-based observation or tracking site.
 | `AngularSeparation(Time, ILocalizable, ILocalizable, Aberration)` | Angular separation |
 | `FindDistanceWindows(...)` | Find the windows of the distance of a target seen from the site (`WindowSearches`) |
 | `FindCoordinateWindows(...)` | Find the windows of a coordinate of a target seen from the site (`WindowSearches`) |
-| `FindHorizontalWindows(Window, ILocalizable, HorizontalCoordinate, RelationnalOperator, double, WindowSearchOptions)` | Find the windows of the azimuth, elevation or range of a target seen from the site, as `GetHorizontalCoordinates` gives them; the visibility of a spacecraft is its elevation above the mask |
+| `FindHorizontalWindows(Window, ILocalizable, HorizontalCoordinate, RelationalOperator, double, WindowSearchOptions)` | Find the windows of the azimuth, elevation or range of a target seen from the site, as `GetHorizontalCoordinates` gives them; the visibility of a spacecraft is its elevation above the mask |
 | `FindOccultationWindows(...)` | Find occultation windows seen from the site (`WindowSearches`, [Occultations](occultations.md)) |
-| `FindIlluminationWindows(Window, IlluminationAngle, RelationnalOperator, double, ILocalizable, WindowSearchOptions)` | Find the windows of the incidence angle of a source ([Illumination](#illumination)) |
+| `FindIlluminationWindows(Window, IlluminationAngle, RelationalOperator, double, ILocalizable, WindowSearchOptions)` | Find the windows of the incidence angle of a source ([Illumination](#illumination)) |
 | `FindDayWindows(Window, double)` | Find daylight windows |
 | `WriteFrame(FileInfo)` | Write the frame kernel of the topocentric frame `<NAME>_TOPO`; its kernel variable `FRAME_<NAME>_TOPO` follows SPICE's rules (Kernel Required Reading, "Variable Name Rules"): no blank, tab or other whitespace or control character, quote, parenthesis, comma or '=', 32 bytes at most in UTF-8, so 21 ASCII characters for the name; another name throws `InvalidOperationException` and nothing is written (#676). For a site from the kernels whose frame id the loaded kernels define, that kernel frame under its kernel name, as a TK matrix of the body frame; one not fixed in the body frame throws `InvalidOperationException` (#690). A file it replaces is unloaded first, under every name SPICE holds it by, and the new one is left unloaded (decision 103 of #668) |
 
@@ -93,21 +93,21 @@ altitude reached CSPICE in km and the threshold of the distance in km/1000, so t
 ([#488](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/488)) and 1000 times off
 ([#466](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/466)).
 
-Both paths take every value of `RelationnalOperator` (#482). CSPICE has no `>=`, `<=` or `!=`: on its path
-`GreaterOrEqual` and `LowerOrEqual` are searched as `Greater` and `Lower`, whose windows are closed, so for a quantity
+Both paths take every value of `RelationalOperator` (#482). CSPICE has no `>=`, `<=` or `!=`: on its path
+`GreaterThanOrEqual` and `LessThanOrEqual` are searched as `GreaterThan` and `LessThan`, whose windows are closed, so for a quantity
 that crosses the value they are the windows of the managed search, which bisects the relation itself; the two differ only
 where the quantity stays equal to the value over an interval, which CSPICE's `>` leaves out. `NotEqual` is, on both
 paths, the search window less the crossings of `Equal`, a window from each crossing to the next: touching windows,
 which the window-list algebra (`WindowList`, [Time Systems](time-and-windows.md#window-lists)) merges back into the
 search window, as CSPICE's `wninsd` does. Before 11.0.0 the three
 operators ended the process on the CSPICE path (the native parser of the relation threw across P/Invoke); the same
-applies to `SpiceAPI.FindWindowsOnDistanceConstraint`, `FindWindowsOnCoordinateConstraint` and
+applies to `SpiceApi.FindWindowsOnDistanceConstraint`, `FindWindowsOnCoordinateConstraint` and
 `FindWindowsOnIlluminationConstraint`, and to the command line (`<=`, `>=` and `!`).
 
 An angular threshold is checked against the range of its angle before any search, on both paths, by the six comparison
 operators (R11 of [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668), lot L6): the
 right ascension and the planetographic longitude in [0, 2π], the geodetic longitude in [−π, π], the declination and the
-latitudes in [−π/2, π/2], an illumination angle in [0, π] (`SpiceAPI.FindWindowsOnIlluminationConstraint`'s emission
+latitudes in [−π/2, π/2], an illumination angle in [0, π] (`SpiceApi.FindWindowsOnIlluminationConstraint`'s emission
 and phase included), each range closed, its bounds accepted. A value outside it, a value in degrees for instance, or NaN
 throws `ArgumentOutOfRangeException` (`value`), and so does the twilight of `FindDayWindows` and of `Launch` outside
 [−π/2, π/2] (`twilight`); the command line reports it as an error of `--value`, exit code 2. The four extremes, whose
@@ -145,17 +145,17 @@ from Mercury, which moves 7e-8 rad/s). Before 11.0.0 the managed `Planetographic
 are measured at the point towards an observer (`gfilum_c` Particulars), which the search does not take: they throw
 `ArgumentException` ([#682](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/682); before 11.0.0 the managed path measured them from the site itself, 0, and
 `gfilum_c` was given the site as its observer). With an observer, search them with
-`SpiceAPI.FindWindowsOnIlluminationConstraint` and the observer's NAIF id, or with the library's search on the angle:
+`SpiceApi.FindWindowsOnIlluminationConstraint` and the observer's NAIF id, or with the library's search on the angle:
 
 ```csharp
 // Inputs: window (Window), step (TimeSpan), site (Site), moon (CelestialBody)
 var windows = GeometryFinder.FindWindows(window,
-    t => site.IlluminationEmission(t, moon, Aberration.None), RelationnalOperator.Lower, Constants.HalfPi, new WindowSearchOptions { Step = step });
+    t => site.IlluminationEmission(t, moon, Aberration.None), RelationalOperator.LessThan, Constants.HalfPi, new WindowSearchOptions { Step = step });
 ```
 
 which is within 4.4 ms of `gfilum_c` from the Moon at DSS-13 (the normal above the ellipsoid, as for the incidence).
 The method is ELLIPSOID, the only one `gfilum_c` supports (Detailed_Input `method`): `FindIlluminationWindows` takes
-no method (lot L6 of #668). `SpiceAPI.FindWindowsOnIlluminationConstraint` keeps its `method`, ELLIPSOID whatever its
+no method (lot L6 of #668). `SpiceApi.FindWindowsOnIlluminationConstraint` keeps its `method`, ELLIPSOID whatever its
 case and its leading or trailing whitespace, any other, DSK forms included, throwing `ArgumentException` (before
 11.0.0, no window on the CSPICE path and the ellipsoid on the managed one).
 
@@ -168,8 +168,8 @@ coordinates, also when its name is that of a station whose frame a loaded kernel
 earth, coordinates)` and `DSS-13_TOPO`). A coordinate search in that frame is the library's, also when a kernel
 spacecraft takes part (third review of [#690](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/690); before, CSPICE's `gfposc_c` got the frame by name and returned
 no window, or for a site named as a kernel frame searched in that kernel frame, [#558](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/558)), and
-`SpiceAPI.FindWindowsOnCoordinateConstraint` throws `ArgumentException` for it unless a loaded kernel defines its id
-under its name. `SpiceAPI.TransformFrame` with it is the library's frame composed through ICRF, as for TEME: the
+`SpiceApi.FindWindowsOnCoordinateConstraint` throws `ArgumentException` for it unless a loaded kernel defines its id
+under its name. `SpiceApi.TransformFrame` with it is the library's frame composed through ICRF, as for TEME: the
 orientation `ToFrame` uses, bit for bit, within 9.3e-16 rad and 5.7e-20 rad/s of SPICE's `sxform_c` in the frame kernel
 `WriteFrame` writes for the site (the same on Linux x64, Windows x64 and macOS arm64, CI run 43773937161; fourth round of
 [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668), before, it threw).
@@ -192,8 +192,8 @@ x64). The choice is made at each read, so a frame kernel of its id loaded later 
 in that frame is the library's, also when a kernel spacecraft takes part, as in the frame of a site built from
 coordinates: within 5.0e-7 s of `gfposc_c` in that frame kernel for a site at DSS-13's coordinates seen from a LEO
 (measured on Linux x64; before, `gfposc_c` got the site's own name and returned no window), and CSPICE's once a frame
-kernel of its id is loaded; `SpiceAPI.FindWindowsOnCoordinateConstraint` with it throws `ArgumentException`, and
-`SpiceAPI.TransformFrame` with it composes that frame through ICRF, as for a site built from coordinates (fourth round
+kernel of its id is loaded; `SpiceApi.FindWindowsOnCoordinateConstraint` with it throws `ArgumentException`, and
+`SpiceApi.TransformFrame` with it composes that frame through ICRF, as for a site built from coordinates (fourth round
 of #668; before, it threw). `Planetodetic` and the illumination
 angles do not move: `IlluminationIncidence` and `IlluminationEmission` take the normal of the ellipsoid at
 `Planetodetic`, the normal `gfilum_c` takes for the site in `FindIlluminationWindows` (#488), not the
@@ -217,7 +217,7 @@ the `+S` corrections the stellar aberration of `stelab` (`stlabx` for transmissi
 ([#489](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/489); the reference-body path of
 [Celestial bodies](celestial-bodies.md)). It agrees with `spkcpt_c` to 2.4e-5 m and 3.7e-9 m/s from the Moon, the Earth
 and LRO, the sites at the poles and on the equator included, and to 6.8e-5 m from the Sun and the Mars barycenter.
-Without correction the state is unchanged, bit for bit. The window searches, `SubObserverPoint` and `IsInFOV` of such a
+Without correction the state is unchanged, bit for bit. The window searches, `SubObserverPoint` and `IsInFov` of such a
 site read it this way: the 400000 km window of the example below, with `LT`, is within 1e-7 s of the window of
 `spkcpt_c`, and so are its coordinate windows seen from the Moon with `LT` (its range and declination in J2000, its
 declination in the frame of another site given by its coordinates). A copy of a site of the kernels built from its
@@ -239,13 +239,20 @@ var goldstone = new Site(13, "DSS-13", earth);
 var mySite = new Site(100, "MySite", earth,
     new Planetodetic(-117.0 * Constants.Deg2Rad, 34.0 * Constants.Deg2Rad, 1000.0));
 var horizontal = mySite.GetHorizontalCoordinates(epoch, moon, Aberration.LT);
+
+// The windows of the site within 400000 km of the Moon, the observer, with LT: one window, 2024-01-01 09:42:24.997 to
+// 14:20:43.029 TDB, as CSPICE's spkcpt_c corrects the site (#489)
+var windows = moon.FindDistanceWindows(
+    new Window(new Time(2024, 1, 1, TimeScale.TDB), new Time(2024, 1, 2, TimeScale.TDB)),
+    mySite, RelationalOperator.LessThan, 400000000,
+    new WindowSearchOptions { Step = TimeSpan.FromMinutes(10), Aberration = Aberration.LT });
 ```
 
 ## LaunchSite
 
 Specialized site for launch operations.
 
-| Constructor | `LaunchSite(int id, string name, CelestialBody body, IEnumerable<AzimuthRange> allowedAzimuths)` |
+| Constructor | `LaunchSite(int id, string name, CelestialBody body, Planetodetic coordinates, params AzimuthRange[] allowedAzimuths)` — its coordinates and the azimuths a launch may take |
 | Method | `IsAzimuthAllowed(double azimuth)` — check if launch azimuth is allowed |
 
 ## Coordinates

@@ -27,7 +27,7 @@ or a file SPICE refuses, ends with exit code 3. `time-converter` reads no kernel
 ## Objects, values, epochs and steps
 
 - **Objects.** A NAIF identifier (`399`, `-1000`, a negative number given bare) or a name SPICE knows, built in or given
-  by the loaded kernels (`EARTH`, `Moon`, `DSS-13`, `SOLAR SYSTEM BARYCENTER`), read by `SpiceAPI.TryGetNaifId`
+  by the loaded kernels (`EARTH`, `Moon`, `DSS-13`, `SOLAR SYSTEM BARYCENTER`), read by `SpiceApi.TryGetNaifId`
   (`bodn2c_c`, choice 12 of #668). An identifier is not checked: the spacecraft a propagation wrote has no name.
 - **Values.** A number in invariant culture, a dot as decimal separator and no thousands separator, finite, in SI units and
   radians, or followed by a unit of its dimension: `km` for a length, `km/s` for a speed, `deg` for an angle
@@ -42,7 +42,7 @@ or a file SPICE refuses, ends with exit code 3. `time-converter` reads no kernel
   (TEME, CIRS, TIRS, GCRF) or of the loaded kernels, checked once they are loaded.
 - **Enumerations.** The aberration, the relation, the coordinate system and coordinate, the shapes, the occultation and the
   illumination angle are read by their SPICE name (`LT+S`, `<=`, `RA/DEC`, `RIGHT ASCENSION`) or their member name
-  (`LTS`, `LowerOrEqual`, `RaDec`, `RightAscension`), in any case.
+  (`LtS`, `LessThanOrEqual`, `RaDec`, `RightAscension`), in any case.
 
 ## Output
 

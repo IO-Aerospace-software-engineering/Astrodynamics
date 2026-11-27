@@ -4,9 +4,7 @@ using System;
 using System.IO;
 using System.Linq;
 using System.Xml.Linq;
-using IO.Astrodynamics.CCSDS;
-using IO.Astrodynamics.CCSDS.Common;
-using IO.Astrodynamics.CCSDS.OMM;
+using IO.Astrodynamics.Ccsds;
 using Xunit;
 
 namespace IO.Astrodynamics.Tests.CCSDS.OMM
@@ -451,13 +449,13 @@ namespace IO.Astrodynamics.Tests.CCSDS.OMM
         [Fact]
         public void Read_MixedNdmOneOmmOneOpm_ReadsEach()
         {
-            var opm = IO.Astrodynamics.CCSDS.OPM.Opm.CreateMinimal("OPM SAT", "2024-001A", "EARTH", "ICRF", "UTC",
-                new IO.Astrodynamics.CCSDS.OPM.OpmStateVector(new DateTime(2024, 1, 15, 12, 0, 0, DateTimeKind.Utc),
+            var opm = IO.Astrodynamics.Ccsds.Opm.CreateMinimal("OPM SAT", "2024-001A", "EARTH", "ICRF", "UTC",
+                new IO.Astrodynamics.Ccsds.OpmStateVector(new DateTime(2024, 1, 15, 12, 0, 0, DateTimeKind.Utc),
                     6778.137, 0.0, 0.0, 0.0, 7.5, 0.0));
             var xml = NdmDocuments.OneOmmOneOpm(opm);
 
             Assert.Equal("ISS (ZARYA)", _reader.ReadFromString(xml).ObjectName);
-            Assert.Equal("OPM SAT", new IO.Astrodynamics.CCSDS.OPM.OpmReader().ReadFromString(xml).ObjectName);
+            Assert.Equal("OPM SAT", new IO.Astrodynamics.Ccsds.OpmReader().ReadFromString(xml).ObjectName);
         }
 
         #endregion

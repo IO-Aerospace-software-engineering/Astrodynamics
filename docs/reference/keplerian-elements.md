@@ -41,13 +41,11 @@ Console.WriteLine($"{transfer.TrueAnomaly()} rad, {transfer.MeanAnomaly()} rad; 
 
 | Property | Description |
 |----------|-------------|
-| `A` | Semi-major axis (m) |
-| `E` | Eccentricity |
-| `I` | Inclination (rad) |
-| `RAAN` | Right ascension of ascending node (rad) |
-| `AOP` | Argument of periapsis (rad) |
-| `M` | Mean anomaly (rad) |
 | `ElementsType` | `Osculating` or `Mean` |
+
+The elements are read by the methods below, `SemiMajorAxis()`, `Eccentricity()`, `Inclination()`, `AscendingNode()`,
+`ArgumentOfPeriapsis()` and `MeanAnomaly()` (the properties `A`, `E`, `I`, `RAAN`, `AOP` and `M`, which repeated them,
+removed in 11.0.0).
 
 ## Methods
 
@@ -62,6 +60,8 @@ Console.WriteLine($"{transfer.TrueAnomaly()} rad, {transfer.MeanAnomaly()} rad; 
 | `PerigeeRadius()` / `ApogeeVector().Magnitude()` | Apse radii (m) |
 | `PerigeeVector()` / `ApogeeVector()` | Apse position vectors, a(1 − e) P̂ and −a(1 + e) P̂, P̂ the perifocal axis of Ω, ω and i, defined at e = 0 (#686); within 1e-6 of e = 1 the periapsis is q P̂, q the perigee radius, and `PerigeeVelocity()` √(2μ/q) for a parabola (#737: NaN before 11.0.0); an open orbit (a not finite and above 0) has no apoapsis, and `ApogeeVector()` and `ApogeeVelocity()` throw `InvalidOperationException` naming e and a, as `Period()` (#737); mean elements have no position and throw `InvalidOperationException`, as `ToStateVector()` does: read `PerigeeRadius()` |
 | `IsCircular()` / `IsElliptical()` / `IsParabolic()` / `IsHyperbolic()` | Orbit type checks |
+| `TimeToRadius(double radius)` | Epoch at a radius after the periapsis: the next on an ellipse (e ≤ 1 − 1e-6), before `Epoch` on an open orbit already past it, `Epoch` on a circular orbit; throws when the orbit never reaches it or `Time` cannot hold the epoch; within 1e-6 of e = 1 the conic's time in universal variables (#753) |
+| `TimeToSphereOfInfluence()` | Epoch at the sphere of influence of the centre of motion (`TimeToRadius`); throws when the sphere is infinite |
 
 ## The near-parabolic band
 
@@ -85,7 +85,7 @@ geometry is that of the conic (#459, option 1, decided by S. Guillet, 2026-11-17
   1). Any other a, the a of another conic, throws `ArgumentException` (`semiMajorAxis`), as before 11.0.0: the semi-major
   axis, the mean motion, the period and the apoapsis come from a, the state and P from q. Migration from 10.x, where the
   band required +Infinity: give q / (1 − e).
-- The internal `SpiceAPI.ConvertStateVectorToConicOrbitalElement` (public before 11.0.0) gives in the band the conic's a of `oscltx` (−μ/(2ξ)), +Infinity
+- The internal `SpiceApi.ConvertStateVectorToConicOrbitalElement` (public before 11.0.0) gives in the band the conic's a of `oscltx` (−μ/(2ξ)), +Infinity
   where `oscltx` gives none (e = 1 or a zero energy), and the perigee radius.
 
 The motion of the band counts from the periapsis in universal variables, the universal anomaly χ with z = (1 − e) χ²/q
@@ -157,9 +157,9 @@ q = P / (1 + e), P / 2 at e = 1, derived when it is built, so that every path (`
 |--------|-------------|
 | `ToStateVector()` | Convert to state vector |
 | `ToKeplerianElements()` | Convert to Keplerian |
-| `EquinoctialEx()` / `EquinoctialEy()` | Eccentricity components, `F` / `G` |
-| `Hx()` / `Hy()` | Inclination components, `H` / `K` |
-| `Lv()` | True longitude (rad), `L0` |
+| `F` / `G` | Eccentricity components (properties) |
+| `H` / `K` | Inclination components (properties) |
+| `L0` | True longitude (rad, property) |
 
 ## See Also
 

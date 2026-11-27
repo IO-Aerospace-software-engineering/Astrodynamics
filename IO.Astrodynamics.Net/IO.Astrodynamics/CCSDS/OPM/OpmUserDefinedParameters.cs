@@ -3,7 +3,7 @@
 using System;
 using System.Collections.Generic;
 
-namespace IO.Astrodynamics.CCSDS.OPM;
+namespace IO.Astrodynamics.Ccsds;
 
 /// <summary>
 /// Represents the optional user-defined parameters section of an OPM message.

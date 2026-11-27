@@ -38,7 +38,7 @@
 | `CelestialBody(NaifObject, geopotentialModelParameters = null, atmosphericModel = null, albedo = 0, thermalEffectiveTemperature = 0, thermalEmissivity = 0)` | Create with a geopotential, an atmosphere and radiation properties (named arguments for the last three, e.g. `albedo: 0.3`) |
 
 A body built from its identifier (`new CelestialBody(id)`, `CelestialItem.Create(id)`) reads its constants from the
-loaded kernels through the data provider (`SpiceAPI.GetCelestialBodyInfo` for the default `SpiceDataProvider`):
+loaded kernels through the data provider (`SpiceApi.GetCelestialBodyInfo` for the default `SpiceDataProvider`):
 
 - its name, which SPICE gives (`bodc2n_c`, built-in names or a kernel's `NAIF_BODY_NAME`); an identifier SPICE does not
   name throws `ArgumentException` (#672), as one that is not a celestial body does (#560);
@@ -69,7 +69,7 @@ identifiers they are objects of the kernels read by their identifier
 | `GetOrientation(Frame, Time)` | Get body orientation |
 | `GeosynchronousOrbit(double, double, Time)` | Compute geosynchronous orbit, of the sidereal rotation period of the body frame at the epoch |
 | `GeosynchronousOrbit(double, double, Time, TimeSpan)` | Compute geosynchronous orbit of a declared period |
-| `HelioSynchronousOrbit(double, double, Time)` | Compute helio-synchronous orbit |
+| `SunSynchronousOrbit(double, double, Time)` | Compute helio-synchronous orbit |
 | `FindDistanceWindows(...)` | Find the windows of the distance of a target seen from this item, the observer (`WindowSearches`) |
 | `FindCoordinateWindows(...)` | Find the windows of a coordinate of a target seen from this item, the observer (`WindowSearches`) |
 | `FindOccultationWindows(...)` | Find occultation/eclipse windows seen from this item, the observer (`WindowSearches`, [Occultations](occultations.md)) |
@@ -81,8 +81,8 @@ identifiers they are objects of the kernels read by their identifier
 
 ```csharp
 // Inputs: epoch (Time)
-var earth = PlanetsAndMoons.EARTH_BODY;
-var moon = new CelestialBody(PlanetsAndMoons.MOON);
+var earth = PlanetsAndMoons.EarthBody;
+var moon = new CelestialBody(PlanetsAndMoons.Moon);
 var state = moon.GetEphemeris(epoch, earth, Frame.ICRF, Aberration.None);
 ```
 
@@ -101,7 +101,7 @@ var state = moon.GetEphemeris(epoch, earth, Frame.ICRF, Aberration.None);
 
 ```csharp
 // Inputs: epoch (Time)
-var earth = PlanetsAndMoons.EARTH_BODY;
+var earth = PlanetsAndMoons.EarthBody;
 var context = AtmosphericContext.FromPlanetodetic(
     new Planetodetic(longitude: 2.35 * Constants.Deg2Rad, latitude: 48.85 * Constants.Deg2Rad, altitude: 400e3), epoch);
 double density = earth.GetAirDensity(context); // kg/m³, NRLMSISE-00 at nominal space weather

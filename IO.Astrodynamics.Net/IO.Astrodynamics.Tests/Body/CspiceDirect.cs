@@ -20,7 +20,7 @@ namespace IO.Astrodynamics.Tests.Body;
 /// <c>sct2e_c</c>, and <c>str2et_c</c>, the references of the window reads (#563); the list of the
 /// files SPICE holds, from KEEPER (the f2c routines <c>ktotal_</c> and <c>kdata_</c>; <c>ktotal_c</c> is not exported), the
 /// reference of the kernel registry and of the type of a text kernel (#673), with their handles and the files of open DAF
-/// handles (<c>dafhfn_</c>), the reference of the unload of deleted binary kernels (#668, second round). Every call holds the lock of the library's CSPICE calls (<see cref="SpiceAPI.SyncRoot"/>).
+/// handles (<c>dafhfn_</c>), the reference of the unload of deleted binary kernels (#668, second round). Every call holds the lock of the library's CSPICE calls (<see cref="SpiceApi.SyncRoot"/>).
 /// </summary>
 /// <remarks>
 /// The Linux build of the native library exports the CSPICE symbols; the Windows DLL exports only the proxies, so the tests
@@ -163,7 +163,7 @@ internal static partial class CspiceDirect
     /// </summary>
     internal static double[] Radrec(double range, double rightAscension, double declination)
     {
-        lock (SpiceAPI.SyncRoot)
+        lock (SpiceApi.SyncRoot)
         {
             var rectan = new double[3];
             latrec_c(range, rightAscension, declination, rectan);
@@ -176,7 +176,7 @@ internal static partial class CspiceDirect
     /// (-π, π], the latitude in [-π/2, π/2]).</summary>
     internal static (double Range, double Longitude, double Latitude) Reclat(double[] rectan)
     {
-        lock (SpiceAPI.SyncRoot)
+        lock (SpiceApi.SyncRoot)
         {
             reclat_c(rectan, out double radius, out double longitude, out double latitude);
             Check("reclat");
@@ -191,7 +191,7 @@ internal static partial class CspiceDirect
     /// </summary>
     internal static (string Error, string Shape, double[] Boresight, int Count) Getfov(int instrumentId)
     {
-        lock (SpiceAPI.SyncRoot)
+        lock (SpiceApi.SyncRoot)
         {
             var shape = new byte[32];
             var frame = new byte[64];
@@ -215,7 +215,7 @@ internal static partial class CspiceDirect
     /// <paramref name="f"/>, in the units of the point.</summary>
     internal static (double Longitude, double Latitude, double Altitude) Recpgr(string body, double[] rectan, double re, double f)
     {
-        lock (SpiceAPI.SyncRoot)
+        lock (SpiceApi.SyncRoot)
         {
             recpgr_c(body, rectan, re, f, out double lon, out double lat, out double alt);
             Check("recpgr");
@@ -226,7 +226,7 @@ internal static partial class CspiceDirect
     /// <summary>The body-fixed position of a geodetic point (<c>georec_c</c>), in the units of <paramref name="re"/>.</summary>
     internal static double[] Georec(double lon, double lat, double alt, double re, double f)
     {
-        lock (SpiceAPI.SyncRoot)
+        lock (SpiceApi.SyncRoot)
         {
             var rectan = new double[3];
             georec_c(lon, lat, alt, re, f, rectan);
@@ -238,7 +238,7 @@ internal static partial class CspiceDirect
     /// <summary>The state of a target from an observer (<c>spkezr_c</c>), km and km/s.</summary>
     internal static double[] Spkezr(string target, double et, string frame, string abcorr, string observer)
     {
-        lock (SpiceAPI.SyncRoot)
+        lock (SpiceApi.SyncRoot)
         {
             var state = new double[6];
             spkezr_c(target, et, frame, abcorr, observer, state, out _);
@@ -250,7 +250,7 @@ internal static partial class CspiceDirect
     /// <summary>The rotation from one frame to another at an epoch (<c>pxform_c</c>), row-major.</summary>
     internal static double[] Pxform(string from, string to, double et)
     {
-        lock (SpiceAPI.SyncRoot)
+        lock (SpiceApi.SyncRoot)
         {
             var rotation = new double[9];
             pxform_c(from, to, et, rotation);
@@ -263,7 +263,7 @@ internal static partial class CspiceDirect
     /// of a covariance turned into ITRF93 (R19 of #668).</summary>
     internal static double[] Sxform(string from, string to, double et)
     {
-        lock (SpiceAPI.SyncRoot)
+        lock (SpiceApi.SyncRoot)
         {
             var transformation = new double[36];
             sxform_c(from, to, et, transformation);
@@ -275,7 +275,7 @@ internal static partial class CspiceDirect
     /// <summary>The rotation matrix of a SPICE quaternion (<c>q2m_c</c>, scalar first), row-major.</summary>
     internal static double[] Q2m(double w, double x, double y, double z)
     {
-        lock (SpiceAPI.SyncRoot)
+        lock (SpiceApi.SyncRoot)
         {
             var r = new double[9];
             q2m_c([w, x, y, z], r);
@@ -288,7 +288,7 @@ internal static partial class CspiceDirect
     /// routine <c>axisar_</c>, whose column-major matrix is returned row-major; the axis need not be a unit vector).</summary>
     internal static double[] Axisar(double[] axis, double angle)
     {
-        lock (SpiceAPI.SyncRoot)
+        lock (SpiceApi.SyncRoot)
         {
             var columnMajor = new double[9];
             double theta = angle;
@@ -306,7 +306,7 @@ internal static partial class CspiceDirect
     /// (the f2c routine <c>vrotv_</c>; the axis need not be a unit vector).</summary>
     internal static double[] Vrotv(double[] v, double[] axis, double angle)
     {
-        lock (SpiceAPI.SyncRoot)
+        lock (SpiceApi.SyncRoot)
         {
             var r = new double[3];
             double theta = angle;
@@ -320,7 +320,7 @@ internal static partial class CspiceDirect
     /// when it gives them; SPICE is reset after the error.</summary>
     internal static string OscltxError(double[] state, double et, double mu)
     {
-        lock (SpiceAPI.SyncRoot)
+        lock (SpiceApi.SyncRoot)
         {
             var elts = new double[20];
             oscltx_c(state, et, mu, elts);
@@ -336,7 +336,7 @@ internal static partial class CspiceDirect
     /// the error it signals, SPICE reset (#714).</summary>
     internal static (double[] State, string Short, string Long) Prop2b(double gm, double[] state, double dt)
     {
-        lock (SpiceAPI.SyncRoot)
+        lock (SpiceApi.SyncRoot)
         {
             var result = new double[6];
             prop2b_c(gm, state, dt, result);
@@ -349,7 +349,7 @@ internal static partial class CspiceDirect
     /// signals, SPICE reset (#714).</summary>
     internal static (double[] Elements, string Short, string Long) Oscltx(double[] state, double et, double mu)
     {
-        lock (SpiceAPI.SyncRoot)
+        lock (SpiceApi.SyncRoot)
         {
             var elements = new double[20];
             oscltx_c(state, et, mu, elements);
@@ -362,7 +362,7 @@ internal static partial class CspiceDirect
     /// gives one; SPICE is reset (#714).</summary>
     internal static string SxformError(string from, string to, double et)
     {
-        lock (SpiceAPI.SyncRoot)
+        lock (SpiceApi.SyncRoot)
         {
             sxform_c(from, to, et, new double[36]);
             return TakeError().Long;
@@ -373,7 +373,7 @@ internal static partial class CspiceDirect
     /// nulls when it gives one; SPICE is reset (R03 of #668).</summary>
     internal static (string Short, string Long) SxformMessages(string from, string to, double et)
     {
-        lock (SpiceAPI.SyncRoot)
+        lock (SpiceApi.SyncRoot)
         {
             sxform_c(from, to, et, new double[36]);
             return TakeError();
@@ -384,7 +384,7 @@ internal static partial class CspiceDirect
     /// SPICE is reset (R03 of #668).</summary>
     internal static (string Short, string Long) SpkezrMessages(string target, double et, string frame, string abcorr, string observer)
     {
-        lock (SpiceAPI.SyncRoot)
+        lock (SpiceApi.SyncRoot)
         {
             spkezr_c(target, et, frame, abcorr, observer, new double[6], out _);
             return TakeError();
@@ -395,7 +395,7 @@ internal static partial class CspiceDirect
     /// the short message of the error it signals, null when none; SPICE is reset (#714).</summary>
     internal static (double[] State, string Error) Conics(double[] elements, double et)
     {
-        lock (SpiceAPI.SyncRoot)
+        lock (SpiceApi.SyncRoot)
         {
             var state = new double[6];
             conics_c(elements, et, state);
@@ -406,7 +406,7 @@ internal static partial class CspiceDirect
     /// <summary>The continuous encoded clock of a spacecraft at an ephemeris time (<c>sce2c_c</c>), its clock kernel loaded.</summary>
     internal static double Sce2c(int spacecraftId, double et)
     {
-        lock (SpiceAPI.SyncRoot)
+        lock (SpiceApi.SyncRoot)
         {
             sce2c_c(spacecraftId, et, out double sclk);
             Check("sce2c");
@@ -420,7 +420,7 @@ internal static partial class CspiceDirect
     internal static void WriteType3Ck(string path, int instrument, string frame, bool withRates, double[] sclk, double[] quaternions,
         double[] angularVelocities)
     {
-        lock (SpiceAPI.SyncRoot)
+        lock (SpiceApi.SyncRoot)
         {
             ckopn_c(path, "IO.Astrodynamics", 0, out int handle);
             Check("ckopn");
@@ -435,7 +435,7 @@ internal static partial class CspiceDirect
     /// <summary>The C-matrix (row-major) a CK gives at an encoded clock (<c>ckgp_c</c>), or null when it finds none.</summary>
     internal static double[] Ckgp(int instrument, double sclk, double tolerance, string frame)
     {
-        lock (SpiceAPI.SyncRoot)
+        lock (SpiceApi.SyncRoot)
         {
             var cmat = new double[9];
             ckgp_c(instrument, sclk, tolerance, frame, cmat, out _, out int found);
@@ -449,7 +449,7 @@ internal static partial class CspiceDirect
     /// of orientations (#563).</summary>
     internal static (double[] Cmat, double[] AngularVelocity, double Et)? Ckgpav(int spacecraftId, double sclk, double tolerance, string frame)
     {
-        lock (SpiceAPI.SyncRoot)
+        lock (SpiceApi.SyncRoot)
         {
             var cmat = new double[9];
             var av = new double[3];
@@ -466,7 +466,7 @@ internal static partial class CspiceDirect
     /// epochs of a UTC window read (#563).</summary>
     internal static double Str2et(string time)
     {
-        lock (SpiceAPI.SyncRoot)
+        lock (SpiceApi.SyncRoot)
         {
             str2et_c(time, out double et);
             Check("str2et");
@@ -490,7 +490,7 @@ internal static partial class CspiceDirect
     /// (#712); nothing is reset.</summary>
     internal static bool ErrorPending()
     {
-        lock (SpiceAPI.SyncRoot)
+        lock (SpiceApi.SyncRoot)
         {
             return failed_c() != 0;
         }
@@ -500,7 +500,7 @@ internal static partial class CspiceDirect
     /// the leapseconds kernel loaded).</summary>
     internal static double TdbToTt(double tdbSecondsPastJ2000)
     {
-        lock (SpiceAPI.SyncRoot)
+        lock (SpiceApi.SyncRoot)
         {
             double tt = unitim_c(tdbSecondsPastJ2000, "TDB", "TT");
             Check("unitim");
@@ -511,7 +511,7 @@ internal static partial class CspiceDirect
     /// <summary>The TDB seconds past J2000 of a TT epoch given in seconds past J2000 (<c>unitim_c(tt, "TT", "TDB")</c>).</summary>
     internal static double TtToTdb(double ttSecondsPastJ2000)
     {
-        lock (SpiceAPI.SyncRoot)
+        lock (SpiceApi.SyncRoot)
         {
             double tdb = unitim_c(ttSecondsPastJ2000, "TT", "TDB");
             Check("unitim");
@@ -527,7 +527,7 @@ internal static partial class CspiceDirect
     /// <c>dafgda</c>).</summary>
     internal static List<Segment> ReadSegments(string path)
     {
-        lock (SpiceAPI.SyncRoot)
+        lock (SpiceApi.SyncRoot)
         {
             var segments = new List<Segment>();
             dafopr_c(path, out int handle);
@@ -568,7 +568,7 @@ internal static partial class CspiceDirect
     /// in J2000, no comment area.</summary>
     internal static void WriteType9(string path, int body, IReadOnlyList<(int Center, int Degree, double[] Epochs, double[] States, string Name)> segments)
     {
-        lock (SpiceAPI.SyncRoot)
+        lock (SpiceApi.SyncRoot)
         {
             spkopn_c(path, "IO.Astrodynamics", 0, out int handle);
             Check("spkopn");
@@ -588,7 +588,7 @@ internal static partial class CspiceDirect
     /// <c>dafena</c>) needs the DAF's summary records to be as the DAF Required Reading lays them out.</summary>
     internal static void AppendType9(string path, int body, (int Center, int Degree, double[] Epochs, double[] States, string Name) segment)
     {
-        lock (SpiceAPI.SyncRoot)
+        lock (SpiceApi.SyncRoot)
         {
             dafopw_c(path, out int handle);
             Check("dafopw");
@@ -618,7 +618,7 @@ internal static partial class CspiceDirect
     /// reused, so a handle once closed stays unknown.</summary>
     internal static string OpenDafFile(int handle)
     {
-        lock (SpiceAPI.SyncRoot)
+        lock (SpiceApi.SyncRoot)
         {
             var file = new byte[1024];
             dafhfn_(ref handle, file, file.Length);
@@ -635,7 +635,7 @@ internal static partial class CspiceDirect
     // The files SPICE holds, their types and their handles, in their load order
     private static List<(string File, string Type, int Handle)> LoadedKernels()
     {
-        lock (SpiceAPI.SyncRoot)
+        lock (SpiceApi.SyncRoot)
         {
             var all = Encoding.ASCII.GetBytes("ALL");
             int count = 0;

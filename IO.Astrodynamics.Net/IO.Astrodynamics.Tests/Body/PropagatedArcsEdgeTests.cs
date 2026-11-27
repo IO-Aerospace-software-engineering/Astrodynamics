@@ -15,7 +15,7 @@ using IO.Astrodynamics.Propagator;
 using IO.Astrodynamics.Propagator.Integrators;
 using IO.Astrodynamics.Propagator.Variational;
 using IO.Astrodynamics.SolarSystemObjects;
-using IO.Astrodynamics.SSA;
+using IO.Astrodynamics.Ssa;
 using IO.Astrodynamics.TimeSystem;
 using Xunit;
 using Xunit.Abstractions;
@@ -154,7 +154,7 @@ public class PropagatedArcsEdgeTests
     [InlineData("RK78", 10.0, 2970.0, -5503)]
     public void ImpulseAtTheEnd_NoArcOfZeroLength(string integrator, double step, double length, int naifId)
     {
-        var earth = new CelestialBody(PlanetsAndMoons.EARTH, Frame.ICRF, Start);
+        var earth = new CelestialBody(PlanetsAndMoons.Earth, Frame.ICRF, Start);
         var (sc, apogee) = Apogee(naifId, Leo(earth), earth);
         var window = new Window(Start, Start.AddSeconds(length));
         var outputStep = TimeSpan.FromSeconds(step);
@@ -162,7 +162,7 @@ public class PropagatedArcsEdgeTests
         var arcs = sc.PropagatedArcs;
         var spk = NewSpk(sc.Name.ToLowerInvariant());
         sc.WriteEphemeris(spk);
-        SpiceAPI.Instance.LoadKernels(spk);
+        SpiceApi.Instance.LoadKernels(spk);
         try
         {
             var kernel = new Spacecraft(sc.NaifId, sc.Name, Start, 1000.0, 3000.0, new Clock(sc.Name + "K_CLK", 65536));
@@ -177,7 +177,7 @@ public class PropagatedArcsEdgeTests
                               $"SPK {spkPosition:E2} m {spkVelocity:E2} m/s, |v| solution {velocity.Magnitude():F2} m/s");
             Assert.True(apogee.ThrustWindow.HasValue);
             Assert.Equal(2, solution.Segments.Count);
-            if (solution.Segments[^1].Duration == 0.0)
+            if (solution.Segments[^1].DurationSeconds == 0.0)
             {
                 // The impulse at the end: the arc closed by the state before it, then the state after it alone; the SPK
                 // ends with the state before it
@@ -206,7 +206,7 @@ public class PropagatedArcsEdgeTests
         }
         finally
         {
-            SpiceAPI.Instance.UnloadKernels(spk);
+            SpiceApi.Instance.UnloadKernels(spk);
             spk.Delete();
         }
     }
@@ -225,13 +225,13 @@ public class PropagatedArcsEdgeTests
     [InlineData(10.0, -5516)]
     public void ImpulseAtTheEnd_ThenALaterWindow_TheSpkLeavesOutTheArcOfOneState(double step, int naifId)
     {
-        var earth = new CelestialBody(PlanetsAndMoons.EARTH, Frame.ICRF, Start);
+        var earth = new CelestialBody(PlanetsAndMoons.Earth, Frame.ICRF, Start);
         var (sc, apogee) = Apogee(naifId, Leo(earth), earth);
         var window = new Window(Start, Start.AddSeconds(2964.0));
         var outputStep = TimeSpan.FromSeconds(step);
         var solution = sc.Propagate(window, new PropagationOptions { Integrator = new VVIntegratorOptions { Step = outputStep }, OutputStep = outputStep, ThirdBodies = [earth], CovariancePropagation = CovariancePropagationOptions.None });
         Assert.True(apogee.ThrustWindow.HasValue);
-        Assert.Equal(0.0, solution.Segments[^1].Duration);
+        Assert.Equal(0.0, solution.Segments[^1].DurationSeconds);
         var end = window.EndDate;
         var after = Assert.Single(sc.PropagatedArcs[^1]);
         var before = solution.Segments[0].Steps[^1];
@@ -246,7 +246,7 @@ public class PropagatedArcsEdgeTests
 
         var spk = NewSpk(sc.Name.ToLowerInvariant() + "added");
         sc.WriteEphemeris(spk);
-        SpiceAPI.Instance.LoadKernels(spk);
+        SpiceApi.Instance.LoadKernels(spk);
         try
         {
             var kernel = new Spacecraft(sc.NaifId, sc.Name, Start, 1000.0, 3000.0, new Clock(sc.Name + "K_CLK", 65536));
@@ -278,7 +278,7 @@ public class PropagatedArcsEdgeTests
         }
         finally
         {
-            SpiceAPI.Instance.UnloadKernels(spk);
+            SpiceApi.Instance.UnloadKernels(spk);
             spk.Delete();
         }
     }
@@ -296,7 +296,7 @@ public class PropagatedArcsEdgeTests
     [InlineData(7200.0 - 1.0e-7, -5593)]
     public void ImpulseWithin2MicrosecondsOfTheStartOrTheEnd_TheWindowStaysCovered(double target, int naifId)
     {
-        var earth = new CelestialBody(PlanetsAndMoons.EARTH, Frame.ICRF, Start);
+        var earth = new CelestialBody(PlanetsAndMoons.Earth, Frame.ICRF, Start);
         var spacecraft = new Spacecraft(naifId, $"PE{-naifId}", 1000.0, Leo(earth), 3000.0, new Clock($"PE{-naifId}_CLK", 65536));
         var tank = new FuelTank("ft", 1000.0, 1000.0, "model", "sn");
         spacecraft.AddFuelTank(tank);
@@ -318,7 +318,7 @@ public class PropagatedArcsEdgeTests
 
         var spk = NewSpk(spacecraft.Name.ToLowerInvariant());
         spacecraft.WriteEphemeris(spk);
-        SpiceAPI.Instance.LoadKernels(spk);
+        SpiceApi.Instance.LoadKernels(spk);
         try
         {
             double managed = 0.0, managedVelocity = 0.0, spkPosition = 0.0, spkVelocity = 0.0;
@@ -329,7 +329,7 @@ public class PropagatedArcsEdgeTests
                 managed = System.Math.Max(managed, (read.Position - position).Magnitude());
                 managedVelocity = System.Math.Max(managedVelocity, (read.Velocity - velocity).Magnitude());
                 // The windowed read, which throws on a SPICE error (the single-epoch read does not, spk-O1 of the review)
-                var fromSpk = SpiceAPI.Instance.ReadEphemeris(new Window(t, t), 399, spacecraft.NaifId, Frame.ICRF, Aberration.None, TimeSpan.FromSeconds(1.0)).First().ToStateVector();
+                var fromSpk = SpiceApi.Instance.ReadEphemeris(new Window(t, t), 399, spacecraft.NaifId, Frame.ICRF, Aberration.None, TimeSpan.FromSeconds(1.0)).First().ToStateVector();
                 spkPosition = System.Math.Max(spkPosition, (fromSpk.Position - position).Magnitude());
                 spkVelocity = System.Math.Max(spkVelocity, (fromSpk.Velocity - velocity).Magnitude());
             }
@@ -343,7 +343,7 @@ public class PropagatedArcsEdgeTests
         }
         finally
         {
-            SpiceAPI.Instance.UnloadKernels(spk);
+            SpiceApi.Instance.UnloadKernels(spk);
             spk.Delete();
         }
     }
@@ -359,7 +359,7 @@ public class PropagatedArcsEdgeTests
     [Fact]
     public void TwoImpulsesAtOneEvent_OneBoundary()
     {
-        var earth = new CelestialBody(PlanetsAndMoons.EARTH, Frame.ICRF, Start);
+        var earth = new CelestialBody(PlanetsAndMoons.Earth, Frame.ICRF, Start);
         var spacecraft = new Spacecraft(-5594, "PE5594", 1000.0, Leo(earth), 3000.0, new Clock("PE5594_CLK", 65536));
         var tank = new FuelTank("ft", 1000.0, 1000.0, "model", "sn");
         spacecraft.AddFuelTank(tank);
@@ -388,7 +388,7 @@ public class PropagatedArcsEdgeTests
 
         var spk = NewSpk("pe5594");
         spacecraft.WriteEphemeris(spk);
-        SpiceAPI.Instance.LoadKernels(spk);
+        SpiceApi.Instance.LoadKernels(spk);
         try
         {
             var segments = OperatingSystem.IsLinux() ? CspiceDirect.ReadSegments(spk.FullName).Count : 2;
@@ -416,7 +416,7 @@ public class PropagatedArcsEdgeTests
         }
         finally
         {
-            SpiceAPI.Instance.UnloadKernels(spk);
+            SpiceApi.Instance.UnloadKernels(spk);
             spk.Delete();
         }
     }
@@ -437,7 +437,7 @@ public class PropagatedArcsEdgeTests
     [InlineData(3.0e-6, -5797)]
     public void TwoImpulsesWithin2Microseconds_ReadsAndSpkGiveTheStateAfterBoth(double d, int naifId)
     {
-        var earth = new CelestialBody(PlanetsAndMoons.EARTH, Frame.ICRF, Start);
+        var earth = new CelestialBody(PlanetsAndMoons.Earth, Frame.ICRF, Start);
         var spacecraft = new Spacecraft(naifId, $"PE{-naifId}", 1000.0, Leo(earth), 3000.0, new Clock($"PE{-naifId}_CLK", 65536));
         var tank = new FuelTank("ft", 1000.0, 1000.0, "model", "sn");
         spacecraft.AddFuelTank(tank);
@@ -471,7 +471,7 @@ public class PropagatedArcsEdgeTests
         var epochs = new[] { t1, t1.AddSeconds(0.5 * separation), t2 };
         var spk = NewSpk(spacecraft.Name.ToLowerInvariant());
         spacecraft.WriteEphemeris(spk);
-        SpiceAPI.Instance.LoadKernels(spk);
+        SpiceApi.Instance.LoadKernels(spk);
         try
         {
             double managedR = 0.0, managedV = 0.0, spkR = 0.0, spkV = 0.0;
@@ -483,7 +483,7 @@ public class PropagatedArcsEdgeTests
                 managedV = System.Math.Max(managedV, (read.Velocity - v).Magnitude());
                 // The windowed read, which throws on a SPICE error, against the managed read (the SPK's epochs are doubles of
                 // 1.2e-7 s resolution in 2024: SpkAgainstManaged)
-                var fromSpk = SpiceAPI.Instance.ReadEphemeris(new Window(t, t), 399, spacecraft.NaifId, Frame.ICRF, Aberration.None, TimeSpan.FromSeconds(1.0)).First().ToStateVector();
+                var fromSpk = SpiceApi.Instance.ReadEphemeris(new Window(t, t), 399, spacecraft.NaifId, Frame.ICRF, Aberration.None, TimeSpan.FromSeconds(1.0)).First().ToStateVector();
                 spkR = System.Math.Max(spkR, (fromSpk.Position - read.Position).Magnitude());
                 spkV = System.Math.Max(spkV, (fromSpk.Velocity - read.Velocity).Magnitude());
             }
@@ -508,7 +508,7 @@ public class PropagatedArcsEdgeTests
         }
         finally
         {
-            SpiceAPI.Instance.UnloadKernels(spk);
+            SpiceApi.Instance.UnloadKernels(spk);
             spk.Delete();
         }
     }
@@ -531,7 +531,7 @@ public class PropagatedArcsEdgeTests
     [InlineData("Apogee", 10.0, "ICRF", "Scenario", -5514)]
     public void Covariance_EveryStoredStateCarriesIt(string maneuver, double step, string frameName, string path, int naifId)
     {
-        var earth = new CelestialBody(PlanetsAndMoons.EARTH, Frame.ICRF, Start);
+        var earth = new CelestialBody(PlanetsAndMoons.Earth, Frame.ICRF, Start);
         var frame = PropagatedArcsTests.FrameOf(frameName);
         var p0Terms = new double[6, 6];
         for (int i = 0; i < 6; i++) p0Terms[i, i] = i < 3 ? 1.0e4 : 1.0e-2;
@@ -572,7 +572,7 @@ public class PropagatedArcsEdgeTests
         var after = arcs[1][0];
 
         // R, the matrix of pxform(frame, J2000), by the images of the axes; the covariance of the solution in ICRF, R6 P R6ᵀ
-        var q = SpiceAPI.Instance.TransformFrame(Start, frame, Frame.ICRF).Rotation;
+        var q = SpiceApi.Instance.TransformFrame(Start, frame, Frame.ICRF).Rotation;
         Vector3[] columns = [Vector3.VectorX.Rotate(q), Vector3.VectorY.Rotate(q), Vector3.VectorZ.Rotate(q)];
         double R(int i, int j) => i switch { 0 => columns[j].X, 1 => columns[j].Y, _ => columns[j].Z };
         Matrix InIcrf(Matrix p)
@@ -681,7 +681,7 @@ public class PropagatedArcsEdgeTests
     [InlineData("VVd", -5522)]
     public void ShortArc_IsFilledFromTheSolution(string integrator, int naifId)
     {
-        var earth = new CelestialBody(PlanetsAndMoons.EARTH, Frame.ICRF, Start);
+        var earth = new CelestialBody(PlanetsAndMoons.Earth, Frame.ICRF, Start);
         var spacecraft = new Spacecraft(naifId, $"PE{-naifId}", 1000.0, PropagatedArcsTests.LeoBeforeApogee(earth, Start), 3000.0, new Clock($"PE{-naifId}_CLK", 65536));
         var tank = new FuelTank("ft", 1000.0, 1000.0, "model", "sn");
         spacecraft.AddFuelTank(tank);
@@ -765,7 +765,7 @@ public class PropagatedArcsEdgeTests
     [Fact]
     public void AddPropagatedStates_ToTheArcOfTheirEpoch_AndReplacedByAPropagation()
     {
-        var earth = new CelestialBody(PlanetsAndMoons.EARTH, Frame.ICRF, Start);
+        var earth = new CelestialBody(PlanetsAndMoons.Earth, Frame.ICRF, Start);
         var (source, _) = Apogee(-5541, Leo(earth), earth);
         var window = new Window(Start, Start.AddHours(2.0));
         var step = TimeSpan.FromSeconds(10.0);
@@ -800,7 +800,7 @@ public class PropagatedArcsEdgeTests
 
         // So does a state at the same instant labelled in another time frame: one instant, one state (#512)
         var utcReplacement = new StateVector(outputs[6].Position + new Vector3(1.0, 0.0, 0.0), outputs[6].Velocity, earth,
-            outputs[6].Epoch.ToUTC(), Frame.ICRF);
+            outputs[6].Epoch.ToUtc(), Frame.ICRF);
         added.AddPropagatedStates(utcReplacement);
         Assert.Equal(outputs.Length, added.PropagatedStates.Length);
         Assert.Same(utcReplacement, added.PropagatedStates[6]);
@@ -845,7 +845,7 @@ public class PropagatedArcsEdgeTests
     [Fact]
     public async Task CosmographiaExport_SpkAcrossTheImpulse()
     {
-        var earth = new CelestialBody(PlanetsAndMoons.EARTH, Frame.ICRF, Start);
+        var earth = new CelestialBody(PlanetsAndMoons.Earth, Frame.ICRF, Start);
         var (sc, _) = Apogee(-5551, Leo(earth), earth);
         var scenario = new Scenario("PA540Cosmo", new IO.Astrodynamics.Mission.Mission("PA540CosmoMission"), new Window(Start, Start.AddHours(2.0)));
         scenario.AddCelestialItem(earth);
@@ -856,7 +856,7 @@ public class PropagatedArcsEdgeTests
         var directory = new DirectoryInfo("CosmographiaExport540");
         await new CosmographiaExporter().ExportAsync(scenario, directory);
         var spk = directory.GetFiles($"{sc.Name}.spk", SearchOption.AllDirectories).Single();
-        SpiceAPI.Instance.LoadKernels(spk);
+        SpiceApi.Instance.LoadKernels(spk);
         try
         {
             var kernel = new Spacecraft(sc.NaifId, sc.Name, Start, 1000.0, 3000.0, new Clock(sc.Name + "K_CLK", 65536));
@@ -875,7 +875,7 @@ public class PropagatedArcsEdgeTests
         }
         finally
         {
-            SpiceAPI.Instance.UnloadKernels(spk);
+            SpiceApi.Instance.UnloadKernels(spk);
         }
     }
 
@@ -888,7 +888,7 @@ public class PropagatedArcsEdgeTests
     [Fact]
     public void Conjunction_WithAManeuveringSecondary_ReadThroughItsStoredStates()
     {
-        var earth = new CelestialBody(PlanetsAndMoons.EARTH, Frame.ICRF, Start);
+        var earth = new CelestialBody(PlanetsAndMoons.Earth, Frame.ICRF, Start);
         var window = new Window(Start, Start.AddHours(2.0));
         var step = TimeSpan.FromSeconds(10.0);
         var (secondary, _) = Apogee(-5561, Leo(earth), earth);
@@ -902,7 +902,7 @@ public class PropagatedArcsEdgeTests
         var atTca = new StateVector(r + axis * 200.0, turned, earth, tca, Frame.ICRF);
         double back = -PropagationTimeArgument.Tt.SecondsBetween(Start, tca);
         long ticks = (long)System.Math.Round(back * TimeSpan.TicksPerSecond);
-        var initial = SpiceAPI.Instance.Propagate2Bodies(atTca, earth.GM, TimeSpan.FromTicks(ticks));
+        var initial = SpiceApi.Instance.Propagate2Bodies(atTca, earth.GM, TimeSpan.FromTicks(ticks));
         initial = new StateVector(initial.Position, initial.Velocity, earth, Start, Frame.ICRF);
         var protectedCraft = new Spacecraft(-5562, "PE5562", 1000.0, initial, 3000.0, new Clock("PE5562_CLK", 65536));
         var protectedSolution = protectedCraft.Propagate(window, new PropagationOptions { Integrator = new RK78IntegratorOptions { AbsoluteTolerance = 1e-12, RelativeTolerance = 1e-12 }, OutputStep = step, ThirdBodies = [earth], CovariancePropagation = CovariancePropagationOptions.None });
@@ -985,7 +985,7 @@ public class PropagatedArcsEdgeTests
         {
             tc = probe.Solution.Segments[1].BaseEpoch;
             before = probe.StateAt(tc.AddSeconds(-30.0)).Position.Inverse().Normalize();
-            var q = probe.Spacecraft.Frame.GetStateOrientationToICRF(tc.AddSeconds(30.0)).Rotation;
+            var q = probe.Spacecraft.Frame.GetStateOrientationToIcrf(tc.AddSeconds(30.0)).Rotation;
             after = probe.StateAt(tc.AddSeconds(30.0)).Position.Inverse().Normalize().Rotate(q.Conjugate());
         }
 
@@ -1007,7 +1007,7 @@ public class PropagatedArcsEdgeTests
         foreach (var instrument in run.Spacecraft.Instruments.Where(x => x.Name is "BEFORE" or "AFTER"))
         {
             var managed = instrument.FindFieldOfViewWindows(search, run.Earth, new FieldOfViewSearchOptions { Step = step, TargetShape = ShapeType.Point, TargetFrame = run.Earth.Frame }).ToArray();
-            var spice = SpiceAPI.Instance.FindWindowsInFieldOfViewConstraint(search, run.Spacecraft.NaifId, instrument.NaifId, run.Earth.NaifId, run.Earth.Frame, ShapeType.Point,
+            var spice = SpiceApi.Instance.FindWindowsInFieldOfViewConstraint(search, run.Spacecraft.NaifId, instrument.NaifId, run.Earth.NaifId, run.Earth.Frame, ShapeType.Point,
                 Aberration.None, step).ToArray();
             Assert.Single(managed);
             Assert.Equal(spice.Length, managed.Length);

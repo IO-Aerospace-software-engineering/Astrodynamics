@@ -299,7 +299,7 @@ namespace IO.Astrodynamics.Math
         /// round of #668: outside about 1e-154 to 1e154 it threw before 11.0.0).</exception>
         /// <exception cref="ArgumentException"><paramref name="q"/> is zero or has a component that is not
         /// finite.</exception>
-        public Quaternion SLERP(Quaternion q, double t)
+        public Quaternion Slerp(Quaternion q, double t)
         {
             var from = RequireUnit(this, null);
             var to = RequireUnit(q, nameof(q));
@@ -307,7 +307,7 @@ namespace IO.Astrodynamics.Math
         }
 
         /// <summary>
-        /// The SLERP of the quaternions as they are, unchecked: the body of the public <see cref="SLERP"/>, bit for bit
+        /// The SLERP of the quaternions as they are, unchecked: the body of the public <see cref="Slerp"/>, bit for bit
         /// its former self. The orientation cache of a propagation interpolates by <see cref="SlerpByAxisAngle"/> since
         /// 11.0.0 (#561).
         /// </summary>

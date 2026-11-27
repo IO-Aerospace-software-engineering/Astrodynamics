@@ -1,6 +1,6 @@
 using System.Globalization;
 
-namespace IO.Astrodynamics.Atmosphere.NRLMSISE_00
+namespace IO.Astrodynamics.Atmosphere
 {
     /// <summary>
     /// Output values from NRLMSISE-00 model using SI units.

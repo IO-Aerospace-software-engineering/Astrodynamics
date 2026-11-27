@@ -10,7 +10,7 @@ public class DateTimeTests
     public void TaiToGps()
     {
         var tai = new TimeSystem.Time(2020, 1, 1, TimeScale.TAI);
-        var gps = tai.ToGPS();
+        var gps = tai.ToGps();
         Assert.Equal((tai - TimeSpan.FromSeconds(19)).DateTime, gps.DateTime);
     }
 
@@ -18,7 +18,7 @@ public class DateTimeTests
     public void GpsToTai()
     {
         var gps = new TimeSystem.Time(2020, 1, 1, TimeScale.GPS);
-        var tai = gps.ToTAI();
+        var tai = gps.ToTai();
         Assert.Equal((gps + TimeSpan.FromSeconds(19)).DateTime, tai.DateTime);
     }
 
@@ -34,7 +34,7 @@ public class DateTimeTests
     public void TdtToTai()
     {
         var tdt = new TimeSystem.Time(2020, 1, 1, TimeScale.TT);
-        var tai = tdt.ToTAI();
+        var tai = tdt.ToTai();
         Assert.Equal((tdt - TimeSpan.FromSeconds(32.184)).DateTime, tai.DateTime);
     }
 
@@ -42,7 +42,7 @@ public class DateTimeTests
     public void TdtToGPS()
     {
         var tdt = new TimeSystem.Time(2020, 1, 1, TimeScale.TT);
-        var gps = tdt.ToGPS();
+        var gps = tdt.ToGps();
         Assert.Equal((tdt + TimeSpan.FromSeconds(32.184 + 19.0).Negate()).DateTime, gps.DateTime);
     }
 
@@ -58,7 +58,7 @@ public class DateTimeTests
     public void TaiToUtc()
     {
         var tai = new TimeSystem.Time(2020, 1, 1, TimeScale.TAI);
-        var utc = tai.ToUTC();
+        var utc = tai.ToUtc();
         Assert.Equal(tai.DateTime.AddSeconds(-37), utc.DateTime);
     }
 
@@ -66,7 +66,7 @@ public class DateTimeTests
     public void UTCToTai()
     {
         var utc = new TimeSystem.Time(2020, 1, 1, TimeScale.UTC);
-        var tai = utc.ToTAI();
+        var tai = utc.ToTai();
         Assert.Equal(utc.DateTime.AddSeconds(37), tai.DateTime);
     }
 
@@ -90,34 +90,34 @@ public class DateTimeTests
     public void ToTDBFromUTC()
     {
         Assert.Equal(new TimeSystem.Time(1976, 12, 31, 12, 0, 47, 183, 926, TimeScale.TDB),
-            new TimeSystem.Time(1976, 12, 31, 12, 0, 0, TimeScale.UTC).ToTDB(), TestHelpers.TimeComparer);
+            new TimeSystem.Time(1976, 12, 31, 12, 0, 0, TimeScale.UTC).ToTdb(), TestHelpers.TimeComparer);
         Assert.Equal(new TimeSystem.Time(1977, 1, 1, 12, 0, 48, 184, TimeScale.TDB),
-            new TimeSystem.Time(1977, 1, 1, 12, 0, 0, TimeScale.UTC).ToTDB(), TestHelpers.TimeComparer);
+            new TimeSystem.Time(1977, 1, 1, 12, 0, 0, TimeScale.UTC).ToTdb(), TestHelpers.TimeComparer);
         Assert.Equal(new TimeSystem.Time(2016, 12, 31, 12, 1, 8, 184, TimeScale.TDB),
-            new TimeSystem.Time(2016, 12, 31, 12, 0, 0, TimeScale.UTC).ToTDB(), TestHelpers.TimeComparer);
+            new TimeSystem.Time(2016, 12, 31, 12, 0, 0, TimeScale.UTC).ToTdb(), TestHelpers.TimeComparer);
         Assert.Equal(new TimeSystem.Time(2017, 1, 1, 12, 1, 9, 184, TimeScale.TDB),
-            new TimeSystem.Time(2017, 1, 1, 12, 0, 0, TimeScale.UTC).ToTDB(), TestHelpers.TimeComparer);
+            new TimeSystem.Time(2017, 1, 1, 12, 0, 0, TimeScale.UTC).ToTdb(), TestHelpers.TimeComparer);
         Assert.Equal(new TimeSystem.Time(2021, 12, 31, 12, 1, 9, 184, TimeScale.TDB),
-            new TimeSystem.Time(2021, 12, 31, 12, 0, 0, TimeScale.UTC).ToTDB(), TestHelpers.TimeComparer);
+            new TimeSystem.Time(2021, 12, 31, 12, 0, 0, TimeScale.UTC).ToTdb(), TestHelpers.TimeComparer);
         Assert.Equal(new TimeSystem.Time(2022, 1, 1, 12, 1, 9, 184, TimeScale.TDB),
-            new TimeSystem.Time(2022, 1, 1, 12, 0, 0, TimeScale.UTC).ToTDB(), TestHelpers.TimeComparer);
+            new TimeSystem.Time(2022, 1, 1, 12, 0, 0, TimeScale.UTC).ToTdb(), TestHelpers.TimeComparer);
     }
 
     [Fact]
     public void ToUTCFromTDB()
     {
         Assert.Equal(new TimeSystem.Time(1976, 12, 31, 12, 0, 0, TimeScale.UTC),
-            new TimeSystem.Time(1976, 12, 31, 12, 0, 47, 184, TimeScale.TDB).ToUTC(), TestHelpers.TimeComparer);
+            new TimeSystem.Time(1976, 12, 31, 12, 0, 47, 184, TimeScale.TDB).ToUtc(), TestHelpers.TimeComparer);
         Assert.Equal(new TimeSystem.Time(1977, 1, 1, 12, 0, 0, TimeScale.UTC),
-            new TimeSystem.Time(1977, 1, 1, 12, 0, 48, 184, TimeScale.TDB).ToUTC(), TestHelpers.TimeComparer);
+            new TimeSystem.Time(1977, 1, 1, 12, 0, 48, 184, TimeScale.TDB).ToUtc(), TestHelpers.TimeComparer);
         Assert.Equal(new TimeSystem.Time(2016, 12, 31, 12, 0, 0, TimeScale.UTC),
-            new TimeSystem.Time(2016, 12, 31, 12, 1, 8, 184, TimeScale.TDB).ToUTC(), TestHelpers.TimeComparer);
+            new TimeSystem.Time(2016, 12, 31, 12, 1, 8, 184, TimeScale.TDB).ToUtc(), TestHelpers.TimeComparer);
         Assert.Equal(new TimeSystem.Time(2017, 1, 1, 12, 0, 0, TimeScale.UTC),
-            new TimeSystem.Time(2017, 1, 1, 12, 1, 9, 184, TimeScale.TDB).ToUTC(), TestHelpers.TimeComparer);
+            new TimeSystem.Time(2017, 1, 1, 12, 1, 9, 184, TimeScale.TDB).ToUtc(), TestHelpers.TimeComparer);
         Assert.Equal(new TimeSystem.Time(2021, 12, 31, 12, 0, 0, TimeScale.UTC),
-            new TimeSystem.Time(2021, 12, 31, 12, 1, 9, 184, TimeScale.TDB).ToUTC(), TestHelpers.TimeComparer);
+            new TimeSystem.Time(2021, 12, 31, 12, 1, 9, 184, TimeScale.TDB).ToUtc(), TestHelpers.TimeComparer);
         Assert.Equal(new TimeSystem.Time(2022, 1, 1, 12, 0, 0, TimeScale.UTC),
-            new TimeSystem.Time(2022, 1, 1, 12, 1, 9, 184, TimeScale.TDB).ToUTC(), TestHelpers.TimeComparer);
+            new TimeSystem.Time(2022, 1, 1, 12, 1, 9, 184, TimeScale.TDB).ToUtc(), TestHelpers.TimeComparer);
     }
 
     [Fact]
@@ -153,7 +153,7 @@ public class DateTimeTests
     public void ToJulian()
     {
         var jd = TimeSystem.Time.Create(0.0, TimeScale.TDB).ToJulianDate();
-        Assert.Equal(TimeSystem.Time.JULIAN_J2000, jd);
+        Assert.Equal(TimeSystem.Time.JulianDateJ2000, jd);
     }
 
     [Fact]
@@ -166,15 +166,15 @@ public class DateTimeTests
     [Fact]
     public void TDBFromJulian()
     {
-        var date = TimeSystem.Time.CreateFromJD(TimeSystem.Time.JULIAN_J2000, TimeScale.TDB);
-        LabelAssert.Equal(TimeSystem.Time.J2000TDB, date);
+        var date = TimeSystem.Time.CreateFromJD(TimeSystem.Time.JulianDateJ2000, TimeScale.TDB);
+        LabelAssert.Equal(TimeSystem.Time.J2000Tdb, date);
     }
 
     [Fact]
     public void UTCFromJulian()
     {
-        var date = TimeSystem.Time.CreateFromJD(TimeSystem.Time.JULIAN_J2000, TimeScale.UTC);
-        LabelAssert.Equal(TimeSystem.Time.J2000UTC, date);
+        var date = TimeSystem.Time.CreateFromJD(TimeSystem.Time.JulianDateJ2000, TimeScale.UTC);
+        LabelAssert.Equal(TimeSystem.Time.J2000Utc, date);
     }
 
     [Fact]
@@ -263,23 +263,23 @@ public class DateTimeTests
         Assert.Equal(frame == TimeScale.UTC ? DateTimeKind.Utc : DateTimeKind.Unspecified, parsed.DateTime.Kind);
         if (frame == TimeScale.UTC)
         {
-            LabelAssert.Equal(TimeSystem.Time.CreateUTC(772243200.0), parsed);
+            LabelAssert.Equal(TimeSystem.Time.CreateUtc(772243200.0), parsed);
         }
         else if (frame == TimeScale.TDB)
         {
-            LabelAssert.Equal(TimeSystem.Time.CreateTDB(772243200.0), parsed);
+            LabelAssert.Equal(TimeSystem.Time.CreateTdb(772243200.0), parsed);
         }
 
         if (taiMinusCalendarTicks.HasValue)
         {
-            Assert.Equal(new DateTime(2024, 6, 21, 12, 0, 0).AddTicks(taiMinusCalendarTicks.Value), parsed.ToTAI().DateTime);
+            Assert.Equal(new DateTime(2024, 6, 21, 12, 0, 0).AddTicks(taiMinusCalendarTicks.Value), parsed.ToTai().DateTime);
         }
     }
 
     [Fact]
     public void TheUtcExampleOfTheDocumentationIsTheUtcInstant()
     {
-        // docs/reference/time-and-windows.md and DEVELOPER_GUIDE.md: the same instant as its Z form
+        // docs/reference/time-and-windows.md: the same instant as its Z form
         LabelAssert.Equal(TimeSystem.Time.Parse("2024-06-21T12:00:00.000Z"), TimeSystem.Time.Parse("2024-06-21T12:00:00.000 UTC"));
     }
 
@@ -388,10 +388,10 @@ public class DateTimeTests
     public void UtcToTaiUsesTheNewOffsetFromMidnightOfTheLeapSecondDate(DateTime leapDate, int index)
     {
         var midnight = new TimeSystem.Time(leapDate, TimeScale.UTC);
-        Assert.Equal(leapDate.AddSeconds(10 + index), midnight.ToTAI().DateTime);
+        Assert.Equal(leapDate.AddSeconds(10 + index), midnight.ToTai().DateTime);
 
         var justBefore = new TimeSystem.Time(leapDate.AddSeconds(-0.5), TimeScale.UTC);
-        Assert.Equal(leapDate.AddSeconds(-0.5 + 9 + index), justBefore.ToTAI().DateTime);
+        Assert.Equal(leapDate.AddSeconds(-0.5 + 9 + index), justBefore.ToTai().DateTime);
     }
 
     [Theory]
@@ -402,7 +402,7 @@ public class DateTimeTests
         foreach (var offset in new[] { -1.5, -1.0, -0.5, 0.0, 0.5, 1.0, 1.5 })
         {
             var utc = new TimeSystem.Time(leapDate.AddSeconds(offset), TimeScale.UTC);
-            Assert.Equal(utc.DateTime, utc.ToTAI().ToUTC().DateTime);
+            Assert.Equal(utc.DateTime, utc.ToTai().ToUtc().DateTime);
         }
     }
 
@@ -412,15 +412,15 @@ public class DateTimeTests
     {
         // Just after midnight TAI, UTC is still on the previous day with the previous offset.
         var shortlyAfterMidnightTai = new TimeSystem.Time(leapDate.AddSeconds(5), TimeScale.TAI);
-        Assert.Equal(leapDate.AddSeconds(5 - 9 - index), shortlyAfterMidnightTai.ToUTC().DateTime);
+        Assert.Equal(leapDate.AddSeconds(5 - 9 - index), shortlyAfterMidnightTai.ToUtc().DateTime);
 
         // The inserted second 23:59:60 cannot be represented and reads as 23:59:59 a second time.
         var insertedSecond = new TimeSystem.Time(leapDate.AddSeconds(9 + index + 0.5), TimeScale.TAI);
-        Assert.Equal(leapDate.AddSeconds(-0.5), insertedSecond.ToUTC().DateTime);
+        Assert.Equal(leapDate.AddSeconds(-0.5), insertedSecond.ToUtc().DateTime);
 
         // One second later, UTC reaches midnight with the new offset.
         var newOffset = new TimeSystem.Time(leapDate.AddSeconds(10 + index), TimeScale.TAI);
-        Assert.Equal(leapDate, newOffset.ToUTC().DateTime);
+        Assert.Equal(leapDate, newOffset.ToUtc().DateTime);
     }
 
     [Fact]
@@ -430,7 +430,7 @@ public class DateTimeTests
         var utc = new TimeSystem.Time(2017, 1, 1, TimeScale.UTC);
         var tdt = utc.ToTT();
         Assert.Equal(new DateTime(2017, 1, 1, 0, 1, 9, 184), tdt.DateTime);
-        Assert.Equal(tdt.DateTime, utc.ToTDB().DateTime, TimeSpan.FromMilliseconds(2));
+        Assert.Equal(tdt.DateTime, utc.ToTdb().DateTime, TimeSpan.FromMilliseconds(2));
     }
 
     [Fact]
@@ -443,7 +443,7 @@ public class DateTimeTests
         // About 8766 days from J2000, a double resolves ~2e-12 day (0.2 µs).
         double elapsedDays = second.DaysFromJ2000() - first.DaysFromJ2000();
         Assert.Equal(4000.0 / TimeSpan.TicksPerDay, elapsedDays, 2e-12);
-        Assert.Equal(TimeSystem.Time.JULIAN_J2000 + first.DaysFromJ2000(), first.ToJulianDate());
+        Assert.Equal(TimeSystem.Time.JulianDateJ2000 + first.DaysFromJ2000(), first.ToJulianDate());
         Assert.Equal(first.DaysFromJ2000() / 36525.0, first.Centuries());
         Assert.NotEqual(first.ToJulianDate(), second.ToJulianDate());
     }
@@ -502,8 +502,8 @@ public class DateTimeTests
             Assert.Equal(TimeScale.TDB, tdb.AddDays(days).Scale);
             Assert.Equal(TimeScale.UTC, utc.AddMinutes(days * 1440.0).Scale);
 
-            double julianDate = TimeSystem.Time.JULIAN_J2000 + days;
-            Assert.Equal(TimeSystem.Time.J2000Calendar.Ticks + ExactTicks.Nearest(julianDate - TimeSystem.Time.JULIAN_J2000, TimeSpan.TicksPerDay),
+            double julianDate = TimeSystem.Time.JulianDateJ2000 + days;
+            Assert.Equal(TimeSystem.Time.J2000Calendar.Ticks + ExactTicks.Nearest(julianDate - TimeSystem.Time.JulianDateJ2000, TimeSpan.TicksPerDay),
                 TimeSystem.Time.CreateFromJD(julianDate, TimeScale.TDB).DateTime.Ticks);
         }
     }

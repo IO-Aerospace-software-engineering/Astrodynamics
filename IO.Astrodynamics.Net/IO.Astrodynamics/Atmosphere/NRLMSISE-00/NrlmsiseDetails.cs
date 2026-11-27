@@ -1,6 +1,6 @@
 // Copyright 2024. Sylvain Guillet (sylvain.guillet@tutamail.com)
 
-namespace IO.Astrodynamics.Atmosphere.NRLMSISE_00;
+namespace IO.Astrodynamics.Atmosphere;
 
 /// <summary>
 /// NRLMSISE-00 specific atmospheric details including molecular densities.

@@ -106,14 +106,14 @@ public class PropagateTests
                 .Single());
             try
             {
-                SpiceAPI.Instance.LoadKernels(ephemeris);
-                start = SpiceAPI.Instance.ReadEphemeris(TimeSystem.Time.J2000TDB, 399, -1000, Frames.Frame.ICRF,
+                SpiceApi.Instance.LoadKernels(ephemeris);
+                start = SpiceApi.Instance.ReadEphemeris(TimeSystem.Time.J2000Tdb, 399, -1000, Frames.Frame.ICRF,
                     Aberration.None);
                 gm = new Body.CelestialBody(399).GM;
             }
             finally
             {
-                SpiceAPI.Instance.UnloadKernels(ephemeris);
+                SpiceApi.Instance.UnloadKernels(ephemeris);
             }
         }
 
@@ -155,7 +155,7 @@ public class PropagateTests
     [InlineData("q", (ushort)2, "ICRF", EquinoctialValues)]
     public async Task EarthGeopotentialDegree_IsTheDegreeOfTheRun(string activation, ushort degree, string frame, string values)
     {
-        var end = Time.J2000TDB.AddSeconds(600.0);
+        var end = Time.J2000Tdb.AddSeconds(600.0);
         var name = $"N{degree}{activation}";
 
         using (await Configuration.LockAsync())
@@ -180,7 +180,7 @@ public class PropagateTests
     [Fact]
     public async Task DefaultDegree_IsDegree10()
     {
-        var end = Time.J2000TDB.AddSeconds(600.0);
+        var end = Time.J2000Tdb.AddSeconds(600.0);
 
         using (await Configuration.LockAsync())
         {
@@ -226,7 +226,7 @@ public class PropagateTests
             Assert.Contains(maximum.ToString(CultureInfo.InvariantCulture), refused);
             Assert.False(Directory.Exists(output));
 
-            var end = Time.J2000TDB.AddSeconds(10.0);
+            var end = Time.J2000Tdb.AddSeconds(10.0);
             var cli = await RunAndReadEnd("s", StateValues, "ICRF", "NM", end, (ushort)maximum);
             var library = LibraryRunEnd("s", StateValues, "ICRF", (ushort)maximum, end);
             var error = (cli - library).Magnitude();
@@ -239,7 +239,7 @@ public class PropagateTests
     /// The start of the TLE runs below: 2021-01-20 13:00 UTC, 47 min after the epoch of the ISS TLE, rounded to the TDB
     /// second, so that the window the CLI parses from its seconds is the window of the reference to the tick.
     /// </summary>
-    private static Time TleStart => Time.CreateTDB(System.Math.Round(Time.Parse("2021-01-20T13:00:00Z").ToTDB().TimeSpanFromJ2000().TotalSeconds));
+    private static Time TleStart => Time.CreateTdb(System.Math.Round(Time.Parse("2021-01-20T13:00:00Z").ToTdb().TimeSpanFromJ2000().TotalSeconds));
 
     /// <summary>
     /// Since #675, <c>-t</c> starts from the SGP4 state on the Earth of the CLI, so <c>-n</c> reaches the TLE path too:
@@ -325,7 +325,7 @@ public class PropagateTests
             Directory.Delete(output, true);
         }
 
-        var begin = (start ?? Time.J2000TDB).TimeSpanFromJ2000().TotalSeconds.ToString("R", CultureInfo.InvariantCulture);
+        var begin = (start ?? Time.J2000Tdb).TimeSpanFromJ2000().TotalSeconds.ToString("R", CultureInfo.InvariantCulture);
         var stop = end.TimeSpanFromJ2000().TotalSeconds.ToString("R", CultureInfo.InvariantCulture);
         string[] orbit = activation == "t"
             ? ["--from", "tle", "--orbit", values.Split(',')[0], "--orbit", values.Split(',')[1]]
@@ -352,12 +352,12 @@ public class PropagateTests
     {
         try
         {
-            SpiceAPI.Instance.LoadKernels(ephemeris);
-            return SpiceAPI.Instance.ReadEphemeris(end, 399, -1000, Frames.Frame.ICRF, Aberration.None).Position;
+            SpiceApi.Instance.LoadKernels(ephemeris);
+            return SpiceApi.Instance.ReadEphemeris(end, 399, -1000, Frames.Frame.ICRF, Aberration.None).Position;
         }
         finally
         {
-            SpiceAPI.Instance.UnloadKernels(ephemeris);
+            SpiceApi.Instance.UnloadKernels(ephemeris);
         }
     }
 
@@ -373,11 +373,11 @@ public class PropagateTests
         var stream = typeof(PropagateCommand).Assembly.GetManifestResourceStream(EmbeddedModel)!;
         var earth = new CelestialBody(399, new GeopotentialModelParameters(stream, degree), new EarthStandardAtmosphere());
         var inputFrame = new Frames.Frame(frame == "ICRF" ? "J2000" : frame);
-        var start = startEpoch ?? Time.J2000TDB;
+        var start = startEpoch ?? Time.J2000Tdb;
         if (activation == "t")
         {
             var lines = values.Split(',');
-            var sgp4 = new IO.Astrodynamics.OrbitalParameters.TLE.TLE("Reference", lines[0], lines[1]).ToStateVector(start);
+            var sgp4 = new IO.Astrodynamics.OrbitalParameters.Tle("Reference", lines[0], lines[1]).ToStateVector(start);
             return LibraryRunEnd(new IO.Astrodynamics.OrbitalParameters.StateVector(sgp4.Position, sgp4.Velocity, earth, start, Frames.Frame.TEME),
                 earth, start, end);
         }
@@ -425,7 +425,7 @@ public class PropagateTests
         const string outputDirectory = "P675T";
         string res;
         var window = new TimeSystem.Window(TimeSystem.Time.Parse("2021-01-20T13:00:00Z"), TimeSystem.Time.Parse("2021-01-20T13:30:00Z"));
-        var epochs = Enumerable.Range(0, 31).Select(i => window.StartDate.ToTDB().AddSeconds(60.0 * i)).ToArray();
+        var epochs = Enumerable.Range(0, 31).Select(i => window.StartDate.ToTdb().AddSeconds(60.0 * i)).ToArray();
         double worst = 0.0, fromPointMass = double.MaxValue;
 
         using (await Configuration.LockAsync())
@@ -434,8 +434,8 @@ public class PropagateTests
             res = CliRun.Ok(["propagate", "P675", "-K", "Data", "--output", outputDirectory, "--from", "tle", "--orbit", IssLine1, "--orbit", IssLine2,
                 "--begin", "2021-01-20T13:00:00Z", "--end", "2021-01-20T13:30:00Z", "--srp", .. LegacyDrag]);
 
-            var tle = new OrbitalParameters.TLE.TLE("ISS", IssLine1, IssLine2);
-            var t0 = window.StartDate.ToTDB();
+            var tle = new OrbitalParameters.Tle("ISS", IssLine1, IssLine2);
+            var t0 = window.StartDate.ToTdb();
             var cliEarth = new Body.CelestialBody(399, new Body.GeopotentialModelParameters(
                 typeof(PropagateCommand).Assembly.GetManifestResourceStream("IO.Astrodynamics.CLI.Data.EGM2008_to100_TideFree.txt"), 10),
                 new Atmosphere.EarthStandardAtmosphere());
@@ -448,21 +448,21 @@ public class PropagateTests
             var ephemeris = new FileInfo(Directory.GetFiles(outputDirectory, "P675.spk", SearchOption.AllDirectories).Single());
             try
             {
-                SpiceAPI.Instance.LoadKernels(ephemeris);
+                SpiceApi.Instance.LoadKernels(ephemeris);
                 foreach (var epoch in epochs)
                 {
-                    var fromSpk = SpiceAPI.Instance.ReadEphemeris(epoch, 399, -1000, Frames.Frame.ICRF, Aberration.None);
+                    var fromSpk = SpiceApi.Instance.ReadEphemeris(epoch, 399, -1000, Frames.Frame.ICRF, Aberration.None);
                     var expected = twin.GetEphemeris(epoch, cliEarth, Frames.Frame.ICRF, Aberration.None);
                     worst = System.Math.Max(worst, (fromSpk.Position - expected.Position).Magnitude());
                 }
 
-                var end = SpiceAPI.Instance.ReadEphemeris(epochs[^1], 399, -1000, Frames.Frame.ICRF, Aberration.None);
+                var end = SpiceApi.Instance.ReadEphemeris(epochs[^1], 399, -1000, Frames.Frame.ICRF, Aberration.None);
                 fromPointMass = (end.Position - pointMass.GetEphemeris(epochs[^1], cliEarth, Frames.Frame.ICRF, Aberration.None).Position)
                     .Magnitude();
             }
             finally
             {
-                SpiceAPI.Instance.UnloadKernels(ephemeris);
+                SpiceApi.Instance.UnloadKernels(ephemeris);
             }
         }
 
@@ -506,7 +506,7 @@ public class PropagateTests
     public async Task Defaults_AreTheLibrarysRun()
     {
         const string output = "PDEF";
-        var window = new Window(Time.J2000TDB, Time.J2000TDB.AddSeconds(1800.0));
+        var window = new Window(Time.J2000Tdb, Time.J2000Tdb.AddSeconds(1800.0));
         var outputs = Enumerable.Range(0, 31).Select(i => window.StartDate.AddSeconds(60.0 * i)).ToArray();
         using (await Configuration.LockAsync())
         {
@@ -532,18 +532,18 @@ public class PropagateTests
             Vector3 end;
             try
             {
-                SpiceAPI.Instance.LoadKernels(spk);
+                SpiceApi.Instance.LoadKernels(spk);
                 foreach (var epoch in outputs)
                 {
-                    var fromSpk = SpiceAPI.Instance.ReadEphemeris(epoch, 399, -1000, Frames.Frame.ICRF, Aberration.None).Position;
+                    var fromSpk = SpiceApi.Instance.ReadEphemeris(epoch, 399, -1000, Frames.Frame.ICRF, Aberration.None).Position;
                     worst = System.Math.Max(worst, (fromSpk - spacecraft.GetEphemeris(epoch, earth, Frames.Frame.ICRF, Aberration.None).Position).Magnitude());
                 }
 
-                end = SpiceAPI.Instance.ReadEphemeris(outputs[^1], 399, -1000, Frames.Frame.ICRF, Aberration.None).Position;
+                end = SpiceApi.Instance.ReadEphemeris(outputs[^1], 399, -1000, Frames.Frame.ICRF, Aberration.None).Position;
             }
             finally
             {
-                SpiceAPI.Instance.UnloadKernels(spk);
+                SpiceApi.Instance.UnloadKernels(spk);
             }
 
             var legacy = await RunAndReadEnd("s", StateValues, "ICRF", "PLEG", outputs[^1], 10);

@@ -11,7 +11,7 @@ using IO.Astrodynamics.Propagator.Variational;
 using IO.Astrodynamics.TimeSystem;
 using MathNet.Numerics.LinearAlgebra;
 
-namespace IO.Astrodynamics.SSA;
+namespace IO.Astrodynamics.Ssa;
 
 /// <summary>
 /// The non-linearity index of the propagation of a covariance from the initial state to an encounter epoch (the guard

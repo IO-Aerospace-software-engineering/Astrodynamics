@@ -1,6 +1,6 @@
 # CCSDS OMM
 
-The `IO.Astrodynamics.CCSDS.OMM` module supports loading, validating, serializing, and converting CCSDS Orbit Mean-Elements Messages.
+The `IO.Astrodynamics.Ccsds` module supports loading, validating, serializing, and converting CCSDS Orbit Mean-Elements Messages.
 
 ## Omm Class
 
@@ -17,7 +17,7 @@ The `IO.Astrodynamics.CCSDS.OMM` module supports loading, validating, serializin
 | `Omm.TryLoad(path, out omm, options?)` | `Load` without an exception: false for a missing file or a document the checks or the reader refuse |
 | `Omm.TryParse(xml, out omm, options?)` | `Parse` without an exception |
 
-One verb set reads and writes the three CCSDS messages, `Omm`, `Opm` and `Cdm`, as the `TLE` reads its text (R22 of
+One verb set reads and writes the three CCSDS messages, `Omm`, `Opm` and `Cdm`, as the `Tle` reads its text (R22 of
 [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668), lot L7): `CcsdsReadOptions`
 (`ValidateSchema`, `ValidateContent`, both true, and the switches of the content check `ValidatePhysicalConstraints`,
 `ValidateTleRequirements` and `WarnOnMissingOptionalFields`, null to run it, false to turn it off) and `CcsdsWriteOptions`
@@ -29,7 +29,7 @@ validator (`OmmReader`, `OmmWriter`, `OmmValidator`) are internal since 11.0.0, 
 `NORAD_CAT_ID`, the other checks kept.
 
 The exceptions of the OMM reader, `OmmParseException` and `OmmValidationException`, derive from `CcsdsFormatException`, a `FormatException` of
-`IO.Astrodynamics.CCSDS` shared by the OMM, OPM and CDM readers, so that one `catch (CcsdsFormatException)` covers a
+`IO.Astrodynamics.Ccsds` shared by the OMM, OPM and CDM readers, so that one `catch (CcsdsFormatException)` covers a
 document that cannot be read, at parsing or at validation (11.0.0, R03 of
 [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668): before, each derived from
 `Exception` alone).
@@ -65,14 +65,14 @@ names the keyword. The readers refuse these schema-valid values, as before 11.0.
 `TryLoad` returns false.
 The constructors of the data model (`MeanElements`, `OmmMetadata`, ...) keep their `ArgumentException`; a ranged
 parameter of `MeanElements` (a, n, e, i, the three angles, GM) or `SpacecraftParameters` refuses NaN and ±Infinity with
-its `ArgumentOutOfRangeException`, and so does `TLE.ToOmm`, which builds them, for such a value, where it wrote `NaN` ([#708](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/708)).
+its `ArgumentOutOfRangeException`, and so does `Tle.ToOmm`, which builds them, for such a value, where it wrote `NaN` ([#708](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/708)).
 The values without a range are real numbers too ([#717](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/717)): a term of `CovarianceMatrix` and a value of `TleParameters`
 (`BSTAR`, `BTERM`, `MEAN_MOTION_DOT`, `MEAN_MOTION_DDOT`, `AGOM`) throw `ArgumentOutOfRangeException` naming the
 parameter (`cxX` ... `czDotZDot`; `bstar`, `bterm`, `meanMotionDot`, `meanMotionDDot`, `agom`) for NaN or ±Infinity, from
 the constructors, the covariance factories (`FromFullMatrix`, `FromMatrix`, `FromMatrixWithUnitConversion`), the four
 `TleParameters.CreateWith*` factories and `Omm.CreateForTle`. Before 11.0.0 they built it, `Validate()` passed it (an
 infinite `BSTAR` with an information message only) and `SaveToStream` wrote `NaN`, `Infinity` or `-Infinity`, which the
-reader refuses. `TLE.ToOmm`, whose values come from the finite text of a TLE, is unchanged.
+reader refuses. `Tle.ToOmm`, whose values come from the finite text of a TLE, is unchanged.
 
 A numeric value is a real number: a text that .NET reads as NaN or ±Infinity (`NaN`, `Infinity` or `-Infinity` in any
 case, or a value beyond the range of a `double` such as `1e400`, which .NET rounds to ±Infinity) throws
@@ -154,7 +154,7 @@ the clock reading given, under any time system; a date of kind `Local` is writte
 and under any other time system the writer throws `ArgumentException` (`omm`) naming the keyword, a local time having
 no reading in TDB, TT, TAI or GPS that the writer could give without a conversion of time scales. `CREATION_DATE` is UTC
 (Table 3-1): `Utc` and `Unspecified` as given, `Local` converted, whatever `TIME_SYSTEM`. Before 11.0.0 a local time was
-written as its clock reading under every time system. The library's own conversions (`TLE.ToOmm`) give dates of kind `Utc`.
+written as its clock reading under every time system. The library's own conversions (`Tle.ToOmm`) give dates of kind `Utc`.
 
 ### Factory Methods
 
@@ -175,7 +175,7 @@ written as its clock reading under every time system. The library's own conversi
 
 | Method | Description |
 |--------|-------------|
-| `ToTle()` | Convert to a `TLE` object (requires `IsTleCompatible`; an OMM with TLE parameters that is not SGP4, TEME and Earth throws `InvalidOperationException` naming each keyword at fault and its value, #679); `EPOCH` is read in `TIME_SYSTEM` (UTC, TAI, TDB, TT or GPS) and written as its UTC, another time system throws (#485); a `NORAD_CAT_ID`, `REV_AT_EPOCH` or `MEAN_MOTION` its TLE field cannot hold throws `InvalidOperationException` naming it (#729 for `MEAN_MOTION`, above 99.99999999 rev/day) |
+| `ToTle()` | Convert to a `Tle` object (requires `IsTleCompatible`; an OMM with TLE parameters that is not SGP4, TEME and Earth throws `InvalidOperationException` naming each keyword at fault and its value, #679); `EPOCH` is read in `TIME_SYSTEM` (UTC, TAI, TDB, TT or GPS) and written as its UTC, another time system throws (#485); a `NORAD_CAT_ID`, `REV_AT_EPOCH` or `MEAN_MOTION` its TLE field cannot hold throws `InvalidOperationException` naming it (#729 for `MEAN_MOTION`, above 99.99999999 rev/day) |
 | `ToMeanElements(observer?)` | The mean elements in SI units, mean `KeplerianElements` (R22 of [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668), lot L7): about the centre `CENTER_NAME` names, by the rules of `Opm.ToStateVector` (a barycenter, the Sun, a planet or a moon; another name without an observer, or an observer that contradicts it, `ArgumentException`), in the frame of `REF_FRAME` (`ICRF`, `GCRF` and `EME2000` as `Frame.ICRF`, `TEME` as `Frame.TEME`), at `GetEpoch()`; from `MEAN_MOTION` the mean motion kept as given and the semi-major axis ∛(GM/n²) of the observer's kernel GM (the `GM` keyword is not read), from `SEMI_MAJOR_AXIS` that axis in m. It gives the elements of the factory of degrees and rev/day public before 11.0.0, now the internal `KeplerianElements.FromOMM`, bit for bit on the same values |
 | `GetEpoch()` | `EPOCH` as a `Time` in its `TIME_SYSTEM` (UTC, TAI, TDB, TT or GPS); another time system, as UT1, which a message may hold, throws `InvalidOperationException`. `Epoch` keeps the `DateTime` of the message |
 | `Validate()` | Validate and return `OmmValidationResult` |
@@ -192,7 +192,7 @@ written as its clock reading under every time system. The library's own conversi
 
 OMM uses full COSPAR IDs such as `1998-067A`. TLE uses abbreviated IDs such as `98067A`. The conversion layer handles this automatically when calling `ToTle()`.
 
-A TLE without an international designator (blank columns 10-17 of line 1, as 11801 and 88888 of Vallado's `SGP4-VER.TLE`) is carried through: `TLE.Create` takes a null or blank `cosparId` and writes eight blanks there, `TLE.ToOmm` writes `OBJECT_ID = UNKNOWN` (the element is mandatory in the ODM; CCSDS's value for an unknown designator, confirmed by S. Guillet, 2026-11-18), and `Omm.ToTle` reads `UNKNOWN`, trimmed and in any letter case, back as the blank columns ([#604](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/604), decided by S. Guillet, 2026-11-18). The fit of `OrbitalParameters.ToTLE(Configuration)` writes a null or blank `Configuration.CosparId` as the same blank columns. Before 11.0.0 `Create` threw `ArgumentException` (`cosparId`), `ToTLE` "TLE conversion using Equinoctial elements failed" (`InvalidOperationException`), `ToOmm` "Object ID is required." (`objectId`), and `ToTle` wrote `UNKNOWN ` in the designator columns. An empty `OBJECT_ID` is still refused by the reader and `OmmMetadata`, as #708 decided (2026-11-16): the decision of #604 also reads an empty value as the blank columns, but no OMM holds one, and whether the reader should accept it is open, for S. Guillet to settle.
+A TLE without an international designator (blank columns 10-17 of line 1, as 11801 and 88888 of Vallado's `SGP4-VER.TLE`) is carried through: `Tle.Create` takes a null or blank `cosparId` and writes eight blanks there, `Tle.ToOmm` writes `OBJECT_ID = UNKNOWN` (the element is mandatory in the ODM; CCSDS's value for an unknown designator, confirmed by S. Guillet, 2026-11-18), and `Omm.ToTle` reads `UNKNOWN`, trimmed and in any letter case, back as the blank columns ([#604](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/604), decided by S. Guillet, 2026-11-18). The fit of `OrbitalParameters.ToTle` writes a null or blank `cosparId` as the same blank columns. Before 11.0.0 `Create` threw `ArgumentException` (`cosparId`), `ToTle` "TLE conversion using Equinoctial elements failed" (`InvalidOperationException`), `ToOmm` "Object ID is required." (`objectId`), and `ToTle` wrote `UNKNOWN ` in the designator columns. An empty `OBJECT_ID` is still refused by the reader and `OmmMetadata`, as #708 decided (2026-11-16): the decision of #604 also reads an empty value as the blank columns, but no OMM holds one, and whether the reader should accept it is open, for S. Guillet to settle.
 
 ## Example
 

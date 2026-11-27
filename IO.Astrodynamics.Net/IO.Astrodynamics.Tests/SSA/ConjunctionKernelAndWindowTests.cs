@@ -10,7 +10,7 @@ using IO.Astrodynamics.Propagator;
 using IO.Astrodynamics.Propagator.Variational;
 using IO.Astrodynamics.Propagator.Integrators;
 using IO.Astrodynamics.SolarSystemObjects;
-using IO.Astrodynamics.SSA;
+using IO.Astrodynamics.Ssa;
 using IO.Astrodynamics.TimeSystem;
 using IO.Astrodynamics.Exceptions;
 using Xunit;
@@ -43,8 +43,8 @@ public class CrossingEncounterCase : IDisposable
         ProtectedId = id1;
         SecondaryId = id2;
         TestKernels.EnsureSolarSystem();
-        T0 = new TimeSystem.Time(2026, 1, 20, 6, 0, 0, TimeScale.UTC).ToTDB();
-        var earth = new CelestialBody(PlanetsAndMoons.EARTH, Frames.Frame.ICRF, T0);
+        T0 = new TimeSystem.Time(2026, 1, 20, 6, 0, 0, TimeScale.UTC).ToTdb();
+        var earth = new CelestialBody(PlanetsAndMoons.Earth, Frames.Frame.ICRF, T0);
         var (s1, s2) = states(earth, T0);
 
         Sat1 = new Spacecraft(id1, name + "1", 500.0, s1, 5000.0, new Clock(name + "1_CLK", 256));
@@ -58,8 +58,8 @@ public class CrossingEncounterCase : IDisposable
         Spk2 = new FileInfo(Path.Combine(_directory.FullName, name.ToLowerInvariant() + "2.bsp"));
         Sat1.WriteEphemeris(Spk1);
         Sat2.WriteEphemeris(Spk2);
-        SpiceAPI.Instance.LoadKernels(Spk1);
-        SpiceAPI.Instance.LoadKernels(Spk2);
+        SpiceApi.Instance.LoadKernels(Spk1);
+        SpiceApi.Instance.LoadKernels(Spk2);
     }
 
     // The encounter designed at t0 + 1800 s: equal circular orbits of 500 km inclined at 51.6° and 111.6°, the second
@@ -118,8 +118,8 @@ public class CrossingEncounterCase : IDisposable
 
     public void Dispose()
     {
-        SpiceAPI.Instance.UnloadKernels(Spk1);
-        SpiceAPI.Instance.UnloadKernels(Spk2);
+        SpiceApi.Instance.UnloadKernels(Spk1);
+        SpiceApi.Instance.UnloadKernels(Spk2);
         _directory.Delete(true);
         GC.SuppressFinalize(this);
     }
@@ -385,11 +385,11 @@ public class ConjunctionKernelAndWindowTests : ConjunctionDensePassTestBase, ICl
     {
         var k1 = new Spacecraft(CrossingEncounterCase.Id1, "K1", _case.T0.AddSeconds(10.0));
         var k2 = new Spacecraft(CrossingEncounterCase.Id2, "K2", _case.T0.AddSeconds(10.0));
-        Assert.Equal(PlanetsAndMoons.EARTH.NaifId, k1.InitialOrbitalParameters.Observer.NaifId);
+        Assert.Equal(PlanetsAndMoons.Earth.NaifId, k1.InitialOrbitalParameters.Observer.NaifId);
 
         var encounter = ConjunctionAssessment.Analyze(k1, k2, _case.Seconds(1200.0, 2400.0), Options);
 
-        var (position, velocity) = CspiceRtn(encounter.EncounterState.Epoch, PlanetsAndMoons.EARTH.NaifId);
+        var (position, velocity) = CspiceRtn(encounter.EncounterState.Epoch, PlanetsAndMoons.Earth.NaifId);
         AssertRtn(encounter, position, velocity, "Earth");
 
         // The design of the case, about the Earth at the encounter: (150, -100 √3, -100) m, |Δv| along T and N. The
@@ -472,8 +472,8 @@ public class ConjunctionKernelAndWindowTests : ConjunctionDensePassTestBase, ICl
         // Starts 0.1 s after the 250 m minimum: the start, about 800 m away and receding, is closer than the interior
         // minimum of 939 m at t0 + 4638.5 s, which CSPICE's ABSMIN shows
         var window = _case.Seconds(1800.1, 4700.0);
-        var absmin = SpiceAPI.Instance.FindWindowsOnDistanceConstraint(window, CrossingEncounterCase.Id1, CrossingEncounterCase.Id2,
-            RelationnalOperator.AbsoluteMin, 0.0, Aberration.None, TimeSpan.FromSeconds(60.0)).Single();
+        var absmin = SpiceApi.Instance.FindWindowsOnDistanceConstraint(window, CrossingEncounterCase.Id1, CrossingEncounterCase.Id2,
+            RelationalOperator.AbsoluteMin, 0.0, Aberration.None, TimeSpan.FromSeconds(60.0)).Single();
         Assert.Equal(0.0, (absmin.StartDate - window.StartDate).TotalSeconds, 3);
 
         var encounter = ConjunctionAssessment.Analyze(_case.Sat1, _case.Solution1, _case.Sat2,
@@ -506,8 +506,8 @@ public class ConjunctionKernelAndWindowTests : ConjunctionDensePassTestBase, ICl
         // midpoint, 79.9 km on [1780, 1799] s, where Screen dropped the object 7.6 km away at the end)
         var window = _case.Seconds(start, end);
         Assert.Empty(CspiceLocalMinima(window));
-        var absolute = SpiceAPI.Instance.FindWindowsOnDistanceConstraint(window, _case.ProtectedId, _case.SecondaryId,
-            RelationnalOperator.AbsoluteMin, 0.0, Aberration.None, TimeSpan.FromSeconds(60.0)).Single();
+        var absolute = SpiceApi.Instance.FindWindowsOnDistanceConstraint(window, _case.ProtectedId, _case.SecondaryId,
+            RelationalOperator.AbsoluteMin, 0.0, Aberration.None, TimeSpan.FromSeconds(60.0)).Single();
         var (position, _) = CspiceRelative(absolute.StartDate, _case);
 
         // Act
@@ -850,10 +850,10 @@ public class ConjunctionKernelAndWindowTests : ConjunctionDensePassTestBase, ICl
 
         // spkezr_c past the SPK: a NaN state from the native layer, SPICE's message in the exception
         var single = Assert.Throws<SpiceException>(() =>
-            SpiceAPI.Instance.ReadEphemeris(past, PlanetsAndMoons.EARTH.NaifId, CrossingEncounterCase.Id1, Frames.Frame.ICRF, Aberration.None));
+            SpiceApi.Instance.ReadEphemeris(past, PlanetsAndMoons.Earth.NaifId, CrossingEncounterCase.Id1, Frames.Frame.ICRF, Aberration.None));
         Assert.Contains("Insufficient ephemeris data", single.Message);
-        Assert.Throws<SpiceException>(() => SpiceAPI.Instance.ReadEphemeris(new Window(_case.T0.AddSeconds(10000.0), past),
-            PlanetsAndMoons.EARTH.NaifId, CrossingEncounterCase.Id1, Frames.Frame.ICRF, Aberration.None, TimeSpan.FromSeconds(600.0)).ToArray());
+        Assert.Throws<SpiceException>(() => SpiceApi.Instance.ReadEphemeris(new Window(_case.T0.AddSeconds(10000.0), past),
+            PlanetsAndMoons.Earth.NaifId, CrossingEncounterCase.Id1, Frames.Frame.ICRF, Aberration.None, TimeSpan.FromSeconds(600.0)).ToArray());
         Assert.Throws<SpiceException>(() => new Spacecraft(CrossingEncounterCase.Id1, "K1", past));
 
         // The analysis of kernel-backed spacecraft past their SPKs: before, a TCA with a miss of 0 m
@@ -864,7 +864,7 @@ public class ConjunctionKernelAndWindowTests : ConjunctionDensePassTestBase, ICl
 
         // A frame past its PCK (earth_latest_high_prec.bpc ends in 2026): before, the zero quaternion
         var frame = Assert.Throws<SpiceException>(() =>
-            SpiceAPI.Instance.TransformFrame(new TimeSystem.Time(2040, 1, 1, TimeScale.TDB), new Frames.Frame("ITRF93"), Frames.Frame.ICRF));
+            SpiceApi.Instance.TransformFrame(new TimeSystem.Time(2040, 1, 1, TimeScale.TDB), new Frames.Frame("ITRF93"), Frames.Frame.ICRF));
         Assert.Contains("ITRF93", frame.Message);
 
         // A propagation reads the orientation of its central body only where a force needs it: a point mass about the
@@ -873,22 +873,22 @@ public class ConjunctionKernelAndWindowTests : ConjunctionDensePassTestBase, ICl
         var window2040 = new Window(epoch2040, epoch2040.AddSeconds(600.0));
         StateVector Leo(CelestialBody body) => new(new Vector3(6878137.0, 0.0, 0.0), new Vector3(0.0, 7612.6, 0.0), body, epoch2040,
             Frames.Frame.ICRF);
-        var pointMass = new CelestialBody(PlanetsAndMoons.EARTH, Frames.Frame.ICRF, epoch2040);
+        var pointMass = new CelestialBody(PlanetsAndMoons.Earth, Frames.Frame.ICRF, epoch2040);
         var free = new Spacecraft(-620004, "PCK2040", 100.0, Leo(pointMass), 1000.0, new Clock("PCK2040_CLK", 256));
         free.Propagate(window2040, new PropagationOptions { Integrator = RK78IntegratorOptions.Default, OutputStep = TimeSpan.FromSeconds(60.0), ThirdBodies = new CelestialItem[] { pointMass }, CovariancePropagation = CovariancePropagationOptions.None });
-        var withField = new CelestialBody(PlanetsAndMoons.EARTH, Frames.Frame.ICRF, epoch2040,
+        var withField = new CelestialBody(PlanetsAndMoons.Earth, Frames.Frame.ICRF, epoch2040,
             new GeopotentialModelParameters("Data/SolarSystem/EGM2008_to70_TideFree", 10));
         var bound = new Spacecraft(-620005, "PCK2040F", 100.0, Leo(withField), 1000.0, new Clock("PCK2040F_CLK", 256));
         Assert.Throws<InvalidOperationException>(() => bound.Propagate(window2040, new PropagationOptions { Integrator = RK78IntegratorOptions.Default, OutputStep = TimeSpan.FromSeconds(60.0), ThirdBodies = new CelestialItem[] { withField }, CovariancePropagation = CovariancePropagationOptions.None }));
 
         // de440s does not chain Mars to its barycenter: the body is built without initial orbital parameters (an
         // undefined state before), and a read of its position throws
-        var mars = new CelestialBody(PlanetsAndMoons.MARS, Frames.Frame.ICRF, _case.T0);
+        var mars = new CelestialBody(PlanetsAndMoons.Mars, Frames.Frame.ICRF, _case.T0);
         Assert.Null(mars.InitialOrbitalParameters);
         Assert.Throws<SpiceException>(() => mars.GetEphemeris(_case.T0, new Barycenter(0), Frames.Frame.ICRF, Aberration.None));
 
         // Inside the coverage nothing moves: a unit quaternion
-        var inside = SpiceAPI.Instance.TransformFrame(_case.T0, new Frames.Frame("ITRF93"), Frames.Frame.ICRF);
+        var inside = SpiceApi.Instance.TransformFrame(_case.T0, new Frames.Frame("ITRF93"), Frames.Frame.ICRF);
         Assert.Equal(1.0, inside.Rotation.Magnitude(), 12);
     }
 }

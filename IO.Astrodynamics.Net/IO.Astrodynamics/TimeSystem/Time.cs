@@ -32,32 +32,32 @@ public readonly record struct Time : IComparable<Time>, IComparable, ISpanParsab
     /// <summary>
     /// J2000, 2000-01-01T12:00:00 TDB.
     /// </summary>
-    public static readonly Time J2000TDB = new Time(J2000Calendar, TimeScale.TDB);
+    public static readonly Time J2000Tdb = new Time(J2000Calendar, TimeScale.TDB);
 
     /// <summary>
     /// 2000-01-01T12:00:00 UTC.
     /// </summary>
-    public static readonly Time J2000UTC = new Time(J2000Calendar, TimeScale.UTC);
+    public static readonly Time J2000Utc = new Time(J2000Calendar, TimeScale.UTC);
 
     /// <summary>
     /// The Julian date of B1950's day, 1950-01-01T00:00:00.
     /// </summary>
-    public const double JULIAN_J1950 = 2433282.5;
+    public const double JulianDateJ1950 = 2433282.5;
 
     /// <summary>
     /// The Julian date of J2000, 2000-01-01T12:00:00.
     /// </summary>
-    public const double JULIAN_J2000 = 2451545.0;
+    public const double JulianDateJ2000 = 2451545.0;
 
     /// <summary>
     /// The Julian year, in days.
     /// </summary>
-    public const double JULIAN_YEAR = 365.25;
+    public const double JulianYear = 365.25;
 
     /// <summary>
     /// The seconds of a day without leap second.
     /// </summary>
-    public const double SECONDS_PER_DAY = 86400.0;
+    public const double SecondsPerDay = 86400.0;
 
     /// <summary>
     /// The calendar of this time in its <see cref="Scale"/>: of kind <see cref="DateTimeKind.Utc"/> in UTC,
@@ -664,7 +664,7 @@ public readonly record struct Time : IComparable<Time>, IComparable, ISpanParsab
     /// <summary>
     /// This time in GPS time.
     /// </summary>
-    public Time ToGPS()
+    public Time ToGps()
     {
         return ConvertTo(TimeScale.GPS);
     }
@@ -672,7 +672,7 @@ public readonly record struct Time : IComparable<Time>, IComparable, ISpanParsab
     /// <summary>
     /// This time in TAI.
     /// </summary>
-    public Time ToTAI()
+    public Time ToTai()
     {
         return ConvertTo(TimeScale.TAI);
     }
@@ -688,7 +688,7 @@ public readonly record struct Time : IComparable<Time>, IComparable, ISpanParsab
     /// <summary>
     /// This time in UTC.
     /// </summary>
-    public Time ToUTC()
+    public Time ToUtc()
     {
         return ConvertTo(TimeScale.UTC);
     }
@@ -696,7 +696,7 @@ public readonly record struct Time : IComparable<Time>, IComparable, ISpanParsab
     /// <summary>
     /// This time in TDB.
     /// </summary>
-    public Time ToTDB()
+    public Time ToTdb()
     {
         return ConvertTo(TimeScale.TDB);
     }
@@ -768,7 +768,7 @@ public readonly record struct Time : IComparable<Time>, IComparable, ISpanParsab
     /// (<see cref="Create(double, TimeScale)"/>).
     /// </summary>
     /// <param name="secondsFromJ2000">The seconds from J2000.</param>
-    public static Time CreateUTC(double secondsFromJ2000)
+    public static Time CreateUtc(double secondsFromJ2000)
     {
         return Create(secondsFromJ2000, TimeScale.UTC);
     }
@@ -778,7 +778,7 @@ public readonly record struct Time : IComparable<Time>, IComparable, ISpanParsab
     /// (<see cref="Create(double, TimeScale)"/>).
     /// </summary>
     /// <param name="secondsFromJ2000">The seconds from J2000.</param>
-    public static Time CreateTDB(double secondsFromJ2000)
+    public static Time CreateTdb(double secondsFromJ2000)
     {
         return Create(secondsFromJ2000, TimeScale.TDB);
     }
@@ -792,7 +792,7 @@ public readonly record struct Time : IComparable<Time>, IComparable, ISpanParsab
     /// </remarks>
     public double ToJulianDate()
     {
-        return JULIAN_J2000 + DaysFromJ2000();
+        return JulianDateJ2000 + DaysFromJ2000();
     }
 
     /// <summary>
@@ -824,7 +824,7 @@ public readonly record struct Time : IComparable<Time>, IComparable, ISpanParsab
     /// not a member of <see cref="TimeScale"/>.</exception>
     public static Time CreateFromJD(double julianDate, TimeScale scale)
     {
-        var date = J2000Calendar.AddTicks(ToNearestTicks(julianDate - JULIAN_J2000, TimeSpan.TicksPerDay, nameof(julianDate)));
+        var date = J2000Calendar.AddTicks(ToNearestTicks(julianDate - JulianDateJ2000, TimeSpan.TicksPerDay, nameof(julianDate)));
         return new Time(date, scale);
     }
 

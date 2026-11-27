@@ -1,9 +1,9 @@
 // Copyright 2026. Sylvain Guillet (sylvain.guillet@tutamail.com)
 
-namespace IO.Astrodynamics.Atmosphere.NRLMSISE_00
+namespace IO.Astrodynamics.Atmosphere
 {
     /// <summary>
-    /// The inputs of <see cref="NRLMSISE00"/> in the internal units of the model: altitude in km, geodetic latitude and
+    /// The inputs of <see cref="Nrlmsise00"/> in the internal units of the model: altitude in km, geodetic latitude and
     /// longitude in degrees.
     /// </summary>
     /// <remarks>

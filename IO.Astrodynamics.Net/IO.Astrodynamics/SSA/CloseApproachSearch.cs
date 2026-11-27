@@ -1,6 +1,6 @@
 // Copyright 2026. Sylvain Guillet (sylvain.guillet@tutamail.com)
 
-namespace IO.Astrodynamics.SSA;
+namespace IO.Astrodynamics.Ssa;
 
 /// <summary>
 /// The search that found the epoch of an encounter (<see cref="EncounterCase.Search"/>; R18 of #668, decided by
@@ -24,7 +24,7 @@ public enum CloseApproachSearch
 
     /// <summary>
     /// No search: the encounter was given at its TCA, by the states of its objects there
-    /// (<see cref="CCSDS.CDM.Cdm.ToEncounter"/>, decision 110 of #668, decided by S. Guillet, 2026-11-26).
+    /// (<see cref="Ccsds.Cdm.ToEncounter"/>, decision 110 of #668, decided by S. Guillet, 2026-11-26).
     /// </summary>
     None
 }

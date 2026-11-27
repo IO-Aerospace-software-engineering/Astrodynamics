@@ -11,7 +11,6 @@ using IO.Astrodynamics.Coordinates;
 using IO.Astrodynamics.Frames;
 using IO.Astrodynamics.Math;
 using IO.Astrodynamics.OrbitalParameters;
-using IO.Astrodynamics.OrbitalParameters.TLE;
 using IO.Astrodynamics.Atmosphere;
 using IO.Astrodynamics.SolarSystemObjects;
 using IO.Astrodynamics.Surface;
@@ -34,9 +33,9 @@ public class Helpers
     internal const ushort EarthGeopotentialDefaultDegree = 10;
 
     /// <summary>
-    /// The object of a NAIF identifier: a site by the library's rule (<see cref="SpiceAPI.IsSiteOfNamedBody"/>, its body's
+    /// The object of a NAIF identifier: a site by the library's rule (<see cref="SpiceApi.IsSiteOfNamedBody"/>, its body's
     /// identifier times 1000 plus its own, the body a planet or a moon without the Lagrange points that SPICE names), built
-    /// from the kernels under its SPICE name as <see cref="SpiceAPI.ReadEphemeris(Time, int, int, Frame, Aberration)"/>
+    /// from the kernels under its SPICE name as <see cref="SpiceApi.ReadEphemeris(Time, int, int, Frame, Aberration)"/>
     /// builds its observer; an object of the kernels read by its identifier for one of that form whose body SPICE does not
     /// name, NOTO (398989) and NEW NORCIA (398990) (#750: before, the site of a body 398, which threw); a celestial item; or
     /// a spacecraft (a negative identifier) read from its kernels (<see cref="CreateCelestialItem"/>).
@@ -53,22 +52,22 @@ public class Helpers
     /// </remarks>
     internal static ILocalizable CreateLocalizable(int objectId, in Time epoch)
     {
-        return SpiceAPI.IsSiteOfNamedBody(objectId) ? SpiceAPI.Instance.CreateKernelSite(objectId) : CreateCelestialItem(objectId, epoch);
+        return SpiceApi.IsSiteOfNamedBody(objectId) ? SpiceApi.Instance.CreateKernelSite(objectId) : CreateCelestialItem(objectId, epoch);
     }
 
     /// <summary>
     /// A celestial body, or for a negative identifier the kernel-backed spacecraft, which reads its SPK (#542): a managed
     /// spacecraft has no state, its ephemeris was a NullReferenceException. An identifier of the form of a site
-    /// (<see cref="SpiceAPI.IsSiteId"/>) that reaches it, one whose body SPICE does not name (NOTO, NEW NORCIA), is the
+    /// (<see cref="SpiceApi.IsSiteId"/>) that reaches it, one whose body SPICE does not name (NOTO, NEW NORCIA), is the
     /// object of the kernels read by its identifier (#750: before, a <see cref="CelestialBody"/>, which has no frame for it).
     /// </summary>
     /// <param name="objectId">The NAIF identifier.</param>
     /// <param name="epoch">An epoch the SPK of a spacecraft covers, which its constructor reads.</param>
     internal static CelestialItem CreateCelestialItem(int objectId, in Time epoch)
     {
-        if (SpiceAPI.IsSiteId(objectId))
+        if (SpiceApi.IsSiteId(objectId))
         {
-            return SpiceAPI.CreateKernelObject(objectId);
+            return SpiceApi.CreateKernelObject(objectId);
         }
 
         if (int.IsPositive(objectId))
@@ -85,7 +84,7 @@ public class Helpers
     /// </summary>
     /// <remarks>
     /// A spacecraft is read by its NAIF identifier alone, as the CLI names it: the CK of its structure (the identifier
-    /// times 1000) through its clock kernel, with no tolerance (<see cref="SpiceAPI.ReadOrientation"/>: the CK segment of
+    /// times 1000) through its clock kernel, with no tolerance (<see cref="SpiceApi.ReadOrientation"/>: the CK segment of
     /// highest priority, <c>ckgp_c</c>'s, with <c>ckgpav_c</c>'s rate when it holds one, #724),
     /// the C-matrix from <paramref name="referenceFrame"/> to the spacecraft with the angular velocity of the spacecraft
     /// relative to <paramref name="referenceFrame"/>, in it: the orientation <see cref="Spacecraft.GetOrientation"/>
@@ -104,7 +103,7 @@ public class Helpers
         return epoch =>
         {
             // The window of the one epoch: one record, read in a buffer of one (#563); the step is that of an empty grid
-            var read = SpiceAPI.Instance.ReadOrientation(new Window(epoch, epoch), objectId, TimeSpan.Zero, referenceFrame, TimeSpan.FromSeconds(1.0)).Single();
+            var read = SpiceApi.Instance.ReadOrientation(new Window(epoch, epoch), objectId, TimeSpan.Zero, referenceFrame, TimeSpan.FromSeconds(1.0)).Single();
             return new StateOrientation(read.Rotation, read.AngularVelocity, epoch, referenceFrame);
         };
     }

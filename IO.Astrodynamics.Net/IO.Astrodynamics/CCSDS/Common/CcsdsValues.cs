@@ -4,7 +4,7 @@ using System;
 using System.Globalization;
 using IO.Astrodynamics.Math;
 
-namespace IO.Astrodynamics.CCSDS.Common;
+namespace IO.Astrodynamics.Ccsds;
 
 /// <summary>
 /// A keyword of a message read into a parameter of a data-model constructor: the parameter's name, the keyword, the text

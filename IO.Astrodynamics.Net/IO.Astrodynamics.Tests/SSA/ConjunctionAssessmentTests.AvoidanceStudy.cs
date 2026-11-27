@@ -4,8 +4,8 @@ using System.Collections.Generic;
 using System.Linq;
 using IO.Astrodynamics.Body;
 using IO.Astrodynamics.Body.Spacecraft;
-using IO.Astrodynamics.CCSDS.CDM;
-using IO.Astrodynamics.SSA;
+using IO.Astrodynamics.Ccsds;
+using IO.Astrodynamics.Ssa;
 using Xunit;
 
 namespace IO.Astrodynamics.Tests.SSA;

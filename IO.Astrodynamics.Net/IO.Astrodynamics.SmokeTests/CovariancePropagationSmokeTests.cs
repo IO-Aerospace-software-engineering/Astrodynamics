@@ -1,6 +1,6 @@
 using System;
 using System.IO;
-using IO.Astrodynamics.Atmosphere.NRLMSISE_00;
+using IO.Astrodynamics.Atmosphere;
 using IO.Astrodynamics.Body;
 using IO.Astrodynamics.Body.Spacecraft;
 using IO.Astrodynamics.Frames;
@@ -26,7 +26,7 @@ public class CovariancePropagationSmokeTests
 
     public CovariancePropagationSmokeTests()
     {
-        SpiceAPI.Instance.LoadKernels(SolarSystemKernelPath);
+        SpiceApi.Instance.LoadKernels(SolarSystemKernelPath);
     }
 
     [Fact]
@@ -34,9 +34,9 @@ public class CovariancePropagationSmokeTests
     {
         // The example of docs/reference/covariance-propagation.md
         var epoch = new Time(2021, 3, 20, 12, 0, 0, TimeScale.TDB);
-        var earth = new CelestialBody(PlanetsAndMoons.EARTH, Frame.ICRF, epoch, null,
+        var earth = new CelestialBody(PlanetsAndMoons.Earth, Frame.ICRF, epoch, null,
             new Nrlmsise00Model(SpaceWeather.Nominal));
-        var moon = new CelestialBody(PlanetsAndMoons.MOON, Frame.ICRF, epoch);
+        var moon = new CelestialBody(PlanetsAndMoons.Moon, Frame.ICRF, epoch);
         var sun = new CelestialBody(Stars.Sun);
 
         var p0Terms = new double[6, 6];

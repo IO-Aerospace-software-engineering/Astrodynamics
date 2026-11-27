@@ -406,11 +406,11 @@ internal sealed class PropagatedEphemeris
     /// </summary>
     internal bool Covers(in Window window)
     {
-        var start = window.StartDate.ToTDB();
-        var end = window.EndDate.ToTDB();
+        var start = window.StartDate.ToTdb();
+        var end = window.EndDate.ToTdb();
         foreach (var w in Windows)
         {
-            if ((start - w.StartDate.ToTDB()).Ticks >= 0 && (w.EndDate.ToTDB() - end).Ticks >= 0) return true;
+            if ((start - w.StartDate.ToTdb()).Ticks >= 0 && (w.EndDate.ToTdb() - end).Ticks >= 0) return true;
         }
 
         return false;
@@ -440,7 +440,7 @@ internal sealed class PropagatedEphemeris
         var snapshot = _snapshot;
         var arcs = snapshot.Arcs;
         if (arcs.Length == 0) return null;
-        var t = epoch.ToTDB();
+        var t = epoch.ToTdb();
         int k = snapshot.ArcIndex(epoch);
         if (!Holds(arcs[k], t))
         {
@@ -464,15 +464,15 @@ internal sealed class PropagatedEphemeris
 
     // Whether a TDB epoch lies within an arc, its ends included
     private static bool Holds(StateVector[] arc, in Time tdb) =>
-        (arc[0].Epoch.ToTDB() - tdb).Ticks <= 0 && (tdb - arc[^1].Epoch.ToTDB()).Ticks <= 0;
+        (arc[0].Epoch.ToTdb() - tdb).Ticks <= 0 && (tdb - arc[^1].Epoch.ToTdb()).Ticks <= 0;
 
     // Whether arc j reads a TDB epoch within slack ticks, and the ticks from its hull: an arc of one state its own epoch, and
     // past it within slack when it touches the arc before it (the arc an impulse at the end of a propagation opens, #575)
     private static bool Reads(StateVector[][] arcs, int j, in Time tdb, long slack, out long distance)
     {
         var arc = arcs[j];
-        long before = (arc[0].Epoch.ToTDB() - tdb).Ticks;
-        long after = (tdb - arc[^1].Epoch.ToTDB()).Ticks;
+        long before = (arc[0].Epoch.ToTdb() - tdb).Ticks;
+        long after = (tdb - arc[^1].Epoch.ToTdb()).Ticks;
         distance = System.Math.Max(0L, System.Math.Max(before, after));
         if (arc.Length == 1)
         {

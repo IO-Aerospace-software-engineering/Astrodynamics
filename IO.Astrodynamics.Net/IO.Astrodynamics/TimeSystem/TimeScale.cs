@@ -9,7 +9,7 @@ namespace IO.Astrodynamics.TimeSystem;
 /// </summary>
 /// <remarks>
 /// <see cref="TDB"/> is 0, so the default <see cref="Time"/> is 0001-01-01T00:00:00 TDB. A local time is not a scale: the
-/// calendar of an instant in the zone of the machine is <c>t.ToUTC().DateTime.ToLocalTime()</c>.
+/// calendar of an instant in the zone of the machine is <c>t.ToUtc().DateTime.ToLocalTime()</c>.
 /// </remarks>
 public enum TimeScale
 {

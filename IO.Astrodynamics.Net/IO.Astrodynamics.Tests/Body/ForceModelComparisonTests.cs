@@ -6,7 +6,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using IO.Astrodynamics.Atmosphere;
-using IO.Astrodynamics.Atmosphere.NRLMSISE_00;
 using IO.Astrodynamics.Body;
 using IO.Astrodynamics.Body.Spacecraft;
 using IO.Astrodynamics.OrbitalParameters;
@@ -51,8 +50,8 @@ public class ForceModelComparisonTests
     /// <summary>An Earth of the kernel GM with other radii.</summary>
     private sealed class WiderEarth : CelestialBody
     {
-        internal WiderEarth() : base(399, "EARTH", PlanetsAndMoons.EARTH_BODY.Mass, PlanetsAndMoons.EARTH_BODY.PolarRadius,
-            PlanetsAndMoons.EARTH_BODY.EquatorialRadius + 1.0)
+        internal WiderEarth() : base(399, "EARTH", PlanetsAndMoons.EarthBody.Mass, PlanetsAndMoons.EarthBody.PolarRadius,
+            PlanetsAndMoons.EarthBody.EquatorialRadius + 1.0)
         {
         }
     }
@@ -60,7 +59,7 @@ public class ForceModelComparisonTests
     /// <summary>An item of the Earth's identifier and GM that is not a body.</summary>
     private sealed class EarthPoint : CelestialItem
     {
-        internal EarthPoint() : base(399, "EARTH", PlanetsAndMoons.EARTH_BODY.Mass, null)
+        internal EarthPoint() : base(399, "EARTH", PlanetsAndMoons.EarthBody.Mass, null)
         {
         }
     }
@@ -112,31 +111,31 @@ public class ForceModelComparisonTests
     {
         // Arrange
         var shared = new GeopotentialModelParameters(ModelPath, 6);
-        var a = new CelestialBody(PlanetsAndMoons.EARTH, geopotentialModelParameters: shared);
-        var b = new CelestialBody(PlanetsAndMoons.EARTH, geopotentialModelParameters: shared);
-        var fresh = new CelestialBody(PlanetsAndMoons.EARTH,
+        var a = new CelestialBody(PlanetsAndMoons.Earth, geopotentialModelParameters: shared);
+        var b = new CelestialBody(PlanetsAndMoons.Earth, geopotentialModelParameters: shared);
+        var fresh = new CelestialBody(PlanetsAndMoons.Earth,
             geopotentialModelParameters: new GeopotentialModelParameters(ModelPath, 6));
         var lines = File.ReadAllLines(ModelPath);
         var columns = lines[0].Split(' ', StringSplitOptions.RemoveEmptyEntries);
         columns[2] = "1.0E-3";
         lines[0] = string.Join(' ', columns);
-        var modified = new CelestialBody(PlanetsAndMoons.EARTH, geopotentialModelParameters: new GeopotentialModelParameters(
+        var modified = new CelestialBody(PlanetsAndMoons.Earth, geopotentialModelParameters: new GeopotentialModelParameters(
             new MemoryStream(System.Text.Encoding.ASCII.GetBytes(string.Join('\n', lines))), 6));
 
         // Act, assert: one reader, equal coefficients, then the degree, the constants, the central term, a coefficient
         Assert.True(a.Field.HasSameModel(a.Field));
         Assert.Null(a.ModelDifference(b));
         Assert.Null(a.ModelDifference(fresh));
-        Assert.Equal("gravitational field", a.ModelDifference(new CelestialBody(PlanetsAndMoons.EARTH,
+        Assert.Equal("gravitational field", a.ModelDifference(new CelestialBody(PlanetsAndMoons.Earth,
             geopotentialModelParameters: new GeopotentialModelParameters(ModelPath, 5))));
-        Assert.Equal("gravitational field", a.ModelDifference(new CelestialBody(PlanetsAndMoons.EARTH,
+        Assert.Equal("gravitational field", a.ModelDifference(new CelestialBody(PlanetsAndMoons.Earth,
             geopotentialModelParameters: new GeopotentialModelParameters(ModelPath, 6, 3.986004418e14, 6378137.0))));
-        Assert.Equal("gravitational field", a.ModelDifference(new CelestialBody(PlanetsAndMoons.EARTH,
+        Assert.Equal("gravitational field", a.ModelDifference(new CelestialBody(PlanetsAndMoons.Earth,
             geopotentialModelParameters: new GeopotentialModelParameters(ModelPath, 6)
                 { CentralTerm = GeopotentialCentralTerm.ModelGravitationalParameter })));
         Assert.Equal("gravitational field", a.ModelDifference(modified));
-        Assert.Equal("gravitational field", a.ModelDifference(PlanetsAndMoons.EARTH_BODY));
-        Assert.Equal("gravitational field", PlanetsAndMoons.EARTH_BODY.ModelDifference(a));
+        Assert.Equal("gravitational field", a.ModelDifference(PlanetsAndMoons.EarthBody));
+        Assert.Equal("gravitational field", PlanetsAndMoons.EarthBody.ModelDifference(a));
 
         // A field of a user equals itself only
         var user = new UserField();
@@ -150,25 +149,25 @@ public class ForceModelComparisonTests
     [Fact]
     public void Bodies_CompareTheirRadiiAndKind()
     {
-        Assert.Equal("radii", PlanetsAndMoons.EARTH_BODY.ModelDifference(new WiderEarth()));
-        Assert.Equal("kind of body", PlanetsAndMoons.EARTH_BODY.ModelDifference(new EarthPoint()));
-        Assert.Equal("kind of body", new EarthPoint().ModelDifference(PlanetsAndMoons.EARTH_BODY));
-        Assert.Null(PlanetsAndMoons.EARTH_BODY.ModelDifference(new CelestialBody(PlanetsAndMoons.EARTH)));
-        Assert.Equal("atmospheric model", PlanetsAndMoons.EARTH_BODY.ModelDifference(
-            new CelestialBody(PlanetsAndMoons.EARTH, atmosphericModel: new EarthStandardAtmosphere())));
+        Assert.Equal("radii", PlanetsAndMoons.EarthBody.ModelDifference(new WiderEarth()));
+        Assert.Equal("kind of body", PlanetsAndMoons.EarthBody.ModelDifference(new EarthPoint()));
+        Assert.Equal("kind of body", new EarthPoint().ModelDifference(PlanetsAndMoons.EarthBody));
+        Assert.Null(PlanetsAndMoons.EarthBody.ModelDifference(new CelestialBody(PlanetsAndMoons.Earth)));
+        Assert.Equal("atmospheric model", PlanetsAndMoons.EarthBody.ModelDifference(
+            new CelestialBody(PlanetsAndMoons.Earth, atmosphericModel: new EarthStandardAtmosphere())));
     }
 
     [Fact]
     public void ListedBodiesOfOneIdentifier_OtherThanTheCentralBody_MustHaveTheSameModels()
     {
         // Arrange: the orbit on the Earth, two Moons of different atmospheres listed
-        var earth = PlanetsAndMoons.EARTH_BODY;
+        var earth = PlanetsAndMoons.EarthBody;
         var spacecraft = new Spacecraft(-7401, "FMC", 100.0, new StateVector(new Vector3(6700000.0, 0, 0), new Vector3(0, 7713.0, 0), earth, new TimeSystem.Time(2021, 1, 1, TimeScale.TDB),
                 Frames.Frame.ICRF), 1000.0,
             new Clock("fmcclk", 65536));
         var moons = new CelestialItem[]
         {
-            new CelestialBody(PlanetsAndMoons.MOON), new CelestialBody(PlanetsAndMoons.MOON, atmosphericModel: new ScaleHeightAtmosphere(1e4))
+            new CelestialBody(PlanetsAndMoons.Moon), new CelestialBody(PlanetsAndMoons.Moon, atmosphericModel: new ScaleHeightAtmosphere(1e4))
         };
         var window = new TimeSystem.Window(new TimeSystem.Time(2021, 1, 1, TimeScale.TDB), new TimeSystem.Time(2021, 1, 1, TimeScale.TDB).AddMinutes(10.0));
 
@@ -186,8 +185,8 @@ public class ForceModelComparisonTests
     public void BuildCentralBodyForces_TheDragOfTheCentralBody_OnceAndFirstWhenNotListed()
     {
         // Arrange
-        var earth = new CelestialBody(PlanetsAndMoons.EARTH, atmosphericModel: new EarthStandardAtmosphere());
-        var mars = new CelestialBody(PlanetsAndMoons.MARS, atmosphericModel: new MarsStandardAtmosphere());
+        var earth = new CelestialBody(PlanetsAndMoons.Earth, atmosphericModel: new EarthStandardAtmosphere());
+        var mars = new CelestialBody(PlanetsAndMoons.Mars, atmosphericModel: new MarsStandardAtmosphere());
         var spacecraft = new Spacecraft(-7402, "FMC", 100.0, new StateVector(new Vector3(6700000.0, 0, 0), new Vector3(0, 7713.0, 0), earth, new TimeSystem.Time(2021, 1, 1, TimeScale.TDB),
                 Frames.Frame.ICRF), 1000.0,
             new Clock("fmcclk2", 65536));

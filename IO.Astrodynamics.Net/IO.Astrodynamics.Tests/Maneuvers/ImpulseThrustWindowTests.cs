@@ -109,7 +109,7 @@ public class ImpulseThrustWindowTests
     public void TryExecute_ThrustWindowOpensAtTheCentroidOfTheAcceleration(double deltaV, int naifId)
     {
         // Arrange: 100 kg dry, 900 kg of fuel
-        var earth = new CelestialBody(PlanetsAndMoons.EARTH, Frame.ICRF, Start);
+        var earth = new CelestialBody(PlanetsAndMoons.Earth, Frame.ICRF, Start);
         var state = new StateVector(new Vector3(6878137.0, 0.0, 0.0), new Vector3(0.0, 7612.6, 0.0), earth, Start, Frame.ICRF);
         var spacecraft = NewSpacecraft(naifId, state, 100.0, 900.0, out var engine);
         var impulse = new FixedImpulse(earth, Start, Start, new Vector3(0.0, deltaV, 0.0), engine);
@@ -148,8 +148,8 @@ public class ImpulseThrustWindowTests
         // Arrange
         bool earthCentred = central == "Earth";
         CelestialBody body = earthCentred
-            ? new CelestialBody(PlanetsAndMoons.EARTH, Frame.ICRF, Start)
-            : new CelestialBody(PlanetsAndMoons.MOON, Frame.ICRF, Start);
+            ? new CelestialBody(PlanetsAndMoons.Earth, Frame.ICRF, Start)
+            : new CelestialBody(PlanetsAndMoons.Moon, Frame.ICRF, Start);
         var initial = earthCentred
             ? new StateVector(new Vector3(6878137.0, 0.0, 0.0), new Vector3(0.0, 7612.6, 0.0), body, Start, Frame.ICRF)
             : new StateVector(new Vector3(1.9e6, 0.0, 0.0), new Vector3(0.0, 1606.0, 0.0), body, Start, Frame.ICRF);
@@ -187,8 +187,8 @@ public class ImpulseThrustWindowTests
         // The impulse's attitude from the opening of its thrust window, its front along the delta-V: 1 ms after it the
         // record holds it, 1 ms before it the identity of no attitude
         var expectedFront = new Vector3(0.0, 1.0, 0.0);
-        var after = spacecraft.Frame.GetStateOrientationToICRF(thrust.StartDate.AddSeconds(1.0e-3));
-        var before = spacecraft.Frame.GetStateOrientationToICRF(thrust.StartDate.AddSeconds(-1.0e-3));
+        var after = spacecraft.Frame.GetStateOrientationToIcrf(thrust.StartDate.AddSeconds(1.0e-3));
+        var before = spacecraft.Frame.GetStateOrientationToIcrf(thrust.StartDate.AddSeconds(-1.0e-3));
         double frontAfter = Spacecraft.Front.Rotate(after.Rotation).Angle(expectedFront);
         double frontBefore = Spacecraft.Front.Rotate(before.Rotation).Angle(Spacecraft.Front);
         Assert.True(frontAfter < 1.0e-9, $"{frontAfter:E3} rad");

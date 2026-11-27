@@ -8,7 +8,7 @@ namespace IO.Astrodynamics.CLI.Cli;
 /// <summary>
 /// The kernels of a command (R29 of #668): the paths of the environment variable <c>ASTRO_KERNELS</c>, separated by the
 /// path separator of the platform (<c>:</c>, <c>;</c> on Windows), then those of <c>-K</c>, in order; each a kernel file, a
-/// meta-kernel or a directory, loaded by <see cref="SpiceAPI.LoadKernels(string)"/>.
+/// meta-kernel or a directory, loaded by <see cref="SpiceApi.LoadKernels(string)"/>.
 /// </summary>
 internal static class CliKernels
 {
@@ -48,7 +48,7 @@ internal static class CliKernels
 
             try
             {
-                SpiceAPI.Instance.LoadKernels(path);
+                SpiceApi.Instance.LoadKernels(path);
             }
             catch (Exception e) when (e is InvalidOperationException or ArgumentException)
             {

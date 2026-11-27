@@ -32,8 +32,8 @@ public class LroTrackingDataTests
         // Data/LRO, loaded once per process (#668, second round)
         TestKernels.EnsureLro();
 
-        _earth = new CelestialBody(PlanetsAndMoons.EARTH);
-        _moon = new CelestialBody(PlanetsAndMoons.MOON);
+        _earth = new CelestialBody(PlanetsAndMoons.Earth);
+        _moon = new CelestialBody(PlanetsAndMoons.Moon);
         _site = new Site(888, "AUWA01", _earth,
             new Planetodetic(
                 115.348678 * IO.Astrodynamics.Constants.Deg2Rad,
@@ -59,7 +59,7 @@ public class LroTrackingDataTests
     private List<Window> ComputeTrackingArcs()
     {
         // Find windows when LRO is above the horizon (Z > 0 in site topocentric frame)
-        var aboveHorizonWindows = _site.FindCoordinateWindows(_searchWindow, _lro, _site.Frame, CoordinateSystem.Rectangular, Coordinate.Z, RelationnalOperator.Greater, 0.0, new WindowSearchOptions { Step = _step }).ToList();
+        var aboveHorizonWindows = _site.FindCoordinateWindows(_searchWindow, _lro, _site.Frame, CoordinateSystem.Rectangular, Coordinate.Z, RelationalOperator.GreaterThan, 0.0, new WindowSearchOptions { Step = _step }).ToList();
 
         // Find windows when LRO is occulted by Moon from site
         var occultations = _site.FindOccultationWindows(_searchWindow, _lro, _moon, new OccultationSearchOptions { Step = _step, TargetShape = ShapeType.Point, FrontShape = ShapeType.Ellipsoid, OccultationType = OccultationType.Full }).ToList();

@@ -8,7 +8,6 @@ using IO.Astrodynamics.Body;
 using IO.Astrodynamics.Coordinates;
 using IO.Astrodynamics.Math;
 using IO.Astrodynamics.OrbitalParameters;
-using IO.Astrodynamics.OrbitalParameters.TLE;
 using IO.Astrodynamics.Surface;
 using IO.Astrodynamics.TimeSystem;
 using IO.Astrodynamics.Exceptions;
@@ -17,11 +16,11 @@ using Xunit.Abstractions;
 
 namespace IO.Astrodynamics.Tests.OrbitalParameters;
 
-public class TLETests
+public class TleTests
 {
     private readonly ITestOutputHelper _testOutputHelper;
 
-    public TLETests(ITestOutputHelper testOutputHelper)
+    public TleTests(ITestOutputHelper testOutputHelper)
     {
         _testOutputHelper = testOutputHelper;
         TestKernels.EnsureSolarSystem();
@@ -30,13 +29,13 @@ public class TLETests
     [Fact]
     public void Create()
     {
-        TLE tle = new TLE("ISS",
+        Tle tle = new Tle("ISS",
             "1 25544U 98067A   21020.53488036  .00016717  00000-0  10270-3 0  9054",
             "2 25544  51.6423 353.0312 0000493 320.8755  39.2360 15.49309423 25703");
-        Assert.ThrowsAny<Exception>(() => new TLE("ISS",
+        Assert.ThrowsAny<Exception>(() => new Tle("ISS",
             "",
             "2 25544  51.6423 353.0312 0000493 320.8755  39.2360 15.49309423 25703"));
-        Assert.ThrowsAny<Exception>(() => new TLE("ISS",
+        Assert.ThrowsAny<Exception>(() => new Tle("ISS",
             "1 25544U 98067A   21020.53488036  .00016717  00000-0  10270-3 0  9054",
             ""));
 
@@ -46,16 +45,16 @@ public class TLETests
         Assert.Equal(6.1615568022666061, tle.MeanAscendingNode, 6);
         Assert.Equal(5.6003339639830649, tle.MeanArgumentOfPeriapsis, 6);
         Assert.Equal(0.68479738531249512, tle.MeanMeanAnomaly, 6);
-        Assert.Equal(664419082.84759152, tle.Epoch.ToTDB().TimeSpanFromJ2000().TotalSeconds, 6);
-        Assert.Equal(0.00016716999999999999, tle.FirstDerivationMeanMotion, 6);
-        Assert.Equal(0.0001027, tle.BallisticCoefficient, 6);
-        Assert.Equal(0.0, tle.SecondDerivativeMeanMotion, 6);
+        Assert.Equal(664419082.84759152, tle.Epoch.ToTdb().TimeSpanFromJ2000().TotalSeconds, 6);
+        Assert.Equal(0.00016716999999999999, tle.MeanMotionDot, 6);
+        Assert.Equal(0.0001027, tle.BStar, 6);
+        Assert.Equal(0.0, tle.MeanMotionDDot, 6);
     }
 
     [Fact]
     public void ToStateVector()
     {
-        TLE tle = new TLE("ISS",
+        Tle tle = new Tle("ISS",
             "1 25544U 98067A   21020.53488036  .00016717  00000-0  10270-3 0  9054",
             "2 25544  51.6423 353.0312 0000493 320.8755  39.2360 15.49309423 25703");
 
@@ -72,7 +71,7 @@ public class TLETests
         // Twice the 0.0660 m and 7.57e-5 m/s measured on Linux x64, Windows x64 and macOS arm64 (CI run 42490199772,
         // 2026-11-08), GMAT's TEME (its kinematic terms of the equation of the equinoxes); 0.114 m and 1.3e-4 m/s
         // before #599 (tsince counted in TDB seconds)
-        _testOutputHelper.WriteLine($"MEASURE TLETests.ToStateVector: {(stateVector.Position - position).Magnitude():E3} m, " +
+        _testOutputHelper.WriteLine($"MEASURE TleTests.ToStateVector: {(stateVector.Position - position).Magnitude():E3} m, " +
                                     $"{(stateVector.Velocity - velocity).Magnitude():E3} m/s");
         Assert.InRange((stateVector.Position - position).Magnitude(), 0.0, 0.14);
         Assert.InRange((stateVector.Velocity - velocity).Magnitude(), 0.0, 1.6e-4);
@@ -86,7 +85,7 @@ public class TLETests
     {
         // #454 on the TLE path: 28872 of Vallado's SGP4-VER.TLE is suborbital; CSPICE refuses it (SPICE(SUBORBITAL)) and the
         // native layer returned r = (0, 0, 0), v = (0, 6.95e-307, 6.95e-307) without an exception
-        var tle = new TLE("SUBORBITAL", "1 28872U 05037B   05333.02012661  .25992681  00000-0  24476-3 0  1534",
+        var tle = new Tle("SUBORBITAL", "1 28872U 05037B   05333.02012661  .25992681  00000-0  24476-3 0  1534",
             "2 28872  96.4736 157.9986 0303955 244.0492 110.6523 16.46015938 10708");
         var ex = Assert.Throws<SpiceException>(() => tle.ToOsculating());
         Assert.Contains("SUBORBITAL (1 28872U", ex.Message);
@@ -98,10 +97,10 @@ public class TLETests
         // #597: 11801 of Vallado's set (1980) lies before the Earth's binary PCK; its Earth was built in ITRF93 at the epoch
         // (two SPICE(FRAMEDATANOTFOUND) printed, no exception). Now in ECLIPJ2000, read without any orientation kernel: the
         // Earth about the Earth-Moon barycenter, 4 670 km times the Moon's distance over its mean
-        var tle = new TLE("11801", "1 11801U          80230.29629788  .01431103  00000-0  14311-1      13",
+        var tle = new Tle("11801", "1 11801U          80230.29629788  .01431103  00000-0  14311-1      13",
             "2 11801  46.7916 230.4354 7318036  47.4722  10.4117  2.28537848    13");
         var earth = tle.Observer.InitialOrbitalParameters;
-        Assert.Equal(Frames.Frame.ECLIPTIC_J2000, earth.Frame);
+        Assert.Equal(Frames.Frame.ECLIPJ2000, earth.Frame);
         LabelAssert.Equal(tle.Epoch, earth.Epoch);
         Assert.Equal(3, earth.Observer.NaifId);
         Assert.InRange(earth.ToStateVector().Position.Magnitude(), 4.2e6, 5.0e6);
@@ -114,7 +113,7 @@ public class TLETests
     [Fact]
     public void Observation()
     {
-        TLE tle = new TLE("CZ-3C DEB", "1 39348U 10057N   24238.91466777  .00000306  00000-0  19116-2 0  9995",
+        Tle tle = new Tle("CZ-3C DEB", "1 39348U 10057N   24238.91466777  .00000306  00000-0  19116-2 0  9995",
             "2 39348  20.0230 212.2863 7218258 312.9449   5.6833  2.25781763 89468");
 
         TimeSystem.Time epoch = TimeSystem.Time.Parse("2024-08-26T22:34:20.00000Z");
@@ -159,11 +158,11 @@ public class TLETests
     [Fact]
     public void Equality()
     {
-        TLE tle = new TLE("ISS",
+        Tle tle = new Tle("ISS",
             "1 25544U 98067A   21020.53488036  .00016717  00000-0  10270-3 0  9054",
             "2 25544  51.6423 353.0312 0000493 320.8755  39.2360 15.49309423 25703");
 
-        TLE tle2 = new TLE("ISS2",
+        Tle tle2 = new Tle("ISS2",
             "1 25544U 98067A   21020.53488036  .00016717  00000-0  10270-3 0  9054",
             "2 25544  51.6423 353.0312 0000493 320.8755  39.2360 15.49309423 25703");
 
@@ -182,7 +181,7 @@ public class TLETests
     public void InvalidTLE()
     {
         // A wrong checksum: ArgumentException since R21 of #668 (InvalidOperationException before)
-        Assert.Throws<ArgumentException>(() => new TLE("ISS",
+        Assert.Throws<ArgumentException>(() => new Tle("ISS",
             "1 25544U 98067A   21021.53488036  .00016717  00000-0  10270-3 0  9054",
             "2 25544  51.6423 353.0312 0000493 320.8755  39.2360 15.49309423 25703"));
     }
@@ -190,7 +189,7 @@ public class TLETests
     [Fact]
     public void InvalidLine1()
     {
-        Assert.ThrowsAny<Exception>(() => new TLE("ISS",
+        Assert.ThrowsAny<Exception>(() => new Tle("ISS",
             "",
             "2 25544  51.6423 353.0312 0000493 320.8755  39.2360 15.49309423 25703"));
     }
@@ -198,7 +197,7 @@ public class TLETests
     [Fact]
     public void InvalidLine2()
     {
-        Assert.ThrowsAny<Exception>(() => new TLE("ISS",
+        Assert.ThrowsAny<Exception>(() => new Tle("ISS",
             "1 25544U 98067A   21020.53488036  .00016717  00000-0  10270-3 0  9054",
             ""));
     }
@@ -207,7 +206,7 @@ public class TLETests
     public void EmptyName_IsTheCatalogField()
     {
         // R21 of #668: a set without a name is named by its catalog field (ArgumentException before)
-        Assert.Equal("25544", new TLE("",
+        Assert.Equal("25544", new Tle("",
             "1 25544U 98067A   21020.53488036  .00016717  00000-0  10270-3 0  9054",
             "2 25544  51.6423 353.0312 0000493 320.8755  39.2360 15.49309423 25703").Name);
     }
@@ -215,14 +214,14 @@ public class TLETests
     [Fact]
     public void CreateFromKeplerian()
     {
-        TLE tle = new TLE("ISS",
+        Tle tle = new Tle("ISS",
             "1 25544U 98067A   21020.53488036  .00016717  00000-0  10270-3 0  9054",
             "2 25544  51.6423 353.0312 0000493 320.8755  39.2360 15.49309423 25703");
 
         var meanElements = tle.ToMeanKeplerianElements();
         // BSTAR value 0.0001027 corresponds to TLE field " 10270-3" (0.10270 × 10^-3)
-        var newtle = TLE.Create(
-            meanElements, "ISS", 25544, "98067A", 2570, Classification.Unclassified, 0.0001027, 0.00016717, elementSetNumber: 905);
+        var newtle = Tle.Create(
+            meanElements, "ISS", 25544, "98067A", 2570, TleClassification.Unclassified, 0.0001027, 0.00016717, elementSetNumber: 905);
         Assert.Equal(tle.Name, newtle.Name);
         Assert.Equal(tle.Line1, newtle.Line1);
         Assert.Equal(tle.Line2, newtle.Line2);
@@ -238,7 +237,7 @@ public class TLETests
         string cosparId = "123";
         ushort revolutionsAtEpoch = 904;
 
-        Assert.Throws<ArgumentException>(() => TLE.Create(kep, name, noradId, cosparId, revolutionsAtEpoch));
+        Assert.Throws<ArgumentException>(() => Tle.Create(kep, name, noradId, cosparId, revolutionsAtEpoch));
     }
 
     [Fact]
@@ -251,7 +250,7 @@ public class TLETests
         string cosparId = "98067A";
         ushort revolutionsAtEpoch = 904;
 
-        Assert.Throws<ArgumentOutOfRangeException>(() => TLE.Create(kep, name, noradId, cosparId, revolutionsAtEpoch, Classification.Unclassified, 0.0001, 0.0, 0.0, 10000));
+        Assert.Throws<ArgumentOutOfRangeException>(() => Tle.Create(kep, name, noradId, cosparId, revolutionsAtEpoch, TleClassification.Unclassified, 0.0001, 0.0, 0.0, 10000));
     }
 
     [Fact]
@@ -262,7 +261,7 @@ public class TLETests
         string cosparId = "98067A";
         ushort revolutionsAtEpoch = 904;
 
-        Assert.Throws<ArgumentNullException>(() => TLE.Create(null, name, noradId, cosparId, revolutionsAtEpoch, Classification.Unclassified, 0.0001, 0.0, 0.0, 10000));
+        Assert.Throws<ArgumentNullException>(() => Tle.Create(null, name, noradId, cosparId, revolutionsAtEpoch, TleClassification.Unclassified, 0.0001, 0.0, 0.0, 10000));
     }
 
     [Fact]
@@ -275,7 +274,7 @@ public class TLETests
         string cosparId = "98067A";
         ushort revolutionsAtEpoch = 904;
 
-        Assert.Throws<ArgumentOutOfRangeException>(() => TLE.Create(kep, name, noradId, cosparId, revolutionsAtEpoch, Classification.Unclassified, 0.0001, 0.0, 0.0, 10000));
+        Assert.Throws<ArgumentOutOfRangeException>(() => Tle.Create(kep, name, noradId, cosparId, revolutionsAtEpoch, TleClassification.Unclassified, 0.0001, 0.0, 0.0, 10000));
     }
 
     [Fact]
@@ -283,8 +282,7 @@ public class TLETests
     {
         var epoch = new TimeSystem.Time(new DateTime(2024, 1, 1), TimeScale.UTC);
         var sv = new StateVector(new Vector3(6800000.0, 0.0, 0.0), new Vector3(0.0, 8000.0, 0.0), TestHelpers.EarthAtJ2000, epoch, Frames.Frame.ICRF);
-        var config = new Astrodynamics.OrbitalParameters.TLE.Configuration(25666, "TestSatellite", "98067A");
-        var tle = sv.ToTLE(config);
+        var tle = sv.ToTle("TestSatellite", 25666, "98067A");
         Assert.NotNull(tle);
         Assert.Equal("TestSatellite", tle.Name);
         var computedSV = tle.ToStateVector().ToFrame(Frames.Frame.ICRF).ToStateVector();
@@ -311,8 +309,8 @@ public class TLETests
         var sv = new StateVector(new Vector3(5465479.168061836, -4037598.9299125164, 3.8812307310800365), // Position vector (X, Y, Z)
             new Vector3(2821.2352501830983, 3825.849951628489, 6009.392701926987), TestHelpers.EarthAtJ2000, epoch, Frames.Frame.ICRF);
         // BSTAR " 21103-3" = 0.21103 × 10^-3 = 0.00021103
-        var config = new Astrodynamics.OrbitalParameters.TLE.Configuration(25666, "TestSatellite", "98067A", BstarDragTerm: 0.00021103);
-        var tle = sv.ToTLE(config);
+        var config = new IO.Astrodynamics.OrbitalParameters.TleFitOptions { BStar = 0.00021103 };
+        var tle = sv.ToTle("TestSatellite", 25666, "98067A", config);
         Assert.NotNull(tle);
         Assert.Equal("TestSatellite", tle.Name);
         var computedSV = tle.ToStateVector().ToFrame(Frames.Frame.ICRF).ToStateVector();
@@ -321,7 +319,7 @@ public class TLETests
         // TEME gave, so that the fit lands on another point of the grid (the per-component bounds before, 0.5, 2 and 6
         // m, were that other draw). Twice the residual, the same on Linux x64, Windows x64 and macOS arm64 (CI run
         // 42490199772, 2026-11-08)
-        _testOutputHelper.WriteLine($"MEASURE TLETests.ToTLE_ValidISSOrbit_ReturnsValidTLE: " +
+        _testOutputHelper.WriteLine($"MEASURE TleTests.ToTLE_ValidISSOrbit_ReturnsValidTLE: " +
                                     $"{(sv.Position - computedSV.Position).Magnitude():E3} m, " +
                                     $"{(sv.Velocity - computedSV.Velocity).Magnitude():E3} m/s");
         Assert.InRange((sv.Position - computedSV.Position).Magnitude(), 0.0, 6.2);
@@ -337,7 +335,7 @@ public class TLETests
         string line1 = "1 25544U 98067A   21020.53488036  .00016717  00000-0  10270-3 0  9054";
         string line2 = "2 25544  51.6423 353.0312 0000493 320.8755  39.2360 15.49309423 25703";
 
-        var tle = new TLE("ISS", line1, line2);
+        var tle = new Tle("ISS", line1, line2);
 
         // Test basic TLE properties that are available
         Assert.NotNull(tle.Name);
@@ -357,7 +355,7 @@ public class TLETests
         string line1 = "1 25544S 98067A   21020.53488036  .00016717  00000-0  10270-3 0  9054";
         string line2 = "2 25544  51.6423 353.0312 0000493 320.8755  39.2360 15.49309423 25703";
 
-        var tle = new TLE("Secret Satellite", line1, line2);
+        var tle = new Tle("Secret Satellite", line1, line2);
 
         Assert.NotNull(tle);
         Assert.Equal("Secret Satellite", tle.Name);
@@ -371,7 +369,7 @@ public class TLETests
         string line1 = "1 25544C 98067A   21020.53488036  .00016717  00000-0  10270-3 0  9054";
         string line2 = "2 25544  51.6423 353.0312 0000493 320.8755  39.2360 15.49309423 25703";
 
-        var tle = new TLE("Confidential Satellite", line1, line2);
+        var tle = new Tle("Confidential Satellite", line1, line2);
 
         Assert.NotNull(tle);
         Assert.Equal("Confidential Satellite", tle.Name);
@@ -385,7 +383,7 @@ public class TLETests
         string line1 = "1 25544U 98067A   21020.53488036  .00016717  00000-0  10270-3 0  9055"; // Invalid checksum
         string line2 = "2 25544  51.6423 353.0312 0000493 320.8755  39.2360 15.49309423 25703";
 
-        var exception = Assert.Throws<ArgumentException>(() => new TLE("ISS", line1, line2));
+        var exception = Assert.Throws<ArgumentException>(() => new Tle("ISS", line1, line2));
         Assert.Equal("line1", exception.ParamName);
     }
 
@@ -395,21 +393,21 @@ public class TLETests
         string line1 = "1 25544U 98067A   21020.53488036  .00016717  00000-0  10270-3 0  9054";
         string line2 = "2 25545  51.6423 353.0312 0000493 320.8755  39.2360 15.49309423 25703"; // Different NORAD ID
 
-        var exception = Assert.Throws<ArgumentException>(() => new TLE("ISS", line1, line2));
+        var exception = Assert.Throws<ArgumentException>(() => new Tle("ISS", line1, line2));
         Assert.Equal("line2", exception.ParamName);
     }
 
     [Fact]
     public void MeanSemiMajorAxis_IsTheKernelGmOverNSquared()
     {
-        // a = (GM / n²)^(1/3), GM BODY399_GM read from the kernels through SpiceAPI, not through the Earth of the TLE, and n
+        // a = (GM / n²)^(1/3), GM BODY399_GM read from the kernels through SpiceApi, not through the Earth of the TLE, and n
         // the mean motion of line 2 in rad/s by the expression of the constructor: a guard of #675, whose constructor builds
         // its Earth once and takes the GM of its observer, the same body from the same kernels
         const string line1 = "1 25544U 98067A   21020.53488036  .00016717  00000-0  10270-3 0  9054";
         const string line2 = "2 25544  51.6423 353.0312 0000493 320.8755  39.2360 15.49309423 25703";
-        var tle = new TLE("ISS", line1, line2);
+        var tle = new Tle("ISS", line1, line2);
 
-        double gm = SpiceAPI.Instance.GetCelestialBodyInfo(399).GM;
+        double gm = SpiceApi.Instance.GetCelestialBodyInfo(399).GM;
         double n = double.Parse(line2.Substring(52, 11), System.Globalization.CultureInfo.InvariantCulture) * IO.Astrodynamics.Constants.TwoPi / 86400.0;
 
         Assert.Equal(System.Math.Cbrt(gm / (n * n)), tle.MeanSemiMajorAxis);
@@ -422,15 +420,15 @@ public class TLETests
         // The null check and the length check of line 1 run before its epoch is read (#675): 'Invalid TLE line 1 format.',
         // the message of the epoch parser, came first before
         const string line2 = "2 25544  51.6423 353.0312 0000493 320.8755  39.2360 15.49309423 25703";
-        var nullLine = Assert.Throws<ArgumentException>(() => new TLE("ISS", null, line2));
+        var nullLine = Assert.Throws<ArgumentException>(() => new Tle("ISS", null, line2));
         Assert.Equal("line1", nullLine.ParamName);
         Assert.StartsWith("Value cannot be null or empty.", nullLine.Message);
 
-        var shortLine = Assert.Throws<ArgumentException>(() => new TLE("ISS", "1 25544U 98067A   21020", line2));
+        var shortLine = Assert.Throws<ArgumentException>(() => new Tle("ISS", "1 25544U 98067A   21020", line2));
         Assert.StartsWith("TLE line 1 must be exactly 69 characters long", shortLine.Message);
 
         // A line 1 whose epoch does not parse and whose checksum is wrong reports the checksum, checked before the fields
-        var badEpoch = Assert.Throws<ArgumentException>(() => new TLE("ISS",
+        var badEpoch = Assert.Throws<ArgumentException>(() => new Tle("ISS",
             "1 25544U 98067A   2X020.53488036  .00016717  00000-0  10270-3 0  9054", line2));
         Assert.StartsWith("Checksum validation failed for TLE line 1", badEpoch.Message);
     }
@@ -441,17 +439,17 @@ public class TLETests
         string line1 = "1 25544U 98067A   21020.53488036  .00016717  00000-0  10270-3"; // Too short
         string line2 = "2 25544  51.6423 353.0312 0000493 320.8755  39.2360 15.49309423 25703";
 
-        Assert.Throws<ArgumentException>(() => new TLE("ISS", line1, line2));
+        Assert.Throws<ArgumentException>(() => new Tle("ISS", line1, line2));
     }
 
     [Fact]
     public void Propagation_FutureEpoch_CalculatesCorrectly()
     {
-        var tle = new TLE("ISS",
+        var tle = new Tle("ISS",
             "1 25544U 98067A   21020.53488036  .00016717  00000-0  10270-3 0  9054",
             "2 25544  51.6423 353.0312 0000493 320.8755  39.2360 15.49309423 25703");
 
-        var futureTime = TimeSystem.Time.CreateTDB(664419082.84759152 + 3600); // 1 hour later
+        var futureTime = TimeSystem.Time.CreateTdb(664419082.84759152 + 3600); // 1 hour later
         var futureStateVector = tle.ToStateVector(futureTime);
 
         Assert.NotNull(futureStateVector);
@@ -463,11 +461,11 @@ public class TLETests
     [Fact]
     public void Propagation_PastEpoch_CalculatesCorrectly()
     {
-        var tle = new TLE("ISS",
+        var tle = new Tle("ISS",
             "1 25544U 98067A   21020.53488036  .00016717  00000-0  10270-3 0  9054",
             "2 25544  51.6423 353.0312 0000493 320.8755  39.2360 15.49309423 25703");
 
-        var pastTime = TimeSystem.Time.CreateTDB(664419082.84759152 - 3600); // 1 hour earlier
+        var pastTime = TimeSystem.Time.CreateTdb(664419082.84759152 - 3600); // 1 hour earlier
         var pastStateVector = tle.ToStateVector(pastTime);
 
         Assert.NotNull(pastStateVector);
@@ -479,12 +477,12 @@ public class TLETests
     [Fact]
     public void MeanKeplerianElements_ConversionRoundTrip_PreservesValues()
     {
-        var tle = new TLE("ISS",
+        var tle = new Tle("ISS",
             "1 25544U 98067A   21020.53488036  .00016717  00000-0  10270-3 0  9054",
             "2 25544  51.6423 353.0312 0000493 320.8755  39.2360 15.49309423 25703");
 
         var meanElements = tle.ToMeanKeplerianElements();
-        var newTle = TLE.Create(meanElements, "ISS", 25544, "98067A", 25703, Classification.Unclassified, 0.0001027, 0.00016717, 0.0, 905);
+        var newTle = Tle.Create(meanElements, "ISS", 25544, "98067A", 25703, TleClassification.Unclassified, 0.0001027, 0.00016717, 0.0, 905);
 
         Assert.Equal(tle.MeanSemiMajorAxis, newTle.MeanSemiMajorAxis, 6);
         Assert.Equal(tle.MeanEccentricity, newTle.MeanEccentricity, 6);
@@ -498,7 +496,7 @@ public class TLETests
     public void EllipticalOrbit_HighEccentricity_HandlesCorrectly()
     {
         // Test with a high eccentricity orbit (like a comet or Molniya orbit)
-        var tle = new TLE("MOLNIYA 1-91",
+        var tle = new Tle("MOLNIYA 1-91",
             "1 25485U 98054A   21020.50000000  .00000100  00000-0  10000-3 0  9995",
             "2 25485  63.4000 270.0000 7200000 270.0000  30.0000  2.00000000 10002");
 
@@ -513,7 +511,7 @@ public class TLETests
     public void CircularOrbit_ZeroEccentricity_HandlesCorrectly()
     {
         // Test with a circular orbit
-        var tle = new TLE("CIRCULAR SAT",
+        var tle = new Tle("CIRCULAR SAT",
             "1 12345U 21001A   21020.50000000  .00000100  00000-0  10000-3 0  9994",
             "2 12345  45.0000 180.0000 0000000 000.0000 000.0000 15.00000000 10002");
 
@@ -528,7 +526,7 @@ public class TLETests
     public void PolarOrbit_HighInclination_HandlesCorrectly()
     {
         // Test with a polar orbit (high inclination)
-        var tle = new TLE("POLAR SAT",
+        var tle = new Tle("POLAR SAT",
             "1 54321U 21002A   21020.50000000  .00000100  00000-0  10000-3 0  9995",
             "2 54321  98.0000 180.0000 0010000 000.0000 000.0000 14.00000000 10000");
 
@@ -543,7 +541,7 @@ public class TLETests
     public void GeosynchronousOrbit_CorrectPeriod_HandlesCorrectly()
     {
         // Test with a geosynchronous orbit (mean motion ~1 rev/day)
-        var tle = new TLE("GEO SAT",
+        var tle = new Tle("GEO SAT",
             "1 99999U 21003A   21020.50000000  .00000100  00000-0  10000-3 0  9996",
             "2 99999  00.0000 180.0000 0000000 000.0000 000.0000  1.00273791 10007");
 
@@ -559,7 +557,7 @@ public class TLETests
     [Fact]
     public void ToString_ReturnsFormattedString()
     {
-        var tle = new TLE("ISS",
+        var tle = new Tle("ISS",
             "1 25544U 98067A   21020.53488036  .00016717  00000-0  10270-3 0  9054",
             "2 25544  51.6423 353.0312 0000493 320.8755  39.2360 15.49309423 25703");
 
@@ -572,10 +570,10 @@ public class TLETests
     [Fact]
     public void TLEAreEquals()
     {
-        var tle1 = new TLE("ISS",
+        var tle1 = new Tle("ISS",
             "1 25544U 98067A   21020.53488036  .00016717  00000-0  10270-3 0  9054",
             "2 25544  51.6423 353.0312 0000493 320.8755  39.2360 15.49309423 25703");
-        var tle2 = new TLE("ISS",
+        var tle2 = new Tle("ISS",
             "1 25544U 98067A   21020.53488036  .00016717  00000-0  10270-3 0  9054",
             "2 25544  51.6423 353.0312 0000493 320.8755  39.2360 15.49309423 25703");
 
@@ -597,8 +595,8 @@ public class TLETests
             epoch,
             Frames.Frame.TEME, elementsType: OrbitalElementsType.Mean);
 
-        var tle = TLE.Create(kep, "TEST_SAT", 65535, "21001A", 1000,
-            Classification.Unclassified, 0.0001, 0.000001, 0.0, 100);
+        var tle = Tle.Create(kep, "TEST_SAT", 65535, "21001A", 1000,
+            TleClassification.Unclassified, 0.0001, 0.000001, 0.0, 100);
 
         Assert.NotNull(tle);
         Assert.Equal("TEST_SAT", tle.Name);
@@ -608,7 +606,7 @@ public class TLETests
     [Fact]
     public void OrbitalParameters_AccessibilityTest()
     {
-        var tle = new TLE("ISS",
+        var tle = new Tle("ISS",
             "1 25544U 98067A   21020.53488036  .00016717  00000-0  10270-3 0  9054",
             "2 25544  51.6423 353.0312 0000493 320.8755  39.2360 15.49309423 25703");
 
@@ -621,15 +619,15 @@ public class TLETests
         Assert.True(tle.MeanMeanAnomaly >= 0 && tle.MeanMeanAnomaly < 2 * System.Math.PI);
 
         // Test derived parameters
-        Assert.True(tle.FirstDerivationMeanMotion != 0); // Should have some drag for ISS
-        Assert.True(tle.BallisticCoefficient > 0); // Should be positive
-        Assert.Equal(0.0, tle.SecondDerivativeMeanMotion); // Usually zero for most satellites
+        Assert.True(tle.MeanMotionDot != 0); // Should have some drag for ISS
+        Assert.True(tle.BStar > 0); // Should be positive
+        Assert.Equal(0.0, tle.MeanMotionDDot); // Usually zero for most satellites
     }
 
     [Fact]
     public void EpochExtraction_ValidatesCorrectly()
     {
-        var tle = new TLE("ISS",
+        var tle = new Tle("ISS",
             "1 25544U 98067A   21020.53488036  .00016717  00000-0  10270-3 0  9054",
             "2 25544  51.6423 353.0312 0000493 320.8755  39.2360 15.49309423 25703");
 
@@ -671,8 +669,8 @@ public class TLETests
             Frames.Frame.TEME, elementsType: OrbitalElementsType.Mean);
 
         // Act: Create TLE with specific BSTAR value
-        var tle = TLE.Create(kep, "TEST", 12345, "24001A", 100,
-            Classification.Unclassified, bstarValue);
+        var tle = Tle.Create(kep, "TEST", 12345, "24001A", 100,
+            TleClassification.Unclassified, bstarValue);
 
         // Assert: BSTAR field in Line1 should match expected format
         // BSTAR is at positions 53-60 (8 characters) in line 1
@@ -680,7 +678,7 @@ public class TLETests
         Assert.Equal(expectedTleField, actualBstarField);
 
         // Assert: Parsed BSTAR should equal original value (within floating point tolerance)
-        Assert.Equal(bstarValue, tle.BallisticCoefficient, 10);
+        Assert.Equal(bstarValue, tle.BStar, 10);
     }
 
     [Fact]
@@ -706,16 +704,11 @@ public class TLETests
 
 // Configure the TLE parameters
         // BSTAR " 21103-3" = 0.21103 × 10^-3 = 0.00021103
-        var config = new IO.Astrodynamics.OrbitalParameters.TLE.Configuration(
-            25544, // NORAD ID
-            "ISS (ZARYA)", // Satellite name
-            "98067A", // COSPAR ID
-            BstarDragTerm: 0.00021103 // B* drag term
-        );
+        var config = new IO.Astrodynamics.OrbitalParameters.TleFitOptions { BStar = 0.00021103 };
 
 // Convert the state vector to a TLE
         var sw = Stopwatch.StartNew();
-        var tle = sv.ToTLE(config);
+        var tle = sv.ToTle("ISS (ZARYA)", 25544, "98067A", config);
         sw.Stop();
         _testOutputHelper.WriteLine($"TLE fitting took: {sw.ElapsedMilliseconds} ms");
 
@@ -740,7 +733,7 @@ public class TLETests
     public void TLE_SGP4_ComparisonScenarioTest()
     {
         // Test realistic Space-Track TLE data for ISS
-        var spaceTrackTLE = new TLE("ISS (ZARYA)",
+        var spaceTrackTLE = new Tle("ISS (ZARYA)",
             "1 25544U 98067A   21020.53488036  .00016717  00000-0  10270-3 0  9054",
             "2 25544  51.6423 353.0312 0000493 320.8755  39.2360 15.49309423 25703");
 
@@ -752,8 +745,8 @@ public class TLETests
 
         // Create modelled TLE from the osculating state at t0 with same B* as Space-Track TLE
         // BSTAR " 10270-3" = 0.10270 × 10^-3 = 0.0001027
-        var tleConfig = new IO.Astrodynamics.OrbitalParameters.TLE.Configuration(25544, "ISS (ZARYA) MODEL", "98067A", BstarDragTerm: 0.0001027);
-        var modelledTLE = osculatingState.ToTLE(tleConfig);
+        var tleConfig = new IO.Astrodynamics.OrbitalParameters.TleFitOptions { BStar = 0.0001027 };
+        var modelledTLE = osculatingState.ToTle("ISS (ZARYA) MODEL", 25544, "98067A", tleConfig);
 
         // Update modelled TLE B* to match Space-Track TLE (this requires manual setting)
         // For this test, we'll work with what we have since B* setting might not be directly accessible
@@ -924,7 +917,7 @@ public class TLETests
     [Fact]
     public void TLE_HasMeanElementsType()
     {
-        var tle = new TLE("ISS",
+        var tle = new Tle("ISS",
             "1 25544U 98067A   21020.53488036  .00016717  00000-0  10270-3 0  9054",
             "2 25544  51.6423 353.0312 0000493 320.8755  39.2360 15.49309423 25703");
 
@@ -999,13 +992,13 @@ public class TLETests
         Assert.Equal(OrbitalElementsType.Mean, meanKep.ElementsType);
 
         // Verify angular elements are converted correctly (degrees to radians)
-        Assert.Equal(inclination * Astrodynamics.Constants.Deg2Rad, meanKep.I, 10);
-        Assert.Equal(raan * Astrodynamics.Constants.Deg2Rad, meanKep.RAAN, 10);
-        Assert.Equal(argumentOfPeriapsis * Astrodynamics.Constants.Deg2Rad, meanKep.AOP, 10);
-        Assert.Equal(meanAnomaly * Astrodynamics.Constants.Deg2Rad, meanKep.M, 10);
+        Assert.Equal(inclination * Astrodynamics.Constants.Deg2Rad, meanKep.Inclination(), 10);
+        Assert.Equal(raan * Astrodynamics.Constants.Deg2Rad, meanKep.AscendingNode(), 10);
+        Assert.Equal(argumentOfPeriapsis * Astrodynamics.Constants.Deg2Rad, meanKep.ArgumentOfPeriapsis(), 10);
+        Assert.Equal(meanAnomaly * Astrodynamics.Constants.Deg2Rad, meanKep.MeanAnomaly(), 10);
 
         // Verify eccentricity is preserved
-        Assert.Equal(eccentricity, meanKep.E, 10);
+        Assert.Equal(eccentricity, meanKep.Eccentricity(), 10);
 
         // Verify mean motion is preserved (convert back to rev/day)
         double meanMotionRadPerSec = meanKep.MeanMotion();
@@ -1033,8 +1026,8 @@ public class TLETests
             TestHelpers.EarthAtJ2000, epoch, Frames.Frame.TEME);
 
         // Create TLE from mean elements
-        var tle = TLE.Create(meanKep, "ISS", 25544, "98067A", 25703,
-            Classification.Unclassified, 0.0001027, 0.00016717);
+        var tle = Tle.Create(meanKep, "ISS", 25544, "98067A", 25703,
+            TleClassification.Unclassified, 0.0001027, 0.00016717);
 
         // Extract mean motion from the generated TLE Line 2 (positions 52-63)
         var tleMeanMotionStr = tle.Line2.Substring(52, 11);
@@ -1053,7 +1046,7 @@ public class TLETests
     public void FromOMM_RoundTrip_TLE_PreservesAllElements()
     {
         // Start with an existing TLE
-        var originalTle = new TLE("ISS",
+        var originalTle = new Tle("ISS",
             "1 25544U 98067A   21020.53488036  .00016717  00000-0  10270-3 0  9054",
             "2 25544  51.6423 353.0312 0000493 320.8755  39.2360 15.49309423 25703");
 
@@ -1073,8 +1066,8 @@ public class TLETests
 
         // Create new TLE from mean elements
         // Note: Original TLE has revolution count 2570 (not 25703 - the 3 is the checksum)
-        var newTle = TLE.Create(meanKep, "ISS", 25544, "98067A", 2570,
-            Classification.Unclassified, 0.0001027, 0.00016717, 0.0, 905);
+        var newTle = Tle.Create(meanKep, "ISS", 25544, "98067A", 2570,
+            TleClassification.Unclassified, 0.0001027, 0.00016717, 0.0, 905);
 
         // Compare TLE lines - they should be identical
         Assert.Equal(originalTle.Line1, newTle.Line1);
@@ -1084,7 +1077,7 @@ public class TLETests
     [Fact]
     public void ToMeanKeplerianElements_HasMeanElementsType()
     {
-        var tle = new TLE("ISS",
+        var tle = new Tle("ISS",
             "1 25544U 98067A   21020.53488036  .00016717  00000-0  10270-3 0  9054",
             "2 25544  51.6423 353.0312 0000493 320.8755  39.2360 15.49309423 25703");
 
@@ -1179,7 +1172,7 @@ public class TLETests
     [Fact]
     public void TLE_ToOsculating_ReturnsValidStateVector()
     {
-        var tle = new TLE("ISS",
+        var tle = new Tle("ISS",
             "1 25544U 98067A   21020.53488036  .00016717  00000-0  10270-3 0  9054",
             "2 25544  51.6423 353.0312 0000493 320.8755  39.2360 15.49309423 25703");
 
@@ -1195,7 +1188,7 @@ public class TLETests
     [Fact]
     public void TLE_ToOsculatingAtEpoch_ReturnsValidStateVector()
     {
-        var tle = new TLE("ISS",
+        var tle = new Tle("ISS",
             "1 25544U 98067A   21020.53488036  .00016717  00000-0  10270-3 0  9054",
             "2 25544  51.6423 353.0312 0000493 320.8755  39.2360 15.49309423 25703");
 
@@ -1212,12 +1205,12 @@ public class TLETests
     [Fact]
     public void TLE_ToStateVector_StillWorksViaSGP4()
     {
-        // TLE.ToStateVector() should still work because TLE overrides it to use SGP4
-        var tle = new TLE("ISS",
+        // Tle.ToStateVector() should still work because TLE overrides it to use SGP4
+        var tle = new Tle("ISS",
             "1 25544U 98067A   21020.53488036  .00016717  00000-0  10270-3 0  9054",
             "2 25544  51.6423 353.0312 0000493 320.8755  39.2360 15.49309423 25703");
 
-        // This should NOT throw because TLE.ToStateVector() uses SGP4
+        // This should NOT throw because Tle.ToStateVector() uses SGP4
         var sv = tle.ToStateVector();
 
         Assert.NotNull(sv);

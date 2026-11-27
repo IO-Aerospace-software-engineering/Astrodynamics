@@ -1,7 +1,7 @@
 # CCSDS CDM
 
 !!! note
-    The CDM types live in the `IO.Astrodynamics.CCSDS.CDM` namespace.
+    The CDM types live in the `IO.Astrodynamics.Ccsds` namespace.
 
 The CDM module supports constructing, reading, writing, and validating CCSDS Conjunction Data Messages in XML format.
 
@@ -31,7 +31,7 @@ a failure throwing `CdmValidationException` (a `CcsdsFormatException`) with its 
 false throws `ArgumentException` naming `options`.
 
 The exceptions of the CDM reader, `CdmParseException` and `CdmValidationException`, derive from `CcsdsFormatException`, a `FormatException` of
-`IO.Astrodynamics.CCSDS` shared by the OMM, OPM and CDM readers, so that one `catch (CcsdsFormatException)` covers a
+`IO.Astrodynamics.Ccsds` shared by the OMM, OPM and CDM readers, so that one `catch (CcsdsFormatException)` covers a
 document that cannot be read, at parsing or at validation (11.0.0, R03 of
 [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668): before, each derived from
 `Exception` alone).
@@ -182,7 +182,7 @@ Inferred metadata, which `ProtectedParticipantMetadata` and `SecondaryParticipan
   propagation (below). Set `ProtectedParticipantMetadata.SolarRadPressure` or
   `SecondaryParticipantMetadata.SolarRadPressure` to state the value of an OD; `null` keeps the inferred value (third
   round of [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668): `YES` for a
-  spacecraft whose `SolarRadiationCoeff` is above 0 before, whether or not any solar radiation pressure was modeled).
+  spacecraft whose `SolarRadiationCoefficient` is above 0 before, whether or not any solar radiation pressure was modeled).
 
 ### Propagated covariance
 
@@ -197,7 +197,7 @@ For a participant whose covariance was propagated (`CovarianceSource.Propagated`
   EGM2008, its default; `GEOPOTENTIAL: nD nO` for harmonics evaluated with other constants, given to
   `GeopotentialModelParameters` or those of another body; `POINT MASS` otherwise), `ATMOSPHERIC_MODEL` (`NRLMSISE-00`,
   `US STANDARD ATMOSPHERE 1976`, `MARS STANDARD ATMOSPHERE`, `NONE` without drag), `N_BODY_PERTURBATIONS` (the third
-  bodies, `NONE` without any) and `SOLAR_RAD_PRESSURE` (`YES` or `NO`, whatever the `SolarRadiationCoeff` of the
+  bodies, `NONE` without any) and `SOLAR_RAD_PRESSURE` (`YES` or `NO`, whatever the `SolarRadiationCoefficient` of the
   spacecraft) describe the forces the propagation actually used. The library
   does not know the name of a model whose constants are given; set it through `ProtectedParticipantMetadata` or
   `SecondaryParticipantMetadata` (`GravityModel = "EGM-96: 36D 36O"`), which take precedence;
@@ -263,7 +263,7 @@ single covariance (`SingleCovarianceMaximumPcUsed`), which no registered value n
 ## Example
 
 ```csharp
-using IO.Astrodynamics.CCSDS.CDM;
+using IO.Astrodynamics.Ccsds;
 
 // Inputs: encounter (EncounterCase)
 var cdm = encounter.ToCdm(new CdmExportOptions
@@ -295,9 +295,9 @@ of the transient spacecraft. The dates of the records have a `Time` accessor in 
 as UTC, as the writer takes it.
 
 ```csharp
-using IO.Astrodynamics.CCSDS.CDM;
+using IO.Astrodynamics.Ccsds;
 using IO.Astrodynamics.OrbitalParameters;
-using IO.Astrodynamics.SSA;
+using IO.Astrodynamics.Ssa;
 
 // Inputs: cdm (Cdm)
 StateVector object1 = cdm.ToStateVector(CdmObjectRole.Object1);

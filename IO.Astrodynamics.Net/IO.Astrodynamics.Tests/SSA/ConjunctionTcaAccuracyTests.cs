@@ -8,7 +8,7 @@ using IO.Astrodynamics.Propagator;
 using IO.Astrodynamics.Propagator.Variational;
 using IO.Astrodynamics.Propagator.Integrators;
 using IO.Astrodynamics.SolarSystemObjects;
-using IO.Astrodynamics.SSA;
+using IO.Astrodynamics.Ssa;
 using IO.Astrodynamics.Tests.Propagators.Integrators.Forces.Partials;
 using IO.Astrodynamics.Tests.Propagators.Variational;
 using Xunit;
@@ -36,7 +36,7 @@ public class ConjunctionTcaAccuracyTests
     {
         TestKernels.EnsureSolarSystem();
         _output = output;
-        _earth = new CelestialBody(PlanetsAndMoons.EARTH, Frames.Frame.ICRF, Start);
+        _earth = new CelestialBody(PlanetsAndMoons.Earth, Frames.Frame.ICRF, Start);
     }
 
     /// <summary>
@@ -256,7 +256,7 @@ public class ConjunctionTcaAccuracyTests
     {
         // Arrange: a UTC window of an hour and a range rate linear in time, g = t − t0 (s), whose zero t0 is given in UTC
         // ticks: the closed form of the tick nearer the zero
-        var start = TimeSystem.Time.J2000UTC.AddHours(1.0);
+        var start = TimeSystem.Time.J2000Utc.AddHours(1.0);
         var window = new TimeSystem.Window(start, start.AddHours(1.0));
         var middle = start.AddMinutes(30.0);
         TimeSystem.Time zero = row switch
@@ -281,9 +281,9 @@ public class ConjunctionTcaAccuracyTests
         var epoch = row switch
         {
             "inFrame" => middle.AddTicks(12),
-            "startInstant" => start.ToTDB(),
-            "endInstant" => window.EndDate.ToTDB(),
-            _ => zero.ToTDB()
+            "startInstant" => start.ToTdb(),
+            "endInstant" => window.EndDate.ToTdb(),
+            _ => zero.ToTdb()
         };
 
         // Act

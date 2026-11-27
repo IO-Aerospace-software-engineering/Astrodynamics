@@ -3,7 +3,7 @@ using System;
 using System.Collections.Generic;
 using IO.Astrodynamics.Math;
 
-namespace IO.Astrodynamics.SSA;
+namespace IO.Astrodynamics.Ssa;
 
 /// <summary>
 /// The Gaussian of the encounter plane in its principal axes: the major and minor variances and the direction of the

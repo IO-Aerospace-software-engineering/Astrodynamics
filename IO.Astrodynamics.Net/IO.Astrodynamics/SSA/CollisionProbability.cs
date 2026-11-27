@@ -3,7 +3,7 @@ using System;
 using IO.Astrodynamics.Frames;
 using IO.Astrodynamics.OrbitalParameters;
 
-namespace IO.Astrodynamics.SSA;
+namespace IO.Astrodynamics.Ssa;
 
 /// <summary>
 /// The 2D probability of collision of two objects given by their states at the time of closest approach, the methods
@@ -16,7 +16,7 @@ namespace IO.Astrodynamics.SSA;
 /// which turns the covariance). The probability is the analysis's: the in-plane miss, the projection of the combined
 /// position covariance on the encounter plane, its eigenvalues raised to CARA's clip (1e-4 R)², and the integral of the
 /// Gaussian over the disc of the combined hard-body radius R (CARA's Pc2D, within 2.0e-14 of the exact Pc of
-/// <c>tools/collision_probability</c>), so <see cref="CCSDS.CDM.Cdm.ToEncounter"/> of the same states gives the same Pc
+/// <c>tools/collision_probability</c>), so <see cref="Ccsds.Cdm.ToEncounter"/> of the same states gives the same Pc
 /// bit for bit (decision 110 of #668, decided by S. Guillet, 2026-11-26). See the conjunction assessment reference,
 /// "Collision probability".
 /// </para>

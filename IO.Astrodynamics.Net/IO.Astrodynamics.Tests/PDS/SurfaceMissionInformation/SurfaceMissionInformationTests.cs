@@ -1,8 +1,8 @@
 // Copyright 2023. Sylvain Guillet (sylvain.guillet@tutamail.com)
 
 using System.IO;
-using IO.Astrodynamics.PDS.V4.MissionInformation;
-using Schemas;
+using IO.Astrodynamics.Pds.V4.MissionInformation;
+using IO.Astrodynamics.Pds.V4.Schemas;
 using Xunit;
 
 namespace IO.Astrodynamics.Tests.PDS.SurfaceMissionInformation;
@@ -12,7 +12,7 @@ public class SurfaceMissionInformationTests
     [Fact]
     public void Create()
     {
-        PDSSurfaceMissionInformation pds = new PDSSurfaceMissionInformation();
+        PdsSurfaceMissionInformation pds = new PdsSurfaceMissionInformation();
         Surface_Mission_Information_1K00_1220 ms = new Surface_Mission_Information_1K00_1220();
     }
 
@@ -20,7 +20,7 @@ public class SurfaceMissionInformationTests
     public void ValidateGoodFile()
     {
         FileInfo validFile = new FileInfo("PDS/SurfaceMissionInformation/test1_VALID.xml");
-        PDSSurfaceMissionInformation pds = new PDSSurfaceMissionInformation();
+        PdsSurfaceMissionInformation pds = new PdsSurfaceMissionInformation();
         var res = pds.ValidateArchive(validFile);
         Assert.Empty(res);
     }
@@ -29,7 +29,7 @@ public class SurfaceMissionInformationTests
     public void ValidateBadFile()
     {
         FileInfo validFile = new FileInfo("PDS/SurfaceMissionInformation/test1_FAIL.xml");
-        PDSSurfaceMissionInformation pds = new PDSSurfaceMissionInformation();
+        PdsSurfaceMissionInformation pds = new PdsSurfaceMissionInformation();
         var res = pds.ValidateArchive(validFile);
         Assert.Equal(2,res.Length);
         Assert.Equal(
@@ -45,7 +45,7 @@ public class SurfaceMissionInformationTests
     public void GenerateArchive()
     {
         FileInfo validFile = new FileInfo("PDS/MissionInformation/test1_VALID.xml");
-        PDSSurfaceMissionInformation pds = new PDSSurfaceMissionInformation();
+        PdsSurfaceMissionInformation pds = new PdsSurfaceMissionInformation();
         var archive = pds.LoadArchive(validFile);
         var xml = pds.GenerateArchive(archive);
         byte[] byteArray = System.Text.Encoding.UTF8.GetBytes(xml);

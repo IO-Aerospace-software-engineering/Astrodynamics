@@ -47,7 +47,7 @@ public class RadiationPressureObserverTests
     {
         _output = output;
         TestKernels.EnsureSolarSystem();
-        _earth = new CelestialBody(PlanetsAndMoons.EARTH, Frames.Frame.ICRF, Epoch, albedo: 0.3,
+        _earth = new CelestialBody(PlanetsAndMoons.Earth, Frames.Frame.ICRF, Epoch, albedo: 0.3,
             thermalEffectiveTemperature: 254.0, thermalEmissivity: 0.95);
     }
 
@@ -59,7 +59,7 @@ public class RadiationPressureObserverTests
     {
         // Arrange
         var relativeToEarth = EarthRelativeState(geometry);
-        var relativeToSun = relativeToEarth.RelativeTo(Stars.SUN_BODY, Aberration.None).ToStateVector();
+        var relativeToSun = relativeToEarth.RelativeTo(Stars.SunBody, Aberration.None).ToStateVector();
         var spacecraft = CreateSpacecraft(relativeToEarth);
 
         foreach (var (name, force) in Forces(spacecraft))
@@ -81,7 +81,7 @@ public class RadiationPressureObserverTests
     public void UmbraRelativeToTheSun_IsZero()
     {
         // Arrange
-        var relativeToSun = EarthRelativeState("umbra").RelativeTo(Stars.SUN_BODY, Aberration.None).ToStateVector();
+        var relativeToSun = EarthRelativeState("umbra").RelativeTo(Stars.SunBody, Aberration.None).ToStateVector();
         var force = new SolarRadiationPressure(CreateSpacecraft(relativeToSun), new[] { _earth });
 
         // Act
@@ -96,18 +96,18 @@ public class RadiationPressureObserverTests
     public void RelativeToTheSun_MatchesTheModelsOnTheGeometricPositionsOfSpice(string geometry)
     {
         // Arrange: the Earth from the Sun by SPICE, geometric, and the models written out
-        var state = EarthRelativeState(geometry).RelativeTo(Stars.SUN_BODY, Aberration.None).ToStateVector();
+        var state = EarthRelativeState(geometry).RelativeTo(Stars.SunBody, Aberration.None).ToStateVector();
         var spacecraft = CreateSpacecraft(state);
-        var earthFromSun = _earth.GetEphemeris(Epoch, Stars.SUN_BODY, Frames.Frame.ICRF, Aberration.None).Position;
+        var earthFromSun = _earth.GetEphemeris(Epoch, Stars.SunBody, Frames.Frame.ICRF, Aberration.None).Position;
         double areaMassRatio = spacecraft.SectionalArea / spacecraft.GetTotalMass();
-        double cr = spacecraft.SolarRadiationCoeff;
+        double cr = spacecraft.SolarRadiationCoefficient;
         double luminosityTerm = IO.Astrodynamics.Constants.SolarMeanRadiativeLuminosity /
-                                (4.0 * System.Math.PI * IO.Astrodynamics.Constants.C);
+                                (4.0 * System.Math.PI * IO.Astrodynamics.Constants.SpeedOfLight);
         var r = state.Position;
         var earthToSc = r - earthFromSun;
 
         // Cannonball SRP, scaled by the shadow fraction of the Earth seen from the spacecraft
-        double shadow = Stars.SUN_BODY.ShadowFraction(_earth, state, Aberration.None);
+        double shadow = Stars.SunBody.ShadowFraction(_earth, state, Aberration.None);
         Assert.Equal(geometry switch { "umbra" => 1.0, "penumbra" => shadow, _ => 0.0 }, shadow);
         Assert.True(geometry != "penumbra" || shadow is > 0.0 and < 1.0, $"penumbra: shadow fraction {shadow}");
         var expectedSrp = r / System.Math.Pow(r.Magnitude(), 3.0) * luminosityTerm * cr * areaMassRatio * (1.0 - shadow);
@@ -120,7 +120,7 @@ public class RadiationPressureObserverTests
             (3.0 * System.Math.PI) * radiusOverSun * radiusOverSun * lambertian / earthToSc.MagnitudeSquared());
         double t2 = 254.0 * 254.0;
         var expectedThermal = earthToSc.Normalize() * (cr * areaMassRatio * 0.95 * IO.Astrodynamics.Constants.StefanBoltzmann *
-            t2 * t2 * _earth.EquatorialRadius * _earth.EquatorialRadius / IO.Astrodynamics.Constants.C /
+            t2 * t2 * _earth.EquatorialRadius * _earth.EquatorialRadius / IO.Astrodynamics.Constants.SpeedOfLight /
             earthToSc.MagnitudeSquared());
 
         var expected = new[] { expectedSrp, expectedAlbedo, expectedThermal };
@@ -146,7 +146,7 @@ public class RadiationPressureObserverTests
         var state = EarthRelativeState(geometry);
         var spacecraft = CreateSpacecraft(state);
         var cache = new PropagationEphemerisCache(new TimeSystem.Window(Epoch.AddHours(-1.0), Epoch.AddHours(1.0)),
-            new (CelestialItem, Aberration)[] { (_earth, Aberration.None), (Stars.SUN_BODY, Aberration.None) }, _earth,
+            new (CelestialItem, Aberration)[] { (_earth, Aberration.None), (Stars.SunBody, Aberration.None) }, _earth,
             Frames.Frame.ICRF, TimeSpan.FromSeconds(60.0));
         var epoch = Epoch.AddSeconds(1234.5);
         var shifted = new StateVector(state.Position, state.Velocity, _earth, epoch, Frames.Frame.ICRF);
@@ -179,7 +179,7 @@ public class RadiationPressureObserverTests
     // A state 7000 km from the Earth's centre, at a velocity of 7546 m/s, in the given geometry with respect to the Sun
     private StateVector EarthRelativeState(string geometry)
     {
-        var sunDirection = Stars.SUN_BODY.GetEphemeris(Epoch, _earth, Frames.Frame.ICRF, Aberration.None)
+        var sunDirection = Stars.SunBody.GetEphemeris(Epoch, _earth, Frames.Frame.ICRF, Aberration.None)
             .Position.Normalize();
         var side = sunDirection.Cross(Vector3.VectorZ).Normalize();
         var (position, velocity) = geometry switch

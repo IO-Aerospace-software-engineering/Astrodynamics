@@ -36,7 +36,7 @@ public class PropagatorStartStateTests
     {
         _output = output;
         TestKernels.EnsureSolarSystem();
-        _earth = new CelestialBody(PlanetsAndMoons.EARTH, Frames.Frame.ICRF, Epoch);
+        _earth = new CelestialBody(PlanetsAndMoons.Earth, Frames.Frame.ICRF, Epoch);
     }
 
     public static TheoryData<string, bool> Starts => new()
@@ -56,7 +56,7 @@ public class PropagatorStartStateTests
         var start = new StateVector(orbit.Position + new Vector3(0.0, 0.0, 1000.0), orbit.Velocity, _earth, Epoch,
             Frames.Frame.ICRF);
         var spacecraft = ReferenceCase.NewSpacecraft(-1398, start);
-        var startDate = tdbWindow ? Epoch.ToTDB() : Epoch;
+        var startDate = tdbWindow ? Epoch.ToTdb() : Epoch;
         var window = new Window(startDate, startDate.AddSeconds(600.0));
         var bodies = new CelestialItem[] { _earth };
 
@@ -105,7 +105,7 @@ public class PropagatorStartStateTests
         var c = reference.Case(elements);
         var spacecraft = new Spacecraft(-1452, "START1452", 100.0, c.Elements(_earth, Epoch, Frames.Frame.ICRF), 1000.0,
             new Clock("start1452", 65536), 10.0);
-        var startDate = tdbWindow ? Epoch.ToTDB() : Epoch;
+        var startDate = tdbWindow ? Epoch.ToTdb() : Epoch;
         var window = new Window(startDate, startDate.AddSeconds(600.0));
         var bodies = new CelestialItem[] { _earth };
 

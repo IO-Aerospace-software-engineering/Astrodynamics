@@ -9,7 +9,7 @@ Integrators advance spacecraft state through time under configured force models.
 | `Initialize(StateVector)` | Set the observer, the frame and the epoch of the evaluations, and reset every state a run depends on (step, step-control history, event bookkeeping); called by every `CentralBodyPropagator` constructor, at the start of every run and after each event |
 | `IntegrateSegment(pos, vel, baseEpoch, duration, eventDetectors)` | Advance state, returning `IntegrationResult` |
 
-`IntegrationResult` contains the completed `PropagationSegment` and optional event information (`EventInfo`) if a detector triggered during the segment; both are read-only record structs (11.0.0: their properties had public setters before).
+`IntegrationResult` contains the completed `PropagationSegment` and optional event information (`IntegrationEvent`) if a detector triggered during the segment; both are read-only record structs (11.0.0: their properties had public setters before).
 
 A custom integrator collects the `AcceptedStep` values of its segment and builds the segment once, with
 `new PropagationSegment(baseEpoch, steps)`, which copies them, or `new PropagationSegment(baseEpoch)` for a segment of no
@@ -19,7 +19,7 @@ outside the library, its `AddStep`, its constructor with a step count, its Hermi
 `UpdateStateVector` of `Integrator` being internal since 11.0.0, so a published solution cannot be changed. Before, an
 integrator filled the segment with the public `AddStep`, which also extended a published solution.
 
-The `duration` of `IntegrateSegment`, `PropagationSegment.Duration`, the `CumulativeTime` and `StepSize` of an
+The `durationSeconds` of `IntegrateSegment`, `PropagationSegment.DurationSeconds`, the `CumulativeTime` and `StepSizeSeconds` of an
 `AcceptedStep` and the time of an event count the seconds of the time argument of the propagation: TT about the Earth,
 TDB about any other central body ([#501](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/501),
 [Time & Windows](time-and-windows.md#the-time-argument-of-a-propagation)). The base epoch and the epochs the forces
@@ -28,7 +28,7 @@ propagator sets on them. A custom integrator, a bare `IIntegrator` or a subclass
 `IntegrateSegment` builds its own epochs from `baseEpoch`, keeps TDB seconds about the Earth too: its forces are then
 evaluated up to 3.4e-10 relative in time from the instants of the propagation.
 
-A `duration` of zero gives a segment of one step of zero length, which holds the start state: the propagator asks for it
+A `durationSeconds` of zero gives a segment of one step of zero length, which holds the start state: the propagator asks for it
 after an impulse executed with no time left, so that the solution ends with the state after the impulse
 ([#575](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/575)). A custom integrator that
 returns no step for it gets that step from the propagator, with the acceleration of its forces for a subclass of
@@ -103,9 +103,9 @@ var integrator = new VVIntegrator(TimeSpan.FromSeconds(1.0));
 |-----------|------|---------|-------------|
 | `absoluteTolerance` | `double` | `1e-9` | Absolute error tolerance |
 | `relativeTolerance` | `double` | `1e-9` | Relative error tolerance |
-| `initialStepSize` | `double` | `60.0` | Initial step size (s) |
-| `minStepSize` | `double` | `1e-6` | Minimum allowed step size (s) |
-| `maxStepSize` | `double` | `86400.0` | Maximum allowed step size (s) |
+| `initialStepSizeSeconds` | `double` | `60.0` | Initial step size (s) |
+| `minStepSizeSeconds` | `double` | `1e-6` | Minimum allowed step size (s) |
+| `maxStepSizeSeconds` | `double` | `86400.0` | Maximum allowed step size (s) |
 | `safetyFactor` | `double` | `0.9` | PI controller safety factor |
 | `minFactor` | `double` | `0.2` | Minimum step-size reduction factor |
 | `maxFactor` | `double` | `5.0` | Maximum step-size growth factor |
@@ -113,7 +113,7 @@ var integrator = new VVIntegrator(TimeSpan.FromSeconds(1.0));
 ### Fixed-Step Constructor
 
 ```csharp
-var fixedStep = new RK78Integrator(fixedStepSize: 30.0);
+var fixedStep = new RK78Integrator(fixedStepSizeSeconds: 30.0);
 ```
 
 When created with a fixed step size, `AdaptiveMode` is `false` and the integrator uses constant steps.
@@ -152,10 +152,10 @@ When created with a fixed step size, `AdaptiveMode` is `false` and the integrato
 var integrator = new RK78Integrator(
     absoluteTolerance: 1e-10,
     relativeTolerance: 1e-10,
-    initialStepSize: 30.0);
+    initialStepSizeSeconds: 30.0);
 
 // Fixed-step
-var fixedIntegrator = new RK78Integrator(fixedStepSize: 10.0);
+var fixedIntegrator = new RK78Integrator(fixedStepSizeSeconds: 10.0);
 ```
 
 ## Integrator options
@@ -170,13 +170,13 @@ abstract property does not compile (CS0117).
 |-------------------------|------|---------|----------------------------|
 | `AbsoluteTolerance` | `double` | `1e-9` | `absoluteTolerance` |
 | `RelativeTolerance` | `double` | `1e-9` | `relativeTolerance` |
-| `InitialStep` | `TimeSpan` | 60 s | `initialStepSize` |
-| `MinStep` | `TimeSpan` | 1 µs | `minStepSize` |
-| `MaxStep` | `TimeSpan` | 1 day | `maxStepSize` |
+| `InitialStep` | `TimeSpan` | 60 s | `initialStepSizeSeconds` |
+| `MinStep` | `TimeSpan` | 1 µs | `minStepSizeSeconds` |
+| `MaxStep` | `TimeSpan` | 1 day | `maxStepSizeSeconds` |
 | `SafetyFactor` | `double` | `0.9` | `safetyFactor` |
 | `MinFactor` | `double` | `0.2` | `minFactor` |
 | `MaxFactor` | `double` | `5.0` | `maxFactor` |
-| `FixedStep` | `TimeSpan?` | null | `fixedStepSize`: the fixed-step mode; with another setting than its default, `ArgumentException` at the start of the call |
+| `FixedStep` | `TimeSpan?` | null | `fixedStepSizeSeconds`: the fixed-step mode; with another setting than its default, `ArgumentException` at the start of the call |
 
 `RK78IntegratorOptions.Default` equals `new()` and builds the integrator of `new RK78Integrator()`, bit for bit: the
 steps are exact (60 s, 10 ticks, 86400 s), and an entry point that takes no integrator runs RK7(8) at these tolerances

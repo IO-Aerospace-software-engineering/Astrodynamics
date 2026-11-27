@@ -116,7 +116,7 @@ public class EclipseSolver : ICategorySolver
     // The search window in TDB: the occultation searches label their windows in the scale of the window's start, so a UTC
     // window would give UTC labels and lengths in TT seconds; the TDB window keeps the TDB labels and lengths of the cases
     // (IC-9 of lot L6 of #668)
-    private static Window InTdb(Window window) => new(window.StartDate.ToTDB(), window.EndDate.ToTDB());
+    private static Window InTdb(Window window) => new(window.StartDate.ToTdb(), window.EndDate.ToTdb());
 
     // The second branch (002 to 006): every event of every occulting body, about the Earth, in time order
     private Dictionary<string, object> EveryEvent(EclipseInputs inputs)
@@ -131,7 +131,7 @@ public class EclipseSolver : ICategorySolver
 
         var lightSource = BodyResolver.Resolve(inputs.LightSource);
         var occultingBodies = inputs.OccultingBodies.Select(BodyResolver.Resolve).ToList();
-        var spacecraft = PropagatedSpacecraft(inputs, new CelestialBody(PlanetsAndMoons.EARTH), epoch, searchWindow);
+        var spacecraft = PropagatedSpacecraft(inputs, new CelestialBody(PlanetsAndMoons.Earth), epoch, searchWindow);
 
         var events = new List<(CelestialBody Body, OccultationType Type, Window Window)>();
         foreach (var body in occultingBodies)
@@ -167,7 +167,7 @@ public class EclipseSolver : ICategorySolver
     // The name of an occulting body in a golden: Earth, Moon
     private static string BodyName(CelestialBody body)
     {
-        return body.NaifId == PlanetsAndMoons.MOON.NaifId ? "Moon" : body.NaifId == PlanetsAndMoons.EARTH.NaifId ? "Earth" : body.Name;
+        return body.NaifId == PlanetsAndMoons.Moon.NaifId ? "Moon" : body.NaifId == PlanetsAndMoons.Earth.NaifId ? "Earth" : body.Name;
     }
 
     // The orientation of the shape of an occulting body, its IAU frame (spec.md section 12.2)

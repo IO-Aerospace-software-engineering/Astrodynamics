@@ -29,7 +29,7 @@ public sealed class FieldOfViewReferenceKernels : IDisposable
     public FieldOfViewReferenceKernels()
     {
         TestKernels.EnsureSolarSystem();
-        SpiceAPI.Instance.LoadKernels(Path);
+        SpiceApi.Instance.LoadKernels(Path);
         Root = JsonDocument.Parse(File.ReadAllText(System.IO.Path.Combine(Path.FullName, "fov_reference.json"))).RootElement;
     }
 
@@ -37,7 +37,7 @@ public sealed class FieldOfViewReferenceKernels : IDisposable
 
     public void Dispose()
     {
-        SpiceAPI.Instance.UnloadKernels(Path);
+        SpiceApi.Instance.UnloadKernels(Path);
     }
 }
 
@@ -123,14 +123,14 @@ public class FieldOfViewReferenceTests : IClassFixture<FieldOfViewReferenceKerne
         return document.RootElement.Clone();
     }
 
-    private TimeSystem.Time Epoch => TimeSystem.Time.CreateTDB(_root.GetProperty("epoch").GetDouble());
+    private TimeSystem.Time Epoch => TimeSystem.Time.CreateTdb(_root.GetProperty("epoch").GetDouble());
 
     private Window SearchWindow
     {
         get
         {
             var window = _root.GetProperty("window");
-            return new Window(TimeSystem.Time.CreateTDB(window[0].GetDouble()), TimeSystem.Time.CreateTDB(window[1].GetDouble()));
+            return new Window(TimeSystem.Time.CreateTdb(window[0].GetDouble()), TimeSystem.Time.CreateTdb(window[1].GetDouble()));
         }
     }
 
@@ -201,10 +201,10 @@ public class FieldOfViewReferenceTests : IClassFixture<FieldOfViewReferenceKerne
     {
         return name switch
         {
-            "EARTH" => new CelestialBody(PlanetsAndMoons.EARTH),
-            "MOON" => new CelestialBody(PlanetsAndMoons.MOON),
+            "EARTH" => new CelestialBody(PlanetsAndMoons.Earth),
+            "MOON" => new CelestialBody(PlanetsAndMoons.Moon),
             "SUN" => new CelestialBody(Stars.Sun),
-            "399013" => new Site(13, "DSS-13", new CelestialBody(PlanetsAndMoons.EARTH)),
+            "399013" => new Site(13, "DSS-13", new CelestialBody(PlanetsAndMoons.Earth)),
             "-470102" => new Spacecraft(-470102, "FOVTARGET", Epoch, 1000.0, 3000.0, new Clock("FOVTARGET_CLK", 65536)),
             "3" => new Barycenter(3),
             "391" => new LagrangePoint(LagrangePoints.L1),
@@ -218,13 +218,13 @@ public class FieldOfViewReferenceTests : IClassFixture<FieldOfViewReferenceKerne
         {
             "NONE" => Aberration.None,
             "LT" => Aberration.LT,
-            "LT+S" => Aberration.LTS,
+            "LT+S" => Aberration.LtS,
             "CN" => Aberration.CN,
-            "CN+S" => Aberration.CNS,
+            "CN+S" => Aberration.CnS,
             "XLT" => Aberration.XLT,
-            "XLT+S" => Aberration.XLTS,
+            "XLT+S" => Aberration.XltS,
             "XCN" => Aberration.XCN,
-            "XCN+S" => Aberration.XCNS,
+            "XCN+S" => Aberration.XcnS,
             _ => throw new ArgumentException(abcorr)
         };
     }
@@ -234,8 +234,8 @@ public class FieldOfViewReferenceTests : IClassFixture<FieldOfViewReferenceKerne
     {
         return aberration switch
         {
-            Aberration.LTS or Aberration.CNS => "S",
-            Aberration.XLTS or Aberration.XCNS => "XS",
+            Aberration.LtS or Aberration.CnS => "S",
+            Aberration.XltS or Aberration.XcnS => "XS",
             _ => "NONE"
         };
     }
@@ -364,7 +364,7 @@ public class FieldOfViewReferenceTests : IClassFixture<FieldOfViewReferenceKerne
     }
 
     /// <summary>
-    /// <see cref="Instrument.IsInFOV"/> against fovtrg POINT on the harness's grid, at every epoch more than 1 ms from an
+    /// <see cref="Instrument.IsInFov"/> against fovtrg POINT on the harness's grid, at every epoch more than 1 ms from an
     /// edge of gftfov's windows when the reference has them.
     /// </summary>
     [Theory]
@@ -399,12 +399,12 @@ public class FieldOfViewReferenceTests : IClassFixture<FieldOfViewReferenceKerne
         var edges = _root.GetProperty("gftfov").TryGetProperty($"{parts[0]} {parts[1]} POINT {parts[2]}", out var windows)
             ? Windows(windows).SelectMany(x => x).ToArray()
             : Array.Empty<double>();
-        int compared = CompareGrid(grid, edges, epoch => instrument.IsInFOV(epoch, target, aberration));
+        int compared = CompareGrid(grid, edges, epoch => instrument.IsInFov(epoch, target, aberration));
         _output.WriteLine($"MEASURE #515 fovtrg {key}: {compared} epochs equal");
         Assert.True(compared >= grid.GetProperty("inView").GetString()!.Length - 4);
     }
 
-    /// <summary><see cref="Instrument.IsInFOV"/> of the star against fovray, for every correction of the library.</summary>
+    /// <summary><see cref="Instrument.IsInFov"/> of the star against fovray, for every correction of the library.</summary>
     [Theory]
     [InlineData(-470101041)]
     [InlineData(-470101042)]
@@ -417,7 +417,7 @@ public class FieldOfViewReferenceTests : IClassFixture<FieldOfViewReferenceKerne
             string correction = RayCorrection(aberration);
             var grid = _root.GetProperty("fovray").GetProperty($"{instrumentId} FOVSTAR1 {correction}");
             var edges = Windows(_root.GetProperty("gfrfov").GetProperty($"{instrumentId} FOVSTAR1 {correction}")).SelectMany(x => x).ToArray();
-            int compared = CompareGrid(grid, edges, epoch => instrument.IsInFOV(epoch, star, aberration));
+            int compared = CompareGrid(grid, edges, epoch => instrument.IsInFov(epoch, star, aberration));
             Assert.True(compared > 190);
         }
     }
@@ -436,7 +436,7 @@ public class FieldOfViewReferenceTests : IClassFixture<FieldOfViewReferenceKerne
                 continue;
             }
 
-            Assert.True(states[i] == '1' == inView(TimeSystem.Time.CreateTDB(et)), $"epoch {et}: fovtrg {states[i]}");
+            Assert.True(states[i] == '1' == inView(TimeSystem.Time.CreateTdb(et)), $"epoch {et}: fovtrg {states[i]}");
             compared++;
         }
 
@@ -451,7 +451,7 @@ public class FieldOfViewReferenceTests : IClassFixture<FieldOfViewReferenceKerne
     public void UtcSearchWindow_ReturnsTheSameInstants_LabelledUtc()
     {
         var instrument = InstrumentOf(-470101001);
-        var utcWindow = new Window(SearchWindow.StartDate.ToUTC(), SearchWindow.EndDate.ToUTC());
+        var utcWindow = new Window(SearchWindow.StartDate.ToUtc(), SearchWindow.EndDate.ToUtc());
         Assert.Equal(TimeScale.UTC, utcWindow.StartDate.Scale);
         foreach (var key in new[] { "-470101001 EARTH ITRF93 LT", "-470101001 399013 POINT LT" })
         {
@@ -465,7 +465,7 @@ public class FieldOfViewReferenceTests : IClassFixture<FieldOfViewReferenceKerne
                 .ToArray();
             Assert.True(WorstEdge(managed, reference) < LightTimeReferenceLimit);
             Assert.All(publicPath, w => Assert.True(w.StartDate.Scale == TimeScale.UTC && w.EndDate.Scale == TimeScale.UTC));
-            Assert.True(WorstEdge(publicPath.Select(w => new Window(w.StartDate.ToTDB(), w.EndDate.ToTDB())).ToArray(), reference) < PublicPathLimit);
+            Assert.True(WorstEdge(publicPath.Select(w => new Window(w.StartDate.ToTdb(), w.EndDate.ToTdb())).ToArray(), reference) < PublicPathLimit);
         }
     }
 
@@ -479,7 +479,7 @@ public class FieldOfViewReferenceTests : IClassFixture<FieldOfViewReferenceKerne
     public void SpicePath_OutsideKernelCoverage_ThrowsSpiceError()
     {
         var instrument = InstrumentOf(-470101001);
-        var earth = new CelestialBody(PlanetsAndMoons.EARTH);
+        var earth = new CelestialBody(PlanetsAndMoons.Earth);
         var outside = new Window(SearchWindow.EndDate.AddSeconds(3600.0), SearchWindow.EndDate.AddSeconds(7200.0));
         var exception = Assert.Throws<SpiceException>(() => instrument.FindFieldOfViewWindows(outside, earth, new FieldOfViewSearchOptions { Step = TimeSpan.FromSeconds(60.0), Aberration = Aberration.LT, TargetShape = ShapeType.Point, TargetFrame = Frames.Frame.ICRF }).ToArray());
         Assert.Contains("Insufficient ephemeris data", exception.Message);

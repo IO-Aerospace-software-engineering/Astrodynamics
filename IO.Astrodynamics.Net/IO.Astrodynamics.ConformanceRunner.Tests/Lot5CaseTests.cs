@@ -215,7 +215,7 @@ public sealed class Lot5CaseTests : IDisposable
         // Arrange: the TT item of tle_conversion 004
         var inputs = InputParser.ParseTleConversionInputs(SuiteFixture.ReadCaseFromFixture(SuiteFixture.Lot5, WriteCase).Inputs);
         var item = inputs.Omms.Single(o => o.TimeSystem == "TT");
-        SpiceAPI.Instance.LoadKernels(new DirectoryInfo(KernelsPath));
+        SpiceApi.Instance.LoadKernels(new DirectoryInfo(KernelsPath));
 
         // Act
         var tle = TleConversionSolver.ToOmm(item).ToTle();

@@ -1,6 +1,6 @@
 // Copyright 2026. Sylvain Guillet (sylvain.guillet@tutamail.com)
 
-namespace IO.Astrodynamics.SSA;
+namespace IO.Astrodynamics.Ssa;
 
 /// <summary>
 /// How the trajectory of a participant of an encounter is computed (<see cref="EncounterState.ProtectedTrajectory"/>,
@@ -28,7 +28,7 @@ public enum TrajectorySource
 
     /// <summary>
     /// SGP4 from the TLE of a spacecraft that no numerical propagation stored states for (unpropagated, or sampled by
-    /// <see cref="Propagator.TLEPropagator"/>).
+    /// <see cref="Propagator.TlePropagator"/>).
     /// </summary>
     Sgp4,
 

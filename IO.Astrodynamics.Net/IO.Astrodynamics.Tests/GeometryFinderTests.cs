@@ -24,7 +24,7 @@ public class GeometryFinderTests
     private const double RootTolerance = 1.0e-6 + 0.5e-7;
 
 
-    private static readonly TimeSystem.Time Start = TimeSystem.Time.CreateTDB(762480000.0);
+    private static readonly TimeSystem.Time Start = TimeSystem.Time.CreateTdb(762480000.0);
     private static readonly Window SearchWindow = new(Start, Start.AddSeconds(600.0));
     private static readonly TimeSpan Step = TimeSpan.FromSeconds(60.0);
 
@@ -41,7 +41,7 @@ public class GeometryFinderTests
 
     private static Func<TimeSystem.Time, double> Of(Func<double, double> f) => t => f(Seconds(t));
 
-    private static Window[] Find(Func<double, double> f, RelationnalOperator relation, double value, double? adjust = null) =>
+    private static Window[] Find(Func<double, double> f, RelationalOperator relation, double value, double? adjust = null) =>
         GeometryFinder.FindWindows(SearchWindow, Of(f), relation, value, new WindowSearchOptions { Step = Step, AdjustValue = adjust }).ToArray();
 
     private static void AssertWindows(IReadOnlyList<(double Start, double End)> expected, IReadOnlyList<Window> actual, double tolerance)
@@ -58,7 +58,7 @@ public class GeometryFinderTests
     public void Greater_RootNotTheFailingSide()
     {
         // #590: the 1 s bisection returned [30, 70.078125] s
-        var windows = Find(t => System.Math.Min(t - 30.3, 70.6 - t), RelationnalOperator.Greater, 0.0);
+        var windows = Find(t => System.Math.Min(t - 30.3, 70.6 - t), RelationalOperator.GreaterThan, 0.0);
         AssertWindows([(30.3, 70.6)], windows, RootTolerance);
     }
 
@@ -66,7 +66,7 @@ public class GeometryFinderTests
     public void Greater_HoldsAtTheEnd()
     {
         // #461: the last edge stopped at 599.443 s
-        var windows = Find(t => t - 30.3, RelationnalOperator.Greater, 0.0);
+        var windows = Find(t => t - 30.3, RelationalOperator.GreaterThan, 0.0);
         AssertWindows([(30.3, 600.0)], windows, RootTolerance);
         LabelAssert.Equal(SearchWindow.EndDate, windows[0].EndDate);
     }
@@ -80,7 +80,7 @@ public class GeometryFinderTests
         {
             read.Add(t);
             return 1.0;
-        }, RelationnalOperator.Greater, 0.0, new WindowSearchOptions { Step = Step }).ToArray();
+        }, RelationalOperator.GreaterThan, 0.0, new WindowSearchOptions { Step = Step }).ToArray();
         LabelAssert.Equal([SearchWindow], windows);
         Assert.All(read, t => Assert.InRange(t, SearchWindow.StartDate, SearchWindow.EndDate));
     }
@@ -88,23 +88,23 @@ public class GeometryFinderTests
     [Fact]
     public void Lower()
     {
-        var windows = Find(t => (t - 300.0) * (t - 300.0), RelationnalOperator.Lower, 100.0 * 100.0);
+        var windows = Find(t => (t - 300.0) * (t - 300.0), RelationalOperator.LessThan, 100.0 * 100.0);
         AssertWindows([(200.0, 400.0)], windows, RootTolerance);
     }
 
     [Fact]
     public void GreaterOrEqualAndLowerOrEqual()
     {
-        AssertWindows([(30.3, 600.0)], Find(t => t - 30.3, RelationnalOperator.GreaterOrEqual, 0.0), RootTolerance);
-        AssertWindows([(0.0, 30.3)], Find(t => t - 30.3, RelationnalOperator.LowerOrEqual, 0.0), RootTolerance);
-        AssertWindows([(30.3, 70.6)], Find(t => System.Math.Min(t - 30.3, 70.6 - t), RelationnalOperator.GreaterOrEqual, 0.0),
+        AssertWindows([(30.3, 600.0)], Find(t => t - 30.3, RelationalOperator.GreaterThanOrEqual, 0.0), RootTolerance);
+        AssertWindows([(0.0, 30.3)], Find(t => t - 30.3, RelationalOperator.LessThanOrEqual, 0.0), RootTolerance);
+        AssertWindows([(30.3, 70.6)], Find(t => System.Math.Min(t - 30.3, 70.6 - t), RelationalOperator.GreaterThanOrEqual, 0.0),
             RootTolerance);
     }
 
     [Fact]
     public void Lower_HoldsAtTheStart()
     {
-        var windows = Find(t => t - 30.3, RelationnalOperator.Lower, 0.0);
+        var windows = Find(t => t - 30.3, RelationalOperator.LessThan, 0.0);
         AssertWindows([(0.0, 30.3)], windows, RootTolerance);
         LabelAssert.Equal(SearchWindow.StartDate, windows[0].StartDate);
     }
@@ -112,7 +112,7 @@ public class GeometryFinderTests
     [Fact]
     public void NeverTrue_NoWindow()
     {
-        Assert.Empty(Find(t => -1.0, RelationnalOperator.Greater, 0.0));
+        Assert.Empty(Find(t => -1.0, RelationalOperator.GreaterThan, 0.0));
     }
 
     [Fact]
@@ -121,7 +121,7 @@ public class GeometryFinderTests
         // #487: no window. sin(2π t / 200) = 0.5 at t = 200 (k + 1/12) and 200 (k + 5/12)
         Func<double, double> f = t => System.Math.Sin(2.0 * System.Math.PI * t / 200.0);
         var crossings = new[] { 1.0 / 12.0, 5.0 / 12.0, 13.0 / 12.0, 17.0 / 12.0, 25.0 / 12.0, 29.0 / 12.0 }.Select(k => 200.0 * k).ToArray();
-        AssertWindows(crossings.Select(c => (c, c)).ToArray(), Find(f, RelationnalOperator.Equal, 0.5), RootTolerance);
+        AssertWindows(crossings.Select(c => (c, c)).ToArray(), Find(f, RelationalOperator.Equal, 0.5), RootTolerance);
 
         var gaps = new List<(double, double)>();
         double previous = 0.0;
@@ -132,21 +132,21 @@ public class GeometryFinderTests
         }
 
         gaps.Add((previous, 600.0));
-        AssertWindows(gaps, Find(f, RelationnalOperator.NotEqual, 0.5), RootTolerance);
+        AssertWindows(gaps, Find(f, RelationalOperator.NotEqual, 0.5), RootTolerance);
     }
 
     [Fact]
     public void Equal_ConstantAtTheValue_IsTheSearchWindow()
     {
-        AssertWindows([(0.0, 600.0)], Find(t => 2.0, RelationnalOperator.Equal, 2.0), 0.0);
-        Assert.Empty(Find(t => 2.0, RelationnalOperator.NotEqual, 2.0));
+        AssertWindows([(0.0, 600.0)], Find(t => 2.0, RelationalOperator.Equal, 2.0), 0.0);
+        Assert.Empty(Find(t => 2.0, RelationalOperator.NotEqual, 2.0));
     }
 
     [Fact]
     public void Equal_AtASample()
     {
         // The crossing falls on the sample at 120 s exactly
-        AssertWindows([(120.0, 120.0)], Find(t => t - 120.0, RelationnalOperator.Equal, 0.0), 0.0);
+        AssertWindows([(120.0, 120.0)], Find(t => t - 120.0, RelationalOperator.Equal, 0.0), 0.0);
     }
 
     [Fact]
@@ -157,14 +157,14 @@ public class GeometryFinderTests
         double crossing = 200.0 * 3.0 / (2.0 * System.Math.PI);
 
         // A threshold window ends at the jump
-        var greater = Find(ra, RelationnalOperator.Greater, 3.0);
+        var greater = Find(ra, RelationalOperator.GreaterThan, 3.0);
         AssertWindows(Enumerable.Range(0, 3).Select(k => (200.0 * k + crossing, 200.0 * (k + 1))).ToArray(), greater, RootTolerance);
 
         // The jumps are no crossing, nor extremes
-        var equal = Find(ra, RelationnalOperator.Equal, 3.0);
+        var equal = Find(ra, RelationalOperator.Equal, 3.0);
         AssertWindows(Enumerable.Range(0, 3).Select(k => (200.0 * k + crossing, 200.0 * k + crossing)).ToArray(), equal, RootTolerance);
-        Assert.Empty(Find(ra, RelationnalOperator.LocalMax, 0.0));
-        Assert.Empty(Find(ra, RelationnalOperator.LocalMin, 0.0));
+        Assert.Empty(Find(ra, RelationalOperator.LocalMax, 0.0));
+        Assert.Empty(Find(ra, RelationalOperator.LocalMin, 0.0));
     }
 
     [Fact]
@@ -177,16 +177,16 @@ public class GeometryFinderTests
         Func<double, double> f = t => System.Math.Exp(-t / 1000.0) * System.Math.Cos(omega * t);
         double At(int k) => (k * System.Math.PI - delta) / omega;
 
-        var maxima = Find(f, RelationnalOperator.LocalMax, 0.0);
-        var minima = Find(f, RelationnalOperator.LocalMin, 0.0);
+        var maxima = Find(f, RelationalOperator.LocalMax, 0.0);
+        var minima = Find(f, RelationalOperator.LocalMin, 0.0);
         LogDeltas("damped cosine maxima", maxima, [At(2), At(4)]);
         LogDeltas("damped cosine minima", minima, [At(1), At(3)]);
         AssertWindows([(At(2), At(2)), (At(4), At(4))], maxima, RootTolerance);
         AssertWindows([(At(1), At(1)), (At(3), At(3))], minima, RootTolerance);
 
         // The absolute maximum is at the start (a bound), the absolute minimum the first local minimum
-        AssertWindows([(0.0, 0.0)], Find(f, RelationnalOperator.AbsoluteMax, 0.0), 0.0);
-        AssertWindows([(At(1), At(1))], Find(f, RelationnalOperator.AbsoluteMin, 0.0), RootTolerance);
+        AssertWindows([(0.0, 0.0)], Find(f, RelationalOperator.AbsoluteMax, 0.0), 0.0);
+        AssertWindows([(At(1), At(1))], Find(f, RelationalOperator.AbsoluteMin, 0.0), RootTolerance);
     }
 
     [Fact]
@@ -194,16 +194,16 @@ public class GeometryFinderTests
     {
         // A decreasing quantity: no local extreme (CSPICE's gfdist neither), its absolute extremes at the bounds
         Func<double, double> f = t => -t;
-        Assert.Empty(Find(f, RelationnalOperator.LocalMin, 0.0));
-        Assert.Empty(Find(f, RelationnalOperator.LocalMax, 0.0));
-        var minimum = Find(f, RelationnalOperator.AbsoluteMin, 0.0);
+        Assert.Empty(Find(f, RelationalOperator.LocalMin, 0.0));
+        Assert.Empty(Find(f, RelationalOperator.LocalMax, 0.0));
+        var minimum = Find(f, RelationalOperator.AbsoluteMin, 0.0);
         LabelAssert.Equal([new Window(SearchWindow.EndDate, SearchWindow.EndDate)], minimum);
-        var maximum = Find(f, RelationnalOperator.AbsoluteMax, 0.0);
+        var maximum = Find(f, RelationalOperator.AbsoluteMax, 0.0);
         LabelAssert.Equal([new Window(SearchWindow.StartDate, SearchWindow.StartDate)], maximum);
 
         // With an adjustment, the windows within it of the extreme
-        AssertWindows([(550.0, 600.0)], Find(f, RelationnalOperator.AbsoluteMin, 0.0, 50.0), RootTolerance);
-        AssertWindows([(0.0, 50.0)], Find(f, RelationnalOperator.AbsoluteMax, 0.0, 50.0), RootTolerance);
+        AssertWindows([(550.0, 600.0)], Find(f, RelationalOperator.AbsoluteMin, 0.0, 50.0), RootTolerance);
+        AssertWindows([(0.0, 50.0)], Find(f, RelationalOperator.AbsoluteMax, 0.0, 50.0), RootTolerance);
     }
 
     [Fact]
@@ -211,20 +211,20 @@ public class GeometryFinderTests
     {
         // (t - 301)^2 within 100 of its minimum 0 at 301 s: [291, 311] s, between the samples at 240, 300 and 360 s
         Func<double, double> f = t => (t - 301.0) * (t - 301.0);
-        AssertWindows([(301.0, 301.0)], Find(f, RelationnalOperator.LocalMin, 0.0), RootTolerance);
-        AssertWindows([(301.0, 301.0)], Find(f, RelationnalOperator.AbsoluteMin, 0.0), RootTolerance);
-        AssertWindows([(291.0, 311.0)], Find(f, RelationnalOperator.AbsoluteMin, 0.0, 100.0), RootTolerance);
+        AssertWindows([(301.0, 301.0)], Find(f, RelationalOperator.LocalMin, 0.0), RootTolerance);
+        AssertWindows([(301.0, 301.0)], Find(f, RelationalOperator.AbsoluteMin, 0.0), RootTolerance);
+        AssertWindows([(291.0, 311.0)], Find(f, RelationalOperator.AbsoluteMin, 0.0, 100.0), RootTolerance);
     }
 
     [Fact]
     public void Boolean_EqualAndNotEqual()
     {
         Func<TimeSystem.Time, bool> inside = t => Seconds(t) >= 30.3 && Seconds(t) <= 70.6;
-        AssertWindows([(30.3, 70.6)], GeometryFinder.FindWindows(SearchWindow, inside, RelationnalOperator.Equal, true, new WindowSearchOptions { Step = Step }).ToArray(),
+        AssertWindows([(30.3, 70.6)], GeometryFinder.FindWindows(SearchWindow, inside, RelationalOperator.Equal, true, new WindowSearchOptions { Step = Step }).ToArray(),
             RootTolerance);
         AssertWindows([(0.0, 30.3), (70.6, 600.0)],
-            GeometryFinder.FindWindows(SearchWindow, inside, RelationnalOperator.NotEqual, true, new WindowSearchOptions { Step = Step }).ToArray(), RootTolerance);
-        Assert.Throws<ArgumentException>(() => GeometryFinder.FindWindows(SearchWindow, inside, RelationnalOperator.Greater, true, new WindowSearchOptions { Step = Step }));
+            GeometryFinder.FindWindows(SearchWindow, inside, RelationalOperator.NotEqual, true, new WindowSearchOptions { Step = Step }).ToArray(), RootTolerance);
+        Assert.Throws<ArgumentException>(() => GeometryFinder.FindWindows(SearchWindow, inside, RelationalOperator.GreaterThan, true, new WindowSearchOptions { Step = Step }));
     }
 
     [Fact]
@@ -232,7 +232,7 @@ public class GeometryFinderTests
     {
         var start = new TimeSystem.Time(2024, 2, 29, 12, 0, 0, TimeScale.UTC);
         var window = new Window(start, start.AddSeconds(600.0));
-        var windows = GeometryFinder.FindWindows(window, t => (t - start).TotalSeconds - 30.3, RelationnalOperator.Greater, 0.0, new WindowSearchOptions { Step = Step }).ToArray();
+        var windows = GeometryFinder.FindWindows(window, t => (t - start).TotalSeconds - 30.3, RelationalOperator.GreaterThan, 0.0, new WindowSearchOptions { Step = Step }).ToArray();
         Assert.Single(windows);
         Assert.Equal(TimeScale.UTC, windows[0].StartDate.Scale);
         Assert.InRange((windows[0].StartDate - start).TotalSeconds - 30.3, -RootTolerance, RootTolerance);
@@ -243,17 +243,17 @@ public class GeometryFinderTests
     public void ZeroLengthSearchWindow()
     {
         var window = new Window(Start, Start);
-        LabelAssert.Equal([window], GeometryFinder.FindWindows(window, t => 1.0, RelationnalOperator.Greater, 0.0, new WindowSearchOptions { Step = Step }));
-        Assert.Empty(GeometryFinder.FindWindows(window, t => 1.0, RelationnalOperator.LocalMax, 0.0, new WindowSearchOptions { Step = Step }));
-        LabelAssert.Equal([window], GeometryFinder.FindWindows(window, t => 1.0, RelationnalOperator.AbsoluteMax, 0.0, new WindowSearchOptions { Step = Step }));
+        LabelAssert.Equal([window], GeometryFinder.FindWindows(window, t => 1.0, RelationalOperator.GreaterThan, 0.0, new WindowSearchOptions { Step = Step }));
+        Assert.Empty(GeometryFinder.FindWindows(window, t => 1.0, RelationalOperator.LocalMax, 0.0, new WindowSearchOptions { Step = Step }));
+        LabelAssert.Equal([window], GeometryFinder.FindWindows(window, t => 1.0, RelationalOperator.AbsoluteMax, 0.0, new WindowSearchOptions { Step = Step }));
     }
 
     [Fact]
     public void InvalidArguments()
     {
-        Assert.Throws<ArgumentOutOfRangeException>(() => GeometryFinder.FindWindows(SearchWindow, t => 1.0, RelationnalOperator.Greater, 0.0, new WindowSearchOptions { Step = TimeSpan.Zero }));
-        Assert.Throws<ArgumentOutOfRangeException>(() => GeometryFinder.FindWindows(SearchWindow, t => 1.0, RelationnalOperator.AbsoluteMin, 0.0, new WindowSearchOptions { Step = Step, AdjustValue = -1.0 }));
-        Assert.Throws<ArgumentNullException>(() => GeometryFinder.FindWindows(SearchWindow, (Func<TimeSystem.Time, double>)null, RelationnalOperator.Greater, 0.0,
+        Assert.Throws<ArgumentOutOfRangeException>(() => GeometryFinder.FindWindows(SearchWindow, t => 1.0, RelationalOperator.GreaterThan, 0.0, new WindowSearchOptions { Step = TimeSpan.Zero }));
+        Assert.Throws<ArgumentOutOfRangeException>(() => GeometryFinder.FindWindows(SearchWindow, t => 1.0, RelationalOperator.AbsoluteMin, 0.0, new WindowSearchOptions { Step = Step, AdjustValue = -1.0 }));
+        Assert.Throws<ArgumentNullException>(() => GeometryFinder.FindWindows(SearchWindow, (Func<TimeSystem.Time, double>)null, RelationalOperator.GreaterThan, 0.0,
             new WindowSearchOptions { Step = Step }));
     }
 
@@ -261,7 +261,7 @@ public class GeometryFinderTests
     public void UndefinedQuantity_IsNoWindow()
     {
         // NaN over [60, 61) s: the transitions about it are bisected on the relation
-        var windows = Find(t => t is >= 60.0 and < 61.0 ? double.NaN : 1.0, RelationnalOperator.Greater, 0.0);
+        var windows = Find(t => t is >= 60.0 and < 61.0 ? double.NaN : 1.0, RelationalOperator.GreaterThan, 0.0);
         AssertWindows([(0.0, 60.0), (61.0, 600.0)], windows, RootTolerance);
     }
 
@@ -269,7 +269,7 @@ public class GeometryFinderTests
     public void Tangency_AtASample_IsOneClosedWindow()
     {
         // (t - 120)^2 > 0 everywhere but at the sample at 120 s: the two windows it closes and opens are one
-        AssertWindows([(0.0, 600.0)], Find(t => (t - 120.0) * (t - 120.0), RelationnalOperator.Greater, 0.0), 0.0);
+        AssertWindows([(0.0, 600.0)], Find(t => (t - 120.0) * (t - 120.0), RelationalOperator.GreaterThan, 0.0), 0.0);
     }
 
     [Fact]
@@ -277,35 +277,35 @@ public class GeometryFinderTests
     {
         // The last interval, 50 µs long, holds the crossing
         var window = new Window(Start, Start.AddTicks(6000000500L));
-        var windows = GeometryFinder.FindWindows(window, Of(t => t - 600.00002), RelationnalOperator.Equal, 0.0, new WindowSearchOptions { Step = Step }).ToArray();
+        var windows = GeometryFinder.FindWindows(window, Of(t => t - 600.00002), RelationalOperator.Equal, 0.0, new WindowSearchOptions { Step = Step }).ToArray();
         AssertWindows([(600.00002, 600.00002)], windows, RootTolerance);
     }
 
     [Fact]
     public void InvalidOperator()
     {
-        Assert.Throws<ArgumentException>(() => Find(t => t, (RelationnalOperator)99, 0.0));
+        Assert.Throws<ArgumentException>(() => Find(t => t, (RelationalOperator)99, 0.0));
     }
 
     [Fact]
     public void EarthMoonDistance_AgainstGfdist()
     {
-                var window = new Window(TimeSystem.Time.J2000TDB, TimeSystem.Time.Parse("2000-04-01 12:00:00.0000 TDB"));
+                var window = new Window(TimeSystem.Time.J2000Tdb, TimeSystem.Time.Parse("2000-04-01 12:00:00.0000 TDB"));
         var step = TimeSpan.FromDays(1.0);
         var moon = TestHelpers.MoonAtJ2000;
         var earth = TestHelpers.EarthAtJ2000;
-        IReadOnlyList<Window> Distance(RelationnalOperator relation, double value = 0.0) =>
+        IReadOnlyList<Window> Distance(RelationalOperator relation, double value = 0.0) =>
             earth.FindDistanceWindows(window, moon, relation, value, new WindowSearchOptions { Step = step }).ToArray();
 
-        GeometryReference.AssertWindows(_output, "earth_moon_distance LOCMIN", Distance(RelationnalOperator.LocalMin), GeometryReference.ThresholdDistanceExtreme);
-        GeometryReference.AssertWindows(_output, "earth_moon_distance LOCMAX", Distance(RelationnalOperator.LocalMax), GeometryReference.ThresholdDistanceExtreme);
-        GeometryReference.AssertWindows(_output, "earth_moon_distance ABSMIN", Distance(RelationnalOperator.AbsoluteMin), GeometryReference.ThresholdDistanceExtreme);
-        GeometryReference.AssertWindows(_output, "earth_moon_distance ABSMAX", Distance(RelationnalOperator.AbsoluteMax), GeometryReference.ThresholdDistanceExtreme);
+        GeometryReference.AssertWindows(_output, "earth_moon_distance LOCMIN", Distance(RelationalOperator.LocalMin), GeometryReference.ThresholdDistanceExtreme);
+        GeometryReference.AssertWindows(_output, "earth_moon_distance LOCMAX", Distance(RelationalOperator.LocalMax), GeometryReference.ThresholdDistanceExtreme);
+        GeometryReference.AssertWindows(_output, "earth_moon_distance ABSMIN", Distance(RelationalOperator.AbsoluteMin), GeometryReference.ThresholdDistanceExtreme);
+        GeometryReference.AssertWindows(_output, "earth_moon_distance ABSMAX", Distance(RelationalOperator.AbsoluteMax), GeometryReference.ThresholdDistanceExtreme);
 
         // The adjustment, which the distance search does not take, on the same quantity
         Func<TimeSystem.Time, double> distance = t => moon.GetEphemeris(t, earth, Frames.Frame.ICRF, Aberration.None).Position.Magnitude();
         GeometryReference.AssertWindows(_output, "earth_moon_distance ABSMIN adjust 1000 km",
-            GeometryFinder.FindWindows(window, distance, RelationnalOperator.AbsoluteMin, 0.0, new WindowSearchOptions { Step = step, AdjustValue = 1000000.0 }).ToArray(),
+            GeometryFinder.FindWindows(window, distance, RelationalOperator.AbsoluteMin, 0.0, new WindowSearchOptions { Step = step, AdjustValue = 1000000.0 }).ToArray(),
             GeometryReference.ThresholdCrossing);
     }
 
@@ -313,16 +313,16 @@ public class GeometryFinderTests
     public void MoonFromSite_AgainstGfposc()
     {
                 Site site = new Site(13, "DSS-13", TestHelpers.EarthAtJ2000);
-        var window = new Window(TimeSystem.Time.J2000TDB, TimeSystem.Time.Parse("2000-01-02 12:00:00.0000 TDB"));
+        var window = new Window(TimeSystem.Time.J2000Tdb, TimeSystem.Time.Parse("2000-01-02 12:00:00.0000 TDB"));
         var step = TimeSpan.FromSeconds(60.0);
         var moon = TestHelpers.MoonAtJ2000;
-        IReadOnlyList<Window> Search(CoordinateSystem system, Coordinate coordinate, RelationnalOperator relation) =>
+        IReadOnlyList<Window> Search(CoordinateSystem system, Coordinate coordinate, RelationalOperator relation) =>
             site.FindCoordinateWindows(window, moon, site.Frame, system, coordinate, relation, 0.0, new WindowSearchOptions { Step = step }).ToArray();
 
-        GeometryReference.AssertWindows(_output, "dss13_moon_z = 0", Search(CoordinateSystem.Rectangular, Coordinate.Z, RelationnalOperator.Equal), GeometryReference.ThresholdCrossing);
-        GeometryReference.AssertWindows(_output, "dss13_moon_elevation LOCMAX", Search(CoordinateSystem.RaDec, Coordinate.Declination, RelationnalOperator.LocalMax),
+        GeometryReference.AssertWindows(_output, "dss13_moon_z = 0", Search(CoordinateSystem.Rectangular, Coordinate.Z, RelationalOperator.Equal), GeometryReference.ThresholdCrossing);
+        GeometryReference.AssertWindows(_output, "dss13_moon_elevation LOCMAX", Search(CoordinateSystem.RaDec, Coordinate.Declination, RelationalOperator.LocalMax),
             GeometryReference.ThresholdElevationExtreme);
-        GeometryReference.AssertWindows(_output, "dss13_moon_elevation LOCMIN", Search(CoordinateSystem.RaDec, Coordinate.Declination, RelationnalOperator.LocalMin),
+        GeometryReference.AssertWindows(_output, "dss13_moon_elevation LOCMIN", Search(CoordinateSystem.RaDec, Coordinate.Declination, RelationalOperator.LocalMin),
             GeometryReference.ThresholdElevationExtreme);
     }
 
@@ -333,7 +333,7 @@ public class GeometryFinderTests
     private static readonly double Rise = Period / (2.0 * System.Math.PI) * System.Math.Asin(0.995);
     private static double Sine(double t) => System.Math.Sin(2.0 * System.Math.PI * t / Period);
 
-    private static Window[] FindOverTheDay(Func<double, double> f, RelationnalOperator relation, double value, double stepMinutes, double? adjust = null) =>
+    private static Window[] FindOverTheDay(Func<double, double> f, RelationalOperator relation, double value, double stepMinutes, double? adjust = null) =>
         GeometryFinder.FindWindows(Day, Of(f), relation, value, new WindowSearchOptions { Step = TimeSpan.FromMinutes(stepMinutes), AdjustValue = adjust }).ToArray();
 
     private void AssertClosedForm(string label, IReadOnlyList<(double Start, double End)> expected, IReadOnlyList<Window> actual)
@@ -352,19 +352,19 @@ public class GeometryFinderTests
     }
 
     [Theory]
-    [InlineData(RelationnalOperator.Greater, 0.995, 3.0)]
-    [InlineData(RelationnalOperator.Greater, 0.995, 10.0)]
-    [InlineData(RelationnalOperator.Greater, 0.995, 22.0)]
-    [InlineData(RelationnalOperator.GreaterOrEqual, 0.995, 3.0)]
-    [InlineData(RelationnalOperator.GreaterOrEqual, 0.995, 10.0)]
-    [InlineData(RelationnalOperator.GreaterOrEqual, 0.995, 22.0)]
-    [InlineData(RelationnalOperator.Lower, -0.995, 3.0)]
-    [InlineData(RelationnalOperator.Lower, -0.995, 10.0)]
-    [InlineData(RelationnalOperator.Lower, -0.995, 22.0)]
-    [InlineData(RelationnalOperator.LowerOrEqual, -0.995, 3.0)]
-    [InlineData(RelationnalOperator.LowerOrEqual, -0.995, 10.0)]
-    [InlineData(RelationnalOperator.LowerOrEqual, -0.995, 22.0)]
-    public void Threshold_WindowsShorterThanTheStep_FoundUpToHalfTheTimeBetweenExtremes(RelationnalOperator relation, double value, double stepMinutes)
+    [InlineData(RelationalOperator.GreaterThan, 0.995, 3.0)]
+    [InlineData(RelationalOperator.GreaterThan, 0.995, 10.0)]
+    [InlineData(RelationalOperator.GreaterThan, 0.995, 22.0)]
+    [InlineData(RelationalOperator.GreaterThanOrEqual, 0.995, 3.0)]
+    [InlineData(RelationalOperator.GreaterThanOrEqual, 0.995, 10.0)]
+    [InlineData(RelationalOperator.GreaterThanOrEqual, 0.995, 22.0)]
+    [InlineData(RelationalOperator.LessThan, -0.995, 3.0)]
+    [InlineData(RelationalOperator.LessThan, -0.995, 10.0)]
+    [InlineData(RelationalOperator.LessThan, -0.995, 22.0)]
+    [InlineData(RelationalOperator.LessThanOrEqual, -0.995, 3.0)]
+    [InlineData(RelationalOperator.LessThanOrEqual, -0.995, 10.0)]
+    [InlineData(RelationalOperator.LessThanOrEqual, -0.995, 22.0)]
+    public void Threshold_WindowsShorterThanTheStep_FoundUpToHalfTheTimeBetweenExtremes(RelationalOperator relation, double value, double stepMinutes)
     {
         // #678: no window at 3 and 10 min, 2 at 22 min; a step of 22 min is less than half the 2700 s between extremes.
         // The windows of the maxima, or of the minima half a period later
@@ -378,7 +378,7 @@ public class GeometryFinderTests
     {
         // #678: at a 10 min step, Equal gave none of the 32 crossings and NotEqual the whole day
         var crossings = Enumerable.Range(0, 16).SelectMany(k => new[] { k * Period + Rise, k * Period + 0.5 * Period - Rise }).ToArray();
-        AssertClosedForm("Equal 0.995 at 10 min", crossings.Select(c => (c, c)).ToArray(), FindOverTheDay(Sine, RelationnalOperator.Equal, 0.995, 10.0));
+        AssertClosedForm("Equal 0.995 at 10 min", crossings.Select(c => (c, c)).ToArray(), FindOverTheDay(Sine, RelationalOperator.Equal, 0.995, 10.0));
 
         var gaps = new List<(double, double)>();
         double previous = 0.0;
@@ -389,7 +389,7 @@ public class GeometryFinderTests
         }
 
         gaps.Add((previous, 86400.0));
-        AssertClosedForm("NotEqual 0.995 at 10 min", gaps, FindOverTheDay(Sine, RelationnalOperator.NotEqual, 0.995, 10.0));
+        AssertClosedForm("NotEqual 0.995 at 10 min", gaps, FindOverTheDay(Sine, RelationalOperator.NotEqual, 0.995, 10.0));
     }
 
     private static (double Start, double End)[] AroundGaps(double first, double halfWidth)
@@ -413,7 +413,7 @@ public class GeometryFinderTests
     {
         // #678: one window over the whole day. sin > -0.995 everywhere but 171.959 s about each minimum, at 4050 s + k 5400 s
         AssertClosedForm("Greater -0.995 at 10 min", AroundGaps(0.75 * Period, 0.25 * Period - Rise),
-            FindOverTheDay(Sine, RelationnalOperator.Greater, -0.995, 10.0));
+            FindOverTheDay(Sine, RelationalOperator.GreaterThan, -0.995, 10.0));
     }
 
     [Fact]
@@ -423,7 +423,7 @@ public class GeometryFinderTests
         // it, below 0.995, everywhere but 171.959 s about each maximum, at 2700 s + k 5400 s
         Func<double, double> f = t => -System.Math.Cos(2.0 * System.Math.PI * t / Period);
         AssertClosedForm("AbsoluteMin adjust 1.995 at 10 min", AroundGaps(0.5 * Period, 0.25 * Period - Rise),
-            FindOverTheDay(f, RelationnalOperator.AbsoluteMin, 0.0, 10.0, 1.995));
+            FindOverTheDay(f, RelationalOperator.AbsoluteMin, 0.0, 10.0, 1.995));
     }
 
     [Fact]
@@ -434,7 +434,7 @@ public class GeometryFinderTests
         var window = new Window(Start, Start.AddSeconds(1200.0));
         Func<double, double> f = t => 1.0 / 64.0 - (t - 640.0) / 320.0 * ((t - 640.0) / 320.0);
         Assert.Equal(0.0, f(600.0));
-        var windows = GeometryFinder.FindWindows(window, Of(f), RelationnalOperator.Greater, 0.0, new WindowSearchOptions { Step = TimeSpan.FromSeconds(120.0) }).ToArray();
+        var windows = GeometryFinder.FindWindows(window, Of(f), RelationalOperator.GreaterThan, 0.0, new WindowSearchOptions { Step = TimeSpan.FromSeconds(120.0) }).ToArray();
         AssertClosedForm("parabola Greater 0", [(600.0, 680.0)], windows);
     }
 
@@ -453,26 +453,26 @@ public class GeometryFinderTests
         };
         double width = 0.01 * Period / (2.0 * System.Math.PI);
         var expected = Enumerable.Range(0, 16).Select(k => (4400.0 + k * Period - width, 4400.0 + k * Period)).ToArray();
-        AssertClosedForm($"sawtooth at {stepMinutes} min", expected, FindOverTheDay(ra, RelationnalOperator.Greater, 2.0 * System.Math.PI - 0.01, stepMinutes));
+        AssertClosedForm($"sawtooth at {stepMinutes} min", expected, FindOverTheDay(ra, RelationalOperator.GreaterThan, 2.0 * System.Math.PI - 0.01, stepMinutes));
     }
 
     [Fact]
     public void UndefinedQuantity_InsideAFailingStretch_IsNoWindow()
     {
         // An undefined quantity holds no relation: NaN over [90, 91) s inside a stretch where it fails
-        Assert.Empty(Find(t => t is >= 90.0 and < 91.0 ? double.NaN : -1.0, RelationnalOperator.Greater, 0.0));
+        Assert.Empty(Find(t => t is >= 90.0 and < 91.0 ? double.NaN : -1.0, RelationalOperator.GreaterThan, 0.0));
 
         // Every sample undefined, in a search window of one interval: no extreme is searched between them
         var window = new Window(Start, Start.AddSeconds(30.0));
-        Assert.Empty(GeometryFinder.FindWindows(window, t => double.NaN, RelationnalOperator.Greater, 0.0, new WindowSearchOptions { Step = Step }));
-        Assert.Empty(GeometryFinder.FindWindows(window, t => double.NaN, RelationnalOperator.Lower, 0.0, new WindowSearchOptions { Step = Step }));
+        Assert.Empty(GeometryFinder.FindWindows(window, t => double.NaN, RelationalOperator.GreaterThan, 0.0, new WindowSearchOptions { Step = Step }));
+        Assert.Empty(GeometryFinder.FindWindows(window, t => double.NaN, RelationalOperator.LessThan, 0.0, new WindowSearchOptions { Step = Step }));
     }
 
     [Theory]
-    [InlineData(RelationnalOperator.Greater)]
-    [InlineData(RelationnalOperator.GreaterOrEqual)]
-    [InlineData(RelationnalOperator.Equal)]
-    public void UndefinedSample_NextToAHiddenExtreme_IsNotSearched(RelationnalOperator relation)
+    [InlineData(RelationalOperator.GreaterThan)]
+    [InlineData(RelationalOperator.GreaterThanOrEqual)]
+    [InlineData(RelationalOperator.Equal)]
+    public void UndefinedSample_NextToAHiddenExtreme_IsNotSearched(RelationalOperator relation)
     {
         // A search window of one interval, the quantity undefined at its start and 1 - ((t - 15 s) / 5 s)^2 elsewhere: the
         // samples are NaN and -8, the hidden maximum 1 at 15 s. A bracket with an undefined sample is not searched, so no
@@ -504,16 +504,16 @@ public class GeometryFinderTests
         var earth = new CelestialBody(399);
         var moon = new CelestialBody(301);
         var site = new Site(682, "F07RADIUS", earth, new Planetodetic(0.5, 0.3, 100.0));
-        Assert.Throws<ArgumentOutOfRangeException>(() => earth.FindCoordinateWindows(SearchWindow, moon, earth.Frame, CoordinateSystem.Planetographic, Coordinate.Radius, RelationnalOperator.Greater, 3.9e8, new WindowSearchOptions { Step = Step }).ToArray());
-        Assert.Throws<ArgumentOutOfRangeException>(() => moon.FindCoordinateWindows(SearchWindow, site, moon.Frame, CoordinateSystem.Planetographic, Coordinate.Radius, RelationnalOperator.Greater, 3.9e8, new WindowSearchOptions { Step = Step }).ToArray());
+        Assert.Throws<ArgumentOutOfRangeException>(() => earth.FindCoordinateWindows(SearchWindow, moon, earth.Frame, CoordinateSystem.Planetographic, Coordinate.Radius, RelationalOperator.GreaterThan, 3.9e8, new WindowSearchOptions { Step = Step }).ToArray());
+        Assert.Throws<ArgumentOutOfRangeException>(() => moon.FindCoordinateWindows(SearchWindow, site, moon.Frame, CoordinateSystem.Planetographic, Coordinate.Radius, RelationalOperator.GreaterThan, 3.9e8, new WindowSearchOptions { Step = Step }).ToArray());
         // and the coordinates of the other systems
-        Assert.Throws<ArgumentOutOfRangeException>(() => earth.FindCoordinateWindows(SearchWindow, moon, earth.Frame, CoordinateSystem.Planetographic, Coordinate.Declination, RelationnalOperator.Greater, 0.0, new WindowSearchOptions { Step = Step }).ToArray());
+        Assert.Throws<ArgumentOutOfRangeException>(() => earth.FindCoordinateWindows(SearchWindow, moon, earth.Frame, CoordinateSystem.Planetographic, Coordinate.Declination, RelationalOperator.GreaterThan, 0.0, new WindowSearchOptions { Step = Step }).ToArray());
     }
 
     #region Resolution of the windows between samples (#668)
 
     // The public search of the closed-form margin of ShortWindowMargin against zero, in seconds from its start
-    private static Func<Func<double, double>, double, IReadOnlyList<(double Start, double End)>> PublicSearch(RelationnalOperator relation) =>
+    private static Func<Func<double, double>, double, IReadOnlyList<(double Start, double End)>> PublicSearch(RelationalOperator relation) =>
         (margin, step) =>
         {
             var start = Start;
@@ -524,13 +524,13 @@ public class GeometryFinderTests
         };
 
     public static IEnumerable<object[]> ResolutionCases() =>
-        from relation in new[] { RelationnalOperator.Greater, RelationnalOperator.GreaterOrEqual }
+        from relation in new[] { RelationalOperator.GreaterThan, RelationalOperator.GreaterThanOrEqual }
         from step in new[] { 60.0, 600.0, 1350.0 }
         select new object[] { relation, step };
 
     /// <summary>
     /// The windows and gaps of a double quantity between samples (#678's search) on the closed form of
-    /// <c>ShortWindowMargin</c>, through the public <see cref="GeometryFinder.FindWindows(Window, Func{TimeSystem.Time, double}, RelationnalOperator, double, WindowSearchOptions)"/>:
+    /// <c>ShortWindowMargin</c>, through the public <see cref="GeometryFinder.FindWindows(Window, Func{TimeSystem.Time, double}, RelationalOperator, double, WindowSearchOptions)"/>:
     /// with the step at most half the time between the extremes, every window and gap at least 2 √ε h + 2τ/3 wide is
     /// found (τ = 1 µs; 2.5 µs at 1 min, 19 µs at 10 min, 41 µs at 22.5 min), its edges within 1 µs and half a tick of the
     /// closed form; a tangency gives no window. #678 stated "down to about 1 µs", which longer steps do not reach (#668).
@@ -538,7 +538,7 @@ public class GeometryFinderTests
     /// </summary>
     [Theory]
     [MemberData(nameof(ResolutionCases))]
-    public void WindowsAndGaps_AtLeastTheResolutionBound_AreFound(RelationnalOperator relation, double step)
+    public void WindowsAndGaps_AtLeastTheResolutionBound_AreFound(RelationalOperator relation, double step)
     {
         var search = PublicSearch(relation);
         double bound = Occultation.ShortWindowMargin.ResolutionBound(step);
@@ -596,8 +596,8 @@ internal static class GeometryReference
         double worst = 0.0;
         for (int i = 0; i < expected.Length; i++)
         {
-            double ds = actual[i].StartDate.ToTDB().TimeSpanFromJ2000().TotalSeconds - expected[i][0];
-            double de = actual[i].EndDate.ToTDB().TimeSpanFromJ2000().TotalSeconds - expected[i][1];
+            double ds = actual[i].StartDate.ToTdb().TimeSpanFromJ2000().TotalSeconds - expected[i][0];
+            double de = actual[i].EndDate.ToTdb().TimeSpanFromJ2000().TotalSeconds - expected[i][1];
             worst = System.Math.Max(worst, System.Math.Max(System.Math.Abs(ds), System.Math.Abs(de)));
         }
 

@@ -5,7 +5,6 @@ using IO.Astrodynamics.ConformanceRunner.Models;
 using IO.Astrodynamics.ConformanceRunner.Utilities;
 using IO.Astrodynamics.Frames;
 using IO.Astrodynamics.OrbitalParameters;
-using IO.Astrodynamics.OrbitalParameters.TLE;
 using IO.Astrodynamics.TimeSystem;
 
 namespace IO.Astrodynamics.ConformanceRunner.Solvers;
@@ -21,10 +20,10 @@ namespace IO.Astrodynamics.ConformanceRunner.Solvers;
 /// model or mode is an ERROR that names it, a model or mode the spec does not define another.
 /// </para>
 /// <para>
-/// <see cref="TLE.ToOsculating(Time)"/> takes tsince as the TT seconds from the TLE epoch to its argument (#599): a
+/// <see cref="Tle.ToOsculating(Time)"/> takes tsince as the TT seconds from the TLE epoch to its argument (#599): a
 /// tsince sample is the TT instant <c>tle.Epoch</c> + 60·tsince, a UTC instant is given as it is. The ICRF state is the
 /// TEME state through <see cref="Frame.TEME"/> (#451), quasi-inertial, v′ = R v. The epoch is the UTC calendar date of
-/// <see cref="TLE"/>'s epoch, exact to the tick (#603).
+/// <see cref="Tle"/>'s epoch, exact to the tick (#603).
 /// </para>
 /// </remarks>
 public class Sgp4Solver : ICategorySolver
@@ -40,7 +39,7 @@ public class Sgp4Solver : ICategorySolver
     {
         var inputs = InputParser.ParseSgp4Inputs(caseInput.Inputs);
         CheckModel(inputs.GravityModel, inputs.Opsmode);
-        var tle = new TLE(string.IsNullOrEmpty(inputs.Tle.Name) ? "TLE" : inputs.Tle.Name, inputs.Tle.Line1, inputs.Tle.Line2);
+        var tle = new Tle(string.IsNullOrEmpty(inputs.Tle.Name) ? "TLE" : inputs.Tle.Name, inputs.Tle.Line1, inputs.Tle.Line2);
 
         var instants = new List<Time>();
         if (inputs.TsinceMin != null)

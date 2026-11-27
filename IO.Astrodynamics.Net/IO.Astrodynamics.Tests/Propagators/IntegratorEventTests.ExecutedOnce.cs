@@ -227,7 +227,7 @@ public partial class IntegratorEventTests
     // burn of its 10 m/s last past the range of a TimeSpan: its execution throws OverflowException after the fuel burned
     private static (Spacecraft Spacecraft, ImpulseManeuver Maneuver, CelestialBody Earth) SlowBurn(int naifId)
     {
-        var earth = new CelestialBody(PlanetsAndMoons.EARTH, Frame.ICRF, S);
+        var earth = new CelestialBody(PlanetsAndMoons.Earth, Frame.ICRF, S);
         var spacecraft = new Spacecraft(naifId, $"IE{-naifId}", 1000.0, MinimumEpochGateTests.Orbit(earth, System.Math.PI), 3000.0,
             new Clock($"IE{-naifId}_CLK", 65536), cosparId: "2026-001A");
         var tank = new FuelTank("ft", 1000.0, 1000.0, "model", "sn");
@@ -355,7 +355,7 @@ public partial class IntegratorEventTests
     [Fact]
     public void ADetectorThatSkippedAnOccurrence_StaysArmedUntilItExecutes()
     {
-        var earth = new CelestialBody(PlanetsAndMoons.EARTH, Frame.ICRF, S);
+        var earth = new CelestialBody(PlanetsAndMoons.Earth, Frame.ICRF, S);
         var (spacecraft, engine) = NewSpacecraft(-7977, MinimumEpochGateTests.Orbit(earth, System.Math.PI));
         var maneuver = new TwoCrossingImpulse(earth, engine, 1, TwoCrossingRoots());
         spacecraft.SetManeuvers(maneuver);
@@ -393,7 +393,7 @@ public partial class IntegratorEventTests
     [InlineData("RK")]
     public void ADetectorThatSkippedACrossing_ExecutesAtTheLaterOne(string inner)
     {
-        var earth = new CelestialBody(PlanetsAndMoons.EARTH, Frame.ICRF, S);
+        var earth = new CelestialBody(PlanetsAndMoons.Earth, Frame.ICRF, S);
         var (spacecraft, engine) = NewSpacecraft(inner == "VV" ? -7978 : -7979, MinimumEpochGateTests.Orbit(earth, System.Math.PI));
         var maneuver = new TwoCrossingImpulse(earth, engine, 1, TwoCrossingRoots());
         spacecraft.SetManeuvers(maneuver);

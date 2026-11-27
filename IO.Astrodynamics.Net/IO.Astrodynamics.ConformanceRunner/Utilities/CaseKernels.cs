@@ -41,11 +41,11 @@ public sealed class CaseKernels : IDisposable
         {
             foreach (var file in files)
             {
-                SpiceAPI.Instance.LoadKernels(file);
+                SpiceApi.Instance.LoadKernels(file);
 
                 // A path inside a set already loaded (the runner's kernel directory) belongs to that set: SPICE already holds
                 // the file, so the load furnishes nothing and the file is not listed on its own (R01 of #668)
-                if (!SpiceAPI.Instance.GetLoadedKernels().Any(k => k.FullName == file.FullName))
+                if (!SpiceApi.Instance.GetLoadedKernels().Any(k => k.FullName == file.FullName))
                 {
                     throw new InvalidOperationException(
                         $"The kernel {file.FullName} lies in a kernel set the runner has loaded: it cannot be loaded for the case alone.");
@@ -71,7 +71,7 @@ public sealed class CaseKernels : IDisposable
     {
         for (int i = _loaded.Count - 1; i >= 0; i--)
         {
-            SpiceAPI.Instance.UnloadKernels(_loaded[i]);
+            SpiceApi.Instance.UnloadKernels(_loaded[i]);
         }
 
         _loaded.Clear();

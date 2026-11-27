@@ -30,8 +30,8 @@ public class LightTimeCorrectionTests
 {
     private static readonly Aberration[] Flags =
     [
-        Aberration.None, Aberration.LT, Aberration.LTS, Aberration.CN, Aberration.CNS, Aberration.XLT, Aberration.XLTS,
-        Aberration.XCN, Aberration.XCNS
+        Aberration.None, Aberration.LT, Aberration.LtS, Aberration.CN, Aberration.CnS, Aberration.XLT, Aberration.XltS,
+        Aberration.XCN, Aberration.XcnS
     ];
 
     // Every bound is twice the worst value over Linux x64, Windows x64 and macOS arm64 (CI of #596 at cde5d3f5,
@@ -61,9 +61,9 @@ public class LightTimeCorrectionTests
         _output = output;
         TestKernels.EnsureSolarSystem();
         _reference = JsonDocument.Parse(File.ReadAllText("Data/LightTimeReference/light_time_reference.json")).RootElement;
-        _epochs = _reference.GetProperty("epochs_tdb").EnumerateArray().Select(e => TimeSystem.Time.CreateTDB(e.GetDouble())).ToArray();
-        _earth = new CelestialBody(PlanetsAndMoons.EARTH);
-        _moon = new CelestialBody(PlanetsAndMoons.MOON);
+        _epochs = _reference.GetProperty("epochs_tdb").EnumerateArray().Select(e => TimeSystem.Time.CreateTdb(e.GetDouble())).ToArray();
+        _earth = new CelestialBody(PlanetsAndMoons.Earth);
+        _moon = new CelestialBody(PlanetsAndMoons.Moon);
         _sun = new CelestialBody(Stars.Sun);
         var site = _reference.GetProperty("site");
         _site = new Site(491, "G491", _earth, new Planetodetic(site.GetProperty("longitude_deg").GetDouble() * global::IO.Astrodynamics.Constants.Deg2Rad,
@@ -220,15 +220,15 @@ public class LightTimeCorrectionTests
     }
 
     /// <summary>
-    /// The window of the Site example of DEVELOPER_GUIDE.md (#483), the site within 400000 km of the Moon with LT, against
+    /// The window of the example of docs/reference/sites.md (DEVELOPER_GUIDE.md's Site example before lot L9 of #668, #483), the site within 400000 km of the Moon with LT, against
     /// the window of <c>spkcpt_c</c> (60 s samples and a bisection, <c>tools/light_time_reference</c>): before 11.0.0 about
     /// 340 s wider at each end (#489).
     /// </summary>
     [Fact]
     public void CoordinateSiteGuideWindow()
     {
-        var expected = _reference.GetProperty("guide_window_lt").EnumerateArray().Select(e => TimeSystem.Time.CreateTDB(e.GetDouble())).ToArray();
-        var windows = _moon.FindDistanceWindows(new TimeSystem.Window(new TimeSystem.Time(2024, 1, 1, TimeScale.TDB), new TimeSystem.Time(2024, 1, 2, TimeScale.TDB)), _site, RelationnalOperator.Lower, 400000000, new WindowSearchOptions { Step = System.TimeSpan.FromMinutes(10), Aberration = Aberration.LT }).ToArray();
+        var expected = _reference.GetProperty("guide_window_lt").EnumerateArray().Select(e => TimeSystem.Time.CreateTdb(e.GetDouble())).ToArray();
+        var windows = _moon.FindDistanceWindows(new TimeSystem.Window(new TimeSystem.Time(2024, 1, 1, TimeScale.TDB), new TimeSystem.Time(2024, 1, 2, TimeScale.TDB)), _site, RelationalOperator.LessThan, 400000000, new WindowSearchOptions { Step = System.TimeSpan.FromMinutes(10), Aberration = Aberration.LT }).ToArray();
         Assert.Single(windows);
         double start = (windows[0].StartDate - expected[0]).TotalSeconds;
         double end = (windows[0].EndDate - expected[1]).TotalSeconds;
@@ -306,22 +306,22 @@ public class LightTimeCorrectionTests
     [Fact]
     public void NonInertialFrameCenter()
     {
-        Assert.Null(SpiceAPI.NonInertialFrameCenter(Frames.Frame.ICRF));
-        Assert.Null(SpiceAPI.NonInertialFrameCenter(Frames.Frame.GCRF));
-        Assert.Null(SpiceAPI.NonInertialFrameCenter(Frames.Frame.ECLIPTIC_J2000));
-        Assert.Null(SpiceAPI.NonInertialFrameCenter(new Frames.Frame("NO_SUCH_FRAME_593")));
-        Assert.Equal(399, SpiceAPI.NonInertialFrameCenter(Itrf93));
-        Assert.Equal(399, SpiceAPI.NonInertialFrameCenter(new Frames.Frame("iau_earth")));
-        Assert.Equal(301, SpiceAPI.NonInertialFrameCenter(MoonMe));
-        Assert.Equal(399013, SpiceAPI.NonInertialFrameCenter(_dss13.Frame));
-        Assert.Equal(_site.NaifId, SpiceAPI.NonInertialFrameCenter(_site.Frame));
-        Assert.Equal(399, SpiceAPI.NonInertialFrameCenter(Frames.Frame.TEME));
-        Assert.Equal(399, SpiceAPI.NonInertialFrameCenter(Frames.Frame.TIRS));
+        Assert.Null(SpiceApi.NonInertialFrameCenter(Frames.Frame.ICRF));
+        Assert.Null(SpiceApi.NonInertialFrameCenter(Frames.Frame.GCRF));
+        Assert.Null(SpiceApi.NonInertialFrameCenter(Frames.Frame.ECLIPJ2000));
+        Assert.Null(SpiceApi.NonInertialFrameCenter(new Frames.Frame("NO_SUCH_FRAME_593")));
+        Assert.Equal(399, SpiceApi.NonInertialFrameCenter(Itrf93));
+        Assert.Equal(399, SpiceApi.NonInertialFrameCenter(new Frames.Frame("iau_earth")));
+        Assert.Equal(301, SpiceApi.NonInertialFrameCenter(MoonMe));
+        Assert.Equal(399013, SpiceApi.NonInertialFrameCenter(_dss13.Frame));
+        Assert.Equal(_site.NaifId, SpiceApi.NonInertialFrameCenter(_site.Frame));
+        Assert.Equal(399, SpiceApi.NonInertialFrameCenter(Frames.Frame.TEME));
+        Assert.Equal(399, SpiceApi.NonInertialFrameCenter(Frames.Frame.TIRS));
         var oriented = new Spacecraft(-1593, "S593", 100.0, _spacecraft.InitialOrbitalParameters, 1000.0, new Clock("S593", 65536));
-        Assert.Null(SpiceAPI.NonInertialFrameCenter(oriented.Frame));
-        oriented.Frame.AddStateOrientationToICRF(new StateOrientation(Quaternion.Identity, Vector3.Zero, _epochs[0], oriented.Frame));
-        Assert.Equal(-1593, SpiceAPI.NonInertialFrameCenter(oriented.Frame));
-        Assert.Throws<System.ArgumentNullException>(() => SpiceAPI.NonInertialFrameCenter(null));
+        Assert.Null(SpiceApi.NonInertialFrameCenter(oriented.Frame));
+        oriented.Frame.AddStateOrientationToIcrf(new StateOrientation(Quaternion.Identity, Vector3.Zero, _epochs[0], oriented.Frame));
+        Assert.Equal(-1593, SpiceApi.NonInertialFrameCenter(oriented.Frame));
+        Assert.Throws<System.ArgumentNullException>(() => SpiceApi.NonInertialFrameCenter(null));
     }
 
     // Review of #593: a non-inertial frame centred on a third object, neither the observer nor the target (the frame of a
@@ -427,19 +427,19 @@ public class LightTimeCorrectionTests
                                                "TKFRAME_1593085_SPEC = 'MATRIX'\nTKFRAME_1593085_RELATIVE = 'ITRF93'\n" +
                                                "TKFRAME_1593085_MATRIX = (1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0)\n\\begintext\n");
         Assert.Empty(KernelShadowing.Find([frameKernel], KernelShadowing.SolarSystem));
-        SpiceAPI.Instance.LoadKernels(frameKernel);
+        SpiceApi.Instance.LoadKernels(frameKernel);
         try
         {
             var frame = new Frames.Frame("LRO593_TK");
-            Assert.Equal(-85, SpiceAPI.NonInertialFrameCenter(frame));
+            Assert.Equal(-85, SpiceApi.NonInertialFrameCenter(frame));
             double worstPosition = 0.0, worstVelocity = 0.0;
-            foreach (var flag in new[] { Aberration.LT, Aberration.CN, Aberration.XLT, Aberration.XCNS })
+            foreach (var flag in new[] { Aberration.LT, Aberration.CN, Aberration.XLT, Aberration.XcnS })
             {
                 foreach (var t in _epochs)
                 {
                     var read = InFrame(_moon.GetEphemeris(t, _site, frame, flag), frame);
                     var icrf = _moon.GetEphemeris(t, _site, Frames.Frame.ICRF, flag);
-                    var lightTimeOnly = flag == Aberration.XCNS ? Aberration.XCN : flag;
+                    var lightTimeOnly = flag == Aberration.XcnS ? Aberration.XCN : flag;
                     var center = lro.GetEphemeris(t, _site, Frames.Frame.ICRF, lightTimeOnly);
                     double sign = flag is Aberration.LT or Aberration.CN ? -1.0 : 1.0;
                     var expected = RotatedAtTheCentreEpoch(icrf, center, Itrf93, sign);
@@ -454,13 +454,13 @@ public class LightTimeCorrectionTests
         }
         finally
         {
-            SpiceAPI.Instance.UnloadKernels(frameKernel);
+            SpiceApi.Instance.UnloadKernels(frameKernel);
             directory.Delete(true);
         }
     }
 
     // #739: the frames that only the library holds between two objects of the kernels, which CSPICE reads in J2000 and the
-    // library rotates (SpiceAPI.ToManagedFrame): the frame of a site built from coordinates and the frame of S as a record
+    // library rotates (SpiceApi.ToManagedFrame): the frame of a site built from coordinates and the frame of S as a record
     // of ITRF93, against spkezr_c in the same frames (tools/light_time_reference); TEME, CIRS and TIRS against the ICRF read
     // rotated at t ∓ lt of their centre, the Earth (RotatedAtTheCentreEpoch), the closed form that ITRF93 checks against
     // spkezr_c. Before the fix every correction was rotated at t (measured on f70ee32: the Earth from the Moon in TIRS
@@ -495,10 +495,10 @@ public class LightTimeCorrectionTests
     /// <summary>The light-time part of a correction, its sign (− reception, + transmission).</summary>
     private static (Aberration LightTimeOnly, double Sign) LightTimeOf(Aberration flag) => flag switch
     {
-        Aberration.LTS => (Aberration.LT, -1.0),
-        Aberration.CNS => (Aberration.CN, -1.0),
-        Aberration.XLTS => (Aberration.XLT, 1.0),
-        Aberration.XCNS => (Aberration.XCN, 1.0),
+        Aberration.LtS => (Aberration.LT, -1.0),
+        Aberration.CnS => (Aberration.CN, -1.0),
+        Aberration.XltS => (Aberration.XLT, 1.0),
+        Aberration.XcnS => (Aberration.XCN, 1.0),
         Aberration.LT or Aberration.CN => (flag, -1.0),
         _ => (flag, 1.0)
     };
@@ -556,7 +556,7 @@ public class LightTimeCorrectionTests
     /// <summary>
     /// #739: the Earth from the Moon in TIRS, CIRS and TEME, and in a frame built by the name "tirs" (#656), centred on the
     /// target, is the ICRF read rotated at t ∓ lt of the Earth, on every read: <see cref="CelestialItem.GetEphemeris(in TimeSystem.Time, ILocalizable, Frames.Frame, Aberration)"/>,
-    /// <see cref="SpiceAPI.ReadEphemeris(TimeSystem.Time, int, int, Frames.Frame, Aberration)"/> by identifiers and its window read.
+    /// <see cref="SpiceApi.ReadEphemeris(TimeSystem.Time, int, int, Frames.Frame, Aberration)"/> by identifiers and its window read.
     /// </summary>
     [Theory]
     [MemberData(nameof(LibraryFrames))]
@@ -564,9 +564,9 @@ public class LightTimeCorrectionTests
     {
         var frame = LibraryFrame(name);
         var byItem = EarthFromMoonAgainstTheCentreRule(frame, (t, a) => _earth.GetEphemeris(t, _moon, frame, a));
-        var byIdentifiers = EarthFromMoonAgainstTheCentreRule(frame, (t, a) => SpiceAPI.Instance.ReadEphemeris(t, 301, 399, frame, a));
+        var byIdentifiers = EarthFromMoonAgainstTheCentreRule(frame, (t, a) => SpiceApi.Instance.ReadEphemeris(t, 301, 399, frame, a));
         var byWindow = EarthFromMoonAgainstTheCentreRule(frame, (t, a) =>
-            SpiceAPI.Instance.ReadEphemeris(new Window(t, t.AddSeconds(60.0)), 301, 399, frame, a, System.TimeSpan.FromSeconds(60.0)).First().ToStateVector());
+            SpiceApi.Instance.ReadEphemeris(new Window(t, t.AddSeconds(60.0)), 301, 399, frame, a, System.TimeSpan.FromSeconds(60.0)).First().ToStateVector());
         _output.WriteLine($"MEASURE #739 the Earth from the Moon in {name} against the closed form: item {byItem.Position:E3} m {byItem.Velocity:E3} m/s, " +
                           $"identifiers {byIdentifiers.Position:E3} m {byIdentifiers.Velocity:E3} m/s, window {byWindow.Position:E3} m {byWindow.Velocity:E3} m/s");
         foreach (var worst in new[] { byItem, byIdentifiers, byWindow })
@@ -608,12 +608,12 @@ public class LightTimeCorrectionTests
     /// </summary>
     internal static StateVector RotatedAtTheCentreEpoch(StateVector state, StateVector center, Frames.Frame frame, double sign)
     {
-        const double c = global::IO.Astrodynamics.Constants.C;
+        const double c = global::IO.Astrodynamics.Constants.SpeedOfLight;
         double lightTime = center.Position.Magnitude() / c;
         double rate = center.Position.Normalize().Dot(center.Velocity) / c;
         var t = state.Epoch;
         var centerEpoch = t.AddSeconds(sign * lightTime);
-        double residual = (t.ToTDB().TimeSpanFromJ2000().TotalSeconds + sign * lightTime) - centerEpoch.ToTDB().TimeSpanFromJ2000().TotalSeconds;
+        double residual = (t.ToTdb().TimeSpanFromJ2000().TotalSeconds + sign * lightTime) - centerEpoch.ToTdb().TimeSpanFromJ2000().TotalSeconds;
         var orientation = Frames.Frame.ICRF.ToFrame(frame, centerEpoch);
         var angularVelocity = orientation.AngularVelocity.Rotate(orientation.Rotation);
         var position = state.Position.Rotate(orientation.Rotation);
@@ -666,9 +666,9 @@ public class LightTimeCorrectionTests
         var row = _reference.GetProperty("coordinate_windows_lt").GetProperty(label);
         double value = row.GetProperty("value").GetDouble();
         value = coordinate == Coordinate.Range ? value * 1000.0 : value * global::IO.Astrodynamics.Constants.Deg2Rad;
-        var expected = row.GetProperty("windows").EnumerateArray().Select(e => TimeSystem.Time.CreateTDB(e.GetDouble())).ToArray();
+        var expected = row.GetProperty("windows").EnumerateArray().Select(e => TimeSystem.Time.CreateTdb(e.GetDouble())).ToArray();
         var frame = inOtherSiteFrame ? OtherSite().Frame : Frames.Frame.ICRF;
-        var windows = _moon.FindCoordinateWindows(new TimeSystem.Window(TimeSystem.Time.CreateTDB(757339200.0), TimeSystem.Time.CreateTDB(757425600.0)), _site, frame, CoordinateSystem.RaDec, coordinate, RelationnalOperator.Greater, value, new WindowSearchOptions { Step = System.TimeSpan.FromMinutes(10), Aberration = Aberration.LT }).ToArray();
+        var windows = _moon.FindCoordinateWindows(new TimeSystem.Window(TimeSystem.Time.CreateTdb(757339200.0), TimeSystem.Time.CreateTdb(757425600.0)), _site, frame, CoordinateSystem.RaDec, coordinate, RelationalOperator.GreaterThan, value, new WindowSearchOptions { Step = System.TimeSpan.FromMinutes(10), Aberration = Aberration.LT }).ToArray();
         Assert.Equal(expected.Length / 2, windows.Length);
         double worst = 0.0;
         for (int k = 0; k < windows.Length; k++)

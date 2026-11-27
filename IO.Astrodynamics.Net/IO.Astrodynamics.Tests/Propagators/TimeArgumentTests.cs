@@ -61,8 +61,8 @@ public class TimeArgumentTests
     {
         TestKernels.EnsureSolarSystem();
         _output = output;
-        _earth = new CelestialBody(PlanetsAndMoons.EARTH, Frames.Frame.ICRF, Start);
-        _moon = new CelestialBody(PlanetsAndMoons.MOON, Frames.Frame.ICRF, Start);
+        _earth = new CelestialBody(PlanetsAndMoons.Earth, Frames.Frame.ICRF, Start);
+        _moon = new CelestialBody(PlanetsAndMoons.Moon, Frames.Frame.ICRF, Start);
     }
 
     // The windows of an hour from 2021-03-20 12:00 TDB, by their tags, and the UTC hour across the leap second of
@@ -82,7 +82,7 @@ public class TimeArgumentTests
     {
         // Arrange
         var window = WindowOf(tags);
-        var initial = Leo(window.StartDate.ToTDB());
+        var initial = Leo(window.StartDate.ToTdb());
 
         // Act
         var solution = Spacecraft(-5011, initial).Propagate(window, new PropagationOptions { Integrator = rk78 ? new RK78IntegratorOptions { AbsoluteTolerance = 1e-13, RelativeTolerance = 1e-13 } : new VVIntegratorOptions { Step = TimeSpan.FromSeconds(10.0) }, OutputStep = Step, ThirdBodies = new CelestialItem[] { _earth }, CovariancePropagation = CovariancePropagationOptions.None });
@@ -106,7 +106,7 @@ public class TimeArgumentTests
         }
 
         WindowEndAssert.ReachesTheEndOf(window, solution);
-        LabelAssert.Equal(window.EndDate.ToTDB(), solution.StateVectors[^1].Epoch);
+        LabelAssert.Equal(window.EndDate.ToTdb(), solution.StateVectors[^1].Epoch);
 
         // Kepler over the reference seconds, so that the dynamics are checked at the reference time too: the bound of the
         // length moves the end by up to |v| times it
@@ -125,14 +125,14 @@ public class TimeArgumentTests
     {
         // Arrange
         var window = WindowOf(tags);
-        var initial = Llo(window.StartDate.ToTDB());
+        var initial = Llo(window.StartDate.ToTdb());
 
         // Act
         var solution = Spacecraft(-5012, initial).Propagate(window, new PropagationOptions { Integrator = rk78 ? new RK78IntegratorOptions { AbsoluteTolerance = 1e-13, RelativeTolerance = 1e-13 } : new VVIntegratorOptions { Step = TimeSpan.FromSeconds(10.0) }, OutputStep = Step, ThirdBodies = new CelestialItem[] { _moon }, CovariancePropagation = CovariancePropagationOptions.None });
 
         // Assert: the TDB seconds between the TDB labels of the ends, the expression of main, the longer of them and of
         // the output grid; within two ticks and the departure of the series of the TDB seconds between the instants
-        var labels = new TimeSystem.Window(window.StartDate.ToTDB(), window.EndDate.ToTDB());
+        var labels = new TimeSystem.Window(window.StartDate.ToTdb(), window.EndDate.ToTdb());
         double expected = System.Math.Max(labels.Length.TotalSeconds, 6.0 * Step.TotalSeconds);
         double integrated = WindowEndAssert.IntegratedSeconds(solution);
         double reference = DynamicalTimeReference.TdbSecondsBetween(window.StartDate, window.EndDate);
@@ -182,7 +182,7 @@ public class TimeArgumentTests
         // Arrange: a UTC hour, the window of the suite about the Earth
         var window = WindowOf("UTC");
         var body = aboutTheEarth ? _earth : _moon;
-        var initial = aboutTheEarth ? Leo(window.StartDate.ToTDB()) : Llo(window.StartDate.ToTDB());
+        var initial = aboutTheEarth ? Leo(window.StartDate.ToTdb()) : Llo(window.StartDate.ToTdb());
         var bodies = new CelestialItem[] { body };
         var options = new CovariancePropagationOptions();
         bool velocityVerlet = path is "Velocity-Verlet constructor" or "Spacecraft.Propagate" or "PropagationTask";
@@ -230,7 +230,7 @@ public class TimeArgumentTests
         // Arrange
         var window = WindowOf("UTC");
         var body = aboutTheEarth ? _earth : _moon;
-        var initial = aboutTheEarth ? Leo(window.StartDate.ToTDB()) : Llo(window.StartDate.ToTDB());
+        var initial = aboutTheEarth ? Leo(window.StartDate.ToTdb()) : Llo(window.StartDate.ToTdb());
         var bodies = new CelestialItem[] { body };
         var velocityVerlet = Spacecraft(-5015, initial).Propagate(window, new PropagationOptions { Integrator = new VVIntegratorOptions { Step = Step }, OutputStep = Step, ThirdBodies = bodies });
         var rk78 = Spacecraft(-5016, initial).Propagate(window, new PropagationOptions { Integrator = new RK78IntegratorOptions { AbsoluteTolerance = 1e-13, RelativeTolerance = 1e-13 }, OutputStep = Step, ThirdBodies = bodies, CovariancePropagation = CovariancePropagationOptions.None });
@@ -263,7 +263,7 @@ public class TimeArgumentTests
 
             if (aboutTheEarth)
             {
-                LabelAssert.Equal(window.EndDate.ToTDB(), actual[^1].Epoch);
+                LabelAssert.Equal(window.EndDate.ToTdb(), actual[^1].Epoch);
             }
         }
     }
@@ -273,7 +273,7 @@ public class TimeArgumentTests
     {
         // Arrange: two runs from a LEO with a covariance, over a UTC hour
         var window = WindowOf("UTC");
-        var initial = PropagatorsTestCovariance(Leo(window.StartDate.ToTDB()));
+        var initial = PropagatorsTestCovariance(Leo(window.StartDate.ToTdb()));
         var reference = Spacecraft(-5021, initial).Propagate(window, new PropagationOptions { Integrator = new RK78IntegratorOptions { AbsoluteTolerance = 1e-11, RelativeTolerance = 1e-11 }, OutputStep = Step, ThirdBodies = new CelestialItem[] { _earth }, CovariancePropagation = CovariancePropagationOptions.None });
         var config = new MonteCarloConfiguration
         {
@@ -281,7 +281,7 @@ public class TimeArgumentTests
             Propagation = new PropagationOptions
             {
                 Integrator = new RK78IntegratorOptions { AbsoluteTolerance = 1e-11, RelativeTolerance = 1e-11 }, OutputStep = Step,
-                ThirdBodies = new CelestialItem[] { new CelestialBody(PlanetsAndMoons.EARTH, Frames.Frame.ICRF, Start) },
+                ThirdBodies = new CelestialItem[] { new CelestialBody(PlanetsAndMoons.Earth, Frames.Frame.ICRF, Start) },
                 CovariancePropagation = CovariancePropagationOptions.None
             }
         };
@@ -292,7 +292,7 @@ public class TimeArgumentTests
         // Assert: the epochs of the statistics are the output labels, uniform in TT, the last the end of the window
         Assert.Equal(2, result.SuccessCount);
         LabelAssert.Equal(reference.StateVectors.Select(s => s.Epoch), result.EpochStatistics.Select(s => s.Epoch));
-        LabelAssert.Equal(window.EndDate.ToTDB(), result.EpochStatistics[^1].Epoch);
+        LabelAssert.Equal(window.EndDate.ToTdb(), result.EpochStatistics[^1].Epoch);
     }
 
     [Theory]
@@ -305,7 +305,7 @@ public class TimeArgumentTests
         var window = WindowOf("UTC");
         var ssb = new Barycenter(0);
         var initial = new StateVector(new Vector3(1.496e11, 0.0, 0.0), new Vector3(0.0, 29780.0, 0.0), ssb,
-            window.StartDate.ToTDB(), Frames.Frame.ICRF);
+            window.StartDate.ToTdb(), Frames.Frame.ICRF);
         var bodies = new CelestialItem[] { new CelestialBody(Stars.Sun), _earth };
 
         // Act
@@ -313,8 +313,8 @@ public class TimeArgumentTests
 
         // Assert
         Assert.Same(PropagationTimeArgument.Tdb, solution.TimeArgument);
-        Assert.Equal(System.Math.Max(window.EndDate.ToTDB().TimeSpanFromJ2000().TotalSeconds -
-                                     window.StartDate.ToTDB().TimeSpanFromJ2000().TotalSeconds, 3600.0),
+        Assert.Equal(System.Math.Max(window.EndDate.ToTdb().TimeSpanFromJ2000().TotalSeconds -
+                                     window.StartDate.ToTdb().TimeSpanFromJ2000().TotalSeconds, 3600.0),
             WindowEndAssert.IntegratedSeconds(solution), 9);
     }
 
@@ -326,7 +326,7 @@ public class TimeArgumentTests
         // Arrange: the LEO in the frame, over a UTC hour
         var window = WindowOf("UTC");
         var frame = new Frames.Frame(frameName);
-        var icrf = Leo(window.StartDate.ToTDB());
+        var icrf = Leo(window.StartDate.ToTdb());
         var initial = icrf.ToFrame(frame).ToStateVector();
 
         // Act
@@ -349,9 +349,9 @@ public class TimeArgumentTests
     {
         // Arrange: 400 × 1000 km LEO from apogee, the apogee raised to 2000 km at the first perigee, over a UTC window of
         // 2 h
-        var window = new TimeSystem.Window(Start.ToUTC(), Start.ToUTC().AddHours(2.0));
+        var window = new TimeSystem.Window(Start.ToUtc(), Start.ToUtc().AddHours(2.0));
         var orbit = new StateVector(new Vector3(-7378137.0, 0.0, 0.0), new Vector3(0.0, -5509.9, -4623.4), _earth,
-            window.StartDate.ToTDB(), Frames.Frame.ICRF);
+            window.StartDate.ToTdb(), Frames.Frame.ICRF);
         var spacecraft = Spacecraft(-5051, orbit);
         var tank = new FuelTank("ta5051", 1000.0, 1000.0, "model", "sn1");
         var engine = new Engine("en5051", 300.0, 10.0, tank, "model", "sn1");
@@ -373,7 +373,7 @@ public class TimeArgumentTests
         Assert.Equal(2, solution.Segments.Count);
         var before = solution.Segments[0];
         var after = solution.Segments[1];
-        double eventTime = rk78 ? before.EventTime!.Value : before.Duration;
+        double eventTime = rk78 ? before.EventTime!.Value : before.DurationSeconds;
         double between = PropagationTimeArgument.Tt.SecondsBetween(before.BaseEpoch, after.BaseEpoch);
         _output.WriteLine($"{(rk78 ? "RK7(8)" : "Velocity-Verlet")}: event at {eventTime:R} s, bases {between:R} s " +
                           $"apart, {between - eventTime:E3} s");
@@ -405,15 +405,15 @@ public class TimeArgumentTests
             var start = Start.Add(TimeSpan.FromTicks(random.NextInt64(0, TimeSpan.TicksPerDay)));
             var end = start.Add(TimeSpan.FromTicks(random.NextInt64(6000L * TimeSpan.TicksPerSecond / 10,
                 6L * TimeSpan.TicksPerHour)));
-            var window = utc ? new TimeSystem.Window(start.ToUTC(), end.ToUTC()) : new TimeSystem.Window(start, end);
-            var initial = Leo(window.StartDate.ToTDB());
+            var window = utc ? new TimeSystem.Window(start.ToUtc(), end.ToUtc()) : new TimeSystem.Window(start, end);
+            var initial = Leo(window.StartDate.ToTdb());
 
             // Act
             var solution = Spacecraft(-5061 - k, initial).Propagate(window, new PropagationOptions { Integrator = new RK78IntegratorOptions { AbsoluteTolerance = 1e-11, RelativeTolerance = 1e-11 }, OutputStep = window.Length, ThirdBodies = new CelestialItem[] { _earth }, CovariancePropagation = CovariancePropagationOptions.None });
 
             // Assert
             if (!WindowEndAssert.Reaches(window, solution) ||
-                solution.StateVectors[^1].Epoch != window.EndDate.ToTDB())
+                solution.StateVectors[^1].Epoch != window.EndDate.ToTdb())
             {
                 failures.Add($"{window.StartDate} to {window.EndDate}: ends at {solution.End}");
                 continue;
@@ -456,7 +456,7 @@ public class TimeArgumentTests
         protectedSpacecraft.Propagate(window, new PropagationOptions { Integrator = new RK78IntegratorOptions { AbsoluteTolerance = 1e-13, RelativeTolerance = 1e-13 }, OutputStep = TimeSpan.FromSeconds(10.0), ThirdBodies = new CelestialItem[] { _earth }, CovariancePropagation = CovariancePropagationOptions.None });
 
         // Act
-        var encounter = IO.Astrodynamics.SSA.ConjunctionAssessment.Analyze(protectedSpacecraft,
+        var encounter = IO.Astrodynamics.Ssa.ConjunctionAssessment.Analyze(protectedSpacecraft,
             secondary, window);
 
         // Assert: both states at the TCA are Kepler over the TT seconds from the start to it: the two-body one between
@@ -465,8 +465,8 @@ public class TimeArgumentTests
         // residuals, here 6.2e-8 s apart, 0.47 mm, labels as on main), to the integration. In TDB seconds both would be
         // 1.2 mm off along their orbits
         double elapsed = DynamicalTimeReference.TtSecondsBetween(window.StartDate, encounter.EncounterState.Epoch);
-        double labels = PropagationTimeArgument.Tt.SecondsBetween(window.StartDate.ToTDB(),
-            encounter.EncounterState.Epoch.ToTDB());
+        double labels = PropagationTimeArgument.Tt.SecondsBetween(window.StartDate.ToTdb(),
+            encounter.EncounterState.Epoch.ToTdb());
         var (p, _) = KeplerianStm.Propagate(mu, protectedInitial.Position, protectedInitial.Velocity, labels);
         var (s, _) = KeplerianStm.Propagate(mu, secondaryInitial.Position, secondaryInitial.Velocity, elapsed);
         double protectedError = (encounter.ProtectedState.Position - new Vector3(p[0], p[1], p[2])).Magnitude();
@@ -481,7 +481,7 @@ public class TimeArgumentTests
     public void ANonPropagatedSpacecraft_ItsEphemerisIsTwoBodyOverTt()
     {
         // Arrange: a LEO given in UTC, read an hour later in UTC (between UTC epochs the reference is exact in ticks)
-        var epoch = Start.ToUTC();
+        var epoch = Start.ToUtc();
         var initial = Leo(Start);
         var utcInitial = new StateVector(initial.Position, initial.Velocity, _earth, epoch, Frames.Frame.ICRF);
         var spacecraft = Spacecraft(-5091, utcInitial);
@@ -503,8 +503,8 @@ public class TimeArgumentTests
     {
         // Arrange
         var window = WindowOf("UTC");
-        var velocityVerlet = Spacecraft(-5111, Leo(window.StartDate.ToTDB())).Propagate(window, new PropagationOptions { Integrator = new VVIntegratorOptions { Step = Step }, OutputStep = Step, ThirdBodies = new CelestialItem[] { _earth } });
-        var rk78 = Spacecraft(-5112, Leo(window.StartDate.ToTDB())).Propagate(window, new PropagationOptions { Integrator = new RK78IntegratorOptions { AbsoluteTolerance = 1e-11, RelativeTolerance = 1e-11 }, OutputStep = Step, ThirdBodies = new CelestialItem[] { _earth }, CovariancePropagation = new CovariancePropagationOptions() });
+        var velocityVerlet = Spacecraft(-5111, Leo(window.StartDate.ToTdb())).Propagate(window, new PropagationOptions { Integrator = new VVIntegratorOptions { Step = Step }, OutputStep = Step, ThirdBodies = new CelestialItem[] { _earth } });
+        var rk78 = Spacecraft(-5112, Leo(window.StartDate.ToTdb())).Propagate(window, new PropagationOptions { Integrator = new RK78IntegratorOptions { AbsoluteTolerance = 1e-11, RelativeTolerance = 1e-11 }, OutputStep = Step, ThirdBodies = new CelestialItem[] { _earth }, CovariancePropagation = new CovariancePropagationOptions() });
 
         // Act and assert: without segments, without the variational equations; the dynamics of RK7(8) take the time
         // argument of the propagation
@@ -531,7 +531,7 @@ public class TimeArgumentTests
         // give (EpochAt, the nearest tick of the seconds, #625), about the Moon as about the Earth; they truncated
         // (TimeSpan.FromSeconds) after #625 made EpochAt round, a tick off half the labels (the review of #625)
         var random = new Random(2627);
-        var label = TimeSystem.Time.CreateTDB(7.6e8 + 0.1234567);
+        var label = TimeSystem.Time.CreateTdb(7.6e8 + 0.1234567);
         for (int i = 0; i < 20_000; i++)
         {
             double cumulative = random.NextDouble() * 86400.0;
@@ -548,10 +548,10 @@ public class TimeArgumentTests
             var later = label.AddTicks((long)(random.NextDouble() * 864_000_000_000L));
             LabelAssert.Equal(later, PropagationTimeArgument.EpochAfter(_moon, label,
                 PropagationTimeArgument.ElapsedSeconds(_moon, label, later)));
-            var tai = label.ToTAI();
-            var taiLater = later.ToTAI();
-            LabelAssert.Equal(taiLater.ToTDB(), PropagationTimeArgument.EpochAfter(_moon, tai,
-                PropagationTimeArgument.ElapsedSeconds(_moon, tai, taiLater)).ToTDB());
+            var tai = label.ToTai();
+            var taiLater = later.ToTai();
+            LabelAssert.Equal(taiLater.ToTdb(), PropagationTimeArgument.EpochAfter(_moon, tai,
+                PropagationTimeArgument.ElapsedSeconds(_moon, tai, taiLater)).ToTdb());
         }
     }
 
@@ -560,15 +560,15 @@ public class TimeArgumentTests
     {
         // Arrange: the TLE propagator is not a PropagatorBase; SGP4 counts minutes from the epoch of the TLE (§3.2 of
         // the design of #501), and its solution keeps the TDB time argument of a solution built by hand
-        var tle = new IO.Astrodynamics.OrbitalParameters.TLE.TLE("ISS",
+        var tle = new IO.Astrodynamics.OrbitalParameters.Tle("ISS",
             "1 25544U 98067A   21020.53488036  .00016717  00000-0  10270-3 0  9054",
             "2 25544  51.6423 353.0312 0000493 320.8755  39.2360 15.49309423 25703");
         var spacecraft = new Spacecraft(-5101, "TIME5101", 100.0, tle, 10000.0, new Clock("time5101", 256));
-        var start = spacecraft.InitialOrbitalParameters.Epoch.ToTDB();
+        var start = spacecraft.InitialOrbitalParameters.Epoch.ToTdb();
         var end = start.AddHours(2.0);
 
         // Act
-        var solution = new TLEPropagator(new TimeSystem.Window(start, end), spacecraft, TimeSpan.FromHours(1.0)).Propagate();
+        var solution = new TlePropagator(new TimeSystem.Window(start, end), spacecraft, TimeSpan.FromHours(1.0)).Propagate();
 
         // Assert: the states of SGP4 at the TDB grid of the window, the first and the last bit for bit
         Assert.Same(PropagationTimeArgument.Tdb, solution.TimeArgument);
@@ -583,11 +583,11 @@ public class TimeArgumentTests
         return tags switch
         {
             "TDB" => new TimeSystem.Window(Start, end),
-            "UTC" => new TimeSystem.Window(Start.ToUTC(), end.ToUTC()),
+            "UTC" => new TimeSystem.Window(Start.ToUtc(), end.ToUtc()),
             "TT" => new TimeSystem.Window(Start.ToTT(), end.ToTT()),
-            "TAI" => new TimeSystem.Window(Start.ToTAI(), end.ToTAI()),
+            "TAI" => new TimeSystem.Window(Start.ToTai(), end.ToTai()),
             "GPS" => new TimeSystem.Window(Start.ConvertTo(TimeScale.GPS), end.ConvertTo(TimeScale.GPS)),
-            "TDB to UTC" => new TimeSystem.Window(Start, end.ToUTC()),
+            "TDB to UTC" => new TimeSystem.Window(Start, end.ToUtc()),
             "UTC leap second" => new TimeSystem.Window(new TimeSystem.Time(2016, 12, 31, 23, 30, 0, TimeScale.UTC),
                 new TimeSystem.Time(2017, 1, 1, 0, 30, 0, TimeScale.UTC)),
             _ => throw new ArgumentOutOfRangeException(nameof(tags))

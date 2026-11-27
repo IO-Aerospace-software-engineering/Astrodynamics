@@ -41,16 +41,16 @@ public class StateVectorAngleTests
 
         // Act
         var elements = state.ToKeplerianElements();
-        var expected = SpiceAPI.Instance.ConvertStateVectorToConicOrbitalElement(state);
+        var expected = SpiceApi.Instance.ConvertStateVectorToConicOrbitalElement(state);
         var back = elements.ToStateVector();
 
         // Assert
-        double a = System.Math.Abs(elements.A - expected.A) / expected.A;
-        double e = System.Math.Abs(elements.E - expected.E);
-        double i = System.Math.Abs(elements.I - expected.I);
-        double node = TestHelpers.AngleDifference(elements.RAAN, expected.RAAN);
-        double periapsis = TestHelpers.AngleDifference(elements.AOP, expected.AOP);
-        double m = TestHelpers.AngleDifference(elements.M, expected.M);
+        double a = System.Math.Abs(elements.SemiMajorAxis() - expected.SemiMajorAxis()) / expected.SemiMajorAxis();
+        double e = System.Math.Abs(elements.Eccentricity() - expected.Eccentricity());
+        double i = System.Math.Abs(elements.Inclination() - expected.Inclination());
+        double node = TestHelpers.AngleDifference(elements.AscendingNode(), expected.AscendingNode());
+        double periapsis = TestHelpers.AngleDifference(elements.ArgumentOfPeriapsis(), expected.ArgumentOfPeriapsis());
+        double m = TestHelpers.AngleDifference(elements.MeanAnomaly(), expected.MeanAnomaly());
         double position = (back.Position - state.Position).Magnitude() / state.Position.Magnitude();
         double velocity = (back.Velocity - state.Velocity).Magnitude() / state.Velocity.Magnitude();
         _output.WriteLine($"{name}: against SPICE, a {a:E2} (relative), e {e:E2}, i {i:E2}, Ω {node:E2}, ω {periapsis:E2}, " +
@@ -63,7 +63,7 @@ public class StateVectorAngleTests
         // and TrueAnomaly() adds fl(2π), 2.45e-16 short of 2π, to the negative ν; before #453 the solver was 2.3e-16
         // above the root and the two cancelled (6e-18 of ν), now they add (4.4e-16 of ν, 1/(1 − e) on the velocity at
         // apogee)
-        bool droppedTilt = expected.RAAN == 0.0 && (expected.I == 0.0 || expected.I == System.Math.PI) &&
+        bool droppedTilt = expected.AscendingNode() == 0.0 && (expected.Inclination() == 0.0 || expected.Inclination() == System.Math.PI) &&
                            state.SpecificAngularMomentum().X != 0.0;
         double roundTrip = droppedTilt ? StateVector.EquatorialTolerance : 1e-14;
         Assert.True(a < 1e-14, $"a: {a:E2}");
@@ -84,12 +84,12 @@ public class StateVectorAngleTests
         var earth = TestHelpers.EarthAtJ2000;
         for (double periapsis = 0.25; periapsis < IO.Astrodynamics.Constants.TwoPi; periapsis += 0.5)
         {
-            var elements = new KeplerianElements(7000000.0, 0.1, 0.0, 0.0, periapsis, 1.0, earth, TimeSystem.Time.J2000TDB,
+            var elements = new KeplerianElements(7000000.0, 0.1, 0.0, 0.0, periapsis, 1.0, earth, TimeSystem.Time.J2000Tdb,
                 Frames.Frame.ICRF);
             var state = elements.ToStateVector();
 
             double error = TestHelpers.AngleDifference(state.ArgumentOfPeriapsis(), periapsis);
-            double spice = TestHelpers.AngleDifference(SpiceAPI.Instance.ConvertStateVectorToConicOrbitalElement(state).AOP,
+            double spice = TestHelpers.AngleDifference(SpiceApi.Instance.ConvertStateVectorToConicOrbitalElement(state).ArgumentOfPeriapsis(),
                 periapsis);
             Assert.True(error < 1e-13, $"ω = {periapsis}: {error:E2}");
             Assert.True(spice < 1e-13, $"SPICE, ω = {periapsis}: {spice:E2}");
@@ -99,7 +99,7 @@ public class StateVectorAngleTests
     private static StateVector State(string name)
     {
         var earth = TestHelpers.EarthAtJ2000;
-        var epoch = TimeSystem.Time.J2000TDB;
+        var epoch = TimeSystem.Time.J2000Tdb;
         var frame = Frames.Frame.ICRF;
         return name switch
         {
@@ -139,7 +139,7 @@ public class StateVectorAngleTests
         // dt seconds after the argument of latitude u, by the closed form of the tests
         StateVector AfterAngle(KeplerianElements elements, double u, double dt)
         {
-            double trueAnomaly = u - elements.AOP;
+            double trueAnomaly = u - elements.ArgumentOfPeriapsis();
             var atAngle = elements.ToStateVector(trueAnomaly < 0.0 ? trueAnomaly + IO.Astrodynamics.Constants.TwoPi : trueAnomaly);
             var (x, _) = KeplerianStm.Propagate(earth.GM, atAngle.Position, atAngle.Velocity, dt);
             return new StateVector(new Vector3(x[0], x[1], x[2]), new Vector3(x[3], x[4], x[5]), earth, epoch, frame);

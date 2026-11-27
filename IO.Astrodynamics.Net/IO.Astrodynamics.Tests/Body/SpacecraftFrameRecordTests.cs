@@ -66,7 +66,7 @@ public class SpacecraftFrameRecordTests
 
     private static Spacecraft Create(int naifId)
     {
-        var earth = new CelestialBody(PlanetsAndMoons.EARTH, Frame.ICRF, Start);
+        var earth = new CelestialBody(PlanetsAndMoons.Earth, Frame.ICRF, Start);
         var orbit = new StateVector(new Vector3(6800000.0, 0.0, 0.0), new Vector3(0.0, 7656.2204182967143, 0.0), earth, Start, Frame.ICRF);
         return new Spacecraft(naifId, $"REC{-naifId}", 1000.0, orbit, 3000.0, new Clock($"REC{-naifId}_CLK", 65536));
     }
@@ -84,17 +84,17 @@ public class SpacecraftFrameRecordTests
     public void EmptyRecord_IsTheIdentityOfIcrf_AndCannotBeWritten()
     {
         var spacecraft = Create(-8501);
-        var orientation = spacecraft.Frame.GetStateOrientationToICRF(Start);
+        var orientation = spacecraft.Frame.GetStateOrientationToIcrf(Start);
         Assert.Equal(Quaternion.Identity, orientation.Rotation);
         Assert.Equal(Vector3.Zero, orientation.AngularVelocity);
         Assert.Equal(spacecraft.Frame, orientation.ReferenceFrame);
-        Assert.Null(spacecraft.Frame.GetLatestStateOrientationToICRF());
-        Assert.Empty(spacecraft.Frame.GetStateOrientationsToICRF());
+        Assert.Null(spacecraft.Frame.GetLatestStateOrientationToIcrf());
+        Assert.Empty(spacecraft.Frame.GetStateOrientationsToIcrf());
         // A spacecraft never propagated has no attitude to write (§5 of the design)
         Assert.Throws<InvalidOperationException>(() => spacecraft.WriteOrientation(new FileInfo("Data/User/AttitudeRecord537/never.bc")));
         // RecordEnd on an empty record records nothing
         FrameOf(spacecraft).RecordEnd(Start.AddSeconds(10.0));
-        Assert.Empty(spacecraft.Frame.GetStateOrientationsToICRF());
+        Assert.Empty(spacecraft.Frame.GetStateOrientationsToIcrf());
     }
 
     [Fact]
@@ -102,36 +102,36 @@ public class SpacecraftFrameRecordTests
     {
         var spacecraft = Create(-8502);
         var frame = spacecraft.Frame;
-        Assert.Throws<ArgumentNullException>(() => frame.AddStateOrientationToICRF(null));
+        Assert.Throws<ArgumentNullException>(() => frame.AddStateOrientationToIcrf(null));
         // Labelled with the spacecraft frame, the source of the rotation (choice 9)
-        Assert.Throws<ArgumentException>(() => frame.AddStateOrientationToICRF(Sample(0.0, Frame.ICRF)));
+        Assert.Throws<ArgumentException>(() => frame.AddStateOrientationToIcrf(Sample(0.0, Frame.ICRF)));
 
-        Assert.True(frame.AddStateOrientationToICRF(Sample(0.0, frame)));
-        Assert.True(frame.AddStateOrientationToICRF(Sample(10.0, frame)));
+        Assert.True(frame.AddStateOrientationToIcrf(Sample(0.0, frame)));
+        Assert.True(frame.AddStateOrientationToIcrf(Sample(10.0, frame)));
         // Within 2 µs of the entry at 10 s: replaces it, at its own epoch
         var replacing = new StateOrientation(At(50.0), Vector3.Zero, Start.AddSeconds(10.0 + 1e-6), frame);
-        Assert.True(frame.AddStateOrientationToICRF(replacing));
-        var record = frame.GetStateOrientationsToICRF().ToArray();
+        Assert.True(frame.AddStateOrientationToIcrf(replacing));
+        var record = frame.GetStateOrientationsToIcrf().ToArray();
         Assert.Equal(2, record.Length);
         LabelAssert.Equal(replacing, record[1]);
         // Exactly 2 µs apart: two epochs
-        Assert.True(frame.AddStateOrientationToICRF(new StateOrientation(At(60.0), Vector3.Zero, Start.AddSeconds(10.0 + 3e-6), frame)));
-        Assert.Equal(3, frame.GetStateOrientationsToICRF().Count());
-        LabelAssert.Equal(Start.AddSeconds(10.0 + 3e-6), frame.GetLatestStateOrientationToICRF().Epoch);
+        Assert.True(frame.AddStateOrientationToIcrf(new StateOrientation(At(60.0), Vector3.Zero, Start.AddSeconds(10.0 + 3e-6), frame)));
+        Assert.Equal(3, frame.GetStateOrientationsToIcrf().Count());
+        LabelAssert.Equal(Start.AddSeconds(10.0 + 3e-6), frame.GetLatestStateOrientationToIcrf().Epoch);
 
         // Discrete entries: the earlier one holds until the next, without angular velocity
-        var between = frame.GetStateOrientationToICRF(Start.AddSeconds(4.0));
+        var between = frame.GetStateOrientationToIcrf(Start.AddSeconds(4.0));
         Assert.Equal(At(0.0), between.Rotation);
         Assert.Equal(Vector3.Zero, between.AngularVelocity);
         Assert.Equal(frame, between.ReferenceFrame);
         // At an entry, before and after the record: that entry, the first, the last
-        Assert.Equal(At(0.0), frame.GetStateOrientationToICRF(Start).Rotation);
-        Assert.Equal(At(0.0), frame.GetStateOrientationToICRF(Start.AddSeconds(-100.0)).Rotation);
-        Assert.Equal(At(60.0), frame.GetStateOrientationToICRF(Start.AddSeconds(1000.0)).Rotation);
-        Assert.Equal(Vector3.Zero, frame.GetStateOrientationToICRF(Start.AddSeconds(1000.0)).AngularVelocity);
+        Assert.Equal(At(0.0), frame.GetStateOrientationToIcrf(Start).Rotation);
+        Assert.Equal(At(0.0), frame.GetStateOrientationToIcrf(Start.AddSeconds(-100.0)).Rotation);
+        Assert.Equal(At(60.0), frame.GetStateOrientationToIcrf(Start.AddSeconds(1000.0)).Rotation);
+        Assert.Equal(Vector3.Zero, frame.GetStateOrientationToIcrf(Start.AddSeconds(1000.0)).AngularVelocity);
 
         frame.ClearStateOrientations();
-        Assert.Empty(frame.GetStateOrientationsToICRF());
+        Assert.Empty(frame.GetStateOrientationsToIcrf());
     }
 
     [Fact]
@@ -153,7 +153,7 @@ public class SpacecraftFrameRecordTests
             // The epoch in ticks of 100 ns, and the seconds it holds
             var epoch = Start.AddSeconds(seconds);
             double t = (epoch - Start).TotalSeconds;
-            var read = frame.GetStateOrientationToICRF(epoch);
+            var read = frame.GetStateOrientationToIcrf(epoch);
             Rotation(Angle(At(t), read.Rotation), $"interpolated at {t} s");
             Rate((read.AngularVelocity - rate).Magnitude(), $"interpolated at {t} s");
             Assert.Equal(frame, read.ReferenceFrame);
@@ -161,13 +161,13 @@ public class SpacecraftFrameRecordTests
 
         // The end of the propagation: the latest held, as a sample of its law; not within 2 µs of an entry
         frame.RecordEnd(Start.AddSeconds(20.0 + 1e-6));
-        Assert.Equal(3, frame.GetStateOrientationsToICRF().Count());
+        Assert.Equal(3, frame.GetStateOrientationsToIcrf().Count());
         frame.RecordEnd(Start.AddSeconds(30.0));
-        Assert.Equal(4, frame.GetStateOrientationsToICRF().Count());
-        var held = frame.GetStateOrientationToICRF(Start.AddSeconds(25.0));
+        Assert.Equal(4, frame.GetStateOrientationsToIcrf().Count());
+        var held = frame.GetStateOrientationToIcrf(Start.AddSeconds(25.0));
         Rotation(Angle(At(20.0), held.Rotation), "held after the end");
         // The rate of the CK: at the entry of 20 s, the mean of the law's rate and of the hold's (zero)
-        Rate((frame.GetStateOrientationToICRF(Start.AddSeconds(20.0)).AngularVelocity - rate * 0.5).Magnitude(), "at the last sample, mean with the hold");
+        Rate((frame.GetStateOrientationToIcrf(Start.AddSeconds(20.0)).AngularVelocity - rate * 0.5).Magnitude(), "at the last sample, mean with the hold");
     }
 
     [Fact]
@@ -176,7 +176,7 @@ public class SpacecraftFrameRecordTests
         var frame = FrameOf(Create(-8504));
         Assert.True(frame.Record(Sample(0.0, Frame.ICRF), Law, false));
         Assert.True(frame.Record(new StateOrientation(At(0.0), Vector3.Zero, Start.AddSeconds(10.0), Frame.ICRF), Law, false));
-        var read = frame.GetStateOrientationToICRF(Start.AddSeconds(5.0));
+        var read = frame.GetStateOrientationToIcrf(Start.AddSeconds(5.0));
         Assert.Equal(At(0.0), read.Rotation);
         Assert.Equal(Vector3.Zero, read.AngularVelocity);
     }
@@ -209,15 +209,15 @@ public class SpacecraftFrameRecordTests
         foreach (var epoch in new[] { Start.AddSeconds(12.0), change.AddSeconds(-1e-6) })
         {
             double t = (epoch - Start).TotalSeconds;
-            var read = frame.GetStateOrientationToICRF(epoch);
+            var read = frame.GetStateOrientationToIcrf(epoch);
             Rotation(Angle(At(t), read.Rotation), $"{t} s");
             Rate((read.AngularVelocity - rate).Magnitude(), $"{t} s");
         }
 
-        var inLead = frame.GetStateOrientationToICRF(change.AddSeconds(-0.5e-6));
+        var inLead = frame.GetStateOrientationToIcrf(change.AddSeconds(-0.5e-6));
         Rotation(Angle(lead.Rotation, inLead.Rotation), "in the lead");
         Assert.Equal(Vector3.Zero, inLead.AngularVelocity);
-        Assert.Equal(discrete.Rotation, frame.GetStateOrientationToICRF(change).Rotation);
+        Assert.Equal(discrete.Rotation, frame.GetStateOrientationToIcrf(change).Rotation);
 
         // The CK: the C-matrices of the entries, the lead as the record before the change (no other record added)
         var records = frame.CkRecords();
@@ -232,10 +232,10 @@ public class SpacecraftFrameRecordTests
         // A discrete attitude replacing the change 1.5 µs after it: the lead, 2.5 µs before it, is an ordinary sample of its
         // law, held until the new attitude, its rate ramping to zero at the CK's repeated record 1 µs before it
         var replacing = new StateOrientation(new Quaternion(Vector3.VectorY, 0.5), Vector3.Zero, change.AddSeconds(1.5e-6), spacecraft.Frame);
-        Assert.True(frame.AddStateOrientationToICRF(replacing));
+        Assert.True(frame.AddStateOrientationToIcrf(replacing));
         // A third of the hold of 1.5 µs (the 2.5 µs to the new attitude less the 1 µs of the repeated record), in ticks of
         // 100 ns: the rate at the lead is the law's (the interval before it), two thirds of it there
-        var ramp = frame.GetStateOrientationToICRF(change.AddSeconds(-0.5e-6));
+        var ramp = frame.GetStateOrientationToIcrf(change.AddSeconds(-0.5e-6));
         Rotation(Angle(lead.Rotation, ramp.Rotation), "demoted lead held");
         Rate((ramp.AngularVelocity - rate * (2.0 / 3.0)).Magnitude(), "demoted lead ramp");
         records = frame.CkRecords();
@@ -251,21 +251,21 @@ public class SpacecraftFrameRecordTests
         var frame = FrameOf(spacecraft);
         var q = new Quaternion(Axis, 0.7);
         var w = new Vector3(1e-3, -2e-3, 3e-3);
-        Assert.True(frame.Record(new StateOrientation(q, w, Start, Frame.ECLIPTIC_J2000), null, true));
-        var entry = frame.GetStateOrientationsToICRF().Single();
+        Assert.True(frame.Record(new StateOrientation(q, w, Start, Frame.ECLIPJ2000), null, true));
+        var entry = frame.GetStateOrientationsToIcrf().Single();
         // pxform(ECLIPJ2000, J2000) after the rotation to ECLIPJ2000
-        var toIcrf = SpiceAPI.Instance.TransformFrame(Start, Frame.ECLIPTIC_J2000, Frame.ICRF).Rotation;
+        var toIcrf = SpiceApi.Instance.TransformFrame(Start, Frame.ECLIPJ2000, Frame.ICRF).Rotation;
         Rotation(AttitudeRecordTests.RotationAngle(v => v.Rotate(q).Rotate(toIcrf), v => v.Rotate(entry.Rotation)), "ECLIPJ2000 entry");
         // The angular velocity it carried is not kept: a lone discrete entry has the CK's, zero by construction (NodeRate),
         // as the read at its epoch
         Assert.Equal(Vector3.Zero, entry.AngularVelocity);
-        LabelAssert.Equal(frame.GetStateOrientationToICRF(Start), entry);
+        LabelAssert.Equal(frame.GetStateOrientationToIcrf(Start), entry);
         Assert.Equal(spacecraft.Frame, entry.ReferenceFrame);
     }
 
     /// <summary>
-    /// The two readers of the record, the entries (<c>GetStateOrientationsToICRF</c>, <c>GetLatestStateOrientationToICRF</c>)
-    /// and the read at an epoch (<c>GetStateOrientationToICRF</c>), give the same orientation at each entry, the angular
+    /// The two readers of the record, the entries (<c>GetStateOrientationsToIcrf</c>, <c>GetLatestStateOrientationToIcrf</c>)
+    /// and the read at an epoch (<c>GetStateOrientationToIcrf</c>), give the same orientation at each entry, the angular
     /// velocity of the CK included (choice 8): samples of a law, a lead, a discrete change, an added attitude, the end.
     /// </summary>
     [Fact]
@@ -279,17 +279,17 @@ public class SpacecraftFrameRecordTests
         var change = Start.AddSeconds(25.0);
         frame.Record(new StateOrientation(new Quaternion(Vector3.VectorX, 1.0), Vector3.Zero, change, Frame.ICRF), null, true);
         Assert.True(frame.RecordLead(new StateOrientation(At((change.AddSeconds(-1e-6) - Start).TotalSeconds), Vector3.Zero, change.AddSeconds(-1e-6), Frame.ICRF), Law, change));
-        frame.AddStateOrientationToICRF(new StateOrientation(new Quaternion(Vector3.VectorY, 0.5), new Vector3(1.0, 2.0, 3.0), Start.AddSeconds(40.0), spacecraft.Frame));
+        frame.AddStateOrientationToIcrf(new StateOrientation(new Quaternion(Vector3.VectorY, 0.5), new Vector3(1.0, 2.0, 3.0), Start.AddSeconds(40.0), spacecraft.Frame));
         frame.RecordEnd(Start.AddSeconds(50.0));
 
-        var entries = frame.GetStateOrientationsToICRF().ToArray();
+        var entries = frame.GetStateOrientationsToIcrf().ToArray();
         Assert.Equal(7, entries.Length);
         foreach (var entry in entries)
         {
-            LabelAssert.Equal(frame.GetStateOrientationToICRF(entry.Epoch), entry);
+            LabelAssert.Equal(frame.GetStateOrientationToIcrf(entry.Epoch), entry);
         }
 
-        LabelAssert.Equal(frame.GetStateOrientationToICRF(Start.AddSeconds(50.0)), frame.GetLatestStateOrientationToICRF());
+        LabelAssert.Equal(frame.GetStateOrientationToIcrf(Start.AddSeconds(50.0)), frame.GetLatestStateOrientationToIcrf());
         // The law's rate at a sample between two interpolated intervals, -ω a in the convention of the frames
         Rate((entries[1].AngularVelocity - Axis * -Omega).Magnitude(), "entry of a sample");
         // A discrete entry, and the attitude added with a rate it does not keep: zero

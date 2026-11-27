@@ -41,7 +41,7 @@ public class BodyAxisTests
 
     private static Spacecraft CustomAxesSpacecraft(int naifId, string name, Vector3 front, Vector3 right, Vector3 up)
     {
-        var orbit = new KeplerianElements(7000000.0, 0.0, 0.5, 0.0, 0.0, 0.0, TestHelpers.EarthAtJ2000, TimeSystem.Time.J2000TDB,
+        var orbit = new KeplerianElements(7000000.0, 0.0, 0.5, 0.0, 0.0, 0.0, TestHelpers.EarthAtJ2000, TimeSystem.Time.J2000Tdb,
             Frames.Frame.ICRF);
         var spacecraft = new Spacecraft(naifId, name, 1000.0, orbit, bodyFront: front, bodyRight: right, bodyUp: up);
         var tank = spacecraft.AddFuelTank(new FuelTank("ft", 1000.0, 900.0));

@@ -38,7 +38,7 @@ namespace IO.Astrodynamics.Tests.Maneuvers
             FuelTank fuelTank10 = new FuelTank("My fuel tank10", 4000.0, 3000.0, "ft2021", "sn0");
             Engine eng = new Engine("My engine", 350.0, 50.0, fuelTank10, "model 1", "sn1");
 
-            PerigeeHeightManeuver perigeeHeightManeuver = new PerigeeHeightManeuver(new KeplerianElements(151000000, 0.0, 0.0, 0.0, 0.0, 0.0, TestHelpers.Earth, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF),
+            PerigeeHeightManeuver perigeeHeightManeuver = new PerigeeHeightManeuver(new KeplerianElements(151000000, 0.0, 0.0, 0.0, 0.0, 0.0, TestHelpers.Earth, TimeSystem.Time.J2000Tdb, Frames.Frame.ICRF),
                 eng,
                 new TimeSystem.Time(new DateTime(2021, 01, 01),TimeScale.TDB),
                 TimeSpan.FromDays(1.0));
@@ -56,7 +56,7 @@ namespace IO.Astrodynamics.Tests.Maneuvers
         [Fact]
         public void TryExecuteIncreasePerigee()
         {
-            var orbitalParams = new StateVector(new Vector3(6678000.0, 0.0, 0.0), new Vector3(0.0, 7727.0, 0.0), TestHelpers.EarthAtJ2000, TimeSystem.Time.J2000TDB,
+            var orbitalParams = new StateVector(new Vector3(6678000.0, 0.0, 0.0), new Vector3(0.0, 7727.0, 0.0), TestHelpers.EarthAtJ2000, TimeSystem.Time.J2000Tdb,
                 Frames.Frame.ICRF);
             var spc = new Spacecraft(-666, "GenericSpacecraft", 1000.0, orbitalParams, 3000.0, new Clock("GenericClk", 65536));
             spc.AddFuelTank(new FuelTank("ft", 1000.0, 900.0, "ftA", "123456"));
@@ -91,7 +91,7 @@ namespace IO.Astrodynamics.Tests.Maneuvers
         [Fact]
         public void TryExecuteDecreasePerigee()
         {
-            var orbitalParams = new StateVector(new Vector3(42164000.0, 0.0, 0.0), new Vector3(0.0, 3075.0, 0.0), TestHelpers.EarthAtJ2000, TimeSystem.Time.J2000TDB,
+            var orbitalParams = new StateVector(new Vector3(42164000.0, 0.0, 0.0), new Vector3(0.0, 3075.0, 0.0), TestHelpers.EarthAtJ2000, TimeSystem.Time.J2000Tdb,
                 Frames.Frame.ICRF);
             var spc = new Spacecraft(-666, "GenericSpacecraft", 1000.0, orbitalParams, 3000.0, new Clock("GenericClk", 65536));
             spc.AddFuelTank(new FuelTank("ft", 1000.0, 900.0, "ftA", "123456"));
@@ -128,7 +128,7 @@ namespace IO.Astrodynamics.Tests.Maneuvers
             double r = 7178e3;
             double v = System.Math.Sqrt(earth.GM / r);
             double i = 30.0 * IO.Astrodynamics.Constants.Deg2Rad;
-            return new StateVector(new Vector3(r, 0.0, 0.0), new Vector3(0.0, v * System.Math.Cos(i), v * System.Math.Sin(i)), earth, TimeSystem.Time.J2000TDB,
+            return new StateVector(new Vector3(r, 0.0, 0.0), new Vector3(0.0, v * System.Math.Cos(i), v * System.Math.Sin(i)), earth, TimeSystem.Time.J2000Tdb,
                 Frames.Frame.ICRF).ToKeplerianElements();
         }
 
@@ -143,7 +143,7 @@ namespace IO.Astrodynamics.Tests.Maneuvers
             var ke = Issue686Elements();
             FuelTank fuelTank = new FuelTank("My fuel tank10", 4000.0, 3000.0, "ft2021", "sn0");
             Engine eng = new Engine("My engine", 350.0, 50.0, fuelTank, "model 1", "sn1");
-            var maneuver = new PerigeeHeightManeuver(ke, eng, TimeSystem.Time.J2000TDB, TimeSpan.Zero);
+            var maneuver = new PerigeeHeightManeuver(ke, eng, TimeSystem.Time.J2000Tdb, TimeSpan.Zero);
 
             double r = 7178e3;
             double v = System.Math.Sqrt(TestHelpers.EarthAtJ2000.GM / r);
@@ -153,7 +153,7 @@ namespace IO.Astrodynamics.Tests.Maneuvers
                 System.Math.Abs(maneuver.TargetPerigeeRadius / r - 1.0), System.Math.Abs(ke.PerigeeVelocity() / v - 1.0),
                 System.Math.Abs(ke.ApogeeVelocity() / v - 1.0)
             }.Max();
-            System.Console.WriteLine($"MEASURE #686 issue elements e = {ke.E:E3}: worst apsis radius and velocity against 7178 km and sqrt(GM/r) {worst:E3}");
+            System.Console.WriteLine($"MEASURE #686 issue elements e = {ke.Eccentricity():E3}: worst apsis radius and velocity against 7178 km and sqrt(GM/r) {worst:E3}");
             Assert.True(worst <= Issue686Tolerance, $"{worst:E3}");
         }
 }

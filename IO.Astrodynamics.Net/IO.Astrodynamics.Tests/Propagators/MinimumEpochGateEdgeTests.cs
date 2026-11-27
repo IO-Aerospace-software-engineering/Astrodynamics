@@ -15,7 +15,7 @@ using IO.Astrodynamics.Propagator.Events;
 using IO.Astrodynamics.Propagator.Forces;
 using IO.Astrodynamics.Propagator.Integrators;
 using IO.Astrodynamics.SolarSystemObjects;
-using IO.Astrodynamics.SSA;
+using IO.Astrodynamics.Ssa;
 using IO.Astrodynamics.Tests.Body;
 using IO.Astrodynamics.Tests.Propagators.Variational;
 using IO.Astrodynamics.Tests.SSA;
@@ -98,7 +98,7 @@ public class MinimumEpochGateEdgeTests
         Time? from = null)
     {
         var epoch = from ?? S;
-        var earth = new CelestialBody(PlanetsAndMoons.EARTH, Frame.ICRF, epoch);
+        var earth = new CelestialBody(PlanetsAndMoons.Earth, Frame.ICRF, epoch);
         var start = new StateVector(new Vector3(0.0, 7e6, 0.0), new Vector3(1.0, 0.0, 0.0), earth, epoch, Frame.ICRF);
         integrator.Initialize(start);
         return integrator.IntegrateSegment(start.Position, start.Velocity, epoch, duration, [detector]);
@@ -173,8 +173,8 @@ public class MinimumEpochGateEdgeTests
     {
         var from = new Time(new DateTime(2024, 3, 19, 23, 17, 0), TimeScale.TDB);
         var gate = new Time(new DateTime(2024, 3, 19, 23, 17, 12, DateTimeKind.Utc).AddTicks(8864997), TimeScale.UTC);
-        Assert.True(gate.ToTDB() < gate);
-        var firstTickNotBefore = gate.ToTDB();
+        Assert.True(gate.ToTdb() < gate);
+        var firstTickNotBefore = gate.ToTdb();
         while (firstTickNotBefore < gate) firstTickNotBefore += TimeSpan.FromTicks(1);
 
         double gateSeconds = PropagationTimeArgument.Tt.SecondsBetween(from, gate);
@@ -190,7 +190,7 @@ public class MinimumEpochGateEdgeTests
         Assert.NotNull(result.Event);
         double t = result.Event.Value.EventTime;
         var epoch = integrator.TimeArgument.EpochAt(from, t);
-        long ticks = epoch.ToTAI().DateTime.Ticks - gate.ToTAI().DateTime.Ticks;
+        long ticks = epoch.ToTai().DateTime.Ticks - gate.ToTai().DateTime.Ticks;
         _output.WriteLine($"MEASURE #569 gate UTC {integratorName} {timeArgument}: gate {gate.DateTime:O} UTC at {gateSeconds:R} TT s, event {epoch.DateTime:O} TDB at {t:R} s, {ticks} ticks (TAI) from the gate");
         Assert.False(epoch < gate);
         if (integratorName.StartsWith("RK"))
@@ -216,7 +216,7 @@ public class MinimumEpochGateEdgeTests
     [InlineData("RK")]
     public void RootJustAfterTheGate_WithContinue_OneEventAtOrAfterTheGate(string integratorName)
     {
-        var earth = new CelestialBody(PlanetsAndMoons.EARTH, Frame.ICRF, S);
+        var earth = new CelestialBody(PlanetsAndMoons.Earth, Frame.ICRF, S);
         int runs = 0, single = 0;
         foreach (var direction in new[] { CrossingDirection.NegativeToPositive, CrossingDirection.PositiveToNegative })
         for (int i = 1; i <= 60; i++)
@@ -263,7 +263,7 @@ public class MinimumEpochGateEdgeTests
     [Fact]
     public void RootJustAfterTheGate_ThroughPropagate_ContinueOnce()
     {
-        var earth = new CelestialBody(PlanetsAndMoons.EARTH, Frame.ICRF, S);
+        var earth = new CelestialBody(PlanetsAndMoons.Earth, Frame.ICRF, S);
         const double m0 = 3.1115924495453107;
         (Spacecraft, ImpulseManeuver) Build(int id, Func<Engine, ImpulseManeuver> maneuver)
         {
@@ -337,7 +337,7 @@ public class MinimumEpochGateEdgeTests
     [InlineData("RK")]
     public void TwoGatedDetectors_EachJudgedOnItsRealG(string integratorName)
     {
-        var earth = new CelestialBody(PlanetsAndMoons.EARTH, Frame.ICRF, S);
+        var earth = new CelestialBody(PlanetsAndMoons.Earth, Frame.ICRF, S);
         var orbit = MinimumEpochGateTests.Orbit(earth, System.Math.PI);
         var sv = orbit.ToStateVector();
         var k = new KeplerClosedForm(earth.GM, sv.Position, sv.Velocity, 0.0);
@@ -380,7 +380,7 @@ public class MinimumEpochGateEdgeTests
     [InlineData(1.0e5, 1.0, false)]
     public void PlaneAlignment_SearchStart_TakesTheNodeItMovesToward(double height, double rate, bool ascending)
     {
-        var earth = new CelestialBody(PlanetsAndMoons.EARTH, Frame.ICRF, S);
+        var earth = new CelestialBody(PlanetsAndMoons.Earth, Frame.ICRF, S);
         var target = new KeplerianElements(7000000.0, 0.0, 0.5, 0.0, 0.0, 0.0, earth, S, Frame.ICRF);
         var normal = target.SpecificAngularMomentum().Normalize();
         var spacecraft = new Spacecraft(-7821, "GE7821", 1000.0, target, 3000.0, new Clock("GE7821_CLK", 65536));
@@ -416,7 +416,7 @@ public class MinimumEpochGateEdgeTests
     [Fact]
     public void ManeuverEventDetector_EvaluateKeepsItsGuard_TheGateIsTheMinimumEpoch()
     {
-        var earth = new CelestialBody(PlanetsAndMoons.EARTH, Frame.ICRF, S);
+        var earth = new CelestialBody(PlanetsAndMoons.Earth, Frame.ICRF, S);
         var orbit = MinimumEpochGateTests.Orbit(earth, 1.0);
         var spacecraft = new Spacecraft(-7831, "GE7831", 1000.0, orbit, 3000.0, new Clock("GE7831_CLK", 65536));
         var tank = new FuelTank("ft", 1000.0, 1000.0, "model", "sn");
@@ -445,7 +445,7 @@ public class MinimumEpochGateEdgeTests
     [Fact]
     public void EvaluateAvoidance_AfterAMovedGate_TheOptionIsTheClosedFormOfItsOrbit()
     {
-        var earth = new CelestialBody(PlanetsAndMoons.EARTH, Frame.ICRF, S);
+        var earth = new CelestialBody(PlanetsAndMoons.Earth, Frame.ICRF, S);
         var orbit = MinimumEpochGateTests.Orbit(earth, System.Math.PI);
         var sv = orbit.ToStateVector();
         var k = new KeplerClosedForm(earth.GM, sv.Position, sv.Velocity, 0.0);
@@ -503,12 +503,12 @@ public class MinimumEpochGateEdgeTests
     [InlineData(false)]
     public void SsbMode_TheBurnOfTwoPropagateCommands(bool perigeeRaise)
     {
-        var earth = new CelestialBody(PlanetsAndMoons.EARTH, Frame.ICRF, S);
+        var earth = new CelestialBody(PlanetsAndMoons.Earth, Frame.ICRF, S);
         var sun = new CelestialBody(Stars.Sun, Frame.ICRF, S);
         var orbit = MinimumEpochGateTests.Orbit(earth, System.Math.PI).ToStateVector();
         var k = new KeplerClosedForm(earth.GM, orbit.Position, orbit.Velocity, 0.0);
-        var fromSsb = earth.GetGeometricStateRelativeTo(S, Barycenters.SOLAR_SYSTEM_BARYCENTER);
-        var start = new StateVector(fromSsb.Position + orbit.Position, fromSsb.Velocity + orbit.Velocity, Barycenters.SOLAR_SYSTEM_BARYCENTER, S, Frame.ICRF);
+        var fromSsb = earth.GetGeometricStateRelativeTo(S, Barycenters.SolarSystemBarycenter);
+        var start = new StateVector(fromSsb.Position + orbit.Position, fromSsb.Velocity + orbit.Velocity, Barycenters.SolarSystemBarycenter, S, Frame.ICRF);
         var gate = MinimumEpochGateTests.GateAtTt(perigeeRaise ? 1000.0 : k.T / 2.0 - 3.0);
         var end = S.AddHours(4.0);
         const double tolerance = AttitudeRecordTests.SsbRk78Tolerance;

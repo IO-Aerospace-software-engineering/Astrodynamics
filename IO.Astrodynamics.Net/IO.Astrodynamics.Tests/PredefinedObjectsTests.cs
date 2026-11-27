@@ -33,7 +33,7 @@ public class PredefinedObjectsTests
             .GetParameters().Select(p => p.ParameterType));
 
         // An entry is used where an INaifObject is asked: its identifier and name, no kernel read
-        INaifObject[] entries = [PlanetsAndMoons.EARTH, PlanetsAndMoons.MOON, Stars.Sun, GroundStations.DSS_13, LagrangePoints.L1];
+        INaifObject[] entries = [PlanetsAndMoons.Earth, PlanetsAndMoons.Moon, Stars.Sun, GroundStations.Dss13, LagrangePoints.L1];
         Assert.Equal([399, 301, 10, 399013, 391], entries.Select(x => x.NaifId));
         Assert.Equal(["EARTH", "MOON", "SUN", "DSS-13", "L1"], entries.Select(x => x.Name));
     }
@@ -42,10 +42,10 @@ public class PredefinedObjectsTests
     public void Site_FromAGroundStation_IsTheSiteOfItsIdentifier()
     {
         // Arrange
-        var earth = new CelestialBody(PlanetsAndMoons.EARTH);
+        var earth = new CelestialBody(PlanetsAndMoons.Earth);
 
         // Act
-        var site = new Site(GroundStations.DSS_13, earth);
+        var site = new Site(GroundStations.Dss13, earth);
 
         // Assert: the site 13 of the Earth, its position at J2000 TDB the one SPICE reads for 399013 (spkezr_c in the
         // Earth's frame, the kernel site's own path: the same state bit for bit)
@@ -53,7 +53,7 @@ public class PredefinedObjectsTests
         Assert.Equal(399013, site.NaifId);
         Assert.Equal("DSS-13", site.Name);
         Assert.True(site.IsSpiceBacked);
-        var expected = SpiceAPI.Instance.ReadEphemeris(TimeSystem.Time.J2000TDB, 399, 399013, earth.Frame, Aberration.None);
+        var expected = SpiceApi.Instance.ReadEphemeris(TimeSystem.Time.J2000Tdb, 399, 399013, earth.Frame, Aberration.None);
         Assert.Equal(expected.Position, site.InitialOrbitalParameters.ToStateVector().Position);
         Assert.Equal(new Site(13, "DSS-13", earth).Planetodetic, site.Planetodetic);
     }
@@ -62,20 +62,20 @@ public class PredefinedObjectsTests
     public void Site_FromAStationOfAnotherBody_Throws()
     {
         // Arrange
-        var moon = new CelestialBody(PlanetsAndMoons.MOON);
-        var earth = new CelestialBody(PlanetsAndMoons.EARTH);
+        var moon = new CelestialBody(PlanetsAndMoons.Moon);
+        var earth = new CelestialBody(PlanetsAndMoons.Earth);
 
         // Act and assert: 399013 is no site of the Moon (301001 to 301999); NOTO (398989) and NEW NORCIA (398990) are of no
         // body 398 and no site of the Earth (399001 to 399999)
-        var other = Assert.Throws<ArgumentException>(() => new Site(GroundStations.DSS_13, moon));
+        var other = Assert.Throws<ArgumentException>(() => new Site(GroundStations.Dss13, moon));
         Assert.Equal("station", other.ParamName);
         Assert.Contains("301001", other.Message);
-        Assert.Equal("station", Assert.Throws<ArgumentException>(() => new Site(GroundStations.NOTO, earth)).ParamName);
-        Assert.Equal("station", Assert.Throws<ArgumentException>(() => new Site(GroundStations.NORCIA, earth)).ParamName);
+        Assert.Equal("station", Assert.Throws<ArgumentException>(() => new Site(GroundStations.Noto, earth)).ParamName);
+        Assert.Equal("station", Assert.Throws<ArgumentException>(() => new Site(GroundStations.Norcia, earth)).ParamName);
         Assert.Equal("station", Assert.Throws<ArgumentException>(() => new Site(new NaifObject(399000, "NONE"), earth)).ParamName);
         Assert.Equal("station", Assert.Throws<ArgumentException>(() => new Site(new NaifObject(400000, "NONE"), earth)).ParamName);
         Assert.Equal("station", Assert.Throws<ArgumentException>(() => new Site(new NaifObject(399013, ""), earth)).ParamName);
-        Assert.Equal("celestialItem", Assert.Throws<ArgumentNullException>(() => new Site(GroundStations.DSS_13, null)).ParamName);
+        Assert.Equal("celestialItem", Assert.Throws<ArgumentNullException>(() => new Site(GroundStations.Dss13, null)).ParamName);
     }
 
     [Fact]

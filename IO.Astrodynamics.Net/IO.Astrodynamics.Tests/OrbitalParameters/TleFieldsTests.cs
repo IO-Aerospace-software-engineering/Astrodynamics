@@ -2,7 +2,7 @@
 
 using System;
 using System.Linq;
-using IO.Astrodynamics.OrbitalParameters.TLE;
+using IO.Astrodynamics.OrbitalParameters;
 using Xunit;
 
 namespace IO.Astrodynamics.Tests.OrbitalParameters;
@@ -66,7 +66,7 @@ public class TleFieldsTests
         string line1 = line == 1 ? WithField(Line1, column, text) : Line1;
         string line2 = line == 2 ? WithField(Line2, column, text) : Line2;
 
-        var exception = Assert.Throws<ArgumentException>(() => new TLE("ISS", line1, line2));
+        var exception = Assert.Throws<ArgumentException>(() => new Tle("ISS", line1, line2));
         Assert.Equal(line == 1 ? "line1" : "line2", exception.ParamName);
         var format = Assert.IsType<TleFormatException>(exception.InnerException);
         Assert.Equal(line, format.Line);
@@ -78,7 +78,7 @@ public class TleFieldsTests
     public void TheDayOfALeapYear_IsAccepted()
     {
         // Day 366 of 2020, the last of a leap year
-        var tle = new TLE("ISS", WithField(Line1, 19, "20366.53488036"), Line2);
+        var tle = new Tle("ISS", WithField(Line1, 19, "20366.53488036"), Line2);
         Assert.Equal(new DateTime(2020, 12, 31), tle.Epoch.DateTime.Date);
     }
 
@@ -99,7 +99,7 @@ public class TleFieldsTests
 
     private static void Expect(string line1, string line2, string parameter, int line, int column, string message)
     {
-        var exception = Assert.Throws<ArgumentException>(() => new TLE("ISS", line1, line2));
+        var exception = Assert.Throws<ArgumentException>(() => new Tle("ISS", line1, line2));
         Assert.Equal(parameter, exception.ParamName);
         Assert.StartsWith(message, exception.Message);
         var format = Assert.IsType<TleFormatException>(exception.InnerException);
@@ -112,31 +112,31 @@ public class TleFieldsTests
     [InlineData("   ")]
     public void WithoutAName_TheNameIsTheCatalogField(string name)
     {
-        Assert.Equal("25544", new TLE(name, Line1, Line2).Name);
-        Assert.Equal("T5544", new TLE(name, "1 T5544U 98067A   24173.50000000  .00016717  00000-0  10270-3 0  9052",
+        Assert.Equal("25544", new Tle(name, Line1, Line2).Name);
+        Assert.Equal("T5544", new Tle(name, "1 T5544U 98067A   24173.50000000  .00016717  00000-0  10270-3 0  9052",
             "2 T5544  51.6423 353.0312 0000493 320.8755  39.2360 15.49309423 25701").Name);
     }
 
     [Fact]
     public void TheFieldsOfTheLines_AreProperties()
     {
-        var tle = new TLE("ISS", Line1, Line2);
+        var tle = new Tle("ISS", Line1, Line2);
         Assert.Equal("98067A", tle.CosparId);
         Assert.Equal(905, tle.ElementSetNumber);
         Assert.Equal(2570, tle.RevolutionNumberAtEpoch);
-        Assert.Equal(Classification.Unclassified, tle.Classification);
-        Assert.Equal(Classification.Classified, new TLE("C", WithField(Line1, 8, "C"), Line2).Classification);
-        Assert.Equal(Classification.Secret, new TLE("S", WithField(Line1, 8, "S"), Line2).Classification);
+        Assert.Equal(TleClassification.Unclassified, tle.Classification);
+        Assert.Equal(TleClassification.Classified, new Tle("C", WithField(Line1, 8, "C"), Line2).Classification);
+        Assert.Equal(TleClassification.Secret, new Tle("S", WithField(Line1, 8, "S"), Line2).Classification);
 
         // Vallado's 11801: no designator, a blank ephemeris type, an element set number and a revolution number of 1
-        var vallado = new TLE("11801", "1 11801U          80230.29629788  .01431103  00000-0  14311-1      13",
+        var vallado = new Tle("11801", "1 11801U          80230.29629788  .01431103  00000-0  14311-1      13",
             "2 11801  46.7916 230.4354 7318036  47.4722  10.4117  2.28537848    13");
         Assert.Null(vallado.CosparId);
         Assert.Equal(1, vallado.ElementSetNumber);
         Assert.Equal(1, vallado.RevolutionNumberAtEpoch);
 
         // Blank count columns read 0
-        var blank = new TLE("ISS", WithField(Line1, 65, "    "), WithField(Line2, 64, "     "));
+        var blank = new Tle("ISS", WithField(Line1, 65, "    "), WithField(Line2, 64, "     "));
         Assert.Equal(0, blank.ElementSetNumber);
         Assert.Equal(0, blank.RevolutionNumberAtEpoch);
     }
@@ -144,9 +144,9 @@ public class TleFieldsTests
     [Fact]
     public void Create_FromTheProperties_RebuildsTheLines()
     {
-        var tle = new TLE("ISS", Line1, Line2);
-        var again = TLE.Create(tle.ToMeanKeplerianElements(), tle.Name, tle.NoradCatalogId, tle.CosparId, tle.RevolutionNumberAtEpoch,
-            tle.Classification, tle.BallisticCoefficient, tle.FirstDerivationMeanMotion, tle.SecondDerivativeMeanMotion, tle.ElementSetNumber);
+        var tle = new Tle("ISS", Line1, Line2);
+        var again = Tle.Create(tle.ToMeanKeplerianElements(), tle.Name, tle.NoradCatalogId, tle.CosparId, tle.RevolutionNumberAtEpoch,
+            tle.Classification, tle.BStar, tle.MeanMotionDot, tle.MeanMotionDDot, tle.ElementSetNumber);
         Assert.Equal(Line1, again.Line1);
         Assert.Equal(Line2, again.Line2);
     }

@@ -6,7 +6,6 @@ using System.Linq;
 using IO.Astrodynamics.Body;
 using IO.Astrodynamics.Math;
 using IO.Astrodynamics.OrbitalParameters;
-using IO.Astrodynamics.OrbitalParameters.TLE;
 using IO.Astrodynamics.TimeSystem;
 using IO.Astrodynamics.Exceptions;
 using Xunit;
@@ -21,7 +20,7 @@ namespace IO.Astrodynamics.Tests.OrbitalParameters;
 /// throw) and <see cref="object.GetHashCode"/> (two objects that compare as equal return the same hash code), so it is
 /// the same on every platform. Inputs: the sets of the issue, a = 7000 km, e = 0.1, i = 0.5 rad, Ω = 1 rad, ω = 2 rad,
 /// M = 3 rad (set 1), a = 26 560 km, e = 0.02, i = 55°, Ω = 1.2 rad, ω = 0.4 rad, M = 2.5 rad (set 2), and the ISS TLE of
-/// <see cref="TLETests"/>.
+/// <see cref="TleTests"/>.
 /// </summary>
 public class OrbitalParametersEqualityTests
 {
@@ -49,7 +48,7 @@ public class OrbitalParametersEqualityTests
     private static StateVector State(double x = 6800e3) =>
         new(new Vector3(x, 1000.0, -2000.0), new Vector3(10.0, 7500.0, 300.0), Earth, Epoch, Frames.Frame.ICRF);
 
-    private static TLE Iss(string name = "ISS") => new(name, IssLine1, IssLine2);
+    private static Tle Iss(string name = "ISS") => new(name, IssLine1, IssLine2);
 
     // A parabola, e = 1 exactly, given its perigee radius q: a = +Infinity (#459), P = +Infinity
     private static KeplerianElements Parabola(double q) =>
@@ -223,7 +222,7 @@ public class OrbitalParametersEqualityTests
     public void TheEpochInAnotherTimeFrame_IsTheSameInstant()
     {
         var utc = Set1(OrbitalElementsType.Mean);
-        var tdb = new KeplerianElements(utc.A, utc.E, utc.I, utc.RAAN, utc.AOP, utc.M, Earth, Epoch.ToTDB(), Frames.Frame.ICRF,
+        var tdb = new KeplerianElements(utc.SemiMajorAxis(), utc.Eccentricity(), utc.Inclination(), utc.AscendingNode(), utc.ArgumentOfPeriapsis(), utc.MeanAnomaly(), Earth, Epoch.ToTdb(), Frames.Frame.ICRF,
             elementsType: OrbitalElementsType.Mean);
 
         Assert.True(utc == (Astrodynamics.OrbitalParameters.OrbitalParameters)tdb);
@@ -238,8 +237,8 @@ public class OrbitalParametersEqualityTests
     public void TleEquality_ReadsNoState()
     {
         const string line2 = "2 25544  51.6423 353.0312 0000493 320.8755  39.2360 19.00000000 25703";
-        var x = new TLE("SUB", IssLine1, line2);
-        var y = new TLE("SUB", IssLine1, line2);
+        var x = new Tle("SUB", IssLine1, line2);
+        var y = new Tle("SUB", IssLine1, line2);
 
         Assert.True(x == y);
         Assert.True(x.Equals((Astrodynamics.OrbitalParameters.OrbitalParameters)y));

@@ -21,14 +21,14 @@ using IO.Astrodynamics.SolarSystemObjects;
 using IO.Astrodynamics.TimeSystem;
 
 var epoch = new Time(2024, 6, 21, 12, 0, 0, TimeScale.TDB);
-var earth = PlanetsAndMoons.EARTH_BODY;
+var earth = PlanetsAndMoons.EarthBody;
 
 var svICRF = new StateVector(
     new Vector3(6800000.0, 0.0, 0.0),
     new Vector3(0.0, 7700.0, 0.0),
     earth, epoch, Frame.ICRF);
 
-var svEcliptic = svICRF.ToFrame(Frame.ECLIPTIC_J2000);
+var svEcliptic = svICRF.ToFrame(Frame.ECLIPJ2000);
 
 Console.WriteLine($"ICRF position:     {svICRF.Position}");
 Console.WriteLine($"Ecliptic position: {svEcliptic.Position}");
@@ -71,7 +71,7 @@ These three frames follow the CIO-based IAU chain, IAU 2006 precession with IAU 
 ```csharp
 // Inputs: svICRF (StateVector), epoch (Time)
 // Get the CIRS-to-ICRF orientation at a given epoch
-var cirsToIcrf = Frame.CIRS.GetStateOrientationToICRF(epoch);
+var cirsToIcrf = Frame.CIRS.GetStateOrientationToIcrf(epoch);
 
 // Rotate a position from ICRF to CIRS (use the conjugate)
 var positionIcrf = svICRF.Position;
@@ -129,7 +129,7 @@ altitude, on the surface as in orbit:
 
 ```csharp
 // Inputs: coords (Planetodetic)
-var earth = PlanetsAndMoons.EARTH_BODY;
+var earth = PlanetsAndMoons.EarthBody;
 var planetocentric = coords.ToPlanetocentric(earth);
 var back = planetocentric.ToPlanetodetic(earth); // coords, to about 1e-15
 ```
@@ -142,7 +142,7 @@ position of a geodetic point one more:
 
 ```csharp
 // Inputs: svICRF (StateVector), coords (Planetodetic)
-var earth = PlanetsAndMoons.EARTH_BODY;
+var earth = PlanetsAndMoons.EarthBody;
 Planetodetic below = svICRF.ToPlanetodetic();            // in ITRF93, the Earth's body frame, at the state's epoch
 Vector3 position = coords.ToCartesianCoordinates(earth); // body-fixed position, m, as CSPICE georec_c
 ```

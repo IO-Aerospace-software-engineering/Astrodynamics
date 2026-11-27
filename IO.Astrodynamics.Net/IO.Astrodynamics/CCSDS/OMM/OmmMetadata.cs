@@ -2,9 +2,9 @@
 
 using System;
 using System.Collections.Generic;
-using IO.Astrodynamics.CCSDS.Common.Enums;
+using IO.Astrodynamics.Ccsds;
 
-namespace IO.Astrodynamics.CCSDS.OMM;
+namespace IO.Astrodynamics.Ccsds;
 
 /// <summary>
 /// Represents the metadata section of an OMM message.
@@ -58,7 +58,7 @@ public class OmmMetadata
 
     /// <summary>
     /// The <c>OBJECT_ID</c> of an object without an international designator, which
-    /// <see cref="OrbitalParameters.TLE.TLE.ToOmm"/> writes for blank columns 10-17 and <see cref="Omm.ToTle"/> reads back as them, trimmed and in any letter case (#604, decided by
+    /// <see cref="OrbitalParameters.Tle.ToOmm"/> writes for blank columns 10-17 and <see cref="Omm.ToTle"/> reads back as them, trimmed and in any letter case (#604, decided by
     /// S. Guillet, 2026-11-18; CCSDS's value for an unknown designator, confirmed by S. Guillet, 2026-11-18).
     /// </summary>
     internal const string UnknownObjectId = "UNKNOWN";
@@ -175,7 +175,7 @@ public class OmmMetadata
             "EARTH",
             CcsdsReferenceFrame.TEME,
             CcsdsTimeSystem.UTC,
-            Common.Enums.MeanElementTheory.SGP4,
+            Ccsds.MeanElementTheory.SGP4,
             comments: comments);
     }
 

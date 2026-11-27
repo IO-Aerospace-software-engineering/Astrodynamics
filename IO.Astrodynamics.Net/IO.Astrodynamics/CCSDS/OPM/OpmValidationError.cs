@@ -2,7 +2,7 @@
 
 using System;
 
-namespace IO.Astrodynamics.CCSDS.OPM;
+namespace IO.Astrodynamics.Ccsds;
 
 /// <summary>
 /// Severity level for OPM validation issues.

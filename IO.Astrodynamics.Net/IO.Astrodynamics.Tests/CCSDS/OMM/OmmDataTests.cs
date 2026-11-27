@@ -2,8 +2,7 @@
 
 using System;
 using System.Collections.Generic;
-using IO.Astrodynamics.CCSDS.Common;
-using IO.Astrodynamics.CCSDS.OMM;
+using IO.Astrodynamics.Ccsds;
 using Xunit;
 
 namespace IO.Astrodynamics.Tests.CCSDS.OMM

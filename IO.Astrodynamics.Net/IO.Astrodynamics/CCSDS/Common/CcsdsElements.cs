@@ -3,7 +3,7 @@
 using System;
 using System.Xml.Linq;
 
-namespace IO.Astrodynamics.CCSDS.Common;
+namespace IO.Astrodynamics.Ccsds;
 
 /// <summary>
 /// Finds the child elements of a message that the NDM/XML schema bounds to one (the header, the body, the segment, its

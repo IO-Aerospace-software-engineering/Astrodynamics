@@ -37,7 +37,7 @@ internal static class WindowEndAssert
     {
         double length = LengthOf(window, solution);
         double departure = IntegratedSeconds(solution) - length;
-        var endLabel = window.EndDate.ToTDB();
+        var endLabel = window.EndDate.ToTdb();
         double allowance = solution.WindowEnd != null
             ? EndUlps * (System.Math.BitIncrement(length) - length)
             : Tick;
@@ -54,10 +54,10 @@ internal static class WindowEndAssert
     {
         var first = solution.Segments[0];
         var last = solution.Segments[^1];
-        return solution.TimeArgument.SecondsBetween(first.BaseEpoch, last.BaseEpoch) + last.Duration;
+        return solution.TimeArgument.SecondsBetween(first.BaseEpoch, last.BaseEpoch) + last.DurationSeconds;
     }
 
     /// <summary>The length of <paramref name="window"/> in seconds of the time argument of the solution.</summary>
     internal static double LengthOf(TimeSystem.Window window, PropagationSolution solution) =>
-        solution.TimeArgument.Length(window, new TimeSystem.Window(window.StartDate.ToTDB(), window.EndDate.ToTDB()));
+        solution.TimeArgument.Length(window, new TimeSystem.Window(window.StartDate.ToTdb(), window.EndDate.ToTdb()));
 }

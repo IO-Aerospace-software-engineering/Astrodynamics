@@ -19,8 +19,8 @@ namespace IO.Astrodynamics.Tests.Propagators;
 /// <summary>
 /// A propagation over a window of zero length throws <see cref="ArgumentException"/> naming <c>window</c> at the start of
 /// the call, before anything changes, on every path (decision 7 of lot L4 of #668, decided by S. Guillet, 2026-11-22;
-/// <see cref="TLEPropagator"/> by decision 15, the same day). Before, a numerical propagation ran, re-armed the spacecraft
-/// and threw <see cref="InvalidOperationException"/> "Solution contains no segments", and <see cref="TLEPropagator"/>
+/// <see cref="TlePropagator"/> by decision 15, the same day). Before, a numerical propagation ran, re-armed the spacecraft
+/// and threw <see cref="InvalidOperationException"/> "Solution contains no segments", and <see cref="TlePropagator"/>
 /// returned one sample at the start.
 /// </summary>
 public class ZeroLengthWindowTests
@@ -39,7 +39,7 @@ public class ZeroLengthWindowTests
     {
         int id = System.Threading.Interlocked.Decrement(ref _nextId);
         var orbit = new StateVector(new Vector3(6878137.0, 0.0, 0.0), new Vector3(0.0, 6200.0, 4500.0),
-            PlanetsAndMoons.EARTH_BODY, Start, Frames.Frame.ICRF);
+            PlanetsAndMoons.EarthBody, Start, Frames.Frame.ICRF);
         return new Spacecraft(id, "ZERO" + -id, 1000.0, orbit, 3000.0, new Clock("zero" + -id, 65536));
     }
 
@@ -58,7 +58,7 @@ public class ZeroLengthWindowTests
             _ => () =>
             {
                 var integrator = new RK78Integrator();
-                integrator.AddForce(new GravitationalAcceleration(PlanetsAndMoons.EARTH_BODY));
+                integrator.AddForce(new GravitationalAcceleration(PlanetsAndMoons.EarthBody));
                 _ = new CentralBodyPropagator(Empty, spacecraft, integrator, TimeSpan.FromSeconds(60.0));
             }
         };
@@ -72,7 +72,7 @@ public class ZeroLengthWindowTests
     }
 
     /// <summary>
-    /// <see cref="TLEPropagator"/> throws in its constructor, in TDB and in UTC alike, and adds no state to the spacecraft
+    /// <see cref="TlePropagator"/> throws in its constructor, in TDB and in UTC alike, and adds no state to the spacecraft
     /// (decision 15).
     /// </summary>
     [Theory]
@@ -81,16 +81,16 @@ public class ZeroLengthWindowTests
     public void TLEPropagator_AZeroLengthWindow_Throws_NamingTheWindow(TimeScale scale)
     {
         // Arrange
-        var tle = new IO.Astrodynamics.OrbitalParameters.TLE.TLE("ISS",
+        var tle = new IO.Astrodynamics.OrbitalParameters.Tle("ISS",
             "1 25544U 98067A   21020.53488036  .00016717  00000-0  10270-3 0  9054",
             "2 25544  51.6423 353.0312 0000493 320.8755  39.2360 15.49309423 25703");
         int id = System.Threading.Interlocked.Decrement(ref _nextId);
         var spacecraft = new Spacecraft(id, "ZERO" + -id, 100.0, tle, 10000.0, new Clock("zero" + -id, 256));
-        var epoch = scale == TimeScale.UTC ? tle.Epoch.ToUTC() : tle.Epoch.ToTDB();
+        var epoch = scale == TimeScale.UTC ? tle.Epoch.ToUtc() : tle.Epoch.ToTdb();
         var empty = new Window(epoch, epoch);
 
         // Act
-        var exception = Assert.Throws<ArgumentException>(() => new TLEPropagator(empty, spacecraft, TimeSpan.FromSeconds(60.0)));
+        var exception = Assert.Throws<ArgumentException>(() => new TlePropagator(empty, spacecraft, TimeSpan.FromSeconds(60.0)));
 
         // Assert
         Assert.Equal("window", exception.ParamName);
@@ -160,7 +160,7 @@ public class ZeroLengthWindowTests
         // Arrange
         int id = System.Threading.Interlocked.Decrement(ref _nextId);
         var orbit = new StateVector(new Vector3(6878137.0, 0.0, 0.0), new Vector3(0.0, 6200.0, 4500.0),
-            PlanetsAndMoons.EARTH_BODY, Start, Frames.Frame.ICRF,
+            PlanetsAndMoons.EarthBody, Start, Frames.Frame.ICRF,
             IO.Astrodynamics.Math.Matrix.Diagonal(100.0, 100.0, 100.0, 1e-4, 1e-4, 1e-4));
         var template = new Spacecraft(id, "ZERO" + -id, 1000.0, orbit, 3000.0, new Clock("zero" + -id, 65536));
         var config = new MonteCarloConfiguration

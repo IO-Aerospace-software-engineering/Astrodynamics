@@ -43,7 +43,7 @@ namespace IO.Astrodynamics.Tests.Occultation;
 /// </remarks>
 public class StarOccultationTests
 {
-    private static readonly TimeSystem.Time S = TimeSystem.Time.CreateTDB(825638400.0);
+    private static readonly TimeSystem.Time S = TimeSystem.Time.CreateTdb(825638400.0);
     private static readonly Window SearchWindow = new(S.AddSeconds(-3.0 * 3600.0), S.AddSeconds(3.0 * 3600.0));
     private const double Arcsec = System.Math.PI / 180.0 / 3600.0;
 
@@ -132,8 +132,8 @@ public class StarOccultationTests
     [InlineData(100.0, 0.1, Aberration.XCN)]
     public void LunarOccultationFromASite(double distancePc, double properMotion, Aberration aberration)
     {
-        var earth = new CelestialBody(PlanetsAndMoons.EARTH);
-        var moon = new CelestialBody(PlanetsAndMoons.MOON);
+        var earth = new CelestialBody(PlanetsAndMoons.Earth);
+        var moon = new CelestialBody(PlanetsAndMoons.Moon);
         var dss13 = new Site(13, "DSS-13", earth);
         var star = NewStar(distancePc, properMotion);
 
@@ -141,8 +141,8 @@ public class StarOccultationTests
 
         var (entry, exit) = Reference(distancePc, properMotion, aberration);
         Assert.Single(windows);
-        double entryError = windows[0].StartDate.ToTDB().TimeSpanFromJ2000().TotalSeconds - entry;
-        double exitError = windows[0].EndDate.ToTDB().TimeSpanFromJ2000().TotalSeconds - exit;
+        double entryError = windows[0].StartDate.ToTdb().TimeSpanFromJ2000().TotalSeconds - entry;
+        double exitError = windows[0].EndDate.ToTdb().TimeSpanFromJ2000().TotalSeconds - exit;
         _output.WriteLine($"MEASURE {distancePc} pc {properMotion}\"/yr {aberration}: entry {entryError:E3} s, exit {exitError:E3} s");
         Assert.True(System.Math.Abs(entryError) <= EdgeLimit, $"entry {entryError:E3} s");
         Assert.True(System.Math.Abs(exitError) <= EdgeLimit, $"exit {exitError:E3} s");
@@ -175,23 +175,23 @@ public class StarOccultationTests
     [InlineData(20.0, 0.1, Aberration.LT)]
     [InlineData(20.0, 0.1, Aberration.CN)]
     [InlineData(20.0, 0.1, Aberration.XLT)]
-    [InlineData(20.0, 0.1, Aberration.LTS)]
-    [InlineData(20.0, 0.1, Aberration.CNS)]
+    [InlineData(20.0, 0.1, Aberration.LtS)]
+    [InlineData(20.0, 0.1, Aberration.CnS)]
     [InlineData(100.0, 0.1, Aberration.LT)]
-    [InlineData(100.0, 0.1, Aberration.CNS)]
+    [InlineData(100.0, 0.1, Aberration.CnS)]
     [InlineData(100.0, 0.0, Aberration.XCN)]
-    [InlineData(100.0, 0.0, Aberration.XLTS)]
+    [InlineData(100.0, 0.0, Aberration.XltS)]
     public void GetEphemeris_IsTheDirectionAtTheEpoch(double distancePc, double properMotion, Aberration aberration)
     {
-        var earth = new CelestialBody(PlanetsAndMoons.EARTH);
+        var earth = new CelestialBody(PlanetsAndMoons.Earth);
         var dss13 = new Site(13, "DSS-13", earth);
         var star = NewStar(distancePc, properMotion);
         TimeSystem.Time epoch = S.AddSeconds(3600.0);
 
         var position = star.GetEphemeris(epoch, dss13, Frames.Frame.ICRF, aberration).Position;
-        bool stellar = aberration is Aberration.LTS or Aberration.CNS or Aberration.XLTS or Aberration.XCNS;
-        var expected = ReferenceDirection(distancePc, properMotion, stellar && aberration is Aberration.LTS or Aberration.CNS);
-        if (aberration is Aberration.XLTS or Aberration.XCNS)
+        bool stellar = aberration is Aberration.LtS or Aberration.CnS or Aberration.XltS or Aberration.XcnS;
+        var expected = ReferenceDirection(distancePc, properMotion, stellar && aberration is Aberration.LtS or Aberration.CnS);
+        if (aberration is Aberration.XltS or Aberration.XcnS)
         {
             // Transmission: stlabx, the stellar aberration of the opposite velocity, the mirror of stelab about the
             // geometric direction to first order; checked against the geometric direction and the reception one
@@ -211,7 +211,7 @@ public class StarOccultationTests
         Assert.True(angle <= DirectionLimit, $"{angle:E3} rad");
         // The distance is that of the star from DSS-13 at the epoch, the stellar aberration a rotation
         double distance = (star.GetEquatorialCoordinates(epoch).ToCartesian()
-                           - dss13.GetGeometricStateRelativeTo(epoch, Barycenters.SOLAR_SYSTEM_BARYCENTER).Position).Magnitude();
+                           - dss13.GetGeometricStateRelativeTo(epoch, Barycenters.SolarSystemBarycenter).Position).Magnitude();
         Assert.True(System.Math.Abs(position.Magnitude() / distance - 1.0) <= 1e-14);
     }
 }

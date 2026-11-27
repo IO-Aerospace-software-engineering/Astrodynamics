@@ -7,7 +7,6 @@ using IO.Astrodynamics.Body.Spacecraft;
 using IO.Astrodynamics.Maneuver;
 using IO.Astrodynamics.Math;
 using IO.Astrodynamics.OrbitalParameters;
-using IO.Astrodynamics.OrbitalParameters.TLE;
 using IO.Astrodynamics.Propagator;
 using IO.Astrodynamics.Propagator.Variational;
 using IO.Astrodynamics.Propagator.Integrators;
@@ -41,7 +40,7 @@ namespace IO.Astrodynamics.Tests.Body;
 /// </para>
 /// <para>
 /// The unpropagated TLE spacecraft reads SGP4 and records no attitude: the test gives it the identity of ICRF by hand
-/// (<c>AddStateOrientationToICRF</c>), without which its search throws (#682), and writes its SPK, the SGP4 states every
+/// (<c>AddStateOrientationToIcrf</c>), without which its search throws (#682), and writes its SPK, the SGP4 states every
 /// 10 s, and its CK, that identity, with the raw writers (a read no longer adds to the attitude record, #523). The TLE
 /// spacecraft propagated by <c>Spacecraft.Propagate</c> (#675) writes its kernels as any propagated spacecraft does.
 /// </para>
@@ -73,7 +72,7 @@ public class FieldOfViewDynamicsTests
         TestKernels.EnsureSolarSystem();
     }
 
-    private static readonly TimeSystem.Time Start = TimeSystem.Time.CreateUTC(676555130.80).ToTDB();
+    private static readonly TimeSystem.Time Start = TimeSystem.Time.CreateUtc(676555130.80).ToTdb();
 
     private static void AddInstruments(Spacecraft spacecraft)
     {
@@ -107,8 +106,8 @@ public class FieldOfViewDynamicsTests
         int offset = parts.Length > 1 ? 100 * (Array.IndexOf(InitialFrames, parts[1]) + 1) : 0;
         StateVector In(StateVector state) => initialFrame == Frames.Frame.ICRF ? state : state.ToFrame(initialFrame).ToStateVector();
         (Spacecraft, Engine) Create(int naifId, StateVector orbit) => FieldOfViewDynamicsTests.Create(naifId - offset, In(orbit));
-        var earth = new CelestialBody(PlanetsAndMoons.EARTH, Frames.Frame.ICRF, Start);
-        var moon = new CelestialBody(PlanetsAndMoons.MOON, Frames.Frame.ICRF, Start);
+        var earth = new CelestialBody(PlanetsAndMoons.Earth, Frames.Frame.ICRF, Start);
+        var moon = new CelestialBody(PlanetsAndMoons.Moon, Frames.Frame.ICRF, Start);
         var sun = new CelestialBody(Stars.Sun, Frames.Frame.ICRF, Start);
         var bodies = new CelestialItem[] { earth, moon, sun };
         var propagation = new Window(Start, Start.AddSeconds(3000.0));
@@ -146,7 +145,7 @@ public class FieldOfViewDynamicsTests
             case "SSB":
             {
                 var earthFromSsb = earth.GetGeometricStateFromICRF(Start).ToStateVector();
-                var orbit = new StateVector(earthFromSsb.Position + leo.Position, earthFromSsb.Velocity + leo.Velocity, Barycenters.SOLAR_SYSTEM_BARYCENTER, Start,
+                var orbit = new StateVector(earthFromSsb.Position + leo.Position, earthFromSsb.Velocity + leo.Velocity, Barycenters.SolarSystemBarycenter, Start,
                     Frames.Frame.ICRF);
                 var (spacecraft, _) = Create(-5174, orbit);
                 spacecraft.Propagate(propagation, new PropagationOptions { Integrator = new VVIntegratorOptions { Step = oneSecond }, OutputStep = oneSecond, ThirdBodies = bodies });
@@ -154,7 +153,7 @@ public class FieldOfViewDynamicsTests
             }
             case "ECLIPJ2000":
             {
-                var (spacecraft, _) = Create(-5175, leo.ToFrame(Frames.Frame.ECLIPTIC_J2000).ToStateVector());
+                var (spacecraft, _) = Create(-5175, leo.ToFrame(Frames.Frame.ECLIPJ2000).ToStateVector());
                 spacecraft.Propagate(propagation, new PropagationOptions { Integrator = new VVIntegratorOptions { Step = oneSecond }, OutputStep = oneSecond, ThirdBodies = bodies });
                 return (spacecraft, window);
             }
@@ -174,24 +173,24 @@ public class FieldOfViewDynamicsTests
             case "TLE":
             {
                 // Not propagated: the spacecraft reads SGP4 at each epoch, and its SPK holds the SGP4 states every 10 s
-                var tle = new TLE("ISS", "1 25544U 98067A   21020.53488036  .00016717  00000-0  10270-3 0  9054",
+                var tle = new Tle("ISS", "1 25544U 98067A   21020.53488036  .00016717  00000-0  10270-3 0  9054",
                     "2 25544  51.6423 353.0312 0000493 320.8755  39.2360 15.49309423 25703");
                 var spacecraft = new Spacecraft(-5177, "FOV5177", 1000.0, tle, 3000.0, new Clock("FOV5177_CLK", 65536));
                 AddInstruments(spacecraft);
-                var tleStart = tle.Epoch.ToTDB();
+                var tleStart = tle.Epoch.ToTdb();
                 // Its attitude, given by hand as the CK the test writes holds it: without one the search throws (#682)
-                spacecraft.Frame.AddStateOrientationToICRF(new StateOrientation(Quaternion.Identity, Vector3.Zero, tleStart, spacecraft.Frame));
+                spacecraft.Frame.AddStateOrientationToIcrf(new StateOrientation(Quaternion.Identity, Vector3.Zero, tleStart, spacecraft.Frame));
                 return (spacecraft, new Window(tleStart.AddSeconds(1.0), tleStart.AddSeconds(2999.0)));
             }
             case "TLEPropagated":
             {
                 // Propagated by RK7(8) about the point-mass Earth of the TLE, with the Moon and the Sun (#675): the spacecraft
                 // reads its stored states, about 50 km from SGP4 at the end
-                var tle = new TLE("ISS", "1 25544U 98067A   21020.53488036  .00016717  00000-0  10270-3 0  9054",
+                var tle = new Tle("ISS", "1 25544U 98067A   21020.53488036  .00016717  00000-0  10270-3 0  9054",
                     "2 25544  51.6423 353.0312 0000493 320.8755  39.2360 15.49309423 25703");
                 var spacecraft = new Spacecraft(-5179, "FOV5179", 1000.0, tle, 3000.0, new Clock("FOV5179_CLK", 65536));
                 AddInstruments(spacecraft);
-                var tleStart = tle.Epoch.ToTDB();
+                var tleStart = tle.Epoch.ToTdb();
                 spacecraft.Propagate(new Window(tleStart, tleStart.AddSeconds(3000.0)), new PropagationOptions { Integrator = new RK78IntegratorOptions { AbsoluteTolerance = 1e-12, RelativeTolerance = 1e-12 }, OutputStep = oneSecond, ThirdBodies = new CelestialItem[] { moon, sun }, CovariancePropagation = CovariancePropagationOptions.None });
                 return (spacecraft, new Window(tleStart.AddSeconds(1.0), tleStart.AddSeconds(2999.0)));
             }
@@ -209,7 +208,7 @@ public class FieldOfViewDynamicsTests
     private static readonly Row[] ConstantAttitude =
     [
         new(789, "EARTH", ShapeType.Ellipsoid, Aberration.LT, 1), new(790, "EARTH", ShapeType.Point, Aberration.LT, 1),
-        new(791, "EARTH", ShapeType.Ellipsoid, Aberration.LTS, 1), new(789, "DSS-13", ShapeType.Point, Aberration.LT, 1),
+        new(791, "EARTH", ShapeType.Ellipsoid, Aberration.LtS, 1), new(789, "DSS-13", ShapeType.Point, Aberration.LT, 1),
         new(792, "DSS-13", ShapeType.Point, Aberration.LT, 2), new(792, "EARTH", ShapeType.Ellipsoid, Aberration.LT, 2)
     ];
 
@@ -221,26 +220,26 @@ public class FieldOfViewDynamicsTests
         ["ImpulseThenTriad"] =
         [
             new(789, "EARTH", ShapeType.Ellipsoid, Aberration.LT, 2), new(790, "EARTH", ShapeType.Point, Aberration.LT, 2),
-            new(791, "EARTH", ShapeType.Ellipsoid, Aberration.LTS, 2), new(792, "DSS-13", ShapeType.Point, Aberration.LT, 3),
-            new(792, "SUN", ShapeType.Point, Aberration.LTS, 2), new(792, "SUN", ShapeType.Ellipsoid, Aberration.LTS, 2)
+            new(791, "EARTH", ShapeType.Ellipsoid, Aberration.LtS, 2), new(792, "DSS-13", ShapeType.Point, Aberration.LT, 3),
+            new(792, "SUN", ShapeType.Point, Aberration.LtS, 2), new(792, "SUN", ShapeType.Ellipsoid, Aberration.LtS, 2)
         ],
         // The nadir attitude: the Earth stays in place in a nadir frame, no edge
         ["Nadir"] =
         [
-            new(792, "SUN", ShapeType.Point, Aberration.LTS, 1), new(792, "SUN", ShapeType.Ellipsoid, Aberration.LTS, 1),
+            new(792, "SUN", ShapeType.Point, Aberration.LtS, 1), new(792, "SUN", ShapeType.Ellipsoid, Aberration.LtS, 1),
             new(792, "MOON", ShapeType.Point, Aberration.LT, 1)
         ],
         ["TLEPropagated"] =
         [
             new(789, "EARTH", ShapeType.Ellipsoid, Aberration.LT, 1), new(790, "EARTH", ShapeType.Point, Aberration.LT, 1),
-            new(791, "EARTH", ShapeType.Ellipsoid, Aberration.LTS, 1), new(789, "DSS-13", ShapeType.Point, Aberration.LT, 1),
-            new(790, "DSS-13", ShapeType.Point, Aberration.LT, 1), new(791, "DSS-13", ShapeType.Point, Aberration.LTS, 1)
+            new(791, "EARTH", ShapeType.Ellipsoid, Aberration.LtS, 1), new(789, "DSS-13", ShapeType.Point, Aberration.LT, 1),
+            new(790, "DSS-13", ShapeType.Point, Aberration.LT, 1), new(791, "DSS-13", ShapeType.Point, Aberration.LtS, 1)
         ],
         ["TLE"] =
         [
             new(789, "EARTH", ShapeType.Ellipsoid, Aberration.LT, 1), new(790, "EARTH", ShapeType.Point, Aberration.LT, 1),
-            new(791, "EARTH", ShapeType.Ellipsoid, Aberration.LTS, 1), new(789, "DSS-13", ShapeType.Point, Aberration.LT, 1),
-            new(790, "DSS-13", ShapeType.Point, Aberration.LT, 1), new(791, "DSS-13", ShapeType.Point, Aberration.LTS, 1)
+            new(791, "EARTH", ShapeType.Ellipsoid, Aberration.LtS, 1), new(789, "DSS-13", ShapeType.Point, Aberration.LT, 1),
+            new(790, "DSS-13", ShapeType.Point, Aberration.LT, 1), new(791, "DSS-13", ShapeType.Point, Aberration.LtS, 1)
         ]
     };
 
@@ -279,10 +278,10 @@ public class FieldOfViewDynamicsTests
     private void Check(string variant)
     {
         var (spacecraft, window) = Build(variant);
-        var earth = new CelestialBody(PlanetsAndMoons.EARTH);
+        var earth = new CelestialBody(PlanetsAndMoons.Earth);
         var targets = new Dictionary<string, ILocalizable>
         {
-            ["EARTH"] = earth, ["SUN"] = new CelestialBody(Stars.Sun), ["MOON"] = new CelestialBody(PlanetsAndMoons.MOON), ["DSS-13"] = new Site(13, "DSS-13", earth)
+            ["EARTH"] = earth, ["SUN"] = new CelestialBody(Stars.Sun), ["MOON"] = new CelestialBody(PlanetsAndMoons.Moon), ["DSS-13"] = new Site(13, "DSS-13", earth)
         };
         string directory = $"Data/User/FieldOfViewDynamics515/{variant.Replace('@', '_')}";
         // The kernels the library writes: a read of the spacecraft no longer changes its attitude (#523), so they may be
@@ -290,7 +289,7 @@ public class FieldOfViewDynamicsTests
         // 10 s, its CK the identity of ICRF, the attitude Build gave it
         if (variant == "TLE")
         {
-            var earthBody = new CelestialBody(PlanetsAndMoons.EARTH);
+            var earthBody = new CelestialBody(PlanetsAndMoons.Earth);
             var states = new List<StateVector>();
             var orientations = new List<StateOrientation>();
             for (var epoch = window.StartDate.AddSeconds(-60.0); epoch <= window.EndDate.AddSeconds(60.0); epoch = epoch.AddSeconds(10.0))
@@ -300,7 +299,7 @@ public class FieldOfViewDynamicsTests
                 orientations.Add(new StateOrientation(Quaternion.Identity, Vector3.Zero, epoch, Frames.Frame.ICRF));
             }
 
-            FieldOfViewKernels.WriteAndLoad(directory, spacecraft, [], [], window, file => SpiceAPI.Instance.WriteEphemeris(file, spacecraft.NaifId, states.ToArray()), orientations);
+            FieldOfViewKernels.WriteAndLoad(directory, spacecraft, [], [], window, file => SpiceApi.Instance.WriteEphemeris(file, spacecraft.NaifId, states.ToArray()), orientations);
         }
         else
         {
@@ -328,7 +327,7 @@ public class FieldOfViewDynamicsTests
 
     private static Window[] Gftfov(Spacecraft spacecraft, Window window, Row row, IReadOnlyDictionary<string, ILocalizable> targets, TimeSpan step)
     {
-        return SpiceAPI.Instance.FindWindowsInFieldOfViewConstraint(window, spacecraft.NaifId, spacecraft.NaifId * 1000 - row.Number, targets[row.Target].NaifId,
+        return SpiceApi.Instance.FindWindowsInFieldOfViewConstraint(window, spacecraft.NaifId, spacecraft.NaifId * 1000 - row.Number, targets[row.Target].NaifId,
             TargetFrame(row), row.Shape, row.Aberration, step).ToArray();
     }
 

@@ -3,7 +3,7 @@ using System.IO;
 using IO.Astrodynamics.Body;
 using IO.Astrodynamics.Body.Spacecraft;
 using IO.Astrodynamics.Coordinates;
-using IO.Astrodynamics.OrbitalParameters.TLE;
+using IO.Astrodynamics.OrbitalParameters;
 using IO.Astrodynamics.SolarSystemObjects;
 using IO.Astrodynamics.Surface;
 using IO.Astrodynamics.TimeSystem;
@@ -13,20 +13,20 @@ using Xunit.Abstractions;
 namespace IO.Astrodynamics.SmokeTests;
 
 /// <summary>
-/// The two examples of DEVELOPER_GUIDE.md that #483 corrected, the Site example (section "Site") and the TLE tracking
-/// example (section "TLE-Based Spacecraft Tracking"), against the packed package. Keep both in step: a change to one
-/// is a change to the other.
+/// The two examples that #483 corrected, the example of docs/reference/sites.md and the ground station tracking of
+/// docs/tutorials/tle-and-omm.md (the Site and TLE tracking examples of DEVELOPER_GUIDE.md before lot L9 of #668), against
+/// the packed package. Keep both in step with their pages: a change to one is a change to the other.
 /// </summary>
 [Collection(KernelCollection.Name)]
-public class DeveloperGuideExamplesSmokeTests
+public class DocumentationExamplesSmokeTests
 {
     private static readonly DirectoryInfo SolarSystemKernelPath = new("Data/SolarSystem");
     private readonly ITestOutputHelper _output;
 
-    public DeveloperGuideExamplesSmokeTests(ITestOutputHelper output)
+    public DocumentationExamplesSmokeTests(ITestOutputHelper output)
     {
         _output = output;
-        SpiceAPI.Instance.LoadKernels(SolarSystemKernelPath);
+        SpiceApi.Instance.LoadKernels(SolarSystemKernelPath);
     }
 
     /// <summary>
@@ -40,7 +40,7 @@ public class DeveloperGuideExamplesSmokeTests
     [Fact]
     public void TheSiteExampleRuns()
     {
-        var earth = PlanetsAndMoons.EARTH_BODY;
+        var earth = PlanetsAndMoons.EarthBody;
 
         // Create site with explicit coordinates
         var mySite = new Site(100, "MySite", earth,
@@ -52,20 +52,20 @@ public class DeveloperGuideExamplesSmokeTests
 
         // Get horizontal coordinates to Moon
         var epoch = new Time(2024, 1, 1, 12, 0, 0, TimeScale.TDB);
-        var moon = new CelestialBody(PlanetsAndMoons.MOON);
+        var moon = new CelestialBody(PlanetsAndMoons.Moon);
         var horizontal = mySite.GetHorizontalCoordinates(epoch, moon, Aberration.LT);
 
         // Find visibility windows
         var windows = moon.FindDistanceWindows(
             new Window(new Time(2024, 1, 1, TimeScale.TDB), new Time(2024, 1, 2, TimeScale.TDB)),
-            mySite, RelationnalOperator.Lower, 400000000,
+            mySite, RelationalOperator.LessThan, 400000000,
             new WindowSearchOptions { Step = TimeSpan.FromMinutes(10), Aberration = Aberration.LT });
 
         _output.WriteLine($"Range {horizontal.Range:R} m, {horizontal.Range - 399039486.050:E3} m from spkcpo; {string.Join(", ", windows)}");
         Assert.Equal(399039486.050, horizontal.Range, RangeBound);
         var window = Assert.Single(windows);
-        double start = (window.StartDate - Time.CreateTDB(757374144.9969522)).TotalSeconds;
-        double end = (window.EndDate - Time.CreateTDB(757390843.0285655)).TotalSeconds;
+        double start = (window.StartDate - Time.CreateTdb(757374144.9969522)).TotalSeconds;
+        double end = (window.EndDate - Time.CreateTdb(757390843.0285655)).TotalSeconds;
         _output.WriteLine($"MEASURE window start {start:E3} s, end {end:E3} s from spkcpt_c");
         Assert.InRange(start, -WindowBound, WindowBound);
         Assert.InRange(end, -WindowBound, WindowBound);
@@ -78,8 +78,8 @@ public class DeveloperGuideExamplesSmokeTests
     [Fact]
     public void TheTleTrackingExampleRuns()
     {
-        var earth = PlanetsAndMoons.EARTH_BODY;
-        var issTLE = new TLE(
+        var earth = PlanetsAndMoons.EarthBody;
+        var issTle = new Tle(
             "ISS (ZARYA)",
             "1 25544U 98067A   24153.17509025  .00020162  00000+0  35104-3 0  9990",
             "2 25544  51.6393  34.6631 0005642 260.2910 238.1766 15.50732314456064"
@@ -87,7 +87,7 @@ public class DeveloperGuideExamplesSmokeTests
 
         // Create spacecraft from TLE
         var clock = new Clock("ISSClock", 65536);
-        var iss = new Spacecraft(-25544, "ISS", 420000.0, issTLE, 450000.0, clock);
+        var iss = new Spacecraft(-25544, "ISS", 420000.0, issTle, 450000.0, clock);
 
         // Track from a ground station
         var goldstone = new Site(13, "DSS-13", earth);
@@ -98,7 +98,7 @@ public class DeveloperGuideExamplesSmokeTests
         var visibilityWindows = iss.FindDistanceWindows(
             new Window(trackStart, trackEnd),
             goldstone,
-            RelationnalOperator.Lower,
+            RelationalOperator.LessThan,
             2000000,  // Within 2000 km
             new WindowSearchOptions { Step = TimeSpan.FromMinutes(1), Aberration = Aberration.LT }
         );

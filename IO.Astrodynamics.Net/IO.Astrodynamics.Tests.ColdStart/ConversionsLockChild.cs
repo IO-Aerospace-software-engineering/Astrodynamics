@@ -15,7 +15,7 @@ namespace IO.Astrodynamics.Tests.ColdStart;
 
 /// <summary>
 /// The mode <c>conversions-lock</c> of the child process (#664): the element conversions and the two-body propagation of
-/// <see cref="SpiceAPI"/> read nothing from the data provider under the SpiceAPI lock. A probe provider, set as the global
+/// <see cref="SpiceApi"/> read nothing from the data provider under the SpiceApi lock. A probe provider, set as the global
 /// provider (which the test process never does, #631), delegates to <see cref="SpiceDataProvider"/> and counts its calls,
 /// and those made while the calling thread holds the lock (<see cref="Monitor.IsEntered"/>).
 /// </summary>
@@ -31,7 +31,7 @@ internal static class ConversionsLockChild
     {
         var probe = new ProbeDataProvider();
         Configuration.Instance.SetDataProvider(probe);
-        SpiceAPI.Instance.LoadKernels(new DirectoryInfo(kernels));
+        SpiceApi.Instance.LoadKernels(new DirectoryInfo(kernels));
 
         var epoch = new Time(2021, 3, 20, 12, 0, 0, TimeScale.TDB);
         var earth = new CelestialBody(399, Frame.ICRF, epoch);
@@ -43,17 +43,17 @@ internal static class ConversionsLockChild
         var equinoctial = new EquinoctialElements(7.0e6, 0.01, 0.02, 0.1, 0.2, 0.5, earth, epoch, Frame.ICRF);
         var calls = new List<(string Name, Func<object> Call)>
         {
-            ("ConvertStateVectorToConicOrbitalElement(sv, gm)", () => SpiceAPI.Instance.ConvertStateVectorToConicOrbitalElement(state, gm)),
-            ("ConvertStateVectorToConicOrbitalElement(sv)", () => SpiceAPI.Instance.ConvertStateVectorToConicOrbitalElement(state)),
-            ("ConvertEquinoctialElementsToStateVector(eq)", () => SpiceAPI.Instance.ConvertEquinoctialElementsToStateVector(equinoctial)),
-            ("ConvertConicElementsToStateVector(ke)", () => SpiceAPI.Instance.ConvertConicElementsToStateVector(ellipse)),
-            ("ConvertConicElementsToStateVector(hyperbola)", () => SpiceAPI.Instance.ConvertConicElementsToStateVector(hyperbola)),
-            ("ConvertConicElementsToStateVector(ke, epoch)", () => SpiceAPI.Instance.ConvertConicElementsToStateVector(ellipse, epoch.AddSeconds(60.0))),
+            ("ConvertStateVectorToConicOrbitalElement(sv, gm)", () => SpiceApi.Instance.ConvertStateVectorToConicOrbitalElement(state, gm)),
+            ("ConvertStateVectorToConicOrbitalElement(sv)", () => SpiceApi.Instance.ConvertStateVectorToConicOrbitalElement(state)),
+            ("ConvertEquinoctialElementsToStateVector(eq)", () => SpiceApi.Instance.ConvertEquinoctialElementsToStateVector(equinoctial)),
+            ("ConvertConicElementsToStateVector(ke)", () => SpiceApi.Instance.ConvertConicElementsToStateVector(ellipse)),
+            ("ConvertConicElementsToStateVector(hyperbola)", () => SpiceApi.Instance.ConvertConicElementsToStateVector(hyperbola)),
+            ("ConvertConicElementsToStateVector(ke, epoch)", () => SpiceApi.Instance.ConvertConicElementsToStateVector(ellipse, epoch.AddSeconds(60.0))),
             ("ConvertConicElementsToStateVector(ke, epoch, gm)",
-                () => SpiceAPI.Instance.ConvertConicElementsToStateVector(ellipse, epoch.AddSeconds(60.0), gm)),
-            ("Propagate2Bodies(sv, gm, dt)", () => SpiceAPI.Instance.Propagate2Bodies(state, gm, TimeSpan.FromSeconds(600.0))),
-            ("Propagate2Bodies(sv, dt)", () => SpiceAPI.Instance.Propagate2Bodies(state, TimeSpan.FromSeconds(600.0))),
-            ("Propagate2Bodies(sv, epoch)", () => SpiceAPI.Instance.Propagate2Bodies(state, epoch.AddSeconds(600.0)))
+                () => SpiceApi.Instance.ConvertConicElementsToStateVector(ellipse, epoch.AddSeconds(60.0), gm)),
+            ("Propagate2Bodies(sv, gm, dt)", () => SpiceApi.Instance.Propagate2Bodies(state, gm, TimeSpan.FromSeconds(600.0))),
+            ("Propagate2Bodies(sv, dt)", () => SpiceApi.Instance.Propagate2Bodies(state, TimeSpan.FromSeconds(600.0))),
+            ("Propagate2Bodies(sv, epoch)", () => SpiceApi.Instance.Propagate2Bodies(state, epoch.AddSeconds(600.0)))
         };
 
         int failures = 0;
@@ -61,10 +61,10 @@ internal static class ConversionsLockChild
         {
             probe.Reset();
             call();
-            Console.WriteLine($"MEASURE #664 {name}: {probe.Calls} provider calls, {probe.CallsUnderLock} under the SpiceAPI lock");
+            Console.WriteLine($"MEASURE #664 {name}: {probe.Calls} provider calls, {probe.CallsUnderLock} under the SpiceApi lock");
             if (probe.CallsUnderLock != 0)
             {
-                Console.Error.WriteLine($"{name}: {probe.CallsUnderLock} provider calls under the SpiceAPI lock");
+                Console.Error.WriteLine($"{name}: {probe.CallsUnderLock} provider calls under the SpiceApi lock");
                 failures++;
             }
         }
@@ -72,13 +72,13 @@ internal static class ConversionsLockChild
         return failures == 0 ? 0 : 1;
     }
 
-    // Delegates to SPICE and counts the calls made while the calling thread holds the SpiceAPI lock
+    // Delegates to SPICE and counts the calls made while the calling thread holds the SpiceApi lock
     private sealed class ProbeDataProvider : IDataProvider
     {
         private readonly IDataProvider _inner = new SpiceDataProvider();
 
-        // SpiceAPI.SyncRoot, internal to the library: the lock of every SPICE call
-        private static readonly object Lock = typeof(SpiceAPI)
+        // SpiceApi.SyncRoot, internal to the library: the lock of every SPICE call
+        private static readonly object Lock = typeof(SpiceApi)
             .GetProperty("SyncRoot", BindingFlags.NonPublic | BindingFlags.Static)!.GetValue(null);
 
         internal int Calls { get; private set; }
@@ -99,10 +99,10 @@ internal static class ConversionsLockChild
             }
         }
 
-        public StateOrientation FrameTransformationToICRF(in Time date, Frame source)
+        public StateOrientation FrameTransformationToIcrf(in Time date, Frame source)
         {
             Count();
-            return _inner.FrameTransformationToICRF(date, source);
+            return _inner.FrameTransformationToIcrf(date, source);
         }
 
         public StateVector GetEphemeris(in Time date, ILocalizable target, ILocalizable observer, Frame frame,

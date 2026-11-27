@@ -10,7 +10,6 @@ using IO.Astrodynamics.Maneuver;
 using IO.Astrodynamics.Math;
 using IO.Astrodynamics.Mission;
 using IO.Astrodynamics.OrbitalParameters;
-using IO.Astrodynamics.OrbitalParameters.TLE;
 using IO.Astrodynamics.Propagator;
 using IO.Astrodynamics.Propagator.Variational;
 using IO.Astrodynamics.Propagator.Integrators;
@@ -36,7 +35,7 @@ using Time = IO.Astrodynamics.TimeSystem.Time;
 /// <remarks>
 /// <para>
 /// <b>The readers.</b> The CK and the SPK are read by CSPICE through a kernel-backed spacecraft built on the written kernels:
-/// its frame is <c>sxform(SC, J2000)</c> (<see cref="SpiceAPI.TransformFrame(Time, Frame, Frame)"/>: the rotation of
+/// its frame is <c>sxform(SC, J2000)</c> (<see cref="SpiceApi.TransformFrame(Time, Frame, Frame)"/>: the rotation of
 /// <c>pxform</c> and the angular velocity of <c>xf2rav</c>, ICRF relative to the spacecraft in its axes), its positions
 /// <c>spkezr</c>. The instruments are read by <c>pxform(instrument, J2000)</c> on the frame kernels the library writes.
 /// </para>
@@ -549,7 +548,7 @@ public class AttitudeRecordTests
     internal static Measures Measure(PropagatedCase run)
     {
         var sc = run.Spacecraft;
-        var record = sc.Frame.GetStateOrientationsToICRF().ToArray();
+        var record = sc.Frame.GetStateOrientationsToIcrf().ToArray();
         var entries = new HashSet<Time>(record.Select(x => x.Epoch));
         var outputs = new HashSet<Time>(sc.PropagatedStates.Select(x => x.Epoch));
         var changes = run.DiscreteChanges();
@@ -576,8 +575,8 @@ public class AttitudeRecordTests
         foreach (var t in epochs)
         {
             bool lead = changes.Any(c => (t - c).TotalSeconds >= -1.5e-6 && (t - c).TotalSeconds <= 0.3e-6);
-            var managed = sc.Frame.GetStateOrientationToICRF(t);
-            var ck = run.Kernel.Frame.GetStateOrientationToICRF(t);
+            var managed = sc.Frame.GetStateOrientationToIcrf(t);
+            var ck = run.Kernel.Frame.GetStateOrientationToIcrf(t);
             double angle = RotationAngle(managed.Rotation, ck.Rotation);
             if (lead)
             {
@@ -592,9 +591,9 @@ public class AttitudeRecordTests
             for (int i = 0; i < instrumentFrames.Length; i++)
             {
                 var instrument = sc.Instruments.ElementAt(i);
-                var q = SpiceAPI.Instance.TransformFrame(t, instrumentFrames[i], Frame.ICRF).Rotation;
-                m.Instruments = System.Math.Max(m.Instruments, Angle(instrument.GetBoresightInICRFFrame(t), instrument.Boresight.Rotate(q)));
-                m.Instruments = System.Math.Max(m.Instruments, Angle(instrument.GetRefVectorInICRFFrame(t), instrument.RefVector.Rotate(q)));
+                var q = SpiceApi.Instance.TransformFrame(t, instrumentFrames[i], Frame.ICRF).Rotation;
+                m.Instruments = System.Math.Max(m.Instruments, Angle(instrument.GetBoresightInIcrfFrame(t), instrument.Boresight.Rotate(q)));
+                m.Instruments = System.Math.Max(m.Instruments, Angle(instrument.GetRefVectorInIcrfFrame(t), instrument.RefVector.Rotate(q)));
             }
 
             if (positions)
@@ -624,7 +623,7 @@ public class AttitudeRecordTests
                 {
                     var body = b == 0 ? run.Earth : run.Sun;
                     var inFrame = sc.GetEphemeris(t, body, sc.Frame, Aberration.None);
-                    var spice = SpiceAPI.Instance.ReadEphemeris(t, body.NaifId, sc.NaifId, run.Kernel.Frame, Aberration.None);
+                    var spice = SpiceApi.Instance.ReadEphemeris(t, body.NaifId, sc.NaifId, run.Kernel.Frame, Aberration.None);
                     var inIcrf = sc.GetEphemeris(t, body, Frame.ICRF, Aberration.None);
                     double positionDelta = (inFrame.Position - spice.Position).Magnitude();
                     double velocityDelta = (inFrame.Velocity - spice.Velocity).Magnitude();
@@ -667,7 +666,7 @@ public class AttitudeRecordTests
             m.RateCkAgainstLaw = System.Math.Max(m.RateCkAgainstLaw, (ck.AngularVelocity - lawRate).Magnitude());
         }
 
-        m.RecordUnchanged = record.SequenceEqual(sc.Frame.GetStateOrientationsToICRF());
+        m.RecordUnchanged = record.SequenceEqual(sc.Frame.GetStateOrientationsToIcrf());
         return m;
     }
 
@@ -693,7 +692,7 @@ public class AttitudeRecordTests
 
     private void Reads(string frame, int naifId)
     {
-        var earth = new CelestialBody(PlanetsAndMoons.EARTH);
+        var earth = new CelestialBody(PlanetsAndMoons.Earth);
         var sun = new CelestialBody(Stars.Sun);
         int during = 0;
         var hooks = new PropagatedCase.Hooks
@@ -703,16 +702,16 @@ public class AttitudeRecordTests
                 var start = sc.InitialOrbitalParameters.Epoch;
                 // Before the propagation the spacecraft has no attitude to test the field of view with (#682): the read
                 // throws, and leaves the record as the others do
-                Assert.Throws<InvalidOperationException>(() => sc.Instruments.First().IsInFOV(start.AddSeconds(-10.0), earth, Aberration.None));
+                Assert.Throws<InvalidOperationException>(() => sc.Instruments.First().IsInFov(start.AddSeconds(-10.0), earth, Aberration.None));
                 sc.GetOrientation(Frame.ICRF, start.AddSeconds(100.0));
-                sc.Frame.GetStateOrientationToICRF(start.AddSeconds(-10.0));
+                sc.Frame.GetStateOrientationToIcrf(start.AddSeconds(-10.0));
             },
             During = (sc, token) =>
             {
                 var start = sc.InitialOrbitalParameters.Epoch;
                 while (!token.IsCancellationRequested)
                 {
-                    sc.Frame.GetStateOrientationToICRF(start.AddSeconds(during % 3700 + 0.37));
+                    sc.Frame.GetStateOrientationToIcrf(start.AddSeconds(during % 3700 + 0.37));
                     during++;
                 }
             },
@@ -722,15 +721,15 @@ public class AttitudeRecordTests
                 var instrument = sc.Instruments.First();
                 // Outside the propagated states the reads throw (#527: they extrapolated the states before 11.0.0), and
                 // leave the record as the others do
-                Assert.Throws<InvalidOperationException>(() => instrument.IsInFOV(start.AddSeconds(-10.0), earth, Aberration.None));
-                Assert.Throws<InvalidOperationException>(() => instrument.IsInFOV(start.AddSeconds(Length + 3.3), earth, Aberration.None));
+                Assert.Throws<InvalidOperationException>(() => instrument.IsInFov(start.AddSeconds(-10.0), earth, Aberration.None));
+                Assert.Throws<InvalidOperationException>(() => instrument.IsInFov(start.AddSeconds(Length + 3.3), earth, Aberration.None));
                 for (int k = 0; k <= 360; k++)
                 {
-                    instrument.IsInFOV(start.AddSeconds(k * 10.0), earth, Aberration.None);
-                    if (k < 360) instrument.IsInFOV(start.AddSeconds(k * 10.0 + 3.3), earth, Aberration.None);
+                    instrument.IsInFov(start.AddSeconds(k * 10.0), earth, Aberration.None);
+                    if (k < 360) instrument.IsInFov(start.AddSeconds(k * 10.0 + 3.3), earth, Aberration.None);
                 }
 
-                instrument.GetBoresightInICRFFrame(start.AddSeconds(Length + 100.0));
+                instrument.GetBoresightInIcrfFrame(start.AddSeconds(Length + 100.0));
                 instrument.FindFieldOfViewWindows(new Window(start.AddSeconds(10.0), start.AddSeconds(Length - 10.0)), sun, new FieldOfViewSearchOptions { Step = TimeSpan.FromSeconds(60.0), TargetShape = ShapeType.Point, TargetFrame = Frame.ICRF }).ToArray();
             }
         };
@@ -738,8 +737,8 @@ public class AttitudeRecordTests
         using var twin = PropagatedCase.Run(naifId - 1, "Nadir", "VV", FrameOf(frame), "Propagate", 2024);
         _output.WriteLine($"{frame}: {during} reads during the propagation");
 
-        var a = read.Spacecraft.Frame.GetStateOrientationsToICRF().ToArray();
-        var b = twin.Spacecraft.Frame.GetStateOrientationsToICRF().ToArray();
+        var a = read.Spacecraft.Frame.GetStateOrientationsToIcrf().ToArray();
+        var b = twin.Spacecraft.Frame.GetStateOrientationsToIcrf().ToArray();
         Assert.Equal(b.Length, a.Length);
         for (int i = 0; i < a.Length; i++)
         {
@@ -753,7 +752,7 @@ public class AttitudeRecordTests
         for (int k = 0; k <= 36000; k++)
         {
             var t = read.Start.AddSeconds(k * 0.1);
-            worst = System.Math.Max(worst, RotationAngle(read.Kernel.Frame.GetStateOrientationToICRF(t).Rotation, twin.Kernel.Frame.GetStateOrientationToICRF(t).Rotation));
+            worst = System.Math.Max(worst, RotationAngle(read.Kernel.Frame.GetStateOrientationToIcrf(t).Rotation, twin.Kernel.Frame.GetStateOrientationToIcrf(t).Rotation));
         }
 
         _output.WriteLine($"MEASURE #523 reads {frame}: CK with reads - CK of the twin {worst:E2} rad");
@@ -787,7 +786,7 @@ public class AttitudeRecordTests
             Assert.True(rule <= TimelineRules.RuleBound, $"change - rule {rule:E3} s");
         }
 
-        var record = run.Spacecraft.Frame.GetStateOrientationsToICRF().ToArray();
+        var record = run.Spacecraft.Frame.GetStateOrientationsToIcrf().ToArray();
         // The entry before the lead: the last output sample of the law before the change
         var lead = record.Single(x => x.Epoch == change.AddSeconds(-1e-6));
         var lastSample = record.Last(x => x.Epoch < lead.Epoch);
@@ -800,8 +799,8 @@ public class AttitudeRecordTests
         {
             var (law, continuous) = run.LawAt(t);
             Assert.True(continuous);
-            managed = System.Math.Max(managed, RotationAngle(law, v => v.Rotate(run.Spacecraft.Frame.GetStateOrientationToICRF(t).Rotation)));
-            ck = System.Math.Max(ck, RotationAngle(law, v => v.Rotate(run.Kernel.Frame.GetStateOrientationToICRF(t).Rotation)));
+            managed = System.Math.Max(managed, RotationAngle(law, v => v.Rotate(run.Spacecraft.Frame.GetStateOrientationToIcrf(t).Rotation)));
+            ck = System.Math.Max(ck, RotationAngle(law, v => v.Rotate(run.Kernel.Frame.GetStateOrientationToIcrf(t).Rotation)));
         }
 
         double atLead = RotationAngle(run.LawAt(lead.Epoch).Law, v => v.Rotate(lead.Rotation));
@@ -854,7 +853,7 @@ public class AttitudeRecordTests
         };
         // The impulse of the chain needs the orbit below circular: the grid's impulse orbit
         using var run = PropagatedCase.Run(naifId, "Custom", "VV", Frame.ICRF, "Propagate", 2024, hooks);
-        var record = run.Spacecraft.Frame.GetStateOrientationsToICRF().ToArray();
+        var record = run.Spacecraft.Frame.GetStateOrientationsToIcrf().ToArray();
         var gaps = record.Zip(record.Skip(1), (x, y) => (y.Epoch - x.Epoch).TotalSeconds).ToArray();
         double smallest = gaps.Min();
         var activation = run.Start.AddSeconds(3400.0);
@@ -912,8 +911,8 @@ public class AttitudeRecordTests
     private void TryExecute(string frame)
     {
         var start = new Time(2024, 3, 1, 12, 0, 0, TimeScale.TDB);
-        var earth = new CelestialBody(PlanetsAndMoons.EARTH, Frame.ICRF, start);
-        var moon = new CelestialBody(PlanetsAndMoons.MOON, Frame.ICRF, start);
+        var earth = new CelestialBody(PlanetsAndMoons.Earth, Frame.ICRF, start);
+        var moon = new CelestialBody(PlanetsAndMoons.Moon, Frame.ICRF, start);
         var sun = new CelestialBody(Stars.Sun, Frame.ICRF, start);
         var leo = new KeplerianElements(6778137.0, 0.001, 51.6 * IO.Astrodynamics.Constants.Deg2Rad, 0.4, 1.1, 0.3, earth, start, Frame.ICRF).ToStateVector();
         var f = FrameOf(frame);
@@ -926,7 +925,7 @@ public class AttitudeRecordTests
         sc.AddEngine(engine);
         sc.AddCircularInstrument("I1", 0.5, Vector3.VectorZ, Vector3.VectorY, InstrumentOrientations[0], naifId: id * 1000 - 1, model: "m");
         var instrument = sc.Instruments.First();
-        Vector3 FromEarth(CelestialItem body) => SpiceAPI.Instance.ReadEphemeris(start, 399, body.NaifId, Frame.ICRF, Aberration.None).Position;
+        Vector3 FromEarth(CelestialItem body) => SpiceApi.Instance.ReadEphemeris(start, 399, body.NaifId, Frame.ICRF, Aberration.None).Position;
         var boresight = EulerToSpacecraft(instrument.Orientation, instrument.Boresight);
         var reference = EulerToSpacecraft(instrument.Orientation, instrument.RefVector);
         // A direct execution takes the centre it is given (a run writes the one it resolves): the centres of before 11.0.0,
@@ -961,7 +960,7 @@ public class AttitudeRecordTests
     internal const double TleVelocity = 6.7e-12;
 
     /// <summary>
-    /// <c>TLEPropagator</c> (public): its SPK is written in J2000 (on the base, SPICE(INVALIDREFFRAME), TEME), and holds the
+    /// <c>TlePropagator</c> (public): its SPK is written in J2000 (on the base, SPICE(INVALIDREFFRAME), TEME), and holds the
     /// states <c>Spacecraft.AddPropagatedStates</c> stored, the SGP4 states converted from TEME to ICRF by the library,
     /// read by <c>spkezr</c> at its records. The expected states take the same conversion: a check of the frame and of the
     /// content of the SPK, not of the conversion, which the TLE tests check. Its CK is left to its own issue, #546 (item
@@ -970,11 +969,11 @@ public class AttitudeRecordTests
     [Fact]
     public void TlePropagator_WritesItsSpkInJ2000()
     {
-        var tle = new TLE("ISS", "1 25544U 98067A   21020.53488036  .00016717  00000-0  10270-3 0  9054",
+        var tle = new Tle("ISS", "1 25544U 98067A   21020.53488036  .00016717  00000-0  10270-3 0  9054",
             "2 25544  51.6423 353.0312 0000493 320.8755  39.2360 15.49309423 25703");
         var start = new Time(2021, 1, 20, 12, 0, 0, TimeScale.TDB);
         var sc = new Spacecraft(-8441, "TLE8441", 1000.0, tle, 3000.0, new Clock("TLE8441_CLK", 65536));
-        new TLEPropagator(new Window(start, start.AddSeconds(600.0)), sc, TimeSpan.FromSeconds(10.0)).Propagate();
+        new TlePropagator(new Window(start, start.AddSeconds(600.0)), sc, TimeSpan.FromSeconds(10.0)).Propagate();
 
         string directory = "Data/User/AttitudeRecord537/TLE8441";
         Directory.CreateDirectory(directory);
@@ -982,7 +981,7 @@ public class AttitudeRecordTests
         File.Delete(spk.FullName);
         spk = new FileInfo(spk.FullName);
         sc.WriteEphemeris(spk);
-        SpiceAPI.Instance.LoadKernels(spk);
+        SpiceApi.Instance.LoadKernels(spk);
         try
         {
             double position = 0.0, velocity = 0.0;
@@ -990,18 +989,18 @@ public class AttitudeRecordTests
             {
                 var t = start.AddSeconds(k * 10.0);
                 var expected = tle.ToStateVector(t).ToFrame(Frame.ICRF).ToStateVector();
-                var read = SpiceAPI.Instance.ReadEphemeris(t, 399, sc.NaifId, Frame.ICRF, Aberration.None);
+                var read = SpiceApi.Instance.ReadEphemeris(t, 399, sc.NaifId, Frame.ICRF, Aberration.None);
                 position = System.Math.Max(position, (read.Position - expected.Position).Magnitude());
                 velocity = System.Math.Max(velocity, (read.Velocity - expected.Velocity).Magnitude());
             }
 
-            _output.WriteLine($"MEASURE #535 TLEPropagator SPK - its stored records (SGP4 converted to ICRF by the library): {position:E2} m, {velocity:E2} m/s");
+            _output.WriteLine($"MEASURE #535 TlePropagator SPK - its stored records (SGP4 converted to ICRF by the library): {position:E2} m, {velocity:E2} m/s");
             Assert.True(position <= TlePosition, $"{position:E3} m");
             Assert.True(velocity <= TleVelocity, $"{velocity:E3} m/s");
         }
         finally
         {
-            SpiceAPI.Instance.UnloadKernels(spk);
+            SpiceApi.Instance.UnloadKernels(spk);
         }
     }
 
@@ -1019,8 +1018,8 @@ public class AttitudeRecordTests
     public void StoredStates_FromAnotherFrame_AreInIcrfWithTheirCovariance()
     {
         var start = new Time(2024, 3, 1, 12, 0, 0, TimeScale.TDB);
-        var earth = new CelestialBody(PlanetsAndMoons.EARTH, Frame.ICRF, start);
-        var f = Frame.ECLIPTIC_J2000;
+        var earth = new CelestialBody(PlanetsAndMoons.Earth, Frame.ICRF, start);
+        var f = Frame.ECLIPJ2000;
         var leo = new KeplerianElements(6778137.0, 0.001, 51.6 * IO.Astrodynamics.Constants.Deg2Rad, 0.4, 1.1, 0.3, earth, start, Frame.ICRF).ToStateVector();
         var inF = leo.ToFrame(f).ToStateVector();
         var p0 = new double[36];
@@ -1029,7 +1028,7 @@ public class AttitudeRecordTests
         var sc = new Spacecraft(-8451, "COV8451", 1000.0, new StateVector(inF.Position, inF.Velocity, earth, start, f, new Matrix(6, 6, p0)), 3000.0,
             new Clock("COV8451_CLK", 65536));
         var solution = sc.Propagate(new Window(start, start.AddSeconds(600.0)), new PropagationOptions { Integrator = new RK78IntegratorOptions { AbsoluteTolerance = 1e-12, RelativeTolerance = 1e-12 }, OutputStep = TimeSpan.FromSeconds(60.0), ThirdBodies = new CelestialItem[] { earth }, CovariancePropagation = new IO.Astrodynamics.Propagator.Variational.CovariancePropagationOptions { Mode = IO.Astrodynamics.Propagator.Variational.CovariancePropagationMode.Covariance } });
-        var q = SpiceAPI.Instance.TransformFrame(start, f, Frame.ICRF).Rotation;
+        var q = SpiceApi.Instance.TransformFrame(start, f, Frame.ICRF).Rotation;
         // R, the matrix of pxform(ECLIPJ2000, J2000), by the images of the axes
         Vector3[] columns = [Vector3.VectorX.Rotate(q), Vector3.VectorY.Rotate(q), Vector3.VectorZ.Rotate(q)];
         double R(int i, int j) => i switch { 0 => columns[j].X, 1 => columns[j].Y, _ => columns[j].Z };
@@ -1079,11 +1078,11 @@ public class AttitudeRecordTests
     public void StatesFromAnotherFrame_NotPropagatedOrAdded_AreReadInIcrf()
     {
         var start = new Time(2024, 3, 1, 12, 0, 0, TimeScale.TDB);
-        var earth = new CelestialBody(PlanetsAndMoons.EARTH, Frame.ICRF, start);
-        var f = Frame.ECLIPTIC_J2000;
+        var earth = new CelestialBody(PlanetsAndMoons.Earth, Frame.ICRF, start);
+        var f = Frame.ECLIPJ2000;
         var leo = new KeplerianElements(6778137.0, 0.001, 51.6 * IO.Astrodynamics.Constants.Deg2Rad, 0.4, 1.1, 0.3, earth, start, Frame.ICRF).ToStateVector();
         var inF = leo.ToFrame(f).ToStateVector();
-        var q = SpiceAPI.Instance.TransformFrame(start, f, Frame.ICRF).Rotation;
+        var q = SpiceApi.Instance.TransformFrame(start, f, Frame.ICRF).Rotation;
 
         var twoBody = new Spacecraft(-8461, "TB8461", 1000.0, inF, 3000.0, new Clock("TB8461_CLK", 65536));
         var read = twoBody.GetGeometricStateRelativeTo(start, earth);
@@ -1148,7 +1147,7 @@ public class AttitudeRecordTests
     private void SlerpResidual(string law, double step, int naifId)
     {
         using var run = PropagatedCase.Run(naifId, law, "RK78", Frame.ICRF, "Propagate", 2024, new PropagatedCase.Hooks { Step = TimeSpan.FromSeconds(step) });
-        var record = run.Spacecraft.Frame.GetStateOrientationsToICRF().ToArray();
+        var record = run.Spacecraft.Frame.GetStateOrientationsToIcrf().ToArray();
         double worst = 0.0;
         // Every interval at 60 s, one in ten at 1 s
         int stride = step < 10.0 ? 10 : 1;
@@ -1159,7 +1158,7 @@ public class AttitudeRecordTests
                 var t = record[i].Epoch.AddSeconds((record[i + 1].Epoch - record[i].Epoch).TotalSeconds * fraction);
                 var (closedForm, continuous) = run.LawAt(t);
                 Assert.True(continuous);
-                worst = System.Math.Max(worst, RotationAngle(closedForm, v => v.Rotate(run.Spacecraft.Frame.GetStateOrientationToICRF(t).Rotation)));
+                worst = System.Math.Max(worst, RotationAngle(closedForm, v => v.Rotate(run.Spacecraft.Frame.GetStateOrientationToIcrf(t).Rotation)));
             }
         }
 
@@ -1327,8 +1326,8 @@ public class AttitudeRecordTests
             var step = hooks.Step ?? Step;
             var start = new Time(year, 3, 1, 12, 0, 0, TimeScale.TDB);
             var window = new Window(start, start.AddSeconds(Length));
-            var earth = new CelestialBody(PlanetsAndMoons.EARTH, Frame.ICRF, start);
-            var moon = new CelestialBody(PlanetsAndMoons.MOON, Frame.ICRF, start);
+            var earth = new CelestialBody(PlanetsAndMoons.Earth, Frame.ICRF, start);
+            var moon = new CelestialBody(PlanetsAndMoons.Moon, Frame.ICRF, start);
             var sun = new CelestialBody(Stars.Sun, Frame.ICRF, start);
             var bodies = new CelestialItem[] { earth, moon, sun };
             bool ssb = path == "SSB";
@@ -1339,8 +1338,8 @@ public class AttitudeRecordTests
             var orbit = law.Contains("Impulse") || law == "Custom" ? new StateVector(leo.Position, leo.Velocity * 0.993, earth, start, Frame.ICRF) : leo;
             if (ssb)
             {
-                var earthFromSsb = earth.GetGeometricStateRelativeTo(start, Barycenters.SOLAR_SYSTEM_BARYCENTER);
-                orbit = new StateVector(earthFromSsb.Position + orbit.Position, earthFromSsb.Velocity + orbit.Velocity, Barycenters.SOLAR_SYSTEM_BARYCENTER, start,
+                var earthFromSsb = earth.GetGeometricStateRelativeTo(start, Barycenters.SolarSystemBarycenter);
+                orbit = new StateVector(earthFromSsb.Position + orbit.Position, earthFromSsb.Velocity + orbit.Velocity, Barycenters.SolarSystemBarycenter, start,
                     Frame.ICRF);
             }
 
@@ -1532,24 +1531,24 @@ public class AttitudeRecordTests
             sc.Clock.Write(clock);
             var frame = NewFile(directory, stem + ".tf");
             sc.Frame.Write(frame);
-            SpiceAPI.Instance.LoadKernels(clock);
-            SpiceAPI.Instance.LoadKernels(frame);
+            SpiceApi.Instance.LoadKernels(clock);
+            SpiceApi.Instance.LoadKernels(frame);
             foreach (var instrument in sc.Instruments)
             {
                 var instrumentFrame = NewFile(directory, $"{stem}_{instrument.Name.ToLowerInvariant()}.tf");
                 instrument.WriteFrame(instrumentFrame);
                 var kernel = NewFile(directory, $"{stem}_{instrument.Name.ToLowerInvariant()}.ti");
                 instrument.WriteKernel(kernel);
-                SpiceAPI.Instance.LoadKernels(instrumentFrame);
-                SpiceAPI.Instance.LoadKernels(kernel);
+                SpiceApi.Instance.LoadKernels(instrumentFrame);
+                SpiceApi.Instance.LoadKernels(kernel);
             }
 
             var spk = NewFile(directory, stem + ".bsp");
             sc.WriteEphemeris(spk);
-            SpiceAPI.Instance.LoadKernels(spk);
+            SpiceApi.Instance.LoadKernels(spk);
             var ck = NewFile(directory, stem + ".bc");
             sc.WriteOrientation(ck);
-            SpiceAPI.Instance.LoadKernels(ck);
+            SpiceApi.Instance.LoadKernels(ck);
             Kernel = new Spacecraft(sc.NaifId, sc.Name, Start, 1000.0, 3000.0, new Clock(sc.Name + "_CLK", 65536));
         }
 
@@ -1604,14 +1603,14 @@ public class AttitudeRecordTests
             var (position, velocity) = Solution.InterpolateAt(t);
             if (InitialFrame != Frame.ICRF)
             {
-                var q = SpiceAPI.Instance.TransformFrame(t, InitialFrame, Frame.ICRF).Rotation;
+                var q = SpiceApi.Instance.TransformFrame(t, InitialFrame, Frame.ICRF).Rotation;
                 position = position.Rotate(q);
                 velocity = velocity.Rotate(q);
             }
 
             if (Ssb)
             {
-                var earth = SpiceAPI.Instance.ReadEphemeris(t, 10, 399, Frame.ICRF, Aberration.None);
+                var earth = SpiceApi.Instance.ReadEphemeris(t, 10, 399, Frame.ICRF, Aberration.None);
                 position -= earth.Position;
                 velocity -= earth.Velocity;
             }
@@ -1620,7 +1619,7 @@ public class AttitudeRecordTests
         }
 
         // The geometric position of a body relative to the Earth in ICRF (spkezr)
-        private Vector3 FromEarth(CelestialBody body, Time t) => SpiceAPI.Instance.ReadEphemeris(t, 399, body.NaifId, Frame.ICRF, Aberration.None).Position;
+        private Vector3 FromEarth(CelestialBody body, Time t) => SpiceApi.Instance.ReadEphemeris(t, 399, body.NaifId, Frame.ICRF, Aberration.None).Position;
 
         /// <summary>The event of the impulse, tc: the base of the segment that follows it in the solution.</summary>
         internal Time ImpulseEpoch => Solution.Segments[1].BaseEpoch;
@@ -1793,7 +1792,7 @@ public class AttitudeRecordTests
 
         // The delta-V of the impulse, in the frame of the propagation, rotated to ICRF by pxform
         private Vector3 ImpulseInIcrf() =>
-            InitialFrame == Frame.ICRF ? Impulse.DeltaV : Impulse.DeltaV.Rotate(SpiceAPI.Instance.TransformFrame(Change, InitialFrame, Frame.ICRF).Rotation);
+            InitialFrame == Frame.ICRF ? Impulse.DeltaV : Impulse.DeltaV.Rotate(SpiceApi.Instance.TransformFrame(Change, InitialFrame, Frame.ICRF).Rotation);
 
         private (Vector3, Vector3)? _axes;
 
@@ -1804,7 +1803,7 @@ public class AttitudeRecordTests
             if (_axes == null)
             {
                 var instrument = Spacecraft.Instruments.First();
-                var q = SpiceAPI.Instance.TransformFrame(Start, new Frame(Spacecraft.Name.ToUpper() + "_" + instrument.Name.ToUpper()), Spacecraft.Frame).Rotation;
+                var q = SpiceApi.Instance.TransformFrame(Start, new Frame(Spacecraft.Name.ToUpper() + "_" + instrument.Name.ToUpper()), Spacecraft.Frame).Rotation;
                 _axes = (instrument.Boresight.Rotate(q), instrument.RefVector.Rotate(q));
             }
 
@@ -1815,7 +1814,7 @@ public class AttitudeRecordTests
         {
             foreach (var kernel in _kernels)
             {
-                SpiceAPI.Instance.UnloadKernels(kernel);
+                SpiceApi.Instance.UnloadKernels(kernel);
             }
         }
     }

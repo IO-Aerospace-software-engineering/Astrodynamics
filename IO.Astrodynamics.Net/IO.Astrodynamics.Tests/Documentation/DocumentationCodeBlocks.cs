@@ -12,8 +12,8 @@ namespace IO.Astrodynamics.Tests.Documentation;
 
 /// <summary>
 /// The csharp blocks of a Markdown page and the regions of the C# file that compiles them (#668): read by
-/// <see cref="DeveloperGuideExamplesTests"/> for DEVELOPER_GUIDE.md, <see cref="ClaudeMdExamplesTests"/> for the two
-/// CLAUDE.md files and <see cref="DocumentationPagesExamplesTests"/> for the pages of docs/ and README.md (#705), so that
+/// <see cref="ClaudeMdExamplesTests"/> for the two CLAUDE.md files and <see cref="DocumentationPagesExamplesTests"/> for
+/// the pages of docs/ and README.md (#705), so that
 /// a page's blocks are compared with code the compiler checks. A <c>csharp-signature</c> block, a signature listing or a
 /// fragment that is not a statement, is not a csharp block (<see cref="SignatureBlocks"/>).
 /// </summary>

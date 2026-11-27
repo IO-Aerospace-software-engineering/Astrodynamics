@@ -5,9 +5,8 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Xml.Linq;
-using IO.Astrodynamics.CCSDS.Common;
+using IO.Astrodynamics.Ccsds;
 using IO.Astrodynamics.Tests.CCSDS.Common;
-using IO.Astrodynamics.CCSDS.OPM;
 using IO.Astrodynamics.Math;
 using Xunit;
 

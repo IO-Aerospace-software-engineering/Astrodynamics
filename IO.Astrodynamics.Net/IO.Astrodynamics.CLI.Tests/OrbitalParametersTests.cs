@@ -27,7 +27,7 @@ public class OrbitalParametersTests
     private static OrbitalParameters.StateVector InputState()
     {
         return new OrbitalParameters.StateVector(new Math.Vector3(-26499033677.42509, 132757417338.33946, 57556718470.53819),
-            new Math.Vector3(-29794.26007, -5018.05231, -2175.39380), new Body.CelestialBody(10), TimeSystem.Time.J2000TDB,
+            new Math.Vector3(-29794.26007, -5018.05231, -2175.39380), new Body.CelestialBody(10), TimeSystem.Time.J2000Tdb,
             Frames.Frame.ICRF);
     }
 
@@ -70,7 +70,7 @@ public class OrbitalParametersTests
 
             // Against SPICE OSCELT
             OutputAssert.EqualApprox(
-                $"{SpiceAPI.Instance.ConvertStateVectorToConicOrbitalElement(InputState())}{Environment.NewLine}",
+                $"{SpiceApi.Instance.ConvertStateVectorToConicOrbitalElement(InputState())}{Environment.NewLine}",
                 res, 1e-14);
         }
     }
@@ -115,10 +115,10 @@ public class OrbitalParametersTests
             // #508): 1.21e-6 s short of 3600 s from J2000, 1.36e-9 rad of M (4.845168091449668 over 3600 s)
             var elements = new IO.Astrodynamics.OrbitalParameters.KeplerianElements(6800803.5449581668,
                 0.001353139738203394, 0.90267066832323262, 0.56855938608714662, 1.8545420365902201, 0.7925932793200029,
-                new Body.CelestialBody(399), TimeSystem.Time.J2000TDB, Frames.Frame.ICRF);
-            double dt = Propagator.PropagationTimeArgument.Tt.SecondsBetween(TimeSystem.Time.J2000TDB,
-                TimeSystem.Time.J2000TDB.AddSeconds(3600.0));
-            double m = IO.Astrodynamics.Math.SpecialFunctions.NormalizeAngle(elements.M + dt * elements.MeanMotion());
+                new Body.CelestialBody(399), TimeSystem.Time.J2000Tdb, Frames.Frame.ICRF);
+            double dt = Propagator.PropagationTimeArgument.Tt.SecondsBetween(TimeSystem.Time.J2000Tdb,
+                TimeSystem.Time.J2000Tdb.AddSeconds(3600.0));
+            double m = IO.Astrodynamics.Math.SpecialFunctions.NormalizeAngle(elements.MeanAnomaly() + dt * elements.MeanMotion());
             Assert.Equal(
                 $"Epoch : 2000-01-01T13:00:00.0000000 TDB A : 6800803.544958167, Ecc. : 0.001353139738203394, Inc. : 0.9026706683232326, AN : 0.5685593860871466, AOP : 1.85454203659022, M : {m}, Frame : J2000{Environment.NewLine}",
                 res);
@@ -150,10 +150,10 @@ public class OrbitalParametersTests
             var earth = new Body.CelestialBody(399);
             Assert.Equal(reference.Gm["gm_de431"], earth.GM);
             Assert.Contains("Frame : J2000", res);
-            var epoch = TimeSystem.Time.J2000TDB.AddSeconds(dt);
+            var epoch = TimeSystem.Time.J2000Tdb.AddSeconds(dt);
             var state = ParseState(res, earth, epoch);
             // The reference at the TT seconds to the epoch, the time of a two-body motion about the Earth (#501, #508)
-            double elapsed = Propagator.PropagationTimeArgument.Tt.SecondsBetween(TimeSystem.Time.J2000TDB, epoch);
+            double elapsed = Propagator.PropagationTimeArgument.Tt.SecondsBetween(TimeSystem.Time.J2000Tdb, epoch);
             var (position, velocity) = c.At(dt).MovedBy(elapsed - dt, earth.GM).RelativeError(state);
             _output.WriteLine($"MEASURE #452 EquinoctialToSv_CircularAndEquatorial, {name}, dt {dt} s: position " +
                               $"{position:E2}, velocity {velocity:E2} (relative)");
@@ -225,7 +225,7 @@ public class OrbitalParametersTests
 
             // Assert: the position of the elements at their epoch, the 60-digit closed form (its geometry does not read
             // the GM; tools/near_parabolic/near_parabolic_reference.py)
-            var state = ParseState(res, new Body.CelestialBody(399), TimeSystem.Time.J2000TDB);
+            var state = ParseState(res, new Body.CelestialBody(399), TimeSystem.Time.J2000Tdb);
             var expected = new Math.Vector3(6546595.968654342, 3568802.005525925, 59848.915685823675);
             double error = (state.Position - expected).Magnitude() / expected.Magnitude();
             _output.WriteLine($"MEASURE #477 CLI --from-equinoctial parabola, |Δr| / |r|: {error:E3}");
@@ -302,8 +302,8 @@ public class OrbitalParametersTests
 
             var res = CliRun.Ok("orbital-parameters-converter", "-K", "Data", "--from", "tle", "--orbit", line1, "--orbit", line2, "--as", "state",
                 "--target-epoch", "2021-01-20T13:00:00Z");
-            SpiceAPI.Instance.LoadKernels(new DirectoryInfo("Data"));
-            var tle = new OrbitalParameters.TLE.TLE("body", line1, line2);
+            SpiceApi.Instance.LoadKernels(new DirectoryInfo("Data"));
+            var tle = new OrbitalParameters.Tle("body", line1, line2);
             var expected = tle.AtEpoch(TimeSystem.Time.Parse("2021-01-20T13:00:00Z")).ToFrame(Frames.Frame.ICRF).ToStateVector();
             Assert.Equal($"{expected}{Environment.NewLine}", res);
             Assert.StartsWith("Epoch : 2021-01-20T13:00:00.0000000Z ", res);

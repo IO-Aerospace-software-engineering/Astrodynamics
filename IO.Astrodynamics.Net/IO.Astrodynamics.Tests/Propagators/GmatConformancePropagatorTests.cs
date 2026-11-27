@@ -129,7 +129,7 @@ public class GmatConformancePropagatorTests
                 new TimeSystem.Time(2025, 8, 25, 11, 55, 44, TimeScale.UTC), 10,
                 new Vector3(5442162.5926801835, -4068949.8468206248, -13456.851447751518),
                 new Vector3(2858.1975428173836, 3809.7859312745794, 6002.1266931226886),
-                () => new CelestialItem[] { PlanetsAndMoons.MOON_BODY, Stars.SUN_BODY }),
+                () => new CelestialItem[] { PlanetsAndMoons.MoonBody, Stars.SunBody }),
             "002" => new GmatCase(
                 Path.Combine(DataDirectory, "propagator_002", "propagator_24h_geo70_full_002_output.txt"),
                 new TimeSystem.Time(2026, 2, 9, 10, 22, 58, 958, TimeScale.UTC), 70,
@@ -137,16 +137,16 @@ public class GmatConformancePropagatorTests
                 new Vector3(-2727.809889171343, 1386.957738048448, 52.987319351738),
                 () => new CelestialItem[]
                 {
-                    PlanetsAndMoons.MOON_BODY, Stars.SUN_BODY, Barycenters.MERCURY_BARYCENTER,
-                    Barycenters.VENUS_BARYCENTER, Barycenters.MARS_BARYCENTER, Barycenters.JUPITER_BARYCENTER,
-                    Barycenters.SATURN_BARYCENTER, Barycenters.URANUS_BARYCENTER, Barycenters.NEPTUNE_BARYCENTER,
-                    Barycenters.PLUTO_BARYCENTER
+                    PlanetsAndMoons.MoonBody, Stars.SunBody, Barycenters.MercuryBarycenter,
+                    Barycenters.VenusBarycenter, Barycenters.MarsBarycenter, Barycenters.JupiterBarycenter,
+                    Barycenters.SaturnBarycenter, Barycenters.UranusBarycenter, Barycenters.NeptuneBarycenter,
+                    Barycenters.PlutoBarycenter
                 }),
             "003" => new GmatCase(Path.Combine(DataDirectory, "propagator_003", "propagator_24h_sso_003_output.txt"),
                 new TimeSystem.Time(2025, 6, 1, 10, 30, 0, TimeScale.UTC), 10,
                 new Vector3(972520.62166446251, -260586.11519760552, 6999012.2132351244),
                 new Vector3(-1944.1954872554523, -7255.8363382834763, 4.5349106380634854e-13),
-                () => new CelestialItem[] { PlanetsAndMoons.MOON_BODY, Stars.SUN_BODY }),
+                () => new CelestialItem[] { PlanetsAndMoons.MoonBody, Stars.SunBody }),
             _ => throw new ArgumentOutOfRangeException(nameof(name))
         };
     }
@@ -158,7 +158,7 @@ public class GmatConformancePropagatorTests
     /// </summary>
     private static double[] Propagate(GmatCase gmatCase, GeopotentialCentralTerm centralTerm, bool verlet)
     {
-        var earth = new CelestialBody(PlanetsAndMoons.EARTH, Frames.Frame.ICRF, gmatCase.Epoch,
+        var earth = new CelestialBody(PlanetsAndMoons.Earth, Frames.Frame.ICRF, gmatCase.Epoch,
             new GeopotentialModelParameters(GeopotentialModel, gmatCase.Degree) { CentralTerm = centralTerm });
         var orbit = new StateVector(gmatCase.Position, gmatCase.Velocity, earth, gmatCase.Epoch, Frames.Frame.ICRF);
         var spacecraft = new Spacecraft(-1001, "GMAT_CONFORMANCE", 1000.0, orbit, 10000.0, new Clock("clock", 256));

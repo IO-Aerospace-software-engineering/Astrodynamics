@@ -23,7 +23,7 @@ public class AlbedoRadiationPressure : ForceBase
 {
     private readonly Spacecraft _spacecraft;
     private readonly CelestialBody _reflectingBody;
-    private readonly CelestialBody _sun = Stars.SUN_BODY;
+    private readonly CelestialBody _sun = Stars.SunBody;
     private readonly double _albedo;
     private readonly double _luminosityTerm;
     private readonly double _bodyRadius;
@@ -45,7 +45,7 @@ public class AlbedoRadiationPressure : ForceBase
                 nameof(reflectingBody));
 
         _albedo = reflectingBody.Albedo;
-        _luminosityTerm = Constants.SolarMeanRadiativeLuminosity / (4.0 * System.Math.PI * Constants.C);
+        _luminosityTerm = Constants.SolarMeanRadiativeLuminosity / (4.0 * System.Math.PI * Constants.SpeedOfLight);
         _bodyRadius = reflectingBody.EquatorialRadius;
     }
 

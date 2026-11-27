@@ -14,7 +14,7 @@ public class BarycenterTests
     [Fact]
     public void Create()
     {
-        var earthbc = Barycenters.EARTH_BARYCENTER;
+        var earthbc = Barycenters.EarthBarycenter;
         Assert.Equal("EARTH BARYCENTER", earthbc.Name);
         Assert.Equal(3, earthbc.NaifId);
         Assert.Equal(6.0456262922775433E+24, earthbc.Mass);
@@ -25,7 +25,7 @@ public class BarycenterTests
     [Fact]
     public void Mass()
     {
-        var earthbc = Barycenters.EARTH_BARYCENTER;
+        var earthbc = Barycenters.EarthBarycenter;
         Assert.Equal(6.0456262922775433E+24, earthbc.Mass);
     }
 }

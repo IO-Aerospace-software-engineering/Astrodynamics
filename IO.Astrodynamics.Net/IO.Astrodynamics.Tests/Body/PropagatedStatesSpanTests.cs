@@ -6,7 +6,6 @@ using IO.Astrodynamics.Body;
 using IO.Astrodynamics.Body.Spacecraft;
 using IO.Astrodynamics.Math;
 using IO.Astrodynamics.OrbitalParameters;
-using IO.Astrodynamics.OrbitalParameters.TLE;
 using IO.Astrodynamics.Propagator;
 using IO.Astrodynamics.Propagator.Variational;
 using IO.Astrodynamics.Propagator.Integrators;
@@ -59,9 +58,9 @@ public class PropagatedStatesSpanTests
 
     private static Spacecraft Propagated(int naifId, string integrator, string frame, out CelestialBody earth)
     {
-        earth = new CelestialBody(PlanetsAndMoons.EARTH, Frame.ICRF, S);
+        earth = new CelestialBody(PlanetsAndMoons.Earth, Frame.ICRF, S);
         var icrf = new StateVector(new Vector3(6800000.0, 0.0, 0.0), new Vector3(0.0, 5400.0, 5400.0), earth, S, Frame.ICRF);
-        var initial = frame == "ICRF" ? icrf : icrf.ToFrame(Frame.ECLIPTIC_J2000).ToStateVector();
+        var initial = frame == "ICRF" ? icrf : icrf.ToFrame(Frame.ECLIPJ2000).ToStateVector();
         var spacecraft = new Spacecraft(naifId, $"SPAN{-naifId}", 1000.0, initial, 3000.0, new Clock($"SPAN{-naifId}_CLK", 65536));
         IntegratorOptions integratorInstance = integrator == "RK" ? new RK78IntegratorOptions { AbsoluteTolerance = 1e-12, RelativeTolerance = 1e-12 } : new VVIntegratorOptions { Step = TimeSpan.FromSeconds(1.0) };
         spacecraft.Propagate(new Window(S, S.AddHours(2.0)), new PropagationOptions { Integrator = integratorInstance, OutputStep = Output, ThirdBodies = [earth], CovariancePropagation = CovariancePropagationOptions.None });
@@ -83,7 +82,7 @@ public class PropagatedStatesSpanTests
     {
         // Arrange
         var spacecraft = Propagated(naifId, integrator, frame, out var earth);
-        var moon = new CelestialBody(PlanetsAndMoons.MOON, Frame.ICRF, S);
+        var moon = new CelestialBody(PlanetsAndMoons.Moon, Frame.ICRF, S);
         var states = spacecraft.PropagatedStates;
         var (first, last) = (states[0], states[^1]);
 
@@ -108,11 +107,11 @@ public class PropagatedStatesSpanTests
             Assert.Throws<InvalidOperationException>(() => spacecraft.GetEphemeris(t, earth, Frame.ICRF, Aberration.None));
             Assert.Throws<InvalidOperationException>(() => spacecraft.GetEphemeris(t, moon, Frame.ICRF, Aberration.None));
             Assert.Throws<InvalidOperationException>(() => spacecraft.GetEphemeris(t, moon, Frame.ICRF, Aberration.LT));
-            Assert.Throws<InvalidOperationException>(() => spacecraft.GetEphemeris(t, earth, Frame.ECLIPTIC_J2000, Aberration.XCN));
+            Assert.Throws<InvalidOperationException>(() => spacecraft.GetEphemeris(t, earth, Frame.ECLIPJ2000, Aberration.XCN));
         }
 
         // The managed distance search over a window past the states reads them outside: it throws
-        Assert.Throws<InvalidOperationException>(() => moon.FindDistanceWindows(new Window(last.Epoch.AddSeconds(-600.0), last.Epoch.AddSeconds(600.0)), spacecraft, RelationnalOperator.Greater, 1.0, new WindowSearchOptions { Step = TimeSpan.FromSeconds(60.0) }).ToArray());
+        Assert.Throws<InvalidOperationException>(() => moon.FindDistanceWindows(new Window(last.Epoch.AddSeconds(-600.0), last.Epoch.AddSeconds(600.0)), spacecraft, RelationalOperator.GreaterThan, 1.0, new WindowSearchOptions { Step = TimeSpan.FromSeconds(60.0) }).ToArray());
     }
 
     /// <summary>
@@ -128,8 +127,8 @@ public class PropagatedStatesSpanTests
     public void LightTimeReadsAtTheEnds_AreAllowedWithinTheLightTime(string integrator, int naifId)
     {
         var spacecraft = Propagated(naifId, integrator, "ICRF", out var earth);
-        var moon = new CelestialBody(PlanetsAndMoons.MOON, Frame.ICRF, S);
-        var ssb = Barycenters.SOLAR_SYSTEM_BARYCENTER;
+        var moon = new CelestialBody(PlanetsAndMoons.Moon, Frame.ICRF, S);
+        var ssb = Barycenters.SolarSystemBarycenter;
         var states = spacecraft.PropagatedStates;
         double worst = 0.0;
         foreach (var (end, aberration, sign) in new[] { (states[0], Aberration.LT, -1.0), (states[0], Aberration.CN, -1.0), (states[^1], Aberration.XLT, 1.0), (states[^1], Aberration.XCN, 1.0) })
@@ -143,13 +142,13 @@ public class PropagatedStatesSpanTests
             }
 
             // spkltc: one light time from the geometric distance (LT, XLT), or iterated to convergence (CN, XCN)
-            double lt = (Target(0.0) - observer).Magnitude() / IO.Astrodynamics.Constants.C;
+            double lt = (Target(0.0) - observer).Magnitude() / IO.Astrodynamics.Constants.SpeedOfLight;
             int iterations = aberration is Aberration.LT or Aberration.XLT ? 1 : 5;
             var expected = Vector3.Zero;
             for (int i = 0; i < iterations; i++)
             {
                 expected = Target(sign * lt) - observer;
-                lt = expected.Magnitude() / IO.Astrodynamics.Constants.C;
+                lt = expected.Magnitude() / IO.Astrodynamics.Constants.SpeedOfLight;
             }
 
             var read = spacecraft.GetEphemeris(t, moon, Frame.ICRF, aberration);
@@ -176,14 +175,14 @@ public class PropagatedStatesSpanTests
     {
         // Arrange
         var (observer, target, earth) = Pair(naifId, integrator);
-        var ssb = Barycenters.SOLAR_SYSTEM_BARYCENTER;
+        var ssb = Barycenters.SolarSystemBarycenter;
         var states = target.PropagatedStates;
         double worst = 0.0;
         foreach (var (end, aberration, sign) in new[] { (states[0], Aberration.LT, -1.0), (states[0], Aberration.CN, -1.0), (states[^1], Aberration.XLT, 1.0), (states[^1], Aberration.XCN, 1.0) })
         {
             var t = end.Epoch;
             var reader = new IO.Astrodynamics.Occultation.ApparentPositionReader(observer, aberration, false, true);
-            Assert.Equal(PlanetsAndMoons.EARTH.NaifId, reader.Reference.NaifId);
+            Assert.Equal(PlanetsAndMoons.Earth.NaifId, reader.Reference.NaifId);
             var observerState = reader.Observer(t);
             var observerFromSsb = earth.GetGeometricStateRelativeTo(t, ssb).Position + observerState.Position;
             Vector3 Target(double dt)
@@ -197,13 +196,13 @@ public class PropagatedStatesSpanTests
                 return earthState.Position + targetState.Position + (earthState.Velocity + targetState.Velocity) * residual;
             }
 
-            double lt = (Target(0.0) - observerFromSsb).Magnitude() / IO.Astrodynamics.Constants.C;
+            double lt = (Target(0.0) - observerFromSsb).Magnitude() / IO.Astrodynamics.Constants.SpeedOfLight;
             int iterations = aberration is Aberration.LT or Aberration.XLT ? 1 : 5;
             var expected = Vector3.Zero;
             for (int i = 0; i < iterations; i++)
             {
                 expected = Target(sign * lt) - observerFromSsb;
-                lt = expected.Magnitude() / IO.Astrodynamics.Constants.C;
+                lt = expected.Magnitude() / IO.Astrodynamics.Constants.SpeedOfLight;
             }
 
             // Act
@@ -238,7 +237,7 @@ public class PropagatedStatesSpanTests
         var hidden = observer.FindOccultationWindows(window, target, earth, new OccultationSearchOptions { Step = step, TargetShape = ShapeType.Point, FrontShape = ShapeType.Ellipsoid }).ToArray();
         Assert.NotEmpty(geometric);
 
-        foreach (var aberration in new[] { Aberration.LT, Aberration.LTS, Aberration.CN, Aberration.CNS, Aberration.XLT, Aberration.XLTS, Aberration.XCN, Aberration.XCNS })
+        foreach (var aberration in new[] { Aberration.LT, Aberration.LtS, Aberration.CN, Aberration.CnS, Aberration.XLT, Aberration.XltS, Aberration.XCN, Aberration.XcnS })
         {
             // Act
             var corrected = instrument.FindFieldOfViewWindows(window, target, new FieldOfViewSearchOptions { Step = step, Aberration = aberration, TargetShape = ShapeType.Point, TargetFrame = Frame.ICRF }).ToArray();
@@ -263,7 +262,7 @@ public class PropagatedStatesSpanTests
     // same orbit, both propagated over [S, S + 1 h]; the attitude of the observer is the identity
     private static (Spacecraft Observer, Spacecraft Target, CelestialBody Earth) Pair(int naifId, string integrator)
     {
-        var earth = new CelestialBody(PlanetsAndMoons.EARTH, Frame.ICRF, S);
+        var earth = new CelestialBody(PlanetsAndMoons.Earth, Frame.ICRF, S);
         var initial = new StateVector(new Vector3(6800000.0, 0.0, 0.0), new Vector3(0.0, 5400.0, 5400.0), earth, S, Frame.ICRF);
         var ahead = initial.AtEpoch(S.AddSeconds(200000.0 / initial.Velocity.Magnitude())).ToStateVector();
         var observer = new Spacecraft(naifId, $"SPAN{-naifId}", 1000.0, initial, 3000.0, new Clock($"SPAN{-naifId}_CLK", 65536));
@@ -281,17 +280,17 @@ public class PropagatedStatesSpanTests
     }
 
     /// <summary>
-    /// A TLE spacecraft sampled by <see cref="TLEPropagator"/> reads SGP4 outside its samples, from the Earth without
+    /// A TLE spacecraft sampled by <see cref="TlePropagator"/> reads SGP4 outside its samples, from the Earth without
     /// aberration as from any other body: before the fix the short-circuit of <c>GetEphemeris</c> extrapolated the samples.
     /// </summary>
     [Fact]
     public void SampledTleSpacecraft_ReadsSgp4OutsideItsSamples()
     {
-        var tle = new TLE("ISS", "1 25544U 98067A   21020.53488036  .00016717  00000-0  10270-3 0  9054",
+        var tle = new Tle("ISS", "1 25544U 98067A   21020.53488036  .00016717  00000-0  10270-3 0  9054",
             "2 25544  51.6423 353.0312 0000493 320.8755  39.2360 15.49309423 25703");
         var spacecraft = new Spacecraft(-5277, "SPAN5277", 1000.0, tle, 3000.0, new Clock("SPAN5277_CLK", 65536));
         var window = new Window(tle.Epoch, tle.Epoch.AddHours(1.0));
-        new TLEPropagator(window, spacecraft, TimeSpan.FromSeconds(60.0)).Propagate();
+        new TlePropagator(window, spacecraft, TimeSpan.FromSeconds(60.0)).Propagate();
         var earth = (CelestialItem)tle.Observer;
         double worst = 0.0;
         foreach (var t in new[] { window.StartDate.AddSeconds(-360.0), window.EndDate.AddSeconds(360.0) })
@@ -311,7 +310,7 @@ public class PropagatedStatesSpanTests
     [Fact]
     public void Unpropagated_ReadsAnywhere()
     {
-        var earth = new CelestialBody(PlanetsAndMoons.EARTH, Frame.ICRF, S);
+        var earth = new CelestialBody(PlanetsAndMoons.Earth, Frame.ICRF, S);
         var initial = new StateVector(new Vector3(6800000.0, 0.0, 0.0), new Vector3(0.0, 5400.0, 5400.0), earth, S, Frame.ICRF);
         var spacecraft = new Spacecraft(-5278, "SPAN5278", 1000.0, initial, 3000.0, new Clock("SPAN5278_CLK", 65536));
         var t = S.AddHours(-5.0);

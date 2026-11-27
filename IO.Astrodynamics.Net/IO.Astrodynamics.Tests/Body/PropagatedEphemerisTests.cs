@@ -35,7 +35,7 @@ public class PropagatedEphemerisTests
     }
 
     private static readonly Time T0 = new(2024, 3, 1, 12, 0, 0, TimeScale.TDB);
-    private static readonly CelestialBody Earth = new(PlanetsAndMoons.EARTH, Frame.ICRF, T0);
+    private static readonly CelestialBody Earth = new(PlanetsAndMoons.Earth, Frame.ICRF, T0);
 
     // A motion whose Y velocity is vy
     private static StateVector State(double t, double vy = 0.0) =>
@@ -314,12 +314,12 @@ public class PropagatedEphemerisTests
         Assert.Equal(3, ephemeris.Arcs.Count);
         Assert.Equal(2, ephemeris.Arcs[1].Length);
         var file = new FileInfo(Path.Combine("Data/User/PropagatedArcs540", "short2026.bsp"));
-        SpiceAPI.Instance.WriteEphemerisArcs(file, -5403, ephemeris.Arcs);
+        SpiceApi.Instance.WriteEphemerisArcs(file, -5403, ephemeris.Arcs);
         Assert.True(file.Exists);
         file.Delete();
 
         // Two epochs one tick apart that are one TDB double
-        double Seconds(Time t) => t.ToTDB().TimeSpanFromJ2000().TotalSeconds;
+        double Seconds(Time t) => t.ToTdb().TimeSpanFromJ2000().TotalSeconds;
         var t0 = t2026.AddSeconds(100.0);
         while (Seconds(t0) != Seconds(t0.AddSeconds(1e-7))) t0 = t0.AddSeconds(1e-7);
         var a0 = new[] { new StateVector(new Vector3(7.0e6, 0.0, 0.0), new Vector3(0.0, 7.5e3, 0.0), Earth, t0.AddSeconds(-20.0), Frame.ICRF),
@@ -342,11 +342,11 @@ public class PropagatedEphemerisTests
         Directory.CreateDirectory(directory);
         var file = new FileInfo(Path.Combine(directory, "kept.bsp"));
         var good = new[] { State(0.0), State(10.0), State(20.0) };
-        SpiceAPI.Instance.WriteEphemerisArcs(file, -5404, new[] { good });
+        SpiceApi.Instance.WriteEphemerisArcs(file, -5404, new[] { good });
         var bytes = File.ReadAllBytes(file.FullName);
-        Assert.Throws<ArgumentException>(() => SpiceAPI.Instance.WriteEphemerisArcs(file, -5404, Array.Empty<StateVector[]>()));
-        Assert.Throws<ArgumentException>(() => SpiceAPI.Instance.WriteEphemerisArcs(file, -5404, new[] { new[] { State(0.0) } }));
-        Assert.Throws<ArgumentException>(() => SpiceAPI.Instance.WriteEphemerisArcs(file, -5404, new[] { new[] { State(10.0), State(0.0) } }));
+        Assert.Throws<ArgumentException>(() => SpiceApi.Instance.WriteEphemerisArcs(file, -5404, Array.Empty<StateVector[]>()));
+        Assert.Throws<ArgumentException>(() => SpiceApi.Instance.WriteEphemerisArcs(file, -5404, new[] { new[] { State(0.0) } }));
+        Assert.Throws<ArgumentException>(() => SpiceApi.Instance.WriteEphemerisArcs(file, -5404, new[] { new[] { State(10.0), State(0.0) } }));
         // A spacecraft with one stored state
         var spacecraft = new IO.Astrodynamics.Body.Spacecraft.Spacecraft(-5404, "PE5404", 1000.0, State(0.0), 3000.0, new Clock("PE5404_CLK", 65536));
         spacecraft.AddPropagatedStates(State(0.0));
@@ -390,7 +390,7 @@ public class PropagatedEphemerisTests
             arcs.Add(arc);
         }
 
-        SpiceAPI.Instance.WriteEphemerisArcs(file, -5405, arcs);
+        SpiceApi.Instance.WriteEphemerisArcs(file, -5405, arcs);
         var bytes = File.ReadAllBytes(file.FullName);
         int forward = BitConverter.ToInt32(bytes, 76), backward = BitConverter.ToInt32(bytes, 80);
         Assert.Equal(2, forward);
@@ -401,7 +401,7 @@ public class PropagatedEphemerisTests
         Assert.Equal(count % 25, (int)summaries);
         if (OperatingSystem.IsLinux())
         {
-            var reference = arcs.Select((arc, k) => (Earth.NaifId, System.Math.Min(7, arc.Length - 1), arc.Select(x => x.Epoch.ToTDB().TimeSpanFromJ2000().TotalSeconds).ToArray(),
+            var reference = arcs.Select((arc, k) => (Earth.NaifId, System.Math.Min(7, arc.Length - 1), arc.Select(x => x.Epoch.ToTdb().TimeSpanFromJ2000().TotalSeconds).ToArray(),
                 arc.SelectMany(x => new[] { x.Position.X * 1e-3, x.Position.Y * 1e-3, x.Position.Z * 1e-3, x.Velocity.X * 1e-3, x.Velocity.Y * 1e-3, x.Velocity.Z * 1e-3 }).ToArray(),
                 $"Seg{k + 1}")).ToList();
             var spkw09 = Path.Combine(directory, "s.spkw09.bsp");
@@ -479,8 +479,8 @@ public class PropagatedEphemerisTests
         Assert.Throws<ArgumentException>(() => IO.Astrodynamics.Kernels.SpkWriter.BuildType9(-540, 1, Array.Empty<StateVector[]>()));
         Assert.Throws<ArgumentException>(() => IO.Astrodynamics.Kernels.SpkWriter.BuildType9(-540, 1, new[] { new[] { State(0.0) } }));
         Assert.Throws<ArgumentException>(() => IO.Astrodynamics.Kernels.SpkWriter.BuildType9(-540, 1, new[] { new[] { State(10.0), State(0.0) } }));
-        Assert.Throws<ArgumentNullException>(() => SpiceAPI.Instance.WriteEphemerisArcs(null, -540, new[] { two }));
-        Assert.Throws<ArgumentNullException>(() => SpiceAPI.Instance.WriteEphemerisArcs(file, -540, null));
+        Assert.Throws<ArgumentNullException>(() => SpiceApi.Instance.WriteEphemerisArcs(null, -540, new[] { two }));
+        Assert.Throws<ArgumentNullException>(() => SpiceApi.Instance.WriteEphemerisArcs(file, -540, null));
         Assert.False(file.Exists);
 
         // A spacecraft without stored states has nothing to write (decision 81 of #668: the object, not the file, is at fault)
@@ -522,16 +522,16 @@ public class PropagatedEphemerisTests
         Directory.CreateDirectory(directory.FullName);
         File.WriteAllText(file.FullName, "not an SPK");
         Assert.True(file.Exists);
-        SpiceAPI.Instance.WriteEphemerisArcs(file, -5402, arcs);
+        SpiceApi.Instance.WriteEphemerisArcs(file, -5402, arcs);
         Assert.True(file.Exists);
         Assert.True(file.Length > 1024);
-        SpiceAPI.Instance.LoadKernels(file);
+        SpiceApi.Instance.LoadKernels(file);
         try
         {
             double worst = 0.0, worstVelocity = 0.0;
             foreach (var (epoch, position, velocity) in expected)
             {
-                var read = SpiceAPI.Instance.ReadEphemeris(epoch, 399, -5402, Frame.ICRF, Aberration.None);
+                var read = SpiceApi.Instance.ReadEphemeris(epoch, 399, -5402, Frame.ICRF, Aberration.None);
                 worst = System.Math.Max(worst, (read.Position - position).Magnitude());
                 worstVelocity = System.Math.Max(worstVelocity, (read.Velocity - velocity).Magnitude());
             }
@@ -542,7 +542,7 @@ public class PropagatedEphemerisTests
         }
         finally
         {
-            SpiceAPI.Instance.UnloadKernels(file);
+            SpiceApi.Instance.UnloadKernels(file);
         }
 
         if (OperatingSystem.IsLinux())
@@ -553,7 +553,7 @@ public class PropagatedEphemerisTests
             // and the data of the segments do not
             var segments = CspiceDirect.ReadSegments(file.FullName);
             Assert.Equal(60, segments.Count);
-            var reference = arcs.Select((arc, k) => (Earth.NaifId, System.Math.Min(7, arc.Length - 1), arc.Select(x => x.Epoch.ToTDB().TimeSpanFromJ2000().TotalSeconds).ToArray(),
+            var reference = arcs.Select((arc, k) => (Earth.NaifId, System.Math.Min(7, arc.Length - 1), arc.Select(x => x.Epoch.ToTdb().TimeSpanFromJ2000().TotalSeconds).ToArray(),
                 arc.SelectMany(x => new[] { x.Position.X * 1e-3, x.Position.Y * 1e-3, x.Position.Z * 1e-3, x.Velocity.X * 1e-3, x.Velocity.Y * 1e-3, x.Velocity.Z * 1e-3 }).ToArray(),
                 $"Seg{k + 1}")).ToList();
             var spkw09 = Path.Combine(directory.FullName, "sixty.spkw09.bsp");

@@ -13,7 +13,6 @@ using IO.Astrodynamics.Maneuver;
 using IO.Astrodynamics.Math;
 using IO.Astrodynamics.Mission;
 using IO.Astrodynamics.OrbitalParameters;
-using IO.Astrodynamics.OrbitalParameters.TLE;
 using IO.Astrodynamics.Propagator;
 using IO.Astrodynamics.Propagator.Events;
 using IO.Astrodynamics.Propagator.Forces;
@@ -59,7 +58,7 @@ public class CancellationTests
     private static int NextId() => Interlocked.Decrement(ref _nextId);
 
     // An Earth of its own per test, without an atmospheric model, so that the option fills it
-    private static CelestialBody NewEarth() => new(PlanetsAndMoons.EARTH);
+    private static CelestialBody NewEarth() => new(PlanetsAndMoons.Earth);
 
     private static IntegratorOptions Integrator(string kind) => kind == "RK"
         ? RK78IntegratorOptions.Default
@@ -115,7 +114,7 @@ public class CancellationTests
     private static void AssertLeftAsAStoppedRun(Spacecraft spacecraft)
     {
         Assert.Empty(spacecraft.PropagatedStates);
-        Assert.Empty(((SpacecraftFrame)spacecraft.Frame).GetStateOrientationsToICRF());
+        Assert.Empty(((SpacecraftFrame)spacecraft.Frame).GetStateOrientationsToIcrf());
         Assert.False(spacecraft.IsPropagated);
         Assert.Null(spacecraft.LastPropagation);
         Assert.Null(spacecraft.LastForceModel);
@@ -138,7 +137,7 @@ public class CancellationTests
         AssertLastToken(typeof(Scenario).GetMethod(nameof(Scenario.Simulate))!);
         AssertLastToken(typeof(IPropagator).GetMethod(nameof(IPropagator.Propagate))!);
         AssertLastToken(typeof(PropagatorBase).GetMethod(nameof(PropagatorBase.Propagate))!);
-        AssertLastToken(typeof(TLEPropagator).GetMethod(nameof(TLEPropagator.Propagate))!);
+        AssertLastToken(typeof(TlePropagator).GetMethod(nameof(TlePropagator.Propagate))!);
         var batch = typeof(BatchPropagator).GetMethods(BindingFlags.Public | BindingFlags.Static)
             .Where(m => m.Name == nameof(BatchPropagator.Propagate)).ToArray();
         Assert.Equal(2, batch.Length);
@@ -181,7 +180,7 @@ public class CancellationTests
 
         foreach (var type in new[]
                  {
-                     typeof(IPropagator), typeof(PropagatorBase), typeof(CentralBodyPropagator), typeof(TLEPropagator)
+                     typeof(IPropagator), typeof(PropagatorBase), typeof(CentralBodyPropagator), typeof(TlePropagator)
                  })
         {
             Assert.False(typeof(IDisposable).IsAssignableFrom(type), type.Name);
@@ -202,7 +201,7 @@ public class CancellationTests
         var spacecraft = NewSpacecraft(earth);
         spacecraft.Propagate(TwoHours, Options(kind));
         var states = spacecraft.PropagatedStates;
-        var attitudes = ((SpacecraftFrame)spacecraft.Frame).GetStateOrientationsToICRF().ToArray();
+        var attitudes = ((SpacecraftFrame)spacecraft.Frame).GetStateOrientationsToIcrf().ToArray();
         var executed = spacecraft.ExecutedManeuvers.ToArray();
         double fuel = Fuel(spacecraft);
         var standby = spacecraft.StandbyManeuver;
@@ -220,7 +219,7 @@ public class CancellationTests
         Assert.Equal(cts.Token, exception.CancellationToken);
         Assert.True(spacecraft.IsPropagated);
         AssertSameStates(states, spacecraft.PropagatedStates);
-        Assert.Equal(attitudes, ((SpacecraftFrame)spacecraft.Frame).GetStateOrientationsToICRF().ToArray());
+        Assert.Equal(attitudes, ((SpacecraftFrame)spacecraft.Frame).GetStateOrientationsToIcrf().ToArray());
         Assert.Equal(executed, spacecraft.ExecutedManeuvers.ToArray());
         Assert.Equal(fuel, Fuel(spacecraft));
         Assert.Same(standby, spacecraft.StandbyManeuver);
@@ -235,13 +234,13 @@ public class CancellationTests
         var earth = NewEarth();
         var spacecraft = NewSpacecraft(earth);
         var propagator = new CentralBodyPropagator(TwoHours, spacecraft, Options("RK"));
-        var tle = new TLE("ISS",
+        var tle = new Tle("ISS",
             "1 25544U 98067A   21020.53488036  .00016717  00000-0  10270-3 0  9054",
             "2 25544  51.6423 353.0312 0000493 320.8755  39.2360 15.49309423 25703");
         int id = NextId();
         var tleSpacecraft = new Spacecraft(id, $"CX{-id}", 100.0, tle, 10000.0, new Clock($"cxclk{-id}", 65536));
         var start = tle.Epoch;
-        var tlePropagator = new TLEPropagator(new Window(start, start.AddHours(1.0)), tleSpacecraft, Output);
+        var tlePropagator = new TlePropagator(new Window(start, start.AddHours(1.0)), tleSpacecraft, Output);
         using var cts = new CancellationTokenSource();
         cts.Cancel();
 
@@ -254,7 +253,7 @@ public class CancellationTests
     }
 
     /// <summary>
-    /// A stop in the middle of a <see cref="TLEPropagator"/> run changes nothing and leaves the spacecraft as it was
+    /// A stop in the middle of a <see cref="TlePropagator"/> run changes nothing and leaves the spacecraft as it was
     /// (decision 19 of lot L4, decided by S. Guillet, 2026-11-22, the exception to C2 then; the rule since decision 38 of
     /// #668, decided by S. Guillet, 2026-11-23: a run re-arms the spacecraft and replaces its stored states by its samples
     /// in one block, once every sample is computed): the stored states of an earlier run, before and after, are the same,
@@ -271,12 +270,12 @@ public class CancellationTests
         int id = NextId();
         var spacecraft = new Spacecraft(id, $"CX{-id}", 100.0, tle, 10000.0, new Clock($"cxclk{-id}", 65536));
         var start = tle.Epoch;
-        new TLEPropagator(new Window(start, start.AddHours(1.0)), spacecraft, Output).Propagate();
+        new TlePropagator(new Window(start, start.AddHours(1.0)), spacecraft, Output).Propagate();
         var before = spacecraft.PropagatedStates.ToArray();
         Assert.NotEmpty(before);
         bool propagatedBefore = spacecraft.IsPropagated;
-        var attitudesBefore = ((SpacecraftFrame)spacecraft.Frame).GetStateOrientationsToICRF().ToArray();
-        var second = new TLEPropagator(new Window(start.AddHours(1.0), start.AddHours(2.0)), spacecraft, Output);
+        var attitudesBefore = ((SpacecraftFrame)spacecraft.Frame).GetStateOrientationsToIcrf().ToArray();
+        var second = new TlePropagator(new Window(start.AddHours(1.0), start.AddHours(2.0)), spacecraft, Output);
         using var cts = new CancellationTokenSource();
         tle.CancelAt(cts, 10);
 
@@ -288,12 +287,12 @@ public class CancellationTests
         Assert.Equal(10, tle.Calls);
         AssertSameStates(before, spacecraft.PropagatedStates);
         Assert.Equal(propagatedBefore, spacecraft.IsPropagated);
-        Assert.Equal(attitudesBefore, ((SpacecraftFrame)spacecraft.Frame).GetStateOrientationsToICRF().ToArray());
+        Assert.Equal(attitudesBefore, ((SpacecraftFrame)spacecraft.Frame).GetStateOrientationsToIcrf().ToArray());
     }
 
     // A TLE that cancels a token from inside its SGP4 call of a given rank, once armed: the seam of a stop in the middle
-    // of a TLEPropagator run, which samples through ToStateVector(Time)
-    private sealed class CancellingTle(string name, string line1, string line2) : TLE(name, line1, line2)
+    // of a TlePropagator run, which samples through ToStateVector(Time)
+    private sealed class CancellingTle(string name, string line1, string line2) : Tle(name, line1, line2)
     {
         private CancellationTokenSource _source;
         private int _rank;
@@ -500,8 +499,8 @@ public class CancellationTests
         // Arrange: about the Sun, near the Earth, whose atmosphere gives the drag as a listed body
         using var cts = new CancellationTokenSource();
         var atmosphere = new CancellingAtmosphere(cts, Epoch.AddMinutes(30.0));
-        var earth = new CelestialBody(PlanetsAndMoons.EARTH, atmosphericModel: atmosphere);
-        var sun = Stars.SUN_BODY;
+        var earth = new CelestialBody(PlanetsAndMoons.Earth, atmosphericModel: atmosphere);
+        var sun = Stars.SunBody;
         var earthState = earth.GetGeometricStateRelativeTo(Epoch, sun);
         int id = NextId();
         var state = new StateVector(earthState.Position + new Vector3(4.0e8, 0.0, 0.0), earthState.Velocity, sun, Epoch,
@@ -529,14 +528,14 @@ public class CancellationTests
     public void AStop_DropsTheStatesAndAttitudesAddedByHand_OfASpacecraftNeverPropagated(string kind)
     {
         // Arrange: a spacecraft never propagated that holds states (AddPropagatedStates, the second 1 km off the initial
-        // orbit, so that the read can tell them apart) and an attitude (AddStateOrientationToICRF), as C2 of lot L4 covers
+        // orbit, so that the read can tell them apart) and an attitude (AddStateOrientationToIcrf), as C2 of lot L4 covers
         var earth = NewEarth();
         var spacecraft = NewSpacecraft(earth);
         var first = spacecraft.InitialOrbitalParameters.ToStateVector(Epoch);
         var second = spacecraft.InitialOrbitalParameters.ToStateVector(Epoch.AddMinutes(1.0));
         spacecraft.AddPropagatedStates(first, new StateVector(second.Position + new Vector3(1000.0, 0.0, 0.0),
             second.Velocity, second.Observer, second.Epoch, second.Frame));
-        spacecraft.Frame.AddStateOrientationToICRF(new StateOrientation(Quaternion.Identity, Vector3.Zero, Epoch,
+        spacecraft.Frame.AddStateOrientationToIcrf(new StateOrientation(Quaternion.Identity, Vector3.Zero, Epoch,
             spacecraft.Frame));
         Assert.False(spacecraft.IsPropagated);
         Assert.Equal(2, spacecraft.PropagatedStates.Length);
@@ -561,7 +560,7 @@ public class CancellationTests
     public void AStopOfATleSpacecraft_ReadsSgp4Again()
     {
         // Arrange: a TLE spacecraft propagated numerically, so that it reads its stored states
-        var tle = new TLE("ISS",
+        var tle = new Tle("ISS",
             "1 25544U 98067A   21020.53488036  .00016717  00000-0  10270-3 0  9054",
             "2 25544  51.6423 353.0312 0000493 320.8755  39.2360 15.49309423 25703");
         int id = NextId();
@@ -570,9 +569,9 @@ public class CancellationTests
         var window = new Window(start, start.AddHours(1.0));
         spacecraft.Propagate(window, Options("RK"));
         var at = start.AddMinutes(20.0);
-        var sgp4 = tle.ToStateVector(at).ToFrame(Frames.Frame.ICRF).RelativeTo(PlanetsAndMoons.EARTH_BODY, Aberration.None)
+        var sgp4 = tle.ToStateVector(at).ToFrame(Frames.Frame.ICRF).RelativeTo(PlanetsAndMoons.EarthBody, Aberration.None)
             .ToStateVector();
-        Assert.NotEqual(sgp4.Position, spacecraft.GetGeometricStateRelativeTo(at, PlanetsAndMoons.EARTH_BODY).Position);
+        Assert.NotEqual(sgp4.Position, spacecraft.GetGeometricStateRelativeTo(at, PlanetsAndMoons.EarthBody).Position);
         using var cts = new CancellationTokenSource();
         var atmosphere = new CancellingAtmosphere(cts, start.AddMinutes(30.0));
 
@@ -581,7 +580,7 @@ public class CancellationTests
 
         // Assert
         AssertLeftAsAStoppedRun(spacecraft);
-        var read = spacecraft.GetGeometricStateRelativeTo(at, PlanetsAndMoons.EARTH_BODY);
+        var read = spacecraft.GetGeometricStateRelativeTo(at, PlanetsAndMoons.EarthBody);
         Assert.Equal(sgp4.Position, read.Position);
         Assert.Equal(sgp4.Velocity, read.Velocity);
     }

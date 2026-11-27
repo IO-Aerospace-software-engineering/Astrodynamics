@@ -2,7 +2,7 @@
 
 using System;
 using System.Collections.Generic;
-using IO.Astrodynamics.CCSDS.OMM;
+using IO.Astrodynamics.Ccsds;
 using Xunit;
 
 namespace IO.Astrodynamics.Tests.CCSDS.OMM
@@ -13,7 +13,7 @@ namespace IO.Astrodynamics.Tests.CCSDS.OMM
         public void Constructor_WithBStarAndDDot_Succeeds()
         {
             var tleParams = new TleParameters(
-                bstar: 0.0001,
+                bStar: 0.0001,
                 meanMotionDot: 0.00001,
                 meanMotionDDot: 0.000001);
 
@@ -30,7 +30,7 @@ namespace IO.Astrodynamics.Tests.CCSDS.OMM
         public void CreateWithBStarAndDDot_FactoryMethod_Succeeds()
         {
             var tleParams = TleParameters.CreateWithBStarAndDDot(
-                bstar: 0.0001,
+                bStar: 0.0001,
                 meanMotionDot: 0.00001,
                 meanMotionDDot: 0.000001,
                 noradCatalogId: 25544);
@@ -45,7 +45,7 @@ namespace IO.Astrodynamics.Tests.CCSDS.OMM
         public void CreateWithBStarAndAGom_FactoryMethod_Succeeds()
         {
             var tleParams = TleParameters.CreateWithBStarAndAGom(
-                bstar: 0.0001,
+                bStar: 0.0001,
                 meanMotionDot: 0.00001,
                 agom: 0.02);
 
@@ -91,7 +91,7 @@ namespace IO.Astrodynamics.Tests.CCSDS.OMM
         {
             var comments = new List<string> { "Test TLE" };
             var tleParams = new TleParameters(
-                bstar: 0.0001,
+                bStar: 0.0001,
                 meanMotionDot: 0.00001,
                 meanMotionDDot: 0.000001,
                 ephemerisType: 0,
@@ -237,9 +237,9 @@ namespace IO.Astrodynamics.Tests.CCSDS.OMM
             var data = new TheoryData<string, string, double>();
             var entries = new (string Entry, string[] Parameters)[]
             {
-                ("Constructor", new[] { "bstar", "meanMotionDot", "meanMotionDDot" }),
-                ("CreateWithBStarAndDDot", new[] { "bstar", "meanMotionDot", "meanMotionDDot" }),
-                ("CreateWithBStarAndAGom", new[] { "bstar", "meanMotionDot", "agom" }),
+                ("Constructor", new[] { "bStar", "meanMotionDot", "meanMotionDDot" }),
+                ("CreateWithBStarAndDDot", new[] { "bStar", "meanMotionDot", "meanMotionDDot" }),
+                ("CreateWithBStarAndAGom", new[] { "bStar", "meanMotionDot", "agom" }),
                 ("CreateWithBTermAndDDot", new[] { "bterm", "meanMotionDot", "meanMotionDDot" }),
                 ("CreateWithBTermAndAGom", new[] { "bterm", "meanMotionDot", "agom" })
             };
@@ -260,9 +260,9 @@ namespace IO.Astrodynamics.Tests.CCSDS.OMM
             double V(string name, double given) => name == parameter ? value : given;
             Func<TleParameters> create = entry switch
             {
-                "Constructor" => () => new TleParameters(V("bstar", 1e-4), V("meanMotionDot", 1e-5), V("meanMotionDDot", 0.0)),
-                "CreateWithBStarAndDDot" => () => TleParameters.CreateWithBStarAndDDot(V("bstar", 1e-4), V("meanMotionDot", 1e-5), V("meanMotionDDot", 0.0)),
-                "CreateWithBStarAndAGom" => () => TleParameters.CreateWithBStarAndAGom(V("bstar", 1e-4), V("meanMotionDot", 1e-5), V("agom", 0.01)),
+                "Constructor" => () => new TleParameters(V("bStar", 1e-4), V("meanMotionDot", 1e-5), V("meanMotionDDot", 0.0)),
+                "CreateWithBStarAndDDot" => () => TleParameters.CreateWithBStarAndDDot(V("bStar", 1e-4), V("meanMotionDot", 1e-5), V("meanMotionDDot", 0.0)),
+                "CreateWithBStarAndAGom" => () => TleParameters.CreateWithBStarAndAGom(V("bStar", 1e-4), V("meanMotionDot", 1e-5), V("agom", 0.01)),
                 "CreateWithBTermAndDDot" => () => TleParameters.CreateWithBTermAndDDot(V("bterm", 0.02), V("meanMotionDot", 1e-5), V("meanMotionDDot", 0.0)),
                 _ => () => TleParameters.CreateWithBTermAndAGom(V("bterm", 0.02), V("meanMotionDot", 1e-5), V("agom", 0.01))
             };

@@ -7,7 +7,7 @@ Impulse maneuvers model instantaneous delta-V burns triggered by g-function zero
 | Member | Description |
 |--------|-------------|
 | `ComputeEventValue(StateVector)` | Scalar g-function evaluated at the current state; pure on every library maneuver (decision 50 of #668: before 11.0.0 a call locked the node of a `PlaneAlignmentManeuver` and wrote the intersection of an `ApsidalAlignmentManeuver`, #802), the node locked by the detector of a run |
-| `ComputeDeltaV(StateVector)` | The delta-V of the impulse at the state, in the frame of the state, without executing it: the state is taken about the centre of the maneuver, as the execution takes it (about its own observer for a maneuver without one), so at one state, whatever its observer (an SSB-mode solution's states are about the Sun), it is the delta-V of the execution; pure, it touches no tank, chain, window, gate or node lock, so it is the same before and after a run; at the state of its event in a run, the delta-V the run applies (decision 50 of #668, decided by S. Guillet, 2026-11-23; before, the preview was the execution, internal `TryExecute` since then, which burnt the fuel and moved the chain of a finished run, #802). A `PlaneAlignmentManeuver` takes the node of the rule of its g-function at the state; the fuel of a delta-V is `Tsiolkovski.DeltaM` |
+| `ComputeDeltaV(StateVector)` | The delta-V of the impulse at the state, in the frame of the state, without executing it: the state is taken about the centre of the maneuver, as the execution takes it (about its own observer for a maneuver without one), so at one state, whatever its observer (an SSB-mode solution's states are about the Sun), it is the delta-V of the execution; pure, it touches no tank, chain, window, gate or node lock, so it is the same before and after a run; at the state of its event in a run, the delta-V the run applies (decision 50 of #668, decided by S. Guillet, 2026-11-23; before, the preview was the execution, internal `TryExecute` since then, which burnt the fuel and moved the chain of a finished run, #802). A `PlaneAlignmentManeuver` takes the node of the rule of its g-function at the state; the fuel of a delta-V is `Tsiolkovsky.DeltaM` |
 | `EventCrossingDirection` | `CrossingDirection` that triggers the burn |
 | `CheckPreconditions(StateVector)` | Optional additional constraints (returns `true` to allow firing). When it returns `false`, the occurrence is skipped and the maneuver waits for its next crossing; if none satisfies it within the window, the maneuver is not executed (`ThrustWindow` stays null) |
 | `DeltaV` | Burn delta-V vector, in the inertial frame of the propagated state: the last run's value (below) |
@@ -186,7 +186,7 @@ Radii are checked (decision 68 of #668, decided by S. Guillet, 2026-11-23): a ra
 `ArgumentOutOfRangeException` naming it (`apogeeRadius`, `perigeeRadius`), its message "a radius from the centre ...;
 for a height h pass R + h"; an apogee radius below the equatorial radius of a celestial body centre throws
 `ArgumentException` in the constructor for a given centre (the target-orbit form included, naming `targetOrbit`; the
-radius of a deferred body such as `PlanetsAndMoons.EARTH_BODY` is read there) and `InvalidOperationException` from the
+radius of a deferred body such as `PlanetsAndMoons.EarthBody` is read there) and `InvalidOperationException` from the
 propagator constructor and `Propagate` for a centre the run infers. A perigee inside the body stays legal (a deorbit).
 `CombinedManeuver` checks its inclination in [0, π] (`ArgumentOutOfRangeException`, `inclination`). Before 11.0.0 the
 radii were accepted, and 1000e3 m, an altitude given for a radius, put the apogee 5378 km under the surface.
@@ -359,7 +359,7 @@ one on another spacecraft's tank burnt that spacecraft's fuel.
 var maneuver = new ApogeeHeightManeuver(
     42164000.0,
     engine,
-    Time.J2000TDB,
+    Time.J2000Tdb,
     TimeSpan.Zero,
     earth);
 

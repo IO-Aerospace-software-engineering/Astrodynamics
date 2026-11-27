@@ -11,8 +11,8 @@ using Window = IO.Astrodynamics.TimeSystem.Window;
 namespace IO.Astrodynamics.Tests;
 
 /// <summary>
-/// The window reads of <see cref="SpiceAPI.ReadEphemeris(Window, int, int, Frames.Frame, Aberration, TimeSpan)"/> and
-/// <see cref="SpiceAPI.ReadOrientation"/> (#563): before 11.0.0 the native proxies stepped their epoch by epoch += step in
+/// The window reads of <see cref="SpiceApi.ReadEphemeris(Window, int, int, Frames.Frame, Aberration, TimeSpan)"/> and
+/// <see cref="SpiceApi.ReadOrientation"/> (#563): before 11.0.0 the native proxies stepped their epoch by epoch += step in
 /// double TDB seconds, so that sample i drifted from start + i·step (1.43e-4 s after 6000 steps of 0.1 s) and the last
 /// epoch of the window could be dropped, and <c>ReadOrientation</c> passed a buffer of 10000 records whatever the window,
 /// 1.4 ms for a read of one epoch. The reads are now at start + i·step in the time frame of the window start (UTC steps for
@@ -22,10 +22,10 @@ namespace IO.Astrodynamics.Tests;
 public partial class SpiceApiTest
 {
     // 2026-04-01 00:00:00 TDB, the start of the measurement of #563
-    private static readonly TimeSystem.Time WindowReadStart = TimeSystem.Time.CreateTDB(828273600.0);
+    private static readonly TimeSystem.Time WindowReadStart = TimeSystem.Time.CreateTdb(828273600.0);
 
     // The PHSRM CK of the tests, within its coverage (ReadOrientationFromExternalCKKernel)
-    private static readonly TimeSystem.Time PhsrmStart = TimeSystem.Time.CreateTDB(374100000.0);
+    private static readonly TimeSystem.Time PhsrmStart = TimeSystem.Time.CreateTdb(374100000.0);
 
     [Theory]
     [InlineData(600.0, 0.1, 6001)]
@@ -38,14 +38,14 @@ public partial class SpiceApiTest
         // the last epoch of the window is read, and a read of more than 10000 epochs (in several native calls) is continuous
         var stepSize = TimeSpan.FromSeconds(step);
         var window = new Window(WindowReadStart, WindowReadStart.AddSeconds(length));
-        var states = SpiceAPI.Instance.ReadEphemeris(window, 399, 301, Frames.Frame.ICRF, Aberration.LT, stepSize).Cast<StateVector>().ToArray();
+        var states = SpiceApi.Instance.ReadEphemeris(window, 399, 301, Frames.Frame.ICRF, Aberration.LT, stepSize).Cast<StateVector>().ToArray();
         _output.WriteLine($"MEASURE #563 ReadEphemeris {length} s at {step} s: {states.Length} states, last at {states[^1].Epoch}");
         Assert.Equal(count, states.Length);
         for (int i = 0; i < count; i++)
         {
             var epoch = WindowReadStart + stepSize * i;
             LabelAssert.Equal(epoch, states[i].Epoch);
-            var single = (StateVector)SpiceAPI.Instance.ReadEphemeris(epoch, 399, 301, Frames.Frame.ICRF, Aberration.LT);
+            var single = (StateVector)SpiceApi.Instance.ReadEphemeris(epoch, 399, 301, Frames.Frame.ICRF, Aberration.LT);
             Assert.Equal(single.Position, states[i].Position);
             Assert.Equal(single.Velocity, states[i].Velocity);
         }
@@ -66,7 +66,7 @@ public partial class SpiceApiTest
         var start = new TimeSystem.Time(2026, month, 1, TimeSystem.TimeScale.UTC);
         var stepSize = TimeSpan.FromSeconds(0.1);
         var window = new Window(start, start.AddSeconds(600.0));
-        var states = SpiceAPI.Instance.ReadEphemeris(window, 399, 301, Frames.Frame.ICRF, Aberration.LT, stepSize).Cast<StateVector>().ToArray();
+        var states = SpiceApi.Instance.ReadEphemeris(window, 399, 301, Frames.Frame.ICRF, Aberration.LT, stepSize).Cast<StateVector>().ToArray();
         _output.WriteLine($"MEASURE #563 ReadEphemeris UTC 2026-{month:D2}: {states.Length} states, last at {states[^1].Epoch}");
         Assert.Equal(6001, states.Length);
         LabelAssert.Equal(window.EndDate, states[^1].Epoch);
@@ -75,7 +75,7 @@ public partial class SpiceApiTest
             var epoch = start + stepSize * i;
             LabelAssert.Equal(epoch, states[i].Epoch);
             Assert.Equal(TimeSystem.TimeScale.UTC, states[i].Epoch.Scale);
-            var single = (StateVector)SpiceAPI.Instance.ReadEphemeris(epoch, 399, 301, Frames.Frame.ICRF, Aberration.LT);
+            var single = (StateVector)SpiceApi.Instance.ReadEphemeris(epoch, 399, 301, Frames.Frame.ICRF, Aberration.LT);
             Assert.Equal(single.Position, states[i].Position);
             Assert.Equal(single.Velocity, states[i].Velocity);
         }
@@ -95,14 +95,14 @@ public partial class SpiceApiTest
         var start = new TimeSystem.Time(2026, month, 1, TimeSystem.TimeScale.UTC);
         var stepSize = TimeSpan.FromSeconds(0.1);
         var window = new Window(start, start.AddSeconds(600.0));
-        var states = SpiceAPI.Instance.ReadEphemeris(window, 399, 301, Frames.Frame.ICRF, Aberration.None, stepSize).Cast<StateVector>().ToArray();
+        var states = SpiceApi.Instance.ReadEphemeris(window, 399, 301, Frames.Frame.ICRF, Aberration.None, stepSize).Cast<StateVector>().ToArray();
         Assert.Equal(6001, states.Length);
         double worstEt = 0.0;
         for (int i = 0; i < states.Length; i++)
         {
             var epoch = start + stepSize * i;
             LabelAssert.Equal(epoch, states[i].Epoch);
-            double et = epoch.ToTDB().TimeSpanFromJ2000().TotalSeconds;
+            double et = epoch.ToTdb().TimeSpanFromJ2000().TotalSeconds;
             double spiceEt = CspiceDirect.Str2et(epoch.DateTime.ToString("yyyy-MM-ddTHH:mm:ss.fffffff", System.Globalization.CultureInfo.InvariantCulture));
             worstEt = System.Math.Max(worstEt, System.Math.Abs(et - spiceEt));
             var spkezr = CspiceDirect.Spkezr("301", et, "J2000", "NONE", "399");
@@ -122,7 +122,7 @@ public partial class SpiceApiTest
     {
         var stepSize = TimeSpan.FromSeconds(0.1);
         var window = new Window(WindowReadStart, WindowReadStart.AddSeconds(600.0));
-        var states = SpiceAPI.Instance.ReadEphemeris(window, 399, 301, Frames.Frame.ICRF, Aberration.None, stepSize).Cast<StateVector>().ToArray();
+        var states = SpiceApi.Instance.ReadEphemeris(window, 399, 301, Frames.Frame.ICRF, Aberration.None, stepSize).Cast<StateVector>().ToArray();
         Assert.Equal(6001, states.Length);
         for (int i = 0; i < states.Length; i++)
         {
@@ -146,14 +146,14 @@ public partial class SpiceApiTest
         // the window's length, leap second included, and the read went one epoch past the end (122 states, the last at
         // 2012-07-01T00:01:01Z)
         var stepSize = TimeSpan.FromSeconds(1.0);
-        var states = SpiceAPI.Instance.ReadEphemeris(AcrossLeapSecond2012, 399, 301, Frames.Frame.ICRF, Aberration.LT, stepSize).ToArray();
+        var states = SpiceApi.Instance.ReadEphemeris(AcrossLeapSecond2012, 399, 301, Frames.Frame.ICRF, Aberration.LT, stepSize).ToArray();
         Assert.Equal(121, states.Length);
         LabelAssert.Equal(AcrossLeapSecond2012.EndDate, states[^1].Epoch);
         for (int i = 0; i < states.Length; i++)
         {
             var epoch = AcrossLeapSecond2012.StartDate + stepSize * i;
             LabelAssert.Equal(epoch, states[i].Epoch);
-            var single = SpiceAPI.Instance.ReadEphemeris(epoch, 399, 301, Frames.Frame.ICRF, Aberration.LT);
+            var single = SpiceApi.Instance.ReadEphemeris(epoch, 399, 301, Frames.Frame.ICRF, Aberration.LT);
             Assert.Equal(single.Position, states[i].Position);
             Assert.Equal(single.Velocity, states[i].Velocity);
         }
@@ -166,18 +166,18 @@ public partial class SpiceApiTest
         // of 2012-07-01T00:01:01Z
         var sclkFile = new FileInfo(Path.Combine(Constants.PhsrmDataPath.FullName, "phsrm_201008031645.tsc"));
         var ckFile = new FileInfo(Path.Combine(Constants.PhsrmDataPath.FullName, "phsrm_sc_test2_111108_130214_v00.bc"));
-        SpiceAPI.Instance.LoadKernels(sclkFile);
-        SpiceAPI.Instance.LoadKernels(ckFile);
+        SpiceApi.Instance.LoadKernels(sclkFile);
+        SpiceApi.Instance.LoadKernels(ckFile);
         try
         {
             var stepSize = TimeSpan.FromSeconds(1.0);
             var tolerance = TimeSpan.FromSeconds(60.0);
-            var records = SpiceAPI.Instance.ReadOrientation(AcrossLeapSecond2012, -555, tolerance, Frames.Frame.ICRF, stepSize).ToArray();
+            var records = SpiceApi.Instance.ReadOrientation(AcrossLeapSecond2012, -555, tolerance, Frames.Frame.ICRF, stepSize).ToArray();
             Assert.Equal(121, records.Length);
             for (int i = 0; i < records.Length; i++)
             {
                 var epoch = AcrossLeapSecond2012.StartDate + stepSize * i;
-                var single = SpiceAPI.Instance.ReadOrientation(new Window(epoch, epoch), -555, tolerance, Frames.Frame.ICRF, stepSize).Single();
+                var single = SpiceApi.Instance.ReadOrientation(new Window(epoch, epoch), -555, tolerance, Frames.Frame.ICRF, stepSize).Single();
                 LabelAssert.Equal(single.Epoch, records[i].Epoch);
                 Assert.Equal(single.Rotation, records[i].Rotation);
                 Assert.Equal(single.AngularVelocity, records[i].AngularVelocity);
@@ -185,8 +185,8 @@ public partial class SpiceApiTest
         }
         finally
         {
-            SpiceAPI.Instance.UnloadKernels(ckFile);
-            SpiceAPI.Instance.UnloadKernels(sclkFile);
+            SpiceApi.Instance.UnloadKernels(ckFile);
+            SpiceApi.Instance.UnloadKernels(sclkFile);
         }
     }
 
@@ -198,10 +198,10 @@ public partial class SpiceApiTest
         // Before 11.0.0 a step of 0 threw the native layer's message and a negative step read 10000 epochs backwards (#563)
         var window = new Window(WindowReadStart, WindowReadStart.AddSeconds(60.0));
         var ephemeris = Assert.Throws<ArgumentOutOfRangeException>(() =>
-            SpiceAPI.Instance.ReadEphemeris(window, 399, 301, Frames.Frame.ICRF, Aberration.None, TimeSpan.FromSeconds(step)));
+            SpiceApi.Instance.ReadEphemeris(window, 399, 301, Frames.Frame.ICRF, Aberration.None, TimeSpan.FromSeconds(step)));
         Assert.Equal("stepSize", ephemeris.ParamName);
         var orientation = Assert.Throws<ArgumentOutOfRangeException>(() =>
-            SpiceAPI.Instance.ReadOrientation(window, -555, TimeSpan.Zero, Frames.Frame.ICRF, TimeSpan.FromSeconds(step)));
+            SpiceApi.Instance.ReadOrientation(window, -555, TimeSpan.Zero, Frames.Frame.ICRF, TimeSpan.FromSeconds(step)));
         Assert.Equal("stepSize", orientation.ParamName);
     }
 
@@ -215,20 +215,20 @@ public partial class SpiceApiTest
         // through the clock); the last epoch of the window is read, and so is a window of more than 10000 epochs
         var sclkFile = new FileInfo(Path.Combine(Constants.PhsrmDataPath.FullName, "phsrm_201008031645.tsc"));
         var ckFile = new FileInfo(Path.Combine(Constants.PhsrmDataPath.FullName, "phsrm_sc_test2_111108_130214_v00.bc"));
-        SpiceAPI.Instance.LoadKernels(sclkFile);
-        SpiceAPI.Instance.LoadKernels(ckFile);
+        SpiceApi.Instance.LoadKernels(sclkFile);
+        SpiceApi.Instance.LoadKernels(ckFile);
         try
         {
             var stepSize = TimeSpan.FromSeconds(step);
             var tolerance = TimeSpan.FromSeconds(60.0);
             var window = new Window(PhsrmStart, PhsrmStart.AddSeconds(length));
-            var records = SpiceAPI.Instance.ReadOrientation(window, -555, tolerance, Frames.Frame.ICRF, stepSize).ToArray();
+            var records = SpiceApi.Instance.ReadOrientation(window, -555, tolerance, Frames.Frame.ICRF, stepSize).ToArray();
             _output.WriteLine($"MEASURE #563 ReadOrientation {length} s at {step} s: {records.Length} records, last at {records[^1].Epoch}");
             Assert.Equal(count, records.Length);
             for (int i = 0; i < count; i++)
             {
                 var epoch = PhsrmStart + stepSize * i;
-                var single = SpiceAPI.Instance.ReadOrientation(new Window(epoch, epoch), -555, tolerance, Frames.Frame.ICRF, stepSize).Single();
+                var single = SpiceApi.Instance.ReadOrientation(new Window(epoch, epoch), -555, tolerance, Frames.Frame.ICRF, stepSize).Single();
                 LabelAssert.Equal(single.Epoch, records[i].Epoch);
                 Assert.Equal(single.Rotation, records[i].Rotation);
                 Assert.Equal(single.AngularVelocity, records[i].AngularVelocity);
@@ -236,8 +236,8 @@ public partial class SpiceApiTest
         }
         finally
         {
-            SpiceAPI.Instance.UnloadKernels(ckFile);
-            SpiceAPI.Instance.UnloadKernels(sclkFile);
+            SpiceApi.Instance.UnloadKernels(ckFile);
+            SpiceApi.Instance.UnloadKernels(sclkFile);
         }
     }
 
@@ -252,23 +252,23 @@ public partial class SpiceApiTest
         // alone, labelled with the CK's epoch of that instant (sct2e_c of the clock ckgpav_c returns)
         var sclkFile = new FileInfo(Path.Combine(Constants.PhsrmDataPath.FullName, "phsrm_201008031645.tsc"));
         var ckFile = new FileInfo(Path.Combine(Constants.PhsrmDataPath.FullName, "phsrm_sc_test2_111108_130214_v00.bc"));
-        SpiceAPI.Instance.LoadKernels(sclkFile);
-        SpiceAPI.Instance.LoadKernels(ckFile);
+        SpiceApi.Instance.LoadKernels(sclkFile);
+        SpiceApi.Instance.LoadKernels(ckFile);
         try
         {
             var start = new TimeSystem.Time(year, month, 1, TimeSystem.TimeScale.UTC);
             var stepSize = TimeSpan.FromSeconds(0.1);
             var tolerance = TimeSpan.FromSeconds(60.0);
             var window = new Window(start, start.AddSeconds(600.0));
-            var records = SpiceAPI.Instance.ReadOrientation(window, -555, tolerance, Frames.Frame.ICRF, stepSize).ToArray();
+            var records = SpiceApi.Instance.ReadOrientation(window, -555, tolerance, Frames.Frame.ICRF, stepSize).ToArray();
             _output.WriteLine($"MEASURE #563 ReadOrientation UTC {year}-{month:D2}: {records.Length} records, last at {records[^1].Epoch}");
             Assert.Equal(6001, records.Length);
             double worst = 0.0;
             for (int i = 0; i < records.Length; i++)
             {
                 var epoch = start + stepSize * i;
-                worst = System.Math.Max(worst, System.Math.Abs((records[i].Epoch - epoch.ToTDB()).TotalSeconds));
-                var single = SpiceAPI.Instance.ReadOrientation(new Window(epoch, epoch), -555, tolerance, Frames.Frame.ICRF, stepSize).Single();
+                worst = System.Math.Max(worst, System.Math.Abs((records[i].Epoch - epoch.ToTdb()).TotalSeconds));
+                var single = SpiceApi.Instance.ReadOrientation(new Window(epoch, epoch), -555, tolerance, Frames.Frame.ICRF, stepSize).Single();
                 LabelAssert.Equal(single.Epoch, records[i].Epoch);
                 Assert.Equal(single.Rotation, records[i].Rotation);
                 Assert.Equal(single.AngularVelocity, records[i].AngularVelocity);
@@ -279,8 +279,8 @@ public partial class SpiceApiTest
         }
         finally
         {
-            SpiceAPI.Instance.UnloadKernels(ckFile);
-            SpiceAPI.Instance.UnloadKernels(sclkFile);
+            SpiceApi.Instance.UnloadKernels(ckFile);
+            SpiceApi.Instance.UnloadKernels(sclkFile);
         }
     }
 
@@ -293,13 +293,13 @@ public partial class SpiceApiTest
         // angular velocity bit for bit, the C-matrix as the rotation angle between the axes it and the record's quaternion map
         var sclkFile = new FileInfo(Path.Combine(Constants.PhsrmDataPath.FullName, "phsrm_201008031645.tsc"));
         var ckFile = new FileInfo(Path.Combine(Constants.PhsrmDataPath.FullName, "phsrm_sc_test2_111108_130214_v00.bc"));
-        SpiceAPI.Instance.LoadKernels(sclkFile);
-        SpiceAPI.Instance.LoadKernels(ckFile);
+        SpiceApi.Instance.LoadKernels(sclkFile);
+        SpiceApi.Instance.LoadKernels(ckFile);
         try
         {
             var stepSize = TimeSpan.FromSeconds(0.1);
             var window = new Window(PhsrmStart, PhsrmStart.AddSeconds(600.0));
-            var records = SpiceAPI.Instance.ReadOrientation(window, -555, TimeSpan.FromSeconds(60.0), Frames.Frame.ICRF, stepSize).ToArray();
+            var records = SpiceApi.Instance.ReadOrientation(window, -555, TimeSpan.FromSeconds(60.0), Frames.Frame.ICRF, stepSize).ToArray();
             Assert.Equal(6001, records.Length);
             double et0 = PhsrmStart.TimeSpanFromJ2000().TotalSeconds;
             double toleranceTicks = System.Math.Abs(CspiceDirect.Sce2c(-555, et0 + 60.0) - CspiceDirect.Sce2c(-555, et0));
@@ -311,7 +311,7 @@ public partial class SpiceApiTest
                 var reference = CspiceDirect.Ckgpav(-555, CspiceDirect.Sce2c(-555, et), toleranceTicks, "J2000");
                 Assert.NotNull(reference);
                 var (cmat, av, recordEt) = reference.Value;
-                LabelAssert.Equal(TimeSystem.Time.CreateTDB(recordEt), records[i].Epoch);
+                LabelAssert.Equal(TimeSystem.Time.CreateTdb(recordEt), records[i].Epoch);
                 worstEpoch = System.Math.Max(worstEpoch, System.Math.Abs((records[i].Epoch - epoch).TotalSeconds));
                 Assert.Equal(new IO.Astrodynamics.Math.Vector3(av[0], av[1], av[2]), records[i].AngularVelocity);
                 for (int axis = 0; axis < 3; axis++)
@@ -330,8 +330,8 @@ public partial class SpiceApiTest
         }
         finally
         {
-            SpiceAPI.Instance.UnloadKernels(ckFile);
-            SpiceAPI.Instance.UnloadKernels(sclkFile);
+            SpiceApi.Instance.UnloadKernels(ckFile);
+            SpiceApi.Instance.UnloadKernels(sclkFile);
         }
     }
 
@@ -353,18 +353,18 @@ public partial class SpiceApiTest
         // MEASURE line; the bound is twice the worst measured after the fix, rounded up at the second significant digit
         var sclkFile = new FileInfo(Path.Combine(Constants.PhsrmDataPath.FullName, "phsrm_201008031645.tsc"));
         var ckFile = new FileInfo(Path.Combine(Constants.PhsrmDataPath.FullName, "phsrm_sc_test2_111108_130214_v00.bc"));
-        SpiceAPI.Instance.LoadKernels(sclkFile);
-        SpiceAPI.Instance.LoadKernels(ckFile);
+        SpiceApi.Instance.LoadKernels(sclkFile);
+        SpiceApi.Instance.LoadKernels(ckFile);
         try
         {
             var window = new Window(PhsrmStart, PhsrmStart);
-            SpiceAPI.Instance.ReadOrientation(window, -555, TimeSpan.Zero, Frames.Frame.ICRF, TimeSpan.FromSeconds(1.0)).Single();
+            SpiceApi.Instance.ReadOrientation(window, -555, TimeSpan.Zero, Frames.Frame.ICRF, TimeSpan.FromSeconds(1.0)).Single();
             long before = GC.GetAllocatedBytesForCurrentThread();
             var watch = System.Diagnostics.Stopwatch.StartNew();
             const int reads = 100;
             for (int i = 0; i < reads; i++)
             {
-                SpiceAPI.Instance.ReadOrientation(window, -555, TimeSpan.Zero, Frames.Frame.ICRF, TimeSpan.FromSeconds(1.0)).Single();
+                SpiceApi.Instance.ReadOrientation(window, -555, TimeSpan.Zero, Frames.Frame.ICRF, TimeSpan.FromSeconds(1.0)).Single();
             }
 
             watch.Stop();
@@ -374,8 +374,8 @@ public partial class SpiceApiTest
         }
         finally
         {
-            SpiceAPI.Instance.UnloadKernels(ckFile);
-            SpiceAPI.Instance.UnloadKernels(sclkFile);
+            SpiceApi.Instance.UnloadKernels(ckFile);
+            SpiceApi.Instance.UnloadKernels(sclkFile);
         }
     }
 

@@ -67,7 +67,7 @@ public class AttitudeSolver : ICategorySolver
         var inputs = InputParser.ParseAttitudeInputs(caseInput.Inputs);
         using var kernels = new CaseKernels(_conformanceTestsPath, InputParser.ParseKernels(caseInput.Inputs));
 
-        var earth = new CelestialBody(PlanetsAndMoons.EARTH);
+        var earth = new CelestialBody(PlanetsAndMoons.Earth);
         var epoch = EpochParser.Parse(inputs.Epoch);
         var window = new Window(EpochParser.Parse(inputs.PropagationWindow.Start), EpochParser.Parse(inputs.PropagationWindow.End));
         int samples = SampleCount(window, inputs.SampleStepS);
@@ -88,7 +88,7 @@ public class AttitudeSolver : ICategorySolver
         var outputs = new Dictionary<string, object> { [array] = samples };
         for (int k = 0; k < samples; k++)
         {
-            var rotation = record.GetStateOrientationToICRF(window.StartDate.ToTT().AddSeconds(k * inputs.SampleStepS)).Rotation;
+            var rotation = record.GetStateOrientationToIcrf(window.StartDate.ToTT().AddSeconds(k * inputs.SampleStepS)).Rotation;
             outputs[OutputComparer.IndexedOutput(array, k)] = front.HasValue
                 ? Components(front.Value.Rotate(rotation).Normalize())
                 : new[] { rotation.W, rotation.VectorPart.X, rotation.VectorPart.Y, rotation.VectorPart.Z };

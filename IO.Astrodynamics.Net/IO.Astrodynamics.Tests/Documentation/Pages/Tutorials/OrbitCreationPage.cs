@@ -18,15 +18,9 @@ using System.Threading;
 using System.Threading.Tasks;
 using IO.Astrodynamics;
 using IO.Astrodynamics.Atmosphere;
-using IO.Astrodynamics.Atmosphere.NRLMSISE_00;
 using IO.Astrodynamics.Body;
 using IO.Astrodynamics.Body.Spacecraft;
-using IO.Astrodynamics.CCSDS;
-using IO.Astrodynamics.CCSDS.CDM;
-using IO.Astrodynamics.CCSDS.Common;
-using IO.Astrodynamics.CCSDS.Common.Enums;
-using IO.Astrodynamics.CCSDS.OMM;
-using IO.Astrodynamics.CCSDS.OPM;
+using IO.Astrodynamics.Ccsds;
 using IO.Astrodynamics.Converters;
 using IO.Astrodynamics.Coordinates;
 using IO.Astrodynamics.Cosmographia;
@@ -49,11 +43,11 @@ using IO.Astrodynamics.Propagator.Forces;
 using IO.Astrodynamics.Propagator.Integrators;
 using IO.Astrodynamics.Propagator.MonteCarlo;
 using IO.Astrodynamics.Propagator.Variational;
-using IO.Astrodynamics.SSA;
+using IO.Astrodynamics.Ssa;
 using IO.Astrodynamics.SolarSystemObjects;
 using IO.Astrodynamics.Surface;
 using IO.Astrodynamics.TimeSystem;
-using TLE = IO.Astrodynamics.OrbitalParameters.TLE.TLE;
+using Tle = IO.Astrodynamics.OrbitalParameters.Tle;
 
 namespace DocumentationPageSamples.Tutorials;
 
@@ -64,7 +58,7 @@ internal static class OrbitCreationPage
     internal static void Block01()
     {
         #region docs/tutorials/orbit-creation.md:1
-        var earth = PlanetsAndMoons.EARTH_BODY;
+        var earth = PlanetsAndMoons.EarthBody;
         var epoch = new Time(2024, 6, 21, 12, 0, 0, TimeScale.TDB);
 
         var sv = new StateVector(
@@ -167,10 +161,10 @@ internal static class OrbitCreationPage
     {
         #region docs/tutorials/orbit-creation.md:8
         // Inputs: earth (CelestialBody), epoch (Time)
-        var ssoOrbit = earth.HelioSynchronousOrbit(
+        var ssoOrbit = earth.SunSynchronousOrbit(
             semiMajorAxis: 7000000.0,
             eccentricity: 0.001,
-            epochAtDescendingNode: epoch);
+            descendingNodeEpoch: epoch);
 
         Console.WriteLine($"SSO inclination: {ssoOrbit.Inclination() * Constants.Rad2Deg:F4} deg");
         #endregion

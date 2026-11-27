@@ -41,7 +41,7 @@ public class OpenOrbitTests
     // TDB labels from J2000 is 1.21e-6 s short of an hour of TT, n·δ of M off a reference in TDB seconds, up to 3.7e-9
     // for the hyperbolas and 2.5e-10 for the parabolas
     private static double Elapsed(TimeSystem.Time epoch) =>
-        PropagationTimeArgument.Tt.SecondsBetween(TimeSystem.Time.J2000TDB, epoch);
+        PropagationTimeArgument.Tt.SecondsBetween(TimeSystem.Time.J2000Tdb, epoch);
 
     [Theory]
     [MemberData(nameof(HyperbolicCases))]
@@ -49,20 +49,20 @@ public class OpenOrbitTests
     {
         // Arrange
         var elements = new KeplerianElements(PeriapsisRadius / (1.0 - e), e, 0.3, 0.2, 0.4, m, TestHelpers.EarthAtJ2000,
-            TimeSystem.Time.J2000TDB, Frames.Frame.ICRF);
-        var laterEpoch = TimeSystem.Time.J2000TDB.AddSeconds(3600.0);
+            TimeSystem.Time.J2000Tdb, Frames.Frame.ICRF);
+        var laterEpoch = TimeSystem.Time.J2000Tdb.AddSeconds(3600.0);
         double dt = Elapsed(laterEpoch);
 
         // Act
         var state = elements.ToStateVector();
-        var spice = SpiceAPI.Instance.ConvertStateVectorToConicOrbitalElement(state);
-        var later = SpiceAPI.Instance.ConvertStateVectorToConicOrbitalElement(elements.ToStateVector(laterEpoch));
-        double back = state.ToKeplerianElements().M;
+        var spice = SpiceApi.Instance.ConvertStateVectorToConicOrbitalElement(state);
+        var later = SpiceApi.Instance.ConvertStateVectorToConicOrbitalElement(elements.ToStateVector(laterEpoch));
+        double back = state.ToKeplerianElements().MeanAnomaly();
 
         // Assert: the state has the given elements for SPICE, M included, and M grows by n Δt
-        double error = System.Math.Abs(spice.M - m);
+        double error = System.Math.Abs(spice.MeanAnomaly() - m);
         double roundTrip = System.Math.Abs(back - m);
-        double propagated = System.Math.Abs(later.M - (m + elements.MeanMotion() * dt));
+        double propagated = System.Math.Abs(later.MeanAnomaly() - (m + elements.MeanMotion() * dt));
         _output.WriteLine($"e = {e}, M = {m}: SPICE M {error:E2}, round trip {roundTrip:E2}, after 1 h {propagated:E2}");
         Assert.True(error < HyperbolicTolerance * (1.0 + System.Math.Abs(m)), $"SPICE M: {error:E2}");
         Assert.True(roundTrip < HyperbolicTolerance * (1.0 + System.Math.Abs(m)), $"round trip M: {roundTrip:E2}");
@@ -76,14 +76,14 @@ public class OpenOrbitTests
     {
         // Arrange
         var elements = KeplerianElements.Parabolic(PeriapsisRadius, 0.3, 0.2, 0.4, m, TestHelpers.EarthAtJ2000,
-            TimeSystem.Time.J2000TDB, Frames.Frame.ICRF);
-        var laterEpoch = TimeSystem.Time.J2000TDB.AddSeconds(3600.0);
+            TimeSystem.Time.J2000Tdb, Frames.Frame.ICRF);
+        var laterEpoch = TimeSystem.Time.J2000Tdb.AddSeconds(3600.0);
         double dt = Elapsed(laterEpoch);
 
         // Act
         var state = elements.ToStateVector();
         var later = elements.ToStateVector(laterEpoch);
-        double back = state.ToKeplerianElements().M;
+        double back = state.ToKeplerianElements().MeanAnomaly();
 
         // Assert: r = q (1 + D²) and ν = 2 atan D, with D from the trigonometric solution of Barker's equation, at M and
         // at M + n Δt
@@ -108,26 +108,26 @@ public class OpenOrbitTests
     {
         // Arrange
         var elements = KeplerianElements.Parabolic(PeriapsisRadius, 0.3, 0.2, 0.4, m, TestHelpers.EarthAtJ2000,
-            TimeSystem.Time.J2000TDB, Frames.Frame.ICRF);
+            TimeSystem.Time.J2000Tdb, Frames.Frame.ICRF);
         var state = elements.ToStateVector();
 
         // Act: before #373, the conversion threw, SPICE giving no semi-major axis to a parabola
-        var spice = SpiceAPI.Instance.ConvertStateVectorToConicOrbitalElement(state);
+        var spice = SpiceApi.Instance.ConvertStateVectorToConicOrbitalElement(state);
 
         // Assert
         double q = System.Math.Abs(spice.PerigeeRadius() - PeriapsisRadius) / PeriapsisRadius;
-        double e = System.Math.Abs(spice.E - 1.0);
-        double i = System.Math.Abs(spice.I - 0.3);
-        double node = TestHelpers.AngleDifference(spice.RAAN, 0.2);
-        double periapsis = TestHelpers.AngleDifference(spice.AOP, 0.4);
-        double meanAnomaly = System.Math.Abs(spice.M - m);
+        double e = System.Math.Abs(spice.Eccentricity() - 1.0);
+        double i = System.Math.Abs(spice.Inclination() - 0.3);
+        double node = TestHelpers.AngleDifference(spice.AscendingNode(), 0.2);
+        double periapsis = TestHelpers.AngleDifference(spice.ArgumentOfPeriapsis(), 0.4);
+        double meanAnomaly = System.Math.Abs(spice.MeanAnomaly() - m);
         double trueAnomaly = TestHelpers.AngleDifference(spice.TrueAnomaly(), 2.0 * System.Math.Atan(Barker(m)));
         var back = spice.ToStateVector();
         double position = (back.Position - state.Position).Magnitude() / state.Position.Magnitude();
         double velocity = (back.Velocity - state.Velocity).Magnitude() / state.Velocity.Magnitude();
         _output.WriteLine($"M = {m}: q {q:E2} (relative), e {e:E2}, i {i:E2}, Ω {node:E2}, ω {periapsis:E2}, M {meanAnomaly:E2}, " +
                           $"ν {trueAnomaly:E2}; back to the state, position {position:E2}, velocity {velocity:E2} (relative)");
-        Assert.True(double.IsPositiveInfinity(spice.A));
+        Assert.True(double.IsPositiveInfinity(spice.SemiMajorAxis()));
         Assert.True(q < ParabolicTolerance, $"q: {q:E2}");
         Assert.True(e < ParabolicTolerance, $"e: {e:E2}");
         Assert.True(i < ParabolicTolerance, $"i: {i:E2}");
@@ -155,25 +155,25 @@ public class OpenOrbitTests
         // Arrange
         var elements = e == 1.0
             ? KeplerianElements.Parabolic(PeriapsisRadius, 0.3, 0.2, 0.4, m, TestHelpers.EarthAtJ2000,
-                TimeSystem.Time.J2000TDB, Frames.Frame.ICRF)
+                TimeSystem.Time.J2000Tdb, Frames.Frame.ICRF)
             : new KeplerianElements(PeriapsisRadius / (1.0 - e), e, 0.3, 0.2, 0.4, m, TestHelpers.EarthAtJ2000,
-                TimeSystem.Time.J2000TDB, Frames.Frame.ICRF);
+                TimeSystem.Time.J2000Tdb, Frames.Frame.ICRF);
 
         // Act: before #372, the native conversion never returned on a hyperbola before its periapsis (M = -2 and
         // -10 at e = 1.5). A regression fails this case after 10 s instead of hanging it, but the conversion that does
         // not return keeps the SPICE lock, so every later SPICE call of the run waits
-        var conversion = Task.Run(() => SpiceAPI.Instance.ConvertConicElementsToStateVector(elements));
+        var conversion = Task.Run(() => SpiceApi.Instance.ConvertConicElementsToStateVector(elements));
         Assert.True(conversion.Wait(TimeSpan.FromSeconds(10.0)), "the conversion did not return");
         var state = conversion.Result;
-        var spice = SpiceAPI.Instance.ConvertStateVectorToConicOrbitalElement(state);
+        var spice = SpiceApi.Instance.ConvertStateVectorToConicOrbitalElement(state);
 
         // Assert: SPICE OSCELT finds the elements in the state, which is at their epoch
         double q = System.Math.Abs(spice.PerigeeRadius() - PeriapsisRadius) / PeriapsisRadius;
-        double eccentricity = System.Math.Abs(spice.E - e);
-        double i = System.Math.Abs(spice.I - 0.3);
-        double node = TestHelpers.AngleDifference(spice.RAAN, 0.2);
-        double periapsis = TestHelpers.AngleDifference(spice.AOP, 0.4);
-        double meanAnomaly = System.Math.Abs(spice.M - m);
+        double eccentricity = System.Math.Abs(spice.Eccentricity() - e);
+        double i = System.Math.Abs(spice.Inclination() - 0.3);
+        double node = TestHelpers.AngleDifference(spice.AscendingNode(), 0.2);
+        double periapsis = TestHelpers.AngleDifference(spice.ArgumentOfPeriapsis(), 0.4);
+        double meanAnomaly = System.Math.Abs(spice.MeanAnomaly() - m);
         _output.WriteLine($"e = {e}, M = {m}: q {q:E2} (relative), e {eccentricity:E2}, i {i:E2}, Ω {node:E2}, " +
                           $"ω {periapsis:E2}, M {meanAnomaly:E2}");
         LabelAssert.Equal(elements.Epoch, state.Epoch);

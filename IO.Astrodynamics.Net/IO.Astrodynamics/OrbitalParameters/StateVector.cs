@@ -21,7 +21,7 @@ namespace IO.Astrodynamics.OrbitalParameters
         /// and ω is measured from the x axis.
         /// </summary>
         /// <remarks>
-        /// The rule of SPICE OSCELT, measured on <see cref="SpiceAPI.ConvertStateVectorToConicOrbitalElement(StateVector)"/>:
+        /// The rule of SPICE OSCELT, measured on <see cref="SpiceApi.ConvertStateVectorToConicOrbitalElement(StateVector)"/>:
         /// the switch is at sin i = 1e-10 for orbits from 6 800 to 100 000 km, any speed and eccentricity (#368).
         /// Confirmed by S. Guillet on the OSCELT source, 2026-10-31.
         /// </remarks>
@@ -146,7 +146,7 @@ namespace IO.Astrodynamics.OrbitalParameters
         /// </exception>
         public override StateVector ToStateVector(Time epoch)
         {
-            if (epoch.ToTDB() != Epoch.ToTDB())
+            if (epoch.ToTdb() != Epoch.ToTdb())
             {
                 return base.ToStateVector(epoch);
             }
@@ -594,7 +594,7 @@ namespace IO.Astrodynamics.OrbitalParameters
         /// The propagation of the covariance (<see cref="Propagator.Variational.CovariancePropagationOptions"/> with
         /// <see cref="Propagator.Variational.CovariancePropagationMode.Covariance"/>) rejects a covariance that is not
         /// positive semi-definite, and never corrects it; the conjunction analysis remediates it, and raises
-        /// <see cref="SSA.EncounterQualityFlags.CovarianceRemediated"/>. This method is the remediation of the analysis,
+        /// <see cref="Ssa.EncounterQualityFlags.CovarianceRemediated"/>. This method is the remediation of the analysis,
         /// the same code and tolerances, for a user who wants to propagate such a covariance explicitly: call it first,
         /// then propagate <see cref="CovarianceRemediation.State"/>.
         /// </para>

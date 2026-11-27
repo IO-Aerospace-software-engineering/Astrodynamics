@@ -6,7 +6,7 @@ using IO.Astrodynamics.Body;
 using IO.Astrodynamics.Frames;
 using IO.Astrodynamics.TimeSystem;
 
-namespace IO.Astrodynamics.CCSDS.Common;
+namespace IO.Astrodynamics.Ccsds;
 
 /// <summary>
 /// The NAIF id of a CCSDS <c>CENTER_NAME</c>: the names the library's writers emit, which are the SPICE names of the

@@ -3,7 +3,7 @@ using System;
 using IO.Astrodynamics.Math;
 using IO.Astrodynamics.TimeSystem;
 
-namespace IO.Astrodynamics.SSA;
+namespace IO.Astrodynamics.Ssa;
 
 /// <summary>
 /// Describes one candidate impulsive avoidance maneuver and the encounter that would result after applying it.

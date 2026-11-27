@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using IO.Astrodynamics.Maneuver;
 
-namespace IO.Astrodynamics.SSA;
+namespace IO.Astrodynamics.Ssa;
 
 /// <summary>
 /// Configures the impulsive avoidance trade study performed for one encounter, read by
@@ -101,7 +101,7 @@ public sealed record AvoidanceSearchOptions
     /// computed for the options (<see cref="ConjunctionAnalysisOptions.ComputeNonlinearityIndex"/> cleared, given or
     /// inherited), and the propagation of the covariance is set by the path of the options. An encounter of <see cref="ConjunctionAssessment.Screen"/> was analyzed with
     /// the settings of the screening (a sample step of 5 min by default). Before 11.0.0 the avoidance took
-    /// <c>AnalysisSampleStep</c>, <c>MaximumEventSearchStep</c>, <c>SecondaryHardBodyRadiusMeters</c> and
+    /// <c>AnalysisSampleStep</c>, <c>MaxEventSearchStep</c>, <c>SecondaryHardBodyRadiusMeters</c> and
     /// <c>LowRelativeSpeedThresholdMetersPerSecond</c> of its own.
     /// </remarks>
     public ConjunctionAnalysisOptions Analysis { get; init; }

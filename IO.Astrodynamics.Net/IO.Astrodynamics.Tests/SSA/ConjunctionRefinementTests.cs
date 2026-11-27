@@ -3,7 +3,7 @@
 using IO.Astrodynamics.TimeSystem;
 using System;
 using System.Linq;
-using IO.Astrodynamics.SSA;
+using IO.Astrodynamics.Ssa;
 using Xunit;
 using Vector3 = IO.Astrodynamics.Math.Vector3;
 
@@ -49,7 +49,7 @@ public class ConjunctionRefinementTests
         Assert.True(System.Math.Abs(error) <= 1.0e-7 * (1.0 + 1.0e-6), $"TCA {error:E3} s from the zero");
     }
 
-    // The spacing of the reads over the window: MaximumEventSearchStep with ReadRangeRateOverWindow, none without it (the
+    // The spacing of the reads over the window: MaxEventSearchStep with ReadRangeRateOverWindow, none without it (the
     // default, decision 54 of #457)
     private static double? Reads(bool overTheWindow) => overTheWindow ? ReadSpacing : null;
 
@@ -673,11 +673,11 @@ public class ConjunctionRefinementTests
     }
     // ---- #628: the minima that no seed reaches. With ReadRangeRateOverWindow (opt-in, decision 54 of #457), the range
     // rate is read at every candidate and, between two candidates farther apart than the spacing of the reads
-    // (MaximumEventSearchStep, 60 s by default, on the dense path), at epochs evenly spaced between them; each change from
+    // (MaxEventSearchStep, 60 s by default, on the dense path), at epochs evenly spaced between them; each change from
     // negative to positive between two reads that holds no zero yet is bisected. Without it, the default, the seeds alone
     // are refined, as before #628 ----
 
-    // The spacing of the reads of the dense path, MaximumEventSearchStep by default
+    // The spacing of the reads of the dense path, MaxEventSearchStep by default
     private const double ReadSpacing = 60.0;
 
     [Theory]

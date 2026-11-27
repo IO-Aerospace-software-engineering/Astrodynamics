@@ -6,7 +6,7 @@ using System.Reflection;
 using System.Xml;
 using System.Xml.Schema;
 
-namespace IO.Astrodynamics.CCSDS;
+namespace IO.Astrodynamics.Ccsds;
 
 /// <summary>
 /// Provides access to embedded CCSDS NDM/XML schemas for validation.
